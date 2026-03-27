@@ -17,7 +17,6 @@ COPY packages/db/package.json ./packages/db/
 COPY packages/aurora-sync/package.json ./packages/aurora-sync/
 COPY packages/backend/package.json ./packages/backend/
 COPY packages/web/package.json ./packages/web/
-COPY packages/board-controller/package.json ./packages/board-controller/
 COPY packages/moonboard-ocr/package.json ./packages/moonboard-ocr/
 
 # Copy source code for all shared packages and backend
