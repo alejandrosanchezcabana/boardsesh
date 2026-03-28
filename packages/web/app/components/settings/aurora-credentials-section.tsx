@@ -1,14 +1,18 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import Box from '@mui/material/Box';
 import Dialog from '@mui/material/Dialog';
 import DialogTitle from '@mui/material/DialogTitle';
 import DialogContent from '@mui/material/DialogContent';
+import DialogActions from '@mui/material/DialogActions';
 import MuiAlert from '@mui/material/Alert';
 import AlertTitle from '@mui/material/AlertTitle';
 import Chip from '@mui/material/Chip';
 import Stack from '@mui/material/Stack';
+import List from '@mui/material/List';
+import ListItem from '@mui/material/ListItem';
+import ListItemText from '@mui/material/ListItemText';
 import { ConfirmPopover } from '@/app/components/ui/confirm-popover';
 import { useSnackbar } from '@/app/components/providers/snackbar-provider';
 import { LoadingSpinner } from '@/app/components/ui/loading-spinner';
@@ -25,13 +29,22 @@ import DeleteOutlined from '@mui/icons-material/DeleteOutlined';
 import AddOutlined from '@mui/icons-material/AddOutlined';
 import SyncOutlined from '@mui/icons-material/SyncOutlined';
 import WarningOutlined from '@mui/icons-material/WarningOutlined';
+import FileUploadOutlined from '@mui/icons-material/FileUploadOutlined';
 import type { AuroraCredentialStatus } from '@/app/api/internal/aurora-credentials/route';
 import type { UnsyncedCounts } from '@/app/api/internal/aurora-credentials/unsynced/route';
+import type { AuroraImportResponse } from '@/app/api/internal/aurora-import/route';
 import styles from './aurora-credentials-section.module.css';
 
 interface BoardUnsyncedCounts {
   ascents: number;
   climbs: number;
+}
+
+interface ImportPreview {
+  ascents: number;
+  attempts: number;
+  circuits: number;
+  username: string;
 }
 
 interface BoardCredentialCardProps {
@@ -40,7 +53,9 @@ interface BoardCredentialCardProps {
   unsyncedCounts: BoardUnsyncedCounts;
   onAdd: () => void;
   onRemove: () => void;
+  onImportJson: () => void;
   isRemoving: boolean;
+  isImporting: boolean;
 }
 
 function BoardCredentialCard({
@@ -49,10 +64,13 @@ function BoardCredentialCard({
   unsyncedCounts,
   onAdd,
   onRemove,
+  onImportJson,
   isRemoving,
+  isImporting,
 }: BoardCredentialCardProps) {
   const boardName = boardType.charAt(0).toUpperCase() + boardType.slice(1);
   const totalUnsynced = unsyncedCounts.ascents + unsyncedCounts.climbs;
+  const isKilter = boardType === 'kilter';
 
   const getSyncStatusTag = () => {
     if (!credential) return null;
@@ -92,12 +110,31 @@ function BoardCredentialCard({
               {boardName} Board
             </Typography>
           </div>
-          <Typography variant="body2" component="span" color="text.secondary" className={styles.notConnectedText}>
-            Not connected. Link your {boardName} account to import your Aurora data.
-          </Typography>
-          <Button variant="contained" startIcon={<AddOutlined />} onClick={onAdd} fullWidth>
-            Link {boardName} Account
-          </Button>
+          {isKilter ? (
+            <Typography variant="body2" component="span" color="text.secondary" className={styles.notConnectedText}>
+              The Kilter backend has been shut down. You can import your data using an Aurora JSON export file.
+            </Typography>
+          ) : (
+            <Typography variant="body2" component="span" color="text.secondary" className={styles.notConnectedText}>
+              Not connected. Link your {boardName} account to import your Aurora data, or import from a JSON export file.
+            </Typography>
+          )}
+          <div className={styles.buttonRow}>
+            {!isKilter && (
+              <Button variant="contained" startIcon={<AddOutlined />} onClick={onAdd} fullWidth>
+                Link {boardName} Account
+              </Button>
+            )}
+            <Button
+              variant={isKilter ? 'contained' : 'outlined'}
+              startIcon={isImporting ? <CircularProgress size={16} /> : <FileUploadOutlined />}
+              onClick={onImportJson}
+              disabled={isImporting}
+              fullWidth
+            >
+              Import JSON
+            </Button>
+          </div>
         </CardContent>
       </Card>
     );
@@ -137,23 +174,34 @@ function BoardCredentialCard({
             </MuiAlert>
           )}
         </div>
-        <ConfirmPopover
-          title="Remove account link"
-          description={`Are you sure you want to unlink your ${boardName} account?`}
-          onConfirm={onRemove}
-          okText="Yes, unlink"
-          okButtonProps={{ color: 'error' }}
-        >
+        <div className={styles.buttonRow}>
+          <ConfirmPopover
+            title="Remove account link"
+            description={`Are you sure you want to unlink your ${boardName} account?`}
+            onConfirm={onRemove}
+            okText="Yes, unlink"
+            okButtonProps={{ color: 'error' }}
+          >
+            <Button
+              color="error"
+              variant="outlined"
+              startIcon={isRemoving ? <CircularProgress size={16} /> : <DeleteOutlined />}
+              disabled={isRemoving}
+              fullWidth
+            >
+              Unlink Account
+            </Button>
+          </ConfirmPopover>
           <Button
-            color="error"
             variant="outlined"
-            startIcon={isRemoving ? <CircularProgress size={16} /> : <DeleteOutlined />}
-            disabled={isRemoving}
+            startIcon={isImporting ? <CircularProgress size={16} /> : <FileUploadOutlined />}
+            onClick={onImportJson}
+            disabled={isImporting}
             fullWidth
           >
-            Unlink Account
+            Import JSON
           </Button>
-        </ConfirmPopover>
+        </div>
       </CardContent>
     </Card>
   );
@@ -169,6 +217,15 @@ export default function AuroraCredentialsSection() {
   const [isSaving, setIsSaving] = useState(false);
   const [removingBoard, setRemovingBoard] = useState<string | null>(null);
   const [formValues, setFormValues] = useState({ username: '', password: '' });
+
+  // Import state
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [importingBoard, setImportingBoard] = useState<'kilter' | 'tension' | null>(null);
+  const [importPreview, setImportPreview] = useState<ImportPreview | null>(null);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const [importRawData, setImportRawData] = useState<any>(null);
+  const [isImporting, setIsImporting] = useState(false);
+  const [importResult, setImportResult] = useState<AuroraImportResponse | null>(null);
 
   const fetchCredentials = async () => {
     try {
@@ -264,6 +321,92 @@ export default function AuroraCredentialsSection() {
     }
   };
 
+  // --- JSON Import handlers ---
+
+  const handleImportClick = (boardType: 'kilter' | 'tension') => {
+    setImportingBoard(boardType);
+    fileInputRef.current?.click();
+  };
+
+  const handleFileSelected = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file || !importingBoard) return;
+
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      try {
+        const json = JSON.parse(e.target?.result as string);
+
+        // Quick validation
+        if (!json.user?.username) {
+          showMessage('Invalid file: missing user data. Please select an Aurora JSON export file.', 'error');
+          setImportingBoard(null);
+          return;
+        }
+
+        setImportRawData(json);
+        setImportPreview({
+          ascents: Array.isArray(json.ascents) ? json.ascents.length : 0,
+          attempts: Array.isArray(json.attempts) ? json.attempts.length : 0,
+          circuits: Array.isArray(json.circuits) ? json.circuits.length : 0,
+          username: json.user.username,
+        });
+      } catch {
+        showMessage('Failed to parse JSON file. Please check the file format.', 'error');
+        setImportingBoard(null);
+      }
+    };
+    reader.readAsText(file);
+
+    // Reset input so the same file can be re-selected
+    event.target.value = '';
+  };
+
+  const handleImportConfirm = async () => {
+    if (!importingBoard || !importRawData) return;
+
+    setIsImporting(true);
+    setImportPreview(null);
+
+    try {
+      const response = await fetch('/api/internal/aurora-import', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          boardType: importingBoard,
+          data: importRawData,
+        }),
+      });
+
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.error || 'Import failed');
+      }
+
+      const data: AuroraImportResponse = await response.json();
+      setImportResult(data);
+
+      const totalImported =
+        data.results.ascents.imported +
+        data.results.attempts.imported +
+        data.results.circuits.imported;
+
+      showMessage(`Successfully imported ${totalImported} items`, 'success');
+    } catch (error) {
+      showMessage(error instanceof Error ? error.message : 'Import failed', 'error');
+    } finally {
+      setIsImporting(false);
+      setImportRawData(null);
+      setImportingBoard(null);
+    }
+  };
+
+  const handleImportCancel = () => {
+    setImportPreview(null);
+    setImportRawData(null);
+    setImportingBoard(null);
+  };
+
   const getCredentialForBoard = (boardType: 'kilter' | 'tension') => {
     return credentials.find((c) => c.boardType === boardType) || null;
   };
@@ -286,7 +429,7 @@ export default function AuroraCredentialsSection() {
         <CardContent>
           <Typography variant="h5">Board Accounts</Typography>
           <Typography variant="body2" component="span" color="text.secondary" className={styles.sectionDescription}>
-            Link your Kilter and Tension board accounts to import your Aurora data to Boardsesh.
+            Link your board accounts to import your Aurora data to Boardsesh, or import from a JSON export file.
             We'll automatically sync your logbook, ascents, and climbs FROM Aurora every 6 hours.
             Data created in Boardsesh stays local and does not sync back to Aurora.
           </Typography>
@@ -298,7 +441,9 @@ export default function AuroraCredentialsSection() {
               unsyncedCounts={unsyncedCounts?.kilter ?? { ascents: 0, climbs: 0 }}
               onAdd={() => handleAddClick('kilter')}
               onRemove={() => handleRemove('kilter')}
+              onImportJson={() => handleImportClick('kilter')}
               isRemoving={removingBoard === 'kilter'}
+              isImporting={isImporting && importingBoard === 'kilter'}
             />
             <BoardCredentialCard
               boardType="tension"
@@ -306,12 +451,25 @@ export default function AuroraCredentialsSection() {
               unsyncedCounts={unsyncedCounts?.tension ?? { ascents: 0, climbs: 0 }}
               onAdd={() => handleAddClick('tension')}
               onRemove={() => handleRemove('tension')}
+              onImportJson={() => handleImportClick('tension')}
               isRemoving={removingBoard === 'tension'}
+              isImporting={isImporting && importingBoard === 'tension'}
             />
           </Stack>
         </CardContent>
       </Card>
 
+      {/* Hidden file input for JSON import */}
+      <input
+        ref={fileInputRef}
+        type="file"
+        accept=".json"
+        onChange={handleFileSelected}
+        aria-label="Upload Aurora JSON export file"
+        hidden
+      />
+
+      {/* Link Account Dialog */}
       <Dialog
         open={isModalOpen}
         onClose={handleModalCancel}
@@ -369,6 +527,103 @@ export default function AuroraCredentialsSection() {
           </Button>
         </Box>
         </DialogContent>
+      </Dialog>
+
+      {/* Import Preview Dialog */}
+      <Dialog
+        open={importPreview !== null}
+        onClose={handleImportCancel}
+        maxWidth="sm"
+        fullWidth
+      >
+        <DialogTitle>Import Aurora Data</DialogTitle>
+        <DialogContent>
+          {importPreview && (
+            <>
+              <Typography variant="body2" color="text.secondary" className={styles.modalDescription}>
+                Import data from <strong>{importPreview.username}</strong> to{' '}
+                <strong>{importingBoard?.charAt(0).toUpperCase()}{importingBoard?.slice(1)}</strong>:
+              </Typography>
+              <List dense>
+                <ListItem>
+                  <ListItemText primary={`${importPreview.ascents} ascents`} />
+                </ListItem>
+                <ListItem>
+                  <ListItemText primary={`${importPreview.attempts} attempts`} />
+                </ListItem>
+                <ListItem>
+                  <ListItemText primary={`${importPreview.circuits} circuits`} />
+                </ListItem>
+              </List>
+              <Typography variant="body2" color="text.secondary">
+                Climbs will be matched by name. Any that can't be matched will be reported after import.
+                Re-importing the same file will not create duplicates.
+              </Typography>
+            </>
+          )}
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={handleImportCancel}>Cancel</Button>
+          <Button variant="contained" onClick={handleImportConfirm} disabled={isImporting}>
+            {isImporting ? 'Importing...' : 'Import'}
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      {/* Import Result Dialog */}
+      <Dialog
+        open={importResult !== null}
+        onClose={() => setImportResult(null)}
+        maxWidth="sm"
+        fullWidth
+      >
+        <DialogTitle>Import Complete</DialogTitle>
+        <DialogContent>
+          {importResult && (
+            <>
+              <List dense>
+                <ListItem>
+                  <ListItemText
+                    primary="Ascents"
+                    secondary={`${importResult.results.ascents.imported} imported, ${importResult.results.ascents.skipped} skipped (already exist), ${importResult.results.ascents.failed} unmatched`}
+                  />
+                </ListItem>
+                <ListItem>
+                  <ListItemText
+                    primary="Attempts"
+                    secondary={`${importResult.results.attempts.imported} imported, ${importResult.results.attempts.skipped} skipped (already exist), ${importResult.results.attempts.failed} unmatched`}
+                  />
+                </ListItem>
+                <ListItem>
+                  <ListItemText
+                    primary="Circuits"
+                    secondary={`${importResult.results.circuits.imported} imported, ${importResult.results.circuits.skipped} skipped, ${importResult.results.circuits.failed} failed`}
+                  />
+                </ListItem>
+              </List>
+              {importResult.results.unresolvedClimbs.length > 0 && (
+                <MuiAlert severity="warning" className={styles.unsyncedAlert}>
+                  <AlertTitle>
+                    {importResult.results.unresolvedClimbs.length} climb{importResult.results.unresolvedClimbs.length > 1 ? 's' : ''} could not be matched
+                  </AlertTitle>
+                  <div className={styles.unresolvedList}>
+                    {importResult.results.unresolvedClimbs.slice(0, 20).map((name) => (
+                      <Typography key={name} variant="body2">{name}</Typography>
+                    ))}
+                    {importResult.results.unresolvedClimbs.length > 20 && (
+                      <Typography variant="body2" color="text.secondary">
+                        ...and {importResult.results.unresolvedClimbs.length - 20} more
+                      </Typography>
+                    )}
+                  </div>
+                </MuiAlert>
+              )}
+            </>
+          )}
+        </DialogContent>
+        <DialogActions>
+          <Button variant="contained" onClick={() => setImportResult(null)}>Close</Button>
+        </DialogActions>
       </Dialog>
     </>
   );
