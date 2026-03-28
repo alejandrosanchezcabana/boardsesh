@@ -207,6 +207,32 @@ describe('BoardImportPrompt', () => {
         expect(mockShowMessage).toHaveBeenCalledWith('Account unlinked successfully', 'success');
       });
     });
+
+    it('shows error when unlink fails', async () => {
+      mockFetch
+        .mockResolvedValueOnce(mockCredentialsResponse([tensionCredential]))
+        .mockResolvedValueOnce({
+          ok: false,
+          json: () => Promise.resolve({ error: 'Server error' }),
+        });
+
+      render(<BoardImportPrompt boardType="tension" />);
+
+      await waitFor(() => {
+        expect(screen.getByText('Unlink Account')).toBeTruthy();
+      });
+
+      fireEvent.click(screen.getByText('Unlink Account'));
+
+      await waitFor(() => {
+        expect(screen.getByText('Yes, unlink')).toBeTruthy();
+      });
+      fireEvent.click(screen.getByText('Yes, unlink'));
+
+      await waitFor(() => {
+        expect(mockShowMessage).toHaveBeenCalledWith('Server error', 'error');
+      });
+    });
   });
 
   describe('JSON file validation', () => {
@@ -249,6 +275,35 @@ describe('BoardImportPrompt', () => {
         expect(mockShowMessage).toHaveBeenCalledWith(
           'Invalid file: missing user data. Please select an Aurora JSON export file.',
           'error',
+        );
+      });
+    });
+
+    it('warns when file layout does not match target board', async () => {
+      mockFetch.mockResolvedValue(mockCredentialsResponse([]));
+
+      render(<BoardImportPrompt boardType="tension" />);
+
+      await waitFor(() => {
+        expect(screen.getByText('Import JSON')).toBeTruthy();
+      });
+
+      const mismatchJson = JSON.stringify({
+        user: { username: 'testuser' },
+        climbs: [{ name: 'Test', layout: 'Kilter Board Original' }],
+        ascents: [],
+        attempts: [],
+        circuits: [],
+      });
+      const file = new File([mismatchJson], 'export.json', { type: 'application/json' });
+      const fileInput = document.querySelector('input[type="file"]') as HTMLInputElement;
+
+      fireEvent.change(fileInput, { target: { files: [file] } });
+
+      await waitFor(() => {
+        expect(mockShowMessage).toHaveBeenCalledWith(
+          expect.stringContaining('Kilter Board Original'),
+          'warning',
         );
       });
     });
@@ -333,6 +388,46 @@ describe('BoardImportPrompt', () => {
         expect(screen.getByText('Import Complete')).toBeTruthy();
         expect(mockShowMessage).toHaveBeenCalledWith('Successfully imported 5 items', 'success');
       });
+    });
+
+    it('prevents closing dialog while import is in progress', async () => {
+      mockFetch.mockResolvedValue(mockCredentialsResponse([]));
+      // streamImport never resolves, simulating an in-progress import
+      mockStreamImport.mockImplementation(() => new Promise(() => {}));
+
+      render(<BoardImportPrompt boardType="kilter" />);
+
+      await waitFor(() => {
+        expect(screen.getByText('Import JSON')).toBeTruthy();
+      });
+
+      const validJson = JSON.stringify({
+        user: { username: 'testuser' },
+        ascents: [],
+        attempts: [],
+        circuits: [],
+      });
+      const file = new File([validJson], 'export.json', { type: 'application/json' });
+      const fileInput = document.querySelector('input[type="file"]') as HTMLInputElement;
+      fireEvent.change(fileInput, { target: { files: [file] } });
+
+      await waitFor(() => {
+        expect(screen.getByText('Import Aurora Data')).toBeTruthy();
+      });
+
+      fireEvent.click(screen.getByText('Import'));
+
+      await waitFor(() => {
+        expect(screen.getByText('Importing Aurora Data...')).toBeTruthy();
+      });
+
+      // Dialog should have no Close/Cancel button during import
+      expect(screen.queryByText('Close')).toBeNull();
+      expect(screen.queryByText('Cancel')).toBeNull();
+
+      // The dialog should have disableEscapeKeyDown set
+      const dialog = document.querySelector('[role="dialog"]');
+      expect(dialog).toBeTruthy();
     });
 
     it('shows error state when import fails', async () => {
