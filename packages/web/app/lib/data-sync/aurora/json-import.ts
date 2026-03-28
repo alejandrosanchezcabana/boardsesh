@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { eq, and, inArray } from 'drizzle-orm';
+import { eq, and, inArray, sql } from 'drizzle-orm';
 import { getPool } from '@/app/lib/db/db';
 import { drizzle } from 'drizzle-orm/neon-serverless';
 import type { NeonDatabase } from 'drizzle-orm/neon-serverless';
@@ -15,6 +15,8 @@ import { randomUUID } from 'crypto';
 import { createHash } from 'crypto';
 import { fontGradeToDifficultyId } from '@/app/lib/board-data';
 import { buildInferredSessionsForUser } from './inferred-session-builder';
+
+const BATCH_SIZE = 100;
 
 // ---------------------------------------------------------------------------
 // Zod schema for the Aurora JSON export format
@@ -281,150 +283,151 @@ export async function importJsonExportData(
     onProgress?.({ type: 'progress', step: 'dedup', message: 'Checking for duplicates...' });
     const existingKeys = await getExistingTickKeys(db, userId, boardType);
 
-    // Step 4: Import ascents and attempts in a transaction
+    // Step 4: Collect ascent rows to insert (in-memory dedup first)
+    type AscentRow = typeof boardseshTicks.$inferInsert;
+    const ascentRows: AscentRow[] = [];
+
+    for (const ascent of data.ascents) {
+      const climbUuid = nameToUuid.get(ascent.climb);
+      if (!climbUuid) {
+        result.ascents.failed++;
+        continue;
+      }
+
+      const climbedAt = normalizeTimestamp(ascent.climbed_at);
+      const tickKey = `${climbUuid}:${ascent.angle}:${climbedAt}`;
+
+      if (existingKeys.has(tickKey)) {
+        result.ascents.skipped++;
+        continue;
+      }
+
+      existingKeys.add(tickKey);
+      const status = ascent.count === 1 ? 'flash' : 'send';
+
+      ascentRows.push({
+        uuid: randomUUID(),
+        userId,
+        boardType,
+        climbUuid,
+        angle: ascent.angle,
+        isMirror: false,
+        status,
+        attemptCount: ascent.count,
+        // The JSON export 'stars' field is already on a 1-5 scale (user-facing),
+        // unlike the Aurora API 'quality' field which is 0-3.
+        quality: ascent.stars,
+        difficulty: fontGradeToDifficultyId(ascent.grade),
+        isBenchmark: false,
+        comment: '',
+        climbedAt,
+        createdAt: ascent.created_at ? normalizeTimestamp(ascent.created_at) : now,
+        updatedAt: now,
+        auroraType: 'ascents' as const,
+        auroraId: generateJsonImportAuroraId(climbUuid, ascent.angle, climbedAt, 'ascents'),
+        auroraSyncedAt: now,
+      });
+    }
+
+    // Step 5: Collect attempt rows to insert
+    const attemptRows: AscentRow[] = [];
+
+    for (const attempt of data.attempts) {
+      const climbUuid = nameToUuid.get(attempt.climb);
+      if (!climbUuid) {
+        result.attempts.failed++;
+        continue;
+      }
+
+      const climbedAt = normalizeTimestamp(attempt.climbed_at);
+      const tickKey = `${climbUuid}:${attempt.angle}:${climbedAt}`;
+
+      if (existingKeys.has(tickKey)) {
+        result.attempts.skipped++;
+        continue;
+      }
+
+      existingKeys.add(tickKey);
+
+      attemptRows.push({
+        uuid: randomUUID(),
+        userId,
+        boardType,
+        climbUuid,
+        angle: attempt.angle,
+        isMirror: false,
+        status: 'attempt',
+        attemptCount: attempt.count,
+        quality: null,
+        difficulty: null,
+        isBenchmark: false,
+        comment: '',
+        climbedAt,
+        createdAt: attempt.created_at ? normalizeTimestamp(attempt.created_at) : now,
+        updatedAt: now,
+        auroraType: 'bids' as const,
+        auroraId: generateJsonImportAuroraId(climbUuid, attempt.angle, climbedAt, 'bids'),
+        auroraSyncedAt: now,
+      });
+    }
+
+    // Step 6: Batch-insert ascents and attempts in a transaction
     await client.query('BEGIN');
 
     try {
-      for (let i = 0; i < data.ascents.length; i++) {
-        const ascent = data.ascents[i];
-        const climbUuid = nameToUuid.get(ascent.climb);
-        if (!climbUuid) {
-          result.ascents.failed++;
-          if (i % 10 === 0 || i === data.ascents.length - 1) {
-            onProgress?.({ type: 'progress', step: 'ascents', current: i + 1, total: data.ascents.length });
-          }
-          continue;
-        }
-
-        const climbedAt = normalizeTimestamp(ascent.climbed_at);
-        const tickKey = `${climbUuid}:${ascent.angle}:${climbedAt}`;
-
-        // Cross-source dedup
-        if (existingKeys.has(tickKey)) {
-          result.ascents.skipped++;
-          if (i % 10 === 0 || i === data.ascents.length - 1) {
-            onProgress?.({ type: 'progress', step: 'ascents', current: i + 1, total: data.ascents.length });
-          }
-          continue;
-        }
-
-        const auroraId = generateJsonImportAuroraId(climbUuid, ascent.angle, climbedAt, 'ascents');
-        const status = ascent.count === 1 ? 'flash' : 'send';
-        // The JSON export 'stars' field is already on a 1-5 scale (user-facing),
-        // unlike the Aurora API 'quality' field which is 0-3.
-        const quality = ascent.stars;
-        const difficulty = fontGradeToDifficultyId(ascent.grade);
+      for (let i = 0; i < ascentRows.length; i += BATCH_SIZE) {
+        const batch = ascentRows.slice(i, i + BATCH_SIZE);
 
         await db
           .insert(boardseshTicks)
-          .values({
-            uuid: randomUUID(),
-            userId,
-            boardType,
-            climbUuid,
-            angle: ascent.angle,
-            isMirror: false,
-            status,
-            attemptCount: ascent.count,
-            quality,
-            difficulty,
-            isBenchmark: false,
-            comment: '',
-            climbedAt,
-            createdAt: ascent.created_at ? normalizeTimestamp(ascent.created_at) : now,
-            updatedAt: now,
-            auroraType: 'ascents',
-            auroraId,
-            auroraSyncedAt: now,
-          })
+          .values(batch)
           .onConflictDoUpdate({
             target: boardseshTicks.auroraId,
             set: {
-              climbUuid,
-              angle: ascent.angle,
-              status,
-              attemptCount: ascent.count,
-              quality,
-              difficulty,
-              climbedAt,
-              updatedAt: now,
-              auroraSyncedAt: now,
+              climbUuid: sql`excluded.climb_uuid`,
+              angle: sql`excluded.angle`,
+              status: sql`excluded.status`,
+              attemptCount: sql`excluded.attempt_count`,
+              quality: sql`excluded.quality`,
+              difficulty: sql`excluded.difficulty`,
+              climbedAt: sql`excluded.climbed_at`,
+              updatedAt: sql`excluded.updated_at`,
+              auroraSyncedAt: sql`excluded.aurora_synced_at`,
             },
           });
 
-        existingKeys.add(tickKey);
-        result.ascents.imported++;
-
-        if (i % 10 === 0 || i === data.ascents.length - 1) {
-          onProgress?.({ type: 'progress', step: 'ascents', current: i + 1, total: data.ascents.length });
-        }
+        result.ascents.imported += batch.length;
+        onProgress?.({ type: 'progress', step: 'ascents', current: Math.min(i + BATCH_SIZE, ascentRows.length), total: ascentRows.length });
       }
 
-      // Step 5: Import attempts
-      for (let i = 0; i < data.attempts.length; i++) {
-        const attempt = data.attempts[i];
-        const climbUuid = nameToUuid.get(attempt.climb);
-        if (!climbUuid) {
-          result.attempts.failed++;
-          if (i % 10 === 0 || i === data.attempts.length - 1) {
-            onProgress?.({ type: 'progress', step: 'attempts', current: i + 1, total: data.attempts.length });
-          }
-          continue;
-        }
+      if (ascentRows.length === 0) {
+        onProgress?.({ type: 'progress', step: 'ascents', current: data.ascents.length, total: data.ascents.length });
+      }
 
-        const climbedAt = normalizeTimestamp(attempt.climbed_at);
-        const tickKey = `${climbUuid}:${attempt.angle}:${climbedAt}`;
-
-        if (existingKeys.has(tickKey)) {
-          result.attempts.skipped++;
-          if (i % 10 === 0 || i === data.attempts.length - 1) {
-            onProgress?.({ type: 'progress', step: 'attempts', current: i + 1, total: data.attempts.length });
-          }
-          continue;
-        }
-
-        const auroraId = generateJsonImportAuroraId(climbUuid, attempt.angle, climbedAt, 'bids');
+      for (let i = 0; i < attemptRows.length; i += BATCH_SIZE) {
+        const batch = attemptRows.slice(i, i + BATCH_SIZE);
 
         await db
           .insert(boardseshTicks)
-          .values({
-            uuid: randomUUID(),
-            userId,
-            boardType,
-            climbUuid,
-            angle: attempt.angle,
-            isMirror: false,
-            status: 'attempt',
-            attemptCount: attempt.count,
-            quality: null,
-            difficulty: null,
-            isBenchmark: false,
-            comment: '',
-            climbedAt,
-            createdAt: attempt.created_at ? normalizeTimestamp(attempt.created_at) : now,
-            updatedAt: now,
-            auroraType: 'bids',
-            auroraId,
-            auroraSyncedAt: now,
-          })
+          .values(batch)
           .onConflictDoUpdate({
             target: boardseshTicks.auroraId,
             set: {
-              climbUuid,
-              angle: attempt.angle,
-              attemptCount: attempt.count,
-              climbedAt,
-              updatedAt: now,
-              auroraSyncedAt: now,
+              climbUuid: sql`excluded.climb_uuid`,
+              angle: sql`excluded.angle`,
+              attemptCount: sql`excluded.attempt_count`,
+              climbedAt: sql`excluded.climbed_at`,
+              updatedAt: sql`excluded.updated_at`,
+              auroraSyncedAt: sql`excluded.aurora_synced_at`,
             },
           });
 
-        existingKeys.add(tickKey);
-        result.attempts.imported++;
+        result.attempts.imported += batch.length;
+        onProgress?.({ type: 'progress', step: 'attempts', current: Math.min(i + BATCH_SIZE, attemptRows.length), total: attemptRows.length });
+      }
 
-        if (i % 10 === 0 || i === data.attempts.length - 1) {
-          onProgress?.({ type: 'progress', step: 'attempts', current: i + 1, total: data.attempts.length });
-        }
+      if (attemptRows.length === 0) {
+        onProgress?.({ type: 'progress', step: 'attempts', current: data.attempts.length, total: data.attempts.length });
       }
 
       await client.query('COMMIT');
@@ -433,7 +436,7 @@ export async function importJsonExportData(
       throw error;
     }
 
-    // Step 6: Import circuits as playlists (separate transaction per circuit
+    // Step 7: Import circuits as playlists (separate transaction per circuit
     // so one failure doesn't roll back others or abort the tick transaction)
     for (let ci = 0; ci < data.circuits.length; ci++) {
       const circuit = data.circuits[ci];
@@ -497,13 +500,16 @@ export async function importJsonExportData(
         if (resolvedClimbs.length > 0) {
           await db.delete(playlistClimbs).where(eq(playlistClimbs.playlistId, playlist.id));
 
-          for (let i = 0; i < resolvedClimbs.length; i++) {
-            await db.insert(playlistClimbs).values({
-              playlistId: playlist.id,
-              climbUuid: resolvedClimbs[i],
-              angle: null,
-              position: i,
-            });
+          // Batch-insert playlist climbs
+          const climbValues = resolvedClimbs.map((climbUuid, i) => ({
+            playlistId: playlist.id,
+            climbUuid,
+            angle: null as number | null,
+            position: i,
+          }));
+
+          for (let i = 0; i < climbValues.length; i += BATCH_SIZE) {
+            await db.insert(playlistClimbs).values(climbValues.slice(i, i + BATCH_SIZE));
           }
         }
 
