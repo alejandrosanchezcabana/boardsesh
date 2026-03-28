@@ -29,6 +29,16 @@ export default async function BoardSlugListPage(props: BoardSlugListPageProps) {
   searchParamsObject.pageSize = Math.min(requestedPageSize, MAX_PAGE_SIZE);
   searchParamsObject.page = 0;
 
+  // Personal progress filters require auth which SSR doesn't have.
+  // Include them in the input so the cache key differentiates filtered vs unfiltered results,
+  // but skip the server cache entirely when they're active.
+  const hasProgressFilters = !!(
+    searchParamsObject.hideAttempted ||
+    searchParamsObject.hideCompleted ||
+    searchParamsObject.showOnlyAttempted ||
+    searchParamsObject.showOnlyCompleted
+  );
+
   const searchInput = {
     boardName: parsedParams.board_name,
     layoutId: parsedParams.layout_id,
@@ -54,6 +64,10 @@ export default async function BoardSlugListPage(props: BoardSlugListPageProps) {
           ])
         )
       : undefined,
+    hideAttempted: searchParamsObject.hideAttempted || undefined,
+    hideCompleted: searchParamsObject.hideCompleted || undefined,
+    showOnlyAttempted: searchParamsObject.showOnlyAttempted || undefined,
+    showOnlyCompleted: searchParamsObject.showOnlyCompleted || undefined,
   };
 
   const isDefaultSearch =
@@ -66,7 +80,8 @@ export default async function BoardSlugListPage(props: BoardSlugListPageProps) {
     (searchParamsObject.sortBy || 'ascents') === 'ascents' &&
     (searchParamsObject.sortOrder || 'desc') === 'desc' &&
     !searchParamsObject.onlyTallClimbs &&
-    (!searchParamsObject.holdsFilter || Object.keys(searchParamsObject.holdsFilter).length === 0);
+    (!searchParamsObject.holdsFilter || Object.keys(searchParamsObject.holdsFilter).length === 0) &&
+    !hasProgressFilters;
 
   let searchResponse: ClimbSearchResponse;
   let boardDetails: BoardDetails;

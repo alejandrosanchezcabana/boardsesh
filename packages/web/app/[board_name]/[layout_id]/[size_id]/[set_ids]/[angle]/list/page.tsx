@@ -64,9 +64,15 @@ export default async function DynamicResultsPage(props: {
   searchParamsObject.pageSize = Math.min(requestedPageSize, MAX_PAGE_SIZE);
   searchParamsObject.page = 0;
 
-  // Build the search input for caching
-  // Note: We only cache non-personalized queries (no auth-dependent filters)
-  // User-specific filters (hideAttempted, hideCompleted, etc.) are applied client-side
+  // Personal progress filters require auth which SSR doesn't have.
+  // Include them in the input so the cache key differentiates filtered vs unfiltered results.
+  const hasProgressFilters = !!(
+    searchParamsObject.hideAttempted ||
+    searchParamsObject.hideCompleted ||
+    searchParamsObject.showOnlyAttempted ||
+    searchParamsObject.showOnlyCompleted
+  );
+
   const searchInput = {
     boardName: parsedParams.board_name,
     layoutId: parsedParams.layout_id,
@@ -84,7 +90,6 @@ export default async function DynamicResultsPage(props: {
     name: searchParamsObject.name || undefined,
     setter: searchParamsObject.settername && searchParamsObject.settername.length > 0 ? searchParamsObject.settername : undefined,
     onlyTallClimbs: searchParamsObject.onlyTallClimbs || undefined,
-    // Convert holdsFilter from LitUpHoldsMap to Record<string, HoldState> format expected by GraphQL
     holdsFilter: searchParamsObject.holdsFilter && Object.keys(searchParamsObject.holdsFilter).length > 0
       ? Object.fromEntries(
           Object.entries(searchParamsObject.holdsFilter).map(([key, value]) => [
@@ -93,10 +98,15 @@ export default async function DynamicResultsPage(props: {
           ])
         )
       : undefined,
+    hideAttempted: searchParamsObject.hideAttempted || undefined,
+    hideCompleted: searchParamsObject.hideCompleted || undefined,
+    showOnlyAttempted: searchParamsObject.showOnlyAttempted || undefined,
+    showOnlyCompleted: searchParamsObject.showOnlyCompleted || undefined,
   };
 
   // Check if this is a default search (no custom filters applied)
   // Default searches can be cached much longer (30 days vs 1 hour)
+  // Progress filters always make it non-default (they require per-user auth)
   const isDefaultSearch =
     !searchParamsObject.gradeAccuracy &&
     !searchParamsObject.minGrade &&
@@ -107,7 +117,8 @@ export default async function DynamicResultsPage(props: {
     (searchParamsObject.sortBy || 'ascents') === 'ascents' &&
     (searchParamsObject.sortOrder || 'desc') === 'desc' &&
     !searchParamsObject.onlyTallClimbs &&
-    (!searchParamsObject.holdsFilter || Object.keys(searchParamsObject.holdsFilter).length === 0);
+    (!searchParamsObject.holdsFilter || Object.keys(searchParamsObject.holdsFilter).length === 0) &&
+    !hasProgressFilters;
 
   let searchResponse: ClimbSearchResponse;
   let boardDetails: BoardDetails;
