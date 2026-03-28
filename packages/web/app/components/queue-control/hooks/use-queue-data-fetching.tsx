@@ -6,7 +6,6 @@ import { ParsedBoardRouteParameters, SearchRequestPagination, SearchClimbsResult
 import { useOptionalBoardProvider } from '../../board-provider/board-provider-context';
 import { createGraphQLHttpClient } from '@/app/lib/graphql/client';
 import { SEARCH_CLIMBS, SEARCH_CLIMBS_COUNT, type ClimbSearchResponse, type ClimbSearchCountResponse } from '@/app/lib/graphql/operations/climb-search';
-import { hasActiveFilters } from '../../search-drawer/search-summary-utils';
 import { useWsAuthToken } from '@/app/hooks/use-ws-auth-token';
 
 interface UseQueueDataFetchingProps {
@@ -129,8 +128,7 @@ export const useQueueDataFetching = ({
   });
 
   // Lazy count query — separate from the main search for performance.
-  // 24hr cache when no filters active (count rarely changes), 5min when filtered.
-  const filtersActive = hasActiveFilters(searchParams);
+  // 24hr staleTime since counts don't change frequently enough to matter.
   const countInput = useMemo(() => ({
     boardName: parsedParams.board_name,
     layoutId: parsedParams.layout_id,
@@ -165,7 +163,7 @@ export const useQueueDataFetching = ({
       const result = await client.request<ClimbSearchCountResponse>(SEARCH_CLIMBS_COUNT, { input: countInput });
       return result.searchClimbs.totalCount;
     },
-    staleTime: filtersActive ? 5 * 60 * 1000 : 24 * 60 * 60 * 1000,
+    staleTime: 24 * 60 * 60 * 1000,
     refetchOnWindowFocus: false,
   });
 
