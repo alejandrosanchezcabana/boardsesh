@@ -214,6 +214,44 @@ Failed to decrypt credentials
 - Verify user has `syncStatus: active` or `error` (not `disabled`)
 - Check Aurora API is accessible from the environment
 
+## JSON Export Import (Alternative to API Sync)
+
+Since the Kilter backend has been shut down, API-based sync is no longer available for Kilter users. As an alternative, users can import their data from Aurora's JSON export file.
+
+### How It Works
+
+1. User downloads their data export from Aurora (a `.json` file)
+2. In Boardsesh Settings > Board Accounts, click **Import JSON** on the relevant board card
+3. Select the export file — a preview shows the number of ascents, attempts, and circuits
+4. Confirm — the server resolves climb names to UUIDs, maps grades, and imports the data
+
+### Technical Details
+
+- **Endpoint**: `POST /api/internal/aurora-import`
+- **Implementation**: `packages/web/app/lib/data-sync/aurora/json-import.ts`
+- **UI**: Import button in `packages/web/app/components/settings/aurora-credentials-section.tsx`
+
+### Key Differences from API Sync
+
+| | API Sync | JSON Import |
+|---|---|---|
+| Data identifiers | Aurora UUIDs | Climb names (resolved to UUIDs) |
+| Grade format | Numeric difficulty IDs | Font grade strings ("6c") |
+| Quality/stars | 0-3 scale (internal) | 1-5 scale (user-facing) |
+| Dedup key | Aurora UUID (`auroraId`) | Deterministic hash (`json-import-{hash}`) |
+| Trigger | Automatic (cron every 15min) | Manual (user uploads file) |
+
+### Deduplication
+
+- **Same file re-imported**: Deterministic `auroraId` based on `sha256(climbUuid:angle:climbedAt:type)` ensures `onConflictDoUpdate` handles idempotency.
+- **Cross-source (API + JSON)**: Before inserting, existing ticks are fetched and matched by `(climbUuid, angle, climbedAt)` with normalized timestamps. Matching entries are skipped.
+
+### Climb Name Resolution
+
+Climb names are resolved via `board_climbs` table using a composite index on `(board_type, name)`. When multiple climbs share the same name (rare), the one with the highest `ascensionist_count` is chosen.
+
+Unresolvable names (delisted climbs, typos) are returned to the user in the result dialog so they know which entries could not be imported.
+
 ## Migration from Vercel Cron
 
 After Railway sync is working:

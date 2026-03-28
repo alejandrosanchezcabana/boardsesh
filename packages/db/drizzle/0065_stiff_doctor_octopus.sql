@@ -1,0 +1,1 @@
+CREATE INDEX "board_climbs_name_idx" ON "board_climbs" USING btree ("board_type","name");

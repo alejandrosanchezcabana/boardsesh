@@ -264,6 +264,11 @@ export const boardClimbs = pgTable('board_climbs', {
     table.boardType,
     table.setterUsername,
   ),
+  // Index for climb name lookups (used by JSON import to resolve names to UUIDs)
+  nameIdx: index('board_climbs_name_idx').on(
+    table.boardType,
+    table.name,
+  ),
   // Note: No FK to board_layouts - climbs may reference layouts that don't exist during sync
 }));
 
