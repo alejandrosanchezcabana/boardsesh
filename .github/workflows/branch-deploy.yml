@@ -3,10 +3,19 @@ name: Branch Deploy
 on:
   pull_request:
     types: [opened, synchronize, reopened]
+  workflow_dispatch:
+    inputs:
+      pr_number:
+        description: 'PR number to deploy'
+        required: true
+        type: string
 
 concurrency:
-  group: branch-deploy-${{ github.event.pull_request.number }}
+  group: branch-deploy-${{ github.event.pull_request.number || github.event.inputs.pr_number }}
   cancel-in-progress: true
+
+env:
+  PR_NUMBER: ${{ github.event.pull_request.number || github.event.inputs.pr_number }}
 
 jobs:
   build-images:
@@ -33,14 +42,14 @@ jobs:
           context: .
           file: Dockerfile.web
           push: true
-          tags: ghcr.io/boardsesh/boardsesh-web:pr-${{ github.event.pull_request.number }}
+          tags: ghcr.io/boardsesh/boardsesh-web:pr-${{ env.PR_NUMBER }}
           build-args: |
-            NEXT_PUBLIC_WS_URL=wss://${{ github.event.pull_request.number }}.ws.preview.boardsesh.com/graphql
-            BASE_URL=https://${{ github.event.pull_request.number }}.preview.boardsesh.com
+            NEXT_PUBLIC_WS_URL=wss://${{ env.PR_NUMBER }}.ws.preview.boardsesh.com/graphql
+            BASE_URL=https://${{ env.PR_NUMBER }}.preview.boardsesh.com
           cache-from: |
-            type=gha,scope=web-pr-${{ github.event.pull_request.number }}
+            type=gha,scope=web-pr-${{ env.PR_NUMBER }}
             type=gha,scope=web-main
-          cache-to: type=gha,mode=max,scope=web-pr-${{ github.event.pull_request.number }}
+          cache-to: type=gha,mode=max,scope=web-pr-${{ env.PR_NUMBER }}
 
       - name: Build and push backend image
         uses: docker/build-push-action@v6
@@ -48,11 +57,11 @@ jobs:
           context: .
           file: Dockerfile.backend
           push: true
-          tags: ghcr.io/boardsesh/boardsesh-daemon:pr-${{ github.event.pull_request.number }}
+          tags: ghcr.io/boardsesh/boardsesh-daemon:pr-${{ env.PR_NUMBER }}
           cache-from: |
-            type=gha,scope=backend-pr-${{ github.event.pull_request.number }}
+            type=gha,scope=backend-pr-${{ env.PR_NUMBER }}
             type=gha,scope=backend-main
-          cache-to: type=gha,mode=max,scope=backend-pr-${{ github.event.pull_request.number }}
+          cache-to: type=gha,mode=max,scope=backend-pr-${{ env.PR_NUMBER }}
 
   deploy:
     needs: build-images
@@ -63,7 +72,7 @@ jobs:
 
       - name: Deploy preview containers
         env:
-          PR_NUM: ${{ github.event.pull_request.number }}
+          PR_NUM: ${{ env.PR_NUMBER }}
           NETWORK: branch-deploys
         run: |
           # Stop/remove old containers
@@ -110,7 +119,7 @@ jobs:
 
       - name: Wait for containers to be healthy
         env:
-          PR_NUM: ${{ github.event.pull_request.number }}
+          PR_NUM: ${{ env.PR_NUMBER }}
         run: |
           echo "Waiting for containers to start..."
           sleep 10
@@ -118,6 +127,7 @@ jobs:
 
   comment:
     needs: deploy
+    if: github.event_name == 'pull_request'
     runs-on: ubuntu-latest
     permissions:
       pull-requests: write
@@ -126,7 +136,7 @@ jobs:
         uses: peter-evans/find-comment@v3
         id: fc
         with:
-          issue-number: ${{ github.event.pull_request.number }}
+          issue-number: ${{ env.PR_NUMBER }}
           comment-author: 'github-actions[bot]'
           body-includes: '<!-- branch-deploy -->'
 
@@ -134,7 +144,7 @@ jobs:
         uses: peter-evans/create-or-update-comment@v4
         with:
           comment-id: ${{ steps.fc.outputs.comment-id }}
-          issue-number: ${{ github.event.pull_request.number }}
+          issue-number: ${{ env.PR_NUMBER }}
           edit-mode: replace
           body: |
             <!-- branch-deploy -->
@@ -142,9 +152,9 @@ jobs:
 
             | Service | URL |
             |---------|-----|
-            | Web | https://${{ github.event.pull_request.number }}.preview.boardsesh.com |
-            | Backend | https://${{ github.event.pull_request.number }}.ws.preview.boardsesh.com |
-            | Health | https://${{ github.event.pull_request.number }}.ws.preview.boardsesh.com/health |
+            | Web | https://${{ env.PR_NUMBER }}.preview.boardsesh.com |
+            | Backend | https://${{ env.PR_NUMBER }}.ws.preview.boardsesh.com |
+            | Health | https://${{ env.PR_NUMBER }}.ws.preview.boardsesh.com/health |
 
-            **Commit:** ${{ github.event.pull_request.head.sha }}
-            **Updated:** ${{ github.event.pull_request.updated_at }}
+            **Commit:** ${{ github.sha }}
+            **Updated:** ${{ github.event.pull_request.updated_at || 'manual trigger' }}
