@@ -78,9 +78,7 @@ jobs:
           docker run -d \
             --name backend-pr-${PR_NUM} \
             --network ${NETWORK} \
-            -e DATABASE_URL=postgresql://postgres:preview@db.localtest.me:5432/main \
-            -e NEON_PROXY_HOST=neon-proxy \
-            -e NEON_PROXY_PORT=4444 \
+            -e DATABASE_URL=${{ secrets.BRANCH_DEPLOY_DATABASE_URL }} \
             -e REDIS_URL=redis://redis:6379 \
             -e PORT=8080 \
             -e BOARDSESH_URL=https://${PR_NUM}.preview.boardsesh.com \
@@ -97,9 +95,7 @@ jobs:
           docker run -d \
             --name web-pr-${PR_NUM} \
             --network ${NETWORK} \
-            -e DATABASE_URL=postgres://postgres:preview@db.localtest.me:5432/main \
-            -e NEON_PROXY_HOST=neon-proxy \
-            -e NEON_PROXY_PORT=4444 \
+            -e DATABASE_URL=${{ secrets.BRANCH_DEPLOY_DATABASE_URL }} \
             -e NEXTAUTH_SECRET=branch-deploy-secret-${PR_NUM} \
             -e NEXTAUTH_URL=https://${PR_NUM}.preview.boardsesh.com \
             -e IRON_SESSION_PASSWORD='{"1":"branch-deploy-session-must-be-32-chars!!"}' \
