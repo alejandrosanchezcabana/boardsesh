@@ -246,12 +246,12 @@ describe('BoardImportPrompt', () => {
       });
 
       const fileInput = document.querySelector('input[type="file"]') as HTMLInputElement;
-      const largeFile = new File(['x'.repeat(11 * 1024 * 1024)], 'big.json', { type: 'application/json' });
+      const largeFile = new File(['x'.repeat(201 * 1024 * 1024)], 'big.json', { type: 'application/json' });
 
       fireEvent.change(fileInput, { target: { files: [largeFile] } });
 
       expect(mockShowMessage).toHaveBeenCalledWith(
-        'File is too large (max 10MB). Please check you selected the correct file.',
+        'File is too large (max 200MB). Please check you selected the correct file.',
         'error',
       );
     });
