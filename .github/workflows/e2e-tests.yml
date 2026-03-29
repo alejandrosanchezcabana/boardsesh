@@ -45,7 +45,7 @@ jobs:
           POSTGRES_DB: main
 
     steps:
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@v6
 
     - name: Point db.localtest.me to neon-proxy service
       run: |
