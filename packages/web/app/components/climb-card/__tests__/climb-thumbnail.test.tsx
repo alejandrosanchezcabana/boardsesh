@@ -78,6 +78,60 @@ const climb = {
   benchmark_difficulty: null,
 } as Climb;
 
+describe('ClimbThumbnail placeholder', () => {
+  beforeEach(() => {
+    // Override: IntersectionObserver that does NOT fire, so the placeholder stays visible
+    vi.stubGlobal(
+      'IntersectionObserver',
+      class {
+        observe() {}
+        disconnect() {}
+        unobserve() {}
+      },
+    );
+  });
+
+  it('applies maxHeight matching BoardRenderer default (10vh) to prevent layout shift', () => {
+    const { container } = render(
+      <ClimbThumbnail
+        boardDetails={boardDetails}
+        currentClimb={climb}
+      />,
+    );
+
+    const placeholder = container.firstElementChild as HTMLElement;
+    expect(placeholder.style.maxHeight).toBe('10vh');
+    expect(placeholder.style.aspectRatio).toBe('100/100');
+  });
+
+  it('uses custom maxHeight when provided', () => {
+    const { container } = render(
+      <ClimbThumbnail
+        boardDetails={boardDetails}
+        currentClimb={climb}
+        maxHeight="80px"
+      />,
+    );
+
+    const placeholder = container.firstElementChild as HTMLElement;
+    expect(placeholder.style.maxHeight).toBe('80px');
+  });
+
+  it('reflects board aspect ratio in placeholder', () => {
+    const tallBoard = { ...boardDetails, boardWidth: 548, boardHeight: 868 };
+    const { container } = render(
+      <ClimbThumbnail
+        boardDetails={tallBoard}
+        currentClimb={climb}
+      />,
+    );
+
+    const placeholder = container.firstElementChild as HTMLElement;
+    expect(placeholder.style.aspectRatio).toBe('548/868');
+    expect(placeholder.style.maxHeight).toBe('10vh');
+  });
+});
+
 describe('ClimbThumbnail', () => {
   it('preserves board-slug URL context on /b routes', () => {
     mockPathname = '/b/moonrise-gym/40/list';
