@@ -32,9 +32,18 @@ const BoardLitupHolds = React.memo(
   ({ holdsData, litUpHoldsMap, mirrored, thumbnail, onHoldClick }: BoardLitupHoldsProps) => {
     if (!holdsData) return null;
 
+    // In thumbnail mode, only render holds that are actually lit up (typically 5-15)
+    // instead of iterating all holds on the board (hundreds) with transparent circles.
+    const holdsToRender = thumbnail
+      ? holdsData.filter((hold) => {
+          const entry = litUpHoldsMap[hold.id];
+          return entry?.state && entry.state !== 'OFF';
+        })
+      : holdsData;
+
     return (
       <>
-        {holdsData.map((hold) => {
+        {holdsToRender.map((hold) => {
           const isLitUp = litUpHoldsMap[hold.id]?.state && litUpHoldsMap[hold.id].state !== 'OFF';
           const color = isLitUp ? litUpHoldsMap[hold.id].color : 'transparent';
 

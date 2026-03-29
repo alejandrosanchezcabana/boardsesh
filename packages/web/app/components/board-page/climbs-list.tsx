@@ -4,6 +4,7 @@ import IconButton from '@mui/material/IconButton';
 import Box from '@mui/material/Box';
 import AppsOutlined from '@mui/icons-material/AppsOutlined';
 import FormatListBulletedOutlined from '@mui/icons-material/FormatListBulletedOutlined';
+import { useWindowVirtualizer } from '@tanstack/react-virtual';
 import { track } from '@vercel/analytics';
 import { Climb, BoardDetails } from '@/app/lib/types';
 import ClimbCard from '../climb-card/climb-card';
@@ -17,11 +18,13 @@ type ViewMode = 'grid' | 'list';
 
 const VIEW_MODE_PREFERENCE_KEY = 'climbListViewMode';
 
+// Estimated height of a ClimbListItem row (px). Used by the virtualizer
+// for initial layout; measured heights replace it after mount.
+const ESTIMATED_LIST_ITEM_HEIGHT = 76;
+
 export type ClimbsListProps = {
   boardDetails: BoardDetails;
-  /** Map of "boardType:layoutId" -> BoardDetails for multi-board contexts */
   boardDetailsMap?: Record<string, BoardDetails>;
-  /** Set of climb UUIDs that are unsupported (no matching user board) */
   unsupportedClimbs?: Set<string>;
   climbs: Climb[];
   selectedClimbUuid?: string | null;
@@ -32,9 +35,7 @@ export type ClimbsListProps = {
   header?: React.ReactNode;
   headerInline?: React.ReactNode;
   hideEndMessage?: boolean;
-  /** Optional extra content to render below each climb item (e.g., per-user tick details in sessions) */
   renderItemExtra?: (climb: Climb) => React.ReactNode;
-  /** When true, adds a bottom spacer to prevent the mobile Safari bottom nav bar from covering the last item */
   showBottomSpacer?: boolean;
 };
 
@@ -69,12 +70,9 @@ const ClimbsList = ({
 }: ClimbsListProps) => {
   const [viewMode, setViewMode] = useState<ViewMode>('list');
 
-  // Keep a ref to onClimbSelect so handleClimbDoubleClick stays stable
-  // while always calling the latest callback (avoids stale closure from ClimbListItem's custom memo)
   const onClimbSelectRef = useRef(onClimbSelect);
   onClimbSelectRef.current = onClimbSelect;
 
-  // Read stored view mode preference after mount to avoid hydration mismatch
   useEffect(() => {
     getPreference<ViewMode>(VIEW_MODE_PREFERENCE_KEY).then((stored) => {
       if (stored === 'grid' || stored === 'list') {
@@ -103,20 +101,14 @@ const ClimbsList = ({
     isFetching,
   });
 
-  // Memoized handler for climb card double-click
-  // Uses ref so this callback is stable and never stale, even when
-  // ClimbListItem's custom memo skips re-renders on onSelect changes
   const handleClimbDoubleClick = useCallback(
     (climb: Climb) => {
       onClimbSelectRef.current?.(climb);
-      track('Climb List Card Clicked', {
-        climbUuid: climb.uuid,
-      });
+      track('Climb List Card Clicked', { climbUuid: climb.uuid });
     },
     [],
   );
 
-  // Memoize climb-specific handlers to prevent unnecessary re-renders
   const climbHandlersMap = useMemo(() => {
     const map = new Map<string, () => void>();
     climbs.forEach(climb => {
@@ -125,7 +117,6 @@ const ClimbsList = ({
     return map;
   }, [climbs, handleClimbDoubleClick]);
 
-  // Resolve per-climb boardDetails when boardDetailsMap is provided
   const resolveBoardDetails = useCallback(
     (climb: Climb): BoardDetails => {
       if (boardDetailsMap && climb.boardType && climb.layoutId != null) {
@@ -137,7 +128,24 @@ const ClimbsList = ({
     [boardDetails, boardDetailsMap],
   );
 
-  // Memoize sx prop objects to prevent recreation on every render
+  // --- Window virtualizer for list mode ---
+  const virtualizer = useWindowVirtualizer({
+    count: climbs.length,
+    estimateSize: () => ESTIMATED_LIST_ITEM_HEIGHT,
+    overscan: 5,
+    getItemKey: (index) => climbs[index].uuid,
+  });
+
+  // Trigger load-more when the last virtual item is rendered
+  const virtualItems = virtualizer.getVirtualItems();
+  const lastItem = virtualItems[virtualItems.length - 1];
+  useEffect(() => {
+    if (lastItem && lastItem.index >= climbs.length - 3 && hasMore && !isFetching) {
+      handleLoadMore();
+    }
+  }, [lastItem?.index, climbs.length, hasMore, isFetching, handleLoadMore]);
+
+  // Memoize sx prop objects
   const headerBoxSx = useMemo(() => ({
     display: 'flex',
     alignItems: 'center',
@@ -183,9 +191,7 @@ const ClimbsList = ({
 
   return (
     <Box>
-      {/* Optional header content (e.g. BoardCreationBanner) */}
       {header}
-      {/* View mode toggle + optional inline header content */}
       <Box sx={headerBoxSx}>
         {headerInline}
         <Box sx={viewModeToggleBoxSx}>
@@ -211,7 +217,7 @@ const ClimbsList = ({
       </Box>
 
       {viewMode === 'grid' ? (
-        /* Grid (card) mode */
+        /* Grid (card) mode — not virtualized */
         <Box sx={gridContainerSx}>
           {climbs.map((climb, index) => (
             <Box key={climb.uuid} sx={cardBoxSx}>
@@ -234,30 +240,50 @@ const ClimbsList = ({
           ) : null}
         </Box>
       ) : (
-        /* List (compact) mode */
-        <div>
-          {climbs.map((climb, index) => (
-            <div
-              key={climb.uuid}
-              {...(index === 0 ? { id: 'onboarding-climb-card' } : {})}
-            >
-              <ClimbListItem
-                climb={climb}
-                boardDetails={resolveBoardDetails(climb)}
-                selected={selectedClimbUuid === climb.uuid}
-                onSelect={climbHandlersMap.get(climb.uuid)}
-                unsupported={unsupportedClimbs?.has(climb.uuid)}
-              />
-              {renderItemExtra?.(climb)}
-            </div>
-          ))}
-          {isFetching && (!climbs || climbs.length === 0) ? (
+        /* List (compact) mode — virtualized with window scroll */
+        <div
+          style={{
+            height: virtualizer.getTotalSize(),
+            width: '100%',
+            position: 'relative',
+          }}
+        >
+          {isFetching && climbs.length === 0 ? (
             <ClimbsListSkeleton aspectRatio={boardDetails.boardWidth / boardDetails.boardHeight} viewMode="list" />
-          ) : null}
+          ) : (
+            virtualItems.map((virtualRow) => {
+              const climb = climbs[virtualRow.index];
+              return (
+                <div
+                  key={virtualRow.key}
+                  data-index={virtualRow.index}
+                  ref={virtualizer.measureElement}
+                  style={{
+                    position: 'absolute',
+                    top: 0,
+                    left: 0,
+                    width: '100%',
+                    transform: `translateY(${virtualRow.start}px)`,
+                  }}
+                >
+                  <div {...(virtualRow.index === 0 ? { id: 'onboarding-climb-card' } : {})}>
+                    <ClimbListItem
+                      climb={climb}
+                      boardDetails={resolveBoardDetails(climb)}
+                      selected={selectedClimbUuid === climb.uuid}
+                      onSelect={climbHandlersMap.get(climb.uuid)}
+                      unsupported={unsupportedClimbs?.has(climb.uuid)}
+                    />
+                  </div>
+                  {renderItemExtra?.(climb)}
+                </div>
+              );
+            })
+          )}
         </div>
       )}
 
-      {/* Sentinel element for Intersection Observer - needs min-height to be observable */}
+      {/* Sentinel for infinite scroll (grid mode fallback) */}
       <Box ref={sentinelRef} sx={sentinelBoxSx}>
         {isFetching && climbs.length > 0 && (
           viewMode === 'grid' ? (
@@ -275,7 +301,6 @@ const ClimbsList = ({
         )}
       </Box>
 
-      {/* Bottom spacer to prevent bottom nav bar from covering last item on mobile Safari */}
       {showBottomSpacer && (
         <Box sx={{ height: themeTokens.layout.bottomNavSpacer }} aria-hidden />
       )}
