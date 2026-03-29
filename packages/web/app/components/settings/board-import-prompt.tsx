@@ -158,9 +158,9 @@ export default function BoardImportPrompt({ boardType }: BoardImportPromptProps)
     const file = event.target.files?.[0];
     if (!file) return;
 
-    const maxSizeBytes = 10 * 1024 * 1024;
+    const maxSizeBytes = 200 * 1024 * 1024;
     if (file.size > maxSizeBytes) {
-      showMessage('File is too large (max 10MB). Please check you selected the correct file.', 'error');
+      showMessage('File is too large (max 200MB). Please check you selected the correct file.', 'error');
       event.target.value = '';
       return;
     }
@@ -189,11 +189,22 @@ export default function BoardImportPrompt({ boardType }: BoardImportPromptProps)
           }
         }
 
-        setImportRawData(json);
+        // Strip heavy unused fields before storing - only keep what the import uses.
+        // The full export can be 50MB+ due to the climbs array containing all climb
+        // definitions with hold data. We only need user, ascents, attempts, and circuits.
+        // TODO: Import user's own climbs (drafts) once the export format is verified.
+        const strippedData = {
+          user: json.user,
+          ascents: Array.isArray(json.ascents) ? json.ascents : [],
+          attempts: Array.isArray(json.attempts) ? json.attempts : [],
+          circuits: Array.isArray(json.circuits) ? json.circuits : [],
+        };
+
+        setImportRawData(strippedData);
         setImportPreview({
-          ascents: Array.isArray(json.ascents) ? json.ascents.length : 0,
-          attempts: Array.isArray(json.attempts) ? json.attempts.length : 0,
-          circuits: Array.isArray(json.circuits) ? json.circuits.length : 0,
+          ascents: strippedData.ascents.length,
+          attempts: strippedData.attempts.length,
+          circuits: strippedData.circuits.length,
           username: json.user.username,
         });
         setImportPhase('preview');

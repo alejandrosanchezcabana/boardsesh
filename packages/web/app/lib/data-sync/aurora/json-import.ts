@@ -277,6 +277,7 @@ export async function importJsonExportData(
   boardType: BoardType,
   data: AuroraExportData,
   onProgress?: (event: ImportProgressEvent) => void,
+  options?: { skipSessionBuild?: boolean },
 ): Promise<ImportResult> {
   const result: ImportResult = {
     ascents: { imported: 0, skipped: 0, failed: 0 },
@@ -507,16 +508,19 @@ export async function importJsonExportData(
       onProgress?.({ type: 'progress', step: 'circuits', current: ci + 1, total: data.circuits.length });
     }
 
-    // Step 7: Build inferred sessions for imported ticks
-    onProgress?.({ type: 'progress', step: 'sessions', message: 'Building sessions...' });
-    if (result.ascents.imported > 0 || result.attempts.imported > 0) {
-      try {
-        const assigned = await buildInferredSessionsForUser(userId);
-        if (assigned > 0) {
-          console.log(`Built inferred sessions: assigned ${assigned} ticks for user ${userId}`);
+    // Step 7: Build inferred sessions for imported ticks (skipped during chunked imports
+    // until the final chunk to avoid rebuilding sessions on every batch)
+    if (!options?.skipSessionBuild) {
+      onProgress?.({ type: 'progress', step: 'sessions', message: 'Building sessions...' });
+      if (result.ascents.imported > 0 || result.attempts.imported > 0) {
+        try {
+          const assigned = await buildInferredSessionsForUser(userId);
+          if (assigned > 0) {
+            console.log(`Built inferred sessions: assigned ${assigned} ticks for user ${userId}`);
+          }
+        } catch (error) {
+          console.error('Error building inferred sessions after JSON import:', error);
         }
-      } catch (error) {
-        console.error('Error building inferred sessions after JSON import:', error);
       }
     }
 
