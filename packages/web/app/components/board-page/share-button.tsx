@@ -1,7 +1,6 @@
 'use client';
 
 import React, { useState } from 'react';
-import GroupOutlined from '@mui/icons-material/GroupOutlined';
 import ContentCopyOutlined from '@mui/icons-material/ContentCopyOutlined';
 import EmojiEvents from '@mui/icons-material/EmojiEvents';
 import CircularProgress from '@mui/material/CircularProgress';
@@ -196,7 +195,7 @@ export const ShareBoardButton = () => {
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
   const [joinSessionId, setJoinSessionId] = useState('');
   const [showAuthModal, setShowAuthModal] = useState(false);
-  const [activeNoSessionTab, setActiveNoSessionTab] = useState('start');
+  const [activeNoSessionTab, setActiveNoSessionTab] = useState('led');
   const [activeSessionTab, setActiveSessionTab] = useState('session');
 
   const isLoggedIn = authStatus === 'authenticated';
@@ -489,7 +488,7 @@ export const ShareBoardButton = () => {
           onClick={showDrawer}
           color={isSessionActive ? 'primary' : 'default'}
         >
-          {isConnecting ? <CircularProgress size={16} /> : <GroupOutlined />}
+          {isConnecting ? <CircularProgress size={16} /> : <LightbulbOutlined />}
         </IconButton>
       </Badge>
       <SwipeableDrawer
@@ -535,18 +534,18 @@ export const ShareBoardButton = () => {
               {!isSessionActive && !isConnecting && (
                 <>
                   <Tabs value={activeNoSessionTab} onChange={(_, v) => setActiveNoSessionTab(v)}>
+                    <Tab label="Connect to Board" value="led" />
                     <Tab label="Start Session" value="start" />
                     <Tab label="Join Session" value="join" />
-                    <Tab label="Connect to Board" value="led" />
                   </Tabs>
+                  <TabPanel value={activeNoSessionTab} index="led">
+                    {ledTabContent}
+                  </TabPanel>
                   <TabPanel value={activeNoSessionTab} index="start">
                     {startTabContent}
                   </TabPanel>
                   <TabPanel value={activeNoSessionTab} index="join">
                     {joinTabContent}
-                  </TabPanel>
-                  <TabPanel value={activeNoSessionTab} index="led">
-                    {ledTabContent}
                   </TabPanel>
                 </>
               )}
