@@ -25,8 +25,8 @@ export default async function RootLayout({ children }: { children: React.ReactNo
   const boardConfigs = await getAllBoardConfigs();
 
   return (
-    <html lang="en" data-theme="dark">
-      <body>
+    <html lang="en" data-theme="dark" suppressHydrationWarning>
+      <body suppressHydrationWarning>
         <Analytics />
         <QueryClientProvider>
           <SessionProviderWrapper>

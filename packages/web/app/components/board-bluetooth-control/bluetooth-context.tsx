@@ -1,6 +1,6 @@
 'use client';
 
-import React, { createContext, useContext, useEffect, useMemo } from 'react';
+import React, { createContext, useContext, useEffect, useMemo, useState } from 'react';
 import { track } from '@vercel/analytics';
 import { useBoardBluetooth } from './use-board-bluetooth';
 import { useQueueContext } from '../graphql-queue';
@@ -30,23 +30,25 @@ export function BluetoothProvider({
   const { isConnected, loading, connect, disconnect, sendFramesToBoard } =
     useBoardBluetooth({ boardDetails });
 
-  const isBluetoothSupported = useMemo(
-    () => {
-      if (typeof window === 'undefined') return false;
-      if (isCapacitor()) return true;
-      return typeof navigator !== 'undefined' && !!navigator.bluetooth;
-    },
-    [],
-  );
+  const [isBluetoothSupported, setIsBluetoothSupported] = useState(false);
+  const [isIOS, setIsIOS] = useState(false);
 
-  const isIOS = useMemo(
-    () =>
+  useEffect(() => {
+    if (isCapacitor()) {
+      setIsBluetoothSupported(true);
+    } else if (typeof navigator !== 'undefined' && !!navigator.bluetooth) {
+      setIsBluetoothSupported(true);
+    }
+
+    if (
       typeof navigator !== 'undefined' &&
       /iPhone|iPad|iPod/i.test(
         navigator.userAgent || (navigator as { vendor?: string }).vendor || '',
-      ),
-    [],
-  );
+      )
+    ) {
+      setIsIOS(true);
+    }
+  }, []);
 
   // Auto-send climb when currentClimbQueueItem changes (only if connected)
   useEffect(() => {
