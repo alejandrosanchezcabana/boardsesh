@@ -42,71 +42,87 @@ export const sessionFeedQueries = {
       }
     }
 
-    const boardFilterSql = boardTypeFilter
-      ? sql`AND t.board_type = ${boardTypeFilter}`
-      : sql``;
-
-    const layoutFilterSql = layoutIdFilter !== null
-      ? sql`AND c.layout_id = ${layoutIdFilter}`
-      : sql``;
-
-    // Simplified CTE: every tick now has either session_id or inferred_session_id.
-    // Always sorted chronologically (newest first).
+    // Optimized query: read pre-computed stats from inferred_sessions table
+    // instead of aggregating all ticks on every request. Party sessions (small
+    // subset) still aggregate from ticks using the session_id index.
     let sessionRows;
     try {
+      // Build board filter conditions for inferred sessions (EXISTS subquery)
+      const inferredBoardFilter = boardTypeFilter
+        ? sql`AND EXISTS (
+            SELECT 1 FROM boardsesh_ticks tf
+            ${layoutIdFilter !== null ? sql`LEFT JOIN board_climbs cf ON cf.uuid = tf.climb_uuid AND cf.board_type = tf.board_type` : sql``}
+            WHERE tf.inferred_session_id = s.id
+              AND tf.board_type = ${boardTypeFilter}
+              ${layoutIdFilter !== null ? sql`AND cf.layout_id = ${layoutIdFilter}` : sql``}
+          )`
+        : sql``;
+
+      // Build board filter conditions for party session ticks
+      const partyBoardFilter = boardTypeFilter
+        ? sql`AND t.board_type = ${boardTypeFilter}`
+        : sql``;
+      const partyLayoutFilter = layoutIdFilter !== null
+        ? sql`AND cf.layout_id = ${layoutIdFilter}`
+        : sql``;
+      const partyLayoutJoin = layoutIdFilter !== null
+        ? sql`LEFT JOIN board_climbs cf ON cf.uuid = t.climb_uuid AND cf.board_type = t.board_type`
+        : sql``;
+
       sessionRows = await db.execute(sql`
-        WITH tick_sessions AS (
+        WITH session_base AS (
+          -- Inferred sessions: read directly from materialized table (uses last_tick_idx)
           SELECT
-            t.uuid AS tick_uuid,
-            t.user_id,
-            t.climbed_at,
-            t.status,
-            t.board_type,
-            t.difficulty,
-            t.attempt_count,
-            COALESCE(t.session_id, t.inferred_session_id) AS effective_session_id,
-            CASE WHEN t.session_id IS NOT NULL THEN 'party' ELSE 'inferred' END AS session_type
-          FROM boardsesh_ticks t
-          LEFT JOIN board_climbs c
-            ON c.uuid = t.climb_uuid AND c.board_type = t.board_type
-          WHERE COALESCE(t.session_id, t.inferred_session_id) IS NOT NULL
-            ${boardFilterSql}
-            ${layoutFilterSql}
-        ),
-        session_agg AS (
+            s.id AS session_id,
+            'inferred'::text AS session_type,
+            s.first_tick_at AS session_first_tick,
+            s.last_tick_at AS session_last_tick,
+            s.tick_count::int AS tick_count,
+            s.total_sends::int AS total_sends,
+            s.total_flashes::int AS total_flashes,
+            s.total_attempts::int AS total_attempts
+          FROM inferred_sessions s
+          WHERE s.tick_count > 0
+            ${inferredBoardFilter}
+
+          UNION ALL
+
+          -- Party sessions: aggregate from ticks (indexed by session_id, much smaller set)
           SELECT
-            ts.effective_session_id AS session_id,
-            MAX(ts.session_type) AS session_type,
-            MIN(ts.climbed_at) AS session_first_tick,
-            MAX(ts.climbed_at) AS session_last_tick,
-            COUNT(*) AS tick_count,
-            COUNT(*) FILTER (WHERE ts.status IN ('flash', 'send')) AS total_sends,
-            COUNT(*) FILTER (WHERE ts.status = 'flash') AS total_flashes,
+            t.session_id,
+            'party'::text,
+            MIN(t.climbed_at),
+            MAX(t.climbed_at),
+            COUNT(*)::int,
+            COUNT(*) FILTER (WHERE t.status IN ('flash', 'send'))::int,
+            COUNT(*) FILTER (WHERE t.status = 'flash')::int,
             (
-              COALESCE(SUM(GREATEST(ts.attempt_count - 1, 0)) FILTER (WHERE ts.status = 'send'), 0)
-              + COALESCE(SUM(ts.attempt_count) FILTER (WHERE ts.status = 'attempt'), 0)
-            )::int AS total_attempts,
-            ARRAY_AGG(DISTINCT ts.board_type) AS board_types,
-            ARRAY_AGG(DISTINCT ts.user_id) AS user_ids
-          FROM tick_sessions ts
-          GROUP BY ts.effective_session_id
+              COALESCE(SUM(GREATEST(t.attempt_count - 1, 0)) FILTER (WHERE t.status = 'send'), 0)
+              + COALESCE(SUM(t.attempt_count) FILTER (WHERE t.status = 'attempt'), 0)
+            )::int
+          FROM boardsesh_ticks t
+          ${partyLayoutJoin}
+          WHERE t.session_id IS NOT NULL
+            ${partyBoardFilter}
+            ${partyLayoutFilter}
+          GROUP BY t.session_id
         ),
         scored AS (
           SELECT
-            sa.*,
+            sb.*,
             COALESCE(vc.score, 0) AS vote_score,
             COALESCE(vc.upvotes, 0) AS vote_up,
             COALESCE(vc.downvotes, 0) AS vote_down,
             COALESCE(cc.comment_count, 0) AS comment_count
-          FROM session_agg sa
+          FROM session_base sb
           LEFT JOIN vote_counts vc
-            ON vc.entity_type = 'session' AND vc.entity_id = sa.session_id
+            ON vc.entity_type = 'session' AND vc.entity_id = sb.session_id
           LEFT JOIN (
             SELECT entity_id, COUNT(*) AS comment_count
             FROM comments
             WHERE entity_type = 'session' AND deleted_at IS NULL
             GROUP BY entity_id
-          ) cc ON cc.entity_id = sa.session_id
+          ) cc ON cc.entity_id = sb.session_id
         )
         SELECT *
         FROM scored
@@ -129,8 +145,6 @@ export const sessionFeedQueries = {
       total_sends: number;
       total_flashes: number;
       total_attempts: number;
-      board_types: string[];
-      user_ids: string[];
       vote_score: number;
       vote_up: number;
       vote_down: number;
@@ -140,20 +154,22 @@ export const sessionFeedQueries = {
     const hasMore = rows.length > limit;
     const resultRows = hasMore ? rows.slice(0, limit) : rows;
 
-    // Batch enrichment: 3 queries total instead of 3 per session
+    // Batch enrichment: 4 queries total instead of scanning all ticks
     const sessionIds = resultRows.map((r) => r.session_id);
     const sessionTypes = new Map(resultRows.map((r) => [r.session_id, r.session_type]));
 
-    const [participantMap, gradeDistMap, metaMap] = await Promise.all([
+    const [participantMap, gradeDistMap, metaMap, boardTypesMap] = await Promise.all([
       fetchParticipantsBatch(sessionIds),
       fetchGradeDistributionBatch(sessionIds),
       fetchSessionMetaBatch(sessionIds, sessionTypes),
+      fetchBoardTypesBatch(sessionIds),
     ]);
 
     const sessions: SessionFeedItem[] = resultRows.map((row) => {
       const participants = participantMap.get(row.session_id) ?? [];
       const gradeDistribution = gradeDistMap.get(row.session_id) ?? [];
       const sessionMeta = metaMap.get(row.session_id) ?? null;
+      const boardTypes = boardTypesMap.get(row.session_id) ?? [];
 
       const firstTime = new Date(row.session_first_tick).getTime();
       const lastTime = new Date(row.session_last_tick).getTime();
@@ -170,7 +186,7 @@ export const sessionFeedQueries = {
         totalAttempts: Number(row.total_attempts),
         tickCount: Number(row.tick_count),
         gradeDistribution,
-        boardTypes: row.board_types,
+        boardTypes,
         hardestGrade: gradeDistribution.length > 0 ? gradeDistribution[0].grade : null,
         firstTickAt: typeof row.session_first_tick === 'object'
           ? (row.session_first_tick as unknown as Date).toISOString()
@@ -700,5 +716,35 @@ async function fetchSessionMetaBatch(
     }
   }
 
+  return map;
+}
+
+/**
+ * Fetch distinct board types for multiple sessions in a single query.
+ * Returns a Map from sessionId to board types array.
+ */
+async function fetchBoardTypesBatch(
+  sessionIds: string[],
+): Promise<Map<string, string[]>> {
+  if (sessionIds.length === 0) return new Map();
+
+  const result = await db.execute(sql`
+    SELECT
+      COALESCE(t.session_id, t.inferred_session_id) AS effective_session_id,
+      ARRAY_AGG(DISTINCT t.board_type) AS board_types
+    FROM boardsesh_ticks t
+    WHERE COALESCE(t.session_id, t.inferred_session_id) IN ${sql`(${sql.join(sessionIds.map(id => sql`${id}`), sql`, `)})`}
+    GROUP BY effective_session_id
+  `);
+
+  const rows = (result as unknown as { rows: Array<{
+    effective_session_id: string;
+    board_types: string[];
+  }> }).rows;
+
+  const map = new Map<string, string[]>();
+  for (const r of rows) {
+    map.set(r.effective_session_id, r.board_types);
+  }
   return map;
 }

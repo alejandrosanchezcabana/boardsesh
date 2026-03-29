@@ -1,4 +1,4 @@
-import { eq, and, desc, inArray, count } from 'drizzle-orm';
+import { eq, and, desc, inArray } from 'drizzle-orm';
 import type { ConnectionContext } from '@boardsesh/shared-schema';
 import { db } from '../../../db/client';
 import * as dbSchema from '@boardsesh/db/schema';
@@ -38,14 +38,6 @@ export const socialFeedQueries = {
       };
     }
 
-    // Get total count
-    const countResult = await db
-      .select({ count: count() })
-      .from(dbSchema.boardseshTicks)
-      .where(inArray(dbSchema.boardseshTicks.userId, followedUserIds));
-
-    const totalCount = Number(countResult[0]?.count || 0);
-
     // Fetch ticks with user, climb, and grade data
     const results = await db
       .select({
@@ -79,10 +71,13 @@ export const socialFeedQueries = {
       )
       .where(inArray(dbSchema.boardseshTicks.userId, followedUserIds))
       .orderBy(desc(dbSchema.boardseshTicks.climbedAt))
-      .limit(limit)
+      .limit(limit + 1)
       .offset(offset);
 
-    const items = results.map(({ tick, userName, userImage, userDisplayName, userAvatarUrl, climbName, setterUsername, layoutId, frames, difficultyName }) => ({
+    const hasMore = results.length > limit;
+    const resultRows = hasMore ? results.slice(0, limit) : results;
+
+    const items = resultRows.map(({ tick, userName, userImage, userDisplayName, userAvatarUrl, climbName, setterUsername, layoutId, frames, difficultyName }) => ({
       uuid: tick.uuid,
       userId: tick.userId,
       userDisplayName: userDisplayName || userName || undefined,
@@ -107,8 +102,8 @@ export const socialFeedQueries = {
 
     return {
       items,
-      totalCount,
-      hasMore: offset + items.length < totalCount,
+      totalCount: 0, // Intentionally 0 — full COUNT(*) was too expensive. No frontend uses this value.
+      hasMore,
     };
   },
 
@@ -123,13 +118,6 @@ export const socialFeedQueries = {
     const validatedInput = validateInput(FollowingAscentsFeedInputSchema, input || {}, 'input');
     const limit = validatedInput.limit ?? 20;
     const offset = validatedInput.offset ?? 0;
-
-    // Get total count
-    const countResult = await db
-      .select({ count: count() })
-      .from(dbSchema.boardseshTicks);
-
-    const totalCount = Number(countResult[0]?.count || 0);
 
     // Fetch ticks with user, climb, and grade data
     const results = await db
@@ -163,10 +151,13 @@ export const socialFeedQueries = {
         )
       )
       .orderBy(desc(dbSchema.boardseshTicks.climbedAt))
-      .limit(limit)
+      .limit(limit + 1)
       .offset(offset);
 
-    const items = results.map(({ tick, userName, userImage, userDisplayName, userAvatarUrl, climbName, setterUsername, layoutId, frames, difficultyName }) => ({
+    const hasMore = results.length > limit;
+    const resultRows = hasMore ? results.slice(0, limit) : results;
+
+    const items = resultRows.map(({ tick, userName, userImage, userDisplayName, userAvatarUrl, climbName, setterUsername, layoutId, frames, difficultyName }) => ({
       uuid: tick.uuid,
       userId: tick.userId,
       userDisplayName: userDisplayName || userName || undefined,
@@ -191,8 +182,8 @@ export const socialFeedQueries = {
 
     return {
       items,
-      totalCount,
-      hasMore: offset + items.length < totalCount,
+      totalCount: 0, // Intentionally 0 — full COUNT(*) was too expensive. No frontend uses this value.
+      hasMore,
     };
   },
 };

@@ -52,6 +52,10 @@ export const feedItems = pgTable(
       table.createdAt
     ),
     createdAtIdx: index('feed_items_created_at_idx').on(table.createdAt),
+    entityTypeEntityIdIdx: index('feed_items_entity_type_entity_id_idx').on(
+      table.entityType,
+      table.entityId,
+    ),
   })
 );
 

@@ -56,7 +56,10 @@ export const socialNotificationQueries = {
     // Build where clause
     const unreadFilter = unreadOnly ? sql`AND n."read_at" IS NULL` : sql``;
 
-    // Main query
+    // Single query with scalar subqueries for totalCount and unreadCount.
+    // These must be computed over ALL user notifications (not filtered by unreadOnly),
+    // so we use subqueries instead of window functions which would only count
+    // the filtered result set.
     const rawResult = await db.execute(sql`
       SELECT
         n."uuid",
@@ -71,7 +74,9 @@ export const socialNotificationQueries = {
         up."avatar_url" as "actorAvatarUrl",
         u."name" as "actorName",
         u."image" as "actorImage",
-        c."body" as "commentBody"
+        c."body" as "commentBody",
+        (SELECT COUNT(*) FROM "notifications" WHERE "recipient_id" = ${userId}) as "totalCount",
+        (SELECT COUNT(*) FROM "notifications" WHERE "recipient_id" = ${userId} AND "read_at" IS NULL) as "unreadCount"
       FROM "notifications" n
       LEFT JOIN "users" u ON n."actor_id" = u."id"
       LEFT JOIN "user_profiles" up ON n."actor_id" = up."user_id"
@@ -83,27 +88,10 @@ export const socialNotificationQueries = {
       OFFSET ${offset}
     `);
 
-    const rows = (rawResult as unknown as { rows: NotificationRow[] }).rows;
+    const rows = (rawResult as unknown as { rows: (NotificationRow & { totalCount: string; unreadCount: string })[] }).rows;
     const notifications = rows.map(mapNotificationRow);
-
-    // Total count
-    const totalCountResult = await db
-      .select({ count: count() })
-      .from(dbSchema.notifications)
-      .where(eq(dbSchema.notifications.recipientId, userId));
-    const totalCount = Number(totalCountResult[0]?.count || 0);
-
-    // Unread count
-    const unreadCountResult = await db
-      .select({ count: count() })
-      .from(dbSchema.notifications)
-      .where(
-        and(
-          eq(dbSchema.notifications.recipientId, userId),
-          isNull(dbSchema.notifications.readAt),
-        ),
-      );
-    const unreadCount = Number(unreadCountResult[0]?.count || 0);
+    const totalCount = rows.length > 0 ? Number(rows[0].totalCount) : 0;
+    const unreadCount = rows.length > 0 ? Number(rows[0].unreadCount) : 0;
 
     return {
       notifications,

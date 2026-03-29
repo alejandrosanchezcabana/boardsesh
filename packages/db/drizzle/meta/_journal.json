@@ -463,6 +463,13 @@
       "when": 1774657873164,
       "tag": "0065_stiff_doctor_octopus",
       "breakpoints": true
+    },
+    {
+      "idx": 66,
+      "version": "7",
+      "when": 1774998000000,
+      "tag": "0066_optimize_feed_indexes",
+      "breakpoints": true
     }
   ]
 }
