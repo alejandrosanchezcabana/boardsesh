@@ -47,6 +47,8 @@
 	<true/>
 	<key>NSBluetoothAlwaysUsageDescription</key>
 	<string>Boardsesh uses Bluetooth to connect to your climbing training board and illuminate routes.</string>
+	<key>NSLocationWhenInUseUsageDescription</key>
+	<string>Boardsesh uses your location to make your session discoverable to nearby climbers.</string>
 	<key>UIApplicationSceneManifest</key>
 	<dict>
 		<key>UIApplicationSupportsMultipleScenes</key>
