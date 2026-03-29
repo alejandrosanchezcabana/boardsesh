@@ -182,10 +182,12 @@ export const socialCommentQueries = {
       INNER JOIN "users" u ON c."user_id" = u."id"
       LEFT JOIN "user_profiles" up ON c."user_id" = up."user_id"
       LEFT JOIN "comments" parent_c ON c."parent_comment_id" = parent_c."id"
-      LEFT JOIN LATERAL (
-        SELECT COUNT(*) as cnt FROM "comments" r
-        WHERE r."parent_comment_id" = c."id" AND r."deleted_at" IS NULL
-      ) reply_cnt ON true
+      LEFT JOIN (
+        SELECT "parent_comment_id", COUNT(*) as cnt
+        FROM "comments"
+        WHERE "parent_comment_id" IS NOT NULL AND "deleted_at" IS NULL
+        GROUP BY "parent_comment_id"
+      ) reply_cnt ON reply_cnt."parent_comment_id" = c."id"
       LEFT JOIN "vote_counts" vc ON vc."entity_type" = 'comment' AND vc."entity_id" = c."uuid"
       ${authenticatedUserId
         ? sql`LEFT JOIN "votes" my_vote ON my_vote."entity_type" = 'comment' AND my_vote."entity_id" = c."uuid" AND my_vote."user_id" = ${authenticatedUserId}`
@@ -301,10 +303,12 @@ export const socialCommentQueries = {
       INNER JOIN "users" u ON c."user_id" = u."id"
       LEFT JOIN "user_profiles" up ON c."user_id" = up."user_id"
       LEFT JOIN "comments" parent_c ON c."parent_comment_id" = parent_c."id"
-      LEFT JOIN LATERAL (
-        SELECT COUNT(*) as cnt FROM "comments" r
-        WHERE r."parent_comment_id" = c."id" AND r."deleted_at" IS NULL
-      ) reply_cnt ON true
+      LEFT JOIN (
+        SELECT "parent_comment_id", COUNT(*) as cnt
+        FROM "comments"
+        WHERE "parent_comment_id" IS NOT NULL AND "deleted_at" IS NULL
+        GROUP BY "parent_comment_id"
+      ) reply_cnt ON reply_cnt."parent_comment_id" = c."id"
       LEFT JOIN "vote_counts" vc ON vc."entity_type" = 'comment' AND vc."entity_id" = c."uuid"
       ${authenticatedUserId
         ? sql`LEFT JOIN "votes" my_vote ON my_vote."entity_type" = 'comment' AND my_vote."entity_id" = c."uuid" AND my_vote."user_id" = ${authenticatedUserId}`
