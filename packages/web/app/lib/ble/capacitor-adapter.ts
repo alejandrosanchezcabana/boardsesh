@@ -6,16 +6,16 @@ const UART_SERVICE_UUID = '6e400001-b5a3-f393-e0a9-e50e24dcca9e';
 const UART_WRITE_UUID = '6e400002-b5a3-f393-e0a9-e50e24dcca9e';
 
 // Raw Capacitor plugin interface as exposed via window.Capacitor.Plugins.BluetoothLe.
-// This is the LOW-LEVEL plugin — NOT the BleClient wrapper from the npm package.
-// Key difference: `write` expects `value` as a hex string, not a DataView.
-// The BleClient wrapper normally handles this conversion, but we bypass it in hosted mode.
+// The plugin JS is injected by the native shell. We type only the methods we use.
+// IMPORTANT: The raw plugin's write() expects `value` as a hex string, not DataView.
+// The BleClient npm wrapper normally handles this conversion, but we bypass it.
 interface CapacitorBlePlugin {
-  initialize(options?: Record<string, unknown>): Promise<void>;
+  initialize(): Promise<void>;
   isEnabled(): Promise<{ value: boolean }>;
   requestDevice(options: {
     services: string[];
     optionalServices?: string[];
-  }): Promise<{ device: { deviceId: string; name?: string } }>;
+  }): Promise<{ deviceId: string; name?: string }>;
   connect(options: {
     deviceId: string;
   }): Promise<void>;
@@ -32,10 +32,6 @@ interface CapacitorBlePlugin {
     deviceId: string;
     mtu: number;
   }): Promise<{ value: number }>;
-  addListener(
-    eventName: string,
-    callback: (event: Record<string, unknown>) => void,
-  ): Promise<{ remove: () => void }>;
 }
 
 function getBlePlugin(): CapacitorBlePlugin {
@@ -56,13 +52,12 @@ function toHexString(data: Uint8Array): string {
 export class CapacitorBleAdapter implements BluetoothAdapter {
   private deviceId: string | null = null;
   private disconnectCallback: (() => void) | null = null;
-  private disconnectListenerRemove: (() => void) | null = null;
   private mtu = 20; // Conservative default; updated via MTU negotiation after connection
 
   async isAvailable(): Promise<boolean> {
     try {
       const ble = getBlePlugin();
-      await ble.initialize({});
+      await ble.initialize();
       const result = await ble.isEnabled();
       return result.value;
     } catch {
@@ -72,24 +67,13 @@ export class CapacitorBleAdapter implements BluetoothAdapter {
 
   async requestAndConnect(): Promise<BleConnection> {
     const ble = getBlePlugin();
-    await ble.initialize({});
+    await ble.initialize();
 
     // Request device — shows native scan dialog on iOS
-    const result = await ble.requestDevice({
+    const device = await ble.requestDevice({
       services: [AURORA_ADVERTISED_SERVICE_UUID],
       optionalServices: [UART_SERVICE_UUID],
     });
-    const device = result.device;
-
-    // Register disconnect listener BEFORE connecting
-    const listener = await ble.addListener(
-      `disconnected|${device.deviceId}`,
-      () => {
-        this.deviceId = null;
-        this.disconnectCallback?.();
-      },
-    );
-    this.disconnectListenerRemove = () => listener.remove();
 
     // Connect to the device
     await ble.connect({ deviceId: device.deviceId });
@@ -119,8 +103,6 @@ export class CapacitorBleAdapter implements BluetoothAdapter {
       } catch {
         // Ignore disconnect errors (device may already be disconnected)
       }
-      this.disconnectListenerRemove?.();
-      this.disconnectListenerRemove = null;
       this.deviceId = null;
     }
   }
