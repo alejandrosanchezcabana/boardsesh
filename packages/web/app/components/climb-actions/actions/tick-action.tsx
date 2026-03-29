@@ -17,6 +17,7 @@ import AuthModal from '../../auth/auth-modal';
 import { LogAscentForm } from '../../logbook/logascent-form';
 import { track } from '@vercel/analytics';
 import { constructClimbInfoUrl } from '@/app/lib/url-utils';
+import { openExternalUrl } from '@/app/lib/open-external-url';
 import { themeTokens } from '@/app/theme/theme-config';
 import { useAlwaysTickInApp } from '@/app/hooks/use-always-tick-in-app';
 import { useSession } from 'next-auth/react';
@@ -97,7 +98,7 @@ export function TickAction({
 
     if (!isAuthenticated && alwaysUseApp && loaded) {
       const url = constructClimbInfoUrl(boardDetails, climb.uuid);
-      window.open(url, '_blank', 'noopener');
+      openExternalUrl(url);
       onComplete?.();
       return;
     }
@@ -113,7 +114,7 @@ export function TickAction({
 
   const handleOpenInApp = useCallback(() => {
     const url = constructClimbInfoUrl(boardDetails, climb.uuid);
-    window.open(url, '_blank', 'noopener');
+    openExternalUrl(url);
     closeDrawer();
   }, [boardDetails, climb.uuid, angle, closeDrawer]);
 

@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useCallback, useEffect } from 'react';
+import { isNativeApp } from '@/app/lib/ble/capacitor-utils';
 
 export type GeolocationCoordinates = {
   latitude: number;
@@ -26,8 +27,35 @@ const defaultOptions: PositionOptions = {
   maximumAge: 60000, // Cache position for 1 minute
 };
 
+/** Get position using Capacitor Geolocation plugin */
+async function getCapacitorPosition(options: PositionOptions): Promise<GeolocationCoordinates> {
+  const plugin = window.Capacitor?.Plugins?.Geolocation;
+  if (!plugin) {
+    throw new Error('Capacitor Geolocation plugin not available');
+  }
+  const result = await plugin.getCurrentPosition({
+    enableHighAccuracy: options.enableHighAccuracy,
+    timeout: options.timeout,
+    maximumAge: options.maximumAge,
+  });
+  return {
+    latitude: result.coords.latitude,
+    longitude: result.coords.longitude,
+    accuracy: result.coords.accuracy,
+  };
+}
+
+/** Check permission state using Capacitor Geolocation plugin */
+async function checkCapacitorPermission(): Promise<PermissionState> {
+  const plugin = window.Capacitor?.Plugins?.Geolocation;
+  if (!plugin) return 'denied';
+  const result = await plugin.checkPermissions();
+  return result.location;
+}
+
 /**
- * Custom hook for accessing browser geolocation.
+ * Custom hook for accessing geolocation.
+ * Uses Capacitor Geolocation plugin on native apps, browser API on web.
  * @param options Position options for geolocation API
  */
 export function useGeolocation(options: PositionOptions = defaultOptions): UseGeolocationReturn {
@@ -40,6 +68,13 @@ export function useGeolocation(options: PositionOptions = defaultOptions): UseGe
 
   // Check permission state on mount
   useEffect(() => {
+    if (isNativeApp()) {
+      checkCapacitorPermission()
+        .then((permState) => setState((prev) => ({ ...prev, permissionState: permState })))
+        .catch(() => {});
+      return;
+    }
+
     if (typeof navigator === 'undefined' || !navigator.permissions) {
       return;
     }
@@ -57,6 +92,10 @@ export function useGeolocation(options: PositionOptions = defaultOptions): UseGe
   }, []);
 
   const getCurrentPosition = useCallback((): Promise<GeolocationCoordinates> => {
+    if (isNativeApp()) {
+      return getCapacitorPosition(options);
+    }
+
     return new Promise((resolve, reject) => {
       if (typeof navigator === 'undefined' || !navigator.geolocation) {
         reject(new Error('Geolocation is not supported by this browser'));
@@ -83,6 +122,14 @@ export function useGeolocation(options: PositionOptions = defaultOptions): UseGe
     setState((prev) => ({ ...prev, loading: true, error: null }));
 
     try {
+      // On native, request permissions explicitly before getting position
+      if (isNativeApp()) {
+        const plugin = window.Capacitor?.Plugins?.Geolocation;
+        if (plugin) {
+          await plugin.requestPermissions();
+        }
+      }
+
       const coords = await getCurrentPosition();
       setState((prev) => ({
         ...prev,

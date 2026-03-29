@@ -16,6 +16,7 @@ import { track } from '@vercel/analytics';
 import { LogAscentDrawer } from './log-ascent-drawer';
 import AuthModal from '../auth/auth-modal';
 import { constructClimbInfoUrl } from '@/app/lib/url-utils';
+import { openExternalUrl } from '@/app/lib/open-external-url';
 import { themeTokens } from '@/app/theme/theme-config';
 import { useAlwaysTickInApp } from '@/app/hooks/use-always-tick-in-app';
 
@@ -39,7 +40,7 @@ export const TickButton: React.FC<TickButtonProps> = ({ currentClimb, angle, boa
 
     if (!isAuthenticated && alwaysUseApp && loaded && currentClimb) {
       const url = constructClimbInfoUrl(boardDetails, currentClimb.uuid);
-      window.open(url, '_blank', 'noopener');
+      openExternalUrl(url);
       return;
     }
 
@@ -50,7 +51,7 @@ export const TickButton: React.FC<TickButtonProps> = ({ currentClimb, angle, boa
   const handleOpenInApp = () => {
     if (!currentClimb) return;
     const url = constructClimbInfoUrl(boardDetails, currentClimb.uuid);
-    window.open(url, '_blank', 'noopener');
+    openExternalUrl(url);
     closeDrawer();
   };
 

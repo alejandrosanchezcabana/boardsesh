@@ -13,6 +13,7 @@ import {
 } from '@/app/lib/url-utils';
 import { Climb, BoardDetails } from '@/app/lib/types';
 import { UseClimbActionsReturn } from './types';
+import { openExternalUrl } from '@/app/lib/open-external-url';
 
 interface UseClimbActionsOptions {
   climb: Climb;
@@ -159,7 +160,7 @@ export function useClimbActions({
       climbUuid: climb.uuid,
     });
 
-    window.open(openInAppUrl, '_blank', 'noopener');
+    openExternalUrl(openInAppUrl);
     onActionComplete?.('openInApp');
   }, [climb, boardDetails.board_name, openInAppUrl, onActionComplete]);
 

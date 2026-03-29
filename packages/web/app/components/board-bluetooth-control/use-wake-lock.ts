@@ -1,10 +1,12 @@
 'use client';
 
 import { useCallback, useEffect, useRef, useState } from 'react';
+import { isNativeApp } from '@/app/lib/ble/capacitor-utils';
 
 /**
- * Custom hook to manage the Screen Wake Lock API.
- * Prevents the device from dimming or locking the screen while active.
+ * Custom hook to manage screen wake lock.
+ * On web, uses the Screen Wake Lock API.
+ * On native apps, uses Capacitor's KeepAwake plugin.
  *
  * The wake lock is automatically re-acquired when the page becomes visible
  * after being hidden, as wake locks are released when the page is hidden.
@@ -16,14 +18,39 @@ export function useWakeLock(enabled: boolean) {
   const [isSupported, setIsSupported] = useState(false);
   const [isActive, setIsActive] = useState(false);
   const wakeLockRef = useRef<WakeLockSentinel | null>(null);
+  const usingCapacitorRef = useRef(false);
 
-  // Check if Wake Lock API is supported
+  // Check if wake lock is supported (web or native)
   useEffect(() => {
+    if (isNativeApp()) {
+      const plugin = window.Capacitor?.Plugins?.KeepAwake;
+      if (plugin) {
+        plugin.isSupported().then(({ isSupported: supported }) => {
+          usingCapacitorRef.current = supported;
+          setIsSupported(supported);
+        }).catch(() => setIsSupported(false));
+        return;
+      }
+    }
     setIsSupported('wakeLock' in navigator);
   }, []);
 
-  // Request wake lock
+  // Request wake lock (native or web)
   const requestWakeLock = useCallback(async () => {
+    if (usingCapacitorRef.current) {
+      try {
+        const plugin = window.Capacitor?.Plugins?.KeepAwake;
+        if (plugin) {
+          await plugin.keepAwake();
+          setIsActive(true);
+        }
+      } catch (err) {
+        console.warn('KeepAwake request failed:', err);
+        setIsActive(false);
+      }
+      return;
+    }
+
     if (!('wakeLock' in navigator)) {
       return;
     }
@@ -46,8 +73,21 @@ export function useWakeLock(enabled: boolean) {
     }
   }, []);
 
-  // Release wake lock
+  // Release wake lock (native or web)
   const releaseWakeLock = useCallback(async () => {
+    if (usingCapacitorRef.current) {
+      try {
+        const plugin = window.Capacitor?.Plugins?.KeepAwake;
+        if (plugin) {
+          await plugin.allowSleep();
+          setIsActive(false);
+        }
+      } catch (err) {
+        console.warn('KeepAwake release failed:', err);
+      }
+      return;
+    }
+
     if (wakeLockRef.current) {
       try {
         await wakeLockRef.current.release();

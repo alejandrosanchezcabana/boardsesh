@@ -9,8 +9,21 @@ import {
   type CreateSessionResponse,
 } from '@/app/lib/graphql/operations/create-session';
 import type { SessionCreationFormData } from '@/app/components/session-creation/session-creation-form';
+import { isNativeApp } from '@/app/lib/ble/capacitor-utils';
 
 function getGeolocation(): Promise<{ latitude: number; longitude: number }> {
+  // Use Capacitor Geolocation plugin on native
+  if (isNativeApp()) {
+    const plugin = window.Capacitor?.Plugins?.Geolocation;
+    if (plugin) {
+      return plugin
+        .getCurrentPosition({ enableHighAccuracy: true, timeout: 10000, maximumAge: 300000 })
+        .then((pos) => ({ latitude: pos.coords.latitude, longitude: pos.coords.longitude }))
+        .catch(() => ({ latitude: 0, longitude: 0 }));
+    }
+    return Promise.resolve({ latitude: 0, longitude: 0 });
+  }
+
   return new Promise((resolve) => {
     if (!navigator.geolocation) {
       resolve({ latitude: 0, longitude: 0 });

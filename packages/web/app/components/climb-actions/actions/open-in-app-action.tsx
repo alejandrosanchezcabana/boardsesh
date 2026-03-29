@@ -6,6 +6,7 @@ import { track } from '@vercel/analytics';
 import { ClimbActionProps, ClimbActionResult } from '../types';
 import { constructClimbInfoUrl } from '@/app/lib/url-utils';
 import { buildActionResult, computeActionDisplay } from '../action-view-renderer';
+import { openExternalUrl } from '@/app/lib/open-external-url';
 
 interface OpenInAppActionProps extends ClimbActionProps {
   auroraAppUrl?: string;
@@ -33,7 +34,7 @@ export function OpenInAppAction({
       climbUuid: climb.uuid,
     });
 
-    window.open(url, '_blank', 'noopener');
+    openExternalUrl(url);
     onComplete?.();
   }, [boardDetails.board_name, climb.uuid, url, onComplete]);
 

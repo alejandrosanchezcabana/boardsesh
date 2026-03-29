@@ -29,6 +29,7 @@ import { useColorMode } from '@/app/hooks/use-color-mode';
 import { themeTokens } from '@/app/theme/theme-config';
 import { getGradeTintColor } from '@/app/lib/grade-colors';
 import { constructClimbInfoUrl, getContextAwareClimbViewUrl } from '@/app/lib/url-utils';
+import { openExternalUrl } from '@/app/lib/open-external-url';
 
 type QueueClimbListItemProps = {
   item: ClimbQueueItem;
@@ -82,7 +83,7 @@ const QueueClimbListItem: React.FC<QueueClimbListItemProps> = ({
 
   const handleOpenInApp = useCallback(() => {
     const url = constructClimbInfoUrl(boardDetails, item.climb.uuid);
-    window.open(url, '_blank', 'noopener');
+    openExternalUrl(url);
   }, [item.climb, boardDetails]);
 
   // Swipe action overrides for ClimbListItem
