@@ -51,6 +51,7 @@ export const UISearchParamsProvider: React.FC<{ children: React.ReactNode }> = (
     }
 
     setClimbSearchParams(uiSearchParams);
+    setCountSearchParams(uiSearchParams);
   }, 500);
 
   const updateFilters = (newFilters: Partial<SearchRequestPagination>, instant?: boolean) => {
@@ -61,11 +62,10 @@ export const UISearchParamsProvider: React.FC<{ children: React.ReactNode }> = (
     };
 
     setUISearchParams(updatedFilters);
-    // Always update count params instantly so the count refreshes as user tweaks filters
-    setCountSearchParams(updatedFilters);
 
     if (instant) {
       setClimbSearchParams(updatedFilters);
+      setCountSearchParams(updatedFilters);
     } else {
       debouncedUpdate();
     }
