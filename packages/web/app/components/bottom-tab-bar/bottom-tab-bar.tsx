@@ -151,6 +151,13 @@ function BottomTabBar({ boardDetails, angle, boardConfigs }: BottomTabBarProps) 
         return `/b/${segments[2]}/${segments[3]}/list`;
       }
     }
+    // Fallback: use active session's board path if it's a /b/ slug route
+    if (activeSession?.boardPath?.startsWith('/b/')) {
+      const segments = activeSession.boardPath.split('/');
+      if (segments.length >= 4) {
+        return `/b/${segments[2]}/${segments[3]}/list`;
+      }
+    }
     if (!effectiveBoardDetails) return null;
     const { board_name, layout_name, size_name, size_description, set_names } = effectiveBoardDetails;
     if (layout_name && size_name && set_names) {
@@ -231,6 +238,12 @@ function BottomTabBar({ boardDetails, angle, boardConfigs }: BottomTabBarProps) 
       }
     } catch {
       // Ignore errors loading recent searches
+    }
+
+    // Preserve active session param so BoardSessionBridge can re-activate the session
+    if (activeSession?.sessionId && url) {
+      const separator = url.includes('?') ? '&' : '?';
+      url = `${url}${separator}session=${activeSession.sessionId}`;
     }
 
     const currentUrl = pathname + (typeof window !== 'undefined' ? window.location.search : '');

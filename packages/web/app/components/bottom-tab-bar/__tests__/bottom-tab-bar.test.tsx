@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { render, screen, fireEvent } from '@testing-library/react';
+import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import React from 'react';
 import type { BoardDetails } from '@/app/lib/types';
 import type { BoardConfigData } from '@/app/lib/server-board-configs';
@@ -7,6 +7,14 @@ import type { BoardConfigData } from '@/app/lib/server-board-configs';
 const mockPush = vi.fn();
 const mockShowMessage = vi.fn();
 const mockCreatePlaylist = vi.fn();
+
+let mockPathname = '/kilter/original/12x12-square/screw_bolt/40/list';
+let mockActiveSession: {
+  sessionId: string;
+  boardPath: string;
+  boardDetails: BoardDetails;
+  parsedParams: { angle: number };
+} | null = null;
 
 const mockBoardConfig = {
   board: 'kilter',
@@ -19,7 +27,7 @@ const mockBoardConfig = {
 };
 
 vi.mock('next/navigation', () => ({
-  usePathname: () => '/kilter/original/12x12-square/screw_bolt/40/list',
+  usePathname: () => mockPathname,
   useRouter: () => ({ push: mockPush }),
 }));
 
@@ -85,7 +93,7 @@ vi.mock('@/app/components/providers/snackbar-provider', () => ({
 
 vi.mock('../../persistent-session', () => ({
   usePersistentSession: () => ({
-    activeSession: null,
+    activeSession: mockActiveSession,
     localBoardDetails: null,
     localCurrentClimbQueueItem: null,
   }),
@@ -98,6 +106,14 @@ vi.mock('@/app/hooks/use-climb-actions-data', () => ({
       isAuthenticated: true,
     },
   }),
+}));
+
+vi.mock('@/app/lib/last-used-board-db', () => ({
+  getLastUsedBoard: () => Promise.resolve(null),
+}));
+
+vi.mock('@/app/components/search-drawer/recent-searches-storage', () => ({
+  getRecentSearches: () => Promise.resolve([]),
 }));
 
 import BottomTabBar from '../bottom-tab-bar';
@@ -123,9 +139,68 @@ const boardDetails = {
 
 const boardConfigs = {} as BoardConfigData;
 
+describe('BottomTabBar session preservation', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    mockPathname = '/';
+    mockActiveSession = null;
+  });
+
+  it('includes session param when navigating to climbs with active session on /b/ board', async () => {
+    mockActiveSession = {
+      sessionId: 'test-session-123',
+      boardPath: '/b/my-board/35/list',
+      boardDetails,
+      parsedParams: { angle: 35 },
+    };
+
+    render(<BottomTabBar boardConfigs={boardConfigs} />);
+    fireEvent.click(screen.getByRole('button', { name: 'Climb' }));
+
+    await waitFor(() => {
+      expect(mockPush).toHaveBeenCalledWith(
+        expect.stringContaining('session=test-session-123'),
+      );
+    });
+  });
+
+  it('uses /b/ slug URL from active session when on home page', async () => {
+    mockActiveSession = {
+      sessionId: 'test-session-123',
+      boardPath: '/b/my-board/35/list',
+      boardDetails,
+      parsedParams: { angle: 35 },
+    };
+
+    render(<BottomTabBar boardConfigs={boardConfigs} />);
+    fireEvent.click(screen.getByRole('button', { name: 'Climb' }));
+
+    await waitFor(() => {
+      expect(mockPush).toHaveBeenCalledWith(
+        expect.stringContaining('/b/my-board/35/list'),
+      );
+    });
+  });
+
+  it('does not include session param when no active session', async () => {
+    mockPathname = '/kilter/original/12x12-square/screw_bolt/40/list';
+
+    render(<BottomTabBar boardDetails={boardDetails} angle={40} boardConfigs={boardConfigs} />);
+    fireEvent.click(screen.getByRole('button', { name: 'Climb' }));
+
+    await waitFor(() => {
+      if (mockPush.mock.calls.length > 0) {
+        expect(mockPush.mock.calls[0][0]).not.toContain('session=');
+      }
+    });
+  });
+});
+
 describe('BottomTabBar create flow', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    mockPathname = '/kilter/original/12x12-square/screw_bolt/40/list';
+    mockActiveSession = null;
   });
 
   it('opens create drawer without immediate navigation', () => {
