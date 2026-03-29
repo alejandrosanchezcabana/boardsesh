@@ -101,7 +101,7 @@ export function useBoardBluetooth({ boardDetails, onConnectionChange }: UseBoard
       setLoading(true);
 
       try {
-        // Create a new adapter (or reuse existing)
+        // Create a fresh adapter for each connection attempt
         const adapter = await createBluetoothAdapter();
 
         const available = await adapter.isAvailable();

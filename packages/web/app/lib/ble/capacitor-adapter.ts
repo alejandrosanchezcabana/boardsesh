@@ -16,6 +16,7 @@ interface CapacitorBlePlugin {
   }): Promise<{ deviceId: string; name?: string }>;
   connect(options: {
     deviceId: string;
+    onDisconnect?: () => void;
   }): Promise<void>;
   disconnect(options: {
     deviceId: string;
@@ -26,11 +27,10 @@ interface CapacitorBlePlugin {
     characteristic: string;
     value: DataView;
   }): Promise<void>;
-  startNotifications(options: {
+  requestMtu(options: {
     deviceId: string;
-    service: string;
-    characteristic: string;
-  }): Promise<void>;
+    mtu: number;
+  }): Promise<{ value: number }>;
 }
 
 function getBlePlugin(): CapacitorBlePlugin {
@@ -48,7 +48,7 @@ function uint8ArrayToDataView(data: Uint8Array): DataView {
 export class CapacitorBleAdapter implements BluetoothAdapter {
   private deviceId: string | null = null;
   private disconnectCallback: (() => void) | null = null;
-  private mtu = 20; // Conservative default; updated after connection
+  private mtu = 20; // Conservative default; updated via MTU negotiation after connection
 
   async isAvailable(): Promise<boolean> {
     try {
@@ -71,11 +71,23 @@ export class CapacitorBleAdapter implements BluetoothAdapter {
       optionalServices: [UART_SERVICE_UUID],
     });
 
-    // Connect to the device
-    await ble.connect({ deviceId: device.deviceId });
+    // Connect with disconnect callback
+    await ble.connect({
+      deviceId: device.deviceId,
+      onDisconnect: () => {
+        this.deviceId = null;
+        this.disconnectCallback?.();
+      },
+    });
 
-    // TODO: Listen for disconnect events via Capacitor plugin notifications
-    // For now, disconnection is detected on write failure
+    // Negotiate larger MTU (iOS negotiates automatically, but requesting
+    // explicitly ensures we know the actual value for chunking)
+    try {
+      const result = await ble.requestMtu({ deviceId: device.deviceId, mtu: 512 });
+      this.mtu = result.value - 3; // MTU minus ATT header overhead
+    } catch {
+      // MTU negotiation not supported or failed — keep default 20
+    }
 
     this.deviceId = device.deviceId;
 
