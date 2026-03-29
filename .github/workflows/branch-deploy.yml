@@ -127,36 +127,68 @@ jobs:
           sleep 10
           docker ps --filter "name=web-pr-${PR_NUM}" --filter "name=backend-pr-${PR_NUM}" --format "table {{.Names}}\t{{.Status}}"
 
-  comment:
-    needs: deploy
+  create-deployment:
     if: github.event_name == 'pull_request'
     runs-on: ubuntu-latest
     permissions:
-      pull-requests: write
+      deployments: write
+    outputs:
+      deployment_id: ${{ steps.create.outputs.deployment_id }}
     steps:
-      - name: Find existing comment
-        uses: peter-evans/find-comment@v4
-        id: fc
-        with:
-          issue-number: ${{ env.PR_NUMBER }}
-          comment-author: 'github-actions[bot]'
-          body-includes: '<!-- branch-deploy -->'
+      - name: Create deployment
+        id: create
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          DEPLOYMENT_ID=$(gh api repos/${{ github.repository }}/deployments \
+            --method POST \
+            --field ref="${{ github.sha }}" \
+            --field environment="preview-pr-${{ env.PR_NUMBER }}" \
+            --field description="Preview deployment for PR #${{ env.PR_NUMBER }}" \
+            --field auto_merge=false \
+            --field required_contexts='[]' \
+            --jq '.id')
+          echo "deployment_id=${DEPLOYMENT_ID}" >> "$GITHUB_OUTPUT"
 
-      - name: Create or update comment
-        uses: peter-evans/create-or-update-comment@v5
-        with:
-          comment-id: ${{ steps.fc.outputs.comment-id }}
-          issue-number: ${{ env.PR_NUMBER }}
-          edit-mode: replace
-          body: |
-            <!-- branch-deploy -->
-            ## 🔄 Branch Deploy Preview
+      - name: Set deployment status to in_progress
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh api repos/${{ github.repository }}/deployments/${{ steps.create.outputs.deployment_id }}/statuses \
+            --method POST \
+            --field state="in_progress" \
+            --field description="Building and deploying preview..."
 
-            | Service | URL |
-            |---------|-----|
-            | Web | https://${{ env.PR_NUMBER }}.preview.boardsesh.com |
-            | Backend | https://${{ env.PR_NUMBER }}.ws.preview.boardsesh.com |
-            | Health | https://${{ env.PR_NUMBER }}.ws.preview.boardsesh.com/health |
+  deployment-status:
+    needs: [deploy, create-deployment]
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    permissions:
+      deployments: write
+    steps:
+      - name: Set deployment status to success
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh api repos/${{ github.repository }}/deployments/${{ needs.create-deployment.outputs.deployment_id }}/statuses \
+            --method POST \
+            --field state="success" \
+            --field environment_url="https://${{ env.PR_NUMBER }}.preview.boardsesh.com" \
+            --field description="Preview is live" \
+            --field auto_inactive=true
 
-            **Commit:** ${{ github.sha }}
-            **Updated:** ${{ github.event.pull_request.updated_at || 'manual trigger' }}
+  deployment-failure:
+    needs: [deploy, create-deployment]
+    if: github.event_name == 'pull_request' && failure() && needs.create-deployment.result == 'success'
+    runs-on: ubuntu-latest
+    permissions:
+      deployments: write
+    steps:
+      - name: Set deployment status to failure
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh api repos/${{ github.repository }}/deployments/${{ needs.create-deployment.outputs.deployment_id }}/statuses \
+            --method POST \
+            --field state="failure" \
+            --field description="Deployment failed"

@@ -4,13 +4,16 @@ on:
   pull_request:
     types: [closed]
 
+env:
+  PR_NUMBER: ${{ github.event.pull_request.number }}
+
 jobs:
   cleanup:
     runs-on: [self-hosted, homelab, ephemeral]
     steps:
       - name: Remove preview containers
         env:
-          PR_NUM: ${{ github.event.pull_request.number }}
+          PR_NUM: ${{ env.PR_NUMBER }}
         run: |
           echo "Cleaning up PR #${PR_NUM} preview..."
 
@@ -23,3 +26,23 @@ jobs:
           docker rmi ghcr.io/boardsesh/boardsesh-daemon:pr-${PR_NUM} 2>/dev/null || true
 
           echo "Cleanup complete for PR #${PR_NUM}"
+
+  deactivate-deployment:
+    runs-on: ubuntu-latest
+    permissions:
+      deployments: write
+    steps:
+      - name: Mark deployments as inactive
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          DEPLOYMENT_IDS=$(gh api "repos/${{ github.repository }}/deployments?environment=preview-pr-${{ env.PR_NUMBER }}&per_page=100" \
+            --jq '.[].id')
+
+          for DEPLOY_ID in $DEPLOYMENT_IDS; do
+            echo "Marking deployment ${DEPLOY_ID} as inactive"
+            gh api "repos/${{ github.repository }}/deployments/${DEPLOY_ID}/statuses" \
+              --method POST \
+              --field state="inactive" \
+              --field description="PR closed, preview torn down" || true
+          done
