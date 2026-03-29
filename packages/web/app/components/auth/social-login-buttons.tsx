@@ -4,6 +4,10 @@ import React, { useEffect, useState } from 'react';
 import Skeleton from '@mui/material/Skeleton';
 import Button from '@mui/material/Button';
 import Box from '@mui/material/Box';
+import Alert from '@mui/material/Alert';
+import Collapse from '@mui/material/Collapse';
+import Typography from '@mui/material/Typography';
+import InfoOutlined from '@mui/icons-material/InfoOutlined';
 import { signIn } from 'next-auth/react';
 
 // Note: OAuth provider icons and button colors use brand-specific colors
@@ -59,6 +63,14 @@ export default function SocialLoginButtons({
 }: SocialLoginButtonsProps) {
   const [providers, setProviders] = useState<ProvidersConfig | null>(null);
   const [loading, setLoading] = useState(true);
+  const [isBluefy, setIsBluefy] = useState(false);
+  const [showBluefyInfo, setShowBluefyInfo] = useState(false);
+
+  useEffect(() => {
+    if (typeof navigator !== 'undefined') {
+      setIsBluefy(/Bluefy/i.test(navigator.userAgent));
+    }
+  }, []);
 
   useEffect(() => {
     fetch('/api/auth/providers-config')
@@ -89,6 +101,35 @@ export default function SocialLoginButtons({
 
   if (!hasAnyProvider) {
     return null;
+  }
+
+  if (isBluefy) {
+    return (
+      <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
+        <Button
+          fullWidth
+          size="large"
+          variant="outlined"
+          startIcon={<InfoOutlined />}
+          onClick={() => setShowBluefyInfo((prev) => !prev)}
+        >
+          Sign-in options unavailable in Bluefy
+        </Button>
+        <Collapse in={showBluefyInfo}>
+          <Alert severity="info" sx={{ mt: 1 }}>
+            <Typography variant="body2" component="div">
+              Google, Apple, and Facebook sign-in are not supported in the Bluefy browser.
+            </Typography>
+            <Typography variant="body2" component="div" sx={{ mt: 1 }}>
+              To use Boardsesh in Bluefy, open <strong>boardsesh.com</strong> in
+              Safari, sign in with your preferred provider, then go
+              to <strong>Settings</strong> and set a password. You can then use
+              that email and password to log in here.
+            </Typography>
+          </Alert>
+        </Collapse>
+      </Box>
+    );
   }
 
   // Apple button needs custom colors per brand guidelines
