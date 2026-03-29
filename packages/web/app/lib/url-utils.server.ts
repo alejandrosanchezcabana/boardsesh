@@ -1,4 +1,5 @@
 import 'server-only';
+import { cache } from 'react';
 import {
   BoardRouteParameters,
   ParsedBoardRouteParametersWithUuid,
@@ -181,7 +182,7 @@ export async function parseBoardRouteParamsWithSlugs<T extends BoardRouteParamet
  *
  * This consolidates the repeated hasNumericParams + parse pattern used across route files.
  */
-export async function parseRouteParams<T extends BoardRouteParameters>(
+async function parseRouteParamsImpl<T extends BoardRouteParameters>(
   params: T,
 ): Promise<{
   parsedParams: T extends BoardRouteParametersWithUuid ? ParsedBoardRouteParametersWithUuid : ParsedBoardRouteParameters;
@@ -207,3 +208,5 @@ export async function parseRouteParams<T extends BoardRouteParameters>(
     isNumericFormat: false,
   };
 }
+
+export const parseRouteParams = cache(parseRouteParamsImpl) as typeof parseRouteParamsImpl;

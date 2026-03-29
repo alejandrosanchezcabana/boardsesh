@@ -174,9 +174,15 @@ const QueueControlBar: React.FC<QueueControlBarProps> = ({ boardDetails, angle }
 
     if (shouldNavigate) {
       const url = buildClimbUrl(nextClimb.climb);
-      if (url) router.push(url);
+      if (url) {
+        if (isPlayPage) {
+          window.history.pushState(null, '', url);
+        } else {
+          router.push(url);
+        }
+      }
     }
-  }, [nextClimb, viewOnlyMode, setCurrentClimbQueueItem, shouldNavigate, router, buildClimbUrl, boardDetails]);
+  }, [nextClimb, viewOnlyMode, setCurrentClimbQueueItem, shouldNavigate, router, buildClimbUrl, boardDetails, isPlayPage]);
 
   const handleSwipePrevious = useCallback(() => {
     if (!previousClimb || viewOnlyMode) return;
@@ -190,9 +196,15 @@ const QueueControlBar: React.FC<QueueControlBarProps> = ({ boardDetails, angle }
 
     if (shouldNavigate) {
       const url = buildClimbUrl(previousClimb.climb);
-      if (url) router.push(url);
+      if (url) {
+        if (isPlayPage) {
+          window.history.pushState(null, '', url);
+        } else {
+          router.push(url);
+        }
+      }
     }
-  }, [previousClimb, viewOnlyMode, setCurrentClimbQueueItem, shouldNavigate, router, buildClimbUrl, boardDetails]);
+  }, [previousClimb, viewOnlyMode, setCurrentClimbQueueItem, shouldNavigate, router, buildClimbUrl, boardDetails, isPlayPage]);
 
   const canSwipeNext = !viewOnlyMode && !!nextClimb;
   const canSwipePrevious = !viewOnlyMode && !!previousClimb;

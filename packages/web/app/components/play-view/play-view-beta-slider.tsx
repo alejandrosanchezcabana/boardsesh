@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import Box from '@mui/material/Box';
 import Typography from '@mui/material/Typography';
 import Dialog from '@mui/material/Dialog';
@@ -12,6 +12,7 @@ import CloseOutlined from '@mui/icons-material/CloseOutlined';
 import PlayArrowOutlined from '@mui/icons-material/PlayArrowOutlined';
 import VideocamOutlined from '@mui/icons-material/VideocamOutlined';
 import { Instagram, PersonOutlined } from '@mui/icons-material';
+import { useQuery } from '@tanstack/react-query';
 import { BetaLink } from '@/app/lib/api-wrappers/sync-api-types';
 import { themeTokens } from '@/app/theme/theme-config';
 
@@ -32,32 +33,18 @@ interface PlayViewBetaSliderProps {
 }
 
 const PlayViewBetaSlider: React.FC<PlayViewBetaSliderProps> = ({ boardName, climbUuid }) => {
-  const [betaLinks, setBetaLinks] = useState<BetaLink[]>([]);
+  const { data: betaLinks = [] } = useQuery<BetaLink[]>({
+    queryKey: ['betaLinks', boardName, climbUuid],
+    queryFn: async () => {
+      const res = await fetch(`/api/v1/${boardName}/beta/${climbUuid}`);
+      if (!res.ok) return [];
+      return res.json();
+    },
+    enabled: !!climbUuid,
+    staleTime: 5 * 60 * 1000,
+  });
   const [selectedVideo, setSelectedVideo] = useState<BetaLink | null>(null);
   const [iframeKey, setIframeKey] = useState(0);
-
-  useEffect(() => {
-    if (!climbUuid) {
-      setBetaLinks([]);
-      return;
-    }
-
-    let cancelled = false;
-
-    const fetchBeta = async () => {
-      try {
-        const res = await fetch(`/api/v1/${boardName}/beta/${climbUuid}`);
-        if (!res.ok) return;
-        const data: BetaLink[] = await res.json();
-        if (!cancelled) setBetaLinks(data);
-      } catch (error) {
-        console.error('Failed to fetch beta links:', error);
-      }
-    };
-
-    fetchBeta();
-    return () => { cancelled = true; };
-  }, [boardName, climbUuid]);
 
   if (betaLinks.length === 0) return null;
 

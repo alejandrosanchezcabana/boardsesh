@@ -32,17 +32,8 @@ export default function PreviousClimbButton({ navigate = false, boardDetails }: 
 
   const previousClimb = getPreviousClimbQueueItem();
 
-  const handleClick = () => {
-    if (previousClimb) {
-      setCurrentClimbQueueItem(previousClimb);
-      track('Queue Navigation', {
-        direction: 'previous',
-        boardLayout: boardDetails?.layout_name || '',
-      });
-    }
-  };
-
-  if (!viewOnlyMode && navigate && previousClimb) {
+  const buildClimbUrl = () => {
+    if (!previousClimb) return '';
     let climbUrl = '';
 
     if (isPlayPage) {
@@ -59,6 +50,11 @@ export default function PreviousClimbButton({ navigate = false, boardDetails }: 
               previousClimb.climb.name,
             )
           : `/${board_name}/${layout_id}/${size_id}/${set_ids}/${angle}/play/${previousClimb.climb.uuid}`;
+
+      const queryString = searchParams.toString();
+      if (queryString) {
+        climbUrl = `${climbUrl}?${queryString}`;
+      }
     } else if (boardDetails) {
       climbUrl = getContextAwareClimbViewUrl(
         pathname,
@@ -71,19 +67,31 @@ export default function PreviousClimbButton({ navigate = false, boardDetails }: 
       climbUrl = `/${board_name}/${layout_id}/${size_id}/${set_ids}/${angle}/view/${previousClimb.climb.uuid}`;
     }
 
-    // Preserve search params in play mode to maintain filter state for back navigation
+    return climbUrl;
+  };
+
+  const handleClick = () => {
+    if (!previousClimb) return;
+    setCurrentClimbQueueItem(previousClimb);
+    track('Queue Navigation', {
+      direction: 'previous',
+      boardLayout: boardDetails?.layout_name || '',
+    });
+
+    if (navigate && isPlayPage) {
+      const url = buildClimbUrl();
+      if (url) window.history.pushState(null, '', url);
+    }
+  };
+
+  if (!viewOnlyMode && navigate && previousClimb) {
     if (isPlayPage) {
-      const queryString = searchParams.toString();
-      if (queryString) {
-        climbUrl = `${climbUrl}?${queryString}`;
-      }
+      return <PreviousButton onClick={handleClick} />;
     }
 
+    const climbUrl = buildClimbUrl();
     return (
-      <Link
-        href={climbUrl}
-        onClick={handleClick}
-      >
+      <Link href={climbUrl} prefetch={false} onClick={handleClick}>
         <PreviousButton />
       </Link>
     );

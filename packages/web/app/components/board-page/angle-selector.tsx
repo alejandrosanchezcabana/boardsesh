@@ -37,7 +37,7 @@ export default function AngleSelector({ boardName, boardDetails, currentAngle, c
   const { data: climbStats, isLoading } = useQuery<ClimbStatsForAngle[]>({
     queryKey: ['climbStats', boardName, currentClimb?.uuid],
     queryFn: () => fetch(`/api/v1/${boardName}/climb-stats/${currentClimb!.uuid}`).then(res => res.json()),
-    enabled: !!currentClimb,
+    enabled: !!currentClimb && isDrawerOpen,
     staleTime: 5 * 60 * 1000,
   });
 

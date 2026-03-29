@@ -27,7 +27,7 @@ const ClimbThumbnail = ({ boardDetails, currentClimb, enableNavigation = false, 
     );
 
     return (
-      <Link href={climbViewUrl} onClick={() => onNavigate?.()} data-testid="climb-thumbnail-link">
+      <Link href={climbViewUrl} prefetch={false} onClick={() => onNavigate?.()} data-testid="climb-thumbnail-link">
         <BoardRenderer
           litUpHoldsMap={currentClimb?.litUpHoldsMap}
           mirrored={!!currentClimb?.mirrored}

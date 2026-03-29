@@ -1,7 +1,8 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
+import React from 'react';
 import { useSearchParams } from 'next/navigation';
+import { useQuery } from '@tanstack/react-query';
 import type { CollapsibleSectionConfig } from '@/app/components/collapsible-section/collapsible-section';
 import BetaVideos from '@/app/components/beta-videos/beta-videos';
 import { LogbookSection, useLogbookSummary } from '@/app/components/logbook/logbook-section';
@@ -20,50 +21,6 @@ interface BuildClimbDetailSectionsProps {
   boardName?: string;
 }
 
-function useClimbBetaLinks({ boardType, climbUuid, initialBetaLinks }: { boardType: string; climbUuid: string; initialBetaLinks?: BetaLink[] }) {
-  const [betaLinks, setBetaLinks] = useState<BetaLink[]>(initialBetaLinks ?? []);
-
-  useEffect(() => {
-    if (initialBetaLinks) {
-      setBetaLinks(initialBetaLinks);
-      return;
-    }
-
-    if (!climbUuid || !boardType) {
-      setBetaLinks([]);
-      return;
-    }
-
-    let cancelled = false;
-
-    const fetchBetaLinks = async () => {
-      try {
-        const response = await fetch(`/api/v1/${boardType}/beta/${climbUuid}`);
-        if (!response.ok) {
-          return;
-        }
-
-        const data: BetaLink[] = await response.json();
-        if (!cancelled) {
-          setBetaLinks(data);
-        }
-      } catch {
-        if (!cancelled) {
-          setBetaLinks([]);
-        }
-      }
-    };
-
-    void fetchBetaLinks();
-
-    return () => {
-      cancelled = true;
-    };
-  }, [boardType, climbUuid, initialBetaLinks]);
-
-  return betaLinks;
-}
-
 export function useBuildClimbDetailSections({
   climb,
   climbUuid,
@@ -75,7 +32,17 @@ export function useBuildClimbDetailSections({
 }: BuildClimbDetailSectionsProps): CollapsibleSectionConfig[] {
   const searchParams = useSearchParams();
   const highlightProposalUuid = searchParams.get('proposalUuid') ?? undefined;
-  const betaLinks = useClimbBetaLinks({ boardType, climbUuid, initialBetaLinks });
+  const { data: betaLinks = [] } = useQuery<BetaLink[]>({
+    queryKey: ['betaLinks', boardType, climbUuid],
+    queryFn: async () => {
+      const res = await fetch(`/api/v1/${boardType}/beta/${climbUuid}`);
+      if (!res.ok) return [];
+      return res.json();
+    },
+    enabled: !!climbUuid,
+    staleTime: 5 * 60 * 1000,
+    initialData: initialBetaLinks,
+  });
   const logbookSummary = useLogbookSummary(climb.uuid);
 
   const getLogbookSummaryParts = (): string[] => {

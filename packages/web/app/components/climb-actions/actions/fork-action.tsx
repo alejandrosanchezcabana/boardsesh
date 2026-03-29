@@ -67,13 +67,13 @@ export function ForkAction({
     available: canFork,
     iconElementOverride: url ? (
       <ActionTooltip title="Fork this climb">
-        <Link href={url} onClick={handleClick} className={className} style={linkResetStyle}>
+        <Link href={url} prefetch={false} onClick={handleClick} className={className} style={linkResetStyle}>
           {icon}
         </Link>
       </ActionTooltip>
     ) : null,
     buttonElementOverride: url ? (
-      <Link href={url} onClick={handleClick} style={linkResetStyle}>
+      <Link href={url} prefetch={false} onClick={handleClick} style={linkResetStyle}>
         <MuiButton
           variant="outlined"
           startIcon={icon}
@@ -86,7 +86,7 @@ export function ForkAction({
       </Link>
     ) : null,
     listElementOverride: url ? (
-      <Link href={url} onClick={handleClick} style={linkResetStyle}>
+      <Link href={url} prefetch={false} onClick={handleClick} style={linkResetStyle}>
         <MuiButton
           variant="text"
           startIcon={icon}
@@ -107,7 +107,7 @@ export function ForkAction({
       ? {
           key: 'fork',
           label: (
-            <Link href={url} onClick={handleClick} style={linkResetStyle}>
+            <Link href={url} prefetch={false} onClick={handleClick} style={linkResetStyle}>
               {label}
             </Link>
           ),

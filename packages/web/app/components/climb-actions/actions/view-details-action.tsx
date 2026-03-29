@@ -61,13 +61,13 @@ export function ViewDetailsAction({
     className,
     iconElementOverride: (
       <ActionTooltip title={label}>
-        <Link href={url} onClick={handleClick} className={className} style={linkResetStyle}>
+        <Link href={url} prefetch={false} onClick={handleClick} className={className} style={linkResetStyle}>
           {icon}
         </Link>
       </ActionTooltip>
     ),
     buttonElementOverride: (
-      <Link href={url} onClick={handleClick} style={linkResetStyle}>
+      <Link href={url} prefetch={false} onClick={handleClick} style={linkResetStyle}>
         <MuiButton
           variant="outlined"
           startIcon={icon}
@@ -80,7 +80,7 @@ export function ViewDetailsAction({
       </Link>
     ),
     listElementOverride: (
-      <Link href={url} onClick={handleClick} style={linkResetStyle}>
+      <Link href={url} prefetch={false} onClick={handleClick} style={linkResetStyle}>
         <MuiButton
           variant="text"
           startIcon={icon}
@@ -100,7 +100,7 @@ export function ViewDetailsAction({
     menuItem: {
       key: 'viewDetails',
       label: (
-        <Link href={url} onClick={handleClick} style={linkResetStyle}>
+        <Link href={url} prefetch={false} onClick={handleClick} style={linkResetStyle}>
           {label}
         </Link>
       ),

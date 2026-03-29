@@ -5,6 +5,7 @@
  * performant.
  */
 import 'server-only';
+import { cache } from 'react';
 import { sql } from '@/app/lib/db/db';
 
 import { Climb, ParsedBoardRouteParametersWithUuid, BoardName, LayoutId, Size } from '../types';
@@ -15,7 +16,7 @@ import {
   getSizeEdges,
 } from '@/app/lib/__generated__/product-sizes-data';
 
-export const getClimb = async (params: ParsedBoardRouteParametersWithUuid): Promise<Climb> => {
+export const getClimb = cache(async (params: ParsedBoardRouteParametersWithUuid): Promise<Climb> => {
   // Get hardcoded size edges (eliminates database query)
   const sizeEdges = getSizeEdges(params.board_name, params.size_id);
   if (!sizeEdges) {
@@ -44,7 +45,7 @@ export const getClimb = async (params: ParsedBoardRouteParametersWithUuid): Prom
         limit 1
       `;
   return result[0] as Climb;
-};
+});
 
 export interface ClimbStatsForAngle {
   angle: number;
