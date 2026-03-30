@@ -78,7 +78,7 @@ const MoonBoardRenderer: React.FC<MoonBoardRendererProps> = ({
     >
       {/* Render MoonBoard background first */}
       <image
-        href="/images/moonboard/moonboard-bg.png"
+        href="/images/moonboard/moonboard-bg.avif"
         width="100%"
         height="100%"
       />
@@ -87,7 +87,7 @@ const MoonBoardRenderer: React.FC<MoonBoardRendererProps> = ({
       {holdSetImages.map((imageFile) => (
         <image
           key={imageFile}
-          href={`/images/moonboard/${layoutFolder}/${imageFile}`}
+          href={`/images/moonboard/${layoutFolder}/${imageFile.replace(/\.png$/, '.avif')}`}
           width="100%"
           height="100%"
         />

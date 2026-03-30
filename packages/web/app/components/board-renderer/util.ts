@@ -11,7 +11,7 @@ export const getImageUrl = (imageUrl: string, board: BoardName) => {
   }
 
   if (USE_SELF_HOSTED_IMAGES) {
-    return `/images/${board}/${imageUrl}`;
+    return `/images/${board}/${imageUrl}`.replace(/\.png$/, '.avif');
   }
 
   return `https://api.${board}boardapp${board === 'tension' ? '2' : ''}.com/img/${imageUrl}`;
