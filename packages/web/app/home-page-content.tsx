@@ -15,6 +15,7 @@ import WarningAmberOutlined from '@mui/icons-material/WarningAmberOutlined';
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import { themeTokens } from '@/app/theme/theme-config';
+import { usePersistentSession } from '@/app/components/persistent-session';
 import StartSeshDrawer from '@/app/components/session-creation/start-sesh-drawer';
 import UnifiedSearchDrawer from '@/app/components/search-drawer/unified-search-drawer';
 import BoardScrollSection from '@/app/components/board-scroll/board-scroll-section';
@@ -91,6 +92,7 @@ function OnboardingCard({ icon, title, description, onClick }: OnboardingCardPro
 export default function HomePageContent({ boardConfigs, isAuthenticatedSSR }: HomePageContentProps) {
   const { status } = useSession();
   const router = useRouter();
+  const { activeSession } = usePersistentSession();
   const [seshDrawerOpen, setSeshDrawerOpen] = useState(false);
   const [findClimbersOpen, setFindClimbersOpen] = useState(false);
 
@@ -146,7 +148,19 @@ export default function HomePageContent({ boardConfigs, isAuthenticatedSSR }: Ho
             variant="contained"
             size="large"
             startIcon={<PlayArrowRounded />}
-            onClick={() => setSeshDrawerOpen(true)}
+            onClick={() => {
+              if (activeSession) {
+                if (activeSession.boardPath.startsWith('/b/')) {
+                  const segments = activeSession.boardPath.split('/');
+                  router.push(constructBoardSlugListUrl(segments[2], activeSession.parsedParams.angle));
+                } else {
+                  // Legacy/custom path — navigate directly
+                  router.push(activeSession.boardPath);
+                }
+              } else {
+                setSeshDrawerOpen(true);
+              }
+            }}
             sx={{
               mt: 1,
               borderRadius: `${themeTokens.borderRadius.full}px`,
@@ -158,7 +172,7 @@ export default function HomePageContent({ boardConfigs, isAuthenticatedSSR }: Ho
               boxShadow: themeTokens.shadows.md,
             }}
           >
-            Start climbing
+            {activeSession ? 'Continue climbing' : 'Start climbing'}
           </Button>
         </Box>
 
