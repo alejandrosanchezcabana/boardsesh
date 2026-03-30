@@ -46,11 +46,12 @@ export function useDiscoverBoards({
     if (coordsRef.current) return Promise.resolve(coordsRef.current);
     if (geoResolvedRef.current) return Promise.resolve(null);
 
-    geoResolvedRef.current = true;
-
     if (!enableLocation || typeof navigator === 'undefined' || !navigator.geolocation) {
       return Promise.resolve(null);
     }
+
+    // Set after enableLocation check so toggling enableLocation from false→true can still trigger geo
+    geoResolvedRef.current = true;
 
     return new Promise<GeolocationPosition>((resolve, reject) => {
       navigator.geolocation.getCurrentPosition(resolve, reject, {
