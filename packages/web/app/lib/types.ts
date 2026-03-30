@@ -7,7 +7,7 @@ export type Climb = {
   boardType?: string; // Board type this climb belongs to (e.g. 'kilter', 'tension'). Populated in multi-board contexts.
   setter_username: string;
   name: string;
-  description: string;
+  description?: string;
   frames: string;
   angle: number;
   ascensionist_count: number;

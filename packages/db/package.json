@@ -40,6 +40,11 @@
       "types": "./src/client/index.ts",
       "import": "./src/client/index.ts",
       "default": "./src/client/index.ts"
+    },
+    "./queries": {
+      "types": "./src/queries/index.ts",
+      "import": "./src/queries/index.ts",
+      "default": "./src/queries/index.ts"
     }
   },
   "scripts": {

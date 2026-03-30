@@ -1,8 +1,7 @@
 import { sql, and } from 'drizzle-orm';
 import { db } from '../../client';
-import { getBoardTables } from '../util/table-select';
-import { createClimbFilters, type ClimbSearchParams, type ParsedBoardRouteParameters } from './create-climb-filters';
-import type { SizeEdges } from '../util/product-sizes-data';
+import { boardClimbs, boardClimbStats } from '@boardsesh/db/schema';
+import { createClimbFilters, type BoardRouteParams, type ClimbSearchParams, type SizeEdges } from '@boardsesh/db/queries';
 
 /**
  * Counts the total number of climbs matching the search criteria.
@@ -16,15 +15,12 @@ import type { SizeEdges } from '../util/product-sizes-data';
  * @see resolvers.ts ClimbSearchResult.totalCount for the field resolver
  */
 export const countClimbs = async (
-  params: ParsedBoardRouteParameters,
+  params: BoardRouteParams,
   searchParams: ClimbSearchParams,
   sizeEdges: SizeEdges,
   userId?: string,
 ): Promise<number> => {
-  const tables = getBoardTables(params.board_name);
-
-  // Use the shared filter creator with static edge values
-  const filters = createClimbFilters(tables, params, searchParams, sizeEdges, userId);
+  const filters = createClimbFilters(params, searchParams, sizeEdges, userId);
 
   const whereConditions = [
     ...filters.getClimbWhereConditions(),
@@ -35,8 +31,8 @@ export const countClimbs = async (
   try {
     const result = await db
       .select({ count: sql<number>`count(*)` })
-      .from(tables.climbs)
-      .leftJoin(tables.climbStats, and(...filters.getClimbStatsJoinConditions()))
+      .from(boardClimbs)
+      .leftJoin(boardClimbStats, and(...filters.getClimbStatsJoinConditions()))
       .where(and(...whereConditions));
 
     return Number(result[0]?.count ?? 0);
