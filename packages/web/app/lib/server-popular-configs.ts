@@ -13,21 +13,20 @@ import type { PopularBoardConfig } from '@boardsesh/shared-schema';
  * The backend caches the result for 30 days, so this is effectively free after the first call.
  */
 export const getPopularBoardConfigs = React.cache(async (): Promise<PopularBoardConfig[]> => {
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), 1000);
   try {
     const client = createGraphQLHttpClient();
-    // 3-second timeout so the home page still renders quickly if backend is slow
-    const result = await Promise.race([
-      client.request<GetPopularBoardConfigsQueryResponse>(
-        GET_POPULAR_BOARD_CONFIGS,
-        { input: { limit: 12, offset: 0 } },
-      ),
-      new Promise<never>((_, reject) =>
-        setTimeout(() => reject(new Error('SSR popular configs timeout')), 1000),
-      ),
-    ]);
+    client.requestConfig.signal = controller.signal;
+    const result = await client.request<GetPopularBoardConfigsQueryResponse>(
+      GET_POPULAR_BOARD_CONFIGS,
+      { input: { limit: 12, offset: 0 } },
+    );
     return result.popularBoardConfigs.configs;
   } catch (err) {
     console.error('Failed to SSR popular board configs:', err);
     return [];
+  } finally {
+    clearTimeout(timer);
   }
 });
