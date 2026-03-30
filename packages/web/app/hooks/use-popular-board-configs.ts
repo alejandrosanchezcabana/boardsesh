@@ -9,6 +9,8 @@ import type { PopularBoardConfig } from '@boardsesh/shared-schema';
 interface UsePopularBoardConfigsOptions {
   /** Number of configs per page */
   limit?: number;
+  /** SSR-provided initial data to avoid loading flash */
+  initialData?: PopularBoardConfig[];
 }
 
 interface PopularBoardConfigsResult {
@@ -27,14 +29,16 @@ interface PopularBoardConfigsResult {
  */
 export function usePopularBoardConfigs({
   limit = 12,
+  initialData,
 }: UsePopularBoardConfigsOptions = {}): PopularBoardConfigsResult {
-  const [configs, setConfigs] = useState<PopularBoardConfig[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+  const hasInitialData = initialData !== undefined && initialData.length > 0;
+  const [configs, setConfigs] = useState<PopularBoardConfig[]>(hasInitialData ? initialData : []);
+  const [isLoading, setIsLoading] = useState(!hasInitialData);
   const [isLoadingMore, setIsLoadingMore] = useState(false);
-  const [hasMore, setHasMore] = useState(false);
+  const [hasMore, setHasMore] = useState(hasInitialData);
   const [error, setError] = useState<string | null>(null);
-  const hasMoreRef = useRef(false);
-  const offsetRef = useRef(0);
+  const hasMoreRef = useRef(hasInitialData);
+  const offsetRef = useRef(hasInitialData ? initialData.length : 0);
   const isFetchingRef = useRef(false);
 
   const fetchPage = useCallback(async (offset: number, isInitial: boolean) => {
@@ -76,9 +80,11 @@ export function usePopularBoardConfigs({
   }, [limit]);
 
   useEffect(() => {
+    // Skip the initial fetch when SSR data is provided
+    if (hasInitialData) return;
     offsetRef.current = 0;
     fetchPage(0, true);
-  }, [fetchPage]);
+  }, [fetchPage, hasInitialData]);
 
   const loadMore = useCallback(() => {
     if (hasMoreRef.current && !isFetchingRef.current) {

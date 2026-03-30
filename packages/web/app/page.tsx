@@ -3,6 +3,7 @@ import type { Metadata } from 'next';
 import { getServerAuthToken } from './lib/auth/server-auth';
 import ConsolidatedBoardConfig from './components/setup-wizard/consolidated-board-config';
 import { getAllBoardConfigs } from './lib/server-board-configs';
+import { getPopularBoardConfigs } from './lib/server-popular-configs';
 import HomePageContent from './home-page-content';
 
 export const metadata: Metadata = {
@@ -29,7 +30,10 @@ type HomeProps = {
 
 export default async function Home({ searchParams }: HomeProps) {
   const params = await searchParams;
-  const boardConfigs = await getAllBoardConfigs();
+  const [boardConfigs, popularConfigs] = await Promise.all([
+    getAllBoardConfigs(),
+    getPopularBoardConfigs(),
+  ]);
 
   // Check if user explicitly wants to see the board selector
   if (params.select === 'true') {
@@ -44,6 +48,7 @@ export default async function Home({ searchParams }: HomeProps) {
     <HomePageContent
       boardConfigs={boardConfigs}
       isAuthenticatedSSR={isAuthenticatedSSR}
+      initialPopularConfigs={popularConfigs}
     />
   );
 }

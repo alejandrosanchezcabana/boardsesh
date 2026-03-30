@@ -39,6 +39,7 @@ const UnifiedSearchDrawer = dynamic(
 interface HomePageContentProps {
   boardConfigs: BoardConfigData;
   isAuthenticatedSSR?: boolean;
+  initialPopularConfigs?: PopularBoardConfig[];
 }
 
 interface OnboardingCardProps {
@@ -100,7 +101,7 @@ function OnboardingCard({ icon, title, description, onClick }: OnboardingCardPro
   );
 }
 
-export default function HomePageContent({ boardConfigs, isAuthenticatedSSR }: HomePageContentProps) {
+export default function HomePageContent({ boardConfigs, isAuthenticatedSSR, initialPopularConfigs }: HomePageContentProps) {
   const { status } = useSession();
   const router = useRouter();
   const { activeSession } = usePersistentSession();
@@ -120,7 +121,7 @@ export default function HomePageContent({ boardConfigs, isAuthenticatedSSR }: Ho
   const isAuthenticated = status === 'authenticated' ? true : (status === 'loading' ? (isAuthenticatedSSR ?? false) : false);
 
   const { boards: discoverBoards, isLoading: isBoardsLoading } = useDiscoverBoards({ limit: 20 });
-  const { configs: popularConfigs, isLoading: isConfigsLoading, isLoadingMore, hasMore, loadMore } = usePopularBoardConfigs({ limit: 12 });
+  const { configs: popularConfigs, isLoading: isConfigsLoading, isLoadingMore, hasMore, loadMore } = usePopularBoardConfigs({ limit: 12, initialData: initialPopularConfigs });
 
   const handleBoardClick = useCallback((board: UserBoard) => {
     if (board.slug) {
@@ -208,7 +209,7 @@ export default function HomePageContent({ boardConfigs, isAuthenticatedSSR }: Ho
         {(isBoardsLoading || isConfigsLoading || discoverBoards.length > 0 || popularConfigs.length > 0) && (
           <BoardScrollSection
             title="Boards near you"
-            loading={isBoardsLoading || isConfigsLoading}
+            loading={isBoardsLoading && popularConfigs.length === 0}
             onLoadMore={loadMore}
             hasMore={hasMore}
             isLoadingMore={isLoadingMore}
