@@ -134,7 +134,7 @@ export default function HomePageContent({ boardConfigs, isAuthenticatedSSR }: Ho
             fontWeight={themeTokens.typography.fontWeight.bold}
             sx={{ color: 'var(--neutral-900)' }}
           >
-            Get on the wall!
+            Get on the board!
           </Typography>
           <Typography
             variant="body1"
