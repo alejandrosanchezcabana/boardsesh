@@ -36,8 +36,10 @@ jobs:
       - name: Setup Android SDK
         uses: android-actions/setup-android@v3
 
-      - name: Install Android SDK components
-        run: sdkmanager "platforms;android-34" "build-tools;34.0.0"
+      - name: Accept licenses and install SDK components
+        run: |
+          yes | sdkmanager --licenses > /dev/null 2>&1 || true
+          sdkmanager "platforms;android-34" "build-tools;34.0.0"
 
       - name: Install Node.js dependencies
         working-directory: mobile
@@ -47,6 +49,15 @@ jobs:
         working-directory: mobile
         run: bunx cap sync android
 
+      - name: Verify sync output
+        run: |
+          echo "=== Checking capacitor-cordova-android-plugins ==="
+          ls -la mobile/android/capacitor-cordova-android-plugins/ || echo "MISSING!"
+          echo "=== Checking assets ==="
+          ls -la mobile/android/app/src/main/assets/ || echo "MISSING!"
+          echo "=== Checking capacitor.settings.gradle ==="
+          cat mobile/android/capacitor.settings.gradle
+
       - name: Set version code
         working-directory: mobile/android
         run: |
@@ -55,7 +66,7 @@ jobs:
 
       - name: Build debug APK
         working-directory: mobile/android
-        run: ./gradlew assembleDebug --stacktrace
+        run: ./gradlew assembleDebug --stacktrace --info
 
       - name: Decode keystore
         if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
