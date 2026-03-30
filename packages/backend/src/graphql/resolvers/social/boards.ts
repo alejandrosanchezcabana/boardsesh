@@ -237,32 +237,49 @@ async function getPopularConfigs(): Promise<CachedPopularConfig[]> {
     return popularConfigCache.data;
   }
 
+  // Two-step query: first enumerate distinct configs with set aggregation,
+  // then count climbs per (board_type, layout_id, size_id) using size edge filtering.
+  // LATERAL JOIN runs one indexed COUNT per config (~31 rows).
   const result = await db.execute(sql`
     SELECT
-      psls.board_type,
-      psls.layout_id,
+      configs.board_type,
+      configs.layout_id,
       bl.name AS layout_name,
-      psls.product_size_id AS size_id,
+      configs.size_id,
       bps.name AS size_name,
       bps.description AS size_description,
-      array_agg(DISTINCT psls.set_id ORDER BY psls.set_id) AS set_ids,
-      array_agg(DISTINCT bs.name ORDER BY bs.name) AS set_names,
+      configs.set_ids,
+      configs.set_names,
       COALESCE(cc.climb_count, 0) AS climb_count
-    FROM board_product_sizes_layouts_sets psls
-    JOIN board_layouts bl ON bl.board_type = psls.board_type AND bl.id = psls.layout_id
-    JOIN board_product_sizes bps ON bps.board_type = psls.board_type AND bps.id = psls.product_size_id
-    JOIN board_sets bs ON bs.board_type = psls.board_type AND bs.id = psls.set_id
-    LEFT JOIN (
-      SELECT board_type, layout_id, COUNT(*) AS climb_count
-      FROM board_climbs
-      WHERE is_listed = true AND is_draft = false
-      GROUP BY board_type, layout_id
-    ) cc ON cc.board_type = psls.board_type AND cc.layout_id = psls.layout_id
-    WHERE psls.is_listed = true
-      AND bl.is_listed = true
+    FROM (
+      SELECT
+        psls.board_type,
+        psls.layout_id,
+        psls.product_size_id AS size_id,
+        array_agg(DISTINCT psls.set_id ORDER BY psls.set_id) AS set_ids,
+        array_agg(DISTINCT bs.name ORDER BY bs.name) AS set_names
+      FROM board_product_sizes_layouts_sets psls
+      JOIN board_sets bs ON bs.board_type = psls.board_type AND bs.id = psls.set_id
+      WHERE psls.is_listed = true
+      GROUP BY psls.board_type, psls.layout_id, psls.product_size_id
+    ) configs
+    JOIN board_layouts bl ON bl.board_type = configs.board_type AND bl.id = configs.layout_id
+    JOIN board_product_sizes bps ON bps.board_type = configs.board_type AND bps.id = configs.size_id
+    LEFT JOIN LATERAL (
+      SELECT COUNT(*)::int AS climb_count
+      FROM board_climbs bc
+      WHERE bc.board_type = configs.board_type
+        AND bc.layout_id = configs.layout_id
+        AND bc.is_listed = true
+        AND bc.is_draft = false
+        AND bc.edge_left > bps.edge_left
+        AND bc.edge_right < bps.edge_right
+        AND bc.edge_bottom > bps.edge_bottom
+        AND bc.edge_top < bps.edge_top
+    ) cc ON true
+    WHERE bl.is_listed = true
       AND bps.is_listed = true
-    GROUP BY psls.board_type, psls.layout_id, bl.name, psls.product_size_id, bps.name, bps.description, cc.climb_count
-    ORDER BY climb_count DESC, psls.board_type, bl.name
+    ORDER BY climb_count DESC, configs.board_type, bl.name
   `);
 
   // db.execute() returns QueryResult with .rows for neon-serverless, or an array directly for postgres-js
