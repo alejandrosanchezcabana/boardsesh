@@ -40,6 +40,7 @@ export function usePopularBoardConfigs({
   const hasMoreRef = useRef(hasInitialData);
   const offsetRef = useRef(hasInitialData ? initialData.length : 0);
   const isFetchingRef = useRef(false);
+  const loadMoreFailCountRef = useRef(0);
 
   const fetchPage = useCallback(async (offset: number, isInitial: boolean) => {
     if (isFetchingRef.current) return;
@@ -64,10 +65,18 @@ export function usePopularBoardConfigs({
       setHasMore(more);
       hasMoreRef.current = more;
       offsetRef.current = offset + newConfigs.length;
+      loadMoreFailCountRef.current = 0;
     } catch (err) {
       console.error('Failed to fetch popular board configs:', err);
       if (isInitial) {
         setError('Failed to load board configurations');
+      } else {
+        // Stop infinite retries from IntersectionObserver by disabling loadMore after 3 failures
+        loadMoreFailCountRef.current += 1;
+        if (loadMoreFailCountRef.current >= 3) {
+          setHasMore(false);
+          hasMoreRef.current = false;
+        }
       }
     } finally {
       if (isInitial) {
