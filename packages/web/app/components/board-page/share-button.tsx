@@ -72,8 +72,7 @@ function LedConnectionTab() {
   return (
     <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
       <Typography variant="body2" component="span">
-        Connect to your board via Bluetooth to illuminate routes with LEDs.
-        Routes will automatically update as you navigate between climbs.
+        Light up holds on your board. Routes switch automatically as you move through your queue.
       </Typography>
 
       {!isBluetoothSupported && (
@@ -90,8 +89,7 @@ function LedConnectionTab() {
         >
           <Typography variant="body1" component="p" sx={{ margin: 0 }}>
             <Typography variant="body2" component="span">
-              Your browser does not support Web Bluetooth, which means you
-              won&#39;t be able to illuminate routes on the board.
+              This browser can&#39;t talk to your board over Bluetooth.
             </Typography>
           </Typography>
           {isIOS ? (
@@ -111,8 +109,7 @@ function LedConnectionTab() {
             </>
           ) : (
             <Typography variant="body1" component="p" sx={{ margin: 0 }}>
-              For the best experience, please use Chrome or another
-              Chromium-based browser.
+              Switch to Chrome or another Chromium-based browser to connect.
             </Typography>
           )}
         </Box>
@@ -149,11 +146,11 @@ function LedConnectionTab() {
             />
             <Box sx={{ flex: 1 }}>
               <Typography variant="body2" component="span" fontWeight={600} sx={{ color: themeTokens.colors.success }}>
-                Board Connected
+                Board connected
               </Typography>
               <br />
               <Typography variant="body2" component="span" color="text.secondary" sx={{ fontSize: '12px' }}>
-                Routes illuminate automatically when navigating
+                Holds light up as you go
               </Typography>
             </Box>
             <MuiButton
@@ -248,10 +245,10 @@ export const ShareBoardButton = () => {
         discoverable: formData.discoverable,
         name: formData.name,
       });
-      showMessage('Party mode started!', 'success');
+      showMessage('Session started!', 'success');
     } catch (error) {
       console.error('Failed to start session:', error);
-      showMessage('Failed to start party mode', 'error');
+      showMessage('Failed to start session', 'error');
     }
   };
 
@@ -274,7 +271,7 @@ export const ShareBoardButton = () => {
       }
 
       await joinSession(sessionIdToJoin);
-      showMessage('Joined party mode!', 'success');
+      showMessage('Joined session!', 'success');
       setJoinSessionId('');
     } catch (error) {
       console.error('Failed to join session:', error);
@@ -284,7 +281,7 @@ export const ShareBoardButton = () => {
 
   const handleEndSession = () => {
     endSession();
-    showMessage('Left party mode', 'info');
+    showMessage('Left session', 'info');
   };
 
   const connectionCount = uniqueUsers.length;
@@ -307,7 +304,7 @@ export const ShareBoardButton = () => {
         <CheckCircleOutlined sx={{ color: themeTokens.colors.success, fontSize: '18px' }} />
         <Box sx={{ flex: 1 }}>
           <Typography variant="body2" component="span" fontWeight={600} sx={{ color: themeTokens.colors.success }}>
-            Party Mode Active
+            Session Active
           </Typography>
           <br />
           <Typography variant="body2" component="span" color="text.secondary" sx={{ fontSize: '12px' }}>
@@ -429,7 +426,7 @@ export const ShareBoardButton = () => {
   const startTabContent = (
     <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
       <Typography variant="body2" component="span">
-        Start a party mode session to climb with others. Share your queue and take turns!
+        Climb with your crew. Share a queue and take turns on the wall.
       </Typography>
 
       {!isLoggedIn && (
@@ -444,7 +441,7 @@ export const ShareBoardButton = () => {
             borderRadius: themeTokens.borderRadius.md,
           }}
         >
-          <Typography variant="body2" component="span">Sign in to start a party session</Typography>
+          <Typography variant="body2" component="span">Sign in to start a session</Typography>
           <MuiButton variant="contained" size="small" startIcon={<LoginOutlined />} onClick={() => setShowAuthModal(true)}>
             Sign in
           </MuiButton>
@@ -455,7 +452,7 @@ export const ShareBoardButton = () => {
         <SessionCreationForm
           onSubmit={handleStartSessionEnhanced}
           isSubmitting={isCreating}
-          submitLabel="Start Party Mode"
+          submitLabel="Start Session"
         />
       )}
     </Box>
@@ -463,7 +460,7 @@ export const ShareBoardButton = () => {
 
   const joinTabContent = (
     <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-      <Typography variant="body2" component="span">Enter a session link or ID to join an existing party.</Typography>
+      <Typography variant="body2" component="span">Paste a link or session ID from your crew.</Typography>
 
       <TextField
         placeholder="Paste session link or ID..."
@@ -608,8 +605,8 @@ export const ShareBoardButton = () => {
       <AuthModal
         open={showAuthModal}
         onClose={() => setShowAuthModal(false)}
-        title="Sign in to start party mode"
-        description="Create an account or sign in to start a party session and climb with others."
+        title="Sign in to start a session"
+        description="Sign in to start climbing with your crew."
       />
     </>
   );

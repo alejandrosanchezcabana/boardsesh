@@ -176,7 +176,7 @@ test.describe('Help Page Screenshots - Authenticated', () => {
 
     // Switch to Start Session tab and start a party session
     await page.getByRole('tab', { name: 'Start Session' }).click();
-    await page.getByRole('button', { name: 'Start Party Mode' }).click();
+    await page.getByRole('button', { name: 'Start Session' }).click();
 
     // Wait for session to be active - WebSocket connection needs time to establish
     await page.waitForSelector('button:has-text("Leave")', { state: 'visible', timeout: 30000 });
