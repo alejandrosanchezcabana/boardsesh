@@ -134,13 +134,13 @@ export default function HomePageContent({ boardConfigs, isAuthenticatedSSR }: Ho
             fontWeight={themeTokens.typography.fontWeight.bold}
             sx={{ color: 'var(--neutral-900)' }}
           >
-            Ready to climb?
+            Get on the wall
           </Typography>
           <Typography
             variant="body1"
             sx={{ color: 'var(--neutral-500)', maxWidth: 320 }}
           >
-            Start a session to track your climbing, control your board, and invite your friends.
+            Track your sends, light up holds, and climb with friends — all in one session.
           </Typography>
           <Button
             variant="contained"
@@ -188,34 +188,34 @@ export default function HomePageContent({ boardConfigs, isAuthenticatedSSR }: Ho
               px: 0.5,
             }}
           >
-            Get started
+            Make it yours
           </Typography>
 
           <OnboardingCard
             icon={<WarningAmberOutlined />}
-            title="Old Kilter app users"
-            description="Migrate your data to Boardsesh before it's lost"
+            title="Coming from Kilter?"
+            description="Bring your logbook and history over in one step"
             onClick={() => router.push('/aurora-migration')}
           />
 
           <OnboardingCard
             icon={<PeopleOutlined />}
-            title="Find climbers"
-            description="Follow friends and see their sessions in your feed"
+            title="Find your crew"
+            description="Follow friends and see what they're climbing"
             onClick={() => setFindClimbersOpen(true)}
           />
 
           <OnboardingCard
             icon={<LocalOfferOutlined />}
-            title="Create playlists"
-            description="Organize climbs into collections for your sessions"
+            title="Build a playlist"
+            description="Line up your climbs before you get to the gym"
             onClick={() => router.push('/playlists')}
           />
 
           <OnboardingCard
             icon={<BluetoothOutlined />}
             title="Connect your board"
-            description="Light up holds on your board via Bluetooth"
+            description="Pair via Bluetooth and light up your next climb"
             onClick={() => setSeshDrawerOpen(true)}
           />
         </Box>
@@ -224,7 +224,7 @@ export default function HomePageContent({ boardConfigs, isAuthenticatedSSR }: Ho
         {isAuthenticated && (
           <Box sx={{ textAlign: 'center', py: 2 }}>
             <Typography variant="body2" sx={{ color: 'var(--neutral-400)', mb: 1 }}>
-              Looking for your activity feed?
+              Your friends are climbing.
             </Typography>
             <Button
               variant="text"
@@ -232,7 +232,7 @@ export default function HomePageContent({ boardConfigs, isAuthenticatedSSR }: Ho
               onClick={() => router.push('/feed')}
               sx={{ textTransform: 'none' }}
             >
-              Go to Feed
+              See the feed
             </Button>
           </Box>
         )}

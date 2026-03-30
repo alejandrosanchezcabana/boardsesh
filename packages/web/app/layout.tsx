@@ -17,11 +17,11 @@ import type { Viewport, Metadata } from 'next';
 export const metadata: Metadata = {
   metadataBase: new URL('https://www.boardsesh.com'),
   title: {
-    default: 'Boardsesh - LED Climbing Board Training',
+    default: 'Boardsesh - Train smarter on your climbing board',
     template: '%s | Boardsesh',
   },
   description:
-    'Track your climbing sessions, control LED boards via Bluetooth, and train with friends on Kilter, Tension, and MoonBoard.',
+    'Track sessions, control LEDs, and climb with friends on Kilter, Tension, and MoonBoard. One app for every board.',
   openGraph: {
     type: 'website',
     siteName: 'Boardsesh',

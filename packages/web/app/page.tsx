@@ -6,20 +6,20 @@ import { getAllBoardConfigs } from './lib/server-board-configs';
 import HomePageContent from './home-page-content';
 
 export const metadata: Metadata = {
-  title: 'Boardsesh - LED Climbing Board Training Hub',
+  title: 'Boardsesh - Train smarter on your climbing board',
   description:
-    'Your all-in-one hub for LED climbing board training. Track sessions, control Kilter, Tension, and MoonBoard LEDs via Bluetooth, create playlists, and climb with friends.',
+    'Track sessions, control LEDs, and climb with friends on Kilter, Tension, and MoonBoard. One app for every board.',
   openGraph: {
-    title: 'Boardsesh - LED Climbing Board Training Hub',
+    title: 'Boardsesh - Train smarter on your climbing board',
     description:
-      'Track your climbing, control LED boards, and train with friends.',
+      'One app for Kilter, Tension, and MoonBoard. Track sessions, control LEDs, climb together.',
     url: 'https://www.boardsesh.com',
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'Boardsesh - LED Climbing Board Training Hub',
+    title: 'Boardsesh - Train smarter on your climbing board',
     description:
-      'Track your climbing, control LED boards, and train with friends.',
+      'One app for Kilter, Tension, and MoonBoard. Track sessions, control LEDs, climb together.',
   },
 };
 
