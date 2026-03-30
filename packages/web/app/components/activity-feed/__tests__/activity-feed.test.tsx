@@ -207,7 +207,7 @@ describe('ActivityFeed', () => {
       );
 
       await waitFor(() => {
-        expect(screen.getByText(/Follow climbers/)).toBeTruthy();
+        expect(screen.getByText(/Find Climbers/)).toBeTruthy();
       });
     });
   });
