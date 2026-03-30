@@ -150,8 +150,13 @@ export default function HomePageContent({ boardConfigs, isAuthenticatedSSR }: Ho
             startIcon={<PlayArrowRounded />}
             onClick={() => {
               if (activeSession) {
-                const slug = activeSession.boardPath.replace('/b/', '');
-                router.push(constructBoardSlugListUrl(slug, activeSession.parsedParams.angle));
+                if (activeSession.boardPath.startsWith('/b/')) {
+                  const segments = activeSession.boardPath.split('/');
+                  router.push(constructBoardSlugListUrl(segments[2], activeSession.parsedParams.angle));
+                } else {
+                  // Legacy/custom path — navigate directly
+                  router.push(activeSession.boardPath);
+                }
               } else {
                 setSeshDrawerOpen(true);
               }
