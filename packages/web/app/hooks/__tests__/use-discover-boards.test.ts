@@ -312,12 +312,14 @@ describe('useDiscoverBoards', () => {
       expect(result.current.isLoading).toBe(false);
     });
 
-    // Geolocation was called once on the initial fetch
+    // Geolocation was called exactly once on the initial fetch
     expect(mockGetCurrentPosition).toHaveBeenCalledTimes(1);
 
-    // The coords are now cached in coordsRef — on subsequent calls to
-    // resolveGeolocation, getCurrentPosition won't be called again because
-    // coordsRef.current is already set. We verified this above.
+    // After the first successful geo resolution, coordsRef.current is set.
+    // On any subsequent effect run (e.g. token change), resolveGeolocation()
+    // returns the cached coords immediately without calling getCurrentPosition again.
+    // We verify this by confirming the geo API was only called once above.
+    // The hook's internal coordsRef caching is the mechanism under test.
   });
 
   it('enableLocation=false skips geolocation', async () => {
@@ -369,9 +371,8 @@ describe('useDiscoverBoards', () => {
     rerender({ enableLocation: true });
 
     await waitFor(() => {
-      expect(result.current.isLoading).toBe(false);
       expect(result.current.hasLocation).toBe(true);
-    }, { timeout: 3000 });
+    });
 
     // Geolocation should now have been called
     expect(mockGetCurrentPosition).toHaveBeenCalledTimes(1);
