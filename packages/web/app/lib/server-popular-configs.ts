@@ -22,7 +22,7 @@ export const getPopularBoardConfigs = React.cache(async (): Promise<PopularBoard
         { input: { limit: 12, offset: 0 } },
       ),
       new Promise<never>((_, reject) =>
-        setTimeout(() => reject(new Error('SSR popular configs timeout')), 3000),
+        setTimeout(() => reject(new Error('SSR popular configs timeout')), 1000),
       ),
     ]);
     return result.popularBoardConfigs.configs;
