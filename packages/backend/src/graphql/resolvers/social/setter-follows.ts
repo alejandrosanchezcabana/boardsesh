@@ -189,7 +189,7 @@ export const setterFollowQueries = {
   },
 
   /**
-   * Get climbs created by a setter with full Climb data (including litUpHoldsMap for thumbnails).
+   * Get climbs created by a setter with full Climb data (for thumbnails).
    * Supports multi-board mode when boardType is omitted.
    */
   setterClimbsFull: async (

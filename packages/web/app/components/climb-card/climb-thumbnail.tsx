@@ -27,7 +27,7 @@ const ClimbThumbnail = ({ boardDetails, currentClimb, enableNavigation = false, 
   const pathname = usePathname();
   const litUpHoldsMap = useMemo(
     () => currentClimb ? convertLitUpHoldsStringToMap(currentClimb.frames, boardDetails.board_name)[0] : undefined,
-    [currentClimb, boardDetails.board_name],
+    [currentClimb?.frames, boardDetails.board_name],
   );
   const containerRef = useRef<HTMLDivElement>(null);
   const [isVisible, setIsVisible] = useState(false);

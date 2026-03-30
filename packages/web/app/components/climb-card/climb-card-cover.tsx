@@ -16,7 +16,7 @@ const ClimbCardCover = ({ climb, boardDetails, onClick, onDoubleClick }: ClimbCa
   const { ref, onDoubleClick: handleDoubleClick } = useDoubleTap(onDoubleClick);
   const litUpHoldsMap = useMemo(
     () => climb ? convertLitUpHoldsStringToMap(climb.frames, boardDetails.board_name)[0] : undefined,
-    [climb, boardDetails.board_name],
+    [climb?.frames, boardDetails.board_name],
   );
 
   return (

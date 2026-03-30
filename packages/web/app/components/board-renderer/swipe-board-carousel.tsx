@@ -100,7 +100,7 @@ const SwipeBoardCarousel: React.FC<SwipeBoardCarouselProps> = ({
   );
   const peekLitUpHoldsMap = useMemo(
     () => peekClimb ? convertLitUpHoldsStringToMap(peekClimb.frames, boardDetails.board_name)[0] : undefined,
-    [peekClimb, boardDetails.board_name],
+    [peekClimb?.frames, boardDetails.board_name],
   );
 
   return (
