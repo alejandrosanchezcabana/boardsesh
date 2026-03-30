@@ -1,7 +1,7 @@
 import { neon, neonConfig, Pool } from '@neondatabase/serverless';
 import { drizzle as drizzleHttp } from 'drizzle-orm/neon-http';
 import { drizzle } from 'drizzle-orm/neon-serverless';
-import { eq, and, or, isNotNull, sql } from 'drizzle-orm';
+import { eq, ne, and, or, isNotNull, sql } from 'drizzle-orm';
 import ws from 'ws';
 
 import { auroraCredentials } from '@boardsesh/db/schema/auth';
@@ -185,6 +185,8 @@ export class SyncRunner {
           isNotNull(auroraCredentials.encryptedUsername),
           isNotNull(auroraCredentials.encryptedPassword),
           isNotNull(auroraCredentials.auroraUserId),
+          // Kilter backend is permanently down
+          ne(auroraCredentials.boardType, 'kilter'),
         ),
       );
 
@@ -204,6 +206,8 @@ export class SyncRunner {
           isNotNull(auroraCredentials.encryptedUsername),
           isNotNull(auroraCredentials.encryptedPassword),
           isNotNull(auroraCredentials.auroraUserId),
+          // Kilter backend is permanently down
+          ne(auroraCredentials.boardType, 'kilter'),
         ),
       )
       .orderBy(sql`${auroraCredentials.lastSyncAt} ASC NULLS FIRST`) // Never-synced users first, then oldest
