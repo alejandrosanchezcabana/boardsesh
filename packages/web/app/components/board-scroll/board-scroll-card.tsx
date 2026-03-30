@@ -122,7 +122,12 @@ export default function BoardScrollCard({
         } else if (distinctiveSets.length > 0) {
           setLabel = ` ${distinctiveSets.map((s) => s.replace(/\bKickboard\b/gi, 'KB')).join(' + ')}`;
         }
-        cardName = `${shortLayout} ${popularConfig.sizeName || ''}${setLabel}`.trim();
+        const shortSize = (popularConfig.sizeName || '')
+          .replace(/\s*high\s*/gi, ' ')
+          .replace(/\s*wide\s*/gi, '')
+          .replace(/\s+/g, ' ')
+          .trim();
+        cardName = `${shortLayout} ${shortSize}${setLabel}`.trim();
         cardMeta = `${BOARD_TYPE_LABELS[boardName] || boardName} \u00B7 ${popularConfig.climbCount.toLocaleString()} routes`;
 
         if (boardName === 'moonboard') {
