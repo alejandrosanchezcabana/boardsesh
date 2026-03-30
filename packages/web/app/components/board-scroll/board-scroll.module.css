@@ -26,7 +26,7 @@
 
 /* Board Card */
 .cardScroll {
-  width: 140px;
+  width: 168px;
   flex-shrink: 0;
   scroll-snap-align: start;
   cursor: pointer;
@@ -189,7 +189,7 @@
 /* Mobile */
 @media (max-width: 767px) {
   .cardScroll {
-    width: 140px;
+    width: 168px;
   }
 
   .cardScrollSmall {
@@ -206,7 +206,7 @@
 /* Desktop */
 @media (min-width: 768px) {
   .cardScroll {
-    width: 160px;
+    width: 192px;
   }
 
   .cardScrollSmall {
