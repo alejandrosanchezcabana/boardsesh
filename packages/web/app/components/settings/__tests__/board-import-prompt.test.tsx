@@ -55,7 +55,7 @@ describe('BoardImportPrompt', () => {
       expect(container.innerHTML).toBe('');
     });
 
-    it('renders card with Link Account and Import JSON when no credential exists', async () => {
+    it('renders card with Link and Import buttons when no credential exists', async () => {
       mockFetch.mockResolvedValue(mockCredentialsResponse([]));
 
       render(<BoardImportPrompt boardType="tension" />);
@@ -64,11 +64,11 @@ describe('BoardImportPrompt', () => {
         expect(screen.getByText('Tension Board')).toBeTruthy();
       });
 
-      expect(screen.getByText('Link Account')).toBeTruthy();
-      expect(screen.getByText('Import JSON')).toBeTruthy();
+      expect(screen.getByText('Link')).toBeTruthy();
+      expect(screen.getByText('Import')).toBeTruthy();
     });
 
-    it('renders card with Unlink Account when credential exists', async () => {
+    it('renders card with Unlink button when credential exists', async () => {
       mockFetch.mockResolvedValue(mockCredentialsResponse([tensionCredential]));
 
       render(<BoardImportPrompt boardType="tension" />);
@@ -77,11 +77,11 @@ describe('BoardImportPrompt', () => {
         expect(screen.getByText('Tension Board')).toBeTruthy();
       });
 
-      expect(screen.getByText('Unlink Account')).toBeTruthy();
-      expect(screen.getByText('Import JSON')).toBeTruthy();
+      expect(screen.getByText('Unlink')).toBeTruthy();
+      expect(screen.getByText('Import')).toBeTruthy();
     });
 
-    it('shows only Import JSON for kilter (no Link Account)', async () => {
+    it('shows only Import for kilter (no Link button)', async () => {
       mockFetch.mockResolvedValue(mockCredentialsResponse([]));
 
       render(<BoardImportPrompt boardType="kilter" />);
@@ -90,8 +90,8 @@ describe('BoardImportPrompt', () => {
         expect(screen.getByText('Kilter Board')).toBeTruthy();
       });
 
-      expect(screen.getByText('Import JSON')).toBeTruthy();
-      expect(screen.queryByText('Link Account')).toBeNull();
+      expect(screen.getByText('Import')).toBeTruthy();
+      expect(screen.queryByText('Link')).toBeNull();
     });
   });
 
@@ -102,10 +102,10 @@ describe('BoardImportPrompt', () => {
       render(<BoardImportPrompt boardType="tension" />);
 
       await waitFor(() => {
-        expect(screen.getByText('Link Account')).toBeTruthy();
+        expect(screen.getByText('Link')).toBeTruthy();
       });
 
-      fireEvent.click(screen.getByText('Link Account'));
+      fireEvent.click(screen.getByText('Link'));
 
       expect(screen.getByText('Link Tension Account')).toBeTruthy();
       expect(screen.getByLabelText('Username *')).toBeTruthy();
@@ -121,10 +121,10 @@ describe('BoardImportPrompt', () => {
       render(<BoardImportPrompt boardType="tension" />);
 
       await waitFor(() => {
-        expect(screen.getByText('Link Account')).toBeTruthy();
+        expect(screen.getByText('Link')).toBeTruthy();
       });
 
-      fireEvent.click(screen.getByText('Link Account'));
+      fireEvent.click(screen.getByText('Link'));
 
       fireEvent.change(screen.getByLabelText('Username *'), { target: { value: 'myuser' } });
       fireEvent.change(screen.getByLabelText('Password *'), { target: { value: 'mypass' } });
@@ -157,10 +157,10 @@ describe('BoardImportPrompt', () => {
       render(<BoardImportPrompt boardType="tension" />);
 
       await waitFor(() => {
-        expect(screen.getByText('Link Account')).toBeTruthy();
+        expect(screen.getByText('Link')).toBeTruthy();
       });
 
-      fireEvent.click(screen.getByText('Link Account'));
+      fireEvent.click(screen.getByText('Link'));
       fireEvent.change(screen.getByLabelText('Username *'), { target: { value: 'user' } });
       fireEvent.change(screen.getByLabelText('Password *'), { target: { value: 'pass' } });
 
@@ -184,11 +184,11 @@ describe('BoardImportPrompt', () => {
       render(<BoardImportPrompt boardType="tension" />);
 
       await waitFor(() => {
-        expect(screen.getByText('Unlink Account')).toBeTruthy();
+        expect(screen.getByText('Unlink')).toBeTruthy();
       });
 
       // Click Unlink which opens the ConfirmPopover
-      fireEvent.click(screen.getByText('Unlink Account'));
+      fireEvent.click(screen.getByText('Unlink'));
 
       // Confirm in the popover
       await waitFor(() => {
@@ -219,10 +219,10 @@ describe('BoardImportPrompt', () => {
       render(<BoardImportPrompt boardType="tension" />);
 
       await waitFor(() => {
-        expect(screen.getByText('Unlink Account')).toBeTruthy();
+        expect(screen.getByText('Unlink')).toBeTruthy();
       });
 
-      fireEvent.click(screen.getByText('Unlink Account'));
+      fireEvent.click(screen.getByText('Unlink'));
 
       await waitFor(() => {
         expect(screen.getByText('Yes, unlink')).toBeTruthy();
@@ -242,7 +242,7 @@ describe('BoardImportPrompt', () => {
       render(<BoardImportPrompt boardType="kilter" />);
 
       await waitFor(() => {
-        expect(screen.getByText('Import JSON')).toBeTruthy();
+        expect(screen.getByText('Import')).toBeTruthy();
       });
 
       const fileInput = document.querySelector('input[type="file"]') as HTMLInputElement;
@@ -262,7 +262,7 @@ describe('BoardImportPrompt', () => {
       render(<BoardImportPrompt boardType="kilter" />);
 
       await waitFor(() => {
-        expect(screen.getByText('Import JSON')).toBeTruthy();
+        expect(screen.getByText('Import')).toBeTruthy();
       });
 
       const fileInput = document.querySelector('input[type="file"]') as HTMLInputElement;
@@ -285,7 +285,7 @@ describe('BoardImportPrompt', () => {
       render(<BoardImportPrompt boardType="tension" />);
 
       await waitFor(() => {
-        expect(screen.getByText('Import JSON')).toBeTruthy();
+        expect(screen.getByText('Import')).toBeTruthy();
       });
 
       const mismatchJson = JSON.stringify({
@@ -314,7 +314,7 @@ describe('BoardImportPrompt', () => {
       render(<BoardImportPrompt boardType="kilter" />);
 
       await waitFor(() => {
-        expect(screen.getByText('Import JSON')).toBeTruthy();
+        expect(screen.getByText('Import')).toBeTruthy();
       });
 
       const validJson = JSON.stringify({
@@ -355,7 +355,7 @@ describe('BoardImportPrompt', () => {
       render(<BoardImportPrompt boardType="kilter" />);
 
       await waitFor(() => {
-        expect(screen.getByText('Import JSON')).toBeTruthy();
+        expect(screen.getByText('Import')).toBeTruthy();
       });
 
       // Select a valid file
@@ -378,7 +378,7 @@ describe('BoardImportPrompt', () => {
       });
 
       // Click Import
-      fireEvent.click(screen.getByText('Import'));
+      fireEvent.click(screen.getAllByText('Import').find((el) => el.closest('[role="dialog"]'))!);
 
       await waitFor(() => {
         expect(mockStreamImport).toHaveBeenCalledWith('kilter', expect.anything(), expect.any(Function));
@@ -398,7 +398,7 @@ describe('BoardImportPrompt', () => {
       render(<BoardImportPrompt boardType="kilter" />);
 
       await waitFor(() => {
-        expect(screen.getByText('Import JSON')).toBeTruthy();
+        expect(screen.getByText('Import')).toBeTruthy();
       });
 
       const validJson = JSON.stringify({
@@ -415,7 +415,7 @@ describe('BoardImportPrompt', () => {
         expect(screen.getByText('Import Aurora Data')).toBeTruthy();
       });
 
-      fireEvent.click(screen.getByText('Import'));
+      fireEvent.click(screen.getAllByText('Import').find((el) => el.closest('[role="dialog"]'))!);
 
       await waitFor(() => {
         expect(screen.getByText('Importing Aurora Data...')).toBeTruthy();
@@ -437,7 +437,7 @@ describe('BoardImportPrompt', () => {
       render(<BoardImportPrompt boardType="kilter" />);
 
       await waitFor(() => {
-        expect(screen.getByText('Import JSON')).toBeTruthy();
+        expect(screen.getByText('Import')).toBeTruthy();
       });
 
       const validJson = JSON.stringify({
@@ -454,7 +454,7 @@ describe('BoardImportPrompt', () => {
         expect(screen.getByText('Import Aurora Data')).toBeTruthy();
       });
 
-      fireEvent.click(screen.getByText('Import'));
+      fireEvent.click(screen.getAllByText('Import').find((el) => el.closest('[role="dialog"]'))!);
 
       await waitFor(() => {
         expect(screen.getByText('Import Failed')).toBeTruthy();

@@ -12,7 +12,28 @@ import { SnackbarProvider } from './components/providers/snackbar-provider';
 import { NotificationSubscriptionManager } from './components/providers/notification-subscription-manager';
 import { getAllBoardConfigs } from './lib/server-board-configs';
 import './components/index.css';
-import type { Viewport } from 'next';
+import type { Viewport, Metadata } from 'next';
+
+export const metadata: Metadata = {
+  metadataBase: new URL('https://www.boardsesh.com'),
+  title: {
+    default: 'Boardsesh - LED Climbing Board Training',
+    template: '%s | Boardsesh',
+  },
+  description:
+    'Track your climbing sessions, control LED boards via Bluetooth, and train with friends on Kilter, Tension, and MoonBoard.',
+  openGraph: {
+    type: 'website',
+    siteName: 'Boardsesh',
+    locale: 'en_US',
+  },
+  twitter: {
+    card: 'summary_large_image',
+  },
+  icons: {
+    icon: '/favicon.ico',
+  },
+};
 
 export const viewport: Viewport = {
   width: 'device-width',

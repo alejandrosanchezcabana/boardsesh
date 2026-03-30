@@ -333,7 +333,7 @@ export const socialBoardQueries = {
 
     if (useProximity) {
       // PostGIS proximity search path
-      const radiusMeters = (radiusKm ?? 50) * 1000;
+      const radiusMeters = (radiusKm ?? 1) * 1000;
       const lon = Number(longitude);
       const lat = Number(latitude);
 
@@ -388,6 +388,7 @@ export const socialBoardQueries = {
         isPublic: row.is_public as boolean,
         isOwned: row.is_owned as boolean,
         angle: row.angle != null ? Number(row.angle) : 40,
+        gymId: row.gym_id != null ? Number(row.gym_id) : null,
         isAngleAdjustable: row.is_angle_adjustable as boolean ?? true,
         createdAt: row.created_at as Date,
         updatedAt: row.updated_at as Date,

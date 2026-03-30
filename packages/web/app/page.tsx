@@ -1,13 +1,27 @@
 import React from 'react';
+import type { Metadata } from 'next';
 import { getServerAuthToken } from './lib/auth/server-auth';
 import ConsolidatedBoardConfig from './components/setup-wizard/consolidated-board-config';
 import { getAllBoardConfigs } from './lib/server-board-configs';
 import HomePageContent from './home-page-content';
-import { cachedSessionGroupedFeed, serverMyBoards } from './lib/graphql/server-cached-client';
-import type { SessionFeedResult } from '@boardsesh/shared-schema';
 
-type FeedTab = 'sessions' | 'proposals' | 'comments';
-const VALID_TABS: FeedTab[] = ['sessions', 'proposals', 'comments'];
+export const metadata: Metadata = {
+  title: 'Boardsesh - LED Climbing Board Training Hub',
+  description:
+    'Your all-in-one hub for LED climbing board training. Track sessions, control Kilter, Tension, and MoonBoard LEDs via Bluetooth, create playlists, and climb with friends.',
+  openGraph: {
+    title: 'Boardsesh - LED Climbing Board Training Hub',
+    description:
+      'Track your climbing, control LED boards, and train with friends.',
+    url: 'https://www.boardsesh.com',
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'Boardsesh - LED Climbing Board Training Hub',
+    description:
+      'Track your climbing, control LED boards, and train with friends.',
+  },
+};
 
 type HomeProps = {
   searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
@@ -22,42 +36,14 @@ export default async function Home({ searchParams }: HomeProps) {
     return <ConsolidatedBoardConfig boardConfigs={boardConfigs} />;
   }
 
-  // Parse URL state
-  const tab = (VALID_TABS.includes(params.tab as FeedTab) ? params.tab : 'sessions') as FeedTab;
-  const boardUuid = typeof params.board === 'string' ? params.board : undefined;
-
   // Read auth cookie to determine if user is authenticated at SSR time
   const authToken = await getServerAuthToken();
   const isAuthenticatedSSR = !!authToken;
 
-  // SSR: fetch boards + feed in parallel
-  let initialFeedResult: SessionFeedResult | null = null;
-  let initialMyBoards: import('@boardsesh/shared-schema').UserBoard[] | null = null;
-
-  if (authToken) {
-    const feedPromise = tab === 'sessions'
-      ? cachedSessionGroupedFeed(boardUuid, true).catch(() => null)
-      : Promise.resolve(null);
-    const boardsPromise = serverMyBoards(authToken);
-
-    const [feedResult, boardsResult] = await Promise.all([feedPromise, boardsPromise]);
-    initialFeedResult = feedResult;
-    initialMyBoards = boardsResult;
-  } else if (tab === 'sessions') {
-    try {
-      initialFeedResult = await cachedSessionGroupedFeed(boardUuid, false);
-    } catch {
-      // Feed fetch failed, client will retry
-    }
-  }
-
   return (
     <HomePageContent
-      initialTab={tab}
-      initialBoardUuid={boardUuid}
-      initialFeedResult={initialFeedResult}
+      boardConfigs={boardConfigs}
       isAuthenticatedSSR={isAuthenticatedSSR}
-      initialMyBoards={initialMyBoards}
     />
   );
 }

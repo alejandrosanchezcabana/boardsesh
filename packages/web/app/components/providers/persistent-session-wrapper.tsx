@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useMemo } from 'react';
+import { usePathname } from 'next/navigation';
 import { PartyProfileProvider } from '../party-manager/party-profile-context';
 import { PersistentSessionProvider, usePersistentSession } from '../persistent-session';
 import { QueueBridgeProvider, useQueueBridgeBoardInfo } from '../queue-control/queue-bridge-context';
@@ -65,8 +66,14 @@ function RootSessionSummaryDialog() {
  * Always renders — the QueueBridge provides queue context from whichever provider is active.
  * QueueControlBar is only shown when there is an active queue (board details available).
  */
+/** Pages where the bottom tab bar is hidden unless there's an active queue */
+const HIDE_TAB_BAR_PAGES = ['/aurora-migration'];
+
 function RootBottomBar({ boardConfigs }: { boardConfigs: BoardConfigData }) {
   const { boardDetails, angle, hasActiveQueue } = useQueueBridgeBoardInfo();
+  const pathname = usePathname();
+
+  const hideTabBar = HIDE_TAB_BAR_PAGES.some((prefix) => pathname.startsWith(prefix)) && !hasActiveQueue;
 
   return (
     <div className={bottomBarStyles.bottomBarWrapper} data-testid="bottom-bar-wrapper">
@@ -83,7 +90,7 @@ function RootBottomBar({ boardConfigs }: { boardConfigs: BoardConfigData }) {
           </BoardProvider>
         </ErrorBoundary>
       )}
-      <BottomTabBar boardConfigs={boardConfigs} />
+      {!hideTabBar && <BottomTabBar boardConfigs={boardConfigs} />}
     </div>
   );
 }

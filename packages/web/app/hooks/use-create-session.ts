@@ -52,10 +52,6 @@ export function useCreateSession() {
 
   const createSession = useCallback(
     async (formData: SessionCreationFormData, boardPath: string): Promise<string> => {
-      if (!token) {
-        throw new Error('Not authenticated');
-      }
-
       setIsCreating(true);
       try {
         // Get geolocation when discoverable

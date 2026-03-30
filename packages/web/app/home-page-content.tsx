@@ -1,149 +1,248 @@
 'use client';
 
-import React, { useCallback, useState } from 'react';
+import React, { useState, useCallback } from 'react';
 import Box from '@mui/material/Box';
-import Tabs from '@mui/material/Tabs';
-import Tab from '@mui/material/Tab';
-import ActivityFeed from '@/app/components/activity-feed/activity-feed';
-import ProposalFeed from '@/app/components/activity-feed/proposal-feed';
-import CommentFeed from '@/app/components/activity-feed/comment-feed';
+import Button from '@mui/material/Button';
+import Typography from '@mui/material/Typography';
+import Card from '@mui/material/Card';
+import CardContent from '@mui/material/CardContent';
+import CardActionArea from '@mui/material/CardActionArea';
+import PlayArrowRounded from '@mui/icons-material/PlayArrowRounded';
+import PeopleOutlined from '@mui/icons-material/PeopleOutlined';
+import BluetoothOutlined from '@mui/icons-material/BluetoothOutlined';
+import LocalOfferOutlined from '@mui/icons-material/LocalOfferOutlined';
+import WarningAmberOutlined from '@mui/icons-material/WarningAmberOutlined';
 import { useSession } from 'next-auth/react';
-import { useRouter, useSearchParams } from 'next/navigation';
-
+import { useRouter } from 'next/navigation';
+import { themeTokens } from '@/app/theme/theme-config';
+import StartSeshDrawer from '@/app/components/session-creation/start-sesh-drawer';
+import UnifiedSearchDrawer from '@/app/components/search-drawer/unified-search-drawer';
 import BoardScrollSection from '@/app/components/board-scroll/board-scroll-section';
 import BoardScrollCard from '@/app/components/board-scroll/board-scroll-card';
-import type { SessionFeedResult } from '@boardsesh/shared-schema';
+import { useDiscoverBoards } from '@/app/hooks/use-discover-boards';
+import { constructBoardSlugListUrl } from '@/app/lib/url-utils';
+import type { BoardConfigData } from '@/app/lib/server-board-configs';
 import type { UserBoard } from '@boardsesh/shared-schema';
-import { useMyBoards } from '@/app/hooks/use-my-boards';
-import boardScrollStyles from '@/app/components/board-scroll/board-scroll.module.css';
-import UnifiedSearchDrawer from '@/app/components/search-drawer/unified-search-drawer';
-
-type FeedTab = 'sessions' | 'proposals' | 'comments';
-const VALID_TABS: FeedTab[] = ['sessions', 'proposals', 'comments'];
 
 interface HomePageContentProps {
-  initialTab?: FeedTab;
-  initialBoardUuid?: string;
-  initialFeedResult?: SessionFeedResult | null;
+  boardConfigs: BoardConfigData;
   isAuthenticatedSSR?: boolean;
-  initialMyBoards?: UserBoard[] | null;
 }
 
-export default function HomePageContent({
-  initialTab = 'sessions',
-  initialBoardUuid,
-  initialFeedResult,
-  isAuthenticatedSSR,
-  initialMyBoards,
-}: HomePageContentProps) {
+interface OnboardingCardProps {
+  icon: React.ReactNode;
+  title: string;
+  description: string;
+  onClick: () => void;
+}
+
+function OnboardingCard({ icon, title, description, onClick }: OnboardingCardProps) {
+  return (
+    <Card
+      variant="outlined"
+      sx={{
+        borderRadius: `${themeTokens.borderRadius.lg}px`,
+        border: '1px solid var(--neutral-200)',
+        transition: themeTokens.transitions.fast,
+        '&:hover': {
+          borderColor: 'var(--neutral-300)',
+          boxShadow: themeTokens.shadows.sm,
+        },
+      }}
+    >
+      <CardActionArea onClick={onClick} sx={{ p: 0 }}>
+        <CardContent sx={{ display: 'flex', alignItems: 'center', gap: 2, py: 2, px: 2.5 }}>
+          <Box
+            sx={{
+              width: 44,
+              height: 44,
+              borderRadius: `${themeTokens.borderRadius.md}px`,
+              backgroundColor: 'var(--semantic-selected-light)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              flexShrink: 0,
+              color: themeTokens.colors.primary,
+            }}
+          >
+            {icon}
+          </Box>
+          <Box sx={{ minWidth: 0 }}>
+            <Typography
+              variant="body1"
+              fontWeight={themeTokens.typography.fontWeight.semibold}
+              sx={{ color: 'var(--neutral-900)', lineHeight: themeTokens.typography.lineHeight.tight }}
+            >
+              {title}
+            </Typography>
+            <Typography
+              variant="body2"
+              sx={{ color: 'var(--neutral-500)', mt: 0.25 }}
+            >
+              {description}
+            </Typography>
+          </Box>
+        </CardContent>
+      </CardActionArea>
+    </Card>
+  );
+}
+
+export default function HomePageContent({ boardConfigs, isAuthenticatedSSR }: HomePageContentProps) {
   const { status } = useSession();
   const router = useRouter();
-  const searchParams = useSearchParams();
-
-  // Trust the SSR hint during the loading phase to prevent flash of unauthenticated content
-  const isAuthenticated = status === 'authenticated' ? true : (status === 'loading' ? (isAuthenticatedSSR ?? false) : false);
-  const { boards: myBoards, isLoading: isLoadingBoards } = useMyBoards(isAuthenticated, 50, initialMyBoards);
-
-  // Read state from URL params (with fallbacks to server-provided initial values)
-  const tabParam = searchParams.get('tab');
-  const activeTab: FeedTab = VALID_TABS.includes(tabParam as FeedTab)
-    ? (tabParam as FeedTab)
-    : initialTab;
-  const selectedBoardUuid = searchParams.get('board') || initialBoardUuid || null;
+  const [seshDrawerOpen, setSeshDrawerOpen] = useState(false);
   const [findClimbersOpen, setFindClimbersOpen] = useState(false);
 
-  // Helper: update a URL param via shallow navigation
-  const updateParam = useCallback((key: string, value: string | null) => {
-    const params = new URLSearchParams(searchParams.toString());
-    // Default tab is 'sessions', don't put in URL
-    if (key === 'tab' && value === 'sessions') {
-      params.delete(key);
-    } else if (value) {
-      params.set(key, value);
-    } else {
-      params.delete(key);
+  const isAuthenticated = status === 'authenticated' ? true : (status === 'loading' ? (isAuthenticatedSSR ?? false) : false);
+
+  const { boards: discoverBoards, isLoading: isBoardsLoading } = useDiscoverBoards({ limit: 20 });
+
+  const handleBoardClick = useCallback((board: UserBoard) => {
+    if (board.slug) {
+      router.push(constructBoardSlugListUrl(board.slug, board.angle));
     }
-    const qs = params.toString();
-    router.push(qs ? `/?${qs}` : '/', { scroll: false });
-  }, [router, searchParams]);
-
-  const handleTabChange = (_: React.SyntheticEvent, value: FeedTab) => {
-    updateParam('tab', value);
-  };
-
-  const handleBoardFilter = useCallback((boardUuid: string | null) => {
-    updateParam('board', boardUuid);
-  }, [updateParam]);
-
-  const handleBoardSelect = useCallback((board: UserBoard) => {
-    updateParam('board', board.uuid);
-  }, [updateParam]);
+  }, [router]);
 
   return (
     <Box sx={{ minHeight: '100dvh', display: 'flex', flexDirection: 'column', pb: '60px' }}>
-      {/* Feed */}
-      <Box component="main" sx={{ flex: 1, px: 2, py: 2, pt: 'calc(var(--global-header-height) + 16px)' }}>
-        {isAuthenticated && (myBoards.length > 0 || isLoadingBoards) && (
-          <BoardScrollSection loading={isLoadingBoards} size="small">
-            <div
-              className={`${boardScrollStyles.cardScroll} ${boardScrollStyles.cardScrollSmall}`}
-              onClick={() => {
-                handleBoardFilter(null);
-              }}
-            >
-              <div className={`${boardScrollStyles.cardSquare} ${boardScrollStyles.filterSquare} ${!selectedBoardUuid ? boardScrollStyles.cardSquareSelected : ''}`}>
-                <span className={boardScrollStyles.filterLabel}>All</span>
-              </div>
-              <div className={`${boardScrollStyles.cardName} ${!selectedBoardUuid ? boardScrollStyles.cardNameSelected : ''}`}>
-                All Boards
-              </div>
-            </div>
-            {myBoards.map((board) => (
+      <Box
+        component="main"
+        sx={{
+          flex: 1,
+          px: 2,
+          py: 2,
+          pt: 'calc(var(--global-header-height) + 16px)',
+          display: 'flex',
+          flexDirection: 'column',
+          gap: 3,
+        }}
+      >
+        {/* Hero: Start Climbing CTA */}
+        <Box
+          sx={{
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            textAlign: 'center',
+            gap: 2,
+            py: 4,
+          }}
+        >
+          <Typography
+            variant="h5"
+            fontWeight={themeTokens.typography.fontWeight.bold}
+            sx={{ color: 'var(--neutral-900)' }}
+          >
+            Ready to climb?
+          </Typography>
+          <Typography
+            variant="body1"
+            sx={{ color: 'var(--neutral-500)', maxWidth: 320 }}
+          >
+            Start a session to track your climbing, control LEDs, and invite friends.
+          </Typography>
+          <Button
+            variant="contained"
+            size="large"
+            startIcon={<PlayArrowRounded />}
+            onClick={() => setSeshDrawerOpen(true)}
+            sx={{
+              mt: 1,
+              borderRadius: `${themeTokens.borderRadius.full}px`,
+              px: 4,
+              py: 1.5,
+              fontSize: themeTokens.typography.fontSize.lg,
+              fontWeight: themeTokens.typography.fontWeight.semibold,
+              textTransform: 'none',
+              boxShadow: themeTokens.shadows.md,
+            }}
+          >
+            Start climbing
+          </Button>
+        </Box>
+
+        {/* Board Discovery - horizontal scroll */}
+        {(isBoardsLoading || discoverBoards.length > 0) && (
+          <BoardScrollSection title="Boards near you" loading={isBoardsLoading}>
+            {discoverBoards.map((board) => (
               <BoardScrollCard
                 key={board.uuid}
                 userBoard={board}
-                size="small"
-                selected={selectedBoardUuid === board.uuid}
-                onClick={() => handleBoardSelect(board)}
+                onClick={() => handleBoardClick(board)}
               />
             ))}
           </BoardScrollSection>
         )}
-        <Tabs
-          value={activeTab}
-          onChange={handleTabChange}
-          variant="fullWidth"
-          sx={{ mb: 2 }}
-          aria-label="Home feed tabs"
-        >
-          <Tab label="Sessions" value="sessions" />
-          <Tab label="Proposals" value="proposals" />
-          <Tab label="Comments" value="comments" />
-        </Tabs>
 
-        {activeTab === 'sessions' && (
-          <ActivityFeed
-            isAuthenticated={isAuthenticated}
-            boardUuid={selectedBoardUuid}
-            initialFeedResult={initialFeedResult}
-            onFindClimbers={() => setFindClimbersOpen(true)}
-          />
-        )}
+        {/* Onboarding Cards */}
+        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5 }}>
+          <Typography
+            variant="body2"
+            fontWeight={themeTokens.typography.fontWeight.semibold}
+            sx={{
+              color: 'var(--neutral-400)',
+              textTransform: 'uppercase',
+              letterSpacing: '0.05em',
+              fontSize: themeTokens.typography.fontSize.xs,
+              px: 0.5,
+            }}
+          >
+            Get started
+          </Typography>
 
-        {activeTab === 'proposals' && (
-          <ProposalFeed
-            isAuthenticated={isAuthenticated}
-            boardUuid={selectedBoardUuid}
+          <OnboardingCard
+            icon={<WarningAmberOutlined />}
+            title="Old Kilter app users"
+            description="Migrate your data to Boardsesh before it's lost"
+            onClick={() => router.push('/aurora-migration')}
           />
-        )}
 
-        {activeTab === 'comments' && (
-          <CommentFeed
-            isAuthenticated={isAuthenticated}
-            boardUuid={selectedBoardUuid}
+          <OnboardingCard
+            icon={<PeopleOutlined />}
+            title="Find climbers"
+            description="Follow friends and see their sessions in your feed"
+            onClick={() => setFindClimbersOpen(true)}
           />
+
+          <OnboardingCard
+            icon={<LocalOfferOutlined />}
+            title="Create playlists"
+            description="Organize climbs into collections for your sessions"
+            onClick={() => router.push('/playlists')}
+          />
+
+          <OnboardingCard
+            icon={<BluetoothOutlined />}
+            title="Connect your board"
+            description="Light up holds on your board via Bluetooth"
+            onClick={() => setSeshDrawerOpen(true)}
+          />
+        </Box>
+
+        {/* Authenticated users: nudge to feed */}
+        {isAuthenticated && (
+          <Box sx={{ textAlign: 'center', py: 2 }}>
+            <Typography variant="body2" sx={{ color: 'var(--neutral-400)', mb: 1 }}>
+              Looking for your activity feed?
+            </Typography>
+            <Button
+              variant="text"
+              size="small"
+              onClick={() => router.push('/feed')}
+              sx={{ textTransform: 'none' }}
+            >
+              Go to Feed
+            </Button>
+          </Box>
         )}
       </Box>
+
+      <StartSeshDrawer
+        open={seshDrawerOpen}
+        onClose={() => setSeshDrawerOpen(false)}
+        boardConfigs={boardConfigs}
+      />
 
       <UnifiedSearchDrawer
         open={findClimbersOpen}

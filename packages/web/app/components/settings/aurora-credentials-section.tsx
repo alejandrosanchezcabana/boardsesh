@@ -27,7 +27,7 @@ import CheckCircleOutlined from '@mui/icons-material/CheckCircleOutlined';
 import WarningAmberOutlined from '@mui/icons-material/WarningAmberOutlined';
 import AccessTimeOutlined from '@mui/icons-material/AccessTimeOutlined';
 import DeleteOutlined from '@mui/icons-material/DeleteOutlined';
-import AddOutlined from '@mui/icons-material/AddOutlined';
+import LinkOutlined from '@mui/icons-material/LinkOutlined';
 import SyncOutlined from '@mui/icons-material/SyncOutlined';
 import WarningOutlined from '@mui/icons-material/WarningOutlined';
 import FileUploadOutlined from '@mui/icons-material/FileUploadOutlined';
@@ -140,8 +140,8 @@ export function BoardCredentialCard({
           )}
           <div className={styles.buttonRow}>
             {!isKilter && (
-              <Button variant="contained" startIcon={<AddOutlined />} onClick={onAdd} fullWidth>
-                Link Account
+              <Button variant="contained" startIcon={<LinkOutlined />} onClick={onAdd}>
+                Link
               </Button>
             )}
             <Button
@@ -149,9 +149,8 @@ export function BoardCredentialCard({
               startIcon={isImporting ? <CircularProgress size={16} /> : <FileUploadOutlined />}
               onClick={onImportJson}
               disabled={isImporting}
-              fullWidth
             >
-              Import JSON
+              Import
             </Button>
           </div>
         </CardContent>
@@ -206,9 +205,8 @@ export function BoardCredentialCard({
               variant="outlined"
               startIcon={isRemoving ? <CircularProgress size={16} /> : <DeleteOutlined />}
               disabled={isRemoving}
-              fullWidth
             >
-              Unlink Account
+              Unlink
             </Button>
           </ConfirmPopover>
           <Button
@@ -216,9 +214,8 @@ export function BoardCredentialCard({
             startIcon={isImporting ? <CircularProgress size={16} /> : <FileUploadOutlined />}
             onClick={onImportJson}
             disabled={isImporting}
-            fullWidth
           >
-            Import JSON
+            Import
           </Button>
         </div>
       </CardContent>

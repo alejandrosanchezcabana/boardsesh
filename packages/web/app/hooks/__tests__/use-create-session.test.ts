@@ -62,7 +62,7 @@ describe('useCreateSession', () => {
     vi.restoreAllMocks();
   });
 
-  it('throws when no token', async () => {
+  it('creates session without token (anonymous)', async () => {
     mockUseWsAuthToken.mockReturnValue({
       token: null,
       isAuthenticated: false,
@@ -70,13 +70,30 @@ describe('useCreateSession', () => {
       error: null,
     });
 
+    mockRequest.mockResolvedValue({
+      createSession: {
+        id: 'anon-session-123',
+        name: 'Anonymous Session',
+        boardPath: '/kilter/1/2/3/40',
+        goal: null,
+        isPublic: false,
+        isPermanent: false,
+        color: null,
+        startedAt: '2024-01-01T00:00:00Z',
+      },
+    });
+
     const { result } = renderHook(() => useCreateSession());
 
-    await expect(
-      act(async () => {
-        await result.current.createSession(createFormData() as SessionCreationFormData, '/kilter/1/2/3/40');
-      }),
-    ).rejects.toThrow('Not authenticated');
+    let sessionId: string | undefined;
+    await act(async () => {
+      sessionId = await result.current.createSession(
+        createFormData({ discoverable: false }) as SessionCreationFormData,
+        '/kilter/1/2/3/40',
+      );
+    });
+
+    expect(sessionId).toBe('anon-session-123');
   });
 
   it('creates session with geolocation when discoverable', async () => {
