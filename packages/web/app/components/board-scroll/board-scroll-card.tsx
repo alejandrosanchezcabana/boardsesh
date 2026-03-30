@@ -123,8 +123,9 @@ export default function BoardScrollCard({
           setLabel = ` ${distinctiveSets.map((s) => s.replace(/\bKickboard\b/gi, 'KB')).join(' + ')}`;
         }
         const shortSize = (popularConfig.sizeName || '')
-          .replace(/\s*high\s*/gi, ' ')
+          .replace(/\s*high\s*/gi, '')
           .replace(/\s*wide\s*/gi, '')
+          .replace(/\s*x\s*/g, 'x')
           .replace(/\s+/g, ' ')
           .trim();
         cardName = `${shortLayout} ${shortSize}${setLabel}`.trim();
