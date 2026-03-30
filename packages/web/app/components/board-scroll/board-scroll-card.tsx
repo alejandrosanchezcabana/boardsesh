@@ -100,7 +100,10 @@ export default function BoardScrollCard({
         }
       } else if (popularConfig) {
         const boardName = popularConfig.boardType as BoardName;
-        const shortLayout = (popularConfig.layoutName || '').replace(/\bBoard\b\s*/gi, '').trim();
+        const shortLayout = (popularConfig.layoutName || '')
+          .replace(/\bBoard\b\s*/gi, '')
+          .replace(/\bHomewall\b/gi, 'HW')
+          .trim();
         cardName = `${shortLayout} ${popularConfig.sizeName || ''}`.trim();
         cardMeta = `${BOARD_TYPE_LABELS[boardName] || boardName} \u00B7 ${popularConfig.climbCount.toLocaleString()} routes`;
 
