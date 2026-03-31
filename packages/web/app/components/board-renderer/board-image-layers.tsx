@@ -1,6 +1,7 @@
-import React, { useMemo } from 'react';
+import React, { useCallback, useMemo, useRef } from 'react';
 import type { BoardDetails } from '@/app/lib/types';
 import { getImageUrl, buildOverlayUrl } from './util';
+import { trackRenderComplete, trackRenderError, type RenderContext } from '@/app/lib/rendering-metrics';
 
 const layerStyle: React.CSSProperties = {
   position: 'absolute',
@@ -53,6 +54,21 @@ const BoardImageLayers = React.memo(function BoardImageLayers({
 
   const imgStyle = contain ? layerContainStyle : layerStyle;
 
+  // Render timing: measure mount → overlay loaded
+  const mountTime = useRef(performance.now());
+  const hasFired = useRef(false);
+  const renderContext: RenderContext = thumbnail ? 'thumbnail' : contain ? 'full-board' : 'card';
+
+  const handleOverlayLoad = useCallback(() => {
+    if (hasFired.current) return;
+    hasFired.current = true;
+    trackRenderComplete(performance.now() - mountTime.current, renderContext, 'rust-wasm');
+  }, [renderContext]);
+
+  const handleOverlayError = useCallback(() => {
+    trackRenderError(renderContext, 'rust-wasm');
+  }, [renderContext]);
+
   return (
     <div style={containerStyle}>
       {backgroundUrls.map((url) => (
@@ -60,7 +76,7 @@ const BoardImageLayers = React.memo(function BoardImageLayers({
         <img key={url} src={url} alt="" style={imgStyle} />
       ))}
       {/* eslint-disable-next-line @next/next/no-img-element */}
-      <img src={overlayUrl} alt="" style={imgStyle} />
+      <img src={overlayUrl} alt="" style={imgStyle} onLoad={handleOverlayLoad} onError={handleOverlayError} />
     </div>
   );
 });

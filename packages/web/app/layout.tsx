@@ -11,6 +11,7 @@ import PersistentSessionWrapper from './components/providers/persistent-session-
 import { SnackbarProvider } from './components/providers/snackbar-provider';
 import { NotificationSubscriptionManager } from './components/providers/notification-subscription-manager';
 import { VercelToolbar } from '@vercel/toolbar/next';
+import { FlagValues } from 'flags/react';
 import { getAllBoardConfigs } from './lib/server-board-configs';
 import { evaluateAllFlags } from './flags';
 import { FeatureFlagsProvider } from './components/providers/feature-flags-provider';
@@ -53,6 +54,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
     <html lang="en" data-theme="dark" suppressHydrationWarning>
       <body suppressHydrationWarning>
         <Analytics />
+        <FlagValues values={featureFlags} />
         <QueryClientProvider>
           <SessionProviderWrapper>
             <AppRouterCacheProvider>

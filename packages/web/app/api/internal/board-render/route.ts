@@ -115,7 +115,9 @@ export async function GET(request: NextRequest) {
     if (!renderOverlay) {
       return NextResponse.json({ error: 'WASM renderer failed to initialize' }, { status: 500 });
     }
+    const wasmT0 = performance.now();
     const rawBytes = renderOverlay(JSON.stringify(config));
+    const wasmMs = performance.now() - wasmT0;
 
     // Parse dimension header: first 8 bytes are width + height as u32 LE
     const view = new DataView(rawBytes.buffer, rawBytes.byteOffset, rawBytes.byteLength);
@@ -124,17 +126,21 @@ export async function GET(request: NextRequest) {
     const rgbaData = rawBytes.subarray(8);
 
     // Encode to WebP lossless using sharp (25-30% smaller than PNG)
+    const sharpT0 = performance.now();
     const webpBuffer = await sharp(Buffer.from(rgbaData.buffer, rgbaData.byteOffset, rgbaData.byteLength), {
       raw: { width, height, channels: 4 },
     })
       .webp({ lossless: true })
       .toBuffer();
+    const sharpMs = performance.now() - sharpT0;
 
     return new NextResponse(new Uint8Array(webpBuffer), {
       headers: {
         'Content-Type': 'image/webp',
         // Climbs are immutable -- cache forever at both CDN (s-maxage) and browser (max-age)
         'Cache-Control': 'public, s-maxage=31536000, max-age=31536000, immutable',
+        // Expose render timing in browser devtools Network panel
+        'Server-Timing': `wasm;dur=${wasmMs.toFixed(1)}, sharp;dur=${sharpMs.toFixed(1)}`,
       },
     });
   } catch (error) {
