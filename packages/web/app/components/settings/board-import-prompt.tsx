@@ -30,9 +30,10 @@ import styles from './aurora-credentials-section.module.css';
 
 interface BoardImportPromptProps {
   boardType: 'kilter' | 'tension';
+  onImportComplete?: () => void;
 }
 
-export default function BoardImportPrompt({ boardType }: BoardImportPromptProps) {
+export default function BoardImportPrompt({ boardType, onImportComplete }: BoardImportPromptProps) {
   const { showMessage } = useSnackbar();
   const boardName = boardType.charAt(0).toUpperCase() + boardType.slice(1);
 
@@ -216,6 +217,7 @@ export default function BoardImportPrompt({ boardType }: BoardImportPromptProps)
             receivedCompleteRef.current = true;
             setImportResult(event.results);
             setImportPhase('complete');
+            onImportComplete?.();
             {
               const totalImported =
                 event.results.climbs.imported +

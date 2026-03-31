@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useCallback } from 'react';
 import Box from '@mui/material/Box';
 import MuiCard from '@mui/material/Card';
 import CardContent from '@mui/material/CardContent';
@@ -17,13 +17,19 @@ import {
 import { useSession } from 'next-auth/react';
 import AuthModal from '@/app/components/auth/auth-modal';
 import BoardImportPrompt from '@/app/components/settings/board-import-prompt';
+import UserSmartCard from '@/app/components/social/user-smart-card';
 import { themeTokens } from '@/app/theme/theme-config';
 import styles from './aurora-migration.module.css';
 
 export default function AuroraMigrationContent() {
   const { data: session, status } = useSession();
   const [authModalOpen, setAuthModalOpen] = useState(false);
+  const [importRefreshKey, setImportRefreshKey] = useState(0);
   const isAuthenticated = status === 'authenticated';
+
+  const handleImportComplete = useCallback(() => {
+    setImportRefreshKey((prev: number) => prev + 1);
+  }, []);
 
   return (
     <Box className={styles.pageLayout}>
@@ -186,10 +192,38 @@ export default function AuroraMigrationContent() {
                       Kilter. For Tension, linking your account will automatically sync
                       your data every 12 hours so you always have a backup.
                     </Typography>
-                    <BoardImportPrompt boardType="kilter" />
-                    <BoardImportPrompt boardType="tension" />
+                    <BoardImportPrompt boardType="kilter" onImportComplete={handleImportComplete} />
+                    <BoardImportPrompt boardType="tension" onImportComplete={handleImportComplete} />
                   </Stack>
                 )}
+
+                {/* Step 4: Your profile */}
+                <div className={styles.stepRow}>
+                  <MuiAvatar
+                    className={styles.stepNumber}
+                    sx={{
+                      width: 32,
+                      height: 32,
+                      fontSize: 14,
+                      fontWeight: 600,
+                      bgcolor: themeTokens.colors.primary,
+                    }}
+                  >
+                    4
+                  </MuiAvatar>
+                  <div className={styles.stepContent}>
+                    <Typography variant="h6" sx={{ mb: 1 }}>
+                      Your Boardsesh profile
+                    </Typography>
+                    {isAuthenticated && session?.user?.id ? (
+                      <UserSmartCard userId={session.user.id} refreshKey={importRefreshKey} />
+                    ) : (
+                      <Typography variant="body2" color="text.secondary">
+                        Sign in first to see your profile.
+                      </Typography>
+                    )}
+                  </div>
+                </div>
               </Stack>
             </CardContent>
           </MuiCard>

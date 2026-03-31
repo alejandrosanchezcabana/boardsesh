@@ -1,0 +1,103 @@
+.card {
+  overflow: hidden;
+}
+
+.cardInner {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 4px 0;
+}
+
+.infoSection {
+  flex: 1;
+  min-width: 0;
+}
+
+.nameRow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.chips {
+  display: flex;
+  gap: 4px;
+  flex-wrap: wrap;
+  margin-top: 4px;
+}
+
+.chartSection {
+  margin-top: 12px;
+}
+
+.chartLabel {
+  margin-bottom: 6px;
+}
+
+.gradeBarContainer {
+  display: flex;
+  gap: 2px;
+  align-items: flex-end;
+  height: 32px;
+}
+
+.gradeBar {
+  flex: 1;
+  min-width: 4px;
+  max-width: 24px;
+  border-radius: 2px 2px 0 0;
+  transition: opacity 0.15s ease;
+}
+
+.gradeLegend {
+  display: flex;
+  gap: 2px;
+  margin-top: 2px;
+}
+
+.gradeLegendLabel {
+  flex: 1;
+  min-width: 4px;
+  max-width: 24px;
+  text-align: center;
+  font-size: 8px;
+  color: var(--neutral-400);
+  line-height: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.arrowIcon {
+  flex-shrink: 0;
+  color: var(--neutral-400);
+}
+
+/* Loading skeleton */
+.skeletonRow {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 4px 0;
+}
+
+.skeletonInfo {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+@media (max-width: 576px) {
+  .cardInner {
+    gap: 12px;
+  }
+
+  .gradeBarContainer {
+    height: 24px;
+  }
+
+  .gradeLegendLabel {
+    font-size: 7px;
+  }
+}
