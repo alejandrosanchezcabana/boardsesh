@@ -1,6 +1,6 @@
-import { flag } from '@vercel/flags/next';
+import { flag } from 'flags/next';
 
-export const rustSvgRendering = flag<boolean>({
+export const rustSvgRendering = flag({
   key: 'rust-svg-rendering',
   defaultValue: false,
   description: 'Use Rust WASM renderer for board overlays instead of SVG',
@@ -9,6 +9,6 @@ export const rustSvgRendering = flag<boolean>({
     { value: false, label: 'Disabled' },
   ],
   decide() {
-    return this.defaultValue as boolean;
+    return false;
   },
 });
