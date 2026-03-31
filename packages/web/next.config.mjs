@@ -24,6 +24,10 @@ const nextConfig = {
       '@mui/material-nextjs',
     ],
   },
+  // Include WASM binary in standalone output for serverless functions
+  outputFileTracingIncludes: {
+    '/api/internal/board-render': ['./node_modules/@boardsesh/board-renderer-wasm/pkg/*.wasm'],
+  },
   async headers() {
     return [
       {

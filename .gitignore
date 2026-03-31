@@ -73,3 +73,4 @@ packages/web/public/uploads
 
 # generated API documentation
 packages/web/public/openapi.json
+.claude/settings.local.json

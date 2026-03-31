@@ -101,7 +101,7 @@ const SwipeBoardCarousel: React.FC<SwipeBoardCarouselProps> = ({
   );
   const peekLitUpHoldsMap = useMemo(
     () => isRustRendererEnabled || !peekClimb ? undefined : convertLitUpHoldsStringToMap(peekClimb.frames, boardDetails.board_name)[0],
-    [peekClimb?.frames, boardDetails.board_name],
+    [peekClimb, boardDetails.board_name],
   );
 
   const renderBoard = (climb: ClimbBoardData, litUpHoldsMap: ReturnType<typeof convertLitUpHoldsStringToMap>[0] | undefined) => {
