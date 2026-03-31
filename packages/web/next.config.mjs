@@ -24,9 +24,13 @@ const nextConfig = {
       '@mui/material-nextjs',
     ],
   },
-  // Include WASM binary in standalone output for serverless functions
+  // Include WASM binary in standalone output for serverless functions.
+  // Both paths needed: monorepo root (hoisted deps) and local node_modules (symlink).
   outputFileTracingIncludes: {
-    '/api/internal/board-render': ['./node_modules/@boardsesh/board-renderer-wasm/pkg/*.wasm'],
+    '/api/internal/board-render': [
+      './node_modules/@boardsesh/board-renderer-wasm/pkg/*.wasm',
+      '../../node_modules/@boardsesh/board-renderer-wasm/pkg/*.wasm',
+    ],
   },
   async headers() {
     return [

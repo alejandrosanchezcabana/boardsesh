@@ -14,19 +14,22 @@ let renderOverlay: ((configJson: string) => Uint8Array) | null = null;
 let wasmInitPromise: Promise<void> | null = null;
 
 function findWasmPath(): string {
-  const wasmFile = 'node_modules/@boardsesh/board-renderer-wasm/pkg/board_renderer_wasm_bg.wasm';
+  const wasmFilename = 'board_renderer_wasm_bg.wasm';
   const candidates = [
-    // Vercel standalone: cwd is /var/task, node_modules at /var/task/node_modules
-    join(process.cwd(), wasmFile),
     // Monorepo dev: cwd is packages/web, workspace deps hoisted to root
-    join(process.cwd(), '..', '..', wasmFile),
-    // Vercel standalone alt: nested under packages/web
-    join(process.cwd(), 'packages', 'web', wasmFile),
+    join(process.cwd(), '..', '..', 'node_modules/@boardsesh/board-renderer-wasm/pkg', wasmFilename),
+    // Vercel standalone: cwd is /var/task, node_modules at root
+    join(process.cwd(), 'node_modules/@boardsesh/board-renderer-wasm/pkg', wasmFilename),
+    // Vercel standalone: nested under packages/web
+    join(process.cwd(), 'packages/web/node_modules/@boardsesh/board-renderer-wasm/pkg', wasmFilename),
+    // Relative to __dirname (works if file tracing copies it alongside the route)
+    join(process.cwd(), '.next/server', wasmFilename),
   ];
   for (const candidate of candidates) {
     if (existsSync(candidate)) return candidate;
   }
-  // Return first candidate so readFile gives a clear error with the attempted path
+  // Log all searched paths to help debug Vercel deployment issues
+  console.error(`WASM file not found. cwd=${process.cwd()}, searched:`, candidates);
   return candidates[0];
 }
 
