@@ -93,10 +93,13 @@ const MoonBoardRenderer: React.FC<MoonBoardRendererProps> = ({
         />
       ))}
 
-      {/* Render clickable grid holds */}
+      {/* Render hold circles - skip transparent ones when they serve no purpose */}
       {gridHolds.map((hold) => {
         const color = getHoldColor(hold.id);
         const isLitUp = color !== 'transparent';
+
+        // Skip transparent circles in thumbnail mode or when there's no click handler
+        if (!isLitUp && (thumbnail || !onHoldClick)) return null;
 
         return (
           <circle

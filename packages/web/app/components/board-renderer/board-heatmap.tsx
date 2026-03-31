@@ -394,8 +394,8 @@ const BoardHeatmap: React.FC<BoardHeatmapProps> = ({ boardDetails, litUpHoldsMap
             </>
           )}
 
-          {/* Interaction layer */}
-          {holdsData.map((hold) => (
+          {/* Interaction layer - only render when click handler exists */}
+          {onHoldClick && holdsData.map((hold) => (
             <circle
               key={`click-${hold.id}`}
               cx={hold.cx}
@@ -403,17 +403,13 @@ const BoardHeatmap: React.FC<BoardHeatmapProps> = ({ boardDetails, litUpHoldsMap
               r={hold.r}
               fill="transparent"
               className="cursor-pointer"
-              onClick={
-                onHoldClick
-                  ? () => {
-                      onHoldClick(hold.id);
-                      track('Heatmap Hold Clicked', {
-                        hold_id: hold.id,
-                        boardLayout: `${boardDetails.layout_name}`,
-                      });
-                    }
-                  : undefined
-              }
+              onClick={() => {
+                onHoldClick(hold.id);
+                track('Heatmap Hold Clicked', {
+                  hold_id: hold.id,
+                  boardLayout: `${boardDetails.layout_name}`,
+                });
+              }}
             />
           ))}
 
