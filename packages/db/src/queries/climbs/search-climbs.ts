@@ -30,7 +30,10 @@ export const searchClimbs = async (
 
   const filters = createClimbFilters(params, searchParams, sizeEdges, userId);
 
-  const sortBy = searchParams.sortBy || (searchParams.onlyDrafts ? 'creation' : 'ascents');
+  // Drafts never have stats, so force creation sort (stats-based sorts would be meaningless)
+  const sortBy = searchParams.onlyDrafts
+    ? 'creation'
+    : (searchParams.sortBy || 'ascents');
   const sortOrder = searchParams.sortOrder === 'asc' ? 'asc' : 'desc';
 
   // For the popular sort, pre-aggregate total ascents across all angles via a joined subquery
@@ -74,10 +77,14 @@ export const searchClimbs = async (
 
   const sortColumn = allowedSortColumns[sortBy] || sql`${boardClimbStats.ascensionistCount}`;
 
+  const isDraftsQuery = !!searchParams.onlyDrafts;
+
   const whereConditions = [
     ...filters.getClimbWhereConditions(),
     ...filters.getSizeConditions(),
-    ...filters.getClimbStatsConditions(),
+    // Draft climbs never have board_climb_stats rows, so stats-based filters
+    // (grade range, min ascents, quality, accuracy) would reject every draft.
+    ...(isDraftsQuery ? [] : filters.getClimbStatsConditions()),
   ];
 
   const selectFields = {
@@ -98,10 +105,9 @@ export const searchClimbs = async (
     ? sql`${sortColumn} ASC NULLS FIRST`
     : sql`${sortColumn} DESC NULLS LAST`;
 
-  // Always use board_climbs as the driving table with LEFT JOIN to board_climb_stats.
-  // This ensures climbs without stats rows are not silently dropped from results.
-  // The board_climb_stats_ascents_covering_idx helps the JOIN, and the planner
-  // can use it for the ORDER BY when sorting by ascents.
+  // LEFT JOIN board_climb_stats for grade/sort data.
+  // Draft climbs never have stats rows so the JOIN returns NULLs — that's fine,
+  // stats conditions are already skipped above and sort is forced to creation.
   const coreQuery = db
     .select(selectFields)
     .from(boardClimbs)
