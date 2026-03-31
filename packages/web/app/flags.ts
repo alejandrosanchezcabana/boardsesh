@@ -9,9 +9,7 @@ const adapter = process.env.FLAGS ? vercelAdapter() : undefined;
 
 async function identify() {
   const session = await getServerSession(authOptions);
-  const entities = session?.user ? { user: { id: session.user.id, email: session.user.email } } : {};
-  console.log('[flags] identify() →', JSON.stringify(entities));
-  return entities;
+  return session?.user ? { user: { id: session.user.id, email: session.user.email } } : {};
 }
 
 export const rustSvgRendering = flag({
@@ -41,7 +39,5 @@ export type FeatureFlags = {
 
 export async function evaluateAllFlags(): Promise<FeatureFlags> {
   const values = await evaluate(allFlags);
-  const result = combine(allFlags, values) as FeatureFlags;
-  console.log('[flags] evaluateAllFlags() →', JSON.stringify(result));
-  return result;
+  return combine(allFlags, values) as FeatureFlags;
 }
