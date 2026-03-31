@@ -12,7 +12,7 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PUBLIC_DIR="$SCRIPT_DIR/../public"
 
 MAX_WIDTH=416
-QUALITY=65
+QUALITY=40
 SPEED=4
 
 converted=0
