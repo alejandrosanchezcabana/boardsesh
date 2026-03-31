@@ -13,7 +13,6 @@ import { ClimbCardSkeleton, ClimbListItemSkeleton } from './board-page-skeleton'
 import { themeTokens } from '@/app/theme/theme-config';
 import { getPreference, setPreference } from '@/app/lib/user-preferences-db';
 import { useInfiniteScroll } from '@/app/hooks/use-infinite-scroll';
-import { useFeatureFlag } from '@/app/components/providers/feature-flags-provider';
 
 type ViewMode = 'grid' | 'list';
 
@@ -69,9 +68,10 @@ const ClimbsList = ({
   renderItemExtra,
   showBottomSpacer,
 }: ClimbsListProps) => {
-  // Progressive rendering: show first batch immediately, rest after a frame.
-  // Only batch when the list is replaced (new search), not when items are
-  // appended (infinite scroll) — otherwise the height shrinks and the page jumps.
+  // Progressive rendering for grid mode only (list mode uses the virtualizer).
+  // Show first batch immediately, rest after a frame. Only batch when the list
+  // is replaced (new search), not when items are appended (infinite scroll)
+  // — otherwise the height shrinks and the page jumps.
   const INITIAL_BATCH = 6;
   const [visibleCount, setVisibleCount] = useState(climbs.length);
   const prevClimbsRef = useRef(climbs);
@@ -166,13 +166,12 @@ const ClimbsList = ({
   );
 
   // --- Window virtualizer for list mode ---
-  // Rust renderer uses cheap <img> tags instead of SVG, so we can afford
-  // more items in the DOM for smoother scrolling (less blank flashes).
-  const isRustRenderer = useFeatureFlag('rust-svg-rendering');
+  // Items are cheap <img> tags (Rust renderer), so we use a large overscan
+  // buffer to prevent blank flashes during fast scrolling.
   const virtualizer = useWindowVirtualizer({
     count: climbs.length,
     estimateSize: () => ESTIMATED_LIST_ITEM_HEIGHT,
-    overscan: isRustRenderer ? 20 : 5,
+    overscan: 15,
     getItemKey: (index) => climbs[index].uuid,
   });
 

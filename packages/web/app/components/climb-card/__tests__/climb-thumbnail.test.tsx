@@ -1,29 +1,7 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { describe, it, expect, vi } from 'vitest';
 import { render, screen } from '@testing-library/react';
 import React from 'react';
 import type { BoardDetails, Climb } from '@/app/lib/types';
-
-// Mock IntersectionObserver so the lazy-load gate immediately fires
-beforeEach(() => {
-  vi.stubGlobal(
-    'IntersectionObserver',
-    class {
-      private cb: IntersectionObserverCallback;
-      constructor(cb: IntersectionObserverCallback) {
-        this.cb = cb;
-      }
-      observe() {
-        // Trigger immediately with isIntersecting: true
-        this.cb(
-          [{ isIntersecting: true } as IntersectionObserverEntry],
-          this as unknown as IntersectionObserver,
-        );
-      }
-      disconnect() {}
-      unobserve() {}
-    },
-  );
-});
 
 let mockPathname = '/b/moonrise-gym/40/list';
 
@@ -35,10 +13,6 @@ vi.mock('next/link', () => ({
   default: ({ href, children, ...rest }: { href: string; children: React.ReactNode }) => (
     <a href={href} {...rest}>{children}</a>
   ),
-}));
-
-vi.mock('../../board-renderer/board-renderer', () => ({
-  default: () => <div data-testid="board-renderer" />,
 }));
 
 import ClimbThumbnail from '../climb-thumbnail';
@@ -85,60 +59,6 @@ const climb = {
   difficulty_error: '0',
   benchmark_difficulty: null,
 } as Climb;
-
-describe('ClimbThumbnail placeholder', () => {
-  beforeEach(() => {
-    // Override: IntersectionObserver that does NOT fire, so the placeholder stays visible
-    vi.stubGlobal(
-      'IntersectionObserver',
-      class {
-        observe() {}
-        disconnect() {}
-        unobserve() {}
-      },
-    );
-  });
-
-  it('applies maxHeight matching BoardRenderer default (10vh) to prevent layout shift', () => {
-    const { container } = renderWithFlags(
-      <ClimbThumbnail
-        boardDetails={boardDetails}
-        currentClimb={climb}
-      />,
-    );
-
-    const placeholder = container.firstElementChild as HTMLElement;
-    expect(placeholder.style.maxHeight).toBe('10vh');
-    expect(placeholder.style.aspectRatio).toBe('100/100');
-  });
-
-  it('uses custom maxHeight when provided', () => {
-    const { container } = renderWithFlags(
-      <ClimbThumbnail
-        boardDetails={boardDetails}
-        currentClimb={climb}
-        maxHeight="80px"
-      />,
-    );
-
-    const placeholder = container.firstElementChild as HTMLElement;
-    expect(placeholder.style.maxHeight).toBe('80px');
-  });
-
-  it('reflects board aspect ratio in placeholder', () => {
-    const tallBoard = { ...boardDetails, boardWidth: 548, boardHeight: 868 };
-    const { container } = renderWithFlags(
-      <ClimbThumbnail
-        boardDetails={tallBoard}
-        currentClimb={climb}
-      />,
-    );
-
-    const placeholder = container.firstElementChild as HTMLElement;
-    expect(placeholder.style.aspectRatio).toBe('548/868');
-    expect(placeholder.style.maxHeight).toBe('10vh');
-  });
-});
 
 describe('ClimbThumbnail', () => {
   it('preserves board-slug URL context on /b routes', () => {
