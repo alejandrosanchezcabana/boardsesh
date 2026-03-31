@@ -4,7 +4,7 @@ import { getAllBoardConfigs } from './lib/server-board-configs';
 import { getPopularBoardConfigs } from './lib/server-popular-configs';
 import HomePageContent from './home-page-content';
 
-export const revalidate = 3600; // Re-fetch popular configs every hour via ISR
+export const revalidate = false;
 
 export const metadata: Metadata = {
   title: 'Boardsesh - Train smarter on your climbing board',
