@@ -45,6 +45,8 @@ const auroraExportCircuitSchema = z.object({
   name: z.string(),
   color: z.string(),
   created_at: z.string(),
+  description: z.string().optional(),
+  is_private: z.boolean().optional(),
   climbs: z.array(z.string()),
 });
 
@@ -628,7 +630,7 @@ export async function importJsonExportData(
         .filter((uuid): uuid is string => uuid != null);
 
       const circuitHash = createHash('sha256')
-        .update(`${boardType}:${circuit.name}:${circuit.created_at}`)
+        .update(`${userId}:${boardType}:${circuit.name}:${circuit.created_at}`)
         .digest('hex')
         .slice(0, 32);
       const circuitAuroraId = `json-import-circuit-${circuitHash}`;
@@ -645,7 +647,7 @@ export async function importJsonExportData(
             boardType,
             layoutId: null,
             name: circuit.name,
-            description: null,
+            description: circuit.description ?? null,
             isPublic: false,
             color: formattedColor,
             auroraType: 'circuits',
@@ -658,6 +660,7 @@ export async function importJsonExportData(
             target: playlists.auroraId,
             set: {
               name: circuit.name,
+              description: circuit.description ?? null,
               isPublic: false,
               color: formattedColor,
               updatedAt: circuitNow,
