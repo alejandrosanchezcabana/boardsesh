@@ -15,6 +15,7 @@ import { ANGLES } from '@/app/lib/board-data';
 import { BoardName, BoardDetails, Climb } from '@/app/lib/types';
 import { ClimbStatsForAngle } from '@/app/lib/data/queries';
 import { themeTokens } from '@/app/theme/theme-config';
+import { useIsDarkMode } from '@/app/hooks/use-is-dark-mode';
 import DrawerClimbHeader from '../climb-card/drawer-climb-header';
 import styles from './angle-selector.module.css';
 
@@ -32,6 +33,7 @@ export default function AngleSelector({ boardName, boardDetails, currentAngle, c
   const router = useRouter();
   const pathname = usePathname();
   const currentAngleRef = useRef<HTMLDivElement>(null);
+  const isDark = useIsDarkMode();
 
   // Fetch climb stats for all angles when there's a current climb
   const { data: climbStats, isLoading } = useQuery<ClimbStatsForAngle[]>({
@@ -147,7 +149,17 @@ export default function AngleSelector({ boardName, boardDetails, currentAngle, c
 
   return (
     <>
-      <MuiButton variant="text" className={styles.anglePill} onClick={() => setIsDrawerOpen(true)} sx={{ textTransform: 'none', minWidth: '38px', padding: '4px 6px' }}>
+      <MuiButton
+        variant="text"
+        className={styles.anglePill}
+        onClick={() => setIsDrawerOpen(true)}
+        sx={{
+          textTransform: 'none',
+          minWidth: '38px',
+          padding: '4px 6px',
+          color: isDark ? '#ffffff' : 'primary.main',
+        }}
+      >
         {currentAngle}°
       </MuiButton>
 

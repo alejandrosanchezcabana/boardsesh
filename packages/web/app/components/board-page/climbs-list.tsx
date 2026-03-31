@@ -143,34 +143,37 @@ const ClimbsList = ({
   // Memoize sx prop objects to prevent recreation on every render
   const headerContainerSx = useMemo(() => ({
     display: 'flex',
-    flexDirection: 'column' as const,
-    gap: `${themeTokens.spacing[2]}px`,
-    padding: `0 ${themeTokens.spacing[3]}px ${themeTokens.spacing[2]}px ${themeTokens.spacing[3]}px`,
-  }), []);
-
-  const headerRow1Sx = useMemo(() => ({
-    display: 'flex',
     alignItems: 'center',
-    justifyContent: 'space-between',
+    gap: `${themeTokens.spacing[2]}px`,
+    padding: `${themeTokens.spacing[2]}px ${themeTokens.spacing[3]}px`,
     minHeight: 40,
   }), []);
 
-  const headerRow2Sx = useMemo(() => ({
+  const searchPillsContainerSx = useMemo(() => ({
+    flex: 1,
+    minWidth: 0,
+    overflow: 'hidden',
+  }), []);
+
+  const rightControlsSx = useMemo(() => ({
     display: 'flex',
     alignItems: 'center',
-    minWidth: 0,
+    gap: `${themeTokens.spacing[2]}px`,
+    flexShrink: 0,
   }), []);
 
   const viewModeToggleBoxSx = useMemo(() => ({
     display: 'flex',
     gap: '2px',
-    backgroundColor: 'rgba(255, 255, 255, 0.6)',
-    borderRadius: `${themeTokens.borderRadius.sm}px`,
-    padding: '2px',
     flexShrink: 0,
   }), []);
 
   const iconButtonSx = useMemo(() => ({ padding: '4px' }), []);
+
+  const viewModeButtonSx = useCallback((isActive: boolean) => ({
+    padding: '4px',
+    opacity: isActive ? 1 : 0.4,
+  }), []);
 
   const gridContainerSx = useMemo(() => ({
     display: 'flex',
@@ -197,38 +200,34 @@ const ClimbsList = ({
     <Box>
       {/* Optional header content (e.g. BoardCreationBanner) */}
       {header}
-      {/* Header: Row 1 = View toggle + Angle selector, Row 2 = Search pills */}
+      {/* Header: Search pills (left, scrollable) | View toggle + Angle selector (right) */}
       <Box sx={headerContainerSx}>
-        {/* Row 1: View toggle (left) + Angle selector (right) */}
-        <Box sx={headerRow1Sx}>
+        {/* Left: Search pills (scrollable) */}
+        <Box sx={searchPillsContainerSx}>
+          {headerInline}
+        </Box>
+        {/* Right: View toggle + Angle selector */}
+        <Box sx={rightControlsSx}>
           <Box sx={viewModeToggleBoxSx}>
             <IconButton
               onClick={() => handleViewModeChange('list')}
               aria-label="List view"
-              color={viewMode === 'list' ? 'primary' : 'default'}
               size="small"
-              sx={iconButtonSx}
+              sx={viewModeButtonSx(viewMode === 'list')}
             >
               <FormatListBulletedOutlined fontSize="small" />
             </IconButton>
             <IconButton
               onClick={() => handleViewModeChange('grid')}
               aria-label="Grid view"
-              color={viewMode === 'grid' ? 'primary' : 'default'}
               size="small"
-              sx={iconButtonSx}
+              sx={viewModeButtonSx(viewMode === 'grid')}
             >
               <AppsOutlined fontSize="small" />
             </IconButton>
           </Box>
           {angleSelector}
         </Box>
-        {/* Row 2: Search pills */}
-        {headerInline && (
-          <Box sx={headerRow2Sx}>
-            {headerInline}
-          </Box>
-        )}
       </Box>
 
       {viewMode === 'grid' ? (
