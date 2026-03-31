@@ -3,10 +3,9 @@ import type { DbInstance } from '../../client/neon';
 import {
   boardClimbs,
   boardClimbStats,
-  boardDifficultyGrades,
-  boardseshTicks,
 } from '../../schema/index';
 import { createClimbFilters } from './create-climb-filters';
+import { getGradeLabel } from './grade-lookup';
 import type { BoardRouteParams, ClimbSearchParams, ClimbRow, ClimbSearchResult, SizeEdges } from './types';
 
 /**
@@ -31,22 +30,36 @@ export const searchClimbs = async (
 
   const filters = createClimbFilters(params, searchParams, sizeEdges, userId);
 
+  const sortBy = searchParams.sortBy || (searchParams.onlyDrafts ? 'creation' : 'ascents');
+  const sortOrder = searchParams.sortOrder === 'asc' ? 'asc' : 'desc';
+
+  // For the popular sort, pre-aggregate total ascents across all angles via a joined subquery
+  // instead of a correlated subquery that runs per candidate row.
+  const popularCountsSubquery = sortBy === 'popular'
+    ? db
+        .select({
+          climbUuid: boardClimbStats.climbUuid,
+          totalAscensionistCount: sql<number>`COALESCE(SUM(${boardClimbStats.ascensionistCount}), 0)`.as('total_ascensionist_count'),
+        })
+        .from(boardClimbStats)
+        .where(eq(boardClimbStats.boardType, params.board_name))
+        .groupBy(boardClimbStats.climbUuid)
+        .as('popular_counts')
+    : null;
+
   // Define sort columns
-  const defaultSort = searchParams.onlyDrafts ? 'creation' : 'ascents';
   const allowedSortColumns: Record<string, ReturnType<typeof sql>> = {
     ascents: sql`${boardClimbStats.ascensionistCount}`,
     difficulty: sql`ROUND(${boardClimbStats.displayDifficulty}::numeric, 0)`,
     name: sql`${boardClimbs.name}`,
     quality: sql`${boardClimbStats.qualityAverage}`,
     creation: sql`${boardClimbs.createdAt}`,
-    popular: sql`(
-      SELECT COALESCE(SUM(cs.ascensionist_count), 0)
-      FROM ${boardClimbStats} cs
-      WHERE cs.board_type = ${params.board_name} AND cs.climb_uuid = ${boardClimbs.uuid}
-    )`,
+    ...(popularCountsSubquery
+      ? { popular: sql`${popularCountsSubquery.totalAscensionistCount}` }
+      : {}),
   };
 
-  const sortColumn = allowedSortColumns[searchParams.sortBy || defaultSort] || sql`${boardClimbStats.ascensionistCount}`;
+  const sortColumn = allowedSortColumns[sortBy] || sql`${boardClimbStats.ascensionistCount}`;
 
   const whereConditions = [
     ...filters.getClimbWhereConditions(),
@@ -54,73 +67,88 @@ export const searchClimbs = async (
     ...filters.getClimbStatsConditions(),
   ];
 
-  const baseSelectFields = {
+  const selectFields = {
     uuid: boardClimbs.uuid,
     setter_username: boardClimbs.setterUsername,
     name: boardClimbs.name,
-    description: boardClimbs.description,
     frames: boardClimbs.frames,
     is_draft: boardClimbs.isDraft,
     angle: boardClimbStats.angle,
     ascensionist_count: boardClimbStats.ascensionistCount,
-    difficulty: boardDifficultyGrades.boulderName,
+    difficulty_id: sql<number>`ROUND(${boardClimbStats.displayDifficulty}::numeric, 0)`,
     quality_average: sql<number>`ROUND(${boardClimbStats.qualityAverage}::numeric, 2)`,
     difficulty_error: sql<number>`ROUND(${boardClimbStats.difficultyAverage}::numeric - ${boardClimbStats.displayDifficulty}::numeric, 2)`,
     benchmark_difficulty: boardClimbStats.benchmarkDifficulty,
   };
 
-  const userTicksSubquery = userId
-    ? db
-        .select({
-          climbUuid: boardseshTicks.climbUuid,
-          userAscents: sql<number>`COUNT(*) FILTER (WHERE ${boardseshTicks.status} IN ('flash', 'send'))`.as('user_ascents'),
-          userAttempts: sql<number>`COUNT(*) FILTER (WHERE ${boardseshTicks.status} = 'attempt')`.as('user_attempts'),
-        })
-        .from(boardseshTicks)
-        .where(and(
-          eq(boardseshTicks.userId, userId),
-          eq(boardseshTicks.boardType, params.board_name),
-          eq(boardseshTicks.angle, params.angle),
-        ))
-        .groupBy(boardseshTicks.climbUuid)
-        .as('user_ticks')
-    : null;
-
-  const selectFields = userId && userTicksSubquery
-    ? {
-        ...baseSelectFields,
-        userAscents: sql<number>`COALESCE(${userTicksSubquery.userAscents}, 0)`,
-        userAttempts: sql<number>`COALESCE(${userTicksSubquery.userAttempts}, 0)`,
-      }
-    : baseSelectFields;
-
-  const sortOrder = searchParams.sortOrder === 'asc' ? 'asc' : 'desc';
-
-  const difficultyGradesJoinCondition = and(
-    eq(boardDifficultyGrades.difficulty, sql`ROUND(${boardClimbStats.displayDifficulty}::numeric)`),
-    eq(boardDifficultyGrades.boardType, params.board_name),
-  );
-
   const orderByClause = sortOrder === 'asc'
     ? sql`${sortColumn} ASC NULLS FIRST`
     : sql`${sortColumn} DESC NULLS LAST`;
 
-  const coreQuery = db
-    .select(selectFields)
-    .from(boardClimbs)
-    .leftJoin(boardClimbStats, and(...filters.getClimbStatsJoinConditions()))
-    .leftJoin(boardDifficultyGrades, difficultyGradesJoinCondition);
+  // For the default ascents sort, drive from board_climb_stats to leverage the
+  // covering index (board_type, angle, ascensionist_count DESC NULLS LAST).
+  // PostgreSQL reads the index in sorted order and stops after 21 qualifying rows,
+  // avoiding a full sort of all matching climbs.
+  const useStatsDriven = sortBy === 'ascents' && sortOrder === 'desc';
 
-  const baseQuery = (userId && userTicksSubquery
-    ? coreQuery.leftJoin(userTicksSubquery, eq(userTicksSubquery.climbUuid, boardClimbs.uuid))
-    : coreQuery
-  )
-    .where(and(...whereConditions))
-    .orderBy(orderByClause, desc(boardClimbs.uuid))
-    .limit(pageSize + 1)
-    .offset(page * pageSize);
+  type SelectResult = {
+    uuid: string;
+    setter_username: string | null;
+    name: string | null;
+    frames: string | null;
+    is_draft: boolean | null;
+    angle: number | null;
+    ascensionist_count: string | null;
+    difficulty_id: number;
+    quality_average: number;
+    difficulty_error: number;
+    benchmark_difficulty: number | null;
+  };
 
-  const results = await baseQuery;
+  let results: SelectResult[];
+
+  if (useStatsDriven) {
+    // Stats-driven: FROM board_climb_stats INNER JOIN board_climbs
+    // The climb filter conditions move to the JOIN predicate so the index scan
+    // on board_climb_stats drives the query in sorted order.
+    const climbJoinConditions = [
+      eq(boardClimbs.uuid, boardClimbStats.climbUuid),
+      ...filters.getClimbWhereConditions(),
+      ...filters.getSizeConditions(),
+    ];
+
+    const statsWhereConditions = [
+      eq(boardClimbStats.boardType, params.board_name),
+      eq(boardClimbStats.angle, params.angle),
+      ...filters.getClimbStatsConditions(),
+    ];
+
+    results = await db
+      .select(selectFields)
+      .from(boardClimbStats)
+      .innerJoin(boardClimbs, and(...climbJoinConditions))
+      .where(and(...statsWhereConditions))
+      .orderBy(sql`${boardClimbStats.ascensionistCount} DESC NULLS LAST`, desc(boardClimbs.uuid))
+      .limit(pageSize + 1)
+      .offset(page * pageSize);
+  } else {
+    // Standard path: FROM board_climbs LEFT JOIN board_climb_stats
+    const coreQuery = db
+      .select(selectFields)
+      .from(boardClimbs)
+      .leftJoin(boardClimbStats, and(...filters.getClimbStatsJoinConditions()));
+
+    // Only add popular counts join when sorting by popular
+    const queryWithJoins = popularCountsSubquery
+      ? coreQuery.leftJoin(popularCountsSubquery, eq(popularCountsSubquery.climbUuid, boardClimbs.uuid))
+      : coreQuery;
+
+    results = await queryWithJoins
+      .where(and(...whereConditions))
+      .orderBy(orderByClause, desc(boardClimbs.uuid))
+      .limit(pageSize + 1)
+      .offset(page * pageSize);
+  }
 
   const hasMore = results.length > pageSize;
   const trimmedResults = hasMore ? results.slice(0, pageSize) : results;
@@ -129,18 +157,16 @@ export const searchClimbs = async (
     uuid: result.uuid,
     setter_username: result.setter_username || '',
     name: result.name || '',
-    description: result.description || '',
+    description: '',
     frames: result.frames || '',
     angle: Number(params.angle),
     ascensionist_count: Number(result.ascensionist_count || 0),
-    difficulty: result.difficulty || '',
+    difficulty: getGradeLabel(result.difficulty_id),
     quality_average: result.quality_average?.toString() || '0',
     stars: Math.round((Number(result.quality_average) || 0) * 5),
     difficulty_error: result.difficulty_error?.toString() || '0',
     benchmark_difficulty: result.benchmark_difficulty && result.benchmark_difficulty > 0 ? result.benchmark_difficulty.toString() : null,
     is_draft: result.is_draft ?? false,
-    userAscents: userId ? Number((result as Record<string, unknown>)?.userAscents || 0) : undefined,
-    userAttempts: userId ? Number((result as Record<string, unknown>)?.userAttempts || 0) : undefined,
   }));
 
   return { climbs, hasMore };
