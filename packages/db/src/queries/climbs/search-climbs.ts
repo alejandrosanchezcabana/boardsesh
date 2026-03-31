@@ -102,6 +102,11 @@ export const searchClimbs = async (
     ? sql`${sortColumn} ASC NULLS FIRST`
     : sql`${sortColumn} DESC NULLS LAST`;
 
+  // When showDrafts is active, surface draft climbs first
+  const draftsFirstClause = searchParams.showDrafts
+    ? sql`CASE WHEN ${boardClimbs.isDraft} = true THEN 0 ELSE 1 END`
+    : undefined;
+
   const coreQuery = db
     .select(selectFields)
     .from(boardClimbs)
@@ -113,7 +118,7 @@ export const searchClimbs = async (
     : coreQuery
   )
     .where(and(...whereConditions))
-    .orderBy(orderByClause, desc(boardClimbs.uuid))
+    .orderBy(...(draftsFirstClause ? [draftsFirstClause, orderByClause, desc(boardClimbs.uuid)] : [orderByClause, desc(boardClimbs.uuid)]))
     .limit(pageSize + 1)
     .offset(page * pageSize);
 
