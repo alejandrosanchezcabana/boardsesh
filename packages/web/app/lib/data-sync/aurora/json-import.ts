@@ -222,6 +222,21 @@ function convertHoldsToFrames(
   return parts.length > 0 ? parts.join('') : null;
 }
 
+/** Compute bounding box (edge) values from hold coordinates. */
+function computeEdgesFromHolds(holds: { x: number; y: number }[]): {
+  edgeLeft: number; edgeRight: number; edgeBottom: number; edgeTop: number;
+} | null {
+  if (holds.length === 0) return null;
+  let minX = Infinity, maxX = -Infinity, minY = Infinity, maxY = -Infinity;
+  for (const hold of holds) {
+    if (hold.x < minX) minX = hold.x;
+    if (hold.x > maxX) maxX = hold.x;
+    if (hold.y < minY) minY = hold.y;
+    if (hold.y > maxY) maxY = hold.y;
+  }
+  return { edgeLeft: minX, edgeRight: maxX, edgeBottom: minY, edgeTop: maxY };
+}
+
 /** Generate a deterministic UUID for an imported draft climb. */
 function generateClimbImportUuid(
   userId: string,
@@ -461,6 +476,8 @@ export async function importJsonExportData(
         const frames = convertHoldsToFrames(climb.holds, coordMap, boardType);
         if (!frames) { result.climbs.failed++; continue; }
 
+        const edges = computeEdgesFromHolds(climb.holds);
+
         draftRows.push({
           uuid: generateClimbImportUuid(userId, boardType, layoutId, climb.name, climb.created_at),
           boardType,
@@ -475,6 +492,10 @@ export async function importJsonExportData(
           framesPace: 0,
           isDraft: true,
           isListed: false,
+          edgeLeft: edges?.edgeLeft ?? null,
+          edgeRight: edges?.edgeRight ?? null,
+          edgeBottom: edges?.edgeBottom ?? null,
+          edgeTop: edges?.edgeTop ?? null,
           angle: null,
           createdAt: climb.created_at ?? now,
           synced: false,
@@ -497,6 +518,8 @@ export async function importJsonExportData(
         const frames = convertHoldsToFrames(climb.holds, coordMap, boardType);
         if (!frames) { result.climbs.failed++; continue; }
 
+        const edges = computeEdgesFromHolds(climb.holds);
+
         publishedRows.push({
           uuid: generateClimbImportUuid(userId, boardType, layoutId, climb.name, climb.created_at),
           boardType,
@@ -511,6 +534,10 @@ export async function importJsonExportData(
           framesPace: 0,
           isDraft: false,
           isListed: true,
+          edgeLeft: edges?.edgeLeft ?? null,
+          edgeRight: edges?.edgeRight ?? null,
+          edgeBottom: edges?.edgeBottom ?? null,
+          edgeTop: edges?.edgeTop ?? null,
           angle: null,
           createdAt: climb.created_at ?? now,
           synced: false,
@@ -537,6 +564,10 @@ export async function importJsonExportData(
                   frames: sql`excluded.frames`,
                   isDraft: sql`excluded.is_draft`,
                   isListed: sql`excluded.is_listed`,
+                  edgeLeft: sql`excluded.edge_left`,
+                  edgeRight: sql`excluded.edge_right`,
+                  edgeBottom: sql`excluded.edge_bottom`,
+                  edgeTop: sql`excluded.edge_top`,
                 },
               });
             result.climbs.imported += batch.length;
