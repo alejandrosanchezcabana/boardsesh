@@ -98,41 +98,38 @@ const TabsWrapper: React.FC<{ boardDetails: BoardDetails }> = ({ boardDetails })
 };
 
 const ListLayoutClient: React.FC<PropsWithChildren<ListLayoutClientProps>> = ({ boardDetails, children }) => {
-  // Prefetch full-size board images so climb detail view loads instantly
+  // Prefetch full-size board images when the browser is idle so climb detail view loads instantly
   useEffect(() => {
     const links: HTMLLinkElement[] = [];
 
-    // Prefetch Kilter/Tension board images
-    Object.keys(boardDetails.images_to_holds).forEach((imageUrl) => {
-      const fullUrl = getImageUrl(imageUrl, boardDetails.board_name);
+    const addPrefetchLink = (href: string) => {
       const link = document.createElement('link');
       link.rel = 'prefetch';
-      link.href = fullUrl;
+      link.href = href;
       link.as = 'image';
       document.head.appendChild(link);
       links.push(link);
+    };
+
+    const idleHandle = requestIdleCallback(() => {
+      // Prefetch Kilter/Tension board images
+      Object.keys(boardDetails.images_to_holds).forEach((imageUrl) => {
+        addPrefetchLink(getImageUrl(imageUrl, boardDetails.board_name));
+      });
+
+      // Prefetch MoonBoard images (background + hold sets)
+      if (boardDetails.layoutFolder) {
+        addPrefetchLink('/images/moonboard/moonboard-bg.avif');
+        boardDetails.holdSetImages?.forEach((imageFile) => {
+          addPrefetchLink(`/images/moonboard/${boardDetails.layoutFolder}/${imageFile.replace(/\.png$/, '.avif')}`);
+        });
+      }
     });
 
-    // Prefetch MoonBoard images (background + hold sets)
-    if (boardDetails.layoutFolder) {
-      const bgLink = document.createElement('link');
-      bgLink.rel = 'prefetch';
-      bgLink.href = '/images/moonboard/moonboard-bg.avif';
-      bgLink.as = 'image';
-      document.head.appendChild(bgLink);
-      links.push(bgLink);
-
-      boardDetails.holdSetImages?.forEach((imageFile) => {
-        const link = document.createElement('link');
-        link.rel = 'prefetch';
-        link.href = `/images/moonboard/${boardDetails.layoutFolder}/${imageFile.replace(/\.png$/, '.avif')}`;
-        link.as = 'image';
-        document.head.appendChild(link);
-        links.push(link);
-      });
-    }
-
-    return () => links.forEach((link) => link.remove());
+    return () => {
+      cancelIdleCallback(idleHandle);
+      links.forEach((link) => link.remove());
+    };
   }, [boardDetails]);
 
   return (
