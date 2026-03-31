@@ -4,11 +4,10 @@
  * Render a transparent overlay image with hold circles.
  *
  * Takes a JSON config string with board dimensions, frames string, holds data,
- * and hold state color mapping. Returns a PNG-encoded byte array with alpha transparency.
+ * and hold state color mapping. Returns raw RGBA pixel data prefixed with
+ * width (u32 LE) and height (u32 LE) as the first 8 bytes.
  *
- * The overlay is mostly transparent with ~5-15 colored circles, so PNG compresses
- * extremely well (typically 2-5KB). Board background images are served separately
- * as static WebP assets.
+ * The caller is responsible for encoding to the desired image format (e.g. WebP via sharp).
  * @param {string} config_json
  * @returns {Uint8Array}
  */

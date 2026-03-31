@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { PropsWithChildren } from 'react';
 import Tabs from '@mui/material/Tabs';
 import Tab from '@mui/material/Tab';
@@ -11,6 +11,7 @@ import { DeleteOutlined } from '@mui/icons-material';
 import { track } from '@vercel/analytics';
 import { BoardDetails } from '@/app/lib/types';
 
+import { getImageUrl } from '@/app/components/board-renderer/util';
 import AccordionSearchForm from '@/app/components/search-drawer/accordion-search-form';
 import SearchResultsFooter from '@/app/components/search-drawer/search-results-footer';
 import QueueList from '@/app/components/queue-control/queue-list';
@@ -96,9 +97,66 @@ const TabsWrapper: React.FC<{ boardDetails: BoardDetails }> = ({ boardDetails })
   );
 };
 
+// Preload thumbnail background images so they stay in the browser's memory
+// cache while the virtualizer mounts/unmounts list items on scroll.
+const hiddenStyle: React.CSSProperties = { position: 'absolute', width: 0, height: 0 };
+const ThumbnailPreload: React.FC<{ boardDetails: BoardDetails }> = React.memo(({ boardDetails }) => (
+  <>
+    {Object.keys(boardDetails.images_to_holds).map((img) => (
+      // eslint-disable-next-line @next/next/no-img-element
+      <img key={img} src={getImageUrl(img, boardDetails.board_name, true)} alt="" aria-hidden style={hiddenStyle} />
+    ))}
+  </>
+));
+ThumbnailPreload.displayName = 'ThumbnailPreload';
+
 const ListLayoutClient: React.FC<PropsWithChildren<ListLayoutClientProps>> = ({ boardDetails, children }) => {
+  // Prefetch full-size board images when the browser is idle so climb detail view loads instantly
+  useEffect(() => {
+    const links: HTMLLinkElement[] = [];
+
+    const addPrefetchLink = (href: string) => {
+      const link = document.createElement('link');
+      link.rel = 'prefetch';
+      link.href = href;
+      link.as = 'image';
+      document.head.appendChild(link);
+      links.push(link);
+    };
+
+    const prefetchImages = () => {
+      // Prefetch Kilter/Tension board images
+      Object.keys(boardDetails.images_to_holds).forEach((imageUrl) => {
+        addPrefetchLink(getImageUrl(imageUrl, boardDetails.board_name));
+      });
+
+      // Prefetch MoonBoard images (background + hold sets)
+      if (boardDetails.layoutFolder) {
+        addPrefetchLink('/images/moonboard/moonboard-bg.avif');
+        boardDetails.holdSetImages?.forEach((imageFile) => {
+          addPrefetchLink(`/images/moonboard/${boardDetails.layoutFolder}/${imageFile.replace(/\.png$/, '.avif')}`);
+        });
+      }
+    };
+
+    // Defer to idle time; fall back to setTimeout for Safari which lacks requestIdleCallback
+    const handle = typeof requestIdleCallback !== 'undefined'
+      ? requestIdleCallback(prefetchImages)
+      : setTimeout(prefetchImages, 1) as unknown as number;
+
+    return () => {
+      if (typeof cancelIdleCallback !== 'undefined') {
+        cancelIdleCallback(handle);
+      } else {
+        clearTimeout(handle);
+      }
+      links.forEach((link) => link.remove());
+    };
+  }, [boardDetails]);
+
   return (
     <Box className={styles.listLayout}>
+      <ThumbnailPreload boardDetails={boardDetails} />
       <Box component="main" className={styles.mainContent}>{children}</Box>
       <Box component="aside" className={styles.sider} sx={{ width: 400, padding: '0 8px 20px 8px' }}>
         <TabsWrapper boardDetails={boardDetails} />

@@ -35,6 +35,46 @@ const LONG_RIGHT_SWIPE_THRESHOLD = 150;
 const SIMPLE_MAX_SWIPE = 120;
 const SIMPLE_SWIPE_THRESHOLD = 100;
 
+// Static style objects (no reactive deps, hoisted out of component to avoid per-render allocation)
+const swipeActionLayerBaseStyle: React.CSSProperties = {
+  position: 'absolute',
+  inset: 0,
+  display: 'flex',
+  alignItems: 'center',
+  justifyContent: 'flex-start',
+  paddingLeft: themeTokens.spacing[4],
+  willChange: 'opacity',
+};
+
+const defaultRightActionStyle: React.CSSProperties = {
+  position: 'absolute',
+  right: 0,
+  top: 0,
+  bottom: 0,
+  width: MAX_GESTURE_SWIPE,
+  backgroundColor: themeTokens.colors.primary,
+  display: 'flex',
+  alignItems: 'center',
+  justifyContent: 'flex-end',
+  paddingRight: themeTokens.spacing[4],
+  opacity: 0,
+  visibility: 'hidden',
+};
+
+const iconStyle: React.CSSProperties = { color: 'white', fontSize: 20 };
+
+const thumbnailStyle: React.CSSProperties = { width: themeTokens.spacing[16], flexShrink: 0 };
+
+const centerStyle: React.CSSProperties = { flex: 1, minWidth: 0 };
+
+const iconButtonStyle: React.CSSProperties = { flexShrink: 0, color: 'var(--neutral-400)' };
+
+const drawerStyles = {
+  wrapper: { height: 'auto', width: '100%' },
+  body: { padding: `${themeTokens.spacing[2]}px 0` },
+  header: { paddingLeft: `${themeTokens.spacing[3]}px`, paddingRight: `${themeTokens.spacing[3]}px` },
+} as const;
+
 export type SwipeActionOverride = {
   icon: React.ReactNode;
   color: string;
@@ -184,26 +224,13 @@ const ClimbListItem: React.FC<ClimbListItemProps> = React.memo(({
     [longSwipeBlend],
   );
 
-  const swipeActionLayerBaseStyle = useMemo(
-    () => ({
-      position: 'absolute' as const,
-      inset: 0,
-      display: 'flex' as const,
-      alignItems: 'center' as const,
-      justifyContent: 'flex-start' as const,
-      paddingLeft: themeTokens.spacing[4],
-      willChange: 'opacity' as const,
-    }),
-    [],
-  );
-
   const shortSwipeLayerStyle = useMemo(
     () => ({
       ...swipeActionLayerBaseStyle,
       backgroundColor: themeTokens.colors.error,
       opacity: shortSwipeLayerOpacity,
     }),
-    [swipeActionLayerBaseStyle, shortSwipeLayerOpacity],
+    [shortSwipeLayerOpacity],
   );
 
   const longSwipeLayerStyle = useMemo(
@@ -212,25 +239,7 @@ const ClimbListItem: React.FC<ClimbListItemProps> = React.memo(({
       backgroundColor: themeTokens.colors.primary,
       opacity: longSwipeLayerOpacity,
     }),
-    [swipeActionLayerBaseStyle, longSwipeLayerOpacity],
-  );
-
-  const defaultRightActionStyle = useMemo(
-    () => ({
-      position: 'absolute' as const,
-      right: 0,
-      top: 0,
-      bottom: 0,
-      width: MAX_GESTURE_SWIPE,
-      backgroundColor: themeTokens.colors.primary,
-      display: 'flex' as const,
-      alignItems: 'center' as const,
-      justifyContent: 'flex-end' as const,
-      paddingRight: themeTokens.spacing[4],
-      opacity: 0,
-      visibility: 'hidden' as const,
-    }),
-    [],
+    [longSwipeLayerOpacity],
   );
 
   // Simple swipe action styles (used when overrides are provided)
@@ -270,11 +279,6 @@ const ClimbListItem: React.FC<ClimbListItemProps> = React.memo(({
     [swipeRightAction?.color],
   );
 
-  const iconStyle = useMemo(
-    () => ({ color: 'white', fontSize: 20 }),
-    [],
-  );
-
   const resolvedBg = backgroundColor
     ?? (selected
       ? (getGradeTintColor(climb.difficulty, 'light', isDark) ?? 'var(--semantic-selected)')
@@ -293,30 +297,6 @@ const ClimbListItem: React.FC<ClimbListItemProps> = React.memo(({
       opacity: isSwipeComplete ? 0 : (contentOpacity ?? 1),
     }),
     [resolvedBg, isSwipeComplete, contentOpacity],
-  );
-
-  const thumbnailStyle = useMemo(
-    () => ({ width: themeTokens.spacing[16], flexShrink: 0 }),
-    [],
-  );
-
-  const centerStyle = useMemo(
-    () => ({ flex: 1, minWidth: 0 }),
-    [],
-  );
-
-  const iconButtonStyle = useMemo(
-    () => ({ flexShrink: 0, color: 'var(--neutral-400)' }),
-    [],
-  );
-
-  const drawerStyles = useMemo(
-    () => ({
-      wrapper: { height: 'auto', width: '100%' },
-      body: { padding: `${themeTokens.spacing[2]}px 0` },
-      header: { paddingLeft: `${themeTokens.spacing[3]}px`, paddingRight: `${themeTokens.spacing[3]}px` },
-    }),
-    [],
   );
 
   // Default ClimbTitle props when no override is provided

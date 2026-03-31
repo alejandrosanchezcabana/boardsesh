@@ -88,37 +88,6 @@ describe('BoardImageLayers', () => {
     expect(buildOverlayUrl).toHaveBeenCalledWith(mockBoardDetails, 'p1r42', true);
   });
 
-  it('sets loading="lazy" when lazy prop is true', () => {
-    const { container } = render(
-      <BoardImageLayers
-        boardDetails={mockBoardDetails}
-        frames="p1r42"
-        mirrored={false}
-        lazy
-      />,
-    );
-
-    const images = container.querySelectorAll('img');
-    images.forEach((img) => {
-      expect(img.getAttribute('loading')).toBe('lazy');
-    });
-  });
-
-  it('does not set loading attribute when lazy is false', () => {
-    const { container } = render(
-      <BoardImageLayers
-        boardDetails={mockBoardDetails}
-        frames="p1r42"
-        mirrored={false}
-      />,
-    );
-
-    const images = container.querySelectorAll('img');
-    images.forEach((img) => {
-      expect(img.hasAttribute('loading')).toBe(false);
-    });
-  });
-
   it('uses object-fit contain when contain prop is set', () => {
     const { container } = render(
       <BoardImageLayers

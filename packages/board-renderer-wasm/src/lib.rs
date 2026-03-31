@@ -1,6 +1,6 @@
 mod frames_parser;
-mod renderer;
-mod types;
+pub mod renderer;
+pub mod types;
 
 use wasm_bindgen::prelude::*;
 
@@ -10,11 +10,10 @@ use crate::types::RenderConfig;
 /// Render a transparent overlay image with hold circles.
 ///
 /// Takes a JSON config string with board dimensions, frames string, holds data,
-/// and hold state color mapping. Returns a PNG-encoded byte array with alpha transparency.
+/// and hold state color mapping. Returns raw RGBA pixel data prefixed with
+/// width (u32 LE) and height (u32 LE) as the first 8 bytes.
 ///
-/// The overlay is mostly transparent with ~5-15 colored circles, so PNG compresses
-/// extremely well (typically 2-5KB). Board background images are served separately
-/// as static WebP assets.
+/// The caller is responsible for encoding to the desired image format (e.g. WebP via sharp).
 #[wasm_bindgen]
 pub fn render_overlay(config_json: &str) -> Result<Vec<u8>, JsValue> {
     let config: RenderConfig = serde_json::from_str(config_json)
@@ -23,27 +22,11 @@ pub fn render_overlay(config_json: &str) -> Result<Vec<u8>, JsValue> {
     let (rgba_data, width, height) = render_overlay_impl(&config)
         .map_err(|e| JsValue::from_str(&format!("Render failed: {e}")))?;
 
-    // Encode as PNG with alpha transparency
-    let png_data = encode_png(&rgba_data, width, height)
-        .map_err(|e| JsValue::from_str(&format!("PNG encoding failed: {e}")))?;
+    // Pack dimensions as header: [width_u32_le, height_u32_le, rgba_bytes...]
+    let mut result = Vec::with_capacity(8 + rgba_data.len());
+    result.extend_from_slice(&width.to_le_bytes());
+    result.extend_from_slice(&height.to_le_bytes());
+    result.extend_from_slice(&rgba_data);
 
-    Ok(png_data)
-}
-
-fn encode_png(rgba_data: &[u8], width: u32, height: u32) -> Result<Vec<u8>, String> {
-    let mut buf = Vec::new();
-    {
-        let mut encoder = png::Encoder::new(&mut buf, width, height);
-        encoder.set_color(png::ColorType::Rgba);
-        encoder.set_depth(png::BitDepth::Eight);
-        encoder.set_compression(png::Compression::Fast);
-
-        let mut writer = encoder
-            .write_header()
-            .map_err(|e| format!("PNG header error: {e}"))?;
-        writer
-            .write_image_data(rgba_data)
-            .map_err(|e| format!("PNG write error: {e}"))?;
-    }
-    Ok(buf)
+    Ok(result)
 }

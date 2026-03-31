@@ -115,7 +115,6 @@ const AscentThumbnail: React.FC<AscentThumbnailProps> = ({
       frames={frames}
       mirrored={isMirror}
       thumbnail
-      lazy
       style={{
         aspectRatio: `${boardDetails.boardWidth} / ${boardDetails.boardHeight}`,
         width: '100%',

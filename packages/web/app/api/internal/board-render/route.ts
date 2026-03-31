@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { readFile } from 'fs/promises';
 import { join } from 'path';
 import { existsSync } from 'fs';
+import sharp from 'sharp';
 import { getBoardDetailsForBoard } from '@/app/lib/board-utils';
 import { HOLD_STATE_MAP } from '@/app/components/board-renderer/types';
 import type { BoardName } from '@/app/lib/types';
@@ -114,13 +115,26 @@ export async function GET(request: NextRequest) {
     if (!renderOverlay) {
       return NextResponse.json({ error: 'WASM renderer failed to initialize' }, { status: 500 });
     }
-    const pngBytes = renderOverlay(JSON.stringify(config));
+    const rawBytes = renderOverlay(JSON.stringify(config));
 
-    return new NextResponse(Buffer.from(pngBytes), {
+    // Parse dimension header: first 8 bytes are width + height as u32 LE
+    const view = new DataView(rawBytes.buffer, rawBytes.byteOffset, rawBytes.byteLength);
+    const width = view.getUint32(0, true);
+    const height = view.getUint32(4, true);
+    const rgbaData = rawBytes.subarray(8);
+
+    // Encode to WebP lossless using sharp (25-30% smaller than PNG)
+    const webpBuffer = await sharp(Buffer.from(rgbaData.buffer, rgbaData.byteOffset, rgbaData.byteLength), {
+      raw: { width, height, channels: 4 },
+    })
+      .webp({ lossless: true })
+      .toBuffer();
+
+    return new NextResponse(new Uint8Array(webpBuffer), {
       headers: {
-        'Content-Type': 'image/png',
-        // Climbs are immutable -- cache forever
-        'Cache-Control': 'public, max-age=31536000, immutable',
+        'Content-Type': 'image/webp',
+        // Climbs are immutable -- cache forever at both CDN (s-maxage) and browser (max-age)
+        'Cache-Control': 'public, s-maxage=31536000, max-age=31536000, immutable',
       },
     });
   } catch (error) {

@@ -21,8 +21,6 @@ export interface BoardImageLayersProps {
   thumbnail?: boolean;
   /** Use object-fit: contain (for swipe carousel where container controls sizing) */
   contain?: boolean;
-  /** Enable native lazy loading on images */
-  lazy?: boolean;
   /** Additional styles for the container div */
   style?: React.CSSProperties;
 }
@@ -30,7 +28,7 @@ export interface BoardImageLayersProps {
 /**
  * Renders a board as layered images:
  * - Background: static board images (cached per board config, shared across all climbs)
- * - Overlay: transparent PNG with hold circles from the WASM renderer (cached per climb)
+ * - Overlay: transparent WebP with hold circles from the WASM renderer (cached per climb)
  * - Mirroring: CSS scaleX(-1) on the container (no separate render needed)
  */
 const BoardImageLayers = React.memo(function BoardImageLayers({
@@ -39,13 +37,12 @@ const BoardImageLayers = React.memo(function BoardImageLayers({
   mirrored,
   thumbnail,
   contain,
-  lazy,
   style,
 }: BoardImageLayersProps) {
   const overlayUrl = buildOverlayUrl(boardDetails, frames, thumbnail);
   const backgroundUrls = useMemo(
-    () => Object.keys(boardDetails.images_to_holds).map((img) => getImageUrl(img, boardDetails.board_name)),
-    [boardDetails.images_to_holds, boardDetails.board_name],
+    () => Object.keys(boardDetails.images_to_holds).map((img) => getImageUrl(img, boardDetails.board_name, thumbnail)),
+    [boardDetails.images_to_holds, boardDetails.board_name, thumbnail],
   );
 
   const containerStyle = useMemo<React.CSSProperties>(() => ({
@@ -60,10 +57,10 @@ const BoardImageLayers = React.memo(function BoardImageLayers({
     <div style={containerStyle}>
       {backgroundUrls.map((url) => (
         // eslint-disable-next-line @next/next/no-img-element
-        <img key={url} src={url} alt="" style={imgStyle} loading={lazy ? 'lazy' : undefined} />
+        <img key={url} src={url} alt="" style={imgStyle} />
       ))}
       {/* eslint-disable-next-line @next/next/no-img-element */}
-      <img src={overlayUrl} alt="" style={imgStyle} loading={lazy ? 'lazy' : undefined} />
+      <img src={overlayUrl} alt="" style={imgStyle} />
     </div>
   );
 });

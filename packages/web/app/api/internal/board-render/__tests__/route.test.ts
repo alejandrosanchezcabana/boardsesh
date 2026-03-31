@@ -2,8 +2,22 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { NextRequest } from 'next/server';
 
-// Mock WASM module
-const mockRenderOverlay = vi.fn((_config: string) => new Uint8Array([0x89, 0x50, 0x4e, 0x47]));
+// Mock WASM module - returns raw RGBA with 8-byte dimension header
+const mockRenderOverlay = vi.fn((_config: string) => {
+  // 2x2 pixel image: 8 bytes header + 16 bytes RGBA data
+  const buf = new Uint8Array(8 + 16);
+  const view = new DataView(buf.buffer);
+  view.setUint32(0, 2, true); // width = 2
+  view.setUint32(4, 2, true); // height = 2
+  // Fill RGBA with semi-transparent red
+  for (let i = 8; i < 24; i += 4) {
+    buf[i] = 255; // R
+    buf[i + 1] = 0; // G
+    buf[i + 2] = 0; // B
+    buf[i + 3] = 128; // A
+  }
+  return buf;
+});
 vi.mock('@boardsesh/board-renderer-wasm', () => ({
   default: vi.fn(),
   initSync: vi.fn(),
@@ -15,6 +29,15 @@ vi.mock('fs/promises', () => ({
 }));
 vi.mock('fs', () => ({
   existsSync: vi.fn(() => true),
+}));
+
+// Mock sharp - returns a WebP-like buffer
+vi.mock('sharp', () => ({
+  default: vi.fn(() => ({
+    webp: vi.fn(() => ({
+      toBuffer: vi.fn(() => Promise.resolve(Buffer.from([0x52, 0x49, 0x46, 0x46]))),
+    })),
+  })),
 }));
 
 vi.mock('@/app/lib/board-utils', () => ({
@@ -73,11 +96,11 @@ describe('board-render API route', () => {
     vi.clearAllMocks();
   });
 
-  it('returns 200 with PNG content for valid request', async () => {
+  it('returns 200 with WebP content for valid request', async () => {
     const response = await GET(makeRequest(validParams));
     expect(response.status).toBe(200);
-    expect(response.headers.get('Content-Type')).toBe('image/png');
-    expect(response.headers.get('Cache-Control')).toBe('public, max-age=31536000, immutable');
+    expect(response.headers.get('Content-Type')).toBe('image/webp');
+    expect(response.headers.get('Cache-Control')).toBe('public, s-maxage=31536000, max-age=31536000, immutable');
   });
 
   it('returns 400 when board_name is missing', async () => {

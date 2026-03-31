@@ -14,11 +14,13 @@ js-sys = "0.3"
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"
 
-# PNG encoding -- pure Rust, compiles to WASM without C dependencies.
-# For mostly-transparent overlay images (~10 circles), PNG is 2-5KB.
-# Board background images are separately converted to WebP via cwebp CLI.
-png = "0.17"
+[dev-dependencies]
+criterion = { version = "0.5", features = ["html_reports"] }
+
+[[bench]]
+name = "render_bench"
+harness = false
 
 [profile.release]
-opt-level = "s"     # Optimize for small WASM binary size
+opt-level = 3       # Optimize for speed (rendering perf > binary size)
 lto = true

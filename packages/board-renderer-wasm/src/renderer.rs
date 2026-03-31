@@ -28,16 +28,20 @@ pub fn render_overlay(config: &RenderConfig) -> Result<(Vec<u8>, u32, u32), Stri
     let parsed_holds = parse_frames(&config.frames, &config.hold_state_map);
 
     // Build a lookup map from hold ID to HoldData for mirroring
-    let holds_by_id: HashMap<u32, &HoldData> = config
-        .holds
-        .iter()
-        .map(|h| (h.id, h))
-        .collect();
+    let mut holds_by_id: HashMap<u32, &HoldData> = HashMap::with_capacity(config.holds.len());
+    for h in &config.holds {
+        holds_by_id.insert(h.id, h);
+    }
 
-    // Match SVG renderer exactly:
-    // - Thumbnail: strokeWidth=8, fillOpacity=0.3, fill=color
-    // - Full size: strokeWidth=6, no fill
+    // Lift constant state out of the per-hold loop
+    let transform = Transform::identity();
     let stroke_width = if config.thumbnail { 8.0 } else { 6.0 } * scale_x;
+
+    let mut paint = Paint::default();
+    paint.anti_alias = true;
+
+    let mut stroke_style = Stroke::default();
+    stroke_style.width = stroke_width;
 
     for parsed in &parsed_holds {
         let hold = match holds_by_id.get(&parsed.hold_id) {
@@ -64,81 +68,26 @@ pub fn render_overlay(config: &RenderConfig) -> Result<(Vec<u8>, u32, u32), Stri
         let cy = render_hold.cy * scale_y;
         let r = render_hold.r * scale_x;
 
+        let path = match PathBuilder::from_circle(cx, cy, r) {
+            Some(p) => p,
+            None => continue,
+        };
+
         let color = parsed.color;
 
         // Thumbnail: filled circle with 0.3 opacity + stroke
         // Full size: stroke only, no fill
         if config.thumbnail {
-            draw_circle(
-                &mut pixmap,
-                cx, cy, r,
-                Some(SkiaColor::from_rgba8(color.r, color.g, color.b, 77)), // 0.3 * 255 ≈ 77
-                None,
-                0.0,
-            );
+            paint.set_color(SkiaColor::from_rgba8(color.r, color.g, color.b, 77)); // 0.3 * 255 ≈ 77
+            pixmap.fill_path(&path, &paint, FillRule::Winding, transform, None);
         }
 
-        draw_circle(
-            &mut pixmap,
-            cx, cy, r,
-            None,
-            Some((
-                SkiaColor::from_rgba8(color.r, color.g, color.b, 255),
-                stroke_width,
-            )),
-            0.0,
-        );
+        paint.set_color(SkiaColor::from_rgba8(color.r, color.g, color.b, 255));
+        pixmap.stroke_path(&path, &paint, &stroke_style, transform, None);
     }
 
     let data = pixmap.data().to_vec();
     Ok((data, output_width, output_height))
-}
-
-fn draw_circle(
-    pixmap: &mut Pixmap,
-    cx: f32,
-    cy: f32,
-    r: f32,
-    fill: Option<SkiaColor>,
-    stroke: Option<(SkiaColor, f32)>,
-    _rotation: f32,
-) {
-    // Build a circle path using cubic Bezier approximation
-    let mut pb = PathBuilder::new();
-
-    // Standard 4-point cubic Bezier circle approximation
-    // Magic number for control points: 0.5522847498 ≈ 4/3 * (sqrt(2) - 1)
-    let k = 0.5522847498 * r;
-
-    pb.move_to(cx + r, cy);
-    pb.cubic_to(cx + r, cy - k, cx + k, cy - r, cx, cy - r);
-    pb.cubic_to(cx - k, cy - r, cx - r, cy - k, cx - r, cy);
-    pb.cubic_to(cx - r, cy + k, cx - k, cy + r, cx, cy + r);
-    pb.cubic_to(cx + k, cy + r, cx + r, cy + k, cx + r, cy);
-    pb.close();
-
-    let path = match pb.finish() {
-        Some(p) => p,
-        None => return,
-    };
-
-    let transform = Transform::identity();
-
-    if let Some(fill_color) = fill {
-        let mut paint = Paint::default();
-        paint.set_color(fill_color);
-        paint.anti_alias = true;
-        pixmap.fill_path(&path, &paint, FillRule::Winding, transform, None);
-    }
-
-    if let Some((stroke_color, width)) = stroke {
-        let mut paint = Paint::default();
-        paint.set_color(stroke_color);
-        paint.anti_alias = true;
-        let mut stroke_style = Stroke::default();
-        stroke_style.width = width;
-        pixmap.stroke_path(&path, &paint, &stroke_style, transform, None);
-    }
 }
 
 #[cfg(test)]
