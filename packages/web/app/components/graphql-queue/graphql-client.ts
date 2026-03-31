@@ -72,7 +72,9 @@ export function createGraphQLClient(
   class SafeWebSocket extends WebSocket {
     constructor(url: string | URL, protocols?: string | string[]) {
       super(url, protocols);
-      this.addEventListener('error', () => {});
+      this.addEventListener('error', (event) => {
+        if (DEBUG) console.log(`[GraphQL] Client #${clientId} WebSocket native error suppressed`, event);
+      });
     }
   }
 

@@ -536,8 +536,9 @@ export function useSessionLifecycle({
             await execute(clientToCleanup, { query: LEAVE_SESSION }).catch(() => {});
           }
           clientToCleanup.dispose();
-        }).catch(() => {
+        }).catch((err) => {
           // Swallow errors during cleanup — the WebSocket is being torn down
+          if (DEBUG) console.log('[PersistentSession] Cleanup error suppressed:', err);
         });
       }
 
