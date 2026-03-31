@@ -16,7 +16,6 @@ import DeleteOutlined from '@mui/icons-material/DeleteOutlined';
 import EditOutlined from '@mui/icons-material/EditOutlined';
 import CloseOutlined from '@mui/icons-material/CloseOutlined';
 import HistoryOutlined from '@mui/icons-material/HistoryOutlined';
-import dynamic from 'next/dynamic';
 import { usePathname } from 'next/navigation';
 import { useQueueContext } from '../graphql-queue';
 import { useFavorite, ClimbActions } from '../climb-actions';
@@ -38,10 +37,6 @@ import drawerStyles from '../swipeable-drawer/swipeable-drawer.module.css';
 import ClimbDetailShellClient from '@/app/components/climb-detail/climb-detail-shell.client';
 import { useBuildClimbDetailSections } from '@/app/components/climb-detail/build-climb-detail-sections';
 
-const SendClimbToBoardButton = dynamic(
-  () => import('../board-bluetooth-control/send-climb-to-board-button').then((mod) => mod.default || mod),
-  { ssr: false },
-);
 
 
 interface PlayDrawerContentProps {
@@ -323,11 +318,8 @@ const PlayViewDrawer: React.FC<PlayViewDrawerProps> = ({
               {isFavorited ? <Favorite sx={{ color: themeTokens.colors.error }} /> : <FavoriteBorderOutlined />}
             </IconButton>
 
-            {/* Party */}
+            {/* Party / LED */}
             <ShareBoardButton />
-
-            {/* LED */}
-            <SendClimbToBoardButton />
 
             {/* More actions */}
             <IconButton
