@@ -20,7 +20,6 @@ const mockClimb: Climb = {
   quality_average: '3.5',
   stars: 3,
   difficulty_error: '',
-  litUpHoldsMap: {},
   mirrored: false,
   benchmark_difficulty: null,
   userAscents: 0,

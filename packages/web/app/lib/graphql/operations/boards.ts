@@ -9,6 +9,8 @@ import type {
   MyBoardsInput,
   FollowBoardInput,
   SearchBoardsInput,
+  PopularBoardConfigConnection,
+  PopularBoardConfigsInput,
 } from '@boardsesh/shared-schema';
 
 // ============================================
@@ -115,6 +117,28 @@ export const GET_BOARD_LEADERBOARD = gql`
       totalCount
       hasMore
       periodLabel
+    }
+  }
+`;
+
+export const GET_POPULAR_BOARD_CONFIGS = gql`
+  query GetPopularBoardConfigs($input: PopularBoardConfigsInput) {
+    popularBoardConfigs(input: $input) {
+      configs {
+        boardType
+        layoutId
+        layoutName
+        sizeId
+        sizeName
+        sizeDescription
+        setIds
+        setNames
+        climbCount
+        totalAscents
+        displayName
+      }
+      totalCount
+      hasMore
     }
   }
 `;
@@ -243,4 +267,12 @@ export interface UnfollowBoardMutationVariables {
 
 export interface UnfollowBoardMutationResponse {
   unfollowBoard: boolean;
+}
+
+export interface GetPopularBoardConfigsQueryVariables {
+  input?: PopularBoardConfigsInput;
+}
+
+export interface GetPopularBoardConfigsQueryResponse {
+  popularBoardConfigs: PopularBoardConfigConnection;
 }

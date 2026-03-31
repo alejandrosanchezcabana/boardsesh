@@ -10,9 +10,34 @@ import { NavigationLoadingProvider } from './components/providers/navigation-loa
 import PersistentSessionWrapper from './components/providers/persistent-session-wrapper';
 import { SnackbarProvider } from './components/providers/snackbar-provider';
 import { NotificationSubscriptionManager } from './components/providers/notification-subscription-manager';
+import { VercelToolbar } from '@vercel/toolbar/next';
+import { FlagValues } from 'flags/react';
 import { getAllBoardConfigs } from './lib/server-board-configs';
+import { evaluateAllFlags } from './flags';
+import { FeatureFlagsProvider } from './components/providers/feature-flags-provider';
 import './components/index.css';
-import type { Viewport } from 'next';
+import type { Viewport, Metadata } from 'next';
+
+export const metadata: Metadata = {
+  metadataBase: new URL('https://www.boardsesh.com'),
+  title: {
+    default: 'Boardsesh - Train smarter on your climbing board',
+    template: '%s | Boardsesh',
+  },
+  description:
+    'Track your sends across Kilter, Tension, and MoonBoard. One app for your boards.',
+  openGraph: {
+    type: 'website',
+    siteName: 'Boardsesh',
+    locale: 'en_US',
+  },
+  twitter: {
+    card: 'summary_large_image',
+  },
+  icons: {
+    icon: '/favicon.ico',
+  },
+};
 
 export const viewport: Viewport = {
   width: 'device-width',
@@ -23,27 +48,32 @@ export const viewport: Viewport = {
 
 export default async function RootLayout({ children }: { children: React.ReactNode }) {
   const boardConfigs = await getAllBoardConfigs();
+  const featureFlags = await evaluateAllFlags();
 
   return (
     <html lang="en" data-theme="dark" suppressHydrationWarning>
       <body suppressHydrationWarning>
         <Analytics />
+        <FlagValues values={featureFlags} />
         <QueryClientProvider>
           <SessionProviderWrapper>
             <AppRouterCacheProvider>
               <ColorModeProvider>
                 <SnackbarProvider>
-                  <PersistentSessionWrapper boardConfigs={boardConfigs}>
-                    <NavigationLoadingProvider>
-                      <NotificationSubscriptionManager>{children}</NotificationSubscriptionManager>
-                    </NavigationLoadingProvider>
-                  </PersistentSessionWrapper>
+                  <FeatureFlagsProvider flags={featureFlags}>
+                    <PersistentSessionWrapper boardConfigs={boardConfigs}>
+                      <NavigationLoadingProvider>
+                        <NotificationSubscriptionManager>{children}</NotificationSubscriptionManager>
+                      </NavigationLoadingProvider>
+                    </PersistentSessionWrapper>
+                  </FeatureFlagsProvider>
                 </SnackbarProvider>
               </ColorModeProvider>
             </AppRouterCacheProvider>
           </SessionProviderWrapper>
         </QueryClientProvider>
         <SpeedInsights />
+        {process.env.NODE_ENV === 'development' && <VercelToolbar />}
       </body>
     </html>
   );

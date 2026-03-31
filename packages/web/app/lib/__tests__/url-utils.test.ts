@@ -377,10 +377,10 @@ describe('URL construction functions', () => {
   });
 
   describe('constructClimbInfoUrl', () => {
-    it('should construct external info URL for kilter', () => {
+    it('should return null for kilter (app URL no longer accessible)', () => {
       const boardDetails = { board_name: 'kilter' as const };
       const result = constructClimbInfoUrl(boardDetails as unknown as BoardDetails, 'abc123');
-      expect(result).toBe('https://kilterboardapp.com/climbs/abc123');
+      expect(result).toBeNull();
     });
 
     it('should construct external info URL for tension', () => {

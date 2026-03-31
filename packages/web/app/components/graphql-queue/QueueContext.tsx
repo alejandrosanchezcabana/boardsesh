@@ -57,7 +57,7 @@ export const GraphQLQueueProvider = ({ parsedParams, boardDetails, children, bas
   // --- Session ID management ---
   const {
     sessionId, baseBoardPath, isPersistentSessionActive, persistentSession,
-    backendUrl, searchParams, router, pathname,
+    backendUrl, searchParams, pathname,
     startSession, joinSession, endSession, sessionSummary, dismissSessionSummary,
   } = useSessionIdManagement({
     isOffBoardMode,
@@ -266,7 +266,11 @@ export const GraphQLQueueProvider = ({ parsedParams, boardDetails, children, bas
           if (currentSession) urlParams.set('session', currentSession);
           const queryString = urlParams.toString();
           const newUrl = queryString ? `${pathname}?${queryString}` : pathname;
-          router.replace(newUrl, { scroll: false });
+          // Use history.replaceState instead of router.replace to update the URL
+          // without triggering a server-side re-render. After the initial page load,
+          // climb data is fetched client-side via TanStack Query, so re-running
+          // the server component on every filter change is wasted work.
+          window.history.replaceState(window.history.state, '', newUrl);
         }
       },
 
@@ -309,7 +313,7 @@ export const GraphQLQueueProvider = ({ parsedParams, boardDetails, children, bas
       state, climbSearchResults, suggestedClimbs, totalSearchResultCount, hasMoreResults,
       isFetchingClimbs, isFetchingNextPage, viewOnlyMode, parsedParams,
       clientId, isLeader, users, hasConnected, connectionError, backendUrl,
-      persistentSession, isPersistentSessionActive, dispatch, pathname, router,
+      persistentSession, isPersistentSessionActive, dispatch, pathname,
       fetchMoreClimbs, currentUserInfo, isSessionActive, sessionId, setCountSearchParams,
       startSession, joinSession, endSession, sessionSummary, dismissSessionSummary,
       isOffBoardMode, connectionState, canMutate, guardMutation, searchParams,

@@ -16,7 +16,6 @@ export const ClimbInputSchema = z.object({
   quality_average: z.string().max(20).nullish().transform(v => v ?? ''),
   stars: z.number().min(0).max(15).nullish().transform(v => v ?? 0),
   difficulty_error: z.string().max(50).nullish().transform(v => v ?? ''),
-  litUpHoldsMap: z.record(z.string(), z.any()).nullish().transform(v => v ?? {}),
   mirrored: z.boolean().nullish(),
   benchmark_difficulty: z.string().max(50).nullish(),
   userAscents: z.number().min(0).nullish(),
@@ -76,6 +75,7 @@ export const ClimbSearchInputSchema = z.object({
   hideCompleted: z.boolean().optional(),
   showOnlyAttempted: z.boolean().optional(),
   showOnlyCompleted: z.boolean().optional(),
+  onlyDrafts: z.boolean().optional(),
 });
 
 export const SaveClimbInputSchema = z.object({

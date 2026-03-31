@@ -15,27 +15,19 @@ import type { BoardName, ClimbUuid } from '@/app/lib/types';
 // Tick status type matching the database enum
 export type TickStatus = 'flash' | 'send' | 'attempt';
 
-// Logbook entry that works for both local ticks and legacy Aurora entries
+// Logbook entry representing a user's tick on a climb
 export interface LogbookEntry {
   uuid: string;
   climb_uuid: string;
   angle: number;
   is_mirror: boolean;
-  user_id: number;
-  attempt_id: number;
   tries: number;
   quality: number | null;
   difficulty: number | null;
-  is_benchmark: boolean;
-  is_listed: boolean;
   comment: string;
   climbed_at: string;
-  created_at: string;
-  updated_at: string;
-  wall_uuid: string | null;
   is_ascent: boolean;
   status?: TickStatus;
-  aurora_synced?: boolean;
 }
 
 function transformTicks(ticks: GetTicksQueryResponse['ticks']): LogbookEntry[] {
@@ -44,21 +36,13 @@ function transformTicks(ticks: GetTicksQueryResponse['ticks']): LogbookEntry[] {
     climb_uuid: tick.climbUuid,
     angle: tick.angle,
     is_mirror: tick.isMirror,
-    user_id: 0,
-    attempt_id: 0,
     tries: tick.attemptCount,
     quality: tick.quality,
     difficulty: tick.difficulty,
-    is_benchmark: tick.isBenchmark,
-    is_listed: true,
     comment: tick.comment,
     climbed_at: tick.climbedAt,
-    created_at: tick.createdAt,
-    updated_at: tick.updatedAt,
-    wall_uuid: null,
     is_ascent: tick.status === 'flash' || tick.status === 'send',
     status: tick.status,
-    aurora_synced: tick.auroraId !== null,
   }));
 }
 

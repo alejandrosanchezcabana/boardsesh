@@ -1,8 +1,26 @@
 import { gql } from 'graphql-request';
 import type { Climb, HoldState } from '@/app/lib/types';
 
-// Fragment for climb fields
-const CLIMB_FIELDS = `
+// Slim fragment for search/list views (no description or mirrored - unused in list/card)
+const CLIMB_SEARCH_FIELDS = `
+  uuid
+  setter_username
+  name
+  frames
+  angle
+  ascensionist_count
+  difficulty
+  quality_average
+  stars
+  difficulty_error
+  benchmark_difficulty
+  is_draft
+  userAscents
+  userAttempts
+`;
+
+// Full fragment for single-climb views that need all fields
+const CLIMB_DETAIL_FIELDS = `
   uuid
   setter_username
   name
@@ -14,7 +32,6 @@ const CLIMB_FIELDS = `
   quality_average
   stars
   difficulty_error
-  litUpHoldsMap
   mirrored
   benchmark_difficulty
   userAscents
@@ -25,7 +42,7 @@ export const SEARCH_CLIMBS = gql`
   query SearchClimbs($input: ClimbSearchInput!) {
     searchClimbs(input: $input) {
       climbs {
-        ${CLIMB_FIELDS}
+        ${CLIMB_SEARCH_FIELDS}
       }
       hasMore
     }
@@ -57,7 +74,7 @@ export const GET_CLIMB = gql`
       angle: $angle
       climbUuid: $climbUuid
     ) {
-      ${CLIMB_FIELDS}
+      ${CLIMB_DETAIL_FIELDS}
     }
   }
 `;
@@ -86,6 +103,7 @@ export interface ClimbSearchInputVariables {
     hideCompleted?: boolean;
     showOnlyAttempted?: boolean;
     showOnlyCompleted?: boolean;
+    onlyDrafts?: boolean;
   };
 }
 

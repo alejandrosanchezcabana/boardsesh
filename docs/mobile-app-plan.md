@@ -1198,7 +1198,7 @@ Push notifications (Milestone 4) ship as a v1.1 update post-launch.
 | Platform | Minimum Version |
 |----------|-----------------|
 | iOS | 16.0+ (Capacitor 6 requirement) |
-| Android | API 22 (Android 5.1)+ / Target API 34+ |
+| Android | API 33 (Android 13)+ / Target API 34+ |
 
 ---
 

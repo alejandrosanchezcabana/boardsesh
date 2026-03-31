@@ -5,11 +5,12 @@ import { authOptions } from '@/app/lib/auth/auth-options';
 import { auroraExportSchema, importJsonExportData } from '@/app/lib/data-sync/aurora/json-import';
 import type { ImportResult, ImportProgressEvent } from '@/app/lib/data-sync/aurora/json-import';
 
-export const maxDuration = 60;
+export const maxDuration = 300;
 
 const requestSchema = z.object({
   boardType: z.enum(['kilter', 'tension']),
   data: auroraExportSchema,
+  skipSessionBuild: z.boolean().optional().default(false),
 });
 
 export interface AuroraImportResponse {
@@ -35,7 +36,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const { boardType, data } = parsed.data;
+    const { boardType, data, skipSessionBuild } = parsed.data;
 
     const encoder = new TextEncoder();
 
@@ -51,6 +52,7 @@ export async function POST(request: NextRequest) {
             boardType,
             data,
             send,
+            { skipSessionBuild },
           );
 
           send({ type: 'complete', results });

@@ -40,7 +40,7 @@ export default function AboutContent() {
                 Track, Train, and Climb Together
               </Typography>
               <Typography variant="body2" component="span" color="text.secondary" className={styles.heroSubtitle}>
-                A centralized hub for all your LED climbing board training
+                One app for every climbing board
               </Typography>
             </div>
 
@@ -51,14 +51,11 @@ export default function AboutContent() {
                 Our Vision
               </Typography>
               <Typography variant="body1" component="p">
-                LED climbing boards like Kilter, Tension, Moonboard, Decoy, and Grasshopper have
-                revolutionized indoor training. We believe the climbing community deserves a
-                centralized platform that brings all these boards together—making it easier to
-                track progress, train with friends, and get the most out of your board.
+                Kilter, Tension, MoonBoard, Decoy, Grasshopper. Every board has its own app
+                and its own walled garden. Your training shouldn&apos;t be locked inside one of them.
               </Typography>
               <Typography variant="body1" component="p">
-                Boardsesh is a unified experience that works across different board types, helping
-                you focus on what matters most—climbing.
+                Boardsesh works across all of them so you can just climb.
               </Typography>
             </section>
 
@@ -68,24 +65,21 @@ export default function AboutContent() {
                 <GroupOutlined className={`${styles.sectionIcon} ${styles.successIcon}`} />
                 What Boardsesh Offers
               </Typography>
-              <Typography variant="body1" component="p">With Boardsesh, you get:</Typography>
               <ul className={styles.featureList}>
                 <li>
-                  <Typography variant="body2" component="span" fontWeight={600}>Queue management</Typography> — Coordinate climbs when training with others
+                  <Typography variant="body2" component="span" fontWeight={600}>Queue management.</Typography> Take turns without the awkward &quot;who&apos;s next?&quot;
                 </li>
                 <li>
-                  <Typography variant="body2" component="span" fontWeight={600}>Real-time collaboration</Typography> — Share sessions with friends via
-                  Party Mode
+                  <Typography variant="body2" component="span" fontWeight={600}>Party Mode.</Typography> Share a session and climb together in real time
                 </li>
                 <li>
-                  <Typography variant="body2" component="span" fontWeight={600}>Multi-board support</Typography> — One app for Kilter, Tension, and more
+                  <Typography variant="body2" component="span" fontWeight={600}>Multi-board.</Typography> Works with Kilter, Tension, MoonBoard, and more
                 </li>
                 <li>
-                  <Typography variant="body2" component="span" fontWeight={600}>Active development</Typography> — New features and improvements from the
-                  community
+                  <Typography variant="body2" component="span" fontWeight={600}>Community-driven.</Typography> Built and improved by people who actually climb
                 </li>
                 <li>
-                  <Typography variant="body2" component="span" fontWeight={600}>Self-hosting option</Typography> — Run your own instance if you prefer
+                  <Typography variant="body2" component="span" fontWeight={600}>Self-hostable.</Typography> Run your own instance if that&apos;s your thing
                 </li>
               </ul>
             </section>
@@ -97,8 +91,8 @@ export default function AboutContent() {
                 Open Source
               </Typography>
               <Typography variant="body1" component="p">
-                Boardsesh is completely open source under the Apache license. You can view the code,
-                contribute features, report bugs, or fork it entirely to run your own instance.
+                Boardsesh is open source under the Apache license. Browse the code, send a PR,
+                file a bug, or fork the whole project.
               </Typography>
               <Typography variant="body1" component="p">
                 <MuiLink
@@ -118,8 +112,7 @@ export default function AboutContent() {
                 API Documentation
               </Typography>
               <Typography variant="body1" component="p">
-                Building something cool with climbing data? We provide a public API that developers
-                can use to access climb information and build their own integrations.
+                Want to build on climbing data? The API is public. Have at it.
               </Typography>
               <Typography variant="body1" component="p">
                 <MuiLink href="/docs">Explore the API Documentation →</MuiLink>
@@ -133,17 +126,22 @@ export default function AboutContent() {
                 Join the Community
               </Typography>
               <Typography variant="body1" component="p">
-                We&apos;re always looking to collaborate with climbers, developers, and anyone
-                passionate about improving the board climbing experience. Whether you want to
-                contribute code, suggest features, or just say hello—we&apos;d love to hear from
-                you.
+                Whether you write code, set problems, or just want to tell us what&apos;s broken,
+                we&apos;d like to hear from you.
+              </Typography>
+            </section>
+
+            {/* Legal */}
+            <section>
+              <Typography variant="body1" component="p">
+                <MuiLink href="/legal">Legal &amp; Intellectual Property Policy</MuiLink>
               </Typography>
             </section>
 
             {/* Call to Action */}
             <section className={styles.callToAction}>
               <Typography variant="body1" component="p" color="text.secondary">
-                Together, we can build the best training companion for board climbers everywhere.
+                Made by climbers. Open to everyone.
               </Typography>
             </section>
           </Stack>

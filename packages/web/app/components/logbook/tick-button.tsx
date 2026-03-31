@@ -32,15 +32,20 @@ export const TickButton: React.FC<TickButtonProps> = ({ currentClimb, angle, boa
   const [showAuthModal, setShowAuthModal] = useState(false);
   const { alwaysUseApp, loaded, enableAlwaysUseApp } = useAlwaysTickInApp();
 
+  // URL for opening in the Aurora app (null for Kilter as app URL is no longer accessible)
+  const openInAppUrl = useMemo(
+    () => currentClimb ? constructClimbInfoUrl(boardDetails, currentClimb.uuid) : null,
+    [boardDetails, currentClimb]
+  );
+
   const showDrawer = () => {
     track('Tick Button Clicked', {
       boardLayout: boardDetails.layout_name || '',
       existingAscentCount: badgeCount,
     });
 
-    if (!isAuthenticated && alwaysUseApp && loaded && currentClimb) {
-      const url = constructClimbInfoUrl(boardDetails, currentClimb.uuid);
-      openExternalUrl(url);
+    if (!isAuthenticated && alwaysUseApp && loaded && openInAppUrl) {
+      openExternalUrl(openInAppUrl);
       return;
     }
 
@@ -49,9 +54,8 @@ export const TickButton: React.FC<TickButtonProps> = ({ currentClimb, angle, boa
   const closeDrawer = () => setDrawerVisible(false);
 
   const handleOpenInApp = () => {
-    if (!currentClimb) return;
-    const url = constructClimbInfoUrl(boardDetails, currentClimb.uuid);
-    openExternalUrl(url);
+    if (!openInAppUrl) return;
+    openExternalUrl(openInAppUrl);
     closeDrawer();
   };
 
@@ -102,23 +106,27 @@ export const TickButton: React.FC<TickButtonProps> = ({ currentClimb, angle, boa
             <Button variant="contained" startIcon={<LoginOutlined />} onClick={() => setShowAuthModal(true)} fullWidth>
               Sign In
             </Button>
-            <Typography variant="body1" component="p" color="text.secondary">
-              Or log your tick in the official app:
-            </Typography>
-            <Button variant="outlined" startIcon={<AppsOutlined />} onClick={handleOpenInApp} fullWidth>
-              Open in App
-            </Button>
-            <Button
-              variant="text"
-              size="small"
-              color="secondary"
-              onClick={async () => {
-                await enableAlwaysUseApp();
-                handleOpenInApp();
-              }}
-            >
-              Always open in app
-            </Button>
+            {openInAppUrl && (
+              <>
+                <Typography variant="body1" component="p" color="text.secondary">
+                  Or log your tick in the official app:
+                </Typography>
+                <Button variant="outlined" startIcon={<AppsOutlined />} onClick={handleOpenInApp} fullWidth>
+                  Open in App
+                </Button>
+                <Button
+                  variant="text"
+                  size="small"
+                  color="secondary"
+                  onClick={async () => {
+                    await enableAlwaysUseApp();
+                    handleOpenInApp();
+                  }}
+                >
+                  Always open in app
+                </Button>
+              </>
+            )}
           </Stack>
         </SwipeableDrawer>
       )}

@@ -1,8 +1,11 @@
 'use client';
-import React from 'react';
-import { Climb, BoardDetails } from '@/app/lib/types';
+import React, { useMemo } from 'react';
+import type { Climb, BoardDetails } from '@/app/lib/types';
 import BoardRenderer from '@/app/components/board-renderer/board-renderer';
+import BoardImageLayers from '@/app/components/board-renderer/board-image-layers';
 import { useDoubleTap } from '@/app/lib/hooks/use-double-tap';
+import { useFeatureFlag } from '@/app/components/providers/feature-flags-provider';
+import { convertLitUpHoldsStringToMap } from '@/app/components/board-renderer/util';
 
 type ClimbCardCoverProps = {
   climb?: Climb;
@@ -13,6 +16,25 @@ type ClimbCardCoverProps = {
 
 const ClimbCardCover = ({ climb, boardDetails, onClick, onDoubleClick }: ClimbCardCoverProps) => {
   const { ref, onDoubleClick: handleDoubleClick } = useDoubleTap(onDoubleClick);
+  const isRustRendererEnabled = useFeatureFlag('rust-svg-rendering');
+  const litUpHoldsMap = useMemo(
+    () => climb && !isRustRendererEnabled ? convertLitUpHoldsStringToMap(climb.frames, boardDetails.board_name)[0] : undefined,
+    [climb?.frames, boardDetails.board_name, isRustRendererEnabled],
+  );
+
+  const renderContent = isRustRendererEnabled && climb ? (
+    <BoardImageLayers
+      boardDetails={boardDetails}
+      frames={climb.frames}
+      mirrored={!!climb.mirrored}
+      style={{
+        aspectRatio: `${boardDetails.boardWidth} / ${boardDetails.boardHeight}`,
+        width: '100%',
+      }}
+    />
+  ) : (
+    <BoardRenderer boardDetails={boardDetails} litUpHoldsMap={litUpHoldsMap} mirrored={!!climb?.mirrored} />
+  );
 
   return (
     <div
@@ -26,7 +48,7 @@ const ClimbCardCover = ({ climb, boardDetails, onClick, onDoubleClick }: ClimbCa
         cursor: onClick || onDoubleClick ? 'pointer' : 'default',
       }}
     >
-      <BoardRenderer boardDetails={boardDetails} litUpHoldsMap={climb?.litUpHoldsMap} mirrored={!!climb?.mirrored} />
+      {renderContent}
     </div>
   );
 };

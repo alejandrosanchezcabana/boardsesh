@@ -2,7 +2,6 @@ import { sql } from 'drizzle-orm';
 import { db } from '../../client';
 import { getBoardTables, type BoardName } from '../util/table-select';
 import type { Climb } from '@boardsesh/shared-schema';
-import { convertLitUpHoldsStringToMap } from '../util/hold-state';
 
 interface GetClimbParams {
   board_name: BoardName;
@@ -70,7 +69,6 @@ export const getClimbByUuid = async (params: GetClimbParams): Promise<Climb | nu
       stars: Math.round((Number(row.quality_average) || 0) * 5),
       difficulty_error: row.difficulty_error?.toString() || '0',
       benchmark_difficulty: row.benchmark_difficulty && row.benchmark_difficulty > 0 ? row.benchmark_difficulty.toString() : null,
-      litUpHoldsMap: convertLitUpHoldsStringToMap(row.frames || '', params.board_name)[0] || {},
     };
 
     return climb;

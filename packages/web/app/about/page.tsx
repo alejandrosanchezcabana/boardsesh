@@ -5,7 +5,7 @@ import AboutContent from './about-content';
 export const metadata: Metadata = {
   title: 'About | Boardsesh',
   description:
-    'Boardsesh is a centralized hub for all your LED climbing board training - track, train, and climb together',
+    'One app for every climbing board. Open source, community-driven.',
 };
 
 export default function AboutPage() {

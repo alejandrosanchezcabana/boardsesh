@@ -236,4 +236,61 @@ export const boardEntitiesTypeDefs = /* GraphQL */ `
     "Offset for pagination"
     offset: Int
   }
+
+  # ============================================
+  # Popular Board Config Types
+  # ============================================
+
+  """
+  A popular board configuration (board type + layout + size + hold sets),
+  derived from the catalog of valid configurations ranked by climb count.
+  """
+  type PopularBoardConfig {
+    "Board type (kilter, tension, moonboard)"
+    boardType: String!
+    "Layout ID"
+    layoutId: Int!
+    "Human-readable layout name"
+    layoutName: String
+    "Size ID"
+    sizeId: Int!
+    "Human-readable size name"
+    sizeName: String
+    "Human-readable size description"
+    sizeDescription: String
+    "Set IDs for this configuration"
+    setIds: [Int!]!
+    "Human-readable set names"
+    setNames: [String!]!
+    "Number of listed climbs for this layout"
+    climbCount: Int!
+    "Total sends across all climbs and angles"
+    totalAscents: Int!
+    "Pre-formatted display name for UI (e.g. 'OG 12x12 Full Ride')"
+    displayName: String!
+  }
+
+  """
+  Paginated list of popular board configurations.
+  """
+  type PopularBoardConfigConnection {
+    "List of configurations"
+    configs: [PopularBoardConfig!]!
+    "Total number of configurations"
+    totalCount: Int!
+    "Whether more configurations are available"
+    hasMore: Boolean!
+  }
+
+  """
+  Input for querying popular board configurations.
+  """
+  input PopularBoardConfigsInput {
+    "Filter by board type"
+    boardType: String
+    "Max results to return (default 12)"
+    limit: Int
+    "Offset for pagination (default 0)"
+    offset: Int
+  }
 `;

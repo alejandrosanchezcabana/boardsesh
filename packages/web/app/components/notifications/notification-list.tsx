@@ -98,7 +98,7 @@ export default function NotificationList({ initialData }: NotificationListProps)
             <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', py: 6, gap: 1 }}>
               <NotificationsNoneOutlined sx={{ fontSize: 40, color: 'var(--neutral-300)' }} />
               <MuiTypography variant="body2" color="text.secondary">
-                No notifications yet
+                Nothing yet
               </MuiTypography>
             </Box>
           ) : (

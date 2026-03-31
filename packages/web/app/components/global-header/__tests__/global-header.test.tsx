@@ -42,6 +42,15 @@ vi.mock('@/app/components/user-drawer/user-drawer', () => ({
   default: () => <div data-testid="user-drawer" />,
 }));
 
+let mockPathname = '/';
+vi.mock('next/navigation', () => ({
+  usePathname: () => mockPathname,
+}));
+
+vi.mock('@/app/components/back-button', () => ({
+  default: () => <button data-testid="back-button">Back</button>,
+}));
+
 import GlobalHeader from '../global-header';
 
 const mockBoardConfigs = {} as Parameters<typeof GlobalHeader>[0]['boardConfigs'];
@@ -51,6 +60,7 @@ describe('GlobalHeader', () => {
     vi.clearAllMocks();
     mockActiveSession = null;
     mockIsOnBoardRoute = false;
+    mockPathname = '/some-page';
     mockBridgeState = {
       openClimbSearchDrawer: null,
       searchPillSummary: null,

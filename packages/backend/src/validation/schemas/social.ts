@@ -61,7 +61,7 @@ export const SetterClimbsInputSchema = z.object({
 });
 
 /**
- * Setter climbs full input validation schema (with litUpHoldsMap for thumbnails)
+ * Setter climbs full input validation schema (with full Climb data for thumbnails)
  */
 export const SetterClimbsFullInputSchema = z.object({
   username: z.string().min(1, 'Username cannot be empty').max(100),

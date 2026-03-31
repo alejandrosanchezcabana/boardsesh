@@ -15,6 +15,7 @@ Boardsesh is a monorepo containing a Next.js 15 application for controlling stan
 - No buzzwords. Concrete numbers and simple language.
 - Keep `REQUESTS.md` updated as the feature backlog. Mark items as you complete them.
 - No unnecessary check-ins. Default to action. Full autonomy except no data deletion without asking.
+- **Performance is critical.** Every change must be reviewed for performance impact. After implementing changes, always spawn a dedicated performance review subagent (Opus) that audits the diff for: unnecessary re-renders, expensive computations in hot paths, unoptimized database queries, missing memoization, bundle size regressions, and N+1 query patterns. Do not merge or finalize work until the performance review passes.
 
 ## Documentation
 
@@ -198,6 +199,27 @@ We are using next.js app router, it's important we try to use server side compon
 - For rendering avoid JavaScript breakpoint detection & Grid.useBreakpoint()
 - While we work together, be careful to remove any code you no longer use, so we dont end up with lots of deadcode
 - **Never use `any` type** - The `no-explicit-any` lint rule is set to `deny` across all packages. Use `unknown`, proper types, or `as unknown as SpecificType` for type assertions. No exceptions - `any` defeats the purpose of TypeScript
+
+### Copy & Microcopy
+
+When writing user-facing text, follow these rules:
+
+- Describe what the user gets, not what the feature does. "Line up your climbs before you get to the gym" is better than "Organize climbs into collections for your sessions."
+- Users opened the app for a reason. Don't ask "Ready to climb?" when you can say "Get on the wall."
+- If a sentence has three commas, it's a feature list in disguise. Pick the strongest point or break it up.
+- Write like a climber talks. "Sends", "crew", "beta", "project" over "hub", "platform", "all-in-one solution."
+- Empty states, error messages, and button labels carry the voice too. "No one's here yet" over "No data available."
+- Use active verbs in CTAs. "See the feed", "Build a playlist", "Start climbing." Avoid "Go to..." and "View your..."
+- Frame migrations and warnings around what users gain, not what they lose.
+- Watch for AI-writing tells: em dash overuse, "not only X but Y" constructions, triple parallel structures, bolded-keyword-colon-explanation bullets, and generic adjectives like "seamless" or "comprehensive." See https://en.wikipedia.org/wiki/Wikipedia:Signs_of_AI_writing
+
+### Trademark Usage (Kilter, Tension, MoonBoard)
+
+- Always capitalize correctly: **MoonBoard** (not Moonboard), **Kilter**, **Tension**
+- Use names to describe compatibility, not to brand Boardsesh: "Works with Kilter" not "Kilter app"
+- Prefer "your" to signal the user's hardware: "One app for your boards" not "One app for Kilter"
+- Never imply endorsement or affiliation with Aurora Climbing, Moon Climbing, or any manufacturer
+- See `/legal` route and `LEGAL.md` for the full trademark disclaimer
 
 ### Component Structure
 

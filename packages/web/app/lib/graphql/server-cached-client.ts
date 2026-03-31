@@ -1,20 +1,9 @@
 import 'server-only';
-import { createHash } from 'crypto';
 import { unstable_cache } from 'next/cache';
 import { GraphQLClient, RequestDocument, Variables } from 'graphql-request';
 import { sortObjectKeys } from '@/app/lib/cache-utils';
 import { getGraphQLHttpUrl } from './client';
 import type { GroupedNotificationConnection } from '@boardsesh/shared-schema';
-
-function hashToken(token: string): string {
-  return createHash('sha256').update(token).digest('hex').slice(0, 16);
-}
-
-/**
- * Cache durations for climb search queries (in seconds)
- */
-const CACHE_DURATION_DEFAULT_SEARCH = 30 * 24 * 60 * 60; // 30 days for default searches
-const CACHE_DURATION_FILTERED_SEARCH = 60 * 60; // 1 hour for filtered searches
 
 /**
  * Execute a GraphQL query via HTTP (non-cached version for internal use)
@@ -75,96 +64,7 @@ export function createCachedGraphQLQuery<T = unknown, V extends Variables = Vari
   };
 }
 
-/**
- * Search input type for climb search queries
- */
-interface ClimbSearchInput {
-  boardName: string;
-  layoutId: number;
-  sizeId: number;
-  setIds: string;
-  angle: number;
-  page?: number;
-  pageSize?: number;
-  gradeAccuracy?: string;
-  minGrade?: number;
-  maxGrade?: number;
-  minAscents?: number;
-  sortBy?: string;
-  sortOrder?: string;
-  name?: string;
-  setter?: string | string[];
-  onlyTallClimbs?: boolean;
-  holdsFilter?: Record<string, string>;
-  hideAttempted?: boolean;
-  hideCompleted?: boolean;
-  showOnlyAttempted?: boolean;
-  showOnlyCompleted?: boolean;
-}
 
-/**
- * Pre-configured cached query for climb search
- *
- * @param document - GraphQL query document
- * @param variables - Query variables containing { input: ClimbSearchInput }
- * @param isDefaultSearch - Whether this is a default/unfiltered search (caches longer)
- */
-export async function cachedSearchClimbs<T = unknown>(
-  document: RequestDocument,
-  variables: { input: ClimbSearchInput },
-  isDefaultSearch: boolean = false,
-  authToken?: string,
-): Promise<T> {
-  const revalidate = isDefaultSearch
-    ? CACHE_DURATION_DEFAULT_SEARCH
-    : CACHE_DURATION_FILTERED_SEARCH;
-
-  const { input } = variables;
-
-  // Build explicit cache key with board identifiers as separate segments
-  // This ensures cache hits/misses are correctly differentiated by board configuration
-  const cacheKey = [
-    'graphql',
-    'climb-search',
-    input.boardName,
-    String(input.layoutId),
-    String(input.sizeId),
-    input.setIds,
-    String(input.angle),
-    // Include filter params as a sorted JSON string
-    JSON.stringify(sortObjectKeys({
-      page: input.page,
-      pageSize: input.pageSize,
-      gradeAccuracy: input.gradeAccuracy,
-      minGrade: input.minGrade,
-      maxGrade: input.maxGrade,
-      minAscents: input.minAscents,
-      sortBy: input.sortBy,
-      sortOrder: input.sortOrder,
-      name: input.name,
-      setter: input.setter,
-      hideAttempted: input.hideAttempted,
-      hideCompleted: input.hideCompleted,
-      showOnlyAttempted: input.showOnlyAttempted,
-      showOnlyCompleted: input.showOnlyCompleted,
-    })),
-    // Hash auth token for per-user cache keying without exposing the raw token in logs
-    ...(authToken ? [`user:${hashToken(authToken)}`] : []),
-  ];
-
-  const cachedFn = unstable_cache(
-    async () => authToken
-      ? executeAuthenticatedGraphQL<T>(document, variables, authToken)
-      : executeGraphQLInternal<T>(document, variables),
-    cacheKey,
-    {
-      revalidate,
-      tags: ['climb-search'],
-    }
-  );
-
-  return cachedFn();
-}
 
 /**
  * Execute a GraphQL query with an auth token (non-cached, per-user data)

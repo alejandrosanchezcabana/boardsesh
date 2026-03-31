@@ -171,7 +171,7 @@ const PlayViewClient: React.FC<PlayViewClientProps> = ({ boardDetails, initialCl
         </div>
         <SwipeBoardCarousel
           boardDetails={boardDetails}
-          currentClimb={{ litUpHoldsMap: displayClimb.litUpHoldsMap, mirrored: isMirrored }}
+          currentClimb={{ frames: displayClimb.frames, mirrored: isMirrored }}
           nextClimb={nextItem?.climb}
           previousClimb={prevItem?.climb}
           onSwipeNext={handleNext}

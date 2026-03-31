@@ -1,10 +1,11 @@
-import React, { useMemo } from 'react';
+import React, { useEffect, useMemo, useRef } from 'react';
 import { getImageUrl } from './util';
 import { BoardDetails } from '@/app/lib/types';
 import BoardLitupHolds from './board-litup-holds';
 import { LitUpHoldsMap } from './types';
 import styles from './board-renderer.module.css';
 import MoonBoardRenderer from '../moonboard-renderer/moonboard-renderer';
+import { trackRenderComplete, type RenderContext } from '@/app/lib/rendering-metrics';
 
 export type BoardProps = {
   boardDetails: BoardDetails;
@@ -20,11 +21,22 @@ export type BoardProps = {
 
 const BoardRenderer = React.memo(
   ({ boardDetails, thumbnail, maxHeight, fillHeight, litUpHoldsMap, mirrored, onHoldClick }: BoardProps) => {
+    // Render timing: measure mount → paint (useEffect fires after DOM update)
+    const mountTime = useRef(performance.now());
+    const hasFired = useRef(false);
+    const isMoonBoard = boardDetails.board_name === 'moonboard' && !!boardDetails.layoutFolder;
+    const renderContext: RenderContext = thumbnail ? 'thumbnail' : fillHeight ? 'full-board' : 'card';
+    useEffect(() => {
+      if (hasFired.current || isMoonBoard) return;
+      hasFired.current = true;
+      trackRenderComplete(performance.now() - mountTime.current, renderContext, 'svg');
+    }, [isMoonBoard, renderContext]);
+
     // Delegate to MoonBoardRenderer for Moonboard (uses grid-based rendering)
-    if (boardDetails.board_name === 'moonboard' && boardDetails.layoutFolder) {
+    if (isMoonBoard) {
       return (
         <MoonBoardRenderer
-          layoutFolder={boardDetails.layoutFolder}
+          layoutFolder={boardDetails.layoutFolder!}
           holdSetImages={boardDetails.holdSetImages || []}
           litUpHoldsMap={litUpHoldsMap}
           mirrored={mirrored}
@@ -56,7 +68,7 @@ const BoardRenderer = React.memo(
         style={svgStyle}
       >
         {Object.keys(boardDetails.images_to_holds).map((imageUrl) => (
-          <image key={imageUrl} href={getImageUrl(imageUrl, boardDetails.board_name)} width="100%" height="100%" />
+          <image key={imageUrl} href={getImageUrl(imageUrl, boardDetails.board_name, thumbnail)} width="100%" height="100%" />
         ))}
         {litUpHoldsMap && (
           <BoardLitupHolds

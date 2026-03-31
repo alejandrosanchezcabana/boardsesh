@@ -105,7 +105,6 @@ function makeClimb(overrides: Partial<Climb> = {}): Climb {
     quality_average: '3.5',
     stars: 0,
     difficulty_error: '0.5',
-    litUpHoldsMap: {},
     benchmark_difficulty: null,
     ...overrides,
   };

@@ -6,6 +6,7 @@ import { pubsub } from '../../../pubsub/index';
 import { roomManager } from '../../../services/room-manager';
 import { createAsyncIterator } from '../shared/async-iterators';
 import { getLedPlacements } from '../../../db/queries/util/led-placements-data';
+import { convertLitUpHoldsStringToMap } from '../../../db/queries/util/hold-state';
 import { requireControllerAuth } from '../shared/helpers';
 import { getGradeColor } from './grade-colors';
 import { buildNavigationContext, findClimbIndex } from './navigation-helpers';
@@ -48,15 +49,18 @@ function buildControllerQueueSync(queue: ClimbQueueItem[], currentItemUuid: stri
 }
 
 /**
- * Convert a climb's litUpHoldsMap to LED commands using LED placements data
+ * Convert a climb's frames string to LED commands using LED placements data.
+ * Derives the litUpHoldsMap from the compact frames string on-the-fly.
  */
 function climbToLedCommands(
-  climb: { litUpHoldsMap: Record<number, { state: string }> },
+  climb: { frames: string },
+  boardName: BoardName,
   ledPlacements: Record<number, number>
 ): LedCommand[] {
+  const litUpHoldsMap = convertLitUpHoldsStringToMap(climb.frames || '', boardName)[0] || {};
   const commands: LedCommand[] = [];
 
-  for (const [placementIdStr, holdInfo] of Object.entries(climb.litUpHoldsMap)) {
+  for (const [placementIdStr, holdInfo] of Object.entries(litUpHoldsMap)) {
     const placementId = parseInt(placementIdStr, 10);
     const ledPosition = ledPlacements[placementId];
 
@@ -75,7 +79,7 @@ function climbToLedCommands(
     });
   }
 
-  console.log(`[Controller] Converted ${Object.keys(climb.litUpHoldsMap).length} holds to ${commands.length} LED commands`);
+  console.log(`[Controller] Converted ${Object.keys(litUpHoldsMap).length} holds to ${commands.length} LED commands`);
   return commands;
 }
 
@@ -121,7 +125,7 @@ export const controllerSubscriptions = {
 
       // Helper to build LedUpdate with navigation context
       const buildLedUpdateWithNavigation = async (
-        climb: { uuid: string; name: string; difficulty: string; angle: number; litUpHoldsMap: Record<number, { state: string }> } | null | undefined,
+        climb: { uuid: string; name: string; difficulty: string; angle: number; frames: string } | null | undefined,
         currentItemUuid?: string,
         clientId?: string | null
       ): Promise<LedUpdate> => {
@@ -151,7 +155,7 @@ export const controllerSubscriptions = {
           };
         }
 
-        const commands = climbToLedCommands(climb, ledPlacements);
+        const commands = climbToLedCommands(climb, controller.boardName as BoardName, ledPlacements);
 
         // Get queue state for navigation context
         const queueState = await roomManager.getQueueState(sessionId);

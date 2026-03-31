@@ -150,8 +150,6 @@ export const sessionMutations = {
     if (DEBUG) console.log(`[createSession] START - connectionId: ${ctx.connectionId}, boardPath: ${input.boardPath}`);
 
     await applyRateLimit(ctx, 5); // Limit session creation to prevent abuse
-    // Only authenticated users can create sessions
-    requireAuthenticated(ctx);
 
     // Validate input
     validateInput(CreateSessionInputSchema, input, 'createSession input');
@@ -161,7 +159,8 @@ export const sessionMutations = {
     if (DEBUG) console.log(`[createSession] Generated sessionId: ${sessionId}`);
 
     if (input.discoverable) {
-      // Create a discoverable session with GPS coordinates
+      // Discoverable sessions require authentication (they write to DB with userId)
+      requireAuthenticated(ctx);
       // Use authenticated userId from context
       const userId = ctx.userId || ctx.connectionId;
       await roomManager.createDiscoverableSession(

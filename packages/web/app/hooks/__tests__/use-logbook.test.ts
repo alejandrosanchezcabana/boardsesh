@@ -103,10 +103,7 @@ describe('useLogbook', () => {
           isBenchmark: false,
           comment: 'Nice climb',
           climbedAt: '2024-01-01',
-          createdAt: '2024-01-01T10:00:00Z',
-          updatedAt: '2024-01-01T10:00:00Z',
           status: 'send',
-          auroraId: null,
         },
       ],
     });
@@ -125,21 +122,13 @@ describe('useLogbook', () => {
       climb_uuid: 'climb-1',
       angle: 40,
       is_mirror: false,
-      user_id: 0,
-      attempt_id: 0,
       tries: 3,
       quality: 4,
       difficulty: 10,
-      is_benchmark: false,
-      is_listed: true,
       comment: 'Nice climb',
       climbed_at: '2024-01-01',
-      created_at: '2024-01-01T10:00:00Z',
-      updated_at: '2024-01-01T10:00:00Z',
-      wall_uuid: null,
       is_ascent: true,
       status: 'send',
-      aurora_synced: false,
     });
   });
 
@@ -157,10 +146,7 @@ describe('useLogbook', () => {
           isBenchmark: true,
           comment: '',
           climbedAt: '2024-06-15',
-          createdAt: '2024-06-15T12:00:00Z',
-          updatedAt: '2024-06-15T12:00:00Z',
           status: 'flash',
-          auroraId: 'aurora-123',
         },
       ],
     });
@@ -176,10 +162,8 @@ describe('useLogbook', () => {
 
     const entry = result.current.logbook[0];
     expect(entry.is_mirror).toBe(true);
-    expect(entry.is_benchmark).toBe(true);
     expect(entry.quality).toBeNull();
     expect(entry.difficulty).toBeNull();
-    expect(entry.aurora_synced).toBe(true);
     expect(entry.is_ascent).toBe(true);
     expect(entry.status).toBe('flash');
   });
@@ -224,10 +208,7 @@ describe('useLogbook', () => {
           isBenchmark: false,
           comment: '',
           climbedAt: '2024-01-01',
-          createdAt: '2024-01-01T10:00:00Z',
-          updatedAt: '2024-01-01T10:00:00Z',
           status: 'flash',
-          auroraId: null,
         },
         {
           uuid: 'tick-send',
@@ -240,10 +221,7 @@ describe('useLogbook', () => {
           isBenchmark: false,
           comment: '',
           climbedAt: '2024-01-02',
-          createdAt: '2024-01-02T10:00:00Z',
-          updatedAt: '2024-01-02T10:00:00Z',
           status: 'send',
-          auroraId: null,
         },
         {
           uuid: 'tick-attempt',
@@ -256,10 +234,7 @@ describe('useLogbook', () => {
           isBenchmark: false,
           comment: '',
           climbedAt: '2024-01-03',
-          createdAt: '2024-01-03T10:00:00Z',
-          updatedAt: '2024-01-03T10:00:00Z',
           status: 'attempt',
-          auroraId: null,
         },
       ],
     });
@@ -293,10 +268,7 @@ describe('useLogbook', () => {
           isBenchmark: false,
           comment: '',
           climbedAt: '2024-01-01',
-          createdAt: '2024-01-01T10:00:00Z',
-          updatedAt: '2024-01-01T10:00:00Z',
           status: 'send',
-          auroraId: null,
         },
       ],
     });
@@ -361,10 +333,7 @@ describe('useLogbook', () => {
           isBenchmark: false,
           comment: '',
           climbedAt: '2024-01-01',
-          createdAt: '2024-01-01T10:00:00Z',
-          updatedAt: '2024-01-01T10:00:00Z',
           status: 'send',
-          auroraId: null,
         },
       ],
     });
@@ -407,10 +376,7 @@ describe('useLogbook', () => {
           isBenchmark: false,
           comment: '',
           climbedAt: '2024-01-01',
-          createdAt: '2024-01-01T10:00:00Z',
-          updatedAt: '2024-01-01T10:00:00Z',
           status: 'send',
-          auroraId: null,
         },
       ],
     });
@@ -430,21 +396,13 @@ describe('useLogbook', () => {
       climb_uuid: 'climb-1',
       angle: 40,
       is_mirror: false,
-      user_id: 0,
-      attempt_id: 0,
       tries: 1,
       quality: null,
       difficulty: null,
-      is_benchmark: false,
-      is_listed: true,
       comment: 'optimistic',
       climbed_at: '2024-02-01',
-      created_at: '2024-02-01T10:00:00Z',
-      updated_at: '2024-02-01T10:00:00Z',
-      wall_uuid: null,
       is_ascent: true,
       status: 'flash',
-      aurora_synced: false,
     };
 
     act(() => {
@@ -475,10 +433,7 @@ describe('useLogbook', () => {
           isBenchmark: false,
           comment: '',
           climbedAt: '2024-01-01',
-          createdAt: '2024-01-01T10:00:00Z',
-          updatedAt: '2024-01-01T10:00:00Z',
           status: 'send',
-          auroraId: null,
         },
       ],
     });
@@ -520,10 +475,7 @@ describe('useLogbook', () => {
           isBenchmark: false,
           comment: '',
           climbedAt: '2024-01-01',
-          createdAt: '2024-01-01T10:00:00Z',
-          updatedAt: '2024-01-01T10:00:00Z',
           status: 'send',
-          auroraId: null,
         },
       ],
     });
@@ -608,10 +560,7 @@ describe('useInvalidateLogbook', () => {
           isBenchmark: false,
           comment: '',
           climbedAt: '2024-01-01',
-          createdAt: '2024-01-01T10:00:00Z',
-          updatedAt: '2024-01-01T10:00:00Z',
           status: 'send',
-          auroraId: null,
         },
       ],
     });

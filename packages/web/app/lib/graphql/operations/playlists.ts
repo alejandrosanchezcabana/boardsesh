@@ -135,7 +135,6 @@ export const GET_PLAYLIST_CLIMBS = gql`
         quality_average
         stars
         difficulty_error
-        litUpHoldsMap
         benchmark_difficulty
       }
       totalCount
@@ -338,7 +337,6 @@ export interface PlaylistClimbsResult {
     quality_average: string;
     stars: number;
     difficulty_error: string;
-    litUpHoldsMap: Record<string, unknown>;
     benchmark_difficulty: string | null;
   }>;
   totalCount: number;

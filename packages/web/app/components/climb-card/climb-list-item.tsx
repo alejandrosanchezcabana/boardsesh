@@ -19,7 +19,6 @@ import PlaylistSelectionContent from '../climb-actions/playlist-selection-conten
 import { useOptionalQueueContext } from '../graphql-queue';
 import { useFavorite } from '../climb-actions';
 import { useSwipeActions } from '@/app/hooks/use-swipe-actions';
-import { useDoubleTap } from '@/app/lib/hooks/use-double-tap';
 import { themeTokens } from '@/app/theme/theme-config';
 import { getGradeTintColor } from '@/app/lib/grade-colors';
 import { useIsDarkMode } from '@/app/hooks/use-is-dark-mode';
@@ -35,6 +34,46 @@ const LONG_RIGHT_SWIPE_THRESHOLD = 150;
 // Simple swipe constants for override mode (no long-swipe)
 const SIMPLE_MAX_SWIPE = 120;
 const SIMPLE_SWIPE_THRESHOLD = 100;
+
+// Static style objects (no reactive deps, hoisted out of component to avoid per-render allocation)
+const swipeActionLayerBaseStyle: React.CSSProperties = {
+  position: 'absolute',
+  inset: 0,
+  display: 'flex',
+  alignItems: 'center',
+  justifyContent: 'flex-start',
+  paddingLeft: themeTokens.spacing[4],
+  willChange: 'opacity',
+};
+
+const defaultRightActionStyle: React.CSSProperties = {
+  position: 'absolute',
+  right: 0,
+  top: 0,
+  bottom: 0,
+  width: MAX_GESTURE_SWIPE,
+  backgroundColor: themeTokens.colors.primary,
+  display: 'flex',
+  alignItems: 'center',
+  justifyContent: 'flex-end',
+  paddingRight: themeTokens.spacing[4],
+  opacity: 0,
+  visibility: 'hidden',
+};
+
+const iconStyle: React.CSSProperties = { color: 'white', fontSize: 20 };
+
+const thumbnailStyle: React.CSSProperties = { width: themeTokens.spacing[16], flexShrink: 0 };
+
+const centerStyle: React.CSSProperties = { flex: 1, minWidth: 0 };
+
+const iconButtonStyle: React.CSSProperties = { flexShrink: 0, color: 'var(--neutral-400)' };
+
+const drawerStyles = {
+  wrapper: { height: 'auto', width: '100%' },
+  body: { padding: `${themeTokens.spacing[2]}px 0` },
+  header: { paddingLeft: `${themeTokens.spacing[3]}px`, paddingRight: `${themeTokens.spacing[3]}px` },
+} as const;
 
 export type SwipeActionOverride = {
   icon: React.ReactNode;
@@ -67,6 +106,8 @@ type ClimbListItemProps = {
   contentOpacity?: number;
   /** When true, disables thumbnail click-to-navigate (e.g., in edit mode) */
   disableThumbnailNavigation?: boolean;
+  /** Handler for thumbnail clicks. When set, stops propagation so the row onClick doesn't also fire. */
+  onThumbnailClick?: () => void;
 };
 
 const ClimbListItem: React.FC<ClimbListItemProps> = React.memo(({
@@ -84,6 +125,7 @@ const ClimbListItem: React.FC<ClimbListItemProps> = React.memo(({
   backgroundColor,
   contentOpacity,
   disableThumbnailNavigation,
+  onThumbnailClick,
 }) => {
   const pathname = usePathname();
   const isDark = useIsDarkMode();
@@ -93,7 +135,6 @@ const ClimbListItem: React.FC<ClimbListItemProps> = React.memo(({
   const queueContext = useOptionalQueueContext();
   const addToQueue = queueContext?.addToQueue;
   const { isFavorited, toggleFavorite } = useFavorite({ climbUuid: climb.uuid });
-  const { ref: doubleTapRef, onDoubleClick: handleDoubleClick } = useDoubleTap(onSelect);
 
   const hasSwipeOverrides = Boolean(swipeLeftAction || swipeRightAction);
 
@@ -183,26 +224,13 @@ const ClimbListItem: React.FC<ClimbListItemProps> = React.memo(({
     [longSwipeBlend],
   );
 
-  const swipeActionLayerBaseStyle = useMemo(
-    () => ({
-      position: 'absolute' as const,
-      inset: 0,
-      display: 'flex' as const,
-      alignItems: 'center' as const,
-      justifyContent: 'flex-start' as const,
-      paddingLeft: themeTokens.spacing[4],
-      willChange: 'opacity' as const,
-    }),
-    [],
-  );
-
   const shortSwipeLayerStyle = useMemo(
     () => ({
       ...swipeActionLayerBaseStyle,
       backgroundColor: themeTokens.colors.error,
       opacity: shortSwipeLayerOpacity,
     }),
-    [swipeActionLayerBaseStyle, shortSwipeLayerOpacity],
+    [shortSwipeLayerOpacity],
   );
 
   const longSwipeLayerStyle = useMemo(
@@ -211,25 +239,7 @@ const ClimbListItem: React.FC<ClimbListItemProps> = React.memo(({
       backgroundColor: themeTokens.colors.primary,
       opacity: longSwipeLayerOpacity,
     }),
-    [swipeActionLayerBaseStyle, longSwipeLayerOpacity],
-  );
-
-  const defaultRightActionStyle = useMemo(
-    () => ({
-      position: 'absolute' as const,
-      right: 0,
-      top: 0,
-      bottom: 0,
-      width: MAX_GESTURE_SWIPE,
-      backgroundColor: themeTokens.colors.primary,
-      display: 'flex' as const,
-      alignItems: 'center' as const,
-      justifyContent: 'flex-end' as const,
-      paddingRight: themeTokens.spacing[4],
-      opacity: 0,
-      visibility: 'hidden' as const,
-    }),
-    [],
+    [longSwipeLayerOpacity],
   );
 
   // Simple swipe action styles (used when overrides are provided)
@@ -269,11 +279,6 @@ const ClimbListItem: React.FC<ClimbListItemProps> = React.memo(({
     [swipeRightAction?.color],
   );
 
-  const iconStyle = useMemo(
-    () => ({ color: 'white', fontSize: 20 }),
-    [],
-  );
-
   const resolvedBg = backgroundColor
     ?? (selected
       ? (getGradeTintColor(climb.difficulty, 'light', isDark) ?? 'var(--semantic-selected)')
@@ -292,30 +297,6 @@ const ClimbListItem: React.FC<ClimbListItemProps> = React.memo(({
       opacity: isSwipeComplete ? 0 : (contentOpacity ?? 1),
     }),
     [resolvedBg, isSwipeComplete, contentOpacity],
-  );
-
-  const thumbnailStyle = useMemo(
-    () => ({ width: themeTokens.spacing[16], flexShrink: 0 }),
-    [],
-  );
-
-  const centerStyle = useMemo(
-    () => ({ flex: 1, minWidth: 0 }),
-    [],
-  );
-
-  const iconButtonStyle = useMemo(
-    () => ({ flexShrink: 0, color: 'var(--neutral-400)' }),
-    [],
-  );
-
-  const drawerStyles = useMemo(
-    () => ({
-      wrapper: { height: 'auto', width: '100%' },
-      body: { padding: `${themeTokens.spacing[2]}px 0` },
-      header: { paddingLeft: `${themeTokens.spacing[3]}px`, paddingRight: `${themeTokens.spacing[3]}px` },
-    }),
-    [],
   );
 
   // Default ClimbTitle props when no override is provided
@@ -371,17 +352,16 @@ const ClimbListItem: React.FC<ClimbListItemProps> = React.memo(({
         <div
           {...(disableSwipe ? {} : swipeHandlers)}
           ref={(node: HTMLDivElement | null) => {
-            doubleTapRef(node);
             if (!disableSwipe) {
               swipeHandlers.ref(node);
               contentRef(node);
             }
           }}
-          onDoubleClick={handleDoubleClick}
+          onClick={onSelect}
           style={swipeableContentStyle}
         >
           {/* Thumbnail */}
-          <div style={thumbnailStyle}>
+          <div style={thumbnailStyle} onClick={onThumbnailClick ? (e) => { e.stopPropagation(); onThumbnailClick(); } : undefined}>
             <ClimbThumbnail
               boardDetails={boardDetails}
               currentClimb={climb}
@@ -479,7 +459,8 @@ const ClimbListItem: React.FC<ClimbListItemProps> = React.memo(({
     && prev.titleProps === next.titleProps
     && prev.backgroundColor === next.backgroundColor
     && prev.contentOpacity === next.contentOpacity
-    && prev.disableThumbnailNavigation === next.disableThumbnailNavigation;
+    && prev.disableThumbnailNavigation === next.disableThumbnailNavigation
+    && prev.onThumbnailClick === next.onThumbnailClick;
 });
 
 ClimbListItem.displayName = 'ClimbListItem';

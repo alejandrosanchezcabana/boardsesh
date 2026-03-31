@@ -28,7 +28,6 @@ const createTestClimb = (uuid?: string): ClimbQueueItem => ({
     quality_average: '3.5',
     stars: 3.5,
     difficulty_error: '0.5',
-    litUpHoldsMap: {},
     mirrored: false,
     benchmark_difficulty: null,
   },

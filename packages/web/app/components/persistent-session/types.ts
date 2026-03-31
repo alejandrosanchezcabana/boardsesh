@@ -123,7 +123,6 @@ export function toClimbQueueItemInput(item: LocalClimbQueueItem) {
       quality_average: item.climb.quality_average,
       stars: item.climb.stars,
       difficulty_error: item.climb.difficulty_error,
-      litUpHoldsMap: item.climb.litUpHoldsMap,
       mirrored: item.climb.mirrored,
       benchmark_difficulty: item.climb.benchmark_difficulty,
       userAscents: item.climb.userAscents,

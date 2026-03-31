@@ -4,7 +4,7 @@ import { constructPlayUrlWithSlugs } from '@/app/lib/url-utils';
 import { parseRouteParams } from '@/app/lib/url-utils.server';
 import { getBoardDetailsForBoard } from '@/app/lib/board-utils';
 import { getClimb } from '@/app/lib/data/queries';
-import { convertLitUpHoldsStringToMap } from '@/app/components/board-renderer/util';
+
 import PlayViewClient from './play-view-client';
 import { Metadata } from 'next';
 
@@ -91,11 +91,7 @@ export default async function PlayPage(props: {
   try {
     const climb = await getClimb(parsedParams);
     if (climb) {
-      const litUpHoldsMap = convertLitUpHoldsStringToMap(climb.frames, parsedParams.board_name)[0];
-      initialClimb = {
-        ...climb,
-        litUpHoldsMap,
-      };
+      initialClimb = climb;
     }
   } catch {
     // Climb will be loaded from queue context on client

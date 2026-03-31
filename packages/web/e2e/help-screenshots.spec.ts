@@ -95,7 +95,7 @@ test.describe('Help Page Screenshots', () => {
     await expect(queueBar).toBeVisible({ timeout: 10000 });
 
     // Click party mode button scoped to the queue bar to avoid strict mode violation
-    await page.locator('[data-testid="queue-control-bar"]').getByLabel('Party Mode').click();
+    await page.locator('[data-testid="queue-control-bar"]').getByLabel('Connect to').click();
     await page.locator('[data-swipeable-drawer="true"]:visible').first().waitFor({ timeout: 10000 });
 
     await page.screenshot({ path: `${SCREENSHOT_DIR}/party-mode.png` });
@@ -170,13 +170,13 @@ test.describe('Help Page Screenshots - Authenticated', () => {
     const queueBar = page.locator('[data-testid="queue-control-bar"]');
     await expect(queueBar).toBeVisible({ timeout: 10000 });
 
-    // Open party mode drawer
-    await page.locator('[data-testid="queue-control-bar"]').getByLabel('Party Mode').click();
+    // Open connect-to drawer
+    await page.locator('[data-testid="queue-control-bar"]').getByLabel('Connect to').click();
     await page.locator('[data-swipeable-drawer="true"]:visible').first().waitFor({ timeout: 10000 });
 
     // Switch to Start Session tab and start a party session
     await page.getByRole('tab', { name: 'Start Session' }).click();
-    await page.getByRole('button', { name: 'Start Party Mode' }).click();
+    await page.getByRole('button', { name: 'Start Session' }).click();
 
     // Wait for session to be active - WebSocket connection needs time to establish
     await page.waitForSelector('button:has-text("Leave")', { state: 'visible', timeout: 30000 });

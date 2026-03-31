@@ -38,12 +38,11 @@ const helpSections = [
         label: 'How do I use the heatmap feature?',
         children: (
           <div className={styles.answerContent}>
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img
-              src="/help/heatmap.png"
-              alt="Heatmap visualization"
-              className={styles.featureImage}
-            />
+            <picture>
+              <source srcSet="/help/heatmap.avif" type="image/avif" />
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src="/help/heatmap.png" alt="Heatmap visualization" className={styles.featureImage} />
+            </picture>
             <Typography variant="body1" component="p">
               The heatmap shows hold usage patterns across all climbs, helping you identify popular
               holds and training opportunities.
@@ -76,12 +75,11 @@ const helpSections = [
         label: 'How do I classify holds on my board?',
         children: (
           <div className={styles.answerContent}>
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img
-              src="/help/hold-classification.png"
-              alt="Hold classification wizard"
-              className={styles.featureImage}
-            />
+            <picture>
+              <source srcSet="/help/hold-classification.avif" type="image/avif" />
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src="/help/hold-classification.png" alt="Hold classification wizard" className={styles.featureImage} />
+            </picture>
             <Typography variant="body1" component="p">
               Hold classification lets you create personal ratings for each hold on your board,
               helping you understand your strengths and find suitable climbs.
@@ -118,12 +116,11 @@ const helpSections = [
         label: 'How do I start a collaborative session?',
         children: (
           <div className={styles.answerContent}>
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img
-              src="/help/party-mode-active.png"
-              alt="Active party mode session"
-              className={styles.featureImage}
-            />
+            <picture>
+              <source srcSet="/help/party-mode-active.avif" type="image/avif" />
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src="/help/party-mode-active.png" alt="Active party mode session" className={styles.featureImage} />
+            </picture>
             <Typography variant="body1" component="p">
               Party Mode allows multiple climbers to share a queue and take turns on the board
               in real-time.
@@ -163,12 +160,11 @@ const helpSections = [
         label: 'How do I manage the climb queue?',
         children: (
           <div className={styles.answerContent}>
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img
-              src="/help/main-interface.png"
-              alt="Queue management"
-              className={styles.featureImage}
-            />
+            <picture>
+              <source srcSet="/help/main-interface.avif" type="image/avif" />
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src="/help/main-interface.png" alt="Queue management" className={styles.featureImage} />
+            </picture>
             <Typography variant="body1" component="p">
               The queue lets you organize climbs for your session, whether climbing solo or with
               others.
@@ -271,12 +267,11 @@ const helpSections = [
         label: 'What search filters are available?',
         children: (
           <div className={styles.answerContent}>
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img
-              src="/help/search-filters.png"
-              alt="Search filters"
-              className={styles.featureImage}
-            />
+            <picture>
+              <source srcSet="/help/search-filters.avif" type="image/avif" />
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src="/help/search-filters.png" alt="Search filters" className={styles.featureImage} />
+            </picture>
             <Typography variant="body1" component="p">
               <Typography variant="body2" component="span" fontWeight={600}>Basic Search filters:</Typography>
             </Typography>
@@ -291,12 +286,11 @@ const helpSections = [
             <Typography variant="body1" component="p">
               <Typography variant="body2" component="span" fontWeight={600}>Personal Progress filters</Typography> (requires login):
             </Typography>
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img
-              src="/help/personal-progress.png"
-              alt="Personal progress filters"
-              className={styles.featureImage}
-            />
+            <picture>
+              <source srcSet="/help/personal-progress.avif" type="image/avif" />
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src="/help/personal-progress.png" alt="Personal progress filters" className={styles.featureImage} />
+            </picture>
             <ul>
               <li>Hide completed climbs</li>
               <li>Hide attempted climbs</li>
@@ -311,12 +305,11 @@ const helpSections = [
         label: 'How do I search by specific holds?',
         children: (
           <div className={styles.answerContent}>
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img
-              src="/help/search-by-hold.png"
-              alt="Search by hold"
-              className={styles.featureImage}
-            />
+            <picture>
+              <source srcSet="/help/search-by-hold.avif" type="image/avif" />
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src="/help/search-by-hold.png" alt="Search by hold" className={styles.featureImage} />
+            </picture>
             <Typography variant="body1" component="p">
               Search by Hold lets you find climbs that use (or avoid) specific holds on the board.
             </Typography>
@@ -387,12 +380,11 @@ const helpSections = [
         label: 'How do I sync with my Kilter/Tension account?',
         children: (
           <div className={styles.answerContent}>
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img
-              src="/help/settings-aurora.png"
-              alt="Aurora account settings"
-              className={styles.featureImage}
-            />
+            <picture>
+              <source srcSet="/help/settings-aurora.avif" type="image/avif" />
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src="/help/settings-aurora.png" alt="Aurora account settings" className={styles.featureImage} />
+            </picture>
             <Typography variant="body1" component="p">
               Link your Aurora account (Kilter or Tension) to sync your climb history and progress.
             </Typography>
@@ -425,12 +417,11 @@ const helpSections = [
         label: 'How do I track my climbs?',
         children: (
           <div className={styles.answerContent}>
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img
-              src="/help/climb-detail.png"
-              alt="Climb detail with actions"
-              className={styles.featureImage}
-            />
+            <picture>
+              <source srcSet="/help/climb-detail.avif" type="image/avif" />
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src="/help/climb-detail.png" alt="Climb detail with actions" className={styles.featureImage} />
+            </picture>
             <Typography variant="body1" component="p">
               Track your climbing progress by logging ascents and attempts.
             </Typography>

@@ -261,3 +261,16 @@ export function buildActionResult({
     expandedContent,
   };
 }
+
+/**
+ * Builds a ClimbActionResult for an unavailable action.
+ * Use this when an action should not be displayed (e.g., feature not supported for this board).
+ */
+export function buildUnavailableResult(key: ClimbActionType): ClimbActionResult {
+  return {
+    element: null,
+    menuItem: { key },
+    key,
+    available: false,
+  };
+}

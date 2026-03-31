@@ -1,5 +1,8 @@
 import { withSentryConfig } from '@sentry/nextjs';
+import createWithVercelToolbar from '@vercel/toolbar/plugins/next';
 // next.config.js
+
+const withVercelToolbar = createWithVercelToolbar();
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
@@ -18,7 +21,19 @@ const nextConfig = {
   // Empty turbopack config to silence warning about webpack config
   turbopack: {},
   experimental: {
-    optimizePackageImports: [],
+    optimizePackageImports: [
+      '@mui/material',
+      '@mui/icons-material',
+      '@mui/material-nextjs',
+    ],
+  },
+  // Include WASM binary in standalone output for serverless functions.
+  // Both paths needed: monorepo root (hoisted deps) and local node_modules (symlink).
+  outputFileTracingIncludes: {
+    '/api/internal/board-render': [
+      './node_modules/@boardsesh/board-renderer-wasm/pkg/*.wasm',
+      '../../node_modules/@boardsesh/board-renderer-wasm/pkg/*.wasm',
+    ],
   },
   async headers() {
     return [
@@ -55,7 +70,7 @@ const nextConfig = {
   },
 };
 
-export default withSentryConfig(nextConfig, {
+export default withVercelToolbar(withSentryConfig(nextConfig, {
   // For all available options, see:
   // https://www.npmjs.com/package/@sentry/webpack-plugin#options
 
@@ -91,4 +106,4 @@ export default withSentryConfig(nextConfig, {
       removeDebugLogging: true,
     },
   },
-});
+}));

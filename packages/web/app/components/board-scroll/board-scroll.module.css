@@ -26,7 +26,7 @@
 
 /* Board Card */
 .cardScroll {
-  width: 140px;
+  width: 182px;
   flex-shrink: 0;
   scroll-snap-align: start;
   cursor: pointer;
@@ -112,6 +112,40 @@
   font-weight: 500;
 }
 
+/* Find Nearby Card */
+.findNearbyOverlay {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1;
+}
+
+.cardNameError {
+  color: var(--semantic-error);
+}
+
+.findNearbyIconPrimary {
+  font-size: 36px;
+  color: var(--color-primary);
+}
+
+.findNearbyIconError {
+  font-size: 36px;
+  color: var(--semantic-error);
+}
+
+.findNearbyIconMuted {
+  font-size: 36px;
+  color: var(--neutral-400);
+}
+
+.findNearbyBoard {
+  filter: grayscale(100%);
+  opacity: 0.35;
+}
+
 /* Skeleton */
 .skeletonSquare {
   aspect-ratio: 1;
@@ -178,6 +212,12 @@
   font-size: 11px;
 }
 
+.cardScrollSmall .findNearbyIconPrimary,
+.cardScrollSmall .findNearbyIconError,
+.cardScrollSmall .findNearbyIconMuted {
+  font-size: 28px;
+}
+
 .cardScrollSmall .createSquare {
   border-width: 1.5px;
 }
@@ -189,7 +229,7 @@
 /* Mobile */
 @media (max-width: 767px) {
   .cardScroll {
-    width: 140px;
+    width: 182px;
   }
 
   .cardScrollSmall {
@@ -197,10 +237,16 @@
   }
 }
 
+/* Invisible trigger point for infinite scroll IntersectionObserver */
+.loadMoreSentinel {
+  min-width: 1px;
+  flex-shrink: 0;
+}
+
 /* Desktop */
 @media (min-width: 768px) {
   .cardScroll {
-    width: 160px;
+    width: 208px;
   }
 
   .cardScrollSmall {

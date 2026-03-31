@@ -65,14 +65,27 @@ export function getQualityPanelSummary(params: SearchRequestPagination): string[
   return parts;
 }
 
-export function getProgressPanelSummary(params: SearchRequestPagination): string[] {
+export function getUserPanelSummary(params: SearchRequestPagination): string[] {
+  // Merge "Hide" filters into single entry
+  const hideFilters: string[] = [];
+  if (params.hideAttempted) hideFilters.push('attempted');
+  if (params.hideCompleted) hideFilters.push('completed');
+
+  // Merge "Only" filters into single entry
+  const onlyFilters: string[] = [];
+  if (params.showOnlyAttempted) onlyFilters.push('attempted');
+  if (params.showOnlyCompleted) onlyFilters.push('completed');
+
   const parts: string[] = [];
-
-  if (params.hideAttempted) parts.push('Hide attempted');
-  if (params.hideCompleted) parts.push('Hide completed');
-  if (params.showOnlyAttempted) parts.push('Only attempted');
-  if (params.showOnlyCompleted) parts.push('Only completed');
-
+  if (params.onlyDrafts) {
+    parts.push('Drafts');
+  }
+  if (hideFilters.length > 0) {
+    parts.push(`Hide ${hideFilters.join(', ')}`);
+  }
+  if (onlyFilters.length > 0) {
+    parts.push(`Only ${onlyFilters.join(', ')}`);
+  }
   return parts;
 }
 
@@ -82,11 +95,37 @@ export function getHoldsPanelSummary(params: SearchRequestPagination): string[] 
   return [`${holdsCount} hold${holdsCount !== 1 ? 's' : ''}`];
 }
 
+/**
+ * Get compact search pill summary (max 2 items + "+N more")
+ * Used for display in the search bar and recent search pills
+ */
 export function getSearchPillSummary(params: SearchRequestPagination): string {
   const allParts = [
     ...getClimbPanelSummary(params),
     ...getQualityPanelSummary(params),
-    ...getProgressPanelSummary(params),
+    ...getUserPanelSummary(params),
+    ...getHoldsPanelSummary(params),
+  ];
+
+  if (allParts.length === 0) return 'Search climbs...';
+
+  // Show max 2 items, append "+N more" if more
+  if (allParts.length <= 2) {
+    return allParts.join(' \u00B7 ');
+  }
+  const remaining = allParts.length - 2;
+  return allParts.slice(0, 2).join(' \u00B7 ') + ` \u00B7 +${remaining} more`;
+}
+
+/**
+ * Get full search pill summary (all items, no truncation)
+ * Used for tooltips to show the complete filter list
+ */
+export function getSearchPillFullSummary(params: SearchRequestPagination): string {
+  const allParts = [
+    ...getClimbPanelSummary(params),
+    ...getQualityPanelSummary(params),
+    ...getUserPanelSummary(params),
     ...getHoldsPanelSummary(params),
   ];
 

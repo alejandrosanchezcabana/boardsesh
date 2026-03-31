@@ -1,63 +1,39 @@
 import React from 'react';
-import { getServerAuthToken } from './lib/auth/server-auth';
-import ConsolidatedBoardConfig from './components/setup-wizard/consolidated-board-config';
+import type { Metadata } from 'next';
 import { getAllBoardConfigs } from './lib/server-board-configs';
+import { getPopularBoardConfigs } from './lib/server-popular-configs';
 import HomePageContent from './home-page-content';
-import { cachedSessionGroupedFeed, serverMyBoards } from './lib/graphql/server-cached-client';
-import type { SessionFeedResult } from '@boardsesh/shared-schema';
 
-type FeedTab = 'sessions' | 'proposals' | 'comments';
-const VALID_TABS: FeedTab[] = ['sessions', 'proposals', 'comments'];
+export const revalidate = false;
 
-type HomeProps = {
-  searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
+export const metadata: Metadata = {
+  title: 'Boardsesh - Train smarter on your climbing board',
+  description:
+    'Track your sends across Kilter, Tension, and MoonBoard. One app for your boards.',
+  openGraph: {
+    title: 'Boardsesh - Train smarter on your climbing board',
+    description:
+      'Works with Kilter, Tension, and MoonBoard. Track sessions, control LEDs, climb together.',
+    url: 'https://www.boardsesh.com',
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'Boardsesh - Train smarter on your climbing board',
+    description:
+      'Works with Kilter, Tension, and MoonBoard. Track sessions, control LEDs, climb together.',
+  },
 };
 
-export default async function Home({ searchParams }: HomeProps) {
-  const params = await searchParams;
-  const boardConfigs = await getAllBoardConfigs();
-
-  // Check if user explicitly wants to see the board selector
-  if (params.select === 'true') {
-    return <ConsolidatedBoardConfig boardConfigs={boardConfigs} />;
-  }
-
-  // Parse URL state
-  const tab = (VALID_TABS.includes(params.tab as FeedTab) ? params.tab : 'sessions') as FeedTab;
-  const boardUuid = typeof params.board === 'string' ? params.board : undefined;
-
-  // Read auth cookie to determine if user is authenticated at SSR time
-  const authToken = await getServerAuthToken();
-  const isAuthenticatedSSR = !!authToken;
-
-  // SSR: fetch boards + feed in parallel
-  let initialFeedResult: SessionFeedResult | null = null;
-  let initialMyBoards: import('@boardsesh/shared-schema').UserBoard[] | null = null;
-
-  if (authToken) {
-    const feedPromise = tab === 'sessions'
-      ? cachedSessionGroupedFeed(boardUuid, true).catch(() => null)
-      : Promise.resolve(null);
-    const boardsPromise = serverMyBoards(authToken);
-
-    const [feedResult, boardsResult] = await Promise.all([feedPromise, boardsPromise]);
-    initialFeedResult = feedResult;
-    initialMyBoards = boardsResult;
-  } else if (tab === 'sessions') {
-    try {
-      initialFeedResult = await cachedSessionGroupedFeed(boardUuid, false);
-    } catch {
-      // Feed fetch failed, client will retry
-    }
-  }
+export default async function Home() {
+  const [boardConfigs, popularConfigs] = await Promise.all([
+    getAllBoardConfigs(),
+    getPopularBoardConfigs(),
+  ]);
 
   return (
     <HomePageContent
-      initialTab={tab}
-      initialBoardUuid={boardUuid}
-      initialFeedResult={initialFeedResult}
-      isAuthenticatedSSR={isAuthenticatedSSR}
-      initialMyBoards={initialMyBoards}
+      boardConfigs={boardConfigs}
+      initialPopularConfigs={popularConfigs}
     />
   );
 }

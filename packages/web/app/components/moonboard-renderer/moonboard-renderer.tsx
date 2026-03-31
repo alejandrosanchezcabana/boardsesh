@@ -78,7 +78,7 @@ const MoonBoardRenderer: React.FC<MoonBoardRendererProps> = ({
     >
       {/* Render MoonBoard background first */}
       <image
-        href="/images/moonboard/moonboard-bg.png"
+        href={thumbnail ? "/images/moonboard/thumbs/moonboard-bg.avif" : "/images/moonboard/moonboard-bg.avif"}
         width="100%"
         height="100%"
       />
@@ -87,16 +87,19 @@ const MoonBoardRenderer: React.FC<MoonBoardRendererProps> = ({
       {holdSetImages.map((imageFile) => (
         <image
           key={imageFile}
-          href={`/images/moonboard/${layoutFolder}/${imageFile}`}
+          href={`/images/moonboard/${layoutFolder}/${thumbnail ? 'thumbs/' : ''}${imageFile.replace(/\.png$/, '.avif')}`}
           width="100%"
           height="100%"
         />
       ))}
 
-      {/* Render clickable grid holds */}
+      {/* Render hold circles - skip transparent ones when they serve no purpose */}
       {gridHolds.map((hold) => {
         const color = getHoldColor(hold.id);
         const isLitUp = color !== 'transparent';
+
+        // Skip transparent circles in thumbnail mode or when there's no click handler
+        if (!isLitUp && (thumbnail || !onHoldClick)) return null;
 
         return (
           <circle

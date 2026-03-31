@@ -4,6 +4,7 @@ import IconButton from '@mui/material/IconButton';
 import Box from '@mui/material/Box';
 import AppsOutlined from '@mui/icons-material/AppsOutlined';
 import FormatListBulletedOutlined from '@mui/icons-material/FormatListBulletedOutlined';
+import { useWindowVirtualizer } from '@tanstack/react-virtual';
 import { track } from '@vercel/analytics';
 import { Climb, BoardDetails } from '@/app/lib/types';
 import ClimbCard from '../climb-card/climb-card';
@@ -12,16 +13,20 @@ import { ClimbCardSkeleton, ClimbListItemSkeleton } from './board-page-skeleton'
 import { themeTokens } from '@/app/theme/theme-config';
 import { getPreference, setPreference } from '@/app/lib/user-preferences-db';
 import { useInfiniteScroll } from '@/app/hooks/use-infinite-scroll';
+import { useFeatureFlag } from '@/app/components/providers/feature-flags-provider';
+import { trackListBatchRender } from '@/app/lib/rendering-metrics';
 
 type ViewMode = 'grid' | 'list';
 
 const VIEW_MODE_PREFERENCE_KEY = 'climbListViewMode';
 
+// Estimated height of a ClimbListItem row (px). Used by the virtualizer
+// for initial layout; measured heights replace it after mount.
+const ESTIMATED_LIST_ITEM_HEIGHT = 76;
+
 export type ClimbsListProps = {
   boardDetails: BoardDetails;
-  /** Map of "boardType:layoutId" -> BoardDetails for multi-board contexts */
   boardDetailsMap?: Record<string, BoardDetails>;
-  /** Set of climb UUIDs that are unsupported (no matching user board) */
   unsupportedClimbs?: Set<string>;
   climbs: Climb[];
   selectedClimbUuid?: string | null;
@@ -34,9 +39,7 @@ export type ClimbsListProps = {
   /** Angle selector to render on the right side of the first header row */
   angleSelector?: React.ReactNode;
   hideEndMessage?: boolean;
-  /** Optional extra content to render below each climb item (e.g., per-user tick details in sessions) */
   renderItemExtra?: (climb: Climb) => React.ReactNode;
-  /** When true, adds a bottom spacer to prevent the mobile Safari bottom nav bar from covering the last item */
   showBottomSpacer?: boolean;
 };
 
@@ -70,14 +73,79 @@ const ClimbsList = ({
   renderItemExtra,
   showBottomSpacer,
 }: ClimbsListProps) => {
-  const [viewMode, setViewMode] = useState<ViewMode>('list');
+  const isRustRendererEnabled = useFeatureFlag('rust-svg-rendering');
 
-  // Keep a ref to onClimbSelect so handleClimbDoubleClick stays stable
-  // while always calling the latest callback (avoids stale closure from ClimbListItem's custom memo)
+  // Progressive rendering for grid mode only (list mode uses the virtualizer).
+  // Show first batch immediately, rest after a frame. Only batch when the list
+  // is replaced (new search), not when items are appended (infinite scroll)
+  // — otherwise the height shrinks and the page jumps.
+  const INITIAL_BATCH = 6;
+  const [visibleCount, setVisibleCount] = useState(climbs.length);
+  const prevClimbsRef = useRef(climbs);
+
+  // --- Batch render timing ---
+  // Records when a new batch of climbs arrives (data change) so we can measure
+  // render duration in useEffect (fires after DOM commit).
+  const batchStartRef = useRef<{ time: number; prevLength: number; isInitial: boolean } | null>(
+    climbs.length > 0 ? { time: performance.now(), prevLength: 0, isInitial: true } : null,
+  );
+
+  if (climbs !== prevClimbsRef.current) {
+    const prevClimbs = prevClimbsRef.current;
+    prevClimbsRef.current = climbs;
+
+    // Detect append (infinite scroll): new list starts with all previous items
+    const isAppend = climbs.length > prevClimbs.length &&
+      prevClimbs.length > 0 &&
+      climbs[0]?.uuid === prevClimbs[0]?.uuid;
+
+    // Record batch start for any data change that adds items
+    if (climbs.length > prevClimbs.length) {
+      batchStartRef.current = { time: performance.now(), prevLength: prevClimbs.length, isInitial: prevClimbs.length === 0 };
+    }
+
+    if (isAppend) {
+      // Show all items immediately — no batching for appended pages
+      setVisibleCount(climbs.length);
+    } else if (climbs.length > INITIAL_BATCH) {
+      setVisibleCount(INITIAL_BATCH);
+    }
+  }
+
+  useEffect(() => {
+    if (visibleCount < climbs.length) {
+      const id = requestAnimationFrame(() => setVisibleCount(climbs.length));
+      return () => cancelAnimationFrame(id);
+    }
+  }, [visibleCount, climbs.length]);
+
+  const visibleClimbs = useMemo(
+    () => climbs.slice(0, visibleCount),
+    [climbs, visibleCount],
+  );
+
+  const [viewMode, setViewMode] = useState<ViewMode>('list');
+  const useVirtualization = viewMode === 'list' && !isRustRendererEnabled;
+
+  // Track batch render timing after DOM commit
+  useEffect(() => {
+    const batch = batchStartRef.current;
+    if (!batch || climbs.length === 0) return;
+    // Only fire once per batch (when all items are visible)
+    if (visibleCount < climbs.length) return;
+    batchStartRef.current = null;
+    trackListBatchRender(performance.now() - batch.time, {
+      viewMode,
+      renderer: isRustRendererEnabled ? 'rust-wasm' : 'svg',
+      batchSize: climbs.length - batch.prevLength,
+      totalItems: climbs.length,
+      isInitial: batch.isInitial,
+    });
+  }, [climbs.length, visibleCount, viewMode, isRustRendererEnabled]);
+
   const onClimbSelectRef = useRef(onClimbSelect);
   onClimbSelectRef.current = onClimbSelect;
 
-  // Read stored view mode preference after mount to avoid hydration mismatch
   useEffect(() => {
     getPreference<ViewMode>(VIEW_MODE_PREFERENCE_KEY).then((stored) => {
       if (stored === 'grid' || stored === 'list') {
@@ -106,29 +174,22 @@ const ClimbsList = ({
     isFetching,
   });
 
-  // Memoized handler for climb card double-click
-  // Uses ref so this callback is stable and never stale, even when
-  // ClimbListItem's custom memo skips re-renders on onSelect changes
-  const handleClimbDoubleClick = useCallback(
+  const handleClimbClick = useCallback(
     (climb: Climb) => {
       onClimbSelectRef.current?.(climb);
-      track('Climb List Card Clicked', {
-        climbUuid: climb.uuid,
-      });
+      track('Climb List Item Clicked', { climbUuid: climb.uuid });
     },
     [],
   );
 
-  // Memoize climb-specific handlers to prevent unnecessary re-renders
   const climbHandlersMap = useMemo(() => {
     const map = new Map<string, () => void>();
     climbs.forEach(climb => {
-      map.set(climb.uuid, () => handleClimbDoubleClick(climb));
+      map.set(climb.uuid, () => handleClimbClick(climb));
     });
     return map;
-  }, [climbs, handleClimbDoubleClick]);
+  }, [climbs, handleClimbClick]);
 
-  // Resolve per-climb boardDetails when boardDetailsMap is provided
   const resolveBoardDetails = useCallback(
     (climb: Climb): BoardDetails => {
       if (boardDetailsMap && climb.boardType && climb.layoutId != null) {
@@ -139,6 +200,23 @@ const ClimbsList = ({
     },
     [boardDetails, boardDetailsMap],
   );
+
+  // --- Window virtualizer for list mode (disabled when Rust renderer is active) ---
+  const virtualizer = useWindowVirtualizer({
+    count: useVirtualization ? climbs.length : 0,
+    estimateSize: () => ESTIMATED_LIST_ITEM_HEIGHT,
+    overscan: 15,
+    getItemKey: (index) => climbs[index].uuid,
+  });
+
+  // Trigger load-more when the last virtual item is rendered
+  const virtualItems = virtualizer.getVirtualItems();
+  const lastItem = virtualItems[virtualItems.length - 1];
+  useEffect(() => {
+    if (lastItem && lastItem.index >= climbs.length - 3 && hasMore && !isFetching) {
+      handleLoadMore();
+    }
+  }, [lastItem?.index, climbs.length, hasMore, isFetching, handleLoadMore]);
 
   // Memoize sx prop objects to prevent recreation on every render
   const headerContainerSx = useMemo(() => ({
@@ -198,7 +276,6 @@ const ClimbsList = ({
 
   return (
     <Box>
-      {/* Optional header content (e.g. BoardCreationBanner) */}
       {header}
       {/* Header: Search pills (left, scrollable) | View toggle + Angle selector (right) */}
       <Box sx={headerContainerSx}>
@@ -231,9 +308,9 @@ const ClimbsList = ({
       </Box>
 
       {viewMode === 'grid' ? (
-        /* Grid (card) mode */
+        /* Grid (card) mode — not virtualized */
         <Box sx={gridContainerSx}>
-          {climbs.map((climb, index) => (
+          {visibleClimbs.map((climb, index) => (
             <Box key={climb.uuid} sx={cardBoxSx}>
               <div
                 {...(index === 0 ? { id: 'onboarding-climb-card' } : {})}
@@ -253,31 +330,77 @@ const ClimbsList = ({
             <ClimbsListSkeleton aspectRatio={boardDetails.boardWidth / boardDetails.boardHeight} viewMode="grid" />
           ) : null}
         </Box>
-      ) : (
-        /* List (compact) mode */
-        <div>
-          {climbs.map((climb, index) => (
-            <div
-              key={climb.uuid}
-              {...(index === 0 ? { id: 'onboarding-climb-card' } : {})}
-            >
-              <ClimbListItem
-                climb={climb}
-                boardDetails={resolveBoardDetails(climb)}
-                selected={selectedClimbUuid === climb.uuid}
-                onSelect={climbHandlersMap.get(climb.uuid)}
-                unsupported={unsupportedClimbs?.has(climb.uuid)}
-              />
-              {renderItemExtra?.(climb)}
-            </div>
-          ))}
-          {isFetching && (!climbs || climbs.length === 0) ? (
+      ) : useVirtualization ? (
+        /* List mode — virtualized with window scroll */
+        <div
+          style={{
+            height: virtualizer.getTotalSize(),
+            width: '100%',
+            position: 'relative',
+          }}
+        >
+          {isFetching && climbs.length === 0 ? (
             <ClimbsListSkeleton aspectRatio={boardDetails.boardWidth / boardDetails.boardHeight} viewMode="list" />
-          ) : null}
+          ) : (
+            virtualItems.map((virtualRow) => {
+              const climb = climbs[virtualRow.index];
+              return (
+                <div
+                  key={virtualRow.key}
+                  data-index={virtualRow.index}
+                  ref={virtualizer.measureElement}
+                  style={{
+                    position: 'absolute',
+                    top: 0,
+                    left: 0,
+                    width: '100%',
+                    transform: `translateY(${virtualRow.start}px)`,
+                  }}
+                >
+                  <div {...(virtualRow.index === 0 ? { id: 'onboarding-climb-card' } : {})}>
+                    <ClimbListItem
+                      climb={climb}
+                      boardDetails={resolveBoardDetails(climb)}
+                      selected={selectedClimbUuid === climb.uuid}
+                      onSelect={climbHandlersMap.get(climb.uuid)}
+                      onThumbnailClick={climbHandlersMap.get(climb.uuid)}
+                      disableThumbnailNavigation
+                      unsupported={unsupportedClimbs?.has(climb.uuid)}
+                    />
+                  </div>
+                  {renderItemExtra?.(climb)}
+                </div>
+              );
+            })
+          )}
+        </div>
+      ) : (
+        /* List mode — non-virtualized (Rust renderer: items are cheap <img> tags) */
+        <div>
+          {isFetching && climbs.length === 0 ? (
+            <ClimbsListSkeleton aspectRatio={boardDetails.boardWidth / boardDetails.boardHeight} viewMode="list" />
+          ) : (
+            visibleClimbs.map((climb, index) => (
+              <div key={climb.uuid}>
+                <div {...(index === 0 ? { id: 'onboarding-climb-card' } : {})}>
+                  <ClimbListItem
+                    climb={climb}
+                    boardDetails={resolveBoardDetails(climb)}
+                    selected={selectedClimbUuid === climb.uuid}
+                    onSelect={climbHandlersMap.get(climb.uuid)}
+                    onThumbnailClick={climbHandlersMap.get(climb.uuid)}
+                    disableThumbnailNavigation
+                    unsupported={unsupportedClimbs?.has(climb.uuid)}
+                  />
+                </div>
+                {renderItemExtra?.(climb)}
+              </div>
+            ))
+          )}
         </div>
       )}
 
-      {/* Sentinel element for Intersection Observer - needs min-height to be observable */}
+      {/* Sentinel for infinite scroll (grid mode fallback) */}
       <Box ref={sentinelRef} sx={sentinelBoxSx}>
         {isFetching && climbs.length > 0 && (
           viewMode === 'grid' ? (
@@ -295,7 +418,6 @@ const ClimbsList = ({
         )}
       </Box>
 
-      {/* Bottom spacer to prevent bottom nav bar from covering last item on mobile Safari */}
       {showBottomSpacer && (
         <Box sx={{ height: themeTokens.layout.bottomNavSpacer }} aria-hidden />
       )}

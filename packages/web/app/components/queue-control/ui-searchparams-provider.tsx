@@ -8,7 +8,7 @@ import { DEFAULT_SEARCH_PARAMS } from '@/app/lib/url-utils';
 
 interface UISearchParamsContextType {
   uiSearchParams: SearchRequestPagination;
-  updateFilters: (newFilters: Partial<SearchRequestPagination>) => void;
+  updateFilters: (newFilters: Partial<SearchRequestPagination>, instant?: boolean) => void;
   clearClimbSearchParams: () => void;
 }
 
@@ -42,6 +42,7 @@ export const UISearchParamsProvider: React.FC<{ children: React.ReactNode }> = (
     if (uiSearchParams.hideCompleted) activeFilters.push('hideCompleted');
     if (uiSearchParams.showOnlyAttempted) activeFilters.push('showOnlyAttempted');
     if (uiSearchParams.showOnlyCompleted) activeFilters.push('showOnlyCompleted');
+    if (uiSearchParams.onlyDrafts) activeFilters.push('onlyDrafts');
 
     if (activeFilters.length > 0) {
       track('Climb Search Performed', {
@@ -51,6 +52,7 @@ export const UISearchParamsProvider: React.FC<{ children: React.ReactNode }> = (
     }
 
     setClimbSearchParams(uiSearchParams);
+    setCountSearchParams(uiSearchParams);
   }, 500);
 
   const updateFilters = (newFilters: Partial<SearchRequestPagination>, instant?: boolean) => {
@@ -61,11 +63,10 @@ export const UISearchParamsProvider: React.FC<{ children: React.ReactNode }> = (
     };
 
     setUISearchParams(updatedFilters);
-    // Always update count params instantly so the count refreshes as user tweaks filters
-    setCountSearchParams(updatedFilters);
 
     if (instant) {
       setClimbSearchParams(updatedFilters);
+      setCountSearchParams(updatedFilters);
     } else {
       debouncedUpdate();
     }

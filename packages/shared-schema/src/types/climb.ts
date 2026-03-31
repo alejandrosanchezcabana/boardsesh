@@ -17,7 +17,6 @@ export type Climb = {
   quality_average: string;
   stars: number;
   difficulty_error: string;
-  litUpHoldsMap: LitUpHoldsMap;
   mirrored?: boolean | null; // GraphQL nullable Boolean
   benchmark_difficulty: string | null;
   userAscents?: number | null; // GraphQL nullable Int
@@ -38,7 +37,6 @@ export type ClimbInput = {
   quality_average: string;
   stars: number;
   difficulty_error: string;
-  litUpHoldsMap: LitUpHoldsMap;
   mirrored?: boolean | null;
   benchmark_difficulty?: string | null;
   userAscents?: number | null;
@@ -73,6 +71,7 @@ export type ClimbSearchInput = {
   hideCompleted?: boolean;
   showOnlyAttempted?: boolean;
   showOnlyCompleted?: boolean;
+  onlyDrafts?: boolean;
 };
 
 export type ClimbSearchResult = {

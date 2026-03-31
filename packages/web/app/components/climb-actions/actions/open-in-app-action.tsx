@@ -5,7 +5,7 @@ import AppsOutlined from '@mui/icons-material/AppsOutlined';
 import { track } from '@vercel/analytics';
 import { ClimbActionProps, ClimbActionResult } from '../types';
 import { constructClimbInfoUrl } from '@/app/lib/url-utils';
-import { buildActionResult, computeActionDisplay } from '../action-view-renderer';
+import { buildActionResult, buildUnavailableResult, computeActionDisplay } from '../action-view-renderer';
 import { openExternalUrl } from '@/app/lib/open-external-url';
 
 interface OpenInAppActionProps extends ClimbActionProps {
@@ -24,6 +24,11 @@ export function OpenInAppAction({
   auroraAppUrl,
 }: OpenInAppActionProps): ClimbActionResult {
   const url = auroraAppUrl || constructClimbInfoUrl(boardDetails, climb.uuid);
+
+  // Open in App is not available for Kilter (kilterboardapp.com is no longer accessible)
+  if (!url) {
+    return buildUnavailableResult('openInApp');
+  }
   const { iconSize } = computeActionDisplay(viewMode, size, showLabel);
 
   const handleClick = useCallback((e?: React.MouseEvent) => {

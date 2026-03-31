@@ -15,11 +15,16 @@ vi.mock('next/link', () => ({
   ),
 }));
 
-vi.mock('../../board-renderer/board-renderer', () => ({
-  default: () => <div data-testid="board-renderer" />,
-}));
-
 import ClimbThumbnail from '../climb-thumbnail';
+import { FeatureFlagsProvider } from '../../providers/feature-flags-provider';
+
+const defaultFlags = { 'rust-svg-rendering': false as const };
+
+function renderWithFlags(ui: React.ReactElement) {
+  return render(
+    <FeatureFlagsProvider flags={defaultFlags}>{ui}</FeatureFlagsProvider>,
+  );
+}
 
 const boardDetails = {
   board_name: 'kilter',
@@ -52,7 +57,6 @@ const climb = {
   quality_average: '3',
   stars: 0,
   difficulty_error: '0',
-  litUpHoldsMap: {},
   benchmark_difficulty: null,
 } as Climb;
 
@@ -60,7 +64,7 @@ describe('ClimbThumbnail', () => {
   it('preserves board-slug URL context on /b routes', () => {
     mockPathname = '/b/moonrise-gym/40/list';
 
-    render(
+    renderWithFlags(
       <ClimbThumbnail
         boardDetails={boardDetails}
         currentClimb={climb}
@@ -75,7 +79,7 @@ describe('ClimbThumbnail', () => {
   it('falls back to canonical route format outside /b routes', () => {
     mockPathname = '/kilter/homewall/8x12-main/main-kicker_aux-kicker/40/list';
 
-    render(
+    renderWithFlags(
       <ClimbThumbnail
         boardDetails={boardDetails}
         currentClimb={climb}

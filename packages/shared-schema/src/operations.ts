@@ -14,7 +14,6 @@ const CLIMB_FIELDS = `
   quality_average
   stars
   difficulty_error
-  litUpHoldsMap
   mirrored
   benchmark_difficulty
   userAscents

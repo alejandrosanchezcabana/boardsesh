@@ -11,9 +11,11 @@ import {
   MyBoardsInputSchema,
   FollowBoardInputSchema,
   SearchBoardsInputSchema,
+  PopularBoardConfigsInputSchema,
   UUIDSchema,
 } from '../../../validation/schemas';
 import { generateUniqueGymSlug } from './gyms';
+import { redisClientManager } from '../../../redis/client';
 
 // ============================================
 // Helpers
@@ -212,6 +214,229 @@ async function enrichBoard(
 }
 
 // ============================================
+// Popular Board Config Cache (Redis-backed)
+// ============================================
+
+export interface CachedPopularConfig {
+  boardType: string;
+  layoutId: number;
+  layoutName: string | null;
+  sizeId: number;
+  sizeName: string | null;
+  sizeDescription: string | null;
+  setIds: number[];
+  setNames: string[];
+  climbCount: number;
+  totalAscents: number;
+  displayName: string;
+}
+
+const BOARD_TYPE_LABELS: Record<string, string> = {
+  kilter: 'Kilter',
+  tension: 'Tension',
+  moonboard: 'MoonBoard',
+  decoy: 'Decoy',
+  touchstone: 'Touchstone',
+  grasshopper: 'Grasshopper',
+  soill: 'So iLL',
+};
+
+const GENERIC_SETS = new Set(['bolt ons', 'screw ons', 'foot set', 'plastic', 'wood']);
+
+function formatDisplayName(
+  boardType: string,
+  layoutName: string | null,
+  sizeName: string | null,
+  setNames: string[],
+): string {
+  const boardLabel = BOARD_TYPE_LABELS[boardType] || boardType;
+
+  // Shorten layout name: strip board type, "Board", abbreviations
+  const shortLayout = (layoutName || '')
+    .replace(new RegExp(`\\b${boardLabel}\\b\\s*`, 'gi'), '')
+    .replace(/\bBoard\b\s*/gi, '')
+    .replace(/\bHomewall\b/gi, 'HW')
+    .replace(/\bOriginal\b/gi, 'OG')
+    .replace(/\bLayout\b/gi, '')
+    .replace(/^2\s+/i, '')
+    .replace(/\s+/g, ' ')
+    .trim();
+
+  // Compact size name: strip "high"/"wide", collapse whitespace around "x"
+  const shortSize = (sizeName || '')
+    .replace(/\s*high\s*/gi, '')
+    .replace(/\s*wide\s*/gi, '')
+    .replace(/\s*x\s*/g, 'x')
+    .replace(/\s+/g, ' ')
+    .trim();
+
+  // Detect distinctive sets (Mainline/Auxiliary vs generic Bolt Ons/Screw Ons)
+  const distinctiveSets = setNames.filter((s) => !GENERIC_SETS.has(s.toLowerCase()));
+  const hasMainline = distinctiveSets.some((s) => /mainline/i.test(s) && !/kickboard/i.test(s));
+  const hasAux = distinctiveSets.some((s) => /auxiliary/i.test(s) && !/kickboard/i.test(s));
+  let setLabel = '';
+  if (hasMainline && hasAux) {
+    setLabel = ' Full Ride';
+  } else if (distinctiveSets.length > 0) {
+    setLabel = ` ${distinctiveSets.map((s) => s.replace(/\bKickboard\b/gi, 'KB')).join(' + ')}`;
+  }
+
+  return `${shortLayout} ${shortSize}${setLabel}`.trim();
+}
+
+const REDIS_CACHE_KEY = 'boardsesh:popular-board-configs';
+const REDIS_CACHE_TTL_SECONDS = 365 * 24 * 60 * 60; // 1 year
+const REDIS_LOCK_KEY = 'boardsesh:popular-board-configs:lock';
+const REDIS_LOCK_TTL_SECONDS = 120; // 2 min lock to prevent duplicate queries across nodes
+
+async function getPopularConfigs(): Promise<CachedPopularConfig[]> {
+  // Try Redis cache first
+  if (redisClientManager.isRedisConnected()) {
+    try {
+      const { publisher } = redisClientManager.getClients();
+      const cached = await publisher.get(REDIS_CACHE_KEY);
+      if (cached) {
+        return JSON.parse(cached) as CachedPopularConfig[];
+      }
+    } catch (err) {
+      console.error('[PopularConfigs] Redis read failed:', err);
+    }
+  }
+
+  // Query all per-size configs with climb counts filtered by size edges AND set membership.
+  // A climb counts for a config only if ALL its holds belong to placements in that config's sets.
+  // board_climb_holds.hold_id = board_placements.id (placement ID).
+  // ~31 configs, ~750ms worst case per LATERAL, cached in Redis for 1 year (refreshed on deploy).
+  const result = await db.execute(sql`
+    SELECT
+      configs.board_type,
+      configs.layout_id,
+      bl.name AS layout_name,
+      configs.size_id,
+      bps.name AS size_name,
+      bps.description AS size_description,
+      configs.set_ids,
+      configs.set_names,
+      COALESCE(cc.climb_count, 0) AS climb_count,
+      COALESCE(cc.total_ascents, 0) AS total_ascents
+    FROM (
+      SELECT
+        psls.board_type,
+        psls.layout_id,
+        psls.product_size_id AS size_id,
+        array_agg(DISTINCT psls.set_id ORDER BY psls.set_id) AS set_ids,
+        array_agg(DISTINCT bs.name ORDER BY bs.name) AS set_names
+      FROM board_product_sizes_layouts_sets psls
+      JOIN board_sets bs ON bs.board_type = psls.board_type AND bs.id = psls.set_id
+      WHERE psls.is_listed = true
+      GROUP BY psls.board_type, psls.layout_id, psls.product_size_id
+    ) configs
+    JOIN board_layouts bl ON bl.board_type = configs.board_type AND bl.id = configs.layout_id
+    JOIN board_product_sizes bps ON bps.board_type = configs.board_type AND bps.id = configs.size_id
+    LEFT JOIN LATERAL (
+      SELECT
+        COUNT(DISTINCT bc.uuid)::int AS climb_count,
+        COALESCE(SUM(bcs.ascensionist_count), 0)::int AS total_ascents
+      FROM board_climbs bc
+      LEFT JOIN board_climb_stats bcs
+        ON bcs.board_type = bc.board_type AND bcs.climb_uuid = bc.uuid
+      WHERE bc.board_type = configs.board_type
+        AND bc.layout_id = configs.layout_id
+        AND bc.is_listed = true
+        AND bc.is_draft = false
+        AND bc.edge_left > bps.edge_left
+        AND bc.edge_right < bps.edge_right
+        AND bc.edge_bottom > bps.edge_bottom
+        AND bc.edge_top < bps.edge_top
+        AND NOT EXISTS (
+          SELECT 1 FROM board_climb_holds bch
+          WHERE bch.climb_uuid = bc.uuid
+            AND bch.board_type = bc.board_type
+            AND NOT EXISTS (
+              SELECT 1 FROM board_placements bp
+              WHERE bp.board_type = bch.board_type
+                AND bp.layout_id = bc.layout_id
+                AND bp.id = bch.hold_id
+                AND bp.set_id = ANY(configs.set_ids)
+            )
+        )
+    ) cc ON true
+    WHERE bl.is_listed = true
+      AND bps.is_listed = true
+    ORDER BY total_ascents DESC, configs.board_type, bl.name
+  `);
+
+  // db.execute() returns QueryResult with .rows for neon-serverless, or an array directly for postgres-js
+  const rows = Array.isArray(result)
+    ? (result as Array<Record<string, unknown>>)
+    : (result as unknown as { rows: Array<Record<string, unknown>> }).rows;
+
+  const configs: CachedPopularConfig[] = rows.map((row) => {
+    const boardType = row.board_type as string;
+    const layoutName = (row.layout_name as string) ?? null;
+    const sizeName = (row.size_name as string) ?? null;
+    const setNames = row.set_names as string[];
+    return {
+      boardType,
+      layoutId: Number(row.layout_id),
+      layoutName,
+      sizeId: Number(row.size_id),
+      sizeName,
+      sizeDescription: (row.size_description as string) ?? null,
+      setIds: (row.set_ids as number[]).map(Number),
+      setNames,
+      climbCount: Number(row.climb_count),
+      totalAscents: Number(row.total_ascents),
+      displayName: formatDisplayName(boardType, layoutName, sizeName, setNames),
+    };
+  });
+
+  // Store in Redis
+  if (redisClientManager.isRedisConnected()) {
+    try {
+      const { publisher } = redisClientManager.getClients();
+      await publisher.set(REDIS_CACHE_KEY, JSON.stringify(configs), 'EX', REDIS_CACHE_TTL_SECONDS);
+    } catch (err) {
+      console.error('[PopularConfigs] Redis write failed:', err);
+    }
+  }
+  return configs;
+}
+
+/**
+ * Refresh the popular configs Redis cache on server startup.
+ * Always re-runs the query on deploy (data may have changed via Aurora sync).
+ * Uses a Redis lock so only one node across the cluster runs the expensive query;
+ * other nodes skip — they'll read from Redis when the resolver executes.
+ */
+export async function warmPopularConfigsCache(): Promise<void> {
+  if (redisClientManager.isRedisConnected()) {
+    try {
+      const { publisher } = redisClientManager.getClients();
+
+      // Try to acquire lock — only the winning node runs the query
+      const lockAcquired = await publisher.set(REDIS_LOCK_KEY, '1', 'EX', REDIS_LOCK_TTL_SECONDS, 'NX');
+      if (!lockAcquired) {
+        console.log('[PopularConfigs] Another node is refreshing the cache, skipping');
+        return;
+      }
+      // Winning node: delete stale cache so getPopularConfigs() runs the SQL query
+      await publisher.del(REDIS_CACHE_KEY);
+    } catch (err) {
+      console.error('[PopularConfigs] Redis lock failed:', err);
+    }
+  }
+
+  console.log('[PopularConfigs] Refreshing cache...');
+  try {
+    const configs = await getPopularConfigs();
+    console.log(`[PopularConfigs] Cache warmed with ${configs.length} configs`);
+  } catch (err) {
+    console.error('[PopularConfigs] Cache warm-up failed:', err);
+  }
+}
+
+// ============================================
 // Queries
 // ============================================
 
@@ -333,7 +558,7 @@ export const socialBoardQueries = {
 
     if (useProximity) {
       // PostGIS proximity search path
-      const radiusMeters = (radiusKm ?? 50) * 1000;
+      const radiusMeters = (radiusKm ?? 1) * 1000;
       const lon = Number(longitude);
       const lat = Number(latitude);
 
@@ -388,6 +613,7 @@ export const socialBoardQueries = {
         isPublic: row.is_public as boolean,
         isOwned: row.is_owned as boolean,
         angle: row.angle != null ? Number(row.angle) : 40,
+        gymId: row.gym_id != null ? Number(row.gym_id) : null,
         isAngleAdjustable: row.is_angle_adjustable as boolean ?? true,
         createdAt: row.created_at as Date,
         updatedAt: row.updated_at as Date,
@@ -451,6 +677,34 @@ export const socialBoardQueries = {
       boards: enrichedBoards,
       totalCount,
       hasMore: offset + boards.length < totalCount,
+    };
+  },
+
+  /**
+   * Get popular board configurations ranked by climb count
+   */
+  popularBoardConfigs: async (
+    _: unknown,
+    { input }: { input?: unknown },
+    _ctx: ConnectionContext,
+  ) => {
+    const validatedInput = validateInput(PopularBoardConfigsInputSchema, input || {}, 'input');
+    const { boardType, limit, offset } = validatedInput;
+
+    const allConfigs = await getPopularConfigs();
+
+    // Apply optional board type filter
+    const filtered = boardType
+      ? allConfigs.filter((c) => c.boardType === boardType)
+      : allConfigs;
+
+    const totalCount = filtered.length;
+    const paginated = filtered.slice(offset, offset + limit);
+
+    return {
+      configs: paginated,
+      totalCount,
+      hasMore: offset + paginated.length < totalCount,
     };
   },
 

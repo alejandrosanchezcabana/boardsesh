@@ -90,15 +90,19 @@ export function getDefaultLayoutForBoard(boardType: string): number | null {
   return ids.length > 0 ? ids[0] : null;
 }
 
-/** Default angle fallback when no angle specified. 40 is the most common training angle. */
-const DEFAULT_ANGLE = 40;
+/** Default angle per board type. Kilter/MoonBoard default to 40, Tension to 40 (all support it). */
+const DEFAULT_ANGLES: Record<string, number> = {
+  kilter: 40,
+  tension: 40,
+  moonboard: 40,
+};
+const FALLBACK_ANGLE = 40;
 
 /**
  * Get a default angle for a board type.
- * Returns the default training angle for all board types.
  */
-export function getDefaultAngleForBoard(_boardType: string): number {
-  return DEFAULT_ANGLE;
+export function getDefaultAngleForBoard(boardType: string): number {
+  return DEFAULT_ANGLES[boardType] ?? FALLBACK_ANGLE;
 }
 
 /**

@@ -30,10 +30,10 @@ import { useClimbActionsData } from '@/app/hooks/use-climb-actions-data';
 import { useMyBoards } from '@/app/hooks/use-my-boards';
 import { useBoardDetailsMap } from '@/app/hooks/use-board-details-map';
 import { getDefaultAngleForBoard } from '@/app/lib/board-config-for-playlist';
-import { convertLitUpHoldsStringToMap } from '@/app/components/board-renderer/util';
+
 import { useSessionDetail } from '@/app/hooks/use-session-detail';
 import { themeTokens } from '@/app/theme/theme-config';
-import type { Climb, BoardName, BoardDetails } from '@/app/lib/types';
+import type { Climb, BoardDetails } from '@/app/lib/types';
 import UserSearchDialog from './user-search-dialog';
 import SessionOverviewPanel from '@/app/components/session-details/session-overview-panel';
 
@@ -104,7 +104,7 @@ function formatAttemptText(tick: SessionDetailTick): string | null {
 
 /**
  * Convert session ticks to deduplicated Climb objects for use with ClimbsList.
- * Keeps the first occurrence of each climbUuid and computes litUpHoldsMap from frames.
+ * Keeps the first occurrence of each climbUuid.
  */
 function convertSessionTicksToClimbs(ticks: SessionDetailTick[]): Climb[] {
   const seen = new Map<string, Climb>();
@@ -115,18 +115,6 @@ function convertSessionTicksToClimbs(ticks: SessionDetailTick[]): Climb[] {
 
     order.push(tick.climbUuid);
 
-    let litUpHoldsMap = {};
-    if (tick.frames && tick.boardType) {
-      try {
-        litUpHoldsMap = convertLitUpHoldsStringToMap(
-          tick.frames,
-          tick.boardType as BoardName,
-        )[0] || {};
-      } catch (err) {
-        console.warn(`Failed to parse litUpHoldsMap for climb ${tick.climbUuid} (boardType: ${tick.boardType}):`, err);
-      }
-    }
-
     seen.set(tick.climbUuid, {
       uuid: tick.climbUuid,
       name: tick.climbName || 'Unknown Climb',
@@ -135,7 +123,6 @@ function convertSessionTicksToClimbs(ticks: SessionDetailTick[]): Climb[] {
       difficulty: tick.difficultyName || '',
       quality_average: tick.quality != null ? String(tick.quality) : '0',
       setter_username: tick.setterUsername || '',
-      litUpHoldsMap,
       description: '',
       ascensionist_count: 0,
       stars: 0,

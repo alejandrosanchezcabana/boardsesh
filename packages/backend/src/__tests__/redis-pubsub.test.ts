@@ -78,7 +78,6 @@ describe('Redis PubSub Adapter', () => {
             quality_average: '4.5',
             stars: 4.5,
             difficulty_error: '0.5',
-            litUpHoldsMap: {},
             mirrored: false,
             benchmark_difficulty: null,
           },

@@ -131,7 +131,7 @@ export interface UseClimbActionsReturn {
   // URLs
   viewDetailsUrl: string;
   forkUrl: string | null;
-  openInAppUrl: string;
+  openInAppUrl: string | null;
 }
 
 /**

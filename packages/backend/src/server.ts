@@ -17,6 +17,7 @@ import { handleOcrTestDataUpload } from './handlers/ocr-test-data';
 import { createYogaInstance } from './graphql/yoga';
 import { setupWebSocketServer } from './websocket/setup';
 import { runInferredSessionBuilderBatched } from './jobs/inferred-session-builder';
+import { warmPopularConfigsCache } from './graphql/resolvers/social/boards';
 
 /**
  * Start the Boardsesh Backend server
@@ -150,6 +151,12 @@ export async function startServer(): Promise<{ wss: WebSocketServer; httpServer:
     console.log(`  Avatar files: http://0.0.0.0:${PORT}/static/avatars/`);
     console.log(`  OCR test data: http://0.0.0.0:${PORT}/api/ocr-test-data`);
     console.log(`  Sync cron: http://0.0.0.0:${PORT}/sync-cron`);
+
+    // Warm up popular board configs cache in the background.
+    // Uses a Redis lock so only one node across the cluster runs the query.
+    warmPopularConfigsCache().catch((err) => {
+      console.error('[Server] Popular configs cache warm-up failed:', err);
+    });
   });
 
   httpServer.on('error', (error) => {

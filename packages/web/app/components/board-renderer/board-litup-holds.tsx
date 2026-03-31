@@ -32,9 +32,20 @@ const BoardLitupHolds = React.memo(
   ({ holdsData, litUpHoldsMap, mirrored, thumbnail, onHoldClick }: BoardLitupHoldsProps) => {
     if (!holdsData) return null;
 
+    // Skip transparent circles when they serve no purpose:
+    // - Thumbnail mode: only render lit-up holds (typically 5-15 vs hundreds)
+    // - No click handler: transparent circles are invisible and non-interactive
+    const skipTransparent = thumbnail || !onHoldClick;
+    const holdsToRender = skipTransparent
+      ? holdsData.filter((hold) => {
+          const entry = litUpHoldsMap[hold.id];
+          return entry?.state && entry.state !== 'OFF';
+        })
+      : holdsData;
+
     return (
       <>
-        {holdsData.map((hold) => {
+        {holdsToRender.map((hold) => {
           const isLitUp = litUpHoldsMap[hold.id]?.state && litUpHoldsMap[hold.id].state !== 'OFF';
           const color = isLitUp ? litUpHoldsMap[hold.id].color : 'transparent';
 

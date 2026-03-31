@@ -267,7 +267,7 @@ export const queriesTypeDefs = /* GraphQL */ `
     setterClimbs(input: SetterClimbsInput!): SetterClimbsConnection!
 
     """
-    Get climbs created by a setter with full Climb data (including litUpHoldsMap for thumbnails).
+    Get climbs created by a setter with full Climb data (for thumbnails).
     Supports multi-board mode when boardType is omitted.
     """
     setterClimbsFull(input: SetterClimbsFullInput!): PlaylistClimbsResult!
@@ -343,6 +343,11 @@ export const queriesTypeDefs = /* GraphQL */ `
     Search public boards.
     """
     searchBoards(input: SearchBoardsInput!): UserBoardConnection!
+
+    """
+    Get popular board configurations ranked by climb count.
+    """
+    popularBoardConfigs(input: PopularBoardConfigsInput): PopularBoardConfigConnection!
 
     """
     Get leaderboard for a board.

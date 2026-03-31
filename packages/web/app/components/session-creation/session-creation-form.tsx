@@ -32,6 +32,7 @@ interface SessionCreationFormProps {
   isSubmitting?: boolean;
   submitLabel?: string;
   headerContent?: React.ReactNode;
+  isAnonymous?: boolean;
 }
 
 export default function SessionCreationForm({
@@ -40,12 +41,13 @@ export default function SessionCreationForm({
   isSubmitting = false,
   submitLabel = 'Sesh',
   headerContent,
+  isAnonymous = false,
 }: SessionCreationFormProps) {
   const [name, setName] = useState('');
   const [goal, setGoal] = useState('');
   const [color, setColor] = useState<string | undefined>(undefined);
   const [isPermanent, setIsPermanent] = useState(false);
-  const [discoverable, setDiscoverable] = useState(true);
+  const [discoverable, setDiscoverable] = useState(false);
 
   const handleSubmit = async () => {
     try {
@@ -54,7 +56,7 @@ export default function SessionCreationForm({
         goal: goal.trim() || undefined,
         color,
         isPermanent,
-        discoverable,
+        discoverable: isAnonymous ? false : discoverable,
       });
 
       // Reset form state only after successful submit
@@ -62,7 +64,7 @@ export default function SessionCreationForm({
       setGoal('');
       setColor(undefined);
       setIsPermanent(false);
-      setDiscoverable(true);
+      setDiscoverable(false);
     } catch {
       // Don't reset on error — preserve form data for retry
     }
@@ -126,20 +128,22 @@ export default function SessionCreationForm({
         </Box>
       </Box>
 
-      <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-        <Stack spacing={0}>
-          <Typography variant="body2" component="span" fontWeight={600}>
-            Discoverable by nearby climbers
-          </Typography>
-          <Typography variant="body2" component="span" color="text.secondary" sx={{ fontSize: '12px' }}>
-            Others nearby can find and join your session
-          </Typography>
-        </Stack>
-        <Switch
-          checked={discoverable}
-          onChange={(e) => setDiscoverable(e.target.checked)}
-        />
-      </Box>
+      {!isAnonymous && (
+        <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+          <Stack spacing={0}>
+            <Typography variant="body2" component="span" fontWeight={600}>
+              Discoverable by nearby climbers
+            </Typography>
+            <Typography variant="body2" component="span" color="text.secondary" sx={{ fontSize: '12px' }}>
+              Others nearby can find and join your session
+            </Typography>
+          </Stack>
+          <Switch
+            checked={discoverable}
+            onChange={(e) => setDiscoverable(e.target.checked)}
+          />
+        </Box>
+      )}
 
       {isGymAdmin && (
         <FormControlLabel

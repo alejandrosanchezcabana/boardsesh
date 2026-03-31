@@ -83,12 +83,17 @@ const sharedComponents: Components<Theme> = {
       },
       paperAnchorLeft: {
         borderRadius: `0 ${themeTokens.borderRadius.lg}px ${themeTokens.borderRadius.lg}px 0`,
+        paddingTop: 'env(safe-area-inset-top, 0px)',
+        paddingBottom: 'env(safe-area-inset-bottom, 0px)',
       },
       paperAnchorRight: {
         borderRadius: `${themeTokens.borderRadius.lg}px 0 0 ${themeTokens.borderRadius.lg}px`,
+        paddingTop: 'env(safe-area-inset-top, 0px)',
+        paddingBottom: 'env(safe-area-inset-bottom, 0px)',
       },
       paperAnchorTop: {
         borderRadius: `0 0 ${themeTokens.borderRadius.lg}px ${themeTokens.borderRadius.lg}px`,
+        paddingTop: 'env(safe-area-inset-top, 0px)',
       },
     },
   },

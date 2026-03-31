@@ -28,12 +28,12 @@ export const climbTypeDefs = /* GraphQL */ `
     stars: Float!
     "Difficulty uncertainty/spread"
     difficulty_error: String!
-    "Map of hold IDs to their lit-up state codes for board display"
-    litUpHoldsMap: JSON!
     "Whether the climb should be displayed mirrored"
     mirrored: Boolean
     "Official benchmark difficulty if this is a benchmark climb"
     benchmark_difficulty: String
+    "Whether this climb is a draft (unpublished)"
+    is_draft: Boolean
     "Number of times the current user has sent this climb"
     userAscents: Int
     "Number of times the current user has attempted this climb"
@@ -57,7 +57,6 @@ export const climbTypeDefs = /* GraphQL */ `
     quality_average: String!
     stars: Float!
     difficulty_error: String!
-    litUpHoldsMap: JSON!
     mirrored: Boolean
     benchmark_difficulty: String
     userAscents: Int
@@ -119,6 +118,8 @@ export const climbTypeDefs = /* GraphQL */ `
     showOnlyAttempted: Boolean
     "Only show climbs the user has completed (requires auth)"
     showOnlyCompleted: Boolean
+    "Show only the user's draft climbs (requires auth)"
+    onlyDrafts: Boolean
   }
 
   """

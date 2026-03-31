@@ -99,7 +99,6 @@ function createTestClimbQueueItem(uuid: string): ClimbQueueItem {
       quality_average: '3',
       stars: 3,
       difficulty_error: '',
-      litUpHoldsMap: {},
       mirrored: false,
       benchmark_difficulty: null,
       userAscents: 0,

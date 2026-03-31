@@ -89,7 +89,6 @@ export const GET_USER_FAVORITE_CLIMBS = gql`
         quality_average
         stars
         difficulty_error
-        litUpHoldsMap
         benchmark_difficulty
       }
       totalCount
@@ -126,7 +125,6 @@ export interface UserFavoriteClimbsResult {
     quality_average: string;
     stars: number;
     difficulty_error: string;
-    litUpHoldsMap: Record<string, unknown>;
     benchmark_difficulty: string | null;
   }>;
   totalCount: number;

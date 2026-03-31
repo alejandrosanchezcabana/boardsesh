@@ -14,7 +14,6 @@ import {
 import { publishSocialEvent } from '../../../events/index';
 import { getBoardTables, isValidBoardName } from '../../../db/queries/util/table-select';
 import { getSizeEdges } from '../../../db/queries/util/product-sizes-data';
-import { convertLitUpHoldsStringToMap } from '../../../db/queries/util/hold-state';
 
 /** Default angle fallback when no angle specified or no stats exist. 40 is the most common training angle. */
 const DEFAULT_ANGLE = 40;
@@ -190,7 +189,7 @@ export const setterFollowQueries = {
   },
 
   /**
-   * Get climbs created by a setter with full Climb data (including litUpHoldsMap for thumbnails).
+   * Get climbs created by a setter with full Climb data (for thumbnails).
    * Supports multi-board mode when boardType is omitted.
    */
   setterClimbsFull: async (
@@ -311,7 +310,6 @@ export const setterFollowQueries = {
         stars: Math.round((Number(result.quality_average) || 0) * 5),
         difficulty_error: result.difficulty_error?.toString() || '0',
         benchmark_difficulty: result.benchmark_difficulty && result.benchmark_difficulty > 0 ? result.benchmark_difficulty.toString() : null,
-        litUpHoldsMap: convertLitUpHoldsStringToMap(result.frames || '', boardName)[0],
         boardType: boardName,
       }));
 
@@ -411,7 +409,6 @@ export const setterFollowQueries = {
           stars: Math.round((Number(result.quality_average) || 0) * 5),
           difficulty_error: result.difficulty_error?.toString() || '0',
           benchmark_difficulty: result.benchmark_difficulty && result.benchmark_difficulty > 0 ? result.benchmark_difficulty.toString() : null,
-          litUpHoldsMap: convertLitUpHoldsStringToMap(result.frames || '', bt)[0],
           boardType: bt,
         };
       });

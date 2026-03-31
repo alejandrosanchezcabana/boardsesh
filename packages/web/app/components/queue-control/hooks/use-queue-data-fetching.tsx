@@ -75,6 +75,7 @@ export const useQueueDataFetching = ({
     hideCompleted: searchParams.hideCompleted || undefined,
     showOnlyAttempted: searchParams.showOnlyAttempted || undefined,
     showOnlyCompleted: searchParams.showOnlyCompleted || undefined,
+    onlyDrafts: searchParams.onlyDrafts || undefined,
   }), [searchParams, parsedParams]);
 
   const {
@@ -151,6 +152,7 @@ export const useQueueDataFetching = ({
     hideCompleted: countSearchParams.hideCompleted || undefined,
     showOnlyAttempted: countSearchParams.showOnlyAttempted || undefined,
     showOnlyCompleted: countSearchParams.showOnlyCompleted || undefined,
+    onlyDrafts: countSearchParams.onlyDrafts || undefined,
   }), [countSearchParams, parsedParams]);
 
   const countQueryKey = useMemo(() => {

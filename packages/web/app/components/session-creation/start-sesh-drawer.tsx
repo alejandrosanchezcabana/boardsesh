@@ -66,11 +66,6 @@ export default function StartSeshDrawer({ open, onClose, boardConfigs }: StartSe
   };
 
   const handleSubmit = async (formData: SessionCreationFormData) => {
-    if (!isLoggedIn) {
-      setShowAuthModal(true);
-      return;
-    }
-
     if (!selectedBoard && !selectedCustomPath) {
       showMessage('Please select a board first', 'warning');
       return;
@@ -143,41 +138,32 @@ export default function StartSeshDrawer({ open, onClose, boardConfigs }: StartSe
         open={open}
         onClose={handleClose}
       >
-        {!isLoggedIn ? (
-          <Box
-            sx={{
-              display: 'flex',
-              flexDirection: 'column',
-              alignItems: 'center',
-              gap: 2,
-              py: 3,
-            }}
-          >
-            <Typography variant="body2" component="span" color="text.secondary">
-              Sign in to start a climbing session
-            </Typography>
+        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+          <Typography variant="body2" component="span">
+            {isLoggedIn
+              ? 'Track your climbs and invite others to join.'
+              : 'Jump in without an account. Sign in later to save your progress.'}
+          </Typography>
+          <SessionCreationForm
+            key={formKey}
+            onSubmit={handleSubmit}
+            isSubmitting={isCreating}
+            submitLabel="Sesh"
+            headerContent={boardSelector}
+            isAnonymous={!isLoggedIn}
+          />
+          {!isLoggedIn && (
             <Button
-              variant="contained"
+              variant="text"
+              size="small"
               startIcon={<LoginOutlined />}
               onClick={() => setShowAuthModal(true)}
+              sx={{ alignSelf: 'center' }}
             >
-              Sign in
+              Sign in for more features
             </Button>
-          </Box>
-        ) : (
-          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-            <Typography variant="body2" component="span">
-              Start a session to track your climbing and invite others to join.
-            </Typography>
-            <SessionCreationForm
-              key={formKey}
-              onSubmit={handleSubmit}
-              isSubmitting={isCreating}
-              submitLabel="Sesh"
-              headerContent={boardSelector}
-            />
-          </Box>
-        )}
+          )}
+        </Box>
       </SwipeableDrawer>
 
       {boardConfigs && (
@@ -193,8 +179,8 @@ export default function StartSeshDrawer({ open, onClose, boardConfigs }: StartSe
       <AuthModal
         open={showAuthModal}
         onClose={() => setShowAuthModal(false)}
-        title="Sign in to start a session"
-        description="Create an account or sign in to start climbing sessions."
+        title="Sign in to save your session"
+        description="Your sends won't disappear when you close the tab."
       />
     </>
   );

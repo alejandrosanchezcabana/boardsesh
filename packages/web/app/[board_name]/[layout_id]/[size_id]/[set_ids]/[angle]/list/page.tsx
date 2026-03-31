@@ -8,11 +8,11 @@ import {
 } from '@/app/lib/url-utils';
 import { parseRouteParams } from '@/app/lib/url-utils.server';
 import BoardPageClimbsList from '@/app/components/board-page/board-page-climbs-list';
-import { cachedSearchClimbs } from '@/app/lib/graphql/server-cached-client';
-import { SEARCH_CLIMBS, type ClimbSearchResponse } from '@/app/lib/graphql/operations/climb-search';
+import { cachedSearchClimbs } from '@/app/lib/db/queries/climbs/search-climbs';
 import { getBoardDetailsForBoard } from '@/app/lib/board-utils';
 import { MAX_PAGE_SIZE } from '@/app/components/board-page/constants';
-import { getServerAuthToken } from '@/app/lib/auth/server-auth';
+import { getServerSession } from 'next-auth/next';
+import { authOptions } from '@/app/lib/auth/auth-options';
 
 export default async function DynamicResultsPage(props: {
   params: Promise<BoardRouteParametersWithUuid>;
@@ -65,54 +65,21 @@ export default async function DynamicResultsPage(props: {
   searchParamsObject.pageSize = Math.min(requestedPageSize, MAX_PAGE_SIZE);
   searchParamsObject.page = 0;
 
-  // Personal progress filters require auth which SSR doesn't have.
-  // Include them in the input so the cache key differentiates filtered vs unfiltered results.
   const hasProgressFilters = !!(
     searchParamsObject.hideAttempted ||
     searchParamsObject.hideCompleted ||
     searchParamsObject.showOnlyAttempted ||
-    searchParamsObject.showOnlyCompleted
+    searchParamsObject.showOnlyCompleted ||
+    searchParamsObject.onlyDrafts
   );
 
-  const searchInput = {
-    boardName: parsedParams.board_name,
-    layoutId: parsedParams.layout_id,
-    sizeId: parsedParams.size_id,
-    setIds: parsedParams.set_ids.join(','),
-    angle: parsedParams.angle,
-    page: searchParamsObject.page,
-    pageSize: searchParamsObject.pageSize,
-    gradeAccuracy: searchParamsObject.gradeAccuracy ? String(searchParamsObject.gradeAccuracy) : undefined,
-    minGrade: searchParamsObject.minGrade || undefined,
-    maxGrade: searchParamsObject.maxGrade || undefined,
-    minAscents: searchParamsObject.minAscents || undefined,
-    sortBy: searchParamsObject.sortBy || 'ascents',
-    sortOrder: searchParamsObject.sortOrder || 'desc',
-    name: searchParamsObject.name || undefined,
-    setter: searchParamsObject.settername && searchParamsObject.settername.length > 0 ? searchParamsObject.settername : undefined,
-    onlyTallClimbs: searchParamsObject.onlyTallClimbs || undefined,
-    holdsFilter: searchParamsObject.holdsFilter && Object.keys(searchParamsObject.holdsFilter).length > 0
-      ? Object.fromEntries(
-          Object.entries(searchParamsObject.holdsFilter).map(([key, value]) => [
-            key.replace('hold_', ''),
-            value.state
-          ])
-        )
-      : undefined,
-    hideAttempted: searchParamsObject.hideAttempted || undefined,
-    hideCompleted: searchParamsObject.hideCompleted || undefined,
-    showOnlyAttempted: searchParamsObject.showOnlyAttempted || undefined,
-    showOnlyCompleted: searchParamsObject.showOnlyCompleted || undefined,
-  };
-
   // Check if this is a default search (no custom filters applied)
-  // Default searches can be cached much longer (30 days vs 1 hour)
-  // Progress filters always make it non-default (they require per-user auth)
   const isDefaultSearch =
     !searchParamsObject.gradeAccuracy &&
     !searchParamsObject.minGrade &&
     !searchParamsObject.maxGrade &&
     !searchParamsObject.minAscents &&
+    !searchParamsObject.minRating &&
     !searchParamsObject.name &&
     (!searchParamsObject.settername || searchParamsObject.settername.length === 0) &&
     (searchParamsObject.sortBy || 'ascents') === 'ascents' &&
@@ -121,7 +88,6 @@ export default async function DynamicResultsPage(props: {
     (!searchParamsObject.holdsFilter || Object.keys(searchParamsObject.holdsFilter).length === 0) &&
     !hasProgressFilters;
 
-  let searchResponse: ClimbSearchResponse;
   let boardDetails: BoardDetails;
 
   try {
@@ -131,32 +97,30 @@ export default async function DynamicResultsPage(props: {
     return notFound();
   }
 
-  const authToken = hasProgressFilters ? await getServerAuthToken() : undefined;
-
-  try {
-    searchResponse = await cachedSearchClimbs<ClimbSearchResponse>(
-      SEARCH_CLIMBS,
-      { input: searchInput },
-      isDefaultSearch,
-      authToken,
-    );
-  } catch (error) {
-    // Log the error for server-side visibility. We intentionally degrade to empty results
-    // rather than returning a 404, since the client-side React Query in QueueContext will
-    // independently retry the search and surface errors through its own error handling.
-    console.error(
-      'Error fetching climb search results (degrading to empty results for SSR):',
-      { boardName: parsedParams.board_name, searchInput },
-      error,
-    );
-    searchResponse = {
-      searchClimbs: {
-        climbs: [],
-        totalCount: 0,
-        hasMore: false,
-      },
-    };
+  // Resolve userId for personal progress filters
+  let userId: string | undefined;
+  if (hasProgressFilters) {
+    const session = await getServerSession(authOptions);
+    userId = session?.user?.id;
   }
 
-  return <BoardPageClimbsList {...parsedParams} boardDetails={boardDetails} initialClimbs={searchResponse.searchClimbs.climbs} />;
+  let searchResponse: { climbs: import('@/app/lib/types').Climb[]; hasMore: boolean };
+
+  try {
+    searchResponse = await cachedSearchClimbs(
+      parsedParams,
+      searchParamsObject,
+      isDefaultSearch,
+      userId,
+    );
+  } catch (error) {
+    console.error(
+      'Error fetching climb search results (degrading to empty results for SSR):',
+      { boardName: parsedParams.board_name },
+      error,
+    );
+    searchResponse = { climbs: [], hasMore: false };
+  }
+
+  return <BoardPageClimbsList {...parsedParams} boardDetails={boardDetails} initialClimbs={searchResponse.climbs} />;
 }

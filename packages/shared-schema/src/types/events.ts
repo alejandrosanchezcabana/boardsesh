@@ -74,6 +74,8 @@ export type ConnectionContext = {
   sessionId?: string;
   userId?: string;
   isAuthenticated?: boolean;
+  // Client IP for rate limiting anonymous HTTP requests
+  clientIp?: string;
   // Controller-specific context (set when using API key auth)
   controllerId?: string;
   controllerApiKey?: string;

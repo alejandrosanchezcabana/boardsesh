@@ -9,7 +9,7 @@ import {
   constructClimbViewUrlWithSlugs,
 } from '@/app/lib/url-utils';
 import { parseRouteParams } from '@/app/lib/url-utils.server';
-import { convertLitUpHoldsStringToMap } from '@/app/components/board-renderer/util';
+
 import { Metadata } from 'next';
 import { fetchClimbDetailData } from '@/app/lib/data/climb-detail-data.server';
 import ClimbDetailPageServer from '@/app/components/climb-detail/climb-detail-page.server';
@@ -116,10 +116,8 @@ export default async function DynamicResultsPage(props: { params: Promise<BoardR
       notFound();
     }
 
-    const litUpHoldsMap = convertLitUpHoldsStringToMap(currentClimb.frames, parsedParams.board_name)[0];
     const climbWithProcessedData = {
       ...currentClimb,
-      litUpHoldsMap,
       communityGrade: detailData.communityGrade,
     };
 

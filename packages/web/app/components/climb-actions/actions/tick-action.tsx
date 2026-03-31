@@ -98,9 +98,11 @@ export function TickAction({
 
     if (!isAuthenticated && alwaysUseApp && loaded) {
       const url = constructClimbInfoUrl(boardDetails, climb.uuid);
-      openExternalUrl(url);
-      onComplete?.();
-      return;
+      if (url) {
+        openExternalUrl(url);
+        onComplete?.();
+        return;
+      }
     }
 
     setDrawerVisible(true);
@@ -112,11 +114,14 @@ export function TickAction({
     setSelectedBoard(null);
   }, []);
 
+  // URL for opening in the Aurora app (null for Kilter as app URL is no longer accessible)
+  const openInAppUrl = useMemo(() => constructClimbInfoUrl(boardDetails, climb.uuid), [boardDetails, climb.uuid]);
+
   const handleOpenInApp = useCallback(() => {
-    const url = constructClimbInfoUrl(boardDetails, climb.uuid);
-    openExternalUrl(url);
+    if (!openInAppUrl) return;
+    openExternalUrl(openInAppUrl);
     closeDrawer();
-  }, [boardDetails, climb.uuid, angle, closeDrawer]);
+  }, [openInAppUrl, closeDrawer]);
 
   const renderSignInPrompt = () => (
     <Stack spacing={3} sx={{ width: '100%', textAlign: 'center', padding: '24px 0' }}>
@@ -127,23 +132,27 @@ export function TickAction({
       <MuiButton variant="contained" startIcon={<LoginOutlined />} onClick={() => setShowAuthModal(true)} fullWidth>
         Sign In
       </MuiButton>
-      <Typography variant="body1" component="p" color="text.secondary">
-        Or log your tick in the official app:
-      </Typography>
-      <MuiButton variant="outlined" startIcon={<AppsOutlined />} onClick={handleOpenInApp} fullWidth>
-        Open in App
-      </MuiButton>
-      <MuiButton
-        variant="text"
-        size="small"
-        color="secondary"
-        onClick={async () => {
-          await enableAlwaysUseApp();
-          handleOpenInApp();
-        }}
-      >
-        Always open in app
-      </MuiButton>
+      {openInAppUrl && (
+        <>
+          <Typography variant="body1" component="p" color="text.secondary">
+            Or log your tick in the official app:
+          </Typography>
+          <MuiButton variant="outlined" startIcon={<AppsOutlined />} onClick={handleOpenInApp} fullWidth>
+            Open in App
+          </MuiButton>
+          <MuiButton
+            variant="text"
+            size="small"
+            color="secondary"
+            onClick={async () => {
+              await enableAlwaysUseApp();
+              handleOpenInApp();
+            }}
+          >
+            Always open in app
+          </MuiButton>
+        </>
+      )}
     </Stack>
   );
 

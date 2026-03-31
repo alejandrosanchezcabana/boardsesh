@@ -5,6 +5,8 @@ import HistoryOutlined from '@mui/icons-material/HistoryOutlined';
 import { getRecentSearches, getFilterKey, RecentSearch, RECENT_SEARCHES_CHANGED_EVENT } from './recent-searches-storage';
 import { useUISearchParams } from '@/app/components/queue-control/ui-searchparams-provider';
 import { SearchRequestPagination } from '@/app/lib/types';
+import { DEFAULT_SEARCH_PARAMS } from '@/app/lib/url-utils';
+import { getSearchPillFullSummary } from './search-summary-utils';
 import styles from './recent-search-pills.module.css';
 
 const RecentSearchPills: React.FC = () => {
@@ -31,7 +33,7 @@ const RecentSearchPills: React.FC = () => {
   if (searches.length === 0) return null;
 
   const handleApply = (filters: Partial<SearchRequestPagination>) => {
-    updateFilters(filters);
+    updateFilters(filters, true);
   };
 
   return (
@@ -39,13 +41,16 @@ const RecentSearchPills: React.FC = () => {
       <div className={styles.pillList}>
         {searches.map((search) => {
           const isActive = getFilterKey(search.filters) === currentFilterKey;
+          // Compute full summary for tooltip (shows all filters without truncation)
+          const fullFilters = { ...DEFAULT_SEARCH_PARAMS, ...search.filters } as SearchRequestPagination;
+          const tooltipText = getSearchPillFullSummary(fullFilters);
           return (
             <button
               key={search.id}
               type="button"
               className={`${styles.pill} ${isActive ? styles.pillActive : ''}`}
               onClick={() => handleApply(search.filters)}
-              title={search.label}
+              title={tooltipText}
             >
               <HistoryOutlined className={styles.pillIcon} />
               <span className={styles.pillLabel}>{search.label}</span>

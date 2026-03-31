@@ -30,7 +30,7 @@ export default function ClimbDetailPageServer({
   const auroraAppUrl = constructClimbInfoUrl(
     boardDetails,
     climb.uuid,
-  );
+  ) ?? undefined;
 
   return (
     <div className={styles.pageContainer}>

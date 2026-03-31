@@ -56,6 +56,7 @@ export const searchParamsToUrlParams = ({
   hideCompleted,
   showOnlyAttempted,
   showOnlyCompleted,
+  onlyDrafts,
   page,
   pageSize,
 }: SearchRequestPagination): URLSearchParams => {
@@ -116,6 +117,9 @@ export const searchParamsToUrlParams = ({
   if (showOnlyCompleted !== DEFAULT_SEARCH_PARAMS.showOnlyCompleted) {
     params.showOnlyCompleted = showOnlyCompleted.toString();
   }
+  if (onlyDrafts !== DEFAULT_SEARCH_PARAMS.onlyDrafts) {
+    params.onlyDrafts = onlyDrafts.toString();
+  }
 
   // Add holds filter entries only if they exist
   if (holdsFilter && Object.keys(holdsFilter).length > 0) {
@@ -144,6 +148,7 @@ export const DEFAULT_SEARCH_PARAMS: SearchRequestPagination = {
   hideCompleted: false,
   showOnlyAttempted: false,
   showOnlyCompleted: false,
+  onlyDrafts: false,
   page: 0,
   pageSize: PAGE_LIMIT,
 };
@@ -175,6 +180,7 @@ export const urlParamsToSearchParams = (urlParams: URLSearchParams): SearchReque
     hideCompleted: urlParams.get('hideCompleted') === 'true',
     showOnlyAttempted: urlParams.get('showOnlyAttempted') === 'true',
     showOnlyCompleted: urlParams.get('showOnlyCompleted') === 'true',
+    onlyDrafts: urlParams.get('onlyDrafts') === 'true',
     page: Number(urlParams.get('page') ?? DEFAULT_SEARCH_PARAMS.page),
     pageSize: Number(urlParams.get('pageSize') ?? DEFAULT_SEARCH_PARAMS.pageSize),
   };
@@ -254,7 +260,13 @@ export const constructClimbViewUrlWithSlugs = (
 export const constructClimbInfoUrl = (
   { board_name }: BoardDetails,
   climb_uuid: ClimbUuid,
-) => `https://${board_name}boardapp${board_name === 'tension' ? '2' : ''}.com/climbs/${climb_uuid}`;
+): string | null => {
+  // Kilter board app URL is no longer accessible
+  if (board_name === 'kilter') {
+    return null;
+  }
+  return `https://${board_name}boardapp${board_name === 'tension' ? '2' : ''}.com/climbs/${climb_uuid}`;
+};
 
 //`/${board_name}/${layout_id}/${size_id}/${set_ids}/${angle}/info/${climb_uuid}`;
 

@@ -233,7 +233,7 @@ export const socialTypeDefs = /* GraphQL */ `
   }
 
   """
-  Input for fetching setter climbs with full Climb data (including litUpHoldsMap).
+  Input for fetching setter climbs with full Climb data.
   Used by the setter profile page for thumbnail rendering.
   """
   input SetterClimbsFullInput {

@@ -24,7 +24,7 @@ import AuthModal from '@/app/components/auth/auth-modal';
 import {
   getClimbPanelSummary,
   getQualityPanelSummary,
-  getProgressPanelSummary,
+  getUserPanelSummary,
   getHoldsPanelSummary,
 } from './search-summary-utils';
 import CollapsibleSection from '@/app/components/collapsible-section/collapsible-section';
@@ -168,6 +168,7 @@ const AccordionSearchForm: React.FC<AccordionSearchFormProps> = ({
                   <MenuItem value="difficulty">Difficulty</MenuItem>
                   <MenuItem value="name">Name</MenuItem>
                   <MenuItem value="quality">Quality</MenuItem>
+                  <MenuItem value="creation">Creation</MenuItem>
                 </MuiSelect>
                 <MuiSelect
                   value={uiSearchParams.sortOrder}
@@ -250,11 +251,11 @@ const AccordionSearchForm: React.FC<AccordionSearchFormProps> = ({
       ),
     },
     {
-      key: 'progress',
-      label: 'Progress',
-      title: 'Progress',
+      key: 'user',
+      label: 'User',
+      title: 'User',
       defaultSummary: 'All climbs',
-      getSummary: () => getProgressPanelSummary(uiSearchParams),
+      getSummary: () => getUserPanelSummary(uiSearchParams),
       content: (
         <div className={styles.panelContent}>
           {!isAuthenticated ? (
@@ -272,12 +273,24 @@ const AccordionSearchForm: React.FC<AccordionSearchFormProps> = ({
                 </MuiButton>
               }
             >
-              <strong>Sign in to filter by progress</strong>
+              <strong>Sign in to filter by your data</strong>
               <br />
               Login to filter climbs based on your attempt and completion history.
             </MuiAlert>
           ) : (
             <div className={styles.switchGroup}>
+              <div className={styles.switchRow}>
+                <MuiTypography variant="body2" component="span">My Drafts</MuiTypography>
+                <MuiSwitch
+                  size="small"
+                  color="primary"
+                  checked={uiSearchParams.onlyDrafts}
+                  onChange={(_, checked) => updateFilters({
+                    onlyDrafts: checked,
+                    ...(checked ? { sortBy: 'creation', sortOrder: 'desc' } : {}),
+                  })}
+                />
+              </div>
               <div className={styles.switchRow}>
                 <MuiTypography variant="body2" component="span">Hide Attempted</MuiTypography>
                 <MuiSwitch

@@ -5,6 +5,8 @@ export default function robots(): MetadataRoute.Robots {
     rules: {
       userAgent: '*',
       allow: '/',
+      disallow: ['/feed', '/api/', '/auth/', '/settings'],
     },
+    sitemap: 'https://www.boardsesh.com/sitemap.xml',
   };
 }

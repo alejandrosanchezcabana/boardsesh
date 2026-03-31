@@ -15,7 +15,6 @@ const mockClimb: Climb = {
   quality_average: '3.5',
   stars: 3,
   difficulty_error: '',
-  litUpHoldsMap: {},
   mirrored: false,
   benchmark_difficulty: null,
   userAscents: 0,
@@ -48,7 +47,8 @@ const mockSearchParams: SearchRequestPagination = {
   hideAttempted: false,
   hideCompleted: false,
   showOnlyAttempted: false,
-  showOnlyCompleted: false
+  showOnlyCompleted: false,
+  onlyDrafts: false
 };
 
 const initialState: QueueState = {
@@ -298,7 +298,8 @@ describe('queueReducer', () => {
         hideAttempted: false,
         hideCompleted: false,
         showOnlyAttempted: false,
-        showOnlyCompleted: false
+        showOnlyCompleted: false,
+        onlyDrafts: false
       };
 
       const action: QueueAction = {

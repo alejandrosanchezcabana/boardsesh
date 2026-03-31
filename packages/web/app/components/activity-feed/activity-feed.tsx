@@ -130,7 +130,7 @@ export default function ActivityFeed({
         isAuthenticated ? (
           <EmptyState
             icon={<PersonSearchOutlined fontSize="inherit" />}
-            description="Follow climbers to see their activity here"
+            description="Follow some climbers to fill this up"
           >
             {onFindClimbers && (
               <MuiButton variant="contained" onClick={onFindClimbers}>

@@ -13,6 +13,7 @@ import HomeOutlined from '@mui/icons-material/HomeOutlined';
 import FormatListBulletedOutlined from '@mui/icons-material/FormatListBulletedOutlined';
 import AddOutlined from '@mui/icons-material/AddOutlined';
 import LocalOfferOutlined from '@mui/icons-material/LocalOfferOutlined';
+import DynamicFeedOutlined from '@mui/icons-material/DynamicFeedOutlined';
 import EditOutlined from '@mui/icons-material/EditOutlined';
 import NotificationsOutlined from '@mui/icons-material/NotificationsOutlined';
 import Badge from '@mui/material/Badge';
@@ -34,7 +35,7 @@ import { useClimbActionsData } from '@/app/hooks/use-climb-actions-data';
 import type { StoredBoardConfig } from '@/app/lib/saved-boards-db';
 import { isValidHexColor } from '@/app/lib/color-utils';
 
-type Tab = 'home' | 'climbs' | 'library' | 'create' | 'notifications';
+type Tab = 'home' | 'climbs' | 'library' | 'feed' | 'create' | 'notifications';
 type PendingCreateAction = 'climb' | 'playlist' | null;
 
 interface BottomTabBarProps {
@@ -51,6 +52,7 @@ interface SelectedBoardContext {
 
 const getActiveTab = (pathname: string): Tab => {
   if (pathname === '/') return 'home';
+  if (pathname.startsWith('/feed')) return 'feed';
   if (pathname.startsWith('/notifications')) return 'notifications';
   if (pathname.startsWith('/playlists') || pathname.includes('/playlists')) return 'library';
   return 'climbs';
@@ -265,6 +267,13 @@ function BottomTabBar({ boardDetails, angle, boardConfigs }: BottomTabBarProps) 
     track('Bottom Tab Bar', { tab: 'library' });
   };
 
+  const handleFeedTab = () => {
+    setIsCreateOpen(false);
+    setIsCreatePlaylistOpen(false);
+    router.push('/feed');
+    track('Bottom Tab Bar', { tab: 'feed' });
+  };
+
   const handleNotificationsTab = () => {
     setIsCreateOpen(false);
     setIsCreatePlaylistOpen(false);
@@ -288,6 +297,9 @@ function BottomTabBar({ boardDetails, angle, boardConfigs }: BottomTabBarProps) 
         break;
       case 'library':
         handleLibraryTab();
+        break;
+      case 'feed':
+        handleFeedTab();
         break;
       case 'create':
         handleCreateTab();
@@ -451,6 +463,12 @@ function BottomTabBar({ boardDetails, angle, boardConfigs }: BottomTabBarProps) 
           label="Your Library"
           icon={<LocalOfferOutlined sx={{ fontSize: 20 }} />}
           value="library"
+          sx={actionSx}
+        />
+        <BottomNavigationAction
+          label="Feed"
+          icon={<DynamicFeedOutlined sx={{ fontSize: 20 }} />}
+          value="feed"
           sx={actionSx}
         />
         <BottomNavigationAction

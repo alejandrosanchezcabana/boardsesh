@@ -288,7 +288,7 @@ export const GET_SETTER_PROFILE = gql`
 `;
 
 // ============================================
-// Setter Climbs Full (with litUpHoldsMap for thumbnails)
+// Setter Climbs Full (with full Climb data for thumbnails)
 // ============================================
 
 export const GET_SETTER_CLIMBS_FULL = gql`
@@ -309,7 +309,6 @@ export const GET_SETTER_CLIMBS_FULL = gql`
         stars
         difficulty_error
         benchmark_difficulty
-        litUpHoldsMap
       }
       totalCount
       hasMore

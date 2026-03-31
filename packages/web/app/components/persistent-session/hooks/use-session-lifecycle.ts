@@ -531,11 +531,14 @@ export function useSessionLifecycle({
       sessionUnsubscribeRef.current = null;
 
       if (clientToCleanup) {
-        Promise.resolve().then(() => {
+        Promise.resolve().then(async () => {
           if (sessionRef.current) {
-            execute(clientToCleanup, { query: LEAVE_SESSION }).catch(() => {});
+            await execute(clientToCleanup, { query: LEAVE_SESSION }).catch(() => {});
           }
           clientToCleanup.dispose();
+        }).catch((err) => {
+          // Swallow errors during cleanup — the WebSocket is being torn down
+          if (DEBUG) console.log('[PersistentSession] Cleanup error suppressed:', err);
         });
       }
 

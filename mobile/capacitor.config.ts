@@ -8,8 +8,13 @@ const config: CapacitorConfig = {
     allowNavigation: ['boardsesh.com', '*.boardsesh.com'],
   },
   ios: {
-    contentInset: 'automatic',
+    contentInset: 'never',
     preferredContentMode: 'mobile',
+    backgroundColor: '#0A0A0A',
+  },
+  android: {
+    backgroundColor: '#0A0A0A',
+    overScrollMode: 'never',
   },
 };
 

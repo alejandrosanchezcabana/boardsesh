@@ -13,7 +13,18 @@ import SeshSettingsDrawer from '@/app/components/sesh-settings/sesh-settings-dra
 import { usePersistentSession, useIsOnBoardRoute } from '@/app/components/persistent-session/persistent-session-context';
 import { BoardConfigData } from '@/app/lib/server-board-configs';
 import { themeTokens } from '@/app/theme/theme-config';
+import { usePathname } from 'next/navigation';
+import BackButton from '@/app/components/back-button';
+import Typography from '@mui/material/Typography';
 import styles from './global-header.module.css';
+
+/** Route prefix → title for pages that show a simple title header instead of the default search/sesh header */
+const TITLE_HEADER_PAGES: Record<string, string> = {
+  '/aurora-migration': 'Aurora Migration',
+};
+
+/** Pages where the global header is completely hidden */
+const HIDDEN_HEADER_PAGES = ['/'];
 
 interface GlobalHeaderProps {
   boardConfigs: BoardConfigData;
@@ -26,8 +37,17 @@ export default function GlobalHeader({ boardConfigs }: GlobalHeaderProps) {
   const { activeSession } = usePersistentSession();
   const isOnBoardRoute = useIsOnBoardRoute();
   const { openClimbSearchDrawer, searchPillSummary, hasActiveFilters: filtersActive } = useSearchDrawerBridge();
+  const pathname = usePathname();
 
   const hasActiveSession = !!activeSession;
+
+  // Hide header completely on certain pages
+  if (HIDDEN_HEADER_PAGES.includes(pathname)) {
+    return null;
+  }
+
+  // Check if current page wants a simple title header
+  const titleHeaderPage = Object.entries(TITLE_HEADER_PAGES).find(([prefix]) => pathname.startsWith(prefix));
 
   // When the bridge is active (on a board list page), delegate to the board route's drawer
   const useClimbSearchBridge = openClimbSearchDrawer !== null;
@@ -49,6 +69,18 @@ export default function GlobalHeader({ boardConfigs }: GlobalHeaderProps) {
   };
 
   const pillText = useClimbSearchBridge && searchPillSummary ? searchPillSummary : 'Search';
+
+  // Simple title header for specific pages (back button + title, no search/sesh)
+  if (titleHeaderPage) {
+    return (
+      <header className={styles.header}>
+        <BackButton fallbackUrl="/" />
+        <Typography variant="h6" sx={{ flex: 1, margin: 0 }}>
+          {titleHeaderPage[1]}
+        </Typography>
+      </header>
+    );
+  }
 
   return (
     <>

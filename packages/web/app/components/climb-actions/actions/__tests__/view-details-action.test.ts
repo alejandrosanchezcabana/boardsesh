@@ -50,7 +50,6 @@ function createTestClimb(overrides?: Partial<Climb>): Climb {
     quality_average: '3.5',
     stars: 3,
     difficulty_error: '0.50',
-    litUpHoldsMap: {},
     benchmark_difficulty: null,
     ...overrides,
   };

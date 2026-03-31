@@ -81,10 +81,16 @@ const QueueClimbListItem: React.FC<QueueClimbListItemProps> = ({
     router.push(climbViewUrl);
   }, [item.climb, pathname, boardDetails, onClimbNavigate, router]);
 
+  // URL for opening in the Aurora app (null for Kilter as app URL is no longer accessible)
+  const openInAppUrl = useMemo(
+    () => constructClimbInfoUrl(boardDetails, item.climb.uuid),
+    [boardDetails, item.climb.uuid]
+  );
+
   const handleOpenInApp = useCallback(() => {
-    const url = constructClimbInfoUrl(boardDetails, item.climb.uuid);
-    openExternalUrl(url);
-  }, [item.climb, boardDetails]);
+    if (!openInAppUrl) return;
+    openExternalUrl(openInAppUrl);
+  }, [openInAppUrl]);
 
   // Swipe action overrides for ClimbListItem
   const swipeLeftAction: SwipeActionOverride = useMemo(
@@ -267,10 +273,12 @@ const QueueClimbListItem: React.FC<QueueClimbListItemProps> = ({
             <ListItemIcon><CheckOutlined /></ListItemIcon>
             <ListItemText>Tick Climb</ListItemText>
           </MenuItem>
-          <MenuItem onClick={() => { setMenuAnchorEl(null); handleOpenInApp(); }}>
-            <ListItemIcon><AppsOutlined /></ListItemIcon>
-            <ListItemText>Open in App</ListItemText>
-          </MenuItem>
+          {openInAppUrl && (
+            <MenuItem onClick={() => { setMenuAnchorEl(null); handleOpenInApp(); }}>
+              <ListItemIcon><AppsOutlined /></ListItemIcon>
+              <ListItemText>Open in App</ListItemText>
+            </MenuItem>
+          )}
           <MenuItem onClick={() => { setMenuAnchorEl(null); removeFromQueue(item); }} sx={{ color: 'error.main' }}>
             <ListItemIcon><DeleteOutlined color="error" /></ListItemIcon>
             <ListItemText>Remove from Queue</ListItemText>

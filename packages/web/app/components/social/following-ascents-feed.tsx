@@ -73,7 +73,7 @@ export default function FollowingAscentsFeed({ onFindClimbers }: FollowingAscent
     return (
       <EmptyState
         icon={<PersonSearchOutlined fontSize="inherit" />}
-        description="Follow climbers to see their activity here"
+        description="Follow some climbers to fill this up"
       >
         {onFindClimbers && (
           <MuiButton variant="contained" onClick={onFindClimbers}>

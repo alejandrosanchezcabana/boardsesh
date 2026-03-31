@@ -1,3 +1,4 @@
+import React from 'react';
 import { BoardName, BoardDetails } from '@/app/lib/types';
 import { LayoutRow, SizeRow, SetRow } from '@/app/lib/data/queries';
 import { getBoardDetails, getBoardSelectorOptions } from '@/app/lib/__generated__/product-sizes-data';
@@ -16,7 +17,9 @@ export type BoardConfigData = {
   details: Record<string, BoardDetails | null>;
 };
 
-export async function getAllBoardConfigs(): Promise<BoardConfigData> {
+// React.cache() deduplicates calls within a single server request lifecycle,
+// so layout.tsx and page.tsx calling this both get the same result without double work.
+export const getAllBoardConfigs = React.cache(async (): Promise<BoardConfigData> => {
   // Get layouts, sizes, and sets from hardcoded data (no database query)
   const selectorOptions = getBoardSelectorOptions();
 
@@ -90,4 +93,4 @@ export async function getAllBoardConfigs(): Promise<BoardConfigData> {
   await Promise.all(detailPromises);
 
   return configData;
-}
+});

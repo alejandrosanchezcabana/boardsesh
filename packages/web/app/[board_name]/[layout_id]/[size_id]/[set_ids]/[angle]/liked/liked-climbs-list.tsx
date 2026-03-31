@@ -244,6 +244,8 @@ export default function LikedClimbsList({
               boardDetails={boardDetails}
               selected={selectedClimbUuid === climb.uuid}
               onSelect={climbHandlersMap.get(climb.uuid)}
+              onThumbnailClick={climbHandlersMap.get(climb.uuid)}
+              disableThumbnailNavigation
             />
           ))}
         </Box>

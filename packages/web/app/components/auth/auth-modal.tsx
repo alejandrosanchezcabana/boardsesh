@@ -79,8 +79,8 @@ export default function AuthModal({
   open,
   onClose,
   onSuccess,
-  title = "Sign in to continue",
-  description = "Create an account or sign in to save your favorites and more."
+  title = "Sign in to keep your progress",
+  description = "Your logbook, playlists, and follows stay with your account."
 }: AuthModalProps) {
   const [loginValues, setLoginValues] = useState(initialLoginValues);
   const [loginErrors, setLoginErrors] = useState<LoginErrors>({});

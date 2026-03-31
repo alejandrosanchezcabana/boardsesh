@@ -7,7 +7,7 @@ export type Climb = {
   boardType?: string; // Board type this climb belongs to (e.g. 'kilter', 'tension'). Populated in multi-board contexts.
   setter_username: string;
   name: string;
-  description: string;
+  description?: string;
   frames: string;
   angle: number;
   ascensionist_count: number;
@@ -15,9 +15,9 @@ export type Climb = {
   quality_average: string;
   stars: number;
   difficulty_error: string;
-  litUpHoldsMap: LitUpHoldsMap;
   mirrored?: boolean;
   benchmark_difficulty: string | null; // Benchmark difficulty, can be null
+  is_draft?: boolean;
   userAscents?: number;
   userAttempts?: number;
 };
@@ -84,7 +84,7 @@ export type SearchRequest = {
   minAscents: number;
   minGrade: number;
   minRating: number;
-  sortBy: 'ascents' | 'difficulty' | 'name' | 'quality' | 'popular';
+  sortBy: 'ascents' | 'difficulty' | 'name' | 'quality' | 'popular' | 'creation';
   sortOrder: 'asc' | 'desc';
   name: string;
   onlyClassics: boolean;
@@ -96,6 +96,7 @@ export type SearchRequest = {
   hideCompleted: boolean;
   showOnlyAttempted: boolean;
   showOnlyCompleted: boolean;
+  onlyDrafts: boolean;
   [key: `hold_${number}`]: HoldFilterValue; // Allow dynamic hold keys directly in the search params
 };
 

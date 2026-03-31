@@ -146,9 +146,13 @@ export async function applyRateLimit(ctx: ConnectionContext, limit?: number, ope
   const maxRequests = limit ?? 60;
 
   // Tier 1: Synchronous in-memory rate limiting (fast path, per-instance)
+  // Use userId for authenticated users, clientIp for anonymous HTTP requests,
+  // or connectionId as fallback (WebSocket connections)
   const key = ctx.isAuthenticated && ctx.userId
     ? `${ctx.userId}:${operation}`
-    : ctx.connectionId;
+    : ctx.clientIp
+      ? `ip:${ctx.clientIp}:${operation}`
+      : ctx.connectionId;
   checkRateLimit(key, maxRequests);
 
   // Tier 2: Distributed Redis rate limiting (authenticated users only)

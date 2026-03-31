@@ -31,7 +31,7 @@ import { VOTE_ON_PROPOSAL, RESOLVE_PROPOSAL, DELETE_PROPOSAL } from '@/app/lib/g
 import type { Proposal } from '@boardsesh/shared-schema';
 import type { Climb, BoardDetails, BoardName } from '@/app/lib/types';
 import ClimbListItem from '@/app/components/climb-card/climb-list-item';
-import { convertLitUpHoldsStringToMap } from '@/app/components/board-renderer/util';
+
 import { getBoardDetailsForBoard } from '@/app/lib/board-utils';
 import { getDefaultBoardConfig } from '@/app/lib/default-board-configs';
 import ProposalVoteBar from './proposal-vote-bar';
@@ -146,10 +146,6 @@ export default function ProposalCard({ proposal, isAdminOrLeader, onUpdate, onDe
       return null;
     }
 
-    const litUpHoldsMap = frames
-      ? convertLitUpHoldsStringToMap(frames, boardName)[0]
-      : {};
-
     const climb: Climb = {
       uuid: climbUuid,
       name: climbName || '',
@@ -162,7 +158,6 @@ export default function ProposalCard({ proposal, isAdminOrLeader, onUpdate, onDe
       quality_average: localProposal.climbQualityAverage || '0',
       stars: 0,
       difficulty_error: localProposal.climbDifficultyError || '0',
-      litUpHoldsMap,
       benchmark_difficulty: localProposal.climbBenchmarkDifficulty || null,
       layoutId,
       boardType,

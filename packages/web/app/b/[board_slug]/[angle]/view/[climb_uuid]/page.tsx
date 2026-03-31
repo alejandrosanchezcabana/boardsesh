@@ -3,7 +3,7 @@ import { notFound } from 'next/navigation';
 import { resolveBoardBySlug, boardToRouteParams } from '@/app/lib/board-slug-utils';
 import { getBoardDetailsForBoard } from '@/app/lib/board-utils';
 import { getClimb } from '@/app/lib/data/queries';
-import { convertLitUpHoldsStringToMap } from '@/app/components/board-renderer/util';
+
 import ClimbDetailPageServer from '@/app/components/climb-detail/climb-detail-page.server';
 import { fetchClimbDetailData } from '@/app/lib/data/climb-detail-data.server';
 
@@ -39,10 +39,8 @@ export default async function BoardSlugViewPage(props: BoardSlugViewPageProps) {
       notFound();
     }
 
-    const litUpHoldsMap = convertLitUpHoldsStringToMap(currentClimb.frames, parsedParams.board_name)[0];
     const climbWithProcessedData = {
       ...currentClimb,
-      litUpHoldsMap,
       communityGrade: detailData.communityGrade,
     };
 

@@ -75,3 +75,12 @@ export const SearchBoardsInputSchema = z.object({
   limit: z.number().int().min(1).max(50).optional().default(20),
   offset: z.number().int().min(0).optional().default(0),
 });
+
+/**
+ * Popular board configs input validation schema
+ */
+export const PopularBoardConfigsInputSchema = z.object({
+  boardType: BoardNameSchema.optional(),
+  limit: z.number().int().min(1).max(100).optional().default(12),
+  offset: z.number().int().min(0).optional().default(0),
+});

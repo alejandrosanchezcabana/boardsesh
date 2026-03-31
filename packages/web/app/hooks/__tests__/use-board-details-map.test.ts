@@ -24,7 +24,6 @@ function makeClimb(overrides: Partial<Climb> = {}): Climb {
     difficulty: 'V5',
     quality_average: '3',
     setter_username: 'setter1',
-    litUpHoldsMap: {},
     description: '',
     ascensionist_count: 0,
     stars: 3,

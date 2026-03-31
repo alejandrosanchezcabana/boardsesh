@@ -175,7 +175,7 @@ export default function CommentList({ entityType, entityId, refreshKey = 0, curr
         <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', py: 4, gap: 1 }}>
           <ChatBubbleOutlineOutlined sx={{ fontSize: 32, color: 'var(--neutral-300)' }} />
           <MuiTypography variant="body2" color="text.secondary">
-            No comments yet. Be the first!
+            No comments yet. Say something.
           </MuiTypography>
         </Box>
       ) : (

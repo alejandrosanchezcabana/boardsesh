@@ -11,7 +11,7 @@ import { ClimbActions } from '../climb-actions';
 type ClimbViewActionsProps = {
   climb: Climb;
   boardDetails: BoardDetails;
-  auroraAppUrl: string;
+  auroraAppUrl?: string;
   angle: number;
 };
 

@@ -8,7 +8,7 @@ Try it out at [boardsesh.com](https://www.boardsesh.com/) | [Join us on Discord]
 
 ## Our Vision
 
-LED climbing boards like Kilter, Tension, Moonboard, Decoy, and Grasshopper have revolutionized indoor training. We believe the climbing community deserves a centralized platform that brings all these boards together—making it easier to track progress, train with friends, and get the most out of your board.
+LED climbing boards like Kilter, Tension, MoonBoard, Decoy, and Grasshopper have revolutionized indoor training. We believe the climbing community deserves a centralized platform that brings all these boards together—making it easier to track progress, train with friends, and get the most out of your board.
 
 Boardsesh is a unified experience that works across different board types, helping you focus on what matters most—climbing.
 
@@ -16,7 +16,7 @@ Boardsesh is a unified experience that works across different board types, helpi
 
 - **Queue management** — Coordinate climbs when training with others
 - **Real-time collaboration** — Share sessions with friends via Party Mode
-- **Multi-board support** — One app for Kilter, Tension, and more
+- **Multi-board support** — Works with Kilter, Tension, and more
 - **Active development** — New features and improvements from the community
 - **Self-hosting option** — Run your own instance if you prefer
 

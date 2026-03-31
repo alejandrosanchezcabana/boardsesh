@@ -96,11 +96,7 @@
 
 .boardPreviewContainer {
   width: 36px;
-  height: auto;
   flex-shrink: 0;
-  display: flex;
-  justify-content: center;
-  align-items: center;
   overflow: hidden;
 }
 

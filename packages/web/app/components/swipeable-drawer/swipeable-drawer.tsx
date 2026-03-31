@@ -229,6 +229,13 @@ const SwipeableDrawer: React.FC<SwipeableDrawerProps> = ({
       sx.backgroundColor = 'var(--semantic-background)';
     }
 
+    // Full-height bottom drawers extend to the top of the screen and need
+    // safe-area-inset-top padding to avoid rendering behind the device notch/pill.
+    // (Top/left/right anchors get this from the MUI theme overrides.)
+    if (isFullHeightDrawer && placement === 'bottom' && !sx.paddingTop) {
+      sx.paddingTop = 'env(safe-area-inset-top, 0px)';
+    }
+
     return sx;
   }, [userStyles?.wrapper, height, width, fullHeightProp]);
 

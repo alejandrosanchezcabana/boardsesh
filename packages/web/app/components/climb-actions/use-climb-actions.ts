@@ -78,9 +78,9 @@ export function useClimbActions({
   }, [climb, canFork, boardDetails, angle]);
 
   const openInAppUrl = useMemo(() => {
-    if (!climb) return '';
+    if (!climb) return null;
     return auroraAppUrl || constructClimbInfoUrl(boardDetails, climb.uuid);
-  }, [climb, boardDetails, angle, auroraAppUrl]);
+  }, [climb, boardDetails, auroraAppUrl]);
 
   // Action handlers
   const handleViewDetails = useCallback(() => {
@@ -153,7 +153,7 @@ export function useClimbActions({
   }, [onActionComplete]);
 
   const handleOpenInApp = useCallback(() => {
-    if (!climb) return;
+    if (!climb || !openInAppUrl) return;
 
     track('Open in Aurora App', {
       boardName: boardDetails.board_name,

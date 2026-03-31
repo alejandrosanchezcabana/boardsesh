@@ -85,21 +85,13 @@ export function useSaveTick(boardName: BoardName) {
         climb_uuid: options.climbUuid,
         angle: options.angle,
         is_mirror: options.isMirror,
-        user_id: 0,
-        attempt_id: 0,
         tries: options.attemptCount,
         quality: options.quality ?? null,
         difficulty: options.difficulty ?? null,
-        is_benchmark: options.isBenchmark,
-        is_listed: true,
         comment: options.comment,
         climbed_at: options.climbedAt,
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString(),
-        wall_uuid: null,
         is_ascent: options.status === 'flash' || options.status === 'send',
         status: options.status,
-        aurora_synced: false,
       };
 
       // Optimistically update all matching logbook queries
@@ -118,7 +110,7 @@ export function useSaveTick(boardName: BoardName) {
           (old) =>
             old?.map((entry) =>
               entry.uuid === context.tempUuid
-                ? { ...entry, uuid: savedTick.uuid, created_at: savedTick.createdAt, updated_at: savedTick.updatedAt }
+                ? { ...entry, uuid: savedTick.uuid }
                 : entry,
             ),
         );

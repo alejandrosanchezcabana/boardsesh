@@ -31,6 +31,11 @@ export function createYogaInstance() {
       // Extract Authorization header
       const authHeader = request.headers.get('authorization');
 
+      // Extract client IP for rate limiting anonymous HTTP requests
+      const clientIp = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim()
+        || request.headers.get('x-real-ip')
+        || undefined;
+
       if (authHeader?.startsWith('Bearer ')) {
         const token = authHeader.slice(7);
         const authResult = await validateNextAuthToken(token);
@@ -41,6 +46,7 @@ export function createYogaInstance() {
             sessionId: undefined,
             userId: authResult.userId,
             isAuthenticated: true,
+            clientIp,
           };
         }
       }
@@ -50,6 +56,7 @@ export function createYogaInstance() {
         sessionId: undefined,
         userId: undefined,
         isAuthenticated: false,
+        clientIp,
       };
     },
     // Disable GraphiQL in production

@@ -13,7 +13,7 @@ type DrawerClimbHeaderProps = {
 export default function DrawerClimbHeader({ climb, boardDetails }: DrawerClimbHeaderProps) {
   return (
     <div className={styles.drawerHeader}>
-      <div style={{ flexShrink: 0, maxWidth: 56 }}>
+      <div style={{ flexShrink: 0, width: 56 }}>
         <ClimbThumbnail boardDetails={boardDetails} currentClimb={climb} maxHeight="80px" />
       </div>
       <ClimbTitle climb={climb} gradePosition="right" titleFontSize={themeTokens.typography.fontSize.xl} showSetterInfo />

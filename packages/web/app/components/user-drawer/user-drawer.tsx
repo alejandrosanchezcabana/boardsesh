@@ -165,7 +165,7 @@ export default function UserDrawer({ boardDetails, boardConfigs }: UserDrawerPro
                 if (boardConfigs) {
                   setShowBoardSelector(true);
                 } else {
-                  router.push('/?select=true');
+                  router.push('/');
                 }
               }}
             >

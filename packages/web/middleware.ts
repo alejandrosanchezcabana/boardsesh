@@ -44,7 +44,7 @@ export function middleware(request: NextRequest) {
 export const config = {
   matcher: [
     '/api/v1/:path*',
-    // Match all page routes but skip static files and Next.js internals
-    '/((?!_next/static|_next/image|favicon.ico|monitoring|.*\\..*).*)',
+    // Match all page routes but skip static files, Next.js internals, and Vercel Flags Explorer
+    '/((?!_next/static|_next/image|favicon.ico|monitoring|\\.well-known/vercel/flags|.*\\..*).*)',
   ],
 };
