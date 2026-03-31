@@ -15,14 +15,19 @@ let wasmInitPromise: Promise<void> | null = null;
 
 function findWasmPath(): string {
   const wasmFile = 'node_modules/@boardsesh/board-renderer-wasm/pkg/board_renderer_wasm_bg.wasm';
-  // Try from cwd (packages/web in dev, project root in prod)
-  const fromCwd = join(process.cwd(), wasmFile);
-  if (existsSync(fromCwd)) return fromCwd;
-  // Try from monorepo root (two levels up from packages/web)
-  const fromRoot = join(process.cwd(), '..', '..', wasmFile);
-  if (existsSync(fromRoot)) return fromRoot;
-  // Exhausted search paths -- return cwd path so readFile gives a clear error
-  return fromCwd;
+  const candidates = [
+    // Vercel standalone: cwd is /var/task, node_modules at /var/task/node_modules
+    join(process.cwd(), wasmFile),
+    // Monorepo dev: cwd is packages/web, workspace deps hoisted to root
+    join(process.cwd(), '..', '..', wasmFile),
+    // Vercel standalone alt: nested under packages/web
+    join(process.cwd(), 'packages', 'web', wasmFile),
+  ];
+  for (const candidate of candidates) {
+    if (existsSync(candidate)) return candidate;
+  }
+  // Return first candidate so readFile gives a clear error with the attempted path
+  return candidates[0];
 }
 
 async function ensureWasmInitialized() {
