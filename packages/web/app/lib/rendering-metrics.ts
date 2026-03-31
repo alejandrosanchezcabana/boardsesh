@@ -6,6 +6,7 @@ export type RenderContext = 'thumbnail' | 'card' | 'full-board' | 'feed';
 // Counter persists across SPA navigations (only resets on full page load).
 const MAX_RENDER_EVENTS = 5;
 let renderEventCount = 0;
+let errorEventCount = 0;
 
 export function trackRenderComplete(
   durationMs: number,
@@ -25,5 +26,7 @@ export function trackRenderError(
   context: RenderContext,
   renderer: 'svg' | 'rust-wasm',
 ) {
+  if (errorEventCount >= MAX_RENDER_EVENTS) return;
+  errorEventCount++;
   track('Board Render Error', { context, renderer });
 }
