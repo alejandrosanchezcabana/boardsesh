@@ -10,6 +10,7 @@ import { NavigationLoadingProvider } from './components/providers/navigation-loa
 import PersistentSessionWrapper from './components/providers/persistent-session-wrapper';
 import { SnackbarProvider } from './components/providers/snackbar-provider';
 import { NotificationSubscriptionManager } from './components/providers/notification-subscription-manager';
+import { VercelToolbar } from '@vercel/toolbar/next';
 import { getAllBoardConfigs } from './lib/server-board-configs';
 import './components/index.css';
 import type { Viewport, Metadata } from 'next';
@@ -65,6 +66,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
           </SessionProviderWrapper>
         </QueryClientProvider>
         <SpeedInsights />
+        {process.env.NODE_ENV === 'development' && <VercelToolbar />}
       </body>
     </html>
   );

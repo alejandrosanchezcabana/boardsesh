@@ -1,5 +1,8 @@
 import { withSentryConfig } from '@sentry/nextjs';
+import createWithVercelToolbar from '@vercel/toolbar/plugins/next';
 // next.config.js
+
+const withVercelToolbar = createWithVercelToolbar();
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
@@ -67,7 +70,7 @@ const nextConfig = {
   },
 };
 
-export default withSentryConfig(nextConfig, {
+export default withVercelToolbar(withSentryConfig(nextConfig, {
   // For all available options, see:
   // https://www.npmjs.com/package/@sentry/webpack-plugin#options
 
@@ -103,4 +106,4 @@ export default withSentryConfig(nextConfig, {
       removeDebugLogging: true,
     },
   },
-});
+}));
