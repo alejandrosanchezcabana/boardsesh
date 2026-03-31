@@ -16,6 +16,7 @@ export type ClimbTitleData = {
   angle?: number | string;
   setter_username?: string;
   ascensionist_count?: number;
+  is_draft?: boolean;
   communityGrade?: string | null;
 };
 
@@ -164,6 +165,10 @@ const ClimbTitle: React.FC<ClimbTitleProps> = ({
     </Typography>
   );
 
+  const setterText = climb.is_draft
+    ? `Draft by ${climb.setter_username}`
+    : `By ${climb.setter_username} - ${climb.ascensionist_count ?? 0} ascents`;
+
   const setterElement = showSetterInfo && climb.setter_username && (
     <Typography
       variant="body2"
@@ -172,15 +177,19 @@ const ClimbTitle: React.FC<ClimbTitleProps> = ({
       sx={{
         fontSize: themeTokens.typography.fontSize.xs,
         fontWeight: themeTokens.typography.fontWeight.normal,
+        fontStyle: climb.is_draft ? 'italic' : undefined,
         ...textOverflowStyles,
       }}
     >
-      By {climb.setter_username} - {climb.ascensionist_count ?? 0} ascents
+      {setterText}
     </Typography>
   );
 
   if (gradePosition === 'right') {
     const subtitleParts: string[] = [];
+    if (climb.is_draft) {
+      subtitleParts.push('Draft');
+    }
     if (hasGrade) {
       subtitleParts.push(`${climb.quality_average}\u2605`);
     }
@@ -240,13 +249,16 @@ const ClimbTitle: React.FC<ClimbTitleProps> = ({
 
   if (layout === 'horizontal') {
     const secondLineContent = [];
+    if (climb.is_draft) {
+      secondLineContent.push('Draft');
+    }
     if (hasGrade) {
       secondLineContent.push(`${displayDifficulty} ${climb.quality_average}★`);
     }
     if (showSetterInfo && climb.setter_username) {
       secondLineContent.push(`${climb.setter_username}`);
     }
-    if (climb.ascensionist_count !== undefined) {
+    if (!climb.is_draft && climb.ascensionist_count !== undefined) {
       secondLineContent.push(`${climb.ascensionist_count} ascents`);
     }
 

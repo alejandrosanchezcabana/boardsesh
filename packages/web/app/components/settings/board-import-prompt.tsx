@@ -218,6 +218,7 @@ export default function BoardImportPrompt({ boardType }: BoardImportPromptProps)
             setImportPhase('complete');
             {
               const totalImported =
+                event.results.climbs.imported +
                 event.results.ascents.imported +
                 event.results.attempts.imported +
                 event.results.circuits.imported;
@@ -359,6 +360,9 @@ export default function BoardImportPrompt({ boardType }: BoardImportPromptProps)
                 <strong>{boardName}</strong>:
               </Typography>
               <List dense>
+                {importPreview.climbs > 0 && (
+                  <ListItem><ListItemText primary={`${importPreview.climbs} draft climbs`} /></ListItem>
+                )}
                 <ListItem><ListItemText primary={`${importPreview.ascents} ascents`} /></ListItem>
                 <ListItem><ListItemText primary={`${importPreview.attempts} attempts`} /></ListItem>
                 <ListItem><ListItemText primary={`${importPreview.circuits} circuits`} /></ListItem>
@@ -377,6 +381,14 @@ export default function BoardImportPrompt({ boardType }: BoardImportPromptProps)
           {importPhase === 'complete' && importResult && (
             <>
               <List dense>
+                {(importResult.climbs.imported > 0 || importResult.climbs.failed > 0) && (
+                  <ListItem>
+                    <ListItemText
+                      primary="Draft Climbs"
+                      secondary={`${importResult.climbs.imported} imported, ${importResult.climbs.skipped} skipped, ${importResult.climbs.failed} failed`}
+                    />
+                  </ListItem>
+                )}
                 <ListItem>
                   <ListItemText
                     primary="Ascents"

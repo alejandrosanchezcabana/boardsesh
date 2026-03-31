@@ -6,6 +6,7 @@ export interface AuroraExportPreview {
   ascents: number;
   attempts: number;
   circuits: number;
+  climbs: number;
   username: string;
 }
 
@@ -14,6 +15,7 @@ export interface StrippedExportData {
   ascents: unknown[];
   attempts: unknown[];
   circuits: unknown[];
+  climbs: unknown[];
 }
 
 export interface ParsedExportResult {
@@ -24,12 +26,7 @@ export interface ParsedExportResult {
 
 /**
  * Parses an Aurora JSON export, validates required fields, strips heavy unused
- * fields (climbs, walls, blocks, etc.), and returns the data ready for import.
- *
- * The full export can be 50MB+ due to the climbs array containing all climb
- * definitions with hold data. We only need user, ascents, attempts, and circuits.
- *
- * TODO: Import user's own climbs (drafts) once the export format is verified.
+ * fields (walls, blocks, etc.), and returns the data ready for import.
  *
  * @throws {Error} If the JSON is missing required user data.
  */
@@ -61,6 +58,7 @@ export function parseAuroraExport(
   const ascents = Array.isArray(json.ascents) ? (json.ascents as unknown[]) : [];
   const attempts = Array.isArray(json.attempts) ? (json.attempts as unknown[]) : [];
   const circuits = Array.isArray(json.circuits) ? (json.circuits as unknown[]) : [];
+  const userClimbs = Array.isArray(json.climbs) ? (json.climbs as unknown[]) : [];
 
   return {
     data: {
@@ -68,11 +66,13 @@ export function parseAuroraExport(
       ascents,
       attempts,
       circuits,
+      climbs: userClimbs,
     },
     preview: {
       ascents: ascents.length,
       attempts: attempts.length,
       circuits: circuits.length,
+      climbs: userClimbs.length,
       username: user.username,
     },
     boardWarning,

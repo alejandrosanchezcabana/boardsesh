@@ -34,7 +34,8 @@ export default async function BoardSlugListPage(props: BoardSlugListPageProps) {
     searchParamsObject.hideAttempted ||
     searchParamsObject.hideCompleted ||
     searchParamsObject.showOnlyAttempted ||
-    searchParamsObject.showOnlyCompleted
+    searchParamsObject.showOnlyCompleted ||
+    searchParamsObject.onlyDrafts
   );
 
   const isDefaultSearch =

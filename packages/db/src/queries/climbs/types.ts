@@ -49,6 +49,7 @@ export interface ClimbSearchParams {
   hideCompleted?: boolean;
   showOnlyAttempted?: boolean;
   showOnlyCompleted?: boolean;
+  onlyDrafts?: boolean;
 }
 
 /**
@@ -76,6 +77,7 @@ export interface ClimbRow {
   stars: number;
   difficulty_error: string;
   benchmark_difficulty: string | null;
+  is_draft: boolean;
   userAscents?: number;
   userAttempts?: number;
 }

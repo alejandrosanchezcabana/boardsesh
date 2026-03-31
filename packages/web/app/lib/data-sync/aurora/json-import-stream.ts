@@ -9,6 +9,7 @@ interface ChunkPayload {
     ascents: unknown[];
     attempts: unknown[];
     circuits: unknown[];
+    climbs: unknown[];
   };
   skipSessionBuild: boolean;
 }
@@ -43,6 +44,11 @@ function mergeResults(a: ImportResult, b: ImportResult): ImportResult {
       imported: a.circuits.imported + b.circuits.imported,
       skipped: a.circuits.skipped + b.circuits.skipped,
       failed: a.circuits.failed + b.circuits.failed,
+    },
+    climbs: {
+      imported: a.climbs.imported + b.climbs.imported,
+      skipped: a.climbs.skipped + b.climbs.skipped,
+      failed: a.climbs.failed + b.climbs.failed,
     },
     unresolvedClimbs: [...new Set([...a.unresolvedClimbs, ...b.unresolvedClimbs])],
   };
@@ -150,24 +156,35 @@ export async function streamImport(
     ascents?: unknown[];
     attempts?: unknown[];
     circuits?: unknown[];
+    climbs?: unknown[];
   };
 
   const user = typedData.user;
   const ascents = typedData.ascents ?? [];
   const attempts = typedData.attempts ?? [];
   const circuits = typedData.circuits ?? [];
+  const climbs = typedData.climbs ?? [];
 
   // Build list of chunks to send
   const ascentChunks = chunk(ascents, CHUNK_SIZE);
   const attemptChunks = chunk(attempts, CHUNK_SIZE);
 
-  // Circuits are typically small, send them all in one chunk
   const allChunks: ChunkPayload[] = [];
+  const emptyData = { user, ascents: [] as unknown[], attempts: [] as unknown[], circuits: [] as unknown[], climbs: [] as unknown[] };
+
+  // Climbs go in the FIRST chunk so they're imported before name resolution
+  if (climbs.length > 0) {
+    allChunks.push({
+      boardType,
+      data: { ...emptyData, climbs },
+      skipSessionBuild: true,
+    });
+  }
 
   for (const batch of ascentChunks) {
     allChunks.push({
       boardType,
-      data: { user, ascents: batch, attempts: [], circuits: [] },
+      data: { ...emptyData, ascents: batch },
       skipSessionBuild: true,
     });
   }
@@ -175,16 +192,16 @@ export async function streamImport(
   for (const batch of attemptChunks) {
     allChunks.push({
       boardType,
-      data: { user, ascents: [], attempts: batch, circuits: [] },
+      data: { ...emptyData, attempts: batch },
       skipSessionBuild: true,
     });
   }
 
-  // Circuits go in the last chunk (or as a standalone if no other data)
+  // Circuits go in a later chunk
   if (circuits.length > 0) {
     allChunks.push({
       boardType,
-      data: { user, ascents: [], attempts: [], circuits },
+      data: { ...emptyData, circuits },
       skipSessionBuild: true,
     });
   }
@@ -193,7 +210,7 @@ export async function streamImport(
   if (allChunks.length === 0) {
     allChunks.push({
       boardType,
-      data: { user, ascents: [], attempts: [], circuits: [] },
+      data: emptyData,
       skipSessionBuild: false,
     });
   }
@@ -205,6 +222,7 @@ export async function streamImport(
     ascents: { imported: 0, skipped: 0, failed: 0 },
     attempts: { imported: 0, skipped: 0, failed: 0 },
     circuits: { imported: 0, skipped: 0, failed: 0 },
+    climbs: { imported: 0, skipped: 0, failed: 0 },
     unresolvedClimbs: [],
   };
 

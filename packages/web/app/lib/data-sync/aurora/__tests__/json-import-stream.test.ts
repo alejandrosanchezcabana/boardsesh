@@ -37,6 +37,7 @@ const emptyResult: ImportResult = {
   ascents: { imported: 0, skipped: 0, failed: 0 },
   attempts: { imported: 0, skipped: 0, failed: 0 },
   circuits: { imported: 0, skipped: 0, failed: 0 },
+  climbs: { imported: 0, skipped: 0, failed: 0 },
   unresolvedClimbs: [],
 };
 

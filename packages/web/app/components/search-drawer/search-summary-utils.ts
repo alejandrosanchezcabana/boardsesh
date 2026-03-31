@@ -65,7 +65,7 @@ export function getQualityPanelSummary(params: SearchRequestPagination): string[
   return parts;
 }
 
-export function getProgressPanelSummary(params: SearchRequestPagination): string[] {
+export function getUserPanelSummary(params: SearchRequestPagination): string[] {
   // Merge "Hide" filters into single entry
   const hideFilters: string[] = [];
   if (params.hideAttempted) hideFilters.push('attempted');
@@ -77,6 +77,9 @@ export function getProgressPanelSummary(params: SearchRequestPagination): string
   if (params.showOnlyCompleted) onlyFilters.push('completed');
 
   const parts: string[] = [];
+  if (params.onlyDrafts) {
+    parts.push('Drafts');
+  }
   if (hideFilters.length > 0) {
     parts.push(`Hide ${hideFilters.join(', ')}`);
   }
@@ -100,7 +103,7 @@ export function getSearchPillSummary(params: SearchRequestPagination): string {
   const allParts = [
     ...getClimbPanelSummary(params),
     ...getQualityPanelSummary(params),
-    ...getProgressPanelSummary(params),
+    ...getUserPanelSummary(params),
     ...getHoldsPanelSummary(params),
   ];
 
@@ -122,7 +125,7 @@ export function getSearchPillFullSummary(params: SearchRequestPagination): strin
   const allParts = [
     ...getClimbPanelSummary(params),
     ...getQualityPanelSummary(params),
-    ...getProgressPanelSummary(params),
+    ...getUserPanelSummary(params),
     ...getHoldsPanelSummary(params),
   ];
 

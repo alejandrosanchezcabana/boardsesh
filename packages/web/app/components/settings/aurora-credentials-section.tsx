@@ -46,7 +46,7 @@ interface BoardUnsyncedCounts {
 
 export type ImportPhase = 'preview' | 'importing' | 'complete' | 'error';
 
-export type ImportStep = 'resolving' | 'dedup' | 'ascents' | 'attempts' | 'circuits' | 'sessions';
+export type ImportStep = 'climbs' | 'resolving' | 'dedup' | 'ascents' | 'attempts' | 'circuits' | 'sessions';
 
 export interface ImportProgress {
   step: ImportStep;
@@ -55,9 +55,10 @@ export interface ImportProgress {
   total?: number;
 }
 
-export const STEP_ORDER: ImportStep[] = ['resolving', 'dedup', 'ascents', 'attempts', 'circuits', 'sessions'];
+export const STEP_ORDER: ImportStep[] = ['climbs', 'resolving', 'dedup', 'ascents', 'attempts', 'circuits', 'sessions'];
 
 export const STEP_LABELS: Record<ImportStep, string> = {
+  climbs: 'Importing draft climbs',
   resolving: 'Resolving climb names',
   dedup: 'Checking for duplicates',
   ascents: 'Importing ascents',
@@ -472,6 +473,7 @@ export default function AuroraCredentialsSection() {
             setImportPhase('complete');
             {
               const totalImported =
+                event.results.climbs.imported +
                 event.results.ascents.imported +
                 event.results.attempts.imported +
                 event.results.circuits.imported;
@@ -661,6 +663,11 @@ export default function AuroraCredentialsSection() {
                 <strong>{importingBoard?.charAt(0).toUpperCase()}{importingBoard?.slice(1)}</strong>:
               </Typography>
               <List dense>
+                {importPreview.climbs > 0 && (
+                  <ListItem>
+                    <ListItemText primary={`${importPreview.climbs} draft climbs`} />
+                  </ListItem>
+                )}
                 <ListItem>
                   <ListItemText primary={`${importPreview.ascents} ascents`} />
                 </ListItem>
@@ -687,6 +694,14 @@ export default function AuroraCredentialsSection() {
           {importPhase === 'complete' && importResult && (
             <>
               <List dense>
+                {(importResult.climbs.imported > 0 || importResult.climbs.failed > 0) && (
+                  <ListItem>
+                    <ListItemText
+                      primary="Draft Climbs"
+                      secondary={`${importResult.climbs.imported} imported, ${importResult.climbs.skipped} skipped, ${importResult.climbs.failed} failed`}
+                    />
+                  </ListItem>
+                )}
                 <ListItem>
                   <ListItemText
                     primary="Ascents"

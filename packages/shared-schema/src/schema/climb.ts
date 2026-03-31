@@ -32,6 +32,8 @@ export const climbTypeDefs = /* GraphQL */ `
     mirrored: Boolean
     "Official benchmark difficulty if this is a benchmark climb"
     benchmark_difficulty: String
+    "Whether this climb is a draft (unpublished)"
+    is_draft: Boolean
     "Number of times the current user has sent this climb"
     userAscents: Int
     "Number of times the current user has attempted this climb"
@@ -116,6 +118,8 @@ export const climbTypeDefs = /* GraphQL */ `
     showOnlyAttempted: Boolean
     "Only show climbs the user has completed (requires auth)"
     showOnlyCompleted: Boolean
+    "Show only the user's draft climbs (requires auth)"
+    onlyDrafts: Boolean
   }
 
   """

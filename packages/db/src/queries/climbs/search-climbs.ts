@@ -32,11 +32,13 @@ export const searchClimbs = async (
   const filters = createClimbFilters(params, searchParams, sizeEdges, userId);
 
   // Define sort columns
+  const defaultSort = searchParams.onlyDrafts ? 'creation' : 'ascents';
   const allowedSortColumns: Record<string, ReturnType<typeof sql>> = {
     ascents: sql`${boardClimbStats.ascensionistCount}`,
     difficulty: sql`ROUND(${boardClimbStats.displayDifficulty}::numeric, 0)`,
     name: sql`${boardClimbs.name}`,
     quality: sql`${boardClimbStats.qualityAverage}`,
+    creation: sql`${boardClimbs.createdAt}`,
     popular: sql`(
       SELECT COALESCE(SUM(cs.ascensionist_count), 0)
       FROM ${boardClimbStats} cs
@@ -44,7 +46,7 @@ export const searchClimbs = async (
     )`,
   };
 
-  const sortColumn = allowedSortColumns[searchParams.sortBy || 'ascents'] || sql`${boardClimbStats.ascensionistCount}`;
+  const sortColumn = allowedSortColumns[searchParams.sortBy || defaultSort] || sql`${boardClimbStats.ascensionistCount}`;
 
   const whereConditions = [
     ...filters.getClimbWhereConditions(),
@@ -58,6 +60,7 @@ export const searchClimbs = async (
     name: boardClimbs.name,
     description: boardClimbs.description,
     frames: boardClimbs.frames,
+    is_draft: boardClimbs.isDraft,
     angle: boardClimbStats.angle,
     ascensionist_count: boardClimbStats.ascensionistCount,
     difficulty: boardDifficultyGrades.boulderName,
@@ -135,6 +138,7 @@ export const searchClimbs = async (
     stars: Math.round((Number(result.quality_average) || 0) * 5),
     difficulty_error: result.difficulty_error?.toString() || '0',
     benchmark_difficulty: result.benchmark_difficulty && result.benchmark_difficulty > 0 ? result.benchmark_difficulty.toString() : null,
+    is_draft: result.is_draft ?? false,
     userAscents: userId ? Number((result as Record<string, unknown>)?.userAscents || 0) : undefined,
     userAttempts: userId ? Number((result as Record<string, unknown>)?.userAttempts || 0) : undefined,
   }));
