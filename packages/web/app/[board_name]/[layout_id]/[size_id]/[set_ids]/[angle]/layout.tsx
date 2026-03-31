@@ -73,7 +73,7 @@ export default async function BoardLayout(props: PropsWithChildren<BoardLayoutPr
   const { angle } = parsedParams;
 
   // Evaluate feature flag server-side (Vercel Flags runtime control)
-  const useRustRenderer = await rustSvgRendering();
+  const useRustRenderer = Boolean(await rustSvgRendering());
 
   // Fetch the board details server-side
   const boardDetails = getBoardDetailsForBoard(parsedParams);
