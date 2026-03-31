@@ -30,3 +30,24 @@ export function trackRenderError(
   errorEventCount++;
   track('Board Render Error', { context, renderer });
 }
+
+const MAX_LIST_EVENTS = 10;
+let listEventCount = 0;
+
+export function trackListBatchRender(
+  durationMs: number,
+  props: {
+    viewMode: 'grid' | 'list';
+    renderer: 'svg' | 'rust-wasm';
+    batchSize: number;
+    totalItems: number;
+    isInitial: boolean;
+  },
+) {
+  if (listEventCount >= MAX_LIST_EVENTS) return;
+  listEventCount++;
+  track('List Batch Render', {
+    durationMs: Math.round(durationMs),
+    ...props,
+  });
+}

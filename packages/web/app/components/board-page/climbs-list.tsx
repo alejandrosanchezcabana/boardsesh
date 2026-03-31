@@ -14,6 +14,7 @@ import { themeTokens } from '@/app/theme/theme-config';
 import { getPreference, setPreference } from '@/app/lib/user-preferences-db';
 import { useInfiniteScroll } from '@/app/hooks/use-infinite-scroll';
 import { useFeatureFlag } from '@/app/components/providers/feature-flags-provider';
+import { trackListBatchRender } from '@/app/lib/rendering-metrics';
 
 type ViewMode = 'grid' | 'list';
 
@@ -79,6 +80,13 @@ const ClimbsList = ({
   const [visibleCount, setVisibleCount] = useState(climbs.length);
   const prevClimbsRef = useRef(climbs);
 
+  // --- Batch render timing ---
+  // Records when a new batch of climbs arrives (data change) so we can measure
+  // render duration in useEffect (fires after DOM commit).
+  const batchStartRef = useRef<{ time: number; prevLength: number; isInitial: boolean } | null>(
+    climbs.length > 0 ? { time: performance.now(), prevLength: 0, isInitial: true } : null,
+  );
+
   if (climbs !== prevClimbsRef.current) {
     const prevClimbs = prevClimbsRef.current;
     prevClimbsRef.current = climbs;
@@ -87,6 +95,11 @@ const ClimbsList = ({
     const isAppend = climbs.length > prevClimbs.length &&
       prevClimbs.length > 0 &&
       climbs[0]?.uuid === prevClimbs[0]?.uuid;
+
+    // Record batch start for any data change that adds items
+    if (climbs.length > prevClimbs.length) {
+      batchStartRef.current = { time: performance.now(), prevLength: prevClimbs.length, isInitial: prevClimbs.length === 0 };
+    }
 
     if (isAppend) {
       // Show all items immediately — no batching for appended pages
@@ -110,6 +123,22 @@ const ClimbsList = ({
 
   const [viewMode, setViewMode] = useState<ViewMode>('list');
   const useVirtualization = viewMode === 'list' && !isRustRendererEnabled;
+
+  // Track batch render timing after DOM commit
+  useEffect(() => {
+    const batch = batchStartRef.current;
+    if (!batch || climbs.length === 0) return;
+    // Only fire once per batch (when all items are visible)
+    if (visibleCount < climbs.length) return;
+    batchStartRef.current = null;
+    trackListBatchRender(performance.now() - batch.time, {
+      viewMode,
+      renderer: isRustRendererEnabled ? 'rust-wasm' : 'svg',
+      batchSize: climbs.length - batch.prevLength,
+      totalItems: climbs.length,
+      isInitial: batch.isInitial,
+    });
+  }, [climbs.length, visibleCount, viewMode, isRustRendererEnabled]);
 
   const onClimbSelectRef = useRef(onClimbSelect);
   onClimbSelectRef.current = onClimbSelect;
