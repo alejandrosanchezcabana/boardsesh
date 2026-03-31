@@ -1,5 +1,6 @@
 import 'server-only';
 import { cache } from 'react';
+import { notFound } from 'next/navigation';
 import {
   BoardRouteParameters,
   ParsedBoardRouteParametersWithUuid,
@@ -64,7 +65,7 @@ export async function parseBoardRouteParamsWithSlugs<T extends BoardRouteParamet
     } else {
       const layout = getMoonBoardLayoutBySlug(layout_id);
       if (!layout) {
-        throw new Error(`MoonBoard layout not found for slug: ${layout_id}`);
+        return notFound();
       }
       parsedLayoutId = layout.id;
     }
@@ -85,7 +86,7 @@ export async function parseBoardRouteParamsWithSlugs<T extends BoardRouteParamet
       // Find the layout key to get sets
       const layoutEntry = Object.entries(MOONBOARD_LAYOUTS).find(([, l]) => l.id === parsedLayoutId);
       if (!layoutEntry) {
-        throw new Error(`MoonBoard layout not found for id: ${parsedLayoutId}`);
+        return notFound();
       }
       const layoutKey = layoutEntry[0] as MoonBoardLayoutKey;
       const sets = getMoonBoardSetsBySlug(layoutKey, decodedSetIds);
@@ -121,16 +122,13 @@ export async function parseBoardRouteParamsWithSlugs<T extends BoardRouteParamet
   if (isNumericId(layout_id)) {
     parsedLayoutId = Number(layout_id);
   } else {
-    if (!layout_id) {
-      throw new Error(`Layout not found for slug: ${layout_id}`);
-    }
-    if (!board_name) {
-      throw new Error(`Board name not found for slug: ${layout_id}`);
+    if (!layout_id || !board_name) {
+      return notFound();
     }
 
     const layout = await getLayoutBySlug(board_name as BoardName, layout_id);
     if (!layout) {
-      throw new Error(`Layout not found for slug: ${layout_id}`);
+      return notFound();
     }
     parsedLayoutId = layout.id;
   }
@@ -141,7 +139,7 @@ export async function parseBoardRouteParamsWithSlugs<T extends BoardRouteParamet
   } else {
     const size = await getSizeBySlug(board_name as BoardName, parsedLayoutId, size_id);
     if (!size) {
-      throw new Error(`Size not found for slug: ${size_id}`);
+      return notFound();
     }
     parsedSizeId = size.id;
   }
@@ -153,7 +151,7 @@ export async function parseBoardRouteParamsWithSlugs<T extends BoardRouteParamet
   } else {
     const sets = await getSetsBySlug(board_name as BoardName, parsedLayoutId, parsedSizeId, decodedSetIds);
     if (!sets || sets.length === 0) {
-      throw new Error(`Sets not found for slug: ${decodedSetIds}`);
+      return notFound();
     }
     parsedSetIds = sets.map((set) => set.id);
   }
