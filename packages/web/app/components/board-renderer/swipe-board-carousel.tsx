@@ -10,7 +10,7 @@ import {
   ENTER_ANIMATION_DURATION,
 } from '@/app/hooks/use-card-swipe-navigation';
 import type { BoardDetails } from '@/app/lib/types';
-import { useRustRenderer } from './board-renderer-context';
+import { useFeatureFlag } from '@/app/components/providers/feature-flags-provider';
 import { convertLitUpHoldsStringToMap } from './util';
 import styles from './swipe-board-carousel.module.css';
 
@@ -95,7 +95,7 @@ const SwipeBoardCarousel: React.FC<SwipeBoardCarouselProps> = ({
   };
 
   const transition = getSwipeTransition();
-  const isRustRendererEnabled = useRustRenderer();
+  const isRustRendererEnabled = useFeatureFlag('rust-svg-rendering');
 
   const currentLitUpHoldsMap = useMemo(
     () => isRustRendererEnabled ? undefined : convertLitUpHoldsStringToMap(currentClimb.frames, boardDetails.board_name)[0],

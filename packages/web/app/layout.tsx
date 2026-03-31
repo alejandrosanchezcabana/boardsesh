@@ -12,6 +12,8 @@ import { SnackbarProvider } from './components/providers/snackbar-provider';
 import { NotificationSubscriptionManager } from './components/providers/notification-subscription-manager';
 import { VercelToolbar } from '@vercel/toolbar/next';
 import { getAllBoardConfigs } from './lib/server-board-configs';
+import { evaluateAllFlags } from './flags';
+import { FeatureFlagsProvider } from './components/providers/feature-flags-provider';
 import './components/index.css';
 import type { Viewport, Metadata } from 'next';
 
@@ -45,6 +47,7 @@ export const viewport: Viewport = {
 
 export default async function RootLayout({ children }: { children: React.ReactNode }) {
   const boardConfigs = await getAllBoardConfigs();
+  const featureFlags = await evaluateAllFlags();
 
   return (
     <html lang="en" data-theme="dark" suppressHydrationWarning>
@@ -55,11 +58,13 @@ export default async function RootLayout({ children }: { children: React.ReactNo
             <AppRouterCacheProvider>
               <ColorModeProvider>
                 <SnackbarProvider>
-                  <PersistentSessionWrapper boardConfigs={boardConfigs}>
-                    <NavigationLoadingProvider>
-                      <NotificationSubscriptionManager>{children}</NotificationSubscriptionManager>
-                    </NavigationLoadingProvider>
-                  </PersistentSessionWrapper>
+                  <FeatureFlagsProvider flags={featureFlags}>
+                    <PersistentSessionWrapper boardConfigs={boardConfigs}>
+                      <NavigationLoadingProvider>
+                        <NotificationSubscriptionManager>{children}</NotificationSubscriptionManager>
+                      </NavigationLoadingProvider>
+                    </PersistentSessionWrapper>
+                  </FeatureFlagsProvider>
                 </SnackbarProvider>
               </ColorModeProvider>
             </AppRouterCacheProvider>

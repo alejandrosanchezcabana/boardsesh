@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { BoardDetails, BoardName } from '@/app/lib/types';
 import BoardRenderer from '@/app/components/board-renderer/board-renderer';
 import BoardImageLayers from '@/app/components/board-renderer/board-image-layers';
-import { useRustRenderer } from '@/app/components/board-renderer/board-renderer-context';
+import { useFeatureFlag } from '@/app/components/providers/feature-flags-provider';
 import { convertLitUpHoldsStringToMap } from '@/app/components/board-renderer/util';
 import { getBoardDetailsForBoard } from '@/app/lib/board-utils';
 import { getDefaultBoardConfig } from '@/app/lib/default-board-configs';
@@ -31,7 +31,7 @@ const AscentThumbnail: React.FC<AscentThumbnailProps> = ({
   frames,
   isMirror,
 }) => {
-  const isRustRendererEnabled = useRustRenderer();
+  const isRustRendererEnabled = useFeatureFlag('rust-svg-rendering');
   // Memoize board details to avoid recomputing on every render
   const boardDetails = useMemo<BoardDetails | null>(() => {
     if (!layoutId) return null;

@@ -18,8 +18,6 @@ import { UISearchParamsProvider } from '@/app/components/queue-control/ui-search
 import { QueueBridgeInjector } from '@/app/components/queue-control/queue-bridge-context';
 import LastUsedBoardTracker from '@/app/components/board-page/last-used-board-tracker';
 import { themeTokens } from '@/app/theme/theme-config';
-import { RustRendererProvider } from '@/app/components/board-renderer/board-renderer-context';
-import { rustSvgRendering } from '@/app/flags';
 
 export async function generateMetadata(props: { params: Promise<BoardRouteParameters> }): Promise<Metadata> {
   const params = await props.params;
@@ -72,9 +70,6 @@ export default async function BoardLayout(props: PropsWithChildren<BoardLayoutPr
 
   const { angle } = parsedParams;
 
-  // Evaluate feature flag server-side (Vercel Flags runtime control)
-  const useRustRenderer = Boolean(await rustSvgRendering());
-
   // Fetch the board details server-side
   const boardDetails = getBoardDetailsForBoard(parsedParams);
 
@@ -91,7 +86,6 @@ export default async function BoardLayout(props: PropsWithChildren<BoardLayoutPr
     : `/${boardDetails.board_name}`;
 
   return (
-    <RustRendererProvider value={useRustRenderer}>
     <div style={{ minHeight: '100dvh', display: 'flex', flexDirection: 'column', padding: 0, background: 'var(--semantic-surface)' }}>
       <LastUsedBoardTracker
         url={listUrl}
@@ -134,6 +128,5 @@ export default async function BoardLayout(props: PropsWithChildren<BoardLayoutPr
         </ConnectionSettingsProvider>
       </BoardSessionBridge>
     </div>
-    </RustRendererProvider>
   );
 }

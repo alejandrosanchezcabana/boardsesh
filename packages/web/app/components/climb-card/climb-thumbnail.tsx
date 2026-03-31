@@ -5,7 +5,7 @@ import { usePathname } from 'next/navigation';
 import { BoardDetails, Climb } from '@/app/lib/types';
 import BoardRenderer from '../board-renderer/board-renderer';
 import BoardImageLayers from '../board-renderer/board-image-layers';
-import { useRustRenderer } from '../board-renderer/board-renderer-context';
+import { useFeatureFlag } from '@/app/components/providers/feature-flags-provider';
 import { getContextAwareClimbViewUrl } from '@/app/lib/url-utils';
 import { convertLitUpHoldsStringToMap } from '@/app/components/board-renderer/util';
 
@@ -27,7 +27,7 @@ const placeholderStyle = (boardDetails: BoardDetails, maxHeight?: string): React
 
 const ClimbThumbnail = ({ boardDetails, currentClimb, enableNavigation = false, onNavigate, maxHeight }: ClimbThumbnailProps) => {
   const pathname = usePathname();
-  const isRustRendererEnabled = useRustRenderer();
+  const isRustRendererEnabled = useFeatureFlag('rust-svg-rendering');
   const litUpHoldsMap = useMemo(
     () => currentClimb && !isRustRendererEnabled ? convertLitUpHoldsStringToMap(currentClimb.frames, boardDetails.board_name)[0] : undefined,
     [currentClimb?.frames, boardDetails.board_name, isRustRendererEnabled],
