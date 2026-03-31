@@ -10,6 +10,7 @@ import { convertLitUpHoldsStringToMap } from '@/app/components/board-renderer/ut
 import { getBoardDetailsForBoard } from '@/app/lib/board-utils';
 import { getDefaultBoardConfig } from '@/app/lib/default-board-configs';
 import { constructClimbViewUrlWithSlugs, constructClimbViewUrl } from '@/app/lib/url-utils';
+import type { SetIdList } from '@/app/lib/board-data';
 import styles from './ascents-feed.module.css';
 
 interface AscentThumbnailProps {
@@ -61,45 +62,36 @@ const AscentThumbnail: React.FC<AscentThumbnailProps> = ({
     return framesData[0];
   }, [frames, boardType, isRustRendererEnabled]);
 
-  // Get climb view path (prefer friendly slugs)
+  // Reuse the already-memoized boardDetails to build the climb view URL
   const climbViewPath = useMemo(() => {
-    if (!layoutId) return null;
+    if (!boardDetails || !layoutId) return null;
 
-    const config = getDefaultBoardConfig(boardType as BoardName, layoutId);
-    if (config) {
-      const details = getBoardDetailsForBoard({
-        board_name: boardType as BoardName,
-        layout_id: layoutId,
-        size_id: config.sizeId,
-        set_ids: config.setIds,
-      });
-      if (details?.layout_name && details.size_name && details.set_names) {
-        return constructClimbViewUrlWithSlugs(
-          details.board_name,
-          details.layout_name,
-          details.size_name,
-          details.size_description,
-          details.set_names,
-          angle,
-          climbUuid,
-          climbName,
-        );
-      }
+    if (boardDetails.layout_name && boardDetails.size_name && boardDetails.set_names) {
+      return constructClimbViewUrlWithSlugs(
+        boardDetails.board_name,
+        boardDetails.layout_name,
+        boardDetails.size_name,
+        boardDetails.size_description,
+        boardDetails.set_names,
+        angle,
+        climbUuid,
+        climbName,
+      );
     }
 
-    // Numeric URL fallback — will be redirected server-side
+    const config = getDefaultBoardConfig(boardType as BoardName, layoutId);
     return constructClimbViewUrl(
       {
         board_name: boardType as BoardName,
         layout_id: layoutId,
         size_id: config?.sizeId ?? 1,
-        set_ids: config?.setIds ?? [],
+        set_ids: (config?.setIds ?? []) as SetIdList,
         angle,
       },
       climbUuid,
       climbName,
     );
-  }, [boardType, layoutId, angle, climbUuid, climbName]);
+  }, [boardDetails, boardType, layoutId, angle, climbUuid, climbName]);
 
   // If we can't render the thumbnail, don't show anything
   if (!boardDetails || !climbViewPath) {
