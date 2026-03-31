@@ -5,8 +5,9 @@ import { usePathname } from 'next/navigation';
 import { BoardDetails, Climb } from '@/app/lib/types';
 import BoardRenderer from '../board-renderer/board-renderer';
 import BoardImageLayers from '../board-renderer/board-image-layers';
+import { useRustRenderer } from '../board-renderer/board-renderer-context';
 import { getContextAwareClimbViewUrl } from '@/app/lib/url-utils';
-import { convertLitUpHoldsStringToMap, isRustRendererEnabled } from '@/app/components/board-renderer/util';
+import { convertLitUpHoldsStringToMap } from '@/app/components/board-renderer/util';
 
 type ClimbThumbnailProps = {
   currentClimb: Climb | null;
@@ -26,9 +27,10 @@ const placeholderStyle = (boardDetails: BoardDetails, maxHeight?: string): React
 
 const ClimbThumbnail = ({ boardDetails, currentClimb, enableNavigation = false, onNavigate, maxHeight }: ClimbThumbnailProps) => {
   const pathname = usePathname();
+  const isRustRendererEnabled = useRustRenderer();
   const litUpHoldsMap = useMemo(
     () => currentClimb && !isRustRendererEnabled ? convertLitUpHoldsStringToMap(currentClimb.frames, boardDetails.board_name)[0] : undefined,
-    [currentClimb?.frames, boardDetails.board_name],
+    [currentClimb?.frames, boardDetails.board_name, isRustRendererEnabled],
   );
   const containerRef = useRef<HTMLDivElement>(null);
   const [isVisible, setIsVisible] = useState(false);
@@ -54,7 +56,7 @@ const ClimbThumbnail = ({ boardDetails, currentClimb, enableNavigation = false, 
     );
     observer.observe(el);
     return () => observer.disconnect();
-  }, []);
+  }, [isRustRendererEnabled]);
 
   if (!isVisible) {
     return <div ref={containerRef} style={placeholderStyle(boardDetails, maxHeight)} />;

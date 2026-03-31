@@ -10,7 +10,8 @@ import {
   ENTER_ANIMATION_DURATION,
 } from '@/app/hooks/use-card-swipe-navigation';
 import type { BoardDetails } from '@/app/lib/types';
-import { convertLitUpHoldsStringToMap, isRustRendererEnabled } from './util';
+import { useRustRenderer } from './board-renderer-context';
+import { convertLitUpHoldsStringToMap } from './util';
 import styles from './swipe-board-carousel.module.css';
 
 interface ClimbBoardData {
@@ -94,14 +95,15 @@ const SwipeBoardCarousel: React.FC<SwipeBoardCarouselProps> = ({
   };
 
   const transition = getSwipeTransition();
+  const isRustRendererEnabled = useRustRenderer();
 
   const currentLitUpHoldsMap = useMemo(
     () => isRustRendererEnabled ? undefined : convertLitUpHoldsStringToMap(currentClimb.frames, boardDetails.board_name)[0],
-    [currentClimb.frames, boardDetails.board_name],
+    [currentClimb.frames, boardDetails.board_name, isRustRendererEnabled],
   );
   const peekLitUpHoldsMap = useMemo(
     () => isRustRendererEnabled || !peekClimb ? undefined : convertLitUpHoldsStringToMap(peekClimb.frames, boardDetails.board_name)[0],
-    [peekClimb, boardDetails.board_name],
+    [peekClimb, boardDetails.board_name, isRustRendererEnabled],
   );
 
   const renderBoard = (climb: ClimbBoardData, litUpHoldsMap: ReturnType<typeof convertLitUpHoldsStringToMap>[0] | undefined) => {

@@ -5,7 +5,8 @@ import Link from 'next/link';
 import { BoardDetails, BoardName } from '@/app/lib/types';
 import BoardRenderer from '@/app/components/board-renderer/board-renderer';
 import BoardImageLayers from '@/app/components/board-renderer/board-image-layers';
-import { convertLitUpHoldsStringToMap, isRustRendererEnabled } from '@/app/components/board-renderer/util';
+import { useRustRenderer } from '@/app/components/board-renderer/board-renderer-context';
+import { convertLitUpHoldsStringToMap } from '@/app/components/board-renderer/util';
 import { getBoardDetailsForBoard } from '@/app/lib/board-utils';
 import { getDefaultBoardConfig } from '@/app/lib/default-board-configs';
 import { constructClimbViewUrlWithSlugs, constructClimbViewUrl } from '@/app/lib/url-utils';
@@ -30,6 +31,7 @@ const AscentThumbnail: React.FC<AscentThumbnailProps> = ({
   frames,
   isMirror,
 }) => {
+  const isRustRendererEnabled = useRustRenderer();
   // Memoize board details to avoid recomputing on every render
   const boardDetails = useMemo<BoardDetails | null>(() => {
     if (!layoutId) return null;
@@ -57,7 +59,7 @@ const AscentThumbnail: React.FC<AscentThumbnailProps> = ({
     if (!frames || !boardType) return undefined;
     const framesData = convertLitUpHoldsStringToMap(frames, boardType as BoardName);
     return framesData[0];
-  }, [frames, boardType]);
+  }, [frames, boardType, isRustRendererEnabled]);
 
   // Get climb view path (prefer friendly slugs)
   const climbViewPath = useMemo(() => {

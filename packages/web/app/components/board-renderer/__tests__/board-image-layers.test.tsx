@@ -10,7 +10,6 @@ vi.mock('../util', () => ({
     (_bd: BoardDetails, frames: string, thumbnail?: boolean) =>
       `/api/internal/board-render?frames=${frames}${thumbnail ? '&thumbnail=1' : ''}`,
   ),
-  isRustRendererEnabled: true,
 }));
 
 import BoardImageLayers from '../board-image-layers';

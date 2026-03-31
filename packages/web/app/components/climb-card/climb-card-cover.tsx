@@ -4,7 +4,8 @@ import type { Climb, BoardDetails } from '@/app/lib/types';
 import BoardRenderer from '@/app/components/board-renderer/board-renderer';
 import BoardImageLayers from '@/app/components/board-renderer/board-image-layers';
 import { useDoubleTap } from '@/app/lib/hooks/use-double-tap';
-import { convertLitUpHoldsStringToMap, isRustRendererEnabled } from '@/app/components/board-renderer/util';
+import { useRustRenderer } from '@/app/components/board-renderer/board-renderer-context';
+import { convertLitUpHoldsStringToMap } from '@/app/components/board-renderer/util';
 
 type ClimbCardCoverProps = {
   climb?: Climb;
@@ -15,9 +16,10 @@ type ClimbCardCoverProps = {
 
 const ClimbCardCover = ({ climb, boardDetails, onClick, onDoubleClick }: ClimbCardCoverProps) => {
   const { ref, onDoubleClick: handleDoubleClick } = useDoubleTap(onDoubleClick);
+  const isRustRendererEnabled = useRustRenderer();
   const litUpHoldsMap = useMemo(
     () => climb && !isRustRendererEnabled ? convertLitUpHoldsStringToMap(climb.frames, boardDetails.board_name)[0] : undefined,
-    [climb?.frames, boardDetails.board_name],
+    [climb?.frames, boardDetails.board_name, isRustRendererEnabled],
   );
 
   const renderContent = isRustRendererEnabled && climb ? (
