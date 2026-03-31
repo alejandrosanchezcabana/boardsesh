@@ -127,6 +127,7 @@ export type PopularBoardConfig = {
   setIds: number[];
   setNames: string[];
   climbCount: number;
+  totalAscents: number;
   displayName: string;
 };
 

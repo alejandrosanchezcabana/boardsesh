@@ -101,7 +101,7 @@ export default function BoardScrollCard({
       } else if (popularConfig) {
         const boardName = popularConfig.boardType as BoardName;
         cardName = popularConfig.displayName;
-        cardMeta = `${BOARD_TYPE_LABELS[boardName] || boardName} \u00B7 ${popularConfig.climbCount.toLocaleString()} routes`;
+        cardMeta = `${BOARD_TYPE_LABELS[boardName] || boardName} \u00B7 ${popularConfig.totalAscents.toLocaleString()} sends`;
 
         if (boardName === 'moonboard') {
           details = getMoonBoardDetails({

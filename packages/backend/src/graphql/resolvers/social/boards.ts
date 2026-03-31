@@ -227,6 +227,7 @@ export interface CachedPopularConfig {
   setIds: number[];
   setNames: string[];
   climbCount: number;
+  totalAscents: number;
   displayName: string;
 }
 
@@ -316,7 +317,8 @@ async function getPopularConfigs(): Promise<CachedPopularConfig[]> {
       bps.description AS size_description,
       configs.set_ids,
       configs.set_names,
-      COALESCE(cc.climb_count, 0) AS climb_count
+      COALESCE(cc.climb_count, 0) AS climb_count,
+      COALESCE(cc.total_ascents, 0) AS total_ascents
     FROM (
       SELECT
         psls.board_type,
@@ -332,8 +334,12 @@ async function getPopularConfigs(): Promise<CachedPopularConfig[]> {
     JOIN board_layouts bl ON bl.board_type = configs.board_type AND bl.id = configs.layout_id
     JOIN board_product_sizes bps ON bps.board_type = configs.board_type AND bps.id = configs.size_id
     LEFT JOIN LATERAL (
-      SELECT COUNT(*)::int AS climb_count
+      SELECT
+        COUNT(DISTINCT bc.uuid)::int AS climb_count,
+        COALESCE(SUM(bcs.ascensionist_count), 0)::int AS total_ascents
       FROM board_climbs bc
+      LEFT JOIN board_climb_stats bcs
+        ON bcs.board_type = bc.board_type AND bcs.climb_uuid = bc.uuid
       WHERE bc.board_type = configs.board_type
         AND bc.layout_id = configs.layout_id
         AND bc.is_listed = true
@@ -357,7 +363,7 @@ async function getPopularConfigs(): Promise<CachedPopularConfig[]> {
     ) cc ON true
     WHERE bl.is_listed = true
       AND bps.is_listed = true
-    ORDER BY climb_count DESC, configs.board_type, bl.name
+    ORDER BY (total_ascents::float / NULLIF(climb_count, 0)) DESC NULLS LAST, total_ascents DESC, configs.board_type, bl.name
   `);
 
   // db.execute() returns QueryResult with .rows for neon-serverless, or an array directly for postgres-js
@@ -380,6 +386,7 @@ async function getPopularConfigs(): Promise<CachedPopularConfig[]> {
       setIds: (row.set_ids as number[]).map(Number),
       setNames,
       climbCount: Number(row.climb_count),
+      totalAscents: Number(row.total_ascents),
       displayName: formatDisplayName(boardType, layoutName, sizeName, setNames),
     };
   });

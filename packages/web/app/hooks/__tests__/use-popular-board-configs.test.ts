@@ -35,6 +35,7 @@ function makeConfig(
     setIds: [1, 2],
     setNames: ['Set A', 'Set B'],
     climbCount,
+    totalAscents: climbCount * 10,
     displayName: `Layout ${boardType} Size 10`,
     ...overrides,
   };
