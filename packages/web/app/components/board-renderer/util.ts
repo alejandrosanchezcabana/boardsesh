@@ -2,8 +2,6 @@ import { BoardDetails, BoardName } from '@/app/lib/types';
 import { BOARD_IMAGE_DIMENSIONS } from '../../lib/board-data';
 import { LitUpHoldsMap, HOLD_STATE_MAP } from './types';
 
-export const isRustRendererEnabled = process.env.NEXT_PUBLIC_RUST_BOARD_RENDERER_ENABLED === 'true';
-
 /**
  * Build the URL for the WASM-rendered overlay image.
  * Mirroring is handled via CSS (scaleX(-1)), not a separate render — halves cache variants.

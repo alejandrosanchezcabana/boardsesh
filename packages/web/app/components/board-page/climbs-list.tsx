@@ -13,6 +13,7 @@ import { ClimbCardSkeleton, ClimbListItemSkeleton } from './board-page-skeleton'
 import { themeTokens } from '@/app/theme/theme-config';
 import { getPreference, setPreference } from '@/app/lib/user-preferences-db';
 import { useInfiniteScroll } from '@/app/hooks/use-infinite-scroll';
+import { useRustRenderer } from '@/app/components/board-renderer/board-renderer-context';
 
 type ViewMode = 'grid' | 'list';
 
@@ -165,10 +166,13 @@ const ClimbsList = ({
   );
 
   // --- Window virtualizer for list mode ---
+  // Rust renderer uses cheap <img> tags instead of SVG, so we can afford
+  // more items in the DOM for smoother scrolling (less blank flashes).
+  const isRustRenderer = useRustRenderer();
   const virtualizer = useWindowVirtualizer({
     count: climbs.length,
     estimateSize: () => ESTIMATED_LIST_ITEM_HEIGHT,
-    overscan: 5,
+    overscan: isRustRenderer ? 20 : 5,
     getItemKey: (index) => climbs[index].uuid,
   });
 
