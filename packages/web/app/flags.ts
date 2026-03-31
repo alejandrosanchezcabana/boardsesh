@@ -23,9 +23,9 @@ export const rustSvgRendering = flag({
     { value: false, label: 'Disabled' },
   ],
   decide() {
-    // Return undefined to defer to the Vercel adapter's dashboard rules.
-    // Falls through to defaultValue (false) when no adapter is active.
-    return undefined as unknown as boolean;
+    // HOTFIX: always return false — adapter is returning true incorrectly.
+    // TODO: investigate and restore adapter-based evaluation.
+    return false;
   },
 });
 
