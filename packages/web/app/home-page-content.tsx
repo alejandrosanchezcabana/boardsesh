@@ -20,6 +20,12 @@ import { usePersistentSession } from '@/app/components/persistent-session';
 import BoardScrollSection from '@/app/components/board-scroll/board-scroll-section';
 import BoardScrollCard from '@/app/components/board-scroll/board-scroll-card';
 import FindNearbyCard, { type FindNearbyStatus } from '@/app/components/board-scroll/find-nearby-card';
+import { useDiscoverBoards } from '@/app/hooks/use-discover-boards';
+import { usePopularBoardConfigs } from '@/app/hooks/use-popular-board-configs';
+import { constructBoardSlugListUrl } from '@/app/lib/url-utils';
+import { getDefaultAngleForBoard } from '@/app/lib/board-config-for-playlist';
+import type { BoardConfigData } from '@/app/lib/server-board-configs';
+import type { UserBoard, PopularBoardConfig } from '@boardsesh/shared-schema';
 
 function deriveFindNearbyStatus({
   locationEnabled,
@@ -38,12 +44,6 @@ function deriveFindNearbyStatus({
   if (!hasLocation) return 'geo-denied';
   return 'no-results';
 }
-import { useDiscoverBoards } from '@/app/hooks/use-discover-boards';
-import { usePopularBoardConfigs } from '@/app/hooks/use-popular-board-configs';
-import { constructBoardSlugListUrl } from '@/app/lib/url-utils';
-import { getDefaultAngleForBoard } from '@/app/lib/board-config-for-playlist';
-import type { BoardConfigData } from '@/app/lib/server-board-configs';
-import type { UserBoard, PopularBoardConfig } from '@boardsesh/shared-schema';
 
 const StartSeshDrawer = dynamic(
   () => import('@/app/components/session-creation/start-sesh-drawer'),
