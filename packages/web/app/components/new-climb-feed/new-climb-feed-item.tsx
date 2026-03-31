@@ -54,8 +54,8 @@ export default function NewClimbFeedItem({ item }: NewClimbFeedItemProps) {
       }
     }
 
-    // Fallback to default numeric path
-    return getDefaultClimbViewPath(boardName, item.layoutId, angle, item.uuid);
+    // Fallback to default path
+    return getDefaultClimbViewPath(boardName, item.layoutId, angle, item.uuid, item.name || undefined);
   })();
 
   return (

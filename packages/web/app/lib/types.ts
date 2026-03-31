@@ -207,6 +207,21 @@ export type BoardDetails = {
   holdSetImages?: string[]; // e.g., ['holdsetd.png', 'holdsete.png']
 };
 
+/**
+ * Minimal board identity needed for URL construction.
+ * Use this instead of full BoardDetails when only building URLs.
+ */
+export type BoardRouteIdentity = {
+  board_name: BoardName;
+  layout_id: number;
+  size_id: number;
+  set_ids: SetIdList;
+  layout_name?: string;
+  size_name?: string;
+  size_description?: string;
+  set_names?: string[];
+};
+
 export type BoardRouteParameters = {
   board_name: string;
   layout_id: string;

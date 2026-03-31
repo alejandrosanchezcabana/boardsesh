@@ -7,6 +7,7 @@ import {
   constructClimbViewUrl,
   isUuidOnly,
   constructClimbViewUrlWithSlugs,
+  tryConstructSlugViewUrl,
 } from '@/app/lib/url-utils';
 import { parseRouteParams } from '@/app/lib/url-utils.server';
 
@@ -25,7 +26,10 @@ export async function generateMetadata(props: { params: Promise<BoardRouteParame
     const climbGrade = currentClimb.difficulty || 'Unknown Grade';
     const setter = currentClimb.setter_username || 'Unknown Setter';
     const description = `${climbName} - ${climbGrade} by ${setter}. Quality: ${currentClimb.quality_average || 0}/5. Ascents: ${currentClimb.ascensionist_count || 0}`;
-    const climbUrl = constructClimbViewUrl(parsedParams, parsedParams.climb_uuid, climbName);
+    const climbUrl = tryConstructSlugViewUrl(
+      parsedParams.board_name, parsedParams.layout_id, parsedParams.size_id,
+      parsedParams.set_ids, parsedParams.angle, parsedParams.climb_uuid, climbName,
+    ) ?? constructClimbViewUrl(parsedParams, parsedParams.climb_uuid, climbName);
 
     const ogImageUrl = new URL('/api/og/climb', 'https://boardsesh.com');
     ogImageUrl.searchParams.set('board_name', parsedParams.board_name);

@@ -6,6 +6,7 @@
 
 import { BoardName } from '@/app/lib/types';
 import { SetIdList } from '@/app/lib/board-data';
+import { tryConstructSlugViewUrl } from '@/app/lib/url-utils';
 
 export interface DefaultBoardConfig {
   sizeId: number;
@@ -60,9 +61,12 @@ export function getDefaultClimbViewPath(
   layoutId: number,
   angle: number,
   climbUuid: string,
+  climbName?: string,
 ): string | null {
   const config = getDefaultBoardConfig(boardName, layoutId);
   if (!config) return null;
 
-  return `/${boardName}/${layoutId}/${config.sizeId}/${config.setIds.join(',')}/${angle}/view/${climbUuid}`;
+  return tryConstructSlugViewUrl(
+    boardName, layoutId, config.sizeId, config.setIds, angle, climbUuid, climbName,
+  ) ?? `/${boardName}/${layoutId}/${config.sizeId}/${config.setIds.join(',')}/${angle}/view/${climbUuid}`;
 }

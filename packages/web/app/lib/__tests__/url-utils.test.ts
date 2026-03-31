@@ -5,6 +5,9 @@ import {
   urlParamsToSearchParams,
   parseBoardRouteParams,
   constructClimbViewUrl,
+  constructClimbViewUrlWithSlugs,
+  constructClimbListWithSlugs,
+  constructPlayUrlWithSlugs,
   constructClimbInfoUrl,
   generateLayoutSlug,
   generateSizeSlug,
@@ -1120,5 +1123,111 @@ describe('getContextAwarePlaylistUrl', () => {
   it('should build global URL when on root', () => {
     expect(getContextAwarePlaylistUrl('/', 'ABC123'))
       .toBe('/playlists/ABC123');
+  });
+});
+
+describe('constructClimbViewUrlWithSlugs', () => {
+  it('should construct slug-based view URL with climb name', () => {
+    const result = constructClimbViewUrlWithSlugs(
+      'kilter', 'Kilter Board Original', '16 x 12', 'Super Wide',
+      ['Bolt Ons', 'Screw Ons'], 40, 'abc123def456', 'Breakfast Burrito',
+    );
+    expect(result).toBe('/kilter/original/16x12-super-wide/screw_bolt/40/view/breakfast-burrito-abc123def456');
+  });
+
+  it('should construct slug-based view URL without climb name', () => {
+    const result = constructClimbViewUrlWithSlugs(
+      'kilter', 'Kilter Board Original', '16 x 12', 'Super Wide',
+      ['Bolt Ons', 'Screw Ons'], 40, 'abc123def456',
+    );
+    expect(result).toBe('/kilter/original/16x12-super-wide/screw_bolt/40/view/abc123def456');
+  });
+
+  it('should handle size without description', () => {
+    const result = constructClimbViewUrlWithSlugs(
+      'kilter', 'Kilter Board Original', '12 x 12', undefined,
+      ['Bolt Ons'], 45, 'uuid123',
+    );
+    expect(result).toBe('/kilter/original/12x12/bolt/45/view/uuid123');
+  });
+
+  it('should handle empty climb name', () => {
+    const result = constructClimbViewUrlWithSlugs(
+      'tension', 'Tension Board 2 Mirror', '12 x 12', undefined,
+      ['Wood', 'Plastic'], 30, 'uuid456', '',
+    );
+    expect(result).toBe('/tension/two-mirror/12x12/wood_plastic/30/view/uuid456');
+  });
+});
+
+describe('constructClimbListWithSlugs', () => {
+  it('should construct slug-based list URL', () => {
+    const result = constructClimbListWithSlugs(
+      'kilter', 'Kilter Board Original', '16 x 12', 'Super Wide',
+      ['Bolt Ons', 'Screw Ons'], 40,
+    );
+    expect(result).toBe('/kilter/original/16x12-super-wide/screw_bolt/40/list');
+  });
+
+  it('should handle size without description', () => {
+    const result = constructClimbListWithSlugs(
+      'tension', 'Tension Board Original Layout', '8 x 12', undefined,
+      ['Screw Ons'], 25,
+    );
+    expect(result).toBe('/tension/original/8x12/screw/25/list');
+  });
+});
+
+describe('constructPlayUrlWithSlugs', () => {
+  it('should construct slug-based play URL with climb name', () => {
+    const result = constructPlayUrlWithSlugs(
+      'kilter', 'Kilter Board Original', '12 x 14', 'Commerical',
+      ['Bolt Ons', 'Screw Ons'], 40, 'abc123', 'My Climb',
+    );
+    expect(result).toBe('/kilter/original/12x14-commerical/screw_bolt/40/play/my-climb-abc123');
+  });
+
+  it('should construct slug-based play URL without climb name', () => {
+    const result = constructPlayUrlWithSlugs(
+      'kilter', 'Kilter Board Original', '12 x 14', 'Commerical',
+      ['Bolt Ons'], 40, 'abc123',
+    );
+    expect(result).toBe('/kilter/original/12x14-commerical/bolt/40/play/abc123');
+  });
+});
+
+describe('getContextAwareClimbViewUrl - static data fallback', () => {
+  it('should try static data when boardDetails lacks slug fields', () => {
+    const detailsWithoutNames = {
+      board_name: 'kilter',
+      layout_id: 1,
+      size_id: 7,
+      set_ids: [1, 20],
+      angle: 40,
+    } as unknown as BoardDetails;
+
+    const result = getContextAwareClimbViewUrl(
+      '/kilter/1/7/1,20/40/list', detailsWithoutNames, 40, 'abc123', 'Test Climb',
+    );
+    // Should resolve via getBoardDetailsForBoard and produce a slug URL
+    expect(result).toContain('/kilter/original/');
+    expect(result).toContain('/view/test-climb-abc123');
+    expect(result).not.toMatch(/\/\d+\/\d+\//); // No numeric segments like /1/7/
+  });
+
+  it('should fall back to numeric URL when static data also fails', () => {
+    const detailsWithInvalidIds = {
+      board_name: 'kilter',
+      layout_id: 9999,
+      size_id: 9999,
+      set_ids: [9999],
+      angle: 40,
+    } as unknown as BoardDetails;
+
+    const result = getContextAwareClimbViewUrl(
+      '/kilter/9999/9999/9999/40/list', detailsWithInvalidIds, 40, 'abc123', 'Test Climb',
+    );
+    // Should fall back to numeric constructClimbViewUrl
+    expect(result).toBe('/kilter/9999/9999/9999/40/view/test-climb-abc123');
   });
 });

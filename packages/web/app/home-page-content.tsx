@@ -23,7 +23,7 @@ import BoardScrollCard from '@/app/components/board-scroll/board-scroll-card';
 import FindNearbyCard, { type FindNearbyStatus } from '@/app/components/board-scroll/find-nearby-card';
 import { useDiscoverBoards } from '@/app/hooks/use-discover-boards';
 import { usePopularBoardConfigs } from '@/app/hooks/use-popular-board-configs';
-import { constructBoardSlugListUrl } from '@/app/lib/url-utils';
+import { constructBoardSlugListUrl, constructClimbListWithSlugs, tryConstructSlugListUrl } from '@/app/lib/url-utils';
 import { getDefaultAngleForBoard } from '@/app/lib/board-config-for-playlist';
 import type { BoardConfigData } from '@/app/lib/server-board-configs';
 import type { UserBoard, PopularBoardConfig } from '@boardsesh/shared-schema';
@@ -158,9 +158,24 @@ export default function HomePageContent({ boardConfigs, initialPopularConfigs }:
   }, [router]);
 
   const handleConfigClick = useCallback((config: PopularBoardConfig) => {
-    const setIds = config.setIds.join(',');
     const angle = getDefaultAngleForBoard(config.boardType);
-    router.push(`/${config.boardType}/${config.layoutId}/${config.sizeId}/${setIds}/${angle}/list`);
+    if (config.layoutName && config.sizeName && config.setNames.length > 0) {
+      router.push(constructClimbListWithSlugs(
+        config.boardType,
+        config.layoutName,
+        config.sizeName,
+        config.sizeDescription ?? undefined,
+        config.setNames,
+        angle,
+      ));
+    } else {
+      const setIds = config.setIds.join(',');
+      const numericFallback = `/${config.boardType}/${config.layoutId}/${config.sizeId}/${setIds}/${angle}/list`;
+      router.push(
+        tryConstructSlugListUrl(config.boardType, config.layoutId, config.sizeId, config.setIds, angle)
+          ?? numericFallback,
+      );
+    }
   }, [router]);
 
   return (
