@@ -3,6 +3,7 @@ import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 import { SUPPORTED_BOARDS } from './app/lib/board-data';
 import { getListPageCacheTTL } from './app/lib/list-page-cache';
+import { CLIMB_SESSION_COOKIE } from './app/lib/climb-session-cookie';
 
 const SPECIAL_ROUTES = ['angles', 'grades']; // routes that don't need board validation
 
@@ -37,6 +38,21 @@ export function middleware(request: NextRequest) {
         });
       }
     }
+  }
+
+  // Backward compat: redirect old ?session= URLs to clean URLs with cookie.
+  // The redirect cost (~150ms) is far less than a CDN cache miss (1.3-1.6s).
+  const sessionParam = request.nextUrl.searchParams.get('session');
+  if (sessionParam) {
+    const cleanUrl = request.nextUrl.clone();
+    cleanUrl.searchParams.delete('session');
+    const response = NextResponse.redirect(cleanUrl, 307);
+    response.cookies.set(CLIMB_SESSION_COOKIE, sessionParam, {
+      path: '/',
+      sameSite: 'lax',
+      maxAge: 86400,
+    });
+    return response;
   }
 
   // Use Vercel-CDN-Cache-Control because Next.js overwrites Cache-Control

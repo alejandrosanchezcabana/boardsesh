@@ -1,8 +1,10 @@
 import { redirect, notFound } from 'next/navigation';
+import { cookies } from 'next/headers';
 import { dbz } from '@/app/lib/db/db';
 import { boardSessions } from '@/app/lib/db/schema';
 import { eq } from 'drizzle-orm';
 import { SessionIdSchema } from '@/app/lib/validation/session';
+import { CLIMB_SESSION_COOKIE } from '@/app/lib/climb-session-cookie';
 import InvalidSessionError from './invalid-session-error';
 
 interface JoinPageProps {
@@ -69,7 +71,7 @@ export default async function JoinPage({ params }: JoinPageProps) {
 
   const { boardPath } = session[0];
 
-  // Redirect to the board path with session query parameter
+  // Set session ID as a cookie so the list page URL stays clean for CDN caching
   // boardPath format: {board_name}/{layout_id}/{size_id}/{set_ids}[/{angle}][/list|/play/uuid]
   // Strip leading slashes to avoid creating protocol-relative URLs (//kilter/... → kilter as host)
   const cleanPath = boardPath.replace(/^\/+/, '');
@@ -77,5 +79,12 @@ export default async function JoinPage({ params }: JoinPageProps) {
   // Ensure the path ends with a view segment (/list) for a good user experience
   const redirectPath = ensureViewSegment(cleanPath);
 
-  redirect(`/${redirectPath}?session=${validatedSessionId}`);
+  const cookieStore = await cookies();
+  cookieStore.set(CLIMB_SESSION_COOKIE, validatedSessionId, {
+    path: '/',
+    sameSite: 'lax',
+    maxAge: 86400,
+  });
+
+  redirect(`/${redirectPath}`);
 }

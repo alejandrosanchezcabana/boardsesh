@@ -262,8 +262,6 @@ export const GraphQLQueueProvider = ({ parsedParams, boardDetails, children, bas
         dispatch({ type: 'SET_CLIMB_SEARCH_PARAMS', payload: params });
         if (!isOffBoardMode) {
           const urlParams = searchParamsToUrlParams(params);
-          const currentSession = searchParams.get('session');
-          if (currentSession) urlParams.set('session', currentSession);
           const queryString = urlParams.toString();
           const newUrl = queryString ? `${pathname}?${queryString}` : pathname;
           // Use history.replaceState instead of router.replace to update the URL

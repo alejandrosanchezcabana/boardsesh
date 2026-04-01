@@ -1,10 +1,11 @@
 'use client';
 
 import React, { useEffect, useMemo } from 'react';
-import { useSearchParams, usePathname } from 'next/navigation';
+import { usePathname } from 'next/navigation';
 import { usePersistentSession } from './persistent-session-context';
 import { BoardDetails, ParsedBoardRouteParameters } from '@/app/lib/types';
 import { getBaseBoardPath } from '@/app/lib/url-utils';
+import { getClimbSessionCookie } from '@/app/lib/climb-session-cookie';
 
 interface BoardSessionBridgeProps {
   boardDetails: BoardDetails;
@@ -21,9 +22,8 @@ const BoardSessionBridge: React.FC<BoardSessionBridgeProps> = ({
   parsedParams,
   children,
 }) => {
-  const searchParams = useSearchParams();
   const pathname = usePathname();
-  const sessionIdFromUrl = searchParams.get('session');
+  const sessionIdFromCookie = getClimbSessionCookie();
 
   const { activeSession, activateSession } = usePersistentSession();
 
@@ -44,18 +44,18 @@ const BoardSessionBridge: React.FC<BoardSessionBridgeProps> = ({
   // 2. Updates when board configuration changes (e.g., angle change) while session remains active
   // Note: Navigation within the same board (e.g., swiping between climbs) should NOT trigger reconnection
   useEffect(() => {
-    if (sessionIdFromUrl && boardDetailsRef.current) {
+    if (sessionIdFromCookie && boardDetailsRef.current) {
       // Activate session when URL has session param and either:
       // - Session ID changed
       // - Board configuration path changed (e.g., navigating to different board/layout/size/sets)
       // Note: We compare baseBoardPaths to ignore changes to angle, /play/[uuid], /list segments
       // This ensures session continuity when navigating between climbs or changing angles
       const activeSessionBasePath = activeSession?.boardPath ? getBaseBoardPath(activeSession.boardPath) : '';
-      if (activeSession?.sessionId !== sessionIdFromUrl || activeSessionBasePath !== baseBoardPath) {
+      if (activeSession?.sessionId !== sessionIdFromCookie || activeSessionBasePath !== baseBoardPath) {
         // Store the full pathname (including angle and view segment like /list)
         // This allows the /join redirect to send users to the exact page with angle
         activateSession({
-          sessionId: sessionIdFromUrl,
+          sessionId: sessionIdFromCookie,
           boardPath: pathname,
           boardDetails: boardDetailsRef.current,
           parsedParams: parsedParamsRef.current,
@@ -65,7 +65,7 @@ const BoardSessionBridge: React.FC<BoardSessionBridgeProps> = ({
     // Don't deactivate when URL param is missing - only explicit endSession() should disconnect
     // The session connection persists even if URL param is temporarily removed
   }, [
-    sessionIdFromUrl,
+    sessionIdFromCookie,
     baseBoardPath,
     pathname,
     // boardDetails and parsedParams removed - accessed via refs to prevent unnecessary reconnections
