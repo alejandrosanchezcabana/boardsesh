@@ -18,36 +18,32 @@ export const climbFieldResolvers = {
    * Uses Redis caching for anonymous queries and in-memory caching to avoid duplicate queries
    */
   climbs: async (parent: ClimbSearchContext): Promise<Climb[]> => {
-    // Return cached result if already fetched (e.g., if hasMore was requested first)
     if (parent._cachedClimbs !== undefined) {
       return parent._cachedClimbs;
     }
 
-    // Try Redis cache for anonymous queries
-    if (parent._isCacheable) {
-      const cacheKey = searchCache.buildCacheKey(parent.params, parent.searchParams, 'climbs');
-      const cached = await searchCache.getCachedResult<CachedClimbsResult>(cacheKey);
-      if (cached) {
-        parent._cachedClimbs = cached.climbs;
-        parent._cachedHasMore = cached.hasMore;
-        return cached.climbs;
-      }
-
-      // Cache miss — query DB and store result
+    // User-specific queries bypass Redis cache entirely
+    if (!parent._isCacheable) {
       const result = await searchClimbsQuery(parent.params, parent.searchParams, parent.userId);
       parent._cachedClimbs = result.climbs;
       parent._cachedHasMore = result.hasMore;
-
-      searchCache.setCachedResult(cacheKey, { climbs: result.climbs, hasMore: result.hasMore }, DEFAULT_SEARCH_CACHE_TTL);
       return result.climbs;
     }
 
-    const result = await searchClimbsQuery(parent.params, parent.searchParams, parent.userId);
+    const cacheKey = searchCache.buildCacheKey(parent.params, parent.searchParams, 'climbs');
+    const cached = await searchCache.getCachedResult<CachedClimbsResult>(cacheKey);
+    if (cached) {
+      parent._cachedClimbs = cached.climbs;
+      parent._cachedHasMore = cached.hasMore;
+      return cached.climbs;
+    }
 
-    // Cache results for other field resolvers
+    // Cache miss — query DB and store in Redis
+    const result = await searchClimbsQuery(parent.params, parent.searchParams, parent.userId);
     parent._cachedClimbs = result.climbs;
     parent._cachedHasMore = result.hasMore;
 
+    searchCache.setCachedResult(cacheKey, { climbs: result.climbs, hasMore: result.hasMore }, DEFAULT_SEARCH_CACHE_TTL);
     return result.climbs;
   },
 
@@ -56,32 +52,27 @@ export const climbFieldResolvers = {
    * Uses Redis caching for anonymous queries
    */
   totalCount: async (parent: ClimbSearchContext): Promise<number> => {
-    // Return cached result if already fetched
     if (parent._cachedTotalCount !== undefined) {
       return parent._cachedTotalCount;
     }
 
-    // Try Redis cache for anonymous queries
-    if (parent._isCacheable) {
-      const cacheKey = searchCache.buildCacheKey(parent.params, parent.searchParams, 'count');
-      const cached = await searchCache.getCachedResult<number>(cacheKey);
-      if (cached !== null) {
-        parent._cachedTotalCount = cached;
-        return cached;
-      }
-
+    if (!parent._isCacheable) {
       const count = await countClimbs(parent.params, parent.searchParams, parent.sizeEdges, parent.userId);
       parent._cachedTotalCount = count;
-
-      searchCache.setCachedResult(cacheKey, count, DEFAULT_SEARCH_CACHE_TTL);
       return count;
     }
 
-    const count = await countClimbs(parent.params, parent.searchParams, parent.sizeEdges, parent.userId);
+    const cacheKey = searchCache.buildCacheKey(parent.params, parent.searchParams, 'count');
+    const cached = await searchCache.getCachedResult<number>(cacheKey);
+    if (cached !== null) {
+      parent._cachedTotalCount = cached;
+      return cached;
+    }
 
-    // Cache result
+    const count = await countClimbs(parent.params, parent.searchParams, parent.sizeEdges, parent.userId);
     parent._cachedTotalCount = count;
 
+    searchCache.setCachedResult(cacheKey, count, DEFAULT_SEARCH_CACHE_TTL);
     return count;
   },
 
