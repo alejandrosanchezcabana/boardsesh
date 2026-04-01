@@ -40,21 +40,28 @@ export function getFilterKey(filters: Partial<SearchRequestPagination>): string 
   return JSON.stringify(rest, Object.keys(rest).sort());
 }
 
-export async function getRecentSearches(): Promise<RecentSearch[]> {
+function getBoardStoreKey(boardName?: string): string {
+  return boardName ? `${STORE_KEY}_${boardName}` : STORE_KEY;
+}
+
+export async function getRecentSearches(boardName?: string): Promise<RecentSearch[]> {
   if (typeof window === 'undefined') return [];
   try {
     const db = await initDB();
     if (!db) return [];
-    const data = await db.get(STORE_NAME, STORE_KEY);
+    const storeKey = getBoardStoreKey(boardName);
+    const data = await db.get(STORE_NAME, storeKey);
     if (data) return data as RecentSearch[];
 
-    // Attempt one-time migration from localStorage
-    const legacy = localStorage.getItem(LEGACY_STORAGE_KEY);
-    if (legacy) {
-      const parsed = JSON.parse(legacy) as RecentSearch[];
-      await db.put(STORE_NAME, parsed, STORE_KEY);
-      localStorage.removeItem(LEGACY_STORAGE_KEY);
-      return parsed;
+    // Attempt one-time migration from localStorage (only for legacy global key)
+    if (!boardName) {
+      const legacy = localStorage.getItem(LEGACY_STORAGE_KEY);
+      if (legacy) {
+        const parsed = JSON.parse(legacy) as RecentSearch[];
+        await db.put(STORE_NAME, parsed, storeKey);
+        localStorage.removeItem(LEGACY_STORAGE_KEY);
+        return parsed;
+      }
     }
 
     return [];
@@ -64,10 +71,10 @@ export async function getRecentSearches(): Promise<RecentSearch[]> {
   }
 }
 
-export async function addRecentSearch(label: string, filters: Partial<SearchRequestPagination>): Promise<void> {
+export async function addRecentSearch(label: string, filters: Partial<SearchRequestPagination>, boardName?: string): Promise<void> {
   if (typeof window === 'undefined') return;
   try {
-    const existing = await getRecentSearches();
+    const existing = await getRecentSearches(boardName);
     const filterKey = getFilterKey(filters);
 
     // Remove duplicate if exists
@@ -84,7 +91,7 @@ export async function addRecentSearch(label: string, filters: Partial<SearchRequ
     const updated = [newEntry, ...deduplicated].slice(0, MAX_ITEMS);
     const db = await initDB();
     if (!db) return;
-    await db.put(STORE_NAME, updated, STORE_KEY);
+    await db.put(STORE_NAME, updated, getBoardStoreKey(boardName));
     window.dispatchEvent(new CustomEvent(RECENT_SEARCHES_CHANGED_EVENT));
   } catch (error) {
     console.error('Failed to add recent search:', error);

@@ -165,7 +165,7 @@ export default function BoardSeshHeader({ boardDetails, angle, isAngleAdjustable
         onClose={() => {
           if (hasActiveFilters(uiSearchParams)) {
             const label = getSearchPillSummary(uiSearchParams);
-            addRecentSearch(label, uiSearchParams).catch(() => {});
+            addRecentSearch(label, uiSearchParams, boardDetails.board_name).catch(() => {});
           }
           setSearchDropdownOpen(false);
         }}
@@ -191,7 +191,7 @@ export default function BoardSeshHeader({ boardDetails, angle, isAngleAdjustable
                 onClick={() => {
                   if (currentFiltersActive) {
                     const label = getSearchPillSummary(uiSearchParams);
-                    addRecentSearch(label, uiSearchParams).catch(() => {});
+                    addRecentSearch(label, uiSearchParams, boardDetails.board_name).catch(() => {});
                   }
                   setSearchDropdownOpen(false);
                 }}
