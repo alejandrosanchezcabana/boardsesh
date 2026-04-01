@@ -12,8 +12,8 @@ import { DatePicker as MuiDatePicker } from '@mui/x-date-pickers/DatePicker';
 import { EmptyState } from '@/app/components/ui/empty-state';
 import BoardImportPrompt from '@/app/components/settings/board-import-prompt';
 import dayjs from 'dayjs';
-import { CssBarChart, GroupedBarChart } from '@/app/components/charts/css-bar-chart';
-import type { CssBarChartBar, GroupedBar } from '@/app/components/charts/css-bar-chart';
+import { CssBarChart } from '@/app/components/charts/css-bar-chart';
+import type { CssBarChartBar } from '@/app/components/charts/css-bar-chart';
 import {
   type TimeframeType,
   type LogbookEntry,
@@ -34,7 +34,6 @@ interface BoardStatsSectionProps {
   loadingStats: boolean;
   filteredLogbook: LogbookEntry[];
   weeklyBars: CssBarChartBar[] | null;
-  flashRedpointBars: GroupedBar[] | null;
   isOwnProfile: boolean;
   weeklyFromDate: string;
   onWeeklyFromDateChange: (date: string) => void;
@@ -54,7 +53,6 @@ export default function BoardStatsSection({
   loadingStats,
   filteredLogbook,
   weeklyBars,
-  flashRedpointBars,
   isOwnProfile,
   weeklyFromDate,
   onWeeklyFromDateChange,
@@ -148,15 +146,6 @@ export default function BoardStatsSection({
             </div>
           )}
 
-          {/* Flash vs Redpoint */}
-          {flashRedpointBars && (
-            <div className={styles.boardChartSection}>
-              <Typography variant="body2" component="span" fontWeight={600} className={styles.boardChartTitle}>
-                Flash vs Redpoint
-              </Typography>
-              <GroupedBarChart bars={flashRedpointBars} height={140} mobileHeight={100} gap={2} ariaLabel="Flash vs redpoint by grade" />
-            </div>
-          )}
         </div>
       )}
     </CardContent></MuiCard>

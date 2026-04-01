@@ -42,7 +42,6 @@ const defaultProps = {
   loadingStats: false,
   filteredLogbook: [],
   weeklyBars: null,
-  flashRedpointBars: null,
   isOwnProfile: false,
   weeklyFromDate: '',
   onWeeklyFromDateChange: vi.fn(),

@@ -38,7 +38,7 @@ export default function ProfilePageContent({ userId }: { userId: string }) {
     toDate,
     setToDate,
     weeklyBars,
-    flashRedpointBars,
+    aggregatedFlashRedpointBars,
     weeklyFromDate,
     setWeeklyFromDate,
     weeklyToDate,
@@ -103,6 +103,7 @@ export default function ProfilePageContent({ userId }: { userId: string }) {
             onAggregatedTimeframeChange={setAggregatedTimeframe}
             loadingAggregated={loadingAggregated}
             aggregatedStackedBars={aggregatedStackedBars}
+            aggregatedFlashRedpointBars={aggregatedFlashRedpointBars}
           />
         )}
 
@@ -118,7 +119,6 @@ export default function ProfilePageContent({ userId }: { userId: string }) {
           loadingStats={loadingStats}
           filteredLogbook={filteredLogbook}
           weeklyBars={weeklyBars}
-          flashRedpointBars={flashRedpointBars}
           isOwnProfile={isOwnProfile}
           weeklyFromDate={weeklyFromDate}
           onWeeklyFromDateChange={setWeeklyFromDate}

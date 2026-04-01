@@ -23,7 +23,7 @@ import {
   filterLogbookByTimeframe,
   buildAggregatedStackedBars,
   buildWeeklyBars,
-  buildFlashRedpointBars,
+  buildAggregatedFlashRedpointBars,
   buildStatisticsSummary,
 } from '../utils/chart-data-builders';
 
@@ -170,9 +170,9 @@ export function useProfileData(userId: string) {
     [filteredLogbook, weeklyFromDate, weeklyToDate],
   );
 
-  const flashRedpointBars = useMemo(
-    () => buildFlashRedpointBars(filteredLogbook),
-    [filteredLogbook],
+  const aggregatedFlashRedpointBars = useMemo(
+    () => buildAggregatedFlashRedpointBars(allBoardsTicks, aggregatedTimeframe),
+    [allBoardsTicks, aggregatedTimeframe],
   );
 
   const statisticsSummary = useMemo(
@@ -204,7 +204,6 @@ export function useProfileData(userId: string) {
     toDate,
     setToDate,
     weeklyBars,
-    flashRedpointBars,
     weeklyFromDate,
     setWeeklyFromDate,
     weeklyToDate,
@@ -215,6 +214,7 @@ export function useProfileData(userId: string) {
     setAggregatedTimeframe,
     loadingAggregated,
     aggregatedStackedBars,
+    aggregatedFlashRedpointBars,
 
     // Profile stats summary
     loadingProfileStats,

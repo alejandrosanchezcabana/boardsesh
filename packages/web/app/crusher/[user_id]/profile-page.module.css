@@ -206,6 +206,12 @@
   flex-shrink: 0;
 }
 
+.flashRedpointSection {
+  border-top: 1px solid var(--neutral-200);
+  padding-top: 16px; /* spacing.4 */
+  margin-top: 16px; /* spacing.4 */
+}
+
 .stackedChartLegend {
   display: flex;
   flex-wrap: wrap;

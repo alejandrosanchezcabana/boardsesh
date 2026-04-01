@@ -257,6 +257,38 @@ export function buildFlashRedpointBars(filteredLogbook: LogbookEntry[]): Grouped
   }));
 }
 
+// ── Aggregated flash vs redpoint (all boards) ─────────────────────────
+
+export function buildAggregatedFlashRedpointBars(
+  allBoardsTicks: Record<string, LogbookEntry[]>,
+  aggregatedTimeframe: AggregatedTimeframeType,
+): GroupedBar[] | null {
+  const now = dayjs();
+
+  const filterByTimeframe = (entry: LogbookEntry) => {
+    const climbedAt = dayjs(entry.climbed_at);
+    switch (aggregatedTimeframe) {
+      case 'today':
+        return climbedAt.isSame(now, 'day');
+      case 'lastWeek':
+        return climbedAt.isAfter(now.subtract(1, 'week'));
+      case 'lastMonth':
+        return climbedAt.isAfter(now.subtract(1, 'month'));
+      case 'lastYear':
+        return climbedAt.isAfter(now.subtract(1, 'year'));
+      case 'all':
+      default:
+        return true;
+    }
+  };
+
+  const allEntries = BOARD_TYPES.flatMap((boardType) =>
+    (allBoardsTicks[boardType] || []).filter(filterByTimeframe),
+  );
+
+  return buildFlashRedpointBars(allEntries);
+}
+
 // ── Statistics summary (layout percentages) ─────────────────────────
 
 export interface LayoutPercentage {

@@ -14,8 +14,8 @@ import { PersonOutlined, Instagram } from '@mui/icons-material';
 import FollowButton from '@/app/components/ui/follow-button';
 import FollowerCount from '@/app/components/social/follower-count';
 import { FOLLOW_USER, UNFOLLOW_USER } from '@/app/lib/graphql/operations';
-import { CssBarChart } from '@/app/components/charts/css-bar-chart';
-import type { CssBarChartBar, BarSegment } from '@/app/components/charts/css-bar-chart';
+import { CssBarChart, GroupedBarChart } from '@/app/components/charts/css-bar-chart';
+import type { CssBarChartBar, BarSegment, GroupedBar } from '@/app/components/charts/css-bar-chart';
 import { EmptyState } from '@/app/components/ui/empty-state';
 import type { UserProfile } from '../utils/profile-constants';
 import { type AggregatedTimeframeType, aggregatedTimeframeOptions } from '../utils/profile-constants';
@@ -36,6 +36,7 @@ interface ProfileHeaderProps {
   onAggregatedTimeframeChange: (value: AggregatedTimeframeType) => void;
   loadingAggregated: boolean;
   aggregatedStackedBars: { bars: CssBarChartBar[]; legendEntries: LayoutLegendEntry[] } | null;
+  aggregatedFlashRedpointBars: GroupedBar[] | null;
 }
 
 export default function ProfileHeader({
@@ -49,6 +50,7 @@ export default function ProfileHeader({
   onAggregatedTimeframeChange,
   loadingAggregated,
   aggregatedStackedBars,
+  aggregatedFlashRedpointBars,
 }: ProfileHeaderProps) {
   const displayName = profile.profile?.displayName || profile.name || 'Crusher';
   const avatarUrl = profile.profile?.avatarUrl || profile.image;
@@ -251,6 +253,22 @@ export default function ProfileHeader({
               <EmptyState description="No ascent data for this period" />
             )}
           </div>
+
+          {/* Flash vs Redpoint */}
+          {aggregatedFlashRedpointBars && !loadingAggregated && (
+            <div className={styles.flashRedpointSection}>
+              <Typography variant="body2" component="span" fontWeight={600} className={styles.gradeDistributionTitle}>
+                Flash vs Redpoint
+              </Typography>
+              <GroupedBarChart
+                bars={aggregatedFlashRedpointBars}
+                height={140}
+                mobileHeight={100}
+                gap={2}
+                ariaLabel="Flash vs redpoint by grade"
+              />
+            </div>
+          )}
         </CardContent></MuiCard>
       )}
     </>
