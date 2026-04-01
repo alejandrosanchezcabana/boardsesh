@@ -4,35 +4,56 @@ import { SUPPORTED_BOARDS } from '@/app/lib/board-data';
 const USER_SPECIFIC_PARAMS = ['hideAttempted', 'hideCompleted', 'showOnlyAttempted', 'showOnlyCompleted', 'onlyDrafts'];
 
 /**
- * Returns the appropriate Cache-Control header value for a list page request,
- * or null if the request is not a list page.
+ * Checks whether a request is a cacheable list page and returns the CDN cache
+ * duration in seconds, or null if the request should not be CDN-cached.
+ *
+ * User-specific params (hideAttempted, etc.) only prevent caching when the
+ * request has an authenticated session — matching the GraphQL resolver logic
+ * where userId is only resolved when user-specific filters are active.
+ * Without a session these params have no effect on query results.
+ *
+ * Matches both URL formats:
+ *   - /[board]/[layout]/[size]/[sets]/[angle]/list  (legacy numeric)
+ *   - /b/[board_slug]/[angle]/list                  (new slug format)
  */
-export function getListPageCacheControl(pathname: string, searchParams: URLSearchParams): string | null {
+export function getListPageCacheTTL(pathname: string, searchParams: URLSearchParams, hasSession: boolean): number | null {
   // Fast-path: skip parsing for routes that clearly aren't list pages
   if (!pathname.endsWith('/list')) {
     return null;
   }
 
   const pathParts = pathname.split('/').filter(Boolean);
+  const lastPart = pathParts[pathParts.length - 1];
 
-  // Must end with /list and have at least 6 segments: board/layout/size/sets/angle/list
-  if (pathParts.length < 6 || pathParts[pathParts.length - 1] !== 'list') {
+  if (lastPart !== 'list') {
     return null;
   }
 
-  // First segment must be a supported board
-  if (!(SUPPORTED_BOARDS as readonly string[]).includes(pathParts[0].toLowerCase())) {
+  const isLegacyFormat =
+    pathParts.length >= 6 &&
+    (SUPPORTED_BOARDS as readonly string[]).includes(pathParts[0].toLowerCase());
+
+  const isSlugFormat =
+    pathParts.length >= 4 &&
+    pathParts[0] === 'b';
+
+  if (!isLegacyFormat && !isSlugFormat) {
     return null;
   }
 
-  const hasUserSpecificParams = USER_SPECIFIC_PARAMS.some((param) => {
-    const value = searchParams.get(param);
-    return value === 'true' || value === '1';
-  });
+  // User-specific params only matter when there's an authenticated session.
+  // Without a session, these params have no effect on query results (the DB
+  // query ignores them without a userId), so the response is still cacheable.
+  if (hasSession) {
+    const hasUserSpecificParams = USER_SPECIFIC_PARAMS.some((param) => {
+      const value = searchParams.get(param);
+      return value === 'true' || value === '1';
+    });
 
-  if (hasUserSpecificParams) {
-    return 'private, no-store';
+    if (hasUserSpecificParams) {
+      return null;
+    }
   }
 
-  return 'public, s-maxage=86400, stale-while-revalidate=604800';
+  return 86400; // 24 hours
 }
