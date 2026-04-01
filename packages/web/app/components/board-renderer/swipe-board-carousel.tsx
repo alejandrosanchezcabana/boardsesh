@@ -3,6 +3,7 @@
 import React, { useEffect, useMemo, useRef } from 'react';
 import BoardRenderer from './board-renderer';
 import BoardImageLayers from './board-image-layers';
+import BoardCanvasRenderer from './board-canvas-renderer';
 import {
   useCardSwipeNavigation,
   EXIT_DURATION,
@@ -11,6 +12,7 @@ import {
 } from '@/app/hooks/use-card-swipe-navigation';
 import type { BoardDetails } from '@/app/lib/types';
 import { useFeatureFlag } from '@/app/components/providers/feature-flags-provider';
+import { useCanvasRendererReady } from '@/app/lib/board-render-worker/worker-manager';
 import { convertLitUpHoldsStringToMap } from './util';
 import styles from './swipe-board-carousel.module.css';
 
@@ -28,11 +30,8 @@ export interface SwipeBoardCarouselProps {
   onSwipePrevious: () => void;
   canSwipeNext: boolean;
   canSwipePrevious: boolean;
-  /** CSS class for the outer swipe container (must provide overflow:hidden, position:relative) */
   className?: string;
-  /** CSS class for the inner board wrapper that translates during swipe */
   boardContainerClassName?: string;
-  /** When true, skip aspect-ratio and let the container fill its parent (parent controls sizing via flex). */
   fillContainer?: boolean;
 }
 
@@ -61,7 +60,6 @@ const SwipeBoardCarousel: React.FC<SwipeBoardCarouselProps> = ({
       delayNavigation: true,
     });
 
-  // Clear enterDirection after enter transition completes
   useEffect(() => {
     if (enterDirection) {
       enterFallbackRef.current = setTimeout(() => {
@@ -83,7 +81,6 @@ const SwipeBoardCarousel: React.FC<SwipeBoardCarouselProps> = ({
     return 'none';
   };
 
-  // Peek: determine which climb to preview during swipe
   const showPeek = swipeOffset !== 0 || isAnimating;
   const peekIsNext = animationDirection === 'left' || (animationDirection === null && swipeOffset < 0);
   const peekClimb = peekIsNext ? nextClimb : previousClimb;
@@ -96,18 +93,36 @@ const SwipeBoardCarousel: React.FC<SwipeBoardCarouselProps> = ({
 
   const transition = getSwipeTransition();
   const isRustRendererEnabled = useFeatureFlag('rust-svg-rendering');
+  const isWasmRendererEnabled = useFeatureFlag('wasm-rendering');
+  const canvasReady = useCanvasRendererReady(!!isWasmRendererEnabled);
+  const useRustRenderer = !!isRustRendererEnabled || !!isWasmRendererEnabled;
 
   const currentLitUpHoldsMap = useMemo(
-    () => isRustRendererEnabled ? undefined : convertLitUpHoldsStringToMap(currentClimb.frames, boardDetails.board_name)[0],
-    [currentClimb.frames, boardDetails.board_name, isRustRendererEnabled],
+    () => useRustRenderer
+      ? undefined
+      : convertLitUpHoldsStringToMap(currentClimb.frames, boardDetails.board_name)[0],
+    [currentClimb.frames, boardDetails.board_name, useRustRenderer],
   );
   const peekLitUpHoldsMap = useMemo(
-    () => isRustRendererEnabled || !peekClimb ? undefined : convertLitUpHoldsStringToMap(peekClimb.frames, boardDetails.board_name)[0],
-    [peekClimb, boardDetails.board_name, isRustRendererEnabled],
+    () => useRustRenderer || !peekClimb
+      ? undefined
+      : convertLitUpHoldsStringToMap(peekClimb.frames, boardDetails.board_name)[0],
+    [peekClimb, boardDetails.board_name, useRustRenderer],
   );
 
   const renderBoard = (climb: ClimbBoardData, litUpHoldsMap: ReturnType<typeof convertLitUpHoldsStringToMap>[0] | undefined) => {
-    if (isRustRendererEnabled) {
+    if (canvasReady) {
+      return (
+        <BoardCanvasRenderer
+          boardDetails={boardDetails}
+          frames={climb.frames}
+          mirrored={!!climb.mirrored}
+          contain
+          style={{ width: '100%', height: '100%' }}
+        />
+      );
+    }
+    if (useRustRenderer) {
       return (
         <BoardImageLayers
           boardDetails={boardDetails}

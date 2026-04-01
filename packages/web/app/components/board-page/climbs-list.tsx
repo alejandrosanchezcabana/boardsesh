@@ -74,6 +74,8 @@ const ClimbsList = ({
   showBottomSpacer,
 }: ClimbsListProps) => {
   const isRustRendererEnabled = useFeatureFlag('rust-svg-rendering');
+  const isWasmRendererEnabled = useFeatureFlag('wasm-rendering');
+  const useRustRenderer = !!isRustRendererEnabled || !!isWasmRendererEnabled;
 
   // Progressive rendering for grid mode only (list mode uses the virtualizer).
   // Show first batch immediately, rest after a frame. Only batch when the list
@@ -125,7 +127,7 @@ const ClimbsList = ({
   );
 
   const [viewMode, setViewMode] = useState<ViewMode>('list');
-  const useVirtualization = viewMode === 'list' && !isRustRendererEnabled;
+  const useVirtualization = viewMode === 'list' && !useRustRenderer;
 
   // Track batch render timing after DOM commit
   useEffect(() => {
@@ -136,12 +138,12 @@ const ClimbsList = ({
     batchStartRef.current = null;
     trackListBatchRender(performance.now() - batch.time, {
       viewMode,
-      renderer: isRustRendererEnabled ? 'rust-wasm' : 'svg',
+      renderer: useRustRenderer ? 'rust-wasm' : 'svg',
       batchSize: climbs.length - batch.prevLength,
       totalItems: climbs.length,
       isInitial: batch.isInitial,
     });
-  }, [climbs.length, visibleCount, viewMode, isRustRendererEnabled]);
+  }, [climbs.length, visibleCount, viewMode, useRustRenderer]);
 
   const onClimbSelectRef = useRef(onClimbSelect);
   onClimbSelectRef.current = onClimbSelect;

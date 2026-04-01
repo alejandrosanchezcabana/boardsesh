@@ -28,8 +28,22 @@ export const rustSvgRendering = flag({
     : { decide: () => false as boolean }),
 });
 
+export const wasmRendering = flag({
+  key: 'wasm-rendering',
+  defaultValue: false,
+  description: 'Use Web Worker + WASM renderer with OffscreenCanvas for board overlays',
+  identify,
+  options: [
+    { value: true, label: 'Enabled' },
+    { value: false, label: 'Disabled' },
+  ],
+  ...(adapter
+    ? { adapter }
+    : { decide: () => false as boolean }),
+});
+
 // Add new flags above this line, then add them to allFlags below.
-export const allFlags = [rustSvgRendering] as const;
+export const allFlags = [rustSvgRendering, wasmRendering] as const;
 
 type FlagTuple = typeof allFlags;
 export type FeatureFlags = {
