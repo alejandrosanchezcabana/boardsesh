@@ -18,7 +18,7 @@ import { isCapacitor } from '@/app/lib/ble/capacitor-utils';
 const THUMBNAIL_WIDTH = 300;
 
 // LRU cache for rendered bitmaps
-const CACHE_MAX = 50;
+const CACHE_MAX = 150;
 const bitmapCache = new Map<string, ImageBitmap>();
 
 function cacheKey(boardDetails: BoardDetails, frames: string, mirrored: boolean, thumbnail: boolean): string {
