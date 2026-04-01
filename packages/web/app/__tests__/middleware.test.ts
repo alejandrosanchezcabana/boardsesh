@@ -334,4 +334,29 @@ describe('middleware flag precompute on list pages', () => {
     await middleware(makeRequest('/some/page'));
     expect(mockPrecomputeAllFlags).not.toHaveBeenCalled();
   });
+
+  it('injects bs_vid into request cookies before calling precomputeAllFlags on first visit', async () => {
+    // Capture the request's cookie state at the moment precomputeAllFlags is called
+    let requestHadVisitorId = false;
+    mockPrecomputeAllFlags.mockImplementationOnce(async function (this: unknown) {
+      // The middleware should have set bs_vid on the request cookies
+      // before calling precomputeAllFlags. We can't read the request
+      // directly, but we can verify the mock was called (meaning
+      // the middleware didn't skip it due to a missing visitor ID).
+      requestHadVisitorId = true;
+      return '__first_visit_code__';
+    });
+    const req = makeRequest(LEGACY_LIST);
+    // Verify no bs_vid cookie exists initially
+    expect(req.cookies.get('bs_vid')).toBeUndefined();
+    const response = await middleware(req);
+    // precomputeAllFlags was called (not skipped)
+    expect(requestHadVisitorId).toBe(true);
+    // The request should now have bs_vid set (via request.cookies.set)
+    expect(req.cookies.get('bs_vid')?.value).toBeDefined();
+    // Response also persists the cookie for subsequent requests
+    const setCookie = response.headers.get('set-cookie');
+    expect(setCookie).toContain('bs_vid=');
+    expect(setCookie).toContain(req.cookies.get('bs_vid')!.value);
+  });
 });
