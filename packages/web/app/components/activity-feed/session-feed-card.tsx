@@ -92,6 +92,11 @@ export default function SessionFeedCard({ session }: SessionFeedCardProps) {
   const hardestGradeColor = getGradeColor(hardestGrade);
   const hardestGradeTextColor = getGradeTextColor(hardestGradeColor);
 
+  const gradeBars = React.useMemo(
+    () => buildSessionGradeBars(gradeDistribution),
+    [gradeDistribution],
+  );
+
   return (
     <Card
       data-testid="activity-feed-item"
@@ -253,7 +258,7 @@ export default function SessionFeedCard({ session }: SessionFeedCardProps) {
             >
               <Box sx={{ flex: 1, minWidth: 0 }}>
                 <CssBarChart
-                  bars={buildSessionGradeBars(gradeDistribution)}
+                  bars={gradeBars}
                   height={80}
                   mobileHeight={60}
                   showLegend={false}

@@ -99,6 +99,11 @@ export default function SessionOverviewPanel({
 
   const isMultiUser = uniqueParticipants.length > 1;
 
+  const gradeBars = React.useMemo(
+    () => buildSessionGradeBars(gradeDistribution),
+    [gradeDistribution],
+  );
+
   return (
     <>
       <Card>
@@ -239,7 +244,7 @@ export default function SessionOverviewPanel({
               Grade Distribution
             </Typography>
             <CssBarChart
-              bars={buildSessionGradeBars(gradeDistribution)}
+              bars={gradeBars}
               height={160}
               mobileHeight={120}
               gap={3}
