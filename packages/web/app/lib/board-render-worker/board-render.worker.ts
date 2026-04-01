@@ -50,10 +50,16 @@ async function ensureWasmInitialized(): Promise<void> {
       const origin = baseOrigin || self.location.origin;
       const glueUrl = `${origin}/wasm/board_renderer_wasm.js`;
       const wasmUrl = `${origin}/wasm/board_renderer_wasm_bg.wasm`;
-      // Dynamic import of the wasm-pack glue code
-      const wasmModule = await import(/* webpackIgnore: true */ glueUrl);
-      await wasmModule.default(wasmUrl);
-      wasmRenderOverlay = wasmModule.render_overlay;
+      try {
+        // Dynamic import of the wasm-pack glue code
+        const wasmModule = await import(/* webpackIgnore: true */ glueUrl);
+        await wasmModule.default(wasmUrl);
+        wasmRenderOverlay = wasmModule.render_overlay;
+      } catch (err) {
+        // Reset so the next render attempt can retry (e.g. after transient network error)
+        wasmInitPromise = null;
+        throw err;
+      }
     })();
   }
   await wasmInitPromise;

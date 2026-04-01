@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useCallback, useEffect, useRef, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import type { BoardDetails } from '@/app/lib/types';
 import { renderBoard } from '@/app/lib/board-render-worker/worker-manager';
 import { trackRenderComplete, trackRenderError, type RenderContext } from '@/app/lib/rendering-metrics';
@@ -32,54 +32,44 @@ const BoardCanvasRenderer = React.memo(function BoardCanvasRenderer({
   style,
 }: BoardCanvasRendererProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
-  const mountTime = useRef(performance.now());
   const hasFired = useRef(false);
   const [failed, setFailed] = useState(false);
-  const renderContext: RenderContext = thumbnail ? 'thumbnail' : contain ? 'full-board' : 'card';
-
-  // Stable reference to track metrics only once
-  const trackSuccess = useCallback(() => {
-    if (hasFired.current) return;
-    hasFired.current = true;
-    trackRenderComplete(performance.now() - mountTime.current, renderContext, 'rust-wasm');
-  }, [renderContext]);
-
-  const trackError = useCallback(() => {
-    trackRenderError(renderContext, 'rust-wasm');
-  }, [renderContext]);
 
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
 
     let cancelled = false;
+    // Capture context and time at effect start so metrics are never stale
+    const context: RenderContext = thumbnail ? 'thumbnail' : contain ? 'full-board' : 'card';
+    const startTime = performance.now();
 
     renderBoard({ boardDetails, frames, mirrored, thumbnail })
       .then((bitmap) => {
-        if (cancelled) {
-          return;
-        }
-        // Set canvas dimensions to match bitmap
+        if (cancelled) return;
         canvas.width = bitmap.width;
         canvas.height = bitmap.height;
         const ctx = canvas.getContext('2d');
         if (ctx) {
           ctx.drawImage(bitmap, 0, 0);
         }
-        trackSuccess();
+        if (!hasFired.current) {
+          hasFired.current = true;
+          trackRenderComplete(performance.now() - startTime, context, 'rust-wasm');
+        }
       })
       .catch((err) => {
         if (!cancelled) {
           console.error('Board canvas render failed:', err);
           setFailed(true);
-          trackError();
+          trackRenderError(context, 'rust-wasm');
         }
       });
 
     return () => {
       cancelled = true;
     };
-  }, [boardDetails, frames, mirrored, thumbnail, trackSuccess, trackError]);
+  }, [boardDetails, frames, mirrored, thumbnail, contain]);
 
   // Fall back to server-rendered image layers if the worker render fails
   if (failed) {
