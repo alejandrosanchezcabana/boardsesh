@@ -76,7 +76,7 @@ const BoardImageLayers = React.memo(function BoardImageLayers({
         <img key={url} src={url} alt="" style={imgStyle} />
       ))}
       {/* eslint-disable-next-line @next/next/no-img-element */}
-      <img src={overlayUrl} alt="" style={imgStyle} onLoad={handleOverlayLoad} onError={handleOverlayError} />
+      <img src={overlayUrl} alt="" loading="lazy" style={imgStyle} onLoad={handleOverlayLoad} onError={handleOverlayError} />
     </div>
   );
 });

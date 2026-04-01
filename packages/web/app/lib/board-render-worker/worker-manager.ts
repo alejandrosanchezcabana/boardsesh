@@ -184,14 +184,28 @@ export function isWorkerRenderingSupported(): boolean {
 }
 
 /**
+ * Module-level flag so that once any component instance has confirmed the
+ * canvas renderer is ready, subsequent instances (e.g. from infinite scroll)
+ * can initialise with `true` immediately — avoiding a one-frame flash of
+ * BoardImageLayers and the API request it triggers.
+ */
+let globalCanvasReady = false;
+
+/**
  * Hook that returns true once the Web Worker canvas renderer is ready (client-side only).
  * Returns false during SSR and initial hydration so the server-rendered BoardImageLayers
  * HTML matches the client. After mount, flips to true and the canvas renderer takes over.
+ *
+ * After the first mount, `globalCanvasReady` is set so that new component instances
+ * (from infinite scroll, navigation, etc.) skip the false→true transition entirely.
  */
 export function useCanvasRendererReady(featureFlagEnabled: boolean): boolean {
-  const [ready, setReady] = React.useState(false);
+  const [ready, setReady] = React.useState(
+    () => globalCanvasReady && featureFlagEnabled && isWorkerRenderingSupported(),
+  );
   React.useEffect(() => {
     if (featureFlagEnabled && isWorkerRenderingSupported()) {
+      globalCanvasReady = true;
       setReady(true);
     }
   }, [featureFlagEnabled]);

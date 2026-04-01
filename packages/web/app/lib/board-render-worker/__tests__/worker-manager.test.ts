@@ -321,6 +321,26 @@ describe('useCanvasRendererReady', () => {
     const { result } = renderHook(() => useCanvasRendererReady(true));
     expect(result.current).toBe(false);
   });
+
+  it('subsequent hook instances start with true immediately after first mount', async () => {
+    stubGlobals();
+    const { useCanvasRendererReady } = await import('../worker-manager');
+
+    // First instance — triggers the useEffect that sets globalCanvasReady
+    const { result: first } = renderHook(() => useCanvasRendererReady(true));
+    expect(first.current).toBe(true);
+
+    // Second instance — should initialise with true immediately (no false→true flash)
+    let initialValue: boolean | undefined;
+    renderHook(() => {
+      const ready = useCanvasRendererReady(true);
+      if (initialValue === undefined) {
+        initialValue = ready;
+      }
+      return ready;
+    });
+    expect(initialValue).toBe(true);
+  });
 });
 
 // ==========================================================================
