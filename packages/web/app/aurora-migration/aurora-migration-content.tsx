@@ -68,6 +68,10 @@ export default function AuroraMigrationContent() {
                     component="img"
                     src="https://cdn.climbing.com/wp-content/uploads/2026/03/Untitled-design-1-2.jpg"
                     alt="The Kilter Board App Just Disappeared Without Warning"
+                    loading="lazy"
+                    onError={(e: React.SyntheticEvent<HTMLImageElement>) => {
+                      e.currentTarget.style.display = 'none';
+                    }}
                     className={styles.articleImage}
                   />
                   <Box className={styles.articleBody}>
