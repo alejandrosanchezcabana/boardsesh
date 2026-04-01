@@ -52,6 +52,20 @@
   white-space: nowrap;
 }
 
+/* Angled x-axis labels for dense charts (e.g. weekly) */
+.legendAngled {
+  position: relative;
+  height: 28px;
+}
+
+.legendAngled .legendLabel {
+  position: relative;
+  transform: rotate(-45deg);
+  transform-origin: top center;
+  text-align: right;
+  overflow: visible;
+}
+
 /* Stacked legend (for charts with multiple segment colors) */
 .stackedLegend {
   display: flex;

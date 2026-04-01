@@ -1,5 +1,5 @@
-import { FONT_GRADE_COLORS } from '@/app/lib/grade-colors';
-import { SUPPORTED_BOARDS } from '@/app/lib/board-data';
+import { V_GRADE_COLORS } from '@/app/lib/grade-colors';
+import { SUPPORTED_BOARDS, BOULDER_GRADES } from '@/app/lib/board-data';
 
 export interface UserProfile {
   id: string;
@@ -36,32 +36,12 @@ export type AggregatedTimeframeType = 'today' | 'lastWeek' | 'lastMonth' | 'last
 
 export const BOARD_TYPES = SUPPORTED_BOARDS;
 
-export const difficultyMapping: Record<number, string> = {
-  10: '4a',
-  11: '4b',
-  12: '4c',
-  13: '5a',
-  14: '5b',
-  15: '5c',
-  16: '6a',
-  17: '6a+',
-  18: '6b',
-  19: '6b+',
-  20: '6c',
-  21: '6c+',
-  22: '7a',
-  23: '7a+',
-  24: '7b',
-  25: '7b+',
-  26: '7c',
-  27: '7c+',
-  28: '8a',
-  29: '8a+',
-  30: '8b',
-  31: '8b+',
-  32: '8c',
-  33: '8c+',
-};
+// Maps difficulty IDs to V-grades (e.g., 16 → "V3", 17 → "V3").
+// Multiple Font grades collapse into the same V-grade, which is what we want
+// for chart aggregation and display labels.
+export const difficultyMapping: Record<number, string> = Object.fromEntries(
+  BOULDER_GRADES.map((g) => [g.difficulty_id, g.v_grade]),
+);
 
 // Layout name mapping: boardType-layoutId -> display name
 const layoutNames: Record<string, string> = {
@@ -113,7 +93,9 @@ export const getLayoutColor = (boardType: string, layoutId: number | null | unde
  * and raises lightness for a cohesive, muted look.
  */
 export const getGradeChartColor = (grade: string): string => {
-  const hexColor = FONT_GRADE_COLORS[grade.toLowerCase()];
+  // Strip trailing "+" so "V5+" looks up the same color as "V5"
+  const normalized = grade.replace(/\+$/, '');
+  const hexColor = V_GRADE_COLORS[normalized];
   if (!hexColor) return 'hsla(0, 0%, 78%, 0.7)';
 
   // Convert hex to HSL for smoother control

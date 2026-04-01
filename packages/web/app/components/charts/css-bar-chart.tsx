@@ -23,6 +23,10 @@ interface CssBarChartProps {
   showLegend?: boolean;
   gap?: number;
   ariaLabel?: string;
+  /** Max number of x-axis labels to display; surplus labels are hidden. */
+  maxLabels?: number;
+  /** Render x-axis labels at a -45° angle (useful for dense charts). */
+  angledLabels?: boolean;
 }
 
 export const CssBarChart = React.memo(function CssBarChart({
@@ -32,6 +36,8 @@ export const CssBarChart = React.memo(function CssBarChart({
   showLegend = true,
   gap = 2,
   ariaLabel = 'Bar chart',
+  maxLabels,
+  angledLabels = false,
 }: CssBarChartProps) {
   const maxTotal = useMemo(
     () => Math.max(...bars.map((b) => b.segments.reduce((sum, s) => sum + s.value, 0)), 1),
@@ -88,12 +94,27 @@ export const CssBarChart = React.memo(function CssBarChart({
         })}
       </div>
       {showLegend && (
-        <div className={styles.legend} style={{ gap: `${gap}px` }} aria-hidden="true">
-          {bars.map((bar) => (
-            <span key={bar.key} className={styles.legendLabel}>
-              {bar.label}
-            </span>
-          ))}
+        <div
+          className={`${styles.legend} ${angledLabels ? styles.legendAngled : ''}`}
+          style={{ gap: `${gap}px` }}
+          aria-hidden="true"
+        >
+          {bars.map((bar, i) => {
+            // When maxLabels is set, evenly distribute visible labels
+            const visible = !maxLabels || bars.length <= maxLabels
+              || i === 0
+              || i === bars.length - 1
+              || i % Math.ceil(bars.length / maxLabels) === 0;
+            return (
+              <span
+                key={bar.key}
+                className={styles.legendLabel}
+                style={visible ? undefined : { visibility: 'hidden' }}
+              >
+                {bar.label}
+              </span>
+            );
+          })}
         </div>
       )}
     </div>

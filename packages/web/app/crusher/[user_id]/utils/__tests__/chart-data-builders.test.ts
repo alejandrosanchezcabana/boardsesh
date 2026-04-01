@@ -5,20 +5,51 @@ import isoWeek from 'dayjs/plugin/isoWeek';
 dayjs.extend(isoWeek);
 
 vi.mock('@/app/lib/grade-colors', () => ({
-  FONT_GRADE_COLORS: {
-    '4a': '#FFEB3B',
-    '5a': '#FFC107',
-    '6a': '#FF7043',
-    '6b': '#FF5722',
-    '7a': '#E53935',
-    '7b': '#C62828',
-    '8a': '#9C27B0',
+  V_GRADE_COLORS: {
+    'V0': '#FFEB3B',
+    'V1': '#FFC107',
+    'V2': '#FF9800',
+    'V3': '#FF7043',
+    'V4': '#FF5722',
+    'V5': '#F44336',
+    'V6': '#E53935',
+    'V7': '#D32F2F',
+    'V8': '#C62828',
+    'V9': '#B71C1C',
+    'V10': '#A11B4A',
+    'V11': '#9C27B0',
   },
   getGradeColorWithOpacity: (hex: string, opacity: number) => `rgba(0,0,0,${opacity})`,
 }));
 
 vi.mock('@/app/lib/board-data', () => ({
   SUPPORTED_BOARDS: ['kilter', 'tension', 'moonboard'],
+  BOULDER_GRADES: [
+    { difficulty_id: 10, font_grade: '4a', v_grade: 'V0', difficulty_name: '4a/V0' },
+    { difficulty_id: 11, font_grade: '4b', v_grade: 'V0', difficulty_name: '4b/V0' },
+    { difficulty_id: 12, font_grade: '4c', v_grade: 'V0', difficulty_name: '4c/V0' },
+    { difficulty_id: 13, font_grade: '5a', v_grade: 'V1', difficulty_name: '5a/V1' },
+    { difficulty_id: 14, font_grade: '5b', v_grade: 'V1', difficulty_name: '5b/V1' },
+    { difficulty_id: 15, font_grade: '5c', v_grade: 'V2', difficulty_name: '5c/V2' },
+    { difficulty_id: 16, font_grade: '6a', v_grade: 'V3', difficulty_name: '6a/V3' },
+    { difficulty_id: 17, font_grade: '6a+', v_grade: 'V3', difficulty_name: '6a+/V3' },
+    { difficulty_id: 18, font_grade: '6b', v_grade: 'V4', difficulty_name: '6b/V4' },
+    { difficulty_id: 19, font_grade: '6b+', v_grade: 'V4', difficulty_name: '6b+/V4' },
+    { difficulty_id: 20, font_grade: '6c', v_grade: 'V5', difficulty_name: '6c/V5' },
+    { difficulty_id: 21, font_grade: '6c+', v_grade: 'V5', difficulty_name: '6c+/V5' },
+    { difficulty_id: 22, font_grade: '7a', v_grade: 'V6', difficulty_name: '7a/V6' },
+    { difficulty_id: 23, font_grade: '7a+', v_grade: 'V7', difficulty_name: '7a+/V7' },
+    { difficulty_id: 24, font_grade: '7b', v_grade: 'V8', difficulty_name: '7b/V8' },
+    { difficulty_id: 25, font_grade: '7b+', v_grade: 'V8', difficulty_name: '7b+/V8' },
+    { difficulty_id: 26, font_grade: '7c', v_grade: 'V9', difficulty_name: '7c/V9' },
+    { difficulty_id: 27, font_grade: '7c+', v_grade: 'V10', difficulty_name: '7c+/V10' },
+    { difficulty_id: 28, font_grade: '8a', v_grade: 'V11', difficulty_name: '8a/V11' },
+    { difficulty_id: 29, font_grade: '8a+', v_grade: 'V12', difficulty_name: '8a+/V12' },
+    { difficulty_id: 30, font_grade: '8b', v_grade: 'V13', difficulty_name: '8b/V13' },
+    { difficulty_id: 31, font_grade: '8b+', v_grade: 'V14', difficulty_name: '8b+/V14' },
+    { difficulty_id: 32, font_grade: '8c', v_grade: 'V15', difficulty_name: '8c/V15' },
+    { difficulty_id: 33, font_grade: '8c+', v_grade: 'V16', difficulty_name: '8c+/V16' },
+  ],
 }));
 
 vi.mock('@/app/theme/theme-config', () => ({
@@ -40,7 +71,7 @@ import type { LogbookEntry } from '../profile-constants';
 function makeEntry(overrides: Partial<LogbookEntry> = {}): LogbookEntry {
   return {
     climbed_at: dayjs().toISOString(),
-    difficulty: 22, // '7a'
+    difficulty: 22, // V6
     tries: 1,
     angle: 40,
     ...overrides,
@@ -160,13 +191,13 @@ describe('buildAggregatedStackedBars', () => {
     };
     const result = buildAggregatedStackedBars(ticks, 'all');
     expect(result).not.toBeNull();
-    expect(result!.bars).toHaveLength(2); // 6a and 7a
+    expect(result!.bars).toHaveLength(2); // V3 and V6
 
-    const bar7a = result!.bars.find((b) => b.label === '7a');
+    const bar7a = result!.bars.find((b) => b.label === 'V6');
     expect(bar7a).toBeDefined();
-    expect(bar7a!.segments[0].value).toBe(2); // 2 distinct climbs at 7a
+    expect(bar7a!.segments[0].value).toBe(2); // 2 distinct climbs at V6
 
-    const bar6a = result!.bars.find((b) => b.label === '6a');
+    const bar6a = result!.bars.find((b) => b.label === 'V3');
     expect(bar6a).toBeDefined();
     expect(bar6a!.segments[0].value).toBe(1);
   });
@@ -180,7 +211,7 @@ describe('buildAggregatedStackedBars', () => {
     };
     const result = buildAggregatedStackedBars(ticks, 'all');
     expect(result).not.toBeNull();
-    const bar7a = result!.bars.find((b) => b.label === '7a');
+    const bar7a = result!.bars.find((b) => b.label === 'V6');
     expect(bar7a!.segments[0].value).toBe(1); // deduplicated to 1
   });
 
@@ -218,15 +249,15 @@ describe('buildAggregatedStackedBars', () => {
   it('returns bars sorted by grade order', () => {
     const ticks: Record<string, LogbookEntry[]> = {
       kilter: [
-        makeEntry({ difficulty: 22, status: 'send', climbUuid: 'c1', layoutId: 1, boardType: 'kilter' }), // 7a
-        makeEntry({ difficulty: 16, status: 'send', climbUuid: 'c2', layoutId: 1, boardType: 'kilter' }), // 6a
-        makeEntry({ difficulty: 28, status: 'send', climbUuid: 'c3', layoutId: 1, boardType: 'kilter' }), // 8a
+        makeEntry({ difficulty: 22, status: 'send', climbUuid: 'c1', layoutId: 1, boardType: 'kilter' }), // V6
+        makeEntry({ difficulty: 16, status: 'send', climbUuid: 'c2', layoutId: 1, boardType: 'kilter' }), // V3
+        makeEntry({ difficulty: 28, status: 'send', climbUuid: 'c3', layoutId: 1, boardType: 'kilter' }), // V11
       ],
     };
     const result = buildAggregatedStackedBars(ticks, 'all');
     expect(result).not.toBeNull();
     const labels = result!.bars.map((b) => b.label);
-    expect(labels).toEqual(['6a', '7a', '8a']);
+    expect(labels).toEqual(['V3', 'V6', 'V11']);
   });
 
   it('filters by timeframe', () => {
@@ -240,8 +271,8 @@ describe('buildAggregatedStackedBars', () => {
     };
     const resultWeek = buildAggregatedStackedBars(ticks, 'lastWeek');
     expect(resultWeek).not.toBeNull();
-    expect(resultWeek!.bars).toHaveLength(1); // only the recent 7a
-    expect(resultWeek!.bars[0].label).toBe('7a');
+    expect(resultWeek!.bars).toHaveLength(1); // only the recent V6
+    expect(resultWeek!.bars[0].label).toBe('V6');
   });
 
   it('ignores entries with null difficulty', () => {
@@ -253,7 +284,7 @@ describe('buildAggregatedStackedBars', () => {
     };
     const result = buildAggregatedStackedBars(ticks, 'all');
     expect(result).not.toBeNull();
-    expect(result!.bars).toHaveLength(1); // only 7a, null is ignored
+    expect(result!.bars).toHaveLength(1); // only V6, null is ignored
   });
 });
 
@@ -275,9 +306,9 @@ describe('buildWeeklyBars', () => {
     const week2Date = '2024-01-15T12:00:00Z'; // W3 2024
     const logbook = [
       // Most-recent first (assumed order)
-      makeEntry({ climbed_at: week2Date, difficulty: 22 }), // 7a W3
-      makeEntry({ climbed_at: week1Date, difficulty: 22 }), // 7a W2
-      makeEntry({ climbed_at: week1Date, difficulty: 22 }), // 7a W2
+      makeEntry({ climbed_at: week2Date, difficulty: 22 }), // V6 W3
+      makeEntry({ climbed_at: week1Date, difficulty: 22 }), // V6 W2
+      makeEntry({ climbed_at: week1Date, difficulty: 22 }), // V6 W2
     ];
     const result = buildWeeklyBars(logbook);
     expect(result).not.toBeNull();
@@ -291,26 +322,26 @@ describe('buildWeeklyBars', () => {
     expect(w2).toBeDefined();
     expect(w3).toBeDefined();
 
-    const w2GradeSegment = w2!.segments.find((s) => s.label === '7a');
-    const w3GradeSegment = w3!.segments.find((s) => s.label === '7a');
+    const w2GradeSegment = w2!.segments.find((s) => s.label === 'V6');
+    const w3GradeSegment = w3!.segments.find((s) => s.label === 'V6');
 
     expect(w2GradeSegment?.value).toBe(2);
     expect(w3GradeSegment?.value).toBe(1);
   });
 
   it('only includes grades that actually appear in the data', () => {
-    const logbook = [makeEntry({ climbed_at: '2024-01-15T12:00:00Z', difficulty: 22 })]; // only 7a
+    const logbook = [makeEntry({ climbed_at: '2024-01-15T12:00:00Z', difficulty: 22 })]; // only V6
     const result = buildWeeklyBars(logbook);
     expect(result).not.toBeNull();
     const grades = result![0].segments.map((s) => s.label);
-    expect(grades).toEqual(['7a']);
-    // Must not include grades like '6a' that have no data
-    expect(grades).not.toContain('6a');
+    expect(grades).toEqual(['V6']);
+    // Must not include grades like V3 that have no data
+    expect(grades).not.toContain('V3');
   });
 
   it('ignores entries with null difficulty', () => {
     const logbook = [
-      makeEntry({ climbed_at: '2024-01-15T12:00:00Z', difficulty: 22 }), // 7a
+      makeEntry({ climbed_at: '2024-01-15T12:00:00Z', difficulty: 22 }), // V6
       makeEntry({ climbed_at: '2024-01-15T12:00:00Z', difficulty: null }),
     ];
     const result = buildWeeklyBars(logbook);
@@ -344,9 +375,9 @@ describe('buildWeeklyBars', () => {
     // 2024-12-23 = ISO W52 of 2024, 2024-12-30 = ISO W1 of 2025
     // Adjacent weeks that cross the year boundary should be separate bars
     const logbook = [
-      makeEntry({ climbed_at: '2025-01-06T12:00:00Z', difficulty: 22 }), // 2025-W2: 7a
-      makeEntry({ climbed_at: '2024-12-30T12:00:00Z', difficulty: 16 }), // 2025-W1: 6a
-      makeEntry({ climbed_at: '2024-12-23T12:00:00Z', difficulty: 22 }), // 2024-W52: 7a
+      makeEntry({ climbed_at: '2025-01-06T12:00:00Z', difficulty: 22 }), // 2025-W2: V6
+      makeEntry({ climbed_at: '2024-12-30T12:00:00Z', difficulty: 16 }), // 2025-W1: V3
+      makeEntry({ climbed_at: '2024-12-23T12:00:00Z', difficulty: 22 }), // 2024-W52: V6
     ];
 
     const result = buildWeeklyBars(logbook);
@@ -361,8 +392,8 @@ describe('buildWeeklyBars', () => {
     const w1_2025 = result!.find((b) => b.key === '2025-W1')!;
 
     // Check they have different data
-    const w52_7a = w52_2024.segments.find((s) => s.label === '7a');
-    const w1_6a = w1_2025.segments.find((s) => s.label === '6a');
+    const w52_7a = w52_2024.segments.find((s) => s.label === 'V6');
+    const w1_6a = w1_2025.segments.find((s) => s.label === 'V3');
     expect(w52_7a?.value).toBe(1);
     expect(w1_6a?.value).toBe(1);
 
@@ -406,36 +437,36 @@ describe('buildFlashRedpointBars', () => {
 
   it('identifies a flash as tries===1 and counts occurrences', () => {
     const logbook = [
-      makeEntry({ difficulty: 22, tries: 1 }), // 7a flash
-      makeEntry({ difficulty: 22, tries: 1 }), // 7a flash
+      makeEntry({ difficulty: 22, tries: 1 }), // V6 flash
+      makeEntry({ difficulty: 22, tries: 1 }), // V6 flash
     ];
     const result = buildFlashRedpointBars(logbook);
     expect(result).not.toBeNull();
-    const bar = result!.find((b) => b.key === '7a')!;
+    const bar = result!.find((b) => b.key === 'V6')!;
     const flashSeg = bar.values.find((v) => v.label === 'Flash')!;
     expect(flashSeg.value).toBe(2);
   });
 
   it('identifies a redpoint as tries>1 and sums tries (not count)', () => {
     const logbook = [
-      makeEntry({ difficulty: 22, tries: 3 }), // 7a redpoint — 3 tries
-      makeEntry({ difficulty: 22, tries: 5 }), // 7a redpoint — 5 tries
+      makeEntry({ difficulty: 22, tries: 3 }), // V6 redpoint — 3 tries
+      makeEntry({ difficulty: 22, tries: 5 }), // V6 redpoint — 5 tries
     ];
     const result = buildFlashRedpointBars(logbook);
     expect(result).not.toBeNull();
-    const bar = result!.find((b) => b.key === '7a')!;
+    const bar = result!.find((b) => b.key === 'V6')!;
     const redpointSeg = bar.values.find((v) => v.label === 'Redpoint')!;
     expect(redpointSeg.value).toBe(8); // 3 + 5, not 2
   });
 
   it('treats flash and redpoint independently for the same grade', () => {
     const logbook = [
-      makeEntry({ difficulty: 22, tries: 1 }), // 7a flash
-      makeEntry({ difficulty: 22, tries: 4 }), // 7a redpoint — 4 tries
+      makeEntry({ difficulty: 22, tries: 1 }), // V6 flash
+      makeEntry({ difficulty: 22, tries: 4 }), // V6 redpoint — 4 tries
     ];
     const result = buildFlashRedpointBars(logbook);
     expect(result).not.toBeNull();
-    const bar = result!.find((b) => b.key === '7a')!;
+    const bar = result!.find((b) => b.key === 'V6')!;
     const flashSeg = bar.values.find((v) => v.label === 'Flash')!;
     const redpointSeg = bar.values.find((v) => v.label === 'Redpoint')!;
     expect(flashSeg.value).toBe(1);
@@ -450,7 +481,7 @@ describe('buildFlashRedpointBars', () => {
     const result = buildFlashRedpointBars(logbook);
     expect(result).not.toBeNull();
     const keys = result!.map((b) => b.key);
-    expect(keys).toEqual(['7a', '7b']); // grade order, not insertion order
+    expect(keys).toEqual(['V6', 'V8']); // grade order, not insertion order
   });
 
   it('ignores entries with null difficulty', () => {
@@ -461,7 +492,7 @@ describe('buildFlashRedpointBars', () => {
     const result = buildFlashRedpointBars(logbook);
     expect(result).not.toBeNull();
     expect(result!.length).toBe(1);
-    expect(result![0].key).toBe('7a');
+    expect(result![0].key).toBe('V6');
   });
 
   it('each bar has exactly two values: Flash and Redpoint', () => {
@@ -478,29 +509,29 @@ describe('buildFlashRedpointBars', () => {
   it('a grade with only flashes has Redpoint value of 0', () => {
     const logbook = [makeEntry({ difficulty: 22, tries: 1 })];
     const result = buildFlashRedpointBars(logbook);
-    const bar = result!.find((b) => b.key === '7a')!;
+    const bar = result!.find((b) => b.key === 'V6')!;
     expect(bar.values.find((v) => v.label === 'Redpoint')!.value).toBe(0);
   });
 
   it('a grade with only redpoints has Flash value of 0', () => {
     const logbook = [makeEntry({ difficulty: 22, tries: 3 })];
     const result = buildFlashRedpointBars(logbook);
-    const bar = result!.find((b) => b.key === '7a')!;
+    const bar = result!.find((b) => b.key === 'V6')!;
     expect(bar.values.find((v) => v.label === 'Flash')!.value).toBe(0);
   });
 
   it('handles multiple different grades correctly', () => {
     const logbook = [
-      makeEntry({ difficulty: 16, tries: 1 }), // 6a flash
-      makeEntry({ difficulty: 22, tries: 2 }), // 7a redpoint
-      makeEntry({ difficulty: 28, tries: 1 }), // 8a flash
+      makeEntry({ difficulty: 16, tries: 1 }), // V3 flash
+      makeEntry({ difficulty: 22, tries: 2 }), // V6 redpoint
+      makeEntry({ difficulty: 28, tries: 1 }), // V11 flash
     ];
     const result = buildFlashRedpointBars(logbook);
     expect(result).not.toBeNull();
     const keys = result!.map((b) => b.key);
-    expect(keys).toContain('6a');
-    expect(keys).toContain('7a');
-    expect(keys).toContain('8a');
+    expect(keys).toContain('V3');
+    expect(keys).toContain('V6');
+    expect(keys).toContain('V11');
   });
 });
 
@@ -530,7 +561,7 @@ describe('buildAggregatedFlashRedpointBars', () => {
     };
     const result = buildAggregatedFlashRedpointBars(ticks, 'all');
     expect(result).not.toBeNull();
-    expect(result).toHaveLength(1); // single grade: 7a
+    expect(result).toHaveLength(1); // single grade: V6
 
     const bar = result![0];
     const flash = bar.values.find((v) => v.label === 'Flash');
@@ -551,7 +582,7 @@ describe('buildAggregatedFlashRedpointBars', () => {
     const result = buildAggregatedFlashRedpointBars(ticks, 'lastWeek');
     expect(result).not.toBeNull();
     expect(result).toHaveLength(1);
-    expect(result![0].label).toBe('7a'); // only recent entry
+    expect(result![0].label).toBe('V6'); // only recent entry
   });
 
   it('returns null when timeframe filters out all entries', () => {
@@ -570,7 +601,7 @@ describe('buildAggregatedFlashRedpointBars', () => {
     const result = buildAggregatedFlashRedpointBars(ticks, 'all');
     expect(result).not.toBeNull();
     const labels = result!.map((b) => b.label);
-    expect(labels).toEqual(['6a', '8a']);
+    expect(labels).toEqual(['V3', 'V11']);
   });
 });
 
@@ -653,14 +684,14 @@ describe('buildStatisticsSummary', () => {
           layoutId: 1,
           distinctClimbCount: 10,
           gradeCounts: [
-            { grade: '22', count: 5 }, // maps to '7a'
-            { grade: '24', count: 3 }, // maps to '7b'
+            { grade: '22', count: 5 }, // maps to V6
+            { grade: '24', count: 3 }, // maps to V8
           ],
         },
       ],
     };
     const { layoutPercentages } = buildStatisticsSummary(profileStats);
-    expect(layoutPercentages[0].grades).toEqual({ '7a': 5, '7b': 3 });
+    expect(layoutPercentages[0].grades).toEqual({ 'V6': 5, 'V8': 3 });
   });
 
   it('ignores grade keys that are not valid numbers or not in the difficulty mapping', () => {

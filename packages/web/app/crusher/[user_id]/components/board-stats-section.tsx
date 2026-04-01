@@ -142,7 +142,7 @@ export default function BoardStatsSection({
                   label="To"
                 />
               </Stack>
-              <CssBarChart bars={weeklyBars} height={180} mobileHeight={120} gap={3} ariaLabel="Weekly attempts by difficulty" />
+              <CssBarChart bars={weeklyBars} height={180} mobileHeight={120} gap={3} ariaLabel="Weekly attempts by difficulty" angledLabels maxLabels={12} />
             </div>
           )}
 

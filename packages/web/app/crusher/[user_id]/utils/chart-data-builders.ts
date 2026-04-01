@@ -26,7 +26,8 @@ dayjs.extend(isoWeek);
 dayjs.extend(isSameOrAfter);
 dayjs.extend(isSameOrBefore);
 
-const GRADE_ORDER = Object.values(difficultyMapping);
+// Deduplicate because multiple Font grades map to the same V-grade
+const GRADE_ORDER = [...new Set(Object.values(difficultyMapping))];
 
 // ── Timeframe filtering ─────────────────────────────────────────────
 
@@ -307,7 +308,7 @@ export function buildStatisticsSummary(
         if (!isNaN(difficultyNum)) {
           const gradeName = difficultyMapping[difficultyNum];
           if (gradeName) {
-            grades[gradeName] = count;
+            grades[gradeName] = (grades[gradeName] || 0) + count;
           }
         }
       });
