@@ -91,6 +91,7 @@
   flex: 1;
   min-width: 8px;
   max-width: 48px;
+  height: 100%;
   display: flex;
   gap: 1px;
   align-items: flex-end;

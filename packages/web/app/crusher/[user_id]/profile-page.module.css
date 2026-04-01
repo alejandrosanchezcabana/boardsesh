@@ -243,22 +243,15 @@
   margin-bottom: 0;
 }
 
-.boardChartHeader {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  margin-bottom: 8px; /* spacing.2 */
-  gap: 12px;
-  flex-wrap: wrap;
-}
-
 .boardChartTitle {
+  display: block;
   font-size: 13px;
   color: var(--neutral-600);
+  margin-bottom: 8px; /* spacing.2 */
 }
 
 .weeklyDateRange {
-  flex-shrink: 0;
+  margin-bottom: 12px; /* spacing.3 */
 }
 
 @media (max-width: 768px) {

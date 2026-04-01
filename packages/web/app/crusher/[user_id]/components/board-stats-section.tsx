@@ -127,25 +127,23 @@ export default function BoardStatsSection({
           {/* Weekly Attempts */}
           {weeklyBars && (
             <div className={styles.boardChartSection}>
-              <div className={styles.boardChartHeader}>
-                <Typography variant="body2" component="span" fontWeight={600} className={styles.boardChartTitle}>
-                  Weekly Attempts
-                </Typography>
-                <Stack direction="row" spacing={1} alignItems="center" className={styles.weeklyDateRange}>
-                  <MuiDatePicker
-                    value={weeklyFromDate ? dayjs(weeklyFromDate) : null}
-                    onChange={(val) => onWeeklyFromDateChange(val ? val.format('YYYY-MM-DD') : '')}
-                    slotProps={{ textField: { size: 'small', placeholder: 'From' } }}
-                    label="From"
-                  />
-                  <MuiDatePicker
-                    value={weeklyToDate ? dayjs(weeklyToDate) : null}
-                    onChange={(val) => onWeeklyToDateChange(val ? val.format('YYYY-MM-DD') : '')}
-                    slotProps={{ textField: { size: 'small', placeholder: 'To' } }}
-                    label="To"
-                  />
-                </Stack>
-              </div>
+              <Typography variant="body2" component="span" fontWeight={600} className={styles.boardChartTitle}>
+                Weekly Attempts
+              </Typography>
+              <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1} alignItems={{ xs: 'stretch', sm: 'center' }} className={styles.weeklyDateRange}>
+                <MuiDatePicker
+                  value={weeklyFromDate ? dayjs(weeklyFromDate) : null}
+                  onChange={(val) => onWeeklyFromDateChange(val ? val.format('YYYY-MM-DD') : '')}
+                  slotProps={{ textField: { size: 'small' } }}
+                  label="From"
+                />
+                <MuiDatePicker
+                  value={weeklyToDate ? dayjs(weeklyToDate) : null}
+                  onChange={(val) => onWeeklyToDateChange(val ? val.format('YYYY-MM-DD') : '')}
+                  slotProps={{ textField: { size: 'small' } }}
+                  label="To"
+                />
+              </Stack>
               <CssBarChart bars={weeklyBars} height={180} mobileHeight={120} gap={3} ariaLabel="Weekly attempts by difficulty" />
             </div>
           )}
