@@ -23,8 +23,6 @@ export const searchClimbs = async (
     const climbs: Climb[] = result.climbs.map((row) => ({
       ...row,
       mirrored: null,
-      userAscents: null,
-      userAttempts: null,
     }));
 
     return {
