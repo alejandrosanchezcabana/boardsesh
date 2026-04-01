@@ -78,7 +78,7 @@ export const TickButton: React.FC<TickButtonProps> = ({ currentClimb, angle, boa
           },
         }}
       >
-        <IconButton id="button-tick" onClick={showDrawer}>
+        <IconButton id="button-tick" onClick={showDrawer} sx={{ opacity: themeTokens.opacity.subtle }}>
           <CheckOutlined />
         </IconButton>
       </MuiBadge>

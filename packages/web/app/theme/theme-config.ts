@@ -139,6 +139,12 @@ export const themeTokens = {
     tooltip: 1060,
   },
 
+  // Opacity
+  opacity: {
+    subtle: 0.7, // De-emphasized but still interactive elements
+    disabled: 0.5, // Disabled/unsupported state
+  },
+
   // Layout constants
   layout: {
     /** CSS height value for a spacer that prevents the bottom nav bar from covering content on mobile Safari.
