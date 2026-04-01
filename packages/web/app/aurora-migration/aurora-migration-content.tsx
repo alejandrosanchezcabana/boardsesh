@@ -52,9 +52,8 @@ export default function AuroraMigrationContent() {
                   On March 25, the Kilter board app suddenly disappeared, as Aurora
                   randomly shut down its Kilter backend. In response Kilter rushed out
                   their own app which was still in beta, but the outcome of these two
-                  entities fighting is that the customer gets left holding the bag, and
-                  everyone likely has lost their data (including playlists, logbooks and
-                  draft climbs). For more info read:
+                  entities fighting is that the customer gets left holding the bag.
+                  For more info read:
                 </Typography>
 
                 <MuiLink
