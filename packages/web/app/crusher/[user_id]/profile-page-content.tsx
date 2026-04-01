@@ -16,7 +16,6 @@ import SetterClimbList from '@/app/components/climb-list/setter-climb-list';
 import styles from './profile-page.module.css';
 import { useProfileData } from './hooks/use-profile-data';
 import ProfileHeader from './components/profile-header';
-import AggregatedCharts from './components/aggregated-charts';
 import BoardStatsSection from './components/board-stats-section';
 
 export default function ProfilePageContent({ userId }: { userId: string }) {
@@ -38,11 +37,12 @@ export default function ProfilePageContent({ userId }: { userId: string }) {
     setFromDate,
     toDate,
     setToDate,
-    boardChartData,
+    weeklyBars,
+    flashRedpointBars,
     aggregatedTimeframe,
     setAggregatedTimeframe,
     loadingAggregated,
-    chartDataAggregated,
+    aggregatedStackedBars,
     loadingProfileStats,
     statisticsSummary,
     activeTab,
@@ -95,15 +95,12 @@ export default function ProfilePageContent({ userId }: { userId: string }) {
             statisticsSummary={statisticsSummary}
             loadingProfileStats={loadingProfileStats}
             onProfileUpdate={setProfile}
+            aggregatedTimeframe={aggregatedTimeframe}
+            onAggregatedTimeframeChange={setAggregatedTimeframe}
+            loadingAggregated={loadingAggregated}
+            aggregatedStackedBars={aggregatedStackedBars}
           />
         )}
-
-        <AggregatedCharts
-          aggregatedTimeframe={aggregatedTimeframe}
-          onTimeframeChange={setAggregatedTimeframe}
-          loadingAggregated={loadingAggregated}
-          chartDataAggregated={chartDataAggregated}
-        />
 
         <BoardStatsSection
           selectedBoard={selectedBoard}
@@ -116,9 +113,8 @@ export default function ProfilePageContent({ userId }: { userId: string }) {
           onToDateChange={setToDate}
           loadingStats={loadingStats}
           filteredLogbook={filteredLogbook}
-          chartDataBar={boardChartData.chartDataBar}
-          chartDataPie={boardChartData.chartDataPie}
-          chartDataWeeklyBar={boardChartData.chartDataWeeklyBar}
+          weeklyBars={weeklyBars}
+          flashRedpointBars={flashRedpointBars}
           isOwnProfile={isOwnProfile}
         />
 

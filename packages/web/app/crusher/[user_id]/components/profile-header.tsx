@@ -7,13 +7,19 @@ import MuiCard from '@mui/material/Card';
 import CardContent from '@mui/material/CardContent';
 import Typography from '@mui/material/Typography';
 import Box from '@mui/material/Box';
+import ToggleButtonGroup from '@mui/material/ToggleButtonGroup';
+import ToggleButton from '@mui/material/ToggleButton';
+import CircularProgress from '@mui/material/CircularProgress';
 import { PersonOutlined, Instagram } from '@mui/icons-material';
 import FollowButton from '@/app/components/ui/follow-button';
 import FollowerCount from '@/app/components/social/follower-count';
 import { FOLLOW_USER, UNFOLLOW_USER } from '@/app/lib/graphql/operations';
+import { CssBarChart } from '@/app/components/charts/css-bar-chart';
+import type { CssBarChartBar } from '@/app/components/charts/css-bar-chart';
+import { EmptyState } from '@/app/components/ui/empty-state';
 import type { UserProfile } from '../utils/profile-constants';
-import type { LayoutPercentage } from '../utils/chart-data-builders';
-import { difficultyMapping, getGradeChartColor } from '../utils/profile-constants';
+import { type AggregatedTimeframeType, aggregatedTimeframeOptions } from '../utils/profile-constants';
+import type { LayoutPercentage, LayoutLegendEntry } from '../utils/chart-data-builders';
 import styles from '../profile-page.module.css';
 
 interface ProfileHeaderProps {
@@ -26,6 +32,10 @@ interface ProfileHeaderProps {
   };
   loadingProfileStats: boolean;
   onProfileUpdate: (updatedProfile: UserProfile) => void;
+  aggregatedTimeframe: AggregatedTimeframeType;
+  onAggregatedTimeframeChange: (value: AggregatedTimeframeType) => void;
+  loadingAggregated: boolean;
+  aggregatedStackedBars: { bars: CssBarChartBar[]; legendEntries: LayoutLegendEntry[] } | null;
 }
 
 export default function ProfileHeader({
@@ -35,6 +45,10 @@ export default function ProfileHeader({
   statisticsSummary,
   loadingProfileStats,
   onProfileUpdate,
+  aggregatedTimeframe,
+  onAggregatedTimeframeChange,
+  loadingAggregated,
+  aggregatedStackedBars,
 }: ProfileHeaderProps) {
   const displayName = profile.profile?.displayName || profile.name || 'Crusher';
   const avatarUrl = profile.profile?.avatarUrl || profile.image;
@@ -106,70 +120,87 @@ export default function ProfileHeader({
             </div>
           </div>
 
-          <div className={styles.percentageBarContainer}>
-            <div className={styles.percentageBar}>
-              {statisticsSummary.layoutPercentages.map((layout) => (
-                <MuiTooltip
-                  key={layout.layoutKey}
-                  title={`${layout.displayName}: ${layout.count} distinct climbs (${layout.percentage}%)`}
-                >
-                  <div
-                    className={styles.percentageSegment}
-                    style={{ width: `${layout.percentage}%`, backgroundColor: layout.color }}
+          {statisticsSummary.layoutPercentages.length > 1 && (
+            <div className={styles.percentageBarContainer}>
+              <div className={styles.percentageBar}>
+                {statisticsSummary.layoutPercentages.map((layout) => (
+                  <MuiTooltip
+                    key={layout.layoutKey}
+                    title={`${layout.displayName}: ${layout.count} distinct climbs (${layout.percentage}%)`}
                   >
-                    {layout.percentage >= 15 && (
-                      <span className={styles.percentageLabel}>
-                        {layout.displayName.split(' ').slice(-1)[0]} {layout.percentage}%
-                      </span>
-                    )}
-                  </div>
-                </MuiTooltip>
-              ))}
-            </div>
-            <div className={styles.percentageLegend}>
-              {statisticsSummary.layoutPercentages.map((layout) => (
-                <div key={layout.layoutKey} className={styles.legendItem}>
-                  <div className={styles.legendColor} style={{ backgroundColor: layout.color }} />
-                  <Typography variant="body2" component="span" className={styles.legendText}>
-                    {layout.displayName} ({layout.percentage}%)
-                  </Typography>
-                </div>
-              ))}
-            </div>
-          </div>
-
-          <div className={styles.gradeBlocksContainer}>
-            <Typography variant="body2" component="span" fontWeight={600} className={styles.gradeBlocksTitle}>
-              Grades by Board
-            </Typography>
-            {statisticsSummary.layoutPercentages.map((layout) => (
-              <div key={layout.layoutKey} className={styles.layoutGradeRow}>
-                <div className={styles.layoutGradeHeader}>
-                  <div className={styles.layoutIndicator} style={{ backgroundColor: layout.color }} />
-                  <Typography variant="body2" component="span" className={styles.layoutName}>
-                    {layout.displayName}
-                  </Typography>
-                  <Typography variant="body2" component="span" color="text.secondary" className={styles.layoutCount}>
-                    {layout.count} climbs
-                  </Typography>
-                </div>
-                <div className={styles.gradeBlocks}>
-                  {Object.entries(layout.grades)
-                    .sort((a, b) => {
-                      const gradeOrder = Object.values(difficultyMapping);
-                      return gradeOrder.indexOf(a[0]) - gradeOrder.indexOf(b[0]);
-                    })
-                    .map(([grade, count]) => (
-                      <MuiTooltip key={grade} title={`${grade}: ${count} climb${count !== 1 ? 's' : ''}`}>
-                        <div className={styles.gradeBlock} style={{ backgroundColor: getGradeChartColor(grade) }}>
-                          <span className={styles.gradeBlockLabel}>{grade}</span>
-                          <span className={styles.gradeBlockCount}>{count}</span>
-                        </div>
-                      </MuiTooltip>
-                    ))}
-                </div>
+                    <div
+                      className={styles.percentageSegment}
+                      style={{ width: `${layout.percentage}%`, backgroundColor: layout.color }}
+                    >
+                      {layout.percentage >= 15 && (
+                        <span className={styles.percentageLabel}>
+                          {layout.displayName.split(' ').slice(-1)[0]} {layout.percentage}%
+                        </span>
+                      )}
+                    </div>
+                  </MuiTooltip>
+                ))}
               </div>
-            ))}
+              <div className={styles.percentageLegend}>
+                {statisticsSummary.layoutPercentages.map((layout) => (
+                  <div key={layout.layoutKey} className={styles.legendItem}>
+                    <div className={styles.legendColor} style={{ backgroundColor: layout.color }} />
+                    <Typography variant="body2" component="span" className={styles.legendText}>
+                      {layout.displayName} ({layout.percentage}%)
+                    </Typography>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Grade Distribution Chart */}
+          <div className={styles.gradeDistributionSection}>
+            <div className={styles.gradeDistributionHeader}>
+              <Typography variant="body2" component="span" fontWeight={600} className={styles.gradeDistributionTitle}>
+                Grade Distribution
+              </Typography>
+              <ToggleButtonGroup
+                exclusive
+                size="small"
+                value={aggregatedTimeframe}
+                onChange={(_, val) => { if (val) onAggregatedTimeframeChange(val as AggregatedTimeframeType); }}
+                className={styles.gradeDistributionToggle}
+              >
+                {aggregatedTimeframeOptions.map((opt) => (
+                  <ToggleButton key={opt.value} value={opt.value}>{opt.label}</ToggleButton>
+                ))}
+              </ToggleButtonGroup>
+            </div>
+
+            {loadingAggregated ? (
+              <div className={styles.loadingStats}>
+                <CircularProgress size={24} />
+              </div>
+            ) : aggregatedStackedBars ? (
+              <>
+                <CssBarChart
+                  bars={aggregatedStackedBars.bars}
+                  height={56}
+                  mobileHeight={40}
+                  ariaLabel="Grade distribution across boards"
+                />
+                {aggregatedStackedBars.legendEntries.length > 1 && (
+                  <div className={styles.stackedChartLegend}>
+                    {aggregatedStackedBars.legendEntries.map((entry) => (
+                      <div key={entry.label} className={styles.legendItem}>
+                        <div className={styles.legendColor} style={{ backgroundColor: entry.color }} />
+                        <Typography variant="body2" component="span" className={styles.legendText}>
+                          {entry.label}
+                        </Typography>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </>
+            ) : (
+              <EmptyState description="No ascent data for this period" />
+            )}
           </div>
         </CardContent></MuiCard>
       )}

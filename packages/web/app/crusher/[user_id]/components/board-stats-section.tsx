@@ -1,7 +1,6 @@
 'use client';
 
 import React from 'react';
-import dynamic from 'next/dynamic';
 import MuiCard from '@mui/material/Card';
 import CardContent from '@mui/material/CardContent';
 import Typography from '@mui/material/Typography';
@@ -13,7 +12,8 @@ import { DatePicker as MuiDatePicker } from '@mui/x-date-pickers/DatePicker';
 import { EmptyState } from '@/app/components/ui/empty-state';
 import BoardImportPrompt from '@/app/components/settings/board-import-prompt';
 import dayjs from 'dayjs';
-import type { ChartData } from '../profile-stats-charts';
+import { CssBarChart, GroupedBarChart } from '@/app/components/charts/css-bar-chart';
+import type { CssBarChartBar, GroupedBar } from '@/app/components/charts/css-bar-chart';
 import {
   type TimeframeType,
   type LogbookEntry,
@@ -21,15 +21,6 @@ import {
   timeframeOptions,
 } from '../utils/profile-constants';
 import styles from '../profile-page.module.css';
-
-const ProfileStatsCharts = dynamic(() => import('../profile-stats-charts'), {
-  ssr: false,
-  loading: () => (
-    <div className={styles.loadingStats}>
-      <CircularProgress />
-    </div>
-  ),
-});
 
 interface BoardStatsSectionProps {
   selectedBoard: string;
@@ -42,9 +33,8 @@ interface BoardStatsSectionProps {
   onToDateChange: (date: string) => void;
   loadingStats: boolean;
   filteredLogbook: LogbookEntry[];
-  chartDataBar: ChartData | null;
-  chartDataPie: ChartData | null;
-  chartDataWeeklyBar: ChartData | null;
+  weeklyBars: CssBarChartBar[] | null;
+  flashRedpointBars: GroupedBar[] | null;
   isOwnProfile: boolean;
 }
 
@@ -59,9 +49,8 @@ export default function BoardStatsSection({
   onToDateChange,
   loadingStats,
   filteredLogbook,
-  chartDataBar,
-  chartDataPie,
-  chartDataWeeklyBar,
+  weeklyBars,
+  flashRedpointBars,
   isOwnProfile,
 }: BoardStatsSectionProps) {
   return (
@@ -98,7 +87,7 @@ export default function BoardStatsSection({
 
       {timeframe === 'custom' && (
         <div className={styles.customDateRange}>
-          <Stack direction="row" spacing={1} alignItems="center">
+          <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1} alignItems={{ xs: 'stretch', sm: 'center' }}>
             <Typography variant="body2" component="span">From:</Typography>
             <MuiDatePicker
               value={fromDate ? dayjs(fromDate) : null}
@@ -126,13 +115,26 @@ export default function BoardStatsSection({
           <EmptyState description="No climbing data for this period" />
         )
       ) : (
-        <div className={styles.chartsContainer}>
-          <ProfileStatsCharts
-            chartDataAggregated={null}
-            chartDataWeeklyBar={chartDataWeeklyBar}
-            chartDataBar={chartDataBar}
-            chartDataPie={chartDataPie}
-          />
+        <div className={styles.boardChartsContainer}>
+          {/* Weekly Attempts */}
+          {weeklyBars && (
+            <div className={styles.boardChartSection}>
+              <Typography variant="body2" component="span" fontWeight={600} className={styles.boardChartTitle}>
+                Weekly Attempts
+              </Typography>
+              <CssBarChart bars={weeklyBars} height={64} mobileHeight={48} gap={3} ariaLabel="Weekly attempts by difficulty" />
+            </div>
+          )}
+
+          {/* Flash vs Redpoint */}
+          {flashRedpointBars && (
+            <div className={styles.boardChartSection}>
+              <Typography variant="body2" component="span" fontWeight={600} className={styles.boardChartTitle}>
+                Flash vs Redpoint
+              </Typography>
+              <GroupedBarChart bars={flashRedpointBars} height={48} mobileHeight={36} gap={2} ariaLabel="Flash vs redpoint by grade" />
+            </div>
+          )}
         </div>
       )}
     </CardContent></MuiCard>

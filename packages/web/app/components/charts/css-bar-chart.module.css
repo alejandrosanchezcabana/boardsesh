@@ -1,0 +1,129 @@
+.container {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.barContainer {
+  display: flex;
+  align-items: flex-end;
+  height: var(--chart-height, 48px);
+}
+
+.barColumn {
+  flex: 1;
+  min-width: 4px;
+  max-width: 24px;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  opacity: 0.85;
+  transition: opacity 0.15s ease;
+  outline: none;
+}
+
+.barColumn:hover,
+.barColumn:focus-visible {
+  opacity: 1;
+}
+
+.barSegment {
+  width: 100%;
+  min-height: 0;
+  transition: height 0.3s ease;
+}
+
+.barSegment:first-child {
+  border-radius: 2px 2px 0 0;
+}
+
+.legend {
+  display: flex;
+}
+
+.legendLabel {
+  flex: 1;
+  min-width: 4px;
+  max-width: 24px;
+  text-align: center;
+  font-size: 9px;
+  color: var(--neutral-500);
+  line-height: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Stacked legend (for charts with multiple segment colors) */
+.stackedLegend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.stackedLegendItem {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.stackedLegendColor {
+  width: 8px;
+  height: 8px;
+  border-radius: 2px;
+  flex-shrink: 0;
+}
+
+.stackedLegendLabel {
+  font-size: 11px;
+  color: var(--neutral-500);
+}
+
+/* Side-by-side bars (flash vs redpoint) */
+.groupedBarContainer {
+  display: flex;
+  align-items: flex-end;
+  height: var(--chart-height, 48px);
+}
+
+.groupedBarColumn {
+  flex: 1;
+  min-width: 8px;
+  max-width: 48px;
+  display: flex;
+  gap: 1px;
+  align-items: flex-end;
+}
+
+.groupedBarSingle {
+  flex: 1;
+  border-radius: 2px 2px 0 0;
+  min-height: 0;
+  opacity: 0.85;
+  transition: height 0.3s ease, opacity 0.15s ease;
+  outline: none;
+}
+
+.groupedBarSingle:hover,
+.groupedBarSingle:focus-visible {
+  opacity: 1;
+}
+
+@media (max-width: 768px) {
+  .barContainer {
+    height: var(--chart-mobile-height, 36px);
+  }
+
+  .groupedBarContainer {
+    height: var(--chart-mobile-height, 36px);
+  }
+
+  .legendLabel {
+    font-size: 8px;
+  }
+
+  .stackedLegendLabel {
+    font-size: 10px;
+  }
+}
