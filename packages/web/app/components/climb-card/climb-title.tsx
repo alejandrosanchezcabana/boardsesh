@@ -7,20 +7,7 @@ import CopyrightOutlined from '@mui/icons-material/CopyrightOutlined';
 import { themeTokens } from '@/app/theme/theme-config';
 import { getSoftVGradeColor, formatVGrade } from '@/app/lib/grade-colors';
 import { useIsDarkMode } from '@/app/hooks/use-is-dark-mode';
-
-/** Format ascent count: <1000 as-is, 1000–9999 with 1 decimal + k, ≥10000 rounded + k */
-function formatAscents(count: number): string {
-  if (count < 1000) return `${count}`;
-  if (count < 10000) return `${(count / 1000).toFixed(1)}k`;
-  return `${Math.round(count / 1000)}k`;
-}
-
-/** Round quality_average to 1 decimal place */
-function formatQuality(quality: string): string {
-  const n = parseFloat(quality);
-  if (Number.isNaN(n)) return quality;
-  return n.toFixed(1);
-}
+import { formatAscents, formatQuality } from '@/app/lib/format-climb-stats';
 
 export type ClimbTitleData = {
   name?: string;
