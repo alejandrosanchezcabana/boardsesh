@@ -63,6 +63,22 @@ export const difficultyMapping: Record<number, string> = {
   33: '8c+',
 };
 
+export const angleColors = [
+  'rgba(255,77,77,0.7)',
+  'rgba(51,0,102,1)',
+  'rgba(77,128,255,0.7)',
+  'rgba(255,204,51,0.7)',
+  'rgba(204,51,153,0.7)',
+  'rgba(51,204,204,0.7)',
+  'rgba(255,230,25,0.7)',
+  'rgba(102,102,255,0.7)',
+  'rgba(51,153,255,0.7)',
+  'rgba(25,179,255,0.7)',
+  'rgba(255,255,51,0.7)',
+  'rgba(102,51,153,1)',
+  'rgba(179,255,128,0.7)',
+];
+
 // Layout name mapping: boardType-layoutId -> display name
 const layoutNames: Record<string, string> = {
   'kilter-1': 'Kilter Original',
