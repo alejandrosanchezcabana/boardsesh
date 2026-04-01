@@ -15,6 +15,8 @@ export type ClimbSearchContext = {
   _cachedClimbs?: Climb[];
   _cachedHasMore?: boolean;
   _cachedTotalCount?: number;
+  /** True when the query has no user-specific filters and results can be cached in Redis */
+  _isCacheable?: boolean;
 };
 
 /**

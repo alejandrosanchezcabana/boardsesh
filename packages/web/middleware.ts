@@ -2,6 +2,7 @@
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 import { SUPPORTED_BOARDS } from './app/lib/board-data';
+import { getListPageCacheControl } from './app/lib/list-page-cache';
 
 const SPECIAL_ROUTES = ['angles', 'grades']; // routes that don't need board validation
 
@@ -36,6 +37,13 @@ export function middleware(request: NextRequest) {
         });
       }
     }
+  }
+
+  const cacheControl = getListPageCacheControl(pathname, request.nextUrl.searchParams);
+  if (cacheControl !== null) {
+    const response = NextResponse.next();
+    response.headers.set('Cache-Control', cacheControl);
+    return response;
   }
 
   return NextResponse.next();
