@@ -139,8 +139,8 @@ const ClimbListItem: React.FC<ClimbListItemProps> = React.memo(({
   const hasParentDrawers = Boolean(onOpenActions && onOpenPlaylistSelector);
   const [isActionsOpen, setIsActionsOpen] = useState(false);
   const [isPlaylistSelectorOpen, setIsPlaylistSelectorOpen] = useState(false);
-  const [rightSwipeOffset, setRightSwipeOffset] = useState(0);
-  const [leftSwipeOffset, setLeftSwipeOffset] = useState(0);
+  // Single signed offset: positive = right swipe, negative = left swipe
+  const [swipeOffset, setSwipeOffset] = useState(0);
   const isDesktop = useMediaQuery('(min-width:768px)', { noSsr: true });
   const queueContext = useOptionalQueueContext();
   const addToQueue = queueContext?.addToQueue;
@@ -190,18 +190,7 @@ const ClimbListItem: React.FC<ClimbListItemProps> = React.memo(({
     onSwipeLeftLong: hasSwipeOverrides ? undefined : handleDefaultSwipeLeftLong,
     onSwipeRight: hasSwipeOverrides ? handleOverrideSwipeRight : handleDefaultSwipeRight,
     onSwipeRightLong: hasSwipeOverrides ? undefined : handleDefaultSwipeRightLong,
-    onSwipeOffsetChange: hasSwipeOverrides ? undefined : (offset) => {
-      if (offset > 0) {
-        setRightSwipeOffset(offset);
-        setLeftSwipeOffset(0);
-      } else if (offset < 0) {
-        setLeftSwipeOffset(Math.abs(offset));
-        setRightSwipeOffset(0);
-      } else {
-        setRightSwipeOffset(0);
-        setLeftSwipeOffset(0);
-      }
-    },
+    onSwipeOffsetChange: hasSwipeOverrides ? undefined : setSwipeOffset,
     swipeThreshold: hasSwipeOverrides ? SIMPLE_SWIPE_THRESHOLD : SHORT_RIGHT_SWIPE_THRESHOLD,
     longSwipeLeftThreshold: hasSwipeOverrides ? undefined : LONG_LEFT_SWIPE_THRESHOLD,
     longSwipeRightThreshold: hasSwipeOverrides ? undefined : LONG_RIGHT_SWIPE_THRESHOLD,
@@ -220,6 +209,10 @@ const ClimbListItem: React.FC<ClimbListItemProps> = React.memo(({
     }),
     [unsupported],
   );
+
+  // Derive directional offsets from the single signed value
+  const rightSwipeOffset = swipeOffset > 0 ? swipeOffset : 0;
+  const leftSwipeOffset = swipeOffset < 0 ? -swipeOffset : 0;
 
   const rightSwipeBaseOpacity = useMemo(
     () => Math.min(1, rightSwipeOffset / SHORT_RIGHT_SWIPE_THRESHOLD),
