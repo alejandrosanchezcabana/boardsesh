@@ -37,15 +37,10 @@ import { useCreateSession } from '@/app/hooks/use-create-session';
 import { getBaseBoardPath } from '@/app/lib/url-utils';
 import { deduplicateBy } from '@/app/utils/deduplicate';
 
-const getShareUrl = (pathname: string, sessionId: string | null, sessionBoardPath: string | undefined) => {
+const getShareUrl = (sessionId: string | null) => {
   try {
     if (!sessionId) return '';
-    const params = new URLSearchParams();
-    params.set('session', sessionId);
-    // Use the session's board path when available (e.g. when on the root page,
-    // the current pathname is "/" but the session needs the full board path)
-    const basePath = sessionBoardPath || pathname;
-    return `${window.location.origin}${basePath}?${params.toString()}`;
+    return `${window.location.origin}/join/${sessionId}`;
   } catch {
     return '';
   }
@@ -216,7 +211,7 @@ export const ShareBoardButton = () => {
   const isConnecting = !!(sessionId && !hasConnected);
   const isConnected = !!(sessionId && hasConnected);
 
-  const shareUrl = getShareUrl(pathname, sessionId, activeSession?.boardPath);
+  const shareUrl = getShareUrl(sessionId);
   // Defensive dedup: during WebSocket reconnection race conditions the server
   // may briefly report the same user twice. Deduplicating by ID keeps the UI
   // stable until the next authoritative state sync arrives.
@@ -267,9 +262,16 @@ export const ShareBoardButton = () => {
       let sessionIdToJoin = joinSessionId.trim();
       try {
         const url = new URL(sessionIdToJoin);
-        const sessionParam = url.searchParams.get('session');
-        if (sessionParam) {
-          sessionIdToJoin = sessionParam;
+        // Support /join/[sessionId] URL format
+        const joinMatch = url.pathname.match(/\/join\/([^/]+)$/);
+        if (joinMatch) {
+          sessionIdToJoin = joinMatch[1];
+        } else {
+          // Legacy: support ?session= URL format
+          const sessionParam = url.searchParams.get('session');
+          if (sessionParam) {
+            sessionIdToJoin = sessionParam;
+          }
         }
       } catch {
         // Not a URL, use as-is

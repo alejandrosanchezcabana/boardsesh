@@ -21,7 +21,9 @@ async function identify({ cookies }: { cookies: ReadonlyRequestCookies }) {
   let user: { id: string; email: string } | undefined;
   if (sessionToken) {
     try {
-      const decoded = await decode({ token: sessionToken, secret: process.env.NEXTAUTH_SECRET! });
+      const secret = process.env.NEXTAUTH_SECRET ?? process.env.AUTH_SECRET;
+      if (!secret) return { ...(visitorId ? { visitorId } : {}) };
+      const decoded = await decode({ token: sessionToken, secret });
       if (decoded?.sub && typeof decoded?.email === 'string') {
         user = { id: decoded.sub, email: decoded.email };
       }

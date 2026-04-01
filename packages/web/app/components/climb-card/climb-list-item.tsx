@@ -23,13 +23,14 @@ import { themeTokens } from '@/app/theme/theme-config';
 import { getGradeTintColor } from '@/app/lib/grade-colors';
 import { useIsDarkMode } from '@/app/hooks/use-is-dark-mode';
 import { getExcludedClimbActions } from '@/app/lib/climb-action-utils';
+import styles from './climb-list-item.module.css';
 
 // Keep swipe visuals aligned with gesture max distance
 const MAX_GESTURE_SWIPE = 180;
 const SHORT_ACTION_WIDTH = 120;
 const LONG_SWIPE_ACTION_WIDTH = MAX_GESTURE_SWIPE;
-const SHORT_RIGHT_SWIPE_THRESHOLD = 90;
-const LONG_RIGHT_SWIPE_THRESHOLD = 150;
+const SHORT_SWIPE_THRESHOLD = 90;
+const LONG_SWIPE_THRESHOLD = 150;
 
 // Simple swipe constants for override mode (no long-swipe)
 const SIMPLE_MAX_SWIPE = 120;
@@ -46,19 +47,14 @@ const swipeActionLayerBaseStyle: React.CSSProperties = {
   willChange: 'opacity',
 };
 
-const defaultRightActionStyle: React.CSSProperties = {
+const rightSwipeActionLayerBaseStyle: React.CSSProperties = {
   position: 'absolute',
-  right: 0,
-  top: 0,
-  bottom: 0,
-  width: MAX_GESTURE_SWIPE,
-  backgroundColor: themeTokens.colors.primary,
+  inset: 0,
   display: 'flex',
   alignItems: 'center',
   justifyContent: 'flex-end',
   paddingRight: themeTokens.spacing[4],
-  opacity: 0,
-  visibility: 'hidden',
+  willChange: 'opacity',
 };
 
 const iconStyle: React.CSSProperties = { color: 'white', fontSize: 20 };
@@ -108,6 +104,10 @@ type ClimbListItemProps = {
   disableThumbnailNavigation?: boolean;
   /** Handler for thumbnail clicks. When set, stops propagation so the row onClick doesn't also fire. */
   onThumbnailClick?: () => void;
+  /** When provided, the item delegates opening the actions drawer to the parent instead of rendering its own. */
+  onOpenActions?: (climb: Climb) => void;
+  /** When provided, the item delegates opening the playlist selector to the parent instead of rendering its own. */
+  onOpenPlaylistSelector?: (climb: Climb) => void;
 };
 
 const ClimbListItem: React.FC<ClimbListItemProps> = React.memo(({
@@ -126,12 +126,18 @@ const ClimbListItem: React.FC<ClimbListItemProps> = React.memo(({
   contentOpacity,
   disableThumbnailNavigation,
   onThumbnailClick,
+  onOpenActions,
+  onOpenPlaylistSelector,
 }) => {
   const pathname = usePathname();
   const isDark = useIsDarkMode();
+  // When parent provides both drawer callbacks, skip local drawers entirely.
+  // Both must be present to ensure the parent handles all drawer interactions.
+  const hasParentDrawers = Boolean(onOpenActions && onOpenPlaylistSelector);
   const [isActionsOpen, setIsActionsOpen] = useState(false);
   const [isPlaylistSelectorOpen, setIsPlaylistSelectorOpen] = useState(false);
-  const [rightSwipeOffset, setRightSwipeOffset] = useState(0);
+  // Single signed offset: positive = right swipe, negative = left swipe
+  const [swipeOffset, setSwipeOffset] = useState(0);
   const queueContext = useOptionalQueueContext();
   const addToQueue = queueContext?.addToQueue;
   const { isFavorited, toggleFavorite } = useFavorite({ climbUuid: climb.uuid });
@@ -143,10 +149,23 @@ const ClimbListItem: React.FC<ClimbListItemProps> = React.memo(({
     addToQueue?.(climb);
   }, [climb, addToQueue]);
 
+  const handleDefaultSwipeLeftLong = useCallback(() => {
+    if (onOpenActions) {
+      onOpenActions(climb);
+    } else {
+      setIsPlaylistSelectorOpen(false);
+      setIsActionsOpen(true);
+    }
+  }, [onOpenActions, climb]);
+
   const handleDefaultSwipeRightLong = useCallback(() => {
-    setIsActionsOpen(false);
-    setIsPlaylistSelectorOpen(true);
-  }, []);
+    if (onOpenPlaylistSelector) {
+      onOpenPlaylistSelector(climb);
+    } else {
+      setIsActionsOpen(false);
+      setIsPlaylistSelectorOpen(true);
+    }
+  }, [onOpenPlaylistSelector, climb]);
 
   const handleDefaultSwipeRight = useCallback(() => {
     toggleFavorite();
@@ -164,11 +183,13 @@ const ClimbListItem: React.FC<ClimbListItemProps> = React.memo(({
   // Use override or default swipe configuration
   const { swipeHandlers, isSwipeComplete, contentRef, leftActionRef, rightActionRef } = useSwipeActions({
     onSwipeLeft: hasSwipeOverrides ? handleOverrideSwipeLeft : handleDefaultSwipeLeft,
+    onSwipeLeftLong: hasSwipeOverrides ? undefined : handleDefaultSwipeLeftLong,
     onSwipeRight: hasSwipeOverrides ? handleOverrideSwipeRight : handleDefaultSwipeRight,
     onSwipeRightLong: hasSwipeOverrides ? undefined : handleDefaultSwipeRightLong,
-    onSwipeOffsetChange: hasSwipeOverrides ? undefined : (offset) => setRightSwipeOffset(offset > 0 ? offset : 0),
-    swipeThreshold: hasSwipeOverrides ? SIMPLE_SWIPE_THRESHOLD : SHORT_RIGHT_SWIPE_THRESHOLD,
-    longSwipeRightThreshold: hasSwipeOverrides ? undefined : LONG_RIGHT_SWIPE_THRESHOLD,
+    onSwipeOffsetChange: hasSwipeOverrides ? undefined : setSwipeOffset,
+    swipeThreshold: hasSwipeOverrides ? SIMPLE_SWIPE_THRESHOLD : SHORT_SWIPE_THRESHOLD,
+    longSwipeLeftThreshold: hasSwipeOverrides ? undefined : LONG_SWIPE_THRESHOLD,
+    longSwipeRightThreshold: hasSwipeOverrides ? undefined : LONG_SWIPE_THRESHOLD,
     maxSwipe: hasSwipeOverrides ? SIMPLE_MAX_SWIPE : MAX_GESTURE_SWIPE,
     disabled: disableSwipe,
   });
@@ -185,15 +206,19 @@ const ClimbListItem: React.FC<ClimbListItemProps> = React.memo(({
     [unsupported],
   );
 
+  // Derive directional offsets from the single signed value
+  const rightSwipeOffset = swipeOffset > 0 ? swipeOffset : 0;
+  const leftSwipeOffset = swipeOffset < 0 ? -swipeOffset : 0;
+
   const rightSwipeBaseOpacity = useMemo(
-    () => Math.min(1, rightSwipeOffset / SHORT_RIGHT_SWIPE_THRESHOLD),
+    () => Math.min(1, rightSwipeOffset / SHORT_SWIPE_THRESHOLD),
     [rightSwipeOffset],
   );
 
   const longSwipeBlend = useMemo(() => {
-    const transitionRange = LONG_RIGHT_SWIPE_THRESHOLD - SHORT_RIGHT_SWIPE_THRESHOLD;
+    const transitionRange = LONG_SWIPE_THRESHOLD - SHORT_SWIPE_THRESHOLD;
     if (transitionRange <= 0) return 1;
-    return Math.max(0, Math.min(1, (rightSwipeOffset - SHORT_RIGHT_SWIPE_THRESHOLD) / transitionRange));
+    return Math.max(0, Math.min(1, (rightSwipeOffset - SHORT_SWIPE_THRESHOLD) / transitionRange));
   }, [rightSwipeOffset]);
 
   const shortSwipeLayerOpacity = useMemo(
@@ -204,6 +229,28 @@ const ClimbListItem: React.FC<ClimbListItemProps> = React.memo(({
   const longSwipeLayerOpacity = useMemo(
     () => rightSwipeBaseOpacity * longSwipeBlend,
     [rightSwipeBaseOpacity, longSwipeBlend],
+  );
+
+  // Left-swipe blend computations (for right action panel)
+  const leftSwipeBaseOpacity = useMemo(
+    () => Math.min(1, leftSwipeOffset / SHORT_SWIPE_THRESHOLD),
+    [leftSwipeOffset],
+  );
+
+  const leftLongSwipeBlend = useMemo(() => {
+    const transitionRange = LONG_SWIPE_THRESHOLD - SHORT_SWIPE_THRESHOLD;
+    if (transitionRange <= 0) return 1;
+    return Math.max(0, Math.min(1, (leftSwipeOffset - SHORT_SWIPE_THRESHOLD) / transitionRange));
+  }, [leftSwipeOffset]);
+
+  const leftShortSwipeLayerOpacity = useMemo(
+    () => leftSwipeBaseOpacity * (1 - leftLongSwipeBlend),
+    [leftSwipeBaseOpacity, leftLongSwipeBlend],
+  );
+
+  const leftLongSwipeLayerOpacity = useMemo(
+    () => leftSwipeBaseOpacity * leftLongSwipeBlend,
+    [leftSwipeBaseOpacity, leftLongSwipeBlend],
   );
 
   const defaultLeftActionStyle = useMemo(
@@ -240,6 +287,42 @@ const ClimbListItem: React.FC<ClimbListItemProps> = React.memo(({
       opacity: longSwipeLayerOpacity,
     }),
     [longSwipeLayerOpacity],
+  );
+
+  const defaultRightActionStyle = useMemo(
+    () => ({
+      position: 'absolute' as const,
+      right: 0,
+      top: 0,
+      bottom: 0,
+      width: SHORT_ACTION_WIDTH + ((LONG_SWIPE_ACTION_WIDTH - SHORT_ACTION_WIDTH) * leftLongSwipeBlend),
+      display: 'flex' as const,
+      alignItems: 'center' as const,
+      justifyContent: 'flex-end' as const,
+      paddingRight: themeTokens.spacing[3],
+      opacity: 0,
+      visibility: 'hidden' as const,
+      overflow: 'hidden' as const,
+    }),
+    [leftLongSwipeBlend],
+  );
+
+  const leftShortSwipeLayerStyle = useMemo(
+    () => ({
+      ...rightSwipeActionLayerBaseStyle,
+      backgroundColor: themeTokens.colors.primary,
+      opacity: leftShortSwipeLayerOpacity,
+    }),
+    [leftShortSwipeLayerOpacity],
+  );
+
+  const leftLongSwipeLayerStyle = useMemo(
+    () => ({
+      ...rightSwipeActionLayerBaseStyle,
+      backgroundColor: themeTokens.neutral[600],
+      opacity: leftLongSwipeLayerOpacity,
+    }),
+    [leftLongSwipeLayerOpacity],
   );
 
   // Simple swipe action styles (used when overrides are provided)
@@ -337,12 +420,17 @@ const ClimbListItem: React.FC<ClimbListItemProps> = React.memo(({
                 </div>
               </div>
 
-              {/* Right action background (add to queue - revealed on swipe left) */}
+              {/* Right action background (revealed on swipe left) */}
               <div
                 ref={rightActionRef}
                 style={defaultRightActionStyle}
               >
-                <AddOutlined style={iconStyle} />
+                <div style={leftShortSwipeLayerStyle}>
+                  <AddOutlined style={iconStyle} />
+                </div>
+                <div style={leftLongSwipeLayerStyle}>
+                  <MoreHorizOutlined style={iconStyle} />
+                </div>
               </div>
             </>
           )
@@ -380,14 +468,19 @@ const ClimbListItem: React.FC<ClimbListItemProps> = React.memo(({
           {/* After-title slot (e.g., avatar) */}
           {afterTitleSlot}
 
-          {/* Menu: custom slot or default ellipsis button */}
+          {/* Menu: custom slot or default ellipsis button (hidden on mobile — replaced by far left swipe) */}
           {menuSlot !== undefined ? menuSlot : (
             <IconButton
+              className={styles.menuButton}
               size="small"
               onClick={(e) => {
                 e.stopPropagation();
-                setIsPlaylistSelectorOpen(false);
-                setIsActionsOpen(true);
+                if (onOpenActions) {
+                  onOpenActions(climb);
+                } else {
+                  setIsPlaylistSelectorOpen(false);
+                  setIsActionsOpen(true);
+                }
               }}
               style={iconButtonStyle}
             >
@@ -397,8 +490,8 @@ const ClimbListItem: React.FC<ClimbListItemProps> = React.memo(({
         </div>
       </div>
 
-      {/* Default actions drawers - only rendered when no menuSlot override */}
-      {menuSlot === undefined && (
+      {/* Default actions drawers - only rendered when no menuSlot override and no parent drawer callbacks */}
+      {menuSlot === undefined && !hasParentDrawers && (
         <>
           <SwipeableDrawer
             title={<DrawerClimbHeader climb={climb} boardDetails={boardDetails} />}
@@ -406,7 +499,6 @@ const ClimbListItem: React.FC<ClimbListItemProps> = React.memo(({
             open={isActionsOpen}
             onClose={() => setIsActionsOpen(false)}
             styles={drawerStyles}
-            keepMounted={false}
           >
             <ClimbActions
               climb={climb}
@@ -433,7 +525,6 @@ const ClimbListItem: React.FC<ClimbListItemProps> = React.memo(({
               body: { padding: 0 },
               header: { paddingLeft: `${themeTokens.spacing[3]}px`, paddingRight: `${themeTokens.spacing[3]}px` },
             }}
-            keepMounted={false}
           >
             <PlaylistSelectionContent
               climbUuid={climb.uuid}
@@ -460,7 +551,9 @@ const ClimbListItem: React.FC<ClimbListItemProps> = React.memo(({
     && prev.backgroundColor === next.backgroundColor
     && prev.contentOpacity === next.contentOpacity
     && prev.disableThumbnailNavigation === next.disableThumbnailNavigation
-    && prev.onThumbnailClick === next.onThumbnailClick;
+    && prev.onThumbnailClick === next.onThumbnailClick
+    && prev.onOpenActions === next.onOpenActions
+    && prev.onOpenPlaylistSelector === next.onOpenPlaylistSelector;
 });
 
 ClimbListItem.displayName = 'ClimbListItem';

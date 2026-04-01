@@ -70,6 +70,7 @@ const ClimbHoldSearchForm: React.FC<ClimbHoldSearchFormProps> = ({ boardDetails 
             }}
             size="small"
             sx={{ minWidth: 120 }}
+            MenuProps={{ disableScrollLock: true }}
           >
             {stateItems.map(item => (
               <MenuItem key={item.value} value={item.value}>

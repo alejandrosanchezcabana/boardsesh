@@ -260,6 +260,7 @@ const PlayViewDrawer: React.FC<PlayViewDrawerProps> = ({
       fullHeight
       open={isOpen}
       onClose={handleClose}
+      keepMounted
       swipeEnabled={!isActionsOpen && !isQueueOpen && !isPlaylistSelectorOpen}
       showDragHandle={true}
       styles={{

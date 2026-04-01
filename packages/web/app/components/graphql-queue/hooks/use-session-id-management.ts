@@ -3,6 +3,7 @@ import { useSearchParams, useRouter, usePathname } from 'next/navigation';
 import { v4 as uuidv4 } from 'uuid';
 import { getBaseBoardPath } from '@/app/lib/url-utils';
 import { saveSessionToHistory } from '@/app/lib/session-history-db';
+import { getClimbSessionCookie, setClimbSessionCookie, clearClimbSessionCookie } from '@/app/lib/climb-session-cookie';
 import { usePersistentSession } from '../../persistent-session';
 import { useConnectionSettings } from '../../connection-manager/connection-settings-context';
 import { useWsAuthToken } from '@/app/hooks/use-ws-auth-token';
@@ -34,36 +35,34 @@ export function useSessionIdManagement({
   const { token: wsAuthToken } = useWsAuthToken();
   const persistentSession = usePersistentSession();
 
-  // Session ID source differs by mode
-  const sessionIdFromUrl = searchParams.get('session');
+  // Session ID source differs by mode:
+  // - Board mode: read from cookie (previously URL ?session= param)
+  // - Off-board mode: read from persistent IndexedDB storage
+  const sessionIdFromCookie = getClimbSessionCookie();
   const persistentSessionId = persistentSession.activeSession?.sessionId ?? null;
   const [activeSessionId, setActiveSessionId] = useState<string | null>(
-    isOffBoardMode ? persistentSessionId : sessionIdFromUrl,
+    isOffBoardMode ? persistentSessionId : sessionIdFromCookie,
   );
 
-  // Sync activeSessionId with URL changes (board routes only)
+  // Backward compat: migrate ?session= URL param to cookie and strip from URL
   useEffect(() => {
     if (isOffBoardMode) return;
-    if (sessionIdFromUrl) {
-      setActiveSessionId(sessionIdFromUrl);
+    const sessionFromUrl = searchParams.get('session');
+    if (sessionFromUrl) {
+      setClimbSessionCookie(sessionFromUrl);
+      setActiveSessionId(sessionFromUrl);
+      const params = new URLSearchParams(searchParams.toString());
+      params.delete('session');
+      const queryString = params.toString();
+      router.replace(queryString ? `${pathname}?${queryString}` : pathname, { scroll: false });
     }
-  }, [sessionIdFromUrl, isOffBoardMode]);
+  }, [searchParams, isOffBoardMode, pathname, router]);
 
   // Sync activeSessionId from persistent session (off-board mode only)
   useEffect(() => {
     if (!isOffBoardMode) return;
     setActiveSessionId(persistentSessionId);
   }, [isOffBoardMode, persistentSessionId]);
-
-  // Restore session param to URL if it's missing but we have an active session (board routes only)
-  useEffect(() => {
-    if (isOffBoardMode) return;
-    if (activeSessionId && !sessionIdFromUrl) {
-      const params = new URLSearchParams(searchParams.toString());
-      params.set('session', activeSessionId);
-      router.replace(`${pathname}?${params.toString()}`, { scroll: false });
-    }
-  }, [activeSessionId, sessionIdFromUrl, pathname, router, searchParams, isOffBoardMode]);
 
   const sessionId = activeSessionId;
 
@@ -97,9 +96,7 @@ export function useSessionIdManagement({
         );
       }
 
-      const params = new URLSearchParams(searchParams.toString());
-      params.set('session', newSessionId);
-      router.replace(`${pathname}?${params.toString()}`, { scroll: false });
+      setClimbSessionCookie(newSessionId);
       setActiveSessionId(newSessionId);
 
       await saveSessionToHistory({
@@ -112,7 +109,7 @@ export function useSessionIdManagement({
 
       return newSessionId;
     },
-    [backendUrl, pathname, router, searchParams, currentQueue, currentClimbQueueItem, persistentSession, isOffBoardMode],
+    [backendUrl, pathname, currentQueue, currentClimbQueueItem, persistentSession, isOffBoardMode],
   );
 
   const joinSession = useCallback(
@@ -120,9 +117,7 @@ export function useSessionIdManagement({
       if (isOffBoardMode) throw new Error('Cannot join a session outside of a board route');
       if (!backendUrl) throw new Error('Backend URL not configured');
 
-      const params = new URLSearchParams(searchParams.toString());
-      params.set('session', sessionIdToJoin);
-      router.replace(`${pathname}?${params.toString()}`, { scroll: false });
+      setClimbSessionCookie(sessionIdToJoin);
       setActiveSessionId(sessionIdToJoin);
 
       await saveSessionToHistory({
@@ -133,20 +128,13 @@ export function useSessionIdManagement({
         lastActivity: new Date().toISOString(),
       });
     },
-    [backendUrl, pathname, router, searchParams, isOffBoardMode],
+    [backendUrl, pathname, isOffBoardMode],
   );
 
   const endSession = useCallback(() => {
     const endingSessionId = activeSessionId;
     persistentSession.deactivateSession();
-
-    if (!isOffBoardMode) {
-      const params = new URLSearchParams(searchParams.toString());
-      params.delete('session');
-      const queryString = params.toString();
-      router.replace(queryString ? `${pathname}?${queryString}` : pathname, { scroll: false });
-    }
-
+    clearClimbSessionCookie();
     setActiveSessionId(null);
 
     if (endingSessionId && wsAuthToken) {
@@ -157,7 +145,7 @@ export function useSessionIdManagement({
         })
         .catch((err: unknown) => console.error('[QueueContext] Failed to get session summary:', err));
     }
-  }, [persistentSession, pathname, router, searchParams, isOffBoardMode, activeSessionId, wsAuthToken]);
+  }, [persistentSession, isOffBoardMode, activeSessionId, wsAuthToken]);
 
   return {
     sessionId,

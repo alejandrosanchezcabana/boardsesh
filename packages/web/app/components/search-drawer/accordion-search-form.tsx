@@ -20,6 +20,7 @@ import SearchClimbNameInput from './search-climb-name-input';
 import SetterNameSelect from './setter-name-select';
 import ClimbHoldSearchForm from './climb-hold-search-form';
 import { BoardDetails } from '@/app/lib/types';
+import { buildGradeRangeUpdate } from './grade-range-utils';
 import AuthModal from '@/app/components/auth/auth-modal';
 import {
   getClimbPanelSummary,
@@ -56,11 +57,7 @@ const AccordionSearchForm: React.FC<AccordionSearchFormProps> = ({
   const showTallClimbsFilter = isKilterHomewall && isLargestSize;
 
   const handleGradeChange = (type: 'min' | 'max', value: number | undefined) => {
-    if (type === 'min') {
-      updateFilters({ minGrade: value });
-    } else {
-      updateFilters({ maxGrade: value });
-    }
+    updateFilters(buildGradeRangeUpdate(type, value, uiSearchParams.minGrade, uiSearchParams.maxGrade));
   };
 
   const getGradeSelectBackground = (difficultyId: number | undefined): string | undefined => {
@@ -97,6 +94,7 @@ const AccordionSearchForm: React.FC<AccordionSearchFormProps> = ({
                 sx={minGradeBg ? { '--grade-bg': minGradeBg } as React.CSSProperties : undefined}
                 size="small"
                 displayEmpty
+                MenuProps={{ disableScrollLock: true }}
               >
                 <MenuItem value={0}>Min</MenuItem>
                 {grades.map((grade) => (
@@ -112,6 +110,7 @@ const AccordionSearchForm: React.FC<AccordionSearchFormProps> = ({
                 sx={maxGradeBg ? { '--grade-bg': maxGradeBg } as React.CSSProperties : undefined}
                 size="small"
                 displayEmpty
+                MenuProps={{ disableScrollLock: true }}
               >
                 <MenuItem value={0}>Max</MenuItem>
                 {grades.map((grade) => (
@@ -162,6 +161,7 @@ const AccordionSearchForm: React.FC<AccordionSearchFormProps> = ({
                   onChange={(e) => updateFilters({ sortBy: e.target.value as typeof uiSearchParams.sortBy })}
                   className={styles.fullWidth}
                   size="small"
+                  MenuProps={{ disableScrollLock: true }}
                 >
                   <MenuItem value="ascents">Ascents</MenuItem>
                   <MenuItem value="popular">Popular</MenuItem>
@@ -175,6 +175,7 @@ const AccordionSearchForm: React.FC<AccordionSearchFormProps> = ({
                   onChange={(e) => updateFilters({ sortOrder: e.target.value as typeof uiSearchParams.sortOrder })}
                   className={styles.fullWidth}
                   size="small"
+                  MenuProps={{ disableScrollLock: true }}
                 >
                   <MenuItem value="desc">Desc</MenuItem>
                   <MenuItem value="asc">Asc</MenuItem>
@@ -228,6 +229,7 @@ const AccordionSearchForm: React.FC<AccordionSearchFormProps> = ({
               onChange={(e) => updateFilters({ gradeAccuracy: (e.target.value as number) || undefined })}
               className={styles.fullWidth}
               size="small"
+              MenuProps={{ disableScrollLock: true }}
             >
               <MenuItem value={0}>Any</MenuItem>
               <MenuItem value={0.2}>Somewhat Accurate (&lt;0.2)</MenuItem>

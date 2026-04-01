@@ -80,7 +80,7 @@ vi.mock('@/app/theme/theme-config', () => ({
   themeTokens: {
     spacing: { 1: 4, 2: 8, 3: 12, 4: 16, 16: 64 },
     colors: { error: '#B8524C', primary: '#8C4A52', success: '#6B9080' },
-    neutral: { 200: '#E5E7EB', 400: '#9CA3AF', 500: '#6B7280' },
+    neutral: { 200: '#E5E7EB', 400: '#9CA3AF', 500: '#6B7280', 600: '#4B5563' },
     typography: {
       fontSize: { xs: 12, sm: 14, xl: 20, '2xl': 24 },
       fontWeight: { normal: 400, semibold: 600, bold: 700 },
@@ -317,8 +317,8 @@ describe('ClimbListItem', () => {
       );
 
       expect(screen.getByTestId('custom-menu')).toBeTruthy();
-      // Default ellipsis icon should not be present
-      expect(screen.queryByTestId('MoreHorizOutlinedIcon')).toBeNull();
+      // Default ellipsis button should not be present (icon may still exist in swipe action layer)
+      expect(screen.queryByRole('button', { name: /more/i })).toBeNull();
     });
 
     it('does not render actions drawers when menuSlot is provided', () => {
@@ -343,8 +343,9 @@ describe('ClimbListItem', () => {
         />,
       );
 
-      // No menu buttons at all (only the swipe-action related hidden divs)
-      expect(screen.queryByTestId('MoreHorizOutlinedIcon')).toBeNull();
+      // No menu button rendered (icon may still exist in swipe action layer)
+      const buttons = screen.queryAllByRole('button');
+      expect(buttons.length).toBe(0);
     });
   });
 

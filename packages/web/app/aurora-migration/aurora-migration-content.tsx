@@ -49,13 +49,42 @@ export default function AuroraMigrationContent() {
                 </Typography>
 
                 <Typography variant="body1" component="p">
-                  Today the Kilter board app suddenly disappeared, as Aurora randomly
-                  shut down its Kilter backend. In response Kilter rushed out their own
-                  app which was still in beta, but the outcome of these two entities
-                  fighting is that the customer gets left holding the bag, and everyone
-                  likely has lost their data (including playlists, logbooks and draft
-                  climbs).
+                  On March 25, the Kilter board app suddenly disappeared, as Aurora
+                  randomly shut down its Kilter backend. In response Kilter rushed out
+                  their own app which was still in beta, but the outcome of these two
+                  entities fighting is that the customer gets left holding the bag.
+                  For more info read:
                 </Typography>
+
+                <MuiLink
+                  href="https://www.climbing.com/news/why-the-kilter-board-app-suddenly-disappeared/"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  underline="none"
+                  className={styles.articleCard}
+                >
+                  <Box
+                    component="img"
+                    src="https://cdn.climbing.com/wp-content/uploads/2026/03/Untitled-design-1-2.jpg"
+                    alt="The Kilter Board App Just Disappeared Without Warning"
+                    loading="lazy"
+                    onError={(e: React.SyntheticEvent<HTMLImageElement>) => {
+                      e.currentTarget.style.display = 'none';
+                    }}
+                    className={styles.articleImage}
+                  />
+                  <Box className={styles.articleBody}>
+                    <Typography variant="subtitle2" color="text.primary" className={styles.articleTitle}>
+                      The Kilter Board App Just Disappeared Without Warning. Here&apos;s What Really Happened.
+                    </Typography>
+                    <Typography variant="body2" color="text.secondary" className={styles.articleDescription}>
+                      For years, climbing&apos;s most successful training board has been at war with its app developer. Now, climbers are paying the price.
+                    </Typography>
+                    <Typography variant="caption" color="text.disabled">
+                      climbing.com
+                    </Typography>
+                  </Box>
+                </MuiLink>
 
                 <Typography variant="body1" component="p">
                   This single-vendor risk first became obvious 2 years ago, when you
@@ -215,15 +244,17 @@ export default function AuroraMigrationContent() {
                     <Typography variant="h6" sx={{ mb: 1 }}>
                       Your Boardsesh profile
                     </Typography>
-                    {isAuthenticated && session?.user?.id ? (
-                      <UserSmartCard userId={session.user.id} refreshKey={importRefreshKey} />
-                    ) : (
+                    {!isAuthenticated && (
                       <Typography variant="body2" color="text.secondary">
                         Sign in first to see your profile.
                       </Typography>
                     )}
                   </div>
                 </div>
+
+                {isAuthenticated && session?.user?.id && (
+                  <UserSmartCard userId={session.user.id} refreshKey={importRefreshKey} />
+                )}
               </Stack>
             </CardContent>
           </MuiCard>

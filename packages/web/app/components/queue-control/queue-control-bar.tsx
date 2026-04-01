@@ -542,6 +542,7 @@ const QueueControlBar: React.FC<QueueControlBarProps> = ({ boardDetails, angle }
         open={activeDrawer === 'queue'}
         onClose={() => setActiveDrawer('none')}
         onTransitionEnd={handleDrawerOpenChange}
+        keepMounted
         styles={{ wrapper: { height: '70%' }, body: { padding: 0 } }}
         extra={
           queue.length > 0 && (

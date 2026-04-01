@@ -1,10 +1,17 @@
 import { describe, it, expect, vi } from 'vitest';
+import { NextRequest } from 'next/server';
+import { CLIMB_SESSION_COOKIE } from '@/app/lib/climb-session-cookie';
 
 vi.mock('@/app/lib/board-data', () => ({
   SUPPORTED_BOARDS: ['kilter', 'tension'],
 }));
 
+vi.mock('@/app/flags', () => ({
+  precomputeAllFlags: vi.fn().mockResolvedValue('__test_code__'),
+}));
+
 const { getListPageCacheTTL, hasUserSpecificFilters } = await import('@/app/lib/list-page-cache');
+const { middleware } = await import('@/middleware');
 
 function sp(params: Record<string, string> = {}): URLSearchParams {
   return new URLSearchParams(params);
@@ -204,5 +211,54 @@ describe('hasUserSpecificFilters', () => {
       hideAttempted: true,
       showOnlyCompleted: true,
     })).toBe(true);
+  });
+});
+
+// --- Middleware integration tests ---
+
+function makeRequest(url: string): NextRequest {
+  return new NextRequest(new URL(url, 'http://localhost:3000'));
+}
+
+describe('middleware session redirect', () => {
+  it('redirects when ?session= is present on a list page', async () => {
+    const response = await middleware(makeRequest('/b/kilter-original-12x12/40/list?session=abc-123'));
+    expect(response.status).toBe(307);
+    const location = response.headers.get('location');
+    expect(location).toBe('http://localhost:3000/b/kilter-original-12x12/40/list');
+  });
+
+  it('redirects when ?session= is present on any page', async () => {
+    const response = await middleware(makeRequest('/some/page?session=xyz'));
+    expect(response.status).toBe(307);
+    const location = response.headers.get('location');
+    expect(location).toBe('http://localhost:3000/some/page');
+  });
+
+  it('sets the climb session cookie on redirect', async () => {
+    const response = await middleware(makeRequest('/b/kilter-original-12x12/40/list?session=abc-123'));
+    const setCookie = response.headers.get('set-cookie');
+    expect(setCookie).toContain(CLIMB_SESSION_COOKIE);
+    expect(setCookie).toContain('abc-123');
+  });
+
+  it('preserves other query params when stripping session', async () => {
+    const response = await middleware(makeRequest('/b/kilter-original-12x12/40/list?minGrade=10&session=abc-123&sortBy=difficulty'));
+    expect(response.status).toBe(307);
+    const location = new URL(response.headers.get('location')!);
+    expect(location.searchParams.get('minGrade')).toBe('10');
+    expect(location.searchParams.get('sortBy')).toBe('difficulty');
+    expect(location.searchParams.has('session')).toBe(false);
+  });
+
+  it('does not redirect when no ?session= is present', async () => {
+    const response = await middleware(makeRequest('/b/kilter-original-12x12/40/list'));
+    expect(response.status).not.toBe(307);
+  });
+
+  it('session redirect takes priority over CDN cache headers', async () => {
+    const response = await middleware(makeRequest('/kilter/original/12x12-square/screw_bolt/40/list?session=abc-123'));
+    expect(response.status).toBe(307);
+    expect(response.headers.has('Vercel-CDN-Cache-Control')).toBe(false);
   });
 });

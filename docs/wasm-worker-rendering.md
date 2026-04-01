@@ -114,7 +114,9 @@ React hydrates `BoardImageLayers`. The DOM matches the server-rendered HTML, so 
 
 ### 3. Worker Takeover
 
-After mount, `useCanvasRendererReady` resolves to `true` once the worker pool is initialized and the WASM modules are loaded. `BoardCanvasRenderer` replaces `BoardImageLayers` in the visible layout:
+After mount, `useCanvasRendererReady` resolves to `true` once the browser supports `OffscreenCanvas` and the feature flag is enabled. `BoardCanvasRenderer` replaces `BoardImageLayers` in the visible layout.
+
+A module-level `globalCanvasReady` flag ensures that only the first batch of component instances goes through the `false`→`true` transition. Subsequent instances (e.g. from infinite scroll) initialise with `true` immediately, avoiding a one-frame flash of `BoardImageLayers` and the API request it would trigger.
 
 1. `BoardCanvasRenderer` sends a render request to the `WorkerManager`.
 2. The `WorkerManager` checks the LRU cache. On a cache hit, it returns the cached `ImageBitmap` immediately.

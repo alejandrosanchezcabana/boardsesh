@@ -4,6 +4,7 @@ import type { NextRequest } from 'next/server';
 import { SUPPORTED_BOARDS } from './app/lib/board-data';
 import { getListPageCacheTTL } from './app/lib/list-page-cache';
 import { precomputeAllFlags } from './app/flags';
+import { CLIMB_SESSION_COOKIE } from './app/lib/climb-session-cookie';
 
 const SPECIAL_ROUTES = ['angles', 'grades']; // routes that don't need board validation
 
@@ -40,9 +41,32 @@ export async function middleware(request: NextRequest) {
     }
   }
 
-  // Ensure every visitor has a stable anonymous ID for percentage-based
-  // feature flag rollouts. Set early so flag evaluation can read it.
+  // Backward compat: redirect old ?session= URLs to clean URLs with cookie.
+  // The redirect cost (~150ms) is far less than a CDN cache miss (1.3-1.6s).
+  const sessionParam = request.nextUrl.searchParams.get('session');
+  if (sessionParam) {
+    const cleanUrl = request.nextUrl.clone();
+    cleanUrl.searchParams.delete('session');
+    const response = NextResponse.redirect(cleanUrl, 307);
+    response.cookies.set(CLIMB_SESSION_COOKIE, sessionParam, {
+      path: '/',
+      sameSite: 'lax',
+      maxAge: 86400,
+    });
+    return response;
+  }
+
+  // Generate visitor ID early so it's available for flag evaluation.
+  // On first visit the cookie won't be on the request yet, so we generate
+  // it here and inject it into the request cookies so precomputeAllFlags()
+  // can read it immediately (no second-request delay).
   const hasVisitorId = request.cookies.has('bs_vid');
+  let visitorId: string | undefined;
+  if (!hasVisitorId) {
+    visitorId = crypto.randomUUID();
+    request.cookies.set('bs_vid', visitorId);
+  }
+
   let response: NextResponse | undefined;
 
   // Use Vercel-CDN-Cache-Control because Next.js overwrites Cache-Control
@@ -56,14 +80,21 @@ export async function middleware(request: NextRequest) {
     if (request.cookies.has('vercel-flag-overrides')) {
       response = NextResponse.next();
     } else {
-      // Evaluate flags at the edge and encode the combination into a signed
-      // code. Rewrite the URL to include the code as a query param so the CDN
-      // caches different responses per flag combination. When a flag changes,
-      // the code changes → cache miss → fresh render with correct values.
-      const code = await precomputeAllFlags();
-      const url = request.nextUrl.clone();
-      url.searchParams.set('_flags', code);
-      response = NextResponse.rewrite(url);
+      try {
+        // Evaluate flags at the edge and encode the combination into a signed
+        // code. Rewrite the URL to include the code as a query param so the CDN
+        // caches different responses per flag combination. When a flag changes,
+        // the code changes → cache miss → fresh render with correct values.
+        const code = await precomputeAllFlags();
+        const url = request.nextUrl.clone();
+        url.searchParams.set('_flags', code);
+        response = NextResponse.rewrite(url);
+      } catch {
+        // Flag evaluation failed — fall through without variant rewrite.
+        // The page still renders correctly (layout.tsx evaluates flags
+        // independently), we just lose CDN cache differentiation by flags.
+        response = NextResponse.next();
+      }
 
       const cdnCacheValue = `s-maxage=${cacheTTL}, stale-while-revalidate=${cacheTTL * 7}`;
       response.headers.set('Vercel-CDN-Cache-Control', cdnCacheValue);
@@ -75,9 +106,9 @@ export async function middleware(request: NextRequest) {
     response = NextResponse.next();
   }
 
-  // Set anonymous visitor ID cookie on first visit
-  if (!hasVisitorId) {
-    response.cookies.set('bs_vid', crypto.randomUUID(), {
+  // Persist the visitor ID cookie so subsequent requests carry it.
+  if (visitorId) {
+    response.cookies.set('bs_vid', visitorId, {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
       sameSite: 'lax',
