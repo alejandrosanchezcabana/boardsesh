@@ -4,12 +4,12 @@
   gap: 4px;
 }
 
-.menuButton {
+.menuButton.menuButton {
   display: none;
 }
 
 @media (min-width: 768px) {
-  .menuButton {
+  .menuButton.menuButton {
     display: inline-flex;
   }
 }
