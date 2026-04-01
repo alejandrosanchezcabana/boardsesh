@@ -21,7 +21,7 @@ import {
 } from '../utils/profile-constants';
 import {
   filterLogbookByTimeframe,
-  buildAggregatedGradeBars,
+  buildAggregatedStackedBars,
   buildWeeklyBars,
   buildFlashRedpointBars,
   buildStatisticsSummary,
@@ -158,8 +158,8 @@ export function useProfileData(userId: string) {
     [logbook, timeframe, fromDate, toDate],
   );
 
-  const aggregatedGradeBars = useMemo(
-    () => buildAggregatedGradeBars(allBoardsTicks, aggregatedTimeframe),
+  const aggregatedStackedBars = useMemo(
+    () => buildAggregatedStackedBars(allBoardsTicks, aggregatedTimeframe),
     [allBoardsTicks, aggregatedTimeframe],
   );
 
@@ -208,7 +208,7 @@ export function useProfileData(userId: string) {
     aggregatedTimeframe,
     setAggregatedTimeframe,
     loadingAggregated,
-    aggregatedGradeBars,
+    aggregatedStackedBars,
 
     // Profile stats summary
     loadingProfileStats,

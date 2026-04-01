@@ -1,7 +1,6 @@
 'use client';
 
 import React, { useMemo } from 'react';
-import Box from '@mui/material/Box';
 import MuiTooltip from '@mui/material/Tooltip';
 import styles from './css-bar-chart.module.css';
 
@@ -23,6 +22,7 @@ interface CssBarChartProps {
   mobileHeight?: number;
   showLegend?: boolean;
   gap?: number;
+  ariaLabel?: string;
 }
 
 export const CssBarChart = React.memo(function CssBarChart({
@@ -31,6 +31,7 @@ export const CssBarChart = React.memo(function CssBarChart({
   mobileHeight = 36,
   showLegend = true,
   gap = 2,
+  ariaLabel = 'Bar chart',
 }: CssBarChartProps) {
   const maxTotal = useMemo(
     () => Math.max(...bars.map((b) => b.segments.reduce((sum, s) => sum + s.value, 0)), 1),
@@ -44,7 +45,12 @@ export const CssBarChart = React.memo(function CssBarChart({
 
   return (
     <div className={styles.container}>
-      <div className={styles.barContainer} style={{ ...cssVars, gap: `${gap}px` }}>
+      <div
+        className={styles.barContainer}
+        style={{ ...cssVars, gap: `${gap}px` }}
+        role="img"
+        aria-label={ariaLabel}
+      >
         {bars.map((bar) => {
           const total = bar.segments.reduce((sum, s) => sum + s.value, 0);
           const barHeightPct = Math.max((total / maxTotal) * 100, 8);
@@ -60,14 +66,16 @@ export const CssBarChart = React.memo(function CssBarChart({
               <div
                 className={styles.barColumn}
                 style={{ height: `${barHeightPct}%` }}
+                tabIndex={0}
+                aria-label={tooltipText}
               >
                 {bar.segments.map((seg, i) => {
                   const segPct = total > 0 ? (seg.value / total) * 100 : 0;
                   return (
-                    <Box
+                    <div
                       key={i}
                       className={styles.barSegment}
-                      sx={{
+                      style={{
                         height: `${segPct}%`,
                         backgroundColor: seg.color,
                       }}
@@ -80,7 +88,7 @@ export const CssBarChart = React.memo(function CssBarChart({
         })}
       </div>
       {showLegend && (
-        <div className={styles.legend} style={{ gap: `${gap}px` }}>
+        <div className={styles.legend} style={{ gap: `${gap}px` }} aria-hidden="true">
           {bars.map((bar) => (
             <span key={bar.key} className={styles.legendLabel}>
               {bar.label}
@@ -105,6 +113,7 @@ interface GroupedBarChartProps {
   mobileHeight?: number;
   showLegend?: boolean;
   gap?: number;
+  ariaLabel?: string;
 }
 
 export const GroupedBarChart = React.memo(function GroupedBarChart({
@@ -113,6 +122,7 @@ export const GroupedBarChart = React.memo(function GroupedBarChart({
   mobileHeight = 36,
   showLegend = true,
   gap = 2,
+  ariaLabel = 'Grouped bar chart',
 }: GroupedBarChartProps) {
   const maxValue = useMemo(
     () => Math.max(...bars.flatMap((b) => b.values.map((v) => v.value)), 1),
@@ -137,37 +147,37 @@ export const GroupedBarChart = React.memo(function GroupedBarChart({
 
   return (
     <div className={styles.container}>
-      <div className={styles.groupedBarContainer} style={{ ...cssVars, gap: `${gap}px` }}>
-        {bars.map((bar) => {
-          const tooltipText = bar.values
-            .filter((v) => v.value > 0)
-            .map((v) => `${v.label}: ${v.value}`)
-            .join(', ');
-
-          return (
-            <MuiTooltip key={bar.key} title={`${bar.label} — ${tooltipText}`} placement="top" arrow>
-              <div className={styles.groupedBarColumn}>
-                {bar.values.map((v, i) => {
-                  const heightPct = Math.max((v.value / maxValue) * 100, v.value > 0 ? 8 : 0);
-                  return (
-                    <Box
-                      key={i}
-                      className={styles.groupedBarSingle}
-                      sx={{
-                        height: `${heightPct}%`,
-                        backgroundColor: v.color,
-                      }}
-                    />
-                  );
-                })}
-              </div>
-            </MuiTooltip>
-          );
-        })}
+      <div
+        className={styles.groupedBarContainer}
+        style={{ ...cssVars, gap: `${gap}px` }}
+        role="img"
+        aria-label={ariaLabel}
+      >
+        {bars.map((bar) => (
+          <div key={bar.key} className={styles.groupedBarColumn} aria-label={bar.label}>
+            {bar.values.map((v, i) => {
+              const heightPct = Math.max((v.value / maxValue) * 100, v.value > 0 ? 8 : 0);
+              const tooltipText = `${bar.label} — ${v.label}: ${v.value}`;
+              return (
+                <MuiTooltip key={i} title={tooltipText} placement="top" arrow>
+                  <div
+                    className={styles.groupedBarSingle}
+                    style={{
+                      height: `${heightPct}%`,
+                      backgroundColor: v.color,
+                    }}
+                    tabIndex={0}
+                    aria-label={tooltipText}
+                  />
+                </MuiTooltip>
+              );
+            })}
+          </div>
+        ))}
       </div>
       {showLegend && (
         <>
-          <div className={styles.legend} style={{ gap: `${gap}px` }}>
+          <div className={styles.legend} style={{ gap: `${gap}px` }} aria-hidden="true">
             {bars.map((bar) => (
               <span key={bar.key} className={styles.legendLabel}>
                 {bar.label}

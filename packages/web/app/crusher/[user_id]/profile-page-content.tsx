@@ -42,7 +42,7 @@ export default function ProfilePageContent({ userId }: { userId: string }) {
     aggregatedTimeframe,
     setAggregatedTimeframe,
     loadingAggregated,
-    aggregatedGradeBars,
+    aggregatedStackedBars,
     loadingProfileStats,
     statisticsSummary,
     activeTab,
@@ -98,7 +98,7 @@ export default function ProfilePageContent({ userId }: { userId: string }) {
             aggregatedTimeframe={aggregatedTimeframe}
             onAggregatedTimeframeChange={setAggregatedTimeframe}
             loadingAggregated={loadingAggregated}
-            aggregatedGradeBars={aggregatedGradeBars}
+            aggregatedStackedBars={aggregatedStackedBars}
           />
         )}
 

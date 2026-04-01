@@ -3,7 +3,6 @@ import isoWeek from 'dayjs/plugin/isoWeek';
 import isSameOrAfter from 'dayjs/plugin/isSameOrAfter';
 import isSameOrBefore from 'dayjs/plugin/isSameOrBefore';
 import type { GetUserProfileStatsQueryResponse } from '@/app/lib/graphql/operations';
-import { FONT_GRADE_COLORS, getGradeColorWithOpacity } from '@/app/lib/grade-colors';
 import type { CssBarChartBar } from '@/app/components/charts/css-bar-chart';
 import type { GroupedBar } from '@/app/components/charts/css-bar-chart';
 import {
@@ -23,11 +22,6 @@ dayjs.extend(isSameOrAfter);
 dayjs.extend(isSameOrBefore);
 
 const GRADE_ORDER = Object.values(difficultyMapping);
-
-function getGradeBarColor(grade: string, opacity = 0.4): string {
-  const hex = FONT_GRADE_COLORS[grade.toLowerCase()];
-  return hex ? getGradeColorWithOpacity(hex, opacity) : 'rgba(200, 200, 200, 0.4)';
-}
 
 // ── Timeframe filtering ─────────────────────────────────────────────
 
@@ -54,63 +48,6 @@ export function filterLogbookByTimeframe(
     default:
       return logbook;
   }
-}
-
-// ── Aggregated grade bars (for stats summary card) ──────────────────
-
-export interface GradeBar {
-  grade: string;
-  count: number;
-  color: string;
-}
-
-export function buildAggregatedGradeBars(
-  allBoardsTicks: Record<string, LogbookEntry[]>,
-  aggregatedTimeframe: AggregatedTimeframeType,
-): GradeBar[] {
-  const now = dayjs();
-
-  const filterByTimeframe = (entry: LogbookEntry) => {
-    const climbedAt = dayjs(entry.climbed_at);
-    switch (aggregatedTimeframe) {
-      case 'today':
-        return climbedAt.isSame(now, 'day');
-      case 'lastWeek':
-        return climbedAt.isAfter(now.subtract(1, 'week'));
-      case 'lastMonth':
-        return climbedAt.isAfter(now.subtract(1, 'month'));
-      case 'lastYear':
-        return climbedAt.isAfter(now.subtract(1, 'year'));
-      case 'all':
-      default:
-        return true;
-    }
-  };
-
-  // Aggregate grade counts across all layouts using distinct climb UUIDs
-  const gradeClimbs: Record<string, Set<string>> = {};
-
-  BOARD_TYPES.forEach((boardType) => {
-    const ticks = allBoardsTicks[boardType] || [];
-    const filteredTicks = ticks.filter(filterByTimeframe);
-
-    filteredTicks.forEach((entry) => {
-      if (entry.difficulty === null || entry.status === 'attempt' || !entry.climbUuid) return;
-      const grade = difficultyMapping[entry.difficulty];
-      if (grade) {
-        if (!gradeClimbs[grade]) gradeClimbs[grade] = new Set();
-        gradeClimbs[grade].add(entry.climbUuid);
-      }
-    });
-  });
-
-  return GRADE_ORDER
-    .filter((grade) => gradeClimbs[grade]?.size > 0)
-    .map((grade) => ({
-      grade,
-      count: gradeClimbs[grade].size,
-      color: getGradeBarColor(grade),
-    }));
 }
 
 // ── Aggregated stacked bars (grade x layout, for stats summary) ─────
@@ -213,14 +150,17 @@ export function buildAggregatedStackedBars(
 export function buildWeeklyBars(filteredLogbook: LogbookEntry[]): CssBarChartBar[] | null {
   if (filteredLogbook.length === 0) return null;
 
-  const weeks: string[] = [];
+  const MAX_WEEKS = 26;
+  const allWeeks: string[] = [];
   const first = dayjs(filteredLogbook[filteredLogbook.length - 1]?.climbed_at).startOf('isoWeek');
   const last = dayjs(filteredLogbook[0]?.climbed_at).endOf('isoWeek');
   let current = first;
   while (current.isBefore(last) || current.isSame(last)) {
-    weeks.push(`W${current.isoWeek()}`);
+    allWeeks.push(`W${current.isoWeek()}`);
     current = current.add(1, 'week');
   }
+  // Limit to most recent weeks to keep the chart readable
+  const weeks = allWeeks.length > MAX_WEEKS ? allWeeks.slice(-MAX_WEEKS) : allWeeks;
 
   const weeklyData: Record<string, Record<string, number>> = {};
   filteredLogbook.forEach((entry) => {
@@ -280,8 +220,8 @@ export function buildFlashRedpointBars(filteredLogbook: LogbookEntry[]): Grouped
     key: grade,
     label: grade,
     values: [
-      { value: flash[grade] || 0, color: 'rgba(75, 192, 192, 0.5)', label: 'Flash' },
-      { value: redpoint[grade] || 0, color: 'rgba(192, 75, 75, 0.5)', label: 'Redpoint' },
+      { value: flash[grade] || 0, color: 'rgba(107, 144, 128, 0.6)', label: 'Flash' }, /* success #6B9080 */
+      { value: redpoint[grade] || 0, color: 'rgba(184, 82, 76, 0.6)', label: 'Redpoint' }, /* error #B8524C */
     ],
   }));
 }

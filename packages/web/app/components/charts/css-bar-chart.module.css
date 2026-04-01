@@ -17,11 +17,14 @@
   display: flex;
   flex-direction: column;
   justify-content: flex-end;
+  opacity: 0.85;
   transition: opacity 0.15s ease;
+  outline: none;
 }
 
-.barColumn:hover {
-  opacity: 0.8;
+.barColumn:hover,
+.barColumn:focus-visible {
+  opacity: 1;
 }
 
 .barSegment {
@@ -43,8 +46,8 @@
   min-width: 4px;
   max-width: 24px;
   text-align: center;
-  font-size: 8px;
-  color: var(--neutral-400);
+  font-size: 9px;
+  color: var(--neutral-500);
   line-height: 1;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -97,11 +100,14 @@
   flex: 1;
   border-radius: 2px 2px 0 0;
   min-height: 0;
+  opacity: 0.85;
   transition: height 0.3s ease, opacity 0.15s ease;
+  outline: none;
 }
 
-.groupedBarSingle:hover {
-  opacity: 0.8;
+.groupedBarSingle:hover,
+.groupedBarSingle:focus-visible {
+  opacity: 1;
 }
 
 @media (max-width: 768px) {
@@ -114,7 +120,7 @@
   }
 
   .legendLabel {
-    font-size: 7px;
+    font-size: 8px;
   }
 
   .stackedLegendLabel {

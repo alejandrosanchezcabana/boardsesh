@@ -87,7 +87,7 @@ export default function BoardStatsSection({
 
       {timeframe === 'custom' && (
         <div className={styles.customDateRange}>
-          <Stack direction="row" spacing={1} alignItems="center">
+          <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1} alignItems={{ xs: 'stretch', sm: 'center' }}>
             <Typography variant="body2" component="span">From:</Typography>
             <MuiDatePicker
               value={fromDate ? dayjs(fromDate) : null}
@@ -122,7 +122,7 @@ export default function BoardStatsSection({
               <Typography variant="body2" component="span" fontWeight={600} className={styles.boardChartTitle}>
                 Weekly Attempts
               </Typography>
-              <CssBarChart bars={weeklyBars} height={64} mobileHeight={48} gap={3} />
+              <CssBarChart bars={weeklyBars} height={64} mobileHeight={48} gap={3} ariaLabel="Weekly attempts by difficulty" />
             </div>
           )}
 
@@ -132,7 +132,7 @@ export default function BoardStatsSection({
               <Typography variant="body2" component="span" fontWeight={600} className={styles.boardChartTitle}>
                 Flash vs Redpoint
               </Typography>
-              <GroupedBarChart bars={flashRedpointBars} height={48} mobileHeight={36} gap={2} />
+              <GroupedBarChart bars={flashRedpointBars} height={48} mobileHeight={36} gap={2} ariaLabel="Flash vs redpoint by grade" />
             </div>
           )}
         </div>

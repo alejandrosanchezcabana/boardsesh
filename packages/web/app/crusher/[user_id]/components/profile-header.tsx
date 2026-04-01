@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useMemo } from 'react';
+import React from 'react';
 import MuiAvatar from '@mui/material/Avatar';
 import MuiTooltip from '@mui/material/Tooltip';
 import MuiCard from '@mui/material/Card';
@@ -16,9 +16,10 @@ import FollowerCount from '@/app/components/social/follower-count';
 import { FOLLOW_USER, UNFOLLOW_USER } from '@/app/lib/graphql/operations';
 import { CssBarChart } from '@/app/components/charts/css-bar-chart';
 import type { CssBarChartBar } from '@/app/components/charts/css-bar-chart';
+import { EmptyState } from '@/app/components/ui/empty-state';
 import type { UserProfile } from '../utils/profile-constants';
 import { type AggregatedTimeframeType, aggregatedTimeframeOptions } from '../utils/profile-constants';
-import type { LayoutPercentage, GradeBar } from '../utils/chart-data-builders';
+import type { LayoutPercentage, LayoutLegendEntry } from '../utils/chart-data-builders';
 import styles from '../profile-page.module.css';
 
 interface ProfileHeaderProps {
@@ -34,7 +35,7 @@ interface ProfileHeaderProps {
   aggregatedTimeframe: AggregatedTimeframeType;
   onAggregatedTimeframeChange: (value: AggregatedTimeframeType) => void;
   loadingAggregated: boolean;
-  aggregatedGradeBars: GradeBar[];
+  aggregatedStackedBars: { bars: CssBarChartBar[]; legendEntries: LayoutLegendEntry[] } | null;
 }
 
 export default function ProfileHeader({
@@ -47,21 +48,11 @@ export default function ProfileHeader({
   aggregatedTimeframe,
   onAggregatedTimeframeChange,
   loadingAggregated,
-  aggregatedGradeBars,
+  aggregatedStackedBars,
 }: ProfileHeaderProps) {
   const displayName = profile.profile?.displayName || profile.name || 'Crusher';
   const avatarUrl = profile.profile?.avatarUrl || profile.image;
   const instagramUrl = profile.profile?.instagramUrl;
-
-  const chartBars: CssBarChartBar[] = useMemo(
-    () =>
-      aggregatedGradeBars.map((bar) => ({
-        key: bar.grade,
-        label: bar.grade,
-        segments: [{ value: bar.count, color: bar.color }],
-      })),
-    [aggregatedGradeBars],
-  );
 
   return (
     <>
@@ -129,37 +120,39 @@ export default function ProfileHeader({
             </div>
           </div>
 
-          <div className={styles.percentageBarContainer}>
-            <div className={styles.percentageBar}>
-              {statisticsSummary.layoutPercentages.map((layout) => (
-                <MuiTooltip
-                  key={layout.layoutKey}
-                  title={`${layout.displayName}: ${layout.count} distinct climbs (${layout.percentage}%)`}
-                >
-                  <div
-                    className={styles.percentageSegment}
-                    style={{ width: `${layout.percentage}%`, backgroundColor: layout.color }}
+          {statisticsSummary.layoutPercentages.length > 1 && (
+            <div className={styles.percentageBarContainer}>
+              <div className={styles.percentageBar}>
+                {statisticsSummary.layoutPercentages.map((layout) => (
+                  <MuiTooltip
+                    key={layout.layoutKey}
+                    title={`${layout.displayName}: ${layout.count} distinct climbs (${layout.percentage}%)`}
                   >
-                    {layout.percentage >= 15 && (
-                      <span className={styles.percentageLabel}>
-                        {layout.displayName.split(' ').slice(-1)[0]} {layout.percentage}%
-                      </span>
-                    )}
+                    <div
+                      className={styles.percentageSegment}
+                      style={{ width: `${layout.percentage}%`, backgroundColor: layout.color }}
+                    >
+                      {layout.percentage >= 15 && (
+                        <span className={styles.percentageLabel}>
+                          {layout.displayName.split(' ').slice(-1)[0]} {layout.percentage}%
+                        </span>
+                      )}
+                    </div>
+                  </MuiTooltip>
+                ))}
+              </div>
+              <div className={styles.percentageLegend}>
+                {statisticsSummary.layoutPercentages.map((layout) => (
+                  <div key={layout.layoutKey} className={styles.legendItem}>
+                    <div className={styles.legendColor} style={{ backgroundColor: layout.color }} />
+                    <Typography variant="body2" component="span" className={styles.legendText}>
+                      {layout.displayName} ({layout.percentage}%)
+                    </Typography>
                   </div>
-                </MuiTooltip>
-              ))}
+                ))}
+              </div>
             </div>
-            <div className={styles.percentageLegend}>
-              {statisticsSummary.layoutPercentages.map((layout) => (
-                <div key={layout.layoutKey} className={styles.legendItem}>
-                  <div className={styles.legendColor} style={{ backgroundColor: layout.color }} />
-                  <Typography variant="body2" component="span" className={styles.legendText}>
-                    {layout.displayName} ({layout.percentage}%)
-                  </Typography>
-                </div>
-              ))}
-            </div>
-          </div>
+          )}
 
           {/* Grade Distribution Chart */}
           <div className={styles.gradeDistributionSection}>
@@ -184,12 +177,29 @@ export default function ProfileHeader({
               <div className={styles.loadingStats}>
                 <CircularProgress size={24} />
               </div>
-            ) : chartBars.length > 0 ? (
-              <CssBarChart bars={chartBars} height={56} mobileHeight={40} />
+            ) : aggregatedStackedBars ? (
+              <>
+                <CssBarChart
+                  bars={aggregatedStackedBars.bars}
+                  height={56}
+                  mobileHeight={40}
+                  ariaLabel="Grade distribution across boards"
+                />
+                {aggregatedStackedBars.legendEntries.length > 1 && (
+                  <div className={styles.stackedChartLegend}>
+                    {aggregatedStackedBars.legendEntries.map((entry) => (
+                      <div key={entry.label} className={styles.legendItem}>
+                        <div className={styles.legendColor} style={{ backgroundColor: entry.color }} />
+                        <Typography variant="body2" component="span" className={styles.legendText}>
+                          {entry.label}
+                        </Typography>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </>
             ) : (
-              <Typography variant="body2" component="span" color="text.secondary">
-                No ascent data for this period
-              </Typography>
+              <EmptyState description="No ascent data for this period" />
             )}
           </div>
         </CardContent></MuiCard>
