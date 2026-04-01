@@ -98,7 +98,11 @@ export const climbFieldResolvers = {
     // Trigger the climbs resolver which handles both Redis and in-memory caching
     await climbFieldResolvers.climbs(parent);
 
-    // _cachedHasMore is now populated by the climbs resolver
-    return parent._cachedHasMore ?? false;
+    // The climbs resolver always sets _cachedHasMore (from DB result or Redis cache).
+    // A missing value here would indicate a bug in the climbs resolver.
+    if (parent._cachedHasMore === undefined) {
+      throw new Error('Invariant violation: climbs resolver did not populate _cachedHasMore');
+    }
+    return parent._cachedHasMore;
   },
 };

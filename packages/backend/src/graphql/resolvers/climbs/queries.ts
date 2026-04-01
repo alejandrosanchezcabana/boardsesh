@@ -85,6 +85,16 @@ export const climbQueries = {
 
     const userId = ctx.isAuthenticated ? ctx.userId : undefined;
 
+    // Results are cacheable when there's no userId AND no user-specific filters.
+    // This mirrors the middleware CDN caching logic which also skips cache for these params.
+    const hasUserSpecificFilters = !!(
+      searchParams.hideAttempted ||
+      searchParams.hideCompleted ||
+      searchParams.showOnlyAttempted ||
+      searchParams.showOnlyCompleted ||
+      searchParams.onlyDrafts
+    );
+
     // Return context for field resolvers - queries are executed lazily per field
     // Personal progress filters now use boardsesh_ticks table with NextAuth user ID
     return {
@@ -92,8 +102,7 @@ export const climbQueries = {
       searchParams,
       sizeEdges,
       userId,
-      // Results are cacheable in Redis when there are no user-specific filters
-      _isCacheable: !userId,
+      _isCacheable: !userId && !hasUserSpecificFilters,
     };
   },
 
