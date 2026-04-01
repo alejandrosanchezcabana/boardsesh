@@ -423,7 +423,6 @@ const ClimbListItem: React.FC<ClimbListItemProps> = React.memo(({
             open={isActionsOpen}
             onClose={() => setIsActionsOpen(false)}
             styles={drawerStyles}
-            keepMounted={false}
           >
             <ClimbActions
               climb={climb}
@@ -450,7 +449,6 @@ const ClimbListItem: React.FC<ClimbListItemProps> = React.memo(({
               body: { padding: 0 },
               header: { paddingLeft: `${themeTokens.spacing[3]}px`, paddingRight: `${themeTokens.spacing[3]}px` },
             }}
-            keepMounted={false}
           >
             <PlaylistSelectionContent
               climbUuid={climb.uuid}

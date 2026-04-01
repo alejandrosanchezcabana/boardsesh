@@ -62,7 +62,7 @@ const SwipeableDrawer: React.FC<SwipeableDrawerProps> = ({
   extra,
   footer,
   disablePortal,
-  keepMounted = true,
+  keepMounted = false,
   disableBackdropClick,
   open,
   children,

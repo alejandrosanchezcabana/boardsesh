@@ -490,7 +490,6 @@ const ClimbsList = ({
         onClose={handleCloseDrawer}
         onTransitionEnd={handleDrawerTransitionEnd}
         styles={sharedDrawerStyles}
-        keepMounted={false}
       >
         {activeDrawerClimb && (
           <ClimbActions
@@ -513,7 +512,6 @@ const ClimbsList = ({
         onClose={handleCloseDrawer}
         onTransitionEnd={handleDrawerTransitionEnd}
         styles={sharedPlaylistDrawerStyles}
-        keepMounted={false}
       >
         {activeDrawerClimb && (
           <PlaylistSelectionContent

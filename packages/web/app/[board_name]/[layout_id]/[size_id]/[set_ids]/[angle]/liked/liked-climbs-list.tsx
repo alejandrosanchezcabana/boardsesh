@@ -327,7 +327,6 @@ export default function LikedClimbsList({
         onClose={handleCloseDrawer}
         onTransitionEnd={handleDrawerTransitionEnd}
         styles={sharedDrawerStyles}
-        keepMounted={false}
       >
         {activeDrawerClimb && (
           <ClimbActions
@@ -350,7 +349,6 @@ export default function LikedClimbsList({
         onClose={handleCloseDrawer}
         onTransitionEnd={handleDrawerTransitionEnd}
         styles={sharedPlaylistDrawerStyles}
-        keepMounted={false}
       >
         {activeDrawerClimb && (
           <PlaylistSelectionContent
