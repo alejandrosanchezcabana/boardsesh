@@ -104,6 +104,24 @@ describe('BoardImageLayers', () => {
     });
   });
 
+  it('sets loading="lazy" on the overlay image but not background images', () => {
+    const { container } = render(
+      <BoardImageLayers
+        boardDetails={mockBoardDetails}
+        frames="p1r42p2r43"
+        mirrored={false}
+      />,
+    );
+
+    const images = container.querySelectorAll('img');
+    // Last image is the overlay
+    expect(images[images.length - 1].getAttribute('loading')).toBe('lazy');
+    // Background images should NOT have loading="lazy"
+    for (let i = 0; i < images.length - 1; i++) {
+      expect(images[i].getAttribute('loading')).toBeNull();
+    }
+  });
+
   it('renders multiple background images when board has multiple sets', () => {
     const multiSetBoard: BoardDetails = {
       ...mockBoardDetails,
