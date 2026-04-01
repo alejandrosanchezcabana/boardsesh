@@ -106,6 +106,75 @@ describe('CssBarChart', () => {
     render(<CssBarChart bars={[]} ariaLabel="My custom chart" />);
     expect(screen.getByRole('img', { name: 'My custom chart' })).toBeTruthy();
   });
+
+  describe('maxLabels', () => {
+    const makeBars = (count: number): CssBarChartBar[] =>
+      Array.from({ length: count }, (_, i) => ({
+        key: `k${i}`,
+        label: `L${i}`,
+        segments: [{ value: i + 1, color: '#000' }],
+      }));
+
+    it('shows all labels when bars.length <= maxLabels', () => {
+      const { container } = render(<CssBarChart bars={makeBars(5)} maxLabels={10} />);
+      const labels = container.querySelectorAll('[aria-hidden="true"] span');
+      const hidden = Array.from(labels).filter(
+        (el) => (el as HTMLElement).style.visibility === 'hidden',
+      );
+      expect(hidden).toHaveLength(0);
+    });
+
+    it('hides some labels when bars.length > maxLabels', () => {
+      const bars = makeBars(20);
+      const { container } = render(<CssBarChart bars={bars} maxLabels={5} />);
+      const labels = container.querySelectorAll('[aria-hidden="true"] span');
+      const visible = Array.from(labels).filter(
+        (el) => (el as HTMLElement).style.visibility !== 'hidden',
+      );
+      expect(visible.length).toBe(5);
+    });
+
+    it('always shows first and last labels', () => {
+      const bars = makeBars(20);
+      const { container } = render(<CssBarChart bars={bars} maxLabels={3} />);
+      const labels = container.querySelectorAll('[aria-hidden="true"] span');
+      const labelArr = Array.from(labels) as HTMLElement[];
+      // First and last should be visible
+      expect(labelArr[0].style.visibility).not.toBe('hidden');
+      expect(labelArr[labelArr.length - 1].style.visibility).not.toBe('hidden');
+    });
+
+    it('shows close to maxLabels even when bars.length is slightly above', () => {
+      // 13 bars, maxLabels=12 — old algorithm showed only 7
+      const bars = makeBars(13);
+      const { container } = render(<CssBarChart bars={bars} maxLabels={12} />);
+      const labels = container.querySelectorAll('[aria-hidden="true"] span');
+      const visible = Array.from(labels).filter(
+        (el) => (el as HTMLElement).style.visibility !== 'hidden',
+      );
+      expect(visible.length).toBe(12);
+    });
+  });
+
+  describe('angledLabels', () => {
+    it('applies angled CSS class to legend when angledLabels is true', () => {
+      const bars: CssBarChartBar[] = [
+        { key: 'a', label: 'A', segments: [{ value: 1, color: '#000' }] },
+      ];
+      const { container } = render(<CssBarChart bars={bars} angledLabels />);
+      const legend = container.querySelector('[aria-hidden="true"]');
+      expect(legend?.className).toContain('legendAngled');
+    });
+
+    it('does not apply angled CSS class when angledLabels is false', () => {
+      const bars: CssBarChartBar[] = [
+        { key: 'a', label: 'A', segments: [{ value: 1, color: '#000' }] },
+      ];
+      const { container } = render(<CssBarChart bars={bars} />);
+      const legend = container.querySelector('[aria-hidden="true"]');
+      expect(legend?.className).not.toContain('legendAngled');
+    });
+  });
 });
 
 describe('GroupedBarChart', () => {

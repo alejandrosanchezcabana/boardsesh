@@ -49,6 +49,19 @@ export const CssBarChart = React.memo(function CssBarChart({
     '--chart-mobile-height': `${mobileHeight}px`,
   } as React.CSSProperties;
 
+  // Pre-compute which label indices are visible when maxLabels is set.
+  // Distributes exactly maxLabels labels evenly across the range.
+  const visibleLabelIndices = useMemo(() => {
+    if (!maxLabels || bars.length <= maxLabels) return null;
+    const count = Math.min(maxLabels, bars.length);
+    const step = (bars.length - 1) / (count - 1);
+    const indices = new Set<number>();
+    for (let k = 0; k < count; k++) {
+      indices.add(Math.round(k * step));
+    }
+    return indices;
+  }, [bars.length, maxLabels]);
+
   return (
     <div className={styles.container}>
       <div
@@ -100,11 +113,7 @@ export const CssBarChart = React.memo(function CssBarChart({
           aria-hidden="true"
         >
           {bars.map((bar, i) => {
-            // When maxLabels is set, evenly distribute visible labels
-            const visible = !maxLabels || bars.length <= maxLabels
-              || i === 0
-              || i === bars.length - 1
-              || i % Math.ceil(bars.length / maxLabels) === 0;
+            const visible = !visibleLabelIndices || visibleLabelIndices.has(i);
             return (
               <span
                 key={bar.key}
