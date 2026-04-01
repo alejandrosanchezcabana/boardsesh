@@ -19,7 +19,8 @@ import { useBoardProvider } from '@/app/components/board-provider/board-provider
 import SearchClimbNameInput from './search-climb-name-input';
 import SetterNameSelect from './setter-name-select';
 import ClimbHoldSearchForm from './climb-hold-search-form';
-import { BoardDetails, SearchRequestPagination } from '@/app/lib/types';
+import { BoardDetails } from '@/app/lib/types';
+import { buildGradeRangeUpdate } from './grade-range-utils';
 import AuthModal from '@/app/components/auth/auth-modal';
 import {
   getClimbPanelSummary,
@@ -56,19 +57,7 @@ const AccordionSearchForm: React.FC<AccordionSearchFormProps> = ({
   const showTallClimbsFilter = isKilterHomewall && isLargestSize;
 
   const handleGradeChange = (type: 'min' | 'max', value: number | undefined) => {
-    if (type === 'min') {
-      const updates: Partial<SearchRequestPagination> = { minGrade: value };
-      if (value && uiSearchParams.maxGrade && value > uiSearchParams.maxGrade) {
-        updates.maxGrade = value;
-      }
-      updateFilters(updates);
-    } else {
-      const updates: Partial<SearchRequestPagination> = { maxGrade: value };
-      if (value && uiSearchParams.minGrade && value < uiSearchParams.minGrade) {
-        updates.minGrade = value;
-      }
-      updateFilters(updates);
-    }
+    updateFilters(buildGradeRangeUpdate(type, value, uiSearchParams.minGrade, uiSearchParams.maxGrade));
   };
 
   const getGradeSelectBackground = (difficultyId: number | undefined): string | undefined => {
