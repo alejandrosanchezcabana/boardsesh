@@ -76,6 +76,16 @@
   }
 }
 
+:global(html[data-theme="dark"]) .shellThumbnail,
+:global(html[data-theme="dark"]) .shellControl,
+:global(html[data-theme="dark"]) .shellControlWide {
+  background: rgba(255, 255, 255, 0.12);
+}
+
+:global(html[data-theme="dark"]) .shellTitle {
+  color: var(--neutral-100);
+}
+
 .swipeWrapper {
   position: relative;
   overflow: hidden;
@@ -98,6 +108,35 @@
   width: 36px;
   flex-shrink: 0;
   overflow: hidden;
+}
+
+.shellThumbnail {
+  height: 36px;
+  border-radius: 8px;
+  background: var(--neutral-200);
+}
+
+.shellTitle {
+  font-size: var(--font-size-sm, 0.95rem);
+  font-weight: 700;
+  color: var(--neutral-900);
+}
+
+.shellControl,
+.shellControlWide {
+  display: inline-flex;
+  height: 32px;
+  border-radius: 9999px;
+  background: var(--neutral-200);
+  flex-shrink: 0;
+}
+
+.shellControl {
+  width: 32px;
+}
+
+.shellControlWide {
+  width: 44px;
 }
 
 .queueToggle {

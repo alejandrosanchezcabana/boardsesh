@@ -3,10 +3,10 @@
 import React, { createContext, useContext, useCallback, useMemo, useRef, useEffect } from 'react';
 import { usePathname } from 'next/navigation';
 import type { SubscriptionQueueEvent, SessionEvent } from '@boardsesh/shared-schema';
-import { SUPPORTED_BOARDS } from '@boardsesh/shared-schema';
 import type { ClimbQueueItem as LocalClimbQueueItem } from '../queue-control/types';
 import { useWsAuthToken } from '@/app/hooks/use-ws-auth-token';
 import { usePartyProfile } from '../party-manager/party-profile-context';
+import { isBoardRoutePath } from '@/app/lib/board-route-paths';
 
 import type { PersistentSessionContextType, Session, ActiveSessionInfo, SharedRefs } from './types';
 import { useEventProcessor } from './hooks/use-event-processor';
@@ -17,9 +17,6 @@ import { useSessionLifecycle } from './hooks/use-session-lifecycle';
 
 // Re-export types for backwards compatibility
 export type { PersistentSessionContextType, Session, ActiveSessionInfo } from './types';
-
-// Board names to check if we're on a board route
-const BOARD_NAMES = SUPPORTED_BOARDS;
 
 const PersistentSessionContext = createContext<PersistentSessionContextType | undefined>(undefined);
 
@@ -186,5 +183,5 @@ export function usePersistentSession() {
 // Helper hook to check if we're on a board route
 export function useIsOnBoardRoute() {
   const pathname = usePathname();
-  return pathname.startsWith('/b/') || BOARD_NAMES.some((board) => pathname.startsWith(`/${board}/`));
+  return isBoardRoutePath(pathname);
 }
