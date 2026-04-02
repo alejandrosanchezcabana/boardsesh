@@ -1,28 +1,46 @@
 PODS:
   - Capacitor (6.2.1):
     - CapacitorCordova
+  - CapacitorBrowser (6.0.6):
+    - Capacitor
   - CapacitorCommunityBluetoothLe (6.1.0):
     - Capacitor
+  - CapacitorCommunityKeepAwake (6.0.0):
+    - Capacitor
   - CapacitorCordova (6.2.1)
+  - CapacitorGeolocation (6.1.1):
+    - Capacitor
 
 DEPENDENCIES:
   - "Capacitor (from `../../node_modules/@capacitor/ios`)"
+  - "CapacitorBrowser (from `../../node_modules/@capacitor/browser`)"
   - "CapacitorCommunityBluetoothLe (from `../../node_modules/@capacitor-community/bluetooth-le`)"
+  - "CapacitorCommunityKeepAwake (from `../../node_modules/@capacitor-community/keep-awake`)"
   - "CapacitorCordova (from `../../node_modules/@capacitor/ios`)"
+  - "CapacitorGeolocation (from `../../node_modules/@capacitor/geolocation`)"
 
 EXTERNAL SOURCES:
   Capacitor:
     :path: "../../node_modules/@capacitor/ios"
+  CapacitorBrowser:
+    :path: "../../node_modules/@capacitor/browser"
   CapacitorCommunityBluetoothLe:
     :path: "../../node_modules/@capacitor-community/bluetooth-le"
+  CapacitorCommunityKeepAwake:
+    :path: "../../node_modules/@capacitor-community/keep-awake"
   CapacitorCordova:
     :path: "../../node_modules/@capacitor/ios"
+  CapacitorGeolocation:
+    :path: "../../node_modules/@capacitor/geolocation"
 
 SPEC CHECKSUMS:
   Capacitor: c95400d761e376be9da6be5a05f226c0e865cebf
+  CapacitorBrowser: 825163a1d6adce944ac7b9e3cab101146b5a9df8
   CapacitorCommunityBluetoothLe: 0d4d197e0d0eadb84d4c3a6683768088253419d9
+  CapacitorCommunityKeepAwake: 31119384836fb7d4c0f7323df974891d399b03e2
   CapacitorCordova: 8d93e14982f440181be7304aa9559ca631d77fff
+  CapacitorGeolocation: ef657a46a125be74010f4ce57caae173c23204d2
 
-PODFILE CHECKSUM: 47998e176d73fb1dcd46c2cd81d1fab8a9f392d8
+PODFILE CHECKSUM: 8403a0ff08a2d3e316328408eef9236e3db4bb53
 
 COCOAPODS: 1.16.2
