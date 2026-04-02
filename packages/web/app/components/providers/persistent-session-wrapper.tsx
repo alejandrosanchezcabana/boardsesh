@@ -76,7 +76,7 @@ export function RootBottomBar({ boardConfigs }: { boardConfigs: BoardConfigData 
   const pathname = usePathname();
 
   const hideTabBar = HIDE_TAB_BAR_PAGES.some((prefix) => pathname.startsWith(prefix)) && !hasActiveQueue;
-  const shouldShowQueueShell = isBoardRoutePath(pathname) && !hasActiveQueue;
+  const shouldShowQueueShell = isBoardRoutePath(pathname) && !hasActiveQueue && !boardDetails;
 
   return (
     <div className={bottomBarStyles.bottomBarWrapper} data-testid="bottom-bar-wrapper">
