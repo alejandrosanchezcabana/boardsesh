@@ -1,8 +1,9 @@
 'use client';
 
 import React, { useMemo } from 'react';
-import MuiTooltip from '@mui/material/Tooltip';
-import styles from './css-bar-chart.module.css';
+import Box from '@mui/material/Box';
+import Typography from '@mui/material/Typography';
+import { BarChart } from '@mui/x-charts/BarChart';
 
 export interface BarSegment {
   value: number;
@@ -34,100 +35,93 @@ export const CssBarChart = React.memo(function CssBarChart({
   height = 48,
   mobileHeight = 36,
   showLegend = true,
-  gap = 2,
   ariaLabel = 'Bar chart',
   maxLabels,
   angledLabels = false,
 }: CssBarChartProps) {
-  const maxTotal = useMemo(
-    () => Math.max(...bars.map((b) => b.segments.reduce((sum, s) => sum + s.value, 0)), 1),
-    [bars],
-  );
+  // Pivot data: bars have segments, MUI wants series (one per unique segment label/color)
+  const { series, categories } = useMemo(() => {
+    if (bars.length === 0) return { series: [], categories: [] };
 
-  const cssVars = {
-    '--chart-height': `${height}px`,
-    '--chart-mobile-height': `${mobileHeight}px`,
-  } as React.CSSProperties;
+    const cats = bars.map((b) => b.label);
 
-  // Pre-compute which label indices are visible when maxLabels is set.
-  // Distributes exactly maxLabels labels evenly across the range.
-  const visibleLabelIndices = useMemo(() => {
-    if (!maxLabels || bars.length <= maxLabels) return null;
-    const count = Math.min(maxLabels, bars.length);
-    if (count <= 1) return new Set([0]);
-    const step = (bars.length - 1) / (count - 1);
+    // Collect unique segment slots by index (segments are positional across bars)
+    const maxSegments = Math.max(...bars.map((b) => b.segments.length));
+    const seriesArr: Array<{
+      data: (number | null)[];
+      stack: string;
+      color: string;
+      label: string;
+    }> = [];
+
+    for (let i = 0; i < maxSegments; i++) {
+      // Use the first bar's segment at this index for color/label
+      const refSegment = bars.find((b) => b.segments[i])?.segments[i];
+      if (!refSegment) continue;
+
+      seriesArr.push({
+        data: bars.map((b) => (b.segments[i]?.value ?? null)),
+        stack: 'total',
+        color: refSegment.color,
+        label: refSegment.label ?? `Series ${i + 1}`,
+      });
+    }
+
+    return { series: seriesArr, categories: cats };
+  }, [bars]);
+
+  // Compute which tick indices to show when maxLabels is set
+  const tickInterval = useMemo(() => {
+    if (!maxLabels || categories.length <= maxLabels) return undefined;
+    const count = Math.min(maxLabels, categories.length);
+    if (count <= 1) return (_value: unknown, index: number) => index === 0;
+    const step = (categories.length - 1) / (count - 1);
     const indices = new Set<number>();
     for (let k = 0; k < count; k++) {
       indices.add(Math.round(k * step));
     }
-    return indices;
-  }, [bars.length, maxLabels]);
+    return (_value: unknown, index: number) => indices.has(index);
+  }, [categories.length, maxLabels]);
+
+  if (bars.length === 0) {
+    return <div role="img" aria-label={ariaLabel} />;
+  }
+
+  const bottomMargin = showLegend ? (angledLabels ? 40 : 24) : 4;
 
   return (
-    <div className={styles.container}>
-      <div
-        className={styles.barContainer}
-        style={{ ...cssVars, gap: `${gap}px` }}
-        role="img"
-        aria-label={ariaLabel}
-      >
-        {bars.map((bar) => {
-          const total = bar.segments.reduce((sum, s) => sum + s.value, 0);
-          const barHeightPct = Math.max((total / maxTotal) * 100, 8);
-          const tooltipText = bar.segments.length === 1
-            ? `${bar.label}: ${total}`
-            : bar.segments
-                .filter((s) => s.value > 0)
-                .map((s) => `${s.label || bar.label}: ${s.value}`)
-                .join(', ');
-
-          return (
-            <MuiTooltip key={bar.key} title={tooltipText} placement="top" arrow>
-              <div
-                className={styles.barColumn}
-                style={{ height: `${barHeightPct}%` }}
-                tabIndex={0}
-                aria-label={tooltipText}
-              >
-                {bar.segments.map((seg, i) => {
-                  const segPct = total > 0 ? (seg.value / total) * 100 : 0;
-                  return (
-                    <div
-                      key={`${i}-${seg.label ?? ''}`}
-                      className={styles.barSegment}
-                      style={{
-                        height: `${segPct}%`,
-                        backgroundColor: seg.color,
-                      }}
-                    />
-                  );
-                })}
-              </div>
-            </MuiTooltip>
-          );
-        })}
-      </div>
-      {showLegend && (
-        <div
-          className={`${styles.legend} ${angledLabels ? styles.legendAngled : ''}`}
-          style={{ gap: `${gap}px` }}
-          aria-hidden="true"
-        >
-          {bars.map((bar, i) => {
-            const visible = !visibleLabelIndices || visibleLabelIndices.has(i);
-            return (
-              <span
-                key={bar.key}
-                className={styles.legendLabel}
-                style={visible ? undefined : { visibility: 'hidden' }}
-              >
-                {bar.label}
-              </span>
-            );
-          })}
-        </div>
-      )}
-    </div>
+    <Box
+      role="img"
+      aria-label={ariaLabel}
+      sx={{
+        height: `${height}px`,
+        '@media (max-width: 768px)': {
+          height: `${mobileHeight}px`,
+        },
+      }}
+    >
+      <BarChart
+        series={series}
+        xAxis={[{
+          data: categories,
+          scaleType: 'band' as const,
+          ...(tickInterval ? { tickInterval } : {}),
+          tickLabelStyle: angledLabels
+            ? { angle: -45, textAnchor: 'end', fontSize: 9 }
+            : { fontSize: 9 },
+        }]}
+        height={height}
+        margin={{ top: 4, bottom: bottomMargin, left: 0, right: 0 }}
+        yAxis={[{ position: 'none' }]}
+        hideLegend
+        slotProps={{
+          bar: {
+            rx: 2,
+            ry: 2,
+          },
+        }}
+      />
+    </Box>
   );
 });
 
@@ -152,81 +146,81 @@ export const GroupedBarChart = React.memo(function GroupedBarChart({
   height = 48,
   mobileHeight = 36,
   showLegend = true,
-  gap = 2,
   ariaLabel = 'Grouped bar chart',
 }: GroupedBarChartProps) {
-  const maxValue = useMemo(
-    () => Math.max(...bars.flatMap((b) => b.values.map((v) => v.value)), 1),
-    [bars],
-  );
+  const { series, categories, legendEntries } = useMemo(() => {
+    if (bars.length === 0) return { series: [], categories: [], legendEntries: [] };
 
-  const cssVars = {
-    '--chart-height': `${height}px`,
-    '--chart-mobile-height': `${mobileHeight}px`,
-  } as React.CSSProperties;
+    const cats = bars.map((b) => b.label);
 
-  // Collect unique legend entries
-  const legendEntries = useMemo(() => {
+    // Collect unique value labels across all bars
     const seen = new Map<string, string>();
     for (const bar of bars) {
       for (const v of bar.values) {
         if (!seen.has(v.label)) seen.set(v.label, v.color);
       }
     }
-    return Array.from(seen.entries()).map(([label, color]) => ({ label, color }));
+
+    const legends = Array.from(seen.entries()).map(([label, color]) => ({ label, color }));
+
+    // Build one series per unique value label
+    const seriesArr = legends.map(({ label, color }) => ({
+      data: bars.map((b) => {
+        const v = b.values.find((val) => val.label === label);
+        return v?.value ?? null;
+      }),
+      color,
+      label,
+    }));
+
+    return { series: seriesArr, categories: cats, legendEntries: legends };
   }, [bars]);
 
+  if (bars.length === 0) {
+    return <div role="img" aria-label={ariaLabel} />;
+  }
+
   return (
-    <div className={styles.container}>
-      <div
-        className={styles.groupedBarContainer}
-        style={{ ...cssVars, gap: `${gap}px` }}
-        role="img"
-        aria-label={ariaLabel}
-      >
-        {bars.map((bar) => (
-          <div key={bar.key} className={styles.groupedBarColumn} aria-label={bar.label}>
-            {bar.values.map((v) => {
-              const heightPct = Math.max((v.value / maxValue) * 100, v.value > 0 ? 8 : 0);
-              const tooltipText = `${bar.label} — ${v.label}: ${v.value}`;
-              return (
-                <MuiTooltip key={v.label} title={tooltipText} placement="top" arrow>
-                  <div
-                    className={styles.groupedBarSingle}
-                    style={{
-                      height: `${heightPct}%`,
-                      backgroundColor: v.color,
-                    }}
-                    tabIndex={0}
-                    aria-label={tooltipText}
-                  />
-                </MuiTooltip>
-              );
-            })}
-          </div>
-        ))}
-      </div>
-      {showLegend && (
-        <>
-          <div className={styles.legend} style={{ gap: `${gap}px` }} aria-hidden="true">
-            {bars.map((bar) => (
-              <span key={bar.key} className={styles.legendLabel}>
-                {bar.label}
-              </span>
-            ))}
-          </div>
-          {legendEntries.length > 1 && (
-            <div className={styles.stackedLegend}>
-              {legendEntries.map((entry) => (
-                <div key={entry.label} className={styles.stackedLegendItem}>
-                  <div className={styles.stackedLegendColor} style={{ backgroundColor: entry.color }} />
-                  <span className={styles.stackedLegendLabel}>{entry.label}</span>
-                </div>
-              ))}
-            </div>
-          )}
-        </>
+    <Box
+      role="img"
+      aria-label={ariaLabel}
+      sx={{
+        height: `${height}px`,
+        '@media (max-width: 768px)': {
+          height: `${mobileHeight}px`,
+        },
+      }}
+    >
+      <BarChart
+        series={series}
+        xAxis={[{
+          data: categories,
+          scaleType: 'band' as const,
+          tickLabelStyle: { fontSize: 9 },
+        }]}
+        height={height}
+        margin={{ top: 4, bottom: 24, left: 0, right: 0 }}
+        yAxis={[{ position: 'none' }]}
+        hideLegend
+        slotProps={{
+          bar: {
+            rx: 2,
+            ry: 2,
+          },
+        }}
+      />
+      {showLegend && legendEntries.length > 1 && (
+        <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1, mt: 1 }}>
+          {legendEntries.map((entry) => (
+            <Box key={entry.label} sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+              <Box sx={{ width: 8, height: 8, borderRadius: '2px', bgcolor: entry.color, flexShrink: 0 }} />
+              <Typography variant="caption" color="text.secondary" sx={{ fontSize: '11px' }}>
+                {entry.label}
+              </Typography>
+            </Box>
+          ))}
+        </Box>
       )}
-    </div>
+    </Box>
   );
 });
