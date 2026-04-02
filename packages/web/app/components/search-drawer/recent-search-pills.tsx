@@ -50,9 +50,9 @@ const RecentSearchPills: React.FC = () => {
     return (
       <div className={styles.container} data-testid="recent-search-pills-loading">
         <div className={styles.pillList} aria-hidden="true">
-          {SHADOW_PILL_WIDTHS.map((width) => (
+          {SHADOW_PILL_WIDTHS.map((width, index) => (
             <div
-              key={width}
+              key={`shadow-${index}`}
               className={`${styles.pill} ${styles.pillShadow}`}
               data-testid="recent-search-pill-shadow"
             >
