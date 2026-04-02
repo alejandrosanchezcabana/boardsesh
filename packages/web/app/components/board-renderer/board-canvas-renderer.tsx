@@ -55,14 +55,14 @@ const BoardCanvasRenderer = React.memo(function BoardCanvasRenderer({
         }
         if (!hasFired.current) {
           hasFired.current = true;
-          trackRenderComplete(performance.now() - startTime, context, 'rust-wasm');
+          trackRenderComplete(performance.now() - startTime, context, 'wasm');
         }
       })
       .catch((err) => {
         if (!cancelled) {
           console.error('Board canvas render failed:', err);
           setFailed(true);
-          trackRenderError(context, 'rust-wasm');
+          trackRenderError(context, 'wasm');
         }
       });
 
