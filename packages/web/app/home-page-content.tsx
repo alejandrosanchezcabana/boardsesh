@@ -290,7 +290,16 @@ export default function HomePageContent({ boardConfigs, initialPopularConfigs }:
         )}
 
         {/* Onboarding Cards */}
-        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5 }}>
+        <Box
+          sx={{
+            display: 'flex',
+            flexDirection: 'column',
+            gap: 1.5,
+            width: '100%',
+            maxWidth: 420,
+            mx: 'auto',
+          }}
+        >
           <Typography
             variant="body2"
             fontWeight={themeTokens.typography.fontWeight.semibold}
