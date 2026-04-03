@@ -15,7 +15,11 @@ public class OfflineFallbackPolicyTest {
         assertTrue(OfflineFallbackPolicy.isNetworkErrorCode(WebViewClient.ERROR_TIMEOUT));
         assertTrue(OfflineFallbackPolicy.isNetworkErrorCode(WebViewClient.ERROR_IO));
         assertTrue(OfflineFallbackPolicy.isNetworkErrorCode(WebViewClient.ERROR_PROXY_AUTHENTICATION));
-        assertTrue(OfflineFallbackPolicy.isNetworkErrorCode(WebViewClient.ERROR_UNKNOWN));
+    }
+
+    @Test
+    public void networkErrorCode_returnsFalseForUnknownErrors() {
+        assertFalse(OfflineFallbackPolicy.isNetworkErrorCode(WebViewClient.ERROR_UNKNOWN));
     }
 
     @Test

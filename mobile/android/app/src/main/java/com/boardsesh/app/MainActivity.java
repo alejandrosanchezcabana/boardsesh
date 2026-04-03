@@ -19,9 +19,7 @@ import com.getcapacitor.BridgeActivity;
 import com.getcapacitor.BridgeWebViewClient;
 
 public class MainActivity extends BridgeActivity {
-    private volatile boolean attemptedCacheFallback = false;
-    private volatile String lastFailedUrl = null;
-    private volatile boolean mainFrameLoadHadError = false;
+    private final OfflineFallbackStateMachine fallbackState = new OfflineFallbackStateMachine();
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -59,11 +57,11 @@ public class MainActivity extends BridgeActivity {
     }
 
     private void tryCacheThenFallback(WebView view) {
+        String lastFailedUrl = fallbackState.getLastFailedUrl();
         String targetUrl = lastFailedUrl != null ? lastFailedUrl : view.getUrl();
         String safeHref = TextUtils.htmlEncode(targetUrl != null ? targetUrl : "https://boardsesh.com");
 
-        if (!attemptedCacheFallback) {
-            attemptedCacheFallback = true;
+        if (fallbackState.shouldAttemptCacheFallback()) {
             view.getSettings().setCacheMode(WebSettings.LOAD_CACHE_ELSE_NETWORK);
             if (targetUrl != null && !targetUrl.isEmpty()) {
                 view.loadUrl(targetUrl);
@@ -98,16 +96,13 @@ public class MainActivity extends BridgeActivity {
 
         @Override
         public void onPageStarted(WebView view, String url, android.graphics.Bitmap favicon) {
-            mainFrameLoadHadError = false;
+            fallbackState.onPageStarted();
             super.onPageStarted(view, url, favicon);
         }
 
         @Override
         public void onPageFinished(WebView view, String url) {
-            if (!mainFrameLoadHadError) {
-                attemptedCacheFallback = false;
-                lastFailedUrl = null;
-            }
+            fallbackState.onPageFinished();
             view.getSettings().setCacheMode(WebSettings.LOAD_DEFAULT);
             super.onPageFinished(view, url);
         }
@@ -128,14 +123,13 @@ public class MainActivity extends BridgeActivity {
         ) {
             super.onReceivedError(view, request, error);
             if (request.isForMainFrame()) {
-                mainFrameLoadHadError = true;
+                fallbackState.onMainFrameError(request.getUrl() != null ? request.getUrl().toString() : null);
             }
 
             if (!shouldTriggerOfflineFallback(request, error.getErrorCode())) {
                 return;
             }
 
-            lastFailedUrl = request.getUrl() != null ? request.getUrl().toString() : null;
             tryCacheThenFallback(view);
         }
 
@@ -147,14 +141,13 @@ public class MainActivity extends BridgeActivity {
         ) {
             super.onReceivedHttpError(view, request, errorResponse);
             if (request.isForMainFrame()) {
-                mainFrameLoadHadError = true;
+                fallbackState.onMainFrameError(request.getUrl() != null ? request.getUrl().toString() : null);
             }
 
             if (!request.isForMainFrame() || !isOffline()) {
                 return;
             }
 
-            lastFailedUrl = request.getUrl() != null ? request.getUrl().toString() : null;
             tryCacheThenFallback(view);
         }
     }

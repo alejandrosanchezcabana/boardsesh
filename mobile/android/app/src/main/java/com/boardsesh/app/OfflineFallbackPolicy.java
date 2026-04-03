@@ -10,8 +10,7 @@ final class OfflineFallbackPolicy {
             || errorCode == WebViewClient.ERROR_CONNECT
             || errorCode == WebViewClient.ERROR_TIMEOUT
             || errorCode == WebViewClient.ERROR_IO
-            || errorCode == WebViewClient.ERROR_PROXY_AUTHENTICATION
-            || errorCode == WebViewClient.ERROR_UNKNOWN;
+            || errorCode == WebViewClient.ERROR_PROXY_AUTHENTICATION;
     }
 
     static boolean shouldTriggerOfflineFallback(boolean isMainFrameRequest, boolean isOffline, int errorCode) {
