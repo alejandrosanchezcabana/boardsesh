@@ -5,7 +5,7 @@ import { track } from '@vercel/analytics';
 import { useBoardBluetooth } from './use-board-bluetooth';
 import { useQueueContext } from '../graphql-queue';
 import type { BoardDetails } from '@/app/lib/types';
-import { isCapacitor } from '@/app/lib/ble/capacitor-utils';
+import { isCapacitor, isCapacitorWebView, waitForCapacitor } from '@/app/lib/ble/capacitor-utils';
 
 interface BluetoothContextValue {
   isConnected: boolean;
@@ -34,10 +34,22 @@ export function BluetoothProvider({
   const [isIOS, setIsIOS] = useState(false);
 
   useEffect(() => {
-    if (isCapacitor()) {
+    let cancelPolling: (() => void) | undefined;
+
+    // Immediate synchronous checks
+    if (isCapacitor() || isCapacitorWebView()) {
       setIsBluetoothSupported(true);
     } else if (typeof navigator !== 'undefined' && !!navigator.bluetooth) {
       setIsBluetoothSupported(true);
+    } else {
+      // Safety net: poll for window.Capacitor in case the bridge loads late
+      let cancelled = false;
+      waitForCapacitor(2000).then((found) => {
+        if (!cancelled && found) {
+          setIsBluetoothSupported(true);
+        }
+      });
+      cancelPolling = () => { cancelled = true; };
     }
 
     if (
@@ -48,6 +60,8 @@ export function BluetoothProvider({
     ) {
       setIsIOS(true);
     }
+
+    return () => cancelPolling?.();
   }, []);
 
   // Auto-send climb when currentClimbQueueItem changes (only if connected)
