@@ -15,6 +15,7 @@ import FormControlLabel from '@mui/material/FormControlLabel';
 import Checkbox from '@mui/material/Checkbox';
 import { signOut } from 'next-auth/react';
 import { useSnackbar } from '@/app/components/providers/snackbar-provider';
+import { ClientError } from 'graphql-request';
 import { useWsAuthToken } from '@/app/hooks/use-ws-auth-token';
 import { createGraphQLHttpClient } from '@/app/lib/graphql/client';
 import {
@@ -96,7 +97,14 @@ export default function DeleteAccountSection() {
       await signOut({ callbackUrl: '/' });
     } catch (error) {
       console.error('Delete account error:', error);
-      showMessage('Failed to delete account. Please try again.', 'error');
+      let message = 'Failed to delete account. Please try again.';
+      if (error instanceof ClientError) {
+        const serverMessage = error.response?.errors?.[0]?.message;
+        if (serverMessage) {
+          message = serverMessage;
+        }
+      }
+      showMessage(message, 'error');
     } finally {
       setDeleting(false);
     }

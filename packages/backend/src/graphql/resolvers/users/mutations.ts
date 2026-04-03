@@ -3,7 +3,7 @@ import type { ConnectionContext, UserProfile, AuroraCredentialStatus, DeleteAcco
 import { db } from '../../../db/client';
 import * as dbSchema from '@boardsesh/db/schema';
 import { requireAuthenticated, validateInput } from '../shared/helpers';
-import { UpdateProfileInputSchema, SaveAuroraCredentialInputSchema, BoardNameSchema } from '../../../validation/schemas';
+import { UpdateProfileInputSchema, SaveAuroraCredentialInputSchema, BoardNameSchema, DeleteAccountInputSchema } from '../../../validation/schemas';
 import { encrypt } from '@boardsesh/crypto';
 
 export const userMutations = {
@@ -164,6 +164,7 @@ export const userMutations = {
     ctx: ConnectionContext
   ): Promise<boolean> => {
     requireAuthenticated(ctx);
+    validateInput(DeleteAccountInputSchema, input, 'input');
 
     const userId = ctx.userId!;
 
