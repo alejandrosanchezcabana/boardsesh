@@ -52,16 +52,29 @@ jobs:
       - name: Resolve simulator destination
         id: simulator
         run: |
-          DESTINATION=$(xctrace list devices 2>/dev/null | grep -m1 'iPhone.*Simulator' | sed 's/ *(.*//' | xargs)
-          echo "device=$DESTINATION" >> "$GITHUB_OUTPUT"
-          echo "Using simulator: $DESTINATION"
+          # Pick the first booted iPhone, or boot one from the latest available runtime
+          DEVICE_NAME=$(xcrun simctl list devices available -j \
+            | python3 -c "
+          import json, sys
+          data = json.load(sys.stdin)
+          for runtime in sorted(data['devices'].keys(), reverse=True):
+              if 'iOS' not in runtime:
+                  continue
+              for d in data['devices'][runtime]:
+                  if 'iPhone' in d['name'] and d['isAvailable']:
+                      print(d['name'])
+                      sys.exit(0)
+          sys.exit(1)
+          ")
+          echo "device=$DEVICE_NAME" >> "$GITHUB_OUTPUT"
+          echo "Using simulator: $DEVICE_NAME"
 
       - name: Build for testing (compiler check)
         run: |
           xcodebuild build-for-testing \
             -workspace "$WORKSPACE_PATH" \
             -scheme "$SCHEME" \
-            -destination 'platform=iOS Simulator,name=${{ steps.simulator.outputs.device }}' \
+            -destination 'platform=iOS Simulator,name=${{ steps.simulator.outputs.device }},OS=latest' \
             -configuration Debug \
             CODE_SIGN_IDENTITY="" \
             CODE_SIGNING_REQUIRED=NO \
@@ -72,4 +85,4 @@ jobs:
           xcodebuild test-without-building \
             -workspace "$WORKSPACE_PATH" \
             -scheme "$SCHEME" \
-            -destination 'platform=iOS Simulator,name=${{ steps.simulator.outputs.device }}'
+            -destination 'platform=iOS Simulator,name=${{ steps.simulator.outputs.device }},OS=latest'
