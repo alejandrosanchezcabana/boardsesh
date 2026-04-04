@@ -37,11 +37,20 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
     }
 
     func scene(_ scene: UIScene, continue userActivity: NSUserActivity) {
+        // Forward to Capacitor's proxy for plugin handling
         let _ = ApplicationDelegateProxy.shared.application(
             UIApplication.shared,
             continue: userActivity,
             restorationHandler: { _ in }
         )
+
+        // Navigate the WebView directly for universal links (warm start).
+        // Without @capacitor/app plugin, the proxy alone does not trigger navigation.
+        if userActivity.activityType == NSUserActivityTypeBrowsingWeb,
+           let url = userActivity.webpageURL,
+           let vc = window?.rootViewController as? BoardseshViewController {
+            vc.webView?.load(URLRequest(url: url))
+        }
     }
 
     func sceneDidDisconnect(_ scene: UIScene) {}
