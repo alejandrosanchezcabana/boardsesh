@@ -24,6 +24,8 @@ describe('SessionProviderWrapper native OAuth deep link', () => {
   const mockRemove = vi.fn().mockResolvedValue(undefined);
   const mockClose = vi.fn().mockResolvedValue(undefined);
   const mockAddListener = vi.fn();
+  const mockLocationAssign = vi.fn();
+  let originalLocation: Location;
 
   beforeEach(() => {
     capturedListener = null;
@@ -31,6 +33,7 @@ describe('SessionProviderWrapper native OAuth deep link', () => {
     mockRemove.mockClear();
     mockClose.mockClear();
     mockAddListener.mockReset();
+    mockLocationAssign.mockClear();
     mockIsNativeApp.mockReturnValue(false);
 
     mockAddListener.mockImplementation(
@@ -39,6 +42,16 @@ describe('SessionProviderWrapper native OAuth deep link', () => {
         return Promise.resolve({ remove: mockRemove });
       },
     );
+
+    // Mock window.location.assign — jsdom marks location properties as
+    // non-configurable, so vi.spyOn fails on repeated calls. Replace the
+    // entire location object instead.
+    originalLocation = window.location;
+    Object.defineProperty(window, 'location', {
+      value: { ...originalLocation, assign: mockLocationAssign },
+      writable: true,
+      configurable: true,
+    });
 
     // Reset window.Capacitor mock
     Object.defineProperty(window, 'Capacitor', {
@@ -50,6 +63,11 @@ describe('SessionProviderWrapper native OAuth deep link', () => {
 
   afterEach(() => {
     cleanup();
+    Object.defineProperty(window, 'location', {
+      value: originalLocation,
+      writable: true,
+      configurable: true,
+    });
     Object.defineProperty(window, 'Capacitor', {
       value: undefined,
       writable: true,
@@ -91,7 +109,6 @@ describe('SessionProviderWrapper native OAuth deep link', () => {
       </SessionProviderWrapper>,
     );
 
-    // Wait for the async listener registration
     await act(async () => {
       await new Promise((r) => setTimeout(r, 0));
     });
@@ -125,7 +142,6 @@ describe('SessionProviderWrapper native OAuth deep link', () => {
 
   it('closes browser and redirects to login on error param', async () => {
     setupCapacitorMock();
-    const locationAssign = vi.spyOn(window.location, 'assign').mockImplementation(() => {});
 
     render(
       <SessionProviderWrapper>
@@ -145,14 +161,11 @@ describe('SessionProviderWrapper native OAuth deep link', () => {
 
     expect(mockClose).toHaveBeenCalled();
     expect(mockSignIn).not.toHaveBeenCalled();
-    expect(locationAssign).toHaveBeenCalledWith('/auth/login');
-
-    locationAssign.mockRestore();
+    expect(mockLocationAssign).toHaveBeenCalledWith('/auth/login');
   });
 
   it('closes browser and redirects to login when transfer token is missing', async () => {
     setupCapacitorMock();
-    const locationAssign = vi.spyOn(window.location, 'assign').mockImplementation(() => {});
 
     render(
       <SessionProviderWrapper>
@@ -172,15 +185,12 @@ describe('SessionProviderWrapper native OAuth deep link', () => {
 
     expect(mockClose).toHaveBeenCalled();
     expect(mockSignIn).not.toHaveBeenCalled();
-    expect(locationAssign).toHaveBeenCalledWith('/auth/login');
-
-    locationAssign.mockRestore();
+    expect(mockLocationAssign).toHaveBeenCalledWith('/auth/login');
   });
 
   it('calls signIn with transfer token and redirects on success', async () => {
     setupCapacitorMock();
     mockSignIn.mockResolvedValue({ url: '/dashboard', error: null });
-    const locationAssign = vi.spyOn(window.location, 'assign').mockImplementation(() => {});
 
     render(
       <SessionProviderWrapper>
@@ -204,15 +214,12 @@ describe('SessionProviderWrapper native OAuth deep link', () => {
       callbackUrl: '/dashboard',
       redirect: false,
     });
-    expect(locationAssign).toHaveBeenCalledWith('/dashboard');
-
-    locationAssign.mockRestore();
+    expect(mockLocationAssign).toHaveBeenCalledWith('/dashboard');
   });
 
   it('redirects to login when signIn returns an error', async () => {
     setupCapacitorMock();
     mockSignIn.mockResolvedValue({ url: null, error: 'CredentialsSignin' });
-    const locationAssign = vi.spyOn(window.location, 'assign').mockImplementation(() => {});
 
     render(
       <SessionProviderWrapper>
@@ -230,15 +237,12 @@ describe('SessionProviderWrapper native OAuth deep link', () => {
       });
     });
 
-    expect(locationAssign).toHaveBeenCalledWith('/auth/login');
-
-    locationAssign.mockRestore();
+    expect(mockLocationAssign).toHaveBeenCalledWith('/auth/login');
   });
 
   it('sanitizes non-relative next path to root', async () => {
     setupCapacitorMock();
     mockSignIn.mockResolvedValue({ url: '/', error: null });
-    const locationAssign = vi.spyOn(window.location, 'assign').mockImplementation(() => {});
 
     render(
       <SessionProviderWrapper>
@@ -261,8 +265,6 @@ describe('SessionProviderWrapper native OAuth deep link', () => {
       callbackUrl: '/',
       redirect: false,
     });
-
-    locationAssign.mockRestore();
   });
 
   it('removes listener on unmount', async () => {
@@ -283,7 +285,6 @@ describe('SessionProviderWrapper native OAuth deep link', () => {
 
   it('removes listener if component unmounts before registration completes', async () => {
     setupCapacitorMock();
-    // Make addListener resolve after a delay
     let resolveListener: ((value: { remove: () => Promise<void> }) => void) | null = null;
     mockAddListener.mockImplementation(
       (_event: string, listener: AppUrlOpenListener) => {
