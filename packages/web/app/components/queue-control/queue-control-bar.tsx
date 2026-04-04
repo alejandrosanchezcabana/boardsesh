@@ -112,6 +112,14 @@ const QueueControlBar: React.FC<QueueControlBarProps> = ({ boardDetails, angle }
 
   const { showMessage } = useSnackbar();
   const [showCancelConfirm, setShowCancelConfirm] = useState(false);
+  const [dismissedDisconnect, setDismissedDisconnect] = useState(false);
+
+  // Reset dismissed state when connection is restored so banner reappears on next disconnect
+  useEffect(() => {
+    if (!isDisconnected) {
+      setDismissedDisconnect(false);
+    }
+  }, [isDisconnected]);
 
   const { mode } = useColorMode();
   const isDark = mode === 'dark';
@@ -415,29 +423,23 @@ const QueueControlBar: React.FC<QueueControlBarProps> = ({ boardDetails, angle }
   return (
     <div id="onboarding-queue-bar" className={`queue-bar-shadow ${styles.queueBar}`} data-testid="queue-control-bar">
       {/* Offline indicator */}
-      {isDisconnected && (
-        <Box
-          sx={{
-            display: 'flex',
-            alignItems: 'center',
-            gap: 1,
-            px: 2,
-            py: 0.5,
-            backgroundColor: 'var(--semantic-surface-secondary, #f5f5f5)',
-            typography: 'caption',
-            color: 'text.secondary',
-          }}
+      {isDisconnected && !dismissedDisconnect && (
+        <div
+          className={styles.offlineBanner}
+          onClick={() => setDismissedDisconnect(true)}
+          role="button"
+          tabIndex={0}
+          onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setDismissedDisconnect(true); } }}
         >
-          <CloudOffOutlined sx={{ fontSize: 'body2.fontSize' }} />
-          <span>
-            Disconnected
+          <CloudOffOutlined sx={{ fontSize: 'body2.fontSize', flexShrink: 0 }} />
+          <span className={styles.offlineBannerText}>
             {sessionId
               ? users && users.length > 1
-                ? ' — climbs you add will sync, but other changes may be lost'
-                : ' — your changes will sync when you reconnect'
-              : ''}
+                ? 'Offline. Queued climbs will still sync.'
+                : 'Offline. Changes will sync when you reconnect.'
+              : 'Offline'}
           </span>
-        </Box>
+        </div>
       )}
       {/* Main Control Bar */}
       <MuiCard variant="outlined" className={styles.card} sx={{ border: 'none', backgroundColor: 'transparent' }}>

@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { render, screen } from '@testing-library/react';
+import { render, screen, fireEvent } from '@testing-library/react';
 import React from 'react';
 
 // -- All mocks before imports --
@@ -201,7 +201,7 @@ describe('QueueControlBar offline UI', () => {
     render(<QueueControlBar {...defaultProps} />);
 
     expect(screen.queryByText(/Reconnecting/)).toBeNull();
-    expect(screen.queryByText(/Disconnected/i)).toBeNull();
+    expect(screen.queryByText(/Offline/i)).toBeNull();
   });
 
   it('shows reconnecting view when online but WebSocket reconnecting', () => {
@@ -216,7 +216,7 @@ describe('QueueControlBar offline UI', () => {
     expect(screen.getByText(/Reconnecting/)).toBeTruthy();
   });
 
-  it('shows disconnected indicator with multi-user warning when offline in party mode', () => {
+  it('shows offline indicator with multi-user message when offline in party mode', () => {
     mockQueueContext = {
       ...baseQueueContext,
       connectionState: 'reconnecting',
@@ -228,12 +228,12 @@ describe('QueueControlBar offline UI', () => {
 
     // Should NOT show the reconnecting spinner view
     expect(screen.queryByText(/Reconnecting/)).toBeNull();
-    // Should show disconnected indicator with multi-user warning
-    expect(screen.getByText(/Disconnected/i)).toBeTruthy();
-    expect(screen.getByText(/other changes may be lost/i)).toBeTruthy();
+    // Should show offline indicator with multi-user sync message
+    expect(screen.getByText(/Offline/i)).toBeTruthy();
+    expect(screen.getByText(/Queued climbs will still sync/i)).toBeTruthy();
   });
 
-  it('shows disconnected indicator without warning when solo in party mode', () => {
+  it('shows offline indicator with solo message when solo in party mode', () => {
     mockQueueContext = {
       ...baseQueueContext,
       connectionState: 'reconnecting',
@@ -243,9 +243,9 @@ describe('QueueControlBar offline UI', () => {
 
     render(<QueueControlBar {...defaultProps} />);
 
-    expect(screen.getByText(/Disconnected/i)).toBeTruthy();
-    expect(screen.getByText(/your changes will sync/i)).toBeTruthy();
-    expect(screen.queryByText(/may be lost/i)).toBeNull();
+    expect(screen.getByText(/Offline/i)).toBeTruthy();
+    expect(screen.getByText(/Changes will sync when you reconnect/i)).toBeTruthy();
+    expect(screen.queryByText(/Queued climbs/i)).toBeNull();
   });
 
   it('shows normal controls when offline in solo mode (no session)', () => {
@@ -259,5 +259,49 @@ describe('QueueControlBar offline UI', () => {
     render(<QueueControlBar {...defaultProps} />);
 
     expect(screen.queryByText(/Reconnecting/)).toBeNull();
+  });
+
+  it('dismisses offline banner when clicked', () => {
+    mockQueueContext = {
+      ...baseQueueContext,
+      connectionState: 'reconnecting',
+      isDisconnected: true,
+      users: [{ id: 'me', username: 'me', isLeader: true }],
+    };
+
+    render(<QueueControlBar {...defaultProps} />);
+
+    const banner = screen.getByText(/Offline/i).closest('[role="button"]')!;
+    expect(banner).toBeTruthy();
+
+    fireEvent.click(banner);
+
+    expect(screen.queryByText(/Offline/i)).toBeNull();
+  });
+
+  it('reappears after reconnect then disconnect again', () => {
+    mockQueueContext = {
+      ...baseQueueContext,
+      connectionState: 'reconnecting',
+      isDisconnected: true,
+      users: [{ id: 'me', username: 'me', isLeader: true }],
+    };
+
+    const { rerender } = render(<QueueControlBar {...defaultProps} />);
+
+    // Dismiss the banner
+    const banner = screen.getByText(/Offline/i).closest('[role="button"]')!;
+    fireEvent.click(banner);
+    expect(screen.queryByText(/Offline/i)).toBeNull();
+
+    // Simulate reconnection
+    mockQueueContext = { ...baseQueueContext, isDisconnected: false, connectionState: 'connected' };
+    rerender(<QueueControlBar {...defaultProps} />);
+
+    // Simulate disconnection again
+    mockQueueContext = { ...baseQueueContext, isDisconnected: true, connectionState: 'reconnecting' };
+    rerender(<QueueControlBar {...defaultProps} />);
+
+    expect(screen.getByText(/Offline/i)).toBeTruthy();
   });
 });
