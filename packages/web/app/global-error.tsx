@@ -5,8 +5,10 @@ import { useEffect } from "react";
 
 export default function GlobalError({
   error,
+  reset,
 }: {
   error: Error & { digest?: string };
+  reset: () => void;
 }) {
   useEffect(() => {
     Sentry.captureException(error);
@@ -41,7 +43,7 @@ export default function GlobalError({
             Pull down to refresh, or tap below
           </p>
           <button
-            onClick={() => window.location.reload()}
+            onClick={() => reset()}
             style={{
               padding: "12px 24px",
               borderRadius: 8,
