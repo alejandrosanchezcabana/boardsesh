@@ -85,16 +85,32 @@ const BoardCanvasRenderer = React.memo(function BoardCanvasRenderer({
     );
   }
 
+  if (contain) {
+    return (
+      <canvas
+        ref={canvasRef}
+        style={{
+          width: '100%',
+          height: '100%',
+          objectFit: 'contain',
+          ...style,
+        }}
+      />
+    );
+  }
+
   return (
-    <canvas
-      ref={canvasRef}
-      style={{
-        width: '100%',
-        height: contain ? '100%' : 'auto',
-        objectFit: contain ? 'contain' : undefined,
-        ...style,
-      }}
-    />
+    <div style={{ position: 'relative', ...style }}>
+      <canvas
+        ref={canvasRef}
+        style={{
+          position: 'absolute',
+          inset: 0,
+          width: '100%',
+          height: '100%',
+        }}
+      />
+    </div>
   );
 });
 
