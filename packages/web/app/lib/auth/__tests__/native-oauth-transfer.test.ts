@@ -61,6 +61,17 @@ describe('native OAuth transfer token', () => {
     expect(verifyNativeOAuthTransferToken(tamperedToken)).toBeNull();
   });
 
+  it('rejects tokens with extra segments', () => {
+    const token = issueNativeOAuthTransferToken({ userId: 'user_123', nextPath: '/' });
+    expect(verifyNativeOAuthTransferToken(`${token}.extra`)).toBeNull();
+  });
+
+  it('rejects tokens with empty segments', () => {
+    expect(verifyNativeOAuthTransferToken('.')).toBeNull();
+    expect(verifyNativeOAuthTransferToken('.sig')).toBeNull();
+    expect(verifyNativeOAuthTransferToken('payload.')).toBeNull();
+  });
+
   it('accepts tokens with iat up to 5 seconds in the future (clock skew)', () => {
     const token = issueNativeOAuthTransferToken({
       userId: 'user_123',

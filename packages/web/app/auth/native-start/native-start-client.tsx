@@ -63,7 +63,7 @@ function NativeStartInner() {
       <form
         ref={formRef}
         method="POST"
-        action={`/api/auth/signin/${provider}`}
+        action={`/api/auth/signin/${encodeURIComponent(provider)}`}
         style={{ display: 'none' }}
       >
         <input type="hidden" name="csrfToken" value="" />

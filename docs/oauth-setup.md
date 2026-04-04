@@ -501,20 +501,23 @@ OAuth in the Capacitor WebView requires special handling because the WebView and
 Instead, the entire OAuth flow runs in the external browser, and the result is transferred back to the WebView via a short-lived HMAC-signed token:
 
 1. **User taps a social login button** in the WebView
-2. The Capacitor Browser plugin opens `/auth/native-start?provider=google&callbackUrl=...` in the external browser
-3. That page fetches a CSRF token and auto-submits the NextAuth sign-in form — all in the external browser's cookie context
-4. The OAuth provider flow completes normally (redirect to Google/Apple/Facebook → callback → session created in external browser)
-5. NextAuth redirects to `/api/auth/native/callback`, which reads the session, issues a **transfer token** (HMAC-SHA256 signed, 120s TTL), and redirects to `com.boardsesh.app://auth/callback?transferToken=...`
-6. The native app intercepts the deep link, closes the external browser, and calls `signIn('native-oauth', { transferToken })` inside the WebView
-7. The `native-oauth` credentials provider verifies the token signature/expiry/iat, looks up the user, and creates a session in the WebView
+2. `buildNativeOAuthSignInUrl()` constructs a URL to `/auth/native-start?provider=google&callbackUrl=...`
+3. The Capacitor Browser plugin opens that URL in the external browser (Chrome Custom Tab / SFSafariViewController)
+4. The `/auth/native-start` page fetches a CSRF token and auto-submits a POST to `/api/auth/signin/{provider}` — this bypasses the custom login page redirect and goes straight to the OAuth provider. A direct GET to `/api/auth/signin/{provider}` would redirect to the custom `pages.signIn` page instead, requiring a second tap.
+5. The OAuth provider flow completes normally (redirect to Google/Apple/Facebook → callback → session created in external browser)
+6. NextAuth redirects to `/api/auth/native/callback`, which reads the session, issues a **transfer token** (HMAC-SHA256 signed, 120s TTL), and redirects to `com.boardsesh.app://auth/callback?transferToken=...`
+7. The native app intercepts the deep link, closes the external browser, and calls `signIn('native-oauth', { transferToken })` inside the WebView
+8. The `native-oauth` credentials provider verifies the token signature/expiry/iat, looks up the user, and creates a session in the WebView
 
 ### Key Files
 
 | File | Purpose |
 |------|---------|
+| `packages/web/app/lib/auth/native-oauth-url.ts` | Build the URL that opens in the external browser for native OAuth |
+| `packages/web/app/lib/auth/native-oauth-config.ts` | Shared deep link scheme constant (`com.boardsesh.app://auth/callback`) |
 | `packages/web/app/lib/auth/native-oauth-transfer.ts` | Issue and verify HMAC-signed transfer tokens |
 | `packages/web/app/api/auth/native/callback/route.ts` | Server endpoint that issues a transfer token and redirects to the deep link |
-| `packages/web/app/auth/native-start/` | Auto-submit page opened in the external browser to start the OAuth flow |
+| `packages/web/app/auth/native-start/` | Auto-submit page that fetches a CSRF token and POSTs to the NextAuth sign-in endpoint |
 | `packages/web/app/components/providers/session-provider.tsx` | Listens for `appUrlOpen` deep links and completes the sign-in in the WebView |
 | `packages/web/app/components/auth/social-login-buttons.tsx` | Detects Capacitor and opens the external browser instead of calling `signIn()` |
 | `packages/web/app/lib/auth/auth-options.ts` | Contains the `native-oauth` credentials provider |

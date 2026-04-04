@@ -6,6 +6,7 @@ import { ReactNode } from 'react';
 import Snackbar from '@mui/material/Snackbar';
 import Alert from '@mui/material/Alert';
 import { isNativeApp } from '@/app/lib/ble/capacitor-utils';
+import { NATIVE_OAUTH_CALLBACK_SCHEME } from '@/app/lib/auth/native-oauth-config';
 
 interface SessionProviderWrapperProps {
   children: ReactNode;
@@ -31,41 +32,42 @@ export default function SessionProviderWrapper({ children }: SessionProviderWrap
     // or a Promise<PluginListenerHandle> (Capacitor 5). Wrap with
     // Promise.resolve to handle both cases safely.
     const listenerResult = appPlugin.addListener('appUrlOpen', async ({ url }) => {
-      if (!url.startsWith('com.boardsesh.app://auth/callback')) {
+      if (!url.startsWith(NATIVE_OAUTH_CALLBACK_SCHEME)) {
         return;
       }
+
+      const closeBrowser = () => window.Capacitor?.Plugins?.Browser?.close?.();
 
       let parsed: URL;
       try {
         parsed = new URL(url);
       } catch {
-        await window.Capacitor?.Plugins?.Browser?.close?.();
-        window.location.assign('/auth/login');
+        await closeBrowser();
+        window.location.assign('/auth/login?error=OAuthCallback');
         return;
       }
 
+      const callbackError = parsed.searchParams.get('error');
       const transferToken = parsed.searchParams.get('transferToken');
-      const error = parsed.searchParams.get('error');
       const nextPath = parsed.searchParams.get('next') ?? '/';
+      const safeCallbackUrl = nextPath.startsWith('/') ? nextPath : '/';
 
-      // Close the external browser regardless of outcome
-      await window.Capacitor?.Plugins?.Browser?.close?.();
-
-      if (error || !transferToken) {
-        // Redirect to login with context about the failure
-        window.location.assign('/auth/login');
+      if (callbackError || !transferToken) {
+        await closeBrowser();
+        window.location.assign('/auth/login?error=OAuthCallback');
         return;
       }
 
-      const safeCallbackUrl = nextPath.startsWith('/') ? nextPath : '/';
       const result = await signIn('native-oauth', {
         transferToken,
         callbackUrl: safeCallbackUrl,
         redirect: false,
       });
 
+      await closeBrowser();
+
       if (result?.error) {
-        window.location.assign('/auth/login');
+        window.location.assign('/auth/login?error=OAuthCallback');
         return;
       }
 

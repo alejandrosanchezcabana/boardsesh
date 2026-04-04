@@ -141,7 +141,7 @@ describe('SessionProviderWrapper native OAuth deep link', () => {
 
     expect(mockClose).toHaveBeenCalled();
     expect(mockSignIn).not.toHaveBeenCalled();
-    expect(mockLocationAssign).toHaveBeenCalledWith('/auth/login');
+    expect(mockLocationAssign).toHaveBeenCalledWith('/auth/login?error=OAuthCallback');
   });
 
   it('ignores non-auth deep links', async () => {
@@ -185,7 +185,7 @@ describe('SessionProviderWrapper native OAuth deep link', () => {
 
     expect(mockClose).toHaveBeenCalled();
     expect(mockSignIn).not.toHaveBeenCalled();
-    expect(mockLocationAssign).toHaveBeenCalledWith('/auth/login');
+    expect(mockLocationAssign).toHaveBeenCalledWith('/auth/login?error=OAuthCallback');
   });
 
   it('closes browser and redirects to login when transfer token is missing', async () => {
@@ -209,7 +209,7 @@ describe('SessionProviderWrapper native OAuth deep link', () => {
 
     expect(mockClose).toHaveBeenCalled();
     expect(mockSignIn).not.toHaveBeenCalled();
-    expect(mockLocationAssign).toHaveBeenCalledWith('/auth/login');
+    expect(mockLocationAssign).toHaveBeenCalledWith('/auth/login?error=OAuthCallback');
   });
 
   it('calls signIn with transfer token and redirects on success', async () => {
@@ -261,7 +261,7 @@ describe('SessionProviderWrapper native OAuth deep link', () => {
       });
     });
 
-    expect(mockLocationAssign).toHaveBeenCalledWith('/auth/login');
+    expect(mockLocationAssign).toHaveBeenCalledWith('/auth/login?error=OAuthCallback');
   });
 
   it('sanitizes non-relative next path to root', async () => {
