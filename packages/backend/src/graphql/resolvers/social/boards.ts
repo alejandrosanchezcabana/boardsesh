@@ -212,6 +212,7 @@ async function enrichBoard(
     gymUuid: gymInfo?.uuid ?? null,
     gymName: gymInfo?.name ?? null,
     distanceMeters: distanceMeters ?? null,
+    serialNumber: board.serialNumber ?? null,
   };
 }
 
@@ -1154,6 +1155,7 @@ export const socialBoardMutations = {
                 isOwned: validatedInput.isOwned ?? true,
                 angle: validatedInput.angle ?? 40,
                 isAngleAdjustable: validatedInput.isAngleAdjustable ?? true,
+                serialNumber: validatedInput.serialNumber ?? null,
                 gymId: newGym.id,
               })
               .returning();
@@ -1194,6 +1196,7 @@ export const socialBoardMutations = {
         isOwned: validatedInput.isOwned ?? true,
         angle: validatedInput.angle ?? 40,
         isAngleAdjustable: validatedInput.isAngleAdjustable ?? true,
+        serialNumber: validatedInput.serialNumber ?? null,
         gymId,
       })
       .returning();
@@ -1251,6 +1254,7 @@ export const socialBoardMutations = {
     if (validatedInput.isOwned !== undefined) updateValues.isOwned = validatedInput.isOwned;
     if (validatedInput.angle !== undefined) updateValues.angle = validatedInput.angle;
     if (validatedInput.isAngleAdjustable !== undefined) updateValues.isAngleAdjustable = validatedInput.isAngleAdjustable;
+    if (validatedInput.serialNumber !== undefined) updateValues.serialNumber = validatedInput.serialNumber;
 
     // Handle config field changes (layoutId, sizeId, setIds) — only allowed on boards with zero ticks
     const hasConfigChange = validatedInput.layoutId !== undefined

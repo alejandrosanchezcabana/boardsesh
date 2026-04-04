@@ -50,6 +50,7 @@ const BOARD_FIELDS = `
   gymUuid
   gymName
   distanceMeters
+  serialNumber
 `;
 
 export const GET_BOARD = gql`

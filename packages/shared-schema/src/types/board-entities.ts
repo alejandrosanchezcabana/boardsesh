@@ -33,6 +33,7 @@ export type UserBoard = {
   gymUuid?: string | null;
   gymName?: string | null;
   distanceMeters?: number | null;
+  serialNumber?: string | null;
 };
 
 export type UserBoardConnection = {
@@ -76,6 +77,7 @@ export type CreateBoardInput = {
   gymUuid?: string;
   angle?: number;
   isAngleAdjustable?: boolean;
+  serialNumber?: string;
 };
 
 export type UpdateBoardInput = {
@@ -93,6 +95,7 @@ export type UpdateBoardInput = {
   layoutId?: number;
   sizeId?: number;
   setIds?: string;
+  serialNumber?: string;
 };
 
 export type BoardLeaderboardInput = {

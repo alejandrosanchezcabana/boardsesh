@@ -71,6 +71,8 @@ export const boardEntitiesTypeDefs = /* GraphQL */ `
     gymName: String
     "Distance in meters from search origin (only set for proximity queries)"
     distanceMeters: Float
+    "Controller box serial number"
+    serialNumber: String
   }
 
   """
@@ -157,6 +159,8 @@ export const boardEntitiesTypeDefs = /* GraphQL */ `
     angle: Int
     "Whether the board's angle is physically adjustable (default true)"
     isAngleAdjustable: Boolean
+    "Controller box serial number"
+    serialNumber: String
   }
 
   """
@@ -191,6 +195,8 @@ export const boardEntitiesTypeDefs = /* GraphQL */ `
     sizeId: Int
     "New set IDs (only allowed when board has zero ticks)"
     setIds: String
+    "Controller box serial number"
+    serialNumber: String
   }
 
   """

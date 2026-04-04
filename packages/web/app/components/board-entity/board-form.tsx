@@ -29,6 +29,7 @@ interface BoardFormFieldValues {
   layoutId?: number;
   sizeId?: number;
   setIds?: string;
+  serialNumber?: string;
 }
 
 interface BoardFormProps {
@@ -89,6 +90,7 @@ export default function BoardForm({
   const [isOwned, setIsOwned] = useState(initialValues.isOwned);
   const [angle, setAngle] = useState(initialValues.angle ?? 40);
   const [isAngleAdjustable, setIsAngleAdjustable] = useState(initialValues.isAngleAdjustable ?? true);
+  const [serialNumber, setSerialNumber] = useState(initialValues.serialNumber ?? '');
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   // Config editing state
@@ -124,6 +126,7 @@ export default function BoardForm({
           sizeId,
           setIds: selectedSets.length > 0 ? selectedSets.sort((a, b) => a - b).join(',') : undefined,
         } : {}),
+        serialNumber: serialNumber.trim() || undefined,
       });
     } finally {
       setIsSubmitting(false);
@@ -249,6 +252,16 @@ export default function BoardForm({
         fullWidth
         size="small"
         placeholder={locationPlaceholder}
+      />
+
+      <TextField
+        label="Controller Serial Number"
+        value={serialNumber}
+        onChange={(e) => setSerialNumber(e.target.value)}
+        fullWidth
+        size="small"
+        placeholder="e.g. ABC-12345"
+        inputProps={{ maxLength: 100 }}
       />
 
       {availableAngles && availableAngles.length > 0 && (

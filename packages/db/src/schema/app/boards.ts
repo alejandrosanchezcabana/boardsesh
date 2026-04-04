@@ -41,6 +41,7 @@ export const userBoards = pgTable(
     isAngleAdjustable: boolean('is_angle_adjustable').notNull().default(true),
     createdAt: timestamp('created_at').defaultNow().notNull(),
     updatedAt: timestamp('updated_at').defaultNow().notNull(),
+    serialNumber: text('serial_number'),
     gymId: bigint('gym_id', { mode: 'number' }).references(() => gyms.id, { onDelete: 'set null' }),
     deletedAt: timestamp('deleted_at'),
   },

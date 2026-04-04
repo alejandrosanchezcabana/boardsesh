@@ -44,7 +44,7 @@ export default function EditBoardForm({ board, totalAscents, onSuccess, onCancel
   }, [totalAscents, board.boardType]);
 
   const handleSubmit = useCallback(
-    async (values: { name: string; slug?: string; description: string; locationName: string; isPublic: boolean; isOwned: boolean; angle?: number; isAngleAdjustable?: boolean; layoutId?: number; sizeId?: number; setIds?: string }) => {
+    async (values: { name: string; slug?: string; description: string; locationName: string; isPublic: boolean; isOwned: boolean; angle?: number; isAngleAdjustable?: boolean; layoutId?: number; sizeId?: number; setIds?: string; serialNumber?: string }) => {
       if (!values.name) {
         showMessage('Board name is required', 'error');
         return;
@@ -66,6 +66,7 @@ export default function EditBoardForm({ board, totalAscents, onSuccess, onCancel
             sizeId: values.sizeId,
             setIds: values.setIds,
           } : {}),
+          serialNumber: values.serialNumber,
         },
       });
 
@@ -92,6 +93,7 @@ export default function EditBoardForm({ board, totalAscents, onSuccess, onCancel
         layoutId: board.layoutId,
         sizeId: board.sizeId,
         setIds: board.setIds,
+        serialNumber: board.serialNumber ?? '',
       }}
       showSlugField
       availableAngles={availableAngles}
