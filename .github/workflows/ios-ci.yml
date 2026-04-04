@@ -1,0 +1,68 @@
+name: iOS CI
+
+on:
+  push:
+    branches-ignore: [main]
+    paths:
+      - 'mobile/**'
+      - '.github/workflows/ios-ci.yml'
+  pull_request:
+    paths:
+      - 'mobile/**'
+      - '.github/workflows/ios-ci.yml'
+  workflow_dispatch:
+
+concurrency:
+  group: ios-ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build-and-test:
+    runs-on: macos-15
+    timeout-minutes: 30
+
+    env:
+      WORKSPACE_PATH: mobile/ios/App/App.xcworkspace
+      SCHEME: App
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
+
+      - name: Install Node.js dependencies
+        working-directory: mobile
+        run: bun install --frozen-lockfile
+
+      - name: Sync Capacitor iOS project
+        working-directory: mobile
+        run: bunx cap sync ios
+
+      - name: Install CocoaPods dependencies
+        working-directory: mobile/ios/App
+        run: pod install
+
+      - name: Build for testing (compiler check)
+        run: |
+          xcodebuild build-for-testing \
+            -workspace "$WORKSPACE_PATH" \
+            -scheme "$SCHEME" \
+            -destination 'platform=iOS Simulator,name=iPhone 16' \
+            -configuration Debug \
+            CODE_SIGN_IDENTITY="" \
+            CODE_SIGNING_REQUIRED=NO \
+            CODE_SIGNING_ALLOWED=NO
+
+      - name: Run unit tests
+        run: |
+          xcodebuild test-without-building \
+            -workspace "$WORKSPACE_PATH" \
+            -scheme "$SCHEME" \
+            -destination 'platform=iOS Simulator,name=iPhone 16'

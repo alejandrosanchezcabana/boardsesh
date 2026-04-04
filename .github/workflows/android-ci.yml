@@ -1,0 +1,64 @@
+name: Android CI
+
+on:
+  push:
+    branches-ignore: [main]
+    paths:
+      - 'mobile/**'
+      - '.github/workflows/android-ci.yml'
+  pull_request:
+    paths:
+      - 'mobile/**'
+      - '.github/workflows/android-ci.yml'
+  workflow_dispatch:
+
+concurrency:
+  group: android-ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
+
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '21'
+
+      - name: Setup Android SDK
+        uses: android-actions/setup-android@v3
+
+      - name: Accept licenses and install SDK components
+        run: |
+          yes | sdkmanager --licenses > /dev/null 2>&1 || true
+          sdkmanager "platforms;android-36" "build-tools;36.0.0"
+
+      - name: Install Node.js dependencies
+        working-directory: mobile
+        run: bun install --frozen-lockfile
+
+      - name: Sync Capacitor Android project
+        working-directory: mobile
+        run: bunx cap sync android
+
+      - name: Build debug APK (compiler check)
+        working-directory: mobile/android
+        run: ./gradlew assembleDebug --stacktrace
+
+      - name: Run unit tests
+        working-directory: mobile/android
+        run: ./gradlew test --stacktrace
