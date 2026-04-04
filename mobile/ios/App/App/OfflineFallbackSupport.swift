@@ -17,12 +17,11 @@ enum OfflineFallbackSupport {
 
     static func isRetryableNetworkError(_ error: Error) -> Bool {
         let nsError = error as NSError
-        guard nsError.domain == NSURLErrorDomain,
-              let code = URLError.Code(rawValue: nsError.code)
-        else {
+        guard nsError.domain == NSURLErrorDomain else {
             return false
         }
 
+        let code = URLError.Code(rawValue: nsError.code)
         switch code {
         case .notConnectedToInternet,
              .networkConnectionLost,
