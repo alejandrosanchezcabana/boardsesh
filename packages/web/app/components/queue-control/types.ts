@@ -94,5 +94,5 @@ export interface QueueContextType {
   getNextClimbQueueItem: () => ClimbQueueItem | null;
   getPreviousClimbQueueItem: () => ClimbQueueItem | null;
   setQueue: (queue: ClimbQueueItem[]) => void;
-  isOffline?: boolean;
+  isDisconnected?: boolean;
 }

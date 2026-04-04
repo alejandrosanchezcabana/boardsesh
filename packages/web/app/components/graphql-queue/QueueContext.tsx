@@ -14,6 +14,7 @@ import { FavoritesProvider } from '../climb-actions/favorites-batch-context';
 import { PlaylistsProvider } from '../climb-actions/playlists-batch-context';
 import { useClimbActionsData } from '@/app/hooks/use-climb-actions-data';
 import { SUGGESTIONS_THRESHOLD } from '../board-page/constants';
+import { useSnackbar } from '../providers/snackbar-provider';
 import SessionSummaryDialog from '../session-summary/session-summary-dialog';
 
 import { useSessionIdManagement } from './hooks/use-session-id-management';
@@ -52,6 +53,7 @@ export const GraphQLQueueProvider = ({ parsedParams, boardDetails, children, bas
 
   const isOffBoardMode = propsBaseBoardPath !== undefined;
   const correlationCounterRef = useRef(0);
+  const { showMessage } = useSnackbar();
 
   const { profile, username, avatarUrl } = usePartyProfile();
   const { state: connectionState } = useWebSocketConnection();
@@ -90,7 +92,7 @@ export const GraphQLQueueProvider = ({ parsedParams, boardDetails, children, bas
   const isSessionReady = isSessionActive && connectionState === 'connected';
 
   // --- Mutation guard ---
-  const { viewOnlyMode, canMutate, guardMutation, isOffline } = useMutationGuard({
+  const { viewOnlyMode, canMutate, guardMutation, isDisconnected } = useMutationGuard({
     sessionId,
     backendUrl,
     hasConnected,
@@ -120,10 +122,17 @@ export const GraphQLQueueProvider = ({ parsedParams, boardDetails, children, bas
     },
   }), [rawOfflineBuffer, isPersistentSessionActive, persistentSession]);
 
+  // Warn user when offline buffer is full
+  useEffect(() => {
+    if (rawOfflineBuffer.isBufferFull) {
+      showMessage("You've hit the offline queue limit. Reconnect to sync your climbs.", 'warning');
+    }
+  }, [rawOfflineBuffer.isBufferFull, showMessage]);
+
   // --- Offline reconciliation (push buffered additions on reconnect) ---
   useOfflineReconciliation({
     offlineBuffer,
-    isOffline,
+    isDisconnected,
     isPersistentSessionActive,
     hasConnected,
     users,
@@ -142,7 +151,7 @@ export const GraphQLQueueProvider = ({ parsedParams, boardDetails, children, bas
     currentClimbQueueItem: state.currentClimbQueueItem,
     baseBoardPath,
     boardDetails,
-    isOffline,
+    isDisconnected,
     persistentSession,
   });
 
@@ -231,7 +240,7 @@ export const GraphQLQueueProvider = ({ parsedParams, boardDetails, children, bas
       isSessionActive, sessionId, startSession, joinSession, endSession,
       sessionSummary, dismissSessionSummary,
       sessionGoal: isPersistentSessionActive ? (persistentSession.session?.goal ?? null) : null,
-      connectionState, canMutate, isOffline,
+      connectionState, canMutate, isDisconnected,
       users, clientId, isLeader,
       isBackendMode: !!backendUrl,
       hasConnected, connectionError,
@@ -241,7 +250,7 @@ export const GraphQLQueueProvider = ({ parsedParams, boardDetails, children, bas
         if (guardMutation()) return;
         const newItem = createClimbQueueItem(climb, clientId, currentUserInfo);
         dispatch({ type: 'DELTA_ADD_QUEUE_ITEM', payload: { item: newItem } });
-        if (isOffline && isPersistentSessionActive) {
+        if (isDisconnected && isPersistentSessionActive) {
           offlineBuffer.bufferAddition(newItem);
         } else if (hasConnected && isPersistentSessionActive) {
           persistentSession.addQueueItem(newItem).catch((error: unknown) => console.error('Failed to add queue item:', error));
@@ -251,7 +260,7 @@ export const GraphQLQueueProvider = ({ parsedParams, boardDetails, children, bas
       removeFromQueue: (item: ClimbQueueItem) => {
         if (guardMutation()) return;
         dispatch({ type: 'DELTA_REMOVE_QUEUE_ITEM', payload: { uuid: item.uuid } });
-        if (!isOffline && hasConnected && isPersistentSessionActive) {
+        if (!isDisconnected && hasConnected && isPersistentSessionActive) {
           persistentSession.removeQueueItem(item.uuid).catch((error: unknown) => console.error('Failed to remove queue item:', error));
         }
       },
@@ -260,7 +269,7 @@ export const GraphQLQueueProvider = ({ parsedParams, boardDetails, children, bas
         if (guardMutation()) return;
         const newItem = createClimbQueueItem(climb, clientId, currentUserInfo);
         dispatch({ type: 'SET_CURRENT_CLIMB', payload: newItem });
-        if (isOffline && isPersistentSessionActive) {
+        if (isDisconnected && isPersistentSessionActive) {
           offlineBuffer.bufferAddition(newItem);
         } else if (hasConnected && isPersistentSessionActive) {
           const previousQueue = [...state.queue];
@@ -282,7 +291,7 @@ export const GraphQLQueueProvider = ({ parsedParams, boardDetails, children, bas
       setQueue: (queue: ClimbQueueItem[]) => {
         if (guardMutation()) return;
         dispatch({ type: 'UPDATE_QUEUE', payload: { queue, currentClimbQueueItem: state.currentClimbQueueItem } });
-        if (!isOffline && hasConnected && isPersistentSessionActive) {
+        if (!isDisconnected && hasConnected && isPersistentSessionActive) {
           persistentSession.setQueue(queue, state.currentClimbQueueItem).catch((error: unknown) => console.error('Failed to set queue:', error));
         }
       },
@@ -291,7 +300,7 @@ export const GraphQLQueueProvider = ({ parsedParams, boardDetails, children, bas
         if (guardMutation()) return;
         const correlationId = clientId ? `${clientId}-${++correlationCounterRef.current}` : undefined;
         dispatch({ type: 'DELTA_UPDATE_CURRENT_CLIMB', payload: { item, shouldAddToQueue: item.suggested, correlationId } });
-        if (!isOffline && hasConnected && isPersistentSessionActive) {
+        if (!isDisconnected && hasConnected && isPersistentSessionActive) {
           persistentSession.setCurrentClimb(item, item.suggested, correlationId).catch((error: unknown) => {
             console.error('Failed to set current climb:', error);
             if (correlationId) dispatch({ type: 'CLEANUP_PENDING_UPDATE', payload: { correlationId } });
@@ -322,7 +331,7 @@ export const GraphQLQueueProvider = ({ parsedParams, boardDetails, children, bas
         if (!state.currentClimbQueueItem?.climb) return;
         const newMirroredState = !state.currentClimbQueueItem.climb?.mirrored;
         dispatch({ type: 'DELTA_MIRROR_CURRENT_CLIMB', payload: { mirrored: newMirroredState } });
-        if (!isOffline && hasConnected && isPersistentSessionActive) {
+        if (!isDisconnected && hasConnected && isPersistentSessionActive) {
           persistentSession.mirrorCurrentClimb(newMirroredState).catch((error: unknown) => console.error('Failed to mirror climb:', error));
         }
       },
@@ -355,7 +364,7 @@ export const GraphQLQueueProvider = ({ parsedParams, boardDetails, children, bas
       persistentSession, isPersistentSessionActive, dispatch, pathname,
       fetchMoreClimbs, currentUserInfo, isSessionActive, sessionId, setCountSearchParams,
       startSession, joinSession, endSession, sessionSummary, dismissSessionSummary,
-      isOffBoardMode, connectionState, canMutate, guardMutation, searchParams, isOffline,
+      isOffBoardMode, connectionState, canMutate, guardMutation, searchParams, isDisconnected,
       offlineBuffer,
     ],
   );

@@ -11,7 +11,7 @@ export interface UseOfflineReconciliationParams {
     hasPendingAdditions: boolean;
     bufferAddition: (item: ClimbQueueItem) => void;
   };
-  isOffline: boolean;
+  isDisconnected: boolean;
   isPersistentSessionActive: boolean;
   hasConnected: boolean;
   users: SessionUser[];
@@ -46,7 +46,7 @@ export interface UseOfflineReconciliationParams {
  */
 export function useOfflineReconciliation({
   offlineBuffer,
-  isOffline,
+  isDisconnected,
   isPersistentSessionActive,
   hasConnected,
   users,
@@ -55,7 +55,7 @@ export function useOfflineReconciliation({
   currentQueue,
   currentClimbQueueItem,
 }: UseOfflineReconciliationParams) {
-  const wasOfflineRef = useRef(isOffline);
+  const wasOfflineRef = useRef(isDisconnected);
   const isReconcilingRef = useRef(false);
   const currentQueueRef = useRef(currentQueue);
   const currentClimbRef = useRef(currentClimbQueueItem);
@@ -69,17 +69,17 @@ export function useOfflineReconciliation({
   // We continuously update while offline in case the sequence was updated
   // just before the disconnect was detected.
   useEffect(() => {
-    if (isOffline) {
+    if (isDisconnected) {
       sequenceAtDisconnectRef.current = lastReceivedSequence;
     }
-  }, [isOffline, lastReceivedSequence]);
+  }, [isDisconnected, lastReceivedSequence]);
 
   useEffect(() => {
     const wasOffline = wasOfflineRef.current;
-    wasOfflineRef.current = isOffline;
+    wasOfflineRef.current = isDisconnected;
 
     // Detect offline-to-online transition
-    if (!wasOffline || isOffline) return;
+    if (!wasOffline || isDisconnected) return;
     if (!isPersistentSessionActive || !hasConnected) return;
     if (!offlineBuffer.hasPendingAdditions) return;
     if (isReconcilingRef.current) return;
@@ -161,5 +161,5 @@ export function useOfflineReconciliation({
       unsubscribe();
       isReconcilingRef.current = false;
     };
-  }, [isOffline, isPersistentSessionActive, hasConnected, offlineBuffer, persistentSession, users]);
+  }, [isDisconnected, isPersistentSessionActive, hasConnected, offlineBuffer, persistentSession, users]);
 }

@@ -54,7 +54,7 @@ describe('useQueueStorageSync', () => {
         currentClimbQueueItem: null,
         baseBoardPath: '/kilter/1/1/1',
         boardDetails: mockBoardDetails,
-        isOffline: false,
+        isDisconnected: false,
         persistentSession: { setLocalQueueState: mockSetLocalQueueState },
       }),
     );
@@ -72,7 +72,7 @@ describe('useQueueStorageSync', () => {
         currentClimbQueueItem: null,
         baseBoardPath: '/kilter/1/1/1',
         boardDetails: mockBoardDetails,
-        isOffline: false,
+        isDisconnected: false,
         persistentSession: { setLocalQueueState: mockSetLocalQueueState },
       }),
     );
@@ -95,7 +95,7 @@ describe('useQueueStorageSync', () => {
         currentClimbQueueItem: null,
         baseBoardPath: '/kilter/1/1/1',
         boardDetails: mockBoardDetails,
-        isOffline: false,
+        isDisconnected: false,
         persistentSession: { setLocalQueueState: mockSetLocalQueueState },
       }),
     );
@@ -113,7 +113,7 @@ describe('useQueueStorageSync', () => {
         currentClimbQueueItem: null,
         baseBoardPath: '/kilter/1/1/1',
         boardDetails: mockBoardDetails,
-        isOffline: true,
+        isDisconnected: true,
         persistentSession: { setLocalQueueState: mockSetLocalQueueState },
       }),
     );
@@ -138,7 +138,7 @@ describe('useQueueStorageSync', () => {
           currentClimbQueueItem: null as ClimbQueueItem | null,
           baseBoardPath: '/kilter/1/1/1',
           boardDetails: mockBoardDetails,
-          isOffline: true,
+          isDisconnected: true,
           persistentSession: { setLocalQueueState: mockSetLocalQueueState },
         },
       },
@@ -155,7 +155,7 @@ describe('useQueueStorageSync', () => {
       currentClimbQueueItem: null,
       baseBoardPath: '/kilter/1/1/1',
       boardDetails: mockBoardDetails,
-      isOffline: false,
+      isDisconnected: false,
       persistentSession: { setLocalQueueState: mockSetLocalQueueState },
     });
 

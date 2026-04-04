@@ -36,14 +36,13 @@ export function useMutationGuard({
   }, [sessionId, backendUrl, hasConnected]);
 
   // True when we were connected but the WebSocket is now disconnected.
-  // Note: this means "WebSocket down after having connected", not "browser has no network".
-  // This covers both true offline and server-down scenarios identically.
-  const isOffline = useMemo(() => {
+  // Covers both true network-offline and server-down scenarios.
+  const isDisconnected = useMemo(() => {
     return !!sessionId && hasConnected && connectionState !== 'connected';
   }, [sessionId, hasConnected, connectionState]);
 
-  // Allow mutations when: not view-only AND (session ready OR offline with prior connection OR solo mode)
-  const canMutate = !viewOnlyMode && (sessionId ? (isSessionReady || isOffline) : true);
+  // Allow mutations when: not view-only AND (session ready OR disconnected with prior connection OR solo mode)
+  const canMutate = !viewOnlyMode && (sessionId ? (isSessionReady || isDisconnected) : true);
 
   // Ref to debounce the "blocked" toast so rapid taps don't spam
   const lastBlockedToastRef = useRef(0);
@@ -58,5 +57,5 @@ export function useMutationGuard({
     return true;
   }, [sessionId, canMutate, showMessage]);
 
-  return { viewOnlyMode, canMutate, guardMutation, isOffline };
+  return { viewOnlyMode, canMutate, guardMutation, isDisconnected };
 }

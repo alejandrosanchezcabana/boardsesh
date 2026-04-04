@@ -33,19 +33,19 @@ describe('useMutationGuard', () => {
   });
 
   describe('solo mode (no session)', () => {
-    it('viewOnlyMode is false, guardMutation allows, isOffline is false', () => {
+    it('viewOnlyMode is false, guardMutation allows, isDisconnected is false', () => {
       const { result } = renderHook(() =>
         useMutationGuard({ ...defaultParams, sessionId: null }),
       );
 
       expect(result.current.viewOnlyMode).toBe(false);
-      expect(result.current.isOffline).toBe(false);
+      expect(result.current.isDisconnected).toBe(false);
       expect(result.current.guardMutation()).toBe(false); // allowed
     });
   });
 
   describe('session, not yet connected', () => {
-    it('viewOnlyMode is true, guardMutation blocks, isOffline is false', () => {
+    it('viewOnlyMode is true, guardMutation blocks, isDisconnected is false', () => {
       const { result } = renderHook(() =>
         useMutationGuard({
           ...defaultParams,
@@ -58,14 +58,14 @@ describe('useMutationGuard', () => {
       );
 
       expect(result.current.viewOnlyMode).toBe(true);
-      expect(result.current.isOffline).toBe(false);
+      expect(result.current.isDisconnected).toBe(false);
       expect(result.current.canMutate).toBe(false);
       expect(result.current.guardMutation()).toBe(true); // blocked
     });
   });
 
   describe('session, connected and ready', () => {
-    it('viewOnlyMode is false, guardMutation allows, isOffline is false', () => {
+    it('viewOnlyMode is false, guardMutation allows, isDisconnected is false', () => {
       const { result } = renderHook(() =>
         useMutationGuard({
           ...defaultParams,
@@ -78,14 +78,14 @@ describe('useMutationGuard', () => {
       );
 
       expect(result.current.viewOnlyMode).toBe(false);
-      expect(result.current.isOffline).toBe(false);
+      expect(result.current.isDisconnected).toBe(false);
       expect(result.current.canMutate).toBe(true);
       expect(result.current.guardMutation()).toBe(false); // allowed
     });
   });
 
   describe('session, was connected, now reconnecting', () => {
-    it('viewOnlyMode is false, guardMutation allows, isOffline is true', () => {
+    it('viewOnlyMode is false, guardMutation allows, isDisconnected is true', () => {
       const { result } = renderHook(() =>
         useMutationGuard({
           ...defaultParams,
@@ -98,14 +98,14 @@ describe('useMutationGuard', () => {
       );
 
       expect(result.current.viewOnlyMode).toBe(false);
-      expect(result.current.isOffline).toBe(true);
+      expect(result.current.isDisconnected).toBe(true);
       expect(result.current.canMutate).toBe(true);
       expect(result.current.guardMutation()).toBe(false); // allowed
     });
   });
 
   describe('session, was connected, now stale', () => {
-    it('isOffline is true, mutations allowed', () => {
+    it('isDisconnected is true, mutations allowed', () => {
       const { result } = renderHook(() =>
         useMutationGuard({
           ...defaultParams,
@@ -117,14 +117,14 @@ describe('useMutationGuard', () => {
         }),
       );
 
-      expect(result.current.isOffline).toBe(true);
+      expect(result.current.isDisconnected).toBe(true);
       expect(result.current.canMutate).toBe(true);
       expect(result.current.guardMutation()).toBe(false); // allowed
     });
   });
 
   describe('session, was connected, error state', () => {
-    it('isOffline is true, mutations allowed', () => {
+    it('isDisconnected is true, mutations allowed', () => {
       const { result } = renderHook(() =>
         useMutationGuard({
           ...defaultParams,
@@ -136,7 +136,7 @@ describe('useMutationGuard', () => {
         }),
       );
 
-      expect(result.current.isOffline).toBe(true);
+      expect(result.current.isDisconnected).toBe(true);
       expect(result.current.canMutate).toBe(true);
       expect(result.current.guardMutation()).toBe(false); // allowed
     });

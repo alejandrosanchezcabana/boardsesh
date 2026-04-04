@@ -60,7 +60,7 @@ describe('useOfflineReconciliation', () => {
   });
 
   function renderReconciliation(overrides: {
-    isOffline?: boolean;
+    isDisconnected?: boolean;
     isPersistentSessionActive?: boolean;
     hasConnected?: boolean;
     currentQueue?: ClimbQueueItem[];
@@ -78,7 +78,7 @@ describe('useOfflineReconciliation', () => {
             hasPendingAdditions: mockGetBufferedAdditions().length > 0,
             bufferAddition: vi.fn(),
           },
-          isOffline: overrides.isOffline ?? false,
+          isDisconnected: overrides.isDisconnected ?? false,
           isPersistentSessionActive: overrides.isPersistentSessionActive ?? true,
           hasConnected: overrides.hasConnected ?? true,
           users: overrides.users ?? [createUser('me'), createUser('other')],
@@ -104,7 +104,7 @@ describe('useOfflineReconciliation', () => {
         hasPendingAdditions: true,
         bufferAddition: vi.fn(),
       },
-      isOffline: false,
+      isDisconnected: false,
       isPersistentSessionActive: true,
       hasConnected: true,
       users: overrides.users ?? [createUser('me'), createUser('other')],
@@ -124,7 +124,7 @@ describe('useOfflineReconciliation', () => {
 
   describe('additions-only reconciliation (server wins)', () => {
     it('does nothing when no pending additions on reconnect', () => {
-      const hook = renderReconciliation({ isOffline: true });
+      const hook = renderReconciliation({ isDisconnected: true });
 
       hook.rerender({
         offlineBuffer: {
@@ -133,7 +133,7 @@ describe('useOfflineReconciliation', () => {
           hasPendingAdditions: false,
           bufferAddition: vi.fn(),
         },
-        isOffline: false,
+        isDisconnected: false,
         isPersistentSessionActive: true,
         hasConnected: true,
         users: [createUser('me'), createUser('other')],
@@ -158,7 +158,7 @@ describe('useOfflineReconciliation', () => {
       mockGetBufferedAdditions.mockReturnValue([item1, item2]);
 
       const hook = renderReconciliation({
-        isOffline: true,
+        isDisconnected: true,
         lastReceivedSequence: 5,
         users: [createUser('me'), createUser('other')],
       });
@@ -188,7 +188,7 @@ describe('useOfflineReconciliation', () => {
       const existingItem = createItem('existing-1');
       mockGetBufferedAdditions.mockReturnValue([item1, existingItem]);
 
-      const hook = renderReconciliation({ isOffline: true, lastReceivedSequence: 5 });
+      const hook = renderReconciliation({ isDisconnected: true, lastReceivedSequence: 5 });
       goOnline(hook);
 
       await act(async () => {
@@ -218,7 +218,7 @@ describe('useOfflineReconciliation', () => {
         .mockRejectedValueOnce(new Error('Network error'))
         .mockResolvedValueOnce(undefined);
 
-      const hook = renderReconciliation({ isOffline: true, lastReceivedSequence: 5 });
+      const hook = renderReconciliation({ isDisconnected: true, lastReceivedSequence: 5 });
       goOnline(hook);
 
       await act(async () => {
@@ -237,7 +237,7 @@ describe('useOfflineReconciliation', () => {
       const item1 = createItem('offline-1');
       mockGetBufferedAdditions.mockReturnValue([item1]);
 
-      const hook = renderReconciliation({ isOffline: true, lastReceivedSequence: 5 });
+      const hook = renderReconciliation({ isDisconnected: true, lastReceivedSequence: 5 });
       goOnline(hook);
 
       await act(async () => {
@@ -261,7 +261,7 @@ describe('useOfflineReconciliation', () => {
       mockGetBufferedAdditions.mockReturnValue([item1]);
 
       const hook = renderReconciliation({
-        isOffline: true,
+        isDisconnected: true,
         users: [createUser('me')],
         lastReceivedSequence: 5,
         currentQueue: localQueue,
@@ -297,7 +297,7 @@ describe('useOfflineReconciliation', () => {
       mockGetBufferedAdditions.mockReturnValue([item1]);
 
       const hook = renderReconciliation({
-        isOffline: true,
+        isDisconnected: true,
         users: [createUser('me'), createUser('other')],
         lastReceivedSequence: 5,
         currentQueue: localQueue,
@@ -327,7 +327,7 @@ describe('useOfflineReconciliation', () => {
       mockGetBufferedAdditions.mockReturnValue([item1]);
 
       const hook = renderReconciliation({
-        isOffline: true,
+        isDisconnected: true,
         users: [createUser('me'), createUser('other')],
         lastReceivedSequence: 5,
       });
@@ -359,7 +359,7 @@ describe('useOfflineReconciliation', () => {
       mockGetBufferedAdditions.mockReturnValue([item1]);
 
       const hook = renderReconciliation({
-        isOffline: true,
+        isDisconnected: true,
         isPersistentSessionActive: true,
       });
 
@@ -370,7 +370,7 @@ describe('useOfflineReconciliation', () => {
           hasPendingAdditions: true,
           bufferAddition: vi.fn(),
         },
-        isOffline: false,
+        isDisconnected: false,
         isPersistentSessionActive: false,
         hasConnected: true,
         users: [],
@@ -394,7 +394,7 @@ describe('useOfflineReconciliation', () => {
       mockGetBufferedAdditions.mockReturnValue([item1]);
 
       const hook = renderReconciliation({
-        isOffline: true,
+        isDisconnected: true,
         users: [createUser('me')],
         currentClimbQueueItem: null,
       });

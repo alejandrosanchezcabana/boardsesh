@@ -230,9 +230,9 @@ describe('QueueContext offline mutations', () => {
       expect(mockRemoveQueueItem).toHaveBeenCalledWith(queueItem.uuid);
     });
 
-    it('isOffline is false', () => {
+    it('isDisconnected is false', () => {
       const { result } = renderHook(() => useQueueContext(), { wrapper: createWrapper() });
-      expect(result.current.isOffline).toBe(false);
+      expect(result.current.isDisconnected).toBe(false);
     });
   });
 
@@ -241,9 +241,9 @@ describe('QueueContext offline mutations', () => {
       mockConnectionState = 'reconnecting';
     });
 
-    it('isOffline is true', () => {
+    it('isDisconnected is true', () => {
       const { result } = renderHook(() => useQueueContext(), { wrapper: createWrapper() });
-      expect(result.current.isOffline).toBe(true);
+      expect(result.current.isDisconnected).toBe(true);
     });
 
     it('addToQueue applies locally but does NOT call persistentSession.addQueueItem', () => {

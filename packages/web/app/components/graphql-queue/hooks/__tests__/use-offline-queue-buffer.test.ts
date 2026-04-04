@@ -84,31 +84,31 @@ describe('useOfflineQueueBuffer', () => {
     expect(result.current.getBufferedAdditions()).toEqual([]);
   });
 
-  it('caps buffer at 100 items', () => {
+  it('caps buffer at 500 items', () => {
     const { result } = renderHook(() => useOfflineQueueBuffer());
 
     act(() => {
-      for (let i = 0; i < 110; i++) {
+      for (let i = 0; i < 510; i++) {
         result.current.bufferAddition(createItem(`item-${i}`));
       }
     });
 
-    expect(result.current.getBufferedAdditions()).toHaveLength(100);
-    // Should contain the first 100 items
+    expect(result.current.getBufferedAdditions()).toHaveLength(500);
+    // Should contain the first 500 items
     expect(result.current.getBufferedAdditions()[0].uuid).toBe('item-0');
-    expect(result.current.getBufferedAdditions()[99].uuid).toBe('item-99');
+    expect(result.current.getBufferedAdditions()[499].uuid).toBe('item-499');
   });
 
   it('can add items again after clearing', () => {
     const { result } = renderHook(() => useOfflineQueueBuffer());
 
     act(() => {
-      for (let i = 0; i < 100; i++) {
+      for (let i = 0; i < 500; i++) {
         result.current.bufferAddition(createItem(`item-${i}`));
       }
     });
 
-    expect(result.current.getBufferedAdditions()).toHaveLength(100);
+    expect(result.current.getBufferedAdditions()).toHaveLength(500);
 
     act(() => {
       result.current.clearBuffer();

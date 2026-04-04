@@ -1,7 +1,7 @@
 import { useRef, useCallback, useState, useMemo } from 'react';
 import type { ClimbQueueItem } from '../../queue-control/types';
 
-const BUFFER_CAP = 100;
+const BUFFER_CAP = 500;
 
 /**
  * Ref-based buffer that tracks queue items added while offline in party mode.
@@ -30,11 +30,12 @@ export function useOfflineQueueBuffer() {
   }, []);
 
   const hasPendingAdditions = count > 0;
+  const isBufferFull = count >= BUFFER_CAP;
 
   // Memoize to provide a stable reference — prevents unnecessary recomputations
   // in downstream useMemo/useEffect dependency arrays
   return useMemo(
-    () => ({ bufferAddition, getBufferedAdditions, clearBuffer, hasPendingAdditions }),
-    [bufferAddition, getBufferedAdditions, clearBuffer, hasPendingAdditions],
+    () => ({ bufferAddition, getBufferedAdditions, clearBuffer, hasPendingAdditions, isBufferFull }),
+    [bufferAddition, getBufferedAdditions, clearBuffer, hasPendingAdditions, isBufferFull],
   );
 }

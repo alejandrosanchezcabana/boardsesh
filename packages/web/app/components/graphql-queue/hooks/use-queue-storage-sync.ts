@@ -10,7 +10,7 @@ interface UseQueueStorageSyncParams {
   currentClimbQueueItem: ClimbQueueItem | null;
   baseBoardPath: string;
   boardDetails: BoardDetails;
-  isOffline: boolean;
+  isDisconnected: boolean;
   persistentSession: {
     setLocalQueueState: (
       queue: ClimbQueueItem[],
@@ -35,7 +35,7 @@ export function useQueueStorageSync({
   currentClimbQueueItem,
   baseBoardPath,
   boardDetails,
-  isOffline,
+  isDisconnected,
   persistentSession,
 }: UseQueueStorageSyncParams) {
   useEffect(() => {
@@ -43,8 +43,8 @@ export function useQueueStorageSync({
     if (!hasRestored) return;
 
     // When in party mode and online, don't sync locally (server is source of truth)
-    if (isPersistentSessionActive && !isOffline) return;
-    if (sessionId && !isPersistentSessionActive && !isOffline) return;
+    if (isPersistentSessionActive && !isDisconnected) return;
+    if (sessionId && !isPersistentSessionActive && !isDisconnected) return;
 
     // Sync queue state to persistent session for local storage
     persistentSession.setLocalQueueState(
@@ -61,7 +61,7 @@ export function useQueueStorageSync({
     boardDetails,
     isPersistentSessionActive,
     sessionId,
-    isOffline,
+    isDisconnected,
     persistentSession,
   ]);
 }

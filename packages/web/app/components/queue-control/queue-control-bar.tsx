@@ -106,7 +106,7 @@ const QueueControlBar: React.FC<QueueControlBarProps> = ({ boardDetails, angle }
     sessionId,
     endSession,
     disconnect,
-    isOffline,
+    isDisconnected,
   } = useQueueContext();
 
   const { showMessage } = useSnackbar();
@@ -118,7 +118,7 @@ const QueueControlBar: React.FC<QueueControlBarProps> = ({ boardDetails, angle }
 
   // Show reconnecting UI only when online but WebSocket is down.
   // When truly offline (browser has no network), show normal controls with an offline indicator instead.
-  const isReconnecting = !!sessionId && !isOffline && (connectionState === 'reconnecting' || connectionState === 'stale' || connectionState === 'error');
+  const isReconnecting = !!sessionId && !isDisconnected && (connectionState === 'reconnecting' || connectionState === 'stale' || connectionState === 'error');
 
   const nextClimb = getNextClimbQueueItem();
   const previousClimb = getPreviousClimbQueueItem();
@@ -414,7 +414,7 @@ const QueueControlBar: React.FC<QueueControlBarProps> = ({ boardDetails, angle }
   return (
     <div id="onboarding-queue-bar" className={`queue-bar-shadow ${styles.queueBar}`} data-testid="queue-control-bar">
       {/* Offline indicator */}
-      {isOffline && (
+      {isDisconnected && (
         <Box
           sx={{
             display: 'flex',

@@ -154,7 +154,7 @@ const baseQueueContext = {
   connectionState: 'connected',
   sessionId: 'session-1',
   canMutate: true,
-  isOffline: false,
+  isDisconnected: false,
   endSession: vi.fn(),
   disconnect: vi.fn(),
   addToQueue: vi.fn(),
@@ -207,7 +207,7 @@ describe('QueueControlBar offline UI', () => {
     mockQueueContext = {
       ...baseQueueContext,
       connectionState: 'reconnecting',
-      isOffline: false,
+      isDisconnected: false,
     };
 
     render(<QueueControlBar {...defaultProps} />);
@@ -219,7 +219,7 @@ describe('QueueControlBar offline UI', () => {
     mockQueueContext = {
       ...baseQueueContext,
       connectionState: 'reconnecting',
-      isOffline: true,
+      isDisconnected: true,
     };
 
     render(<QueueControlBar {...defaultProps} />);
@@ -235,7 +235,7 @@ describe('QueueControlBar offline UI', () => {
       ...baseQueueContext,
       connectionState: 'idle',
       sessionId: null,
-      isOffline: false,
+      isDisconnected: false,
     };
 
     render(<QueueControlBar {...defaultProps} />);
