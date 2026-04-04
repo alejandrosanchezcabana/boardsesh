@@ -25,8 +25,67 @@ final class NetworkStatus {
     }
 }
 
-class BoardseshViewController: CAPBridgeViewController, WKNavigationDelegate {
-    private let fallbackState = IOSOfflineFallbackStateMachine()
+/// Intercepts WKNavigationDelegate calls to add offline-fallback behaviour,
+/// then forwards every call to Capacitor's original navigation delegate
+/// (WebViewDelegationHandler) so the bridge keeps working normally.
+final class NavigationDelegateProxy: NSObject, WKNavigationDelegate {
+    weak var original: WKNavigationDelegate?
+    weak var controller: BoardseshViewController?
+
+    // MARK: - Forwarded delegate methods
+
+    func webView(_ webView: WKWebView, didStartProvisionalNavigation navigation: WKNavigation!) {
+        controller?.fallbackState.onPageStarted()
+        original?.webView?(webView, didStartProvisionalNavigation: navigation)
+    }
+
+    func webView(_ webView: WKWebView, didFinish navigation: WKNavigation!) {
+        controller?.fallbackState.onPageFinished()
+        original?.webView?(webView, didFinish: navigation)
+    }
+
+    func webView(_ webView: WKWebView, didFail navigation: WKNavigation!, withError error: Error) {
+        controller?.handleNavigationError(webView, error: error)
+        original?.webView?(webView, didFail: navigation, withError: error)
+    }
+
+    func webView(_ webView: WKWebView, didFailProvisionalNavigation navigation: WKNavigation!, withError error: Error) {
+        controller?.handleNavigationError(webView, error: error)
+        original?.webView?(webView, didFailProvisionalNavigation: navigation, withError: error)
+    }
+
+    func webView(_ webView: WKWebView, decidePolicyFor navigationAction: WKNavigationAction, decisionHandler: @escaping (WKNavigationActionPolicy) -> Void) {
+        if let orig = original, orig.responds(to: #selector(WKNavigationDelegate.webView(_:decidePolicyFor:decisionHandler:) as ((WKNavigationDelegate) -> (WKWebView, WKNavigationAction, @escaping (WKNavigationActionPolicy) -> Void) -> Void)?)) {
+            orig.webView?(webView, decidePolicyFor: navigationAction, decisionHandler: decisionHandler)
+        } else {
+            decisionHandler(.allow)
+        }
+    }
+
+    func webView(_ webView: WKWebView, decidePolicyFor navigationResponse: WKNavigationResponse, decisionHandler: @escaping (WKNavigationResponsePolicy) -> Void) {
+        if let orig = original, orig.responds(to: #selector(WKNavigationDelegate.webView(_:decidePolicyFor:decisionHandler:) as ((WKNavigationDelegate) -> (WKWebView, WKNavigationResponse, @escaping (WKNavigationResponsePolicy) -> Void) -> Void)?)) {
+            orig.webView?(webView, decidePolicyFor: navigationResponse, decisionHandler: decisionHandler)
+        } else {
+            decisionHandler(.allow)
+        }
+    }
+
+    func webView(_ webView: WKWebView, didReceive challenge: URLAuthenticationChallenge, completionHandler: @escaping (URLSession.AuthChallengeDisposition, URLCredential?) -> Void) {
+        if let orig = original, orig.responds(to: #selector(WKNavigationDelegate.webView(_:didReceive:completionHandler:))) {
+            orig.webView?(webView, didReceive: challenge, completionHandler: completionHandler)
+        } else {
+            completionHandler(.performDefaultHandling, nil)
+        }
+    }
+
+    func webViewWebContentProcessDidTerminate(_ webView: WKWebView) {
+        original?.webViewWebContentProcessDidTerminate?(webView)
+    }
+}
+
+class BoardseshViewController: CAPBridgeViewController {
+    let fallbackState = IOSOfflineFallbackStateMachine()
+    private var delegateProxy: NavigationDelegateProxy?
 
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -34,8 +93,9 @@ class BoardseshViewController: CAPBridgeViewController, WKNavigationDelegate {
         // Disable rubber-band bounce so the page cannot overscroll
         webView?.scrollView.bounces = false
 
-        // Become the navigation delegate so we can intercept load failures.
-        webView?.navigationDelegate = self
+        // Insert our proxy between the webView and Capacitor's delegate
+        // so we can observe navigation failures for offline fallback.
+        installNavigationProxy()
 
         // Start monitor eagerly so offline decisions have recent connectivity state.
         _ = NetworkStatus.shared
@@ -53,6 +113,15 @@ class BoardseshViewController: CAPBridgeViewController, WKNavigationDelegate {
         loadPendingUniversalLink()
     }
 
+    private func installNavigationProxy() {
+        guard let wv = webView else { return }
+        let proxy = NavigationDelegateProxy()
+        proxy.original = wv.navigationDelegate
+        proxy.controller = self
+        self.delegateProxy = proxy
+        wv.navigationDelegate = proxy
+    }
+
     private func loadPendingUniversalLink() {
         guard let sceneDelegate = view.window?.windowScene?.delegate as? SceneDelegate,
               let pendingURL = sceneDelegate.pendingUniversalLinkURL else {
@@ -62,22 +131,7 @@ class BoardseshViewController: CAPBridgeViewController, WKNavigationDelegate {
         webView?.load(URLRequest(url: pendingURL))
     }
 
-    func webView(_ webView: WKWebView, didStartProvisionalNavigation navigation: WKNavigation!) {
-        fallbackState.onPageStarted()
-    }
-
-    func webView(_ webView: WKWebView, didFinish navigation: WKNavigation!) {
-        fallbackState.onPageFinished()
-    }
-
-    func webView(_ webView: WKWebView, didFail navigation: WKNavigation!, withError error: Error) {
-        fallbackState.onMainFrameError(webView.url)
-        if shouldTriggerOfflineFallback(error: error) {
-            tryCacheThenFallback(webView)
-        }
-    }
-
-    func webView(_ webView: WKWebView, didFailProvisionalNavigation navigation: WKNavigation!, withError error: Error) {
+    func handleNavigationError(_ webView: WKWebView, error: Error) {
         fallbackState.onMainFrameError(webView.url)
         if shouldTriggerOfflineFallback(error: error) {
             tryCacheThenFallback(webView)
