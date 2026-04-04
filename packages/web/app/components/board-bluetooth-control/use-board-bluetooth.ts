@@ -74,6 +74,7 @@ export function useBoardBluetooth({ boardDetails, onConnectionChange }: UseBoard
           `[BLE] LED placement map is empty for ${boardDetails.board_name} layout=${boardDetails.layout_id} size=${boardDetails.size_id}. ` +
           'Board configuration may be incorrect or LED data may need regeneration.',
         );
+        showMessage('Could not send to board — LED data missing for this board configuration.', 'error');
         return false;
       }
 
