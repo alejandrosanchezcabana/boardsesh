@@ -36,6 +36,8 @@
 	</array>
 	<key>UIViewControllerBasedStatusBarAppearance</key>
 	<true/>
+	<key>ITSAppUsesNonExemptEncryption</key>
+	<false/>
 	<key>NSBluetoothAlwaysUsageDescription</key>
 	<string>Boardsesh uses Bluetooth to connect to your climbing training board and illuminate routes.</string>
 	<key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
