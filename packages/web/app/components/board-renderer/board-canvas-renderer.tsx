@@ -23,6 +23,8 @@ export interface BoardCanvasRendererProps {
  * returning an ImageBitmap that is drawn directly onto the canvas.
  * Falls back to BoardImageLayers if the worker render fails.
  */
+const THUMBNAIL_WIDTH = 300;
+
 const BoardCanvasRenderer = React.memo(function BoardCanvasRenderer({
   boardDetails,
   frames,
@@ -34,6 +36,15 @@ const BoardCanvasRenderer = React.memo(function BoardCanvasRenderer({
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const hasFired = useRef(false);
   const [failed, setFailed] = useState(false);
+
+  // Compute initial canvas dimensions to match worker output, so the element
+  // has a correct intrinsic aspect ratio before the bitmap arrives. Older
+  // iOS Safari (18.x) mis-renders canvases that start at the default 300×150
+  // inside aspect-ratio containers with absolute positioning.
+  const initialWidth = thumbnail ? THUMBNAIL_WIDTH : boardDetails.boardWidth;
+  const initialHeight = thumbnail
+    ? Math.round((THUMBNAIL_WIDTH * boardDetails.boardHeight) / boardDetails.boardWidth)
+    : boardDetails.boardHeight;
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -89,6 +100,8 @@ const BoardCanvasRenderer = React.memo(function BoardCanvasRenderer({
     return (
       <canvas
         ref={canvasRef}
+        width={initialWidth}
+        height={initialHeight}
         style={{
           width: '100%',
           height: '100%',
@@ -100,17 +113,17 @@ const BoardCanvasRenderer = React.memo(function BoardCanvasRenderer({
   }
 
   return (
-    <div style={{ position: 'relative', ...style }}>
-      <canvas
-        ref={canvasRef}
-        style={{
-          position: 'absolute',
-          inset: 0,
-          width: '100%',
-          height: '100%',
-        }}
-      />
-    </div>
+    <canvas
+      ref={canvasRef}
+      width={initialWidth}
+      height={initialHeight}
+      style={{
+        display: 'block',
+        width: '100%',
+        height: 'auto',
+        ...style,
+      }}
+    />
   );
 });
 
