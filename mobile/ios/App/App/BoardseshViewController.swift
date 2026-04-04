@@ -36,6 +36,26 @@ class BoardseshViewController: CAPBridgeViewController {
 
         // Start monitor eagerly so offline decisions have recent connectivity state.
         _ = NetworkStatus.shared
+
+        // If a universal link triggered a cold start, navigate to it now
+        // that the bridge and WebView are ready.
+        if let sceneDelegate = view.window?.windowScene?.delegate as? SceneDelegate,
+           let pendingURL = sceneDelegate.pendingUniversalLinkURL {
+            sceneDelegate.pendingUniversalLinkURL = nil
+            webView?.load(URLRequest(url: pendingURL))
+        }
+    }
+
+    override func viewDidAppear(_ animated: Bool) {
+        super.viewDidAppear(animated)
+
+        // Fallback: the window may not be set during viewDidLoad on first launch.
+        // Check again once the view is fully in the hierarchy.
+        if let sceneDelegate = view.window?.windowScene?.delegate as? SceneDelegate,
+           let pendingURL = sceneDelegate.pendingUniversalLinkURL {
+            sceneDelegate.pendingUniversalLinkURL = nil
+            webView?.load(URLRequest(url: pendingURL))
+        }
     }
 
     override func webView(_ webView: WKWebView, didStartProvisionalNavigation navigation: WKNavigation!) {
