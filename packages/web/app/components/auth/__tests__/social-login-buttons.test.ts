@@ -23,4 +23,15 @@ describe('buildNativeOAuthSignInUrl', () => {
 
     expect(url).toContain('next%3D%252F');
   });
+
+  it('encodes provider names to prevent path traversal', () => {
+    const url = buildNativeOAuthSignInUrl({
+      origin: 'https://boardsesh.com',
+      provider: '../admin',
+      callbackPath: '/',
+    });
+
+    const parsed = new URL(url);
+    expect(parsed.pathname).toBe('/api/auth/signin/..%2Fadmin');
+  });
 });

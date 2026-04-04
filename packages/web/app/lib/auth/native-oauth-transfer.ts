@@ -62,7 +62,7 @@ export const verifyNativeOAuthTransferToken = (
   }
 
   const parts = token.split('.');
-  if (parts.length !== 2) {
+  if (parts.length !== 2 || !parts[0] || !parts[1]) {
     return null;
   }
   const [encodedPayload, signature] = parts;

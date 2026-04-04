@@ -11,7 +11,7 @@ export const buildNativeOAuthSignInUrl = ({
 }): string => {
   const nextPath = sanitizeRelativePath(callbackPath);
   const nativeCallbackUrl = `${origin}/api/auth/native/callback?next=${encodeURIComponent(nextPath)}`;
-  const signInUrl = new URL(`/api/auth/signin/${provider}`, origin);
+  const signInUrl = new URL(`/api/auth/signin/${encodeURIComponent(provider)}`, origin);
   signInUrl.searchParams.set('callbackUrl', nativeCallbackUrl);
   return signInUrl.toString();
 };
