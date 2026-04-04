@@ -36,8 +36,8 @@ RUN apt-get update && \
       unzip \
       jq \
       gnupg && \
-    # Install Node.js 20 for TypeScript import/seed scripts
-    curl -fsSL https://deb.nodesource.com/setup_20.x | bash - && \
+    # Install Node.js 22 LTS for TypeScript import/seed scripts
+    curl -fsSL https://deb.nodesource.com/setup_22.x | bash - && \
     apt-get install -y --no-install-recommends nodejs && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/*
