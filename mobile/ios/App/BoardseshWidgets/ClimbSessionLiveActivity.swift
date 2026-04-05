@@ -21,7 +21,7 @@ private let pillBackground = Color.white.opacity(0.15)
 
 // MARK: - Shared Subviews
 
-@available(iOS 16.1, *)
+@available(iOS 17.0, *)
 private struct ThumbnailView: View {
     let climbUuid: String
     let width: CGFloat
@@ -47,7 +47,7 @@ private struct ThumbnailView: View {
     }
 }
 
-@available(iOS 16.1, *)
+@available(iOS 17.0, *)
 private struct DifficultyPill: View {
     let text: String
     var font: Font = .caption.bold()
@@ -65,7 +65,7 @@ private struct DifficultyPill: View {
 
 // MARK: - Live Activity Widget
 
-@available(iOS 16.1, *)
+@available(iOS 17.0, *)
 struct ClimbSessionLiveActivity: Widget {
     var body: some WidgetConfiguration {
         ActivityConfiguration(for: ClimbSessionAttributes.self) { context in
@@ -172,7 +172,7 @@ struct ClimbSessionLiveActivity: Widget {
 
 // MARK: - Lock Screen View
 
-@available(iOS 16.1, *)
+@available(iOS 17.0, *)
 private struct LockScreenView: View {
     let context: ActivityViewContext<ClimbSessionAttributes>
 

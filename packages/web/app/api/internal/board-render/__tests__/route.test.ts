@@ -27,17 +27,34 @@ vi.mock('@boardsesh/board-renderer-wasm', () => ({
 vi.mock('fs/promises', () => ({
   readFile: vi.fn(() => Promise.resolve(new Uint8Array([0]))),
 }));
+const mockExistsSync = vi.fn<(path: string) => boolean>(() => true);
 vi.mock('fs', () => ({
-  existsSync: vi.fn(() => true),
+  existsSync: (path: string) => mockExistsSync(path),
 }));
 
-// Mock sharp - returns a WebP-like buffer
+// Mock sharp - tracks calls to composite() and webp() options
+const mockComposite = vi.fn();
+const mockResize = vi.fn();
+const mockWebpOptions = vi.fn();
+const mockSharpInstance = () => {
+  const instance = {
+    composite: vi.fn((...args: unknown[]) => {
+      mockComposite(...args);
+      return instance;
+    }),
+    resize: vi.fn((...args: unknown[]) => {
+      mockResize(...args);
+      return { toBuffer: vi.fn(() => Promise.resolve(Buffer.from([0xB0]))) };
+    }),
+    webp: vi.fn((opts: unknown) => {
+      mockWebpOptions(opts);
+      return { toBuffer: vi.fn(() => Promise.resolve(Buffer.from([0x52, 0x49, 0x46, 0x46]))) };
+    }),
+  };
+  return instance;
+};
 vi.mock('sharp', () => ({
-  default: vi.fn(() => ({
-    webp: vi.fn(() => ({
-      toBuffer: vi.fn(() => Promise.resolve(Buffer.from([0x52, 0x49, 0x46, 0x46]))),
-    })),
-  })),
+  default: vi.fn(() => mockSharpInstance()),
 }));
 
 vi.mock('@/app/lib/board-utils', () => ({
@@ -94,6 +111,7 @@ const validParams = {
 describe('board-render API route', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    mockExistsSync.mockReturnValue(true);
   });
 
   it('returns 200 with WebP content for valid request', async () => {
@@ -155,5 +173,31 @@ describe('board-render API route', () => {
     expect(response.status).toBe(500);
     const body = await response.json();
     expect(body.error).toContain('render exploded');
+  });
+
+  it('calls composite with background when include_background=1', async () => {
+    const response = await GET(makeRequest({ ...validParams, thumbnail: '1', include_background: '1' }));
+    expect(response.status).toBe(200);
+    // composite() should have been called (background + overlay layers)
+    expect(mockComposite).toHaveBeenCalled();
+    // Should use lossy WebP for composited output
+    expect(mockWebpOptions).toHaveBeenCalledWith({ quality: 80 });
+  });
+
+  it('does not call composite without include_background', async () => {
+    const response = await GET(makeRequest(validParams));
+    expect(response.status).toBe(200);
+    expect(mockComposite).not.toHaveBeenCalled();
+    expect(mockWebpOptions).toHaveBeenCalledWith({ lossless: true });
+  });
+
+  it('falls back to lossless when background images are missing', async () => {
+    // Make findPublicImagePath return null for all candidates
+    mockExistsSync.mockImplementation((path) => path.includes('.wasm'));
+    const response = await GET(makeRequest({ ...validParams, include_background: '1' }));
+    expect(response.status).toBe(200);
+    // Should fall back to lossless since no backgrounds found
+    expect(mockComposite).not.toHaveBeenCalled();
+    expect(mockWebpOptions).toHaveBeenCalledWith({ lossless: true });
   });
 });

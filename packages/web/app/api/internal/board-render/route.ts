@@ -54,6 +54,73 @@ const VALID_BOARD_NAMES = new Set(['kilter', 'tension', 'moonboard']);
 // Full: native board resolution for crisp rendering in climb drawer/card cover
 const THUMBNAIL_WIDTH = 300;
 
+// ---------------------------------------------------------------------------
+// Background image helpers (for include_background=1 compositing)
+// ---------------------------------------------------------------------------
+
+/**
+ * Resolve a public/-relative path to an absolute filesystem path.
+ * Tries multiple candidate directories to work across dev, monorepo root,
+ * and Vercel standalone builds.
+ */
+function findPublicImagePath(relPath: string): string | null {
+  const candidates = [
+    join(process.cwd(), 'public', relPath),
+    join(process.cwd(), 'packages/web/public', relPath),
+    join(process.cwd(), relPath),
+    join(process.cwd(), '..', '..', 'packages/web/public', relPath),
+  ];
+  for (const candidate of candidates) {
+    if (existsSync(candidate)) return candidate;
+  }
+  return null;
+}
+
+/** Convert a raw image filename to its AVIF equivalent, optionally as a thumbnail. */
+function toAvifPath(dir: string, filename: string, isThumbnail: boolean): string {
+  const avifName = filename.replace(/\.png$/, '.avif');
+  if (isThumbnail) {
+    const lastSlash = avifName.lastIndexOf('/');
+    if (lastSlash >= 0) {
+      return `${dir}/${avifName.substring(0, lastSlash)}/thumbs${avifName.substring(lastSlash)}`;
+    }
+    return `${dir}/thumbs/${avifName}`;
+  }
+  return `${dir}/${avifName}`;
+}
+
+interface BoardDetailsForBg {
+  board_name: string;
+  images_to_holds: Record<string, unknown>;
+  layoutFolder?: string;
+  holdSetImages?: string[];
+}
+
+/**
+ * Build the ordered list of public/-relative paths for background images.
+ * Kilter/Tension use images_to_holds keys; MoonBoard uses layoutFolder + holdSetImages.
+ */
+function getBackgroundRelPaths(boardDetails: BoardDetailsForBg, isThumbnail: boolean): string[] {
+  const paths: string[] = [];
+  const imageKeys = Object.keys(boardDetails.images_to_holds);
+
+  if (imageKeys.length > 0) {
+    // Aurora boards (Kilter, Tension): keys like "product_sizes_layouts_sets/36-1.png"
+    for (const key of imageKeys) {
+      paths.push(toAvifPath(`images/${boardDetails.board_name}`, key, isThumbnail));
+    }
+  } else if (boardDetails.layoutFolder && boardDetails.holdSetImages) {
+    // MoonBoard: board background + hold set layers
+    const bgFile = 'moonboard-bg.png';
+    paths.push(toAvifPath('images/moonboard', bgFile, isThumbnail));
+    for (const holdSetImage of boardDetails.holdSetImages) {
+      paths.push(toAvifPath(`images/moonboard/${boardDetails.layoutFolder}`, holdSetImage, isThumbnail));
+    }
+  }
+
+  return paths;
+}
+
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
@@ -64,6 +131,7 @@ export async function GET(request: NextRequest) {
     const setIds = searchParams.get('set_ids');
     const frames = searchParams.get('frames');
     const thumbnail = searchParams.get('thumbnail') === '1';
+    const includeBackground = searchParams.get('include_background') === '1';
     // Mirroring is handled client-side via CSS scaleX(-1) to maximize cache hit rate
 
     if (!boardName || !layoutId || !sizeId || !setIds || !frames) {
@@ -125,14 +193,59 @@ export async function GET(request: NextRequest) {
     const height = view.getUint32(4, true);
     const rgbaData = rawBytes.subarray(8);
 
-    // Encode to WebP lossless using sharp (25-30% smaller than PNG)
+    // Encode to WebP, optionally compositing background images first
+    const overlayBuffer = Buffer.from(rgbaData.buffer, rgbaData.byteOffset, rgbaData.byteLength);
+
     const sharpT0 = performance.now();
-    const webpBuffer = await sharp(Buffer.from(rgbaData.buffer, rgbaData.byteOffset, rgbaData.byteLength), {
-      raw: { width, height, channels: 4 },
-    })
-      .webp({ lossless: true })
-      .toBuffer();
+    let webpBuffer: Buffer;
+    let bgMs = 0;
+
+    if (includeBackground) {
+      const bgT0 = performance.now();
+      const bgRelPaths = getBackgroundRelPaths(boardDetails, thumbnail);
+      const bgFsPaths = bgRelPaths
+        .map((rp) => findPublicImagePath(rp))
+        .filter((p): p is string => p !== null);
+      bgMs = performance.now() - bgT0;
+
+      if (bgFsPaths.length > 0) {
+        // Load and resize all background images to match overlay dimensions
+        const resizedBuffers = await Promise.all(
+          bgFsPaths.map((fsPath) =>
+            sharp(fsPath).resize(width, height, { fit: 'fill' }).toBuffer(),
+          ),
+        );
+
+        const [firstBg, ...restBgs] = resizedBuffers;
+
+        // Composite: first background as base → remaining backgrounds → WASM overlay on top
+        webpBuffer = await sharp(firstBg)
+          .composite([
+            ...restBgs.map((buf) => ({ input: buf, blend: 'over' as const })),
+            {
+              input: overlayBuffer,
+              raw: { width, height, channels: 4 as const },
+              blend: 'over' as const,
+            },
+          ])
+          .webp({ quality: 80 })
+          .toBuffer();
+      } else {
+        // No background images found — fall back to overlay-only lossless
+        webpBuffer = await sharp(overlayBuffer, { raw: { width, height, channels: 4 } })
+          .webp({ lossless: true })
+          .toBuffer();
+      }
+    } else {
+      // Default: overlay-only lossless WebP (25-30% smaller than PNG)
+      webpBuffer = await sharp(overlayBuffer, { raw: { width, height, channels: 4 } })
+        .webp({ lossless: true })
+        .toBuffer();
+    }
     const sharpMs = performance.now() - sharpT0;
+
+    const timingParts = [`wasm;dur=${wasmMs.toFixed(1)}`, `sharp;dur=${sharpMs.toFixed(1)}`];
+    if (bgMs > 0) timingParts.push(`bg;dur=${bgMs.toFixed(1)}`);
 
     return new NextResponse(new Uint8Array(webpBuffer), {
       headers: {
@@ -140,7 +253,7 @@ export async function GET(request: NextRequest) {
         // Climbs are immutable -- cache forever at both CDN (s-maxage) and browser (max-age)
         'Cache-Control': 'public, s-maxage=31536000, max-age=31536000, immutable',
         // Expose render timing in browser devtools Network panel
-        'Server-Timing': `wasm;dur=${wasmMs.toFixed(1)}, sharp;dur=${sharpMs.toFixed(1)}`,
+        'Server-Timing': timingParts.join(', '),
       },
     });
   } catch (error) {

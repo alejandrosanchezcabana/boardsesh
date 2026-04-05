@@ -94,6 +94,11 @@ class BoardseshViewController: CAPBridgeViewController {
     let fallbackState = IOSOfflineFallbackStateMachine()
     private var delegateProxy: NavigationDelegateProxy?
 
+    override func capacitorDidLoad() {
+        super.capacitorDidLoad()
+        bridge?.registerPluginInstance(LiveActivityPlugin())
+    }
+
     override func viewDidLoad() {
         super.viewDidLoad()
 

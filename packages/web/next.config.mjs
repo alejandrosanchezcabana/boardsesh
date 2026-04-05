@@ -33,6 +33,7 @@ const nextConfig = {
     '/api/internal/board-render': [
       './node_modules/@boardsesh/board-renderer-wasm/pkg/*.wasm',
       '../../node_modules/@boardsesh/board-renderer-wasm/pkg/*.wasm',
+      './public/images/**',
     ],
   },
   async headers() {

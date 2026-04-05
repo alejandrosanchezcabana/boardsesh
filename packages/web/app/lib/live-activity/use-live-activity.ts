@@ -65,6 +65,33 @@ export function useLiveActivity({
         layoutId: stableBoardDetails.layout_id,
         sizeId: stableBoardDetails.size_id,
         setIds: stableBoardDetails.set_ids.join(','),
+      }).then(() => {
+        // Send an initial update immediately after start so the widget
+        // doesn't stay on "Loading...". Skip in party mode — WebSocket handles updates.
+        if (isSessionActive && sessionId) return;
+        const displayItem = currentClimbQueueItem ?? (queue.length > 0 ? queue[0] : null);
+        if (!displayItem) return;
+        const idx = queue.findIndex((q) => q.uuid === displayItem.uuid);
+        if (idx === -1) return;
+        updateLiveActivity({
+          climbName: displayItem.climb.name,
+          climbDifficulty: displayItem.climb.difficulty,
+          angle: displayItem.climb.angle,
+          currentIndex: idx,
+          totalClimbs: queue.length,
+          hasNext: idx < queue.length - 1,
+          hasPrevious: idx > 0,
+          climbUuid: displayItem.climb.uuid,
+          queue: queue.map((q) => ({
+            uuid: q.uuid,
+            climbUuid: q.climb.uuid,
+            climbName: q.climb.name,
+            difficulty: q.climb.difficulty,
+            angle: q.climb.angle,
+            frames: q.climb.frames,
+            setterUsername: q.climb.setter_username,
+          })),
+        });
       });
       isActiveRef.current = true;
     } else if (!shouldBeActive && isActiveRef.current) {
@@ -82,21 +109,24 @@ export function useLiveActivity({
 
   // Update on climb changes (local queue mode only; party mode uses WebSocket updates)
   useEffect(() => {
-    if (!isActiveRef.current || !currentClimbQueueItem || !stableBoardDetails) return;
+    if (!isActiveRef.current || !stableBoardDetails) return;
     if (isSessionActive && sessionId) return;
 
-    const currentIndex = queue.findIndex((q) => q.uuid === currentClimbQueueItem.uuid);
+    const displayItem = currentClimbQueueItem ?? (queue.length > 0 ? queue[0] : null);
+    if (!displayItem) return;
+
+    const currentIndex = queue.findIndex((q) => q.uuid === displayItem.uuid);
     if (currentIndex === -1) return;
 
     updateLiveActivity({
-      climbName: currentClimbQueueItem.climb.name,
-      climbDifficulty: currentClimbQueueItem.climb.difficulty,
-      angle: currentClimbQueueItem.climb.angle,
+      climbName: displayItem.climb.name,
+      climbDifficulty: displayItem.climb.difficulty,
+      angle: displayItem.climb.angle,
       currentIndex,
       totalClimbs: queue.length,
       hasNext: currentIndex < queue.length - 1,
       hasPrevious: currentIndex > 0,
-      climbUuid: currentClimbQueueItem.climb.uuid,
+      climbUuid: displayItem.climb.uuid,
       queue: queue.map((q) => ({
         uuid: q.uuid,
         climbUuid: q.climb.uuid,

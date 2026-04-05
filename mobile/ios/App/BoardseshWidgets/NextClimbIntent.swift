@@ -1,7 +1,7 @@
 import ActivityKit
 import AppIntents
 
-@available(iOS 16.1, *)
+@available(iOS 17.0, *)
 struct NextClimbIntent: LiveActivityIntent {
     static var title: LocalizedStringResource = "Next Climb"
     static var description = IntentDescription("Navigate to the next climb in the queue")
