@@ -3,6 +3,7 @@ name: Staging Backend Deploy
 on:
   push:
     branches: [main]
+    # Backend-affecting paths — keep in sync with detect-changes in branch-deploy.yml
     paths:
       - 'packages/backend/**'
       - 'packages/shared-schema/**'

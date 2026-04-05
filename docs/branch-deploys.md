@@ -1418,6 +1418,60 @@ What changed → what gets deployed:
 
 ---
 
+## Staging Backend (FE-Only Deploys)
+
+When a PR only changes frontend code, building and deploying a per-PR backend is wasteful (~3 min build, 256MB RAM). A persistent **staging backend** container runs on the branch-deploy VM, tracking the `main` branch, and serves as a shared fallback.
+
+### How It Works
+
+```
+PR with backend changes:     web-pr-N  →  backend-pr-N     (per-PR, isolated)
+PR with FE-only changes:     web-pr-N  →  staging-backend   (shared, tracks main)
+```
+
+**Routing priority (branch-deploy Traefik):**
+- Per-PR backend: `Host(N.ws.preview.boardsesh.com)` at **priority 100** (wins when present)
+- Staging backend: `HostRegexp(^[0-9]+\.ws\.preview\.boardsesh\.com$)` at **priority 1** (catch-all fallback)
+
+Client-side WebSocket resolution works unchanged — `{N}.ws.preview.boardsesh.com` always resolves via the Traefik wildcard, hitting either the per-PR backend or the staging backend.
+
+### What Counts as Backend Changes
+
+The `detect-changes` job in `branch-deploy.yml` checks the PR diff. These paths trigger a per-PR backend build:
+- `packages/backend/**`, `packages/shared-schema/**`, `packages/db/**`
+- `packages/crypto/**`, `packages/aurora-sync/**`
+- `Dockerfile.backend`, `bun.lock`, `package.json`
+
+Everything else is treated as FE-only. `workflow_dispatch` always does a full build.
+
+> **Note:** The same path list appears in two places (see "Path patterns" below). Keep them in sync.
+
+### Staging Backend Configuration
+
+The staging backend runs as part of the shared docker-compose infrastructure (managed by Ansible):
+- **Image:** `ghcr.io/boardsesh/boardsesh-daemon:staging` (auto-rebuilt on main push via `staging-backend-deploy.yml`)
+- **Database:** Real Neon DB (same `DATABASE_URL` as per-PR deploys)
+- **Redis:** Shared Redis container on the `branch-deploys` network
+- **NEXTAUTH_SECRET:** Shared fixed value stored in 1Password (Homelab vault, "Branch Deploy Host" item) and as GitHub Actions secret `BRANCH_DEPLOY_STAGING_NEXTAUTH_SECRET`
+- **Memory:** 256MB limit, health-checked on `/health`
+
+### Path Patterns
+
+Backend-affecting paths are defined in two places that must stay in sync:
+1. `staging-backend-deploy.yml` lines 7-14 — YAML `paths:` filter (triggers staging rebuild on main push)
+2. `branch-deploy.yml` `detect-changes` job — shell `case` patterns (decides per-PR vs staging for PRs)
+
+### Workflows
+
+| Workflow | Trigger | Purpose |
+|----------|---------|---------|
+| `branch-deploy.yml` | PR open/sync | Detects changes, builds web (always) + backend (if needed), deploys |
+| `staging-backend-deploy.yml` | Push to main (backend paths) | Rebuilds staging backend image, restarts container on VM |
+| `branch-deploy-cleanup.yml` | PR close | Removes per-PR containers (backend may not exist for FE-only) |
+| `branch-deploy-sweep.yml` | Daily 3am UTC + main push | Cleans stale containers, prunes images (7-day TTL) |
+
+---
+
 ## Key Files Reference
 
 ### BoardSesh repo

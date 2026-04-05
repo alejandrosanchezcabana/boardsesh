@@ -41,9 +41,11 @@ jobs:
           # Aggressively prune images older than 7 days to prevent disk exhaustion
           docker image prune -a -f --filter "until=168h" 2>/dev/null || true
 
-          # Also prune build cache and unused volumes
+          # Prune build cache older than 7 days
           docker builder prune -f --filter "until=168h" 2>/dev/null || true
-          docker volume prune -f 2>/dev/null || true
+
+          # Remove anonymous volumes only (not named volumes like devdb-data)
+          docker volume ls -qf dangling=true | xargs -r docker volume rm 2>/dev/null || true
 
           echo "Sweep complete"
           df -h / | tail -1
