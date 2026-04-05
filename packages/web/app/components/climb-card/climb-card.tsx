@@ -9,8 +9,11 @@ import { usePathname } from 'next/navigation';
 
 import ClimbCardCover from './climb-card-cover';
 import ClimbTitle from './climb-title';
+import HeartAnimationOverlay from './heart-animation-overlay';
 import { Climb, BoardDetails } from '@/app/lib/types';
 import { ClimbActions } from '../climb-actions';
+import { useDoubleTapFavorite } from '../climb-actions/use-double-tap-favorite';
+import AuthModal from '../auth/auth-modal';
 import { themeTokens } from '@/app/theme/theme-config';
 import { getGradeTintColor } from '@/app/lib/grade-colors';
 import { useColorMode } from '@/app/hooks/use-color-mode';
@@ -75,12 +78,21 @@ function ClimbCardWithActions({
   const pathname = usePathname();
   const { mode } = useColorMode();
   const isDark = mode === 'dark';
+
+  const {
+    handleDoubleTap,
+    showHeart,
+    dismissHeart,
+    showAuthModal,
+    setShowAuthModal,
+  } = useDoubleTapFavorite({ climbUuid: climb.uuid });
+
   const cover = (
     <ClimbCardCover
       climb={climb}
       boardDetails={boardDetails}
       onClick={onCoverClick}
-      onDoubleClick={onCoverDoubleClick}
+      onDoubleClick={onCoverDoubleClick ?? handleDoubleTap}
       preferImageLayers={preferImageLayers}
     />
   );
@@ -89,6 +101,7 @@ function ClimbCardWithActions({
   const excludeActions = getExcludedClimbActions(boardDetails.board_name, 'card');
 
   return (
+    <>
     <div data-testid="climb-card" style={unsupported ? { opacity: 0.5, filter: 'grayscale(80%)' } : undefined}>
       <MuiCard>
         <CardHeader
@@ -103,7 +116,10 @@ function ClimbCardWithActions({
               : undefined,
           }}
         >
-          <div style={{ position: 'relative' }}>{cover}</div>
+          <div style={{ position: 'relative' }}>
+            {cover}
+            <HeartAnimationOverlay visible={showHeart} onAnimationEnd={dismissHeart} />
+          </div>
         </CardContent>
         {/* Actions rendered as a proper component to support hooks */}
         <CardActions
@@ -123,6 +139,13 @@ function ClimbCardWithActions({
         </CardActions>
       </MuiCard>
     </div>
+    <AuthModal
+      open={showAuthModal}
+      onClose={() => setShowAuthModal(false)}
+      title="Sign in to like climbs"
+      description="Save your favorite climbs so you can find them later."
+    />
+    </>
   );
 }
 
