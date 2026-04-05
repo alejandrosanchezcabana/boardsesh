@@ -266,7 +266,7 @@ const OnboardingTour: React.FC = () => {
     {
       title: 'Queue Item Actions',
       description: withSkip(
-        'Swipe queue items left to remove them from the queue, or swipe right to log an ascent.',
+        'Swipe queue items left to log an ascent, or swipe right to add to a playlist.',
       ),
       target: getTarget('[data-testid="queue-item"]'),
       mask: false,
