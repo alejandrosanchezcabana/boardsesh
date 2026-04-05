@@ -166,7 +166,7 @@ describe('CapacitorBleAdapter', () => {
         deviceId: 'dev-1',
         service: '6e400001-b5a3-f393-e0a9-e50e24dcca9e',
         characteristic: '6e400002-b5a3-f393-e0a9-e50e24dcca9e',
-        value: '01 02 03 04 05',
+        value: '0102030405',
       });
     });
 
@@ -193,14 +193,14 @@ describe('CapacitorBleAdapter', () => {
       expect(mockBlePlugin.write).toHaveBeenCalledTimes(3);
     });
 
-    it('encodes bytes as space-separated hex string', async () => {
+    it('encodes bytes as continuous hex string', async () => {
       await adapter.requestAndConnect();
 
       const data = new Uint8Array([0x01, 0x02, 0xff]);
       await adapter.write(data);
 
       const writtenValue = mockBlePlugin.write.mock.calls[0][0].value;
-      expect(writtenValue).toBe('01 02 ff');
+      expect(writtenValue).toBe('0102ff');
     });
   });
 
