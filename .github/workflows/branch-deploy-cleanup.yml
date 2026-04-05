@@ -17,7 +17,7 @@ jobs:
         run: |
           echo "Cleaning up PR #${PR_NUM} preview..."
 
-          # Stop and remove containers
+          # Stop and remove containers (backend may not exist for FE-only deploys)
           docker stop web-pr-${PR_NUM} backend-pr-${PR_NUM} 2>/dev/null || true
           docker rm web-pr-${PR_NUM} backend-pr-${PR_NUM} 2>/dev/null || true
 

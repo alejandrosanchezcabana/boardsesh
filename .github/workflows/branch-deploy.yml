@@ -20,7 +20,48 @@ env:
   PR_NUMBER: ${{ github.event.pull_request.number || github.event.inputs.pr_number }}
 
 jobs:
+  detect-changes:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: read
+    outputs:
+      backend_changed: ${{ steps.changes.outputs.backend }}
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - name: Detect changed paths
+        id: changes
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          # workflow_dispatch has no PR diff - always do full build
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            echo "backend=true" >> "$GITHUB_OUTPUT"
+            echo "Manual trigger: building everything"
+            exit 0
+          fi
+
+          CHANGED_FILES=$(gh pr diff ${{ env.PR_NUMBER }} --name-only --repo ${{ github.repository }}) || \
+            CHANGED_FILES=$(git diff --name-only origin/${{ github.event.pull_request.base.ref }}...HEAD)
+
+          BACKEND_CHANGED=false
+          for file in $CHANGED_FILES; do
+            case "$file" in
+              packages/backend/*|packages/shared-schema/*|packages/db/*|packages/crypto/*|packages/aurora-sync/*|Dockerfile.backend|bun.lock|package.json)
+                BACKEND_CHANGED=true
+                break
+                ;;
+            esac
+          done
+
+          echo "backend=${BACKEND_CHANGED}" >> "$GITHUB_OUTPUT"
+          echo "Backend changed: ${BACKEND_CHANGED}"
+
   build-images:
+    needs: detect-changes
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -54,6 +95,7 @@ jobs:
           cache-to: type=gha,mode=max,scope=web-pr-${{ env.PR_NUMBER }}
 
       - name: Build and push backend image
+        if: needs.detect-changes.outputs.backend_changed == 'true'
         uses: docker/build-push-action@v7
         with:
           context: .
@@ -66,7 +108,7 @@ jobs:
           cache-to: type=gha,mode=max,scope=backend-pr-${{ env.PR_NUMBER }}
 
   deploy:
-    needs: [build-images, create-deployment]
+    needs: [build-images, detect-changes, create-deployment]
     if: always() && needs.build-images.result == 'success' && (needs.create-deployment.result == 'success' || needs.create-deployment.result == 'skipped')
     runs-on: [self-hosted, homelab, ephemeral]
     steps:
@@ -78,41 +120,64 @@ jobs:
           PR_NUM: ${{ env.PR_NUMBER }}
           NETWORK: branch-deploys
           DATABASE_URL: ${{ secrets.BRANCH_DEPLOY_DATABASE_URL }}
+          BACKEND_CHANGED: ${{ needs.detect-changes.outputs.backend_changed }}
+          STAGING_NEXTAUTH_SECRET: ${{ secrets.BRANCH_DEPLOY_STAGING_NEXTAUTH_SECRET }}
         run: |
-          # Stop/remove old containers
-          docker stop web-pr-${PR_NUM} backend-pr-${PR_NUM} 2>/dev/null || true
-          docker rm web-pr-${PR_NUM} backend-pr-${PR_NUM} 2>/dev/null || true
+          # Always stop/remove old web container
+          docker stop web-pr-${PR_NUM} 2>/dev/null || true
+          docker rm web-pr-${PR_NUM} 2>/dev/null || true
 
-          # Pull new images
+          if [ "${BACKEND_CHANGED}" = "true" ]; then
+            echo "Backend changed: deploying per-PR backend"
+
+            # Stop/remove old per-PR backend
+            docker stop backend-pr-${PR_NUM} 2>/dev/null || true
+            docker rm backend-pr-${PR_NUM} 2>/dev/null || true
+
+            docker pull ghcr.io/boardsesh/boardsesh-daemon:pr-${PR_NUM}
+
+            NEXTAUTH_SECRET="branch-deploy-secret-${PR_NUM}"
+            BACKEND_INTERNAL_URL="ws://backend-pr-${PR_NUM}:8080/graphql"
+
+            # Start per-PR backend (priority 100 overrides staging backend at priority 1)
+            docker run -d \
+              --name backend-pr-${PR_NUM} \
+              --network ${NETWORK} \
+              -e "DATABASE_URL=${DATABASE_URL}" \
+              -e REDIS_URL=redis://redis:6379 \
+              -e PORT=8080 \
+              -e BOARDSESH_URL=https://${PR_NUM}.preview.boardsesh.com \
+              -e NEXTAUTH_SECRET=${NEXTAUTH_SECRET} \
+              -e NODE_ENV=production \
+              --label "traefik.enable=true" \
+              --label "traefik.http.routers.backend-pr-${PR_NUM}.rule=Host(\`${PR_NUM}.ws.preview.boardsesh.com\`)" \
+              --label "traefik.http.routers.backend-pr-${PR_NUM}.priority=100" \
+              --label "traefik.http.services.backend-pr-${PR_NUM}.loadbalancer.server.port=8080" \
+              --memory=256m \
+              --restart unless-stopped \
+              ghcr.io/boardsesh/boardsesh-daemon:pr-${PR_NUM}
+          else
+            echo "FE-only change: using staging backend"
+
+            # Clean up any leftover per-PR backend from a previous push
+            docker stop backend-pr-${PR_NUM} 2>/dev/null || true
+            docker rm backend-pr-${PR_NUM} 2>/dev/null || true
+
+            NEXTAUTH_SECRET="${STAGING_NEXTAUTH_SECRET}"
+            BACKEND_INTERNAL_URL="ws://staging-backend:8080/graphql"
+          fi
+
+          # Pull and start web
           docker pull ghcr.io/boardsesh/boardsesh-web:pr-${PR_NUM}
-          docker pull ghcr.io/boardsesh/boardsesh-daemon:pr-${PR_NUM}
 
-          # Start backend
-          docker run -d \
-            --name backend-pr-${PR_NUM} \
-            --network ${NETWORK} \
-            -e "DATABASE_URL=${DATABASE_URL}" \
-            -e REDIS_URL=redis://redis:6379 \
-            -e PORT=8080 \
-            -e BOARDSESH_URL=https://${PR_NUM}.preview.boardsesh.com \
-            -e NEXTAUTH_SECRET=branch-deploy-secret-${PR_NUM} \
-            -e NODE_ENV=production \
-            --label "traefik.enable=true" \
-            --label "traefik.http.routers.backend-pr-${PR_NUM}.rule=Host(\`${PR_NUM}.ws.preview.boardsesh.com\`)" \
-            --label "traefik.http.services.backend-pr-${PR_NUM}.loadbalancer.server.port=8080" \
-            --memory=256m \
-            --restart unless-stopped \
-            ghcr.io/boardsesh/boardsesh-daemon:pr-${PR_NUM}
-
-          # Start web
           docker run -d \
             --name web-pr-${PR_NUM} \
             --network ${NETWORK} \
             -e "DATABASE_URL=${DATABASE_URL}" \
-            -e NEXTAUTH_SECRET=branch-deploy-secret-${PR_NUM} \
+            -e NEXTAUTH_SECRET=${NEXTAUTH_SECRET} \
             -e NEXTAUTH_URL=https://${PR_NUM}.preview.boardsesh.com \
             -e IRON_SESSION_PASSWORD='{"1":"branch-deploy-session-must-be-32-chars!!"}' \
-            -e BACKEND_INTERNAL_URL=ws://backend-pr-${PR_NUM}:8080/graphql \
+            -e BACKEND_INTERNAL_URL=${BACKEND_INTERNAL_URL} \
             -e VERCEL_ENV=preview \
             -e NODE_ENV=production \
             --label "traefik.enable=true" \
@@ -125,10 +190,16 @@ jobs:
       - name: Wait for containers to be healthy
         env:
           PR_NUM: ${{ env.PR_NUMBER }}
+          BACKEND_CHANGED: ${{ needs.detect-changes.outputs.backend_changed }}
         run: |
           echo "Waiting for containers to start..."
           sleep 10
-          docker ps --filter "name=web-pr-${PR_NUM}" --filter "name=backend-pr-${PR_NUM}" --format "table {{.Names}}\t{{.Status}}"
+          if [ "${BACKEND_CHANGED}" = "true" ]; then
+            docker ps --filter "name=web-pr-${PR_NUM}" --filter "name=backend-pr-${PR_NUM}" --format "table {{.Names}}\t{{.Status}}"
+          else
+            echo "FE-only deploy (using staging backend)"
+            docker ps --filter "name=web-pr-${PR_NUM}" --filter "name=staging-backend" --format "table {{.Names}}\t{{.Status}}"
+          fi
 
   # Note: deployment tracking only runs for pull_request events.
   # Manual workflow_dispatch deploys skip deployment creation since there's no PR to attach to.

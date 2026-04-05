@@ -35,7 +35,15 @@ jobs:
             fi
           done
 
-          # Prune dangling images
-          docker image prune -f --filter "label=org.opencontainers.image.source=https://github.com/boardsesh/boardsesh" 2>/dev/null || true
+          # Remove images for closed PRs (not just dangling)
+          docker image prune -f 2>/dev/null || true
+
+          # Aggressively prune images older than 7 days to prevent disk exhaustion
+          docker image prune -a -f --filter "until=168h" 2>/dev/null || true
+
+          # Also prune build cache and unused volumes
+          docker builder prune -f --filter "until=168h" 2>/dev/null || true
+          docker volume prune -f 2>/dev/null || true
 
           echo "Sweep complete"
+          df -h / | tail -1
