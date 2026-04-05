@@ -22,10 +22,6 @@ vi.mock('@/app/hooks/use-is-dark-mode', () => ({
   useIsDarkMode: () => false,
 }));
 
-vi.mock('../../graphql-queue', () => ({
-  useOptionalQueueContext: () => null,
-}));
-
 vi.mock('../../climb-actions', () => ({
   useFavorite: () => ({
     isFavorited: false,

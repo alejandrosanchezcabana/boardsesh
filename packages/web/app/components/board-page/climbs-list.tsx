@@ -51,6 +51,7 @@ export type ClimbsListProps = {
   isFetching: boolean;
   hasMore: boolean;
   onClimbSelect?: (climb: Climb) => void;
+  addToQueue?: (climb: Climb) => void;
   onLoadMore: () => void;
   header?: React.ReactNode;
   headerInline?: React.ReactNode;
@@ -82,6 +83,7 @@ const ClimbsList = ({
   isFetching,
   hasMore,
   onClimbSelect,
+  addToQueue,
   onLoadMore,
   header,
   headerInline,
@@ -406,6 +408,7 @@ const ClimbsList = ({
                     unsupported={unsupportedClimbs?.has(climb.uuid)}
                     onOpenActions={handleOpenActions}
                     onOpenPlaylistSelector={handleOpenPlaylistSelector}
+                    addToQueue={addToQueue}
                   />
                 </div>
                 {renderItemExtra?.(climb)}

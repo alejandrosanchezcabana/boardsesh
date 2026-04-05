@@ -294,6 +294,7 @@ const QueueList = forwardRef<QueueListHandle, QueueListProps>(({ boardDetails, o
                   boardDetails={boardDetails}
                   titleProps={suggestedTitleProps}
                   onNavigate={onClimbNavigate}
+                  addToQueue={addToQueue}
                 />
               </div>
             ))}

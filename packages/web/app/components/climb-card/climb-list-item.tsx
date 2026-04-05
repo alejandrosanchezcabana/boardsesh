@@ -16,7 +16,6 @@ import { ClimbActions } from '../climb-actions';
 import { useDoubleTapFavorite } from '../climb-actions/use-double-tap-favorite';
 import HeartAnimationOverlay from './heart-animation-overlay';
 import PlaylistSelectionContent from '../climb-actions/playlist-selection-content';
-import { useOptionalQueueContext } from '../graphql-queue';
 import { useSwipeActions } from '@/app/hooks/use-swipe-actions';
 import { useDoubleTap } from '@/app/lib/hooks/use-double-tap';
 import { themeTokens } from '@/app/theme/theme-config';
@@ -161,6 +160,9 @@ type ClimbListItemProps = {
   onOpenPlaylistSelector?: (climb: Climb) => void;
   /** Callback invoked when the user navigates via the thumbnail link (e.g., to close a drawer). Forwarded to ClimbThumbnail. */
   onNavigate?: () => void;
+  /** Optional callback to add the climb to the queue (default swipe-left action).
+   *  When not provided, swipe-left is a no-op. Pass from a parent that subscribes to QueueContext. */
+  addToQueue?: (climb: Climb) => void;
 };
 
 const ClimbListItem: React.FC<ClimbListItemProps> = React.memo(
@@ -182,6 +184,7 @@ const ClimbListItem: React.FC<ClimbListItemProps> = React.memo(
     onOpenActions,
     onOpenPlaylistSelector,
     onNavigate,
+    addToQueue,
   }) => {
     const pathname = usePathname();
     const isDark = useIsDarkMode();
@@ -195,8 +198,10 @@ const ClimbListItem: React.FC<ClimbListItemProps> = React.memo(
     const longSwipeLayerRef = useRef<HTMLDivElement>(null);
     const rightActionLayerRef = useRef<HTMLDivElement>(null);
     const leftActionContainerRef = useRef<HTMLDivElement>(null);
-    const queueContext = useOptionalQueueContext();
-    const addToQueue = queueContext?.addToQueue;
+    // Store addToQueue in a ref so the memoized handler always reads the latest
+    // value without requiring addToQueue in the memo comparator.
+    const addToQueueRef = useRef(addToQueue);
+    addToQueueRef.current = addToQueue;
     const {
       handleDoubleTap,
       showHeart,
@@ -223,8 +228,8 @@ const ClimbListItem: React.FC<ClimbListItemProps> = React.memo(
     // Default swipe handlers
     // Swipe left (right action): add to queue
     const handleDefaultSwipeLeft = useCallback(() => {
-      addToQueue?.(climb);
-    }, [climb, addToQueue]);
+      addToQueueRef.current?.(climb);
+    }, [climb]);
 
     // Swipe right short (left action): open playlist selector
     const handleDefaultSwipeRight = useCallback(() => {

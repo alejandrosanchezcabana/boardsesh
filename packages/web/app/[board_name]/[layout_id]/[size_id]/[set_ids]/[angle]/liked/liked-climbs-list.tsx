@@ -70,7 +70,7 @@ export default function LikedClimbsList({
   angle,
 }: LikedClimbsListProps) {
   const { token, isLoading: tokenLoading } = useWsAuthToken();
-  const { setCurrentClimb } = useQueueContext();
+  const { setCurrentClimb, addToQueue } = useQueueContext();
   const { showMessage } = useSnackbar();
   const [selectedClimbUuid, setSelectedClimbUuid] = useState<string | null>(null);
   const [viewMode, setViewMode] = useState<ViewMode>('list');
@@ -300,6 +300,7 @@ export default function LikedClimbsList({
               disableThumbnailNavigation
               onOpenActions={handleOpenActions}
               onOpenPlaylistSelector={handleOpenPlaylistSelector}
+              addToQueue={addToQueue}
             />
           ))}
         </Box>

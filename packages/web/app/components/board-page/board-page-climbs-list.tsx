@@ -24,6 +24,7 @@ const BoardPageClimbsList = ({
 }: BoardPageClimbsListProps) => {
   const {
     setCurrentClimb,
+    addToQueue,
     climbSearchResults,
     hasMoreResults,
     fetchMoreClimbs,
@@ -84,6 +85,7 @@ const BoardPageClimbsList = ({
       isFetching={isFetchingClimbs}
       hasMore={hasMoreResults}
       onClimbSelect={setCurrentClimb}
+      addToQueue={addToQueue}
       onLoadMore={fetchMoreClimbs}
       headerInline={headerInline}
       angleSelector={angleSelectorElement}
