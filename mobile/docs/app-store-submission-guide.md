@@ -204,10 +204,11 @@ App Store Connect asks about data collection during submission. Answer based on 
 
 Apple rejects apps that are just websites wrapped in a WebView without meaningful native functionality. Our defense:
 
-- **Bluetooth Low Energy board control is impossible in iOS Safari.** The Web Bluetooth API is not supported. This is the entire reason the native app exists.
-- The review notes explain this clearly with a link to caniuse.com.
+- **This app requires native CoreBluetooth to communicate with Kilter Board and Tension Board hardware.** The Web Bluetooth API is not supported on iOS (https://caniuse.com/web-bluetooth). This is the sole reason the native app exists.
+- The app declares `bluetooth-le` in `UIRequiredDeviceCapabilities` and `bluetooth-central` in `UIBackgroundModes`, signaling that BLE is core functionality.
+- The Capacitor BluetoothLe plugin (CapacitorCommunityBluetoothLe) provides the CoreBluetooth bridge. The native implementation uses `CBCentralManager` for device discovery and `CBPeripheral` for characteristic writes to the board's Nordic UART Service.
 - Include a screenshot of the Bluetooth pairing flow in the screenshots.
-- If questioned, respond with: "The app uses CoreBluetooth via Capacitor's BLE plugin to communicate with climbing board LED controllers. This functionality is not available in any iOS browser."
+- If questioned, respond with: "This app requires native CoreBluetooth to communicate with Kilter Board hardware. Web Bluetooth is not supported on iOS. The app uses CBCentralManager to scan for boards advertising the Aurora BLE service (UUID 4488b571-7806-4df6-bcff-a2897e4953ff) and writes LED lighting commands to the Nordic UART RX characteristic (UUID 6e400002-b5a3-f393-e0a9-e50e24dcca9e). This functionality is not available in any iOS browser."
 
 ### 5.1.1(v) Account Deletion
 
@@ -245,9 +246,13 @@ Apple requires all apps with account creation to also support account deletion.
 ### BLE-specific questions from review
 
 Apple reviewers sometimes ask for more detail about Bluetooth usage. Be ready to explain:
-- What BLE services and characteristics the app connects to (the board's LED controller service).
-- That data only flows from the phone to the board (lighting commands), not the other way.
-- That no personal data is transmitted over Bluetooth.
+
+- **Framework used:** CoreBluetooth, accessed via the CapacitorCommunityBluetoothLe plugin. The native implementation uses `CBCentralManager` (Central role) and `CBPeripheral` for GATT operations.
+- **Services and characteristics:** The app scans for devices advertising the Aurora service (UUID `4488b571-7806-4df6-bcff-a2897e4953ff`). After connecting, it discovers the Nordic UART Service (UUID `6e400001-b5a3-f393-e0a9-e50e24dcca9e`) and writes to the RX characteristic (UUID `6e400002-b5a3-f393-e0a9-e50e24dcca9e`).
+- **Data direction:** One-way only — phone to board. The app sends LED lighting commands (hold positions and colors) so the board illuminates the correct holds for a climb.
+- **No personal data:** No personal, health, or identifying information is transmitted over Bluetooth. Only LED position and color bytes.
+- **Background mode:** The app declares `bluetooth-central` in `UIBackgroundModes` to maintain the BLE connection when the user briefly switches apps during a climbing session. No background scanning or reconnection is performed.
+- **Device capability:** The app declares `bluetooth-le` in `UIRequiredDeviceCapabilities` because BLE board control is core functionality.
 
 ### After approval
 

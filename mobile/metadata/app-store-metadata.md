@@ -84,8 +84,15 @@ You do not need a climbing board to test the app. Here is what you can verify:
 7. **Party Mode**: Start a party session from the queue panel. This creates a WebSocket-backed collaborative session. You can open a second browser tab at boardsesh.com, sign in with a different account, and join the same session to test real-time sync (climb additions, queue reordering, and voting all sync live).
 8. **Logbook**: After signing in, check the logbook/profile section to see logged climbs and stats.
 
-**Technical notes**
-- The app uses Capacitor to wrap the web application with native BLE access.
+**Native Bluetooth (CoreBluetooth)**
+
+This app requires native CoreBluetooth to communicate with Kilter Board and Tension Board hardware. Web Bluetooth is not supported on iOS (https://caniuse.com/web-bluetooth), which is why this app exists as a native iOS app rather than a web app.
+
+The app acts as a BLE Central and connects to climbing boards that advertise the Aurora service (UUID 4488b571-7806-4df6-bcff-a2897e4953ff). It discovers the Nordic UART Service (UUID 6e400001-b5a3-f393-e0a9-e50e24dcca9e) and writes LED lighting commands to the RX characteristic (UUID 6e400002-b5a3-f393-e0a9-e50e24dcca9e). Data flows one direction only: phone to board. No personal data is transmitted over Bluetooth.
+
+The Capacitor BluetoothLe plugin (CapacitorCommunityBluetoothLe) provides the CoreBluetooth bridge. The native implementation uses CBCentralManager for device discovery and CBPeripheral for characteristic writes. The app declares bluetooth-le in UIRequiredDeviceCapabilities and bluetooth-central in UIBackgroundModes.
+
+**Other technical notes**
 - Network requests go to boardsesh.com (production API).
 - WebSocket connections for Party Mode go to the backend at wss://backend.boardsesh.com.
 
