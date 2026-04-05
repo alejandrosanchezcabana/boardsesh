@@ -47,7 +47,10 @@ const CollapsibleSection: React.FC<CollapsibleSectionProps> = ({
             className={`${styles.sectionCard} ${isActive ? styles.sectionCardActive : ''}`}
             {...(!isActive ? { onClick: () => setActiveKey(section.key) } : {})}
           >
-            <div className={`${styles.collapsedRow} ${isActive ? styles.collapsedRowActive : ''}`}>
+            <div
+              className={`${styles.collapsedRow} ${isActive ? styles.collapsedRowActive : ''}`}
+              {...(isActive ? { onClick: () => setActiveKey(null) } : {})}
+            >
               <span className={styles.collapsedLabel}>{isActive ? section.title : section.label}</span>
               <span className={`${styles.collapsedSummary} ${isActive ? styles.collapsedSummaryHidden : ''}`}>
                 {summaryText}

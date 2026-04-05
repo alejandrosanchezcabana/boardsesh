@@ -38,6 +38,7 @@
 
 .collapsedRowActive {
   padding: 24px 24px 4px 24px;
+  cursor: pointer;
 }
 
 .collapsedLabel {
