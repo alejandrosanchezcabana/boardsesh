@@ -21,14 +21,31 @@ vi.mock('../../graphql-queue', () => ({
 
 vi.mock('../../climb-actions', () => ({
   ClimbActions: () => <div data-testid="climb-actions" />,
-  useFavorite: () => ({
+}));
+
+vi.mock('../../climb-actions/use-double-tap-favorite', () => ({
+  useDoubleTapFavorite: () => ({
+    handleDoubleTap: vi.fn(),
+    showHeart: false,
+    dismissHeart: vi.fn(),
     isFavorited: false,
-    isLoading: false,
     toggleFavorite: vi.fn(),
-    isAuthenticated: false,
+    showAuthModal: false,
+    setShowAuthModal: vi.fn(),
   }),
 }));
 
+vi.mock('../../auth/auth-modal', () => ({
+  default: () => null,
+}));
+
+vi.mock('../heart-animation-overlay', () => ({
+  default: () => null,
+}));
+
+vi.mock('../drawer-favorite-button', () => ({
+  default: () => <span data-testid="drawer-favorite-button" />,
+}));
 vi.mock('@/app/hooks/use-swipe-actions', () => ({
   useSwipeActions: (options: { disabled?: boolean }) => {
     capturedSwipeOptions = options;
