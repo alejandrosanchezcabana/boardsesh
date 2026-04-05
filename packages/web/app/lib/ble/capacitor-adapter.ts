@@ -7,7 +7,7 @@ const UART_WRITE_UUID = '6e400002-b5a3-f393-e0a9-e50e24dcca9e';
 
 // Raw Capacitor plugin interface as exposed via window.Capacitor.Plugins.BluetoothLe.
 // The plugin JS is injected by the native shell. We type only the methods we use.
-// IMPORTANT: The raw plugin's write() expects `value` as a hex string, not DataView.
+// IMPORTANT: The raw plugin's write() expects `value` as a continuous hex string (no spaces), not DataView.
 // The BleClient npm wrapper normally handles this conversion, but we bypass it.
 
 interface PluginListenerHandle {
@@ -31,7 +31,7 @@ interface CapacitorBlePlugin {
     deviceId: string;
     service: string;
     characteristic: string;
-    value: string; // Hex string, e.g. "01 02 ff"
+    value: string; // Continuous hex string, e.g. "0102ff"
   }): Promise<void>;
   requestMtu(options: {
     deviceId: string;
@@ -51,11 +51,11 @@ function getBlePlugin(): CapacitorBlePlugin {
   return plugin as CapacitorBlePlugin;
 }
 
-/** Convert a Uint8Array to the space-separated hex string the raw plugin expects */
+/** Convert a Uint8Array to the continuous hex string the raw plugin expects (v8+) */
 function toHexString(data: Uint8Array): string {
   return Array.from(data)
     .map((b) => b.toString(16).padStart(2, '0'))
-    .join(' ');
+    .join('');
 }
 
 export class CapacitorBleAdapter implements BluetoothAdapter {
