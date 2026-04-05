@@ -110,6 +110,8 @@ type ClimbListItemProps = {
   onOpenActions?: (climb: Climb) => void;
   /** When provided, the item delegates opening the playlist selector to the parent instead of rendering its own. */
   onOpenPlaylistSelector?: (climb: Climb) => void;
+  /** Callback invoked when the user navigates via the thumbnail link (e.g., to close a drawer). Forwarded to ClimbThumbnail. */
+  onNavigate?: () => void;
 };
 
 const ClimbListItem: React.FC<ClimbListItemProps> = React.memo(
@@ -132,6 +134,7 @@ const ClimbListItem: React.FC<ClimbListItemProps> = React.memo(
     onThumbnailClick,
     onOpenActions,
     onOpenPlaylistSelector,
+    onNavigate,
   }) => {
     const pathname = usePathname();
     const isDark = useIsDarkMode();
@@ -430,6 +433,7 @@ const ClimbListItem: React.FC<ClimbListItemProps> = React.memo(
                 currentClimb={climb}
                 enableNavigation={!disableThumbnailNavigation}
                 preferImageLayers={preferImageLayers}
+                onNavigate={onNavigate}
               />
             </div>
 
@@ -532,7 +536,8 @@ const ClimbListItem: React.FC<ClimbListItemProps> = React.memo(
       prev.preferImageLayers === next.preferImageLayers &&
       prev.onThumbnailClick === next.onThumbnailClick &&
       prev.onOpenActions === next.onOpenActions &&
-      prev.onOpenPlaylistSelector === next.onOpenPlaylistSelector
+      prev.onOpenPlaylistSelector === next.onOpenPlaylistSelector &&
+      prev.onNavigate === next.onNavigate
     );
   },
 );
