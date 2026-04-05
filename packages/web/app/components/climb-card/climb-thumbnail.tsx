@@ -31,6 +31,7 @@ const ClimbThumbnail = ({
   const boardStyle: React.CSSProperties = {
     aspectRatio: `${boardDetails.boardWidth} / ${boardDetails.boardHeight}`,
     maxHeight: maxHeight ?? '10vh',
+    width: '100%',
   };
 
   let renderContent: React.ReactNode = null;

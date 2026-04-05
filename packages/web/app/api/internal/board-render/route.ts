@@ -76,17 +76,17 @@ function findPublicImagePath(relPath: string): string | null {
   return null;
 }
 
-/** Convert a raw image filename to its AVIF equivalent, optionally as a thumbnail. */
-function toAvifPath(dir: string, filename: string, isThumbnail: boolean): string {
-  const avifName = filename.replace(/\.png$/, '.avif');
+/** Convert a raw image filename to its WebP equivalent, optionally as a thumbnail. */
+function toWebpPath(dir: string, filename: string, isThumbnail: boolean): string {
+  const webpName = filename.replace(/\.png$/, '.webp');
   if (isThumbnail) {
-    const lastSlash = avifName.lastIndexOf('/');
+    const lastSlash = webpName.lastIndexOf('/');
     if (lastSlash >= 0) {
-      return `${dir}/${avifName.substring(0, lastSlash)}/thumbs${avifName.substring(lastSlash)}`;
+      return `${dir}/${webpName.substring(0, lastSlash)}/thumbs${webpName.substring(lastSlash)}`;
     }
-    return `${dir}/thumbs/${avifName}`;
+    return `${dir}/thumbs/${webpName}`;
   }
-  return `${dir}/${avifName}`;
+  return `${dir}/${webpName}`;
 }
 
 interface BoardDetailsForBg {
@@ -107,14 +107,14 @@ function getBackgroundRelPaths(boardDetails: BoardDetailsForBg, isThumbnail: boo
   if (imageKeys.length > 0) {
     // Aurora boards (Kilter, Tension): keys like "product_sizes_layouts_sets/36-1.png"
     for (const key of imageKeys) {
-      paths.push(toAvifPath(`images/${boardDetails.board_name}`, key, isThumbnail));
+      paths.push(toWebpPath(`images/${boardDetails.board_name}`, key, isThumbnail));
     }
   } else if (boardDetails.layoutFolder && boardDetails.holdSetImages) {
     // MoonBoard: board background + hold set layers
     const bgFile = 'moonboard-bg.png';
-    paths.push(toAvifPath('images/moonboard', bgFile, isThumbnail));
+    paths.push(toWebpPath('images/moonboard', bgFile, isThumbnail));
     for (const holdSetImage of boardDetails.holdSetImages) {
-      paths.push(toAvifPath(`images/moonboard/${boardDetails.layoutFolder}`, holdSetImage, isThumbnail));
+      paths.push(toWebpPath(`images/moonboard/${boardDetails.layoutFolder}`, holdSetImage, isThumbnail));
     }
   }
 

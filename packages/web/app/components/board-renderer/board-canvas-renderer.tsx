@@ -98,32 +98,41 @@ const BoardCanvasRenderer = React.memo(function BoardCanvasRenderer({
 
   if (contain) {
     return (
-      <canvas
-        ref={canvasRef}
-        width={initialWidth}
-        height={initialHeight}
+      <div
         style={{
-          width: '100%',
-          height: '100%',
-          objectFit: 'contain',
+          display: 'flex',
+          justifyContent: 'center',
+          alignItems: 'center',
+          overflow: 'hidden',
           ...style,
         }}
-      />
+      >
+        <canvas
+          ref={canvasRef}
+          width={initialWidth}
+          height={initialHeight}
+          style={{
+            maxWidth: '100%',
+            maxHeight: '100%',
+            width: 'auto',
+            height: 'auto',
+          }}
+        />
+      </div>
     );
   }
 
   return (
-    <div style={{ position: 'relative', ...style }}>
+    <div style={{ display: 'grid', overflow: 'hidden', ...style }}>
       <canvas
         ref={canvasRef}
         width={initialWidth}
         height={initialHeight}
         style={{
-          position: 'absolute',
-          top: 0,
-          left: 0,
+          gridArea: '1 / 1',
           width: '100%',
           height: '100%',
+          display: 'block',
         }}
       />
     </div>

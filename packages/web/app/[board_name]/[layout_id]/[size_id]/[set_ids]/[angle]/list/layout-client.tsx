@@ -134,9 +134,9 @@ const ListLayoutClient: React.FC<PropsWithChildren<ListLayoutClientProps>> = ({ 
 
       // Prefetch MoonBoard images (background + hold sets)
       if (boardDetails.layoutFolder) {
-        addPrefetchLink('/images/moonboard/moonboard-bg.avif');
+        addPrefetchLink('/images/moonboard/moonboard-bg.webp');
         boardDetails.holdSetImages?.forEach((imageFile) => {
-          addPrefetchLink(`/images/moonboard/${boardDetails.layoutFolder}/${imageFile.replace(/\.png$/, '.avif')}`);
+          addPrefetchLink(`/images/moonboard/${boardDetails.layoutFolder}/${imageFile.replace(/\.png$/, '.webp')}`);
         });
       }
     };

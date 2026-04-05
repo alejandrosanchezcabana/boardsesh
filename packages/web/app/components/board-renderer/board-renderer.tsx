@@ -68,7 +68,13 @@ const BoardRenderer = React.memo(
         style={svgStyle}
       >
         {Object.keys(boardDetails.images_to_holds).map((imageUrl) => (
-          <image key={imageUrl} href={getImageUrl(imageUrl, boardDetails.board_name, thumbnail)} width="100%" height="100%" />
+          <image
+            key={imageUrl}
+            href={getImageUrl(imageUrl, boardDetails.board_name, thumbnail)}
+            width={boardWidth}
+            height={boardHeight}
+            preserveAspectRatio="none"
+          />
         ))}
         {litUpHoldsMap && (
           <BoardLitupHolds

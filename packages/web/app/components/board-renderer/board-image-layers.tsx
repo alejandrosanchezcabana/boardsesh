@@ -3,11 +3,14 @@ import type { BoardDetails } from '@/app/lib/types';
 import { getImageUrl, buildOverlayUrl } from './util';
 import { trackRenderComplete, trackRenderError, type RenderContext } from '@/app/lib/rendering-metrics';
 
+// Use CSS Grid stacking (gridArea: 1/1) instead of absolute positioning to avoid
+// iOS 18.x WebKit bugs with absolutely positioned images in aspect-ratio containers.
 const layerStyle: React.CSSProperties = {
-  position: 'absolute',
-  inset: 0,
+  gridArea: '1 / 1',
   width: '100%',
   height: '100%',
+  objectFit: 'fill',
+  display: 'block',
 };
 
 const layerContainStyle: React.CSSProperties = {
@@ -48,7 +51,8 @@ const BoardImageLayers = React.memo(function BoardImageLayers({
 
   const containerStyle = useMemo<React.CSSProperties>(
     () => ({
-      position: 'relative',
+      display: 'grid',
+      overflow: 'hidden',
       ...style,
       transform: mirrored ? 'scaleX(-1)' : style?.transform,
     }),
@@ -76,13 +80,22 @@ const BoardImageLayers = React.memo(function BoardImageLayers({
     <div style={containerStyle}>
       {backgroundUrls.map((url) => (
         // eslint-disable-next-line @next/next/no-img-element
-        <img key={url} src={url} alt="" style={imgStyle} />
+        <img
+          key={url}
+          src={url}
+          alt=""
+          width={boardDetails.boardWidth}
+          height={boardDetails.boardHeight}
+          style={imgStyle}
+        />
       ))}
       {overlayUrl && (
         // eslint-disable-next-line @next/next/no-img-element
         <img
           src={overlayUrl}
           alt=""
+          width={boardDetails.boardWidth}
+          height={boardDetails.boardHeight}
           loading={thumbnail ? undefined : 'lazy'}
           style={imgStyle}
           onLoad={handleOverlayLoad}

@@ -11,23 +11,22 @@ export const buildOverlayUrl = (boardDetails: BoardDetails, frames: string, thum
 
 const USE_SELF_HOSTED_IMAGES = true;
 
+/** Insert /thumbs/ before the filename in a WebP path, or return as-is. */
+const toThumbUrl = (webpUrl: string) => {
+  const lastSlash = webpUrl.lastIndexOf('/');
+  return `${webpUrl.substring(0, lastSlash)}/thumbs${webpUrl.substring(lastSlash)}`;
+};
+
 export const getImageUrl = (imageUrl: string, board: BoardName, thumbnail?: boolean) => {
-  // If the URL already starts with /, it's a full path (e.g., MoonBoard images)
+  // Absolute path (e.g. MoonBoard images already prefixed with /images/moonboard/...)
   if (imageUrl.startsWith('/')) {
-    if (thumbnail) {
-      const lastSlash = imageUrl.lastIndexOf('/');
-      return `${imageUrl.substring(0, lastSlash)}/thumbs${imageUrl.substring(lastSlash)}`.replace(/\.png$/, '.avif');
-    }
-    return imageUrl;
+    const webpUrl = imageUrl.replace(/\.png$/, '.webp');
+    return thumbnail ? toThumbUrl(webpUrl) : webpUrl;
   }
 
   if (USE_SELF_HOSTED_IMAGES) {
-    const avifUrl = `/images/${board}/${imageUrl}`.replace(/\.png$/, '.avif');
-    if (thumbnail) {
-      const lastSlash = avifUrl.lastIndexOf('/');
-      return `${avifUrl.substring(0, lastSlash)}/thumbs${avifUrl.substring(lastSlash)}`;
-    }
-    return avifUrl;
+    const webpUrl = `/images/${board}/${imageUrl}`.replace(/\.png$/, '.webp');
+    return thumbnail ? toThumbUrl(webpUrl) : webpUrl;
   }
 
   return `https://api.${board}boardapp${board === 'tension' ? '2' : ''}.com/img/${imageUrl}`;
