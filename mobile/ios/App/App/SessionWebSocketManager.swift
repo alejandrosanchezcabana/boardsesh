@@ -408,6 +408,41 @@ final class SessionWebSocketManager {
         sendJSON(message)
     }
 
+    private func sendJoinSession() {
+        guard let sessionId = sessionId else { return }
+
+        // Build boardPath from shared UserDefaults (stored by LiveActivityPlugin.startSession)
+        let defaults = SharedConstants.sharedDefaults
+        let boardName = defaults?.string(forKey: SharedConstants.boardNameKey) ?? ""
+        let layoutId = defaults?.integer(forKey: SharedConstants.layoutIdKey) ?? 0
+        let sizeId = defaults?.integer(forKey: SharedConstants.sizeIdKey) ?? 0
+        let setIds = defaults?.string(forKey: SharedConstants.setIdsKey) ?? ""
+        let boardPath = "/\(boardName)/\(layoutId)/\(sizeId)/\(setIds)/0"
+
+        let query = """
+        mutation JoinSession($sessionId: ID!, $boardPath: String!) {
+          joinSession(sessionId: $sessionId, boardPath: $boardPath) {
+            id
+            clientId
+          }
+        }
+        """
+
+        let joinId = "join-session"
+        let message: [String: Any] = [
+            "type": GQLMessageType.subscribe.rawValue,
+            "id": joinId,
+            "payload": [
+                "query": query,
+                "variables": [
+                    "sessionId": sessionId,
+                    "boardPath": boardPath,
+                ] as [String: Any]
+            ] as [String: Any]
+        ]
+        sendJSON(message)
+    }
+
     private func sendComplete() {
         let message: [String: Any] = [
             "type": GQLMessageType.complete.rawValue,
@@ -506,6 +541,7 @@ final class SessionWebSocketManager {
                 guard let self = self else { return }
                 self.isConnected = true
                 self.reconnectAttempt = 0
+                self.sendJoinSession()
                 self.sendSubscription()
             }
             startPingTimeoutTimer()
