@@ -58,7 +58,7 @@
 	<key>NSBluetoothAlwaysUsageDescription</key>
 	<string>Boardsesh uses Bluetooth to connect to your Kilter Board, Tension Board, or MoonBoard and light up climbing holds. No personal data is sent over Bluetooth.</string>
 	<key>NSLocationWhenInUseUsageDescription</key>
-	<string>Boardsesh uses your location to help you discover nearby climbing sessions in Party Mode.</string>
+	<string>Boardsesh uses your location to find nearby boards to climb on and to discover nearby climbing sessions in Party Mode.</string>
 	<key>UIApplicationSceneManifest</key>
 	<dict>
 		<key>UIApplicationSupportsMultipleScenes</key>
