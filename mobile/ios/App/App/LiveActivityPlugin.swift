@@ -115,7 +115,9 @@ public class LiveActivityPlugin: CAPPlugin, CAPBridgedPlugin {
     // MARK: - endSession
 
     @objc func endSession(_ call: CAPPluginCall) {
-        SessionWebSocketManager.shared.disconnect()
+        let wsManager = SessionWebSocketManager.shared
+        wsManager.onQueueStateChanged = nil
+        wsManager.disconnect()
 
         if #available(iOS 16.1, *) {
             LiveActivityManager.shared.endAllActivities()

@@ -14,6 +14,7 @@ This document describes the WebSocket implementation used for real-time party se
 8. [Failure States and Recovery](#failure-states-and-recovery)
 9. [Client-Side Connection Supervisor](#client-side-connection-supervisor)
 10. [Data Persistence Strategy](#data-persistence-strategy)
+11. [Native iOS WebSocket Client](#native-ios-websocket-client)
 
 ---
 
@@ -1368,6 +1369,80 @@ Requires user authentication and controller ownership.
 
 ---
 
+## Native iOS WebSocket Client
+
+The iOS app includes a native WebSocket client (`SessionWebSocketManager`) that maintains its own connection to the GraphQL backend, independent of the web view's connection. This enables Live Activities (Lock Screen and Dynamic Island widgets) to receive real-time queue updates even when the web view is backgrounded.
+
+### Why a Separate Native Client
+
+The web view's `graphql-ws` connection is tied to the web view's lifecycle — when iOS suspends the web view (backgrounding, Lock Screen), the connection drops. Live Activities need continuous updates to show the current climb on the Lock Screen. A native `URLSessionWebSocketTask` connection persists longer and can be managed by the app's main process.
+
+### Protocol
+
+The native client implements the same `graphql-ws` protocol as the web client:
+
+1. **ConnectionInit** — Sent on connect with optional `authToken` in `connectionParams`
+2. **ConnectionAck** — Server confirms, client then subscribes
+3. **Subscribe** — `queueUpdates(sessionId:)` subscription
+4. **Next** — Queue delta events (FullSync, CurrentClimbChanged, QueueItemAdded, etc.)
+5. **Ping/Pong** — Server sends pings every 30s, client responds with pong
+
+### Reconnection
+
+Exponential backoff: 1s, 2s, 4s, 8s, 16s, capped at 30s. Reconnection stops on intentional disconnect (session end, app termination). After reconnection, the first event from the server is always a `FullSync`, which resets the client's queue state.
+
+### Sequence Gap Detection
+
+Each queue event carries a `sequence` number. The native client tracks the last received sequence and detects gaps (missed events). When a gap is detected, the client relies on the server's next `FullSync` to recover — no explicit resync request is needed since the server sends a full state on reconnection.
+
+### Data Flow
+
+```
+SessionWebSocketManager
+  │ subscribes to queueUpdates(sessionId:)
+  │ receives delta events
+  ▼
+LiveActivityManager
+  │ calls Activity.update() with new ContentState
+  ▼
+Lock Screen / Dynamic Island
+  │ renders updated climb info
+```
+
+Widget button taps (next/prev) flow in the opposite direction:
+
+```
+Widget App Intent (NextClimbIntent / PreviousClimbIntent)
+  │ updates App Group UserDefaults optimistically
+  │ posts Darwin notification
+  ▼
+SessionWebSocketManager (main app process)
+  │ reads pending action from App Group
+  │ sends setCurrentClimb mutation via existing WS
+  ▼
+Backend publishes CurrentClimbChanged
+  │ all clients (web + native) receive update
+```
+
+### App Group Shared State
+
+The main app and widget extension share data via App Group (`group.com.boardsesh.app`):
+
+| Key | Type | Purpose |
+|-----|------|---------|
+| `queue_items` | JSON array | Serialized `SharedQueueItem` list |
+| `current_index` | Int | Current position in queue |
+| `session_id` | String | Active session identifier |
+| `server_url` | String | Backend URL for thumbnail fetching |
+| `board_name`, `layout_id`, `size_id`, `set_ids` | String/Int | Board details for thumbnail URL construction |
+| `pending_action` | String | Widget→app navigation request ("next"/"previous") |
+
+### Lifecycle
+
+- **Start**: `LiveActivityPlugin.startSession()` stores board details in App Group, connects the WebSocket manager, and starts the Live Activity
+- **End**: `LiveActivityPlugin.endSession()` clears the callback, disconnects WebSocket, ends all Live Activities, and cleans up App Group state
+- **App termination**: `SceneDelegate.sceneDidDisconnect` and `AppDelegate.applicationWillTerminate` end the Live Activity and disconnect the WebSocket to prevent stale widgets on the Lock Screen
+
 ## Related Files
 
 ### Backend
@@ -1389,6 +1464,17 @@ Requires user authentication and controller ownership.
 - `packages/web/app/components/graphql-queue/use-queue-session.ts` - Session hook
 - `packages/web/app/components/persistent-session/persistent-session-context.tsx` - Root-level session management
 - `packages/web/app/components/graphql-queue/QueueContext.tsx` - Queue state context
+
+### Native iOS
+
+- `mobile/ios/App/App/SessionWebSocketManager.swift` - Native graphql-ws client for queue subscriptions
+- `mobile/ios/App/App/LiveActivityPlugin.swift` - Capacitor plugin bridge (start/end session, update activity)
+- `mobile/ios/App/App/LiveActivityManager.swift` - ActivityKit lifecycle management
+- `mobile/ios/App/App/SharedConstants.swift` - App Group ID, UserDefaults keys, shared queue state helpers
+- `mobile/ios/App/App/ThumbnailFetcher.swift` - Board-render thumbnail fetching and caching
+- `mobile/ios/App/BoardseshWidgets/NextClimbIntent.swift` - Widget next button App Intent
+- `mobile/ios/App/BoardseshWidgets/PreviousClimbIntent.swift` - Widget previous button App Intent
+- `packages/web/app/lib/live-activity/use-live-activity.ts` - React hook bridging queue state to native Live Activity
 
 ### Shared
 

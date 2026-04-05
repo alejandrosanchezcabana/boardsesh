@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useMemo, useRef } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { isNativeApp, getPlatform } from '../ble/capacitor-utils';
 import {
   startLiveActivitySession,
@@ -27,7 +27,7 @@ export function useLiveActivity({
   isSessionActive,
 }: UseLiveActivityOptions): void {
   const isActiveRef = useRef(false);
-  const availableRef = useRef<boolean | null>(null);
+  const [available, setAvailable] = useState<boolean | null>(null);
 
   // Stabilize boardDetails by value so reference changes don't restart the session
   const boardKey = boardDetails
@@ -38,15 +38,17 @@ export function useLiveActivity({
   // Check availability once
   useEffect(() => {
     if (!isNativeApp() || getPlatform() !== 'ios') return;
-    isLiveActivityAvailable().then((available) => {
-      availableRef.current = available;
+    let cancelled = false;
+    isLiveActivityAvailable().then((result) => {
+      if (!cancelled) setAvailable(result);
     });
+    return () => { cancelled = true; };
   }, []);
 
-  // Start/end session
+  // Start/end session — waits until availability is confirmed
   useEffect(() => {
-    if (availableRef.current === false) return;
     if (!isNativeApp() || getPlatform() !== 'ios') return;
+    if (available !== true) return;
 
     const hasContent = queue.length > 0 || currentClimbQueueItem !== null;
     const shouldBeActive = hasContent && stableBoardDetails !== null;
@@ -74,7 +76,7 @@ export function useLiveActivity({
         isActiveRef.current = false;
       }
     };
-  }, [queue.length, currentClimbQueueItem, stableBoardDetails, isSessionActive, sessionId]);
+  }, [queue.length, currentClimbQueueItem, stableBoardDetails, isSessionActive, sessionId, available]);
 
   // Update on climb changes (local queue mode only; party mode uses WebSocket updates)
   useEffect(() => {

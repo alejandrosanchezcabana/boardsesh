@@ -254,13 +254,13 @@ describe('useLiveActivity', () => {
       boardDetails: makeBoardDetails(),
     });
 
+    // Wait for availability check to resolve and session to start
     await act(async () => { await new Promise((r) => setTimeout(r, 50)); });
-
-    // Initial update should have been called
-    expect(mockUpdateLiveActivity).toHaveBeenCalled();
+    expect(mockStartLiveActivitySession).toHaveBeenCalled();
 
     mockUpdateLiveActivity.mockClear();
 
+    // Change current climb — should trigger updateActivity
     await hook.rerender({ currentClimbQueueItem: item2 });
 
     await act(async () => { await new Promise((r) => setTimeout(r, 50)); });
