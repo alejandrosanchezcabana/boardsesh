@@ -31,7 +31,7 @@ const mockBoardDetails: BoardDetails = {
 };
 
 describe('BoardImageLayers', () => {
-  it('renders background and overlay images when frames are provided', () => {
+  it('renders single composited image when frames are provided', () => {
     const { container } = render(
       <BoardImageLayers
         boardDetails={mockBoardDetails}
@@ -41,9 +41,9 @@ describe('BoardImageLayers', () => {
     );
 
     const images = container.querySelectorAll('img');
-    // Background image + overlay image rendered separately
-    expect(images).toHaveLength(2);
-    expect(images[1].getAttribute('src')).toContain('frames=p1r42p2r43');
+    // Single composited image (background + overlay baked together)
+    expect(images).toHaveLength(1);
+    expect(images[0].getAttribute('src')).toContain('frames=p1r42p2r43');
   });
 
   it('renders background images when no frames are provided', () => {
@@ -78,7 +78,7 @@ describe('BoardImageLayers', () => {
     expect(container.querySelectorAll('img')).toHaveLength(2);
   });
 
-  it('renders background images plus overlay with multiple background sets', () => {
+  it('renders single composited image even with multiple background sets', () => {
     const multiSetBoard: BoardDetails = {
       ...mockBoardDetails,
       images_to_holds: {
@@ -95,8 +95,8 @@ describe('BoardImageLayers', () => {
       />,
     );
 
-    // 2 background images + 1 overlay
-    expect(container.querySelectorAll('img')).toHaveLength(3);
+    // Only 1 composited image, no separate backgrounds
+    expect(container.querySelectorAll('img')).toHaveLength(1);
   });
 
   it('applies scaleX(-1) transform when mirrored', () => {
@@ -156,34 +156,4 @@ describe('BoardImageLayers', () => {
     });
   });
 
-  it('sets loading="lazy" on the overlay image', () => {
-    const { container } = render(
-      <BoardImageLayers
-        boardDetails={mockBoardDetails}
-        frames="p1r42p2r43"
-        mirrored={false}
-      />,
-    );
-
-    const images = container.querySelectorAll('img');
-    expect(images).toHaveLength(2);
-    // Overlay is the second image
-    expect(images[1].getAttribute('loading')).toBe('lazy');
-  });
-
-  it('does not set loading="lazy" on thumbnail overlay images', () => {
-    const { container } = render(
-      <BoardImageLayers
-        boardDetails={mockBoardDetails}
-        frames="p1r42p2r43"
-        mirrored={false}
-        thumbnail
-      />,
-    );
-
-    const images = container.querySelectorAll('img');
-    expect(images).toHaveLength(2);
-    // Overlay is the second image
-    expect(images[1].getAttribute('loading')).toBeNull();
-  });
 });

@@ -78,29 +78,31 @@ const BoardImageLayers = React.memo(function BoardImageLayers({
 
   return (
     <div style={containerStyle}>
-      {backgroundUrls.map((url) => (
-        // eslint-disable-next-line @next/next/no-img-element
-        <img
-          key={url}
-          src={url}
-          alt=""
-          width={boardDetails.boardWidth}
-          height={boardDetails.boardHeight}
-          style={imgStyle}
-        />
-      ))}
-      {overlayUrl && (
+      {overlayUrl ? (
+        // Single composited image: background + overlay baked together server-side
         // eslint-disable-next-line @next/next/no-img-element
         <img
           src={overlayUrl}
           alt=""
           width={boardDetails.boardWidth}
           height={boardDetails.boardHeight}
-          loading={thumbnail ? undefined : 'lazy'}
           style={imgStyle}
           onLoad={handleOverlayLoad}
           onError={handleOverlayError}
         />
+      ) : (
+        // No climb selected: just show background layers
+        backgroundUrls.map((url) => (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img
+            key={url}
+            src={url}
+            alt=""
+            width={boardDetails.boardWidth}
+            height={boardDetails.boardHeight}
+            style={imgStyle}
+          />
+        ))
       )}
     </div>
   );
