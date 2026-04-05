@@ -246,7 +246,8 @@ const SwipeableDrawer: React.FC<SwipeableDrawerProps> = ({
 
   // Callback that controls whether swipe gestures are recognized.
   // Also prevents a parent drawer from capturing swipes that originate
-  // inside a nested SwipeableDrawer (identified via data attribute on Paper).
+  // inside a nested SwipeableDrawer (identified via data attribute on Paper)
+  // or inside a zone marked with data-swipe-blocked (e.g. zoomed board).
   const allowSwipeInChildren = useCallback(
     (e: TouchEvent, _swipeArea: HTMLDivElement, paper: HTMLDivElement) => {
       if (!effectiveSwipeEnabled) return false;
@@ -257,6 +258,11 @@ const SwipeableDrawer: React.FC<SwipeableDrawerProps> = ({
         // If the closest drawer paper is a *nested* drawer (not this one),
         // don't let this (parent) drawer handle the swipe.
         if (closestDrawerPaper && closestDrawerPaper !== paper) {
+          return false;
+        }
+
+        // Block swipe if it originates inside a swipe-blocked zone
+        if (target.closest('[data-swipe-blocked]')) {
           return false;
         }
       }

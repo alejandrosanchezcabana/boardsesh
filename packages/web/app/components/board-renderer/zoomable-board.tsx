@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useEffect, useRef, memo } from 'react';
-import IconButton from '@mui/material/IconButton';
+import Button from '@mui/material/Button';
 import CropFreeOutlined from '@mui/icons-material/CropFreeOutlined';
 import { useZoomPan } from '@/app/lib/hooks/use-zoom-pan';
 import styles from './swipe-board-carousel.module.css';
@@ -34,19 +34,21 @@ const ZoomableBoard = memo(function ZoomableBoard({ children, onZoomChange, rese
       ref={containerRef}
       className={styles.zoomContainer}
       style={{ touchAction: isZoomed ? 'none' : 'pan-y' }}
+      {...(isZoomed ? { 'data-swipe-blocked': '' } : undefined)}
     >
       <div ref={contentRef} className={styles.zoomContent}>
         {children}
       </div>
-      <IconButton
+      <Button
         className={`${styles.zoomResetButton} ${isZoomed ? styles.zoomResetButtonVisible : ''}`}
         onClick={resetZoom}
         aria-label="Reset zoom"
         size="small"
+        startIcon={<CropFreeOutlined sx={{ fontSize: '18px !important' }} />}
         tabIndex={isZoomed ? 0 : -1}
       >
-        <CropFreeOutlined fontSize="small" />
-      </IconButton>
+        Reset
+      </Button>
     </div>
   );
 });

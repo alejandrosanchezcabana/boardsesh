@@ -13,6 +13,7 @@ import type { BoardDetails } from '@/app/lib/types';
 import { useCanvasRendererReady } from '@/app/lib/board-render-worker/worker-manager';
 import { useDoubleTap } from '@/app/lib/hooks/use-double-tap';
 import ZoomableBoard from './zoomable-board';
+import ZoomHint from './zoom-hint';
 import styles from './swipe-board-carousel.module.css';
 
 interface ClimbBoardData {
@@ -33,6 +34,7 @@ export interface SwipeBoardCarouselProps {
   boardContainerClassName?: string;
   fillContainer?: boolean;
   onDoubleTap?: () => void;
+  showZoomHint?: boolean;
   overlay?: React.ReactNode;
 }
 
@@ -49,6 +51,7 @@ const SwipeBoardCarousel: React.FC<SwipeBoardCarouselProps> = ({
   boardContainerClassName,
   fillContainer,
   onDoubleTap,
+  showZoomHint,
   overlay,
 }) => {
   const enterFallbackRef = useRef<NodeJS.Timeout | null>(null);
@@ -162,6 +165,7 @@ const SwipeBoardCarousel: React.FC<SwipeBoardCarouselProps> = ({
         </ZoomableBoard>
       </div>
       {overlay}
+      {showZoomHint && <ZoomHint visible={!isZoomed} />}
       {showPeek && peekClimb && (
         <div
           className={styles.peekBoardContainer}

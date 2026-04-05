@@ -312,6 +312,7 @@ const PlayViewDrawer: React.FC<PlayViewDrawerProps> = ({
                     boardContainerClassName={styles.swipeCardContainer}
                     fillContainer
                     onDoubleTap={handleDoubleTap}
+                    showZoomHint
                     overlay={<HeartAnimationOverlay visible={showHeart} onAnimationEnd={dismissHeart} />}
                   />
                 )}

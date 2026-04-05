@@ -14,10 +14,33 @@ export function useDoubleTap(callback: (() => void) | undefined) {
   // Once any touch event is detected, permanently disable onDoubleClick
   // to prevent the browser's synthesized dblclick from double-firing.
   const isTouchDeviceRef = useRef(false);
+  // Track whether the current gesture involves multiple touches (pinch, etc.)
+  const wasMultiTouchRef = useRef(false);
+
+  const handleTouchStart = useCallback((e: TouchEvent) => {
+    if ((e.touches?.length ?? 0) > 1) {
+      wasMultiTouchRef.current = true;
+    }
+  }, []);
 
   const handleTouchEnd = useCallback(
     (e: TouchEvent) => {
       isTouchDeviceRef.current = true;
+
+      const remainingTouches = e.touches?.length ?? 0;
+
+      // If other fingers are still down, this is part of a multi-touch gesture
+      if (remainingTouches > 0) {
+        wasMultiTouchRef.current = true;
+        return;
+      }
+
+      // All fingers lifted — if this was a multi-touch gesture (pinch), skip it
+      if (wasMultiTouchRef.current) {
+        wasMultiTouchRef.current = false;
+        lastTapTimeRef.current = 0;
+        return;
+      }
 
       if (!callback) return;
 
@@ -37,19 +60,21 @@ export function useDoubleTap(callback: (() => void) | undefined) {
 
   const ref: RefCallback<HTMLElement> = useCallback(
     (node: HTMLElement | null) => {
-      // Cleanup previous listener
+      // Cleanup previous listeners
       if (elementRef.current) {
+        elementRef.current.removeEventListener('touchstart', handleTouchStart);
         elementRef.current.removeEventListener('touchend', handleTouchEnd);
       }
 
       elementRef.current = node;
 
-      // Attach new listener
+      // Attach new listeners
       if (node) {
+        node.addEventListener('touchstart', handleTouchStart, { passive: true });
         node.addEventListener('touchend', handleTouchEnd, { passive: false });
       }
     },
-    [handleTouchEnd],
+    [handleTouchStart, handleTouchEnd],
   );
 
   const onDoubleClick = useCallback(() => {

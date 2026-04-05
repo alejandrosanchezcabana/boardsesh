@@ -193,4 +193,35 @@ describe('ZoomableBoard', () => {
     const container = board.parentElement?.parentElement;
     expect(container?.style.touchAction).toBe('none');
   });
+
+  it('adds data-swipe-blocked attribute when zoomed', () => {
+    mockUseZoomPan.mockReturnValue({
+      containerRef: vi.fn(),
+      contentRef: { current: null },
+      isZoomed: true,
+      resetZoom: mockResetZoom,
+    });
+
+    render(
+      <ZoomableBoard {...defaultProps}>
+        <div data-testid="board">Board</div>
+      </ZoomableBoard>,
+    );
+
+    const board = screen.getByTestId('board');
+    const container = board.parentElement?.parentElement;
+    expect(container?.hasAttribute('data-swipe-blocked')).toBe(true);
+  });
+
+  it('does not have data-swipe-blocked attribute when not zoomed', () => {
+    render(
+      <ZoomableBoard {...defaultProps}>
+        <div data-testid="board">Board</div>
+      </ZoomableBoard>,
+    );
+
+    const board = screen.getByTestId('board');
+    const container = board.parentElement?.parentElement;
+    expect(container?.hasAttribute('data-swipe-blocked')).toBe(false);
+  });
 });
