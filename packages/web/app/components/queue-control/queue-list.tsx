@@ -179,9 +179,9 @@ const QueueList = forwardRef<QueueListHandle, QueueListProps>(({ boardDetails, o
   // Show only 2 history items above current, so scroll target is at index (length - 2)
   const scrollToHistoryIndex = historyItems.length > 2 ? historyItems.length - 2 : 0;
 
-  // Memoize suggested item title props
+  // Memoize suggested item title props — match queue item layout (grade on right)
   const suggestedTitleProps = useMemo(
-    () => ({ showAngle: true, centered: true } as const),
+    () => ({ gradePosition: 'right' as const, showSetterInfo: true, titleFontSize: themeTokens.typography.fontSize.xl }),
     [],
   );
 
@@ -201,13 +201,6 @@ const QueueList = forwardRef<QueueListHandle, QueueListProps>(({ boardDetails, o
     [],
   );
 
-  const noMoreSuggestionsStyle = useMemo(
-    () => ({
-      padding: themeTokens.spacing[4],
-      color: 'var(--neutral-400)',
-    }),
-    [],
-  );
 
   return (
     <>
@@ -295,16 +288,21 @@ const QueueList = forwardRef<QueueListHandle, QueueListProps>(({ boardDetails, o
       </div>
       {!viewOnlyMode && (
         <>
-          <MuiDivider>Suggested Items</MuiDivider>
+          <div className={styles.suggestedSectionHeader}>
+            <Typography variant="overline" color="text.secondary">
+              Suggestions
+            </Typography>
+          </div>
           <div className={styles.suggestedColumn}>
             {suggestedClimbs.map((climb: Climb) => (
-              <ClimbListItem
-                key={`suggested-${climb.uuid}`}
-                climb={climb}
-                boardDetails={boardDetails}
-                titleProps={suggestedTitleProps}
-                onNavigate={onClimbNavigate}
-              />
+              <div key={`suggested-${climb.uuid}`} className={styles.suggestedItem}>
+                <ClimbListItem
+                  climb={climb}
+                  boardDetails={boardDetails}
+                  titleProps={suggestedTitleProps}
+                  onNavigate={onClimbNavigate}
+                />
+              </div>
             ))}
           </div>
           {/* Sentinel element for Intersection Observer - only render when needed */}
@@ -329,11 +327,10 @@ const QueueList = forwardRef<QueueListHandle, QueueListProps>(({ boardDetails, o
                 </div>
               )}
               {!hasMoreResults && !isFetchingClimbs && suggestedClimbs.length > 0 && (
-                <div
-                  className={styles.noMoreSuggestions}
-                  style={noMoreSuggestionsStyle}
-                >
-                  No more suggestions
+                <div className={styles.noMoreSuggestions}>
+                  <Typography variant="body2" color="text.disabled">
+                    That's all for now
+                  </Typography>
                 </div>
               )}
             </div>

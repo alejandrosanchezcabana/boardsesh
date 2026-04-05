@@ -7,9 +7,17 @@
   flex-direction: column;
 }
 
+.suggestedSectionHeader {
+  padding: 12px 8px 4px;
+}
+
 .suggestedColumn {
   display: flex;
   flex-direction: column;
+}
+
+.suggestedItem {
+  border-left: 3px solid var(--color-primary);
 }
 
 .loadMoreContainer {
@@ -26,4 +34,5 @@
 
 .noMoreSuggestions {
   text-align: center;
+  padding: 16px;
 }
