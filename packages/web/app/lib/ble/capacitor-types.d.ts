@@ -47,6 +47,12 @@ interface CapacitorGlobal {
     KeepAwake?: CapacitorKeepAwakePlugin;
     Browser?: CapacitorBrowserPlugin;
     App?: CapacitorAppPlugin;
+    LiveActivity?: {
+      isAvailable(): Promise<{ available: boolean }>;
+      startSession(options: Record<string, unknown>): Promise<void>;
+      endSession(): Promise<void>;
+      updateActivity(options: Record<string, unknown>): Promise<void>;
+    };
     [key: string]: unknown;
   };
 }

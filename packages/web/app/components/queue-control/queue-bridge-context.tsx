@@ -8,6 +8,12 @@ import { getBaseBoardPath } from '@/app/lib/url-utils';
 import { DEFAULT_SEARCH_PARAMS } from '@/app/lib/url-utils';
 import type { BoardDetails, Angle, Climb, SearchRequestPagination } from '@/app/lib/types';
 import type { ClimbQueueItem } from './types';
+import dynamic from 'next/dynamic';
+
+const LiveActivityBridge = dynamic(
+  () => import('@/app/lib/live-activity/live-activity-bridge'),
+  { ssr: false },
+);
 
 // -------------------------------------------------------------------
 // Board info context (for the root-level bottom bar to know what board is active)
@@ -353,6 +359,14 @@ export function QueueBridgeProvider({ children }: { children: React.ReactNode })
     <QueueBridgeSetterContext.Provider value={setters}>
       <QueueBridgeBoardInfoContext.Provider value={boardInfo}>
         <QueueContext.Provider value={effectiveContext}>
+          {/* Sync queue state to iOS Live Activity (code-split, no-op on non-iOS) */}
+          <LiveActivityBridge
+            queue={adapter.context.queue}
+            currentClimbQueueItem={adapter.context.currentClimbQueueItem}
+            boardDetails={adapter.boardDetails}
+            sessionId={adapter.context.sessionId}
+            isSessionActive={adapter.context.isSessionActive}
+          />
           {children}
         </QueueContext.Provider>
       </QueueBridgeBoardInfoContext.Provider>

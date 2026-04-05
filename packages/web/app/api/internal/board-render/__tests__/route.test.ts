@@ -27,17 +27,35 @@ vi.mock('@boardsesh/board-renderer-wasm', () => ({
 vi.mock('fs/promises', () => ({
   readFile: vi.fn(() => Promise.resolve(new Uint8Array([0]))),
 }));
+const mockExistsSync = vi.fn<(path: string) => boolean>(() => true);
 vi.mock('fs', () => ({
-  existsSync: vi.fn(() => true),
+  existsSync: (path: string) => mockExistsSync(path),
 }));
 
-// Mock sharp - returns a WebP-like buffer
+// Mock sharp - tracks calls to composite() and webp() options
+const mockComposite = vi.fn();
+const mockResize = vi.fn();
+const mockWebpOptions = vi.fn();
+const mockSharpInstance = () => {
+  const instance = {
+    composite: vi.fn((...args: unknown[]) => {
+      mockComposite(...args);
+      return instance;
+    }),
+    resize: vi.fn((...args: unknown[]) => {
+      mockResize(...args);
+      return { toBuffer: vi.fn(() => Promise.resolve(Buffer.from([0xB0]))) };
+    }),
+    webp: vi.fn((opts: unknown) => {
+      mockWebpOptions(opts);
+      return { toBuffer: vi.fn(() => Promise.resolve(Buffer.from([0x52, 0x49, 0x46, 0x46]))) };
+    }),
+  };
+  return instance;
+};
+const mockSharpDefault = vi.fn((_input?: unknown, _options?: unknown) => mockSharpInstance());
 vi.mock('sharp', () => ({
-  default: vi.fn(() => ({
-    webp: vi.fn(() => ({
-      toBuffer: vi.fn(() => Promise.resolve(Buffer.from([0x52, 0x49, 0x46, 0x46]))),
-    })),
-  })),
+  default: (input?: unknown, options?: unknown) => mockSharpDefault(input, options),
 }));
 
 vi.mock('@/app/lib/board-utils', () => ({
@@ -94,6 +112,7 @@ const validParams = {
 describe('board-render API route', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    mockExistsSync.mockReturnValue(true);
   });
 
   it('returns 200 with WebP content for valid request', async () => {
@@ -155,5 +174,91 @@ describe('board-render API route', () => {
     expect(response.status).toBe(500);
     const body = await response.json();
     expect(body.error).toContain('render exploded');
+  });
+
+  it('calls composite with background when include_background=1', async () => {
+    const response = await GET(makeRequest({ ...validParams, thumbnail: '1', include_background: '1' }));
+    expect(response.status).toBe(200);
+    // composite() should have been called (background + overlay layers)
+    expect(mockComposite).toHaveBeenCalled();
+    // Should use lossy WebP for composited output
+    expect(mockWebpOptions).toHaveBeenCalledWith({ quality: 80 });
+  });
+
+  it('does not call composite without include_background', async () => {
+    const response = await GET(makeRequest(validParams));
+    expect(response.status).toBe(200);
+    expect(mockComposite).not.toHaveBeenCalled();
+    expect(mockWebpOptions).toHaveBeenCalledWith({ lossless: true });
+  });
+
+  it('falls back to lossless when background images are missing', async () => {
+    // Make findPublicImagePath return null for all candidates
+    mockExistsSync.mockImplementation((path) => path.includes('.wasm'));
+    const response = await GET(makeRequest({ ...validParams, include_background: '1' }));
+    expect(response.status).toBe(200);
+    // Should fall back to lossless since no backgrounds found
+    expect(mockComposite).not.toHaveBeenCalled();
+    expect(mockWebpOptions).toHaveBeenCalledWith({ lossless: true });
+  });
+
+  it('composites successfully when some background images fail to load', async () => {
+    // Override board details to return multiple background image keys
+    const { getBoardDetailsForBoard } = await import('@/app/lib/board-utils');
+    vi.mocked(getBoardDetailsForBoard).mockReturnValueOnce({
+      board_name: 'kilter',
+      layout_id: 1,
+      size_id: 7,
+      set_ids: [1, 20],
+      boardWidth: 1080,
+      boardHeight: 1350,
+      holdsData: [
+        { id: 1073, mirroredHoldId: null, cx: 200, cy: 300, r: 20 },
+      ],
+      images_to_holds: {
+        'layer-good.png': [],
+        'layer-bad.png': [],
+        'layer-also-good.png': [],
+      },
+      edge_left: 0,
+      edge_right: 144,
+      edge_bottom: 0,
+      edge_top: 180,
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    } as any);
+
+    // Make sharp fail for paths containing "layer-bad" but succeed for others
+    let callIndex = 0;
+    mockSharpDefault.mockImplementation(() => {
+      const idx = callIndex++;
+      // First call is the WASM overlay sharp (raw buffer), calls after are backgrounds.
+      // Background calls: index 0 = good, index 1 = bad, index 2 = good
+      const instance = {
+        composite: vi.fn((...args: unknown[]) => {
+          mockComposite(...args);
+          return instance;
+        }),
+        resize: vi.fn((...args: unknown[]) => {
+          mockResize(...args);
+          if (idx === 1) {
+            // Second background image fails
+            return { toBuffer: vi.fn(() => Promise.reject(new Error('corrupt image'))) };
+          }
+          return { toBuffer: vi.fn(() => Promise.resolve(Buffer.from([0xB0]))) };
+        }),
+        webp: vi.fn((opts: unknown) => {
+          mockWebpOptions(opts);
+          return { toBuffer: vi.fn(() => Promise.resolve(Buffer.from([0x52, 0x49, 0x46, 0x46]))) };
+        }),
+      };
+      return instance;
+    });
+
+    const response = await GET(makeRequest({ ...validParams, include_background: '1' }));
+    expect(response.status).toBe(200);
+    // Composite should still be called with the surviving backgrounds + overlay
+    expect(mockComposite).toHaveBeenCalled();
+    // Should use lossy WebP (composited output) not lossless (fallback)
+    expect(mockWebpOptions).toHaveBeenCalledWith({ quality: 80 });
   });
 });

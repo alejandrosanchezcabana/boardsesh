@@ -53,7 +53,15 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
         }
     }
 
-    func sceneDidDisconnect(_ scene: UIScene) {}
+    func sceneDidDisconnect(_ scene: UIScene) {
+        // End Live Activity when the scene is discarded to avoid stale state
+        SessionWebSocketManager.shared.disconnect()
+        if #available(iOS 16.1, *) {
+            Task {
+                await LiveActivityManager.shared.endAllActivities()
+            }
+        }
+    }
     func sceneDidBecomeActive(_ scene: UIScene) {}
     func sceneWillResignActive(_ scene: UIScene) {}
     func sceneWillEnterForeground(_ scene: UIScene) {}
