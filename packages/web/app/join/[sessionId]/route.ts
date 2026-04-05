@@ -33,6 +33,10 @@ function ensureViewSegment(path: string): string {
   return `${path}/${DEFAULT_ANGLE}/list`;
 }
 
+// Derives the base URL for redirects. Trusts x-forwarded-host because
+// Vercel (and standard reverse proxies) sanitize these headers before
+// forwarding. The redirect target is always a relative board path on
+// the same host, so spoofing this would only redirect to the spoofed host.
 function getBaseUrl(request: Request): string {
   const headers = request.headers;
   const forwardedHost = headers.get('x-forwarded-host');
