@@ -15,7 +15,7 @@ let mockSession: Record<string, unknown> | null = {
   goal: 'Send V5',
   startedAt: new Date(Date.now() - 30 * 60000).toISOString(),
 };
-const mockEndSessionWithSummary = vi.fn();
+const mockDeactivateSession = vi.fn();
 let mockAngle: number | undefined = 40;
 let mockBoardDetails: Record<string, unknown> | null = { board_name: 'kilter' };
 let mockSessionDetail: Record<string, unknown> | null = {
@@ -56,7 +56,7 @@ vi.mock('@/app/components/persistent-session/persistent-session-context', () => 
     activeSession: mockActiveSession,
     session: mockSession,
     users: [],
-    endSessionWithSummary: mockEndSessionWithSummary,
+    deactivateSession: mockDeactivateSession,
     liveSessionStats: null,
   }),
 }));
@@ -170,7 +170,7 @@ describe('SeshSettingsDrawer', () => {
 
   it('renders drawer title', () => {
     render(<SeshSettingsDrawer open={true} onClose={vi.fn()} />);
-    expect(screen.getByTestId('swipeable-drawer').getAttribute('data-title')).toBe('Sesh Settings');
+    expect(screen.getByTestId('swipeable-drawer').getAttribute('data-title')).toBe('Session overview');
   });
 
   it('renders session detail content', () => {
@@ -232,12 +232,29 @@ describe('SeshSettingsDrawer', () => {
   });
 
   describe('handleStopSession', () => {
-    it('calls endSessionWithSummary and onClose', () => {
+    it('calls deactivateSession but does not close the drawer', () => {
       const onClose = vi.fn();
       render(<SeshSettingsDrawer open={true} onClose={onClose} />);
 
       fireEvent.click(screen.getByText('Stop Session'));
-      expect(mockEndSessionWithSummary).toHaveBeenCalled();
+      expect(mockDeactivateSession).toHaveBeenCalled();
+      expect(onClose).not.toHaveBeenCalled();
+    });
+
+    it('shows Dismiss button after stopping session', () => {
+      render(<SeshSettingsDrawer open={true} onClose={vi.fn()} />);
+
+      fireEvent.click(screen.getByText('Stop Session'));
+      expect(screen.getByText('Dismiss')).toBeTruthy();
+      expect(screen.queryByText('Stop Session')).toBeNull();
+    });
+
+    it('calls onClose when Dismiss is clicked', () => {
+      const onClose = vi.fn();
+      render(<SeshSettingsDrawer open={true} onClose={onClose} />);
+
+      fireEvent.click(screen.getByText('Stop Session'));
+      fireEvent.click(screen.getByText('Dismiss'));
       expect(onClose).toHaveBeenCalled();
     });
   });

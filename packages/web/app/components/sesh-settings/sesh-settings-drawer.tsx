@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useCallback, useMemo, useRef } from 'react';
+import React, { useCallback, useMemo, useRef, useState } from 'react';
 import Box from '@mui/material/Box';
 import Typography from '@mui/material/Typography';
 import Button from '@mui/material/Button';
@@ -30,12 +30,14 @@ interface SeshSettingsDrawerProps {
 }
 
 export default function SeshSettingsDrawer({ open, onClose }: SeshSettingsDrawerProps) {
-  const { activeSession, session, users, endSessionWithSummary, liveSessionStats } = usePersistentSession();
+  const { activeSession, session, users, deactivateSession, liveSessionStats } = usePersistentSession();
   const { boardDetails, angle } = useQueueBridgeBoardInfo();
   const { token: authToken } = useWsAuthToken();
   const router = useRouter();
   const pathname = usePathname();
   const sessionId = activeSession?.sessionId ?? null;
+  const [isStopped, setIsStopped] = useState(false);
+  const lastSessionRef = useRef<SessionDetail | null>(null);
 
   const handleAngleChange = useCallback((newAngle: number) => {
     if (!boardDetails || angle === undefined) return;
@@ -52,9 +54,14 @@ export default function SeshSettingsDrawer({ open, onClose }: SeshSettingsDrawer
   }, [boardDetails, angle, pathname, router]);
 
   const handleStopSession = useCallback(() => {
-    endSessionWithSummary();
+    deactivateSession();
+    setIsStopped(true);
+  }, [deactivateSession]);
+
+  const handleClose = useCallback(() => {
+    setIsStopped(false);
     onClose();
-  }, [endSessionWithSummary, onClose]);
+  }, [onClose]);
 
   const { data, isLoading, isError } = useQuery({
     queryKey: ['activeSessionDetail', sessionId],
@@ -159,20 +166,33 @@ export default function SeshSettingsDrawer({ open, onClose }: SeshSettingsDrawer
     };
   }, [sessionDetail, fallbackSession, mergedStats]);
 
-  if (!activeSession) return null;
+  if (sessionForView) {
+    lastSessionRef.current = sessionForView;
+  }
+  const displaySession = sessionForView ?? lastSessionRef.current;
+
+  if (!activeSession && !isStopped) return null;
 
   return (
     <SwipeableDrawer
-      title="Sesh Settings"
+      title="Session overview"
       placement="top"
       open={open}
-      onClose={onClose}
+      onClose={handleClose}
       fullHeight
       styles={{
         wrapper: { height: '100dvh' },
         body: { padding: 0, paddingBottom: 0 },
       }}
-      footer={(
+      footer={isStopped ? (
+        <Button
+          variant="outlined"
+          onClick={handleClose}
+          fullWidth
+        >
+          Dismiss
+        </Button>
+      ) : (
         <Button
           variant="outlined"
           color="error"
@@ -193,7 +213,7 @@ export default function SeshSettingsDrawer({ open, onClose }: SeshSettingsDrawer
       )}
     >
       <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, pb: 2 }}>
-        {isLoading && !sessionForView && (
+        {isLoading && !displaySession && (
           <Box sx={{ display: 'flex', justifyContent: 'center', py: 4 }}>
             <CircularProgress size={28} />
           </Box>
@@ -205,10 +225,10 @@ export default function SeshSettingsDrawer({ open, onClose }: SeshSettingsDrawer
           </Alert>
         )}
 
-        {sessionForView && (
+        {displaySession && (
           <SessionDetailContent
-            key={`${sessionForView.sessionId}:${sessionForView.ticks.length}:${sessionForView.ticks[0]?.uuid ?? ''}`}
-            session={sessionForView}
+            key={`${displaySession.sessionId}:${displaySession.ticks.length}:${displaySession.ticks[0]?.uuid ?? ''}`}
+            session={displaySession}
             embedded
             fallbackBoardDetails={boardDetails}
           />
@@ -216,7 +236,7 @@ export default function SeshSettingsDrawer({ open, onClose }: SeshSettingsDrawer
 
         <Divider />
 
-        {boardDetails && angle !== undefined && (
+        {!isStopped && boardDetails && angle !== undefined && (
           <Box sx={{ px: 1 }}>
             <Typography variant="subtitle2" sx={{ mb: 1, fontWeight: 600 }}>
               Angle
