@@ -295,11 +295,13 @@ export interface VPointsTimelineData {
 
 /**
  * Extract the numeric V-grade value from a V-grade string.
- * "V3" → 3, "V10" → 10, etc.
+ * "V3" → 3, "V10" → 10, etc. V0 returns 1 so every send counts.
  */
 function vGradeToPoints(vGrade: string): number {
   const match = vGrade.match(/^V(\d+)$/);
-  return match ? parseInt(match[1], 10) : 0;
+  if (!match) return 0;
+  const num = parseInt(match[1], 10);
+  return Math.max(num, 1);
 }
 
 const LAYOUT_ORDER = [

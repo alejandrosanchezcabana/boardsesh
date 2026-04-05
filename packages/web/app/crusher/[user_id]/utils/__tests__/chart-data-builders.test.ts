@@ -63,6 +63,7 @@ import {
   buildWeeklyBars,
   buildFlashRedpointBars,
   buildStatisticsSummary,
+  buildVPointsTimeline,
 } from '../chart-data-builders';
 import type { LogbookEntry } from '../profile-constants';
 
@@ -780,5 +781,131 @@ describe('buildStatisticsSummary', () => {
     expect(entry).toHaveProperty('count', 10);
     expect(typeof entry.grades).toBe('object');
     expect(typeof entry.percentage).toBe('number');
+  });
+});
+
+// ── buildVPointsTimeline ────────────────────────────────────────────────────
+
+describe('buildVPointsTimeline', () => {
+  it('returns null for empty data', () => {
+    expect(buildVPointsTimeline({}, 'all')).toBeNull();
+    expect(buildVPointsTimeline({ kilter: [], tension: [] }, 'all')).toBeNull();
+  });
+
+  it('returns null when all entries are attempts', () => {
+    const ticks = {
+      kilter: [
+        makeEntry({ status: 'attempt', difficulty: 22, climbed_at: '2024-06-01T12:00:00Z', layoutId: 1, boardType: 'kilter' }),
+      ],
+    };
+    expect(buildVPointsTimeline(ticks, 'all')).toBeNull();
+  });
+
+  it('computes cumulative v-points for a single layout', () => {
+    const monday = dayjs('2024-06-03').startOf('isoWeek'); // a Monday
+    const ticks = {
+      kilter: [
+        makeEntry({ status: 'send', difficulty: 16, climbed_at: monday.toISOString(), layoutId: 1, boardType: 'kilter' }), // V3
+        makeEntry({ status: 'flash', difficulty: 20, climbed_at: monday.add(1, 'day').toISOString(), layoutId: 1, boardType: 'kilter' }), // V5
+      ],
+    };
+    const result = buildVPointsTimeline(ticks, 'all');
+    expect(result).not.toBeNull();
+    expect(result!.series).toHaveLength(1);
+    expect(result!.series[0].layoutKey).toBe('kilter-1');
+    // V3 + V5 = 8, single week so one data point
+    expect(result!.series[0].data).toEqual([8]);
+    expect(result!.totalPoints).toBe(8);
+  });
+
+  it('V0 sends contribute 1 point each', () => {
+    const monday = dayjs('2024-06-03').startOf('isoWeek');
+    const ticks = {
+      kilter: [
+        makeEntry({ status: 'send', difficulty: 10, climbed_at: monday.toISOString(), layoutId: 1, boardType: 'kilter' }), // V0 → 1
+        makeEntry({ status: 'send', difficulty: 10, climbed_at: monday.add(1, 'day').toISOString(), layoutId: 1, boardType: 'kilter' }), // V0 → 1
+      ],
+    };
+    const result = buildVPointsTimeline(ticks, 'all');
+    expect(result).not.toBeNull();
+    expect(result!.series[0].data).toEqual([2]);
+    expect(result!.totalPoints).toBe(2);
+  });
+
+  it('splits data into separate series per layout', () => {
+    const monday = dayjs('2024-06-03').startOf('isoWeek');
+    const ticks = {
+      kilter: [
+        makeEntry({ status: 'send', difficulty: 16, climbed_at: monday.toISOString(), layoutId: 1, boardType: 'kilter' }), // V3
+      ],
+      tension: [
+        makeEntry({ status: 'send', difficulty: 20, climbed_at: monday.toISOString(), layoutId: 9, boardType: 'tension' }), // V5
+      ],
+    };
+    const result = buildVPointsTimeline(ticks, 'all');
+    expect(result).not.toBeNull();
+    expect(result!.series).toHaveLength(2);
+
+    const kilterSeries = result!.series.find((s) => s.layoutKey === 'kilter-1');
+    const tensionSeries = result!.series.find((s) => s.layoutKey === 'tension-9');
+    expect(kilterSeries).toBeDefined();
+    expect(tensionSeries).toBeDefined();
+    expect(kilterSeries!.data).toEqual([3]);
+    expect(tensionSeries!.data).toEqual([5]);
+    expect(result!.totalPoints).toBe(8);
+  });
+
+  it('fills missing weeks with flat cumulative values', () => {
+    const week1 = dayjs('2024-06-03').startOf('isoWeek');
+    const week3 = week1.add(2, 'week'); // skip week 2
+    const ticks = {
+      kilter: [
+        makeEntry({ status: 'send', difficulty: 16, climbed_at: week1.toISOString(), layoutId: 1, boardType: 'kilter' }), // V3
+        makeEntry({ status: 'send', difficulty: 20, climbed_at: week3.toISOString(), layoutId: 1, boardType: 'kilter' }), // V5
+      ],
+    };
+    const result = buildVPointsTimeline(ticks, 'all');
+    expect(result).not.toBeNull();
+    // 3 weeks: week1 (3), week2 (still 3), week3 (3+5=8)
+    expect(result!.weekLabels).toHaveLength(3);
+    expect(result!.series[0].data).toEqual([3, 3, 8]);
+  });
+
+  it('excludes attempts from v-points total', () => {
+    const monday = dayjs('2024-06-03').startOf('isoWeek');
+    const ticks = {
+      kilter: [
+        makeEntry({ status: 'send', difficulty: 16, climbed_at: monday.toISOString(), layoutId: 1, boardType: 'kilter' }), // V3 counts
+        makeEntry({ status: 'attempt', difficulty: 22, climbed_at: monday.toISOString(), layoutId: 1, boardType: 'kilter' }), // V6 excluded
+      ],
+    };
+    const result = buildVPointsTimeline(ticks, 'all');
+    expect(result).not.toBeNull();
+    expect(result!.series[0].data).toEqual([3]);
+  });
+
+  it('caps at 104 weeks with correct cumulative base', () => {
+    // Create entries spanning 110 weeks
+    const start = dayjs('2022-01-03').startOf('isoWeek');
+    const entries: LogbookEntry[] = [];
+    for (let w = 0; w < 110; w++) {
+      entries.push(
+        makeEntry({
+          status: 'send',
+          difficulty: 13, // V1
+          climbed_at: start.add(w, 'week').toISOString(),
+          layoutId: 1,
+          boardType: 'kilter',
+        }),
+      );
+    }
+    const ticks = { kilter: entries };
+    const result = buildVPointsTimeline(ticks, 'all');
+    expect(result).not.toBeNull();
+    expect(result!.weekLabels).toHaveLength(104);
+    // First 6 weeks skipped (base = 6), so first visible week = 7
+    expect(result!.series[0].data[0]).toBe(7);
+    // Last week = 110
+    expect(result!.series[0].data[103]).toBe(110);
   });
 });
