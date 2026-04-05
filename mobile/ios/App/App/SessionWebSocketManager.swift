@@ -322,10 +322,9 @@ final class SessionWebSocketManager {
             return
         }
 
-        var request = URLRequest(url: url)
-        request.addValue("graphql-transport-ws", forHTTPHeaderField: "Sec-WebSocket-Protocol")
+        print("[SessionWS] Connecting to \(urlString)")
 
-        let task = self.urlSession.webSocketTask(with: request)
+        let task = self.urlSession.webSocketTask(with: url, protocols: ["graphql-transport-ws"])
         self.webSocketTask = task
         task.resume()
         self.sendConnectionInit()
@@ -512,6 +511,7 @@ final class SessionWebSocketManager {
 
         switch msg.type {
         case .connectionAck:
+            print("[SessionWS] Received connection_ack, sending subscription")
             stateQueue.async { [weak self] in
                 guard let self = self else { return }
                 self.isConnected = true
@@ -524,15 +524,18 @@ final class SessionWebSocketManager {
             sendPong()
 
         case .next:
+            print("[SessionWS] Received next message (id=\(msg.id ?? "nil"))")
             handleNextMessage(msg)
 
         case .error:
+            print("[SessionWS] Received error message (id=\(msg.id ?? "nil"))")
             handleMutationError(msg)
 
         case .complete:
             handleMutationComplete(msg)
 
         default:
+            print("[SessionWS] Received unhandled message type: \(msg.type.rawValue)")
             break
         }
     }

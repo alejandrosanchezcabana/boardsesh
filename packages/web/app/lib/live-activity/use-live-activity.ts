@@ -94,8 +94,7 @@ export function useLiveActivity({
         // Guard: if cleanup ran or a newer start replaced us, bail out.
         if (!isActiveRef.current || generationRef.current !== startGeneration) return;
         // Send an initial update immediately after start so the widget
-        // doesn't stay on "Loading...". Skip in party mode — WebSocket handles updates.
-        if (isSessionActive && sessionId) return;
+        // doesn't stay on "Loading...".
         const displayItem = currentClimbQueueItem ?? (queue.length > 0 ? queue[0] : null);
         if (!displayItem) return;
         const idx = queue.findIndex((q) => q.uuid === displayItem.uuid);
@@ -125,10 +124,9 @@ export function useLiveActivity({
     };
   }, [queue.length, currentClimbQueueItem, stableBoardDetails, isSessionActive, sessionId, available]);
 
-  // Update on climb changes (local queue mode only; party mode uses WebSocket updates)
+  // Update Live Activity on climb changes
   useEffect(() => {
     if (!isActiveRef.current || !stableBoardDetails) return;
-    if (isSessionActive && sessionId) return;
 
     const displayItem = currentClimbQueueItem ?? (queue.length > 0 ? queue[0] : null);
     if (!displayItem) return;
