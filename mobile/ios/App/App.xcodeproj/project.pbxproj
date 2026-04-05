@@ -36,6 +36,7 @@
 		LA100031 /* ThumbnailFetcherTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = LA200031 /* ThumbnailFetcherTests.swift */; };
 		LA100032 /* LiveActivityManagerTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = LA200032 /* LiveActivityManagerTests.swift */; };
 		LA100033 /* AppIntentNavigationTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = LA200033 /* AppIntentNavigationTests.swift */; };
+		LA100034 /* VGradeFormatterTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = LA200034 /* VGradeFormatterTests.swift */; };
 		LA100040 /* BoardseshWidgets.appex in Embed App Extensions */ = {isa = PBXBuildFile; fileRef = LA300001 /* BoardseshWidgets.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 /* End PBXBuildFile section */
 
@@ -105,6 +106,7 @@
 		LA200031 /* ThumbnailFetcherTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ThumbnailFetcherTests.swift; sourceTree = "<group>"; };
 		LA200032 /* LiveActivityManagerTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LiveActivityManagerTests.swift; sourceTree = "<group>"; };
 		LA200033 /* AppIntentNavigationTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppIntentNavigationTests.swift; sourceTree = "<group>"; };
+		LA200034 /* VGradeFormatterTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VGradeFormatterTests.swift; sourceTree = "<group>"; };
 		LA300001 /* BoardseshWidgets.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = BoardseshWidgets.appex; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
@@ -206,6 +208,7 @@
 				LA200031 /* ThumbnailFetcherTests.swift */,
 				LA200032 /* LiveActivityManagerTests.swift */,
 				LA200033 /* AppIntentNavigationTests.swift */,
+				LA200034 /* VGradeFormatterTests.swift */,
 			);
 			path = AppTests;
 			sourceTree = "<group>";
@@ -438,6 +441,7 @@
 				LA100031 /* ThumbnailFetcherTests.swift in Sources */,
 				LA100032 /* LiveActivityManagerTests.swift in Sources */,
 				LA100033 /* AppIntentNavigationTests.swift in Sources */,
+				LA100034 /* VGradeFormatterTests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
