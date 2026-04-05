@@ -33,10 +33,8 @@ import AuthModal from '@/app/components/auth/auth-modal';
 import PlaylistCardGrid from '@/app/components/library/playlist-card-grid';
 import PlaylistScrollSection from '@/app/components/library/playlist-scroll-section';
 import PlaylistCard from '@/app/components/library/playlist-card';
-import BoardScrollSection from '@/app/components/board-scroll/board-scroll-section';
-import BoardScrollCard from '@/app/components/board-scroll/board-scroll-card';
+import BoardFilterStrip from '@/app/components/board-scroll/board-filter-strip';
 import styles from '@/app/components/library/library.module.css';
-import boardScrollStyles from '@/app/components/board-scroll/board-scroll.module.css';
 
 type LibraryPageContentProps = {
   /** When set, the page was rendered from a board route and this board is pre-selected. */
@@ -255,13 +253,6 @@ export default function LibraryPageContent({
     }
   }, [boardSlug, playlistsBasePath, router]);
 
-  const handleAllBoardsKeyDown = useCallback((e: React.KeyboardEvent) => {
-    if (e.key === 'Enter' || e.key === ' ') {
-      e.preventDefault();
-      handleBoardSelect(null);
-    }
-  }, [handleBoardSelect]);
-
   // Header with back button
   const renderHeader = () => (
     <div className={styles.header}>
@@ -309,31 +300,12 @@ export default function LibraryPageContent({
       {renderHeader()}
 
       {/* Board Selector */}
-      <BoardScrollSection loading={boardsLoading && myBoards.length === 0} size="small">
-        <div
-          className={`${boardScrollStyles.cardScroll} ${boardScrollStyles.cardScrollSmall}`}
-          role="button"
-          tabIndex={0}
-          onClick={() => handleBoardSelect(null)}
-          onKeyDown={handleAllBoardsKeyDown}
-        >
-          <div className={`${boardScrollStyles.cardSquare} ${boardScrollStyles.filterSquare} ${!selectedBoard ? boardScrollStyles.cardSquareSelected : ''}`}>
-            <span className={boardScrollStyles.filterLabel}>All</span>
-          </div>
-          <div className={`${boardScrollStyles.cardName} ${!selectedBoard ? boardScrollStyles.cardNameSelected : ''}`}>
-            All Boards
-          </div>
-        </div>
-        {myBoards.map((board) => (
-          <BoardScrollCard
-            key={board.uuid}
-            userBoard={board}
-            size="small"
-            selected={selectedBoard?.uuid === board.uuid}
-            onClick={() => handleBoardSelect(board)}
-          />
-        ))}
-      </BoardScrollSection>
+      <BoardFilterStrip
+        boards={myBoards}
+        loading={boardsLoading && myBoards.length === 0}
+        selectedBoard={selectedBoard}
+        onBoardSelect={handleBoardSelect}
+      />
 
       {/* Sign-in banner for non-authenticated users */}
       {hasMounted && !isAuthenticated && sessionStatus !== 'loading' && (

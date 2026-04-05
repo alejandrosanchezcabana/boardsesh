@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useCallback, useState } from 'react';
+import React, { useCallback, useMemo, useState } from 'react';
 import Box from '@mui/material/Box';
 import Tabs from '@mui/material/Tabs';
 import Tab from '@mui/material/Tab';
@@ -10,12 +10,10 @@ import CommentFeed from '@/app/components/activity-feed/comment-feed';
 import { useSession } from 'next-auth/react';
 import { useRouter, useSearchParams } from 'next/navigation';
 
-import BoardScrollSection from '@/app/components/board-scroll/board-scroll-section';
-import BoardScrollCard from '@/app/components/board-scroll/board-scroll-card';
+import BoardFilterStrip from '@/app/components/board-scroll/board-filter-strip';
 import type { SessionFeedResult } from '@boardsesh/shared-schema';
 import type { UserBoard } from '@boardsesh/shared-schema';
 import { useMyBoards } from '@/app/hooks/use-my-boards';
-import boardScrollStyles from '@/app/components/board-scroll/board-scroll.module.css';
 import UnifiedSearchDrawer from '@/app/components/search-drawer/unified-search-drawer';
 
 type FeedTab = 'sessions' | 'proposals' | 'comments';
@@ -71,43 +69,26 @@ export default function FeedPageContent({
     updateParam('tab', value);
   };
 
-  const handleBoardFilter = useCallback((boardUuid: string | null) => {
-    updateParam('board', boardUuid);
+  const handleBoardSelect = useCallback((board: UserBoard | null) => {
+    updateParam('board', board?.uuid ?? null);
   }, [updateParam]);
 
-  const handleBoardSelect = useCallback((board: UserBoard) => {
-    updateParam('board', board.uuid);
-  }, [updateParam]);
+  const selectedBoard = useMemo(
+    () => myBoards.find((b) => b.uuid === selectedBoardUuid) ?? null,
+    [myBoards, selectedBoardUuid],
+  );
 
   return (
     <Box sx={{ minHeight: '100dvh', display: 'flex', flexDirection: 'column', pb: 'calc(120px + env(safe-area-inset-bottom, 0px))' }}>
       {/* Feed */}
       <Box component="main" sx={{ flex: 1, px: 2, py: 2, pt: 'calc(var(--global-header-height) + 16px)' }}>
-        {isAuthenticated && (myBoards.length > 0 || isLoadingBoards) && (
-          <BoardScrollSection loading={isLoadingBoards} size="small">
-            <div
-              className={`${boardScrollStyles.cardScroll} ${boardScrollStyles.cardScrollSmall}`}
-              onClick={() => {
-                handleBoardFilter(null);
-              }}
-            >
-              <div className={`${boardScrollStyles.cardSquare} ${boardScrollStyles.filterSquare} ${!selectedBoardUuid ? boardScrollStyles.cardSquareSelected : ''}`}>
-                <span className={boardScrollStyles.filterLabel}>All</span>
-              </div>
-              <div className={`${boardScrollStyles.cardName} ${!selectedBoardUuid ? boardScrollStyles.cardNameSelected : ''}`}>
-                All Boards
-              </div>
-            </div>
-            {myBoards.map((board) => (
-              <BoardScrollCard
-                key={board.uuid}
-                userBoard={board}
-                size="small"
-                selected={selectedBoardUuid === board.uuid}
-                onClick={() => handleBoardSelect(board)}
-              />
-            ))}
-          </BoardScrollSection>
+        {isAuthenticated && (
+          <BoardFilterStrip
+            boards={myBoards}
+            loading={isLoadingBoards}
+            selectedBoard={selectedBoard}
+            onBoardSelect={handleBoardSelect}
+          />
         )}
         <Tabs
           value={activeTab}
