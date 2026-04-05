@@ -1,5 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import React from 'react';
+import { act } from 'react';
 
 // ---------------------------------------------------------------------------
 // Mocks
@@ -101,7 +102,7 @@ function defaultProps(): LiveActivityHookProps {
 /**
  * Minimal renderHook replacement using React.createElement + vitest jsdom.
  */
-function renderLiveActivityHook(initialProps: LiveActivityHookProps) {
+async function renderLiveActivityHook(initialProps: LiveActivityHookProps) {
   let latestProps = { ...initialProps };
   const container = document.createElement('div');
   document.body.appendChild(container);
@@ -111,26 +112,24 @@ function renderLiveActivityHook(initialProps: LiveActivityHookProps) {
     return null;
   }
 
-  // Use React 18 createRoot if available, otherwise fall back to render
-  const root = (React as unknown as { createRoot?: (c: HTMLElement) => { render: (el: React.ReactElement) => void; unmount: () => void } }).createRoot?.(container);
+  const ReactDOM = await import('react-dom/client');
+  const root = ReactDOM.createRoot(container);
 
-  function render() {
-    if (root) {
-      root.render(React.createElement(HookHost));
-    }
-  }
-
-  render();
+  await act(async () => {
+    root.render(React.createElement(HookHost));
+  });
 
   return {
-    rerender(newProps: Partial<LiveActivityHookProps>) {
+    async rerender(newProps: Partial<LiveActivityHookProps>) {
       latestProps = { ...latestProps, ...newProps };
-      render();
+      await act(async () => {
+        root.render(React.createElement(HookHost));
+      });
     },
-    unmount() {
-      if (root) {
+    async unmount() {
+      await act(async () => {
         root.unmount();
-      }
+      });
       container.remove();
     },
   };
@@ -153,7 +152,7 @@ describe('useLiveActivity', () => {
     mockGetPlatform.mockReturnValue('android');
 
     const item = makeQueueItem('1');
-    const hook = renderLiveActivityHook({
+    const hook = await renderLiveActivityHook({
       ...defaultProps(),
       queue: [item],
       currentClimbQueueItem: item,
@@ -161,12 +160,12 @@ describe('useLiveActivity', () => {
     });
 
     // Wait for effects
-    await new Promise((r) => setTimeout(r, 50));
+    await act(async () => { await new Promise((r) => setTimeout(r, 50)); });
 
     expect(mockStartLiveActivitySession).not.toHaveBeenCalled();
     expect(mockUpdateLiveActivity).not.toHaveBeenCalled();
 
-    hook.unmount();
+    await hook.unmount();
   });
 
   it('does not call plugin on web', async () => {
@@ -174,19 +173,19 @@ describe('useLiveActivity', () => {
     mockGetPlatform.mockReturnValue('web');
 
     const item = makeQueueItem('1');
-    const hook = renderLiveActivityHook({
+    const hook = await renderLiveActivityHook({
       ...defaultProps(),
       queue: [item],
       currentClimbQueueItem: item,
       boardDetails: makeBoardDetails(),
     });
 
-    await new Promise((r) => setTimeout(r, 50));
+    await act(async () => { await new Promise((r) => setTimeout(r, 50)); });
 
     expect(mockStartLiveActivitySession).not.toHaveBeenCalled();
     expect(mockUpdateLiveActivity).not.toHaveBeenCalled();
 
-    hook.unmount();
+    await hook.unmount();
   });
 
   it('calls startSession when queue becomes active', async () => {
@@ -194,14 +193,14 @@ describe('useLiveActivity', () => {
     mockGetPlatform.mockReturnValue('ios');
 
     const item = makeQueueItem('1');
-    const hook = renderLiveActivityHook({
+    const hook = await renderLiveActivityHook({
       ...defaultProps(),
       queue: [item],
       currentClimbQueueItem: item,
       boardDetails: makeBoardDetails(),
     });
 
-    await new Promise((r) => setTimeout(r, 50));
+    await act(async () => { await new Promise((r) => setTimeout(r, 50)); });
 
     expect(mockStartLiveActivitySession).toHaveBeenCalledTimes(1);
     expect(mockStartLiveActivitySession).toHaveBeenCalledWith(
@@ -212,7 +211,7 @@ describe('useLiveActivity', () => {
       }),
     );
 
-    hook.unmount();
+    await hook.unmount();
   });
 
   it('calls endSession when queue is cleared', async () => {
@@ -220,25 +219,25 @@ describe('useLiveActivity', () => {
     mockGetPlatform.mockReturnValue('ios');
 
     const item = makeQueueItem('1');
-    const hook = renderLiveActivityHook({
+    const hook = await renderLiveActivityHook({
       ...defaultProps(),
       queue: [item],
       currentClimbQueueItem: item,
       boardDetails: makeBoardDetails(),
     });
 
-    await new Promise((r) => setTimeout(r, 50));
+    await act(async () => { await new Promise((r) => setTimeout(r, 50)); });
     expect(mockStartLiveActivitySession).toHaveBeenCalledTimes(1);
 
-    hook.rerender({
+    await hook.rerender({
       queue: [],
       currentClimbQueueItem: null,
     });
 
-    await new Promise((r) => setTimeout(r, 50));
+    await act(async () => { await new Promise((r) => setTimeout(r, 50)); });
     expect(mockEndLiveActivitySession).toHaveBeenCalled();
 
-    hook.unmount();
+    await hook.unmount();
   });
 
   it('calls updateActivity on climb change in local mode', async () => {
@@ -248,23 +247,23 @@ describe('useLiveActivity', () => {
     const item1 = makeQueueItem('1');
     const item2 = makeQueueItem('2');
 
-    const hook = renderLiveActivityHook({
+    const hook = await renderLiveActivityHook({
       ...defaultProps(),
       queue: [item1, item2],
       currentClimbQueueItem: item1,
       boardDetails: makeBoardDetails(),
     });
 
-    await new Promise((r) => setTimeout(r, 50));
+    await act(async () => { await new Promise((r) => setTimeout(r, 50)); });
 
     // Initial update should have been called
     expect(mockUpdateLiveActivity).toHaveBeenCalled();
 
     mockUpdateLiveActivity.mockClear();
 
-    hook.rerender({ currentClimbQueueItem: item2 });
+    await hook.rerender({ currentClimbQueueItem: item2 });
 
-    await new Promise((r) => setTimeout(r, 50));
+    await act(async () => { await new Promise((r) => setTimeout(r, 50)); });
     expect(mockUpdateLiveActivity).toHaveBeenCalledWith(
       expect.objectContaining({
         climbName: 'Test Climb 2',
@@ -275,7 +274,7 @@ describe('useLiveActivity', () => {
       }),
     );
 
-    hook.unmount();
+    await hook.unmount();
   });
 
   it('does not call updateActivity in party mode', async () => {
@@ -283,7 +282,7 @@ describe('useLiveActivity', () => {
     mockGetPlatform.mockReturnValue('ios');
 
     const item = makeQueueItem('1');
-    const hook = renderLiveActivityHook({
+    const hook = await renderLiveActivityHook({
       ...defaultProps(),
       queue: [item],
       currentClimbQueueItem: item,
@@ -292,12 +291,12 @@ describe('useLiveActivity', () => {
       sessionId: 'party-123',
     });
 
-    await new Promise((r) => setTimeout(r, 50));
+    await act(async () => { await new Promise((r) => setTimeout(r, 50)); });
 
     // startSession may be called, but updateActivity should NOT be called in party mode
     expect(mockUpdateLiveActivity).not.toHaveBeenCalled();
 
-    hook.unmount();
+    await hook.unmount();
   });
 
   it('handles plugin unavailability gracefully', async () => {
@@ -308,20 +307,20 @@ describe('useLiveActivity', () => {
     const item = makeQueueItem('1');
 
     // Should not throw
-    const hook = renderLiveActivityHook({
+    const hook = await renderLiveActivityHook({
       ...defaultProps(),
       queue: [item],
       currentClimbQueueItem: item,
       boardDetails: makeBoardDetails(),
     });
 
-    await new Promise((r) => setTimeout(r, 100));
+    await act(async () => { await new Promise((r) => setTimeout(r, 100)); });
 
     // When availability check returns false, startSession may still be called
     // on the first render (before the async check completes), but the hook
     // should not crash. The key assertion is no uncaught error.
     expect(true).toBe(true);
 
-    hook.unmount();
+    await hook.unmount();
   });
 });
