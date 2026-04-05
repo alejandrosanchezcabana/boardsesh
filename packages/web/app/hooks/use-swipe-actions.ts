@@ -11,7 +11,7 @@ const DEFAULT_MAX_SWIPE = 120;
 // Peek offset shown during left-swipe confirmation (enough to reveal the action icon)
 const CONFIRMATION_PEEK_OFFSET = -56;
 // Duration the confirmation checkmark is shown before snapping back
-const CONFIRMATION_DISPLAY_MS = 1400;
+const CONFIRMATION_DISPLAY_MS = 2800;
 
 export type SwipeZone = 'none' | 'left-short' | 'left-long' | 'right-short' | 'right-long';
 
