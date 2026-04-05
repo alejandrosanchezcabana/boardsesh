@@ -43,11 +43,10 @@ export default function VPointsChart({ data }: VPointsChartProps) {
           tickInterval: (_value: string, index: number) => index % labelInterval === 0,
         }]}
         yAxis={[{
-          label: 'V-Points',
           tickLabelStyle: { fontSize: 10 },
         }]}
         height={200}
-        margin={{ top: 10, bottom: 30, left: 50, right: 10 }}
+        margin={{ top: 10, bottom: 30, left: 35, right: 10 }}
         hideLegend={series.length <= 1}
         slotProps={{
           legend: {
