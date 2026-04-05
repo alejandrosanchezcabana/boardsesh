@@ -325,10 +325,11 @@ final class SessionWebSocketManager {
         var request = URLRequest(url: url)
         request.addValue("graphql-transport-ws", forHTTPHeaderField: "Sec-WebSocket-Protocol")
 
-        self.webSocketTask = self.urlSession.webSocketTask(with: request)
-        self.webSocketTask?.resume()
+        let task = self.urlSession.webSocketTask(with: request)
+        self.webSocketTask = task
+        task.resume()
         self.sendConnectionInit()
-        self.listenForMessages()
+        self.listenForMessages(for: task)
     }
 
     // MARK: - graphql-ws Protocol Messages
@@ -477,8 +478,8 @@ final class SessionWebSocketManager {
 
     // MARK: - Message Handling
 
-    private func listenForMessages() {
-        webSocketTask?.receive { [weak self] result in
+    private func listenForMessages(for task: URLSessionWebSocketTask) {
+        task.receive { [weak self] result in
             guard let self = self else { return }
             switch result {
             case .success(let message):
@@ -492,11 +493,12 @@ final class SessionWebSocketManager {
                 @unknown default:
                     break
                 }
-                // Continue listening
-                self.listenForMessages()
+                // Continue listening on the same task
+                self.listenForMessages(for: task)
 
-            case .failure:
-                self.handleDisconnect()
+            case .failure(let error):
+                print("[SessionWS] Receive failed: \(error.localizedDescription)")
+                self.handleDisconnect(for: task)
             }
         }
     }
@@ -645,9 +647,17 @@ final class SessionWebSocketManager {
 
     // MARK: - Reconnection
 
-    private func handleDisconnect() {
+    private func handleDisconnect(for task: URLSessionWebSocketTask) {
         stateQueue.async { [weak self] in
             guard let self = self else { return }
+
+            // Only process disconnect if this is still the current task.
+            // A stale task from a previous connection must not tear down the
+            // active connection.
+            guard self.webSocketTask === task else {
+                print("[SessionWS] Ignoring stale disconnect for superseded task")
+                return
+            }
 
             self.isConnected = false
             self.webSocketTask = nil

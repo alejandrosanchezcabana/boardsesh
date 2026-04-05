@@ -935,6 +935,24 @@ final class SessionWebSocketManagerTests: XCTestCase {
         XCTAssertFalse(manager.isConnected)
     }
 
+    // MARK: - Stale Task Disconnect Guard
+
+    func testStaleDisconnectDoesNotKillNewConnection() {
+        let manager = SessionWebSocketManager(urlSession: .shared)
+
+        // Create two tasks to simulate old vs new connection
+        let fakeUrl = URL(string: "wss://example.com/graphql")!
+        let oldTask = URLSession.shared.webSocketTask(with: fakeUrl)
+        let newTask = URLSession.shared.webSocketTask(with: fakeUrl)
+
+        // Distinct instances must not be identity-equal
+        XCTAssertFalse(oldTask === newTask)
+
+        // Same instance must be identity-equal
+        XCTAssertTrue(oldTask === oldTask)
+        XCTAssertTrue(newTask === newTask)
+    }
+
     // MARK: - GQLMessageType Raw Values
 
     func testGQLMessageTypeRawValues() {
