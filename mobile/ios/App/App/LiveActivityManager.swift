@@ -5,7 +5,7 @@ import os.log
 // MARK: - LiveActivityManager
 
 @available(iOS 16.1, *)
-final class LiveActivityManager {
+actor LiveActivityManager {
 
     // MARK: - Singleton
 
@@ -17,6 +17,12 @@ final class LiveActivityManager {
     private let thumbnailFetcher = ThumbnailFetcher()
     private let logger = Logger(subsystem: "com.boardsesh.app", category: "LiveActivityManager")
 
+    /// How far in the future the stale date is set. The ping timeout timer
+    /// refreshes this every 60s, so 3 minutes gives a comfortable 2× margin
+    /// during normal operation. After a force-quit the activity goes stale
+    /// in 3 minutes instead of lingering for 30.
+    private let staleInterval: TimeInterval = 3 * 60
+
     // MARK: - Init
 
     private init() {}
@@ -24,7 +30,7 @@ final class LiveActivityManager {
     // MARK: - Availability
 
     /// Whether Live Activities are supported and the user has granted permission.
-    var isAvailable: Bool {
+    nonisolated var isAvailable: Bool {
         ActivityAuthorizationInfo().areActivitiesEnabled
     }
 
@@ -51,7 +57,7 @@ final class LiveActivityManager {
         await endAllActivities()
 
         let attributes = ClimbSessionAttributes(boardName: boardName, sessionId: sessionId)
-        let content = ActivityContent(state: initialState, staleDate: nil)
+        let content = ActivityContent(state: initialState, staleDate: Date().addingTimeInterval(staleInterval))
 
         do {
             currentActivity = try Activity.request(
@@ -78,11 +84,11 @@ final class LiveActivityManager {
             return
         }
 
-        // Stale date set to 30 minutes. The ping timeout timer refreshes this
-        // every 60s while the native WebSocket is healthy, and each JS
-        // updateActivity call also resets it. If all update paths fail for
-        // 30 minutes, the activity shows "Session ended" as a signal.
-        let content = ActivityContent(state: state, staleDate: Date().addingTimeInterval(30 * 60))
+        // The ping timeout timer refreshes the stale date every 60s while
+        // the native WebSocket is healthy, and each JS updateActivity call
+        // also resets it. If all update paths fail for the stale interval,
+        // the activity shows "Session ended" as a signal.
+        let content = ActivityContent(state: state, staleDate: Date().addingTimeInterval(staleInterval))
         await activity.update(content)
         logger.info("Updated Live Activity: \(state.climbName, privacy: .public) (\(state.currentIndex + 1)/\(state.totalClimbs))")
 
@@ -105,7 +111,7 @@ final class LiveActivityManager {
     /// Call this periodically (e.g. on WebSocket ping) to keep the activity alive.
     func refreshStaleDate() async {
         guard let activity = currentActivity else { return }
-        let content = ActivityContent(state: activity.content.state, staleDate: Date().addingTimeInterval(30 * 60))
+        let content = ActivityContent(state: activity.content.state, staleDate: Date().addingTimeInterval(staleInterval))
         await activity.update(content)
     }
 
@@ -129,12 +135,36 @@ final class LiveActivityManager {
         }
     }
 
+    // MARK: - Stale / Orphan Cleanup
+
+    /// Ends only activities whose stale date has already passed.
+    /// Safe to call at any time — active (non-stale) activities are untouched.
+    func endStaleActivities() async {
+        for activity in Activity<ClimbSessionAttributes>.activities {
+            if activity.content.staleDate.map({ $0 < Date() }) ?? false {
+                await activity.end(nil, dismissalPolicy: .immediate)
+                logger.info("Ended stale activity \(activity.id, privacy: .public)")
+            }
+        }
+    }
+
+    /// Ends orphaned activities when no session is actively managed by this
+    /// process. Safe to call on launch/foreground — does nothing if a session
+    /// is currently tracked (i.e. `startActivity` was called this launch).
+    func cleanupOrphanedActivities() async {
+        guard currentActivity == nil else { return }
+        for activity in Activity<ClimbSessionAttributes>.activities {
+            await activity.end(nil, dismissalPolicy: .immediate)
+            logger.info("Cleaned up orphaned activity \(activity.id, privacy: .public)")
+        }
+    }
+
     // MARK: - Content State Builder
 
     /// Builds a `ContentState` from the current shared queue state.
     ///
     /// Returns `nil` if the queue is empty or the index is out of bounds.
-    static func buildContentState(
+    nonisolated static func buildContentState(
         items: [SharedQueueItem],
         currentIndex: Int
     ) -> ClimbSessionAttributes.ContentState? {

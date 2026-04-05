@@ -1447,7 +1447,7 @@ The main app and widget extension share data via App Group (`group.com.boardsesh
 
 - **Start**: `LiveActivityPlugin.startSession()` stores board details in App Group, connects the WebSocket manager, and starts the Live Activity
 - **End**: `LiveActivityPlugin.endSession()` clears the callback, disconnects WebSocket, ends all Live Activities, and cleans up App Group state
-- **App termination**: `SceneDelegate.sceneDidDisconnect` and `AppDelegate.applicationWillTerminate` end the Live Activity and disconnect the WebSocket to prevent stale widgets on the Lock Screen
+- **App termination**: `SceneDelegate.sceneDidDisconnect` and `AppDelegate.applicationWillTerminate` attempt to end the Live Activity and disconnect the WebSocket, but these callbacks are **not reliably called** on force-quit. As a fallback, the stale date is set to 3 minutes (refreshed every 60s by the ping timer), and `SceneDelegate.sceneWillEnterForeground` / `scene(_:willConnectTo:)` clean up any stale or orphaned activities on the next app launch or foreground return
 
 ## Related Files
 

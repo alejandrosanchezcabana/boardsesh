@@ -24,6 +24,14 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
         window.rootViewController = storyboard.instantiateInitialViewController()
         self.window = window
         window.makeKeyAndVisible()
+
+        // Clean up any orphaned Live Activities from a previous session/crash.
+        if #available(iOS 16.1, *) {
+            Task {
+                await LiveActivityManager.shared.endStaleActivities()
+                await LiveActivityManager.shared.cleanupOrphanedActivities()
+            }
+        }
     }
 
     func scene(_ scene: UIScene, openURLContexts URLContexts: Set<UIOpenURLContext>) {
@@ -64,6 +72,14 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
     }
     func sceneDidBecomeActive(_ scene: UIScene) {}
     func sceneWillResignActive(_ scene: UIScene) {}
-    func sceneWillEnterForeground(_ scene: UIScene) {}
+    func sceneWillEnterForeground(_ scene: UIScene) {
+        // Dismiss any Live Activities left over from a force-quit or crash.
+        if #available(iOS 16.1, *) {
+            Task {
+                await LiveActivityManager.shared.endStaleActivities()
+                await LiveActivityManager.shared.cleanupOrphanedActivities()
+            }
+        }
+    }
     func sceneDidEnterBackground(_ scene: UIScene) {}
 }
