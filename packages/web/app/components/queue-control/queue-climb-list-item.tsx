@@ -92,23 +92,15 @@ const QueueClimbListItem: React.FC<QueueClimbListItemProps> = ({
     openExternalUrl(openInAppUrl);
   }, [openInAppUrl]);
 
-  // Swipe action overrides for ClimbListItem
-  const swipeLeftAction: SwipeActionOverride = useMemo(
+  // Only override swipe-left (right action) to tick instead of the default add-to-queue,
+  // since these items are already in the queue. Swipe-right uses the default playlist/actions.
+  const swipeRightAction: SwipeActionOverride = useMemo(
     () => ({
       icon: <CheckOutlined style={{ color: 'white', fontSize: 20 }} />,
       color: themeTokens.colors.success,
       onAction: () => onTickClick(item.climb),
     }),
     [item.climb, onTickClick],
-  );
-
-  const swipeRightAction: SwipeActionOverride = useMemo(
-    () => ({
-      icon: <DeleteOutlined style={{ color: 'white', fontSize: 20 }} />,
-      color: themeTokens.colors.error,
-      onAction: () => removeFromQueue(item),
-    }),
-    [item, removeFromQueue],
   );
 
   // Background color based on current/history state
@@ -226,7 +218,6 @@ const QueueClimbListItem: React.FC<QueueClimbListItemProps> = ({
       disableSwipe={isEditMode}
       disableThumbnailNavigation={isEditMode}
       onSelect={isEditMode ? () => onToggleSelect?.(item.uuid) : handleSelect}
-      swipeLeftAction={swipeLeftAction}
       swipeRightAction={swipeRightAction}
       afterTitleSlot={afterTitleSlot}
       menuSlot={menuSlot}
