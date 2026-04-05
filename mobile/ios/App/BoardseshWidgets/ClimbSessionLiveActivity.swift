@@ -240,6 +240,7 @@ private struct LockScreenView: View {
                         .background(context.state.hasPrevious ? Color.white.opacity(0.15) : Color.white.opacity(0.05))
                         .clipShape(RoundedRectangle(cornerRadius: 8))
                     }
+                    .buttonStyle(.plain)
                     .disabled(!context.state.hasPrevious)
 
                     Button(intent: NextClimbIntent()) {
