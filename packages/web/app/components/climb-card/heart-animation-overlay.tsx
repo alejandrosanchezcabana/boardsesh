@@ -11,7 +11,11 @@ interface HeartAnimationOverlayProps {
   size?: number;
 }
 
-export default function HeartAnimationOverlay({ visible, onAnimationEnd, size = 80 }: HeartAnimationOverlayProps) {
+const HeartAnimationOverlay = React.memo(function HeartAnimationOverlay({
+  visible,
+  onAnimationEnd,
+  size = 80,
+}: HeartAnimationOverlayProps) {
   if (!visible) return null;
 
   return (
@@ -23,4 +27,6 @@ export default function HeartAnimationOverlay({ visible, onAnimationEnd, size = 
       />
     </div>
   );
-}
+});
+
+export default HeartAnimationOverlay;

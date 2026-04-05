@@ -111,7 +111,7 @@ const defaultRightActionStyle: React.CSSProperties = {
 
 const iconStyle: React.CSSProperties = { color: 'white', fontSize: 20 };
 
-const thumbnailStyle: React.CSSProperties = { width: themeTokens.spacing[16], flexShrink: 0 };
+const thumbnailStyle: React.CSSProperties = { width: themeTokens.spacing[16], flexShrink: 0, position: 'relative' };
 
 const centerStyle: React.CSSProperties = { flex: 1, minWidth: 0 };
 
@@ -293,6 +293,12 @@ const ClimbListItem: React.FC<ClimbListItemProps> = React.memo(
       disabled: disableSwipe,
     });
 
+    // Combined ref callback for left action container — avoids inline function recreation
+    const leftActionCombinedRef = useCallback((node: HTMLDivElement | null) => {
+      leftActionRef(node);
+      leftActionContainerRef.current = node;
+    }, [leftActionRef]);
+
     const excludeActions = getExcludedClimbActions(boardDetails.board_name, 'list');
 
     // Memoize style objects to prevent recreation on every render
@@ -360,7 +366,7 @@ const ClimbListItem: React.FC<ClimbListItemProps> = React.memo(
           {!disableSwipe && (
             <>
               {/* Left action (revealed on swipe right) */}
-              <div ref={(node: HTMLDivElement | null) => { leftActionRef(node); leftActionContainerRef.current = node; }} style={defaultLeftActionStyle}>
+              <div ref={leftActionCombinedRef} style={defaultLeftActionStyle}>
                 <div ref={shortSwipeLayerRef} style={shortSwipeLayerInitialStyle}>
                   <LocalOfferOutlined style={iconStyle} />
                 </div>
@@ -401,7 +407,7 @@ const ClimbListItem: React.FC<ClimbListItemProps> = React.memo(
             {/* Thumbnail */}
             <div
               ref={doubleTapRef}
-              style={{ ...thumbnailStyle, position: 'relative' }}
+              style={thumbnailStyle}
               onClick={
                 onThumbnailClick
                   ? (e) => {

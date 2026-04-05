@@ -11,6 +11,9 @@ const DOUBLE_TAP_THRESHOLD = 300;
 export function useDoubleTap(callback: (() => void) | undefined) {
   const lastTapTimeRef = useRef(0);
   const elementRef = useRef<HTMLElement | null>(null);
+  // Store callback in a ref so event listeners stay stable across re-renders
+  const callbackRef = useRef(callback);
+  callbackRef.current = callback;
   // Once any touch event is detected, permanently disable onDoubleClick
   // to prevent the browser's synthesized dblclick from double-firing.
   const isTouchDeviceRef = useRef(false);
@@ -42,7 +45,7 @@ export function useDoubleTap(callback: (() => void) | undefined) {
         return;
       }
 
-      if (!callback) return;
+      if (!callbackRef.current) return;
 
       const now = Date.now();
       const timeSinceLastTap = now - lastTapTimeRef.current;
@@ -50,12 +53,12 @@ export function useDoubleTap(callback: (() => void) | undefined) {
       if (timeSinceLastTap > 0 && timeSinceLastTap < DOUBLE_TAP_THRESHOLD) {
         e.preventDefault();
         lastTapTimeRef.current = 0;
-        callback();
+        callbackRef.current();
       } else {
         lastTapTimeRef.current = now;
       }
     },
-    [callback],
+    [],
   );
 
   const ref: RefCallback<HTMLElement> = useCallback(
@@ -80,8 +83,8 @@ export function useDoubleTap(callback: (() => void) | undefined) {
   const onDoubleClick = useCallback(() => {
     // On touch devices, ignore synthesized dblclick events entirely
     if (isTouchDeviceRef.current) return;
-    callback?.();
-  }, [callback]);
+    callbackRef.current?.();
+  }, []);
 
   return { ref, onDoubleClick };
 }
