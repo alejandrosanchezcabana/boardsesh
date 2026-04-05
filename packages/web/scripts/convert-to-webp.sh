@@ -4,6 +4,11 @@
 #
 # Usage: bash packages/web/scripts/convert-to-webp.sh
 # Run from the repo root.
+#
+# WHY WebP INSTEAD OF AVIF:
+# iOS 18.x WebKit has an AVIF decoder bug that causes horizontal image compression.
+# WebP does not have this bug and has comparable file sizes. See GitHub issue
+# boardsesh/boardsesh#1182 for the plan to re-evaluate AVIF once iOS 18.x adoption drops.
 
 set -euo pipefail
 
