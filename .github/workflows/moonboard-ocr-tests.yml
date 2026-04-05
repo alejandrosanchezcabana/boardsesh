@@ -26,6 +26,14 @@ jobs:
     - name: Setup Bun
       uses: oven-sh/setup-bun@v2
 
+    - name: Cache bun dependencies
+      uses: actions/cache@v4
+      with:
+        path: ~/.bun/install/cache
+        key: ${{ runner.os }}-bun-${{ hashFiles('bun.lock') }}
+        restore-keys: |
+          ${{ runner.os }}-bun-
+
     - name: Install system dependencies for canvas
       run: |
         sudo apt-get update
