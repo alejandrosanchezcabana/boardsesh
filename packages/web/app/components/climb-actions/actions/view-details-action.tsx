@@ -91,6 +91,13 @@ export function ViewDetailsAction({
             justifyContent: 'flex-start',
             paddingLeft: `${themeTokens.spacing[4]}px`,
             fontSize: themeTokens.typography.fontSize.base,
+            color: 'text.primary',
+            '& .MuiButton-startIcon': {
+              color: 'text.secondary',
+            },
+            '&:hover': {
+              backgroundColor: 'action.hover',
+            },
           }}
         >
           {label}

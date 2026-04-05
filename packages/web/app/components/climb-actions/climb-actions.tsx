@@ -173,7 +173,7 @@ export function ClimbActions({
   // List mode - render each action as a full-width row (for drawer menus)
   if (viewMode === 'list') {
     return (
-      <Box sx={{ display: 'flex', flexDirection: 'column' }} className={className}>
+      <Box sx={{ display: 'flex', flexDirection: 'column', py: 1 }} className={className}>
         {actionsToShow.map((actionType) => {
           const Renderer = ACTION_RENDERERS[actionType];
           if (!Renderer) return null;
