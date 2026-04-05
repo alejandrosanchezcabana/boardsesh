@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useCallback, useMemo } from 'react';
+import React, { useState, useCallback, useMemo, useRef, useEffect } from 'react';
 import IconButton from '@mui/material/IconButton';
 import { usePathname } from 'next/navigation';
 import dynamic from 'next/dynamic';
@@ -13,10 +13,12 @@ import ClimbTitle, { type ClimbTitleProps } from './climb-title';
 import DrawerClimbHeader from './drawer-climb-header';
 import { AscentStatus } from './ascent-status';
 import { ClimbActions } from '../climb-actions';
-import { useFavorite } from '../climb-actions/use-favorite';
+import { useDoubleTapFavorite } from '../climb-actions/use-double-tap-favorite';
+import HeartAnimationOverlay from './heart-animation-overlay';
 import PlaylistSelectionContent from '../climb-actions/playlist-selection-content';
 import { useOptionalQueueContext } from '../graphql-queue';
 import { useSwipeActions } from '@/app/hooks/use-swipe-actions';
+import { useDoubleTap } from '@/app/lib/hooks/use-double-tap';
 import { themeTokens } from '@/app/theme/theme-config';
 import { getGradeTintColor } from '@/app/lib/grade-colors';
 import { useIsDarkMode } from '@/app/hooks/use-is-dark-mode';
@@ -143,7 +145,21 @@ const ClimbListItem: React.FC<ClimbListItemProps> = React.memo(
     const [swipeOffset, setSwipeOffset] = useState(0);
     const queueContext = useOptionalQueueContext();
     const addToQueue = queueContext?.addToQueue;
-    const { isFavorited } = useFavorite({ climbUuid: climb.uuid });
+    const {
+      handleDoubleTap,
+      showHeart,
+      dismissHeart,
+      isFavorited,
+    } = useDoubleTapFavorite({ climbUuid: climb.uuid });
+    const { ref: doubleTapRef, onDoubleClick: handleDoubleTapClick } = useDoubleTap(handleDoubleTap);
+    const clickTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+    // Clear pending click timeout on unmount to prevent stale callbacks
+    useEffect(() => {
+      return () => {
+        if (clickTimeoutRef.current) clearTimeout(clickTimeoutRef.current);
+      };
+    }, []);
 
     // Per-direction override flag
     const hasRightOverride = Boolean(swipeRightAction);
@@ -393,15 +409,27 @@ const ClimbListItem: React.FC<ClimbListItemProps> = React.memo(
           >
             {/* Thumbnail */}
             <div
-              style={thumbnailStyle}
+              ref={doubleTapRef}
+              style={{ ...thumbnailStyle, position: 'relative' }}
               onClick={
                 onThumbnailClick
                   ? (e) => {
                       e.stopPropagation();
-                      onThumbnailClick();
+                      if (clickTimeoutRef.current) clearTimeout(clickTimeoutRef.current);
+                      clickTimeoutRef.current = setTimeout(() => {
+                        clickTimeoutRef.current = null;
+                        onThumbnailClick();
+                      }, 300);
                     }
                   : undefined
               }
+              onDoubleClick={() => {
+                if (clickTimeoutRef.current) {
+                  clearTimeout(clickTimeoutRef.current);
+                  clickTimeoutRef.current = null;
+                }
+                handleDoubleTapClick();
+              }}
             >
               <ClimbThumbnail
                 boardDetails={boardDetails}
@@ -410,6 +438,7 @@ const ClimbListItem: React.FC<ClimbListItemProps> = React.memo(
                 preferImageLayers={preferImageLayers}
                 onNavigate={onNavigate}
               />
+              <HeartAnimationOverlay visible={showHeart} onAnimationEnd={dismissHeart} size={32} />
             </div>
 
             {/* Center + Right: Name, stars, setter, colorized grade */}

@@ -7,9 +7,11 @@ import styles from './heart-animation-overlay.module.css';
 interface HeartAnimationOverlayProps {
   visible: boolean;
   onAnimationEnd: () => void;
+  /** Icon size in px. Defaults to 80. */
+  size?: number;
 }
 
-export default function HeartAnimationOverlay({ visible, onAnimationEnd }: HeartAnimationOverlayProps) {
+export default function HeartAnimationOverlay({ visible, onAnimationEnd, size = 80 }: HeartAnimationOverlayProps) {
   if (!visible) return null;
 
   return (
@@ -17,7 +19,7 @@ export default function HeartAnimationOverlay({ visible, onAnimationEnd }: Heart
       <Favorite
         className={styles.heart}
         onAnimationEnd={onAnimationEnd}
-        sx={{ fontSize: 80, color: 'white' }}
+        sx={{ fontSize: size, color: 'white' }}
       />
     </div>
   );

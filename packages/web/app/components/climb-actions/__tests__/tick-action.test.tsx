@@ -806,9 +806,6 @@ describe('TickAction', () => {
       });
       expect(onComplete).not.toHaveBeenCalled();
 
-      // onComplete fires when the drawer closes, not on the initial click
-      expect(onComplete).not.toHaveBeenCalled();
-
       await act(async () => {
         screen.getByTestId('close-drawer').click();
       });

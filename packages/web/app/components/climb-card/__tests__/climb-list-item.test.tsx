@@ -21,14 +21,32 @@ vi.mock('../../graphql-queue', () => ({
 
 vi.mock('../../climb-actions', () => ({
   ClimbActions: () => <div data-testid="climb-actions" />,
-  useFavorite: () => ({
-    isFavorited: false,
-    isLoading: false,
-    toggleFavorite: vi.fn(),
-    isAuthenticated: false,
-  }),
 }));
 
+const mockDoubleTapFavorite = {
+  handleDoubleTap: vi.fn(),
+  showHeart: false,
+  dismissHeart: vi.fn(),
+  isFavorited: false,
+  toggleFavorite: vi.fn(),
+};
+
+vi.mock('../../climb-actions/use-double-tap-favorite', () => ({
+  useDoubleTapFavorite: () => mockDoubleTapFavorite,
+}));
+
+vi.mock('../../auth/auth-modal', () => ({
+  default: () => null,
+}));
+
+vi.mock('../heart-animation-overlay', () => ({
+  default: ({ visible, onAnimationEnd, size }: { visible: boolean; onAnimationEnd: () => void; size?: number }) =>
+    visible ? <div data-testid="heart-animation-overlay" data-size={size} onClick={onAnimationEnd} /> : null,
+}));
+
+vi.mock('../drawer-favorite-button', () => ({
+  default: () => <span data-testid="drawer-favorite-button" />,
+}));
 vi.mock('@/app/hooks/use-swipe-actions', () => ({
   useSwipeActions: (options: { disabled?: boolean }) => {
     capturedSwipeOptions = options;
@@ -42,11 +60,18 @@ vi.mock('@/app/hooks/use-swipe-actions', () => ({
   },
 }));
 
+let capturedDoubleTapCallback: (() => void) | undefined;
+const mockOnDoubleClick = vi.fn();
+
 vi.mock('@/app/lib/hooks/use-double-tap', () => ({
-  useDoubleTap: () => ({
-    ref: vi.fn(),
-    onDoubleClick: vi.fn(),
-  }),
+  useDoubleTap: (callback: (() => void) | undefined) => {
+    capturedDoubleTapCallback = callback;
+    mockOnDoubleClick.mockImplementation(() => callback?.());
+    return {
+      ref: vi.fn(),
+      onDoubleClick: mockOnDoubleClick,
+    };
+  },
 }));
 
 vi.mock('@/app/lib/grade-colors', () => ({
@@ -132,6 +157,13 @@ describe('ClimbListItem', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     capturedSwipeOptions = null;
+    capturedDoubleTapCallback = undefined;
+    // Reset to default state
+    mockDoubleTapFavorite.handleDoubleTap = vi.fn();
+    mockDoubleTapFavorite.showHeart = false;
+    mockDoubleTapFavorite.dismissHeart = vi.fn();
+    mockDoubleTapFavorite.isFavorited = false;
+    mockDoubleTapFavorite.toggleFavorite = vi.fn();
   });
 
   describe('basic rendering', () => {
@@ -351,6 +383,99 @@ describe('ClimbListItem', () => {
       const contentDiv = container.querySelector('[style*="user-select: none"]') as HTMLElement;
       expect(contentDiv).toBeTruthy();
       expect(contentDiv.style.opacity).toBe('1');
+    });
+  });
+
+  describe('double-tap to like', () => {
+    it('passes handleDoubleTap to useDoubleTap hook', () => {
+      render(<ClimbListItem climb={makeClimb()} boardDetails={makeBoardDetails()} />);
+      expect(capturedDoubleTapCallback).toBe(mockDoubleTapFavorite.handleDoubleTap);
+    });
+
+    it('calls handleDoubleTap when thumbnail is double-clicked', () => {
+      render(<ClimbListItem climb={makeClimb()} boardDetails={makeBoardDetails()} />);
+
+      const thumbnail = screen.getByTestId('climb-thumbnail').parentElement!;
+      fireEvent.doubleClick(thumbnail);
+
+      expect(mockDoubleTapFavorite.handleDoubleTap).toHaveBeenCalled();
+    });
+
+    it('shows heart animation overlay when showHeart is true', () => {
+      mockDoubleTapFavorite.showHeart = true;
+      render(<ClimbListItem climb={makeClimb()} boardDetails={makeBoardDetails()} />);
+
+      expect(screen.getByTestId('heart-animation-overlay')).toBeTruthy();
+      expect(screen.getByTestId('heart-animation-overlay').getAttribute('data-size')).toBe('32');
+    });
+
+    it('does not show heart animation overlay when showHeart is false', () => {
+      mockDoubleTapFavorite.showHeart = false;
+      render(<ClimbListItem climb={makeClimb()} boardDetails={makeBoardDetails()} />);
+
+      expect(screen.queryByTestId('heart-animation-overlay')).toBeNull();
+    });
+
+    it('calls dismissHeart when heart animation ends', () => {
+      mockDoubleTapFavorite.showHeart = true;
+      render(<ClimbListItem climb={makeClimb()} boardDetails={makeBoardDetails()} />);
+
+      // Our mock uses onClick to simulate onAnimationEnd
+      fireEvent.click(screen.getByTestId('heart-animation-overlay'));
+      expect(mockDoubleTapFavorite.dismissHeart).toHaveBeenCalled();
+    });
+
+    it('delays onThumbnailClick to avoid conflict with double-click', () => {
+      vi.useFakeTimers();
+      const onThumbnailClick = vi.fn();
+      render(
+        <ClimbListItem
+          climb={makeClimb()}
+          boardDetails={makeBoardDetails()}
+          onThumbnailClick={onThumbnailClick}
+        />,
+      );
+
+      const thumbnail = screen.getByTestId('climb-thumbnail').parentElement!;
+      fireEvent.click(thumbnail);
+
+      // Should not fire immediately
+      expect(onThumbnailClick).not.toHaveBeenCalled();
+
+      // Should fire after 300ms delay
+      vi.advanceTimersByTime(300);
+      expect(onThumbnailClick).toHaveBeenCalledOnce();
+
+      vi.useRealTimers();
+    });
+
+    it('cancels pending onThumbnailClick when double-click fires', () => {
+      vi.useFakeTimers();
+      const onThumbnailClick = vi.fn();
+      render(
+        <ClimbListItem
+          climb={makeClimb()}
+          boardDetails={makeBoardDetails()}
+          onThumbnailClick={onThumbnailClick}
+        />,
+      );
+
+      const thumbnail = screen.getByTestId('climb-thumbnail').parentElement!;
+
+      // First click starts the delayed handler
+      fireEvent.click(thumbnail);
+      // Double-click cancels it and triggers the like
+      fireEvent.doubleClick(thumbnail);
+
+      // Advance past the delay
+      vi.advanceTimersByTime(300);
+
+      // onThumbnailClick should never have fired
+      expect(onThumbnailClick).not.toHaveBeenCalled();
+      // Double-tap handler should have fired
+      expect(mockDoubleTapFavorite.handleDoubleTap).toHaveBeenCalled();
+
+      vi.useRealTimers();
     });
   });
 });

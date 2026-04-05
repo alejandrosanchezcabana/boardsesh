@@ -15,9 +15,13 @@
     transform: scale(1.1);
     opacity: 1;
   }
-  80% {
+  60% {
     transform: scale(1);
-    opacity: 0.9;
+    opacity: 1;
+  }
+  85% {
+    transform: scale(1);
+    opacity: 0.8;
   }
   100% {
     transform: scale(1);
@@ -36,6 +40,6 @@
 }
 
 .heart {
-  animation: heartBurst 800ms ease-out forwards;
+  animation: heartBurst 1200ms ease-out forwards;
   filter: drop-shadow(0 2px 8px rgba(0, 0, 0, 0.4));
 }
