@@ -37,6 +37,8 @@
 		LA100032 /* LiveActivityManagerTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = LA200032 /* LiveActivityManagerTests.swift */; };
 		LA100033 /* AppIntentNavigationTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = LA200033 /* AppIntentNavigationTests.swift */; };
 		LA100040 /* BoardseshWidgets.appex in Embed App Extensions */ = {isa = PBXBuildFile; fileRef = LA300001 /* BoardseshWidgets.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
+		PI100001 /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = PI200001 /* PrivacyInfo.xcprivacy */; };
+		PI100002 /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = PI200002 /* PrivacyInfo.xcprivacy */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -106,6 +108,8 @@
 		LA200032 /* LiveActivityManagerTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LiveActivityManagerTests.swift; sourceTree = "<group>"; };
 		LA200033 /* AppIntentNavigationTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppIntentNavigationTests.swift; sourceTree = "<group>"; };
 		LA300001 /* BoardseshWidgets.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = BoardseshWidgets.appex; sourceTree = BUILT_PRODUCTS_DIR; };
+		PI200001 /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; lastKnownFileType = text.xml; path = PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
+		PI200002 /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; lastKnownFileType = text.xml; path = PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -183,6 +187,7 @@
 				504EC30E1FED79650016851F /* Assets.xcassets */,
 				504EC3101FED79650016851F /* LaunchScreen.storyboard */,
 				504EC3131FED79650016851F /* Info.plist */,
+				PI200001 /* PrivacyInfo.xcprivacy */,
 				2FAD9762203C412B000D30F8 /* config.xml */,
 				50B271D01FEDC1A000F3C39B /* public */,
 			);
@@ -219,6 +224,7 @@
 				LA200013 /* PreviousClimbIntent.swift */,
 				LA200014 /* Info.plist */,
 				LA200015 /* BoardseshWidgets.entitlements */,
+				PI200002 /* PrivacyInfo.xcprivacy */,
 			);
 			path = BoardseshWidgets;
 			sourceTree = "<group>";
@@ -341,6 +347,7 @@
 				50379B232058CBB4000EE86E /* capacitor.config.json in Resources */,
 				504EC30D1FED79650016851F /* Main.storyboard in Resources */,
 				2FAD9763203C412B000D30F8 /* config.xml in Resources */,
+				PI100001 /* PrivacyInfo.xcprivacy in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -355,6 +362,7 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				PI100002 /* PrivacyInfo.xcprivacy in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

@@ -28,7 +28,6 @@
 	<string>Main</string>
 	<key>UIRequiredDeviceCapabilities</key>
 	<array>
-		<string>armv7</string>
 		<string>bluetooth-le</string>
 	</array>
 	<key>UIBackgroundModes</key>
@@ -57,11 +56,9 @@
 	<key>NSSupportsLiveActivities</key>
 	<true/>
 	<key>NSBluetoothAlwaysUsageDescription</key>
-	<string>Boardsesh uses Bluetooth to connect to your climbing training board and illuminate routes.</string>
-	<key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
-	<string>Boardsesh uses your location to make your session discoverable to nearby climbers and support nearby session features.</string>
+	<string>Boardsesh uses Bluetooth to connect to your Kilter Board, Tension Board, or MoonBoard and light up climbing holds. No personal data is sent over Bluetooth.</string>
 	<key>NSLocationWhenInUseUsageDescription</key>
-	<string>Boardsesh uses your location to make your session discoverable to nearby climbers and support nearby session features.</string>
+	<string>Boardsesh uses your location to help you discover nearby climbing sessions in Party Mode.</string>
 	<key>UIApplicationSceneManifest</key>
 	<dict>
 		<key>UIApplicationSupportsMultipleScenes</key>
