@@ -218,14 +218,14 @@ describe('QueueClimbListItem', () => {
   });
 
   describe('swipe actions', () => {
-    it('uses default swipe thresholds with long-swipe support for playlist/actions', () => {
+    it('uses simple swipe thresholds since swipeRightAction is overridden (tick)', () => {
       render(<QueueClimbListItem {...defaultProps()} />);
 
       expect(capturedSwipeOptions).not.toBeNull();
-      // Only swipeRightAction is overridden (tick), so default thresholds apply
-      expect(capturedSwipeOptions?.swipeThreshold).toBe(90);
-      expect(capturedSwipeOptions?.maxSwipe).toBe(180);
-      expect(capturedSwipeOptions?.longSwipeRightThreshold).toBe(150);
+      // swipeRightAction is overridden (tick), so simple thresholds apply
+      expect(capturedSwipeOptions?.swipeThreshold).toBe(100);
+      expect(capturedSwipeOptions?.maxSwipe).toBe(120);
+      expect(capturedSwipeOptions?.longSwipeRightThreshold).toBeUndefined();
     });
 
     it('calls onTickClick when swiped left (tick action)', () => {
