@@ -9,6 +9,11 @@ const UART_WRITE_UUID = '6e400002-b5a3-f393-e0a9-e50e24dcca9e';
 // The plugin JS is injected by the native shell. We type only the methods we use.
 // IMPORTANT: The raw plugin's write() expects `value` as a hex string, not DataView.
 // The BleClient npm wrapper normally handles this conversion, but we bypass it.
+
+interface PluginListenerHandle {
+  remove(): Promise<void>;
+}
+
 interface CapacitorBlePlugin {
   initialize(): Promise<void>;
   isEnabled(): Promise<{ value: boolean }>;
@@ -32,6 +37,10 @@ interface CapacitorBlePlugin {
     deviceId: string;
     mtu: number;
   }): Promise<{ value: number }>;
+  addListener(
+    eventName: 'disconnected',
+    callback: (data: { deviceId: string }) => void,
+  ): Promise<PluginListenerHandle>;
 }
 
 function getBlePlugin(): CapacitorBlePlugin {
@@ -52,6 +61,7 @@ function toHexString(data: Uint8Array): string {
 export class CapacitorBleAdapter implements BluetoothAdapter {
   private deviceId: string | null = null;
   private disconnectCallback: (() => void) | null = null;
+  private disconnectListenerHandle: PluginListenerHandle | null = null;
   private mtu = 20; // Conservative default; updated via MTU negotiation after connection
 
   async isAvailable(): Promise<boolean> {
@@ -89,6 +99,15 @@ export class CapacitorBleAdapter implements BluetoothAdapter {
 
     this.deviceId = device.deviceId;
 
+    // Listen for unexpected disconnections from the native CoreBluetooth layer
+    this.disconnectListenerHandle = await ble.addListener('disconnected', (data) => {
+      if (data.deviceId === this.deviceId) {
+        this.deviceId = null;
+        this.disconnectListenerHandle = null;
+        this.disconnectCallback?.();
+      }
+    });
+
     return {
       deviceId: device.deviceId,
       deviceName: device.name,
@@ -96,6 +115,13 @@ export class CapacitorBleAdapter implements BluetoothAdapter {
   }
 
   async disconnect(): Promise<void> {
+    // Remove the disconnect listener before intentional disconnect
+    // to avoid firing the callback for user-initiated disconnections
+    if (this.disconnectListenerHandle) {
+      await this.disconnectListenerHandle.remove();
+      this.disconnectListenerHandle = null;
+    }
+
     if (this.deviceId) {
       try {
         const ble = getBlePlugin();

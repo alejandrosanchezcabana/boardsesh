@@ -1,6 +1,9 @@
 import { describe, it, expect, vi, beforeEach, afterAll } from 'vitest';
 
 // Mock window.Capacitor before importing the adapter
+const mockListenerRemove = vi.fn().mockResolvedValue(undefined);
+let disconnectListenerCallback: ((data: { deviceId: string }) => void) | null = null;
+
 const mockBlePlugin = {
   initialize: vi.fn().mockResolvedValue(undefined),
   isEnabled: vi.fn().mockResolvedValue({ value: true }),
@@ -9,6 +12,10 @@ const mockBlePlugin = {
   disconnect: vi.fn().mockResolvedValue(undefined),
   write: vi.fn().mockResolvedValue(undefined),
   requestMtu: vi.fn().mockResolvedValue({ value: 185 }),
+  addListener: vi.fn().mockImplementation((_event: string, cb: (data: { deviceId: string }) => void) => {
+    disconnectListenerCallback = cb;
+    return Promise.resolve({ remove: mockListenerRemove });
+  }),
 };
 
 // Store original window.Capacitor so we can clean up
@@ -41,6 +48,7 @@ describe('CapacitorBleAdapter', () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
+    disconnectListenerCallback = null;
     adapter = new CapacitorBleAdapter();
   });
 
@@ -86,6 +94,15 @@ describe('CapacitorBleAdapter', () => {
       });
     });
 
+    it('registers disconnect listener after connecting', async () => {
+      await adapter.requestAndConnect();
+
+      expect(mockBlePlugin.addListener).toHaveBeenCalledWith(
+        'disconnected',
+        expect.any(Function),
+      );
+    });
+
     it('falls back to default MTU when negotiation fails', async () => {
       mockBlePlugin.requestMtu.mockRejectedValueOnce(new Error('Not supported'));
       await adapter.requestAndConnect();
@@ -105,6 +122,17 @@ describe('CapacitorBleAdapter', () => {
       await adapter.disconnect();
 
       expect(mockBlePlugin.disconnect).toHaveBeenCalledWith({ deviceId: 'dev-1' });
+    });
+
+    it('removes disconnect listener before disconnecting', async () => {
+      await adapter.requestAndConnect();
+      await adapter.disconnect();
+
+      expect(mockListenerRemove).toHaveBeenCalled();
+      // Listener removal should happen before the plugin disconnect call
+      const removeOrder = mockListenerRemove.mock.invocationCallOrder[0];
+      const disconnectOrder = mockBlePlugin.disconnect.mock.invocationCallOrder[0];
+      expect(removeOrder).toBeLessThan(disconnectOrder);
     });
 
     it('does nothing when not connected', async () => {
@@ -185,6 +213,58 @@ describe('CapacitorBleAdapter', () => {
 
       // After unsubscribe, callback should be cleared
       unsub();
+    });
+
+    it('fires callback on unexpected disconnect from native layer', async () => {
+      const callback = vi.fn();
+      adapter.onDisconnect(callback);
+      await adapter.requestAndConnect();
+
+      // Simulate the native CoreBluetooth disconnect event
+      disconnectListenerCallback?.({ deviceId: 'dev-1' });
+
+      expect(callback).toHaveBeenCalledTimes(1);
+    });
+
+    it('ignores disconnect events for other devices', async () => {
+      const callback = vi.fn();
+      adapter.onDisconnect(callback);
+      await adapter.requestAndConnect();
+
+      disconnectListenerCallback?.({ deviceId: 'other-device' });
+
+      expect(callback).not.toHaveBeenCalled();
+    });
+
+    it('clears listener handle on unexpected disconnect to prevent orphaned handles', async () => {
+      const callback = vi.fn();
+      adapter.onDisconnect(callback);
+      await adapter.requestAndConnect();
+
+      // Simulate unexpected disconnect
+      disconnectListenerCallback?.({ deviceId: 'dev-1' });
+
+      // After unexpected disconnect, write should throw (deviceId cleared)
+      await expect(adapter.write(new Uint8Array([1]))).rejects.toThrow('Not connected');
+
+      // Reconnect — should register a fresh listener without orphaning the old one
+      mockListenerRemove.mockClear();
+      mockBlePlugin.addListener.mockClear();
+      await adapter.requestAndConnect();
+
+      expect(mockBlePlugin.addListener).toHaveBeenCalledTimes(1);
+      // The old handle was nulled out, so disconnect() won't try to remove it twice
+    });
+
+    it('does not fire callback on intentional disconnect', async () => {
+      const callback = vi.fn();
+      adapter.onDisconnect(callback);
+      await adapter.requestAndConnect();
+
+      // Intentional disconnect removes the listener first
+      await adapter.disconnect();
+
+      expect(callback).not.toHaveBeenCalled();
     });
   });
 });
