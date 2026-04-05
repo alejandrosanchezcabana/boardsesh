@@ -76,7 +76,7 @@ export function useLiveActivity({
   // Start/end session — only reacts to content presence and board config.
   // Does NOT restart when the current climb changes or party session toggles.
   const hasContent = queue.length > 0 || currentClimbQueueItem !== null;
-  const shouldBeActive = hasContent && stableBoardDetails !== null && available === true;
+  const shouldBeActive = isSessionActive && hasContent && stableBoardDetails !== null && available === true;
 
   useEffect(() => {
     if (!isNativeApp() || getPlatform() !== 'ios') return;
