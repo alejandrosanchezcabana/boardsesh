@@ -55,4 +55,4 @@ jobs:
       working-directory: packages/web
 
     - name: Run tests
-      run: bun run --filter=@boardsesh/web test:run -- --reporter=dot --reporter=github-actions
+      run: bun run --filter=@boardsesh/web test:run -- --reporter=verbose --reporter=github-actions
