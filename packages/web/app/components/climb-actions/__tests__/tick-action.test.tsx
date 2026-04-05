@@ -127,8 +127,8 @@ vi.mock('../../auth/auth-modal', () => ({
 }));
 
 vi.mock('../../logbook/log-ascent-drawer', () => ({
-  LogAscentDrawer: ({ open }: { open: boolean }) =>
-    open ? <div data-testid="log-ascent-drawer" /> : null,
+  LogAscentDrawer: ({ open, onClose }: { open: boolean; onClose?: () => void }) =>
+    open ? <div data-testid="log-ascent-drawer"><button data-testid="close-drawer" onClick={onClose}>Close</button></div> : null,
 }));
 
 vi.mock('../../logbook/logascent-form', () => ({
@@ -796,13 +796,20 @@ describe('TickAction', () => {
       });
     });
 
-    it('calls onComplete callback when clicked', async () => {
+    it('calls onComplete callback when drawer is closed', async () => {
       setupMocks({ hasBoardProvider: true, isAuthenticated: true });
       const onComplete = vi.fn();
       render(<TestTickAction {...defaultProps} onComplete={onComplete} />);
 
       await act(async () => {
         screen.getByRole('button', { name: /tick/i }).click();
+      });
+
+      // onComplete fires when the drawer closes, not on the initial click
+      expect(onComplete).not.toHaveBeenCalled();
+
+      await act(async () => {
+        screen.getByTestId('close-drawer').click();
       });
 
       expect(onComplete).toHaveBeenCalled();
