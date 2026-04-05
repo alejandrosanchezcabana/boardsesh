@@ -78,11 +78,13 @@ final class LiveActivityManager {
             return
         }
 
-        let content = ActivityContent(state: state, staleDate: nil)
+        let content = ActivityContent(state: state, staleDate: Date().addingTimeInterval(120))
         await activity.update(content)
         logger.info("Updated Live Activity: \(state.climbName, privacy: .public) (\(state.currentIndex + 1)/\(state.totalClimbs))")
 
         // Fire-and-forget thumbnail pre-fetch for the current and adjacent items.
+        // Strong capture of thumbnailFetcher is intentional: it's owned by the
+        // singleton LiveActivityManager, so it outlives the task.
         Task.detached(priority: .utility) { [thumbnailFetcher] in
             guard let defaults = SharedConstants.sharedDefaults else { return }
             let (items, currentIndex) = SharedQueueState.load(from: defaults)

@@ -28,6 +28,7 @@ export function useLiveActivity({
   isSessionActive,
 }: UseLiveActivityOptions): void {
   const isActiveRef = useRef(false);
+  const generationRef = useRef(0);
   const [available, setAvailable] = useState<boolean | null>(null);
 
   // Memoize queue serialization so it only recomputes when the queue array changes,
@@ -77,6 +78,10 @@ export function useLiveActivity({
       // if React re-renders before the promise resolves.
       isActiveRef.current = true;
 
+      // Track this specific start so the cleanup can detect if a newer
+      // mount has taken ownership of the flag.
+      const startGeneration = ++generationRef.current;
+
       startLiveActivitySession({
         sessionId: sessionId ?? `local-${Date.now()}`,
         serverUrl,
@@ -86,9 +91,8 @@ export function useLiveActivity({
         sizeId: stableBoardDetails.size_id,
         setIds: Array.isArray(stableBoardDetails.set_ids) ? stableBoardDetails.set_ids.join(',') : String(stableBoardDetails.set_ids),
       }).then(() => {
-        // Guard: if cleanup ran while the start was in-flight, don't send a
-        // stale update to a session that has already ended.
-        if (!isActiveRef.current) return;
+        // Guard: if cleanup ran or a newer start replaced us, bail out.
+        if (!isActiveRef.current || generationRef.current !== startGeneration) return;
         // Send an initial update immediately after start so the widget
         // doesn't stay on "Loading...". Skip in party mode — WebSocket handles updates.
         if (isSessionActive && sessionId) return;

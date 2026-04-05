@@ -18,7 +18,7 @@ public class LiveActivityPlugin: CAPPlugin, CAPBridgedPlugin {
     // MARK: - isAvailable
 
     @objc func isAvailable(_ call: CAPPluginCall) {
-        if #available(iOS 16.1, *) {
+        if #available(iOS 17.0, *) {
             let available = LiveActivityManager.shared.isAvailable
             call.resolve(["available": available])
         } else {
@@ -29,8 +29,8 @@ public class LiveActivityPlugin: CAPPlugin, CAPBridgedPlugin {
     // MARK: - startSession
 
     @objc func startSession(_ call: CAPPluginCall) {
-        guard #available(iOS 16.1, *) else {
-            call.reject("Live Activities require iOS 16.1 or later")
+        guard #available(iOS 17.0, *) else {
+            call.reject("Live Activities require iOS 17.0 or later")
             return
         }
 
@@ -125,12 +125,6 @@ public class LiveActivityPlugin: CAPPlugin, CAPBridgedPlugin {
         wsManager.onQueueStateChanged = nil
         wsManager.disconnect()
 
-        if #available(iOS 16.1, *) {
-            Task {
-                await LiveActivityManager.shared.endAllActivities()
-            }
-        }
-
         // Clear shared UserDefaults queue state.
         if let defaults = SharedConstants.sharedDefaults {
             defaults.removeObject(forKey: SharedConstants.queueItemsKey)
@@ -139,15 +133,23 @@ public class LiveActivityPlugin: CAPPlugin, CAPBridgedPlugin {
             defaults.removeObject(forKey: SharedConstants.pendingActionKey)
         }
 
-        logger.info("Ended session and cleaned up Live Activity")
-        call.resolve()
+        if #available(iOS 17.0, *) {
+            Task {
+                await LiveActivityManager.shared.endAllActivities()
+                self.logger.info("Ended session and cleaned up Live Activity")
+                call.resolve()
+            }
+        } else {
+            logger.info("Ended session")
+            call.resolve()
+        }
     }
 
     // MARK: - updateActivity
 
     @objc func updateActivity(_ call: CAPPluginCall) {
-        guard #available(iOS 16.1, *) else {
-            call.reject("Live Activities require iOS 16.1 or later")
+        guard #available(iOS 17.0, *) else {
+            call.reject("Live Activities require iOS 17.0 or later")
             return
         }
 

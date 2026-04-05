@@ -164,6 +164,9 @@ actor ThumbnailFetcher {
             try data.write(to: fileURL, options: .atomic)
 
             // Evict after writing so we stay within the cache limit.
+            // Note: called within the actor, so file I/O runs on the actor's
+            // serial executor. The cache is small (maxCachedThumbnails=10),
+            // keeping this synchronous to avoid unnecessary suspension points.
             evictOldThumbnails()
 
             return fileURL

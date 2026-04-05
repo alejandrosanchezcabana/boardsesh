@@ -48,6 +48,7 @@ final class ThumbnailFetcherTests: XCTestCase {
 
     private var tempDirectory: URL!
     private var defaults: UserDefaults!
+    private var defaultsSuiteName: String!
     private var session: URLSession!
 
     override func setUp() {
@@ -59,8 +60,8 @@ final class ThumbnailFetcherTests: XCTestCase {
         try? FileManager.default.createDirectory(at: tempDirectory, withIntermediateDirectories: true)
 
         // Use a unique suite name so tests don't interfere.
-        let suiteName = "ThumbnailFetcherTests-\(UUID().uuidString)"
-        defaults = UserDefaults(suiteName: suiteName)!
+        defaultsSuiteName = "ThumbnailFetcherTests-\(UUID().uuidString)"
+        defaults = UserDefaults(suiteName: defaultsSuiteName)!
 
         // Populate board details in shared defaults.
         defaults.set("https://boardsesh.com", forKey: SharedConstants.serverUrlKey)
@@ -78,7 +79,7 @@ final class ThumbnailFetcherTests: XCTestCase {
 
     override func tearDown() {
         try? FileManager.default.removeItem(at: tempDirectory)
-        defaults.removePersistentDomain(forName: defaults.description)
+        UserDefaults.standard.removePersistentDomain(forName: defaultsSuiteName)
         MockURLProtocol.reset()
         super.tearDown()
     }
