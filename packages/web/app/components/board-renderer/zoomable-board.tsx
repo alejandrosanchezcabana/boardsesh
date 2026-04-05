@@ -34,6 +34,7 @@ const ZoomableBoard = memo(function ZoomableBoard({ children, onZoomChange, rese
       ref={containerRef}
       className={styles.zoomContainer}
       style={{ touchAction: isZoomed ? 'none' : 'pan-y' }}
+      {...(isZoomed ? { 'data-swipe-blocked': '' } : undefined)}
     >
       <div ref={contentRef} className={styles.zoomContent}>
         {children}

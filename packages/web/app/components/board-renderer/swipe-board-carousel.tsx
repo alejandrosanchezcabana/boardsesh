@@ -34,7 +34,6 @@ export interface SwipeBoardCarouselProps {
   boardContainerClassName?: string;
   fillContainer?: boolean;
   onDoubleTap?: () => void;
-  onZoomStateChange?: (isZoomed: boolean) => void;
   showZoomHint?: boolean;
   overlay?: React.ReactNode;
 }
@@ -52,7 +51,6 @@ const SwipeBoardCarousel: React.FC<SwipeBoardCarouselProps> = ({
   boardContainerClassName,
   fillContainer,
   onDoubleTap,
-  onZoomStateChange,
   showZoomHint,
   overlay,
 }) => {
@@ -107,8 +105,7 @@ const SwipeBoardCarousel: React.FC<SwipeBoardCarouselProps> = ({
 
   const handleZoomChange = useCallback((zoomed: boolean) => {
     setIsZoomed(zoomed);
-    onZoomStateChange?.(zoomed);
-  }, [onZoomStateChange]);
+  }, []);
 
   // Merge swipe ref and double-tap ref into one callback ref
   const mergedRef = useCallback(
