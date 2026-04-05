@@ -9,9 +9,7 @@ import ToggleButton from '@mui/material/ToggleButton';
 import { useMyBoards } from '@/app/hooks/use-my-boards';
 import { useBoardDetailsMap } from '@/app/hooks/use-board-details-map';
 import { useClimbActionsData } from '@/app/hooks/use-climb-actions-data';
-import BoardScrollSection from '@/app/components/board-scroll/board-scroll-section';
-import BoardScrollCard from '@/app/components/board-scroll/board-scroll-card';
-import boardScrollStyles from '@/app/components/board-scroll/board-scroll.module.css';
+import BoardFilterStrip from '@/app/components/board-scroll/board-filter-strip';
 import ClimbsList from '@/app/components/board-page/climbs-list';
 import { FavoritesProvider } from '@/app/components/climb-actions/favorites-batch-context';
 import { PlaylistsProvider } from '@/app/components/climb-actions/playlists-batch-context';
@@ -138,31 +136,15 @@ export default function MultiboardClimbList({
   return (
     <Box>
       {/* Board filter - thumbnail scroll cards */}
-      {showBoardFilter && (myBoards.length > 0 || isLoadingBoards) && (
-        <BoardScrollSection loading={isLoadingBoards} size="small">
-          <div
-            className={`${boardScrollStyles.cardScroll} ${boardScrollStyles.cardScrollSmall}`}
-            onClick={() => onBoardSelect(null)}
-          >
-            <div className={`${boardScrollStyles.cardSquare} ${boardScrollStyles.filterSquare} ${!selectedBoard ? boardScrollStyles.cardSquareSelected : ''}`}>
-              <span className={boardScrollStyles.filterLabel}>All</span>
-            </div>
-            <div className={`${boardScrollStyles.cardName} ${!selectedBoard ? boardScrollStyles.cardNameSelected : ''}`}>
-              All Boards
-            </div>
-          </div>
-          {myBoards.map((board) => (
-            <BoardScrollCard
-              key={board.uuid}
-              userBoard={board}
-              size="small"
-              selected={selectedBoard?.uuid === board.uuid}
-              disabled={boardTypes ? !boardTypes.includes(board.boardType) : false}
-              disabledText="No climbs"
-              onClick={() => onBoardSelect(board)}
-            />
-          ))}
-        </BoardScrollSection>
+      {showBoardFilter && (
+        <BoardFilterStrip
+          boards={myBoards}
+          loading={isLoadingBoards}
+          selectedBoard={selectedBoard}
+          onBoardSelect={onBoardSelect}
+          boardTypes={boardTypes}
+          disabledText="No climbs"
+        />
       )}
 
       {isLoading && climbs.length === 0 ? (
