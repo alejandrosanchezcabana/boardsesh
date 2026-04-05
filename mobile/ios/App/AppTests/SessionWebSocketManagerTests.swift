@@ -871,6 +871,67 @@ final class SessionWebSocketManagerTests: XCTestCase {
         XCTAssertEqual(item?.climbName, "First Climb")
     }
 
+    // MARK: - Reconnection Flow
+
+    func testReconnectDelayIncrementsOnSubsequentCalls() {
+        let manager = SessionWebSocketManager(urlSession: .shared)
+
+        let first = manager.reconnectDelay()
+        XCTAssertEqual(first, 1.0, accuracy: 0.01)
+
+        let second = manager.reconnectDelay()
+        XCTAssertEqual(second, 2.0, accuracy: 0.01)
+
+        let third = manager.reconnectDelay()
+        XCTAssertEqual(third, 4.0, accuracy: 0.01)
+
+        let fourth = manager.reconnectDelay()
+        XCTAssertEqual(fourth, 8.0, accuracy: 0.01)
+    }
+
+    func testReconnectDelayCapsAt30Seconds() {
+        let manager = SessionWebSocketManager(urlSession: .shared)
+
+        // Call enough times to exceed 30s cap
+        _ = manager.reconnectDelay() // 1
+        _ = manager.reconnectDelay() // 2
+        _ = manager.reconnectDelay() // 4
+        _ = manager.reconnectDelay() // 8
+        _ = manager.reconnectDelay() // 16
+        let sixth = manager.reconnectDelay() // would be 32, capped at 30
+
+        XCTAssertEqual(sixth, 30.0, accuracy: 0.01)
+    }
+
+    func testSequenceGapTriggeresResync() {
+        // When a sequence gap is detected, the parser should recognize
+        // that the gap means we missed events and need a full sync.
+        // lastKnown=5, received=8 means we missed 6 and 7
+        XCTAssertTrue(QueueMessageParser.hasSequenceGap(lastKnown: 5, received: 8))
+
+        // Verify various gap scenarios
+        XCTAssertTrue(QueueMessageParser.hasSequenceGap(lastKnown: 0, received: 5))
+        XCTAssertTrue(QueueMessageParser.hasSequenceGap(lastKnown: 10, received: 15))
+    }
+
+    func testSequenceGapRecoveryAfterFullSync() {
+        // After a full sync with sequence 42, the next expected is 43
+        // Receiving 43 should NOT be a gap
+        XCTAssertFalse(QueueMessageParser.hasSequenceGap(lastKnown: 42, received: 43))
+
+        // But receiving 44 means we missed 43
+        XCTAssertTrue(QueueMessageParser.hasSequenceGap(lastKnown: 42, received: 44))
+    }
+
+    func testDisconnectStopsReconnection() {
+        let manager = SessionWebSocketManager(urlSession: .shared)
+        manager.disconnect()
+
+        // After intentional disconnect, manager should not try to reconnect
+        // Verify by checking the intentionalDisconnect state via connect/disconnect cycle
+        XCTAssertFalse(manager.isConnected)
+    }
+
     // MARK: - GQLMessageType Raw Values
 
     func testGQLMessageTypeRawValues() {

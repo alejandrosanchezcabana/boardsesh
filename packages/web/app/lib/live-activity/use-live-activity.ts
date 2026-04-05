@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useRef } from 'react';
+import { useEffect, useMemo, useRef } from 'react';
 import { isNativeApp, getPlatform } from '../ble/capacitor-utils';
 import {
   startLiveActivitySession,
@@ -29,6 +29,12 @@ export function useLiveActivity({
   const isActiveRef = useRef(false);
   const availableRef = useRef<boolean | null>(null);
 
+  // Stabilize boardDetails by value so reference changes don't restart the session
+  const boardKey = boardDetails
+    ? `${boardDetails.board_name}:${boardDetails.layout_id}:${boardDetails.size_id}:${boardDetails.set_ids.join(',')}`
+    : null;
+  const stableBoardDetails = useMemo(() => boardDetails, [boardKey]);
+
   // Check availability once
   useEffect(() => {
     if (!isNativeApp() || getPlatform() !== 'ios') return;
@@ -43,7 +49,7 @@ export function useLiveActivity({
     if (!isNativeApp() || getPlatform() !== 'ios') return;
 
     const hasContent = queue.length > 0 || currentClimbQueueItem !== null;
-    const shouldBeActive = hasContent && boardDetails !== null;
+    const shouldBeActive = hasContent && stableBoardDetails !== null;
 
     if (shouldBeActive && !isActiveRef.current) {
       const serverUrl = typeof window !== 'undefined' ? window.location.origin : '';
@@ -51,10 +57,10 @@ export function useLiveActivity({
       startLiveActivitySession({
         sessionId: sessionId ?? `local-${Date.now()}`,
         serverUrl,
-        boardName: boardDetails.board_name,
-        layoutId: boardDetails.layout_id,
-        sizeId: boardDetails.size_id,
-        setIds: boardDetails.set_ids.join(','),
+        boardName: stableBoardDetails.board_name,
+        layoutId: stableBoardDetails.layout_id,
+        sizeId: stableBoardDetails.size_id,
+        setIds: stableBoardDetails.set_ids.join(','),
       });
       isActiveRef.current = true;
     } else if (!shouldBeActive && isActiveRef.current) {
@@ -68,11 +74,11 @@ export function useLiveActivity({
         isActiveRef.current = false;
       }
     };
-  }, [queue.length, currentClimbQueueItem, boardDetails, isSessionActive, sessionId]);
+  }, [queue.length, currentClimbQueueItem, stableBoardDetails, isSessionActive, sessionId]);
 
   // Update on climb changes (local queue mode only; party mode uses WebSocket updates)
   useEffect(() => {
-    if (!isActiveRef.current || !currentClimbQueueItem || !boardDetails) return;
+    if (!isActiveRef.current || !currentClimbQueueItem || !stableBoardDetails) return;
     if (isSessionActive && sessionId) return;
 
     const currentIndex = queue.findIndex((q) => q.uuid === currentClimbQueueItem.uuid);
@@ -87,7 +93,6 @@ export function useLiveActivity({
       hasNext: currentIndex < queue.length - 1,
       hasPrevious: currentIndex > 0,
       climbUuid: currentClimbQueueItem.climb.uuid,
-      frames: currentClimbQueueItem.climb.frames,
       queue: queue.map((q) => ({
         uuid: q.uuid,
         climbUuid: q.climb.uuid,
@@ -98,5 +103,5 @@ export function useLiveActivity({
         setterUsername: q.climb.setter_username,
       })),
     });
-  }, [currentClimbQueueItem?.uuid, queue, boardDetails, isSessionActive, sessionId, currentClimbQueueItem]);
+  }, [currentClimbQueueItem?.uuid, queue, stableBoardDetails, isSessionActive, sessionId, currentClimbQueueItem]);
 }

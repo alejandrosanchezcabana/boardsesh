@@ -41,7 +41,6 @@ struct PreviousClimbIntent: LiveActivityIntent {
 
         // Tell the main app to send the WebSocket mutation.
         defaults.set("previous", forKey: SharedConstants.pendingActionKey)
-        defaults.synchronize()
         postDarwinNotification()
 
         return .result()

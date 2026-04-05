@@ -19,7 +19,6 @@ interface LiveActivityUpdateOptions {
   hasNext: boolean;
   hasPrevious: boolean;
   climbUuid: string;
-  frames: string;
   queue: Array<{
     uuid: string;
     climbUuid: string;

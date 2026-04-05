@@ -266,7 +266,10 @@ final class SessionWebSocketManager {
             .replacingOccurrences(of: "http://", with: "")
         let urlString = "\(wsScheme)://\(host)/graphql"
 
-        guard let url = URL(string: urlString) else { return }
+        guard let url = URL(string: urlString) else {
+            print("[SessionWS] Failed to construct URL from: \(urlString)")
+            return
+        }
 
         var request = URLRequest(url: url)
         request.addValue("graphql-transport-ws", forHTTPHeaderField: "Sec-WebSocket-Protocol")

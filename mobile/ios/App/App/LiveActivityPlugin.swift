@@ -149,7 +149,6 @@ public class LiveActivityPlugin: CAPPlugin, CAPBridgedPlugin {
         let hasNext = call.getBool("hasNext") ?? false
         let hasPrevious = call.getBool("hasPrevious") ?? false
         let climbUuid = call.getString("climbUuid") ?? ""
-        let frames = call.getString("frames") ?? ""
 
         // Parse the queue array from the call and store in shared UserDefaults
         // so App Intents can navigate locally.
