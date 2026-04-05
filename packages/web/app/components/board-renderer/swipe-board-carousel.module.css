@@ -29,7 +29,7 @@
 
 .zoomResetButton {
   position: absolute;
-  bottom: 12px;
+  bottom: 62px;
   left: 50%;
   transform: translateX(-50%);
   z-index: 5;

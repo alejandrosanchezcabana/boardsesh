@@ -313,6 +313,7 @@ const PlayViewDrawer: React.FC<PlayViewDrawerProps> = ({
                     fillContainer
                     onDoubleTap={handleDoubleTap}
                     showZoomHint
+                    isDrawerOpen={isOpen}
                     overlay={<HeartAnimationOverlay visible={showHeart} onAnimationEnd={dismissHeart} />}
                   />
                 )}

@@ -35,6 +35,7 @@ export interface SwipeBoardCarouselProps {
   fillContainer?: boolean;
   onDoubleTap?: () => void;
   showZoomHint?: boolean;
+  isDrawerOpen?: boolean;
   overlay?: React.ReactNode;
 }
 
@@ -52,6 +53,7 @@ const SwipeBoardCarousel: React.FC<SwipeBoardCarouselProps> = ({
   fillContainer,
   onDoubleTap,
   showZoomHint,
+  isDrawerOpen,
   overlay,
 }) => {
   const enterFallbackRef = useRef<NodeJS.Timeout | null>(null);
@@ -165,7 +167,7 @@ const SwipeBoardCarousel: React.FC<SwipeBoardCarouselProps> = ({
         </ZoomableBoard>
       </div>
       {overlay}
-      {showZoomHint && <ZoomHint visible={!isZoomed} />}
+      {showZoomHint && <ZoomHint visible={!isZoomed && !!isDrawerOpen} />}
       {showPeek && peekClimb && (
         <div
           className={styles.peekBoardContainer}
