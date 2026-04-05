@@ -16,9 +16,10 @@ import { useCreateSession } from '@/app/hooks/use-create-session';
 import { useSnackbar } from '@/app/components/providers/snackbar-provider';
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
-import { constructBoardSlugListUrl } from '@/app/lib/url-utils';
+import { constructBoardSlugListUrl, getBaseBoardPath } from '@/app/lib/url-utils';
 import { useAuthModal } from '@/app/components/providers/auth-modal-provider';
 import { setClimbSessionCookie } from '@/app/lib/climb-session-cookie';
+import { usePersistentSession } from '@/app/components/persistent-session/persistent-session-context';
 import { useMyBoards } from '@/app/hooks/use-my-boards';
 import { BoardConfigData } from '@/app/lib/server-board-configs';
 import type { StoredBoardConfig } from '@/app/lib/saved-boards-db';
@@ -34,6 +35,12 @@ export default function StartSeshDrawer({ open, onClose, boardConfigs }: StartSe
   const router = useRouter();
   const { showMessage } = useSnackbar();
   const { createSession, isCreating } = useCreateSession();
+  const {
+    setInitialQueueForSession,
+    localQueue,
+    localCurrentClimbQueueItem,
+    localBoardPath,
+  } = usePersistentSession();
   const { boards, isLoading: isLoadingBoards, error: boardsError } = useMyBoards(open);
 
   const [selectedBoard, setSelectedBoard] = useState<(typeof boards)[number] | null>(null);
@@ -87,6 +94,18 @@ export default function StartSeshDrawer({ open, onClose, boardConfigs }: StartSe
       }
 
       const sessionId = await createSession(formData, boardPath);
+
+      // Transfer existing local queue to the new session when the board matches.
+      // Without this, the WebSocket join sends no initial queue and the server
+      // returns an empty FullSync that wipes the user's queue.
+      if (
+        localBoardPath &&
+        (localQueue.length > 0 || localCurrentClimbQueueItem) &&
+        getBaseBoardPath(localBoardPath) === getBaseBoardPath(boardPath)
+      ) {
+        setInitialQueueForSession(sessionId, localQueue, localCurrentClimbQueueItem, formData.name);
+      }
+
       setClimbSessionCookie(sessionId);
       router.push(navigateUrl);
 
