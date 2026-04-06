@@ -279,13 +279,28 @@ const SwipeableDrawer: React.FC<SwipeableDrawerProps> = ({
         ? `translate(${sign * maxTranslate}px, 0)`
         : `translate(0, ${sign * maxTranslate}px)`;
 
+      // Calculate duration proportional to remaining distance so the animation
+      // feels like it carries the fling momentum. A short fling from near the
+      // top has more distance → longer duration. A deep fling has less → snappier.
+      const currentMatch = paper.style.transform.match(/translate\(\s*(.+?)px\s*,\s*(.+?)px\s*\)/);
+      let currentTranslate = 0;
+      if (currentMatch) {
+        currentTranslate = Math.abs(parseFloat(isHorizontal ? currentMatch[1] : currentMatch[2]));
+      }
+      const remaining = maxTranslate - currentTranslate;
+      const fraction = remaining / maxTranslate;
+      // Base speed: cross the full distance in 300ms. Minimum 120ms so it doesn't
+      // feel instant, maximum 300ms so it doesn't feel sluggish.
+      const duration = Math.max(120, Math.min(300, fraction * 300));
+
       // Force reflow so the browser commits the current swipe position as the
       // transition start value. Without this, setting transition + transform in
       // the same microtask can cause browsers to skip the animation.
       void paper.offsetHeight;
 
-      paper.style.transition = 'transform 200ms cubic-bezier(0.4, 0, 0.2, 1)';
-      paper.style.webkitTransition = '-webkit-transform 200ms cubic-bezier(0.4, 0, 0.2, 1)';
+      const ease = 'cubic-bezier(0.0, 0, 0.2, 1)'; // decelerate — momentum feel
+      paper.style.transition = `transform ${duration}ms ${ease}`;
+      paper.style.webkitTransition = `-webkit-transform ${duration}ms ${ease}`;
       paper.style.transform = target;
       paper.style.webkitTransform = target;
 
@@ -293,7 +308,7 @@ const SwipeableDrawer: React.FC<SwipeableDrawerProps> = ({
       clearTimeout(closeAnimRef.current);
       closeAnimRef.current = window.setTimeout(() => {
         onClose?.();
-      }, 210);
+      }, duration + 10);
       return;
     }
     onClose?.();
