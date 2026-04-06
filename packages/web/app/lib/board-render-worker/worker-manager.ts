@@ -39,11 +39,11 @@ function cachePut(key: string, bitmap: ImageBitmap): void {
 }
 
 // --- Worker pool ---
-// Mobile (Capacitor) has constrained memory and CPU — keep workers low.
-// Browser tabs share resources, so also keep it light.
+// Capacitor WebView is a dedicated app context — can afford more workers.
+// Browser tabs share resources, so keep it lighter.
 function getPoolSize(): number {
   if (typeof window === 'undefined') return 1;
-  return isCapacitor() ? 2 : 3;
+  return isCapacitor() ? 5 : 3;
 }
 
 type PendingRequest = {

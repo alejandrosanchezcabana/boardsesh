@@ -675,7 +675,7 @@ describe('worker pool size', () => {
     });
   });
 
-  it('creates 2 workers in a Capacitor environment', async () => {
+  it('creates 5 workers in a Capacitor environment', async () => {
     stubGlobals();
 
     // Override isCapacitor to return true before importing worker-manager
@@ -691,7 +691,7 @@ describe('worker pool size', () => {
     });
 
     await vi.waitFor(() => {
-      expect(fakeWorkerInstances.length).toBe(2);
+      expect(fakeWorkerInstances.length).toBe(5);
     });
   });
 });
