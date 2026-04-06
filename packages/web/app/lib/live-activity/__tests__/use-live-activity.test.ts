@@ -18,12 +18,14 @@ const mockIsLiveActivityAvailable = vi.fn<() => Promise<boolean>>(() => Promise.
 const mockStartLiveActivitySession = vi.fn<() => Promise<void>>(() => Promise.resolve());
 const mockEndLiveActivitySession = vi.fn<() => Promise<void>>(() => Promise.resolve());
 const mockUpdateLiveActivity = vi.fn<() => Promise<void>>(() => Promise.resolve());
+const mockUpdateLiveActivityClimb = vi.fn<() => Promise<void>>(() => Promise.resolve());
 
 vi.mock('../live-activity-plugin', () => ({
   isLiveActivityAvailable: () => mockIsLiveActivityAvailable(),
   startLiveActivitySession: (...args: unknown[]) => mockStartLiveActivitySession(...(args as [])),
   endLiveActivitySession: (...args: unknown[]) => mockEndLiveActivitySession(...(args as [])),
   updateLiveActivity: (...args: unknown[]) => mockUpdateLiveActivity(...(args as [])),
+  updateLiveActivityClimb: (...args: unknown[]) => mockUpdateLiveActivityClimb(...(args as [])),
 }));
 
 vi.mock('../../backend-url', () => ({
@@ -273,12 +275,14 @@ describe('useLiveActivity', () => {
     expect(mockStartLiveActivitySession).toHaveBeenCalled();
 
     mockUpdateLiveActivity.mockClear();
+    mockUpdateLiveActivityClimb.mockClear();
 
-    // Change current climb — should trigger updateActivity
+    // Change current climb — should trigger the lightweight updateActivityClimb
+    // (not the full updateActivity, since the queue didn't change)
     await hook.rerender({ currentClimbQueueItem: item2 });
 
     await act(async () => { await new Promise((r) => setTimeout(r, 50)); });
-    expect(mockUpdateLiveActivity).toHaveBeenCalledWith(
+    expect(mockUpdateLiveActivityClimb).toHaveBeenCalledWith(
       expect.objectContaining({
         climbName: 'Test Climb 2',
         currentIndex: 1,
@@ -287,6 +291,8 @@ describe('useLiveActivity', () => {
         hasPrevious: true,
       }),
     );
+    // Full updateLiveActivity should NOT have been called (queue unchanged)
+    expect(mockUpdateLiveActivity).not.toHaveBeenCalled();
 
     await hook.unmount();
   });
@@ -307,7 +313,8 @@ describe('useLiveActivity', () => {
 
     await act(async () => { await new Promise((r) => setTimeout(r, 50)); });
 
-    // JS side now always sends updates regardless of party mode
+    // JS side now always sends updates regardless of party mode.
+    // The initial render with a queue triggers the queue-sync effect (full update).
     expect(mockUpdateLiveActivity).toHaveBeenCalled();
 
     await hook.unmount();

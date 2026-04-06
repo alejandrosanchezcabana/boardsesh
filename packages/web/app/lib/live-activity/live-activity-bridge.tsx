@@ -13,10 +13,13 @@ interface LiveActivityBridgeProps {
   sessionId: string | null;
   isSessionActive: boolean;
   onSetCurrentClimb?: (item: ClimbQueueItem) => void;
+  /** Called when a widget navigation includes a correlationId (party mode optimistic path). */
+  onWidgetNavigate?: (item: ClimbQueueItem, correlationId: string) => void;
 }
 
 export default function LiveActivityBridge({
   onSetCurrentClimb,
+  onWidgetNavigate,
   ...props
 }: LiveActivityBridgeProps) {
   useLiveActivity(props);
@@ -26,6 +29,8 @@ export default function LiveActivityBridge({
   queueRef.current = props.queue;
   const onSetCurrentClimbRef = useRef(onSetCurrentClimb);
   onSetCurrentClimbRef.current = onSetCurrentClimb;
+  const onWidgetNavigateRef = useRef(onWidgetNavigate);
+  onWidgetNavigateRef.current = onWidgetNavigate;
 
   useEffect(() => {
     if (!isNativeApp() || getPlatform() !== 'ios') return;
@@ -34,10 +39,22 @@ export default function LiveActivityBridge({
 
     const handle = plugin.addListener('queueNavigate', (data: Record<string, unknown>) => {
       const currentIndex = data.currentIndex as number;
+      const correlationId = data.correlationId as string | undefined;
       const queue = queueRef.current;
-      const callback = onSetCurrentClimbRef.current;
-      if (!callback || currentIndex < 0 || currentIndex >= queue.length) return;
-      callback(queue[currentIndex]);
+      if (currentIndex < 0 || currentIndex >= queue.length) return;
+
+      const item = queue[currentIndex];
+
+      // If we have a correlationId and the optimistic handler, use it.
+      // This dispatches directly to the reducer without sending a JS mutation
+      // (the native WebSocket already sent the server mutation).
+      if (correlationId && onWidgetNavigateRef.current) {
+        onWidgetNavigateRef.current(item, correlationId);
+        return;
+      }
+
+      // Fallback: solo mode or no correlationId.
+      onSetCurrentClimbRef.current?.(item);
     });
 
     // addListener may return a Promise or a handle directly depending on Capacitor version.

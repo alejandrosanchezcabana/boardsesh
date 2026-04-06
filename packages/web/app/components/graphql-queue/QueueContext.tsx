@@ -417,6 +417,17 @@ export const GraphQLQueueProvider = ({ parsedParams, boardDetails, children, bas
     return queueItemIndex > 0 ? r.state.queue[queueItemIndex - 1] : null;
   }, []);
 
+  // Optimistic dispatch for widget navigation (Next/Previous from Live Activity).
+  // The native WebSocket already sent the server mutation, so we only need to
+  // update the local reducer state and register the correlationId for echo suppression.
+  const dispatchWidgetNavigation = useCallback((item: ClimbQueueItem, correlationId: string) => {
+    const r = latestRef.current;
+    r.dispatch({
+      type: 'DELTA_UPDATE_CURRENT_CLIMB',
+      payload: { item, shouldAddToQueue: false, correlationId },
+    });
+  }, []);
+
   const stableStartSession = useCallback((options?: { discoverable?: boolean; name?: string; sessionId?: string }) => {
     return latestRef.current.startSession(options);
   }, []);
@@ -451,6 +462,7 @@ export const GraphQLQueueProvider = ({ parsedParams, boardDetails, children, bas
     getNextClimbQueueItem,
     getPreviousClimbQueueItem,
     disconnect: stableDisconnect,
+    dispatchWidgetNavigation,
     startSession: stableStartSession,
     joinSession: stableJoinSession,
     endSession: stableEndSession,
@@ -459,6 +471,7 @@ export const GraphQLQueueProvider = ({ parsedParams, boardDetails, children, bas
     addToQueue, removeFromQueue, setCurrentClimb, setQueue,
     setCurrentClimbQueueItem, setClimbSearchParams, setCountSearchParamsAction,
     mirrorClimb, stableFetchMoreClimbs, getNextClimbQueueItem, getPreviousClimbQueueItem,
+    dispatchWidgetNavigation,
     stableDisconnect, stableStartSession, stableJoinSession, stableEndSession, stableDismissSessionSummary,
   ]);
 

@@ -1194,4 +1194,145 @@ describe('queueReducer', () => {
       expect(result.currentClimbQueueItem).toEqual(newItem);
     });
   });
+
+  describe('DELTA_UPDATE_CURRENT_CLIMB - Widget Navigation (optimistic dispatch)', () => {
+    // Widget navigation dispatches with a correlationId but without isServerEvent,
+    // simulating the optimistic path where the native WS already sent the mutation.
+    // The reducer should update state immediately and track the correlationId so the
+    // subsequent server echo is suppressed.
+
+    const itemA: ClimbQueueItem = { ...mockClimbQueueItem, uuid: 'item-a', climb: { ...mockClimb, uuid: 'climb-a', name: 'Climb A' } };
+    const itemB: ClimbQueueItem = { ...mockClimbQueueItem, uuid: 'item-b', climb: { ...mockClimb, uuid: 'climb-b', name: 'Climb B' } };
+    const itemC: ClimbQueueItem = { ...mockClimbQueueItem, uuid: 'item-c', climb: { ...mockClimb, uuid: 'climb-c', name: 'Climb C' } };
+
+    it('should optimistically navigate to next climb and track correlationId', () => {
+      const state: QueueState = {
+        ...initialState,
+        queue: [itemA, itemB, itemC],
+        currentClimbQueueItem: itemA,
+      };
+
+      const correlationId = 'native-ws-uuid-1';
+      const result = queueReducer(state, {
+        type: 'DELTA_UPDATE_CURRENT_CLIMB',
+        payload: { item: itemB, shouldAddToQueue: false, correlationId },
+      });
+
+      // Optimistic update applied
+      expect(result.currentClimbQueueItem).toEqual(itemB);
+      // correlationId tracked for echo suppression
+      expect(result.pendingCurrentClimbUpdates).toContain(correlationId);
+      // Queue unchanged (shouldAddToQueue: false)
+      expect(result.queue).toHaveLength(3);
+    });
+
+    it('should suppress the server echo matching the widget correlationId', () => {
+      const correlationId = 'native-ws-uuid-1';
+      const state: QueueState = {
+        ...initialState,
+        queue: [itemA, itemB, itemC],
+        currentClimbQueueItem: itemB, // Already updated optimistically
+        pendingCurrentClimbUpdates: [correlationId],
+      };
+
+      // Server echoes with the same correlationId
+      const result = queueReducer(state, {
+        type: 'DELTA_UPDATE_CURRENT_CLIMB',
+        payload: {
+          item: itemB,
+          shouldAddToQueue: false,
+          isServerEvent: true,
+          serverCorrelationId: correlationId,
+        },
+      });
+
+      // State unchanged — echo suppressed
+      expect(result.currentClimbQueueItem).toEqual(itemB);
+      // correlationId removed from pending
+      expect(result.pendingCurrentClimbUpdates).not.toContain(correlationId);
+    });
+
+    it('should apply a different user\'s update even with a pending widget correlationId', () => {
+      const widgetCorrelationId = 'native-ws-uuid-1';
+      const state: QueueState = {
+        ...initialState,
+        queue: [itemA, itemB, itemC],
+        currentClimbQueueItem: itemB, // Optimistically set by widget
+        pendingCurrentClimbUpdates: [widgetCorrelationId],
+      };
+
+      // Another user changes the climb (different correlationId)
+      const result = queueReducer(state, {
+        type: 'DELTA_UPDATE_CURRENT_CLIMB',
+        payload: {
+          item: itemC,
+          shouldAddToQueue: false,
+          isServerEvent: true,
+          serverCorrelationId: 'other-user-corr-1',
+        },
+      });
+
+      // Should apply (different correlationId)
+      expect(result.currentClimbQueueItem).toEqual(itemC);
+      // Widget's pending ID preserved
+      expect(result.pendingCurrentClimbUpdates).toContain(widgetCorrelationId);
+    });
+
+    it('should handle rapid widget navigations (multiple pending correlationIds)', () => {
+      const state: QueueState = {
+        ...initialState,
+        queue: [itemA, itemB, itemC],
+        currentClimbQueueItem: itemA,
+      };
+
+      // First tap: A → B
+      const corr1 = 'native-ws-uuid-1';
+      const state1 = queueReducer(state, {
+        type: 'DELTA_UPDATE_CURRENT_CLIMB',
+        payload: { item: itemB, shouldAddToQueue: false, correlationId: corr1 },
+      });
+
+      // Second tap: B → C (before server echoed first)
+      const corr2 = 'native-ws-uuid-2';
+      const state2 = queueReducer(state1, {
+        type: 'DELTA_UPDATE_CURRENT_CLIMB',
+        payload: { item: itemC, shouldAddToQueue: false, correlationId: corr2 },
+      });
+
+      // Both correlationIds tracked
+      expect(state2.pendingCurrentClimbUpdates).toContain(corr1);
+      expect(state2.pendingCurrentClimbUpdates).toContain(corr2);
+      expect(state2.currentClimbQueueItem).toEqual(itemC);
+
+      // Server echo for first tap — suppressed
+      const state3 = queueReducer(state2, {
+        type: 'DELTA_UPDATE_CURRENT_CLIMB',
+        payload: {
+          item: itemB,
+          shouldAddToQueue: false,
+          isServerEvent: true,
+          serverCorrelationId: corr1,
+        },
+      });
+
+      // Current climb stays at C (not reverted to B)
+      expect(state3.currentClimbQueueItem).toEqual(itemC);
+      expect(state3.pendingCurrentClimbUpdates).not.toContain(corr1);
+      expect(state3.pendingCurrentClimbUpdates).toContain(corr2);
+
+      // Server echo for second tap — suppressed
+      const state4 = queueReducer(state3, {
+        type: 'DELTA_UPDATE_CURRENT_CLIMB',
+        payload: {
+          item: itemC,
+          shouldAddToQueue: false,
+          isServerEvent: true,
+          serverCorrelationId: corr2,
+        },
+      });
+
+      expect(state4.currentClimbQueueItem).toEqual(itemC);
+      expect(state4.pendingCurrentClimbUpdates).toHaveLength(0);
+    });
+  });
 });

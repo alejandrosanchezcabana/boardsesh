@@ -11,6 +11,7 @@ public class LiveActivityPlugin: CAPPlugin, CAPBridgedPlugin {
         CAPPluginMethod(name: "startSession", returnType: CAPPluginReturnPromise),
         CAPPluginMethod(name: "endSession", returnType: CAPPluginReturnPromise),
         CAPPluginMethod(name: "updateActivity", returnType: CAPPluginReturnPromise),
+        CAPPluginMethod(name: "updateActivityClimb", returnType: CAPPluginReturnPromise),
     ]
 
     private let logger = Logger(subsystem: "com.boardsesh.app", category: "LiveActivityPlugin")
@@ -60,19 +61,24 @@ public class LiveActivityPlugin: CAPPlugin, CAPBridgedPlugin {
         // Read the updated queue state that the widget intent already saved.
         let (items, currentIndex) = SharedQueueState.load(from: defaults)
 
+        // Generate a shared correlationId so the JS side can register the
+        // optimistic update and suppress the server echo when it arrives.
+        let correlationId = UUID().uuidString
+
         // Send the server mutation via the native WebSocket.
         // This works even from the lock screen (no web view needed).
         if !items.isEmpty, currentIndex >= 0, currentIndex < items.count {
             let item = items[currentIndex]
-            SessionWebSocketManager.shared.navigateToItem(item, at: currentIndex, totalItems: items)
+            SessionWebSocketManager.shared.navigateToItem(item, at: currentIndex, totalItems: items, correlationId: correlationId)
         }
 
-        // Also notify JS so it can send the mutation when the web view is active.
-        // retainUntilConsumed ensures the event is queued if no listener is
-        // attached yet (e.g. app was on the lock screen).
+        // Also notify JS so it can dispatch an optimistic reducer update
+        // using the same correlationId. retainUntilConsumed ensures the event
+        // is queued if no listener is attached yet (e.g. app was on the lock screen).
         notifyListeners("queueNavigate", data: [
             "action": action,
             "currentIndex": currentIndex,
+            "correlationId": correlationId,
         ], retainUntilConsumed: true)
     }
 
@@ -273,8 +279,65 @@ public class LiveActivityPlugin: CAPPlugin, CAPBridgedPlugin {
         let activityManager = LiveActivityManager.shared
 
         Task {
-            // updateActivity already triggers thumbnail pre-fetch via LiveActivityManager
-            await activityManager.updateActivity(state: state)
+            // Skip the ActivityKit push if the native WebSocket callback already
+            // updated the Live Activity within the last 500ms. The UserDefaults
+            // write above still runs to keep state consistent.
+            let elapsed = await activityManager.timeSinceLastUpdate()
+            if let elapsed, elapsed < 0.5 {
+                self.logger.debug("Skipping redundant ActivityKit push (\(Int(elapsed * 1000))ms since last native update)")
+            } else {
+                await activityManager.updateActivity(state: state)
+            }
+        }
+
+        call.resolve()
+    }
+
+    // MARK: - updateActivityClimb (lightweight — no queue serialization)
+
+    /// Lightweight update that only sends scalar climb data + current index.
+    /// Skips re-encoding the full queue array to UserDefaults.
+    /// Use this for climb navigation; use `updateActivity` for queue changes.
+    @objc func updateActivityClimb(_ call: CAPPluginCall) {
+        guard #available(iOS 17.0, *) else {
+            call.reject("Live Activities require iOS 17.0 or later")
+            return
+        }
+
+        let climbName = call.getString("climbName") ?? ""
+        let climbDifficulty = call.getString("climbDifficulty") ?? ""
+        let angle = call.getInt("angle") ?? 0
+        let currentIndex = call.getInt("currentIndex") ?? 0
+        let totalClimbs = call.getInt("totalClimbs") ?? 0
+        let hasNext = call.getBool("hasNext") ?? false
+        let hasPrevious = call.getBool("hasPrevious") ?? false
+        let climbUuid = call.getString("climbUuid") ?? ""
+
+        // Only update the current index in shared UserDefaults (not the full items array).
+        if let defaults = SharedConstants.sharedDefaults {
+            SharedQueueState.saveCurrentIndex(currentIndex, to: defaults)
+        }
+
+        let state = ClimbSessionAttributes.ContentState(
+            climbName: climbName,
+            climbDifficulty: VGradeFormatter.formatVGrade(climbDifficulty),
+            angle: angle,
+            currentIndex: currentIndex,
+            totalClimbs: totalClimbs,
+            hasNext: hasNext,
+            hasPrevious: hasPrevious,
+            climbUuid: climbUuid
+        )
+
+        let activityManager = LiveActivityManager.shared
+
+        Task {
+            let elapsed = await activityManager.timeSinceLastUpdate()
+            if let elapsed, elapsed < 0.5 {
+                self.logger.debug("Skipping redundant climb ActivityKit push (\(Int(elapsed * 1000))ms since last native update)")
+            } else {
+                await activityManager.updateActivity(state: state)
+            }
         }
 
         call.resolve()

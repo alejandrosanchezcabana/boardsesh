@@ -63,6 +63,12 @@ enum SharedQueueState {
         if let data = try? JSONEncoder().encode(items) {
             defaults.set(data, forKey: SharedConstants.queueItemsKey)
         }
+        saveCurrentIndex(currentIndex, to: defaults)
+    }
+
+    /// Write only the current index without re-encoding the items array.
+    /// Use this for climb navigation where only the index changes.
+    static func saveCurrentIndex(_ currentIndex: Int, to defaults: UserDefaults) {
         defaults.set(currentIndex, forKey: SharedConstants.currentIndexKey)
     }
 

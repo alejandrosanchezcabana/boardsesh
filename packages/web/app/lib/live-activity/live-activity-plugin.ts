@@ -31,11 +31,25 @@ interface LiveActivityUpdateOptions {
   }>;
 }
 
+/** Lightweight update options for climb navigation (no queue array). */
+interface LiveActivityClimbUpdateOptions {
+  climbName: string;
+  climbDifficulty: string;
+  angle: number;
+  currentIndex: number;
+  totalClimbs: number;
+  hasNext: boolean;
+  hasPrevious: boolean;
+  climbUuid: string;
+}
+
 interface LiveActivityPlugin {
   isAvailable(): Promise<{ available: boolean }>;
   startSession(options: LiveActivityStartOptions): Promise<void>;
   endSession(): Promise<void>;
   updateActivity(options: LiveActivityUpdateOptions): Promise<void>;
+  /** Lightweight climb-only update — no queue serialization. */
+  updateActivityClimb(options: LiveActivityClimbUpdateOptions): Promise<void>;
 }
 
 function getPlugin(): LiveActivityPlugin | null {
@@ -86,4 +100,15 @@ export async function updateLiveActivity(options: LiveActivityUpdateOptions): Pr
   }
 }
 
-export type { LiveActivityStartOptions, LiveActivityUpdateOptions, LiveActivityPlugin };
+/** Lightweight climb-only update — skips queue serialization across the bridge. */
+export async function updateLiveActivityClimb(options: LiveActivityClimbUpdateOptions): Promise<void> {
+  const plugin = getPlugin();
+  if (!plugin) return;
+  try {
+    await plugin.updateActivityClimb(options);
+  } catch (e) {
+    console.warn('[LiveActivity] Failed to update activity climb:', e);
+  }
+}
+
+export type { LiveActivityStartOptions, LiveActivityUpdateOptions, LiveActivityClimbUpdateOptions, LiveActivityPlugin };
