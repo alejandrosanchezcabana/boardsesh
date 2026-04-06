@@ -41,7 +41,7 @@ afterAll(() => {
   }
 });
 
-import { CapacitorBleAdapter } from '../capacitor-adapter';
+import { CapacitorBleAdapter, _resetInitCache } from '../capacitor-adapter';
 
 describe('CapacitorBleAdapter', () => {
   let adapter: CapacitorBleAdapter;
@@ -49,6 +49,7 @@ describe('CapacitorBleAdapter', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     disconnectListenerCallback = null;
+    _resetInitCache();
     adapter = new CapacitorBleAdapter();
   });
 
@@ -201,6 +202,36 @@ describe('CapacitorBleAdapter', () => {
 
       const writtenValue = mockBlePlugin.write.mock.calls[0][0].value;
       expect(writtenValue).toBe('0102ff');
+    });
+
+    it('aborts remaining chunks when signal is aborted', async () => {
+      mockBlePlugin.requestMtu.mockRejectedValueOnce(new Error('Not supported'));
+      await adapter.requestAndConnect();
+
+      const controller = new AbortController();
+      // Abort after the first write completes
+      mockBlePlugin.write.mockImplementationOnce(async () => {
+        controller.abort();
+      });
+
+      // 50 bytes / 20 byte chunks = 3 writes normally, but should stop after 1
+      const data = new Uint8Array(50);
+      await expect(adapter.write(data, controller.signal)).rejects.toThrow('Write aborted');
+
+      // Only the first chunk should have been written
+      expect(mockBlePlugin.write).toHaveBeenCalledTimes(1);
+    });
+
+    it('throws AbortError immediately when signal is already aborted', async () => {
+      await adapter.requestAndConnect();
+
+      const controller = new AbortController();
+      controller.abort();
+
+      const data = new Uint8Array([1, 2, 3]);
+      await expect(adapter.write(data, controller.signal)).rejects.toThrow('Write aborted');
+
+      expect(mockBlePlugin.write).not.toHaveBeenCalled();
     });
   });
 

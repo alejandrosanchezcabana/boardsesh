@@ -33,6 +33,10 @@ vi.mock('../../graphql-queue', () => ({
   useQueueData: () => ({
     currentClimbQueueItem: mockCurrentClimbQueueItem,
   }),
+  useCurrentClimb: () => ({
+    currentClimbQueueItem: mockCurrentClimbQueueItem,
+    currentClimb: mockCurrentClimbQueueItem?.climb ?? null,
+  }),
 }));
 
 import { BluetoothProvider, useBluetoothContext } from '../bluetooth-context';
@@ -152,7 +156,9 @@ describe('BluetoothProvider', () => {
       // The useEffect triggers async sendClimb
       await act(async () => {
         await vi.waitFor(() => {
-          expect(mockSendFramesToBoard).toHaveBeenCalledWith('p1r12p2r13', false);
+          expect(mockSendFramesToBoard).toHaveBeenCalledWith(
+            'p1r12p2r13', false, expect.any(AbortSignal),
+          );
         });
       });
     });
@@ -169,7 +175,9 @@ describe('BluetoothProvider', () => {
 
       await act(async () => {
         await vi.waitFor(() => {
-          expect(mockSendFramesToBoard).toHaveBeenCalledWith('p3r14p4r15', true);
+          expect(mockSendFramesToBoard).toHaveBeenCalledWith(
+            'p3r14p4r15', true, expect.any(AbortSignal),
+          );
         });
       });
     });
@@ -262,6 +270,85 @@ describe('BluetoothProvider', () => {
         expect.any(Error),
       );
       consoleSpy.mockRestore();
+    });
+  });
+
+  describe('rapid-swiping cancellation', () => {
+    it('passes AbortSignal to sendFramesToBoard and aborts on unmount', async () => {
+      // Simulate a slow send that doesn't resolve
+      let resolveFirstSend: (value: boolean) => void;
+      mockSendFramesToBoard.mockImplementationOnce(
+        () => new Promise<boolean>((resolve) => { resolveFirstSend = resolve; }),
+      );
+      mockCurrentClimbQueueItem = {
+        climb: { uuid: 'climb-1', frames: 'p1r12', mirrored: false },
+      };
+      mockBluetoothState.isConnected = true;
+
+      const { unmount } = renderHook(() => useBluetoothContext(), {
+        wrapper: createWrapper(),
+      });
+
+      // Wait for the first send to start
+      await act(async () => {
+        await vi.waitFor(() => {
+          expect(mockSendFramesToBoard).toHaveBeenCalledTimes(1);
+        });
+      });
+
+      // Verify an AbortSignal was passed as the third argument
+      const signal = mockSendFramesToBoard.mock.calls[0][2] as AbortSignal;
+      expect(signal).toBeInstanceOf(AbortSignal);
+      expect(signal.aborted).toBe(false);
+
+      // Unmount triggers effect cleanup which aborts the controller
+      unmount();
+      expect(signal.aborted).toBe(true);
+
+      // Resolve the send — since signal is aborted, analytics should not be tracked
+      resolveFirstSend!(true);
+      // Give microtasks a chance to flush
+      await act(async () => {
+        await new Promise((r) => setTimeout(r, 10));
+      });
+      expect(mockTrack).not.toHaveBeenCalled();
+    });
+
+    it('does not track analytics when send throws after abort', async () => {
+      // When signal is already aborted, the send throws AbortError
+      // The catch block should check signal.aborted and skip analytics
+      mockSendFramesToBoard.mockImplementation(
+        (_frames: string, _mirrored: boolean, signal?: AbortSignal) => {
+          if (signal?.aborted) {
+            return Promise.reject(new DOMException('Write aborted', 'AbortError'));
+          }
+          return Promise.resolve(true);
+        },
+      );
+      mockCurrentClimbQueueItem = {
+        climb: { uuid: 'climb-1', frames: 'p1r12', mirrored: false },
+      };
+      mockBluetoothState.isConnected = true;
+
+      renderHook(() => useBluetoothContext(), {
+        wrapper: createWrapper(),
+      });
+
+      await act(async () => {
+        await vi.waitFor(() => {
+          expect(mockSendFramesToBoard).toHaveBeenCalledTimes(1);
+        });
+      });
+
+      // The signal was NOT aborted, so analytics should track success
+      await act(async () => {
+        await vi.waitFor(() => {
+          expect(mockTrack).toHaveBeenCalledWith('Climb Sent to Board Success', {
+            climbUuid: 'climb-1',
+            boardLayout: 'Original',
+          });
+        });
+      });
     });
   });
 

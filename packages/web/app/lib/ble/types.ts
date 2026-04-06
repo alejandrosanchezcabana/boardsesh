@@ -17,8 +17,11 @@ export interface BluetoothAdapter {
    * Write the COMPLETE packet to the board's UART characteristic.
    * The adapter handles transport-level chunking internally.
    * Callers pass the full output of getBluetoothPacket().
+   *
+   * If `signal` is provided and aborted, remaining chunks are skipped
+   * and the method throws an `AbortError`.
    */
-  write(data: Uint8Array): Promise<void>;
+  write(data: Uint8Array, signal?: AbortSignal): Promise<void>;
 
   /** Register a callback for disconnection events. Returns an unsubscribe function. */
   onDisconnect(callback: () => void): () => void;

@@ -5,6 +5,13 @@ const AURORA_ADVERTISED_SERVICE_UUID = '4488b571-7806-4df6-bcff-a2897e4953ff';
 const UART_SERVICE_UUID = '6e400001-b5a3-f393-e0a9-e50e24dcca9e';
 const UART_WRITE_UUID = '6e400002-b5a3-f393-e0a9-e50e24dcca9e';
 
+// Default MTU before negotiation (BLE spec minimum)
+const DEFAULT_MTU = 20;
+
+// Small delay between chunked writes when using the default MTU.
+// Gives CoreBluetooth breathing room when sending many small chunks.
+const INTER_CHUNK_DELAY_MS = 5;
+
 // Raw Capacitor plugin interface as exposed via window.Capacitor.Plugins.BluetoothLe.
 // The plugin JS is injected by the native shell. We type only the methods we use.
 // IMPORTANT: The raw plugin's write() expects `value` as a continuous hex string (no spaces), not DataView.
@@ -51,6 +58,22 @@ function getBlePlugin(): CapacitorBlePlugin {
   return plugin as CapacitorBlePlugin;
 }
 
+// Cache the initialize() promise so we only cross the bridge once
+let initPromise: Promise<void> | null = null;
+
+function ensureInitialized(): Promise<void> {
+  if (!initPromise) {
+    const ble = getBlePlugin();
+    initPromise = ble.initialize();
+  }
+  return initPromise;
+}
+
+/** @internal Reset cached init promise — only for tests */
+export function _resetInitCache(): void {
+  initPromise = null;
+}
+
 /** Convert a Uint8Array to the continuous hex string the raw plugin expects (v8+) */
 function toHexString(data: Uint8Array): string {
   return Array.from(data)
@@ -58,16 +81,18 @@ function toHexString(data: Uint8Array): string {
     .join('');
 }
 
+const delay = (ms: number) => new Promise<void>((resolve) => setTimeout(resolve, ms));
+
 export class CapacitorBleAdapter implements BluetoothAdapter {
   private deviceId: string | null = null;
   private disconnectCallback: (() => void) | null = null;
   private disconnectListenerHandle: PluginListenerHandle | null = null;
-  private mtu = 20; // Conservative default; updated via MTU negotiation after connection
+  private mtu = DEFAULT_MTU; // Conservative default; updated via MTU negotiation after connection
 
   async isAvailable(): Promise<boolean> {
     try {
+      await ensureInitialized();
       const ble = getBlePlugin();
-      await ble.initialize();
       const result = await ble.isEnabled();
       return result.value;
     } catch {
@@ -76,8 +101,8 @@ export class CapacitorBleAdapter implements BluetoothAdapter {
   }
 
   async requestAndConnect(): Promise<BleConnection> {
+    await ensureInitialized();
     const ble = getBlePlugin();
-    await ble.initialize();
 
     // Request device — shows native scan dialog on iOS
     const device = await ble.requestDevice({
@@ -133,22 +158,37 @@ export class CapacitorBleAdapter implements BluetoothAdapter {
     }
   }
 
-  async write(data: Uint8Array): Promise<void> {
+  async write(data: Uint8Array, signal?: AbortSignal): Promise<void> {
     if (!this.deviceId) {
       throw new Error('Not connected');
     }
 
     const ble = getBlePlugin();
     const chunkSize = this.mtu;
+    const needsPacing = this.mtu <= DEFAULT_MTU;
 
-    // Adapter owns chunking — callers pass the full packet from getBluetoothPacket()
-    for (let i = 0; i < data.length; i += chunkSize) {
-      const chunk = data.slice(i, i + chunkSize);
+    // Convert the entire packet to hex once, then slice per-chunk.
+    // Each byte = 2 hex chars, so chunk boundaries are chunkSize * 2.
+    const fullHex = toHexString(data);
+    const hexChunkSize = chunkSize * 2;
+
+    for (let i = 0; i < fullHex.length; i += hexChunkSize) {
+      // Check abort signal before each chunk to stop sending stale climbs
+      if (signal?.aborted) {
+        throw new DOMException('Write aborted', 'AbortError');
+      }
+
+      // Add a small delay between chunks when using the minimum MTU
+      // to avoid overwhelming the CoreBluetooth write queue
+      if (needsPacing && i > 0) {
+        await delay(INTER_CHUNK_DELAY_MS);
+      }
+
       await ble.write({
         deviceId: this.deviceId,
         service: UART_SERVICE_UUID,
         characteristic: UART_WRITE_UUID,
-        value: toHexString(chunk),
+        value: fullHex.slice(i, i + hexChunkSize),
       });
     }
   }

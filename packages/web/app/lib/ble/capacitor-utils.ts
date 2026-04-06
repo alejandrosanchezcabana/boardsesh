@@ -28,7 +28,7 @@ export const CAPACITOR_BRIDGE_TIMEOUT_MS = 3000;
  */
 export const waitForCapacitor = (
   timeoutMs = CAPACITOR_BRIDGE_TIMEOUT_MS,
-  intervalMs = 100,
+  intervalMs = 250,
 ): Promise<boolean> =>
   new Promise((resolve) => {
     if (isCapacitor()) {

@@ -90,8 +90,12 @@ export const splitMessages = (buffer: Uint8Array) =>
 export const writeCharacteristicSeries = async (
   characteristic: BluetoothRemoteGATTCharacteristic,
   messages: Uint8Array[],
+  signal?: AbortSignal,
 ) => {
   for (const message of messages) {
+    if (signal?.aborted) {
+      throw new DOMException('Write aborted', 'AbortError');
+    }
     await characteristic.writeValue(new Uint8Array(message));
   }
 };

@@ -197,6 +197,7 @@ describe('WebBluetoothAdapter', () => {
       expect(mockWriteCharacteristicSeries).toHaveBeenCalledWith(
         mockCharacteristic,
         [chunk1, chunk2],
+        undefined,
       );
     });
   });

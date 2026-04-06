@@ -1,6 +1,6 @@
 'use client';
 
-import React, { createContext, useContext, useEffect, useMemo, useState } from 'react';
+import React, { createContext, useContext, useEffect, useMemo, useRef, useState } from 'react';
 import { track } from '@vercel/analytics';
 import { useBoardBluetooth } from './use-board-bluetooth';
 import { useCurrentClimb } from '../graphql-queue';
@@ -12,12 +12,77 @@ interface BluetoothContextValue {
   loading: boolean;
   connect: (initialFrames?: string, mirrored?: boolean) => Promise<boolean>;
   disconnect: () => void;
-  sendFramesToBoard: (frames: string, mirrored?: boolean) => Promise<boolean | undefined>;
+  sendFramesToBoard: (frames: string, mirrored?: boolean, signal?: AbortSignal) => Promise<boolean | undefined>;
   isBluetoothSupported: boolean;
   isIOS: boolean;
 }
 
 const BluetoothContext = createContext<BluetoothContextValue | null>(null);
+
+/**
+ * Isolated child component that subscribes to CurrentClimbContext and auto-sends
+ * climb data over BLE. Only mounted when isConnected is true so BluetoothProvider
+ * itself never subscribes to the climb context — preventing re-renders of the
+ * entire component tree on every climb change when BT is disconnected.
+ */
+function BluetoothAutoSender({
+  sendFramesToBoard,
+  layoutName,
+}: {
+  sendFramesToBoard: (frames: string, mirrored?: boolean, signal?: AbortSignal) => Promise<boolean | undefined>;
+  layoutName: string;
+}) {
+  const { currentClimbQueueItem } = useCurrentClimb();
+  const abortControllerRef = useRef<AbortController | null>(null);
+
+  useEffect(() => {
+    if (!currentClimbQueueItem) return;
+
+    // Abort any in-flight BLE write from the previous climb
+    abortControllerRef.current?.abort();
+    const controller = new AbortController();
+    abortControllerRef.current = controller;
+
+    const sendClimb = async () => {
+      try {
+        const result = await sendFramesToBoard(
+          currentClimbQueueItem.climb.frames,
+          !!currentClimbQueueItem.climb.mirrored,
+          controller.signal,
+        );
+
+        // Skip analytics if this send was aborted (rapid swiping)
+        if (controller.signal.aborted) return;
+
+        if (result === true) {
+          track('Climb Sent to Board Success', {
+            climbUuid: currentClimbQueueItem.climb?.uuid,
+            boardLayout: layoutName,
+          });
+        } else if (result === false) {
+          track('Climb Sent to Board Failure', {
+            climbUuid: currentClimbQueueItem.climb?.uuid,
+            boardLayout: layoutName,
+          });
+        }
+      } catch (error) {
+        if (controller.signal.aborted) return;
+        console.error('Error sending climb to board:', error);
+        track('Climb Sent to Board Failure', {
+          climbUuid: currentClimbQueueItem.climb?.uuid,
+          boardLayout: layoutName,
+        });
+      }
+    };
+    sendClimb();
+
+    return () => {
+      controller.abort();
+    };
+  }, [currentClimbQueueItem, sendFramesToBoard, layoutName]);
+
+  return null;
+}
 
 export function BluetoothProvider({
   boardDetails,
@@ -26,7 +91,6 @@ export function BluetoothProvider({
   boardDetails: BoardDetails;
   children: React.ReactNode;
 }) {
-  const { currentClimbQueueItem } = useCurrentClimb();
   const { isConnected, loading, connect, disconnect, sendFramesToBoard } =
     useBoardBluetooth({ boardDetails });
 
@@ -66,40 +130,6 @@ export function BluetoothProvider({
     return () => cancelPolling?.();
   }, []);
 
-  // Auto-send climb when currentClimbQueueItem changes (only if connected)
-  useEffect(() => {
-    if (isConnected && currentClimbQueueItem) {
-      const sendClimb = async () => {
-        try {
-          const result = await sendFramesToBoard(
-            currentClimbQueueItem.climb.frames,
-            !!currentClimbQueueItem.climb.mirrored,
-          );
-          // undefined means send was not attempted (missing characteristic/frames/boardDetails)
-          // Only track analytics for explicit success (true) or failure (false)
-          if (result === true) {
-            track('Climb Sent to Board Success', {
-              climbUuid: currentClimbQueueItem.climb?.uuid,
-              boardLayout: `${boardDetails.layout_name}`,
-            });
-          } else if (result === false) {
-            track('Climb Sent to Board Failure', {
-              climbUuid: currentClimbQueueItem.climb?.uuid,
-              boardLayout: `${boardDetails.layout_name}`,
-            });
-          }
-        } catch (error) {
-          console.error('Error sending climb to board:', error);
-          track('Climb Sent to Board Failure', {
-            climbUuid: currentClimbQueueItem.climb?.uuid,
-            boardLayout: `${boardDetails.layout_name}`,
-          });
-        }
-      };
-      sendClimb();
-    }
-  }, [currentClimbQueueItem, isConnected, sendFramesToBoard, boardDetails.layout_name]);
-
   const value = useMemo(
     () => ({
       isConnected,
@@ -123,6 +153,12 @@ export function BluetoothProvider({
 
   return (
     <BluetoothContext.Provider value={value}>
+      {isConnected && (
+        <BluetoothAutoSender
+          sendFramesToBoard={sendFramesToBoard}
+          layoutName={boardDetails.layout_name ?? ''}
+        />
+      )}
       {children}
     </BluetoothContext.Provider>
   );

@@ -46,12 +46,12 @@ export class WebBluetoothAdapter implements BluetoothAdapter {
     this.characteristic = null;
   }
 
-  async write(data: Uint8Array): Promise<void> {
+  async write(data: Uint8Array, signal?: AbortSignal): Promise<void> {
     if (!this.characteristic) {
       throw new Error('Not connected');
     }
     const messages = splitMessages(data);
-    await writeCharacteristicSeries(this.characteristic, messages);
+    await writeCharacteristicSeries(this.characteristic, messages, signal);
   }
 
   onDisconnect(callback: () => void): () => void {

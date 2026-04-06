@@ -65,7 +65,7 @@ export function useBoardBluetooth({ boardDetails, onConnectionChange }: UseBoard
 
   // Function to send frames string to the board
   const sendFramesToBoard = useCallback(
-    async (frames: string, mirrored: boolean = false) => {
+    async (frames: string, mirrored: boolean = false, signal?: AbortSignal) => {
       if (!adapterRef.current || !frames || !boardDetails) return;
 
       let framesToSend = frames;
@@ -98,9 +98,13 @@ export function useBoardBluetooth({ boardDetails, onConnectionChange }: UseBoard
       const bluetoothPacket = getBluetoothPacket(framesToSend, placementPositions, boardDetails.board_name);
 
       try {
-        await adapterRef.current.write(bluetoothPacket);
+        await adapterRef.current.write(bluetoothPacket, signal);
         return true;
       } catch (error) {
+        // Abort errors are expected during rapid swiping — don't log or show them
+        if (error instanceof DOMException && error.name === 'AbortError') {
+          return;
+        }
         console.error('Error sending frames to board:', error);
         return false;
       }
