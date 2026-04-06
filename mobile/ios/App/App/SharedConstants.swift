@@ -21,6 +21,13 @@ enum SharedConstants {
 
     static let queueNavigateNotification = "com.boardsesh.app.queueNavigate"
 
+    // MARK: Live Activity
+
+    /// Minimum seconds between consecutive ActivityKit pushes.
+    /// Redundant JS-side updates that arrive within this window are skipped
+    /// because the native WebSocket callback already applied the state.
+    static let liveActivityDedupWindow: TimeInterval = 0.5
+
     // MARK: Helpers
 
     static var sharedDefaults: UserDefaults? {

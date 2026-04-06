@@ -147,8 +147,12 @@ export function useLiveActivity({
 
     // Mark that we already sent a full update this cycle.
     queueSyncedRef.current = true;
-    // Reset on next microtask so the climb-nav effect (same render) sees it,
-    // but future renders start clean.
+    // Reset on the next microtask so Effect 2 (climb-nav, declared below) sees
+    // queueSyncedRef.current === true during this render's synchronous effect
+    // flush, then starts the next render clean.
+    // IMPORTANT: Effect 1 (queue-sync) MUST remain declared before Effect 2
+    // (climb-nav) in source order. React runs effects top-to-bottom within a
+    // render, so reversing the order would cause Effect 2 to always read false.
     queueMicrotask(() => { queueSyncedRef.current = false; });
 
     updateLiveActivity({

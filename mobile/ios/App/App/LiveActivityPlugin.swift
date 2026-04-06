@@ -280,10 +280,10 @@ public class LiveActivityPlugin: CAPPlugin, CAPBridgedPlugin {
 
         Task {
             // Skip the ActivityKit push if the native WebSocket callback already
-            // updated the Live Activity within the last 500ms. The UserDefaults
+            // updated the Live Activity within the dedup window. The UserDefaults
             // write above still runs to keep state consistent.
             let elapsed = await activityManager.timeSinceLastUpdate()
-            if let elapsed, elapsed < 0.5 {
+            if let elapsed, elapsed < SharedConstants.liveActivityDedupWindow {
                 self.logger.debug("Skipping redundant ActivityKit push (\(Int(elapsed * 1000))ms since last native update)")
             } else {
                 await activityManager.updateActivity(state: state)
@@ -333,7 +333,7 @@ public class LiveActivityPlugin: CAPPlugin, CAPBridgedPlugin {
 
         Task {
             let elapsed = await activityManager.timeSinceLastUpdate()
-            if let elapsed, elapsed < 0.5 {
+            if let elapsed, elapsed < SharedConstants.liveActivityDedupWindow {
                 self.logger.debug("Skipping redundant climb ActivityKit push (\(Int(elapsed * 1000))ms since last native update)")
             } else {
                 await activityManager.updateActivity(state: state)
