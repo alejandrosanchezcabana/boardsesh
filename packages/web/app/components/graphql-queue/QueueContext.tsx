@@ -16,6 +16,7 @@ import { useClimbActionsData } from '@/app/hooks/use-climb-actions-data';
 import { SUGGESTIONS_THRESHOLD } from '../board-page/constants';
 import { useSnackbar } from '../providers/snackbar-provider';
 import SessionSummaryDialog from '../session-summary/session-summary-dialog';
+import { trackQueueOperation, trackQueueOperationError, type QueueOperationMode } from '@/app/lib/queue-metrics';
 
 import { useSessionIdManagement } from './hooks/use-session-id-management';
 import { useQueueRestoration } from './hooks/use-queue-restoration';
@@ -253,33 +254,58 @@ export const GraphQLQueueProvider = ({ parsedParams, boardDetails, children, bas
 
   // --- Stable action callbacks (read from latestRef, never recreated) ---
   const addToQueue = useCallback((climb: Climb) => {
+    const startTime = performance.now();
     const r = latestRef.current;
     if (r.guardMutation()) return;
+    const mode: QueueOperationMode = !r.isPersistentSessionActive
+      ? 'local' : r.isDisconnected ? 'party-offline' : 'party';
     const newItem = createClimbQueueItem(climb, r.clientId, r.currentUserInfo);
     r.dispatch({ type: 'DELTA_ADD_QUEUE_ITEM', payload: { item: newItem } });
     if (r.isDisconnected && r.isPersistentSessionActive) {
       r.offlineBuffer.bufferAddition(newItem);
+      trackQueueOperation('addToQueue', performance.now() - startTime, mode);
     } else if (r.hasConnected && r.isPersistentSessionActive) {
-      r.persistentSession.addQueueItem(newItem).catch((error: unknown) => console.error('Failed to add queue item:', error));
+      r.persistentSession.addQueueItem(newItem)
+        .then(() => trackQueueOperation('addToQueue', performance.now() - startTime, mode))
+        .catch((error: unknown) => {
+          console.error('Failed to add queue item:', error);
+          trackQueueOperationError('addToQueue', mode);
+        });
+    } else {
+      trackQueueOperation('addToQueue', performance.now() - startTime, mode);
     }
   }, []);
 
   const removeFromQueue = useCallback((item: ClimbQueueItem) => {
+    const startTime = performance.now();
     const r = latestRef.current;
     if (r.guardMutation()) return;
+    const mode: QueueOperationMode = !r.isPersistentSessionActive
+      ? 'local' : r.isDisconnected ? 'party-offline' : 'party';
     r.dispatch({ type: 'DELTA_REMOVE_QUEUE_ITEM', payload: { uuid: item.uuid } });
     if (!r.isDisconnected && r.hasConnected && r.isPersistentSessionActive) {
-      r.persistentSession.removeQueueItem(item.uuid).catch((error: unknown) => console.error('Failed to remove queue item:', error));
+      r.persistentSession.removeQueueItem(item.uuid)
+        .then(() => trackQueueOperation('removeFromQueue', performance.now() - startTime, mode))
+        .catch((error: unknown) => {
+          console.error('Failed to remove queue item:', error);
+          trackQueueOperationError('removeFromQueue', mode);
+        });
+    } else {
+      trackQueueOperation('removeFromQueue', performance.now() - startTime, mode);
     }
   }, []);
 
   const setCurrentClimb = useCallback(async (climb: Climb) => {
+    const startTime = performance.now();
     const r = latestRef.current;
     if (r.guardMutation()) return;
+    const mode: QueueOperationMode = !r.isPersistentSessionActive
+      ? 'local' : r.isDisconnected ? 'party-offline' : 'party';
     const newItem = createClimbQueueItem(climb, r.clientId, r.currentUserInfo);
     r.dispatch({ type: 'SET_CURRENT_CLIMB', payload: newItem });
     if (r.isDisconnected && r.isPersistentSessionActive) {
       r.offlineBuffer.bufferAddition(newItem);
+      trackQueueOperation('setCurrentClimb', performance.now() - startTime, mode);
     } else if (r.hasConnected && r.isPersistentSessionActive) {
       const previousQueue = [...r.state.queue];
       const previousCurrentClimb = r.state.currentClimbQueueItem;
@@ -290,32 +316,54 @@ export const GraphQLQueueProvider = ({ parsedParams, boardDetails, children, bas
       try {
         await r.persistentSession.addQueueItem(newItem, position);
         await r.persistentSession.setCurrentClimb(newItem, false);
+        trackQueueOperation('setCurrentClimb', performance.now() - startTime, mode);
       } catch (error: unknown) {
         console.error('Failed to set current climb, rolling back:', error);
         r.dispatch({ type: 'UPDATE_QUEUE', payload: { queue: previousQueue, currentClimbQueueItem: previousCurrentClimb } });
+        trackQueueOperationError('setCurrentClimb', mode);
       }
+    } else {
+      trackQueueOperation('setCurrentClimb', performance.now() - startTime, mode);
     }
   }, []);
 
   const setQueue = useCallback((queue: ClimbQueueItem[]) => {
+    const startTime = performance.now();
     const r = latestRef.current;
     if (r.guardMutation()) return;
+    const mode: QueueOperationMode = !r.isPersistentSessionActive
+      ? 'local' : r.isDisconnected ? 'party-offline' : 'party';
     r.dispatch({ type: 'UPDATE_QUEUE', payload: { queue, currentClimbQueueItem: r.state.currentClimbQueueItem } });
     if (!r.isDisconnected && r.hasConnected && r.isPersistentSessionActive) {
-      r.persistentSession.setQueue(queue, r.state.currentClimbQueueItem).catch((error: unknown) => console.error('Failed to set queue:', error));
+      r.persistentSession.setQueue(queue, r.state.currentClimbQueueItem)
+        .then(() => trackQueueOperation('setQueue', performance.now() - startTime, mode))
+        .catch((error: unknown) => {
+          console.error('Failed to set queue:', error);
+          trackQueueOperationError('setQueue', mode);
+        });
+    } else {
+      trackQueueOperation('setQueue', performance.now() - startTime, mode);
     }
   }, []);
 
   const setCurrentClimbQueueItem = useCallback((item: ClimbQueueItem) => {
+    const startTime = performance.now();
     const r = latestRef.current;
     if (r.guardMutation()) return;
+    const mode: QueueOperationMode = !r.isPersistentSessionActive
+      ? 'local' : r.isDisconnected ? 'party-offline' : 'party';
     const correlationId = r.clientId ? `${r.clientId}-${++r.correlationCounterRef.current}` : undefined;
     r.dispatch({ type: 'DELTA_UPDATE_CURRENT_CLIMB', payload: { item, shouldAddToQueue: item.suggested, correlationId } });
     if (!r.isDisconnected && r.hasConnected && r.isPersistentSessionActive) {
-      r.persistentSession.setCurrentClimb(item, item.suggested, correlationId).catch((error: unknown) => {
-        console.error('Failed to set current climb:', error);
-        if (correlationId) r.dispatch({ type: 'CLEANUP_PENDING_UPDATE', payload: { correlationId } });
-      });
+      r.persistentSession.setCurrentClimb(item, item.suggested, correlationId)
+        .then(() => trackQueueOperation('setCurrentClimbQueueItem', performance.now() - startTime, mode))
+        .catch((error: unknown) => {
+          console.error('Failed to set current climb:', error);
+          if (correlationId) r.dispatch({ type: 'CLEANUP_PENDING_UPDATE', payload: { correlationId } });
+          trackQueueOperationError('setCurrentClimbQueueItem', mode);
+        });
+    } else {
+      trackQueueOperation('setCurrentClimbQueueItem', performance.now() - startTime, mode);
     }
   }, []);
 
@@ -335,13 +383,23 @@ export const GraphQLQueueProvider = ({ parsedParams, boardDetails, children, bas
   }, []);
 
   const mirrorClimb = useCallback(() => {
+    const startTime = performance.now();
     const r = latestRef.current;
     if (r.guardMutation()) return;
     if (!r.state.currentClimbQueueItem?.climb) return;
+    const mode: QueueOperationMode = !r.isPersistentSessionActive
+      ? 'local' : r.isDisconnected ? 'party-offline' : 'party';
     const newMirroredState = !r.state.currentClimbQueueItem.climb?.mirrored;
     r.dispatch({ type: 'DELTA_MIRROR_CURRENT_CLIMB', payload: { mirrored: newMirroredState } });
     if (!r.isDisconnected && r.hasConnected && r.isPersistentSessionActive) {
-      r.persistentSession.mirrorCurrentClimb(newMirroredState).catch((error: unknown) => console.error('Failed to mirror climb:', error));
+      r.persistentSession.mirrorCurrentClimb(newMirroredState)
+        .then(() => trackQueueOperation('mirrorClimb', performance.now() - startTime, mode))
+        .catch((error: unknown) => {
+          console.error('Failed to mirror climb:', error);
+          trackQueueOperationError('mirrorClimb', mode);
+        });
+    } else {
+      trackQueueOperation('mirrorClimb', performance.now() - startTime, mode);
     }
   }, []);
 
