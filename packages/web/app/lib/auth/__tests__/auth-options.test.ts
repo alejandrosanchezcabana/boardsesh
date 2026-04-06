@@ -1,0 +1,459 @@
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
+
+// Mock server-only before any imports
+vi.mock('server-only', () => ({}));
+
+// Mock drizzle-orm query builder helpers (values are passed to mocked DB methods, so content is irrelevant)
+vi.mock('drizzle-orm', () => ({
+  and: vi.fn((...args: unknown[]) => ({ _type: 'and', args })),
+  eq: vi.fn((col: unknown, val: unknown) => ({ _type: 'eq', col, val })),
+  isNull: vi.fn((col: unknown) => ({ _type: 'isNull', col })),
+}));
+
+// Mock DrizzleAdapter — we only care about the signIn callback, not adapter internals
+vi.mock('@auth/drizzle-adapter', () => ({
+  DrizzleAdapter: vi.fn(() => ({})),
+}));
+
+// Mock OAuth providers — only present in the array; we test callbacks, not provider config
+vi.mock('next-auth/providers/google', () => ({ default: vi.fn(() => ({ id: 'google' })) }));
+vi.mock('next-auth/providers/apple', () => ({ default: vi.fn(() => ({ id: 'apple' })) }));
+vi.mock('next-auth/providers/facebook', () => ({ default: vi.fn(() => ({ id: 'facebook' })) }));
+// Preserve `id` and `authorize` so tests can retrieve them from authOptions.providers
+vi.mock('next-auth/providers/credentials', () => ({
+  default: vi.fn((opts: { id?: string; authorize?: unknown }) => ({
+    id: opts.id ?? 'credentials',
+    authorize: opts.authorize,
+  })),
+}));
+
+// Mock native-oauth transfer verification
+const mockVerifyNativeOAuthTransferToken = vi.fn();
+vi.mock('../native-oauth-transfer', () => ({
+  verifyNativeOAuthTransferToken: (...args: unknown[]) => mockVerifyNativeOAuthTransferToken(...args),
+}));
+
+// Mock bcrypt
+const mockBcryptCompare = vi.fn();
+vi.mock('bcryptjs', () => ({
+  default: {
+    compare: (...args: unknown[]) => mockBcryptCompare(...args),
+  },
+}));
+
+// --- DB mock ---
+// We need to be able to swap return values per-test, so keep a mutable reference.
+const mockDbUpdate = vi.fn();
+const mockDbSet = vi.fn();
+const mockDbUpdateWhere = vi.fn();
+const mockDbSelect = vi.fn();
+const mockDbFrom = vi.fn();
+const mockDbWhere = vi.fn();
+const mockDbLimit = vi.fn();
+
+vi.mock('@/app/lib/db/db', () => ({
+  getDb: () => ({
+    update: (...args: unknown[]) => mockDbUpdate(...args),
+    select: (...args: unknown[]) => mockDbSelect(...args),
+  }),
+}));
+
+vi.mock('@/app/lib/db/schema', () => ({
+  users: {
+    id: 'users.id',
+    email: 'users.email',
+    emailVerified: 'users.emailVerified',
+  },
+  accounts: {},
+  sessions: {},
+  verificationTokens: {},
+  userCredentials: {
+    userId: 'userCredentials.userId',
+    passwordHash: 'userCredentials.passwordHash',
+  },
+  userProfiles: {},
+}));
+
+// Import after mocks are registered
+import { authOptions } from '../auth-options';
+
+// Helper to grab the signIn callback
+type SignInParams = Parameters<NonNullable<NonNullable<typeof authOptions.callbacks>['signIn']>>[0];
+
+async function callSignIn(params: Partial<SignInParams>) {
+  const cb = authOptions.callbacks?.signIn;
+  if (!cb) throw new Error('signIn callback not defined');
+  return cb(params as SignInParams);
+}
+
+describe('authOptions.callbacks.signIn', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+
+    // Default DB chain: update().set().where() resolves
+    mockDbUpdate.mockReturnValue({ set: mockDbSet });
+    mockDbSet.mockReturnValue({ where: mockDbUpdateWhere });
+    mockDbUpdateWhere.mockResolvedValue(undefined);
+
+    // Default DB chain: select().from().where().limit() resolves to empty
+    mockDbSelect.mockReturnValue({ from: mockDbFrom });
+    mockDbFrom.mockReturnValue({ where: mockDbWhere });
+    mockDbWhere.mockReturnValue({ limit: mockDbLimit });
+    mockDbLimit.mockResolvedValue([]);
+  });
+
+  afterEach(() => {
+    vi.unstubAllEnvs();
+  });
+
+  // -------------------------------------------------------------------------
+  // OAuth provider paths
+  // -------------------------------------------------------------------------
+
+  describe('OAuth provider (google)', () => {
+    it('marks email as verified for new user and returns true', async () => {
+      const result = await callSignIn({
+        user: { id: 'user-1', email: 'user@example.com', name: 'Test' },
+        account: { provider: 'google', type: 'oauth' },
+      });
+
+      expect(result).toBe(true);
+      expect(mockDbUpdate).toHaveBeenCalledTimes(1);
+      expect(mockDbSet).toHaveBeenCalledWith({ emailVerified: expect.any(Date) });
+    });
+
+    it('skips DB update when user has no id', async () => {
+      const result = await callSignIn({
+        user: { email: 'user@example.com', name: 'Test' },
+        account: { provider: 'google', type: 'oauth' },
+      });
+
+      expect(result).toBe(true);
+      expect(mockDbUpdate).not.toHaveBeenCalled();
+    });
+
+    it('returns true even when DB update throws (best-effort)', async () => {
+      mockDbUpdateWhere.mockRejectedValue(new Error('DB exploded'));
+      const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
+
+      const result = await callSignIn({
+        user: { id: 'user-1', email: 'user@example.com' },
+        account: { provider: 'google', type: 'oauth' },
+      });
+
+      expect(result).toBe(true);
+      expect(warnSpy).toHaveBeenCalledWith(
+        'Failed to mark email as verified during OAuth sign-in:',
+        expect.any(Error),
+      );
+      warnSpy.mockRestore();
+    });
+
+    it('includes isNull condition so already-verified emails are not re-updated', async () => {
+      const { isNull } = await import('drizzle-orm');
+
+      await callSignIn({
+        user: { id: 'user-1', email: 'user@example.com' },
+        account: { provider: 'google', type: 'oauth' },
+      });
+
+      expect(isNull).toHaveBeenCalledWith('users.emailVerified');
+    });
+  });
+
+  describe('OAuth provider (apple)', () => {
+    it('marks email as verified and returns true', async () => {
+      const result = await callSignIn({
+        user: { id: 'user-2', email: 'apple@example.com' },
+        account: { provider: 'apple', type: 'oauth' },
+      });
+
+      expect(result).toBe(true);
+      expect(mockDbUpdate).toHaveBeenCalledTimes(1);
+    });
+  });
+
+  describe('OAuth provider (facebook)', () => {
+    it('marks email as verified and returns true', async () => {
+      const result = await callSignIn({
+        user: { id: 'user-3', email: 'fb@example.com' },
+        account: { provider: 'facebook', type: 'oauth' },
+      });
+
+      expect(result).toBe(true);
+      expect(mockDbUpdate).toHaveBeenCalledTimes(1);
+    });
+  });
+
+  // -------------------------------------------------------------------------
+  // native-oauth path (transfer token)
+  // -------------------------------------------------------------------------
+
+  describe('native-oauth provider', () => {
+    it('returns true without any DB operations', async () => {
+      const result = await callSignIn({
+        user: { id: 'user-1', email: 'user@example.com' },
+        account: { provider: 'native-oauth', type: 'credentials' },
+      });
+
+      expect(result).toBe(true);
+      expect(mockDbUpdate).not.toHaveBeenCalled();
+      expect(mockDbSelect).not.toHaveBeenCalled();
+    });
+  });
+
+  // -------------------------------------------------------------------------
+  // credentials (email/password) path
+  // -------------------------------------------------------------------------
+
+  describe('credentials provider', () => {
+    it('returns false when user has no email', async () => {
+      const result = await callSignIn({
+        user: { id: 'user-1' },
+        account: { provider: 'credentials', type: 'credentials' },
+      });
+
+      expect(result).toBe(false);
+    });
+
+    it('returns true when email verification is disabled (default)', async () => {
+      // EMAIL_VERIFICATION_ENABLED not set → disabled
+      mockDbLimit.mockResolvedValue([{ id: 'user-1', email: 'user@example.com', emailVerified: null }]);
+
+      const result = await callSignIn({
+        user: { id: 'user-1', email: 'user@example.com' },
+        account: { provider: 'credentials', type: 'credentials' },
+      });
+
+      expect(result).toBe(true);
+    });
+
+    it('returns true when email verification enabled and email is verified', async () => {
+      vi.stubEnv('EMAIL_VERIFICATION_ENABLED', 'true');
+      mockDbLimit.mockResolvedValue([
+        { id: 'user-1', email: 'user@example.com', emailVerified: new Date() },
+      ]);
+
+      const result = await callSignIn({
+        user: { id: 'user-1', email: 'user@example.com' },
+        account: { provider: 'credentials', type: 'credentials' },
+      });
+
+      expect(result).toBe(true);
+    });
+
+    it('returns redirect URL when email verification enabled and email is not verified', async () => {
+      vi.stubEnv('EMAIL_VERIFICATION_ENABLED', 'true');
+      mockDbLimit.mockResolvedValue([
+        { id: 'user-1', email: 'user@example.com', emailVerified: null },
+      ]);
+
+      const result = await callSignIn({
+        user: { id: 'user-1', email: 'user@example.com' },
+        account: { provider: 'credentials', type: 'credentials' },
+      });
+
+      expect(result).toBe('/auth/verify-request?error=EmailNotVerified');
+    });
+
+    it('returns true when email verification enabled but user not found in DB', async () => {
+      vi.stubEnv('EMAIL_VERIFICATION_ENABLED', 'true');
+      mockDbLimit.mockResolvedValue([]); // user not found
+
+      const result = await callSignIn({
+        user: { id: 'user-1', email: 'user@example.com' },
+        account: { provider: 'credentials', type: 'credentials' },
+      });
+
+      // No existingUser[0] — condition is skipped → allow sign in
+      expect(result).toBe(true);
+    });
+
+    it('returns true when EMAIL_VERIFICATION_ENABLED is not "true" (e.g. "false")', async () => {
+      vi.stubEnv('EMAIL_VERIFICATION_ENABLED', 'false');
+      mockDbLimit.mockResolvedValue([
+        { id: 'user-1', email: 'user@example.com', emailVerified: null },
+      ]);
+
+      const result = await callSignIn({
+        user: { id: 'user-1', email: 'user@example.com' },
+        account: { provider: 'credentials', type: 'credentials' },
+      });
+
+      expect(result).toBe(true);
+    });
+  });
+});
+
+// =============================================================================
+// CredentialsProvider authorize — email/password
+// =============================================================================
+
+// We need to reach into the providers array to grab the authorize function.
+// authOptions.providers is typed as Provider[], but the CredentialsProvider
+// object exposes an `authorize` method.
+
+type CredentialProviderLike = {
+  id?: string;
+  authorize?: (
+    credentials: Record<string, string> | undefined,
+  ) => Promise<{ id: string; email: string | null; name: string | null; image: string | null } | null>;
+};
+
+function getEmailCredentialsProvider(): CredentialProviderLike {
+  const providers = authOptions.providers as CredentialProviderLike[];
+  // The email/password provider is the one without an explicit id ('credentials' is the default)
+  // In the actual implementation it's the last one added and has no explicit id override.
+  // We identify it by checking which authorize function queries userCredentials (password hash).
+  // For test purposes, just grab the provider at the expected index.
+  // providers: [native-oauth, email-password] (OAuth providers absent in test env)
+  const emailProvider = providers.find((p) => p.id === undefined || p.id === 'credentials');
+  if (!emailProvider) throw new Error('Could not find email credentials provider');
+  return emailProvider;
+}
+
+function getNativeOAuthProvider(): CredentialProviderLike {
+  const providers = authOptions.providers as CredentialProviderLike[];
+  const nativeProvider = providers.find((p) => (p as { id?: string }).id === 'native-oauth');
+  if (!nativeProvider) throw new Error('Could not find native-oauth provider');
+  return nativeProvider;
+}
+
+describe('CredentialsProvider.authorize — email/password', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+
+    mockDbSelect.mockReturnValue({ from: mockDbFrom });
+    mockDbFrom.mockReturnValue({ where: mockDbWhere });
+    mockDbWhere.mockReturnValue({ limit: mockDbLimit });
+    mockDbLimit.mockResolvedValue([]);
+  });
+
+  it('returns null when credentials are missing', async () => {
+    const provider = getEmailCredentialsProvider();
+    const result = await provider.authorize?.(undefined);
+    expect(result).toBeNull();
+  });
+
+  it('returns null when email is missing', async () => {
+    const provider = getEmailCredentialsProvider();
+    const result = await provider.authorize?.({ password: 'pass' });
+    expect(result).toBeNull();
+  });
+
+  it('returns null when password is missing', async () => {
+    const provider = getEmailCredentialsProvider();
+    const result = await provider.authorize?.({ email: 'user@example.com' });
+    expect(result).toBeNull();
+  });
+
+  it('returns null when user is not found', async () => {
+    // First select (users lookup) → empty
+    mockDbLimit.mockResolvedValue([]);
+
+    const provider = getEmailCredentialsProvider();
+    const result = await provider.authorize?.({ email: 'notfound@example.com', password: 'pass' });
+    expect(result).toBeNull();
+  });
+
+  it('returns null when user has no password (OAuth-only account)', async () => {
+    // First select (users) → user found; second select (userCredentials) → empty
+    mockDbLimit
+      .mockResolvedValueOnce([{ id: 'user-1', email: 'user@example.com', name: 'Test', image: null }])
+      .mockResolvedValueOnce([]);
+
+    const provider = getEmailCredentialsProvider();
+    const result = await provider.authorize?.({ email: 'user@example.com', password: 'mypassword' });
+    expect(result).toBeNull();
+  });
+
+  it('returns null when password is incorrect', async () => {
+    mockDbLimit
+      .mockResolvedValueOnce([{ id: 'user-1', email: 'user@example.com', name: 'Test', image: null }])
+      .mockResolvedValueOnce([{ userId: 'user-1', passwordHash: '$2a$12$hashed' }]);
+    mockBcryptCompare.mockResolvedValue(false);
+
+    const provider = getEmailCredentialsProvider();
+    const result = await provider.authorize?.({ email: 'user@example.com', password: 'wrongpass' });
+    expect(result).toBeNull();
+  });
+
+  it('returns user object when credentials are valid', async () => {
+    const user = { id: 'user-1', email: 'user@example.com', name: 'Test User', image: null };
+    mockDbLimit
+      .mockResolvedValueOnce([user])
+      .mockResolvedValueOnce([{ userId: 'user-1', passwordHash: '$2a$12$hashed' }]);
+    mockBcryptCompare.mockResolvedValue(true);
+
+    const provider = getEmailCredentialsProvider();
+    const result = await provider.authorize?.({ email: 'user@example.com', password: 'correctpass' });
+
+    expect(result).toEqual({
+      id: 'user-1',
+      email: 'user@example.com',
+      name: 'Test User',
+      image: null,
+    });
+    expect(mockBcryptCompare).toHaveBeenCalledWith('correctpass', '$2a$12$hashed');
+  });
+});
+
+// =============================================================================
+// CredentialsProvider authorize — native-oauth (transfer token)
+// =============================================================================
+
+describe('CredentialsProvider.authorize — native-oauth', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+
+    mockDbSelect.mockReturnValue({ from: mockDbFrom });
+    mockDbFrom.mockReturnValue({ where: mockDbWhere });
+    mockDbWhere.mockReturnValue({ limit: mockDbLimit });
+    mockDbLimit.mockResolvedValue([]);
+  });
+
+  it('returns null when transferToken is missing', async () => {
+    const provider = getNativeOAuthProvider();
+    const result = await provider.authorize?.(undefined);
+    expect(result).toBeNull();
+  });
+
+  it('returns null when transferToken is empty string', async () => {
+    const provider = getNativeOAuthProvider();
+    const result = await provider.authorize?.({ transferToken: '' });
+    expect(result).toBeNull();
+  });
+
+  it('returns null when token verification fails', async () => {
+    mockVerifyNativeOAuthTransferToken.mockReturnValue(null);
+
+    const provider = getNativeOAuthProvider();
+    const result = await provider.authorize?.({ transferToken: 'invalid.token' });
+    expect(result).toBeNull();
+  });
+
+  it('returns null when user not found in DB', async () => {
+    mockVerifyNativeOAuthTransferToken.mockReturnValue({ userId: 'user-99', nextPath: '/' });
+    mockDbLimit.mockResolvedValue([]);
+
+    const provider = getNativeOAuthProvider();
+    const result = await provider.authorize?.({ transferToken: 'valid.token' });
+    expect(result).toBeNull();
+  });
+
+  it('returns user object when token is valid and user exists', async () => {
+    const user = { id: 'user-1', email: 'user@example.com', name: 'Test', image: '/img.png' };
+    mockVerifyNativeOAuthTransferToken.mockReturnValue({ userId: 'user-1', nextPath: '/feed' });
+    mockDbLimit.mockResolvedValue([user]);
+
+    const provider = getNativeOAuthProvider();
+    const result = await provider.authorize?.({ transferToken: 'valid.token' });
+
+    expect(result).toEqual({
+      id: 'user-1',
+      email: 'user@example.com',
+      name: 'Test',
+      image: '/img.png',
+    });
+  });
+});
