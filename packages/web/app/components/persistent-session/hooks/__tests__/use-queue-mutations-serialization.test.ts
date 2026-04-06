@@ -111,7 +111,7 @@ describe('executeWithLatestWins', () => {
     expect(refs.inFlightRef.current).toBe(false);
   });
 
-  it('drains pending after the first call errors', async () => {
+  it('drains pending after the first call errors, then re-throws', async () => {
     const { executeFn, calls } = createDeferredExecute();
 
     const promise1 = executeWithLatestWins(refs, { id: 'a', value: 1 }, executeFn);
@@ -126,8 +126,11 @@ describe('executeWithLatestWins', () => {
     expect(executeFn).toHaveBeenCalledTimes(2);
     expect(calls[1].args).toEqual({ id: 'b', value: 2 });
 
+    // Complete the drain so promise1 settles
     calls[1].resolve();
-    await promise1;
+
+    // promise1 should reject with the original error
+    await expect(promise1).rejects.toThrow('network error');
 
     expect(refs.inFlightRef.current).toBe(false);
   });
@@ -232,6 +235,36 @@ describe('executeWithLatestWins', () => {
     calls[2].resolve();
     await promise1;
 
+    expect(refs.inFlightRef.current).toBe(false);
+  });
+
+  it('propagates initial error to caller after drain completes', async () => {
+    const { executeFn, calls } = createDeferredExecute();
+
+    const promise1 = executeWithLatestWins(refs, { id: 'a', value: 1 }, executeFn);
+
+    // No pending calls - just error the initial one
+    calls[0].reject(new Error('server unavailable'));
+
+    await expect(promise1).rejects.toThrow('server unavailable');
+    expect(refs.inFlightRef.current).toBe(false);
+  });
+
+  it('does not propagate drain errors to the initial caller', async () => {
+    const { executeFn, calls } = createDeferredExecute();
+
+    const promise1 = executeWithLatestWins(refs, { id: 'a', value: 1 }, executeFn);
+    executeWithLatestWins(refs, { id: 'b', value: 2 }, executeFn);
+
+    // Initial call succeeds
+    calls[0].resolve();
+    await waitForCall(calls, 1);
+
+    // Drain call errors
+    calls[1].reject(new Error('drain failure'));
+
+    // promise1 should resolve (not reject) because the initial call succeeded
+    await expect(promise1).resolves.toBeUndefined();
     expect(refs.inFlightRef.current).toBe(false);
   });
 });

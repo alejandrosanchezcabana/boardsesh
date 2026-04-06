@@ -57,13 +57,16 @@ export async function executeWithLatestWins<TArgs>(
   }
 
   refs.inFlightRef.current = true;
+  let initialError: unknown;
   try {
     await executeFn(args);
   } catch (error) {
-    console.error('Failed to send mutation:', error);
+    initialError = error;
   }
 
-  // Drain: keep sending until no more pending args
+  // Drain: keep sending until no more pending args.
+  // Errors during drain are logged but not propagated since the original
+  // caller's context (correlation ID, analytics) doesn't apply to coalesced calls.
   while (refs.pendingRef.current !== null) {
     const next = refs.pendingRef.current;
     refs.pendingRef.current = null;
@@ -75,6 +78,12 @@ export async function executeWithLatestWins<TArgs>(
   }
 
   refs.inFlightRef.current = false;
+
+  // Re-throw the initial error so the direct caller can handle it
+  // (e.g. clean up pending correlation IDs, track error analytics).
+  if (initialError) {
+    throw initialError;
+  }
 }
 
 export function useQueueMutations({ client, session }: UseQueueMutationsArgs): QueueMutationsActions {
