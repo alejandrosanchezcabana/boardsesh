@@ -7,6 +7,7 @@ describe('FavoritesStore', () => {
   beforeEach(() => {
     // Reset store state before each test
     favoritesStore.setFavorites(new Set());
+    favoritesStore.setMeta(false, false);
   });
 
   describe('getIsFavorited', () => {
@@ -141,6 +142,56 @@ describe('FavoritesStore', () => {
       favoritesStore.setFavorites(new Set());
 
       expect(listener).toHaveBeenCalledTimes(1);
+    });
+  });
+
+  describe('setMeta / getIsLoading / getIsAuthenticated', () => {
+    it('getIsLoading returns false by default', () => {
+      expect(favoritesStore.getIsLoading()).toBe(false);
+    });
+
+    it('getIsAuthenticated returns false by default', () => {
+      expect(favoritesStore.getIsAuthenticated()).toBe(false);
+    });
+
+    it('setMeta updates isLoading', () => {
+      favoritesStore.setMeta(true, false);
+      expect(favoritesStore.getIsLoading()).toBe(true);
+    });
+
+    it('setMeta updates isAuthenticated', () => {
+      favoritesStore.setMeta(false, true);
+      expect(favoritesStore.getIsAuthenticated()).toBe(true);
+    });
+
+    it('setMeta notifies listeners when values change', () => {
+      const listener = vi.fn();
+      favoritesStore.subscribe(listener);
+
+      favoritesStore.setMeta(true, true);
+
+      expect(listener).toHaveBeenCalledTimes(1);
+    });
+
+    it('setMeta does not notify listeners when values unchanged', () => {
+      favoritesStore.setMeta(false, false);
+
+      const listener = vi.fn();
+      favoritesStore.subscribe(listener);
+
+      favoritesStore.setMeta(false, false);
+
+      expect(listener).not.toHaveBeenCalled();
+    });
+
+    it('setMeta and setFavorites share the same listener pool', () => {
+      const listener = vi.fn();
+      favoritesStore.subscribe(listener);
+
+      favoritesStore.setMeta(true, false);
+      favoritesStore.setFavorites(new Set(['climb-1']));
+
+      expect(listener).toHaveBeenCalledTimes(2);
     });
   });
 });

@@ -46,6 +46,7 @@ interface SessionDataType {
 
 // Create standalone contexts to test the isolation pattern without importing the full QueueContext module
 const CurrentClimbContext = createContext<CurrentClimbDataType | undefined>(undefined);
+const CurrentClimbUuidContext = createContext<string | null>(null);
 const QueueListContext = createContext<QueueListDataType | undefined>(undefined);
 const SearchContext = createContext<SearchDataType | undefined>(undefined);
 const SessionContext = createContext<SessionDataType | undefined>(undefined);
@@ -55,6 +56,9 @@ function useCurrentClimb(): CurrentClimbDataType {
   const ctx = useContext(CurrentClimbContext);
   if (!ctx) throw new Error('missing CurrentClimbContext');
   return ctx;
+}
+function useCurrentClimbUuid(): string | null {
+  return useContext(CurrentClimbUuidContext);
 }
 function useQueueList(): QueueListDataType {
   const ctx = useContext(QueueListContext);
@@ -194,30 +198,37 @@ function makeSessionData(overrides: Partial<SessionDataType> = {}): SessionDataT
 
 function createTestWrapper() {
   let setCurrentClimb: React.Dispatch<React.SetStateAction<CurrentClimbDataType>>;
+  let setCurrentClimbUuid: React.Dispatch<React.SetStateAction<string | null>>;
   let setQueueList: React.Dispatch<React.SetStateAction<QueueListDataType>>;
   let setSearch: React.Dispatch<React.SetStateAction<SearchDataType>>;
   let setSession: React.Dispatch<React.SetStateAction<SessionDataType>>;
 
   const Wrapper = ({ children }: { children: React.ReactNode }) => {
     const [currentClimb, _setCurrentClimb] = useState<CurrentClimbDataType>(makeCurrentClimbData());
+    const [currentClimbUuid, _setCurrentClimbUuid] = useState<string | null>(
+      makeClimbQueueItem().uuid,
+    );
     const [queueList, _setQueueList] = useState<QueueListDataType>(makeQueueListData());
     const [search, _setSearch] = useState<SearchDataType>(makeSearchData());
     const [session, _setSession] = useState<SessionDataType>(makeSessionData());
 
     setCurrentClimb = _setCurrentClimb;
+    setCurrentClimbUuid = _setCurrentClimbUuid;
     setQueueList = _setQueueList;
     setSearch = _setSearch;
     setSession = _setSession;
 
     return (
       <CurrentClimbContext.Provider value={currentClimb}>
-        <QueueListContext.Provider value={queueList}>
-          <SearchContext.Provider value={search}>
-            <SessionContext.Provider value={session}>
-              {children}
-            </SessionContext.Provider>
-          </SearchContext.Provider>
-        </QueueListContext.Provider>
+        <CurrentClimbUuidContext.Provider value={currentClimbUuid}>
+          <QueueListContext.Provider value={queueList}>
+            <SearchContext.Provider value={search}>
+              <SessionContext.Provider value={session}>
+                {children}
+              </SessionContext.Provider>
+            </SearchContext.Provider>
+          </QueueListContext.Provider>
+        </CurrentClimbUuidContext.Provider>
       </CurrentClimbContext.Provider>
     );
   };
@@ -226,6 +237,7 @@ function createTestWrapper() {
     Wrapper,
     update: {
       currentClimb: (v: CurrentClimbDataType) => act(() => setCurrentClimb(v)),
+      currentClimbUuid: (v: string | null) => act(() => setCurrentClimbUuid(v)),
       queueList: (v: QueueListDataType) => act(() => setQueueList(v)),
       search: (v: SearchDataType) => act(() => setSearch(v)),
       session: (v: SessionDataType) => act(() => setSession(v)),
@@ -459,6 +471,118 @@ describe('Fine-grained context split isolation', () => {
     expect(sessionResult.current.isSessionActive).toBe(false);
     expect(sessionResult.current.connectionState).toBe('idle');
     expect(sessionResult.current.users).toHaveLength(0);
+  });
+
+  it('CurrentClimbUuidContext does not re-render when CurrentClimbContext changes but UUID stays the same', () => {
+    // Simulates the real provider pattern: CurrentClimbContext holds the full
+    // climb object and changes whenever any field on it changes, while
+    // CurrentClimbUuidContext holds only the UUID string. When the climb
+    // object changes but the UUID stays the same, UUID subscribers should NOT
+    // re-render.
+
+    const counts = {
+      currentClimb: 0,
+      currentClimbUuid: 0,
+    };
+
+    const CurrentClimbConsumer = React.memo(function CurrentClimbConsumer() {
+      counts.currentClimb++;
+      useCurrentClimb();
+      return null;
+    });
+
+    const CurrentClimbUuidConsumer = React.memo(function CurrentClimbUuidConsumer() {
+      counts.currentClimbUuid++;
+      useCurrentClimbUuid();
+      return null;
+    });
+
+    let setCurrentClimb: React.Dispatch<React.SetStateAction<CurrentClimbDataType>>;
+
+    function TestTree({ children }: { children: React.ReactNode }) {
+      const [currentClimb, _setCurrentClimb] = useState<CurrentClimbDataType>(
+        makeCurrentClimbData(),
+      );
+      const [currentClimbUuid] = useState<string | null>('queue-item-1');
+
+      setCurrentClimb = _setCurrentClimb;
+
+      return (
+        <CurrentClimbContext.Provider value={currentClimb}>
+          <CurrentClimbUuidContext.Provider value={currentClimbUuid}>
+            <CurrentClimbConsumer />
+            <CurrentClimbUuidConsumer />
+            {children}
+          </CurrentClimbUuidContext.Provider>
+        </CurrentClimbContext.Provider>
+      );
+    }
+
+    renderHook(() => null, { wrapper: TestTree });
+
+    const initialCounts = { ...counts };
+
+    // Update the full CurrentClimbContext (new climb object) but keep UUID the same
+    act(() =>
+      setCurrentClimb(
+        makeCurrentClimbData({
+          currentClimbQueueItem: makeClimbQueueItem({
+            uuid: 'queue-item-1', // same UUID
+            climb: makeClimb({ uuid: 'climb-1', name: 'Renamed Climb', quality_average: '5' }),
+          }),
+          currentClimb: makeClimb({ uuid: 'climb-1', name: 'Renamed Climb', quality_average: '5' }),
+        }),
+      ),
+    );
+
+    // CurrentClimb consumer SHOULD have re-rendered (new object reference)
+    expect(counts.currentClimb).toBeGreaterThan(initialCounts.currentClimb);
+    // CurrentClimbUuid consumer should NOT have re-rendered (UUID unchanged, primitive string)
+    expect(counts.currentClimbUuid).toBe(initialCounts.currentClimbUuid);
+  });
+
+  it('CurrentClimbUuidContext re-renders only when UUID changes', () => {
+    const counts = {
+      currentClimbUuid: 0,
+    };
+
+    const CurrentClimbUuidConsumer = React.memo(function CurrentClimbUuidConsumer() {
+      counts.currentClimbUuid++;
+      useCurrentClimbUuid();
+      return null;
+    });
+
+    let setCurrentClimbUuid: React.Dispatch<React.SetStateAction<string | null>>;
+
+    function TestTree({ children }: { children: React.ReactNode }) {
+      const [currentClimbUuid, _setCurrentClimbUuid] = useState<string | null>('queue-item-1');
+      setCurrentClimbUuid = _setCurrentClimbUuid;
+
+      return (
+        <CurrentClimbUuidContext.Provider value={currentClimbUuid}>
+          <CurrentClimbUuidConsumer />
+          {children}
+        </CurrentClimbUuidContext.Provider>
+      );
+    }
+
+    renderHook(() => null, { wrapper: TestTree });
+
+    const initialCount = counts.currentClimbUuid;
+
+    // Set to the SAME UUID — should NOT re-render (React skips equal primitives)
+    act(() => setCurrentClimbUuid('queue-item-1'));
+    expect(counts.currentClimbUuid).toBe(initialCount);
+
+    // Set to a DIFFERENT UUID — SHOULD re-render
+    act(() => setCurrentClimbUuid('queue-item-2'));
+    expect(counts.currentClimbUuid).toBeGreaterThan(initialCount);
+
+    const afterChangeCount = counts.currentClimbUuid;
+
+    // Set to null — SHOULD re-render
+    act(() => setCurrentClimbUuid(null));
+    expect(counts.currentClimbUuid).toBeGreaterThan(afterChangeCount);
   });
 
   it('changing one context does not trigger re-renders in any other context subscriber', () => {
