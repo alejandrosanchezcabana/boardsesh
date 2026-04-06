@@ -295,6 +295,10 @@ final class SessionWebSocketManager {
     private func _openConnectionOnQueue() {
         guard let serverUrl = self.serverUrl else { return }
 
+        // Cancel any existing connection before opening a new one to prevent
+        // leaked tasks (e.g. multiple reconnects firing after backgrounding).
+        self.webSocketTask?.cancel(with: .goingAway, reason: nil)
+
         let urlString: String
         if let wsUrl = self.wsUrl, !wsUrl.isEmpty {
             urlString = wsUrl
@@ -699,6 +703,10 @@ final class SessionWebSocketManager {
 
             let delay = self.reconnectDelay()
             self.reconnectAttempt += 1
+
+            // Cancel any previously scheduled reconnect to prevent duplicate
+            // connections piling up (e.g. rapid disconnect/reconnect during background).
+            self.reconnectWorkItem?.cancel()
 
             let workItem = DispatchWorkItem { [weak self] in
                 self?.openConnection()

@@ -75,14 +75,9 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
     func sceneDidBecomeActive(_ scene: UIScene) {}
     func sceneWillResignActive(_ scene: UIScene) {}
     func sceneWillEnterForeground(_ scene: UIScene) {
-        // Dismiss any Live Activities left over from a force-quit or crash.
-        // Use Task.detached to avoid inheriting MainActor context.
-        if #available(iOS 16.1, *) {
-            Task.detached(priority: .utility) {
-                await LiveActivityManager.shared.endStaleActivities()
-                await LiveActivityManager.shared.cleanupOrphanedActivities()
-            }
-        }
+        // Live Activities auto-dismiss after their 3-minute stale date.
+        // Cold-start cleanup in scene(_:willConnectTo:) handles the rest.
+        // No work needed here — avoids ActivityKit IPC on every foreground.
     }
     func sceneDidEnterBackground(_ scene: UIScene) {}
 }
