@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useCallback, useRef } from 'react';
+import { useState, useCallback, useRef, useEffect } from 'react';
 import { useFavorite } from './use-favorite';
 import { useAuthModal } from '@/app/components/providers/auth-modal-provider';
 
@@ -30,9 +30,12 @@ export function useDoubleTapFavorite({ climbUuid }: UseDoubleTapFavoriteOptions)
   const [showHeart, setShowHeart] = useState(false);
   const { openAuthModal } = useAuthModal();
 
-  // Read isFavorited via ref at call time so handleDoubleTap stays stable
+  // Read isFavorited via ref at call time so handleDoubleTap stays stable.
+  // useEffect ensures the ref only updates when isFavorited actually changes.
   const isFavoritedRef = useRef(isFavorited);
-  isFavoritedRef.current = isFavorited;
+  useEffect(() => {
+    isFavoritedRef.current = isFavorited;
+  }, [isFavorited]);
 
   const handleDoubleTap = useCallback(() => {
     if (!isAuthenticated) {

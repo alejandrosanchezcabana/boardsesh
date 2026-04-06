@@ -25,8 +25,9 @@ class FavoritesStore {
 
   /** Bulk-replace the favorites set (called when React Query data changes). */
   setFavorites(next: Set<string>): void {
-    // Skip notification if the reference is identical (no change)
-    if (next === this.favorites) return;
+    // React Query creates new Set instances on each fetch, so reference equality
+    // almost never fires. Compare contents instead to avoid spurious notifications.
+    if (next.size === this.favorites.size && [...next].every((id) => this.favorites.has(id))) return;
     this.favorites = next;
     this.notify();
   }
