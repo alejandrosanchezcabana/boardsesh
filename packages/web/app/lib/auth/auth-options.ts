@@ -29,7 +29,7 @@ if (process.env.APPLE_ID && process.env.APPLE_SECRET) {
     AppleProvider({
       clientId: process.env.APPLE_ID,
       clientSecret: process.env.APPLE_SECRET,
-      checks: ["state"],
+      checks: ["pkce"],
     })
   );
 }
@@ -144,9 +144,9 @@ providers.push(
     })
 );
 
-// Apple Sign-In posts its callback cross-origin, so the state cookie must use
-// SameSite=None (which requires Secure). This matches what production needs;
-// Apple OAuth already requires HTTPS callback URLs.
+// Apple Sign-In posts its callback cross-origin (response_mode=form_post),
+// so verification cookies need SameSite=None (which requires Secure).
+// We override state, nonce, and pkceCodeVerifier cookies for this reason.
 const useSecureCookies =
   process.env.NEXTAUTH_URL?.startsWith("https://") ??
   !!process.env.VERCEL_URL;
@@ -171,6 +171,15 @@ export const authOptions: NextAuthOptions = {
     },
     nonce: {
       name: `${useSecureCookies ? "__Secure-" : ""}next-auth.nonce`,
+      options: {
+        httpOnly: true,
+        sameSite: useSecureCookies ? "none" : "lax",
+        path: "/",
+        secure: useSecureCookies,
+      },
+    },
+    pkceCodeVerifier: {
+      name: `${useSecureCookies ? "__Secure-" : ""}next-auth.pkce.code_verifier`,
       options: {
         httpOnly: true,
         sameSite: useSecureCookies ? "none" : "lax",
