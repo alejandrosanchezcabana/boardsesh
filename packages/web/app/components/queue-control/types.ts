@@ -73,6 +73,10 @@ export interface QueueActionsType {
   getPreviousClimbQueueItem: () => ClimbQueueItem | null;
   setQueue: (queue: ClimbQueueItem[]) => void;
   disconnect?: () => void;
+  /** Dispatch an optimistic current-climb update from a native widget navigation.
+   *  The native WebSocket already sent the server mutation, so this only updates
+   *  the local reducer state and registers the correlationId for echo suppression. */
+  dispatchWidgetNavigation?: (item: ClimbQueueItem, correlationId: string) => void;
 }
 
 // Frequently-changing state data

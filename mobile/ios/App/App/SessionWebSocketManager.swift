@@ -719,7 +719,7 @@ final class SessionWebSocketManager {
 
     /// Called by LiveActivityPlugin when the widget's Next/Previous intent fires.
     /// Sends the setCurrentClimb mutation over the native WebSocket.
-    func navigateToItem(_ item: SharedQueueItem, at index: Int, totalItems items: [SharedQueueItem]) {
+    func navigateToItem(_ item: SharedQueueItem, at index: Int, totalItems items: [SharedQueueItem], correlationId: String) {
         stateQueue.async { [weak self] in
             guard let self = self else { return }
 
@@ -728,7 +728,6 @@ final class SessionWebSocketManager {
             let previousIndex = self.currentIndex
             self.currentIndex = index
 
-            let correlationId = UUID().uuidString
             self.pendingMutations[correlationId] = previousIndex
 
             self.persistAndNotify()

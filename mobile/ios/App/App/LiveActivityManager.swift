@@ -17,6 +17,9 @@ actor LiveActivityManager {
     private let thumbnailFetcher = ThumbnailFetcher()
     private let logger = Logger(subsystem: "com.boardsesh.app", category: "LiveActivityManager")
 
+    /// Timestamp of the last ActivityKit update, used for deduplication.
+    private var lastUpdateTime: Date?
+
     /// How far in the future the stale date is set. The ping timeout timer
     /// refreshes this every 60s, so 3 minutes gives a comfortable 2× margin
     /// during normal operation. After a force-quit the activity goes stale
@@ -90,6 +93,7 @@ actor LiveActivityManager {
         // the activity shows "Session ended" as a signal.
         let content = ActivityContent(state: state, staleDate: Date().addingTimeInterval(staleInterval))
         await activity.update(content)
+        lastUpdateTime = Date()
         logger.info("Updated Live Activity: \(state.climbName, privacy: .public) (\(state.currentIndex + 1)/\(state.totalClimbs))")
 
         // Fire-and-forget thumbnail pre-fetch for the current and adjacent items.
@@ -103,6 +107,12 @@ actor LiveActivityManager {
                 currentIndex: currentIndex
             )
         }
+    }
+
+    /// Returns time since the last ActivityKit update, or nil if no update has occurred.
+    func timeSinceLastUpdate() -> TimeInterval? {
+        guard let lastUpdateTime else { return nil }
+        return Date().timeIntervalSince(lastUpdateTime)
     }
 
     // MARK: - Refresh Stale Date

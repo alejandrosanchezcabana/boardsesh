@@ -505,6 +505,7 @@ export function QueueBridgeProvider({ children }: { children: React.ReactNode })
                         sessionId={adapter.context.sessionId}
                         isSessionActive={adapter.context.isSessionActive}
                         onSetCurrentClimb={adapter.context.setCurrentClimbQueueItem}
+                        onWidgetNavigate={effectiveActions.dispatchWidgetNavigation}
                       />
                       {children}
                     </SessionContext.Provider>

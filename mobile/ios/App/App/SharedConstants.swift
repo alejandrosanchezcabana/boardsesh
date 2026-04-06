@@ -66,6 +66,12 @@ enum SharedQueueState {
         defaults.set(currentIndex, forKey: SharedConstants.currentIndexKey)
     }
 
+    /// Write only the current index without re-encoding the items array.
+    /// Use this for climb navigation where only the index changes.
+    static func saveCurrentIndex(_ currentIndex: Int, to defaults: UserDefaults) {
+        defaults.set(currentIndex, forKey: SharedConstants.currentIndexKey)
+    }
+
     static func currentItem(from defaults: UserDefaults) -> SharedQueueItem? {
         let (items, currentIndex) = load(from: defaults)
         guard currentIndex >= 0, currentIndex < items.count else { return nil }

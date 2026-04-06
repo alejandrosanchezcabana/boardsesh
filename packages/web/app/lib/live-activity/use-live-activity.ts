@@ -6,6 +6,7 @@ import {
   startLiveActivitySession,
   endLiveActivitySession,
   updateLiveActivity,
+  updateLiveActivityClimb,
   isLiveActivityAvailable,
 } from './live-activity-plugin';
 import { getBackendWsUrl } from '../backend-url';
@@ -129,9 +130,46 @@ export function useLiveActivity({
     };
   }, [shouldBeActive, stableBoardDetails, available]);
 
-  // Update Live Activity on climb changes — no session restart needed
+  // Track whether the queue-sync effect fired this render cycle so the
+  // climb-nav effect can skip its redundant lightweight update.
+  const queueSyncedRef = useRef(false);
+
+  // Effect 1: Queue sync — sends the full queue when items change (add/remove/reorder).
+  // Only depends on serializedQueue, not currentClimbQueueItem.
   useEffect(() => {
     if (!isActiveRef.current || !stableBoardDetails) return;
+
+    const displayItem = currentClimbRef.current ?? (queueRef.current.length > 0 ? queueRef.current[0] : null);
+    if (!displayItem) return;
+
+    const currentIndex = queueRef.current.findIndex((q) => q.uuid === displayItem.uuid);
+    if (currentIndex === -1) return;
+
+    // Mark that we already sent a full update this cycle.
+    queueSyncedRef.current = true;
+    // Reset on next microtask so the climb-nav effect (same render) sees it,
+    // but future renders start clean.
+    queueMicrotask(() => { queueSyncedRef.current = false; });
+
+    updateLiveActivity({
+      climbName: displayItem.climb.name,
+      climbDifficulty: displayItem.climb.difficulty,
+      angle: displayItem.climb.angle,
+      currentIndex,
+      totalClimbs: queueRef.current.length,
+      hasNext: currentIndex < queueRef.current.length - 1,
+      hasPrevious: currentIndex > 0,
+      climbUuid: displayItem.climb.uuid,
+      queue: serializedQueue,
+    });
+  }, [serializedQueue, stableBoardDetails]);
+
+  // Effect 2: Climb navigation — lightweight update with only scalar data.
+  // Fires when the current climb changes without a queue change.
+  useEffect(() => {
+    if (!isActiveRef.current || !stableBoardDetails) return;
+    // Skip if the queue-sync effect already sent a full update this cycle.
+    if (queueSyncedRef.current) return;
 
     const displayItem = currentClimbQueueItem ?? (queue.length > 0 ? queue[0] : null);
     if (!displayItem) return;
@@ -139,7 +177,7 @@ export function useLiveActivity({
     const currentIndex = queue.findIndex((q) => q.uuid === displayItem.uuid);
     if (currentIndex === -1) return;
 
-    updateLiveActivity({
+    updateLiveActivityClimb({
       climbName: displayItem.climb.name,
       climbDifficulty: displayItem.climb.difficulty,
       angle: displayItem.climb.angle,
@@ -148,7 +186,6 @@ export function useLiveActivity({
       hasNext: currentIndex < queue.length - 1,
       hasPrevious: currentIndex > 0,
       climbUuid: displayItem.climb.uuid,
-      queue: serializedQueue,
     });
-  }, [currentClimbQueueItem, queue, serializedQueue, stableBoardDetails]);
+  }, [currentClimbQueueItem, queue, stableBoardDetails]);
 }
