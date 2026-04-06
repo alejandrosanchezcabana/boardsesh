@@ -78,10 +78,10 @@ const QueueList = forwardRef<QueueListHandle, QueueListProps>(({ boardDetails, o
     setPlaylistClimb(climb);
   }, []);
   const handleCloseActions = useCallback(() => setActionsClimb(null), []);
-  const handleOpenPlaylistFromActions = useCallback((climb: Climb) => {
+  const handleOpenPlaylistFromActions = useCallback(() => {
     setActionsClimb(null);
-    setPlaylistClimb(climb);
-  }, []);
+    setPlaylistClimb(actionsClimb);
+  }, [actionsClimb]);
   const handleClosePlaylist = useCallback(() => setPlaylistClimb(null), []);
 
   // Stabilize onClimbNavigate via ref to prevent suggested ClimbListItems from
@@ -424,7 +424,7 @@ const QueueList = forwardRef<QueueListHandle, QueueListProps>(({ boardDetails, o
             currentPathname={pathname}
             viewMode="list"
             exclude={excludeActions}
-            onOpenPlaylistSelector={() => handleOpenPlaylistFromActions(actionsClimb)}
+            onOpenPlaylistSelector={handleOpenPlaylistFromActions}
             onActionComplete={handleCloseActions}
           />
         </SwipeableDrawer>
