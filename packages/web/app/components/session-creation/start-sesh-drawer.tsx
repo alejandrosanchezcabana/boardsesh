@@ -163,7 +163,7 @@ export default function StartSeshDrawer({ open, onClose, boardConfigs }: StartSe
         localBoardDetails &&
         getBaseBoardPath(localBoardPath) === getBaseBoardPath(boardPath)
       ) {
-        const angle = selectedBoard?.angle ?? 0;
+        const angle = selectedBoard?.angle ?? selectedCustomConfig?.angle ?? 0;
         activateSession({
           sessionId,
           sessionName: formData.name,

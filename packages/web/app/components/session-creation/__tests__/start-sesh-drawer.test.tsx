@@ -5,6 +5,7 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 // --- Mocks ---
 
 const mockSetInitialQueueForSession = vi.fn();
+const mockActivateSession = vi.fn();
 let mockLocalQueue: unknown[] = [];
 let mockLocalCurrentClimbQueueItem: unknown = null;
 let mockLocalBoardPath: string | null = null;
@@ -13,10 +14,12 @@ let mockLocalBoardDetails: {
   layout_id: number;
   size_id: number;
   set_ids: number[];
+  angle?: number;
 } | null = null;
 
 vi.mock('@/app/components/persistent-session/persistent-session-context', () => ({
   usePersistentSession: () => ({
+    activateSession: mockActivateSession,
     setInitialQueueForSession: mockSetInitialQueueForSession,
     localQueue: mockLocalQueue,
     localCurrentClimbQueueItem: mockLocalCurrentClimbQueueItem,
@@ -29,6 +32,7 @@ vi.mock('@/app/components/persistent-session/persistent-session-context', () => 
     localBoardPath: mockLocalBoardPath,
   }),
   usePersistentSessionActions: () => ({
+    activateSession: mockActivateSession,
     setInitialQueueForSession: mockSetInitialQueueForSession,
   }),
 }));
@@ -353,5 +357,62 @@ describe('StartSeshDrawer', () => {
         '/b/kilter-original-12x12',
       );
     });
+  });
+
+  it('calls activateSession directly when already on the same board route', async () => {
+    mockLocalBoardPath = '/b/kilter-original-12x12/40/list';
+    mockLocalBoardDetails = { board_name: 'kilter', layout_id: 1, size_id: 10, set_ids: [1, 2] };
+
+    render(<StartSeshDrawer open onClose={vi.fn()} />);
+
+    // Board is auto-selected (Kilter), just submit
+    await submitSesh();
+
+    await waitFor(() => {
+      expect(mockActivateSession).toHaveBeenCalledWith({
+        sessionId: 'new-session-id',
+        sessionName: undefined,
+        boardPath: '/b/kilter-original-12x12/40/list',
+        boardDetails: mockLocalBoardDetails,
+        parsedParams: {
+          board_name: 'kilter',
+          layout_id: 1,
+          size_id: 10,
+          set_ids: [1, 2],
+          angle: 40,
+        },
+      });
+    });
+  });
+
+  it('does not call activateSession when navigating to a different board', async () => {
+    mockLocalBoardPath = '/b/tension-board-8x10/30/list';
+    mockLocalBoardDetails = { board_name: 'tension', layout_id: 2, size_id: 20, set_ids: [3, 4] };
+
+    render(<StartSeshDrawer open onClose={vi.fn()} />);
+
+    // Tension is auto-selected, expand and select Kilter instead
+    await selectBoardAndSubmit('Kilter');
+
+    await waitFor(() => {
+      expect(mockCreateSession).toHaveBeenCalled();
+    });
+
+    expect(mockActivateSession).not.toHaveBeenCalled();
+  });
+
+  it('does not call activateSession when localBoardPath is null', async () => {
+    mockLocalBoardPath = null;
+    mockLocalBoardDetails = null;
+
+    render(<StartSeshDrawer open onClose={vi.fn()} />);
+
+    await selectBoardAndSubmit('Kilter');
+
+    await waitFor(() => {
+      expect(mockCreateSession).toHaveBeenCalled();
+    });
+
+    expect(mockActivateSession).not.toHaveBeenCalled();
   });
 });
