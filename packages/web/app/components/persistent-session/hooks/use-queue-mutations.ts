@@ -49,9 +49,15 @@ export async function executeWithLatestWins<TArgs>(
   refs: LatestWinsMutationRefs<TArgs>,
   args: TArgs,
   executeFn: (args: TArgs) => Promise<void>,
+  onSupersede?: (superseded: TArgs) => void,
 ): Promise<void> {
   if (refs.inFlightRef.current) {
-    // A mutation is already in-flight. Store the latest args, superseding any prior pending.
+    // If there are already pending args being superseded, notify the caller
+    // so it can handle side effects that shouldn't be silently dropped.
+    if (refs.pendingRef.current !== null && onSupersede) {
+      onSupersede(refs.pendingRef.current);
+    }
+    // Store the latest args, superseding any prior pending.
     refs.pendingRef.current = args;
     return;
   }
@@ -138,6 +144,17 @@ export function useQueueMutations({ client, session }: UseQueueMutationsArgs): Q
               correlationId: args.correlationId,
             },
           });
+        },
+        (superseded) => {
+          // When a pending mutation is superseded, its setCurrentClimb is correctly
+          // dropped (only the latest matters). But if it carried shouldAddToQueue,
+          // the queue-add side effect must still reach the server.
+          if (superseded.shouldAddToQueue && superseded.item && clientRef.current) {
+            execute(clientRef.current, {
+              query: ADD_QUEUE_ITEM,
+              variables: { item: toClimbQueueItemInput(superseded.item) },
+            }).catch((err: unknown) => console.error('Failed to add superseded queue item:', err));
+          }
         },
       );
     },

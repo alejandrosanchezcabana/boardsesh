@@ -269,6 +269,68 @@ describe('executeWithLatestWins', () => {
   });
 });
 
+describe('onSupersede callback', () => {
+  let refs: LatestWinsMutationRefs<TestArgs>;
+
+  beforeEach(() => {
+    refs = createLatestWinsMutationRefs<TestArgs>();
+  });
+
+  it('does not call onSupersede when there is no pending to replace', async () => {
+    const { executeFn, calls } = createDeferredExecute();
+    const onSupersede = vi.fn();
+
+    executeWithLatestWins(refs, { id: 'a', value: 1 }, executeFn, onSupersede);
+    // Second call stores as pending (nothing to supersede)
+    executeWithLatestWins(refs, { id: 'b', value: 2 }, executeFn, onSupersede);
+
+    expect(onSupersede).not.toHaveBeenCalled();
+
+    calls[0].resolve();
+    await waitForCall(calls, 1);
+    calls[1].resolve();
+  });
+
+  it('calls onSupersede with the old pending args when superseded', async () => {
+    const { executeFn, calls } = createDeferredExecute();
+    const onSupersede = vi.fn();
+
+    executeWithLatestWins(refs, { id: 'a', value: 1 }, executeFn, onSupersede);
+    // First pending - no supersede
+    executeWithLatestWins(refs, { id: 'b', value: 2 }, executeFn, onSupersede);
+    expect(onSupersede).not.toHaveBeenCalled();
+
+    // Second pending supersedes 'b'
+    executeWithLatestWins(refs, { id: 'c', value: 3 }, executeFn, onSupersede);
+    expect(onSupersede).toHaveBeenCalledTimes(1);
+    expect(onSupersede).toHaveBeenCalledWith({ id: 'b', value: 2 });
+
+    calls[0].resolve();
+    await waitForCall(calls, 1);
+    calls[1].resolve();
+  });
+
+  it('calls onSupersede for each superseded pending', async () => {
+    const { executeFn, calls } = createDeferredExecute();
+    const onSupersede = vi.fn();
+
+    executeWithLatestWins(refs, { id: 'a', value: 1 }, executeFn, onSupersede);
+    executeWithLatestWins(refs, { id: 'b', value: 2 }, executeFn, onSupersede);
+    executeWithLatestWins(refs, { id: 'c', value: 3 }, executeFn, onSupersede);
+    executeWithLatestWins(refs, { id: 'd', value: 4 }, executeFn, onSupersede);
+
+    expect(onSupersede).toHaveBeenCalledTimes(2);
+    expect(onSupersede).toHaveBeenNthCalledWith(1, { id: 'b', value: 2 });
+    expect(onSupersede).toHaveBeenNthCalledWith(2, { id: 'c', value: 3 });
+
+    // Only 'a' (in-flight) and 'd' (final pending) are sent
+    calls[0].resolve();
+    await waitForCall(calls, 1);
+    expect(calls[1].args).toEqual({ id: 'd', value: 4 });
+    calls[1].resolve();
+  });
+});
+
 describe('createLatestWinsMutationRefs', () => {
   it('creates refs with correct initial state', () => {
     const refs = createLatestWinsMutationRefs<TestArgs>();
