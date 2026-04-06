@@ -30,7 +30,7 @@ const SwipeableDrawer = dynamic(() => import('../swipeable-drawer/swipeable-draw
 // Keep swipe visuals aligned with gesture max distance
 const MAX_GESTURE_SWIPE = 180;
 const SHORT_ACTION_WIDTH = 120;
-const RIGHT_ACTION_WIDTH = 80;
+const RIGHT_ACTION_WIDTH = 100;
 const LONG_SWIPE_ACTION_WIDTH = MAX_GESTURE_SWIPE;
 const SHORT_SWIPE_THRESHOLD = 60;
 const TRANSITION_START = 115;
@@ -78,12 +78,14 @@ const rightActionLayerDefaultStyle: React.CSSProperties = {
   ...rightSwipeActionLayerBaseStyle,
   backgroundColor: themeTokens.colors.primary,
   opacity: 0,
+  transition: 'opacity 200ms ease-out',
 };
 
 const rightActionLayerConfirmedStyle: React.CSSProperties = {
   ...rightSwipeActionLayerBaseStyle,
   backgroundColor: themeTokens.colors.success,
   opacity: 0,
+  transition: 'opacity 200ms ease-out',
 };
 
 const defaultLeftActionStyle: React.CSSProperties = {
@@ -460,12 +462,24 @@ const ClimbListItem: React.FC<ClimbListItemProps> = React.memo(
                 </div>
               ) : (
                 <div ref={rightActionRef} style={defaultRightActionStyle}>
-                  <div ref={rightActionLayerRef} style={swipeLeftConfirmed ? rightActionLayerConfirmedStyle : rightActionLayerDefaultStyle}>
-                    {swipeLeftConfirmed ? (
-                      <CheckOutlined style={iconStyle} />
-                    ) : (
-                      <AddOutlined style={iconStyle} />
-                    )}
+                  {/* Default layer (Add icon) — opacity driven by swipe gesture via ref */}
+                  <div
+                    ref={rightActionLayerRef}
+                    style={{
+                      ...rightActionLayerDefaultStyle,
+                      ...(swipeLeftConfirmed ? { opacity: 0 } : {}),
+                    }}
+                  >
+                    <AddOutlined style={iconStyle} />
+                  </div>
+                  {/* Confirmed layer (Check icon) — crossfades in via CSS transition */}
+                  <div
+                    style={{
+                      ...rightActionLayerConfirmedStyle,
+                      opacity: swipeLeftConfirmed ? 1 : 0,
+                    }}
+                  >
+                    <CheckOutlined style={iconStyle} />
                   </div>
                 </div>
               )}

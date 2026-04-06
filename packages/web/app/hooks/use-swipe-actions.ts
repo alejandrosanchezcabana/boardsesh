@@ -9,7 +9,7 @@ const DEFAULT_SWIPE_THRESHOLD = 100;
 // Maximum swipe distance
 const DEFAULT_MAX_SWIPE = 120;
 // Peek offset shown during left-swipe confirmation (enough to reveal the action icon)
-const CONFIRMATION_PEEK_OFFSET = -56;
+const CONFIRMATION_PEEK_OFFSET = -76;
 // Duration the confirmation checkmark is shown before snapping back
 const CONFIRMATION_DISPLAY_MS = 2800;
 
@@ -126,7 +126,7 @@ export function useSwipeActions({
     if (contentEl.current) {
       contentEl.current.style.transform = `translateX(${offset}px)`;
       // Only apply transition when snapping back to zero
-      contentEl.current.style.transition = offset === 0 ? 'transform 150ms ease, opacity 150ms ease' : 'none';
+      contentEl.current.style.transition = offset === 0 ? 'transform 250ms ease-out, opacity 250ms ease-out' : 'none';
     }
 
     const absOffset = Math.abs(offset);
@@ -161,7 +161,7 @@ export function useSwipeActions({
 
     // Animate content to a peek offset so the action layer (checkmark) stays visible
     if (contentEl.current) {
-      contentEl.current.style.transition = 'transform 150ms ease';
+      contentEl.current.style.transition = 'transform 200ms ease-out';
       contentEl.current.style.transform = `translateX(${CONFIRMATION_PEEK_OFFSET}px)`;
     }
 
@@ -174,7 +174,15 @@ export function useSwipeActions({
     // After the confirmation display, snap back
     confirmationTimerRef.current = setTimeout(() => {
       confirmationTimerRef.current = null;
+      // Set transition on right action before applyOffset changes values so it fades out smoothly
+      if (rightActionEl.current) {
+        rightActionEl.current.style.transition = 'opacity 350ms ease-out, visibility 0s 350ms';
+      }
       applyOffset(0);
+      // Override content transition with a gentler one for the confirmation snap-back
+      if (contentEl.current) {
+        contentEl.current.style.transition = 'transform 350ms ease-out';
+      }
       updateSwipeZone('none');
       setSwipeLeftConfirmed(false);
     }, CONFIRMATION_DISPLAY_MS);
