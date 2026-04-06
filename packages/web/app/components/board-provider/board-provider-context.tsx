@@ -1,12 +1,12 @@
 'use client';
-import React, { createContext, useContext, useState, useEffect, useCallback, useMemo } from 'react';
+import React, { createContext, useContext, useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { BoardName, ClimbUuid } from '@/app/lib/types';
 import { SaveClimbOptions } from '@/app/lib/api-wrappers/aurora/types';
 import { useSession } from 'next-auth/react';
 import { useLogbook as useLogbookQuery } from '@/app/hooks/use-logbook';
 import { useSaveTick as useSaveTickMutation, type SaveTickOptions } from '@/app/hooks/use-save-tick';
 import { useSaveClimb as useSaveClimbMutation, type SaveClimbResponse } from '@/app/hooks/use-save-climb';
-import { usePersistentSession } from '@/app/components/persistent-session/persistent-session-context';
+import { usePersistentSessionState } from '@/app/components/persistent-session/persistent-session-context';
 
 // Re-export types for backward compatibility
 export type { SaveTickOptions } from '@/app/hooks/use-save-tick';
@@ -31,7 +31,7 @@ const BoardContext = createContext<BoardContextType | undefined>(undefined);
 
 export function BoardProvider({ boardName, children }: { boardName: BoardName; children: React.ReactNode }) {
   const { status: sessionStatus } = useSession();
-  const { activeSession } = usePersistentSession();
+  const { activeSession } = usePersistentSessionState();
   const [isInitialized, setIsInitialized] = useState(false);
   const [climbUuids, setClimbUuids] = useState<ClimbUuid[]>([]);
 
@@ -53,17 +53,25 @@ export function BoardProvider({ boardName, children }: { boardName: BoardName; c
   }, []);
 
   // Wrapper to maintain backward-compatible API
+  // Refs for stable callback identity — mutation objects change reference every render
+  const saveTickMutateRef = useRef(saveTickMutation.mutateAsync);
+  saveTickMutateRef.current = saveTickMutation.mutateAsync;
+  const saveClimbMutateRef = useRef(saveClimbMutation.mutateAsync);
+  saveClimbMutateRef.current = saveClimbMutation.mutateAsync;
+  const activeSessionIdRef = useRef(activeSession?.sessionId);
+  activeSessionIdRef.current = activeSession?.sessionId;
+
   const saveTick = useCallback(async (options: SaveTickOptions): Promise<void> => {
-    const sessionId = options.sessionId ?? activeSession?.sessionId;
-    await saveTickMutation.mutateAsync({
+    const sessionId = options.sessionId ?? activeSessionIdRef.current;
+    await saveTickMutateRef.current({
       ...options,
       sessionId,
     });
-  }, [saveTickMutation, activeSession?.sessionId]);
+  }, []);
 
   const saveClimb = useCallback(async (options: Omit<SaveClimbOptions, 'setter_id' | 'user_id'>): Promise<SaveClimbResponse> => {
-    return saveClimbMutation.mutateAsync(options);
-  }, [saveClimbMutation]);
+    return saveClimbMutateRef.current(options);
+  }, []);
 
   const isAuthenticated = sessionStatus === 'authenticated';
   const isLoading = sessionStatus === 'loading';

@@ -59,7 +59,24 @@ export type QueueAction =
   | { type: 'CLEANUP_PENDING_UPDATES_BATCH'; payload: { correlationIds: string[] } }
   | { type: 'CLEAR_RESYNC_FLAG' };
 
-export interface QueueContextType {
+// Stable action functions — identity rarely changes
+export interface QueueActionsType {
+  addToQueue: (climb: Climb) => void;
+  removeFromQueue: (item: ClimbQueueItem) => void;
+  setCurrentClimb: (climb: Climb) => void;
+  setCurrentClimbQueueItem: (item: ClimbQueueItem) => void;
+  setClimbSearchParams: (params: SearchRequestPagination) => void;
+  setCountSearchParams: (params: SearchRequestPagination) => void;
+  mirrorClimb: () => void;
+  fetchMoreClimbs: () => void;
+  getNextClimbQueueItem: () => ClimbQueueItem | null;
+  getPreviousClimbQueueItem: () => ClimbQueueItem | null;
+  setQueue: (queue: ClimbQueueItem[]) => void;
+  disconnect?: () => void;
+}
+
+// Frequently-changing state data
+export interface QueueDataType {
   queue: ClimbQueue;
   currentClimbQueueItem: ClimbQueueItem | null;
   currentClimb: Climb | null;
@@ -75,24 +92,14 @@ export interface QueueContextType {
   parsedParams: ParsedBoardRouteParameters;
   connectionState?: ConnectionState;
   canMutate?: boolean;
-  // Session-related fields (from GraphQL queue)
   users?: SessionUser[];
   clientId?: string | null;
   isLeader?: boolean;
   isBackendMode?: boolean;
   hasConnected?: boolean;
   connectionError?: Error | null;
-  disconnect?: () => void;
-  addToQueue: (climb: Climb) => void;
-  removeFromQueue: (item: ClimbQueueItem) => void;
-  setCurrentClimb: (climb: Climb) => void;
-  setCurrentClimbQueueItem: (item: ClimbQueueItem) => void;
-  setClimbSearchParams: (params: SearchRequestPagination) => void;
-  setCountSearchParams: (params: SearchRequestPagination) => void;
-  mirrorClimb: () => void;
-  fetchMoreClimbs: () => void;
-  getNextClimbQueueItem: () => ClimbQueueItem | null;
-  getPreviousClimbQueueItem: () => ClimbQueueItem | null;
-  setQueue: (queue: ClimbQueueItem[]) => void;
   isDisconnected: boolean;
 }
+
+// Combined type for backward compatibility
+export type QueueContextType = QueueDataType & QueueActionsType;

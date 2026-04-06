@@ -5,7 +5,7 @@ import AddCircleOutlined from '@mui/icons-material/AddCircleOutlined';
 import CheckCircleOutlined from '@mui/icons-material/CheckCircleOutlined';
 import { track } from '@vercel/analytics';
 import { ClimbActionProps, ClimbActionResult } from '../types';
-import { useOptionalQueueContext } from '../../graphql-queue';
+import { useOptionalQueueActions } from '../../graphql-queue';
 import { themeTokens } from '@/app/theme/theme-config';
 import { buildActionResult, computeActionDisplay, ActionIconElement, ActionButtonElement } from '../action-view-renderer';
 
@@ -19,7 +19,7 @@ export function QueueAction({
   className,
   onComplete,
 }: ClimbActionProps): ClimbActionResult {
-  const queueContext = useOptionalQueueContext();
+  const queueActions = useOptionalQueueActions();
   const [recentlyAdded, setRecentlyAdded] = useState(false);
   const { iconSize, shouldShowLabel } = computeActionDisplay(viewMode, size, showLabel);
 
@@ -27,13 +27,12 @@ export function QueueAction({
     e?.stopPropagation();
     e?.preventDefault();
 
-    if (!queueContext?.addToQueue || recentlyAdded) return;
+    if (!queueActions?.addToQueue || recentlyAdded) return;
 
-    queueContext.addToQueue(climb);
+    queueActions.addToQueue(climb);
 
     track('Add to Queue', {
       boardLayout: boardDetails.layout_name || '',
-      queueLength: (queueContext.queue?.length ?? 0) + 1,
     });
 
     setRecentlyAdded(true);
@@ -42,7 +41,7 @@ export function QueueAction({
     }, 5000);
 
     onComplete?.();
-  }, [queueContext, recentlyAdded, climb, boardDetails.layout_name, onComplete]);
+  }, [queueActions, recentlyAdded, climb, boardDetails.layout_name, onComplete]);
 
   const label = recentlyAdded ? 'Added' : 'Add to Queue';
   const shortLabel = recentlyAdded ? 'Added' : 'Queue';
@@ -63,7 +62,7 @@ export function QueueAction({
     showLabel,
     disabled: disabled || recentlyAdded,
     className,
-    available: !!queueContext,
+    available: !!queueActions,
     iconElementOverride: (
       <ActionIconElement
         tooltip={recentlyAdded ? 'Added to queue' : 'Add to queue'}

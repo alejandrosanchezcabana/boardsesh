@@ -20,6 +20,8 @@ let mockPersistentSession: Record<string, unknown> = {};
 
 vi.mock('../../persistent-session', () => ({
   usePersistentSession: () => mockPersistentSession,
+  usePersistentSessionState: () => mockPersistentSession,
+  usePersistentSessionActions: () => mockPersistentSession,
 }));
 
 vi.mock('../../graphql-queue/QueueContext', () => {

@@ -166,7 +166,7 @@ export function useSessionLifecycle({
   }, []);
 
   const endSessionWithSummary = useCallback(() => {
-    const endingSessionId = activeSession?.sessionId;
+    const endingSessionId = activeSessionRef.current?.sessionId;
     const token = wsAuthTokenRef.current;
 
     deactivateSession();
@@ -183,7 +183,7 @@ export function useSessionLifecycle({
           console.error('[PersistentSession] Failed to get session summary:', err);
         });
     }
-  }, [activeSession, deactivateSession, wsAuthTokenRef]);
+  }, [activeSessionRef, deactivateSession, wsAuthTokenRef]);
 
   // Connect to session when activeSession changes
   useEffect(() => {

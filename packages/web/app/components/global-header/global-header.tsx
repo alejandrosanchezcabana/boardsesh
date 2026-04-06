@@ -11,7 +11,7 @@ import { DEFAULT_CLIMB_SEARCH_SUMMARY } from '@/app/components/search-drawer/sea
 import UserDrawer from '@/app/components/user-drawer/user-drawer';
 import StartSeshDrawer from '@/app/components/session-creation/start-sesh-drawer';
 import SeshSettingsDrawer from '@/app/components/sesh-settings/sesh-settings-drawer';
-import { usePersistentSession, useIsOnBoardRoute } from '@/app/components/persistent-session/persistent-session-context';
+import { usePersistentSessionState, useIsOnBoardRoute } from '@/app/components/persistent-session/persistent-session-context';
 import { BoardConfigData } from '@/app/lib/server-board-configs';
 import { isBoardListPath } from '@/app/lib/board-route-paths';
 import { themeTokens } from '@/app/theme/theme-config';
@@ -36,7 +36,7 @@ export default function GlobalHeader({ boardConfigs }: GlobalHeaderProps) {
   const [searchOpen, setSearchOpen] = useState(false);
   const [startSeshOpen, setStartSeshOpen] = useState(false);
   const [seshSettingsOpen, setSeshSettingsOpen] = useState(false);
-  const { activeSession } = usePersistentSession();
+  const { activeSession } = usePersistentSessionState();
   const isOnBoardRoute = useIsOnBoardRoute();
   const { openClimbSearchDrawer, searchPillSummary, hasActiveFilters: filtersActive } = useSearchDrawerBridge();
   const pathname = usePathname();

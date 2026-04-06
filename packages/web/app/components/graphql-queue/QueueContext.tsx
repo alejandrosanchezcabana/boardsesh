@@ -25,10 +25,10 @@ import { usePendingUpdateCleanup } from './hooks/use-pending-update-cleanup';
 import { useMutationGuard } from './hooks/use-mutation-guard';
 import { useOfflineQueueBuffer } from './hooks/use-offline-queue-buffer';
 import { useOfflineReconciliation } from './hooks/use-offline-reconciliation';
-import type { GraphQLQueueContextType, GraphQLQueueContextProps } from './types';
+import type { GraphQLQueueContextType, GraphQLQueueActionsType, GraphQLQueueDataType, GraphQLQueueContextProps } from './types';
 
 // Re-export types so direct importers still work
-export type { GraphQLQueueContextType } from './types';
+export type { GraphQLQueueContextType, GraphQLQueueActionsType, GraphQLQueueDataType } from './types';
 
 const createClimbQueueItem = (
   climb: Climb,
@@ -43,6 +43,10 @@ const createClimbQueueItem = (
   suggested: !!suggested,
 });
 
+// Split contexts: actions (stable) vs data (changes frequently)
+export const QueueActionsContext = createContext<GraphQLQueueActionsType | undefined>(undefined);
+export const QueueDataContext = createContext<GraphQLQueueDataType | undefined>(undefined);
+// Combined context for backward compatibility
 export const QueueContext = createContext<GraphQLQueueContextType | undefined>(undefined);
 
 export const GraphQLQueueProvider = ({ parsedParams, boardDetails, children, baseBoardPath: propsBaseBoardPath }: GraphQLQueueContextProps) => {
@@ -226,160 +230,265 @@ export const GraphQLQueueProvider = ({ parsedParams, boardDetails, children, bas
     }
   }, [suggestedClimbs.length, state.queue.length, hasMoreResults, isFetchingNextPage, fetchMoreClimbs, state.hasDoneFirstFetch]);
 
-  // --- Context value ---
+  // --- Ref holding latest values so action callbacks can be stable ---
+  const latestRef = useRef({
+    state, dispatch, isPersistentSessionActive, persistentSession,
+    clientId, currentUserInfo, isDisconnected, hasConnected,
+    offlineBuffer, guardMutation, isOffBoardMode, pathname,
+    climbSearchResults, suggestedClimbs, setCountSearchParams,
+    correlationCounterRef,
+    startSession, joinSession, endSession, dismissSessionSummary,
+    fetchMoreClimbs,
+  });
+  // Sync ref every render (synchronous — safe for refs)
+  latestRef.current = {
+    state, dispatch, isPersistentSessionActive, persistentSession,
+    clientId, currentUserInfo, isDisconnected, hasConnected,
+    offlineBuffer, guardMutation, isOffBoardMode, pathname,
+    climbSearchResults, suggestedClimbs, setCountSearchParams,
+    correlationCounterRef,
+    startSession, joinSession, endSession, dismissSessionSummary,
+    fetchMoreClimbs,
+  };
+
+  // --- Stable action callbacks (read from latestRef, never recreated) ---
+  const addToQueue = useCallback((climb: Climb) => {
+    const r = latestRef.current;
+    if (r.guardMutation()) return;
+    const newItem = createClimbQueueItem(climb, r.clientId, r.currentUserInfo);
+    r.dispatch({ type: 'DELTA_ADD_QUEUE_ITEM', payload: { item: newItem } });
+    if (r.isDisconnected && r.isPersistentSessionActive) {
+      r.offlineBuffer.bufferAddition(newItem);
+    } else if (r.hasConnected && r.isPersistentSessionActive) {
+      r.persistentSession.addQueueItem(newItem).catch((error: unknown) => console.error('Failed to add queue item:', error));
+    }
+  }, []);
+
+  const removeFromQueue = useCallback((item: ClimbQueueItem) => {
+    const r = latestRef.current;
+    if (r.guardMutation()) return;
+    r.dispatch({ type: 'DELTA_REMOVE_QUEUE_ITEM', payload: { uuid: item.uuid } });
+    if (!r.isDisconnected && r.hasConnected && r.isPersistentSessionActive) {
+      r.persistentSession.removeQueueItem(item.uuid).catch((error: unknown) => console.error('Failed to remove queue item:', error));
+    }
+  }, []);
+
+  const setCurrentClimb = useCallback(async (climb: Climb) => {
+    const r = latestRef.current;
+    if (r.guardMutation()) return;
+    const newItem = createClimbQueueItem(climb, r.clientId, r.currentUserInfo);
+    r.dispatch({ type: 'SET_CURRENT_CLIMB', payload: newItem });
+    if (r.isDisconnected && r.isPersistentSessionActive) {
+      r.offlineBuffer.bufferAddition(newItem);
+    } else if (r.hasConnected && r.isPersistentSessionActive) {
+      const previousQueue = [...r.state.queue];
+      const previousCurrentClimb = r.state.currentClimbQueueItem;
+      const currentIndex = r.state.currentClimbQueueItem
+        ? r.state.queue.findIndex((queueItem: ClimbQueueItem) => queueItem.uuid === r.state.currentClimbQueueItem?.uuid)
+        : -1;
+      const position = currentIndex === -1 ? undefined : currentIndex + 1;
+      try {
+        await r.persistentSession.addQueueItem(newItem, position);
+        await r.persistentSession.setCurrentClimb(newItem, false);
+      } catch (error: unknown) {
+        console.error('Failed to set current climb, rolling back:', error);
+        r.dispatch({ type: 'UPDATE_QUEUE', payload: { queue: previousQueue, currentClimbQueueItem: previousCurrentClimb } });
+      }
+    }
+  }, []);
+
+  const setQueue = useCallback((queue: ClimbQueueItem[]) => {
+    const r = latestRef.current;
+    if (r.guardMutation()) return;
+    r.dispatch({ type: 'UPDATE_QUEUE', payload: { queue, currentClimbQueueItem: r.state.currentClimbQueueItem } });
+    if (!r.isDisconnected && r.hasConnected && r.isPersistentSessionActive) {
+      r.persistentSession.setQueue(queue, r.state.currentClimbQueueItem).catch((error: unknown) => console.error('Failed to set queue:', error));
+    }
+  }, []);
+
+  const setCurrentClimbQueueItem = useCallback((item: ClimbQueueItem) => {
+    const r = latestRef.current;
+    if (r.guardMutation()) return;
+    const correlationId = r.clientId ? `${r.clientId}-${++r.correlationCounterRef.current}` : undefined;
+    r.dispatch({ type: 'DELTA_UPDATE_CURRENT_CLIMB', payload: { item, shouldAddToQueue: item.suggested, correlationId } });
+    if (!r.isDisconnected && r.hasConnected && r.isPersistentSessionActive) {
+      r.persistentSession.setCurrentClimb(item, item.suggested, correlationId).catch((error: unknown) => {
+        console.error('Failed to set current climb:', error);
+        if (correlationId) r.dispatch({ type: 'CLEANUP_PENDING_UPDATE', payload: { correlationId } });
+      });
+    }
+  }, []);
+
+  const setClimbSearchParams = useCallback((params: SearchRequestPagination) => {
+    const r = latestRef.current;
+    r.dispatch({ type: 'SET_CLIMB_SEARCH_PARAMS', payload: params });
+    if (!r.isOffBoardMode) {
+      const urlParams = searchParamsToUrlParams(params);
+      const queryString = urlParams.toString();
+      const newUrl = queryString ? `${r.pathname}?${queryString}` : r.pathname;
+      window.history.replaceState(window.history.state, '', newUrl);
+    }
+  }, []);
+
+  const setCountSearchParamsAction = useCallback((params: SearchRequestPagination) => {
+    latestRef.current.setCountSearchParams(params);
+  }, []);
+
+  const mirrorClimb = useCallback(() => {
+    const r = latestRef.current;
+    if (r.guardMutation()) return;
+    if (!r.state.currentClimbQueueItem?.climb) return;
+    const newMirroredState = !r.state.currentClimbQueueItem.climb?.mirrored;
+    r.dispatch({ type: 'DELTA_MIRROR_CURRENT_CLIMB', payload: { mirrored: newMirroredState } });
+    if (!r.isDisconnected && r.hasConnected && r.isPersistentSessionActive) {
+      r.persistentSession.mirrorCurrentClimb(newMirroredState).catch((error: unknown) => console.error('Failed to mirror climb:', error));
+    }
+  }, []);
+
+  const stableFetchMoreClimbs = useCallback(() => {
+    latestRef.current.fetchMoreClimbs();
+  }, []);
+
+  const getNextClimbQueueItem = useCallback(() => {
+    const r = latestRef.current;
+    const queueItemIndex = r.state.queue.findIndex((queueItem: ClimbQueueItem) => queueItem.uuid === r.state.currentClimbQueueItem?.uuid);
+    if (
+      (r.state.queue.length === 0 || r.state.queue.length <= queueItemIndex + 1) &&
+      r.climbSearchResults && r.climbSearchResults.length > 0
+    ) {
+      const nextClimb = r.suggestedClimbs.find(
+        (climb: Climb) => !r.state.queue.some((qItem: ClimbQueueItem) => qItem.climb?.uuid === climb.uuid),
+      );
+      return nextClimb ? createClimbQueueItem(nextClimb, r.clientId, r.currentUserInfo, true) : null;
+    }
+    return queueItemIndex >= r.state.queue.length - 1 ? null : r.state.queue[queueItemIndex + 1];
+  }, []);
+
+  const getPreviousClimbQueueItem = useCallback(() => {
+    const r = latestRef.current;
+    const queueItemIndex = r.state.queue.findIndex((queueItem: ClimbQueueItem) => queueItem.uuid === r.state.currentClimbQueueItem?.uuid);
+    return queueItemIndex > 0 ? r.state.queue[queueItemIndex - 1] : null;
+  }, []);
+
+  const stableStartSession = useCallback((options?: { discoverable?: boolean; name?: string; sessionId?: string }) => {
+    return latestRef.current.startSession(options);
+  }, []);
+
+  const stableJoinSession = useCallback((sessionId: string) => {
+    return latestRef.current.joinSession(sessionId);
+  }, []);
+
+  const stableEndSession = useCallback(() => {
+    latestRef.current.endSession();
+  }, []);
+
+  const stableDismissSessionSummary = useCallback(() => {
+    latestRef.current.dismissSessionSummary();
+  }, []);
+
+  const stableDisconnect = useCallback(() => {
+    latestRef.current.persistentSession.deactivateSession();
+  }, []);
+
+  // --- Actions context value (stable — callbacks never change) ---
+  const actionsValue: GraphQLQueueActionsType = useMemo(() => ({
+    addToQueue,
+    removeFromQueue,
+    setCurrentClimb,
+    setQueue,
+    setCurrentClimbQueueItem,
+    setClimbSearchParams,
+    setCountSearchParams: setCountSearchParamsAction,
+    mirrorClimb,
+    fetchMoreClimbs: stableFetchMoreClimbs,
+    getNextClimbQueueItem,
+    getPreviousClimbQueueItem,
+    disconnect: stableDisconnect,
+    startSession: stableStartSession,
+    joinSession: stableJoinSession,
+    endSession: stableEndSession,
+    dismissSessionSummary: stableDismissSessionSummary,
+  }), [
+    addToQueue, removeFromQueue, setCurrentClimb, setQueue,
+    setCurrentClimbQueueItem, setClimbSearchParams, setCountSearchParamsAction,
+    mirrorClimb, stableFetchMoreClimbs, getNextClimbQueueItem, getPreviousClimbQueueItem,
+    stableDisconnect, stableStartSession, stableJoinSession, stableEndSession, stableDismissSessionSummary,
+  ]);
+
+  // --- Data context value (changes when state/data changes) ---
+  const dataValue: GraphQLQueueDataType = useMemo(() => ({
+    queue: state.queue,
+    currentClimbQueueItem: state.currentClimbQueueItem,
+    currentClimb: state.currentClimbQueueItem?.climb || null,
+    climbSearchParams: state.climbSearchParams,
+    climbSearchResults, suggestedClimbs, totalSearchResultCount, hasMoreResults,
+    isFetchingClimbs, isFetchingNextPage,
+    hasDoneFirstFetch: state.hasDoneFirstFetch,
+    viewOnlyMode, parsedParams,
+    isSessionActive, sessionId,
+    sessionSummary,
+    sessionGoal: isPersistentSessionActive ? (persistentSession.session?.goal ?? null) : null,
+    connectionState, canMutate, isDisconnected,
+    users, clientId, isLeader,
+    isBackendMode: !!backendUrl,
+    hasConnected, connectionError,
+  }), [
+    state.queue, state.currentClimbQueueItem, state.climbSearchParams, state.hasDoneFirstFetch,
+    climbSearchResults, suggestedClimbs, totalSearchResultCount, hasMoreResults,
+    isFetchingClimbs, isFetchingNextPage, viewOnlyMode, parsedParams,
+    isSessionActive, sessionId, sessionSummary, isPersistentSessionActive, persistentSession.session?.goal,
+    connectionState, canMutate, isDisconnected, users, clientId, isLeader, backendUrl, hasConnected, connectionError,
+  ]);
+
+  // --- Combined context value for backward compatibility ---
   const contextValue: GraphQLQueueContextType = useMemo(
-    () => ({
-      queue: state.queue,
-      currentClimbQueueItem: state.currentClimbQueueItem,
-      currentClimb: state.currentClimbQueueItem?.climb || null,
-      climbSearchParams: state.climbSearchParams,
-      climbSearchResults, suggestedClimbs, totalSearchResultCount, hasMoreResults,
-      isFetchingClimbs, isFetchingNextPage,
-      hasDoneFirstFetch: state.hasDoneFirstFetch,
-      viewOnlyMode, parsedParams,
-      isSessionActive, sessionId, startSession, joinSession, endSession,
-      sessionSummary, dismissSessionSummary,
-      sessionGoal: isPersistentSessionActive ? (persistentSession.session?.goal ?? null) : null,
-      connectionState, canMutate, isDisconnected,
-      users, clientId, isLeader,
-      isBackendMode: !!backendUrl,
-      hasConnected, connectionError,
-      disconnect: persistentSession.deactivateSession,
-
-      addToQueue: (climb: Climb) => {
-        if (guardMutation()) return;
-        const newItem = createClimbQueueItem(climb, clientId, currentUserInfo);
-        dispatch({ type: 'DELTA_ADD_QUEUE_ITEM', payload: { item: newItem } });
-        if (isDisconnected && isPersistentSessionActive) {
-          offlineBuffer.bufferAddition(newItem);
-        } else if (hasConnected && isPersistentSessionActive) {
-          persistentSession.addQueueItem(newItem).catch((error: unknown) => console.error('Failed to add queue item:', error));
-        }
-      },
-
-      removeFromQueue: (item: ClimbQueueItem) => {
-        if (guardMutation()) return;
-        dispatch({ type: 'DELTA_REMOVE_QUEUE_ITEM', payload: { uuid: item.uuid } });
-        if (!isDisconnected && hasConnected && isPersistentSessionActive) {
-          persistentSession.removeQueueItem(item.uuid).catch((error: unknown) => console.error('Failed to remove queue item:', error));
-        }
-      },
-
-      setCurrentClimb: async (climb: Climb) => {
-        if (guardMutation()) return;
-        const newItem = createClimbQueueItem(climb, clientId, currentUserInfo);
-        dispatch({ type: 'SET_CURRENT_CLIMB', payload: newItem });
-        if (isDisconnected && isPersistentSessionActive) {
-          offlineBuffer.bufferAddition(newItem);
-        } else if (hasConnected && isPersistentSessionActive) {
-          const previousQueue = [...state.queue];
-          const previousCurrentClimb = state.currentClimbQueueItem;
-          const currentIndex = state.currentClimbQueueItem
-            ? state.queue.findIndex((queueItem: ClimbQueueItem) => queueItem.uuid === state.currentClimbQueueItem?.uuid)
-            : -1;
-          const position = currentIndex === -1 ? undefined : currentIndex + 1;
-          try {
-            await persistentSession.addQueueItem(newItem, position);
-            await persistentSession.setCurrentClimb(newItem, false);
-          } catch (error: unknown) {
-            console.error('Failed to set current climb, rolling back:', error);
-            dispatch({ type: 'UPDATE_QUEUE', payload: { queue: previousQueue, currentClimbQueueItem: previousCurrentClimb } });
-          }
-        }
-      },
-
-      setQueue: (queue: ClimbQueueItem[]) => {
-        if (guardMutation()) return;
-        dispatch({ type: 'UPDATE_QUEUE', payload: { queue, currentClimbQueueItem: state.currentClimbQueueItem } });
-        if (!isDisconnected && hasConnected && isPersistentSessionActive) {
-          persistentSession.setQueue(queue, state.currentClimbQueueItem).catch((error: unknown) => console.error('Failed to set queue:', error));
-        }
-      },
-
-      setCurrentClimbQueueItem: (item: ClimbQueueItem) => {
-        if (guardMutation()) return;
-        const correlationId = clientId ? `${clientId}-${++correlationCounterRef.current}` : undefined;
-        dispatch({ type: 'DELTA_UPDATE_CURRENT_CLIMB', payload: { item, shouldAddToQueue: item.suggested, correlationId } });
-        if (!isDisconnected && hasConnected && isPersistentSessionActive) {
-          persistentSession.setCurrentClimb(item, item.suggested, correlationId).catch((error: unknown) => {
-            console.error('Failed to set current climb:', error);
-            if (correlationId) dispatch({ type: 'CLEANUP_PENDING_UPDATE', payload: { correlationId } });
-          });
-        }
-      },
-
-      setClimbSearchParams: (params: SearchRequestPagination) => {
-        dispatch({ type: 'SET_CLIMB_SEARCH_PARAMS', payload: params });
-        if (!isOffBoardMode) {
-          const urlParams = searchParamsToUrlParams(params);
-          const queryString = urlParams.toString();
-          const newUrl = queryString ? `${pathname}?${queryString}` : pathname;
-          // Use history.replaceState instead of router.replace to update the URL
-          // without triggering a server-side re-render. After the initial page load,
-          // climb data is fetched client-side via TanStack Query, so re-running
-          // the server component on every filter change is wasted work.
-          window.history.replaceState(window.history.state, '', newUrl);
-        }
-      },
-
-      setCountSearchParams: (params: SearchRequestPagination) => {
-        setCountSearchParams(params);
-      },
-
-      mirrorClimb: () => {
-        if (guardMutation()) return;
-        if (!state.currentClimbQueueItem?.climb) return;
-        const newMirroredState = !state.currentClimbQueueItem.climb?.mirrored;
-        dispatch({ type: 'DELTA_MIRROR_CURRENT_CLIMB', payload: { mirrored: newMirroredState } });
-        if (!isDisconnected && hasConnected && isPersistentSessionActive) {
-          persistentSession.mirrorCurrentClimb(newMirroredState).catch((error: unknown) => console.error('Failed to mirror climb:', error));
-        }
-      },
-
-      fetchMoreClimbs,
-
-      getNextClimbQueueItem: () => {
-        const queueItemIndex = state.queue.findIndex((queueItem: ClimbQueueItem) => queueItem.uuid === state.currentClimbQueueItem?.uuid);
-        if (
-          (state.queue.length === 0 || state.queue.length <= queueItemIndex + 1) &&
-          climbSearchResults && climbSearchResults.length > 0
-        ) {
-          const nextClimb = suggestedClimbs.find(
-            (climb: Climb) => !state.queue.some((qItem: ClimbQueueItem) => qItem.climb?.uuid === climb.uuid),
-          );
-          return nextClimb ? createClimbQueueItem(nextClimb, clientId, currentUserInfo, true) : null;
-        }
-        return queueItemIndex >= state.queue.length - 1 ? null : state.queue[queueItemIndex + 1];
-      },
-
-      getPreviousClimbQueueItem: () => {
-        const queueItemIndex = state.queue.findIndex((queueItem: ClimbQueueItem) => queueItem.uuid === state.currentClimbQueueItem?.uuid);
-        return queueItemIndex > 0 ? state.queue[queueItemIndex - 1] : null;
-      },
-    }),
-    [
-      state, climbSearchResults, suggestedClimbs, totalSearchResultCount, hasMoreResults,
-      isFetchingClimbs, isFetchingNextPage, viewOnlyMode, parsedParams,
-      clientId, isLeader, users, hasConnected, connectionError, backendUrl,
-      persistentSession, isPersistentSessionActive, dispatch, pathname,
-      fetchMoreClimbs, currentUserInfo, isSessionActive, sessionId, setCountSearchParams,
-      startSession, joinSession, endSession, sessionSummary, dismissSessionSummary,
-      isOffBoardMode, connectionState, canMutate, guardMutation, searchParams, isDisconnected,
-      offlineBuffer,
-    ],
+    () => ({ ...dataValue, ...actionsValue }),
+    [dataValue, actionsValue],
   );
 
   return (
-    <QueueContext.Provider value={contextValue}>
-      <FavoritesProvider {...favoritesProviderProps}>
-        <PlaylistsProvider {...playlistsProviderProps}>
-          {children}
-        </PlaylistsProvider>
-      </FavoritesProvider>
-      <SessionSummaryDialog summary={sessionSummary} onDismiss={dismissSessionSummary} />
-    </QueueContext.Provider>
+    <QueueActionsContext.Provider value={actionsValue}>
+      <QueueDataContext.Provider value={dataValue}>
+        <QueueContext.Provider value={contextValue}>
+          <FavoritesProvider {...favoritesProviderProps}>
+            <PlaylistsProvider {...playlistsProviderProps}>
+              {children}
+            </PlaylistsProvider>
+          </FavoritesProvider>
+          <SessionSummaryDialog summary={sessionSummary} onDismiss={stableDismissSessionSummary} />
+        </QueueContext.Provider>
+      </QueueDataContext.Provider>
+    </QueueActionsContext.Provider>
   );
 };
+
+// --- Targeted hooks (prefer these for performance) ---
+
+export const useQueueActions = (): GraphQLQueueActionsType => {
+  const context = useContext(QueueActionsContext);
+  if (!context) {
+    throw new Error('useQueueActions must be used within a GraphQLQueueProvider');
+  }
+  return context;
+};
+
+export const useOptionalQueueActions = (): GraphQLQueueActionsType | null => {
+  return useContext(QueueActionsContext) ?? null;
+};
+
+export const useQueueData = (): GraphQLQueueDataType => {
+  const context = useContext(QueueDataContext);
+  if (!context) {
+    throw new Error('useQueueData must be used within a GraphQLQueueProvider');
+  }
+  return context;
+};
+
+export const useOptionalQueueData = (): GraphQLQueueDataType | null => {
+  return useContext(QueueDataContext) ?? null;
+};
+
+// --- Backward-compatible hooks (subscribe to everything) ---
 
 export const useGraphQLQueueContext = (): GraphQLQueueContextType => {
   const context = useContext(QueueContext);

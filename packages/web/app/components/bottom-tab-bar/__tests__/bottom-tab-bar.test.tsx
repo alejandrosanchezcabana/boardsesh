@@ -97,6 +97,12 @@ vi.mock('../../persistent-session', () => ({
     localBoardDetails: null,
     localCurrentClimbQueueItem: null,
   }),
+  usePersistentSessionState: () => ({
+    activeSession: mockActiveSession,
+    localBoardDetails: null,
+    localCurrentClimbQueueItem: null,
+  }),
+  usePersistentSessionActions: () => ({}),
 }));
 
 vi.mock('@/app/hooks/use-climb-actions-data', () => ({

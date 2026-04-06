@@ -4,7 +4,7 @@ import { useState, useCallback, useMemo } from 'react';
 import { usePathname, useRouter } from 'next/navigation';
 import { useSnackbar } from '@/app/components/providers/snackbar-provider';
 import { track } from '@vercel/analytics';
-import { useQueueContext } from '../graphql-queue';
+import { useQueueActions } from '../graphql-queue';
 import { useFavorite } from './use-favorite';
 import {
   constructCreateClimbUrl,
@@ -33,7 +33,7 @@ export function useClimbActions({
 }: UseClimbActionsOptions): UseClimbActionsReturn {
   const router = useRouter();
   const pathname = usePathname();
-  const { addToQueue, queue, mirrorClimb } = useQueueContext();
+  const { addToQueue, mirrorClimb } = useQueueActions();
   const { showMessage } = useSnackbar();
 
   const [recentlyAddedToQueue, setRecentlyAddedToQueue] = useState(false);
@@ -139,7 +139,6 @@ export function useClimbActions({
 
     track('Add to Queue', {
       boardLayout: boardDetails.layout_name || '',
-      queueLength: queue.length + 1,
     });
 
     setRecentlyAddedToQueue(true);
@@ -148,7 +147,7 @@ export function useClimbActions({
     }, 5000);
 
     onActionComplete?.('queue');
-  }, [climb, addToQueue, recentlyAddedToQueue, boardDetails.layout_name, queue.length, onActionComplete]);
+  }, [climb, addToQueue, recentlyAddedToQueue, boardDetails.layout_name, onActionComplete]);
 
   const handleTick = useCallback(() => {
     // TickButton handles its own drawer/modal logic

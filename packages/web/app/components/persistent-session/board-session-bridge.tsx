@@ -2,7 +2,7 @@
 
 import React, { useEffect, useMemo } from 'react';
 import { usePathname } from 'next/navigation';
-import { usePersistentSession } from './persistent-session-context';
+import { usePersistentSessionState, usePersistentSessionActions } from './persistent-session-context';
 import { BoardDetails, ParsedBoardRouteParameters } from '@/app/lib/types';
 import { getBaseBoardPath } from '@/app/lib/url-utils';
 import { getClimbSessionCookie } from '@/app/lib/climb-session-cookie';
@@ -25,7 +25,8 @@ const BoardSessionBridge: React.FC<BoardSessionBridgeProps> = ({
   const pathname = usePathname();
   const sessionIdFromCookie = getClimbSessionCookie();
 
-  const { activeSession, activateSession } = usePersistentSession();
+  const { activeSession } = usePersistentSessionState();
+  const { activateSession } = usePersistentSessionActions();
 
   // Compute the base board path (without /play/[uuid] or /list segments)
   // This ensures navigation between climbs doesn't trigger session reconnection

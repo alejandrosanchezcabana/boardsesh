@@ -25,7 +25,7 @@ import { themeTokens } from '@/app/theme/theme-config';
 import { useColorMode } from '@/app/hooks/use-color-mode';
 import { PlaylistsContext } from '../climb-actions/playlists-batch-context';
 import { useAuthModal } from '@/app/components/providers/auth-modal-provider';
-import { usePersistentSession } from '../persistent-session';
+import { usePersistentSessionState } from '../persistent-session';
 import { getLastUsedBoard } from '@/app/lib/last-used-board-db';
 import { getRecentSearches } from '@/app/components/search-drawer/recent-searches-storage';
 import BoardSelectorDrawer from '../board-selector-drawer/board-selector-drawer';
@@ -113,7 +113,7 @@ function BottomTabBar({ boardDetails, angle, boardConfigs }: BottomTabBarProps) 
     activeSession,
     localBoardDetails,
     localCurrentClimbQueueItem,
-  } = usePersistentSession();
+  } = usePersistentSessionState();
 
   // Resolve effective board details: prop > active session > local queue
   const effectiveBoardDetails = boardDetails

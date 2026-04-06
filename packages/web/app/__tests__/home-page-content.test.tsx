@@ -24,6 +24,8 @@ vi.mock('next-auth/react', () => ({
 let mockActiveSession: ActiveSessionInfo | null = null;
 vi.mock('@/app/components/persistent-session', () => ({
   usePersistentSession: () => ({ activeSession: mockActiveSession }),
+  usePersistentSessionState: () => ({ activeSession: mockActiveSession }),
+  usePersistentSessionActions: () => ({}),
 }));
 
 vi.mock('@/app/hooks/use-discover-boards', () => ({

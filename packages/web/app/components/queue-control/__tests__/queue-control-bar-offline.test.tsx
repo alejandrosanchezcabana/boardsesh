@@ -12,6 +12,8 @@ vi.mock('@/app/components/providers/snackbar-provider', () => ({
 let mockQueueContext: Record<string, unknown> = {};
 vi.mock('@/app/components/graphql-queue', () => ({
   useQueueContext: () => mockQueueContext,
+  useQueueData: () => mockQueueContext,
+  useQueueActions: () => mockQueueContext,
 }));
 
 vi.mock('next/navigation', () => ({
@@ -107,6 +109,12 @@ vi.mock('@/app/components/persistent-session', () => ({
     localBoardDetails: null,
     localCurrentClimbQueueItem: null,
   }),
+  usePersistentSessionState: () => ({
+    activeSession: null,
+    localBoardDetails: null,
+    localCurrentClimbQueueItem: null,
+  }),
+  usePersistentSessionActions: () => ({}),
 }));
 
 vi.mock('@/app/components/board-bluetooth-control/bluetooth-context', () => ({

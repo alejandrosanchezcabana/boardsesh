@@ -5,7 +5,7 @@ import CircularProgress from '@mui/material/CircularProgress';
 import MuiTypography from '@mui/material/Typography';
 import Stack from '@mui/material/Stack';
 import FilterListOutlined from '@mui/icons-material/FilterListOutlined';
-import { useQueueContext } from '@/app/components/graphql-queue';
+import { useQueueData } from '@/app/components/graphql-queue';
 import ClearButton from './clear-button';
 import { useUISearchParams } from '../queue-control/ui-searchparams-provider';
 import { DEFAULT_SEARCH_PARAMS } from '@/app/lib/url-utils';
@@ -14,7 +14,7 @@ import styles from './search-form.module.css';
 
 
 const SearchResultsFooter = () => {
-  const { totalSearchResultCount, isFetchingClimbs } = useQueueContext();
+  const { totalSearchResultCount, isFetchingClimbs } = useQueueData();
   const { uiSearchParams } = useUISearchParams();
 
   // Check if any filters are active

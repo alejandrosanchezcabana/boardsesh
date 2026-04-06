@@ -2,7 +2,7 @@
 
 import React from 'react';
 import Link from 'next/link';
-import { useQueueContext } from '../graphql-queue';
+import { useQueueActions, useQueueData } from '../graphql-queue';
 import { constructPlayUrlWithSlugs, getContextAwareClimbViewUrl } from '@/app/lib/url-utils';
 import { BoardDetails } from '@/app/lib/types';
 import { useResolvedBoardDetails } from '@/app/hooks/use-resolved-board-details';
@@ -21,7 +21,8 @@ const NextButton = (props: IconButtonProps) => (
 );
 
 export default function NextClimbButton({ navigate = false, boardDetails }: NextClimbButtonProps) {
-  const { setCurrentClimbQueueItem, getNextClimbQueueItem, viewOnlyMode } = useQueueContext();
+  const { setCurrentClimbQueueItem, getNextClimbQueueItem } = useQueueActions();
+  const { viewOnlyMode } = useQueueData();
   const { rawParams, angle, pathname, searchParams, isPlayPage, resolvedDetails } =
     useResolvedBoardDetails(boardDetails);
 

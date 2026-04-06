@@ -59,6 +59,15 @@ vi.mock('@/app/components/persistent-session/persistent-session-context', () => 
     deactivateSession: mockDeactivateSession,
     liveSessionStats: null,
   }),
+  usePersistentSessionState: () => ({
+    activeSession: mockActiveSession,
+    session: mockSession,
+    users: [],
+    liveSessionStats: null,
+  }),
+  usePersistentSessionActions: () => ({
+    deactivateSession: mockDeactivateSession,
+  }),
 }));
 
 vi.mock('@/app/components/queue-control/queue-bridge-context', () => ({

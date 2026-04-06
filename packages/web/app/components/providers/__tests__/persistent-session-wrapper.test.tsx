@@ -28,6 +28,12 @@ vi.mock('../../persistent-session', () => ({
     sessionSummary: null,
     dismissSessionSummary: vi.fn(),
   }),
+  usePersistentSessionState: () => ({
+    sessionSummary: null,
+  }),
+  usePersistentSessionActions: () => ({
+    dismissSessionSummary: vi.fn(),
+  }),
 }));
 
 vi.mock('../../queue-control/queue-bridge-context', () => ({
@@ -37,6 +43,8 @@ vi.mock('../../queue-control/queue-bridge-context', () => ({
 
 vi.mock('../../graphql-queue', () => ({
   useQueueContext: () => mockQueueContext,
+  useQueueData: () => mockQueueContext,
+  useQueueActions: () => mockQueueContext,
 }));
 
 vi.mock('../../queue-control/queue-control-bar', () => ({

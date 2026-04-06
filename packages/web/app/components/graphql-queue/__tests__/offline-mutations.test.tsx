@@ -84,6 +84,8 @@ vi.mock('../../connection-manager/connection-settings-context', () => ({
 
 vi.mock('../../persistent-session', () => ({
   usePersistentSession: () => mockPersistentSession,
+  usePersistentSessionState: () => mockPersistentSession,
+  usePersistentSessionActions: () => mockPersistentSession,
   PersistentSessionProvider: ({ children }: { children: React.ReactNode }) => <>{children}</>,
 }));
 

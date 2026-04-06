@@ -34,31 +34,9 @@ export interface ActiveSessionInfo {
   parsedParams: ParsedBoardRouteParameters;
 }
 
-export interface PersistentSessionContextType {
-  // Active session info
-  activeSession: ActiveSessionInfo | null;
-
-  // Session state
-  session: Session | null;
-  isConnecting: boolean;
-  hasConnected: boolean;
-  error: Error | null;
-
-  // Session data
-  clientId: string | null;
-  isLeader: boolean;
-  users: SessionUser[];
-
-  // Queue state synced from backend
-  currentClimbQueueItem: LocalClimbQueueItem | null;
-  queue: LocalClimbQueueItem[];
-
-  // Local queue state (persists without WebSocket session)
-  localQueue: LocalClimbQueueItem[];
-  localCurrentClimbQueueItem: LocalClimbQueueItem | null;
-  localBoardPath: string | null;
-  localBoardDetails: BoardDetails | null;
-  isLocalQueueLoaded: boolean;
+// Stable action functions — identity rarely changes
+export interface PersistentSessionActionsType {
+  // Local queue management
   setLocalQueueState: (
     queue: LocalClimbQueueItem[],
     currentItem: LocalClimbQueueItem | null,
@@ -97,21 +75,53 @@ export interface PersistentSessionContextType {
   subscribeToQueueEvents: (callback: (event: SubscriptionQueueEvent) => void) => () => void;
   subscribeToSessionEvents: (callback: (event: SessionEvent) => void) => () => void;
 
+  // Trigger a resync with the server (useful when corrupted data is detected)
+  triggerResync: () => void;
+
+  // Session ending with summary
+  endSessionWithSummary: () => void;
+  dismissSessionSummary: () => void;
+}
+
+// Frequently-changing state data
+export interface PersistentSessionStateType {
+  // Active session info
+  activeSession: ActiveSessionInfo | null;
+
+  // Session state
+  session: Session | null;
+  isConnecting: boolean;
+  hasConnected: boolean;
+  error: Error | null;
+
+  // Session data
+  clientId: string | null;
+  isLeader: boolean;
+  users: SessionUser[];
+
+  // Queue state synced from backend
+  currentClimbQueueItem: LocalClimbQueueItem | null;
+  queue: LocalClimbQueueItem[];
+
+  // Local queue state (persists without WebSocket session)
+  localQueue: LocalClimbQueueItem[];
+  localCurrentClimbQueueItem: LocalClimbQueueItem | null;
+  localBoardPath: string | null;
+  localBoardDetails: BoardDetails | null;
+  isLocalQueueLoaded: boolean;
+
   // Ref for offline queue buffer (used by QueueContext to populate, read by event processor during FullSync)
   offlineBufferRef: MutableRefObject<LocalClimbQueueItem[]>;
 
   // Ref for last received sequence number (used by reconciliation to detect server changes)
   lastReceivedSequenceRef: MutableRefObject<number | null>;
 
-  // Trigger a resync with the server (useful when corrupted data is detected)
-  triggerResync: () => void;
-
-  // Session ending with summary (elevated from GraphQLQueueProvider)
-  endSessionWithSummary: () => void;
   liveSessionStats: SessionLiveStats | null;
   sessionSummary: SessionSummary | null;
-  dismissSessionSummary: () => void;
 }
+
+// Combined type for backward compatibility
+export type PersistentSessionContextType = PersistentSessionStateType & PersistentSessionActionsType;
 
 // Pending initial queue for new sessions
 export interface PendingInitialQueue {

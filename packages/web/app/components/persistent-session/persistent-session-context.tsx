@@ -8,7 +8,7 @@ import { useWsAuthToken } from '@/app/hooks/use-ws-auth-token';
 import { usePartyProfile } from '../party-manager/party-profile-context';
 import { isBoardRoutePath } from '@/app/lib/board-route-paths';
 
-import type { PersistentSessionContextType, Session, ActiveSessionInfo, SharedRefs } from './types';
+import type { PersistentSessionContextType, PersistentSessionActionsType, PersistentSessionStateType, Session, ActiveSessionInfo, SharedRefs } from './types';
 import { useEventProcessor } from './hooks/use-event-processor';
 import { useQueueStorage } from './hooks/use-queue-storage';
 import { useQueueMutations } from './hooks/use-queue-mutations';
@@ -16,8 +16,12 @@ import { useSessionSubscriptions } from './hooks/use-session-subscriptions';
 import { useSessionLifecycle } from './hooks/use-session-lifecycle';
 
 // Re-export types for backwards compatibility
-export type { PersistentSessionContextType, Session, ActiveSessionInfo } from './types';
+export type { PersistentSessionContextType, PersistentSessionActionsType, PersistentSessionStateType, Session, ActiveSessionInfo } from './types';
 
+// Split contexts: actions (stable) vs state (changes frequently)
+const PersistentSessionActionsContext = createContext<PersistentSessionActionsType | undefined>(undefined);
+const PersistentSessionStateContext = createContext<PersistentSessionStateType | undefined>(undefined);
+// Combined context for backward compatibility
 const PersistentSessionContext = createContext<PersistentSessionContextType | undefined>(undefined);
 
 export const PersistentSessionProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
@@ -113,7 +117,40 @@ export const PersistentSessionProvider: React.FC<{ children: React.ReactNode }> 
     refs,
   });
 
-  const value = useMemo<PersistentSessionContextType>(
+  // --- Actions context value (stable — functions from hooks are already memoized) ---
+  const actionsValue = useMemo<PersistentSessionActionsType>(
+    () => ({
+      activateSession: lifecycle.activateSession,
+      deactivateSession: lifecycle.deactivateSession,
+      setInitialQueueForSession: lifecycle.setInitialQueueForSession,
+      addQueueItem: mutations.addQueueItem,
+      removeQueueItem: mutations.removeQueueItem,
+      setCurrentClimb: mutations.setCurrentClimb,
+      mirrorCurrentClimb: mutations.mirrorCurrentClimb,
+      setQueue: mutations.setQueue,
+      setLocalQueueState: queueStorage.setLocalQueueState,
+      persistToStorageOnly: queueStorage.persistToStorageOnly,
+      clearLocalQueue: queueStorage.clearLocalQueue,
+      loadStoredQueue: queueStorage.loadStoredQueue,
+      subscribeToQueueEvents: subscriptions.subscribeToQueueEvents,
+      subscribeToSessionEvents: subscriptions.subscribeToSessionEvents,
+      triggerResync: subscriptions.triggerResync,
+      endSessionWithSummary: lifecycle.endSessionWithSummary,
+      dismissSessionSummary: lifecycle.dismissSessionSummary,
+    }),
+    [
+      lifecycle.activateSession, lifecycle.deactivateSession, lifecycle.setInitialQueueForSession,
+      lifecycle.endSessionWithSummary, lifecycle.dismissSessionSummary,
+      mutations.addQueueItem, mutations.removeQueueItem, mutations.setCurrentClimb,
+      mutations.mirrorCurrentClimb, mutations.setQueue,
+      queueStorage.setLocalQueueState, queueStorage.persistToStorageOnly,
+      queueStorage.clearLocalQueue, queueStorage.loadStoredQueue,
+      subscriptions.subscribeToQueueEvents, subscriptions.subscribeToSessionEvents, subscriptions.triggerResync,
+    ],
+  );
+
+  // --- State context value (changes when session/queue state changes) ---
+  const stateValue = useMemo<PersistentSessionStateType>(
     () => ({
       activeSession: lifecycle.activeSession,
       session: lifecycle.session,
@@ -130,52 +167,56 @@ export const PersistentSessionProvider: React.FC<{ children: React.ReactNode }> 
       localBoardPath: queueStorage.localBoardPath,
       localBoardDetails: queueStorage.localBoardDetails,
       isLocalQueueLoaded: queueStorage.isLocalQueueLoaded,
-      setLocalQueueState: queueStorage.setLocalQueueState,
-      persistToStorageOnly: queueStorage.persistToStorageOnly,
-      clearLocalQueue: queueStorage.clearLocalQueue,
-      loadStoredQueue: queueStorage.loadStoredQueue,
-      activateSession: lifecycle.activateSession,
-      deactivateSession: lifecycle.deactivateSession,
-      setInitialQueueForSession: lifecycle.setInitialQueueForSession,
-      addQueueItem: mutations.addQueueItem,
-      removeQueueItem: mutations.removeQueueItem,
-      setCurrentClimb: mutations.setCurrentClimb,
-      mirrorCurrentClimb: mutations.mirrorCurrentClimb,
-      setQueue: mutations.setQueue,
       offlineBufferRef,
       lastReceivedSequenceRef,
-      subscribeToQueueEvents: subscriptions.subscribeToQueueEvents,
-      subscribeToSessionEvents: subscriptions.subscribeToSessionEvents,
-      triggerResync: subscriptions.triggerResync,
-      endSessionWithSummary: lifecycle.endSessionWithSummary,
       liveSessionStats: eventProcessor.liveSessionStats,
       sessionSummary: lifecycle.sessionSummary,
-      dismissSessionSummary: lifecycle.dismissSessionSummary,
     }),
     [
       lifecycle.activeSession, lifecycle.session, lifecycle.isConnecting,
-      lifecycle.hasConnected, lifecycle.error, lifecycle.activateSession,
-      lifecycle.deactivateSession, lifecycle.setInitialQueueForSession,
-      lifecycle.endSessionWithSummary, lifecycle.sessionSummary, lifecycle.dismissSessionSummary,
+      lifecycle.hasConnected, lifecycle.error, lifecycle.sessionSummary,
       eventProcessor.currentClimbQueueItem, eventProcessor.queue, eventProcessor.liveSessionStats,
       queueStorage.localQueue, queueStorage.localCurrentClimbQueueItem,
-      queueStorage.localBoardPath, queueStorage.localBoardDetails,
-      queueStorage.isLocalQueueLoaded, queueStorage.setLocalQueueState,
-      queueStorage.persistToStorageOnly,
-      queueStorage.clearLocalQueue, queueStorage.loadStoredQueue,
-      mutations.addQueueItem, mutations.removeQueueItem, mutations.setCurrentClimb,
-      mutations.mirrorCurrentClimb, mutations.setQueue,
-      subscriptions.subscribeToQueueEvents, subscriptions.subscribeToSessionEvents,
-      subscriptions.triggerResync,
+      queueStorage.localBoardPath, queueStorage.localBoardDetails, queueStorage.isLocalQueueLoaded,
     ],
   );
 
+  // --- Combined context value for backward compatibility ---
+  const value = useMemo<PersistentSessionContextType>(
+    () => ({ ...stateValue, ...actionsValue }),
+    [stateValue, actionsValue],
+  );
+
   return (
-    <PersistentSessionContext.Provider value={value}>
-      {children}
-    </PersistentSessionContext.Provider>
+    <PersistentSessionActionsContext.Provider value={actionsValue}>
+      <PersistentSessionStateContext.Provider value={stateValue}>
+        <PersistentSessionContext.Provider value={value}>
+          {children}
+        </PersistentSessionContext.Provider>
+      </PersistentSessionStateContext.Provider>
+    </PersistentSessionActionsContext.Provider>
   );
 };
+
+// --- Targeted hooks (prefer these for performance) ---
+
+export function usePersistentSessionActions() {
+  const context = useContext(PersistentSessionActionsContext);
+  if (!context) {
+    throw new Error('usePersistentSessionActions must be used within a PersistentSessionProvider');
+  }
+  return context;
+}
+
+export function usePersistentSessionState() {
+  const context = useContext(PersistentSessionStateContext);
+  if (!context) {
+    throw new Error('usePersistentSessionState must be used within a PersistentSessionProvider');
+  }
+  return context;
+}
+
+// --- Backward-compatible hook (subscribes to everything) ---
 
 export function usePersistentSession() {
   const context = useContext(PersistentSessionContext);

@@ -3,7 +3,7 @@ import React, { createContext, useContext, useState } from 'react';
 import { SearchRequestPagination } from '@/lib/types';
 import { useDebouncedCallback } from 'use-debounce';
 import { track } from '@vercel/analytics';
-import { useQueueContext } from '../graphql-queue';
+import { useQueueActions, useQueueData } from '../graphql-queue';
 import { DEFAULT_SEARCH_PARAMS } from '@/app/lib/url-utils';
 
 interface UISearchParamsContextType {
@@ -22,7 +22,8 @@ const UISearchParamsContext = createContext<UISearchParamsContextType | undefine
  *
  */
 export const UISearchParamsProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const { climbSearchParams, setClimbSearchParams, setCountSearchParams } = useQueueContext();
+  const { climbSearchParams } = useQueueData();
+  const { setClimbSearchParams, setCountSearchParams } = useQueueActions();
   const [uiSearchParams, setUISearchParams] = useState<SearchRequestPagination>(climbSearchParams);
 
   const debouncedUpdate = useDebouncedCallback(() => {

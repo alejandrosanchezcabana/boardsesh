@@ -15,7 +15,7 @@ import {
   GetUserFavoriteClimbsQueryVariables,
 } from '@/app/lib/graphql/operations/favorites';
 import { useWsAuthToken } from '@/app/hooks/use-ws-auth-token';
-import { useQueueContext } from '@/app/components/graphql-queue';
+import { useQueueActions } from '@/app/components/graphql-queue';
 import { useSnackbar } from '@/app/components/providers/snackbar-provider';
 import ClimbCard from '@/app/components/climb-card/climb-card';
 import ClimbListItem from '@/app/components/climb-card/climb-list-item';
@@ -70,7 +70,7 @@ export default function LikedClimbsList({
   angle,
 }: LikedClimbsListProps) {
   const { token, isLoading: tokenLoading } = useWsAuthToken();
-  const { setCurrentClimb, addToQueue } = useQueueContext();
+  const { setCurrentClimb, addToQueue } = useQueueActions();
   const { showMessage } = useSnackbar();
   const [selectedClimbUuid, setSelectedClimbUuid] = useState<string | null>(null);
   const [viewMode, setViewMode] = useState<ViewMode>('list');

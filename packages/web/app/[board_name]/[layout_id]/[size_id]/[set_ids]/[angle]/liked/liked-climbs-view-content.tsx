@@ -24,7 +24,7 @@ import {
 import { useSnackbar } from '@/app/components/providers/snackbar-provider';
 import { LoadingSpinner } from '@/app/components/ui/loading-spinner';
 import { useWsAuthToken } from '@/app/hooks/use-ws-auth-token';
-import { useQueueContext } from '@/app/components/graphql-queue';
+import { useQueueActions } from '@/app/components/graphql-queue';
 import BackButton from '@/app/components/back-button';
 import LikedClimbsList from './liked-climbs-list';
 import styles from '@/app/components/library/playlist-view.module.css';
@@ -44,7 +44,7 @@ export default function LikedClimbsViewContent({
   const addingToQueueRef = useRef(false);
   const abortControllerRef = useRef<AbortController | null>(null);
   const { token, isLoading: tokenLoading } = useWsAuthToken();
-  const { addToQueue } = useQueueContext();
+  const { addToQueue } = useQueueActions();
 
   const getBackUrl = () => {
     return '/playlists';
