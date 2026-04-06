@@ -33,6 +33,8 @@ vi.mock('../../graphql-queue/QueueContext', () => {
     QueueContext: ctx,
     QueueActionsContext: actionsCtx,
     QueueDataContext: dataCtx,
+    useQueueActions: () => React.useContext(actionsCtx),
+    useQueueData: () => React.useContext(dataCtx),
     __esModule: true,
   };
 });
@@ -59,8 +61,8 @@ import {
   QueueBridgeInjector,
   useQueueBridgeBoardInfo,
 } from '../queue-bridge-context';
-import { QueueContext } from '../../graphql-queue/QueueContext';
-import type { GraphQLQueueContextType } from '../../graphql-queue/QueueContext';
+import { QueueContext, QueueActionsContext } from '../../graphql-queue/QueueContext';
+import type { GraphQLQueueContextType, GraphQLQueueActionsType } from '../../graphql-queue/QueueContext';
 import type { BoardDetails, Climb, Angle } from '@/app/lib/types';
 import type { ClimbQueueItem } from '../types';
 
@@ -215,6 +217,13 @@ function createFakeQueueContext(overrides?: Partial<GraphQLQueueContextType>): G
  */
 function useTestQueueContext() {
   return React.useContext(QueueContext);
+}
+
+/**
+ * Hook to read the QueueActionsContext value exposed by QueueBridgeProvider.
+ */
+function useTestQueueActions() {
+  return React.useContext(QueueActionsContext) as GraphQLQueueActionsType | undefined;
 }
 
 // ---------------------------------------------------------------------------
@@ -519,6 +528,27 @@ describe('queue-bridge-context', () => {
 
       // The injector's useEffect should have called updateContext
       expect(result.current.queueCtx).toBe(fakeCtx2);
+    });
+
+    it('exposes disconnect via useQueueActions when context is injected', () => {
+      const mockDisconnect = vi.fn();
+      const fakeCtx = createFakeQueueContext({ disconnect: mockDisconnect });
+
+      const wrapper = ({ children }: { children: React.ReactNode }) => (
+        <QueueBridgeProvider>
+          {children}
+          <QueueContext.Provider value={fakeCtx}>
+            <QueueBridgeInjector boardDetails={bd} angle={angle} />
+          </QueueContext.Provider>
+        </QueueBridgeProvider>
+      );
+
+      const { result } = renderHook(
+        () => useTestQueueActions(),
+        { wrapper },
+      );
+
+      expect(result.current?.disconnect).toBe(mockDisconnect);
     });
 
     it('handles initially-null queueContext via deferred injection', () => {
