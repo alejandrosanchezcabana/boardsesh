@@ -8,6 +8,12 @@ const mockSetInitialQueueForSession = vi.fn();
 let mockLocalQueue: unknown[] = [];
 let mockLocalCurrentClimbQueueItem: unknown = null;
 let mockLocalBoardPath: string | null = null;
+let mockLocalBoardDetails: {
+  board_name: string;
+  layout_id: number;
+  size_id: number;
+  set_ids: number[];
+} | null = null;
 
 vi.mock('@/app/components/persistent-session/persistent-session-context', () => ({
   usePersistentSession: () => ({
@@ -15,6 +21,7 @@ vi.mock('@/app/components/persistent-session/persistent-session-context', () => 
     localQueue: mockLocalQueue,
     localCurrentClimbQueueItem: mockLocalCurrentClimbQueueItem,
     localBoardPath: mockLocalBoardPath,
+    localBoardDetails: mockLocalBoardDetails,
   }),
 }));
 
@@ -50,8 +57,8 @@ vi.mock('@/app/lib/climb-session-cookie', () => ({
 vi.mock('@/app/hooks/use-my-boards', () => ({
   useMyBoards: () => ({
     boards: [
-      { uuid: 'board-1', slug: 'kilter-original-12x12', name: 'Kilter', angle: 40 },
-      { uuid: 'board-2', slug: 'tension-board-8x10', name: 'Tension', angle: 30 },
+      { uuid: 'board-1', slug: 'kilter-original-12x12', name: 'Kilter', angle: 40, boardType: 'kilter', layoutId: 1, sizeId: 10, setIds: '1,2' },
+      { uuid: 'board-2', slug: 'tension-board-8x10', name: 'Tension', angle: 30, boardType: 'tension', layoutId: 2, sizeId: 20, setIds: '3,4' },
     ],
     isLoading: false,
     error: null,
@@ -64,7 +71,7 @@ vi.mock('@/app/components/swipeable-drawer/swipeable-drawer', () => ({
 }));
 
 vi.mock('@/app/components/board-scroll/board-scroll-section', () => ({
-  default: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
+  default: ({ children }: { children: React.ReactNode }) => <div data-testid="board-scroll-section">{children}</div>,
 }));
 
 vi.mock('@/app/components/board-scroll/board-scroll-card', () => ({
@@ -104,18 +111,96 @@ describe('StartSeshDrawer', () => {
     mockLocalQueue = [];
     mockLocalCurrentClimbQueueItem = null;
     mockLocalBoardPath = null;
+    mockLocalBoardDetails = null;
     mockCreateSession.mockResolvedValue('new-session-id');
   });
 
-  async function selectBoardAndSubmit(boardName: string) {
+  async function expandBoardSelectorAndSelect(boardName: string) {
+    // If the board selector is collapsed (pill shown), expand it first
+    const changeButton = screen.queryByText('Change');
+    if (changeButton) {
+      fireEvent.click(changeButton);
+    }
+
     const boardCard = screen.getByTestId(`board-card-${boardName}`);
     fireEvent.click(boardCard);
+  }
 
+  async function submitSesh() {
     const submitButton = screen.getByRole('button', { name: /sesh/i });
     await act(async () => {
       fireEvent.click(submitButton);
     });
   }
+
+  async function selectBoardAndSubmit(boardName: string) {
+    await expandBoardSelectorAndSelect(boardName);
+    await submitSesh();
+  }
+
+  it('auto-selects board from localBoardPath and starts session without manual selection', async () => {
+    const item1 = makeQueueItem('q1', 'Boulder 1');
+    mockLocalQueue = [item1];
+    mockLocalCurrentClimbQueueItem = item1;
+    mockLocalBoardPath = '/b/kilter-original-12x12/40/list';
+
+    render(<StartSeshDrawer open onClose={vi.fn()} />);
+
+    // Board should be auto-selected — just press submit
+    await submitSesh();
+
+    await waitFor(() => {
+      expect(mockCreateSession).toHaveBeenCalled();
+    });
+
+    expect(mockSetInitialQueueForSession).toHaveBeenCalledWith(
+      'new-session-id',
+      [item1],
+      item1,
+      undefined,
+    );
+    expect(mockRouterPush).toHaveBeenCalled();
+  });
+
+  it('auto-selects board from localBoardDetails (generic route)', async () => {
+    mockLocalBoardPath = '/kilter/original/12x12/screw_bolt/40/list';
+    mockLocalBoardDetails = { board_name: 'kilter', layout_id: 1, size_id: 10, set_ids: [1, 2] };
+
+    render(<StartSeshDrawer open onClose={vi.fn()} />);
+
+    // Board should be auto-selected via strategy 2
+    await submitSesh();
+
+    await waitFor(() => {
+      expect(mockCreateSession).toHaveBeenCalled();
+    });
+    expect(mockRouterPush).toHaveBeenCalled();
+  });
+
+  it('shows collapsed pill when board is auto-selected', async () => {
+    mockLocalBoardPath = '/b/kilter-original-12x12/40/list';
+
+    render(<StartSeshDrawer open onClose={vi.fn()} />);
+
+    // Should show the board name in a pill and "Change" link
+    expect(screen.getByText('Kilter')).toBeTruthy();
+    expect(screen.getByText('Change')).toBeTruthy();
+
+    // Board scroll section should not be visible
+    expect(screen.queryByTestId('board-scroll-section')).toBeNull();
+  });
+
+  it('expands board selector when Change is clicked', async () => {
+    mockLocalBoardPath = '/b/kilter-original-12x12/40/list';
+
+    render(<StartSeshDrawer open onClose={vi.fn()} />);
+
+    // Click Change to expand
+    fireEvent.click(screen.getByText('Change'));
+
+    // Board scroll section should now be visible
+    expect(screen.getByTestId('board-scroll-section')).toBeTruthy();
+  });
 
   it('transfers local queue when board matches', async () => {
     const item1 = makeQueueItem('q1', 'Boulder 1');
@@ -126,7 +211,8 @@ describe('StartSeshDrawer', () => {
 
     render(<StartSeshDrawer open onClose={vi.fn()} />);
 
-    await selectBoardAndSubmit('Kilter');
+    // Board is auto-selected, just submit
+    await submitSesh();
 
     await waitFor(() => {
       expect(mockSetInitialQueueForSession).toHaveBeenCalledWith(
@@ -148,6 +234,7 @@ describe('StartSeshDrawer', () => {
 
     render(<StartSeshDrawer open onClose={vi.fn()} />);
 
+    // Tension is auto-selected, expand and select Kilter instead
     await selectBoardAndSubmit('Kilter');
 
     await waitFor(() => {
@@ -165,7 +252,7 @@ describe('StartSeshDrawer', () => {
 
     render(<StartSeshDrawer open onClose={vi.fn()} />);
 
-    await selectBoardAndSubmit('Kilter');
+    await submitSesh();
 
     await waitFor(() => {
       expect(mockCreateSession).toHaveBeenCalled();
@@ -182,6 +269,7 @@ describe('StartSeshDrawer', () => {
 
     render(<StartSeshDrawer open onClose={vi.fn()} />);
 
+    // No auto-selection, manually select a board
     await selectBoardAndSubmit('Kilter');
 
     await waitFor(() => {
@@ -199,7 +287,8 @@ describe('StartSeshDrawer', () => {
 
     render(<StartSeshDrawer open onClose={vi.fn()} />);
 
-    await selectBoardAndSubmit('Kilter');
+    // Board is auto-selected, just submit
+    await submitSesh();
 
     await waitFor(() => {
       expect(mockSetInitialQueueForSession).toHaveBeenCalledWith(
@@ -209,5 +298,16 @@ describe('StartSeshDrawer', () => {
         undefined,
       );
     });
+  });
+
+  it('shows full board scroll when no board context is available', async () => {
+    mockLocalBoardPath = null;
+    mockLocalBoardDetails = null;
+
+    render(<StartSeshDrawer open onClose={vi.fn()} />);
+
+    // No auto-selection, full scroll should show
+    expect(screen.getByTestId('board-scroll-section')).toBeTruthy();
+    expect(screen.queryByText('Change')).toBeNull();
   });
 });
