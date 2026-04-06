@@ -8,6 +8,7 @@ import {
   QueueItemIdSchema,
   QueueArraySchema,
 } from '../../../validation/schemas';
+import { logMutationMetrics } from './mutation-metrics';
 
 // Debug logging flag - only log in development
 const DEBUG = process.env.NODE_ENV === 'development';
@@ -22,6 +23,7 @@ export const queueMutations = {
     { item, position }: { item: ClimbQueueItem; position?: number },
     ctx: ConnectionContext
   ) => {
+    const startTime = performance.now();
     await applyRateLimit(ctx); // Apply default rate limit
     const sessionId = requireSession(ctx);
 
@@ -92,6 +94,7 @@ export const queueMutations = {
       });
     }
 
+    logMutationMetrics('addQueueItem', performance.now() - startTime, sessionId, { queueSize: originalQueueLength });
     return item;
   },
 
@@ -100,6 +103,7 @@ export const queueMutations = {
    * Also clears current climb if it was removed
    */
   removeQueueItem: async (_: unknown, { uuid }: { uuid: string }, ctx: ConnectionContext) => {
+    const startTime = performance.now();
     await applyRateLimit(ctx);
     const sessionId = requireSession(ctx);
 
@@ -123,6 +127,7 @@ export const queueMutations = {
       uuid,
     });
 
+    logMutationMetrics('removeQueueItem', performance.now() - startTime, sessionId);
     return true;
   },
 
@@ -134,6 +139,7 @@ export const queueMutations = {
     { uuid, oldIndex, newIndex }: { uuid: string; oldIndex: number; newIndex: number },
     ctx: ConnectionContext
   ) => {
+    const startTime = performance.now();
     await applyRateLimit(ctx);
     const sessionId = requireSession(ctx);
 
@@ -168,6 +174,7 @@ export const queueMutations = {
       newIndex,
     });
 
+    logMutationMetrics('reorderQueueItem', performance.now() - startTime, sessionId);
     return true;
   },
 
@@ -181,6 +188,7 @@ export const queueMutations = {
     { item, shouldAddToQueue, correlationId }: { item: ClimbQueueItem | null; shouldAddToQueue?: boolean; correlationId?: string },
     ctx: ConnectionContext
   ) => {
+    const startTime = performance.now();
     await applyRateLimit(ctx);
     const sessionId = requireSession(ctx);
 
@@ -230,6 +238,7 @@ export const queueMutations = {
       correlationId: correlationId || null,
     });
 
+    logMutationMetrics('setCurrentClimb', performance.now() - startTime, sessionId, { shouldAddToQueue: !!shouldAddToQueue });
     return item;
   },
 
@@ -238,6 +247,7 @@ export const queueMutations = {
    * Updates both the current climb and the queue item if present
    */
   mirrorCurrentClimb: async (_: unknown, { mirrored }: { mirrored: boolean }, ctx: ConnectionContext) => {
+    const startTime = performance.now();
     await applyRateLimit(ctx);
     const sessionId = requireSession(ctx);
 
@@ -267,6 +277,7 @@ export const queueMutations = {
       mirrored,
     });
 
+    logMutationMetrics('mirrorCurrentClimb', performance.now() - startTime, sessionId);
     return currentClimb;
   },
 
@@ -279,6 +290,7 @@ export const queueMutations = {
     { uuid, item }: { uuid: string; item: ClimbQueueItem },
     ctx: ConnectionContext
   ) => {
+    const startTime = performance.now();
     await applyRateLimit(ctx);
     const sessionId = requireSession(ctx);
 
@@ -304,6 +316,7 @@ export const queueMutations = {
       state: { sequence, stateHash, queue, currentClimbQueueItem: currentClimb },
     });
 
+    logMutationMetrics('replaceQueueItem', performance.now() - startTime, sessionId);
     return item;
   },
 
@@ -316,6 +329,7 @@ export const queueMutations = {
     { queue, currentClimbQueueItem }: { queue: ClimbQueueItem[]; currentClimbQueueItem?: ClimbQueueItem },
     ctx: ConnectionContext
   ) => {
+    const startTime = performance.now();
     await applyRateLimit(ctx, 30); // Lower limit for bulk operations
     const sessionId = requireSession(ctx);
 
@@ -340,6 +354,7 @@ export const queueMutations = {
       state,
     });
 
+    logMutationMetrics('setQueue', performance.now() - startTime, sessionId, { queueSize: queue.length });
     return state;
   },
 };
