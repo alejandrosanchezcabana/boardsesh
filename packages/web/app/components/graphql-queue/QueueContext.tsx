@@ -291,7 +291,7 @@ export const GraphQLQueueProvider = ({ parsedParams, boardDetails, children, bas
     }
   }, []);
 
-  const setCurrentClimb = useCallback((climb: Climb) => {
+  const setCurrentClimb = useCallback(async (climb: Climb) => {
     const startTime = performance.now();
     const r = latestRef.current;
     if (r.guardMutation()) return;
@@ -304,13 +304,14 @@ export const GraphQLQueueProvider = ({ parsedParams, boardDetails, children, bas
       r.offlineBuffer.bufferAddition(newItem);
       trackQueueOperation('setCurrentClimb', performance.now() - startTime, mode);
     } else if (r.hasConnected && r.isPersistentSessionActive) {
-      r.persistentSession.setCurrentClimb(newItem, true, correlationId)
-        .then(() => trackQueueOperation('setCurrentClimb', performance.now() - startTime, mode))
-        .catch((error: unknown) => {
-          console.error('Failed to set current climb:', error);
-          if (correlationId) r.dispatch({ type: 'CLEANUP_PENDING_UPDATE', payload: { correlationId } });
-          trackQueueOperationError('setCurrentClimb', mode);
-        });
+      try {
+        await r.persistentSession.setCurrentClimb(newItem, true, correlationId);
+        trackQueueOperation('setCurrentClimb', performance.now() - startTime, mode);
+      } catch (error: unknown) {
+        console.error('Failed to set current climb:', error);
+        if (correlationId) r.dispatch({ type: 'CLEANUP_PENDING_UPDATE', payload: { correlationId } });
+        trackQueueOperationError('setCurrentClimb', mode);
+      }
     } else {
       trackQueueOperation('setCurrentClimb', performance.now() - startTime, mode);
     }
