@@ -2,6 +2,7 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { renderHook, act } from '@testing-library/react';
 import React from 'react';
 import { FavoritesContext } from '../favorites-batch-context';
+import { favoritesStore } from '../favorites-store';
 import { useFavorite } from '../use-favorite';
 
 // Helper to create a wrapper with FavoritesContext.Provider
@@ -12,11 +13,9 @@ function createWrapper(contextValue: React.ContextType<typeof FavoritesContext>)
 }
 
 describe('useFavorite', () => {
-  const mockIsFavorited = vi.fn().mockReturnValue(false);
   const mockToggleFavorite = vi.fn().mockResolvedValue(true);
 
   const defaultContext = {
-    isFavorited: mockIsFavorited,
     toggleFavorite: mockToggleFavorite,
     isLoading: false,
     isAuthenticated: true,
@@ -24,17 +23,20 @@ describe('useFavorite', () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
-    mockIsFavorited.mockReturnValue(false);
     mockToggleFavorite.mockResolvedValue(true);
+    // Reset the store to empty before each test
+    favoritesStore.setFavorites(new Set());
   });
 
   describe('with FavoritesProvider', () => {
-    it('calls isFavorited with climbUuid', () => {
-      renderHook(() => useFavorite({ climbUuid: 'climb-123' }), {
+    it('reads isFavorited from the external store', () => {
+      favoritesStore.setFavorites(new Set(['climb-123']));
+
+      const { result } = renderHook(() => useFavorite({ climbUuid: 'climb-123' }), {
         wrapper: createWrapper(defaultContext),
       });
 
-      expect(mockIsFavorited).toHaveBeenCalledWith('climb-123');
+      expect(result.current.isFavorited).toBe(true);
     });
 
     it('calls toggleFavorite with climbUuid when toggle invoked', async () => {
@@ -66,7 +68,7 @@ describe('useFavorite', () => {
     });
 
     it('returns isFavorited result for the specific climb', () => {
-      mockIsFavorited.mockReturnValue(true);
+      favoritesStore.setFavorites(new Set(['climb-123']));
 
       const { result } = renderHook(() => useFavorite({ climbUuid: 'climb-123' }), {
         wrapper: createWrapper(defaultContext),
@@ -76,7 +78,7 @@ describe('useFavorite', () => {
     });
 
     it('handles different climbUuids correctly', () => {
-      mockIsFavorited.mockImplementation((uuid: string) => uuid === 'climb-A');
+      favoritesStore.setFavorites(new Set(['climb-A']));
 
       const { result: resultA } = renderHook(() => useFavorite({ climbUuid: 'climb-A' }), {
         wrapper: createWrapper(defaultContext),
@@ -87,8 +89,6 @@ describe('useFavorite', () => {
 
       expect(resultA.current.isFavorited).toBe(true);
       expect(resultB.current.isFavorited).toBe(false);
-      expect(mockIsFavorited).toHaveBeenCalledWith('climb-A');
-      expect(mockIsFavorited).toHaveBeenCalledWith('climb-B');
     });
   });
 

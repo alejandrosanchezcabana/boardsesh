@@ -68,7 +68,7 @@ describe('useClimbActionsData', () => {
     const { result } = renderHook(() => useClimbActionsData(defaultOptions), { wrapper });
 
     await waitFor(() => {
-      expect(result.current.favoritesProviderProps.isFavorited('climb-1')).toBe(true);
+      expect(result.current.favoritesProviderProps.favorites.has('climb-1')).toBe(true);
     });
   });
 
@@ -109,8 +109,8 @@ describe('useClimbActionsData', () => {
     const { result } = renderHook(() => useClimbActionsData(defaultOptions), { wrapper });
 
     await waitFor(() => {
-      expect(result.current.favoritesProviderProps.isFavorited('climb-2')).toBe(true);
-      expect(result.current.favoritesProviderProps.isFavorited('climb-1')).toBe(false);
+      expect(result.current.favoritesProviderProps.favorites.has('climb-2')).toBe(true);
+      expect(result.current.favoritesProviderProps.favorites.has('climb-1')).toBe(false);
     });
   });
 
@@ -168,7 +168,7 @@ describe('useClimbActionsData', () => {
 
     // Optimistic update should show climb-1 as favorited
     await waitFor(() => {
-      expect(result.current.favoritesProviderProps.isFavorited('climb-1')).toBe(true);
+      expect(result.current.favoritesProviderProps.favorites.has('climb-1')).toBe(true);
     });
 
     // Resolve the mutation
@@ -187,7 +187,7 @@ describe('useClimbActionsData', () => {
     const { result } = renderHook(() => useClimbActionsData(defaultOptions), { wrapper });
 
     await waitFor(() => {
-      expect(result.current.favoritesProviderProps.isFavorited('climb-1')).toBe(true);
+      expect(result.current.favoritesProviderProps.favorites.has('climb-1')).toBe(true);
     });
 
     // Mock the toggle mutation to fail
@@ -204,7 +204,7 @@ describe('useClimbActionsData', () => {
 
     // Should roll back to original state
     await waitFor(() => {
-      expect(result.current.favoritesProviderProps.isFavorited('climb-1')).toBe(true);
+      expect(result.current.favoritesProviderProps.favorites.has('climb-1')).toBe(true);
     });
 
     vi.restoreAllMocks();
@@ -383,7 +383,7 @@ describe('useClimbActionsData', () => {
     );
 
     await waitFor(() => {
-      expect(result.current.favoritesProviderProps.isFavorited('climb-1')).toBe(true);
+      expect(result.current.favoritesProviderProps.favorites.has('climb-1')).toBe(true);
     });
 
     const callCountAfterInit = mockRequest.mock.calls.length;
@@ -395,7 +395,7 @@ describe('useClimbActionsData', () => {
     rerender({ ...defaultOptions, climbUuids: ['climb-1', 'climb-2', 'climb-3'] });
 
     await waitFor(() => {
-      expect(result.current.favoritesProviderProps.isFavorited('climb-3')).toBe(true);
+      expect(result.current.favoritesProviderProps.favorites.has('climb-3')).toBe(true);
     });
 
     // The favorites fetch should only include climb-3 (not climb-1, climb-2)
@@ -407,7 +407,7 @@ describe('useClimbActionsData', () => {
     expect(lastFavCall[1].climbUuids).toEqual(['climb-3']);
 
     // Original favorites should still be available
-    expect(result.current.favoritesProviderProps.isFavorited('climb-1')).toBe(true);
+    expect(result.current.favoritesProviderProps.favorites.has('climb-1')).toBe(true);
   });
 
   it('does not refetch when UUIDs are reordered', async () => {

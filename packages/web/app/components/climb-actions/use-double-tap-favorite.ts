@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useRef } from 'react';
 import { useFavorite } from './use-favorite';
 import { useAuthModal } from '@/app/components/providers/auth-modal-provider';
 
@@ -30,6 +30,10 @@ export function useDoubleTapFavorite({ climbUuid }: UseDoubleTapFavoriteOptions)
   const [showHeart, setShowHeart] = useState(false);
   const { openAuthModal } = useAuthModal();
 
+  // Read isFavorited via ref at call time so handleDoubleTap stays stable
+  const isFavoritedRef = useRef(isFavorited);
+  isFavoritedRef.current = isFavorited;
+
   const handleDoubleTap = useCallback(() => {
     if (!isAuthenticated) {
       openAuthModal({
@@ -43,10 +47,10 @@ export function useDoubleTapFavorite({ climbUuid }: UseDoubleTapFavoriteOptions)
     setShowHeart(true);
 
     // Only toggle if not already favorited (Instagram behavior)
-    if (!isFavorited) {
+    if (!isFavoritedRef.current) {
       toggleFavorite();
     }
-  }, [isAuthenticated, isFavorited, toggleFavorite, openAuthModal]);
+  }, [isAuthenticated, toggleFavorite, openAuthModal]);
 
   const dismissHeart = useCallback(() => {
     setShowHeart(false);

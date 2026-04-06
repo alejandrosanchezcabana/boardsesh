@@ -158,11 +158,6 @@ export function useClimbActionsData({
     [isAuthenticated, toggleFavoriteMutation],
   );
 
-  const isFavorited = useCallback(
-    (climbUuid: string): boolean => favorites.has(climbUuid),
-    [favorites],
-  );
-
   // === Playlists ===
 
   // Fetch user's playlists (all boards) — not incremental, just a simple query
@@ -312,7 +307,6 @@ export function useClimbActionsData({
   return {
     favoritesProviderProps: {
       favorites,
-      isFavorited,
       toggleFavorite,
       isLoading: isLoadingFavorites,
       isAuthenticated,

@@ -1,7 +1,8 @@
 'use client';
 
-import { useCallback, useContext } from 'react';
+import { useCallback, useContext, useSyncExternalStore } from 'react';
 import { FavoritesContext } from './favorites-batch-context';
+import { favoritesStore } from './favorites-store';
 
 type UseFavoriteOptions = {
   climbUuid: string;
@@ -19,12 +20,22 @@ const noopToggle = async () => false;
 /**
  * Hook to check and toggle favorite status for a climb.
  *
- * Uses the hoisted favorites query from FavoritesProvider when available.
+ * Uses `useSyncExternalStore` for the favorited boolean so only THIS
+ * component re-renders when its specific climb's status changes —
+ * not every consumer in the tree.
+ *
  * When rendered outside a FavoritesProvider (e.g. on the home page proposals feed),
  * returns safe defaults — favorite actions will be unavailable but won't crash.
  */
 export function useFavorite({ climbUuid }: UseFavoriteOptions): UseFavoriteReturn {
   const context = useContext(FavoritesContext);
+
+  // Per-UUID subscription — only re-renders when THIS climb's boolean flips
+  const isFavorited = useSyncExternalStore(
+    favoritesStore.subscribe,
+    () => favoritesStore.getIsFavorited(climbUuid),
+    () => false, // server snapshot
+  );
 
   const handleToggle = useCallback(async (): Promise<boolean> => {
     if (!context) return false;
@@ -41,7 +52,7 @@ export function useFavorite({ climbUuid }: UseFavoriteOptions): UseFavoriteRetur
   }
 
   return {
-    isFavorited: context.isFavorited(climbUuid),
+    isFavorited,
     isLoading: context.isLoading,
     toggleFavorite: handleToggle,
     isAuthenticated: context.isAuthenticated,

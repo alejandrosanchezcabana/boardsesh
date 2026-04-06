@@ -1,10 +1,10 @@
 'use client';
 
-import React, { useMemo } from 'react';
+import React, { useMemo, useLayoutEffect } from 'react';
 import { createTypedContext } from '@/app/lib/create-typed-context';
+import { favoritesStore } from './favorites-store';
 
 interface FavoritesContextValue {
-  isFavorited: (uuid: string) => boolean;
   toggleFavorite: (uuid: string) => Promise<boolean>;
   isLoading: boolean;
   isAuthenticated: boolean;
@@ -17,7 +17,6 @@ export { useFavoritesContext };
 
 interface FavoritesProviderProps {
   favorites: Set<string>;
-  isFavorited: (uuid: string) => boolean;
   toggleFavorite: (uuid: string) => Promise<boolean>;
   isLoading: boolean;
   isAuthenticated: boolean;
@@ -25,20 +24,28 @@ interface FavoritesProviderProps {
 }
 
 export function FavoritesProvider({
-  isFavorited,
+  favorites,
   toggleFavorite,
   isLoading,
   isAuthenticated,
   children,
 }: FavoritesProviderProps) {
+  // Sync React Query data into the external store before children render.
+  // useLayoutEffect ensures the store is up-to-date in the same commit.
+  useLayoutEffect(() => {
+    favoritesStore.setFavorites(favorites);
+  }, [favorites]);
+
+  // Context now only carries callbacks and auth state — these references
+  // are stable so the context value rarely changes, preventing cascade
+  // re-renders in all consumers.
   const value = useMemo<FavoritesContextValue>(
     () => ({
-      isFavorited,
       toggleFavorite,
       isLoading,
       isAuthenticated,
     }),
-    [isFavorited, toggleFavorite, isLoading, isAuthenticated]
+    [toggleFavorite, isLoading, isAuthenticated]
   );
 
   return <FavoritesContext.Provider value={value}>{children}</FavoritesContext.Provider>;
