@@ -17,8 +17,7 @@
 		A084ECDBA7D38E1E42DFC39D /* Pods_App.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = AF277DCFFFF123FFC6DF26C7 /* Pods_App.framework */; };
 		B1A2C3D4E5F60718 /* SceneDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = B1A2C3D4E5F60717 /* SceneDelegate.swift */; };
 		C1A2B3D4E5F60720 /* BoardseshViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = C1A2B3D4E5F60719 /* BoardseshViewController.swift */; };
-		D1A2B3C4E5F60722 /* OfflineFallbackSupport.swift in Sources */ = {isa = PBXBuildFile; fileRef = D1A2B3C4E5F60721 /* OfflineFallbackSupport.swift */; };
-		E1A2B3C401000003 /* OfflineFallbackSupportTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = E1A2B3C401000002 /* OfflineFallbackSupportTests.swift */; };
+
 		LA100001 /* SharedConstants.swift in Sources */ = {isa = PBXBuildFile; fileRef = LA200001 /* SharedConstants.swift */; };
 		LA100002 /* ClimbSessionAttributes.swift in Sources */ = {isa = PBXBuildFile; fileRef = LA200002 /* ClimbSessionAttributes.swift */; };
 		LA100003 /* ThumbnailFetcher.swift in Sources */ = {isa = PBXBuildFile; fileRef = LA200003 /* ThumbnailFetcher.swift */; };
@@ -87,9 +86,7 @@
 		AF51FD2D460BCFE21FA515B2 /* Pods-App.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-App.release.xcconfig"; path = "Pods/Target Support Files/Pods-App/Pods-App.release.xcconfig"; sourceTree = "<group>"; };
 		B1A2C3D4E5F60717 /* SceneDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SceneDelegate.swift; sourceTree = "<group>"; };
 		C1A2B3D4E5F60719 /* BoardseshViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BoardseshViewController.swift; sourceTree = "<group>"; };
-		D1A2B3C4E5F60721 /* OfflineFallbackSupport.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OfflineFallbackSupport.swift; sourceTree = "<group>"; };
 		E1A2B3C401000001 /* AppTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = AppTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
-		E1A2B3C401000002 /* OfflineFallbackSupportTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OfflineFallbackSupportTests.swift; sourceTree = "<group>"; };
 		FC68EB0AF532CFC21C3344DD /* Pods-App.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-App.debug.xcconfig"; path = "Pods/Target Support Files/Pods-App/Pods-App.debug.xcconfig"; sourceTree = "<group>"; };
 		LA200001 /* SharedConstants.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SharedConstants.swift; sourceTree = "<group>"; };
 		LA200002 /* ClimbSessionAttributes.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ClimbSessionAttributes.swift; sourceTree = "<group>"; };
@@ -177,7 +174,6 @@
 				504EC3071FED79650016851F /* AppDelegate.swift */,
 				B1A2C3D4E5F60717 /* SceneDelegate.swift */,
 				C1A2B3D4E5F60719 /* BoardseshViewController.swift */,
-				D1A2B3C4E5F60721 /* OfflineFallbackSupport.swift */,
 				LA200001 /* SharedConstants.swift */,
 				LA200002 /* ClimbSessionAttributes.swift */,
 				LA200003 /* ThumbnailFetcher.swift */,
@@ -208,7 +204,6 @@
 		E1A2B3C401000004 /* AppTests */ = {
 			isa = PBXGroup;
 			children = (
-				E1A2B3C401000002 /* OfflineFallbackSupportTests.swift */,
 				LA200030 /* SessionWebSocketManagerTests.swift */,
 				LA200031 /* ThumbnailFetcherTests.swift */,
 				LA200032 /* LiveActivityManagerTests.swift */,
@@ -429,7 +424,6 @@
 				504EC3081FED79650016851F /* AppDelegate.swift in Sources */,
 				B1A2C3D4E5F60718 /* SceneDelegate.swift in Sources */,
 				C1A2B3D4E5F60720 /* BoardseshViewController.swift in Sources */,
-				D1A2B3C4E5F60722 /* OfflineFallbackSupport.swift in Sources */,
 				LA100001 /* SharedConstants.swift in Sources */,
 				LA100002 /* ClimbSessionAttributes.swift in Sources */,
 				LA100003 /* ThumbnailFetcher.swift in Sources */,
@@ -444,7 +438,6 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				E1A2B3C401000003 /* OfflineFallbackSupportTests.swift in Sources */,
 				LA100030 /* SessionWebSocketManagerTests.swift in Sources */,
 				LA100031 /* ThumbnailFetcherTests.swift in Sources */,
 				LA100032 /* LiveActivityManagerTests.swift in Sources */,

@@ -26,8 +26,10 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
         window.makeKeyAndVisible()
 
         // Clean up any orphaned Live Activities from a previous session/crash.
+        // Use Task.detached to avoid inheriting MainActor context and blocking
+        // the main run loop with Activity<> enumeration continuations.
         if #available(iOS 16.1, *) {
-            Task {
+            Task.detached(priority: .utility) {
                 await LiveActivityManager.shared.endStaleActivities()
                 await LiveActivityManager.shared.cleanupOrphanedActivities()
             }
@@ -65,7 +67,7 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
         // End Live Activity when the scene is discarded to avoid stale state
         SessionWebSocketManager.shared.disconnect()
         if #available(iOS 16.1, *) {
-            Task {
+            Task.detached(priority: .utility) {
                 await LiveActivityManager.shared.endAllActivities()
             }
         }
@@ -74,8 +76,9 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
     func sceneWillResignActive(_ scene: UIScene) {}
     func sceneWillEnterForeground(_ scene: UIScene) {
         // Dismiss any Live Activities left over from a force-quit or crash.
+        // Use Task.detached to avoid inheriting MainActor context.
         if #available(iOS 16.1, *) {
-            Task {
+            Task.detached(priority: .utility) {
                 await LiveActivityManager.shared.endStaleActivities()
                 await LiveActivityManager.shared.cleanupOrphanedActivities()
             }
