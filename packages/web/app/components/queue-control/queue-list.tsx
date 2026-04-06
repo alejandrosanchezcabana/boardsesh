@@ -7,7 +7,7 @@ import Stack from '@mui/material/Stack';
 import MuiDivider from '@mui/material/Divider';
 import SwipeableDrawer from '../swipeable-drawer/swipeable-drawer';
 import LoginOutlined from '@mui/icons-material/LoginOutlined';
-import { useQueueContext } from '../graphql-queue';
+import { useQueueActions, useQueueData } from '../graphql-queue';
 import { Climb, BoardDetails } from '@/app/lib/types';
 import { monitorForElements } from '@atlaskit/pragmatic-drag-and-drop/element/adapter';
 import { extractClosestEdge } from '@atlaskit/pragmatic-drag-and-drop-hitbox/closest-edge';
@@ -45,11 +45,13 @@ const QueueList = forwardRef<QueueListHandle, QueueListProps>(({ boardDetails, o
     hasMoreResults,
     isFetchingClimbs,
     isFetchingNextPage,
+  } = useQueueData();
+  const {
     fetchMoreClimbs,
     setCurrentClimbQueueItem,
     setQueue,
     addToQueue,
-  } = useQueueContext();
+  } = useQueueActions();
 
   const isAuthenticated = useOptionalBoardProvider()?.isAuthenticated ?? false;
 

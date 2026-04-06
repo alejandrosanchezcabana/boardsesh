@@ -5,7 +5,7 @@ import AddCircleOutlined from '@mui/icons-material/AddCircleOutlined';
 import CheckCircleOutlined from '@mui/icons-material/CheckCircleOutlined';
 import MuiTooltip from '@mui/material/Tooltip';
 import { track } from '@vercel/analytics';
-import { useQueueContext } from '../graphql-queue';
+import { useQueueActions, useQueueData } from '../graphql-queue';
 import { Climb, BoardDetails } from '@/app/lib/types';
 import { themeTokens } from '@/app/theme/theme-config';
 
@@ -24,7 +24,8 @@ export default function QueueButton({
   size = 'default',
   className,
 }: QueueButtonProps) {
-  const { addToQueue, queue } = useQueueContext();
+  const { addToQueue } = useQueueActions();
+  const { queue } = useQueueData();
   const [recentlyAdded, setRecentlyAdded] = useState(false);
 
   const handleClick = useCallback((e: React.MouseEvent) => {

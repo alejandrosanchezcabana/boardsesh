@@ -5,7 +5,7 @@ import { usePathname } from 'next/navigation';
 import { PartyProfileProvider } from '../party-manager/party-profile-context';
 import { PersistentSessionProvider, usePersistentSession } from '../persistent-session';
 import { QueueBridgeProvider, useQueueBridgeBoardInfo } from '../queue-control/queue-bridge-context';
-import { useQueueContext } from '../graphql-queue';
+import { useQueueData } from '../graphql-queue';
 import QueueControlBar from '../queue-control/queue-control-bar';
 import QueueControlBarShell from '../queue-control/queue-control-bar-shell';
 import BottomTabBar from '../bottom-tab-bar/bottom-tab-bar';
@@ -101,7 +101,7 @@ export function RootBottomBar({ boardConfigs }: { boardConfigs: BoardConfigData 
 
 /**
  * Wraps QueueControlBar with FavoritesProvider and PlaylistsProvider.
- * Must be rendered inside QueueContext.Provider (via QueueBridge) so useQueueContext works.
+ * Must be rendered inside QueueContext.Provider (via QueueBridge) so useQueueData works.
  * React Query deduplicates API calls with the board route's providers.
  */
 function RootQueueControlBarWithProviders({
@@ -111,7 +111,7 @@ function RootQueueControlBarWithProviders({
   boardDetails: NonNullable<ReturnType<typeof useQueueBridgeBoardInfo>['boardDetails']>;
   angle: number;
 }) {
-  const { queue, currentClimb } = useQueueContext();
+  const { queue, currentClimb } = useQueueData();
 
   const climbUuids = useMemo(() => {
     const queueUuids = queue.map((item) => item.climb?.uuid).filter(Boolean) as string[];

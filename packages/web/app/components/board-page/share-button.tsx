@@ -23,7 +23,7 @@ import Box from '@mui/material/Box';
 import SwipeableDrawer from '../swipeable-drawer/swipeable-drawer';
 import { usePathname, useSearchParams } from 'next/navigation';
 import { useSession } from 'next-auth/react';
-import { useQueueContext, useQueueData } from '../graphql-queue';
+import { useQueueActions, useQueueData } from '../graphql-queue';
 import { usePersistentSession } from '../persistent-session';
 import { useBluetoothContext } from '../board-bluetooth-control/bluetooth-context';
 import './share-button.css';
@@ -176,11 +176,13 @@ export const ShareBoardButton = () => {
     connectionError,
     isSessionActive,
     sessionId,
+    sessionGoal,
+  } = useQueueData();
+  const {
     startSession,
     joinSession,
     endSession,
-    sessionGoal,
-  } = useQueueContext();
+  } = useQueueActions();
   const { isConnected: isBoardConnected } = useBluetoothContext();
   const { status: authStatus } = useSession();
   const { activeSession } = usePersistentSession();

@@ -18,7 +18,7 @@ import CloseOutlined from '@mui/icons-material/CloseOutlined';
 import HistoryOutlined from '@mui/icons-material/HistoryOutlined';
 import CheckOutlined from '@mui/icons-material/CheckOutlined';
 import { usePathname } from 'next/navigation';
-import { useQueueContext } from '../graphql-queue';
+import { useQueueActions, useQueueData } from '../graphql-queue';
 import { ClimbActions } from '../climb-actions';
 import { useDoubleTapFavorite } from '../climb-actions/use-double-tap-favorite';
 import HeartAnimationOverlay from '../climb-card/heart-animation-overlay';
@@ -103,14 +103,16 @@ const PlayViewDrawer: React.FC<PlayViewDrawerProps> = ({
   const {
     currentClimb,
     currentClimbQueueItem,
-    mirrorClimb,
     queue,
+    viewOnlyMode,
+  } = useQueueData();
+  const {
+    mirrorClimb,
     setQueue,
     getNextClimbQueueItem,
     getPreviousClimbQueueItem,
     setCurrentClimbQueueItem,
-    viewOnlyMode,
-  } = useQueueContext();
+  } = useQueueActions();
 
   const {
     handleDoubleTap,

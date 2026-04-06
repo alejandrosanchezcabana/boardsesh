@@ -16,11 +16,11 @@ The `usePersistentSessionQueueAdapter()` creates a context object with 20+ prope
 
 ### Overly broad context subscription
 **File:** `packages/web/app/components/queue-control/queue-control-bar.tsx:96-111`
-**Status:** Open
+**Status:** Fixed
 
 The bar calls `useQueueContext()` which subscribes to the combined context (data + actions). The codebase already has split hooks (`useQueueData()` + `useQueueActions()` in `QueueContext.tsx:467-489`), but the control bar doesn't use them. Any data change (connection state, suggested climbs, user list) triggers a full bar re-render even when only action callbacks are needed.
 
-**Fix:** Migrate to `useQueueData()` + `useQueueActions()` in queue-control-bar and other consumers.
+**Fix applied:** Migrated all 10 production consumers from `useQueueContext()` to the split `useQueueData()` + `useQueueActions()` hooks. Components that only need actions (stable callbacks) no longer re-render on data changes. Components that only need data don't subscribe to the actions context. Zero production `useQueueContext()` calls remain.
 
 ### Color mode coupling
 **File:** `packages/web/app/components/queue-control/queue-control-bar.tsx:124-126`
@@ -147,7 +147,7 @@ Refilters and resorts the logbook array on every parent re-render.
 | P0 | CSS content-visibility for paint skipping | Climb List | **Fixed** |
 | P0 | keepMounted with canvas | Play View Drawer | **Fixed** |
 | P0 | Unstable bridge context | Queue Control Bar | **Fixed** |
-| P1 | Combined context subscription | Queue Control Bar | Open |
+| P1 | Combined context subscription | Queue Control Bar | **Fixed** |
 | P1 | Shared drawer state re-renders | Climb List | **Fixed** |
 | P1 | O(n^2) dedup filter | Climb List | **Fixed** |
 | P1 | Unmemoized PlayDrawerContent | Play View Drawer | **Fixed** |
