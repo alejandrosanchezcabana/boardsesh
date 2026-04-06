@@ -221,6 +221,7 @@ function usePersistentSessionQueueAdapter(): {
       joinSession: noopJoinSession,
       endSession: ps.deactivateSession,
       dismissSessionSummary: noop,
+      disconnect: ps.deactivateSession,
     }),
     [
       addToQueue,
@@ -266,7 +267,6 @@ function usePersistentSessionQueueAdapter(): {
       isBackendMode: true,
       hasConnected: ps.hasConnected,
       connectionError: ps.error,
-      disconnect: ps.deactivateSession,
       isDisconnected: false,
     }),
     [

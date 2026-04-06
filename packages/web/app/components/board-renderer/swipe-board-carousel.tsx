@@ -182,5 +182,6 @@ const SwipeBoardCarousel = React.memo<SwipeBoardCarouselProps>(({
     </div>
   );
 });
+SwipeBoardCarousel.displayName = 'SwipeBoardCarousel';
 
 export default SwipeBoardCarousel;

@@ -63,6 +63,7 @@ const PlayDrawerContent = React.memo<PlayDrawerContentProps>(({ climb, boardType
 
   return <ClimbDetailShellClient mode="play" sections={sections} aboveFold={aboveFold} />;
 });
+PlayDrawerContent.displayName = 'PlayDrawerContent';
 
 interface PlayViewDrawerProps {
   activeDrawer: ActiveDrawer;
