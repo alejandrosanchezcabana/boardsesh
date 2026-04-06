@@ -12,7 +12,7 @@ import CloudOffOutlined from '@mui/icons-material/CloudOffOutlined';
 import DeleteOutlined from '@mui/icons-material/DeleteOutlined';
 import OpenInFullOutlined from '@mui/icons-material/OpenInFullOutlined';
 import { track } from '@vercel/analytics';
-import { useQueueContext } from '../graphql-queue';
+import { useQueueActions, useQueueData } from '../graphql-queue';
 import NextClimbButton from './next-climb-button';
 import { usePathname, useParams, useSearchParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
@@ -95,20 +95,22 @@ const QueueControlBar: React.FC<QueueControlBarProps> = ({ boardDetails, angle }
   const isPlayPage = pathname.includes('/play/');
   const {
     currentClimb,
-    mirrorClimb,
     queue,
+    viewOnlyMode,
+    connectionState,
+    sessionId,
+    isDisconnected,
+    users,
+  } = useQueueData();
+  const {
+    mirrorClimb,
     setQueue,
     getNextClimbQueueItem,
     getPreviousClimbQueueItem,
     setCurrentClimbQueueItem,
-    viewOnlyMode,
-    connectionState,
-    sessionId,
     endSession,
     disconnect,
-    isDisconnected,
-    users,
-  } = useQueueContext();
+  } = useQueueActions();
 
   const { showMessage } = useSnackbar();
   const [showCancelConfirm, setShowCancelConfirm] = useState(false);

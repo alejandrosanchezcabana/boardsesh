@@ -16,11 +16,11 @@ The `usePersistentSessionQueueAdapter()` creates a context object with 20+ prope
 
 ### Overly broad context subscription
 **File:** `packages/web/app/components/queue-control/queue-control-bar.tsx:96-111`
-**Status:** Open
+**Status:** Fixed
 
 The bar calls `useQueueContext()` which subscribes to the combined context (data + actions). The codebase already has split hooks (`useQueueData()` + `useQueueActions()` in `QueueContext.tsx:467-489`), but the control bar doesn't use them. Any data change (connection state, suggested climbs, user list) triggers a full bar re-render even when only action callbacks are needed.
 
-**Fix:** Migrate to `useQueueData()` + `useQueueActions()` in queue-control-bar and other consumers.
+**Fix applied:** Migrated all 10 production consumers from `useQueueContext()` to the split `useQueueData()` + `useQueueActions()` hooks. Components that only need actions (stable callbacks) no longer re-render on data changes. Components that only need data don't subscribe to the actions context. Zero production `useQueueContext()` calls remain.
 
 ### Color mode coupling
 **File:** `packages/web/app/components/queue-control/queue-control-bar.tsx:124-126`
@@ -112,9 +112,11 @@ Not wrapped in `React.memo`. Receives callback props (`onSwipeNext`, `onDoubleTa
 
 ### Queue drawer height state cascade
 **File:** `packages/web/app/components/play-view/play-view-drawer.tsx:90,183-194,501`
-**Status:** Open
+**Status:** Fixed
 
 `queueDrawerHeight` state updates during drag gestures trigger parent re-renders, which cascade to the canvas renderer. Should use a ref + CSS variable instead of state.
+
+**Fix applied:** Replaced `queueDrawerHeight` state with a ref (`queueDrawerHeightRef`) and direct DOM manipulation via a `paperRef` on the queue `SwipeableDrawer`. The `updateQueueDrawerHeight` helper writes to both the ref and the Paper element's inline `style.height`, bypassing React reconciliation entirely. Drag gestures no longer trigger re-renders of `PlayViewDrawer`, `SwipeBoardCarousel`, or `PlayDrawerContent`. The queue drawer's `styles` object was also extracted to a module-level constant (`QUEUE_DRAWER_STYLES`) to prevent object recreation on every render.
 
 ### Beta API queries fire unconditionally
 **File:** `packages/web/app/components/play-view/play-view-beta-slider.tsx:36-45`
@@ -147,11 +149,11 @@ Refilters and resorts the logbook array on every parent re-render.
 | P0 | CSS content-visibility for paint skipping | Climb List | **Fixed** |
 | P0 | keepMounted with canvas | Play View Drawer | **Fixed** |
 | P0 | Unstable bridge context | Queue Control Bar | **Fixed** |
-| P1 | Combined context subscription | Queue Control Bar | Open |
+| P1 | Combined context subscription | Queue Control Bar | **Fixed** |
 | P1 | Shared drawer state re-renders | Climb List | **Fixed** |
 | P1 | O(n^2) dedup filter | Climb List | **Fixed** |
 | P1 | Unmemoized PlayDrawerContent | Play View Drawer | **Fixed** |
-| P2 | Queue height via state | Play View Drawer | Open |
+| P2 | Queue height via state | Play View Drawer | **Fixed** |
 | P2 | Canvas thumbnails for all items | Climb List | Mitigated |
 | P2 | Beta API queries unconditional | Play View Drawer | Open |
 | P2 | Logbook filtering no memo | Play View Drawer | **Fixed** |

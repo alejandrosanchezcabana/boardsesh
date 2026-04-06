@@ -42,6 +42,8 @@ export interface SwipeableDrawerProps {
   footer?: React.ReactNode;
   disablePortal?: boolean;
   keepMounted?: boolean;
+  /** Ref forwarded to the MUI Paper element inside the drawer. */
+  paperRef?: React.Ref<HTMLDivElement>;
   children?: React.ReactNode;
 }
 
@@ -63,6 +65,7 @@ const SwipeableDrawer: React.FC<SwipeableDrawerProps> = ({
   footer,
   disablePortal,
   keepMounted = false,
+  paperRef,
   disableBackdropClick,
   open,
   children,
@@ -297,8 +300,8 @@ const SwipeableDrawer: React.FC<SwipeableDrawerProps> = ({
   );
 
   const muiPaperProps = useMemo(
-    () => ({ sx: paperSx, 'data-swipeable-drawer': 'true' }),
-    [paperSx],
+    () => ({ ref: paperRef, sx: paperSx, 'data-swipeable-drawer': 'true' }),
+    [paperRef, paperSx],
   );
 
   const bodyContent = (

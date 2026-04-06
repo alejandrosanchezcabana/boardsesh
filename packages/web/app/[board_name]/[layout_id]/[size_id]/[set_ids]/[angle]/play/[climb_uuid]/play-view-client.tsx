@@ -5,7 +5,7 @@ import MuiButton from '@mui/material/Button';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { track } from '@vercel/analytics';
 import { Climb, BoardDetails, Angle } from '@/app/lib/types';
-import { useQueueContext } from '@/app/components/graphql-queue';
+import { useQueueActions, useQueueData } from '@/app/components/graphql-queue';
 import SwipeBoardCarousel from '@/app/components/board-renderer/swipe-board-carousel';
 import ClimbTitle from '@/app/components/climb-card/climb-title';
 import { AscentStatus } from '@/app/components/climb-card/ascent-status';
@@ -25,13 +25,12 @@ type PlayViewClientProps = {
 const PlayViewClient: React.FC<PlayViewClientProps> = ({ boardDetails, initialClimb, angle }) => {
   const router = useRouter();
   const searchParams = useSearchParams();
+  const { queue, currentClimb } = useQueueData();
   const {
-    queue,
-    currentClimb,
     setCurrentClimbQueueItem,
     getNextClimbQueueItem,
     getPreviousClimbQueueItem,
-  } = useQueueContext();
+  } = useQueueActions();
 
   // Use queue's current climb if available (has real-time state like mirrored),
   // otherwise fall back to the initial climb from SSR.
