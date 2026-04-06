@@ -19,6 +19,9 @@ interface BuildClimbDetailSectionsProps {
   betaLinks?: BetaLink[];
   currentClimbDifficulty?: string;
   boardName?: string;
+  /** When false, skips data fetching and returns empty sections. Used to defer
+   *  below-fold work until after the drawer open animation completes. */
+  enabled?: boolean;
 }
 
 export function useBuildClimbDetailSections({
@@ -29,6 +32,7 @@ export function useBuildClimbDetailSections({
   betaLinks: initialBetaLinks,
   currentClimbDifficulty,
   boardName,
+  enabled: enabledProp = true,
 }: BuildClimbDetailSectionsProps): CollapsibleSectionConfig[] {
   const searchParams = useSearchParams();
   const highlightProposalUuid = searchParams.get('proposalUuid') ?? undefined;
@@ -39,11 +43,13 @@ export function useBuildClimbDetailSections({
       if (!res.ok) return [];
       return res.json();
     },
-    enabled: !!climbUuid,
+    enabled: enabledProp && !!climbUuid,
     staleTime: 5 * 60 * 1000,
     initialData: initialBetaLinks,
   });
   const logbookSummary = useLogbookSummary(climb.uuid);
+
+  if (!enabledProp) return [];
 
   const getLogbookSummaryParts = (): string[] => {
     if (!logbookSummary) return [];

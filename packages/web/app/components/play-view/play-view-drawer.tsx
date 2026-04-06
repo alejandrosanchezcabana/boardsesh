@@ -41,6 +41,7 @@ import styles from './play-view-drawer.module.css';
 import drawerStyles from '../swipeable-drawer/swipeable-drawer.module.css';
 import ClimbDetailShellClient from '@/app/components/climb-detail/climb-detail-shell.client';
 import { useBuildClimbDetailSections } from '@/app/components/climb-detail/build-climb-detail-sections';
+import { renderBoard } from '@/app/lib/board-render-worker/worker-manager';
 
 
 
@@ -57,9 +58,10 @@ interface PlayDrawerContentProps {
   boardType: string;
   angle: number;
   aboveFold: React.ReactNode;
+  sectionsEnabled: boolean;
 }
 
-const PlayDrawerContent = React.memo<PlayDrawerContentProps>(({ climb, boardType, angle, aboveFold }) => {
+const PlayDrawerContent = React.memo<PlayDrawerContentProps>(({ climb, boardType, angle, aboveFold, sectionsEnabled }) => {
   const sections = useBuildClimbDetailSections({
     climb,
     climbUuid: climb.uuid,
@@ -67,6 +69,7 @@ const PlayDrawerContent = React.memo<PlayDrawerContentProps>(({ climb, boardType
     angle,
     currentClimbDifficulty: climb.difficulty ?? undefined,
     boardName: boardType,
+    enabled: sectionsEnabled,
   });
 
   return <ClimbDetailShellClient mode="play" sections={sections} aboveFold={aboveFold} />;
@@ -292,16 +295,29 @@ const PlayViewDrawer: React.FC<PlayViewDrawerProps> = ({
 
   const isMirrored = !!currentClimb?.mirrored;
 
-  // Two-phase open: mount content first, then open the drawer on the next
-  // animation frame. This ensures the Slide animation runs on an already-
-  // rendered Paper instead of competing with heavy content mounting for the
-  // main thread.
   const [drawerOpen, setDrawerOpen] = useState(false);
-  const [showContent, setShowContent] = useState(false);
   const openRafRef = useRef<number>(0);
+  const hasBeenMountedRef = useRef(false);
+
+  // Eagerly pre-mount drawer content during browser idle time so the DOM and
+  // WASM board render are ready before the user ever opens the drawer.
+  // Falls back to immediate mount if the user opens before idle fires.
+  const [contentReady, setContentReady] = useState(false);
+  useEffect(() => {
+    const setReady = () => {
+      setContentReady(true);
+      hasBeenMountedRef.current = true;
+    };
+    const w = window as Window & { requestIdleCallback?: (cb: () => void, opts?: { timeout: number }) => number; cancelIdleCallback?: (id: number) => void };
+    if (w.requestIdleCallback) {
+      const id = w.requestIdleCallback(setReady, { timeout: 2000 });
+      return () => w.cancelIdleCallback?.(id);
+    }
+    const id = setTimeout(setReady, 100);
+    return () => clearTimeout(id);
+  }, []);
 
   // Close path: runs before paint so the Slide exit animation starts immediately
-  // (especially important after a fling where the Paper is at a mid-swipe position)
   useLayoutEffect(() => {
     if (!isOpen) {
       cancelAnimationFrame(openRafRef.current);
@@ -309,23 +325,42 @@ const PlayViewDrawer: React.FC<PlayViewDrawerProps> = ({
     }
   }, [isOpen]);
 
-  // Open path: mount content first, then open drawer after browser has painted
+  // Open path: if content is already pre-mounted, open immediately (0ms).
+  // Otherwise give the browser one frame to paint freshly-mounted content.
   useEffect(() => {
     if (isOpen) {
-      setShowContent(true);
-      openRafRef.current = requestAnimationFrame(() => {
+      setContentReady(true); // ensure content mounts if idle hasn't fired yet
+      if (hasBeenMountedRef.current) {
+        // Content already in DOM — open instantly
+        setDrawerOpen(true);
+      } else {
+        // First open before idle: single rAF (~16ms) instead of double (~33ms)
+        hasBeenMountedRef.current = true;
         openRafRef.current = requestAnimationFrame(() => {
           setDrawerOpen(true);
         });
-      });
+      }
     }
     return () => cancelAnimationFrame(openRafRef.current);
   }, [isOpen]);
 
-  const handleTransitionEnd = useCallback((_open: boolean) => {
-    // Content stays mounted for instant re-opens.
-    // useDeferredValue already deprioritizes background updates when closed.
+  // Once the open animation completes, enable below-fold sections permanently.
+  // Using "once enabled, stays enabled" avoids section unmount/remount on re-opens.
+  const [sectionsEverEnabled, setSectionsEverEnabled] = useState(false);
+  const handleTransitionEnd = useCallback((open: boolean) => {
+    if (open) setSectionsEverEnabled(true);
   }, []);
+
+  // Pre-warm WASM board render whenever the current climb changes (even when
+  // drawer is closed). The worker runs off-thread so this has zero main-thread
+  // cost. When the drawer opens, BoardCanvasRenderer gets an instant cache hit.
+  useEffect(() => {
+    if (currentClimb) {
+      renderBoard({ boardDetails, frames: currentClimb.frames, mirrored: !!currentClimb.mirrored }).catch(() => {
+        // Pre-warm is best-effort; ignore errors
+      });
+    }
+  }, [currentClimb?.frames, currentClimb?.mirrored, boardDetails]);
 
   return (
     <>
@@ -344,13 +379,14 @@ const PlayViewDrawer: React.FC<PlayViewDrawerProps> = ({
         wrapper: { height: '100%', backgroundColor: 'var(--semantic-background)' },
       }}
     >
-      {showContent ? (<>
+      {(contentReady || isOpen) ? (<>
       <div className={styles.drawerContent}>
         {currentClimb ? (
           <PlayDrawerContent
             climb={currentClimb}
             boardType={boardDetails.board_name}
             angle={currentAngle}
+            sectionsEnabled={sectionsEverEnabled}
             aboveFold={
             <>
               {/* Header: Grade | Name | Angle Selector */}
