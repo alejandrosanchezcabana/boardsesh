@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import { useWsAuthToken } from '@/app/hooks/use-ws-auth-token';
 import { useSnackbar } from '@/app/components/providers/snackbar-provider';
 import { createGraphQLHttpClient } from '@/app/lib/graphql/client';
@@ -26,6 +26,10 @@ export function useFollowToggle({
   onFollowChange,
 }: UseFollowToggleConfig) {
   const [isFollowing, setIsFollowing] = useState(initialIsFollowing);
+  // Sync internal state when the prop changes (e.g. after parent re-fetches)
+  useEffect(() => {
+    setIsFollowing(initialIsFollowing);
+  }, [initialIsFollowing]);
   const [isLoading, setIsLoading] = useState(false);
   const [isHovered, setIsHovered] = useState(false);
   const { token, isAuthenticated } = useWsAuthToken();
