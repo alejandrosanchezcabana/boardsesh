@@ -22,7 +22,6 @@ import { ClimbActions } from '../climb-actions';
 import PlaylistSelectionContent from '../climb-actions/playlist-selection-content';
 import { getExcludedClimbActions } from '@/app/lib/climb-action-utils';
 import { themeTokens } from '@/app/theme/theme-config';
-import { SUGGESTIONS_THRESHOLD } from '../board-page/constants';
 import { useOptionalBoardProvider } from '../board-provider/board-provider-context';
 import { LogAscentDrawer } from '../logbook/log-ascent-drawer';
 import { useAuthModal } from '@/app/components/providers/auth-modal-provider';
@@ -52,7 +51,6 @@ const QueueList = forwardRef<QueueListHandle, QueueListProps>(({ boardDetails, o
   const { hasMoreResults, isFetchingClimbs, isFetchingNextPage } = useSearchData();
   const { viewOnlyMode } = useSessionData();
   const {
-    fetchMoreClimbs,
     setCurrentClimbQueueItem,
     setQueue,
     addToQueue,
@@ -157,55 +155,8 @@ const QueueList = forwardRef<QueueListHandle, QueueListProps>(({ boardDetails, o
     return cleanup; // Cleanup listener on component unmount
   }, [queue, setQueue, isEditMode]);
 
-  // Ref for the intersection observer sentinel element
-  const loadMoreRef = useRef<HTMLDivElement>(null);
-
-  // Refs for observer callback values — prevents observer recreation on every page load
-  const fetchMoreClimbsRef = useRef(fetchMoreClimbs);
-  const hasMoreResultsRef = useRef(hasMoreResults);
-  const isFetchingNextPageRef = useRef(isFetchingNextPage);
-  const suggestedClimbsLengthRef = useRef(suggestedClimbs.length);
-  fetchMoreClimbsRef.current = fetchMoreClimbs;
-  hasMoreResultsRef.current = hasMoreResults;
-  isFetchingNextPageRef.current = isFetchingNextPage;
-  suggestedClimbsLengthRef.current = suggestedClimbs.length;
-
-  // Intersection Observer callback for infinite scroll — stable ref, never recreated
-  // Skip if suggestions are below threshold - proactive fetch in QueueContext handles that case
-  const handleObserver = useCallback(
-    (entries: IntersectionObserverEntry[]) => {
-      const [target] = entries;
-      if (
-        target.isIntersecting &&
-        hasMoreResultsRef.current &&
-        !isFetchingNextPageRef.current &&
-        suggestedClimbsLengthRef.current >= SUGGESTIONS_THRESHOLD
-      ) {
-        fetchMoreClimbsRef.current();
-      }
-    },
-    [],
-  );
-
-  // Set up Intersection Observer for infinite scroll
-  // Uses scrollContainerRef as root when provided (for nested scroll containers like drawers/sidebars),
-  // falls back to null (viewport) for top-level scrolling
-  useEffect(() => {
-    const element = loadMoreRef.current;
-    if (!element || viewOnlyMode) return;
-
-    const observer = new IntersectionObserver(handleObserver, {
-      root: scrollContainer ?? null,
-      rootMargin: '100px',
-      threshold: 0,
-    });
-
-    observer.observe(element);
-
-    return () => {
-      observer.disconnect();
-    };
-  }, [handleObserver, viewOnlyMode, scrollContainer]);
+  // No infinite scroll here — QueueContext's proactive fetch handles loading
+  // more suggestions when they run low.
 
   // Find the index of the current climb in the queue
   const currentIndex = queue.findIndex((item) => item.uuid === currentClimbUuid);
@@ -252,21 +203,7 @@ const QueueList = forwardRef<QueueListHandle, QueueListProps>(({ boardDetails, o
     getItemKey: (index) => suggestedClimbs[index]?.uuid ?? index,
   });
 
-  // Virtualizer-based infinite scroll for suggested climbs
   const suggestedVirtualItems = suggestedVirtualizer.getVirtualItems();
-  const lastSuggestedItem = suggestedVirtualItems[suggestedVirtualItems.length - 1];
-
-  useEffect(() => {
-    if (!lastSuggestedItem) return;
-    if (
-      lastSuggestedItem.index >= suggestedClimbs.length - 5 &&
-      hasMoreResultsRef.current &&
-      !isFetchingNextPageRef.current &&
-      suggestedClimbsLengthRef.current >= SUGGESTIONS_THRESHOLD
-    ) {
-      fetchMoreClimbsRef.current();
-    }
-  }, [lastSuggestedItem?.index, suggestedClimbs.length]);
 
   return (
     <>
@@ -405,11 +342,8 @@ const QueueList = forwardRef<QueueListHandle, QueueListProps>(({ boardDetails, o
               );
             })}
           </div>
-          {/* Sentinel element for Intersection Observer - only render when needed */}
-          {/* Include isFetchingClimbs to show skeleton during initial page load */}
-          {(suggestedClimbs.length > 0 || isFetchingClimbs || isFetchingNextPage || hasMoreResults) && (
+          {(suggestedClimbs.length > 0 || isFetchingClimbs || isFetchingNextPage) && (
             <div
-              ref={loadMoreRef}
               style={loadMoreContainerStyle}
             >
               {(isFetchingClimbs || isFetchingNextPage) && (

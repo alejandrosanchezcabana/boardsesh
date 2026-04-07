@@ -115,20 +115,25 @@ let lastVirtualizerOpts: { count: number } | null = null;
 vi.mock('@tanstack/react-virtual', () => ({
   useWindowVirtualizer: (opts: { count: number; estimateSize: () => number; overscan: number; getItemKey: (i: number) => string | number }) => {
     lastVirtualizerOpts = opts;
-    const itemCount = Math.min(15, opts.count);
+    const itemCount = Math.min(opts.overscan + 7, opts.count);
+    const estimatedSize = opts.estimateSize();
     const items = Array.from({ length: itemCount }, (_, i) => ({
       index: i,
       key: opts.getItemKey ? opts.getItemKey(i) : `item-${i}`,
-      start: i * 72,
-      size: 72,
-      end: (i + 1) * 72,
+      start: i * estimatedSize,
+      size: estimatedSize,
+      end: (i + 1) * estimatedSize,
       lane: 0,
     }));
     return {
       getVirtualItems: () => items,
-      getTotalSize: () => opts.count * 72,
+      getTotalSize: () => opts.count * estimatedSize,
       measureElement: vi.fn(),
       scrollToIndex: vi.fn(),
+      scrollOffset: 0,
+      range: opts.count > 0
+        ? { startIndex: 0, endIndex: Math.min(6, opts.count - 1) }
+        : null,
     };
   },
 }));
@@ -191,7 +196,8 @@ describe('ClimbsList virtualization', () => {
     );
 
     const items = screen.getAllByTestId('climb-list-item');
-    expect(items.length).toBeLessThanOrEqual(15);
+    // Mock renders visible items + overscan (6 + 25 + 1 = 32), far fewer than all 100
+    expect(items.length).toBeLessThan(allClimbs.length);
     expect(items.length).toBeGreaterThan(0);
   });
 
@@ -257,5 +263,74 @@ describe('ClimbsList virtualization', () => {
 
     const items = screen.getAllByTestId('climb-list-item');
     expect(items).toHaveLength(5);
+  });
+});
+
+describe('ClimbsList infinite scroll', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    lastVirtualizerOpts = null;
+  });
+
+  it('calls onLoadMore when last virtual item is near the end of the list', () => {
+    // Mock renders min(overscan+7, count) items. With 20 items and overscan 25,
+    // all 20 render. lastVirtualItem.index=19, 19 >= 20-5=15 → loads.
+    const onLoadMore = vi.fn();
+    render(
+      <ClimbsList
+        boardDetails={makeBoardDetails()}
+        climbs={allClimbs.slice(0, 20)}
+        isFetching={false}
+        hasMore={true}
+        onLoadMore={onLoadMore}
+      />,
+    );
+
+    expect(onLoadMore).toHaveBeenCalled();
+  });
+
+  it('does NOT call onLoadMore when isFetching is true', () => {
+    const onLoadMore = vi.fn();
+    render(
+      <ClimbsList
+        boardDetails={makeBoardDetails()}
+        climbs={allClimbs.slice(0, 20)}
+        isFetching={true}
+        hasMore={true}
+        onLoadMore={onLoadMore}
+      />,
+    );
+
+    expect(onLoadMore).not.toHaveBeenCalled();
+  });
+
+  it('does NOT call onLoadMore when hasMore is false', () => {
+    const onLoadMore = vi.fn();
+    render(
+      <ClimbsList
+        boardDetails={makeBoardDetails()}
+        climbs={allClimbs.slice(0, 20)}
+        isFetching={false}
+        hasMore={false}
+        onLoadMore={onLoadMore}
+      />,
+    );
+
+    expect(onLoadMore).not.toHaveBeenCalled();
+  });
+
+  it('does NOT call onLoadMore with empty climb list', () => {
+    const onLoadMore = vi.fn();
+    render(
+      <ClimbsList
+        boardDetails={makeBoardDetails()}
+        climbs={[]}
+        isFetching={false}
+        hasMore={true}
+        onLoadMore={onLoadMore}
+      />,
+    );
+
+    expect(onLoadMore).not.toHaveBeenCalled();
   });
 });

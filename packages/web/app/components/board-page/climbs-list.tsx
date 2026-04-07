@@ -464,8 +464,9 @@ const ClimbsList = ({
     getItemKey: (index) => visibleClimbs[index]?.uuid ?? index,
   });
 
-  // Virtualizer-based infinite scroll for list mode
   const virtualItems = virtualizer.getVirtualItems();
+
+  // Virtualizer-based infinite scroll for list mode
   const lastVirtualItem = virtualItems[virtualItems.length - 1];
   useEffect(() => {
     if (viewMode !== 'list' || !lastVirtualItem) return;
