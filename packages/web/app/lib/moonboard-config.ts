@@ -236,6 +236,34 @@ export function getMoonBoardDetails({
   const sets = MOONBOARD_SETS[layoutKey as MoonBoardLayoutKey] || [];
   const selectedSets = sets.filter((s) => set_ids.includes(s.id));
 
+  // Compute all 198 hold positions from grid for WASM/canvas rendering pipeline
+  const cellWidth = MOONBOARD_SIZE.width / MOONBOARD_GRID.numColumns;
+  const cellHeight = MOONBOARD_SIZE.height / MOONBOARD_GRID.numRows;
+  const holdRadius = Math.min(cellWidth, cellHeight) * 0.35;
+
+  const holdsData = Array.from(
+    { length: MOONBOARD_GRID.numColumns * MOONBOARD_GRID.numRows },
+    (_, i) => {
+      const holdId = i + 1;
+      const pos = getGridPosition(holdId);
+      return {
+        id: holdId,
+        mirroredHoldId: null,
+        cx: pos.x * MOONBOARD_SIZE.width,
+        cy: pos.y * MOONBOARD_SIZE.height,
+        r: holdRadius,
+      };
+    },
+  );
+
+  // Build images_to_holds with background + hold set images as keys.
+  // Values are empty arrays — only keys are used for background URL construction
+  // in the WASM worker and BoardImageLayers rendering paths.
+  const images_to_holds: Record<string, []> = { 'moonboard-bg.png': [] };
+  for (const set of selectedSets) {
+    images_to_holds[`${layoutData.folder}/${set.imageFile}`] = [];
+  }
+
   return {
     board_name: 'moonboard' as const,
     layout_id,
@@ -248,15 +276,13 @@ export function getMoonBoardDetails({
     boardWidth: MOONBOARD_SIZE.width,
     boardHeight: MOONBOARD_SIZE.height,
     supportsMirroring: false,
-    // MoonBoard uses grid-based rendering, not edge-based
     edge_left: 0,
     edge_right: MOONBOARD_GRID.numColumns,
     edge_bottom: 0,
     edge_top: MOONBOARD_GRID.numRows,
-    // Empty - MoonBoard uses its own renderer
-    images_to_holds: {},
-    holdsData: [],
-    // Moonboard-specific fields for grid-based rendering
+    images_to_holds,
+    holdsData,
+    // Moonboard-specific fields for grid-based rendering (used by MoonBoardRenderer SVG)
     layoutFolder: layoutData.folder,
     holdSetImages: selectedSets.map((s) => s.imageFile),
   };
