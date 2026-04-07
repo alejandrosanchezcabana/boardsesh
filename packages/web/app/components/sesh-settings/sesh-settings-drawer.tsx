@@ -4,14 +4,10 @@ import React, { useCallback, useMemo, useRef, useState } from 'react';
 import Box from '@mui/material/Box';
 import Typography from '@mui/material/Typography';
 import Button from '@mui/material/Button';
-import ButtonBase from '@mui/material/ButtonBase';
-import Collapse from '@mui/material/Collapse';
 import CircularProgress from '@mui/material/CircularProgress';
 import Alert from '@mui/material/Alert';
 import StopCircleOutlined from '@mui/icons-material/StopCircleOutlined';
 import ContentCopyOutlined from '@mui/icons-material/ContentCopyOutlined';
-import PersonAddOutlined from '@mui/icons-material/PersonAddOutlined';
-import ExpandMoreOutlined from '@mui/icons-material/ExpandMoreOutlined';
 import Divider from '@mui/material/Divider';
 import IconButton from '@mui/material/IconButton';
 import TextField from '@mui/material/TextField';
@@ -32,6 +28,7 @@ import {
 import { clearClimbSessionCookie } from '@/app/lib/climb-session-cookie';
 import { useSnackbar } from '@/app/components/providers/snackbar-provider';
 import type { SessionDetail } from '@boardsesh/shared-schema';
+import CollapsibleSection from '@/app/components/collapsible-section/collapsible-section';
 import SessionDetailContent from '@/app/session/[sessionId]/session-detail-content';
 
 const getShareUrl = (sessionId: string | null) => {
@@ -59,7 +56,6 @@ export default function SeshSettingsDrawer({ open, onClose, onTransitionEnd }: S
   const shareUrl = getShareUrl(sessionId);
   const { showMessage } = useSnackbar();
   const [isStopped, setIsStopped] = useState(false);
-  const [inviteExpanded, setInviteExpanded] = useState(false);
   const lastSessionRef = useRef<SessionDetail | null>(null);
 
   const copyToClipboard = useCallback(() => {
@@ -265,55 +261,34 @@ export default function SeshSettingsDrawer({ open, onClose, onTransitionEnd }: S
             fallbackBoardDetails={boardDetails}
             afterParticipants={
               !isStopped && shareUrl ? (
-                <Box>
-                  <ButtonBase
-                    onClick={() => setInviteExpanded((prev) => !prev)}
-                    sx={{
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'space-between',
-                      width: '100%',
-                      px: 1.5,
-                      py: 1,
-                      borderRadius: 2,
-                      bgcolor: 'action.hover',
-                    }}
-                  >
-                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                      <PersonAddOutlined sx={{ fontSize: 18, color: 'text.secondary' }} />
-                      <Typography variant="body2" fontWeight={600}>
-                        Invite others to join
-                      </Typography>
-                    </Box>
-                    <ExpandMoreOutlined
-                      sx={{
-                        fontSize: 20,
-                        color: 'text.secondary',
-                        transition: 'transform 0.2s',
-                        transform: inviteExpanded ? 'rotate(180deg)' : 'rotate(0deg)',
-                      }}
-                    />
-                  </ButtonBase>
-                  <Collapse in={inviteExpanded}>
-                    <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1, pt: 1.5 }}>
-                      <Box sx={{ display: 'flex', width: '100%', alignItems: 'center' }}>
-                        <TextField
-                          value={shareUrl}
-                          slotProps={{ input: { readOnly: true } }}
-                          variant="outlined"
-                          size="small"
-                          fullWidth
-                        />
-                        <IconButton onClick={copyToClipboard}>
-                          <ContentCopyOutlined />
-                        </IconButton>
+                <CollapsibleSection
+                  sections={[{
+                    key: 'invite',
+                    label: 'Invite',
+                    title: 'Invite others to join',
+                    defaultSummary: 'Share link or QR code',
+                    getSummary: () => [],
+                    content: (
+                      <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
+                        <Box sx={{ display: 'flex', width: '100%', alignItems: 'center' }}>
+                          <TextField
+                            value={shareUrl}
+                            slotProps={{ input: { readOnly: true } }}
+                            variant="outlined"
+                            size="small"
+                            fullWidth
+                          />
+                          <IconButton onClick={copyToClipboard}>
+                            <ContentCopyOutlined />
+                          </IconButton>
+                        </Box>
+                        <Box sx={{ display: 'flex', justifyContent: 'center' }}>
+                          <QRCodeSVG value={shareUrl} size={160} />
+                        </Box>
                       </Box>
-                      <Box sx={{ display: 'flex', justifyContent: 'center' }}>
-                        <QRCodeSVG value={shareUrl} size={160} />
-                      </Box>
-                    </Box>
-                  </Collapse>
-                </Box>
+                    ),
+                  }]}
+                />
               ) : undefined
             }
           />
