@@ -22,6 +22,7 @@ import { getPreference, setPreference } from '@/app/lib/user-preferences-db';
 import { useInfiniteScroll } from '@/app/hooks/use-infinite-scroll';
 import { trackListBatchRender } from '@/app/lib/rendering-metrics';
 import { classifyClimbListChange } from './climb-list-utils';
+import { PAGE_LIMIT } from './constants';
 import { getExcludedClimbActions } from '@/app/lib/climb-action-utils';
 import { SelectionStoreContext, useSelectionStore } from './selected-climb-store';
 import listStyles from './climbs-list.module.css';
@@ -466,6 +467,25 @@ const ClimbsList = ({
 
   const virtualItems = virtualizer.getVirtualItems();
 
+  // Virtualizer-based infinite scroll for list mode.
+  // Use the estimated visible end (excluding overscan) so that large desktop
+  // viewports don't trigger a cascade of automatic page loads.
+  useEffect(() => {
+    if (viewMode !== 'list' || virtualItems.length === 0) return;
+
+    const windowHeight = typeof window !== 'undefined' ? window.innerHeight : 800;
+    const avgItemSize =
+      visibleClimbs.length > 0
+        ? virtualizer.getTotalSize() / visibleClimbs.length
+        : 102;
+    const estimatedVisibleEnd =
+      (virtualItems[0]?.index ?? 0) + Math.ceil(windowHeight / avgItemSize);
+
+    if (estimatedVisibleEnd + PAGE_LIMIT >= visibleClimbs.length && hasMore && !isFetching) {
+      handleLoadMore();
+    }
+  }, [viewMode, virtualItems, visibleClimbs.length, hasMore, isFetching, handleLoadMore, virtualizer]);
+
   return (
     <SelectionStoreContext.Provider value={selectionStore}>
     <Box>
@@ -570,8 +590,8 @@ const ClimbsList = ({
       )}
       </ErrorBoundary>
 
-      {/* Sentinel for infinite scroll — IntersectionObserver fires when this element approaches the viewport */}
-      <Box ref={sentinelRef} sx={sentinelBoxSx}>
+      {/* Sentinel for infinite scroll — only needed for grid mode (list mode uses virtualizer) */}
+      <Box ref={viewMode === 'grid' ? sentinelRef : undefined} sx={sentinelBoxSx}>
         {isFetching &&
           climbs.length > 0 &&
           (viewMode === 'grid' ? (
