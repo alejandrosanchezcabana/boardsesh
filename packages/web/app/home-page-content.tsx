@@ -355,9 +355,6 @@ export default function HomePageContent({ boardConfigs, initialPopularConfigs }:
           boardConfigs={boardConfigs}
           placement="bottom"
           onBoardSelected={handleBoardCreated}
-          hideNearby
-          showCreateBoard
-          startWithForm
         />
       )}
     </Box>

@@ -732,9 +732,6 @@ function BottomTabBar({ boardDetails, angle, boardConfigs }: BottomTabBarProps) 
             handleBoardSelected(url);
             setIsCustomBoardOpen(false);
           }}
-          hideNearby
-          showCreateBoard
-          startWithForm
         />
       )}
 
