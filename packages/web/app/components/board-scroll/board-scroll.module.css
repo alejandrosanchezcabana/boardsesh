@@ -8,7 +8,7 @@
   font-size: 16px;
   font-weight: 600;
   color: var(--neutral-900);
-  margin-bottom: 12px;
+  margin-bottom: 8px;
 }
 
 .scrollContainer {
@@ -36,7 +36,7 @@
   aspect-ratio: 1;
   border-radius: 8px;
   overflow: hidden;
-  margin-bottom: 4px;
+  margin-bottom: 2px;
   box-shadow: var(--shadow-xs);
   background: var(--neutral-100);
   position: relative;
