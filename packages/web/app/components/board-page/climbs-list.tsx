@@ -468,22 +468,22 @@ const ClimbsList = ({
   const virtualItems = virtualizer.getVirtualItems();
 
   // Virtualizer-based infinite scroll for list mode.
-  // Use the estimated visible end (excluding overscan) so that large desktop
-  // viewports don't trigger a cascade of automatic page loads.
-  // Depend on firstVirtualIndex (a number) instead of virtualItems (a new array
-  // on every virtualizer recalculation) to avoid firing during measurement cascades.
-  const firstVirtualIndex = virtualItems[0]?.index ?? 0;
+  // Trigger loading based on remaining scroll distance (in pixels) rather than
+  // the last rendered item index, which includes overscan and caused desktop
+  // viewports to cascade through multiple automatic page loads.
+  const lastVirtualItem = virtualItems[virtualItems.length - 1];
   useEffect(() => {
-    if (viewMode !== 'list' || visibleClimbs.length === 0) return;
+    if (viewMode !== 'list' || !lastVirtualItem) return;
 
-    const windowHeight = typeof window !== 'undefined' ? window.innerHeight : 800;
-    const avgItemSize = virtualizer.getTotalSize() / visibleClimbs.length || 102;
-    const estimatedVisibleEnd = firstVirtualIndex + Math.ceil(windowHeight / avgItemSize);
+    const scrollOffset = virtualizer.scrollOffset ?? 0;
+    const viewportHeight = typeof window !== 'undefined' ? window.innerHeight : 800;
+    const remainingScroll = virtualizer.getTotalSize() - scrollOffset - viewportHeight;
 
-    if (estimatedVisibleEnd + PAGE_LIMIT >= visibleClimbs.length && hasMore && !isFetching) {
+    // Load more when less than ~one page of content remains below the viewport
+    if (remainingScroll < PAGE_LIMIT * 102 && hasMore && !isFetching) {
       handleLoadMore();
     }
-  }, [viewMode, firstVirtualIndex, visibleClimbs.length, hasMore, isFetching, handleLoadMore]);
+  }, [viewMode, lastVirtualItem?.index, visibleClimbs.length, hasMore, isFetching, handleLoadMore]);
 
   return (
     <SelectionStoreContext.Provider value={selectionStore}>
