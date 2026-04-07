@@ -27,6 +27,15 @@ describe('formatAscents', () => {
     expect(formatAscents(13200)).toBe('13k');
     expect(formatAscents(13800)).toBe('14k');
     expect(formatAscents(100000)).toBe('100k');
+    expect(formatAscents(999499)).toBe('999k');
+  });
+
+  it('formats ≥1000000 with 1 decimal + m', () => {
+    expect(formatAscents(1000000)).toBe('1m');
+    expect(formatAscents(1400000)).toBe('1.4m');
+    expect(formatAscents(2500000)).toBe('2.5m');
+    expect(formatAscents(10000000)).toBe('10m');
+    expect(formatAscents(15300000)).toBe('15.3m');
   });
 });
 
