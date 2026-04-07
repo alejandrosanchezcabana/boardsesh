@@ -4,6 +4,7 @@ import React, { useMemo } from 'react';
 import DashboardOutlined from '@mui/icons-material/DashboardOutlined';
 import BoardRenderer from '../board-renderer/board-renderer';
 import { useBoardDetails } from './board-thumbnail';
+import { formatAscents } from '@/app/lib/format-climb-stats';
 import { BoardConfigData } from '@/app/lib/server-board-configs';
 import { StoredBoardConfig } from '@/app/lib/saved-boards-db';
 import type { UserBoard, PopularBoardConfig } from '@boardsesh/shared-schema';
@@ -23,6 +24,7 @@ function formatDistance(meters: number): string {
   if (meters < 1000) return `${Math.round(meters)}m`;
   return `${(meters / 1000).toFixed(1)}km`;
 }
+
 
 interface BoardScrollCardProps {
   userBoard?: UserBoard;
@@ -74,7 +76,10 @@ export default function BoardScrollCard({
     } else if (popularConfig) {
       const label = BOARD_TYPE_LABELS[popularConfig.boardType] || popularConfig.boardType;
       cardName = popularConfig.displayName;
-      cardMeta = `${label} \u00B7 ${popularConfig.totalAscents.toLocaleString()} sends`;
+      const parts = [label];
+      if (popularConfig.boardCount > 0) parts.push(`${formatAscents(popularConfig.boardCount)} boards`);
+      parts.push(`${formatAscents(popularConfig.totalAscents)} sends`);
+      cardMeta = parts.join(' \u00B7 ');
     }
 
     return { name: cardName, meta: cardMeta };
