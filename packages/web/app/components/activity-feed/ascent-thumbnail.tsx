@@ -90,7 +90,6 @@ const AscentThumbnail: React.FC<AscentThumbnailProps> = ({
   }
 
   const thumbnailStyle: React.CSSProperties = {
-    aspectRatio: `${boardDetails.boardWidth} / ${boardDetails.boardHeight}`,
     width: '100%',
     height: '100%',
   };
