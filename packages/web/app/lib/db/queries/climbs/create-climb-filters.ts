@@ -170,6 +170,24 @@ export const createClimbFilters = (
     );
   }
 
+  // Set membership filter: exclude climbs that use holds from sets the user doesn't own.
+  // Uses double-NOT-EXISTS: "no hold of this climb lacks a placement in the selected sets."
+  // MoonBoard has no board_placements data, so skip (same pattern as edge filtering).
+  const setIdsConditions: SQL[] = params.board_name === 'moonboard' || params.set_ids.length === 0 ? [] : [
+    sql`NOT EXISTS (
+      SELECT 1 FROM board_climb_holds bch_set
+      WHERE bch_set.climb_uuid = ${tables.climbs.uuid}
+        AND bch_set.board_type = ${params.board_name}
+        AND NOT EXISTS (
+          SELECT 1 FROM board_placements bp_set
+          WHERE bp_set.board_type = ${params.board_name}
+            AND bp_set.layout_id = ${params.layout_id}
+            AND bp_set.id = bch_set.hold_id
+            AND bp_set.set_id IN (${sql.join(params.set_ids.map(id => sql`${id}`), sql`, `)})
+        )
+    )`,
+  ];
+
   // Personal progress filter conditions (only apply if userId is provided)
   // Uses boardsesh_ticks with NextAuth userId
   const personalProgressConditions: SQL[] = [];
@@ -277,7 +295,7 @@ export const createClimbFilters = (
 
   return {
     // Helper function to get all climb filtering conditions
-    getClimbWhereConditions: () => [...baseConditions, ...nameCondition, ...setterNameCondition, ...holdConditions, ...holdStateConditions, ...tallClimbsConditions, ...personalProgressConditions],
+    getClimbWhereConditions: () => [...baseConditions, ...nameCondition, ...setterNameCondition, ...holdConditions, ...holdStateConditions, ...tallClimbsConditions, ...setIdsConditions, ...personalProgressConditions],
 
     // Size-specific conditions
     getSizeConditions: () => sizeConditions,
@@ -319,6 +337,7 @@ export const createClimbFilters = (
     holdConditions,
     holdStateConditions,
     tallClimbsConditions,
+    setIdsConditions,
     sizeConditions,
     personalProgressConditions,
     anyHolds,
