@@ -582,7 +582,7 @@ const PlayViewDrawer: React.FC<PlayViewDrawerProps> = ({
       swipeEnabled={!isActionsOpen && !isQueueOpen && !isPlaylistSelectorOpen}
       showDragHandle={true}
       styles={{
-        body: { padding: 0, overflow: 'hidden' },
+        body: { padding: 0 },
         wrapper: { height: '100%', backgroundColor: 'var(--semantic-background)' },
       }}
     >
