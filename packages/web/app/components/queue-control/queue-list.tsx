@@ -247,7 +247,7 @@ const QueueList = forwardRef<QueueListHandle, QueueListProps>(({ boardDetails, o
   const suggestedVirtualizer = useVirtualizer({
     count: suggestedClimbs.length,
     getScrollElement: () => scrollContainer ?? null,
-    estimateSize: () => 72,
+    estimateSize: () => 102,
     overscan: 15,
     getItemKey: (index) => suggestedClimbs[index]?.uuid ?? index,
   });
@@ -379,15 +379,14 @@ const QueueList = forwardRef<QueueListHandle, QueueListProps>(({ boardDetails, o
               return (
                 <div
                   key={virtualItem.key}
+                  ref={suggestedVirtualizer.measureElement}
                   data-index={virtualItem.index}
                   style={{
                     position: 'absolute',
                     top: 0,
                     left: 0,
                     width: '100%',
-                    height: `${virtualItem.size}px`,
                     transform: `translateY(${virtualItem.start}px)`,
-                    contain: 'layout style paint',
                   }}
                 >
                   <ClimbListItem

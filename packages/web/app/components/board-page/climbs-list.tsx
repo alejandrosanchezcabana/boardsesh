@@ -459,7 +459,7 @@ const ClimbsList = ({
   // never outpaces the render cycle and causes a blank screen.
   const virtualizer = useWindowVirtualizer({
     count: visibleClimbs.length,
-    estimateSize: () => 72,
+    estimateSize: () => 102,
     overscan: 25,
     getItemKey: (index) => visibleClimbs[index]?.uuid ?? index,
   });
@@ -541,6 +541,7 @@ const ClimbsList = ({
                 return (
                   <div
                     key={virtualItem.key}
+                    ref={virtualizer.measureElement}
                     data-index={virtualItem.index}
                     {...(index === 0 ? { id: 'onboarding-climb-card' } : {})}
                     style={{
@@ -548,9 +549,7 @@ const ClimbsList = ({
                       top: 0,
                       left: 0,
                       width: '100%',
-                      height: `${virtualItem.size}px`,
                       transform: `translateY(${virtualItem.start}px)`,
-                      contain: 'layout style paint',
                     }}
                   >
                     <ClimbListItem
