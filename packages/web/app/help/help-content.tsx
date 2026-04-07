@@ -356,7 +356,7 @@ const helpSections = [
             </Typography>
             <ul>
               <li>Chrome browser (recommended) or other Web Bluetooth-compatible browser</li>
-              <li>iOS users: Use the Bluefy browser (Safari doesn&apos;t support Web Bluetooth)</li>
+              <li>iOS users: Use the Boardsesh app (Safari doesn&apos;t support Web Bluetooth)</li>
               <li>Bluetooth enabled on your device</li>
               <li>Board powered on and in range</li>
             </ul>

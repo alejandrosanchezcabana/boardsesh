@@ -4,8 +4,7 @@ import React, { useEffect, useState } from 'react';
 import Skeleton from '@mui/material/Skeleton';
 import Button from '@mui/material/Button';
 import Box from '@mui/material/Box';
-import Alert from '@mui/material/Alert';
-import Typography from '@mui/material/Typography';
+
 import { signIn } from 'next-auth/react';
 import { isNativeApp } from '@/app/lib/ble/capacitor-utils';
 import { buildNativeOAuthSignInUrl } from '@/app/lib/auth/native-oauth-url';
@@ -63,13 +62,9 @@ export default function SocialLoginButtons({
 }: SocialLoginButtonsProps) {
   const [providers, setProviders] = useState<ProvidersConfig | null>(null);
   const [loading, setLoading] = useState(true);
-  const [isBluefy, setIsBluefy] = useState(false);
   const [isCapacitorApp, setIsCapacitorApp] = useState(false);
 
   useEffect(() => {
-    if (typeof navigator !== 'undefined') {
-      setIsBluefy(/Bluefy/i.test(navigator.userAgent));
-    }
     setIsCapacitorApp(isNativeApp());
   }, []);
 
@@ -116,22 +111,6 @@ export default function SocialLoginButtons({
 
   if (!hasAnyProvider) {
     return null;
-  }
-
-  if (isBluefy) {
-    return (
-      <Alert severity="info" sx={{ mt: 1 }}>
-        <Typography variant="body2" component="div">
-          Google, Apple, and Facebook sign-in are not supported in Bluefy.
-        </Typography>
-        <Typography variant="body2" component="div" sx={{ mt: 1 }}>
-          To sign in, open <strong>boardsesh.com</strong> in
-          Safari, sign in with your preferred provider, then go
-          to <strong>Settings</strong> and set a password. You can then use
-          that email and password to log in here.
-        </Typography>
-      </Alert>
-    );
   }
 
   // Apple button needs custom colors per brand guidelines

@@ -125,7 +125,7 @@ export default function SetPasswordSection({
         <Typography variant="h5">Email & Password Login</Typography>
         <Typography variant="body2" component="span" color="text.secondary" sx={{ display: 'block', mb: 2 }}>
           Set a password to log in with your email address. This is useful for browsers
-          that don&apos;t support Google sign-in (e.g., Bluefy on iOS).
+          that don&apos;t support Google sign-in (e.g., the Boardsesh iOS app).
         </Typography>
 
         {providerNames.length > 0 && (
