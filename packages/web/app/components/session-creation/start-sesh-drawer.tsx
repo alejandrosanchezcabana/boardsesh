@@ -91,11 +91,22 @@ export default function StartSeshDrawer({ open, onClose, onTransitionEnd, boardC
       );
     }
 
+    // Strategy 3: Match by slug from current pathname (handles /b/{slug} routes
+    // when no persistent session is active yet)
+    if (!match && pathname?.startsWith('/b/')) {
+      const segments = pathname.split('/').filter(Boolean);
+      // segments: ['b', 'chalk-awe', '40', 'list']
+      if (segments.length >= 2) {
+        const slug = segments[1];
+        match = boards.find((b) => b.slug === slug);
+      }
+    }
+
     hasAutoSelectedRef.current = true;
     if (match) {
       setSelectedBoard(match);
     }
-  }, [open, boards, localBoardPath, localBoardDetails]);
+  }, [open, boards, localBoardPath, localBoardDetails, pathname]);
 
   const isLoggedIn = status === 'authenticated';
 
@@ -262,7 +273,7 @@ export default function StartSeshDrawer({ open, onClose, onTransitionEnd, boardC
   return (
     <>
       <SwipeableDrawer
-        title="Sesh"
+        title="Start session"
         placement="top"
         open={open}
         onClose={handleClose}
