@@ -83,20 +83,29 @@ vi.mock('@/app/components/swipeable-drawer/swipeable-drawer', () => ({
     open ? <div data-testid="drawer">{children}</div> : null,
 }));
 
-vi.mock('@/app/components/board-scroll/board-scroll-section', () => ({
-  default: ({ children }: { children: React.ReactNode }) => <div data-testid="board-scroll-section">{children}</div>,
-}));
-
-vi.mock('@/app/components/board-scroll/board-scroll-card', () => ({
-  default: ({ onClick, userBoard }: { onClick: () => void; userBoard?: { name: string } }) => (
-    <button data-testid={`board-card-${userBoard?.name}`} onClick={onClick}>
-      {userBoard?.name}
-    </button>
+vi.mock('@/app/components/board-scroll/board-discovery-scroll', () => ({
+  default: ({ onBoardClick, myBoards, selectedBoardUuid }: {
+    onBoardClick: (board: { uuid: string; name: string }) => void;
+    myBoards?: Array<{ uuid: string; name: string; slug: string; angle: number; boardType: string; layoutId: number; sizeId: number; setIds: string }>;
+    selectedBoardUuid?: string;
+  }) => (
+    <div data-testid="board-discovery-scroll">
+      {myBoards?.map((board) => (
+        <button
+          key={board.uuid}
+          data-testid={`board-card-${board.name}`}
+          data-selected={selectedBoardUuid === board.uuid ? 'true' : 'false'}
+          onClick={() => onBoardClick(board)}
+        >
+          {board.name}
+        </button>
+      ))}
+    </div>
   ),
 }));
 
-vi.mock('@/app/components/board-scroll/create-board-card', () => ({
-  default: () => <div data-testid="create-board-card" />,
+vi.mock('@/app/components/board-scroll/board-thumbnail', () => ({
+  default: () => <div data-testid="board-thumbnail" />,
 }));
 
 vi.mock('@/app/components/board-selector-drawer/board-selector-drawer', () => ({
@@ -199,8 +208,8 @@ describe('StartSeshDrawer', () => {
     expect(screen.getByText('Kilter')).toBeTruthy();
     expect(screen.getByText('Change')).toBeTruthy();
 
-    // Board scroll section should not be visible
-    expect(screen.queryByTestId('board-scroll-section')).toBeNull();
+    // Board discovery scroll should not be visible (collapsed)
+    expect(screen.queryByTestId('board-discovery-scroll')).toBeNull();
   });
 
   it('expands board selector when Change is clicked', async () => {
@@ -211,8 +220,8 @@ describe('StartSeshDrawer', () => {
     // Click Change to expand
     fireEvent.click(screen.getByText('Change'));
 
-    // Board scroll section should now be visible
-    expect(screen.getByTestId('board-scroll-section')).toBeTruthy();
+    // Board discovery scroll should now be visible
+    expect(screen.getByTestId('board-discovery-scroll')).toBeTruthy();
   });
 
   it('transfers local queue when board matches', async () => {
@@ -319,8 +328,8 @@ describe('StartSeshDrawer', () => {
 
     render(<StartSeshDrawer open onClose={vi.fn()} />);
 
-    // No auto-selection, full scroll should show
-    expect(screen.getByTestId('board-scroll-section')).toBeTruthy();
+    // No auto-selection, full discovery scroll should show
+    expect(screen.getByTestId('board-discovery-scroll')).toBeTruthy();
     expect(screen.queryByText('Change')).toBeNull();
   });
 

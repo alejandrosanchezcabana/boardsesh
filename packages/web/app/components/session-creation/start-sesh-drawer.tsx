@@ -6,19 +6,18 @@ import Typography from '@mui/material/Typography';
 import Button from '@mui/material/Button';
 import ButtonBase from '@mui/material/ButtonBase';
 import LoginOutlined from '@mui/icons-material/LoginOutlined';
-import DashboardOutlined from '@mui/icons-material/DashboardOutlined';
 import SwipeableDrawer from '../swipeable-drawer/swipeable-drawer';
 import SessionCreationForm from './session-creation-form';
 import type { SessionCreationFormData } from './session-creation-form';
 import BoardSelectorDrawer from '@/app/components/board-selector-drawer/board-selector-drawer';
-import BoardScrollSection from '@/app/components/board-scroll/board-scroll-section';
-import BoardScrollCard from '@/app/components/board-scroll/board-scroll-card';
-import CreateBoardCard from '@/app/components/board-scroll/create-board-card';
+import BoardDiscoveryScroll from '@/app/components/board-scroll/board-discovery-scroll';
+import BoardThumbnail from '@/app/components/board-scroll/board-thumbnail';
 import { useCreateSession } from '@/app/hooks/use-create-session';
 import { useSnackbar } from '@/app/components/providers/snackbar-provider';
 import { useSession } from 'next-auth/react';
 import { useRouter, usePathname } from 'next/navigation';
-import { constructBoardSlugListUrl, getBaseBoardPath } from '@/app/lib/url-utils';
+import { constructBoardSlugListUrl, getBaseBoardPath, constructClimbListWithSlugs, tryConstructSlugListUrl } from '@/app/lib/url-utils';
+import { getDefaultAngleForBoard } from '@/app/lib/board-config-for-playlist';
 import { isBoardRoutePath } from '@/app/lib/board-route-paths';
 import { useAuthModal } from '@/app/components/providers/auth-modal-provider';
 import { setClimbSessionCookie } from '@/app/lib/climb-session-cookie';
@@ -26,6 +25,8 @@ import { usePersistentSession } from '@/app/components/persistent-session/persis
 import { useMyBoards } from '@/app/hooks/use-my-boards';
 import { BoardConfigData } from '@/app/lib/server-board-configs';
 import type { StoredBoardConfig } from '@/app/lib/saved-boards-db';
+import type { UserBoard, PopularBoardConfig } from '@boardsesh/shared-schema';
+import type { BoardName } from '@/app/lib/types';
 
 interface StartSeshDrawerProps {
   open: boolean;
@@ -48,7 +49,7 @@ export default function StartSeshDrawer({ open, onClose, onTransitionEnd, boardC
     localBoardDetails,
   } = usePersistentSession();
   const pathname = usePathname();
-  const { boards, isLoading: isLoadingBoards, error: boardsError } = useMyBoards(open);
+  const { boards, error: boardsError } = useMyBoards(open);
 
   const [selectedBoard, setSelectedBoard] = useState<(typeof boards)[number] | null>(null);
   const [selectedCustomPath, setSelectedCustomPath] = useState<string | null>(null);
@@ -79,7 +80,6 @@ export default function StartSeshDrawer({ open, onClose, onTransitionEnd, boardC
     }
 
     // Strategy 2: Match by numeric board identity from localBoardDetails
-    // Handles generic routes like /kilter/original/16x12/screw_bolt/40/list
     if (!match && localBoardDetails) {
       const sortedLocalSetIds = [...localBoardDetails.set_ids].sort((a, b) => a - b).join(',');
       match = boards.find(
@@ -91,11 +91,9 @@ export default function StartSeshDrawer({ open, onClose, onTransitionEnd, boardC
       );
     }
 
-    // Strategy 3: Match by slug from current pathname (handles /b/{slug} routes
-    // when no persistent session is active yet)
+    // Strategy 3: Match by slug from current pathname
     if (!match && pathname?.startsWith('/b/')) {
       const segments = pathname.split('/').filter(Boolean);
-      // segments: ['b', 'chalk-awe', '40', 'list']
       if (segments.length >= 2) {
         const slug = segments[1];
         match = boards.find((b) => b.slug === slug);
@@ -119,12 +117,49 @@ export default function StartSeshDrawer({ open, onClose, onTransitionEnd, boardC
     setFormKey((k) => k + 1);
   }, [onClose]);
 
-  const handleBoardSelect = (board: (typeof boards)[number]) => {
+  const handleBoardSelect = useCallback((board: UserBoard) => {
     setSelectedBoard(board);
     setSelectedCustomPath(null);
     setSelectedCustomConfig(null);
     setBoardSelectorExpanded(false);
-  };
+  }, []);
+
+  const handleDiscoveryBoardClick = useCallback((board: UserBoard) => {
+    handleBoardSelect(board);
+  }, [handleBoardSelect]);
+
+  const handleConfigClick = useCallback((config: PopularBoardConfig) => {
+    // For popular configs in the session drawer, navigate to that board config
+    const angle = getDefaultAngleForBoard(config.boardType);
+    let url: string;
+    if (config.layoutName && config.sizeName && config.setNames.length > 0) {
+      url = constructClimbListWithSlugs(
+        config.boardType,
+        config.layoutName,
+        config.sizeName,
+        config.sizeDescription ?? undefined,
+        config.setNames,
+        angle,
+      );
+    } else {
+      const setIds = config.setIds.join(',');
+      url = tryConstructSlugListUrl(config.boardType, config.layoutId, config.sizeId, config.setIds, angle)
+        ?? `/${config.boardType}/${config.layoutId}/${config.sizeId}/${setIds}/${angle}/list`;
+    }
+    // Store as custom path selection
+    setSelectedCustomPath(url);
+    setSelectedCustomConfig({
+      name: config.displayName,
+      board: config.boardType as BoardName,
+      layoutId: config.layoutId,
+      sizeId: config.sizeId,
+      setIds: config.setIds,
+      angle,
+      createdAt: new Date().toISOString(),
+    });
+    setSelectedBoard(null);
+    setBoardSelectorExpanded(false);
+  }, []);
 
   const handleCustomSelect = (url: string, config?: StoredBoardConfig) => {
     setSelectedCustomPath(url);
@@ -145,7 +180,6 @@ export default function StartSeshDrawer({ open, onClose, onTransitionEnd, boardC
       boardPath = selectedCustomPath;
       navigateUrl = selectedCustomPath;
     } else if (isBoardRoutePath(pathname)) {
-      // Fallback: user is on a board page but no board was selected from the list
       boardPath = getBaseBoardPath(pathname);
       navigateUrl = pathname;
     }
@@ -156,12 +190,8 @@ export default function StartSeshDrawer({ open, onClose, onTransitionEnd, boardC
     }
 
     try {
-
       const sessionId = await createSession(formData, boardPath);
 
-      // Transfer existing local queue to the new session when the board matches.
-      // Without this, the WebSocket join sends no initial queue and the server
-      // returns an empty FullSync that wipes the user's queue.
       if (
         localBoardPath &&
         (localQueue.length > 0 || localCurrentClimbQueueItem) &&
@@ -172,9 +202,6 @@ export default function StartSeshDrawer({ open, onClose, onTransitionEnd, boardC
 
       setClimbSessionCookie(sessionId);
 
-      // When already on the target board route, router.push to the same URL
-      // won't trigger a re-render, so BoardSessionBridge never picks up the
-      // new cookie. Activate the session directly to avoid this.
       if (
         localBoardPath &&
         localBoardDetails &&
@@ -218,49 +245,38 @@ export default function StartSeshDrawer({ open, onClose, onTransitionEnd, boardC
           sx={{
             display: 'flex',
             alignItems: 'center',
-            justifyContent: 'space-between',
+            gap: 1.5,
             width: '100%',
-            px: 2,
-            py: 1.5,
+            px: 1,
+            py: 1,
             borderRadius: 2,
             bgcolor: 'action.hover',
             textAlign: 'left',
           }}
         >
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-            <DashboardOutlined sx={{ fontSize: 20, color: 'text.secondary' }} />
-            <Typography variant="body2" fontWeight={600}>
+          <BoardThumbnail
+            userBoard={selectedBoard ?? undefined}
+            storedConfig={selectedCustomConfig ?? undefined}
+            boardConfigs={boardConfigs}
+            size={48}
+          />
+          <Box sx={{ flex: 1, minWidth: 0 }}>
+            <Typography variant="body2" fontWeight={600} noWrap>
               {selectedName}
             </Typography>
+            <Typography variant="caption" color="primary" fontWeight={500}>
+              Change
+            </Typography>
           </Box>
-          <Typography variant="body2" color="primary" fontWeight={500}>
-            Change
-          </Typography>
         </ButtonBase>
       ) : (
-        <BoardScrollSection title="Select a board" loading={isLoadingBoards}>
-          <CreateBoardCard
-            onClick={() => setShowBoardDrawer(true)}
-            label="Custom"
-          />
-          {selectedCustomConfig && (
-            <BoardScrollCard
-              key={`custom-${selectedCustomConfig.name}`}
-              storedConfig={selectedCustomConfig}
-              boardConfigs={boardConfigs}
-              selected
-              onClick={() => setShowBoardDrawer(true)}
-            />
-          )}
-          {boards.map((board) => (
-            <BoardScrollCard
-              key={board.uuid}
-              userBoard={board}
-              selected={selectedBoard?.uuid === board.uuid}
-              onClick={() => handleBoardSelect(board)}
-            />
-          ))}
-        </BoardScrollSection>
+        <BoardDiscoveryScroll
+          onBoardClick={handleDiscoveryBoardClick}
+          onConfigClick={handleConfigClick}
+          onCustomClick={() => setShowBoardDrawer(true)}
+          selectedBoardUuid={selectedBoard?.uuid}
+          myBoards={boards}
+        />
       )}
       {boardsError && (
         <Typography variant="body2" color="error" sx={{ mt: 0.5 }}>

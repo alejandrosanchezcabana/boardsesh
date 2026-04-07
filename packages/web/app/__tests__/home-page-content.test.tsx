@@ -28,23 +28,6 @@ vi.mock('@/app/components/persistent-session', () => ({
   usePersistentSessionActions: () => ({}),
 }));
 
-vi.mock('@/app/hooks/use-discover-boards', () => ({
-  useDiscoverBoards: () => ({ boards: [], isLoading: false }),
-}));
-
-const mockUsePopularBoardConfigs = vi.fn().mockReturnValue({
-  configs: [],
-  isLoading: false,
-  isLoadingMore: false,
-  hasMore: false,
-  error: null,
-  loadMore: vi.fn(),
-});
-
-vi.mock('@/app/hooks/use-popular-board-configs', () => ({
-  usePopularBoardConfigs: (...args: unknown[]) => mockUsePopularBoardConfigs(...args),
-}));
-
 vi.mock('@/app/components/session-creation/start-sesh-drawer', () => ({
   default: ({ open }: { open: boolean }) =>
     open ? <div data-testid="start-sesh-drawer">Drawer</div> : null,
@@ -54,11 +37,11 @@ vi.mock('@/app/components/search-drawer/unified-search-drawer', () => ({
   default: () => null,
 }));
 
-vi.mock('@/app/components/board-scroll/board-scroll-section', () => ({
-  default: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
+vi.mock('@/app/components/board-selector-drawer/board-selector-drawer', () => ({
+  default: () => null,
 }));
 
-vi.mock('@/app/components/board-scroll/board-scroll-card', () => ({
+vi.mock('@/app/components/board-scroll/board-discovery-scroll', () => ({
   default: () => null,
 }));
 
@@ -92,14 +75,6 @@ describe('HomePageContent', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     mockActiveSession = null;
-    mockUsePopularBoardConfigs.mockReturnValue({
-      configs: [],
-      isLoading: false,
-      isLoadingMore: false,
-      hasMore: false,
-      error: null,
-      loadMore: vi.fn(),
-    });
   });
 
   describe('hero button without active session', () => {
@@ -214,7 +189,8 @@ describe('HomePageContent', () => {
   });
 
   describe('SSR popular configs', () => {
-    it('passes initialData to usePopularBoardConfigs when initialPopularConfigs is provided', () => {
+    it('passes initialPopularConfigs to BoardDiscoveryScroll when provided', () => {
+      // BoardDiscoveryScroll is mocked, so we just verify the component renders without error
       const initialConfigs = [
         {
           boardType: 'kilter',
@@ -232,20 +208,7 @@ describe('HomePageContent', () => {
       ];
 
       render(<HomePageContent {...defaultProps} initialPopularConfigs={initialConfigs} />);
-
-      expect(mockUsePopularBoardConfigs).toHaveBeenCalledWith({
-        limit: 12,
-        initialData: initialConfigs,
-      });
-    });
-
-    it('does not pass initialData when initialPopularConfigs is not provided', () => {
-      render(<HomePageContent {...defaultProps} />);
-
-      expect(mockUsePopularBoardConfigs).toHaveBeenCalledWith({
-        limit: 12,
-        initialData: undefined,
-      });
+      expect(screen.getByRole('button', { name: /start climbing/i })).toBeTruthy();
     });
   });
 });

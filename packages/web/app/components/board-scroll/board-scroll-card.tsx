@@ -2,10 +2,8 @@
 
 import React, { useMemo } from 'react';
 import DashboardOutlined from '@mui/icons-material/DashboardOutlined';
-import { BoardDetails, BoardName } from '@/app/lib/types';
-import { getBoardDetails } from '@/app/lib/__generated__/product-sizes-data';
-import { getMoonBoardDetails } from '@/app/lib/moonboard-config';
 import BoardRenderer from '../board-renderer/board-renderer';
+import { useBoardDetails } from './board-thumbnail';
 import { BoardConfigData } from '@/app/lib/server-board-configs';
 import { StoredBoardConfig } from '@/app/lib/saved-boards-db';
 import type { UserBoard, PopularBoardConfig } from '@boardsesh/shared-schema';
@@ -51,84 +49,35 @@ export default function BoardScrollCard({
   size = 'default',
   onClick,
 }: BoardScrollCardProps) {
-  const { boardDetails, name, meta } = useMemo(() => {
-    let details: BoardDetails | null = null;
+  const boardDetails = useBoardDetails(userBoard, storedConfig, popularConfig);
+
+  const { name, meta } = useMemo(() => {
     let cardName = '';
     let cardMeta = '';
 
-    try {
-      if (userBoard) {
-        const setIds = userBoard.setIds.split(',').map(Number);
-        const boardName = userBoard.boardType as BoardName;
-        cardName = userBoard.name;
-        cardMeta = BOARD_TYPE_LABELS[userBoard.boardType] || userBoard.boardType;
-        if (userBoard.locationName) {
-          cardMeta += ` \u00B7 ${userBoard.locationName}`;
-        }
-
-        if (boardName === 'moonboard') {
-          details = getMoonBoardDetails({
-            layout_id: userBoard.layoutId,
-            set_ids: setIds,
-          }) as BoardDetails;
-        } else {
-          details = getBoardDetails({
-            board_name: boardName,
-            layout_id: userBoard.layoutId,
-            size_id: userBoard.sizeId,
-            set_ids: setIds,
-          });
-        }
-      } else if (storedConfig) {
-        cardName = storedConfig.name;
-
-        // Derive meta from boardConfigs if available
-        if (boardConfigs) {
-          const layouts = boardConfigs.layouts[storedConfig.board] || [];
-          const layout = layouts.find((l) => l.id === storedConfig.layoutId);
-          cardMeta = layout?.name || (storedConfig.board.charAt(0).toUpperCase() + storedConfig.board.slice(1));
-        } else {
-          cardMeta = storedConfig.board.charAt(0).toUpperCase() + storedConfig.board.slice(1);
-        }
-        cardMeta += ` \u00B7 ${storedConfig.angle}\u00B0`;
-
-        if (storedConfig.board === 'moonboard') {
-          details = getMoonBoardDetails({
-            layout_id: storedConfig.layoutId,
-            set_ids: storedConfig.setIds,
-          }) as BoardDetails;
-        } else {
-          details = getBoardDetails({
-            board_name: storedConfig.board,
-            layout_id: storedConfig.layoutId,
-            size_id: storedConfig.sizeId,
-            set_ids: storedConfig.setIds,
-          });
-        }
-      } else if (popularConfig) {
-        const boardName = popularConfig.boardType as BoardName;
-        cardName = popularConfig.displayName;
-        cardMeta = `${BOARD_TYPE_LABELS[boardName] || boardName} \u00B7 ${popularConfig.totalAscents.toLocaleString()} sends`;
-
-        if (boardName === 'moonboard') {
-          details = getMoonBoardDetails({
-            layout_id: popularConfig.layoutId,
-            set_ids: popularConfig.setIds,
-          }) as BoardDetails;
-        } else {
-          details = getBoardDetails({
-            board_name: boardName,
-            layout_id: popularConfig.layoutId,
-            size_id: popularConfig.sizeId,
-            set_ids: popularConfig.setIds,
-          });
-        }
+    if (userBoard) {
+      cardName = userBoard.name;
+      cardMeta = BOARD_TYPE_LABELS[userBoard.boardType] || userBoard.boardType;
+      if (userBoard.locationName) {
+        cardMeta += ` \u00B7 ${userBoard.locationName}`;
       }
-    } catch {
-      // Fall back to icon if board details unavailable
+    } else if (storedConfig) {
+      cardName = storedConfig.name;
+      if (boardConfigs) {
+        const layouts = boardConfigs.layouts[storedConfig.board] || [];
+        const layout = layouts.find((l) => l.id === storedConfig.layoutId);
+        cardMeta = layout?.name || (storedConfig.board.charAt(0).toUpperCase() + storedConfig.board.slice(1));
+      } else {
+        cardMeta = storedConfig.board.charAt(0).toUpperCase() + storedConfig.board.slice(1);
+      }
+      cardMeta += ` \u00B7 ${storedConfig.angle}\u00B0`;
+    } else if (popularConfig) {
+      const label = BOARD_TYPE_LABELS[popularConfig.boardType] || popularConfig.boardType;
+      cardName = popularConfig.displayName;
+      cardMeta = `${label} \u00B7 ${popularConfig.totalAscents.toLocaleString()} sends`;
     }
 
-    return { boardDetails: details, name: cardName, meta: cardMeta };
+    return { name: cardName, meta: cardMeta };
   }, [userBoard, storedConfig, popularConfig, boardConfigs]);
 
   const isSmall = size === 'small';

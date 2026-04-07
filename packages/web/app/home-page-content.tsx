@@ -18,34 +18,12 @@ import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import { themeTokens } from '@/app/theme/theme-config';
 import { usePersistentSession } from '@/app/components/persistent-session';
-import BoardScrollSection from '@/app/components/board-scroll/board-scroll-section';
-import BoardScrollCard from '@/app/components/board-scroll/board-scroll-card';
-import FindNearbyCard, { type FindNearbyStatus } from '@/app/components/board-scroll/find-nearby-card';
-import { useDiscoverBoards } from '@/app/hooks/use-discover-boards';
-import { usePopularBoardConfigs } from '@/app/hooks/use-popular-board-configs';
+import BoardDiscoveryScroll from '@/app/components/board-scroll/board-discovery-scroll';
 import { constructBoardSlugListUrl, constructClimbListWithSlugs, tryConstructSlugListUrl } from '@/app/lib/url-utils';
 import { getDefaultAngleForBoard } from '@/app/lib/board-config-for-playlist';
 import type { BoardConfigData } from '@/app/lib/server-board-configs';
 import type { UserBoard, PopularBoardConfig } from '@boardsesh/shared-schema';
 import { setClimbSessionCookie } from '@/app/lib/climb-session-cookie';
-
-function deriveFindNearbyStatus({
-  locationEnabled,
-  isLoading,
-  error,
-  hasLocation,
-}: {
-  locationEnabled: boolean;
-  isLoading: boolean;
-  error: string | null;
-  hasLocation: boolean;
-}): FindNearbyStatus {
-  if (!locationEnabled) return 'idle';
-  if (isLoading) return 'loading';
-  if (error) return 'error';
-  if (!hasLocation) return 'geo-denied';
-  return 'no-results';
-}
 
 const StartSeshDrawer = dynamic(
   () => import('@/app/components/session-creation/start-sesh-drawer'),
@@ -54,6 +32,11 @@ const StartSeshDrawer = dynamic(
 
 const UnifiedSearchDrawer = dynamic(
   () => import('@/app/components/search-drawer/unified-search-drawer'),
+  { ssr: false },
+);
+
+const BoardSelectorDrawer = dynamic(
+  () => import('@/app/components/board-selector-drawer/board-selector-drawer'),
   { ssr: false },
 );
 
@@ -135,8 +118,10 @@ export default function HomePageContent({ boardConfigs, initialPopularConfigs }:
   const { activeSession } = usePersistentSession();
   const [seshDrawerOpen, setSeshDrawerOpen] = useState(false);
   const [findClimbersOpen, setFindClimbersOpen] = useState(false);
+  const [createBoardOpen, setCreateBoardOpen] = useState(false);
   const [seshDrawerMounted, setSeshDrawerMounted] = useState(false);
   const [findClimbersMounted, setFindClimbersMounted] = useState(false);
+  const [createBoardMounted, setCreateBoardMounted] = useState(false);
 
   useEffect(() => {
     if (seshDrawerOpen) setSeshDrawerMounted(true);
@@ -146,11 +131,11 @@ export default function HomePageContent({ boardConfigs, initialPopularConfigs }:
     if (findClimbersOpen) setFindClimbersMounted(true);
   }, [findClimbersOpen]);
 
-  const isAuthenticated = status === 'authenticated';
+  useEffect(() => {
+    if (createBoardOpen) setCreateBoardMounted(true);
+  }, [createBoardOpen]);
 
-  const [locationEnabled, setLocationEnabled] = useState(false);
-  const { boards: discoverBoards, isLoading: isBoardsLoading, hasLocation, error: discoverError } = useDiscoverBoards({ limit: 20, enableLocation: locationEnabled });
-  const { configs: popularConfigs, isLoading: isConfigsLoading, isLoadingMore, hasMore, loadMore } = usePopularBoardConfigs({ limit: 12, initialData: initialPopularConfigs });
+  const isAuthenticated = status === 'authenticated';
 
   const handleBoardClick = useCallback((board: UserBoard) => {
     if (board.slug) {
@@ -177,6 +162,15 @@ export default function HomePageContent({ boardConfigs, initialPopularConfigs }:
           ?? numericFallback,
       );
     }
+  }, [router]);
+
+  const handleCustomClick = useCallback(() => {
+    setCreateBoardOpen(true);
+  }, []);
+
+  const handleBoardCreated = useCallback((url: string) => {
+    setCreateBoardOpen(false);
+    router.push(url);
   }, [router]);
 
   return (
@@ -228,7 +222,6 @@ export default function HomePageContent({ boardConfigs, initialPopularConfigs }:
                   const segments = activeSession.boardPath.split('/');
                   url = constructBoardSlugListUrl(segments[2], activeSession.parsedParams.angle);
                 } else {
-                  // Legacy/custom path — navigate directly
                   url = activeSession.boardPath;
                 }
                 setClimbSessionCookie(activeSession.sessionId);
@@ -252,42 +245,13 @@ export default function HomePageContent({ boardConfigs, initialPopularConfigs }:
           </Button>
         </Box>
 
-        {/* Board Discovery - horizontal scroll */}
-        {(isBoardsLoading || isConfigsLoading || discoverBoards.length > 0 || popularConfigs.length > 0) && (
-          <BoardScrollSection
-            title="Boards near you"
-            loading={isBoardsLoading && popularConfigs.length === 0}
-            onLoadMore={loadMore}
-            hasMore={hasMore}
-            isLoadingMore={isLoadingMore}
-          >
-            {discoverBoards.length === 0 && (
-              <FindNearbyCard
-                onClick={() => setLocationEnabled(true)}
-                status={deriveFindNearbyStatus({
-                  locationEnabled,
-                  isLoading: isBoardsLoading,
-                  error: discoverError,
-                  hasLocation,
-                })}
-              />
-            )}
-            {discoverBoards.map((board) => (
-              <BoardScrollCard
-                key={board.uuid}
-                userBoard={board}
-                onClick={() => handleBoardClick(board)}
-              />
-            ))}
-            {popularConfigs.map((config) => (
-              <BoardScrollCard
-                key={`${config.boardType}-${config.layoutId}-${config.sizeId}`}
-                popularConfig={config}
-                onClick={() => handleConfigClick(config)}
-              />
-            ))}
-          </BoardScrollSection>
-        )}
+        {/* Board Discovery - Find nearby + Custom + My boards + Popular configs */}
+        <BoardDiscoveryScroll
+          onBoardClick={handleBoardClick}
+          onConfigClick={handleConfigClick}
+          onCustomClick={handleCustomClick}
+          initialPopularConfigs={initialPopularConfigs}
+        />
 
         {/* Onboarding Cards */}
         <Box
@@ -381,6 +345,16 @@ export default function HomePageContent({ boardConfigs, initialPopularConfigs }:
           open={findClimbersOpen}
           onClose={() => setFindClimbersOpen(false)}
           defaultCategory="users"
+        />
+      )}
+
+      {createBoardMounted && (
+        <BoardSelectorDrawer
+          open={createBoardOpen}
+          onClose={() => setCreateBoardOpen(false)}
+          boardConfigs={boardConfigs}
+          placement="bottom"
+          onBoardSelected={handleBoardCreated}
         />
       )}
     </Box>
