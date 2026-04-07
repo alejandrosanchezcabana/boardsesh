@@ -18,6 +18,8 @@ import StatItem from '@/app/components/ui/stat-item';
 interface BoardCardProps {
   board: UserBoard;
   onClick?: (board: UserBoard) => void;
+  /** Optional trailing action (e.g. follow button) rendered below the stats row. */
+  trailingAction?: React.ReactNode;
 }
 
 const BOARD_TYPE_LABELS: Record<string, string> = {
@@ -30,7 +32,7 @@ const BOARD_TYPE_LABELS: Record<string, string> = {
   soill: 'So iLL',
 };
 
-export default function BoardCard({ board, onClick }: BoardCardProps) {
+export default function BoardCard({ board, onClick, trailingAction }: BoardCardProps) {
   return (
     <Card
       variant="outlined"
@@ -89,6 +91,14 @@ export default function BoardCard({ board, onClick }: BoardCardProps) {
           </Box>
         </CardContent>
       </CardActionArea>
+      {trailingAction && (
+        <Box
+          sx={{ display: 'flex', justifyContent: 'flex-end', px: 2, pb: 1.5 }}
+          onClick={(e) => e.stopPropagation()}
+        >
+          {trailingAction}
+        </Box>
+      )}
     </Card>
   );
 }

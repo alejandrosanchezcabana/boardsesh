@@ -15,10 +15,13 @@ export const CreateBoardInputSchema = z.object({
   latitude: LatitudeSchema.optional(),
   longitude: LongitudeSchema.optional(),
   isPublic: z.boolean().optional(),
+  isUnlisted: z.boolean().optional(),
+  hideLocation: z.boolean().optional(),
   isOwned: z.boolean().optional(),
   gymUuid: UUIDSchema.optional(),
   angle: z.number().int().min(0).max(70).optional(),
   isAngleAdjustable: z.boolean().optional(),
+  serialNumber: z.string().max(100).optional(),
 });
 
 /**
@@ -33,12 +36,15 @@ export const UpdateBoardInputSchema = z.object({
   latitude: LatitudeSchema.optional().nullable(),
   longitude: LongitudeSchema.optional().nullable(),
   isPublic: z.boolean().optional(),
+  isUnlisted: z.boolean().optional(),
+  hideLocation: z.boolean().optional(),
   isOwned: z.boolean().optional(),
   angle: z.number().int().min(0).max(70).optional(),
   isAngleAdjustable: z.boolean().optional(),
   layoutId: z.number().int().positive('Layout ID must be positive').optional(),
   sizeId: z.number().int().positive('Size ID must be positive').optional(),
   setIds: z.string().min(1, 'Set IDs cannot be empty').optional(),
+  serialNumber: z.string().max(100).optional().nullable(),
 });
 
 /**

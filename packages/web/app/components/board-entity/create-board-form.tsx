@@ -53,7 +53,7 @@ export default function CreateBoardForm({
   );
 
   const handleSubmit = useCallback(
-    async (values: { name: string; description: string; locationName: string; isPublic: boolean; isOwned: boolean; angle?: number; isAngleAdjustable?: boolean }) => {
+    async (values: { name: string; description: string; locationName: string; latitude?: number | null; longitude?: number | null; isPublic: boolean; isUnlisted: boolean; hideLocation: boolean; isOwned: boolean; angle?: number; isAngleAdjustable?: boolean }) => {
       if (!values.name) {
         showMessage('Board name is required', 'error');
         return;
@@ -68,7 +68,11 @@ export default function CreateBoardForm({
           name: values.name,
           description: values.description || undefined,
           locationName: values.locationName || undefined,
+          latitude: values.latitude ?? undefined,
+          longitude: values.longitude ?? undefined,
           isPublic: values.isPublic,
+          isUnlisted: values.isUnlisted,
+          hideLocation: values.hideLocation,
           isOwned: values.isOwned,
           gymUuid: selectedGymUuid || undefined,
           angle: values.angle,
@@ -104,6 +108,8 @@ export default function CreateBoardForm({
           description: '',
           locationName: '',
           isPublic: true,
+          isUnlisted: false,
+          hideLocation: false,
           isOwned: true,
         }}
         namePlaceholder="e.g., Home Board, Gym Name"

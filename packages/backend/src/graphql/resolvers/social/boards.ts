@@ -194,6 +194,8 @@ async function enrichBoard(
     latitude: board.latitude,
     longitude: board.longitude,
     isPublic: board.isPublic,
+    isUnlisted: board.isUnlisted,
+    hideLocation: board.hideLocation,
     isOwned: board.isOwned,
     angle: Number(board.angle),
     isAngleAdjustable: board.isAngleAdjustable,
@@ -212,6 +214,7 @@ async function enrichBoard(
     gymUuid: gymInfo?.uuid ?? null,
     gymName: gymInfo?.name ?? null,
     distanceMeters: distanceMeters ?? null,
+    serialNumber: board.serialNumber ?? null,
   };
 }
 
@@ -340,6 +343,8 @@ async function enrichBoards(
       latitude: board.latitude,
       longitude: board.longitude,
       isPublic: board.isPublic,
+      isUnlisted: board.isUnlisted,
+      hideLocation: board.hideLocation,
       isOwned: board.isOwned,
       angle: Number(board.angle),
       isAngleAdjustable: board.isAngleAdjustable,
@@ -357,6 +362,7 @@ async function enrichBoards(
       gymUuid: gym?.uuid ?? null,
       gymName: gym?.name ?? null,
       distanceMeters: distanceMeters ?? null,
+      serialNumber: board.serialNumber ?? null,
     };
   });
 }
@@ -720,9 +726,20 @@ export const socialBoardQueries = {
       // Build shared WHERE conditions
       const conditions = [
         eq(dbSchema.userBoards.isPublic, true),
+        eq(dbSchema.userBoards.isUnlisted, false),
         isNull(dbSchema.userBoards.deletedAt),
         sql`${locationCol} IS NOT NULL`,
         sql`ST_DWithin(${locationCol}, ${userPoint}, ${radiusMeters})`,
+        // Hide boards with hideLocation=true unless the board owner follows the searching user
+        sql`(${dbSchema.userBoards.hideLocation} = false${
+          ctx.isAuthenticated
+            ? sql` OR EXISTS (
+                SELECT 1 FROM user_follows
+                WHERE follower_id = ${dbSchema.userBoards.ownerId}
+                AND following_id = ${ctx.userId}
+              )`
+            : sql``
+        })`,
       ];
 
       if (boardType) {
@@ -773,6 +790,7 @@ export const socialBoardQueries = {
     // Text-only search path (no proximity)
     const conditions = [
       eq(dbSchema.userBoards.isPublic, true),
+      eq(dbSchema.userBoards.isUnlisted, false),
       isNull(dbSchema.userBoards.deletedAt),
     ];
 
@@ -1151,9 +1169,12 @@ export const socialBoardMutations = {
                 latitude: validatedInput.latitude ?? null,
                 longitude: validatedInput.longitude ?? null,
                 isPublic: validatedInput.isPublic ?? true,
+                isUnlisted: validatedInput.isUnlisted ?? false,
+                hideLocation: validatedInput.hideLocation ?? false,
                 isOwned: validatedInput.isOwned ?? true,
                 angle: validatedInput.angle ?? 40,
                 isAngleAdjustable: validatedInput.isAngleAdjustable ?? true,
+                serialNumber: validatedInput.serialNumber ?? null,
                 gymId: newGym.id,
               })
               .returning();
@@ -1191,9 +1212,12 @@ export const socialBoardMutations = {
         latitude: validatedInput.latitude ?? null,
         longitude: validatedInput.longitude ?? null,
         isPublic: validatedInput.isPublic ?? true,
+        isUnlisted: validatedInput.isUnlisted ?? false,
+        hideLocation: validatedInput.hideLocation ?? false,
         isOwned: validatedInput.isOwned ?? true,
         angle: validatedInput.angle ?? 40,
         isAngleAdjustable: validatedInput.isAngleAdjustable ?? true,
+        serialNumber: validatedInput.serialNumber ?? null,
         gymId,
       })
       .returning();
@@ -1248,9 +1272,12 @@ export const socialBoardMutations = {
     if (validatedInput.latitude !== undefined) updateValues.latitude = validatedInput.latitude;
     if (validatedInput.longitude !== undefined) updateValues.longitude = validatedInput.longitude;
     if (validatedInput.isPublic !== undefined) updateValues.isPublic = validatedInput.isPublic;
+    if (validatedInput.isUnlisted !== undefined) updateValues.isUnlisted = validatedInput.isUnlisted;
+    if (validatedInput.hideLocation !== undefined) updateValues.hideLocation = validatedInput.hideLocation;
     if (validatedInput.isOwned !== undefined) updateValues.isOwned = validatedInput.isOwned;
     if (validatedInput.angle !== undefined) updateValues.angle = validatedInput.angle;
     if (validatedInput.isAngleAdjustable !== undefined) updateValues.isAngleAdjustable = validatedInput.isAngleAdjustable;
+    if (validatedInput.serialNumber !== undefined) updateValues.serialNumber = validatedInput.serialNumber;
 
     // Handle config field changes (layoutId, sizeId, setIds) — only allowed on boards with zero ticks
     const hasConfigChange = validatedInput.layoutId !== undefined

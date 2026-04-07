@@ -33,6 +33,8 @@ const BOARD_FIELDS = `
   latitude
   longitude
   isPublic
+  isUnlisted
+  hideLocation
   isOwned
   angle
   isAngleAdjustable
@@ -50,6 +52,7 @@ const BOARD_FIELDS = `
   gymUuid
   gymName
   distanceMeters
+  serialNumber
 `;
 
 export const GET_BOARD = gql`

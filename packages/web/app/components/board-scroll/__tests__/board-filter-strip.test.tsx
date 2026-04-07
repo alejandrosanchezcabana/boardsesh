@@ -57,6 +57,8 @@ function makeBoard(overrides?: Partial<UserBoard>): UserBoard {
     name: 'My Kilter',
     locationName: 'The Gym',
     isPublic: true,
+    isUnlisted: false,
+    hideLocation: false,
     isOwned: true,
     isAngleAdjustable: false,
     createdAt: '2024-01-01T00:00:00Z',

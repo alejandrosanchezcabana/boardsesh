@@ -76,6 +76,8 @@ function makeBoard(overrides: Partial<UserBoard> = {}): UserBoard {
     latitude: 40.7128,
     longitude: -74.006,
     isPublic: true,
+    isUnlisted: false,
+    hideLocation: false,
     isOwned: false,
     angle: 40,
     isAngleAdjustable: false,

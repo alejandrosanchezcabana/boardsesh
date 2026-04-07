@@ -1,16 +1,19 @@
 'use client';
 
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useCallback } from 'react';
 import Box from '@mui/material/Box';
 import Stack from '@mui/material/Stack';
 import Typography from '@mui/material/Typography';
 import CircularProgress from '@mui/material/CircularProgress';
-import { useInfiniteQuery } from '@tanstack/react-query';
+import { useInfiniteQuery, useQueryClient, type InfiniteData } from '@tanstack/react-query';
 import BoardCard from '@/app/components/board-entity/board-card';
 import BoardDetail from '@/app/components/board-entity/board-detail';
+import FollowButton from '@/app/components/ui/follow-button';
 import { createGraphQLHttpClient } from '@/app/lib/graphql/client';
 import {
   SEARCH_BOARDS,
+  FOLLOW_BOARD,
+  UNFOLLOW_BOARD,
   type SearchBoardsQueryVariables,
   type SearchBoardsQueryResponse,
 } from '@/app/lib/graphql/operations';
@@ -21,11 +24,21 @@ import { useInfiniteScroll } from '@/app/hooks/use-infinite-scroll';
 interface BoardSearchResultsProps {
   query: string;
   authToken: string | null;
+  /** Show a follow button on each board card. */
+  showFollowButton?: boolean;
+  /** Called when a board is selected (instead of opening internal BoardDetail drawer). */
+  onBoardSelect?: (board: UserBoard) => void;
 }
 
-export default function BoardSearchResults({ query, authToken }: BoardSearchResultsProps) {
+export default function BoardSearchResults({
+  query,
+  authToken,
+  showFollowButton,
+  onBoardSelect,
+}: BoardSearchResultsProps) {
   const [selectedBoardUuid, setSelectedBoardUuid] = useState<string | null>(null);
   const debouncedQuery = useDebouncedValue(query, 300);
+  const queryClient = useQueryClient();
 
   const { data, fetchNextPage, hasNextPage, isFetchingNextPage, isLoading } = useInfiniteQuery<
     UserBoardConnection,
@@ -60,6 +73,34 @@ export default function BoardSearchResults({ query, authToken }: BoardSearchResu
     isFetching: isFetchingNextPage,
   });
 
+  const handleFollowChange = useCallback((boardUuid: string, isFollowing: boolean) => {
+    queryClient.setQueryData<InfiniteData<UserBoardConnection>>(
+      ['searchBoards', debouncedQuery, authToken],
+      (old) => {
+        if (!old) return old;
+        return {
+          ...old,
+          pages: old.pages.map((page) => ({
+            ...page,
+            boards: page.boards.map((b) =>
+              b.uuid === boardUuid
+                ? { ...b, isFollowedByMe: isFollowing, followerCount: b.followerCount + (isFollowing ? 1 : -1) }
+                : b
+            ),
+          })),
+        };
+      }
+    );
+  }, [queryClient, debouncedQuery, authToken]);
+
+  const handleBoardClick = useCallback((board: UserBoard) => {
+    if (onBoardSelect) {
+      onBoardSelect(board);
+    } else {
+      setSelectedBoardUuid(board.uuid);
+    }
+  }, [onBoardSelect]);
+
   if (query.length < 2) {
     return (
       <Box sx={{ py: 4, textAlign: 'center' }}>
@@ -92,18 +133,35 @@ export default function BoardSearchResults({ query, authToken }: BoardSearchResu
     <>
       <Stack spacing={1.5} sx={{ px: 2, py: 1 }}>
         {results.map((board) => (
-          <BoardCard key={board.uuid} board={board} onClick={(b) => setSelectedBoardUuid(b.uuid)} />
+          <BoardCard
+            key={board.uuid}
+            board={board}
+            onClick={handleBoardClick}
+            trailingAction={showFollowButton ? (
+              <FollowButton
+                entityId={board.uuid}
+                initialIsFollowing={board.isFollowedByMe}
+                followMutation={FOLLOW_BOARD}
+                unfollowMutation={UNFOLLOW_BOARD}
+                entityLabel="board"
+                getFollowVariables={(id) => ({ input: { boardUuid: id } })}
+                onFollowChange={(isFollowing) => handleFollowChange(board.uuid, isFollowing)}
+              />
+            ) : undefined}
+          />
         ))}
       </Stack>
       <Box ref={sentinelRef} sx={{ display: 'flex', justifyContent: 'center', py: 2, minHeight: 20 }}>
         {isFetchingNextPage && <CircularProgress size={24} />}
       </Box>
-      <BoardDetail
-        boardUuid={selectedBoardUuid ?? ''}
-        open={!!selectedBoardUuid}
-        onClose={() => setSelectedBoardUuid(null)}
-        anchor="top"
-      />
+      {!onBoardSelect && (
+        <BoardDetail
+          boardUuid={selectedBoardUuid ?? ''}
+          open={!!selectedBoardUuid}
+          onClose={() => setSelectedBoardUuid(null)}
+          anchor="top"
+        />
+      )}
     </>
   );
 }

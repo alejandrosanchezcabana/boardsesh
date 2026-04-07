@@ -16,6 +16,8 @@ export type UserBoard = {
   latitude?: number | null;
   longitude?: number | null;
   isPublic: boolean;
+  isUnlisted: boolean;
+  hideLocation: boolean;
   isOwned: boolean;
   angle: number;
   isAngleAdjustable: boolean;
@@ -33,6 +35,7 @@ export type UserBoard = {
   gymUuid?: string | null;
   gymName?: string | null;
   distanceMeters?: number | null;
+  serialNumber?: string | null;
 };
 
 export type UserBoardConnection = {
@@ -72,10 +75,13 @@ export type CreateBoardInput = {
   latitude?: number;
   longitude?: number;
   isPublic?: boolean;
+  isUnlisted?: boolean;
+  hideLocation?: boolean;
   isOwned?: boolean;
   gymUuid?: string;
   angle?: number;
   isAngleAdjustable?: boolean;
+  serialNumber?: string;
 };
 
 export type UpdateBoardInput = {
@@ -87,12 +93,15 @@ export type UpdateBoardInput = {
   latitude?: number;
   longitude?: number;
   isPublic?: boolean;
+  isUnlisted?: boolean;
+  hideLocation?: boolean;
   isOwned?: boolean;
   angle?: number;
   isAngleAdjustable?: boolean;
   layoutId?: number;
   sizeId?: number;
   setIds?: string;
+  serialNumber?: string;
 };
 
 export type BoardLeaderboardInput = {

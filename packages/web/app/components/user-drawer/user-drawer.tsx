@@ -26,11 +26,13 @@ import { useColorMode } from '@/app/hooks/use-color-mode';
 import { useRouter, usePathname } from 'next/navigation';
 import Link from 'next/link';
 import { getPlaylistsBasePath } from '@/app/lib/url-utils';
+import DashboardOutlined from '@mui/icons-material/DashboardOutlined';
 import SwipeableDrawer from '../swipeable-drawer/swipeable-drawer';
 import { useAuthModal } from '@/app/components/providers/auth-modal-provider';
 import { HoldClassificationWizard } from '../hold-classification';
 
 import BoardSelectorDrawer from '../board-selector-drawer/board-selector-drawer';
+import MyBoardsDrawer from '../my-boards-drawer/my-boards-drawer';
 import { BoardDetails } from '@/app/lib/types';
 import { BoardConfigData } from '@/app/lib/server-board-configs';
 import {
@@ -56,6 +58,7 @@ export default function UserDrawer({ boardDetails, boardConfigs }: UserDrawerPro
   const { openAuthModal } = useAuthModal();
   const [showHoldClassification, setShowHoldClassification] = useState(false);
   const [showBoardSelector, setShowBoardSelector] = useState(false);
+  const [showMyBoards, setShowMyBoards] = useState(false);
   const [recentSessions, setRecentSessions] = useState<StoredSession[]>([]);
 
   const { mode, toggleMode } = useColorMode();
@@ -178,6 +181,20 @@ export default function UserDrawer({ boardDetails, boardConfigs }: UserDrawerPro
               <span className={styles.menuItemIcon}><SwapHorizOutlined /></span>
               <span className={styles.menuItemLabel}>Change Board</span>
             </button>
+
+            {session?.user && (
+              <button
+                type="button"
+                className={styles.menuItem}
+                onClick={() => {
+                  handleClose();
+                  setShowMyBoards(true);
+                }}
+              >
+                <span className={styles.menuItemIcon}><DashboardOutlined /></span>
+                <span className={styles.menuItemLabel}>My Boards</span>
+              </button>
+            )}
 
             {session?.user && (
               <Link
@@ -325,6 +342,15 @@ export default function UserDrawer({ boardDetails, boardConfigs }: UserDrawerPro
           boardConfigs={boardConfigs}
         />
       )}
+
+      <MyBoardsDrawer
+        open={showMyBoards}
+        onClose={() => setShowMyBoards(false)}
+        onCreateBoard={boardConfigs ? () => {
+          setShowMyBoards(false);
+          setShowBoardSelector(true);
+        } : undefined}
+      />
     </>
   );
 }

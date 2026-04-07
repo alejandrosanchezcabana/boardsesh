@@ -56,15 +56,21 @@ const BOARD_TYPE_LABELS: Record<string, string> = {
   soill: 'So iLL',
 };
 
-interface BoardDetailProps {
+export interface BoardDetailContentProps {
   boardUuid: string;
-  open: boolean;
-  onClose: () => void;
+  /** Override for the initial isFollowedByMe state (e.g. from search results). */
+  initialIsFollowing?: boolean;
   onDeleted?: () => void;
-  anchor?: 'top' | 'bottom';
+  /** Called when follow state changes, so parent can update caches. */
+  onFollowChange?: (boardUuid: string, isFollowing: boolean) => void;
 }
 
-export default function BoardDetail({ boardUuid, open, onClose, onDeleted, anchor = 'bottom' }: BoardDetailProps) {
+export function BoardDetailContent({
+  boardUuid,
+  initialIsFollowing,
+  onDeleted,
+  onFollowChange,
+}: BoardDetailContentProps) {
   const [board, setBoard] = useState<UserBoard | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [activeTab, setActiveTab] = useState(0);
@@ -86,21 +92,23 @@ export default function BoardDetail({ boardUuid, open, onClose, onDeleted, ancho
         GET_BOARD,
         { boardUuid },
       );
-      setBoard(data.board ?? null);
+      const fetchedBoard = data.board ?? null;
+      if (fetchedBoard && initialIsFollowing !== undefined) {
+        fetchedBoard.isFollowedByMe = initialIsFollowing;
+      }
+      setBoard(fetchedBoard);
     } catch (error) {
       console.error('Failed to fetch board:', error);
     } finally {
       setIsLoading(false);
     }
-  }, [token, boardUuid]);
+  }, [token, boardUuid, initialIsFollowing]);
 
   useEffect(() => {
-    if (open) {
-      fetchBoard();
-      setIsEditing(false);
-      setActiveTab(0);
-    }
-  }, [open, fetchBoard]);
+    fetchBoard();
+    setIsEditing(false);
+    setActiveTab(0);
+  }, [fetchBoard]);
 
   const isOwner = !!currentUserId && board?.ownerId === currentUserId;
 
@@ -117,7 +125,6 @@ export default function BoardDetail({ boardUuid, open, onClose, onDeleted, ancho
       );
       showMessage('Board deleted', 'success');
       onDeleted?.();
-      onClose();
     } catch (error) {
       console.error('Failed to delete board:', error);
       showMessage('Failed to delete board', 'error');
@@ -148,6 +155,233 @@ export default function BoardDetail({ boardUuid, open, onClose, onDeleted, ancho
     }
   };
 
+  const handleFollowChange = useCallback((isFollowing: boolean) => {
+    if (board) {
+      onFollowChange?.(board.uuid, isFollowing);
+    }
+    fetchBoard();
+  }, [board, onFollowChange, fetchBoard]);
+
+  if (isLoading) {
+    return (
+      <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', flex: 1 }}>
+        <CircularProgress />
+      </Box>
+    );
+  }
+
+  if (!board) {
+    return (
+      <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', flex: 1 }}>
+        <MuiTypography color="text.secondary">Board not found</MuiTypography>
+      </Box>
+    );
+  }
+
+  if (isEditing) {
+    return (
+      <Box sx={{ px: 2, pb: 2, overflow: 'auto', flex: 1 }}>
+        <EditBoardForm
+          board={board}
+          totalAscents={board.totalAscents}
+          onSuccess={handleEditSuccess}
+          onCancel={() => setIsEditing(false)}
+        />
+      </Box>
+    );
+  }
+
+  return (
+    <>
+      {/* Header */}
+      <Box sx={{ px: 2, pb: 2 }}>
+        <Box sx={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 1 }}>
+          <Box sx={{ flex: 1, minWidth: 0 }}>
+            <MuiTypography
+              variant="h5"
+              sx={{ fontWeight: themeTokens.typography.fontWeight.bold }}
+            >
+              {board.name}
+            </MuiTypography>
+            {board.locationName && (
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, mt: 0.5 }}>
+                <LocationOnOutlined sx={{ fontSize: 16, color: 'var(--neutral-400)' }} />
+                <MuiTypography variant="body2" color="text.secondary">
+                  {board.locationName}
+                </MuiTypography>
+              </Box>
+            )}
+          </Box>
+          <Chip
+            label={BOARD_TYPE_LABELS[board.boardType] || board.boardType}
+            size="small"
+            variant="outlined"
+          />
+        </Box>
+
+        {/* Owner info */}
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mt: 1.5 }}>
+          <Avatar
+            src={board.ownerAvatarUrl ?? undefined}
+            sx={{ width: 24, height: 24, fontSize: 11 }}
+          >
+            {board.ownerDisplayName?.[0]?.toUpperCase()}
+          </Avatar>
+          <MuiTypography variant="body2" color="text.secondary">
+            {board.ownerDisplayName}
+          </MuiTypography>
+        </Box>
+
+        {board.description && (
+          <MuiTypography variant="body2" sx={{ mt: 1.5, color: 'var(--neutral-600)' }}>
+            {board.description}
+          </MuiTypography>
+        )}
+
+        {isOwner && (board.isUnlisted || board.hideLocation) && (
+          <Box sx={{ display: 'flex', gap: 1, mt: 1.5, flexWrap: 'wrap' }}>
+            {board.isUnlisted && (
+              <Chip label="Unlisted" size="small" variant="outlined" color="warning" />
+            )}
+            {board.hideLocation && (
+              <Chip label="Location hidden" size="small" variant="outlined" color="warning" />
+            )}
+          </Box>
+        )}
+
+        {/* Gym info */}
+        {board.gymName && board.gymUuid && (
+          <Box
+            sx={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: 0.5,
+              mt: 1.5,
+              cursor: 'pointer',
+              '&:hover': { opacity: 0.8 },
+            }}
+            onClick={() => setShowGymDetail(true)}
+          >
+            <FitnessCenterOutlined sx={{ fontSize: 16, color: 'var(--neutral-400)' }} />
+            <MuiTypography variant="body2" color="primary" sx={{ textDecoration: 'underline' }}>
+              {board.gymName}
+            </MuiTypography>
+          </Box>
+        )}
+        {!board.gymUuid && isOwner && !showGymSelector && (
+          <MuiButton
+            variant="text"
+            size="small"
+            startIcon={<AddOutlined />}
+            onClick={() => setShowGymSelector(true)}
+            sx={{ textTransform: 'none', mt: 1, alignSelf: 'flex-start' }}
+          >
+            Add to Gym
+          </MuiButton>
+        )}
+        {showGymSelector && isOwner && (
+          <Box sx={{ mt: 1.5 }}>
+            <GymSelector
+              selectedGymUuid={board.gymUuid ?? null}
+              onSelect={(gymUuid) => handleLinkGym(gymUuid)}
+            />
+          </Box>
+        )}
+
+        {/* Stats */}
+        <Box sx={{ display: 'flex', gap: 2.5, mt: 2, flexWrap: 'wrap' }}>
+          <StatChip icon={<TrendingUpOutlined sx={{ fontSize: 16 }} />} value={board.totalAscents} label="ascents" />
+          <StatChip icon={<PersonOutlined sx={{ fontSize: 16 }} />} value={board.uniqueClimbers} label="climbers" />
+          <StatChip icon={<PeopleOutlined sx={{ fontSize: 16 }} />} value={board.followerCount} label="followers" />
+          <StatChip icon={<ChatBubbleOutlined sx={{ fontSize: 16 }} />} value={board.commentCount} label="comments" />
+        </Box>
+
+        {/* Actions */}
+        <Box sx={{ display: 'flex', gap: 1, mt: 2 }}>
+          {!isOwner && (
+            <FollowButton
+              entityId={board.uuid}
+              initialIsFollowing={board.isFollowedByMe}
+              followMutation={FOLLOW_BOARD}
+              unfollowMutation={UNFOLLOW_BOARD}
+              entityLabel="board"
+              getFollowVariables={(id) => ({ input: { boardUuid: id } })}
+              onFollowChange={handleFollowChange}
+            />
+          )}
+          {isOwner && (
+            <>
+              <MuiButton
+                variant="outlined"
+                size="small"
+                startIcon={<EditOutlined />}
+                onClick={() => setIsEditing(true)}
+                sx={{ textTransform: 'none' }}
+              >
+                Edit
+              </MuiButton>
+              <MuiButton
+                variant="outlined"
+                size="small"
+                color="error"
+                startIcon={<DeleteOutlined />}
+                onClick={handleDelete}
+                disabled={isDeleting}
+                sx={{ textTransform: 'none' }}
+              >
+                {isDeleting ? <CircularProgress size={16} /> : 'Delete'}
+              </MuiButton>
+            </>
+          )}
+        </Box>
+      </Box>
+
+      <Divider />
+
+      {/* Tabs */}
+      <Tabs
+        value={activeTab}
+        onChange={(_, v) => setActiveTab(v)}
+        sx={{ px: 2 }}
+      >
+        <Tab label="Leaderboard" sx={{ textTransform: 'none' }} />
+        <Tab label="Comments" sx={{ textTransform: 'none' }} />
+      </Tabs>
+
+      {/* Tab content */}
+      <Box sx={{ flex: 1, overflow: 'auto', px: 2, py: 2 }}>
+        {activeTab === 0 && <BoardLeaderboard boardUuid={board.uuid} />}
+        {activeTab === 1 && (
+          <CommentSection
+            entityType="board"
+            entityId={board.uuid}
+            title="Board Discussion"
+          />
+        )}
+      </Box>
+
+      {/* Gym detail drawer */}
+      {board.gymUuid && (
+        <GymDetail
+          gymUuid={board.gymUuid}
+          open={showGymDetail}
+          onClose={() => setShowGymDetail(false)}
+          anchor="top"
+        />
+      )}
+    </>
+  );
+}
+
+interface BoardDetailProps {
+  boardUuid: string;
+  open: boolean;
+  onClose: () => void;
+  onDeleted?: () => void;
+  anchor?: 'top' | 'bottom';
+}
+
+export default function BoardDetail({ boardUuid, open, onClose, onDeleted, anchor = 'bottom' }: BoardDetailProps) {
   return (
     <SwipeableDrawer
       placement={anchor}
@@ -156,192 +390,15 @@ export default function BoardDetail({ boardUuid, open, onClose, onDeleted, ancho
       height="90dvh"
       styles={{ body: { padding: 0, overflow: 'hidden' } }}
     >
-        {isLoading ? (
-          <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', flex: 1 }}>
-            <CircularProgress />
-          </Box>
-        ) : !board ? (
-          <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', flex: 1 }}>
-            <MuiTypography color="text.secondary">Board not found</MuiTypography>
-          </Box>
-        ) : isEditing ? (
-          <Box sx={{ px: 2, pb: 2, overflow: 'auto', flex: 1 }}>
-            <EditBoardForm
-              board={board}
-              totalAscents={board.totalAscents}
-              onSuccess={handleEditSuccess}
-              onCancel={() => setIsEditing(false)}
-            />
-          </Box>
-        ) : (
-          <>
-            {/* Header */}
-            <Box sx={{ px: 2, pb: 2 }}>
-              <Box sx={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 1 }}>
-                <Box sx={{ flex: 1, minWidth: 0 }}>
-                  <MuiTypography
-                    variant="h5"
-                    sx={{ fontWeight: themeTokens.typography.fontWeight.bold }}
-                  >
-                    {board.name}
-                  </MuiTypography>
-                  {board.locationName && (
-                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, mt: 0.5 }}>
-                      <LocationOnOutlined sx={{ fontSize: 16, color: 'var(--neutral-400)' }} />
-                      <MuiTypography variant="body2" color="text.secondary">
-                        {board.locationName}
-                      </MuiTypography>
-                    </Box>
-                  )}
-                </Box>
-                <Chip
-                  label={BOARD_TYPE_LABELS[board.boardType] || board.boardType}
-                  size="small"
-                  variant="outlined"
-                />
-              </Box>
-
-              {/* Owner info */}
-              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mt: 1.5 }}>
-                <Avatar
-                  src={board.ownerAvatarUrl ?? undefined}
-                  sx={{ width: 24, height: 24, fontSize: 11 }}
-                >
-                  {board.ownerDisplayName?.[0]?.toUpperCase()}
-                </Avatar>
-                <MuiTypography variant="body2" color="text.secondary">
-                  {board.ownerDisplayName}
-                </MuiTypography>
-              </Box>
-
-              {board.description && (
-                <MuiTypography variant="body2" sx={{ mt: 1.5, color: 'var(--neutral-600)' }}>
-                  {board.description}
-                </MuiTypography>
-              )}
-
-              {/* Gym info */}
-              {board.gymName && board.gymUuid && (
-                <Box
-                  sx={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: 0.5,
-                    mt: 1.5,
-                    cursor: 'pointer',
-                    '&:hover': { opacity: 0.8 },
-                  }}
-                  onClick={() => setShowGymDetail(true)}
-                >
-                  <FitnessCenterOutlined sx={{ fontSize: 16, color: 'var(--neutral-400)' }} />
-                  <MuiTypography variant="body2" color="primary" sx={{ textDecoration: 'underline' }}>
-                    {board.gymName}
-                  </MuiTypography>
-                </Box>
-              )}
-              {!board.gymUuid && isOwner && !showGymSelector && (
-                <MuiButton
-                  variant="text"
-                  size="small"
-                  startIcon={<AddOutlined />}
-                  onClick={() => setShowGymSelector(true)}
-                  sx={{ textTransform: 'none', mt: 1, alignSelf: 'flex-start' }}
-                >
-                  Add to Gym
-                </MuiButton>
-              )}
-              {showGymSelector && isOwner && (
-                <Box sx={{ mt: 1.5 }}>
-                  <GymSelector
-                    selectedGymUuid={board.gymUuid ?? null}
-                    onSelect={(gymUuid) => handleLinkGym(gymUuid)}
-                  />
-                </Box>
-              )}
-
-              {/* Stats */}
-              <Box sx={{ display: 'flex', gap: 2.5, mt: 2, flexWrap: 'wrap' }}>
-                <StatChip icon={<TrendingUpOutlined sx={{ fontSize: 16 }} />} value={board.totalAscents} label="ascents" />
-                <StatChip icon={<PersonOutlined sx={{ fontSize: 16 }} />} value={board.uniqueClimbers} label="climbers" />
-                <StatChip icon={<PeopleOutlined sx={{ fontSize: 16 }} />} value={board.followerCount} label="followers" />
-                <StatChip icon={<ChatBubbleOutlined sx={{ fontSize: 16 }} />} value={board.commentCount} label="comments" />
-              </Box>
-
-              {/* Actions */}
-              <Box sx={{ display: 'flex', gap: 1, mt: 2 }}>
-                {!isOwner && (
-                  <FollowButton
-                    entityId={board.uuid}
-                    initialIsFollowing={board.isFollowedByMe}
-                    followMutation={FOLLOW_BOARD}
-                    unfollowMutation={UNFOLLOW_BOARD}
-                    entityLabel="board"
-                    getFollowVariables={(id) => ({ input: { boardUuid: id } })}
-                    onFollowChange={() => fetchBoard()}
-                  />
-                )}
-                {isOwner && (
-                  <>
-                    <MuiButton
-                      variant="outlined"
-                      size="small"
-                      startIcon={<EditOutlined />}
-                      onClick={() => setIsEditing(true)}
-                      sx={{ textTransform: 'none' }}
-                    >
-                      Edit
-                    </MuiButton>
-                    <MuiButton
-                      variant="outlined"
-                      size="small"
-                      color="error"
-                      startIcon={<DeleteOutlined />}
-                      onClick={handleDelete}
-                      disabled={isDeleting}
-                      sx={{ textTransform: 'none' }}
-                    >
-                      {isDeleting ? <CircularProgress size={16} /> : 'Delete'}
-                    </MuiButton>
-                  </>
-                )}
-              </Box>
-            </Box>
-
-            <Divider />
-
-            {/* Tabs */}
-            <Tabs
-              value={activeTab}
-              onChange={(_, v) => setActiveTab(v)}
-              sx={{ px: 2 }}
-            >
-              <Tab label="Leaderboard" sx={{ textTransform: 'none' }} />
-              <Tab label="Comments" sx={{ textTransform: 'none' }} />
-            </Tabs>
-
-            {/* Tab content */}
-            <Box sx={{ flex: 1, overflow: 'auto', px: 2, py: 2 }}>
-              {activeTab === 0 && <BoardLeaderboard boardUuid={board.uuid} />}
-              {activeTab === 1 && (
-                <CommentSection
-                  entityType="board"
-                  entityId={board.uuid}
-                  title="Board Discussion"
-                />
-              )}
-            </Box>
-
-            {/* Gym detail drawer */}
-            {board.gymUuid && (
-              <GymDetail
-                gymUuid={board.gymUuid}
-                open={showGymDetail}
-                onClose={() => setShowGymDetail(false)}
-                anchor="top"
-              />
-            )}
-          </>
-        )}
+      {open && (
+        <BoardDetailContent
+          boardUuid={boardUuid}
+          onDeleted={() => {
+            onDeleted?.();
+            onClose();
+          }}
+        />
+      )}
     </SwipeableDrawer>
   );
 }

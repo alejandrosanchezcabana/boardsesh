@@ -37,6 +37,10 @@ export const boardEntitiesTypeDefs = /* GraphQL */ `
     longitude: Float
     "Whether publicly visible"
     isPublic: Boolean!
+    "Whether hidden from search results (accessible via direct link only)"
+    isUnlisted: Boolean!
+    "Whether hidden from proximity/nearby search"
+    hideLocation: Boolean!
     "Whether the user owns the physical board"
     isOwned: Boolean!
     "Default angle for this board"
@@ -71,6 +75,8 @@ export const boardEntitiesTypeDefs = /* GraphQL */ `
     gymName: String
     "Distance in meters from search origin (only set for proximity queries)"
     distanceMeters: Float
+    "Controller box serial number"
+    serialNumber: String
   }
 
   """
@@ -149,6 +155,10 @@ export const boardEntitiesTypeDefs = /* GraphQL */ `
     longitude: Float
     "Whether publicly visible (default true)"
     isPublic: Boolean
+    "Hide from search results (default false)"
+    isUnlisted: Boolean
+    "Hide from proximity search unless owner follows searcher (default false)"
+    hideLocation: Boolean
     "Whether user owns the physical board (default true)"
     isOwned: Boolean
     "Optional gym UUID to link board to"
@@ -157,6 +167,8 @@ export const boardEntitiesTypeDefs = /* GraphQL */ `
     angle: Int
     "Whether the board's angle is physically adjustable (default true)"
     isAngleAdjustable: Boolean
+    "Controller box serial number"
+    serialNumber: String
   }
 
   """
@@ -179,6 +191,10 @@ export const boardEntitiesTypeDefs = /* GraphQL */ `
     longitude: Float
     "New visibility"
     isPublic: Boolean
+    "Hide from search results"
+    isUnlisted: Boolean
+    "Hide from proximity search unless owner follows searcher"
+    hideLocation: Boolean
     "New ownership flag"
     isOwned: Boolean
     "New default angle"
@@ -191,6 +207,8 @@ export const boardEntitiesTypeDefs = /* GraphQL */ `
     sizeId: Int
     "New set IDs (only allowed when board has zero ticks)"
     setIds: String
+    "Controller box serial number"
+    serialNumber: String
   }
 
   """

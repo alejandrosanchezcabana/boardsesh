@@ -12,6 +12,8 @@ const makeBoard = (overrides: Partial<UserBoard> = {}): UserBoard => ({
   setIds: '1,2',
   name: 'My Kilter',
   isPublic: true,
+  isUnlisted: false,
+  hideLocation: false,
   isOwned: true,
   angle: 40,
   isAngleAdjustable: true,

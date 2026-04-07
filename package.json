@@ -5,7 +5,7 @@
     "packages/*"
   ],
   "scripts": {
-    "dev": "bun run --filter=@boardsesh/web dev",
+    "dev": "tsx scripts/dev-orchestrator.ts",
     "build": "bun run --filter=@boardsesh/shared-schema build && bun run --filter=@boardsesh/crypto build && bun run --filter=@boardsesh/db build && bun run --filter='*' build",
     "build:web": "bun run --filter=@boardsesh/web build",
     "build:backend": "bun run --filter=boardsesh-backend build",

@@ -1,0 +1,1 @@
+ALTER TABLE "user_boards" ADD COLUMN "serial_number" text;
