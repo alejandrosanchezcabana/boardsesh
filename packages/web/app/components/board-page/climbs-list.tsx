@@ -177,6 +177,42 @@ const ClimbsListSkeleton = ({ aspectRatio, viewMode }: { aspectRatio: number; vi
   ));
 };
 
+type GridClimbItemProps = {
+  climb: Climb;
+  index: number;
+  boardDetails: BoardDetails;
+  preferImageLayers: boolean;
+  unsupported?: boolean;
+  onClimbClickByIndex: (index: number) => void;
+  renderItemExtra?: (climb: Climb) => React.ReactNode;
+};
+
+const GridClimbItem = React.memo(function GridClimbItem({
+  climb,
+  index,
+  boardDetails,
+  preferImageLayers,
+  unsupported,
+  onClimbClickByIndex,
+  renderItemExtra,
+}: GridClimbItemProps) {
+  const handleCoverClick = useCallback(() => onClimbClickByIndex(index), [onClimbClickByIndex, index]);
+  return (
+    <>
+      <div {...(index === 0 ? { id: 'onboarding-climb-card' } : {})}>
+        <ClimbCard
+          climb={climb}
+          boardDetails={boardDetails}
+          preferImageLayers={preferImageLayers}
+          onCoverClick={handleCoverClick}
+          unsupported={unsupported}
+        />
+      </div>
+      {renderItemExtra?.(climb)}
+    </>
+  );
+});
+
 const ClimbsList = ({
   boardDetails,
   boardDetailsMap,
@@ -475,16 +511,15 @@ const ClimbsList = ({
         <Box sx={gridContainerSx} translate="no">
           {visibleClimbs.map((climb, index) => (
             <Box key={climb.uuid} sx={cardBoxSx} className={listStyles.gridItem}>
-              <div {...(index === 0 ? { id: 'onboarding-climb-card' } : {})}>
-                <ClimbCard
-                  climb={climb}
-                  boardDetails={resolveBoardDetails(climb)}
-                  preferImageLayers={index < initialImageCount}
-                  onCoverClick={() => handleClimbClickByIndex(index)}
-                  unsupported={unsupportedClimbs?.has(climb.uuid)}
-                />
-              </div>
-              {renderItemExtra?.(climb)}
+              <GridClimbItem
+                climb={climb}
+                index={index}
+                boardDetails={resolveBoardDetails(climb)}
+                preferImageLayers={index < initialImageCount}
+                unsupported={unsupportedClimbs?.has(climb.uuid)}
+                onClimbClickByIndex={handleClimbClickByIndex}
+                renderItemExtra={renderItemExtra}
+              />
             </Box>
           ))}
           {isFetching && (!climbs || climbs.length === 0) ? (
@@ -501,6 +536,7 @@ const ClimbsList = ({
               {virtualItems.map((virtualItem) => {
                 const climb = visibleClimbs[virtualItem.index];
                 const index = virtualItem.index;
+                if (!climb) return null;
                 return (
                   <div
                     key={virtualItem.key}

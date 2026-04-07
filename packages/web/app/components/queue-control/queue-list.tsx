@@ -375,6 +375,7 @@ const QueueList = forwardRef<QueueListHandle, QueueListProps>(({ boardDetails, o
           >
             {suggestedVirtualizer.getVirtualItems().map((virtualItem) => {
               const climb = suggestedClimbs[virtualItem.index];
+              if (!climb) return null;
               return (
                 <div
                   key={virtualItem.key}
