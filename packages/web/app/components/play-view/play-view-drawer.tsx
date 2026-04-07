@@ -55,7 +55,7 @@ const QUEUE_DRAWER_STYLES = {
     touchAction: 'pan-y' as const,
     transition: 'height 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
   },
-  body: { padding: 0, touchAction: 'pan-y' as const },
+  body: { padding: 0, overflow: 'hidden', touchAction: 'pan-y' as const },
 } as const;
 
 interface PlayDrawerContentProps {
