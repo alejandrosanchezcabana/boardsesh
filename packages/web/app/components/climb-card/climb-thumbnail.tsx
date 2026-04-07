@@ -30,8 +30,9 @@ const ClimbThumbnail: React.FC<ClimbThumbnailProps> = React.memo(({
   const canvasReady = useCanvasRendererReady();
 
   const boardStyle = useMemo<React.CSSProperties>(() => ({
+    aspectRatio: '3 / 4',
     width: '100%',
-    height: maxHeight ?? '82px',
+    ...(maxHeight ? { maxHeight } : {}),
   }), [maxHeight]);
 
   let renderContent: React.ReactNode = null;
