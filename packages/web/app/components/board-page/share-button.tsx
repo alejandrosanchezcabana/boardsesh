@@ -16,6 +16,7 @@ import { useCurrentClimb, useSessionData } from '../graphql-queue';
 import { useBluetoothContext } from '../board-bluetooth-control/bluetooth-context';
 import { useSnackbar } from '@/app/components/providers/snackbar-provider';
 import { themeTokens } from '@/app/theme/theme-config';
+import { isCapacitor } from '@/app/lib/ble/capacitor-utils';
 
 export const ShareBoardButton = () => {
   const { showMessage } = useSnackbar();
@@ -38,7 +39,9 @@ export const ShareBoardButton = () => {
   const isConnecting = !!(sessionId && !hasConnected);
 
   const handleLightbulbClick = async () => {
-    if (!isBluetoothSupported) {
+    // Allow connection in Capacitor apps even if the async isBluetoothSupported
+    // state hasn't resolved yet — the native bridge is available by click time.
+    if (!isBluetoothSupported && !isCapacitor()) {
       setUnsupportedOpen(true);
       return;
     }
