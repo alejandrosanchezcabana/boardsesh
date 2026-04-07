@@ -252,21 +252,23 @@ const QueueList = forwardRef<QueueListHandle, QueueListProps>(({ boardDetails, o
     getItemKey: (index) => suggestedClimbs[index]?.uuid ?? index,
   });
 
-  // Virtualizer-based infinite scroll for suggested climbs
+  // Virtualizer-based infinite scroll for suggested climbs.
+  // Use range (visible items WITHOUT overscan) to prevent the sidebar's short
+  // scroll container + overscan from cascading through multiple automatic page loads.
   const suggestedVirtualItems = suggestedVirtualizer.getVirtualItems();
-  const lastSuggestedItem = suggestedVirtualItems[suggestedVirtualItems.length - 1];
+  const suggestedRange = suggestedVirtualizer.range;
 
   useEffect(() => {
-    if (!lastSuggestedItem) return;
+    if (!suggestedRange) return;
     if (
-      lastSuggestedItem.index >= suggestedClimbs.length - 5 &&
+      suggestedRange.endIndex >= suggestedClimbs.length - 5 &&
       hasMoreResultsRef.current &&
       !isFetchingNextPageRef.current &&
       suggestedClimbsLengthRef.current >= SUGGESTIONS_THRESHOLD
     ) {
       fetchMoreClimbsRef.current();
     }
-  }, [lastSuggestedItem?.index, suggestedClimbs.length]);
+  }, [suggestedRange?.startIndex, suggestedRange?.endIndex, suggestedClimbs.length]);
 
   return (
     <>

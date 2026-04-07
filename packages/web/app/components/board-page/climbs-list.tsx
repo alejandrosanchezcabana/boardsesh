@@ -22,7 +22,6 @@ import { getPreference, setPreference } from '@/app/lib/user-preferences-db';
 import { useInfiniteScroll } from '@/app/hooks/use-infinite-scroll';
 import { trackListBatchRender } from '@/app/lib/rendering-metrics';
 import { classifyClimbListChange } from './climb-list-utils';
-import { PAGE_LIMIT } from './constants';
 import { getExcludedClimbActions } from '@/app/lib/climb-action-utils';
 import { SelectionStoreContext, useSelectionStore } from './selected-climb-store';
 import listStyles from './climbs-list.module.css';
@@ -467,22 +466,14 @@ const ClimbsList = ({
 
   const virtualItems = virtualizer.getVirtualItems();
 
-  // Virtualizer-based infinite scroll for list mode.
-  // Use virtualizer.range (visible items WITHOUT overscan) instead of
-  // lastVirtualItem.index (which includes overscan and caused desktop
-  // viewports to cascade through multiple automatic page loads).
-  const range = virtualizer.range;
+  // Virtualizer-based infinite scroll for list mode
+  const lastVirtualItem = virtualItems[virtualItems.length - 1];
   useEffect(() => {
-    if (viewMode !== 'list' || !range) return;
-
-    // Load when the visible end plus a buffer reaches the data end.
-    // Buffer of PAGE_LIMIT - 2 ensures page 2 loads eagerly on any screen
-    // (endIndex >= 2 → always true) while preventing cascade to page 3
-    // even on 4K screens (max endIndex ~21 + 18 = 39 < 40 items after page 2).
-    if (range.endIndex + PAGE_LIMIT - 2 >= visibleClimbs.length && hasMore && !isFetching) {
+    if (viewMode !== 'list' || !lastVirtualItem) return;
+    if (lastVirtualItem.index >= visibleClimbs.length - 5 && hasMore && !isFetching) {
       handleLoadMore();
     }
-  }, [viewMode, range?.startIndex, range?.endIndex, visibleClimbs.length, hasMore, isFetching, handleLoadMore]);
+  }, [viewMode, lastVirtualItem?.index, visibleClimbs.length, hasMore, isFetching, handleLoadMore]);
 
   return (
     <SelectionStoreContext.Provider value={selectionStore}>
