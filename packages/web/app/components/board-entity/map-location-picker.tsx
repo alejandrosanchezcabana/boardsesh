@@ -4,14 +4,24 @@ import React, { useEffect, useRef, useCallback, useState } from 'react';
 import Box from '@mui/material/Box';
 import MuiButton from '@mui/material/Button';
 import MuiTypography from '@mui/material/Typography';
+import TextField from '@mui/material/TextField';
+import InputAdornment from '@mui/material/InputAdornment';
+import CircularProgress from '@mui/material/CircularProgress';
 import Accordion from '@mui/material/Accordion';
 import AccordionSummary from '@mui/material/AccordionSummary';
 import AccordionDetails from '@mui/material/AccordionDetails';
 import MapOutlined from '@mui/icons-material/MapOutlined';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import MyLocationOutlined from '@mui/icons-material/MyLocationOutlined';
+import SearchOutlined from '@mui/icons-material/SearchOutlined';
 import type { Map as LeafletMap, Marker as LeafletMarker } from 'leaflet';
 import { useGeolocation } from '@/app/hooks/use-geolocation';
+
+interface NominatimResult {
+  lat: string;
+  lon: string;
+  display_name: string;
+}
 
 interface MapLocationPickerProps {
   latitude: number | null;
@@ -30,6 +40,9 @@ export default function MapLocationPicker({ latitude, longitude, onChange }: Map
   const { coordinates: userCoords, requestPermission } = useGeolocation();
   const [expanded, setExpanded] = useState(latitude != null && longitude != null);
   const [mapReady, setMapReady] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [isSearching, setIsSearching] = useState(false);
+  const searchTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const placeMarker = useCallback((lat: number, lng: number) => {
     const L = leafletRef.current;
@@ -142,6 +155,40 @@ export default function MapLocationPicker({ latitude, longitude, onChange }: Map
     }
   }, []);
 
+  const handleAddressSearch = useCallback((query: string) => {
+    setSearchQuery(query);
+    if (searchTimerRef.current) clearTimeout(searchTimerRef.current);
+    if (!query.trim()) return;
+
+    searchTimerRef.current = setTimeout(async () => {
+      setIsSearching(true);
+      try {
+        const encoded = encodeURIComponent(query.trim());
+        const res = await fetch(
+          `https://nominatim.openstreetmap.org/search?format=json&limit=1&q=${encoded}`,
+          { headers: { 'Accept-Language': 'en' } },
+        );
+        const results: NominatimResult[] = await res.json();
+        if (results.length > 0) {
+          const lat = Math.round(parseFloat(results[0].lat) * 1000000) / 1000000;
+          const lng = Math.round(parseFloat(results[0].lon) * 1000000) / 1000000;
+          placeMarker(lat, lng);
+          mapRef.current?.flyTo([lat, lng], 16);
+          onChangeRef.current(lat, lng);
+        }
+      } finally {
+        setIsSearching(false);
+      }
+    }, 500);
+  }, [placeMarker]);
+
+  // Cleanup search timer
+  useEffect(() => {
+    return () => {
+      if (searchTimerRef.current) clearTimeout(searchTimerRef.current);
+    };
+  }, []);
+
   const hasLocation = latitude != null && longitude != null;
 
   return (
@@ -163,6 +210,29 @@ export default function MapLocationPicker({ latitude, longitude, onChange }: Map
         </Box>
       </AccordionSummary>
       <AccordionDetails sx={{ p: 0 }}>
+        <Box sx={{ px: 1.5, pt: 1, pb: 1 }}>
+          <TextField
+            size="small"
+            fullWidth
+            placeholder="Search address or city..."
+            value={searchQuery}
+            onChange={(e) => handleAddressSearch(e.target.value)}
+            slotProps={{
+              input: {
+                startAdornment: (
+                  <InputAdornment position="start">
+                    <SearchOutlined fontSize="small" color="action" />
+                  </InputAdornment>
+                ),
+                endAdornment: isSearching ? (
+                  <InputAdornment position="end">
+                    <CircularProgress size={16} />
+                  </InputAdornment>
+                ) : undefined,
+              },
+            }}
+          />
+        </Box>
         <Box sx={{ position: 'relative' }}>
           <div ref={containerRef} style={{ width: '100%', height: 200, borderRadius: '0 0 4px 4px' }} />
           {mapReady && (
