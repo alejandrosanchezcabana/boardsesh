@@ -468,22 +468,19 @@ const ClimbsList = ({
   const virtualItems = virtualizer.getVirtualItems();
 
   // Virtualizer-based infinite scroll for list mode.
-  // Trigger loading based on remaining scroll distance (in pixels) rather than
-  // the last rendered item index, which includes overscan and caused desktop
-  // viewports to cascade through multiple automatic page loads.
-  const lastVirtualItem = virtualItems[virtualItems.length - 1];
+  // Use virtualizer.range (visible items WITHOUT overscan) instead of
+  // lastVirtualItem.index (which includes overscan and caused desktop
+  // viewports to cascade through multiple automatic page loads).
+  const range = virtualizer.range;
   useEffect(() => {
-    if (viewMode !== 'list' || !lastVirtualItem) return;
+    if (viewMode !== 'list' || !range) return;
 
-    const scrollOffset = virtualizer.scrollOffset ?? 0;
-    const viewportHeight = typeof window !== 'undefined' ? window.innerHeight : 800;
-    const remainingScroll = virtualizer.getTotalSize() - scrollOffset - viewportHeight;
-
-    // Load more when less than ~one page of content remains below the viewport
-    if (remainingScroll < PAGE_LIMIT * 102 && hasMore && !isFetching) {
+    // Load when the visible end plus one page buffer reaches the data end.
+    // This eagerly preloads one page ahead while preventing the desktop cascade.
+    if (range.endIndex + PAGE_LIMIT >= visibleClimbs.length && hasMore && !isFetching) {
       handleLoadMore();
     }
-  }, [viewMode, lastVirtualItem?.index, visibleClimbs.length, hasMore, isFetching, handleLoadMore]);
+  }, [viewMode, range?.startIndex, range?.endIndex, visibleClimbs.length, hasMore, isFetching, handleLoadMore]);
 
   return (
     <SelectionStoreContext.Provider value={selectionStore}>
