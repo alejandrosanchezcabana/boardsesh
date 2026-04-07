@@ -79,6 +79,7 @@ vi.mock('@/app/lib/board-utils', () => ({
 }));
 
 vi.mock('@/app/components/board-renderer/types', () => ({
+  THUMBNAIL_WIDTH: 200,
   HOLD_STATE_MAP: {
     kilter: {
       42: { name: 'STARTING', color: '#00FF00' },
@@ -148,7 +149,7 @@ describe('board-render API route', () => {
     const configJson = mockRenderOverlay.mock.calls[0][0];
     const config = JSON.parse(configJson);
     expect(config.thumbnail).toBe(true);
-    expect(config.output_width).toBe(300);
+    expect(config.output_width).toBe(200);
   });
 
   it('uses native board width when not thumbnail', async () => {
