@@ -59,9 +59,14 @@ export default function BoardScrollCard({
 
     if (userBoard) {
       cardName = userBoard.name;
-      cardMeta = BOARD_TYPE_LABELS[userBoard.boardType] || userBoard.boardType;
-      if (userBoard.locationName) {
-        cardMeta += ` \u00B7 ${userBoard.locationName}`;
+      if (userBoard.distanceMeters != null) {
+        // Nearby/discovered board — show type and location
+        cardMeta = BOARD_TYPE_LABELS[userBoard.boardType] || userBoard.boardType;
+        if (userBoard.locationName) {
+          cardMeta += ` \u00B7 ${userBoard.locationName}`;
+        }
+      } else {
+        cardMeta = `${formatAscents(userBoard.totalAscents)} sends`;
       }
     } else if (storedConfig) {
       cardName = storedConfig.name;
