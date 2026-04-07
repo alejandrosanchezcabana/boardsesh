@@ -153,7 +153,7 @@ export default function BoardDetail({ boardUuid, open, onClose, onDeleted, ancho
       placement={anchor}
       open={open}
       onClose={onClose}
-      height="100dvh"
+      height="100%"
       styles={{ body: { padding: 0, overflow: 'hidden' } }}
     >
         {isLoading ? (

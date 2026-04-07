@@ -217,6 +217,9 @@ export default function MapLocationPicker({ latitude, longitude, onChange }: Map
             placeholder="Search address or city..."
             value={searchQuery}
             onChange={(e) => handleAddressSearch(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter') e.preventDefault();
+            }}
             slotProps={{
               input: {
                 startAdornment: (
