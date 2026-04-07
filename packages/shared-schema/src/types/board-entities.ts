@@ -32,6 +32,7 @@ export type UserBoard = {
   gymId?: number | null;
   gymUuid?: string | null;
   gymName?: string | null;
+  distanceMeters?: number | null;
 };
 
 export type UserBoardConnection = {

@@ -47,10 +47,12 @@ export const userBoards = pgTable(
   (table) => ({
     // Gym lookup
     gymIdx: index('user_boards_gym_idx').on(table.gymId),
-    // Unique partial: one active board per owner per config
+    // Unique partial: one active board per owner per config.
+    // Excludes the system user (seeded public boards) so multiple gyms
+    // can have the same board configuration.
     uniqueOwnerConfigIdx: uniqueIndex('user_boards_unique_owner_config')
       .on(table.ownerId, table.boardType, table.layoutId, table.sizeId, table.setIds)
-      .where(sql`${table.deletedAt} IS NULL`),
+      .where(sql`${table.deletedAt} IS NULL AND ${table.ownerId} != '00000000-0000-0000-0000-000000000000'`),
     // Owner's owned boards
     ownerOwnedIdx: index('user_boards_owner_owned_idx')
       .on(table.ownerId, table.isOwned)

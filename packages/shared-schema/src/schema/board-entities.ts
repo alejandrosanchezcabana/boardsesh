@@ -69,6 +69,8 @@ export const boardEntitiesTypeDefs = /* GraphQL */ `
     gymUuid: String
     "Gym name if linked to a gym"
     gymName: String
+    "Distance in meters from search origin (only set for proximity queries)"
+    distanceMeters: Float
   }
 
   """

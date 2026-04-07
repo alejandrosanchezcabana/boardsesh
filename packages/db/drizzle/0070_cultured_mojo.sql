@@ -1,0 +1,3 @@
+DROP INDEX IF EXISTS "user_boards_unique_owner_config";--> statement-breakpoint
+CREATE INDEX IF NOT EXISTS "feed_items_entity_type_entity_id_idx" ON "feed_items" USING btree ("entity_type","entity_id");--> statement-breakpoint
+CREATE UNIQUE INDEX "user_boards_unique_owner_config" ON "user_boards" USING btree ("owner_id","board_type","layout_id","size_id","set_ids") WHERE "user_boards"."deleted_at" IS NULL AND "user_boards"."owner_id" != '00000000-0000-0000-0000-000000000000';

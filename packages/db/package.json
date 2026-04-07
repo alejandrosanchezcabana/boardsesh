@@ -59,10 +59,12 @@
     "db:studio": "drizzle-kit studio",
     "db:import-moonboard": "tsx scripts/import-moonboard-problems.ts",
     "db:seed-social": "tsx scripts/seed-social.ts",
-    "db:create-test-user": "tsx scripts/create-test-user.ts"
+    "db:create-test-user": "tsx scripts/create-test-user.ts",
+    "db:seed-locations": "tsx scripts/seed-board-locations.ts"
   },
   "dependencies": {
     "@boardsesh/shared-schema": "*",
+    "@hangtime/climbing-boards": "^1.0.6",
     "@neondatabase/serverless": "1.0.2",
     "drizzle-orm": "^0.45.1",
     "postgres": "^3.4.8",

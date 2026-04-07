@@ -1,14 +1,17 @@
 'use client';
 
-import React, { useState, useEffect, useMemo, useCallback } from 'react';
+import React, { useState, useEffect, useMemo, useCallback, lazy, Suspense } from 'react';
 import Box from '@mui/material/Box';
 import Button from '@mui/material/Button';
 import FormControl from '@mui/material/FormControl';
 import InputLabel from '@mui/material/InputLabel';
 import MuiSelect, { SelectChangeEvent } from '@mui/material/Select';
 import MenuItem from '@mui/material/MenuItem';
+import Tab from '@mui/material/Tab';
+import Tabs from '@mui/material/Tabs';
 import TextField from '@mui/material/TextField';
 import Typography from '@mui/material/Typography';
+import CircularProgress from '@mui/material/CircularProgress';
 import { useRouter } from 'next/navigation';
 import SwipeableDrawer from '../swipeable-drawer/swipeable-drawer';
 import BoardScrollSection from '../board-scroll/board-scroll-section';
@@ -22,6 +25,9 @@ import { constructClimbListWithSlugs, constructBoardSlugListUrl } from '@/app/li
 import { loadSavedBoards, saveBoardConfig, StoredBoardConfig } from '@/app/lib/saved-boards-db';
 import { setLastUsedBoard } from '@/app/lib/last-used-board-db';
 import { useMyBoards } from '@/app/hooks/use-my-boards';
+import NearbyBoardsSection from './nearby-boards-section';
+
+const BoardMapView = lazy(() => import('./board-map-view'));
 
 interface BoardSelectorDrawerProps {
   open: boolean;
@@ -41,6 +47,7 @@ export default function BoardSelectorDrawer({
   const router = useRouter();
   const [savedConfigurations, setSavedConfigurations] = useState<StoredBoardConfig[]>([]);
   const [showNewBoardForm, setShowNewBoardForm] = useState(false);
+  const [newBoardTab, setNewBoardTab] = useState(0);
   const { boards: serverBoards, isLoading: isLoadingServerBoards } = useMyBoards(open);
 
   // New board form state
@@ -313,6 +320,12 @@ export default function BoardSelectorDrawer({
           </BoardScrollSection>
         )}
 
+        {/* Found Nearby (GPS-based) */}
+        <NearbyBoardsSection
+          open={open}
+          onBoardSelect={handleServerBoardSelect}
+        />
+
         {/* Empty state */}
         {isEmpty && (
           <Box sx={{ textAlign: 'center', py: 4, px: 2 }}>
@@ -334,102 +347,119 @@ export default function BoardSelectorDrawer({
         onClose={() => setShowNewBoardForm(false)}
         height="85dvh"
       >
-        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, pt: 1 }}>
-          <FormControl fullWidth size="small">
-            <InputLabel>Board</InputLabel>
-            <MuiSelect
-              value={selectedBoard || ''}
-              label="Board"
-              onChange={(e: SelectChangeEvent) => setSelectedBoard(e.target.value as BoardName)}
-            >
-              {SUPPORTED_BOARDS.map((board) => (
-                <MenuItem key={board} value={board}>
-                  {board.charAt(0).toUpperCase() + board.slice(1)}
-                </MenuItem>
-              ))}
-            </MuiSelect>
-          </FormControl>
+        <Tabs
+          value={newBoardTab}
+          onChange={(_, v: number) => setNewBoardTab(v)}
+          sx={{ mb: 1, minHeight: 36 }}
+        >
+          <Tab label="Configure" sx={{ minHeight: 36, py: 0 }} />
+          <Tab label="Map" sx={{ minHeight: 36, py: 0 }} />
+        </Tabs>
 
-          <FormControl fullWidth size="small">
-            <InputLabel>Layout</InputLabel>
-            <MuiSelect
-              value={selectedLayout ?? ''}
-              label="Layout"
-              onChange={(e: SelectChangeEvent<number | string>) => setSelectedLayout(e.target.value as number)}
-              disabled={!selectedBoard}
-            >
-              {layouts.map(({ id, name }) => (
-                <MenuItem key={id} value={id}>{name}</MenuItem>
-              ))}
-            </MuiSelect>
-          </FormControl>
-
-          {selectedBoard !== 'moonboard' && (
+        {newBoardTab === 0 && (
+          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, pt: 1 }}>
             <FormControl fullWidth size="small">
-              <InputLabel>Size</InputLabel>
+              <InputLabel>Board</InputLabel>
               <MuiSelect
-                value={selectedSize ?? ''}
-                label="Size"
-                onChange={(e: SelectChangeEvent<number | string>) => setSelectedSize(e.target.value as number)}
-                disabled={!selectedLayout}
+                value={selectedBoard || ''}
+                label="Board"
+                onChange={(e: SelectChangeEvent) => setSelectedBoard(e.target.value as BoardName)}
               >
-                {sizes.map(({ id, name, description }) => (
-                  <MenuItem key={id} value={id}>{`${name} ${description}`}</MenuItem>
+                {SUPPORTED_BOARDS.map((board) => (
+                  <MenuItem key={board} value={board}>
+                    {board.charAt(0).toUpperCase() + board.slice(1)}
+                  </MenuItem>
                 ))}
               </MuiSelect>
             </FormControl>
-          )}
 
-          <FormControl fullWidth size="small">
-            <InputLabel>Hold Sets</InputLabel>
-            <MuiSelect<number[]>
-              multiple
-              value={selectedSets}
-              label="Hold Sets"
-              onChange={(e) => setSelectedSets(e.target.value as number[])}
-              disabled={!selectedSize}
-            >
-              {sets.map(({ id, name }) => (
-                <MenuItem key={id} value={id}>{name}</MenuItem>
-              ))}
-            </MuiSelect>
-          </FormControl>
-
-          <FormControl fullWidth size="small">
-            <InputLabel>Angle</InputLabel>
-            <MuiSelect
-              value={selectedAngle}
-              label="Angle"
-              onChange={(e: SelectChangeEvent<number>) => setSelectedAngle(e.target.value as number)}
-              disabled={!selectedBoard}
-            >
-              {selectedBoard &&
-                ANGLES[selectedBoard].map((angle) => (
-                  <MenuItem key={angle} value={angle}>{angle}</MenuItem>
+            <FormControl fullWidth size="small">
+              <InputLabel>Layout</InputLabel>
+              <MuiSelect
+                value={selectedLayout ?? ''}
+                label="Layout"
+                onChange={(e: SelectChangeEvent<number | string>) => setSelectedLayout(e.target.value as number)}
+                disabled={!selectedBoard}
+              >
+                {layouts.map(({ id, name }) => (
+                  <MenuItem key={id} value={id}>{name}</MenuItem>
                 ))}
-            </MuiSelect>
-          </FormControl>
+              </MuiSelect>
+            </FormControl>
 
-          <TextField
-            value={configName}
-            onChange={(e) => setConfigName(e.target.value)}
-            placeholder={suggestedName || 'Board name (optional)'}
-            variant="outlined"
-            size="small"
-            fullWidth
-            inputProps={{ maxLength: 50 }}
-          />
+            {selectedBoard !== 'moonboard' && (
+              <FormControl fullWidth size="small">
+                <InputLabel>Size</InputLabel>
+                <MuiSelect
+                  value={selectedSize ?? ''}
+                  label="Size"
+                  onChange={(e: SelectChangeEvent<number | string>) => setSelectedSize(e.target.value as number)}
+                  disabled={!selectedLayout}
+                >
+                  {sizes.map(({ id, name, description }) => (
+                    <MenuItem key={id} value={id}>{`${name} ${description}`}</MenuItem>
+                  ))}
+                </MuiSelect>
+              </FormControl>
+            )}
 
-          <Button
-            variant="contained"
-            size="large"
-            fullWidth
-            onClick={handleStartClimbing}
-            disabled={!isFormComplete}
-          >
-            Save & Select
-          </Button>
-        </Box>
+            <FormControl fullWidth size="small">
+              <InputLabel>Hold Sets</InputLabel>
+              <MuiSelect<number[]>
+                multiple
+                value={selectedSets}
+                label="Hold Sets"
+                onChange={(e) => setSelectedSets(e.target.value as number[])}
+                disabled={!selectedSize}
+              >
+                {sets.map(({ id, name }) => (
+                  <MenuItem key={id} value={id}>{name}</MenuItem>
+                ))}
+              </MuiSelect>
+            </FormControl>
+
+            <FormControl fullWidth size="small">
+              <InputLabel>Angle</InputLabel>
+              <MuiSelect
+                value={selectedAngle}
+                label="Angle"
+                onChange={(e: SelectChangeEvent<number>) => setSelectedAngle(e.target.value as number)}
+                disabled={!selectedBoard}
+              >
+                {selectedBoard &&
+                  ANGLES[selectedBoard].map((angle) => (
+                    <MenuItem key={angle} value={angle}>{angle}</MenuItem>
+                  ))}
+              </MuiSelect>
+            </FormControl>
+
+            <TextField
+              value={configName}
+              onChange={(e) => setConfigName(e.target.value)}
+              placeholder={suggestedName || 'Board name (optional)'}
+              variant="outlined"
+              size="small"
+              fullWidth
+              inputProps={{ maxLength: 50 }}
+            />
+
+            <Button
+              variant="contained"
+              size="large"
+              fullWidth
+              onClick={handleStartClimbing}
+              disabled={!isFormComplete}
+            >
+              Save & Select
+            </Button>
+          </Box>
+        )}
+
+        {newBoardTab === 1 && (
+          <Suspense fallback={<Box sx={{ display: 'flex', justifyContent: 'center', py: 4 }}><CircularProgress size={32} /></Box>}>
+            <BoardMapView onBoardSelect={handleServerBoardSelect} />
+          </Suspense>
+        )}
       </SwipeableDrawer>
     </>
   );

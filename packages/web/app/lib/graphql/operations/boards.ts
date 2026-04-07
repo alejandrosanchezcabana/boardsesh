@@ -49,6 +49,7 @@ const BOARD_FIELDS = `
   gymId
   gymUuid
   gymName
+  distanceMeters
 `;
 
 export const GET_BOARD = gql`

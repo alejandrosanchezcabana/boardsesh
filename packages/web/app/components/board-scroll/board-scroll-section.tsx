@@ -11,7 +11,7 @@ interface BoardScrollSectionProps {
   onLoadMore?: () => void;
   hasMore?: boolean;
   isLoadingMore?: boolean;
-  children: React.ReactNode;
+  children?: React.ReactNode;
 }
 
 function SkeletonCards({ count, isSmall }: { count: number; isSmall: boolean }) {

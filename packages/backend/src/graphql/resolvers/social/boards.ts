@@ -95,6 +95,7 @@ export async function resolveBoardFromPath(
 async function enrichBoard(
   board: typeof dbSchema.userBoards.$inferSelect,
   authenticatedUserId?: string,
+  distanceMeters?: number | null,
 ) {
   // Run all independent queries in parallel to avoid N+1 per board
   const [ownerResult, tickStatsResult, followerStatsResult, commentStatsResult, followCheckResult, gymInfoResult] =
@@ -210,7 +211,154 @@ async function enrichBoard(
     gymId: board.gymId ?? null,
     gymUuid: gymInfo?.uuid ?? null,
     gymName: gymInfo?.name ?? null,
+    distanceMeters: distanceMeters ?? null,
   };
+}
+
+/**
+ * Batch-enrich multiple boards with computed fields using 6 total queries
+ * instead of 6 per board. Used by list endpoints to avoid N+1.
+ */
+async function enrichBoards(
+  boards: Array<{ board: typeof dbSchema.userBoards.$inferSelect; distanceMeters?: number | null }>,
+  authenticatedUserId?: string,
+) {
+  if (boards.length === 0) return [];
+
+  const boardIds = boards.map((b) => b.board.id);
+  const boardUuids = boards.map((b) => b.board.uuid);
+  const ownerIds = [...new Set(boards.map((b) => b.board.ownerId))];
+  const gymIds = [...new Set(boards.map((b) => b.board.gymId).filter((id): id is number => id != null))];
+
+  const [ownerRows, tickRows, followerRows, commentRows, followRows, gymRows] = await Promise.all([
+    // Batch owner profiles
+    db
+      .select({
+        userId: dbSchema.users.id,
+        name: dbSchema.users.name,
+        image: dbSchema.users.image,
+        displayName: dbSchema.userProfiles.displayName,
+        avatarUrl: dbSchema.userProfiles.avatarUrl,
+      })
+      .from(dbSchema.users)
+      .leftJoin(dbSchema.userProfiles, eq(dbSchema.users.id, dbSchema.userProfiles.userId))
+      .where(inArray(dbSchema.users.id, ownerIds)),
+
+    // Batch tick stats per board
+    db
+      .select({
+        boardId: dbSchema.boardseshTicks.boardId,
+        totalAscents: count(),
+        uniqueClimbers: sql<number>`COUNT(DISTINCT ${dbSchema.boardseshTicks.userId})`,
+      })
+      .from(dbSchema.boardseshTicks)
+      .where(
+        and(
+          inArray(dbSchema.boardseshTicks.boardId, boardIds),
+          or(
+            eq(dbSchema.boardseshTicks.status, 'flash'),
+            eq(dbSchema.boardseshTicks.status, 'send'),
+          ),
+        ),
+      )
+      .groupBy(dbSchema.boardseshTicks.boardId),
+
+    // Batch follower counts per board
+    db
+      .select({
+        boardUuid: dbSchema.boardFollows.boardUuid,
+        count: count(),
+      })
+      .from(dbSchema.boardFollows)
+      .where(inArray(dbSchema.boardFollows.boardUuid, boardUuids))
+      .groupBy(dbSchema.boardFollows.boardUuid),
+
+    // Batch comment counts per board
+    db
+      .select({
+        entityId: dbSchema.comments.entityId,
+        count: count(),
+      })
+      .from(dbSchema.comments)
+      .where(
+        and(
+          eq(dbSchema.comments.entityType, 'board'),
+          inArray(dbSchema.comments.entityId, boardUuids),
+          isNull(dbSchema.comments.deletedAt),
+        ),
+      )
+      .groupBy(dbSchema.comments.entityId),
+
+    // Batch follow status for authenticated user
+    authenticatedUserId
+      ? db
+          .select({ boardUuid: dbSchema.boardFollows.boardUuid })
+          .from(dbSchema.boardFollows)
+          .where(
+            and(
+              eq(dbSchema.boardFollows.userId, authenticatedUserId),
+              inArray(dbSchema.boardFollows.boardUuid, boardUuids),
+            ),
+          )
+      : Promise.resolve([]),
+
+    // Batch gym info
+    gymIds.length > 0
+      ? db
+          .select({ id: dbSchema.gyms.id, uuid: dbSchema.gyms.uuid, name: dbSchema.gyms.name })
+          .from(dbSchema.gyms)
+          .where(and(inArray(dbSchema.gyms.id, gymIds), isNull(dbSchema.gyms.deletedAt)))
+      : Promise.resolve([]),
+  ]);
+
+  // Index results for O(1) lookups
+  const ownerMap = new Map(ownerRows.map((r) => [r.userId, r]));
+  const tickMap = new Map(tickRows.map((r) => [r.boardId, r]));
+  const followerMap = new Map(followerRows.map((r) => [r.boardUuid, Number(r.count)]));
+  const commentMap = new Map(commentRows.map((r) => [r.entityId, Number(r.count)]));
+  const followedSet = new Set(followRows.map((r) => r.boardUuid));
+  const gymMap = new Map(gymRows.map((r) => [r.id, r]));
+
+  return boards.map(({ board, distanceMeters }) => {
+    const owner = ownerMap.get(board.ownerId);
+    const ticks = tickMap.get(board.id);
+    const gym = board.gymId ? gymMap.get(board.gymId) : undefined;
+
+    return {
+      uuid: board.uuid,
+      slug: board.slug,
+      ownerId: board.ownerId,
+      ownerDisplayName: owner?.displayName || owner?.name || undefined,
+      ownerAvatarUrl: owner?.avatarUrl || owner?.image || undefined,
+      boardType: board.boardType,
+      layoutId: Number(board.layoutId),
+      sizeId: Number(board.sizeId),
+      setIds: board.setIds,
+      name: board.name,
+      description: board.description,
+      locationName: board.locationName,
+      latitude: board.latitude,
+      longitude: board.longitude,
+      isPublic: board.isPublic,
+      isOwned: board.isOwned,
+      angle: Number(board.angle),
+      isAngleAdjustable: board.isAngleAdjustable,
+      createdAt: board.createdAt.toISOString(),
+      layoutName: null,
+      sizeName: null,
+      sizeDescription: null,
+      setNames: null,
+      totalAscents: Number(ticks?.totalAscents || 0),
+      uniqueClimbers: Number(ticks?.uniqueClimbers || 0),
+      followerCount: followerMap.get(board.uuid) || 0,
+      commentCount: commentMap.get(board.uuid) || 0,
+      isFollowedByMe: followedSet.has(board.uuid),
+      gymId: board.gymId ?? null,
+      gymUuid: gym?.uuid ?? null,
+      gymName: gym?.name ?? null,
+      distanceMeters: distanceMeters ?? null,
+    };
+  });
 }
 
 // ============================================
@@ -531,8 +679,9 @@ export const socialBoardQueries = {
       .limit(limit)
       .offset(offset);
 
-    const enrichedBoards = await Promise.all(
-      boards.map((b) => enrichBoard(b, userId)),
+    const enrichedBoards = await enrichBoards(
+      boards.map((b) => ({ board: b })),
+      userId,
     );
 
     return {
@@ -550,6 +699,7 @@ export const socialBoardQueries = {
     { input }: { input: unknown },
     ctx: ConnectionContext,
   ) => {
+    await applyRateLimit(ctx, 20);
     const validatedInput = validateInput(SearchBoardsInputSchema, input, 'input');
     const { query, boardType, latitude, longitude, radiusKm } = validatedInput;
     const limit = validatedInput.limit ?? 20;
@@ -557,77 +707,66 @@ export const socialBoardQueries = {
     const useProximity = latitude !== undefined && longitude !== undefined;
 
     if (useProximity) {
-      // PostGIS proximity search path
+      // PostGIS proximity search path using Drizzle query builder
       const radiusMeters = (radiusKm ?? 1) * 1000;
       const lon = Number(longitude);
       const lat = Number(latitude);
 
-      // Escape ILIKE wildcards once for reuse in both count and main queries
-      const escapedQuery = query ? query.replace(/[%_\\]/g, '\\$&') : null;
-      const likePattern = escapedQuery ? `%${escapedQuery}%` : null;
+      const userPoint = sql`ST_MakePoint(${lon}, ${lat})::geography`;
+      // "location" is a PostGIS geography column added via raw migration, not in the Drizzle schema
+      const locationCol = sql`${dbSchema.userBoards}.location`;
+      const distanceMeters = sql<number>`ST_Distance(${locationCol}, ${userPoint})`.as('distance_meters');
 
-      // Build count query with proper parameterization
-      const countSql = sql`SELECT count(*)::int as count FROM user_boards WHERE is_public = true AND deleted_at IS NULL AND location IS NOT NULL AND ST_DWithin(location, ST_MakePoint(${lon}, ${lat})::geography, ${radiusMeters})`;
-
-      if (boardType) {
-        countSql.append(sql` AND board_type = ${boardType}`);
-      }
-      if (likePattern) {
-        countSql.append(sql` AND (name ILIKE ${likePattern} OR location_name ILIKE ${likePattern})`);
-      }
-
-      const countRows = await db.execute(countSql);
-      const totalCount = Number(((countRows as unknown as Array<Record<string, unknown>>)[0])?.count || 0);
-
-      // Build the main query with distance ordering
-      const mainSql = sql`SELECT *, ST_Distance(location, ST_MakePoint(${lon}, ${lat})::geography) as distance_meters FROM user_boards WHERE is_public = true AND deleted_at IS NULL AND location IS NOT NULL AND ST_DWithin(location, ST_MakePoint(${lon}, ${lat})::geography, ${radiusMeters})`;
+      // Build shared WHERE conditions
+      const conditions = [
+        eq(dbSchema.userBoards.isPublic, true),
+        isNull(dbSchema.userBoards.deletedAt),
+        sql`${locationCol} IS NOT NULL`,
+        sql`ST_DWithin(${locationCol}, ${userPoint}, ${radiusMeters})`,
+      ];
 
       if (boardType) {
-        mainSql.append(sql` AND board_type = ${boardType}`);
+        conditions.push(eq(dbSchema.userBoards.boardType, boardType));
       }
-      if (likePattern) {
-        mainSql.append(sql` AND (name ILIKE ${likePattern} OR location_name ILIKE ${likePattern})`);
+      if (query) {
+        const escapedQuery = query.replace(/[%_\\]/g, '\\$&');
+        conditions.push(
+          or(
+            ilike(dbSchema.userBoards.name, `%${escapedQuery}%`),
+            ilike(dbSchema.userBoards.locationName, `%${escapedQuery}%`),
+          )!,
+        );
       }
 
-      mainSql.append(sql` ORDER BY distance_meters ASC LIMIT ${limit} OFFSET ${offset}`);
+      const whereClause = and(...conditions);
 
-      const boardRows = await db.execute(mainSql);
-      const boards = (boardRows as unknown as Array<Record<string, unknown>>);
+      const [countResult] = await db
+        .select({ count: count() })
+        .from(dbSchema.userBoards)
+        .where(whereClause);
 
-      // Map raw rows to board shape expected by enrichBoard
-      type BoardRow = typeof dbSchema.userBoards.$inferSelect;
-      const mappedBoards = boards.map((row) => ({
-        id: row.id as number,
-        uuid: row.uuid as string,
-        slug: (row.slug as string) || '',
-        ownerId: row.owner_id as string,
-        boardType: row.board_type as string,
-        layoutId: row.layout_id as number,
-        sizeId: row.size_id as number,
-        setIds: row.set_ids as string,
-        name: row.name as string,
-        description: (row.description as string | null) ?? null,
-        locationName: (row.location_name as string | null) ?? null,
-        latitude: row.latitude != null ? Number(row.latitude) : null,
-        longitude: row.longitude != null ? Number(row.longitude) : null,
-        isPublic: row.is_public as boolean,
-        isOwned: row.is_owned as boolean,
-        angle: row.angle != null ? Number(row.angle) : 40,
-        gymId: row.gym_id != null ? Number(row.gym_id) : null,
-        isAngleAdjustable: row.is_angle_adjustable as boolean ?? true,
-        createdAt: row.created_at as Date,
-        updatedAt: row.updated_at as Date,
-        deletedAt: (row.deleted_at as Date | null) ?? null,
-      }) as BoardRow);
+      const totalCount = Number(countResult?.count || 0);
 
-      const enrichedBoards = await Promise.all(
-        mappedBoards.map((b) => enrichBoard(b, ctx.isAuthenticated ? ctx.userId : undefined)),
+      const boards = await db
+        .select({
+          board: dbSchema.userBoards,
+          distanceMeters,
+        })
+        .from(dbSchema.userBoards)
+        .where(whereClause)
+        .orderBy(sql`distance_meters ASC`)
+        .limit(limit)
+        .offset(offset);
+
+      const enrichedBoards = await enrichBoards(
+        boards.map(({ board, distanceMeters: dist }) => ({ board, distanceMeters: dist })),
+        ctx.isAuthenticated ? ctx.userId : undefined,
       );
 
       return {
         boards: enrichedBoards,
         totalCount,
-        hasMore: offset + mappedBoards.length < totalCount,
+        hasMore: offset + enrichedBoards.length < totalCount,
       };
     }
 
@@ -669,8 +808,9 @@ export const socialBoardQueries = {
       .limit(limit)
       .offset(offset);
 
-    const enrichedBoards = await Promise.all(
-      boards.map((b) => enrichBoard(b, ctx.isAuthenticated ? ctx.userId : undefined)),
+    const enrichedBoards = await enrichBoards(
+      boards.map((b) => ({ board: b })),
+      ctx.isAuthenticated ? ctx.userId : undefined,
     );
 
     return {

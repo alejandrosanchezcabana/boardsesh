@@ -21,6 +21,11 @@ const BOARD_TYPE_LABELS: Record<string, string> = {
   soill: 'So iLL',
 };
 
+function formatDistance(meters: number): string {
+  if (meters < 1000) return `${Math.round(meters)}m`;
+  return `${(meters / 1000).toFixed(1)}km`;
+}
+
 interface BoardScrollCardProps {
   userBoard?: UserBoard;
   storedConfig?: StoredBoardConfig;
@@ -29,6 +34,7 @@ interface BoardScrollCardProps {
   selected?: boolean;
   disabled?: boolean;
   disabledText?: string;
+  distanceMeters?: number | null;
   size?: 'default' | 'small';
   onClick: () => void;
 }
@@ -41,6 +47,7 @@ export default function BoardScrollCard({
   selected,
   disabled,
   disabledText,
+  distanceMeters,
   size = 'default',
   onClick,
 }: BoardScrollCardProps) {
@@ -146,6 +153,9 @@ export default function BoardScrollCard({
           <div className={styles.cardFallback}>
             <DashboardOutlined sx={{ fontSize: iconSize }} />
           </div>
+        )}
+        {distanceMeters != null && (
+          <div className={styles.distanceBadge}>{formatDistance(distanceMeters)}</div>
         )}
       </div>
       <div className={`${styles.cardName} ${selected ? styles.cardNameSelected : ''} ${disabled ? styles.cardNameDisabled : ''}`}>
