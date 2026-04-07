@@ -391,7 +391,7 @@ const QueueControlBar: React.FC<QueueControlBarProps> = ({ boardDetails, angle }
                       boardDetails={boardDetails}
                       currentClimb={currentClimb}
                       enableNavigation={true}
-                      onNavigate={() => setActiveDrawer('none')}
+                      onNavigate={handleCloseDrawer}
                     />
                   </div>
 
@@ -460,7 +460,7 @@ const QueueControlBar: React.FC<QueueControlBarProps> = ({ boardDetails, angle }
                       boardDetails={boardDetails}
                       currentClimb={currentClimb}
                       enableNavigation={true}
-                      onNavigate={() => setActiveDrawer('none')}
+                      onNavigate={handleCloseDrawer}
                     />
                   </div>
 

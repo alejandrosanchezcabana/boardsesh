@@ -98,6 +98,9 @@ const PlayViewDrawer: React.FC<PlayViewDrawerProps> = ({
   const isOpen = activeDrawer === 'play';
   const [isActionsOpen, setIsActionsOpen] = useState(false);
   const [isQueueOpen, setIsQueueOpen] = useState(false);
+  // Lazy-mount: queue drawer tree only exists in DOM after the user first opens it.
+  // This avoids mounting ~30 ClimbListItems (~225ms) when the play drawer opens.
+  const [queueMounted, setQueueMounted] = useState(false);
   const [isPlaylistSelectorOpen, setIsPlaylistSelectorOpen] = useState(false);
   const [isTickDrawerOpen, setIsTickDrawerOpen] = useState(false);
   const [isEditMode, setIsEditMode] = useState(false);
@@ -327,6 +330,9 @@ const PlayViewDrawer: React.FC<PlayViewDrawerProps> = ({
     if (!isOpen) {
       cancelAnimationFrame(openRafRef.current);
       setDrawerOpen(false);
+      // Unmount queue drawer tree when play drawer closes
+      setQueueMounted(false);
+      setIsQueueOpen(false);
     }
   }, [isOpen]);
 
@@ -507,6 +513,7 @@ const PlayViewDrawer: React.FC<PlayViewDrawerProps> = ({
                 onClick={() => {
                   setIsActionsOpen(false);
                   setIsPlaylistSelectorOpen(false);
+                  setQueueMounted(true);
                   setIsQueueOpen(true);
                 }}
                 aria-label="Open queue"
@@ -597,8 +604,8 @@ const PlayViewDrawer: React.FC<PlayViewDrawerProps> = ({
         )}
       </>) : null}
 
-        {/* Queue list drawer — only mount when play drawer is open */}
-        {isOpen && <SwipeableDrawer
+        {/* Queue list drawer — lazy-mounted on first open, unmounted after close animation */}
+        {queueMounted && <SwipeableDrawer
           placement="bottom"
           height="60%"
           paperRef={queuePaperRef}
@@ -617,6 +624,9 @@ const PlayViewDrawer: React.FC<PlayViewDrawerProps> = ({
               setTimeout(() => {
                 queueListRef.current?.scrollToCurrentClimb();
               }, 100);
+            } else if (!isQueueOpen) {
+              // Unmount queue tree after close animation completes
+              setQueueMounted(false);
             }
           }}
           styles={QUEUE_DRAWER_STYLES}
