@@ -353,7 +353,7 @@ export default function LibraryPageContent({
       )}
 
       {activeTab === 'logbook' ? (
-        <LogbookFeed selectedBoard={selectedBoard} />
+        <LogbookFeed />
       ) : (
         <>
           {/* Authenticated: Recent Playlists Grid */}

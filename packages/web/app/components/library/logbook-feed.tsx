@@ -30,7 +30,6 @@ import {
   type DeleteTickVariables,
 } from '@/app/lib/graphql/operations/ticks';
 import { useSnackbar } from '@/app/components/providers/snackbar-provider';
-import type { UserBoard } from '@boardsesh/shared-schema';
 import LogbookFeedItem from './logbook-feed-item';
 import styles from './library.module.css';
 import feedStyles from '@/app/components/activity-feed/ascents-feed.module.css';
@@ -38,7 +37,15 @@ import feedStyles from '@/app/components/activity-feed/ascents-feed.module.css';
 const PAGE_SIZE = 20;
 
 type StatusFilter = 'all' | 'flash' | 'send' | 'attempt';
+type BoardFilter = 'all' | 'kilter' | 'tension' | 'moonboard';
 type SortOption = 'recent' | 'hardest' | 'easiest' | 'mostAttempts' | 'oldest';
+
+const BOARD_OPTIONS: { value: BoardFilter; label: string }[] = [
+  { value: 'all', label: 'All boards' },
+  { value: 'kilter', label: 'Kilter' },
+  { value: 'tension', label: 'Tension' },
+  { value: 'moonboard', label: 'MoonBoard' },
+];
 
 const STATUS_OPTIONS: { value: StatusFilter; label: string }[] = [
   { value: 'all', label: 'All' },
@@ -55,9 +62,7 @@ const SORT_OPTIONS: { value: SortOption; label: string }[] = [
   { value: 'oldest', label: 'Oldest' },
 ];
 
-interface LogbookFeedProps {
-  selectedBoard: UserBoard | null;
-}
+interface LogbookFeedProps {}
 
 function LogbookItemSkeleton() {
   return (
@@ -81,15 +86,15 @@ function LogbookItemSkeleton() {
   );
 }
 
-export default function LogbookFeed({ selectedBoard }: LogbookFeedProps) {
+export default function LogbookFeed() {
   const { data: session } = useSession();
   const { token } = useWsAuthToken();
   const userId = session?.user?.id;
-  const boardType = selectedBoard?.boardType ?? undefined;
 
   const queryClient = useQueryClient();
   const { showMessage } = useSnackbar();
 
+  const [boardFilter, setBoardFilter] = useState<BoardFilter>('all');
   const [statusFilter, setStatusFilter] = useState<StatusFilter>('all');
   const [sortBy, setSortBy] = useState<SortOption>('recent');
   const [searchText, setSearchText] = useState('');
@@ -112,6 +117,7 @@ export default function LogbookFeed({ selectedBoard }: LogbookFeedProps) {
   // Cleanup debounce timer
   useEffect(() => () => clearTimeout(debounceRef.current), []);
 
+  const boardTypeParam = boardFilter === 'all' ? undefined : boardFilter;
   const statusParam = statusFilter === 'all' ? undefined : statusFilter;
   const climbNameParam = debouncedSearch || undefined;
   const minDifficultyParam = minGrade !== '' ? minGrade : undefined;
@@ -120,7 +126,7 @@ export default function LogbookFeed({ selectedBoard }: LogbookFeedProps) {
   const toDateParam = toDate || undefined;
 
   const { data, fetchNextPage, hasNextPage, isFetchingNextPage, isLoading } = useInfiniteQuery({
-    queryKey: ['logbookFeed', userId, boardType ?? 'all', statusParam ?? 'all', climbNameParam ?? '', sortBy, minDifficultyParam ?? '', maxDifficultyParam ?? '', fromDateParam ?? '', toDateParam ?? ''],
+    queryKey: ['logbookFeed', userId, boardTypeParam ?? 'all', statusParam ?? 'all', climbNameParam ?? '', sortBy, minDifficultyParam ?? '', maxDifficultyParam ?? '', fromDateParam ?? '', toDateParam ?? ''],
     queryFn: async ({ pageParam }) => {
       const client = createGraphQLHttpClient(token ?? null);
       const variables: GetUserAscentsFeedQueryVariables = {
@@ -128,7 +134,7 @@ export default function LogbookFeed({ selectedBoard }: LogbookFeedProps) {
         input: {
           limit: PAGE_SIZE,
           offset: pageParam,
-          ...(boardType ? { boardType } : {}),
+          ...(boardTypeParam ? { boardType: boardTypeParam } : {}),
           ...(statusParam ? { status: statusParam } : {}),
           ...(climbNameParam ? { climbName: climbNameParam } : {}),
           ...(sortBy === 'oldest' ? { sortBy: 'recent' as const, sortOrder: 'asc' as const } : sortBy !== 'recent' ? { sortBy } : {}),
@@ -175,8 +181,8 @@ export default function LogbookFeed({ selectedBoard }: LogbookFeedProps) {
     }
   }, [token, queryClient, showMessage]);
 
-  const showBoardType = !selectedBoard;
-  const hasFilters = statusFilter !== 'all' || debouncedSearch.length > 0 || minGrade !== '' || maxGrade !== '' || fromDate !== '' || toDate !== '';
+  const showBoardType = boardFilter === 'all';
+  const hasFilters = boardFilter !== 'all' || statusFilter !== 'all' || debouncedSearch.length > 0 || minGrade !== '' || maxGrade !== '' || fromDate !== '' || toDate !== '';
 
   const filterBar = (
     <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5, mb: 2 }}>
@@ -196,6 +202,18 @@ export default function LogbookFeed({ selectedBoard }: LogbookFeedProps) {
         }}
         sx={{ '& .MuiOutlinedInput-root': { borderRadius: '8px' } }}
       />
+      <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>
+        {BOARD_OPTIONS.map((opt) => (
+          <Chip
+            key={opt.value}
+            label={opt.label}
+            size="small"
+            variant={boardFilter === opt.value ? 'filled' : 'outlined'}
+            color={boardFilter === opt.value ? 'primary' : 'default'}
+            onClick={() => setBoardFilter(opt.value)}
+          />
+        ))}
+      </Box>
       <Box sx={{ display: 'flex', gap: 1, alignItems: 'center', flexWrap: 'wrap' }}>
         {STATUS_OPTIONS.map((opt) => (
           <Chip
