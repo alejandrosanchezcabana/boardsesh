@@ -83,6 +83,23 @@ vi.mock('../../board-selector-drawer/board-selector-drawer', () => ({
     : null),
 }));
 
+vi.mock('next-auth/react', () => ({
+  useSession: () => ({ data: null, status: 'unauthenticated' }),
+}));
+
+vi.mock('@/app/components/board-scroll/board-discovery-scroll', () => ({
+  default: ({ onBoardClick }: { onBoardClick?: (board: { uuid: string; slug: string; angle: number; name: string; boardType: string; layoutId: number; sizeId: number; setIds: string; createdAt: string }) => void }) => (
+    <div data-testid="board-discovery-scroll">
+      <button
+        type="button"
+        onClick={() => onBoardClick?.({ uuid: 'b1', slug: 'kilter-original', angle: 40, name: 'Kilter', boardType: 'kilter', layoutId: 1, sizeId: 1, setIds: '1', createdAt: '2026-01-01T00:00:00.000Z' })}
+      >
+        Select Board
+      </button>
+    </div>
+  ),
+}));
+
 vi.mock('@/app/components/providers/auth-modal-provider', () => ({
   useAuthModal: () => ({ openAuthModal: vi.fn() }),
 }));
@@ -226,7 +243,7 @@ describe('BottomTabBar create flow', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Create' }));
     fireEvent.click(screen.getByTestId('create-playlist-option'));
 
-    expect(screen.getByTestId('board-selector-drawer')).toBeTruthy();
+    expect(screen.getByTestId('drawer-Pick a board')).toBeTruthy();
 
     fireEvent.click(screen.getByRole('button', { name: 'Select Board' }));
 

@@ -19,7 +19,7 @@ import NotificationsOutlined from '@mui/icons-material/NotificationsOutlined';
 import Badge from '@mui/material/Badge';
 import { usePathname, useRouter } from 'next/navigation';
 import { track } from '@vercel/analytics';
-import { BoardDetails } from '@/app/lib/types';
+import { BoardDetails, BoardName } from '@/app/lib/types';
 import { constructClimbListWithSlugs, constructBoardSlugListUrl, tryConstructSlugListUrl, generateLayoutSlug, generateSizeSlug, generateSetSlug, searchParamsToUrlParams, getContextAwarePlaylistUrl, getPlaylistsBasePath } from '@/app/lib/url-utils';
 import { themeTokens } from '@/app/theme/theme-config';
 import { useColorMode } from '@/app/hooks/use-color-mode';
@@ -411,7 +411,16 @@ function BottomTabBar({ boardDetails, angle, boardConfigs }: BottomTabBarProps) 
   const handleDiscoveryBoardClick = useCallback((board: UserBoard) => {
     if (board.slug) {
       const url = constructBoardSlugListUrl(board.slug, board.angle);
-      handleBoardSelected(url);
+      const config: StoredBoardConfig = {
+        name: board.name,
+        board: board.boardType as BoardName,
+        layoutId: board.layoutId,
+        sizeId: board.sizeId,
+        setIds: board.setIds.split(',').map(Number),
+        angle: board.angle,
+        createdAt: board.createdAt,
+      };
+      handleBoardSelected(url, config);
     }
     setIsBoardSelectorOpen(false);
   }, [handleBoardSelected]);
