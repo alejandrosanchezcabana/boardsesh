@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { render, screen, fireEvent } from '@testing-library/react';
+import { render, screen, fireEvent, act } from '@testing-library/react';
 import React from 'react';
 
 // -- All mocks before imports --
@@ -320,13 +320,18 @@ describe('QueueControlBar offline UI', () => {
     fireEvent.click(banner);
     expect(screen.queryByText(/Offline/i)).toBeNull();
 
-    // Simulate reconnection
+    // Simulate reconnection — pass a new boardDetails object so React.memo re-renders
+    // and the useEffect that resets dismissedDisconnect can fire.
     mockQueueContext = { ...baseQueueContext, isDisconnected: false, connectionState: 'connected' };
-    rerender(<QueueControlBar {...defaultProps} />);
+    act(() => {
+      rerender(<QueueControlBar {...defaultProps} boardDetails={{ ...defaultProps.boardDetails }} />);
+    });
 
     // Simulate disconnection again
     mockQueueContext = { ...baseQueueContext, isDisconnected: true, connectionState: 'reconnecting' };
-    rerender(<QueueControlBar {...defaultProps} />);
+    act(() => {
+      rerender(<QueueControlBar {...defaultProps} boardDetails={{ ...defaultProps.boardDetails }} />);
+    });
 
     expect(screen.getByText(/Offline/i)).toBeTruthy();
   });
