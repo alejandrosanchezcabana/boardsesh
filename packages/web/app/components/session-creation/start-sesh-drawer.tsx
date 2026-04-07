@@ -6,6 +6,7 @@ import Typography from '@mui/material/Typography';
 import Button from '@mui/material/Button';
 import ButtonBase from '@mui/material/ButtonBase';
 import LoginOutlined from '@mui/icons-material/LoginOutlined';
+import EditOutlined from '@mui/icons-material/EditOutlined';
 import PlayCircleOutlineOutlined from '@mui/icons-material/PlayCircleOutlineOutlined';
 import CircularProgress from '@mui/material/CircularProgress';
 import SwipeableDrawer from '../swipeable-drawer/swipeable-drawer';
@@ -249,7 +250,7 @@ export default function StartSeshDrawer({ open, onClose, onTransitionEnd, boardC
           >
             Boards near you
           </Typography>
-          <Box sx={{ display: 'flex', alignItems: 'flex-end', gap: 1.5 }}>
+          <Box sx={{ position: 'relative', width: 'fit-content' }} onClick={() => setBoardSelectorExpanded(true)}>
             <BoardScrollCard
               userBoard={selectedBoard ?? undefined}
               storedConfig={selectedCustomConfig ?? undefined}
@@ -257,15 +258,25 @@ export default function StartSeshDrawer({ open, onClose, onTransitionEnd, boardC
               selected
               onClick={() => setBoardSelectorExpanded(true)}
             />
-            <Typography
-              variant="caption"
-              color="primary"
-              fontWeight={500}
-              onClick={() => setBoardSelectorExpanded(true)}
-              sx={{ cursor: 'pointer', pb: 0.5 }}
+            {/* Grey overlay + edit icon */}
+            <Box
+              sx={{
+                position: 'absolute',
+                top: 0,
+                left: 0,
+                right: 0,
+                aspectRatio: 1,
+                borderRadius: '8px',
+                bgcolor: 'rgba(0, 0, 0, 0.3)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                cursor: 'pointer',
+                pointerEvents: 'none',
+              }}
             >
-              Change
-            </Typography>
+              <EditOutlined sx={{ color: '#fff', fontSize: 28 }} />
+            </Box>
           </Box>
         </Box>
       ) : (
