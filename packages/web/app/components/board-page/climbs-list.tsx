@@ -464,15 +464,7 @@ const ClimbsList = ({
     getItemKey: (index) => visibleClimbs[index]?.uuid ?? index,
   });
 
-  // Virtualizer-based infinite scroll for list mode
   const virtualItems = virtualizer.getVirtualItems();
-  const lastVirtualItem = virtualItems[virtualItems.length - 1];
-  useEffect(() => {
-    if (viewMode !== 'list' || !lastVirtualItem) return;
-    if (lastVirtualItem.index >= visibleClimbs.length - 5 && hasMore && !isFetching) {
-      handleLoadMore();
-    }
-  }, [viewMode, lastVirtualItem?.index, visibleClimbs.length, hasMore, isFetching, handleLoadMore]);
 
   return (
     <SelectionStoreContext.Provider value={selectionStore}>
@@ -578,8 +570,8 @@ const ClimbsList = ({
       )}
       </ErrorBoundary>
 
-      {/* Sentinel for infinite scroll — only needed for grid mode (list mode uses virtualizer) */}
-      <Box ref={viewMode === 'grid' ? sentinelRef : undefined} sx={sentinelBoxSx}>
+      {/* Sentinel for infinite scroll — IntersectionObserver fires when this element approaches the viewport */}
+      <Box ref={sentinelRef} sx={sentinelBoxSx}>
         {isFetching &&
           climbs.length > 0 &&
           (viewMode === 'grid' ? (
