@@ -15,6 +15,7 @@ import Typography from '@mui/material/Typography';
 import { useCurrentClimb, useSessionData } from '../graphql-queue';
 import { useBluetoothContext } from '../board-bluetooth-control/bluetooth-context';
 import { useSnackbar } from '@/app/components/providers/snackbar-provider';
+import { themeTokens } from '@/app/theme/theme-config';
 
 export const ShareBoardButton = () => {
   const { showMessage } = useSnackbar();
@@ -70,10 +71,10 @@ export const ShareBoardButton = () => {
           <CircularProgress size={16} />
         ) : isBoardConnected ? (
           <Lightbulb sx={{
-            color: '#FFD700',
+            color: themeTokens.colors.warning,
             '@keyframes connectedGlow': {
-              '0%': { filter: 'drop-shadow(0 0 2px rgba(255, 215, 0, 0.6))' },
-              '100%': { filter: 'drop-shadow(0 0 6px rgba(255, 215, 0, 1))' },
+              '0%': { filter: `drop-shadow(0 0 2px ${themeTokens.colors.warning}99)` },
+              '100%': { filter: `drop-shadow(0 0 6px ${themeTokens.colors.warning})` },
             },
             animation: 'connectedGlow 1.5s ease-in-out infinite alternate',
           }} />
