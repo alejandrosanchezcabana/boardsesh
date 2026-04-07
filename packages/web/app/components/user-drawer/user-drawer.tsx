@@ -32,7 +32,9 @@ import SwipeableDrawer from '../swipeable-drawer/swipeable-drawer';
 import { useAuthModal } from '@/app/components/providers/auth-modal-provider';
 import { HoldClassificationWizard } from '../hold-classification';
 import BoardDiscoveryScroll from '../board-scroll/board-discovery-scroll';
+import BoardSelectorDrawer from '../board-selector-drawer/board-selector-drawer';
 import MyBoardsDrawer from '../my-boards-drawer/my-boards-drawer';
+import { BoardConfigData } from '@/app/lib/server-board-configs';
 import { BoardDetails } from '@/app/lib/types';
 import type { UserBoard, PopularBoardConfig } from '@boardsesh/shared-schema';
 import {
@@ -46,9 +48,10 @@ import styles from './user-drawer.module.css';
 interface UserDrawerProps {
   boardDetails?: BoardDetails | null;
   angle?: number;
+  boardConfigs?: BoardConfigData;
 }
 
-export default function UserDrawer({ boardDetails }: UserDrawerProps) {
+export default function UserDrawer({ boardDetails, boardConfigs }: UserDrawerProps) {
   const { data: session } = useSession();
   const router = useRouter();
   const pathname = usePathname();
@@ -57,6 +60,7 @@ export default function UserDrawer({ boardDetails }: UserDrawerProps) {
   const { openAuthModal } = useAuthModal();
   const [showHoldClassification, setShowHoldClassification] = useState(false);
   const [showBoardSelector, setShowBoardSelector] = useState(false);
+  const [showCustomBoard, setShowCustomBoard] = useState(false);
   const [showMyBoards, setShowMyBoards] = useState(false);
   const [recentSessions, setRecentSessions] = useState<StoredSession[]>([]);
 
@@ -363,16 +367,32 @@ export default function UserDrawer({ boardDetails }: UserDrawerProps) {
         <BoardDiscoveryScroll
           onBoardClick={handleChangeBoardClick}
           onConfigClick={handleChangeConfigClick}
-          onCustomClick={() => setShowBoardSelector(false)}
+          onCustomClick={() => {
+            setShowBoardSelector(false);
+            setShowCustomBoard(true);
+          }}
         />
       </SwipeableDrawer>
+
+      {boardConfigs && (
+        <BoardSelectorDrawer
+          open={showCustomBoard}
+          onClose={() => setShowCustomBoard(false)}
+          boardConfigs={boardConfigs}
+          placement="bottom"
+          onBoardSelected={(url) => {
+            router.push(url);
+            setShowCustomBoard(false);
+          }}
+        />
+      )}
 
       <MyBoardsDrawer
         open={showMyBoards}
         onClose={() => setShowMyBoards(false)}
         onCreateBoard={() => {
           setShowMyBoards(false);
-          setShowBoardSelector(true);
+          setShowCustomBoard(true);
         }}
       />
     </>

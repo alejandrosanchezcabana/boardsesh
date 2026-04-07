@@ -62,7 +62,7 @@ export default function GlobalHeader({ boardConfigs }: GlobalHeaderProps) {
   if (HIDDEN_HEADER_PAGES.includes(pathname)) {
     return (
       <header className={styles.headerTransparent}>
-        <UserDrawer />
+        <UserDrawer boardConfigs={boardConfigs} />
       </header>
     );
   }
@@ -110,7 +110,7 @@ export default function GlobalHeader({ boardConfigs }: GlobalHeaderProps) {
   return (
     <>
       <header className={styles.header}>
-        <UserDrawer />
+        <UserDrawer boardConfigs={boardConfigs} />
 
         <button
           id={useClimbSearchBridge ? 'onboarding-search-button' : undefined}
