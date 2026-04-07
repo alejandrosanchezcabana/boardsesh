@@ -407,11 +407,16 @@ export function QueueBridgeProvider({ children }: { children: React.ReactNode })
     data: GraphQLQueueDataType,
   ) => {
     const actionsChanged = actions !== injectedActionsRef.current;
+    const dataChanged = data !== injectedDataRef.current;
     injectedContextRef.current = ctx;
     injectedActionsRef.current = actions;
     injectedDataRef.current = data;
-    // Always bump data version (data changes are expected and frequent)
-    setDataVersion(v => v + 1);
+    // Only bump data version when the injected data reference actually changed.
+    // Prevents cascading re-renders when updateContext is called with the same
+    // data (e.g. during session stats updates that don't change queue data).
+    if (dataChanged) {
+      setDataVersion(v => v + 1);
+    }
     // Only bump actions version when the actions object identity actually changed.
     // GraphQLQueueProvider's actionsValue uses latestRef with empty deps, so this
     // almost never changes — keeping QueueActionsContext stable for consumers.

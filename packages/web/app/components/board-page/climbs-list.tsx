@@ -7,6 +7,7 @@ import FormatListBulletedOutlined from '@mui/icons-material/FormatListBulletedOu
 import { usePathname } from 'next/navigation';
 import { track } from '@vercel/analytics';
 import dynamic from 'next/dynamic';
+import { useIsDarkMode } from '@/app/hooks/use-is-dark-mode';
 import { useWindowVirtualizer } from '@tanstack/react-virtual';
 import { Climb, BoardDetails } from '@/app/lib/types';
 import ErrorBoundary from '../error-boundary';
@@ -56,7 +57,7 @@ type SharedDrawersProps = {
   resolveBoardDetails: (climb: Climb) => BoardDetails;
 };
 
-const SharedDrawers = forwardRef<SharedDrawerHandle, SharedDrawersProps>(
+const SharedDrawers = React.memo(forwardRef<SharedDrawerHandle, SharedDrawersProps>(
   ({ boardDetails, resolveBoardDetails }, ref) => {
     const pathname = usePathname();
     const [activeDrawerClimb, setActiveDrawerClimb] = useState<Climb | null>(null);
@@ -141,7 +142,7 @@ const SharedDrawers = forwardRef<SharedDrawerHandle, SharedDrawersProps>(
       </>
     );
   },
-);
+));
 SharedDrawers.displayName = 'SharedDrawers';
 
 export type ClimbsListProps = {
@@ -195,6 +196,10 @@ const ClimbsList = ({
   renderItemExtra,
   showBottomSpacer,
 }: ClimbsListProps) => {
+  // Hoisted once so every ClimbListItem receives the value as a prop
+  // instead of each one doing its own context lookup.
+  const pathname = usePathname();
+  const isDark = useIsDarkMode();
   // Show the first batch immediately, then reveal the rest on the next frame.
   // Only batch when the list is replaced (new search), not when items are appended (infinite scroll)
   // — otherwise the height shrinks and the page jumps.
@@ -514,6 +519,8 @@ const ClimbsList = ({
                       <ClimbListItem
                         climb={climb}
                         boardDetails={resolveBoardDetails(climb)}
+                        pathname={pathname}
+                        isDark={isDark}
                         preferImageLayers={index < initialImageCount}
                         onSelect={() => handleClimbClickByIndex(index)}
                         onThumbnailClick={() => handleClimbClickByIndex(index)}

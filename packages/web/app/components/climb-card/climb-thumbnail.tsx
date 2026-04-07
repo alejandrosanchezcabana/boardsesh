@@ -1,6 +1,5 @@
 import React, { useMemo } from 'react';
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
 
 import { BoardDetails, Climb } from '@/app/lib/types';
 import BoardImageLayers from '@/app/components/board-renderer/board-image-layers';
@@ -11,6 +10,8 @@ import { getContextAwareClimbViewUrl } from '@/app/lib/url-utils';
 type ClimbThumbnailProps = {
   currentClimb: Climb | null;
   boardDetails: BoardDetails;
+  /** Current pathname — passed from parent to avoid per-instance usePathname() context lookups. */
+  pathname: string;
   enableNavigation?: boolean;
   onNavigate?: () => void;
   maxHeight?: string;
@@ -20,12 +21,12 @@ type ClimbThumbnailProps = {
 const ClimbThumbnail: React.FC<ClimbThumbnailProps> = React.memo(({
   boardDetails,
   currentClimb,
+  pathname,
   enableNavigation = false,
   onNavigate,
   maxHeight,
   preferImageLayers = false,
 }) => {
-  const pathname = usePathname();
   const canvasReady = useCanvasRendererReady();
 
   const boardStyle = useMemo<React.CSSProperties>(() => ({
@@ -98,6 +99,7 @@ const ClimbThumbnail: React.FC<ClimbThumbnailProps> = React.memo(({
   }
 
   return (
+    prev.pathname === next.pathname &&
     prev.enableNavigation === next.enableNavigation &&
     prev.maxHeight === next.maxHeight &&
     prev.preferImageLayers === next.preferImageLayers

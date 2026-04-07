@@ -14,6 +14,7 @@ import { monitorForElements } from '@atlaskit/pragmatic-drag-and-drop/element/ad
 import { extractClosestEdge } from '@atlaskit/pragmatic-drag-and-drop-hitbox/closest-edge';
 import { reorder } from '@atlaskit/pragmatic-drag-and-drop/reorder';
 import { usePathname } from 'next/navigation';
+import { useIsDarkMode } from '@/app/hooks/use-is-dark-mode';
 import QueueClimbListItem from './queue-climb-list-item';
 import ClimbListItem from '../climb-card/climb-list-item';
 import DrawerClimbHeader from '../climb-card/drawer-climb-header';
@@ -57,6 +58,7 @@ const QueueList = forwardRef<QueueListHandle, QueueListProps>(({ boardDetails, o
     addToQueue,
   } = useQueueActions();
   const pathname = usePathname();
+  const isDark = useIsDarkMode();
 
   const isAuthenticated = useOptionalBoardProvider()?.isAuthenticated ?? false;
 
@@ -287,6 +289,8 @@ const QueueList = forwardRef<QueueListHandle, QueueListProps>(({ boardDetails, o
                     isCurrent={false}
                     isHistory={true}
                     boardDetails={boardDetails}
+                    pathname={pathname}
+                    isDark={isDark}
                     setCurrentClimbQueueItem={setCurrentClimbQueueItem}
                     onTickClick={handleTickClick}
                     onOpenActions={handleOpenActions}
@@ -311,6 +315,8 @@ const QueueList = forwardRef<QueueListHandle, QueueListProps>(({ boardDetails, o
               isCurrent={true}
               isHistory={false}
               boardDetails={boardDetails}
+              pathname={pathname}
+              isDark={isDark}
               setCurrentClimbQueueItem={setCurrentClimbQueueItem}
               onTickClick={handleTickClick}
               onOpenActions={handleOpenActions}
@@ -338,6 +344,8 @@ const QueueList = forwardRef<QueueListHandle, QueueListProps>(({ boardDetails, o
                 isCurrent={false}
                 isHistory={false}
                 boardDetails={boardDetails}
+                pathname={pathname}
+                isDark={isDark}
                 setCurrentClimbQueueItem={setCurrentClimbQueueItem}
                 onTickClick={handleTickClick}
                 onOpenActions={handleOpenActions}
@@ -384,6 +392,8 @@ const QueueList = forwardRef<QueueListHandle, QueueListProps>(({ boardDetails, o
                   <ClimbListItem
                     climb={climb}
                     boardDetails={boardDetails}
+                    pathname={pathname}
+                    isDark={isDark}
                     titleProps={suggestedTitleProps}
                     onNavigate={stableOnClimbNavigate}
                     onOpenActions={handleOpenActions}

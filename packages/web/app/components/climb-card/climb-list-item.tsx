@@ -2,7 +2,6 @@
 
 import React, { useRef, useState, useCallback, useMemo, useEffect } from 'react';
 import IconButton from '@mui/material/IconButton';
-import { usePathname } from 'next/navigation';
 import dynamic from 'next/dynamic';
 import MoreHorizOutlined from '@mui/icons-material/MoreHorizOutlined';
 import AddOutlined from '@mui/icons-material/AddOutlined';
@@ -21,7 +20,6 @@ import { useSwipeActions } from '@/app/hooks/use-swipe-actions';
 import { useDoubleTap } from '@/app/lib/hooks/use-double-tap';
 import { themeTokens } from '@/app/theme/theme-config';
 import { getGradeTintColor } from '@/app/lib/grade-colors';
-import { useIsDarkMode } from '@/app/hooks/use-is-dark-mode';
 import { getExcludedClimbActions } from '@/app/lib/climb-action-utils';
 import { useIsClimbSelected } from '../board-page/selected-climb-store';
 import styles from './climb-list-item.module.css';
@@ -148,6 +146,10 @@ export type SwipeActionOverride = {
 type ClimbListItemProps = {
   climb: Climb;
   boardDetails: BoardDetails;
+  /** Current pathname — passed from parent to avoid per-instance usePathname() context lookups. */
+  pathname: string;
+  /** Whether the app is in dark mode — passed from parent to avoid per-instance context lookups. */
+  isDark: boolean;
   /** Override selected state (e.g. in queue drawer). When omitted, subscribes to SelectionStoreContext. */
   selected?: boolean;
   /** When true, the item is visually dimmed (greyed out) but still interactive */
@@ -187,6 +189,8 @@ const ClimbListItem: React.FC<ClimbListItemProps> = React.memo(
   ({
     climb,
     boardDetails,
+    pathname,
+    isDark,
     selected: selectedOverride,
     unsupported,
     disableSwipe,
@@ -204,8 +208,6 @@ const ClimbListItem: React.FC<ClimbListItemProps> = React.memo(
     onNavigate,
     addToQueue,
   }) => {
-    const pathname = usePathname();
-    const isDark = useIsDarkMode();
     // Subscribe to selection store — only re-renders when THIS item's selected state changes.
     // When `selectedOverride` is provided (e.g. queue drawer), use that instead.
     const storeSelected = useIsClimbSelected(climb.uuid);
@@ -515,6 +517,7 @@ const ClimbListItem: React.FC<ClimbListItemProps> = React.memo(
               <ClimbThumbnail
                 boardDetails={boardDetails}
                 currentClimb={climb}
+                pathname={pathname}
                 enableNavigation={!disableThumbnailNavigation}
                 preferImageLayers={preferImageLayers}
                 onNavigate={onNavigate}
@@ -588,6 +591,8 @@ const ClimbListItem: React.FC<ClimbListItemProps> = React.memo(
   (prev, next) => {
     return (
       prev.climb.uuid === next.climb.uuid &&
+      prev.pathname === next.pathname &&
+      prev.isDark === next.isDark &&
       prev.selected === next.selected &&
       prev.unsupported === next.unsupported &&
       prev.disableSwipe === next.disableSwipe &&

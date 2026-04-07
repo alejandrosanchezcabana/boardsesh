@@ -6,6 +6,7 @@ import IconButton from '@mui/material/IconButton';
 import { FormatListBulletedOutlined, AppsOutlined } from '@mui/icons-material';
 import { useInfiniteQuery } from '@tanstack/react-query';
 import { usePathname } from 'next/navigation';
+import { useIsDarkMode } from '@/app/hooks/use-is-dark-mode';
 import { track } from '@vercel/analytics';
 import { Climb, BoardDetails } from '@/app/lib/types';
 import { executeGraphQL } from '@/app/lib/graphql/client';
@@ -156,6 +157,8 @@ export default function LikedClimbsList({
   boardDetails,
   angle,
 }: LikedClimbsListProps) {
+  const pathname = usePathname();
+  const isDark = useIsDarkMode();
   const { token, isLoading: tokenLoading } = useWsAuthToken();
   const { setCurrentClimb, addToQueue } = useQueueActions();
   const { showMessage } = useSnackbar();
@@ -367,6 +370,8 @@ export default function LikedClimbsList({
             <ClimbListItem
               climb={climb}
               boardDetails={boardDetails}
+              pathname={pathname}
+              isDark={isDark}
               onSelect={climbHandlersMap.get(climb.uuid)}
               onThumbnailClick={climbHandlersMap.get(climb.uuid)}
               disableThumbnailNavigation

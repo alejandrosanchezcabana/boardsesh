@@ -91,6 +91,10 @@ vi.mock('next/navigation', () => ({
   usePathname: () => '/kilter/original/12x12/default/40/play/some-climb',
 }));
 
+vi.mock('@/app/hooks/use-is-dark-mode', () => ({
+  useIsDarkMode: () => false,
+}));
+
 vi.mock('../../board-provider/board-provider-context', () => ({
   useOptionalBoardProvider: () => null,
 }));

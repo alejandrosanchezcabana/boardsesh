@@ -390,6 +390,7 @@ const QueueControlBar: React.FC<QueueControlBarProps> = ({ boardDetails, angle }
                     <ClimbThumbnail
                       boardDetails={boardDetails}
                       currentClimb={currentClimb}
+                      pathname={pathname}
                       enableNavigation={true}
                       onNavigate={() => setActiveDrawer('none')}
                     />
@@ -459,6 +460,7 @@ const QueueControlBar: React.FC<QueueControlBarProps> = ({ boardDetails, angle }
                     <ClimbThumbnail
                       boardDetails={boardDetails}
                       currentClimb={currentClimb}
+                      pathname={pathname}
                       enableNavigation={true}
                       onNavigate={() => setActiveDrawer('none')}
                     />

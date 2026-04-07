@@ -5,9 +5,7 @@ import type { BoardDetails, Climb } from '@/app/lib/types';
 
 let mockPathname = '/b/moonrise-gym/40/list';
 
-vi.mock('next/navigation', () => ({
-  usePathname: () => mockPathname,
-}));
+// usePathname is no longer called inside ClimbThumbnail — pathname is passed as a prop.
 
 vi.mock('next/link', () => ({
   default: ({ href, children, prefetch: _prefetch, ...rest }: { href: string; children: React.ReactNode; prefetch?: boolean }) => (
@@ -57,7 +55,7 @@ describe('ClimbThumbnail', () => {
   it('preserves board-slug URL context on /b routes', () => {
     mockPathname = '/b/moonrise-gym/40/list';
 
-    render(<ClimbThumbnail boardDetails={boardDetails} currentClimb={climb} enableNavigation />);
+    render(<ClimbThumbnail boardDetails={boardDetails} currentClimb={climb} pathname={mockPathname} enableNavigation />);
 
     const link = screen.getByTestId('climb-thumbnail-link');
     expect(link.getAttribute('href')).toBe('/b/moonrise-gym/40/view/moon-landing-ABC123');
@@ -66,7 +64,7 @@ describe('ClimbThumbnail', () => {
   it('falls back to canonical route format outside /b routes', () => {
     mockPathname = '/kilter/homewall/8x12-main/main-kicker_aux-kicker/40/list';
 
-    render(<ClimbThumbnail boardDetails={boardDetails} currentClimb={climb} enableNavigation />);
+    render(<ClimbThumbnail boardDetails={boardDetails} currentClimb={climb} pathname={mockPathname} enableNavigation />);
 
     const link = screen.getByTestId('climb-thumbnail-link');
     expect(link.getAttribute('href')).toBe(

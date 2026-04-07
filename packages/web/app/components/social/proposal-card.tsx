@@ -29,8 +29,10 @@ import { useWsAuthToken } from '@/app/hooks/use-ws-auth-token';
 import { createGraphQLHttpClient } from '@/app/lib/graphql/client';
 import { VOTE_ON_PROPOSAL, RESOLVE_PROPOSAL, DELETE_PROPOSAL } from '@/app/lib/graphql/operations/proposals';
 import type { Proposal } from '@boardsesh/shared-schema';
+import { usePathname } from 'next/navigation';
 import type { Climb, BoardDetails, BoardName } from '@/app/lib/types';
 import ClimbListItem from '@/app/components/climb-card/climb-list-item';
+import { useIsDarkMode } from '@/app/hooks/use-is-dark-mode';
 
 import { getBoardDetailsForBoard } from '@/app/lib/board-utils';
 import { getDefaultBoardConfig } from '@/app/lib/default-board-configs';
@@ -58,6 +60,8 @@ interface ProposalCardProps {
 }
 
 export default function ProposalCard({ proposal, isAdminOrLeader, onUpdate, onDelete, highlight }: ProposalCardProps) {
+  const pathname = usePathname();
+  const isDark = useIsDarkMode();
   const { token } = useWsAuthToken();
   const [loading, setLoading] = useState(false);
   const [snackbar, setSnackbar] = useState('');
@@ -187,6 +191,8 @@ export default function ProposalCard({ proposal, isAdminOrLeader, onUpdate, onDe
             <ClimbListItem
               climb={climbAndBoardDetails.climb}
               boardDetails={climbAndBoardDetails.boardDetails}
+              pathname={pathname}
+              isDark={isDark}
               disableSwipe
             />
           )}

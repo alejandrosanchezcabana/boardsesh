@@ -14,13 +14,8 @@ vi.mock('next/navigation', () => ({
   useRouter: () => ({ push: mockPush }),
 }));
 
-vi.mock('@/app/hooks/use-color-mode', () => ({
-  useColorMode: () => ({ mode: 'light' }),
-}));
-
-vi.mock('@/app/hooks/use-is-dark-mode', () => ({
-  useIsDarkMode: () => false,
-}));
+// useColorMode and useIsDarkMode are no longer called inside QueueClimbListItem —
+// isDark is passed as a prop from the parent.
 
 vi.mock('../../climb-actions', () => ({
   useFavorite: () => ({
@@ -164,6 +159,8 @@ const defaultProps = () => ({
   isCurrent: false,
   isHistory: false,
   boardDetails: makeBoardDetails(),
+  pathname: '/kilter/original/12x12/default/40/play/some-climb',
+  isDark: false,
   setCurrentClimbQueueItem: vi.fn(),
   onTickClick: vi.fn(),
 });

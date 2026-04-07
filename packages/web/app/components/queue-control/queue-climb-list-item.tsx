@@ -15,7 +15,6 @@ import { combine } from '@atlaskit/pragmatic-drag-and-drop/combine';
 import BluetoothIcon from './bluetooth-icon';
 import { ClimbQueueItem } from './types';
 import ClimbListItem, { type SwipeActionOverride } from '../climb-card/climb-list-item';
-import { useColorMode } from '@/app/hooks/use-color-mode';
 import { themeTokens } from '@/app/theme/theme-config';
 import { getGradeTintColor } from '@/app/lib/grade-colors';
 
@@ -25,6 +24,10 @@ type QueueClimbListItemProps = {
   isCurrent: boolean;
   isHistory: boolean;
   boardDetails: BoardDetails;
+  /** Current pathname — hoisted from parent to avoid per-instance context lookups. */
+  pathname: string;
+  /** Whether the app is in dark mode — hoisted from parent to avoid per-instance context lookups. */
+  isDark: boolean;
   setCurrentClimbQueueItem: (item: ClimbQueueItem) => void;
   onTickClick: (climb: Climb) => void;
   onOpenActions?: (climb: Climb) => void;
@@ -40,6 +43,8 @@ const QueueClimbListItem: React.FC<QueueClimbListItemProps> = ({
   isCurrent,
   isHistory,
   boardDetails,
+  pathname,
+  isDark,
   setCurrentClimbQueueItem,
   onTickClick,
   onOpenActions,
@@ -48,8 +53,6 @@ const QueueClimbListItem: React.FC<QueueClimbListItemProps> = ({
   isSelected = false,
   onToggleSelect,
 }) => {
-  const { mode } = useColorMode();
-  const isDark = mode === 'dark';
   const [closestEdge, setClosestEdge] = useState<Edge | null>(null);
   const itemRef = useRef<HTMLDivElement>(null);
 
@@ -155,6 +158,8 @@ const QueueClimbListItem: React.FC<QueueClimbListItemProps> = ({
     <ClimbListItem
       climb={item.climb}
       boardDetails={boardDetails}
+      pathname={pathname}
+      isDark={isDark}
       selected={isCurrent}
       disableSwipe={isEditMode}
       disableThumbnailNavigation={isEditMode}
