@@ -25,9 +25,11 @@ import { constructClimbListWithSlugs, constructBoardSlugListUrl } from '@/app/li
 import { loadSavedBoards, saveBoardConfig, StoredBoardConfig } from '@/app/lib/saved-boards-db';
 import { setLastUsedBoard } from '@/app/lib/last-used-board-db';
 import { useMyBoards } from '@/app/hooks/use-my-boards';
+import type { UserBoard } from '@boardsesh/shared-schema';
 import NearbyBoardsSection from './nearby-boards-section';
 
 const BoardMapView = lazy(() => import('./board-map-view'));
+const CreateBoardForm = lazy(() => import('../board-entity/create-board-form'));
 
 interface BoardSelectorDrawerProps {
   open: boolean;
@@ -36,6 +38,12 @@ interface BoardSelectorDrawerProps {
   boardConfigs: BoardConfigData;
   placement?: 'top' | 'bottom';
   onBoardSelected?: (url: string, config?: StoredBoardConfig) => void;
+  /** Hide the "Found Nearby" GPS-based section */
+  hideNearby?: boolean;
+  /** Show a "Create board" button alongside "Quick session" in the new board form */
+  showCreateBoard?: boolean;
+  /** Skip the boards list and show the config form directly */
+  startWithForm?: boolean;
 }
 
 export default function BoardSelectorDrawer({
@@ -45,10 +53,14 @@ export default function BoardSelectorDrawer({
   boardConfigs,
   placement = 'bottom',
   onBoardSelected,
+  hideNearby,
+  showCreateBoard,
+  startWithForm,
 }: BoardSelectorDrawerProps) {
   const router = useRouter();
   const [savedConfigurations, setSavedConfigurations] = useState<StoredBoardConfig[]>([]);
   const [showNewBoardForm, setShowNewBoardForm] = useState(false);
+  const [showCreateBoardForm, setShowCreateBoardForm] = useState(false);
   const [newBoardTab, setNewBoardTab] = useState(0);
   const { boards: serverBoards, isLoading: isLoadingServerBoards } = useMyBoards(open);
 
@@ -83,8 +95,13 @@ export default function BoardSelectorDrawer({
       loadSavedBoards().then((configs) => {
         setSavedConfigurations(configs);
       });
+      // Auto-select first board when starting with config form
+      if (startWithForm && !selectedBoard && SUPPORTED_BOARDS.length > 0) {
+        setSelectedBoard(SUPPORTED_BOARDS[0] as BoardName);
+      }
     }
-  }, [open]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [open, startWithForm]);
 
   // Auto-cascade: layout when board changes
   useEffect(() => {
@@ -285,60 +302,167 @@ export default function BoardSelectorDrawer({
   return (
     <>
       <SwipeableDrawer
-        title="Select Board"
+        title={startWithForm ? 'Custom Board' : 'Select Board'}
         placement={placement}
         open={open}
         onClose={onClose}
         onTransitionEnd={onTransitionEnd}
         height="85dvh"
       >
-        {/* My Boards (server-side) */}
-        {(hasServerBoards || isLoadingServerBoards) && (
-          <BoardScrollSection title="My Boards" loading={isLoadingServerBoards}>
-            <CreateBoardCard onClick={handleOpenNewBoardForm} />
-            {serverBoards.map((board) => (
-              <BoardScrollCard
-                key={board.uuid}
-                userBoard={board}
-                onClick={() => handleServerBoardSelect(board)}
-              />
-            ))}
-          </BoardScrollSection>
-        )}
+        {startWithForm ? (
+          /* Direct config form - skip boards list */
+          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, pt: 1 }}>
+            <FormControl fullWidth size="small">
+              <InputLabel>Board</InputLabel>
+              <MuiSelect
+                value={selectedBoard || ''}
+                label="Board"
+                onChange={(e: SelectChangeEvent) => setSelectedBoard(e.target.value as BoardName)}
+              >
+                {SUPPORTED_BOARDS.map((board) => (
+                  <MenuItem key={board} value={board}>
+                    {board.charAt(0).toUpperCase() + board.slice(1)}
+                  </MenuItem>
+                ))}
+              </MuiSelect>
+            </FormControl>
 
-        {/* Recently Used (local configs) */}
-        {hasSavedConfigs && (
-          <BoardScrollSection title="Recently Used">
-            {!hasServerBoards && (
-              <CreateBoardCard onClick={handleOpenNewBoardForm} />
+            <FormControl fullWidth size="small">
+              <InputLabel>Layout</InputLabel>
+              <MuiSelect
+                value={selectedLayout ?? ''}
+                label="Layout"
+                onChange={(e: SelectChangeEvent<number | string>) => setSelectedLayout(e.target.value as number)}
+                disabled={!selectedBoard}
+              >
+                {layouts.map(({ id, name }) => (
+                  <MenuItem key={id} value={id}>{name}</MenuItem>
+                ))}
+              </MuiSelect>
+            </FormControl>
+
+            {selectedBoard !== 'moonboard' && (
+              <FormControl fullWidth size="small">
+                <InputLabel>Size</InputLabel>
+                <MuiSelect
+                  value={selectedSize ?? ''}
+                  label="Size"
+                  onChange={(e: SelectChangeEvent<number | string>) => setSelectedSize(e.target.value as number)}
+                  disabled={!selectedLayout}
+                >
+                  {sizes.map(({ id, name, description }) => (
+                    <MenuItem key={id} value={id}>{`${name} ${description}`}</MenuItem>
+                  ))}
+                </MuiSelect>
+              </FormControl>
             )}
-            {savedConfigurations.map((config) => (
-              <BoardScrollCard
-                key={config.name}
-                storedConfig={config}
-                boardConfigs={boardConfigs}
-                onClick={() => handleSavedConfigSelect(config)}
-              />
-            ))}
-          </BoardScrollSection>
-        )}
 
-        {/* Found Nearby (GPS-based) */}
-        <NearbyBoardsSection
-          open={open}
-          onBoardSelect={handleServerBoardSelect}
-        />
+            <FormControl fullWidth size="small">
+              <InputLabel>Hold Sets</InputLabel>
+              <MuiSelect<number[]>
+                multiple
+                value={selectedSets}
+                label="Hold Sets"
+                onChange={(e) => setSelectedSets(e.target.value as number[])}
+                disabled={!selectedSize}
+              >
+                {sets.map(({ id, name }) => (
+                  <MenuItem key={id} value={id}>{name}</MenuItem>
+                ))}
+              </MuiSelect>
+            </FormControl>
 
-        {/* Empty state */}
-        {isEmpty && (
-          <Box sx={{ textAlign: 'center', py: 4, px: 2 }}>
-            <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-              No saved boards yet. Create a new board to get started.
-            </Typography>
-            <Button variant="contained" onClick={handleOpenNewBoardForm}>
-              Create New Board
-            </Button>
+            <FormControl fullWidth size="small">
+              <InputLabel>Angle</InputLabel>
+              <MuiSelect
+                value={selectedAngle}
+                label="Angle"
+                onChange={(e: SelectChangeEvent<number>) => setSelectedAngle(e.target.value as number)}
+                disabled={!selectedBoard}
+              >
+                {selectedBoard &&
+                  ANGLES[selectedBoard].map((angle) => (
+                    <MenuItem key={angle} value={angle}>{angle}</MenuItem>
+                  ))}
+              </MuiSelect>
+            </FormControl>
+
+            <Box sx={{ display: 'flex', gap: 1 }}>
+              <Button
+                variant="contained"
+                size="large"
+                fullWidth
+                onClick={handleStartClimbing}
+                disabled={!isFormComplete}
+              >
+                Quick session
+              </Button>
+              {showCreateBoard && (
+                <Button
+                  variant="outlined"
+                  size="large"
+                  fullWidth
+                  onClick={() => setShowCreateBoardForm(true)}
+                  disabled={!isFormComplete}
+                >
+                  Create board
+                </Button>
+              )}
+            </Box>
           </Box>
+        ) : (
+          <>
+            {/* My Boards (server-side) */}
+            {(hasServerBoards || isLoadingServerBoards) && (
+              <BoardScrollSection title="My Boards" loading={isLoadingServerBoards}>
+                <CreateBoardCard onClick={handleOpenNewBoardForm} />
+                {serverBoards.map((board) => (
+                  <BoardScrollCard
+                    key={board.uuid}
+                    userBoard={board}
+                    onClick={() => handleServerBoardSelect(board)}
+                  />
+                ))}
+              </BoardScrollSection>
+            )}
+
+            {/* Recently Used (local configs) */}
+            {hasSavedConfigs && (
+              <BoardScrollSection title="Recently Used">
+                {!hasServerBoards && (
+                  <CreateBoardCard onClick={handleOpenNewBoardForm} />
+                )}
+                {savedConfigurations.map((config) => (
+                  <BoardScrollCard
+                    key={config.name}
+                    storedConfig={config}
+                    boardConfigs={boardConfigs}
+                    onClick={() => handleSavedConfigSelect(config)}
+                  />
+                ))}
+              </BoardScrollSection>
+            )}
+
+            {/* Found Nearby (GPS-based) */}
+            {!hideNearby && (
+              <NearbyBoardsSection
+                open={open}
+                onBoardSelect={handleServerBoardSelect}
+              />
+            )}
+
+            {/* Empty state */}
+            {isEmpty && (
+              <Box sx={{ textAlign: 'center', py: 4, px: 2 }}>
+                <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+                  No saved boards yet. Create a new board to get started.
+                </Typography>
+                <Button variant="contained" onClick={handleOpenNewBoardForm}>
+                  Create New Board
+                </Button>
+              </Box>
+            )}
+          </>
         )}
       </SwipeableDrawer>
 
@@ -446,15 +570,38 @@ export default function BoardSelectorDrawer({
               inputProps={{ maxLength: 50 }}
             />
 
-            <Button
-              variant="contained"
-              size="large"
-              fullWidth
-              onClick={handleStartClimbing}
-              disabled={!isFormComplete}
-            >
-              Save & Select
-            </Button>
+            {showCreateBoard ? (
+              <Box sx={{ display: 'flex', gap: 1 }}>
+                <Button
+                  variant="contained"
+                  size="large"
+                  fullWidth
+                  onClick={handleStartClimbing}
+                  disabled={!isFormComplete}
+                >
+                  Quick session
+                </Button>
+                <Button
+                  variant="outlined"
+                  size="large"
+                  fullWidth
+                  onClick={() => setShowCreateBoardForm(true)}
+                  disabled={!isFormComplete}
+                >
+                  Create board
+                </Button>
+              </Box>
+            ) : (
+              <Button
+                variant="contained"
+                size="large"
+                fullWidth
+                onClick={handleStartClimbing}
+                disabled={!isFormComplete}
+              >
+                Save & Select
+              </Button>
+            )}
           </Box>
         )}
 
@@ -464,6 +611,40 @@ export default function BoardSelectorDrawer({
           </Suspense>
         )}
       </SwipeableDrawer>
+
+      {/* Create Board form drawer */}
+      {showCreateBoard && selectedBoard && selectedLayout && selectedSize && (
+        <SwipeableDrawer
+          title="Create Board"
+          placement={placement}
+          open={showCreateBoardForm}
+          onClose={() => setShowCreateBoardForm(false)}
+          height="85dvh"
+        >
+          <Suspense fallback={<Box sx={{ display: 'flex', justifyContent: 'center', py: 4 }}><CircularProgress size={32} /></Box>}>
+            <CreateBoardForm
+              boardType={selectedBoard}
+              layoutId={selectedLayout}
+              sizeId={selectedSize}
+              setIds={selectedSets.join(',')}
+              defaultAngle={selectedAngle}
+              onSuccess={(board: UserBoard) => {
+                setShowCreateBoardForm(false);
+                setShowNewBoardForm(false);
+                const url = constructBoardSlugListUrl(board.slug, board.angle);
+                if (onBoardSelected) {
+                  onBoardSelected(url);
+                  onClose();
+                } else {
+                  router.push(url);
+                  onClose();
+                }
+              }}
+              onCancel={() => setShowCreateBoardForm(false)}
+            />
+          </Suspense>
+        </SwipeableDrawer>
+      )}
     </>
   );
 }

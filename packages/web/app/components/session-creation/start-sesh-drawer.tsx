@@ -330,6 +330,9 @@ export default function StartSeshDrawer({ open, onClose, onTransitionEnd, boardC
           boardConfigs={boardConfigs}
           placement="top"
           onBoardSelected={handleCustomSelect}
+          hideNearby
+          showCreateBoard
+          startWithForm
         />
       )}
 
