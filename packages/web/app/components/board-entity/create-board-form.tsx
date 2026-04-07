@@ -101,7 +101,7 @@ export default function CreateBoardForm({
   return (
     <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
       <BoardForm
-        title="Create Board"
+        title=""
         submitLabel="Create Board"
         initialValues={{
           name: '',
