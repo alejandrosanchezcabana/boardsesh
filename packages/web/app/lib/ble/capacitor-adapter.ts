@@ -1,12 +1,20 @@
+import type { BoardName } from '@/app/lib/types';
 import type { BleConnection, BluetoothAdapter } from './types';
+import {
+  AURORA_OPTIONAL_SERVICE_UUIDS,
+  AURORA_SCAN_SERVICE_UUIDS,
+} from '@/app/components/board-bluetooth-control/bluetooth-aurora';
+import {
+  MOONBOARD_OPTIONAL_SERVICE_UUIDS,
+  MOONBOARD_SCAN_SERVICE_UUIDS,
+} from '@/app/components/board-bluetooth-control/bluetooth-moonboard';
+import {
+  MAX_BLUETOOTH_MESSAGE_SIZE,
+  UART_SERVICE_UUID,
+  UART_WRITE_CHARACTERISTIC_UUID,
+} from '@/app/components/board-bluetooth-control/bluetooth-shared';
 
-// Service UUIDs for Aurora boards (same as bluetooth.ts)
-const AURORA_ADVERTISED_SERVICE_UUID = '4488b571-7806-4df6-bcff-a2897e4953ff';
-const UART_SERVICE_UUID = '6e400001-b5a3-f393-e0a9-e50e24dcca9e';
-const UART_WRITE_UUID = '6e400002-b5a3-f393-e0a9-e50e24dcca9e';
-
-// Default MTU before negotiation (BLE spec minimum)
-const DEFAULT_MTU = 20;
+const DEFAULT_MTU = MAX_BLUETOOTH_MESSAGE_SIZE;
 
 // Small delay between chunked writes when using the default MTU.
 // Gives CoreBluetooth breathing room when sending many small chunks.
@@ -84,6 +92,8 @@ function toHexString(data: Uint8Array): string {
 const delay = (ms: number) => new Promise<void>((resolve) => setTimeout(resolve, ms));
 
 export class CapacitorBleAdapter implements BluetoothAdapter {
+  constructor(private readonly boardName: BoardName = 'kilter') {}
+
   private deviceId: string | null = null;
   private disconnectCallback: (() => void) | null = null;
   private disconnectListenerHandle: PluginListenerHandle | null = null;
@@ -104,10 +114,19 @@ export class CapacitorBleAdapter implements BluetoothAdapter {
     await ensureInitialized();
     const ble = getBlePlugin();
 
-    // Request device — shows native scan dialog on iOS
+    const services = this.boardName === 'moonboard'
+      ? [...MOONBOARD_SCAN_SERVICE_UUIDS]
+      : [...AURORA_SCAN_SERVICE_UUIDS];
+    const optionalServices = this.boardName === 'moonboard'
+      ? [...MOONBOARD_OPTIONAL_SERVICE_UUIDS]
+      : [...AURORA_OPTIONAL_SERVICE_UUIDS];
+
+    // Request device — shows native scan dialog on iOS.
+    // MoonBoard controllers advertise Nordic UART directly; Aurora boards use
+    // their own advertised service and expose UART after connection.
     const device = await ble.requestDevice({
-      services: [AURORA_ADVERTISED_SERVICE_UUID],
-      optionalServices: [UART_SERVICE_UUID],
+      services,
+      optionalServices,
     });
 
     // Connect to the device
@@ -187,7 +206,7 @@ export class CapacitorBleAdapter implements BluetoothAdapter {
       await ble.write({
         deviceId: this.deviceId,
         service: UART_SERVICE_UUID,
-        characteristic: UART_WRITE_UUID,
+        characteristic: UART_WRITE_CHARACTERISTIC_UUID,
         value: fullHex.slice(i, i + hexChunkSize),
       });
     }

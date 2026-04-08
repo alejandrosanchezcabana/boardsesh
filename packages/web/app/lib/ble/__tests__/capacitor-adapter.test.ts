@@ -1,4 +1,12 @@
 import { describe, it, expect, vi, beforeEach, afterAll } from 'vitest';
+import {
+  AURORA_OPTIONAL_SERVICE_UUIDS,
+  AURORA_SCAN_SERVICE_UUIDS,
+} from '@/app/components/board-bluetooth-control/bluetooth-aurora';
+import {
+  MOONBOARD_OPTIONAL_SERVICE_UUIDS,
+  MOONBOARD_SCAN_SERVICE_UUIDS,
+} from '@/app/components/board-bluetooth-control/bluetooth-moonboard';
 
 // Mock window.Capacitor before importing the adapter
 const mockListenerRemove = vi.fn().mockResolvedValue(undefined);
@@ -78,11 +86,22 @@ describe('CapacitorBleAdapter', () => {
       expect(connection.deviceId).toBe('dev-1');
       expect(connection.deviceName).toBe('Kilter Board');
       expect(mockBlePlugin.requestDevice).toHaveBeenCalledWith({
-        services: ['4488b571-7806-4df6-bcff-a2897e4953ff'],
-        optionalServices: ['6e400001-b5a3-f393-e0a9-e50e24dcca9e'],
+        services: [...AURORA_SCAN_SERVICE_UUIDS],
+        optionalServices: [...AURORA_OPTIONAL_SERVICE_UUIDS],
       });
       expect(mockBlePlugin.connect).toHaveBeenCalledWith({
         deviceId: 'dev-1',
+      });
+    });
+
+    it('requests Moonboard devices via Nordic UART when board is Moonboard', async () => {
+      const moonboardAdapter = new CapacitorBleAdapter('moonboard');
+
+      await moonboardAdapter.requestAndConnect();
+
+      expect(mockBlePlugin.requestDevice).toHaveBeenCalledWith({
+        services: [...MOONBOARD_SCAN_SERVICE_UUIDS],
+        optionalServices: [...MOONBOARD_OPTIONAL_SERVICE_UUIDS],
       });
     });
 

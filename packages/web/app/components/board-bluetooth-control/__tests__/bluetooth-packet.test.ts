@@ -16,12 +16,12 @@ import { describe, it, expect, vi } from 'vitest';
  *   4678 (x=-36, y=-8)  — foot hold
  */
 
-// Mock transitive dependencies so bluetooth.ts can be imported directly
+// Mock transitive dependencies so bluetooth-aurora.ts can be imported directly
 vi.mock('@/app/lib/moonboard-config', () => ({
   MOONBOARD_ENABLED: false,
 }));
 
-import { getBluetoothPacket } from '../bluetooth';
+import { getAuroraBluetoothPacket } from '../bluetooth-aurora';
 import { getLedPlacements } from '../../../lib/__generated__/led-placements-data';
 
 // ---- Packet decoder ----
@@ -76,16 +76,16 @@ const CORRECT_10x12_POSITIONS: Record<number, number> = {
   4678: 22,
 };
 
-describe('getBluetoothPacket — Aurora payload verification', () => {
+describe('getAuroraBluetoothPacket — Aurora payload verification', () => {
   it('generates correct LED positions for Kilter 10x12 Full Ride (size 25)', () => {
-    const packet = getBluetoothPacket(CLIMB_FRAMES, CORRECT_10x12_POSITIONS, 'kilter');
+    const packet = getAuroraBluetoothPacket(CLIMB_FRAMES, CORRECT_10x12_POSITIONS, 'kilter');
     const ourPositions = decodeLedPositions(packet).map((l) => l.position);
     const auroraPositions = decodeLedPositions(AURORA_10x12_HEX).map((l) => l.position);
     expect(ourPositions).toEqual(auroraPositions);
   });
 
   it('generates correct LED positions for Kilter 8x12 Full Ride (size 23)', () => {
-    const packet = getBluetoothPacket(CLIMB_FRAMES, CORRECT_8x12_POSITIONS, 'kilter');
+    const packet = getAuroraBluetoothPacket(CLIMB_FRAMES, CORRECT_8x12_POSITIONS, 'kilter');
     const ourPositions = decodeLedPositions(packet).map((l) => l.position);
     const auroraPositions = decodeLedPositions(AURORA_8x12_HEX).map((l) => l.position);
     expect(ourPositions).toEqual(auroraPositions);
@@ -95,7 +95,7 @@ describe('getBluetoothPacket — Aurora payload verification', () => {
     const sparseLedMap = { 4131: 39, 4421: 389 };
     const frames = 'p4131r42p4421r42p9999r45';
 
-    const packet = getBluetoothPacket(frames, sparseLedMap, 'kilter');
+    const packet = getAuroraBluetoothPacket(frames, sparseLedMap, 'kilter');
     const leds = decodeLedPositions(packet);
 
     // 9999 should be skipped, not encoded as position 0
@@ -145,14 +145,14 @@ function toHex(packet: Uint8Array): string {
     .join('');
 }
 
-describe('getBluetoothPacket — Kilter Original (Layout 1) payload verification', () => {
+describe('getAuroraBluetoothPacket — Kilter Original (Layout 1) payload verification', () => {
   it('generates correct full packet for Kilter 12x12 Original (size 10)', () => {
-    const packet = getBluetoothPacket(CORNERS_12x12_FRAMES, CORRECT_12x12_POSITIONS, 'kilter');
+    const packet = getAuroraBluetoothPacket(CORNERS_12x12_FRAMES, CORRECT_12x12_POSITIONS, 'kilter');
     expect(toHex(packet)).toBe(VALIDATED_12x12_HEX);
   });
 
   it('generates correct full packet for Kilter 8x12 Original (size 8)', () => {
-    const packet = getBluetoothPacket(CORNERS_8x12_ORIGINAL_FRAMES, CORRECT_8x12_ORIGINAL_POSITIONS, 'kilter');
+    const packet = getAuroraBluetoothPacket(CORNERS_8x12_ORIGINAL_FRAMES, CORRECT_8x12_ORIGINAL_POSITIONS, 'kilter');
     expect(toHex(packet)).toBe(VALIDATED_8x12_ORIGINAL_HEX);
   });
 
@@ -174,7 +174,7 @@ describe('getBluetoothPacket — Kilter Original (Layout 1) payload verification
 
   it('12x12 full packet matches when using real LED data', () => {
     const ledMap = getLedPlacements('kilter', 1, 10);
-    const packet = getBluetoothPacket(CORNERS_12x12_FRAMES, ledMap, 'kilter');
+    const packet = getAuroraBluetoothPacket(CORNERS_12x12_FRAMES, ledMap, 'kilter');
     const ourPositions = decodeLedPositions(packet).map((l) => l.position);
     const validatedPositions = decodeLedPositions(VALIDATED_12x12_HEX).map((l) => l.position);
     expect(ourPositions).toEqual(validatedPositions);
@@ -182,7 +182,7 @@ describe('getBluetoothPacket — Kilter Original (Layout 1) payload verification
 
   it('8x12 Original full packet matches when using real LED data', () => {
     const ledMap = getLedPlacements('kilter', 1, 8);
-    const packet = getBluetoothPacket(CORNERS_8x12_ORIGINAL_FRAMES, ledMap, 'kilter');
+    const packet = getAuroraBluetoothPacket(CORNERS_8x12_ORIGINAL_FRAMES, ledMap, 'kilter');
     const ourPositions = decodeLedPositions(packet).map((l) => l.position);
     const validatedPositions = decodeLedPositions(VALIDATED_8x12_ORIGINAL_HEX).map((l) => l.position);
     expect(ourPositions).toEqual(validatedPositions);

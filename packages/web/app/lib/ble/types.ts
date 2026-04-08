@@ -14,9 +14,8 @@ export interface BluetoothAdapter {
   disconnect(): Promise<void>;
 
   /**
-   * Write the COMPLETE packet to the board's UART characteristic.
+   * Write a complete board payload to the UART characteristic.
    * The adapter handles transport-level chunking internally.
-   * Callers pass the full output of getBluetoothPacket().
    *
    * If `signal` is provided and aborted, remaining chunks are skipped
    * and the method throws an `AbortError`.

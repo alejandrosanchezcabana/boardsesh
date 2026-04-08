@@ -1,12 +1,17 @@
+import type { BoardName } from '@/app/lib/types';
+import { AURORA_REQUEST_DEVICE_OPTIONS } from '@/app/components/board-bluetooth-control/bluetooth-aurora';
+import { MOONBOARD_REQUEST_DEVICE_OPTIONS } from '@/app/components/board-bluetooth-control/bluetooth-moonboard';
 import {
-  getCharacteristic,
-  requestDevice,
+  getUartCharacteristic,
+  requestBluetoothDevice,
   splitMessages,
   writeCharacteristicSeries,
-} from '@/app/components/board-bluetooth-control/bluetooth';
+} from '@/app/components/board-bluetooth-control/bluetooth-shared';
 import type { BleConnection, BluetoothAdapter } from './types';
 
 export class WebBluetoothAdapter implements BluetoothAdapter {
+  constructor(private readonly boardName: BoardName = 'kilter') {}
+
   private device: BluetoothDevice | null = null;
   private characteristic: BluetoothRemoteGATTCharacteristic | null = null;
   private disconnectHandler: (() => void) | null = null;
@@ -19,8 +24,13 @@ export class WebBluetoothAdapter implements BluetoothAdapter {
     // Clean up any existing device listeners
     this.cleanupListeners();
 
-    const device = await requestDevice();
-    const characteristic = await getCharacteristic(device);
+    const requestOptions =
+      this.boardName === 'moonboard'
+        ? MOONBOARD_REQUEST_DEVICE_OPTIONS
+        : AURORA_REQUEST_DEVICE_OPTIONS;
+
+    const device = await requestBluetoothDevice(requestOptions);
+    const characteristic = await getUartCharacteristic(device);
 
     if (!characteristic) {
       throw new Error('Failed to get UART characteristic');
