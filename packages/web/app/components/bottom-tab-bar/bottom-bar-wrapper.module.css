@@ -1,6 +1,8 @@
 .bottomBarWrapper {
+  --tab-bar-top-radius: 16px;
   --tab-bar-bottom-radius: 16px;
   --tab-bar-safe-area-padding: 0px;
+  --tab-bar-bottom-extension: 0px;
   position: fixed;
   bottom: 0;
   left: 2dvw;
@@ -11,11 +13,21 @@
 }
 
 .nativeApp {
+  --tab-bar-top-radius: 0px;
   --tab-bar-bottom-radius: 0px;
   --tab-bar-safe-area-padding: env(safe-area-inset-bottom, 0px);
   left: 0;
   right: 0;
-  border-radius: 16px 16px 0 0;
+  border-radius: 0;
+}
+
+/* iOS Capacitor: env(safe-area-inset-bottom) may return 0 depending on
+   how the WKWebView is configured. Use a minimum of 34px to guarantee
+   coverage of the home indicator and screen corner rounding area. */
+@supports (-webkit-touch-callout: none) {
+  .nativeApp {
+    --tab-bar-safe-area-padding: max(env(safe-area-inset-bottom, 0px), 34px);
+  }
 }
 
 @media (min-width: 768px) {
@@ -30,13 +42,20 @@
 /* Mobile Safari renders a grey rectangle under the chrome when bottom: 0,
    so keep the 2dvh offset. Instead of a separate ::after pseudo-element
    (which creates a visible backdrop-filter seam), extend the BottomNavigation
-   itself via --tab-bar-safe-area-padding so the frosted glass is one element. */
+   below the wrapper via negative margin so the frosted glass is one element.
+   The wrapper has no overflow:hidden, so the child visually overflows to
+   cover the 2dvh gap plus any safe area beyond it. */
 @supports (-webkit-touch-callout: none) {
   @media (hover: none) and (pointer: coarse) {
     .bottomBarWrapper:not(.nativeApp) {
+      --tab-bar-top-radius: 0px;
       --tab-bar-bottom-radius: 0px;
-      --tab-bar-safe-area-padding: 2dvh;
+      --tab-bar-safe-area-padding: max(2dvh, env(safe-area-inset-bottom, 0px));
+      --tab-bar-bottom-extension: calc(-1 * max(2dvh, env(safe-area-inset-bottom, 0px)));
       bottom: 2dvh;
+      left: 0;
+      right: 0;
+      border-radius: 0;
     }
   }
 }
