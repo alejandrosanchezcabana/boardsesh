@@ -11,25 +11,33 @@ const mockAdapter = {
   onDisconnect: vi.fn(() => vi.fn()),
 };
 
-const mockCreateBluetoothAdapter = vi.fn(() => Promise.resolve(mockAdapter));
-const mockGetAuroraBluetoothPacket = vi.fn(() => new Uint8Array([1, 2, 3]));
-const mockGetMoonboardBluetoothPacket = vi.fn(() => new Uint8Array([9, 8, 7]));
-const mockGetLedPlacements = vi.fn(() => ({ 4131: 39 }));
+const mockCreateBluetoothAdapter = vi.fn<(boardName: string) => Promise<typeof mockAdapter>>(
+  () => Promise.resolve(mockAdapter),
+);
+const mockGetAuroraBluetoothPacket = vi.fn<
+  (frames: string, placementPositions: Record<number, number>, boardName: string) => Uint8Array
+>(() => new Uint8Array([1, 2, 3]));
+const mockGetMoonboardBluetoothPacket = vi.fn<(frames: string) => Uint8Array>(
+  () => new Uint8Array([9, 8, 7]),
+);
+const mockGetLedPlacements = vi.fn<
+  (boardName: string, layoutId: number, sizeId: number) => Record<number, number>
+>(() => ({ 4131: 39 }));
 
 vi.mock('@/app/lib/ble/adapter-factory', () => ({
-  createBluetoothAdapter: (...args: unknown[]) => mockCreateBluetoothAdapter(...args),
+  createBluetoothAdapter: mockCreateBluetoothAdapter,
 }));
 
 vi.mock('../bluetooth-aurora', () => ({
-  getAuroraBluetoothPacket: (...args: unknown[]) => mockGetAuroraBluetoothPacket(...args),
+  getAuroraBluetoothPacket: mockGetAuroraBluetoothPacket,
 }));
 
 vi.mock('../bluetooth-moonboard', () => ({
-  getMoonboardBluetoothPacket: (...args: unknown[]) => mockGetMoonboardBluetoothPacket(...args),
+  getMoonboardBluetoothPacket: mockGetMoonboardBluetoothPacket,
 }));
 
 vi.mock('@/app/lib/__generated__/led-placements-data', () => ({
-  getLedPlacements: (...args: unknown[]) => mockGetLedPlacements(...args),
+  getLedPlacements: mockGetLedPlacements,
 }));
 
 vi.mock('../use-wake-lock', () => ({

@@ -5,6 +5,9 @@ const MOONBOARD_FRAME_PREFIX = 'l#';
 const MOONBOARD_FRAME_SUFFIX = '#';
 const MOONBOARD_DEVICE_NAME_PREFIXES = ['MoonBoard', 'Moonboard'] as const;
 
+// Boardsesh persists MoonBoard frames with the shared basic role codes only.
+// The newer controller firmware can render extra preview-only roles, but the
+// web client does not emit them in climb frames.
 const MOONBOARD_ROLE_MAP = {
   42: 'S',
   43: 'P',

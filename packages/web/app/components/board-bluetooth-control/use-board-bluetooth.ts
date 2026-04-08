@@ -69,21 +69,21 @@ export function useBoardBluetooth({ boardDetails, onConnectionChange }: UseBoard
     async (frames: string, mirrored: boolean = false, signal?: AbortSignal) => {
       if (!adapterRef.current || !frames || !boardDetails) return;
 
-      let framesToSend = frames;
-
       try {
+        if (boardDetails.board_name === 'moonboard') {
+          const bluetoothPacket = getMoonboardBluetoothPacket(frames);
+          await adapterRef.current.write(bluetoothPacket, signal);
+          return true;
+        }
+
+        let framesToSend = frames;
+
         if (mirrored && boardDetails.supportsMirroring === true) {
           if (!boardDetails.holdsData || Object.keys(boardDetails.holdsData).length === 0) {
             console.error('Cannot mirror frames: holdsData is missing or empty');
             return false;
           }
           framesToSend = convertToMirroredFramesString(frames, boardDetails.holdsData);
-        }
-
-        if (boardDetails.board_name === 'moonboard') {
-          const bluetoothPacket = getMoonboardBluetoothPacket(framesToSend);
-          await adapterRef.current.write(bluetoothPacket, signal);
-          return true;
         }
 
         if (!cachedGetLedPlacements) {
