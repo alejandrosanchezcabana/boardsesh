@@ -88,7 +88,12 @@ vi.mock('@/app/components/board-renderer/types', () => ({
       45: { name: 'FOOT', color: '#FFAA00' },
     },
     tension: {},
-    moonboard: {},
+    moonboard: {
+      42: { name: 'STARTING', color: '#00FF00' },
+      43: { name: 'HAND', color: '#0000FF' },
+      44: { name: 'FINISH', color: '#FF0000' },
+      46: { name: 'AUX', color: '#FFE066', renderStyle: 'above-marker' },
+    },
   },
 }));
 
@@ -165,6 +170,42 @@ describe('board-render API route', () => {
     const configJson = mockRenderOverlay.mock.calls[0][0];
     const config = JSON.parse(configJson);
     expect(config.mirrored).toBe(false);
+  });
+
+  it('passes moonboard renderStyle metadata through to the WASM config', async () => {
+    const { getBoardDetailsForBoard } = await import('@/app/lib/board-utils');
+    vi.mocked(getBoardDetailsForBoard).mockReturnValueOnce({
+      board_name: 'moonboard',
+      layout_id: 3,
+      size_id: 1,
+      set_ids: [5, 6],
+      boardWidth: 650,
+      boardHeight: 1000,
+      holdsData: [
+        { id: 1, mirroredHoldId: null, cx: 100, cy: 200, r: 20 },
+      ],
+      images_to_holds: { 'moonboard-bg.png': [] },
+      edge_left: 0,
+      edge_right: 11,
+      edge_bottom: 0,
+      edge_top: 18,
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    } as any);
+
+    await GET(makeRequest({
+      board_name: 'moonboard',
+      layout_id: '3',
+      size_id: '1',
+      set_ids: '5,6',
+      frames: 'p1r46',
+    }));
+
+    const configJson = mockRenderOverlay.mock.calls[0][0];
+    const config = JSON.parse(configJson);
+    expect(config.hold_state_map['46']).toEqual({
+      color: '#FFE066',
+      renderStyle: 'above-marker',
+    });
   });
 
   it('returns 500 when render throws', async () => {

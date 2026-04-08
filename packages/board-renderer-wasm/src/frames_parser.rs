@@ -24,7 +24,11 @@ pub fn parse_frames(
             let state_info = hold_state_map.get(&state_code)?;
             let color = Color::from_hex(&state_info.color)?;
 
-            Some(ParsedHold { hold_id, color })
+            Some(ParsedHold {
+                hold_id,
+                color,
+                render_style: state_info.render_style,
+            })
         })
         .collect()
 }
@@ -35,10 +39,10 @@ mod tests {
 
     fn kilter_state_map() -> HashMap<u32, HoldStateInfo> {
         let mut map = HashMap::new();
-        map.insert(42, HoldStateInfo { color: "#00FF00".into() });
-        map.insert(43, HoldStateInfo { color: "#00FFFF".into() });
-        map.insert(44, HoldStateInfo { color: "#FF00FF".into() });
-        map.insert(45, HoldStateInfo { color: "#FFAA00".into() });
+        map.insert(42, HoldStateInfo { color: "#00FF00".into(), render_style: Default::default() });
+        map.insert(43, HoldStateInfo { color: "#00FFFF".into(), render_style: Default::default() });
+        map.insert(44, HoldStateInfo { color: "#FF00FF".into(), render_style: Default::default() });
+        map.insert(45, HoldStateInfo { color: "#FFAA00".into(), render_style: Default::default() });
         map
     }
 
@@ -73,5 +77,18 @@ mod tests {
         let holds = parse_frames("p1r99p2r42", &kilter_state_map());
         assert_eq!(holds.len(), 1);
         assert_eq!(holds[0].hold_id, 2);
+    }
+
+    #[test]
+    fn test_parse_render_style() {
+        let mut state_map = kilter_state_map();
+        state_map.insert(46, HoldStateInfo {
+            color: "#FFE066".into(),
+            render_style: crate::types::HoldRenderStyle::AboveMarker,
+        });
+
+        let holds = parse_frames("p1r46", &state_map);
+        assert_eq!(holds.len(), 1);
+        assert_eq!(holds[0].render_style, crate::types::HoldRenderStyle::AboveMarker);
     }
 }

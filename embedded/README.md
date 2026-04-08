@@ -8,16 +8,19 @@ This directory contains ESP32 firmware projects and shared libraries for Boardse
 embedded/
 ├── libs/                          # Shared PlatformIO libraries
 │   ├── aurora-protocol/           # Kilter/Tension BLE protocol decoder
+│   ├── moonboard-protocol/        # MoonBoard BLE ASCII protocol decoder
 │   ├── led-controller/            # FastLED abstraction
 │   ├── config-manager/            # NVS persistence
 │   ├── log-buffer/                # Ring buffer logging
 │   ├── wifi-utils/                # WiFi connection wrapper
 │   ├── graphql-ws-client/         # WebSocket client
 │   ├── nordic-uart-ble/           # BLE GATT server (Nordic UART Service)
+│   ├── moonboard-uart-ble/        # BLE GATT server for MoonBoard UART payloads
 │   └── esp-web-server/            # HTTP configuration server
 │
 └── projects/
-    └── board-controller/          # Main firmware for LED board control
+    ├── board-controller/          # Main firmware for LED board control
+    └── moonboard-dev-server/      # MoonBoard BLE controller + local preview UI
 ```
 
 ## Development Setup
@@ -84,6 +87,15 @@ Main firmware for controlling Kilter/Tension climbing board LEDs. Features:
 - **GraphQL-WS Client**: Real-time sync with Boardsesh backend
 - **Web Config**: HTTP server for WiFi and device setup
 
+### moonboard-dev-server
+
+Development firmware for MoonBoard BLE decoding and browser-based previewing. Features:
+
+- **MoonBoard BLE UART**: Accepts MoonBoard app payloads over Nordic UART
+- **MoonBoard Protocol**: Parses `l#...#` ASCII payloads into LEDs + Boardsesh frames
+- **Headless Preview UI**: Local page at `/moonboard` with layout and set selection
+- **Remote Renderer Integration**: Reloads preview images from `www.boardsesh.com/api/internal/board-render`
+
 ## Adding a New Project
 
 1. Create directory: `mkdir -p projects/my-project/{src,data,test,scripts}`
@@ -134,6 +146,9 @@ Most editors support clang-format:
 bun run controller:build         # Build board-controller
 bun run controller:upload        # Flash board-controller
 bun run controller:monitor       # Serial monitor
+bun run moonboard:build          # Build moonboard-dev-server
+bun run moonboard:upload         # Flash moonboard-dev-server
+bun run moonboard:monitor        # Serial monitor for moonboard-dev-server
 bun run controller:format        # Format all C++ code
 bun run controller:format:check  # Check C++ formatting
 ```

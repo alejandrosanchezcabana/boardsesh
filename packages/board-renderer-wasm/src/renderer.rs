@@ -4,7 +4,7 @@ use tiny_skia::{
 };
 
 use crate::frames_parser::parse_frames;
-use crate::types::{HoldData, RenderConfig};
+use crate::types::{HoldData, HoldRenderStyle, RenderConfig};
 
 /// Render a transparent overlay with hold circles drawn on it.
 /// Returns RGBA pixel data and dimensions (width, height).
@@ -68,22 +68,41 @@ pub fn render_overlay(config: &RenderConfig) -> Result<(Vec<u8>, u32, u32), Stri
         let cy = render_hold.cy * scale_y;
         let r = render_hold.r * scale_x;
 
-        let path = match PathBuilder::from_circle(cx, cy, r) {
-            Some(p) => p,
-            None => continue,
-        };
-
         let color = parsed.color;
 
-        // Thumbnail: filled circle with 0.3 opacity + stroke
-        // Full size: stroke only, no fill
-        if config.thumbnail {
-            paint.set_color(SkiaColor::from_rgba8(color.r, color.g, color.b, 77)); // 0.3 * 255 ≈ 77
-            pixmap.fill_path(&path, &paint, FillRule::Winding, transform, None);
-        }
+        match parsed.render_style {
+            HoldRenderStyle::Circle => {
+                let path = match PathBuilder::from_circle(cx, cy, r) {
+                    Some(p) => p,
+                    None => continue,
+                };
 
-        paint.set_color(SkiaColor::from_rgba8(color.r, color.g, color.b, 255));
-        pixmap.stroke_path(&path, &paint, &stroke_style, transform, None);
+                // Thumbnail: filled circle with 0.3 opacity + stroke
+                // Full size: stroke only, no fill
+                if config.thumbnail {
+                    paint.set_color(SkiaColor::from_rgba8(color.r, color.g, color.b, 77)); // 0.3 * 255 ≈ 77
+                    pixmap.fill_path(&path, &paint, FillRule::Winding, transform, None);
+                }
+
+                paint.set_color(SkiaColor::from_rgba8(color.r, color.g, color.b, 255));
+                pixmap.stroke_path(&path, &paint, &stroke_style, transform, None);
+            }
+            HoldRenderStyle::AboveMarker => {
+                let marker_radius = (r * if config.thumbnail { 0.62 } else { 0.48 }).max(2.0);
+                let marker_cy = cy - (r * if config.thumbnail { 1.28 } else { 1.15 });
+                let path = match PathBuilder::from_circle(cx, marker_cy, marker_radius) {
+                    Some(p) => p,
+                    None => continue,
+                };
+
+                paint.set_color(SkiaColor::from_rgba8(color.r, color.g, color.b, 255));
+                pixmap.fill_path(&path, &paint, FillRule::Winding, transform, None);
+
+                let mut marker_stroke = Stroke::default();
+                marker_stroke.width = (stroke_width * 0.45).max(2.0);
+                pixmap.stroke_path(&path, &paint, &marker_stroke, transform, None);
+            }
+        }
     }
 
     let data = pixmap.data().to_vec();
@@ -97,9 +116,9 @@ mod tests {
 
     fn test_config() -> RenderConfig {
         let mut hold_state_map = HashMap::new();
-        hold_state_map.insert(42, HoldStateInfo { color: "#00FF00".into() });
-        hold_state_map.insert(43, HoldStateInfo { color: "#00FFFF".into() });
-        hold_state_map.insert(44, HoldStateInfo { color: "#FF00FF".into() });
+        hold_state_map.insert(42, HoldStateInfo { color: "#00FF00".into(), render_style: Default::default() });
+        hold_state_map.insert(43, HoldStateInfo { color: "#00FFFF".into(), render_style: Default::default() });
+        hold_state_map.insert(44, HoldStateInfo { color: "#FF00FF".into(), render_style: Default::default() });
 
         RenderConfig {
             board_width: 1080.0,
@@ -149,5 +168,27 @@ mod tests {
         let mut config = test_config();
         config.output_width = 0;
         assert!(render_overlay(&config).is_err());
+    }
+
+    #[test]
+    fn test_render_above_marker_differs_from_circle_render() {
+        let mut aux_config = test_config();
+        aux_config.frames = "p1r46".into();
+        aux_config.hold_state_map.insert(46, HoldStateInfo {
+            color: "#FFE066".into(),
+            render_style: HoldRenderStyle::AboveMarker,
+        });
+
+        let mut circle_config = test_config();
+        circle_config.frames = "p1r46".into();
+        circle_config.hold_state_map.insert(46, HoldStateInfo {
+            color: "#FFE066".into(),
+            render_style: HoldRenderStyle::Circle,
+        });
+
+        let (aux_data, _, _) = render_overlay(&aux_config).unwrap();
+        let (circle_data, _, _) = render_overlay(&circle_config).unwrap();
+
+        assert_ne!(aux_data, circle_data);
     }
 }

@@ -1,6 +1,14 @@
 use serde::Deserialize;
 use std::collections::HashMap;
 
+#[derive(Deserialize, Clone, Copy, PartialEq, Eq, Default)]
+#[serde(rename_all = "kebab-case")]
+pub enum HoldRenderStyle {
+    #[default]
+    Circle,
+    AboveMarker,
+}
+
 #[derive(Deserialize)]
 pub struct RenderConfig {
     pub board_width: f32,
@@ -26,11 +34,14 @@ pub struct HoldData {
 #[derive(Deserialize, Clone)]
 pub struct HoldStateInfo {
     pub color: String,
+    #[serde(default, alias = "renderStyle")]
+    pub render_style: HoldRenderStyle,
 }
 
 pub struct ParsedHold {
     pub hold_id: u32,
     pub color: Color,
+    pub render_style: HoldRenderStyle,
 }
 
 #[derive(Clone, Copy)]

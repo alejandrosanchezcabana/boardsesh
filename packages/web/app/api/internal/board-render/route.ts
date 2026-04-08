@@ -152,10 +152,13 @@ export async function GET(request: NextRequest) {
     });
 
     // Build hold state map for this board
-    const holdStateMap: Record<number, { color: string }> = {};
+    const holdStateMap: Record<number, { color: string; renderStyle?: string }> = {};
     const boardStates = HOLD_STATE_MAP[boardName as BoardName];
     for (const [code, info] of Object.entries(boardStates)) {
-      holdStateMap[Number(code)] = { color: info.color };
+      holdStateMap[Number(code)] = {
+        color: info.color,
+        ...(info.renderStyle ? { renderStyle: info.renderStyle } : {}),
+      };
     }
 
     // Build the render config
