@@ -34,7 +34,7 @@ export default function ClimbDetailShellClient({
 
   if (mode === 'play') {
     return (
-      <div className={styles.mobileScrollLayout}>
+      <div className={styles.mobileScrollLayout} data-scroll-container>
         <div className={styles.aboveFold}>{aboveFold}</div>
         <div className={styles.belowFold}>
           {showSections && <CollapsibleSection sections={sections} />}

@@ -27,6 +27,8 @@ export interface UseCardSwipeNavigationReturn {
   enterDirection: 'from-left' | 'from-right' | null;
   clearEnterAnimation: () => void;
   resetSwipe: () => void;
+  /** Ref indicating the current swipe direction: true=horizontal, false=vertical, null=undecided */
+  isHorizontalSwipeRef: React.RefObject<boolean | null>;
 }
 
 export function useCardSwipeNavigation({
@@ -42,7 +44,7 @@ export function useCardSwipeNavigation({
   const [isAnimating, setIsAnimating] = useState(false);
   const [animationDirection, setAnimationDirection] = useState<'left' | 'right' | null>(null);
   const [enterDirection, setEnterDirection] = useState<'from-left' | 'from-right' | null>(null);
-  const { detect: detectDirection, reset: resetDirection } = useSwipeDirection();
+  const { detect: detectDirection, reset: resetDirection, isHorizontalRef } = useSwipeDirection();
   const animatingRef = useRef(false);
 
   const resetSwipe = useCallback(() => {
@@ -157,6 +159,9 @@ export function useCardSwipeNavigation({
     },
     trackMouse: false,
     trackTouch: true,
+    // preventScrollOnSwipe doesn't work with React 18's passive touch listeners.
+    // Scroll prevention is handled via a native non-passive touchmove listener
+    // in the component that renders the swipeable element.
     preventScrollOnSwipe: false,
   });
 
@@ -168,6 +173,7 @@ export function useCardSwipeNavigation({
     enterDirection,
     clearEnterAnimation,
     resetSwipe,
+    isHorizontalSwipeRef: isHorizontalRef,
   };
 }
 

@@ -16,6 +16,8 @@ interface UseZoomPanReturn {
   contentRef: React.RefObject<HTMLDivElement | null>;
   isZoomed: boolean;
   resetZoom: () => void;
+  /** Spread onto the gesture target element: <div {...gestureHandlers} /> */
+  gestureHandlers: ReturnType<ReturnType<typeof useGesture>>;
 }
 
 export function useZoomPan({ enabled = true }: UseZoomPanOptions = {}): UseZoomPanReturn {
@@ -48,7 +50,9 @@ export function useZoomPan({ enabled = true }: UseZoomPanOptions = {}): UseZoomP
     const el = contentRef.current;
     if (!el) return;
 
-    if (animate) {
+    const newTransform = scale === 1 ? '' : `scale(${scale}) translate(${x / scale}px, ${y / scale}px)`;
+
+    if (animate && el.style.transform !== newTransform) {
       isTransitioningRef.current = true;
       el.style.transition = 'transform 0.25s ease-out';
       const onEnd = () => {
@@ -57,11 +61,17 @@ export function useZoomPan({ enabled = true }: UseZoomPanOptions = {}): UseZoomP
         el.removeEventListener('transitionend', onEnd);
       };
       el.addEventListener('transitionend', onEnd, { once: true });
+      // Fallback: clear transitioning state if transitionend doesn't fire
+      // (e.g. element hidden by parent animation, browser skips transition)
+      setTimeout(() => {
+        isTransitioningRef.current = false;
+      }, 300);
     } else {
       el.style.transition = '';
+      isTransitioningRef.current = false;
     }
 
-    el.style.transform = scale === 1 ? '' : `scale(${scale}) translate(${x / scale}px, ${y / scale}px)`;
+    el.style.transform = newTransform;
   }, []);
 
   const resetZoom = useCallback(() => {
@@ -74,7 +84,12 @@ export function useZoomPan({ enabled = true }: UseZoomPanOptions = {}): UseZoomP
   // Pinch origin tracking
   const pinchOriginRef = useRef({ x: 0, y: 0 });
 
-  useGesture(
+  // Use React prop-based binding (NOT target) so that event handlers fire
+  // via React's synthetic event system, which doesn't block native scroll.
+  // The browser handles single-finger vertical scroll natively via
+  // touch-action: pan-y, and the gesture library detects pinch-to-zoom
+  // from the same pointer events without interference.
+  const bind = useGesture(
     {
       onPinch: ({ origin: [ox, oy], first, offset: [s], memo }) => {
         if (!enabled || isTransitioningRef.current) return memo;
@@ -175,12 +190,12 @@ export function useZoomPan({ enabled = true }: UseZoomPanOptions = {}): UseZoomP
       },
     },
     {
-      target: containerElRef,
       pinch: {
         scaleBounds: { min: MIN_SCALE, max: MAX_SCALE },
         from: () => [scaleRef.current, 0],
       },
       drag: {
+        enabled: isZoomed,
         from: () => [translateRef.current.x, translateRef.current.y],
         filterTaps: true,
         pointer: { capture: false },
@@ -191,7 +206,6 @@ export function useZoomPan({ enabled = true }: UseZoomPanOptions = {}): UseZoomP
     },
   );
 
-  // Ref callback to set up the container element
   const containerRef = useCallback((node: HTMLDivElement | null) => {
     containerElRef.current = node;
   }, []);
@@ -211,5 +225,6 @@ export function useZoomPan({ enabled = true }: UseZoomPanOptions = {}): UseZoomP
     contentRef,
     isZoomed,
     resetZoom,
+    gestureHandlers: bind(),
   };
 }

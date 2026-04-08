@@ -96,6 +96,8 @@ describe('useZoomPan', () => {
     const { result } = renderHook(() => useZoomPan());
 
     const contentEl = document.createElement('div');
+    // Simulate a zoomed state so the transform actually changes on reset
+    contentEl.style.transform = 'scale(2) translate(10px, 10px)';
     const addEventSpy = vi.spyOn(contentEl, 'addEventListener');
     Object.defineProperty(result.current.contentRef, 'current', {
       writable: true,
@@ -118,6 +120,8 @@ describe('useZoomPan', () => {
     const { result } = renderHook(() => useZoomPan());
 
     const contentEl = document.createElement('div');
+    // Simulate a zoomed state so the animated reset path executes
+    contentEl.style.transform = 'scale(2) translate(10px, 10px)';
     Object.defineProperty(result.current.contentRef, 'current', {
       writable: true,
       value: contentEl,

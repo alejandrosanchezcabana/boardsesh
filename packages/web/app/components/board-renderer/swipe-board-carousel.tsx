@@ -37,6 +37,7 @@ export interface SwipeBoardCarouselProps {
   showZoomHint?: boolean;
   isDrawerOpen?: boolean;
   overlay?: React.ReactNode;
+  onZoomChange?: (zoomed: boolean) => void;
 }
 
 const SwipeBoardCarousel = React.memo<SwipeBoardCarouselProps>(({
@@ -55,11 +56,12 @@ const SwipeBoardCarousel = React.memo<SwipeBoardCarouselProps>(({
   showZoomHint,
   isDrawerOpen,
   overlay,
+  onZoomChange: onZoomChangeProp,
 }) => {
   const enterFallbackRef = useRef<NodeJS.Timeout | null>(null);
   const [isZoomed, setIsZoomed] = useState(false);
 
-  const { swipeHandlers, swipeOffset, isAnimating, animationDirection, enterDirection, clearEnterAnimation } =
+  const { swipeHandlers, swipeOffset, isAnimating, animationDirection, enterDirection, clearEnterAnimation, isHorizontalSwipeRef } =
     useCardSwipeNavigation({
       onSwipeNext,
       onSwipePrevious,
@@ -107,11 +109,30 @@ const SwipeBoardCarousel = React.memo<SwipeBoardCarouselProps>(({
 
   const handleZoomChange = useCallback((zoomed: boolean) => {
     setIsZoomed(zoomed);
-  }, []);
+    onZoomChangeProp?.(zoomed);
+  }, [onZoomChangeProp]);
 
-  // Merge swipe ref and double-tap ref into one callback ref
+  // Prevent vertical scroll during horizontal card swipes.
+  // touch-action: pan-y enables compositor-driven scroll that ignores React 18's
+  // passive preventDefault(). A native non-passive listener forces the compositor
+  // to wait for our decision before scrolling.
+  const carouselElRef = useRef<HTMLElement | null>(null);
+  useEffect(() => {
+    const el = carouselElRef.current;
+    if (!el) return;
+    const handler = (e: TouchEvent) => {
+      if (isHorizontalSwipeRef.current === true) {
+        e.preventDefault();
+      }
+    };
+    el.addEventListener('touchmove', handler, { passive: false });
+    return () => el.removeEventListener('touchmove', handler);
+  }, [isHorizontalSwipeRef]);
+
+  // Merge swipe ref, double-tap ref, and carousel ref into one callback ref
   const mergedRef = useCallback(
     (node: HTMLElement | null) => {
+      carouselElRef.current = node;
       doubleTapRef(node);
       if (swipeHandlers.ref) {
         // react-swipeable ref callback

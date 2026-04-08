@@ -47,8 +47,12 @@ export function filterLogbookByTimeframe(
       return logbook.filter((entry) => dayjs(entry.climbed_at).isAfter(now.subtract(1, 'year')));
     case 'custom':
       return logbook.filter((entry) => {
-        const climbedAt = dayjs(entry.climbed_at);
-        return climbedAt.isSameOrAfter(dayjs(fromDate), 'day') && climbedAt.isSameOrBefore(dayjs(toDate), 'day');
+        // Compare date strings only (YYYY-MM-DD) to avoid timezone issues.
+        // climbed_at is an ISO 8601 UTC timestamp, but the user picks calendar
+        // dates — matching on the date portion keeps the filter intuitive and
+        // timezone-agnostic.
+        const dateStr = entry.climbed_at.slice(0, 10); // 'YYYY-MM-DD'
+        return dateStr >= fromDate && dateStr <= toDate;
       });
     case 'all':
     default:

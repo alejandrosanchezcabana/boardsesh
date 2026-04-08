@@ -2,9 +2,7 @@
 
 import React, { useCallback, useEffect, useLayoutEffect, useRef, useState, useMemo, useDeferredValue } from 'react';
 import MuiBadge from '@mui/material/Badge';
-import MuiButton from '@mui/material/Button';
 import IconButton from '@mui/material/IconButton';
-import Stack from '@mui/material/Stack';
 import SyncOutlined from '@mui/icons-material/SyncOutlined';
 import FavoriteBorderOutlined from '@mui/icons-material/FavoriteBorderOutlined';
 import Favorite from '@mui/icons-material/Favorite';
@@ -12,10 +10,6 @@ import SkipPreviousOutlined from '@mui/icons-material/SkipPreviousOutlined';
 import SkipNextOutlined from '@mui/icons-material/SkipNextOutlined';
 import MoreHorizOutlined from '@mui/icons-material/MoreHorizOutlined';
 import FormatListBulletedOutlined from '@mui/icons-material/FormatListBulletedOutlined';
-import DeleteOutlined from '@mui/icons-material/DeleteOutlined';
-import EditOutlined from '@mui/icons-material/EditOutlined';
-import CloseOutlined from '@mui/icons-material/CloseOutlined';
-import HistoryOutlined from '@mui/icons-material/HistoryOutlined';
 import CheckOutlined from '@mui/icons-material/CheckOutlined';
 import { usePathname } from 'next/navigation';
 import { useQueueActions, useCurrentClimb, useQueueList, useSessionData } from '../graphql-queue';
@@ -26,7 +20,6 @@ import PlaylistSelectionContent from '../climb-actions/playlist-selection-conten
 import DrawerClimbHeader from '../climb-card/drawer-climb-header';
 import { ShareBoardButton } from '../board-page/share-button';
 import { useBoardProvider } from '../board-provider/board-provider-context';
-import QueueList, { QueueListHandle } from '../queue-control/queue-list';
 import SwipeBoardCarousel from '../board-renderer/swipe-board-carousel';
 import { useWakeLock } from '../board-bluetooth-control/use-wake-lock';
 import { themeTokens } from '@/app/theme/theme-config';
@@ -35,13 +28,13 @@ import ClimbDetailHeader from '@/app/components/climb-detail/climb-detail-header
 import { LogAscentDrawer } from '../logbook/log-ascent-drawer';
 import type { ActiveDrawer } from '../queue-control/queue-control-bar';
 import type { BoardDetails, Angle, Climb } from '@/app/lib/types';
-import Box from '@mui/material/Box';
-import Typography from '@mui/material/Typography';
 import styles from './play-view-drawer.module.css';
-import drawerStyles from '../swipeable-drawer/swipeable-drawer.module.css';
 import ClimbDetailShellClient from '@/app/components/climb-detail/climb-detail-shell.client';
 import { useBuildClimbDetailSections } from '@/app/components/climb-detail/build-climb-detail-sections';
 import { renderBoard } from '@/app/lib/board-render-worker/worker-manager';
+import { useNestedDrawerSwipe } from '@/app/lib/hooks/use-nested-drawer-swipe';
+import { usePullToClose, findScrollContainer } from '@/app/lib/hooks/pull-to-close';
+import QueueDrawer from './queue-drawer';
 
 
 
@@ -49,14 +42,6 @@ import { renderBoard } from '@/app/lib/board-render-worker/worker-manager';
 type WindowWithIdleCallback = Window & {
   requestIdleCallback?: ((cb: () => void, opts?: { timeout: number }) => number) | undefined;
 };
-
-const QUEUE_DRAWER_STYLES = {
-  wrapper: {
-    touchAction: 'pan-y' as const,
-    transition: 'height 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
-  },
-  body: { padding: 0, touchAction: 'pan-y' as const },
-} as const;
 
 interface PlayDrawerContentProps {
   climb: Climb;
@@ -170,30 +155,23 @@ const PlayViewDrawer: React.FC<PlayViewDrawerProps> = ({
   const [queueMounted, setQueueMounted] = useState(false);
   const [isPlaylistSelectorOpen, setIsPlaylistSelectorOpen] = useState(false);
   const [isTickDrawerOpen, setIsTickDrawerOpen] = useState(false);
-  const [isEditMode, setIsEditMode] = useState(false);
-  const [showHistory, setShowHistory] = useState(false);
-  const [selectedItems, setSelectedItems] = useState<Set<string>>(new Set());
-  const queueDrawerHeightRef = useRef('60%');
-  const queuePaperRef = useRef<HTMLDivElement>(null);
+  const [isBoardZoomed, setIsBoardZoomed] = useState(false);
 
-  const updateQueueDrawerHeight = useCallback((height: string) => {
-    queueDrawerHeightRef.current = height;
-    if (queuePaperRef.current) {
-      queuePaperRef.current.style.height = height;
-    }
-  }, []);
+  // Lock the scroll container when the board is zoomed so single-finger
+  // drags pan the zoomed board instead of scrolling below the fold.
+  // isOpen re-runs the query when the drawer mounts (scroll container may not exist yet).
+  useEffect(() => {
+    const scrollContainer = playPaperRef.current?.querySelector('[data-scroll-container]') as HTMLElement | null;
+    if (!scrollContainer) return;
+    scrollContainer.style.overflowY = isBoardZoomed ? 'hidden' : '';
+  }, [isBoardZoomed, isOpen]);
+
+  const playPaperRef = useRef<HTMLDivElement>(null);
+
   const pathname = usePathname();
-  const queueListRef = useRef<QueueListHandle>(null);
-  const queueScrollRef = useRef<HTMLDivElement>(null);
-  const [queueScrollEl, setQueueScrollEl] = useState<HTMLDivElement | null>(null);
 
   // Get logbook data for tick FAB badge
   const { logbook } = useBoardProvider();
-
-  const queueScrollCallbackRef = useCallback((node: HTMLDivElement | null) => {
-    queueScrollRef.current = node;
-    setQueueScrollEl(node);
-  }, []);
 
   // Fine-grained context hooks (only re-render when specific data changes)
   const currentClimbData = useCurrentClimb();
@@ -212,7 +190,6 @@ const PlayViewDrawer: React.FC<PlayViewDrawerProps> = ({
   const { viewOnlyMode } = isOpen ? sessionData : deferredSession;
   const {
     mirrorClimb,
-    setQueue,
     getNextClimbQueueItem,
     getPreviousClimbQueueItem,
     setCurrentClimbQueueItem,
@@ -235,76 +212,6 @@ const PlayViewDrawer: React.FC<PlayViewDrawerProps> = ({
 
   // Wake lock when drawer is open
   useWakeLock(isOpen);
-
-  const handleToggleSelect = useCallback((uuid: string) => {
-    setSelectedItems((prev) => {
-      const next = new Set(prev);
-      if (next.has(uuid)) {
-        next.delete(uuid);
-      } else {
-        next.add(uuid);
-      }
-      return next;
-    });
-  }, []);
-
-  const handleBulkRemove = useCallback(() => {
-    setQueue(queue.filter((item) => !selectedItems.has(item.uuid)));
-    setSelectedItems(new Set());
-    setIsEditMode(false);
-  }, [queue, selectedItems, setQueue]);
-
-  const handleExitEditMode = useCallback(() => {
-    setIsEditMode(false);
-    setSelectedItems(new Set());
-  }, []);
-
-  // Drag-to-resize handlers for queue drawer header
-  const dragStartY = useRef<number>(0);
-  const dragStartHeightRef = useRef<string>('60%');
-  const isDragGestureRef = useRef(false);
-
-  const handleQueueDragStart = useCallback((e: React.TouchEvent) => {
-    dragStartY.current = e.touches[0].clientY;
-    dragStartHeightRef.current = queueDrawerHeightRef.current;
-    isDragGestureRef.current = false;
-  }, []);
-
-  const handleQueueDragMove = useCallback((e: React.TouchEvent) => {
-    const delta = Math.abs(e.touches[0].clientY - dragStartY.current);
-    if (delta > 10) {
-      isDragGestureRef.current = true;
-    }
-  }, []);
-
-  const handleQueueDragEnd = useCallback((e: React.TouchEvent) => {
-    if (!isDragGestureRef.current) return;
-
-    const deltaY = e.changedTouches[0].clientY - dragStartY.current;
-    const THRESHOLD = 30;
-
-    if (deltaY < -THRESHOLD) {
-      // Dragged up → expand to 100%
-      updateQueueDrawerHeight('100%');
-    } else if (deltaY > THRESHOLD) {
-      if (dragStartHeightRef.current === '100%') {
-        // Dragged down from 100% → collapse to 60%
-        updateQueueDrawerHeight('60%');
-      } else {
-        // Dragged down from 60% → close drawer
-        setIsQueueOpen(false);
-        handleExitEditMode();
-        setShowHistory(false);
-      }
-    }
-  }, [handleExitEditMode, updateQueueDrawerHeight]);
-
-  // Reset drawer height when queue drawer closes
-  useEffect(() => {
-    if (!isQueueOpen) {
-      updateQueueDrawerHeight('60%');
-    }
-  }, [isQueueOpen, updateQueueDrawerHeight]);
 
   // Hash-based back button support
   useEffect(() => {
@@ -391,6 +298,27 @@ const PlayViewDrawer: React.FC<PlayViewDrawerProps> = ({
 
   const isMirrored = !!currentClimb?.mirrored;
 
+  // Custom swipe-to-close for nested disablePortal drawers (actions + playlist)
+  const handleCloseActions = useCallback(() => setIsActionsOpen(false), []);
+  const actionsSwipe = useNestedDrawerSwipe(handleCloseActions);
+  const handleClosePlaylist = useCallback(() => setIsPlaylistSelectorOpen(false), []);
+  const playlistSwipe = useNestedDrawerSwipe(handleClosePlaylist);
+
+  // Queue drawer callbacks
+  const handleCloseQueueDrawer = useCallback(() => {
+    setIsQueueOpen(false);
+  }, []);
+  const handleQueueTransitionEnd = useCallback((open: boolean) => {
+    if (!open && !isQueueOpen) {
+      // Unmount queue tree after close animation completes
+      setQueueMounted(false);
+    }
+  }, [isQueueOpen]);
+  const handleQueueClimbNavigate = useCallback(() => {
+    setIsQueueOpen(false);
+    setActiveDrawer('none');
+  }, [setActiveDrawer]);
+
   const [drawerOpen, setDrawerOpen] = useState(false);
   const openRafRef = useRef<number>(0);
   const hasBeenMountedRef = useRef(false);
@@ -428,6 +356,11 @@ const PlayViewDrawer: React.FC<PlayViewDrawerProps> = ({
   // Otherwise give the browser one frame to paint freshly-mounted content.
   useEffect(() => {
     if (isOpen) {
+      // Clear any leftover inline styles from a custom pull-to-close gesture
+      if (playPaperRef.current) {
+        playPaperRef.current.style.transform = '';
+        playPaperRef.current.style.transition = '';
+      }
       setContentReady(true); // ensure content mounts if idle hasn't fired yet
       if (hasBeenMountedRef.current) {
         // Content already in DOM — open instantly
@@ -469,6 +402,52 @@ const PlayViewDrawer: React.FC<PlayViewDrawerProps> = ({
     // eslint-disable-next-line react-hooks/exhaustive-deps -- see comment above
   }, [currentFrames, currentMirrored, boardDetails]);
 
+  // Custom pull-to-close on the board area.
+  // MUI's getDomTreeShapes fails to detect the mobileScrollLayout scroll
+  // container through the board's overflow:hidden layers, so we block MUI
+  // and handle the close gesture ourselves. When at scroll top and pulling
+  // down, the play drawer Paper follows the finger and closes past threshold.
+  const handleBoardPullClose = useCallback(() => {
+    setDrawerOpen(false);
+    setActiveDrawer('none');
+    if (window.location.hash === '#playing') {
+      window.history.back();
+    }
+  }, [setActiveDrawer]);
+
+  const boardPull = usePullToClose({
+    paperEl: playPaperRef.current,
+    onClose: handleBoardPullClose,
+    deadZone: 60,
+    closeThreshold: 70,
+    trackPullOrigin: true,
+    offsetByDeadZone: true,
+  });
+
+  const handleBoardTouchStart = useCallback((e: React.TouchEvent) => {
+    (e.nativeEvent as unknown as Record<string, unknown>).defaultMuiPrevented = true;
+
+    // Find nearest scroll container (mobileScrollLayout) by walking up from
+    // the touched element, not e.currentTarget (which is drawerContent — the
+    // scroll container is a descendant of drawerContent, not an ancestor).
+    const scrollContainer = findScrollContainer(e.target as HTMLElement);
+    const y = e.touches[0].clientY;
+    boardPull.onTouchStart(y, scrollContainer);
+
+    // When at scroll top at touch start, set pullOriginY to the touch Y
+    if (scrollContainer && scrollContainer.scrollTop <= 0) {
+      boardPull.stateRef.current.pullOriginY = y;
+    }
+  }, [boardPull]);
+
+  const handleBoardTouchMove = useCallback((e: React.TouchEvent) => {
+    boardPull.onTouchMove(e.touches[0].clientY, e.touches.length, isBoardZoomed);
+  }, [boardPull, isBoardZoomed]);
+
+  const handleBoardTouchEnd = useCallback(() => {
+    boardPull.onTouchEnd();
+  }, [boardPull]);
+
   const aboveFold = useMemo(() => {
     if (!currentClimb) return null;
     return (
@@ -501,6 +480,7 @@ const PlayViewDrawer: React.FC<PlayViewDrawerProps> = ({
             onDoubleTap={handleDoubleTap}
             showZoomHint
             isDrawerOpen={isOpen}
+            onZoomChange={setIsBoardZoomed}
             overlay={<HeartAnimationOverlay visible={showHeart} onAnimationEnd={dismissHeart} />}
           />
         )}
@@ -579,15 +559,16 @@ const PlayViewDrawer: React.FC<PlayViewDrawerProps> = ({
       onClose={handleClose}
       onTransitionEnd={handleTransitionEnd}
       keepMounted
+      paperRef={playPaperRef}
       swipeEnabled={!isActionsOpen && !isQueueOpen && !isPlaylistSelectorOpen}
       showDragHandle={true}
       styles={{
-        body: { padding: 0, overflow: 'hidden' },
+        body: { padding: 0 },
         wrapper: { height: '100%', backgroundColor: 'var(--semantic-background)' },
       }}
     >
       {(contentReady || isOpen) ? (<>
-      <div className={styles.drawerContent}>
+      <div className={styles.drawerContent} onTouchStart={handleBoardTouchStart} onTouchMove={handleBoardTouchMove} onTouchEnd={handleBoardTouchEnd}>
         {currentClimb ? (
           <PlayDrawerContent
             climb={currentClimb}
@@ -607,7 +588,9 @@ const PlayViewDrawer: React.FC<PlayViewDrawerProps> = ({
             title={<DrawerClimbHeader climb={currentClimb} boardDetails={boardDetails} />}
             placement="bottom"
             open={isActionsOpen}
-            onClose={() => setIsActionsOpen(false)}
+            onClose={handleCloseActions}
+            paperRef={actionsSwipe.paperRef}
+            swipeEnabled={false}
             disablePortal
             styles={{
               wrapper: { height: 'auto' },
@@ -625,7 +608,7 @@ const PlayViewDrawer: React.FC<PlayViewDrawerProps> = ({
                 setIsActionsOpen(false);
                 setIsPlaylistSelectorOpen(true);
               }}
-              onActionComplete={() => setIsActionsOpen(false)}
+              onActionComplete={handleCloseActions}
             />
           </SwipeableDrawer>
         )}
@@ -636,7 +619,9 @@ const PlayViewDrawer: React.FC<PlayViewDrawerProps> = ({
             title={<DrawerClimbHeader climb={currentClimb} boardDetails={boardDetails} />}
             placement="bottom"
             open={isPlaylistSelectorOpen}
-            onClose={() => setIsPlaylistSelectorOpen(false)}
+            onClose={handleClosePlaylist}
+            paperRef={playlistSwipe.paperRef}
+            swipeEnabled={false}
             disablePortal
             styles={{
               wrapper: { height: 'auto', maxHeight: '70vh' },
@@ -648,7 +633,7 @@ const PlayViewDrawer: React.FC<PlayViewDrawerProps> = ({
               climbUuid={currentClimb.uuid}
               boardDetails={boardDetails}
               angle={currentAngle}
-              onDone={() => setIsPlaylistSelectorOpen(false)}
+              onDone={handleClosePlaylist}
             />
           </SwipeableDrawer>
         )}
@@ -665,116 +650,15 @@ const PlayViewDrawer: React.FC<PlayViewDrawerProps> = ({
       </>) : null}
 
         {/* Queue list drawer — lazy-mounted on first open, unmounted after close animation */}
-        {queueMounted && <SwipeableDrawer
-          placement="bottom"
-          height="60%"
-          paperRef={queuePaperRef}
-          open={isQueueOpen}
-          showCloseButton={false}
-          swipeEnabled={false}
-          showDragHandle={false}
-          disablePortal
-          onClose={() => {
-            setIsQueueOpen(false);
-            handleExitEditMode();
-            setShowHistory(false);
-          }}
-          onTransitionEnd={(open) => {
-            if (open) {
-              setTimeout(() => {
-                queueListRef.current?.scrollToCurrentClimb();
-              }, 100);
-            } else if (!isQueueOpen) {
-              // Unmount queue tree after close animation completes
-              setQueueMounted(false);
-            }
-          }}
-          styles={QUEUE_DRAWER_STYLES}
-        >
-          {/* Custom drag header — resize only on deliberate drag, not scroll */}
-          <div
-            className={styles.queueDragHeader}
-            onTouchStart={handleQueueDragStart}
-            onTouchMove={handleQueueDragMove}
-            onTouchEnd={handleQueueDragEnd}
-          >
-            <div className={drawerStyles.dragHandleZoneHorizontal}>
-              <div className={drawerStyles.dragHandleBarHorizontal} />
-            </div>
-            <Box
-              sx={{
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'space-between',
-                padding: `${themeTokens.spacing[4]}px ${themeTokens.spacing[6]}px`,
-                borderBottom: '1px solid var(--neutral-200)',
-              }}
-            >
-              <Typography variant="h6" component="div" sx={{ fontWeight: themeTokens.typography.fontWeight.semibold, fontSize: themeTokens.typography.fontSize.base }}>
-                Queue
-              </Typography>
-              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                {queue.length > 0 && !viewOnlyMode && (
-                  isEditMode ? (
-                    <Stack direction="row" spacing={1}>
-                      <MuiButton
-                        variant="text"
-                        startIcon={<DeleteOutlined />}
-                        sx={{ color: 'var(--neutral-400)' }}
-                        onClick={() => {
-                          setQueue([]);
-                          handleExitEditMode();
-                        }}
-                      >
-                        Clear
-                      </MuiButton>
-                      <IconButton onClick={handleExitEditMode}><CloseOutlined /></IconButton>
-                    </Stack>
-                  ) : (
-                    <Stack direction="row" spacing={1}>
-                      <IconButton
-                        color={showHistory ? 'default' : 'default'}
-                        onClick={() => setShowHistory((prev) => !prev)}
-                        sx={showHistory ? { border: '1px solid', borderColor: 'divider' } : undefined}
-                      >
-                        <HistoryOutlined />
-                      </IconButton>
-                      <IconButton onClick={() => setIsEditMode(true)}><EditOutlined /></IconButton>
-                    </Stack>
-                  )
-                )}
-              </Box>
-            </Box>
-          </div>
-          <div className={styles.queueBodyLayout}>
-            <div
-              ref={queueScrollCallbackRef}
-              className={styles.queueScrollContainer}
-              style={{ touchAction: 'pan-y' }}
-            >
-              <QueueList
-                ref={queueListRef}
-                boardDetails={boardDetails}
-                onClimbNavigate={() => {
-                  setIsQueueOpen(false);
-                  setActiveDrawer('none');
-                }}
-                isEditMode={isEditMode}
-                showHistory={showHistory}
-                selectedItems={selectedItems}
-                onToggleSelect={handleToggleSelect}
-                scrollContainer={queueScrollEl}
-              />
-            </div>
-            {isEditMode && selectedItems.size > 0 && (
-              <div className={styles.bulkRemoveBar}>
-                <MuiButton variant="contained" color="error" fullWidth onClick={handleBulkRemove}>
-                  Remove {selectedItems.size} {selectedItems.size === 1 ? 'item' : 'items'}
-                </MuiButton>
-              </div>
-            )}
-          </div>
-        </SwipeableDrawer>}
+        {queueMounted && (
+          <QueueDrawer
+            open={isQueueOpen}
+            onClose={handleCloseQueueDrawer}
+            onTransitionEnd={handleQueueTransitionEnd}
+            boardDetails={boardDetails}
+            onClimbNavigate={handleQueueClimbNavigate}
+          />
+        )}
     </SwipeableDrawer>
     </>
   );
