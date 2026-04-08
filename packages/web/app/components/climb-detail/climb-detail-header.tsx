@@ -6,6 +6,7 @@ import Typography from '@mui/material/Typography';
 import CopyrightOutlined from '@mui/icons-material/CopyrightOutlined';
 import { themeTokens } from '@/app/theme/theme-config';
 import { getSoftVGradeColor, formatVGrade } from '@/app/lib/grade-colors';
+import { formatAscents } from '@/app/lib/format-climb-stats';
 import { useIsDarkMode } from '@/app/hooks/use-is-dark-mode';
 import AngleSelector from '../board-page/angle-selector';
 import type { Climb, BoardDetails } from '@/app/lib/types';
@@ -143,6 +144,7 @@ export default function ClimbDetailHeader({
         >
           {[
             hasQuality ? `${climb.quality_average}★` : null,
+            climb.ascensionist_count ? `${formatAscents(climb.ascensionist_count)} ascent${climb.ascensionist_count === 1 ? '' : 's'}` : null,
             climb.setter_username,
           ]
             .filter(Boolean)
