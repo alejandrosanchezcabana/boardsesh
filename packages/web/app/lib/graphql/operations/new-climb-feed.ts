@@ -1,10 +1,12 @@
 import { gql } from 'graphql-request';
 import type {
+  CheckMoonBoardClimbDuplicatesInput,
   NewClimbFeedInput,
   NewClimbFeedResult,
   NewClimbSubscription,
   NewClimbSubscriptionInput,
   NewClimbCreatedEvent,
+  MoonBoardClimbDuplicateMatch,
   SaveClimbInput,
   SaveClimbResult,
   SaveMoonBoardClimbInput,
@@ -73,6 +75,17 @@ export const NEW_CLIMB_CREATED_SUBSCRIPTION = gql`
   }
 `;
 
+export const CHECK_MOONBOARD_CLIMB_DUPLICATES_QUERY = gql`
+  query CheckMoonBoardClimbDuplicates($input: CheckMoonBoardClimbDuplicatesInput!) {
+    checkMoonBoardClimbDuplicates(input: $input) {
+      clientKey
+      exists
+      existingClimbUuid
+      existingClimbName
+    }
+  }
+`;
+
 export const SAVE_CLIMB_MUTATION = gql`
   mutation SaveClimb($input: SaveClimbInput!) {
     saveClimb(input: $input) {
@@ -129,6 +142,14 @@ export interface SaveClimbMutationVariables {
 
 export interface SaveClimbMutationResponse {
   saveClimb: SaveClimbResult;
+}
+
+export interface CheckMoonBoardClimbDuplicatesVariables {
+  input: CheckMoonBoardClimbDuplicatesInput;
+}
+
+export interface CheckMoonBoardClimbDuplicatesResponse {
+  checkMoonBoardClimbDuplicates: MoonBoardClimbDuplicateMatch[];
 }
 
 export interface SaveMoonBoardClimbMutationVariables {

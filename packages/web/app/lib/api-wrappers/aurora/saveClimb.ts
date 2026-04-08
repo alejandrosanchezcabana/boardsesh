@@ -23,6 +23,7 @@ export async function saveClimb(
 ): Promise<SaveClimbResponse> {
   const uuid = generateUuid();
   const createdAt = dayjs().format('YYYY-MM-DD HH:mm:ss');
+  const isListed = !options.is_draft;
 
   const { climbs } = UNIFIED_TABLES;
 
@@ -42,7 +43,7 @@ export async function saveClimb(
       framesPace: options.frames_pace || 0,
       frames: options.frames,
       isDraft: options.is_draft,
-      isListed: false,
+      isListed,
       createdAt,
       synced: false,
       syncError: null,
@@ -61,6 +62,7 @@ export async function saveClimb(
         framesPace: options.frames_pace || 0,
         frames: options.frames,
         isDraft: options.is_draft,
+        isListed,
         synced: false,
         syncError: null,
       },

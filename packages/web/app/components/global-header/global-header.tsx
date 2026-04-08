@@ -12,8 +12,9 @@ import UserDrawer from '@/app/components/user-drawer/user-drawer';
 import StartSeshDrawer from '@/app/components/session-creation/start-sesh-drawer';
 import SeshSettingsDrawer from '@/app/components/sesh-settings/sesh-settings-drawer';
 import { usePersistentSessionState, useIsOnBoardRoute } from '@/app/components/persistent-session/persistent-session-context';
+import { useCreateHeaderBridge } from '@/app/components/create-climb/create-header-bridge-context';
 import { BoardConfigData } from '@/app/lib/server-board-configs';
-import { isBoardListPath } from '@/app/lib/board-route-paths';
+import { isBoardCreatePath, isBoardListPath } from '@/app/lib/board-route-paths';
 import { themeTokens } from '@/app/theme/theme-config';
 import { usePathname } from 'next/navigation';
 import BackButton from '@/app/components/back-button';
@@ -42,9 +43,11 @@ export default function GlobalHeader({ boardConfigs }: GlobalHeaderProps) {
   const { activeSession } = usePersistentSessionState();
   const isOnBoardRoute = useIsOnBoardRoute();
   const { openClimbSearchDrawer, searchPillSummary, hasActiveFilters: filtersActive } = useSearchDrawerBridge();
+  const { climbName, setClimbName, actionSlot } = useCreateHeaderBridge();
   const pathname = usePathname();
 
   const hasActiveSession = !!activeSession;
+  const isBoardCreateRoute = isBoardCreatePath(pathname);
 
   // Unmount drawer trees after close animation finishes to avoid rendering
   // MUI Modal/Portal/FocusTrap infrastructure on every parent re-render.
@@ -94,6 +97,31 @@ export default function GlobalHeader({ boardConfigs }: GlobalHeaderProps) {
   };
 
   const pillText = useClimbSearchBridge ? (searchPillSummary ?? defaultSearchPillText) : defaultSearchPillText;
+
+  if (isBoardCreateRoute) {
+    return (
+      <header className={styles.header}>
+        <UserDrawer boardConfigs={boardConfigs} />
+
+        <div className={styles.createNameField}>
+          <input
+            aria-label="Climb name"
+            className={styles.createNameInput}
+            disabled={!setClimbName}
+            maxLength={100}
+            onChange={(event) => setClimbName?.(event.target.value)}
+            placeholder="Climb name"
+            type="text"
+            value={climbName}
+          />
+        </div>
+
+        <div className={styles.createActionSlot}>
+          {actionSlot ?? <div className={styles.createActionPlaceholder} aria-hidden="true" />}
+        </div>
+      </header>
+    );
+  }
 
   // Simple title header for specific pages (back button + title, no search/sesh)
   if (titleHeaderPage) {

@@ -104,6 +104,10 @@ vi.mock('../../search-drawer/search-drawer-bridge-context', () => ({
   SearchDrawerBridgeProvider: ({ children }: { children: React.ReactNode }) => <>{children}</>,
 }));
 
+vi.mock('../../create-climb/create-header-bridge-context', () => ({
+  CreateHeaderBridgeProvider: ({ children }: { children: React.ReactNode }) => <>{children}</>,
+}));
+
 const mockBoardConfigs = {} as Parameters<typeof RootBottomBar>[0]['boardConfigs'];
 
 describe('RootBottomBar', () => {

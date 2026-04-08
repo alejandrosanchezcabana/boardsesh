@@ -1,40 +1,12 @@
-/* Create Climb Form Styles - matches play view layout */
-
 .pageContainer {
-  height: calc(100% + max(8dvh, 48px) + env(safe-area-inset-top, 0px));
+  height: calc(100dvh - var(--global-header-height) - 120px - env(safe-area-inset-bottom, 0px));
   display: flex;
   flex-direction: column;
   overflow: hidden;
   touch-action: manipulation;
-  /* Offset the parent layout's paddingTop since we hide the global header */
-  margin-top: calc(-1 * (max(8dvh, 48px) + env(safe-area-inset-top, 0px)));
-  padding-top: env(safe-area-inset-top, 0px);
-  /* semantic.background = neutral-50 */
   background-color: var(--semantic-background);
-}
-
-/* Header for create page with back and save buttons */
-.createHeader {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-  padding: 8px 12px;
-  background-color: var(--semantic-surface);
-  border-bottom: 1px solid var(--border-subtle);
-  flex-shrink: 0;
-}
-
-.headerNameInput {
-  flex: 1;
-  font-size: 16px;
-  font-weight: 500;
-  text-align: center;
-  min-width: 0;
-}
-
-.headerNameInput input {
-  text-align: center;
+  border: 1px solid var(--neutral-200);
+  border-radius: 20px;
 }
 
 /* Alert banner styling */
@@ -57,63 +29,24 @@
   flex: 1;
   display: flex;
   flex-direction: column;
-  overflow: auto;
+  overflow: hidden;
   position: relative;
   min-height: 0;
-  -webkit-overflow-scrolling: touch;
 }
 
-/* Title container - same position as play view */
 .climbTitleContainer {
   width: 100%;
   flex-shrink: 0;
-  padding: 4px 12px;
+  padding: 10px 12px;
+  background-color: var(--semantic-surface);
+  border-bottom: 1px solid var(--neutral-200);
 }
 
-/* Editable title styling */
-.editableTitle {
-  display: inline-flex;
+.controlBarContent {
+  display: flex;
   align-items: center;
-  cursor: pointer;
-  padding: 2px 4px;
-  border-radius: 4px;
-  transition: background-color 0.2s;
-}
-
-.editableTitle:hover {
-  background-color: var(--semantic-selected-light);
-}
-
-.editableTitle:focus {
-  outline: none;
-  background-color: var(--semantic-selected-light);
-}
-
-/* Title wrapper for flex content */
-.titleWrapper {
-  flex: 1;
-  min-width: 0;
-}
-
-/* Title input when editing */
-.titleInput {
-  flex: 1;
-}
-
-/* Title text styling */
-.titleText {
-  font-size: 14px;
-  font-weight: 600;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-/* Edit icon next to title */
-.editIcon {
-  font-size: 12px;
-  color: var(--neutral-400);
-  margin-left: 4px;
+  justify-content: space-between;
+  gap: 12px;
 }
 
 /* Draft label */
@@ -122,16 +55,16 @@
   font-weight: 400;
 }
 
-/* Settings button next to title */
-.settingsButton {
-  color: var(--neutral-400);
+.gradeBadge {
+  font-size: 14px;
+  font-weight: 700;
+  line-height: 1;
+  padding: 6px 10px;
+  border-radius: 9999px;
+  background: var(--neutral-100);
+  border: 1px solid var(--neutral-200);
 }
 
-.settingsButton:hover {
-  color: var(--neutral-500);
-}
-
-/* Heatmap button next to title */
 .heatmapButton {
   color: var(--neutral-400);
 }
@@ -152,22 +85,23 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 12px;
+  padding: 16px 12px;
   min-height: 300px;
   width: 100%;
   position: relative;
+  overflow: auto;
+  -webkit-overflow-scrolling: touch;
 }
 
-/* Wrapper for board and heatmap overlay - ensures overlay aligns with board */
 .boardWrapper {
   position: relative;
   height: 100%;
+  width: 100%;
   display: flex;
-  align-items: flex-start;
+  align-items: center;
   justify-content: center;
 }
 
-/* Settings overlay panel */
 .settingsPanel {
   position: absolute;
   top: 0;
@@ -205,28 +139,37 @@
   width: 100%;
 }
 
-/* Hold counts bar at bottom */
 .holdCountsBar {
   display: flex;
   gap: 8px;
   flex-wrap: wrap;
   align-items: center;
-  justify-content: center;
-  padding: 8px 12px;
+  justify-content: space-between;
+  padding: 10px 12px;
   flex-shrink: 0;
   background-color: var(--semantic-surface);
-  border-top: 1px solid var(--border-subtle);
+  border-top: 1px solid var(--neutral-200);
 }
 
 /* Mobile adjustments */
 @media (max-width: 767px) {
+  .pageContainer {
+    border-radius: 16px;
+  }
+
   .holdCountsBar {
     padding: 6px 8px;
     gap: 6px;
+    justify-content: center;
   }
 
   .climbTitleContainer {
-    padding: 4px 8px;
+    padding: 8px;
+  }
+
+  .controlBarContent {
+    flex-direction: column;
+    align-items: stretch;
   }
 
   .opacitySlider {

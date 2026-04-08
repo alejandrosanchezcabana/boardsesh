@@ -58,6 +58,12 @@ export const queriesTypeDefs = /* GraphQL */ `
     searchClimbs(input: ClimbSearchInput!): ClimbSearchResult!
 
     """
+    Check whether MoonBoard climbs with exact hold-role selections already exist.
+    Returns one result per submitted candidate.
+    """
+    checkMoonBoardClimbDuplicates(input: CheckMoonBoardClimbDuplicatesInput!): [MoonBoardClimbDuplicateMatch!]!
+
+    """
     Get a single climb by its UUID.
     """
     climb(

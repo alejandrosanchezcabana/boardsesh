@@ -23,6 +23,7 @@ import { isBoardRoutePath } from '@/app/lib/board-route-paths';
 import GlobalHeader from '../global-header/global-header';
 import SessionSummaryDialog from '../session-summary/session-summary-dialog';
 import { SearchDrawerBridgeProvider } from '../search-drawer/search-drawer-bridge-context';
+import { CreateHeaderBridgeProvider } from '../create-climb/create-header-bridge-context';
 
 interface PersistentSessionWrapperProps {
   children: React.ReactNode;
@@ -42,10 +43,12 @@ export default function PersistentSessionWrapper({ children, boardConfigs }: Per
       <PersistentSessionProvider>
         <QueueBridgeProvider>
           <SearchDrawerBridgeProvider>
-            <GlobalHeader boardConfigs={boardConfigs} />
-            {children}
-            <RootBottomBar boardConfigs={boardConfigs} />
-            <RootSessionSummaryDialog />
+            <CreateHeaderBridgeProvider>
+              <GlobalHeader boardConfigs={boardConfigs} />
+              {children}
+              <RootBottomBar boardConfigs={boardConfigs} />
+              <RootSessionSummaryDialog />
+            </CreateHeaderBridgeProvider>
           </SearchDrawerBridgeProvider>
         </QueueBridgeProvider>
       </PersistentSessionProvider>

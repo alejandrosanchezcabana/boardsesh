@@ -4,6 +4,7 @@ import { AuroraBoardName } from '@/app/lib/api-wrappers/aurora/types';
 import { BoardName } from '@/app/lib/types';
 import { encodeMoonBoardHoldsToFrames } from '@/app/lib/moonboard-config';
 import { fontGradeToDifficultyId } from '@/app/lib/board-data';
+import { revalidateClimbSearchTags } from '@/app/lib/climb-search-cache.server';
 import { NextResponse } from 'next/server';
 import { z } from 'zod';
 
@@ -49,6 +50,19 @@ export async function POST(request: Request, props: { params: Promise<{ board_na
   const params = await props.params;
   const board_name = params.board_name as BoardName;
 
+  const revalidateMoonBoardSearch = async (layoutId: number) => {
+    if (board_name !== 'moonboard') {
+      return;
+    }
+
+    await revalidateClimbSearchTags({
+      boardName: board_name,
+      layoutId,
+      requestHeaders: request.headers,
+      source: 'save-climb-proxy',
+    });
+  };
+
   try {
     const body = await request.json();
 
@@ -81,6 +95,10 @@ export async function POST(request: Request, props: { params: Promise<{ board_na
             benchmarkDifficulty: validatedData.options.is_benchmark ? difficultyId : null,
           });
         }
+      }
+
+      if (!(validatedData.options.is_draft ?? false)) {
+        await revalidateMoonBoardSearch(validatedData.options.layout_id);
       }
 
       return NextResponse.json(response);

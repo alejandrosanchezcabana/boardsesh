@@ -3,7 +3,6 @@
 import React, { useEffect, useState } from 'react';
 import Typography from '@mui/material/Typography';
 import TextField from '@mui/material/TextField';
-import Chip from '@mui/material/Chip';
 import Dialog from '@mui/material/Dialog';
 import DialogTitle from '@mui/material/DialogTitle';
 import DialogContent from '@mui/material/DialogContent';
@@ -11,7 +10,9 @@ import DialogActions from '@mui/material/DialogActions';
 import Button from '@mui/material/Button';
 import MoonBoardRenderer from '../moonboard-renderer/moonboard-renderer';
 import { useMoonBoardCreateClimb } from '../create-climb/use-moonboard-create-climb';
-import { coordinateToHoldId, holdIdToCoordinate, MOONBOARD_HOLD_STATES } from '@/app/lib/moonboard-config';
+import HoldStatusChip from '../create-climb/hold-status-chip';
+import { coordinateToHoldId, MOONBOARD_HOLD_STATES } from '@/app/lib/moonboard-config';
+import { convertLitUpHoldsMapToMoonBoardHolds } from '@/app/lib/moonboard-climb-helpers';
 import type { MoonBoardClimb, GridCoordinate } from '@boardsesh/moonboard-ocr/browser';
 import type { LitUpHoldsMap } from '../board-renderer/types';
 import styles from './moonboard-edit-modal.module.css';
@@ -66,28 +67,12 @@ function convertClimbToHoldsMap(climb: MoonBoardClimb): LitUpHoldsMap {
  * Convert lit up holds map back to OCR hold format
  */
 function convertHoldsMapToOcrFormat(holdsMap: LitUpHoldsMap): MoonBoardClimb['holds'] {
-  const holds: MoonBoardClimb['holds'] = {
-    start: [],
-    hand: [],
-    finish: [],
+  const holds = convertLitUpHoldsMapToMoonBoardHolds(holdsMap);
+  return {
+    start: holds.start as GridCoordinate[],
+    hand: holds.hand as GridCoordinate[],
+    finish: holds.finish as GridCoordinate[],
   };
-
-  // Map standard HoldState to OCR format keys
-  const stateToKey = {
-    STARTING: 'start',
-    HAND: 'hand',
-    FINISH: 'finish',
-  } as const;
-
-  Object.entries(holdsMap).forEach(([id, hold]) => {
-    const coord = holdIdToCoordinate(Number(id)) as GridCoordinate;
-    const key = stateToKey[hold.state as keyof typeof stateToKey];
-    if (key) {
-      holds[key].push(coord);
-    }
-  });
-
-  return holds;
 }
 
 export default function MoonBoardEditModal({
@@ -152,10 +137,10 @@ export default function MoonBoardEditModal({
             />
 
             <div className={styles.holdCounts}>
-              <Chip label={`Start: ${startingCount}/2`} size="small" color={startingCount > 0 ? 'error' : undefined} />
-              <Chip label={`Hand: ${handCount}`} size="small" color={handCount > 0 ? 'primary' : undefined} />
-              <Chip label={`Finish: ${finishCount}/2`} size="small" color={finishCount > 0 ? 'success' : undefined} />
-              <Chip label={`Total: ${totalHolds}`} size="small" color={totalHolds > 0 ? 'secondary' : undefined} />
+              <HoldStatusChip label={`Start: ${startingCount}/2`} active={startingCount > 0} tone="error" />
+              <HoldStatusChip label={`Hand: ${handCount}`} active={handCount > 0} tone="primary" />
+              <HoldStatusChip label={`Finish: ${finishCount}/2`} active={finishCount > 0} tone="success" />
+              <HoldStatusChip label={`Total: ${totalHolds}`} active={totalHolds > 0} tone="secondary" />
             </div>
 
             {!isValid && totalHolds > 0 && (
