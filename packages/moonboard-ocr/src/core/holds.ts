@@ -187,8 +187,13 @@ export function findCircleCenters(pixelData: RawPixelData): CircleCenter[] {
   const visited = new Set<number>();
   const circles: CircleCenter[] = [];
 
-  // Minimum pixels to be considered a valid circle (filters noise)
-  const minPixels = 500;
+  // Minimum pixels to be considered a valid circle (filters noise).
+  // Scale with image resolution: 5% of average cell area (11 cols x 18 rows).
+  // For 1097x1764 (1290 phone): ~489, for 992x1595 (1206 phone): ~399
+  const minPixels = Math.max(
+    100,
+    Math.round((width * height) / (11 * 18) * 0.05)
+  );
 
   for (let y = 0; y < height; y++) {
     for (let x = 0; x < width; x++) {
@@ -291,6 +296,91 @@ export function mapCirclesToHolds(
       };
     })
     .filter((hold) => hold.confidence > 0.5);
+}
+
+/**
+ * Check if a pixel matches the benchmark circle's golden/orange color.
+ * The MoonBoard benchmark indicator is a ~47x47 golden circle in the header.
+ * Color samples: RGB(211,175,88), RGB(214,165,62), RGB(229,168,88)
+ */
+function isOrangePixel(r: number, g: number, b: number): boolean {
+  return (
+    r >= 180 &&
+    r <= 255 &&
+    g >= 130 &&
+    g <= 210 &&
+    b >= 20 &&
+    b <= 100 &&
+    r > g &&
+    g > b
+  );
+}
+
+/**
+ * Detect the benchmark indicator (orange circle) in the header region.
+ * Uses flood-fill to find individual orange clusters, then checks if any
+ * cluster matches the benchmark circle pattern (compact, roughly circular,
+ * ~48x48px). This avoids false negatives when star ratings or other small
+ * orange UI elements are present in the same header region.
+ */
+export function detectBenchmarkCircle(pixelData: RawPixelData): boolean {
+  const { data, width, height, channels } = pixelData;
+  const visited = new Set<number>();
+
+  for (let y = 0; y < height; y++) {
+    for (let x = 0; x < width; x++) {
+      const idx = y * width + x;
+      if (visited.has(idx)) continue;
+
+      const pixelIdx = idx * channels;
+      if (!isOrangePixel(data[pixelIdx], data[pixelIdx + 1], data[pixelIdx + 2]))
+        continue;
+
+      // Flood-fill this orange component
+      let count = 0;
+      let minX = width,
+        maxX = 0,
+        minY = height,
+        maxY = 0;
+      const stack = [{ x, y }];
+
+      while (stack.length > 0) {
+        const p = stack.pop()!;
+        if (p.x < 0 || p.x >= width || p.y < 0 || p.y >= height) continue;
+        const vi = p.y * width + p.x;
+        if (visited.has(vi)) continue;
+        const pi = vi * channels;
+        if (!isOrangePixel(data[pi], data[pi + 1], data[pi + 2])) continue;
+        visited.add(vi);
+        count++;
+        if (p.x < minX) minX = p.x;
+        if (p.x > maxX) maxX = p.x;
+        if (p.y < minY) minY = p.y;
+        if (p.y > maxY) maxY = p.y;
+        stack.push(
+          { x: p.x + 1, y: p.y },
+          { x: p.x - 1, y: p.y },
+          { x: p.x, y: p.y + 1 },
+          { x: p.x, y: p.y - 1 }
+        );
+      }
+
+      // Check if this component is the benchmark circle:
+      // ~1500+ pixels, roughly square bbox under 100px, high density
+      if (count < 200) continue;
+      const bboxWidth = maxX - minX + 1;
+      const bboxHeight = maxY - minY + 1;
+      const density = count / (bboxWidth * bboxHeight);
+      const aspectRatio =
+        Math.max(bboxWidth, bboxHeight) / Math.min(bboxWidth, bboxHeight);
+
+      if (density > 0.4 && aspectRatio < 1.5 && bboxWidth < 100) {
+        return true;
+      }
+    }
+  }
+
+  return false;
 }
 
 /**

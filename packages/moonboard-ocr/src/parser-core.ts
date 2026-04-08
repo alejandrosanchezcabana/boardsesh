@@ -7,13 +7,24 @@
 
 import { ImageProcessor } from './image-processor/types';
 import { runOCR } from './core/ocr';
-import { detectHoldsFromPixelData } from './core/holds';
-import { calculateRegions } from './core/regions';
+import {
+  detectHoldsFromPixelData,
+  detectBoardRegion,
+  detectBenchmarkCircle,
+} from './core/holds';
+import {
+  calculateRegions,
+  calculateRegionsFromDetectedBoard,
+} from './core/regions';
 import { MoonBoardClimb, ParseResult, GridCoordinate } from './types';
 
 /**
  * Parse a MoonBoard screenshot using the provided ImageProcessor.
  * This is the core parsing function used by both Node and browser implementations.
+ *
+ * Uses yellow-pixel auto-detection to find the board region, making it resilient
+ * to different iPhone screen sizes. Falls back to proportional calculation if
+ * auto-detection fails.
  */
 export async function parseWithProcessor(
   processor: ImageProcessor
@@ -22,9 +33,28 @@ export async function parseWithProcessor(
 
   try {
     const metadata = processor.getMetadata();
-    const regions = calculateRegions(metadata.width, metadata.height);
 
-    // Extract header for OCR
+    // Try auto-detecting the board via yellow pixel analysis
+    const fullPixelData = await processor.extractFullImage();
+    const yellowRegion = detectBoardRegion(fullPixelData);
+
+    const regions = yellowRegion
+      ? calculateRegionsFromDetectedBoard(
+          yellowRegion,
+          metadata.width,
+          metadata.height
+        )
+      : (() => {
+          warnings.push(
+            'Could not auto-detect board region, using proportional fallback'
+          );
+          return calculateRegions(metadata.width, metadata.height);
+        })();
+
+    // Extract header for OCR and benchmark detection
+    const headerPixels = await processor.extractRegion(regions.header);
+    const isBenchmark = detectBenchmarkCircle(headerPixels);
+
     const ocrImageData = await processor.extractForOCR(regions.header);
     const ocrResult = await runOCR(ocrImageData);
     warnings.push(...ocrResult.warnings);
@@ -70,7 +100,7 @@ export async function parseWithProcessor(
       angle: ocrResult.angle,
       userGrade: ocrResult.userGrade,
       setterGrade: ocrResult.setterGrade,
-      isBenchmark: ocrResult.isBenchmark,
+      isBenchmark: isBenchmark || ocrResult.isBenchmark,
       holds: {
         start: [...new Set(startHolds)], // Dedupe
         hand: [...new Set(handHolds)],

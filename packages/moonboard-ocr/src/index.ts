@@ -42,7 +42,10 @@ export {
   findNearestGridPosition,
 } from './core/holds';
 export { runOCR, parseHeaderText } from './core/ocr';
-export { calculateRegions } from './core/regions';
+export {
+  calculateRegions,
+  calculateRegionsFromDetectedBoard,
+} from './core/regions';
 
 // Types
 export type {

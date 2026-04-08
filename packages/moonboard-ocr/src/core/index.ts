@@ -1,5 +1,6 @@
 export {
   detectBoardRegion,
+  detectBenchmarkCircle,
   classifyPixelColor,
   findCircleCenters,
   findNearestGridPosition,
@@ -9,4 +10,8 @@ export {
 
 export { runOCR, parseHeaderText, type OcrResult } from './ocr';
 
-export { calculateRegions, type ImageRegions } from './regions';
+export {
+  calculateRegions,
+  calculateRegionsFromDetectedBoard,
+  type ImageRegions,
+} from './regions';

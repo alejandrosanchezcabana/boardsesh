@@ -6,31 +6,18 @@ export interface ImageRegions {
 }
 
 /**
- * Calculate header and board regions based on image dimensions
- *
- * The MoonBoard app has a consistent layout:
- * - Status bar + nav bar at top (dark area)
- * - Header with climb name, setter, grade (white area)
- * - "Any marked holds" button
- * - Board grid (yellow background with holds)
- * - Controls at bottom
- *
- * Calibrated for iPhone screenshots (1290x2796)
+ * Calculate header and board regions based on image dimensions.
+ * Fallback method using hardcoded proportions calibrated for 1290x2796 iPhones.
+ * Prefer calculateRegionsFromDetectedBoard() when yellow region is available.
  */
 export function calculateRegions(width: number, height: number): ImageRegions {
-  // Header region: starts after nav bar, includes name/setter/grade
-  // On 2796px height: roughly y=308 to y=504
   const headerTop = Math.round(height * 0.11);
   const headerHeight = Math.round(height * 0.07);
 
-  // Board region: the actual 11x18 grid of holds
-  // Calibrated for labeled MoonBoard screenshots with "Show hold markers" enabled
-  // These values are fine-tuned to align grid cells with actual hold positions
-  const boardTop = Math.round(height * 0.249); // Start at row 18 (top)
-  const boardBottom = Math.round(height * 0.88); // End at row 1 (bottom)
+  const boardTop = Math.round(height * 0.249);
+  const boardBottom = Math.round(height * 0.88);
   const boardHeight = boardBottom - boardTop;
 
-  // Skip the row number labels on left
   const boardLeft = Math.round(width * 0.1);
   const boardRight = Math.round(width * 0.95);
   const boardWidth = boardRight - boardLeft;
@@ -47,6 +34,61 @@ export function calculateRegions(width: number, height: number): ImageRegions {
       y: boardTop,
       width: boardWidth,
       height: boardHeight,
+    },
+  };
+}
+
+// Calibrated from 1290x2796 fixtures by comparing detectBoardRegion() output
+// against known-good proportional board regions.
+// Horizontal insets are consistent across images because the board left/right
+// edges are well-defined. Vertical positions use proportional calculation
+// because the yellow region's top/bottom boundaries vary (some screenshots
+// include extra yellow area from UI elements or the "TRAIN HARD" section).
+const GRID_LEFT_INSET = 0.0886; // Row number labels on left
+const GRID_RIGHT_INSET = 0.0359; // Small margin on right
+
+/**
+ * Calculate header and board regions from the auto-detected yellow board area.
+ *
+ * Uses yellow detection for horizontal boundaries (fixes different screen widths)
+ * and proportional calculation for vertical boundaries (stable across images).
+ * The header position is derived from proportional image height.
+ */
+export function calculateRegionsFromDetectedBoard(
+  yellowRegion: ImageRegion,
+  imageWidth: number,
+  imageHeight: number
+): ImageRegions {
+  // Horizontal: use yellow detection (accurate across different resolutions)
+  const gridLeft = Math.round(
+    yellowRegion.x + yellowRegion.width * GRID_LEFT_INSET
+  );
+  const gridRight = Math.round(
+    yellowRegion.x + yellowRegion.width * (1 - GRID_RIGHT_INSET)
+  );
+  const gridWidth = gridRight - gridLeft;
+
+  // Vertical: use proportional calculation (yellow top/bottom vary too much)
+  const gridTop = Math.round(imageHeight * 0.249);
+  const gridBottom = Math.round(imageHeight * 0.88);
+  const gridHeight = gridBottom - gridTop;
+
+  // Header: proportional (consistent across resolutions for the vertical axis)
+  const headerTop = Math.round(imageHeight * 0.11);
+  const headerHeight = Math.round(imageHeight * 0.07);
+
+  return {
+    header: {
+      x: 0,
+      y: headerTop,
+      width: imageWidth,
+      height: headerHeight,
+    },
+    board: {
+      x: gridLeft,
+      y: gridTop,
+      width: gridWidth,
+      height: gridHeight,
     },
   };
 }
