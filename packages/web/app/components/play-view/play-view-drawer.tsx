@@ -159,6 +159,7 @@ const PlayViewDrawer: React.FC<PlayViewDrawerProps> = ({
 
   // Lock the scroll container when the board is zoomed so single-finger
   // drags pan the zoomed board instead of scrolling below the fold.
+  // isOpen re-runs the query when the drawer mounts (scroll container may not exist yet).
   useEffect(() => {
     const scrollContainer = playPaperRef.current?.querySelector('[data-scroll-container]') as HTMLElement | null;
     if (!scrollContainer) return;

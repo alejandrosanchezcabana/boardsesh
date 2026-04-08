@@ -239,7 +239,7 @@ const QueueDrawer: React.FC<QueueDrawerProps> = ({
               ) : (
                 <Stack direction="row" spacing={1}>
                   <IconButton
-                    color={showHistory ? 'default' : 'default'}
+                    color="default"
                     onClick={() => setShowHistory((prev) => !prev)}
                     sx={showHistory ? { border: '1px solid', borderColor: 'divider' } : undefined}
                   >
