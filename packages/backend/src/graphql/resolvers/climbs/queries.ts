@@ -10,7 +10,7 @@ import type { ClimbSearchParams, ParsedBoardRouteParameters } from '../../../db/
 import { getClimbByUuid } from '../../../db/queries/climbs/index';
 import { getSizeEdges } from '../../../db/queries/util/product-sizes-data';
 import { isValidBoardName } from '../../../db/queries/util/table-select';
-import { validateInput } from '../shared/helpers';
+import { applyRateLimit, validateInput } from '../shared/helpers';
 import { findMoonBoardDuplicateMatches } from './moonboard-duplicates';
 import {
   BoardNameSchema,
@@ -29,7 +29,9 @@ export const climbQueries = {
   checkMoonBoardClimbDuplicates: async (
     _: unknown,
     { input }: { input: CheckMoonBoardClimbDuplicatesInput },
+    ctx: ConnectionContext,
   ) => {
+    await applyRateLimit(ctx, 60, 'moonboard-duplicate-check');
     const validated = validateInput(CheckMoonBoardClimbDuplicatesInputSchema, input, 'input');
     return findMoonBoardDuplicateMatches(validated.layoutId, validated.angle, validated.climbs);
   },

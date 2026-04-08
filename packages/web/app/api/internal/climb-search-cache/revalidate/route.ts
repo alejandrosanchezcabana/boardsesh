@@ -1,7 +1,8 @@
-import { revalidateTag } from 'next/cache';
+import { getServerSession } from 'next-auth/next';
 import { NextResponse } from 'next/server';
 import { z } from 'zod';
-import { getBoardClimbSearchTag, getLayoutClimbSearchTag } from '@/app/lib/climb-search-cache';
+import { authOptions } from '@/app/lib/auth/auth-options';
+import { revalidateClimbSearchTags } from '@/app/lib/climb-search-cache.server';
 
 const revalidateClimbSearchSchema = z.object({
   boardName: z.enum(['kilter', 'moonboard', 'tension']),
@@ -10,14 +11,20 @@ const revalidateClimbSearchSchema = z.object({
 
 export async function POST(request: Request) {
   try {
+    const session = await getServerSession(authOptions);
+    if (!session?.user?.id) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
     const body = await request.json();
     const validated = revalidateClimbSearchSchema.parse(body);
 
-    revalidateTag(getBoardClimbSearchTag(validated.boardName), { expire: 0 });
-
-    if (validated.layoutId) {
-      revalidateTag(getLayoutClimbSearchTag(validated.boardName, validated.layoutId), { expire: 0 });
-    }
+    await revalidateClimbSearchTags({
+      boardName: validated.boardName,
+      layoutId: validated.layoutId,
+      requestHeaders: request.headers,
+      source: 'internal-route',
+    });
 
     return NextResponse.json({ revalidated: true });
   } catch (error) {

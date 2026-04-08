@@ -4,9 +4,8 @@ import { AuroraBoardName } from '@/app/lib/api-wrappers/aurora/types';
 import { BoardName } from '@/app/lib/types';
 import { encodeMoonBoardHoldsToFrames } from '@/app/lib/moonboard-config';
 import { fontGradeToDifficultyId } from '@/app/lib/board-data';
-import { getBoardClimbSearchTag, getLayoutClimbSearchTag } from '@/app/lib/climb-search-cache';
+import { revalidateClimbSearchTags } from '@/app/lib/climb-search-cache.server';
 import { NextResponse } from 'next/server';
-import { revalidateTag } from 'next/cache';
 import { z } from 'zod';
 
 const saveClimbSchema = z.object({
@@ -51,13 +50,17 @@ export async function POST(request: Request, props: { params: Promise<{ board_na
   const params = await props.params;
   const board_name = params.board_name as BoardName;
 
-  const revalidateMoonBoardSearch = (layoutId: number) => {
+  const revalidateMoonBoardSearch = async (layoutId: number) => {
     if (board_name !== 'moonboard') {
       return;
     }
 
-    revalidateTag(getBoardClimbSearchTag(board_name), { expire: 0 });
-    revalidateTag(getLayoutClimbSearchTag(board_name, layoutId), { expire: 0 });
+    await revalidateClimbSearchTags({
+      boardName: board_name,
+      layoutId,
+      requestHeaders: request.headers,
+      source: 'save-climb-proxy',
+    });
   };
 
   try {
@@ -95,7 +98,7 @@ export async function POST(request: Request, props: { params: Promise<{ board_na
       }
 
       if (!(validatedData.options.is_draft ?? false)) {
-        revalidateMoonBoardSearch(validatedData.options.layout_id);
+        await revalidateMoonBoardSearch(validatedData.options.layout_id);
       }
 
       return NextResponse.json(response);
