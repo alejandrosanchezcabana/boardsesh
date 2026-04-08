@@ -78,6 +78,7 @@ export async function cachedSearchClimbs(
     const climbs: Climb[] = result.climbs.map((row) => ({
       ...row,
       mirrored: undefined,
+      is_no_match: /^no match/i.test(row.description || ''),
     }));
 
     return { climbs, hasMore: result.hasMore };

@@ -110,6 +110,12 @@ export const resolvers = {
   // Field-level resolvers
   ClimbSearchResult: climbFieldResolvers,
 
+  // Climb type resolvers (derived fields)
+  Climb: {
+    is_no_match: (climb: { description?: string | null }) =>
+      /^no match/i.test(climb.description || ''),
+  },
+
   // Union type resolvers
   QueueEvent: queueEventResolver,
   SessionEvent: sessionEventResolver,
