@@ -1,4 +1,6 @@
 .bottomBarWrapper {
+  --tab-bar-bottom-radius: 16px;
+  --tab-bar-safe-area-padding: 0px;
   position: fixed;
   bottom: 0;
   left: 2dvw;
@@ -8,7 +10,13 @@
   border-radius: 16px;
 }
 
-.nativeApp {}
+.nativeApp {
+  --tab-bar-bottom-radius: 0px;
+  --tab-bar-safe-area-padding: env(safe-area-inset-bottom, 0px);
+  left: 0;
+  right: 0;
+  border-radius: 16px 16px 0 0;
+}
 
 @media (min-width: 768px) {
   .bottomBarWrapper {
@@ -20,34 +28,15 @@
 }
 
 /* Mobile Safari renders a grey rectangle under the chrome when bottom: 0,
-   so offset with 2dvh. -webkit-touch-callout is only supported by iOS Safari
-   (all iOS browsers use WebKit), and the media query limits to touch devices. */
+   so keep the 2dvh offset. Instead of a separate ::after pseudo-element
+   (which creates a visible backdrop-filter seam), extend the BottomNavigation
+   itself via --tab-bar-safe-area-padding so the frosted glass is one element. */
 @supports (-webkit-touch-callout: none) {
   @media (hover: none) and (pointer: coarse) {
     .bottomBarWrapper:not(.nativeApp) {
+      --tab-bar-bottom-radius: 0px;
+      --tab-bar-safe-area-padding: 2dvh;
       bottom: 2dvh;
-    }
-
-    /* Fill the Safari chrome-protection gap with the same frosted effect
-       so the space below the tabs doesn't appear as a hard blank strip. */
-    .bottomBarWrapper:not(.nativeApp)::after {
-      content: '';
-      position: absolute;
-      left: 0;
-      right: 0;
-      top: 100%;
-      height: 2dvh;
-      border-radius: 0 0 16px 16px;
-      background: rgba(255, 255, 255, 0.3);
-      -webkit-backdrop-filter: blur(5px);
-      backdrop-filter: blur(5px);
-      pointer-events: none;
-    }
-
-    :global(html[data-theme='dark']) .bottomBarWrapper:not(.nativeApp)::after {
-      background: rgba(0, 0, 0, 0.4);
-      -webkit-backdrop-filter: blur(20px);
-      backdrop-filter: blur(20px);
     }
   }
 }
