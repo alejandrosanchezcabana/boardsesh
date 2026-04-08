@@ -8,14 +8,26 @@ describe('isNoMatchClimb', () => {
     expect(isNoMatchClimb('')).toBe(false);
   });
 
-  it('returns true when description starts with "No matching."', () => {
+  it('detects common "no match" variations (case-insensitive)', () => {
+    expect(isNoMatchClimb('No matching')).toBe(true);
+    expect(isNoMatchClimb('No match')).toBe(true);
+    expect(isNoMatchClimb('no matching')).toBe(true);
+    expect(isNoMatchClimb('NO MATCHING')).toBe(true);
+    expect(isNoMatchClimb('No Matching')).toBe(true);
+    expect(isNoMatchClimb('No matches')).toBe(true);
+    expect(isNoMatchClimb('No matchy')).toBe(true);
+    expect(isNoMatchClimb('No matchies')).toBe(true);
+    expect(isNoMatchClimb('No matching!')).toBe(true);
     expect(isNoMatchClimb('No matching.')).toBe(true);
+    expect(isNoMatchClimb('No matching :)')).toBe(true);
     expect(isNoMatchClimb('No matching. Some extra notes')).toBe(true);
   });
 
-  it('returns false for descriptions that do not start with the prefix', () => {
+  it('returns false for unrelated descriptions', () => {
     expect(isNoMatchClimb('A fun climb')).toBe(false);
-    expect(isNoMatchClimb('no matching.')).toBe(false); // case-sensitive
-    expect(isNoMatchClimb('This has No matching. in the middle')).toBe(false);
+    expect(isNoMatchClimb('V3')).toBe(false);
+    expect(isNoMatchClimb('Campus')).toBe(false);
+    expect(isNoMatchClimb('Matching allowed')).toBe(false);
+    expect(isNoMatchClimb('Match only the finish hold')).toBe(false);
   });
 });

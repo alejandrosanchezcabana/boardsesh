@@ -122,7 +122,7 @@ async function statsDrivenSearch(
     quality_average: sql<number | null>`ROUND(${boardClimbStats.qualityAverage}::numeric, 2)`,
     difficulty_error: sql<number | null>`ROUND(${boardClimbStats.difficultyAverage}::numeric - ${boardClimbStats.displayDifficulty}::numeric, 2)`,
     benchmark_difficulty: boardClimbStats.benchmarkDifficulty,
-    is_no_match: sql<boolean>`COALESCE(${boardClimbs.description} LIKE 'No matching.%', false)`,
+    is_no_match: sql<boolean>`COALESCE(LOWER(${boardClimbs.description}) LIKE 'no match%', false)`,
   };
 
   const results: RawSelectResult[] = await db
@@ -225,7 +225,7 @@ async function standardSearch(
     quality_average: sql<number | null>`ROUND(${boardClimbStats.qualityAverage}::numeric, 2)`,
     difficulty_error: sql<number | null>`ROUND(${boardClimbStats.difficultyAverage}::numeric - ${boardClimbStats.displayDifficulty}::numeric, 2)`,
     benchmark_difficulty: boardClimbStats.benchmarkDifficulty,
-    is_no_match: sql<boolean>`COALESCE(${boardClimbs.description} LIKE 'No matching.%', false)`,
+    is_no_match: sql<boolean>`COALESCE(LOWER(${boardClimbs.description}) LIKE 'no match%', false)`,
   };
 
   const orderByClause = sortOrder === 'asc'

@@ -1,9 +1,11 @@
 /**
  * Returns `true` when a climb is marked as "no matching".
  *
- * In the Aurora climbing API, setters indicate "no matching" by prefixing the
- * climb description with "No matching." — the same convention used by Climbdex.
+ * Setters indicate "no matching" by starting the climb description with
+ * variations of "no match" — e.g. "No matching", "no match", "NO MATCHING",
+ * "No matches", "No matchy", "No matching!", etc.
  */
 export function isNoMatchClimb(description: string | undefined | null): boolean {
-  return !!description && description.startsWith('No matching.');
+  if (!description) return false;
+  return /^no match/i.test(description);
 }
