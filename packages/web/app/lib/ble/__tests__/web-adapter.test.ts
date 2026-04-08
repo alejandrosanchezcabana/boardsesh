@@ -8,12 +8,19 @@ const mockGetCharacteristic = vi.fn();
 const mockSplitMessages = vi.fn((data: Uint8Array) => [data]);
 const mockWriteCharacteristicSeries = vi.fn();
 
-vi.mock('@/app/components/board-bluetooth-control/bluetooth-shared', () => ({
-  requestBluetoothDevice: (...args: unknown[]) => mockRequestDevice(...args),
-  getUartCharacteristic: (...args: unknown[]) => mockGetCharacteristic(...args),
-  splitMessages: (data: Uint8Array) => mockSplitMessages(data),
-  writeCharacteristicSeries: (...args: unknown[]) => mockWriteCharacteristicSeries(...args),
-}));
+vi.mock('@/app/components/board-bluetooth-control/bluetooth-shared', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('@/app/components/board-bluetooth-control/bluetooth-shared')>();
+  return {
+    ...actual,
+    requestBluetoothDevice: (...args: Parameters<typeof actual.requestBluetoothDevice>) =>
+      mockRequestDevice(...args),
+    getUartCharacteristic: (...args: Parameters<typeof actual.getUartCharacteristic>) =>
+      mockGetCharacteristic(...args),
+    splitMessages: (data: Uint8Array) => mockSplitMessages(data),
+    writeCharacteristicSeries: (...args: Parameters<typeof actual.writeCharacteristicSeries>) =>
+      mockWriteCharacteristicSeries(...args),
+  };
+});
 
 import { WebBluetoothAdapter } from '../web-adapter';
 

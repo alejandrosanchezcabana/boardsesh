@@ -3,26 +3,39 @@ import { renderHook, act } from '@testing-library/react';
 
 // --- Mocks ---
 
-const mockAdapter = {
-  isAvailable: vi.fn(),
-  requestAndConnect: vi.fn(),
-  disconnect: vi.fn(),
-  write: vi.fn(),
-  onDisconnect: vi.fn(() => vi.fn()),
-};
+const {
+  mockAdapter,
+  mockCreateBluetoothAdapter,
+  mockGetAuroraBluetoothPacket,
+  mockGetMoonboardBluetoothPacket,
+  mockGetLedPlacements,
+  mockShowMessage,
+} = vi.hoisted(() => {
+  const mockAdapter = {
+    isAvailable: vi.fn(),
+    requestAndConnect: vi.fn(),
+    disconnect: vi.fn(),
+    write: vi.fn(),
+    onDisconnect: vi.fn(() => vi.fn()),
+  };
 
-const mockCreateBluetoothAdapter = vi.fn<(boardName: string) => Promise<typeof mockAdapter>>(
-  () => Promise.resolve(mockAdapter),
-);
-const mockGetAuroraBluetoothPacket = vi.fn<
-  (frames: string, placementPositions: Record<number, number>, boardName: string) => Uint8Array
->(() => new Uint8Array([1, 2, 3]));
-const mockGetMoonboardBluetoothPacket = vi.fn<(frames: string) => Uint8Array>(
-  () => new Uint8Array([9, 8, 7]),
-);
-const mockGetLedPlacements = vi.fn<
-  (boardName: string, layoutId: number, sizeId: number) => Record<number, number>
->(() => ({ 4131: 39 }));
+  return {
+    mockAdapter,
+    mockCreateBluetoothAdapter: vi.fn<(boardName: string) => Promise<typeof mockAdapter>>(
+      () => Promise.resolve(mockAdapter),
+    ),
+    mockGetAuroraBluetoothPacket: vi.fn<
+      (frames: string, placementPositions: Record<number, number>, boardName: string) => Uint8Array
+    >(() => new Uint8Array([1, 2, 3])),
+    mockGetMoonboardBluetoothPacket: vi.fn<(frames: string) => Uint8Array>(
+      () => new Uint8Array([9, 8, 7]),
+    ),
+    mockGetLedPlacements: vi.fn<
+      (boardName: string, layoutId: number, sizeId: number) => Record<number, number>
+    >(() => ({ 4131: 39 })),
+    mockShowMessage: vi.fn(),
+  };
+});
 
 vi.mock('@/app/lib/ble/adapter-factory', () => ({
   createBluetoothAdapter: mockCreateBluetoothAdapter,
@@ -44,7 +57,6 @@ vi.mock('../use-wake-lock', () => ({
   useWakeLock: vi.fn(),
 }));
 
-const mockShowMessage = vi.fn();
 vi.mock('@/app/components/providers/snackbar-provider', () => ({
   useSnackbar: () => ({ showMessage: mockShowMessage }),
 }));

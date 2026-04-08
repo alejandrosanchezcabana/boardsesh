@@ -43,10 +43,13 @@ export function getMoonboardSerialPosition(holdId: number): number {
 }
 
 export function getMoonboardBluetoothPacket(frames: string): Uint8Array {
-  const holdPayload = frames
+  const encodedHolds: string[] = [];
+  let skippedCount = 0;
+
+  frames
     .split('p')
     .filter(Boolean)
-    .map((frame) => {
+    .forEach((frame) => {
       const [placement, role] = frame.split('r');
       const holdId = Number(placement);
       const holdType = MOONBOARD_ROLE_MAP[Number(role) as keyof typeof MOONBOARD_ROLE_MAP];
@@ -55,9 +58,18 @@ export function getMoonboardBluetoothPacket(frames: string): Uint8Array {
         throw new Error(`Unsupported MoonBoard hold state code: ${role}`);
       }
 
-      return `${holdType}${getMoonboardSerialPosition(holdId)}`;
-    })
-    .join(',');
+      try {
+        encodedHolds.push(`${holdType}${getMoonboardSerialPosition(holdId)}`);
+      } catch {
+        skippedCount++;
+      }
+    });
+
+  if (skippedCount > 0) {
+    console.warn(`[BLE] Skipped ${skippedCount} MoonBoard holds with invalid ids for this payload`);
+  }
+
+  const holdPayload = encodedHolds.join(',');
 
   return new TextEncoder().encode(`${MOONBOARD_FRAME_PREFIX}${holdPayload}${MOONBOARD_FRAME_SUFFIX}`);
 }

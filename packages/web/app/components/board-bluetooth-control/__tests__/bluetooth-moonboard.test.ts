@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 import { coordinateToHoldId } from '@/app/lib/moonboard-config';
 import {
   getMoonboardBluetoothPacket,
@@ -28,6 +28,19 @@ describe('getMoonboardBluetoothPacket', () => {
     expect(() => getMoonboardBluetoothPacket('p1r45')).toThrow(
       'Unsupported MoonBoard hold state code: 45',
     );
+  });
+
+  it('skips invalid Moonboard hold ids and keeps the remaining payload', () => {
+    const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
+
+    const packet = getMoonboardBluetoothPacket('p1r42p999r43p198r44');
+
+    expect(new TextDecoder().decode(packet)).toBe('l#S0,E197#');
+    expect(warnSpy).toHaveBeenCalledWith(
+      '[BLE] Skipped 1 MoonBoard holds with invalid ids for this payload',
+    );
+
+    warnSpy.mockRestore();
   });
 
   it('can be split into 20-byte BLE chunks without changing the payload', () => {
