@@ -144,7 +144,7 @@ export default function ClimbDetailHeader({
         >
           {[
             hasQuality ? `${climb.quality_average}★` : null,
-            climb.ascensionist_count ? `${formatAscents(climb.ascensionist_count)} ascent${climb.ascensionist_count === 1 ? '' : 's'}` : null,
+            climb.ascensionist_count ? formatAscents(climb.ascensionist_count) : null,
             climb.setter_username,
           ]
             .filter(Boolean)

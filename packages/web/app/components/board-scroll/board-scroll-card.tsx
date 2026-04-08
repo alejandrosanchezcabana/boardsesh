@@ -4,7 +4,7 @@ import React, { useMemo } from 'react';
 import DashboardOutlined from '@mui/icons-material/DashboardOutlined';
 import BoardRenderer from '../board-renderer/board-renderer';
 import { useBoardDetails } from './board-thumbnail';
-import { formatAscents } from '@/app/lib/format-climb-stats';
+import { formatCount } from '@/app/lib/format-climb-stats';
 import { BoardConfigData } from '@/app/lib/server-board-configs';
 import { StoredBoardConfig } from '@/app/lib/saved-boards-db';
 import type { UserBoard, PopularBoardConfig } from '@boardsesh/shared-schema';
@@ -66,7 +66,7 @@ export default function BoardScrollCard({
           cardMeta += ` \u00B7 ${userBoard.locationName}`;
         }
       } else {
-        cardMeta = `${formatAscents(userBoard.totalAscents)} sends`;
+        cardMeta = `${formatCount(userBoard.totalAscents)} sends`;
       }
     } else if (storedConfig) {
       cardName = storedConfig.name;
@@ -81,8 +81,8 @@ export default function BoardScrollCard({
     } else if (popularConfig) {
       cardName = popularConfig.displayName;
       const parts: string[] = [];
-      if (popularConfig.boardCount > 0) parts.push(`${formatAscents(popularConfig.boardCount)} boards`);
-      parts.push(`${formatAscents(popularConfig.totalAscents)} sends`);
+      if (popularConfig.boardCount > 0) parts.push(`${formatCount(popularConfig.boardCount)} boards`);
+      parts.push(`${formatCount(popularConfig.totalAscents)} sends`);
       cardMeta = parts.join(' \u00B7 ');
     }
 
