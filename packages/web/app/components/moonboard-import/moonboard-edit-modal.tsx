@@ -11,7 +11,8 @@ import Button from '@mui/material/Button';
 import MoonBoardRenderer from '../moonboard-renderer/moonboard-renderer';
 import { useMoonBoardCreateClimb } from '../create-climb/use-moonboard-create-climb';
 import HoldStatusChip from '../create-climb/hold-status-chip';
-import { coordinateToHoldId, holdIdToCoordinate, MOONBOARD_HOLD_STATES } from '@/app/lib/moonboard-config';
+import { coordinateToHoldId, MOONBOARD_HOLD_STATES } from '@/app/lib/moonboard-config';
+import { convertLitUpHoldsMapToMoonBoardHolds } from '@/app/lib/moonboard-climb-helpers';
 import type { MoonBoardClimb, GridCoordinate } from '@boardsesh/moonboard-ocr/browser';
 import type { LitUpHoldsMap } from '../board-renderer/types';
 import styles from './moonboard-edit-modal.module.css';
@@ -66,28 +67,12 @@ function convertClimbToHoldsMap(climb: MoonBoardClimb): LitUpHoldsMap {
  * Convert lit up holds map back to OCR hold format
  */
 function convertHoldsMapToOcrFormat(holdsMap: LitUpHoldsMap): MoonBoardClimb['holds'] {
-  const holds: MoonBoardClimb['holds'] = {
-    start: [],
-    hand: [],
-    finish: [],
+  const holds = convertLitUpHoldsMapToMoonBoardHolds(holdsMap);
+  return {
+    start: holds.start as GridCoordinate[],
+    hand: holds.hand as GridCoordinate[],
+    finish: holds.finish as GridCoordinate[],
   };
-
-  // Map standard HoldState to OCR format keys
-  const stateToKey = {
-    STARTING: 'start',
-    HAND: 'hand',
-    FINISH: 'finish',
-  } as const;
-
-  Object.entries(holdsMap).forEach(([id, hold]) => {
-    const coord = holdIdToCoordinate(Number(id)) as GridCoordinate;
-    const key = stateToKey[hold.state as keyof typeof stateToKey];
-    if (key) {
-      holds[key].push(coord);
-    }
-  });
-
-  return holds;
 }
 
 export default function MoonBoardEditModal({

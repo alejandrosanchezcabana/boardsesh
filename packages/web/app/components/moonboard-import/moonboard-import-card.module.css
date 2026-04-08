@@ -28,6 +28,11 @@
   flex-shrink: 0;
 }
 
+.duplicateTag {
+  margin: 0;
+  flex-shrink: 0;
+}
+
 .metadata {
   display: flex;
   flex-direction: column;
@@ -35,5 +40,9 @@
 }
 
 .setter {
+  margin: 0 !important;
+}
+
+.duplicateText {
   margin: 0 !important;
 }

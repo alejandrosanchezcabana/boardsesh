@@ -1,12 +1,23 @@
 import { eq, and, gte, desc } from 'drizzle-orm';
-import type { ClimbSearchInput, ConnectionContext, BoardName } from '@boardsesh/shared-schema';
+import type {
+  BoardName,
+  CheckMoonBoardClimbDuplicatesInput,
+  ClimbSearchInput,
+  ConnectionContext,
+} from '@boardsesh/shared-schema';
 import { SUPPORTED_BOARDS, USER_SPECIFIC_SEARCH_PARAMS } from '@boardsesh/shared-schema';
 import type { ClimbSearchParams, ParsedBoardRouteParameters } from '../../../db/queries/climbs/index';
 import { getClimbByUuid } from '../../../db/queries/climbs/index';
 import { getSizeEdges } from '../../../db/queries/util/product-sizes-data';
 import { isValidBoardName } from '../../../db/queries/util/table-select';
 import { validateInput } from '../shared/helpers';
-import { ClimbSearchInputSchema, BoardNameSchema, ExternalUUIDSchema } from '../../../validation/schemas';
+import { findMoonBoardDuplicateMatches } from './moonboard-duplicates';
+import {
+  BoardNameSchema,
+  CheckMoonBoardClimbDuplicatesInputSchema,
+  ClimbSearchInputSchema,
+  ExternalUUIDSchema,
+} from '../../../validation/schemas';
 import type { ClimbSearchContext } from '../shared/types';
 import { db } from '../../../db/client';
 import * as dbSchema from '@boardsesh/db/schema';
@@ -15,6 +26,14 @@ import * as dbSchema from '@boardsesh/db/schema';
 const DEBUG = process.env.NODE_ENV === 'development';
 
 export const climbQueries = {
+  checkMoonBoardClimbDuplicates: async (
+    _: unknown,
+    { input }: { input: CheckMoonBoardClimbDuplicatesInput },
+  ) => {
+    const validated = validateInput(CheckMoonBoardClimbDuplicatesInputSchema, input, 'input');
+    return findMoonBoardDuplicateMatches(validated.layoutId, validated.angle, validated.climbs);
+  },
+
   /**
    * Search for climbs with various filters
    * Returns a context object that field resolvers use to fetch data lazily

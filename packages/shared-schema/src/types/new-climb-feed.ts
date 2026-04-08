@@ -41,3 +41,27 @@ export type NewClimbFeedInput = {
 export type NewClimbCreatedEvent = {
   climb: NewClimbFeedItem;
 };
+
+export type MoonBoardHoldsInput = {
+  start: string[];
+  hand: string[];
+  finish: string[];
+};
+
+export type MoonBoardClimbDuplicateCandidateInput = {
+  clientKey: string;
+  holds: MoonBoardHoldsInput;
+};
+
+export type CheckMoonBoardClimbDuplicatesInput = {
+  layoutId: number;
+  angle: number;
+  climbs: MoonBoardClimbDuplicateCandidateInput[];
+};
+
+export type MoonBoardClimbDuplicateMatch = {
+  clientKey: string;
+  exists: boolean;
+  existingClimbUuid?: string | null;
+  existingClimbName?: string | null;
+};

@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useReducer, useCallback, useState, useRef } from 'react';
+import React, { useReducer, useCallback, useEffect, useState, useRef } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import MuiAlert from '@mui/material/Alert';
 import AlertTitle from '@mui/material/AlertTitle';
@@ -20,6 +20,7 @@ import Link from 'next/link';
 import { useSession } from 'next-auth/react';
 import { parseMultipleScreenshots, deduplicateClimbs } from '@boardsesh/moonboard-ocr/browser';
 import type { MoonBoardClimb } from '@boardsesh/moonboard-ocr/browser';
+import type { MoonBoardClimbDuplicateMatch } from '@boardsesh/shared-schema';
 import MoonBoardImportCard from './moonboard-import-card';
 import MoonBoardEditModal from './moonboard-edit-modal';
 import { convertOcrHoldsToMap } from '@/app/lib/moonboard-climbs-db';
@@ -28,6 +29,9 @@ import { useWsAuthToken } from '@/app/hooks/use-ws-auth-token';
 import { uploadOcrTestDataBatch } from '@/app/lib/moonboard-ocr-upload';
 import { createGraphQLHttpClient } from '@/app/lib/graphql/client';
 import {
+  CHECK_MOONBOARD_CLIMB_DUPLICATES_QUERY,
+  type CheckMoonBoardClimbDuplicatesResponse,
+  type CheckMoonBoardClimbDuplicatesVariables,
   SAVE_MOONBOARD_CLIMB_MUTATION,
   type SaveMoonBoardClimbMutationVariables,
   type SaveMoonBoardClimbMutationResponse,
@@ -43,19 +47,22 @@ interface MoonBoardBulkImportProps {
   angle: number;
 }
 
+type ImportWarning = { name: string; error: string };
+type DuplicateMatchMap = Record<string, MoonBoardClimbDuplicateMatch>;
+
 // State and action types for the reducer
 interface ImportState {
   status: 'idle' | 'processing' | 'complete';
   progress: { current: number; total: number; name: string };
   climbs: MoonBoardClimb[];
-  errors: Array<{ name: string; error: string }>;
+  errors: ImportWarning[];
   editingClimb: MoonBoardClimb | null;
 }
 
 type ImportAction =
   | { type: 'START_PROCESSING'; total: number }
   | { type: 'UPDATE_PROGRESS'; current: number; total: number; name: string }
-  | { type: 'COMPLETE'; climbs: MoonBoardClimb[]; errors: Array<{ name: string; error: string }> }
+  | { type: 'COMPLETE'; climbs: MoonBoardClimb[]; errors: ImportWarning[] }
   | { type: 'REMOVE_CLIMB'; sourceFile: string }
   | { type: 'UPDATE_CLIMB'; sourceFile: string; climb: MoonBoardClimb }
   | { type: 'OPEN_EDIT'; climb: MoonBoardClimb }
@@ -133,11 +140,14 @@ export default function MoonBoardBulkImport({
   const queryClient = useQueryClient();
   const [state, dispatch] = useReducer(importReducer, initialState);
   const [isSaving, setIsSaving] = useState(false);
+  const [isCheckingDuplicates, setIsCheckingDuplicates] = useState(false);
+  const [duplicateMatches, setDuplicateMatches] = useState<DuplicateMatchMap>({});
   const [contributeImages, setContributeImages] = useState(true);
   const { showMessage } = useSnackbar();
 
   // Store original files for OCR test data upload
   const filesMapRef = useRef<Map<string, File>>(new Map());
+  const duplicateCheckRequestIdRef = useRef(0);
 
   // File input ref for the drop zone
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -146,6 +156,85 @@ export default function MoonBoardBulkImport({
   const { backendUrl } = useBackendUrl();
   const { token: authToken } = useWsAuthToken();
   const listUrl = pathname.replace(/\/import$/, '/list');
+
+  const runDuplicateCheck = useCallback(async (climbs: MoonBoardClimb[]): Promise<DuplicateMatchMap> => {
+    const requestId = ++duplicateCheckRequestIdRef.current;
+
+    if (climbs.length === 0) {
+      setDuplicateMatches({});
+      setIsCheckingDuplicates(false);
+      return {};
+    }
+
+    setIsCheckingDuplicates(true);
+
+    try {
+      const client = createGraphQLHttpClient();
+      const variables: CheckMoonBoardClimbDuplicatesVariables = {
+        input: {
+          layoutId,
+          angle,
+          climbs: climbs.map((climb) => ({
+            clientKey: climb.sourceFile,
+            holds: climb.holds,
+          })),
+        },
+      };
+
+      const response = await client.request<
+        CheckMoonBoardClimbDuplicatesResponse,
+        CheckMoonBoardClimbDuplicatesVariables
+      >(CHECK_MOONBOARD_CLIMB_DUPLICATES_QUERY, variables);
+
+      const matches = Object.fromEntries(
+        response.checkMoonBoardClimbDuplicates.map((match) => [match.clientKey, match]),
+      ) as DuplicateMatchMap;
+
+      if (requestId === duplicateCheckRequestIdRef.current) {
+        setDuplicateMatches(matches);
+      }
+
+      return matches;
+    } catch (error) {
+      console.warn('Failed to check MoonBoard climb duplicates:', error);
+
+      if (requestId === duplicateCheckRequestIdRef.current) {
+        setDuplicateMatches({});
+      }
+
+      return {};
+    } finally {
+      if (requestId === duplicateCheckRequestIdRef.current) {
+        setIsCheckingDuplicates(false);
+      }
+    }
+  }, [angle, layoutId]);
+
+  useEffect(() => {
+    if (state.status !== 'complete') {
+      setDuplicateMatches({});
+      setIsCheckingDuplicates(false);
+      return;
+    }
+
+    void runDuplicateCheck(state.climbs);
+  }, [runDuplicateCheck, state.climbs, state.status]);
+
+  const duplicateWarnings: ImportWarning[] = state.climbs
+    .map((climb) => {
+      const duplicate = duplicateMatches[climb.sourceFile];
+      if (!duplicate?.exists) return null;
+
+      return {
+        name: climb.sourceFile,
+        error: duplicate.existingClimbName
+          ? `Already exists as "${duplicate.existingClimbName}". It will be skipped unless you edit the holds.`
+          : 'Already exists. It will be skipped unless you edit the holds.',
+      };
+    })
+    .filter((warning): warning is ImportWarning => warning !== null);
+
+  const readyToImportClimbs = state.climbs.filter((climb) => !duplicateMatches[climb.sourceFile]?.exists);
 
   const handleFilesUpload = useCallback(
     async (fileList: File[]) => {
@@ -197,13 +286,24 @@ export default function MoonBoardBulkImport({
 
     setIsSaving(true);
     try {
+      const latestDuplicateMatches = await runDuplicateCheck(state.climbs);
+      const climbsToSave = state.climbs.filter((climb) => !latestDuplicateMatches[climb.sourceFile]?.exists);
+      const skippedDuplicateCount = state.climbs.length - climbsToSave.length;
+
+      if (climbsToSave.length === 0) {
+        if (skippedDuplicateCount > 0) {
+          showMessage(`Skipped ${skippedDuplicateCount} climb(s) that already exist`, 'warning');
+        }
+        return;
+      }
+
       let savedCount = 0;
       const errors: string[] = [];
       const savedClimbs: MoonBoardClimb[] = [];
       const client = createGraphQLHttpClient(authToken);
 
       // Save each climb individually to the database
-      for (const climb of state.climbs) {
+      for (const climb of climbsToSave) {
         try {
           const variables: SaveMoonBoardClimbMutationVariables = {
             input: {
@@ -242,6 +342,9 @@ export default function MoonBoardBulkImport({
           );
         }
       }
+      if (skippedDuplicateCount > 0) {
+        showMessage(`Skipped ${skippedDuplicateCount} climb(s) that already exist`, 'warning');
+      }
       if (errors.length > 0) {
         showMessage(`Failed to save ${errors.length} climb(s)`, 'warning');
         console.error('Save errors:', errors);
@@ -258,7 +361,7 @@ export default function MoonBoardBulkImport({
     } finally {
       setIsSaving(false);
     }
-  }, [state.climbs, layoutId, session, authToken, queryClient, router, listUrl, contributeImages, backendUrl, showMessage, angle]);
+  }, [state.climbs, layoutId, session, authToken, queryClient, router, listUrl, contributeImages, backendUrl, showMessage, angle, runDuplicateCheck]);
 
   const handleRemoveClimb = useCallback((sourceFile: string) => {
     dispatch({ type: 'REMOVE_CLIMB', sourceFile });
@@ -277,6 +380,9 @@ export default function MoonBoardBulkImport({
   }, []);
 
   const handleReset = useCallback(() => {
+    duplicateCheckRequestIdRef.current += 1;
+    setDuplicateMatches({});
+    setIsCheckingDuplicates(false);
     dispatch({ type: 'RESET' });
     filesMapRef.current = new Map();
   }, []);
@@ -382,10 +488,29 @@ export default function MoonBoardBulkImport({
             </MuiAlert>
           )}
 
+          {duplicateWarnings.length > 0 && (
+            <MuiAlert severity="warning" className={styles.errorAlert}>
+              <AlertTitle>{`${duplicateWarnings.length} Duplicate Climb(s)`}</AlertTitle>
+              <ul className={styles.errorList}>
+                {duplicateWarnings.map((warning, i) => (
+                  <li key={i}>
+                    <strong>{warning.name}:</strong> {warning.error}
+                  </li>
+                ))}
+              </ul>
+            </MuiAlert>
+          )}
+
+          {isCheckingDuplicates && state.climbs.length > 0 && (
+            <MuiAlert severity="info" className={styles.successAlert}>
+              Checking imported climbs against existing MoonBoard problems...
+            </MuiAlert>
+          )}
+
           {/* Success Summary */}
-          {state.climbs.length > 0 && (
+          {readyToImportClimbs.length > 0 && (
             <MuiAlert severity="success" className={styles.successAlert}>
-              <AlertTitle>{`${state.climbs.length} climb(s) ready to import`}</AlertTitle>
+              <AlertTitle>{`${readyToImportClimbs.length} climb(s) ready to import`}</AlertTitle>
               Review the climbs below. You can edit or remove any before saving.
             </MuiAlert>
           )}
@@ -400,9 +525,9 @@ export default function MoonBoardBulkImport({
                     startIcon={isSaving ? <CircularProgress size={16} /> : <SaveOutlined />}
                     onClick={handleSaveAll}
                     size="large"
-                    disabled={isSaving || !session?.user}
+                    disabled={isSaving || isCheckingDuplicates || !session?.user || readyToImportClimbs.length === 0}
                   >
-                    Save All ({state.climbs.length})
+                    Save All ({readyToImportClimbs.length})
                   </MuiButton>
                   <MuiButton variant="outlined" startIcon={<ClearOutlined />} onClick={handleReset}>
                     Clear & Start Over
@@ -425,6 +550,7 @@ export default function MoonBoardBulkImport({
                 <Box key={climb.sourceFile} sx={{ width: { xs: '100%', sm: '50%', md: '33.33%', lg: '25%' }, boxSizing: 'border-box' }}>
                   <MoonBoardImportCard
                     climb={climb}
+                    duplicateMatch={duplicateMatches[climb.sourceFile] ?? null}
                     layoutFolder={layoutFolder}
                     holdSetImages={holdSetImages}
                     litUpHoldsMap={convertOcrHoldsToMap(climb.holds)}
@@ -437,8 +563,12 @@ export default function MoonBoardBulkImport({
           ) : (
             <ResultPage
               status="warning"
-              title="No climbs could be imported"
-              subTitle="Please check the errors above and try again with different screenshots."
+              title={duplicateWarnings.length > 0 ? 'All imported climbs already exist' : 'No climbs could be imported'}
+              subTitle={
+                duplicateWarnings.length > 0
+                  ? 'Edit the duplicate climbs to change their hold selections, or try different screenshots.'
+                  : 'Please check the errors above and try again with different screenshots.'
+              }
               extra={
                 <MuiButton onClick={handleReset} variant="contained">
                   Try Again

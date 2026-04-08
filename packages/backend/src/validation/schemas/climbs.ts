@@ -90,19 +90,30 @@ export const SaveClimbInputSchema = z.object({
   angle: z.number().int().min(0).max(90),
 });
 
+export const MoonBoardHoldsInputSchema = z.object({
+  start: z.array(z.string()).default([]),
+  hand: z.array(z.string()).default([]),
+  finish: z.array(z.string()).default([]),
+});
+
 export const SaveMoonBoardClimbInputSchema = z.object({
   boardType: z.literal('moonboard'),
   layoutId: z.number().int().positive('Layout ID must be positive'),
   name: z.string().min(1).max(200),
   description: z.string().max(2000).optional().default(''),
-  holds: z.object({
-    start: z.array(z.string()).default([]),
-    hand: z.array(z.string()).default([]),
-    finish: z.array(z.string()).default([]),
-  }),
+  holds: MoonBoardHoldsInputSchema,
   angle: z.number().int().min(0).max(90),
   isDraft: z.boolean().optional(),
   userGrade: z.string().max(20).optional(),
   isBenchmark: z.boolean().optional(),
   setter: z.string().max(100).optional(),
+});
+
+export const CheckMoonBoardClimbDuplicatesInputSchema = z.object({
+  layoutId: z.number().int().positive('Layout ID must be positive'),
+  angle: z.number().int().min(0).max(90),
+  climbs: z.array(z.object({
+    clientKey: z.string().min(1).max(200),
+    holds: MoonBoardHoldsInputSchema,
+  })).min(1).max(100),
 });

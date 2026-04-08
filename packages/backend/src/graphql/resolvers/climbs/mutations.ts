@@ -8,6 +8,12 @@ import { UNIFIED_TABLES, isValidBoardName } from '../../../db/queries/util/table
 import { publishSocialEvent } from '../../../events';
 import { requireAuthenticated, applyRateLimit, validateInput } from '../shared/helpers';
 import {
+  buildMoonBoardClimbHoldRows,
+  buildMoonBoardDuplicateError,
+  encodeMoonBoardHoldsToFrames,
+  findMoonBoardDuplicateMatch,
+} from './moonboard-duplicates';
+import {
   SaveClimbInputSchema,
   SaveMoonBoardClimbInputSchema,
 } from '../../../validation/schemas';
@@ -37,26 +43,6 @@ async function getUserProfile(userId: string) {
     name: user?.name || '',
     avatarUrl: user?.avatarUrl || user?.image || undefined,
   };
-}
-
-function encodeMoonBoardHoldsToFrames(holds: { start: string[]; hand: string[]; finish: string[] }): string {
-  const START = 42;
-  const HAND = 43;
-  const FINISH = 44;
-
-  const coordinateToHoldId = (coord: string): number => {
-    // Coord format: e.g., "A1" -> column letter + row number
-    const colIndex = coord[0].toUpperCase().charCodeAt(0) - 'A'.charCodeAt(0);
-    const row = parseInt(coord.slice(1), 10);
-    const NUM_COLUMNS = 11; // MoonBoard grid: 11 columns x 18 rows
-    return (row - 1) * NUM_COLUMNS + colIndex + 1;
-  };
-
-  const parts: string[] = [];
-  holds.start.forEach((coord) => parts.push(`p${coordinateToHoldId(coord)}r${START}`));
-  holds.hand.forEach((coord) => parts.push(`p${coordinateToHoldId(coord)}r${HAND}`));
-  holds.finish.forEach((coord) => parts.push(`p${coordinateToHoldId(coord)}r${FINISH}`));
-  return parts.join('');
 }
 
 async function resolveDifficultyId(boardType: string, grade?: string | null): Promise<number | null> {
@@ -168,7 +154,12 @@ export const climbMutations = {
     const { displayName, name, avatarUrl } = await getUserProfile(ctx.userId!);
     const preferredSetter = validated.setter || displayName || name || null;
 
-    const frames = encodeMoonBoardHoldsToFrames(validated.holds as { start: string[]; hand: string[]; finish: string[] });
+    const duplicateMatch = await findMoonBoardDuplicateMatch(validated.layoutId, validated.angle, validated.holds);
+    if (duplicateMatch) {
+      throw new Error(buildMoonBoardDuplicateError(duplicateMatch.existingClimbName));
+    }
+
+    const frames = encodeMoonBoardHoldsToFrames(validated.holds);
 
     await db.insert(UNIFIED_TABLES.climbs).values({
       boardType: validated.boardType,
@@ -189,6 +180,11 @@ export const climbMutations = {
       synced: false,
       syncError: null,
     });
+
+    const holdRows = buildMoonBoardClimbHoldRows(uuid, validated.holds);
+    if (holdRows.length > 0) {
+      await db.insert(dbSchema.boardClimbHolds).values(holdRows).onConflictDoNothing();
+    }
 
     // Optional grade stats
     const difficultyId = await resolveDifficultyId(validated.boardType, validated.userGrade);

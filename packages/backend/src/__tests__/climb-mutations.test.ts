@@ -7,6 +7,7 @@ const { mockDb, mockPublishSocialEvent, insertCalls } = vi.hoisted(() => {
   const mockDb = {
     select: vi.fn(),
     insert: vi.fn(),
+    execute: vi.fn(),
   };
 
   const mockPublishSocialEvent = vi.fn().mockResolvedValue(undefined);
@@ -47,7 +48,7 @@ function makeCtx(overrides: Partial<ConnectionContext> = {}): ConnectionContext 
 
 function createMockChain(resolveValue: unknown = [], onValues?: (values: unknown) => void): Record<string, unknown> {
   const chain: Record<string, unknown> = {};
-  const methods = ['from', 'where', 'leftJoin', 'limit', 'values'];
+  const methods = ['from', 'where', 'leftJoin', 'limit', 'values', 'onConflictDoNothing', 'onConflictDoUpdate'];
 
   chain.then = (resolve: (value: unknown) => unknown) => Promise.resolve(resolveValue).then(resolve);
 
@@ -101,6 +102,9 @@ describe('climb mutations', () => {
   });
 
   it('stores non-draft MoonBoard climbs as listed', async () => {
+    mockDb.execute
+      .mockResolvedValueOnce([])
+      .mockResolvedValueOnce([]);
     mockDb.select
       .mockReturnValueOnce(createMockChain([
         { name: 'Alice', displayName: 'Alice Setter', image: null, avatarUrl: null },
@@ -136,5 +140,54 @@ describe('climb mutations', () => {
       isDraft: false,
       isListed: true,
     });
+    expect(insertCalls[1].values).toEqual([
+      expect.objectContaining({ boardType: 'moonboard', climbUuid: expect.any(String), holdId: 1, holdState: 'STARTING' }),
+      expect.objectContaining({ boardType: 'moonboard', climbUuid: expect.any(String), holdId: 13, holdState: 'HAND' }),
+      expect.objectContaining({ boardType: 'moonboard', climbUuid: expect.any(String), holdId: 25, holdState: 'FINISH' }),
+    ]);
+  });
+
+  it('rejects duplicate MoonBoard climbs before inserting', async () => {
+    mockDb.execute
+      .mockResolvedValueOnce([
+        {
+          uuid: 'existing-uuid',
+          name: 'Already There',
+          ascensionist_count: 12,
+          signature: '1:STARTING,13:HAND,25:FINISH',
+        },
+      ])
+      .mockResolvedValueOnce([]);
+    mockDb.select.mockReturnValueOnce(createMockChain([
+      { name: 'Alice', displayName: 'Alice Setter', image: null, avatarUrl: null },
+    ]));
+    mockDb.insert.mockImplementation((table: unknown) =>
+      createMockChain(undefined, (values) => insertCalls.push({ table, values })),
+    );
+
+    await expect(
+      climbMutations.saveMoonBoardClimb(
+        {},
+        {
+          input: {
+            boardType: 'moonboard',
+            layoutId: 3,
+            name: 'MoonBoard Climb',
+            description: '',
+            holds: {
+              start: ['A1'],
+              hand: ['B2'],
+              finish: ['C3'],
+            },
+            angle: 40,
+            isDraft: false,
+          },
+        },
+        makeCtx(),
+      ),
+    ).rejects.toThrow('A MoonBoard climb with the same holds already exists: "Already There"');
+
+    expect(insertCalls).toHaveLength(0);
+    expect(mockPublishSocialEvent).not.toHaveBeenCalled();
   });
 });

@@ -41,6 +41,30 @@ export const newClimbFeedTypeDefs = /* GraphQL */ `
     offset: Int
   }
 
+  input MoonBoardHoldsInput {
+    start: [String!]!
+    hand: [String!]!
+    finish: [String!]!
+  }
+
+  input MoonBoardClimbDuplicateCandidateInput {
+    clientKey: String!
+    holds: MoonBoardHoldsInput!
+  }
+
+  input CheckMoonBoardClimbDuplicatesInput {
+    layoutId: Int!
+    angle: Int!
+    climbs: [MoonBoardClimbDuplicateCandidateInput!]!
+  }
+
+  type MoonBoardClimbDuplicateMatch {
+    clientKey: String!
+    exists: Boolean!
+    existingClimbUuid: ID
+    existingClimbName: String
+  }
+
   type NewClimbCreatedEvent {
     climb: NewClimbFeedItem!
   }
@@ -62,7 +86,7 @@ export const newClimbFeedTypeDefs = /* GraphQL */ `
     layoutId: Int!
     name: String!
     description: String
-    holds: JSON!
+    holds: MoonBoardHoldsInput!
     angle: Int!
     isDraft: Boolean
     userGrade: String

@@ -26,24 +26,33 @@ import { useBoardProvider } from '../board-provider/board-provider-context';
 import { useCreateClimb } from './use-create-climb';
 import { useMoonBoardCreateClimb } from './use-moonboard-create-climb';
 import { useBoardBluetooth } from '../board-bluetooth-control/use-board-bluetooth';
+import type { MoonBoardClimbDuplicateMatch } from '@boardsesh/shared-schema';
 import { BoardDetails } from '@/app/lib/types';
 import { constructClimbListWithSlugs } from '@/app/lib/url-utils';
 import { convertLitUpHoldsStringToMap } from '../board-renderer/util';
-import { holdIdToCoordinate, MOONBOARD_GRADES, MOONBOARD_ANGLES } from '@/app/lib/moonboard-config';
+import { MOONBOARD_GRADES, MOONBOARD_ANGLES } from '@/app/lib/moonboard-config';
 import { getSoftFontGradeColor } from '@/app/lib/grade-colors';
 import { useColorMode } from '@/app/hooks/use-color-mode';
 import { parseScreenshot } from '@boardsesh/moonboard-ocr/browser';
 import { convertOcrHoldsToMap } from '@/app/lib/moonboard-climbs-db';
 import { createGraphQLClient, execute, type Client } from '../graphql-queue/graphql-client';
 import { getBackendWsUrl } from '@/app/lib/backend-url';
+import { createGraphQLHttpClient } from '@/app/lib/graphql/client';
 import { useAuthModal } from '@/app/components/providers/auth-modal-provider';
 import { useSnackbar } from '../providers/snackbar-provider';
 import { refreshClimbSearchAfterSave } from '@/app/lib/climb-search-cache';
 import CreateClimbHeatmapOverlay from './create-climb-heatmap-overlay';
 import HoldStatusChip from './hold-status-chip';
 import { useCreateHeaderBridgeSetters } from './create-header-bridge-context';
+import {
+  convertLitUpHoldsMapToMoonBoardHolds,
+  isMoonBoardDuplicateError,
+} from '@/app/lib/moonboard-climb-helpers';
 import styles from './create-climb-form.module.css';
 import {
+  CHECK_MOONBOARD_CLIMB_DUPLICATES_QUERY,
+  type CheckMoonBoardClimbDuplicatesResponse,
+  type CheckMoonBoardClimbDuplicatesVariables,
   SAVE_MOONBOARD_CLIMB_MUTATION,
   type SaveMoonBoardClimbMutationVariables,
   type SaveMoonBoardClimbMutationResponse,
@@ -153,6 +162,8 @@ export default function CreateClimbForm({
   const [userGrade, setUserGrade] = useState<string | undefined>(undefined);
   const [isBenchmark, setIsBenchmark] = useState(false);
   const [selectedAngle, setSelectedAngle] = useState<number>(angle);
+  const [moonBoardDuplicateMatch, setMoonBoardDuplicateMatch] = useState<MoonBoardClimbDuplicateMatch | null>(null);
+  const [isCheckingMoonBoardDuplicate, setIsCheckingMoonBoardDuplicate] = useState(false);
 
   // Common state
   const [climbName, setClimbName] = useState(forkName ? `${forkName} fork` : '');
@@ -161,9 +172,22 @@ export default function CreateClimbForm({
   const climbNameRef = useRef(climbName);
   const setClimbNameRef = useRef(setClimbName);
   const headerActionRef = useRef<React.ReactNode | null>(null);
+  const duplicateCheckRequestIdRef = useRef(0);
 
   // Construct the bulk import URL (MoonBoard only)
   const bulkImportUrl = pathname.replace(/\/create$/, '/import');
+
+  const moonBoardHolds = useMemo(
+    () => (boardType === 'moonboard' ? convertLitUpHoldsMapToMoonBoardHolds(litUpHoldsMap) : null),
+    [boardType, litUpHoldsMap],
+  );
+
+  const moonBoardDuplicateError = useMemo(() => {
+    if (!moonBoardDuplicateMatch?.exists) return null;
+    return moonBoardDuplicateMatch.existingClimbName
+      ? `This hold pattern already exists as "${moonBoardDuplicateMatch.existingClimbName}". Change at least one hold to save.`
+      : 'This hold pattern already exists. Change at least one hold to save.';
+  }, [moonBoardDuplicateMatch]);
 
   // Send frames to board whenever litUpHoldsMap changes (Aurora only)
   useEffect(() => {
@@ -231,6 +255,71 @@ export default function CreateClimbForm({
     }
   }, [boardType, angle, setLitUpHoldsMap]);
 
+  const runMoonBoardDuplicateCheck = useCallback(async (holds: NonNullable<typeof moonBoardHolds>) => {
+    if (!layoutId) return null;
+
+    const requestId = ++duplicateCheckRequestIdRef.current;
+    setIsCheckingMoonBoardDuplicate(true);
+
+    try {
+      const client = createGraphQLHttpClient();
+      const variables: CheckMoonBoardClimbDuplicatesVariables = {
+        input: {
+          layoutId,
+          angle: selectedAngle,
+          climbs: [{ clientKey: 'create-form', holds }],
+        },
+      };
+
+      const response = await client.request<
+        CheckMoonBoardClimbDuplicatesResponse,
+        CheckMoonBoardClimbDuplicatesVariables
+      >(CHECK_MOONBOARD_CLIMB_DUPLICATES_QUERY, variables);
+      const duplicateMatch = response.checkMoonBoardClimbDuplicates[0] ?? null;
+
+      if (requestId === duplicateCheckRequestIdRef.current) {
+        setMoonBoardDuplicateMatch(duplicateMatch?.exists ? duplicateMatch : null);
+      }
+
+      return duplicateMatch?.exists ? duplicateMatch : null;
+    } catch (error) {
+      console.warn('Failed to check MoonBoard climb duplicates:', error);
+
+      if (requestId === duplicateCheckRequestIdRef.current) {
+        setMoonBoardDuplicateMatch(null);
+      }
+
+      return null;
+    } finally {
+      if (requestId === duplicateCheckRequestIdRef.current) {
+        setIsCheckingMoonBoardDuplicate(false);
+      }
+    }
+  }, [layoutId, selectedAngle]);
+
+  useEffect(() => {
+    if (boardType !== 'moonboard') {
+      setMoonBoardDuplicateMatch(null);
+      setIsCheckingMoonBoardDuplicate(false);
+      return;
+    }
+
+    if (!layoutId || !moonBoardHolds || !isValid) {
+      duplicateCheckRequestIdRef.current += 1;
+      setMoonBoardDuplicateMatch(null);
+      setIsCheckingMoonBoardDuplicate(false);
+      return;
+    }
+
+    const timeoutId = window.setTimeout(() => {
+      void runMoonBoardDuplicateCheck(moonBoardHolds);
+    }, 350);
+
+    return () => {
+      window.clearTimeout(timeoutId);
+    };
+  }, [boardType, isValid, layoutId, moonBoardHolds, runMoonBoardDuplicateCheck, selectedAngle]);
+
   // Save climb - Aurora
   const doSaveAuroraClimb = useCallback(async () => {
     if (!boardDetails || !generateFramesString) return;
@@ -283,24 +372,16 @@ export default function CreateClimbForm({
   // Save climb - MoonBoard
   const doSaveMoonBoardClimb = useCallback(async () => {
     const userId = session?.user?.id;
-    if (!layoutId || !userId) return;
+    if (!layoutId || !userId || !moonBoardHolds) return;
+
+    if (moonBoardDuplicateError) {
+      showMessage(moonBoardDuplicateError, 'error');
+      return;
+    }
 
     setIsSaving(true);
 
     try {
-      // Convert holds to coordinate format for storage
-      const holds = {
-        start: Object.entries(litUpHoldsMap)
-          .filter(([, hold]) => hold.state === 'STARTING')
-          .map(([id]) => holdIdToCoordinate(Number(id))),
-        hand: Object.entries(litUpHoldsMap)
-          .filter(([, hold]) => hold.state === 'HAND')
-          .map(([id]) => holdIdToCoordinate(Number(id))),
-        finish: Object.entries(litUpHoldsMap)
-          .filter(([, hold]) => hold.state === 'FINISH')
-          .map(([id]) => holdIdToCoordinate(Number(id))),
-      };
-
       if (!wsAuthToken) {
         throw new Error('Authentication required to save climb');
       }
@@ -318,7 +399,7 @@ export default function CreateClimbForm({
           layoutId,
           name: climbName,
           description: description || '',
-          holds,
+          holds: moonBoardHolds,
           angle: selectedAngle,
           isDraft: isDraft,
           userGrade,
@@ -342,11 +423,31 @@ export default function CreateClimbForm({
       router.push(listUrl);
     } catch (error) {
       console.error('Failed to save climb:', error);
+      if (error instanceof Error && isMoonBoardDuplicateError(error.message)) {
+        await runMoonBoardDuplicateCheck(moonBoardHolds);
+      }
       showMessage(error instanceof Error ? error.message : 'Failed to save climb. Please try again.', 'error');
     } finally {
       setIsSaving(false);
     }
-  }, [layoutId, session, litUpHoldsMap, climbName, description, userGrade, isBenchmark, isDraft, selectedAngle, pathname, router, wsAuthToken, queryClient, showMessage]);
+  }, [
+    layoutId,
+    session,
+    moonBoardHolds,
+    moonBoardDuplicateError,
+    climbName,
+    description,
+    userGrade,
+    isBenchmark,
+    isDraft,
+    selectedAngle,
+    pathname,
+    router,
+    wsAuthToken,
+    queryClient,
+    showMessage,
+    runMoonBoardDuplicateCheck,
+  ]);
 
   const handleAuthSuccess = useCallback(async () => {
     if (pendingFormValues) {
@@ -358,6 +459,13 @@ export default function CreateClimbForm({
 
   const handlePublish = useCallback(async () => {
     if (!isValid || !climbName.trim()) {
+      return;
+    }
+
+    if (boardType === 'moonboard' && (isCheckingMoonBoardDuplicate || moonBoardDuplicateError)) {
+      if (moonBoardDuplicateError) {
+        showMessage(moonBoardDuplicateError, 'error');
+      }
       return;
     }
 
@@ -378,9 +486,26 @@ export default function CreateClimbForm({
     } else {
       await doSaveMoonBoardClimb();
     }
-  }, [boardType, isValid, climbName, isLoggedIn, description, isDraft, doSaveAuroraClimb, doSaveMoonBoardClimb, openAuthModal, handleAuthSuccess]);
+  }, [
+    boardType,
+    isValid,
+    climbName,
+    isLoggedIn,
+    description,
+    isDraft,
+    isCheckingMoonBoardDuplicate,
+    moonBoardDuplicateError,
+    doSaveAuroraClimb,
+    doSaveMoonBoardClimb,
+    openAuthModal,
+    handleAuthSuccess,
+    showMessage,
+  ]);
 
-  const canSave = isLoggedIn && isValid && climbName.trim().length > 0;
+  const canSave = isLoggedIn
+    && isValid
+    && climbName.trim().length > 0
+    && (boardType !== 'moonboard' || (!isCheckingMoonBoardDuplicate && !moonBoardDuplicateError));
 
   const handleToggleSettings = useCallback(() => {
     setShowSettingsPanel((prev) => !prev);
@@ -490,6 +615,18 @@ export default function CreateClimbForm({
           className={styles.alertBanner}
         >
           Import Warnings: {ocrWarnings.map((w, i) => <div key={i}>{w}</div>)}
+        </MuiAlert>
+      )}
+
+      {boardType === 'moonboard' && moonBoardDuplicateError && (
+        <MuiAlert severity="error" className={styles.alertBanner}>
+          {moonBoardDuplicateError}
+        </MuiAlert>
+      )}
+
+      {boardType === 'moonboard' && !moonBoardDuplicateError && isCheckingMoonBoardDuplicate && isValid && (
+        <MuiAlert severity="info" className={styles.alertBanner}>
+          Checking whether this MoonBoard climb already exists...
         </MuiAlert>
       )}
 
