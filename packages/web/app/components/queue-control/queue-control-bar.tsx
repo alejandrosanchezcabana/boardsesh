@@ -21,6 +21,7 @@ import { BoardRouteParameters, BoardDetails, Angle } from '@/app/lib/types';
 import PreviousClimbButton from './previous-climb-button';
 import QueueList, { QueueListHandle } from './queue-list';
 import { TickButton } from '../logbook/tick-button';
+import { QuickTickBar } from '../logbook/quick-tick-bar';
 import ClimbThumbnail from '../climb-card/climb-thumbnail';
 import ClimbTitle from '../climb-card/climb-title';
 import { themeTokens } from '@/app/theme/theme-config';
@@ -37,7 +38,7 @@ import { ConfirmPopover } from '@/app/components/ui/confirm-popover';
 import { useSnackbar } from '@/app/components/providers/snackbar-provider';
 import styles from './queue-control-bar.module.css';
 
-export type ActiveDrawer = 'none' | 'play' | 'queue';
+export type ActiveDrawer = 'none' | 'play' | 'queue' | 'tick';
 
 const QUEUE_DRAWER_STYLES = { wrapper: { height: '70%' }, body: { padding: 0 } } as const;
 
@@ -113,6 +114,12 @@ const QueueControlBar: React.FC<QueueControlBarProps> = ({ boardDetails, angle }
   const { showMessage } = useSnackbar();
   const [showCancelConfirm, setShowCancelConfirm] = useState(false);
   const [dismissedDisconnect, setDismissedDisconnect] = useState(false);
+
+  // Close tick bar when climb changes (e.g. party session navigation)
+  const currentClimbUuid = currentClimb?.uuid;
+  useEffect(() => {
+    setActiveDrawer((prev) => prev === 'tick' ? 'none' : prev);
+  }, [currentClimbUuid]);
 
   // Reset dismissed state when connection is restored so banner reappears on next disconnect
   useEffect(() => {
@@ -228,8 +235,9 @@ const QueueControlBar: React.FC<QueueControlBarProps> = ({ boardDetails, angle }
     }
   }, [previousClimb, viewOnlyMode, setCurrentClimbQueueItem, shouldNavigate, router, buildClimbUrl, boardDetails, isPlayPage]);
 
-  const canSwipeNext = !viewOnlyMode && !!nextClimb;
-  const canSwipePrevious = !viewOnlyMode && !!previousClimb;
+  const tickBarActive = activeDrawer === 'tick';
+  const canSwipeNext = !viewOnlyMode && !!nextClimb && !tickBarActive;
+  const canSwipePrevious = !viewOnlyMode && !!previousClimb && !tickBarActive;
 
   const { swipeHandlers, swipeOffset, isAnimating, animationDirection, enterDirection, clearEnterAnimation } = useCardSwipeNavigation({
     onSwipeNext: handleSwipeNext,
@@ -470,44 +478,57 @@ const QueueControlBar: React.FC<QueueControlBarProps> = ({ boardDetails, angle }
 
                   {/* Text swipe clip — overflow hidden to contain sliding text */}
                   <div className={styles.textSwipeClip}>
-                    {/* Current climb text — slides with finger */}
-                    <div
-                      id="onboarding-queue-toggle"
-                      onClick={handleClimbInfoClick}
-                      className={`${styles.queueToggle} ${isListPage ? styles.listPage : ''}`}
-                      style={{
-                        transform: `translateX(${swipeOffset}px)`,
-                        transition: getTextTransitionStyle(),
-                      }}
-                    >
-                      <ClimbTitle
-                        climb={currentClimb}
-                        gradePosition="right"
-                        showSetterInfo
+                    {tickBarActive ? (
+                      <QuickTickBar
+                        currentClimb={currentClimb}
+                        angle={angle}
+                        boardDetails={boardDetails}
+                        onSave={() => setActiveDrawer('none')}
+                        onCancel={() => setActiveDrawer('none')}
                       />
-                    </div>
+                    ) : (
+                      <>
+                        {/* Current climb text — slides with finger */}
+                        <div
+                          id="onboarding-queue-toggle"
+                          onClick={handleClimbInfoClick}
+                          className={`${styles.queueToggle} ${isListPage ? styles.listPage : ''}`}
+                          style={{
+                            transform: `translateX(${swipeOffset}px)`,
+                            transition: getTextTransitionStyle(),
+                          }}
+                        >
+                          <ClimbTitle
+                            climb={currentClimb}
+                            gradePosition="right"
+                            showSetterInfo
+                          />
+                        </div>
 
-                    {/* Peek text — shows next/previous climb sliding in from the edge */}
-                    {showPeek && peekClimbData && (
-                      <div
-                        className={`${styles.queueToggle} ${styles.peekText}`}
-                        style={{
-                          transform: getPeekTransform(),
-                          transition: getTextTransitionStyle(),
-                        }}
-                      >
-                        <ClimbTitle
-                          climb={peekClimbData}
-                          gradePosition="right"
-                          showSetterInfo
-                        />
-                      </div>
+                        {/* Peek text — shows next/previous climb sliding in from the edge */}
+                        {showPeek && peekClimbData && (
+                          <div
+                            className={`${styles.queueToggle} ${styles.peekText}`}
+                            style={{
+                              transform: getPeekTransform(),
+                              transition: getTextTransitionStyle(),
+                            }}
+                          >
+                            <ClimbTitle
+                              climb={peekClimbData}
+                              gradePosition="right"
+                              showSetterInfo
+                            />
+                          </div>
+                        )}
+                      </>
                     )}
                   </div>
                 </div>
               </Box>
 
-              {/* Button cluster — STATIC */}
+              {/* Button cluster — hidden when tick bar is active to give full width */}
+              {!tickBarActive && (
               <Box sx={{ flex: 'none', marginLeft: `${themeTokens.spacing[2]}px` }}>
                 <Stack direction="row" spacing={1}>
                   {/* Mirror button - desktop only */}
@@ -558,9 +579,16 @@ const QueueControlBar: React.FC<QueueControlBarProps> = ({ boardDetails, angle }
                   {/* Party button */}
                   <ShareBoardButton />
                   {/* Tick button */}
-                  <TickButton currentClimb={currentClimb} angle={angle} boardDetails={boardDetails} />
+                  <TickButton
+                    currentClimb={currentClimb}
+                    angle={angle}
+                    boardDetails={boardDetails}
+                    onActivateTickBar={() => setActiveDrawer('tick')}
+                    tickBarActive={tickBarActive}
+                  />
                 </Stack>
               </Box>
+              )}
             </Box>
           </div>
         </div>

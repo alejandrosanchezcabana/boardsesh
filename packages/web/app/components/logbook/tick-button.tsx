@@ -24,9 +24,11 @@ interface TickButtonProps {
   angle: Angle;
   currentClimb: Climb | null;
   boardDetails: BoardDetails;
+  onActivateTickBar?: () => void;
+  tickBarActive?: boolean;
 }
 
-export const TickButton: React.FC<TickButtonProps> = ({ currentClimb, angle, boardDetails }) => {
+export const TickButton: React.FC<TickButtonProps> = ({ currentClimb, angle, boardDetails, onActivateTickBar, tickBarActive }) => {
   const { logbook, isAuthenticated } = useBoardProvider();
   const [drawerVisible, setDrawerVisible] = useState(false);
   const { openAuthModal } = useAuthModal();
@@ -46,6 +48,12 @@ export const TickButton: React.FC<TickButtonProps> = ({ currentClimb, angle, boa
 
     if (!isAuthenticated && alwaysUseApp && loaded && openInAppUrl) {
       openExternalUrl(openInAppUrl);
+      return;
+    }
+
+    // Use inline tick bar when available and authenticated
+    if (isAuthenticated && onActivateTickBar) {
+      onActivateTickBar();
       return;
     }
 
@@ -78,7 +86,14 @@ export const TickButton: React.FC<TickButtonProps> = ({ currentClimb, angle, boa
           },
         }}
       >
-        <IconButton id="button-tick" onClick={showDrawer} sx={{ opacity: themeTokens.opacity.subtle }}>
+        <IconButton
+          id="button-tick"
+          onClick={showDrawer}
+          sx={tickBarActive
+            ? { backgroundColor: themeTokens.colors.success, color: 'common.white', '&:hover': { backgroundColor: themeTokens.colors.successHover } }
+            : { opacity: themeTokens.opacity.subtle }
+          }
+        >
           <CheckOutlined />
         </IconButton>
       </MuiBadge>
