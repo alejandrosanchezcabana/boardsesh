@@ -98,7 +98,7 @@ const getItemStatusColor = (status: string): 'success' | 'primary' | 'default' =
   return 'default';
 };
 
-const TickItemRow: React.FC<{ item: AscentFeedItem; onDelete: (uuid: string) => void }> = ({ item, onDelete }) => {
+const TickItemRow: React.FC<{ item: AscentFeedItem; onDelete: (uuid: string) => void; isDeleting: boolean }> = ({ item, onDelete, isDeleting }) => {
   const timeAgo = dayjs(item.climbedAt).fromNow();
   return (
     <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, py: 0.5 }}>
@@ -119,7 +119,7 @@ const TickItemRow: React.FC<{ item: AscentFeedItem; onDelete: (uuid: string) => 
         okText="Delete"
         okButtonProps={{ color: 'error' }}
       >
-        <IconButton size="small" sx={{ color: 'text.secondary' }}>
+        <IconButton size="small" disabled={isDeleting} sx={{ color: 'text.secondary' }}>
           <DeleteOutlined sx={{ fontSize: 16 }} />
         </IconButton>
       </ConfirmPopover>
@@ -127,7 +127,7 @@ const TickItemRow: React.FC<{ item: AscentFeedItem; onDelete: (uuid: string) => 
   );
 };
 
-const GroupedFeedItem: React.FC<{ group: GroupedAscentFeedItem; isOwnProfile?: boolean; onDeleteTick?: (uuid: string) => void }> = ({ group, isOwnProfile = false, onDeleteTick }) => {
+const GroupedFeedItem: React.FC<{ group: GroupedAscentFeedItem; isOwnProfile?: boolean; onDeleteTick?: (uuid: string) => void; isDeleting?: boolean }> = ({ group, isOwnProfile = false, onDeleteTick, isDeleting = false }) => {
   const latestItem = group.items.reduce((latest, item) =>
     new Date(item.climbedAt) > new Date(latest.climbedAt) ? item : latest
   );
@@ -201,7 +201,7 @@ const GroupedFeedItem: React.FC<{ group: GroupedAscentFeedItem; isOwnProfile?: b
           {isOwnProfile && onDeleteTick && (
             <Box sx={{ display: 'flex', flexDirection: 'column', borderTop: `1px solid ${themeTokens.neutral[100]}`, mt: 0.5, pt: 0.5 }}>
               {group.items.map((item) => (
-                <TickItemRow key={item.uuid} item={item} onDelete={onDeleteTick} />
+                <TickItemRow key={item.uuid} item={item} onDelete={onDeleteTick} isDeleting={isDeleting} />
               ))}
             </Box>
           )}
@@ -275,7 +275,7 @@ export const AscentsFeed: React.FC<AscentsFeedProps> = ({ userId, pageSize = 10,
     <div className={styles.feed}>
       <Box sx={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
         {groups.map((group) => (
-          <GroupedFeedItem key={group.key} group={group} isOwnProfile={isOwnProfile} onDeleteTick={isOwnProfile ? (uuid) => deleteTick.mutate(uuid) : undefined} />
+          <GroupedFeedItem key={group.key} group={group} isOwnProfile={isOwnProfile} onDeleteTick={isOwnProfile ? (uuid) => deleteTick.mutate(uuid) : undefined} isDeleting={deleteTick.isPending} />
         ))}
       </Box>
 

@@ -163,12 +163,14 @@ function SessionTickItem({
   participant,
   currentUserId,
   onDelete,
+  isDeleting,
 }: {
   tick: SessionDetailTick;
   isMultiUser: boolean;
   participant: SessionFeedParticipant | null;
   currentUserId?: string;
   onDelete?: (uuid: string) => void;
+  isDeleting?: boolean;
 }) {
   const [commentsOpen, setCommentsOpen] = useState(false);
   const attemptText = formatAttemptText(tick);
@@ -231,7 +233,7 @@ function SessionTickItem({
               okText="Delete"
               okButtonProps={{ color: 'error' }}
             >
-              <IconButton size="small" sx={{ color: 'text.secondary' }}>
+              <IconButton size="small" disabled={isDeleting} sx={{ color: 'text.secondary' }}>
                 <DeleteOutlined fontSize="small" />
               </IconButton>
             </ConfirmPopover>
@@ -414,12 +416,13 @@ export default function SessionDetailContent({
               participant={participant ?? null}
               currentUserId={currentUserId}
               onDelete={handleDeleteTick}
+              isDeleting={deleteTick.isPending}
             />
           );
         })}
       </Box>
     );
-  }, [ticksByClimb, participantMap, isMultiUser, currentUserId, handleDeleteTick]);
+  }, [ticksByClimb, participantMap, isMultiUser, currentUserId, handleDeleteTick, deleteTick.isPending]);
 
   const handleStartEdit = useCallback(() => {
     setEditName(sessionName || '');
