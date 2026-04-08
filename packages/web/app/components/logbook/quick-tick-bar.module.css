@@ -1,6 +1,6 @@
 .tickBar {
   display: flex;
-  align-items: center;
+  flex-direction: column;
   gap: var(--space-1, 4px);
   min-width: 0;
   flex: 1;
@@ -30,7 +30,7 @@
   display: flex;
   align-items: center;
   gap: var(--space-1, 4px);
-  padding: var(--space-1, 4px) 0 0;
+  width: 100%;
   animation: commentExpand 150ms ease-out;
 }
 
