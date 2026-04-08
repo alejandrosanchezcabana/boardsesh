@@ -375,6 +375,17 @@ const SwipeableDrawer: React.FC<SwipeableDrawerProps> = ({
     [paperSx],
   );
 
+  // Prevent parent MUI SwipeableDrawer from claiming touches inside nested
+  // drawers. MUI registers touchstart handlers on `document` in effect order,
+  // so the parent's handler always fires first and sets defaultMuiPrevented,
+  // stealing the touch from the child. React synthetic handlers fire at the
+  // React root (before document), so we can set the flag first.
+  const handleNestedTouchStart = useCallback((e: React.TouchEvent) => {
+    if (disablePortal && (open ?? false)) {
+      (e.nativeEvent as unknown as Record<string, unknown>).defaultMuiPrevented = true;
+    }
+  }, [disablePortal, open]);
+
   // Forward paperRef to the MUI Paper element via the wrapper Box's parent.
   const lastPaperRef = useRef<HTMLDivElement | null>(null);
   const wrapperBoxRef = useCallback(
@@ -443,7 +454,7 @@ const SwipeableDrawer: React.FC<SwipeableDrawerProps> = ({
       slotProps={slotProps}
       PaperProps={muiPaperProps}
     >
-      <Box ref={wrapperBoxRef} sx={{ position: 'relative', display: 'flex', flexDirection: 'column', flex: 1, minHeight: 0 }}>
+      <Box ref={wrapperBoxRef} onTouchStart={handleNestedTouchStart} sx={{ position: 'relative', display: 'flex', flexDirection: 'column', flex: 1, minHeight: 0 }}>
         {bodyContent}
       </Box>
     </MuiSwipeableDrawer>

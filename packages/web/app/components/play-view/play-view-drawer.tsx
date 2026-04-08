@@ -55,7 +55,7 @@ const QUEUE_DRAWER_STYLES = {
     touchAction: 'pan-y' as const,
     transition: 'height 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
   },
-  body: { padding: 0, touchAction: 'pan-y' as const },
+  body: { padding: 0, overflow: 'hidden' as const, touchAction: 'pan-y' as const },
 } as const;
 
 interface PlayDrawerContentProps {
@@ -175,6 +175,7 @@ const PlayViewDrawer: React.FC<PlayViewDrawerProps> = ({
   const [selectedItems, setSelectedItems] = useState<Set<string>>(new Set());
   const queueDrawerHeightRef = useRef('60%');
   const queuePaperRef = useRef<HTMLDivElement>(null);
+  const playPaperRef = useRef<HTMLDivElement>(null);
 
   const updateQueueDrawerHeight = useCallback((height: string) => {
     queueDrawerHeightRef.current = height;
@@ -298,6 +299,93 @@ const PlayViewDrawer: React.FC<PlayViewDrawerProps> = ({
       }
     }
   }, [handleExitEditMode, updateQueueDrawerHeight]);
+
+  // Custom swipe-to-close on queue scroll container.
+  // MUI's swipe-to-close cannot work for nested disablePortal drawers (the
+  // parent always claims the touch first), so we detect the "pull down from
+  // scroll top" gesture ourselves and translate the Paper to follow the finger.
+  const queueSwipeRef = useRef({ startY: 0, isPulling: false, translateY: 0 });
+
+  const handleQueueSwipeStart = useCallback((e: React.TouchEvent) => {
+    queueSwipeRef.current = {
+      startY: e.touches[0].clientY,
+      isPulling: false,
+      translateY: 0,
+    };
+  }, []);
+
+  const handleQueueSwipeMove = useCallback((e: React.TouchEvent) => {
+    const state = queueSwipeRef.current;
+    const scrollEl = queueScrollRef.current;
+    if (!scrollEl) return;
+
+    const currentY = e.touches[0].clientY;
+    const deltaY = currentY - state.startY;
+
+    // Only start pull-to-close if at scroll top and pulling down
+    if (scrollEl.scrollTop <= 0 && deltaY > 0) {
+      if (!state.isPulling && deltaY > 10) {
+        state.isPulling = true;
+      }
+      if (state.isPulling) {
+        state.translateY = deltaY;
+        if (queuePaperRef.current) {
+          queuePaperRef.current.style.transform = `translateY(${deltaY}px)`;
+          queuePaperRef.current.style.transition = 'none';
+        }
+      }
+    } else if (state.isPulling) {
+      // User reversed direction or scrolled — cancel pull
+      state.isPulling = false;
+      state.translateY = 0;
+      if (queuePaperRef.current) {
+        queuePaperRef.current.style.transform = '';
+        queuePaperRef.current.style.transition = '';
+      }
+    }
+  }, []);
+
+  const handleQueueSwipeEnd = useCallback(() => {
+    const state = queueSwipeRef.current;
+    if (!state.isPulling) {
+      // Reset any lingering transform
+      if (queuePaperRef.current && state.translateY > 0) {
+        queuePaperRef.current.style.transform = '';
+        queuePaperRef.current.style.transition = '';
+      }
+      return;
+    }
+
+    const CLOSE_THRESHOLD = 80;
+    const paper = queuePaperRef.current;
+
+    if (state.translateY > CLOSE_THRESHOLD && paper) {
+      // Animate off-screen then close
+      const targetY = paper.offsetHeight;
+      paper.style.transition = 'transform 200ms cubic-bezier(0.0, 0, 0.2, 1)';
+      paper.style.transform = `translateY(${targetY}px)`;
+      setTimeout(() => {
+        setIsQueueOpen(false);
+        handleExitEditMode();
+        setShowHistory(false);
+        // Don't reset transform — Paper stays off-screen.
+        // MUI's Slide exit starts from off-screen position (invisible).
+        // Cleanup happens when queue drawer re-opens via onTransitionEnd.
+      }, 210);
+    } else if (paper) {
+      // Snap back
+      paper.style.transition = 'transform 200ms cubic-bezier(0.0, 0, 0.2, 1)';
+      paper.style.transform = '';
+      setTimeout(() => {
+        if (paper) {
+          paper.style.transition = '';
+        }
+      }, 210);
+    }
+
+    state.isPulling = false;
+    state.translateY = 0;
+  }, [handleExitEditMode]);
 
   // Reset drawer height when queue drawer closes
   useEffect(() => {
@@ -428,6 +516,11 @@ const PlayViewDrawer: React.FC<PlayViewDrawerProps> = ({
   // Otherwise give the browser one frame to paint freshly-mounted content.
   useEffect(() => {
     if (isOpen) {
+      // Clear any leftover inline styles from a custom pull-to-close gesture
+      if (playPaperRef.current) {
+        playPaperRef.current.style.transform = '';
+        playPaperRef.current.style.transition = '';
+      }
       setContentReady(true); // ensure content mounts if idle hasn't fired yet
       if (hasBeenMountedRef.current) {
         // Content already in DOM — open instantly
@@ -469,6 +562,98 @@ const PlayViewDrawer: React.FC<PlayViewDrawerProps> = ({
     // eslint-disable-next-line react-hooks/exhaustive-deps -- see comment above
   }, [currentFrames, currentMirrored, boardDetails]);
 
+  // Custom pull-to-close on the board area.
+  // MUI's getDomTreeShapes fails to detect the mobileScrollLayout scroll
+  // container through the board's overflow:hidden layers, so we block MUI
+  // and handle the close gesture ourselves. When at scroll top and pulling
+  // down, the play drawer Paper follows the finger and closes past threshold.
+  const boardSwipeRef = useRef({ startY: 0, scrollContainer: null as HTMLElement | null, isPulling: false, translateY: 0 });
+
+  const handleBoardTouchStart = useCallback((e: React.TouchEvent) => {
+    (e.nativeEvent as unknown as Record<string, unknown>).defaultMuiPrevented = true;
+
+    // Find nearest scroll container (mobileScrollLayout)
+    let el: HTMLElement | null = e.currentTarget as HTMLElement;
+    let scrollContainer: HTMLElement | null = null;
+    while (el) {
+      const style = window.getComputedStyle(el);
+      if (style.overflowY === 'auto' || style.overflowY === 'scroll') {
+        scrollContainer = el;
+        break;
+      }
+      el = el.parentElement;
+    }
+
+    boardSwipeRef.current = { startY: e.touches[0].clientY, scrollContainer, isPulling: false, translateY: 0 };
+  }, []);
+
+  const handleBoardTouchMove = useCallback((e: React.TouchEvent) => {
+    const state = boardSwipeRef.current;
+    if (!state.scrollContainer) return;
+
+    const currentY = e.touches[0].clientY;
+    const deltaY = currentY - state.startY;
+
+    if (state.scrollContainer.scrollTop <= 0 && deltaY > 0) {
+      if (!state.isPulling && deltaY > 10) {
+        state.isPulling = true;
+      }
+      if (state.isPulling) {
+        state.translateY = deltaY;
+        if (playPaperRef.current) {
+          playPaperRef.current.style.transform = `translateY(${deltaY}px)`;
+          playPaperRef.current.style.transition = 'none';
+        }
+      }
+    } else if (state.isPulling) {
+      state.isPulling = false;
+      state.translateY = 0;
+      if (playPaperRef.current) {
+        playPaperRef.current.style.transform = '';
+        playPaperRef.current.style.transition = '';
+      }
+    }
+  }, []);
+
+  const handleBoardTouchEnd = useCallback(() => {
+    const state = boardSwipeRef.current;
+    if (!state.isPulling) {
+      if (playPaperRef.current && state.translateY > 0) {
+        playPaperRef.current.style.transform = '';
+        playPaperRef.current.style.transition = '';
+      }
+      return;
+    }
+
+    const CLOSE_THRESHOLD = 80;
+    const paper = playPaperRef.current;
+
+    if (state.translateY > CLOSE_THRESHOLD && paper) {
+      const targetY = paper.offsetHeight;
+      paper.style.transition = 'transform 200ms cubic-bezier(0.0, 0, 0.2, 1)';
+      paper.style.transform = `translateY(${targetY}px)`;
+      setTimeout(() => {
+        setDrawerOpen(false);
+        setActiveDrawer('none');
+        if (window.location.hash === '#playing') {
+          window.history.back();
+        }
+        // Don't reset transform here — Paper stays off-screen.
+        // MUI's Slide exit starts from the off-screen position (invisible).
+        // Cleanup happens on next open via the isOpen effect.
+      }, 210);
+    } else if (paper) {
+      paper.style.transition = 'transform 200ms cubic-bezier(0.0, 0, 0.2, 1)';
+      paper.style.transform = '';
+      setTimeout(() => {
+        if (paper) paper.style.transition = '';
+      }, 210);
+    }
+
+    state.isPulling = false;
+    state.translateY = 0;
+  }, [setActiveDrawer]);
+
   const aboveFold = useMemo(() => {
     if (!currentClimb) return null;
     return (
@@ -484,7 +669,7 @@ const PlayViewDrawer: React.FC<PlayViewDrawerProps> = ({
       </div>
 
       {/* Board renderer with card-swipe and floating Tick FAB */}
-      <div className={styles.boardSectionWrapper}>
+      <div className={styles.boardSectionWrapper} onTouchStart={handleBoardTouchStart} onTouchMove={handleBoardTouchMove} onTouchEnd={handleBoardTouchEnd}>
         {currentClimb && (
           <SwipeBoardCarousel
             boardDetails={boardDetails}
@@ -567,6 +752,9 @@ const PlayViewDrawer: React.FC<PlayViewDrawerProps> = ({
     toggleFavorite,
     handleOpenActionsMenu,
     handleOpenQueueDrawer,
+    handleBoardTouchStart,
+    handleBoardTouchMove,
+    handleBoardTouchEnd,
   ]);
 
   return (
@@ -579,6 +767,7 @@ const PlayViewDrawer: React.FC<PlayViewDrawerProps> = ({
       onClose={handleClose}
       onTransitionEnd={handleTransitionEnd}
       keepMounted
+      paperRef={playPaperRef}
       swipeEnabled={!isActionsOpen && !isQueueOpen && !isPlaylistSelectorOpen}
       showDragHandle={true}
       styles={{
@@ -681,6 +870,11 @@ const PlayViewDrawer: React.FC<PlayViewDrawerProps> = ({
           }}
           onTransitionEnd={(open) => {
             if (open) {
+              // Clear any leftover inline styles from a custom pull-to-close gesture
+              if (queuePaperRef.current) {
+                queuePaperRef.current.style.transform = '';
+                queuePaperRef.current.style.transition = '';
+              }
               setTimeout(() => {
                 queueListRef.current?.scrollToCurrentClimb();
               }, 100);
@@ -694,6 +888,7 @@ const PlayViewDrawer: React.FC<PlayViewDrawerProps> = ({
           {/* Custom drag header — resize only on deliberate drag, not scroll */}
           <div
             className={styles.queueDragHeader}
+            data-swipe-blocked=""
             onTouchStart={handleQueueDragStart}
             onTouchMove={handleQueueDragMove}
             onTouchEnd={handleQueueDragEnd}
@@ -751,6 +946,9 @@ const PlayViewDrawer: React.FC<PlayViewDrawerProps> = ({
               ref={queueScrollCallbackRef}
               className={styles.queueScrollContainer}
               style={{ touchAction: 'pan-y' }}
+              onTouchStart={handleQueueSwipeStart}
+              onTouchMove={handleQueueSwipeMove}
+              onTouchEnd={handleQueueSwipeEnd}
             >
               <QueueList
                 ref={queueListRef}
