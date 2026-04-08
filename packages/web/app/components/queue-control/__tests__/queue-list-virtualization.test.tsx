@@ -63,10 +63,12 @@ const mockQueueItems: ClimbQueueItem[] = [
   },
 ];
 
+let mockCurrentClimbUuid: string | null = null;
+
 // --- Mocks ---
 
 vi.mock('../../graphql-queue', () => ({
-  useCurrentClimbUuid: () => null,
+  useCurrentClimbUuid: () => mockCurrentClimbUuid,
   useQueueList: () => ({
     queue: mockQueueItems,
     suggestedClimbs,
@@ -107,8 +109,13 @@ vi.mock('@/app/components/providers/auth-modal-provider', () => ({
 
 // Mock child components as simple stubs
 vi.mock('../queue-climb-list-item', () => ({
-  default: ({ item }: { item: ClimbQueueItem }) => (
-    <div data-testid="queue-climb-list-item" data-uuid={item.uuid}>
+  default: ({ item, isCurrent, isHistory }: { item: ClimbQueueItem; isCurrent: boolean; isHistory: boolean }) => (
+    <div
+      data-testid="queue-climb-list-item"
+      data-uuid={item.uuid}
+      data-current={isCurrent ? 'true' : 'false'}
+      data-history={isHistory ? 'true' : 'false'}
+    >
       {item.climb.name}
     </div>
   ),
@@ -244,6 +251,7 @@ function makeBoardDetails(): BoardDetails {
 describe('QueueList rendering', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    mockCurrentClimbUuid = null;
   });
 
   it('renders all suggested climbs when active', () => {
@@ -288,5 +296,55 @@ describe('QueueList rendering', () => {
     // Queue items still render
     const queueItems = screen.getAllByTestId('queue-climb-list-item');
     expect(queueItems).toHaveLength(2);
+  });
+
+  it('hides history items by default and marks the current item', () => {
+    mockCurrentClimbUuid = 'queue-2';
+
+    render(<QueueList boardDetails={makeBoardDetails()} active={false} />);
+
+    const queueItems = screen.getAllByTestId('queue-climb-list-item');
+    expect(queueItems).toHaveLength(1);
+    expect(screen.queryByText('Queue Climb 1')).toBeNull();
+    expect(screen.getByText('Queue Climb 2')).toBeTruthy();
+    expect(queueItems[0].getAttribute('data-uuid')).toBe('queue-2');
+    expect(queueItems[0].getAttribute('data-current')).toBe('true');
+    expect(queueItems[0].getAttribute('data-history')).toBe('false');
+  });
+
+  it('renders history items only when showHistory is true', () => {
+    mockCurrentClimbUuid = 'queue-2';
+
+    render(<QueueList boardDetails={makeBoardDetails()} active={false} showHistory={true} />);
+
+    const queueItems = screen.getAllByTestId('queue-climb-list-item');
+    expect(queueItems).toHaveLength(2);
+    expect(screen.getByText('Queue Climb 1')).toBeTruthy();
+    expect(screen.getByText('Queue Climb 2')).toBeTruthy();
+
+    const historyItem = queueItems.find(item => item.getAttribute('data-uuid') === 'queue-1');
+    const currentItem = queueItems.find(item => item.getAttribute('data-uuid') === 'queue-2');
+
+    expect(historyItem?.getAttribute('data-history')).toBe('true');
+    expect(historyItem?.getAttribute('data-current')).toBe('false');
+    expect(currentItem?.getAttribute('data-current')).toBe('true');
+    expect(currentItem?.getAttribute('data-history')).toBe('false');
+  });
+
+  it('updates visible rows when only the current climb uuid changes', () => {
+    const { rerender } = render(<QueueList boardDetails={makeBoardDetails()} active={false} />);
+
+    expect(screen.getAllByTestId('queue-climb-list-item')).toHaveLength(2);
+    expect(screen.getByText('Queue Climb 1')).toBeTruthy();
+    expect(screen.getByText('Queue Climb 2')).toBeTruthy();
+
+    mockCurrentClimbUuid = 'queue-2';
+    rerender(<QueueList boardDetails={makeBoardDetails()} active={false} />);
+
+    const queueItems = screen.getAllByTestId('queue-climb-list-item');
+    expect(queueItems).toHaveLength(1);
+    expect(screen.queryByText('Queue Climb 1')).toBeNull();
+    expect(screen.getByText('Queue Climb 2')).toBeTruthy();
+    expect(queueItems[0].getAttribute('data-current')).toBe('true');
   });
 });

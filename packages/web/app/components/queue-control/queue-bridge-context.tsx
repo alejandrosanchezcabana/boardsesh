@@ -4,7 +4,7 @@ import React, { createContext, useContext, useState, useCallback, useMemo, useLa
 import { v4 as uuidv4 } from 'uuid';
 import {
   QueueContext, QueueActionsContext, QueueDataContext,
-  CurrentClimbContext, QueueListContext, SearchContext, SessionContext,
+  CurrentClimbContext, CurrentClimbUuidContext, QueueListContext, SearchContext, SessionContext,
   type GraphQLQueueContextType, type GraphQLQueueActionsType, type GraphQLQueueDataType,
 } from '../graphql-queue/QueueContext';
 import type { CurrentClimbDataType, QueueListDataType, SearchDataType, SessionDataType } from '../graphql-queue/types';
@@ -482,6 +482,7 @@ export function QueueBridgeProvider({ children }: { children: React.ReactNode })
     currentClimbQueueItem: effectiveData.currentClimbQueueItem,
     currentClimb: effectiveData.currentClimb,
   }), [effectiveData.currentClimbQueueItem, effectiveData.currentClimb]);
+  const effectiveCurrentClimbUuid = effectiveData.currentClimbQueueItem?.uuid ?? null;
 
   const effectiveQueueList: QueueListDataType = useMemo(() => ({
     queue: effectiveData.queue,
@@ -535,23 +536,25 @@ export function QueueBridgeProvider({ children }: { children: React.ReactNode })
           <QueueDataContext.Provider value={effectiveData}>
             <QueueContext.Provider value={effectiveContext}>
               <CurrentClimbContext.Provider value={effectiveCurrentClimb}>
-                <QueueListContext.Provider value={effectiveQueueList}>
-                  <SearchContext.Provider value={effectiveSearch}>
-                    <SessionContext.Provider value={effectiveSession}>
-                      {/* Sync queue state to iOS Live Activity (code-split, no-op on non-iOS) */}
-                      <LiveActivityBridge
-                        queue={adapter.context.queue}
-                        currentClimbQueueItem={adapter.context.currentClimbQueueItem}
-                        boardDetails={adapter.boardDetails}
-                        sessionId={adapter.context.sessionId}
-                        isSessionActive={adapter.context.isSessionActive}
-                        onSetCurrentClimb={adapter.context.setCurrentClimbQueueItem}
-                        onWidgetNavigate={effectiveActions.dispatchWidgetNavigation}
-                      />
-                      {children}
-                    </SessionContext.Provider>
-                  </SearchContext.Provider>
-                </QueueListContext.Provider>
+                <CurrentClimbUuidContext.Provider value={effectiveCurrentClimbUuid}>
+                  <QueueListContext.Provider value={effectiveQueueList}>
+                    <SearchContext.Provider value={effectiveSearch}>
+                      <SessionContext.Provider value={effectiveSession}>
+                        {/* Sync queue state to iOS Live Activity (code-split, no-op on non-iOS) */}
+                        <LiveActivityBridge
+                          queue={adapter.context.queue}
+                          currentClimbQueueItem={adapter.context.currentClimbQueueItem}
+                          boardDetails={adapter.boardDetails}
+                          sessionId={adapter.context.sessionId}
+                          isSessionActive={adapter.context.isSessionActive}
+                          onSetCurrentClimb={adapter.context.setCurrentClimbQueueItem}
+                          onWidgetNavigate={effectiveActions.dispatchWidgetNavigation}
+                        />
+                        {children}
+                      </SessionContext.Provider>
+                    </SearchContext.Provider>
+                  </QueueListContext.Provider>
+                </CurrentClimbUuidContext.Provider>
               </CurrentClimbContext.Provider>
             </QueueContext.Provider>
           </QueueDataContext.Provider>
