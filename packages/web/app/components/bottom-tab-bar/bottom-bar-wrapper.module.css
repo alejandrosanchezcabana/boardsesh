@@ -8,6 +8,8 @@
   border-radius: 16px;
 }
 
+.nativeApp {}
+
 @media (min-width: 768px) {
   .bottomBarWrapper {
     left: 0;
@@ -22,7 +24,7 @@
    (all iOS browsers use WebKit), and the media query limits to touch devices. */
 @supports (-webkit-touch-callout: none) {
   @media (hover: none) and (pointer: coarse) {
-    .bottomBarWrapper {
+    .bottomBarWrapper:not(.nativeApp) {
       bottom: 2dvh;
     }
   }
