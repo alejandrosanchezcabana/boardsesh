@@ -1,5 +1,5 @@
 import { v4 as uuidv4 } from 'uuid';
-import { eq, and } from 'drizzle-orm';
+import { eq, and, inArray } from 'drizzle-orm';
 import type { ConnectionContext } from '@boardsesh/shared-schema';
 import { db } from '../../../db/client';
 import * as dbSchema from '@boardsesh/db/schema';
@@ -11,6 +11,69 @@ import { assignInferredSession } from '../../../jobs/inferred-session-builder';
 import { publishDebouncedSessionStats } from '../sessions/debounced-stats-publisher';
 
 export const tickMutations = {
+  /**
+   * Delete a tick (climb attempt/ascent) for the authenticated user.
+   * Only the owner can delete their own ticks.
+   */
+  deleteTick: async (
+    _: unknown,
+    { uuid }: { uuid: string },
+    ctx: ConnectionContext
+  ): Promise<boolean> => {
+    requireAuthenticated(ctx);
+    const userId = ctx.userId!;
+
+    const [tick] = await db
+      .select({ uuid: dbSchema.boardseshTicks.uuid, userId: dbSchema.boardseshTicks.userId })
+      .from(dbSchema.boardseshTicks)
+      .where(eq(dbSchema.boardseshTicks.uuid, uuid))
+      .limit(1);
+
+    if (!tick) {
+      throw new Error('Tick not found');
+    }
+    if (tick.userId !== userId) {
+      throw new Error('You can only delete your own ticks');
+    }
+
+    await db.transaction(async (tx) => {
+      // Collect comment IDs on this tick so we can clean up their notifications
+      const tickComments = await tx
+        .select({ id: dbSchema.comments.id })
+        .from(dbSchema.comments)
+        .where(and(eq(dbSchema.comments.entityType, 'tick'), eq(dbSchema.comments.entityId, uuid)));
+      const commentIds = tickComments.map((c) => c.id);
+
+      // Delete notifications referencing these comments (commentId FK is SET NULL, so we must delete explicitly)
+      if (commentIds.length > 0) {
+        await tx.delete(dbSchema.notifications).where(
+          inArray(dbSchema.notifications.commentId, commentIds)
+        );
+      }
+
+      // Delete related social data for the tick itself
+      await tx.delete(dbSchema.feedItems).where(
+        and(eq(dbSchema.feedItems.entityType, 'tick'), eq(dbSchema.feedItems.entityId, uuid))
+      );
+      await tx.delete(dbSchema.votes).where(
+        and(eq(dbSchema.votes.entityType, 'tick'), eq(dbSchema.votes.entityId, uuid))
+      );
+      await tx.delete(dbSchema.voteCounts).where(
+        and(eq(dbSchema.voteCounts.entityType, 'tick'), eq(dbSchema.voteCounts.entityId, uuid))
+      );
+      await tx.delete(dbSchema.comments).where(
+        and(eq(dbSchema.comments.entityType, 'tick'), eq(dbSchema.comments.entityId, uuid))
+      );
+      await tx.delete(dbSchema.notifications).where(
+        and(eq(dbSchema.notifications.entityType, 'tick'), eq(dbSchema.notifications.entityId, uuid))
+      );
+      // Delete the tick itself
+      await tx.delete(dbSchema.boardseshTicks).where(eq(dbSchema.boardseshTicks.uuid, uuid));
+    });
+
+    return true;
+  },
+
   /**
    * Save a tick (climb attempt/ascent) for the authenticated user
    */

@@ -119,6 +119,11 @@ export const mutationsTypeDefs = /* GraphQL */ `
     """
     saveTick(input: SaveTickInput!): Tick!
 
+    """
+    Delete a tick (climb attempt record). Only the owner can delete.
+    """
+    deleteTick(uuid: ID!): Boolean!
+
     # ============================================
     # Climb Mutations (require auth)
     # ============================================

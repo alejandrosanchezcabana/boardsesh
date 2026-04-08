@@ -16,6 +16,7 @@ import EditOutlined from '@mui/icons-material/EditOutlined';
 import CloseOutlined from '@mui/icons-material/CloseOutlined';
 import CheckOutlined from '@mui/icons-material/CheckOutlined';
 import ChatBubbleOutlineOutlined from '@mui/icons-material/ChatBubbleOutlineOutlined';
+import DeleteOutlined from '@mui/icons-material/DeleteOutlined';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useSession } from 'next-auth/react';
@@ -36,6 +37,8 @@ import { themeTokens } from '@/app/theme/theme-config';
 import type { Climb, BoardDetails } from '@/app/lib/types';
 import UserSearchDialog from './user-search-dialog';
 import SessionOverviewPanel from '@/app/components/session-details/session-overview-panel';
+import { ConfirmPopover } from '@/app/components/ui/confirm-popover';
+import { useDeleteTick } from '@/app/hooks/use-delete-tick';
 
 interface SessionDetailContentProps {
   session: SessionDetail | null;
@@ -158,10 +161,16 @@ function SessionTickItem({
   tick,
   isMultiUser,
   participant,
+  currentUserId,
+  onDelete,
+  isDeleting,
 }: {
   tick: SessionDetailTick;
   isMultiUser: boolean;
   participant: SessionFeedParticipant | null;
+  currentUserId?: string;
+  onDelete?: (uuid: string) => void;
+  isDeleting?: boolean;
 }) {
   const [commentsOpen, setCommentsOpen] = useState(false);
   const attemptText = formatAttemptText(tick);
@@ -216,6 +225,19 @@ function SessionTickItem({
           >
             <ChatBubbleOutlineOutlined fontSize="small" />
           </IconButton>
+          {currentUserId && tick.userId === currentUserId && onDelete && (
+            <ConfirmPopover
+              title="Delete ascent"
+              description="Are you sure? This cannot be undone."
+              onConfirm={() => onDelete(tick.uuid)}
+              okText="Delete"
+              okButtonProps={{ color: 'error' }}
+            >
+              <IconButton size="small" disabled={isDeleting} sx={{ color: 'text.secondary' }}>
+                <DeleteOutlined fontSize="small" />
+              </IconButton>
+            </ConfirmPopover>
+          )}
         </Box>
       </Box>
       {tick.comment && (
@@ -241,6 +263,7 @@ export default function SessionDetailContent({
 }: SessionDetailContentProps) {
   const { data: authSession } = useSession();
   const router = useRouter();
+  const deleteTick = useDeleteTick();
 
   const {
     session: hookSession,
@@ -372,6 +395,10 @@ export default function SessionDetailContent({
     }
   }, [router]);
 
+  const handleDeleteTick = useCallback((uuid: string) => {
+    deleteTick.mutate(uuid);
+  }, [deleteTick]);
+
   // Render tick details below each climb item (per-user rows for multi-user, status/attempts for single-user)
   const renderTickDetails = useCallback((climb: Climb) => {
     const climbTicks = ticksByClimb.get(climb.uuid);
@@ -387,12 +414,15 @@ export default function SessionDetailContent({
               tick={tick}
               isMultiUser={isMultiUser}
               participant={participant ?? null}
+              currentUserId={currentUserId}
+              onDelete={handleDeleteTick}
+              isDeleting={deleteTick.isPending}
             />
           );
         })}
       </Box>
     );
-  }, [ticksByClimb, participantMap, isMultiUser]);
+  }, [ticksByClimb, participantMap, isMultiUser, currentUserId, handleDeleteTick, deleteTick.isPending]);
 
   const handleStartEdit = useCallback(() => {
     setEditName(sessionName || '');

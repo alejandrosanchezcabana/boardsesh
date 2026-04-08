@@ -8,11 +8,13 @@ import Box from '@mui/material/Box';
 import Chip from '@mui/material/Chip';
 import Rating from '@mui/material/Rating';
 import CircularProgress from '@mui/material/CircularProgress';
+import IconButton from '@mui/material/IconButton';
 import { EmptyState } from '@/app/components/ui/empty-state';
 import CheckCircleOutlined from '@mui/icons-material/CheckCircleOutlined';
 import ElectricBoltOutlined from '@mui/icons-material/ElectricBoltOutlined';
 import CancelOutlined from '@mui/icons-material/CancelOutlined';
 import LocationOnOutlined from '@mui/icons-material/LocationOnOutlined';
+import DeleteOutlined from '@mui/icons-material/DeleteOutlined';
 import dayjs from 'dayjs';
 import relativeTime from 'dayjs/plugin/relativeTime';
 import { useInfiniteQuery } from '@tanstack/react-query';
@@ -20,10 +22,13 @@ import { createGraphQLHttpClient } from '@/app/lib/graphql/client';
 import {
   GET_USER_GROUPED_ASCENTS_FEED,
   type GroupedAscentFeedItem,
+  type AscentFeedItem,
   type GetUserGroupedAscentsFeedQueryVariables,
   type GetUserGroupedAscentsFeedQueryResponse,
 } from '@/app/lib/graphql/operations';
 import AscentThumbnail from './ascent-thumbnail';
+import { ConfirmPopover } from '@/app/components/ui/confirm-popover';
+import { useDeleteTick } from '@/app/hooks/use-delete-tick';
 import { themeTokens } from '@/app/theme/theme-config';
 import styles from './ascents-feed.module.css';
 import { useInfiniteScroll } from '@/app/hooks/use-infinite-scroll';
@@ -34,6 +39,7 @@ dayjs.extend(relativeTime);
 interface AscentsFeedProps {
   userId: string;
   pageSize?: number;
+  isOwnProfile?: boolean;
 }
 
 // Layout name mapping
@@ -86,7 +92,42 @@ const getGroupStatusSummary = (group: GroupedAscentFeedItem): { text: string; ic
   return { text: parts.join(', '), icon, color };
 };
 
-const GroupedFeedItem: React.FC<{ group: GroupedAscentFeedItem }> = ({ group }) => {
+const getItemStatusColor = (status: string): 'success' | 'primary' | 'default' => {
+  if (status === 'flash') return 'success';
+  if (status === 'send') return 'primary';
+  return 'default';
+};
+
+const TickItemRow: React.FC<{ item: AscentFeedItem; onDelete: (uuid: string) => void; isDeleting: boolean }> = ({ item, onDelete, isDeleting }) => {
+  const timeAgo = dayjs(item.climbedAt).fromNow();
+  return (
+    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, py: 0.5 }}>
+      <Chip
+        label={item.status}
+        size="small"
+        color={getItemStatusColor(item.status)}
+        variant={item.status === 'attempt' ? 'outlined' : 'filled'}
+        sx={{ height: 20, '& .MuiChip-label': { px: 0.75, fontSize: themeTokens.typography.fontSize.xs - 1 } }}
+      />
+      <MuiTypography variant="caption" color="text.secondary" sx={{ flex: 1 }}>
+        {item.attemptCount > 1 ? `${item.attemptCount} attempts` : null} {timeAgo}
+      </MuiTypography>
+      <ConfirmPopover
+        title="Delete ascent"
+        description="Are you sure? This cannot be undone."
+        onConfirm={() => onDelete(item.uuid)}
+        okText="Delete"
+        okButtonProps={{ color: 'error' }}
+      >
+        <IconButton size="small" disabled={isDeleting} sx={{ color: 'text.secondary' }}>
+          <DeleteOutlined sx={{ fontSize: 16 }} />
+        </IconButton>
+      </ConfirmPopover>
+    </Box>
+  );
+};
+
+const GroupedFeedItem: React.FC<{ group: GroupedAscentFeedItem; isOwnProfile?: boolean; onDeleteTick?: (uuid: string) => void; isDeleting?: boolean }> = ({ group, isOwnProfile = false, onDeleteTick, isDeleting = false }) => {
   const latestItem = group.items.reduce((latest, item) =>
     new Date(item.climbedAt) > new Date(latest.climbedAt) ? item : latest
   );
@@ -156,6 +197,14 @@ const GroupedFeedItem: React.FC<{ group: GroupedAscentFeedItem }> = ({ group }) 
           {group.latestComment && (
             <MuiTypography variant="body2" component="span" className={styles.comment}>{group.latestComment}</MuiTypography>
           )}
+
+          {isOwnProfile && onDeleteTick && (
+            <Box sx={{ display: 'flex', flexDirection: 'column', borderTop: `1px solid ${themeTokens.neutral[100]}`, mt: 0.5, pt: 0.5 }}>
+              {group.items.map((item) => (
+                <TickItemRow key={item.uuid} item={item} onDelete={onDeleteTick} isDeleting={isDeleting} />
+              ))}
+            </Box>
+          )}
         </Box>
       </Box>
       </CardContent>
@@ -163,7 +212,8 @@ const GroupedFeedItem: React.FC<{ group: GroupedAscentFeedItem }> = ({ group }) 
   );
 };
 
-export const AscentsFeed: React.FC<AscentsFeedProps> = ({ userId, pageSize = 10 }) => {
+export const AscentsFeed: React.FC<AscentsFeedProps> = ({ userId, pageSize = 10, isOwnProfile = false }) => {
+  const deleteTick = useDeleteTick();
   const { data, fetchNextPage, hasNextPage, isFetchingNextPage, isLoading, error } = useInfiniteQuery({
     queryKey: ['ascentsFeed', userId, pageSize],
     queryFn: async ({ pageParam }) => {
@@ -225,7 +275,7 @@ export const AscentsFeed: React.FC<AscentsFeedProps> = ({ userId, pageSize = 10 
     <div className={styles.feed}>
       <Box sx={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
         {groups.map((group) => (
-          <GroupedFeedItem key={group.key} group={group} />
+          <GroupedFeedItem key={group.key} group={group} isOwnProfile={isOwnProfile} onDeleteTick={isOwnProfile ? (uuid) => deleteTick.mutate(uuid) : undefined} isDeleting={deleteTick.isPending} />
         ))}
       </Box>
 
