@@ -90,7 +90,7 @@ describe('ClimbTitle', () => {
 
     it('renders setter info when showSetterInfo is true', () => {
       render(<ClimbTitle climb={makeClimb()} showSetterInfo />);
-      expect(screen.getByText('By setter_joe - 10 ascents')).toBeTruthy();
+      expect(screen.getByText('By setter_joe - 10 sends')).toBeTruthy();
     });
 
     it('does not render setter info when showSetterInfo is false', () => {
@@ -163,20 +163,20 @@ describe('ClimbTitle', () => {
       expect(screen.getByText(/DanielBolts/)).toBeTruthy();
     });
 
-    it('renders subtitle as "ascents · stars · setter_name" format', () => {
+    it('renders subtitle as "sends · stars · setter_name" format', () => {
       render(<ClimbTitle climb={makeClimb({ quality_average: '3.5', setter_username: 'alice' })} gradePosition="right" showSetterInfo />);
-      expect(screen.getByText('10 ascents · 3.5★ · alice')).toBeTruthy();
+      expect(screen.getByText('10 sends · 3.5★ · alice')).toBeTruthy();
     });
 
-    it('renders only ascents and stars when showSetterInfo is false', () => {
+    it('renders only sends and stars when showSetterInfo is false', () => {
       render(<ClimbTitle climb={makeClimb({ quality_average: '3.5' })} gradePosition="right" />);
-      expect(screen.getByText('10 ascents · 3.5★')).toBeTruthy();
+      expect(screen.getByText('10 sends · 3.5★')).toBeTruthy();
       expect(screen.queryByText(/setter_joe/)).toBeNull();
     });
 
-    it('renders only ascents and stars when setter_username is missing', () => {
+    it('renders only sends and stars when setter_username is missing', () => {
       render(<ClimbTitle climb={makeClimb({ setter_username: undefined })} gradePosition="right" showSetterInfo />);
-      expect(screen.getByText('10 ascents · 3.5★')).toBeTruthy();
+      expect(screen.getByText('10 sends · 3.5★')).toBeTruthy();
     });
 
     it('does not render angle even when showAngle is true', () => {
@@ -184,19 +184,19 @@ describe('ClimbTitle', () => {
       expect(screen.queryByText(/@ 40°/)).toBeNull();
     });
 
-    it('renders ascent count', () => {
+    it('renders send count', () => {
       render(<ClimbTitle climb={makeClimb({ ascensionist_count: 72 })} gradePosition="right" showSetterInfo />);
-      expect(screen.getByText(/72 ascents/)).toBeTruthy();
+      expect(screen.getByText(/72 sends/)).toBeTruthy();
     });
 
-    it('renders only ascent count when no grade quality', () => {
+    it('renders only send count when no grade quality', () => {
       render(<ClimbTitle climb={makeClimb({ quality_average: '0' })} gradePosition="right" />);
-      expect(screen.getByText('10 ascents')).toBeTruthy();
+      expect(screen.getByText('10 sends')).toBeTruthy();
     });
 
-    it('renders only ascent count when difficulty is null', () => {
+    it('renders only send count when difficulty is null', () => {
       render(<ClimbTitle climb={makeClimb({ difficulty: null, quality_average: null })} gradePosition="right" />);
-      expect(screen.getByText('10 ascents')).toBeTruthy();
+      expect(screen.getByText('10 sends')).toBeTruthy();
     });
 
     it('renders "project" when no grade and no ascents', () => {
@@ -209,9 +209,9 @@ describe('ClimbTitle', () => {
       expect(screen.getByText('project')).toBeTruthy();
     });
 
-    it('renders singular "ascent" when ascensionist_count is 1', () => {
+    it('renders singular "send" when ascensionist_count is 1', () => {
       render(<ClimbTitle climb={makeClimb({ ascensionist_count: 1 })} gradePosition="right" />);
-      expect(screen.getByText(/1 ascent(?!s)/)).toBeTruthy();
+      expect(screen.getByText(/1 send(?!s)/)).toBeTruthy();
     });
 
     it('renders benchmark icon after climb name', () => {
