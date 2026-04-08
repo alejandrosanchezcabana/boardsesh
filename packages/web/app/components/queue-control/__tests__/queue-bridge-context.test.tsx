@@ -29,6 +29,7 @@ vi.mock('../../graphql-queue/QueueContext', () => {
   const actionsCtx = React.createContext(undefined);
   const dataCtx = React.createContext(undefined);
   const currentClimbCtx = React.createContext(undefined);
+  const currentClimbUuidCtx = React.createContext(null);
   const queueListCtx = React.createContext(undefined);
   const searchCtx = React.createContext(undefined);
   const sessionCtx = React.createContext(undefined);
@@ -37,6 +38,7 @@ vi.mock('../../graphql-queue/QueueContext', () => {
     QueueActionsContext: actionsCtx,
     QueueDataContext: dataCtx,
     CurrentClimbContext: currentClimbCtx,
+    CurrentClimbUuidContext: currentClimbUuidCtx,
     QueueListContext: queueListCtx,
     SearchContext: searchCtx,
     SessionContext: sessionCtx,
@@ -73,7 +75,7 @@ import {
   QueueBridgeInjector,
   useQueueBridgeBoardInfo,
 } from '../queue-bridge-context';
-import { QueueContext, QueueActionsContext, QueueDataContext } from '../../graphql-queue/QueueContext';
+import { QueueContext, QueueActionsContext, QueueDataContext, CurrentClimbUuidContext } from '../../graphql-queue/QueueContext';
 import type { GraphQLQueueContextType, GraphQLQueueActionsType, GraphQLQueueDataType } from '../../graphql-queue/QueueContext';
 import type { BoardDetails, Climb, Angle } from '@/app/lib/types';
 import type { ClimbQueueItem } from '../types';
@@ -244,6 +246,13 @@ function useTestQueueData() {
   return React.useContext(QueueDataContext) as GraphQLQueueDataType | undefined;
 }
 
+/**
+ * Hook to read the CurrentClimbUuidContext value exposed by QueueBridgeProvider.
+ */
+function useTestCurrentClimbUuid() {
+  return React.useContext(CurrentClimbUuidContext) as string | null;
+}
+
 /** Extract the actions slice from a combined context (simulates GraphQLQueueProvider's actionsValue) */
 function extractActions(ctx: GraphQLQueueContextType): GraphQLQueueActionsType {
   return {
@@ -351,6 +360,24 @@ describe('queue-bridge-context', () => {
       });
       const { result } = renderBridgeHook();
       expect(result.current.boardInfo.hasActiveQueue).toBe(true);
+    });
+
+    it('provides current climb uuid in adapter mode', () => {
+      const item = createTestQueueItem(createTestClimb({ uuid: 'c1' }), 'u1');
+      mockPersistentSession = createDefaultPersistentSession({
+        localQueue: [item],
+        localCurrentClimbQueueItem: item,
+        localBoardDetails: createTestBoardDetails(),
+        localBoardPath: '/kilter/1/10/1,2',
+        isLocalQueueLoaded: true,
+      });
+
+      const wrapper = ({ children }: { children: React.ReactNode }) => (
+        <QueueBridgeProvider>{children}</QueueBridgeProvider>
+      );
+
+      const { result } = renderHook(() => useTestCurrentClimbUuid(), { wrapper });
+      expect(result.current).toBe('u1');
     });
 
     // -------------------------------------------------------------------
@@ -539,6 +566,7 @@ describe('queue-bridge-context', () => {
         () => ({
           boardInfo: useQueueBridgeBoardInfo(),
           queueCtx: useTestQueueContext(),
+          currentClimbUuid: useTestCurrentClimbUuid(),
         }),
         { wrapper },
       );
@@ -554,6 +582,7 @@ describe('queue-bridge-context', () => {
       expect(result.current.boardInfo.angle).toBe(40);
       // The bridge's exposed QueueContext should be the injected one
       expect(result.current.queueCtx).toBe(fakeCtx);
+      expect(result.current.currentClimbUuid).toBeNull();
     });
 
     it('clears on unmount', () => {
@@ -576,7 +605,13 @@ describe('queue-bridge-context', () => {
 
     it('updates context when queueContext changes', () => {
       const fakeCtx1 = createFakeQueueContext({ queue: [] });
-      const fakeCtx2 = createFakeQueueContext({ queue: [createTestQueueItem()] });
+      const item1 = createTestQueueItem(createTestClimb({ uuid: 'c1' }), 'u1');
+      const item2 = createTestQueueItem(createTestClimb({ uuid: 'c2' }), 'u2');
+      const fakeCtx2 = createFakeQueueContext({
+        queue: [item1, item2],
+        currentClimbQueueItem: item2,
+        currentClimb: item2.climb,
+      });
 
       // Use a mutable variable so we can change the value without remounting
       let boardRouteCtx: GraphQLQueueContextType | undefined = fakeCtx1;
@@ -602,11 +637,13 @@ describe('queue-bridge-context', () => {
         () => ({
           boardInfo: useQueueBridgeBoardInfo(),
           queueCtx: useTestQueueContext(),
+          currentClimbUuid: useTestCurrentClimbUuid(),
         }),
         { wrapper },
       );
 
       expect(result.current.queueCtx).toBe(fakeCtx1);
+      expect(result.current.currentClimbUuid).toBeNull();
 
       // Change the board route context and rerender (same wrapper, so provider state persists)
       boardRouteCtx = fakeCtx2;
@@ -614,6 +651,7 @@ describe('queue-bridge-context', () => {
 
       // The injector's useEffect should have called updateContext
       expect(result.current.queueCtx).toBe(fakeCtx2);
+      expect(result.current.currentClimbUuid).toBe('u2');
     });
 
     it('exposes disconnect via useQueueActions when context is injected', () => {

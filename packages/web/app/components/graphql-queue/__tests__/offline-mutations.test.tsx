@@ -154,6 +154,12 @@ const mockClimb2: Climb = {
   name: 'Test Climb 2',
 };
 
+const mockClimb3: Climb = {
+  ...mockClimb,
+  uuid: 'climb-3',
+  name: 'Test Climb 3',
+};
+
 const defaultProps = {
   parsedParams: {
     board_name: 'kilter',
@@ -230,6 +236,70 @@ describe('QueueContext offline mutations', () => {
       });
 
       expect(mockRemoveQueueItem).toHaveBeenCalledWith(queueItem.uuid);
+    });
+
+    it('setCurrentClimb inserts via addQueueItem before setting current climb', async () => {
+      const { result } = renderHook(() => useQueueContext(), { wrapper: createWrapper() });
+
+      act(() => {
+        result.current.addToQueue(mockClimb);
+        result.current.addToQueue(mockClimb2);
+      });
+
+      const currentQueueItem = result.current.queue[0];
+
+      act(() => {
+        result.current.setCurrentClimbQueueItem(currentQueueItem);
+      });
+
+      mockAddQueueItem.mockClear();
+      mockSetCurrentClimb.mockClear();
+
+      await act(async () => {
+        await result.current.setCurrentClimb(mockClimb3);
+      });
+
+      expect(mockAddQueueItem).toHaveBeenCalledTimes(1);
+      expect(mockSetCurrentClimb).toHaveBeenCalledTimes(1);
+
+      const [addedItem, position] = mockAddQueueItem.mock.calls[0];
+      const [currentItem, shouldAddToQueue, correlationId] = mockSetCurrentClimb.mock.calls[0];
+
+      expect(addedItem.climb.uuid).toBe('climb-3');
+      expect(position).toBe(1);
+      expect(currentItem).toEqual(addedItem);
+      expect(shouldAddToQueue).toBe(false);
+      expect(correlationId).toMatch(/^client-1-\d+$/);
+      expect(mockAddQueueItem.mock.invocationCallOrder[0]).toBeLessThan(
+        mockSetCurrentClimb.mock.invocationCallOrder[0]
+      );
+    });
+
+    it('setCurrentClimb appends when there is no current climb', async () => {
+      const { result } = renderHook(() => useQueueContext(), { wrapper: createWrapper() });
+
+      act(() => {
+        result.current.addToQueue(mockClimb);
+      });
+
+      mockAddQueueItem.mockClear();
+      mockSetCurrentClimb.mockClear();
+
+      await act(async () => {
+        await result.current.setCurrentClimb(mockClimb2);
+      });
+
+      expect(mockAddQueueItem).toHaveBeenCalledTimes(1);
+      expect(mockSetCurrentClimb).toHaveBeenCalledTimes(1);
+
+      const [addedItem, position] = mockAddQueueItem.mock.calls[0];
+      const [currentItem, shouldAddToQueue, correlationId] = mockSetCurrentClimb.mock.calls[0];
+
+      expect(addedItem.climb.uuid).toBe('climb-2');
+      expect(position).toBeUndefined();
+      expect(currentItem).toEqual(addedItem);
+      expect(shouldAddToQueue).toBe(false);
+      expect(correlationId).toMatch(/^client-1-\d+$/);
     });
 
     it('isDisconnected is false', () => {

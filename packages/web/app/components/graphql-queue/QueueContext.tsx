@@ -308,8 +308,13 @@ export const GraphQLQueueProvider = ({ parsedParams, boardDetails, children, bas
       r.offlineBuffer.bufferAddition(newItem);
       trackQueueOperation('setCurrentClimb', performance.now() - startTime, mode);
     } else if (r.hasConnected && r.isPersistentSessionActive) {
+      const currentIndex = r.state.currentClimbQueueItem
+        ? r.state.queue.findIndex(queueItem => queueItem.uuid === r.state.currentClimbQueueItem?.uuid)
+        : -1;
+      const position = currentIndex === -1 ? undefined : currentIndex + 1;
       try {
-        await r.persistentSession.setCurrentClimb(newItem, true, correlationId);
+        await r.persistentSession.addQueueItem(newItem, position);
+        await r.persistentSession.setCurrentClimb(newItem, false, correlationId);
         trackQueueOperation('setCurrentClimb', performance.now() - startTime, mode);
       } catch (error: unknown) {
         console.error('Failed to set current climb:', error);
