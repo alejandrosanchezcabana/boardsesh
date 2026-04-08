@@ -4,7 +4,7 @@ import { Metadata } from 'next';
 import { resolveBoardBySlug, boardToRouteParams } from '@/app/lib/board-slug-utils';
 import { getBoardDetailsForBoard } from '@/app/lib/board-utils';
 import { getClimb } from '@/app/lib/data/queries';
-import { constructBoardSlugViewUrl } from '@/app/lib/url-utils';
+import { generateClimbMetadata } from '@/app/lib/climb-metadata';
 
 import PlayViewClient from '@/app/[board_name]/[layout_id]/[size_id]/[set_ids]/[angle]/play/[climb_uuid]/play-view-client';
 import { scheduleOverlayWarming } from '@/app/lib/warm-overlay-cache';
@@ -14,82 +14,12 @@ interface BoardSlugPlayPageProps {
 }
 
 export async function generateMetadata(props: BoardSlugPlayPageProps): Promise<Metadata> {
-  try {
-    const params = await props.params;
-    const board = await resolveBoardBySlug(params.board_slug);
-    if (!board) {
-      return { title: 'Play | Boardsesh', robots: { index: false, follow: true } };
-    }
-
-    const parsedParams = {
-      ...boardToRouteParams(board, Number(params.angle)),
-      climb_uuid: params.climb_uuid,
-    };
-
-    const currentClimb = await getClimb(parsedParams);
-    if (!currentClimb) {
-      return { title: 'Play | Boardsesh', robots: { index: false, follow: true } };
-    }
-
-    const boardLabel = parsedParams.board_name.charAt(0).toUpperCase() + parsedParams.board_name.slice(1);
-    const climbName = currentClimb.name || `${boardLabel} Climb`;
-    const climbGrade = currentClimb.difficulty || 'Unknown Grade';
-    const setter = currentClimb.setter_username || 'Unknown Setter';
-    const description = `${climbName} - ${climbGrade} by ${setter}. Quality: ${currentClimb.quality_average || 0}/5. Ascents: ${currentClimb.ascensionist_count || 0}`;
-
-    const viewUrl = constructBoardSlugViewUrl(
-      board.slug,
-      parsedParams.angle,
-      parsedParams.climb_uuid,
-      currentClimb.name,
-    );
-
-    const ogParams = new URLSearchParams({
-      board_name: parsedParams.board_name,
-      layout_id: parsedParams.layout_id.toString(),
-      size_id: parsedParams.size_id.toString(),
-      set_ids: parsedParams.set_ids.join(','),
-      angle: parsedParams.angle.toString(),
-      climb_uuid: parsedParams.climb_uuid,
-    });
-    const ogImageUrl = `/api/og/climb?${ogParams.toString()}`;
-
-    return {
-      title: `${climbName} - ${climbGrade} | Play Mode | Boardsesh`,
-      description,
-      robots: { index: false, follow: true },
-      alternates: {
-        canonical: viewUrl,
-      },
-      openGraph: {
-        title: `${climbName} - ${climbGrade}`,
-        description,
-        type: 'website',
-        url: viewUrl,
-        images: [
-          {
-            url: ogImageUrl,
-            width: 1200,
-            height: 630,
-            alt: `${climbName} - ${climbGrade} on ${boardLabel} board`,
-          },
-        ],
-      },
-      twitter: {
-        card: 'summary_large_image',
-        title: `${climbName} - ${climbGrade}`,
-        description,
-        images: [ogImageUrl],
-      },
-    };
-  } catch (error) {
-    console.error('Error generating play mode metadata:', error);
-    return {
-      title: 'Play Mode | Boardsesh',
-      description: 'Play climbs on your board',
-      robots: { index: false, follow: true },
-    };
-  }
+  const params = await props.params;
+  return generateClimbMetadata(params, {
+    titleSuffix: ' | Play Mode',
+    indexable: false,
+    fallback: { title: 'Play Mode | Boardsesh', description: 'Play climbs on your board' },
+  });
 }
 
 export default async function BoardSlugPlayPage(props: BoardSlugPlayPageProps) {
