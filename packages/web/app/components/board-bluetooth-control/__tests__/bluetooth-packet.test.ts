@@ -718,12 +718,10 @@ describe('getBluetoothPacket — API level selection', () => {
     expect(frames[0].commandByte).toBe(80); // P = v2 Single
   });
 
-  it('skips undefined placements', () => {
+  it('throws when any placements are missing', () => {
     const sparse: Record<number, number> = { 1: 39 };
-    const packet = getBluetoothPacket('p1r42p9999r42', sparse, 'kilter', 3);
-    const leds = decodeLedPositionsV3(packet);
-    expect(leds).toHaveLength(1);
-    expect(leds[0].position).toBe(39);
+    expect(() => getBluetoothPacket('p1r42p9999r42', sparse, 'kilter', 3))
+      .toThrow('1 of 2 placements have no LED mapping');
   });
 });
 
@@ -749,12 +747,10 @@ describe('getBluetoothPacket — v2 encoding integration', () => {
     expect(leds[0].colorByte & 0x03).toBe(2); // posHi in bits [1:0]
   });
 
-  it('skips positions > 1023 in v2 mode', () => {
+  it('throws when v2 position exceeds 10-bit limit', () => {
     const positions: Record<number, number> = { 1: 39, 2: 1024 };
-    const packet = getBluetoothPacket('p1r42p2r42', positions, 'kilter', 2);
-    const leds = decodeLedPositionsV2(packet);
-    expect(leds).toHaveLength(1);
-    expect(leds[0].position).toBe(39);
+    expect(() => getBluetoothPacket('p1r42p2r42', positions, 'kilter', 2))
+      .toThrow('exceeds 10-bit limit');
   });
 });
 
@@ -829,13 +825,10 @@ describe('Captured Aurora payloads — position verification', () => {
     expect(ourPositions).toEqual(auroraPositions);
   });
 
-  it('skips placements with no LED mapping instead of encoding position 0', () => {
+  it('throws when placements have no LED mapping', () => {
     const sparseLedMap = { 4131: 39, 4421: 389 };
-    const packet = getBluetoothPacket('p4131r42p4421r42p9999r45', sparseLedMap, 'kilter');
-    const leds = decodeLedPositionsV3(packet);
-    expect(leds).toHaveLength(2);
-    expect(leds[0].position).toBe(39);
-    expect(leds[1].position).toBe(389);
+    expect(() => getBluetoothPacket('p4131r42p4421r42p9999r45', sparseLedMap, 'kilter'))
+      .toThrow('1 of 3 placements have no LED mapping');
   });
 
   it('8x12 kickboard positions match Aurora expectations', () => {

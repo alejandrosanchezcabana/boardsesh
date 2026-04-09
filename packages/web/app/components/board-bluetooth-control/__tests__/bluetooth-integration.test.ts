@@ -6,6 +6,9 @@ import { describe, it, expect, vi } from 'vitest';
  * Uses real climbs from the Kilter and Tension apps with real LED placement data.
  * Each test asserts on the **exact expected hex payload** — any change to
  * encoding, framing, color mapping, or LED position data will break these.
+ *
+ * Climbs are only tested on board sizes where ALL holds resolve. The protocol
+ * throws when any holds are missing (indicating a search filter bug).
  */
 
 vi.mock('@/app/lib/moonboard-config', () => ({
@@ -56,7 +59,7 @@ interface ClimbTest {
   sizes: SizeExpectation[];
 }
 
-/** Generate tests for a climb across all its compatible sizes. */
+/** Generate tests for a climb across all its fully-compatible sizes. */
 function testClimb(climb: ClimbTest) {
   describe(`"${climb.climbName}" (${climb.board} layout ${climb.layoutId})`, () => {
     for (const size of climb.sizes) {
@@ -89,7 +92,7 @@ function testClimb(climb: ClimbTest) {
 }
 
 // =============================================================================
-// Kilter Homewall (layout 8)
+// Kilter Homewall (layout 8) — all holds resolve on all sizes
 // =============================================================================
 
 testClimb({
@@ -130,18 +133,17 @@ testClimb({
   board: 'kilter',
   frames: 'p4119r45p4131r44p4184r43p4199r45p4208r43p4220r43p4231r42p4265r42p4270r43p4530r45p4663r45',
   layoutId: 8,
+  // Only 10x12 Full Ride (size 25) resolves all 11 holds.
+  // 10x12 Mainline (size 26) skips 3 Auxiliary-only holds → tested in "throws" section.
   sizes: [
     { name: '10x12 Full Ride', sizeId: 25,
       v3: '0122f502545c00f45000e39b001faf00f4c3001fda001fcf001c0a011c05011fc900f41300f403',
       v2: '0117c402505ce050cc9b3cafe0c33cda3ccf300a31053dc9e013e003' },
-    { name: '10x12 Mainline', sizeId: 26,
-      v3: '0119b002543a00f42e00e357001f6b001f8e001c93001f6500f41300f403',
-      v2: '01119c02503ae02ecc573c6b3c8e30933c65e013e003' },
   ],
 });
 
 // =============================================================================
-// Kilter Original (layout 1)
+// Kilter Original (layout 1) — only sizes where ALL holds resolve
 // =============================================================================
 
 testClimb({
@@ -149,22 +151,14 @@ testClimb({
   board: 'kilter',
   frames: 'p1143r12p1158r12p1181r13p1204r15p1229r13p1252r13p1284r13p1320r13p1322r13p1389r14p1464r15p1467r15',
   layoutId: 1,
+  // 12 holds. Sizes 8 (9/12), 14 (8/12), 27 (11/12) skip holds → tested in "throws" section.
   sizes: [
     { name: '12x14', sizeId: 7,
       v3: '01256f025469001c2c001cde001f8b01f491001f3a011ffe001f34011f6d011f6101e32100f49c00f403',
       v2: '0119f0025069302c30de3c8be1913c3a3dfe3c343d6d3d61cd21e09ce003' },
-    { name: '8x12', sizeId: 8,
-      v3: '011c5a02547d001f1401f428001fc6001f96001fcc001fff001fd200e31900f403',
-      v2: '0113ef02507d3c14e1283cc63c963ccc3cff3cd2cc19e003' },
     { name: '12x12 w/kick', sizeId: 10,
       v3: '012559025463001c2c001ccc001f6701f485001f1c011fe6001f16011f49011f4301e32100f49000f403',
       v2: '0119da025063302c30cc3c67e1853c1c3de63c163d493d43cd21e090e003' },
-    { name: '7x10', sizeId: 14,
-      v3: '011939025450001fcc00f407001f87001f60001f8d001fb7001f9300e303',
-      v2: '0111ba0250503ccce0073c873c603c8d3cb73c93cc03' },
-    { name: '12x12 w/o kick', sizeId: 27,
-      v3: '0122fc02543f001c08001ca8001f4301f461001ff8001fc2001ff2001f25011f1f01e36c00f403',
-      v2: '01176902503f300830a83c43e1613cf83cc23cf23c253d1fcd6ce003' },
     { name: '16x12', sizeId: 28,
       v3: '01255c0254cb001c96001c2e011fc501f4dc001f77011f47011f7d011fb0011f8301e32800f4d100f403',
       v2: '0119dd0250cb3096302e3dc5e1dc3c773d473d7d3db03d83cd28e0d1e003' },
@@ -176,6 +170,7 @@ testClimb({
   board: 'kilter',
   frames: 'p1080r15p1131r12p1134r12p1219r13p1251r13p1281r13p1301r13p1316r13p1365r13p1383r14p1452r15p1505r15p1530r15',
   layoutId: 1,
+  // 13 holds. Sizes 14 (9/13), 27 (11/13) skip holds → tested in "throws" section.
   sizes: [
     { name: '12x14', sizeId: 7,
       v3: '0128c702540f00f40c011c4c011c53011f1d011fae001ffd001fc2001f85001fb600e30a00f40801f4a900f403',
@@ -186,12 +181,6 @@ testClimb({
     { name: '12x12 w/kick', sizeId: 10,
       v3: '0128a702540f00f4f4001c2e011c35011f05011fa2001fe5001fb0001f79001faa00e30a00f4f000f49d00f403',
       v2: '011b3c02500fe0f4302e31353d053da23ce53cb03c793caacc0ae0f0e09de003' },
-    { name: '7x10', sizeId: 14,
-      v3: '011cba0254a1001f74001f1d001f61001f39001f13001f1500e35600f42200f403',
-      v2: '01134f0250a13c743c1d3c613c393c133c15cc56e022e003' },
-    { name: '12x12 w/o kick', sizeId: 27,
-      v3: '0122350254d0001c0a011c11011fe1001f7e001fc1001f8c001f55001f8600e3cc00f47900f403',
-      v2: '0117a20250d0300a31113de13c7e3cc13c8c3c553c86cccce079e003' },
     { name: '16x12', sizeId: 28,
       v3: '0128c602541500f439011c98011c91011f5b011ff2001f48011f17011fe8001fea00e31000f43d01f4f700f403',
       v2: '011b5b025015e039319831913d5b3df23c483d173de83ceacc10e03de1f7e003' },
@@ -203,6 +192,7 @@ testClimb({
   board: 'kilter',
   frames: 'p1151r15p1216r12p1254r12p1302r13p1336r13p1385r14p1532r15p1557r15',
   layoutId: 1,
+  // All 8 holds resolve on every Kilter Original size
   sizes: [
     { name: '12x14', sizeId: 7,
       v3: '0119ce02544d01f404011c73011c22011f25011fef00e31b01f48d00f403',
@@ -226,7 +216,7 @@ testClimb({
 });
 
 // =============================================================================
-// Tension (layout 10 and 11)
+// Tension (layout 10 and 11) — only sizes where ALL holds resolve
 // =============================================================================
 
 testClimb({
@@ -234,19 +224,14 @@ testClimb({
   board: 'tension',
   frames: 'p452r6p473r6p550r6p563r8p577r8p589r7p689r8p695r6p704r5p722r6p727r8p728r8p733r8p734r8p744r6p750r8',
   layoutId: 10,
+  // 16 holds. Sizes 7 (14/16), 9 (14/16) skip 2 holds → tested in "throws" section.
   sizes: [
     { name: 'Tension 12x16', sizeId: 6,
       v3: '01312002544f01038c01031f01030f01e3ea00e3e300e03e01e349010363011c890103a201e39c01e3a401e3a801e3ba0103ca01e303',
       v2: '0121b202504f0d8c0d1f0d0fcdeacce3c03ecd490d6331890da2cd9ccda4cda8cdba0dcacd03' },
-    { name: 'Tension 8x12', sizeId: 7,
-      v3: '012baa02544a0103ef0003df00e3c000e30801e313010327011c4701035a01e35401e35c01e36001e36c01037c01e303',
-      v2: '011d2502504a0def0cdfccc0cc08cd130d2731470d5acd54cd5ccd60cd6c0d7ccd03' },
     { name: 'Tension 12x18', sizeId: 8,
       v3: '0131b60254e60003230103b60003a600e38100e37a00e0d500e3e00003fa001c2001033901e33301e33b01e33f01e35101036101e303',
       v2: '0121480250e60c230db60ca6cc81cc7ac0d5cce00cfa30200d39cd33cd3bcd3fcd510d61cd03' },
-    { name: 'Tension 8x14', sizeId: 9,
-      v3: '012b720254f300039800038800e36900e3b100e3bc0003d0001cf000030301e3fd00e30501e30901e31501032501e303',
-      v2: '011ded0250f30c980c88cc69ccb1ccbc0cd030f00c03cdfdcc05cd09cd150d25cd03' },
   ],
 });
 
@@ -255,6 +240,7 @@ testClimb({
   board: 'tension',
   frames: 'p848r6p850r6p907r5p996r8p1088r8p1097r5p1113r8p1132r6p1148r8p1163r6p1226r6p1254r7',
   layoutId: 11,
+  // All 12 holds resolve on every size
   sizes: [
     { name: 'Tension 12x16', sizeId: 6,
       v3: '0125820254720003750003fb001ccd01e36900e386001cac00e3c50003f500e30a01038f0103d501e003',
@@ -272,64 +258,101 @@ testClimb({
 });
 
 // =============================================================================
-// Cross-size: verify that different sizes produce different packets
+// Cross-size: same climb produces different packets per board size
 // =============================================================================
 
 describe('Cross-size: same climb produces different packets per board size (§18.4)', () => {
   it('"Go Go Right" has unique v3 payloads for each of the 8 homewall sizes', () => {
+    const frames = 'p4265r45p4269r45p4331r43p4334r44p4350r45p4356r42p4363r44p4412r45p4415r42';
     const hexes = new Set<string>();
     for (const sizeId of [17, 18, 21, 22, 23, 24, 25, 26]) {
       const ledMap = getLedPlacements('kilter', 8, sizeId);
-      hexes.add(toHex(getBluetoothPacket('p4265r45p4269r45p4331r43p4334r44p4350r45p4356r42p4363r44p4412r45p4415r42', ledMap, 'kilter', 3)));
+      hexes.add(toHex(getBluetoothPacket(frames, ledMap, 'kilter', 3)));
     }
     expect(hexes.size).toBe(8);
   });
 
-  it('"Hailey Mary." has unique v3 payloads for each of the 6 Original sizes', () => {
+  it('"bless your heart" has unique v3 payloads for each of the 6 Original sizes', () => {
+    const frames = 'p1151r15p1216r12p1254r12p1302r13p1336r13p1385r14p1532r15p1557r15';
     const hexes = new Set<string>();
     for (const sizeId of [7, 8, 10, 14, 27, 28]) {
       const ledMap = getLedPlacements('kilter', 1, sizeId);
-      hexes.add(toHex(getBluetoothPacket('p1143r12p1158r12p1181r13p1204r15p1229r13p1252r13p1284r13p1320r13p1322r13p1389r14p1464r15p1467r15', ledMap, 'kilter', 3)));
+      hexes.add(toHex(getBluetoothPacket(frames, ledMap, 'kilter', 3)));
     }
     expect(hexes.size).toBe(6);
   });
 });
 
 // =============================================================================
-// Mainline skip behavior
+// Throws when climb has missing holds on the target board
 // =============================================================================
 
-describe('Mainline boards correctly skip Auxiliary-only holds', () => {
-  it('"Mid Range Game" on 10x12 Mainline skips 3 Auxiliary holds', () => {
-    const frames = 'p4119r45p4131r44p4184r43p4199r45p4208r43p4220r43p4231r42p4265r42p4270r43p4530r45p4663r45';
-    const frMap = getLedPlacements('kilter', 8, 25);
-    const mlMap = getLedPlacements('kilter', 8, 26);
-    const placements = frames.split('p').filter(Boolean).map((f) => Number(f.split('r')[0]));
-    expect(placements.filter((id) => frMap[id] !== undefined)).toHaveLength(11);
-    expect(placements.filter((id) => mlMap[id] !== undefined)).toHaveLength(8);
-  });
-});
+describe('Throws when any placements are missing (search filter bug)', () => {
+  // --- Zero LEDs resolved (completely wrong board) ---
 
-// =============================================================================
-// Error: climb sent to incompatible board size
-// =============================================================================
-
-describe('Throws when climb has zero LEDs on the target board', () => {
-  it('Kilter Original 12x14 climb on Homewall 7x10 throws', () => {
-    // "Kings Cross" uses Kilter Original (layout 1) placements.
-    // These don't exist in Homewall (layout 8) LED maps at all.
-    const ledMap = getLedPlacements('kilter', 8, 17); // Homewall 7x10
-    const frames = 'p1080r15p1131r12p1134r12p1219r13p1251r13p1281r13p1301r13p1316r13p1365r13p1383r14p1452r15p1505r15p1530r15';
-    expect(() => getBluetoothPacket(frames, ledMap, 'kilter', 3)).toThrow('No LEDs resolved');
+  it('Kilter Original climb on Homewall board throws (zero overlap)', () => {
+    const ledMap = getLedPlacements('kilter', 8, 17);
+    const frames = 'p1080r15p1131r12p1134r12';
+    expect(() => getBluetoothPacket(frames, ledMap, 'kilter', 3)).toThrow('placements have no LED mapping');
   });
 
-  it('Tension climb on Kilter board throws', () => {
+  it('Tension climb on Kilter board throws (zero overlap)', () => {
     const ledMap = getLedPlacements('kilter', 1, 7);
     const frames = 'p452r6p473r6p550r6';
-    expect(() => getBluetoothPacket(frames, ledMap, 'tension', 3)).toThrow('No LEDs resolved');
+    expect(() => getBluetoothPacket(frames, ledMap, 'tension', 3)).toThrow('placements have no LED mapping');
   });
 
-  it('completely empty placements map throws', () => {
-    expect(() => getBluetoothPacket('p1r42p2r42', {}, 'kilter', 3)).toThrow('No LEDs resolved');
+  it('empty placements map throws', () => {
+    expect(() => getBluetoothPacket('p1r42p2r42', {}, 'kilter', 3)).toThrow('placements have no LED mapping');
+  });
+
+  // --- Partial match (climb uses holds not on this board size) ---
+
+  it('"Mid Range Game" on 10x12 Mainline throws (3 Auxiliary holds missing)', () => {
+    const ledMap = getLedPlacements('kilter', 8, 26);
+    const frames = 'p4119r45p4131r44p4184r43p4199r45p4208r43p4220r43p4231r42p4265r42p4270r43p4530r45p4663r45';
+    expect(() => getBluetoothPacket(frames, ledMap, 'kilter', 3)).toThrow('3 of 11 placements have no LED mapping');
+  });
+
+  it('"Hailey Mary." on 8x12 Original throws (3 holds missing)', () => {
+    const ledMap = getLedPlacements('kilter', 1, 8);
+    const frames = 'p1143r12p1158r12p1181r13p1204r15p1229r13p1252r13p1284r13p1320r13p1322r13p1389r14p1464r15p1467r15';
+    expect(() => getBluetoothPacket(frames, ledMap, 'kilter', 3)).toThrow('3 of 12 placements have no LED mapping');
+  });
+
+  it('"Hailey Mary." on 7x10 Original throws (4 holds missing)', () => {
+    const ledMap = getLedPlacements('kilter', 1, 14);
+    const frames = 'p1143r12p1158r12p1181r13p1204r15p1229r13p1252r13p1284r13p1320r13p1322r13p1389r14p1464r15p1467r15';
+    expect(() => getBluetoothPacket(frames, ledMap, 'kilter', 3)).toThrow('4 of 12 placements have no LED mapping');
+  });
+
+  it('"Hailey Mary." on 12x12 w/o kick throws (1 hold missing)', () => {
+    const ledMap = getLedPlacements('kilter', 1, 27);
+    const frames = 'p1143r12p1158r12p1181r13p1204r15p1229r13p1252r13p1284r13p1320r13p1322r13p1389r14p1464r15p1467r15';
+    expect(() => getBluetoothPacket(frames, ledMap, 'kilter', 3)).toThrow('1 of 12 placements have no LED mapping');
+  });
+
+  it('"Kings Cross" on 7x10 Original throws (4 holds missing)', () => {
+    const ledMap = getLedPlacements('kilter', 1, 14);
+    const frames = 'p1080r15p1131r12p1134r12p1219r13p1251r13p1281r13p1301r13p1316r13p1365r13p1383r14p1452r15p1505r15p1530r15';
+    expect(() => getBluetoothPacket(frames, ledMap, 'kilter', 3)).toThrow('4 of 13 placements have no LED mapping');
+  });
+
+  it('"Kings Cross" on 12x12 w/o kick throws (2 holds missing)', () => {
+    const ledMap = getLedPlacements('kilter', 1, 27);
+    const frames = 'p1080r15p1131r12p1134r12p1219r13p1251r13p1281r13p1301r13p1316r13p1365r13p1383r14p1452r15p1505r15p1530r15';
+    expect(() => getBluetoothPacket(frames, ledMap, 'kilter', 3)).toThrow('2 of 13 placements have no LED mapping');
+  });
+
+  it('"Catastrophe" on Tension 8x12 throws (2 holds missing)', () => {
+    const ledMap = getLedPlacements('tension', 10, 7);
+    const frames = 'p452r6p473r6p550r6p563r8p577r8p589r7p689r8p695r6p704r5p722r6p727r8p728r8p733r8p734r8p744r6p750r8';
+    expect(() => getBluetoothPacket(frames, ledMap, 'tension', 3)).toThrow('2 of 16 placements have no LED mapping');
+  });
+
+  it('"Catastrophe" on Tension 8x14 throws (2 holds missing)', () => {
+    const ledMap = getLedPlacements('tension', 10, 9);
+    const frames = 'p452r6p473r6p550r6p563r8p577r8p589r7p689r8p695r6p704r5p722r6p727r8p728r8p733r8p734r8p744r6p750r8';
+    expect(() => getBluetoothPacket(frames, ledMap, 'tension', 3)).toThrow('2 of 16 placements have no LED mapping');
   });
 });
