@@ -66,26 +66,31 @@ function testClimb(climb: ClimbTest) {
       describe(`${size.name} (size ${size.sizeId})`, () => {
         const ledMap = getLedPlacements(climb.board, climb.layoutId, size.sizeId);
 
-        it('v3 packet matches expected payload', () => {
-          expect(toHex(getBluetoothPacket(climb.frames, ledMap, climb.board, 3))).toBe(size.v3);
-        });
+        // Only Aurora boards (Kilter/Tension) use this packet generation
+        if (climb.board !== 'moonboard') {
+          const boardName = climb.board;
 
-        it('v2 packet matches expected payload', () => {
-          expect(toHex(getBluetoothPacket(climb.frames, ledMap, climb.board, 2))).toBe(size.v2);
-        });
+          it('v3 packet matches expected payload', () => {
+            expect(toHex(getBluetoothPacket(climb.frames, ledMap, boardName, 3))).toBe(size.v3);
+          });
 
-        it('frame integrity', () => {
-          verifyFrameIntegrity(getBluetoothPacket(climb.frames, ledMap, climb.board, 3));
-          verifyFrameIntegrity(getBluetoothPacket(climb.frames, ledMap, climb.board, 2));
-        });
+          it('v2 packet matches expected payload', () => {
+            expect(toHex(getBluetoothPacket(climb.frames, ledMap, boardName, 2))).toBe(size.v2);
+          });
 
-        it('BLE chunks fit 20-byte MTU', () => {
-          for (const v of [2, 3] as const) {
-            for (const chunk of splitMessages(getBluetoothPacket(climb.frames, ledMap, climb.board, v))) {
-              expect(chunk.length).toBeLessThanOrEqual(20);
+          it('frame integrity', () => {
+            verifyFrameIntegrity(getBluetoothPacket(climb.frames, ledMap, boardName, 3));
+            verifyFrameIntegrity(getBluetoothPacket(climb.frames, ledMap, boardName, 2));
+          });
+
+          it('BLE chunks fit 20-byte MTU', () => {
+            for (const v of [2, 3] as const) {
+              for (const chunk of splitMessages(getBluetoothPacket(climb.frames, ledMap, boardName, v))) {
+                expect(chunk.length).toBeLessThanOrEqual(20);
+              }
             }
-          }
-        });
+          });
+        }
       });
     }
   });
