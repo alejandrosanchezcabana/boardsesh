@@ -7,8 +7,10 @@ import type { BoardDetails } from '@/app/lib/types';
 // --- Mocks ---
 
 let resolveRenderBoard: (bitmap: ImageBitmap) => void;
+const isWorkerRenderingSupportedMock = vi.fn(() => true);
 
 vi.mock('@/app/lib/board-render-worker/worker-manager', () => ({
+  isWorkerRenderingSupported: isWorkerRenderingSupportedMock,
   renderBoard: vi.fn(
     () =>
       new Promise<ImageBitmap>((resolve) => {
@@ -47,6 +49,7 @@ const mockBoardDetails: BoardDetails = {
 describe('BoardCanvasRenderer cleanup', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    isWorkerRenderingSupportedMock.mockReturnValue(true);
   });
 
   it('sets initial canvas dimensions from board details', () => {
@@ -148,5 +151,20 @@ describe('BoardCanvasRenderer cleanup', () => {
     const expectedHeight = Math.round((200 * mockBoardDetails.boardHeight) / mockBoardDetails.boardWidth);
     expect(canvas.width).toBe(200);
     expect(canvas.height).toBe(expectedHeight);
+  });
+
+  it('falls back to image layers immediately when worker rendering is unavailable', () => {
+    isWorkerRenderingSupportedMock.mockReturnValue(false);
+
+    const { queryByTestId, container } = render(
+      <BoardCanvasRenderer
+        boardDetails={mockBoardDetails}
+        frames="p1r42p2r43"
+        mirrored={false}
+      />,
+    );
+
+    expect(queryByTestId('board-image-layers')).toBeTruthy();
+    expect(container.querySelector('canvas')).toBeNull();
   });
 });

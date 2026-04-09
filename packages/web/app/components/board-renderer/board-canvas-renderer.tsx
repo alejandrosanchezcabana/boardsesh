@@ -2,7 +2,7 @@
 
 import React, { useEffect, useRef, useState } from 'react';
 import type { BoardDetails } from '@/app/lib/types';
-import { renderBoard } from '@/app/lib/board-render-worker/worker-manager';
+import { isWorkerRenderingSupported, renderBoard } from '@/app/lib/board-render-worker/worker-manager';
 import { trackRenderComplete, trackRenderError, type RenderContext } from '@/app/lib/rendering-metrics';
 import { THUMBNAIL_WIDTH } from './types';
 import BoardImageLayers from './board-image-layers';
@@ -49,6 +49,14 @@ const BoardCanvasRenderer = React.memo(function BoardCanvasRenderer({
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
+
+    // If worker rendering is unavailable (or has been disabled after a prior
+    // worker load/runtime failure), switch immediately to image URL layers —
+    // the same path used for SSR output.
+    if (!isWorkerRenderingSupported()) {
+      setFailed(true);
+      return;
+    }
 
     let cancelled = false;
     // Capture context and time at effect start so metrics are never stale
