@@ -49,7 +49,7 @@ vi.mock('../bluetooth-moonboard', () => ({
   getMoonboardBluetoothPacket: mockGetMoonboardBluetoothPacket,
 }));
 
-vi.mock('@/app/lib/__generated__/led-placements-data', () => ({
+vi.mock('@boardsesh/board-constants/led-placements', () => ({
   getLedPlacements: mockGetLedPlacements,
 }));
 

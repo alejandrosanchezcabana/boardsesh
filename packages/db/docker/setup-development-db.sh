@@ -235,11 +235,48 @@ if [ "$FRESH_SETUP" = true ]; then
   DB_FILE=$KILTER_DB_FILE pgloader /db/kilter_db.load
   echo "   ✅ Kilter data loaded successfully"
 
+  echo "🔄 Step 7/7: Finalizing database with migrations and unified imports..."
+  cd /app
+  
+  echo "   🏗️  Running drizzle migrations..."
+  DATABASE_URL=$DB_URL bunx drizzle-kit migrate
+  echo "   ✅ Migrations completed"
+
+  if [ -f "$DECOY_DB_FILE" ]; then
+    echo "   📊 Importing Decoy board data into unified tables..."
+    DATABASE_URL=$DB_URL bunx tsx scripts/import-aurora-board-unified.ts decoy $DECOY_DB_FILE
+    echo "   ✅ Decoy data imported"
+  fi
+
+  if [ -f "$TOUCHSTONE_DB_FILE" ]; then
+    echo "   📊 Importing Touchstone board data into unified tables..."
+    DATABASE_URL=$DB_URL bunx tsx scripts/import-aurora-board-unified.ts touchstone $TOUCHSTONE_DB_FILE
+    echo "   ✅ Touchstone data imported"
+  fi
+
+  if [ -f "$GRASSHOPPER_DB_FILE" ]; then
+    echo "   📊 Importing Grasshopper board data into unified tables..."
+    DATABASE_URL=$DB_URL bunx tsx scripts/import-aurora-board-unified.ts grasshopper $GRASSHOPPER_DB_FILE
+    echo "   ✅ Grasshopper data imported"
+  fi
+
+  if [ -d "/db/tmp/problems_2023_01_30" ]; then
+    echo "   📊 Importing MoonBoard problems..."
+    DATABASE_URL=$DB_URL bunx tsx scripts/import-moonboard-problems.ts /db/tmp/problems_2023_01_30
+    echo "   ✅ MoonBoard problems imported"
+  fi
+
+  echo "   👤 Creating test user..."
+  DATABASE_URL=$DB_URL bunx tsx scripts/create-test-user.ts
+  
+  echo "   🌱 Seeding social data..."
+  DATABASE_URL=$DB_URL bunx tsx scripts/seed-social.ts
+  
   touch /db/tmp/db-setup-complete.flag
   echo "🎉 Initial database setup completed!"
   echo "   💾 Database: $PGDBNAME"
   echo "   🔗 Connection: $DB_URL"
-  echo "   🏔️  Board data: Kilter + Tension loaded, MoonBoard problems downloaded"
+  echo "   🏔️  Board data: All boards loaded and unified"
 else
   echo "♻️  Database setup already completed. Skipping initial setup."
 fi
@@ -247,4 +284,4 @@ fi
 echo ""
 echo "✨ Boardsesh database import complete!"
 echo ""
-echo "Next step: Run 'bun run db:up' to start containers and run migrations."
+echo "Database is ready for use."

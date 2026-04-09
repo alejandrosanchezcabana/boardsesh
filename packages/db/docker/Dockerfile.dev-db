@@ -48,8 +48,8 @@ ENV PGDATA=/var/lib/postgresql/pgdata
 
 # Copy pgloader configs and scripts (from docker/ subdirectory of build context)
 COPY docker/cleanup_sqlite_db_problems.sh \
-     docker/kilter_db.load docker/tension_db.load \
-     docker/kilter_table_rename.sql docker/tension_table_rename.sql \
+     docker/*.load \
+     docker/*.sql \
      /db/
 RUN chmod +x /db/cleanup_sqlite_db_problems.sh
 
