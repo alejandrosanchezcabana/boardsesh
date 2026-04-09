@@ -102,6 +102,7 @@ export const sessionQueries = {
         const participantCount = distributedState
           ? await distributedState.getSessionMemberCount(s.id)
           : roomManager.getSessionClients(s.id).length;
+        const isActive = await roomManager.isSessionActive(s.id);
 
         return {
           id: s.id,
@@ -113,7 +114,7 @@ export const sessionQueries = {
           createdByUserId: s.createdByUserId,
           participantCount,
           distance: 0, // Not applicable for own sessions
-          isActive: true, // User's own sessions are always considered active
+          isActive,
           goal: s.goal || null,
           isPublic: s.isPublic,
           isPermanent: s.isPermanent,

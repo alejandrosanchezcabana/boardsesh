@@ -251,24 +251,33 @@ export async function writeQueueStateToPostgres(
     return;
   }
 
-  await db
-    .insert(sessionQueues)
-    .values({
-      sessionId,
-      queue: state.queue,
-      currentClimbQueueItem: state.currentClimbQueueItem,
-      version: state.version,
-      sequence: state.sequence,
-      updatedAt: new Date(),
-    })
-    .onConflictDoUpdate({
-      target: sessionQueues.sessionId,
-      set: {
+  const now = new Date();
+
+  await db.transaction(async (tx) => {
+    await tx
+      .insert(sessionQueues)
+      .values({
+        sessionId,
         queue: state.queue,
         currentClimbQueueItem: state.currentClimbQueueItem,
         version: state.version,
         sequence: state.sequence,
-        updatedAt: new Date(),
-      },
-    });
+        updatedAt: now,
+      })
+      .onConflictDoUpdate({
+        target: sessionQueues.sessionId,
+        set: {
+          queue: state.queue,
+          currentClimbQueueItem: state.currentClimbQueueItem,
+          version: state.version,
+          sequence: state.sequence,
+          updatedAt: now,
+        },
+      });
+
+    await tx
+      .update(sessions)
+      .set({ lastActivity: now })
+      .where(eq(sessions.id, sessionId));
+  });
 }

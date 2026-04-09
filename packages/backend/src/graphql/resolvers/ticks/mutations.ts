@@ -3,6 +3,7 @@ import { eq, and, inArray } from 'drizzle-orm';
 import type { ConnectionContext } from '@boardsesh/shared-schema';
 import { db } from '../../../db/client';
 import * as dbSchema from '@boardsesh/db/schema';
+import { sessions } from '../../../db/schema';
 import { requireAuthenticated, validateInput } from '../shared/helpers';
 import { SaveTickInputSchema } from '../../../validation/schemas';
 import { resolveBoardFromPath } from '../social/boards';
@@ -24,7 +25,11 @@ export const tickMutations = {
     const userId = ctx.userId!;
 
     const [tick] = await db
-      .select({ uuid: dbSchema.boardseshTicks.uuid, userId: dbSchema.boardseshTicks.userId })
+      .select({
+        uuid: dbSchema.boardseshTicks.uuid,
+        userId: dbSchema.boardseshTicks.userId,
+        sessionId: dbSchema.boardseshTicks.sessionId,
+      })
       .from(dbSchema.boardseshTicks)
       .where(eq(dbSchema.boardseshTicks.uuid, uuid))
       .limit(1);
@@ -69,6 +74,13 @@ export const tickMutations = {
       );
       // Delete the tick itself
       await tx.delete(dbSchema.boardseshTicks).where(eq(dbSchema.boardseshTicks.uuid, uuid));
+
+      if (tick.sessionId) {
+        await tx
+          .update(sessions)
+          .set({ lastActivity: new Date() })
+          .where(eq(sessions.id, tick.sessionId));
+      }
     });
 
     return true;
@@ -105,33 +117,44 @@ export const tickMutations = {
     }
 
     // Insert into database
-    const [tick] = await db
-      .insert(dbSchema.boardseshTicks)
-      .values({
-        uuid,
-        userId,
-        boardType: validatedInput.boardType,
-        climbUuid: validatedInput.climbUuid,
-        angle: validatedInput.angle,
-        isMirror: validatedInput.isMirror,
-        status: validatedInput.status,
-        attemptCount: validatedInput.attemptCount,
-        quality: validatedInput.quality ?? null,
-        difficulty: validatedInput.difficulty ?? null,
-        isBenchmark: validatedInput.isBenchmark,
-        comment: validatedInput.comment,
-        climbedAt,
-        createdAt: now,
-        updatedAt: now,
-        sessionId: validatedInput.sessionId ?? null,
-        boardId,
-        // Aurora sync fields are null - will be populated by periodic sync job
-        auroraType: null,
-        auroraId: null,
-        auroraSyncedAt: null,
-        auroraSyncError: null,
-      })
-      .returning();
+    const [tick] = await db.transaction(async (tx) => {
+      const [createdTick] = await tx
+        .insert(dbSchema.boardseshTicks)
+        .values({
+          uuid,
+          userId,
+          boardType: validatedInput.boardType,
+          climbUuid: validatedInput.climbUuid,
+          angle: validatedInput.angle,
+          isMirror: validatedInput.isMirror,
+          status: validatedInput.status,
+          attemptCount: validatedInput.attemptCount,
+          quality: validatedInput.quality ?? null,
+          difficulty: validatedInput.difficulty ?? null,
+          isBenchmark: validatedInput.isBenchmark,
+          comment: validatedInput.comment,
+          climbedAt,
+          createdAt: now,
+          updatedAt: now,
+          sessionId: validatedInput.sessionId ?? null,
+          boardId,
+          // Aurora sync fields are null - will be populated by periodic sync job
+          auroraType: null,
+          auroraId: null,
+          auroraSyncedAt: null,
+          auroraSyncError: null,
+        })
+        .returning();
+
+      if (validatedInput.sessionId) {
+        await tx
+          .update(sessions)
+          .set({ lastActivity: new Date() })
+          .where(eq(sessions.id, validatedInput.sessionId));
+      }
+
+      return [createdTick];
+    });
 
     const result = {
       uuid: tick.uuid,

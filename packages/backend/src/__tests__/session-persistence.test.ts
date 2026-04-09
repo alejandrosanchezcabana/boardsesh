@@ -2,7 +2,7 @@ import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { v4 as uuidv4 } from 'uuid';
 import { roomManager } from '../services/room-manager';
 import { db } from '../db/client';
-import { sessions, sessionQueues } from '../db/schema';
+import { sessions, sessionQueues, boardSessionParticipants } from '../db/schema';
 import { eq } from 'drizzle-orm';
 import type { ClimbQueueItem } from '@boardsesh/shared-schema';
 import { createMockRedis, type MockRedis } from './helpers/mock-redis';
@@ -57,7 +57,7 @@ describe('Session Persistence - Hybrid Redis + Postgres', () => {
   });
 
   describe('Session Lifecycle Transitions', () => {
-    it('should transition from active → inactive when last user leaves', async () => {
+    it('should keep a durable session row without marking it inactive on last leave', async () => {
       const sessionId = uuidv4();
       const boardPath = '/kilter/1/2/3/40';
 
@@ -75,19 +75,20 @@ describe('Session Persistence - Hybrid Redis + Postgres', () => {
       // Leave session
       await roomManager.leaveSession('client-1');
 
-      // Verify inactive status
+      // Verify durable state remains not-ended
       session = await db
         .select()
         .from(sessions)
         .where(eq(sessions.id, sessionId))
         .limit(1);
-      expect(session[0]?.status).toBe('inactive');
+      expect(session[0]?.status).toBe('active');
+      expect(session[0]?.endedAt).toBeNull();
 
       // Verify session not deleted from Postgres
       expect(session.length).toBe(1);
     });
 
-    it('should transition inactive → active when user rejoins', async () => {
+    it('should allow rejoining without changing the durable lifecycle status', async () => {
       const sessionId = uuidv4();
       const boardPath = '/kilter/1/2/3/40';
 
@@ -95,18 +96,18 @@ describe('Session Persistence - Hybrid Redis + Postgres', () => {
       await registerAndJoinSession('client-1', sessionId, boardPath, 'User1');
       await roomManager.leaveSession('client-1');
 
-      // Verify inactive
+      // Verify durable state remains active until explicit end
       let session = await db
         .select()
         .from(sessions)
         .where(eq(sessions.id, sessionId))
         .limit(1);
-      expect(session[0]?.status).toBe('inactive');
+      expect(session[0]?.status).toBe('active');
 
       // Rejoin
       await registerAndJoinSession('client-2', sessionId, boardPath, 'User2');
 
-      // Verify back to active
+      // Verify durable state is unchanged
       session = await db
         .select()
         .from(sessions)
@@ -139,7 +140,7 @@ describe('Session Persistence - Hybrid Redis + Postgres', () => {
   });
 
   describe('Lazy Restoration from Redis', () => {
-    it('should restore inactive session from Redis when user rejoins', async () => {
+    it('should restore a Redis-backed session when user rejoins', async () => {
       const sessionId = uuidv4();
       const boardPath = '/kilter/1/2/3/40';
       const climb = createTestClimb();
@@ -164,7 +165,7 @@ describe('Session Persistence - Hybrid Redis + Postgres', () => {
       expect(result.queue[0]?.uuid).toBe(climb.uuid);
     });
 
-    it('should handle multiple users joining inactive session concurrently', async () => {
+    it('should handle multiple users joining a Redis-backed session concurrently', async () => {
       const sessionId = uuidv4();
       const boardPath = '/kilter/1/2/3/40';
 
@@ -439,7 +440,7 @@ describe('Session Persistence - Hybrid Redis + Postgres', () => {
       expect(session?.participantCount).toBe(0);
     });
 
-    it('should mark session as inactive when only in Postgres', async () => {
+    it('should exclude sessions that exist only in Postgres from discovery', async () => {
       const sessionId = uuidv4();
       const boardPath = '/kilter/1/2/3/40';
 
@@ -467,8 +468,7 @@ describe('Session Persistence - Hybrid Redis + Postgres', () => {
       const nearby = await roomManager.findNearbySessions(37.7749, -122.4194, 10000);
 
       const session = nearby.find((s) => s.id === sessionId);
-      expect(session?.isActive).toBe(false);
-      expect(session?.participantCount).toBe(0);
+      expect(session).toBeUndefined();
     });
 
     it('should exclude ended sessions from discovery', async () => {
@@ -519,13 +519,14 @@ describe('Session Persistence - Hybrid Redis + Postgres', () => {
       // Leave session
       await roomManager.leaveSession('client-1');
 
-      // Session should be marked inactive in Postgres
+      // Durable session row should remain not-ended; liveness is not persisted to SQL
       const session = await db
         .select()
         .from(sessions)
         .where(eq(sessions.id, sessionId))
         .limit(1);
-      expect(session[0]?.status).toBe('inactive');
+      expect(session[0]?.status).toBe('active');
+      expect(await roomManager.isSessionActive(sessionId)).toBe(false);
     });
 
     it('should not restore sessions in Postgres-only mode after server restart', async () => {
@@ -599,6 +600,12 @@ describe('Session Persistence - Hybrid Redis + Postgres', () => {
       // through the roomManager API.
       const users = await roomManager.getSessionUsers(sessionId);
       expect(users.length).toBeGreaterThan(0);
+
+      const participantRows = await db
+        .select()
+        .from(boardSessionParticipants)
+        .where(eq(boardSessionParticipants.sessionId, sessionId));
+      expect(participantRows).toHaveLength(0);
 
       // Session queue state should be in Redis (written by updateQueueState)
       const redisHashes = mockRedis._hashes;

@@ -138,7 +138,7 @@ sequenceDiagram
     alt Session exists in memory
         RM->>RM: Add client to session
         Note over RM: initialQueue ignored (session has state)
-    else Session exists in Redis (inactive)
+    else Session exists in Redis (warm cache)
         RM->>R: getSession(sessionId)
         R-->>RM: Session data
         RM->>RM: Restore to memory
@@ -179,7 +179,7 @@ sequenceDiagram
 1. **Origin Validation**: WebSocket connections are validated against allowed origins
 2. **Authentication**: Optional auth token passed in `connectionParams`
 3. **Eager Subscription**: Queue subscription starts BEFORE fetching state to prevent race conditions
-4. **Session Restoration**: Sessions can be restored from Redis (hot) or PostgreSQL (cold)
+4. **Session Restoration**: Sessions can be restored from Redis (warm cache) or PostgreSQL (dormant durable state)
 5. **Initial Queue Seeding**: When creating a new session, clients can provide `initialQueue` and `initialCurrentClimb` to seed the session with an existing local queue (e.g., when starting party mode with climbs already queued)
 
 ### Initial Queue Seeding
@@ -211,7 +211,7 @@ mutation JoinSession(
 
 **Behavior:**
 - `initialQueue`, `initialCurrentClimb`, and `sessionName` are **only applied when creating a new session**
-- If joining an existing session (active, inactive, or dormant), these values are ignored and the existing session state is used
+- If joining an existing session (active, warm, or dormant), these values are ignored and the existing session state is used
 - The queue is persisted immediately to Postgres (not debounced) to ensure durability for new sessions
 - All users who join after the initial seed will receive the seeded queue state
 
@@ -318,49 +318,48 @@ The main Traefik instance routes `*.preview.boardsesh.com` and `*.ws.preview.boa
 
 ```
                     ┌─────────────────────────────────────┐
-                    │              Created                  │
-                    │  - Optional: goal, color, boardIds   │
-                    │  - Optional: isPermanent flag        │
-                    │  - startedAt set on creation         │
-                    └──────────────┬────────────────────────┘
+                    │              Created                │
+                    │  - Optional: goal, color, boardIds │
+                    │  - Optional: isPermanent flag      │
+                    │  - startedAt set on creation       │
+                    └──────────────┬──────────────────────┘
                                    │ First user joins
                                    ▼
     ┌──────────────────────────────────────────────┐
-    │                   ACTIVE                      │
-    │  - Users connected                            │
-    │  - Real-time sync enabled                     │
-    │  - Redis cache hot                            │
-    │  - In-memory session state                    │
+    │                   ACTIVE                     │
+    │  - Users connected                           │
+    │  - Real-time sync enabled                    │
+    │  - Redis cache hot                           │
+    │  - In-memory session state                   │
     └──────┬───────────────────────┬───────────────┘
            │ Last user leaves      │ Leader calls endSession
            ▼                       ▼
-    ┌────────────────────┐   ┌──────────────────────────────┐
-    │  GRACE PERIOD (60s)│   │     ENDED (explicit)          │
-    │  - No connected    │   │  - endedAt set                │
-    │    users           │   │  - Summary generated           │
-    │  - In-memory state │   │  - SessionEnded event sent     │
-    │    RETAINED        │   │  - Removed from Redis          │
-    │  - Redis: inactive │   │  - Postgres record kept        │
-    │  - Postgres:       │   └──────────────────────────────┘
-    │    'inactive'      │
-    └────────┬──────┬────┘
+    ┌──────────────────────────┐   ┌──────────────────────────────┐
+    │   GRACE PERIOD (60s)     │   │     ENDED (explicit)         │
+    │  - No connected users    │   │  - endedAt set               │
+    │  - In-memory state       │   │  - Summary generated         │
+    │    retained              │   │  - SessionEnded event sent   │
+    │  - Redis session kept    │   │  - Removed from Redis        │
+    │  - Postgres row not ended│   │  - Postgres record kept      │
+    └────────┬──────┬──────────┘   └──────────────────────────────┘
              │      │ 60s expires
              │      ▼
-             │   ┌─────────────────────────────┐
-             │   │          INACTIVE            │
+             │   ┌──────────────────────────────┐
+             │   │      WARM (Redis only)       │
              │   │  - In-memory state deleted   │
              │   │  - Redis cache retained (4h) │
-             │   │  - Restoration needed on     │
-             │   │    next join (lock + fetch)   │
-             │   └──────────┬──────────────────┘
-             │              │ TTL expires OR auto-end
+             │   │  - Rejoin restores from      │
+             │   │    Redis back into memory    │
+             │   └──────────┬───────────────────┘
+             │              │ Redis TTL expires
              │              ▼
              │   ┌──────────────────────────────┐
-             │   │      ENDED (auto/TTL)         │
-             │   │  - endedAt set                │
-             │   │  - Removed from Redis         │
-             │   │  - Postgres record kept       │
-             │   │  - Cannot be rejoined         │
+             │   │    DORMANT (Postgres only)   │
+             │   │  - Redis entry expired       │
+             │   │  - Postgres row still active │
+             │   │  - Rejoin restores from      │
+             │   │    Postgres while status     │
+             │   │    is not 'ended'            │
              │   └──────────────────────────────┘
              │
              │ User rejoins within grace
@@ -374,6 +373,8 @@ The main Traefik instance routes `*.preview.boardsesh.com` and `*.ws.preview.boa
 
 **Grace Period:** When the last user disconnects, the session enters a 60-second grace period where in-memory state is preserved. If a client reconnects within this window (common during network flaps or page refreshes), the session is instantly available without the expensive lock + Redis/Postgres restoration cycle. The grace period duration is controlled by `SESSION_GRACE_PERIOD_MS` in `RoomManager`.
 
+If the grace period expires, the session is evicted from memory but remains restorable from Redis until the 4-hour TTL expires. After Redis TTL expiry, the session is still not ended; the next join restores it from Postgres as long as the durable row has not been explicitly marked `ended`.
+
 ### Session Properties
 
 Sessions support the following configurable properties set at creation time:
@@ -382,19 +383,15 @@ Sessions support the following configurable properties set at creation time:
 |----------|------|-------------|
 | `goal` | `String?` | Free-text session goal (max 500 chars), displayed in the session header |
 | `color` | `String?` | Hex color code for multi-session display (e.g., `#FF5722`) |
-| `isPermanent` | `Boolean` | Exempt from auto-end cleanup (for gym kiosk sessions) |
+| `isPermanent` | `Boolean` | Optional flag for long-lived kiosk-style sessions, persisted with the session metadata |
 | `isPublic` | `Boolean` | Whether the session appears in discovery (default: true) |
 | `boardIds` | `[Int]?` | Multi-board support — links session to specific boards within a gym |
 
 ### Session Ending and Summaries
 
-Sessions can end in three ways:
+Sessions only end when a client explicitly calls `endSession`. Last-user disconnects, grace-period expiry, and Redis TTL expiry do not mark a session as ended; they only evict hot state and force later restoration from Redis or Postgres.
 
-1. **Explicit end** — Leader or creator calls `endSession` mutation
-2. **Auto-end** — Background job ends inactive, non-permanent sessions after 30 minutes (configurable via `SESSION_AUTO_END_MINUTES` env var)
-3. **TTL expiry** — Redis cache expires after 4 hours of inactivity
-
-When a session ends explicitly via `endSession`:
+When a session ends via `endSession`:
 - `endedAt` timestamp is recorded in Postgres
 - A `SessionEnded` event is broadcast to all connected clients
 - A `SessionSummary` is generated and returned to the caller
@@ -408,15 +405,6 @@ When a session ends explicitly via `endSession`:
 - Session goal (if set)
 
 The frontend displays the summary in a dialog when the session ends, and optionally as a feed item in the activity feed.
-
-### Auto-End Cleanup
-
-A periodic background job runs every 5 minutes on the backend server to automatically end stale sessions:
-
-- Targets sessions with status `inactive` that have not had activity for `SESSION_AUTO_END_MINUTES` (default: 30)
-- Skips sessions with `isPermanent = true` (gym kiosk sessions)
-- Processes up to 50 sessions per cycle to avoid overload
-- Failures for individual sessions are logged but don't block other sessions
 
 ### Multi-Board Sessions
 
@@ -1036,8 +1024,8 @@ When Redis is unavailable, RoomManager falls back to **Postgres-only mode**:
 | Tier | Storage | TTL | Use Case |
 |------|---------|-----|----------|
 | **Hot** | In-Memory + Redis | 4 hours | Active sessions with connected users |
-| **Warm** | Redis only | 4 hours | Recently inactive (users left) |
-| **Cold** | PostgreSQL | Indefinite | Historical sessions, dormant restoration |
+| **Warm** | Redis only | 4 hours | No connected users, but fast restoration is still available |
+| **Cold** | PostgreSQL | Indefinite | Durable session rows, including dormant sessions restorable until explicitly ended |
 
 ### Participant Tracking (Postgres)
 
@@ -1357,7 +1345,6 @@ Requires user authentication and controller ownership.
 | `REDIS_URL` | Redis connection string | None (local-only mode) |
 | `PORT` | HTTP/WS server port | 8080 |
 | `BOARDSESH_URL` | Allowed CORS origin | https://boardsesh.com |
-| `SESSION_AUTO_END_MINUTES` | Inactive session auto-end threshold | 30 |
 
 ### Timeouts and Limits
 
@@ -1379,8 +1366,6 @@ Requires user authentication and controller ownership.
 | Instance heartbeat TTL | 60s | Dead instance detection |
 | Session members TTL | 4 hours | Matches session TTL |
 | Session grace period | 60s | In-memory retention after last disconnect |
-| Session auto-end | 30 min | Auto-end inactive non-permanent sessions |
-| Auto-end check interval | 5 min | How often the auto-end job runs |
 
 ---
 

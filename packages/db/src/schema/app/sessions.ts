@@ -9,7 +9,8 @@ export const boardSessions = pgTable('board_sessions', {
   boardPath: text('board_path').notNull(),
   createdAt: timestamp('created_at').defaultNow().notNull(),
   lastActivity: timestamp('last_activity').defaultNow().notNull(),
-  // Session lifecycle status: 'active' (users connected), 'inactive' (no users, in Redis), 'ended' (explicitly closed)
+  // Persistent lifecycle status. Live active/inactive presence is tracked in Redis;
+  // SQL only uses ended/not-ended for durable history and discovery filtering.
   status: text('status').default('active').notNull(),
   // GPS coordinates for session discovery
   latitude: doublePrecision('latitude'),
