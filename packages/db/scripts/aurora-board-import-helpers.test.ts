@@ -39,6 +39,34 @@ test('deriveClimbHoldsFromFrames prefers meaningful non-foot states for duplicat
   ]);
 });
 
+test('deriveClimbHoldsFromFrames prefers FOOT over OFF', () => {
+  // FOOT in frame 0, OFF in frame 1 -> FOOT wins
+  const holds1 = deriveClimbHoldsFromFrames(
+    {
+      uuid: 'climb-4',
+      frames: 'p401r4,p401x1',
+    },
+    'decoy',
+  );
+
+  assert.deepEqual(holds1, [
+    { climbUuid: 'climb-4', holdId: 401, frameNumber: 0, holdState: 'FOOT' },
+  ]);
+
+  // OFF in frame 0, FOOT in frame 1 -> FOOT wins
+  const holds2 = deriveClimbHoldsFromFrames(
+    {
+      uuid: 'climb-5',
+      frames: 'p501x1,p501r4',
+    },
+    'decoy',
+  );
+
+  assert.deepEqual(holds2, [
+    { climbUuid: 'climb-5', holdId: 501, frameNumber: 1, holdState: 'FOOT' },
+  ]);
+});
+
 test('dedupeSourceClimbHolds keeps the newest source hold row per climb and hold', () => {
   const holds = dedupeSourceClimbHolds([
     {

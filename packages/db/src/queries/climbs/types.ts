@@ -20,8 +20,8 @@ export interface ClimbSearchParams {
   page?: number;
   pageSize?: number;
   // Sorting
-  sortBy?: string;
-  sortOrder?: string;
+  sortBy?: 'ascents' | 'difficulty' | 'name' | 'quality' | 'popular' | 'creation' | string;
+  sortOrder?: 'asc' | 'desc' | string;
   // Filters
   gradeAccuracy?: number;
   minGrade?: number;
@@ -30,15 +30,20 @@ export interface ClimbSearchParams {
   minAscents?: number;
   name?: string;
   settername?: string[];
+  setternameSuggestion?: string;
+  onlyClassics?: boolean;
   onlyTallClimbs?: boolean;
   // Hold filters - 'ANY', 'NOT', or specific states like 'STARTING', 'HAND', etc.
-  holdsFilter?: Record<string, HoldState | string>;
+  // Record<string, any> allows for both simple strings and the object-based LitUpHoldsMap
+  holdsFilter?: Record<string, any>;
   // Personal progress filters
   hideAttempted?: boolean;
   hideCompleted?: boolean;
   showOnlyAttempted?: boolean;
   showOnlyCompleted?: boolean;
   onlyDrafts?: boolean;
+  // Allow dynamic hold keys (e.g., hold_123)
+  [key: `hold_${number}`]: any;
 }
 
 /**

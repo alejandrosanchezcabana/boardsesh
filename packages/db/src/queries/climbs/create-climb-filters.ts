@@ -26,6 +26,11 @@ export const createClimbFilters = (
   userId?: string,
 ) => {
   // Process hold filters
+  // holdsFilter can have values like:
+  // - 'ANY': hold must be present in the climb
+  // - 'NOT': hold must NOT be present in the climb
+  // - { state: 'STARTING' | 'HAND' | 'FOOT' | 'FINISH' }: hold must be present with that specific state
+  // - 'STARTING' | 'HAND' | 'FOOT' | 'FINISH': (after URL parsing) same as above
   const holdsToFilter = Object.entries(searchParams.holdsFilter || {}).map(([key, stateOrValue]) => {
     const holdId = key.replace('hold_', '');
     // Handle both object form { state: 'STARTING' } and string form 'STARTING'
@@ -168,7 +173,7 @@ export const createClimbFilters = (
   const personalProgressConditions: SQL[] = [];
   if (userId) {
     if (searchParams.hideAttempted) {
-      // Hide climbs where the user has any tick (attempted or completed)
+      // Hide climbs where the user has at least one attempt tick
       personalProgressConditions.push(
         sql`NOT EXISTS (
           SELECT 1 FROM ${boardseshTicks}
@@ -176,6 +181,7 @@ export const createClimbFilters = (
           AND ${boardseshTicks.userId} = ${userId}
           AND ${boardseshTicks.boardType} = ${params.board_name}
           AND ${boardseshTicks.angle} = ${params.angle}
+          AND ${boardseshTicks.status} = 'attempt'
         )`
       );
     }
@@ -194,7 +200,7 @@ export const createClimbFilters = (
     }
 
     if (searchParams.showOnlyAttempted) {
-      // Show only climbs where the user has any tick
+      // Show only climbs where the user has an attempt tick
       personalProgressConditions.push(
         sql`EXISTS (
           SELECT 1 FROM ${boardseshTicks}
@@ -202,6 +208,7 @@ export const createClimbFilters = (
           AND ${boardseshTicks.userId} = ${userId}
           AND ${boardseshTicks.boardType} = ${params.board_name}
           AND ${boardseshTicks.angle} = ${params.angle}
+          AND ${boardseshTicks.status} = 'attempt'
         )`
       );
     }
@@ -219,6 +226,54 @@ export const createClimbFilters = (
       );
     }
   }
+
+  // User-specific logbook data selectors using boardsesh_ticks
+  const getUserLogbookSelects = () => {
+    return {
+      userAscents: sql<number>`(
+        SELECT COUNT(*)
+        FROM ${boardseshTicks}
+        WHERE ${boardseshTicks.climbUuid} = ${boardClimbs.uuid}
+        AND ${boardseshTicks.userId} = ${userId || ''}
+        AND ${boardseshTicks.boardType} = ${params.board_name}
+        AND ${boardseshTicks.angle} = ${params.angle}
+        AND ${boardseshTicks.status} IN ('flash', 'send')
+      )`,
+      userAttempts: sql<number>`(
+        SELECT COUNT(*)
+        FROM ${boardseshTicks}
+        WHERE ${boardseshTicks.climbUuid} = ${boardClimbs.uuid}
+        AND ${boardseshTicks.userId} = ${userId || ''}
+        AND ${boardseshTicks.boardType} = ${params.board_name}
+        AND ${boardseshTicks.angle} = ${params.angle}
+        AND ${boardseshTicks.status} = 'attempt'
+      )`,
+    };
+  };
+
+  // Hold-specific user data selectors for heatmap using boardsesh_ticks
+  const getHoldUserLogbookSelects = (climbHoldsTable: typeof boardClimbHolds) => {
+    return {
+      userAscents: sql<number>`(
+        SELECT COUNT(*)
+        FROM ${boardseshTicks}
+        WHERE ${boardseshTicks.climbUuid} = ${climbHoldsTable.climbUuid}
+        AND ${boardseshTicks.userId} = ${userId || ''}
+        AND ${boardseshTicks.boardType} = ${params.board_name}
+        AND ${boardseshTicks.angle} = ${params.angle}
+        AND ${boardseshTicks.status} IN ('flash', 'send')
+      )`,
+      userAttempts: sql<number>`(
+        SELECT COUNT(*)
+        FROM ${boardseshTicks}
+        WHERE ${boardseshTicks.climbUuid} = ${climbHoldsTable.climbUuid}
+        AND ${boardseshTicks.userId} = ${userId || ''}
+        AND ${boardseshTicks.boardType} = ${params.board_name}
+        AND ${boardseshTicks.angle} = ${params.angle}
+        AND ${boardseshTicks.status} = 'attempt'
+      )`,
+    };
+  };
 
   return {
     getClimbWhereConditions: () => [
@@ -238,5 +293,30 @@ export const createClimbFilters = (
       eq(boardClimbStats.boardType, params.board_name),
       eq(boardClimbStats.angle, params.angle),
     ],
+    getHoldHeatmapClimbStatsConditions: () => [
+      eq(boardClimbStats.climbUuid, boardClimbHolds.climbUuid),
+      eq(boardClimbStats.boardType, params.board_name),
+      eq(boardClimbStats.angle, params.angle),
+    ],
+    getClimbHoldsJoinConditions: () => [
+      eq(boardClimbHolds.climbUuid, boardClimbs.uuid),
+      eq(boardClimbHolds.boardType, params.board_name),
+    ],
+    getUserLogbookSelects,
+    getHoldUserLogbookSelects,
+    // Raw parts
+    baseConditions,
+    climbStatsConditions,
+    nameCondition,
+    setterNameCondition,
+    holdConditions,
+    holdStateConditions,
+    tallClimbsConditions,
+    setIdsConditions,
+    sizeConditions,
+    personalProgressConditions,
+    anyHolds,
+    notHolds,
+    holdStateFilters,
   };
 };

@@ -93,26 +93,27 @@ vi.mock('@/app/components/board-renderer/types', () => ({
       43: { name: 'HAND', color: '#0000FF' },
       44: { name: 'FINISH', color: '#FF0000' },
       46: { name: 'AUX', color: '#FFE066', renderStyle: 'above-marker' },
-      decoy: {
-        1: { name: 'STARTING', color: '#00FF00' },
-        2: { name: 'HAND', color: '#0000FF' },
-        3: { name: 'FINISH', color: '#FF0000' },
-        4: { name: 'FOOT', color: '#FF00FF' },
-      },
-      touchstone: {
-        1: { name: 'STARTING', color: '#00FF00' },
-        2: { name: 'HAND', color: '#0000FF' },
-        3: { name: 'FINISH', color: '#FF0000' },
-        4: { name: 'FOOT', color: '#FF00FF' },
-      },
-      grasshopper: {
-        1: { name: 'STARTING', color: '#00FF00' },
-        2: { name: 'HAND', color: '#0000FF' },
-        3: { name: 'FINISH', color: '#FF0000' },
-        4: { name: 'FOOT', color: '#FF00FF' },
-      },
     },
-  }));
+    decoy: {
+      1: { name: 'STARTING', color: '#00FF00' },
+      2: { name: 'HAND', color: '#0000FF' },
+      3: { name: 'FINISH', color: '#FF0000' },
+      4: { name: 'FOOT', color: '#FF00FF' },
+    },
+    touchstone: {
+      1: { name: 'STARTING', color: '#00FF00' },
+      2: { name: 'HAND', color: '#0000FF' },
+      3: { name: 'FINISH', color: '#FF0000' },
+      4: { name: 'FOOT', color: '#FF00FF' },
+    },
+    grasshopper: {
+      1: { name: 'STARTING', color: '#00FF00' },
+      2: { name: 'HAND', color: '#0000FF' },
+      3: { name: 'FINISH', color: '#FF0000' },
+      4: { name: 'FOOT', color: '#FF00FF' },
+    },
+  },
+}));
 
 import { GET } from '../route';
 
