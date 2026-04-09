@@ -1,7 +1,6 @@
 import type { ClimbQueueItem, SessionUser } from '@boardsesh/shared-schema';
 import { db } from '../../db/client';
-import { sessions, boardSessionParticipants } from '../../db/schema';
-import { eq } from 'drizzle-orm';
+import { sessions } from '../../db/schema';
 import type { RedisSessionStore } from '../redis-session-store';
 import type { DistributedStateManager } from '../distributed-state';
 import type { ConnectedClient } from './types';
@@ -152,20 +151,23 @@ export async function joinSession(
   client.isLeader = isLeader;
   sessionClientIds.add(connectionId);
 
-  // Await status update so callers see consistent Postgres state after join returns.
-  await db.update(sessions).set({ status: 'active', lastActivity: new Date() }).where(eq(sessions.id, sessionId));
+  // Ensure new sessions exist in Postgres before any queue state persists.
+  // Existing sessions stay Redis-only for join/leave activity.
+  if (isNewSession) {
+    const previous = pendingJoinPersists.get(sessionId) ?? Promise.resolve();
+    const chained = previous.then(() =>
+      ensureSessionRecordExists(sessionId, boardPath, client.userId, sessionName)
+    );
 
-  // Background Postgres metadata writes
-  const previous = pendingJoinPersists.get(sessionId) ?? Promise.resolve();
-  const chained = previous
-    .then(() => persistSessionJoin(sessionId, boardPath, client.userId, isNewSession ? sessionName : undefined))
-    .catch(err => console.warn(`[RoomManager] Background Postgres persist failed for session ${sessionId}:`, err));
-  pendingJoinPersists.set(sessionId, chained);
-  chained.finally(() => {
-    if (pendingJoinPersists.get(sessionId) === chained) {
-      pendingJoinPersists.delete(sessionId);
+    pendingJoinPersists.set(sessionId, chained);
+    try {
+      await chained;
+    } finally {
+      if (pendingJoinPersists.get(sessionId) === chained) {
+        pendingJoinPersists.delete(sessionId);
+      }
     }
-  });
+  }
 
   // Initialize queue state for new sessions with provided initial queue
   if (isNewSession && initialQueue && initialQueue.length > 0) {
@@ -261,16 +263,11 @@ export async function leaveSession(
         console.log(`[RoomManager] Session ${sessionId} marked inactive - grace period started (60s)`);
       }
 
-      // Await pending join persist
+      // Await pending session insert for brand-new sessions.
       const pending = pendingJoinPersists.get(sessionId);
       if (pending) {
         await pending;
       }
-
-      await db
-        .update(sessions)
-        .set({ status: 'inactive', lastActivity: new Date() })
-        .where(eq(sessions.id, sessionId));
     }
   }
 
@@ -348,9 +345,9 @@ export async function removeClient(
 }
 
 /**
- * Persist session join to Postgres (session record + participant).
+ * Ensure a session record exists in Postgres for durable history/summary reads.
  */
-async function persistSessionJoin(
+async function ensureSessionRecordExists(
   sessionId: string,
   boardPath: string,
   userId: string | null,
@@ -367,22 +364,9 @@ async function persistSessionJoin(
       latitude: null,
       longitude: null,
       discoverable: false,
-      createdByUserId: null,
+      createdByUserId: userId,
       name: sessionName || null,
+      startedAt: now,
     })
-    .onConflictDoUpdate({
-      target: sessions.id,
-      set: { boardPath, lastActivity: now },
-    });
-
-  if (userId) {
-    await db
-      .insert(boardSessionParticipants)
-      .values({
-        sessionId,
-        userId,
-        joinedAt: now,
-      })
-      .onConflictDoNothing();
-  }
+    .onConflictDoNothing();
 }

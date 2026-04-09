@@ -127,6 +127,10 @@ export async function findNearbySessions(
       isActive = redisExistsMap.get(session.id) || false;
     }
 
+    if (!isActive) {
+      continue;
+    }
+
     result.push({
       id: session.id,
       name: session.name,
@@ -137,7 +141,7 @@ export async function findNearbySessions(
       createdByUserId: session.createdByUserId,
       participantCount,
       distance,
-      isActive,
+      isActive: true,
       goal: session.goal || null,
       isPublic: session.isPublic,
       isPermanent: session.isPermanent,

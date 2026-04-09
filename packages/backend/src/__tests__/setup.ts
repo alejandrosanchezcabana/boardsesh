@@ -21,6 +21,7 @@ const createTablesSQL = `
   -- Drop existing tables to ensure schema is up-to-date
   DROP TABLE IF EXISTS "board_session_queues" CASCADE;
   DROP TABLE IF EXISTS "board_session_clients" CASCADE;
+  DROP TABLE IF EXISTS "board_session_participants" CASCADE;
   DROP TABLE IF EXISTS "board_sessions" CASCADE;
   DROP TABLE IF EXISTS "users" CASCADE;
 
@@ -57,6 +58,14 @@ const createTablesSQL = `
     CONSTRAINT "board_sessions_status_check" CHECK (status IN ('active', 'inactive', 'ended'))
   );
 
+  -- Create board_session_participants table
+  CREATE TABLE IF NOT EXISTS "board_session_participants" (
+    "session_id" text NOT NULL REFERENCES "board_sessions"("id") ON DELETE CASCADE,
+    "user_id" text NOT NULL REFERENCES "users"("id") ON DELETE CASCADE,
+    "joined_at" timestamp DEFAULT now() NOT NULL,
+    PRIMARY KEY ("session_id", "user_id")
+  );
+
   -- Create board_session_clients table
   CREATE TABLE IF NOT EXISTS "board_session_clients" (
     "id" text PRIMARY KEY NOT NULL,
@@ -83,6 +92,8 @@ const createTablesSQL = `
   CREATE INDEX IF NOT EXISTS "board_sessions_status_idx" ON "board_sessions" ("status");
   CREATE INDEX IF NOT EXISTS "board_sessions_last_activity_idx" ON "board_sessions" ("last_activity");
   CREATE INDEX IF NOT EXISTS "board_sessions_discovery_idx" ON "board_sessions" ("discoverable", "status", "last_activity");
+  CREATE INDEX IF NOT EXISTS "board_session_participants_session_idx" ON "board_session_participants" ("session_id");
+  CREATE INDEX IF NOT EXISTS "board_session_participants_user_idx" ON "board_session_participants" ("user_id");
 
   -- Drop and recreate esp32_controllers table for controller tests
   DROP TABLE IF EXISTS "esp32_controllers" CASCADE;
@@ -267,6 +278,7 @@ beforeEach(async () => {
   // Clear all tables in correct order (respect foreign keys)
   await db.execute(sql`TRUNCATE TABLE board_session_queues CASCADE`);
   await db.execute(sql`TRUNCATE TABLE board_session_clients CASCADE`);
+  await db.execute(sql`TRUNCATE TABLE board_session_participants CASCADE`);
   await db.execute(sql`TRUNCATE TABLE board_sessions CASCADE`);
 });
 
