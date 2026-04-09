@@ -723,6 +723,12 @@ describe('getBluetoothPacket — API level selection', () => {
     expect(() => getBluetoothPacket('p1r42p9999r42', sparse, 'kilter', 3))
       .toThrow('1 of 2 placements have no LED mapping');
   });
+
+  it('throws when a hold role is not mapped for the board', () => {
+    const positions: Record<number, number> = { 1: 39, 2: 40 };
+    expect(() => getBluetoothPacket('p1r42p2r1', positions, 'kilter', 3))
+      .toThrow('1 of 2 placements have no LED mapping');
+  });
 });
 
 // =============================================================================
