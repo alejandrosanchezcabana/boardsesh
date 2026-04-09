@@ -585,6 +585,37 @@ describe('renderBoard', () => {
     await expect(renderPromise).rejects.toThrow('WASM init failed');
   });
 
+  it('disables worker rendering after worker onerror and prevents default bubbling', async () => {
+    const { renderBoard, isWorkerRenderingSupported } = await import('../worker-manager');
+
+    const renderPromise = renderBoard({
+      boardDetails: mockBoardDetails,
+      frames: 'p77r42',
+      mirrored: false,
+    });
+
+    await vi.waitFor(() => {
+      expect(findWorkerWithRenderMsg('p77r42')).toBeTruthy();
+    });
+
+    const worker = findWorkerWithRenderMsg('p77r42')!;
+    const preventDefault = vi.fn();
+
+    worker.onerror?.({ message: 'Load failed', preventDefault } as unknown as ErrorEvent);
+
+    await expect(renderPromise).rejects.toThrow('Worker error: Load failed');
+    expect(preventDefault).toHaveBeenCalledTimes(1);
+    expect(isWorkerRenderingSupported()).toBe(false);
+
+    await expect(
+      renderBoard({
+        boardDetails: mockBoardDetails,
+        frames: 'p78r42',
+        mirrored: false,
+      }),
+    ).rejects.toThrow('Worker rendering is disabled');
+  });
+
   it('sends the correct render request shape to the worker', async () => {
     const { renderBoard } = await import('../worker-manager');
 

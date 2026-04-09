@@ -54,15 +54,26 @@ let nextRequestId = 0;
 const pendingRequests = new Map<number, PendingRequest>();
 // Track which request IDs are assigned to which worker index
 const workerRequestIds = new Map<number, Set<number>>();
+let workerPoolDisabled = false;
 
 // Deduplication: in-flight requests by cache key
 const inflightRequests = new Map<string, Promise<ImageBitmap>>();
 
 function getWorkerPool(): Worker[] {
+  if (workerPoolDisabled) {
+    throw new Error('Worker rendering is disabled after a worker load/runtime failure');
+  }
   if (!workers) {
     workers = Array.from({ length: getPoolSize() }, (_, workerIdx) => {
       workerRequestIds.set(workerIdx, new Set());
-      const w = new Worker(new URL('./board-render.worker.ts', import.meta.url));
+      let w: Worker;
+      try {
+        w = new Worker(new URL('./board-render.worker.ts', import.meta.url));
+      } catch (err) {
+        workerPoolDisabled = true;
+        markCanvasNotReady();
+        throw err;
+      }
       w.onmessage = (event: MessageEvent<RenderResponse>) => {
         const response = event.data;
         const pending = pendingRequests.get(response.id);
@@ -77,6 +88,15 @@ function getWorkerPool(): Worker[] {
         }
       };
       w.onerror = (event) => {
+        // Prevent worker script-load/runtime errors from bubbling to
+        // global window.onerror (notably in some WKWebView contexts).
+        event.preventDefault();
+
+        // Disable worker rendering for this session to avoid retry loops
+        // when worker loading is broken in this runtime.
+        workerPoolDisabled = true;
+        markCanvasNotReady();
+
         // Only reject requests assigned to this worker, not the entire pool
         const ids = workerRequestIds.get(workerIdx);
         if (!ids) return;
@@ -177,6 +197,7 @@ export interface RenderBoardOptions {
  */
 export function isWorkerRenderingSupported(): boolean {
   if (typeof window === 'undefined') return false;
+  if (workerPoolDisabled) return false;
   return typeof OffscreenCanvas !== 'undefined' && typeof Worker !== 'undefined';
 }
 
@@ -199,6 +220,12 @@ function subscribeCanvasReady(listener: () => void): () => void {
 function markCanvasReady(): void {
   if (globalCanvasReady) return;
   globalCanvasReady = true;
+  canvasReadyListeners.forEach((listener) => listener());
+}
+
+function markCanvasNotReady(): void {
+  if (!globalCanvasReady) return;
+  globalCanvasReady = false;
   canvasReadyListeners.forEach((listener) => listener());
 }
 
