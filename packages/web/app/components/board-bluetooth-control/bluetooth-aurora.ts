@@ -162,7 +162,8 @@ export const getAuroraBluetoothPacket = (
 
   // Pre-collect LED entries for v2 power scaling
   const ledEntries: Array<{ position: number; color: string }> = [];
-  let skippedCount = 0;
+  let skippedPositionCount = 0;
+  let skippedRoleCount = 0;
 
   frames.split('p').forEach((frame) => {
     if (!frame) return;
@@ -171,15 +172,24 @@ export const getAuroraBluetoothPacket = (
     const ledPosition = placementPositions[placementId];
 
     if (ledPosition === undefined) {
-      skippedCount++;
+      skippedPositionCount++;
       return;
     }
 
-    const color = HOLD_STATE_MAP[boardName][Number(role)].color.replace('#', '');
+    const roleCode = Number(role);
+    const state = HOLD_STATE_MAP[boardName]?.[roleCode];
+
+    if (!state?.color) {
+      skippedRoleCount++;
+      return;
+    }
+
+    const color = state.color.replace('#', '');
     ledEntries.push({ position: ledPosition, color });
   });
 
-  if (skippedCount > 0) {
+  if (skippedPositionCount > 0 || skippedRoleCount > 0) {
+    const skippedCount = skippedPositionCount + skippedRoleCount;
     throw new Error(
       `[BLE] ${skippedCount} of ${skippedCount + ledEntries.length} placements have no LED mapping ` +
       `for this board configuration. The climb is incompatible with the connected board — ` +
