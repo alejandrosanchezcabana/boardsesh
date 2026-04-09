@@ -20,7 +20,7 @@ vi.mock('@/app/lib/board-data', () => ({
   BOARD_IMAGE_DIMENSIONS: {},
   SUPPORTED_BOARDS: ['kilter', 'tension'],
 }));
-vi.mock('@/app/lib/__generated__/product-sizes-data', () => ({
+vi.mock('@/app/lib/board-constants', () => ({
   LAYOUTS: {
     kilter: {
       1: { id: 1, name: 'Kilter Board Original', productId: 1 },

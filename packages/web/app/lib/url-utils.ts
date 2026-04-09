@@ -429,6 +429,28 @@ export const isNumericId = (value: string): boolean => {
   return /^\d+$/.test(value);
 };
 
+const decodeRouteSegment = (value: string): string => {
+  try {
+    return decodeURIComponent(value);
+  } catch {
+    return value;
+  }
+};
+
+/**
+ * Detect whether a board route is using the legacy fully-numeric format.
+ * Mixed routes like `/grasshopper/2020/grandmaster-12-x-12/...` must stay on the slug path.
+ */
+export const hasOnlyNumericBoardRouteSegments = (
+  params: Pick<BoardRouteParameters, 'layout_id' | 'size_id' | 'set_ids'>,
+): boolean => {
+  const decodedSetIds = decodeRouteSegment(params.set_ids);
+
+  return isNumericId(params.layout_id)
+    && isNumericId(params.size_id)
+    && decodedSetIds.split(',').every((id) => isNumericId(id.trim()));
+};
+
 export const constructPlayUrlWithSlugs = (
   board_name: string,
   layoutName: string,
@@ -737,7 +759,7 @@ export const getPlaylistsBasePath = (pathname: string): string => {
   const oldStyleMatch = pathname.match(/^\/([^/]+)\/([^/]+)\/([^/]+)\/([^/]+)\/([^/]+)/);
   if (oldStyleMatch) {
     const [, boardName] = oldStyleMatch;
-    const validBoardNames: readonly string[] = ['kilter', 'tension', 'moonboard'] satisfies readonly BoardName[];
+    const validBoardNames: readonly string[] = ['kilter', 'tension', 'moonboard', 'decoy', 'touchstone', 'grasshopper'] satisfies readonly BoardName[];
     if (validBoardNames.includes(boardName)) {
       return `/${oldStyleMatch.slice(1, 6).join('/')}/playlists`;
     }

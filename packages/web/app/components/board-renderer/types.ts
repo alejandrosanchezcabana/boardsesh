@@ -37,8 +37,8 @@ export const THUMBNAIL_WIDTH = 200;
 
 // If adding more boards be sure to increment the DB version number for indexeddb
 export const supported_boards: BoardName[] = MOONBOARD_ENABLED
-  ? ['kilter', 'tension', 'moonboard']
-  : ['kilter', 'tension'];
+  ? ['kilter', 'tension', 'moonboard', 'decoy', 'touchstone', 'grasshopper']
+  : ['kilter', 'tension', 'decoy', 'touchstone', 'grasshopper'];
 
 // Mapping object for board-specific hold states
 export const HOLD_STATE_MAP: Record<
@@ -76,5 +76,24 @@ export const HOLD_STATE_MAP: Record<
     46: { name: 'AUX', color: '#FFE066', displayColor: '#FFE066', renderStyle: 'above-marker' }, // above-hold marker
     47: { name: 'HAND', color: '#8B5CF6', displayColor: '#C084FC' }, // left hand
     48: { name: 'HAND', color: '#FF4FA3', displayColor: '#FF7DBB' }, // match hand
+  },
+  // New Aurora boards use the same 1/2/3/4 role codes as Tension-style layouts.
+  decoy: {
+    1: { name: 'STARTING', displayColor: '#00DD00', color: '#00FF00' },
+    2: { name: 'HAND', displayColor: '#0000FF', color: '#0000FF' },
+    3: { name: 'FINISH', displayColor: '#FF0000', color: '#FF0000' },
+    4: { name: 'FOOT', displayColor: '#FF00FF', color: '#FF00FF' },
+  },
+  touchstone: {
+    1: { name: 'STARTING', displayColor: '#00DD00', color: '#00FF00' },
+    2: { name: 'HAND', displayColor: '#4444FF', color: '#0000FF' },
+    3: { name: 'FINISH', displayColor: '#FF0000', color: '#FF0000' },
+    4: { name: 'FOOT', displayColor: '#FF00FF', color: '#FF00FF' },
+  },
+  grasshopper: {
+    1: { name: 'STARTING', displayColor: '#00DD00', color: '#00FF00' },
+    2: { name: 'HAND', displayColor: '#4455FF', color: '#0000FF' },
+    3: { name: 'FINISH', displayColor: '#FF0000', color: '#FF0000' },
+    4: { name: 'FOOT', displayColor: '#FF00FF', color: '#FF00FF' },
   },
 };

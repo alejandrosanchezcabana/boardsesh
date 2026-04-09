@@ -14,7 +14,6 @@ import {
 } from '../../../validation/schemas';
 import { publishSocialEvent } from '../../../events/index';
 import { getBoardTables, isValidBoardName } from '../../../db/queries/util/table-select';
-import { getSizeEdges } from '../../../db/queries/util/product-sizes-data';
 
 /** Default angle fallback when no angle specified or no stats exist. 40 is the most common training angle. */
 const DEFAULT_ANGLE = 40;
@@ -226,17 +225,11 @@ export const setterFollowQueries = {
         filterConditions.push(eq(tables.climbs.layoutId, layoutId));
       }
 
-      // Filter by size edges if sizeId is provided
+      // Filter by compatible size if sizeId is provided
       if (sizeId != null) {
-        const sizeEdges = getSizeEdges(boardName, sizeId);
-        if (sizeEdges && boardName !== 'moonboard') {
-          filterConditions.push(
-            sql`${tables.climbs.edgeLeft} > ${sizeEdges.edgeLeft}`,
-            sql`${tables.climbs.edgeRight} < ${sizeEdges.edgeRight}`,
-            sql`${tables.climbs.edgeBottom} > ${sizeEdges.edgeBottom}`,
-            sql`${tables.climbs.edgeTop} < ${sizeEdges.edgeTop}`,
-          );
-        }
+        filterConditions.push(
+          sql`${sizeId} = ANY(${tables.climbs.compatibleSizeIds})`,
+        );
       }
 
       // Get total count

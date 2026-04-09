@@ -6,7 +6,7 @@ import {
 } from '../../schema/index';
 import { createClimbFilters } from './create-climb-filters';
 import { getGradeLabel } from './grade-lookup';
-import type { BoardRouteParams, ClimbSearchParams, ClimbRow, ClimbSearchResult, SizeEdges } from './types';
+import type { BoardRouteParams, ClimbSearchParams, ClimbRow, ClimbSearchResult } from './types';
 
 type RawSelectResult = {
   uuid: string;
@@ -48,20 +48,18 @@ function mapResultToClimbRow(result: RawSelectResult, angle: number): ClimbRow {
  * @param db Drizzle database instance
  * @param params Board route parameters
  * @param searchParams Search/filter parameters
- * @param sizeEdges Pre-fetched edge values for the board size
  * @param userId Optional user ID for personal progress filters
  */
 export const searchClimbs = async (
   db: DbInstance,
   params: BoardRouteParams,
   searchParams: ClimbSearchParams,
-  sizeEdges: SizeEdges,
   userId?: string,
 ): Promise<ClimbSearchResult> => {
   const page = searchParams.page ?? 0;
   const pageSize = searchParams.pageSize ?? 20;
 
-  const filters = createClimbFilters(params, searchParams, sizeEdges, userId);
+  const filters = createClimbFilters(params, searchParams, userId);
 
   // Drafts never have stats, so force creation sort (stats-based sorts would be meaningless)
   const sortBy = searchParams.onlyDrafts

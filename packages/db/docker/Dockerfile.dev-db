@@ -1,7 +1,8 @@
 # =============================================================================
 # Dockerfile.dev-db
 # Multi-stage build that produces a PostgreSQL + PostGIS image with all
-# Kilter/Tension/MoonBoard board data, a test user, and social seed data
+# Kilter/Tension/Decoy/Touchstone/Grasshopper/MoonBoard board data,
+# a test user, and social seed data
 # pre-loaded with drizzle migrations applied. Developers just pull & run.
 #
 # Build context: packages/db/ (not packages/db/docker/) so we can access
@@ -47,8 +48,8 @@ ENV PGDATA=/var/lib/postgresql/pgdata
 
 # Copy pgloader configs and scripts (from docker/ subdirectory of build context)
 COPY docker/cleanup_sqlite_db_problems.sh \
-     docker/kilter_db.load docker/tension_db.load \
-     docker/kilter_table_rename.sql docker/tension_table_rename.sql \
+     docker/*.load \
+     docker/*.sql \
      /db/
 RUN chmod +x /db/cleanup_sqlite_db_problems.sh
 
@@ -83,6 +84,18 @@ RUN set -e && \
     curl -o /tmp/tensionboard.apk -L \
       -A "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/119.0.0.0 Safari/537.36" \
       "https://d.apkpure.net/b/APK/com.auroraclimbing.tensionboard2?version=latest" && \
+    echo ">>> Downloading Decoyboard APK..." && \
+    curl -o /tmp/decoyboard.apk -L \
+      -A "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/119.0.0.0 Safari/537.36" \
+      "https://d.apkpure.net/b/APK/com.auroraclimbing.decoyboard?version=latest" && \
+    echo ">>> Downloading Touchstoneboard APK..." && \
+    curl -o /tmp/touchstoneboard.apk -L \
+      -A "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/119.0.0.0 Safari/537.36" \
+      "https://d.apkpure.net/b/APK/com.auroraclimbing.touchstoneboard?version=latest" && \
+    echo ">>> Downloading Grasshopperboard APK..." && \
+    curl -o /tmp/grasshopperboard.apk -L \
+      -A "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/119.0.0.0 Safari/537.36" \
+      "https://d.apkpure.net/b/APK/com.auroraclimbing.grasshopperboard?version=latest" && \
     \
     # ── Extract SQLite databases from APKs ───────────────────────────── \
     echo ">>> Extracting Kilter database..." && \
@@ -98,13 +111,52 @@ RUN set -e && \
       (echo "ERROR: Failed to extract Tension database from APK" && false); } && \
     mv /db/tmp/db.sqlite3 /db/tmp/tension.db && \
     \
+    echo ">>> Extracting Decoy database..." && \
+    rm -f /db/tmp/db.sqlite3 /tmp/com.auroraclimbing.decoyboard.apk && \
+    (unzip -o -j /tmp/decoyboard.apk assets/db.sqlite3 -d /db/tmp/ > /dev/null 2>&1 || \
+     (echo ">>> Direct extraction failed, trying nested APK..." && \
+      unzip -o -j /tmp/decoyboard.apk 'com.auroraclimbing.decoyboard.apk' -d /tmp/ && \
+      unzip -o -j /tmp/com.auroraclimbing.decoyboard.apk assets/db.sqlite3 -d /db/tmp/)) && \
+    { test -f /db/tmp/db.sqlite3 || \
+      (echo "ERROR: Failed to extract Decoy database from APK" && false); } && \
+    mv /db/tmp/db.sqlite3 /db/tmp/decoy.db && \
+    \
+    echo ">>> Extracting Touchstone database..." && \
+    rm -f /db/tmp/db.sqlite3 /tmp/com.auroraclimbing.touchstoneboard.apk && \
+    (unzip -o -j /tmp/touchstoneboard.apk assets/db.sqlite3 -d /db/tmp/ > /dev/null 2>&1 || \
+     (echo ">>> Direct extraction failed, trying nested APK..." && \
+      unzip -o -j /tmp/touchstoneboard.apk 'com.auroraclimbing.touchstoneboard.apk' -d /tmp/ && \
+      unzip -o -j /tmp/com.auroraclimbing.touchstoneboard.apk assets/db.sqlite3 -d /db/tmp/)) && \
+    { test -f /db/tmp/db.sqlite3 || \
+      (echo "ERROR: Failed to extract Touchstone database from APK" && false); } && \
+    mv /db/tmp/db.sqlite3 /db/tmp/touchstone.db && \
+    \
+    echo ">>> Extracting Grasshopper database..." && \
+    rm -f /db/tmp/db.sqlite3 /tmp/com.auroraclimbing.grasshopperboard.apk && \
+    (unzip -o -j /tmp/grasshopperboard.apk assets/db.sqlite3 -d /db/tmp/ > /dev/null 2>&1 || \
+     (echo ">>> Direct extraction failed, trying nested APK..." && \
+      unzip -o -j /tmp/grasshopperboard.apk 'com.auroraclimbing.grasshopperboard.apk' -d /tmp/ && \
+      unzip -o -j /tmp/com.auroraclimbing.grasshopperboard.apk assets/db.sqlite3 -d /db/tmp/)) && \
+    { test -f /db/tmp/db.sqlite3 || \
+      (echo "ERROR: Failed to extract Grasshopper database from APK" && false); } && \
+    mv /db/tmp/db.sqlite3 /db/tmp/grasshopper.db && \
+    \
     # ── Fix SQLite compatibility (FLOAT UNSIGNED → FLOAT, orphans) ──── \
     echo ">>> Fixing Kilter SQLite compatibility..." && \
     cp /db/tmp/kilter.db /db/tmp/kilter.modified.db && \
     cp /db/tmp/tension.db /db/tmp/tension.modified.db && \
+    cp /db/tmp/decoy.db /db/tmp/decoy.modified.db && \
+    cp /db/tmp/touchstone.db /db/tmp/touchstone.modified.db && \
+    cp /db/tmp/grasshopper.db /db/tmp/grasshopper.modified.db && \
     DB_FILE=/db/tmp/kilter.modified.db /db/cleanup_sqlite_db_problems.sh && \
     echo ">>> Fixing Tension SQLite compatibility..." && \
     DB_FILE=/db/tmp/tension.modified.db /db/cleanup_sqlite_db_problems.sh && \
+    echo ">>> Fixing Decoy SQLite compatibility..." && \
+    DB_FILE=/db/tmp/decoy.modified.db /db/cleanup_sqlite_db_problems.sh && \
+    echo ">>> Fixing Touchstone SQLite compatibility..." && \
+    DB_FILE=/db/tmp/touchstone.modified.db /db/cleanup_sqlite_db_problems.sh && \
+    echo ">>> Fixing Grasshopper SQLite compatibility..." && \
+    DB_FILE=/db/tmp/grasshopper.modified.db /db/cleanup_sqlite_db_problems.sh && \
     \
     # ── Initialize and start PostgreSQL ────────────────────────────────── \
     # Listen on localhost TCP (for pgloader, which can't parse Unix socket URLs) \
@@ -173,6 +225,15 @@ RUN set -e && \
       echo "ERROR: Migration count mismatch! Expected $migration_count, got $recorded" && false; \
     fi && \
     \
+    # ── Import direct Aurora boards into unified tables ──────────────── \
+    echo ">>> Importing Decoy board data into unified tables..." && \
+    cd /app && \
+    DATABASE_URL=postgresql://postgres@localhost/main bunx tsx scripts/import-aurora-board-unified.ts decoy /db/tmp/decoy.modified.db && \
+    echo ">>> Importing Touchstone board data into unified tables..." && \
+    DATABASE_URL=postgresql://postgres@localhost/main bunx tsx scripts/import-aurora-board-unified.ts touchstone /db/tmp/touchstone.modified.db && \
+    echo ">>> Importing Grasshopper board data into unified tables..." && \
+    DATABASE_URL=postgresql://postgres@localhost/main bunx tsx scripts/import-aurora-board-unified.ts grasshopper /db/tmp/grasshopper.modified.db && \
+    \
     # ── Download and import MoonBoard data ────────────────────────────── \
     echo ">>> Downloading MoonBoard problem data..." && \
     mkdir -p /tmp/moonboard && \
@@ -197,7 +258,7 @@ RUN set -e && \
     \
     # ── Clean up temporary files ─────────────────────────────────────── \
     rm -rf /db/tmp /tmp/*.apk /tmp/com.auroraclimbing.*.apk /tmp/moonboard /drizzle /app && \
-    echo ">>> Build complete — database is pre-populated with all data."
+    echo ">>> Build complete — database is pre-populated with all board data."
 
 # ---------------------------------------------------------------------------
 # Stage 3: Final clean image with only the pre-populated PGDATA

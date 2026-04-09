@@ -16,7 +16,7 @@ import { BoardConfigData } from '@/app/lib/server-board-configs';
 import { BoardName } from '@/app/lib/types';
 import { BOARD_NAME_PREFIX_REGEX } from '@/app/lib/board-constants';
 import { SUPPORTED_BOARDS, ANGLES } from '@/app/lib/board-data';
-import { getDefaultSizeForLayout } from '@/app/lib/__generated__/product-sizes-data';
+import { getDefaultSizeForLayout } from '@/app/lib/board-constants';
 import { constructClimbListWithSlugs, constructBoardSlugListUrl } from '@/app/lib/url-utils';
 import { saveBoardConfig, StoredBoardConfig } from '@/app/lib/saved-boards-db';
 import type { UserBoard } from '@boardsesh/shared-schema';

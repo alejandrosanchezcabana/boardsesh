@@ -156,7 +156,9 @@ const createTablesSQL = `
     "created_at" text,
     "synced" boolean DEFAULT true NOT NULL,
     "sync_error" text,
-    "user_id" text REFERENCES "users"("id") ON DELETE SET NULL
+    "user_id" text REFERENCES "users"("id") ON DELETE SET NULL,
+    "required_set_ids" integer[],
+    "compatible_size_ids" integer[]
   );
 
   -- Create board_climb_stats table

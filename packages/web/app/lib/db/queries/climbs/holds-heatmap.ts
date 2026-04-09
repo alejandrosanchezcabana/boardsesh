@@ -2,8 +2,7 @@ import { and, sql } from 'drizzle-orm';
 import { dbz as db } from '@/app/lib/db/db';
 import { ParsedBoardRouteParameters, SearchRequestPagination } from '@/app/lib/types';
 import { UNIFIED_TABLES } from '@/lib/db/queries/util/table-select';
-import { createClimbFilters } from './create-climb-filters';
-import { getSizeEdges } from '@/app/lib/__generated__/product-sizes-data';
+import { createClimbFilters } from '@boardsesh/db/queries';
 import { boardseshTicks } from '@/app/lib/db/schema';
 
 export interface HoldHeatmapData {
@@ -26,14 +25,8 @@ export const getHoldHeatmapData = async (
 ): Promise<HoldHeatmapData[]> => {
   const { climbs, climbStats, climbHolds } = UNIFIED_TABLES;
 
-  // Get hardcoded size edges (eliminates database query)
-  const sizeEdges = getSizeEdges(params.board_name, params.size_id);
-  if (!sizeEdges) {
-    return [];
-  }
-
-  // Use the shared filter creator with static edge values
-  const filters = createClimbFilters(params, searchParams, sizeEdges, userId);
+  // Use the shared filter creator
+  const filters = createClimbFilters(params, searchParams, userId);
 
   try {
     // Check if personal progress filters are active - if so, use user-specific counts

@@ -1,33 +1,108 @@
-import type { AuroraBoardName } from './api-wrappers/aurora/types';
+import { AURORA_BOARDS, SUPPORTED_BOARDS } from '@boardsesh/shared-schema';
+import type { AuroraBoardName } from '@boardsesh/shared-schema';
+import type { HoldRenderData } from '@/app/components/board-renderer/types';
+import type { BoardDetails, ImageFileName } from '@/app/lib/types';
+import type { SetIdList } from '@/app/lib/board-data';
+import {
+  PRODUCT_SIZES,
+  getProductSize,
+  getLayout,
+  getSetsForLayoutAndSize,
+  getImageFilename,
+  getHolePlacements,
+} from '@boardsesh/board-constants/product-sizes';
+import { BOARD_IMAGE_DIMENSIONS } from './board-data';
+import type { BoardName, HoldTuple } from './types';
 
-/**
- * Valid Aurora board names (boards that use Aurora API).
- * Centralized to avoid duplicating ['kilter', 'tension'] across API routes.
- */
-export const AURORA_BOARD_NAMES: AuroraBoardName[] = ['kilter', 'tension'];
+export * from '@boardsesh/board-constants/product-sizes';
+export type { HoldTuple, LayoutData, ProductSizeData, SetData, SizeEdges } from '@boardsesh/board-constants/product-sizes';
 
-/**
- * Check if a board name is a valid Aurora board (kilter or tension).
- */
+export const AURORA_BOARD_NAMES = [...AURORA_BOARDS];
+export const KILTER_HOMEWALL_LAYOUT_ID = 8;
+export const KILTER_HOMEWALL_PRODUCT_ID = 7;
+export const BOARD_NAME_PREFIX_REGEX = new RegExp(`^(?:${SUPPORTED_BOARDS.join('|')})\\s*(?:board)?\\s*`, 'i');
+
 export function isAuroraBoardName(boardName: string): boardName is AuroraBoardName {
   return AURORA_BOARD_NAMES.includes(boardName as AuroraBoardName);
 }
 
-/**
- * Kilter Homewall layout ID.
- * Used for layout-specific features like tall climbs filtering.
- */
-export const KILTER_HOMEWALL_LAYOUT_ID = 8;
+export const getBoardDetails = ({
+  board_name,
+  layout_id,
+  size_id,
+  set_ids,
+}: {
+  board_name: BoardName;
+  layout_id: number;
+  size_id: number;
+  set_ids: SetIdList;
+}): BoardDetails => {
+  const sizeData = getProductSize(board_name, size_id);
+  if (!sizeData) {
+    const availableSizes = Object.keys(PRODUCT_SIZES[board_name] || {});
+    throw new Error(
+      `Size dimensions not found for board_name=${board_name}, size_id=${size_id}. Available sizes: [${availableSizes.join(', ')}]`,
+    );
+  }
 
-/**
- * Kilter Homewall product ID.
- * Used for product-specific size queries.
- */
-export const KILTER_HOMEWALL_PRODUCT_ID = 7;
+  const layoutData = getLayout(board_name, layout_id);
+  const setsResult = getSetsForLayoutAndSize(board_name, layout_id, size_id);
 
-/**
- * Regex pattern to strip board name prefix from layout names.
- * Used in slug generation and URL utilities.
- * Matches patterns like "Kilter Board ..." or "Tension Board ..."
- */
-export const BOARD_NAME_PREFIX_REGEX = /^(kilter|tension)\s+board\s+/i;
+  const imagesToHolds: Record<ImageFileName, HoldTuple[]> = {};
+  for (const setId of set_ids) {
+    const imageFilename = getImageFilename(board_name, layout_id, size_id, setId);
+    if (!imageFilename) {
+      throw new Error(`Could not find image for set_id ${setId} for layout_id: ${layout_id} and size_id: ${size_id}`);
+    }
+    imagesToHolds[imageFilename] = getHolePlacements(board_name, layout_id, setId);
+  }
+
+  const {
+    edgeLeft: edge_left,
+    edgeRight: edge_right,
+    edgeBottom: edge_bottom,
+    edgeTop: edge_top,
+  } = sizeData;
+
+  const firstImage = Object.keys(imagesToHolds)[0];
+  const dimensions = BOARD_IMAGE_DIMENSIONS[board_name][firstImage];
+  const boardWidth = dimensions?.width ?? 1080;
+  const boardHeight = dimensions?.height ?? 1920;
+
+  const xSpacing = boardWidth / (edge_right - edge_left);
+  const ySpacing = boardHeight / (edge_top - edge_bottom);
+
+  const holdsData: HoldRenderData[] = Object.values(imagesToHolds).flatMap((holds: HoldTuple[]) =>
+    holds
+      .filter(([, , x, y]) => x > edge_left && x < edge_right && y > edge_bottom && y < edge_top)
+      .map(([holdId, mirroredHoldId, x, y]) => ({
+        id: holdId,
+        mirroredHoldId,
+        cx: (x - edge_left) * xSpacing,
+        cy: boardHeight - (y - edge_bottom) * ySpacing,
+        r: xSpacing * 4,
+      })),
+  );
+
+  const selectedSets = setsResult.filter((set) => set_ids.includes(set.id));
+
+  return {
+    images_to_holds: imagesToHolds,
+    holdsData,
+    edge_left,
+    edge_right,
+    edge_bottom,
+    edge_top,
+    boardHeight,
+    boardWidth,
+    board_name,
+    layout_id,
+    size_id,
+    set_ids,
+    supportsMirroring: board_name === 'tension' && layout_id !== 11,
+    layout_name: layoutData?.name,
+    size_name: sizeData.name,
+    size_description: sizeData.description,
+    set_names: selectedSets.map((set) => set.name),
+  };
+};

@@ -17,6 +17,7 @@ import {
   extractUuidFromSlug,
   isUuidOnly,
   isNumericId,
+  hasOnlyNumericBoardRouteSegments,
   getBaseBoardPath,
   getPlaylistsBasePath,
   getContextAwarePlaylistUrl,
@@ -408,6 +409,10 @@ describe('Slug generation functions', () => {
       expect(generateLayoutSlug('Original Layout')).toBe('original');
       expect(generateLayoutSlug('2-Zone Layout')).toBe('two-zone-layout');
     });
+
+    it('should preserve numeric-only layout slugs when the name is just a year', () => {
+      expect(generateLayoutSlug('Grasshopper 2020')).toBe('2020');
+    });
   });
 
   describe('generateSizeSlug', () => {
@@ -719,6 +724,32 @@ describe('Utility functions', () => {
       expect(isNumericId('abc')).toBe(false);
       expect(isNumericId('12x12')).toBe(false);
       expect(isNumericId('')).toBe(false);
+    });
+  });
+
+  describe('hasOnlyNumericBoardRouteSegments', () => {
+    it('should return true for legacy numeric board routes', () => {
+      expect(hasOnlyNumericBoardRouteSegments({
+        layout_id: '8',
+        size_id: '25',
+        set_ids: '26,27,28,29',
+      })).toBe(true);
+    });
+
+    it('should treat encoded numeric set ids as numeric', () => {
+      expect(hasOnlyNumericBoardRouteSegments({
+        layout_id: '8',
+        size_id: '25',
+        set_ids: '26%2C27%2C28%2C29',
+      })).toBe(true);
+    });
+
+    it('should return false for grasshopper slug routes with a numeric-looking layout slug', () => {
+      expect(hasOnlyNumericBoardRouteSegments({
+        layout_id: '2020',
+        size_id: 'grandmaster-12-x-12',
+        set_ids: 'power_flow_engage',
+      })).toBe(false);
     });
   });
 

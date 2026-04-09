@@ -1,7 +1,6 @@
 import { describe, it, expect, beforeAll, afterAll } from 'vitest';
 import { searchClimbs, countClimbs, getClimbByUuid } from '../db/queries/climbs/index';
 import type { ParsedBoardRouteParameters, ClimbSearchParams } from '../db/queries/climbs/index';
-import { getSizeEdges } from '../db/queries/util/product-sizes-data';
 import { db } from '../db/client';
 import { sql } from 'drizzle-orm';
 
@@ -193,9 +192,8 @@ describe('Climb Query Functions', () => {
         pageSize: 10,
       };
 
-      const sizeEdges = getSizeEdges(testParams.board_name, testParams.size_id);
       const searchResult = await searchClimbs(testParams, searchParams);
-      const count = await countClimbs(testParams, searchParams, sizeEdges!);
+      const count = await countClimbs(testParams, searchParams);
 
       // Count should match totalCount from search
       expect(count).toBe(searchResult.totalCount);
@@ -213,9 +211,8 @@ describe('Climb Query Functions', () => {
         pageSize: 10,
       };
 
-      const sizeEdges = getSizeEdges(testParams.board_name, testParams.size_id);
-      const filteredCount = await countClimbs(testParams, filteredParams, sizeEdges!);
-      const unfilteredCount = await countClimbs(testParams, unfilteredParams, sizeEdges!);
+      const filteredCount = await countClimbs(testParams, filteredParams);
+      const unfilteredCount = await countClimbs(testParams, unfilteredParams);
 
       // Filtered count should be <= unfiltered count
       expect(filteredCount).toBeLessThanOrEqual(unfilteredCount);
@@ -281,11 +278,11 @@ describe('Climb Query Functions', () => {
 
       // Insert test climbs that fit within size 7 edges
       await db.execute(sql`
-        INSERT INTO board_climbs (uuid, board_type, layout_id, setter_username, name, frames, frames_count, is_draft, is_listed, edge_left, edge_right, edge_bottom, edge_top, created_at)
+        INSERT INTO board_climbs (uuid, board_type, layout_id, setter_username, name, frames, frames_count, is_draft, is_listed, edge_left, edge_right, edge_bottom, edge_top, created_at, required_set_ids, compatible_size_ids)
         VALUES
-          (${SET_IDS_TEST_PREFIX + 'mainline'}, 'kilter', 1, 'test-setter', 'Mainline Only', 'p100r43', 1, false, true, 10, 100, 10, 150, '2024-01-01'),
-          (${SET_IDS_TEST_PREFIX + 'fullride'}, 'kilter', 1, 'test-setter', 'Full Ride Only', 'p200r43', 1, false, true, 10, 100, 10, 150, '2024-01-01'),
-          (${SET_IDS_TEST_PREFIX + 'mixed'}, 'kilter', 1, 'test-setter', 'Mixed Sets', 'p100r43p200r44', 1, false, true, 10, 100, 10, 150, '2024-01-01')
+          (${SET_IDS_TEST_PREFIX + 'mainline'}, 'kilter', 1, 'test-setter', 'Mainline Only', 'p100r43', 1, false, true, 10, 100, 10, 150, '2024-01-01', ARRAY[1], ARRAY[7]),
+          (${SET_IDS_TEST_PREFIX + 'fullride'}, 'kilter', 1, 'test-setter', 'Full Ride Only', 'p200r43', 1, false, true, 10, 100, 10, 150, '2024-01-01', ARRAY[2], ARRAY[7]),
+          (${SET_IDS_TEST_PREFIX + 'mixed'}, 'kilter', 1, 'test-setter', 'Mixed Sets', 'p100r43p200r44', 1, false, true, 10, 100, 10, 150, '2024-01-01', ARRAY[1, 2], ARRAY[7])
         ON CONFLICT DO NOTHING
       `);
 

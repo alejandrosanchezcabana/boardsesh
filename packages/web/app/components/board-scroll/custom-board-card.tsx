@@ -2,7 +2,7 @@
 
 import React, { useMemo } from 'react';
 import AddOutlined from '@mui/icons-material/AddOutlined';
-import { getBoardDetails } from '@/app/lib/__generated__/product-sizes-data';
+import { getBoardDetails } from '@/app/lib/board-constants';
 import BoardRenderer from '../board-renderer/board-renderer';
 import styles from './board-scroll.module.css';
 

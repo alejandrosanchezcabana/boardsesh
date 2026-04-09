@@ -206,6 +206,9 @@ export async function GET(request: Request, props: { params: Promise<SharedSyncR
     const AURORA_TOKENS: Record<string, string | undefined> = {
       kilter: process.env.KILTER_SYNC_TOKEN,
       tension: process.env.TENSION_SYNC_TOKEN,
+      decoy: process.env.DECOY_SYNC_TOKEN,
+      touchstone: process.env.TOUCHSTONE_SYNC_TOKEN,
+      grasshopper: process.env.GRASSHOPPER_SYNC_TOKEN,
     };
     // Get the token for this board
     const token = AURORA_TOKENS && AURORA_TOKENS[board_name];

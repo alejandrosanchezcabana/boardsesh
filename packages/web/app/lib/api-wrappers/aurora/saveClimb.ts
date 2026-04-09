@@ -4,6 +4,7 @@ import { generateUuid } from './util';
 import { dbz } from '@/app/lib/db/db';
 import { UNIFIED_TABLES } from '@/app/lib/db/queries/util/table-select';
 import { boardClimbStats } from '@boardsesh/db/schema';
+import { populateDenormalizedColumns } from '@boardsesh/db/queries';
 import dayjs from 'dayjs';
 
 /**
@@ -67,6 +68,9 @@ export async function saveClimb(
         syncError: null,
       },
     });
+
+  // Populate denormalized required_set_ids and compatible_size_ids
+  await populateDenormalizedColumns(dbz, board, [uuid]);
 
   // Return response - always success from client perspective
   return {

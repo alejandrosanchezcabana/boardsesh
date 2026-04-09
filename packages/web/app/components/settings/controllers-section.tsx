@@ -28,7 +28,7 @@ import AddOutlined from '@mui/icons-material/AddOutlined';
 import ContentCopyOutlined from '@mui/icons-material/ContentCopyOutlined';
 import WarningOutlined from '@mui/icons-material/WarningOutlined';
 import type { ControllerInfo } from '@/app/api/internal/controllers/route';
-import { getBoardSelectorOptions } from '@/app/lib/__generated__/product-sizes-data';
+import { getBoardSelectorOptions } from '@/app/lib/board-constants';
 import { BoardName } from '@/app/lib/types';
 import styles from './controllers-section.module.css';
 import { useSnackbar } from '@/app/components/providers/snackbar-provider';

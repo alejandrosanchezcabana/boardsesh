@@ -5,7 +5,7 @@ import {
   getSetsForLayoutAndSize,
   getBoardDetails,
   LAYOUTS,
-} from './__generated__/product-sizes-data';
+} from './board-constants';
 import { getMoonBoardDetails, MOONBOARD_LAYOUTS, MOONBOARD_SETS, MoonBoardLayoutKey } from './moonboard-config';
 
 /**

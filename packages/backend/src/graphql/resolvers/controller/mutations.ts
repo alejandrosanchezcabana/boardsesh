@@ -18,7 +18,7 @@ import { randomBytes, randomUUID } from 'crypto';
 import { matchClimbByFrames, getClimbByUuid } from '../../../db/queries/climbs';
 import { roomManager } from '../../../services/room-manager';
 import { pubsub } from '../../../pubsub';
-import { buildFramesString } from '../../../db/queries/util/led-placements-data';
+import { buildFramesString } from '@boardsesh/board-constants/led-placements';
 import { forwardLogs, type DeviceLog } from '../../../services/axiom';
 
 /**

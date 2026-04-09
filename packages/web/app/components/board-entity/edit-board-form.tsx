@@ -11,7 +11,7 @@ import {
 import type { UserBoard } from '@boardsesh/shared-schema';
 import type { BoardName } from '@/app/lib/types';
 import { ANGLES } from '@/app/lib/board-data';
-import { getBoardSelectorOptions } from '@/app/lib/__generated__/product-sizes-data';
+import { getBoardSelectorOptions } from '@/app/lib/board-constants';
 import BoardForm from './board-form';
 
 interface EditBoardFormProps {

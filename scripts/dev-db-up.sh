@@ -16,6 +16,51 @@
 set -e
 
 HBA_FILE="/var/lib/postgresql/pgdata/pg_hba.conf"
+REPO_ROOT=$(CDPATH= cd -- "$(dirname "$0")/.." && pwd)
+DRIZZLE_DIR="$REPO_ROOT/packages/db/drizzle"
+
+run_pending_drizzle_sql_migrations() {
+  last_migration_created_at=$(docker exec -u postgres "$PG_CONTAINER" psql -U postgres -d main -t -A -c \
+    "SELECT COALESCE((SELECT created_at FROM drizzle.\"__drizzle_migrations\" ORDER BY created_at DESC LIMIT 1), 0);")
+
+  pending_migrations=$(DRIZZLE_DIR="$DRIZZLE_DIR" LAST_MIGRATION_CREATED_AT="$last_migration_created_at" bun --eval '
+    const fs = require("node:fs");
+    const path = require("node:path");
+    const crypto = require("node:crypto");
+
+    const drizzleDir = process.env.DRIZZLE_DIR;
+    const lastAppliedAt = Number(process.env.LAST_MIGRATION_CREATED_AT ?? 0);
+    const journal = JSON.parse(fs.readFileSync(path.join(drizzleDir, "meta", "_journal.json"), "utf8"));
+
+    for (const entry of journal.entries) {
+      if (entry.when <= lastAppliedAt) continue;
+      const sql = fs.readFileSync(path.join(drizzleDir, `${entry.tag}.sql`), "utf8");
+      const hash = crypto.createHash("sha256").update(sql).digest("hex");
+      process.stdout.write(`${entry.tag}|${entry.when}|${hash}\n`);
+    }
+  ')
+
+  if [ -z "$pending_migrations" ]; then
+    echo "  No pending migrations."
+    return
+  fi
+
+  pending_count=$(printf '%s\n' "$pending_migrations" | sed '/^$/d' | wc -l | tr -d ' ')
+  echo "  Applying $pending_count pending migration(s) from $DRIZZLE_DIR..."
+
+  printf '%s\n' "$pending_migrations" | while IFS='|' read -r tag created_at hash; do
+    [ -n "$tag" ] || continue
+    migration_file="$DRIZZLE_DIR/$tag.sql"
+    echo "    → $tag"
+
+    {
+      printf 'BEGIN;\n'
+      cat "$migration_file"
+      printf '\nINSERT INTO drizzle."__drizzle_migrations" (hash, created_at) VALUES (%s, %s);\n' "'$hash'" "$created_at"
+      printf 'COMMIT;\n'
+    } | docker exec -i -u postgres "$PG_CONTAINER" psql -v ON_ERROR_STOP=1 -U postgres -d main > /dev/null
+  done
+}
 
 echo "Starting development database containers..."
 docker compose up -d postgres redis
@@ -119,7 +164,7 @@ if [ "$attempts" -ge "$max_attempts" ]; then
 fi
 
 echo "Running database migrations..."
-bun run db:migrate
+run_pending_drizzle_sql_migrations
 
 echo ""
 echo "Development database is ready."

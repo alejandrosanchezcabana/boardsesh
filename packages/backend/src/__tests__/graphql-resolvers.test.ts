@@ -1,9 +1,11 @@
 import { describe, it, expect, beforeAll, afterAll } from 'vitest';
 import { createClient, Client } from 'graphql-ws';
 import WebSocket from 'ws';
+import { SUPPORTED_BOARDS } from '@boardsesh/shared-schema';
 import { startServer } from '../server';
 
 const TEST_PORT = 8084; // Different port to avoid conflicts
+const BOARD_NAME_ERROR = `Board name must be ${SUPPORTED_BOARDS.join(', ')}`;
 
 // Helper to execute GraphQL operations
 async function execute<T>(
@@ -233,7 +235,7 @@ describe('GraphQL Resolver Input Validation', () => {
             climbUuid: 'test-uuid',
           },
         },
-        'Board name must be kilter, tension, or moonboard',
+        BOARD_NAME_ERROR,
       );
     });
   });
@@ -330,7 +332,7 @@ describe('GraphQL Resolver Input Validation', () => {
             },
           },
         },
-        'Board name must be kilter, tension, or moonboard',
+        BOARD_NAME_ERROR,
       );
     });
   });

@@ -71,6 +71,9 @@ packages/web/public/uploads
 !packages/web/public/uploads/.gitkeep
 .env.sentry-build-plugin
 
+
 # generated API documentation
 packages/web/public/openapi.json
 .claude/settings.local.json
+packages/db/docker/tmp/g
+packages/db/docker/tmp/

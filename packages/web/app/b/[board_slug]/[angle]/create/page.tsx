@@ -1,7 +1,7 @@
 import React from 'react';
 import { notFound } from 'next/navigation';
 import { resolveBoardBySlug, boardToRouteParams } from '@/app/lib/board-slug-utils';
-import { getBoardDetails } from '@/app/lib/__generated__/product-sizes-data';
+import { getBoardDetails } from '@/app/lib/board-constants';
 import CreateClimbForm from '@/app/components/create-climb/create-climb-form';
 import {
   MOONBOARD_LAYOUTS,

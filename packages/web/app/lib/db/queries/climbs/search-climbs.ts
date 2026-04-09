@@ -2,7 +2,6 @@ import 'server-only';
 import { unstable_cache } from 'next/cache';
 import { getDb } from '@/app/lib/db/db';
 import { searchClimbs as sharedSearchClimbs, type ClimbSearchResult } from '@boardsesh/db/queries';
-import { getSizeEdges } from '@/app/lib/__generated__/product-sizes-data';
 import { getBoardClimbSearchTag, getLayoutClimbSearchTag } from '@/app/lib/climb-search-cache';
 import type { ParsedBoardRouteParameters, SearchRequestPagination } from '@/app/lib/types';
 import type { Climb } from '@/app/lib/types';
@@ -40,11 +39,6 @@ export async function cachedSearchClimbs(
     : CACHE_DURATION_FILTERED_SEARCH;
 
   const executeQuery = async () => {
-    const sizeEdges = getSizeEdges(params.board_name, params.size_id);
-    if (!sizeEdges) {
-      return { climbs: [], hasMore: false };
-    }
-
     const db = getDb();
     const result = await sharedSearchClimbs(db, params, {
       page: searchParams.page,
@@ -72,7 +66,7 @@ export async function cachedSearchClimbs(
       showOnlyAttempted: searchParams.showOnlyAttempted || undefined,
       showOnlyCompleted: searchParams.showOnlyCompleted || undefined,
       onlyDrafts: searchParams.onlyDrafts || undefined,
-    }, sizeEdges, userId);
+    }, userId);
 
     // Map ClimbRow to the web Climb type
     const climbs: Climb[] = result.climbs.map((row) => ({

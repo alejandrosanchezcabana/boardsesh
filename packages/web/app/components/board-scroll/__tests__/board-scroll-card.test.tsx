@@ -9,7 +9,7 @@ vi.mock('../../board-renderer/board-renderer', () => ({
 }));
 
 // Mock getBoardDetails
-vi.mock('@/app/lib/__generated__/product-sizes-data', () => ({
+vi.mock('@/app/lib/board-constants', () => ({
   getBoardDetails: vi.fn(() => ({
     board_name: 'kilter',
     layout_id: 8,

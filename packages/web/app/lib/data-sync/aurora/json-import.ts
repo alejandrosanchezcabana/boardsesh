@@ -14,8 +14,9 @@ import {
 import { randomUUID } from 'crypto';
 import { createHash } from 'crypto';
 import { fontGradeToDifficultyId } from '@/app/lib/board-data';
-import { LAYOUTS, HOLE_PLACEMENTS } from '@/app/lib/__generated__/product-sizes-data';
+import { LAYOUTS, HOLE_PLACEMENTS } from '@/app/lib/board-constants';
 import { buildInferredSessionsForUser } from './inferred-session-builder';
+import { populateDenormalizedColumns } from '@boardsesh/db/queries';
 
 const BATCH_SIZE = 100;
 
@@ -584,6 +585,13 @@ export async function importJsonExportData(
               .onConflictDoNothing();
             result.climbs.imported += batch.length;
           }
+
+          // Populate denormalized required_set_ids and compatible_size_ids
+          const allInsertedUuids = [
+            ...draftRows.map((r) => r.uuid),
+            ...publishedRows.map((r) => r.uuid),
+          ];
+          await populateDenormalizedColumns(db, boardType, allInsertedUuids);
 
           await client.query('COMMIT');
         } catch (error) {

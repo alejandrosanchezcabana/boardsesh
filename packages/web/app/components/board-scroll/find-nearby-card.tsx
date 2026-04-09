@@ -6,7 +6,7 @@ import LocationOffOutlined from '@mui/icons-material/LocationOffOutlined';
 import SearchOffOutlined from '@mui/icons-material/SearchOffOutlined';
 import ErrorOutlineOutlined from '@mui/icons-material/ErrorOutlineOutlined';
 import CircularProgress from '@mui/material/CircularProgress';
-import { getBoardDetails } from '@/app/lib/__generated__/product-sizes-data';
+import { getBoardDetails } from '@/app/lib/board-constants';
 import BoardRenderer from '../board-renderer/board-renderer';
 import styles from './board-scroll.module.css';
 

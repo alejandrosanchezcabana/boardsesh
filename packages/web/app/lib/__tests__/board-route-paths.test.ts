@@ -11,6 +11,11 @@ describe('board-route-paths', () => {
       expect(isBoardRoutePath('/kilter/1/1/default/40/list')).toBe(true);
     });
 
+    it('detects new aurora board routes', () => {
+      expect(isBoardRoutePath('/grasshopper/2020/grandmaster-12-x-12/power_flow_engage/40/list')).toBe(true);
+      expect(isBoardRoutePath('/decoy/dungeon-trainer/12x12/foundation/40/list')).toBe(true);
+    });
+
     it('rejects non-board routes', () => {
       expect(isBoardRoutePath('/playlists')).toBe(false);
     });
@@ -23,6 +28,10 @@ describe('board-route-paths', () => {
 
     it('matches board-name list routes', () => {
       expect(isBoardListPath('/kilter/1/1/default/40/list')).toBe(true);
+    });
+
+    it('matches new aurora board list routes', () => {
+      expect(isBoardListPath('/grasshopper/2020/grandmaster-12-x-12/power_flow_engage/40/list')).toBe(true);
     });
 
     it('rejects non-list board routes', () => {

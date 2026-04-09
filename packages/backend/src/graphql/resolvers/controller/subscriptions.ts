@@ -5,7 +5,7 @@ import { eq } from 'drizzle-orm';
 import { pubsub } from '../../../pubsub/index';
 import { roomManager } from '../../../services/room-manager';
 import { createAsyncIterator } from '../shared/async-iterators';
-import { getLedPlacements } from '../../../db/queries/util/led-placements-data';
+import { getLedPlacements } from '@boardsesh/board-constants/led-placements';
 import { convertLitUpHoldsStringToMap } from '../../../db/queries/util/hold-state';
 import { requireControllerAuth } from '../shared/helpers';
 import { getGradeColor } from './grade-colors';

@@ -5,9 +5,8 @@ import {
   boardseshTicks,
   boardProductSizes,
   boardClimbHolds,
-  boardPlacements,
 } from '../../schema/index';
-import type { BoardRouteParams, ClimbSearchParams, SizeEdges } from './types';
+import type { BoardRouteParams, ClimbSearchParams } from './types';
 
 // Kilter Homewall constants for tall-climb filtering
 const KILTER_HOMEWALL_LAYOUT_ID = 8;
@@ -19,16 +18,19 @@ const KILTER_HOMEWALL_PRODUCT_ID = 7;
  *
  * @param params Board route parameters (board_name, layout_id, etc.)
  * @param searchParams Search/filter parameters
- * @param sizeEdges Pre-fetched edge values from product_sizes
  * @param userId Optional user ID for personal progress filters
  */
 export const createClimbFilters = (
   params: BoardRouteParams,
   searchParams: ClimbSearchParams,
-  sizeEdges: SizeEdges,
   userId?: string,
 ) => {
   // Process hold filters
+  // holdsFilter can have values like:
+  // - 'ANY': hold must be present in the climb
+  // - 'NOT': hold must NOT be present in the climb
+  // - { state: 'STARTING' | 'HAND' | 'FOOT' | 'FINISH' }: hold must be present with that specific state
+  // - 'STARTING' | 'HAND' | 'FOOT' | 'FINISH': (after URL parsing) same as above
   const holdsToFilter = Object.entries(searchParams.holdsFilter || {}).map(([key, stateOrValue]) => {
     const holdId = key.replace('hold_', '');
     // Handle both object form { state: 'STARTING' } and string form 'STARTING'
@@ -81,13 +83,11 @@ export const createClimbFilters = (
     eq(boardClimbs.framesCount, 1),
   ];
 
-  // Size-specific conditions using pre-fetched static edge values
-  // MoonBoard climbs have NULL edge values (single fixed size), so skip edge filtering
+  // Size filter: check if this climb fits on the selected board size.
+  // Uses denormalized compatible_size_ids array (pre-computed from edge comparison).
+  // MoonBoard has a single fixed size, so skip.
   const sizeConditions: SQL[] = params.board_name === 'moonboard' ? [] : [
-    sql`${boardClimbs.edgeLeft} > ${sizeEdges.edgeLeft}`,
-    sql`${boardClimbs.edgeRight} < ${sizeEdges.edgeRight}`,
-    sql`${boardClimbs.edgeBottom} > ${sizeEdges.edgeBottom}`,
-    sql`${boardClimbs.edgeTop} < ${sizeEdges.edgeTop}`,
+    sql`${params.size_id} = ANY(${boardClimbs.compatibleSizeIds})`,
   ];
 
   // Conditions for climb stats
@@ -162,28 +162,18 @@ export const createClimbFilters = (
   }
 
   // Set membership filter: exclude climbs that use holds from sets the user doesn't own.
-  // Uses double-NOT-EXISTS: "no hold of this climb lacks a placement in the selected sets."
-  // MoonBoard has no board_placements data, so skip (same pattern as edge filtering).
+  // Uses denormalized required_set_ids array (pre-computed from climb_holds -> placements).
+  // The <@ operator checks that all required sets are in the user's selected sets.
+  // MoonBoard has no set data, so skip.
   const setIdsConditions: SQL[] = params.board_name === 'moonboard' || params.set_ids.length === 0 ? [] : [
-    sql`NOT EXISTS (
-      SELECT 1 FROM ${boardClimbHolds} bch_set
-      WHERE bch_set.climb_uuid = ${boardClimbs.uuid}
-        AND bch_set.board_type = ${params.board_name}
-        AND NOT EXISTS (
-          SELECT 1 FROM ${boardPlacements} bp_set
-          WHERE bp_set.board_type = ${params.board_name}
-            AND bp_set.layout_id = ${params.layout_id}
-            AND bp_set.id = bch_set.hold_id
-            AND bp_set.set_id IN (${sql.join(params.set_ids.map(id => sql`${id}`), sql`, `)})
-        )
-    )`,
+    sql`${boardClimbs.requiredSetIds} <@ ARRAY[${sql.join(params.set_ids.map(id => sql`${id}`), sql`, `)}]::int[]`,
   ];
 
   // Personal progress filter conditions
   const personalProgressConditions: SQL[] = [];
   if (userId) {
     if (searchParams.hideAttempted) {
-      // Hide climbs where the user has any tick (attempted or completed)
+      // Hide climbs where the user has at least one attempt tick
       personalProgressConditions.push(
         sql`NOT EXISTS (
           SELECT 1 FROM ${boardseshTicks}
@@ -191,6 +181,7 @@ export const createClimbFilters = (
           AND ${boardseshTicks.userId} = ${userId}
           AND ${boardseshTicks.boardType} = ${params.board_name}
           AND ${boardseshTicks.angle} = ${params.angle}
+          AND ${boardseshTicks.status} = 'attempt'
         )`
       );
     }
@@ -209,7 +200,7 @@ export const createClimbFilters = (
     }
 
     if (searchParams.showOnlyAttempted) {
-      // Show only climbs where the user has any tick
+      // Show only climbs where the user has an attempt tick
       personalProgressConditions.push(
         sql`EXISTS (
           SELECT 1 FROM ${boardseshTicks}
@@ -217,6 +208,7 @@ export const createClimbFilters = (
           AND ${boardseshTicks.userId} = ${userId}
           AND ${boardseshTicks.boardType} = ${params.board_name}
           AND ${boardseshTicks.angle} = ${params.angle}
+          AND ${boardseshTicks.status} = 'attempt'
         )`
       );
     }
@@ -234,6 +226,54 @@ export const createClimbFilters = (
       );
     }
   }
+
+  // User-specific logbook data selectors using boardsesh_ticks
+  const getUserLogbookSelects = () => {
+    return {
+      userAscents: sql<number>`(
+        SELECT COUNT(*)
+        FROM ${boardseshTicks}
+        WHERE ${boardseshTicks.climbUuid} = ${boardClimbs.uuid}
+        AND ${boardseshTicks.userId} = ${userId || ''}
+        AND ${boardseshTicks.boardType} = ${params.board_name}
+        AND ${boardseshTicks.angle} = ${params.angle}
+        AND ${boardseshTicks.status} IN ('flash', 'send')
+      )`,
+      userAttempts: sql<number>`(
+        SELECT COUNT(*)
+        FROM ${boardseshTicks}
+        WHERE ${boardseshTicks.climbUuid} = ${boardClimbs.uuid}
+        AND ${boardseshTicks.userId} = ${userId || ''}
+        AND ${boardseshTicks.boardType} = ${params.board_name}
+        AND ${boardseshTicks.angle} = ${params.angle}
+        AND ${boardseshTicks.status} = 'attempt'
+      )`,
+    };
+  };
+
+  // Hold-specific user data selectors for heatmap using boardsesh_ticks
+  const getHoldUserLogbookSelects = (climbHoldsTable: typeof boardClimbHolds) => {
+    return {
+      userAscents: sql<number>`(
+        SELECT COUNT(*)
+        FROM ${boardseshTicks}
+        WHERE ${boardseshTicks.climbUuid} = ${climbHoldsTable.climbUuid}
+        AND ${boardseshTicks.userId} = ${userId || ''}
+        AND ${boardseshTicks.boardType} = ${params.board_name}
+        AND ${boardseshTicks.angle} = ${params.angle}
+        AND ${boardseshTicks.status} IN ('flash', 'send')
+      )`,
+      userAttempts: sql<number>`(
+        SELECT COUNT(*)
+        FROM ${boardseshTicks}
+        WHERE ${boardseshTicks.climbUuid} = ${climbHoldsTable.climbUuid}
+        AND ${boardseshTicks.userId} = ${userId || ''}
+        AND ${boardseshTicks.boardType} = ${params.board_name}
+        AND ${boardseshTicks.angle} = ${params.angle}
+        AND ${boardseshTicks.status} = 'attempt'
+      )`,
+    };
+  };
 
   return {
     getClimbWhereConditions: () => [
@@ -253,5 +293,30 @@ export const createClimbFilters = (
       eq(boardClimbStats.boardType, params.board_name),
       eq(boardClimbStats.angle, params.angle),
     ],
+    getHoldHeatmapClimbStatsConditions: () => [
+      eq(boardClimbStats.climbUuid, boardClimbHolds.climbUuid),
+      eq(boardClimbStats.boardType, params.board_name),
+      eq(boardClimbStats.angle, params.angle),
+    ],
+    getClimbHoldsJoinConditions: () => [
+      eq(boardClimbHolds.climbUuid, boardClimbs.uuid),
+      eq(boardClimbHolds.boardType, params.board_name),
+    ],
+    getUserLogbookSelects,
+    getHoldUserLogbookSelects,
+    // Raw parts
+    baseConditions,
+    climbStatsConditions,
+    nameCondition,
+    setterNameCondition,
+    holdConditions,
+    holdStateConditions,
+    tallClimbsConditions,
+    setIdsConditions,
+    sizeConditions,
+    personalProgressConditions,
+    anyHolds,
+    notHolds,
+    holdStateFilters,
   };
 };

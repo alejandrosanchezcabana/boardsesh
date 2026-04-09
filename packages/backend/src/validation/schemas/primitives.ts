@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { SUPPORTED_BOARDS } from '@boardsesh/shared-schema';
 
 /**
  * UUID validation schema
@@ -38,7 +39,7 @@ export const UsernameSchema = z.string().min(1, 'Username cannot be empty').max(
 /**
  * Board path validation schema
  */
-export const BoardPathSchema = z.string().min(1, 'Board path cannot be empty').max(200, 'Board path too long');
+export const BoardPathSchema = z.string().min(1, 'Board path cannot be empty').max(1000, 'Board path too long');
 
 /**
  * Session name validation schema
@@ -57,10 +58,10 @@ export const AvatarUrlSchema = z.string()
   .optional();
 
 /**
- * Board name validation schema (kilter, tension, moonboard)
+ * Board name validation schema
  */
-export const BoardNameSchema = z.enum(['kilter', 'tension', 'moonboard'], {
-  error: 'Board name must be kilter, tension, or moonboard',
+export const BoardNameSchema = z.enum(SUPPORTED_BOARDS, {
+  error: `Board name must be ${SUPPORTED_BOARDS.join(', ')}`,
 });
 
 /**

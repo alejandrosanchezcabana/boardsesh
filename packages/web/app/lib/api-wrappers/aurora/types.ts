@@ -1,5 +1,5 @@
-// Aurora boards only (kilter/tension) - different from main BoardName which includes moonboard
-export type AuroraBoardName = 'kilter' | 'tension';
+// Aurora boards only - different from main BoardName which includes moonboard
+export type AuroraBoardName = 'kilter' | 'tension' | 'decoy' | 'touchstone' | 'grasshopper';
 
 export interface BoardUser {
   id: number;
@@ -104,12 +104,11 @@ export interface SaveClimbOptions {
   setter_username?: string;
 }
 export const HOST_BASES: Record<AuroraBoardName, string> = {
-  // aurora: 'auroraboardapp',
-  // decoy: 'decoyboardapp',
-  // grasshopper: 'grasshopperboardapp',
   kilter: 'kilterboardapp',
   tension: 'tensionboardapp2',
-  // touchstone: 'touchstoneboardapp',
+  decoy: 'decoyboardapp',
+  touchstone: 'touchstoneboardapp',
+  grasshopper: 'grasshopperboardapp',
 };
 
 export const WEB_HOSTS: Record<AuroraBoardName, string> = Object.fromEntries(

@@ -4,6 +4,7 @@ import { matchSetNameToSlugParts } from './slug-matching';
 import { generateSlugFromText, generateDescriptionSlug, generateLayoutSlug } from './url-utils';
 import { UNIFIED_TABLES } from '@/app/lib/db/queries/util/table-select';
 import { eq, and, isNull } from 'drizzle-orm';
+import { getAllLayouts, getSetsForLayoutAndSize, getSizesForLayoutId } from './board-constants';
 
 // Re-export for backwards compatibility
 export { matchSetNameToSlugParts } from './slug-matching';
@@ -24,8 +25,92 @@ export type SetRow = {
   name: string;
 };
 
+function findLayoutBySlug(rows: LayoutRow[], slug: string): LayoutRow | null {
+  const normalizedSlug = slug
+    .toLowerCase()
+    .replace(/^(kilter|tension|decoy|touchstone|grasshopper|moonboard)-/, '');
+
+  return rows.find((layout) => (
+    layout.name &&
+    (generateLayoutSlug(layout.name) === slug || generateLayoutSlug(layout.name) === normalizedSlug)
+  )) ?? null;
+}
+
+function findSizeBySlug(rows: SizeRow[], slug: string): SizeRow | null {
+  const dimensionMatch = slug.match(/^(\d+x\d+)(?:-(.+))?$/i);
+
+  if (dimensionMatch) {
+    const dimensions = dimensionMatch[1].toLowerCase();
+    const descSuffix = dimensionMatch[2];
+
+    const size = rows.find((s) => {
+      if (!s.name) return false;
+      const sizeMatch = s.name.match(/(\d+)\s*x\s*(\d+)/i);
+      if (!sizeMatch) return false;
+
+      const sizeDimensions = `${sizeMatch[1]}x${sizeMatch[2]}`.toLowerCase();
+      if (sizeDimensions !== dimensions) return false;
+
+      if (descSuffix && s.description) {
+        const descSlug = generateDescriptionSlug(s.description);
+        return descSlug === descSuffix;
+      }
+
+      if (!descSuffix) {
+        const descLower = (s.description || '').toLowerCase();
+        return descLower.includes('full ride') || !s.description;
+      }
+
+      return false;
+    });
+
+    if (size) {
+      return size;
+    }
+
+    if (!descSuffix) {
+      return rows.find((s) => {
+        if (!s.name) return false;
+        const sizeMatch = s.name.match(/(\d+)\s*x\s*(\d+)/i);
+        if (!sizeMatch) return false;
+        const sizeDimensions = `${sizeMatch[1]}x${sizeMatch[2]}`.toLowerCase();
+        return sizeDimensions === dimensions;
+      }) ?? null;
+    }
+  }
+
+  return rows.find((s) => {
+    if (!s.name) return false;
+
+    let sizeSlug = generateSlugFromText(s.name);
+
+    if (s.description && s.description.trim()) {
+      const descSlug = generateDescriptionSlug(s.description);
+
+      if (descSlug) {
+        sizeSlug = `${sizeSlug}-${descSlug}`;
+      }
+    }
+
+    return sizeSlug === slug;
+  }) ?? null;
+}
+
+function findSetsBySlug(rows: SetRow[], slug: string): SetRow[] {
+  const slugParts = slug.split('_');
+  return rows.filter((set) => matchSetNameToSlugParts(set.name, slugParts));
+}
+
 // Reverse lookup functions for slug to ID conversion
 export const getLayoutBySlug = async (board_name: BoardName, slug: string): Promise<LayoutRow | null> => {
+  const staticLayout = findLayoutBySlug(
+    getAllLayouts(board_name).map((layout) => ({ id: layout.id, name: layout.name })),
+    slug,
+  );
+  if (staticLayout) {
+    return staticLayout;
+  }
+
   const { layouts } = UNIFIED_TABLES;
 
   const rows = await dbz
@@ -33,13 +118,9 @@ export const getLayoutBySlug = async (board_name: BoardName, slug: string): Prom
     .from(layouts)
     .where(and(eq(layouts.boardType, board_name), eq(layouts.isListed, true), isNull(layouts.password)));
 
-  const layout = rows.find((l) => {
-    if (!l.name) return false;
-    return generateLayoutSlug(l.name) === slug;
-  });
+  const layout = findLayoutBySlug(rows.filter((row): row is LayoutRow => row.name !== null), slug);
 
-  if (!layout || !layout.name) return null;
-  return { id: layout.id, name: layout.name };
+  return layout;
 };
 
 export const getSizeBySlug = async (
@@ -47,6 +128,18 @@ export const getSizeBySlug = async (
   layout_id: LayoutId,
   slug: string,
 ): Promise<SizeRow | null> => {
+  const staticSize = findSizeBySlug(
+    getSizesForLayoutId(board_name, layout_id).map((size) => ({
+      id: size.id,
+      name: size.name,
+      description: size.description,
+    })),
+    slug,
+  );
+  if (staticSize) {
+    return staticSize;
+  }
+
   const { productSizes, layouts } = UNIFIED_TABLES;
 
   const rows = await dbz
@@ -65,77 +158,14 @@ export const getSizeBySlug = async (
     )
     .where(and(eq(layouts.boardType, board_name), eq(layouts.id, layout_id)));
 
-  // Parse slug - may be "10x12" or "10x12-full-ride"
-  const dimensionMatch = slug.match(/^(\d+x\d+)(?:-(.+))?$/i);
+  const size = findSizeBySlug(
+    rows
+      .filter((row): row is typeof row & { name: string } => row.name !== null)
+      .map((row) => ({ id: row.id, name: row.name, description: row.description || '' })),
+    slug,
+  );
 
-  if (dimensionMatch) {
-    const dimensions = dimensionMatch[1].toLowerCase();
-    const descSuffix = dimensionMatch[2]; // e.g., "full-ride" or undefined
-
-    const size = rows.find((s) => {
-      if (!s.name) return false;
-      const sizeMatch = s.name.match(/(\d+)\s*x\s*(\d+)/i);
-      if (!sizeMatch) return false;
-
-      const sizeDimensions = `${sizeMatch[1]}x${sizeMatch[2]}`.toLowerCase();
-      if (sizeDimensions !== dimensions) return false;
-
-      // If slug has description suffix, match against description
-      if (descSuffix && s.description) {
-        const descSlug = generateDescriptionSlug(s.description);
-        return descSlug === descSuffix;
-      }
-
-      // No suffix - default to "Full Ride" variant for backward compat
-      // or first size if no description contains "full ride"
-      if (!descSuffix) {
-        const descLower = (s.description || '').toLowerCase();
-        return descLower.includes('full ride') || !s.description;
-      }
-
-      return false;
-    });
-
-    if (size && size.name) {
-      return { id: size.id, name: size.name, description: size.description || '' };
-    }
-
-    // If no "Full Ride" found with backward compat, try to match first size with dimensions
-    if (!descSuffix) {
-      const fallbackSize = rows.find((s) => {
-        if (!s.name) return false;
-        const sizeMatch = s.name.match(/(\d+)\s*x\s*(\d+)/i);
-        if (!sizeMatch) return false;
-        const sizeDimensions = `${sizeMatch[1]}x${sizeMatch[2]}`.toLowerCase();
-        return sizeDimensions === dimensions;
-      });
-      if (fallbackSize && fallbackSize.name) {
-        return { id: fallbackSize.id, name: fallbackSize.name, description: fallbackSize.description || '' };
-      }
-    }
-  }
-
-  // Fallback to general slug matching (including description like generateSizeSlug does)
-  const size = rows.find((s) => {
-    if (!s.name) return false;
-
-    // Generate slug from name using shared helper
-    let sizeSlug = generateSlugFromText(s.name);
-
-    // Append description suffix if present (mirrors generateSizeSlug logic)
-    if (s.description && s.description.trim()) {
-      const descSlug = generateDescriptionSlug(s.description);
-
-      if (descSlug) {
-        sizeSlug = `${sizeSlug}-${descSlug}`;
-      }
-    }
-
-    return sizeSlug === slug;
-  });
-
-  if (!size || !size.name) return null;
-  return { id: size.id, name: size.name, description: size.description || '' };
+  return size;
 };
 
 /**
@@ -153,6 +183,14 @@ export const getSetsBySlug = async (
   size_id: Size,
   slug: string,
 ): Promise<SetRow[]> => {
+  const staticSets = findSetsBySlug(
+    getSetsForLayoutAndSize(board_name, layout_id, size_id).map((set) => ({ id: set.id, name: set.name })),
+    slug,
+  );
+  if (staticSets.length > 0) {
+    return staticSets;
+  }
+
   const { sets, productSizesLayoutsSets } = UNIFIED_TABLES;
 
   const rows = await dbz
@@ -173,11 +211,12 @@ export const getSetsBySlug = async (
       ),
     );
 
-  // Parse the slug to get individual set names
-  const slugParts = slug.split('_');
-  const matchingSets = rows
-    .filter((s): s is typeof s & { name: string } => s.name !== null && matchSetNameToSlugParts(s.name, slugParts))
-    .map((s) => ({ id: s.id, name: s.name }));
+  const matchingSets = findSetsBySlug(
+    rows
+      .filter((row): row is typeof row & { name: string } => row.name !== null)
+      .map((row) => ({ id: row.id, name: row.name })),
+    slug,
+  );
 
   return matchingSets;
 };

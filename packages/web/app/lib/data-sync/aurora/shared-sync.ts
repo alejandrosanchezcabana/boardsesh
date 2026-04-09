@@ -7,6 +7,7 @@ import { NeonDatabase } from 'drizzle-orm/neon-serverless';
 import { Attempt, BetaLink, Climb, ClimbStats, SharedSync, SyncPutFields } from '../../api-wrappers/sync-api-types';
 import { UNIFIED_TABLES } from '../../db/queries/util/table-select';
 import { convertLitUpHoldsStringToMap } from '@/app/components/board-renderer/util';
+import { populateDenormalizedColumns } from '@boardsesh/db/queries';
 
 export type NewClimbInfo = {
   uuid: string;
@@ -228,6 +229,10 @@ async function upsertClimbs(db: NeonDatabase<Record<string, never>>, board: Auro
       await db.insert(climbHoldsSchema).values(holdsToInsert).onConflictDoNothing(); // Avoid duplicate inserts
     }),
   );
+
+  // Populate denormalized required_set_ids and compatible_size_ids for the synced climbs
+  const uuids_to_populate = data.map((c) => c.uuid);
+  await populateDenormalizedColumns(db, board, uuids_to_populate);
 
   // Return info about newly inserted climbs
   return data

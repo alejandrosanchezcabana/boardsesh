@@ -7,7 +7,6 @@ import { getGradeLabel } from '@boardsesh/db/queries';
 import { validateInput } from '../../shared/helpers';
 import { GetPlaylistClimbsInputSchema } from '../../../../validation/schemas';
 import { getBoardTables, isValidBoardName } from '../../../../db/queries/util/table-select';
-import { getSizeEdges } from '../../../../db/queries/util/product-sizes-data';
 import { verifyPlaylistAccess } from '../helpers/enrichment';
 
 export interface PlaylistClimbsInput {
@@ -53,15 +52,9 @@ async function fetchSpecificBoardClimbs(
   }
 
   if (input.sizeId != null) {
-    const sizeEdges = getSizeEdges(boardName, input.sizeId);
-    if (sizeEdges && boardName !== 'moonboard') {
-      climbJoinConditions.push(
-        sql`${tables.climbs.edgeLeft} > ${sizeEdges.edgeLeft}`,
-        sql`${tables.climbs.edgeRight} < ${sizeEdges.edgeRight}`,
-        sql`${tables.climbs.edgeBottom} > ${sizeEdges.edgeBottom}`,
-        sql`${tables.climbs.edgeTop} < ${sizeEdges.edgeTop}`,
-      );
-    }
+    climbJoinConditions.push(
+      sql`${input.sizeId} = ANY(${tables.climbs.compatibleSizeIds})`,
+    );
   }
 
   const inputAngle = input.angle ?? 40;

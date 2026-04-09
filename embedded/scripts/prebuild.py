@@ -32,8 +32,8 @@ CODEGEN_SCRIPT = SCRIPT_DIR / "generate-graphql-types.mjs"
 
 # Board data codegen paths
 BOARD_DATA_SOURCES = [
-    PROJECT_ROOT / "packages" / "web" / "app" / "lib" / "__generated__" / "product-sizes-data.ts",
-    PROJECT_ROOT / "packages" / "web" / "app" / "lib" / "__generated__" / "led-placements-data.ts",
+    PROJECT_ROOT / "packages" / "board-constants" / "src" / "generated" / "product-sizes-data.ts",
+    PROJECT_ROOT / "packages" / "board-constants" / "src" / "generated" / "led-placements-data.ts",
     PROJECT_ROOT / "packages" / "web" / "app" / "lib" / "board-data.ts",
 ]
 BOARD_DATA_OUTPUT = SCRIPT_DIR.parent / "libs" / "board-data" / "src" / "board_hold_data.h"

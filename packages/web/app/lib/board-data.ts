@@ -1,3 +1,4 @@
+import { AURORA_BOARDS, SUPPORTED_BOARDS as ALL_SUPPORTED_BOARDS } from '@boardsesh/shared-schema';
 import { Angle, BoardName } from './types';
 import { MOONBOARD_ENABLED, MOONBOARD_ANGLES } from './moonboard-config';
 
@@ -12,8 +13,8 @@ export type SetIdList = number[];
 
 // Conditionally include moonboard based on feature flag
 export const SUPPORTED_BOARDS: BoardName[] = MOONBOARD_ENABLED
-  ? ['kilter', 'tension', 'moonboard']
-  : ['kilter', 'tension'];
+  ? [...ALL_SUPPORTED_BOARDS]
+  : [...AURORA_BOARDS];
 
 export const BOARD_IMAGE_DIMENSIONS: Record<BoardName, ImageDimensions> = {
   kilter: {
@@ -117,12 +118,86 @@ export const BOARD_IMAGE_DIMENSIONS: Record<BoardName, ImageDimensions> = {
     'moonboardmasters2019/woodenholdsb.png': { width: 650, height: 1000 },
     'moonboardmasters2019/woodenholdsc.png': { width: 650, height: 1000 },
   },
+  decoy: {
+    'product_sizes_layouts_sets/1.png': { width: 1080, height: 1144 },
+    'product_sizes_layouts_sets/10.png': { width: 1080, height: 1144 },
+    'product_sizes_layouts_sets/11.png': { width: 1080, height: 1144 },
+    'product_sizes_layouts_sets/12.png': { width: 1080, height: 1144 },
+    'product_sizes_layouts_sets/12x12_foundation_12x12.png': { width: 1080, height: 1144 },
+    'product_sizes_layouts_sets/12x12_foundation_feet_12x12.png': { width: 1080, height: 1144 },
+    'product_sizes_layouts_sets/12x12_lime_foot_12x12.png': { width: 1080, height: 1144 },
+    'product_sizes_layouts_sets/12x12_lime_foot.png': { width: 1080, height: 1144 },
+    'product_sizes_layouts_sets/12x12_lime.png': { width: 1080, height: 1144 },
+    'product_sizes_layouts_sets/12x12_pacos_12x12.png': { width: 1080, height: 1144 },
+    'product_sizes_layouts_sets/12x12_rollies_12x12.png': { width: 1080, height: 1144 },
+    'product_sizes_layouts_sets/12x12_sams_12x12.png': { width: 1080, height: 1144 },
+    'product_sizes_layouts_sets/12x12_schist_12x12.png': { width: 1080, height: 1144 },
+    'product_sizes_layouts_sets/13-2.png': { width: 1080, height: 1144 },
+    'product_sizes_layouts_sets/14.png': { width: 1080, height: 1767 },
+    'product_sizes_layouts_sets/15.png': { width: 1080, height: 1767 },
+    'product_sizes_layouts_sets/16.png': { width: 1080, height: 1767 },
+    'product_sizes_layouts_sets/17.png': { width: 1080, height: 1767 },
+    'product_sizes_layouts_sets/18.png': { width: 1080, height: 1767 },
+    'product_sizes_layouts_sets/19.png': { width: 1080, height: 1767 },
+    'product_sizes_layouts_sets/2.png': { width: 1080, height: 1767 },
+    'product_sizes_layouts_sets/20.png': { width: 1080, height: 1767 },
+    'product_sizes_layouts_sets/21.png': { width: 1080, height: 1767 },
+    'product_sizes_layouts_sets/22.png': { width: 1080, height: 1767 },
+    'product_sizes_layouts_sets/23-2.png': { width: 1080, height: 1767 },
+    'product_sizes_layouts_sets/24.png': { width: 1080, height: 1473 },
+    'product_sizes_layouts_sets/25.png': { width: 1080, height: 1473 },
+    'product_sizes_layouts_sets/26.png': { width: 1080, height: 1473 },
+    'product_sizes_layouts_sets/27.png': { width: 1080, height: 1473 },
+    'product_sizes_layouts_sets/28.png': { width: 1080, height: 1473 },
+    'product_sizes_layouts_sets/29.png': { width: 1080, height: 1473 },
+    'product_sizes_layouts_sets/3.png': { width: 1080, height: 1473 },
+    'product_sizes_layouts_sets/30.png': { width: 1080, height: 1473 },
+    'product_sizes_layouts_sets/31.png': { width: 1080, height: 1473 },
+    'product_sizes_layouts_sets/32.png': { width: 1080, height: 1473 },
+    'product_sizes_layouts_sets/33-2.png': { width: 1080, height: 1473 },
+    'product_sizes_layouts_sets/4.png': { width: 1080, height: 1144 },
+    'product_sizes_layouts_sets/5.png': { width: 1080, height: 1144 },
+    'product_sizes_layouts_sets/6.png': { width: 1080, height: 1144 },
+    'product_sizes_layouts_sets/7.png': { width: 1080, height: 1144 },
+    'product_sizes_layouts_sets/8.png': { width: 1080, height: 1144 },
+    'product_sizes_layouts_sets/8x10_lime_foot.png': { width: 1080, height: 1473 },
+    'product_sizes_layouts_sets/8x10_lime.png': { width: 1080, height: 1473 },
+    'product_sizes_layouts_sets/8x12_lime_foot.png': { width: 1080, height: 1767 },
+    'product_sizes_layouts_sets/8x12_lime.png': { width: 1080, height: 1767 },
+    'product_sizes_layouts_sets/9.png': { width: 1080, height: 1144 },
+  },
+  touchstone: {
+    'product_sizes_layouts_sets/1-v2.png': { width: 1080, height: 1170 },
+    'product_sizes_layouts_sets/1-v4.png': { width: 1080, height: 1170 },
+  },
+  grasshopper: {
+    'product_sizes_layouts_sets/1_v3.png': { width: 1080, height: 1144 },
+    'product_sizes_layouts_sets/12x12-2020-flow.png': { width: 1080, height: 1144 },
+    'product_sizes_layouts_sets/12x12-2020-tweeners-v2.png': { width: 1080, height: 1144 },
+    'product_sizes_layouts_sets/13_v2.png': { width: 1080, height: 1144 },
+    'product_sizes_layouts_sets/14.png': { width: 1080, height: 1144 },
+    'product_sizes_layouts_sets/3_v3.png': { width: 1080, height: 1144 },
+    'product_sizes_layouts_sets/8x10-2020-engage.png': { width: 1080, height: 1473 },
+    'product_sizes_layouts_sets/8x10-2020-flow.png': { width: 1080, height: 1473 },
+    'product_sizes_layouts_sets/8x10-2020-gradient.png': { width: 1080, height: 1473 },
+    'product_sizes_layouts_sets/8x10-2020-power.png': { width: 1080, height: 1473 },
+    'product_sizes_layouts_sets/8x10-2020-tweeners-v2.png': { width: 1080, height: 1473 },
+    'product_sizes_layouts_sets/8x12-2020-engage.png': { width: 1080, height: 1767 },
+    'product_sizes_layouts_sets/8x12-2020-flow.png': { width: 1080, height: 1767 },
+    'product_sizes_layouts_sets/8x12-2020-gradient.png': { width: 1080, height: 1767 },
+    'product_sizes_layouts_sets/8x12-2020-power.png': { width: 1080, height: 1767 },
+    'product_sizes_layouts_sets/8x12-2020-tweeners-v2.png': { width: 1080, height: 1767 },
+  },
 };
 
 export const ANGLES: Record<BoardName, Angle[]> = {
   kilter: [0, 5, 10, 15, 20, 25, 30, 35, 40, 45, 50, 55, 60, 65, 70],
   tension: [0, 5, 10, 15, 20, 25, 30, 35, 40, 45, 50, 55, 60, 65, 70],
   moonboard: [...MOONBOARD_ANGLES],
+  // New Aurora boards use the same angle range as Kilter/Tension
+  decoy: [0, 5, 10, 15, 20, 25, 30, 35, 40, 45, 50, 55, 60, 65, 70],
+  touchstone: [0, 5, 10, 15, 20, 25, 30, 35, 40, 45, 50, 55, 60, 65, 70],
+  grasshopper: [0, 5, 10, 15, 20, 25, 30, 35, 40, 45, 50, 55, 60, 65, 70],
 };
 
 // Unified grade system used by all boards

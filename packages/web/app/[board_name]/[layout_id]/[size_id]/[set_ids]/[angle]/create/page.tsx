@@ -1,6 +1,6 @@
 import React from 'react';
 import { BoardRouteParameters } from '@/app/lib/types';
-import { getBoardDetails } from '@/app/lib/__generated__/product-sizes-data';
+import { getBoardDetails } from '@/app/lib/board-constants';
 import { parseRouteParams } from '@/app/lib/url-utils.server';
 import CreateClimbForm from '@/app/components/create-climb/create-climb-form';
 import {

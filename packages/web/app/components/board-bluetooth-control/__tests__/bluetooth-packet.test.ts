@@ -22,7 +22,7 @@ vi.mock('@/app/lib/moonboard-config', () => ({
 }));
 
 import { getAuroraBluetoothPacket } from '../bluetooth-aurora';
-import { getLedPlacements } from '../../../lib/__generated__/led-placements-data';
+import { getLedPlacements } from '@boardsesh/board-constants/led-placements';
 
 // ---- Packet decoder ----
 

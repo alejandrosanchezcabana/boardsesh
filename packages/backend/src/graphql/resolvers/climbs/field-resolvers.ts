@@ -57,7 +57,7 @@ export const climbFieldResolvers = {
     }
 
     if (!parent._isCacheable) {
-      const count = await countClimbs(parent.params, parent.searchParams, parent.sizeEdges, parent.userId);
+      const count = await countClimbs(parent.params, parent.searchParams, parent.userId);
       parent._cachedTotalCount = count;
       return count;
     }
@@ -69,7 +69,7 @@ export const climbFieldResolvers = {
       return cached;
     }
 
-    const count = await countClimbs(parent.params, parent.searchParams, parent.sizeEdges, parent.userId);
+    const count = await countClimbs(parent.params, parent.searchParams, parent.userId);
     parent._cachedTotalCount = count;
 
     searchCache.setCachedResult(cacheKey, count, DEFAULT_SEARCH_CACHE_TTL);

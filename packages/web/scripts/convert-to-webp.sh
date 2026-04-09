@@ -64,6 +64,27 @@ for f in "$PUBLIC_DIR"/images/tension/product_sizes_layouts_sets/*.png; do
 done
 echo ""
 
+# Grasshopper board images
+echo "Grasshopper:"
+for f in "$PUBLIC_DIR"/images/grasshopper/product_sizes_layouts_sets/*.png; do
+  [[ -f "$f" ]] && convert_file "$f"
+done
+echo ""
+
+# Decoy board images
+echo "Decoy:"
+for f in "$PUBLIC_DIR"/images/decoy/product_sizes_layouts_sets/*.png; do
+  [[ -f "$f" ]] && convert_file "$f"
+done
+echo ""
+
+# Touchstone board images
+echo "Touchstone:"
+for f in "$PUBLIC_DIR"/images/touchstone/product_sizes_layouts_sets/*.png; do
+  [[ -f "$f" ]] && convert_file "$f"
+done
+echo ""
+
 # MoonBoard images (recursive)
 echo "MoonBoard:"
 while IFS= read -r -d '' f; do

@@ -9,7 +9,7 @@ import {
   BoardName,
 } from '@/app/lib/types';
 import { getLayoutBySlug, getSizeBySlug, getSetsBySlug } from './slug-utils';
-import { isNumericId, extractUuidFromSlug, parseBoardRouteParams } from './url-utils';
+import { isNumericId, extractUuidFromSlug, hasOnlyNumericBoardRouteSegments, parseBoardRouteParams } from './url-utils';
 import {
   MOONBOARD_LAYOUTS,
   MOONBOARD_SETS,
@@ -52,6 +52,7 @@ export async function parseBoardRouteParamsWithSlugs<T extends BoardRouteParamet
   params: T,
 ): Promise<T extends BoardRouteParametersWithUuid ? ParsedBoardRouteParametersWithUuid : ParsedBoardRouteParameters> {
   const { board_name, layout_id, size_id, set_ids, angle, climb_uuid } = params;
+  const isFullyNumericFormat = hasOnlyNumericBoardRouteSegments(params);
 
   let parsedLayoutId: number;
   let parsedSizeId: number;
@@ -60,7 +61,7 @@ export async function parseBoardRouteParamsWithSlugs<T extends BoardRouteParamet
   // Handle MoonBoard separately (uses static config instead of database)
   if (board_name === 'moonboard') {
     // Handle layout_id (slug or numeric)
-    if (isNumericId(layout_id)) {
+    if (isFullyNumericFormat && isNumericId(layout_id)) {
       parsedLayoutId = Number(layout_id);
     } else {
       const layout = getMoonBoardLayoutBySlug(layout_id);
@@ -71,7 +72,7 @@ export async function parseBoardRouteParamsWithSlugs<T extends BoardRouteParamet
     }
 
     // Handle size_id (slug or numeric) - MoonBoard has single size
-    if (isNumericId(size_id)) {
+    if (isFullyNumericFormat && isNumericId(size_id)) {
       parsedSizeId = Number(size_id);
     } else {
       const size = getMoonBoardSizeBySlug();
@@ -80,7 +81,7 @@ export async function parseBoardRouteParamsWithSlugs<T extends BoardRouteParamet
 
     // Handle set_ids (slug or numeric)
     const decodedSetIds = decodeURIComponent(set_ids);
-    if (isNumericId(decodedSetIds.split(',')[0])) {
+    if (isFullyNumericFormat && isNumericId(decodedSetIds.split(',')[0])) {
       parsedSetIds = decodedSetIds.split(',').map((id) => Number(id));
     } else {
       // Find the layout key to get sets
@@ -117,43 +118,48 @@ export async function parseBoardRouteParamsWithSlugs<T extends BoardRouteParamet
     return parsedParams as T extends BoardRouteParametersWithUuid ? never : ParsedBoardRouteParameters;
   }
 
-  // Aurora boards (kilter, tension) - use database lookups
-  // Handle layout_id (slug or numeric)
-  if (isNumericId(layout_id)) {
+  // Aurora boards - prefer slug resolution on mixed-format routes so numeric-looking
+  // slugs like grasshopper's `2020` are treated as slugs, not numeric IDs.
+  if (isFullyNumericFormat && isNumericId(layout_id)) {
     parsedLayoutId = Number(layout_id);
   } else {
-    if (!layout_id || !board_name) {
-      return notFound();
-    }
-
     const layout = await getLayoutBySlug(board_name as BoardName, layout_id);
-    if (!layout) {
+    if (layout) {
+      parsedLayoutId = layout.id;
+    } else if (isNumericId(layout_id)) {
+      parsedLayoutId = Number(layout_id);
+    } else {
       return notFound();
     }
-    parsedLayoutId = layout.id;
   }
 
   // Handle size_id (slug or numeric)
-  if (isNumericId(size_id)) {
+  if (isFullyNumericFormat && isNumericId(size_id)) {
     parsedSizeId = Number(size_id);
   } else {
     const size = await getSizeBySlug(board_name as BoardName, parsedLayoutId, size_id);
-    if (!size) {
+    if (size) {
+      parsedSizeId = size.id;
+    } else if (isNumericId(size_id)) {
+      parsedSizeId = Number(size_id);
+    } else {
       return notFound();
     }
-    parsedSizeId = size.id;
   }
 
   // Handle set_ids (slug or numeric)
   const decodedSetIds = decodeURIComponent(set_ids);
-  if (isNumericId(decodedSetIds.split(',')[0])) {
+  if (isFullyNumericFormat && isNumericId(decodedSetIds.split(',')[0])) {
     parsedSetIds = decodedSetIds.split(',').map((id) => Number(id));
   } else {
     const sets = await getSetsBySlug(board_name as BoardName, parsedLayoutId, parsedSizeId, decodedSetIds);
-    if (!sets || sets.length === 0) {
+    if (sets && sets.length > 0) {
+      parsedSetIds = sets.map((set) => set.id);
+    } else if (decodedSetIds.split(',').every((id) => isNumericId(id.trim()))) {
+      parsedSetIds = decodedSetIds.split(',').map((id) => Number(id));
+    } else {
       return notFound();
     }
-    parsedSetIds = sets.map((set) => set.id);
   }
 
   const parsedParams = {
@@ -186,17 +192,30 @@ async function parseRouteParamsImpl<T extends BoardRouteParameters>(
   parsedParams: T extends BoardRouteParametersWithUuid ? ParsedBoardRouteParametersWithUuid : ParsedBoardRouteParameters;
   isNumericFormat: boolean;
 }> {
-  const isNumericFormat = [params.layout_id, params.size_id, params.set_ids].some((param) =>
-    param.includes(',') ? param.split(',').every((id) => /^\d+$/.test(id.trim())) : /^\d+$/.test(param),
-  );
+  const isNumericFormat = hasOnlyNumericBoardRouteSegments(params);
 
   if (isNumericFormat) {
     // For UUID routes, extract the UUID from the slug before parsing
     const paramsToPass = (params as BoardRouteParametersWithUuid).climb_uuid
       ? { ...params, climb_uuid: extractUuidFromSlug((params as BoardRouteParametersWithUuid).climb_uuid) }
       : params;
+
+    const parsedParams = parseBoardRouteParams(paramsToPass as T);
+    const hasInvalidNumericIds =
+      Number.isNaN(parsedParams.layout_id) ||
+      Number.isNaN(parsedParams.size_id) ||
+      Number.isNaN(parsedParams.angle) ||
+      parsedParams.set_ids.some((id) => Number.isNaN(id));
+
+    if (hasInvalidNumericIds) {
+      return {
+        parsedParams: await parseBoardRouteParamsWithSlugs(params),
+        isNumericFormat: false,
+      };
+    }
+
     return {
-      parsedParams: parseBoardRouteParams(paramsToPass as T),
+      parsedParams,
       isNumericFormat: true,
     };
   }

@@ -48,7 +48,7 @@ async function ensureWasmInitialized() {
   await wasmInitPromise;
 }
 
-const VALID_BOARD_NAMES = new Set(['kilter', 'tension', 'moonboard']);
+const VALID_BOARD_NAMES = new Set(['kilter', 'tension', 'moonboard', 'decoy', 'touchstone', 'grasshopper']);
 
 // THUMBNAIL_WIDTH imported from @/app/components/board-renderer/types
 // Full: native board resolution for crisp rendering in climb drawer/card cover

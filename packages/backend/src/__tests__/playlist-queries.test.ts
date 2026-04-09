@@ -40,10 +40,6 @@ vi.mock('../db/queries/util/hold-state', () => ({
   convertLitUpHoldsStringToMap: vi.fn().mockReturnValue([{}]),
 }));
 
-vi.mock('../db/queries/util/product-sizes-data', () => ({
-  getSizeEdges: vi.fn().mockReturnValue({ edgeLeft: 0, edgeRight: 100, edgeBottom: 0, edgeTop: 100 }),
-}));
-
 import type { ConnectionContext } from '@boardsesh/shared-schema';
 import { playlistQueries, getPlaylistFollowStats } from '../graphql/resolvers/playlists/queries';
 

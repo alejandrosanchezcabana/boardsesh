@@ -244,6 +244,10 @@ export const boardClimbs = pgTable('board_climbs', {
   syncError: text('sync_error'),
   // Boardsesh user who created this climb locally (null for Aurora-synced climbs)
   userId: text('user_id').references(() => users.id, { onDelete: 'set null' }),
+  // Denormalized: which hold sets does this climb require? (from climb_holds → placements)
+  requiredSetIds: integer('required_set_ids').array(),
+  // Denormalized: which product_size IDs can display this climb? (from edge comparison)
+  compatibleSizeIds: integer('compatible_size_ids').array(),
 }, (table) => ({
   boardTypeIdx: index('board_climbs_board_type_idx').on(table.boardType),
   // Combined index covering the full WHERE clause of the main climb search query

@@ -5,8 +5,7 @@ import {
   MESSAGE_BODY_MAX_LENGTH,
   UART_SERVICE_UUID,
 } from './bluetooth-shared';
-
-export type AuroraBoardName = 'kilter' | 'tension';
+import { BoardName } from '@boardsesh/shared-schema';
 
 const PACKET_MIDDLE = 81;
 const PACKET_FIRST = 82;
@@ -45,7 +44,7 @@ const encodePositionAndColor = (position: number, ledColor: string) => [
 export const getAuroraBluetoothPacket = (
   frames: string,
   placementPositions: LedPlacements,
-  boardName: AuroraBoardName,
+  boardName: BoardName,
 ) => {
   const resultArray: number[][] = [];
   let tempArray = [PACKET_MIDDLE];

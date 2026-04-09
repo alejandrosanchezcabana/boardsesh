@@ -8,7 +8,6 @@ import type {
 import { SUPPORTED_BOARDS, USER_SPECIFIC_SEARCH_PARAMS } from '@boardsesh/shared-schema';
 import type { ClimbSearchParams, ParsedBoardRouteParameters } from '../../../db/queries/climbs/index';
 import { getClimbByUuid } from '../../../db/queries/climbs/index';
-import { getSizeEdges } from '../../../db/queries/util/product-sizes-data';
 import { isValidBoardName } from '../../../db/queries/util/table-select';
 import { applyRateLimit, validateInput } from '../shared/helpers';
 import { findMoonBoardDuplicateMatches } from './moonboard-duplicates';
@@ -46,12 +45,6 @@ export const climbQueries = {
     // Validate board name
     if (!isValidBoardName(input.boardName)) {
       throw new Error(`Invalid board name: ${input.boardName}. Must be one of: ${SUPPORTED_BOARDS.join(', ')}`);
-    }
-
-    // Get size edges for filtering
-    const sizeEdges = getSizeEdges(input.boardName, input.sizeId);
-    if (!sizeEdges) {
-      throw new Error(`Invalid size ID: ${input.sizeId} for board: ${input.boardName}`);
     }
 
     // Parse setIds from comma-separated string
@@ -96,7 +89,6 @@ export const climbQueries = {
       return {
         params,
         searchParams,
-        sizeEdges,
         userId: undefined,
         _cachedClimbs: [],
         _cachedHasMore: false,
@@ -121,7 +113,6 @@ export const climbQueries = {
     return {
       params,
       searchParams,
-      sizeEdges,
       userId,
       _isCacheable: !hasUserSpecificFilters && isCacheableBoard,
     };

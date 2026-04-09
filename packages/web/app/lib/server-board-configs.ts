@@ -1,7 +1,7 @@
 import React from 'react';
 import { BoardName, BoardDetails } from '@/app/lib/types';
 import { LayoutRow, SizeRow, SetRow } from '@/app/lib/data/queries';
-import { getBoardDetails, getBoardSelectorOptions } from '@/app/lib/__generated__/product-sizes-data';
+import { getBoardDetails, getBoardSelectorOptions } from '@/app/lib/board-constants';
 import {
   MOONBOARD_ENABLED,
   MOONBOARD_LAYOUTS,

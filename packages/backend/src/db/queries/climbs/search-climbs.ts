@@ -1,6 +1,5 @@
 import { db } from '../../client';
 import { searchClimbs as sharedSearchClimbs, type BoardRouteParams, type ClimbSearchParams } from '@boardsesh/db/queries';
-import { getSizeEdges } from '../util/product-sizes-data';
 import type { Climb, ClimbSearchResult } from '@boardsesh/shared-schema';
 
 // Re-export shared types for backward compatibility
@@ -11,13 +10,8 @@ export const searchClimbs = async (
   searchParams: ClimbSearchParams,
   userId?: string,
 ): Promise<ClimbSearchResult> => {
-  const sizeEdges = getSizeEdges(params.board_name, params.size_id);
-  if (!sizeEdges) {
-    return { climbs: [], totalCount: 0, hasMore: false };
-  }
-
   try {
-    const result = await sharedSearchClimbs(db, params, searchParams, sizeEdges, userId);
+    const result = await sharedSearchClimbs(db, params, searchParams, userId);
 
     // Map ClimbRow to Climb (add fields expected by the GraphQL schema)
     const climbs: Climb[] = result.climbs.map((row) => ({

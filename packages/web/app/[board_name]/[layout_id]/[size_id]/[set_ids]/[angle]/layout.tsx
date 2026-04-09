@@ -54,18 +54,18 @@ export default async function BoardLayout(props: PropsWithChildren<BoardLayoutPr
   if (isNumericFormat) {
     const boardDetails = getBoardDetailsForBoard(parsedParams);
 
-    if (boardDetails.layout_name && boardDetails.size_name && boardDetails.set_names) {
-      const newUrl = constructClimbListWithSlugs(
-        boardDetails.board_name,
-        boardDetails.layout_name,
-        boardDetails.size_name,
-        boardDetails.size_description,
-        boardDetails.set_names,
-        parsedParams.angle,
-      );
+      if (boardDetails.layout_name && boardDetails.size_name && boardDetails.set_names) {
+        const newUrl = constructClimbListWithSlugs(
+          boardDetails.board_name,
+          boardDetails.layout_name,
+          boardDetails.size_name,
+          boardDetails.size_description,
+          boardDetails.set_names,
+          parsedParams.angle,
+        );
 
-      permanentRedirect(newUrl);
-    }
+        permanentRedirect(newUrl);
+      }
   }
 
   const { angle } = parsedParams;

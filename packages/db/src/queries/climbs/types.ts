@@ -12,17 +12,6 @@ export interface BoardRouteParams {
 }
 
 /**
- * Pre-fetched edge values from product_sizes table.
- * Used to filter climbs by size without joining product_sizes.
- */
-export interface SizeEdges {
-  edgeLeft: number;
-  edgeRight: number;
-  edgeBottom: number;
-  edgeTop: number;
-}
-
-/**
  * Search parameters for the climb search query.
  * Shared between web and backend packages.
  */
@@ -31,8 +20,8 @@ export interface ClimbSearchParams {
   page?: number;
   pageSize?: number;
   // Sorting
-  sortBy?: string;
-  sortOrder?: string;
+  sortBy?: 'ascents' | 'difficulty' | 'name' | 'quality' | 'popular' | 'creation' | string;
+  sortOrder?: 'asc' | 'desc' | string;
   // Filters
   gradeAccuracy?: number;
   minGrade?: number;
@@ -41,15 +30,20 @@ export interface ClimbSearchParams {
   minAscents?: number;
   name?: string;
   settername?: string[];
+  setternameSuggestion?: string;
+  onlyClassics?: boolean;
   onlyTallClimbs?: boolean;
   // Hold filters - 'ANY', 'NOT', or specific states like 'STARTING', 'HAND', etc.
-  holdsFilter?: Record<string, HoldState | string>;
+  // Record<string, any> allows for both simple strings and the object-based LitUpHoldsMap
+  holdsFilter?: Record<string, any>;
   // Personal progress filters
   hideAttempted?: boolean;
   hideCompleted?: boolean;
   showOnlyAttempted?: boolean;
   showOnlyCompleted?: boolean;
   onlyDrafts?: boolean;
+  // Allow dynamic hold keys (e.g., hold_123)
+  [key: `hold_${number}`]: any;
 }
 
 /**

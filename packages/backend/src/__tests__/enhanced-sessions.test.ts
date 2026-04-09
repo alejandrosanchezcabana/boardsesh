@@ -19,6 +19,17 @@ describe('Enhanced Sessions - CreateSessionInputSchema Validation', () => {
     expect(result.success).toBe(true);
   });
 
+  it('should accept long board paths', () => {
+    const longBoardPath = '/kilter/1/1/' + Array.from({ length: 100 }, (_, i) => i + 1).join(',') + '/40';
+    const result = CreateSessionInputSchema.safeParse({
+      ...validInput,
+      boardPath: longBoardPath,
+    });
+    expect(result.success).toBe(true);
+    expect(longBoardPath.length).toBeGreaterThan(200);
+    expect(longBoardPath.length).toBeLessThan(1000);
+  });
+
   it('should accept valid input with goal', () => {
     const result = CreateSessionInputSchema.safeParse({
       ...validInput,

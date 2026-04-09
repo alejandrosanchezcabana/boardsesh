@@ -14,16 +14,9 @@ import {
   getSizesForLayoutId,
   getAllLayouts,
   getSetsForLayoutAndSize,
-  getSizeEdges,
-} from '@/app/lib/__generated__/product-sizes-data';
+} from '@/app/lib/board-constants';
 
 export const getClimb = cache(async (params: ParsedBoardRouteParametersWithUuid): Promise<Climb> => {
-  // Get hardcoded size edges (eliminates database query)
-  const sizeEdges = getSizeEdges(params.board_name, params.size_id);
-  if (!sizeEdges) {
-    throw new Error(`Invalid size_id ${params.size_id} for board ${params.board_name}`);
-  }
-
   const result = await sql`
         SELECT climbs.uuid, climbs.setter_username, climbs.name, climbs.description,
         climbs.frames, COALESCE(climb_stats.angle, ${params.angle}) as angle, COALESCE(climb_stats.ascensionist_count, 0) as ascensionist_count,

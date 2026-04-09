@@ -28,6 +28,25 @@ const STATE_TO_CODE: Record<BoardName, Partial<Record<HoldState, HoldCode>>> = {
     FINISH: 3,
     // No FOOT holds on MoonBoard
   },
+  // New Aurora boards use the same role codes as the Tension-style layouts.
+  decoy: {
+    STARTING: 1,
+    HAND: 2,
+    FINISH: 3,
+    FOOT: 4,
+  },
+  touchstone: {
+    STARTING: 1,
+    HAND: 2,
+    FINISH: 3,
+    FOOT: 4,
+  },
+  grasshopper: {
+    STARTING: 1,
+    HAND: 2,
+    FINISH: 3,
+    FOOT: 4,
+  },
 };
 
 interface UseCreateClimbOptions {

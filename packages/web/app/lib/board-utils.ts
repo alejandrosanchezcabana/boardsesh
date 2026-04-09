@@ -1,6 +1,6 @@
 import type { BoardDetails, ParsedBoardRouteParameters } from './types';
 import type { SetIdList } from './board-data';
-import { getBoardDetails } from './__generated__/product-sizes-data';
+import { getBoardDetails } from './board-constants';
 import { getMoonBoardDetails } from './moonboard-config';
 
 /**

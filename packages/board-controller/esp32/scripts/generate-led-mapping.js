@@ -15,7 +15,7 @@ const path = require('path');
 
 // Read the LED placements TypeScript file and extract the data
 function extractLedPlacements() {
-  const filePath = path.join(__dirname, '../../../web/app/lib/__generated__/led-placements-data.ts');
+  const filePath = path.join(__dirname, '../../../board-constants/src/generated/led-placements-data.ts');
   const content = fs.readFileSync(filePath, 'utf8');
 
   // Find the start of the object after LED_PLACEMENTS declaration

@@ -42,7 +42,7 @@ const mockGetBoardDetails = vi.fn(() => ({
   supportsMirroring: false,
 }));
 
-vi.mock('@/app/lib/__generated__/product-sizes-data', () => ({
+vi.mock('@/app/lib/board-constants', () => ({
   getBoardSelectorOptions: mockGetBoardSelectorOptions,
   getBoardDetails: mockGetBoardDetails,
 }));
@@ -178,7 +178,7 @@ describe('getAllBoardConfigs', () => {
       const actual = await vi.importActual<typeof import('react')>('react');
       return { ...actual, cache: (fn: Function) => fn };
     });
-    vi.doMock('@/app/lib/__generated__/product-sizes-data', () => ({
+    vi.doMock('@/app/lib/board-constants', () => ({
       getBoardSelectorOptions: mockGetBoardSelectorOptions,
       getBoardDetails: mockGetBoardDetails,
     }));
@@ -252,7 +252,7 @@ describe('getAllBoardConfigs', () => {
         cache: cacheFn,
       };
     });
-    vi.doMock('@/app/lib/__generated__/product-sizes-data', () => ({
+    vi.doMock('@/app/lib/board-constants', () => ({
       getBoardSelectorOptions: mockGetBoardSelectorOptions,
       getBoardDetails: mockGetBoardDetails,
     }));

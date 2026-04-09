@@ -33,6 +33,24 @@ export const HOLD_STATE_MAP: Record<
     43: { name: 'HAND', color: '#0000FF', displayColor: '#4444FF' },
     44: { name: 'FINISH', color: '#FF0000', displayColor: '#FF3333' },
   },
+  decoy: {
+    1: { name: 'STARTING', displayColor: '#00DD00', color: '#00FF00' },
+    2: { name: 'HAND', displayColor: '#0000FF', color: '#0000FF' },
+    3: { name: 'FINISH', displayColor: '#FF0000', color: '#FF0000' },
+    4: { name: 'FOOT', displayColor: '#FF00FF', color: '#FF00FF' },
+  },
+  touchstone: {
+    1: { name: 'STARTING', displayColor: '#00DD00', color: '#00FF00' },
+    2: { name: 'HAND', displayColor: '#4444FF', color: '#0000FF' },
+    3: { name: 'FINISH', displayColor: '#FF0000', color: '#FF0000' },
+    4: { name: 'FOOT', displayColor: '#FF00FF', color: '#FF00FF' },
+  },
+  grasshopper: {
+    1: { name: 'STARTING', displayColor: '#00DD00', color: '#00FF00' },
+    2: { name: 'HAND', displayColor: '#4455FF', color: '#0000FF' },
+    3: { name: 'FINISH', displayColor: '#FF0000', color: '#FF0000' },
+    4: { name: 'FOOT', displayColor: '#FF00FF', color: '#FF00FF' },
+  },
 };
 
 // Warned hold states to avoid log spam

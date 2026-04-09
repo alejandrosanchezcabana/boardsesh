@@ -7,7 +7,6 @@ import { getGradeLabel } from '@boardsesh/db/queries';
 import { requireAuthenticated, validateInput } from '../shared/helpers';
 import { GetUserFavoriteClimbsInputSchema } from '../../../validation/schemas';
 import { getBoardTables, isValidBoardName } from '../../../db/queries/util/table-select';
-import { getSizeEdges } from '../../../db/queries/util/product-sizes-data';
 
 export const favoriteClimbsQuery = {
   userFavoriteClimbs: async (
@@ -31,11 +30,6 @@ export const favoriteClimbsQuery = {
 
     if (!isValidBoardName(boardName)) {
       throw new Error(`Invalid board name: ${boardName}. Must be one of: ${SUPPORTED_BOARDS.join(', ')}`);
-    }
-
-    const sizeEdges = getSizeEdges(boardName, input.sizeId);
-    if (!sizeEdges) {
-      throw new Error(`Invalid size ID: ${input.sizeId} for board: ${boardName}`);
     }
 
     const page = input.page ?? 0;

@@ -27,7 +27,7 @@ const __dirname = path.dirname(__filename);
 // Path configuration
 const PROJECT_ROOT = path.join(__dirname, '../..');
 const WEB_LIB = path.join(PROJECT_ROOT, 'packages/web/app/lib');
-const GENERATED_DIR = path.join(WEB_LIB, '__generated__');
+const BOARD_CONSTANTS_GENERATED = path.join(PROJECT_ROOT, 'packages/board-constants/src/generated');
 const IMAGES_BASE = path.join(PROJECT_ROOT, 'packages/web/public/images');
 const OUTPUT_DIR = path.join(__dirname, '../libs/board-data/src');
 
@@ -100,10 +100,10 @@ function loadBoardData() {
 
   // Read raw file contents
   const productSizesContent = fs.readFileSync(
-    path.join(GENERATED_DIR, 'product-sizes-data.ts'), 'utf-8'
+    path.join(BOARD_CONSTANTS_GENERATED, 'product-sizes-data.ts'), 'utf-8'
   );
   const ledPlacementsContent = fs.readFileSync(
-    path.join(GENERATED_DIR, 'led-placements-data.ts'), 'utf-8'
+    path.join(BOARD_CONSTANTS_GENERATED, 'led-placements-data.ts'), 'utf-8'
   );
   const boardDataContent = fs.readFileSync(
     path.join(WEB_LIB, 'board-data.ts'), 'utf-8'

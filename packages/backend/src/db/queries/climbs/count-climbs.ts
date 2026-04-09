@@ -1,7 +1,7 @@
 import { sql, and } from 'drizzle-orm';
 import { db } from '../../client';
 import { boardClimbs, boardClimbStats } from '@boardsesh/db/schema';
-import { createClimbFilters, type BoardRouteParams, type ClimbSearchParams, type SizeEdges } from '@boardsesh/db/queries';
+import { createClimbFilters, type BoardRouteParams, type ClimbSearchParams } from '@boardsesh/db/queries';
 
 /**
  * Counts the total number of climbs matching the search criteria.
@@ -17,10 +17,9 @@ import { createClimbFilters, type BoardRouteParams, type ClimbSearchParams, type
 export const countClimbs = async (
   params: BoardRouteParams,
   searchParams: ClimbSearchParams,
-  sizeEdges: SizeEdges,
   userId?: string,
 ): Promise<number> => {
-  const filters = createClimbFilters(params, searchParams, sizeEdges, userId);
+  const filters = createClimbFilters(params, searchParams, userId);
 
   const isDraftsQuery = !!searchParams.onlyDrafts;
 

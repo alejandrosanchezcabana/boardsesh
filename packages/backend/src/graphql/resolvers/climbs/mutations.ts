@@ -5,6 +5,7 @@ import { SUPPORTED_BOARDS } from '@boardsesh/shared-schema';
 import { db } from '../../../db/client';
 import * as dbSchema from '@boardsesh/db/schema';
 import { UNIFIED_TABLES, isValidBoardName } from '../../../db/queries/util/table-select';
+import { populateDenormalizedColumns } from '@boardsesh/db/queries';
 import { publishSocialEvent } from '../../../events';
 import { requireAuthenticated, applyRateLimit, validateInput } from '../shared/helpers';
 import {
@@ -107,6 +108,9 @@ export const climbMutations = {
       synced: false,
       syncError: null,
     });
+
+    // Populate denormalized required_set_ids and compatible_size_ids
+    await populateDenormalizedColumns(db, validated.boardType, [uuid]);
 
     await publishSocialEvent({
       type: 'climb.created',

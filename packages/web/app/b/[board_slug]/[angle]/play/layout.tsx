@@ -3,7 +3,7 @@ import { PropsWithChildren } from 'react';
 import { notFound } from 'next/navigation';
 import { BoardDetails } from '@/app/lib/types';
 import { resolveBoardBySlug, boardToRouteParams } from '@/app/lib/board-slug-utils';
-import { getBoardDetails } from '@/app/lib/__generated__/product-sizes-data';
+import { getBoardDetails } from '@/app/lib/board-constants';
 import { getMoonBoardDetails } from '@/app/lib/moonboard-config';
 import PlayLayoutClient from '@/app/[board_name]/[layout_id]/[size_id]/[set_ids]/[angle]/play/layout-client';
 

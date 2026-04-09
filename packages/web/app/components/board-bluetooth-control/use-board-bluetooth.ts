@@ -87,7 +87,7 @@ export function useBoardBluetooth({ boardDetails, onConnectionChange }: UseBoard
         }
 
         if (!cachedGetLedPlacements) {
-          const mod = await import('@/app/lib/__generated__/led-placements-data');
+          const mod = await import('@boardsesh/board-constants/led-placements');
           cachedGetLedPlacements = mod.getLedPlacements as GetLedPlacementsFn;
         }
         const getLedPlacementsFn = cachedGetLedPlacements;

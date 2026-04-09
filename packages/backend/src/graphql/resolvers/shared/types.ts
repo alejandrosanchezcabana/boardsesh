@@ -1,6 +1,5 @@
 import type { Climb } from '@boardsesh/shared-schema';
 import type { ParsedBoardRouteParameters, ClimbSearchParams } from '../../../db/queries/climbs/index';
-import type { SizeEdges } from '../../../db/queries/util/product-sizes-data';
 
 /**
  * Context object passed from searchClimbs query to ClimbSearchResult field resolvers.
@@ -9,7 +8,6 @@ import type { SizeEdges } from '../../../db/queries/util/product-sizes-data';
 export type ClimbSearchContext = {
   params: ParsedBoardRouteParameters;
   searchParams: ClimbSearchParams;
-  sizeEdges: SizeEdges;
   userId: string | undefined;
   // Cached results to avoid duplicate queries when multiple fields are requested
   _cachedClimbs?: Climb[];
