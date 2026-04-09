@@ -3,8 +3,9 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { useSnackbar } from '@/app/components/providers/snackbar-provider';
 import { track } from '@vercel/analytics';
+import * as Sentry from '@sentry/nextjs';
 import { BoardDetails } from '@/app/lib/types';
-import { getAuroraBluetoothPacket } from './bluetooth-aurora';
+import { getAuroraBluetoothPacket, parseApiLevel } from './bluetooth-aurora';
 import { getMoonboardBluetoothPacket } from './bluetooth-moonboard';
 import { HoldRenderData } from '../board-renderer/types';
 import { useWakeLock } from './use-wake-lock';
@@ -54,8 +55,9 @@ export function useBoardBluetooth({ boardDetails, onConnectionChange }: UseBoard
   // Prevent device from sleeping while connected to the board
   useWakeLock(isConnected);
 
-  // Store the BLE adapter across renders
+  // Store the BLE adapter and API level across renders
   const adapterRef = useRef<BluetoothAdapter | null>(null);
+  const apiLevelRef = useRef<number>(3);
   const unsubDisconnectRef = useRef<(() => void) | null>(null);
 
   // Handler for device disconnection
@@ -106,11 +108,24 @@ export function useBoardBluetooth({ boardDetails, onConnectionChange }: UseBoard
           return false;
         }
 
-        const bluetoothPacket = getAuroraBluetoothPacket(
-          framesToSend,
-          placementPositions,
-          boardDetails.board_name,
-        );
+        // getAuroraBluetoothPacket throws if any placements can't be resolved.
+        // Catch separately so we can report to Sentry without crashing the UI.
+        let bluetoothPacket: Uint8Array;
+        try {
+          bluetoothPacket = getAuroraBluetoothPacket(
+            framesToSend,
+            placementPositions,
+            boardDetails.board_name,
+            apiLevelRef.current,
+          );
+        } catch (error) {
+          Sentry.captureException(error, {
+            tags: { board: boardDetails.board_name, layout: boardDetails.layout_id, size: boardDetails.size_id },
+          });
+          console.error('[BLE] Packet generation failed:', error);
+          showMessage('This climb is not compatible with your board.', 'error');
+          return false;
+        }
 
         await adapterRef.current.write(bluetoothPacket, signal);
         return true;
@@ -152,8 +167,9 @@ export function useBoardBluetooth({ boardDetails, onConnectionChange }: UseBoard
           await adapterRef.current.disconnect();
         }
 
-        // Connect via the adapter
-        await adapter.requestAndConnect();
+        // Connect via the adapter and parse API level from device name
+        const connection = await adapter.requestAndConnect();
+        apiLevelRef.current = parseApiLevel(connection.deviceName);
 
         // Set up disconnection listener
         unsubDisconnectRef.current = adapter.onDisconnect(handleDisconnection);

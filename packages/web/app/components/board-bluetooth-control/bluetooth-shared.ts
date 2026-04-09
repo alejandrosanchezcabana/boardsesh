@@ -12,16 +12,24 @@ export const splitMessages = (buffer: Uint8Array) =>
     buffer.slice(i * MAX_BLUETOOTH_MESSAGE_SIZE, (i + 1) * MAX_BLUETOOTH_MESSAGE_SIZE),
   );
 
+// Small delay between write-without-response chunks to avoid overwhelming the BLE stack.
+// Matches the pacing strategy used in the Capacitor adapter.
+const INTER_CHUNK_DELAY_MS = 5;
+const delay = (ms: number) => new Promise<void>((resolve) => setTimeout(resolve, ms));
+
 export const writeCharacteristicSeries = async (
   characteristic: BluetoothRemoteGATTCharacteristic,
   messages: Uint8Array[],
   signal?: AbortSignal,
 ) => {
-  for (const message of messages) {
+  for (let i = 0; i < messages.length; i++) {
     if (signal?.aborted) {
       throw new DOMException('Write aborted', 'AbortError');
     }
-    await characteristic.writeValue(new Uint8Array(message));
+    if (i > 0) {
+      await delay(INTER_CHUNK_DELAY_MS);
+    }
+    await characteristic.writeValueWithoutResponse(new Uint8Array(messages[i]));
   }
 };
 

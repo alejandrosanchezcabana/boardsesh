@@ -132,6 +132,7 @@ export class SyncRunner {
     for (const cred of credentials) {
       try {
         await this.syncSingleCredential(cred);
+        await new Promise((resolve) => setTimeout(resolve, 10000));
         results.successful++;
         this.log(`[SyncRunner] ✓ Successfully synced user ${cred.userId} for ${cred.boardType}`);
       } catch (error) {
