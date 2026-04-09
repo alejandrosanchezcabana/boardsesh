@@ -17,7 +17,7 @@ vi.mock('@/app/lib/moonboard-config', () => ({
 
 import { getAuroraBluetoothPacket as getBluetoothPacket } from '../bluetooth-aurora';
 import { splitMessages } from '../bluetooth-shared';
-import { getLedPlacements } from '../../../lib/__generated__/led-placements-data';
+import { getLedPlacements } from '@boardsesh/board-constants/led-placements';
 import type { BoardName } from '@/app/lib/types';
 
 // ---- Helpers ----
