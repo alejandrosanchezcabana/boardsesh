@@ -14,6 +14,7 @@ import ClimbsList from '@/app/components/board-page/climbs-list';
 import { FavoritesProvider } from '@/app/components/climb-actions/favorites-batch-context';
 import { PlaylistsProvider } from '@/app/components/climb-actions/playlists-batch-context';
 import { getDefaultAngleForBoard } from '@/app/lib/board-config-for-playlist';
+import { useOptionalQueueActions } from '@/app/components/graphql-queue';
 import type { UserBoard } from '@boardsesh/shared-schema';
 import type { Climb } from '@/app/lib/types';
 
@@ -89,6 +90,7 @@ export default function MultiboardClimbList({
     angle: actionsAngle,
     climbUuids,
   });
+  const queueActions = useOptionalQueueActions();
 
   // Default climb navigation via redirect API
   const defaultNavigateToClimb = useCallback(async (climb: Climb) => {
@@ -170,6 +172,7 @@ export default function MultiboardClimbList({
               hasMore={hasMore}
               onClimbSelect={handleClimbSelect}
               onLoadMore={onLoadMore}
+              addToQueue={queueActions?.addToQueue}
               header={header}
               headerInline={headerInline}
               hideEndMessage={hideEndMessage}
