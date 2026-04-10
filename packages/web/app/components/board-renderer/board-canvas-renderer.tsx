@@ -49,14 +49,11 @@ const BoardCanvasRenderer = React.memo(function BoardCanvasRenderer({
 
   useEffect(() => {
     const canvas = canvasRef.current;
+    // When !workerSupported, the render body below already returns
+    // BoardImageLayers, so there is no canvas element and this effect exits
+    // here. The workerSupported dep still forces effect re-evaluation if the
+    // flag flips mid-session.
     if (!canvas) return;
-
-    // If worker rendering is unavailable (or has been disabled after a prior
-    // worker load/runtime failure), skip worker calls.
-    if (!workerSupported) {
-      setFailed(true);
-      return;
-    }
 
     let cancelled = false;
     // Capture context and time at effect start so metrics are never stale

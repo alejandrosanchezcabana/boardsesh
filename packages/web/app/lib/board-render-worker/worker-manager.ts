@@ -13,6 +13,7 @@ import type { HoldRenderData } from '@/app/components/board-renderer/types';
 import { getImageUrl } from '@/app/components/board-renderer/util';
 import { HOLD_STATE_MAP, THUMBNAIL_WIDTH } from '@/app/components/board-renderer/types';
 import { isCapacitor } from '@/app/lib/ble/capacitor-utils';
+import { trackWorkerRenderingDisabled } from '@/app/lib/rendering-metrics';
 
 // LRU cache for rendered bitmaps
 const CACHE_MAX = 150;
@@ -72,6 +73,7 @@ function getWorkerPool(): Worker[] {
       } catch (err) {
         workerPoolDisabled = true;
         markCanvasNotReady();
+        trackWorkerRenderingDisabled('construct-failed');
         throw err;
       }
       w.onmessage = (event: MessageEvent<RenderResponse>) => {
@@ -96,6 +98,7 @@ function getWorkerPool(): Worker[] {
         // when worker loading is broken in this runtime.
         workerPoolDisabled = true;
         markCanvasNotReady();
+        trackWorkerRenderingDisabled('load-failed');
 
         // Only reject requests assigned to this worker, not the entire pool
         const ids = workerRequestIds.get(workerIdx);
