@@ -238,6 +238,8 @@ const ClimbListItem: React.FC<ClimbListItemProps> = React.memo(
     // value without requiring onThumbnailClick in the memo comparator.
     const onThumbnailClickRef = useRef(onThumbnailClick);
     onThumbnailClickRef.current = onThumbnailClick;
+    const onNavigateRef = useRef(onNavigate);
+    onNavigateRef.current = onNavigate;
 
     // Clear pending click timeout on unmount to prevent stale callbacks
     useEffect(() => {
@@ -345,7 +347,13 @@ const ClimbListItem: React.FC<ClimbListItemProps> = React.memo(
     // Always attached (not conditional) because onThumbnailClick is excluded from
     // the memo comparator; a render-time conditional would go stale.
     const handleThumbnailClick = useCallback((e: React.MouseEvent) => {
-      if (!onThumbnailClickRef.current) return;
+      if (!onThumbnailClickRef.current) {
+        if (onNavigateRef.current) {
+          e.stopPropagation();
+          onNavigateRef.current();
+        }
+        return;
+      }
       e.stopPropagation();
       if (clickTimeoutRef.current) clearTimeout(clickTimeoutRef.current);
       clickTimeoutRef.current = setTimeout(() => {
@@ -519,9 +527,7 @@ const ClimbListItem: React.FC<ClimbListItemProps> = React.memo(
                 boardDetails={boardDetails}
                 currentClimb={climb}
                 pathname={pathname}
-                enableNavigation={!disableThumbnailNavigation}
                 preferImageLayers={preferImageLayers}
-                onNavigate={onNavigate}
               />
               <HeartAnimationOverlay visible={showHeart} onAnimationEnd={dismissHeart} size={32} />
             </div>

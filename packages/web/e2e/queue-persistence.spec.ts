@@ -116,8 +116,8 @@ test.describe('Queue Persistence - Local Mode', () => {
     await verifyQueueShowsClimb(page, climbName, 15000);
   });
 
-  test('clicking global bar thumbnail should navigate back to board', async ({ page }) => {
-    test.slow(); // Queue setup + navigation + thumbnail click + board route load
+  test('clicking global bar thumbnail should keep current route and open play drawer context', async ({ page }) => {
+    test.slow(); // Queue setup + navigation + thumbnail click
     const climbName = await addClimbToQueue(page);
 
     // Navigate to home via bottom tab bar (client-side navigation preserves queue state)
@@ -127,13 +127,13 @@ test.describe('Queue Persistence - Local Mode', () => {
     // Verify climb is still shown before clicking
     await verifyQueueShowsClimb(page, climbName);
 
-    // Click the thumbnail link within the queue bar (not the bar itself, which opens the play drawer)
+    // Click the thumbnail button within the queue bar
     const queueBar = page.locator(queueControlBar);
-    const thumbnailLink = queueBar.locator('[data-testid="climb-thumbnail-link"]');
-    await thumbnailLink.click();
+    const thumbnailButton = queueBar.getByRole('button').first();
+    await thumbnailButton.click();
 
-    // Verify we're back on a board page with the same climb
-    await expect(page).toHaveURL(/\/(kilter|tension)\//, { timeout: 10000 });
+    // Route should remain stable; thumbnail should activate/open play context instead of navigating to climb info.
+    await expect(page).toHaveURL('/', { timeout: 10000 });
     await verifyQueueShowsClimb(page, climbName, 15000);
   });
 });

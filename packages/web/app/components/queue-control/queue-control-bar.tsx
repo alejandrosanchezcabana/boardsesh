@@ -94,6 +94,7 @@ const QueueControlBar: React.FC<QueueControlBarProps> = ({ boardDetails, angle }
   }, []);
 
   const handleCloseDrawer = useCallback(() => setActiveDrawer('none'), []);
+  const handleQueueClimbNavigate = useCallback(() => setActiveDrawer('play'), []);
 
   const isViewPage = pathname.includes('/view/');
   const isListPage = pathname.includes('/list');
@@ -110,6 +111,14 @@ const QueueControlBar: React.FC<QueueControlBarProps> = ({ boardDetails, angle }
     endSession,
     disconnect,
   } = useQueueActions();
+  const handleThumbnailClick = useCallback(() => {
+    if (!currentClimb || viewOnlyMode) return;
+    const currentQueueItem = queue.find((item) => item.climb.uuid === currentClimb.uuid);
+    if (currentQueueItem) {
+      setCurrentClimbQueueItem(currentQueueItem);
+    }
+    setActiveDrawer('play');
+  }, [currentClimb, viewOnlyMode, queue, setCurrentClimbQueueItem]);
 
   const { showMessage } = useSnackbar();
   const [showCancelConfirm, setShowCancelConfirm] = useState(false);
@@ -401,8 +410,7 @@ const QueueControlBar: React.FC<QueueControlBarProps> = ({ boardDetails, angle }
                       boardDetails={boardDetails}
                       currentClimb={currentClimb}
                       pathname={pathname}
-                      enableNavigation={true}
-                      onNavigate={handleCloseDrawer}
+                      onClick={handleThumbnailClick}
                     />
                   </div>
 
@@ -471,8 +479,7 @@ const QueueControlBar: React.FC<QueueControlBarProps> = ({ boardDetails, angle }
                       boardDetails={boardDetails}
                       currentClimb={currentClimb}
                       pathname={pathname}
-                      enableNavigation={true}
-                      onNavigate={handleCloseDrawer}
+                      onClick={handleThumbnailClick}
                     />
                   </div>
 
@@ -619,7 +626,7 @@ const QueueControlBar: React.FC<QueueControlBarProps> = ({ boardDetails, angle }
           )
         }
       >
-        <QueueList ref={queueListRef} boardDetails={boardDetails} onClimbNavigate={handleCloseDrawer} active={activeDrawer === 'queue'} />
+        <QueueList ref={queueListRef} boardDetails={boardDetails} onClimbNavigate={handleQueueClimbNavigate} active={activeDrawer === 'queue'} />
       </SwipeableDrawer>
 
       <PlayViewDrawer

@@ -1,19 +1,17 @@
 import React, { useMemo } from 'react';
-import Link from 'next/link';
 
 import { BoardDetails, Climb } from '@/app/lib/types';
 import BoardImageLayers from '@/app/components/board-renderer/board-image-layers';
 import BoardCanvasRenderer from '@/app/components/board-renderer/board-canvas-renderer';
 import { useCanvasRendererReady } from '@/app/lib/board-render-worker/worker-manager';
-import { getContextAwareClimbViewUrl } from '@/app/lib/url-utils';
 
 type ClimbThumbnailProps = {
   currentClimb: Climb | null;
   boardDetails: BoardDetails;
   /** Current pathname — passed from parent to avoid per-instance usePathname() context lookups. */
   pathname: string;
-  enableNavigation?: boolean;
-  onNavigate?: () => void;
+  /** Callback for thumbnail presses when an active-climb/play-drawer flow is desired. */
+  onClick?: () => void;
   maxHeight?: string;
   preferImageLayers?: boolean;
 };
@@ -22,8 +20,7 @@ const ClimbThumbnail: React.FC<ClimbThumbnailProps> = React.memo(({
   boardDetails,
   currentClimb,
   pathname,
-  enableNavigation = false,
-  onNavigate,
+  onClick,
   maxHeight,
   preferImageLayers = false,
 }) => {
@@ -60,22 +57,23 @@ const ClimbThumbnail: React.FC<ClimbThumbnailProps> = React.memo(({
     }
   }
 
-  if (enableNavigation && currentClimb) {
-    const climbViewUrl = getContextAwareClimbViewUrl(
-      pathname,
-      boardDetails,
-      currentClimb.angle,
-      currentClimb.uuid,
-      currentClimb.name,
-    );
-
+  if (onClick && currentClimb) {
     return (
-      <div>
-        <Link href={climbViewUrl} prefetch={false} onClick={() => onNavigate?.()} data-testid="climb-thumbnail-link">
-          {renderContent}
-        </Link>
+      <div
+        onClick={onClick}
+        style={{ cursor: 'pointer' }}
+        role="button"
+        tabIndex={0}
+        onKeyDown={(e) => {
+          if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault();
+            onClick();
+          }
+        }}
+      >
+        {renderContent}
       </div>
-    );
+    )
   }
 
   return <div>{renderContent}</div>;
@@ -100,10 +98,9 @@ const ClimbThumbnail: React.FC<ClimbThumbnailProps> = React.memo(({
 
   return (
     prev.pathname === next.pathname &&
-    prev.enableNavigation === next.enableNavigation &&
+    prev.onClick === next.onClick &&
     prev.maxHeight === next.maxHeight &&
     prev.preferImageLayers === next.preferImageLayers
-    // onNavigate intentionally excluded — callback stability not guaranteed
   );
 });
 

@@ -1,19 +1,9 @@
 import { describe, it, expect, vi } from 'vitest';
-import { render, screen } from '@testing-library/react';
+import { fireEvent, render, screen } from '@testing-library/react';
 import React from 'react';
 import type { BoardDetails, Climb } from '@/app/lib/types';
 
 let mockPathname = '/b/moonrise-gym/40/list';
-
-// usePathname is no longer called inside ClimbThumbnail — pathname is passed as a prop.
-
-vi.mock('next/link', () => ({
-  default: ({ href, children, prefetch: _prefetch, ...rest }: { href: string; children: React.ReactNode; prefetch?: boolean }) => (
-    <a href={href} {...rest}>
-      {children}
-    </a>
-  ),
-}));
 
 import ClimbThumbnail from '../climb-thumbnail';
 
@@ -52,23 +42,15 @@ const climb = {
 } as Climb;
 
 describe('ClimbThumbnail', () => {
-  it('preserves board-slug URL context on /b routes', () => {
-    mockPathname = '/b/moonrise-gym/40/list';
-
-    render(<ClimbThumbnail boardDetails={boardDetails} currentClimb={climb} pathname={mockPathname} enableNavigation />);
-
-    const link = screen.getByTestId('climb-thumbnail-link');
-    expect(link.getAttribute('href')).toBe('/b/moonrise-gym/40/view/moon-landing-ABC123');
+  it('fires onClick when a climb is present', () => {
+    const onClick = vi.fn();
+    render(<ClimbThumbnail boardDetails={boardDetails} currentClimb={climb} pathname={mockPathname} onClick={onClick} />);
+    fireEvent.click(screen.getByRole('button'));
+    expect(onClick).toHaveBeenCalledOnce();
   });
 
-  it('falls back to canonical route format outside /b routes', () => {
-    mockPathname = '/kilter/homewall/8x12-main/main-kicker_aux-kicker/40/list';
-
-    render(<ClimbThumbnail boardDetails={boardDetails} currentClimb={climb} pathname={mockPathname} enableNavigation />);
-
-    const link = screen.getByTestId('climb-thumbnail-link');
-    expect(link.getAttribute('href')).toBe(
-      '/kilter/homewall/8x12-main/main-kicker_aux-kicker/40/view/moon-landing-ABC123',
-    );
+  it('does not expose a button when there is no climb', () => {
+    render(<ClimbThumbnail boardDetails={boardDetails} currentClimb={null} pathname={mockPathname} onClick={vi.fn()} />);
+    expect(screen.queryByRole('button')).toBeNull();
   });
 });

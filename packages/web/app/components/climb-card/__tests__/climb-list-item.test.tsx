@@ -501,5 +501,22 @@ describe('ClimbListItem', () => {
 
       vi.useRealTimers();
     });
+
+    it('falls back to onNavigate when onThumbnailClick is not provided', () => {
+      const onNavigate = vi.fn();
+      render(
+        <ClimbListItem
+          pathname={defaultPathname}
+          isDark={defaultIsDark}
+          climb={makeClimb()}
+          boardDetails={makeBoardDetails()}
+          onNavigate={onNavigate}
+        />,
+      );
+
+      const thumbnail = screen.getByTestId('climb-thumbnail').parentElement!;
+      fireEvent.click(thumbnail);
+      expect(onNavigate).toHaveBeenCalledOnce();
+    });
   });
 });

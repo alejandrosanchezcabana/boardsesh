@@ -32,6 +32,7 @@ type QueueClimbListItemProps = {
   onTickClick: (climb: Climb) => void;
   onOpenActions?: (climb: Climb) => void;
   onOpenPlaylistSelector?: (climb: Climb) => void;
+  onThumbnailActivate?: () => void;
   isEditMode?: boolean;
   isSelected?: boolean;
   onToggleSelect?: (uuid: string) => void;
@@ -49,6 +50,7 @@ const QueueClimbListItem: React.FC<QueueClimbListItemProps> = ({
   onTickClick,
   onOpenActions,
   onOpenPlaylistSelector,
+  onThumbnailActivate,
   isEditMode = false,
   isSelected = false,
   onToggleSelect,
@@ -106,6 +108,12 @@ const QueueClimbListItem: React.FC<QueueClimbListItemProps> = ({
     }
   }, [isEditMode, setCurrentClimbQueueItem, item]);
 
+  const handleThumbnailClick = useCallback(() => {
+    if (isEditMode) return;
+    setCurrentClimbQueueItem(item);
+    onThumbnailActivate?.();
+  }, [isEditMode, setCurrentClimbQueueItem, item, onThumbnailActivate]);
+
   // Drag-and-drop setup
   useEffect(() => {
     if (isEditMode) return;
@@ -162,7 +170,8 @@ const QueueClimbListItem: React.FC<QueueClimbListItemProps> = ({
       isDark={isDark}
       selected={isCurrent}
       disableSwipe={isEditMode}
-      disableThumbnailNavigation={isEditMode}
+      disableThumbnailNavigation
+      onThumbnailClick={handleThumbnailClick}
       onSelect={isEditMode ? () => onToggleSelect?.(item.uuid) : handleSelect}
       swipeRightAction={swipeRightAction}
       afterTitleSlot={afterTitleSlot}

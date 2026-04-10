@@ -316,7 +316,7 @@ const PlayViewDrawer: React.FC<PlayViewDrawerProps> = ({
   }, [isQueueOpen]);
   const handleQueueClimbNavigate = useCallback(() => {
     setIsQueueOpen(false);
-    setActiveDrawer('none');
+    setActiveDrawer('play');
   }, [setActiveDrawer]);
 
   const [drawerOpen, setDrawerOpen] = useState(false);
