@@ -94,6 +94,7 @@ const QueueControlBar: React.FC<QueueControlBarProps> = ({ boardDetails, angle }
   }, []);
 
   const handleCloseDrawer = useCallback(() => setActiveDrawer('none'), []);
+  const handleQueueClimbNavigate = useCallback(() => setActiveDrawer('play'), []);
 
   const isViewPage = pathname.includes('/view/');
   const isListPage = pathname.includes('/list');
@@ -625,7 +626,7 @@ const QueueControlBar: React.FC<QueueControlBarProps> = ({ boardDetails, angle }
           )
         }
       >
-        <QueueList ref={queueListRef} boardDetails={boardDetails} onClimbNavigate={handleCloseDrawer} active={activeDrawer === 'queue'} />
+        <QueueList ref={queueListRef} boardDetails={boardDetails} onClimbNavigate={handleQueueClimbNavigate} active={activeDrawer === 'queue'} />
       </SwipeableDrawer>
 
       <PlayViewDrawer
