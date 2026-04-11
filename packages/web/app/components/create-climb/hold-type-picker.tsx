@@ -116,7 +116,7 @@ export default function HoldTypePicker({
       }}
     >
       <Box
-        role="menu"
+        role="toolbar"
         aria-label="Hold type"
         sx={{
           display: 'flex',
@@ -181,7 +181,6 @@ function Swatch({ label, color, isActive, isDisabled, isClear, onClick }: Swatch
         padding: `${themeTokens.spacing[1]}px`,
         borderRadius: `${themeTokens.borderRadius.md}px`,
         opacity: isDisabled ? 0.35 : 1,
-        cursor: isDisabled ? 'not-allowed' : 'pointer',
         transition: themeTokens.transitions.fast,
         '&:hover': isDisabled
           ? undefined

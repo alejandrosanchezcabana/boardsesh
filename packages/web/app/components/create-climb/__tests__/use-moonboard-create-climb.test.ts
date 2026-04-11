@@ -125,6 +125,25 @@ describe('useMoonBoardCreateClimb', () => {
 
       expect(result.current.litUpHoldsMap[300]).toBeUndefined();
     });
+
+    it('allows re-selecting the same state on a hold already at the limit', () => {
+      const { result } = renderHook(() => useMoonBoardCreateClimb());
+
+      act(() => {
+        result.current.setHoldState(100, 'STARTING');
+      });
+      act(() => {
+        result.current.setHoldState(200, 'STARTING');
+      });
+      // Re-set hold 100 to STARTING — should still apply because the hold is
+      // already counted toward the cap (no new hold is being added).
+      act(() => {
+        result.current.setHoldState(100, 'STARTING');
+      });
+
+      expect(result.current.litUpHoldsMap[100].state).toBe('STARTING');
+      expect(result.current.startingCount).toBe(2);
+    });
   });
 
   describe('isValid', () => {

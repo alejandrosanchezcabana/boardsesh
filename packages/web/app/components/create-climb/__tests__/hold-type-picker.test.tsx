@@ -1,6 +1,53 @@
 import { afterEach, describe, it, expect, vi } from 'vitest';
 import React, { useRef, useEffect } from 'react';
 import { render, screen, cleanup, fireEvent } from '@testing-library/react';
+
+// Mock HOLD_STATE_MAP so picker color assertions don't depend on the real LED
+// colors — if production LED hex values change, these tests should keep passing
+// because the picker logic is what's under test, not the colors themselves.
+vi.mock('../../board-renderer/types', () => ({
+  HOLD_STATE_MAP: {
+    kilter: {
+      42: { name: 'STARTING', color: '#11AA11' },
+      43: { name: 'HAND', color: '#11AAAA' },
+      44: { name: 'FINISH', color: '#AA11AA' },
+      45: { name: 'FOOT', color: '#AA8800' },
+    },
+    tension: {
+      1: { name: 'STARTING', displayColor: '#22BB22', color: '#11AA11' },
+      2: { name: 'HAND', displayColor: '#2222BB', color: '#1111AA' },
+      3: { name: 'FINISH', color: '#AA1111' },
+      4: { name: 'FOOT', color: '#AA11AA' },
+    },
+    moonboard: {
+      42: { name: 'STARTING', color: '#11AA11', displayColor: '#33CC33' },
+      43: { name: 'HAND', color: '#1111AA', displayColor: '#3333CC' },
+      44: { name: 'FINISH', color: '#AA1111', displayColor: '#CC2222' },
+      // BLE-preview-only entries that should NOT show up in the picker.
+      45: { name: 'FOOT', color: '#11AAAA' },
+      46: { name: 'AUX', color: '#FFE066' },
+    },
+    decoy: {
+      1: { name: 'STARTING', color: '#11AA11' },
+      2: { name: 'HAND', color: '#1111AA' },
+      3: { name: 'FINISH', color: '#AA1111' },
+      4: { name: 'FOOT', color: '#AA11AA' },
+    },
+    touchstone: {
+      1: { name: 'STARTING', color: '#11AA11' },
+      2: { name: 'HAND', color: '#1111AA' },
+      3: { name: 'FINISH', color: '#AA1111' },
+      4: { name: 'FOOT', color: '#AA11AA' },
+    },
+    grasshopper: {
+      1: { name: 'STARTING', color: '#11AA11' },
+      2: { name: 'HAND', color: '#1111AA' },
+      3: { name: 'FINISH', color: '#AA1111' },
+      4: { name: 'FOOT', color: '#AA11AA' },
+    },
+  },
+}));
+
 import HoldTypePicker, { buildOptions } from '../hold-type-picker';
 
 // Note: MUI Popover prints "anchorEl is invalid" warnings during the brief
@@ -83,14 +130,16 @@ describe('buildOptions', () => {
 
   it('uses board-specific colors', () => {
     const kilter = buildOptions('kilter');
+    const tension = buildOptions('tension');
     const moonboard = buildOptions('moonboard');
 
-    // Kilter STARTING color from HOLD_STATE_MAP
-    expect(kilter.find((o) => o.state === 'STARTING')?.color).toBe('#00FF00');
-    // Kilter FOOT color
-    expect(kilter.find((o) => o.state === 'FOOT')?.color).toBe('#FFAA00');
-    // MoonBoard STARTING uses displayColor
-    expect(moonboard.find((o) => o.state === 'STARTING')?.color).toBe('#44FF44');
+    // Kilter has no displayColor, so the picker uses the raw color.
+    expect(kilter.find((o) => o.state === 'STARTING')?.color).toBe('#11AA11');
+    expect(kilter.find((o) => o.state === 'FOOT')?.color).toBe('#AA8800');
+    // Tension prefers displayColor over color when present.
+    expect(tension.find((o) => o.state === 'STARTING')?.color).toBe('#22BB22');
+    // MoonBoard also has a displayColor that should win over color.
+    expect(moonboard.find((o) => o.state === 'STARTING')?.color).toBe('#33CC33');
   });
 });
 
