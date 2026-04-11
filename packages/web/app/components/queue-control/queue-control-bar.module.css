@@ -124,6 +124,47 @@
   }
 }
 
+/* Transient "swipe left to dismiss" hint — floats above the tick bar for a
+   few seconds after tick mode opens, then fades out. Uses a small pill with
+   a blurred backdrop so it reads as a system hint without competing with
+   the action buttons below. */
+.swipeHint {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: fit-content;
+  max-width: calc(100% - 24px);
+  margin: 0 auto 6px;
+  padding: 4px 12px;
+  border-radius: 999px;
+  background-color: rgba(0, 0, 0, 0.55);
+  color: rgba(255, 255, 255, 0.92);
+  font-size: 11px;
+  font-style: italic;
+  letter-spacing: 0.2px;
+  white-space: nowrap;
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  pointer-events: none;
+  user-select: none;
+  opacity: 0;
+  transform: translateY(4px);
+  transition: opacity 300ms ease-out, transform 300ms ease-out;
+  will-change: opacity, transform;
+}
+
+.swipeHintVisible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+:global(html[data-theme="dark"]) .swipeHint {
+  background-color: rgba(255, 255, 255, 0.1);
+  color: rgba(255, 255, 255, 0.85);
+  border-color: rgba(255, 255, 255, 0.12);
+}
+
 /* Tick-mode comment bar — sits above the main control bar so the queue bar
    doesn't reflow when the comment button is tapped. Lines up visually with
    the main card padding + desktop max-width. */

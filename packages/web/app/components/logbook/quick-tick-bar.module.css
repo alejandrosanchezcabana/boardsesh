@@ -1,7 +1,5 @@
 .tickBar {
   display: flex;
-  flex-direction: column;
-  gap: var(--space-1, 4px);
   min-width: 0;
   flex: 1;
   animation: tickBarEnter 150ms ease-out;
@@ -28,25 +26,15 @@
   min-width: 0;
 }
 
-.ratingStack {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  gap: var(--space-1, 4px);
+.rating {
   flex-shrink: 0;
-  min-width: 0;
   margin-left: auto;
 }
 
-.hint {
-  font-size: 11px;
-  font-style: italic;
-  user-select: none;
-  pointer-events: none;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  min-width: 0;
+/* Match the visual weight of the adjacent CheckOutlined / CloseOutlined icons
+   (24px) so the stars line up with the action buttons. */
+.rating :global(.MuiRating-icon) {
+  font-size: 22px;
 }
 
 .gradeLabel {

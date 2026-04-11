@@ -149,6 +149,10 @@ const QueueControlBar: React.FC<QueueControlBarProps> = ({ boardDetails, angle }
   const handleTickCommentFocus = useCallback(() => setTickCommentFocused(true), []);
   const handleTickCommentBlur = useCallback(() => setTickCommentFocused(false), []);
 
+  // Transient "swipe left to dismiss" hint that floats above the queue
+  // control bar whenever the tick bar opens. Visible for 3s then fades out.
+  const [swipeHintVisible, setSwipeHintVisible] = useState(false);
+
   // Note: the tick bar intentionally stays open when the active climb changes
   // (e.g. party session navigation). QuickTickBar snapshots its target climb
   // internally so the user can finish ticking the climb they opened the bar
@@ -280,6 +284,18 @@ const QueueControlBar: React.FC<QueueControlBarProps> = ({ boardDetails, angle }
       setTickCommentOpen(false);
       setTickCommentFocused(false);
     }
+  }, [tickBarActive]);
+
+  // Show the swipe hint every time the tick bar opens, then auto-fade it
+  // after 3 seconds so it stays out of the user's way.
+  useEffect(() => {
+    if (!tickBarActive) {
+      setSwipeHintVisible(false);
+      return;
+    }
+    setSwipeHintVisible(true);
+    const timer = setTimeout(() => setSwipeHintVisible(false), 3000);
+    return () => clearTimeout(timer);
   }, [tickBarActive]);
 
   const { swipeHandlers, swipeOffset, isAnimating, animationDirection, enterDirection, clearEnterAnimation } = useCardSwipeNavigation({
@@ -488,6 +504,18 @@ const QueueControlBar: React.FC<QueueControlBarProps> = ({ boardDetails, angle }
                 : 'Offline. Changes will sync when you reconnect.'
               : 'Offline'}
           </span>
+        </div>
+      )}
+      {/* Transient "swipe left to dismiss" hint — floats above the queue
+          control bar the first 3 seconds after tick mode opens, then fades
+          away so it doesn't interfere with the stars or action buttons. */}
+      {tickBarActive && (
+        <div
+          className={`${styles.swipeHint} ${swipeHintVisible ? styles.swipeHintVisible : ''}`}
+          aria-hidden="true"
+          data-testid="quick-tick-swipe-hint"
+        >
+          swipe left to dismiss
         </div>
       )}
       {/* Tick-mode comment bar — rendered above the main card so tapping the

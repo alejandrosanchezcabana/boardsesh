@@ -167,53 +167,43 @@ describe('QuickTickBar', () => {
   });
 
   describe('layout', () => {
-    it('renders the controls in the expected order: rating stack, comment toggle, grade, attempt, confirm — all clustered to the right', () => {
+    it('renders the controls in the expected order: rating, comment toggle, grade, attempt, confirm — all clustered to the right', () => {
       render(<QuickTickBar {...defaultProps} />);
 
       const rating = screen.getByTestId('quick-tick-rating');
-      const hint = screen.getByTestId('quick-tick-hint');
       const commentToggle = screen.getByRole('button', { name: /toggle comment/i });
       const gradeLabel = screen.getByTestId('quick-tick-grade');
       const attemptBtn = screen.getByTestId('quick-tick-attempt');
       const confirmBtn = screen.getByTestId('quick-tick-confirm');
 
-      // The rating sits inside a small stack with the swipe hint rendered as
-      // a byline directly underneath it. That stack is then a sibling of
-      // the comment toggle, grade label, attempt and confirm buttons inside
-      // the single flex row.
-      const ratingStack = rating.parentElement!;
-      expect(hint.parentElement).toBe(ratingStack);
-
-      const controls = ratingStack.parentElement!;
+      // Rating sits directly inside the single flex row alongside the
+      // comment toggle, grade label, attempt and confirm buttons. The
+      // "swipe left to dismiss" hint is no longer rendered here — it lives
+      // as a transient toast above the queue control bar instead.
+      const controls = rating.parentElement!;
       expect(commentToggle.parentElement).toBe(controls);
       expect(gradeLabel.parentElement).toBe(controls);
       expect(attemptBtn.parentElement).toBe(controls);
       expect(confirmBtn.parentElement).toBe(controls);
 
-      // Siblings of .controls must appear in this order: rating stack,
-      // comment toggle, grade label, attempt (X), confirm (tick). The
-      // grade sits immediately to the left of the attempt button and the
-      // confirm button is the final element.
+      // Siblings of .controls must appear in this order: rating, comment
+      // toggle, grade label, attempt (X), confirm (tick). The grade sits
+      // immediately to the left of the attempt button and the confirm
+      // button is the final element.
       const siblings = Array.from(controls.children) as HTMLElement[];
-      const stackIdx = siblings.indexOf(ratingStack);
+      const ratingIdx = siblings.indexOf(rating);
       const commentIdx = siblings.indexOf(commentToggle);
       const gradeIdx = siblings.indexOf(gradeLabel);
       const attemptIdx = siblings.indexOf(attemptBtn);
       const confirmIdx = siblings.indexOf(confirmBtn);
-      expect(stackIdx).toBeLessThan(commentIdx);
+      expect(ratingIdx).toBeLessThan(commentIdx);
       expect(commentIdx).toBeLessThan(gradeIdx);
       expect(gradeIdx).toBeLessThan(attemptIdx);
       expect(confirmIdx).toBe(attemptIdx + 1);
     });
 
-    it('shows the "swipe left to dismiss" hint text by default', () => {
+    it('does not render the swipe hint inline — the hint lives above the bar as a transient toast', () => {
       render(<QuickTickBar {...defaultProps} />);
-      const hint = screen.getByTestId('quick-tick-hint');
-      expect(hint.textContent).toMatch(/swipe left to dismiss/i);
-    });
-
-    it('hides the swipe hint when the comment field is open', () => {
-      render(<QuickTickBar {...defaultProps} commentOpen={true} />);
       expect(screen.queryByTestId('quick-tick-hint')).toBeNull();
     });
 

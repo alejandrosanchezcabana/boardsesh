@@ -5,6 +5,9 @@ import { useSwipeable } from 'react-swipeable';
 import IconButton from '@mui/material/IconButton';
 import Rating from '@mui/material/Rating';
 import Typography from '@mui/material/Typography';
+// NOTE: the "swipe left to dismiss" hint is intentionally NOT rendered here —
+// it lives above the queue control bar as a transient toast so it doesn't
+// push the stars out of alignment with the action buttons.
 import Menu from '@mui/material/Menu';
 import MenuItem from '@mui/material/MenuItem';
 import CloseOutlined from '@mui/icons-material/CloseOutlined';
@@ -275,30 +278,15 @@ export const QuickTickBar: React.FC<QuickTickBarProps> = ({
       data-testid="quick-tick-bar"
     >
       <div className={styles.controls}>
-        {/* The rating stack + comment button float to the right of the bar,
-            immediately next to the colourised V-grade, attempt (X) and
-            confirm (tick). The "swipe to dismiss" hint sits as a byline
-            directly underneath the stars. */}
-        <div className={styles.ratingStack}>
-          <Rating
-            value={quality}
-            onChange={(_, val) => setQuality(val)}
-            size="small"
-            max={5}
-            data-testid="quick-tick-rating"
-          />
-          {!commentOpen && (
-            <Typography
-              variant="caption"
-              component="span"
-              color="text.secondary"
-              className={styles.hint}
-              data-testid="quick-tick-hint"
-            >
-              swipe left to dismiss
-            </Typography>
-          )}
-        </div>
+        {/* Rating sits to the right of the bar, sized to match the adjacent
+            attempt (X) and confirm (tick) icon buttons. */}
+        <Rating
+          value={quality}
+          onChange={(_, val) => setQuality(val)}
+          max={5}
+          data-testid="quick-tick-rating"
+          className={styles.rating}
+        />
 
         <IconButton
           size="small"
