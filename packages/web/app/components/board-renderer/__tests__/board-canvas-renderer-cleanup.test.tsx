@@ -6,15 +6,31 @@ import type { BoardDetails } from '@/app/lib/types';
 
 // --- Mocks ---
 
-let resolveRenderBoard: (bitmap: ImageBitmap) => void;
+const {
+  isWorkerRenderingSupportedMock,
+  renderBoardMock,
+  setResolveRenderBoard,
+  getResolveRenderBoard,
+} = vi.hoisted(() => {
+  let resolveRenderBoard: ((bitmap: ImageBitmap) => void) | undefined;
+  return {
+    isWorkerRenderingSupportedMock: vi.fn(() => true),
+    renderBoardMock: vi.fn(
+      () =>
+        new Promise<ImageBitmap>((resolve) => {
+          resolveRenderBoard = resolve;
+        }),
+    ),
+    setResolveRenderBoard: (fn?: (bitmap: ImageBitmap) => void) => {
+      resolveRenderBoard = fn;
+    },
+    getResolveRenderBoard: () => resolveRenderBoard,
+  };
+});
 
 vi.mock('@/app/lib/board-render-worker/worker-manager', () => ({
-  renderBoard: vi.fn(
-    () =>
-      new Promise<ImageBitmap>((resolve) => {
-        resolveRenderBoard = resolve;
-      }),
-  ),
+  isWorkerRenderingSupported: isWorkerRenderingSupportedMock,
+  renderBoard: renderBoardMock,
 }));
 
 vi.mock('@/app/lib/rendering-metrics', () => ({
@@ -47,6 +63,8 @@ const mockBoardDetails: BoardDetails = {
 describe('BoardCanvasRenderer cleanup', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    setResolveRenderBoard(undefined);
+    isWorkerRenderingSupportedMock.mockReturnValue(true);
   });
 
   it('sets initial canvas dimensions from board details', () => {
@@ -96,9 +114,11 @@ describe('BoardCanvasRenderer cleanup', () => {
       height: 1350,
       close: vi.fn(),
     } as unknown as ImageBitmap;
+    const resolve = getResolveRenderBoard();
+    expect(resolve).toBeTypeOf('function');
 
     await act(async () => {
-      resolveRenderBoard(mockBitmap);
+      resolve?.(mockBitmap);
       // Allow microtask to flush
       await Promise.resolve();
     });
@@ -148,5 +168,21 @@ describe('BoardCanvasRenderer cleanup', () => {
     const expectedHeight = Math.round((200 * mockBoardDetails.boardHeight) / mockBoardDetails.boardWidth);
     expect(canvas.width).toBe(200);
     expect(canvas.height).toBe(expectedHeight);
+  });
+
+  it('falls back to image layers immediately when worker rendering is unavailable', () => {
+    isWorkerRenderingSupportedMock.mockReturnValue(false);
+
+    const { queryByTestId, container } = render(
+      <BoardCanvasRenderer
+        boardDetails={mockBoardDetails}
+        frames="p1r42p2r43"
+        mirrored={false}
+      />,
+    );
+
+    expect(queryByTestId('board-image-layers')).toBeTruthy();
+    expect(container.querySelector('canvas')).toBeNull();
+    expect(renderBoardMock).not.toHaveBeenCalled();
   });
 });

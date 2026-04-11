@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { renderHook } from '@testing-library/react';
+import { renderHook, act } from '@testing-library/react';
 import type { BoardDetails } from '@/app/lib/types';
 import type { RenderResponse } from '../board-render.worker';
 
@@ -18,6 +18,14 @@ vi.mock('@/app/components/board-renderer/util', () => ({
     (imageUrl: string, board: string, thumbnail?: boolean) =>
       `/images/${board}/${thumbnail ? 'thumbs/' : ''}${imageUrl}`,
   ),
+}));
+
+// Mock rendering-metrics so analytics calls don't hit @vercel/analytics during tests
+vi.mock('@/app/lib/rendering-metrics', () => ({
+  trackWorkerRenderingDisabled: vi.fn(),
+  trackRenderComplete: vi.fn(),
+  trackRenderError: vi.fn(),
+  trackListBatchRender: vi.fn(),
 }));
 
 // Mock HOLD_STATE_MAP
@@ -583,6 +591,70 @@ describe('renderBoard', () => {
     rejectWorkerRequest(worker, requestId, 'WASM init failed');
 
     await expect(renderPromise).rejects.toThrow('WASM init failed');
+  });
+
+  it('disables worker rendering after worker onerror and prevents default bubbling', async () => {
+    const { renderBoard, isWorkerRenderingSupported } = await import('../worker-manager');
+    const { trackWorkerRenderingDisabled } = await import('@/app/lib/rendering-metrics');
+
+    const renderPromise = renderBoard({
+      boardDetails: mockBoardDetails,
+      frames: 'p77r42',
+      mirrored: false,
+    });
+
+    await vi.waitFor(() => {
+      expect(findWorkerWithRenderMsg('p77r42')).toBeTruthy();
+    });
+
+    const worker = findWorkerWithRenderMsg('p77r42')!;
+    const preventDefault = vi.fn();
+
+    worker.onerror?.({ message: 'Load failed', preventDefault } as unknown as ErrorEvent);
+
+    await expect(renderPromise).rejects.toThrow('Worker error: Load failed');
+    expect(preventDefault).toHaveBeenCalledTimes(1);
+    expect(isWorkerRenderingSupported()).toBe(false);
+    expect(trackWorkerRenderingDisabled).toHaveBeenCalledWith('load-failed');
+
+    await expect(
+      renderBoard({
+        boardDetails: mockBoardDetails,
+        frames: 'p78r42',
+        mirrored: false,
+      }),
+    ).rejects.toThrow('Worker rendering is disabled');
+  });
+
+  it('notifies useCanvasRendererReady subscribers when a worker error disables the pool', async () => {
+    const { renderBoard, useCanvasRendererReady } = await import('../worker-manager');
+
+    // First mount primes globalCanvasReady=true via the hook's effect.
+    const { result, rerender } = renderHook(() => useCanvasRendererReady());
+    expect(result.current).toBe(true);
+
+    // Kick off a render so a worker exists to receive an onerror.
+    renderBoard({
+      boardDetails: mockBoardDetails,
+      frames: 'p88r42',
+      mirrored: false,
+    }).catch(() => {
+      // Expected to reject after onerror; swallow so the test doesn't see
+      // an unhandled rejection.
+    });
+
+    await vi.waitFor(() => {
+      expect(findWorkerWithRenderMsg('p88r42')).toBeTruthy();
+    });
+
+    const worker = findWorkerWithRenderMsg('p88r42')!;
+    act(() => {
+      worker.onerror?.({ message: 'Load failed', preventDefault: vi.fn() } as unknown as ErrorEvent);
+    });
+
+    // Force useSyncExternalStore to re-read after the listener fires.
+    rerender();
+    expect(result.current).toBe(false);
   });
 
   it('sends the correct render request shape to the worker', async () => {

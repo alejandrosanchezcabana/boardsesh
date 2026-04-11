@@ -2,7 +2,7 @@
 
 import React, { useEffect, useRef, useState } from 'react';
 import type { BoardDetails } from '@/app/lib/types';
-import { renderBoard } from '@/app/lib/board-render-worker/worker-manager';
+import { isWorkerRenderingSupported, renderBoard } from '@/app/lib/board-render-worker/worker-manager';
 import { trackRenderComplete, trackRenderError, type RenderContext } from '@/app/lib/rendering-metrics';
 import { THUMBNAIL_WIDTH } from './types';
 import BoardImageLayers from './board-image-layers';
@@ -36,6 +36,7 @@ const BoardCanvasRenderer = React.memo(function BoardCanvasRenderer({
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const hasFired = useRef(false);
   const [failed, setFailed] = useState(false);
+  const workerSupported = isWorkerRenderingSupported();
 
   // Compute initial canvas dimensions to match worker output, so the element
   // has a correct intrinsic aspect ratio before the bitmap arrives. Older
@@ -48,6 +49,10 @@ const BoardCanvasRenderer = React.memo(function BoardCanvasRenderer({
 
   useEffect(() => {
     const canvas = canvasRef.current;
+    // When !workerSupported, the render body below already returns
+    // BoardImageLayers, so there is no canvas element and this effect exits
+    // here. The workerSupported dep still forces effect re-evaluation if the
+    // flag flips mid-session.
     if (!canvas) return;
 
     let cancelled = false;
@@ -85,10 +90,10 @@ const BoardCanvasRenderer = React.memo(function BoardCanvasRenderer({
         canvas.height = 0;
       }
     };
-  }, [boardDetails, frames, mirrored, thumbnail, contain]);
+  }, [boardDetails, frames, mirrored, thumbnail, contain, workerSupported]);
 
   // Fall back to server-rendered image layers if the worker render fails
-  if (failed) {
+  if (failed || !workerSupported) {
     return (
       <BoardImageLayers
         boardDetails={boardDetails}

@@ -177,11 +177,19 @@ If `OffscreenCanvas` is unavailable, the system stays on `BoardImageLayers` (Tie
 
 ### Worker Errors
 
-When a worker encounters an error (via `onerror`), only the pending requests assigned to that specific worker are rejected. Other workers in the pool continue operating normally. The pool does not collapse on a single worker failure.
+When any worker fires `onerror` (typically a script-load failure such as `NetworkError: Load failed` in WKWebView, but also runtime crashes), the worker-manager:
+
+1. Calls `event.preventDefault()` so the error does not bubble to `window.onerror` / the browser console (prevents repetitive noise in WKWebView sessions).
+2. Sets a session-level `workerPoolDisabled` flag so future `renderBoard` calls reject synchronously with `Worker rendering is disabled`.
+3. Calls `markCanvasNotReady()`, which flips `globalCanvasReady` to `false` and notifies every `useCanvasRendererReady` subscriber. Parents (`ClimbThumbnail`, `ClimbCardCover`, `SwipeBoardCarousel`, `AscentThumbnail`) re-render and swap their active instance from `BoardCanvasRenderer` to `BoardImageLayers` automatically.
+4. Rejects the pending requests tracked against the failing worker so their caller promises settle.
+5. Emits a single `Board Worker Rendering Disabled` analytics event via `trackWorkerRenderingDisabled` (reason `'load-failed'` or `'construct-failed'`) to measure impact in production.
+
+The "disable the whole pool on any worker error" behavior is intentional: script-load failures affect every worker because they all load the same bundle, and leaving a partially broken pool alive is exactly what this fallback is trying to avoid.
 
 ### Render Failures
 
-If `BoardCanvasRenderer` fails to produce a frame (worker error, WASM crash, or any unhandled exception), it falls back to rendering `BoardImageLayers`. This fallback is per-instance -- one component failing does not affect others.
+If `BoardCanvasRenderer` fails to produce a frame for an individual request (WASM crash, worker runtime exception, or any unhandled rejection from `renderBoard`), it catches the error in its own `useEffect` and falls back to rendering `BoardImageLayers` for that instance. This per-instance safety net complements the session-level disable above — one bad frame does not disable the pool, but any `onerror` does.
 
 ### Image Preload Failures
 
@@ -196,6 +204,7 @@ If a background image fails to load during preloading, the error is logged but d
 | `packages/web/app/lib/board-render-worker/worker-manager.ts`           | Worker pool lifecycle, LRU cache, request deduplication, background image preloading |
 | `packages/web/app/lib/board-render-worker/board-render.worker.ts`      | Worker code: WASM loading, OffscreenCanvas compositing, message handling             |
 | `packages/web/app/components/board-renderer/board-canvas-renderer.tsx` | Client-side canvas renderer component, error fallback to BoardImageLayers            |
+| `packages/web/app/lib/rendering-metrics.ts`                            | Render analytics, including the once-per-session `trackWorkerRenderingDisabled` ping |
 | `packages/web/app/components/board-renderer/board-image-layers.tsx`    | Server-rendered image layer component (Tier 2)                                       |
 | `packages/web/app/api/internal/board-render/route.ts`                  | Server-side WASM API route, generates PNG overlay                                    |
 | `packages/web/app/flags.ts`                                            | Empty feature flag placeholder kept for future flags                                 |
