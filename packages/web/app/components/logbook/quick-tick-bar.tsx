@@ -358,7 +358,7 @@ export const QuickTickBar: React.FC<QuickTickBarProps> = ({
                   setGradeAnchorEl(null);
                 }}
               >
-                {grade.v_grade}
+                {formatVGrade(grade.difficulty_name) ?? grade.v_grade}
               </MenuItem>
             );
           })}
