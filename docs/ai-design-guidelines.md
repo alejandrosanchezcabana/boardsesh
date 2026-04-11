@@ -61,7 +61,7 @@ All tokens live in `packages/web/app/theme/theme-config.ts` and are exposed as C
 
 | Token | Value | CSS Variable | Usage |
 |-------|-------|-------------|-------|
-| `semantic.selected` | `#F7F2F3` | `--semantic-selected` | Selected item background (rose tint) |
+| `semantic.selected` | `rgba(140, 74, 82, 0.18)` | `--semantic-selected` | Selected item background (rose tint) |
 | `semantic.selectedHover` | `#EFE6E8` | `--semantic-selected-hover` | Selected item hover |
 | `semantic.selectedLight` | `rgba(140, 74, 82, 0.06)` | `--semantic-selected-light` | Very subtle rose highlight |
 | `semantic.selectedBorder` | `#8C4A52` | `--semantic-selected-border` | Matches primary |
@@ -221,7 +221,7 @@ Climbing difficulty is represented by a spectrum from yellow through red to purp
 
 ### Semantic Selected Tints
 
-- **`semantic.selected`** (`#F7F2F3`): Selected list item background (subtle rose)
+- **`semantic.selected`** (`rgba(140, 74, 82, 0.18)`): Selected list item background (subtle rose)
 - **`semantic.selectedHover`** (`#EFE6E8`): Selected item hover state
 - **`semantic.selectedLight`** (`rgba(140, 74, 82, 0.06)`): Ultra-subtle highlight
 - Grade-tinted backgrounds override `semantic.selected` when a climb is selected (uses `getGradeTintColor(difficulty, 'light')`)
@@ -541,7 +541,7 @@ background: var(--neutral-100);  /* lighter press on already-hovered */
 
 ### Selected
 - Grade-tinted background via `getGradeTintColor(difficulty, 'light')`
-- Or `semantic.selected` (`#F7F2F3`) for non-grade items
+- Or `semantic.selected` (`rgba(140, 74, 82, 0.18)`) for non-grade items
 - Active recent pill: `border-color: var(--color-primary)`, `background: var(--semantic-selected)`
 
 ### Disabled
