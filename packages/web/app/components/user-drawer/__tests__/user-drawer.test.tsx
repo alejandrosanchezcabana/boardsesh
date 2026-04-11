@@ -131,6 +131,10 @@ async function openBoardSelector() {
   });
   fireEvent.click(screen.getByText('Change Board'));
   expect(screen.getByTestId('board-discovery-scroll')).toBeTruthy();
+  // Verify the mock captured the callbacks — a null here would otherwise surface
+  // as a confusing "TypeError: null is not a function" inside individual tests.
+  expect(captured.onBoardClick, 'onBoardClick not captured by BoardDiscoveryScroll mock').not.toBeNull();
+  expect(captured.onConfigClick, 'onConfigClick not captured by BoardDiscoveryScroll mock').not.toBeNull();
 }
 
 function makeUserBoard(overrides: Partial<UserBoard> = {}): UserBoard {
@@ -295,6 +299,20 @@ describe('UserDrawer', () => {
       ];
       expect(target.set_ids).toEqual([]);
     });
+
+    it('filters out non-numeric set_ids entries (NaN values are dropped)', async () => {
+      await openBoardSelector();
+
+      act(() => {
+        captured.onBoardClick!(makeUserBoard({ boardType: 'kilter', setIds: 'a,b,c' }));
+      });
+
+      const [target] = mockGuardBoardSwitch.mock.calls[0] as [
+        { set_ids: number[] },
+        () => void,
+      ];
+      expect(target.set_ids).toEqual([]);
+    });
   });
 
   // -----------------------------------------------------------------------
@@ -303,6 +321,8 @@ describe('UserDrawer', () => {
   describe('handleChangeConfigClick', () => {
     it('navigates directly without calling the guard when boardType is unsupported', async () => {
       await openBoardSelector();
+      // Default config has layoutName/sizeName/setNames set, so constructClimbListWithSlugs is used
+      mockConstructClimbListWithSlugs.mockReturnValue('/unsupported/original/full/holds/40/list');
 
       act(() => {
         captured.onConfigClick!(makePopularConfig({ boardType: 'unsupported-board' }));
@@ -310,6 +330,7 @@ describe('UserDrawer', () => {
 
       expect(mockGuardBoardSwitch).not.toHaveBeenCalled();
       expect(mockPush).toHaveBeenCalledOnce();
+      expect(mockPush).toHaveBeenCalledWith('/unsupported/original/full/holds/40/list');
     });
 
     it('calls guardBoardSwitch with a correctly shaped target for a supported board', async () => {
