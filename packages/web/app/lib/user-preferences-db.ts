@@ -1,6 +1,12 @@
 import { createIndexedDBStore, migrateFromLocalStorage } from './idb-helper';
+import type { LogbookPreferences } from './logbook-preferences';
 
 const STORE_NAME = 'preferences';
+
+export type UserPreferenceKeyMap = {
+  libraryTab: 'playlists' | 'logbook';
+  logbookPreferences: LogbookPreferences;
+};
 
 // Map of IDB preference keys to their legacy localStorage keys for one-time migration
 const LEGACY_LOCALSTORAGE_KEYS: Record<string, string> = {
@@ -13,12 +19,14 @@ const getDB = createIndexedDBStore('boardsesh-user-preferences', STORE_NAME);
 /**
  * Get a preference value from IndexedDB.
  */
-export const getPreference = async <T>(key: string): Promise<T | null> => {
+export const getPreference = async <T = unknown, K extends string = string>(
+  key: K,
+): Promise<(K extends keyof UserPreferenceKeyMap ? UserPreferenceKeyMap[K] : T) | null> => {
   try {
     const db = await getDB();
     if (!db) return null;
     const value = await db.get(STORE_NAME, key);
-    if (value !== undefined) return value as T;
+    if (value !== undefined) return value as (K extends keyof UserPreferenceKeyMap ? UserPreferenceKeyMap[K] : T);
 
     // Attempt one-time migration from localStorage
     const legacyKey = LEGACY_LOCALSTORAGE_KEYS[key];
@@ -30,7 +38,7 @@ export const getPreference = async <T>(key: string): Promise<T | null> => {
         migratedValue = val;
         migrated = true;
       });
-      if (migrated) return migratedValue;
+      if (migrated) return migratedValue as (K extends keyof UserPreferenceKeyMap ? UserPreferenceKeyMap[K] : T);
     }
 
     return null;
@@ -43,7 +51,10 @@ export const getPreference = async <T>(key: string): Promise<T | null> => {
 /**
  * Save a preference value to IndexedDB.
  */
-export const setPreference = async <T>(key: string, value: T): Promise<void> => {
+export const setPreference = async <K extends string>(
+  key: K,
+  value: K extends keyof UserPreferenceKeyMap ? UserPreferenceKeyMap[K] : unknown,
+): Promise<void> => {
   try {
     const db = await getDB();
     if (!db) return;

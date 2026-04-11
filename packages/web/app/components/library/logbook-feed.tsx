@@ -24,9 +24,25 @@ import AccordionSummary from '@mui/material/AccordionSummary';
 import AccordionDetails from '@mui/material/AccordionDetails';
 import Checkbox from '@mui/material/Checkbox';
 import FormGroup from '@mui/material/FormGroup';
-import { HistoryOutlined, SearchOutlined, FilterListOutlined, SwapVertOutlined, ExpandMoreOutlined } from '@mui/icons-material';
+import IconButton from '@mui/material/IconButton';
+import { HistoryOutlined, SearchOutlined, FilterListOutlined, SwapVertOutlined, ExpandMoreOutlined, CloseOutlined } from '@mui/icons-material';
 import { BOULDER_GRADES } from '@/app/lib/board-data';
 import { getAllLayouts } from '@/app/lib/board-constants';
+import { getPreference, setPreference } from '@/app/lib/user-preferences-db';
+import {
+  ALL_LAYOUT_SELECTIONS,
+  DEFAULT_ANGLE_RANGE,
+  DEFAULT_FILTERS,
+  DEFAULT_SORT,
+  sanitizeLogbookPreferences,
+  type BoardFilter,
+  type LogbookPreferences,
+  type LogbookFilterState as FilterState,
+  type LogbookSortState as SortState,
+  type SortDirection,
+  type SortField,
+  type SortPreset,
+} from '@/app/lib/logbook-preferences';
 import { useSession } from 'next-auth/react';
 import { useInfiniteQuery } from '@tanstack/react-query';
 import { createGraphQLHttpClient } from '@/app/lib/graphql/client';
@@ -47,55 +63,7 @@ import styles from './library.module.css';
 import feedStyles from '@/app/components/activity-feed/ascents-feed.module.css';
 
 const PAGE_SIZE = 20;
-const DEFAULT_ANGLE_RANGE: [number, number] = [0, 70];
-
-type BoardFilter = 'all' | 'kilter' | 'tension' | 'moonboard';
 type StatusMode = 'both' | 'send' | 'attempt';
-type SortPreset = 'recent' | 'hardest';
-type SortField = 'climbName' | 'loggedGrade' | 'consensusGrade' | 'date' | 'attemptCount';
-type SortDirection = 'asc' | 'desc';
-
-type FilterState = {
-  includeSends: boolean;
-  includeAttempts: boolean;
-  flashOnly: boolean;
-  minGrade: number | '';
-  maxGrade: number | '';
-  fromDate: string;
-  toDate: string;
-  angleRange: [number, number];
-  benchmarkOnly: boolean;
-};
-
-type SortState = {
-  mode: 'preset' | 'custom';
-  preset: SortPreset;
-  primaryField: SortField;
-  primaryDirection: SortDirection;
-  secondaryField: '' | SortField;
-  secondaryDirection: SortDirection;
-};
-
-const DEFAULT_FILTERS: FilterState = {
-  includeSends: true,
-  includeAttempts: false,
-  flashOnly: false,
-  minGrade: '',
-  maxGrade: '',
-  fromDate: '',
-  toDate: '',
-  angleRange: DEFAULT_ANGLE_RANGE,
-  benchmarkOnly: false,
-};
-
-const DEFAULT_SORT: SortState = {
-  mode: 'preset',
-  preset: 'recent',
-  primaryField: 'date',
-  primaryDirection: 'desc',
-  secondaryField: '',
-  secondaryDirection: 'desc',
-};
 
 const BOARD_OPTIONS: { value: BoardFilter; label: string }[] = [
   { value: 'all', label: 'All boards' },
@@ -210,10 +178,9 @@ export default function LogbookFeed() {
   const [sortAnchorEl, setSortAnchorEl] = useState<HTMLElement | null>(null);
   const [boardAnchorEl, setBoardAnchorEl] = useState<HTMLElement | null>(null);
   const [layoutSelections, setLayoutSelections] = useState<Record<Exclude<BoardFilter, 'all'>, number[]>>({
-    kilter: BOARD_LAYOUT_OPTIONS.kilter.map((layout) => layout.id),
-    tension: BOARD_LAYOUT_OPTIONS.tension.map((layout) => layout.id),
-    moonboard: BOARD_LAYOUT_OPTIONS.moonboard.map((layout) => layout.id),
+    ...ALL_LAYOUT_SELECTIONS,
   });
+  const [preferencesLoaded, setPreferencesLoaded] = useState(false);
   const debounceRef = useRef<ReturnType<typeof setTimeout>>(undefined);
 
   const handleSearchChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
@@ -226,6 +193,31 @@ export default function LogbookFeed() {
   }, []);
 
   useEffect(() => () => clearTimeout(debounceRef.current), []);
+
+  useEffect(() => {
+    let isCancelled = false;
+
+    getPreference('logbookPreferences').then((saved) => {
+      if (isCancelled) return;
+
+      if (saved) {
+        const sanitized = sanitizeLogbookPreferences(saved);
+        setBoardFilter(sanitized.boardFilter);
+        setLayoutSelections(sanitized.layoutSelections);
+        setFilters(sanitized.filters);
+        setDraftFilters(sanitized.filters);
+        setSortState(sanitized.sort);
+        setDraftSortState(sanitized.sort);
+        setIsAdvancedSortOpen(Boolean(sanitized.sort.secondaryField));
+      }
+
+      setPreferencesLoaded(true);
+    });
+
+    return () => {
+      isCancelled = true;
+    };
+  }, []);
 
   const openFilterMenu = useCallback((event: React.MouseEvent<HTMLButtonElement>) => {
     setDraftFilters(filters);
@@ -271,6 +263,48 @@ export default function LogbookFeed() {
     });
     closeSortMenu();
   }, [closeSortMenu, draftSortState, isAdvancedSortOpen]);
+
+  const applyPresetSort = useCallback((preset: SortPreset) => {
+    const nextSortState: SortState = {
+      ...sortState,
+      mode: 'preset',
+      preset,
+    };
+    setDraftSortState(nextSortState);
+    setSortState(nextSortState);
+  }, [sortState]);
+
+  const persistedPreferences = useMemo<LogbookPreferences>(() => ({
+    version: 1,
+    boardFilter,
+    layoutSelections,
+    filters,
+    sort: sortState,
+  }), [boardFilter, layoutSelections, filters, sortState]);
+
+  const boardChipLabels = useMemo(() => {
+    return BOARD_OPTIONS.reduce<Record<BoardFilter, string>>((labels, option) => {
+      if (option.value === 'all') {
+        labels.all = option.label;
+        return labels;
+      }
+
+      const totalVariants = BOARD_LAYOUT_OPTIONS[option.value].length;
+      if (totalVariants <= 1) {
+        labels[option.value] = option.label;
+        return labels;
+      }
+
+      const selectedVariants = layoutSelections[option.value].length;
+      labels[option.value] = `${option.label} (${selectedVariants}/${totalVariants})`;
+      return labels;
+    }, { all: 'All boards', kilter: 'Kilter', tension: 'Tension', moonboard: 'MoonBoard' });
+  }, [layoutSelections]);
+
+  useEffect(() => {
+    if (!preferencesLoaded) return;
+    void setPreference('logbookPreferences', persistedPreferences);
+  }, [persistedPreferences, preferencesLoaded]);
 
   const boardTypeParam = boardFilter === 'all' ? undefined : boardFilter;
   const selectedLayoutIds = boardFilter === 'all' ? undefined : layoutSelections[boardFilter];
@@ -410,7 +444,7 @@ export default function LogbookFeed() {
           {BOARD_OPTIONS.map((opt) => (
             <Chip
               key={opt.value}
-              label={opt.label}
+              label={boardChipLabels[opt.value]}
               size="small"
               variant={boardFilter === opt.value ? 'filled' : 'outlined'}
               color={boardFilter === opt.value ? 'primary' : 'default'}
@@ -487,6 +521,7 @@ export default function LogbookFeed() {
           setIsAdvancedSortOpen={setIsAdvancedSortOpen}
           onClose={closeSortMenu}
           onApply={applySort}
+          onPresetChange={applyPresetSort}
         />
         {boardFilter !== 'all' && (
           <BoardLayoutsPopover
@@ -531,6 +566,7 @@ export default function LogbookFeed() {
         setIsAdvancedSortOpen={setIsAdvancedSortOpen}
         onClose={closeSortMenu}
         onApply={applySort}
+        onPresetChange={applyPresetSort}
       />
       {boardFilter !== 'all' && (
         <BoardLayoutsPopover
@@ -730,6 +766,7 @@ function SortPopover({
   setIsAdvancedSortOpen,
   onClose,
   onApply,
+  onPresetChange,
 }: {
   anchorEl: HTMLElement | null;
   draftSortState: SortState;
@@ -738,6 +775,7 @@ function SortPopover({
   setIsAdvancedSortOpen: React.Dispatch<React.SetStateAction<boolean>>;
   onClose: () => void;
   onApply: () => void;
+  onPresetChange: (preset: SortPreset) => void;
 }) {
   const open = Boolean(anchorEl);
   const primaryDirectionOptions = getDirectionOptions(draftSortState.primaryField);
@@ -753,9 +791,14 @@ function SortPopover({
       slotProps={{ paper: { sx: { width: 420, maxWidth: 'calc(100vw - 24px)', borderRadius: '16px', mt: 1 } } }}
     >
       <Box sx={{ p: 2, display: 'flex', flexDirection: 'column', gap: 2 }}>
-        <Box>
-          <Typography variant="h6" sx={{ fontWeight: 700, mb: 0.5 }}>Sort Logbook</Typography>
-          <Typography variant="body2" color="text.secondary">Choose how your entries are ordered.</Typography>
+        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 1 }}>
+          <Box>
+            <Typography variant="h6" sx={{ fontWeight: 700, mb: 0.5 }}>Sort Logbook</Typography>
+            <Typography variant="body2" color="text.secondary">Choose how your entries are ordered.</Typography>
+          </Box>
+          <IconButton size="small" onClick={onClose} sx={{ mt: -0.5, mr: -0.5 }}>
+            <CloseOutlined fontSize="small" />
+          </IconButton>
         </Box>
 
         <Box sx={{ display: 'flex', gap: 1 }}>
@@ -779,7 +822,11 @@ function SortPopover({
           <FormControl size="small" fullWidth>
             <Select
               value={draftSortState.preset}
-              onChange={(e) => setDraftSortState((current) => ({ ...current, preset: e.target.value as SortPreset }))}
+              onChange={(e) => {
+                const nextPreset = e.target.value as SortPreset;
+                setDraftSortState((current) => ({ ...current, mode: 'preset', preset: nextPreset }));
+                onPresetChange(nextPreset);
+              }}
               sx={{ borderRadius: '10px' }}
             >
               {SORT_PRESET_OPTIONS.map((option) => (
@@ -789,7 +836,7 @@ function SortPopover({
           </FormControl>
         ) : (
           <>
-            <Box sx={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 1.25 }}>
+            <Box sx={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 1.25, mb: 0.5 }}>
               <FormControl size="small" fullWidth>
                 <Select
                   value={draftSortState.primaryField}
@@ -820,6 +867,7 @@ function SortPopover({
               disableGutters
               elevation={0}
               sx={{
+                mt: 0.5,
                 bgcolor: 'transparent',
                 border: '1px solid',
                 borderColor: 'divider',
@@ -862,12 +910,16 @@ function SortPopover({
           </>
         )}
 
-        <Divider />
+        {draftSortState.mode === 'custom' && (
+          <>
+            <Divider />
 
-        <Box sx={{ display: 'flex', justifyContent: 'flex-end', gap: 1 }}>
-          <Button variant="outlined" color="inherit" onClick={onClose} sx={{ textTransform: 'none' }}>Cancel</Button>
-          <Button variant="contained" onClick={onApply} sx={{ textTransform: 'none' }}>Apply</Button>
-        </Box>
+            <Box sx={{ display: 'flex', justifyContent: 'flex-end', gap: 1 }}>
+              <Button variant="outlined" color="inherit" onClick={onClose} sx={{ textTransform: 'none' }}>Cancel</Button>
+              <Button variant="contained" onClick={onApply} sx={{ textTransform: 'none' }}>Apply</Button>
+            </Box>
+          </>
+        )}
       </Box>
     </Popover>
   );

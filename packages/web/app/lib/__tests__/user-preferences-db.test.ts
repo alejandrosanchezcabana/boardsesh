@@ -2,12 +2,36 @@ import 'fake-indexeddb/auto';
 import { openDB } from 'idb';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { getPreference, setPreference, removePreference } from '../user-preferences-db';
+import { DEFAULT_LOGBOOK_PREFERENCES } from '../logbook-preferences';
 
 const DB_NAME = 'boardsesh-user-preferences';
 const STORE_NAME = 'preferences';
+const createStorageShim = () => {
+  const store = new Map<string, string>();
+
+  return {
+    getItem: (key: string) => store.get(key) ?? null,
+    setItem: (key: string, value: string) => {
+      store.set(key, String(value));
+    },
+    removeItem: (key: string) => {
+      store.delete(key);
+    },
+    clear: () => {
+      store.clear();
+    },
+  };
+};
+
+const storage = createStorageShim();
+
+Object.defineProperty(globalThis, 'localStorage', {
+  configurable: true,
+  value: storage,
+});
 
 beforeEach(async () => {
-  localStorage.clear();
+  storage.clear();
   // Clear the store contents using a separate short-lived connection
   const db = await openDB(DB_NAME, 1, {
     upgrade(db) {
@@ -33,6 +57,12 @@ describe('user-preferences-db', () => {
       await setPreference('objKey', obj);
       const result = await getPreference<typeof obj>('objKey');
       expect(result).toEqual(obj);
+    });
+
+    it('should store and retrieve logbookPreferences', async () => {
+      await setPreference('logbookPreferences', DEFAULT_LOGBOOK_PREFERENCES);
+      const result = await getPreference('logbookPreferences');
+      expect(result).toEqual(DEFAULT_LOGBOOK_PREFERENCES);
     });
 
     it('should return null for a non-existent key', async () => {
@@ -63,22 +93,22 @@ describe('user-preferences-db', () => {
 
   describe('localStorage migration', () => {
     it('should migrate climbListViewMode from localStorage on first read', async () => {
-      localStorage.setItem('climbListViewMode', 'grid');
+      storage.setItem('climbListViewMode', 'grid');
 
       const result = await getPreference<string>('climbListViewMode');
       expect(result).toBe('grid');
 
       // localStorage key should be cleaned up
-      expect(localStorage.getItem('climbListViewMode')).toBeNull();
+      expect(storage.getItem('climbListViewMode')).toBeNull();
     });
 
     it('should migrate boardsesh:partyMode from localStorage on first read', async () => {
-      localStorage.setItem('boardsesh:partyMode', 'backend');
+      storage.setItem('boardsesh:partyMode', 'backend');
 
       const result = await getPreference<string>('boardsesh:partyMode');
       expect(result).toBe('backend');
 
-      expect(localStorage.getItem('boardsesh:partyMode')).toBeNull();
+      expect(storage.getItem('boardsesh:partyMode')).toBeNull();
     });
 
     it('should not re-migrate if IndexedDB already has the value', async () => {
@@ -86,13 +116,13 @@ describe('user-preferences-db', () => {
       await setPreference('climbListViewMode', 'list');
 
       // Set a different value in localStorage (simulating stale data)
-      localStorage.setItem('climbListViewMode', 'grid');
+      storage.setItem('climbListViewMode', 'grid');
 
       const result = await getPreference<string>('climbListViewMode');
       expect(result).toBe('list');
 
       // localStorage should remain untouched since migration was skipped
-      expect(localStorage.getItem('climbListViewMode')).toBe('grid');
+      expect(storage.getItem('climbListViewMode')).toBe('grid');
     });
 
     it('should return null when neither IndexedDB nor localStorage has the value', async () => {
@@ -101,26 +131,26 @@ describe('user-preferences-db', () => {
     });
 
     it('should not attempt migration for keys without a legacy mapping', async () => {
-      localStorage.setItem('someOtherKey', 'value');
+      storage.setItem('someOtherKey', 'value');
 
       const result = await getPreference<string>('someOtherKey');
       expect(result).toBeNull();
 
       // localStorage should be untouched
-      expect(localStorage.getItem('someOtherKey')).toBe('value');
+      expect(storage.getItem('someOtherKey')).toBe('value');
     });
 
     it('should parse JSON values during migration', async () => {
-      localStorage.setItem('climbListViewMode', JSON.stringify({ mode: 'grid' }));
+      storage.setItem('climbListViewMode', JSON.stringify({ mode: 'grid' }));
 
       const result = await getPreference<{ mode: string }>('climbListViewMode');
       expect(result).toEqual({ mode: 'grid' });
 
-      expect(localStorage.getItem('climbListViewMode')).toBeNull();
+      expect(storage.getItem('climbListViewMode')).toBeNull();
     });
 
     it('should persist migrated value so subsequent reads come from IndexedDB', async () => {
-      localStorage.setItem('climbListViewMode', 'grid');
+      storage.setItem('climbListViewMode', 'grid');
 
       // First read triggers migration
       await getPreference<string>('climbListViewMode');
