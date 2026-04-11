@@ -15,7 +15,6 @@ Boardsesh is a monorepo containing a Next.js 15 application for controlling stan
 - No buzzwords. Concrete numbers and simple language.
 - Keep `REQUESTS.md` updated as the feature backlog. Mark items as you complete them.
 - No unnecessary check-ins. Default to action. Full autonomy except no data deletion without asking.
-- **Performance is critical.** Every change must be reviewed for performance impact. After implementing changes, always spawn a dedicated performance review subagent (Opus) that audits the diff for: unnecessary re-renders, expensive computations in hot paths, unoptimized database queries, missing memoization, bundle size regressions, and N+1 query patterns. Do not merge or finalize work until the performance review passes.
 
 ## Documentation
 
