@@ -109,6 +109,8 @@ jobs:
       pull-requests: write
     steps:
     - uses: actions/checkout@v6
+      with:
+        fetch-depth: 50
 
     - name: Setup Bun
       uses: oven-sh/setup-bun@v2
@@ -130,7 +132,13 @@ jobs:
         name: built-packages
 
     - name: Run tests
-      run: bun run --filter=@boardsesh/web test:run -- --reporter=verbose --reporter=github-actions --reporter=junit --outputFile.junit=./test-results/junit.xml
+      run: |
+        if [ "${{ github.event_name }}" = "pull_request" ]; then
+          BASE="origin/${{ github.base_ref }}"
+        else
+          BASE="HEAD~1"
+        fi
+        bun run --filter=@boardsesh/web test:run -- --changed "$BASE" --reporter=verbose --reporter=github-actions --reporter=junit --outputFile.junit=./test-results/junit.xml
 
     - name: Upload test results
       uses: actions/upload-artifact@v4

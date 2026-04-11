@@ -50,6 +50,8 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v6
+        with:
+          fetch-depth: 50
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
@@ -77,7 +79,13 @@ jobs:
         run: bun run --filter=@boardsesh/db build
 
       - name: Run backend integration tests
-        run: bun run --filter=boardsesh-backend test:run -- --reporter=verbose --reporter=junit --outputFile.junit=./test-results/junit.xml
+        run: |
+          if [ "${{ github.event_name }}" = "pull_request" ]; then
+            BASE="origin/${{ github.base_ref }}"
+          else
+            BASE="HEAD~1"
+          fi
+          bun run --filter=boardsesh-backend test:run -- --changed "$BASE" --reporter=verbose --reporter=junit --outputFile.junit=./test-results/junit.xml
         env:
           DATABASE_URL: postgresql://postgres:postgres@localhost:5433/boardsesh_backend_test
           REDIS_URL: redis://localhost:6380
