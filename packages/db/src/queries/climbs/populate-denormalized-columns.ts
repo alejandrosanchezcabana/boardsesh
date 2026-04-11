@@ -36,6 +36,14 @@ export async function populateDenormalizedColumns(
 ): Promise<void> {
   if (climbUuids.length === 0 || boardType === 'moonboard') return;
 
+  // Drizzle's `sql` template expands a JS array into comma-separated parameters
+  // wrapped in parentheses, producing a ROW literal like `($1, $2, $3)` which
+  // cannot be cast to `text[]`. Build an explicit `ARRAY[...]` literal instead.
+  const uuidsArray = sql`ARRAY[${sql.join(
+    climbUuids.map((uuid) => sql`${uuid}`),
+    sql`, `,
+  )}]::text[]`;
+
   // Step 1: Compute missing edge values from hold positions.
   // Locally created climbs don't have edges set, but we can derive them from
   // the hold IDs in the frames string -> placements -> holes (x, y).
@@ -59,7 +67,7 @@ export async function populateDenormalizedColumns(
         ON bh.id = bp.hole_id
         AND bh.board_type = c2.board_type
       WHERE c2.board_type = ${boardType}
-        AND c2.uuid = ANY(${climbUuids}::text[])
+        AND c2.uuid = ANY(${uuidsArray})
         AND c2.edge_left IS NULL
         AND c2.frames IS NOT NULL
       GROUP BY c2.uuid
@@ -83,7 +91,7 @@ export async function populateDenormalizedColumns(
         AND bp.board_type = c2.board_type
         AND bp.layout_id = c2.layout_id
       WHERE c2.board_type = ${boardType}
-        AND c2.uuid = ANY(${climbUuids}::text[])
+        AND c2.uuid = ANY(${uuidsArray})
         AND c2.frames IS NOT NULL
       GROUP BY c2.uuid
     ) sub
@@ -104,7 +112,7 @@ export async function populateDenormalizedColumns(
         AND c2.edge_bottom > ps.edge_bottom
         AND c2.edge_top < ps.edge_top
       WHERE c2.board_type = ${boardType}
-        AND c2.uuid = ANY(${climbUuids}::text[])
+        AND c2.uuid = ANY(${uuidsArray})
         AND c2.edge_left IS NOT NULL
       GROUP BY c2.uuid
     ) sub
