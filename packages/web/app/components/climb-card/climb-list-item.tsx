@@ -478,6 +478,7 @@ const ClimbListItem: React.FC<ClimbListItemProps> = React.memo(
             <div
               ref={doubleTapRef}
               style={thumbnailStyle}
+              data-testid="climb-thumbnail"
               onClick={handleThumbnailClick}
               onDoubleClick={handleDoubleTapClick}
             >
