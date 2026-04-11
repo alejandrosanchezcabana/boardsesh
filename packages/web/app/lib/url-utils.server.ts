@@ -9,26 +9,19 @@ import {
   BoardName,
 } from '@/app/lib/types';
 import { getLayoutBySlug, getSizeBySlug, getSetsBySlug } from './slug-utils';
-import { isNumericId, extractUuidFromSlug, hasOnlyNumericBoardRouteSegments, parseBoardRouteParams } from './url-utils';
+import {
+  isNumericId,
+  extractUuidFromSlug,
+  hasOnlyNumericBoardRouteSegments,
+  parseBoardRouteParams,
+  getMoonBoardLayoutBySlug,
+} from './url-utils';
 import {
   MOONBOARD_LAYOUTS,
   MOONBOARD_SETS,
   MOONBOARD_SIZE,
   MoonBoardLayoutKey,
 } from './moonboard-config';
-
-// Helper to parse MoonBoard layout slug
-function getMoonBoardLayoutBySlug(slug: string): { id: number; name: string } | null {
-  // MoonBoard layout slugs are like "moonboard-2016", "moonboard-2024", "moonboard-masters-2017"
-  const entry = Object.entries(MOONBOARD_LAYOUTS).find(([key]) => {
-    // Convert key to expected slug format and compare
-    return key === slug || key.replace(/-/g, '').toLowerCase() === slug.replace(/-/g, '').toLowerCase();
-  });
-  if (entry) {
-    return { id: entry[1].id, name: entry[1].name };
-  }
-  return null;
-}
 
 // Helper to parse MoonBoard size slug (always returns the single size)
 function getMoonBoardSizeBySlug(): { id: number; name: string } {

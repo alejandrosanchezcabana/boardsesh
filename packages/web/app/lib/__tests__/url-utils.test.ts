@@ -10,6 +10,7 @@ import {
   constructPlayUrlWithSlugs,
   constructClimbInfoUrl,
   generateLayoutSlug,
+  getMoonBoardLayoutBySlug,
   generateSizeSlug,
   generateSetSlug,
   generateSlugFromText,
@@ -412,6 +413,40 @@ describe('Slug generation functions', () => {
 
     it('should preserve numeric-only layout slugs when the name is just a year', () => {
       expect(generateLayoutSlug('Grasshopper 2020')).toBe('2020');
+    });
+  });
+
+  describe('getMoonBoardLayoutBySlug', () => {
+    // Regression coverage for the MoonBoard 404 bug: the generator strips the
+    // "moonboard" prefix from layout names, so the parser must accept slugs
+    // like "2016" and "masters-2017" — not just the MOONBOARD_LAYOUTS keys.
+    const cases: Array<{ name: string; expectedSlug: string; expectedId: number }> = [
+      { name: 'MoonBoard 2010', expectedSlug: '2010', expectedId: 1 },
+      { name: 'MoonBoard 2016', expectedSlug: '2016', expectedId: 2 },
+      { name: 'MoonBoard 2024', expectedSlug: '2024', expectedId: 3 },
+      { name: 'MoonBoard Masters 2017', expectedSlug: 'masters-2017', expectedId: 4 },
+      { name: 'MoonBoard Masters 2019', expectedSlug: 'masters-2019', expectedId: 5 },
+      { name: 'Mini MoonBoard 2020', expectedSlug: 'mini-moonboard-2020', expectedId: 6 },
+    ];
+
+    it.each(cases)('round-trips $name through generateLayoutSlug', ({ name, expectedSlug, expectedId }) => {
+      const slug = generateLayoutSlug(name);
+      expect(slug).toBe(expectedSlug);
+      const resolved = getMoonBoardLayoutBySlug(slug);
+      expect(resolved).toEqual({ id: expectedId, name });
+    });
+
+    it('still accepts legacy MOONBOARD_LAYOUTS keys for backwards compatibility', () => {
+      expect(getMoonBoardLayoutBySlug('moonboard-2016')).toEqual({ id: 2, name: 'MoonBoard 2016' });
+      expect(getMoonBoardLayoutBySlug('moonboard-masters-2017')).toEqual({
+        id: 4,
+        name: 'MoonBoard Masters 2017',
+      });
+    });
+
+    it('returns null for unknown slugs', () => {
+      expect(getMoonBoardLayoutBySlug('not-a-layout')).toBeNull();
+      expect(getMoonBoardLayoutBySlug('')).toBeNull();
     });
   });
 
