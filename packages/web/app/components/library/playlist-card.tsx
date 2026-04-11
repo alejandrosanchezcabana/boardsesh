@@ -66,7 +66,7 @@ export default function PlaylistCard({
       <Link href={href} className={styles.cardCompact}>
         <div
           className={`${styles.cardCompactSquare} ${isLikedClimbs ? styles.likedGradient : ''}`}
-          style={!isLikedClimbs ? { background: `linear-gradient(135deg, rgba(255,255,255,0.18) 0%, rgba(255,255,255,0.03) 100%), ${backgroundColor}` } : undefined}
+          style={!isLikedClimbs ? { background: `linear-gradient(135deg, rgba(255,255,255,0.4) 0%, rgba(255,255,255,0.08) 100%), ${backgroundColor}` } : undefined}
         >
           {renderIcon(styles.cardCompactIcon)}
         </div>
@@ -87,7 +87,7 @@ export default function PlaylistCard({
     >
       <div
         className={`${styles.cardSquare} ${isLikedClimbs ? styles.likedGradient : ''}`}
-        style={!isLikedClimbs ? { background: `linear-gradient(135deg, rgba(255,255,255,0.18) 0%, rgba(255,255,255,0.03) 100%), ${backgroundColor}` } : undefined}
+        style={!isLikedClimbs ? { background: `linear-gradient(135deg, rgba(255,255,255,0.4) 0%, rgba(255,255,255,0.08) 100%), ${backgroundColor}` } : undefined}
       >
         {renderIcon(styles.cardIcon)}
       </div>
