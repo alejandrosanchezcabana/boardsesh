@@ -51,7 +51,10 @@ export function useBoardDetailsMap(
             boardType: selectedBoard.boardType as BoardName,
             layoutId: selectedBoard.layoutId,
             sizeId: selectedBoard.sizeId,
-            setIds: selectedBoard.setIds.split(',').map(Number).filter((n) => Number.isFinite(n)),
+            setIds: selectedBoard.setIds
+              .split(',')
+              .map(Number)
+              .filter((n) => Number.isFinite(n) && n > 0),
           }
         : null;
 

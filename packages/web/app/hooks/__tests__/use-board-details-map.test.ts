@@ -210,8 +210,8 @@ describe('useBoardDetailsMap', () => {
       boardType: 'kilter',
       layoutId: 1,
       sizeId: 10,
-      // Includes an invalid entry to exercise the Number.isFinite filter.
-      setIds: '1,2,abc',
+      // Includes an invalid entry and a zero to exercise the numeric filter.
+      setIds: '1,2,abc,0',
     });
     const details = makeBoardDetails('kilter-selected');
     mockGetUserBoardDetails.mockReturnValue(details);
@@ -227,6 +227,27 @@ describe('useBoardDetailsMap', () => {
       layoutId: 1,
       sizeId: 10,
       setIds: [1, 2],
+    });
+  });
+
+  it('should synthesize an empty setIds array when selectedBoard.setIds is empty', () => {
+    const climb = makeClimb({ uuid: 'c1', boardType: 'kilter', layoutId: 1 });
+    const selectedBoard = makeUserBoard({
+      boardType: 'kilter',
+      layoutId: 1,
+      sizeId: 10,
+      setIds: '',
+    });
+    const details = makeBoardDetails('kilter-selected');
+    mockResolveBoardDetailsForClimb.mockReturnValue({ details, status: 'exact' });
+
+    renderHook(() => useBoardDetailsMap([climb], [selectedBoard], selectedBoard));
+
+    expect(mockResolveBoardDetailsForClimb).toHaveBeenCalledWith(climb, {
+      boardType: 'kilter',
+      layoutId: 1,
+      sizeId: 10,
+      setIds: [],
     });
   });
 
