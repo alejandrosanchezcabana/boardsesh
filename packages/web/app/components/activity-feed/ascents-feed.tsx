@@ -17,6 +17,7 @@ import LocationOnOutlined from '@mui/icons-material/LocationOnOutlined';
 import DeleteOutlined from '@mui/icons-material/DeleteOutlined';
 import dayjs from 'dayjs';
 import relativeTime from 'dayjs/plugin/relativeTime';
+import utc from 'dayjs/plugin/utc'
 import { useInfiniteQuery } from '@tanstack/react-query';
 import { createGraphQLHttpClient } from '@/app/lib/graphql/client';
 import {
@@ -33,6 +34,8 @@ import { themeTokens } from '@/app/theme/theme-config';
 import styles from './ascents-feed.module.css';
 import { useInfiniteScroll } from '@/app/hooks/use-infinite-scroll';
 
+dayjs.extend(relativeTime);
+dayjs.extend(utc)
 dayjs.extend(relativeTime);
 
 
@@ -99,7 +102,7 @@ const getItemStatusColor = (status: string): 'success' | 'primary' | 'default' =
 };
 
 const TickItemRow: React.FC<{ item: AscentFeedItem; onDelete: (uuid: string) => void; isDeleting: boolean }> = ({ item, onDelete, isDeleting }) => {
-  const timeAgo = dayjs(item.climbedAt).fromNow();
+  const timeAgo = dayjs(item.climbedAt).utc(true).fromNow();
   return (
     <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, py: 0.5 }}>
       <Chip
@@ -131,7 +134,7 @@ const GroupedFeedItem: React.FC<{ group: GroupedAscentFeedItem; isOwnProfile?: b
   const latestItem = group.items.reduce((latest, item) =>
     new Date(item.climbedAt) > new Date(latest.climbedAt) ? item : latest
   );
-  const timeAgo = dayjs(latestItem.climbedAt).fromNow();
+  const timeAgo = dayjs(latestItem.climbedAt).utc(true).fromNow();
   const boardDisplay = getLayoutDisplayName(group.boardType, group.layoutId);
   const statusSummary = getGroupStatusSummary(group);
   const hasSuccess = group.flashCount > 0 || group.sendCount > 0;
