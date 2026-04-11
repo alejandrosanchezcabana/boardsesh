@@ -8,7 +8,7 @@ import styles from './swipe-board-carousel.module.css';
 
 interface ZoomableBoardProps {
   children: React.ReactNode;
-  onZoomChange: (isZoomed: boolean) => void;
+  onZoomChange?: (isZoomed: boolean) => void;
   resetKey: string;
 }
 
@@ -18,7 +18,7 @@ const ZoomableBoard = memo(function ZoomableBoard({ children, onZoomChange, rese
 
   // Notify parent of zoom state changes
   useEffect(() => {
-    onZoomChange(isZoomed);
+    onZoomChange?.(isZoomed);
   }, [isZoomed, onZoomChange]);
 
   // Reset zoom when climb changes

@@ -15,13 +15,15 @@ import MuiSwitch from '@mui/material/Switch';
 import MuiSlider from '@mui/material/Slider';
 import MuiSelect from '@mui/material/Select';
 import MenuItem from '@mui/material/MenuItem';
-import { SettingsOutlined, CloseOutlined, LocalFireDepartmentOutlined, SaveOutlined, LoginOutlined, CloudUploadOutlined, GetAppOutlined } from '@mui/icons-material';
+import { SettingsOutlined, LocalFireDepartmentOutlined, SaveOutlined, LoginOutlined, CloudUploadOutlined, GetAppOutlined } from '@mui/icons-material';
 import { useRouter, usePathname } from 'next/navigation';
 import Link from 'next/link';
 import { track } from '@vercel/analytics';
 import { useSession } from 'next-auth/react';
 import BoardRenderer from '../board-renderer/board-renderer';
 import MoonBoardRenderer from '../moonboard-renderer/moonboard-renderer';
+import ZoomableBoard from '../board-renderer/zoomable-board';
+import SwipeableDrawer from '../swipeable-drawer/swipeable-drawer';
 import { useBoardProvider } from '../board-provider/board-provider-context';
 import { useCreateClimb } from './use-create-climb';
 import { useMoonBoardCreateClimb } from './use-moonboard-create-climb';
@@ -59,6 +61,11 @@ import {
 } from '@/app/lib/graphql/operations/new-climb-feed';
 import { useWsAuthToken } from '@/app/hooks/use-ws-auth-token';
 
+
+const SETTINGS_DRAWER_STYLES = {
+  wrapper: { height: 'auto', maxHeight: '70vh' },
+  body: { padding: 0 },
+};
 
 interface CreateClimbFormValues {
   name: string;
@@ -169,6 +176,7 @@ export default function CreateClimbForm({
   const [climbName, setClimbName] = useState(forkName ? `${forkName} fork` : '');
   const [description, setDescription] = useState('');
   const [showSettingsPanel, setShowSettingsPanel] = useState(false);
+  const zoomResetKey = boardType === 'moonboard' ? `moonboard-${selectedAngle}` : `aurora-${angle}`;
   const climbNameRef = useRef(climbName);
   const setClimbNameRef = useRef(setClimbName);
   const headerActionRef = useRef<React.ReactNode | null>(null);
@@ -596,277 +604,277 @@ export default function CreateClimbForm({
   }, [climbName, headerAction, setClimbName, update]);
 
   return (
-    <div className={styles.pageContainer}>
-      {/* MoonBoard OCR errors */}
-      {boardType === 'moonboard' && ocrError && (
-        <MuiAlert
-          severity="error"
-          onClose={() => setOcrError(null)}
-          className={styles.alertBanner}
-        >
-          Import Failed: {ocrError}
-        </MuiAlert>
-      )}
+    <div className={styles.pageContainer} data-testid="climb-setter">
+      {/* Header section: alerts + control row */}
+      <div className={styles.headerSection}>
+        {/* MoonBoard OCR errors */}
+        {boardType === 'moonboard' && ocrError && (
+          <MuiAlert
+            severity="error"
+            onClose={() => setOcrError(null)}
+            className={styles.alertBanner}
+          >
+            Import Failed: {ocrError}
+          </MuiAlert>
+        )}
 
-      {boardType === 'moonboard' && ocrWarnings.length > 0 && (
-        <MuiAlert
-          severity="warning"
-          onClose={() => setOcrWarnings([])}
-          className={styles.alertBanner}
-        >
-          Import Warnings: {ocrWarnings.map((w, i) => <div key={i}>{w}</div>)}
-        </MuiAlert>
-      )}
+        {boardType === 'moonboard' && ocrWarnings.length > 0 && (
+          <MuiAlert
+            severity="warning"
+            onClose={() => setOcrWarnings([])}
+            className={styles.alertBanner}
+          >
+            Import Warnings: {ocrWarnings.map((w, i) => <div key={i}>{w}</div>)}
+          </MuiAlert>
+        )}
 
-      {boardType === 'moonboard' && moonBoardDuplicateError && (
-        <MuiAlert severity="error" className={styles.alertBanner}>
-          {moonBoardDuplicateError}
-        </MuiAlert>
-      )}
+        {boardType === 'moonboard' && moonBoardDuplicateError && (
+          <MuiAlert severity="error" className={styles.alertBanner}>
+            {moonBoardDuplicateError}
+          </MuiAlert>
+        )}
 
-      {boardType === 'moonboard' && !moonBoardDuplicateError && isCheckingMoonBoardDuplicate && isValid && (
-        <MuiAlert severity="info" className={styles.alertBanner}>
-          Checking whether this MoonBoard climb already exists...
-        </MuiAlert>
-      )}
+        {boardType === 'moonboard' && !moonBoardDuplicateError && isCheckingMoonBoardDuplicate && isValid && (
+          <MuiAlert severity="info" className={styles.alertBanner}>
+            Checking whether this MoonBoard climb already exists...
+          </MuiAlert>
+        )}
 
-      <div className={styles.contentWrapper}>
-        {/* Controls bar with draft toggle (all boards) and heatmap (Aurora only) */}
-        <div className={styles.climbTitleContainer}>
-          <div className={styles.controlBarContent}>
-            <Box sx={{ display: 'flex', gap: 1, alignItems: 'center', flexWrap: 'wrap' }}>
-              <Typography variant="body2" component="span" color="text.secondary" className={styles.draftLabel}>
-                Draft
-              </Typography>
-              <MuiSwitch
-                size="small"
-                checked={isDraft}
-                onChange={(_, checked) => setIsDraft(checked)}
-              />
-              {/* Aurora-only: Heatmap toggle */}
-              {boardType === 'aurora' && (
-                <>
-                  <MuiTooltip title={showHeatmap ? 'Hide heatmap' : 'Show hold popularity heatmap'}>
-                    <IconButton
-                      color={showHeatmap ? 'error' : 'default'}
-                      size="small"
-                      onClick={handleToggleHeatmap}
-                      className={styles.heatmapButton}
-                    >
-                      <LocalFireDepartmentOutlined />
-                    </IconButton>
-                  </MuiTooltip>
-                  {showHeatmap && (
-                    <>
-                      <Typography variant="body2" component="span" color="text.secondary" className={styles.draftLabel}>
-                        Opacity
-                      </Typography>
-                      <MuiSlider
-                        min={0.1}
-                        max={1}
-                        step={0.1}
-                        value={heatmapOpacity}
-                        onChange={(_, value) => setHeatmapOpacity(value as number)}
-                        className={styles.opacitySlider}
-                      />
-                    </>
-                  )}
-                </>
-              )}
-              {boardType === 'moonboard' && userGrade && (
-                <Typography
-                  variant="body2"
-                  component="span"
-                  className={styles.gradeBadge}
-                  style={{
-                    color: getSoftFontGradeColor(userGrade, isDark) ?? 'var(--neutral-500)',
-                  }}
-                >
-                  {userGrade}
-                </Typography>
-              )}
-            </Box>
-
-            <MuiButton
+        <div className={styles.headerRow}>
+          <div className={styles.headerControls}>
+            <Typography variant="body2" component="span" color="text.secondary" className={styles.draftLabel}>
+              Draft
+            </Typography>
+            <MuiSwitch
               size="small"
-              variant={showSettingsPanel ? 'contained' : 'outlined'}
-              startIcon={showSettingsPanel ? <CloseOutlined /> : <SettingsOutlined />}
-              onClick={handleToggleSettings}
-            >
-              Settings
-            </MuiButton>
-          </div>
-        </div>
-
-        {/* Board Section */}
-        <div className={styles.boardContainer}>
-          <div className={styles.boardWrapper}>
-            {boardType === 'aurora' && boardDetails ? (
+              checked={isDraft}
+              onChange={(_, checked) => setIsDraft(checked)}
+            />
+            {/* Aurora-only: Heatmap toggle */}
+            {boardType === 'aurora' && (
               <>
-                <BoardRenderer
-                  boardDetails={boardDetails}
-                  litUpHoldsMap={litUpHoldsMap}
-                  mirrored={false}
-                  onHoldClick={handleHoldClick}
-                  fillHeight
-                />
-                <CreateClimbHeatmapOverlay
-                  boardDetails={boardDetails}
-                  angle={angle}
-                  litUpHoldsMap={litUpHoldsMap}
-                  opacity={heatmapOpacity}
-                  enabled={showHeatmap}
-                />
+                <MuiTooltip title={showHeatmap ? 'Hide heatmap' : 'Show hold popularity heatmap'}>
+                  <IconButton
+                    color={showHeatmap ? 'error' : 'default'}
+                    size="small"
+                    onClick={handleToggleHeatmap}
+                    className={styles.heatmapButton}
+                  >
+                    <LocalFireDepartmentOutlined />
+                  </IconButton>
+                </MuiTooltip>
+                {showHeatmap && (
+                  <>
+                    <Typography variant="body2" component="span" color="text.secondary" className={styles.draftLabel}>
+                      Opacity
+                    </Typography>
+                    <MuiSlider
+                      min={0.1}
+                      max={1}
+                      step={0.1}
+                      value={heatmapOpacity}
+                      onChange={(_, value) => setHeatmapOpacity(value as number)}
+                      className={styles.opacitySlider}
+                    />
+                  </>
+                )}
               </>
-            ) : boardType === 'moonboard' && layoutFolder && holdSetImages ? (
+            )}
+            {boardType === 'moonboard' && userGrade && (
+              <Typography
+                variant="body2"
+                component="span"
+                className={styles.gradeBadge}
+                style={{
+                  color: getSoftFontGradeColor(userGrade, isDark) ?? 'var(--neutral-500)',
+                }}
+              >
+                {userGrade}
+              </Typography>
+            )}
+          </div>
+
+          <MuiButton
+            size="small"
+            variant="outlined"
+            startIcon={<SettingsOutlined />}
+            onClick={handleToggleSettings}
+          >
+            Settings
+          </MuiButton>
+        </div>
+      </div>
+
+      {/* Board section: zoomable SVG renderer */}
+      <div className={styles.boardSectionWrapper} data-testid="climb-setter-board">
+        <ZoomableBoard resetKey={zoomResetKey}>
+          {boardType === 'aurora' && boardDetails ? (
+            <div className={styles.zoomFill}>
+              <BoardRenderer
+                boardDetails={boardDetails}
+                litUpHoldsMap={litUpHoldsMap}
+                mirrored={false}
+                onHoldClick={handleHoldClick}
+                fillHeight
+              />
+              <CreateClimbHeatmapOverlay
+                boardDetails={boardDetails}
+                angle={angle}
+                litUpHoldsMap={litUpHoldsMap}
+                opacity={heatmapOpacity}
+                enabled={showHeatmap}
+              />
+            </div>
+          ) : boardType === 'moonboard' && layoutFolder && holdSetImages ? (
+            <div className={styles.moonboardFill}>
               <MoonBoardRenderer
                 layoutFolder={layoutFolder}
                 holdSetImages={holdSetImages}
                 litUpHoldsMap={litUpHoldsMap}
                 onHoldClick={handleHoldClick}
               />
-            ) : null}
-          </div>
-
-          {/* Settings overlay panel */}
-          {showSettingsPanel && (
-            <div
-              className={styles.settingsPanel}
-              onClick={(e) => e.stopPropagation()}
-            >
-              <div className={styles.settingsPanelHeader}>
-                <Typography variant="body2" component="span" fontWeight={600}>Climb Settings</Typography>
-              </div>
-              <div className={styles.settingsPanelContent}>
-                {/* MoonBoard-specific: Angle, Grade and Benchmark */}
-                {boardType === 'moonboard' && (
-                  <>
-                    <div className={styles.settingsField}>
-                      <Typography variant="body2" component="span" color="text.secondary" className={styles.settingsLabel}>
-                        Angle
-                      </Typography>
-                      <MuiSelect
-                        value={selectedAngle}
-                        onChange={(e) => setSelectedAngle(e.target.value as number)}
-                        className={styles.settingsGradeField}
-                        size="small"
-                      >
-                        {MOONBOARD_ANGLES.map(a => (
-                          <MenuItem key={a} value={a}>{a}&deg;</MenuItem>
-                        ))}
-                      </MuiSelect>
-                    </div>
-                    <div className={styles.settingsField}>
-                      <Typography variant="body2" component="span" color="text.secondary" className={styles.settingsLabel}>
-                        Grade
-                      </Typography>
-                      <MuiSelect
-                        displayEmpty
-                        value={userGrade ?? ''}
-                        onChange={(e) => setUserGrade(e.target.value === '' ? undefined : (e.target.value as string))}
-                        className={styles.settingsGradeField}
-                        size="small"
-                      >
-                        <MenuItem value=""><em>None</em></MenuItem>
-                        {MOONBOARD_GRADES.map(g => (
-                          <MenuItem key={g.value} value={g.value}>{g.label}</MenuItem>
-                        ))}
-                      </MuiSelect>
-                    </div>
-                    <div className={styles.settingsField}>
-                      <Box sx={{ display: 'flex', gap: 1, alignItems: 'center' }}>
-                        <MuiSwitch
-                          size="small"
-                          checked={isBenchmark}
-                          onChange={(_, checked) => setIsBenchmark(checked)}
-                        />
-                        <Typography variant="body2" component="span">Benchmark</Typography>
-                      </Box>
-                    </div>
-                  </>
-                )}
-                {/* Common: Description */}
-                <div className={styles.settingsField}>
-                  <Typography variant="body2" component="span" color="text.secondary" className={styles.settingsLabel}>
-                    Description (optional)
-                  </Typography>
-                  <TextField
-                    value={description}
-                    onChange={(e) => setDescription(e.target.value)}
-                    placeholder="Add beta or notes about your climb..."
-                    multiline
-                    rows={3}
-                    inputProps={{ maxLength: 500 }}
-                    variant="outlined"
-                    size="small"
-                    fullWidth
-                  />
-                </div>
-              </div>
             </div>
-          )}
-        </div>
-
-        {/* Hold counts bar at bottom */}
-        <div className={styles.holdCountsBar}>
-          <Stack direction="row" spacing={1} sx={{ flexWrap: 'wrap' }}>
-            {boardType === 'aurora' ? (
-              <>
-                <HoldStatusChip label={`Starting: ${startingCount}/2`} active={startingCount > 0} tone="success" />
-                <HoldStatusChip label={`Finish: ${finishCount}/2`} active={finishCount > 0} tone="pink" />
-                <HoldStatusChip label={`Total: ${totalHolds}`} active={totalHolds > 0} tone="primary" />
-              </>
-            ) : (
-              <>
-                <HoldStatusChip label={`Start: ${startingCount}/2`} active={startingCount > 0} tone="error" />
-                <HoldStatusChip label={`Hand: ${handCount}`} active={handCount > 0} tone="primary" />
-                <HoldStatusChip label={`Finish: ${finishCount}/2`} active={finishCount > 0} tone="success" />
-                <HoldStatusChip label={`Total: ${totalHolds}`} active={totalHolds > 0} tone="secondary" />
-              </>
-            )}
-          </Stack>
-          <Stack direction="row" spacing={1} sx={{ flexWrap: 'wrap' }}>
-            {totalHolds > 0 && (
-              <MuiButton size="small" variant="outlined" onClick={resetHolds}>
-                Clear
-              </MuiButton>
-            )}
-            {/* MoonBoard-only: Import buttons */}
-            {boardType === 'moonboard' && (
-              <>
-                <input
-                  type="file"
-                  ref={fileInputRef}
-                  accept="image/png,image/jpeg,image/webp"
-                  style={{ display: 'none' }}
-                  onChange={(e) => {
-                    const file = e.target.files?.[0];
-                    if (file) handleOcrImport(file);
-                    e.target.value = '';
-                  }}
-                  disabled={isOcrProcessing}
-                />
-                <MuiButton size="small" variant="outlined" startIcon={isOcrProcessing ? <CircularProgress size={16} /> : <CloudUploadOutlined />} disabled={isOcrProcessing} onClick={() => fileInputRef.current?.click()}>
-                  {isOcrProcessing ? 'Processing...' : 'Import'}
-                </MuiButton>
-                <Link href={bulkImportUrl}>
-                  <MuiButton size="small" variant="outlined" startIcon={<GetAppOutlined />}>Bulk</MuiButton>
-                </Link>
-              </>
-            )}
-          </Stack>
-        </div>
+          ) : null}
+        </ZoomableBoard>
       </div>
 
-      {/* MoonBoard validation hint */}
+      {/* MoonBoard validation hint band */}
       {boardType === 'moonboard' && !isValid && totalHolds > 0 && (
-        <div className={styles.validationBar}>
+        <div className={styles.validationHintBar}>
           <Typography variant="body2" component="span" color="text.secondary">
             A valid climb needs at least 1 start hold and 1 finish hold
           </Typography>
         </div>
       )}
 
+      {/* Bottom action bar: hold counts + clear/import */}
+      <div className={styles.actionBar}>
+        <Stack direction="row" className={styles.actionBarChips}>
+          {boardType === 'aurora' ? (
+            <>
+              <HoldStatusChip label={`Starting: ${startingCount}/2`} active={startingCount > 0} tone="success" />
+              <HoldStatusChip label={`Finish: ${finishCount}/2`} active={finishCount > 0} tone="pink" />
+              <HoldStatusChip label={`Total: ${totalHolds}`} active={totalHolds > 0} tone="primary" />
+            </>
+          ) : (
+            <>
+              <HoldStatusChip label={`Start: ${startingCount}/2`} active={startingCount > 0} tone="error" />
+              <HoldStatusChip label={`Hand: ${handCount}`} active={handCount > 0} tone="primary" />
+              <HoldStatusChip label={`Finish: ${finishCount}/2`} active={finishCount > 0} tone="success" />
+              <HoldStatusChip label={`Total: ${totalHolds}`} active={totalHolds > 0} tone="secondary" />
+            </>
+          )}
+        </Stack>
+        <Stack direction="row" className={styles.actionBarButtons}>
+          {totalHolds > 0 && (
+            <MuiButton size="small" variant="outlined" onClick={resetHolds}>
+              Clear
+            </MuiButton>
+          )}
+          {/* MoonBoard-only: Import buttons */}
+          {boardType === 'moonboard' && (
+            <>
+              <input
+                type="file"
+                ref={fileInputRef}
+                accept="image/png,image/jpeg,image/webp"
+                style={{ display: 'none' }}
+                onChange={(e) => {
+                  const file = e.target.files?.[0];
+                  if (file) handleOcrImport(file);
+                  e.target.value = '';
+                }}
+                disabled={isOcrProcessing}
+              />
+              <MuiButton size="small" variant="outlined" startIcon={isOcrProcessing ? <CircularProgress size={16} /> : <CloudUploadOutlined />} disabled={isOcrProcessing} onClick={() => fileInputRef.current?.click()}>
+                {isOcrProcessing ? 'Processing...' : 'Import'}
+              </MuiButton>
+              <Link href={bulkImportUrl}>
+                <MuiButton size="small" variant="outlined" startIcon={<GetAppOutlined />}>Bulk</MuiButton>
+              </Link>
+            </>
+          )}
+        </Stack>
+      </div>
+
+      {/* Settings nested drawer — lazy-mounted */}
+      {showSettingsPanel && (
+        <SwipeableDrawer
+          title="Climb Settings"
+          placement="bottom"
+          open={showSettingsPanel}
+          onClose={() => setShowSettingsPanel(false)}
+          swipeEnabled={false}
+          styles={SETTINGS_DRAWER_STYLES}
+        >
+          <div className={styles.settingsDrawerContent}>
+            {/* MoonBoard-specific: Angle, Grade and Benchmark */}
+            {boardType === 'moonboard' && (
+              <>
+                <div className={styles.settingsField}>
+                  <Typography variant="body2" component="span" color="text.secondary" className={styles.settingsLabel}>
+                    Angle
+                  </Typography>
+                  <MuiSelect
+                    value={selectedAngle}
+                    onChange={(e) => setSelectedAngle(e.target.value as number)}
+                    className={styles.settingsGradeField}
+                    size="small"
+                  >
+                    {MOONBOARD_ANGLES.map(a => (
+                      <MenuItem key={a} value={a}>{a}&deg;</MenuItem>
+                    ))}
+                  </MuiSelect>
+                </div>
+                <div className={styles.settingsField}>
+                  <Typography variant="body2" component="span" color="text.secondary" className={styles.settingsLabel}>
+                    Grade
+                  </Typography>
+                  <MuiSelect
+                    displayEmpty
+                    value={userGrade ?? ''}
+                    onChange={(e) => setUserGrade(e.target.value === '' ? undefined : (e.target.value as string))}
+                    className={styles.settingsGradeField}
+                    size="small"
+                  >
+                    <MenuItem value=""><em>None</em></MenuItem>
+                    {MOONBOARD_GRADES.map(g => (
+                      <MenuItem key={g.value} value={g.value}>{g.label}</MenuItem>
+                    ))}
+                  </MuiSelect>
+                </div>
+                <div className={styles.settingsField}>
+                  <Box sx={{ display: 'flex', gap: 1, alignItems: 'center' }}>
+                    <MuiSwitch
+                      size="small"
+                      checked={isBenchmark}
+                      onChange={(_, checked) => setIsBenchmark(checked)}
+                    />
+                    <Typography variant="body2" component="span">Benchmark</Typography>
+                  </Box>
+                </div>
+              </>
+            )}
+            {/* Common: Description */}
+            <div className={styles.settingsField}>
+              <Typography variant="body2" component="span" color="text.secondary" className={styles.settingsLabel}>
+                Description (optional)
+              </Typography>
+              <TextField
+                value={description}
+                onChange={(e) => setDescription(e.target.value)}
+                placeholder="Add beta or notes about your climb..."
+                multiline
+                rows={3}
+                inputProps={{ maxLength: 500 }}
+                variant="outlined"
+                size="small"
+                fullWidth
+              />
+            </div>
+          </div>
+        </SwipeableDrawer>
+      )}
     </div>
   );
 }

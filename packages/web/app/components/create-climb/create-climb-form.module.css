@@ -7,46 +7,36 @@
   background-color: var(--semantic-background);
   border: 1px solid var(--neutral-200);
   border-radius: 20px;
+  min-height: 0;
 }
 
-/* Alert banner styling */
+/* Header section (PlayViewDrawer-style) */
+.headerSection {
+  flex-shrink: 0;
+  background-color: var(--semantic-surface);
+  border-bottom: 1px solid var(--neutral-100);
+}
+
 .alertBanner {
   margin: 8px 12px;
   flex-shrink: 0;
 }
 
-/* Validation bar at bottom */
-.validationBar {
-  padding: 8px 12px;
-  text-align: center;
-  background-color: var(--semantic-surface);
-  border-top: 1px solid var(--border-subtle);
-  flex-shrink: 0;
-}
-
-/* Content wrapper - scrollable for mobile */
-.contentWrapper {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  overflow: hidden;
-  position: relative;
-  min-height: 0;
-}
-
-.climbTitleContainer {
-  width: 100%;
-  flex-shrink: 0;
-  padding: 10px 12px;
-  background-color: var(--semantic-surface);
-  border-bottom: 1px solid var(--neutral-200);
-}
-
-.controlBarContent {
+.headerRow {
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 12px;
+  padding: 10px 12px;
+  flex-wrap: wrap;
+}
+
+.headerControls {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  min-width: 0;
 }
 
 /* Draft label */
@@ -79,49 +69,76 @@
   margin: 0;
 }
 
-/* Board container - fills remaining space like play view */
-.boardContainer {
+/* Board section (flex:1, holds ZoomableBoard + heatmap) */
+.boardSectionWrapper {
   flex: 1;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 16px 12px;
-  min-height: 300px;
-  width: 100%;
+  min-height: 0;
   position: relative;
-  overflow: auto;
-  -webkit-overflow-scrolling: touch;
-}
-
-.boardWrapper {
-  position: relative;
-  height: 100%;
-  width: 100%;
   display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.settingsPanel {
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
   padding: 12px;
-  background-color: var(--semantic-surface-overlay);
-  overflow: auto;
-  z-index: 10;
+  overflow: hidden;
 }
 
-.settingsPanelHeader {
-  margin-bottom: 12px;
+.zoomFill {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
-.settingsPanelContent {
+.moonboardFill {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Validation hint band (MoonBoard) */
+.validationHintBar {
+  flex-shrink: 0;
+  padding: 6px 12px;
+  text-align: center;
+  background-color: var(--semantic-surface);
+  border-top: 1px solid var(--neutral-100);
+}
+
+/* Bottom action bar (PlayViewDrawer-style) */
+.actionBar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 12px;
+  flex-shrink: 0;
+  background-color: var(--semantic-surface);
+  border-top: 1px solid var(--neutral-100);
+  flex-wrap: wrap;
+}
+
+.actionBarChips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+  min-width: 0;
+}
+
+.actionBarButtons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+}
+
+/* Settings nested drawer content */
+.settingsDrawerContent {
   display: flex;
   flex-direction: column;
   gap: 16px;
+  padding: 12px 16px 24px;
 }
 
 .settingsField {
@@ -134,21 +151,8 @@
   font-size: 12px;
 }
 
-/* MoonBoard-specific grade field */
 .settingsGradeField {
   width: 100%;
-}
-
-.holdCountsBar {
-  display: flex;
-  gap: 8px;
-  flex-wrap: wrap;
-  align-items: center;
-  justify-content: space-between;
-  padding: 10px 12px;
-  flex-shrink: 0;
-  background-color: var(--semantic-surface);
-  border-top: 1px solid var(--neutral-200);
 }
 
 /* Mobile adjustments */
@@ -157,36 +161,31 @@
     border-radius: 16px;
   }
 
-  .holdCountsBar {
-    padding: 6px 8px;
+  .headerRow {
+    padding: 8px 10px;
+    gap: 8px;
+  }
+
+  .actionBar {
+    padding: 8px 10px;
     gap: 6px;
     justify-content: center;
-  }
-
-  .climbTitleContainer {
-    padding: 8px;
-  }
-
-  .controlBarContent {
-    flex-direction: column;
-    align-items: stretch;
   }
 
   .opacitySlider {
     width: 60px;
   }
-}
 
-/* Validation hint text */
-.validationHint {
-  margin-top: 8px;
-  display: block;
+  .boardSectionWrapper {
+    padding: 8px;
+  }
 }
 
 /* Desktop adjustments */
 @media (min-width: 768px) {
-  .boardContainer {
-    max-width: 600px;
+  .pageContainer {
+    max-width: 720px;
     margin: 0 auto;
+    width: 100%;
   }
 }
