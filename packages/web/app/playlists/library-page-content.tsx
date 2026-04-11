@@ -95,6 +95,11 @@ export default function LibraryPageContent({
     });
   }, []);
 
+  useEffect(() => {
+    if (typeof document === 'undefined') return;
+    document.title = activeTab === 'logbook' ? 'Logbook | Boardsesh' : 'Playlists | Boardsesh';
+  }, [activeTab]);
+
   // Auto-select the matching board once boards finish loading (fallback for non-SSR paths)
   useEffect(() => {
     if (defaultBoardAppliedRef.current || boardsLoading || myBoards.length === 0) return;
@@ -228,6 +233,10 @@ export default function LibraryPageContent({
     return `${playlistsBasePath}/${playlistUuid}`;
   }, [playlistsBasePath]);
 
+  const logbookBasePath = playlistsBasePath === '/playlists'
+    ? '/logbook'
+    : playlistsBasePath.replace(/\/playlists$/, '/logbook');
+
   // Filter discover playlists to exclude user's own
   const getDiscoverPlaylists = useCallback(() => {
     const userId = session?.user?.id;
@@ -254,17 +263,19 @@ export default function LibraryPageContent({
     // When rendered from a board route, switching boards navigates to the correct URL
     if (boardSlug || playlistsBasePath !== '/playlists') {
       if (board) {
-        router.push(constructBoardSlugPlaylistsUrl(board.slug, board.angle));
+        const nextPlaylistsPath = constructBoardSlugPlaylistsUrl(board.slug, board.angle);
+        router.push(activeTab === 'logbook' ? nextPlaylistsPath.replace(/\/playlists$/, '/logbook') : nextPlaylistsPath);
       } else {
-        router.push('/playlists');
+        router.push(activeTab === 'logbook' ? '/logbook' : '/playlists');
       }
     }
-  }, [boardSlug, playlistsBasePath, router]);
+  }, [activeTab, boardSlug, playlistsBasePath, router]);
 
   const handleTabChange = useCallback((_: React.SyntheticEvent, newValue: 'playlists' | 'logbook') => {
     setActiveTab(newValue);
     setPreference('libraryTab', newValue);
-  }, []);
+    router.replace(newValue === 'logbook' ? logbookBasePath : playlistsBasePath);
+  }, [logbookBasePath, playlistsBasePath, router]);
 
   // Header with back button
   const renderHeader = () => (

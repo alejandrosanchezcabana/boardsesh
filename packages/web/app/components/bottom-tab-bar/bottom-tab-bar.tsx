@@ -20,7 +20,7 @@ import Badge from '@mui/material/Badge';
 import { usePathname, useRouter } from 'next/navigation';
 import { track } from '@vercel/analytics';
 import { BoardDetails, BoardName } from '@/app/lib/types';
-import { constructClimbListWithSlugs, constructBoardSlugListUrl, tryConstructSlugListUrl, generateLayoutSlug, generateSizeSlug, generateSetSlug, searchParamsToUrlParams, getContextAwarePlaylistUrl, getPlaylistsBasePath } from '@/app/lib/url-utils';
+import { constructClimbListWithSlugs, constructBoardSlugListUrl, tryConstructSlugListUrl, generateLayoutSlug, generateSizeSlug, generateSetSlug, searchParamsToUrlParams, getContextAwarePlaylistUrl, getLogbookBasePath } from '@/app/lib/url-utils';
 import { themeTokens } from '@/app/theme/theme-config';
 import { useColorMode } from '@/app/hooks/use-color-mode';
 import { PlaylistsContext } from '../climb-actions/playlists-batch-context';
@@ -57,7 +57,7 @@ const getActiveTab = (pathname: string): Tab => {
   if (pathname === '/') return 'home';
   if (pathname.startsWith('/feed')) return 'feed';
   if (pathname.startsWith('/notifications')) return 'notifications';
-  if (pathname.startsWith('/playlists') || pathname.includes('/playlists')) return 'library';
+  if (pathname.startsWith('/playlists') || pathname.includes('/playlists') || pathname.startsWith('/logbook') || pathname.includes('/logbook')) return 'library';
   return 'climbs';
 };
 
@@ -277,14 +277,14 @@ function BottomTabBar({ boardDetails, angle, boardConfigs }: BottomTabBarProps) 
     track('Bottom Tab Bar', { tab: 'climbs' });
   };
 
-  const playlistsUrl = getPlaylistsBasePath(pathname);
+  const logbookUrl = getLogbookBasePath(pathname);
 
   const handleLibraryTab = () => {
     setIsCreateOpen(false);
     setIsCreatePlaylistOpen(false);
     const currentUrl = pathname + (typeof window !== 'undefined' ? window.location.search : '');
-    if (playlistsUrl !== currentUrl) {
-      router.push(playlistsUrl);
+    if (logbookUrl !== currentUrl) {
+      router.push(logbookUrl);
     }
     track('Bottom Tab Bar', { tab: 'library' });
   };

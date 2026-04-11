@@ -25,6 +25,59 @@ export type FollowingAscentFeedItem = {
   frames?: string;
 };
 
+export type AscentFeedItem = {
+  uuid: string;
+  climbUuid: string;
+  climbName: string;
+  setterUsername?: string | null;
+  boardType: string;
+  layoutId?: number | null;
+  angle: number;
+  isMirror: boolean;
+  status: 'flash' | 'send' | 'attempt';
+  attemptCount: number;
+  quality?: number | null;
+  difficulty?: number | null;
+  difficultyName?: string | null;
+  consensusDifficulty?: number | null;
+  consensusDifficultyName?: string | null;
+  isBenchmark: boolean;
+  comment: string;
+  climbedAt: string;
+  frames?: string | null;
+};
+
+export type AscentFeedInput = {
+  limit?: number;
+  offset?: number;
+  boardType?: string;
+  layoutIds?: number[];
+  status?: 'flash' | 'send' | 'attempt';
+  statusMode?: 'both' | 'send' | 'attempt';
+  flashOnly?: boolean;
+  climbName?: string;
+  minDifficulty?: number;
+  maxDifficulty?: number;
+  minAngle?: number;
+  maxAngle?: number;
+  benchmarkOnly?: boolean;
+  sortBy?:
+    | 'recent'
+    | 'hardest'
+    | 'easiest'
+    | 'mostAttempts'
+    | 'climbName'
+    | 'loggedGrade'
+    | 'consensusGrade'
+    | 'date'
+    | 'attemptCount';
+  sortOrder?: 'asc' | 'desc';
+  secondarySortBy?: 'climbName' | 'loggedGrade' | 'consensusGrade' | 'date' | 'attemptCount';
+  secondarySortOrder?: 'asc' | 'desc';
+  fromDate?: string;
+  toDate?: string;
+};
+
 export type FollowingAscentsFeedResult = {
   items: FollowingAscentFeedItem[];
   totalCount: number;

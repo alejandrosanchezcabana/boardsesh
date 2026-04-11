@@ -769,6 +769,13 @@ export const getPlaylistsBasePath = (pathname: string): string => {
 };
 
 /**
+ * Extract the logbook base path from the current pathname.
+ * Mirrors getPlaylistsBasePath but targets /logbook routes.
+ */
+export const getLogbookBasePath = (pathname: string): string =>
+  getPlaylistsBasePath(pathname).replace(/\/playlists$/, '/logbook');
+
+/**
  * Build a context-aware URL for a specific playlist detail page.
  * Uses the current pathname to determine whether to use board-scoped or global URL.
  */

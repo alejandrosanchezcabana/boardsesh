@@ -145,8 +145,11 @@ const LogbookFeedItem: React.FC<LogbookFeedItemProps> = ({ item, showBoardType, 
             </Box>
 
             <Box sx={{ display: 'flex', gap: '8px', flexWrap: 'wrap', alignItems: 'center' }}>
+              {item.consensusDifficultyName && (
+                <Chip label={`Consensus ${item.consensusDifficultyName}`} size="small" variant="outlined" />
+              )}
               {item.difficultyName && (
-                <Chip label={item.difficultyName} size="small" color="primary" />
+                <Chip label={`Logged ${item.difficultyName}`} size="small" color="primary" />
               )}
               <Chip icon={<LocationOnOutlined />} label={`${item.angle}\u00B0`} size="small" />
               {showBoardType && (

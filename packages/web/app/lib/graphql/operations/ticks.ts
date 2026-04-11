@@ -106,6 +106,8 @@ export const GET_USER_ASCENTS_FEED = gql`
         quality
         difficulty
         difficultyName
+        consensusDifficulty
+        consensusDifficultyName
         isBenchmark
         comment
         climbedAt
@@ -132,6 +134,8 @@ export interface AscentFeedItem {
   quality: number | null;
   difficulty: number | null;
   difficultyName: string | null;
+  consensusDifficulty: number | null;
+  consensusDifficultyName: string | null;
   isBenchmark: boolean;
   comment: string;
   climbedAt: string;
@@ -145,12 +149,20 @@ export interface GetUserAscentsFeedQueryVariables {
     limit?: number;
     offset?: number;
     boardType?: string;
+    layoutIds?: number[];
     status?: 'flash' | 'send' | 'attempt';
+    statusMode?: 'both' | 'send' | 'attempt';
+    flashOnly?: boolean;
     climbName?: string;
-    sortBy?: 'recent' | 'hardest' | 'easiest' | 'mostAttempts';
+    sortBy?: 'recent' | 'hardest' | 'easiest' | 'mostAttempts' | 'climbName' | 'loggedGrade' | 'consensusGrade' | 'date' | 'attemptCount';
     sortOrder?: 'asc' | 'desc';
+    secondarySortBy?: 'climbName' | 'loggedGrade' | 'consensusGrade' | 'date' | 'attemptCount';
+    secondarySortOrder?: 'asc' | 'desc';
     minDifficulty?: number;
     maxDifficulty?: number;
+    minAngle?: number;
+    maxAngle?: number;
+    benchmarkOnly?: boolean;
     fromDate?: string;
     toDate?: string;
   };
