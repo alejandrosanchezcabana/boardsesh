@@ -16,16 +16,10 @@ on:
       - '.github/workflows/test.yml'
 
 jobs:
-  test:
+  setup:
     runs-on: ubuntu-latest
-
     steps:
     - uses: actions/checkout@v6
-
-    - name: Setup Node.js
-      uses: actions/setup-node@v4
-      with:
-        node-version: '22'
 
     - name: Setup Bun
       uses: oven-sh/setup-bun@v2
@@ -41,18 +35,101 @@ jobs:
     - name: Install dependencies
       run: bun install --frozen-lockfile
 
-    - name: Build shared-schema
-      run: bun run --filter=@boardsesh/shared-schema build
+    - name: Build shared packages
+      run: |
+        bun run --filter=@boardsesh/shared-schema build
+        bun run --filter=@boardsesh/db build
 
-    - name: Build db package
-      run: bun run --filter=@boardsesh/db build
+    - name: Upload built packages
+      uses: actions/upload-artifact@v4
+      with:
+        name: built-packages
+        path: |
+          packages/shared-schema/dist
+          packages/db/dist
+        retention-days: 1
+
+  lint:
+    needs: setup
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v6
+
+    - name: Setup Bun
+      uses: oven-sh/setup-bun@v2
+
+    - name: Restore bun cache
+      uses: actions/cache@v4
+      with:
+        path: ~/.bun/install/cache
+        key: ${{ runner.os }}-bun-${{ hashFiles('bun.lock') }}
+        restore-keys: |
+          ${{ runner.os }}-bun-
+
+    - name: Install dependencies
+      run: bun install --frozen-lockfile
+
+    - name: Download built packages
+      uses: actions/download-artifact@v4
+      with:
+        name: built-packages
 
     - name: Run linting
       run: bun run lint
 
+  typecheck:
+    needs: setup
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v6
+
+    - name: Setup Bun
+      uses: oven-sh/setup-bun@v2
+
+    - name: Restore bun cache
+      uses: actions/cache@v4
+      with:
+        path: ~/.bun/install/cache
+        key: ${{ runner.os }}-bun-${{ hashFiles('bun.lock') }}
+        restore-keys: |
+          ${{ runner.os }}-bun-
+
+    - name: Install dependencies
+      run: bun install --frozen-lockfile
+
+    - name: Download built packages
+      uses: actions/download-artifact@v4
+      with:
+        name: built-packages
+
     - name: Run type checking
       run: bunx tsc --noEmit
       working-directory: packages/web
+
+  test:
+    needs: setup
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v6
+
+    - name: Setup Bun
+      uses: oven-sh/setup-bun@v2
+
+    - name: Restore bun cache
+      uses: actions/cache@v4
+      with:
+        path: ~/.bun/install/cache
+        key: ${{ runner.os }}-bun-${{ hashFiles('bun.lock') }}
+        restore-keys: |
+          ${{ runner.os }}-bun-
+
+    - name: Install dependencies
+      run: bun install --frozen-lockfile
+
+    - name: Download built packages
+      uses: actions/download-artifact@v4
+      with:
+        name: built-packages
 
     - name: Run tests
       run: bun run --filter=@boardsesh/web test:run -- --reporter=verbose --reporter=github-actions
