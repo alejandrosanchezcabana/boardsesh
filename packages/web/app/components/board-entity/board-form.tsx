@@ -10,8 +10,8 @@ import CircularProgress from '@mui/material/CircularProgress';
 import MuiTypography from '@mui/material/Typography';
 import MenuItem from '@mui/material/MenuItem';
 import Alert from '@mui/material/Alert';
-import Checkbox from '@mui/material/Checkbox';
 import ListItemText from '@mui/material/ListItemText';
+import Check from '@mui/icons-material/Check';
 import MuiSelect from '@mui/material/Select';
 import type { SelectChangeEvent } from '@mui/material/Select';
 import FormControl from '@mui/material/FormControl';
@@ -214,9 +214,16 @@ export default function BoardForm({
                 }
               >
                 {availableSets.map(({ id, name: setName }) => (
-                  <MenuItem key={id} value={id}>
-                    <Checkbox checked={selectedSets.includes(id)} />
-                    <ListItemText primary={setName} />
+                  <MenuItem key={id} value={id} sx={{ display: 'flex', justifyContent: 'space-between', gap: 1 }}>
+                    <ListItemText
+                      primary={setName}
+                      primaryTypographyProps={{
+                        color: selectedSets.includes(id) ? 'text.primary' : 'text.secondary',
+                      }}
+                    />
+                    {selectedSets.includes(id) && (
+                      <Check fontSize="small" sx={{ color: 'primary.main', flexShrink: 0 }} />
+                    )}
                   </MenuItem>
                 ))}
               </MuiSelect>
