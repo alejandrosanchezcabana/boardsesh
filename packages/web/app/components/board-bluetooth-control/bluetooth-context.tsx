@@ -6,6 +6,7 @@ import { useBoardBluetooth } from './use-board-bluetooth';
 import { useCurrentClimb } from '../graphql-queue';
 import type { BoardDetails } from '@/app/lib/types';
 import { isCapacitor, isCapacitorWebView, waitForCapacitor, CAPACITOR_BRIDGE_TIMEOUT_MS } from '@/app/lib/ble/capacitor-utils';
+import { registerBluetoothConnection } from './bluetooth-status-store';
 
 interface BluetoothContextValue {
   isConnected: boolean;
@@ -129,6 +130,15 @@ export function BluetoothProvider({
 
     return () => cancelPolling?.();
   }, []);
+
+  // Register with the module-level status store so consumers rendered
+  // outside this provider (the root bottom tab bar, board switch guard)
+  // can observe BT connection state and trigger disconnect.
+  useEffect(() => {
+    if (!isConnected) return;
+    const release = registerBluetoothConnection(disconnect);
+    return release;
+  }, [isConnected, disconnect]);
 
   const value = useMemo(
     () => ({

@@ -20,6 +20,8 @@ import { getDefaultSizeForLayout } from '@/app/lib/board-constants';
 import { constructClimbListWithSlugs, constructBoardSlugListUrl } from '@/app/lib/url-utils';
 import { saveBoardConfig, StoredBoardConfig } from '@/app/lib/saved-boards-db';
 import type { UserBoard } from '@boardsesh/shared-schema';
+import { useBoardSwitchGuard } from '@/app/components/board-lock/use-board-switch-guard';
+import type { BoardRouteIdentity } from '@/app/lib/types';
 
 const CreateBoardForm = lazy(() => import('../board-entity/create-board-form'));
 
@@ -142,6 +144,7 @@ export default function BoardSelectorDrawer({
   onBoardSelected,
 }: BoardSelectorDrawerProps) {
   const router = useRouter();
+  const guardBoardSwitch = useBoardSwitchGuard();
   const [showCreateBoardForm, setShowCreateBoardForm] = useState(false);
 
   // Board config form state
@@ -256,16 +259,27 @@ export default function BoardSelectorDrawer({
       lastUsed: new Date().toISOString(),
     };
 
-    await saveBoardConfig(config);
+    const target: BoardRouteIdentity = {
+      board_name: selectedBoard,
+      layout_id: selectedLayout,
+      size_id: selectedSize,
+      set_ids: selectedSets,
+      layout_name: layout?.name,
+      size_name: size?.name,
+      size_description: size?.description,
+    };
 
-    if (onBoardSelected) {
-      onBoardSelected(targetUrl, config);
-      onClose();
-    } else {
-      router.push(targetUrl);
-      onClose();
-    }
-  }, [selectedBoard, selectedLayout, selectedSize, selectedSets, selectedAngle, targetUrl, layouts, sizes, onBoardSelected, onClose, router]);
+    guardBoardSwitch(target, async () => {
+      await saveBoardConfig(config);
+      if (onBoardSelected) {
+        onBoardSelected(targetUrl, config);
+        onClose();
+      } else {
+        router.push(targetUrl);
+        onClose();
+      }
+    });
+  }, [selectedBoard, selectedLayout, selectedSize, selectedSets, selectedAngle, targetUrl, layouts, sizes, onBoardSelected, onClose, router, guardBoardSwitch]);
 
   const isFormComplete = selectedBoard && selectedLayout && selectedSize && selectedSets.length > 0;
 

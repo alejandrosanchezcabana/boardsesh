@@ -25,6 +25,7 @@ import SessionSummaryDialog from '../session-summary/session-summary-dialog';
 import { SearchDrawerBridgeProvider } from '../search-drawer/search-drawer-bridge-context';
 import { CreateHeaderBridgeProvider } from '../create-climb/create-header-bridge-context';
 import { isNativeApp } from '@/app/lib/ble/capacitor-utils';
+import { BoardSwitchConfirmProvider } from '../board-lock/board-switch-confirm-provider';
 
 interface PersistentSessionWrapperProps {
   children: React.ReactNode;
@@ -43,14 +44,16 @@ export default function PersistentSessionWrapper({ children, boardConfigs }: Per
     <PartyProfileProvider>
       <PersistentSessionProvider>
         <QueueBridgeProvider>
-          <SearchDrawerBridgeProvider>
-            <CreateHeaderBridgeProvider>
-              <GlobalHeader boardConfigs={boardConfigs} />
-              {children}
-              <RootBottomBar boardConfigs={boardConfigs} />
-              <RootSessionSummaryDialog />
-            </CreateHeaderBridgeProvider>
-          </SearchDrawerBridgeProvider>
+          <BoardSwitchConfirmProvider>
+            <SearchDrawerBridgeProvider>
+              <CreateHeaderBridgeProvider>
+                <GlobalHeader boardConfigs={boardConfigs} />
+                {children}
+                <RootBottomBar boardConfigs={boardConfigs} />
+                <RootSessionSummaryDialog />
+              </CreateHeaderBridgeProvider>
+            </SearchDrawerBridgeProvider>
+          </BoardSwitchConfirmProvider>
         </QueueBridgeProvider>
       </PersistentSessionProvider>
     </PartyProfileProvider>

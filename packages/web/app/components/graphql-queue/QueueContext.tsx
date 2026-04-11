@@ -25,6 +25,7 @@ import { usePendingUpdateCleanup } from './hooks/use-pending-update-cleanup';
 import { useMutationGuard } from './hooks/use-mutation-guard';
 import { useOfflineQueueBuffer } from './hooks/use-offline-queue-buffer';
 import { useOfflineReconciliation } from './hooks/use-offline-reconciliation';
+import { useQueueAddValidator } from '../board-lock/use-queue-add-validator';
 import type {
   GraphQLQueueContextType, GraphQLQueueActionsType, GraphQLQueueDataType, GraphQLQueueContextProps,
   CurrentClimbDataType, QueueListDataType, SearchDataType, SessionDataType,
@@ -231,6 +232,9 @@ export const GraphQLQueueProvider = ({ parsedParams, boardDetails, children, bas
     }
   }, [suggestedClimbs.length, state.queue.length, hasMoreResults, isFetchingNextPage, fetchMoreClimbs, state.hasDoneFirstFetch]);
 
+  // --- Queue-add compatibility validator ---
+  const validateQueueAdd = useQueueAddValidator();
+
   // --- Ref holding latest values so action callbacks can be stable ---
   const latestRef = useRef({
     state, dispatch, isPersistentSessionActive, persistentSession,
@@ -239,7 +243,7 @@ export const GraphQLQueueProvider = ({ parsedParams, boardDetails, children, bas
     climbSearchResults, suggestedClimbs, setCountSearchParams,
     correlationCounterRef,
     startSession, joinSession, endSession, dismissSessionSummary,
-    fetchMoreClimbs,
+    fetchMoreClimbs, validateQueueAdd,
   });
   // Sync ref every render (synchronous — safe for refs)
   latestRef.current = {
@@ -249,7 +253,7 @@ export const GraphQLQueueProvider = ({ parsedParams, boardDetails, children, bas
     climbSearchResults, suggestedClimbs, setCountSearchParams,
     correlationCounterRef,
     startSession, joinSession, endSession, dismissSessionSummary,
-    fetchMoreClimbs,
+    fetchMoreClimbs, validateQueueAdd,
   };
 
   // --- Stable action callbacks (read from latestRef, never recreated) ---
@@ -257,6 +261,7 @@ export const GraphQLQueueProvider = ({ parsedParams, boardDetails, children, bas
     const startTime = performance.now();
     const r = latestRef.current;
     if (r.guardMutation()) return;
+    if (!r.validateQueueAdd(climb)) return;
     const mode: QueueOperationMode = !r.isPersistentSessionActive
       ? 'local' : r.isDisconnected ? 'party-offline' : 'party';
     const newItem = createClimbQueueItem(climb, r.clientId, r.currentUserInfo);
@@ -299,6 +304,7 @@ export const GraphQLQueueProvider = ({ parsedParams, boardDetails, children, bas
     const startTime = performance.now();
     const r = latestRef.current;
     if (r.guardMutation()) return;
+    if (!r.validateQueueAdd(climb)) return;
     const mode: QueueOperationMode = !r.isPersistentSessionActive
       ? 'local' : r.isDisconnected ? 'party-offline' : 'party';
     const newItem = createClimbQueueItem(climb, r.clientId, r.currentUserInfo);

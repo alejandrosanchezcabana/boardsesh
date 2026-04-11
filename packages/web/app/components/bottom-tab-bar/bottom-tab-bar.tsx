@@ -37,6 +37,8 @@ import type { UserBoard, PopularBoardConfig } from '@boardsesh/shared-schema';
 import { useClimbActionsData } from '@/app/hooks/use-climb-actions-data';
 import type { StoredBoardConfig } from '@/app/lib/saved-boards-db';
 import { isValidHexColor } from '@/app/lib/color-utils';
+import { useBoardSwitchGuard } from '@/app/components/board-lock/use-board-switch-guard';
+import type { BoardRouteIdentity } from '@/app/lib/types';
 
 type Tab = 'home' | 'climbs' | 'library' | 'feed' | 'create' | 'notifications';
 type PendingCreateAction = 'climb' | 'playlist' | null;
@@ -124,6 +126,7 @@ function BottomTabBar({ boardDetails, angle, boardConfigs }: BottomTabBarProps) 
 
   const pathname = usePathname();
   const router = useRouter();
+  const guardBoardSwitch = useBoardSwitchGuard();
 
   const notificationUnreadCount = useUnreadNotificationCount();
 
@@ -405,8 +408,18 @@ function BottomTabBar({ boardDetails, angle, boardConfigs }: BottomTabBarProps) 
       return;
     }
 
-    router.push(url);
-  }, [pendingCreateAction, router, showMessage]);
+    if (config) {
+      const target: BoardRouteIdentity = {
+        board_name: config.board,
+        layout_id: config.layoutId,
+        size_id: config.sizeId,
+        set_ids: config.setIds,
+      };
+      guardBoardSwitch(target, () => router.push(url));
+    } else {
+      router.push(url);
+    }
+  }, [pendingCreateAction, router, showMessage, guardBoardSwitch]);
 
   const handleDiscoveryBoardClick = useCallback((board: UserBoard) => {
     if (board.slug) {
@@ -442,7 +455,16 @@ function BottomTabBar({ boardDetails, angle, boardConfigs }: BottomTabBarProps) 
       url = tryConstructSlugListUrl(config.boardType, config.layoutId, config.sizeId, config.setIds, angle)
         ?? `/${config.boardType}/${config.layoutId}/${config.sizeId}/${setIds}/${angle}/list`;
     }
-    handleBoardSelected(url);
+    const storedConfig: StoredBoardConfig = {
+      name: config.layoutName ?? `${config.boardType} board`,
+      board: config.boardType as BoardName,
+      layoutId: config.layoutId,
+      sizeId: config.sizeId,
+      setIds: config.setIds,
+      angle,
+      createdAt: new Date().toISOString(),
+    };
+    handleBoardSelected(url, storedConfig);
     setIsBoardSelectorOpen(false);
   }, [handleBoardSelected]);
 
