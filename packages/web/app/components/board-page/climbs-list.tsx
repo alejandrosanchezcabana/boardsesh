@@ -343,7 +343,7 @@ const ClimbsList = ({
     const climb = climbs[index];
     if (climb) {
       onClimbSelectRef.current?.(climb);
-      track('Climb List Item Clicked', { climbUuid: climb.uuid });
+      track('Climb List Row Clicked', { climbUuid: climb.uuid });
     }
   }, [climbs]);
 
@@ -353,7 +353,7 @@ const ClimbsList = ({
     if (climb) {
       onClimbSelectRef.current?.(climb);
       dispatchOpenPlayDrawer();
-      track('Climb List Item Clicked', { climbUuid: climb.uuid });
+      track('Climb List Cover Clicked', { climbUuid: climb.uuid });
     }
   }, [climbs]);
 
