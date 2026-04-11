@@ -39,7 +39,7 @@ export type BoardSwitchTarget = BoardDetails | BoardRouteIdentity;
  */
 export function useBoardSwitchGuard(): (target: BoardSwitchTarget, onConfirmed: () => void) => void {
   const { lockedBoard, reason } = useActiveBoardLock();
-  const { confirmBoardSwitch } = useBoardSwitchConfirm();
+  const confirmCtx = useBoardSwitchConfirm();
 
   return useCallback(
     (target, onConfirmed) => {
@@ -51,7 +51,13 @@ export function useBoardSwitchGuard(): (target: BoardSwitchTarget, onConfirmed: 
         onConfirmed();
         return;
       }
-      confirmBoardSwitch({
+      // No provider mounted (tests, isolated component rendering). Fall
+      // back to an immediate call-through rather than crashing.
+      if (!confirmCtx) {
+        onConfirmed();
+        return;
+      }
+      confirmCtx.confirmBoardSwitch({
         reason,
         lockedBoard,
         target,
@@ -65,6 +71,6 @@ export function useBoardSwitchGuard(): (target: BoardSwitchTarget, onConfirmed: 
         },
       });
     },
-    [lockedBoard, reason, confirmBoardSwitch],
+    [lockedBoard, reason, confirmCtx],
   );
 }

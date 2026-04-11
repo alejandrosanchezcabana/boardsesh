@@ -17,6 +17,7 @@ import { usePathname } from 'next/navigation';
 import dynamic from 'next/dynamic';
 import { canAddClimbToBoard } from '@/app/lib/board-compatibility';
 import { useSnackbar } from '../providers/snackbar-provider';
+import { queueAddErrorMessage } from '../board-lock/queue-add-error-messages';
 
 const LiveActivityBridge = dynamic(
   () => import('@/app/lib/live-activity/live-activity-bridge'),
@@ -75,10 +76,6 @@ const QueueBridgeSetterContext = createContext<QueueBridgeSetters>({
 // Uses latestRef pattern for stable action callbacks (matches GraphQLQueueProvider).
 // -------------------------------------------------------------------
 
-function formatBoardName(name: string): string {
-  return name.charAt(0).toUpperCase() + name.slice(1);
-}
-
 function usePersistentSessionQueueAdapter(): {
   context: GraphQLQueueContextType;
   actionsValue: GraphQLQueueActionsType;
@@ -127,23 +124,15 @@ function usePersistentSessionQueueAdapter(): {
 
   // Validates a climb against the locked board (session) or the current
   // adapter board. Shows a Snackbar error and returns false if not
-  // compatible.
+  // compatible. Message formatting lives in `queue-add-error-messages`
+  // so the board-route and root-level entry points speak the same copy.
   const validateClimbForQueue = useCallback((climb: Climb): boolean => {
     const r = latestRef.current;
     const target = r.ps.activeSession?.boardDetails ?? r.boardDetails;
     if (!target) return true;
     const result = canAddClimbToBoard(climb, target);
     if (result.ok) return true;
-    const targetLabel = formatBoardName(target.board_name);
-    if (result.reason === 'board_name') {
-      const climbLabel = climb.boardType ? formatBoardName(climb.boardType) : 'a different board';
-      r.showMessage(`That climb is set on ${climbLabel}. Your queue is on ${targetLabel}.`, 'error');
-    } else if (result.reason === 'layout') {
-      r.showMessage(`That climb is on a different ${targetLabel} layout.`, 'error');
-    } else {
-      const sizeLabel = target.size_name ?? `${targetLabel} board`;
-      r.showMessage(`That climb uses holds your ${sizeLabel} doesn't have.`, 'error');
-    }
+    r.showMessage(queueAddErrorMessage(climb, target, result), 'error');
     return false;
   }, []);
 

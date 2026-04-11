@@ -1,6 +1,6 @@
 'use client';
 
-import React, { createContext, useCallback, useContext, useMemo, useState } from 'react';
+import React, { createContext, useCallback, useContext, useMemo, useRef, useState } from 'react';
 import Dialog from '@mui/material/Dialog';
 import DialogTitle from '@mui/material/DialogTitle';
 import DialogContent from '@mui/material/DialogContent';
@@ -23,12 +23,15 @@ interface BoardSwitchConfirmContextValue {
 
 const BoardSwitchConfirmContext = createContext<BoardSwitchConfirmContextValue | null>(null);
 
-export function useBoardSwitchConfirm(): BoardSwitchConfirmContextValue {
-  const ctx = useContext(BoardSwitchConfirmContext);
-  if (!ctx) {
-    throw new Error('useBoardSwitchConfirm must be used within BoardSwitchConfirmProvider');
-  }
-  return ctx;
+/**
+ * Returns the board-switch confirmation context, or `null` when the
+ * provider isn't mounted. `useBoardSwitchGuard` falls back to an
+ * immediate call-through in that case so tests and non-app surfaces
+ * (Storybook, isolated components) don't need to wrap their render
+ * tree in the provider.
+ */
+export function useBoardSwitchConfirm(): BoardSwitchConfirmContextValue | null {
+  return useContext(BoardSwitchConfirmContext);
 }
 
 function formatBoardLabel(board: BoardDetails | BoardRouteIdentity): string {
@@ -44,31 +47,35 @@ interface DialogState {
   reason: BoardLockReason;
   lockedLabel: string;
   targetLabel: string;
-  onConfirmed: () => void;
 }
 
 export function BoardSwitchConfirmProvider({ children }: { children: React.ReactNode }) {
   const [state, setState] = useState<DialogState | null>(null);
+  // Hold onConfirmed in a ref so handlers never read a stale closure and
+  // the render doesn't need to re-run when the callback changes.
+  const pendingConfirmRef = useRef<(() => void) | null>(null);
 
   const confirmBoardSwitch = useCallback((args: ConfirmArgs) => {
+    pendingConfirmRef.current = args.onConfirmed;
     setState({
       open: true,
       reason: args.reason,
       lockedLabel: formatBoardLabel(args.lockedBoard),
       targetLabel: formatBoardLabel(args.target),
-      onConfirmed: args.onConfirmed,
     });
   }, []);
 
   const handleCancel = useCallback(() => {
+    pendingConfirmRef.current = null;
     setState((prev) => (prev ? { ...prev, open: false } : prev));
   }, []);
 
   const handleConfirm = useCallback(() => {
-    const onConfirmed = state?.onConfirmed;
+    const callback = pendingConfirmRef.current;
+    pendingConfirmRef.current = null;
     setState((prev) => (prev ? { ...prev, open: false } : prev));
-    onConfirmed?.();
-  }, [state]);
+    callback?.();
+  }, []);
 
   const handleExited = useCallback(() => {
     setState(null);
