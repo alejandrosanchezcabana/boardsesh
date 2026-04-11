@@ -7,10 +7,6 @@ export function getBoardClimbSearchTag(boardName: BoardName): string {
   return `${CLIMB_SEARCH_TAG}:${boardName}`;
 }
 
-export function getLayoutClimbSearchTag(boardName: BoardName, layoutId: number): string {
-  return `${getBoardClimbSearchTag(boardName)}:${layoutId}`;
-}
-
 export async function invalidateClimbSearchQueries(
   queryClient: QueryClient,
   boardName: BoardName,

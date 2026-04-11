@@ -21,7 +21,7 @@ describe('revalidateClimbSearchTags', () => {
     mockTrack.mockResolvedValue(undefined);
   });
 
-  it('revalidates board and layout tags and emits a metric', async () => {
+  it('revalidates the board tag and emits a metric (layoutId is informational only)', async () => {
     const headers = new Headers({
       cookie: 'session=test',
       'user-agent': 'vitest',
@@ -35,15 +35,14 @@ describe('revalidateClimbSearchTags', () => {
       source: 'internal-route',
     });
 
-    expect(mockRevalidateTag).toHaveBeenNthCalledWith(1, 'climb-search:moonboard', { expire: 0 });
-    expect(mockRevalidateTag).toHaveBeenNthCalledWith(2, 'climb-search:moonboard:3', { expire: 0 });
+    expect(mockRevalidateTag).toHaveBeenCalledTimes(1);
+    expect(mockRevalidateTag).toHaveBeenCalledWith('climb-search:moonboard', { expire: 0 });
     expect(mockTrack).toHaveBeenCalledWith(
       'Climb Search Cache Invalidated',
       {
         boardName: 'moonboard',
         layoutId: 3,
         source: 'internal-route',
-        tagCount: 2,
       },
       { headers },
     );
@@ -69,7 +68,6 @@ describe('revalidateClimbSearchTags', () => {
         boardName: 'kilter',
         layoutId: null,
         source: 'save-climb-proxy',
-        tagCount: 1,
       },
       { headers },
     );
