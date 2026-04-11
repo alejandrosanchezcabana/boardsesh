@@ -150,8 +150,10 @@ const QueueControlBar: React.FC<QueueControlBarProps> = ({ boardDetails, angle }
   const handleTickCommentBlur = useCallback(() => setTickCommentFocused(false), []);
 
   // Transient "swipe left to dismiss" hint that floats above the queue
-  // control bar whenever the tick bar opens. Visible for 3s then fades out.
+  // control bar whenever the tick bar opens. Visible for 3s then fades out,
+  // then unmounted so it doesn't hold layout space while invisible.
   const [swipeHintVisible, setSwipeHintVisible] = useState(false);
+  const [swipeHintMounted, setSwipeHintMounted] = useState(false);
 
   // Note: the tick bar intentionally stays open when the active climb changes
   // (e.g. party session navigation). QuickTickBar snapshots its target climb
@@ -286,16 +288,24 @@ const QueueControlBar: React.FC<QueueControlBarProps> = ({ boardDetails, angle }
     }
   }, [tickBarActive]);
 
-  // Show the swipe hint every time the tick bar opens, then auto-fade it
-  // after 3 seconds so it stays out of the user's way.
+  // Show the swipe hint every time the tick bar opens, fade it after 3s,
+  // then unmount it after the CSS transition completes (300ms) so it stops
+  // occupying layout space for the rest of the tick session.
+  const SWIPE_HINT_TRANSITION_MS = 300; // must match CSS transition duration
   useEffect(() => {
     if (!tickBarActive) {
       setSwipeHintVisible(false);
+      setSwipeHintMounted(false);
       return;
     }
+    setSwipeHintMounted(true);
     setSwipeHintVisible(true);
-    const timer = setTimeout(() => setSwipeHintVisible(false), 3000);
-    return () => clearTimeout(timer);
+    const fadeTimer = setTimeout(() => setSwipeHintVisible(false), 3000);
+    const unmountTimer = setTimeout(() => setSwipeHintMounted(false), 3000 + SWIPE_HINT_TRANSITION_MS);
+    return () => {
+      clearTimeout(fadeTimer);
+      clearTimeout(unmountTimer);
+    };
   }, [tickBarActive]);
 
   const { swipeHandlers, swipeOffset, isAnimating, animationDirection, enterDirection, clearEnterAnimation } = useCardSwipeNavigation({
@@ -508,8 +518,9 @@ const QueueControlBar: React.FC<QueueControlBarProps> = ({ boardDetails, angle }
       )}
       {/* Transient "swipe left to dismiss" hint — floats above the queue
           control bar the first 3 seconds after tick mode opens, then fades
-          away so it doesn't interfere with the stars or action buttons. */}
-      {tickBarActive && (
+          away so it doesn't interfere with the stars or action buttons.
+          Unmounted after the fade finishes so it releases its layout space. */}
+      {swipeHintMounted && (
         <div
           className={`${styles.swipeHint} ${swipeHintVisible ? styles.swipeHintVisible : ''}`}
           aria-hidden="true"
