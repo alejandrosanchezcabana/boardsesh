@@ -148,10 +148,14 @@ export function useOfflineReconciliation({
         unsubscribe();
 
         if (shouldClientWin(event.sequence)) {
-          reconcileClientWins();
+          reconcileClientWins().catch((err) =>
+            console.error('[OfflineReconciliation] reconcileClientWins failed:', err),
+          );
         } else {
           const serverQueue = (event.state?.queue ?? []) as ClimbQueueItem[];
-          reconcileAdditionsOnly(serverQueue);
+          reconcileAdditionsOnly(serverQueue).catch((err) =>
+            console.error('[OfflineReconciliation] reconcileAdditionsOnly failed:', err),
+          );
         }
       }
     });
@@ -162,7 +166,9 @@ export function useOfflineReconciliation({
     // items are skipped. This is a best-effort fallback.
     timeoutId = setTimeout(() => {
       unsubscribe();
-      reconcileAdditionsOnly(currentQueueRef.current);
+      reconcileAdditionsOnly(currentQueueRef.current).catch((err) =>
+        console.error('[OfflineReconciliation] timeout reconcileAdditionsOnly failed:', err),
+      );
     }, RECONCILIATION_TIMEOUT_MS);
 
     return () => {

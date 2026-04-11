@@ -168,7 +168,12 @@ export function execute<TData = unknown, TVariables = Record<string, unknown>>(
           if (!hasResolved) {
             hasResolved = true;
             unsubscribe();
-            reject(err);
+            // graphql-ws can pass a raw DOM Event (ErrorEvent/CloseEvent) when the
+            // WebSocket connection fails. Rejecting with a DOM Event causes Sentry to
+            // report "Event `Event` (type=error) captured as promise rejection" and
+            // prevents catch blocks from seeing a useful message. Always reject with
+            // a proper Error so callers receive a catchable, inspectable value.
+            reject(err instanceof Error ? err : new Error(String(err)));
           }
         },
         complete: () => {
