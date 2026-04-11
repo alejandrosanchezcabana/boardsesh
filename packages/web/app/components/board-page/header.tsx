@@ -37,6 +37,8 @@ export default function BoardSeshHeader({ boardDetails, angle, isAngleAdjustable
   const [searchDropdownOpen, setSearchDropdownOpen] = useState(false);
   const isCreatePage = pathname.includes('/create');
   const isListPage = pathname.includes('/list');
+  const isPlaylistPage = pathname.includes('/playlists');
+  const isLogbookPage = pathname.includes('/logbook');
   const isPlayPage = pathname.includes('/play/');
   const isViewPage = pathname.includes('/view/');
 
@@ -79,8 +81,8 @@ export default function BoardSeshHeader({ boardDetails, angle, isAngleAdjustable
   const hasBackButton = isPlayPage;
   // Angle selector is only needed on play/view pages
   const hasAngleSelector = angle !== undefined && (isPlayPage || isViewPage);
-  // Create button is only shown on desktop, so skip rendering the container on list pages
-  const hasCreateButton = !!createClimbUrl && !isListPage;
+  // Create button is only shown on desktop; skip on list, playlist, and logbook pages
+  const hasCreateButton = !!createClimbUrl && !isListPage && !isPlaylistPage && !isLogbookPage;
 
   return (
     <>
