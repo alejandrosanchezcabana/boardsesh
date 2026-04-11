@@ -93,6 +93,57 @@ describe('useBoardSwitchGuard', () => {
     expect(mockConfirmBoardSwitch).not.toHaveBeenCalled();
   });
 
+  it('does not open dialog when only set_ids differ', () => {
+    mockLock = {
+      lockedBoard: makeBoard({ board_name: 'kilter', layout_id: 1, size_id: 1, set_ids: [1, 2] }),
+      reason: 'session',
+    };
+    const { result } = renderHook(() => useBoardSwitchGuard());
+    const onConfirmed = vi.fn();
+
+    act(() => {
+      result.current(
+        makeTarget({ board_name: 'kilter', layout_id: 1, size_id: 1, set_ids: [3, 4] }),
+        onConfirmed,
+      );
+    });
+
+    expect(onConfirmed).toHaveBeenCalledOnce();
+    expect(mockConfirmBoardSwitch).not.toHaveBeenCalled();
+  });
+
+  it('opens confirmation dialog when layout changes within the same board', () => {
+    mockLock = {
+      lockedBoard: makeBoard({ board_name: 'kilter', layout_id: 1, size_id: 1 }),
+      reason: 'session',
+    };
+    const { result } = renderHook(() => useBoardSwitchGuard());
+    const onConfirmed = vi.fn();
+
+    act(() => {
+      result.current(makeTarget({ board_name: 'kilter', layout_id: 2, size_id: 1 }), onConfirmed);
+    });
+
+    expect(mockConfirmBoardSwitch).toHaveBeenCalledOnce();
+    expect(onConfirmed).not.toHaveBeenCalled();
+  });
+
+  it('opens confirmation dialog when size changes within the same board and layout', () => {
+    mockLock = {
+      lockedBoard: makeBoard({ board_name: 'kilter', layout_id: 1, size_id: 1 }),
+      reason: 'bluetooth',
+    };
+    const { result } = renderHook(() => useBoardSwitchGuard());
+    const onConfirmed = vi.fn();
+
+    act(() => {
+      result.current(makeTarget({ board_name: 'kilter', layout_id: 1, size_id: 2 }), onConfirmed);
+    });
+
+    expect(mockConfirmBoardSwitch).toHaveBeenCalledOnce();
+    expect(onConfirmed).not.toHaveBeenCalled();
+  });
+
   it('opens confirmation dialog when switching to a different board', () => {
     mockLock = {
       lockedBoard: makeBoard({ board_name: 'kilter', layout_id: 1 }),

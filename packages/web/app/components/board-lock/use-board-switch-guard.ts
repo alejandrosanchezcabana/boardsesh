@@ -6,25 +6,16 @@ import { useActiveBoardLock } from './use-active-board-lock';
 import { useBoardSwitchConfirm } from './board-switch-confirm-provider';
 import { disconnectAllBluetooth } from '../board-bluetooth-control/bluetooth-status-store';
 
-function sameSetIds(a: readonly number[], b: readonly number[]): boolean {
-  if (a.length !== b.length) return false;
-  const sa = [...a].sort((x, y) => x - y);
-  const sb = [...b].sort((x, y) => x - y);
-  for (let i = 0; i < sa.length; i++) {
-    if (sa[i] !== sb[i]) return false;
-  }
-  return true;
-}
-
 function isSameBoard(
   a: BoardDetails | BoardRouteIdentity,
   b: BoardDetails | BoardRouteIdentity,
 ): boolean {
+  // set_ids intentionally excluded: changing hold sets is a minor config
+  // change that does not warrant a board-switch confirmation.
   return (
     a.board_name === b.board_name &&
     a.layout_id === b.layout_id &&
-    a.size_id === b.size_id &&
-    sameSetIds(a.set_ids, b.set_ids)
+    a.size_id === b.size_id
   );
 }
 

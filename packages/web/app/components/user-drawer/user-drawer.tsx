@@ -35,8 +35,10 @@ import BoardDiscoveryScroll from '../board-scroll/board-discovery-scroll';
 import BoardSelectorDrawer from '../board-selector-drawer/board-selector-drawer';
 import MyBoardsDrawer from '../my-boards-drawer/my-boards-drawer';
 import { BoardConfigData } from '@/app/lib/server-board-configs';
-import { BoardDetails } from '@/app/lib/types';
+import { BoardDetails, BoardName } from '@/app/lib/types';
+import type { BoardRouteIdentity } from '@/app/lib/types';
 import type { UserBoard, PopularBoardConfig } from '@boardsesh/shared-schema';
+import { useBoardSwitchGuard } from '@/app/components/board-lock/use-board-switch-guard';
 import {
   type StoredSession,
   getRecentSessions,
@@ -69,6 +71,7 @@ export default function UserDrawer({ boardDetails, boardConfigs }: UserDrawerPro
 
   const { mode, toggleMode } = useColorMode();
   const isMoonboard = boardDetails?.board_name === 'moonboard';
+  const guardBoardSwitch = useBoardSwitchGuard();
 
   // Load recent sessions when drawer opens
   useEffect(() => {
@@ -98,11 +101,18 @@ export default function UserDrawer({ boardDetails, boardConfigs }: UserDrawerPro
   }, []);
 
   const handleChangeBoardClick = useCallback((board: UserBoard) => {
-    if (board.slug) {
-      router.push(constructBoardSlugListUrl(board.slug, board.angle));
-    }
-    setShowBoardSelector(false);
-  }, [router]);
+    if (!board.slug) return;
+    const target: BoardRouteIdentity = {
+      board_name: board.boardType as BoardName,
+      layout_id: board.layoutId,
+      size_id: board.sizeId,
+      set_ids: board.setIds.split(',').map(Number),
+    };
+    guardBoardSwitch(target, () => {
+      router.push(constructBoardSlugListUrl(board.slug!, board.angle));
+      setShowBoardSelector(false);
+    });
+  }, [router, guardBoardSwitch]);
 
   const handleChangeConfigClick = useCallback((config: PopularBoardConfig) => {
     const angle = getDefaultAngleForBoard(config.boardType);
@@ -117,9 +127,17 @@ export default function UserDrawer({ boardDetails, boardConfigs }: UserDrawerPro
       url = tryConstructSlugListUrl(config.boardType, config.layoutId, config.sizeId, config.setIds, angle)
         ?? `/${config.boardType}/${config.layoutId}/${config.sizeId}/${setIds}/${angle}/list`;
     }
-    router.push(url);
-    setShowBoardSelector(false);
-  }, [router]);
+    const target: BoardRouteIdentity = {
+      board_name: config.boardType as BoardName,
+      layout_id: config.layoutId,
+      size_id: config.sizeId,
+      set_ids: config.setIds,
+    };
+    guardBoardSwitch(target, () => {
+      router.push(url);
+      setShowBoardSelector(false);
+    });
+  }, [router, guardBoardSwitch]);
 
   const handleSignOut = () => {
     signOut();
