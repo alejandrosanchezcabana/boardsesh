@@ -712,12 +712,16 @@ export default function CreateClimbForm({
             {/* Aurora-only: Heatmap toggle */}
             {boardType === 'aurora' && (
               <>
-                <MuiTooltip title={showHeatmap ? 'Hide heatmap' : 'Show hold popularity heatmap'}>
+                <Typography variant="body2" component="span" color="text.secondary" className={styles.draftLabel}>
+                  Heatmap
+                </Typography>
+                <MuiTooltip title={showHeatmap ? 'Hide heatmap' : 'Show which holds get used most'}>
                   <IconButton
                     color={showHeatmap ? 'error' : 'default'}
                     size="small"
                     onClick={handleToggleHeatmap}
                     className={styles.heatmapButton}
+                    aria-label={showHeatmap ? 'Hide heatmap' : 'Show heatmap'}
                   >
                     <LocalFireDepartmentOutlined />
                   </IconButton>

@@ -1,64 +1,11 @@
-import { getHoldHeatmapData, HoldHeatmapData } from '@/app/lib/db/queries/climbs/holds-heatmap';
-import { BoardRouteParameters, ErrorResponse, ParsedBoardRouteParameters, SearchRequestPagination } from '@/app/lib/types';
+import { getHoldHeatmapData } from '@/app/lib/db/queries/climbs/holds-heatmap';
+import { cachedGetHoldHeatmapData } from '@/app/lib/db/queries/climbs/holds-heatmap-cache';
+import { BoardRouteParameters, ErrorResponse, SearchRequestPagination } from '@/app/lib/types';
 import { urlParamsToSearchParams } from '@/app/lib/url-utils';
 import { parseBoardRouteParamsWithSlugs } from '@/app/lib/url-utils.server';
-import { sortObjectKeys } from '@/app/lib/cache-utils';
-import { unstable_cache } from 'next/cache';
 import { NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth/next';
 import { authOptions } from '@/app/lib/auth/auth-options';
-
-/**
- * Cache duration for heatmap queries (in seconds)
- * Anonymous heatmap queries are cached for 30 days since aggregate data doesn't change meaningfully
- */
-const CACHE_DURATION_HEATMAP = 30 * 24 * 60 * 60; // 30 days
-
-/**
- * Cached version of getHoldHeatmapData
- * Only used for anonymous requests - user-specific data is not cached
- */
-async function cachedGetHoldHeatmapData(
-  params: ParsedBoardRouteParameters,
-  searchParams: SearchRequestPagination,
-): Promise<HoldHeatmapData[]> {
-  // Build explicit cache key with board identifiers as separate segments
-  // This ensures cache hits/misses are correctly differentiated by board configuration
-  const cacheKey = [
-    'heatmap',
-    params.board_name,
-    String(params.layout_id),
-    String(params.size_id),
-    params.set_ids.join(','),
-    String(params.angle),
-    // Include filter params as a sorted JSON string
-    JSON.stringify(sortObjectKeys({
-      gradeAccuracy: searchParams.gradeAccuracy,
-      minGrade: searchParams.minGrade,
-      maxGrade: searchParams.maxGrade,
-      minAscents: searchParams.minAscents,
-      minRating: searchParams.minRating,
-      sortBy: searchParams.sortBy,
-      sortOrder: searchParams.sortOrder,
-      name: searchParams.name,
-      settername: searchParams.settername,
-      onlyClassics: searchParams.onlyClassics,
-      onlyTallClimbs: searchParams.onlyTallClimbs,
-      holdsFilter: searchParams.holdsFilter,
-    })),
-  ];
-
-  const cachedFn = unstable_cache(
-    async () => getHoldHeatmapData(params, searchParams, undefined),
-    cacheKey,
-    {
-      revalidate: CACHE_DURATION_HEATMAP,
-      tags: ['heatmap'],
-    }
-  );
-
-  return cachedFn();
-}
 
 export interface HoldHeatmapResponse {
   holdStats: Array<{
@@ -99,8 +46,8 @@ export async function GET(
     const session = await getServerSession(authOptions);
     const userId = session?.user?.id;
 
-    // Get the heatmap data - use cached version for anonymous requests only
-    // User-specific data is not cached to ensure fresh personal progress data
+    // Get the heatmap data - use cached version for anonymous requests only.
+    // User-specific data is not cached to ensure fresh personal progress data.
     const holdStats = userId
       ? await getHoldHeatmapData(parsedParams, searchParams, userId)
       : await cachedGetHoldHeatmapData(parsedParams, searchParams);
