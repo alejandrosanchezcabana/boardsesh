@@ -8,27 +8,20 @@ import { themeTokens } from '@/app/theme/theme-config';
 import { getSoftVGradeColor, formatVGrade } from '@/app/lib/grade-colors';
 import { formatSends } from '@/app/lib/format-climb-stats';
 import { useIsDarkMode } from '@/app/hooks/use-is-dark-mode';
-import AngleSelector from '../board-page/angle-selector';
-import type { Climb, BoardDetails } from '@/app/lib/types';
+import type { Climb } from '@/app/lib/types';
 
 interface ClimbDetailHeaderProps {
   climb: Climb;
-  boardDetails: BoardDetails;
-  angle: number;
-  isAngleAdjustable?: boolean;
   /** Community-voted grade override, fetched separately from climb_community_status table */
   communityGrade?: string | null;
 }
 
 /**
  * Header component for climb detail view.
- * Layout: Grade (left) | Name + details (center) | Angle Selector (right)
+ * Layout: Grade (left) | Name + details (center) | Spacer (right, balances grade)
  */
 export default function ClimbDetailHeader({
   climb,
-  boardDetails,
-  angle,
-  isAngleAdjustable = true,
   communityGrade,
 }: ClimbDetailHeaderProps) {
   const isDark = useIsDarkMode();
@@ -152,16 +145,8 @@ export default function ClimbDetailHeader({
         </Typography>
       </Box>
 
-      {/* Right: Angle Selector */}
-      <Box sx={{ flexShrink: 0 }}>
-        <AngleSelector
-          boardName={boardDetails.board_name}
-          boardDetails={boardDetails}
-          currentAngle={angle}
-          currentClimb={climb}
-          isAngleAdjustable={isAngleAdjustable}
-        />
-      </Box>
+      {/* Right: Spacer to balance the grade column so the centered name is truly centered */}
+      <Box sx={{ flexShrink: 0, minWidth: 48 }} />
     </Box>
   );
 }

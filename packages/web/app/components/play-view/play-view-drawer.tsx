@@ -11,6 +11,7 @@ import SkipNextOutlined from '@mui/icons-material/SkipNextOutlined';
 import MoreHorizOutlined from '@mui/icons-material/MoreHorizOutlined';
 import FormatListBulletedOutlined from '@mui/icons-material/FormatListBulletedOutlined';
 import CheckOutlined from '@mui/icons-material/CheckOutlined';
+import CloseOutlined from '@mui/icons-material/CloseOutlined';
 import { usePathname } from 'next/navigation';
 import { useQueueActions, useCurrentClimb, useQueueList, useSessionData } from '../graphql-queue';
 import { ClimbActions } from '../climb-actions';
@@ -24,6 +25,7 @@ import SwipeBoardCarousel from '../board-renderer/swipe-board-carousel';
 import { useWakeLock } from '../board-bluetooth-control/use-wake-lock';
 import { themeTokens } from '@/app/theme/theme-config';
 import SwipeableDrawer from '../swipeable-drawer/swipeable-drawer';
+import AngleSelector from '../board-page/angle-selector';
 import ClimbDetailHeader from '@/app/components/climb-detail/climb-detail-header';
 import { LogAscentDrawer } from '../logbook/log-ascent-drawer';
 import type { ActiveDrawer } from '../queue-control/queue-control-bar';
@@ -80,6 +82,7 @@ interface PlayViewActionBarProps {
   onToggleFavorite: () => void;
   onOpenActions: () => void;
   onOpenQueue: () => void;
+  angleSelector?: React.ReactNode;
 }
 
 export const PlayViewActionBar = React.memo(function PlayViewActionBar({
@@ -95,6 +98,7 @@ export const PlayViewActionBar = React.memo(function PlayViewActionBar({
   onToggleFavorite,
   onOpenActions,
   onOpenQueue,
+  angleSelector,
 }: PlayViewActionBarProps) {
   return (
     <div className={styles.actionBar}>
@@ -118,6 +122,7 @@ export const PlayViewActionBar = React.memo(function PlayViewActionBar({
         {isFavorited ? <Favorite sx={{ color: themeTokens.colors.error }} /> : <FavoriteBorderOutlined />}
       </IconButton>
       <ShareBoardButton />
+      {angleSelector}
       <IconButton onClick={onOpenActions} aria-label="Climb actions">
         <MoreHorizOutlined />
       </IconButton>
@@ -458,14 +463,9 @@ const PlayViewDrawer: React.FC<PlayViewDrawerProps> = ({
     if (!currentClimb) return null;
     return (
     <>
-      {/* Header: Grade | Name | Angle Selector */}
+      {/* Header: Grade | Name | Spacer (angle now lives in the action bar) */}
       <div className={styles.headerSection}>
-        <ClimbDetailHeader
-          climb={currentClimb}
-          boardDetails={boardDetails}
-          angle={currentAngle}
-          isAngleAdjustable={true}
-        />
+        <ClimbDetailHeader climb={currentClimb} />
       </div>
 
       {/* Board renderer with card-swipe and floating Tick FAB */}
@@ -523,6 +523,15 @@ const PlayViewDrawer: React.FC<PlayViewDrawerProps> = ({
           onToggleFavorite={toggleFavorite}
           onOpenActions={handleOpenActionsMenu}
           onOpenQueue={handleOpenQueueDrawer}
+          angleSelector={
+            <AngleSelector
+              boardName={boardDetails.board_name}
+              boardDetails={boardDetails}
+              currentAngle={currentAngle}
+              currentClimb={currentClimb}
+              isAngleAdjustable
+            />
+          }
         />
       )}
     </>
@@ -574,6 +583,22 @@ const PlayViewDrawer: React.FC<PlayViewDrawerProps> = ({
       }}
     >
       {(contentReady || isOpen) ? (<>
+      <IconButton
+        size="small"
+        onClick={handleClose}
+        aria-label="Close"
+        sx={{
+          position: 'absolute',
+          top: 8,
+          right: 8,
+          zIndex: 2,
+          color: 'text.primary',
+          backgroundColor: 'action.selected',
+          '&:hover': { backgroundColor: 'action.focus' },
+        }}
+      >
+        <CloseOutlined />
+      </IconButton>
       <div className={styles.drawerContent} onTouchStart={handleBoardTouchStart} onTouchMove={handleBoardTouchMove} onTouchEnd={handleBoardTouchEnd}>
         {currentClimb ? (
           <PlayDrawerContent
