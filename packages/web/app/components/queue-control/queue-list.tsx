@@ -16,6 +16,7 @@ import { reorder } from '@atlaskit/pragmatic-drag-and-drop/reorder';
 import { usePathname } from 'next/navigation';
 import { useIsDarkMode } from '@/app/hooks/use-is-dark-mode';
 import QueueClimbListItem from './queue-climb-list-item';
+import { dispatchOpenPlayDrawer } from './play-drawer-event';
 import ClimbListItem from '../climb-card/climb-list-item';
 import DrawerClimbHeader from '../climb-card/drawer-climb-header';
 import { ClimbActions } from '../climb-actions';
@@ -45,7 +46,6 @@ export type QueueListHandle = {
 
 type QueueListProps = {
   boardDetails: BoardDetails;
-  onClimbNavigate?: () => void;
   isEditMode?: boolean;
   showHistory?: boolean;
   selectedItems?: Set<string>;
@@ -56,12 +56,13 @@ type QueueListProps = {
   active?: boolean;
 };
 
-const QueueList = forwardRef<QueueListHandle, QueueListProps>(({ boardDetails, onClimbNavigate, isEditMode = false, showHistory = false, selectedItems, onToggleSelect, scrollContainer, active = true }, ref) => {
+const QueueList = forwardRef<QueueListHandle, QueueListProps>(({ boardDetails, isEditMode = false, showHistory = false, selectedItems, onToggleSelect, scrollContainer, active = true }, ref) => {
   const currentClimbUuid = useCurrentClimbUuid();
   const { queue, suggestedClimbs } = useQueueList();
   const { hasMoreResults, isFetchingClimbs, isFetchingNextPage } = useSearchData();
   const { viewOnlyMode } = useSessionData();
   const {
+    setCurrentClimb,
     setCurrentClimbQueueItem,
     setQueue,
     addToQueue,
@@ -96,13 +97,13 @@ const QueueList = forwardRef<QueueListHandle, QueueListProps>(({ boardDetails, o
   }, [actionsClimb]);
   const handleClosePlaylist = useCallback(() => setPlaylistClimb(null), []);
 
-  // Stabilize onClimbNavigate via ref to prevent suggested ClimbListItems from
-  // re-rendering when the parent passes a new function reference.
-  const onClimbNavigateRef = useRef(onClimbNavigate);
-  onClimbNavigateRef.current = onClimbNavigate;
-  const stableOnClimbNavigate = useCallback(() => {
-    onClimbNavigateRef.current?.();
-  }, []);
+  // Suggested climbs: clicking the thumbnail promotes the climb to current
+  // (which also adds it to the queue) and opens the play drawer, matching
+  // the behavior of queue items and board list items.
+  const handleSuggestionThumbnailClick = useCallback((climb: Climb) => {
+    setCurrentClimb(climb);
+    dispatchOpenPlayDrawer();
+  }, [setCurrentClimb]);
 
   const excludeActions = useMemo(
     () => getExcludedClimbActions(boardDetails.board_name, 'list'),
@@ -318,7 +319,6 @@ const QueueList = forwardRef<QueueListHandle, QueueListProps>(({ boardDetails, o
                   onTickClick={handleTickClick}
                   onOpenActions={handleOpenActions}
                   onOpenPlaylistSelector={handleOpenPlaylistSelector}
-                  onThumbnailActivate={stableOnClimbNavigate}
                   isEditMode={isEditMode}
                   isSelected={selectedItems?.has(row.item.uuid) ?? false}
                   onToggleSelect={onToggleSelect}
@@ -340,7 +340,6 @@ const QueueList = forwardRef<QueueListHandle, QueueListProps>(({ boardDetails, o
                   onTickClick={handleTickClick}
                   onOpenActions={handleOpenActions}
                   onOpenPlaylistSelector={handleOpenPlaylistSelector}
-                  onThumbnailActivate={stableOnClimbNavigate}
                   isEditMode={isEditMode}
                   isSelected={selectedItems?.has(row.item.uuid) ?? false}
                   onToggleSelect={onToggleSelect}
@@ -359,7 +358,6 @@ const QueueList = forwardRef<QueueListHandle, QueueListProps>(({ boardDetails, o
                   onTickClick={handleTickClick}
                   onOpenActions={handleOpenActions}
                   onOpenPlaylistSelector={handleOpenPlaylistSelector}
-                  onThumbnailActivate={stableOnClimbNavigate}
                   isEditMode={isEditMode}
                   isSelected={selectedItems?.has(row.item.uuid) ?? false}
                   onToggleSelect={onToggleSelect}
@@ -379,7 +377,7 @@ const QueueList = forwardRef<QueueListHandle, QueueListProps>(({ boardDetails, o
                   pathname={pathname}
                   isDark={isDark}
                   titleProps={suggestedTitleProps}
-                  onNavigate={stableOnClimbNavigate}
+                  onThumbnailClick={() => handleSuggestionThumbnailClick(row.climb)}
                   onOpenActions={handleOpenActions}
                   onOpenPlaylistSelector={handleOpenPlaylistSelector}
                   addToQueue={addToQueue}

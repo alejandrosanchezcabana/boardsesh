@@ -562,7 +562,6 @@ const ClimbsList = ({
                       preferImageLayers={index < initialImageCount}
                       onSelect={() => handleClimbClickByIndex(index)}
                       onThumbnailClick={() => handleClimbClickByIndex(index)}
-                      disableThumbnailNavigation
                       disableSwipe={!hydrated}
                       unsupported={unsupportedClimbs?.has(climb.uuid)}
                       onOpenActions={handleOpenActions}

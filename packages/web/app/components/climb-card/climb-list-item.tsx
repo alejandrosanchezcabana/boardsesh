@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useRef, useState, useCallback, useMemo, useEffect } from 'react';
+import React, { useRef, useState, useCallback, useMemo } from 'react';
 import IconButton from '@mui/material/IconButton';
 import dynamic from 'next/dynamic';
 import MoreHorizOutlined from '@mui/icons-material/MoreHorizOutlined';
@@ -165,8 +165,6 @@ type ClimbListItemProps = {
   backgroundColor?: string;
   /** Override content opacity (e.g., 0.6 for history items) */
   contentOpacity?: number;
-  /** When true, disables thumbnail click-to-navigate (e.g., in edit mode) */
-  disableThumbnailNavigation?: boolean;
   /** When true, prefer SSR image layers over the canvas renderer for this item. */
   preferImageLayers?: boolean;
   /** Handler for thumbnail clicks. When set, stops propagation so the row onClick doesn't also fire. */
@@ -175,8 +173,6 @@ type ClimbListItemProps = {
   onOpenActions?: (climb: Climb) => void;
   /** When provided, the item delegates opening the playlist selector to the parent instead of rendering its own. */
   onOpenPlaylistSelector?: (climb: Climb) => void;
-  /** Callback invoked when the user navigates via the thumbnail link (e.g., to close a drawer). Forwarded to ClimbThumbnail. */
-  onNavigate?: () => void;
   /** Optional callback to add the climb to the queue (default swipe-left action).
    *  When not provided, swipe-left is a no-op. Pass from a parent that subscribes to QueueContext. */
   addToQueue?: (climb: Climb) => void;
@@ -197,12 +193,10 @@ const ClimbListItem: React.FC<ClimbListItemProps> = React.memo(
     titleProps,
     backgroundColor,
     contentOpacity,
-    disableThumbnailNavigation,
     preferImageLayers,
     onThumbnailClick,
     onOpenActions,
     onOpenPlaylistSelector,
-    onNavigate,
     addToQueue,
   }) => {
     // Subscribe to selection store — only re-renders when THIS item's selected state changes.
@@ -230,20 +224,10 @@ const ClimbListItem: React.FC<ClimbListItemProps> = React.memo(
       isFavorited,
     } = useDoubleTapFavorite({ climbUuid: climb.uuid });
     const { ref: doubleTapRef, onDoubleClick: handleDoubleTapClick } = useDoubleTap(handleDoubleTap);
-    const clickTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
     // Store onThumbnailClick in a ref so the memoized handler always reads the latest
     // value without requiring onThumbnailClick in the memo comparator.
     const onThumbnailClickRef = useRef(onThumbnailClick);
     onThumbnailClickRef.current = onThumbnailClick;
-    const onNavigateRef = useRef(onNavigate);
-    onNavigateRef.current = onNavigate;
-
-    // Clear pending click timeout on unmount to prevent stale callbacks
-    useEffect(() => {
-      return () => {
-        if (clickTimeoutRef.current) clearTimeout(clickTimeoutRef.current);
-      };
-    }, []);
 
     // Per-direction override flag
     const hasRightOverride = Boolean(swipeRightAction);
@@ -342,33 +326,10 @@ const ClimbListItem: React.FC<ClimbListItemProps> = React.memo(
     // Always attached (not conditional) because onThumbnailClick is excluded from
     // the memo comparator; a render-time conditional would go stale.
     const handleThumbnailClick = useCallback((e: React.MouseEvent) => {
-      if (!onThumbnailClickRef.current) {
-        if (onNavigateRef.current) {
-          e.stopPropagation();
-          onNavigateRef.current();
-        }
-        return;
-      }
+      if (!onThumbnailClickRef.current) return;
       e.stopPropagation();
-      if (disableThumbnailNavigation) {
-        onThumbnailClickRef.current();
-        return;
-      }
-      if (clickTimeoutRef.current) clearTimeout(clickTimeoutRef.current);
-      clickTimeoutRef.current = setTimeout(() => {
-        clickTimeoutRef.current = null;
-        onThumbnailClickRef.current?.();
-      }, 300);
-    }, [disableThumbnailNavigation]);
-
-    // Thumbnail double-click handler
-    const handleThumbnailDoubleClick = useCallback(() => {
-      if (clickTimeoutRef.current) {
-        clearTimeout(clickTimeoutRef.current);
-        clickTimeoutRef.current = null;
-      }
-      handleDoubleTapClick();
-    }, [handleDoubleTapClick]);
+      onThumbnailClickRef.current();
+    }, []);
 
     // Drawer state callbacks — extracted from inline to avoid per-render allocation
     const handleCloseActions = useCallback(() => setIsActionsOpen(false), []);
@@ -518,7 +479,7 @@ const ClimbListItem: React.FC<ClimbListItemProps> = React.memo(
               ref={doubleTapRef}
               style={thumbnailStyle}
               onClick={handleThumbnailClick}
-              onDoubleClick={handleThumbnailDoubleClick}
+              onDoubleClick={handleDoubleTapClick}
             >
               <ClimbThumbnail
                 boardDetails={boardDetails}
@@ -606,11 +567,9 @@ const ClimbListItem: React.FC<ClimbListItemProps> = React.memo(
       prev.titleProps === next.titleProps &&
       prev.backgroundColor === next.backgroundColor &&
       prev.contentOpacity === next.contentOpacity &&
-      prev.disableThumbnailNavigation === next.disableThumbnailNavigation &&
       prev.preferImageLayers === next.preferImageLayers &&
       prev.onOpenActions === next.onOpenActions &&
-      prev.onOpenPlaylistSelector === next.onOpenPlaylistSelector &&
-      prev.onNavigate === next.onNavigate
+      prev.onOpenPlaylistSelector === next.onOpenPlaylistSelector
     );
   },
 );

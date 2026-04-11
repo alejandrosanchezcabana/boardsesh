@@ -18,6 +18,7 @@ import {
 import { useWsAuthToken } from '@/app/hooks/use-ws-auth-token';
 import { useQueueActions } from '@/app/components/graphql-queue';
 import { useSnackbar } from '@/app/components/providers/snackbar-provider';
+import { dispatchOpenPlayDrawer } from '@/app/components/queue-control/play-drawer-event';
 import ClimbCard from '@/app/components/climb-card/climb-card';
 import ClimbListItem from '@/app/components/climb-card/climb-list-item';
 import SwipeableDrawer from '@/app/components/swipeable-drawer/swipeable-drawer';
@@ -250,6 +251,7 @@ export default function LikedClimbsList({
   const handleClimbDoubleClick = useCallback((climb: Climb) => {
     setSelectedClimbUuid(climb.uuid);
     setCurrentClimb(climb);
+    dispatchOpenPlayDrawer();
     track('Liked Climb Card Double Clicked', {
       climbUuid: climb.uuid,
       angle: climb.angle,
@@ -374,7 +376,6 @@ export default function LikedClimbsList({
               isDark={isDark}
               onSelect={climbHandlersMap.get(climb.uuid)}
               onThumbnailClick={climbHandlersMap.get(climb.uuid)}
-              disableThumbnailNavigation
               onOpenActions={handleOpenActions}
               onOpenPlaylistSelector={handleOpenPlaylistSelector}
               addToQueue={addToQueue}

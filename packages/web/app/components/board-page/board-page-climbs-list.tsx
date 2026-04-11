@@ -1,10 +1,11 @@
 'use client';
-import React, { useMemo, useEffect, useRef } from 'react';
+import React, { useCallback, useMemo, useEffect, useRef } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { Climb, ParsedBoardRouteParameters, BoardDetails } from '@/app/lib/types';
 import { useQueueActions, useCurrentClimb, useSearchData } from '../graphql-queue';
 import ClimbsList from './climbs-list';
 import { stabilizeClimbArrayRef } from './climb-list-utils';
+import { dispatchOpenPlayDrawer } from '../queue-control/play-drawer-event';
 import RecentSearchPills from '../search-drawer/recent-search-pills';
 import AngleSelector from './angle-selector';
 
@@ -69,6 +70,13 @@ const BoardPageClimbsList = ({
     return deduped;
   }, [hasDoneFirstFetch, initialClimbs, climbSearchResults]);
 
+  // Clicking a climb in the list activates it and opens the play view drawer.
+  // Matches queue items, queue suggestions, and liked list behavior.
+  const handleClimbSelect = useCallback((climb: Climb) => {
+    setCurrentClimb(climb);
+    dispatchOpenPlayDrawer();
+  }, [setCurrentClimb]);
+
   const headerInline = useMemo(() => <RecentSearchPills />, []);
 
   const angleSelectorElement = useMemo(
@@ -91,7 +99,7 @@ const BoardPageClimbsList = ({
       selectedClimbUuid={currentClimb?.uuid}
       isFetching={isFetchingClimbs}
       hasMore={hasMoreResults}
-      onClimbSelect={setCurrentClimb}
+      onClimbSelect={handleClimbSelect}
       addToQueue={addToQueue}
       onLoadMore={fetchMoreClimbs}
       headerInline={headerInline}

@@ -32,7 +32,6 @@ export interface QueueDrawerProps {
   onClose: () => void;
   onTransitionEnd: (open: boolean) => void;
   boardDetails: BoardDetails;
-  onClimbNavigate: () => void;
 }
 
 const QueueDrawer: React.FC<QueueDrawerProps> = ({
@@ -40,7 +39,6 @@ const QueueDrawer: React.FC<QueueDrawerProps> = ({
   onClose,
   onTransitionEnd,
   boardDetails,
-  onClimbNavigate,
 }) => {
   // Internal state
   const [isEditMode, setIsEditMode] = useState(false);
@@ -264,7 +262,6 @@ const QueueDrawer: React.FC<QueueDrawerProps> = ({
           <QueueList
             ref={queueListRef}
             boardDetails={boardDetails}
-            onClimbNavigate={onClimbNavigate}
             isEditMode={isEditMode}
             showHistory={showHistory}
             selectedItems={selectedItems}

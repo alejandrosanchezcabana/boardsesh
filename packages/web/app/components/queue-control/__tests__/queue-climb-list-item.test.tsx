@@ -246,6 +246,39 @@ describe('QueueClimbListItem', () => {
     });
   });
 
+  describe('thumbnail activation', () => {
+    it('sets the current queue item and dispatches the play drawer event', () => {
+      const dispatchSpy = vi.spyOn(window, 'dispatchEvent');
+      const props = defaultProps();
+      render(<QueueClimbListItem {...props} />);
+
+      // Simulate ClimbListItem calling its onThumbnailClick by clicking the thumbnail.
+      fireEvent.click(screen.getByTestId('climb-thumbnail').parentElement!);
+
+      expect(props.setCurrentClimbQueueItem).toHaveBeenCalledWith(props.item);
+      const dispatched = dispatchSpy.mock.calls.some(
+        ([event]) => event instanceof CustomEvent && event.type === 'boardsesh:open-play-drawer',
+      );
+      expect(dispatched).toBe(true);
+      dispatchSpy.mockRestore();
+    });
+
+    it('does nothing when the thumbnail is pressed in edit mode', () => {
+      const dispatchSpy = vi.spyOn(window, 'dispatchEvent');
+      const props = defaultProps();
+      render(<QueueClimbListItem {...props} isEditMode />);
+
+      fireEvent.click(screen.getByTestId('climb-thumbnail').parentElement!);
+
+      expect(props.setCurrentClimbQueueItem).not.toHaveBeenCalled();
+      const dispatched = dispatchSpy.mock.calls.some(
+        ([event]) => event instanceof CustomEvent && event.type === 'boardsesh:open-play-drawer',
+      );
+      expect(dispatched).toBe(false);
+      dispatchSpy.mockRestore();
+    });
+  });
+
   describe('edit mode', () => {
     it('renders checkbox in edit mode', () => {
       render(<QueueClimbListItem {...defaultProps()} isEditMode />);

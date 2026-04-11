@@ -40,6 +40,12 @@ import styles from './queue-control-bar.module.css';
 
 export type ActiveDrawer = 'none' | 'play' | 'queue' | 'tick';
 
+// Re-export the window event so existing imports from this file keep working.
+// The actual definition lives in ./play-drawer-event to keep the import graph
+// light for callsites that only need the dispatch helper.
+export { PLAY_DRAWER_EVENT, dispatchOpenPlayDrawer } from './play-drawer-event';
+import { PLAY_DRAWER_EVENT as PLAY_DRAWER_EVENT_INTERNAL } from './play-drawer-event';
+
 const QUEUE_DRAWER_STYLES = { wrapper: { height: '70%' }, body: { padding: 0 } } as const;
 
 export interface QueueControlBarProps {
@@ -84,6 +90,15 @@ const QueueControlBar: React.FC<QueueControlBarProps> = ({ boardDetails, angle }
     return () => window.removeEventListener(TOUR_DRAWER_EVENT, handler);
   }, []);
 
+  // Listen for play drawer open requests from climb list items that live
+  // outside this component's React tree (board page, liked list, queue
+  // suggestions, queue items). Callers set the active climb before dispatching.
+  useEffect(() => {
+    const handler = () => setActiveDrawer('play');
+    window.addEventListener(PLAY_DRAWER_EVENT_INTERNAL, handler);
+    return () => window.removeEventListener(PLAY_DRAWER_EVENT_INTERNAL, handler);
+  }, []);
+
   // Scroll to current climb when drawer finishes opening
   const handleDrawerOpenChange = useCallback((open: boolean) => {
     if (open) {
@@ -94,7 +109,6 @@ const QueueControlBar: React.FC<QueueControlBarProps> = ({ boardDetails, angle }
   }, []);
 
   const handleCloseDrawer = useCallback(() => setActiveDrawer('none'), []);
-  const handleQueueClimbNavigate = useCallback(() => setActiveDrawer('play'), []);
 
   const isViewPage = pathname.includes('/view/');
   const isListPage = pathname.includes('/list');
@@ -626,7 +640,7 @@ const QueueControlBar: React.FC<QueueControlBarProps> = ({ boardDetails, angle }
           )
         }
       >
-        <QueueList ref={queueListRef} boardDetails={boardDetails} onClimbNavigate={handleQueueClimbNavigate} active={activeDrawer === 'queue'} />
+        <QueueList ref={queueListRef} boardDetails={boardDetails} active={activeDrawer === 'queue'} />
       </SwipeableDrawer>
 
       <PlayViewDrawer

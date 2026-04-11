@@ -5,6 +5,8 @@ import React from 'react';
 import type { Climb, BoardDetails } from '@/app/lib/types';
 import type { ClimbQueueItem } from '../types';
 
+const mockSetCurrentClimb = vi.fn();
+
 // --- Mocks ---
 
 const mockSuggestedClimbs: Climb[] = [
@@ -75,6 +77,7 @@ vi.mock('../../graphql-queue', () => ({
   }),
   useQueueActions: () => ({
     fetchMoreClimbs: vi.fn(),
+    setCurrentClimb: mockSetCurrentClimb,
     setCurrentClimbQueueItem: vi.fn(),
     setQueue: vi.fn(),
     addToQueue: vi.fn(),
@@ -110,11 +113,23 @@ vi.mock('../queue-climb-list-item', () => ({
   ),
 }));
 
+type MockClimbListItemProps = {
+  climb: Climb;
+  addToQueue?: (climb: Climb) => void;
+  swipeRightAction?: unknown;
+  onThumbnailClick?: () => void;
+  onNavigate?: () => void;
+};
+
 vi.mock('../../climb-card/climb-list-item', () => ({
-  default: (props: { climb: Climb; addToQueue?: (climb: Climb) => void; swipeRightAction?: unknown }) => {
+  default: (props: MockClimbListItemProps) => {
     mockClimbListItem(props);
     return (
-      <div data-testid="climb-list-item" data-uuid={props.climb.uuid}>
+      <div
+        data-testid="climb-list-item"
+        data-uuid={props.climb.uuid}
+        onClick={() => props.onThumbnailClick?.()}
+      >
         {props.climb.name}
       </div>
     );
@@ -161,6 +176,8 @@ vi.mock('@/app/lib/climb-action-utils', () => ({
 
 vi.mock('../../board-page/constants', () => ({
   SUGGESTIONS_THRESHOLD: 5,
+  PAGE_LIMIT: 20,
+  MAX_PAGE_SIZE: 100,
 }));
 
 vi.mock('@/app/theme/theme-config', () => ({
@@ -206,6 +223,7 @@ Object.defineProperty(globalThis, 'IntersectionObserver', {
   writable: true,
 });
 
+import { fireEvent } from '@testing-library/react';
 import QueueList from '../queue-list';
 
 // --- Helpers ---
@@ -271,7 +289,25 @@ describe('QueueList active prop', () => {
     propsList.forEach((props) => {
       expect(typeof props.addToQueue).toBe('function');
       expect(props.swipeRightAction).toBeUndefined();
+      // Suggestions should no longer use the legacy onNavigate fallback
+      expect(props.onNavigate).toBeUndefined();
+      expect(typeof props.onThumbnailClick).toBe('function');
     });
+  });
+
+  it('activates the suggested climb and opens the play drawer on thumbnail click', () => {
+    const dispatchSpy = vi.spyOn(window, 'dispatchEvent');
+    render(<QueueList boardDetails={makeBoardDetails()} active={true} />);
+
+    const items = screen.getAllByTestId('climb-list-item');
+    fireEvent.click(items[0]);
+
+    expect(mockSetCurrentClimb).toHaveBeenCalledWith(mockSuggestedClimbs[0]);
+    const dispatched = dispatchSpy.mock.calls.some(
+      ([event]) => event instanceof CustomEvent && event.type === 'boardsesh:open-play-drawer',
+    );
+    expect(dispatched).toBe(true);
+    dispatchSpy.mockRestore();
   });
 
   it('renders queue items (QueueClimbListItem) when active is true', () => {

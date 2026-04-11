@@ -27,6 +27,7 @@ import SwipeableDrawer from '../swipeable-drawer/swipeable-drawer';
 import ClimbDetailHeader from '@/app/components/climb-detail/climb-detail-header';
 import { LogAscentDrawer } from '../logbook/log-ascent-drawer';
 import type { ActiveDrawer } from '../queue-control/queue-control-bar';
+import { PLAY_DRAWER_EVENT } from '../queue-control/play-drawer-event';
 import type { BoardDetails, Angle, Climb } from '@/app/lib/types';
 import styles from './play-view-drawer.module.css';
 import ClimbDetailShellClient from '@/app/components/climb-detail/climb-detail-shell.client';
@@ -314,10 +315,15 @@ const PlayViewDrawer: React.FC<PlayViewDrawerProps> = ({
       setQueueMounted(false);
     }
   }, [isQueueOpen]);
-  const handleQueueClimbNavigate = useCallback(() => {
-    setIsQueueOpen(false);
-    setActiveDrawer('play');
-  }, [setActiveDrawer]);
+  // Close the nested queue drawer whenever something (a queue item thumbnail,
+  // a suggested item thumbnail, etc.) asks for the play drawer to open. The
+  // QueueControlBar listener already handles activeDrawer; here we just
+  // collapse the nested queue drawer so the user can see the play view.
+  useEffect(() => {
+    const handler = () => setIsQueueOpen(false);
+    window.addEventListener(PLAY_DRAWER_EVENT, handler);
+    return () => window.removeEventListener(PLAY_DRAWER_EVENT, handler);
+  }, []);
 
   const [drawerOpen, setDrawerOpen] = useState(false);
   const openRafRef = useRef<number>(0);
@@ -656,7 +662,6 @@ const PlayViewDrawer: React.FC<PlayViewDrawerProps> = ({
             onClose={handleCloseQueueDrawer}
             onTransitionEnd={handleQueueTransitionEnd}
             boardDetails={boardDetails}
-            onClimbNavigate={handleQueueClimbNavigate}
           />
         )}
     </SwipeableDrawer>
