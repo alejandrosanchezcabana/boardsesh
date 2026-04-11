@@ -1,4 +1,4 @@
-import { useCallback, useState } from 'react';
+import { useCallback, useRef, useState } from 'react';
 import type { HoldState, LitUpHoldsMap } from '../board-renderer/types';
 
 export type PickerSelection = HoldState | 'OFF';
@@ -22,9 +22,19 @@ interface UseHoldTypePickerOptions {
 export function useHoldTypePicker({ litUpHoldsMap, setHoldState }: UseHoldTypePickerOptions) {
   const [pickerState, setPickerState] = useState<PickerState | null>(null);
 
+  // Ref so handleHoldClick can read the latest map without being recreated on every hold change.
+  const litUpHoldsMapRef = useRef(litUpHoldsMap);
+  litUpHoldsMapRef.current = litUpHoldsMap;
+
   const handleHoldClick = useCallback((holdId: number, anchor: Element) => {
+    // Auto-assign HAND to blank holds so the user gets immediate visual
+    // confirmation that the hold has been selected.
+    const currentState = litUpHoldsMapRef.current[holdId]?.state ?? 'OFF';
+    if (currentState === 'OFF') {
+      setHoldState(holdId, 'HAND');
+    }
     setPickerState({ holdId, anchor });
-  }, []);
+  }, [setHoldState]);
 
   const handleSelect = useCallback(
     (state: PickerSelection) => {
