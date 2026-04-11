@@ -8,6 +8,7 @@ export default defineConfig({
     'process.env.NODE_ENV': '"test"',
   },
   test: {
+    name: 'web',
     environment: 'jsdom',
     globals: true,
     env: {
