@@ -42,18 +42,6 @@
   flex-shrink: 0;
 }
 
-/* Prior ascent count — subtle display element. */
-.ascents {
-  font-size: var(--font-size-xs, 12px);
-  font-weight: 600;
-  line-height: 1;
-  color: var(--text-secondary, rgba(0, 0, 0, 0.6));
-  opacity: 0.7;
-  flex-shrink: 0;
-  padding: 0 2px;
-  white-space: nowrap;
-}
-
 /* Tries counter — ButtonBase that shows the selected number on the row
    baseline with a subtle "tries" byline absolutely positioned beneath so
    it cannot push the number out of alignment with its siblings. */

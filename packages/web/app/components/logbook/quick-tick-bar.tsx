@@ -278,9 +278,6 @@ export const QuickTickBar: React.FC<QuickTickBarProps> = ({
   // comment text selection, or in-flight saves, don't get hijacked.
   const rootHandlers = swipeEnabled ? swipeHandlers : {};
 
-  const userAscentsCount =
-    tickTarget?.climb.userAscents ?? currentClimb?.userAscents ?? 0;
-
   const attemptDisplay = attemptCount >= 10 ? '9+' : String(attemptCount);
 
   return (
@@ -291,9 +288,9 @@ export const QuickTickBar: React.FC<QuickTickBarProps> = ({
       data-testid="quick-tick-bar"
     >
       <div className={styles.controls}>
-        {/* Order: stars, comment, grade, # ascents, attempt, tick. The
-            rating sits to the right of the bar, sized to match the adjacent
-            icon buttons. */}
+        {/* Order: stars, comment, grade, tries, attempt, tick. The rating
+            sits to the right of the bar, sized to match the adjacent icon
+            buttons. */}
         <Rating
           value={quality}
           onChange={(_, val) => setQuality(val)}
@@ -364,19 +361,6 @@ export const QuickTickBar: React.FC<QuickTickBarProps> = ({
             );
           })}
         </Menu>
-
-        {/* Prior ascent count for this climb — display only. Shown before
-            the attempts picker so the user knows how many sends they
-            already have before logging another. */}
-        <Typography
-          variant="body2"
-          component="span"
-          aria-label={`${userAscentsCount} prior ascent${userAscentsCount === 1 ? '' : 's'}`}
-          data-testid="quick-tick-ascents"
-          className={styles.ascents}
-        >
-          #{userAscentsCount}
-        </Typography>
 
         {/* Tries counter. Shows the selected try count aligned on the same
             baseline as the adjacent items; the "tries" byline is absolutely

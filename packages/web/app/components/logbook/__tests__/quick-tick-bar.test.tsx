@@ -167,44 +167,44 @@ describe('QuickTickBar', () => {
   });
 
   describe('layout', () => {
-    it('renders the controls in the expected order: rating, comment toggle, grade, # ascents, tries counter, fail, confirm — all clustered to the right', () => {
+    it('renders the controls in the expected order: rating, comment toggle, grade, tries counter, fail, confirm — all clustered to the right', () => {
       render(<QuickTickBar {...defaultProps} />);
 
       const rating = screen.getByTestId('quick-tick-rating');
       const commentToggle = screen.getByRole('button', { name: /toggle comment/i });
       const gradeLabel = screen.getByTestId('quick-tick-grade');
-      const ascents = screen.getByTestId('quick-tick-ascents');
       const attemptBtn = screen.getByTestId('quick-tick-attempt');
       const failBtn = screen.getByTestId('quick-tick-fail');
       const confirmBtn = screen.getByTestId('quick-tick-confirm');
 
       // Rating sits directly inside the single flex row alongside the
-      // comment toggle, grade label, ascents display, tries counter, fail
-      // (X) and confirm (✓) buttons. The "swipe left to dismiss" hint is
-      // not rendered here — it lives as a transient toast above the queue
-      // control bar instead.
+      // comment toggle, grade label, tries counter, fail (X) and confirm
+      // (✓) buttons. The "swipe left to dismiss" hint is not rendered here
+      // — it lives as a transient toast above the queue control bar
+      // instead.
       const controls = rating.parentElement!;
       expect(commentToggle.parentElement).toBe(controls);
       expect(gradeLabel.parentElement).toBe(controls);
-      expect(ascents.parentElement).toBe(controls);
       expect(attemptBtn.parentElement).toBe(controls);
       expect(failBtn.parentElement).toBe(controls);
       expect(confirmBtn.parentElement).toBe(controls);
 
+      // The quick tick bar intentionally does NOT show the user's prior
+      // ascent count — it's clutter the user doesn't need while logging.
+      expect(screen.queryByTestId('quick-tick-ascents')).toBeNull();
+
       // Siblings of .controls must appear in this order: rating, comment
-      // toggle, grade label, # ascents, tries counter, fail (X), confirm (✓).
+      // toggle, grade label, tries counter, fail (X), confirm (✓).
       const siblings = Array.from(controls.children) as HTMLElement[];
       const ratingIdx = siblings.indexOf(rating);
       const commentIdx = siblings.indexOf(commentToggle);
       const gradeIdx = siblings.indexOf(gradeLabel);
-      const ascentsIdx = siblings.indexOf(ascents);
       const attemptIdx = siblings.indexOf(attemptBtn);
       const failIdx = siblings.indexOf(failBtn);
       const confirmIdx = siblings.indexOf(confirmBtn);
       expect(ratingIdx).toBeLessThan(commentIdx);
       expect(commentIdx).toBeLessThan(gradeIdx);
-      expect(gradeIdx).toBeLessThan(ascentsIdx);
-      expect(ascentsIdx).toBeLessThan(attemptIdx);
+      expect(gradeIdx).toBeLessThan(attemptIdx);
       expect(attemptIdx).toBeLessThan(failIdx);
       expect(failIdx).toBeLessThan(confirmIdx);
     });
@@ -216,18 +216,6 @@ describe('QuickTickBar', () => {
       // row items) is rendered directly; the "tries" label sits beneath.
       expect(attemptBtn.textContent).toContain('1');
       expect(attemptBtn.textContent?.toLowerCase()).toContain('tries');
-    });
-
-    it('renders the # ascents display using the climb userAscents count', () => {
-      const climb = makeClimb({ userAscents: 4, userAttempts: 0 });
-      render(<QuickTickBar {...defaultProps} currentClimb={climb} />);
-      expect(screen.getByTestId('quick-tick-ascents').textContent).toBe('#4');
-    });
-
-    it('falls back to #0 ascents when the climb has no userAscents value', () => {
-      // makeClimb() does not set userAscents.
-      render(<QuickTickBar {...defaultProps} />);
-      expect(screen.getByTestId('quick-tick-ascents').textContent).toBe('#0');
     });
 
     it('does not render the swipe hint inline — the hint lives above the bar as a transient toast', () => {
