@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import React from 'react';
-import { render, screen, fireEvent, act } from '@testing-library/react';
+import { render, screen, fireEvent, act, waitFor } from '@testing-library/react';
 import type { Angle, BoardDetails, BoardName, Climb } from '@/app/lib/types';
 import type { LogbookEntry } from '@/app/hooks/use-logbook';
 
@@ -490,6 +490,138 @@ describe('QuickTickBar', () => {
 
       expect(mockSaveTick).toHaveBeenCalledTimes(1);
       expect(mockSaveTick.mock.calls[0][0].comment).toBe('sick send');
+    });
+  });
+
+  describe('displayedGrades — grade window logic', () => {
+    // The component only narrows the grade list when the climb's difficulty
+    // string matches a difficulty_name in TENSION_KILTER_GRADES exactly
+    // (e.g. '6c/V5'). Strings like 'V5' produce no match, so climbGradeId
+    // is undefined and all 24 grades are shown.
+
+    it('shows all 24 grades when the climb difficulty does not match any grade name', () => {
+      // makeClimb() defaults to difficulty: 'V5', which has no entry in the
+      // grade list (names use the full '6c/V5' format).
+      render(<QuickTickBar {...defaultProps} />);
+      fireEvent.click(screen.getByTestId('quick-tick-grade'));
+
+      const items = screen.getAllByRole('menuitem');
+      // 24 grade rows + 1 "—" (no-grade) row
+      expect(items).toHaveLength(25);
+    });
+
+    it('shows all 24 grades when the climb has no difficulty set', () => {
+      const climb = makeClimb({ difficulty: undefined });
+      render(<QuickTickBar {...defaultProps} currentClimb={climb} />);
+      fireEvent.click(screen.getByTestId('quick-tick-grade'));
+
+      const items = screen.getAllByRole('menuitem');
+      expect(items).toHaveLength(25);
+    });
+
+    it('shows a 5-grade window (±2) around a mid-range matched grade', () => {
+      // '6c/V5' is difficulty_id 20 at index 10 in the grade array.
+      // window: max(0, 10-2)=8 … min(24, 10+3)=13  →  indices 8–12.
+      // Those map to: 6b/V4, 6b+/V4, 6c/V5, 6c+/V5, 7a/V6
+      const climb = makeClimb({ difficulty: '6c/V5' });
+      render(<QuickTickBar {...defaultProps} currentClimb={climb} />);
+      fireEvent.click(screen.getByTestId('quick-tick-grade'));
+
+      const items = screen.getAllByRole('menuitem');
+      expect(items).toHaveLength(6); // 5 grade rows + "—"
+
+      const gradeLabels = items.slice(1).map((el) => el.textContent);
+      expect(gradeLabels).toEqual(['V4', 'V4', 'V5', 'V5', 'V6']);
+    });
+
+    it('clamps the lower boundary: V0 at index 0 yields only 3 grades', () => {
+      // '4a/V0' is difficulty_id 10 at index 0.
+      // start = max(0, 0-2) = 0, end = min(24, 0+3) = 3  →  3 grades
+      const climb = makeClimb({ difficulty: '4a/V0' });
+      render(<QuickTickBar {...defaultProps} currentClimb={climb} />);
+      fireEvent.click(screen.getByTestId('quick-tick-grade'));
+
+      const items = screen.getAllByRole('menuitem');
+      expect(items).toHaveLength(4); // 3 grade rows + "—"
+
+      const gradeLabels = items.slice(1).map((el) => el.textContent);
+      expect(gradeLabels).toEqual(['V0', 'V0', 'V0']);
+    });
+
+    it('clamps the upper boundary: V16 at the last index yields only 3 grades', () => {
+      // '8c+/V16' is difficulty_id 33 at index 23 (last entry).
+      // start = max(0, 23-2) = 21, end = min(24, 23+3) = 24  →  3 grades
+      const climb = makeClimb({ difficulty: '8c+/V16' });
+      render(<QuickTickBar {...defaultProps} currentClimb={climb} />);
+      fireEvent.click(screen.getByTestId('quick-tick-grade'));
+
+      const items = screen.getAllByRole('menuitem');
+      expect(items).toHaveLength(4); // 3 grade rows + "—"
+
+      const gradeLabels = items.slice(1).map((el) => el.textContent);
+      expect(gradeLabels).toEqual(['V14', 'V15', 'V16']);
+    });
+
+    it('near-low boundary: second grade (4b/V0 at index 1) yields 4 grades', () => {
+      // start = max(0, 1-2) = 0, end = min(24, 1+3) = 4  →  4 grades
+      const climb = makeClimb({ difficulty: '4b/V0' });
+      render(<QuickTickBar {...defaultProps} currentClimb={climb} />);
+      fireEvent.click(screen.getByTestId('quick-tick-grade'));
+
+      const items = screen.getAllByRole('menuitem');
+      expect(items).toHaveLength(5); // 4 grade rows + "—"
+    });
+
+    it('near-high boundary: second-to-last grade (8c/V15 at index 22) yields 4 grades', () => {
+      // start = max(0, 22-2) = 20, end = min(24, 22+3) = 24  →  4 grades
+      const climb = makeClimb({ difficulty: '8c/V15' });
+      render(<QuickTickBar {...defaultProps} currentClimb={climb} />);
+      fireEvent.click(screen.getByTestId('quick-tick-grade'));
+
+      const items = screen.getAllByRole('menuitem');
+      expect(items).toHaveLength(5); // 4 grade rows + "—"
+    });
+  });
+
+  describe('grade menu autoFocus', () => {
+    it('focuses the matched grade item when the menu opens', async () => {
+      // '6c/V5' matches difficulty_id 20 exactly, so currentGradeId = 20
+      // and isCurrent is true for that MenuItem.  autoFocus={isCurrent} means
+      // React calls .focus() on that element when the menu mounts.
+      const climb = makeClimb({ difficulty: '6c/V5' });
+      render(<QuickTickBar {...defaultProps} currentClimb={climb} />);
+
+      await act(async () => {
+        fireEvent.click(screen.getByTestId('quick-tick-grade'));
+      });
+
+      // Wait for MUI's focus management to settle.
+      await waitFor(() => {
+        const active = document.activeElement;
+        expect(active?.getAttribute('role')).toBe('menuitem');
+        // The focused item should carry the Mui-selected class (selected={isCurrent})
+        // confirming it is the current-grade item, not just the first item.
+        expect(active?.classList.contains('Mui-selected')).toBe(true);
+        expect(active?.textContent).toBe('V5');
+      });
+    });
+
+    it('does not auto-focus any grade item when the climb has no matched difficulty', async () => {
+      // When climbGradeId is undefined, currentGradeId is also undefined and
+      // isCurrent is false for every row, so no item has autoFocus={true}.
+      // MUI falls back to focusing the first focusable item in the menu (the
+      // "—" option), which does NOT have Mui-selected.
+      render(<QuickTickBar {...defaultProps} />);
+
+      await act(async () => {
+        fireEvent.click(screen.getByTestId('quick-tick-grade'));
+      });
+
+      await waitFor(() => {
+        const items = screen.getAllByRole('menuitem');
+        const selectedItems = items.filter((el) => el.classList.contains('Mui-selected'));
+        expect(selectedItems).toHaveLength(0);
+      });
     });
   });
 });
