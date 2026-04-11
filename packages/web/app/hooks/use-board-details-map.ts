@@ -59,11 +59,16 @@ export function useBoardDetailsMap(
       }
     }
 
-    // Mark unsupported climbs (board types the user doesn't have)
-    const userBoardTypes = new Set(myBoards.map((b) => b.boardType));
-    for (const climb of climbs) {
-      if (climb.boardType && !userBoardTypes.has(climb.boardType)) {
-        unsupported.add(climb.uuid);
+    // Mark unsupported climbs (board types the user doesn't have).
+    // Only meaningful when the user actually owns at least one board — when
+    // myBoards is empty we can't filter by ownership, so we render every climb
+    // normally and let selection auto-activate the climb's own board config.
+    if (myBoards.length > 0) {
+      const userBoardTypes = new Set(myBoards.map((b) => b.boardType));
+      for (const climb of climbs) {
+        if (climb.boardType && !userBoardTypes.has(climb.boardType)) {
+          unsupported.add(climb.uuid);
+        }
       }
     }
 

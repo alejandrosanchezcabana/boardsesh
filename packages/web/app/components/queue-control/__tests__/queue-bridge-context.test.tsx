@@ -69,6 +69,38 @@ vi.mock('@/app/lib/url-utils', () => ({
   },
 }));
 
+// Mock playlist board-config helper so cold-start seeding tests don't pull in
+// the real board constants data. Returns a simple, deterministic BoardDetails
+// shape per board type that the seed helper can stringify into baseBoardPath.
+vi.mock('@/app/lib/board-config-for-playlist', () => ({
+  getBoardDetailsForPlaylist: (boardType: string, layoutId: number | null | undefined) => {
+    if (!layoutId) return null;
+    if (boardType === 'moonboard') {
+      return {
+        board_name: 'moonboard',
+        layout_id: layoutId,
+        size_id: 0,
+        set_ids: [17, 18],
+        layout_name: 'MoonBoard 2024',
+        size_name: 'Full',
+        size_description: 'Full',
+        set_names: ['A', 'B'],
+      };
+    }
+    return {
+      board_name: boardType,
+      layout_id: layoutId,
+      size_id: 10,
+      set_ids: [1, 2],
+      layout_name: 'Original',
+      size_name: '12x12',
+      size_description: 'Full Size',
+      set_names: ['Standard', 'Extended'],
+    };
+  },
+  getDefaultAngleForBoard: () => 40,
+}));
+
 // Now import the SUT — after all vi.mock calls
 import {
   QueueBridgeProvider,
@@ -525,6 +557,87 @@ describe('queue-bridge-context', () => {
         expect(newQueue[1].climb.uuid).toBe('c2');
         // New item becomes current
         expect(newCurrent.climb.uuid).toBe('c2');
+      });
+    });
+
+    // -------------------------------------------------------------------
+    // Cold-start seeding: selecting a climb from a surface with no active
+    // board (e.g. a playlist view) must auto-activate the climb's board.
+    // -------------------------------------------------------------------
+    describe('adapter cold-start seeding', () => {
+      function renderWithoutLocalBoard() {
+        mockPersistentSession = createDefaultPersistentSession({
+          localQueue: [],
+          localCurrentClimbQueueItem: null,
+          localBoardDetails: null,
+          localBoardPath: null,
+          isLocalQueueLoaded: true,
+        });
+        const wrapper = ({ children }: { children: React.ReactNode }) => (
+          <QueueBridgeProvider>{children}</QueueBridgeProvider>
+        );
+        return renderHook(() => useTestQueueContext(), { wrapper });
+      }
+
+      it('setCurrentClimb seeds local state from a Kilter climb when no board is active', () => {
+        const climb = createTestClimb({ uuid: 'c-cold', boardType: 'kilter', layoutId: 1 });
+        const { result } = renderWithoutLocalBoard();
+        act(() => {
+          result.current!.setCurrentClimb(climb);
+        });
+        expect(mockSetLocalQueueState).toHaveBeenCalledTimes(1);
+        const [newQueue, newCurrent, boardPath, boardDetails] =
+          mockSetLocalQueueState.mock.calls[0];
+        expect(newQueue).toHaveLength(1);
+        expect(newQueue[0].climb.uuid).toBe('c-cold');
+        expect(newCurrent.climb.uuid).toBe('c-cold');
+        expect(boardPath).toBe('/kilter/1/10/1,2');
+        expect(boardDetails.board_name).toBe('kilter');
+        expect(boardDetails.layout_id).toBe(1);
+      });
+
+      it('setCurrentClimb seeds with moonboard path shape (no size segment)', () => {
+        const climb = createTestClimb({ uuid: 'mb-1', boardType: 'moonboard', layoutId: 99 });
+        const { result } = renderWithoutLocalBoard();
+        act(() => {
+          result.current!.setCurrentClimb(climb);
+        });
+        expect(mockSetLocalQueueState).toHaveBeenCalledTimes(1);
+        const [, , boardPath, boardDetails] = mockSetLocalQueueState.mock.calls[0];
+        expect(boardPath).toBe('/moonboard/99/17,18');
+        expect(boardDetails.board_name).toBe('moonboard');
+      });
+
+      it('addToQueue seeds local state from the climb when no board is active', () => {
+        const climb = createTestClimb({ uuid: 'c-add', boardType: 'tension', layoutId: 2 });
+        const { result } = renderWithoutLocalBoard();
+        act(() => {
+          result.current!.addToQueue(climb);
+        });
+        expect(mockSetLocalQueueState).toHaveBeenCalledTimes(1);
+        const [newQueue, newCurrent, boardPath] = mockSetLocalQueueState.mock.calls[0];
+        expect(newQueue).toHaveLength(1);
+        expect(newQueue[0].climb.uuid).toBe('c-add');
+        expect(newCurrent.climb.uuid).toBe('c-add');
+        expect(boardPath).toBe('/tension/2/10/1,2');
+      });
+
+      it('setCurrentClimb is a no-op when the climb has no layoutId to seed from', () => {
+        const climb = createTestClimb({ uuid: 'orphan', boardType: 'kilter', layoutId: null });
+        const { result } = renderWithoutLocalBoard();
+        act(() => {
+          result.current!.setCurrentClimb(climb);
+        });
+        expect(mockSetLocalQueueState).not.toHaveBeenCalled();
+      });
+
+      it('setCurrentClimb is a no-op when the climb has no boardType to seed from', () => {
+        const climb = createTestClimb({ uuid: 'orphan', boardType: undefined, layoutId: 1 });
+        const { result } = renderWithoutLocalBoard();
+        act(() => {
+          result.current!.setCurrentClimb(climb);
+        });
+        expect(mockSetLocalQueueState).not.toHaveBeenCalled();
       });
     });
   });

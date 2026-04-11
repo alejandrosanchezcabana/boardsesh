@@ -142,6 +142,20 @@ describe('useBoardDetailsMap', () => {
     expect(result.current.unsupportedClimbs.has('c2')).toBe(true);
   });
 
+  it('should not mark any climbs as unsupported when the user owns zero boards', () => {
+    // Users without any registered boards shouldn't see climbs greyed out —
+    // selection auto-activates the climb's own board config downstream.
+    const climb1 = makeClimb({ uuid: 'c1', boardType: 'kilter', layoutId: 1 });
+    const climb2 = makeClimb({ uuid: 'c2', boardType: 'tension', layoutId: 2 });
+    mockGetBoardDetailsForPlaylist.mockReturnValue(makeBoardDetails('kilter'));
+
+    const { result } = renderHook(() =>
+      useBoardDetailsMap([climb1, climb2], []),
+    );
+
+    expect(result.current.unsupportedClimbs.size).toBe(0);
+  });
+
   it('should return defaultBoardDetails from selectedBoard when provided', () => {
     const selectedBoard = makeUserBoard({ boardType: 'kilter', layoutId: 1 });
     const selectedDetails = makeBoardDetails('kilter-selected');

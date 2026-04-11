@@ -16,6 +16,7 @@ import type { ClimbQueueItem } from './types';
 import { usePathname } from 'next/navigation';
 import dynamic from 'next/dynamic';
 import { canAddClimbToBoard } from '@/app/lib/board-compatibility';
+import { getBoardDetailsForPlaylist } from '@/app/lib/board-config-for-playlist';
 import { useSnackbar } from '../providers/snackbar-provider';
 import { queueAddErrorMessage } from '../board-lock/queue-add-error-messages';
 
@@ -23,6 +24,29 @@ const LiveActivityBridge = dynamic(
   () => import('@/app/lib/live-activity/live-activity-bridge'),
   { ssr: false },
 );
+
+/**
+ * Derive BoardDetails + baseBoardPath from a climb's own boardType/layoutId.
+ *
+ * Used to seed `ps.localBoardDetails` when a user selects a climb from a
+ * surface that has no active board context (e.g. a playlist view when the
+ * user has never been on a board route). The resulting `baseBoardPath` must
+ * match `getBaseBoardPath` output so queue restoration (`use-queue-restoration`)
+ * and party-session transfer (`start-sesh-drawer`) keep working.
+ */
+function deriveSeedStateFromClimb(
+  climb: Climb,
+): { boardDetails: BoardDetails; baseBoardPath: string } | null {
+  if (!climb.boardType || climb.layoutId == null) return null;
+  const details = getBoardDetailsForPlaylist(climb.boardType, climb.layoutId);
+  if (!details) return null;
+  const setIds = details.set_ids.join(',');
+  const baseBoardPath =
+    details.board_name === 'moonboard'
+      ? `/moonboard/${details.layout_id}/${setIds}`
+      : `/${details.board_name}/${details.layout_id}/${details.size_id}/${setIds}`;
+  return { boardDetails: details, baseBoardPath };
+}
 
 // -------------------------------------------------------------------
 // Board info context (for the root-level bottom bar to know what board is active)
@@ -163,7 +187,6 @@ function usePersistentSessionQueueAdapter(): {
   const addToQueue = useCallback(
     (climb: Climb) => {
       const r = latestRef.current;
-      if (!r.boardDetails) return;
       if (!validateClimbForQueue(climb)) return;
       const newItem: ClimbQueueItem = {
         climb,
@@ -171,6 +194,14 @@ function usePersistentSessionQueueAdapter(): {
         uuid: uuidv4(),
         suggested: false,
       };
+      if (!r.boardDetails) {
+        // Cold-start path: no active board yet. Seed local state from the
+        // climb's own board config so the queue bar begins showing.
+        const seed = deriveSeedStateFromClimb(climb);
+        if (!seed) return;
+        r.ps.setLocalQueueState([newItem], newItem, seed.baseBoardPath, seed.boardDetails);
+        return;
+      }
       const newQueue = [...r.queue, newItem];
       const current = r.currentClimbQueueItem ?? newItem;
       r.ps.setLocalQueueState(newQueue, current, r.baseBoardPath, r.boardDetails);
@@ -220,7 +251,6 @@ function usePersistentSessionQueueAdapter(): {
   const setCurrentClimb = useCallback(
     (climb: Climb) => {
       const r = latestRef.current;
-      if (!r.boardDetails) return;
       if (!validateClimbForQueue(climb)) return;
       const newItem: ClimbQueueItem = {
         climb,
@@ -228,6 +258,14 @@ function usePersistentSessionQueueAdapter(): {
         uuid: uuidv4(),
         suggested: false,
       };
+      if (!r.boardDetails) {
+        // Cold-start path: no active board yet. Seed local state from the
+        // climb's own board config so the queue bar begins showing.
+        const seed = deriveSeedStateFromClimb(climb);
+        if (!seed) return;
+        r.ps.setLocalQueueState([newItem], newItem, seed.baseBoardPath, seed.boardDetails);
+        return;
+      }
       const currentIdx = r.currentClimbQueueItem
         ? r.queue.findIndex(q => q.uuid === r.currentClimbQueueItem!.uuid)
         : -1;
