@@ -23,6 +23,7 @@ export interface SwipeableDrawerProps {
   placement?: Placement;
   title?: React.ReactNode;
   showCloseButton?: boolean;
+  showCloseButtonOnMobile?: boolean;
   disableBackdropClick?: boolean;
   onTransitionEnd?: (open: boolean) => void;
   styles?: {
@@ -52,6 +53,7 @@ const SwipeableDrawer: React.FC<SwipeableDrawerProps> = ({
   showDragHandle = true,
   placement = 'bottom',
   showCloseButton,
+  showCloseButtonOnMobile = false,
   onClose,
   onTransitionEnd: userOnTransitionEnd,
   styles: userStyles,
@@ -74,13 +76,18 @@ const SwipeableDrawer: React.FC<SwipeableDrawerProps> = ({
   // Otherwise, disable swipe when showCloseButton is explicitly false.
   const effectiveSwipeEnabled = swipeEnabled ?? (showCloseButton !== false);
 
-  const rootClassName = userRootClassName
-    ? `${styles.mobileHideClose} ${userRootClassName}`
-    : className
-      ? `${styles.mobileHideClose} ${className}`
-      : styles.mobileHideClose;
-
-  const isVerticalPlacement = placement === 'top' || placement === 'bottom';
+  // `rootClassName` and `className` are accepted as aliases and are not meant
+  // to be merged — prefer `rootClassName`, fall back to `className`. When
+  // the consumer opts out via `showCloseButtonOnMobile`, we skip applying
+  // the `mobileHideClose` CSS module class that otherwise hides the close
+  // button on viewports <768px.
+  const userClasses = userRootClassName ?? className;
+  const rootClassName = [
+    showCloseButtonOnMobile ? null : styles.mobileHideClose,
+    userClasses,
+  ]
+    .filter(Boolean)
+    .join(' ');
 
   const horizontalDragHandle = useMemo(() => showDragHandle ? (
     <div className={styles.dragHandleZoneHorizontal}>
@@ -163,7 +170,7 @@ const SwipeableDrawer: React.FC<SwipeableDrawerProps> = ({
 
     const positionMap: Record<Placement, Record<string, number | string>> = {
       bottom: { top: 8, left: 8 },
-      top: { bottom: 8, left: 8 },
+      top: { top: 8, right: 8 },
       left: { top: 8, right: 8 },
       right: { top: 8, left: 8 },
     };

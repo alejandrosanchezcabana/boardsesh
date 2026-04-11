@@ -301,6 +301,8 @@ export default function StartSeshDrawer({ open, onClose, onTransitionEnd, boardC
       <SwipeableDrawer
         title="Start session"
         placement="top"
+        showCloseButton={false}
+        swipeEnabled
         open={open}
         onClose={handleClose}
         onTransitionEnd={onTransitionEnd}

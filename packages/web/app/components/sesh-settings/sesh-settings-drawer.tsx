@@ -204,6 +204,8 @@ export default function SeshSettingsDrawer({ open, onClose, onTransitionEnd }: S
     <SwipeableDrawer
       title="Session overview"
       placement="top"
+      showCloseButton={false}
+      swipeEnabled
       open={open}
       onClose={handleClose}
       onTransitionEnd={onTransitionEnd}
