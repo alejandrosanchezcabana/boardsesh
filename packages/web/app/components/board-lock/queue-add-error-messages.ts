@@ -1,16 +1,16 @@
 import type { Climb, BoardDetails } from '@/app/lib/types';
 import type { BoardCompatibilityResult } from '@/app/lib/board-compatibility';
-import { titleCase } from '@/app/lib/string-utils';
+import { capitalizeFirst } from '@/app/lib/string-utils';
 
 type QueueAddFailure = Extract<BoardCompatibilityResult, { ok: false }>;
 
 function climbBoardLabel(climb: Climb): string {
-  if (climb.boardType) return titleCase(climb.boardType);
+  if (climb.boardType) return capitalizeFirst(climb.boardType);
   return 'a different board';
 }
 
 function targetBoardLabel(target: BoardDetails): string {
-  return titleCase(target.board_name);
+  return capitalizeFirst(target.board_name);
 }
 
 function targetSizeLabel(target: BoardDetails): string {

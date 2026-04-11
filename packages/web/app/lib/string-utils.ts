@@ -1,3 +1,3 @@
-export function titleCase(value: string): string {
+export function capitalizeFirst(value: string): string {
   return value.charAt(0).toUpperCase() + value.slice(1);
 }
