@@ -6,16 +6,29 @@ import { useSession } from 'next-auth/react';
 import { useSnackbar } from '@/app/components/providers/snackbar-provider';
 import {
   SAVE_CLIMB_MUTATION,
+  UPDATE_CLIMB_MUTATION,
   type SaveClimbMutationVariables,
   type SaveClimbMutationResponse,
+  type UpdateClimbMutationVariables,
+  type UpdateClimbMutationResponse,
 } from '@/app/lib/graphql/operations/new-climb-feed';
 import { createGraphQLClient, execute } from '@/app/components/graphql-queue/graphql-client';
 import { getBackendWsUrl } from '@/app/lib/backend-url';
 import type { BoardName } from '@/app/lib/types';
 import type { SaveClimbOptions } from '@/app/lib/api-wrappers/aurora/types';
+import type { UpdateClimbInput } from '@boardsesh/shared-schema';
 
 export interface SaveClimbResponse {
   uuid: string;
+  createdAt?: string | null;
+  publishedAt?: string | null;
+}
+
+export interface UpdateClimbResponse {
+  uuid: string;
+  createdAt?: string | null;
+  publishedAt?: string | null;
+  isDraft: boolean;
 }
 
 /**
@@ -66,6 +79,40 @@ export function useSaveClimb(boardName: BoardName) {
     },
     onError: () => {
       showMessage('Failed to save climb', 'error');
+    },
+  });
+}
+
+/**
+ * Hook to update an existing climb. Only the climb's owner may call this,
+ * and only while the climb is still a draft or within 24h of first publish.
+ * The backend enforces both rules.
+ */
+export function useUpdateClimb() {
+  const { token } = useWsAuthToken();
+  const { data: session, status: sessionStatus } = useSession();
+
+  return useMutation({
+    mutationFn: async (input: UpdateClimbInput): Promise<UpdateClimbResponse> => {
+      if (sessionStatus !== 'authenticated' || !session?.user?.id || !token) {
+        throw new Error('Authentication required to update climbs');
+      }
+
+      const client = createGraphQLClient({
+        url: getBackendWsUrl()!,
+        authToken: token,
+      });
+
+      try {
+        const variables: UpdateClimbMutationVariables = { input };
+        const result = await execute<UpdateClimbMutationResponse, UpdateClimbMutationVariables>(
+          client,
+          { query: UPDATE_CLIMB_MUTATION, variables },
+        );
+        return result.updateClimb;
+      } finally {
+        client.dispose();
+      }
     },
   });
 }

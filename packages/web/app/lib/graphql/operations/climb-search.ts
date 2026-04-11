@@ -3,6 +3,8 @@ import type { Climb, HoldState } from '@/app/lib/types';
 
 // Slim fragment for search/list views. Description is requested so the drafts
 // drawer can load a draft back into the create form without a second round-trip.
+// published_at/created_at are used by the create form to enforce the 24h
+// post-publish edit window.
 const CLIMB_SEARCH_FIELDS = `
   uuid
   setter_username
@@ -18,6 +20,8 @@ const CLIMB_SEARCH_FIELDS = `
   benchmark_difficulty
   is_draft
   is_no_match
+  published_at
+  created_at
 `;
 
 // Full fragment for single-climb views that need all fields

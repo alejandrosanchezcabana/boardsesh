@@ -71,4 +71,6 @@ export interface ClimbRow {
   difficulty_error: string;
   benchmark_difficulty: string | null;
   is_draft: boolean;
+  created_at: string | null;
+  published_at: string | null;
 }

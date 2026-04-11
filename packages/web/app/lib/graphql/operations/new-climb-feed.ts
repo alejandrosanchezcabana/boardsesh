@@ -10,6 +10,8 @@ import type {
   SaveClimbInput,
   SaveClimbResult,
   SaveMoonBoardClimbInput,
+  UpdateClimbInput,
+  UpdateClimbResult,
 } from '@boardsesh/shared-schema';
 
 export const GET_NEW_CLIMB_FEED = gql`
@@ -91,6 +93,8 @@ export const SAVE_CLIMB_MUTATION = gql`
     saveClimb(input: $input) {
       uuid
       synced
+      createdAt
+      publishedAt
     }
   }
 `;
@@ -100,6 +104,19 @@ export const SAVE_MOONBOARD_CLIMB_MUTATION = gql`
     saveMoonBoardClimb(input: $input) {
       uuid
       synced
+      createdAt
+      publishedAt
+    }
+  }
+`;
+
+export const UPDATE_CLIMB_MUTATION = gql`
+  mutation UpdateClimb($input: UpdateClimbInput!) {
+    updateClimb(input: $input) {
+      uuid
+      createdAt
+      publishedAt
+      isDraft
     }
   }
 `;
@@ -158,4 +175,12 @@ export interface SaveMoonBoardClimbMutationVariables {
 
 export interface SaveMoonBoardClimbMutationResponse {
   saveMoonBoardClimb: SaveClimbResult;
+}
+
+export interface UpdateClimbMutationVariables {
+  input: UpdateClimbInput;
+}
+
+export interface UpdateClimbMutationResponse {
+  updateClimb: UpdateClimbResult;
 }

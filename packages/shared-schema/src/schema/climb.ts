@@ -42,6 +42,10 @@ export const climbTypeDefs = /* GraphQL */ `
     boardType: String
     "Whether this climb disallows matching (both hands on the same hold)"
     is_no_match: Boolean
+    "ISO timestamp of when this climb was first published (null while still a draft)"
+    published_at: String
+    "ISO timestamp of when this climb row was created"
+    created_at: String
   }
 
   """

@@ -22,6 +22,10 @@ export type Climb = {
   is_no_match?: boolean;
   userAscents?: number;
   userAttempts?: number;
+  // ISO timestamp of when this climb row was created
+  created_at?: string | null;
+  // ISO timestamp of when this climb was first published (null while still a draft)
+  published_at?: string | null;
 };
 
 export type ClimbQueryResult = {

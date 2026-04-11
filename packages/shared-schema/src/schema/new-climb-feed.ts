@@ -97,5 +97,34 @@ export const newClimbFeedTypeDefs = /* GraphQL */ `
   type SaveClimbResult {
     uuid: ID!
     synced: Boolean!
+    "ISO timestamp of when the row was created"
+    createdAt: String
+    "ISO timestamp of when the row was first published (null while still a draft)"
+    publishedAt: String
+  }
+
+  """
+  Input for updating an existing climb. Only the climb's owner can update
+  the row, and only while it is still a draft OR within 24 hours of its
+  first publish.
+  """
+  input UpdateClimbInput {
+    uuid: ID!
+    boardType: String!
+    name: String
+    description: String
+    frames: String
+    angle: Int
+    "When set, flips the draft state. A climb can go from draft→published but not the other way around."
+    isDraft: Boolean
+    framesCount: Int
+    framesPace: Int
+  }
+
+  type UpdateClimbResult {
+    uuid: ID!
+    createdAt: String
+    publishedAt: String
+    isDraft: Boolean!
   }
 `;

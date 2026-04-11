@@ -21,6 +21,8 @@ type RawSelectResult = {
   difficulty_error: number | null;
   benchmark_difficulty: number | null;
   description: string | null;
+  created_at: string | null;
+  published_at: string | null;
 };
 
 function mapResultToClimbRow(result: RawSelectResult, angle: number): ClimbRow {
@@ -38,6 +40,8 @@ function mapResultToClimbRow(result: RawSelectResult, angle: number): ClimbRow {
     benchmark_difficulty: result.benchmark_difficulty && result.benchmark_difficulty > 0 ? result.benchmark_difficulty.toString() : null,
     is_draft: result.is_draft ?? false,
     description: result.description || '',
+    created_at: result.created_at,
+    published_at: result.published_at,
   };
 }
 
@@ -121,6 +125,8 @@ async function statsDrivenSearch(
     difficulty_error: sql<number | null>`ROUND(${boardClimbStats.difficultyAverage}::numeric - ${boardClimbStats.displayDifficulty}::numeric, 2)`,
     benchmark_difficulty: boardClimbStats.benchmarkDifficulty,
     description: boardClimbs.description,
+    created_at: boardClimbs.createdAt,
+    published_at: boardClimbs.publishedAt,
   };
 
   const results: RawSelectResult[] = await db
@@ -224,6 +230,8 @@ async function standardSearch(
     difficulty_error: sql<number | null>`ROUND(${boardClimbStats.difficultyAverage}::numeric - ${boardClimbStats.displayDifficulty}::numeric, 2)`,
     benchmark_difficulty: boardClimbStats.benchmarkDifficulty,
     description: boardClimbs.description,
+    created_at: boardClimbs.createdAt,
+    published_at: boardClimbs.publishedAt,
   };
 
   const orderByClause = sortOrder === 'asc'

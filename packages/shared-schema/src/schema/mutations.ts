@@ -144,6 +144,14 @@ export const mutationsTypeDefs = /* GraphQL */ `
     """
     saveMoonBoardClimb(input: SaveMoonBoardClimbInput!): SaveClimbResult!
 
+    """
+    Update an existing climb. The caller must own the climb, and the climb
+    must either still be a draft or have been published within the last 24
+    hours. Used by the create form to let users keep tweaking a freshly
+    published climb.
+    """
+    updateClimb(input: UpdateClimbInput!): UpdateClimbResult!
+
     # ============================================
     # Playlist Mutations (require auth)
     # ============================================

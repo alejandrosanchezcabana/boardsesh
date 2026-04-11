@@ -19,7 +19,7 @@ import Badge from '@mui/material/Badge';
 import { SettingsOutlined, LocalFireDepartmentOutlined, SaveOutlined, LoginOutlined, CloudUploadOutlined, GetAppOutlined, DraftsOutlined, DeleteOutlined, CheckCircleOutlined } from '@mui/icons-material';
 import { themeTokens } from '@/app/theme/theme-config';
 import HoldIndicator from './hold-indicator';
-import { useRouter, usePathname } from 'next/navigation';
+import { usePathname } from 'next/navigation';
 import Link from 'next/link';
 import { track } from '@vercel/analytics';
 import { useSession } from 'next-auth/react';
@@ -31,9 +31,8 @@ import { useBoardProvider } from '../board-provider/board-provider-context';
 import { useCreateClimb } from './use-create-climb';
 import { useMoonBoardCreateClimb } from './use-moonboard-create-climb';
 import { useBoardBluetooth } from '../board-bluetooth-control/use-board-bluetooth';
-import type { MoonBoardClimbDuplicateMatch } from '@boardsesh/shared-schema';
+import type { MoonBoardClimbDuplicateMatch, UpdateClimbInput } from '@boardsesh/shared-schema';
 import type { BoardDetails, Climb } from '@/app/lib/types';
-import { constructClimbListWithSlugs } from '@/app/lib/url-utils';
 import { convertLitUpHoldsStringToMap } from '../board-renderer/util';
 import { MOONBOARD_GRADES, MOONBOARD_ANGLES } from '@/app/lib/moonboard-config';
 import { getSoftFontGradeColor } from '@/app/lib/grade-colors';
@@ -109,7 +108,6 @@ export default function CreateClimbForm({
   layoutId,
   holdSetImages,
 }: CreateClimbFormProps) {
-  const router = useRouter();
   const pathname = usePathname();
   const { data: session } = useSession();
   const { register, update, deregister } = useCreateHeaderBridgeSetters();
@@ -118,7 +116,7 @@ export default function CreateClimbForm({
   const queryClient = useQueryClient();
 
   // Aurora-specific hooks
-  const { isAuthenticated, saveClimb } = useBoardProvider();
+  const { isAuthenticated, saveClimb, updateClimb } = useBoardProvider();
   const { showMessage } = useSnackbar();
   const { token: wsAuthToken } = useWsAuthToken();
 
@@ -166,24 +164,40 @@ export default function CreateClimbForm({
 
   // Form state
   const [isSaving, setIsSaving] = useState(false);
-  const [justSavedDraft, setJustSavedDraft] = useState(false);
+  // Set to true briefly after a successful save so the Save button flips to a
+  // "Saved" confirmation state for both draft and published saves.
+  const [justSaved, setJustSaved] = useState(false);
   const savedTimeoutRef = useRef<number | null>(null);
   const { openAuthModal } = useAuthModal();
   const [pendingFormValues, setPendingFormValues] = useState<CreateClimbFormValues | null>(null);
 
-  const markDraftJustSaved = useCallback(() => {
-    setJustSavedDraft(true);
+  // Tracks the row we've saved during this form session so subsequent Save
+  // presses update that row in place instead of creating a new climb. Cleared
+  // by Clear. Set by both create (saveClimb) and load-a-draft flows.
+  interface SavedClimbState {
+    uuid: string;
+    boardType: string;
+    /** ISO timestamp of when the row was created */
+    createdAt: string | null;
+    /** ISO timestamp of when the row was first published; null while still draft */
+    publishedAt: string | null;
+    isDraft: boolean;
+  }
+  const [savedClimb, setSavedClimb] = useState<SavedClimbState | null>(null);
+
+  const markJustSaved = useCallback(() => {
+    setJustSaved(true);
     if (savedTimeoutRef.current !== null) {
       window.clearTimeout(savedTimeoutRef.current);
     }
     savedTimeoutRef.current = window.setTimeout(() => {
-      setJustSavedDraft(false);
+      setJustSaved(false);
       savedTimeoutRef.current = null;
     }, 3000);
   }, []);
 
-  const clearJustSavedDraft = useCallback(() => {
-    setJustSavedDraft(false);
+  const clearJustSaved = useCallback(() => {
+    setJustSaved(false);
     if (savedTimeoutRef.current !== null) {
       window.clearTimeout(savedTimeoutRef.current);
       savedTimeoutRef.current = null;
@@ -198,6 +212,34 @@ export default function CreateClimbForm({
       }
     };
   }, []);
+
+  // Published climbs remain editable for 24 hours after their first publish.
+  // Drafts are editable indefinitely. We re-check on every render so the lock
+  // naturally engages while the form is open past the window.
+  const EDIT_WINDOW_MS = 24 * 60 * 60 * 1000;
+  const [nowTick, setNowTick] = useState(() => Date.now());
+  useEffect(() => {
+    if (!savedClimb?.publishedAt) return;
+    const publishedMs = Date.parse(savedClimb.publishedAt);
+    if (!Number.isFinite(publishedMs)) return;
+    const remaining = publishedMs + EDIT_WINDOW_MS - Date.now();
+    if (remaining <= 0) {
+      setNowTick(Date.now());
+      return;
+    }
+    // Tick once when the edit window expires so the button flips to locked.
+    const timeoutId = window.setTimeout(() => setNowTick(Date.now()), remaining + 50);
+    return () => window.clearTimeout(timeoutId);
+  }, [savedClimb?.publishedAt, EDIT_WINDOW_MS]);
+
+  const editLocked = useMemo(() => {
+    if (!savedClimb) return false;
+    if (savedClimb.isDraft) return false; // drafts are always editable
+    if (!savedClimb.publishedAt) return false;
+    const publishedMs = Date.parse(savedClimb.publishedAt);
+    if (!Number.isFinite(publishedMs)) return false;
+    return nowTick - publishedMs > EDIT_WINDOW_MS;
+  }, [savedClimb, nowTick, EDIT_WINDOW_MS]);
 
   // Aurora-specific state
   const [showHeatmap, setShowHeatmap] = useState(false);
@@ -248,13 +290,13 @@ export default function CreateClimbForm({
     }
   }, [boardType, litUpHoldsMap, isConnected, generateFramesString, sendFramesToBoard]);
 
-  // As soon as the user edits the climb after a successful draft save, flip
-  // the button back to its normal "Save" state so they can save the revision.
+  // As soon as the user edits the climb after a successful save, flip the
+  // button back to its normal "Save" state so they can save the revision.
   useEffect(() => {
-    if (justSavedDraft) {
-      clearJustSavedDraft();
+    if (justSaved) {
+      clearJustSaved();
     }
-    // We intentionally depend only on the edit signals, not on justSavedDraft
+    // We intentionally depend only on the edit signals, not on justSaved
     // itself — otherwise this effect would re-run every time we clear the flag.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [climbName, description, litUpHoldsMap]);
@@ -265,13 +307,16 @@ export default function CreateClimbForm({
   const pickerBoardName = boardType === 'aurora' ? boardDetails?.board_name ?? 'kilter' : 'moonboard';
 
   // Wrap resetHolds so Clear starts a brand-new climb: holds wiped, text fields
-  // cleared, Bluetooth board blanked, and any lingering "Saved" confirmation
-  // dismissed. Leaves the Draft toggle alone — that's a user preference.
+  // cleared, Bluetooth board blanked, any lingering "Saved" confirmation
+  // dismissed, and the tracked savedClimb row detached so the next Save
+  // creates a new climb instead of updating the previous one.
+  // Leaves the Draft toggle alone — that's a user preference.
   const resetHolds = useCallback(() => {
     baseResetHolds();
     setClimbName('');
     setDescription('');
-    clearJustSavedDraft();
+    clearJustSaved();
+    setSavedClimb(null);
     if (boardType === 'aurora' && isConnected) {
       sendFramesToBoard('');
     }
@@ -282,7 +327,7 @@ export default function CreateClimbForm({
       setOcrWarnings([]);
       setMoonBoardDuplicateMatch(null);
     }
-  }, [boardType, baseResetHolds, isConnected, sendFramesToBoard, clearJustSavedDraft]);
+  }, [boardType, baseResetHolds, isConnected, sendFramesToBoard, clearJustSaved]);
 
   // MoonBoard OCR import
   const handleOcrImport = useCallback(async (file: File) => {
@@ -392,6 +437,17 @@ export default function CreateClimbForm({
   }, [boardType, isValid, layoutId, moonBoardHolds, runMoonBoardDuplicateCheck, selectedAngle]);
 
   // Save climb - Aurora
+  //
+  // Flow:
+  //   - First press (no savedClimb yet): create a new row via saveClimb.
+  //   - Subsequent press on the same row: update it in place via updateClimb.
+  //     Drafts stay editable indefinitely; published climbs have a 24h window
+  //     (enforced on the backend too).
+  //
+  // The form never navigates away on save anymore — the user stays on the
+  // create page and the Save button flips to a transient "Saved" confirmation
+  // state. Clearing the form (via Clear) detaches savedClimb so the next
+  // save starts a fresh row.
   const doSaveAuroraClimb = useCallback(async () => {
     if (!boardDetails || !generateFramesString) return;
 
@@ -400,6 +456,72 @@ export default function CreateClimbForm({
     try {
       const frames = generateFramesString();
 
+      // Invalidation keys used in both branches.
+      const invalidateDraftCaches = () =>
+        Promise.all([
+          queryClient.invalidateQueries({ queryKey: ['climbDrafts', boardDetails.board_name, boardDetails.layout_id] }),
+          queryClient.invalidateQueries({ queryKey: ['climbDraftsCount', boardDetails.board_name, boardDetails.layout_id] }),
+        ]);
+
+      // Decide create-vs-update. We can only update when we have a savedClimb
+      // for the current board type and its edit window is still open (for
+      // drafts, the window is effectively infinite).
+      const canUpdate = !!savedClimb
+        && savedClimb.boardType === boardDetails.board_name
+        && (savedClimb.isDraft || (
+          !!savedClimb.publishedAt
+          && Date.now() - Date.parse(savedClimb.publishedAt) <= EDIT_WINDOW_MS
+        ));
+
+      if (canUpdate && savedClimb) {
+        const updateInput: UpdateClimbInput = {
+          uuid: savedClimb.uuid,
+          boardType: savedClimb.boardType,
+          name: climbName,
+          description: description || '',
+          frames,
+          angle,
+          framesCount: 1,
+          framesPace: 0,
+          isDraft,
+        };
+        const updateResult = await updateClimb(updateInput);
+
+        // A draft→published transition updates the published climb list too;
+        // otherwise we just refresh the drafts cache either way so UI stays
+        // in sync.
+        if (savedClimb.isDraft && !updateResult.isDraft) {
+          await refreshClimbSearchAfterSave(queryClient, boardDetails.board_name, boardDetails.layout_id);
+        }
+        await invalidateDraftCaches();
+
+        setSavedClimb({
+          uuid: updateResult.uuid,
+          boardType: boardDetails.board_name,
+          createdAt: updateResult.createdAt ?? savedClimb.createdAt,
+          publishedAt: updateResult.publishedAt ?? null,
+          isDraft: updateResult.isDraft,
+        });
+
+        track('Climb Updated', {
+          boardLayout: boardDetails.layout_name || '',
+          isDraft: updateResult.isDraft,
+          holdCount: totalHolds,
+        });
+
+        if (process.env.NODE_ENV !== 'production') {
+          console.debug('[climb-update]', {
+            uuid: updateResult.uuid,
+            isDraft: updateResult.isDraft,
+            publishedAt: updateResult.publishedAt,
+          });
+        }
+
+        markJustSaved();
+        return;
+      }
+
+      // Create a brand-new row.
       const saveResult = await saveClimb({
         layout_id: boardDetails.layout_id,
         name: climbName,
@@ -413,13 +535,8 @@ export default function CreateClimbForm({
 
       if (!isDraft) {
         await refreshClimbSearchAfterSave(queryClient, boardDetails.board_name, boardDetails.layout_id);
-      } else {
-        // Refresh drafts list/count so the new draft shows up immediately.
-        await Promise.all([
-          queryClient.invalidateQueries({ queryKey: ['climbDrafts', boardDetails.board_name, boardDetails.layout_id] }),
-          queryClient.invalidateQueries({ queryKey: ['climbDraftsCount', boardDetails.board_name, boardDetails.layout_id] }),
-        ]);
       }
+      await invalidateDraftCaches();
 
       track('Climb Created', {
         boardLayout: boardDetails.layout_name || '',
@@ -427,42 +544,49 @@ export default function CreateClimbForm({
         holdCount: totalHolds,
       });
 
-      if (isDraft) {
-        if (process.env.NODE_ENV !== 'production') {
-          console.debug('[draft-save]', {
-            uuid: saveResult?.uuid,
-            isDraft: true,
-            boardType: boardDetails.board_name,
-            layoutId: boardDetails.layout_id,
-            sizeId: boardDetails.size_id,
-            setIds: boardDetails.set_ids,
-            angle,
-          });
-        }
-        markDraftJustSaved();
-        return;
+      setSavedClimb({
+        uuid: saveResult.uuid,
+        boardType: boardDetails.board_name,
+        createdAt: saveResult.createdAt ?? null,
+        publishedAt: saveResult.publishedAt ?? null,
+        isDraft,
+      });
+
+      if (process.env.NODE_ENV !== 'production') {
+        console.debug('[climb-save]', {
+          uuid: saveResult?.uuid,
+          isDraft,
+          publishedAt: saveResult?.publishedAt ?? null,
+          boardType: boardDetails.board_name,
+          layoutId: boardDetails.layout_id,
+          sizeId: boardDetails.size_id,
+          setIds: boardDetails.set_ids,
+          angle,
+        });
       }
 
-      const listUrl = constructClimbListWithSlugs(
-        boardDetails.board_name,
-        boardDetails.layout_name || '',
-        boardDetails.size_name || '',
-        boardDetails.size_description,
-        boardDetails.set_names || [],
-        angle,
-      );
-      router.push(listUrl);
+      markJustSaved();
     } catch (error) {
       console.error('Failed to save climb:', error);
       track('Climb Create Failed', {
         boardLayout: boardDetails.layout_name || '',
       });
+      showMessage(error instanceof Error ? error.message : 'Failed to save climb. Please try again.', 'error');
     } finally {
       setIsSaving(false);
     }
-  }, [boardDetails, generateFramesString, saveClimb, climbName, description, isDraft, angle, totalHolds, router, queryClient, markDraftJustSaved]);
+  }, [boardDetails, generateFramesString, saveClimb, updateClimb, climbName, description, isDraft, angle, totalHolds, queryClient, markJustSaved, savedClimb, showMessage, EDIT_WINDOW_MS]);
 
   // Save climb - MoonBoard
+  //
+  // Mirrors the Aurora flow: first Save creates a new row; subsequent Saves
+  // update the tracked row in place (within the 24h post-publish window for
+  // non-drafts). The form never navigates away on save.
+  //
+  // Note: MoonBoard hold re-encoding on update isn't supported by updateClimb,
+  // so updates only touch name/description/angle/isDraft. If the user changes
+  // holds after a save we intentionally skip the update and create a new row,
+  // which the duplicate check will catch if the new holds collide.
   const doSaveMoonBoardClimb = useCallback(async () => {
     const userId = session?.user?.id;
     if (!layoutId || !userId || !moonBoardHolds) return;
@@ -477,6 +601,58 @@ export default function CreateClimbForm({
     try {
       if (!wsAuthToken) {
         throw new Error('Authentication required to save climb');
+      }
+
+      const invalidateCaches = async (wasDraft: boolean) => {
+        if (!wasDraft) {
+          await refreshClimbSearchAfterSave(queryClient, 'moonboard', layoutId);
+        }
+        await Promise.all([
+          queryClient.invalidateQueries({ queryKey: ['climbDrafts', 'moonboard', layoutId] }),
+          queryClient.invalidateQueries({ queryKey: ['climbDraftsCount', 'moonboard', layoutId] }),
+        ]);
+      };
+
+      // Update path: we already have a savedClimb and its edit window is open.
+      const canUpdate = !!savedClimb
+        && savedClimb.boardType === 'moonboard'
+        && (savedClimb.isDraft || (
+          !!savedClimb.publishedAt
+          && Date.now() - Date.parse(savedClimb.publishedAt) <= EDIT_WINDOW_MS
+        ));
+
+      if (canUpdate && savedClimb) {
+        const updateInput: UpdateClimbInput = {
+          uuid: savedClimb.uuid,
+          boardType: 'moonboard',
+          name: climbName,
+          description: description || '',
+          angle: selectedAngle,
+          isDraft,
+        };
+        const updateResult = await updateClimb(updateInput);
+
+        await invalidateCaches(savedClimb.isDraft);
+
+        setSavedClimb({
+          uuid: updateResult.uuid,
+          boardType: 'moonboard',
+          createdAt: updateResult.createdAt ?? savedClimb.createdAt,
+          publishedAt: updateResult.publishedAt ?? null,
+          isDraft: updateResult.isDraft,
+        });
+
+        if (process.env.NODE_ENV !== 'production') {
+          console.debug('[climb-update]', {
+            uuid: updateResult.uuid,
+            isDraft: updateResult.isDraft,
+            publishedAt: updateResult.publishedAt,
+            boardType: 'moonboard',
+          });
+        }
+
+        markJustSaved();
+        return;
       }
 
       if (!graphqlClientRef.current) {
@@ -506,33 +682,28 @@ export default function CreateClimbForm({
         { query: SAVE_MOONBOARD_CLIMB_MUTATION, variables },
       );
 
-      if (!isDraft) {
-        await refreshClimbSearchAfterSave(queryClient, 'moonboard', layoutId);
-      } else {
-        await Promise.all([
-          queryClient.invalidateQueries({ queryKey: ['climbDrafts', 'moonboard', layoutId] }),
-          queryClient.invalidateQueries({ queryKey: ['climbDraftsCount', 'moonboard', layoutId] }),
-        ]);
+      await invalidateCaches(isDraft);
+
+      setSavedClimb({
+        uuid: moonBoardResult.saveMoonBoardClimb.uuid,
+        boardType: 'moonboard',
+        createdAt: moonBoardResult.saveMoonBoardClimb.createdAt ?? null,
+        publishedAt: moonBoardResult.saveMoonBoardClimb.publishedAt ?? null,
+        isDraft,
+      });
+
+      if (process.env.NODE_ENV !== 'production') {
+        console.debug('[climb-save]', {
+          uuid: moonBoardResult?.saveMoonBoardClimb?.uuid,
+          isDraft,
+          publishedAt: moonBoardResult?.saveMoonBoardClimb?.publishedAt ?? null,
+          boardType: 'moonboard',
+          layoutId,
+          angle: selectedAngle,
+        });
       }
 
-      if (isDraft) {
-        if (process.env.NODE_ENV !== 'production') {
-          console.debug('[draft-save]', {
-            uuid: moonBoardResult?.saveMoonBoardClimb?.uuid,
-            isDraft: true,
-            boardType: 'moonboard',
-            layoutId,
-            angle: selectedAngle,
-          });
-        }
-        markDraftJustSaved();
-        return;
-      }
-
-      showMessage('Climb saved to database!', 'success');
-
-      const listUrl = pathname.replace(/\/create$/, '/list');
-      router.push(listUrl);
+      markJustSaved();
     } catch (error) {
       console.error('Failed to save climb:', error);
       if (error instanceof Error && isMoonBoardDuplicateError(error.message)) {
@@ -553,13 +724,14 @@ export default function CreateClimbForm({
     isBenchmark,
     isDraft,
     selectedAngle,
-    pathname,
-    router,
     wsAuthToken,
     queryClient,
     showMessage,
     runMoonBoardDuplicateCheck,
-    markDraftJustSaved,
+    markJustSaved,
+    savedClimb,
+    updateClimb,
+    EDIT_WINDOW_MS,
   ]);
 
   const handleAuthSuccess = useCallback(async () => {
@@ -672,6 +844,9 @@ export default function CreateClimbForm({
 
   // Loads a draft climb back into the form so the user can keep working on it.
   // Aurora-only for now — the MoonBoard form doesn't mount a drafts drawer.
+  //
+  // Tracks the loaded row as savedClimb so subsequent Save presses update it
+  // in place rather than creating a duplicate.
   const handleLoadDraft = useCallback((climb: Climb) => {
     if (boardType !== 'aurora' || !boardDetails || !loadAuroraHolds) return;
 
@@ -680,10 +855,17 @@ export default function CreateClimbForm({
     loadAuroraHolds(holdsForFrame);
     setClimbName(climb.name || '');
     setDescription(climb.description || '');
-    clearJustSavedDraft();
+    setSavedClimb({
+      uuid: climb.uuid,
+      boardType: boardDetails.board_name,
+      createdAt: climb.created_at ?? null,
+      publishedAt: climb.published_at ?? null,
+      isDraft: climb.is_draft ?? true,
+    });
+    clearJustSaved();
     // The litUpHoldsMap effect at the top of this component pushes new frames
     // to a connected Bluetooth board automatically.
-  }, [boardType, boardDetails, loadAuroraHolds, clearJustSavedDraft]);
+  }, [boardType, boardDetails, loadAuroraHolds, clearJustSaved]);
 
   const handleToggleHeatmap = useCallback(() => {
     if (boardType !== 'aurora' || !boardDetails) return;
@@ -697,7 +879,23 @@ export default function CreateClimbForm({
 
   const headerAction = useMemo(() => {
     const renderSaveButton = () => {
-      if (justSavedDraft) {
+      if (editLocked) {
+        return (
+          <MuiTooltip title="Published climbs can only be edited for 24 hours after first publish.">
+            <span>
+              <MuiButton
+                size="small"
+                variant="outlined"
+                color="inherit"
+                disabled
+              >
+                Edit window closed
+              </MuiButton>
+            </span>
+          </MuiTooltip>
+        );
+      }
+      if (justSaved) {
         return (
           <MuiButton
             size="small"
@@ -751,7 +949,7 @@ export default function CreateClimbForm({
       );
     }
     return renderSaveButton();
-  }, [boardType, isAuthenticated, openAuthModal, handleAuthSuccess, isSaving, canSave, handlePublish, hasMoonBoardSessionUser, justSavedDraft]);
+  }, [boardType, isAuthenticated, openAuthModal, handleAuthSuccess, isSaving, canSave, handlePublish, hasMoonBoardSessionUser, justSaved, editLocked]);
 
   climbNameRef.current = climbName;
   setClimbNameRef.current = setClimbName;

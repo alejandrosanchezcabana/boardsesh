@@ -240,6 +240,10 @@ export const boardClimbs = pgTable('board_climbs', {
   isDraft: boolean('is_draft').default(false),
   isListed: boolean('is_listed'),
   createdAt: text('created_at'),
+  // Timestamp of the first non-draft save. Null while the climb is still a
+  // draft. Used by the create-climb form to gate the post-publish edit window
+  // (users can continue tweaking a published climb for 24h).
+  publishedAt: text('published_at'),
   synced: boolean('synced').default(true).notNull(),
   syncError: text('sync_error'),
   // Boardsesh user who created this climb locally (null for Aurora-synced climbs)

@@ -90,6 +90,18 @@ export const SaveClimbInputSchema = z.object({
   angle: z.number().int().min(0).max(90),
 });
 
+export const UpdateClimbInputSchema = z.object({
+  uuid: z.string().min(1).max(100),
+  boardType: BoardNameSchema,
+  name: z.string().min(1).max(200).optional(),
+  description: z.string().max(2000).optional(),
+  frames: z.string().min(1).max(10000).optional(),
+  angle: z.number().int().min(0).max(90).optional(),
+  isDraft: z.boolean().optional(),
+  framesCount: z.number().int().min(1).optional(),
+  framesPace: z.number().int().min(0).optional(),
+});
+
 export const MoonBoardHoldsInputSchema = z.object({
   start: z.array(z.string()).default([]),
   hand: z.array(z.string()).default([]),

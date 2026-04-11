@@ -1,6 +1,6 @@
 import crypto from 'crypto';
 import { and, eq, sql } from 'drizzle-orm';
-import type { ConnectionContext, SaveClimbResult } from '@boardsesh/shared-schema';
+import type { ConnectionContext, SaveClimbResult, UpdateClimbResult } from '@boardsesh/shared-schema';
 import { SUPPORTED_BOARDS } from '@boardsesh/shared-schema';
 import { db } from '../../../db/client';
 import * as dbSchema from '@boardsesh/db/schema';
@@ -17,6 +17,7 @@ import {
 import {
   SaveClimbInputSchema,
   SaveMoonBoardClimbInputSchema,
+  UpdateClimbInputSchema,
 } from '../../../validation/schemas';
 
 type SaveClimbArgs = { input: unknown };
@@ -86,6 +87,7 @@ export const climbMutations = {
 
     const uuid = generateClimbUuid();
     const now = new Date().toISOString();
+    const publishedAt = validated.isDraft ? null : now;
     const { displayName, name, avatarUrl } = await getUserProfile(ctx.userId!);
     const preferredSetter = displayName || name || null;
 
@@ -105,6 +107,7 @@ export const climbMutations = {
       isDraft: validated.isDraft,
       isListed,
       createdAt: now,
+      publishedAt,
       synced: false,
       syncError: null,
     });
@@ -130,7 +133,7 @@ export const climbMutations = {
       },
     });
 
-    return { uuid, synced: false };
+    return { uuid, synced: false, createdAt: now, publishedAt };
   },
 
   /**
@@ -155,6 +158,7 @@ export const climbMutations = {
 
     const uuid = generateClimbUuid();
     const now = new Date().toISOString();
+    const publishedAt = isDraft ? null : now;
     const { displayName, name, avatarUrl } = await getUserProfile(ctx.userId!);
     const preferredSetter = validated.setter || displayName || name || null;
 
@@ -181,6 +185,7 @@ export const climbMutations = {
       isDraft,
       isListed,
       createdAt: now,
+      publishedAt,
       synced: false,
       syncError: null,
     });
@@ -240,6 +245,139 @@ export const climbMutations = {
       },
     });
 
-    return { uuid, synced: false };
+    return { uuid, synced: false, createdAt: now, publishedAt };
+  },
+
+  /**
+   * Update an existing climb in-place. Enforces ownership and a 24h edit
+   * window on published climbs. Drafts can be edited indefinitely.
+   *
+   * A climb can transition from draft → published via `isDraft: false` —
+   * that sets `publishedAt` to now and starts the 24h clock. The reverse
+   * transition is not allowed (can't un-publish).
+   */
+  updateClimb: async (
+    _: unknown,
+    { input }: { input: unknown },
+    ctx: ConnectionContext
+  ): Promise<UpdateClimbResult> => {
+    requireAuthenticated(ctx);
+    await applyRateLimit(ctx, 20);
+
+    const validated = validateInput(UpdateClimbInputSchema, input, 'input');
+
+    if (!isValidBoardName(validated.boardType)) {
+      throw new Error(`Invalid board type: ${validated.boardType}. Must be one of ${SUPPORTED_BOARDS.join(', ')}`);
+    }
+
+    // Load the existing row and verify ownership + edit window.
+    const [existing] = await db
+      .select({
+        uuid: dbSchema.boardClimbs.uuid,
+        userId: dbSchema.boardClimbs.userId,
+        isDraft: dbSchema.boardClimbs.isDraft,
+        publishedAt: dbSchema.boardClimbs.publishedAt,
+        createdAt: dbSchema.boardClimbs.createdAt,
+      })
+      .from(dbSchema.boardClimbs)
+      .where(
+        and(
+          eq(dbSchema.boardClimbs.uuid, validated.uuid),
+          eq(dbSchema.boardClimbs.boardType, validated.boardType),
+        )
+      )
+      .limit(1);
+
+    if (!existing) {
+      throw new Error('Climb not found');
+    }
+
+    if (existing.userId !== ctx.userId!) {
+      throw new Error('You can only update your own climbs');
+    }
+
+    const EDIT_WINDOW_MS = 24 * 60 * 60 * 1000;
+    const currentlyDraft = existing.isDraft === true;
+
+    if (!currentlyDraft) {
+      // Non-draft: only editable within 24h of the first publish.
+      if (!existing.publishedAt) {
+        throw new Error('This climb can no longer be edited');
+      }
+      const publishedMs = Date.parse(existing.publishedAt);
+      if (!Number.isFinite(publishedMs) || Date.now() - publishedMs > EDIT_WINDOW_MS) {
+        throw new Error('The 24 hour edit window has expired');
+      }
+    }
+
+    // Decide the next draft/publish state. We only honor a transition from
+    // draft → published; a publish → draft attempt is silently ignored.
+    const nextIsDraft = validated.isDraft === undefined
+      ? existing.isDraft ?? false
+      : (currentlyDraft && validated.isDraft === false ? false : existing.isDraft ?? false);
+
+    const transitioningToPublished = currentlyDraft && validated.isDraft === false;
+    const now = new Date().toISOString();
+    const nextPublishedAt = transitioningToPublished ? now : existing.publishedAt;
+
+    // Build the update set from provided fields only.
+    const updateSet: Record<string, unknown> = {
+      isDraft: nextIsDraft,
+      isListed: !nextIsDraft,
+      publishedAt: nextPublishedAt,
+    };
+    if (validated.name !== undefined) updateSet.name = validated.name;
+    if (validated.description !== undefined) updateSet.description = validated.description;
+    if (validated.frames !== undefined) updateSet.frames = validated.frames;
+    if (validated.angle !== undefined) updateSet.angle = validated.angle;
+    if (validated.framesCount !== undefined) updateSet.framesCount = validated.framesCount;
+    if (validated.framesPace !== undefined) updateSet.framesPace = validated.framesPace;
+
+    await db
+      .update(dbSchema.boardClimbs)
+      .set(updateSet)
+      .where(
+        and(
+          eq(dbSchema.boardClimbs.uuid, validated.uuid),
+          eq(dbSchema.boardClimbs.boardType, validated.boardType),
+        )
+      );
+
+    // If frames changed we need to refresh the denormalized edge/set columns
+    // so search filters still match.
+    if (validated.frames !== undefined) {
+      await populateDenormalizedColumns(db, validated.boardType, [validated.uuid]);
+    }
+
+    // On a draft → published transition, announce the new climb so follower
+    // feeds pick it up, the same way saveClimb does.
+    if (transitioningToPublished) {
+      const { displayName, name, avatarUrl } = await getUserProfile(ctx.userId!);
+      const preferredSetter = displayName || name || null;
+      await publishSocialEvent({
+        type: 'climb.created',
+        actorId: ctx.userId!,
+        entityType: 'climb',
+        entityId: validated.uuid,
+        timestamp: Date.now(),
+        metadata: {
+          boardType: validated.boardType,
+          layoutId: '',
+          climbName: validated.name ?? '',
+          climbUuid: validated.uuid,
+          angle: validated.angle !== undefined ? String(validated.angle) : '',
+          frames: validated.frames ?? '',
+          setterDisplayName: preferredSetter || '',
+          setterAvatarUrl: avatarUrl || '',
+        },
+      });
+    }
+
+    return {
+      uuid: validated.uuid,
+      createdAt: existing.createdAt,
+      publishedAt: nextPublishedAt,
+      isDraft: nextIsDraft,
+    };
   },
 };

@@ -5,12 +5,18 @@ import { SaveClimbOptions } from '@/app/lib/api-wrappers/aurora/types';
 import { useSession } from 'next-auth/react';
 import { useLogbook as useLogbookQuery } from '@/app/hooks/use-logbook';
 import { useSaveTick as useSaveTickMutation, type SaveTickOptions } from '@/app/hooks/use-save-tick';
-import { useSaveClimb as useSaveClimbMutation, type SaveClimbResponse } from '@/app/hooks/use-save-climb';
+import {
+  useSaveClimb as useSaveClimbMutation,
+  useUpdateClimb as useUpdateClimbMutation,
+  type SaveClimbResponse,
+  type UpdateClimbResponse,
+} from '@/app/hooks/use-save-climb';
 import { usePersistentSessionState } from '@/app/components/persistent-session/persistent-session-context';
+import type { UpdateClimbInput } from '@boardsesh/shared-schema';
 
 // Re-export types for backward compatibility
 export type { SaveTickOptions } from '@/app/hooks/use-save-tick';
-export type { SaveClimbResponse } from '@/app/hooks/use-save-climb';
+export type { SaveClimbResponse, UpdateClimbResponse } from '@/app/hooks/use-save-climb';
 export type { TickStatus, LogbookEntry } from '@/app/hooks/use-logbook';
 
 import type { LogbookEntry } from '@/app/hooks/use-logbook';
@@ -25,6 +31,7 @@ interface BoardContextType {
   getLogbook: (climbUuids: ClimbUuid[]) => Promise<void>;
   saveTick: (options: SaveTickOptions) => Promise<void>;
   saveClimb: (options: Omit<SaveClimbOptions, 'setter_id' | 'user_id'>) => Promise<SaveClimbResponse>;
+  updateClimb: (input: UpdateClimbInput) => Promise<UpdateClimbResponse>;
 }
 
 const BoardContext = createContext<BoardContextType | undefined>(undefined);
@@ -39,6 +46,7 @@ export function BoardProvider({ boardName, children }: { boardName: BoardName; c
   const { logbook } = useLogbookQuery(boardName, climbUuids);
   const saveTickMutation = useSaveTickMutation(boardName);
   const saveClimbMutation = useSaveClimbMutation(boardName);
+  const updateClimbMutation = useUpdateClimbMutation();
 
   // Initialize when session status changes
   useEffect(() => {
@@ -58,6 +66,8 @@ export function BoardProvider({ boardName, children }: { boardName: BoardName; c
   saveTickMutateRef.current = saveTickMutation.mutateAsync;
   const saveClimbMutateRef = useRef(saveClimbMutation.mutateAsync);
   saveClimbMutateRef.current = saveClimbMutation.mutateAsync;
+  const updateClimbMutateRef = useRef(updateClimbMutation.mutateAsync);
+  updateClimbMutateRef.current = updateClimbMutation.mutateAsync;
   const activeSessionIdRef = useRef(activeSession?.sessionId);
   activeSessionIdRef.current = activeSession?.sessionId;
 
@@ -71,6 +81,10 @@ export function BoardProvider({ boardName, children }: { boardName: BoardName; c
 
   const saveClimb = useCallback(async (options: Omit<SaveClimbOptions, 'setter_id' | 'user_id'>): Promise<SaveClimbResponse> => {
     return saveClimbMutateRef.current(options);
+  }, []);
+
+  const updateClimb = useCallback(async (input: UpdateClimbInput): Promise<UpdateClimbResponse> => {
+    return updateClimbMutateRef.current(input);
   }, []);
 
   const isAuthenticated = sessionStatus === 'authenticated';
@@ -87,8 +101,9 @@ export function BoardProvider({ boardName, children }: { boardName: BoardName; c
       getLogbook,
       saveTick,
       saveClimb,
+      updateClimb,
     }),
-    [boardName, isAuthenticated, isLoading, isInitialized, logbook, getLogbook, saveTick, saveClimb],
+    [boardName, isAuthenticated, isLoading, isInitialized, logbook, getLogbook, saveTick, saveClimb, updateClimb],
   );
 
   return <BoardContext.Provider value={value}>{children}</BoardContext.Provider>;

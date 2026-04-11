@@ -146,6 +146,7 @@ describe('useQueueDataFetching', () => {
       logbook: [],
       saveTick: vi.fn(),
       saveClimb: vi.fn(),
+      updateClimb: vi.fn(),
       boardName: 'kilter'
     });
 
@@ -158,6 +159,7 @@ describe('useQueueDataFetching', () => {
       logbook: [],
       saveTick: vi.fn(),
       saveClimb: vi.fn(),
+      updateClimb: vi.fn(),
       boardName: 'kilter'
     });
 
@@ -170,6 +172,7 @@ describe('useQueueDataFetching', () => {
       logbook: [],
       saveTick: vi.fn(),
       saveClimb: vi.fn(),
+      updateClimb: vi.fn(),
       boardName: 'kilter'
     });
 

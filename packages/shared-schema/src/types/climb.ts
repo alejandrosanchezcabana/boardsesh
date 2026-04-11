@@ -24,6 +24,13 @@ export type Climb = {
   userAttempts?: number | null; // GraphQL nullable Int
   boardType?: string; // Populated in multi-board contexts
   is_no_match?: boolean | null; // Whether matching is disallowed
+  is_draft?: boolean | null; // Whether this climb is still a draft
+  // ISO timestamp of when the climb was first published (transitioned out of
+  // draft). Null while the climb is still a draft. Used by the create form
+  // to enforce the 24h post-publish edit window.
+  published_at?: string | null;
+  // ISO timestamp of when the climb row was created.
+  created_at?: string | null;
 };
 
 // Input type for Climb (matches GraphQL ClimbInput)
@@ -127,4 +134,38 @@ export type SaveMoonBoardClimbInput = {
 export type SaveClimbResult = {
   uuid: string;
   synced: boolean;
+  /** ISO timestamp of when the row was created */
+  createdAt?: string | null;
+  /** ISO timestamp of when the row was first published (null while still a draft) */
+  publishedAt?: string | null;
+};
+
+/**
+ * Input for updating an existing climb. Only the climb's owner can update
+ * it, and only while the climb is still a draft OR within 24 hours of its
+ * first publish. The backend enforces both rules.
+ */
+export type UpdateClimbInput = {
+  uuid: string;
+  boardType: string;
+  name?: string | null;
+  description?: string | null;
+  frames?: string | null;
+  angle?: number | null;
+  /**
+   * When set, flips the climb's draft state. A climb can go from draft→published
+   * at any point (that's the publish action), but cannot be un-published.
+   */
+  isDraft?: boolean | null;
+  framesCount?: number | null;
+  framesPace?: number | null;
+};
+
+export type UpdateClimbResult = {
+  uuid: string;
+  /** ISO timestamp of when the row was created */
+  createdAt?: string | null;
+  /** ISO timestamp of when the row was first published (null while still a draft) */
+  publishedAt?: string | null;
+  isDraft: boolean;
 };
