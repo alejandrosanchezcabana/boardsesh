@@ -17,16 +17,22 @@ export default function HoldIndicator({ count, max, color, label }: HoldIndicato
   const active = count > 0;
   return (
     <MuiTooltip title={label}>
-      <Stack direction="row" alignItems="center" spacing={0.5} sx={{ cursor: 'default' }}>
+      <Stack
+        direction="row"
+        alignItems="center"
+        spacing={0.5}
+        aria-label={label}
+        sx={{ cursor: 'default' }}
+      >
         <Box
-          sx={{
+          sx={(theme) => ({
             width: 10,
             height: 10,
             borderRadius: '50%',
             backgroundColor: color,
-            opacity: active ? 1 : 0.25,
+            opacity: active ? 1 : theme.palette.mode === 'dark' ? 0.4 : 0.25,
             flexShrink: 0,
-          }}
+          })}
         />
         <Typography
           variant="caption"
