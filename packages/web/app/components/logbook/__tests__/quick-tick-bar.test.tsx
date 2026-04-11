@@ -1,0 +1,426 @@
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
+import React from 'react';
+import { render, screen, fireEvent, act } from '@testing-library/react';
+import type { Angle, BoardDetails, BoardName, Climb } from '@/app/lib/types';
+import type { LogbookEntry } from '@/app/hooks/use-logbook';
+
+// --- Mocks (must be hoisted before imports of the component under test) ---
+
+const mockSaveTick = vi.fn();
+const mockLogbookRef: { current: LogbookEntry[] } = { current: [] };
+
+vi.mock('../../board-provider/board-provider-context', () => ({
+  useBoardProvider: () => ({
+    saveTick: mockSaveTick,
+    logbook: mockLogbookRef.current,
+    boardName: 'kilter' as BoardName,
+    isAuthenticated: true,
+    isLoading: false,
+    error: null,
+    isInitialized: true,
+    getLogbook: vi.fn(),
+    saveClimb: vi.fn(),
+  }),
+}));
+
+vi.mock('@vercel/analytics', () => ({
+  track: vi.fn(),
+}));
+
+// Import after mocks.
+import { QuickTickBar, hasPriorHistoryForClimb } from '../quick-tick-bar';
+
+// --- Fixtures ---
+
+function makeClimb(overrides: Partial<Climb> = {}): Climb {
+  return {
+    uuid: 'climb-1',
+    name: 'Test Climb',
+    difficulty: 'V5',
+    frames: 'p1r42',
+    quality_average: '3.5',
+    angle: 40,
+    ascensionist_count: 10,
+    display_difficulty: 5,
+    difficulty_average: 12.5,
+    setter_username: 'setter',
+    ...overrides,
+  } as Climb;
+}
+
+function makeBoardDetails(overrides: Partial<BoardDetails> = {}): BoardDetails {
+  return {
+    board_name: 'kilter' as BoardName,
+    layout_id: 1,
+    size_id: 10,
+    set_ids: [1, 2],
+    layout_name: 'Original',
+    size_name: '12x12',
+    size_description: 'Full',
+    set_names: ['Standard'],
+    supportsMirroring: true,
+    images_to_holds: {},
+    holdsData: {},
+    edge_left: 0,
+    edge_right: 0,
+    edge_bottom: 0,
+    edge_top: 0,
+    boardHeight: 100,
+    boardWidth: 100,
+    ...overrides,
+  } as BoardDetails;
+}
+
+function makeLogbookEntry(overrides: Partial<LogbookEntry> = {}): LogbookEntry {
+  return {
+    uuid: 'log-1',
+    climb_uuid: 'climb-1',
+    angle: 40,
+    is_mirror: false,
+    tries: 1,
+    quality: null,
+    difficulty: null,
+    comment: '',
+    climbed_at: '2025-01-01T00:00:00Z',
+    is_ascent: false,
+    status: 'attempt',
+    ...overrides,
+  };
+}
+
+const defaultProps = {
+  currentClimb: makeClimb(),
+  angle: 40 as Angle,
+  boardDetails: makeBoardDetails(),
+  onSave: vi.fn(),
+  onCancel: vi.fn(),
+};
+
+/**
+ * Simulate a horizontal swipe on the bar root.
+ * react-swipeable uses touch events internally, so we dispatch native touch
+ * events with TouchEvent-shaped fields that the library reads.
+ */
+function simulateSwipe(el: HTMLElement, deltaX: number) {
+  const startX = 200;
+  const startY = 100;
+  const endX = startX + deltaX;
+
+  fireEvent.touchStart(el, {
+    touches: [{ clientX: startX, clientY: startY }],
+  });
+  // A couple of intermediate points so react-swipeable recognises a swipe.
+  fireEvent.touchMove(el, {
+    touches: [{ clientX: startX + deltaX / 2, clientY: startY }],
+  });
+  fireEvent.touchMove(el, {
+    touches: [{ clientX: endX, clientY: startY }],
+  });
+  fireEvent.touchEnd(el, {
+    changedTouches: [{ clientX: endX, clientY: startY }],
+  });
+}
+
+describe('QuickTickBar', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    mockLogbookRef.current = [];
+    mockSaveTick.mockResolvedValue(undefined);
+    defaultProps.onSave = vi.fn();
+    defaultProps.onCancel = vi.fn();
+  });
+
+  afterEach(() => {
+    vi.useRealTimers();
+  });
+
+  describe('hasPriorHistoryForClimb helper', () => {
+    it('prefers userAscents/userAttempts on the climb when present', () => {
+      const climbFresh = makeClimb({ uuid: 'c1', userAscents: 0, userAttempts: 0 });
+      const climbAttempted = makeClimb({ uuid: 'c2', userAscents: 0, userAttempts: 3 });
+      const climbSent = makeClimb({ uuid: 'c3', userAscents: 1, userAttempts: 0 });
+
+      // Logbook contents should be ignored when the climb carries counts.
+      const logbook = [makeLogbookEntry({ climb_uuid: 'c1' })];
+
+      expect(hasPriorHistoryForClimb(climbFresh, logbook)).toBe(false);
+      expect(hasPriorHistoryForClimb(climbAttempted, [])).toBe(true);
+      expect(hasPriorHistoryForClimb(climbSent, [])).toBe(true);
+    });
+
+    it('falls back to the logbook when the climb has no counts', () => {
+      const climb = makeClimb({ uuid: 'c1' });
+      // Climb is created via makeClimb without userAscents / userAttempts.
+      expect(hasPriorHistoryForClimb(climb, [])).toBe(false);
+      expect(
+        hasPriorHistoryForClimb(climb, [makeLogbookEntry({ climb_uuid: 'c1' })]),
+      ).toBe(true);
+      expect(
+        hasPriorHistoryForClimb(climb, [makeLogbookEntry({ climb_uuid: 'other' })]),
+      ).toBe(false);
+    });
+  });
+
+  describe('layout', () => {
+    it('renders the controls in the expected order: stars, grade, comment toggle, attempt, confirm', () => {
+      render(<QuickTickBar {...defaultProps} />);
+
+      const rating = screen.getByTestId('quick-tick-rating');
+      const commentToggle = screen.getByRole('button', { name: /toggle comment/i });
+      const attemptBtn = screen.getByTestId('quick-tick-attempt');
+      const confirmBtn = screen.getByTestId('quick-tick-confirm');
+
+      // Same parent (the .controls flex row).
+      expect(rating.parentElement).toBe(commentToggle.parentElement);
+      expect(rating.parentElement).toBe(attemptBtn.parentElement);
+      expect(rating.parentElement).toBe(confirmBtn.parentElement);
+
+      const siblings = Array.from(rating.parentElement!.children) as HTMLElement[];
+      const ratingIdx = siblings.indexOf(rating);
+      const commentIdx = siblings.indexOf(commentToggle);
+      const attemptIdx = siblings.indexOf(attemptBtn);
+      const confirmIdx = siblings.indexOf(confirmBtn);
+
+      expect(ratingIdx).toBeLessThan(commentIdx);
+      expect(commentIdx).toBeLessThan(attemptIdx);
+      // The X must be the DOM sibling immediately before the confirm tick.
+      expect(confirmIdx).toBe(attemptIdx + 1);
+    });
+
+    it('shows the "swipe left to dismiss" hint text by default', () => {
+      render(<QuickTickBar {...defaultProps} />);
+      const hint = screen.getByTestId('quick-tick-hint');
+      expect(hint.textContent).toMatch(/swipe left to dismiss/i);
+    });
+  });
+
+  describe('save behaviour — history-aware default', () => {
+    it('saves as flash with attemptCount 1 when the logbook is empty', async () => {
+      mockLogbookRef.current = [];
+      render(<QuickTickBar {...defaultProps} />);
+
+      await act(async () => {
+        screen.getByTestId('quick-tick-confirm').click();
+      });
+
+      expect(mockSaveTick).toHaveBeenCalledTimes(1);
+      const call = mockSaveTick.mock.calls[0][0];
+      expect(call.status).toBe('flash');
+      expect(call.attemptCount).toBe(1);
+      expect(call.climbUuid).toBe('climb-1');
+      expect(defaultProps.onSave).toHaveBeenCalledTimes(1);
+    });
+
+    it('saves as send with attemptCount 1 when there is one prior log', async () => {
+      mockLogbookRef.current = [
+        makeLogbookEntry({ uuid: 'p1', climb_uuid: 'climb-1', angle: 40 }),
+      ];
+      render(<QuickTickBar {...defaultProps} />);
+
+      await act(async () => {
+        screen.getByTestId('quick-tick-confirm').click();
+      });
+
+      const call = mockSaveTick.mock.calls[0][0];
+      expect(call.status).toBe('send');
+      expect(call.attemptCount).toBe(1);
+    });
+
+    it('still logs a single send row (attemptCount 1) when there are multiple prior logs', async () => {
+      mockLogbookRef.current = [
+        makeLogbookEntry({ uuid: 'p1', status: 'attempt' }),
+        makeLogbookEntry({ uuid: 'p2', status: 'attempt' }),
+        makeLogbookEntry({ uuid: 'p3', status: 'attempt' }),
+      ];
+      render(<QuickTickBar {...defaultProps} />);
+
+      await act(async () => {
+        screen.getByTestId('quick-tick-confirm').click();
+      });
+
+      const call = mockSaveTick.mock.calls[0][0];
+      expect(call.status).toBe('send');
+      expect(call.attemptCount).toBe(1);
+    });
+
+    it('ignores logbook rows for other climbs when deciding flash vs send', async () => {
+      mockLogbookRef.current = [
+        makeLogbookEntry({ uuid: 'other-climb', climb_uuid: 'climb-other', angle: 40 }),
+      ];
+      render(<QuickTickBar {...defaultProps} />);
+
+      await act(async () => {
+        screen.getByTestId('quick-tick-confirm').click();
+      });
+
+      const call = mockSaveTick.mock.calls[0][0];
+      expect(call.status).toBe('flash');
+      expect(call.attemptCount).toBe(1);
+    });
+
+    it('saves the attempt button as status attempt with attemptCount 1 regardless of history', async () => {
+      mockLogbookRef.current = [
+        makeLogbookEntry({ uuid: 'p1' }),
+        makeLogbookEntry({ uuid: 'p2' }),
+      ];
+      render(<QuickTickBar {...defaultProps} />);
+
+      await act(async () => {
+        screen.getByTestId('quick-tick-attempt').click();
+      });
+
+      const call = mockSaveTick.mock.calls[0][0];
+      expect(call.status).toBe('attempt');
+      expect(call.attemptCount).toBe(1);
+      expect(defaultProps.onSave).toHaveBeenCalledTimes(1);
+    });
+
+    it('uses userAscents on the climb to default to send without touching the logbook', async () => {
+      // Logbook is intentionally empty — the fast path should look at the
+      // climb's own counts and still treat this as a send.
+      mockLogbookRef.current = [];
+      const climbWithHistory = makeClimb({ userAscents: 2, userAttempts: 0 });
+
+      render(<QuickTickBar {...defaultProps} currentClimb={climbWithHistory} />);
+
+      await act(async () => {
+        screen.getByTestId('quick-tick-confirm').click();
+      });
+
+      const call = mockSaveTick.mock.calls[0][0];
+      expect(call.status).toBe('send');
+      expect(call.attemptCount).toBe(1);
+    });
+
+    it('uses userAttempts on the climb to default to send without touching the logbook', async () => {
+      mockLogbookRef.current = [];
+      const climbWithAttempts = makeClimb({ userAscents: 0, userAttempts: 1 });
+
+      render(<QuickTickBar {...defaultProps} currentClimb={climbWithAttempts} />);
+
+      await act(async () => {
+        screen.getByTestId('quick-tick-confirm').click();
+      });
+
+      const call = mockSaveTick.mock.calls[0][0];
+      expect(call.status).toBe('send');
+      expect(call.attemptCount).toBe(1);
+    });
+
+    it('reflects the quality rating in the save payload', async () => {
+      render(<QuickTickBar {...defaultProps} />);
+
+      // MUI Rating renders radio inputs for each star value.
+      const threeStars = screen.getAllByRole('radio', { name: /3 star/i })[0];
+      fireEvent.click(threeStars);
+
+      await act(async () => {
+        screen.getByTestId('quick-tick-confirm').click();
+      });
+
+      const call = mockSaveTick.mock.calls[0][0];
+      expect(call.quality).toBe(3);
+    });
+
+    it('does not call onSave when saveTick rejects and leaves the bar mounted', async () => {
+      mockSaveTick.mockRejectedValueOnce(new Error('network down'));
+      render(<QuickTickBar {...defaultProps} />);
+
+      await act(async () => {
+        screen.getByTestId('quick-tick-confirm').click();
+      });
+
+      expect(mockSaveTick).toHaveBeenCalledTimes(1);
+      expect(defaultProps.onSave).not.toHaveBeenCalled();
+      // Bar should still be mounted and usable for a retry.
+      expect(screen.getByTestId('quick-tick-bar')).toBeTruthy();
+      const confirm = screen.getByTestId('quick-tick-confirm') as HTMLButtonElement;
+      expect(confirm.disabled).toBe(false);
+    });
+  });
+
+  describe('climb snapshot', () => {
+    it('keeps ticking the original climb even when currentClimb prop changes', async () => {
+      const originalClimb = makeClimb({ uuid: 'original-climb' });
+      const newClimb = makeClimb({ uuid: 'new-climb' });
+
+      // Original climb has no prior history.
+      // The new climb has 5 prior rows — if the component ever resolved the
+      // "live" props instead of its snapshot, we would see send/6 below.
+      mockLogbookRef.current = [
+        makeLogbookEntry({ uuid: 'n1', climb_uuid: 'new-climb' }),
+        makeLogbookEntry({ uuid: 'n2', climb_uuid: 'new-climb' }),
+        makeLogbookEntry({ uuid: 'n3', climb_uuid: 'new-climb' }),
+        makeLogbookEntry({ uuid: 'n4', climb_uuid: 'new-climb' }),
+        makeLogbookEntry({ uuid: 'n5', climb_uuid: 'new-climb' }),
+      ];
+
+      const { rerender } = render(
+        <QuickTickBar {...defaultProps} currentClimb={originalClimb} />,
+      );
+
+      // Simulate another party member advancing the queue mid-tick.
+      rerender(<QuickTickBar {...defaultProps} currentClimb={newClimb} />);
+
+      await act(async () => {
+        screen.getByTestId('quick-tick-confirm').click();
+      });
+
+      const call = mockSaveTick.mock.calls[0][0];
+      expect(call.climbUuid).toBe('original-climb');
+      expect(call.status).toBe('flash');
+      expect(call.attemptCount).toBe(1);
+    });
+  });
+
+  describe('swipe to dismiss', () => {
+    beforeEach(() => {
+      vi.useFakeTimers();
+    });
+
+    it('calls onCancel when swiped left past the threshold', () => {
+      render(<QuickTickBar {...defaultProps} />);
+      const bar = screen.getByTestId('quick-tick-bar');
+
+      simulateSwipe(bar, -120);
+
+      // Exit animation is scheduled via setTimeout — advance to flush it.
+      act(() => {
+        vi.runAllTimers();
+      });
+
+      expect(defaultProps.onCancel).toHaveBeenCalledTimes(1);
+    });
+
+    it('does not call onCancel when swipe is below the threshold', () => {
+      render(<QuickTickBar {...defaultProps} />);
+      const bar = screen.getByTestId('quick-tick-bar');
+
+      simulateSwipe(bar, -40);
+
+      act(() => {
+        vi.runAllTimers();
+      });
+
+      expect(defaultProps.onCancel).not.toHaveBeenCalled();
+    });
+
+    it('ignores swipes while the comment field is focused', () => {
+      render(<QuickTickBar {...defaultProps} />);
+
+      // Open and focus the comment input.
+      fireEvent.click(screen.getByRole('button', { name: /toggle comment/i }));
+      const commentInput = screen.getByPlaceholderText('Comment...');
+      fireEvent.focus(commentInput);
+
+      const bar = screen.getByTestId('quick-tick-bar');
+      simulateSwipe(bar, -200);
+
+      act(() => {
+        vi.runAllTimers();
+      });
+
+      expect(defaultProps.onCancel).not.toHaveBeenCalled();
+    });
+  });
+});

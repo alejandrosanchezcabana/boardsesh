@@ -138,11 +138,10 @@ const QueueControlBar: React.FC<QueueControlBarProps> = ({ boardDetails, angle }
   const [showCancelConfirm, setShowCancelConfirm] = useState(false);
   const [dismissedDisconnect, setDismissedDisconnect] = useState(false);
 
-  // Close tick bar when climb changes (e.g. party session navigation)
-  const currentClimbUuid = currentClimb?.uuid;
-  useEffect(() => {
-    setActiveDrawer((prev) => prev === 'tick' ? 'none' : prev);
-  }, [currentClimbUuid]);
+  // Note: the tick bar intentionally stays open when the active climb changes
+  // (e.g. party session navigation). QuickTickBar snapshots its target climb
+  // internally so the user can finish ticking the climb they opened the bar
+  // for, even after someone else advances the queue.
 
   // Reset dismissed state when connection is restored so banner reappears on next disconnect
   useEffect(() => {

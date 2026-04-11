@@ -29,11 +29,15 @@ export const SaveTickInputSchema = z.object({
   setIds: z.string().min(1).optional(),
 }).refine(
   (data) => {
+    // A flash is by definition a first-try ascent, so attemptCount must be 1.
+    // A send is any successful ascent — the attempt count on the row just
+    // records how many tries that particular log represents (e.g. 1 when the
+    // user is logging a single successful action, >1 when they're
+    // back-filling a redpoint that took multiple tries). Both are valid.
     if (data.status === 'flash' && data.attemptCount !== 1) return false;
-    if (data.status === 'send' && data.attemptCount <= 1) return false;
     return true;
   },
-  { message: 'Flash requires attemptCount of 1, send requires attemptCount > 1', path: ['attemptCount'] }
+  { message: 'Flash requires attemptCount of 1', path: ['attemptCount'] }
 ).refine(
   (data) => {
     if (data.status === 'attempt' && data.quality !== undefined && data.quality !== null) return false;

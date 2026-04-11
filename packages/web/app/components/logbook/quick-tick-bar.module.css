@@ -5,6 +5,8 @@
   min-width: 0;
   flex: 1;
   animation: tickBarEnter 150ms ease-out;
+  will-change: transform, opacity;
+  touch-action: pan-y;
 }
 
 @keyframes tickBarEnter {
@@ -24,6 +26,30 @@
   gap: var(--space-1, 4px);
   flex: 1;
   min-width: 0;
+}
+
+.spacer {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.hintRow {
+  /* Align the hint underneath the star rating. The MUI Rating small size sits
+     at the very start of the controls row, so no left padding is needed. */
+  display: flex;
+  align-items: center;
+  padding-left: 2px;
+  margin-top: -2px;
+  line-height: 1;
+}
+
+.hint {
+  font-size: 10px;
+  font-style: italic;
+  color: var(--mui-palette-text-secondary, rgba(0, 0, 0, 0.6));
+  opacity: 0.7;
+  user-select: none;
+  pointer-events: none;
 }
 
 .commentRow {
