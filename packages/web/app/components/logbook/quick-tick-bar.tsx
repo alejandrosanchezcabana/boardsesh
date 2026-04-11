@@ -335,7 +335,7 @@ export const QuickTickBar: React.FC<QuickTickBarProps> = ({
           anchorEl={gradeAnchorEl}
           open={Boolean(gradeAnchorEl)}
           onClose={() => setGradeAnchorEl(null)}
-          MenuListProps={{ autoFocusItem: true }}
+          slotProps={{ paper: { sx: { maxHeight: 240 } } }}
         >
           <MenuItem
             onClick={() => {
@@ -345,18 +345,22 @@ export const QuickTickBar: React.FC<QuickTickBarProps> = ({
           >
             —
           </MenuItem>
-          {displayedGrades.map((grade) => (
-            <MenuItem
-              key={grade.difficulty_id}
-              selected={grade.difficulty_id === currentGradeId}
-              onClick={() => {
-                setDifficulty(grade.difficulty_id);
-                setGradeAnchorEl(null);
-              }}
-            >
-              {grade.v_grade}
-            </MenuItem>
-          ))}
+          {displayedGrades.map((grade) => {
+            const isCurrent = grade.difficulty_id === currentGradeId;
+            return (
+              <MenuItem
+                key={grade.difficulty_id}
+                selected={isCurrent}
+                autoFocus={isCurrent}
+                onClick={() => {
+                  setDifficulty(grade.difficulty_id);
+                  setGradeAnchorEl(null);
+                }}
+              >
+                {grade.v_grade}
+              </MenuItem>
+            );
+          })}
         </Menu>
 
         <IconButton

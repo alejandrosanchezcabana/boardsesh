@@ -167,33 +167,40 @@ describe('QuickTickBar', () => {
   });
 
   describe('layout', () => {
-    it('renders the controls in the expected order: stars + comment toggle on the left, then grade, attempt, confirm', () => {
+    it('renders the controls in the expected order: rating stack, comment toggle, grade, attempt, confirm — all clustered to the right', () => {
       render(<QuickTickBar {...defaultProps} />);
 
       const rating = screen.getByTestId('quick-tick-rating');
+      const hint = screen.getByTestId('quick-tick-hint');
       const commentToggle = screen.getByRole('button', { name: /toggle comment/i });
       const gradeLabel = screen.getByTestId('quick-tick-grade');
       const attemptBtn = screen.getByTestId('quick-tick-attempt');
       const confirmBtn = screen.getByTestId('quick-tick-confirm');
 
-      // All controls are direct siblings inside a single flex row so they
-      // share a single vertically-centered baseline with the climb title.
-      const controls = rating.parentElement!;
+      // The rating sits inside a small stack with the swipe hint rendered as
+      // a byline directly underneath it. That stack is then a sibling of
+      // the comment toggle, grade label, attempt and confirm buttons inside
+      // the single flex row.
+      const ratingStack = rating.parentElement!;
+      expect(hint.parentElement).toBe(ratingStack);
+
+      const controls = ratingStack.parentElement!;
       expect(commentToggle.parentElement).toBe(controls);
       expect(gradeLabel.parentElement).toBe(controls);
       expect(attemptBtn.parentElement).toBe(controls);
       expect(confirmBtn.parentElement).toBe(controls);
 
-      // The siblings must appear in this order: rating, comment toggle,
-      // ..., grade label, attempt (X), confirm (tick) as the final pair.
-      // The grade sits immediately to the left of the attempt button.
+      // Siblings of .controls must appear in this order: rating stack,
+      // comment toggle, grade label, attempt (X), confirm (tick). The
+      // grade sits immediately to the left of the attempt button and the
+      // confirm button is the final element.
       const siblings = Array.from(controls.children) as HTMLElement[];
-      const ratingIdx = siblings.indexOf(rating);
+      const stackIdx = siblings.indexOf(ratingStack);
       const commentIdx = siblings.indexOf(commentToggle);
       const gradeIdx = siblings.indexOf(gradeLabel);
       const attemptIdx = siblings.indexOf(attemptBtn);
       const confirmIdx = siblings.indexOf(confirmBtn);
-      expect(ratingIdx).toBeLessThan(commentIdx);
+      expect(stackIdx).toBeLessThan(commentIdx);
       expect(commentIdx).toBeLessThan(gradeIdx);
       expect(gradeIdx).toBeLessThan(attemptIdx);
       expect(confirmIdx).toBe(attemptIdx + 1);
