@@ -4,9 +4,6 @@ import { useState, useCallback, useMemo } from 'react';
 import { LitUpHoldsMap, HoldState, HOLD_STATE_MAP, HoldCode } from '../board-renderer/types';
 import { BoardName } from '@/app/lib/types';
 
-// Hold state cycle order: Starting -> Hand -> Foot -> Finish -> OFF
-const STATE_CYCLE: HoldState[] = ['STARTING', 'HAND', 'FOOT', 'FINISH', 'OFF'];
-
 // Map from state name to the primary hold code for each board
 const STATE_TO_CODE: Record<BoardName, Partial<Record<HoldState, HoldCode>>> = {
   kilter: {
@@ -74,50 +71,32 @@ export function useCreateClimb(boardName: BoardName, options?: UseCreateClimbOpt
 
   const isValid = totalHolds > 0;
 
-  const handleHoldClick = useCallback(
-    (holdId: number) => {
+  const setHoldState = useCallback(
+    (holdId: number, nextState: HoldState | 'OFF') => {
       setLitUpHoldsMap((prev) => {
-        const currentHold = prev[holdId];
-        const currentState: HoldState = currentHold?.state || 'OFF';
-
-        // Find current position in cycle
-        const currentIndex = STATE_CYCLE.indexOf(currentState);
-
-        // Count current states (excluding this hold if it has that state)
-        const currentStartingCount = Object.entries(prev).filter(
-          ([id, h]) => h.state === 'STARTING' && Number(id) !== holdId,
-        ).length;
-        const currentFinishCount = Object.entries(prev).filter(
-          ([id, h]) => h.state === 'FINISH' && Number(id) !== holdId,
-        ).length;
-
-        // Find next valid state in cycle
-        let nextState: HoldState = 'OFF';
-        for (let i = 1; i <= STATE_CYCLE.length; i++) {
-          const candidateIndex = (currentIndex + i) % STATE_CYCLE.length;
-          const candidateState = STATE_CYCLE[candidateIndex];
-
-          // Skip STARTING if already at max (2)
-          if (candidateState === 'STARTING' && currentStartingCount >= 2) {
-            continue;
-          }
-          // Skip FINISH if already at max (2)
-          if (candidateState === 'FINISH' && currentFinishCount >= 2) {
-            continue;
-          }
-
-          nextState = candidateState;
-          break;
-        }
-
-        // If next state is OFF, remove the hold from the map
+        // Clearing a hold removes it from the map.
         if (nextState === 'OFF') {
+          if (!(holdId in prev)) return prev;
           const { [holdId]: _removed, ...rest } = prev;
-          void _removed; // Explicitly mark as intentionally unused
+          void _removed;
           return rest;
         }
 
-        // Get the color info for this state
+        // Enforce max-2 STARTING / FINISH limits as a safety net — the picker
+        // already disables these options when at the cap.
+        const currentHold = prev[holdId];
+        const isAlreadyThisState = currentHold?.state === nextState;
+        if (!isAlreadyThisState) {
+          if (nextState === 'STARTING') {
+            const startingCount = Object.values(prev).filter((h) => h.state === 'STARTING').length;
+            if (startingCount >= 2) return prev;
+          }
+          if (nextState === 'FINISH') {
+            const finishCount = Object.values(prev).filter((h) => h.state === 'FINISH').length;
+            if (finishCount >= 2) return prev;
+          }
+        }
+
         const stateCode = STATE_TO_CODE[boardName][nextState];
         if (stateCode === undefined) {
           return prev;
@@ -160,7 +139,7 @@ export function useCreateClimb(boardName: BoardName, options?: UseCreateClimbOpt
 
   return {
     litUpHoldsMap,
-    handleHoldClick,
+    setHoldState,
     generateFramesString,
     startingCount,
     finishCount,

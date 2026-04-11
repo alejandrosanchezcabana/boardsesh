@@ -16,7 +16,7 @@ export type BoardProps = {
   fillHeight?: boolean;
   /** Custom max-height for the board SVG. Defaults to '55vh', or '10vh' for thumbnails. Ignored when fillHeight is true. */
   maxHeight?: string;
-  onHoldClick?: (holdId: number) => void;
+  onHoldClick?: (holdId: number, anchor: Element) => void;
 };
 
 const BoardRenderer = React.memo(

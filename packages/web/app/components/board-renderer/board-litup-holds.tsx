@@ -6,7 +6,7 @@ interface BoardLitupHoldsProps {
   litUpHoldsMap: LitUpHoldsMap;
   mirrored: boolean;
   thumbnail?: boolean;
-  onHoldClick?: (holdId: number) => void;
+  onHoldClick?: (holdId: number, anchor: Element) => void;
 }
 
 const areLitUpHoldsMapsEqual = (prev: LitUpHoldsMap, next: LitUpHoldsMap): boolean => {
@@ -71,7 +71,7 @@ const BoardLitupHolds = React.memo(
               fillOpacity={thumbnail ? 0.3 : 0}
               fill={thumbnail ? color : undefined}
               style={{ cursor: onHoldClick ? 'pointer' : 'default' }}
-              onClick={onHoldClick ? () => onHoldClick(renderHold.id) : undefined}
+              onClick={onHoldClick ? (event) => onHoldClick(renderHold.id, event.currentTarget) : undefined}
             />
           );
         })}

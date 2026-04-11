@@ -29,5 +29,5 @@ export interface MoonBoardRendererProps {
   litUpHoldsMap?: LitUpHoldsMap;
   mirrored?: boolean;
   thumbnail?: boolean;
-  onHoldClick?: (holdId: number) => void;
+  onHoldClick?: (holdId: number, anchor: Element) => void;
 }

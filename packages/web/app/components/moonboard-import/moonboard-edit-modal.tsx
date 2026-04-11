@@ -11,6 +11,8 @@ import Button from '@mui/material/Button';
 import MoonBoardRenderer from '../moonboard-renderer/moonboard-renderer';
 import { useMoonBoardCreateClimb } from '../create-climb/use-moonboard-create-climb';
 import HoldStatusChip from '../create-climb/hold-status-chip';
+import HoldTypePicker from '../create-climb/hold-type-picker';
+import { useHoldTypePicker } from '../create-climb/use-hold-type-picker';
 import { coordinateToHoldId, MOONBOARD_HOLD_STATES } from '@/app/lib/moonboard-config';
 import { convertLitUpHoldsMapToMoonBoardHolds } from '@/app/lib/moonboard-climb-helpers';
 import type { MoonBoardClimb, GridCoordinate } from '@boardsesh/moonboard-ocr/browser';
@@ -90,13 +92,15 @@ export default function MoonBoardEditModal({
   const {
     litUpHoldsMap,
     setLitUpHoldsMap,
-    handleHoldClick,
+    setHoldState,
     startingCount,
     finishCount,
     handCount,
     totalHolds,
     isValid,
   } = useMoonBoardCreateClimb({ initialHoldsMap });
+
+  const picker = useHoldTypePicker({ litUpHoldsMap, setHoldState });
 
   // Reset to initial state when climb changes
   useEffect(() => {
@@ -133,7 +137,17 @@ export default function MoonBoardEditModal({
               layoutFolder={layoutFolder}
               holdSetImages={holdSetImages}
               litUpHoldsMap={litUpHoldsMap}
-              onHoldClick={handleHoldClick}
+              onHoldClick={picker.handleHoldClick}
+            />
+
+            <HoldTypePicker
+              boardName="moonboard"
+              anchorEl={picker.anchorEl}
+              currentState={picker.currentState}
+              startingCount={startingCount}
+              finishCount={finishCount}
+              onSelect={picker.handleSelect}
+              onClose={picker.handleClose}
             />
 
             <div className={styles.holdCounts}>

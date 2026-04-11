@@ -113,7 +113,7 @@ const MoonBoardRenderer: React.FC<MoonBoardRendererProps> = ({
             fillOpacity={thumbnail && isLitUp ? 1 : 0}
             fill={thumbnail && isLitUp ? color : 'transparent'}
             style={{ cursor: onHoldClick ? 'pointer' : 'default' }}
-            onClick={onHoldClick ? () => onHoldClick(hold.id) : undefined}
+            onClick={onHoldClick ? (event) => onHoldClick(hold.id, event.currentTarget) : undefined}
           />
         );
       })}
