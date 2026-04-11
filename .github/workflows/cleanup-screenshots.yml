@@ -1,0 +1,40 @@
+name: Cleanup PR Screenshots
+
+on:
+  pull_request:
+    types: [closed]
+
+jobs:
+  cleanup:
+    name: Remove PR screenshots
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - name: Remove screenshots for closed PR
+        run: |
+          PR_NUMBER="${{ github.event.pull_request.number }}"
+          BRANCH="test-screenshots"
+
+          if ! git ls-remote --exit-code --heads origin "$BRANCH" > /dev/null 2>&1; then
+            echo "Branch $BRANCH does not exist, nothing to clean up."
+            exit 0
+          fi
+
+          git config user.email "github-actions@github.com"
+          git config user.name "GitHub Actions"
+          git fetch origin "$BRANCH"
+          git worktree add /tmp/ss-branch "$BRANCH"
+
+          if [ -d "/tmp/ss-branch/pr-${PR_NUMBER}" ]; then
+            cd /tmp/ss-branch
+            git rm -rf "pr-${PR_NUMBER}"
+            git commit -m "cleanup: remove screenshots for PR #${PR_NUMBER}"
+            git push origin "$BRANCH"
+          else
+            echo "No screenshots found for PR #${PR_NUMBER}, nothing to do."
+          fi

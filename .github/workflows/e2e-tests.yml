@@ -211,7 +211,7 @@ jobs:
           name: screenshots-shard-${{ matrix.shard }}
           path: |
             mobile/screenshots/
-            packages/web/help-screenshots/
+            packages/web/public/help/
           if-no-files-found: ignore
           retention-days: 14
 
@@ -222,7 +222,14 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       pull-requests: write
+      contents: write
+
     steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
       - name: Download screenshot artifacts
         uses: actions/download-artifact@v4
         with:
@@ -230,46 +237,81 @@ jobs:
           pattern: screenshots-shard-*
           merge-multiple: false
 
-      - name: Build screenshot summary
-        id: summary
+      - name: Push screenshots to test-screenshots branch
         run: |
-          set -e
-          RUN_URL="${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+          git config user.email "github-actions@github.com"
+          git config user.name "GitHub Actions"
+
+          PR_NUMBER="${{ github.event.pull_request.number }}"
           SHA="${{ github.event.pull_request.head.sha }}"
-          {
-            echo "### Playwright screenshot specs"
-            echo ""
-            echo "Run: [\`${SHA:0:7}\`]($RUN_URL)"
-            echo ""
-            if [ ! -d screenshot-artifacts ] || [ -z "$(ls -A screenshot-artifacts 2>/dev/null)" ]; then
-              echo "_No screenshot artifacts were uploaded by this run._"
+          BRANCH="test-screenshots"
+
+          if git ls-remote --exit-code --heads origin "$BRANCH" > /dev/null 2>&1; then
+            git fetch origin "$BRANCH"
+            git worktree add /tmp/ss-branch "$BRANCH"
+          else
+            git worktree add --orphan -b "$BRANCH" /tmp/ss-branch
+          fi
+
+          rm -rf "/tmp/ss-branch/pr-${PR_NUMBER}"
+          mkdir -p "/tmp/ss-branch/pr-${PR_NUMBER}/app-store" \
+                   "/tmp/ss-branch/pr-${PR_NUMBER}/help"
+
+          find screenshot-artifacts -type f -name '*.png' | while read -r f; do
+            if echo "$f" | grep -q "mobile/screenshots"; then
+              cp "$f" "/tmp/ss-branch/pr-${PR_NUMBER}/app-store/"
             else
-              total=0
-              for shard_dir in screenshot-artifacts/screenshots-shard-*; do
-                [ -d "$shard_dir" ] || continue
-                shard=$(basename "$shard_dir" | sed 's/screenshots-shard-//')
-                count=$(find "$shard_dir" -type f -name '*.png' 2>/dev/null | wc -l | tr -d ' ')
-                total=$((total + count))
-                echo "<details><summary><strong>Shard $shard</strong> — $count PNG(s)</summary>"
-                echo ""
-                if [ "$count" -gt 0 ]; then
-                  find "$shard_dir" -type f -name '*.png' \
-                    | sed "s|$shard_dir/||" \
-                    | sort \
-                    | sed 's/^/- /'
-                else
-                  echo "_No screenshots rendered._"
-                fi
-                echo ""
-                echo "</details>"
-                echo ""
-              done
-              echo "**Total rendered:** $total screenshot(s) across 4 shards."
-              echo ""
-              echo "Download them from the [run artifacts]($RUN_URL#artifacts)."
+              cp "$f" "/tmp/ss-branch/pr-${PR_NUMBER}/help/"
             fi
-          } > summary.md
-          cat summary.md
+          done
+
+          cd /tmp/ss-branch
+          git add "pr-${PR_NUMBER}"
+          git commit -m "screenshots: PR #${PR_NUMBER} @ ${SHA:0:7}" \
+            || echo "nothing to commit"
+          git push origin "$BRANCH"
+
+      - name: Build screenshot gallery
+        run: |
+          python3 << 'PYEOF'
+          import os, glob
+
+          pr   = "${{ github.event.pull_request.number }}"
+          repo = "${{ github.repository }}"
+          sha  = "${{ github.event.pull_request.head.sha }}"
+          run  = "${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+          base = f"https://raw.githubusercontent.com/{repo}/test-screenshots/pr-{pr}"
+
+          app = sorted(glob.glob(f"/tmp/ss-branch/pr-{pr}/app-store/*.png"))
+          hlp = sorted(glob.glob(f"/tmp/ss-branch/pr-{pr}/help/*.png"))
+
+          def table(shots, subdir, cols=3):
+              rows = ["<table>"]
+              for i, f in enumerate(shots):
+                  name = os.path.basename(f).replace(".png", "")
+                  url  = f"{base}/{subdir}/{os.path.basename(f)}"
+                  if i % cols == 0:
+                      if i:
+                          rows.append("</tr>")
+                      rows.append("<tr>")
+                  rows.append(
+                      f'<td align="center">'
+                      f'<a href="{url}"><img src="{url}" width="160"></a>'
+                      f'<br><sub><code>{name}</code></sub></td>'
+                  )
+              rows += ["</tr>", "</table>"]
+              return rows
+
+          out = ["### E2E Screenshots", "", f"Run: [`{sha[:7]}`]({run})", ""]
+          if app:
+              out += ["**App Store Screenshots** (iPhone 16 Pro Max)", ""] + table(app, "app-store") + [""]
+          if hlp:
+              out += ["**Help Screenshots**", ""] + table(hlp, "help") + [""]
+          if not app and not hlp:
+              out.append("_No screenshots rendered._")
+
+          open("summary.md", "w").write("\n".join(out))
+          PYEOF
 
       - name: Upsert sticky PR comment
         uses: marocchino/sticky-pull-request-comment@v2
