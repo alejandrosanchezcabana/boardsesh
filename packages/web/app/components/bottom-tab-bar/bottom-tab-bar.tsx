@@ -538,7 +538,7 @@ function BottomTabBar({ boardDetails, angle, boardConfigs }: BottomTabBarProps) 
           sx={actionSx}
         />
         <BottomNavigationAction
-          label="Your Library"
+          label="Discover"
           icon={<LocalOfferOutlined sx={{ fontSize: 20 }} />}
           value="library"
           sx={actionSx}

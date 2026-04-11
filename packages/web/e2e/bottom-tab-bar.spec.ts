@@ -79,11 +79,11 @@ test.describe('Bottom Tab Bar - Navigation', () => {
     await expect(page.locator(bottomTabBar)).toBeVisible();
   });
 
-  test('Your Library tab should navigate to playlists page', async ({ page }) => {
+  test('Discover tab should navigate to playlists page', async ({ page }) => {
     await page.goto('/');
     await waitForPageReady(page);
 
-    await bottomTabButton(page, 'Your Library').click();
+    await bottomTabButton(page, 'Discover').click();
     await expect(page).toHaveURL(/\/playlists/, { timeout: 15000 });
     await expect(page.locator(bottomTabBar)).toBeVisible();
   });
@@ -138,11 +138,11 @@ test.describe('Bottom Tab Bar - Active State', () => {
     await expect(bottomTabButton(page, 'Climb', true)).toHaveClass(/Mui-selected/);
   });
 
-  test('Your Library tab should be active on playlists page', async ({ page }) => {
+  test('Discover tab should be active on playlists page', async ({ page }) => {
     await page.goto('/playlists');
     await waitForPageReady(page);
 
-    await expect(bottomTabButton(page, 'Your Library')).toHaveClass(/Mui-selected/);
+    await expect(bottomTabButton(page, 'Discover')).toHaveClass(/Mui-selected/);
   });
 
   test('Notifications tab should be active on notifications page', async ({ page }) => {
@@ -206,8 +206,8 @@ test.describe('Bottom Tab Bar - Queue Integration', () => {
     await expect(page).toHaveURL('/', { timeout: 15000 });
     await verifyBarsShowClimb();
 
-    // Navigate to Your Library
-    await bottomTabButton(page, 'Your Library').click();
+    // Navigate to Discover
+    await bottomTabButton(page, 'Discover').click();
     await expect(page).toHaveURL(/\/playlists/, { timeout: 15000 });
     await verifyBarsShowClimb();
 
