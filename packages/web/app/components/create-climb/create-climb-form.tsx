@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
-import { useQueryClient } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import MuiAlert from '@mui/material/Alert';
 import MuiTooltip from '@mui/material/Tooltip';
 import Box from '@mui/material/Box';
@@ -15,7 +15,8 @@ import MuiSwitch from '@mui/material/Switch';
 import MuiSlider from '@mui/material/Slider';
 import MuiSelect from '@mui/material/Select';
 import MenuItem from '@mui/material/MenuItem';
-import { SettingsOutlined, LocalFireDepartmentOutlined, SaveOutlined, LoginOutlined, CloudUploadOutlined, GetAppOutlined } from '@mui/icons-material';
+import Badge from '@mui/material/Badge';
+import { SettingsOutlined, LocalFireDepartmentOutlined, SaveOutlined, LoginOutlined, CloudUploadOutlined, GetAppOutlined, DraftsOutlined } from '@mui/icons-material';
 import { useRouter, usePathname } from 'next/navigation';
 import Link from 'next/link';
 import { track } from '@vercel/analytics';
@@ -45,7 +46,13 @@ import { useSnackbar } from '../providers/snackbar-provider';
 import { refreshClimbSearchAfterSave } from '@/app/lib/climb-search-cache';
 import CreateClimbHeatmapOverlay from './create-climb-heatmap-overlay';
 import HoldStatusChip from './hold-status-chip';
+import DraftsDrawer from './drafts-drawer';
 import { useCreateHeaderBridgeSetters } from './create-header-bridge-context';
+import {
+  SEARCH_CLIMBS_COUNT,
+  type ClimbSearchCountResponse,
+  type ClimbSearchInputVariables,
+} from '@/app/lib/graphql/operations/climb-search';
 import {
   convertLitUpHoldsMapToMoonBoardHolds,
   isMoonBoardDuplicateError,
@@ -176,6 +183,7 @@ export default function CreateClimbForm({
   const [climbName, setClimbName] = useState(forkName ? `${forkName} fork` : '');
   const [description, setDescription] = useState('');
   const [showSettingsPanel, setShowSettingsPanel] = useState(false);
+  const [showDraftsDrawer, setShowDraftsDrawer] = useState(false);
   const zoomResetKey = boardType === 'moonboard' ? `moonboard-${selectedAngle}` : `aurora-${angle}`;
   const climbNameRef = useRef(climbName);
   const setClimbNameRef = useRef(setClimbName);
@@ -350,6 +358,12 @@ export default function CreateClimbForm({
 
       if (!isDraft) {
         await refreshClimbSearchAfterSave(queryClient, boardDetails.board_name, boardDetails.layout_id);
+      } else {
+        // Refresh drafts list/count so the new draft shows up immediately.
+        await Promise.all([
+          queryClient.invalidateQueries({ queryKey: ['climbDrafts', boardDetails.board_name, boardDetails.layout_id] }),
+          queryClient.invalidateQueries({ queryKey: ['climbDraftsCount', boardDetails.board_name, boardDetails.layout_id] }),
+        ]);
       }
 
       track('Climb Created', {
@@ -517,6 +531,52 @@ export default function CreateClimbForm({
 
   const handleToggleSettings = useCallback(() => {
     setShowSettingsPanel((prev) => !prev);
+  }, []);
+
+  // Drafts: count query for the badge (Aurora only — MoonBoard has its own flow).
+  // Scoped to the current layout/size/sets/angle so users see drafts for the wall in front of them.
+  const canShowDrafts = boardType === 'aurora' && !!boardDetails && isLoggedIn;
+  const draftsCountQueryKey = useMemo(() => {
+    if (!boardDetails) return ['climbDraftsCount', 'disabled'] as const;
+    return [
+      'climbDraftsCount',
+      boardDetails.board_name,
+      boardDetails.layout_id,
+      boardDetails.size_id,
+      boardDetails.set_ids.join(','),
+      angle,
+    ] as const;
+  }, [boardDetails, angle]);
+
+  const { data: draftsCount } = useQuery({
+    queryKey: draftsCountQueryKey,
+    enabled: canShowDrafts && !!wsAuthToken,
+    queryFn: async (): Promise<number> => {
+      if (!boardDetails) return 0;
+      const input: ClimbSearchInputVariables['input'] = {
+        boardName: boardDetails.board_name,
+        layoutId: boardDetails.layout_id,
+        sizeId: boardDetails.size_id,
+        setIds: boardDetails.set_ids.join(','),
+        angle,
+        page: 0,
+        pageSize: 1,
+        onlyDrafts: true,
+      };
+      const client = createGraphQLHttpClient(wsAuthToken);
+      const result = await client.request<ClimbSearchCountResponse>(SEARCH_CLIMBS_COUNT, { input });
+      return result.searchClimbs.totalCount ?? 0;
+    },
+    staleTime: 30 * 1000,
+    refetchOnWindowFocus: false,
+  });
+
+  const handleOpenDrafts = useCallback(() => {
+    setShowDraftsDrawer(true);
+  }, []);
+
+  const handleCloseDrafts = useCallback(() => {
+    setShowDraftsDrawer(false);
   }, []);
 
   const handleToggleHeatmap = useCallback(() => {
@@ -694,14 +754,34 @@ export default function CreateClimbForm({
             )}
           </div>
 
-          <MuiButton
-            size="small"
-            variant="outlined"
-            startIcon={<SettingsOutlined />}
-            onClick={handleToggleSettings}
-          >
-            Settings
-          </MuiButton>
+          <Stack direction="row" spacing={1} alignItems="center">
+            {canShowDrafts && (
+              <Badge
+                color="primary"
+                badgeContent={draftsCount ?? 0}
+                max={99}
+                invisible={!draftsCount}
+                overlap="rectangular"
+              >
+                <MuiButton
+                  size="small"
+                  variant="outlined"
+                  startIcon={<DraftsOutlined />}
+                  onClick={handleOpenDrafts}
+                >
+                  Drafts
+                </MuiButton>
+              </Badge>
+            )}
+            <MuiButton
+              size="small"
+              variant="outlined"
+              startIcon={<SettingsOutlined />}
+              onClick={handleToggleSettings}
+            >
+              Settings
+            </MuiButton>
+          </Stack>
         </div>
       </div>
 
@@ -796,6 +876,16 @@ export default function CreateClimbForm({
           )}
         </Stack>
       </div>
+
+      {/* Drafts drawer — only for Aurora boards where boardDetails is loaded */}
+      {canShowDrafts && boardDetails && (
+        <DraftsDrawer
+          open={showDraftsDrawer}
+          onClose={handleCloseDrafts}
+          boardDetails={boardDetails}
+          angle={angle}
+        />
+      )}
 
       {/* Settings nested drawer — lazy-mounted */}
       {showSettingsPanel && (
