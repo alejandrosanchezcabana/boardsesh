@@ -3,7 +3,7 @@ import 'server-only';
 import { track } from '@vercel/analytics/server';
 import { revalidateTag } from 'next/cache';
 import type { BoardName } from '@/app/lib/types';
-import { getBoardClimbSearchTag, getLayoutClimbSearchTag } from '@/app/lib/climb-search-cache';
+import { getBoardClimbSearchTag } from '@/app/lib/climb-search-cache';
 
 export type ClimbSearchInvalidationSource = 'internal-route' | 'save-climb-proxy';
 
@@ -20,11 +20,9 @@ export async function revalidateClimbSearchTags({
   requestHeaders,
   source,
 }: RevalidateClimbSearchTagsOptions): Promise<void> {
+  // Cache entries are tagged at board level (not layout level), so board-level
+  // invalidation covers all layouts including the one a climb was just saved to.
   revalidateTag(getBoardClimbSearchTag(boardName), { expire: 0 });
-
-  if (layoutId) {
-    revalidateTag(getLayoutClimbSearchTag(boardName, layoutId), { expire: 0 });
-  }
 
   if (!requestHeaders) {
     return;
@@ -36,7 +34,6 @@ export async function revalidateClimbSearchTags({
       boardName,
       layoutId: layoutId ?? null,
       source,
-      tagCount: layoutId ? 2 : 1,
     },
     { headers: requestHeaders },
   );
