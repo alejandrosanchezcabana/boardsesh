@@ -244,12 +244,15 @@ export function buildFlashRedpointBars(filteredLogbook: LogbookEntry[]): Grouped
   filteredLogbook.forEach((entry) => {
     if (entry.difficulty === null) return;
     const difficulty = difficultyMapping[entry.difficulty];
-    if (difficulty) {
-      if (entry.tries === 1) {
-        flash[difficulty] = (flash[difficulty] || 0) + 1;
-      } else if (entry.tries > 1) {
-        redpoint[difficulty] = (redpoint[difficulty] || 0) + entry.tries;
-      }
+    if (!difficulty) return;
+    // Prefer the canonical status field when available. Fall back to the old
+    // tries-based heuristic for legacy rows that don't have status set.
+    const isFlash = entry.status === 'flash' || (entry.status == null && entry.tries === 1);
+    const isRedpoint = entry.status === 'send' || (entry.status == null && entry.tries > 1);
+    if (isFlash) {
+      flash[difficulty] = (flash[difficulty] || 0) + 1;
+    } else if (isRedpoint) {
+      redpoint[difficulty] = (redpoint[difficulty] || 0) + Math.max(entry.tries, 1);
     }
   });
 

@@ -77,7 +77,17 @@ const PlayViewComments: React.FC<PlayViewCommentsProps> = ({ climbUuid }) => {
                   {dayjs(ascent.climbed_at).format('MMM D, YYYY')}
                 </Typography>
                 <Chip
-                  label={ascent.is_ascent ? (ascent.tries === 1 ? 'Flash' : 'Send') : 'Attempt'}
+                  label={
+                    ascent.status === 'flash'
+                      ? 'Flash'
+                      : ascent.status === 'send'
+                        ? 'Send'
+                        : ascent.is_ascent
+                          ? ascent.tries === 1
+                            ? 'Flash'
+                            : 'Send'
+                          : 'Attempt'
+                  }
                   size="small"
                   sx={{
                     height: themeTokens.spacing[5],

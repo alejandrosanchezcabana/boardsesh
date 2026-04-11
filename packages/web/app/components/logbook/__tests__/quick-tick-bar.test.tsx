@@ -28,7 +28,7 @@ vi.mock('@vercel/analytics', () => ({
 }));
 
 // Import after mocks.
-import { QuickTickBar, countPriorLogs } from '../quick-tick-bar';
+import { QuickTickBar, hasPriorHistoryForClimb } from '../quick-tick-bar';
 
 // --- Fixtures ---
 
@@ -134,17 +134,30 @@ describe('QuickTickBar', () => {
     vi.useRealTimers();
   });
 
-  describe('countPriorLogs helper', () => {
-    it('counts entries matching climb uuid and angle', () => {
-      const logbook = [
-        makeLogbookEntry({ uuid: 'a', climb_uuid: 'climb-1', angle: 40 }),
-        makeLogbookEntry({ uuid: 'b', climb_uuid: 'climb-1', angle: 40 }),
-        makeLogbookEntry({ uuid: 'c', climb_uuid: 'climb-1', angle: 30 }),
-        makeLogbookEntry({ uuid: 'd', climb_uuid: 'climb-2', angle: 40 }),
-      ];
-      expect(countPriorLogs(logbook, 'climb-1', 40 as Angle)).toBe(2);
-      expect(countPriorLogs(logbook, 'climb-2', 40 as Angle)).toBe(1);
-      expect(countPriorLogs(logbook, 'climb-3', 40 as Angle)).toBe(0);
+  describe('hasPriorHistoryForClimb helper', () => {
+    it('prefers userAscents/userAttempts on the climb when present', () => {
+      const climbFresh = makeClimb({ uuid: 'c1', userAscents: 0, userAttempts: 0 });
+      const climbAttempted = makeClimb({ uuid: 'c2', userAscents: 0, userAttempts: 3 });
+      const climbSent = makeClimb({ uuid: 'c3', userAscents: 1, userAttempts: 0 });
+
+      // Logbook contents should be ignored when the climb carries counts.
+      const logbook = [makeLogbookEntry({ climb_uuid: 'c1' })];
+
+      expect(hasPriorHistoryForClimb(climbFresh, logbook)).toBe(false);
+      expect(hasPriorHistoryForClimb(climbAttempted, [])).toBe(true);
+      expect(hasPriorHistoryForClimb(climbSent, [])).toBe(true);
+    });
+
+    it('falls back to the logbook when the climb has no counts', () => {
+      const climb = makeClimb({ uuid: 'c1' });
+      // Climb is created via makeClimb without userAscents / userAttempts.
+      expect(hasPriorHistoryForClimb(climb, [])).toBe(false);
+      expect(
+        hasPriorHistoryForClimb(climb, [makeLogbookEntry({ climb_uuid: 'c1' })]),
+      ).toBe(true);
+      expect(
+        hasPriorHistoryForClimb(climb, [makeLogbookEntry({ climb_uuid: 'other' })]),
+      ).toBe(false);
     });
   });
 
@@ -198,7 +211,7 @@ describe('QuickTickBar', () => {
       expect(defaultProps.onSave).toHaveBeenCalledTimes(1);
     });
 
-    it('saves as send with attemptCount 2 when there is one prior log', async () => {
+    it('saves as send with attemptCount 1 when there is one prior log', async () => {
       mockLogbookRef.current = [
         makeLogbookEntry({ uuid: 'p1', climb_uuid: 'climb-1', angle: 40 }),
       ];
@@ -210,14 +223,14 @@ describe('QuickTickBar', () => {
 
       const call = mockSaveTick.mock.calls[0][0];
       expect(call.status).toBe('send');
-      expect(call.attemptCount).toBe(2);
+      expect(call.attemptCount).toBe(1);
     });
 
-    it('saves as send with attemptCount 4 when there are three prior logs', async () => {
+    it('still logs a single send row (attemptCount 1) when there are multiple prior logs', async () => {
       mockLogbookRef.current = [
         makeLogbookEntry({ uuid: 'p1', status: 'attempt' }),
         makeLogbookEntry({ uuid: 'p2', status: 'attempt' }),
-        makeLogbookEntry({ uuid: 'p3', status: 'send' }),
+        makeLogbookEntry({ uuid: 'p3', status: 'attempt' }),
       ];
       render(<QuickTickBar {...defaultProps} />);
 
@@ -227,13 +240,12 @@ describe('QuickTickBar', () => {
 
       const call = mockSaveTick.mock.calls[0][0];
       expect(call.status).toBe('send');
-      expect(call.attemptCount).toBe(4);
+      expect(call.attemptCount).toBe(1);
     });
 
-    it('ignores logbook rows for other climbs or angles when deciding flash vs send', async () => {
+    it('ignores logbook rows for other climbs when deciding flash vs send', async () => {
       mockLogbookRef.current = [
         makeLogbookEntry({ uuid: 'other-climb', climb_uuid: 'climb-other', angle: 40 }),
-        makeLogbookEntry({ uuid: 'other-angle', climb_uuid: 'climb-1', angle: 30 }),
       ];
       render(<QuickTickBar {...defaultProps} />);
 
@@ -263,6 +275,38 @@ describe('QuickTickBar', () => {
       expect(defaultProps.onSave).toHaveBeenCalledTimes(1);
     });
 
+    it('uses userAscents on the climb to default to send without touching the logbook', async () => {
+      // Logbook is intentionally empty — the fast path should look at the
+      // climb's own counts and still treat this as a send.
+      mockLogbookRef.current = [];
+      const climbWithHistory = makeClimb({ userAscents: 2, userAttempts: 0 });
+
+      render(<QuickTickBar {...defaultProps} currentClimb={climbWithHistory} />);
+
+      await act(async () => {
+        screen.getByTestId('quick-tick-confirm').click();
+      });
+
+      const call = mockSaveTick.mock.calls[0][0];
+      expect(call.status).toBe('send');
+      expect(call.attemptCount).toBe(1);
+    });
+
+    it('uses userAttempts on the climb to default to send without touching the logbook', async () => {
+      mockLogbookRef.current = [];
+      const climbWithAttempts = makeClimb({ userAscents: 0, userAttempts: 1 });
+
+      render(<QuickTickBar {...defaultProps} currentClimb={climbWithAttempts} />);
+
+      await act(async () => {
+        screen.getByTestId('quick-tick-confirm').click();
+      });
+
+      const call = mockSaveTick.mock.calls[0][0];
+      expect(call.status).toBe('send');
+      expect(call.attemptCount).toBe(1);
+    });
+
     it('reflects the quality rating in the save payload', async () => {
       render(<QuickTickBar {...defaultProps} />);
 
@@ -276,6 +320,22 @@ describe('QuickTickBar', () => {
 
       const call = mockSaveTick.mock.calls[0][0];
       expect(call.quality).toBe(3);
+    });
+
+    it('does not call onSave when saveTick rejects and leaves the bar mounted', async () => {
+      mockSaveTick.mockRejectedValueOnce(new Error('network down'));
+      render(<QuickTickBar {...defaultProps} />);
+
+      await act(async () => {
+        screen.getByTestId('quick-tick-confirm').click();
+      });
+
+      expect(mockSaveTick).toHaveBeenCalledTimes(1);
+      expect(defaultProps.onSave).not.toHaveBeenCalled();
+      // Bar should still be mounted and usable for a retry.
+      expect(screen.getByTestId('quick-tick-bar')).toBeTruthy();
+      const confirm = screen.getByTestId('quick-tick-confirm') as HTMLButtonElement;
+      expect(confirm.disabled).toBe(false);
     });
   });
 

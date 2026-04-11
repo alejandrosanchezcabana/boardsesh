@@ -24,8 +24,8 @@ interface TickTarget {
   climb: Climb;
   angle: Angle;
   boardDetails: BoardDetails;
-  /** Number of prior logbook rows (any status) for this climb + angle at open time. */
-  priorCount: number;
+  /** Whether the user has any prior logbook history for this climb at open time. */
+  hasPriorHistory: boolean;
 }
 
 export interface QuickTickBarProps {
@@ -46,10 +46,10 @@ const SNAP_BACK_DURATION_MS = 180;
  * of the climb so that mid-flow changes to the active climb (party session
  * navigation, etc.) do not cause the user to lose their in-progress tick.
  *
- * The confirm status is history-aware: if the user has no prior logbook rows
- * for this climb + angle the tick is recorded as a `flash`, otherwise it is
- * recorded as a `send` with `attemptCount = priorCount + 1`. This matches what
- * a climber would expect when tapping a single "I sent it" button.
+ * Each tap on the bar logs exactly one row with `attemptCount: 1`. The status
+ * is history-aware: if the user has no prior logbook rows for this climb +
+ * angle the tick is recorded as a `flash`, otherwise it is recorded as a
+ * `send`. Totals are derived server-side by aggregating rows.
  */
 export const QuickTickBar: React.FC<QuickTickBarProps> = ({
   currentClimb,
@@ -113,24 +113,18 @@ export const QuickTickBar: React.FC<QuickTickBarProps> = ({
     async (isAscent: boolean) => {
       if (!tickTarget || isSaving) return;
 
-      const { climb, angle: targetAngle, boardDetails: targetBoard, priorCount } = tickTarget;
+      const { climb, angle: targetAngle, boardDetails: targetBoard, hasPriorHistory } = tickTarget;
 
-      // History-aware status: flash only if no prior logs for this climb+angle.
-      // Attempts always record as a single attempt row.
+      // One tap == one row. Status is history-aware: flash only if the user
+      // has no prior history for this climb; otherwise send. attemptCount is
+      // always 1 because each row represents a single climbing action.
       let status: TickStatus;
-      let attemptCount: number;
       if (isAscent) {
-        if (priorCount === 0) {
-          status = 'flash';
-          attemptCount = 1;
-        } else {
-          status = 'send';
-          attemptCount = priorCount + 1;
-        }
+        status = hasPriorHistory ? 'send' : 'flash';
       } else {
         status = 'attempt';
-        attemptCount = 1;
       }
+      const attemptCount = 1;
 
       setIsSaving(true);
       try {
@@ -360,16 +354,27 @@ export const QuickTickBar: React.FC<QuickTickBarProps> = ({
   );
 };
 
-/** Count prior logbook rows for a given climb + angle. Exposed for tests. */
-export function countPriorLogs(
+/**
+ * Decide whether the user has any prior history for a climb at open time.
+ *
+ * Fast path: the climb payload already carries `userAscents` and
+ * `userAttempts` counts from the climb list query, so in the common case we
+ * avoid walking the logbook entirely. When those fields are missing (e.g. the
+ * climb was fetched through a slim query that does not include the user
+ * aggregation), we fall back to filtering the in-memory logbook by climb
+ * uuid. Exposed for tests.
+ */
+export function hasPriorHistoryForClimb(
+  climb: Climb,
   logbook: LogbookEntry[],
-  climbUuid: string,
-  angle: Angle,
-): number {
-  const numericAngle = Number(angle);
-  return logbook.filter(
-    (entry) => entry.climb_uuid === climbUuid && Number(entry.angle) === numericAngle,
-  ).length;
+): boolean {
+  const ascents = climb.userAscents;
+  const attempts = climb.userAttempts;
+  if (ascents != null || attempts != null) {
+    return (ascents ?? 0) + (attempts ?? 0) > 0;
+  }
+  // Fallback: slim climb payload — consult the local logbook instead.
+  return logbook.some((entry) => entry.climb_uuid === climb.uuid);
 }
 
 function buildTickTarget(
@@ -382,6 +387,6 @@ function buildTickTarget(
     climb,
     angle,
     boardDetails,
-    priorCount: countPriorLogs(logbook, climb.uuid, angle),
+    hasPriorHistory: hasPriorHistoryForClimb(climb, logbook),
   };
 }
