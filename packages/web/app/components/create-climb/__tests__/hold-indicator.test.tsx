@@ -18,9 +18,9 @@ describe('HoldIndicator', () => {
     expect(screen.getByText('0/2')).toBeTruthy();
   });
 
-  it('shows the label as tooltip text', () => {
+  it('associates the label via aria-label for accessibility', () => {
     render(<HoldIndicator count={2} max={2} color="#ec4899" label="Finish" />);
-    expect(screen.getByTitle('Finish')).toBeTruthy();
+    expect(screen.getByRole('generic', { name: 'Finish' })).toBeTruthy();
   });
 
   it('renders string count when max is undefined', () => {
