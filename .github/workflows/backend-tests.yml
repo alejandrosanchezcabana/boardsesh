@@ -18,6 +18,9 @@ on:
 jobs:
   test:
     runs-on: ubuntu-latest
+    permissions:
+      checks: write
+      pull-requests: write
 
     services:
       postgres:
@@ -73,7 +76,24 @@ jobs:
         run: bun run --filter=@boardsesh/db build
 
       - name: Run backend integration tests
-        run: bun run --filter=boardsesh-backend test:run
+        run: bun run --filter=boardsesh-backend test:run -- --reporter=verbose --reporter=junit --outputFile.junit=./test-results/junit.xml
         env:
           DATABASE_URL: postgresql://postgres:postgres@localhost:5433/boardsesh_backend_test
           REDIS_URL: redis://localhost:6380
+
+      - name: Upload test results
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: backend-test-results
+          path: packages/backend/test-results/junit.xml
+          retention-days: 7
+
+      - name: Publish test report
+        uses: dorny/test-reporter@v1
+        if: always()
+        with:
+          name: Backend Integration Tests
+          path: packages/backend/test-results/junit.xml
+          reporter: java-junit
+          fail-on-error: false
