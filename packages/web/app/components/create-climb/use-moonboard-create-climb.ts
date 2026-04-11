@@ -4,9 +4,6 @@ import { useState, useCallback, useMemo } from 'react';
 import { LitUpHoldsMap, HoldState } from '../board-renderer/types';
 import { MOONBOARD_HOLD_STATES } from '@/app/lib/moonboard-config';
 
-// MoonBoard hold state cycle: STARTING -> HAND -> FINISH -> OFF
-const STATE_CYCLE: (HoldState | 'OFF')[] = ['STARTING', 'HAND', 'FINISH', 'OFF'];
-
 interface UseMoonBoardCreateClimbOptions {
   initialHoldsMap?: LitUpHoldsMap;
 }
@@ -37,56 +34,42 @@ export function useMoonBoardCreateClimb(options?: UseMoonBoardCreateClimbOptions
   // MoonBoard climbs need at least 1 start hold and 1 finish hold
   const isValid = totalHolds > 0 && startingCount >= 1 && finishCount >= 1;
 
-  const handleHoldClick = useCallback((holdId: number) => {
+  const setHoldState = useCallback((holdId: number, nextState: HoldState | 'OFF') => {
     setLitUpHoldsMap((prev) => {
-      const currentHold = prev[holdId];
-      const currentState: HoldState | 'OFF' = currentHold?.state || 'OFF';
-
-      // Find current position in cycle
-      const currentIndex = STATE_CYCLE.indexOf(currentState);
-
-      // Count current states (excluding this hold if it has that state)
-      const currentStartCount = Object.entries(prev).filter(
-        ([id, h]) => h.state === 'STARTING' && Number(id) !== holdId,
-      ).length;
-      const currentFinishCount = Object.entries(prev).filter(
-        ([id, h]) => h.state === 'FINISH' && Number(id) !== holdId,
-      ).length;
-
-      // Find next valid state in cycle
-      let nextState: HoldState | 'OFF' = 'OFF';
-      for (let i = 1; i <= STATE_CYCLE.length; i++) {
-        const candidateIndex = (currentIndex + i) % STATE_CYCLE.length;
-        const candidateState = STATE_CYCLE[candidateIndex];
-
-        // Skip STARTING if already at max (2)
-        if (candidateState === 'STARTING' && currentStartCount >= 2) {
-          continue;
-        }
-        // Skip FINISH if already at max (2)
-        if (candidateState === 'FINISH' && currentFinishCount >= 2) {
-          continue;
-        }
-
-        nextState = candidateState;
-        break;
-      }
-
-      // If next state is OFF, remove the hold from the map
+      // Clearing a hold removes it from the map.
       if (nextState === 'OFF') {
+        if (!(holdId in prev)) return prev;
         const { [holdId]: _removed, ...rest } = prev;
-        void _removed; // Explicitly mark as intentionally unused
+        void _removed;
         return rest;
       }
 
-      // Map state to Moonboard hold states for colors
+      // MoonBoard has no FOOT state — silently no-op if asked.
+      if (nextState !== 'STARTING' && nextState !== 'HAND' && nextState !== 'FINISH') {
+        return prev;
+      }
+
+      // Enforce max-2 STARTING / FINISH limits as a safety net.
+      const currentHold = prev[holdId];
+      const isAlreadyThisState = currentHold?.state === nextState;
+      if (!isAlreadyThisState) {
+        if (nextState === 'STARTING') {
+          const startingCount = Object.values(prev).filter((h) => h.state === 'STARTING').length;
+          if (startingCount >= 2) return prev;
+        }
+        if (nextState === 'FINISH') {
+          const finishCount = Object.values(prev).filter((h) => h.state === 'FINISH').length;
+          if (finishCount >= 2) return prev;
+        }
+      }
+
       const stateToMoonboard = {
         STARTING: MOONBOARD_HOLD_STATES.start,
         HAND: MOONBOARD_HOLD_STATES.hand,
         FINISH: MOONBOARD_HOLD_STATES.finish,
       } as const;
 
-      const stateInfo = stateToMoonboard[nextState as keyof typeof stateToMoonboard];
+      const stateInfo = stateToMoonboard[nextState];
 
       return {
         ...prev,
@@ -107,7 +90,7 @@ export function useMoonBoardCreateClimb(options?: UseMoonBoardCreateClimbOptions
   return {
     litUpHoldsMap,
     setLitUpHoldsMap,
-    handleHoldClick,
+    setHoldState,
     startingCount,
     finishCount,
     handCount,

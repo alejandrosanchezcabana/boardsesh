@@ -25,12 +25,12 @@ describe('useMoonBoardCreateClimb', () => {
     });
   });
 
-  describe('hold state cycling (no FOOT state)', () => {
-    it('first click cycles to STARTING', () => {
+  describe('setHoldState', () => {
+    it('sets a hold to STARTING', () => {
       const { result } = renderHook(() => useMoonBoardCreateClimb());
 
       act(() => {
-        result.current.handleHoldClick(100);
+        result.current.setHoldState(100, 'STARTING');
       });
 
       expect(result.current.litUpHoldsMap[100]).toEqual({
@@ -40,108 +40,87 @@ describe('useMoonBoardCreateClimb', () => {
       });
     });
 
-    it('second click cycles from STARTING to HAND', () => {
+    it('sets a hold to HAND', () => {
       const { result } = renderHook(() => useMoonBoardCreateClimb());
 
       act(() => {
-        result.current.handleHoldClick(100);
-      });
-      act(() => {
-        result.current.handleHoldClick(100);
+        result.current.setHoldState(100, 'HAND');
       });
 
       expect(result.current.litUpHoldsMap[100].state).toBe('HAND');
       expect(result.current.litUpHoldsMap[100].color).toBe('#00FFFF');
     });
 
-    it('third click cycles from HAND to FINISH', () => {
+    it('sets a hold to FINISH', () => {
       const { result } = renderHook(() => useMoonBoardCreateClimb());
 
       act(() => {
-        result.current.handleHoldClick(100);
-      });
-      act(() => {
-        result.current.handleHoldClick(100);
-      });
-      act(() => {
-        result.current.handleHoldClick(100);
+        result.current.setHoldState(100, 'FINISH');
       });
 
       expect(result.current.litUpHoldsMap[100].state).toBe('FINISH');
       expect(result.current.litUpHoldsMap[100].color).toBe('#FF00FF');
     });
 
-    it('fourth click cycles from FINISH to OFF (removed)', () => {
+    it('OFF removes the hold from the map', () => {
       const { result } = renderHook(() => useMoonBoardCreateClimb());
 
       act(() => {
-        result.current.handleHoldClick(100);
+        result.current.setHoldState(100, 'STARTING');
       });
+      expect(result.current.totalHolds).toBe(1);
+
       act(() => {
-        result.current.handleHoldClick(100);
-      });
-      act(() => {
-        result.current.handleHoldClick(100);
-      });
-      act(() => {
-        result.current.handleHoldClick(100);
+        result.current.setHoldState(100, 'OFF');
       });
 
       expect(result.current.litUpHoldsMap[100]).toBeUndefined();
       expect(result.current.totalHolds).toBe(0);
     });
-  });
 
-  describe('max starting holds', () => {
-    it('skips STARTING when 2 starting holds already exist', () => {
+    it('refuses FOOT (MoonBoard has no foot holds)', () => {
       const { result } = renderHook(() => useMoonBoardCreateClimb());
 
-      // Add 2 starting holds
       act(() => {
-        result.current.handleHoldClick(100);
-      });
-      act(() => {
-        result.current.handleHoldClick(200);
+        result.current.setHoldState(100, 'FOOT');
       });
 
-      expect(result.current.startingCount).toBe(2);
-
-      // Third hold should skip STARTING and go to HAND
-      act(() => {
-        result.current.handleHoldClick(300);
-      });
-
-      expect(result.current.litUpHoldsMap[300].state).toBe('HAND');
+      expect(result.current.litUpHoldsMap[100]).toBeUndefined();
     });
   });
 
-  describe('max finish holds', () => {
-    it('skips FINISH when 2 finish holds already exist', () => {
+  describe('max state limits', () => {
+    it('refuses to add a third STARTING hold when 2 already exist', () => {
       const { result } = renderHook(() => useMoonBoardCreateClimb());
 
-      // Add 2 finish holds (cycle each through STARTING -> HAND -> FINISH)
-      for (let i = 0; i < 3; i++) {
-        act(() => {
-          result.current.handleHoldClick(100);
-        });
-      }
-      for (let i = 0; i < 3; i++) {
-        act(() => {
-          result.current.handleHoldClick(200);
-        });
-      }
+      act(() => {
+        result.current.setHoldState(100, 'STARTING');
+      });
+      act(() => {
+        result.current.setHoldState(200, 'STARTING');
+      });
+      expect(result.current.startingCount).toBe(2);
 
+      act(() => {
+        result.current.setHoldState(300, 'STARTING');
+      });
+
+      expect(result.current.litUpHoldsMap[300]).toBeUndefined();
+    });
+
+    it('refuses to add a third FINISH hold when 2 already exist', () => {
+      const { result } = renderHook(() => useMoonBoardCreateClimb());
+
+      act(() => {
+        result.current.setHoldState(100, 'FINISH');
+      });
+      act(() => {
+        result.current.setHoldState(200, 'FINISH');
+      });
       expect(result.current.finishCount).toBe(2);
 
-      // Now add a hold and cycle to where FINISH would be
       act(() => {
-        result.current.handleHoldClick(300); // STARTING
-      });
-      act(() => {
-        result.current.handleHoldClick(300); // HAND
-      });
-      act(() => {
-        result.current.handleHoldClick(300); // Should skip FINISH -> OFF
+        result.current.setHoldState(300, 'FINISH');
       });
 
       expect(result.current.litUpHoldsMap[300]).toBeUndefined();
@@ -154,32 +133,19 @@ describe('useMoonBoardCreateClimb', () => {
 
       expect(result.current.isValid).toBe(false);
 
-      // Add starting hold
       act(() => {
-        result.current.handleHoldClick(100);
+        result.current.setHoldState(100, 'STARTING');
       });
       expect(result.current.isValid).toBe(false);
 
-      // Add hand hold
       act(() => {
-        result.current.handleHoldClick(200);
-      });
-      act(() => {
-        result.current.handleHoldClick(200); // HAND
+        result.current.setHoldState(200, 'HAND');
       });
       expect(result.current.isValid).toBe(false);
 
-      // Add finish hold
       act(() => {
-        result.current.handleHoldClick(300);
+        result.current.setHoldState(300, 'FINISH');
       });
-      act(() => {
-        result.current.handleHoldClick(300); // HAND
-      });
-      act(() => {
-        result.current.handleHoldClick(300); // FINISH
-      });
-
       expect(result.current.isValid).toBe(true);
     });
   });
@@ -189,10 +155,10 @@ describe('useMoonBoardCreateClimb', () => {
       const { result } = renderHook(() => useMoonBoardCreateClimb());
 
       act(() => {
-        result.current.handleHoldClick(100);
+        result.current.setHoldState(100, 'STARTING');
       });
       act(() => {
-        result.current.handleHoldClick(200);
+        result.current.setHoldState(200, 'HAND');
       });
       expect(result.current.totalHolds).toBe(2);
 
@@ -213,24 +179,14 @@ describe('useMoonBoardCreateClimb', () => {
     it('tracks hand holds correctly', () => {
       const { result } = renderHook(() => useMoonBoardCreateClimb());
 
-      // Add hold and cycle to HAND
       act(() => {
-        result.current.handleHoldClick(100); // STARTING
+        result.current.setHoldState(100, 'HAND');
       });
-      act(() => {
-        result.current.handleHoldClick(100); // HAND
-      });
-
       expect(result.current.handCount).toBe(1);
 
-      // Add another HAND hold
       act(() => {
-        result.current.handleHoldClick(200); // STARTING
+        result.current.setHoldState(200, 'HAND');
       });
-      act(() => {
-        result.current.handleHoldClick(200); // HAND
-      });
-
       expect(result.current.handCount).toBe(2);
     });
   });

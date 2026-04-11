@@ -47,6 +47,8 @@ import { refreshClimbSearchAfterSave } from '@/app/lib/climb-search-cache';
 import CreateClimbHeatmapOverlay from './create-climb-heatmap-overlay';
 import HoldStatusChip from './hold-status-chip';
 import DraftsDrawer from './drafts-drawer';
+import HoldTypePicker from './hold-type-picker';
+import type { HoldState } from '../board-renderer/types';
 import { useCreateHeaderBridgeSetters } from './create-header-bridge-context';
 import {
   SEARCH_CLIMBS_COUNT,
@@ -138,7 +140,7 @@ export default function CreateClimbForm({
   // Use the appropriate hook values based on board type
   const {
     litUpHoldsMap,
-    handleHoldClick: baseHandleHoldClick,
+    setHoldState,
     startingCount,
     finishCount,
     totalHolds,
@@ -213,13 +215,28 @@ export default function CreateClimbForm({
     }
   }, [boardType, litUpHoldsMap, isConnected, generateFramesString, sendFramesToBoard]);
 
-  // Wrap handleHoldClick
-  const handleHoldClick = useCallback(
-    (holdId: number) => {
-      baseHandleHoldClick(holdId);
+  // Hold-type picker state: which hold the user just tapped, and the DOM
+  // anchor (the SVG circle / MoonBoard cell) to position the popover against.
+  const [pickerState, setPickerState] = useState<{ holdId: number; anchor: Element } | null>(null);
+
+  const handleHoldClick = useCallback((holdId: number, anchor: Element) => {
+    setPickerState({ holdId, anchor });
+  }, []);
+
+  const handlePickerSelect = useCallback(
+    (state: HoldState | 'OFF') => {
+      if (!pickerState) return;
+      setHoldState(pickerState.holdId, state);
+      setPickerState(null);
     },
-    [baseHandleHoldClick],
+    [pickerState, setHoldState],
   );
+
+  const handlePickerClose = useCallback(() => {
+    setPickerState(null);
+  }, []);
+
+  const pickerBoardName = boardType === 'aurora' ? boardDetails?.board_name ?? 'kilter' : 'moonboard';
 
   // Wrap resetHolds to also clear the board
   const resetHolds = useCallback(() => {
@@ -817,6 +834,16 @@ export default function CreateClimbForm({
           ) : null}
         </ZoomableBoard>
       </div>
+
+      <HoldTypePicker
+        boardName={pickerBoardName}
+        anchorEl={pickerState?.anchor ?? null}
+        currentState={pickerState ? litUpHoldsMap[pickerState.holdId]?.state ?? 'OFF' : 'OFF'}
+        startingCount={startingCount}
+        finishCount={finishCount}
+        onSelect={handlePickerSelect}
+        onClose={handlePickerClose}
+      />
 
       {/* MoonBoard validation hint band */}
       {boardType === 'moonboard' && !isValid && totalHolds > 0 && (

@@ -4,21 +4,21 @@ import { renderHook, act } from '@testing-library/react';
 vi.mock('../../board-renderer/types', () => ({
   HOLD_STATE_MAP: {
     kilter: {
-      42: { state: 'STARTING', color: '#00FF00', displayColor: '#00FF00' },
-      43: { state: 'HAND', color: '#00FFFF', displayColor: '#00FFFF' },
-      44: { state: 'FINISH', color: '#FF00FF', displayColor: '#FF00FF' },
-      45: { state: 'FOOT', color: '#FFA500', displayColor: '#FFA500' },
+      42: { name: 'STARTING', color: '#00FF00', displayColor: '#00FF00' },
+      43: { name: 'HAND', color: '#00FFFF', displayColor: '#00FFFF' },
+      44: { name: 'FINISH', color: '#FF00FF', displayColor: '#FF00FF' },
+      45: { name: 'FOOT', color: '#FFA500', displayColor: '#FFA500' },
     },
     tension: {
-      1: { state: 'STARTING', color: '#00FF00', displayColor: '#00FF00' },
-      2: { state: 'HAND', color: '#00FFFF', displayColor: '#00FFFF' },
-      3: { state: 'FINISH', color: '#FF00FF', displayColor: '#FF00FF' },
-      4: { state: 'FOOT', color: '#FFA500', displayColor: '#FFA500' },
+      1: { name: 'STARTING', color: '#00FF00', displayColor: '#00FF00' },
+      2: { name: 'HAND', color: '#00FFFF', displayColor: '#00FFFF' },
+      3: { name: 'FINISH', color: '#FF00FF', displayColor: '#FF00FF' },
+      4: { name: 'FOOT', color: '#FFA500', displayColor: '#FFA500' },
     },
     moonboard: {
-      1: { state: 'STARTING', color: '#00FF00', displayColor: '#00FF00' },
-      2: { state: 'HAND', color: '#00FFFF', displayColor: '#00FFFF' },
-      3: { state: 'FINISH', color: '#FF00FF', displayColor: '#FF00FF' },
+      1: { name: 'STARTING', color: '#00FF00', displayColor: '#00FF00' },
+      2: { name: 'HAND', color: '#00FFFF', displayColor: '#00FFFF' },
+      3: { name: 'FINISH', color: '#FF00FF', displayColor: '#FF00FF' },
     },
   },
 }));
@@ -38,12 +38,12 @@ describe('useCreateClimb', () => {
     });
   });
 
-  describe('hold state cycling', () => {
-    it('first click cycles hold to STARTING', () => {
+  describe('setHoldState', () => {
+    it('sets a hold to STARTING', () => {
       const { result } = renderHook(() => useCreateClimb('kilter'));
 
       act(() => {
-        result.current.handleHoldClick(100);
+        result.current.setHoldState(100, 'STARTING');
       });
 
       expect(result.current.litUpHoldsMap[100]).toEqual({
@@ -53,74 +53,62 @@ describe('useCreateClimb', () => {
       });
     });
 
-    it('second click cycles hold from STARTING to HAND', () => {
+    it('sets a hold to HAND', () => {
       const { result } = renderHook(() => useCreateClimb('kilter'));
 
       act(() => {
-        result.current.handleHoldClick(100);
-      });
-      act(() => {
-        result.current.handleHoldClick(100);
+        result.current.setHoldState(100, 'HAND');
       });
 
       expect(result.current.litUpHoldsMap[100].state).toBe('HAND');
       expect(result.current.litUpHoldsMap[100].color).toBe('#00FFFF');
     });
 
-    it('third click cycles hold from HAND to FOOT', () => {
+    it('sets a hold to FOOT', () => {
       const { result } = renderHook(() => useCreateClimb('kilter'));
 
       act(() => {
-        result.current.handleHoldClick(100);
-      });
-      act(() => {
-        result.current.handleHoldClick(100);
-      });
-      act(() => {
-        result.current.handleHoldClick(100);
+        result.current.setHoldState(100, 'FOOT');
       });
 
       expect(result.current.litUpHoldsMap[100].state).toBe('FOOT');
       expect(result.current.litUpHoldsMap[100].color).toBe('#FFA500');
     });
 
-    it('fourth click cycles hold from FOOT to FINISH', () => {
+    it('sets a hold to FINISH', () => {
       const { result } = renderHook(() => useCreateClimb('kilter'));
 
       act(() => {
-        result.current.handleHoldClick(100);
-      });
-      act(() => {
-        result.current.handleHoldClick(100);
-      });
-      act(() => {
-        result.current.handleHoldClick(100);
-      });
-      act(() => {
-        result.current.handleHoldClick(100);
+        result.current.setHoldState(100, 'FINISH');
       });
 
       expect(result.current.litUpHoldsMap[100].state).toBe('FINISH');
       expect(result.current.litUpHoldsMap[100].color).toBe('#FF00FF');
     });
 
-    it('fifth click cycles hold from FINISH to OFF (removed)', () => {
+    it('changes a hold from one state to another', () => {
       const { result } = renderHook(() => useCreateClimb('kilter'));
 
       act(() => {
-        result.current.handleHoldClick(100);
+        result.current.setHoldState(100, 'STARTING');
       });
       act(() => {
-        result.current.handleHoldClick(100);
+        result.current.setHoldState(100, 'FOOT');
       });
+
+      expect(result.current.litUpHoldsMap[100].state).toBe('FOOT');
+    });
+
+    it('OFF removes the hold from the map', () => {
+      const { result } = renderHook(() => useCreateClimb('kilter'));
+
       act(() => {
-        result.current.handleHoldClick(100);
+        result.current.setHoldState(100, 'STARTING');
       });
+      expect(result.current.totalHolds).toBe(1);
+
       act(() => {
-        result.current.handleHoldClick(100);
-      });
-      act(() => {
-        result.current.handleHoldClick(100);
+        result.current.setHoldState(100, 'OFF');
       });
 
       expect(result.current.litUpHoldsMap[100]).toBeUndefined();
@@ -129,60 +117,59 @@ describe('useCreateClimb', () => {
   });
 
   describe('max state limits', () => {
-    it('skips STARTING when 2 starting holds already exist', () => {
+    it('refuses to add a third STARTING hold when 2 already exist', () => {
       const { result } = renderHook(() => useCreateClimb('kilter'));
 
-      // Add 2 starting holds
       act(() => {
-        result.current.handleHoldClick(100);
+        result.current.setHoldState(100, 'STARTING');
       });
       act(() => {
-        result.current.handleHoldClick(200);
+        result.current.setHoldState(200, 'STARTING');
       });
-
       expect(result.current.startingCount).toBe(2);
 
-      // Third hold should skip STARTING and go to HAND
       act(() => {
-        result.current.handleHoldClick(300);
-      });
-
-      expect(result.current.litUpHoldsMap[300].state).toBe('HAND');
-    });
-
-    it('skips FINISH when 2 finish holds already exist', () => {
-      const { result } = renderHook(() => useCreateClimb('kilter'));
-
-      // Add 2 finish holds (cycle each through STARTING -> HAND -> FOOT -> FINISH)
-      for (let i = 0; i < 4; i++) {
-        act(() => {
-          result.current.handleHoldClick(100);
-        });
-      }
-      for (let i = 0; i < 4; i++) {
-        act(() => {
-          result.current.handleHoldClick(200);
-        });
-      }
-
-      expect(result.current.finishCount).toBe(2);
-
-      // Now add a hold and cycle to where FINISH would be
-      // It should skip FINISH and go to OFF
-      act(() => {
-        result.current.handleHoldClick(300); // STARTING
-      });
-      act(() => {
-        result.current.handleHoldClick(300); // HAND
-      });
-      act(() => {
-        result.current.handleHoldClick(300); // FOOT
-      });
-      act(() => {
-        result.current.handleHoldClick(300); // Should skip FINISH -> OFF
+        result.current.setHoldState(300, 'STARTING');
       });
 
       expect(result.current.litUpHoldsMap[300]).toBeUndefined();
+      expect(result.current.startingCount).toBe(2);
+    });
+
+    it('refuses to add a third FINISH hold when 2 already exist', () => {
+      const { result } = renderHook(() => useCreateClimb('kilter'));
+
+      act(() => {
+        result.current.setHoldState(100, 'FINISH');
+      });
+      act(() => {
+        result.current.setHoldState(200, 'FINISH');
+      });
+      expect(result.current.finishCount).toBe(2);
+
+      act(() => {
+        result.current.setHoldState(300, 'FINISH');
+      });
+
+      expect(result.current.litUpHoldsMap[300]).toBeUndefined();
+    });
+
+    it('allows re-selecting the same state on a hold already at the limit', () => {
+      const { result } = renderHook(() => useCreateClimb('kilter'));
+
+      act(() => {
+        result.current.setHoldState(100, 'STARTING');
+      });
+      act(() => {
+        result.current.setHoldState(200, 'STARTING');
+      });
+      // Re-set hold 100 to STARTING — should not no-op since it's already there.
+      act(() => {
+        result.current.setHoldState(100, 'STARTING');
+      });
+
+      expect(result.current.litUpHoldsMap[100].state).toBe('STARTING');
+      expect(result.current.startingCount).toBe(2);
     });
   });
 
@@ -190,9 +177,8 @@ describe('useCreateClimb', () => {
     it('produces correct format for kilter holds', () => {
       const { result } = renderHook(() => useCreateClimb('kilter'));
 
-      // Add a STARTING hold (holdId=100, stateCode=42)
       act(() => {
-        result.current.handleHoldClick(100);
+        result.current.setHoldState(100, 'STARTING');
       });
 
       const frames = result.current.generateFramesString();
@@ -202,17 +188,11 @@ describe('useCreateClimb', () => {
     it('produces correct format for multiple holds', () => {
       const { result } = renderHook(() => useCreateClimb('kilter'));
 
-      // Add a STARTING hold
       act(() => {
-        result.current.handleHoldClick(100);
+        result.current.setHoldState(100, 'STARTING');
       });
-      // Add another STARTING hold
       act(() => {
-        result.current.handleHoldClick(200);
-      });
-      // Cycle second hold to HAND
-      act(() => {
-        result.current.handleHoldClick(200);
+        result.current.setHoldState(200, 'HAND');
       });
 
       const frames = result.current.generateFramesString();
@@ -233,10 +213,10 @@ describe('useCreateClimb', () => {
       const { result } = renderHook(() => useCreateClimb('kilter'));
 
       act(() => {
-        result.current.handleHoldClick(100);
+        result.current.setHoldState(100, 'STARTING');
       });
       act(() => {
-        result.current.handleHoldClick(200);
+        result.current.setHoldState(200, 'HAND');
       });
       expect(result.current.totalHolds).toBe(2);
 
@@ -257,13 +237,13 @@ describe('useCreateClimb', () => {
       const { result } = renderHook(() => useCreateClimb('kilter'));
 
       act(() => {
-        result.current.handleHoldClick(100);
+        result.current.setHoldState(100, 'STARTING');
       });
       act(() => {
-        result.current.handleHoldClick(200);
+        result.current.setHoldState(200, 'HAND');
       });
       act(() => {
-        result.current.handleHoldClick(300);
+        result.current.setHoldState(300, 'FOOT');
       });
 
       expect(result.current.totalHolds).toBe(3);
@@ -273,10 +253,10 @@ describe('useCreateClimb', () => {
       const { result } = renderHook(() => useCreateClimb('kilter'));
 
       act(() => {
-        result.current.handleHoldClick(100); // STARTING
+        result.current.setHoldState(100, 'STARTING');
       });
       act(() => {
-        result.current.handleHoldClick(200); // STARTING
+        result.current.setHoldState(200, 'STARTING');
       });
 
       expect(result.current.startingCount).toBe(2);
@@ -285,12 +265,9 @@ describe('useCreateClimb', () => {
     it('finishCount is correct', () => {
       const { result } = renderHook(() => useCreateClimb('kilter'));
 
-      // Cycle hold to FINISH
-      for (let i = 0; i < 4; i++) {
-        act(() => {
-          result.current.handleHoldClick(100);
-        });
-      }
+      act(() => {
+        result.current.setHoldState(100, 'FINISH');
+      });
 
       expect(result.current.finishCount).toBe(1);
     });
@@ -301,7 +278,7 @@ describe('useCreateClimb', () => {
       expect(result.current.isValid).toBe(false);
 
       act(() => {
-        result.current.handleHoldClick(100);
+        result.current.setHoldState(100, 'STARTING');
       });
 
       expect(result.current.isValid).toBe(true);
@@ -331,7 +308,7 @@ describe('useCreateClimb', () => {
       const { result } = renderHook(() => useCreateClimb('tension'));
 
       act(() => {
-        result.current.handleHoldClick(100); // STARTING
+        result.current.setHoldState(100, 'STARTING');
       });
 
       const frames = result.current.generateFramesString();

@@ -30,7 +30,7 @@ vi.mock('../../board-bluetooth-control/use-board-bluetooth', () => ({
 vi.mock('../use-create-climb', () => ({
   useCreateClimb: () => ({
     litUpHoldsMap: {},
-    handleHoldClick: vi.fn(),
+    setHoldState: vi.fn(),
     startingCount: 0,
     finishCount: 0,
     totalHolds: 0,
@@ -48,7 +48,7 @@ vi.mock('../use-moonboard-create-climb', () => ({
       25: { state: 'FINISH', color: '#FF0000', displayColor: '#FF3333' },
     },
     setLitUpHoldsMap: vi.fn(),
-    handleHoldClick: vi.fn(),
+    setHoldState: vi.fn(),
     startingCount: 1,
     finishCount: 1,
     handCount: 1,
