@@ -160,7 +160,7 @@ export default function CreateClimbForm({
   // Aurora-specific state
   const [showHeatmap, setShowHeatmap] = useState(false);
   const [heatmapOpacity, setHeatmapOpacity] = useState(0.7);
-  const [isDraft, setIsDraft] = useState(false);
+  const [isDraft, setIsDraft] = useState(true);
 
   // MoonBoard-specific state
   const [isOcrProcessing, setIsOcrProcessing] = useState(false);
@@ -705,6 +705,29 @@ export default function CreateClimbForm({
         </div>
       </div>
 
+      {/* Holds row: hold counts + Clear button */}
+      <div className={styles.holdsRow}>
+        <Stack direction="row" className={styles.holdsRowChips}>
+          {boardType === 'aurora' ? (
+            <>
+              <HoldStatusChip label={`Starting: ${startingCount}/2`} active={startingCount > 0} tone="success" />
+              <HoldStatusChip label={`Finish: ${finishCount}/2`} active={finishCount > 0} tone="pink" />
+              <HoldStatusChip label={`Total: ${totalHolds}`} active={totalHolds > 0} tone="primary" />
+            </>
+          ) : (
+            <>
+              <HoldStatusChip label={`Start: ${startingCount}/2`} active={startingCount > 0} tone="error" />
+              <HoldStatusChip label={`Hand: ${handCount}`} active={handCount > 0} tone="primary" />
+              <HoldStatusChip label={`Finish: ${finishCount}/2`} active={finishCount > 0} tone="success" />
+              <HoldStatusChip label={`Total: ${totalHolds}`} active={totalHolds > 0} tone="secondary" />
+            </>
+          )}
+        </Stack>
+        <MuiButton size="small" variant="outlined" onClick={resetHolds} disabled={totalHolds === 0}>
+          Clear
+        </MuiButton>
+      </div>
+
       {/* Board section: zoomable SVG renderer */}
       <div className={styles.boardSectionWrapper} data-testid="climb-setter-board">
         <ZoomableBoard resetKey={zoomResetKey}>
@@ -747,55 +770,29 @@ export default function CreateClimbForm({
         </div>
       )}
 
-      {/* Bottom action bar: hold counts + clear/import */}
-      <div className={styles.actionBar}>
-        <Stack direction="row" className={styles.actionBarChips}>
-          {boardType === 'aurora' ? (
-            <>
-              <HoldStatusChip label={`Starting: ${startingCount}/2`} active={startingCount > 0} tone="success" />
-              <HoldStatusChip label={`Finish: ${finishCount}/2`} active={finishCount > 0} tone="pink" />
-              <HoldStatusChip label={`Total: ${totalHolds}`} active={totalHolds > 0} tone="primary" />
-            </>
-          ) : (
-            <>
-              <HoldStatusChip label={`Start: ${startingCount}/2`} active={startingCount > 0} tone="error" />
-              <HoldStatusChip label={`Hand: ${handCount}`} active={handCount > 0} tone="primary" />
-              <HoldStatusChip label={`Finish: ${finishCount}/2`} active={finishCount > 0} tone="success" />
-              <HoldStatusChip label={`Total: ${totalHolds}`} active={totalHolds > 0} tone="secondary" />
-            </>
-          )}
-        </Stack>
-        <Stack direction="row" className={styles.actionBarButtons}>
-          {totalHolds > 0 && (
-            <MuiButton size="small" variant="outlined" onClick={resetHolds}>
-              Clear
-            </MuiButton>
-          )}
-          {/* MoonBoard-only: Import buttons */}
-          {boardType === 'moonboard' && (
-            <>
-              <input
-                type="file"
-                ref={fileInputRef}
-                accept="image/png,image/jpeg,image/webp"
-                style={{ display: 'none' }}
-                onChange={(e) => {
-                  const file = e.target.files?.[0];
-                  if (file) handleOcrImport(file);
-                  e.target.value = '';
-                }}
-                disabled={isOcrProcessing}
-              />
-              <MuiButton size="small" variant="outlined" startIcon={isOcrProcessing ? <CircularProgress size={16} /> : <CloudUploadOutlined />} disabled={isOcrProcessing} onClick={() => fileInputRef.current?.click()}>
-                {isOcrProcessing ? 'Processing...' : 'Import'}
-              </MuiButton>
-              <Link href={bulkImportUrl}>
-                <MuiButton size="small" variant="outlined" startIcon={<GetAppOutlined />}>Bulk</MuiButton>
-              </Link>
-            </>
-          )}
-        </Stack>
-      </div>
+      {/* MoonBoard-only: Import buttons */}
+      {boardType === 'moonboard' && (
+        <div className={styles.importActionsBar}>
+          <input
+            type="file"
+            ref={fileInputRef}
+            accept="image/png,image/jpeg,image/webp"
+            style={{ display: 'none' }}
+            onChange={(e) => {
+              const file = e.target.files?.[0];
+              if (file) handleOcrImport(file);
+              e.target.value = '';
+            }}
+            disabled={isOcrProcessing}
+          />
+          <MuiButton size="small" variant="outlined" startIcon={isOcrProcessing ? <CircularProgress size={16} /> : <CloudUploadOutlined />} disabled={isOcrProcessing} onClick={() => fileInputRef.current?.click()}>
+            {isOcrProcessing ? 'Processing...' : 'Import'}
+          </MuiButton>
+          <Link href={bulkImportUrl}>
+            <MuiButton size="small" variant="outlined" startIcon={<GetAppOutlined />}>Bulk</MuiButton>
+          </Link>
+        </div>
+      )}
 
       {/* Settings nested drawer — lazy-mounted */}
       {showSettingsPanel && (

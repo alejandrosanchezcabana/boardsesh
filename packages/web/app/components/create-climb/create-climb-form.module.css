@@ -105,20 +105,20 @@
   border-top: 1px solid var(--neutral-100);
 }
 
-/* Bottom action bar (PlayViewDrawer-style) */
-.actionBar {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  gap: 8px;
-  padding: 10px 12px;
+/* Holds row: chips + Clear button (above board) */
+.holdsRow {
   flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 6px 12px;
   background-color: var(--semantic-surface);
-  border-top: 1px solid var(--neutral-100);
+  border-bottom: 1px solid var(--neutral-100);
   flex-wrap: wrap;
 }
 
-.actionBarChips {
+.holdsRowChips {
   display: flex;
   flex-wrap: wrap;
   gap: 8px;
@@ -126,11 +126,15 @@
   min-width: 0;
 }
 
-.actionBarButtons {
+/* Import actions bar (MoonBoard only, below board) */
+.importActionsBar {
+  flex-shrink: 0;
   display: flex;
-  flex-wrap: wrap;
+  justify-content: flex-end;
   gap: 8px;
-  align-items: center;
+  padding: 8px 12px;
+  background-color: var(--semantic-surface);
+  border-top: 1px solid var(--neutral-100);
 }
 
 /* Settings nested drawer content */
@@ -166,10 +170,14 @@
     gap: 8px;
   }
 
-  .actionBar {
-    padding: 8px 10px;
+  .holdsRow {
+    padding: 6px 10px;
     gap: 6px;
-    justify-content: center;
+  }
+
+  .importActionsBar {
+    padding: 6px 10px;
+    gap: 6px;
   }
 
   .opacitySlider {
