@@ -1,8 +1,10 @@
 name: Branch Deploy Cleanup
 
 on:
-  pull_request:
-    types: [closed]
+  # Disabled - branch deploys are currently disabled
+  # pull_request:
+  #   types: [closed]
+  workflow_dispatch:
 
 env:
   PR_NUMBER: ${{ github.event.pull_request.number }}

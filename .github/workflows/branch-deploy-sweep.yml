@@ -1,11 +1,13 @@
 name: Branch Deploy Sweep
 
 on:
-  push:
-    branches: [main]
-  schedule:
-    # Run daily at 3am UTC
-    - cron: '0 3 * * *'
+  # Disabled - branch deploys are currently disabled
+  # push:
+  #   branches: [main]
+  # schedule:
+  #   # Run daily at 3am UTC
+  #   - cron: '0 3 * * *'
+  workflow_dispatch:
 
 jobs:
   sweep:
