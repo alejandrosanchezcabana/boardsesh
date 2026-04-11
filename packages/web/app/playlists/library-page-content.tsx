@@ -3,14 +3,12 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import MuiButton from '@mui/material/Button';
 import Typography from '@mui/material/Typography';
-import IconButton from '@mui/material/IconButton';
 import Tabs from '@mui/material/Tabs';
 import Tab from '@mui/material/Tab';
 import {
   LabelOutlined,
   LoginOutlined,
   SentimentDissatisfiedOutlined,
-  ArrowBackOutlined,
 } from '@mui/icons-material';
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
@@ -277,28 +275,11 @@ export default function LibraryPageContent({
     router.replace(newValue === 'logbook' ? logbookBasePath : playlistsBasePath);
   }, [logbookBasePath, playlistsBasePath, router]);
 
-  // Header with back button
-  const renderHeader = () => (
-    <div className={styles.header}>
-      <IconButton
-        size="small"
-        onClick={() => router.back()}
-        aria-label="Go back"
-        sx={{ mr: 0.5 }}
-      >
-        <ArrowBackOutlined />
-      </IconButton>
-      <Typography variant="h6" component="h1" sx={{ fontWeight: 600 }}>
-        Discover
-      </Typography>
-    </div>
-  );
 
   // Error state (only for authenticated users with fetch errors)
   if (isAuthenticated && error) {
     return (
       <>
-        {renderHeader()}
         <div className={styles.errorContainer}>
           <SentimentDissatisfiedOutlined className={styles.errorIcon} />
           <Typography variant="h6" component="h4" sx={{ mb: 1 }}>
@@ -321,8 +302,6 @@ export default function LibraryPageContent({
 
   return (
     <>
-      {renderHeader()}
-
       {/* Playlists / Logbook tabs */}
       <Tabs
         value={activeTab}

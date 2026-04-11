@@ -9,18 +9,6 @@
   padding-bottom: 96px;
 }
 
-/* Header */
-.header {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  margin-bottom: 20px;
-  background-color: var(--semantic-surface);
-  border-radius: 12px;
-  padding: 16px;
-  box-shadow: var(--shadow-sm);
-}
-
 /* Section Title */
 .sectionTitle {
   font-size: 20px;
@@ -285,12 +273,6 @@
   .pageContainer {
     padding: 12px;
     padding-bottom: 96px;
-  }
-
-  .header {
-    margin-bottom: 16px;
-    padding: 12px;
-    border-radius: 8px;
   }
 
   .cardScroll {
