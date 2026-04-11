@@ -171,4 +171,35 @@ describe('UnifiedSearchDrawer', () => {
 
     expect(screen.queryByText('Climbs')).toBeNull();
   });
+
+  it('keeps the selected category stable across re-renders with fresh allowedCategories arrays', () => {
+    // Simulates the common pattern `allowedCategories={['users', 'boards']}`,
+    // where parents pass a new array identity every render. The category
+    // state must not glitch and the visibleCategories memo key should stay
+    // stable across renders with identical contents.
+    const { rerender } = render(
+      <UnifiedSearchDrawer
+        open={true}
+        onClose={vi.fn()}
+        defaultCategory="boards"
+        allowedCategories={['users', 'boards']}
+      />,
+    );
+
+    expect(screen.getByPlaceholderText('Search boards...')).toBeTruthy();
+
+    // Re-render with a fresh array literal of the same contents.
+    rerender(
+      <UnifiedSearchDrawer
+        open={true}
+        onClose={vi.fn()}
+        defaultCategory="boards"
+        allowedCategories={['users', 'boards']}
+      />,
+    );
+
+    // Category is still 'boards', not reset to the allow-list's first entry.
+    expect(screen.getByPlaceholderText('Search boards...')).toBeTruthy();
+    expect(screen.queryByPlaceholderText('Search climbers...')).toBeNull();
+  });
 });

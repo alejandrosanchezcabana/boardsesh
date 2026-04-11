@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useCallback, useEffect } from 'react';
+import React, { useState, useCallback, useEffect, useMemo } from 'react';
 import Box from '@mui/material/Box';
 import TextField from '@mui/material/TextField';
 import Chip from '@mui/material/Chip';
@@ -62,16 +62,29 @@ export default function UnifiedSearchDrawer({
 
   const isClimbMode = category === 'climbs' && !!boardDetails && !!renderClimbSearch;
 
-  const categories: { key: SearchCategory; label: string; visible: boolean }[] = [
-    { key: 'climbs', label: 'Climbs', visible: !!boardDetails },
-    { key: 'boards', label: 'Boards', visible: true },
-    { key: 'gyms', label: 'Gyms', visible: true },
-    { key: 'users', label: 'Users', visible: true },
-    { key: 'playlists', label: 'Playlists', visible: true },
-  ];
+  // Derive once per relevant input change. Use a stable string key for the
+  // allow-list so callers passing a fresh array literal each render (the
+  // common case, e.g. `allowedCategories={['climbs']}`) don't invalidate the
+  // memo — which would otherwise re-run the category-fallback effect every
+  // render.
+  const hasBoardDetails = !!boardDetails;
+  const allowedCategoriesKey = allowedCategories ? allowedCategories.join('|') : '';
+  const visibleCategories = useMemo<{ key: SearchCategory; label: string }[]>(() => {
+    const all: { key: SearchCategory; label: string; visible: boolean }[] = [
+      { key: 'climbs', label: 'Climbs', visible: hasBoardDetails },
+      { key: 'boards', label: 'Boards', visible: true },
+      { key: 'gyms', label: 'Gyms', visible: true },
+      { key: 'users', label: 'Users', visible: true },
+      { key: 'playlists', label: 'Playlists', visible: true },
+    ];
+    const allowedSet = allowedCategoriesKey
+      ? new Set(allowedCategoriesKey.split('|') as SearchCategory[])
+      : null;
+    return all
+      .filter((c) => c.visible && (allowedSet ? allowedSet.has(c.key) : true))
+      .map(({ key, label }) => ({ key, label }));
+  }, [hasBoardDetails, allowedCategoriesKey]);
 
-  const allowedCategorySet = allowedCategories ? new Set(allowedCategories) : null;
-  const visibleCategories = categories.filter((c) => c.visible && (allowedCategorySet ? allowedCategorySet.has(c.key) : true));
   const showCategoryChips = visibleCategories.length > 1;
 
   useEffect(() => {

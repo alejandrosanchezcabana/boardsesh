@@ -84,8 +84,6 @@ const SwipeableDrawer: React.FC<SwipeableDrawerProps> = ({
         ? `${styles.mobileHideClose} ${className}`
         : styles.mobileHideClose;
 
-  const isVerticalPlacement = placement === 'top' || placement === 'bottom';
-
   const horizontalDragHandle = useMemo(() => showDragHandle ? (
     <div className={styles.dragHandleZoneHorizontal}>
       <div className={styles.dragHandleBarHorizontal} />

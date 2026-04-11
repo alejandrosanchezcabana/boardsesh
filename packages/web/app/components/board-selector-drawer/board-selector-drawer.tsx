@@ -269,11 +269,20 @@ export default function BoardSelectorDrawer({
 
   const isFormComplete = selectedBoard && selectedLayout && selectedSize && selectedSets.length > 0;
 
+  // Top-anchored drawers place the shared close button at top-right, which
+  // would float over the title bar's empty right edge. These drawers already
+  // have swipe-to-dismiss and a backdrop click, so suppress the close button
+  // for top placement only. Pass swipeEnabled explicitly so the showCloseButton
+  // linkage doesn't also disable swipe (see swipeable-drawer.tsx:77).
+  const topDrawerDismissProps =
+    placement === 'top' ? ({ showCloseButton: false as const, swipeEnabled: true } as const) : {};
+
   return (
     <>
       <SwipeableDrawer
         title="Custom Board"
         placement={placement}
+        {...topDrawerDismissProps}
         open={open}
         onClose={onClose}
         onTransitionEnd={onTransitionEnd}
@@ -324,6 +333,7 @@ export default function BoardSelectorDrawer({
         <SwipeableDrawer
           title="Create Board"
           placement={placement}
+          {...topDrawerDismissProps}
           open={showCreateBoardForm}
           onClose={() => setShowCreateBoardForm(false)}
           height="85dvh"
