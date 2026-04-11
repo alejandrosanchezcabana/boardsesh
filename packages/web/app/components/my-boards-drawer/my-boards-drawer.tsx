@@ -30,9 +30,10 @@ interface MyBoardsDrawerProps {
   open: boolean;
   onClose: () => void;
   onCreateBoard?: () => void;
+  onTransitionEnd?: (open: boolean) => void;
 }
 
-export default function MyBoardsDrawer({ open, onClose, onCreateBoard }: MyBoardsDrawerProps) {
+export default function MyBoardsDrawer({ open, onClose, onCreateBoard, onTransitionEnd }: MyBoardsDrawerProps) {
   const { boards, isLoading, error } = useMyBoards(open);
   const { token } = useWsAuthToken();
   const [view, setView] = useState<DrawerView>({ type: 'list' });
@@ -121,6 +122,7 @@ export default function MyBoardsDrawer({ open, onClose, onCreateBoard }: MyBoard
       placement="bottom"
       open={open}
       onClose={handleClose}
+      onTransitionEnd={onTransitionEnd}
       height="100%"
       fullHeight
       extra={headerExtra}

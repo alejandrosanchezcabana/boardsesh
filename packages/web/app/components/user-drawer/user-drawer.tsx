@@ -60,8 +60,11 @@ export default function UserDrawer({ boardDetails, boardConfigs }: UserDrawerPro
   const { openAuthModal } = useAuthModal();
   const [showHoldClassification, setShowHoldClassification] = useState(false);
   const [showBoardSelector, setShowBoardSelector] = useState(false);
+  const [boardSelectorRendered, setBoardSelectorRendered] = useState(false);
   const [showCustomBoard, setShowCustomBoard] = useState(false);
+  const [customBoardRendered, setCustomBoardRendered] = useState(false);
   const [showMyBoards, setShowMyBoards] = useState(false);
+  const [myBoardsRendered, setMyBoardsRendered] = useState(false);
   const [recentSessions, setRecentSessions] = useState<StoredSession[]>([]);
 
   const { mode, toggleMode } = useColorMode();
@@ -83,6 +86,15 @@ export default function UserDrawer({ boardDetails, boardConfigs }: UserDrawerPro
   const handleClose = () => setIsOpen(false);
   const handleDrawerTransitionEnd = useCallback((open: boolean) => {
     if (!open) setDrawerRendered(false);
+  }, []);
+  const handleBoardSelectorTransitionEnd = useCallback((open: boolean) => {
+    if (!open) setBoardSelectorRendered(false);
+  }, []);
+  const handleCustomBoardTransitionEnd = useCallback((open: boolean) => {
+    if (!open) setCustomBoardRendered(false);
+  }, []);
+  const handleMyBoardsTransitionEnd = useCallback((open: boolean) => {
+    if (!open) setMyBoardsRendered(false);
   }, []);
 
   const handleChangeBoardClick = useCallback((board: UserBoard) => {
@@ -198,6 +210,7 @@ export default function UserDrawer({ boardDetails, boardConfigs }: UserDrawerPro
               className={styles.menuItem}
               onClick={() => {
                 handleClose();
+                setBoardSelectorRendered(true);
                 setShowBoardSelector(true);
               }}
             >
@@ -211,6 +224,7 @@ export default function UserDrawer({ boardDetails, boardConfigs }: UserDrawerPro
                 className={styles.menuItem}
                 onClick={() => {
                   handleClose();
+                  setMyBoardsRendered(true);
                   setShowMyBoards(true);
                 }}
               >
@@ -358,26 +372,31 @@ export default function UserDrawer({ boardDetails, boardConfigs }: UserDrawerPro
         />
       )}
 
-      <SwipeableDrawer
-        title="Pick a board"
-        placement="bottom"
-        open={showBoardSelector}
-        onClose={() => setShowBoardSelector(false)}
-      >
-        <BoardDiscoveryScroll
-          onBoardClick={handleChangeBoardClick}
-          onConfigClick={handleChangeConfigClick}
-          onCustomClick={() => {
-            setShowBoardSelector(false);
-            setShowCustomBoard(true);
-          }}
-        />
-      </SwipeableDrawer>
+      {boardSelectorRendered && (
+        <SwipeableDrawer
+          title="Pick a board"
+          placement="bottom"
+          open={showBoardSelector}
+          onClose={() => setShowBoardSelector(false)}
+          onTransitionEnd={handleBoardSelectorTransitionEnd}
+        >
+          <BoardDiscoveryScroll
+            onBoardClick={handleChangeBoardClick}
+            onConfigClick={handleChangeConfigClick}
+            onCustomClick={() => {
+              setShowBoardSelector(false);
+              setCustomBoardRendered(true);
+              setShowCustomBoard(true);
+            }}
+          />
+        </SwipeableDrawer>
+      )}
 
-      {boardConfigs && (
+      {boardConfigs && customBoardRendered && (
         <BoardSelectorDrawer
           open={showCustomBoard}
           onClose={() => setShowCustomBoard(false)}
+          onTransitionEnd={handleCustomBoardTransitionEnd}
           boardConfigs={boardConfigs}
           placement="bottom"
           onBoardSelected={(url) => {
@@ -387,14 +406,18 @@ export default function UserDrawer({ boardDetails, boardConfigs }: UserDrawerPro
         />
       )}
 
-      <MyBoardsDrawer
-        open={showMyBoards}
-        onClose={() => setShowMyBoards(false)}
-        onCreateBoard={() => {
-          setShowMyBoards(false);
-          setShowCustomBoard(true);
-        }}
-      />
+      {myBoardsRendered && (
+        <MyBoardsDrawer
+          open={showMyBoards}
+          onClose={() => setShowMyBoards(false)}
+          onTransitionEnd={handleMyBoardsTransitionEnd}
+          onCreateBoard={() => {
+            setShowMyBoards(false);
+            setCustomBoardRendered(true);
+            setShowCustomBoard(true);
+          }}
+        />
+      )}
     </>
   );
 }
