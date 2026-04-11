@@ -35,7 +35,7 @@ export const ticksTypeDefs = /* GraphQL */ `
     status: TickStatus!
     "Number of attempts before success (or total attempts if not sent)"
     attemptCount: Int!
-    "User's quality rating (0-3)"
+    "User's quality rating (1-5)"
     quality: Int
     "User's difficulty rating"
     difficulty: Int
@@ -79,7 +79,7 @@ export const ticksTypeDefs = /* GraphQL */ `
     status: TickStatus!
     "Number of attempts"
     attemptCount: Int!
-    "Quality rating (0-3)"
+    "Quality rating (1-5)"
     quality: Int
     "Difficulty rating"
     difficulty: Int
