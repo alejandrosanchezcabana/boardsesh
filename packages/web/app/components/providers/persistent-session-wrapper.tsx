@@ -102,7 +102,7 @@ export function RootBottomBar({ boardConfigs }: { boardConfigs: BoardConfigData 
         </ErrorBoundary>
       )}
       {shouldShowQueueShell && <QueueControlBarShell />}
-      {!hideTabBar && <BottomTabBar boardConfigs={boardConfigs} />}
+      {!hideTabBar && <BottomTabBar boardDetails={boardDetails} angle={angle} boardConfigs={boardConfigs} />}
     </div>
   );
 }

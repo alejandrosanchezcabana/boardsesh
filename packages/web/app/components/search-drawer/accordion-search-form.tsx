@@ -246,8 +246,8 @@ const AccordionSearchForm: React.FC<AccordionSearchFormProps> = ({
     },
     {
       key: 'user',
-      label: 'User',
-      title: 'User',
+      label: 'Progress',
+      title: 'Progress',
       defaultSummary: 'All climbs',
       getSummary: () => getUserPanelSummary(uiSearchParams),
       content: (

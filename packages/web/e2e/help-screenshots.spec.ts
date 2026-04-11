@@ -94,8 +94,8 @@ test.describe('Help Page Screenshots', () => {
     const queueBar = page.locator('[data-testid="queue-control-bar"]');
     await expect(queueBar).toBeVisible({ timeout: 10000 });
 
-    // Click party mode button scoped to the queue bar to avoid strict mode violation
-    await page.locator('[data-testid="queue-control-bar"]').getByLabel('Connect to').click();
+    // Click "Sesh" button in the global header to open the start session drawer
+    await page.getByRole('button', { name: 'Sesh', exact: true }).click();
     await page.locator('[data-swipeable-drawer="true"]:visible').first().waitFor({ timeout: 10000 });
 
     await page.screenshot({ path: `${SCREENSHOT_DIR}/party-mode.png` });
@@ -150,8 +150,8 @@ test.describe('Help Page Screenshots - Authenticated', () => {
     await page.locator('#onboarding-search-button').click();
     await page.getByText('Grade').first().waitFor({ state: 'visible' });
 
-    // Expand the Progress section
-    await page.getByText('Progress').click();
+    // Expand the Progress section (user-specific filters: attempts, completions, etc.)
+    await page.getByText('Progress', { exact: true }).click();
 
     await page.screenshot({ path: `${SCREENSHOT_DIR}/personal-progress.png` });
   });
@@ -162,7 +162,7 @@ test.describe('Help Page Screenshots - Authenticated', () => {
     // Grant geolocation permission so session creation doesn't wait for permission prompt
     await context.grantPermissions(['geolocation']);
 
-    // First add a climb to queue so the queue bar appears
+    // First add a climb to queue (also sets localBoardDetails for session creation)
     const climbCard = page.locator('#onboarding-climb-card');
     await climbCard.dblclick();
 
@@ -170,21 +170,22 @@ test.describe('Help Page Screenshots - Authenticated', () => {
     const queueBar = page.locator('[data-testid="queue-control-bar"]');
     await expect(queueBar).toBeVisible({ timeout: 10000 });
 
-    // Open connect-to drawer
-    await page.locator('[data-testid="queue-control-bar"]').getByLabel('Connect to').click();
+    // Open start session drawer via "Sesh" button in the global header
+    await page.getByRole('button', { name: 'Sesh', exact: true }).click();
     await page.locator('[data-swipeable-drawer="true"]:visible').first().waitFor({ timeout: 10000 });
 
-    // Switch to Start Session tab and start a party session
-    await page.getByRole('tab', { name: 'Start Session' }).click();
-    await page.getByRole('button', { name: 'Start Session' }).click();
+    // Start the session — we're already on a board route so no board selection needed.
+    // The footer "Sesh" button submits the session creation form.
+    await page.getByRole('button', { name: 'Sesh', exact: true }).last().click();
 
-    // Wait for session to be active - WebSocket connection needs time to establish
-    await page.waitForSelector('button:has-text("Leave")', { state: 'visible', timeout: 30000 });
+    // Wait for session to start — success snackbar appears after creation
+    await expect(page.getByText('Session started!')).toBeVisible({ timeout: 30000 });
 
     await page.screenshot({ path: `${SCREENSHOT_DIR}/party-mode-active.png` });
 
-    // Leave the session to clean up
-    await page.getByRole('button', { name: 'Leave' }).click();
+    // Clean up: open session settings and stop the session
+    await page.getByRole('button', { name: 'Sesh', exact: true }).click();
+    await page.getByRole('button', { name: 'Stop Session' }).click();
   });
 
   test('hold classification wizard', async ({ page }) => {
