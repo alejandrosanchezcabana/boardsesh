@@ -289,7 +289,7 @@ export default function LibraryPageContent({
         <ArrowBackOutlined />
       </IconButton>
       <Typography variant="h6" component="h1" sx={{ fontWeight: 600 }}>
-        Your Library
+        Discover
       </Typography>
     </div>
   );

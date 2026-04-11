@@ -59,7 +59,7 @@ This plan transforms Boardsesh's UI into a Spotify-like experience with a persis
 ├────────────────────────────────────┤
 │ [T] "Current Climb" V4  [Q] [✓]  │  ← Now Playing bar (~45px, compact)
 ├────────────────────────────────────┤
-│  🏠 Climb  📚 Your Library ✚ Create │  ← Bottom tab bar
+│  🏠 Climb  📚 Discover ✚ Create │  ← Bottom tab bar
 └────────────────────────────────────┘
 ```
 
@@ -85,7 +85,7 @@ This plan transforms Boardsesh's UI into a Spotify-like experience with a persis
 ├────────────────────────────────────┤
 │ [T] "Current Climb" V4  [Q] [✓]  │  ← Compact now-playing bar (~45px)
 ├────────────────────────────────────┤
-│  🏠 Climb  📚 Your Library ✚ Create │
+│  🏠 Climb  📚 Discover ✚ Create │
 └────────────────────────────────────┘
 ```
 
@@ -141,7 +141,7 @@ This plan transforms Boardsesh's UI into a Spotify-like experience with a persis
 ## Phase 1: Bottom Tab Bar
 
 ### What changes
-Add a persistent bottom tab bar below the QueueControlBar with three tabs: **Climb**, **Your Library**, and **Create**.
+Add a persistent bottom tab bar below the QueueControlBar with three tabs: **Climb**, **Discover**, and **Create**.
 
 **Note:** Search functionality remains in the header on mobile list pages (search input + advanced search button). The bottom tab bar provides navigation, not search.
 
@@ -167,8 +167,8 @@ A new landing/home screen accessible via the first tab. This is a placeholder fo
 
 1. **New file: `packages/web/app/components/bottom-tab-bar/bottom-tab-bar.tsx`**
    - Client component (`'use client'`)
-   - Three tabs: Climb (navigates to list), Your Library (navigates to playlists), Create (opens create drawer)
-   - Icons: Use AntD icons - `UnorderedListOutlined` for Climb, `TagOutlined` for Your Library, `PlusOutlined` for Create
+   - Three tabs: Climb (navigates to list), Discover (navigates to playlists), Create (opens create drawer)
+   - Icons: Use AntD icons - `UnorderedListOutlined` for Climb, `TagOutlined` for Discover, `PlusOutlined` for Create
    - Active state: Primary color (`themeTokens.colors.primary`) for active tab icon + label
    - Inactive state: `themeTokens.neutral[400]` color
    - Fixed at the bottom, full width
@@ -191,7 +191,7 @@ A new landing/home screen accessible via the first tab. This is a placeholder fo
 4. **Mobile search stays in header**
    - The `SearchClimbNameInput` (text input) and `SearchButton` (advanced filters icon) **remain in the header** on mobile list pages.
    - This keeps search easily accessible while browsing climbs.
-   - The bottom tab bar is for navigation only (Climb, Your Library, Create).
+   - The bottom tab bar is for navigation only (Climb, Discover, Create).
 
 5. **New file: `packages/web/app/components/create-drawer/create-drawer.tsx`**
    - Bottom drawer with creation options
@@ -205,9 +205,9 @@ A new landing/home screen accessible via the first tab. This is a placeholder fo
 
 ### Behavior
 - **Climb tab**: Navigates to the `/list` route (the climb list). This is the default/first tab.
-- **Your Library tab**: Navigates to the `/playlists` route. Shows as active when on playlists page.
+- **Discover tab**: Navigates to the `/playlists` route. Shows as active when on playlists page.
 - **Create tab**: Opens the CreateDrawer with options (Climb, Playlist). The Playlist option opens a Create Playlist form directly.
-- Active tab state reflects current context (Climb when on /list, Your Library when on /playlists, etc.)
+- Active tab state reflects current context (Climb when on /list, Discover when on /playlists, etc.)
 - On desktop (>= 768px): Tab bar is hidden. Search and create remain in header/sidebar.
 - **On play/view/create pages**: Tab bar remains visible. On play pages the user may want to quickly return to the list or access playlists.
 
@@ -899,7 +899,7 @@ Board layout.tsx (server component)
 │
 └── BottomTabBar [NEW] (mobile only)
     ├── Climb Tab → Navigate to /list
-    ├── Your Library Tab → Navigate to /playlists
+    ├── Discover Tab → Navigate to /playlists
     └── Create Tab → Open CreateDrawer [NEW]
         ├── Climb → /create route
         └── Playlist → Opens Create Playlist drawer (hidden for MoonBoard)
@@ -992,8 +992,8 @@ Board layout.tsx (server component)
 ### Phase 1
 - [x] Bottom tab bar renders on mobile, hidden on desktop
 - [x] Climb tab navigates to /list
-- [x] Your Library tab navigates to /playlists
-- [x] Your Library tab shows as active when on playlists page
+- [x] Discover tab navigates to /playlists
+- [x] Discover tab shows as active when on playlists page
 - [x] Create tab opens create drawer
 - [x] Create drawer options work (Climb navigates to /create, Playlist opens create playlist form)
 - [x] Create drawer hides playlist option for MoonBoard
