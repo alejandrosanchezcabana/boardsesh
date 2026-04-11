@@ -80,7 +80,7 @@ export function buildOptions(boardName: BoardName): PickerOption[] {
   return options;
 }
 
-const SWATCH_SIZE = 36;
+const SWATCH_SIZE = 25;
 
 export default function HoldTypePicker({
   boardName,
@@ -192,7 +192,7 @@ function Swatch({ label, color, isActive, isDisabled, isClear, onClick }: Swatch
           width: SWATCH_SIZE,
           height: SWATCH_SIZE,
           borderRadius: '50%',
-          border: `3px solid ${ring}`,
+          border: `2px solid ${ring}`,
           backgroundColor: isActive && !isClear ? ring : 'transparent',
           display: 'flex',
           alignItems: 'center',
@@ -201,12 +201,12 @@ function Swatch({ label, color, isActive, isDisabled, isClear, onClick }: Swatch
           boxSizing: 'border-box',
         }}
       >
-        {isClear && <CloseIcon sx={{ fontSize: 18 }} />}
+        {isClear && <CloseIcon sx={{ fontSize: 13 }} />}
       </Box>
       <Typography
         variant="caption"
         sx={{
-          fontSize: 11,
+          fontSize: 8,
           fontWeight: themeTokens.typography.fontWeight.medium,
           lineHeight: 1,
           color: 'text.primary',
