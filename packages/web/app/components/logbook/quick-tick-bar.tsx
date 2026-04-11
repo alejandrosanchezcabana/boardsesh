@@ -58,6 +58,7 @@ const SNAP_BACK_DURATION_MS = 180;
 
 /** Options shown in the attempts picker. 10 displays as "9+" in the UI. */
 const ATTEMPT_OPTIONS: readonly number[] = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
+const REVERSED_ATTEMPT_OPTIONS: readonly number[] = [...ATTEMPT_OPTIONS].reverse();
 
 /**
  * Inline tick entry bar. Designed to be embedded in a parent row (e.g. the queue
@@ -389,7 +390,7 @@ export const QuickTickBar: React.FC<QuickTickBarProps> = ({
           transformOrigin={{ vertical: 'bottom', horizontal: 'center' }}
           slotProps={{ paper: { sx: { minWidth: 64 } } }}
         >
-          {ATTEMPT_OPTIONS.map((n) => (
+          {REVERSED_ATTEMPT_OPTIONS.map((n) => (
             <MenuItem
               key={n}
               selected={n === attemptCount}
