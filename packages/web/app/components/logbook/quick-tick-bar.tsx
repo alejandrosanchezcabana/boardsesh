@@ -122,6 +122,16 @@ export const QuickTickBar: React.FC<QuickTickBarProps> = ({
   const gradeLabel = vGrade ?? (displayDifficulty || '—');
   const gradeColor = getSoftVGradeColor(vGrade, isDark);
 
+  // Fall back to matching the climb's own difficulty string against the
+  // grade list so the menu can highlight + scroll to the "current" grade
+  // even before the user picks an override.
+  const climbGradeId = useMemo(() => {
+    const source = tickTarget?.climb.difficulty ?? currentClimb?.difficulty;
+    if (!source) return undefined;
+    return grades.find((g) => g.difficulty_name === source)?.difficulty_id;
+  }, [tickTarget, currentClimb, grades]);
+  const currentGradeId = difficulty ?? climbGradeId;
+
   const handleSave = useCallback(
     async (isAscent: boolean) => {
       if (!tickTarget || isSaving) return;
@@ -252,18 +262,30 @@ export const QuickTickBar: React.FC<QuickTickBarProps> = ({
       data-testid="quick-tick-bar"
     >
       <div className={styles.controls}>
-        {/* Single horizontal row: rating, comment toggle, "swipe to dismiss"
-            hint, spacer, colourised V-grade, attempt (X) and confirm (tick).
-            The grade sits immediately to the left of the attempt button and
-            opens a grade override menu on click. */}
-        <Rating
-          value={quality}
-          onChange={(_, val) => setQuality(val)}
-          size="small"
-          max={5}
-          sx={{ flexShrink: 0 }}
-          data-testid="quick-tick-rating"
-        />
+        {/* The rating stack + comment button float to the right of the bar,
+            immediately next to the colourised V-grade, attempt (X) and
+            confirm (tick). The "swipe to dismiss" hint sits as a byline
+            directly underneath the stars. */}
+        <div className={styles.ratingStack}>
+          <Rating
+            value={quality}
+            onChange={(_, val) => setQuality(val)}
+            size="small"
+            max={5}
+            data-testid="quick-tick-rating"
+          />
+          {!commentOpen && (
+            <Typography
+              variant="caption"
+              component="span"
+              color="text.secondary"
+              className={styles.hint}
+              data-testid="quick-tick-hint"
+            >
+              swipe left to dismiss
+            </Typography>
+          )}
+        </div>
 
         <IconButton
           size="small"
@@ -273,20 +295,6 @@ export const QuickTickBar: React.FC<QuickTickBarProps> = ({
         >
           <ChatBubbleOutlineOutlined fontSize="small" />
         </IconButton>
-
-        {!commentOpen && (
-          <Typography
-            variant="body2"
-            component="span"
-            color="text.secondary"
-            className={styles.hint}
-            data-testid="quick-tick-hint"
-          >
-            swipe left to dismiss
-          </Typography>
-        )}
-
-        <span className={styles.spacer} />
 
         {/* Colourised V-grade, matching the styling used by ClimbTitle's
             right-aligned large grade. Click opens the override menu. */}
@@ -315,6 +323,7 @@ export const QuickTickBar: React.FC<QuickTickBarProps> = ({
           open={Boolean(gradeAnchorEl)}
           onClose={() => setGradeAnchorEl(null)}
           slotProps={{ paper: { sx: { maxHeight: 240 } } }}
+          MenuListProps={{ autoFocusItem: true }}
         >
           <MenuItem
             onClick={() => {
@@ -324,18 +333,26 @@ export const QuickTickBar: React.FC<QuickTickBarProps> = ({
           >
             —
           </MenuItem>
-          {grades.map((grade) => (
-            <MenuItem
-              key={grade.difficulty_id}
-              selected={grade.difficulty_id === difficulty}
-              onClick={() => {
-                setDifficulty(grade.difficulty_id);
-                setGradeAnchorEl(null);
-              }}
-            >
-              {grade.v_grade}
-            </MenuItem>
-          ))}
+          {grades.map((grade) => {
+            const isCurrent = grade.difficulty_id === currentGradeId;
+            return (
+              <MenuItem
+                key={grade.difficulty_id}
+                selected={isCurrent}
+                ref={(el) => {
+                  if (el && isCurrent) {
+                    el.scrollIntoView({ block: 'center' });
+                  }
+                }}
+                onClick={() => {
+                  setDifficulty(grade.difficulty_id);
+                  setGradeAnchorEl(null);
+                }}
+              >
+                {grade.v_grade}
+              </MenuItem>
+            );
+          })}
         </Menu>
 
         <IconButton
