@@ -209,7 +209,7 @@ const DraftsDrawer: React.FC<DraftsDrawerProps> = ({ open, onClose, boardDetails
       </div>
 
       <div className={queueStyles.queueBodyLayout}>
-        <div className={queueStyles.queueScrollContainer} style={{ touchAction: 'pan-y' }}>
+        <div className={queueStyles.queueScrollContainer}>
           {isLoading ? (
             <Box
               sx={{
