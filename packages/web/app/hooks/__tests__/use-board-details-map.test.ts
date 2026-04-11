@@ -203,4 +203,47 @@ describe('useBoardDetailsMap', () => {
 
     expect(Object.keys(result.current.boardDetailsByClimb)).toHaveLength(0);
   });
+
+  it('should synthesize session config from selectedBoard when no sessionBoard provided', () => {
+    const climb = makeClimb({ uuid: 'c1', boardType: 'kilter', layoutId: 1 });
+    const selectedBoard = makeUserBoard({
+      boardType: 'kilter',
+      layoutId: 1,
+      sizeId: 10,
+      // Includes an invalid entry to exercise the Number.isFinite filter.
+      setIds: '1,2,abc',
+    });
+    const details = makeBoardDetails('kilter-selected');
+    mockGetUserBoardDetails.mockReturnValue(details);
+    mockResolveBoardDetailsForClimb.mockReturnValue({ details, status: 'exact' });
+
+    renderHook(() => useBoardDetailsMap([climb], [selectedBoard], selectedBoard));
+
+    // The resolver should be invoked with the synthesized session config —
+    // boardType/layoutId/sizeId from the selected board and numeric set IDs
+    // parsed from its comma-separated setIds string.
+    expect(mockResolveBoardDetailsForClimb).toHaveBeenCalledWith(climb, {
+      boardType: 'kilter',
+      layoutId: 1,
+      sizeId: 10,
+      setIds: [1, 2],
+    });
+  });
+
+  it('should prefer sessionBoard over selectedBoard when both are provided', () => {
+    const climb = makeClimb({ uuid: 'c1', boardType: 'kilter', layoutId: 1 });
+    const selectedBoard = makeUserBoard({ boardType: 'kilter', layoutId: 1, sizeId: 10, setIds: '1,2' });
+    const sessionBoard = {
+      boardType: 'kilter' as const,
+      layoutId: 1,
+      sizeId: 27,
+      setIds: [1, 20],
+    };
+    const details = makeBoardDetails('kilter');
+    mockResolveBoardDetailsForClimb.mockReturnValue({ details, status: 'exact' });
+
+    renderHook(() => useBoardDetailsMap([climb], [selectedBoard], selectedBoard, sessionBoard));
+
+    expect(mockResolveBoardDetailsForClimb).toHaveBeenCalledWith(climb, sessionBoard);
+  });
 });

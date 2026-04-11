@@ -211,20 +211,14 @@ export function resolveBoardDetailsForClimb(
   }
 
   // Otherwise walk larger sizes on the same layout and pick the smallest that fits.
-  // Moonboard doesn't have multiple sizes — skip the search.
-  if (sessionBoard.boardType !== 'moonboard') {
-    const sessionSizeData = exactDetails
-      ? {
-          edgeLeft: exactDetails.edge_left,
-          edgeRight: exactDetails.edge_right,
-          edgeBottom: exactDetails.edge_bottom,
-          edgeTop: exactDetails.edge_top,
-        }
-      : null;
-    const sessionArea = sessionSizeData
-      ? (sessionSizeData.edgeRight - sessionSizeData.edgeLeft) *
-        (sessionSizeData.edgeTop - sessionSizeData.edgeBottom)
-      : 0;
+  // Moonboard doesn't have multiple sizes — skip the search. We also bail out
+  // when the exact session details couldn't be built: without them we don't
+  // know the session's area, and defaulting to 0 would let smaller sizes slip
+  // through as "upsized" candidates.
+  if (sessionBoard.boardType !== 'moonboard' && exactDetails) {
+    const sessionArea =
+      (exactDetails.edge_right - exactDetails.edge_left) *
+      (exactDetails.edge_top - exactDetails.edge_bottom);
 
     const candidates = getSizesForLayoutId(sessionBoard.boardType, sessionBoard.layoutId)
       .filter((size) => size.id !== sessionBoard.sizeId)

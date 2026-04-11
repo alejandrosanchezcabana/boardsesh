@@ -640,8 +640,8 @@ const ClimbsList = ({
         anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
       >
         <Alert severity="warning" onClose={handleCloseBiggerBoard} variant="filled">
-          <AlertTitle>Bigger board needed</AlertTitle>
-          This climb needs a bigger board than your current setup.
+          <AlertTitle>Won&apos;t fit your board</AlertTitle>
+          This one runs off the edge of your wall. You&apos;ll need a bigger size to send it.
         </Alert>
       </Snackbar>
     </Box>
