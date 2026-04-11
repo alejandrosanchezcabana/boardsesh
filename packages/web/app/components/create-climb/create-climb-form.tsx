@@ -48,7 +48,7 @@ import CreateClimbHeatmapOverlay from './create-climb-heatmap-overlay';
 import HoldStatusChip from './hold-status-chip';
 import DraftsDrawer from './drafts-drawer';
 import HoldTypePicker from './hold-type-picker';
-import type { HoldState } from '../board-renderer/types';
+import { useHoldTypePicker } from './use-hold-type-picker';
 import { useCreateHeaderBridgeSetters } from './create-header-bridge-context';
 import {
   SEARCH_CLIMBS_COUNT,
@@ -215,27 +215,9 @@ export default function CreateClimbForm({
     }
   }, [boardType, litUpHoldsMap, isConnected, generateFramesString, sendFramesToBoard]);
 
-  // Hold-type picker state: which hold the user just tapped, and the DOM
-  // anchor (the SVG circle / MoonBoard cell) to position the popover against.
-  const [pickerState, setPickerState] = useState<{ holdId: number; anchor: Element } | null>(null);
-
-  const handleHoldClick = useCallback((holdId: number, anchor: Element) => {
-    setPickerState({ holdId, anchor });
-  }, []);
-
-  const handlePickerSelect = useCallback(
-    (state: HoldState | 'OFF') => {
-      if (!pickerState) return;
-      setHoldState(pickerState.holdId, state);
-      setPickerState(null);
-    },
-    [pickerState, setHoldState],
-  );
-
-  const handlePickerClose = useCallback(() => {
-    setPickerState(null);
-  }, []);
-
+  // Hold-type picker: tracks which hold the user just tapped, anchors the
+  // popover against its DOM element, and routes selections back to setHoldState.
+  const picker = useHoldTypePicker({ litUpHoldsMap, setHoldState });
   const pickerBoardName = boardType === 'aurora' ? boardDetails?.board_name ?? 'kilter' : 'moonboard';
 
   // Wrap resetHolds to also clear the board
@@ -811,7 +793,7 @@ export default function CreateClimbForm({
                 boardDetails={boardDetails}
                 litUpHoldsMap={litUpHoldsMap}
                 mirrored={false}
-                onHoldClick={handleHoldClick}
+                onHoldClick={picker.handleHoldClick}
                 fillHeight
               />
               <CreateClimbHeatmapOverlay
@@ -828,7 +810,7 @@ export default function CreateClimbForm({
                 layoutFolder={layoutFolder}
                 holdSetImages={holdSetImages}
                 litUpHoldsMap={litUpHoldsMap}
-                onHoldClick={handleHoldClick}
+                onHoldClick={picker.handleHoldClick}
               />
             </div>
           ) : null}
@@ -837,12 +819,12 @@ export default function CreateClimbForm({
 
       <HoldTypePicker
         boardName={pickerBoardName}
-        anchorEl={pickerState?.anchor ?? null}
-        currentState={pickerState ? litUpHoldsMap[pickerState.holdId]?.state ?? 'OFF' : 'OFF'}
+        anchorEl={picker.anchorEl}
+        currentState={picker.currentState}
         startingCount={startingCount}
         finishCount={finishCount}
-        onSelect={handlePickerSelect}
-        onClose={handlePickerClose}
+        onSelect={picker.handleSelect}
+        onClose={picker.handleClose}
       />
 
       {/* MoonBoard validation hint band */}

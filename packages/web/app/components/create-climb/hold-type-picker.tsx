@@ -22,33 +22,46 @@ interface HoldTypePickerProps {
   onClose: () => void;
 }
 
-// Order in which hold types should appear in the picker.
-const STATE_ORDER: HoldState[] = ['STARTING', 'HAND', 'FINISH', 'FOOT'];
+// Hold types the picker can show, in display order. Search-only states like
+// ANY/NOT and the MoonBoard above-marker AUX state are intentionally excluded
+// — the picker is for setting climbs, not searching them.
+type PickerHoldState = 'STARTING' | 'HAND' | 'FINISH' | 'FOOT';
 
-const STATE_LABELS: Record<HoldState, string> = {
+const STATE_ORDER: readonly PickerHoldState[] = ['STARTING', 'HAND', 'FINISH', 'FOOT'];
+
+const STATE_LABELS: Record<PickerHoldState, string> = {
   STARTING: 'Start',
   HAND: 'Mid',
   FINISH: 'Finish',
   FOOT: 'Foot',
-  OFF: 'Clear',
-  ANY: 'Any',
-  NOT: 'Not',
-  AUX: 'Aux',
+};
+
+// Per-board allowlist of selectable states. MoonBoard climbs are STARTING /
+// HAND / FINISH only — its HOLD_STATE_MAP entries 45-48 exist to render live
+// BLE preview frames from the dev firmware, not to set climbs, so we filter
+// them out here so they never appear in the picker.
+const PICKER_STATES_BY_BOARD: Record<BoardName, readonly PickerHoldState[]> = {
+  kilter: STATE_ORDER,
+  tension: STATE_ORDER,
+  decoy: STATE_ORDER,
+  touchstone: STATE_ORDER,
+  grasshopper: STATE_ORDER,
+  moonboard: ['STARTING', 'HAND', 'FINISH'],
 };
 
 interface PickerOption {
-  state: SelectableState;
+  state: PickerHoldState;
   label: string;
   color: string;
 }
 
 /**
- * Build the picker's options from HOLD_STATE_MAP. Each board exposes a different
- * set of role codes — MoonBoard has no FOOT, etc. We dedupe by HoldState name
- * and use the first occurrence's displayColor (or color) so the swatch matches
- * what the LED actually shows on that board.
+ * Build the picker's options for a given board. The list of states comes from
+ * PICKER_STATES_BY_BOARD (so we don't surface preview-only roles like the
+ * MoonBoard FOOT/AUX BLE codes), and the colors come from HOLD_STATE_MAP so
+ * each swatch matches the actual LED color the board uses.
  */
-function buildOptions(boardName: BoardName): PickerOption[] {
+export function buildOptions(boardName: BoardName): PickerOption[] {
   const boardMap = HOLD_STATE_MAP[boardName];
   const colorByState = new Map<HoldState, string>();
 
@@ -59,7 +72,7 @@ function buildOptions(boardName: BoardName): PickerOption[] {
   }
 
   const options: PickerOption[] = [];
-  for (const state of STATE_ORDER) {
+  for (const state of PICKER_STATES_BY_BOARD[boardName]) {
     const color = colorByState.get(state);
     if (!color) continue;
     options.push({ state, label: STATE_LABELS[state], color });

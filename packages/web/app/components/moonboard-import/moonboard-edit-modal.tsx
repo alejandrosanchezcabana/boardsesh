@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import Typography from '@mui/material/Typography';
 import TextField from '@mui/material/TextField';
 import Dialog from '@mui/material/Dialog';
@@ -12,10 +12,11 @@ import MoonBoardRenderer from '../moonboard-renderer/moonboard-renderer';
 import { useMoonBoardCreateClimb } from '../create-climb/use-moonboard-create-climb';
 import HoldStatusChip from '../create-climb/hold-status-chip';
 import HoldTypePicker from '../create-climb/hold-type-picker';
+import { useHoldTypePicker } from '../create-climb/use-hold-type-picker';
 import { coordinateToHoldId, MOONBOARD_HOLD_STATES } from '@/app/lib/moonboard-config';
 import { convertLitUpHoldsMapToMoonBoardHolds } from '@/app/lib/moonboard-climb-helpers';
 import type { MoonBoardClimb, GridCoordinate } from '@boardsesh/moonboard-ocr/browser';
-import type { HoldState, LitUpHoldsMap } from '../board-renderer/types';
+import type { LitUpHoldsMap } from '../board-renderer/types';
 import styles from './moonboard-edit-modal.module.css';
 
 
@@ -99,24 +100,7 @@ export default function MoonBoardEditModal({
     isValid,
   } = useMoonBoardCreateClimb({ initialHoldsMap });
 
-  const [pickerState, setPickerState] = useState<{ holdId: number; anchor: Element } | null>(null);
-
-  const handleHoldClick = useCallback((holdId: number, anchor: Element) => {
-    setPickerState({ holdId, anchor });
-  }, []);
-
-  const handlePickerSelect = useCallback(
-    (state: HoldState | 'OFF') => {
-      if (!pickerState) return;
-      setHoldState(pickerState.holdId, state);
-      setPickerState(null);
-    },
-    [pickerState, setHoldState],
-  );
-
-  const handlePickerClose = useCallback(() => {
-    setPickerState(null);
-  }, []);
+  const picker = useHoldTypePicker({ litUpHoldsMap, setHoldState });
 
   // Reset to initial state when climb changes
   useEffect(() => {
@@ -153,17 +137,17 @@ export default function MoonBoardEditModal({
               layoutFolder={layoutFolder}
               holdSetImages={holdSetImages}
               litUpHoldsMap={litUpHoldsMap}
-              onHoldClick={handleHoldClick}
+              onHoldClick={picker.handleHoldClick}
             />
 
             <HoldTypePicker
               boardName="moonboard"
-              anchorEl={pickerState?.anchor ?? null}
-              currentState={pickerState ? litUpHoldsMap[pickerState.holdId]?.state ?? 'OFF' : 'OFF'}
+              anchorEl={picker.anchorEl}
+              currentState={picker.currentState}
               startingCount={startingCount}
               finishCount={finishCount}
-              onSelect={handlePickerSelect}
-              onClose={handlePickerClose}
+              onSelect={picker.handleSelect}
+              onClose={picker.handleClose}
             />
 
             <div className={styles.holdCounts}>
