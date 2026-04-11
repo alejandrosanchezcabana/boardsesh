@@ -1,5 +1,5 @@
 import { v4 as uuidv4 } from 'uuid';
-import { eq, and, count, isNull, sql, ilike, or, desc, inArray } from 'drizzle-orm';
+import { eq, and, count, isNull, sql, ilike, or, desc, inArray, like } from 'drizzle-orm';
 import type { ConnectionContext } from '@boardsesh/shared-schema';
 import { db } from '../../../db/client';
 import * as dbSchema from '@boardsesh/db/schema';
@@ -23,7 +23,8 @@ import { redisClientManager } from '../../../redis/client';
 
 /**
  * Generate a unique slug from a board name.
- * Slugifies the name and appends a suffix on collision.
+ * Uses a single query to fetch all existing slugs that share the same prefix,
+ * then picks the next available suffix in-memory — no sequential DB loop.
  */
 async function generateUniqueSlug(name: string): Promise<string> {
   const baseSlug = name
@@ -32,27 +33,35 @@ async function generateUniqueSlug(name: string): Promise<string> {
     .replace(/^-+|-+$/g, '')
     .slice(0, 100) || 'board';
 
-  // Check if base slug is available
+  // Fetch the base slug and all numeric-suffix variants in one query.
+  // e.g. for "my-board" we match "my-board" and "my-board-2", "my-board-10", etc.
   const existing = await db
     .select({ slug: dbSchema.userBoards.slug })
     .from(dbSchema.userBoards)
-    .where(and(eq(dbSchema.userBoards.slug, baseSlug), isNull(dbSchema.userBoards.deletedAt)))
-    .limit(1);
+    .where(
+      and(
+        or(
+          eq(dbSchema.userBoards.slug, baseSlug),
+          like(dbSchema.userBoards.slug, `${baseSlug}-%`),
+        ),
+        isNull(dbSchema.userBoards.deletedAt),
+      ),
+    );
 
   if (existing.length === 0) {
     return baseSlug;
   }
 
-  // Find next available suffix
+  const taken = new Set(existing.map((r) => r.slug));
+
+  if (!taken.has(baseSlug)) {
+    return baseSlug;
+  }
+
   for (let i = 2; i <= 100; i++) {
-    const candidateSlug = `${baseSlug}-${i}`;
-    const check = await db
-      .select({ slug: dbSchema.userBoards.slug })
-      .from(dbSchema.userBoards)
-      .where(and(eq(dbSchema.userBoards.slug, candidateSlug), isNull(dbSchema.userBoards.deletedAt)))
-      .limit(1);
-    if (check.length === 0) {
-      return candidateSlug;
+    const candidate = `${baseSlug}-${i}`;
+    if (!taken.has(candidate)) {
+      return candidate;
     }
   }
 

@@ -19,29 +19,61 @@ export interface ControllerAuthResult {
   setIds: string;
 }
 
-/**
- * Derive the encryption key the same way NextAuth does.
- * NextAuth uses HKDF with SHA-256 and a specific info string.
- */
+// Cache the derived encryption key — it only changes if NEXTAUTH_SECRET changes,
+// which requires a process restart anyway.
+let cachedEncryptionKey: Uint8Array | null = null;
+let cachedSecret: string | null = null;
+
 async function deriveEncryptionKey(secret: string): Promise<Uint8Array> {
+  if (cachedEncryptionKey && cachedSecret === secret) {
+    return cachedEncryptionKey;
+  }
   const encoder = new TextEncoder();
-  return await hkdf(
+  cachedEncryptionKey = await hkdf(
     'sha256',
     encoder.encode(secret),
     '',
     'NextAuth.js Generated Encryption Key',
     32
   );
+  cachedSecret = secret;
+  return cachedEncryptionKey;
 }
+
+// Short-lived in-process cache for validated tokens: token → { result, expiresAt }
+// Avoids repeated JWE decryption for the same token across rapid requests.
+const TOKEN_CACHE_TTL_MS = 60_000; // 60 seconds
+interface TokenCacheEntry {
+  result: AuthResult | null;
+  expiresAt: number;
+}
+const tokenCache = new Map<string, TokenCacheEntry>();
+
+// Periodically evict stale entries so the map doesn't grow unbounded.
+setInterval(() => {
+  const now = Date.now();
+  for (const [key, entry] of tokenCache) {
+    if (entry.expiresAt <= now) tokenCache.delete(key);
+  }
+}, TOKEN_CACHE_TTL_MS);
 
 /**
  * Validate a NextAuth JWT token.
  * NextAuth tokens are encrypted JWTs (JWE) using the NEXTAUTH_SECRET.
  *
+ * Results are cached in-process for 60 seconds to avoid repeated HKDF + JWE
+ * decryption on every request when many connections share the same token.
+ *
  * @param token - The JWT token from the client
  * @returns Auth result with userId if valid, null if invalid
  */
 export async function validateNextAuthToken(token: string): Promise<AuthResult | null> {
+  const now = Date.now();
+  const cached = tokenCache.get(token);
+  if (cached && cached.expiresAt > now) {
+    return cached.result;
+  }
+
   try {
     const secret = process.env.NEXTAUTH_SECRET;
     if (!secret) {
@@ -49,30 +81,27 @@ export async function validateNextAuthToken(token: string): Promise<AuthResult |
       return null;
     }
 
-    // Derive the encryption key the same way NextAuth does (using HKDF)
     const encryptionKey = await deriveEncryptionKey(secret);
 
-    // Decrypt the NextAuth JWE token
     const { payload } = await jwtDecrypt(token, encryptionKey, {
-      clockTolerance: 60, // Allow 60 seconds clock skew
+      clockTolerance: 60,
     });
 
-    // NextAuth stores user ID in the 'sub' claim
     const userId = payload.sub as string | undefined;
     if (!userId) {
       console.warn('[Auth] Token missing sub claim');
+      tokenCache.set(token, { result: null, expiresAt: now + TOKEN_CACHE_TTL_MS });
       return null;
     }
 
-    return {
-      userId,
-      isAuthenticated: true,
-    };
+    const result: AuthResult = { userId, isAuthenticated: true };
+    tokenCache.set(token, { result, expiresAt: now + TOKEN_CACHE_TTL_MS });
+    return result;
   } catch (error) {
-    // Log the error but don't expose details to caller
     if (error instanceof Error) {
       console.warn('[Auth] Token validation failed:', error.message);
     }
+    tokenCache.set(token, { result: null, expiresAt: now + TOKEN_CACHE_TTL_MS });
     return null;
   }
 }

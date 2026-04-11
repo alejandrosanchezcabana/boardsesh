@@ -5,32 +5,83 @@ import { resolveCommunitySetting, DEFAULTS } from '../community-settings';
 
 /**
  * Enrich a single proposal with proposer info, vote counts, climb data, and stats.
+ * Independent queries are parallelised with Promise.all to minimise round-trip latency.
  */
 export async function enrichProposal(
   proposal: typeof dbSchema.climbProposals.$inferSelect,
   authenticatedUserId: string | null | undefined,
 ) {
-  // Fetch proposer profile (LEFT JOIN to get OAuth name/image as fallback)
-  const [proposer] = await db
-    .select({
-      name: dbSchema.users.name,
-      image: dbSchema.users.image,
-      displayName: dbSchema.userProfiles.displayName,
-      avatarUrl: dbSchema.userProfiles.avatarUrl,
-    })
-    .from(dbSchema.users)
-    .leftJoin(dbSchema.userProfiles, eq(dbSchema.users.id, dbSchema.userProfiles.userId))
-    .where(eq(dbSchema.users.id, proposal.proposerId))
-    .limit(1);
+  // Run all independent queries in parallel:
+  //   • proposer profile
+  //   • vote rows for weighted counts
+  //   • community approval threshold
+  //   • climb data (name, frames, etc.)
+  //   • current user's own vote (if authenticated)
+  //
+  // Stats need climb.angle when proposal.angle is null, so they run in a second batch.
+  const [proposerRows, voteRows, threshold, climbRows, myVoteRows] = await Promise.all([
+    db
+      .select({
+        name: dbSchema.users.name,
+        image: dbSchema.users.image,
+        displayName: dbSchema.userProfiles.displayName,
+        avatarUrl: dbSchema.userProfiles.avatarUrl,
+      })
+      .from(dbSchema.users)
+      .leftJoin(dbSchema.userProfiles, eq(dbSchema.users.id, dbSchema.userProfiles.userId))
+      .where(eq(dbSchema.users.id, proposal.proposerId))
+      .limit(1),
 
-  // Compute weighted vote counts
-  const voteRows = await db
-    .select({
-      value: dbSchema.proposalVotes.value,
-      weight: dbSchema.proposalVotes.weight,
-    })
-    .from(dbSchema.proposalVotes)
-    .where(eq(dbSchema.proposalVotes.proposalId, proposal.id));
+    db
+      .select({
+        value: dbSchema.proposalVotes.value,
+        weight: dbSchema.proposalVotes.weight,
+      })
+      .from(dbSchema.proposalVotes)
+      .where(eq(dbSchema.proposalVotes.proposalId, proposal.id)),
+
+    resolveCommunitySetting(
+      'approval_threshold',
+      proposal.climbUuid,
+      proposal.angle,
+      proposal.boardType,
+    ),
+
+    db
+      .select({
+        name: dbSchema.boardClimbs.name,
+        frames: dbSchema.boardClimbs.frames,
+        layoutId: dbSchema.boardClimbs.layoutId,
+        setterUsername: dbSchema.boardClimbs.setterUsername,
+        angle: dbSchema.boardClimbs.angle,
+      })
+      .from(dbSchema.boardClimbs)
+      .where(
+        and(
+          eq(dbSchema.boardClimbs.uuid, proposal.climbUuid),
+          eq(dbSchema.boardClimbs.boardType, proposal.boardType),
+        ),
+      )
+      .limit(1),
+
+    authenticatedUserId
+      ? db
+          .select({ value: dbSchema.proposalVotes.value })
+          .from(dbSchema.proposalVotes)
+          .where(
+            and(
+              eq(dbSchema.proposalVotes.proposalId, proposal.id),
+              eq(dbSchema.proposalVotes.userId, authenticatedUserId),
+            ),
+          )
+          .limit(1)
+      : Promise.resolve([] as { value: number }[]),
+  ]);
+
+  const proposer = proposerRows[0];
+  const climb = climbRows[0];
+  const requiredUpvotes = parseInt(threshold, 10) || 5;
+  const userVote = myVoteRows[0]?.value || 0;
 
   let weightedUpvotes = 0;
   let weightedDownvotes = 0;
@@ -39,51 +90,7 @@ export async function enrichProposal(
     else weightedDownvotes += Math.abs(v.value) * v.weight;
   }
 
-  // Get required upvotes from settings
-  const threshold = await resolveCommunitySetting(
-    'approval_threshold',
-    proposal.climbUuid,
-    proposal.angle,
-    proposal.boardType,
-  );
-  const requiredUpvotes = parseInt(threshold, 10) || 5;
-
-  // Get current user's vote
-  let userVote = 0;
-  if (authenticatedUserId) {
-    const [myVote] = await db
-      .select({ value: dbSchema.proposalVotes.value })
-      .from(dbSchema.proposalVotes)
-      .where(
-        and(
-          eq(dbSchema.proposalVotes.proposalId, proposal.id),
-          eq(dbSchema.proposalVotes.userId, authenticatedUserId),
-        ),
-      )
-      .limit(1);
-    userVote = myVote?.value || 0;
-  }
-
-  // Fetch climb data (name, frames, layoutId, setterUsername, angle)
-  const [climb] = await db
-    .select({
-      name: dbSchema.boardClimbs.name,
-      frames: dbSchema.boardClimbs.frames,
-      layoutId: dbSchema.boardClimbs.layoutId,
-      setterUsername: dbSchema.boardClimbs.setterUsername,
-      angle: dbSchema.boardClimbs.angle,
-    })
-    .from(dbSchema.boardClimbs)
-    .where(
-      and(
-        eq(dbSchema.boardClimbs.uuid, proposal.climbUuid),
-        eq(dbSchema.boardClimbs.boardType, proposal.boardType),
-      ),
-    )
-    .limit(1);
-
-  // Fetch climb stats and difficulty grade name
-  // For classic proposals (angle null), fall back to the climb's default angle
+  // Stats query — only needs the climb's angle, which we now have.
   let climbDifficulty: string | undefined;
   let climbQualityAverage: string | undefined;
   let climbAscensionistCount: number | undefined;
