@@ -5,10 +5,7 @@ import MuiSwipeableDrawer from '@mui/material/SwipeableDrawer';
 import Box from '@mui/material/Box';
 import IconButton from '@mui/material/IconButton';
 import Typography from '@mui/material/Typography';
-import KeyboardArrowDownOutlined from '@mui/icons-material/KeyboardArrowDownOutlined';
-import KeyboardArrowUpOutlined from '@mui/icons-material/KeyboardArrowUpOutlined';
-import KeyboardArrowLeftOutlined from '@mui/icons-material/KeyboardArrowLeftOutlined';
-import KeyboardArrowRightOutlined from '@mui/icons-material/KeyboardArrowRightOutlined';
+import CloseOutlined from '@mui/icons-material/CloseOutlined';
 import { themeTokens } from '@/app/theme/theme-config';
 import styles from './swipeable-drawer.module.css';
 
@@ -161,13 +158,6 @@ const SwipeableDrawer: React.FC<SwipeableDrawerProps> = ({
   const closeButton = useMemo(() => {
     if (showCloseButton === false) return null;
 
-    const iconMap: Record<Placement, React.ReactElement> = {
-      bottom: <KeyboardArrowDownOutlined />,
-      top: <KeyboardArrowUpOutlined />,
-      left: <KeyboardArrowLeftOutlined />,
-      right: <KeyboardArrowRightOutlined />,
-    };
-
     const positionMap: Record<Placement, Record<string, number | string>> = {
       bottom: { top: 8, left: 8 },
       top: { top: 8, right: 8 },
@@ -180,15 +170,17 @@ const SwipeableDrawer: React.FC<SwipeableDrawerProps> = ({
         className="drawer-close-btn"
         size="small"
         onClick={(e) => onClose?.(e)}
+        aria-label="Close"
         sx={{
           position: 'absolute',
           zIndex: 2,
           ...positionMap[placement],
-          backgroundColor: themeTokens.neutral[100],
-          '&:hover': { backgroundColor: themeTokens.neutral[200] },
+          color: 'text.primary',
+          backgroundColor: 'action.selected',
+          '&:hover': { backgroundColor: 'action.focus' },
         }}
       >
-        {iconMap[placement]}
+        <CloseOutlined />
       </IconButton>
     );
   }, [showCloseButton, placement, onClose]);

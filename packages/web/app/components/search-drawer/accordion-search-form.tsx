@@ -23,7 +23,6 @@ import { BoardDetails } from '@/app/lib/types';
 import { buildGradeRangeUpdate } from './grade-range-utils';
 import { useAuthModal } from '@/app/components/providers/auth-modal-provider';
 import {
-  getClimbPanelSummary,
   getQualityPanelSummary,
   getUserPanelSummary,
   getHoldsPanelSummary,
@@ -42,7 +41,7 @@ interface AccordionSearchFormProps {
 
 const AccordionSearchForm: React.FC<AccordionSearchFormProps> = ({
   boardDetails,
-  defaultActiveKey = ['climb'],
+  defaultActiveKey,
 }) => {
   const { mode } = useColorMode();
   const isDark = mode === 'dark';
@@ -70,123 +69,116 @@ const AccordionSearchForm: React.FC<AccordionSearchFormProps> = ({
   const minGradeBg = getGradeSelectBackground(uiSearchParams.minGrade);
   const maxGradeBg = getGradeSelectBackground(uiSearchParams.maxGrade);
 
-  const sections: CollapsibleSectionConfig[] = [
-    {
-      key: 'climb',
-      label: 'Climb',
-      title: 'Climb',
-      defaultSummary: 'All climbs',
-      getSummary: () => getClimbPanelSummary(uiSearchParams),
-      content: (
-        <div className={styles.panelContent}>
-          <div className={styles.inputGroup}>
-            <span className={styles.fieldLabel}>Climb Name</span>
-            <SearchClimbNameInput />
-          </div>
+  const climbContent = (
+    <div className={styles.panelContent}>
+      <div className={styles.inputGroup}>
+        <span className={styles.fieldLabel}>Climb Name</span>
+        <SearchClimbNameInput />
+      </div>
 
-          <div className={styles.inputGroup}>
-            <span className={styles.fieldLabel}>Grade Range</span>
-            <div className={styles.gradeRow}>
-              <MuiSelect
-                value={uiSearchParams.minGrade || 0}
-                onChange={(e: SelectChangeEvent<number>) => handleGradeChange('min', e.target.value as number || undefined)}
-                className={`${styles.fullWidth} ${minGradeBg ? styles.gradeSelectColored : ''}`}
-                sx={minGradeBg ? { '--grade-bg': minGradeBg } as React.CSSProperties : undefined}
-                size="small"
-                displayEmpty
-                MenuProps={{ disableScrollLock: true }}
-              >
-                <MenuItem value={0}>Min</MenuItem>
-                {grades.map((grade) => (
-                  <MenuItem key={grade.difficulty_id} value={grade.difficulty_id}>
-                    {grade.difficulty_name}
-                  </MenuItem>
-                ))}
-              </MuiSelect>
-              <MuiSelect
-                value={uiSearchParams.maxGrade || 0}
-                onChange={(e: SelectChangeEvent<number>) => handleGradeChange('max', e.target.value as number || undefined)}
-                className={`${styles.fullWidth} ${maxGradeBg ? styles.gradeSelectColored : ''}`}
-                sx={maxGradeBg ? { '--grade-bg': maxGradeBg } as React.CSSProperties : undefined}
-                size="small"
-                displayEmpty
-                MenuProps={{ disableScrollLock: true }}
-              >
-                <MenuItem value={0}>Max</MenuItem>
-                {grades.map((grade) => (
-                  <MenuItem key={grade.difficulty_id} value={grade.difficulty_id}>
-                    {grade.difficulty_name}
-                  </MenuItem>
-                ))}
-              </MuiSelect>
-            </div>
-          </div>
-
-          {showTallClimbsFilter && (
-            <div className={styles.switchGroup}>
-              <div className={styles.switchRow}>
-                <MuiTooltip title="Show only climbs that use holds in the bottom 8 rows (only available on 10x12 boards)">
-                  <MuiTypography variant="body2" component="span">Tall Climbs Only</MuiTypography>
-                </MuiTooltip>
-                <MuiSwitch
-                  size="small"
-                  color="primary"
-                  checked={uiSearchParams.onlyTallClimbs}
-                  onChange={(_, checked) => updateFilters({ onlyTallClimbs: checked })}
-                />
-              </div>
-            </div>
-          )}
-
-          <div className={styles.inputGroup}>
-            <span className={styles.fieldLabel}>Setter</span>
-            <SetterNameSelect />
-          </div>
-
-          <MuiButton
-            variant="text"
+      <div className={styles.inputGroup}>
+        <span className={styles.fieldLabel}>Grade Range</span>
+        <div className={styles.gradeRow}>
+          <MuiSelect
+            value={uiSearchParams.minGrade || 0}
+            onChange={(e: SelectChangeEvent<number>) => handleGradeChange('min', e.target.value as number || undefined)}
+            className={`${styles.fullWidth} ${minGradeBg ? styles.gradeSelectColored : ''}`}
+            sx={minGradeBg ? { '--grade-bg': minGradeBg } as React.CSSProperties : undefined}
             size="small"
-            startIcon={<ArrowUpwardOutlined />}
-            className={styles.sortToggle}
-            onClick={() => setShowSort(!showSort)}
+            displayEmpty
+            MenuProps={{ disableScrollLock: true }}
           >
-            Sort
-          </MuiButton>
-
-          {showSort && (
-            <div className={styles.inputGroup}>
-              <div className={styles.sortRow}>
-                <MuiSelect
-                  value={uiSearchParams.sortBy}
-                  onChange={(e) => updateFilters({ sortBy: e.target.value as typeof uiSearchParams.sortBy })}
-                  className={styles.fullWidth}
-                  size="small"
-                  MenuProps={{ disableScrollLock: true }}
-                >
-                  <MenuItem value="ascents">Ascents</MenuItem>
-                  <MenuItem value="popular">Popular</MenuItem>
-                  <MenuItem value="difficulty">Difficulty</MenuItem>
-                  <MenuItem value="name">Name</MenuItem>
-                  <MenuItem value="quality">Quality</MenuItem>
-                  <MenuItem value="creation">Creation</MenuItem>
-                </MuiSelect>
-                <MuiSelect
-                  value={uiSearchParams.sortOrder}
-                  onChange={(e) => updateFilters({ sortOrder: e.target.value as typeof uiSearchParams.sortOrder })}
-                  className={styles.fullWidth}
-                  size="small"
-                  MenuProps={{ disableScrollLock: true }}
-                >
-                  <MenuItem value="desc">Desc</MenuItem>
-                  <MenuItem value="asc">Asc</MenuItem>
-                </MuiSelect>
-              </div>
-            </div>
-          )}
-
+            <MenuItem value={0}>Min</MenuItem>
+            {grades.map((grade) => (
+              <MenuItem key={grade.difficulty_id} value={grade.difficulty_id}>
+                {grade.difficulty_name}
+              </MenuItem>
+            ))}
+          </MuiSelect>
+          <MuiSelect
+            value={uiSearchParams.maxGrade || 0}
+            onChange={(e: SelectChangeEvent<number>) => handleGradeChange('max', e.target.value as number || undefined)}
+            className={`${styles.fullWidth} ${maxGradeBg ? styles.gradeSelectColored : ''}`}
+            sx={maxGradeBg ? { '--grade-bg': maxGradeBg } as React.CSSProperties : undefined}
+            size="small"
+            displayEmpty
+            MenuProps={{ disableScrollLock: true }}
+          >
+            <MenuItem value={0}>Max</MenuItem>
+            {grades.map((grade) => (
+              <MenuItem key={grade.difficulty_id} value={grade.difficulty_id}>
+                {grade.difficulty_name}
+              </MenuItem>
+            ))}
+          </MuiSelect>
         </div>
-      ),
-    },
+      </div>
+
+      {showTallClimbsFilter && (
+        <div className={styles.switchGroup}>
+          <div className={styles.switchRow}>
+            <MuiTooltip title="Show only climbs that use holds in the bottom 8 rows (only available on 10x12 boards)">
+              <MuiTypography variant="body2" component="span">Tall Climbs Only</MuiTypography>
+            </MuiTooltip>
+            <MuiSwitch
+              size="small"
+              color="primary"
+              checked={uiSearchParams.onlyTallClimbs}
+              onChange={(_, checked) => updateFilters({ onlyTallClimbs: checked })}
+            />
+          </div>
+        </div>
+      )}
+
+      <div className={styles.inputGroup}>
+        <span className={styles.fieldLabel}>Setter</span>
+        <SetterNameSelect />
+      </div>
+
+      <MuiButton
+        variant="text"
+        size="small"
+        startIcon={<ArrowUpwardOutlined />}
+        className={styles.sortToggle}
+        onClick={() => setShowSort(!showSort)}
+      >
+        Sort
+      </MuiButton>
+
+      {showSort && (
+        <div className={styles.inputGroup}>
+          <div className={styles.sortRow}>
+            <MuiSelect
+              value={uiSearchParams.sortBy}
+              onChange={(e) => updateFilters({ sortBy: e.target.value as typeof uiSearchParams.sortBy })}
+              className={styles.fullWidth}
+              size="small"
+              MenuProps={{ disableScrollLock: true }}
+            >
+              <MenuItem value="ascents">Ascents</MenuItem>
+              <MenuItem value="popular">Popular</MenuItem>
+              <MenuItem value="difficulty">Difficulty</MenuItem>
+              <MenuItem value="name">Name</MenuItem>
+              <MenuItem value="quality">Quality</MenuItem>
+              <MenuItem value="creation">Creation</MenuItem>
+            </MuiSelect>
+            <MuiSelect
+              value={uiSearchParams.sortOrder}
+              onChange={(e) => updateFilters({ sortOrder: e.target.value as typeof uiSearchParams.sortOrder })}
+              className={styles.fullWidth}
+              size="small"
+              MenuProps={{ disableScrollLock: true }}
+            >
+              <MenuItem value="desc">Desc</MenuItem>
+              <MenuItem value="asc">Asc</MenuItem>
+            </MuiSelect>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+
+  const sections: CollapsibleSectionConfig[] = [
     {
       key: 'quality',
       label: 'Quality',
@@ -349,10 +341,13 @@ const AccordionSearchForm: React.FC<AccordionSearchFormProps> = ({
   ];
 
   return (
-    <CollapsibleSection
-      sections={sections}
-      defaultActiveKey={defaultActiveKey[0] || 'climb'}
-    />
+    <div className={styles.formWrapper}>
+      <div className={styles.primaryContent}>{climbContent}</div>
+      <CollapsibleSection
+        sections={sections}
+        defaultActiveKey={defaultActiveKey?.[0]}
+      />
+    </div>
   );
 };
 
