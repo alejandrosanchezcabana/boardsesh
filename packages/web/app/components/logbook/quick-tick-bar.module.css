@@ -31,13 +31,87 @@
   margin-left: auto;
 }
 
-/* Match the visual weight of the adjacent CheckOutlined / CloseOutlined icons
-   (24px) so the stars line up with the action buttons. */
+/* Match the visual weight of the adjacent icon buttons so the stars line
+   up with the action buttons. */
 .rating :global(.MuiRating-icon) {
-  font-size: 22px;
+  font-size: 20px;
 }
 
 .gradeLabel {
   min-width: 0;
   flex-shrink: 0;
+}
+
+/* Prior ascent count — subtle display element. */
+.ascents {
+  font-size: var(--font-size-xs, 12px);
+  font-weight: 600;
+  line-height: 1;
+  color: var(--text-secondary, rgba(0, 0, 0, 0.6));
+  opacity: 0.7;
+  flex-shrink: 0;
+  padding: 0 2px;
+  white-space: nowrap;
+}
+
+/* Attempts counter — bare button that shows the selected number on the row
+   baseline with a subtle "attempts" byline absolutely positioned beneath so
+   it cannot push the number out of alignment with its siblings. */
+.attemptButton {
+  position: relative;
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: transparent;
+  border: none;
+  padding: 4px 6px;
+  margin: 0;
+  cursor: pointer;
+  color: inherit;
+  font: inherit;
+  min-width: 24px;
+  line-height: 1;
+  opacity: var(--tick-bar-button-opacity, 0.75);
+  transition: opacity 150ms ease;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.attemptButton:hover,
+.attemptButton:focus-visible {
+  opacity: 1;
+}
+
+.attemptButton:focus-visible {
+  outline: 1px solid currentColor;
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+.attemptNumber {
+  font-size: 14px;
+  font-weight: 600;
+  line-height: 1;
+}
+
+.attemptLabel {
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  margin-top: 1px;
+  font-size: 8px;
+  font-weight: 500;
+  line-height: 1;
+  letter-spacing: 0.02em;
+  color: inherit;
+  opacity: 0.55;
+  white-space: nowrap;
+  pointer-events: none;
+  text-transform: lowercase;
+}
+
+/* Confirm (tick) button — slightly smaller than the default IconButton. */
+.confirmButton {
+  padding: 4px !important;
 }

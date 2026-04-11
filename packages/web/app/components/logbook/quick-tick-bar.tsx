@@ -10,7 +10,6 @@ import Typography from '@mui/material/Typography';
 // push the stars out of alignment with the action buttons.
 import Menu from '@mui/material/Menu';
 import MenuItem from '@mui/material/MenuItem';
-import CloseOutlined from '@mui/icons-material/CloseOutlined';
 import CheckOutlined from '@mui/icons-material/CheckOutlined';
 import ChatBubbleOutlineOutlined from '@mui/icons-material/ChatBubbleOutlineOutlined';
 import { track } from '@vercel/analytics';
@@ -61,10 +60,11 @@ const SNAP_BACK_DURATION_MS = 180;
  * of the climb so that mid-flow changes to the active climb (party session
  * navigation, etc.) do not cause the user to lose their in-progress tick.
  *
- * Each tap on the bar logs exactly one row with `attemptCount: 1`. The status
- * is history-aware: if the user has no prior logbook rows for this climb
- * the tick is recorded as a `flash`, otherwise it is recorded as a
- * `send`. Totals are derived server-side by aggregating rows.
+ * Tapping the tick button logs one row for the climb. The user picks the
+ * attempt count (1–9+) from the attempts counter to the left of the tick
+ * button; the saved row carries that count. Status is history-aware: a first
+ * attempt with no prior history records as `flash`, otherwise as `send`.
+ * Totals are derived server-side by aggregating rows.
  */
 export const QuickTickBar: React.FC<QuickTickBarProps> = ({
   currentClimb,
@@ -98,6 +98,8 @@ export const QuickTickBar: React.FC<QuickTickBarProps> = ({
   const [difficulty, setDifficulty] = useState<number | undefined>(undefined);
   const [isSaving, setIsSaving] = useState(false);
   const [gradeAnchorEl, setGradeAnchorEl] = useState<HTMLElement | null>(null);
+  const [attemptAnchorEl, setAttemptAnchorEl] = useState<HTMLElement | null>(null);
+  const [attemptCount, setAttemptCount] = useState<number>(1);
   const [swipeOffset, setSwipeOffset] = useState(0);
   const [isDismissing, setIsDismissing] = useState(false);
   const dismissTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -148,22 +150,17 @@ export const QuickTickBar: React.FC<QuickTickBarProps> = ({
     return grades.slice(start, end);
   }, [grades, climbGradeId]);
 
-  const handleSave = useCallback(
-    async (isAscent: boolean) => {
+  const handleConfirm = useCallback(
+    async () => {
       if (!tickTarget || isSaving) return;
 
       const { climb, angle: targetAngle, boardDetails: targetBoard, hasPriorHistory } = tickTarget;
 
-      // One tap == one row. Status is history-aware: flash only if the user
-      // has no prior history for this climb; otherwise send. attemptCount is
-      // always 1 because each row represents a single climbing action.
-      let status: TickStatus;
-      if (isAscent) {
-        status = hasPriorHistory ? 'send' : 'flash';
-      } else {
-        status = 'attempt';
-      }
-      const attemptCount = 1;
+      // Status is history-aware: flash only if the user has no prior history
+      // for this climb AND this is a one-try send; otherwise send. The user
+      // can pick how many attempts this send took via the attempts picker.
+      const status: TickStatus =
+        hasPriorHistory || attemptCount > 1 ? 'send' : 'flash';
 
       setIsSaving(true);
       try {
@@ -204,11 +201,8 @@ export const QuickTickBar: React.FC<QuickTickBarProps> = ({
         setIsSaving(false);
       }
     },
-    [tickTarget, quality, difficulty, comment, isSaving, saveTick, onSave],
+    [tickTarget, quality, difficulty, comment, isSaving, saveTick, onSave, attemptCount],
   );
-
-  const handleConfirm = useCallback(() => handleSave(true), [handleSave]);
-  const handleFail = useCallback(() => handleSave(false), [handleSave]);
 
   const triggerDismiss = useCallback(() => {
     if (isDismissing) return;
@@ -270,6 +264,12 @@ export const QuickTickBar: React.FC<QuickTickBarProps> = ({
   // comment text selection, or in-flight saves, don't get hijacked.
   const rootHandlers = swipeEnabled ? swipeHandlers : {};
 
+  const userAscentsCount =
+    tickTarget?.climb.userAscents ?? currentClimb?.userAscents ?? 0;
+
+  const attemptOptions = useMemo(() => [1, 2, 3, 4, 5, 6, 7, 8, 9, 10] as const, []);
+  const attemptDisplay = attemptCount >= 10 ? '9+' : String(attemptCount);
+
   return (
     <div
       {...rootHandlers}
@@ -278,8 +278,9 @@ export const QuickTickBar: React.FC<QuickTickBarProps> = ({
       data-testid="quick-tick-bar"
     >
       <div className={styles.controls}>
-        {/* Rating sits to the right of the bar, sized to match the adjacent
-            attempt (X) and confirm (tick) icon buttons. */}
+        {/* Order: stars, comment, grade, # ascents, attempt, tick. The
+            rating sits to the right of the bar, sized to match the adjacent
+            icon buttons. */}
         <Rating
           value={quality}
           onChange={(_, val) => setQuality(val)}
@@ -351,32 +352,75 @@ export const QuickTickBar: React.FC<QuickTickBarProps> = ({
           })}
         </Menu>
 
-        <IconButton
-          onClick={handleFail}
-          disabled={isSaving}
-          sx={{
-            backgroundColor: themeTokens.colors.error,
-            color: 'common.white',
-            '&:hover': { backgroundColor: themeTokens.colors.error },
-          }}
-          aria-label="Log attempt"
-          data-testid="quick-tick-attempt"
+        {/* Prior ascent count for this climb — display only. Shown before
+            the attempts picker so the user knows how many sends they
+            already have before logging another. */}
+        <Typography
+          variant="body2"
+          component="span"
+          aria-label={`${userAscentsCount} prior ascent${userAscentsCount === 1 ? '' : 's'}`}
+          data-testid="quick-tick-ascents"
+          className={styles.ascents}
         >
-          <CloseOutlined />
-        </IconButton>
+          #{userAscentsCount}
+        </Typography>
+
+        {/* Attempts counter. Shows the selected attempt count aligned on the
+            same baseline as the adjacent items; the "attempts" byline is
+            absolutely positioned underneath so it does not push the number
+            out of alignment. Opens a small menu upward with options 1–9+. */}
+        <button
+          type="button"
+          onClick={(e) => setAttemptAnchorEl(e.currentTarget)}
+          aria-label={`Attempts: ${attemptDisplay}`}
+          aria-haspopup="menu"
+          aria-expanded={Boolean(attemptAnchorEl)}
+          data-testid="quick-tick-attempt"
+          className={styles.attemptButton}
+        >
+          <span className={styles.attemptNumber}>{attemptDisplay}</span>
+          <span className={styles.attemptLabel}>attempts</span>
+        </button>
+        <Menu
+          anchorEl={attemptAnchorEl}
+          open={Boolean(attemptAnchorEl)}
+          onClose={() => setAttemptAnchorEl(null)}
+          anchorOrigin={{ vertical: 'top', horizontal: 'center' }}
+          transformOrigin={{ vertical: 'bottom', horizontal: 'center' }}
+          slotProps={{ paper: { sx: { minWidth: 64 } } }}
+        >
+          {attemptOptions.map((n) => (
+            <MenuItem
+              key={n}
+              selected={n === attemptCount}
+              onClick={() => {
+                setAttemptCount(n);
+                setAttemptAnchorEl(null);
+              }}
+              data-testid={`quick-tick-attempt-option-${n === 10 ? '9plus' : n}`}
+            >
+              {n === 10 ? '9+' : n}
+            </MenuItem>
+          ))}
+        </Menu>
 
         <IconButton
+          size="small"
           onClick={handleConfirm}
           disabled={isSaving}
+          className={styles.confirmButton}
           sx={{
-            backgroundColor: themeTokens.colors.success,
-            color: 'common.white',
-            '&:hover': { backgroundColor: themeTokens.colors.successHover },
+            color: themeTokens.colors.success,
+            opacity: themeTokens.opacity.subtle,
+            '&:hover': {
+              color: themeTokens.colors.successHover,
+              opacity: 1,
+            },
           }}
           aria-label="Confirm ascent"
           data-testid="quick-tick-confirm"
         >
-          <CheckOutlined />
+          <CheckOutlined fontSize="small" />
         </IconButton>
       </div>
     </div>
