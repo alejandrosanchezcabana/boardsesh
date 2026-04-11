@@ -16,7 +16,8 @@ import MuiSlider from '@mui/material/Slider';
 import MuiSelect from '@mui/material/Select';
 import MenuItem from '@mui/material/MenuItem';
 import Badge from '@mui/material/Badge';
-import { SettingsOutlined, LocalFireDepartmentOutlined, SaveOutlined, LoginOutlined, CloudUploadOutlined, GetAppOutlined, DraftsOutlined } from '@mui/icons-material';
+import { SettingsOutlined, LocalFireDepartmentOutlined, SaveOutlined, LoginOutlined, CloudUploadOutlined, GetAppOutlined, DraftsOutlined, DeleteOutlined } from '@mui/icons-material';
+import { themeTokens } from '@/app/theme/theme-config';
 import { useRouter, usePathname } from 'next/navigation';
 import Link from 'next/link';
 import { track } from '@vercel/analytics';
@@ -45,7 +46,6 @@ import { useAuthModal } from '@/app/components/providers/auth-modal-provider';
 import { useSnackbar } from '../providers/snackbar-provider';
 import { refreshClimbSearchAfterSave } from '@/app/lib/climb-search-cache';
 import CreateClimbHeatmapOverlay from './create-climb-heatmap-overlay';
-import HoldStatusChip from './hold-status-chip';
 import DraftsDrawer from './drafts-drawer';
 import HoldTypePicker from './hold-type-picker';
 import { useHoldTypePicker } from './use-hold-type-picker';
@@ -75,6 +75,37 @@ const SETTINGS_DRAWER_STYLES = {
   wrapper: { height: 'auto', maxHeight: '70vh' },
   body: { padding: 0 },
 };
+
+function HoldIndicator({ count, max, color, label }: { count: number; max?: number; color: string; label: string }) {
+  const active = count > 0;
+  return (
+    <MuiTooltip title={label}>
+      <Stack direction="row" alignItems="center" spacing={0.5} sx={{ cursor: 'default' }}>
+        <Box
+          sx={{
+            width: 10,
+            height: 10,
+            borderRadius: '50%',
+            backgroundColor: color,
+            opacity: active ? 1 : 0.25,
+            flexShrink: 0,
+          }}
+        />
+        <Typography
+          variant="caption"
+          sx={{
+            fontWeight: 600,
+            lineHeight: 1,
+            color: active ? color : 'text.disabled',
+            minWidth: '1.5ch',
+          }}
+        >
+          {max !== undefined ? `${count}/${max}` : String(count)}
+        </Typography>
+      </Stack>
+    </MuiTooltip>
+  );
+}
 
 interface CreateClimbFormValues {
   name: string;
@@ -699,116 +730,32 @@ export default function CreateClimbForm({
           </MuiAlert>
         )}
 
-        <div className={styles.headerRow}>
-          <div className={styles.headerControls}>
-            <Typography variant="body2" component="span" color="text.secondary" className={styles.draftLabel}>
-              Draft
-            </Typography>
-            <MuiSwitch
-              size="small"
-              checked={isDraft}
-              onChange={(_, checked) => setIsDraft(checked)}
-            />
-            {/* Aurora-only: Heatmap toggle */}
-            {boardType === 'aurora' && (
+        {/* Holds row: hold count indicators + Clear button */}
+        <div className={styles.holdsRow}>
+          <Stack direction="row" className={styles.holdsRowChips} alignItems="center" spacing={1.5}>
+            {boardType === 'aurora' ? (
               <>
-                <Typography variant="body2" component="span" color="text.secondary" className={styles.draftLabel}>
-                  Heatmap
-                </Typography>
-                <MuiTooltip title={showHeatmap ? 'Hide heatmap' : 'Show which holds get used most'}>
-                  <IconButton
-                    color={showHeatmap ? 'error' : 'default'}
-                    size="small"
-                    onClick={handleToggleHeatmap}
-                    className={styles.heatmapButton}
-                    aria-label={showHeatmap ? 'Hide heatmap' : 'Show heatmap'}
-                  >
-                    <LocalFireDepartmentOutlined />
-                  </IconButton>
-                </MuiTooltip>
-                {showHeatmap && (
-                  <>
-                    <Typography variant="body2" component="span" color="text.secondary" className={styles.draftLabel}>
-                      Opacity
-                    </Typography>
-                    <MuiSlider
-                      min={0.1}
-                      max={1}
-                      step={0.1}
-                      value={heatmapOpacity}
-                      onChange={(_, value) => setHeatmapOpacity(value as number)}
-                      className={styles.opacitySlider}
-                    />
-                  </>
-                )}
+                <HoldIndicator count={startingCount} max={2} color={themeTokens.colors.success} label="Starting" />
+                <HoldIndicator count={finishCount} max={2} color={themeTokens.colors.pink} label="Finish" />
+                <HoldIndicator count={totalHolds} color={themeTokens.colors.primary} label="Total" />
+              </>
+            ) : (
+              <>
+                <HoldIndicator count={startingCount} max={2} color={themeTokens.colors.error} label="Start" />
+                <HoldIndicator count={handCount} color={themeTokens.colors.primary} label="Hand" />
+                <HoldIndicator count={finishCount} max={2} color={themeTokens.colors.success} label="Finish" />
+                <HoldIndicator count={totalHolds} color={themeTokens.colors.secondary} label="Total" />
               </>
             )}
-            {boardType === 'moonboard' && userGrade && (
-              <Typography
-                variant="body2"
-                component="span"
-                className={styles.gradeBadge}
-                style={{
-                  color: getSoftFontGradeColor(userGrade, isDark) ?? 'var(--neutral-500)',
-                }}
-              >
-                {userGrade}
-              </Typography>
-            )}
-          </div>
-
-          <Stack direction="row" spacing={1} alignItems="center">
-            {canShowDrafts && (
-              <Badge
-                color="primary"
-                badgeContent={draftsCount ?? 0}
-                max={99}
-                invisible={!draftsCount}
-                overlap="rectangular"
-              >
-                <MuiButton
-                  size="small"
-                  variant="outlined"
-                  startIcon={<DraftsOutlined />}
-                  onClick={handleOpenDrafts}
-                >
-                  Drafts
-                </MuiButton>
-              </Badge>
-            )}
-            <MuiButton
-              size="small"
-              variant="outlined"
-              startIcon={<SettingsOutlined />}
-              onClick={handleToggleSettings}
-            >
-              Settings
-            </MuiButton>
           </Stack>
+          <MuiTooltip title="Clear all holds">
+            <span>
+              <IconButton size="small" onClick={resetHolds} disabled={totalHolds === 0}>
+                <DeleteOutlined fontSize="small" />
+              </IconButton>
+            </span>
+          </MuiTooltip>
         </div>
-      </div>
-
-      {/* Holds row: hold counts + Clear button */}
-      <div className={styles.holdsRow}>
-        <Stack direction="row" className={styles.holdsRowChips}>
-          {boardType === 'aurora' ? (
-            <>
-              <HoldStatusChip label={`Starting: ${startingCount}/2`} active={startingCount > 0} tone="success" />
-              <HoldStatusChip label={`Finish: ${finishCount}/2`} active={finishCount > 0} tone="pink" />
-              <HoldStatusChip label={`Total: ${totalHolds}`} active={totalHolds > 0} tone="primary" />
-            </>
-          ) : (
-            <>
-              <HoldStatusChip label={`Start: ${startingCount}/2`} active={startingCount > 0} tone="error" />
-              <HoldStatusChip label={`Hand: ${handCount}`} active={handCount > 0} tone="primary" />
-              <HoldStatusChip label={`Finish: ${finishCount}/2`} active={finishCount > 0} tone="success" />
-              <HoldStatusChip label={`Total: ${totalHolds}`} active={totalHolds > 0} tone="secondary" />
-            </>
-          )}
-        </Stack>
-        <MuiButton size="small" variant="outlined" onClick={resetHolds} disabled={totalHolds === 0}>
-          Clear
-        </MuiButton>
       </div>
 
       {/* Board section: zoomable SVG renderer */}
@@ -886,6 +833,90 @@ export default function CreateClimbForm({
           </Link>
         </div>
       )}
+
+      {/* Bottom controls: draft toggle, heatmap, Drafts/Settings buttons */}
+      <div className={styles.bottomControls}>
+        <div className={styles.bottomControlsLeft}>
+          <Typography variant="body2" component="span" color="text.secondary" className={styles.draftLabel}>
+            Draft
+          </Typography>
+          <MuiSwitch
+            size="small"
+            checked={isDraft}
+            onChange={(_, checked) => setIsDraft(checked)}
+          />
+          {boardType === 'aurora' && (
+            <>
+              <MuiTooltip title={showHeatmap ? 'Hide heatmap' : 'Show which holds get used most'}>
+                <IconButton
+                  color={showHeatmap ? 'error' : 'default'}
+                  size="small"
+                  onClick={handleToggleHeatmap}
+                  className={styles.heatmapButton}
+                  aria-label={showHeatmap ? 'Hide heatmap' : 'Show heatmap'}
+                >
+                  <LocalFireDepartmentOutlined />
+                </IconButton>
+              </MuiTooltip>
+              {showHeatmap && (
+                <>
+                  <Typography variant="body2" component="span" color="text.secondary" className={styles.draftLabel}>
+                    Opacity
+                  </Typography>
+                  <MuiSlider
+                    min={0.1}
+                    max={1}
+                    step={0.1}
+                    value={heatmapOpacity}
+                    onChange={(_, value) => setHeatmapOpacity(value as number)}
+                    className={styles.opacitySlider}
+                  />
+                </>
+              )}
+            </>
+          )}
+          {boardType === 'moonboard' && userGrade && (
+            <Typography
+              variant="body2"
+              component="span"
+              className={styles.gradeBadge}
+              style={{
+                color: getSoftFontGradeColor(userGrade, isDark) ?? 'var(--neutral-500)',
+              }}
+            >
+              {userGrade}
+            </Typography>
+          )}
+        </div>
+        <Stack direction="row" spacing={1} alignItems="center">
+          {canShowDrafts && (
+            <Badge
+              color="primary"
+              badgeContent={draftsCount ?? 0}
+              max={99}
+              invisible={!draftsCount}
+              overlap="rectangular"
+            >
+              <MuiButton
+                size="small"
+                variant="outlined"
+                startIcon={<DraftsOutlined />}
+                onClick={handleOpenDrafts}
+              >
+                Drafts
+              </MuiButton>
+            </Badge>
+          )}
+          <MuiButton
+            size="small"
+            variant="outlined"
+            startIcon={<SettingsOutlined />}
+            onClick={handleToggleSettings}
+          >
+            Settings
+          </MuiButton>
+        </Stack>
+      </div>
 
       {/* Drafts drawer — only for Aurora boards where boardDetails is loaded */}
       {canShowDrafts && boardDetails && (

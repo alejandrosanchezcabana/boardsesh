@@ -14,7 +14,6 @@
 .headerSection {
   flex-shrink: 0;
   background-color: var(--semantic-surface);
-  border-bottom: 1px solid var(--neutral-100);
 }
 
 .alertBanner {
@@ -137,6 +136,27 @@
   border-top: 1px solid var(--neutral-100);
 }
 
+/* Bottom controls: draft toggle, heatmap, Drafts/Settings buttons */
+.bottomControls {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 10px 12px;
+  background-color: var(--semantic-surface);
+  border-top: 1px solid var(--neutral-100);
+  flex-wrap: wrap;
+}
+
+.bottomControlsLeft {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  min-width: 0;
+}
+
 /* Settings nested drawer content */
 .settingsDrawerContent {
   display: flex;
@@ -178,6 +198,11 @@
   .importActionsBar {
     padding: 6px 10px;
     gap: 6px;
+  }
+
+  .bottomControls {
+    padding: 8px 10px;
+    gap: 8px;
   }
 
   .opacitySlider {
