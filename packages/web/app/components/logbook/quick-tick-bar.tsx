@@ -4,8 +4,7 @@ import React, { useState, useCallback, useRef, useEffect, useMemo } from 'react'
 import { useSwipeable } from 'react-swipeable';
 import IconButton from '@mui/material/IconButton';
 import Rating from '@mui/material/Rating';
-import Chip from '@mui/material/Chip';
-import TextField from '@mui/material/TextField';
+import Typography from '@mui/material/Typography';
 import Menu from '@mui/material/Menu';
 import MenuItem from '@mui/material/MenuItem';
 import CloseOutlined from '@mui/icons-material/CloseOutlined';
@@ -17,6 +16,8 @@ import { useBoardProvider } from '../board-provider/board-provider-context';
 import type { LogbookEntry, TickStatus } from '@/app/hooks/use-logbook';
 import { TENSION_KILTER_GRADES } from '@/app/lib/board-data';
 import { themeTokens } from '@/app/theme/theme-config';
+import { formatVGrade, getSoftVGradeColor } from '@/app/lib/grade-colors';
+import { useIsDarkMode } from '@/app/hooks/use-is-dark-mode';
 import styles from './quick-tick-bar.module.css';
 
 /** Snapshot of the tick target taken when the bar is first opened with a valid climb. */
@@ -34,6 +35,17 @@ export interface QuickTickBarProps {
   boardDetails: BoardDetails;
   onSave: () => void;
   onCancel: () => void;
+  /** Current comment text. Owned by the parent so the comment field can live
+   *  outside this bar (above the queue control bar) without causing reflow. */
+  comment: string;
+  /** Whether the parent is currently rendering the comment input. */
+  commentOpen: boolean;
+  /** Called when the user taps the comment button inside this bar. */
+  onCommentToggle: () => void;
+  /** Whether the parent's comment input currently has focus. Used to disable
+   *  the swipe-to-dismiss gesture so the user can type without the bar
+   *  sliding away under them. */
+  commentFocused: boolean;
 }
 
 const SWIPE_DISMISS_THRESHOLD = 80;
@@ -57,8 +69,13 @@ export const QuickTickBar: React.FC<QuickTickBarProps> = ({
   boardDetails,
   onSave,
   onCancel,
+  comment,
+  commentOpen,
+  onCommentToggle,
+  commentFocused,
 }) => {
   const { saveTick, logbook } = useBoardProvider();
+  const isDark = useIsDarkMode();
 
   // Snapshot the target climb the first time we get a non-null climb.
   // All subsequent saves use this snapshot, not the live props.
@@ -76,23 +93,13 @@ export const QuickTickBar: React.FC<QuickTickBarProps> = ({
 
   const [quality, setQuality] = useState<number | null>(null);
   const [difficulty, setDifficulty] = useState<number | undefined>(undefined);
-  const [comment, setComment] = useState('');
-  const [showComment, setShowComment] = useState(false);
-  const [commentFocused, setCommentFocused] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [gradeAnchorEl, setGradeAnchorEl] = useState<HTMLElement | null>(null);
   const [swipeOffset, setSwipeOffset] = useState(0);
   const [isDismissing, setIsDismissing] = useState(false);
-  const commentRef = useRef<HTMLInputElement>(null);
   const dismissTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const grades = TENSION_KILTER_GRADES;
-
-  useEffect(() => {
-    if (showComment && commentRef.current) {
-      commentRef.current.focus();
-    }
-  }, [showComment]);
 
   useEffect(() => {
     return () => {
@@ -106,8 +113,14 @@ export const QuickTickBar: React.FC<QuickTickBarProps> = ({
     ? grades.find((g) => g.difficulty_id === difficulty)
     : undefined;
 
-  // Default grade label falls back to the snapshot climb's own difficulty.
-  const defaultGradeLabel = tickTarget?.climb.difficulty ?? currentClimb?.difficulty ?? '';
+  // Prefer the user's override (which carries the full "font/v" difficulty
+  // name so formatVGrade can disambiguate V5 vs V5+), otherwise fall back
+  // to the snapshot climb's own difficulty string.
+  const displayDifficulty =
+    selectedGrade?.difficulty_name ?? tickTarget?.climb.difficulty ?? currentClimb?.difficulty ?? '';
+  const vGrade = formatVGrade(displayDifficulty);
+  const gradeLabel = vGrade ?? (displayDifficulty || '—');
+  const gradeColor = getSoftVGradeColor(vGrade, isDark);
 
   const handleSave = useCallback(
     async (isAscent: boolean) => {
@@ -239,8 +252,10 @@ export const QuickTickBar: React.FC<QuickTickBarProps> = ({
       data-testid="quick-tick-bar"
     >
       <div className={styles.controls}>
-        {/* Single horizontal row: rating, grade, comment toggle, then attempt (X)
-            and confirm (tick). All elements center-align vertically. */}
+        {/* Single horizontal row: rating, comment toggle, "swipe to dismiss"
+            hint, spacer, colourised V-grade, attempt (X) and confirm (tick).
+            The grade sits immediately to the left of the attempt button and
+            opens a grade override menu on click. */}
         <Rating
           value={quality}
           onChange={(_, val) => setQuality(val)}
@@ -250,13 +265,51 @@ export const QuickTickBar: React.FC<QuickTickBarProps> = ({
           data-testid="quick-tick-rating"
         />
 
-        <Chip
-          label={selectedGrade?.v_grade ?? defaultGradeLabel ?? '—'}
+        <IconButton
           size="small"
-          variant={difficulty ? 'filled' : 'outlined'}
-          className={styles.gradeChip}
+          onClick={onCommentToggle}
+          color={commentOpen ? 'primary' : 'default'}
+          aria-label="Toggle comment"
+        >
+          <ChatBubbleOutlineOutlined fontSize="small" />
+        </IconButton>
+
+        {!commentOpen && (
+          <Typography
+            variant="body2"
+            component="span"
+            color="text.secondary"
+            className={styles.hint}
+            data-testid="quick-tick-hint"
+          >
+            swipe left to dismiss
+          </Typography>
+        )}
+
+        <span className={styles.spacer} />
+
+        {/* Colourised V-grade, matching the styling used by ClimbTitle's
+            right-aligned large grade. Click opens the override menu. */}
+        <Typography
+          variant="body2"
+          component="span"
           onClick={(e) => setGradeAnchorEl(e.currentTarget)}
-        />
+          role="button"
+          aria-label="Select logged grade"
+          data-testid="quick-tick-grade"
+          className={styles.gradeLabel}
+          sx={{
+            fontSize: themeTokens.typography.fontSize.sm,
+            fontWeight: themeTokens.typography.fontWeight.bold,
+            lineHeight: 1,
+            color: gradeColor ?? 'text.secondary',
+            cursor: 'pointer',
+            flexShrink: 0,
+            px: '4px',
+          }}
+        >
+          {gradeLabel}
+        </Typography>
         <Menu
           anchorEl={gradeAnchorEl}
           open={Boolean(gradeAnchorEl)}
@@ -286,17 +339,6 @@ export const QuickTickBar: React.FC<QuickTickBarProps> = ({
         </Menu>
 
         <IconButton
-          size="small"
-          onClick={() => setShowComment((prev) => !prev)}
-          color={showComment ? 'primary' : 'default'}
-          aria-label="Toggle comment"
-        >
-          <ChatBubbleOutlineOutlined fontSize="small" />
-        </IconButton>
-
-        <span className={styles.spacer} />
-
-        <IconButton
           onClick={handleFail}
           disabled={isSaving}
           sx={{
@@ -324,23 +366,6 @@ export const QuickTickBar: React.FC<QuickTickBarProps> = ({
           <CheckOutlined />
         </IconButton>
       </div>
-
-      {showComment && (
-        <div className={styles.commentRow}>
-          <TextField
-            inputRef={commentRef}
-            size="small"
-            placeholder="Comment..."
-            value={comment}
-            onChange={(e) => setComment(e.target.value)}
-            onFocus={() => setCommentFocused(true)}
-            onBlur={() => setCommentFocused(false)}
-            variant="standard"
-            slotProps={{ htmlInput: { maxLength: 2000 } }}
-            sx={{ flex: 1 }}
-          />
-        </div>
-      )}
     </div>
   );
 };

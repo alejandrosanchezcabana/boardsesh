@@ -6,6 +6,7 @@ import MuiCard from '@mui/material/Card';
 import CardContent from '@mui/material/CardContent';
 import Box from '@mui/material/Box';
 import Stack from '@mui/material/Stack';
+import TextField from '@mui/material/TextField';
 import SwipeableDrawer from '../swipeable-drawer/swipeable-drawer';
 import SyncOutlined from '@mui/icons-material/SyncOutlined';
 import CloudOffOutlined from '@mui/icons-material/CloudOffOutlined';
@@ -138,6 +139,16 @@ const QueueControlBar: React.FC<QueueControlBarProps> = ({ boardDetails, angle }
   const [showCancelConfirm, setShowCancelConfirm] = useState(false);
   const [dismissedDisconnect, setDismissedDisconnect] = useState(false);
 
+  // Tick-bar comment state lives here so the comment field can render in a
+  // separate bar *above* the queue control bar without reflowing the main bar.
+  // QuickTickBar reads the value back out via props when saving the tick.
+  const [tickComment, setTickComment] = useState('');
+  const [tickCommentOpen, setTickCommentOpen] = useState(false);
+  const [tickCommentFocused, setTickCommentFocused] = useState(false);
+  const handleTickCommentToggle = useCallback(() => setTickCommentOpen((prev) => !prev), []);
+  const handleTickCommentFocus = useCallback(() => setTickCommentFocused(true), []);
+  const handleTickCommentBlur = useCallback(() => setTickCommentFocused(false), []);
+
   // Note: the tick bar intentionally stays open when the active climb changes
   // (e.g. party session navigation). QuickTickBar snapshots its target climb
   // internally so the user can finish ticking the climb they opened the bar
@@ -260,6 +271,16 @@ const QueueControlBar: React.FC<QueueControlBarProps> = ({ boardDetails, angle }
   const tickBarActive = activeDrawer === 'tick';
   const canSwipeNext = !viewOnlyMode && !!nextClimb && !tickBarActive;
   const canSwipePrevious = !viewOnlyMode && !!previousClimb && !tickBarActive;
+
+  // Clear tick-bar comment state whenever the tick bar closes so a fresh
+  // activation always starts empty.
+  useEffect(() => {
+    if (!tickBarActive) {
+      setTickComment('');
+      setTickCommentOpen(false);
+      setTickCommentFocused(false);
+    }
+  }, [tickBarActive]);
 
   const { swipeHandlers, swipeOffset, isAnimating, animationDirection, enterDirection, clearEnterAnimation } = useCardSwipeNavigation({
     onSwipeNext: handleSwipeNext,
@@ -469,6 +490,24 @@ const QueueControlBar: React.FC<QueueControlBarProps> = ({ boardDetails, angle }
           </span>
         </div>
       )}
+      {/* Tick-mode comment bar — rendered above the main card so tapping the
+          comment button doesn't reflow the queue control bar. */}
+      {tickBarActive && tickCommentOpen && (
+        <div className={styles.commentBar}>
+          <TextField
+            autoFocus
+            fullWidth
+            size="small"
+            variant="standard"
+            placeholder="Comment..."
+            value={tickComment}
+            onChange={(e) => setTickComment(e.target.value)}
+            onFocus={handleTickCommentFocus}
+            onBlur={handleTickCommentBlur}
+            slotProps={{ htmlInput: { maxLength: 2000, 'aria-label': 'Tick comment' } }}
+          />
+        </div>
+      )}
       {/* Main Control Bar */}
       <MuiCard variant="outlined" className={styles.card} sx={{ border: 'none', backgroundColor: 'transparent' }}>
         <CardContent sx={{ p: 0, '&:last-child': { pb: 0 } }}>
@@ -505,6 +544,10 @@ const QueueControlBar: React.FC<QueueControlBarProps> = ({ boardDetails, angle }
                         boardDetails={boardDetails}
                         onSave={() => setActiveDrawer('none')}
                         onCancel={() => setActiveDrawer('none')}
+                        comment={tickComment}
+                        commentOpen={tickCommentOpen}
+                        onCommentToggle={handleTickCommentToggle}
+                        commentFocused={tickCommentFocused}
                       />
                     ) : (
                       <>
