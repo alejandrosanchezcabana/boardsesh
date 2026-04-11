@@ -23,34 +23,14 @@
 .controls {
   display: flex;
   align-items: center;
-  justify-content: flex-end;
   gap: var(--space-1, 4px);
   flex: 1;
   min-width: 0;
 }
 
-.leftGroup {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  min-width: 0;
-}
-
-.leftGroupRow {
-  display: flex;
-  align-items: center;
-  gap: var(--space-1, 4px);
-  min-width: 0;
-}
-
-.hint {
-  font-size: 11px;
-  font-style: italic;
-  line-height: 1;
-  margin-top: 1px;
-  color: var(--mui-palette-text-secondary, rgba(0, 0, 0, 0.6));
-  user-select: none;
-  pointer-events: none;
+.spacer {
+  flex: 1;
+  min-width: var(--space-1, 4px);
 }
 
 .commentRow {

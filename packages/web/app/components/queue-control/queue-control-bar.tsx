@@ -411,7 +411,7 @@ const QueueControlBar: React.FC<QueueControlBarProps> = ({ boardDetails, angle }
           <div
             className={styles.swipeContainer}
             style={{
-              padding: `6px ${themeTokens.spacing[3]}px 6px ${themeTokens.spacing[3]}px`,
+              padding: `${themeTokens.spacing[2]}px ${themeTokens.spacing[3]}px`,
               backgroundColor: gradeTintColor ?? (isDark ? 'transparent' : 'var(--semantic-surface)'),
             }}
           >
@@ -478,7 +478,7 @@ const QueueControlBar: React.FC<QueueControlBarProps> = ({ boardDetails, angle }
             {...swipeHandlers}
             className={styles.swipeContainer}
             style={{
-              padding: `6px ${themeTokens.spacing[3]}px 6px ${themeTokens.spacing[3]}px`,
+              padding: `${themeTokens.spacing[2]}px ${themeTokens.spacing[3]}px`,
               backgroundColor: gradeTintColor ?? (isDark ? 'transparent' : 'var(--semantic-surface)'),
             }}
           >
@@ -549,8 +549,8 @@ const QueueControlBar: React.FC<QueueControlBarProps> = ({ boardDetails, angle }
 
               {/* Button cluster — hidden when tick bar is active to give full width */}
               {!tickBarActive && (
-              <Box sx={{ flex: 'none', marginLeft: `${themeTokens.spacing[2]}px` }}>
-                <Stack direction="row" spacing={1}>
+              <Box sx={{ flex: 'none', marginLeft: `${themeTokens.spacing[1]}px` }}>
+                <Stack direction="row" spacing={0.5}>
                   {/* Mirror button - desktop only */}
                   {boardDetails.supportsMirroring ? (
                     <span className={styles.desktopOnly}>
@@ -591,7 +591,7 @@ const QueueControlBar: React.FC<QueueControlBarProps> = ({ boardDetails, angle }
                   )}
                   {/* Navigation buttons - desktop only */}
                   <span className={styles.navButtons}>
-                    <Stack direction="row" spacing={1}>
+                    <Stack direction="row" spacing={0.5}>
                       <PreviousClimbButton navigate={isViewPage || isPlayPage} boardDetails={boardDetails} />
                       <NextClimbButton navigate={isViewPage || isPlayPage} boardDetails={boardDetails} />
                     </Stack>

@@ -170,37 +170,23 @@ describe('QuickTickBar', () => {
       const attemptBtn = screen.getByTestId('quick-tick-attempt');
       const confirmBtn = screen.getByTestId('quick-tick-confirm');
 
-      // Stars + comment toggle live in the same leftGroupRow wrapper.
-      const leftGroupRow = rating.parentElement!;
-      expect(commentToggle.parentElement).toBe(leftGroupRow);
-
-      // The leftGroupRow lives inside a leftGroup column, which sits inside
-      // the .controls flex row alongside the attempt and confirm buttons.
-      const leftGroup = leftGroupRow.parentElement!;
-      const controls = leftGroup.parentElement!;
+      // All controls are direct siblings inside a single flex row so they
+      // share a single vertically-centered baseline with the climb title.
+      const controls = rating.parentElement!;
+      expect(commentToggle.parentElement).toBe(controls);
       expect(attemptBtn.parentElement).toBe(controls);
       expect(confirmBtn.parentElement).toBe(controls);
 
-      // Within the leftGroupRow, stars come before the comment toggle.
-      const innerSiblings = Array.from(leftGroupRow.children) as HTMLElement[];
-      expect(innerSiblings.indexOf(rating)).toBeLessThan(
-        innerSiblings.indexOf(commentToggle),
-      );
-
-      // Within the controls row, the leftGroup must come before the attempt
-      // button, and the X must be the immediate sibling before the tick.
-      const controlsSiblings = Array.from(controls.children) as HTMLElement[];
-      const leftGroupIdx = controlsSiblings.indexOf(leftGroup);
-      const attemptIdx = controlsSiblings.indexOf(attemptBtn);
-      const confirmIdx = controlsSiblings.indexOf(confirmBtn);
-      expect(leftGroupIdx).toBeLessThan(attemptIdx);
+      // The siblings must appear in this order: rating, ..., comment toggle,
+      // ..., attempt (X), confirm (tick) as the final pair.
+      const siblings = Array.from(controls.children) as HTMLElement[];
+      const ratingIdx = siblings.indexOf(rating);
+      const commentIdx = siblings.indexOf(commentToggle);
+      const attemptIdx = siblings.indexOf(attemptBtn);
+      const confirmIdx = siblings.indexOf(confirmBtn);
+      expect(ratingIdx).toBeLessThan(commentIdx);
+      expect(commentIdx).toBeLessThan(attemptIdx);
       expect(confirmIdx).toBe(attemptIdx + 1);
-    });
-
-    it('shows the "swipe left to dismiss" hint text by default', () => {
-      render(<QuickTickBar {...defaultProps} />);
-      const hint = screen.getByTestId('quick-tick-hint');
-      expect(hint.textContent).toMatch(/swipe left to dismiss/i);
     });
   });
 
