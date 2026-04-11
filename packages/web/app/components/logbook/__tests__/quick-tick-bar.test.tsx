@@ -170,20 +170,30 @@ describe('QuickTickBar', () => {
       const attemptBtn = screen.getByTestId('quick-tick-attempt');
       const confirmBtn = screen.getByTestId('quick-tick-confirm');
 
-      // Same parent (the .controls flex row).
-      expect(rating.parentElement).toBe(commentToggle.parentElement);
-      expect(rating.parentElement).toBe(attemptBtn.parentElement);
-      expect(rating.parentElement).toBe(confirmBtn.parentElement);
+      // Stars + comment toggle live in the same leftGroupRow wrapper.
+      const leftGroupRow = rating.parentElement!;
+      expect(commentToggle.parentElement).toBe(leftGroupRow);
 
-      const siblings = Array.from(rating.parentElement!.children) as HTMLElement[];
-      const ratingIdx = siblings.indexOf(rating);
-      const commentIdx = siblings.indexOf(commentToggle);
-      const attemptIdx = siblings.indexOf(attemptBtn);
-      const confirmIdx = siblings.indexOf(confirmBtn);
+      // The leftGroupRow lives inside a leftGroup column, which sits inside
+      // the .controls flex row alongside the attempt and confirm buttons.
+      const leftGroup = leftGroupRow.parentElement!;
+      const controls = leftGroup.parentElement!;
+      expect(attemptBtn.parentElement).toBe(controls);
+      expect(confirmBtn.parentElement).toBe(controls);
 
-      expect(ratingIdx).toBeLessThan(commentIdx);
-      expect(commentIdx).toBeLessThan(attemptIdx);
-      // The X must be the DOM sibling immediately before the confirm tick.
+      // Within the leftGroupRow, stars come before the comment toggle.
+      const innerSiblings = Array.from(leftGroupRow.children) as HTMLElement[];
+      expect(innerSiblings.indexOf(rating)).toBeLessThan(
+        innerSiblings.indexOf(commentToggle),
+      );
+
+      // Within the controls row, the leftGroup must come before the attempt
+      // button, and the X must be the immediate sibling before the tick.
+      const controlsSiblings = Array.from(controls.children) as HTMLElement[];
+      const leftGroupIdx = controlsSiblings.indexOf(leftGroup);
+      const attemptIdx = controlsSiblings.indexOf(attemptBtn);
+      const confirmIdx = controlsSiblings.indexOf(confirmBtn);
+      expect(leftGroupIdx).toBeLessThan(attemptIdx);
       expect(confirmIdx).toBe(attemptIdx + 1);
     });
 

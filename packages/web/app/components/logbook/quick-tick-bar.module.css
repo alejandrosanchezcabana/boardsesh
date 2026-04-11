@@ -23,31 +23,32 @@
 .controls {
   display: flex;
   align-items: center;
+  justify-content: flex-end;
   gap: var(--space-1, 4px);
   flex: 1;
   min-width: 0;
 }
 
-.spacer {
-  flex: 1 1 auto;
+.leftGroup {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
   min-width: 0;
 }
 
-.hintRow {
-  /* Align the hint underneath the star rating. The MUI Rating small size sits
-     at the very start of the controls row, so no left padding is needed. */
+.leftGroupRow {
   display: flex;
   align-items: center;
-  padding-left: 2px;
-  margin-top: -2px;
-  line-height: 1;
+  gap: var(--space-1, 4px);
+  min-width: 0;
 }
 
 .hint {
-  font-size: 10px;
+  font-size: 11px;
   font-style: italic;
+  line-height: 1;
+  margin-top: 1px;
   color: var(--mui-palette-text-secondary, rgba(0, 0, 0, 0.6));
-  opacity: 0.7;
   user-select: none;
   pointer-events: none;
 }

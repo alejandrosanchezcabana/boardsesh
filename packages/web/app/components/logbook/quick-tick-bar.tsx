@@ -239,63 +239,72 @@ export const QuickTickBar: React.FC<QuickTickBarProps> = ({
       data-testid="quick-tick-bar"
     >
       <div className={styles.controls}>
-        {/* Left group: rating, grade, comment toggle */}
-        <Rating
-          value={quality}
-          onChange={(_, val) => setQuality(val)}
-          size="small"
-          max={5}
-          sx={{ flexShrink: 0 }}
-          data-testid="quick-tick-rating"
-        />
+        {/* Left group packs rating + grade + comment toggle together and
+            keeps the dismiss hint aligned directly under the stars. The
+            whole group sits next to the attempt/confirm pair thanks to
+            `justify-content: flex-end` on .controls. */}
+        <div className={styles.leftGroup}>
+          <div className={styles.leftGroupRow}>
+            <Rating
+              value={quality}
+              onChange={(_, val) => setQuality(val)}
+              size="small"
+              max={5}
+              sx={{ flexShrink: 0 }}
+              data-testid="quick-tick-rating"
+            />
 
-        <Chip
-          label={selectedGrade?.v_grade ?? defaultGradeLabel ?? '—'}
-          size="small"
-          variant={difficulty ? 'filled' : 'outlined'}
-          className={styles.gradeChip}
-          onClick={(e) => setGradeAnchorEl(e.currentTarget)}
-        />
-        <Menu
-          anchorEl={gradeAnchorEl}
-          open={Boolean(gradeAnchorEl)}
-          onClose={() => setGradeAnchorEl(null)}
-          slotProps={{ paper: { sx: { maxHeight: 240 } } }}
-        >
-          <MenuItem
-            onClick={() => {
-              setDifficulty(undefined);
-              setGradeAnchorEl(null);
-            }}
-          >
-            —
-          </MenuItem>
-          {grades.map((grade) => (
-            <MenuItem
-              key={grade.difficulty_id}
-              selected={grade.difficulty_id === difficulty}
-              onClick={() => {
-                setDifficulty(grade.difficulty_id);
-                setGradeAnchorEl(null);
-              }}
+            <Chip
+              label={selectedGrade?.v_grade ?? defaultGradeLabel ?? '—'}
+              size="small"
+              variant={difficulty ? 'filled' : 'outlined'}
+              className={styles.gradeChip}
+              onClick={(e) => setGradeAnchorEl(e.currentTarget)}
+            />
+            <Menu
+              anchorEl={gradeAnchorEl}
+              open={Boolean(gradeAnchorEl)}
+              onClose={() => setGradeAnchorEl(null)}
+              slotProps={{ paper: { sx: { maxHeight: 240 } } }}
             >
-              {grade.v_grade}
-            </MenuItem>
-          ))}
-        </Menu>
+              <MenuItem
+                onClick={() => {
+                  setDifficulty(undefined);
+                  setGradeAnchorEl(null);
+                }}
+              >
+                —
+              </MenuItem>
+              {grades.map((grade) => (
+                <MenuItem
+                  key={grade.difficulty_id}
+                  selected={grade.difficulty_id === difficulty}
+                  onClick={() => {
+                    setDifficulty(grade.difficulty_id);
+                    setGradeAnchorEl(null);
+                  }}
+                >
+                  {grade.v_grade}
+                </MenuItem>
+              ))}
+            </Menu>
 
-        <IconButton
-          size="small"
-          onClick={() => setShowComment((prev) => !prev)}
-          color={showComment ? 'primary' : 'default'}
-          aria-label="Toggle comment"
-        >
-          <ChatBubbleOutlineOutlined fontSize="small" />
-        </IconButton>
+            <IconButton
+              size="small"
+              onClick={() => setShowComment((prev) => !prev)}
+              color={showComment ? 'primary' : 'default'}
+              aria-label="Toggle comment"
+            >
+              <ChatBubbleOutlineOutlined fontSize="small" />
+            </IconButton>
+          </div>
 
-        {/* Spacer pushes the attempt + confirm pair to the right edge so the
-            confirm icon lines up with the original tick button position. */}
-        <div className={styles.spacer} />
+          {!showComment && (
+            <span className={styles.hint} data-testid="quick-tick-hint">
+              swipe left to dismiss
+            </span>
+          )}
+        </div>
 
         {/* Right group: attempt (X) immediately next to confirm (tick) */}
         <IconButton
@@ -323,16 +332,6 @@ export const QuickTickBar: React.FC<QuickTickBarProps> = ({
           <CheckOutlined />
         </IconButton>
       </div>
-
-      {/* Dismiss hint sits under the stars. Hidden while the comment field
-          is open to keep the bar compact. */}
-      {!showComment && (
-        <div className={styles.hintRow}>
-          <span className={styles.hint} data-testid="quick-tick-hint">
-            swipe left to dismiss
-          </span>
-        </div>
-      )}
 
       {showComment && (
         <div className={styles.commentRow}>
