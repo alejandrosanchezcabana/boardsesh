@@ -2380,7 +2380,7 @@ The search drawer is extended with a **search category pill bar** at the top, al
 The existing search system consists of:
 - `SearchDrawerBridgeInjector` (in `header.tsx`) -- registers the search drawer opener with `GlobalHeader` via bridge context
 - `SearchDropdown` -- full-screen swipeable drawer with `AccordionSearchForm`
-- `AccordionSearchForm` -- 4 collapsible filter panels (Climb, Quality, Progress, Holds)
+- `AccordionSearchForm` -- 3 collapsible filter panels (Quality, Progress, Holds) with a primary Climb filter section
 - `UISearchParamsProvider` -- manages filter state with 500ms debounce
 - `ClimbsList` -- renders climb results with infinite scroll
 

@@ -8,7 +8,7 @@
 .primaryContent {
   background: var(--semantic-surface, #FFFFFF);
   border-radius: 16px;
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.06), 0 1px 3px rgba(0, 0, 0, 0.08);
+  box-shadow: var(--shadow-xs);
   padding: 20px 24px;
   margin: 4px 0 12px;
 }
