@@ -4,6 +4,7 @@ interface NativeTabBarPluginInterface {
   setActiveTab(options: { tab: string }): Promise<void>;
   setBarsHidden(options: { hidden: boolean }): Promise<void>;
   setNotificationBadge(options: { count: number }): Promise<void>;
+  navigateTab(options: { tab: string; url: string }): Promise<void>;
 }
 
 export function getNativeTabBarPlugin(): NativeTabBarPluginInterface | null {

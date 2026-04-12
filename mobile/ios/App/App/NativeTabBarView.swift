@@ -180,7 +180,8 @@ public class NativeTabBarView: UIView {
         let index = sender.tag
         guard index >= 0, index < NativeTabBarView.tabs.count else { return }
         let tab = NativeTabBarView.tabs[index]
-        setActiveTab(tab.tabKey)
+        // Note: setActiveTab is called by the controller (MultiWebViewController.switchToTab)
+        // to avoid a double update. The onTabTapped callback handles the logic.
         onTabTapped?(tab.tabKey)
     }
 

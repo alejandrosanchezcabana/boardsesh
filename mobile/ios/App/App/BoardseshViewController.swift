@@ -4,8 +4,6 @@ import WebKit
 
 class BoardseshViewController: CAPBridgeViewController {
 
-    var tabBarView: NativeTabBarView?
-
     override func capacitorDidLoad() {
         super.capacitorDidLoad()
         bridge?.registerPluginInstance(LiveActivityPlugin())
@@ -45,18 +43,14 @@ class BoardseshViewController: CAPBridgeViewController {
         prefs.preferredContentMode = .mobile
         config.defaultWebpagePreferences = prefs
 
+        // Share the process pool with satellite webviews for cookie sharing.
+        config.processPool = MultiWebViewController.sharedProcessPool
+
         return config
     }
 
     override func viewDidLoad() {
         super.viewDidLoad()
-
-        // Let the native scroll view bounce naturally for smooth scroll physics.
-        // CSS overscroll-behavior-y:none on <html> prevents web content from
-        // rubber-banding, and Capacitor's backgroundColor (#0A0A0A) ensures
-        // any native bounce reveals matching black — not a jarring white.
-        // Previously bounces=false was set here, but it degrades momentum
-        // scrolling and touch responsiveness vs Safari.
 
         // UIScrollView adds ~150ms delay to disambiguate taps from scrolls.
         // Since the web layer handles its own scroll/tap detection via
@@ -67,39 +61,12 @@ class BoardseshViewController: CAPBridgeViewController {
             scrollView.canCancelContentTouches = true
         }
 
-        let bar = NativeTabBarView()
-        bar.translatesAutoresizingMaskIntoConstraints = false
-        bar.onTabTapped = { [weak self] tab in
-            let js = "window.dispatchEvent(new CustomEvent('boardsesh:native-tab-tapped',{detail:{tab:'\(tab)'}}));"
-            self?.webView?.evaluateJavaScript(js, completionHandler: nil)
-        }
-        view.addSubview(bar)
-        view.bringSubviewToFront(bar)
-        NSLayoutConstraint.activate([
-            bar.leadingAnchor.constraint(equalTo: view.leadingAnchor),
-            bar.trailingAnchor.constraint(equalTo: view.trailingAnchor),
-            bar.bottomAnchor.constraint(equalTo: view.bottomAnchor),
-            // 49pt is the standard iOS tab bar content height; pinning the top here
-            // gives the view a defined height = 49 + safeAreaInsets.bottom.
-            bar.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.bottomAnchor, constant: -49),
-        ])
-        tabBarView = bar
+        // NOTE: Tab bar management has moved to MultiWebViewController.
+        // This VC is now embedded as a child VC for the climbs tab only.
 
         // If a universal link triggered a cold start, navigate to it now
         // that the bridge and WebView are ready.
         loadPendingUniversalLink()
-    }
-
-    private var lastInjectedTabBarHeight: CGFloat = 0
-
-    override func viewDidLayoutSubviews() {
-        super.viewDidLayoutSubviews()
-        guard let bar = tabBarView, bar.frame.height > 0 else { return }
-        let h = bar.frame.height
-        guard h != lastInjectedTabBarHeight else { return }
-        lastInjectedTabBarHeight = h
-        let js = "document.documentElement.style.setProperty('--native-tab-bar-height','\(h)px');"
-        webView?.evaluateJavaScript(js, completionHandler: nil)
     }
 
     override func viewDidAppear(_ animated: Bool) {

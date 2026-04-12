@@ -45,6 +45,9 @@
 		LA100038 /* NativeTabBarPlugin.m in Sources */ = {isa = PBXBuildFile; fileRef = LA200038 /* NativeTabBarPlugin.m */; };
 		LA100039 /* NativeTabBarViewTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = LA200039 /* NativeTabBarViewTests.swift */; };
 		LA100041 /* NativeTabBarPluginTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = LA200041 /* NativeTabBarPluginTests.swift */; };
+		MW100001 /* MultiWebViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = MW200001 /* MultiWebViewController.swift */; };
+		MW100002 /* SatelliteBridge.swift in Sources */ = {isa = PBXBuildFile; fileRef = MW200002 /* SatelliteBridge.swift */; };
+		MW100003 /* WebSocketBroadcaster.swift in Sources */ = {isa = PBXBuildFile; fileRef = MW200003 /* WebSocketBroadcaster.swift */; };
 		LA100040 /* BoardseshWidgets.appex in Embed App Extensions */ = {isa = PBXBuildFile; fileRef = LA300001 /* BoardseshWidgets.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 		PI100001 /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = PI200001 /* PrivacyInfo.xcprivacy */; };
 		PI100002 /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = PI200002 /* PrivacyInfo.xcprivacy */; };
@@ -124,6 +127,9 @@
 		LA200038 /* NativeTabBarPlugin.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = NativeTabBarPlugin.m; sourceTree = "<group>"; };
 		LA200039 /* NativeTabBarViewTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NativeTabBarViewTests.swift; sourceTree = "<group>"; };
 		LA200041 /* NativeTabBarPluginTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NativeTabBarPluginTests.swift; sourceTree = "<group>"; };
+		MW200001 /* MultiWebViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MultiWebViewController.swift; sourceTree = "<group>"; };
+		MW200002 /* SatelliteBridge.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SatelliteBridge.swift; sourceTree = "<group>"; };
+		MW200003 /* WebSocketBroadcaster.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WebSocketBroadcaster.swift; sourceTree = "<group>"; };
 		LA300001 /* BoardseshWidgets.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = BoardseshWidgets.appex; sourceTree = BUILT_PRODUCTS_DIR; };
 		PI200001 /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; lastKnownFileType = text.xml; path = PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
 		PI200002 /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; lastKnownFileType = text.xml; path = PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
@@ -206,6 +212,9 @@
 				LA200036 /* NativeTabBarView.swift */,
 				LA200037 /* NativeTabBarPlugin.swift */,
 				LA200038 /* NativeTabBarPlugin.m */,
+				MW200001 /* MultiWebViewController.swift */,
+				MW200002 /* SatelliteBridge.swift */,
+				MW200003 /* WebSocketBroadcaster.swift */,
 				504EC30B1FED79650016851F /* Main.storyboard */,
 				504EC30E1FED79650016851F /* Assets.xcassets */,
 				504EC3101FED79650016851F /* LaunchScreen.storyboard */,
@@ -465,6 +474,9 @@
 				LA100036 /* NativeTabBarView.swift in Sources */,
 				LA100037 /* NativeTabBarPlugin.swift in Sources */,
 				LA100038 /* NativeTabBarPlugin.m in Sources */,
+				MW100001 /* MultiWebViewController.swift in Sources */,
+				MW100002 /* SatelliteBridge.swift in Sources */,
+				MW100003 /* WebSocketBroadcaster.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

@@ -16,6 +16,7 @@ import LocalOfferOutlined from '@mui/icons-material/LocalOfferOutlined';
 import DynamicFeedOutlined from '@mui/icons-material/DynamicFeedOutlined';
 import PersonOutlined from '@mui/icons-material/PersonOutlined';
 import { usePathname, useRouter } from 'next/navigation';
+import { useTabRouter } from '@/app/hooks/use-tab-router';
 import { track } from '@vercel/analytics';
 import type { BoardDetails, BoardName, BoardRouteIdentity } from '@/app/lib/types';
 import {
@@ -49,8 +50,9 @@ import { useBoardSwitchGuard } from '@/app/components/board-lock/use-board-switc
 import { isNativeApp } from '@/app/lib/ble/capacitor-utils';
 import { getNativeTabBarPlugin, addNativeOverlay, removeNativeOverlay } from '@/app/lib/native-tab-bar/native-tab-bar-plugin';
 import { useUnreadNotificationCount } from '@/app/hooks/use-unread-notification-count';
+import { getActiveTab } from '@/app/lib/tab-routing';
+import type { Tab } from '@/app/lib/tab-routing';
 
-type Tab = 'home' | 'climbs' | 'library' | 'feed' | 'create' | 'you';
 type PendingCreateAction = 'climb' | 'playlist' | null;
 
 type BottomTabBarProps = {
@@ -63,15 +65,6 @@ type SelectedBoardContext = {
   boardName: string;
   layoutId: number;
   angle: number;
-};
-
-const getActiveTab = (pathname: string): Tab => {
-  if (pathname === '/') return 'home';
-  if (pathname.endsWith('/create')) return 'create';
-  if (pathname.startsWith('/feed')) return 'feed';
-  if (pathname.startsWith('/you')) return 'you';
-  if (pathname.startsWith('/playlists') || pathname.includes('/playlists')) return 'library';
-  return 'climbs';
 };
 
 const INITIAL_PLAYLIST_FORM = { name: '', description: '', color: '' };
@@ -131,7 +124,11 @@ function BottomTabBar({ boardDetails, angle, boardConfigs }: BottomTabBarProps) 
   }, []);
 
   const pathname = usePathname();
-  const router = useRouter();
+  const router = useTabRouter();
+  // Raw Next.js router for native-initiated navigation (event handlers that
+  // should NOT go through useTabRouter's cross-tab interception since the
+  // native side has already handled the tab switch).
+  const nextRouter = useRouter();
   const guardBoardSwitch = useBoardSwitchGuard();
 
   const { data: session } = useSession();
@@ -376,7 +373,9 @@ function BottomTabBar({ boardDetails, angle, boardConfigs }: BottomTabBarProps) 
     getNativeTabBarPlugin()?.setActiveTab({ tab: getActiveTab(pathname) });
   }, [pathname]);
 
-  // Handle native tab-tapped events
+  // Handle native tab-tapped events (same-tab re-tap or "create" action).
+  // In multi-webview mode, the native side has already switched tabs;
+  // this event is only dispatched to the target webview for same-tab behaviors.
   useEffect(() => {
     if (!isNativeApp()) return;
     const handler = (e: Event) => {
@@ -386,6 +385,24 @@ function BottomTabBar({ boardDetails, angle, boardConfigs }: BottomTabBarProps) 
     window.addEventListener('boardsesh:native-tab-tapped', handler);
     return () => window.removeEventListener('boardsesh:native-tab-tapped', handler);
   }, [handleTabChange]);
+
+  // Handle cross-tab navigation dispatched by the native side.
+  // When MultiWebViewController.navigateToTab() calls evaluateJavaScript to
+  // dispatch this event, the web app performs client-side navigation to
+  // preserve React state. Uses the raw Next.js router (not useTabRouter)
+  // since the native side has already handled the tab switch — intercepting
+  // again would cause an infinite loop.
+  useEffect(() => {
+    if (!isNativeApp()) return;
+    const handler = (e: Event) => {
+      const { url } = (e as CustomEvent<{ url: string }>).detail;
+      if (url) {
+        nextRouter.push(url);
+      }
+    };
+    window.addEventListener('boardsesh:navigate', handler);
+    return () => window.removeEventListener('boardsesh:navigate', handler);
+  }, [nextRouter]);
 
   // Notify native when internal drawers open/close — each drawer manages its own overlay
   // so the tab bar stays hidden until the last overlay closes (ref-counted).
