@@ -19,6 +19,7 @@ import TimerOutlined from '@mui/icons-material/TimerOutlined';
 import FlagOutlined from '@mui/icons-material/FlagOutlined';
 import PersonOutlined from '@mui/icons-material/PersonOutlined';
 import type { SessionSummary } from '@boardsesh/shared-schema';
+import { getGradeColor as getVividGradeColor } from '@/app/lib/grade-colors';
 import { useGradeFormat } from '@/app/hooks/use-grade-format';
 
 interface SessionSummaryViewProps {
@@ -26,7 +27,7 @@ interface SessionSummaryViewProps {
 }
 
 export default function SessionSummaryView({ summary }: SessionSummaryViewProps) {
-  const { formatGrade, getGradeColor, loaded: gradeFormatLoaded } = useGradeFormat();
+  const { formatGrade, loaded: gradeFormatLoaded } = useGradeFormat();
   const maxGradeCount = Math.max(...summary.gradeDistribution.map((g) => g.count), 1);
 
   const formatDuration = (minutes: number | null | undefined) => {
@@ -112,7 +113,7 @@ export default function SessionSummaryView({ summary }: SessionSummaryViewProps)
                   label={formatGrade(summary.hardestClimb.grade) ?? summary.hardestClimb.grade}
                   size="small"
                   sx={{
-                    bgcolor: getGradeColor(summary.hardestClimb.grade),
+                    bgcolor: getVividGradeColor(summary.hardestClimb.grade),
                     color: '#fff',
                     fontWeight: 600,
                   }}
@@ -154,7 +155,7 @@ export default function SessionSummaryView({ summary }: SessionSummaryViewProps)
                       borderRadius: 1,
                       bgcolor: 'action.hover',
                       '& .MuiLinearProgress-bar': {
-                        bgcolor: getGradeColor(g.grade) ?? 'action.selected',
+                        bgcolor: getVividGradeColor(g.grade) ?? 'action.selected',
                         borderRadius: 1,
                       },
                     }}
