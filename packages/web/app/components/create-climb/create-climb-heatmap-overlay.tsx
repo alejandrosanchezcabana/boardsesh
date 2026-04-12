@@ -31,6 +31,7 @@ interface CreateClimbHeatmapOverlayProps {
   litUpHoldsMap: LitUpHoldsMap;
   opacity: number;
   enabled: boolean;
+  onLoadingChange?: (loading: boolean) => void;
 }
 
 const CreateClimbHeatmapOverlay: React.FC<CreateClimbHeatmapOverlayProps> = ({
@@ -39,6 +40,7 @@ const CreateClimbHeatmapOverlay: React.FC<CreateClimbHeatmapOverlayProps> = ({
   litUpHoldsMap,
   opacity,
   enabled,
+  onLoadingChange,
 }) => {
   const { boardWidth, boardHeight, holdsData } = boardDetails;
 
@@ -81,6 +83,10 @@ const CreateClimbHeatmapOverlay: React.FC<CreateClimbHeatmapOverlayProps> = ({
     filters,
     enabled,
   });
+
+  useEffect(() => {
+    onLoadingChange?.(loading);
+  }, [loading, onLoadingChange]);
 
   const heatmapMap = useMemo(
     () => new Map(heatmapData?.map((data) => [data.holdId, data]) || []),

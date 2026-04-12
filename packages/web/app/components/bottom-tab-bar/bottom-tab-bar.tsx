@@ -14,7 +14,6 @@ import FormatListBulletedOutlined from '@mui/icons-material/FormatListBulletedOu
 import AddOutlined from '@mui/icons-material/AddOutlined';
 import LocalOfferOutlined from '@mui/icons-material/LocalOfferOutlined';
 import DynamicFeedOutlined from '@mui/icons-material/DynamicFeedOutlined';
-import EditOutlined from '@mui/icons-material/EditOutlined';
 import NotificationsOutlined from '@mui/icons-material/NotificationsOutlined';
 import Badge from '@mui/material/Badge';
 import { usePathname, useRouter } from 'next/navigation';
@@ -94,8 +93,6 @@ const actionSx = {
 function BottomTabBar({ boardDetails, angle, boardConfigs }: BottomTabBarProps) {
   const { mode } = useColorMode();
   const isDark = mode === 'dark';
-  const [isCreateOpen, setIsCreateOpen] = useState(false);
-  const [isCreateRendered, setIsCreateRendered] = useState(false);
   const [isCreatePlaylistOpen, setIsCreatePlaylistOpen] = useState(false);
   const [isCreatePlaylistRendered, setIsCreatePlaylistRendered] = useState(false);
   const [isCreatingPlaylist, setIsCreatingPlaylist] = useState(false);
@@ -111,9 +108,6 @@ function BottomTabBar({ boardDetails, angle, boardConfigs }: BottomTabBarProps) 
 
   // Stable callbacks for drawer unmount-after-close-animation pattern.
   // Avoids invalidating MUI's SlideProps memo on every parent render.
-  const handleCreateTransitionEnd = useCallback((open: boolean) => {
-    if (!open) setIsCreateRendered(false);
-  }, []);
   const handleCreatePlaylistTransitionEnd = useCallback((open: boolean) => {
     if (!open) setIsCreatePlaylistRendered(false);
   }, []);
@@ -168,7 +162,7 @@ function BottomTabBar({ boardDetails, angle, boardConfigs }: BottomTabBarProps) 
 
   // Determine active tab from pathname
   const activeTabFromPath = getActiveTab(pathname);
-  const activeTab = (isCreateOpen || isCreatePlaylistOpen) ? 'create' : activeTabFromPath;
+  const activeTab = isCreatePlaylistOpen ? 'create' : activeTabFromPath;
 
   // Build URLs using effective board details
   // If we're on a /b/ slug route, preserve the slug URL format
@@ -209,8 +203,7 @@ function BottomTabBar({ boardDetails, angle, boardConfigs }: BottomTabBarProps) 
   }, [pathname]);
 
   const handleHomeTab = () => {
-    setIsCreateOpen(false);
-    setIsCreatePlaylistOpen(false);
+        setIsCreatePlaylistOpen(false);
     router.push('/');
     track('Bottom Tab Bar', { tab: 'home' });
   };
@@ -219,8 +212,7 @@ function BottomTabBar({ boardDetails, angle, boardConfigs }: BottomTabBarProps) 
   const isOnBoardPage = pathname.startsWith('/b/') || (!!effectiveBoardDetails && pathname !== '/' && !pathname.startsWith('/notifications') && !pathname.startsWith('/playlists'));
 
   const handleClimbsTab = async () => {
-    setIsCreateOpen(false);
-    setIsCreatePlaylistOpen(false);
+        setIsCreatePlaylistOpen(false);
 
     let url: string | null = null;
 
@@ -283,8 +275,7 @@ function BottomTabBar({ boardDetails, angle, boardConfigs }: BottomTabBarProps) 
   const playlistsUrl = getPlaylistsBasePath(pathname);
 
   const handleLibraryTab = () => {
-    setIsCreateOpen(false);
-    setIsCreatePlaylistOpen(false);
+        setIsCreatePlaylistOpen(false);
     const currentUrl = pathname + (typeof window !== 'undefined' ? window.location.search : '');
     if (playlistsUrl !== currentUrl) {
       router.push(playlistsUrl);
@@ -293,23 +284,29 @@ function BottomTabBar({ boardDetails, angle, boardConfigs }: BottomTabBarProps) 
   };
 
   const handleFeedTab = () => {
-    setIsCreateOpen(false);
-    setIsCreatePlaylistOpen(false);
+        setIsCreatePlaylistOpen(false);
     router.push('/feed');
     track('Bottom Tab Bar', { tab: 'feed' });
   };
 
   const handleNotificationsTab = () => {
-    setIsCreateOpen(false);
-    setIsCreatePlaylistOpen(false);
+        setIsCreatePlaylistOpen(false);
     router.push('/notifications');
     track('Bottom Tab Bar', { tab: 'notifications' });
   };
 
   const handleCreateTab = () => {
     setIsCreatePlaylistOpen(false);
-    setIsCreateRendered(true); setIsCreateOpen(true);
     track('Bottom Tab Bar', { tab: 'create' });
+    // Go directly to create climb, skip the drawer
+    if (createClimbUrl) {
+      router.push(createClimbUrl);
+      return;
+    }
+    if (boardConfigs) {
+      setPendingCreateAction('climb');
+      setIsBoardSelectorRendered(true); setIsBoardSelectorOpen(true);
+    }
   };
 
   const handleTabChange = (_event: React.SyntheticEvent, newValue: Tab) => {
@@ -335,27 +332,13 @@ function BottomTabBar({ boardDetails, angle, boardConfigs }: BottomTabBarProps) 
     }
   };
 
-  const handleOpenCreateClimb = () => {
-    setIsCreateOpen(false);
-    if (createClimbUrl) {
-      router.push(createClimbUrl);
-      return;
-    }
-
-    if (boardConfigs) {
-      setPendingCreateAction('climb');
-      setIsBoardSelectorRendered(true); setIsBoardSelectorOpen(true);
-    }
-  };
-
   const handleOpenCreatePlaylist = () => {
     if (!isAuthenticated) {
       openAuthModal({
         title: 'Sign in to create playlists',
         description: 'Sign in to create and manage your climb playlists.',
         onSuccess: () => {
-          setIsCreateOpen(false);
-          if (!canCreatePlaylistHere) {
+                    if (!canCreatePlaylistHere) {
             if (boardConfigs) {
               setPendingCreateAction('playlist');
               setIsBoardSelectorRendered(true); setIsBoardSelectorOpen(true);
@@ -371,8 +354,7 @@ function BottomTabBar({ boardDetails, angle, boardConfigs }: BottomTabBarProps) 
     }
 
     if (!canCreatePlaylistHere) {
-      setIsCreateOpen(false);
-      if (boardConfigs) {
+            if (boardConfigs) {
         setPendingCreateAction('playlist');
         setIsBoardSelectorRendered(true); setIsBoardSelectorOpen(true);
       } else {
@@ -381,8 +363,7 @@ function BottomTabBar({ boardDetails, angle, boardConfigs }: BottomTabBarProps) 
       return;
     }
 
-    setIsCreateOpen(false);
-    setIsCreatePlaylistRendered(true); setIsCreatePlaylistOpen(true);
+        setIsCreatePlaylistRendered(true); setIsCreatePlaylistOpen(true);
   };
 
   const handleBoardSelected = useCallback((url: string, config?: StoredBoardConfig) => {
@@ -594,56 +575,7 @@ function BottomTabBar({ boardDetails, angle, boardConfigs }: BottomTabBarProps) 
         />
       </BottomNavigation>
 
-      {/* Create Menu Drawer — only mounted after first open, unmounted after close animation */}
-      {isCreateRendered && (
-        <SwipeableDrawer
-          title="Create"
-          placement="bottom"
-          open={isCreateOpen}
-          onClose={() => setIsCreateOpen(false)}
-          onTransitionEnd={handleCreateTransitionEnd}
-          styles={{
-            wrapper: { height: 'auto' },
-            body: { padding: `${themeTokens.spacing[2]}px 0` },
-          }}
-        >
-          <Box sx={{ display: 'flex', flexDirection: 'column' }}>
-            <MuiButton
-              data-testid="create-climb-option"
-              variant="text"
-              startIcon={<EditOutlined />}
-              fullWidth
-              onClick={handleOpenCreateClimb}
-              sx={{
-                height: 48,
-                justifyContent: 'flex-start',
-                paddingLeft: themeTokens.spacing[4],
-                fontSize: themeTokens.typography.fontSize.base,
-                color: 'inherit',
-              }}
-            >
-              Create Climb
-            </MuiButton>
-            {!isMoonboard && (
-              <MuiButton
-                data-testid="create-playlist-option"
-                variant="text"
-                startIcon={<LocalOfferOutlined />}
-                fullWidth
-                onClick={handleOpenCreatePlaylist}
-                sx={{
-                  height: 48,
-                  justifyContent: 'flex-start',
-                  paddingLeft: themeTokens.spacing[4],
-                  fontSize: themeTokens.typography.fontSize.base,
-                }}
-              >
-                Playlist
-              </MuiButton>
-            )}
-          </Box>
-        </SwipeableDrawer>
-      )}
+
 
       {/* Create Playlist Drawer */}
       {isCreatePlaylistRendered && (

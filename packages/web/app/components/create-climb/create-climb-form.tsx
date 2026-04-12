@@ -7,11 +7,11 @@ import MuiTooltip from '@mui/material/Tooltip';
 import Box from '@mui/material/Box';
 import Stack from '@mui/material/Stack';
 import IconButton from '@mui/material/IconButton';
+import MuiButton from '@mui/material/Button';
 import Typography from '@mui/material/Typography';
 import TextField from '@mui/material/TextField';
 import CircularProgress from '@mui/material/CircularProgress';
 import MuiSwitch from '@mui/material/Switch';
-import MuiSlider from '@mui/material/Slider';
 import MuiSelect from '@mui/material/Select';
 import MenuItem from '@mui/material/MenuItem';
 import Badge from '@mui/material/Badge';
@@ -45,6 +45,7 @@ import { createGraphQLHttpClient } from '@/app/lib/graphql/client';
 import { useAuthModal } from '@/app/components/providers/auth-modal-provider';
 import { useSnackbar } from '../providers/snackbar-provider';
 import { refreshClimbSearchAfterSave } from '@/app/lib/climb-search-cache';
+import { ConfirmPopover } from '@/app/components/ui/confirm-popover';
 import CreateClimbHeatmapOverlay from './create-climb-heatmap-overlay';
 import DraftsDrawer from './drafts-drawer';
 import HoldTypePicker from './hold-type-picker';
@@ -242,7 +243,9 @@ export default function CreateClimbForm({
 
   // Aurora-specific state
   const [showHeatmap, setShowHeatmap] = useState(false);
-  const [heatmapOpacity, setHeatmapOpacity] = useState(0.7);
+  const [isHeatmapLoading, setIsHeatmapLoading] = useState(false);
+  const heatmapOpacity = 0.7;
+  const handleHeatmapLoadingChange = useCallback((loading: boolean) => setIsHeatmapLoading(loading), []);
   const [isDraft, setIsDraft] = useState(true);
 
   // MoonBoard-specific state
@@ -945,14 +948,24 @@ export default function CreateClimbForm({
       );
     }
 
+    const needsTitle = climbName.trim().length === 0;
+
+    const handleSaveClick = () => {
+      if (needsTitle) {
+        setShowSettingsPanel(true);
+        return;
+      }
+      handlePublish();
+    };
+
     return (
-      <MuiTooltip title={isSaving ? 'Saving...' : 'Save climb'}>
+      <MuiTooltip title={isSaving ? 'Saving...' : needsTitle ? 'Name your climb' : 'Save climb'}>
         <span>
           <IconButton
             size="small"
             color="primary"
-            disabled={isSaving || !canSave}
-            onClick={handlePublish}
+            disabled={isSaving || (canSave === false && !needsTitle)}
+            onClick={handleSaveClick}
             aria-label={isSaving ? 'Saving' : 'Save climb'}
           >
             {isSaving ? <CircularProgress size={16} /> : <SaveOutlined fontSize="small" />}
@@ -960,7 +973,7 @@ export default function CreateClimbForm({
         </span>
       </MuiTooltip>
     );
-  }, [boardType, isAuthenticated, hasMoonBoardSessionUser, editLocked, justSaved, isSaving, canSave, handlePublish, openAuthModal, handleAuthSuccess]);
+  }, [boardType, isAuthenticated, hasMoonBoardSessionUser, editLocked, justSaved, isSaving, canSave, climbName, handlePublish, openAuthModal, handleAuthSuccess]);
 
   const titleClimb: ClimbTitleData = useMemo(() => ({
     name: climbName || 'Untitled climb',
@@ -1027,20 +1040,17 @@ export default function CreateClimbForm({
             )}
           </div>
           {isDraft && (
-            <Typography
-              variant="body2"
-              component="span"
-              color="text.secondary"
-              className={styles.climbTitleDraftBadge}
-            >
-              Draft
-            </Typography>
+            <div className={styles.climbTitleTrailing}>
+              <Typography
+                variant="body2"
+                component="span"
+                color="text.secondary"
+                className={styles.climbTitleDraftBadge}
+              >
+                Draft
+              </Typography>
+            </div>
           )}
-          <MuiTooltip title="Climb settings">
-            <IconButton size="small" onClick={handleToggleSettings} aria-label="Climb settings">
-              <SettingsOutlined fontSize="small" />
-            </IconButton>
-          </MuiTooltip>
         </div>
       </div>
 
@@ -1062,6 +1072,7 @@ export default function CreateClimbForm({
                 litUpHoldsMap={litUpHoldsMap}
                 opacity={heatmapOpacity}
                 enabled={showHeatmap}
+                onLoadingChange={handleHeatmapLoadingChange}
               />
             </div>
           ) : boardType === 'moonboard' && layoutFolder && holdSetImages ? (
@@ -1124,29 +1135,26 @@ export default function CreateClimbForm({
                 className={styles.heatmapButton}
                 aria-label={showHeatmap ? 'Hide heatmap' : 'Show heatmap'}
               >
-                <LocalFireDepartmentOutlined fontSize="small" />
+                {showHeatmap && isHeatmapLoading ? <CircularProgress size={16} /> : <LocalFireDepartmentOutlined fontSize="small" />}
               </IconButton>
             </MuiTooltip>
-            {showHeatmap && (
-              <MuiSlider
-                min={0.1}
-                max={1}
-                step={0.1}
-                value={heatmapOpacity}
-                onChange={(_, value) => setHeatmapOpacity(value as number)}
-                className={styles.opacitySlider}
-                aria-label="Heatmap opacity"
-              />
-            )}
           </>
         )}
-        <MuiTooltip title="Clear all holds">
-          <span>
-            <IconButton size="small" onClick={resetHolds} disabled={totalHolds === 0} aria-label="Clear all holds">
-              <DeleteOutlined fontSize="small" />
-            </IconButton>
-          </span>
-        </MuiTooltip>
+        <ConfirmPopover
+          title="Clear climb"
+          description="This will clear all holds and reset the form. Are you sure?"
+          onConfirm={resetHolds}
+          okText="Clear"
+          cancelText="Cancel"
+        >
+          <MuiTooltip title="Clear all holds">
+            <span>
+              <IconButton size="small" disabled={totalHolds === 0} aria-label="Clear all holds">
+                <DeleteOutlined fontSize="small" />
+              </IconButton>
+            </span>
+          </MuiTooltip>
+        </ConfirmPopover>
         {canShowDrafts && (
           <MuiTooltip title="Drafts">
             <Badge
@@ -1195,7 +1203,14 @@ export default function CreateClimbForm({
             {userGrade}
           </Typography>
         )}
-        <div className={styles.bottomControlsSaveSlot}>{saveIconButton}</div>
+        <div className={styles.bottomControlsSaveSlot}>
+          <MuiTooltip title="Climb settings">
+            <IconButton size="small" onClick={handleToggleSettings} aria-label="Climb settings">
+              <SettingsOutlined fontSize="small" />
+            </IconButton>
+          </MuiTooltip>
+          {saveIconButton}
+        </div>
       </div>
 
       {/* Drafts drawer — only for Aurora boards where boardDetails is loaded */}
@@ -1209,16 +1224,15 @@ export default function CreateClimbForm({
         />
       )}
 
-      {/* Settings nested drawer — lazy-mounted */}
-      {showSettingsPanel && (
-        <SwipeableDrawer
-          title="Climb Settings"
-          placement="bottom"
-          open={showSettingsPanel}
-          onClose={() => setShowSettingsPanel(false)}
-          swipeEnabled={false}
-          styles={SETTINGS_DRAWER_STYLES}
-        >
+      {/* Settings nested drawer */}
+      <SwipeableDrawer
+        title="Climb Settings"
+        placement="bottom"
+        open={showSettingsPanel}
+        onClose={() => setShowSettingsPanel(false)}
+        swipeEnabled={false}
+        styles={SETTINGS_DRAWER_STYLES}
+      >
           <div className={styles.settingsDrawerContent}>
             {/* Name */}
             <div className={styles.settingsField}>
@@ -1336,8 +1350,28 @@ export default function CreateClimbForm({
               />
             </div>
           </div>
+          <Box sx={{ display: 'flex', gap: 1.5, mt: 2 }}>
+            <MuiButton
+              variant="outlined"
+              onClick={() => setShowSettingsPanel(false)}
+              sx={{ flex: 1, height: 48, borderRadius: `${themeTokens.borderRadius.md}px`, fontSize: 16, fontWeight: 600 }}
+            >
+              Dismiss
+            </MuiButton>
+            <MuiButton
+              variant="contained"
+              disabled={isSaving || !canSave}
+              onClick={() => {
+                setShowSettingsPanel(false);
+                handlePublish();
+              }}
+              startIcon={isSaving ? <CircularProgress size={16} /> : <SaveOutlined />}
+              sx={{ flex: 1, height: 48, borderRadius: `${themeTokens.borderRadius.md}px`, fontSize: 16, fontWeight: 600 }}
+            >
+              {isSaving ? 'Saving...' : 'Save'}
+            </MuiButton>
+          </Box>
         </SwipeableDrawer>
-      )}
     </div>
   );
 }

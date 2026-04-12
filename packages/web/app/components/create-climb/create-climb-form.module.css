@@ -1,6 +1,9 @@
 .pageContainer {
-  height: calc(100dvh - 120px - env(safe-area-inset-bottom, 0px));
-  margin-top: calc(-1 * var(--global-header-height));
+  position: fixed;
+  top: env(safe-area-inset-top, 0px);
+  bottom: calc(120px + env(safe-area-inset-bottom, 0px));
+  left: 8px;
+  right: 8px;
   display: flex;
   flex-direction: column;
   overflow: hidden;
@@ -15,7 +18,6 @@
 .headerSection {
   flex-shrink: 0;
   background-color: var(--semantic-surface);
-  padding-top: var(--global-header-height);
 }
 
 .alertBanner {
@@ -23,24 +25,33 @@
   flex-shrink: 0;
 }
 
-/* Title row — ClimbTitle + settings icon, optional draft badge on the left */
+/* Title row — centered title with draft badge + settings absolutely positioned right */
 .climbTitleRow {
+  position: relative;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 4px 12px;
+  flex-shrink: 0;
+}
+
+.climbTitleTrailing {
+  position: absolute;
+  right: 12px;
+  top: 50%;
+  transform: translateY(-50%);
   display: flex;
   align-items: center;
-  gap: 12px;
-  padding: 8px 12px;
-  flex-shrink: 0;
+  gap: 4px;
 }
 
 .climbTitleDraftBadge {
   font-style: italic;
   font-size: 20px;
   line-height: 1;
-  flex-shrink: 0;
 }
 
 .climbTitleMain {
-  flex: 1;
   min-width: 0;
   display: flex;
   flex-direction: column;
@@ -72,12 +83,6 @@
 
 .heatmapButton:hover {
   color: var(--neutral-500);
-}
-
-/* Opacity slider for heatmap */
-.opacitySlider {
-  width: 80px;
-  margin: 0;
 }
 
 /* Board section (flex:1, holds ZoomableBoard + heatmap) */
@@ -163,17 +168,12 @@
   }
 
   .climbTitleRow {
-    padding: 8px 10px;
-    gap: 8px;
+    padding: 4px 10px;
   }
 
   .bottomControls {
     padding: 8px;
     gap: 4px;
-  }
-
-  .opacitySlider {
-    width: 60px;
   }
 
   .boardSectionWrapper {
@@ -184,8 +184,7 @@
 /* Desktop adjustments */
 @media (min-width: 768px) {
   .pageContainer {
-    max-width: 720px;
-    margin: 0 auto;
-    width: 100%;
+    left: max(8px, calc(50% - 360px));
+    right: max(8px, calc(50% - 360px));
   }
 }
