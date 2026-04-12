@@ -192,12 +192,13 @@ public class NativeTabBarView: UIView {
     }
 
     public func setBarsHidden(_ hidden: Bool, animated: Bool = true) {
+        let targetTransform = hidden ? CGAffineTransform(translationX: 0, y: bounds.height) : .identity
         if animated {
-            UIView.animate(withDuration: 0.25) {
-                self.alpha = hidden ? 0 : 1
+            UIView.animate(withDuration: 0.3, delay: 0, options: .curveEaseInOut) {
+                self.transform = targetTransform
             }
         } else {
-            alpha = hidden ? 0 : 1
+            transform = targetTransform
         }
     }
 
