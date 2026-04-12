@@ -8,22 +8,26 @@ vi.mock('@/app/hooks/use-is-dark-mode', () => ({
   useIsDarkMode: () => false,
 }));
 
+const defaultGradeFormatReturn = {
+  gradeFormat: 'v-grade' as const,
+  formatGrade: (d: string | null | undefined) => {
+    if (!d) return null;
+    const match = d.match(/V\d+\+?/i);
+    return match ? match[0].toUpperCase() : null;
+  },
+  getGradeColor: (d: string | null | undefined) => {
+    if (!d) return undefined;
+    const match = d.match(/V\d+\+?/i);
+    return match ? `#color-${match[0].toUpperCase()}` : undefined;
+  },
+  loaded: true,
+  setGradeFormat: vi.fn(),
+};
+
+const mockUseGradeFormat = vi.fn(() => defaultGradeFormatReturn);
+
 vi.mock('@/app/hooks/use-grade-format', () => ({
-  useGradeFormat: () => ({
-    gradeFormat: 'v-grade',
-    formatGrade: (d: string | null | undefined) => {
-      if (!d) return null;
-      const match = d.match(/V\d+\+?/i);
-      return match ? match[0].toUpperCase() : null;
-    },
-    getGradeColor: (d: string | null | undefined) => {
-      if (!d) return undefined;
-      const match = d.match(/V\d+\+?/i);
-      return match ? `#color-${match[0].toUpperCase()}` : undefined;
-    },
-    loaded: true,
-    setGradeFormat: vi.fn(),
-  }),
+  useGradeFormat: (...args: unknown[]) => mockUseGradeFormat(...args),
 }));
 
 vi.mock('@/app/theme/theme-config', () => ({
@@ -311,6 +315,90 @@ describe('ClimbTitle', () => {
       render(<ClimbTitle climb={makeClimb()} />);
       expect(screen.getByText('Test Boulder')).toBeTruthy();
       expect(screen.getByText('6a/V3 3.5★')).toBeTruthy();
+    });
+  });
+
+  // --- Font grade format ---
+
+  describe('Font grade format', () => {
+    beforeEach(() => {
+      mockUseGradeFormat.mockReturnValue({
+        gradeFormat: 'font' as const,
+        formatGrade: (d: string | null | undefined) => {
+          if (!d) return null;
+          const slash = d.indexOf('/');
+          return slash > 0 ? d.substring(0, slash).toUpperCase() : null;
+        },
+        getGradeColor: () => '#color-font',
+        loaded: true,
+        setGradeFormat: vi.fn(),
+      });
+    });
+
+    afterEach(() => {
+      mockUseGradeFormat.mockReturnValue(defaultGradeFormatReturn);
+    });
+
+    it('renders Font grade in horizontal layout', () => {
+      render(<ClimbTitle climb={makeClimb({ difficulty: '6a/V3' })} layout="horizontal" />);
+      expect(screen.getByText('6A')).toBeTruthy();
+    });
+
+    it('renders Font grade in gradePosition="right" layout', () => {
+      render(<ClimbTitle climb={makeClimb({ difficulty: '6a/V3' })} gradePosition="right" />);
+      expect(screen.getByText('6A')).toBeTruthy();
+    });
+
+    it('calls getGradeColor with the difficulty string', () => {
+      const getGradeColorSpy = vi.fn(() => '#color-font');
+      mockUseGradeFormat.mockReturnValue({
+        gradeFormat: 'font' as const,
+        formatGrade: (d: string | null | undefined) => {
+          if (!d) return null;
+          const slash = d.indexOf('/');
+          return slash > 0 ? d.substring(0, slash).toUpperCase() : null;
+        },
+        getGradeColor: getGradeColorSpy,
+        loaded: true,
+        setGradeFormat: vi.fn(),
+      });
+      render(<ClimbTitle climb={makeClimb({ difficulty: '6a/V3' })} gradePosition="right" />);
+      expect(getGradeColorSpy).toHaveBeenCalledWith('6a/V3', false);
+    });
+  });
+
+  // --- Loading state ---
+
+  describe('loading state', () => {
+    beforeEach(() => {
+      mockUseGradeFormat.mockReturnValue({
+        gradeFormat: 'v-grade' as const,
+        formatGrade: () => null,
+        getGradeColor: () => undefined,
+        loaded: false,
+        setGradeFormat: vi.fn(),
+      });
+    });
+
+    afterEach(() => {
+      mockUseGradeFormat.mockReturnValue(defaultGradeFormatReturn);
+    });
+
+    it('renders a Skeleton instead of grade text in gradePosition="right" layout', () => {
+      const { container } = render(<ClimbTitle climb={makeClimb({ difficulty: '6a/V3' })} gradePosition="right" />);
+      expect(container.querySelector('.MuiSkeleton-root')).toBeTruthy();
+      expect(screen.queryByText('V3')).toBeNull();
+    });
+
+    it('renders a Skeleton instead of grade text in horizontal layout', () => {
+      const { container } = render(<ClimbTitle climb={makeClimb({ difficulty: '6a/V3' })} layout="horizontal" />);
+      expect(container.querySelector('.MuiSkeleton-root')).toBeTruthy();
+      expect(screen.queryByText('V3')).toBeNull();
+    });
+
+    it('does not render a Skeleton when difficulty is null', () => {
+      const { container } = render(<ClimbTitle climb={makeClimb({ difficulty: null })} gradePosition="right" />);
+      expect(container.querySelector('.MuiSkeleton-root')).toBeNull();
     });
   });
 });

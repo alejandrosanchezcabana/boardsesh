@@ -104,6 +104,38 @@ describe('buildSessionGradeBars', () => {
   });
 });
 
+describe('buildSessionGradeBars with custom formatGradeFn', () => {
+  it('uses custom formatGradeFn for labels when provided', () => {
+    const input: SessionGradeDistributionItem[] = [
+      { grade: '7a/V6', flash: 0, send: 1, attempt: 0 },
+      { grade: '6a/V3', flash: 1, send: 0, attempt: 0 },
+    ];
+    const fontFormatter = (grade: string) => {
+      const slash = grade.indexOf('/');
+      return slash > 0 ? grade.substring(0, slash).toUpperCase() : grade;
+    };
+    const bars = buildSessionGradeBars(input, fontFormatter);
+    expect(bars[0].label).toBe('6A');
+    expect(bars[1].label).toBe('7A');
+  });
+
+  it('falls back to raw grade when custom formatGradeFn returns null', () => {
+    const input: SessionGradeDistributionItem[] = [
+      { grade: 'unknown', flash: 1, send: 0, attempt: 0 },
+    ];
+    const bars = buildSessionGradeBars(input, () => null);
+    expect(bars[0].label).toBe('unknown');
+  });
+
+  it('uses formatVGrade as default when no formatGradeFn provided', () => {
+    const input: SessionGradeDistributionItem[] = [
+      { grade: '6a/V3', flash: 1, send: 0, attempt: 0 },
+    ];
+    const bars = buildSessionGradeBars(input);
+    expect(bars[0].label).toBe('V3');
+  });
+});
+
 describe('SESSION_GRADE_LEGEND', () => {
   it('has 3 entries: Flash, Send, Attempt', () => {
     expect(SESSION_GRADE_LEGEND).toHaveLength(3);
