@@ -29,6 +29,9 @@ export const getClimbByUuid = async (params: GetClimbParams): Promise<Climb | nu
         quality_average: sql<number>`ROUND(${tables.climbStats.qualityAverage}::numeric, 2)`,
         difficulty_error: sql<number>`ROUND(${tables.climbStats.difficultyAverage}::numeric - ${tables.climbStats.displayDifficulty}::numeric, 2)`,
         benchmark_difficulty: tables.climbStats.benchmarkDifficulty,
+        is_draft: tables.climbs.isDraft,
+        created_at: tables.climbs.createdAt,
+        published_at: tables.climbs.publishedAt,
       })
       .from(tables.climbs)
       .leftJoin(
@@ -64,6 +67,9 @@ export const getClimbByUuid = async (params: GetClimbParams): Promise<Climb | nu
       stars: Math.round((Number(row.quality_average) || 0) * 5),
       difficulty_error: row.difficulty_error?.toString() || '0',
       benchmark_difficulty: row.benchmark_difficulty && row.benchmark_difficulty > 0 ? row.benchmark_difficulty.toString() : null,
+      is_draft: row.is_draft ?? false,
+      created_at: row.created_at ?? null,
+      published_at: row.published_at ?? null,
     };
 
     return climb;

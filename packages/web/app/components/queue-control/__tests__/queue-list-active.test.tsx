@@ -86,6 +86,12 @@ vi.mock('../../graphql-queue', () => ({
 
 vi.mock('next/navigation', () => ({
   usePathname: () => '/kilter/original/12x12/default/40/play/some-climb',
+  useRouter: () => ({ push: vi.fn(), replace: vi.fn(), back: vi.fn(), forward: vi.fn(), refresh: vi.fn(), prefetch: vi.fn() }),
+  useParams: () => ({}),
+}));
+
+vi.mock('next-auth/react', () => ({
+  useSession: () => ({ data: null, status: 'unauthenticated' }),
 }));
 
 vi.mock('@/app/hooks/use-is-dark-mode', () => ({

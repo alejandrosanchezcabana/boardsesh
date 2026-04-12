@@ -48,6 +48,9 @@ const CLIMB_DETAIL_FIELDS = `
   benchmark_difficulty
   userAscents
   userAttempts
+  is_draft
+  created_at
+  published_at
 `;
 
 export const SEARCH_CLIMBS = gql`

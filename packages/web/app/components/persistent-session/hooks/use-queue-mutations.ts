@@ -6,6 +6,7 @@ import {
   SET_CURRENT_CLIMB,
   MIRROR_CURRENT_CLIMB,
   SET_QUEUE,
+  REPLACE_QUEUE_ITEM,
 } from '@boardsesh/shared-schema';
 import type { ClimbQueueItem as LocalClimbQueueItem } from '../../queue-control/types';
 import type { Session } from '../types';
@@ -22,6 +23,7 @@ export interface QueueMutationsActions {
   setCurrentClimb: (item: LocalClimbQueueItem | null, shouldAddToQueue?: boolean, correlationId?: string) => Promise<void>;
   mirrorCurrentClimb: (mirrored: boolean) => Promise<void>;
   setQueue: (queue: LocalClimbQueueItem[], currentClimbQueueItem?: LocalClimbQueueItem | null) => Promise<void>;
+  replaceQueueItem: (uuid: string, item: LocalClimbQueueItem) => Promise<void>;
 }
 
 /**
@@ -160,11 +162,23 @@ export function useQueueMutations({ client, session }: UseQueueMutationsArgs): Q
     [],
   );
 
+  const replaceQueueItem = useCallback(
+    async (uuid: string, item: LocalClimbQueueItem) => {
+      if (!clientRef.current || !sessionRef.current) throw new Error('Not connected to session');
+      await execute(clientRef.current, {
+        query: REPLACE_QUEUE_ITEM,
+        variables: { uuid, item: toClimbQueueItemInput(item) },
+      });
+    },
+    [],
+  );
+
   return {
     addQueueItem,
     removeQueueItem,
     setCurrentClimb,
     mirrorCurrentClimb,
     setQueue,
+    replaceQueueItem,
   };
 }

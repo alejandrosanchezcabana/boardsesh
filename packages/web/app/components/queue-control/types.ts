@@ -63,8 +63,16 @@ export type QueueAction =
 export interface QueueActionsType {
   addToQueue: (climb: Climb) => void;
   removeFromQueue: (item: ClimbQueueItem) => void;
-  setCurrentClimb: (climb: Climb) => void;
+  /** Sets the climb as current. Resolves to the freshly-created ClimbQueueItem
+   *  so callers can capture its uuid (e.g. the create form tracks this uuid
+   *  to later replace the item in place on subsequent saves). Resolves to
+   *  null when validation fails or the mutation is guarded. */
+  setCurrentClimb: (climb: Climb) => Promise<ClimbQueueItem | null>;
   setCurrentClimbQueueItem: (item: ClimbQueueItem) => void;
+  /** Replace an existing queue item (by its queue-item uuid) with a new climb,
+   *  preserving addedBy attribution. Used by the create form to keep the
+   *  tracked queue item in sync as the user keeps editing a climb. */
+  replaceQueueItem: (queueItemUuid: string, climb: Climb) => void;
   setClimbSearchParams: (params: SearchRequestPagination) => void;
   setCountSearchParams: (params: SearchRequestPagination) => void;
   mirrorClimb: () => void;

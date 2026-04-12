@@ -6,7 +6,8 @@ export type QueueOperation =
   | 'addToQueue'
   | 'removeFromQueue'
   | 'mirrorClimb'
-  | 'setQueue';
+  | 'setQueue'
+  | 'replaceQueueItem';
 
 export type QueueOperationMode = 'local' | 'party' | 'party-offline';
 

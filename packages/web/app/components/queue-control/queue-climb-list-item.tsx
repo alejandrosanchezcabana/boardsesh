@@ -4,7 +4,10 @@ import React, { useEffect, useRef, useState, useCallback, useMemo } from 'react'
 import MuiTooltip from '@mui/material/Tooltip';
 import MuiAvatar from '@mui/material/Avatar';
 import MuiCheckbox from '@mui/material/Checkbox';
+import MuiIconButton from '@mui/material/IconButton';
+import MuiStack from '@mui/material/Stack';
 import CheckOutlined from '@mui/icons-material/CheckOutlined';
+import EditOutlined from '@mui/icons-material/EditOutlined';
 import PersonOutlined from '@mui/icons-material/PersonOutlined';
 import { BoardDetails, Climb } from '@/app/lib/types';
 import { draggable, dropTargetForElements } from '@atlaskit/pragmatic-drag-and-drop/element/adapter';
@@ -36,6 +39,12 @@ type QueueClimbListItemProps = {
   isEditMode?: boolean;
   isSelected?: boolean;
   onToggleSelect?: (uuid: string) => void;
+  /** When the climb is user-editable (draft or within the 24h post-publish
+   *  window), the queue list surfaces an Edit affordance that routes the user
+   *  back to the create form. The parent is responsible for deciding which
+   *  climbs qualify; this component just renders the button when asked. */
+  onEditClimb?: (climb: Climb) => void;
+  isEditable?: boolean;
 };
 
 const QueueClimbListItem: React.FC<QueueClimbListItemProps> = ({
@@ -53,6 +62,8 @@ const QueueClimbListItem: React.FC<QueueClimbListItemProps> = ({
   isEditMode = false,
   isSelected = false,
   onToggleSelect,
+  onEditClimb,
+  isEditable = false,
 }) => {
   const [closestEdge, setClosestEdge] = useState<Edge | null>(null);
   const itemRef = useRef<HTMLDivElement>(null);
@@ -77,28 +88,55 @@ const QueueClimbListItem: React.FC<QueueClimbListItemProps> = ({
     return 'var(--semantic-surface)';
   }, [isCurrent, isHistory, item.climb.difficulty, isDark]);
 
-  // "Added by" avatar slot
+  const handleEditClick = useCallback(
+    (event: React.MouseEvent) => {
+      // Stop the synthetic event from bubbling up to the list item's own
+      // select/double-tap handlers — otherwise tapping Edit would also mark
+      // this climb as current.
+      event.stopPropagation();
+      onEditClimb?.(item.climb);
+    },
+    [onEditClimb, item.climb],
+  );
+
+  // "Added by" avatar slot (plus an Edit affordance for editable climbs)
   const afterTitleSlot = useMemo(() => {
     const avatarStyle = { width: 24, height: 24 };
     const avatarBluetoothStyle = { width: 24, height: 24, backgroundColor: 'transparent' };
 
-    if (item.addedByUser) {
-      return (
-        <MuiTooltip title={item.addedByUser.username}>
-          <MuiAvatar sx={avatarStyle} src={item.addedByUser.avatarUrl}>
-            <PersonOutlined />
-          </MuiAvatar>
-        </MuiTooltip>
-      );
-    }
-    return (
+    const avatar = item.addedByUser ? (
+      <MuiTooltip title={item.addedByUser.username}>
+        <MuiAvatar sx={avatarStyle} src={item.addedByUser.avatarUrl}>
+          <PersonOutlined />
+        </MuiAvatar>
+      </MuiTooltip>
+    ) : (
       <MuiTooltip title="Added via Bluetooth">
         <MuiAvatar sx={avatarBluetoothStyle}>
           <BluetoothIcon style={{ color: 'var(--neutral-400)' }} />
         </MuiAvatar>
       </MuiTooltip>
     );
-  }, [item.addedByUser]);
+
+    if (!isEditable || !onEditClimb) {
+      return avatar;
+    }
+
+    return (
+      <MuiStack direction="row" spacing={0.5} alignItems="center">
+        <MuiTooltip title="Edit this climb">
+          <MuiIconButton
+            size="small"
+            onClick={handleEditClick}
+            sx={{ width: 24, height: 24 }}
+          >
+            <EditOutlined sx={{ fontSize: 16 }} />
+          </MuiIconButton>
+        </MuiTooltip>
+        {avatar}
+      </MuiStack>
+    );
+  }, [item.addedByUser, isEditable, onEditClimb, handleEditClick]);
 
   // onSelect handler — double-tap sets current climb
   const handleSelect = useCallback(() => {

@@ -45,6 +45,7 @@ import { getBackendWsUrl } from '@/app/lib/backend-url';
 import { createGraphQLHttpClient } from '@/app/lib/graphql/client';
 import { useAuthModal } from '@/app/components/providers/auth-modal-provider';
 import { useSnackbar } from '../providers/snackbar-provider';
+import { useOptionalQueueActions } from '@/app/components/graphql-queue';
 import { refreshClimbSearchAfterSave } from '@/app/lib/climb-search-cache';
 import CreateClimbHeatmapOverlay from './create-climb-heatmap-overlay';
 import DraftsDrawer from './drafts-drawer';
@@ -93,6 +94,10 @@ interface CreateClimbFormProps {
   boardDetails?: BoardDetails;
   forkFrames?: string;
   forkName?: string;
+  // Pre-loaded climb to edit (Aurora only, for now). When present the form
+  // seeds its hold map, name, description, and saved-row tracker from this
+  // climb on mount so the user can pick up a draft or recent publish via URL.
+  editClimb?: Climb;
   // MoonBoard-specific
   layoutFolder?: string;
   layoutId?: number;
@@ -105,6 +110,7 @@ export default function CreateClimbForm({
   boardDetails,
   forkFrames,
   forkName,
+  editClimb,
   layoutFolder,
   layoutId,
   holdSetImages,
@@ -185,6 +191,16 @@ export default function CreateClimbForm({
     isDraft: boolean;
   }
   const [savedClimb, setSavedClimb] = useState<SavedClimbState | null>(null);
+
+  // Tracks the uuid of the queue item representing the climb the user is
+  // authoring. Set when the climb first lands in the queue (first save or
+  // drafts-drawer load) and reused on subsequent saves to replace the same
+  // queue slot in place instead of piling up duplicates. Cleared by Clear.
+  const [queueItemUuid, setQueueItemUuid] = useState<string | null>(null);
+
+  // The create page is always mounted inside GraphQLQueueProvider, but use the
+  // optional hook so unit tests that render the form in isolation don't blow up.
+  const queueActions = useOptionalQueueActions();
 
   const markJustSaved = useCallback(() => {
     setJustSaved(true);
@@ -318,6 +334,11 @@ export default function CreateClimbForm({
     setDescription('');
     clearJustSaved();
     setSavedClimb(null);
+    // Detach the tracked queue slot too — Clear starts a fresh climb, so the
+    // next Save should create a new queue item rather than replace the old one.
+    // The existing queue item is intentionally left in place; Clear resets the
+    // form, not party state.
+    setQueueItemUuid(null);
     if (boardType === 'aurora' && isConnected) {
       sendFramesToBoard('');
     }
@@ -437,6 +458,56 @@ export default function CreateClimbForm({
     };
   }, [boardType, isValid, layoutId, moonBoardHolds, runMoonBoardDuplicateCheck, selectedAngle]);
 
+  // Builds a Climb object from the form's current state + a freshly-issued
+  // uuid. Used to push the in-progress climb into the live queue so party
+  // peers and a connected Bluetooth board see it as the current climb. Fields
+  // the form doesn't own (difficulty, stars, ascents, etc.) get safe defaults
+  // — a brand-new draft has nothing to report for those.
+  const buildClimbFromFormState = useCallback(
+    (uuid: string, frames: string): Climb => ({
+      uuid,
+      name: climbName,
+      description,
+      frames,
+      angle: boardType === 'moonboard' ? selectedAngle : angle,
+      setter_username: session?.user?.name || '',
+      ascensionist_count: 0,
+      difficulty: '',
+      quality_average: '0',
+      stars: 0,
+      difficulty_error: '0',
+      benchmark_difficulty: null,
+      mirrored: false,
+      is_draft: isDraft,
+      layoutId: boardType === 'aurora' ? boardDetails?.layout_id ?? null : layoutId ?? null,
+      boardType: boardType === 'aurora' ? boardDetails?.board_name : 'moonboard',
+    }),
+    [climbName, description, angle, selectedAngle, boardType, session?.user?.name, isDraft, boardDetails?.layout_id, boardDetails?.board_name, layoutId],
+  );
+
+  // Pushes the just-saved (or just-updated) climb into the live queue so it
+  // becomes the current active climb. On first save we call setCurrentClimb
+  // and remember the queue-item uuid; on subsequent saves we call
+  // replaceQueueItem against that uuid so the queue slot stays stable.
+  // BluetoothAutoSender reacts to currentClimbQueueItem identity changes and
+  // pushes new frames to the board automatically, so party peers with a
+  // connected board also see the update.
+  const syncSavedClimbToQueue = useCallback(
+    async (uuid: string, frames: string) => {
+      if (!queueActions) return;
+      const climb = buildClimbFromFormState(uuid, frames);
+      if (queueItemUuid) {
+        queueActions.replaceQueueItem(queueItemUuid, climb);
+        return;
+      }
+      const newItem = await queueActions.setCurrentClimb(climb);
+      if (newItem) {
+        setQueueItemUuid(newItem.uuid);
+      }
+    },
+    [queueActions, queueItemUuid, buildClimbFromFormState],
+  );
+
   // Save climb - Aurora
   //
   // Flow:
@@ -518,6 +589,8 @@ export default function CreateClimbForm({
           });
         }
 
+        await syncSavedClimbToQueue(updateResult.uuid, frames);
+
         markJustSaved();
         return;
       }
@@ -566,6 +639,8 @@ export default function CreateClimbForm({
         });
       }
 
+      await syncSavedClimbToQueue(saveResult.uuid, frames);
+
       markJustSaved();
     } catch (error) {
       console.error('Failed to save climb:', error);
@@ -576,7 +651,7 @@ export default function CreateClimbForm({
     } finally {
       setIsSaving(false);
     }
-  }, [boardDetails, generateFramesString, saveClimb, updateClimb, climbName, description, isDraft, angle, totalHolds, queryClient, markJustSaved, savedClimb, showMessage, EDIT_WINDOW_MS]);
+  }, [boardDetails, generateFramesString, saveClimb, updateClimb, climbName, description, isDraft, angle, totalHolds, queryClient, markJustSaved, savedClimb, showMessage, EDIT_WINDOW_MS, syncSavedClimbToQueue]);
 
   // Save climb - MoonBoard
   //
@@ -652,6 +727,12 @@ export default function CreateClimbForm({
           });
         }
 
+        // MoonBoard doesn't regenerate a frames string on update (updateClimb
+        // only touches metadata), so reuse whatever the existing queue item
+        // already has via an empty frames string — the queue renderer won't
+        // use it for MoonBoard and the form's own hold map is authoritative.
+        await syncSavedClimbToQueue(updateResult.uuid, '');
+
         markJustSaved();
         return;
       }
@@ -704,6 +785,8 @@ export default function CreateClimbForm({
         });
       }
 
+      await syncSavedClimbToQueue(moonBoardResult.saveMoonBoardClimb.uuid, '');
+
       markJustSaved();
     } catch (error) {
       console.error('Failed to save climb:', error);
@@ -733,6 +816,7 @@ export default function CreateClimbForm({
     savedClimb,
     updateClimb,
     EDIT_WINDOW_MS,
+    syncSavedClimbToQueue,
   ]);
 
   const handleAuthSuccess = useCallback(async () => {
@@ -874,9 +958,30 @@ export default function CreateClimbForm({
       isDraft: climb.is_draft ?? true,
     });
     clearJustSaved();
+    // Push the loaded draft into the queue as the current climb so party peers
+    // and any connected Bluetooth board see it. Start from a fresh queue slot
+    // so subsequent saves replace the same item in place.
+    setQueueItemUuid(null);
+    if (queueActions) {
+      void queueActions.setCurrentClimb(climb).then((newItem) => {
+        if (newItem) setQueueItemUuid(newItem.uuid);
+      });
+    }
     // The litUpHoldsMap effect at the top of this component pushes new frames
     // to a connected Bluetooth board automatically.
-  }, [boardType, boardDetails, loadAuroraHolds, clearJustSaved]);
+  }, [boardType, boardDetails, loadAuroraHolds, clearJustSaved, queueActions]);
+
+  // When the parent passes an editClimb (typically from
+  // /b/.../create?editClimbUuid=...), seed the form once it has mounted.
+  // Tracked by uuid so we only seed once per distinct target climb — subsequent
+  // saves update savedClimb in place and must not trigger another reload.
+  const seededEditClimbUuidRef = useRef<string | null>(null);
+  useEffect(() => {
+    if (!editClimb || boardType !== 'aurora' || !boardDetails || !loadAuroraHolds) return;
+    if (seededEditClimbUuidRef.current === editClimb.uuid) return;
+    seededEditClimbUuidRef.current = editClimb.uuid;
+    handleLoadDraft(editClimb);
+  }, [editClimb, boardType, boardDetails, loadAuroraHolds, handleLoadDraft]);
 
   const handleToggleHeatmap = useCallback(() => {
     if (boardType !== 'aurora' || !boardDetails) return;

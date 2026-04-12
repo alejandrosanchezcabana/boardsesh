@@ -258,9 +258,9 @@ function usePersistentSessionQueueAdapter(): {
   }, []);
 
   const setCurrentClimb = useCallback(
-    (climb: Climb) => {
+    async (climb: Climb): Promise<ClimbQueueItem | null> => {
       const r = latestRef.current;
-      if (!validateClimbForQueue(climb)) return;
+      if (!validateClimbForQueue(climb)) return null;
       const newItem: ClimbQueueItem = {
         climb,
         addedBy: null,
@@ -271,9 +271,9 @@ function usePersistentSessionQueueAdapter(): {
         // Cold-start path: no active board yet. Seed local state from the
         // climb's own board config so the queue bar begins showing.
         const seed = deriveSeedStateFromClimb(climb);
-        if (!seed) return;
+        if (!seed) return null;
         r.ps.setLocalQueueState([newItem], newItem, seed.baseBoardPath, seed.boardDetails);
-        return;
+        return newItem;
       }
       const currentIdx = r.currentClimbQueueItem
         ? r.queue.findIndex(q => q.uuid === r.currentClimbQueueItem!.uuid)
@@ -285,8 +285,29 @@ function usePersistentSessionQueueAdapter(): {
         newQueue.push(newItem);
       }
       r.ps.setLocalQueueState(newQueue, newItem, r.baseBoardPath, r.boardDetails);
+      return newItem;
     },
     [validateClimbForQueue],
+  );
+
+  // Bridge-mode replace: mirrors the local-state update with a new climb while
+  // preserving the queue-item uuid and existing addedBy attribution. The
+  // bridge context has no network path, so this is a pure local mutation.
+  const replaceQueueItem = useCallback(
+    (queueItemUuid: string, climb: Climb) => {
+      const r = latestRef.current;
+      if (!r.boardDetails) return;
+      const existing = r.queue.find(q => q.uuid === queueItemUuid);
+      if (!existing) return;
+      const updated: ClimbQueueItem = {
+        ...existing,
+        climb,
+      };
+      const newQueue = r.queue.map(q => (q.uuid === queueItemUuid ? updated : q));
+      const nextCurrent = r.currentClimbQueueItem?.uuid === queueItemUuid ? updated : r.currentClimbQueueItem;
+      r.ps.setLocalQueueState(newQueue, nextCurrent, r.baseBoardPath, r.boardDetails);
+    },
+    [],
   );
 
   // No-op functions for fields not used by the bottom bar
@@ -309,6 +330,7 @@ function usePersistentSessionQueueAdapter(): {
       removeFromQueue,
       setCurrentClimb,
       setCurrentClimbQueueItem,
+      replaceQueueItem,
       setClimbSearchParams: noopSetClimbSearchParams,
       setCountSearchParams: noopSetClimbSearchParams,
       mirrorClimb,
@@ -327,6 +349,7 @@ function usePersistentSessionQueueAdapter(): {
       removeFromQueue,
       setCurrentClimb,
       setCurrentClimbQueueItem,
+      replaceQueueItem,
       noopSetClimbSearchParams,
       mirrorClimb,
       noop,

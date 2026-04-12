@@ -144,6 +144,14 @@ export const MIRROR_CURRENT_CLIMB = `
   }
 `;
 
+export const REPLACE_QUEUE_ITEM = `
+  mutation ReplaceQueueItem($uuid: ID!, $item: ClimbQueueItemInput!) {
+    replaceQueueItem(uuid: $uuid, item: $item) {
+      ${QUEUE_ITEM_FIELDS}
+    }
+  }
+`;
+
 export const SET_QUEUE = `
   mutation SetQueue($queue: [ClimbQueueItemInput!]!, $currentClimbQueueItem: ClimbQueueItemInput) {
     setQueue(queue: $queue, currentClimbQueueItem: $currentClimbQueueItem) {

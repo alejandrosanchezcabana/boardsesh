@@ -300,11 +300,15 @@ export const GraphQLQueueProvider = ({ parsedParams, boardDetails, children, bas
     }
   }, []);
 
-  const setCurrentClimb = useCallback(async (climb: Climb) => {
+  // Resolves to the freshly-created ClimbQueueItem so callers (notably the
+  // create form) can capture its uuid and later call replaceQueueItem on
+  // subsequent edits. Resolves to null when validation fails or the mutation
+  // is guarded.
+  const setCurrentClimb = useCallback(async (climb: Climb): Promise<ClimbQueueItem | null> => {
     const startTime = performance.now();
     const r = latestRef.current;
-    if (r.guardMutation()) return;
-    if (!r.validateQueueAdd(climb)) return;
+    if (r.guardMutation()) return null;
+    if (!r.validateQueueAdd(climb)) return null;
     const mode: QueueOperationMode = !r.isPersistentSessionActive
       ? 'local' : r.isDisconnected ? 'party-offline' : 'party';
     const newItem = createClimbQueueItem(climb, r.clientId, r.currentUserInfo);
@@ -329,6 +333,40 @@ export const GraphQLQueueProvider = ({ parsedParams, boardDetails, children, bas
       }
     } else {
       trackQueueOperation('setCurrentClimb', performance.now() - startTime, mode);
+    }
+    return newItem;
+  }, []);
+
+  // Replace an existing queue item in place with a new climb, preserving the
+  // queue-item uuid and the existing addedBy attribution. Used by the create
+  // form on subsequent saves so the queue item stays in the same slot instead
+  // of piling up duplicates.
+  const replaceQueueItem = useCallback((queueItemUuid: string, climb: Climb) => {
+    const startTime = performance.now();
+    const r = latestRef.current;
+    if (r.guardMutation()) return;
+    if (!r.validateQueueAdd(climb)) return;
+    const existing = r.state.queue.find(qItem => qItem.uuid === queueItemUuid);
+    const mode: QueueOperationMode = !r.isPersistentSessionActive
+      ? 'local' : r.isDisconnected ? 'party-offline' : 'party';
+    const base = createClimbQueueItem(climb, r.clientId, r.currentUserInfo);
+    const newItem: ClimbQueueItem = {
+      ...base,
+      uuid: queueItemUuid,
+      addedBy: existing?.addedBy ?? base.addedBy,
+      addedByUser: existing?.addedByUser ?? base.addedByUser,
+      tickedBy: existing?.tickedBy,
+    };
+    r.dispatch({ type: 'DELTA_REPLACE_QUEUE_ITEM', payload: { uuid: queueItemUuid, item: newItem } });
+    if (!r.isDisconnected && r.hasConnected && r.isPersistentSessionActive) {
+      r.persistentSession.replaceQueueItem(queueItemUuid, newItem)
+        .then(() => trackQueueOperation('replaceQueueItem', performance.now() - startTime, mode))
+        .catch((error: unknown) => {
+          console.error('Failed to replace queue item:', error);
+          trackQueueOperationError('replaceQueueItem', mode);
+        });
+    } else {
+      trackQueueOperation('replaceQueueItem', performance.now() - startTime, mode);
     }
   }, []);
 
@@ -471,6 +509,7 @@ export const GraphQLQueueProvider = ({ parsedParams, boardDetails, children, bas
     setCurrentClimb,
     setQueue,
     setCurrentClimbQueueItem,
+    replaceQueueItem,
     setClimbSearchParams,
     setCountSearchParams: setCountSearchParamsAction,
     mirrorClimb,
@@ -485,7 +524,7 @@ export const GraphQLQueueProvider = ({ parsedParams, boardDetails, children, bas
     dismissSessionSummary: stableDismissSessionSummary,
   }), [
     addToQueue, removeFromQueue, setCurrentClimb, setQueue,
-    setCurrentClimbQueueItem, setClimbSearchParams, setCountSearchParamsAction,
+    setCurrentClimbQueueItem, replaceQueueItem, setClimbSearchParams, setCountSearchParamsAction,
     mirrorClimb, stableFetchMoreClimbs, getNextClimbQueueItem, getPreviousClimbQueueItem,
     dispatchWidgetNavigation,
     stableDisconnect, stableStartSession, stableJoinSession, stableEndSession, stableDismissSessionSummary,

@@ -13,7 +13,8 @@ import { Climb, BoardDetails } from '@/app/lib/types';
 import { monitorForElements } from '@atlaskit/pragmatic-drag-and-drop/element/adapter';
 import { extractClosestEdge } from '@atlaskit/pragmatic-drag-and-drop-hitbox/closest-edge';
 import { reorder } from '@atlaskit/pragmatic-drag-and-drop/reorder';
-import { usePathname } from 'next/navigation';
+import { usePathname, useRouter, useParams } from 'next/navigation';
+import { useSession } from 'next-auth/react';
 import { useIsDarkMode } from '@/app/hooks/use-is-dark-mode';
 import QueueClimbListItem from './queue-climb-list-item';
 import { dispatchOpenPlayDrawer } from './play-drawer-event';
@@ -68,7 +69,40 @@ const QueueList = forwardRef<QueueListHandle, QueueListProps>(({ boardDetails, i
     addToQueue,
   } = useQueueActions();
   const pathname = usePathname();
+  const router = useRouter();
+  const routeParams = useParams<{ board_slug?: string; angle?: string }>();
+  const { data: authSession } = useSession();
   const isDark = useIsDarkMode();
+
+  // Users can edit their own drafts indefinitely, and their own published
+  // climbs for the first 24 hours after publish. The backend enforces
+  // ownership too; this filter just keeps the UI tidy. Gated on board_slug
+  // because edit routes are only available on the new /b route.
+  const currentUsername = authSession?.user?.name;
+  const boardSlug = routeParams?.board_slug;
+  const angleParam = routeParams?.angle;
+  const EDIT_WINDOW_MS = 24 * 60 * 60 * 1000;
+  const isClimbEditable = useCallback(
+    (climb: Climb): boolean => {
+      if (!boardSlug || !angleParam) return false;
+      if (!currentUsername) return false;
+      if (climb.setter_username && climb.setter_username !== currentUsername) return false;
+      if (climb.is_draft) return true;
+      if (!climb.published_at) return false;
+      const publishedMs = Date.parse(climb.published_at);
+      if (!Number.isFinite(publishedMs)) return false;
+      return Date.now() - publishedMs <= EDIT_WINDOW_MS;
+    },
+    [currentUsername, boardSlug, angleParam, EDIT_WINDOW_MS],
+  );
+
+  const handleEditClimb = useCallback(
+    (climb: Climb) => {
+      if (!boardSlug || !angleParam) return;
+      router.push(`/b/${boardSlug}/${angleParam}/create?editClimbUuid=${climb.uuid}`);
+    },
+    [router, boardSlug, angleParam],
+  );
 
   const isAuthenticated = useOptionalBoardProvider()?.isAuthenticated ?? false;
 
@@ -322,6 +356,8 @@ const QueueList = forwardRef<QueueListHandle, QueueListProps>(({ boardDetails, i
                   isEditMode={isEditMode}
                   isSelected={selectedItems?.has(row.item.uuid) ?? false}
                   onToggleSelect={onToggleSelect}
+                  onEditClimb={handleEditClimb}
+                  isEditable={isClimbEditable(row.item.climb)}
                 />
               )}
               {row.type === 'history-divider' && (
@@ -343,6 +379,8 @@ const QueueList = forwardRef<QueueListHandle, QueueListProps>(({ boardDetails, i
                   isEditMode={isEditMode}
                   isSelected={selectedItems?.has(row.item.uuid) ?? false}
                   onToggleSelect={onToggleSelect}
+                  onEditClimb={handleEditClimb}
+                  isEditable={isClimbEditable(row.item.climb)}
                 />
               )}
               {row.type === 'future-item' && (
@@ -361,6 +399,8 @@ const QueueList = forwardRef<QueueListHandle, QueueListProps>(({ boardDetails, i
                   isEditMode={isEditMode}
                   isSelected={selectedItems?.has(row.item.uuid) ?? false}
                   onToggleSelect={onToggleSelect}
+                  onEditClimb={handleEditClimb}
+                  isEditable={isClimbEditable(row.item.climb)}
                 />
               )}
               {row.type === 'suggestion-header' && (
