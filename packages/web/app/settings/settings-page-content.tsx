@@ -31,8 +31,66 @@ import { usePartyProfile } from '@/app/components/party-manager/party-profile-co
 import { useSnackbar } from '@/app/components/providers/snackbar-provider';
 import { getBackendHttpUrl } from '@/app/lib/backend-url';
 
-const MAX_FILE_SIZE = 2 * 1024 * 1024; // 2MB
+const MAX_INPUT_SIZE = 10 * 1024 * 1024; // 10MB input ceiling before compression
+const MAX_DIMENSION = 1024; // resize longest side to ≤ 1024 px
+const COMPRESSION_QUALITY = 0.85;
 const ALLOWED_TYPES = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
+
+async function compressImage(file: File): Promise<File> {
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    const objectUrl = URL.createObjectURL(file);
+
+    img.onload = () => {
+      URL.revokeObjectURL(objectUrl);
+
+      let { width, height } = img;
+      if (width > MAX_DIMENSION || height > MAX_DIMENSION) {
+        if (width >= height) {
+          height = Math.round((height * MAX_DIMENSION) / width);
+          width = MAX_DIMENSION;
+        } else {
+          width = Math.round((width * MAX_DIMENSION) / height);
+          height = MAX_DIMENSION;
+        }
+      }
+
+      const canvas = document.createElement('canvas');
+      canvas.width = width;
+      canvas.height = height;
+      const ctx = canvas.getContext('2d');
+      if (!ctx) {
+        reject(new Error('Canvas not supported'));
+        return;
+      }
+
+      // Fill white before drawing so transparent areas become white, not black,
+      // when encoding as JPEG (which has no alpha channel).
+      ctx.fillStyle = '#ffffff';
+      ctx.fillRect(0, 0, width, height);
+      ctx.drawImage(img, 0, 0, width, height);
+
+      canvas.toBlob(
+        (blob) => {
+          if (!blob) {
+            reject(new Error('Compression failed'));
+            return;
+          }
+          resolve(new File([blob], 'avatar.jpg', { type: 'image/jpeg' }));
+        },
+        'image/jpeg',
+        COMPRESSION_QUALITY,
+      );
+    };
+
+    img.onerror = () => {
+      URL.revokeObjectURL(objectUrl);
+      reject(new Error('Failed to load image'));
+    };
+
+    img.src = objectUrl;
+  });
+}
 
 interface UserProfile {
   id: string;
@@ -107,27 +165,31 @@ export default function SettingsPageContent() {
     }
   };
 
-  const beforeUpload = (file: File): boolean => {
-    // Validate file type
+  const handleFileSelect = async (file: File): Promise<void> => {
     if (!ALLOWED_TYPES.includes(file.type)) {
       showMessage('Only JPG, PNG, GIF, and WebP images are allowed', 'error');
-      return false;
+      return;
     }
 
-    // Validate file size
-    if (file.size > MAX_FILE_SIZE) {
-      showMessage('Image must be smaller than 2MB', 'error');
-      return false;
+    if (file.size > MAX_INPUT_SIZE) {
+      showMessage('Image must be smaller than 10MB', 'error');
+      return;
     }
 
-    // Create preview
+    // Show preview immediately with the original file
     const objectUrl = URL.createObjectURL(file);
+    if (previewUrl?.startsWith('blob:')) URL.revokeObjectURL(previewUrl);
     setPreviewUrl(objectUrl);
 
-    // Store file for later upload
-    setSelectedFile(file);
-
-    return false;
+    try {
+      const compressed = await compressImage(file);
+      setSelectedFile(compressed);
+    } catch (err) {
+      console.error('Image compression failed:', err);
+      if (previewUrl?.startsWith('blob:')) URL.revokeObjectURL(previewUrl);
+      setPreviewUrl(undefined);
+      showMessage('Could not compress — please try a smaller image', 'error');
+    }
   };
 
   const handleRemoveAvatar = () => {
@@ -291,9 +353,9 @@ export default function SettingsPageContent() {
                       ref={fileInputRef}
                       accept={ALLOWED_TYPES.join(',')}
                       style={{ display: 'none' }}
-                      onChange={(e) => {
+                      onChange={async (e) => {
                         const file = e.target.files?.[0];
-                        if (file) beforeUpload(file);
+                        if (file) await handleFileSelect(file);
                         e.target.value = '';
                       }}
                     />
@@ -312,7 +374,7 @@ export default function SettingsPageContent() {
                     )}
                   </Stack>
                   <Typography variant="body2" component="span" color="text.secondary" sx={{ fontSize: 12 }}>
-                    JPG, PNG, GIF, or WebP. Max 2MB.
+                    JPG, PNG, GIF, or WebP. Up to 10MB — auto-compressed.
                   </Typography>
                 </Stack>
               </Box>
