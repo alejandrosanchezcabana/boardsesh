@@ -180,7 +180,7 @@ export const tickMutations = {
     };
 
     // Assign inferred session for ticks not in party mode (fire-and-forget).
-    // On failure, the tick stays unassigned until the background builder picks it up (~30 min).
+    // On failure, the tick stays unassigned until the daily safety-net cron picks it up.
     if (!validatedInput.sessionId) {
       assignInferredSession(uuid, userId, climbedAt, validatedInput.status).catch((err) => {
         console.error(`[saveTick] Failed to assign inferred session for tick ${uuid} (user ${userId}):`, err);
