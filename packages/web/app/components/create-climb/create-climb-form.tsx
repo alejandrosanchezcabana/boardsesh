@@ -189,6 +189,7 @@ export default function CreateClimbForm({
 
   const markJustSaved = useCallback(() => {
     setJustSaved(true);
+    autosaveSuppressedRef.current = true;
     clearAutosave();
     if (savedTimeoutRef.current !== null) {
       window.clearTimeout(savedTimeoutRef.current);
@@ -278,6 +279,7 @@ export default function CreateClimbForm({
     ? `${boardDetails.board_name}:${boardDetails.layout_id}:${boardDetails.size_id}:${angle}`
     : `moonboard:${layoutId}:${angle}`;
   const autosaveRestoredRef = useRef(false);
+  const autosaveSuppressedRef = useRef(false);
 
   // Restore autosave on mount (only if not forking).
   // Mark restored only after the async load completes to prevent the
@@ -320,18 +322,22 @@ export default function CreateClimbForm({
     description,
     isDraft,
     boardKey: autosaveBoardKey,
-    savedAt: Date.now(),
   }), [litUpHoldsMap, climbName, description, isDraft, autosaveBoardKey]);
   const debouncedAutosave = useDebouncedValue(autosaveData, 500);
+  const debouncedTotalHolds = useDebouncedValue(totalHolds, 500);
 
   useEffect(() => {
     if (!autosaveRestoredRef.current) return;
-    if (totalHolds === 0 && !climbName && !description) {
+    if (autosaveSuppressedRef.current) {
+      autosaveSuppressedRef.current = false;
+      return;
+    }
+    if (debouncedTotalHolds === 0 && !debouncedAutosave.climbName && !debouncedAutosave.description) {
       clearAutosave();
       return;
     }
     saveAutosave(debouncedAutosave);
-  }, [debouncedAutosave, totalHolds, climbName, description]);
+  }, [debouncedAutosave, debouncedTotalHolds]);
 
   const moonBoardHolds = useMemo(
     () => (boardType === 'moonboard' ? convertLitUpHoldsMapToMoonBoardHolds(litUpHoldsMap) : null),
@@ -379,6 +385,7 @@ export default function CreateClimbForm({
     setClimbName('');
     setDescription('');
     clearJustSaved();
+    autosaveSuppressedRef.current = true;
     clearAutosave();
     setSavedClimb(null);
     if (boardType === 'aurora' && isConnected) {

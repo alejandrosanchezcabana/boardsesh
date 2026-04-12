@@ -11,8 +11,6 @@ export interface CreateClimbAutosave {
   isDraft: boolean;
   /** Board identifier so we only restore on the matching board */
   boardKey: string;
-  /** Timestamp so stale autosaves can be ignored */
-  savedAt: number;
 }
 
 const getDB = createIndexedDBStore('boardsesh-create-climb', STORE_NAME);
