@@ -58,8 +58,13 @@ export default function GlobalHeader({ boardConfigs }: GlobalHeaderProps) {
     if (!open) setSeshSettingsRendered(false);
   }, []);
 
-  // On hidden-header pages (and board create routes), show only the avatar in a transparent bar
-  if (HIDDEN_HEADER_PAGES.includes(pathname) || isBoardCreatePath(pathname)) {
+  // On board create routes, hide the header entirely
+  if (isBoardCreatePath(pathname)) {
+    return null;
+  }
+
+  // On hidden-header pages, show only the avatar in a transparent bar
+  if (HIDDEN_HEADER_PAGES.includes(pathname)) {
     return (
       <header className={styles.headerTransparent}>
         <UserDrawer boardConfigs={boardConfigs} />

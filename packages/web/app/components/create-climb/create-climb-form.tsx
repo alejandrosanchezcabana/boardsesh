@@ -46,6 +46,8 @@ import { useAuthModal } from '@/app/components/providers/auth-modal-provider';
 import { useSnackbar } from '../providers/snackbar-provider';
 import { refreshClimbSearchAfterSave } from '@/app/lib/climb-search-cache';
 import { ConfirmPopover } from '@/app/components/ui/confirm-popover';
+import { saveAutosave, loadAutosave, clearAutosave } from '@/app/lib/create-climb-autosave-db';
+import { useDebouncedValue } from '@/app/hooks/use-debounced-value';
 import CreateClimbHeatmapOverlay from './create-climb-heatmap-overlay';
 import DraftsDrawer from './drafts-drawer';
 import HoldTypePicker from './hold-type-picker';
@@ -187,6 +189,8 @@ export default function CreateClimbForm({
 
   const markJustSaved = useCallback(() => {
     setJustSaved(true);
+    autosaveSuppressedRef.current = true;
+    clearAutosave();
     if (savedTimeoutRef.current !== null) {
       window.clearTimeout(savedTimeoutRef.current);
     }
@@ -269,6 +273,72 @@ export default function CreateClimbForm({
   // Construct the bulk import URL (MoonBoard only)
   const bulkImportUrl = pathname.replace(/\/create$/, '/import');
 
+  // Autosave: persist form state to IndexedDB on every change (debounced).
+  // Only one autosave is stored at a time, scoped to the current board.
+  const autosaveBoardKey = boardType === 'aurora' && boardDetails
+    ? `${boardDetails.board_name}:${boardDetails.layout_id}:${boardDetails.size_id}:${angle}`
+    : `moonboard:${layoutId}:${angle}`;
+  const autosaveRestoredRef = useRef(false);
+  const autosaveSuppressedRef = useRef(false);
+
+  // Restore autosave on mount (only if not forking).
+  // Mark restored only after the async load completes to prevent the
+  // debounced autosave effect from clearing the stored draft before it
+  // has been read.
+  useEffect(() => {
+    if (autosaveRestoredRef.current || forkFrames || forkName) {
+      autosaveRestoredRef.current = true;
+      return;
+    }
+    let cancelled = false;
+    loadAutosave(autosaveBoardKey).then((saved) => {
+      if (cancelled) return;
+      if (saved) {
+        try {
+          const holds = JSON.parse(saved.holdsJson);
+          if (boardType === 'aurora' && loadAuroraHolds) {
+            loadAuroraHolds(holds);
+          } else if (boardType === 'moonboard' && setLitUpHoldsMap) {
+            setLitUpHoldsMap(holds);
+          }
+          if (saved.climbName) setClimbName(saved.climbName);
+          if (saved.description) setDescription(saved.description);
+          setIsDraft(saved.isDraft);
+        } catch {
+          clearAutosave();
+        }
+      }
+      autosaveRestoredRef.current = true;
+    });
+    return () => { cancelled = true; };
+  // Only run on mount
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // Debounced autosave on changes
+  const autosaveData = useMemo(() => ({
+    holdsJson: JSON.stringify(litUpHoldsMap),
+    climbName,
+    description,
+    isDraft,
+    boardKey: autosaveBoardKey,
+  }), [litUpHoldsMap, climbName, description, isDraft, autosaveBoardKey]);
+  const debouncedAutosave = useDebouncedValue(autosaveData, 500);
+  const debouncedTotalHolds = useDebouncedValue(totalHolds, 500);
+
+  useEffect(() => {
+    if (!autosaveRestoredRef.current) return;
+    if (autosaveSuppressedRef.current) {
+      autosaveSuppressedRef.current = false;
+      return;
+    }
+    if (debouncedTotalHolds === 0 && !debouncedAutosave.climbName && !debouncedAutosave.description) {
+      clearAutosave();
+      return;
+    }
+    saveAutosave(debouncedAutosave);
+  }, [debouncedAutosave, debouncedTotalHolds]);
+
   const moonBoardHolds = useMemo(
     () => (boardType === 'moonboard' ? convertLitUpHoldsMapToMoonBoardHolds(litUpHoldsMap) : null),
     [boardType, litUpHoldsMap],
@@ -315,6 +385,8 @@ export default function CreateClimbForm({
     setClimbName('');
     setDescription('');
     clearJustSaved();
+    autosaveSuppressedRef.current = true;
+    clearAutosave();
     setSavedClimb(null);
     if (boardType === 'aurora' && isConnected) {
       sendFramesToBoard('');

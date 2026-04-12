@@ -56,6 +56,7 @@ interface SelectedBoardContext {
 
 const getActiveTab = (pathname: string): Tab => {
   if (pathname === '/') return 'home';
+  if (pathname.endsWith('/create')) return 'create';
   if (pathname.startsWith('/feed')) return 'feed';
   if (pathname.startsWith('/notifications')) return 'notifications';
   if (pathname.startsWith('/playlists') || pathname.includes('/playlists') || pathname.startsWith('/logbook') || pathname.includes('/logbook')) return 'library';
