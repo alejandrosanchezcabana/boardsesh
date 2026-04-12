@@ -114,10 +114,12 @@ vi.mock('@/app/lib/ble/capacitor-utils', () => ({
   isNativeApp: () => mockIsNativeApp(),
 }));
 
-// Mock getNativeTabBarPlugin
+// Mock the native tab bar plugin module (including overlay helpers)
 const mockSetActiveTab = vi.fn().mockResolvedValue(undefined);
 const mockSetBarsHidden = vi.fn().mockResolvedValue(undefined);
 const mockSetNotificationBadge = vi.fn().mockResolvedValue(undefined);
+const mockAddNativeOverlay = vi.fn();
+const mockRemoveNativeOverlay = vi.fn();
 let mockPluginInstance: {
   setActiveTab: typeof mockSetActiveTab;
   setBarsHidden: typeof mockSetBarsHidden;
@@ -126,6 +128,9 @@ let mockPluginInstance: {
 
 vi.mock('@/app/lib/native-tab-bar/native-tab-bar-plugin', () => ({
   getNativeTabBarPlugin: () => mockPluginInstance,
+  addNativeOverlay: () => mockAddNativeOverlay(),
+  removeNativeOverlay: () => mockRemoveNativeOverlay(),
+  _resetOverlayCountForTesting: vi.fn(),
 }));
 
 import BottomTabBar from '../bottom-tab-bar';
@@ -243,14 +248,14 @@ describe('BottomTabBar native iOS', () => {
     expect(mockSetNotificationBadge).toHaveBeenCalledWith({ count: 3 });
   });
 
-  it('calls setBarsHidden({ hidden: true }) when board selector opens', async () => {
+  it('calls addNativeOverlay() when board selector opens', async () => {
     // No boardDetails and no last-used board — tapping 'climbs' opens the board selector
     mockPathname = '/';
     await act(async () => {
       render(<BottomTabBar boardConfigs={boardConfigs} />);
     });
 
-    mockSetBarsHidden.mockClear();
+    mockAddNativeOverlay.mockClear();
 
     await act(async () => {
       window.dispatchEvent(
@@ -259,19 +264,16 @@ describe('BottomTabBar native iOS', () => {
       await new Promise((r) => setTimeout(r, 0));
     });
 
-    // Board selector opened → setBarsHidden({ hidden: true })
-    expect(mockSetBarsHidden).toHaveBeenCalledWith({ hidden: true });
+    expect(mockAddNativeOverlay).toHaveBeenCalled();
   });
 
-  it('calls setBarsHidden({ hidden: false }) when board selector closes', async () => {
-    // Render without boardDetails so the board selector will open when climbs tab is tapped
+  it('calls removeNativeOverlay() when board selector closes', async () => {
     mockPathname = '/';
     await act(async () => {
       render(<BottomTabBar boardConfigs={boardConfigs} />);
     });
 
-    mockSetBarsHidden.mockClear();
-
+    // Open the board selector
     await act(async () => {
       window.dispatchEvent(
         new CustomEvent('boardsesh:native-tab-tapped', { detail: { tab: 'climbs' } }),
@@ -279,10 +281,7 @@ describe('BottomTabBar native iOS', () => {
       await new Promise((r) => setTimeout(r, 0));
     });
 
-    // Board selector opened → setBarsHidden(hidden: true)
-    expect(mockSetBarsHidden).toHaveBeenCalledWith({ hidden: true });
-
-    mockSetBarsHidden.mockClear();
+    mockRemoveNativeOverlay.mockClear();
 
     // Close the board selector drawer
     const closeButton = screen.queryByRole('button', { name: 'Close' });
@@ -290,7 +289,7 @@ describe('BottomTabBar native iOS', () => {
       await act(async () => {
         closeButton.click();
       });
-      expect(mockSetBarsHidden).toHaveBeenCalledWith({ hidden: false });
+      expect(mockRemoveNativeOverlay).toHaveBeenCalled();
     }
   });
 

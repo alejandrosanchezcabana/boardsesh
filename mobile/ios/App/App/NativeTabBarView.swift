@@ -181,6 +181,16 @@ public class NativeTabBarView: UIView {
         updateButtonAppearances()
     }
 
+    public func setBarsHidden(_ hidden: Bool, animated: Bool = true) {
+        if animated {
+            UIView.animate(withDuration: 0.25) {
+                self.alpha = hidden ? 0 : 1
+            }
+        } else {
+            alpha = hidden ? 0 : 1
+        }
+    }
+
     public func setNotificationBadge(_ count: Int) {
         guard notificationBadge != nil else { return }
         if count <= 0 {

@@ -47,7 +47,7 @@ import type { StoredBoardConfig } from '@/app/lib/saved-boards-db';
 import { isValidHexColor } from '@/app/lib/color-utils';
 import { useBoardSwitchGuard } from '@/app/components/board-lock/use-board-switch-guard';
 import { isNativeApp } from '@/app/lib/ble/capacitor-utils';
-import { getNativeTabBarPlugin } from '@/app/lib/native-tab-bar/native-tab-bar-plugin';
+import { getNativeTabBarPlugin, addNativeOverlay, removeNativeOverlay } from '@/app/lib/native-tab-bar/native-tab-bar-plugin';
 
 type Tab = 'home' | 'climbs' | 'library' | 'feed' | 'create' | 'you';
 type PendingCreateAction = 'climb' | 'playlist' | null;
@@ -385,12 +385,25 @@ function BottomTabBar({ boardDetails, angle, boardConfigs }: BottomTabBarProps) 
     return () => window.removeEventListener('boardsesh:native-tab-tapped', handler);
   }, [handleTabChange]);
 
-  // Notify native when internal drawers open/close
+  // Notify native when internal drawers open/close — each drawer manages its own overlay
+  // so the tab bar stays hidden until the last overlay closes (ref-counted).
   useEffect(() => {
-    if (!isNativeApp()) return;
-    const anyOpen = isBoardSelectorOpen || isCreatePlaylistOpen || isCustomBoardOpen;
-    getNativeTabBarPlugin()?.setBarsHidden({ hidden: anyOpen });
-  }, [isBoardSelectorOpen, isCreatePlaylistOpen, isCustomBoardOpen]);
+    if (!isNativeApp() || !isBoardSelectorOpen) return;
+    addNativeOverlay();
+    return () => removeNativeOverlay();
+  }, [isBoardSelectorOpen]);
+
+  useEffect(() => {
+    if (!isNativeApp() || !isCreatePlaylistOpen) return;
+    addNativeOverlay();
+    return () => removeNativeOverlay();
+  }, [isCreatePlaylistOpen]);
+
+  useEffect(() => {
+    if (!isNativeApp() || !isCustomBoardOpen) return;
+    addNativeOverlay();
+    return () => removeNativeOverlay();
+  }, [isCustomBoardOpen]);
 
   // Sync notification badge count to native
   useEffect(() => {

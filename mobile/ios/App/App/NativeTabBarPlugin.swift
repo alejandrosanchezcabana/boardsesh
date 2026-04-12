@@ -17,8 +17,8 @@ public class NativeTabBarPlugin: CAPPlugin, CAPBridgedPlugin {
         let tab = call.getString("tab") ?? "home"
         DispatchQueue.main.async {
             (self.bridge?.viewController as? BoardseshViewController)?.tabBarView?.setActiveTab(tab)
+            call.resolve()
         }
-        call.resolve()
     }
 
     // MARK: - setBarsHidden
@@ -26,11 +26,9 @@ public class NativeTabBarPlugin: CAPPlugin, CAPBridgedPlugin {
     @objc func setBarsHidden(_ call: CAPPluginCall) {
         let hidden = call.getBool("hidden") ?? false
         DispatchQueue.main.async {
-            UIView.animate(withDuration: 0.25) {
-                (self.bridge?.viewController as? BoardseshViewController)?.tabBarView?.alpha = hidden ? 0 : 1
-            }
+            (self.bridge?.viewController as? BoardseshViewController)?.tabBarView?.setBarsHidden(hidden)
+            call.resolve()
         }
-        call.resolve()
     }
 
     // MARK: - setNotificationBadge
@@ -39,7 +37,7 @@ public class NativeTabBarPlugin: CAPPlugin, CAPBridgedPlugin {
         let count = call.getInt("count") ?? 0
         DispatchQueue.main.async {
             (self.bridge?.viewController as? BoardseshViewController)?.tabBarView?.setNotificationBadge(count)
+            call.resolve()
         }
-        call.resolve()
     }
 }

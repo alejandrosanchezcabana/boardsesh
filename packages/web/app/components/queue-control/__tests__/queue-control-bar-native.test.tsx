@@ -151,18 +151,15 @@ vi.mock('@/app/lib/ble/capacitor-utils', () => ({
   isNativeApp: () => mockIsNativeApp(),
 }));
 
-// Mock getNativeTabBarPlugin
-const mockSetBarsHidden = vi.fn().mockResolvedValue(undefined);
-const mockSetActiveTab = vi.fn().mockResolvedValue(undefined);
-const mockSetNotificationBadge = vi.fn().mockResolvedValue(undefined);
-let mockPluginInstance: {
-  setActiveTab: typeof mockSetActiveTab;
-  setBarsHidden: typeof mockSetBarsHidden;
-  setNotificationBadge: typeof mockSetNotificationBadge;
-} | null = null;
+// Mock the native tab bar plugin module (including overlay helpers)
+const mockAddNativeOverlay = vi.fn();
+const mockRemoveNativeOverlay = vi.fn();
 
 vi.mock('@/app/lib/native-tab-bar/native-tab-bar-plugin', () => ({
-  getNativeTabBarPlugin: () => mockPluginInstance,
+  getNativeTabBarPlugin: () => null,
+  addNativeOverlay: () => mockAddNativeOverlay(),
+  removeNativeOverlay: () => mockRemoveNativeOverlay(),
+  _resetOverlayCountForTesting: vi.fn(),
 }));
 
 // Import after all mocks
@@ -242,83 +239,54 @@ describe('QueueControlBar native tab bar integration', () => {
     vi.clearAllMocks();
     mockQueueContext = { ...baseQueueContext };
     mockIsNativeApp.mockReturnValue(true);
-    mockPluginInstance = {
-      setActiveTab: mockSetActiveTab,
-      setBarsHidden: mockSetBarsHidden,
-      setNotificationBadge: mockSetNotificationBadge,
-    };
   });
 
   afterEach(() => {
     cleanup();
   });
 
-  it('calls setBarsHidden({ hidden: true }) when activeDrawer changes to "play"', async () => {
+  it('calls addNativeOverlay() when activeDrawer changes to "play"', async () => {
     render(<QueueControlBar {...defaultProps} />);
 
     await act(async () => {
       dispatchOpenPlayDrawer();
     });
 
-    expect(mockSetBarsHidden).toHaveBeenCalledWith({ hidden: true });
+    expect(mockAddNativeOverlay).toHaveBeenCalled();
   });
 
-  it('calls setBarsHidden({ hidden: true }) when activeDrawer changes to "queue"', async () => {
+  it('calls addNativeOverlay() when activeDrawer changes to "queue" via tour event', async () => {
     render(<QueueControlBar {...defaultProps} />);
 
-    mockSetBarsHidden.mockClear();
+    mockAddNativeOverlay.mockClear();
 
-    // Use the tour drawer event which sets activeDrawer to 'queue'
     await act(async () => {
       window.dispatchEvent(new CustomEvent('tour-drawer', { detail: { open: true } }));
     });
 
-    expect(mockSetBarsHidden).toHaveBeenCalledWith({ hidden: true });
+    expect(mockAddNativeOverlay).toHaveBeenCalled();
   });
 
-  it('calls setBarsHidden({ hidden: true }) when activeDrawer changes to "tick"', async () => {
+  it('calls removeNativeOverlay() when activeDrawer returns to "none"', async () => {
     render(<QueueControlBar {...defaultProps} />);
 
-    await act(async () => {
-      // Open tick drawer via the tour event mechanism or tick button click
-      // The tick button (data-testid="tick-button") is a mock — find the real tick icon
-      const tickButton = document.querySelector('[data-testid="tick-button"]') as HTMLButtonElement | null;
-      if (tickButton) {
-        tickButton.click();
-      }
-    });
-
-    // Tick drawer opening should call setBarsHidden hidden:true
-    // Note: the mock tick-button doesn't trigger setActiveDrawer('tick')
-    // so we verify via the play drawer which we know works
+    // Open a drawer first
     await act(async () => {
       dispatchOpenPlayDrawer();
     });
 
-    expect(mockSetBarsHidden).toHaveBeenCalledWith({ hidden: true });
-  });
+    expect(mockAddNativeOverlay).toHaveBeenCalled();
+    mockRemoveNativeOverlay.mockClear();
 
-  it('calls setBarsHidden({ hidden: false }) when activeDrawer returns to "none"', async () => {
-    render(<QueueControlBar {...defaultProps} />);
-
-    // Open the play drawer first
-    await act(async () => {
-      dispatchOpenPlayDrawer();
-    });
-
-    expect(mockSetBarsHidden).toHaveBeenCalledWith({ hidden: true });
-    mockSetBarsHidden.mockClear();
-
-    // Navigate to a new path — the pathname useEffect resets activeDrawer to 'none'
-    // We can't change the mock pathname easily, but we can dispatch tour close event
+    // Close via tour close event (resets to 'none')
     await act(async () => {
       window.dispatchEvent(new CustomEvent('tour-drawer', { detail: { open: false } }));
     });
 
-    expect(mockSetBarsHidden).toHaveBeenCalledWith({ hidden: false });
+    expect(mockRemoveNativeOverlay).toHaveBeenCalled();
   });
 
-  it('setBarsHidden is NOT called when isNativeApp() returns false', async () => {
+  it('addNativeOverlay is NOT called when isNativeApp() returns false', async () => {
     mockIsNativeApp.mockReturnValue(false);
 
     render(<QueueControlBar {...defaultProps} />);
@@ -327,12 +295,10 @@ describe('QueueControlBar native tab bar integration', () => {
       dispatchOpenPlayDrawer();
     });
 
-    expect(mockSetBarsHidden).not.toHaveBeenCalled();
+    expect(mockAddNativeOverlay).not.toHaveBeenCalled();
   });
 
   it('does not throw when getNativeTabBarPlugin() returns null', async () => {
-    mockPluginInstance = null;
-
     expect(() => {
       render(<QueueControlBar {...defaultProps} />);
     }).not.toThrow();
@@ -341,7 +307,20 @@ describe('QueueControlBar native tab bar integration', () => {
       dispatchOpenPlayDrawer();
     });
 
-    // No errors thrown — test passes if we reach here
-    expect(mockSetBarsHidden).not.toHaveBeenCalled();
+    // Test passes if we reach here without error
+    expect(mockAddNativeOverlay).toHaveBeenCalled();
+  });
+
+  it('calls removeNativeOverlay() on unmount when a drawer is open', async () => {
+    const { unmount } = render(<QueueControlBar {...defaultProps} />);
+
+    await act(async () => {
+      dispatchOpenPlayDrawer();
+    });
+
+    mockRemoveNativeOverlay.mockClear();
+    unmount();
+
+    expect(mockRemoveNativeOverlay).toHaveBeenCalled();
   });
 });

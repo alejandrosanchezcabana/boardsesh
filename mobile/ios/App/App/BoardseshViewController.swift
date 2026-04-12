@@ -79,6 +79,9 @@ class BoardseshViewController: CAPBridgeViewController {
             bar.leadingAnchor.constraint(equalTo: view.leadingAnchor),
             bar.trailingAnchor.constraint(equalTo: view.trailingAnchor),
             bar.bottomAnchor.constraint(equalTo: view.bottomAnchor),
+            // 49pt is the standard iOS tab bar content height; pinning the top here
+            // gives the view a defined height = 49 + safeAreaInsets.bottom.
+            bar.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.bottomAnchor, constant: -49),
         ])
         tabBarView = bar
 
@@ -87,10 +90,14 @@ class BoardseshViewController: CAPBridgeViewController {
         loadPendingUniversalLink()
     }
 
+    private var lastInjectedTabBarHeight: CGFloat = 0
+
     override func viewDidLayoutSubviews() {
         super.viewDidLayoutSubviews()
         guard let bar = tabBarView, bar.frame.height > 0 else { return }
         let h = bar.frame.height
+        guard h != lastInjectedTabBarHeight else { return }
+        lastInjectedTabBarHeight = h
         let js = "document.documentElement.style.setProperty('--native-tab-bar-height','\(h)px');"
         webView?.evaluateJavaScript(js, completionHandler: nil)
     }

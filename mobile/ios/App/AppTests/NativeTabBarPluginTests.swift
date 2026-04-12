@@ -8,7 +8,7 @@ import XCTest
 class MockNativeTabBarView: NativeTabBarView {
     var lastSetActiveTab: String?
     var lastBadgeCount: Int?
-    var alphaValues: [CGFloat] = []
+    var lastHiddenState: Bool?
 
     override func setActiveTab(_ tab: String) {
         lastSetActiveTab = tab
@@ -18,6 +18,11 @@ class MockNativeTabBarView: NativeTabBarView {
     override func setNotificationBadge(_ count: Int) {
         lastBadgeCount = count
         super.setNotificationBadge(count)
+    }
+
+    override func setBarsHidden(_ hidden: Bool, animated: Bool = true) {
+        lastHiddenState = hidden
+        // Do not call super — avoids UIView.animate in unit tests.
     }
 }
 
@@ -52,20 +57,21 @@ final class NativeTabBarPluginTests: XCTestCase {
                        "setActiveTab should forward 'climbs' to the view")
     }
 
-    // MARK: - Test 2: alpha 0 when hidden = true
+    // MARK: - Test 2: setBarsHidden(true) records hidden = true
 
-    func testSetBarsHiddenTrueAnimatesAlphaToZero() {
-        mockView.alpha = 1
-        mockView.alpha = 0
-        XCTAssertEqual(mockView.alpha, 0, "alpha should be 0 when bars are hidden")
+    func testSetBarsHiddenTrueRecordsHiddenState() {
+        mockView.setBarsHidden(true)
+        XCTAssertEqual(mockView.lastHiddenState, true,
+                       "setBarsHidden(true) should record hidden = true")
     }
 
-    // MARK: - Test 3: alpha 1 when hidden = false
+    // MARK: - Test 3: setBarsHidden(false) records hidden = false
 
-    func testSetBarsHiddenFalseAnimatesAlphaToOne() {
-        mockView.alpha = 0
-        mockView.alpha = 1
-        XCTAssertEqual(mockView.alpha, 1, "alpha should be 1 when bars are shown")
+    func testSetBarsHiddenFalseRecordsHiddenState() {
+        mockView.setBarsHidden(true)
+        mockView.setBarsHidden(false)
+        XCTAssertEqual(mockView.lastHiddenState, false,
+                       "setBarsHidden(false) should record hidden = false")
     }
 
     // MARK: - Test 4: setNotificationBadge forwards the count
@@ -79,24 +85,30 @@ final class NativeTabBarPluginTests: XCTestCase {
     // MARK: - Test 5: setActiveTab resolves (verify the view method doesn't throw)
 
     func testSetActiveTabResolves() {
-        // Mirroring how the plugin calls setActiveTab — should not throw or crash.
         XCTAssertNoThrow(mockView.setActiveTab("home"),
                          "setActiveTab('home') should resolve without error")
         XCTAssertEqual(mockView.lastSetActiveTab, "home")
     }
 
-    // MARK: - Additional coverage: plugin default tab fallback
+    // MARK: - Test 6: plugin default tab fallback
 
     func testSetActiveTabDefaultsToHomeWhenKeyIsEmpty() {
         // When the plugin receives no "tab" key it falls back to "home".
-        // Simulate that here by calling setActiveTab with the same fallback value.
-        let tab = ""  // empty string simulates a missing call.getString("tab") returning nil
+        let tab = ""
         let resolved = tab.isEmpty ? "home" : tab
         mockView.setActiveTab(resolved)
         XCTAssertEqual(mockView.lastSetActiveTab, "home")
     }
 
-    // MARK: - Additional coverage: badge count capped at 99+
+    // MARK: - Test 7: setBarsHidden non-animated variant
+
+    func testSetBarsHiddenNonAnimatedRecordsState() {
+        mockView.setBarsHidden(true, animated: false)
+        XCTAssertEqual(mockView.lastHiddenState, true,
+                       "setBarsHidden(true, animated: false) should record hidden = true")
+    }
+
+    // MARK: - Test 8: badge count capped at 99+
 
     func testSetNotificationBadgeCapsAt99Plus() {
         mockView.setNotificationBadge(100)
@@ -104,12 +116,12 @@ final class NativeTabBarPluginTests: XCTestCase {
                        "Mock should record the raw count passed by the plugin")
     }
 
-    // MARK: - Additional coverage: hidden=false restores full opacity
+    // MARK: - Test 9: hidden=false restores full opacity
 
     func testAlphaIsRestoredAfterShowingBars() {
-        mockView.alpha = 0
-        // Simulate plugin setBarsHidden(false)
-        mockView.alpha = 1
-        XCTAssertEqual(mockView.alpha, 1)
+        mockView.setBarsHidden(true)
+        XCTAssertEqual(mockView.lastHiddenState, true)
+        mockView.setBarsHidden(false)
+        XCTAssertEqual(mockView.lastHiddenState, false)
     }
 }

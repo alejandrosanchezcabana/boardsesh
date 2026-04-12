@@ -74,7 +74,7 @@ import { getPreference, setPreference } from '@/app/lib/user-preferences-db';
 import styles from './queue-control-bar.module.css';
 import { PLAY_DRAWER_EVENT as PLAY_DRAWER_EVENT_INTERNAL, dispatchOpenPlayDrawer } from './play-drawer-event';
 import { isNativeApp } from '@/app/lib/ble/capacitor-utils';
-import { getNativeTabBarPlugin } from '@/app/lib/native-tab-bar/native-tab-bar-plugin';
+import { addNativeOverlay, removeNativeOverlay } from '@/app/lib/native-tab-bar/native-tab-bar-plugin';
 
 export type ActiveDrawer = 'none' | 'play' | 'queue' | 'tick';
 
@@ -176,10 +176,11 @@ const QueueControlBar: React.FC<QueueControlBarProps> = ({ boardDetails, angle }
     return () => window.removeEventListener(PLAY_DRAWER_EVENT_INTERNAL, handler);
   }, []);
 
-  // Notify native tab bar to hide when any drawer covers the screen
+  // Notify native tab bar to hide while any drawer covers the screen (ref-counted with BottomTabBar).
   useEffect(() => {
-    if (!isNativeApp()) return;
-    getNativeTabBarPlugin()?.setBarsHidden({ hidden: activeDrawer !== 'none' });
+    if (!isNativeApp() || activeDrawer === 'none') return;
+    addNativeOverlay();
+    return () => removeNativeOverlay();
   }, [activeDrawer]);
 
   // Scroll to current climb when drawer finishes opening
