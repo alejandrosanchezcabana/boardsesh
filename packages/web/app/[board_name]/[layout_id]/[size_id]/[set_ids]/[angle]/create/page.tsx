@@ -1,6 +1,7 @@
 import React from 'react';
-import { BoardRouteParameters } from '@/app/lib/types';
+import { BoardRouteParameters, Climb } from '@/app/lib/types';
 import { getBoardDetails } from '@/app/lib/board-constants';
+import { getClimb } from '@/app/lib/data/queries';
 import { parseRouteParams } from '@/app/lib/url-utils.server';
 import CreateClimbForm from '@/app/components/create-climb/create-climb-form';
 import {
@@ -17,7 +18,7 @@ export const metadata: Metadata = {
 
 interface CreateClimbPageProps {
   params: Promise<BoardRouteParameters>;
-  searchParams: Promise<{ forkFrames?: string; forkName?: string; forkDescription?: string; editUuid?: string }>;
+  searchParams: Promise<{ forkFrames?: string; forkName?: string; forkDescription?: string; editClimbUuid?: string }>;
 }
 
 // Helper to get MoonBoard layout info from layout ID
@@ -62,6 +63,25 @@ export default async function CreateClimbPage(props: CreateClimbPageProps) {
   // Aurora boards (kilter, tension) - use database
   const boardDetails = await getBoardDetails(parsedParams);
 
+  let editClimb: Climb | undefined;
+  let editClimbError: string | undefined;
+  if (searchParams.editClimbUuid) {
+    try {
+      const loaded = await getClimb({
+        ...parsedParams,
+        climb_uuid: searchParams.editClimbUuid,
+      });
+      if (!loaded) {
+        editClimbError = "We couldn't find that climb on this board.";
+      } else {
+        editClimb = loaded;
+      }
+    } catch (error) {
+      console.error('Failed to load edit climb:', error);
+      editClimbError = "We couldn't load that climb. It may have been deleted or belongs to a different board.";
+    }
+  }
+
   return (
     <CreateClimbForm
       boardType="aurora"
@@ -70,7 +90,8 @@ export default async function CreateClimbPage(props: CreateClimbPageProps) {
       forkFrames={searchParams.forkFrames}
       forkName={searchParams.forkName}
       forkDescription={searchParams.forkDescription}
-      editUuid={searchParams.editUuid}
+      editClimb={editClimb}
+      editClimbError={editClimbError}
     />
   );
 }

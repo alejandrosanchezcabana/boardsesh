@@ -300,6 +300,7 @@ export default function CreateClimbForm({
   const [isCheckingMoonBoardDuplicate, setIsCheckingMoonBoardDuplicate] = useState(false);
 
   // Common state — in edit mode use the original name, not "{name} fork"
+  const isEditMode = !!editClimb;
   const [climbName, setClimbName] = useState(
     isEditMode ? (forkName || '') : (forkName ? `${forkName} fork` : ''),
   );
