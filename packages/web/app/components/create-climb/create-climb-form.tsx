@@ -279,27 +279,36 @@ export default function CreateClimbForm({
     : `moonboard:${layoutId}:${angle}`;
   const autosaveRestoredRef = useRef(false);
 
-  // Restore autosave on mount (only if not forking)
+  // Restore autosave on mount (only if not forking).
+  // Mark restored only after the async load completes to prevent the
+  // debounced autosave effect from clearing the stored draft before it
+  // has been read.
   useEffect(() => {
-    if (autosaveRestoredRef.current || forkFrames || forkName) return;
-    autosaveRestoredRef.current = true;
+    if (autosaveRestoredRef.current || forkFrames || forkName) {
+      autosaveRestoredRef.current = true;
+      return;
+    }
+    let cancelled = false;
     loadAutosave(autosaveBoardKey).then((saved) => {
-      if (!saved) return;
-      try {
-        const holds = JSON.parse(saved.holdsJson);
-        if (boardType === 'aurora' && loadAuroraHolds) {
-          loadAuroraHolds(holds);
-        } else if (boardType === 'moonboard' && setLitUpHoldsMap) {
-          setLitUpHoldsMap(holds);
+      if (cancelled) return;
+      if (saved) {
+        try {
+          const holds = JSON.parse(saved.holdsJson);
+          if (boardType === 'aurora' && loadAuroraHolds) {
+            loadAuroraHolds(holds);
+          } else if (boardType === 'moonboard' && setLitUpHoldsMap) {
+            setLitUpHoldsMap(holds);
+          }
+          if (saved.climbName) setClimbName(saved.climbName);
+          if (saved.description) setDescription(saved.description);
+          setIsDraft(saved.isDraft);
+        } catch {
+          clearAutosave();
         }
-        if (saved.climbName) setClimbName(saved.climbName);
-        if (saved.description) setDescription(saved.description);
-        setIsDraft(saved.isDraft);
-      } catch {
-        // Corrupt autosave — ignore and clear
-        clearAutosave();
       }
+      autosaveRestoredRef.current = true;
     });
+    return () => { cancelled = true; };
   // Only run on mount
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
