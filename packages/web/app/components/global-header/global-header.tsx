@@ -77,7 +77,7 @@ export default function GlobalHeader({ boardConfigs }: GlobalHeaderProps) {
 
   // When the bridge is active (on a board list page), delegate to the board route's drawer
   const useClimbSearchBridge = openClimbSearchDrawer !== null;
-  const defaultSearchPillText = isBoardListPath(pathname) ? DEFAULT_CLIMB_SEARCH_SUMMARY : 'Search';
+  const defaultSearchPillText = isBoardListPath(pathname) ? DEFAULT_CLIMB_SEARCH_SUMMARY : 'What do you want to climb?';
 
   const handleSearchClick = () => {
     if (useClimbSearchBridge) {

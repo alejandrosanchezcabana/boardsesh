@@ -29,7 +29,7 @@
   gap: 8px;
   flex: 1;
   padding: 6px 14px;
-  border-radius: 9999px;
+  border-radius: 8px;
   background: var(--neutral-50);
   border: 1px solid var(--neutral-200);
   cursor: pointer;
@@ -96,5 +96,23 @@
   -webkit-backdrop-filter: blur(20px);
   backdrop-filter: blur(20px);
   border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+:global(html[data-theme="dark"]) .searchPillButton {
+  background: #FFFFFF;
+  border-color: #FFFFFF;
+  color: #000000;
+}
+
+:global(html[data-theme="dark"]) .searchPillButton:hover {
+  background: #F3F4F6;
+}
+
+:global(html[data-theme="dark"]) .searchPillButton:active {
+  background: #E5E7EB;
+}
+
+:global(html[data-theme="dark"]) .searchPillIcon {
+  color: #6B7280;
 }
 

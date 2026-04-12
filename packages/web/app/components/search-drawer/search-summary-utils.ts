@@ -2,7 +2,7 @@ import { SearchRequestPagination } from '@/app/lib/types';
 import { TENSION_KILTER_GRADES } from '@/app/lib/board-data';
 import { DEFAULT_SEARCH_PARAMS } from '@/app/lib/url-utils';
 
-export const DEFAULT_CLIMB_SEARCH_SUMMARY = 'Search climbs...';
+export const DEFAULT_CLIMB_SEARCH_SUMMARY = 'What do you want to climb?';
 
 function getGradeName(gradeId: number): string {
   const grade = TENSION_KILTER_GRADES.find((g) => g.difficulty_id === gradeId);
