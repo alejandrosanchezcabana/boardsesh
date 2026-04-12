@@ -574,8 +574,12 @@ const QueueControlBar: React.FC<QueueControlBarProps> = ({ boardDetails, angle }
                     />
                   </div>
 
-                  {/* Text swipe clip — overflow hidden to contain sliding text */}
-                  <div className={styles.textSwipeClip}>
+                  {/* Text swipe clip — overflow hidden to contain sliding text.
+                       In tick mode, overlays the thumbnail with a subtle tinted blur. */}
+                  <div
+                    className={`${styles.textSwipeClip} ${tickBarActive ? styles.textSwipeClipTick : ''}`}
+                    style={tickBarActive ? { backgroundColor: gradeTintColor ?? (isDark ? 'rgba(0,0,0,0.5)' : 'rgba(245,245,245,0.7)') } : undefined}
+                  >
                     {/* Current climb text — slides with finger */}
                     <div
                       id="onboarding-queue-toggle"

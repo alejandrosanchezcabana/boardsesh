@@ -215,6 +215,7 @@
 .climbInfoInner {
   display: flex;
   align-items: center;
+  position: relative;
 }
 
 .boardPreviewContainer {
@@ -298,6 +299,18 @@
   flex: 1;
   min-width: 0;
   position: relative;
+}
+
+/* Tick mode: overlay the climb title over the thumbnail area */
+.textSwipeClipTick {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  border-radius: 6px;
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
 }
 
 /* Peek text — absolutely positioned to slide in from the edge during swipe */
