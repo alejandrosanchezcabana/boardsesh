@@ -25,10 +25,12 @@ interface TickButtonProps {
   currentClimb: Climb | null;
   boardDetails: BoardDetails;
   onActivateTickBar?: () => void;
+  /** Called when the tick button is pressed while tick mode is already active (saves the tick). */
+  onTickSave?: () => void;
   tickBarActive?: boolean;
 }
 
-export const TickButton: React.FC<TickButtonProps> = ({ currentClimb, angle, boardDetails, onActivateTickBar, tickBarActive }) => {
+export const TickButton: React.FC<TickButtonProps> = ({ currentClimb, angle, boardDetails, onActivateTickBar, onTickSave, tickBarActive }) => {
   const { logbook, isAuthenticated } = useBoardProvider();
   const [drawerVisible, setDrawerVisible] = useState(false);
   const { openAuthModal } = useAuthModal();
@@ -45,6 +47,12 @@ export const TickButton: React.FC<TickButtonProps> = ({ currentClimb, angle, boa
       boardLayout: boardDetails.layout_name || '',
       existingAscentCount: badgeCount,
     });
+
+    // When tick mode is already active, save the tick
+    if (tickBarActive && onTickSave) {
+      onTickSave();
+      return;
+    }
 
     if (!isAuthenticated && alwaysUseApp && loaded && openInAppUrl) {
       openExternalUrl(openInAppUrl);

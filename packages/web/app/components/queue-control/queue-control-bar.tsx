@@ -21,8 +21,9 @@ import { constructPlayUrlWithSlugs, getContextAwareClimbViewUrl, isNumericId, tr
 import { BoardRouteParameters, BoardDetails, Angle } from '@/app/lib/types';
 import PreviousClimbButton from './previous-climb-button';
 import QueueList, { QueueListHandle } from './queue-list';
+import { useSwipeable } from 'react-swipeable';
 import { TickButton } from '../logbook/tick-button';
-import { QuickTickBar } from '../logbook/quick-tick-bar';
+import { QuickTickBar, type QuickTickBarHandle } from '../logbook/quick-tick-bar';
 import ClimbThumbnail from '../climb-card/climb-thumbnail';
 import ClimbTitle from '../climb-card/climb-title';
 import { themeTokens } from '@/app/theme/theme-config';
@@ -145,6 +146,18 @@ const QueueControlBar: React.FC<QueueControlBarProps> = ({ boardDetails, angle }
   const [tickComment, setTickComment] = useState('');
   const [tickCommentOpen, setTickCommentOpen] = useState(false);
   const [tickCommentFocused, setTickCommentFocused] = useState(false);
+  const quickTickBarRef = useRef<QuickTickBarHandle>(null);
+
+  // Swipe-to-dismiss state for the whole card when tick mode is active.
+  const [tickSwipeOffset, setTickSwipeOffset] = useState(0);
+  const [isTickDismissing, setIsTickDismissing] = useState(false);
+  const tickDismissRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  useEffect(() => {
+    return () => {
+      if (tickDismissRef.current) clearTimeout(tickDismissRef.current);
+    };
+  }, []);
   const handleTickCommentToggle = useCallback(() => setTickCommentOpen((prev) => !prev), []);
   const handleTickCommentFocus = useCallback(() => setTickCommentFocused(true), []);
   const handleTickCommentBlur = useCallback(() => setTickCommentFocused(false), []);
@@ -307,6 +320,56 @@ const QueueControlBar: React.FC<QueueControlBarProps> = ({ boardDetails, angle }
       clearTimeout(unmountTimer);
     };
   }, [tickBarActive]);
+
+  // Reset swipe-to-dismiss state when tick mode deactivates.
+  useEffect(() => {
+    if (!tickBarActive) {
+      setTickSwipeOffset(0);
+      setIsTickDismissing(false);
+    }
+  }, [tickBarActive]);
+
+  const tickSwipeEnabled = tickBarActive && !tickCommentFocused && !isTickDismissing;
+
+  const tickDismissHandlers = useSwipeable({
+    onSwiping: (eventData) => {
+      if (!tickSwipeEnabled) return;
+      if (Math.abs(eventData.deltaY) > Math.abs(eventData.deltaX)) return;
+      if (eventData.deltaX > 0) { setTickSwipeOffset(0); return; }
+      setTickSwipeOffset(eventData.deltaX);
+    },
+    onSwipedLeft: (eventData) => {
+      if (!tickSwipeEnabled) return;
+      if (Math.abs(eventData.deltaX) >= 80) {
+        setIsTickDismissing(true);
+        setTickSwipeOffset(-window.innerWidth);
+        tickDismissRef.current = setTimeout(() => setActiveDrawer('none'), 220);
+      } else {
+        setTickSwipeOffset(0);
+      }
+    },
+    onSwiped: (eventData) => {
+      if (!tickSwipeEnabled) return;
+      if (eventData.dir !== 'Left') setTickSwipeOffset(0);
+    },
+    trackMouse: false,
+    preventScrollOnSwipe: true,
+    delta: 10,
+  });
+
+  const tickDismissStyle = useMemo<React.CSSProperties | undefined>(() => {
+    if (!tickBarActive) return undefined;
+    const transition = isTickDismissing
+      ? 'transform 220ms ease-out, opacity 220ms ease-out'
+      : tickSwipeOffset === 0
+        ? 'transform 180ms ease-out'
+        : 'none';
+    return {
+      transform: `translateX(${tickSwipeOffset}px)`,
+      opacity: isTickDismissing ? 0 : 1,
+      transition,
+    };
+  }, [tickBarActive, tickSwipeOffset, isTickDismissing]);
 
   const { swipeHandlers, swipeOffset, isAnimating, animationDirection, enterDirection, clearEnterAnimation } = useCardSwipeNavigation({
     onSwipeNext: handleSwipeNext,
@@ -529,27 +592,53 @@ const QueueControlBar: React.FC<QueueControlBarProps> = ({ boardDetails, angle }
           swipe left to dismiss
         </div>
       )}
-      {/* Tick-mode comment bar — rendered above the main card so tapping the
-          comment button doesn't reflow the queue control bar. */}
-      {tickBarActive && tickCommentOpen && (
-        <div className={styles.commentBar}>
-          <TextField
-            autoFocus
-            fullWidth
-            size="small"
-            variant="standard"
-            placeholder="Comment..."
-            value={tickComment}
-            onChange={(e) => setTickComment(e.target.value)}
-            onFocus={handleTickCommentFocus}
-            onBlur={handleTickCommentBlur}
-            slotProps={{ htmlInput: { maxLength: 2000, 'aria-label': 'Tick comment' } }}
-          />
-        </div>
-      )}
       {/* Main Control Bar */}
-      <MuiCard variant="outlined" className={styles.card} sx={{ border: 'none', backgroundColor: 'transparent' }}>
+      <MuiCard
+        {...(tickBarActive ? tickDismissHandlers : {})}
+        variant="outlined"
+        className={styles.card}
+        sx={{ border: 'none', backgroundColor: 'transparent' }}
+        style={tickDismissStyle}
+      >
         <CardContent sx={{ p: 0, '&:last-child': { pb: 0 } }}>
+        {/* Tick-mode controls — grows upward from the bar */}
+        {tickBarActive && (
+          <div
+            className={styles.tickRow}
+            style={{ backgroundColor: gradeTintColor ?? (isDark ? 'transparent' : 'var(--semantic-surface)') }}
+          >
+            {/* Comment input */}
+            {tickCommentOpen && (
+              <div className={styles.commentBar}>
+                <TextField
+                  autoFocus
+                  fullWidth
+                  size="small"
+                  variant="standard"
+                  placeholder="Comment..."
+                  value={tickComment}
+                  onChange={(e) => setTickComment(e.target.value)}
+                  onFocus={handleTickCommentFocus}
+                  onBlur={handleTickCommentBlur}
+                  slotProps={{ htmlInput: { maxLength: 2000, 'aria-label': 'Tick comment' } }}
+                />
+              </div>
+            )}
+            {/* Tick controls — tries, grade, stars */}
+            <QuickTickBar
+              ref={quickTickBarRef}
+              currentClimb={currentClimb}
+              angle={angle}
+              boardDetails={boardDetails}
+              onSave={() => setActiveDrawer('none')}
+              onCancel={() => setActiveDrawer('none')}
+              comment={tickComment}
+              commentOpen={tickCommentOpen}
+              onCommentToggle={handleTickCommentToggle}
+              commentFocused={tickCommentFocused}
+            />
+          </div>
+        )}
         {/* Swipe container - captures swipe gestures, does NOT translate */}
         <div className={styles.swipeWrapper}>
           <div
@@ -574,12 +663,8 @@ const QueueControlBar: React.FC<QueueControlBarProps> = ({ boardDetails, angle }
                     />
                   </div>
 
-                  {/* Text swipe clip — overflow hidden to contain sliding text.
-                       In tick mode, overlays the thumbnail with a subtle tinted blur. */}
-                  <div
-                    className={`${styles.textSwipeClip} ${tickBarActive ? styles.textSwipeClipTick : ''}`}
-                    style={tickBarActive ? { backgroundColor: gradeTintColor ?? (isDark ? 'rgba(0,0,0,0.5)' : 'rgba(245,245,245,0.7)') } : undefined}
-                  >
+                  {/* Text swipe clip — overflow hidden to contain sliding text */}
+                  <div className={styles.textSwipeClip}>
                     {/* Current climb text — slides with finger */}
                     <div
                       id="onboarding-queue-toggle"
@@ -618,79 +703,80 @@ const QueueControlBar: React.FC<QueueControlBarProps> = ({ boardDetails, angle }
                 </div>
               </Box>
 
-              {/* Button cluster — swaps to tick controls when tick bar is active */}
+              {/* Button cluster — always visible, lightbulb swaps to X in tick mode */}
               <Box sx={{ flex: 'none', marginLeft: `${themeTokens.spacing[1]}px` }}>
-                {tickBarActive ? (
-                  <QuickTickBar
+                <Stack direction="row" spacing={0.5}>
+                  {/* Mirror button - desktop only */}
+                  {boardDetails.supportsMirroring ? (
+                    <span className={styles.desktopOnly}>
+                      <IconButton
+                        id="button-mirror"
+                        onClick={() => {
+                          mirrorClimb();
+                          track('Mirror Climb Toggled', {
+                            boardLayout: boardDetails.layout_name || '',
+                            mirrored: !currentClimb?.mirrored,
+                          });
+                        }}
+                        color={currentClimb?.mirrored ? 'primary' : 'default'}
+                        sx={
+                          currentClimb?.mirrored
+                            ? { backgroundColor: themeTokens.colors.purple, borderColor: themeTokens.colors.purple, color: 'common.white', '&:hover': { backgroundColor: themeTokens.colors.purple } }
+                            : undefined
+                        }
+                      >
+                        <SyncOutlined />
+                      </IconButton>
+                    </span>
+                  ) : null}
+                  {/* Play link - desktop only */}
+                  {!isPlayPage && playUrl && (
+                    <span className={styles.desktopOnly}>
+                      <Link
+                        href={playUrl}
+                        onClick={() => {
+                          track('Play Mode Entered', {
+                            boardLayout: boardDetails.layout_name || '',
+                          });
+                        }}
+                      >
+                        <IconButton aria-label="Enter play mode"><OpenInFullOutlined /></IconButton>
+                      </Link>
+                    </span>
+                  )}
+                  {/* Navigation buttons - desktop only */}
+                  <span className={styles.navButtons}>
+                    <Stack direction="row" spacing={0.5}>
+                      <PreviousClimbButton navigate={isViewPage || isPlayPage} boardDetails={boardDetails} />
+                      <NextClimbButton navigate={isViewPage || isPlayPage} boardDetails={boardDetails} />
+                    </Stack>
+                  </span>
+                  {/* Party / Cancel button — swaps to X when tick mode is active */}
+                  {tickBarActive ? (
+                    <IconButton
+                      onClick={() => setActiveDrawer('none')}
+                      sx={{
+                        color: themeTokens.colors.error,
+                        opacity: themeTokens.opacity.subtle,
+                        '&:hover': { color: themeTokens.colors.error, opacity: 1 },
+                      }}
+                      aria-label="Cancel tick"
+                    >
+                      <CloseOutlined />
+                    </IconButton>
+                  ) : (
+                    <ShareBoardButton />
+                  )}
+                  {/* Tick button — activates tick mode, or saves when already active */}
+                  <TickButton
                     currentClimb={currentClimb}
                     angle={angle}
                     boardDetails={boardDetails}
-                    onSave={() => setActiveDrawer('none')}
-                    onCancel={() => setActiveDrawer('none')}
-                    comment={tickComment}
-                    commentOpen={tickCommentOpen}
-                    onCommentToggle={handleTickCommentToggle}
-                    commentFocused={tickCommentFocused}
+                    onActivateTickBar={() => setActiveDrawer('tick')}
+                    onTickSave={() => quickTickBarRef.current?.save()}
+                    tickBarActive={tickBarActive}
                   />
-                ) : (
-                  <Stack direction="row" spacing={0.5}>
-                    {/* Mirror button - desktop only */}
-                    {boardDetails.supportsMirroring ? (
-                      <span className={styles.desktopOnly}>
-                        <IconButton
-                          id="button-mirror"
-                          onClick={() => {
-                            mirrorClimb();
-                            track('Mirror Climb Toggled', {
-                              boardLayout: boardDetails.layout_name || '',
-                              mirrored: !currentClimb?.mirrored,
-                            });
-                          }}
-                          color={currentClimb?.mirrored ? 'primary' : 'default'}
-                          sx={
-                            currentClimb?.mirrored
-                              ? { backgroundColor: themeTokens.colors.purple, borderColor: themeTokens.colors.purple, color: 'common.white', '&:hover': { backgroundColor: themeTokens.colors.purple } }
-                              : undefined
-                          }
-                        >
-                          <SyncOutlined />
-                        </IconButton>
-                      </span>
-                    ) : null}
-                    {/* Play link - desktop only */}
-                    {!isPlayPage && playUrl && (
-                      <span className={styles.desktopOnly}>
-                        <Link
-                          href={playUrl}
-                          onClick={() => {
-                            track('Play Mode Entered', {
-                              boardLayout: boardDetails.layout_name || '',
-                            });
-                          }}
-                        >
-                          <IconButton aria-label="Enter play mode"><OpenInFullOutlined /></IconButton>
-                        </Link>
-                      </span>
-                    )}
-                    {/* Navigation buttons - desktop only */}
-                    <span className={styles.navButtons}>
-                      <Stack direction="row" spacing={0.5}>
-                        <PreviousClimbButton navigate={isViewPage || isPlayPage} boardDetails={boardDetails} />
-                        <NextClimbButton navigate={isViewPage || isPlayPage} boardDetails={boardDetails} />
-                      </Stack>
-                    </span>
-                    {/* Party button */}
-                    <ShareBoardButton />
-                    {/* Tick button */}
-                    <TickButton
-                      currentClimb={currentClimb}
-                      angle={angle}
-                      boardDetails={boardDetails}
-                      onActivateTickBar={() => setActiveDrawer('tick')}
-                      tickBarActive={tickBarActive}
-                    />
-                  </Stack>
-                )}
+                </Stack>
               </Box>
             </Box>
           </div>

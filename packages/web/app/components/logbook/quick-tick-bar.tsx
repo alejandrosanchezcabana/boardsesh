@@ -1,7 +1,6 @@
 'use client';
 
-import React, { useState, useCallback, useRef, useEffect, useMemo } from 'react';
-import { useSwipeable } from 'react-swipeable';
+import React, { useState, useCallback, useEffect, useMemo, useRef, useImperativeHandle, forwardRef } from 'react';
 import Stack from '@mui/material/Stack';
 import { track } from '@vercel/analytics';
 import { Angle, Climb, BoardDetails } from '@/app/lib/types';
@@ -9,7 +8,6 @@ import { useBoardProvider } from '../board-provider/board-provider-context';
 import type { LogbookEntry, TickStatus } from '@/app/hooks/use-logbook';
 import { TENSION_KILTER_GRADES } from '@/app/lib/board-data';
 import { TickControls } from './tick-controls';
-import styles from './quick-tick-bar.module.css';
 
 /** Snapshot of the tick target taken when the bar is first opened with a valid climb. */
 interface TickTarget {
@@ -39,19 +37,21 @@ export interface QuickTickBarProps {
   commentFocused: boolean;
 }
 
-const SWIPE_DISMISS_THRESHOLD = 80;
-const EXIT_DURATION_MS = 220;
-const SNAP_BACK_DURATION_MS = 180;
+export interface QuickTickBarHandle {
+  /** Trigger a save (ascent). Called by the parent tick button. */
+  save: () => void;
+}
 
 /**
  * Stateful tick entry wrapper. Manages the tick target snapshot, form state
- * (quality, difficulty, attempts), save logic, and swipe-to-dismiss gesture.
- * Renders TickControls for the actual UI buttons.
+ * (quality, difficulty, attempts), and save logic. Renders TickControls for
+ * the actual UI buttons.
  *
- * Designed to be embedded in the queue control bar's button cluster position
- * (replacing the normal navigation/action buttons when tick mode is active).
+ * Exposes a `save()` method via ref so the parent's tick button can trigger
+ * the save. Swipe-to-dismiss is handled by the parent (queue-control-bar)
+ * on the whole card so the user can swipe anywhere on the bar to dismiss.
  */
-export const QuickTickBar: React.FC<QuickTickBarProps> = ({
+export const QuickTickBar = forwardRef<QuickTickBarHandle, QuickTickBarProps>(({
   currentClimb,
   angle,
   boardDetails,
@@ -61,7 +61,7 @@ export const QuickTickBar: React.FC<QuickTickBarProps> = ({
   commentOpen,
   onCommentToggle,
   commentFocused,
-}) => {
+}, ref) => {
   const { saveTick, logbook } = useBoardProvider();
 
   // Snapshot the target climb the first time we get a non-null climb.
@@ -82,19 +82,8 @@ export const QuickTickBar: React.FC<QuickTickBarProps> = ({
   const [difficulty, setDifficulty] = useState<number | undefined>(undefined);
   const [isSaving, setIsSaving] = useState(false);
   const [attemptCount, setAttemptCount] = useState<number>(1);
-  const [swipeOffset, setSwipeOffset] = useState(0);
-  const [isDismissing, setIsDismissing] = useState(false);
-  const dismissTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const grades = TENSION_KILTER_GRADES;
-
-  useEffect(() => {
-    return () => {
-      if (dismissTimeoutRef.current) {
-        clearTimeout(dismissTimeoutRef.current);
-      }
-    };
-  }, []);
 
   // Fall back to matching the climb's own difficulty string against the
   // grade list so the menu can highlight the "current" grade even before
@@ -181,75 +170,13 @@ export const QuickTickBar: React.FC<QuickTickBarProps> = ({
   );
 
   const handleConfirm = useCallback(() => handleSave(true), [handleSave]);
-  const handleFail = useCallback(() => handleSave(false), [handleSave]);
 
-  const triggerDismiss = useCallback(() => {
-    if (isDismissing) return;
-    setIsDismissing(true);
-    // Slide the bar fully off-screen to the left, then tell the parent to close.
-    setSwipeOffset(-window.innerWidth);
-    dismissTimeoutRef.current = setTimeout(() => {
-      onCancel();
-    }, EXIT_DURATION_MS);
-  }, [isDismissing, onCancel]);
-
-  const swipeEnabled = !commentFocused && !isSaving && !isDismissing;
-
-  const swipeHandlers = useSwipeable({
-    onSwiping: (eventData) => {
-      if (!swipeEnabled) return;
-      // Only track horizontal left drags.
-      if (Math.abs(eventData.deltaY) > Math.abs(eventData.deltaX)) return;
-      if (eventData.deltaX > 0) {
-        setSwipeOffset(0);
-        return;
-      }
-      setSwipeOffset(eventData.deltaX);
-    },
-    onSwipedLeft: (eventData) => {
-      if (!swipeEnabled) return;
-      if (Math.abs(eventData.deltaX) >= SWIPE_DISMISS_THRESHOLD) {
-        triggerDismiss();
-      } else {
-        setSwipeOffset(0);
-      }
-    },
-    onSwiped: (eventData) => {
-      if (!swipeEnabled) return;
-      // Reset if we ended on any non-left direction.
-      if (eventData.dir !== 'Left') {
-        setSwipeOffset(0);
-      }
-    },
-    trackMouse: false,
-    preventScrollOnSwipe: true,
-    delta: 10,
-  });
-
-  const rootStyle = useMemo<React.CSSProperties>(() => {
-    const transition = isDismissing
-      ? `transform ${EXIT_DURATION_MS}ms ease-out, opacity ${EXIT_DURATION_MS}ms ease-out`
-      : swipeOffset === 0
-        ? `transform ${SNAP_BACK_DURATION_MS}ms ease-out`
-        : 'none';
-    return {
-      transform: `translateX(${swipeOffset}px)`,
-      opacity: isDismissing ? 0 : 1,
-      transition,
-    };
-  }, [swipeOffset, isDismissing]);
-
-  // Apply swipe handlers only when gesture capture is allowed so focused
-  // comment text selection, or in-flight saves, don't get hijacked.
-  const rootHandlers = swipeEnabled ? swipeHandlers : {};
+  useImperativeHandle(ref, () => ({
+    save: handleConfirm,
+  }), [handleConfirm]);
 
   return (
-    <div
-      {...rootHandlers}
-      className={styles.tickBar}
-      style={rootStyle}
-      data-testid="quick-tick-bar"
-    >
+    <div data-testid="quick-tick-bar">
       <Stack direction="row" spacing={0.5} sx={{ alignItems: 'center' }}>
         <TickControls
           quality={quality}
@@ -264,13 +191,13 @@ export const QuickTickBar: React.FC<QuickTickBarProps> = ({
           commentOpen={commentOpen}
           onCommentToggle={onCommentToggle}
           isSaving={isSaving}
-          onConfirm={handleConfirm}
-          onFail={handleFail}
         />
       </Stack>
     </div>
   );
-};
+});
+
+QuickTickBar.displayName = 'QuickTickBar';
 
 /**
  * Decide whether the user has any prior history for a climb at open time.

@@ -7,8 +7,6 @@ import Skeleton from '@mui/material/Skeleton';
 import Typography from '@mui/material/Typography';
 import Menu from '@mui/material/Menu';
 import MenuItem from '@mui/material/MenuItem';
-import CheckOutlined from '@mui/icons-material/CheckOutlined';
-import CloseOutlined from '@mui/icons-material/CloseOutlined';
 import ChatBubbleOutlineOutlined from '@mui/icons-material/ChatBubbleOutlineOutlined';
 import StarIcon from '@mui/icons-material/Star';
 import { themeTokens } from '@/app/theme/theme-config';
@@ -40,8 +38,6 @@ export interface TickControlsProps {
   onCommentToggle: () => void;
   /** Whether save is in progress. */
   isSaving: boolean;
-  onConfirm: () => void;
-  onFail: () => void;
 }
 
 /**
@@ -64,8 +60,6 @@ export const TickControls: React.FC<TickControlsProps> = ({
   commentOpen,
   onCommentToggle,
   isSaving,
-  onConfirm,
-  onFail,
 }) => {
   const isDark = useIsDarkMode();
   const { formatGrade, getGradeColor, loaded: gradeFormatLoaded } = useGradeFormat();
@@ -240,41 +234,6 @@ export const TickControls: React.FC<TickControlsProps> = ({
         ))}
       </Menu>
 
-      {/* Fail button */}
-      <IconButton
-        onClick={onFail}
-        disabled={isSaving}
-        sx={{
-          color: themeTokens.colors.error,
-          opacity: themeTokens.opacity.subtle,
-          '&:hover': {
-            color: themeTokens.colors.error,
-            opacity: 1,
-          },
-        }}
-        aria-label={`Log ${attemptDisplay} tries without a send`}
-        data-testid="quick-tick-fail"
-      >
-        <CloseOutlined />
-      </IconButton>
-
-      {/* Confirm button */}
-      <IconButton
-        onClick={onConfirm}
-        disabled={isSaving}
-        sx={{
-          color: themeTokens.colors.success,
-          opacity: themeTokens.opacity.subtle,
-          '&:hover': {
-            color: themeTokens.colors.successHover,
-            opacity: 1,
-          },
-        }}
-        aria-label="Confirm ascent"
-        data-testid="quick-tick-confirm"
-      >
-        <CheckOutlined />
-      </IconButton>
     </>
   );
 };

@@ -215,7 +215,6 @@
 .climbInfoInner {
   display: flex;
   align-items: center;
-  position: relative;
 }
 
 .boardPreviewContainer {
@@ -301,16 +300,26 @@
   position: relative;
 }
 
-/* Tick mode: overlay the climb title over the thumbnail area */
-.textSwipeClipTick {
-  position: absolute;
-  inset: 0;
-  z-index: 1;
-  display: flex;
-  align-items: center;
-  border-radius: 6px;
-  backdrop-filter: blur(4px);
-  -webkit-backdrop-filter: blur(4px);
+/* Tick controls row — expands upward from the main bar */
+.tickRow {
+  padding: 8px 12px;
+  overflow: hidden;
+  animation: tickRowExpand 200ms ease-out;
+}
+
+@keyframes tickRowExpand {
+  from {
+    max-height: 0;
+    opacity: 0;
+    padding-top: 0;
+    padding-bottom: 0;
+  }
+  to {
+    max-height: 120px;
+    opacity: 1;
+    padding-top: 8px;
+    padding-bottom: 8px;
+  }
 }
 
 /* Peek text — absolutely positioned to slide in from the edge during swipe */
