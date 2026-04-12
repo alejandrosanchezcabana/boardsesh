@@ -23,7 +23,6 @@ import { isBoardRoutePath } from '@/app/lib/board-route-paths';
 import GlobalHeader from '../global-header/global-header';
 import SessionSummaryDialog from '../session-summary/session-summary-dialog';
 import { SearchDrawerBridgeProvider } from '../search-drawer/search-drawer-bridge-context';
-import { CreateHeaderBridgeProvider } from '../create-climb/create-header-bridge-context';
 import { isNativeApp } from '@/app/lib/ble/capacitor-utils';
 import { BoardSwitchConfirmProvider } from '../board-lock/board-switch-confirm-provider';
 
@@ -46,12 +45,10 @@ export default function PersistentSessionWrapper({ children, boardConfigs }: Per
         <QueueBridgeProvider>
           <BoardSwitchConfirmProvider>
             <SearchDrawerBridgeProvider>
-              <CreateHeaderBridgeProvider>
-                <GlobalHeader boardConfigs={boardConfigs} />
-                {children}
-                <RootBottomBar boardConfigs={boardConfigs} />
-                <RootSessionSummaryDialog />
-              </CreateHeaderBridgeProvider>
+              <GlobalHeader boardConfigs={boardConfigs} />
+              {children}
+              <RootBottomBar boardConfigs={boardConfigs} />
+              <RootSessionSummaryDialog />
             </SearchDrawerBridgeProvider>
           </BoardSwitchConfirmProvider>
         </QueueBridgeProvider>

@@ -69,55 +69,6 @@
   flex-shrink: 0;
 }
 
-.createNameField {
-  flex: 1;
-  min-width: 0;
-  display: flex;
-  align-items: center;
-  height: 38px;
-  padding: 0 14px;
-  border-radius: 9999px;
-  background: var(--neutral-50);
-  border: 1px solid var(--neutral-200);
-}
-
-.createNameField:focus-within {
-  border-color: var(--color-primary);
-  box-shadow: 0 0 0 3px rgba(140, 74, 82, 0.12);
-}
-
-.createNameInput {
-  width: 100%;
-  min-width: 0;
-  border: none;
-  outline: none;
-  background: transparent;
-  color: var(--neutral-900);
-  font: inherit;
-}
-
-.createNameInput::placeholder {
-  color: var(--neutral-400);
-}
-
-.createNameInput:disabled {
-  cursor: default;
-}
-
-.createActionSlot {
-  flex-shrink: 0;
-  display: flex;
-  align-items: center;
-}
-
-.createActionPlaceholder {
-  width: 84px;
-  height: 32px;
-  border-radius: 9999px;
-  background: var(--neutral-100);
-  border: 1px solid var(--neutral-200);
-}
-
 .headerTransparent {
   position: fixed;
   top: 0;
@@ -147,12 +98,3 @@
   border-bottom: 1px solid rgba(255, 255, 255, 0.08);
 }
 
-:global(html[data-theme="dark"]) .createNameField {
-  background: var(--neutral-100);
-  border-color: var(--neutral-300);
-}
-
-:global(html[data-theme="dark"]) .createActionPlaceholder {
-  background: var(--neutral-100);
-  border-color: var(--neutral-300);
-}

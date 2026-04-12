@@ -5,9 +5,6 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 
 const mockShowMessage = vi.fn();
 const mockRequest = vi.fn();
-const mockRegister = vi.fn();
-const mockUpdate = vi.fn();
-const mockDeregister = vi.fn();
 const mockOpenAuthModal = vi.fn();
 
 vi.mock('next/navigation', () => ({
@@ -91,14 +88,6 @@ vi.mock('../../providers/snackbar-provider', () => ({
   useSnackbar: () => ({ showMessage: mockShowMessage }),
 }));
 
-vi.mock('../create-header-bridge-context', () => ({
-  useCreateHeaderBridgeSetters: () => ({
-    register: mockRegister,
-    update: mockUpdate,
-    deregister: mockDeregister,
-  }),
-}));
-
 vi.mock('@/app/lib/climb-search-cache', () => ({
   refreshClimbSearchAfterSave: vi.fn(),
 }));
@@ -149,8 +138,11 @@ describe('CreateClimbForm', () => {
     });
 
     await waitFor(() => {
-      const latestUpdate = mockUpdate.mock.calls.at(-1)?.[0];
-      expect(latestUpdate?.actionSlot?.props?.disabled).toBe(true);
+      const saveButton = screen
+        .getAllByLabelText('Save climb')
+        .find((el): el is HTMLButtonElement => el.tagName === 'BUTTON');
+      expect(saveButton).toBeTruthy();
+      expect(saveButton?.disabled).toBe(true);
     });
   });
 });
