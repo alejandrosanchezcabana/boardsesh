@@ -4,8 +4,6 @@ import { pubsub } from './pubsub/index';
 import { roomManager } from './services/room-manager';
 import { redisClientManager } from './redis/client';
 import { eventBroker, NotificationWorker } from './events/index';
-import { sql } from 'drizzle-orm';
-import { db } from './db/client';
 import { initCors, applyCorsHeaders } from './handlers/cors';
 import { handleHealthCheck } from './handlers/health';
 import { handleSessionJoin } from './handlers/join';
@@ -15,7 +13,6 @@ import { handleSyncCron } from './handlers/sync';
 import { handleOcrTestDataUpload } from './handlers/ocr-test-data';
 import { createYogaInstance } from './graphql/yoga';
 import { setupWebSocketServer } from './websocket/setup';
-import { runInferredSessionBuilderBatched } from './jobs/inferred-session-builder';
 import { warmPopularConfigsCache } from './graphql/resolvers/social/boards';
 
 /**
@@ -203,30 +200,6 @@ export async function startServer(): Promise<ServerResources> {
   }, 60000);
   intervals.push(flushInterval);
 
-  // Periodic notification cleanup (once per day)
-  const notificationCleanupInterval = setInterval(async () => {
-    try {
-      await db.execute(sql`DELETE FROM notifications WHERE created_at < NOW() - INTERVAL '90 days'`);
-    } catch (error) {
-      console.error('[Server] Notification cleanup error:', error);
-    }
-  }, 24 * 60 * 60 * 1000);
-  intervals.push(notificationCleanupInterval);
-
-  // Periodic feed items cleanup (hourly, retains 180 days)
-  const feedCleanupInterval = setInterval(async () => {
-    try {
-      const result = await db.execute(sql`DELETE FROM feed_items WHERE created_at < NOW() - INTERVAL '180 days'`);
-      const deleted = (result as unknown as { rowCount?: number }).rowCount ?? 0;
-      if (deleted > 0) {
-        console.log(`[Server] Feed cleanup: deleted ${deleted} old feed items`);
-      }
-    } catch (error) {
-      console.error('[Server] Feed cleanup error:', error);
-    }
-  }, 60 * 60 * 1000);
-  intervals.push(feedCleanupInterval);
-
   // Periodic TTL refresh for active sessions (every 2 minutes)
   const ttlRefreshInterval = setInterval(async () => {
     try {
@@ -255,19 +228,6 @@ export async function startServer(): Promise<ServerResources> {
     }
   }, 120000); // 2 minutes
   intervals.push(ttlRefreshInterval);
-
-  // Periodic inferred session builder (every 30 minutes)
-  const inferredSessionInterval = setInterval(async () => {
-    try {
-      const result = await runInferredSessionBuilderBatched();
-      if (result.ticksAssigned > 0) {
-        console.log(`[Server] Inferred session builder: assigned ${result.ticksAssigned} ticks for ${result.usersProcessed} users`);
-      }
-    } catch (error) {
-      console.error('[Server] Inferred session builder error:', error);
-    }
-  }, 30 * 60 * 1000);
-  intervals.push(inferredSessionInterval);
 
   return { wss, httpServer, cleanupIntervals, shutdownServices };
 }

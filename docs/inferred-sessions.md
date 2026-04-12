@@ -23,7 +23,7 @@ There are no "ungrouped" ticks — the backfill migration (0060) ensures every h
 
 1. **Real-time** (`assignInferredSession`): Called from `saveTick` when a user logs a new tick. Looks at the user's most recent tick — if it's within 4 hours, the new tick joins that session. Otherwise, a new inferred session is created.
 
-2. **Batched** (`runInferredSessionBuilderBatched`): Runs on a 30-minute interval in the backend. Processes all users who have unassigned ticks, grouping them using the same 4-hour gap heuristic.
+2. **Batched** (`buildInferredSessionsForUser`): Runs as a daily Vercel cron (`/api/internal/inferred-sessions-backfill`) as a safety net for ticks that failed real-time assignment. Processes users with unassigned ticks in paginated batches, grouping them using the same 4-hour gap heuristic.
 
 3. **Post-sync** (`buildInferredSessionsForUser`): Runs after Aurora data sync completes, assigning sessions to newly imported ticks.
 
