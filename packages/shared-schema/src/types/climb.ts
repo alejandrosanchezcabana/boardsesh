@@ -9,6 +9,10 @@ export type Climb = {
   uuid: string;
   layoutId?: number | null; // GraphQL nullable Int - layout the climb belongs to
   setter_username: string;
+  // Boardsesh user ID of the climb owner. Null for Aurora-synced climbs
+  // that pre-date Boardsesh accounts. Used for ownership gates instead of
+  // the mutable setter_username.
+  userId?: string | null;
   name: string;
   description?: string | null;
   frames: string;
@@ -37,6 +41,8 @@ export type Climb = {
 export type ClimbInput = {
   uuid: string;
   setter_username: string;
+  // Boardsesh user ID of the climb owner; nullable for Aurora-synced climbs.
+  userId?: string | null;
   name: string;
   description?: string | null;
   frames: string;
@@ -49,6 +55,10 @@ export type ClimbInput = {
   mirrored?: boolean | null;
   benchmark_difficulty?: string | null;
   is_no_match?: boolean | null;
+  // Round-trips draft/publish state through the queue so peers can gate
+  // the Edit affordance without re-querying the DB.
+  is_draft?: boolean | null;
+  published_at?: string | null;
   userAscents?: number | null;
   userAttempts?: number | null;
 };

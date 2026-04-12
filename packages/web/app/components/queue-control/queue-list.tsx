@@ -28,6 +28,7 @@ import { useOptionalBoardProvider } from '../board-provider/board-provider-conte
 import { LogAscentDrawer } from '../logbook/log-ascent-drawer';
 import { useAuthModal } from '@/app/components/providers/auth-modal-provider';
 import { ClimbQueueItem } from './types';
+import { isClimbEditable } from './is-climb-editable';
 import styles from './queue-list.module.css';
 
 // Discriminated union for all possible rows in the flat virtualized list
@@ -74,26 +75,16 @@ const QueueList = forwardRef<QueueListHandle, QueueListProps>(({ boardDetails, i
   const { data: authSession } = useSession();
   const isDark = useIsDarkMode();
 
-  // Users can edit their own drafts indefinitely, and their own published
-  // climbs for the first 24 hours after publish. The backend enforces
-  // ownership too; this filter just keeps the UI tidy. Gated on board_slug
-  // because edit routes are only available on the new /b route.
-  const currentUsername = authSession?.user?.name;
+  // Gate the Edit affordance on ownership (by immutable userId), draft or
+  // in-window status, and whether we're on a board-slug-shaped route.
+  const currentUserId = authSession?.user?.id ?? null;
   const boardSlug = routeParams?.board_slug;
   const angleParam = routeParams?.angle;
-  const EDIT_WINDOW_MS = 24 * 60 * 60 * 1000;
-  const isClimbEditable = useCallback(
-    (climb: Climb): boolean => {
-      if (!boardSlug || !angleParam) return false;
-      if (!currentUsername) return false;
-      if (climb.setter_username && climb.setter_username !== currentUsername) return false;
-      if (climb.is_draft) return true;
-      if (!climb.published_at) return false;
-      const publishedMs = Date.parse(climb.published_at);
-      if (!Number.isFinite(publishedMs)) return false;
-      return Date.now() - publishedMs <= EDIT_WINDOW_MS;
-    },
-    [currentUsername, boardSlug, angleParam, EDIT_WINDOW_MS],
+  const hasBoardRoute = !!(boardSlug && angleParam);
+  const canEditClimb = useCallback(
+    (climb: Climb): boolean =>
+      isClimbEditable(climb, { currentUserId, hasBoardRoute }),
+    [currentUserId, hasBoardRoute],
   );
 
   const handleEditClimb = useCallback(
@@ -357,7 +348,7 @@ const QueueList = forwardRef<QueueListHandle, QueueListProps>(({ boardDetails, i
                   isSelected={selectedItems?.has(row.item.uuid) ?? false}
                   onToggleSelect={onToggleSelect}
                   onEditClimb={handleEditClimb}
-                  isEditable={isClimbEditable(row.item.climb)}
+                  isEditable={canEditClimb(row.item.climb)}
                 />
               )}
               {row.type === 'history-divider' && (
@@ -380,7 +371,7 @@ const QueueList = forwardRef<QueueListHandle, QueueListProps>(({ boardDetails, i
                   isSelected={selectedItems?.has(row.item.uuid) ?? false}
                   onToggleSelect={onToggleSelect}
                   onEditClimb={handleEditClimb}
-                  isEditable={isClimbEditable(row.item.climb)}
+                  isEditable={canEditClimb(row.item.climb)}
                 />
               )}
               {row.type === 'future-item' && (
@@ -400,7 +391,7 @@ const QueueList = forwardRef<QueueListHandle, QueueListProps>(({ boardDetails, i
                   isSelected={selectedItems?.has(row.item.uuid) ?? false}
                   onToggleSelect={onToggleSelect}
                   onEditClimb={handleEditClimb}
-                  isEditable={isClimbEditable(row.item.climb)}
+                  isEditable={canEditClimb(row.item.climb)}
                 />
               )}
               {row.type === 'suggestion-header' && (

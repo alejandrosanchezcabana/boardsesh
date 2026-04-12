@@ -18,7 +18,7 @@ import {
 
 export const getClimb = cache(async (params: ParsedBoardRouteParametersWithUuid): Promise<Climb> => {
   const result = await sql`
-        SELECT climbs.uuid, climbs.setter_username, climbs.name, climbs.description,
+        SELECT climbs.uuid, climbs.setter_username, climbs.user_id as "userId", climbs.name, climbs.description,
         climbs.frames, COALESCE(climb_stats.angle, ${params.angle}) as angle, COALESCE(climb_stats.ascensionist_count, 0) as ascensionist_count,
         ROUND(climb_stats.display_difficulty::numeric, 0) as difficulty_id,
         ROUND(climb_stats.quality_average::numeric, 2) as quality_average,

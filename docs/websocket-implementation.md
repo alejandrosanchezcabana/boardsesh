@@ -486,6 +486,19 @@ sequenceDiagram
 | `CurrentClimbChanged` | Active climb changed | `sequence`, `item`, `clientId`, `correlationId` |
 | `ClimbMirrored` | Mirror state toggled | `sequence`, `mirrored` |
 
+### Queue Mutations
+
+| Mutation | Event emitted | Notes |
+|----------|---------------|-------|
+| `addQueueItem` | `QueueItemAdded` | Appends to queue or inserts at `position`. Idempotent on `item.uuid` — duplicate adds are collapsed server-side during offline reconciliation. |
+| `removeQueueItem` | `QueueItemRemoved` | Removes by queue-item uuid. |
+| `reorderQueue` | `QueueReordered` | Moves a queue item to a new index. |
+| `setCurrentClimbQueueItem` | `CurrentClimbChanged` | Activates an existing queue item by uuid. |
+| `setCurrentClimb` | `CurrentClimbChanged` + `QueueItemAdded` | Adds the climb to the queue (if not already present) and activates it. |
+| `replaceQueueItem` | `FullSync` | Replaces the climb inside an existing queue slot in place, preserving position and the queue-item uuid. Used by the create-climb form to push saves of the currently-authored climb to peers without reshuffling the queue. Emits `FullSync` rather than a narrow delta because replace is infrequent and simpler to reconcile. |
+| `mirrorCurrentClimb` | `ClimbMirrored` | Flips the mirror flag on the current climb. |
+| `setQueue` | `FullSync` | Bulk replaces queue + current climb. Used for offline → online reconciliation. |
+
 ### Optimistic Updates with Correlation IDs
 
 ```mermaid

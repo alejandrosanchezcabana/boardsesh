@@ -10,6 +10,8 @@ export const climbTypeDefs = /* GraphQL */ `
     layoutId: Int
     "Username of the person who created this climb"
     setter_username: String!
+    "Boardsesh user ID of the climb owner (null for Aurora-synced climbs). Used as the stable identity for ownership gates like the post-publish edit window."
+    userId: ID
     "Name/title of the climb"
     name: String!
     "Description or notes about the climb (nullable - omitted from search results, fetch separately via climb detail query)"
@@ -54,6 +56,8 @@ export const climbTypeDefs = /* GraphQL */ `
   input ClimbInput {
     uuid: ID!
     setter_username: String!
+    "Boardsesh user ID of the climb owner (null for Aurora-synced climbs)."
+    userId: ID
     name: String!
     description: String
     frames: String!
@@ -66,6 +70,10 @@ export const climbTypeDefs = /* GraphQL */ `
     mirrored: Boolean
     benchmark_difficulty: String
     is_no_match: Boolean
+    "Whether this climb is still a draft."
+    is_draft: Boolean
+    "ISO timestamp of when this climb was first published."
+    published_at: String
     userAscents: Int
     userAttempts: Int
   }

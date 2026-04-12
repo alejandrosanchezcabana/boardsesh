@@ -7,6 +7,9 @@ import { ExternalUUIDSchema, BoardNameSchema } from './primitives';
 export const ClimbInputSchema = z.object({
   uuid: ExternalUUIDSchema,
   setter_username: z.string().max(100).nullish().transform(v => v ?? ''),
+  // Boardsesh user ID of the climb owner. Nullable for Aurora-synced climbs
+  // that pre-date Boardsesh accounts.
+  userId: z.string().max(100).nullish(),
   name: z.string().max(200).nullish().transform(v => v ?? ''),
   description: z.string().max(2000).nullish().transform(v => v ?? ''),
   frames: z.string().max(10000).nullish().transform(v => v ?? ''),
@@ -18,6 +21,12 @@ export const ClimbInputSchema = z.object({
   difficulty_error: z.string().max(50).nullish().transform(v => v ?? ''),
   mirrored: z.boolean().nullish(),
   benchmark_difficulty: z.string().max(50).nullish(),
+  // Whether this climb is still an unpublished draft. Round-trips through
+  // the queue so peers can gate the Edit affordance locally.
+  is_draft: z.boolean().nullish(),
+  // ISO timestamp of first publish; used by clients to enforce the 24h
+  // post-publish edit window without a second round-trip.
+  published_at: z.string().max(100).nullish(),
   userAscents: z.number().min(0).nullish(),
   userAttempts: z.number().min(0).nullish(),
 });

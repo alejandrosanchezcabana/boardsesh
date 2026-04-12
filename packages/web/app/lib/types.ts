@@ -7,6 +7,10 @@ export type Climb = {
   layoutId?: number | null; // Layout the climb belongs to - used to identify cross-layout climbs
   boardType?: string; // Board type this climb belongs to (e.g. 'kilter', 'tension'). Populated in multi-board contexts.
   setter_username: string;
+  // Boardsesh user ID of the climb owner. Null for Aurora-synced climbs
+  // that pre-date Boardsesh accounts. Used for ownership gates (e.g. the
+  // Edit affordance in queue-list) instead of the mutable setter_username.
+  userId?: string | null;
   name: string;
   description?: string;
   frames: string;

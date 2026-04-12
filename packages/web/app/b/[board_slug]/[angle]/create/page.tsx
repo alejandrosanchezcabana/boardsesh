@@ -69,15 +69,26 @@ export default async function BoardSlugCreatePage(props: CreatePageProps) {
   // publish still inside the 24h edit window), load it up-front so the form
   // can seed holds, name, description, and the saved-row tracker on mount.
   // MoonBoard edit-via-URL isn't wired yet; drafts drawer is Aurora-only.
+  //
+  // We track `editClimbError` separately so the form can surface a message
+  // when the link is broken (expired, wrong board, typo) rather than silently
+  // mounting an empty form.
   let editClimb: Climb | undefined;
+  let editClimbError: string | undefined;
   if (searchParams.editClimbUuid) {
     try {
-      editClimb = await getClimb({
+      const loaded = await getClimb({
         ...parsedParams,
         climb_uuid: searchParams.editClimbUuid,
       });
+      if (!loaded) {
+        editClimbError = "We couldn't find that climb on this board.";
+      } else {
+        editClimb = loaded;
+      }
     } catch (error) {
       console.error('Failed to load edit climb:', error);
+      editClimbError = "We couldn't load that climb. It may have been deleted or belongs to a different board.";
     }
   }
 
@@ -89,6 +100,7 @@ export default async function BoardSlugCreatePage(props: CreatePageProps) {
       forkFrames={searchParams.forkFrames}
       forkName={searchParams.forkName}
       editClimb={editClimb}
+      editClimbError={editClimbError}
     />
   );
 }

@@ -128,6 +128,9 @@ export function toClimbQueueItemInput(item: LocalClimbQueueItem) {
     climb: {
       uuid: item.climb.uuid,
       setter_username: item.climb.setter_username,
+      // userId is the stable identity for ownership gates (Edit button,
+      // 24h post-publish window). Null/undefined for Aurora-synced climbs.
+      userId: item.climb.userId ?? null,
       name: item.climb.name,
       description: item.climb.description || '',
       frames: item.climb.frames,
@@ -139,6 +142,10 @@ export function toClimbQueueItemInput(item: LocalClimbQueueItem) {
       difficulty_error: item.climb.difficulty_error,
       mirrored: item.climb.mirrored,
       benchmark_difficulty: item.climb.benchmark_difficulty,
+      // Round-trip draft/publish state so peers can decide locally whether
+      // to surface the Edit affordance without re-querying the DB.
+      is_draft: item.climb.is_draft ?? null,
+      published_at: item.climb.published_at ?? null,
       userAscents: item.climb.userAscents,
       userAttempts: item.climb.userAttempts,
     },

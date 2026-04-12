@@ -20,6 +20,7 @@ export const getClimbByUuid = async (params: GetClimbParams): Promise<Climb | nu
       .select({
         uuid: tables.climbs.uuid,
         setter_username: tables.climbs.setterUsername,
+        user_id: tables.climbs.userId,
         name: tables.climbs.name,
         description: tables.climbs.description,
         frames: tables.climbs.frames,
@@ -57,6 +58,7 @@ export const getClimbByUuid = async (params: GetClimbParams): Promise<Climb | nu
     const climb: Climb = {
       uuid: row.uuid,
       setter_username: row.setter_username || '',
+      userId: row.user_id ?? null,
       name: row.name || '',
       description: row.description || '',
       frames: row.frames || '',

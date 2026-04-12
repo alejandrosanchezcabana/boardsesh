@@ -35,6 +35,7 @@ const CLIMB_DRAFT_FIELDS = `
 const CLIMB_DETAIL_FIELDS = `
   uuid
   setter_username
+  userId
   name
   description
   frames

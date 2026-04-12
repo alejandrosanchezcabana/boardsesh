@@ -98,6 +98,10 @@ interface CreateClimbFormProps {
   // seeds its hold map, name, description, and saved-row tracker from this
   // climb on mount so the user can pick up a draft or recent publish via URL.
   editClimb?: Climb;
+  // Surfaces an inline error when an editClimbUuid was supplied but the
+  // lookup failed (wrong board, deleted row, etc). Shown once on mount so
+  // the user isn't left staring at an empty form wondering what happened.
+  editClimbError?: string;
   // MoonBoard-specific
   layoutFolder?: string;
   layoutId?: number;
@@ -111,6 +115,7 @@ export default function CreateClimbForm({
   forkFrames,
   forkName,
   editClimb,
+  editClimbError,
   layoutFolder,
   layoutId,
   holdSetImages,
@@ -471,6 +476,10 @@ export default function CreateClimbForm({
       frames,
       angle: boardType === 'moonboard' ? selectedAngle : angle,
       setter_username: session?.user?.name || '',
+      // Stable owner identity. The queue list (local + peers) uses this —
+      // not setter_username — to decide whether to show the Edit button,
+      // because usernames can change or be blank but userId is immutable.
+      userId: session?.user?.id ?? null,
       ascensionist_count: 0,
       difficulty: '',
       quality_average: '0',
@@ -479,10 +488,14 @@ export default function CreateClimbForm({
       benchmark_difficulty: null,
       mirrored: false,
       is_draft: isDraft,
+      // Stamp publish time on the first save that flips out of draft. Drafts
+      // leave this null; once published it stays stable until the 24h window
+      // lapses and the backend refuses further updates.
+      published_at: !isDraft && savedClimb?.publishedAt ? savedClimb.publishedAt : (!isDraft ? new Date().toISOString() : null),
       layoutId: boardType === 'aurora' ? boardDetails?.layout_id ?? null : layoutId ?? null,
       boardType: boardType === 'aurora' ? boardDetails?.board_name : 'moonboard',
     }),
-    [climbName, description, angle, selectedAngle, boardType, session?.user?.name, isDraft, boardDetails?.layout_id, boardDetails?.board_name, layoutId],
+    [climbName, description, angle, selectedAngle, boardType, session?.user?.name, session?.user?.id, isDraft, savedClimb?.publishedAt, boardDetails?.layout_id, boardDetails?.board_name, layoutId],
   );
 
   // Pushes the just-saved (or just-updated) climb into the live queue so it
@@ -982,6 +995,17 @@ export default function CreateClimbForm({
     seededEditClimbUuidRef.current = editClimb.uuid;
     handleLoadDraft(editClimb);
   }, [editClimb, boardType, boardDetails, loadAuroraHolds, handleLoadDraft]);
+
+  // Surface a lookup failure from the create page (expired link, wrong
+  // board, deleted row) exactly once per error value so the user knows why
+  // the form came up empty.
+  const shownEditClimbErrorRef = useRef<string | null>(null);
+  useEffect(() => {
+    if (!editClimbError) return;
+    if (shownEditClimbErrorRef.current === editClimbError) return;
+    shownEditClimbErrorRef.current = editClimbError;
+    showMessage(editClimbError, 'error');
+  }, [editClimbError, showMessage]);
 
   const handleToggleHeatmap = useCallback(() => {
     if (boardType !== 'aurora' || !boardDetails) return;
