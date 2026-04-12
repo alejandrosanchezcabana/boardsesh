@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
-import { sql } from 'drizzle-orm';
+import { lt, sql } from 'drizzle-orm';
 import { dbz as db } from '@/app/lib/db/db';
+import { feedItems, notifications } from '@boardsesh/db/schema';
 
 export const dynamic = 'force-dynamic';
 export const maxDuration = 60;
@@ -14,22 +15,15 @@ export async function GET(request: Request) {
   }
 
   try {
-    // Delete feed items older than 180 days
-    const feedResult = await db.execute<{ count: string }>(
-      sql`DELETE FROM feed_items WHERE created_at < NOW() - INTERVAL '180 days'`,
-    );
-    const feedDeleted = (feedResult as unknown as { rowCount?: number }).rowCount ?? 0;
+    await db
+      .delete(feedItems)
+      .where(lt(feedItems.createdAt, sql`NOW() - INTERVAL '180 days'`));
 
-    // Delete notifications older than 90 days
-    const notifResult = await db.execute<{ count: string }>(
-      sql`DELETE FROM notifications WHERE created_at < NOW() - INTERVAL '90 days'`,
-    );
-    const notifDeleted = (notifResult as unknown as { rowCount?: number }).rowCount ?? 0;
+    await db
+      .delete(notifications)
+      .where(lt(notifications.createdAt, sql`NOW() - INTERVAL '90 days'`));
 
-    return NextResponse.json({
-      feedItemsDeleted: feedDeleted,
-      notificationsDeleted: notifDeleted,
-    });
+    return NextResponse.json({ success: true });
   } catch (error) {
     console.error('[Cleanup cron] Error:', error);
     return NextResponse.json(
