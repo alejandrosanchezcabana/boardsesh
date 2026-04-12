@@ -4,7 +4,7 @@ import React, { useMemo } from 'react';
 import { LabelOutlined, FavoriteOutlined } from '@mui/icons-material';
 import { getBoardDetailsForPlaylist } from '@/app/lib/board-config-for-playlist';
 import { themeTokens } from '@/app/theme/theme-config';
-import BoardRenderer from '../board-renderer/board-renderer';
+import BoardImageLayers from '../board-renderer/board-image-layers';
 import styles from './library.module.css';
 
 const PLAYLIST_COLORS = [
@@ -101,11 +101,11 @@ export default function PlaylistPreviewSquare({
   return (
     <div className={`${styles.previewContainer} ${className ?? ''}`}>
       <div className={styles.previewBoardLayer}>
-        <BoardRenderer
-          mirrored={false}
+        <BoardImageLayers
           boardDetails={boardDetails}
+          mirrored={false}
           thumbnail
-          fillHeight
+          style={{ width: '100%', height: '100%' }}
         />
       </div>
       <div
