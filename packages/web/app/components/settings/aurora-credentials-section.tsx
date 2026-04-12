@@ -163,7 +163,7 @@ export function BoardCredentialCard({
               Not connected. Link your {boardName} account to import your Aurora data, or import from a JSON export file.
             </Typography>
           )}
-          <div className={styles.buttonRow}>
+          <div className={isKilter ? styles.buttonRowStacked : styles.buttonRow}>
             {!isKilter && (
               <Button variant="contained" startIcon={<LinkOutlined />} onClick={onAdd}>
                 Link
