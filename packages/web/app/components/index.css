@@ -273,6 +273,13 @@ html[data-theme="dark"] .MuiOutlinedInput-input::placeholder {
   opacity: 1;
 }
 
+html[data-theme="dark"] .MuiOutlinedInput-root .MuiSvgIcon-root,
+html[data-theme="dark"] .MuiOutlinedInput-root .MuiInputAdornment-root,
+html[data-theme="dark"] .MuiFilledInput-root .MuiSvgIcon-root,
+html[data-theme="dark"] .MuiFilledInput-root .MuiInputAdornment-root {
+  color: #6B7280;
+}
+
 /* Ensure all interactive elements have minimum 16px font to prevent iOS auto-zoom on focus */
 @media (max-width: 768px) {
   input,
