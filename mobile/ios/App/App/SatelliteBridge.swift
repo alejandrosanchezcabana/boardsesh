@@ -93,6 +93,38 @@ final class SatelliteBridge: NSObject, WKScriptMessageHandler, WKNavigationDeleg
         onFirstLoadComplete = nil
     }
 
+    /// Intercept full page navigations (window.location, link clicks) to detect
+    /// cross-tab URLs. Client-side SPA navigations (pushState) are intercepted
+    /// by the JS shim instead.
+    func webView(
+        _ webView: WKWebView,
+        decidePolicyFor navigationAction: WKNavigationAction,
+        decisionHandler: @escaping (WKNavigationActionPolicy) -> Void
+    ) {
+        guard let url = navigationAction.request.url,
+              (url.scheme == "http" || url.scheme == "https"),
+              !url.path.isEmpty else {
+            decisionHandler(.allow)
+            return
+        }
+
+        let targetTab = MultiWebViewController.tabForPath(url.path)
+
+        // Allow navigations within this tab or to "create" (handled in-place)
+        if targetTab == tabKey || targetTab == "create" {
+            decisionHandler(.allow)
+            return
+        }
+
+        // Cross-tab navigation: cancel and redirect to the native tab switch
+        decisionHandler(.cancel)
+        logger.debug("Intercepted cross-tab navigation from \(self.tabKey) to \(targetTab): \(url.absoluteString, privacy: .public)")
+
+        DispatchQueue.main.async { [weak self] in
+            self?.onTabBarAction?("navigateTab", ["tab": targetTab, "url": url.absoluteString])
+        }
+    }
+
     // MARK: - Cleanup
 
     /// Removes the message handler to break the retain cycle.
@@ -471,6 +503,77 @@ final class SatelliteBridge: NSObject, WKScriptMessageHandler, WKNavigationDeleg
 
             // ── Tab identifier ───────────────────────────────────────────
             window.__BOARDSESH_TAB__ = '\(tabKey)';
+
+            // ── Cross-tab navigation interceptor ────────────────────────
+            // Next.js router.push() uses history.pushState under the hood.
+            // Intercept it to detect cross-tab navigations and redirect
+            // them to the native tab switch instead of navigating in-place.
+            var currentTab = '\(tabKey)';
+
+            function getTabForPath(path) {
+                if (path === '/') return 'home';
+                if (path.match(/\\/create$/)) return 'create';
+                if (path.indexOf('/feed') === 0) return 'feed';
+                if (path.indexOf('/notifications') === 0) return 'notifications';
+                if (path.indexOf('/playlists') === 0 || path.indexOf('/logbook') === 0) return 'library';
+                return 'climbs';
+            }
+
+            function extractPath(url) {
+                if (!url) return null;
+                try {
+                    // Handle both absolute URLs and relative paths
+                    if (url.indexOf('://') !== -1) {
+                        return new URL(url).pathname;
+                    }
+                    // Strip query string and hash
+                    return url.split('?')[0].split('#')[0];
+                } catch(e) {
+                    return null;
+                }
+            }
+
+            var _origPushState = history.pushState;
+            var _origReplaceState = history.replaceState;
+
+            history.pushState = function(state, title, url) {
+                var path = extractPath(url);
+                if (path) {
+                    var targetTab = getTabForPath(path);
+                    if (targetTab !== currentTab && targetTab !== 'create') {
+                        // Cross-tab navigation: redirect to native tab switch
+                        var fullUrl = url;
+                        if (url && url.indexOf('://') === -1) {
+                            fullUrl = window.location.origin + (url.charAt(0) === '/' ? '' : '/') + url;
+                        }
+                        postBridgeMessage('NativeTabBar', 'navigateTab', {
+                            tab: targetTab,
+                            url: fullUrl || url
+                        });
+                        return; // Do NOT push state in this webview
+                    }
+                }
+                return _origPushState.apply(this, arguments);
+            };
+
+            history.replaceState = function(state, title, url) {
+                var path = extractPath(url);
+                if (path) {
+                    var targetTab = getTabForPath(path);
+                    if (targetTab !== currentTab && targetTab !== 'create') {
+                        var fullUrl = url;
+                        if (url && url.indexOf('://') === -1) {
+                            fullUrl = window.location.origin + (url.charAt(0) === '/' ? '' : '/') + url;
+                        }
+                        postBridgeMessage('NativeTabBar', 'navigateTab', {
+                            tab: targetTab,
+                            url: fullUrl || url
+                        });
+                        return;
+                    }
+                }
+                return _origReplaceState.apply(this, arguments);
+            };
         })();
         """
     }
