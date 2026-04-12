@@ -93,37 +93,12 @@ final class SatelliteBridge: NSObject, WKScriptMessageHandler, WKNavigationDeleg
         onFirstLoadComplete = nil
     }
 
-    /// Intercept full page navigations (window.location, link clicks) to detect
-    /// cross-tab URLs. Client-side SPA navigations (pushState) are intercepted
-    /// by the JS shim instead.
-    func webView(
-        _ webView: WKWebView,
-        decidePolicyFor navigationAction: WKNavigationAction,
-        decisionHandler: @escaping (WKNavigationActionPolicy) -> Void
-    ) {
-        guard let url = navigationAction.request.url,
-              (url.scheme == "http" || url.scheme == "https"),
-              !url.path.isEmpty else {
-            decisionHandler(.allow)
-            return
-        }
-
-        let targetTab = MultiWebViewController.tabForPath(url.path)
-
-        // Allow navigations within this tab or to "create" (handled in-place)
-        if targetTab == tabKey || targetTab == "create" {
-            decisionHandler(.allow)
-            return
-        }
-
-        // Cross-tab navigation: cancel and redirect to the native tab switch
-        decisionHandler(.cancel)
-        logger.debug("Intercepted cross-tab navigation from \(self.tabKey) to \(targetTab): \(url.absoluteString, privacy: .public)")
-
-        DispatchQueue.main.async { [weak self] in
-            self?.onTabBarAction?("navigateTab", ["tab": targetTab, "url": url.absoluteString])
-        }
-    }
+    // NOTE: Cross-tab navigation interception for full page loads (window.location,
+    // link clicks) is NOT done via WKNavigationDelegate.decidePolicyFor because it
+    // can't distinguish server redirects (which must be followed) from user-initiated
+    // cross-tab navigations. Instead, the history.pushState/replaceState interceptor
+    // in the JS shim handles client-side navigations, which covers the vast majority
+    // of cross-tab navigation cases in this SPA.
 
     // MARK: - Cleanup
 
