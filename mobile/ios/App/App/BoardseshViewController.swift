@@ -4,10 +4,13 @@ import WebKit
 
 class BoardseshViewController: CAPBridgeViewController {
 
+    var tabBarView: NativeTabBarView?
+
     override func capacitorDidLoad() {
         super.capacitorDidLoad()
         bridge?.registerPluginInstance(LiveActivityPlugin())
         bridge?.registerPluginInstance(HealthKitPlugin())
+        bridge?.registerPluginInstance(NativeTabBarPlugin())
         // DevUrlPlugin is auto-registered via the CAP_PLUGIN macro in DevUrlPlugin.m
     }
 
@@ -64,9 +67,32 @@ class BoardseshViewController: CAPBridgeViewController {
             scrollView.canCancelContentTouches = true
         }
 
+        let bar = NativeTabBarView()
+        bar.translatesAutoresizingMaskIntoConstraints = false
+        bar.onTabTapped = { [weak self] tab in
+            let js = "window.dispatchEvent(new CustomEvent('boardsesh:native-tab-tapped',{detail:{tab:'\(tab)'}}));"
+            self?.webView?.evaluateJavaScript(js, completionHandler: nil)
+        }
+        view.addSubview(bar)
+        view.bringSubviewToFront(bar)
+        NSLayoutConstraint.activate([
+            bar.leadingAnchor.constraint(equalTo: view.leadingAnchor),
+            bar.trailingAnchor.constraint(equalTo: view.trailingAnchor),
+            bar.bottomAnchor.constraint(equalTo: view.bottomAnchor),
+        ])
+        tabBarView = bar
+
         // If a universal link triggered a cold start, navigate to it now
         // that the bridge and WebView are ready.
         loadPendingUniversalLink()
+    }
+
+    override func viewDidLayoutSubviews() {
+        super.viewDidLayoutSubviews()
+        guard let bar = tabBarView, bar.frame.height > 0 else { return }
+        let h = bar.frame.height
+        let js = "document.documentElement.style.setProperty('--native-tab-bar-height','\(h)px');"
+        webView?.evaluateJavaScript(js, completionHandler: nil)
     }
 
     override func viewDidAppear(_ animated: Bool) {

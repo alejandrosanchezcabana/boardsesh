@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useCallback, useContext } from 'react';
+import React, { useState, useCallback, useContext, useEffect } from 'react';
 import { useSnackbar } from '@/app/components/providers/snackbar-provider';
 import MuiButton from '@mui/material/Button';
 import Box from '@mui/material/Box';
@@ -46,6 +46,8 @@ import { useClimbActionsData } from '@/app/hooks/use-climb-actions-data';
 import type { StoredBoardConfig } from '@/app/lib/saved-boards-db';
 import { isValidHexColor } from '@/app/lib/color-utils';
 import { useBoardSwitchGuard } from '@/app/components/board-lock/use-board-switch-guard';
+import { isNativeApp } from '@/app/lib/ble/capacitor-utils';
+import { getNativeTabBarPlugin } from '@/app/lib/native-tab-bar/native-tab-bar-plugin';
 
 type Tab = 'home' | 'climbs' | 'library' | 'feed' | 'create' | 'you';
 type PendingCreateAction = 'climb' | 'playlist' | null;
@@ -342,7 +344,7 @@ function BottomTabBar({ boardDetails, angle, boardConfigs }: BottomTabBarProps) 
     }
   };
 
-  const handleTabChange = (_event: React.SyntheticEvent, newValue: Tab) => {
+  const handleTabChange = useCallback((_event: React.SyntheticEvent, newValue: Tab) => {
     switch (newValue) {
       case 'home':
         handleHomeTab();
@@ -363,7 +365,38 @@ function BottomTabBar({ boardDetails, angle, boardConfigs }: BottomTabBarProps) 
         handleYouTab();
         break;
     }
-  };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [handleHomeTab, handleClimbsTab, handleLibraryTab, handleFeedTab, handleCreateTab, handleNotificationsTab]);
+
+  // Sync active tab to native on path change
+  useEffect(() => {
+    if (!isNativeApp()) return;
+    getNativeTabBarPlugin()?.setActiveTab({ tab: getActiveTab(pathname) });
+  }, [pathname]);
+
+  // Handle native tab-tapped events
+  useEffect(() => {
+    if (!isNativeApp()) return;
+    const handler = (e: Event) => {
+      const { tab } = (e as CustomEvent<{ tab: string }>).detail;
+      handleTabChange({} as React.SyntheticEvent, tab as Tab);
+    };
+    window.addEventListener('boardsesh:native-tab-tapped', handler);
+    return () => window.removeEventListener('boardsesh:native-tab-tapped', handler);
+  }, [handleTabChange]);
+
+  // Notify native when internal drawers open/close
+  useEffect(() => {
+    if (!isNativeApp()) return;
+    const anyOpen = isBoardSelectorOpen || isCreatePlaylistOpen || isCustomBoardOpen;
+    getNativeTabBarPlugin()?.setBarsHidden({ hidden: anyOpen });
+  }, [isBoardSelectorOpen, isCreatePlaylistOpen, isCustomBoardOpen]);
+
+  // Sync notification badge count to native
+  useEffect(() => {
+    if (!isNativeApp()) return;
+    getNativeTabBarPlugin()?.setNotificationBadge({ count: notificationUnreadCount ?? 0 });
+  }, [notificationUnreadCount]);
 
   const handleBoardSelected = useCallback(
     (url: string, config?: StoredBoardConfig) => {
@@ -527,6 +560,128 @@ function BottomTabBar({ boardDetails, angle, boardConfigs }: BottomTabBarProps) 
     getPlaylistUrl,
     showMessage,
   ]);
+
+  // On native iOS, the visual tab bar is rendered natively.
+  // We only render the drawers so they can be opened by native tab taps.
+  if (isNativeApp()) {
+    return (
+      <>
+        {/* Create Playlist Drawer */}
+        {isCreatePlaylistRendered && (
+          <SwipeableDrawer
+            title="Create Playlist"
+            placement="bottom"
+            open={isCreatePlaylistOpen}
+            onClose={() => {
+              setIsCreatePlaylistOpen(false);
+              setPlaylistFormValues(INITIAL_PLAYLIST_FORM);
+              setPlaylistFormErrors({});
+            }}
+            onTransitionEnd={handleCreatePlaylistTransitionEnd}
+            styles={{
+              wrapper: { height: 'auto' },
+              body: { padding: themeTokens.spacing[4] },
+            }}
+            extra={
+              <MuiButton
+                variant="contained"
+                onClick={handleCreatePlaylist}
+                disabled={isCreatingPlaylist}
+              >
+                {isCreatingPlaylist ? 'Creating...' : 'Create'}
+              </MuiButton>
+            }
+          >
+            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+              <Box>
+                <Typography variant="body2" fontWeight={600} sx={{ mb: 0.5 }}>Name</Typography>
+                <TextField
+                  placeholder="e.g., Hard Crimps"
+                  autoFocus
+                  fullWidth
+                  size="small"
+                  value={playlistFormValues.name}
+                  onChange={(e) => {
+                    setPlaylistFormValues((prev) => ({ ...prev, name: e.target.value }));
+                    setPlaylistFormErrors((prev) => ({ ...prev, name: '' }));
+                  }}
+                  error={!!playlistFormErrors.name}
+                  helperText={playlistFormErrors.name}
+                />
+              </Box>
+              <Box>
+                <Typography variant="body2" fontWeight={600} sx={{ mb: 0.5 }}>Description (optional)</Typography>
+                <TextField
+                  placeholder="Optional description..."
+                  multiline
+                  rows={2}
+                  fullWidth
+                  size="small"
+                  slotProps={{ htmlInput: { maxLength: 500 } }}
+                  value={playlistFormValues.description}
+                  onChange={(e) => {
+                    setPlaylistFormValues((prev) => ({ ...prev, description: e.target.value }));
+                    setPlaylistFormErrors((prev) => ({ ...prev, description: '' }));
+                  }}
+                  error={!!playlistFormErrors.description}
+                  helperText={playlistFormErrors.description}
+                />
+              </Box>
+              <Box>
+                <Typography variant="body2" fontWeight={600} sx={{ mb: 0.5 }}>Color (optional)</Typography>
+                <TextField
+                  type="color"
+                  value={playlistFormValues.color || '#000000'}
+                  onChange={(e) => setPlaylistFormValues((prev) => ({ ...prev, color: e.target.value }))}
+                  size="small"
+                  sx={{ width: 80 }}
+                />
+              </Box>
+            </Box>
+          </SwipeableDrawer>
+        )}
+
+        {/* Board Selector Drawer */}
+        {isBoardSelectorRendered && (
+          <SwipeableDrawer
+            title="Pick a board"
+            placement="bottom"
+            open={isBoardSelectorOpen}
+            onClose={() => {
+              setIsBoardSelectorOpen(false);
+              setPendingCreateAction(null);
+            }}
+            onTransitionEnd={handleBoardSelectorTransitionEnd}
+          >
+            <BoardDiscoveryScroll
+              onBoardClick={handleDiscoveryBoardClick}
+              onConfigClick={handleDiscoveryConfigClick}
+              onCustomClick={() => {
+                setIsBoardSelectorOpen(false);
+                setIsCustomBoardRendered(true);
+                setIsCustomBoardOpen(true);
+              }}
+            />
+          </SwipeableDrawer>
+        )}
+
+        {/* Custom Board Selector Drawer */}
+        {boardConfigs && isCustomBoardRendered && (
+          <BoardSelectorDrawer
+            open={isCustomBoardOpen}
+            onClose={() => setIsCustomBoardOpen(false)}
+            onTransitionEnd={handleCustomBoardTransitionEnd}
+            boardConfigs={boardConfigs}
+            placement="bottom"
+            onBoardSelected={(url) => {
+              handleBoardSelected(url);
+              setIsCustomBoardOpen(false);
+            }}
+          />
+        )}
+      </>
+    );
+  }
 
   return (
     <>

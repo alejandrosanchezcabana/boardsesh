@@ -133,9 +133,39 @@ export function RootBottomBar({ boardConfigs }: { boardConfigs: BoardConfigData 
   const hideTabBar = HIDE_TAB_BAR_PAGES.some((prefix) => pathname.startsWith(prefix)) && !hasActiveQueue;
   const shouldShowQueueShell = isBoardRoutePath(pathname) && !hasActiveQueue && !boardDetails;
 
+  if (isNative) {
+    return (
+      <div
+        style={{
+          position: 'fixed',
+          bottom: 'var(--native-tab-bar-height, 83px)',
+          left: 0,
+          right: 0,
+          zIndex: 10,
+        }}
+      >
+        {hasActiveQueue && boardDetails && (
+          <ErrorBoundary>
+            <BoardProvider boardName={boardDetails.board_name}>
+              <ConnectionSettingsProvider>
+                <WebSocketConnectionProvider>
+                  <BluetoothProvider boardDetails={boardDetails}>
+                    <RootQueueControlBarWithProviders boardDetails={boardDetails} angle={angle} />
+                  </BluetoothProvider>
+                </WebSocketConnectionProvider>
+              </ConnectionSettingsProvider>
+            </BoardProvider>
+          </ErrorBoundary>
+        )}
+        {shouldShowQueueShell && <QueueControlBarShell />}
+        <BottomTabBar boardDetails={boardDetails} angle={angle} boardConfigs={boardConfigs} />
+      </div>
+    );
+  }
+
   return (
     <div
-      className={`${bottomBarStyles.bottomBarWrapper} ${isNative ? bottomBarStyles.nativeApp : ''}`}
+      className={`${bottomBarStyles.bottomBarWrapper}`}
       data-testid="bottom-bar-wrapper"
     >
       <FeedbackPromptBanner />

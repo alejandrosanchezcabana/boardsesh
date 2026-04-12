@@ -40,6 +40,11 @@
 		LA100032 /* LiveActivityManagerTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = LA200032 /* LiveActivityManagerTests.swift */; };
 		LA100033 /* AppIntentNavigationTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = LA200033 /* AppIntentNavigationTests.swift */; };
 		LA100034 /* VGradeFormatterTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = LA200034 /* VGradeFormatterTests.swift */; };
+		LA100036 /* NativeTabBarView.swift in Sources */ = {isa = PBXBuildFile; fileRef = LA200036 /* NativeTabBarView.swift */; };
+		LA100037 /* NativeTabBarPlugin.swift in Sources */ = {isa = PBXBuildFile; fileRef = LA200037 /* NativeTabBarPlugin.swift */; };
+		LA100038 /* NativeTabBarPlugin.m in Sources */ = {isa = PBXBuildFile; fileRef = LA200038 /* NativeTabBarPlugin.m */; };
+		LA100039 /* NativeTabBarViewTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = LA200039 /* NativeTabBarViewTests.swift */; };
+		LA100041 /* NativeTabBarPluginTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = LA200041 /* NativeTabBarPluginTests.swift */; };
 		LA100040 /* BoardseshWidgets.appex in Embed App Extensions */ = {isa = PBXBuildFile; fileRef = LA300001 /* BoardseshWidgets.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 		PI100001 /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = PI200001 /* PrivacyInfo.xcprivacy */; };
 		PI100002 /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = PI200002 /* PrivacyInfo.xcprivacy */; };
@@ -114,6 +119,11 @@
 		LA200032 /* LiveActivityManagerTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LiveActivityManagerTests.swift; sourceTree = "<group>"; };
 		LA200033 /* AppIntentNavigationTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppIntentNavigationTests.swift; sourceTree = "<group>"; };
 		LA200034 /* VGradeFormatterTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VGradeFormatterTests.swift; sourceTree = "<group>"; };
+		LA200036 /* NativeTabBarView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NativeTabBarView.swift; sourceTree = "<group>"; };
+		LA200037 /* NativeTabBarPlugin.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NativeTabBarPlugin.swift; sourceTree = "<group>"; };
+		LA200038 /* NativeTabBarPlugin.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = NativeTabBarPlugin.m; sourceTree = "<group>"; };
+		LA200039 /* NativeTabBarViewTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NativeTabBarViewTests.swift; sourceTree = "<group>"; };
+		LA200041 /* NativeTabBarPluginTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NativeTabBarPluginTests.swift; sourceTree = "<group>"; };
 		LA300001 /* BoardseshWidgets.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = BoardseshWidgets.appex; sourceTree = BUILT_PRODUCTS_DIR; };
 		PI200001 /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; lastKnownFileType = text.xml; path = PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
 		PI200002 /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; lastKnownFileType = text.xml; path = PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
@@ -193,6 +203,9 @@
 				LA200009 /* HealthKitPlugin.m */,
 				LA200050 /* DevUrlPlugin.swift */,
 				LA200051 /* DevUrlPlugin.m */,
+				LA200036 /* NativeTabBarView.swift */,
+				LA200037 /* NativeTabBarPlugin.swift */,
+				LA200038 /* NativeTabBarPlugin.m */,
 				504EC30B1FED79650016851F /* Main.storyboard */,
 				504EC30E1FED79650016851F /* Assets.xcassets */,
 				504EC3101FED79650016851F /* LaunchScreen.storyboard */,
@@ -221,6 +234,8 @@
 				LA200032 /* LiveActivityManagerTests.swift */,
 				LA200033 /* AppIntentNavigationTests.swift */,
 				LA200034 /* VGradeFormatterTests.swift */,
+				LA200039 /* NativeTabBarViewTests.swift */,
+				LA200041 /* NativeTabBarPluginTests.swift */,
 			);
 			path = AppTests;
 			sourceTree = "<group>";
@@ -447,6 +462,9 @@
 				LA100009 /* HealthKitPlugin.m in Sources */,
 				LA100050 /* DevUrlPlugin.swift in Sources */,
 				LA100051 /* DevUrlPlugin.m in Sources */,
+				LA100036 /* NativeTabBarView.swift in Sources */,
+				LA100037 /* NativeTabBarPlugin.swift in Sources */,
+				LA100038 /* NativeTabBarPlugin.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -459,6 +477,8 @@
 				LA100032 /* LiveActivityManagerTests.swift in Sources */,
 				LA100033 /* AppIntentNavigationTests.swift in Sources */,
 				LA100034 /* VGradeFormatterTests.swift in Sources */,
+				LA100039 /* NativeTabBarViewTests.swift in Sources */,
+				LA100041 /* NativeTabBarPluginTests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
