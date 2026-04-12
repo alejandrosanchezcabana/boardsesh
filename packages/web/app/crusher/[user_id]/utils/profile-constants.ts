@@ -1,4 +1,4 @@
-import { V_GRADE_COLORS, type GradeDisplayFormat } from '@/app/lib/grade-colors';
+import { V_GRADE_COLORS, FONT_GRADE_COLORS, type GradeDisplayFormat } from '@/app/lib/grade-colors';
 import { SUPPORTED_BOARDS, BOULDER_GRADES } from '@/app/lib/board-data';
 
 export interface UserProfile {
@@ -129,9 +129,9 @@ export const getLayoutColor = (boardType: string, layoutId: number | null | unde
  * and raises lightness for a cohesive, muted look.
  */
 export const getGradeChartColor = (grade: string): string => {
-  // Strip trailing "+" so "V5+" looks up the same color as "V5"
+  // Try V-grade first (strip trailing "+"), then Font grade (lowercase)
   const normalized = grade.replace(/\+$/, '');
-  const hexColor = V_GRADE_COLORS[normalized];
+  const hexColor = V_GRADE_COLORS[normalized] ?? FONT_GRADE_COLORS[grade.toLowerCase()];
   if (!hexColor) return 'hsla(0, 0%, 78%, 0.7)';
 
   // Convert hex to HSL for smoother control

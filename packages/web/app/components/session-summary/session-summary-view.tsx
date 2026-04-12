@@ -26,7 +26,7 @@ interface SessionSummaryViewProps {
 }
 
 export default function SessionSummaryView({ summary }: SessionSummaryViewProps) {
-  const { formatGrade } = useGradeFormat();
+  const { formatGrade, loaded: gradeFormatLoaded } = useGradeFormat();
   const maxGradeCount = Math.max(...summary.gradeDistribution.map((g) => g.count), 1);
 
   const formatDuration = (minutes: number | null | undefined) => {
@@ -108,7 +108,7 @@ export default function SessionSummaryView({ summary }: SessionSummaryViewProps)
                 {summary.hardestClimb.climbName}
               </Typography>
               <Chip
-                label={formatGrade(summary.hardestClimb.grade) ?? summary.hardestClimb.grade}
+                label={gradeFormatLoaded ? (formatGrade(summary.hardestClimb.grade) ?? summary.hardestClimb.grade) : '\u00A0'}
                 size="small"
                 sx={{
                   bgcolor: getGradeColor(summary.hardestClimb.grade),
@@ -135,7 +135,7 @@ export default function SessionSummaryView({ summary }: SessionSummaryViewProps)
                     variant="body2"
                     sx={{ minWidth: 40, fontWeight: 600, textAlign: 'right' }}
                   >
-                    {formatGrade(g.grade) ?? g.grade}
+                    {gradeFormatLoaded ? (formatGrade(g.grade) ?? g.grade) : '\u00A0'}
                   </Typography>
                   <LinearProgress
                     variant="determinate"

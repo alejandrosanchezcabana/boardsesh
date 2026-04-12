@@ -31,7 +31,7 @@ interface SessionSummaryFeedItemProps {
 }
 
 export default function SessionSummaryFeedItem({ item }: SessionSummaryFeedItemProps) {
-  const { formatGrade } = useGradeFormat();
+  const { formatGrade, loaded: gradeFormatLoaded } = useGradeFormat();
 
   let metadata: SessionSummaryMetadata = {};
   try {
@@ -99,7 +99,7 @@ export default function SessionSummaryFeedItem({ item }: SessionSummaryFeedItemP
           <Box sx={{ display: 'flex', gap: 0.5, mb: 1, flexWrap: 'wrap' }}>
             {gradeDistribution.slice(0, 6).map((g) => (
               <Box key={g.grade} sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-                <Typography variant="caption" sx={{ fontWeight: 600, minWidth: 24 }}>
+                <Typography variant="caption" sx={{ fontWeight: 600, minWidth: 24, visibility: gradeFormatLoaded ? 'visible' : 'hidden' }}>
                   {formatGrade(g.grade) ?? g.grade}
                 </Typography>
                 <LinearProgress
