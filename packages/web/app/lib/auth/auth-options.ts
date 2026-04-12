@@ -259,6 +259,17 @@ export const authOptions: NextAuthOptions = {
       // Include user ID in session from JWT
       if (session?.user && token?.sub) {
         session.user.id = token.sub;
+
+        // Fetch custom avatar from userProfiles so the drawer/header show the current avatar
+        const db = getDb();
+        const profiles = await db
+          .select({ avatarUrl: schema.userProfiles.avatarUrl })
+          .from(schema.userProfiles)
+          .where(eq(schema.userProfiles.userId, token.sub))
+          .limit(1);
+        if (profiles[0]?.avatarUrl) {
+          session.user.image = profiles[0].avatarUrl;
+        }
       }
       return session;
     },

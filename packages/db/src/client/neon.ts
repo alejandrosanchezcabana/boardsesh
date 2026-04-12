@@ -40,7 +40,7 @@ export function createPool(): Pool {
     pool = new Pool({
       connectionString,
       connectionTimeoutMillis: 30000, // 30s to establish connection
-      idleTimeoutMillis: 120000, // 2 min idle before closing
+      idleTimeoutMillis: 30000, // 30s idle before closing
       max: 10, // max connections in pool
     });
   }
@@ -69,6 +69,24 @@ export function createNeonHttp() {
   const { connectionString } = getConnectionConfig();
   const sql = neon(connectionString);
   return drizzleHttp({ client: sql, schema: fullSchema, logger: sqlLogger });
+}
+
+export async function closePool(): Promise<void> {
+  try {
+    if (pool) {
+      await pool.end();
+    }
+  } finally {
+    pool = null;
+  }
+  try {
+    if (postgresClient) {
+      await postgresClient.end();
+    }
+  } finally {
+    postgresClient = null;
+  }
+  db = null;
 }
 
 export type DbInstance = ReturnType<typeof createDb>;

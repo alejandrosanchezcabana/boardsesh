@@ -25,7 +25,14 @@ import { warmPopularConfigsCache } from './graphql/resolvers/social/boards';
  * for WebSocket subscriptions. Non-GraphQL routes are handled by custom
  * request handlers.
  */
-export async function startServer(): Promise<{ wss: WebSocketServer; httpServer: ReturnType<typeof createServer> }> {
+export interface ServerResources {
+  wss: WebSocketServer;
+  httpServer: ReturnType<typeof createServer>;
+  cleanupIntervals: () => void;
+  shutdownServices: () => Promise<void>;
+}
+
+export async function startServer(): Promise<ServerResources> {
   // Initialize PubSub (connects to Redis if configured)
   // This must happen before we start accepting connections
   await pubsub.initialize();
@@ -171,45 +178,11 @@ export async function startServer(): Promise<{ wss: WebSocketServer; httpServer:
     intervals.length = 0;
   }
 
-  // Graceful shutdown handler - flush pending writes and clean up distributed state
-  process.on('SIGTERM', async () => {
-    console.log('[Server] SIGTERM received, initiating graceful shutdown...');
-
-    // Clean up intervals first
-    cleanupIntervals();
-
-    // Shutdown EventBroker consumer
-    eventBroker.shutdown();
-
-    try {
-      // Shutdown RoomManager (flushes writes + cleans up distributed state)
-      await roomManager.shutdown();
-      console.log('[Server] RoomManager shutdown complete');
-    } catch (error) {
-      console.error('[Server] Error during RoomManager shutdown:', error);
-    }
-
-    // Close HTTP server
-    httpServer.close(() => {
-      console.log('[Server] HTTP server closed');
-      process.exit(0);
-    });
-
-    // Force exit after 10 seconds if graceful shutdown fails
-    setTimeout(() => {
-      console.error('[Server] Forcefully shutting down after 10s timeout');
-      process.exit(1);
-    }, 10000);
-  });
-
-  // Also handle SIGINT (Ctrl+C)
-  process.on('SIGINT', async () => {
-    console.log('[Server] SIGINT received, initiating graceful shutdown...');
-
-    // Clean up intervals first
-    cleanupIntervals();
-
-    // Shutdown EventBroker consumer
+  /**
+   * Shutdown services (EventBroker + RoomManager).
+   * Called by the centralized shutdown handler in index.ts.
+   */
+  async function shutdownServices(): Promise<void> {
     eventBroker.shutdown();
 
     try {
@@ -218,17 +191,7 @@ export async function startServer(): Promise<{ wss: WebSocketServer; httpServer:
     } catch (error) {
       console.error('[Server] Error during RoomManager shutdown:', error);
     }
-
-    httpServer.close(() => {
-      console.log('[Server] HTTP server closed');
-      process.exit(0);
-    });
-
-    setTimeout(() => {
-      console.error('[Server] Forcefully shutting down after 10s timeout');
-      process.exit(1);
-    }, 10000);
-  });
+  }
 
   // Periodic flush as backup (every 60 seconds)
   const flushInterval = setInterval(async () => {
@@ -306,5 +269,5 @@ export async function startServer(): Promise<{ wss: WebSocketServer; httpServer:
   }, 30 * 60 * 1000);
   intervals.push(inferredSessionInterval);
 
-  return { wss, httpServer };
+  return { wss, httpServer, cleanupIntervals, shutdownServices };
 }
