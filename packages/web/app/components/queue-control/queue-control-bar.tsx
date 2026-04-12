@@ -34,6 +34,8 @@ import PlayViewDrawer from '../play-view/play-view-drawer';
 import CircularProgress from '@mui/material/CircularProgress';
 import CloseOutlined from '@mui/icons-material/CloseOutlined';
 import CheckOutlined from '@mui/icons-material/CheckOutlined';
+import ChatBubbleOutlineOutlined from '@mui/icons-material/ChatBubbleOutlineOutlined';
+import InputAdornment from '@mui/material/InputAdornment';
 import { getGradeTintColor } from '@/app/lib/grade-colors';
 import { useColorMode } from '@/app/hooks/use-color-mode';
 import { ConfirmPopover } from '@/app/components/ui/confirm-popover';
@@ -144,7 +146,6 @@ const QueueControlBar: React.FC<QueueControlBarProps> = ({ boardDetails, angle }
   // separate bar *above* the queue control bar without reflowing the main bar.
   // QuickTickBar reads the value back out via props when saving the tick.
   const [tickComment, setTickComment] = useState('');
-  const [tickCommentOpen, setTickCommentOpen] = useState(false);
   const [tickCommentFocused, setTickCommentFocused] = useState(false);
   const quickTickBarRef = useRef<QuickTickBarHandle>(null);
 
@@ -158,7 +159,6 @@ const QueueControlBar: React.FC<QueueControlBarProps> = ({ boardDetails, angle }
       if (tickDismissRef.current) clearTimeout(tickDismissRef.current);
     };
   }, []);
-  const handleTickCommentToggle = useCallback(() => setTickCommentOpen((prev) => !prev), []);
   const handleTickCommentFocus = useCallback(() => setTickCommentFocused(true), []);
   const handleTickCommentBlur = useCallback(() => setTickCommentFocused(false), []);
 
@@ -296,7 +296,6 @@ const QueueControlBar: React.FC<QueueControlBarProps> = ({ boardDetails, angle }
   useEffect(() => {
     if (!tickBarActive) {
       setTickComment('');
-      setTickCommentOpen(false);
       setTickCommentFocused(false);
     }
   }, [tickBarActive]);
@@ -607,36 +606,44 @@ const QueueControlBar: React.FC<QueueControlBarProps> = ({ boardDetails, angle }
             className={styles.tickRow}
             style={{ backgroundColor: gradeTintColor ?? (isDark ? 'transparent' : 'var(--semantic-surface)') }}
           >
-            {/* Comment input */}
-            {tickCommentOpen && (
-              <div className={styles.commentBar}>
+            {/* Comment input (70%) + tick controls (30%) */}
+            <div className={styles.tickRowInner}>
+              <div className={`${styles.tickComment} ${tickCommentFocused ? styles.tickCommentExpanded : ''}`}>
                 <TextField
-                  autoFocus
                   fullWidth
                   size="small"
                   variant="standard"
                   placeholder="Comment..."
+                  multiline={tickCommentFocused}
+                  maxRows={4}
                   value={tickComment}
                   onChange={(e) => setTickComment(e.target.value)}
                   onFocus={handleTickCommentFocus}
                   onBlur={handleTickCommentBlur}
-                  slotProps={{ htmlInput: { maxLength: 2000, 'aria-label': 'Tick comment' } }}
+                  slotProps={{
+                    htmlInput: { maxLength: 2000, 'aria-label': 'Tick comment' },
+                  }}
+                  InputProps={{
+                    startAdornment: (
+                      <InputAdornment position="start">
+                        <ChatBubbleOutlineOutlined sx={{ fontSize: 16, opacity: 0.5 }} />
+                      </InputAdornment>
+                    ),
+                  }}
                 />
               </div>
-            )}
-            {/* Tick controls — tries, grade, stars */}
-            <QuickTickBar
-              ref={quickTickBarRef}
-              currentClimb={currentClimb}
-              angle={angle}
-              boardDetails={boardDetails}
-              onSave={() => setActiveDrawer('none')}
-              onCancel={() => setActiveDrawer('none')}
-              comment={tickComment}
-              commentOpen={tickCommentOpen}
-              onCommentToggle={handleTickCommentToggle}
-              commentFocused={tickCommentFocused}
-            />
+              <div className={styles.tickControls}>
+                <QuickTickBar
+                  ref={quickTickBarRef}
+                  currentClimb={currentClimb}
+                  angle={angle}
+                  boardDetails={boardDetails}
+                  onSave={() => setActiveDrawer('none')}
+                  onCancel={() => setActiveDrawer('none')}
+                  comment={tickComment}
+                />
+              </div>
+            </div>
           </div>
         )}
         {/* Swipe container - captures swipe gestures, does NOT translate */}

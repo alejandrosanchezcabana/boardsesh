@@ -303,8 +303,8 @@
 /* Tick controls row — expands upward from the main bar */
 .tickRow {
   padding: 8px 12px;
-  overflow: hidden;
   animation: tickRowExpand 200ms ease-out;
+  position: relative;
 }
 
 @keyframes tickRowExpand {
@@ -320,6 +320,36 @@
     padding-top: 8px;
     padding-bottom: 8px;
   }
+}
+
+.tickRowInner {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/* Comment input — fills ~70% of the tick row */
+.tickComment {
+  flex: 7;
+  min-width: 0;
+}
+
+/* When focused, grow downward over the main bar without changing tick row height */
+.tickCommentExpanded {
+  position: absolute;
+  left: 12px;
+  width: 70%;
+  top: 4px;
+  z-index: 2;
+  background: inherit;
+  padding: 4px 0;
+}
+
+/* Tick controls — fills ~30% of the tick row */
+.tickControls {
+  flex: 3;
+  display: flex;
+  justify-content: flex-end;
 }
 
 /* Peek text — absolutely positioned to slide in from the edge during swipe */

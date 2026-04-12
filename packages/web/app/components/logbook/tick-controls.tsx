@@ -2,12 +2,10 @@
 
 import React, { useState } from 'react';
 import ButtonBase from '@mui/material/ButtonBase';
-import IconButton from '@mui/material/IconButton';
 import Skeleton from '@mui/material/Skeleton';
 import Typography from '@mui/material/Typography';
 import Menu from '@mui/material/Menu';
 import MenuItem from '@mui/material/MenuItem';
-import ChatBubbleOutlineOutlined from '@mui/icons-material/ChatBubbleOutlineOutlined';
 import StarIcon from '@mui/icons-material/Star';
 import { themeTokens } from '@/app/theme/theme-config';
 import { useGradeFormat } from '@/app/hooks/use-grade-format';
@@ -33,17 +31,14 @@ export interface TickControlsProps {
   displayedGrades: readonly { difficulty_id: number; difficulty_name: string; v_grade: string }[];
   /** The currently active grade id (user override or climb's own). */
   currentGradeId: number | undefined;
-  /** Whether the comment input is open. */
-  commentOpen: boolean;
-  onCommentToggle: () => void;
   /** Whether save is in progress. */
   isSaving: boolean;
 }
 
 /**
- * Reusable tick control buttons: star selector, comment toggle, grade picker,
- * tries counter, fail (X), and confirm (✓). Designed to be embedded in any
- * row layout (queue control bar, climb list items, etc.).
+ * Reusable tick control buttons: star selector, grade picker, and tries
+ * counter. Designed to be embedded in any row layout (queue control bar,
+ * climb list items, etc.).
  *
  * All state is owned by the parent — this component is a pure controlled UI.
  */
@@ -57,8 +52,6 @@ export const TickControls: React.FC<TickControlsProps> = ({
   climbDifficulty,
   displayedGrades,
   currentGradeId,
-  commentOpen,
-  onCommentToggle,
   isSaving,
 }) => {
   const isDark = useIsDarkMode();
@@ -126,45 +119,25 @@ export const TickControls: React.FC<TickControlsProps> = ({
         </MenuItem>
       </Menu>
 
-      {/* Comment toggle */}
-      <IconButton
-        onClick={onCommentToggle}
-        color={commentOpen ? 'primary' : 'default'}
-        aria-label="Toggle comment"
+      {/* Grade selector with "user" byline */}
+      <ButtonBase
+        onClick={(e) => setGradeAnchorEl(e.currentTarget)}
+        aria-label="Select logged grade"
+        aria-haspopup="menu"
+        aria-expanded={Boolean(gradeAnchorEl)}
+        data-testid="quick-tick-grade"
+        className={styles.gradeButton}
+        disableRipple={false}
       >
-        <ChatBubbleOutlineOutlined />
-      </IconButton>
-
-      {/* Grade selector */}
-      {!gradeFormatLoaded ? (
-        <Skeleton
-          variant="rounded"
-          width={themeTokens.typography.fontSize.sm * 2.5}
-          height={themeTokens.typography.fontSize.sm}
-          sx={{ flexShrink: 0, mx: '4px' }}
-        />
-      ) : (
-        <Typography
-          variant="body2"
-          component="span"
-          onClick={(e) => setGradeAnchorEl(e.currentTarget)}
-          role="button"
-          aria-label="Select logged grade"
-          data-testid="quick-tick-grade"
-          className={styles.gradeLabel}
-          sx={{
-            fontSize: themeTokens.typography.fontSize.sm,
-            fontWeight: themeTokens.typography.fontWeight.bold,
-            lineHeight: 1,
-            color: gradeColor ?? 'text.secondary',
-            cursor: 'pointer',
-            flexShrink: 0,
-            px: '4px',
-          }}
-        >
-          {gradeLabel}
-        </Typography>
-      )}
+        {!gradeFormatLoaded ? (
+          <Skeleton variant="rounded" width={24} height={14} />
+        ) : (
+          <span className={styles.gradeNumber} style={{ color: gradeColor ?? undefined }}>
+            {gradeLabel}
+          </span>
+        )}
+        <span className={styles.gradeByline}>user</span>
+      </ButtonBase>
       <Menu
         anchorEl={gradeAnchorEl}
         open={Boolean(gradeAnchorEl)}

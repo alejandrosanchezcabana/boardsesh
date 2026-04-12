@@ -95,9 +95,6 @@ const defaultProps = {
   onSave: vi.fn(),
   onCancel: vi.fn(),
   comment: '',
-  commentOpen: false,
-  onCommentToggle: vi.fn(),
-  commentFocused: false,
 };
 
 /**
@@ -132,7 +129,6 @@ describe('QuickTickBar', () => {
     mockSaveTick.mockResolvedValue(undefined);
     defaultProps.onSave = vi.fn();
     defaultProps.onCancel = vi.fn();
-    defaultProps.onCommentToggle = vi.fn();
   });
 
   afterEach(() => {
@@ -173,37 +169,20 @@ describe('QuickTickBar', () => {
       // Grade label only appears after the async useGradeFormat hook loads.
       const gradeLabel = await screen.findByTestId('quick-tick-grade');
       const rating = screen.getByTestId('quick-tick-rating');
-      const commentToggle = screen.getByRole('button', { name: /toggle comment/i });
       const attemptBtn = screen.getByTestId('quick-tick-attempt');
-      const failBtn = screen.getByTestId('quick-tick-fail');
-      const confirmBtn = screen.getByTestId('quick-tick-confirm');
 
       // All controls sit inside the single flex row.
       const controls = rating.parentElement!;
-      expect(commentToggle.parentElement).toBe(controls);
       expect(gradeLabel.parentElement).toBe(controls);
       expect(attemptBtn.parentElement).toBe(controls);
-      expect(failBtn.parentElement).toBe(controls);
-      expect(confirmBtn.parentElement).toBe(controls);
 
-      // The quick tick bar intentionally does NOT show the user's prior
-      // ascent count — it's clutter the user doesn't need while logging.
-      expect(screen.queryByTestId('quick-tick-ascents')).toBeNull();
-
-      // Siblings must appear in this order: rating, comment toggle,
-      // grade label, tries counter, fail (X), confirm (✓).
+      // Siblings must appear in this order: rating, grade, tries.
       const siblings = Array.from(controls.children) as HTMLElement[];
       const ratingIdx = siblings.indexOf(rating);
-      const commentIdx = siblings.indexOf(commentToggle);
       const gradeIdx = siblings.indexOf(gradeLabel);
       const attemptIdx = siblings.indexOf(attemptBtn);
-      const failIdx = siblings.indexOf(failBtn);
-      const confirmIdx = siblings.indexOf(confirmBtn);
-      expect(ratingIdx).toBeLessThan(commentIdx);
-      expect(commentIdx).toBeLessThan(gradeIdx);
+      expect(ratingIdx).toBeLessThan(gradeIdx);
       expect(gradeIdx).toBeLessThan(attemptIdx);
-      expect(attemptIdx).toBeLessThan(failIdx);
-      expect(failIdx).toBeLessThan(confirmIdx);
     });
 
     it('defaults the tries counter to 1 and exposes a "tries" byline for the user', () => {
@@ -220,11 +199,6 @@ describe('QuickTickBar', () => {
       expect(screen.queryByTestId('quick-tick-hint')).toBeNull();
     });
 
-    it('invokes onCommentToggle when the comment button is tapped', () => {
-      render(<QuickTickBar {...defaultProps} />);
-      fireEvent.click(screen.getByRole('button', { name: /toggle comment/i }));
-      expect(defaultProps.onCommentToggle).toHaveBeenCalledTimes(1);
-    });
   });
 
   describe('save behaviour — history-aware default', () => {
@@ -522,53 +496,7 @@ describe('QuickTickBar', () => {
     });
   });
 
-  describe('swipe to dismiss', () => {
-    beforeEach(() => {
-      vi.useFakeTimers();
-    });
-
-    it('calls onCancel when swiped left past the threshold', () => {
-      render(<QuickTickBar {...defaultProps} />);
-      const bar = screen.getByTestId('quick-tick-bar');
-
-      simulateSwipe(bar, -120);
-
-      // Exit animation is scheduled via setTimeout — advance to flush it.
-      act(() => {
-        vi.runAllTimers();
-      });
-
-      expect(defaultProps.onCancel).toHaveBeenCalledTimes(1);
-    });
-
-    it('does not call onCancel when swipe is below the threshold', () => {
-      render(<QuickTickBar {...defaultProps} />);
-      const bar = screen.getByTestId('quick-tick-bar');
-
-      simulateSwipe(bar, -40);
-
-      act(() => {
-        vi.runAllTimers();
-      });
-
-      expect(defaultProps.onCancel).not.toHaveBeenCalled();
-    });
-
-    it('ignores swipes while the commentFocused prop is true', () => {
-      // The comment TextField lives in the parent QueueControlBar, so the
-      // bar learns that the user is typing via the `commentFocused` prop.
-      render(<QuickTickBar {...defaultProps} commentFocused={true} />);
-
-      const bar = screen.getByTestId('quick-tick-bar');
-      simulateSwipe(bar, -200);
-
-      act(() => {
-        vi.runAllTimers();
-      });
-
-      expect(defaultProps.onCancel).not.toHaveBeenCalled();
-    });
-  });
+  // Swipe-to-dismiss is handled by the parent queue-control-bar, not QuickTickBar.
 
   describe('controlled comment prop', () => {
     it('forwards the comment prop in the save payload', async () => {

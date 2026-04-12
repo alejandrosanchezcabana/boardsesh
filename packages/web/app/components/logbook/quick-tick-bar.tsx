@@ -27,14 +27,6 @@ export interface QuickTickBarProps {
   /** Current comment text. Owned by the parent so the comment field can live
    *  outside this bar (above the queue control bar) without causing reflow. */
   comment: string;
-  /** Whether the parent is currently rendering the comment input. */
-  commentOpen: boolean;
-  /** Called when the user taps the comment button inside this bar. */
-  onCommentToggle: () => void;
-  /** Whether the parent's comment input currently has focus. Used to disable
-   *  the swipe-to-dismiss gesture so the user can type without the bar
-   *  sliding away under them. */
-  commentFocused: boolean;
 }
 
 export interface QuickTickBarHandle {
@@ -58,9 +50,6 @@ export const QuickTickBar = forwardRef<QuickTickBarHandle, QuickTickBarProps>(({
   onSave,
   onCancel,
   comment,
-  commentOpen,
-  onCommentToggle,
-  commentFocused,
 }, ref) => {
   const { saveTick, logbook } = useBoardProvider();
 
@@ -188,8 +177,6 @@ export const QuickTickBar = forwardRef<QuickTickBarHandle, QuickTickBarProps>(({
           climbDifficulty={climbDifficulty}
           displayedGrades={displayedGrades}
           currentGradeId={currentGradeId}
-          commentOpen={commentOpen}
-          onCommentToggle={onCommentToggle}
           isSaving={isSaving}
         />
       </Stack>
