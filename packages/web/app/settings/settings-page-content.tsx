@@ -64,6 +64,10 @@ async function compressImage(file: File): Promise<File> {
         return;
       }
 
+      // Fill white before drawing so transparent areas become white, not black,
+      // when encoding as JPEG (which has no alpha channel).
+      ctx.fillStyle = '#ffffff';
+      ctx.fillRect(0, 0, width, height);
       ctx.drawImage(img, 0, 0, width, height);
 
       canvas.toBlob(
@@ -182,7 +186,9 @@ export default function SettingsPageContent() {
       setSelectedFile(compressed);
     } catch (err) {
       console.error('Image compression failed:', err);
-      setSelectedFile(file);
+      if (previewUrl?.startsWith('blob:')) URL.revokeObjectURL(previewUrl);
+      setPreviewUrl(undefined);
+      showMessage('Could not compress — please try a smaller image', 'error');
     }
   };
 
@@ -368,7 +374,7 @@ export default function SettingsPageContent() {
                     )}
                   </Stack>
                   <Typography variant="body2" component="span" color="text.secondary" sx={{ fontSize: 12 }}>
-                    JPG, PNG, GIF, or WebP. Any size — auto-compressed.
+                    JPG, PNG, GIF, or WebP. Up to 10MB — auto-compressed.
                   </Typography>
                 </Stack>
               </Box>
