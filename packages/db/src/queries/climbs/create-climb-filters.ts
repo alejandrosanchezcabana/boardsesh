@@ -165,8 +165,13 @@ export const createClimbFilters = (
   // Uses denormalized required_set_ids array (pre-computed from climb_holds -> placements).
   // The <@ operator checks that all required sets are in the user's selected sets.
   // MoonBoard has no set data, so skip.
+  //
+  // For draft queries, allow NULL required_set_ids — denormalized columns are populated
+  // asynchronously and may be NULL for freshly saved drafts, so we must not exclude them.
   const setIdsConditions: SQL[] = params.board_name === 'moonboard' || params.set_ids.length === 0 ? [] : [
-    sql`${boardClimbs.requiredSetIds} <@ ARRAY[${sql.join(params.set_ids.map(id => sql`${id}`), sql`, `)}]::int[]`,
+    isOnlyDrafts
+      ? sql`(${boardClimbs.requiredSetIds} IS NULL OR ${boardClimbs.requiredSetIds} <@ ARRAY[${sql.join(params.set_ids.map(id => sql`${id}`), sql`, `)}]::int[])`
+      : sql`${boardClimbs.requiredSetIds} <@ ARRAY[${sql.join(params.set_ids.map(id => sql`${id}`), sql`, `)}]::int[]`,
   ];
 
   // Personal progress filter conditions

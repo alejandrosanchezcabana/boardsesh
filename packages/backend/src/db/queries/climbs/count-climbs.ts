@@ -25,7 +25,9 @@ export const countClimbs = async (
 
   const whereConditions = [
     ...filters.getClimbWhereConditions(),
-    ...filters.getSizeConditions(),
+    // Draft climbs may have NULL compatible_size_ids (denormalized columns not yet populated),
+    // so skip the size filter entirely — users must be able to find their freshly saved drafts.
+    ...(isDraftsQuery ? [] : filters.getSizeConditions()),
     // Draft climbs never have stats rows — skip stats filters to avoid rejecting all drafts
     ...(isDraftsQuery ? [] : filters.getClimbStatsConditions()),
   ];
