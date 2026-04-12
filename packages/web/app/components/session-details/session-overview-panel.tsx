@@ -10,6 +10,7 @@ import AvatarGroup from '@mui/material/AvatarGroup';
 import Chip from '@mui/material/Chip';
 import IconButton from '@mui/material/IconButton';
 import CircularProgress from '@mui/material/CircularProgress';
+import Skeleton from '@mui/material/Skeleton';
 import FlagOutlined from '@mui/icons-material/FlagOutlined';
 import TimerOutlined from '@mui/icons-material/TimerOutlined';
 import FlashOnOutlined from '@mui/icons-material/FlashOnOutlined';
@@ -91,7 +92,7 @@ export default function SessionOverviewPanel({
   getParticipantHref,
   afterParticipants,
 }: SessionOverviewPanelProps) {
-  const { formatGrade } = useGradeFormat();
+  const { formatGrade, loaded: gradeFormatLoaded } = useGradeFormat();
 
   // Defensive dedup: during WebSocket reconnection race conditions the server
   // may briefly report the same participant twice. Deduplicating by userId
@@ -226,7 +227,9 @@ export default function SessionOverviewPanel({
         )}
         <Chip label={`${tickCount} climb${tickCount !== 1 ? 's' : ''}`} variant="outlined" />
         {hardestGrade && (
-          <Chip label={`Hardest: ${formatGrade(hardestGrade) ?? hardestGrade}`} variant="outlined" />
+          gradeFormatLoaded
+            ? <Chip label={`Hardest: ${formatGrade(hardestGrade) ?? hardestGrade}`} variant="outlined" />
+            : <Skeleton variant="rounded" width={80} height={32} />
         )}
       </Box>
 

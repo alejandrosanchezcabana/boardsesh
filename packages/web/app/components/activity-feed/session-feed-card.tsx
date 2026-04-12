@@ -8,6 +8,7 @@ import Typography from '@mui/material/Typography';
 import Avatar from '@mui/material/Avatar';
 import AvatarGroup from '@mui/material/AvatarGroup';
 import Chip from '@mui/material/Chip';
+import Skeleton from '@mui/material/Skeleton';
 import TimerOutlined from '@mui/icons-material/TimerOutlined';
 import FlagOutlined from '@mui/icons-material/FlagOutlined';
 import FlashOnOutlined from '@mui/icons-material/FlashOnOutlined';
@@ -65,7 +66,7 @@ function formatRelativeTime(isoString: string): string {
 }
 
 export default function SessionFeedCard({ session }: SessionFeedCardProps) {
-  const { formatGrade } = useGradeFormat();
+  const { formatGrade, loaded: gradeFormatLoaded } = useGradeFormat();
 
   const {
     sessionId,
@@ -232,16 +233,20 @@ export default function SessionFeedCard({ session }: SessionFeedCardProps) {
               />
             )}
             {hardestGrade && (
-              <Chip
-                label={formatGrade(hardestGrade) ?? hardestGrade}
-                size="small"
-                sx={{
-                  borderRadius: themeTokens.borderRadius.full,
-                  bgcolor: hardestGradeColor || 'var(--neutral-200)',
-                  color: hardestGradeTextColor,
-                  fontWeight: 600,
-                }}
-              />
+              gradeFormatLoaded ? (
+                <Chip
+                  label={formatGrade(hardestGrade) ?? hardestGrade}
+                  size="small"
+                  sx={{
+                    borderRadius: themeTokens.borderRadius.full,
+                    bgcolor: hardestGradeColor || 'var(--neutral-200)',
+                    color: hardestGradeTextColor,
+                    fontWeight: 600,
+                  }}
+                />
+              ) : (
+                <Skeleton variant="rounded" width={40} height={24} sx={{ borderRadius: themeTokens.borderRadius.full }} />
+              )
             )}
           </Box>
 
