@@ -1013,6 +1013,7 @@ export default function CreateClimbForm({
               climb={titleClimb}
               layout="horizontal"
               showSetterInfo
+              centered
               titleFontSize={themeTokens.typography.fontSize['2xl']}
             />
             {description && (

@@ -14,32 +14,29 @@ export const userQueries = {
       return null;
     }
 
-    const users = await db
-      .select()
+    const [row] = await db
+      .select({
+        id: dbSchema.users.id,
+        email: dbSchema.users.email,
+        name: dbSchema.users.name,
+        image: dbSchema.users.image,
+        displayName: dbSchema.userProfiles.displayName,
+        avatarUrl: dbSchema.userProfiles.avatarUrl,
+      })
       .from(dbSchema.users)
+      .leftJoin(dbSchema.userProfiles, eq(dbSchema.userProfiles.userId, dbSchema.users.id))
       .where(eq(dbSchema.users.id, ctx.userId))
       .limit(1);
 
-    if (users.length === 0) {
+    if (!row) {
       return null;
     }
 
-    const user = users[0];
-
-    // Get profile if exists
-    const profiles = await db
-      .select()
-      .from(dbSchema.userProfiles)
-      .where(eq(dbSchema.userProfiles.userId, ctx.userId))
-      .limit(1);
-
-    const profile = profiles[0];
-
     return {
-      id: user.id,
-      email: user.email,
-      displayName: profile?.displayName || user.name || undefined,
-      avatarUrl: profile?.avatarUrl || user.image || undefined,
+      id: row.id,
+      email: row.email,
+      displayName: row.displayName || row.name || undefined,
+      avatarUrl: row.avatarUrl || row.image || undefined,
     };
   },
 

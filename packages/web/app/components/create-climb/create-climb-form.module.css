@@ -1,6 +1,6 @@
 .pageContainer {
-  height: calc(100dvh - var(--global-header-height) - env(safe-area-inset-bottom, 0px));
-  margin-top: var(--global-header-height);
+  height: calc(100dvh - 120px - env(safe-area-inset-bottom, 0px));
+  margin-top: calc(-1 * var(--global-header-height));
   display: flex;
   flex-direction: column;
   overflow: hidden;
@@ -15,6 +15,7 @@
 .headerSection {
   flex-shrink: 0;
   background-color: var(--semantic-surface);
+  padding-top: var(--global-header-height);
 }
 
 .alertBanner {
@@ -43,6 +44,7 @@
   min-width: 0;
   display: flex;
   flex-direction: column;
+  align-items: center;
   gap: 2px;
 }
 
@@ -51,6 +53,7 @@
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+  text-align: center;
 }
 
 .gradeBadge {
