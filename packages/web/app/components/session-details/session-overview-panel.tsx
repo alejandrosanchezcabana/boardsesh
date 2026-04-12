@@ -24,6 +24,34 @@ import { deduplicateBy } from '@/app/utils/deduplicate';
 import { CssBarChart } from '@/app/components/charts/css-bar-chart';
 import { buildSessionGradeBars, SESSION_GRADE_LEGEND } from '@/app/components/charts/session-grade-bars';
 import { useGradeFormat } from '@/app/hooks/use-grade-format';
+import type { BoardDetails } from '@/app/lib/types';
+import BoardRenderer from '@/app/components/board-renderer/board-renderer';
+import AngleSelector from '@/app/components/board-page/angle-selector';
+
+/**
+ * Build summary parts for collapsed activity pill display.
+ */
+export function buildSessionSummaryParts(stats: {
+  totalFlashes: number;
+  totalSends: number;
+  totalAttempts: number;
+  tickCount: number;
+  hardestGrade?: string | null;
+  formatGrade?: (g: string) => string | null;
+}): string[] {
+  const parts: string[] = [];
+  // Flashes are a type of send, so total sends includes flashes
+  const combinedSends = stats.totalSends + stats.totalFlashes;
+  if (stats.totalFlashes > 0) parts.push(`${stats.totalFlashes} flash${stats.totalFlashes !== 1 ? 'es' : ''}`);
+  parts.push(`${combinedSends} send${combinedSends !== 1 ? 's' : ''}`);
+  if (stats.totalAttempts > 0) parts.push(`${stats.totalAttempts} attempt${stats.totalAttempts !== 1 ? 's' : ''}`);
+  parts.push(`${stats.tickCount} climb${stats.tickCount !== 1 ? 's' : ''}`);
+  if (stats.hardestGrade) {
+    const formatted = stats.formatGrade ? stats.formatGrade(stats.hardestGrade) : stats.hardestGrade;
+    parts.push(`Hardest: ${formatted ?? stats.hardestGrade}`);
+  }
+  return parts;
+}
 
 interface SessionOverviewPanelProps {
   participants: SessionFeedParticipant[];
@@ -43,6 +71,16 @@ interface SessionOverviewPanelProps {
   removingUserId?: string | null;
   getParticipantHref?: (userId: string) => string;
   afterParticipants?: React.ReactNode;
+  /** When true, only render participants + board preview + goal (no chips/chart). */
+  compact?: boolean;
+  /** Board details for rendering a thumbnail preview. */
+  boardDetails?: BoardDetails | null;
+  /** Current board angle for display next to the board preview. */
+  currentAngle?: number;
+  /** Callback when user changes the angle via the angle selector. */
+  onAngleChange?: (angle: number) => void;
+  /** User-facing name of the named board (e.g., "My Home Wall") */
+  namedBoardName?: string;
 }
 
 function ParticipantAvatar({
@@ -91,6 +129,11 @@ export default function SessionOverviewPanel({
   removingUserId = null,
   getParticipantHref,
   afterParticipants,
+  compact = false,
+  boardDetails = null,
+  currentAngle,
+  onAngleChange,
+  namedBoardName,
 }: SessionOverviewPanelProps) {
   const { formatGrade, loaded: gradeFormatLoaded } = useGradeFormat();
 
@@ -111,81 +154,119 @@ export default function SessionOverviewPanel({
 
   return (
     <>
-      <Card>
-        <CardContent sx={{ p: 1.5, '&:last-child': { pb: 1.5 } }}>
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}>
-            {isMultiUser ? (
-              <AvatarGroup max={5} sx={{ '& .MuiAvatar-root': { width: 32, height: 32, fontSize: 14 } }}>
-                {uniqueParticipants.map((participant) => (
-                  <ParticipantAvatar
-                    key={participant.userId}
-                    participant={participant}
-                    size={32}
-                    href={getParticipantHref?.(participant.userId)}
-                  />
-                ))}
-              </AvatarGroup>
-            ) : uniqueParticipants[0] ? (
-              <ParticipantAvatar
-                participant={uniqueParticipants[0]}
-                size={40}
-                href={getParticipantHref?.(uniqueParticipants[0].userId)}
+      <Box sx={{ display: 'flex', gap: 1.5, alignItems: 'flex-start' }}>
+        {compact && boardDetails && (
+          <>
+            <Box
+              sx={{
+                width: 90,
+                flexShrink: 0,
+                borderRadius: '6px',
+                overflow: 'hidden',
+                boxShadow: 'var(--shadow-xs)',
+                background: 'var(--neutral-100)',
+                aspectRatio: '1',
+              }}
+            >
+              <BoardRenderer
+                boardDetails={boardDetails}
+                mirrored={false}
+                thumbnail
+                fillHeight
               />
-            ) : (
-              <Avatar sx={{ width: 40, height: 40 }}>
-                <PersonOutlined />
-              </Avatar>
-            )}
-            <Box sx={{ flex: 1 }}>
+            </Box>
+            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.5, minWidth: 0, flexShrink: 0 }}>
               <Typography variant="body2" fontWeight={600}>
-                {uniqueParticipants.length > 0
-                  ? uniqueParticipants.map((participant) => participant.displayName || 'Climber').join(', ')
-                  : 'No participants yet'}
+                {namedBoardName || (boardDetails.board_name.charAt(0).toUpperCase() + boardDetails.board_name.slice(1))}
               </Typography>
-              <Typography variant="caption" color="text.secondary">
-                {uniqueParticipants.length} participant{uniqueParticipants.length !== 1 ? 's' : ''}
-              </Typography>
+              {currentAngle != null && onAngleChange && (
+                <AngleSelector
+                  boardName={boardDetails.board_name}
+                  boardDetails={boardDetails}
+                  currentAngle={currentAngle}
+                  currentClimb={null}
+                  onAngleChange={onAngleChange}
+                />
+              )}
             </Box>
-            {canEditParticipants && onAddParticipant && (
-              <IconButton size="small" onClick={onAddParticipant}>
-                <PersonAddOutlined fontSize="small" />
-              </IconButton>
-            )}
-          </Box>
+          </>
+        )}
+        <Card sx={{ flex: 1 }}>
+          <CardContent sx={{ p: 1.5, '&:last-child': { pb: 1.5 } }}>
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: isMultiUser ? 1 : 0 }}>
+              {isMultiUser ? (
+                <AvatarGroup max={5} sx={{ '& .MuiAvatar-root': { width: 32, height: 32, fontSize: 14 } }}>
+                  {uniqueParticipants.map((participant) => (
+                    <ParticipantAvatar
+                      key={participant.userId}
+                      participant={participant}
+                      size={32}
+                      href={getParticipantHref?.(participant.userId)}
+                    />
+                  ))}
+                </AvatarGroup>
+              ) : uniqueParticipants[0] ? (
+                <ParticipantAvatar
+                  participant={uniqueParticipants[0]}
+                  size={40}
+                  href={getParticipantHref?.(uniqueParticipants[0].userId)}
+                />
+              ) : (
+                <Avatar sx={{ width: 40, height: 40 }}>
+                  <PersonOutlined />
+                </Avatar>
+              )}
+              <Box sx={{ flex: 1 }}>
+                <Typography variant="body2" fontWeight={600}>
+                  {uniqueParticipants.length > 0
+                    ? uniqueParticipants.map((participant) => participant.displayName || 'Climber').join(', ')
+                    : 'No participants yet'}
+                </Typography>
+                <Typography variant="caption" color="text.secondary">
+                  {uniqueParticipants.length} participant{uniqueParticipants.length !== 1 ? 's' : ''}
+                </Typography>
+              </Box>
+              {canEditParticipants && onAddParticipant && (
+                <IconButton size="small" onClick={onAddParticipant}>
+                  <PersonAddOutlined fontSize="small" />
+                </IconButton>
+              )}
+            </Box>
 
-          {isMultiUser && (
-            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.5, mt: 1 }}>
-              {uniqueParticipants.map((participant) => (
-                <Box key={participant.userId} sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                  <Avatar src={participant.avatarUrl ?? undefined} sx={{ width: 20, height: 20 }}>
-                    {!participant.avatarUrl && <PersonOutlined sx={{ fontSize: 10 }} />}
-                  </Avatar>
-                  <Typography variant="caption" sx={{ flex: 1 }}>
-                    {participant.displayName || 'Climber'}
-                  </Typography>
-                  <Typography variant="caption" color="text.secondary">
-                    {participant.sends}S {participant.flashes}F {participant.attempts}A
-                  </Typography>
-                  {canEditParticipants && onRemoveParticipant && participant.userId !== ownerUserId && (
-                    <IconButton
-                      size="small"
-                      onClick={() => onRemoveParticipant(participant.userId)}
-                      disabled={removingUserId === participant.userId}
-                      sx={{ p: 0.25 }}
-                    >
-                      {removingUserId === participant.userId ? (
-                        <CircularProgress size={14} />
-                      ) : (
-                        <RemoveCircleOutlineOutlined sx={{ fontSize: 14 }} color="error" />
-                      )}
-                    </IconButton>
-                  )}
-                </Box>
-              ))}
-            </Box>
-          )}
-        </CardContent>
-      </Card>
+            {isMultiUser && (
+              <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.5, mt: 1 }}>
+                {uniqueParticipants.map((participant) => (
+                  <Box key={participant.userId} sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                    <Avatar src={participant.avatarUrl ?? undefined} sx={{ width: 20, height: 20 }}>
+                      {!participant.avatarUrl && <PersonOutlined sx={{ fontSize: 10 }} />}
+                    </Avatar>
+                    <Typography variant="caption" sx={{ flex: 1 }}>
+                      {participant.displayName || 'Climber'}
+                    </Typography>
+                    <Typography variant="caption" color="text.secondary">
+                      {participant.sends}S {participant.flashes}F {participant.attempts}A
+                    </Typography>
+                    {canEditParticipants && onRemoveParticipant && participant.userId !== ownerUserId && (
+                      <IconButton
+                        size="small"
+                        onClick={() => onRemoveParticipant(participant.userId)}
+                        disabled={removingUserId === participant.userId}
+                        sx={{ p: 0.25 }}
+                      >
+                        {removingUserId === participant.userId ? (
+                          <CircularProgress size={14} />
+                        ) : (
+                          <RemoveCircleOutlineOutlined sx={{ fontSize: 14 }} color="error" />
+                        )}
+                      </IconButton>
+                    )}
+                  </Box>
+                ))}
+              </Box>
+            )}
+          </CardContent>
+        </Card>
+      </Box>
 
       {afterParticipants}
 
@@ -198,77 +279,81 @@ export default function SessionOverviewPanel({
         </Box>
       ) : null}
 
-      <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>
-        {totalFlashes > 0 && (
-          <Chip
-            icon={<FlashOnOutlined />}
-            label={`${totalFlashes} flash${totalFlashes !== 1 ? 'es' : ''}`}
-            sx={{ bgcolor: 'success.main', color: 'success.contrastText', '& .MuiChip-icon': { color: 'inherit' } }}
-          />
-        )}
-        <Chip
-          icon={<CheckCircleOutlineOutlined />}
-          label={`${totalSends} send${totalSends !== 1 ? 's' : ''}`}
-          color="primary"
-        />
-        {totalAttempts > 0 && (
-          <Chip
-            icon={<ErrorOutlineOutlined />}
-            label={`${totalAttempts} attempt${totalAttempts !== 1 ? 's' : ''}`}
-            variant="outlined"
-          />
-        )}
-        {durationMinutes != null && durationMinutes > 0 && (
-          <Chip
-            icon={<TimerOutlined />}
-            label={formatDuration(durationMinutes)}
-            variant="outlined"
-          />
-        )}
-        <Chip label={`${tickCount} climb${tickCount !== 1 ? 's' : ''}`} variant="outlined" />
-        {hardestGrade && (
-          gradeFormatLoaded
-            ? <Chip label={`Hardest: ${formatGrade(hardestGrade) ?? hardestGrade}`} variant="outlined" />
-            : <Skeleton variant="rounded" width={80} height={32} />
-        )}
-      </Box>
-
-      {boardTypes.length > 0 && (
-        <Box sx={{ display: 'flex', gap: 0.5 }}>
-          {boardTypes.map((boardType) => (
+      {!compact && (
+        <>
+          <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>
+            {totalFlashes > 0 && (
+              <Chip
+                icon={<FlashOnOutlined />}
+                label={`${totalFlashes} flash${totalFlashes !== 1 ? 'es' : ''}`}
+                sx={{ bgcolor: 'success.main', color: 'success.contrastText', '& .MuiChip-icon': { color: 'inherit' } }}
+              />
+            )}
             <Chip
-              key={boardType}
-              label={boardType.charAt(0).toUpperCase() + boardType.slice(1)}
-              size="small"
-              variant="outlined"
+              icon={<CheckCircleOutlineOutlined />}
+              label={`${totalSends} send${totalSends !== 1 ? 's' : ''}`}
+              color="primary"
             />
-          ))}
-        </Box>
-      )}
+            {totalAttempts > 0 && (
+              <Chip
+                icon={<ErrorOutlineOutlined />}
+                label={`${totalAttempts} attempt${totalAttempts !== 1 ? 's' : ''}`}
+                variant="outlined"
+              />
+            )}
+            {durationMinutes != null && durationMinutes > 0 && (
+              <Chip
+                icon={<TimerOutlined />}
+                label={formatDuration(durationMinutes)}
+                variant="outlined"
+              />
+            )}
+            <Chip label={`${tickCount} climb${tickCount !== 1 ? 's' : ''}`} variant="outlined" />
+            {hardestGrade && (
+              gradeFormatLoaded
+                ? <Chip label={`Hardest: ${formatGrade(hardestGrade) ?? hardestGrade}`} variant="outlined" />
+                : <Skeleton variant="rounded" width={80} height={32} />
+            )}
+          </Box>
 
-      {gradeDistribution.length > 0 && (
-        <Card>
-          <CardContent>
-            <Typography variant="subtitle2" sx={{ mb: 1 }}>
-              Grade Distribution
-            </Typography>
-            <CssBarChart
-              bars={gradeBars}
-              height={160}
-              mobileHeight={120}
-              gap={3}
-              ariaLabel="Session grade distribution"
-            />
-            <Box sx={{ display: 'flex', gap: 1.5, justifyContent: 'center', mt: 1 }}>
-              {SESSION_GRADE_LEGEND.map((entry) => (
-                <Box key={entry.label} sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-                  <Box sx={{ width: 10, height: 10, borderRadius: '2px', bgcolor: entry.color }} />
-                  <Typography variant="caption" color="text.secondary">{entry.label}</Typography>
-                </Box>
+          {boardTypes.length > 0 && (
+            <Box sx={{ display: 'flex', gap: 0.5 }}>
+              {boardTypes.map((boardType) => (
+                <Chip
+                  key={boardType}
+                  label={boardType.charAt(0).toUpperCase() + boardType.slice(1)}
+                  size="small"
+                  variant="outlined"
+                />
               ))}
             </Box>
-          </CardContent>
-        </Card>
+          )}
+
+          {gradeDistribution.length > 0 && (
+            <Card>
+              <CardContent>
+                <Typography variant="subtitle2" sx={{ mb: 1 }}>
+                  Grade Distribution
+                </Typography>
+                <CssBarChart
+                  bars={gradeBars}
+                  height={160}
+                  mobileHeight={120}
+                  gap={3}
+                  ariaLabel="Session grade distribution"
+                />
+                <Box sx={{ display: 'flex', gap: 1.5, justifyContent: 'center', mt: 1 }}>
+                  {SESSION_GRADE_LEGEND.map((entry) => (
+                    <Box key={entry.label} sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                      <Box sx={{ width: 10, height: 10, borderRadius: '2px', bgcolor: entry.color }} />
+                      <Typography variant="caption" color="text.secondary">{entry.label}</Typography>
+                    </Box>
+                  ))}
+                </Box>
+              </CardContent>
+            </Card>
+          )}
+        </>
       )}
     </>
   );

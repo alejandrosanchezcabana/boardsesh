@@ -30,6 +30,10 @@ export interface ActiveSessionInfo {
   boardPath: string;
   boardDetails: BoardDetails;
   parsedParams: ParsedBoardRouteParameters;
+  /** User-facing name of the named board (e.g., "My Home Wall") */
+  namedBoardName?: string;
+  /** UUID of the named board (UserBoard) */
+  namedBoardUuid?: string;
 }
 
 // Stable action functions — identity rarely changes

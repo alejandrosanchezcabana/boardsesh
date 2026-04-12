@@ -2,27 +2,13 @@
 
 import React, { useState, useCallback, useRef, useEffect, useMemo } from 'react';
 import { useSwipeable } from 'react-swipeable';
-import ButtonBase from '@mui/material/ButtonBase';
-import IconButton from '@mui/material/IconButton';
-import Rating from '@mui/material/Rating';
-import Typography from '@mui/material/Typography';
-// NOTE: the "swipe left to dismiss" hint is intentionally NOT rendered here —
-// it lives above the queue control bar as a transient toast so it doesn't
-// push the stars out of alignment with the action buttons.
-import Skeleton from '@mui/material/Skeleton';
-import Menu from '@mui/material/Menu';
-import MenuItem from '@mui/material/MenuItem';
-import CheckOutlined from '@mui/icons-material/CheckOutlined';
-import CloseOutlined from '@mui/icons-material/CloseOutlined';
-import ChatBubbleOutlineOutlined from '@mui/icons-material/ChatBubbleOutlineOutlined';
+import Stack from '@mui/material/Stack';
 import { track } from '@vercel/analytics';
 import { Angle, Climb, BoardDetails } from '@/app/lib/types';
 import { useBoardProvider } from '../board-provider/board-provider-context';
 import type { LogbookEntry, TickStatus } from '@/app/hooks/use-logbook';
 import { TENSION_KILTER_GRADES } from '@/app/lib/board-data';
-import { themeTokens } from '@/app/theme/theme-config';
-import { useGradeFormat } from '@/app/hooks/use-grade-format';
-import { useIsDarkMode } from '@/app/hooks/use-is-dark-mode';
+import { TickControls } from './tick-controls';
 import styles from './quick-tick-bar.module.css';
 
 /** Snapshot of the tick target taken when the bar is first opened with a valid climb. */
@@ -57,22 +43,13 @@ const SWIPE_DISMISS_THRESHOLD = 80;
 const EXIT_DURATION_MS = 220;
 const SNAP_BACK_DURATION_MS = 180;
 
-/** Options shown in the attempts picker. 10 displays as "9+" in the UI. */
-const ATTEMPT_OPTIONS: readonly number[] = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
-const REVERSED_ATTEMPT_OPTIONS: readonly number[] = [...ATTEMPT_OPTIONS].reverse();
-
 /**
- * Inline tick entry bar. Designed to be embedded in a parent row (e.g. the queue
- * control bar) in place of the climb title. The component owns its own snapshot
- * of the climb so that mid-flow changes to the active climb (party session
- * navigation, etc.) do not cause the user to lose their in-progress tick.
+ * Stateful tick entry wrapper. Manages the tick target snapshot, form state
+ * (quality, difficulty, attempts), save logic, and swipe-to-dismiss gesture.
+ * Renders TickControls for the actual UI buttons.
  *
- * The user picks how many tries (1–9+) they put into the climb via the tries
- * counter, then taps either the confirm (✓) button to log a send with that
- * count or the fail (X) button to log the same count of tries without a send.
- * Send status is history-aware: a one-try send with no prior history records
- * as `flash`, otherwise `send`. Fail rows always record as `attempt`. Totals
- * are derived server-side by aggregating rows.
+ * Designed to be embedded in the queue control bar's button cluster position
+ * (replacing the normal navigation/action buttons when tick mode is active).
  */
 export const QuickTickBar: React.FC<QuickTickBarProps> = ({
   currentClimb,
@@ -86,8 +63,6 @@ export const QuickTickBar: React.FC<QuickTickBarProps> = ({
   commentFocused,
 }) => {
   const { saveTick, logbook } = useBoardProvider();
-  const isDark = useIsDarkMode();
-  const { formatGrade, getGradeColor, loaded: gradeFormatLoaded } = useGradeFormat();
 
   // Snapshot the target climb the first time we get a non-null climb.
   // All subsequent saves use this snapshot, not the live props.
@@ -106,8 +81,6 @@ export const QuickTickBar: React.FC<QuickTickBarProps> = ({
   const [quality, setQuality] = useState<number | null>(null);
   const [difficulty, setDifficulty] = useState<number | undefined>(undefined);
   const [isSaving, setIsSaving] = useState(false);
-  const [gradeAnchorEl, setGradeAnchorEl] = useState<HTMLElement | null>(null);
-  const [attemptAnchorEl, setAttemptAnchorEl] = useState<HTMLElement | null>(null);
   const [attemptCount, setAttemptCount] = useState<number>(1);
   const [swipeOffset, setSwipeOffset] = useState(0);
   const [isDismissing, setIsDismissing] = useState(false);
@@ -122,19 +95,6 @@ export const QuickTickBar: React.FC<QuickTickBarProps> = ({
       }
     };
   }, []);
-
-  const selectedGrade = difficulty
-    ? grades.find((g) => g.difficulty_id === difficulty)
-    : undefined;
-
-  // Prefer the user's override (which carries the full "font/v" difficulty
-  // name so formatGrade can disambiguate V5 vs V5+), otherwise fall back
-  // to the snapshot climb's own difficulty string.
-  const displayDifficulty =
-    selectedGrade?.difficulty_name ?? tickTarget?.climb.difficulty ?? currentClimb?.difficulty ?? '';
-  const formattedGrade = formatGrade(displayDifficulty);
-  const gradeLabel = formattedGrade ?? (displayDifficulty || '—');
-  const gradeColor = getGradeColor(displayDifficulty, isDark);
 
   // Fall back to matching the climb's own difficulty string against the
   // grade list so the menu can highlight the "current" grade even before
@@ -158,6 +118,8 @@ export const QuickTickBar: React.FC<QuickTickBarProps> = ({
     const end = Math.min(grades.length, idx + 3);
     return grades.slice(start, end);
   }, [grades, climbGradeId]);
+
+  const climbDifficulty = tickTarget?.climb.difficulty ?? currentClimb?.difficulty ?? undefined;
 
   const handleSave = useCallback(
     async (isAscent: boolean) => {
@@ -281,8 +243,6 @@ export const QuickTickBar: React.FC<QuickTickBarProps> = ({
   // comment text selection, or in-flight saves, don't get hijacked.
   const rootHandlers = swipeEnabled ? swipeHandlers : {};
 
-  const attemptDisplay = attemptCount >= 10 ? '9+' : String(attemptCount);
-
   return (
     <div
       {...rootHandlers}
@@ -290,171 +250,24 @@ export const QuickTickBar: React.FC<QuickTickBarProps> = ({
       style={rootStyle}
       data-testid="quick-tick-bar"
     >
-      <div className={styles.controls}>
-        {/* Order: stars, comment, grade, tries, attempt, tick. The rating
-            sits to the right of the bar, sized to match the adjacent icon
-            buttons. */}
-        <Rating
-          value={quality}
-          onChange={(_, val) => setQuality(val)}
-          max={5}
-          data-testid="quick-tick-rating"
-          className={styles.rating}
+      <Stack direction="row" spacing={0.5} sx={{ alignItems: 'center' }}>
+        <TickControls
+          quality={quality}
+          onQualityChange={setQuality}
+          attemptCount={attemptCount}
+          onAttemptCountChange={setAttemptCount}
+          difficulty={difficulty}
+          onDifficultyChange={setDifficulty}
+          climbDifficulty={climbDifficulty}
+          displayedGrades={displayedGrades}
+          currentGradeId={currentGradeId}
+          commentOpen={commentOpen}
+          onCommentToggle={onCommentToggle}
+          isSaving={isSaving}
+          onConfirm={handleConfirm}
+          onFail={handleFail}
         />
-
-        <IconButton
-          size="small"
-          onClick={onCommentToggle}
-          color={commentOpen ? 'primary' : 'default'}
-          aria-label="Toggle comment"
-        >
-          <ChatBubbleOutlineOutlined fontSize="small" />
-        </IconButton>
-
-        {/* Colourised grade, matching the styling used by ClimbTitle's
-            right-aligned large grade. Click opens the override menu. */}
-        {!gradeFormatLoaded ? (
-          <Skeleton
-            variant="rounded"
-            width={themeTokens.typography.fontSize.sm * 2.5}
-            height={themeTokens.typography.fontSize.sm}
-            sx={{ flexShrink: 0, mx: '4px' }}
-          />
-        ) : (
-          <Typography
-            variant="body2"
-            component="span"
-            onClick={(e) => setGradeAnchorEl(e.currentTarget)}
-            role="button"
-            aria-label="Select logged grade"
-            data-testid="quick-tick-grade"
-            className={styles.gradeLabel}
-            sx={{
-              fontSize: themeTokens.typography.fontSize.sm,
-              fontWeight: themeTokens.typography.fontWeight.bold,
-              lineHeight: 1,
-              color: gradeColor ?? 'text.secondary',
-              cursor: 'pointer',
-              flexShrink: 0,
-              px: '4px',
-            }}
-          >
-            {gradeLabel}
-          </Typography>
-        )}
-        <Menu
-          anchorEl={gradeAnchorEl}
-          open={Boolean(gradeAnchorEl)}
-          onClose={() => setGradeAnchorEl(null)}
-          anchorOrigin={{ vertical: 'top', horizontal: 'center' }}
-          transformOrigin={{ vertical: 'bottom', horizontal: 'center' }}
-          slotProps={{ paper: { sx: { maxHeight: 240 } } }}
-        >
-          <MenuItem
-            onClick={() => {
-              setDifficulty(undefined);
-              setGradeAnchorEl(null);
-            }}
-          >
-            —
-          </MenuItem>
-          {displayedGrades.map((grade) => {
-            const isCurrent = grade.difficulty_id === currentGradeId;
-            return (
-              <MenuItem
-                key={grade.difficulty_id}
-                selected={isCurrent}
-                onClick={() => {
-                  setDifficulty(grade.difficulty_id);
-                  setGradeAnchorEl(null);
-                }}
-              >
-                {formatGrade(grade.difficulty_name) ?? grade.v_grade}
-              </MenuItem>
-            );
-          })}
-        </Menu>
-
-        {/* Tries counter. Shows the selected try count aligned on the same
-            baseline as the adjacent items; the "tries" byline is absolutely
-            positioned underneath so it does not push the number out of
-            alignment. Opens a small menu upward with options 1–9+. The
-            selected value drives both the attempt (X) and confirm (✓)
-            buttons so the user can log 5 tries without a send by picking 5
-            and tapping X. */}
-        <ButtonBase
-          onClick={(e) => setAttemptAnchorEl(e.currentTarget)}
-          aria-label={`Tries: ${attemptDisplay}`}
-          aria-haspopup="menu"
-          aria-expanded={Boolean(attemptAnchorEl)}
-          data-testid="quick-tick-attempt"
-          className={styles.attemptButton}
-          disableRipple={false}
-        >
-          <span className={styles.attemptNumber}>{attemptDisplay}</span>
-          <span className={styles.attemptLabel}>tries</span>
-        </ButtonBase>
-        <Menu
-          anchorEl={attemptAnchorEl}
-          open={Boolean(attemptAnchorEl)}
-          onClose={() => setAttemptAnchorEl(null)}
-          anchorOrigin={{ vertical: 'top', horizontal: 'center' }}
-          transformOrigin={{ vertical: 'bottom', horizontal: 'center' }}
-          slotProps={{ paper: { sx: { minWidth: 64 } } }}
-        >
-          {REVERSED_ATTEMPT_OPTIONS.map((n) => (
-            <MenuItem
-              key={n}
-              selected={n === attemptCount}
-              onClick={() => {
-                setAttemptCount(n);
-                setAttemptAnchorEl(null);
-              }}
-              data-testid={`quick-tick-attempt-option-${n === 10 ? '9plus' : n}`}
-            >
-              {n === 10 ? '9+' : n}
-            </MenuItem>
-          ))}
-        </Menu>
-
-        <IconButton
-          size="small"
-          onClick={handleFail}
-          disabled={isSaving}
-          sx={{
-            p: '4px',
-            color: themeTokens.colors.error,
-            opacity: themeTokens.opacity.subtle,
-            '&:hover': {
-              color: themeTokens.colors.error,
-              opacity: 1,
-            },
-          }}
-          aria-label={`Log ${attemptDisplay} tries without a send`}
-          data-testid="quick-tick-fail"
-        >
-          <CloseOutlined fontSize="small" />
-        </IconButton>
-
-        <IconButton
-          size="small"
-          onClick={handleConfirm}
-          disabled={isSaving}
-          sx={{
-            p: '4px',
-            color: themeTokens.colors.success,
-            opacity: themeTokens.opacity.subtle,
-            '&:hover': {
-              color: themeTokens.colors.successHover,
-              opacity: 1,
-            },
-          }}
-          aria-label="Confirm ascent"
-          data-testid="quick-tick-confirm"
-        >
-          <CheckOutlined fontSize="small" />
-        </IconButton>
-      </div>
+      </Stack>
     </div>
   );
 };

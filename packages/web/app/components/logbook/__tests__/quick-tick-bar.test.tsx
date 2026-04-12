@@ -167,21 +167,18 @@ describe('QuickTickBar', () => {
   });
 
   describe('layout', () => {
-    it('renders the controls in the expected order: rating, comment toggle, grade, tries counter, fail, confirm — all clustered to the right', () => {
+    it('renders the controls in the expected order: rating, comment toggle, grade, tries counter, fail, confirm', async () => {
       render(<QuickTickBar {...defaultProps} />);
 
+      // Grade label only appears after the async useGradeFormat hook loads.
+      const gradeLabel = await screen.findByTestId('quick-tick-grade');
       const rating = screen.getByTestId('quick-tick-rating');
       const commentToggle = screen.getByRole('button', { name: /toggle comment/i });
-      const gradeLabel = screen.getByTestId('quick-tick-grade');
       const attemptBtn = screen.getByTestId('quick-tick-attempt');
       const failBtn = screen.getByTestId('quick-tick-fail');
       const confirmBtn = screen.getByTestId('quick-tick-confirm');
 
-      // Rating sits directly inside the single flex row alongside the
-      // comment toggle, grade label, tries counter, fail (X) and confirm
-      // (✓) buttons. The "swipe left to dismiss" hint is not rendered here
-      // — it lives as a transient toast above the queue control bar
-      // instead.
+      // All controls sit inside the single flex row.
       const controls = rating.parentElement!;
       expect(commentToggle.parentElement).toBe(controls);
       expect(gradeLabel.parentElement).toBe(controls);
@@ -193,8 +190,8 @@ describe('QuickTickBar', () => {
       // ascent count — it's clutter the user doesn't need while logging.
       expect(screen.queryByTestId('quick-tick-ascents')).toBeNull();
 
-      // Siblings of .controls must appear in this order: rating, comment
-      // toggle, grade label, tries counter, fail (X), confirm (✓).
+      // Siblings must appear in this order: rating, comment toggle,
+      // grade label, tries counter, fail (X), confirm (✓).
       const siblings = Array.from(controls.children) as HTMLElement[];
       const ratingIdx = siblings.indexOf(rating);
       const commentIdx = siblings.indexOf(commentToggle);
@@ -419,9 +416,13 @@ describe('QuickTickBar', () => {
     it('reflects the quality rating in the save payload', async () => {
       render(<QuickTickBar {...defaultProps} />);
 
-      // MUI Rating renders radio inputs for each star value.
-      const threeStars = screen.getAllByRole('radio', { name: /3 star/i })[0];
-      fireEvent.click(threeStars);
+      // Open the star selector menu and pick 3.
+      await act(async () => {
+        screen.getByTestId('quick-tick-rating').click();
+      });
+      await act(async () => {
+        screen.getByTestId('quick-tick-star-option-3').click();
+      });
 
       await act(async () => {
         screen.getByTestId('quick-tick-confirm').click();
@@ -588,47 +589,47 @@ describe('QuickTickBar', () => {
     // (e.g. '6c/V5'). Strings like 'V5' produce no match, so climbGradeId
     // is undefined and all 24 grades are shown.
 
-    it('shows all 24 grades when the climb difficulty does not match any grade name', () => {
+    it('shows all 24 grades when the climb difficulty does not match any grade name', async () => {
       // makeClimb() defaults to difficulty: 'V5', which has no entry in the
       // grade list (names use the full '6c/V5' format).
       render(<QuickTickBar {...defaultProps} />);
-      fireEvent.click(screen.getByTestId('quick-tick-grade'));
+      fireEvent.click(await screen.findByTestId('quick-tick-grade'));
 
       const items = screen.getAllByRole('menuitem');
       // 24 grade rows + 1 "—" (no-grade) row
       expect(items).toHaveLength(25);
     });
 
-    it('shows all 24 grades when the climb has no difficulty set', () => {
+    it('shows all 24 grades when the climb has no difficulty set', async () => {
       const climb = makeClimb({ difficulty: undefined });
       render(<QuickTickBar {...defaultProps} currentClimb={climb} />);
-      fireEvent.click(screen.getByTestId('quick-tick-grade'));
+      fireEvent.click(await screen.findByTestId('quick-tick-grade'));
 
       const items = screen.getAllByRole('menuitem');
       expect(items).toHaveLength(25);
     });
 
-    it('shows a 5-grade window (±2) around a mid-range matched grade', () => {
+    it('shows a 5-grade window (±2) around a mid-range matched grade', async () => {
       // '6c/V5' is difficulty_id 20 at index 10 in the grade array.
       // window: max(0, 10-2)=8 … min(24, 10+3)=13  →  indices 8–12.
       // Those map to: 6b/V4, 6b+/V4, 6c/V5, 6c+/V5, 7a/V6
       const climb = makeClimb({ difficulty: '6c/V5' });
       render(<QuickTickBar {...defaultProps} currentClimb={climb} />);
-      fireEvent.click(screen.getByTestId('quick-tick-grade'));
+      fireEvent.click(await screen.findByTestId('quick-tick-grade'));
 
       const items = screen.getAllByRole('menuitem');
       expect(items).toHaveLength(6); // 5 grade rows + "—"
 
       const gradeLabels = items.slice(1).map((el) => el.textContent);
-      expect(gradeLabels).toEqual(['V4', 'V4', 'V5', 'V5', 'V6']);
+      expect(gradeLabels).toEqual(['V4', 'V4+', 'V5', 'V5+', 'V6']);
     });
 
-    it('clamps the lower boundary: V0 at index 0 yields only 3 grades', () => {
+    it('clamps the lower boundary: V0 at index 0 yields only 3 grades', async () => {
       // '4a/V0' is difficulty_id 10 at index 0.
       // start = max(0, 0-2) = 0, end = min(24, 0+3) = 3  →  3 grades
       const climb = makeClimb({ difficulty: '4a/V0' });
       render(<QuickTickBar {...defaultProps} currentClimb={climb} />);
-      fireEvent.click(screen.getByTestId('quick-tick-grade'));
+      fireEvent.click(await screen.findByTestId('quick-tick-grade'));
 
       const items = screen.getAllByRole('menuitem');
       expect(items).toHaveLength(4); // 3 grade rows + "—"
@@ -637,12 +638,12 @@ describe('QuickTickBar', () => {
       expect(gradeLabels).toEqual(['V0', 'V0', 'V0']);
     });
 
-    it('clamps the upper boundary: V16 at the last index yields only 3 grades', () => {
+    it('clamps the upper boundary: V16 at the last index yields only 3 grades', async () => {
       // '8c+/V16' is difficulty_id 33 at index 23 (last entry).
       // start = max(0, 23-2) = 21, end = min(24, 23+3) = 24  →  3 grades
       const climb = makeClimb({ difficulty: '8c+/V16' });
       render(<QuickTickBar {...defaultProps} currentClimb={climb} />);
-      fireEvent.click(screen.getByTestId('quick-tick-grade'));
+      fireEvent.click(await screen.findByTestId('quick-tick-grade'));
 
       const items = screen.getAllByRole('menuitem');
       expect(items).toHaveLength(4); // 3 grade rows + "—"
@@ -651,21 +652,21 @@ describe('QuickTickBar', () => {
       expect(gradeLabels).toEqual(['V14', 'V15', 'V16']);
     });
 
-    it('near-low boundary: second grade (4b/V0 at index 1) yields 4 grades', () => {
+    it('near-low boundary: second grade (4b/V0 at index 1) yields 4 grades', async () => {
       // start = max(0, 1-2) = 0, end = min(24, 1+3) = 4  →  4 grades
       const climb = makeClimb({ difficulty: '4b/V0' });
       render(<QuickTickBar {...defaultProps} currentClimb={climb} />);
-      fireEvent.click(screen.getByTestId('quick-tick-grade'));
+      fireEvent.click(await screen.findByTestId('quick-tick-grade'));
 
       const items = screen.getAllByRole('menuitem');
       expect(items).toHaveLength(5); // 4 grade rows + "—"
     });
 
-    it('near-high boundary: second-to-last grade (8c/V15 at index 22) yields 4 grades', () => {
+    it('near-high boundary: second-to-last grade (8c/V15 at index 22) yields 4 grades', async () => {
       // start = max(0, 22-2) = 20, end = min(24, 22+3) = 24  →  4 grades
       const climb = makeClimb({ difficulty: '8c/V15' });
       render(<QuickTickBar {...defaultProps} currentClimb={climb} />);
-      fireEvent.click(screen.getByTestId('quick-tick-grade'));
+      fireEvent.click(await screen.findByTestId('quick-tick-grade'));
 
       const items = screen.getAllByRole('menuitem');
       expect(items).toHaveLength(5); // 4 grade rows + "—"
@@ -680,8 +681,9 @@ describe('QuickTickBar', () => {
       const climb = makeClimb({ difficulty: '6c/V5' });
       render(<QuickTickBar {...defaultProps} currentClimb={climb} />);
 
+      const gradeEl = await screen.findByTestId('quick-tick-grade');
       await act(async () => {
-        fireEvent.click(screen.getByTestId('quick-tick-grade'));
+        fireEvent.click(gradeEl);
       });
 
       // Wait for MUI's focus management to settle.
@@ -702,8 +704,9 @@ describe('QuickTickBar', () => {
       // "—" option), which does NOT have Mui-selected.
       render(<QuickTickBar {...defaultProps} />);
 
+      const gradeEl = await screen.findByTestId('quick-tick-grade');
       await act(async () => {
-        fireEvent.click(screen.getByTestId('quick-tick-grade'));
+        fireEvent.click(gradeEl);
       });
 
       await waitFor(() => {

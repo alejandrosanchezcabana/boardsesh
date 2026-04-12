@@ -12,6 +12,7 @@ import UserDrawer from '@/app/components/user-drawer/user-drawer';
 import StartSeshDrawer from '@/app/components/session-creation/start-sesh-drawer';
 import SeshSettingsDrawer from '@/app/components/sesh-settings/sesh-settings-drawer';
 import { usePersistentSessionState, useIsOnBoardRoute } from '@/app/components/persistent-session/persistent-session-context';
+import { useSessionTimer } from '@/app/hooks/use-session-timer';
 import { BoardConfigData } from '@/app/lib/server-board-configs';
 import { isBoardCreatePath, isBoardListPath } from '@/app/lib/board-route-paths';
 import { themeTokens } from '@/app/theme/theme-config';
@@ -39,12 +40,13 @@ export default function GlobalHeader({ boardConfigs }: GlobalHeaderProps) {
   const [startSeshRendered, setStartSeshRendered] = useState(false);
   const [seshSettingsOpen, setSeshSettingsOpen] = useState(false);
   const [seshSettingsRendered, setSeshSettingsRendered] = useState(false);
-  const { activeSession } = usePersistentSessionState();
+  const { activeSession, session } = usePersistentSessionState();
   const isOnBoardRoute = useIsOnBoardRoute();
   const { openClimbSearchDrawer, searchPillSummary, hasActiveFilters: filtersActive } = useSearchDrawerBridge();
   const pathname = usePathname();
 
   const hasActiveSession = !!activeSession;
+  const timerText = useSessionTimer(hasActiveSession ? session?.startedAt : null, { short: true });
 
   // Unmount drawer trees after close animation finishes to avoid rendering
   // MUI Modal/Portal/FocusTrap infrastructure on every parent re-render.
@@ -136,9 +138,10 @@ export default function GlobalHeader({ boardConfigs }: GlobalHeaderProps) {
           sx={hasActiveSession ? {
             backgroundColor: themeTokens.colors.success,
             '&:hover': { backgroundColor: themeTokens.colors.successHover },
+            ...(timerText ? { fontFamily: 'monospace', fontVariantNumeric: 'tabular-nums' } : {}),
           } : undefined}
         >
-          Sesh
+          {hasActiveSession && timerText ? timerText : 'Sesh'}
         </Button>
       </header>
 

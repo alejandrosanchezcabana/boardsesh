@@ -224,6 +224,8 @@ export default function StartSeshDrawer({ open, onClose, onTransitionEnd, boardC
             set_ids: localBoardDetails.set_ids,
             angle,
           },
+          namedBoardName: selectedBoard?.name,
+          namedBoardUuid: selectedBoard?.uuid,
         });
       }
 

@@ -25,19 +25,10 @@ import FeedCommentButton from '@/app/components/social/feed-comment-button';
 import { themeTokens } from '@/app/theme/theme-config';
 import { getGradeColor, getGradeTextColor } from '@/app/lib/grade-colors';
 import { useGradeFormat } from '@/app/hooks/use-grade-format';
+import { generateSessionName } from '@/app/lib/session-utils';
 
 interface SessionFeedCardProps {
   session: SessionFeedItem;
-}
-
-const DAYS = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
-
-function generateSessionName(firstTickAt: string, boardTypes: string[]): string {
-  const day = DAYS[new Date(firstTickAt).getDay()];
-  const boards = boardTypes
-    .map((bt) => bt.charAt(0).toUpperCase() + bt.slice(1))
-    .join(' & ');
-  return `${day} ${boards} Session`;
 }
 
 function formatDuration(minutes: number): string {

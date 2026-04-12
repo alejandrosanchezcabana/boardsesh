@@ -8,18 +8,17 @@ import CircularProgress from '@mui/material/CircularProgress';
 import Alert from '@mui/material/Alert';
 import StopCircleOutlined from '@mui/icons-material/StopCircleOutlined';
 import ContentCopyOutlined from '@mui/icons-material/ContentCopyOutlined';
-import Divider from '@mui/material/Divider';
 import IconButton from '@mui/material/IconButton';
 import TextField from '@mui/material/TextField';
 import { QRCodeSVG } from 'qrcode.react';
 import { useQuery } from '@tanstack/react-query';
 import SwipeableDrawer from '@/app/components/swipeable-drawer/swipeable-drawer';
-import AngleSelector from '@/app/components/board-page/angle-selector';
 import { usePersistentSession } from '@/app/components/persistent-session/persistent-session-context';
 import { useQueueBridgeBoardInfo } from '@/app/components/queue-control/queue-bridge-context';
 import { useRouter, usePathname } from 'next/navigation';
 import { themeTokens } from '@/app/theme/theme-config';
 import { useWsAuthToken } from '@/app/hooks/use-ws-auth-token';
+import { useSessionTimer } from '@/app/hooks/use-session-timer';
 import { createGraphQLHttpClient } from '@/app/lib/graphql/client';
 import {
   GET_SESSION_DETAIL,
@@ -28,7 +27,7 @@ import {
 import { clearClimbSessionCookie } from '@/app/lib/climb-session-cookie';
 import { useSnackbar } from '@/app/components/providers/snackbar-provider';
 import type { SessionDetail } from '@boardsesh/shared-schema';
-import CollapsibleSection from '@/app/components/collapsible-section/collapsible-section';
+import { generateSessionName } from '@/app/lib/session-utils';
 import SessionDetailContent from '@/app/session/[sessionId]/session-detail-content';
 
 const getShareUrl = (sessionId: string | null) => {
@@ -198,11 +197,37 @@ export default function SeshSettingsDrawer({ open, onClose, onTransitionEnd }: S
   }
   const displaySession = sessionForView ?? lastSessionRef.current;
 
+  const timerText = useSessionTimer(session?.startedAt ?? displaySession?.firstTickAt);
+
+  const drawerTitle = displaySession
+    ? (displaySession.sessionName || generateSessionName(displaySession.firstTickAt, displaySession.boardTypes))
+    : 'Session';
+
+  const inviteContent = !isStopped && shareUrl ? (
+    <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
+      <Box sx={{ display: 'flex', width: '100%', alignItems: 'center' }}>
+        <TextField
+          value={shareUrl}
+          slotProps={{ input: { readOnly: true } }}
+          variant="outlined"
+          size="small"
+          fullWidth
+        />
+        <IconButton onClick={copyToClipboard}>
+          <ContentCopyOutlined />
+        </IconButton>
+      </Box>
+      <Box sx={{ display: 'flex', justifyContent: 'center' }}>
+        <QRCodeSVG value={shareUrl} size={160} />
+      </Box>
+    </Box>
+  ) : undefined;
+
   if (!activeSession && !isStopped) return null;
 
   return (
     <SwipeableDrawer
-      title="Session overview"
+      title={drawerTitle}
       placement="top"
       showCloseButton={false}
       swipeEnabled
@@ -210,6 +235,19 @@ export default function SeshSettingsDrawer({ open, onClose, onTransitionEnd }: S
       onClose={handleClose}
       onTransitionEnd={onTransitionEnd}
       fullHeight
+      extra={timerText ? (
+        <Typography
+          variant="body2"
+          sx={{
+            fontFamily: 'monospace',
+            fontWeight: 600,
+            color: 'text.secondary',
+            whiteSpace: 'nowrap',
+          }}
+        >
+          {timerText}
+        </Typography>
+      ) : undefined}
       styles={{
         wrapper: { height: '100dvh' },
         body: { padding: 0, paddingBottom: 0 },
@@ -257,60 +295,15 @@ export default function SeshSettingsDrawer({ open, onClose, onTransitionEnd }: S
 
         {displaySession && (
           <SessionDetailContent
-            key={`${displaySession.sessionId}:${displaySession.ticks.length}:${displaySession.ticks[0]?.uuid ?? ''}`}
+            key={displaySession.sessionId}
             session={displaySession}
             embedded
             fallbackBoardDetails={boardDetails}
-            afterParticipants={
-              !isStopped && shareUrl ? (
-                <CollapsibleSection
-                  sections={[{
-                    key: 'invite',
-                    label: 'Invite',
-                    title: 'Invite others to join',
-                    defaultSummary: 'Share link or QR code',
-                    getSummary: () => [],
-                    content: (
-                      <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
-                        <Box sx={{ display: 'flex', width: '100%', alignItems: 'center' }}>
-                          <TextField
-                            value={shareUrl}
-                            slotProps={{ input: { readOnly: true } }}
-                            variant="outlined"
-                            size="small"
-                            fullWidth
-                          />
-                          <IconButton onClick={copyToClipboard}>
-                            <ContentCopyOutlined />
-                          </IconButton>
-                        </Box>
-                        <Box sx={{ display: 'flex', justifyContent: 'center' }}>
-                          <QRCodeSVG value={shareUrl} size={160} />
-                        </Box>
-                      </Box>
-                    ),
-                  }]}
-                />
-              ) : undefined
-            }
+            inviteContent={inviteContent}
+            currentAngle={angle}
+            onAngleChange={!isStopped ? handleAngleChange : undefined}
+            namedBoardName={activeSession?.namedBoardName}
           />
-        )}
-
-        <Divider />
-
-        {!isStopped && boardDetails && angle !== undefined && (
-          <Box sx={{ px: 1 }}>
-            <Typography variant="subtitle2" sx={{ mb: 1, fontWeight: 600 }}>
-              Angle
-            </Typography>
-            <AngleSelector
-              boardName={boardDetails.board_name}
-              boardDetails={boardDetails}
-              currentAngle={angle}
-              currentClimb={null}
-              onAngleChange={handleAngleChange}
-            />
-          </Box>
         )}
       </Box>
     </SwipeableDrawer>

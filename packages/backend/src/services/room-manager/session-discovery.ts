@@ -1,5 +1,6 @@
 import { db } from '../../db/client';
 import { sessions, type Session } from '../../db/schema';
+import { userBoards } from '@boardsesh/db/schema/app';
 import { eq, and, gt, gte, lte, ne } from 'drizzle-orm';
 import type { RedisSessionStore } from '../redis-session-store';
 import type { DistributedStateManager } from '../distributed-state';
@@ -29,6 +30,21 @@ export async function createDiscoverableSession(
   color?: string
 ): Promise<Session> {
   const now = new Date();
+
+  // Auto-resolve boardId from slug paths (e.g., "/b/my-home-wall")
+  let boardId: number | null = null;
+  const slugMatch = boardPath.match(/^\/b\/([^/]+)/);
+  if (slugMatch) {
+    const boardRows = await db
+      .select({ id: userBoards.id })
+      .from(userBoards)
+      .where(eq(userBoards.slug, slugMatch[1]))
+      .limit(1);
+    if (boardRows[0]) {
+      boardId = boardRows[0].id;
+    }
+  }
+
   const result = await db
     .insert(sessions)
     .values({
@@ -44,6 +60,7 @@ export async function createDiscoverableSession(
       isPermanent: isPermanent || false,
       color: color || null,
       startedAt: now,
+      boardId,
     })
     .onConflictDoUpdate({
       target: sessions.id,
@@ -59,6 +76,7 @@ export async function createDiscoverableSession(
         isPermanent: isPermanent || false,
         color: color || null,
         startedAt: now,
+        boardId,
       },
     })
     .returning();

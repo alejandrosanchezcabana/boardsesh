@@ -458,7 +458,7 @@ const QueueControlBar: React.FC<QueueControlBarProps> = ({ boardDetails, angle }
           <div
             className={styles.swipeContainer}
             style={{
-              padding: `${themeTokens.spacing[2]}px ${themeTokens.spacing[3]}px`,
+              padding: `10px ${themeTokens.spacing[3]}px`,
               backgroundColor: gradeTintColor ?? (isDark ? 'transparent' : 'var(--semantic-surface)'),
             }}
           >
@@ -556,7 +556,7 @@ const QueueControlBar: React.FC<QueueControlBarProps> = ({ boardDetails, angle }
             {...swipeHandlers}
             className={styles.swipeContainer}
             style={{
-              padding: `${themeTokens.spacing[2]}px ${themeTokens.spacing[3]}px`,
+              padding: `10px ${themeTokens.spacing[3]}px`,
               backgroundColor: gradeTintColor ?? (isDark ? 'transparent' : 'var(--semantic-surface)'),
             }}
           >
@@ -576,121 +576,118 @@ const QueueControlBar: React.FC<QueueControlBarProps> = ({ boardDetails, angle }
 
                   {/* Text swipe clip — overflow hidden to contain sliding text */}
                   <div className={styles.textSwipeClip}>
-                    {tickBarActive ? (
-                      <QuickTickBar
-                        currentClimb={currentClimb}
-                        angle={angle}
-                        boardDetails={boardDetails}
-                        onSave={() => setActiveDrawer('none')}
-                        onCancel={() => setActiveDrawer('none')}
-                        comment={tickComment}
-                        commentOpen={tickCommentOpen}
-                        onCommentToggle={handleTickCommentToggle}
-                        commentFocused={tickCommentFocused}
+                    {/* Current climb text — slides with finger */}
+                    <div
+                      id="onboarding-queue-toggle"
+                      onClick={tickBarActive ? undefined : handleClimbInfoClick}
+                      className={`${styles.queueToggle} ${isListPage ? styles.listPage : ''}`}
+                      style={{
+                        transform: tickBarActive ? undefined : `translateX(${swipeOffset}px)`,
+                        transition: tickBarActive ? undefined : getTextTransitionStyle(),
+                        cursor: tickBarActive ? 'default' : undefined,
+                      }}
+                    >
+                      <ClimbTitle
+                        climb={currentClimb}
+                        gradePosition="right"
+                        showSetterInfo
                       />
-                    ) : (
-                      <>
-                        {/* Current climb text — slides with finger */}
-                        <div
-                          id="onboarding-queue-toggle"
-                          onClick={handleClimbInfoClick}
-                          className={`${styles.queueToggle} ${isListPage ? styles.listPage : ''}`}
-                          style={{
-                            transform: `translateX(${swipeOffset}px)`,
-                            transition: getTextTransitionStyle(),
-                          }}
-                        >
-                          <ClimbTitle
-                            climb={currentClimb}
-                            gradePosition="right"
-                            showSetterInfo
-                          />
-                        </div>
+                    </div>
 
-                        {/* Peek text — shows next/previous climb sliding in from the edge */}
-                        {showPeek && peekClimbData && (
-                          <div
-                            className={`${styles.queueToggle} ${styles.peekText}`}
-                            style={{
-                              transform: getPeekTransform(),
-                              transition: getTextTransitionStyle(),
-                            }}
-                          >
-                            <ClimbTitle
-                              climb={peekClimbData}
-                              gradePosition="right"
-                              showSetterInfo
-                            />
-                          </div>
-                        )}
-                      </>
+                    {/* Peek text — shows next/previous climb sliding in from the edge */}
+                    {!tickBarActive && showPeek && peekClimbData && (
+                      <div
+                        className={`${styles.queueToggle} ${styles.peekText}`}
+                        style={{
+                          transform: getPeekTransform(),
+                          transition: getTextTransitionStyle(),
+                        }}
+                      >
+                        <ClimbTitle
+                          climb={peekClimbData}
+                          gradePosition="right"
+                          showSetterInfo
+                        />
+                      </div>
                     )}
                   </div>
                 </div>
               </Box>
 
-              {/* Button cluster — hidden when tick bar is active to give full width */}
-              {!tickBarActive && (
+              {/* Button cluster — swaps to tick controls when tick bar is active */}
               <Box sx={{ flex: 'none', marginLeft: `${themeTokens.spacing[1]}px` }}>
-                <Stack direction="row" spacing={0.5}>
-                  {/* Mirror button - desktop only */}
-                  {boardDetails.supportsMirroring ? (
-                    <span className={styles.desktopOnly}>
-                      <IconButton
-                        id="button-mirror"
-                        onClick={() => {
-                          mirrorClimb();
-                          track('Mirror Climb Toggled', {
-                            boardLayout: boardDetails.layout_name || '',
-                            mirrored: !currentClimb?.mirrored,
-                          });
-                        }}
-                        color={currentClimb?.mirrored ? 'primary' : 'default'}
-                        sx={
-                          currentClimb?.mirrored
-                            ? { backgroundColor: themeTokens.colors.purple, borderColor: themeTokens.colors.purple, color: 'common.white', '&:hover': { backgroundColor: themeTokens.colors.purple } }
-                            : undefined
-                        }
-                      >
-                        <SyncOutlined />
-                      </IconButton>
-                    </span>
-                  ) : null}
-                  {/* Play link - desktop only */}
-                  {!isPlayPage && playUrl && (
-                    <span className={styles.desktopOnly}>
-                      <Link
-                        href={playUrl}
-                        onClick={() => {
-                          track('Play Mode Entered', {
-                            boardLayout: boardDetails.layout_name || '',
-                          });
-                        }}
-                      >
-                        <IconButton aria-label="Enter play mode"><OpenInFullOutlined /></IconButton>
-                      </Link>
-                    </span>
-                  )}
-                  {/* Navigation buttons - desktop only */}
-                  <span className={styles.navButtons}>
-                    <Stack direction="row" spacing={0.5}>
-                      <PreviousClimbButton navigate={isViewPage || isPlayPage} boardDetails={boardDetails} />
-                      <NextClimbButton navigate={isViewPage || isPlayPage} boardDetails={boardDetails} />
-                    </Stack>
-                  </span>
-                  {/* Party button */}
-                  <ShareBoardButton />
-                  {/* Tick button */}
-                  <TickButton
+                {tickBarActive ? (
+                  <QuickTickBar
                     currentClimb={currentClimb}
                     angle={angle}
                     boardDetails={boardDetails}
-                    onActivateTickBar={() => setActiveDrawer('tick')}
-                    tickBarActive={tickBarActive}
+                    onSave={() => setActiveDrawer('none')}
+                    onCancel={() => setActiveDrawer('none')}
+                    comment={tickComment}
+                    commentOpen={tickCommentOpen}
+                    onCommentToggle={handleTickCommentToggle}
+                    commentFocused={tickCommentFocused}
                   />
-                </Stack>
+                ) : (
+                  <Stack direction="row" spacing={0.5}>
+                    {/* Mirror button - desktop only */}
+                    {boardDetails.supportsMirroring ? (
+                      <span className={styles.desktopOnly}>
+                        <IconButton
+                          id="button-mirror"
+                          onClick={() => {
+                            mirrorClimb();
+                            track('Mirror Climb Toggled', {
+                              boardLayout: boardDetails.layout_name || '',
+                              mirrored: !currentClimb?.mirrored,
+                            });
+                          }}
+                          color={currentClimb?.mirrored ? 'primary' : 'default'}
+                          sx={
+                            currentClimb?.mirrored
+                              ? { backgroundColor: themeTokens.colors.purple, borderColor: themeTokens.colors.purple, color: 'common.white', '&:hover': { backgroundColor: themeTokens.colors.purple } }
+                              : undefined
+                          }
+                        >
+                          <SyncOutlined />
+                        </IconButton>
+                      </span>
+                    ) : null}
+                    {/* Play link - desktop only */}
+                    {!isPlayPage && playUrl && (
+                      <span className={styles.desktopOnly}>
+                        <Link
+                          href={playUrl}
+                          onClick={() => {
+                            track('Play Mode Entered', {
+                              boardLayout: boardDetails.layout_name || '',
+                            });
+                          }}
+                        >
+                          <IconButton aria-label="Enter play mode"><OpenInFullOutlined /></IconButton>
+                        </Link>
+                      </span>
+                    )}
+                    {/* Navigation buttons - desktop only */}
+                    <span className={styles.navButtons}>
+                      <Stack direction="row" spacing={0.5}>
+                        <PreviousClimbButton navigate={isViewPage || isPlayPage} boardDetails={boardDetails} />
+                        <NextClimbButton navigate={isViewPage || isPlayPage} boardDetails={boardDetails} />
+                      </Stack>
+                    </span>
+                    {/* Party button */}
+                    <ShareBoardButton />
+                    {/* Tick button */}
+                    <TickButton
+                      currentClimb={currentClimb}
+                      angle={angle}
+                      boardDetails={boardDetails}
+                      onActivateTickBar={() => setActiveDrawer('tick')}
+                      tickBarActive={tickBarActive}
+                    />
+                  </Stack>
+                )}
               </Box>
-              )}
             </Box>
           </div>
         </div>

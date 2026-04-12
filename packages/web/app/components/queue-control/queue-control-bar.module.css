@@ -218,13 +218,18 @@
 }
 
 .boardPreviewContainer {
-  width: 36px;
+  width: 42px;
+  height: 42px;
   flex-shrink: 0;
   overflow: hidden;
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .shellThumbnail {
-  height: 36px;
+  height: 42px;
   border-radius: 8px;
   background: var(--neutral-200);
 }
