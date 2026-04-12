@@ -141,6 +141,11 @@ export default async function DynamicResultsPage(props: { params: Promise<BoardR
       />
     );
   } catch (error) {
+    // Re-throw Next.js internal errors (permanentRedirect, notFound, etc.) so they
+    // are handled correctly instead of being replaced by a 404.
+    if (error !== null && typeof error === 'object' && 'digest' in error) {
+      throw error;
+    }
     console.error('Error fetching results or climb:', error);
     notFound();
   }

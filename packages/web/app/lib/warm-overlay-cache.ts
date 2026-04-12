@@ -35,7 +35,9 @@ async function warmOverlays(options: {
     await Promise.allSettled(
       toWarm.map((climb) => {
         const path = buildOverlayUrl(boardDetails, climb.frames, isThumbnail);
-        return fetch(`${BASE_URL}${path}`).then((r) => r.body?.cancel());
+        return fetch(`${BASE_URL}${path}`)
+          .then((r) => r.body?.cancel())
+          .catch(() => {});
       }),
     );
   } catch {
