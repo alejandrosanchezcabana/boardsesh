@@ -98,6 +98,7 @@
 .cardCompactInfo {
   flex: 1;
   min-width: 0;
+  padding-left: 10px;
   padding-right: 8px;
 }
 
