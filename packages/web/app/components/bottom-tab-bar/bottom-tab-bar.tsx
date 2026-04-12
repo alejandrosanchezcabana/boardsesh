@@ -48,6 +48,7 @@ import { isValidHexColor } from '@/app/lib/color-utils';
 import { useBoardSwitchGuard } from '@/app/components/board-lock/use-board-switch-guard';
 import { isNativeApp } from '@/app/lib/ble/capacitor-utils';
 import { getNativeTabBarPlugin, addNativeOverlay, removeNativeOverlay } from '@/app/lib/native-tab-bar/native-tab-bar-plugin';
+import { useUnreadNotificationCount } from '@/app/hooks/use-unread-notification-count';
 
 type Tab = 'home' | 'climbs' | 'library' | 'feed' | 'create' | 'you';
 type PendingCreateAction = 'climb' | 'playlist' | null;
@@ -134,6 +135,7 @@ function BottomTabBar({ boardDetails, angle, boardConfigs }: BottomTabBarProps) 
   const guardBoardSwitch = useBoardSwitchGuard();
 
   const { data: session } = useSession();
+  const notificationUnreadCount = useUnreadNotificationCount();
 
   // Playlist context may be absent at root-level routes; use a local fallback for create flow.
   const playlistsContext = useContext(PlaylistsContext);
@@ -574,180 +576,8 @@ function BottomTabBar({ boardDetails, angle, boardConfigs }: BottomTabBarProps) 
     showMessage,
   ]);
 
-  // On native iOS, the visual tab bar is rendered natively.
-  // We only render the drawers so they can be opened by native tab taps.
-  if (isNativeApp()) {
-    return (
-      <>
-        {/* Create Playlist Drawer */}
-        {isCreatePlaylistRendered && (
-          <SwipeableDrawer
-            title="Create Playlist"
-            placement="bottom"
-            open={isCreatePlaylistOpen}
-            onClose={() => {
-              setIsCreatePlaylistOpen(false);
-              setPlaylistFormValues(INITIAL_PLAYLIST_FORM);
-              setPlaylistFormErrors({});
-            }}
-            onTransitionEnd={handleCreatePlaylistTransitionEnd}
-            styles={{
-              wrapper: { height: 'auto' },
-              body: { padding: themeTokens.spacing[4] },
-            }}
-            extra={
-              <MuiButton
-                variant="contained"
-                onClick={handleCreatePlaylist}
-                disabled={isCreatingPlaylist}
-              >
-                {isCreatingPlaylist ? 'Creating...' : 'Create'}
-              </MuiButton>
-            }
-          >
-            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-              <Box>
-                <Typography variant="body2" fontWeight={600} sx={{ mb: 0.5 }}>Name</Typography>
-                <TextField
-                  placeholder="e.g., Hard Crimps"
-                  autoFocus
-                  fullWidth
-                  size="small"
-                  value={playlistFormValues.name}
-                  onChange={(e) => {
-                    setPlaylistFormValues((prev) => ({ ...prev, name: e.target.value }));
-                    setPlaylistFormErrors((prev) => ({ ...prev, name: '' }));
-                  }}
-                  error={!!playlistFormErrors.name}
-                  helperText={playlistFormErrors.name}
-                />
-              </Box>
-              <Box>
-                <Typography variant="body2" fontWeight={600} sx={{ mb: 0.5 }}>Description (optional)</Typography>
-                <TextField
-                  placeholder="Optional description..."
-                  multiline
-                  rows={2}
-                  fullWidth
-                  size="small"
-                  slotProps={{ htmlInput: { maxLength: 500 } }}
-                  value={playlistFormValues.description}
-                  onChange={(e) => {
-                    setPlaylistFormValues((prev) => ({ ...prev, description: e.target.value }));
-                    setPlaylistFormErrors((prev) => ({ ...prev, description: '' }));
-                  }}
-                  error={!!playlistFormErrors.description}
-                  helperText={playlistFormErrors.description}
-                />
-              </Box>
-              <Box>
-                <Typography variant="body2" fontWeight={600} sx={{ mb: 0.5 }}>Color (optional)</Typography>
-                <TextField
-                  type="color"
-                  value={playlistFormValues.color || '#000000'}
-                  onChange={(e) => setPlaylistFormValues((prev) => ({ ...prev, color: e.target.value }))}
-                  size="small"
-                  sx={{ width: 80 }}
-                />
-              </Box>
-            </Box>
-          </SwipeableDrawer>
-        )}
-
-        {/* Board Selector Drawer */}
-        {isBoardSelectorRendered && (
-          <SwipeableDrawer
-            title="Pick a board"
-            placement="bottom"
-            open={isBoardSelectorOpen}
-            onClose={() => {
-              setIsBoardSelectorOpen(false);
-              setPendingCreateAction(null);
-            }}
-            onTransitionEnd={handleBoardSelectorTransitionEnd}
-          >
-            <BoardDiscoveryScroll
-              onBoardClick={handleDiscoveryBoardClick}
-              onConfigClick={handleDiscoveryConfigClick}
-              onCustomClick={() => {
-                setIsBoardSelectorOpen(false);
-                setIsCustomBoardRendered(true);
-                setIsCustomBoardOpen(true);
-              }}
-            />
-          </SwipeableDrawer>
-        )}
-
-        {/* Custom Board Selector Drawer */}
-        {boardConfigs && isCustomBoardRendered && (
-          <BoardSelectorDrawer
-            open={isCustomBoardOpen}
-            onClose={() => setIsCustomBoardOpen(false)}
-            onTransitionEnd={handleCustomBoardTransitionEnd}
-            boardConfigs={boardConfigs}
-            placement="bottom"
-            onBoardSelected={(url) => {
-              handleBoardSelected(url);
-              setIsCustomBoardOpen(false);
-            }}
-          />
-        )}
-      </>
-    );
-  }
-
-  return (
+  const drawers = (
     <>
-      <BottomNavigation
-        data-testid="bottom-tab-bar"
-        value={activeTab}
-        onChange={handleTabChange}
-        showLabels
-        sx={{
-          background: isDark ? 'rgba(26, 26, 26, 0.7)' : 'rgba(255, 255, 255, 0.3)',
-          WebkitBackdropFilter: isDark ? 'blur(20px)' : 'blur(5px)',
-          backdropFilter: isDark ? 'blur(20px)' : 'blur(5px)',
-          borderRadius: `var(--tab-bar-top-radius, ${themeTokens.borderRadius.xl}px) var(--tab-bar-top-radius, ${themeTokens.borderRadius.xl}px) var(--tab-bar-bottom-radius, ${themeTokens.borderRadius.xl}px) var(--tab-bar-bottom-radius, ${themeTokens.borderRadius.xl}px)`,
-          pt: `${themeTokens.spacing[2]}px`,
-          pb: `calc(${themeTokens.spacing[2]}px + var(--tab-bar-safe-area-padding, 0px))`,
-          mb: 'var(--tab-bar-bottom-extension, 0px)',
-          height: 'auto',
-          '@media (min-width: 768px)': {
-            maxWidth: 480,
-            mx: 'auto',
-            boxShadow: themeTokens.shadows.lg,
-            border: `1px solid var(--neutral-200)`,
-          },
-        }}
-      >
-        <BottomNavigationAction label="Home" icon={<HomeOutlined sx={{ fontSize: 20 }} />} value="home" sx={actionSx} />
-        <BottomNavigationAction
-          label="Climb"
-          icon={<FormatListBulletedOutlined sx={{ fontSize: 20 }} />}
-          value="climbs"
-          sx={actionSx}
-        />
-        <BottomNavigationAction
-          label="Discover"
-          icon={<LocalOfferOutlined sx={{ fontSize: 20 }} />}
-          value="library"
-          sx={actionSx}
-        />
-        <BottomNavigationAction
-          label="Feed"
-          icon={<DynamicFeedOutlined sx={{ fontSize: 20 }} />}
-          value="feed"
-          sx={actionSx}
-        />
-        <BottomNavigationAction
-          label="Create"
-          icon={<AddOutlined sx={{ fontSize: 20 }} />}
-          value="create"
-          sx={actionSx}
-        />
-        <BottomNavigationAction label="You" icon={<PersonOutlined sx={{ fontSize: 20 }} />} value="you" sx={actionSx} />
-      </BottomNavigation>
-
       {/* Create Playlist Drawer */}
       {isCreatePlaylistRendered && (
         <SwipeableDrawer
@@ -863,6 +693,73 @@ function BottomTabBar({ boardDetails, angle, boardConfigs }: BottomTabBarProps) 
           }}
         />
       )}
+    </>
+  );
+
+  // On native iOS with the native tab bar plugin available, render only the
+  // drawers — the visual tab bar is drawn natively and dispatches tab taps
+  // back to React via the boardsesh:native-tab-tapped event.
+  // BACKWARDS-COMPAT: older iOS app builds do not have NativeTabBarPlugin,
+  // so we must keep rendering the web BottomNavigation for them. Otherwise
+  // existing TestFlight/App Store users would lose all bottom navigation on
+  // their next page load.
+  if (isNativeApp() && getNativeTabBarPlugin() !== null) {
+    return drawers;
+  }
+
+  return (
+    <>
+      <BottomNavigation
+        data-testid="bottom-tab-bar"
+        value={activeTab}
+        onChange={handleTabChange}
+        showLabels
+        sx={{
+          background: isDark ? 'rgba(26, 26, 26, 0.7)' : 'rgba(255, 255, 255, 0.3)',
+          WebkitBackdropFilter: isDark ? 'blur(20px)' : 'blur(5px)',
+          backdropFilter: isDark ? 'blur(20px)' : 'blur(5px)',
+          borderRadius: `var(--tab-bar-top-radius, ${themeTokens.borderRadius.xl}px) var(--tab-bar-top-radius, ${themeTokens.borderRadius.xl}px) var(--tab-bar-bottom-radius, ${themeTokens.borderRadius.xl}px) var(--tab-bar-bottom-radius, ${themeTokens.borderRadius.xl}px)`,
+          pt: `${themeTokens.spacing[2]}px`,
+          pb: `calc(${themeTokens.spacing[2]}px + var(--tab-bar-safe-area-padding, 0px))`,
+          mb: 'var(--tab-bar-bottom-extension, 0px)',
+          height: 'auto',
+          '@media (min-width: 768px)': {
+            maxWidth: 480,
+            mx: 'auto',
+            boxShadow: themeTokens.shadows.lg,
+            border: `1px solid var(--neutral-200)`,
+          },
+        }}
+      >
+        <BottomNavigationAction label="Home" icon={<HomeOutlined sx={{ fontSize: 20 }} />} value="home" sx={actionSx} />
+        <BottomNavigationAction
+          label="Climb"
+          icon={<FormatListBulletedOutlined sx={{ fontSize: 20 }} />}
+          value="climbs"
+          sx={actionSx}
+        />
+        <BottomNavigationAction
+          label="Discover"
+          icon={<LocalOfferOutlined sx={{ fontSize: 20 }} />}
+          value="library"
+          sx={actionSx}
+        />
+        <BottomNavigationAction
+          label="Feed"
+          icon={<DynamicFeedOutlined sx={{ fontSize: 20 }} />}
+          value="feed"
+          sx={actionSx}
+        />
+        <BottomNavigationAction
+          label="Create"
+          icon={<AddOutlined sx={{ fontSize: 20 }} />}
+          value="create"
+          sx={actionSx}
+        />
+        <BottomNavigationAction label="You" icon={<PersonOutlined sx={{ fontSize: 20 }} />} value="you" sx={actionSx} />
+      </BottomNavigation>
+
+      {drawers}
     </>
   );
 }

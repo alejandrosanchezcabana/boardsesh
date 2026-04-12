@@ -28,6 +28,7 @@ import { ProfileHeaderShareProvider } from '../profile-header-bridge/profile-hea
 import { isNativeApp } from '@/app/lib/ble/capacitor-utils';
 import dynamic from 'next/dynamic';
 import { SESH_SETTINGS_DRAWER_EVENT } from '../sesh-settings/sesh-settings-drawer-event';
+import { getNativeTabBarPlugin } from '@/app/lib/native-tab-bar/native-tab-bar-plugin';
 import { BoardSwitchConfirmProvider } from '../board-lock/board-switch-confirm-provider';
 import { FeedbackPromptBanner } from '../feedback/feedback-prompt-banner';
 
@@ -132,6 +133,15 @@ export function RootBottomBar({ boardConfigs }: { boardConfigs: BoardConfigData 
 
   const hideTabBar = HIDE_TAB_BAR_PAGES.some((prefix) => pathname.startsWith(prefix)) && !hasActiveQueue;
   const shouldShowQueueShell = isBoardRoutePath(pathname) && !hasActiveQueue && !boardDetails;
+
+  // Hide native tab bar on pages where the web tab bar would also be hidden
+  useEffect(() => {
+    if (!isNative || !hideTabBar) return;
+    getNativeTabBarPlugin()?.setBarsHidden({ hidden: true });
+    return () => {
+      getNativeTabBarPlugin()?.setBarsHidden({ hidden: false });
+    };
+  }, [isNative, hideTabBar]);
 
   if (isNative) {
     return (
