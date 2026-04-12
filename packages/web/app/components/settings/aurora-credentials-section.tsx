@@ -156,7 +156,7 @@ export function BoardCredentialCard({
           {isKilter ? (
             <Typography variant="body2" component="span" color="text.secondary" className={styles.notConnectedText}>
               The Kilter backend has been shut down. You can import your data using an Aurora JSON export file, or
-              email Peter from Aurora Climbing to request a data export.
+              email Aurora Climbing to request a data export.
             </Typography>
           ) : (
             <Typography variant="body2" component="span" color="text.secondary" className={styles.notConnectedText}>
