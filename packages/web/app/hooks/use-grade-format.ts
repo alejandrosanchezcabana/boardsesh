@@ -17,10 +17,17 @@ export function useGradeFormat() {
   const isLocalChangeRef = useRef(false);
 
   useEffect(() => {
-    getGradeDisplayFormat().then((value) => {
-      setGradeFormatState(value);
-      setLoaded(true);
-    });
+    getGradeDisplayFormat()
+      .then((value) => {
+        setGradeFormatState(value);
+      })
+      .catch(() => {
+        // IndexedDB unavailable (private browsing, quota exceeded, etc.)
+        // Fall back to default v-grade so Skeletons don't stay forever.
+      })
+      .finally(() => {
+        setLoaded(true);
+      });
   }, []);
 
   // Listen for changes from other components that call setGradeFormat

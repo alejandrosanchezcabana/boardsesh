@@ -31,11 +31,12 @@ vi.mock('@/app/lib/grade-colors', () => ({
   getGradeColor: (d: string | null | undefined) => (d ? '#vivid' : undefined),
 }));
 
+import type { SessionSummary } from '@boardsesh/shared-schema';
 import SessionSummaryView from '../session-summary-view';
 
 // --- Helpers ---
 
-const makeSummary = (overrides = {}) =>
+const makeSummary = (overrides: Partial<SessionSummary> = {}): SessionSummary =>
   ({
     totalSends: 5,
     totalAttempts: 3,
@@ -49,8 +50,7 @@ const makeSummary = (overrides = {}) =>
     ],
     participants: [],
     ...overrides,
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  }) as any;
+  }) as unknown as SessionSummary;
 
 describe('SessionSummaryView grade format integration', () => {
   beforeEach(() => {

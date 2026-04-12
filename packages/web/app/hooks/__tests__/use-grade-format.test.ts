@@ -147,4 +147,17 @@ describe('useGradeFormat', () => {
 
     expect(result.current.gradeFormat).toBe('font');
   });
+
+  it('sets loaded=true even when IndexedDB rejects', async () => {
+    mockGetFormat.mockRejectedValue(new Error('IndexedDB unavailable'));
+
+    const { result } = renderHook(() => useGradeFormat());
+
+    await waitFor(() => {
+      expect(result.current.loaded).toBe(true);
+    });
+
+    // Falls back to default v-grade
+    expect(result.current.gradeFormat).toBe('v-grade');
+  });
 });

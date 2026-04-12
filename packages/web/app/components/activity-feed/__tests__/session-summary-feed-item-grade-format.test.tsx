@@ -31,11 +31,12 @@ vi.mock('@/app/lib/grade-colors', () => ({
   getGradeColor: (d: string | null | undefined) => (d ? '#vivid' : undefined),
 }));
 
+import type { ActivityFeedItem } from '@boardsesh/shared-schema';
 import SessionSummaryFeedItem from '../session-summary-feed-item';
 
 // --- Helpers ---
 
-const makeItem = (overrides = {}) =>
+const makeItem = (overrides: Partial<ActivityFeedItem> = {}): ActivityFeedItem =>
   ({
     id: '1',
     type: 'session_summary',
@@ -49,8 +50,7 @@ const makeItem = (overrides = {}) =>
     }),
     createdAt: new Date().toISOString(),
     ...overrides,
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  }) as any;
+  }) as unknown as ActivityFeedItem;
 
 describe('SessionSummaryFeedItem grade format integration', () => {
   beforeEach(() => {
