@@ -22,20 +22,9 @@ let mockBridgeState = {
   searchPillSummary: null as string | null,
   hasActiveFilters: false,
 };
-const mockSetClimbName = vi.fn();
-let mockCreateHeaderState = {
-  isActive: false,
-  climbName: '',
-  setClimbName: null as ((value: string) => void) | null,
-  actionSlot: null as React.ReactNode,
-};
 
 vi.mock('@/app/components/search-drawer/search-drawer-bridge-context', () => ({
   useSearchDrawerBridge: () => mockBridgeState,
-}));
-
-vi.mock('@/app/components/create-climb/create-header-bridge-context', () => ({
-  useCreateHeaderBridge: () => mockCreateHeaderState,
 }));
 
 vi.mock('@/app/components/search-drawer/unified-search-drawer', () => ({
@@ -80,12 +69,6 @@ describe('GlobalHeader', () => {
       openClimbSearchDrawer: null,
       searchPillSummary: null,
       hasActiveFilters: false,
-    };
-    mockCreateHeaderState = {
-      isActive: false,
-      climbName: '',
-      setClimbName: null,
-      actionSlot: null,
     };
   });
 
@@ -140,40 +123,22 @@ describe('GlobalHeader', () => {
     expect(screen.queryByTestId('start-sesh-drawer')).toBeNull();
   });
 
-  it('renders create-mode header content on board create routes', () => {
+  it('renders only the avatar in a transparent bar on board create routes', () => {
     mockPathname = '/b/test-board/40/create';
-    mockCreateHeaderState = {
-      isActive: true,
-      climbName: 'Moon Magic',
-      setClimbName: mockSetClimbName,
-      actionSlot: <button type="button">Save</button>,
-    };
 
     render(<GlobalHeader boardConfigs={mockBoardConfigs} />);
 
     expect(screen.getByTestId('user-drawer')).toBeTruthy();
-    expect(screen.getByDisplayValue('Moon Magic')).toBeTruthy();
-    expect(screen.getByText('Save')).toBeTruthy();
     expect(screen.queryByText('Search')).toBeNull();
     expect(screen.queryByText('Sesh')).toBeNull();
   });
 
-  it('updates the climb name through the create header bridge on create routes', () => {
+  it('renders only the avatar on MoonBoard create routes', () => {
     mockPathname = '/moonboard/moonboard-2024/standard-11x18-grid/wooden-holds/40/create';
-    mockCreateHeaderState = {
-      isActive: true,
-      climbName: 'Test',
-      setClimbName: mockSetClimbName,
-      actionSlot: <button type="button">Save</button>,
-    };
 
     render(<GlobalHeader boardConfigs={mockBoardConfigs} />);
 
-    fireEvent.change(screen.getByLabelText('Climb name'), {
-      target: { value: 'Updated name' },
-    });
-
-    expect(mockSetClimbName).toHaveBeenCalledWith('Updated name');
+    expect(screen.getByTestId('user-drawer')).toBeTruthy();
     expect(screen.queryByText('Search')).toBeNull();
     expect(screen.queryByText('Sesh')).toBeNull();
   });

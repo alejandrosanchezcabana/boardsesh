@@ -6,7 +6,6 @@ import MuiAlert from '@mui/material/Alert';
 import MuiTooltip from '@mui/material/Tooltip';
 import Box from '@mui/material/Box';
 import Stack from '@mui/material/Stack';
-import MuiButton from '@mui/material/Button';
 import IconButton from '@mui/material/IconButton';
 import Typography from '@mui/material/Typography';
 import TextField from '@mui/material/TextField';
@@ -16,7 +15,7 @@ import MuiSlider from '@mui/material/Slider';
 import MuiSelect from '@mui/material/Select';
 import MenuItem from '@mui/material/MenuItem';
 import Badge from '@mui/material/Badge';
-import { SettingsOutlined, LocalFireDepartmentOutlined, SaveOutlined, LoginOutlined, CloudUploadOutlined, GetAppOutlined, DraftsOutlined, DeleteOutlined, CheckCircleOutlined } from '@mui/icons-material';
+import { SettingsOutlined, LocalFireDepartmentOutlined, SaveOutlined, LoginOutlined, CloudUploadOutlined, GetAppOutlined, DraftsOutlined, DeleteOutlined, CheckCircleOutlined, LockOutlined } from '@mui/icons-material';
 import { themeTokens } from '@/app/theme/theme-config';
 import HoldIndicator from './hold-indicator';
 import { usePathname } from 'next/navigation';
@@ -50,7 +49,7 @@ import CreateClimbHeatmapOverlay from './create-climb-heatmap-overlay';
 import DraftsDrawer from './drafts-drawer';
 import HoldTypePicker from './hold-type-picker';
 import { useHoldTypePicker } from './use-hold-type-picker';
-import { useCreateHeaderBridgeSetters } from './create-header-bridge-context';
+import ClimbTitle, { type ClimbTitleData } from '../climb-card/climb-title';
 import {
   SEARCH_CLIMBS_COUNT,
   type ClimbSearchCountResponse,
@@ -111,7 +110,6 @@ export default function CreateClimbForm({
 }: CreateClimbFormProps) {
   const pathname = usePathname();
   const { data: session } = useSession();
-  const { register, update, deregister } = useCreateHeaderBridgeSetters();
   const { mode } = useColorMode();
   const isDark = mode === 'dark';
   const queryClient = useQueryClient();
@@ -263,9 +261,6 @@ export default function CreateClimbForm({
   const [showSettingsPanel, setShowSettingsPanel] = useState(false);
   const [showDraftsDrawer, setShowDraftsDrawer] = useState(false);
   const zoomResetKey = boardType === 'moonboard' ? `moonboard-${selectedAngle}` : `aurora-${angle}`;
-  const climbNameRef = useRef(climbName);
-  const setClimbNameRef = useRef(setClimbName);
-  const headerActionRef = useRef<React.ReactNode | null>(null);
   const duplicateCheckRequestIdRef = useRef(0);
 
   // Construct the bulk import URL (MoonBoard only)
@@ -888,107 +883,89 @@ export default function CreateClimbForm({
     });
   }, [boardType, boardDetails]);
 
-  const headerAction = useMemo(() => {
-    const renderSaveButton = () => {
-      if (editLocked) {
-        return (
-          <MuiTooltip title="Published climbs can only be edited for 24 hours after first publish.">
-            <span>
-              <MuiButton
-                size="small"
-                variant="outlined"
-                color="inherit"
-                disabled
-              >
-                Edit window closed
-              </MuiButton>
-            </span>
-          </MuiTooltip>
-        );
-      }
-      if (justSaved) {
-        // Pure confirmation state — no onClick so a mis-tap can't fire off
-        // another save (which would otherwise publish a draft the user
-        // thought they were just dismissing). The button flips back to the
-        // normal Save state automatically on the next edit or after the
-        // 3s timeout.
-        return (
-          <MuiButton
-            size="small"
-            variant="contained"
-            color="success"
-            startIcon={<CheckCircleOutlined />}
-            disableRipple
-          >
-            Saved
-          </MuiButton>
-        );
-      }
+  // Rightmost save icon button. Collapses every state (saving, just-saved,
+  // edit-locked, not-authenticated, idle) into a single icon button so the
+  // bottom action row stays compact.
+  const saveIconButton = useMemo(() => {
+    if (boardType === 'aurora' && !isAuthenticated) {
       return (
-        <MuiButton
-          size="small"
-          variant="contained"
-          startIcon={isSaving ? <CircularProgress size={16} /> : <SaveOutlined />}
-          disabled={isSaving || !canSave}
-          onClick={handlePublish}
-        >
-          {isSaving ? 'Saving...' : 'Save'}
-        </MuiButton>
-      );
-    };
-
-    if (boardType === 'aurora') {
-      if (!isAuthenticated) {
-        return (
-          <MuiButton
+        <MuiTooltip title="Sign in to save your climb">
+          <IconButton
             size="small"
-            variant="contained"
-            startIcon={<LoginOutlined />}
-            onClick={() => openAuthModal({ title: 'Sign in to save your climb', description: 'Create an account or sign in to save your climb to the board.', onSuccess: handleAuthSuccess })}
+            color="primary"
+            onClick={() =>
+              openAuthModal({
+                title: 'Sign in to save your climb',
+                description: 'Create an account or sign in to save your climb to the board.',
+                onSuccess: handleAuthSuccess,
+              })
+            }
+            aria-label="Sign in to save"
           >
-            Sign In
-          </MuiButton>
-        );
-      }
-      return renderSaveButton();
-    }
-
-    // MoonBoard
-    if (!hasMoonBoardSessionUser) {
-      return (
-        <Link href="/api/auth/signin">
-          <MuiButton size="small" variant="contained" startIcon={<LoginOutlined />}>
-            Log In
-          </MuiButton>
-        </Link>
+            <LoginOutlined fontSize="small" />
+          </IconButton>
+        </MuiTooltip>
       );
     }
-    return renderSaveButton();
-  }, [boardType, isAuthenticated, openAuthModal, handleAuthSuccess, isSaving, canSave, handlePublish, hasMoonBoardSessionUser, justSaved, editLocked]);
 
-  climbNameRef.current = climbName;
-  setClimbNameRef.current = setClimbName;
-  headerActionRef.current = headerAction;
+    if (boardType === 'moonboard' && !hasMoonBoardSessionUser) {
+      return (
+        <MuiTooltip title="Log in to save your climb">
+          <Link href="/api/auth/signin" aria-label="Log in to save">
+            <IconButton size="small" color="primary" component="span">
+              <LoginOutlined fontSize="small" />
+            </IconButton>
+          </Link>
+        </MuiTooltip>
+      );
+    }
 
-  useEffect(() => {
-    register({
-      climbName: climbNameRef.current,
-      setClimbName: setClimbNameRef.current,
-      actionSlot: headerActionRef.current,
-    });
+    if (editLocked) {
+      return (
+        <MuiTooltip title="Published climbs can only be edited for 24 hours after first publish.">
+          <span>
+            <IconButton size="small" disabled aria-label="Edit window closed">
+              <LockOutlined fontSize="small" />
+            </IconButton>
+          </span>
+        </MuiTooltip>
+      );
+    }
 
-    return () => {
-      deregister();
-    };
-  }, [register, deregister]);
+    if (justSaved) {
+      // Pure confirmation state — no onClick so a mis-tap can't fire off
+      // another save. Flips back automatically on the next edit or after
+      // the 3s timeout.
+      return (
+        <MuiTooltip title="Saved">
+          <IconButton size="small" color="success" disableRipple aria-label="Saved">
+            <CheckCircleOutlined fontSize="small" />
+          </IconButton>
+        </MuiTooltip>
+      );
+    }
 
-  useEffect(() => {
-    update({
-      climbName,
-      setClimbName,
-      actionSlot: headerAction,
-    });
-  }, [climbName, headerAction, setClimbName, update]);
+    return (
+      <MuiTooltip title={isSaving ? 'Saving...' : 'Save climb'}>
+        <span>
+          <IconButton
+            size="small"
+            color="primary"
+            disabled={isSaving || !canSave}
+            onClick={handlePublish}
+            aria-label={isSaving ? 'Saving' : 'Save climb'}
+          >
+            {isSaving ? <CircularProgress size={16} /> : <SaveOutlined fontSize="small" />}
+          </IconButton>
+        </span>
+      </MuiTooltip>
+    );
+  }, [boardType, isAuthenticated, hasMoonBoardSessionUser, editLocked, justSaved, isSaving, canSave, handlePublish, openAuthModal, handleAuthSuccess]);
+
+  const titleClimb: ClimbTitleData = useMemo(() => ({
+    name: climbName || 'Untitled climb',
+    setter_username: session?.user?.name ?? undefined,
+  }), [climbName, session?.user?.name]);
 
   return (
     <div className={styles.pageContainer} data-testid="climb-setter">
@@ -1027,30 +1004,41 @@ export default function CreateClimbForm({
           </MuiAlert>
         )}
 
-        {/* Holds row: hold count indicators + Clear button */}
-        <div className={styles.holdsRow}>
-          <Stack direction="row" className={styles.holdsRowChips} alignItems="center" spacing={1.5}>
-            {boardType === 'aurora' ? (
-              <>
-                <HoldIndicator count={startingCount} max={2} color={themeTokens.colors.success} label="Starting" />
-                <HoldIndicator count={finishCount} max={2} color={themeTokens.colors.pink} label="Finish" />
-                <HoldIndicator count={totalHolds} color={themeTokens.colors.primary} label="Total" />
-              </>
-            ) : (
-              <>
-                <HoldIndicator count={startingCount} max={2} color={themeTokens.colors.error} label="Start" />
-                <HoldIndicator count={handCount} color={themeTokens.colors.primary} label="Hand" />
-                <HoldIndicator count={finishCount} max={2} color={themeTokens.colors.success} label="Finish" />
-                <HoldIndicator count={totalHolds} color={themeTokens.colors.secondary} label="Total" />
-              </>
+        {/* Title row — mirrors play view: name + byline, settings icon on right.
+            Draft label floats top-right so the transparent header avatar on the
+            left doesn't collide with it. */}
+        <div className={styles.climbTitleRow}>
+          <div className={styles.climbTitleMain}>
+            <ClimbTitle
+              climb={titleClimb}
+              layout="horizontal"
+              showSetterInfo
+              titleFontSize={themeTokens.typography.fontSize['2xl']}
+            />
+            {description && (
+              <Typography
+                variant="body2"
+                color="text.secondary"
+                className={styles.climbTitleDescription}
+              >
+                {description}
+              </Typography>
             )}
-          </Stack>
-          <MuiTooltip title="Clear all holds">
-            <span>
-              <IconButton size="small" onClick={resetHolds} disabled={totalHolds === 0}>
-                <DeleteOutlined fontSize="small" />
-              </IconButton>
-            </span>
+          </div>
+          {isDraft && (
+            <Typography
+              variant="body2"
+              component="span"
+              color="text.secondary"
+              className={styles.climbTitleDraftBadge}
+            >
+              Draft
+            </Typography>
+          )}
+          <MuiTooltip title="Climb settings">
+            <IconButton size="small" onClick={handleToggleSettings} aria-label="Climb settings">
+              <SettingsOutlined fontSize="small" />
+            </IconButton>
           </MuiTooltip>
         </div>
       </div>
@@ -1107,84 +1095,59 @@ export default function CreateClimbForm({
         </div>
       )}
 
-      {/* MoonBoard-only: Import buttons */}
+      {/* MoonBoard-only: hidden file input (trigger lives in the bottom row) */}
       {boardType === 'moonboard' && (
-        <div className={styles.importActionsBar}>
-          <input
-            type="file"
-            ref={fileInputRef}
-            accept="image/png,image/jpeg,image/webp"
-            style={{ display: 'none' }}
-            onChange={(e) => {
-              const file = e.target.files?.[0];
-              if (file) handleOcrImport(file);
-              e.target.value = '';
-            }}
-            disabled={isOcrProcessing}
-          />
-          <MuiButton size="small" variant="outlined" startIcon={isOcrProcessing ? <CircularProgress size={16} /> : <CloudUploadOutlined />} disabled={isOcrProcessing} onClick={() => fileInputRef.current?.click()}>
-            {isOcrProcessing ? 'Processing...' : 'Import'}
-          </MuiButton>
-          <Link href={bulkImportUrl}>
-            <MuiButton size="small" variant="outlined" startIcon={<GetAppOutlined />}>Bulk</MuiButton>
-          </Link>
-        </div>
+        <input
+          type="file"
+          ref={fileInputRef}
+          accept="image/png,image/jpeg,image/webp"
+          style={{ display: 'none' }}
+          onChange={(e) => {
+            const file = e.target.files?.[0];
+            if (file) handleOcrImport(file);
+            e.target.value = '';
+          }}
+          disabled={isOcrProcessing}
+        />
       )}
 
-      {/* Bottom controls: draft toggle, heatmap, Drafts/Settings buttons */}
+      {/* Bottom icon row — all actions, Save pinned right */}
       <div className={styles.bottomControls}>
-        <div className={styles.bottomControlsLeft}>
-          <Typography variant="body2" component="span" color="text.secondary" className={styles.draftLabel}>
-            Draft
-          </Typography>
-          <MuiSwitch
-            size="small"
-            checked={isDraft}
-            onChange={(_, checked) => setIsDraft(checked)}
-          />
-          {boardType === 'aurora' && (
-            <>
-              <MuiTooltip title={showHeatmap ? 'Hide heatmap' : 'Show which holds get used most'}>
-                <IconButton
-                  color={showHeatmap ? 'error' : 'default'}
-                  size="small"
-                  onClick={handleToggleHeatmap}
-                  className={styles.heatmapButton}
-                  aria-label={showHeatmap ? 'Hide heatmap' : 'Show heatmap'}
-                >
-                  <LocalFireDepartmentOutlined />
-                </IconButton>
-              </MuiTooltip>
-              {showHeatmap && (
-                <>
-                  <Typography variant="body2" component="span" color="text.secondary" className={styles.draftLabel}>
-                    Opacity
-                  </Typography>
-                  <MuiSlider
-                    min={0.1}
-                    max={1}
-                    step={0.1}
-                    value={heatmapOpacity}
-                    onChange={(_, value) => setHeatmapOpacity(value as number)}
-                    className={styles.opacitySlider}
-                  />
-                </>
-              )}
-            </>
-          )}
-          {boardType === 'moonboard' && userGrade && (
-            <Typography
-              variant="body2"
-              component="span"
-              className={styles.gradeBadge}
-              sx={{ color: getSoftFontGradeColor(userGrade, isDark) ?? 'var(--neutral-500)' }}
-            >
-              {userGrade}
-            </Typography>
-          )}
-        </div>
-        <Stack direction="row" spacing={1} alignItems="center">
-          {canShowDrafts && (
+        {boardType === 'aurora' && (
+          <>
+            <MuiTooltip title={showHeatmap ? 'Hide heatmap' : 'Show which holds get used most'}>
+              <IconButton
+                color={showHeatmap ? 'error' : 'default'}
+                size="small"
+                onClick={handleToggleHeatmap}
+                className={styles.heatmapButton}
+                aria-label={showHeatmap ? 'Hide heatmap' : 'Show heatmap'}
+              >
+                <LocalFireDepartmentOutlined fontSize="small" />
+              </IconButton>
+            </MuiTooltip>
+            {showHeatmap && (
+              <MuiSlider
+                min={0.1}
+                max={1}
+                step={0.1}
+                value={heatmapOpacity}
+                onChange={(_, value) => setHeatmapOpacity(value as number)}
+                className={styles.opacitySlider}
+                aria-label="Heatmap opacity"
+              />
+            )}
+          </>
+        )}
+        <MuiTooltip title="Clear all holds">
+          <span>
+            <IconButton size="small" onClick={resetHolds} disabled={totalHolds === 0} aria-label="Clear all holds">
+              <DeleteOutlined fontSize="small" />
+            </IconButton>
+          </span>
+        </MuiTooltip>
+        {canShowDrafts && (
+          <MuiTooltip title="Drafts">
             <Badge
               color="primary"
               badgeContent={draftsCount ?? 0}
@@ -1192,25 +1155,46 @@ export default function CreateClimbForm({
               invisible={!draftsCount}
               overlap="rectangular"
             >
-              <MuiButton
-                size="small"
-                variant="outlined"
-                startIcon={<DraftsOutlined />}
-                onClick={handleOpenDrafts}
-              >
-                Drafts
-              </MuiButton>
+              <IconButton size="small" onClick={handleOpenDrafts} aria-label="Open drafts">
+                <DraftsOutlined fontSize="small" />
+              </IconButton>
             </Badge>
-          )}
-          <MuiButton
-            size="small"
-            variant="outlined"
-            startIcon={<SettingsOutlined />}
-            onClick={handleToggleSettings}
+          </MuiTooltip>
+        )}
+        {boardType === 'moonboard' && (
+          <>
+            <MuiTooltip title={isOcrProcessing ? 'Processing...' : 'Import from screenshot'}>
+              <span>
+                <IconButton
+                  size="small"
+                  disabled={isOcrProcessing}
+                  onClick={() => fileInputRef.current?.click()}
+                  aria-label="Import from screenshot"
+                >
+                  {isOcrProcessing ? <CircularProgress size={16} /> : <CloudUploadOutlined fontSize="small" />}
+                </IconButton>
+              </span>
+            </MuiTooltip>
+            <MuiTooltip title="Bulk import">
+              <Link href={bulkImportUrl} aria-label="Bulk import">
+                <IconButton size="small" component="span">
+                  <GetAppOutlined fontSize="small" />
+                </IconButton>
+              </Link>
+            </MuiTooltip>
+          </>
+        )}
+        {boardType === 'moonboard' && userGrade && (
+          <Typography
+            variant="body2"
+            component="span"
+            className={styles.gradeBadge}
+            sx={{ color: getSoftFontGradeColor(userGrade, isDark) ?? 'var(--neutral-500)' }}
           >
-            Settings
-          </MuiButton>
-        </Stack>
+            {userGrade}
+          </Typography>
+        )}
+        <div className={styles.bottomControlsSaveSlot}>{saveIconButton}</div>
       </div>
 
       {/* Drafts drawer — only for Aurora boards where boardDetails is loaded */}
@@ -1235,6 +1219,57 @@ export default function CreateClimbForm({
           styles={SETTINGS_DRAWER_STYLES}
         >
           <div className={styles.settingsDrawerContent}>
+            {/* Name */}
+            <div className={styles.settingsField}>
+              <Typography variant="body2" component="span" color="text.secondary" className={styles.settingsLabel}>
+                Name
+              </Typography>
+              <TextField
+                value={climbName}
+                onChange={(e) => setClimbName(e.target.value)}
+                placeholder="Climb name"
+                inputProps={{ maxLength: 100 }}
+                variant="outlined"
+                size="small"
+                fullWidth
+              />
+            </div>
+
+            {/* Draft toggle */}
+            <div className={styles.settingsField}>
+              <Box sx={{ display: 'flex', gap: 1, alignItems: 'center' }}>
+                <MuiSwitch
+                  size="small"
+                  checked={isDraft}
+                  onChange={(_, checked) => setIsDraft(checked)}
+                />
+                <Typography variant="body2" component="span">Draft</Typography>
+              </Box>
+            </div>
+
+            {/* Hold count indicators */}
+            <div className={styles.settingsField}>
+              <Typography variant="body2" component="span" color="text.secondary" className={styles.settingsLabel}>
+                Holds
+              </Typography>
+              <Stack direction="row" spacing={1.5} alignItems="center" flexWrap="wrap">
+                {boardType === 'aurora' ? (
+                  <>
+                    <HoldIndicator count={startingCount} max={2} color={themeTokens.colors.success} label="Starting" />
+                    <HoldIndicator count={finishCount} max={2} color={themeTokens.colors.pink} label="Finish" />
+                    <HoldIndicator count={totalHolds} color={themeTokens.colors.primary} label="Total" />
+                  </>
+                ) : (
+                  <>
+                    <HoldIndicator count={startingCount} max={2} color={themeTokens.colors.error} label="Start" />
+                    <HoldIndicator count={handCount} color={themeTokens.colors.primary} label="Hand" />
+                    <HoldIndicator count={finishCount} max={2} color={themeTokens.colors.success} label="Finish" />
+                    <HoldIndicator count={totalHolds} color={themeTokens.colors.secondary} label="Total" />
+                  </>
+                )}
+              </Stack>
+            </div>
+
             {/* MoonBoard-specific: Angle, Grade and Benchmark */}
             {boardType === 'moonboard' && (
               <>

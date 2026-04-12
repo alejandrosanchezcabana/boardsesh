@@ -1,5 +1,6 @@
 .pageContainer {
-  height: calc(100dvh - var(--global-header-height) - 120px - env(safe-area-inset-bottom, 0px));
+  height: calc(100dvh - var(--global-header-height) - env(safe-area-inset-bottom, 0px));
+  margin-top: var(--global-header-height);
   display: flex;
   flex-direction: column;
   overflow: hidden;
@@ -21,27 +22,35 @@
   flex-shrink: 0;
 }
 
-.headerRow {
+/* Title row — ClimbTitle + settings icon, optional draft badge on the left */
+.climbTitleRow {
   display: flex;
   align-items: center;
-  justify-content: space-between;
   gap: 12px;
-  padding: 10px 12px;
-  flex-wrap: wrap;
+  padding: 8px 12px;
+  flex-shrink: 0;
 }
 
-.headerControls {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  flex-wrap: wrap;
+.climbTitleDraftBadge {
+  font-style: italic;
+  font-size: 20px;
+  line-height: 1;
+  flex-shrink: 0;
+}
+
+.climbTitleMain {
+  flex: 1;
   min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
 }
 
-/* Draft label */
-.draftLabel {
+.climbTitleDescription {
   font-size: 12px;
-  font-weight: 400;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .gradeBadge {
@@ -104,57 +113,22 @@
   border-top: 1px solid var(--neutral-100);
 }
 
-/* Holds row: chips + Clear button (above board) */
-.holdsRow {
-  flex-shrink: 0;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 8px;
-  padding: 6px 12px;
-  background-color: var(--semantic-surface);
-  border-bottom: 1px solid var(--neutral-100);
-  flex-wrap: wrap;
-}
-
-.holdsRowChips {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-  align-items: center;
-  min-width: 0;
-}
-
-/* Import actions bar (MoonBoard only, below board) */
-.importActionsBar {
-  flex-shrink: 0;
-  display: flex;
-  justify-content: flex-end;
-  gap: 8px;
-  padding: 8px 12px;
-  background-color: var(--semantic-surface);
-  border-top: 1px solid var(--neutral-100);
-}
-
-/* Bottom controls: draft toggle, heatmap, Drafts/Settings buttons */
+/* Bottom icon row: all icon actions, Save pinned right */
 .bottomControls {
   flex-shrink: 0;
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  gap: 12px;
+  gap: 4px;
   padding: 8px 12px;
   background-color: var(--semantic-surface);
   border-top: 1px solid var(--neutral-100);
   flex-wrap: wrap;
 }
 
-.bottomControlsLeft {
+.bottomControlsSaveSlot {
+  margin-left: auto;
   display: flex;
   align-items: center;
-  gap: 8px;
-  flex-wrap: wrap;
-  min-width: 0;
 }
 
 /* Settings nested drawer content */
@@ -185,24 +159,14 @@
     border-radius: 16px;
   }
 
-  .headerRow {
+  .climbTitleRow {
     padding: 8px 10px;
     gap: 8px;
   }
 
-  .holdsRow {
-    padding: 6px 10px;
-    gap: 6px;
-  }
-
-  .importActionsBar {
-    padding: 6px 10px;
-    gap: 6px;
-  }
-
   .bottomControls {
     padding: 8px;
-    gap: 8px;
+    gap: 4px;
   }
 
   .opacitySlider {
