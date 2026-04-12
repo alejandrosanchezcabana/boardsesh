@@ -133,7 +133,6 @@ const DraftsDrawer: React.FC<DraftsDrawerProps> = ({ open, onClose, boardDetails
       const result = await client.request<ClimbSearchResponse>(SEARCH_DRAFT_CLIMBS, { input });
       return result.searchClimbs.climbs;
     },
-    staleTime: 30 * 1000,
     refetchOnWindowFocus: false,
   });
 

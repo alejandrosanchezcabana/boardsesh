@@ -586,6 +586,9 @@ const ClimbListItem: React.FC<ClimbListItemProps> = React.memo(
   (prev, next) => {
     return (
       prev.climb.uuid === next.climb.uuid &&
+      prev.climb.frames === next.climb.frames &&
+      prev.climb.name === next.climb.name &&
+      prev.climb.mirrored === next.climb.mirrored &&
       prev.pathname === next.pathname &&
       prev.isDark === next.isDark &&
       prev.selected === next.selected &&
