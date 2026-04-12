@@ -71,11 +71,21 @@ public class NativeTabBarView: UIView {
         blurView.translatesAutoresizingMaskIntoConstraints = false
         addSubview(blurView)
 
+        // Dark tint overlay on top of the blur for a Spotify-style deep black frosted glass
+        let tintView = UIView()
+        tintView.backgroundColor = UIColor.black.withAlphaComponent(0.6)
+        tintView.translatesAutoresizingMaskIntoConstraints = false
+        blurView.contentView.addSubview(tintView)
+
         NSLayoutConstraint.activate([
             blurView.leadingAnchor.constraint(equalTo: leadingAnchor),
             blurView.trailingAnchor.constraint(equalTo: trailingAnchor),
             blurView.topAnchor.constraint(equalTo: topAnchor),
             blurView.bottomAnchor.constraint(equalTo: bottomAnchor),
+            tintView.leadingAnchor.constraint(equalTo: blurView.contentView.leadingAnchor),
+            tintView.trailingAnchor.constraint(equalTo: blurView.contentView.trailingAnchor),
+            tintView.topAnchor.constraint(equalTo: blurView.contentView.topAnchor),
+            tintView.bottomAnchor.constraint(equalTo: blurView.contentView.bottomAnchor),
         ])
     }
 
