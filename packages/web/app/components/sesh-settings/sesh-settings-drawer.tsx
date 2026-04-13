@@ -229,7 +229,7 @@ export default function SeshSettingsDrawer({ open, onClose, onTransitionEnd }: S
     <SwipeableDrawer
       title={drawerTitle}
       placement="top"
-      showCloseButton={false}
+      showCloseButtonOnMobile
       swipeEnabled
       open={open}
       onClose={handleClose}
@@ -250,6 +250,7 @@ export default function SeshSettingsDrawer({ open, onClose, onTransitionEnd }: S
       ) : undefined}
       styles={{
         wrapper: { height: '100dvh' },
+        header: { paddingRight: '48px' },
         body: { padding: 0, paddingBottom: 0 },
       }}
       footer={isStopped ? (

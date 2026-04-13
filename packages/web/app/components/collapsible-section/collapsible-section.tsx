@@ -14,6 +14,8 @@ export interface CollapsibleSectionConfig {
   lazy?: boolean;
   /** When true, this section should be the initially active one (overrides defaultActiveKey). */
   defaultActive?: boolean;
+  /** When true, removes the inner padding around the expanded content. */
+  flush?: boolean;
 }
 
 interface CollapsibleSectionProps {
@@ -58,7 +60,7 @@ const CollapsibleSection: React.FC<CollapsibleSectionProps> = ({
             </div>
             <div className={`${styles.expandableContent} ${isActive ? styles.expandableContentOpen : ''}`}>
               <div className={styles.expandableInner}>
-                <div className={styles.expandableInnerPadding}>
+                <div className={section.flush ? styles.expandableInnerFlush : styles.expandableInnerPadding}>
                   {shouldRenderContent ? section.content : null}
                 </div>
               </div>

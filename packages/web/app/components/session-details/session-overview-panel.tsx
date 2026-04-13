@@ -40,10 +40,8 @@ export function buildSessionSummaryParts(stats: {
   formatGrade?: (g: string) => string | null;
 }): string[] {
   const parts: string[] = [];
-  // Flashes are a type of send, so total sends includes flashes
-  const combinedSends = stats.totalSends + stats.totalFlashes;
   if (stats.totalFlashes > 0) parts.push(`${stats.totalFlashes} flash${stats.totalFlashes !== 1 ? 'es' : ''}`);
-  parts.push(`${combinedSends} send${combinedSends !== 1 ? 's' : ''}`);
+  parts.push(`${stats.totalSends} send${stats.totalSends !== 1 ? 's' : ''}`);
   if (stats.totalAttempts > 0) parts.push(`${stats.totalAttempts} attempt${stats.totalAttempts !== 1 ? 's' : ''}`);
   parts.push(`${stats.tickCount} climb${stats.tickCount !== 1 ? 's' : ''}`);
   if (stats.hardestGrade) {

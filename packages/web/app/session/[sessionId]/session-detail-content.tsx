@@ -522,7 +522,7 @@ export default function SessionDetailContent({
         totalFlashes, totalSends, totalAttempts, tickCount, hardestGrade,
         formatGrade: gradeFormatLoaded ? formatGrade : undefined,
       }),
-      defaultActive: true,
+      flush: true,
       content: effectiveBoardDetails && sessionClimbs.length > 0 ? (
         <VoteSummaryProvider entityType="tick" entityIds={tickUuids}>
           <FavoritesProvider {...favoritesProviderProps}>
@@ -538,7 +538,6 @@ export default function SessionDetailContent({
                 onClimbSelect={navigateToClimb}
                 onLoadMore={noopLoadMore}
                 hideEndMessage
-                showBottomSpacer
                 renderItemExtra={renderTickDetails}
               />
             </PlaylistsProvider>
