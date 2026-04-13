@@ -39,10 +39,22 @@ export const InlineListTickBar: React.FC<InlineListTickBarProps> = ({
 }) => {
   const { logbook } = useBoardProvider();
 
-  // Build tick target on mount / when climb changes
-  const tickTarget = useMemo<TickTarget | null>(() => {
-    if (!climb) return null;
-    return buildTickTarget(climb, angle, boardDetails, logbook);
+  // Snapshot the tick target once on mount — same pattern as QuickTickBar.
+  // This avoids recomputing hasPriorHistory on every logbook mutation
+  // (logbook is a new array reference after each optimistic save).
+  const tickTargetTaken = useRef(false);
+  const [tickTarget, setTickTarget] = useState<TickTarget | null>(() => {
+    if (climb) {
+      tickTargetTaken.current = true;
+      return buildTickTarget(climb, angle, boardDetails, logbook);
+    }
+    return null;
+  });
+  useEffect(() => {
+    if (!tickTargetTaken.current && climb) {
+      tickTargetTaken.current = true;
+      setTickTarget(buildTickTarget(climb, angle, boardDetails, logbook));
+    }
   }, [climb, angle, boardDetails, logbook]);
 
   const [quality, setQuality] = useState<number | null>(null);

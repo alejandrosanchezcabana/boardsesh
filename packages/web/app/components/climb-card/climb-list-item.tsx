@@ -581,7 +581,7 @@ const ClimbListItem: React.FC<ClimbListItemProps> = React.memo(
                 exclude={excludeActions}
                 onOpenPlaylistSelector={handleOpenPlaylistFromActions}
                 onActionComplete={handleCloseActions}
-                onTickAction={boardProvider ? handleOpenInlineTickBar : undefined}
+                onTickAction={boardProvider?.isAuthenticated ? handleOpenInlineTickBar : undefined}
               />
             </SwipeableDrawer>
 

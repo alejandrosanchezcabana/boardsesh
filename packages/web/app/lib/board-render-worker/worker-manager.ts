@@ -216,6 +216,10 @@ export interface RenderBoardOptions {
   frames: string;
   mirrored: boolean;
   thumbnail?: boolean;
+  /** Pre-computed crop top value. When provided, skips recomputing from holdsData.
+   *  Callers that already computed cropTop for canvas sizing should pass it here
+   *  to guarantee the canvas element and worker render stay in sync. */
+  cropTop?: number;
 }
 
 /**
@@ -286,7 +290,7 @@ export function renderBoard(options: RenderBoardOptions): Promise<ImageBitmap> {
     return Promise.reject(new Error('renderBoard is not available during SSR'));
   }
 
-  const { boardDetails, frames, mirrored, thumbnail = false } = options;
+  const { boardDetails, frames, mirrored, thumbnail = false, cropTop: cropTopOverride } = options;
   const key = cacheKey(boardDetails, frames, mirrored, thumbnail);
 
   // Check cache
@@ -300,7 +304,7 @@ export function renderBoard(options: RenderBoardOptions): Promise<ImageBitmap> {
 
   const id = nextRequestId++;
   const outputWidth = thumbnail ? THUMBNAIL_WIDTH : boardDetails.boardWidth;
-  const cropTop = thumbnail ? 0 : computeCropTop(boardDetails, outputWidth);
+  const cropTop = cropTopOverride ?? (thumbnail ? 0 : computeCropTop(boardDetails, outputWidth));
 
   // Build holds array for WASM
   const holds = boardDetails.holdsData.map((h: HoldRenderData) => ({

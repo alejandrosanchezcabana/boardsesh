@@ -61,7 +61,7 @@ const BoardCanvasRenderer = React.memo(function BoardCanvasRenderer({
     const context: RenderContext = thumbnail ? 'thumbnail' : contain ? 'full-board' : 'card';
     const startTime = performance.now();
 
-    renderBoard({ boardDetails, frames, mirrored, thumbnail })
+    renderBoard({ boardDetails, frames, mirrored, thumbnail, cropTop })
       .then((bitmap) => {
         if (cancelled) return;
         canvas.width = bitmap.width;

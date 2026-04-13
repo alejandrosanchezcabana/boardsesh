@@ -163,6 +163,8 @@ describe('InlineListTickBar', () => {
       expect(defaultProps.onClose).toHaveBeenCalledTimes(1);
     });
 
+    // Confetti on attempts is intentional — it's a small celebration for logging
+    // any climbing activity, encouraging users to keep trying. Matches queue control bar behavior.
     it('clicking the Log attempt button fires confetti and saves an attempt', async () => {
       render(<InlineListTickBar {...defaultProps} />);
 
