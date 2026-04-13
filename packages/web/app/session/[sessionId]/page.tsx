@@ -40,9 +40,9 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const title = `${session.sessionName || 'Climbing Session'} | Boardsesh`;
   const description = `${participantNames} - ${session.totalSends} sends, ${session.totalFlashes} flashes`;
 
-  const ogImageUrl = new URL('/api/og/session', 'https://boardsesh.com');
-  ogImageUrl.searchParams.set('sessionId', sessionId);
-  const ogImage = ogImageUrl.toString();
+  const ogParams = new URLSearchParams();
+  ogParams.set('sessionId', sessionId);
+  const ogImage = `/api/og/session?${ogParams.toString()}`;
 
   return {
     title,

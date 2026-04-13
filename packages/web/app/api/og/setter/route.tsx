@@ -1,7 +1,8 @@
 import React from 'react';
 import { ImageResponse } from '@vercel/og';
 import { NextRequest } from 'next/server';
-import { sql } from '@/app/lib/db/db';
+import { dbz } from '@/app/lib/db/db';
+import { sql } from 'drizzle-orm';
 import { themeTokens } from '@/app/theme/theme-config';
 import { FONT_GRADE_COLORS, getGradeColorWithOpacity } from '@/app/lib/grade-colors';
 import { BOULDER_GRADES } from '@/app/lib/board-data';
@@ -27,25 +28,36 @@ export async function GET(request: NextRequest) {
     }
 
     // Fetch setter profile info and grade distribution in parallel
-    const [setterRows, gradeRows] = await Promise.all([
-      sql`
-        SELECT uc.user_id, u.name, p.display_name, p.avatar_url
-        FROM user_credentials uc
-        JOIN users u ON u.id = uc.user_id
-        LEFT JOIN user_profiles p ON p.user_id = uc.user_id
-        WHERE uc.aurora_username = ${username}
+    const [setterResult, gradeResult] = await Promise.all([
+      dbz.execute<{
+        user_id: string;
+        name: string | null;
+        display_name: string | null;
+        avatar_url: string | null;
+      }>(sql`
+        SELECT ubm.user_id, u.name, p.display_name, p.avatar_url
+        FROM user_board_mappings ubm
+        JOIN users u ON u.id = ubm.user_id
+        LEFT JOIN user_profiles p ON p.user_id = ubm.user_id
+        WHERE ubm.board_username = ${username}
         LIMIT 1
-      `,
-      sql`
+      `),
+      dbz.execute<{
+        difficulty: number;
+        cnt: number;
+      }>(sql`
         SELECT bt.difficulty, COUNT(*) as cnt
         FROM boardsesh_ticks bt
-        WHERE bt.setter_username = ${username}
+        JOIN board_climbs bc ON bc.uuid = bt.climb_uuid
+        WHERE bc.setter_username = ${username}
           AND bt.status IN ('flash', 'send')
           AND bt.difficulty IS NOT NULL
         GROUP BY bt.difficulty
         ORDER BY bt.difficulty
-      `,
+      `),
     ]);
+    const setterRows = setterResult.rows;
+    const gradeRows = gradeResult.rows;
 
     // Setter may not be linked to a user account — that's okay
     const setter = setterRows.length > 0 ? setterRows[0] : null;

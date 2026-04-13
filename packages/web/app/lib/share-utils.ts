@@ -25,26 +25,31 @@ export async function shareWithFallback({
   trackingProps = {},
   onClipboardSuccess,
   onError,
-}: ShareOptions): Promise<void> {
+}: ShareOptions): Promise<boolean> {
   const shareData = { title, text, url };
 
   try {
     if (navigator.share && navigator.canShare?.(shareData)) {
       await navigator.share(shareData);
       track(trackingEvent, { ...trackingProps, method: 'native' });
+      return true;
     } else {
       await navigator.clipboard.writeText(url);
       onClipboardSuccess?.();
       track(trackingEvent, { ...trackingProps, method: 'clipboard' });
+      return true;
     }
   } catch (error) {
     if ((error as Error).name !== 'AbortError') {
       try {
         await navigator.clipboard.writeText(url);
         onClipboardSuccess?.();
+        return true;
       } catch {
         onError?.();
+        return false;
       }
     }
+    return false;
   }
 }

@@ -1,7 +1,8 @@
 import React from 'react';
 import { ImageResponse } from '@vercel/og';
 import { NextRequest } from 'next/server';
-import { sql } from '@/app/lib/db/db';
+import { dbz } from '@/app/lib/db/db';
+import { sql } from 'drizzle-orm';
 import { themeTokens } from '@/app/theme/theme-config';
 
 export const runtime = 'edge';
@@ -20,25 +21,39 @@ export async function GET(request: NextRequest) {
       return new Response('Missing uuid parameter', { status: 400 });
     }
 
-    const rows = await sql`
+    const result = await dbz.execute<{
+      name: string | null;
+      description: string | null;
+      color: string | null;
+      icon: string | null;
+      is_public: boolean;
+      board_type: string;
+      climb_count: number;
+    }>(sql`
       SELECT p.name, p.description, p.color, p.icon, p.is_public,
              p.board_type,
              (SELECT COUNT(*) FROM playlist_climbs pc WHERE pc.playlist_id = p.id) as climb_count
       FROM playlists p
       WHERE p.uuid = ${uuid}
       LIMIT 1
-    `;
+    `);
+    const rows = result.rows;
 
     if (rows.length === 0) {
       return new Response('Playlist not found', { status: 404 });
     }
 
     const playlist = rows[0];
-    const name = (playlist.name as string) || 'Playlist';
-    const description = playlist.description as string | null;
-    const color = (playlist.color as string) || themeTokens.colors.primary;
-    const icon = (playlist.icon as string) || null;
-    const boardType = playlist.board_type as string;
+
+    if (!playlist.is_public) {
+      return new Response('Playlist is private', { status: 404 });
+    }
+
+    const name = playlist.name || 'Playlist';
+    const description = playlist.description;
+    const color = playlist.color || themeTokens.colors.primary;
+    const icon = playlist.icon || null;
+    const boardType = playlist.board_type;
     const climbCount = Number(playlist.climb_count);
     const boardLabel = capitalizeBoardType(boardType);
 

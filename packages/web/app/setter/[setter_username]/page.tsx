@@ -1,6 +1,7 @@
 import React from 'react';
 import type { Metadata } from 'next';
-import { sql } from '@/app/lib/db/db';
+import { dbz } from '@/app/lib/db/db';
+import { sql } from 'drizzle-orm';
 import SetterProfileContent from './setter-profile-content';
 import styles from '@/app/components/library/playlist-view.module.css';
 
@@ -13,18 +14,20 @@ export async function generateMetadata({
   const username = decodeURIComponent(setter_username);
 
   try {
-    const rows = await sql`
+    const result = await dbz.execute<{
+      display_name: string | null;
+      name: string | null;
+    }>(sql`
       SELECT p.display_name, u.name
-      FROM user_credentials uc
-      JOIN users u ON u.id = uc.user_id
-      LEFT JOIN user_profiles p ON p.user_id = uc.user_id
-      WHERE uc.aurora_username = ${username}
+      FROM user_board_mappings ubm
+      JOIN users u ON u.id = ubm.user_id
+      LEFT JOIN user_profiles p ON p.user_id = ubm.user_id
+      WHERE ubm.board_username = ${username}
       LIMIT 1
-    `;
+    `);
 
-    const displayName = rows[0]?.display_name || rows[0]?.name || username;
-    const ogUrl = new URL('/api/og/setter', 'https://boardsesh.com');
-    ogUrl.searchParams.set('username', setter_username);
+    const displayName = result.rows[0]?.display_name || result.rows[0]?.name || username;
+    const ogImagePath = `/api/og/setter?username=${encodeURIComponent(setter_username)}`;
 
     return {
       title: `${displayName} - Setter | Boardsesh`,
@@ -32,13 +35,13 @@ export async function generateMetadata({
       openGraph: {
         title: `${displayName} - Setter | Boardsesh`,
         description: `Climbs created by ${displayName} on Boardsesh`,
-        images: [{ url: ogUrl.toString(), width: 1200, height: 630 }],
+        images: [{ url: ogImagePath, width: 1200, height: 630 }],
       },
       twitter: {
         card: 'summary_large_image',
         title: `${displayName} - Setter | Boardsesh`,
         description: `Climbs created by ${displayName} on Boardsesh`,
-        images: [ogUrl.toString()],
+        images: [ogImagePath],
       },
     };
   } catch {

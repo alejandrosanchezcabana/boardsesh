@@ -2,7 +2,9 @@ import React from 'react';
 import { Metadata } from 'next';
 import { getServerAuthToken } from '@/app/lib/auth/server-auth';
 import { serverMyBoards } from '@/app/lib/graphql/server-cached-client';
-import { sql } from '@/app/lib/db/db';
+import { dbz } from '@/app/lib/db/db';
+import { sql } from 'drizzle-orm';
+import { createNoIndexMetadata } from '@/app/lib/seo/metadata';
 import PlaylistDetailContent from './playlist-detail-content';
 import styles from '@/app/components/library/playlist-view.module.css';
 
@@ -14,44 +16,57 @@ export async function generateMetadata({
   const { playlist_uuid } = await params;
 
   try {
-    const rows = await sql`
+    const result = await dbz.execute<{
+      name: string;
+      description: string | null;
+      is_public: boolean;
+      climb_count: number;
+    }>(sql`
       SELECT p.name, p.description, p.is_public,
              (SELECT COUNT(*) FROM playlist_climbs pc WHERE pc.playlist_id = p.id) as climb_count
       FROM playlists p
       WHERE p.uuid = ${playlist_uuid}
       LIMIT 1
-    `;
+    `);
 
-    if (rows.length === 0) {
+    if (result.rows.length === 0) {
       return { title: 'Playlist | Boardsesh', description: 'View playlist details and climbs' };
     }
 
-    const playlist = rows[0];
-    const name = playlist.name as string;
+    const playlist = result.rows[0];
+
+    if (!playlist.is_public) {
+      return createNoIndexMetadata({
+        title: 'Private Playlist',
+        description: 'This playlist is private',
+        imagePath: null,
+      });
+    }
+
+    const name = playlist.name;
     const climbCount = Number(playlist.climb_count);
-    const description = (playlist.description as string) || `A climbing playlist on Boardsesh with ${climbCount} climb${climbCount === 1 ? '' : 's'}`;
+    const description = playlist.description || `A climbing playlist on Boardsesh with ${climbCount} climb${climbCount === 1 ? '' : 's'}`;
     const title = `${name} | Boardsesh`;
 
-    const ogImageUrl = `https://boardsesh.com/api/og/playlist?uuid=${playlist_uuid}`;
+    const ogImagePath = `/api/og/playlist?uuid=${playlist_uuid}`;
     const canonicalUrl = `/playlists/${playlist_uuid}`;
 
     return {
       title,
       description,
       alternates: { canonical: canonicalUrl },
-      ...(!playlist.is_public && { robots: { index: false, follow: true } }),
       openGraph: {
         title,
         description,
         type: 'website',
         url: canonicalUrl,
-        images: [{ url: ogImageUrl, width: 1200, height: 630, alt: `${name} playlist` }],
+        images: [{ url: ogImagePath, width: 1200, height: 630, alt: `${name} playlist` }],
       },
       twitter: {
         card: 'summary_large_image',
         title,
         description,
-        images: [ogImageUrl],
+        images: [ogImagePath],
       },
     };
   } catch {

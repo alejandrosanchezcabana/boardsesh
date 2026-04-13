@@ -41,7 +41,7 @@ export function ShareAction({
       ? `${window.location.origin}${viewUrl}`
       : viewUrl;
 
-    await shareWithFallback({
+    const shared = await shareWithFallback({
       url: shareUrl,
       title: climb.name,
       text: `Check out "${climb.name}" (${climb.difficulty}) on Boardsesh`,
@@ -50,7 +50,9 @@ export function ShareAction({
       onClipboardSuccess: () => showMessage('Link copied to clipboard!', 'success'),
       onError: () => showMessage('Failed to share', 'error'),
     });
-    onComplete?.();
+    if (shared) {
+      onComplete?.();
+    }
   }, [climb, viewUrl, boardDetails.board_name, onComplete, showMessage]);
 
   const icon = <ShareOutlined sx={{ fontSize: iconSize }} />;

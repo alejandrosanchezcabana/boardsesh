@@ -1,7 +1,8 @@
 import React from 'react';
 import { ImageResponse } from '@vercel/og';
 import { NextRequest } from 'next/server';
-import { sql } from '@/app/lib/db/db';
+import { dbz } from '@/app/lib/db/db';
+import { sql } from 'drizzle-orm';
 import { themeTokens } from '@/app/theme/theme-config';
 import { FONT_GRADE_COLORS, getGradeColorWithOpacity } from '@/app/lib/grade-colors';
 import { BOULDER_GRADES } from '@/app/lib/board-data';
@@ -25,14 +26,20 @@ export async function GET(request: NextRequest) {
     }
 
     // Fetch session info, participants, and grade distribution in parallel
-    const [sessionRows, participantRows, gradeRows] = await Promise.all([
-      sql`
+    const [sessionResult, participantResult, gradeResult] = await Promise.all([
+      dbz.execute<{
+        id: string;
+        session_name: string | null;
+        board_path: string | null;
+      }>(sql`
         SELECT bs.id, bs.session_name, bs.board_path
         FROM board_sessions bs
         WHERE bs.id = ${sessionId}
         LIMIT 1
-      `,
-      sql`
+      `),
+      dbz.execute<{
+        display_name: string;
+      }>(sql`
         SELECT DISTINCT
           COALESCE(up.display_name, u.name, 'Climber') as display_name
         FROM boardsesh_ticks bt
@@ -40,8 +47,11 @@ export async function GET(request: NextRequest) {
         LEFT JOIN user_profiles up ON up.user_id = bt.user_id
         WHERE bt.session_id = ${sessionId}
         LIMIT 6
-      `,
-      sql`
+      `),
+      dbz.execute<{
+        difficulty: number;
+        cnt: number;
+      }>(sql`
         SELECT bt.difficulty, COUNT(*) as cnt
         FROM boardsesh_ticks bt
         WHERE bt.session_id = ${sessionId}
@@ -49,8 +59,11 @@ export async function GET(request: NextRequest) {
           AND bt.difficulty IS NOT NULL
         GROUP BY bt.difficulty
         ORDER BY bt.difficulty
-      `,
+      `),
     ]);
+    const sessionRows = sessionResult.rows;
+    const participantRows = participantResult.rows;
+    const gradeRows = gradeResult.rows;
 
     if (sessionRows.length === 0) {
       return new Response('Session not found', { status: 404 });
