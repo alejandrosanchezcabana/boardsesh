@@ -142,6 +142,11 @@
   flex-wrap: wrap;
 }
 
+/* Push picker items to the right — used for stars which sit above the right-aligned button */
+.pickerRowEnd {
+  justify-content: flex-end;
+}
+
 /* Horizontally scrollable variant — used by grade and tries pickers */
 .pickerRowScrollable {
   display: flex;

@@ -181,7 +181,7 @@ export const InlineStarPicker: React.FC<{
   quality: number | null;
   onSelect: (value: number | null) => void;
 }> = ({ quality, onSelect }) => (
-  <div className={styles.pickerRow} role="listbox" aria-label="Star rating">
+  <div className={`${styles.pickerRow} ${styles.pickerRowEnd}`} role="listbox" aria-label="Star rating">
     {[1, 2, 3, 4, 5].map((n) => (
       <ButtonBase
         key={n}

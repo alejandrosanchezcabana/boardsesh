@@ -200,7 +200,11 @@ export const QuickTickBar = forwardRef<QuickTickBarHandle, QuickTickBarProps>(({
         {/* Left section: comment fills space, grade sits at right edge —
             mirrors the queue bar's [thumbnail + title + grade] column. */}
         <div className={styles.leftSection}>
-          {commentSlot}
+          {/* Collapse any open picker when the comment field gains focus */}
+          {/* eslint-disable-next-line jsx-a11y/no-static-element-interactions */}
+          <div onFocus={() => setExpandedControl(null)} style={{ flex: 1, minWidth: 0 }}>
+            {commentSlot}
+          </div>
           <TickGradeButton
             ref={gradeButtonRef}
             difficulty={difficulty}
