@@ -79,6 +79,25 @@ export const QuickTickBar = forwardRef<QuickTickBarHandle, QuickTickBarProps>(({
   const [isSaving, setIsSaving] = useState(false);
   const [attemptCount, setAttemptCount] = useState<number>(1);
   const [expandedControl, setExpandedControl] = useState<ExpandedControl>(null);
+  // Track which picker was last open so we can keep it mounted during collapse.
+  const [lastExpandedControl, setLastExpandedControl] = useState<ExpandedControl>(null);
+  const [pickerVisible, setPickerVisible] = useState(false);
+
+  useEffect(() => {
+    if (expandedControl) {
+      setLastExpandedControl(expandedControl);
+      setPickerVisible(true);
+    } else {
+      // Keep content mounted during the 200ms CSS grid collapse transition.
+      const timer = setTimeout(() => setPickerVisible(false), 200);
+      return () => clearTimeout(timer);
+    }
+  }, [expandedControl]);
+
+  // The control to actually render — either the currently expanded one, or
+  // the last one that was open (kept alive during the collapse animation).
+  const renderedControl = expandedControl ?? (pickerVisible ? lastExpandedControl : null);
+
   const gradeButtonRef = useRef<HTMLButtonElement>(null);
   const triesButtonRef = useRef<HTMLButtonElement>(null);
 
@@ -177,10 +196,10 @@ export const QuickTickBar = forwardRef<QuickTickBarHandle, QuickTickBarProps>(({
       {/* Picker panel — expands above the controls row when a control is active */}
       <div className={`${styles.pickerPanel} ${expandedControl ? styles.pickerPanelExpanded : ''}`}>
         <div className={styles.pickerPanelContent}>
-          {expandedControl === 'stars' && (
+          {renderedControl === 'stars' && (
             <InlineStarPicker quality={quality} onSelect={handleStarSelect} />
           )}
-          {expandedControl === 'grade' && (
+          {renderedControl === 'grade' && (
             <InlineGradePicker
               grades={displayedGrades}
               currentGradeId={currentGradeId}
@@ -188,7 +207,7 @@ export const QuickTickBar = forwardRef<QuickTickBarHandle, QuickTickBarProps>(({
               gradeButtonRef={gradeButtonRef}
             />
           )}
-          {expandedControl === 'tries' && (
+          {renderedControl === 'tries' && (
             <InlineTriesPicker attemptCount={attemptCount} onSelect={handleTriesSelect} triesButtonRef={triesButtonRef} />
           )}
         </div>
