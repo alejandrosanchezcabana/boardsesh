@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useCallback, useEffect, useMemo, useRef, forwardRef, useImperativeHandle } from 'react';
+import React, { useState, useCallback, useEffect, useMemo, useRef } from 'react';
 import IconButton from '@mui/material/IconButton';
 import Stack from '@mui/material/Stack';
 import CheckOutlined from '@mui/icons-material/CheckOutlined';
@@ -21,11 +21,6 @@ import {
 } from './tick-controls';
 import styles from './inline-list-tick-bar.module.css';
 
-export interface InlineListTickBarHandle {
-  save: () => void;
-  saveAttempt: (originElement?: HTMLElement | null) => void;
-}
-
 export interface InlineListTickBarProps {
   climb: Climb;
   angle: Angle;
@@ -36,14 +31,14 @@ export interface InlineListTickBarProps {
   onError?: () => void;
 }
 
-export const InlineListTickBar = forwardRef<InlineListTickBarHandle, InlineListTickBarProps>(({
+export const InlineListTickBar: React.FC<InlineListTickBarProps> = ({
   climb,
   angle,
   boardDetails,
   open,
   onClose,
   onError,
-}, ref) => {
+}) => {
   const { logbook } = useBoardProvider();
 
   // Build tick target on mount / when climb changes
@@ -102,6 +97,7 @@ export const InlineListTickBar = forwardRef<InlineListTickBarHandle, InlineListT
   const gradeButtonRef = useRef<HTMLButtonElement>(null);
   const triesButtonRef = useRef<HTMLButtonElement>(null);
   const saveButtonRef = useRef<HTMLButtonElement>(null);
+  const attemptButtonRef = useRef<HTMLButtonElement>(null);
 
   const grades = TENSION_KILTER_GRADES;
 
@@ -138,17 +134,12 @@ export const InlineListTickBar = forwardRef<InlineListTickBarHandle, InlineListT
     onError,
   });
 
-  useImperativeHandle(ref, () => ({
-    save,
-    saveAttempt,
-  }), [save, saveAttempt]);
-
   const handleSaveClick = useCallback(() => {
-    save();
+    save(saveButtonRef.current);
   }, [save]);
 
   const handleAttemptClick = useCallback(() => {
-    saveAttempt(saveButtonRef.current);
+    saveAttempt(attemptButtonRef.current);
   }, [saveAttempt]);
 
   return (
@@ -212,6 +203,7 @@ export const InlineListTickBar = forwardRef<InlineListTickBarHandle, InlineListT
               <CheckOutlined sx={{ fontSize: 18 }} />
             </IconButton>
             <IconButton
+              ref={attemptButtonRef}
               size="small"
               onClick={handleAttemptClick}
               aria-label="Log attempt"
@@ -242,6 +234,4 @@ export const InlineListTickBar = forwardRef<InlineListTickBarHandle, InlineListT
       </div>
     </div>
   );
-});
-
-InlineListTickBar.displayName = 'InlineListTickBar';
+};

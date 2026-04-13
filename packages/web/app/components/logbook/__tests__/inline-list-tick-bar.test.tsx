@@ -52,7 +52,7 @@ vi.mock('@/app/hooks/use-grade-format', () => ({
 }));
 
 // Import after mocks.
-import { InlineListTickBar, type InlineListTickBarHandle } from '../inline-list-tick-bar';
+import { InlineListTickBar } from '../inline-list-tick-bar';
 
 // --- Fixtures ---
 
@@ -158,55 +158,28 @@ describe('InlineListTickBar', () => {
   });
 
   describe('save actions', () => {
-    it('save via ref fires confetti and calls onClose', async () => {
-      const ref = React.createRef<InlineListTickBarHandle>();
-      render(<InlineListTickBar ref={ref} {...defaultProps} open={true} />);
-
-      await act(async () => {
-        ref.current!.save();
-      });
-
-      expect(mockFireConfetti).toHaveBeenCalledTimes(1);
-      expect(defaultProps.onClose).toHaveBeenCalledTimes(1);
-      expect(mockSaveTick).toHaveBeenCalledTimes(1);
-    });
-
-    it('saveAttempt via ref fires confetti and calls onClose', async () => {
-      const ref = React.createRef<InlineListTickBarHandle>();
-      render(<InlineListTickBar ref={ref} {...defaultProps} open={true} />);
-
-      await act(async () => {
-        ref.current!.saveAttempt();
-      });
-
-      expect(mockFireConfetti).toHaveBeenCalledTimes(1);
-      expect(defaultProps.onClose).toHaveBeenCalledTimes(1);
-      expect(mockSaveTick).toHaveBeenCalledTimes(1);
-      // Attempt status
-      const call = mockSaveTick.mock.calls[0][0];
-      expect(call.status).toBe('attempt');
-    });
-
-    it('clicking the Log ascent button saves', async () => {
+    it('clicking the Log ascent button fires confetti and saves', async () => {
       render(<InlineListTickBar {...defaultProps} open={true} />);
 
       await act(async () => {
         screen.getByRole('button', { name: 'Log ascent' }).click();
       });
 
+      expect(mockFireConfetti).toHaveBeenCalledTimes(1);
       expect(mockSaveTick).toHaveBeenCalledTimes(1);
       const call = mockSaveTick.mock.calls[0][0];
       expect(call.status).toBe('flash');
       expect(defaultProps.onClose).toHaveBeenCalledTimes(1);
     });
 
-    it('clicking the Log attempt button saves an attempt', async () => {
+    it('clicking the Log attempt button fires confetti and saves an attempt', async () => {
       render(<InlineListTickBar {...defaultProps} open={true} />);
 
       await act(async () => {
         screen.getByRole('button', { name: 'Log attempt' }).click();
       });
 
+      expect(mockFireConfetti).toHaveBeenCalledTimes(1);
       expect(mockSaveTick).toHaveBeenCalledTimes(1);
       const call = mockSaveTick.mock.calls[0][0];
       expect(call.status).toBe('attempt');
@@ -216,19 +189,18 @@ describe('InlineListTickBar', () => {
 
   describe('state reset on close', () => {
     it('resets state when open changes from true to false', async () => {
-      const ref = React.createRef<InlineListTickBarHandle>();
       const { rerender } = render(
-        <InlineListTickBar ref={ref} {...defaultProps} open={true} />,
+        <InlineListTickBar {...defaultProps} open={true} />,
       );
 
       // Close the bar
-      rerender(<InlineListTickBar ref={ref} {...defaultProps} open={false} />);
+      rerender(<InlineListTickBar {...defaultProps} open={false} />);
 
       // Re-open and save — should use default values (attemptCount=1, no quality)
-      rerender(<InlineListTickBar ref={ref} {...defaultProps} open={true} />);
+      rerender(<InlineListTickBar {...defaultProps} open={true} />);
 
       await act(async () => {
-        ref.current!.save();
+        screen.getByRole('button', { name: 'Log ascent' }).click();
       });
 
       const call = mockSaveTick.mock.calls[0][0];

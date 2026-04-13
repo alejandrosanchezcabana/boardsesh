@@ -65,7 +65,7 @@ export function buildTickTarget(
  * IndexedDB and calls `onError`.
  */
 export function useTickSave(options: UseTickSaveOptions): {
-  save: () => void;
+  save: (originElement?: HTMLElement | null) => void;
   saveAttempt: (originElement?: HTMLElement | null) => void;
 } {
   const { tickTarget, quality, difficulty, attemptCount, comment, onSave, onError } = options;
