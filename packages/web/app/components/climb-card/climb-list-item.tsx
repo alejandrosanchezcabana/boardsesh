@@ -473,7 +473,7 @@ const ClimbListItem: React.FC<ClimbListItemProps> = React.memo(
         padding: `${themeTokens.spacing[2]}px ${themeTokens.spacing[2]}px`,
         gap: themeTokens.spacing[3],
         backgroundColor: resolvedBg,
-        borderBottom: `1px solid ${themeTokens.neutral[200]}`,
+        borderBottom: '1px solid var(--neutral-200)',
         cursor: 'pointer' as const,
         userSelect: 'none' as const,
         opacity: contentOpacity ?? 1,
@@ -616,7 +616,7 @@ const ClimbListItem: React.FC<ClimbListItemProps> = React.memo(
                     alignItems: 'center',
                     justifyContent: 'space-between',
                     padding: `${themeTokens.spacing[3]}px`,
-                    borderBottom: `1px solid ${themeTokens.neutral[200]}`,
+                    borderBottom: '1px solid var(--neutral-200)',
                   }}
                 >
                   <DrawerClimbHeader climb={climb} boardDetails={boardDetails} />

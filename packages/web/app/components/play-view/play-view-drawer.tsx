@@ -822,7 +822,7 @@ const PlayViewDrawer: React.FC<PlayViewDrawerProps> = ({
                     display: 'flex',
                     alignItems: 'center',
                     padding: `${themeTokens.spacing[3]}px`,
-                    borderBottom: `1px solid ${themeTokens.neutral[200]}`,
+                    borderBottom: '1px solid var(--neutral-200)',
                   }}
                 >
                   <DrawerClimbHeader climb={currentClimb} boardDetails={boardDetails} />
