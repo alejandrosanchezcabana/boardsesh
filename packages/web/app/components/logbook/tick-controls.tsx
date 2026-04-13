@@ -242,6 +242,15 @@ export const InlineStarPicker: React.FC<{
   onSelect: (value: number | null) => void;
 }> = ({ quality, onSelect }) => (
   <div className={`${styles.pickerRow} ${styles.pickerRowEnd}`} role="listbox" aria-label="Star rating">
+    <ButtonBase
+      onClick={() => onSelect(null)}
+      className={`${styles.pickerItem} ${quality === null ? styles.pickerItemSelected : ''}`}
+      aria-label="No rating"
+      aria-selected={quality === null}
+      role="option"
+    >
+      <span className={styles.pickerClear}>—</span>
+    </ButtonBase>
     {[1, 2, 3, 4, 5].map((n) => (
       <ButtonBase
         key={n}
@@ -260,14 +269,6 @@ export const InlineStarPicker: React.FC<{
         />
       </ButtonBase>
     ))}
-    <ButtonBase
-      onClick={() => onSelect(null)}
-      className={styles.pickerItem}
-      aria-label="Clear rating"
-      role="option"
-    >
-      <span className={styles.pickerClear}>—</span>
-    </ButtonBase>
   </div>
 );
 
