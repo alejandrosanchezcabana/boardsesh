@@ -206,99 +206,103 @@ const PlayViewTickBar = React.memo<PlayViewTickBarProps>(function PlayViewTickBa
           ...(gradeTintColor ? { backgroundImage: `linear-gradient(${gradeTintColor}, ${gradeTintColor})` } : {}),
         }}
       >
-        {/* Close button — top-right corner, identical to queue control bar */}
-        <div className={styles.tickBarClose}>
-          <IconButton
-            size="small"
-            onClick={handleClose}
-            aria-label="Close tick bar"
-            sx={{
-              color: 'text.primary',
-              backgroundColor: 'action.selected',
-              '&:hover': { backgroundColor: 'action.focus' },
-            }}
-          >
-            <CloseOutlined sx={{ fontSize: 16 }} />
-          </IconButton>
-        </div>
         {/* Drag handle — identical to queue control bar */}
         <div className={styles.tickBarDragHandleRow}>
           <div className={styles.tickBarDragHandle}>
             <div className={styles.tickBarDragHandleBar} />
           </div>
         </div>
-        <QuickTickBar
-          ref={quickTickBarRef}
-          currentClimb={currentClimb}
-          angle={angle}
-          boardDetails={boardDetails}
-          onSave={handleClose}
-          onError={onError}
-          onDraftRestored={(draftComment) => setTickComment(draftComment)}
-          comment={tickComment}
-          commentSlot={
-            <div className={`${styles.tickBarComment} ${commentFocused ? styles.tickBarCommentExpanded : ''}`}>
-              <TextField
-                fullWidth
+        {isTickBarActive && (
+          <>
+            {/* Close button — top-right corner, identical to queue control bar */}
+            <div className={styles.tickBarClose}>
+              <IconButton
                 size="small"
-                variant="outlined"
-                placeholder="Comment..."
-                multiline
-                minRows={1}
-                maxRows={commentFocused ? 4 : 1}
-                value={tickComment}
-                onChange={(e) => setTickComment(e.target.value)}
-                onFocus={handleCommentFocus}
-                onBlur={handleCommentBlur}
-                slotProps={{
-                  htmlInput: { maxLength: 2000, 'aria-label': 'Tick comment' },
-                  input: {
-                    startAdornment: (
-                      <InputAdornment position="start">
-                        <ChatBubbleOutlineOutlined sx={{ fontSize: 16, opacity: 0.5 }} />
-                      </InputAdornment>
-                    ),
-                  },
-                }}
+                onClick={handleClose}
+                aria-label="Close tick bar"
                 sx={{
-                  '& .MuiOutlinedInput-root': {
-                    borderRadius: '8px',
-                    backgroundColor: 'var(--input-bg)',
-                    '& .MuiOutlinedInput-notchedOutline': {
-                      borderColor: 'var(--neutral-200)',
-                    },
-                  },
+                  color: 'text.primary',
+                  backgroundColor: 'action.selected',
+                  '&:hover': { backgroundColor: 'action.focus' },
                 }}
-              />
+              >
+                <CloseOutlined sx={{ fontSize: 16 }} />
+              </IconButton>
             </div>
-          }
-        />
-        {/* Action buttons — attempt (X) + save (check), both fire confetti from click target */}
-        <div className={styles.tickBarButtons}>
-          <IconButton
-            onClick={(e) => quickTickBarRef.current?.saveAttempt(e.currentTarget)}
-            sx={{
-              color: themeTokens.colors.error,
-              opacity: themeTokens.opacity.subtle,
-              '&:hover': { color: themeTokens.colors.error, opacity: 1 },
-            }}
-            aria-label="Log attempt"
-          >
-            <CloseOutlined />
-          </IconButton>
-          <IconButton
-            id="button-tick"
-            onClick={(e) => quickTickBarRef.current?.save(e.currentTarget)}
-            sx={{
-              backgroundColor: themeTokens.colors.success,
-              color: 'common.white',
-              '&:hover': { backgroundColor: themeTokens.colors.success },
-            }}
-            aria-label="Log ascent"
-          >
-            <CheckOutlined />
-          </IconButton>
-        </div>
+            <QuickTickBar
+              ref={quickTickBarRef}
+              currentClimb={currentClimb}
+              angle={angle}
+              boardDetails={boardDetails}
+              onSave={handleClose}
+              onError={onError}
+              onDraftRestored={(draftComment) => setTickComment(draftComment)}
+              comment={tickComment}
+              commentSlot={
+                <div className={`${styles.tickBarComment} ${commentFocused ? styles.tickBarCommentExpanded : ''}`}>
+                  <TextField
+                    fullWidth
+                    size="small"
+                    variant="outlined"
+                    placeholder="Comment..."
+                    multiline
+                    minRows={1}
+                    maxRows={commentFocused ? 4 : 1}
+                    value={tickComment}
+                    onChange={(e) => setTickComment(e.target.value)}
+                    onFocus={handleCommentFocus}
+                    onBlur={handleCommentBlur}
+                    slotProps={{
+                      htmlInput: { maxLength: 2000, 'aria-label': 'Tick comment' },
+                      input: {
+                        startAdornment: (
+                          <InputAdornment position="start">
+                            <ChatBubbleOutlineOutlined sx={{ fontSize: 16, opacity: 0.5 }} />
+                          </InputAdornment>
+                        ),
+                      },
+                    }}
+                    sx={{
+                      '& .MuiOutlinedInput-root': {
+                        borderRadius: '8px',
+                        backgroundColor: 'var(--input-bg)',
+                        '& .MuiOutlinedInput-notchedOutline': {
+                          borderColor: 'var(--neutral-200)',
+                        },
+                      },
+                    }}
+                  />
+                </div>
+              }
+            />
+            {/* Action buttons — attempt (X) + save (check), both fire confetti from click target */}
+            <div className={styles.tickBarButtons}>
+              <IconButton
+                onClick={(e) => quickTickBarRef.current?.saveAttempt(e.currentTarget)}
+                sx={{
+                  color: themeTokens.colors.error,
+                  opacity: themeTokens.opacity.subtle,
+                  '&:hover': { color: themeTokens.colors.error, opacity: 1 },
+                }}
+                aria-label="Log attempt"
+              >
+                <CloseOutlined />
+              </IconButton>
+              <IconButton
+                id="button-tick"
+                onClick={(e) => quickTickBarRef.current?.save(e.currentTarget)}
+                sx={{
+                  backgroundColor: themeTokens.colors.success,
+                  color: 'common.white',
+                  '&:hover': { backgroundColor: themeTokens.colors.success },
+                }}
+                aria-label="Log ascent"
+              >
+                <CheckOutlined />
+              </IconButton>
+            </div>
+          </>
+        )}
       </div>
     </div>
   );

@@ -9,10 +9,18 @@
 .ascentIconRegular {
   position: absolute;
   left: 0;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .ascentIconMirrored {
   position: absolute;
   transform: scaleX(-1);
   left: 2px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }

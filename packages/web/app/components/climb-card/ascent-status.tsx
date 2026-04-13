@@ -32,27 +32,28 @@ export const AscentStatus = ({ climbUuid, fontSize, className }: AscentStatusPro
 
   if (!hasAttempts) return null;
 
-  // Frosted glass: semi-transparent so backdrop-filter blur shows through
-  const successColor = 'rgba(107, 144, 128, 0.7)';
-  const attemptColor = 'rgba(184, 82, 76, 0.7)';
+  const successColor = themeTokens.colors.success;
+  const attemptColor = themeTokens.colors.error;
 
   if (supportsMirroring) {
     return (
       <div className={`${styles.ascentStatusContainer} ${className ?? ''}`}>
         {/* Regular ascent icon */}
         {hasSuccessfulAscent ? (
-          <div className={styles.ascentIconRegular}>
-            <CheckOutlined style={{ color: successColor, fontSize }} />
+          <div className={styles.ascentIconRegular} style={{ backgroundColor: successColor }}>
+            <CheckOutlined style={{ color: 'white', fontSize }} />
           </div>
         ) : null}
         {/* Mirrored ascent icon */}
         {hasSuccessfulMirroredAscent ? (
-          <div className={styles.ascentIconMirrored}>
-            <CheckOutlined style={{ color: successColor, fontSize }} />
+          <div className={styles.ascentIconMirrored} style={{ backgroundColor: successColor }}>
+            <CheckOutlined style={{ color: 'white', fontSize }} />
           </div>
         ) : null}
         {!hasSuccessfulMirroredAscent && !hasSuccessfulAscent ? (
-          <CloseOutlined className={styles.ascentIconRegular} style={{ color: attemptColor, fontSize }} />
+          <div className={styles.ascentIconRegular} style={{ backgroundColor: attemptColor }}>
+            <CloseOutlined style={{ color: 'white', fontSize }} />
+          </div>
         ) : null}
       </div>
     );

@@ -23,6 +23,7 @@ import { getGradeTintColor } from '@/app/lib/grade-colors';
 import { getExcludedClimbActions } from '@/app/lib/climb-action-utils';
 import { useIsClimbSelected } from '../board-page/selected-climb-store';
 import { InlineListTickBar } from '../logbook/inline-list-tick-bar';
+import { useOptionalBoardProvider } from '../board-provider/board-provider-context';
 import { useSnackbar } from '../providers/snackbar-provider';
 import styles from './climb-list-item.module.css';
 
@@ -211,6 +212,8 @@ const ClimbListItem: React.FC<ClimbListItemProps> = React.memo(
     // When `selectedOverride` is provided (e.g. queue drawer), use that instead.
     const storeSelected = useIsClimbSelected(climb.uuid);
     const selected = selectedOverride ?? storeSelected;
+    // Check if we're inside a BoardProvider — needed for inline tick bar
+    const boardProvider = useOptionalBoardProvider();
     // When parent provides both drawer callbacks, skip local drawers entirely.
     // Both must be present to ensure the parent handles all drawer interactions.
     const hasParentDrawers = Boolean(onOpenActions && onOpenPlaylistSelector);
@@ -578,7 +581,7 @@ const ClimbListItem: React.FC<ClimbListItemProps> = React.memo(
                 exclude={excludeActions}
                 onOpenPlaylistSelector={handleOpenPlaylistFromActions}
                 onActionComplete={handleCloseActions}
-                onTickAction={handleOpenInlineTickBar}
+                onTickAction={boardProvider ? handleOpenInlineTickBar : undefined}
               />
             </SwipeableDrawer>
 
@@ -599,13 +602,12 @@ const ClimbListItem: React.FC<ClimbListItemProps> = React.memo(
           </>
         )}
 
-        {/* Inline tick bar — only mounted when open */}
-        {isInlineTickOpen && (
+        {/* Inline tick bar — only mounted when open and inside a BoardProvider */}
+        {isInlineTickOpen && boardProvider && (
           <InlineListTickBar
             climb={climb}
             angle={climb.angle}
             boardDetails={boardDetails}
-            open={isInlineTickOpen}
             onClose={handleCloseTickBar}
             onError={handleTickError}
           />

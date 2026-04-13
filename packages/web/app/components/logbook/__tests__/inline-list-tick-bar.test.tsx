@@ -99,7 +99,6 @@ const defaultProps = {
   climb: makeClimb(),
   angle: 40 as Angle,
   boardDetails: makeBoardDetails(),
-  open: true,
   onClose: vi.fn(),
 };
 
@@ -112,42 +111,34 @@ describe('InlineListTickBar', () => {
   });
 
   describe('visibility', () => {
-    it('renders nothing visible when open=false (the wrapper has 0fr grid)', () => {
-      const { container } = render(<InlineListTickBar {...defaultProps} open={false} />);
-      // The wrapper div should exist but NOT have the open CSS class.
+    it('renders the tick bar wrapper when mounted', () => {
+      const { container } = render(<InlineListTickBar {...defaultProps} />);
       const wrapper = container.firstElementChild;
       expect(wrapper).toBeTruthy();
-      expect(wrapper?.className).not.toContain('tickBarWrapperOpen');
-    });
-
-    it('renders the open CSS class when open=true', () => {
-      const { container } = render(<InlineListTickBar {...defaultProps} open={true} />);
-      const wrapper = container.firstElementChild;
-      expect(wrapper).toBeTruthy();
-      expect(wrapper?.className).toContain('tickBarWrapperOpen');
+      expect(wrapper?.className).toContain('tickBarWrapper');
     });
   });
 
   describe('controls when open', () => {
     it('renders the save (check) button with "Log ascent" label', () => {
-      render(<InlineListTickBar {...defaultProps} open={true} />);
+      render(<InlineListTickBar {...defaultProps} />);
       expect(screen.getByRole('button', { name: 'Log ascent' })).toBeTruthy();
     });
 
     it('renders the attempt (X) button with "Log attempt" label', () => {
-      render(<InlineListTickBar {...defaultProps} open={true} />);
+      render(<InlineListTickBar {...defaultProps} />);
       expect(screen.getByRole('button', { name: 'Log attempt' })).toBeTruthy();
     });
 
     it('renders the cancel button', () => {
-      render(<InlineListTickBar {...defaultProps} open={true} />);
+      render(<InlineListTickBar {...defaultProps} />);
       expect(screen.getByRole('button', { name: 'Cancel' })).toBeTruthy();
     });
   });
 
   describe('cancel button', () => {
     it('calls onClose when the cancel button is clicked', async () => {
-      render(<InlineListTickBar {...defaultProps} open={true} />);
+      render(<InlineListTickBar {...defaultProps} />);
 
       await act(async () => {
         screen.getByRole('button', { name: 'Cancel' }).click();
@@ -159,7 +150,7 @@ describe('InlineListTickBar', () => {
 
   describe('save actions', () => {
     it('clicking the Log ascent button fires confetti and saves', async () => {
-      render(<InlineListTickBar {...defaultProps} open={true} />);
+      render(<InlineListTickBar {...defaultProps} />);
 
       await act(async () => {
         screen.getByRole('button', { name: 'Log ascent' }).click();
@@ -173,7 +164,7 @@ describe('InlineListTickBar', () => {
     });
 
     it('clicking the Log attempt button fires confetti and saves an attempt', async () => {
-      render(<InlineListTickBar {...defaultProps} open={true} />);
+      render(<InlineListTickBar {...defaultProps} />);
 
       await act(async () => {
         screen.getByRole('button', { name: 'Log attempt' }).click();
@@ -187,17 +178,12 @@ describe('InlineListTickBar', () => {
     });
   });
 
-  describe('state reset on close', () => {
-    it('resets state when open changes from true to false', async () => {
-      const { rerender } = render(
-        <InlineListTickBar {...defaultProps} open={true} />,
-      );
-
-      // Close the bar
-      rerender(<InlineListTickBar {...defaultProps} open={false} />);
-
-      // Re-open and save — should use default values (attemptCount=1, no quality)
-      rerender(<InlineListTickBar {...defaultProps} open={true} />);
+  describe('state reset on remount', () => {
+    it('uses default state values on fresh mount', async () => {
+      // Mount, unmount, remount — fresh mount should have default state
+      const { unmount } = render(<InlineListTickBar {...defaultProps} />);
+      unmount();
+      render(<InlineListTickBar {...defaultProps} />);
 
       await act(async () => {
         screen.getByRole('button', { name: 'Log ascent' }).click();

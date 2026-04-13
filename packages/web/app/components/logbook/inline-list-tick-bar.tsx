@@ -25,7 +25,6 @@ export interface InlineListTickBarProps {
   climb: Climb;
   angle: Angle;
   boardDetails: BoardDetails;
-  open: boolean;
   onClose: () => void;
   /** Called when a save fails so the parent can show feedback. */
   onError?: () => void;
@@ -35,7 +34,6 @@ export const InlineListTickBar: React.FC<InlineListTickBarProps> = ({
   climb,
   angle,
   boardDetails,
-  open,
   onClose,
   onError,
 }) => {
@@ -66,17 +64,6 @@ export const InlineListTickBar: React.FC<InlineListTickBarProps> = ({
     });
     return () => { cancelled = true; };
   }, [tickTarget]);
-
-  // Reset state when closed
-  useEffect(() => {
-    if (!open) {
-      setQuality(null);
-      setDifficulty(undefined);
-      setAttemptCount(1);
-      setExpandedControl(null);
-      draftLoaded.current = false;
-    }
-  }, [open]);
 
   // Track picker visibility for collapse animation
   const [lastExpandedControl, setLastExpandedControl] = useState<ExpandedControl>(null);
@@ -143,7 +130,7 @@ export const InlineListTickBar: React.FC<InlineListTickBarProps> = ({
   }, [saveAttempt]);
 
   return (
-    <div className={`${styles.tickBarWrapper} ${open ? styles.tickBarWrapperOpen : ''}`}>
+    <div className={styles.tickBarWrapper}>
       <div className={styles.tickBarInner}>
         {/* Picker panel — expands above the controls row */}
         <div className={`${styles.pickerPanel} ${expandedControl ? styles.pickerPanelExpanded : ''}`}>
