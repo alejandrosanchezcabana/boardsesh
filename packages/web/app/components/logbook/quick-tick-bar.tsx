@@ -32,6 +32,8 @@ export interface QuickTickBarProps {
   angle: Angle;
   boardDetails: BoardDetails;
   onSave: () => void;
+  /** Called when a save fails so the parent can show feedback. */
+  onError?: () => void;
   /** Current comment text. Owned by the parent so the comment field can live
    *  outside this bar (above the queue control bar) without causing reflow. */
   comment: string;
@@ -59,6 +61,7 @@ export const QuickTickBar = forwardRef<QuickTickBarHandle, QuickTickBarProps>(({
   angle,
   boardDetails,
   onSave,
+  onError,
   comment,
   commentSlot,
 }, ref) => {
@@ -187,11 +190,12 @@ export const QuickTickBar = forwardRef<QuickTickBarHandle, QuickTickBarProps>(({
         track('Quick Tick Failed', {
           boardLayout: targetBoard.layout_name || '',
         });
+        onError?.();
       } finally {
         setIsSaving(false);
       }
     },
-    [tickTarget, quality, difficulty, comment, isSaving, saveTick, onSave, attemptCount, fireConfetti],
+    [tickTarget, quality, difficulty, comment, isSaving, saveTick, onSave, attemptCount, fireConfetti, onError],
   );
 
   const handleConfirm = useCallback(() => handleSave(true), [handleSave]);

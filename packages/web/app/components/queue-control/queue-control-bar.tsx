@@ -599,6 +599,7 @@ const QueueControlBar: React.FC<QueueControlBarProps> = ({ boardDetails, angle }
                   angle={angle}
                   boardDetails={boardDetails}
                   onSave={() => setActiveDrawer('none')}
+                  onError={() => showMessage('Couldn\u2019t save your tick. Give it another go.', 'error')}
                   comment={tickComment}
                   commentSlot={
                     <div className={`${styles.tickComment} ${tickCommentFocused ? styles.tickCommentExpanded : ''}`}>
