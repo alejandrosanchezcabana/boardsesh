@@ -2,8 +2,31 @@
 
 import { useCallback, useEffect, useRef } from 'react';
 
-const DRAG_MOVE_THRESHOLD = 10;
-const DRAG_SNAP_THRESHOLD = 30;
+export const DRAG_MOVE_THRESHOLD = 10;
+export const DRAG_SNAP_THRESHOLD = 30;
+
+export type DragResult = 'expand' | 'collapse' | 'close' | 'none';
+
+/** Pure decision function: determines if finger movement qualifies as a drag gesture. */
+export function isDragGestureDetected(startY: number, currentY: number, threshold = DRAG_MOVE_THRESHOLD): boolean {
+  return Math.abs(currentY - startY) > threshold;
+}
+
+/** Pure decision function: given a drag delta and starting height, returns the drawer action. */
+export function computeDragResult(
+  deltaY: number,
+  startHeight: string,
+  isGesture: boolean,
+  expandedHeight = '100%',
+  threshold = DRAG_SNAP_THRESHOLD,
+): DragResult {
+  if (!isGesture) return 'none';
+  if (deltaY < -threshold) return 'expand';
+  if (deltaY > threshold) {
+    return startHeight === expandedHeight ? 'collapse' : 'close';
+  }
+  return 'none';
+}
 
 export interface DrawerDragResizeOptions {
   /** Whether the drawer is currently open. Height resets to initialHeight when false. */

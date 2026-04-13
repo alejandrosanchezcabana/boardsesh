@@ -30,7 +30,7 @@ const QUEUE_DRAWER_STYLES = {
 export interface QueueDrawerProps {
   open: boolean;
   onClose: () => void;
-  onTransitionEnd: (open: boolean) => void;
+  onTransitionEnd?: (open: boolean) => void;
   boardDetails: BoardDetails;
 }
 
@@ -177,7 +177,7 @@ const QueueDrawer: React.FC<QueueDrawerProps> = ({
       }, 100);
     }
     // Always propagate to parent for lifecycle management
-    onTransitionEnd(transitionOpen);
+    onTransitionEnd?.(transitionOpen);
   }, [onTransitionEnd]);
 
   return (

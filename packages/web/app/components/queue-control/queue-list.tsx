@@ -552,6 +552,7 @@ const QueueList = forwardRef<QueueListHandle, QueueListProps>(({ boardDetails, i
 // Static drawer styles — hoisted to avoid per-render allocation
 const actionsDrawerStyles = {
   wrapper: {
+    width: '100%',
     touchAction: 'pan-y' as const,
     transition: 'height 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
   },

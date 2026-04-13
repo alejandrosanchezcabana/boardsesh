@@ -655,7 +655,6 @@ const ClimbListItem: React.FC<ClimbListItemProps> = React.memo(
               <QueueDrawer
                 open={isQueueListOpen}
                 onClose={handleCloseQueueList}
-                onTransitionEnd={(open) => { if (!open) setIsQueueListOpen(false); }}
                 boardDetails={boardDetails}
               />
             )}
