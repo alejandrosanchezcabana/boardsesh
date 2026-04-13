@@ -247,7 +247,7 @@ function BottomTabBar({ boardDetails, angle, boardConfigs }: BottomTabBarProps) 
 
     // Auto-apply most recent filter
     try {
-      const recentSearches = await getRecentSearches(effectiveBoardDetails?.board_name, effectiveBoardDetails?.layout_id);
+      const recentSearches = await getRecentSearches();
       if (recentSearches.length > 0) {
         const mostRecent = recentSearches[0];
         const filterParams = searchParamsToUrlParams(mostRecent.filters as Parameters<typeof searchParamsToUrlParams>[0]);
