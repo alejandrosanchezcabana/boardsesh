@@ -90,9 +90,9 @@ html[data-theme="dark"] {
   --semantic-background: #000000;
   --semantic-surface: #0A0A0A;
   --semantic-surface-overlay: rgba(10, 10, 10, 0.95);
-  --semantic-selected: rgba(140, 74, 82, 0.12);
-  --semantic-selected-hover: rgba(140, 74, 82, 0.18);
-  --semantic-selected-light: rgba(140, 74, 82, 0.08);
+  --semantic-selected: rgba(175, 45, 60, 0.14);
+  --semantic-selected-hover: rgba(175, 45, 60, 0.20);
+  --semantic-selected-light: rgba(175, 45, 60, 0.08);
 
   /* Status background tints (semi-transparent for dark) */
   --color-success-bg: rgba(107, 144, 128, 0.12);

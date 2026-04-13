@@ -149,20 +149,15 @@ const QueueControlBar: React.FC<QueueControlBarProps> = ({ boardDetails, angle }
   const [tickCommentFocused, setTickCommentFocused] = useState(false);
   const quickTickBarRef = useRef<QuickTickBarHandle>(null);
 
-  // Swipe-to-dismiss state for the whole card when tick mode is active.
+  // Swipe-to-dismiss state — tracks vertical offset during down-swipe gesture.
   const [tickSwipeOffset, setTickSwipeOffset] = useState(0);
-  const [isTickDismissing, setIsTickDismissing] = useState(false);
-  const tickDismissRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  useEffect(() => {
-    return () => {
-      if (tickDismissRef.current) clearTimeout(tickDismissRef.current);
-    };
-  }, []);
+  // Keep the tick row mounted during the close animation so it can collapse.
+  const [tickRowVisible, setTickRowVisible] = useState(false);
   const handleTickCommentFocus = useCallback(() => setTickCommentFocused(true), []);
   const handleTickCommentBlur = useCallback(() => setTickCommentFocused(false), []);
 
-  // Transient "swipe left to dismiss" hint that floats above the queue
+  // Transient "swipe down to dismiss" hint that floats above the queue
   // control bar whenever the tick bar opens. Visible for 3s then fades out,
   // then unmounted so it doesn't hold layout space while invisible.
   const [swipeHintVisible, setSwipeHintVisible] = useState(false);
@@ -320,34 +315,42 @@ const QueueControlBar: React.FC<QueueControlBarProps> = ({ boardDetails, angle }
     };
   }, [tickBarActive]);
 
-  // Reset swipe-to-dismiss state when tick mode deactivates.
+  // Reset swipe offset when tick mode deactivates.
   useEffect(() => {
     if (!tickBarActive) {
       setTickSwipeOffset(0);
-      setIsTickDismissing(false);
     }
   }, [tickBarActive]);
 
-  const tickSwipeEnabled = tickBarActive && !tickCommentFocused && !isTickDismissing;
+  // Keep the tick row mounted during the 200ms close transition.
+  useEffect(() => {
+    if (tickBarActive) {
+      setTickRowVisible(true);
+    } else {
+      const timer = setTimeout(() => setTickRowVisible(false), 200);
+      return () => clearTimeout(timer);
+    }
+  }, [tickBarActive]);
+
+  const tickSwipeEnabled = tickBarActive && !tickCommentFocused;
 
   const tickDismissHandlers = useSwipeable({
     onSwiping: (eventData) => {
       if (!tickSwipeEnabled) return;
-      // Don't intercept swipes on horizontally-scrollable picker strips
       const target = eventData.event.target as HTMLElement | null;
       if (target?.closest('[data-scrollable-picker]')) return;
-      if (Math.abs(eventData.deltaY) > Math.abs(eventData.deltaX)) return;
-      if (eventData.deltaX > 0) { setTickSwipeOffset(0); return; }
-      setTickSwipeOffset(eventData.deltaX);
+      // Only track downward swipes; ignore horizontal-dominant gestures
+      if (Math.abs(eventData.deltaX) > Math.abs(eventData.deltaY)) return;
+      if (eventData.deltaY < 0) { setTickSwipeOffset(0); return; }
+      setTickSwipeOffset(eventData.deltaY);
     },
-    onSwipedLeft: (eventData) => {
+    onSwipedDown: (eventData) => {
       if (!tickSwipeEnabled) return;
       const target = eventData.event.target as HTMLElement | null;
       if (target?.closest('[data-scrollable-picker]')) return;
-      if (Math.abs(eventData.deltaX) >= 80) {
-        setIsTickDismissing(true);
-        setTickSwipeOffset(-window.innerWidth);
-        tickDismissRef.current = setTimeout(() => setActiveDrawer('none'), 220);
+      if (Math.abs(eventData.deltaY) >= 80) {
+        // Just close — the CSS grid collapse animation handles the visual exit
+        setActiveDrawer('none');
       } else {
         setTickSwipeOffset(0);
       }
@@ -356,26 +359,31 @@ const QueueControlBar: React.FC<QueueControlBarProps> = ({ boardDetails, angle }
       if (!tickSwipeEnabled) return;
       const target = eventData.event.target as HTMLElement | null;
       if (target?.closest('[data-scrollable-picker]')) return;
-      if (eventData.dir !== 'Left') setTickSwipeOffset(0);
+      if (eventData.dir !== 'Down') setTickSwipeOffset(0);
     },
     trackMouse: false,
-    preventScrollOnSwipe: true,
+    preventScrollOnSwipe: false,
     delta: 10,
   });
 
-  const tickDismissStyle = useMemo<React.CSSProperties | undefined>(() => {
-    if (!tickBarActive) return undefined;
-    const transition = isTickDismissing
-      ? 'transform 220ms ease-out, opacity 220ms ease-out'
-      : tickSwipeOffset === 0
-        ? 'transform 180ms ease-out'
-        : 'none';
+  // During a down-swipe, slide the inner content downward. The outer container
+  // clips it (overflow: hidden), making it look like it slides into the queue bar.
+  const tickDismissInnerStyle = useMemo<React.CSSProperties | undefined>(() => {
+    if (tickSwipeOffset === 0) return undefined;
     return {
-      transform: `translateX(${tickSwipeOffset}px)`,
-      opacity: isTickDismissing ? 0 : 1,
-      transition,
+      transform: `translateY(${tickSwipeOffset}px)`,
+      opacity: Math.max(0, 1 - tickSwipeOffset / 150),
+      transition: 'none',
     };
-  }, [tickBarActive, tickSwipeOffset, isTickDismissing]);
+  }, [tickSwipeOffset]);
+
+  // Snap-back transition when swipe is released without triggering dismiss.
+  const tickDismissSnapBack = useMemo<React.CSSProperties | undefined>(() => {
+    if (tickSwipeOffset !== 0) return undefined;
+    return {
+      transition: 'transform 180ms ease-out, opacity 180ms ease-out',
+    };
+  }, [tickSwipeOffset]);
 
   const { swipeHandlers, swipeOffset, isAnimating, animationDirection, enterDirection, clearEnterAnimation } = useCardSwipeNavigation({
     onSwipeNext: handleSwipeNext,
@@ -585,7 +593,7 @@ const QueueControlBar: React.FC<QueueControlBarProps> = ({ boardDetails, angle }
           </span>
         </div>
       )}
-      {/* Transient "swipe left to dismiss" hint — floats above the queue
+      {/* Transient "swipe down to dismiss" hint — floats above the queue
           control bar the first 3 seconds after tick mode opens, then fades
           away so it doesn't interfere with the stars or action buttons.
           Unmounted after the fade finishes so it releases its layout space. */}
@@ -595,69 +603,75 @@ const QueueControlBar: React.FC<QueueControlBarProps> = ({ boardDetails, angle }
           aria-hidden="true"
           data-testid="quick-tick-swipe-hint"
         >
-          swipe left to dismiss
+          swipe down to dismiss
         </div>
       )}
       {/* Main Control Bar */}
       <MuiCard
-        {...(tickBarActive ? tickDismissHandlers : {})}
         variant="outlined"
         className={styles.card}
         sx={{ border: 'none', backgroundColor: 'transparent' }}
-        style={tickDismissStyle}
       >
         <CardContent sx={{ p: 0, '&:last-child': { pb: 0 } }}>
-        {/* Tick-mode controls — grows upward from the bar */}
-        {tickBarActive && (
+        {/* Tick-mode controls — expands/collapses via CSS grid transition.
+            Swipe-to-dismiss handlers are on the tick row only, not the whole card. */}
+        {(tickBarActive || tickRowVisible) && (
           <div
-            className={styles.tickRow}
+            {...(tickBarActive ? tickDismissHandlers : {})}
+            className={`${styles.tickRow} ${tickBarActive ? styles.tickRowExpanded : ''}`}
             style={{ backgroundColor: gradeTintColor ?? (isDark ? 'transparent' : 'var(--semantic-surface)') }}
           >
-            <QuickTickBar
-              ref={quickTickBarRef}
-              currentClimb={currentClimb}
-              angle={angle}
-              boardDetails={boardDetails}
-              onSave={() => setActiveDrawer('none')}
-              onCancel={() => setActiveDrawer('none')}
-              comment={tickComment}
-              commentSlot={
-                <div className={`${styles.tickComment} ${tickCommentFocused ? styles.tickCommentExpanded : ''}`}>
-                  <TextField
-                    fullWidth
-                    size="small"
-                    variant="outlined"
-                    placeholder="Comment..."
-                    multiline
-                    minRows={1}
-                    maxRows={tickCommentFocused ? 4 : 1}
-                    value={tickComment}
-                    onChange={(e) => setTickComment(e.target.value)}
-                    onFocus={handleTickCommentFocus}
-                    onBlur={handleTickCommentBlur}
-                    slotProps={{
-                      htmlInput: { maxLength: 2000, 'aria-label': 'Tick comment' },
-                    }}
-                    InputProps={{
-                      startAdornment: (
-                        <InputAdornment position="start">
-                          <ChatBubbleOutlineOutlined sx={{ fontSize: 16, opacity: 0.5 }} />
-                        </InputAdornment>
-                      ),
-                    }}
-                    sx={{
-                      '& .MuiOutlinedInput-root': {
-                        borderRadius: '8px',
-                        backgroundColor: 'var(--neutral-50)',
-                        '& .MuiOutlinedInput-notchedOutline': {
-                          borderColor: 'var(--neutral-200)',
+            <div className={styles.tickRowInner} style={{ ...tickDismissSnapBack, ...tickDismissInnerStyle }}>
+              {/* Drag handle — pull down to dismiss */}
+              <div className={styles.tickDragHandle} aria-hidden="true">
+                <div className={styles.tickDragHandleBar} />
+              </div>
+              <QuickTickBar
+                ref={quickTickBarRef}
+                currentClimb={currentClimb}
+                angle={angle}
+                boardDetails={boardDetails}
+                onSave={() => setActiveDrawer('none')}
+                onCancel={() => setActiveDrawer('none')}
+                comment={tickComment}
+                commentSlot={
+                  <div className={`${styles.tickComment} ${tickCommentFocused ? styles.tickCommentExpanded : ''}`}>
+                    <TextField
+                      fullWidth
+                      size="small"
+                      variant="outlined"
+                      placeholder="Comment..."
+                      multiline
+                      minRows={1}
+                      maxRows={tickCommentFocused ? 4 : 1}
+                      value={tickComment}
+                      onChange={(e) => setTickComment(e.target.value)}
+                      onFocus={handleTickCommentFocus}
+                      onBlur={handleTickCommentBlur}
+                      slotProps={{
+                        htmlInput: { maxLength: 2000, 'aria-label': 'Tick comment' },
+                      }}
+                      InputProps={{
+                        startAdornment: (
+                          <InputAdornment position="start">
+                            <ChatBubbleOutlineOutlined sx={{ fontSize: 16, opacity: 0.5 }} />
+                          </InputAdornment>
+                        ),
+                      }}
+                      sx={{
+                        '& .MuiOutlinedInput-root': {
+                          borderRadius: '8px',
+                          backgroundColor: 'var(--neutral-50)',
+                          '& .MuiOutlinedInput-notchedOutline': {
+                            borderColor: 'var(--neutral-200)',
+                          },
                         },
-                      },
-                    }}
-                  />
-                </div>
-              }
-            />
+                      }}
+                    />
+                  </div>
+                }
+              />
+            </div>
           </div>
         )}
         {/* Swipe container - captures swipe gestures, does NOT translate */}

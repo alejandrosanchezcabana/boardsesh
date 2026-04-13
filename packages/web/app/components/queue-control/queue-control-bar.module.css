@@ -124,7 +124,7 @@
   }
 }
 
-/* Transient "swipe left to dismiss" hint — floats above the tick bar for a
+/* Transient "swipe down to close" hint — floats above the tick bar for a
    few seconds after tick mode opens, then fades out. Uses a small pill with
    a blurred backdrop so it reads as a system hint without competing with
    the action buttons below. */
@@ -300,28 +300,53 @@
   position: relative;
 }
 
-/* Tick controls row — expands upward from the main bar.
+/* Tick controls row — expands/collapses via CSS grid transition.
    z-index ensures the expanded comment overlays the swipeWrapper below. */
 .tickRow {
-  padding: 8px 12px;
-  animation: tickRowExpand 200ms ease-out;
+  display: grid;
+  grid-template-rows: 0fr;
+  opacity: 0;
+  transition: grid-template-rows 200ms ease-out, opacity 200ms ease-out;
   position: relative;
   z-index: 1;
 }
 
-@keyframes tickRowExpand {
-  from {
-    max-height: 0;
-    opacity: 0;
-    padding-top: 0;
-    padding-bottom: 0;
-  }
-  to {
-    max-height: 300px;
-    opacity: 1;
-    padding-top: 8px;
-    padding-bottom: 8px;
-  }
+.tickRowExpanded {
+  grid-template-rows: 1fr;
+  opacity: 1;
+}
+
+.tickRowInner {
+  overflow: hidden;
+  min-height: 0;
+  padding: 0 12px;
+  transition: padding 200ms ease-out;
+}
+
+.tickRowExpanded .tickRowInner {
+  padding: 8px 12px;
+  /* Allow comment box to overflow downward over the queue bar */
+  overflow: visible;
+}
+
+/* Drag handle — centered pill at the top of the tick row */
+.tickDragHandle {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 0 6px;
+  cursor: grab;
+}
+
+.tickDragHandle:active {
+  cursor: grabbing;
+}
+
+.tickDragHandleBar {
+  width: 36px;
+  height: 4px;
+  border-radius: 2px;
+  background-color: var(--neutral-200, #E5E7EB);
 }
 
 /* Comment input — fills available space in the left section */

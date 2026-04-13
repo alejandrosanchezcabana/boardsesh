@@ -170,9 +170,9 @@ export const darkTokens = {
   },
 
   semantic: {
-    selected: 'rgba(175, 45, 60, 0.25)',
-    selectedHover: 'rgba(175, 45, 60, 0.32)',
-    selectedLight: 'rgba(175, 45, 60, 0.12)',
+    selected: 'rgba(175, 45, 60, 0.14)',
+    selectedHover: 'rgba(175, 45, 60, 0.20)',
+    selectedLight: 'rgba(175, 45, 60, 0.08)',
     selectedBorder: '#8C4A52',
     background: '#000000',
     surface: '#0A0A0A',
