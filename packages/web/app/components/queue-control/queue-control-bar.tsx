@@ -564,7 +564,7 @@ const QueueControlBar: React.FC<QueueControlBarProps> = ({ boardDetails, angle }
         {(tickBarActive || tickRowVisible) && (
           <div
             {...(tickBarActive ? tickDismissHandlers : {})}
-            className={`${styles.tickRow} ${tickBarActive ? styles.tickRowExpanded : ''}`}
+            className={`${styles.tickRow} ${tickBarActive ? styles.tickRowExpanded : ''} ${tickSwipeOffset > 0 ? styles.tickRowSwiping : ''}`}
             style={{
               backgroundColor: gradeTintColor ?? (isDark ? 'transparent' : 'var(--semantic-surface)'),
               ...tickDismissStyle,
@@ -585,7 +585,7 @@ const QueueControlBar: React.FC<QueueControlBarProps> = ({ boardDetails, angle }
                 <CloseOutlined sx={{ fontSize: 16 }} />
               </IconButton>
             </div>
-            <div className={styles.tickRowInner} style={tickSwipeOffset > 0 ? { overflow: 'hidden' } : undefined}>
+            <div className={styles.tickRowInner}>
               {/* Drag handle */}
               <div className={styles.tickDragHandleRow}>
                 <div className={styles.tickDragHandle} aria-hidden="true">

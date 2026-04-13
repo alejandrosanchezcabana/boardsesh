@@ -476,8 +476,7 @@ export default function SessionDetailContent({
 
     const gradeMap = new Map<string, { flash: number; send: number; attempt: number }>();
     for (const tick of ticks) {
-      const grade = tick.difficultyName;
-      if (!grade) continue;
+      const grade = tick.difficultyName ?? 'Ungraded';
       const entry = gradeMap.get(grade) ?? { flash: 0, send: 0, attempt: 0 };
       if (tick.status === 'flash') entry.flash++;
       else if (tick.status === 'send') entry.send++;

@@ -41,7 +41,7 @@ export function useSessionTimer(
     };
 
     update();
-    // Short format only changes every minute, but 1s keeps it responsive
+    // Short format only changes every minute — 10s is enough to stay current
     const id = setInterval(update, short ? 10000 : 1000);
     return () => clearInterval(id);
   }, [startedAt, short]);

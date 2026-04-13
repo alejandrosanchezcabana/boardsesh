@@ -3,7 +3,7 @@ import type { ConnectionContext } from '@boardsesh/shared-schema';
 import { db } from '../../../db/client';
 import * as dbSchema from '@boardsesh/db/schema';
 import { requireAuthenticated, validateInput } from '../shared/helpers';
-import { difficultyNameWithFallbackExpr } from '../shared/sql-expressions';
+import { difficultyNameWithFallbackExpr, consensusGradeTable, consensusGradeJoinCondition } from '../shared/sql-expressions';
 import { FollowingAscentsFeedInputSchema } from '../../../validation/schemas';
 
 export const socialFeedQueries = {
@@ -78,6 +78,7 @@ export const socialFeedQueries = {
           eq(dbSchema.boardseshTicks.angle, dbSchema.boardClimbStats.angle)
         )
       )
+      .leftJoin(consensusGradeTable, consensusGradeJoinCondition)
       .where(inArray(dbSchema.boardseshTicks.userId, followedUserIds))
       .orderBy(desc(dbSchema.boardseshTicks.climbedAt))
       .limit(limit + 1)
@@ -167,6 +168,7 @@ export const socialFeedQueries = {
           eq(dbSchema.boardseshTicks.angle, dbSchema.boardClimbStats.angle)
         )
       )
+      .leftJoin(consensusGradeTable, consensusGradeJoinCondition)
       .orderBy(desc(dbSchema.boardseshTicks.climbedAt))
       .limit(limit + 1)
       .offset(offset);

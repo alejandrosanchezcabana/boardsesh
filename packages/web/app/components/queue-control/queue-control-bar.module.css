@@ -251,6 +251,12 @@
   overflow: visible;
 }
 
+/* During swipe-to-dismiss, force overflow hidden so content clips as
+   the grid row collapses — overrides the visible overflow above. */
+.tickRowSwiping .tickRowInner {
+  overflow: hidden;
+}
+
 /* Drag handle row — centers the handle pill with close button at the right */
 .tickDragHandleRow {
   position: relative;

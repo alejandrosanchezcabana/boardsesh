@@ -1,33 +1,38 @@
 import { sql, eq, and } from 'drizzle-orm';
+import { aliasedTable } from 'drizzle-orm/alias';
 import * as dbSchema from '@boardsesh/db/schema';
 import { db } from '../../../db/client';
 
 /**
- * SQL expression: consensus difficulty name from board_climb_stats.
- * Requires boardClimbStats to be joined in the query.
+ * Aliased board_difficulty_grades table for consensus grade lookups.
+ * Join this on ROUND(boardClimbStats.displayDifficulty) + boardType
+ * to avoid correlated subqueries.
  */
-export const consensusDifficultyNameExpr = sql<string | null>`(
-  SELECT bdg.boulder_name
-  FROM board_difficulty_grades bdg
-  WHERE bdg.board_type = ${dbSchema.boardseshTicks.boardType}
-    AND bdg.difficulty = ROUND(${dbSchema.boardClimbStats.displayDifficulty})
-  LIMIT 1
-)`;
+export const consensusGradeTable = aliasedTable(dbSchema.boardDifficultyGrades, 'consensus_grade');
+
+/**
+ * JOIN condition for consensusGradeTable — requires boardClimbStats
+ * to already be joined in the query.
+ */
+export const consensusGradeJoinCondition = and(
+  eq(consensusGradeTable.difficulty, sql`ROUND(${dbSchema.boardClimbStats.displayDifficulty})`),
+  eq(consensusGradeTable.boardType, dbSchema.boardClimbStats.boardType),
+);
+
+/**
+ * SQL expression: consensus difficulty name from the joined consensus grade table.
+ * Requires consensusGradeTable to be LEFT JOINed in the query.
+ */
+export const consensusDifficultyNameExpr = sql<string | null>`${consensusGradeTable.boulderName}`;
 
 /**
  * SQL expression: COALESCE user-logged grade with consensus grade.
  * Falls back to consensus when user didn't log a grade.
- * Requires both boardDifficultyGrades and boardClimbStats to be joined.
+ * Requires both boardDifficultyGrades and consensusGradeTable to be joined.
  */
 export const difficultyNameWithFallbackExpr = sql<string | null>`COALESCE(
   ${dbSchema.boardDifficultyGrades.boulderName},
-  (
-    SELECT bdg.boulder_name
-    FROM board_difficulty_grades bdg
-    WHERE bdg.board_type = ${dbSchema.boardseshTicks.boardType}
-      AND bdg.difficulty = ROUND(${dbSchema.boardClimbStats.displayDifficulty})
-    LIMIT 1
-  )
+  ${consensusGradeTable.boulderName}
 )`;
 
 /**

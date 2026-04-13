@@ -237,47 +237,14 @@ button,
   }
 }
 
-/* Force all MUI form inputs to white in dark mode */
-html[data-theme="dark"] .MuiOutlinedInput-root {
-  background-color: var(--input-bg, #FFFFFF);
-  color: #1F2937;
-}
-
-html[data-theme="dark"] .MuiOutlinedInput-root:hover {
-  background-color: var(--input-bg-hover, #F3F4F6);
-}
-
-html[data-theme="dark"] .MuiOutlinedInput-root.Mui-focused {
-  background-color: var(--input-bg-focused, #FFFFFF);
-}
-
-html[data-theme="dark"] .MuiFilledInput-root {
-  background-color: var(--input-bg, #FFFFFF);
-  color: #1F2937;
-}
-
-html[data-theme="dark"] .MuiSelect-icon {
-  color: #6B7280;
-}
-
-html[data-theme="dark"] .MuiInputLabel-root {
-  color: #6B7280;
-}
-
-html[data-theme="dark"] .MuiInputLabel-root.Mui-focused {
-  color: #8C4A52;
-}
-
-html[data-theme="dark"] .MuiOutlinedInput-input::placeholder {
-  color: #6B7280;
-  opacity: 1;
-}
-
+/* Dark-mode input icon/adornment colors — MUI theme overrides handle
+   backgrounds and text, but nested SVG icons and adornments need a CSS
+   rule because MUI doesn't expose a clean slot for them. */
 html[data-theme="dark"] .MuiOutlinedInput-root .MuiSvgIcon-root,
 html[data-theme="dark"] .MuiOutlinedInput-root .MuiInputAdornment-root,
 html[data-theme="dark"] .MuiFilledInput-root .MuiSvgIcon-root,
 html[data-theme="dark"] .MuiFilledInput-root .MuiInputAdornment-root {
-  color: #6B7280;
+  color: var(--neutral-500);
 }
 
 /* Ensure all interactive elements have minimum 16px font to prevent iOS auto-zoom on focus */

@@ -4,7 +4,7 @@ import { SUPPORTED_BOARDS } from '@boardsesh/shared-schema';
 import { db } from '../../../db/client';
 import * as dbSchema from '@boardsesh/db/schema';
 import { requireAuthenticated, validateInput } from '../shared/helpers';
-import { consensusDifficultyNameExpr, consensusDifficultyExpr, difficultyNameWithFallbackExpr } from '../shared/sql-expressions';
+import { consensusDifficultyNameExpr, consensusDifficultyExpr, difficultyNameWithFallbackExpr, consensusGradeTable, consensusGradeJoinCondition } from '../shared/sql-expressions';
 import { GetTicksInputSchema, BoardNameSchema, AscentFeedInputSchema } from '../../../validation/schemas';
 
 export const tickQueries = {
@@ -255,7 +255,8 @@ export const tickQueries = {
           eq(dbSchema.boardseshTicks.difficulty, dbSchema.boardDifficultyGrades.difficulty),
           eq(dbSchema.boardseshTicks.boardType, dbSchema.boardDifficultyGrades.boardType)
         )
-      );
+      )
+      .leftJoin(consensusGradeTable, consensusGradeJoinCondition);
 
     // Escape LIKE wildcards so user input is treated as a literal substring,
     // not a SQL pattern (e.g. typing "100%" should match the literal string).
@@ -483,6 +484,7 @@ export const tickQueries = {
           eq(dbSchema.boardseshTicks.angle, dbSchema.boardClimbStats.angle)
         )
       )
+      .leftJoin(consensusGradeTable, consensusGradeJoinCondition)
       .where(
         and(
           eq(dbSchema.boardseshTicks.userId, userId),

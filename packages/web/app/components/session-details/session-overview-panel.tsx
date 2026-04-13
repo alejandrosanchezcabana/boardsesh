@@ -41,7 +41,9 @@ export function buildSessionSummaryParts(stats: {
 }): string[] {
   const parts: string[] = [];
   if (stats.totalFlashes > 0) parts.push(`${stats.totalFlashes} flash${stats.totalFlashes !== 1 ? 'es' : ''}`);
-  parts.push(`${stats.totalSends} send${stats.totalSends !== 1 ? 's' : ''}`);
+  // totalSends includes flashes, so subtract to avoid double-counting
+  const nonFlashSends = stats.totalSends - stats.totalFlashes;
+  if (nonFlashSends > 0) parts.push(`${nonFlashSends} send${nonFlashSends !== 1 ? 's' : ''}`);
   if (stats.totalAttempts > 0) parts.push(`${stats.totalAttempts} attempt${stats.totalAttempts !== 1 ? 's' : ''}`);
   parts.push(`${stats.tickCount} climb${stats.tickCount !== 1 ? 's' : ''}`);
   if (stats.hardestGrade) {
@@ -287,11 +289,14 @@ export default function SessionOverviewPanel({
                 sx={{ bgcolor: 'success.main', color: 'success.contrastText', '& .MuiChip-icon': { color: 'inherit' } }}
               />
             )}
-            <Chip
-              icon={<CheckCircleOutlineOutlined />}
-              label={`${totalSends} send${totalSends !== 1 ? 's' : ''}`}
-              color="primary"
-            />
+            {/* totalSends includes flashes — subtract to avoid double-counting */}
+            {(totalSends - totalFlashes) > 0 && (
+              <Chip
+                icon={<CheckCircleOutlineOutlined />}
+                label={`${totalSends - totalFlashes} send${(totalSends - totalFlashes) !== 1 ? 's' : ''}`}
+                color="primary"
+              />
+            )}
             {totalAttempts > 0 && (
               <Chip
                 icon={<ErrorOutlineOutlined />}

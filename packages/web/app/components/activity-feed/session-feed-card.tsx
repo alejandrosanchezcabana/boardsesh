@@ -201,17 +201,20 @@ export default function SessionFeedCard({ session }: SessionFeedCardProps) {
                 }}
               />
             )}
-            <Chip
-              icon={<CheckCircleOutlineOutlined />}
-              label={`${totalSends} send${totalSends !== 1 ? 's' : ''}`}
-              size="small"
-              sx={{
-                borderRadius: themeTokens.borderRadius.full,
-                bgcolor: themeTokens.colors.successBg,
-                color: themeTokens.colors.success,
-                '& .MuiChip-icon': { color: 'inherit' },
-              }}
-            />
+            {/* totalSends includes flashes — subtract to avoid double-counting */}
+            {(totalSends - totalFlashes) > 0 && (
+              <Chip
+                icon={<CheckCircleOutlineOutlined />}
+                label={`${totalSends - totalFlashes} send${(totalSends - totalFlashes) !== 1 ? 's' : ''}`}
+                size="small"
+                sx={{
+                  borderRadius: themeTokens.borderRadius.full,
+                  bgcolor: themeTokens.colors.successBg,
+                  color: themeTokens.colors.success,
+                  '& .MuiChip-icon': { color: 'inherit' },
+                }}
+              />
+            )}
             {totalAttempts > 0 && (
               <Chip
                 icon={<ErrorOutlineOutlined />}

@@ -223,8 +223,7 @@ export const QuickTickBar = forwardRef<QuickTickBarHandle, QuickTickBarProps>(({
             mirrors the queue bar's [thumbnail + title + grade] column. */}
         <div className={styles.leftSection}>
           {/* Collapse any open picker when the comment field gains focus */}
-          {/* eslint-disable-next-line jsx-a11y/no-static-element-interactions */}
-          <div onFocus={() => setExpandedControl(null)} style={{ flex: 1, minWidth: 0 }}>
+          <div role="group" onFocus={() => setExpandedControl(null)} className={styles.commentWrapper}>
             {commentSlot}
           </div>
           <TickGradeButton

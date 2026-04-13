@@ -46,6 +46,12 @@
    Fixed 92px width matches the queue bar button cluster
    (Close 40px + 4px gap + Tick 40px + margins = 92px), ensuring the grade
    in the left section aligns with the consensus grade below. */
+/* Comment field wrapper — fills available space in the left section */
+.commentWrapper {
+  flex: 1;
+  min-width: 0;
+}
+
 .rightControls {
   flex: none;
   margin-left: 4px;
