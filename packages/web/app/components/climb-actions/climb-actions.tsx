@@ -191,35 +191,6 @@ export function ClimbActions({
     );
   }
 
-  // Overlay mode - labeled icon buttons in a wrapping grid for swipe-revealed actions
-  if (viewMode === 'overlay') {
-    return (
-      <Box
-        sx={{
-          display: 'flex',
-          flexWrap: 'wrap',
-          alignItems: 'flex-start',
-          justifyContent: 'flex-start',
-          gap: '2px',
-          width: '100%',
-        }}
-        className={className}
-      >
-        {actionsToShow.map((actionType) => {
-          const Renderer = ACTION_RENDERERS[actionType];
-          if (!Renderer) return null;
-          return (
-            <Renderer
-              key={actionType}
-              {...commonProps}
-              onComplete={onActionComplete ? () => handleActionComplete(actionType) : undefined}
-            />
-          );
-        })}
-      </Box>
-    );
-  }
-
   // Dropdown mode - use DropdownActions component for proper hooks handling
   if (viewMode === 'dropdown') {
     return (

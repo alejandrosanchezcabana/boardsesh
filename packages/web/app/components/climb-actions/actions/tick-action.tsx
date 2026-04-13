@@ -12,7 +12,6 @@ import CheckOutlined from '@mui/icons-material/CheckOutlined';
 import LoginOutlined from '@mui/icons-material/LoginOutlined';
 import AppsOutlined from '@mui/icons-material/AppsOutlined';
 import { ClimbActionProps, ClimbActionResult } from '../types';
-import { ActionOverlayElement } from '../action-view-renderer';
 import { useOptionalBoardProvider, BoardProvider } from '../../board-provider/board-provider-context';
 import { useAuthModal } from '@/app/components/providers/auth-modal-provider';
 import { LogAscentForm } from '../../logbook/logascent-form';
@@ -353,20 +352,6 @@ export function TickAction({
     </>
   );
 
-  // Overlay mode — vertical icon+label button; skip drawers when onTickAction handles the flow
-  const overlayElement = (
-    <ActionOverlayElement
-      icon={
-        <MuiBadge badgeContent={badgeCount} max={99} sx={{ '& .MuiBadge-badge': { backgroundColor: badgeColor, color: 'common.white' } }}>
-          {icon}
-        </MuiBadge>
-      }
-      label={label}
-      onClick={handleClick}
-      disabled={disabled}
-    />
-  );
-
   let element: React.ReactNode;
   switch (viewMode) {
     case 'icon':
@@ -378,9 +363,6 @@ export function TickAction({
       break;
     case 'list':
       element = listElement;
-      break;
-    case 'overlay':
-      element = onTickAction ? overlayElement : <>{overlayElement}{drawers}</>;
       break;
     case 'dropdown':
       element = drawers; // Need to render drawers even in dropdown mode

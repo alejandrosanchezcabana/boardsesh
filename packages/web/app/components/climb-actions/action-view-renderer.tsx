@@ -2,7 +2,6 @@
 
 import React from 'react';
 import MuiButton from '@mui/material/Button';
-import ButtonBase from '@mui/material/ButtonBase';
 import { ActionTooltip } from './action-tooltip';
 import { themeTokens } from '@/app/theme/theme-config';
 import type { ClimbActionsViewMode, ClimbActionSize, ClimbActionResult, ClimbActionMenuItem, ClimbActionType } from './types';
@@ -138,63 +137,6 @@ export function ActionListElement({
 }
 
 /**
- * Standard overlay element for action components (overlay mode / swipe-revealed actions).
- * Vertical layout with icon on top and a small label beneath for clarity.
- */
-const overlayButtonSx = {
-  display: 'flex',
-  flexDirection: 'column',
-  alignItems: 'center',
-  justifyContent: 'center',
-  gap: '2px',
-  padding: '4px 6px',
-  borderRadius: '8px',
-  minWidth: 0,
-  color: 'common.white',
-  '&:hover': { backgroundColor: 'rgba(255,255,255,0.15)' },
-  '&.Mui-disabled': { color: 'rgba(255,255,255,0.3)' },
-} as const;
-
-const overlayLabelStyle: React.CSSProperties = {
-  fontSize: 10,
-  lineHeight: 1,
-  whiteSpace: 'nowrap',
-  overflow: 'hidden',
-  textOverflow: 'ellipsis',
-  maxWidth: 56,
-  textAlign: 'center',
-};
-
-export function ActionOverlayElement({
-  icon,
-  label,
-  onClick,
-  disabled,
-  extraContent,
-}: {
-  icon: React.ReactNode;
-  label: string;
-  onClick: (e?: React.MouseEvent) => void;
-  disabled?: boolean;
-  extraContent?: React.ReactNode;
-}) {
-  return (
-    <>
-      <ButtonBase
-        onClick={onClick}
-        disabled={disabled}
-        aria-label={label}
-        sx={overlayButtonSx}
-      >
-        {icon}
-        <span style={overlayLabelStyle}>{label}</span>
-      </ButtonBase>
-      {extraContent}
-    </>
-  );
-}
-
-/**
  * Resolves which element to display based on the current view mode.
  * Eliminates the repeated switch statement across all action components.
  */
@@ -204,7 +146,6 @@ export function resolveActionViewMode(
     iconElement: React.ReactNode;
     buttonElement: React.ReactNode;
     listElement: React.ReactNode;
-    overlayElement: React.ReactNode;
     dropdownElement?: React.ReactNode;
   },
 ): React.ReactNode {
@@ -216,8 +157,6 @@ export function resolveActionViewMode(
       return elements.buttonElement;
     case 'list':
       return elements.listElement;
-    case 'overlay':
-      return elements.overlayElement;
     case 'dropdown':
       return elements.dropdownElement ?? null;
     default:
@@ -249,7 +188,6 @@ export function buildActionResult({
   iconElementOverride,
   buttonElementOverride,
   listElementOverride,
-  overlayElementOverride,
   dropdownElementOverride,
   expandedContent,
 }: {
@@ -269,7 +207,6 @@ export function buildActionResult({
   iconElementOverride?: React.ReactNode;
   buttonElementOverride?: React.ReactNode;
   listElementOverride?: React.ReactNode;
-  overlayElementOverride?: React.ReactNode;
   dropdownElementOverride?: React.ReactNode;
   expandedContent?: React.ReactNode;
 }): ClimbActionResult {
@@ -309,16 +246,6 @@ export function buildActionResult({
     />
   );
 
-  const overlayElement = overlayElementOverride ?? (
-    <ActionOverlayElement
-      icon={icon}
-      label={tooltipTitle ?? label}
-      onClick={onClick}
-      disabled={disabled}
-      extraContent={extraContent}
-    />
-  );
-
   const menuItem: ClimbActionMenuItem = menuItemOverride ?? {
     key,
     label,
@@ -330,7 +257,6 @@ export function buildActionResult({
     iconElement,
     buttonElement,
     listElement,
-    overlayElement,
     dropdownElement: dropdownElementOverride ?? extraContent ?? null,
   });
 
