@@ -2,13 +2,13 @@
 
 import React, { useState, useCallback, useEffect, useMemo, useImperativeHandle, useRef, forwardRef } from 'react';
 import Stack from '@mui/material/Stack';
-import { track } from '@vercel/analytics';
 import { Angle, Climb, BoardDetails } from '@/app/lib/types';
 import { useBoardProvider } from '../board-provider/board-provider-context';
-import type { LogbookEntry, TickStatus } from '@/app/hooks/use-logbook';
 import { TENSION_KILTER_GRADES } from '@/app/lib/board-data';
-import { useConfetti } from '@/app/hooks/use-confetti';
-import { saveTickDraft, loadTickDraft, clearTickDraft } from '@/app/lib/tick-draft-db';
+import { loadTickDraft } from '@/app/lib/tick-draft-db';
+import { useTickSave, buildTickTarget, hasPriorHistoryForClimb, type TickTarget } from '@/app/hooks/use-tick-save';
+// Re-export so existing consumers (tests) don't break
+export { hasPriorHistoryForClimb };
 import {
   TickControls,
   TickGradeButton,
@@ -18,15 +18,6 @@ import {
   type ExpandedControl,
 } from './tick-controls';
 import styles from './quick-tick-bar.module.css';
-
-/** Snapshot of the tick target taken when the bar is first opened with a valid climb. */
-interface TickTarget {
-  climb: Climb;
-  angle: Angle;
-  boardDetails: BoardDetails;
-  /** Whether the user has any prior logbook history for this climb at open time. */
-  hasPriorHistory: boolean;
-}
 
 export interface QuickTickBarProps {
   currentClimb: Climb | null;
@@ -69,8 +60,7 @@ export const QuickTickBar = forwardRef<QuickTickBarHandle, QuickTickBarProps>(({
   comment,
   commentSlot,
 }, ref) => {
-  const { saveTick, logbook } = useBoardProvider();
-  const fireConfetti = useConfetti();
+  const { logbook } = useBoardProvider();
 
   // Snapshot the target climb the first time we get a non-null climb.
   // Uses a ref flag so it only fires once, avoiding re-snapshot when
@@ -160,71 +150,20 @@ export const QuickTickBar = forwardRef<QuickTickBarHandle, QuickTickBarProps>(({
     setExpandedControl(null);
   }, []);
 
-  const handleSave = useCallback(
-    (isAscent: boolean, confettiOrigin?: HTMLElement | null) => {
-      if (!tickTarget) return;
-
-      const { climb, angle: targetAngle, boardDetails: targetBoard, hasPriorHistory } = tickTarget;
-
-      let status: TickStatus;
-      if (isAscent) {
-        status = hasPriorHistory || attemptCount > 1 ? 'send' : 'flash';
-      } else {
-        status = 'attempt';
-      }
-
-      // Capture values for the draft in case the save fails.
-      const draftValues = { climbUuid: climb.uuid, angle: Number(targetAngle), quality, difficulty, attemptCount, comment, status };
-
-      // Fire confetti and close the bar immediately — don't wait for the network.
-      fireConfetti(confettiOrigin ?? document.getElementById('button-tick'));
-      onSave();
-
-      // Fire-and-forget: the logbook cache updates optimistically via useSaveTick's onMutate.
-      saveTick({
-        climbUuid: climb.uuid,
-        angle: Number(targetAngle),
-        isMirror: !!climb.mirrored,
-        status,
-        attemptCount,
-        quality: quality ?? undefined,
-        difficulty,
-        isBenchmark: false,
-        comment: comment || '',
-        climbedAt: new Date().toISOString(),
-        layoutId: targetBoard.layout_id,
-        sizeId: targetBoard.size_id,
-        setIds: Array.isArray(targetBoard.set_ids)
-          ? targetBoard.set_ids.join(',')
-          : String(targetBoard.set_ids),
-      }).then(() => {
-        track('Quick Tick Saved', {
-          boardLayout: targetBoard.layout_name || '',
-          status,
-          attemptCount,
-          hasQuality: quality !== null,
-          hasDifficulty: difficulty !== undefined,
-          hasComment: comment.length > 0,
-        });
-        clearTickDraft(climb.uuid, Number(targetAngle));
-      }).catch(() => {
-        track('Quick Tick Failed', {
-          boardLayout: targetBoard.layout_name || '',
-        });
-        saveTickDraft(draftValues);
-        onError?.();
-      });
-    },
-    [tickTarget, quality, difficulty, comment, saveTick, onSave, attemptCount, fireConfetti, onError],
-  );
-
-  const handleConfirm = useCallback(() => handleSave(true), [handleSave]);
-  const handleAttempt = useCallback((originElement?: HTMLElement | null) => handleSave(false, originElement), [handleSave]);
+  const { save, saveAttempt } = useTickSave({
+    tickTarget,
+    quality,
+    difficulty,
+    attemptCount,
+    comment,
+    onSave,
+    onError,
+  });
 
   useImperativeHandle(ref, () => ({
-    save: handleConfirm,
-    saveAttempt: handleAttempt,
-  }), [handleConfirm, handleAttempt]);
+    save,
+    saveAttempt,
+  }), [save, saveAttempt]);
 
   return (
     <div data-testid="quick-tick-bar" className={styles.tickBar}>
@@ -288,32 +227,3 @@ export const QuickTickBar = forwardRef<QuickTickBarHandle, QuickTickBarProps>(({
 });
 
 QuickTickBar.displayName = 'QuickTickBar';
-
-/**
- * Decide whether the user has any prior history for a climb at open time.
- */
-export function hasPriorHistoryForClimb(
-  climb: Climb,
-  logbook: LogbookEntry[],
-): boolean {
-  const ascents = climb.userAscents;
-  const attempts = climb.userAttempts;
-  if (ascents != null || attempts != null) {
-    return (ascents ?? 0) + (attempts ?? 0) > 0;
-  }
-  return logbook.some((entry) => entry.climb_uuid === climb.uuid);
-}
-
-function buildTickTarget(
-  climb: Climb,
-  angle: Angle,
-  boardDetails: BoardDetails,
-  logbook: LogbookEntry[],
-): TickTarget {
-  return {
-    climb,
-    angle,
-    boardDetails,
-    hasPriorHistory: hasPriorHistoryForClimb(climb, logbook),
-  };
-}

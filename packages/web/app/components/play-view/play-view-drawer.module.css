@@ -16,6 +16,8 @@
   position: relative;
   display: flex;
   flex-direction: column;
+  /* Board renders top-aligned so the tick bar can float over the bottom without covering the climb */
+  justify-content: flex-start;
 }
 
 .boardSection {
@@ -46,7 +48,7 @@
   align-items: center;
   justify-content: center;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  transition: transform 0.2s ease, box-shadow 0.2s ease, opacity 0.2s ease;
   position: relative;
 }
 
@@ -79,12 +81,19 @@
   background: linear-gradient(135deg, var(--color-warning, #f59e0b) 0%, var(--color-warning-dark, #d97706) 100%);
 }
 
-.tickFab:hover {
+/* FAB hiding animation when tick bar is active */
+.tickFabHiding {
+  transform: scale(0.5);
+  opacity: 0;
+  pointer-events: none;
+}
+
+.tickFab:hover:not(.tickFabHiding) {
   transform: scale(1.05);
   box-shadow: 0 6px 16px rgba(0, 0, 0, 0.4);
 }
 
-.tickFab:active {
+.tickFab:active:not(.tickFabHiding) {
   transform: scale(0.95);
 }
 
@@ -92,20 +101,113 @@
   font-size: 28px;
 }
 
+/* Floating tick bar — overlays the bottom of the board section, no reflow */
+.tickBarContainer {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  z-index: 10;
+  pointer-events: none;
+  transform: translateY(100%);
+  opacity: 0;
+  transition: transform 200ms ease-out, opacity 150ms ease-out;
+}
+
+.tickBarContainerActive {
+  pointer-events: auto;
+  transform: translateY(0);
+  opacity: 1;
+}
+
+.tickBarInner {
+  padding: 8px 12px;
+  /* background-color set inline via grade tint color */
+  border-top: 1px solid var(--neutral-200);
+  border-radius: 12px 12px 0 0;
+  box-shadow: 0 -4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.tickBarButtons {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
+  padding-top: 8px;
+}
+
+/* Action bar wrapper for main bar + expandable actions */
+.actionBarWrapper {
+  flex-shrink: 0;
+  border-top: 1px solid var(--neutral-100);
+}
 
 .actionBar {
   display: flex;
   justify-content: space-around;
-  align-items: center;
+  align-items: flex-start;
   padding: 8px 16px 12px;
-  flex-shrink: 0;
-  border-top: 1px solid var(--neutral-100);
+}
+
+.actionBarItem {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+}
+
+.actionBarLabel {
+  font-size: 10px;
+  line-height: 1;
+  color: var(--neutral-500);
+  white-space: nowrap;
+  display: none;
+}
+
+.actionBarExpanded .actionBarLabel {
+  display: block;
+}
+
+/* Expanded actions row — grid animation below the main bar */
+.expandedActionsRow {
+  display: grid;
+  grid-template-rows: 0fr;
+  transition: grid-template-rows 200ms ease-out;
+  overflow: hidden;
+}
+
+.expandedActionsRowOpen {
+  grid-template-rows: 1fr;
+}
+
+.expandedActionsContent {
+  overflow: hidden;
+  min-height: 0;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 4px;
+  padding: 0 16px;
+  /* Fixed dark background — not var(--neutral-700) which flips in dark mode */
+  background-color: #1F2937;
+  border-radius: 8px;
+}
+
+.expandedActionsRowOpen .expandedActionsContent {
+  padding: 8px 16px;
+  margin: 0 16px 12px;
 }
 
 .swipeCardContainer {
   width: 100%;
   height: 100%;
   position: relative;
+}
+
+/* Top-align the board canvas within the carousel card so it sits right under the title.
+   The canvas renderer sets align-items: center via inline style, so !important is needed. */
+.swipeCardContainer > div {
+  align-items: flex-start !important;
 }
 
 .queueDragHeader {

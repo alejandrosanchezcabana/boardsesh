@@ -43,6 +43,17 @@ export interface UseSwipeActionsOptions {
   /** Pixels the content peeks left during confirmation to reveal the action icon.
    *  Should match the right action layer width so both states show the same area. */
   confirmationPeekOffset?: number;
+  /**
+   * Swipe behaviour after threshold:
+   * - 'fire-and-snap' (default): fires action and snaps content back to zero.
+   * - 'reveal-toggle': holds content offset to reveal action overlay; left swipe closes.
+   */
+  revealMode?: 'fire-and-snap' | 'reveal-toggle';
+  /** Pixel offset at which the content stays when in 'reveal-toggle' mode and revealed.
+   *  Defaults to the right max-swipe value. */
+  revealOffset?: number;
+  /** Called when the revealed state changes in 'reveal-toggle' mode. */
+  onRevealChange?: (revealed: boolean) => void;
 }
 
 export interface UseSwipeActionsReturn {
@@ -50,6 +61,10 @@ export interface UseSwipeActionsReturn {
   swipeHandlers: ReturnType<typeof useSwipeable>;
   /** Whether a left-swipe action was just confirmed (checkmark peek is visible) */
   swipeLeftConfirmed: boolean;
+  /** Whether the right-swipe action overlay is revealed (reveal-toggle mode) */
+  revealed: boolean;
+  /** Programmatically close the revealed overlay */
+  closeReveal: () => void;
   /** Ref for the swipeable content element (applies transform) */
   contentRef: React.RefCallback<HTMLElement>;
   /** Ref for the left action background (visible on swipe right) */
@@ -81,8 +96,12 @@ export function useSwipeActions({
   maxSwipeRight,
   disabled = false,
   confirmationPeekOffset = 76,
+  revealMode = 'fire-and-snap',
+  revealOffset: revealOffsetProp,
+  onRevealChange,
 }: UseSwipeActionsOptions): UseSwipeActionsReturn {
   const [swipeLeftConfirmed, setSwipeLeftConfirmed] = useState(false);
+  const [revealed, setRevealed] = useState(false);
   const confirmationTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // DOM element refs (set via ref callbacks)
@@ -90,11 +109,19 @@ export function useSwipeActions({
   const leftActionEl = useRef<HTMLElement | null>(null);
   const rightActionEl = useRef<HTMLElement | null>(null);
 
+  // Track reveal-toggle state without React render
+  const revealedRef = useRef(false);
+
+  // Compute the reveal offset — default to the right max-swipe distance.
+  const effectiveMaxRight = maxSwipeRight ?? maxSwipe;
+  const effectiveRevealOffset = revealOffsetProp ?? effectiveMaxRight;
+
   // Clean up confirmation timer and DOM refs on unmount.
   // Nulling refs breaks reference chains that retain detached DOM trees.
   useEffect(() => {
     return () => {
       if (confirmationTimerRef.current) clearTimeout(confirmationTimerRef.current);
+      revealedRef.current = false;
       contentEl.current = null;
       leftActionEl.current = null;
       rightActionEl.current = null;
@@ -151,11 +178,36 @@ export function useSwipeActions({
     }
   }, [swipeThreshold, onSwipeOffsetChange]);
 
+  /** Snap offset to a given position with a smooth transition */
+  const snapTo = useCallback((target: number) => {
+    if (contentEl.current) {
+      contentEl.current.style.transition = 'transform 150ms ease-out';
+      contentEl.current.style.transform = `translateX(${target}px)`;
+    }
+    offsetRef.current = target;
+    onSwipeOffsetChange?.(target);
+
+    if (target > 0 && leftActionEl.current) {
+      leftActionEl.current.style.opacity = '1';
+      leftActionEl.current.style.visibility = 'visible';
+    }
+  }, [onSwipeOffsetChange]);
+
   /** Snap offset back to zero (no action taken) */
   const resetOffset = useCallback(() => {
     applyOffset(0);
     updateSwipeZone('none');
   }, [applyOffset, updateSwipeZone]);
+
+  /** Close the revealed overlay programmatically */
+  const closeReveal = useCallback(() => {
+    if (!revealedRef.current) return;
+    revealedRef.current = false;
+    setRevealed(false);
+    onRevealChange?.(false);
+    applyOffset(0);
+    updateSwipeZone('none');
+  }, [applyOffset, updateSwipeZone, onRevealChange]);
 
   const handleSwipeLeftComplete = useCallback(() => {
     // Guard against rapid double-swipes
@@ -195,10 +247,24 @@ export function useSwipeActions({
   }, [onSwipeLeft, applyOffset, updateSwipeZone, confirmationPeekOffset]);
 
   const handleSwipeRightComplete = useCallback(() => {
-    applyOffset(0);
-    updateSwipeZone('none');
-    onSwipeRight();
-  }, [onSwipeRight, applyOffset, updateSwipeZone]);
+    if (revealMode === 'reveal-toggle') {
+      // Toggle: if already revealed, close; otherwise, open.
+      if (revealedRef.current) {
+        closeReveal();
+      } else {
+        revealedRef.current = true;
+        setRevealed(true);
+        onRevealChange?.(true);
+        snapTo(effectiveRevealOffset);
+        updateSwipeZone('none');
+        onSwipeRight();
+      }
+    } else {
+      applyOffset(0);
+      updateSwipeZone('none');
+      onSwipeRight();
+    }
+  }, [revealMode, onSwipeRight, applyOffset, updateSwipeZone, closeReveal, snapTo, effectiveRevealOffset, onRevealChange]);
 
   const handleSwipeLeftLongComplete = useCallback(() => {
     applyOffset(0);
@@ -235,6 +301,24 @@ export function useSwipeActions({
         event.preventDefault();
       }
 
+      // In reveal-toggle mode when revealed, a left swipe closes the overlay.
+      // Map the gesture so that the content moves from revealOffset toward 0.
+      if (revealMode === 'reveal-toggle' && revealedRef.current) {
+        // Prevent scroll interference during close gesture
+        if ('nativeEvent' in event) {
+          event.nativeEvent.preventDefault();
+        } else {
+          event.preventDefault();
+        }
+        const closeOffset = Math.max(0, effectiveRevealOffset + deltaX);
+        if (contentEl.current) {
+          contentEl.current.style.transition = 'none';
+          contentEl.current.style.transform = `translateX(${closeOffset}px)`;
+        }
+        offsetRef.current = closeOffset;
+        return;
+      }
+
       const maxLeft = maxSwipeLeft ?? maxSwipe;
       const maxRight = maxSwipeRight ?? maxSwipe;
       const clampedOffset = Math.max(-maxLeft, Math.min(maxRight, deltaX));
@@ -258,6 +342,20 @@ export function useSwipeActions({
       }
     },
     onSwipedLeft: (eventData) => {
+      // In reveal-toggle mode when revealed, left swipe closes the overlay.
+      if (revealMode === 'reveal-toggle' && revealedRef.current) {
+        const currentOffset = effectiveRevealOffset + eventData.deltaX;
+        if (currentOffset < effectiveRevealOffset * 0.5) {
+          // Past halfway — close
+          closeReveal();
+        } else {
+          // Snap back to revealed position
+          snapTo(effectiveRevealOffset);
+        }
+        resetDirection();
+        return;
+      }
+
       const swipeDistance = Math.abs(eventData.deltaX);
       const longSwipeReady = typeof longSwipeLeftThreshold === 'number' && swipeDistance >= longSwipeLeftThreshold;
 
@@ -271,6 +369,13 @@ export function useSwipeActions({
       resetDirection();
     },
     onSwipedRight: (eventData) => {
+      // In reveal-toggle mode when revealed, right swipe is a no-op (already open).
+      if (revealMode === 'reveal-toggle' && revealedRef.current) {
+        snapTo(effectiveRevealOffset);
+        resetDirection();
+        return;
+      }
+
       const swipeDistance = Math.abs(eventData.deltaX);
       const longSwipeReady = typeof longSwipeRightThreshold === 'number' && swipeDistance >= longSwipeRightThreshold;
 
@@ -284,6 +389,12 @@ export function useSwipeActions({
       resetDirection();
     },
     onTouchEndOrOnMouseUp: () => {
+      // In reveal-toggle mode when revealed, let the swipedLeft/swipedRight handlers deal with it.
+      if (revealMode === 'reveal-toggle' && revealedRef.current) {
+        resetDirection();
+        return;
+      }
+
       if (Math.abs(offsetRef.current) < swipeThreshold) {
         resetOffset();
       }
@@ -298,6 +409,8 @@ export function useSwipeActions({
   return {
     swipeHandlers,
     swipeLeftConfirmed,
+    revealed,
+    closeReveal,
     contentRef,
     leftActionRef,
     rightActionRef,

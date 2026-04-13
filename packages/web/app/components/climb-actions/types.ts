@@ -22,7 +22,7 @@ export type ClimbActionType =
  * - dropdown: Menu items for Dropdown component
  * - compact: Small buttons with labels on hover
  */
-export type ClimbActionsViewMode = 'icon' | 'button' | 'dropdown' | 'compact' | 'list';
+export type ClimbActionsViewMode = 'icon' | 'button' | 'dropdown' | 'compact' | 'list' | 'overlay';
 
 /**
  * Size options for action buttons/icons
@@ -51,6 +51,8 @@ export interface ClimbActionProps extends ClimbActionBaseProps {
   className?: string;
   onComplete?: () => void;
   onOpenPlaylistSelector?: () => void;
+  /** When provided, the tick action calls this instead of its built-in drawer flow. */
+  onTickAction?: () => void;
 }
 
 /**
@@ -73,6 +75,8 @@ export interface ClimbActionsProps extends ClimbActionBaseProps {
   onOpenPlaylistSelector?: () => void;
   /** Aurora app URL for Open in App action */
   auroraAppUrl?: string;
+  /** When provided, the tick action calls this instead of its built-in drawer flow. */
+  onTickAction?: () => void;
 }
 
 /**

@@ -12,6 +12,7 @@ import CheckOutlined from '@mui/icons-material/CheckOutlined';
 import LoginOutlined from '@mui/icons-material/LoginOutlined';
 import AppsOutlined from '@mui/icons-material/AppsOutlined';
 import { ClimbActionProps, ClimbActionResult } from '../types';
+import { ActionOverlayElement } from '../action-view-renderer';
 import { useOptionalBoardProvider, BoardProvider } from '../../board-provider/board-provider-context';
 import { useAuthModal } from '@/app/components/providers/auth-modal-provider';
 import { LogAscentForm } from '../../logbook/logascent-form';
@@ -44,6 +45,7 @@ export function TickAction({
   disabled,
   className,
   onComplete,
+  onTickAction,
 }: ClimbActionProps): ClimbActionResult {
   const [drawerVisible, setDrawerVisible] = useState(false);
   const [selectedBoard, setSelectedBoard] = useState<UserBoard | null>(null);
@@ -96,6 +98,11 @@ export function TickAction({
       existingAscentCount: badgeCount,
     });
 
+    if (onTickAction) {
+      onTickAction();
+      return;
+    }
+
     if (!isAuthenticated && alwaysUseApp && loaded) {
       const url = constructClimbInfoUrl(boardDetails, climb.uuid);
       if (url) {
@@ -106,7 +113,7 @@ export function TickAction({
     }
 
     setDrawerVisible(true);
-  }, [boardDetails, badgeCount, isAuthenticated, alwaysUseApp, loaded, climb.uuid, angle]);
+  }, [boardDetails, badgeCount, isAuthenticated, alwaysUseApp, loaded, climb.uuid, angle, onTickAction]);
 
   const closeDrawer = useCallback(() => {
     setDrawerVisible(false);
@@ -346,6 +353,20 @@ export function TickAction({
     </>
   );
 
+  // Overlay mode — vertical icon+label button; skip drawers when onTickAction handles the flow
+  const overlayElement = (
+    <ActionOverlayElement
+      icon={
+        <MuiBadge badgeContent={badgeCount} max={99} sx={{ '& .MuiBadge-badge': { backgroundColor: badgeColor, color: 'common.white' } }}>
+          {icon}
+        </MuiBadge>
+      }
+      label={label}
+      onClick={handleClick}
+      disabled={disabled}
+    />
+  );
+
   let element: React.ReactNode;
   switch (viewMode) {
     case 'icon':
@@ -357,6 +378,9 @@ export function TickAction({
       break;
     case 'list':
       element = listElement;
+      break;
+    case 'overlay':
+      element = onTickAction ? overlayElement : <>{overlayElement}{drawers}</>;
       break;
     case 'dropdown':
       element = drawers; // Need to render drawers even in dropdown mode

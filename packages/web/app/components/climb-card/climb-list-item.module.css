@@ -13,3 +13,29 @@
     display: inline-flex;
   }
 }
+
+/* Background layer shown during the swipe gesture (before reveal completes) */
+.actionsOverlayBg {
+  position: absolute;
+  inset: 0;
+  /* Fixed dark background — not var(--neutral-700) which flips in dark mode */
+  background-color: #1F2937;
+  opacity: 0;
+  visibility: hidden;
+}
+
+/* Action overlay shown when fully revealed — in normal flow so it can wrap to 2 rows */
+.actionsOverlay {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  align-content: center;
+  justify-content: flex-start;
+  padding: 8px 12px;
+  gap: 2px;
+  /* Fixed dark background — not var(--neutral-700) which flips in dark mode */
+  background-color: #1F2937;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  min-height: 56px;
+  cursor: pointer;
+}

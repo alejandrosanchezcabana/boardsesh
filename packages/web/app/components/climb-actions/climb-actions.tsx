@@ -103,6 +103,7 @@ export function ClimbActions({
   onActionComplete,
   onOpenPlaylistSelector,
   auroraAppUrl,
+  onTickAction,
 }: ClimbActionsProps) {
   // Determine which actions to show
   const actionsToShow = useMemo(() => {
@@ -123,8 +124,9 @@ export function ClimbActions({
       size,
       onOpenPlaylistSelector,
       auroraAppUrl,
+      onTickAction,
     }),
-    [climb, boardDetails, angle, currentPathname, viewMode, size, onOpenPlaylistSelector, auroraAppUrl]
+    [climb, boardDetails, angle, currentPathname, viewMode, size, onOpenPlaylistSelector, auroraAppUrl, onTickAction]
   );
 
   // Memoize action complete handler to prevent creating new functions on every render
@@ -174,6 +176,35 @@ export function ClimbActions({
   if (viewMode === 'list') {
     return (
       <Box sx={{ display: 'flex', flexDirection: 'column', py: 1 }} className={className}>
+        {actionsToShow.map((actionType) => {
+          const Renderer = ACTION_RENDERERS[actionType];
+          if (!Renderer) return null;
+          return (
+            <Renderer
+              key={actionType}
+              {...commonProps}
+              onComplete={onActionComplete ? () => handleActionComplete(actionType) : undefined}
+            />
+          );
+        })}
+      </Box>
+    );
+  }
+
+  // Overlay mode - labeled icon buttons in a wrapping grid for swipe-revealed actions
+  if (viewMode === 'overlay') {
+    return (
+      <Box
+        sx={{
+          display: 'flex',
+          flexWrap: 'wrap',
+          alignItems: 'flex-start',
+          justifyContent: 'flex-start',
+          gap: '2px',
+          width: '100%',
+        }}
+        className={className}
+      >
         {actionsToShow.map((actionType) => {
           const Renderer = ACTION_RENDERERS[actionType];
           if (!Renderer) return null;

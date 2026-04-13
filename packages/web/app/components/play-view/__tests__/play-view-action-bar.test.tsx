@@ -30,6 +30,9 @@ vi.mock('@mui/icons-material/FavoriteBorderOutlined', () => ({
 vi.mock('@mui/icons-material/MoreHorizOutlined', () => ({
   default: () => React.createElement('svg', { 'data-testid': 'icon-more' }),
 }));
+vi.mock('@mui/icons-material/CloseOutlined', () => ({
+  default: () => React.createElement('svg', { 'data-testid': 'icon-close' }),
+}));
 vi.mock('@mui/icons-material/FormatListBulletedOutlined', () => ({
   default: () => React.createElement('svg', { 'data-testid': 'icon-queue' }),
 }));
@@ -53,8 +56,9 @@ function buildProps(overrides: Partial<React.ComponentProps<typeof PlayViewActio
     onNextClick: vi.fn(),
     onMirror: vi.fn(),
     onToggleFavorite: vi.fn(),
-    onOpenActions: vi.fn(),
+    onToggleActions: vi.fn(),
     onOpenQueue: vi.fn(),
+    actionsExpanded: false,
     ...overrides,
   };
 }
@@ -134,11 +138,11 @@ describe('PlayViewActionBar', () => {
     expect(onToggleFavorite).toHaveBeenCalledOnce();
   });
 
-  it('calls onOpenActions when actions button clicked', () => {
-    const onOpenActions = vi.fn();
-    render(<PlayViewActionBar {...buildProps({ onOpenActions })} />);
+  it('calls onToggleActions when actions button clicked', () => {
+    const onToggleActions = vi.fn();
+    render(<PlayViewActionBar {...buildProps({ onToggleActions })} />);
     fireEvent.click(screen.getByLabelText('Climb actions'));
-    expect(onOpenActions).toHaveBeenCalledOnce();
+    expect(onToggleActions).toHaveBeenCalledOnce();
   });
 
   it('calls onOpenQueue when queue button clicked', () => {
