@@ -3,9 +3,12 @@ import {
   computeDragResult,
   isDragGestureDetected,
   DRAG_MOVE_THRESHOLD,
-  DRAG_SNAP_THRESHOLD,
-  DRAG_CLOSE_THRESHOLD,
+  FLICK_VELOCITY_THRESHOLD,
 } from '@/app/hooks/use-drawer-drag-resize';
+
+const INITIAL = 0.6; // 60%
+const EXPANDED = 0.9; // 90%
+const VP = 1000; // viewport height for easy math
 
 describe('Actions drawer drag-to-resize logic', () => {
   describe('exported constants', () => {
@@ -13,12 +16,8 @@ describe('Actions drawer drag-to-resize logic', () => {
       expect(DRAG_MOVE_THRESHOLD).toBe(10);
     });
 
-    it('DRAG_SNAP_THRESHOLD is 30', () => {
-      expect(DRAG_SNAP_THRESHOLD).toBe(30);
-    });
-
-    it('DRAG_CLOSE_THRESHOLD is 120', () => {
-      expect(DRAG_CLOSE_THRESHOLD).toBe(120);
+    it('FLICK_VELOCITY_THRESHOLD is 0.5', () => {
+      expect(FLICK_VELOCITY_THRESHOLD).toBe(0.5);
     });
   });
 
@@ -34,19 +33,13 @@ describe('Actions drawer drag-to-resize logic', () => {
       expect(isDragGestureDetected(200, 190)).toBe(false);
     });
 
-    it('returns true for upward movement just beyond threshold (11px)', () => {
+    it('returns true for movement just beyond threshold (11px)', () => {
+      expect(isDragGestureDetected(200, 211)).toBe(true);
       expect(isDragGestureDetected(200, 189)).toBe(true);
     });
 
-    it('returns true for downward movement just beyond threshold (11px)', () => {
-      expect(isDragGestureDetected(200, 211)).toBe(true);
-    });
-
-    it('returns true for large upward movement', () => {
+    it('returns true for large movements', () => {
       expect(isDragGestureDetected(500, 100)).toBe(true);
-    });
-
-    it('returns true for large downward movement', () => {
       expect(isDragGestureDetected(100, 500)).toBe(true);
     });
 
@@ -59,123 +52,97 @@ describe('Actions drawer drag-to-resize logic', () => {
   // ----- Drag result decision (touchend phase) -----
 
   describe('computeDragResult', () => {
-    it('returns "none" when no drag gesture was detected', () => {
-      expect(computeDragResult(-50, '60%', false)).toBe('none');
+    // The new signature: computeDragResult(currentHeightPx, viewportHeight, velocity, initialFrac, expandedFrac)
+
+    // --- Fast flick always closes ---
+
+    it('returns "close" for fast downward flick regardless of position', () => {
+      // At 80% height but fast flick
+      expect(computeDragResult(800, VP, 0.6, INITIAL, EXPANDED)).toBe('close');
     });
 
-    it('returns "none" when no gesture, even with large delta', () => {
-      expect(computeDragResult(100, '60%', false)).toBe('none');
+    it('returns "close" for fast flick even near expanded height', () => {
+      expect(computeDragResult(850, VP, 1.0, INITIAL, EXPANDED)).toBe('close');
     });
 
-    it('returns "none" for upward drag exactly at threshold (deltaY = -30)', () => {
-      expect(computeDragResult(-30, '60%', true)).toBe('none');
+    it('does not close for slow drag at same position', () => {
+      expect(computeDragResult(800, VP, 0.1, INITIAL, EXPANDED)).toBe('expand');
     });
 
-    it('returns "none" for downward drag exactly at threshold (deltaY = 30)', () => {
-      expect(computeDragResult(30, '60%', true)).toBe('none');
+    // --- Position-based snapping (slow drag) ---
+
+    it('returns "close" when dragged below half of initial height', () => {
+      // Half of 60% = 30% of viewport = 300px. Below that → close.
+      expect(computeDragResult(250, VP, 0, INITIAL, EXPANDED)).toBe('close');
     });
 
-    it('returns "none" for zero delta with gesture detected', () => {
-      expect(computeDragResult(0, '60%', true)).toBe('none');
+    it('returns "collapse" when dragged just above half of initial height', () => {
+      // 350px = 35% — above 30% but below midpoint (75%)
+      expect(computeDragResult(350, VP, 0, INITIAL, EXPANDED)).toBe('collapse');
     });
 
-    it('returns "none" for small upward drag within dead zone', () => {
-      expect(computeDragResult(-15, '90%', true)).toBe('none');
+    it('returns "collapse" when at exactly initial height', () => {
+      expect(computeDragResult(600, VP, 0, INITIAL, EXPANDED)).toBe('collapse');
     });
 
-    it('returns "none" for small downward drag within dead zone', () => {
-      expect(computeDragResult(20, '90%', true)).toBe('none');
+    it('returns "expand" when above midpoint between initial and expanded', () => {
+      // Midpoint = (60 + 90) / 2 = 75%. 760px > 750px midpoint → expand
+      expect(computeDragResult(760, VP, 0, INITIAL, EXPANDED)).toBe('expand');
     });
 
-    it('returns "expand" for upward drag just beyond threshold (deltaY = -31)', () => {
-      expect(computeDragResult(-31, '60%', true)).toBe('expand');
+    it('returns "expand" when at expanded height', () => {
+      expect(computeDragResult(900, VP, 0, INITIAL, EXPANDED)).toBe('expand');
     });
 
-    it('returns "expand" for large upward drag from 60%', () => {
-      expect(computeDragResult(-200, '60%', true)).toBe('expand');
+    it('returns "expand" when above expanded height', () => {
+      expect(computeDragResult(950, VP, 0, INITIAL, EXPANDED)).toBe('expand');
     });
 
-    it('returns "expand" for upward drag from 90% (idempotent)', () => {
-      expect(computeDragResult(-50, '90%', true)).toBe('expand');
+    // --- Edge cases ---
+
+    it('returns "close" at 0 height', () => {
+      expect(computeDragResult(0, VP, 0, INITIAL, EXPANDED)).toBe('close');
     });
 
-    it('returns "collapse" for downward drag just beyond threshold from 90%', () => {
-      expect(computeDragResult(31, '90%', true)).toBe('collapse');
+    it('returns "expand" at midpoint exactly', () => {
+      // Midpoint = 750px. At midpoint → expand (>= midpoint)
+      expect(computeDragResult(750, VP, 0, INITIAL, EXPANDED)).toBe('expand');
     });
 
-    it('returns "close" for long downward drag from 90% (exceeds close threshold)', () => {
-      expect(computeDragResult(150, '90%', true)).toBe('close');
-    });
-
-    it('returns "close" for downward drag just beyond threshold from 60%', () => {
-      expect(computeDragResult(31, '60%', true)).toBe('close');
-    });
-
-    it('returns "close" for large downward drag from 60%', () => {
-      expect(computeDragResult(200, '60%', true)).toBe('close');
-    });
-
-    it('respects a custom threshold', () => {
-      expect(computeDragResult(-40, '60%', true, '100%', 50)).toBe('none');
-      expect(computeDragResult(-51, '60%', true, '100%', 50)).toBe('expand');
-    });
-  });
-
-  // ----- Height reset on close -----
-
-  describe('height reset behavior', () => {
-    it('after close, the drawer should reset to 60% for next open', () => {
-      const result = computeDragResult(50, '60%', true);
-      expect(result).toBe('close');
-      const reopenResult = computeDragResult(-50, '60%', true);
-      expect(reopenResult).toBe('expand');
-    });
-
-    it('after collapse from 90% to 60%, subsequent downward drag closes', () => {
-      expect(computeDragResult(50, '90%', true)).toBe('collapse');
-      expect(computeDragResult(50, '60%', true)).toBe('close');
-    });
-
-    it('full lifecycle: open at 60% -> expand -> collapse -> close', () => {
-      expect(computeDragResult(-50, '60%', true)).toBe('expand');
-      expect(computeDragResult(50, '90%', true)).toBe('collapse');
-      expect(computeDragResult(50, '60%', true)).toBe('close');
+    it('returns "expand" just above midpoint', () => {
+      expect(computeDragResult(751, VP, 0, INITIAL, EXPANDED)).toBe('expand');
     });
   });
 
-  // ----- End-to-end gesture flow -----
+  // ----- Lifecycle flows -----
 
-  describe('full gesture flow (detection + result)', () => {
-    it('small tap (5px movement) produces no action', () => {
-      const startY = 300;
-      const endY = 305;
-      const gesture = isDragGestureDetected(startY, endY);
-      expect(gesture).toBe(false);
-      expect(computeDragResult(endY - startY, '60%', gesture)).toBe('none');
+  describe('drag lifecycle', () => {
+    it('slow drag from 90% to ~70% snaps back to 60%', () => {
+      // Started at 90%, dragged to 70% slowly → below midpoint (75%) → collapse
+      expect(computeDragResult(700, VP, 0.1, INITIAL, EXPANDED)).toBe('collapse');
     });
 
-    it('deliberate upward swipe from 60% expands', () => {
-      const startY = 400;
-      const endY = 340;
-      const gesture = isDragGestureDetected(startY, endY);
-      expect(gesture).toBe(true);
-      expect(computeDragResult(endY - startY, '60%', gesture)).toBe('expand');
+    it('slow drag from 90% to ~80% snaps back to 90%', () => {
+      // Above midpoint → expand
+      expect(computeDragResult(800, VP, 0.1, INITIAL, EXPANDED)).toBe('expand');
     });
 
-    it('deliberate downward swipe from 90% collapses', () => {
-      const startY = 200;
-      const endY = 260;
-      const gesture = isDragGestureDetected(startY, endY);
-      expect(gesture).toBe(true);
-      expect(computeDragResult(endY - startY, '90%', gesture)).toBe('collapse');
+    it('slow drag from 60% to ~20% closes', () => {
+      // Below half of initial (30%) → close
+      expect(computeDragResult(200, VP, 0.1, INITIAL, EXPANDED)).toBe('close');
     });
 
-    it('deliberate downward swipe from 60% closes', () => {
-      const startY = 200;
-      const endY = 260;
-      const gesture = isDragGestureDetected(startY, endY);
-      expect(gesture).toBe(true);
-      expect(computeDragResult(endY - startY, '60%', gesture)).toBe('close');
+    it('fast flick from 90% closes', () => {
+      expect(computeDragResult(850, VP, 0.6, INITIAL, EXPANDED)).toBe('close');
+    });
+
+    it('fast flick from 60% closes', () => {
+      expect(computeDragResult(550, VP, 0.8, INITIAL, EXPANDED)).toBe('close');
+    });
+
+    it('slow drag from 60% to 50% stays at 60%', () => {
+      // 50% > 30% threshold and < 75% midpoint → collapse (i.e. snap to 60%)
+      expect(computeDragResult(500, VP, 0.1, INITIAL, EXPANDED)).toBe('collapse');
     });
   });
 });

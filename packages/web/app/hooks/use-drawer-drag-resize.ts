@@ -3,8 +3,8 @@
 import { useCallback, useEffect, useRef } from 'react';
 
 export const DRAG_MOVE_THRESHOLD = 10;
-export const DRAG_SNAP_THRESHOLD = 30;
-export const DRAG_CLOSE_THRESHOLD = 120;
+/** Minimum velocity (px/ms) for a flick to close the drawer. */
+export const FLICK_VELOCITY_THRESHOLD = 0.5;
 
 export type DragResult = 'expand' | 'collapse' | 'close' | 'none';
 
@@ -13,22 +13,33 @@ export function isDragGestureDetected(startY: number, currentY: number, threshol
   return Math.abs(currentY - startY) > threshold;
 }
 
-/** Pure decision function: given a drag delta and starting height, returns the drawer action. */
+/**
+ * Pure decision function for the final drawer state after a drag ends.
+ *
+ * - Fast downward flick (velocity > threshold) → close
+ * - Dragged past the bottom edge of the initial height → close
+ * - Dragged to a position between initial and expanded → snap to nearest
+ * - Dragged upward → expand
+ */
 export function computeDragResult(
-  deltaY: number,
-  startHeight: string,
-  isGesture: boolean,
-  expandedHeight = '90%',
-  threshold = DRAG_SNAP_THRESHOLD,
-  closeThreshold = DRAG_CLOSE_THRESHOLD,
+  currentHeightPx: number,
+  viewportHeight: number,
+  velocity: number,
+  initialFraction: number,
+  expandedFraction: number,
 ): DragResult {
-  if (!isGesture) return 'none';
-  if (deltaY < -threshold) return 'expand';
-  if (deltaY > closeThreshold) return 'close';
-  if (deltaY > threshold) {
-    return startHeight === expandedHeight ? 'collapse' : 'close';
-  }
-  return 'none';
+  const currentFraction = currentHeightPx / viewportHeight;
+
+  // Fast downward flick always closes
+  if (velocity > FLICK_VELOCITY_THRESHOLD) return 'close';
+
+  // Below half of initial height → close
+  if (currentFraction < initialFraction * 0.5) return 'close';
+
+  // Snap to nearest of initial or expanded
+  const midpoint = (initialFraction + expandedFraction) / 2;
+  if (currentFraction < midpoint) return 'collapse';
+  return 'expand';
 }
 
 export interface DrawerDragResizeOptions {
@@ -53,12 +64,15 @@ export interface DrawerDragResizeResult {
   };
 }
 
+function parseFraction(pct: string): number {
+  return parseFloat(pct) / 100;
+}
+
 /**
  * Hook that implements Spotify-style drag-to-resize for bottom drawers.
  *
- * Drag up → expand to 90%.
- * Drag down from expanded → collapse to initial height (60%).
- * Drag down from initial height → close.
+ * The drawer follows the finger during drags and snaps to the nearest
+ * resting height (60% or 90%) on release. A fast downward flick closes.
  */
 export function useDrawerDragResize({
   open,
@@ -69,8 +83,11 @@ export function useDrawerDragResize({
   const paperRef = useRef<HTMLDivElement>(null);
   const heightRef = useRef(initialHeight);
   const dragStartY = useRef(0);
-  const dragStartHeight = useRef(initialHeight);
+  const dragStartHeightPx = useRef(0);
   const isDragGesture = useRef(false);
+  const lastTouchY = useRef(0);
+  const lastTouchTime = useRef(0);
+  const velocityRef = useRef(0);
 
   const updateHeight = useCallback((height: string) => {
     heightRef.current = height;
@@ -87,20 +104,45 @@ export function useDrawerDragResize({
   }, [open, initialHeight, updateHeight]);
 
   const onTouchStart = useCallback((e: React.TouchEvent) => {
-    dragStartY.current = e.touches[0].clientY;
-    dragStartHeight.current = heightRef.current;
+    const y = e.touches[0].clientY;
+    dragStartY.current = y;
+    lastTouchY.current = y;
+    lastTouchTime.current = Date.now();
+    velocityRef.current = 0;
     isDragGesture.current = false;
+    // Capture the paper's current pixel height
+    dragStartHeightPx.current = paperRef.current?.offsetHeight ?? 0;
+    // Disable height transition during drag for instant feedback
+    if (paperRef.current) {
+      paperRef.current.style.transition = 'none';
+    }
   }, []);
 
   const onTouchMove = useCallback((e: React.TouchEvent) => {
-    const deltaY = e.touches[0].clientY - dragStartY.current;
-    if (Math.abs(deltaY) > DRAG_MOVE_THRESHOLD) {
+    const y = e.touches[0].clientY;
+    const totalDelta = y - dragStartY.current;
+
+    if (Math.abs(totalDelta) > DRAG_MOVE_THRESHOLD) {
       isDragGesture.current = true;
     }
-    // Only show visual feedback for downward drags (positive deltaY)
-    if (isDragGesture.current && deltaY > 0 && paperRef.current) {
-      paperRef.current.style.transition = 'none';
-      paperRef.current.style.transform = `translateY(${deltaY}px)`;
+
+    if (!isDragGesture.current) return;
+
+    // Track velocity (positive = downward)
+    const now = Date.now();
+    const dt = now - lastTouchTime.current;
+    if (dt > 0) {
+      velocityRef.current = (y - lastTouchY.current) / dt;
+    }
+    lastTouchY.current = y;
+    lastTouchTime.current = now;
+
+    // Directly set the paper height to follow the finger.
+    // Dragging down (positive delta) shrinks the drawer.
+    const paper = paperRef.current;
+    if (paper) {
+      const newHeight = Math.max(0, dragStartHeightPx.current - totalDelta);
+      paper.style.height = `${newHeight}px`;
     }
   }, []);
 
@@ -116,26 +158,30 @@ export function useDrawerDragResize({
     }
   }, []);
 
-  const onTouchEnd = useCallback((e: React.TouchEvent) => {
+  const onTouchEnd = useCallback(() => {
     const paper = paperRef.current;
 
-    if (!isDragGesture.current) {
-      // Reset any partial transform from a tiny drag
-      if (paper) {
-        paper.style.transition = '';
-        paper.style.transform = '';
-      }
-      return;
-    }
-
-    const deltaY = e.changedTouches[0].clientY - dragStartY.current;
-    const result = computeDragResult(deltaY, dragStartHeight.current, true, expandedHeight);
-
-    // Animate back to resting position
+    // Re-enable transition for the snap animation
     if (paper) {
-      paper.style.transition = 'transform 0.2s cubic-bezier(0.4, 0, 0.2, 1), height 0.3s cubic-bezier(0.4, 0, 0.2, 1)';
-      paper.style.transform = '';
+      paper.style.transition = 'height 0.3s cubic-bezier(0.4, 0, 0.2, 1)';
     }
+
+    if (!isDragGesture.current) return;
+
+    const currentHeightPx = paper?.offsetHeight ?? 0;
+    const viewportHeight = window.innerHeight;
+    // Velocity: positive = finger moving down = closing direction
+    const velocity = velocityRef.current;
+    const initialFrac = parseFraction(initialHeight);
+    const expandedFrac = parseFraction(expandedHeight);
+
+    const result = computeDragResult(
+      currentHeightPx,
+      viewportHeight,
+      velocity,
+      initialFrac,
+      expandedFrac,
+    );
 
     switch (result) {
       case 'expand':
@@ -152,13 +198,11 @@ export function useDrawerDragResize({
   }, [onClose, initialHeight, expandedHeight, updateHeight, scrollToTop]);
 
   // Auto-expand when the user scrolls content inside the drawer.
-  // Find the scroll container (element with overflow auto/scroll) inside the paper.
   useEffect(() => {
     if (!open) return;
     const paper = paperRef.current;
     if (!paper) return;
 
-    // Find the scrollable body element — SwipeableDrawer renders a Box with overflow: auto
     let scrollEl: HTMLElement | null = null;
     const candidates = paper.querySelectorAll<HTMLElement>('*');
     for (const el of candidates) {
@@ -168,7 +212,6 @@ export function useDrawerDragResize({
         break;
       }
     }
-    // Fallback: even if not yet scrollable, find the body box by overflow style
     if (!scrollEl) {
       for (const el of candidates) {
         const overflow = getComputedStyle(el).overflowY;
