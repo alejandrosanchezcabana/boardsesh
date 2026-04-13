@@ -7,6 +7,7 @@ import { Angle, Climb, BoardDetails } from '@/app/lib/types';
 import { useBoardProvider } from '../board-provider/board-provider-context';
 import type { LogbookEntry, TickStatus } from '@/app/hooks/use-logbook';
 import { TENSION_KILTER_GRADES } from '@/app/lib/board-data';
+import { useConfetti } from '@/app/hooks/use-confetti';
 import {
   TickControls,
   TickGradeButton,
@@ -31,6 +32,8 @@ export interface QuickTickBarProps {
   angle: Angle;
   boardDetails: BoardDetails;
   onSave: () => void;
+  /** Called when a save fails so the parent can show feedback. */
+  onError?: () => void;
   /** Current comment text. Owned by the parent so the comment field can live
    *  outside this bar (above the queue control bar) without causing reflow. */
   comment: string;
@@ -41,6 +44,8 @@ export interface QuickTickBarProps {
 export interface QuickTickBarHandle {
   /** Trigger a save (ascent). Called by the parent tick button. */
   save: () => void;
+  /** Trigger a save (attempt). Pass the origin element for confetti positioning. */
+  saveAttempt: (originElement?: HTMLElement | null) => void;
 }
 
 /**
@@ -56,10 +61,12 @@ export const QuickTickBar = forwardRef<QuickTickBarHandle, QuickTickBarProps>(({
   angle,
   boardDetails,
   onSave,
+  onError,
   comment,
   commentSlot,
 }, ref) => {
   const { saveTick, logbook } = useBoardProvider();
+  const fireConfetti = useConfetti();
 
   // Snapshot the target climb the first time we get a non-null climb.
   // Uses a ref flag so it only fires once, avoiding re-snapshot when
@@ -135,7 +142,7 @@ export const QuickTickBar = forwardRef<QuickTickBarHandle, QuickTickBarProps>(({
   }, []);
 
   const handleSave = useCallback(
-    async (isAscent: boolean) => {
+    async (isAscent: boolean, confettiOrigin?: HTMLElement | null) => {
       if (!tickTarget || isSaving) return;
 
       const { climb, angle: targetAngle, boardDetails: targetBoard, hasPriorHistory } = tickTarget;
@@ -176,23 +183,28 @@ export const QuickTickBar = forwardRef<QuickTickBarHandle, QuickTickBarProps>(({
           hasComment: comment.length > 0,
         });
 
+        fireConfetti(confettiOrigin ?? document.getElementById('button-tick'));
+
         onSave();
       } catch {
         track('Quick Tick Failed', {
           boardLayout: targetBoard.layout_name || '',
         });
+        onError?.();
       } finally {
         setIsSaving(false);
       }
     },
-    [tickTarget, quality, difficulty, comment, isSaving, saveTick, onSave, attemptCount],
+    [tickTarget, quality, difficulty, comment, isSaving, saveTick, onSave, attemptCount, fireConfetti, onError],
   );
 
   const handleConfirm = useCallback(() => handleSave(true), [handleSave]);
+  const handleAttempt = useCallback((originElement?: HTMLElement | null) => handleSave(false, originElement), [handleSave]);
 
   useImperativeHandle(ref, () => ({
     save: handleConfirm,
-  }), [handleConfirm]);
+    saveAttempt: handleAttempt,
+  }), [handleConfirm, handleAttempt]);
 
   return (
     <div data-testid="quick-tick-bar" className={styles.tickBar}>
