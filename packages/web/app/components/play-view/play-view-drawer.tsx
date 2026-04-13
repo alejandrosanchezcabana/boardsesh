@@ -36,6 +36,8 @@ import type { ActiveDrawer } from '../queue-control/queue-control-bar';
 import { PLAY_DRAWER_EVENT } from '../queue-control/play-drawer-event';
 import type { BoardDetails, Angle, Climb } from '@/app/lib/types';
 import styles from './play-view-drawer.module.css';
+import drawerStyles from '../swipeable-drawer/swipeable-drawer.module.css';
+import { useDrawerDragResize } from '@/app/hooks/use-drawer-drag-resize';
 import ClimbDetailShellClient from '@/app/components/climb-detail/climb-detail-shell.client';
 import { useBuildClimbDetailSections } from '@/app/components/climb-detail/build-climb-detail-sections';
 import { renderBoard } from '@/app/lib/board-render-worker/worker-manager';
@@ -340,12 +342,14 @@ const PlayViewDrawer: React.FC<PlayViewDrawerProps> = ({
 
   const playPaperRef = useRef<HTMLDivElement>(null);
 
-  // Actions drawer drag-to-resize refs
-  const actionsPaperRef = useRef<HTMLDivElement>(null);
-  const actionsHeightRef = useRef('60%');
-  const actionsDragStartY = useRef(0);
-  const actionsDragStartHeight = useRef('60%');
-  const actionsIsDragGesture = useRef(false);
+  // Custom swipe-to-close for nested disablePortal drawers (actions + playlist)
+  const handleCloseActions = useCallback(() => setIsActionsOpen(false), []);
+
+  // Actions drawer drag-to-resize
+  const { paperRef: actionsPaperRef, dragHandlers: actionsDragHandlers } = useDrawerDragResize({
+    open: isActionsOpen,
+    onClose: handleCloseActions,
+  });
 
   const pathname = usePathname();
   const { showMessage } = useSnackbar();
@@ -486,51 +490,6 @@ const PlayViewDrawer: React.FC<PlayViewDrawerProps> = ({
   }, []);
 
   const isMirrored = !!currentClimb?.mirrored;
-
-  // Custom swipe-to-close for nested disablePortal drawers (actions + playlist)
-  const handleCloseActions = useCallback(() => setIsActionsOpen(false), []);
-
-  // Actions drawer drag-to-resize handlers
-  const updateActionsHeight = useCallback((height: string) => {
-    actionsHeightRef.current = height;
-    if (actionsPaperRef.current) {
-      actionsPaperRef.current.style.height = height;
-    }
-  }, []);
-
-  const handleActionsDragStart = useCallback((e: React.TouchEvent) => {
-    actionsDragStartY.current = e.touches[0].clientY;
-    actionsDragStartHeight.current = actionsHeightRef.current;
-    actionsIsDragGesture.current = false;
-  }, []);
-
-  const handleActionsDragMove = useCallback((e: React.TouchEvent) => {
-    if (Math.abs(e.touches[0].clientY - actionsDragStartY.current) > 10) {
-      actionsIsDragGesture.current = true;
-    }
-  }, []);
-
-  const handleActionsDragEnd = useCallback((e: React.TouchEvent) => {
-    if (!actionsIsDragGesture.current) return;
-    const deltaY = e.changedTouches[0].clientY - actionsDragStartY.current;
-    const THRESHOLD = 30;
-    if (deltaY < -THRESHOLD) {
-      updateActionsHeight('100%');
-    } else if (deltaY > THRESHOLD) {
-      if (actionsDragStartHeight.current === '100%') {
-        updateActionsHeight('60%');
-      } else {
-        handleCloseActions();
-      }
-    }
-  }, [handleCloseActions, updateActionsHeight]);
-
-  // Reset actions drawer height when it closes
-  useEffect(() => {
-    if (!isActionsOpen) {
-      updateActionsHeight('60%');
-    }
-  }, [isActionsOpen, updateActionsHeight]);
 
   // Go to queue from actions drawer
   const handleGoToQueueFromActions = useCallback(() => {
@@ -852,20 +811,18 @@ const PlayViewDrawer: React.FC<PlayViewDrawerProps> = ({
             <>
               <div
                 data-swipe-blocked=""
-                onTouchStart={handleActionsDragStart}
-                onTouchMove={handleActionsDragMove}
-                onTouchEnd={handleActionsDragEnd}
+                {...actionsDragHandlers}
                 style={{ touchAction: 'none' }}
               >
-                <div style={{ display: 'flex', justifyContent: 'center', padding: '12px 0' }}>
-                  <div style={{ width: 36, height: 4, borderRadius: 2, backgroundColor: 'var(--neutral-300, #d9d9d9)' }} />
+                <div className={drawerStyles.dragHandleZoneHorizontal}>
+                  <div className={drawerStyles.dragHandleBarHorizontal} />
                 </div>
                 <Box
                   sx={{
                     display: 'flex',
                     alignItems: 'center',
                     padding: `${themeTokens.spacing[3]}px`,
-                    borderBottom: '1px solid var(--neutral-200)',
+                    borderBottom: `1px solid ${themeTokens.neutral[200]}`,
                   }}
                 >
                   <DrawerClimbHeader climb={currentClimb} boardDetails={boardDetails} />

@@ -11,6 +11,8 @@ import { usePathname } from 'next/navigation';
 import { track } from '@vercel/analytics';
 import dynamic from 'next/dynamic';
 import { useIsDarkMode } from '@/app/hooks/use-is-dark-mode';
+import { useDrawerDragResize } from '@/app/hooks/use-drawer-drag-resize';
+import drawerCss from '../swipeable-drawer/swipeable-drawer.module.css';
 import { useWindowVirtualizer } from '@tanstack/react-virtual';
 import { Climb, BoardDetails } from '@/app/lib/types';
 import ErrorBoundary from '../error-boundary';
@@ -72,13 +74,6 @@ const SharedDrawers = React.memo(forwardRef<SharedDrawerHandle, SharedDrawersPro
     const [activeDrawerClimb, setActiveDrawerClimb] = useState<Climb | null>(null);
     const [drawerMode, setDrawerMode] = useState<'actions' | 'playlist' | null>(null);
 
-    // Drag-to-resize state for the actions drawer
-    const actionsPaperRef = useRef<HTMLDivElement>(null);
-    const actionsHeightRef = useRef('60%');
-    const dragStartY = useRef(0);
-    const dragStartHeight = useRef('60%');
-    const isDragGesture = useRef(false);
-
     // Queue list drawer state
     const [isQueueListOpen, setIsQueueListOpen] = useState(false);
 
@@ -94,6 +89,11 @@ const SharedDrawers = React.memo(forwardRef<SharedDrawerHandle, SharedDrawersPro
     }), []);
 
     const handleCloseDrawer = useCallback(() => setDrawerMode(null), []);
+
+    const { paperRef: actionsPaperRef, dragHandlers: actionsDragHandlers } = useDrawerDragResize({
+      open: drawerMode === 'actions',
+      onClose: handleCloseDrawer,
+    });
     const handleSwitchToPlaylist = useCallback(() => setDrawerMode('playlist'), []);
     const handleDrawerTransitionEnd = useCallback((open: boolean) => {
       if (!open) setActiveDrawerClimb(null);
@@ -108,48 +108,6 @@ const SharedDrawers = React.memo(forwardRef<SharedDrawerHandle, SharedDrawersPro
       () => (activeDrawerClimb ? resolveBoardDetails(activeDrawerClimb) : boardDetails),
       [activeDrawerClimb, resolveBoardDetails, boardDetails],
     );
-
-    // --- Drag-to-resize handlers for actions drawer ---
-    const updateActionsHeight = useCallback((height: string) => {
-      actionsHeightRef.current = height;
-      if (actionsPaperRef.current) {
-        actionsPaperRef.current.style.height = height;
-      }
-    }, []);
-
-    const handleActionsDragStart = useCallback((e: React.TouchEvent) => {
-      dragStartY.current = e.touches[0].clientY;
-      dragStartHeight.current = actionsHeightRef.current;
-      isDragGesture.current = false;
-    }, []);
-
-    const handleActionsDragMove = useCallback((e: React.TouchEvent) => {
-      if (Math.abs(e.touches[0].clientY - dragStartY.current) > 10) {
-        isDragGesture.current = true;
-      }
-    }, []);
-
-    const handleActionsDragEnd = useCallback((e: React.TouchEvent) => {
-      if (!isDragGesture.current) return;
-      const deltaY = e.changedTouches[0].clientY - dragStartY.current;
-      const THRESHOLD = 30;
-      if (deltaY < -THRESHOLD) {
-        updateActionsHeight('100%');
-      } else if (deltaY > THRESHOLD) {
-        if (dragStartHeight.current === '100%') {
-          updateActionsHeight('60%');
-        } else {
-          handleCloseDrawer();
-        }
-      }
-    }, [handleCloseDrawer, updateActionsHeight]);
-
-    // Reset height when drawer closes
-    useEffect(() => {
-      if (drawerMode !== 'actions') {
-        updateActionsHeight('60%');
-      }
-    }, [drawerMode, updateActionsHeight]);
 
     // --- Queue list drawer handlers ---
     const handleGoToQueue = useCallback(() => {
@@ -179,20 +137,18 @@ const SharedDrawers = React.memo(forwardRef<SharedDrawerHandle, SharedDrawersPro
               {/* Drag header zone */}
               <div
                 data-swipe-blocked=""
-                onTouchStart={handleActionsDragStart}
-                onTouchMove={handleActionsDragMove}
-                onTouchEnd={handleActionsDragEnd}
+                {...actionsDragHandlers}
                 style={{ touchAction: 'none' }}
               >
-                <div style={{ display: 'flex', justifyContent: 'center', padding: '12px 0' }}>
-                  <div style={{ width: 36, height: 4, borderRadius: 2, backgroundColor: 'var(--neutral-300, #d9d9d9)' }} />
+                <div className={drawerCss.dragHandleZoneHorizontal}>
+                  <div className={drawerCss.dragHandleBarHorizontal} />
                 </div>
                 <Box
                   sx={{
                     display: 'flex',
                     alignItems: 'center',
                     padding: `${themeTokens.spacing[3]}px`,
-                    borderBottom: '1px solid var(--neutral-200)',
+                    borderBottom: `1px solid ${themeTokens.neutral[200]}`,
                   }}
                 >
                   <DrawerClimbHeader climb={activeDrawerClimb} boardDetails={activeDrawerBoardDetails} />

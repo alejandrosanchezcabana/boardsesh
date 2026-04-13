@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useRef, useState, useCallback, useMemo, useEffect } from 'react';
+import React, { useRef, useState, useCallback, useMemo } from 'react';
 import IconButton from '@mui/material/IconButton';
 import Box from '@mui/material/Box';
 import dynamic from 'next/dynamic';
@@ -18,6 +18,7 @@ import { useDoubleTapFavorite } from '../climb-actions/use-double-tap-favorite';
 import HeartAnimationOverlay from './heart-animation-overlay';
 import PlaylistSelectionContent from '../climb-actions/playlist-selection-content';
 import { useSwipeActions } from '@/app/hooks/use-swipe-actions';
+import { useDrawerDragResize } from '@/app/hooks/use-drawer-drag-resize';
 import { useDoubleTap } from '@/app/lib/hooks/use-double-tap';
 import { themeTokens } from '@/app/theme/theme-config';
 import { getGradeTintColor } from '@/app/lib/grade-colors';
@@ -397,52 +398,10 @@ const ClimbListItem: React.FC<ClimbListItemProps> = React.memo(
     }, [showMessage]);
 
     // --- Actions drawer drag-to-resize (Spotify-style) ---
-    const actionsPaperRef = useRef<HTMLDivElement>(null);
-    const actionsHeightRef = useRef('60%');
-    const dragStartY = useRef(0);
-    const dragStartHeight = useRef('60%');
-    const isDragGesture = useRef(false);
-
-    const updateActionsHeight = useCallback((height: string) => {
-      actionsHeightRef.current = height;
-      if (actionsPaperRef.current) {
-        actionsPaperRef.current.style.height = height;
-      }
-    }, []);
-
-    const handleActionsDragStart = useCallback((e: React.TouchEvent) => {
-      dragStartY.current = e.touches[0].clientY;
-      dragStartHeight.current = actionsHeightRef.current;
-      isDragGesture.current = false;
-    }, []);
-
-    const handleActionsDragMove = useCallback((e: React.TouchEvent) => {
-      if (Math.abs(e.touches[0].clientY - dragStartY.current) > 10) {
-        isDragGesture.current = true;
-      }
-    }, []);
-
-    const handleActionsDragEnd = useCallback((e: React.TouchEvent) => {
-      if (!isDragGesture.current) return;
-      const deltaY = e.changedTouches[0].clientY - dragStartY.current;
-      const THRESHOLD = 30;
-      if (deltaY < -THRESHOLD) {
-        updateActionsHeight('100%');
-      } else if (deltaY > THRESHOLD) {
-        if (dragStartHeight.current === '100%') {
-          updateActionsHeight('60%');
-        } else {
-          handleCloseActions();
-        }
-      }
-    }, [handleCloseActions, updateActionsHeight]);
-
-    // Reset height when actions drawer closes
-    useEffect(() => {
-      if (!isActionsOpen) {
-        updateActionsHeight('60%');
-      }
-    }, [isActionsOpen, updateActionsHeight]);
+    const { paperRef: actionsPaperRef, dragHandlers: actionsDragHandlers } = useDrawerDragResize({
+      open: isActionsOpen,
+      onClose: handleCloseActions,
+    });
 
     // --- Queue drawer state ---
     const [isQueueListOpen, setIsQueueListOpen] = useState(false);
@@ -514,7 +473,7 @@ const ClimbListItem: React.FC<ClimbListItemProps> = React.memo(
         padding: `${themeTokens.spacing[2]}px ${themeTokens.spacing[2]}px`,
         gap: themeTokens.spacing[3],
         backgroundColor: resolvedBg,
-        borderBottom: `1px solid var(--neutral-200)`,
+        borderBottom: `1px solid ${themeTokens.neutral[200]}`,
         cursor: 'pointer' as const,
         userSelect: 'none' as const,
         opacity: contentOpacity ?? 1,
@@ -645,9 +604,7 @@ const ClimbListItem: React.FC<ClimbListItemProps> = React.memo(
               {/* Drag handle + header zone */}
               <div
                 data-swipe-blocked=""
-                onTouchStart={handleActionsDragStart}
-                onTouchMove={handleActionsDragMove}
-                onTouchEnd={handleActionsDragEnd}
+                {...actionsDragHandlers}
                 style={{ touchAction: 'none' }}
               >
                 <div className={drawerCss.dragHandleZoneHorizontal}>
@@ -659,7 +616,7 @@ const ClimbListItem: React.FC<ClimbListItemProps> = React.memo(
                     alignItems: 'center',
                     justifyContent: 'space-between',
                     padding: `${themeTokens.spacing[3]}px`,
-                    borderBottom: '1px solid var(--neutral-200)',
+                    borderBottom: `1px solid ${themeTokens.neutral[200]}`,
                   }}
                 >
                   <DrawerClimbHeader climb={climb} boardDetails={boardDetails} />
@@ -694,12 +651,14 @@ const ClimbListItem: React.FC<ClimbListItemProps> = React.memo(
               />
             </SwipeableDrawer>
 
-            <QueueDrawer
-              open={isQueueListOpen}
-              onClose={handleCloseQueueList}
-              onTransitionEnd={() => {}}
-              boardDetails={boardDetails}
-            />
+            {isQueueListOpen && (
+              <QueueDrawer
+                open={isQueueListOpen}
+                onClose={handleCloseQueueList}
+                onTransitionEnd={(open) => { if (!open) setIsQueueListOpen(false); }}
+                boardDetails={boardDetails}
+              />
+            )}
           </>
         )}
 

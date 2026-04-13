@@ -164,11 +164,17 @@ describe('GoToQueueAction', () => {
       expect(result.key).toBe('goToQueue');
     });
 
-    it('returns available: true when queue context exists', () => {
+    it('returns available: true when queue context and onGoToQueue exist', () => {
       mockUseOptionalQueueActions.mockReturnValue({ addToQueue: vi.fn() });
       const result = renderGoToQueueActionResult(defaultProps);
       expect(result.available).toBe(true);
       expect(result.key).toBe('goToQueue');
+    });
+
+    it('returns available: false when onGoToQueue is not provided', () => {
+      mockUseOptionalQueueActions.mockReturnValue({ addToQueue: vi.fn() });
+      const result = renderGoToQueueActionResult({ ...defaultProps, onGoToQueue: undefined });
+      expect(result.available).toBe(false);
     });
   });
 

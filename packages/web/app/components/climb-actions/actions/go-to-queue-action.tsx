@@ -37,7 +37,7 @@ export function GoToQueueAction({
     showLabel,
     disabled: disabled || !onGoToQueue,
     className,
-    available: !!queueActions,
+    available: !!queueActions && !!onGoToQueue,
   });
 }
 
