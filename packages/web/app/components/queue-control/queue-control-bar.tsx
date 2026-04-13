@@ -797,7 +797,7 @@ const QueueControlBar: React.FC<QueueControlBarProps> = ({ boardDetails, angle }
                   )}
                   {/* Tick button — activates tick mode, or saves when already active */}
                   <TickButton
-                    currentClimb={currentClimb}
+                    currentClimb={displayedClimb}
                     angle={angle}
                     boardDetails={boardDetails}
                     onActivateTickBar={() => setActiveDrawer('tick')}
