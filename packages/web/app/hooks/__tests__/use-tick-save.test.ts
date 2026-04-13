@@ -44,6 +44,7 @@ import {
   useTickSave,
   type UseTickSaveOptions,
 } from '../use-tick-save';
+import { saveTickDraft } from '@/app/lib/tick-draft-db';
 
 // --- Fixtures ---
 
@@ -348,5 +349,55 @@ describe('useTickSave', () => {
 
     const call = mockSaveTick.mock.calls[0][0];
     expect(call.status).toBe('attempt');
+  });
+
+  it('save() calls onError and saves a draft when saveTick rejects', async () => {
+    mockSaveTick.mockRejectedValue(new Error('Network error'));
+    const onError = vi.fn();
+    const onSave = vi.fn();
+    const opts = makeOptions({ onSave, onError, comment: 'beta note' });
+
+    const { result } = renderHook(() => useTickSave(opts));
+
+    await act(async () => {
+      result.current.save();
+      // Flush the rejected promise
+      await vi.waitFor(() => expect(onError).toHaveBeenCalledTimes(1));
+    });
+
+    expect(onError).toHaveBeenCalledTimes(1);
+    expect(saveTickDraft).toHaveBeenCalledTimes(1);
+    expect(saveTickDraft).toHaveBeenCalledWith(
+      expect.objectContaining({
+        climbUuid: 'climb-1',
+        angle: 40,
+        comment: 'beta note',
+        status: 'flash',
+      }),
+    );
+  });
+
+  it('saveAttempt() calls onError and saves a draft when saveTick rejects', async () => {
+    mockSaveTick.mockRejectedValue(new Error('Network error'));
+    const onError = vi.fn();
+    const onSave = vi.fn();
+    const opts = makeOptions({ onSave, onError });
+
+    const { result } = renderHook(() => useTickSave(opts));
+
+    await act(async () => {
+      result.current.saveAttempt();
+      await vi.waitFor(() => expect(onError).toHaveBeenCalledTimes(1));
+    });
+
+    expect(onError).toHaveBeenCalledTimes(1);
+    expect(saveTickDraft).toHaveBeenCalledTimes(1);
+    expect(saveTickDraft).toHaveBeenCalledWith(
+      expect.objectContaining({
+        climbUuid: 'climb-1',
+        angle: 40,
+        status: 'attempt',
+      }),
+    );
   });
 });

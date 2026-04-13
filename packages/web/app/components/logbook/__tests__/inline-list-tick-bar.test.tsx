@@ -178,6 +178,22 @@ describe('InlineListTickBar', () => {
     });
   });
 
+  describe('error handling', () => {
+    it('calls onError when saveTick rejects', async () => {
+      mockSaveTick.mockRejectedValue(new Error('fail'));
+      const onError = vi.fn();
+
+      render(<InlineListTickBar {...defaultProps} onError={onError} />);
+
+      await act(async () => {
+        screen.getByRole('button', { name: 'Log ascent' }).click();
+      });
+
+      // Wait for the rejected promise to propagate
+      await vi.waitFor(() => expect(onError).toHaveBeenCalledTimes(1));
+    });
+  });
+
   describe('state reset on remount', () => {
     it('uses default state values on fresh mount', async () => {
       // Mount, unmount, remount — fresh mount should have default state

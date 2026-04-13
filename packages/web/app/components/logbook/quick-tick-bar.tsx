@@ -6,9 +6,7 @@ import { Angle, Climb, BoardDetails } from '@/app/lib/types';
 import { useBoardProvider } from '../board-provider/board-provider-context';
 import { TENSION_KILTER_GRADES } from '@/app/lib/board-data';
 import { loadTickDraft } from '@/app/lib/tick-draft-db';
-import { useTickSave, buildTickTarget, hasPriorHistoryForClimb, type TickTarget } from '@/app/hooks/use-tick-save';
-// Re-export so existing consumers (tests) don't break
-export { hasPriorHistoryForClimb };
+import { useTickSave, buildTickTarget, type TickTarget } from '@/app/hooks/use-tick-save';
 import {
   TickControls,
   TickGradeButton,

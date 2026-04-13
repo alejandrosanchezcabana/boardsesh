@@ -28,7 +28,8 @@ vi.mock('@vercel/analytics', () => ({
 }));
 
 // Import after mocks.
-import { QuickTickBar, QuickTickBarHandle, hasPriorHistoryForClimb } from '../quick-tick-bar';
+import { QuickTickBar, QuickTickBarHandle } from '../quick-tick-bar';
+import { hasPriorHistoryForClimb } from '@/app/hooks/use-tick-save';
 
 // --- Fixtures ---
 
