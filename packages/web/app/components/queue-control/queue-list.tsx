@@ -4,6 +4,7 @@ import { useVirtualizer } from '@tanstack/react-virtual';
 import Skeleton from '@mui/material/Skeleton';
 import Button from '@mui/material/Button';
 import Typography from '@mui/material/Typography';
+import Box from '@mui/material/Box';
 import Stack from '@mui/material/Stack';
 import MuiDivider from '@mui/material/Divider';
 import SwipeableDrawer from '../swipeable-drawer/swipeable-drawer';
@@ -102,6 +103,13 @@ const QueueList = forwardRef<QueueListHandle, QueueListProps>(({ boardDetails, i
   const [tickClimb, setTickClimb] = useState<Climb | null>(null);
   const { openAuthModal } = useAuthModal();
 
+  // Drag-to-resize refs for the actions drawer
+  const actionsPaperRef = useRef<HTMLDivElement>(null);
+  const actionsHeightRef = useRef('60%');
+  const dragStartYRef = useRef(0);
+  const dragStartHeightRef = useRef('60%');
+  const isDragGestureRef = useRef(false);
+
   // Shared drawer state — one actions drawer and one playlist drawer for all items.
   // This replaces the per-ClimbListItem drawers (previously 100+ drawer trees).
   const [actionsClimb, setActionsClimb] = useState<Climb | null>(null);
@@ -121,6 +129,53 @@ const QueueList = forwardRef<QueueListHandle, QueueListProps>(({ boardDetails, i
     setPlaylistClimb(actionsClimb);
   }, [actionsClimb]);
   const handleClosePlaylist = useCallback(() => setPlaylistClimb(null), []);
+
+  // Drag-to-resize handlers for the actions drawer
+  const updateActionsHeight = useCallback((height: string) => {
+    actionsHeightRef.current = height;
+    if (actionsPaperRef.current) {
+      actionsPaperRef.current.style.height = height;
+    }
+  }, []);
+
+  const handleActionsDragStart = useCallback((e: React.TouchEvent) => {
+    dragStartYRef.current = e.touches[0].clientY;
+    dragStartHeightRef.current = actionsHeightRef.current;
+    isDragGestureRef.current = false;
+  }, []);
+
+  const handleActionsDragMove = useCallback((e: React.TouchEvent) => {
+    if (Math.abs(e.touches[0].clientY - dragStartYRef.current) > 10) {
+      isDragGestureRef.current = true;
+    }
+  }, []);
+
+  const handleActionsDragEnd = useCallback((e: React.TouchEvent) => {
+    if (!isDragGestureRef.current) return;
+    const deltaY = e.changedTouches[0].clientY - dragStartYRef.current;
+    const THRESHOLD = 30;
+    if (deltaY < -THRESHOLD) {
+      updateActionsHeight('100%');
+    } else if (deltaY > THRESHOLD) {
+      if (dragStartHeightRef.current === '100%') {
+        updateActionsHeight('60%');
+      } else {
+        handleCloseActions();
+      }
+    }
+  }, [handleCloseActions, updateActionsHeight]);
+
+  // Reset height when actions drawer closes
+  useEffect(() => {
+    if (!actionsClimb) {
+      updateActionsHeight('60%');
+    }
+  }, [actionsClimb, updateActionsHeight]);
+
+  // Since the user is already in the queue list, "go to queue" just closes the actions drawer
+  const handleGoToQueue = useCallback(() => {
+    handleCloseActions();
+  }, [handleCloseActions]);
 
   // Suggested climbs: clicking the thumbnail promotes the climb to current
   // (which also adds it to the queue) and opens the play drawer, matching
@@ -471,12 +526,37 @@ const QueueList = forwardRef<QueueListHandle, QueueListProps>(({ boardDetails, i
       {/* Shared actions drawer — only mount when a climb's actions are open */}
       {actionsClimb && (
         <SwipeableDrawer
-          title={<DrawerClimbHeader climb={actionsClimb} boardDetails={boardDetails} />}
           placement="bottom"
+          height="60%"
+          paperRef={actionsPaperRef}
           open
           onClose={handleCloseActions}
+          swipeEnabled={false}
+          showDragHandle={false}
           styles={actionsDrawerStyles}
         >
+          {/* Drag header zone */}
+          <div
+            data-swipe-blocked=""
+            onTouchStart={handleActionsDragStart}
+            onTouchMove={handleActionsDragMove}
+            onTouchEnd={handleActionsDragEnd}
+            style={{ touchAction: 'none' }}
+          >
+            <div style={{ display: 'flex', justifyContent: 'center', padding: '12px 0' }}>
+              <div style={{ width: 36, height: 4, borderRadius: 2, backgroundColor: 'var(--neutral-300, #d9d9d9)' }} />
+            </div>
+            <Box
+              sx={{
+                display: 'flex',
+                alignItems: 'center',
+                padding: `${themeTokens.spacing[3]}px`,
+                borderBottom: '1px solid var(--neutral-200)',
+              }}
+            >
+              <DrawerClimbHeader climb={actionsClimb} boardDetails={boardDetails} />
+            </Box>
+          </div>
           <ClimbActions
             climb={actionsClimb}
             boardDetails={boardDetails}
@@ -486,6 +566,7 @@ const QueueList = forwardRef<QueueListHandle, QueueListProps>(({ boardDetails, i
             exclude={excludeActions}
             onOpenPlaylistSelector={handleOpenPlaylistFromActions}
             onActionComplete={handleCloseActions}
+            onGoToQueue={handleGoToQueue}
           />
         </SwipeableDrawer>
       )}
@@ -514,9 +595,11 @@ const QueueList = forwardRef<QueueListHandle, QueueListProps>(({ boardDetails, i
 
 // Static drawer styles — hoisted to avoid per-render allocation
 const actionsDrawerStyles = {
-  wrapper: { height: 'auto', width: '100%' },
-  body: { padding: `${themeTokens.spacing[2]}px 0` },
-  header: { paddingLeft: `${themeTokens.spacing[3]}px`, paddingRight: `${themeTokens.spacing[3]}px` },
+  wrapper: {
+    touchAction: 'pan-y' as const,
+    transition: 'height 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+  },
+  body: { padding: 0 },
 } as const;
 
 const playlistDrawerStyles = {

@@ -22,6 +22,7 @@ import {
   FavoriteAction,
   SetActiveAction,
   QueueAction,
+  GoToQueueAction,
   TickAction,
   OpenInAppAction,
   MirrorAction,
@@ -53,6 +54,7 @@ const ACTION_FUNCTIONS: Record<
   favorite: FavoriteAction,
   setActive: SetActiveAction,
   queue: QueueAction,
+  goToQueue: GoToQueueAction,
   tick: TickAction,
   openInApp: OpenInAppAction,
   mirror: MirrorAction,
@@ -83,6 +85,7 @@ const ACTION_RENDERERS: Record<ClimbActionType, React.FC<ClimbActionProps | Open
   favorite: createActionRenderer(FavoriteAction),
   setActive: createActionRenderer(SetActiveAction),
   queue: createActionRenderer(QueueAction),
+  goToQueue: createActionRenderer(GoToQueueAction),
   tick: createActionRenderer(TickAction),
   openInApp: createActionRenderer(OpenInAppAction),
   mirror: createActionRenderer(MirrorAction),
@@ -104,6 +107,7 @@ export function ClimbActions({
   onOpenPlaylistSelector,
   auroraAppUrl,
   onTickAction,
+  onGoToQueue,
 }: ClimbActionsProps) {
   // Determine which actions to show
   const actionsToShow = useMemo(() => {
@@ -125,8 +129,9 @@ export function ClimbActions({
       onOpenPlaylistSelector,
       auroraAppUrl,
       onTickAction,
+      onGoToQueue,
     }),
-    [climb, boardDetails, angle, currentPathname, viewMode, size, onOpenPlaylistSelector, auroraAppUrl, onTickAction]
+    [climb, boardDetails, angle, currentPathname, viewMode, size, onOpenPlaylistSelector, auroraAppUrl, onTickAction, onGoToQueue]
   );
 
   // Memoize action complete handler to prevent creating new functions on every render

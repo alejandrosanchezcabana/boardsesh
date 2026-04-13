@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useCallback, useEffect, useLayoutEffect, useRef, useState, useMemo, useDeferredValue } from 'react';
+import Box from '@mui/material/Box';
 import MuiBadge from '@mui/material/Badge';
 import IconButton from '@mui/material/IconButton';
 import TextField from '@mui/material/TextField';
@@ -339,6 +340,13 @@ const PlayViewDrawer: React.FC<PlayViewDrawerProps> = ({
 
   const playPaperRef = useRef<HTMLDivElement>(null);
 
+  // Actions drawer drag-to-resize refs
+  const actionsPaperRef = useRef<HTMLDivElement>(null);
+  const actionsHeightRef = useRef('60%');
+  const actionsDragStartY = useRef(0);
+  const actionsDragStartHeight = useRef('60%');
+  const actionsIsDragGesture = useRef(false);
+
   const pathname = usePathname();
   const { showMessage } = useSnackbar();
 
@@ -481,7 +489,55 @@ const PlayViewDrawer: React.FC<PlayViewDrawerProps> = ({
 
   // Custom swipe-to-close for nested disablePortal drawers (actions + playlist)
   const handleCloseActions = useCallback(() => setIsActionsOpen(false), []);
-  const actionsSwipe = useNestedDrawerSwipe(handleCloseActions);
+
+  // Actions drawer drag-to-resize handlers
+  const updateActionsHeight = useCallback((height: string) => {
+    actionsHeightRef.current = height;
+    if (actionsPaperRef.current) {
+      actionsPaperRef.current.style.height = height;
+    }
+  }, []);
+
+  const handleActionsDragStart = useCallback((e: React.TouchEvent) => {
+    actionsDragStartY.current = e.touches[0].clientY;
+    actionsDragStartHeight.current = actionsHeightRef.current;
+    actionsIsDragGesture.current = false;
+  }, []);
+
+  const handleActionsDragMove = useCallback((e: React.TouchEvent) => {
+    if (Math.abs(e.touches[0].clientY - actionsDragStartY.current) > 10) {
+      actionsIsDragGesture.current = true;
+    }
+  }, []);
+
+  const handleActionsDragEnd = useCallback((e: React.TouchEvent) => {
+    if (!actionsIsDragGesture.current) return;
+    const deltaY = e.changedTouches[0].clientY - actionsDragStartY.current;
+    const THRESHOLD = 30;
+    if (deltaY < -THRESHOLD) {
+      updateActionsHeight('100%');
+    } else if (deltaY > THRESHOLD) {
+      if (actionsDragStartHeight.current === '100%') {
+        updateActionsHeight('60%');
+      } else {
+        handleCloseActions();
+      }
+    }
+  }, [handleCloseActions, updateActionsHeight]);
+
+  // Reset actions drawer height when it closes
+  useEffect(() => {
+    if (!isActionsOpen) {
+      updateActionsHeight('60%');
+    }
+  }, [isActionsOpen, updateActionsHeight]);
+
+  // Go to queue from actions drawer
+  const handleGoToQueueFromActions = useCallback(() => {
+    handleCloseActions();
+    handleOpenQueueDrawer();
+  }, [handleCloseActions, handleOpenQueueDrawer]);
+
   const handleClosePlaylist = useCallback(() => setIsPlaylistSelectorOpen(false), []);
   const playlistSwipe = useNestedDrawerSwipe(handleClosePlaylist);
 
@@ -777,31 +833,58 @@ const PlayViewDrawer: React.FC<PlayViewDrawerProps> = ({
         {/* Climb actions drawer */}
         {isOpen && currentClimb && isActionsOpen && (
           <SwipeableDrawer
-            title={<DrawerClimbHeader climb={currentClimb} boardDetails={boardDetails} />}
             placement="bottom"
+            height="60%"
+            paperRef={actionsPaperRef}
             open={isActionsOpen}
             onClose={handleCloseActions}
-            paperRef={actionsSwipe.paperRef}
             swipeEnabled={false}
+            showDragHandle={false}
             disablePortal
             styles={{
-              wrapper: { height: 'auto' },
+              wrapper: {
+                touchAction: 'pan-y' as const,
+                transition: 'height 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+              },
               body: { padding: `${themeTokens.spacing[2]}px 0` },
-              header: { paddingLeft: `${themeTokens.spacing[3]}px`, paddingRight: `${themeTokens.spacing[3]}px` },
             }}
           >
-            <ClimbActions
-              climb={currentClimb}
-              boardDetails={boardDetails}
-              angle={currentAngle}
-              currentPathname={pathname}
-              viewMode="list"
-              onOpenPlaylistSelector={() => {
-                setIsActionsOpen(false);
-                setIsPlaylistSelectorOpen(true);
-              }}
-              onActionComplete={handleCloseActions}
-            />
+            <>
+              <div
+                data-swipe-blocked=""
+                onTouchStart={handleActionsDragStart}
+                onTouchMove={handleActionsDragMove}
+                onTouchEnd={handleActionsDragEnd}
+                style={{ touchAction: 'none' }}
+              >
+                <div style={{ display: 'flex', justifyContent: 'center', padding: '12px 0' }}>
+                  <div style={{ width: 36, height: 4, borderRadius: 2, backgroundColor: 'var(--neutral-300, #d9d9d9)' }} />
+                </div>
+                <Box
+                  sx={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    padding: `${themeTokens.spacing[3]}px`,
+                    borderBottom: '1px solid var(--neutral-200)',
+                  }}
+                >
+                  <DrawerClimbHeader climb={currentClimb} boardDetails={boardDetails} />
+                </Box>
+              </div>
+              <ClimbActions
+                climb={currentClimb}
+                boardDetails={boardDetails}
+                angle={currentAngle}
+                currentPathname={pathname}
+                viewMode="list"
+                onOpenPlaylistSelector={() => {
+                  setIsActionsOpen(false);
+                  setIsPlaylistSelectorOpen(true);
+                }}
+                onActionComplete={handleCloseActions}
+                onGoToQueue={handleGoToQueueFromActions}
+              />
+            </>
           </SwipeableDrawer>
         )}
 

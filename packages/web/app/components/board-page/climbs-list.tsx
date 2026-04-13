@@ -31,6 +31,7 @@ import { dispatchOpenPlayDrawer } from '../queue-control/play-drawer-event';
 import listStyles from './climbs-list.module.css';
 
 const SwipeableDrawer = dynamic(() => import('../swipeable-drawer/swipeable-drawer'), { ssr: false });
+const QueueDrawer = dynamic(() => import('../play-view/queue-drawer'), { ssr: false });
 
 type ViewMode = 'grid' | 'list';
 
@@ -38,7 +39,11 @@ const VIEW_MODE_PREFERENCE_KEY = 'climbListViewMode';
 
 // Static drawer style objects (hoisted to avoid per-render allocation)
 const sharedDrawerStyles = {
-  wrapper: { height: 'auto', width: '100%' },
+  wrapper: {
+    width: '100%',
+    touchAction: 'pan-y' as const,
+    transition: 'height 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+  },
   body: { padding: `${themeTokens.spacing[2]}px 0` },
   header: { paddingLeft: `${themeTokens.spacing[3]}px`, paddingRight: `${themeTokens.spacing[3]}px` },
 } as const;
@@ -67,6 +72,16 @@ const SharedDrawers = React.memo(forwardRef<SharedDrawerHandle, SharedDrawersPro
     const [activeDrawerClimb, setActiveDrawerClimb] = useState<Climb | null>(null);
     const [drawerMode, setDrawerMode] = useState<'actions' | 'playlist' | null>(null);
 
+    // Drag-to-resize state for the actions drawer
+    const actionsPaperRef = useRef<HTMLDivElement>(null);
+    const actionsHeightRef = useRef('60%');
+    const dragStartY = useRef(0);
+    const dragStartHeight = useRef('60%');
+    const isDragGesture = useRef(false);
+
+    // Queue list drawer state
+    const [isQueueListOpen, setIsQueueListOpen] = useState(false);
+
     useImperativeHandle(ref, () => ({
       openActions: (climb: Climb) => {
         setActiveDrawerClimb(climb);
@@ -94,31 +109,107 @@ const SharedDrawers = React.memo(forwardRef<SharedDrawerHandle, SharedDrawersPro
       [activeDrawerClimb, resolveBoardDetails, boardDetails],
     );
 
+    // --- Drag-to-resize handlers for actions drawer ---
+    const updateActionsHeight = useCallback((height: string) => {
+      actionsHeightRef.current = height;
+      if (actionsPaperRef.current) {
+        actionsPaperRef.current.style.height = height;
+      }
+    }, []);
+
+    const handleActionsDragStart = useCallback((e: React.TouchEvent) => {
+      dragStartY.current = e.touches[0].clientY;
+      dragStartHeight.current = actionsHeightRef.current;
+      isDragGesture.current = false;
+    }, []);
+
+    const handleActionsDragMove = useCallback((e: React.TouchEvent) => {
+      if (Math.abs(e.touches[0].clientY - dragStartY.current) > 10) {
+        isDragGesture.current = true;
+      }
+    }, []);
+
+    const handleActionsDragEnd = useCallback((e: React.TouchEvent) => {
+      if (!isDragGesture.current) return;
+      const deltaY = e.changedTouches[0].clientY - dragStartY.current;
+      const THRESHOLD = 30;
+      if (deltaY < -THRESHOLD) {
+        updateActionsHeight('100%');
+      } else if (deltaY > THRESHOLD) {
+        if (dragStartHeight.current === '100%') {
+          updateActionsHeight('60%');
+        } else {
+          handleCloseDrawer();
+        }
+      }
+    }, [handleCloseDrawer, updateActionsHeight]);
+
+    // Reset height when drawer closes
+    useEffect(() => {
+      if (drawerMode !== 'actions') {
+        updateActionsHeight('60%');
+      }
+    }, [drawerMode, updateActionsHeight]);
+
+    // --- Queue list drawer handlers ---
+    const handleGoToQueue = useCallback(() => {
+      handleCloseDrawer();
+      setIsQueueListOpen(true);
+    }, [handleCloseDrawer]);
+
+    const handleCloseQueueList = useCallback(() => {
+      setIsQueueListOpen(false);
+    }, []);
+
     return (
       <>
         <SwipeableDrawer
-          title={
-            activeDrawerClimb ? (
-              <DrawerClimbHeader climb={activeDrawerClimb} boardDetails={activeDrawerBoardDetails} />
-            ) : undefined
-          }
           placement="bottom"
+          height="60%"
+          paperRef={actionsPaperRef}
           open={drawerMode === 'actions'}
           onClose={handleCloseDrawer}
           onTransitionEnd={handleDrawerTransitionEnd}
+          swipeEnabled={false}
+          showDragHandle={false}
           styles={sharedDrawerStyles}
         >
           {activeDrawerClimb && (
-            <ClimbActions
-              climb={activeDrawerClimb}
-              boardDetails={activeDrawerBoardDetails}
-              angle={activeDrawerClimb.angle}
-              currentPathname={pathname}
-              viewMode="list"
-              exclude={excludeActions}
-              onOpenPlaylistSelector={handleSwitchToPlaylist}
-              onActionComplete={handleCloseDrawer}
-            />
+            <>
+              {/* Drag header zone */}
+              <div
+                data-swipe-blocked=""
+                onTouchStart={handleActionsDragStart}
+                onTouchMove={handleActionsDragMove}
+                onTouchEnd={handleActionsDragEnd}
+                style={{ touchAction: 'none' }}
+              >
+                <div style={{ display: 'flex', justifyContent: 'center', padding: '12px 0' }}>
+                  <div style={{ width: 36, height: 4, borderRadius: 2, backgroundColor: 'var(--neutral-300, #d9d9d9)' }} />
+                </div>
+                <Box
+                  sx={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    padding: `${themeTokens.spacing[3]}px`,
+                    borderBottom: '1px solid var(--neutral-200)',
+                  }}
+                >
+                  <DrawerClimbHeader climb={activeDrawerClimb} boardDetails={activeDrawerBoardDetails} />
+                </Box>
+              </div>
+              <ClimbActions
+                climb={activeDrawerClimb}
+                boardDetails={activeDrawerBoardDetails}
+                angle={activeDrawerClimb.angle}
+                currentPathname={pathname}
+                viewMode="list"
+                exclude={excludeActions}
+                onOpenPlaylistSelector={handleSwitchToPlaylist}
+                onActionComplete={handleCloseDrawer}
+                onGoToQueue={handleGoToQueue}
+              />
+            </>
           )}
         </SwipeableDrawer>
 
@@ -143,6 +234,15 @@ const SharedDrawers = React.memo(forwardRef<SharedDrawerHandle, SharedDrawersPro
             />
           )}
         </SwipeableDrawer>
+
+        {isQueueListOpen && (
+          <QueueDrawer
+            open={isQueueListOpen}
+            onClose={handleCloseQueueList}
+            onTransitionEnd={(open) => { if (!open) setIsQueueListOpen(false); }}
+            boardDetails={boardDetails}
+          />
+        )}
       </>
     );
   },

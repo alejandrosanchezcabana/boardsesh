@@ -8,7 +8,7 @@ import { ClimbActionProps, ClimbActionResult } from '../types';
 import { useFavorite } from '../use-favorite';
 import { useAuthModal } from '@/app/components/providers/auth-modal-provider';
 import { themeTokens } from '@/app/theme/theme-config';
-import { buildActionResult, computeActionDisplay } from '../action-view-renderer';
+import { buildActionResult, computeActionDisplay, ActionListElement } from '../action-view-renderer';
 
 export function FavoriteAction({
   climb,
@@ -80,6 +80,7 @@ export function FavoriteAction({
   const label = isFavorited ? 'Favorited' : 'Favorite';
   const HeartIcon = isFavorited ? Favorite : FavoriteBorderOutlined;
   const iconStyle = isFavorited ? { color: themeTokens.colors.error, fontSize: iconSize } : { fontSize: iconSize };
+  const listIcon = <HeartIcon sx={{ fontSize: iconSize }} />;
 
   return buildActionResult({
     key: 'favorite',
@@ -91,6 +92,9 @@ export function FavoriteAction({
     showLabel,
     disabled: disabled || isLoading,
     className,
+    listElementOverride: (
+      <ActionListElement icon={listIcon} label={label} onClick={handleClick} disabled={disabled || isLoading} />
+    ),
   });
 }
 

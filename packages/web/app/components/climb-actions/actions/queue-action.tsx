@@ -7,7 +7,7 @@ import { track } from '@vercel/analytics';
 import { ClimbActionProps, ClimbActionResult } from '../types';
 import { useOptionalQueueActions } from '../../graphql-queue';
 import { themeTokens } from '@/app/theme/theme-config';
-import { buildActionResult, computeActionDisplay, ActionIconElement, ActionButtonElement } from '../action-view-renderer';
+import { buildActionResult, computeActionDisplay, ActionIconElement, ActionButtonElement, ActionListElement } from '../action-view-renderer';
 
 export function QueueAction({
   climb,
@@ -51,6 +51,7 @@ export function QueueAction({
     ? { color: themeTokens.colors.success, fontSize: iconSize }
     : { fontSize: iconSize };
   const icon = <Icon sx={iconStyle} />;
+  const listIcon = <Icon sx={{ fontSize: iconSize }} />;
 
   return buildActionResult({
     key: 'queue',
@@ -82,6 +83,9 @@ export function QueueAction({
         size={size}
         className={className}
       />
+    ),
+    listElementOverride: (
+      <ActionListElement icon={listIcon} label={label} onClick={handleClick} disabled={disabled || recentlyAdded} />
     ),
     menuItem: {
       key: 'queue',

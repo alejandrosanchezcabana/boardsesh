@@ -162,7 +162,7 @@ export function TickAction({
     </Stack>
   );
 
-  const label = 'Tick';
+  const label = 'Log ascent';
   const shouldShowLabel = showLabel ?? (viewMode === 'button' || viewMode === 'dropdown');
   const iconSize = size === 'small' ? 14 : size === 'large' ? 20 : 16;
 
@@ -344,6 +344,13 @@ export function TickAction({
           justifyContent: 'flex-start',
           paddingLeft: `${themeTokens.spacing[4]}px`,
           fontSize: themeTokens.typography.fontSize.base,
+          color: 'text.primary',
+          '& .MuiButton-startIcon': {
+            color: 'text.secondary',
+          },
+          '&:hover': {
+            backgroundColor: 'action.hover',
+          },
         }}
       >
         {badgeCount > 0 ? `${label} (${badgeCount})` : label}
