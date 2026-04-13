@@ -244,10 +244,12 @@ describe('useSaveTick', () => {
     expect(data?.length).toBe(0);
   });
 
-  it('shows error snackbar on failure', async () => {
+  it('rolls back optimistic entry on failure without showing snackbar', async () => {
     mockRequest.mockRejectedValue(new Error('Save failed'));
 
-    const { wrapper } = createTestWrapper();
+    const { wrapper, queryClient } = createTestWrapper();
+
+    queryClient.setQueryData(['logbook', 'kilter', 'accumulated'], []);
 
     const { result } = renderHook(() => useSaveTick('kilter'), { wrapper });
 
@@ -259,7 +261,12 @@ describe('useSaveTick', () => {
       expect(result.current.isError).toBe(true);
     });
 
-    expect(mockShowMessage).toHaveBeenCalledWith('Save failed', 'error');
+    // Optimistic entry should be rolled back
+    const data = queryClient.getQueryData(['logbook', 'kilter', 'accumulated']) as LogbookEntry[];
+    expect(data).toEqual([]);
+
+    // Snackbar is NOT called — callers handle their own error feedback
+    expect(mockShowMessage).not.toHaveBeenCalled();
   });
 
   it('optimistic entry has correct is_ascent for flash/send', async () => {
@@ -321,7 +328,7 @@ describe('useSaveTick', () => {
     });
   });
 
-  it('extracts GraphQL error message from response', async () => {
+  it('propagates GraphQL errors to the caller', async () => {
     const graphqlError: Error & { response?: { errors: { message: string }[] } } = new Error('GraphQL error');
     graphqlError.response = {
       errors: [{ message: 'Climb not found' }],
@@ -340,6 +347,9 @@ describe('useSaveTick', () => {
       expect(result.current.isError).toBe(true);
     });
 
-    expect(mockShowMessage).toHaveBeenCalledWith('Climb not found', 'error');
+    // Error is propagated so callers can handle their own feedback
+    expect(result.current.error).toBe(graphqlError);
+    // No snackbar from the hook itself
+    expect(mockShowMessage).not.toHaveBeenCalled();
   });
 });

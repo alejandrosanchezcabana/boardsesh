@@ -92,6 +92,11 @@ export const QuickTickBar = forwardRef<QuickTickBarHandle, QuickTickBarProps>(({
     }
   }, [currentClimb, angle, boardDetails, logbook]);
 
+  const [quality, setQuality] = useState<number | null>(null);
+  const [difficulty, setDifficulty] = useState<number | undefined>(undefined);
+  const [attemptCount, setAttemptCount] = useState<number>(1);
+  const [expandedControl, setExpandedControl] = useState<ExpandedControl>(null);
+
   // Restore draft values from a previous failed save for this climb.
   const draftLoaded = useRef(false);
   useEffect(() => {
@@ -107,11 +112,6 @@ export const QuickTickBar = forwardRef<QuickTickBarHandle, QuickTickBarProps>(({
       }
     });
   }, [tickTarget, onDraftRestored]);
-
-  const [quality, setQuality] = useState<number | null>(null);
-  const [difficulty, setDifficulty] = useState<number | undefined>(undefined);
-  const [attemptCount, setAttemptCount] = useState<number>(1);
-  const [expandedControl, setExpandedControl] = useState<ExpandedControl>(null);
   // Track which picker was last open so we can keep it mounted during collapse.
   const [lastExpandedControl, setLastExpandedControl] = useState<ExpandedControl>(null);
   const [pickerVisible, setPickerVisible] = useState(false);
