@@ -1,16 +1,18 @@
-/* Star selector button — follows the same pattern as .attemptButton */
+/* Star selector button — 40px wide to center-align with the
+   Close (X) IconButton in the queue bar below. */
 .starButton {
   position: relative;
   display: inline-flex;
   align-items: center;
+  justify-content: center;
   gap: 2px;
   flex-shrink: 0;
-  padding: 4px 6px;
-  min-width: 24px;
+  width: 40px;
+  padding: 4px 0;
   border-radius: 4px;
   line-height: 1;
   color: inherit;
-  opacity: 0.75;
+  opacity: 0.7;
   transition: opacity 150ms ease;
 }
 
@@ -42,28 +44,22 @@
   text-transform: lowercase;
 }
 
-/* Grade selector button — same pattern as .attemptButton with "user" byline */
+/* Grade selector button — no horizontal padding so the colored grade
+   text aligns exactly with the consensus grade in ClimbTitle below. */
 .gradeButton {
   position: relative;
   flex-shrink: 0;
-  padding: 4px 6px;
+  padding: 4px 0;
   min-width: 24px;
   border-radius: 4px;
   line-height: 1;
   color: inherit;
-  opacity: 0.75;
-  transition: opacity 150ms ease;
   cursor: pointer;
-}
-
-.gradeButton:hover,
-.gradeButton:focus-visible {
-  opacity: 1;
 }
 
 .gradeNumber {
   font-size: 14px;
-  font-weight: 600;
+  font-weight: 700;
   line-height: 1;
 }
 
@@ -84,18 +80,20 @@
   text-transform: lowercase;
 }
 
-/* Tries counter — ButtonBase that shows the selected number on the row
-   baseline with a subtle "tries" byline absolutely positioned beneath so
-   it cannot push the number out of alignment with its siblings. */
+/* Tries counter button — 40px wide to center-align with the
+   Tick (✓) IconButton in the queue bar below. */
 .attemptButton {
   position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   flex-shrink: 0;
-  padding: 4px 6px;
-  min-width: 24px;
+  width: 40px;
+  padding: 4px 0;
   border-radius: 4px;
   line-height: 1;
   color: inherit;
-  opacity: 0.75;
+  opacity: 0.7;
   transition: opacity 150ms ease;
 }
 
@@ -125,4 +123,72 @@
   white-space: nowrap;
   pointer-events: none;
   text-transform: lowercase;
+}
+
+/* Active state — the control whose picker is expanded */
+.active {
+  opacity: 1;
+}
+
+/* ------------------------------------------------------------------ */
+/*  Inline picker styles                                              */
+/* ------------------------------------------------------------------ */
+
+.pickerRow {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  padding: 4px 0;
+  flex-wrap: wrap;
+}
+
+.pickerItem {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 36px;
+  min-height: 36px;
+  padding: 4px 8px;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 500;
+  color: inherit;
+  opacity: 0.7;
+  transition: opacity 150ms ease, background-color 150ms ease;
+}
+
+.pickerItem:hover,
+.pickerItem:focus-visible {
+  opacity: 1;
+  background-color: rgba(128, 128, 128, 0.12);
+}
+
+.pickerItemSelected {
+  opacity: 1;
+  background-color: rgba(128, 128, 128, 0.18);
+}
+
+:global(html[data-theme="dark"]) .pickerItem:hover,
+:global(html[data-theme="dark"]) .pickerItem:focus-visible {
+  background-color: rgba(255, 255, 255, 0.1);
+}
+
+:global(html[data-theme="dark"]) .pickerItemSelected {
+  background-color: rgba(255, 255, 255, 0.15);
+}
+
+.pickerClear {
+  font-size: 16px;
+  font-weight: 600;
+  opacity: 0.5;
+}
+
+.pickerNumber {
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.pickerGrade {
+  font-size: 14px;
+  font-weight: 600;
 }

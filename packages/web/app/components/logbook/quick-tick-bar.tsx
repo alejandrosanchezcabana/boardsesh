@@ -1,13 +1,21 @@
 'use client';
 
-import React, { useState, useCallback, useEffect, useMemo, useRef, useImperativeHandle, forwardRef } from 'react';
+import React, { useState, useCallback, useEffect, useMemo, useImperativeHandle, forwardRef } from 'react';
 import Stack from '@mui/material/Stack';
 import { track } from '@vercel/analytics';
 import { Angle, Climb, BoardDetails } from '@/app/lib/types';
 import { useBoardProvider } from '../board-provider/board-provider-context';
 import type { LogbookEntry, TickStatus } from '@/app/hooks/use-logbook';
 import { TENSION_KILTER_GRADES } from '@/app/lib/board-data';
-import { TickControls } from './tick-controls';
+import {
+  TickControls,
+  TickGradeButton,
+  InlineStarPicker,
+  InlineGradePicker,
+  InlineTriesPicker,
+  type ExpandedControl,
+} from './tick-controls';
+import styles from './quick-tick-bar.module.css';
 
 /** Snapshot of the tick target taken when the bar is first opened with a valid climb. */
 interface TickTarget {
@@ -27,6 +35,8 @@ export interface QuickTickBarProps {
   /** Current comment text. Owned by the parent so the comment field can live
    *  outside this bar (above the queue control bar) without causing reflow. */
   comment: string;
+  /** Comment input element rendered by the parent — placed in the row next to tick controls. */
+  commentSlot: React.ReactNode;
 }
 
 export interface QuickTickBarHandle {
@@ -36,12 +46,11 @@ export interface QuickTickBarHandle {
 
 /**
  * Stateful tick entry wrapper. Manages the tick target snapshot, form state
- * (quality, difficulty, attempts), and save logic. Renders TickControls for
- * the actual UI buttons.
+ * (quality, difficulty, attempts), expansion state, and save logic.
  *
- * Exposes a `save()` method via ref so the parent's tick button can trigger
- * the save. Swipe-to-dismiss is handled by the parent (queue-control-bar)
- * on the whole card so the user can swipe anywhere on the bar to dismiss.
+ * Layout mirrors the queue control bar below:
+ *   [comment (flex:1) + grade] [stars + tries]
+ * so the user grade aligns vertically with the consensus grade.
  */
 export const QuickTickBar = forwardRef<QuickTickBarHandle, QuickTickBarProps>(({
   currentClimb,
@@ -50,11 +59,11 @@ export const QuickTickBar = forwardRef<QuickTickBarHandle, QuickTickBarProps>(({
   onSave,
   onCancel,
   comment,
+  commentSlot,
 }, ref) => {
   const { saveTick, logbook } = useBoardProvider();
 
   // Snapshot the target climb the first time we get a non-null climb.
-  // All subsequent saves use this snapshot, not the live props.
   const [tickTarget, setTickTarget] = useState<TickTarget | null>(() =>
     currentClimb ? buildTickTarget(currentClimb, angle, boardDetails, logbook) : null,
   );
@@ -62,8 +71,6 @@ export const QuickTickBar = forwardRef<QuickTickBarHandle, QuickTickBarProps>(({
     if (!tickTarget && currentClimb) {
       setTickTarget(buildTickTarget(currentClimb, angle, boardDetails, logbook));
     }
-    // Intentionally only re-runs while we have no snapshot yet. Once set, the
-    // snapshot is intentionally sticky until the component unmounts.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [currentClimb, tickTarget]);
 
@@ -71,12 +78,10 @@ export const QuickTickBar = forwardRef<QuickTickBarHandle, QuickTickBarProps>(({
   const [difficulty, setDifficulty] = useState<number | undefined>(undefined);
   const [isSaving, setIsSaving] = useState(false);
   const [attemptCount, setAttemptCount] = useState<number>(1);
+  const [expandedControl, setExpandedControl] = useState<ExpandedControl>(null);
 
   const grades = TENSION_KILTER_GRADES;
 
-  // Fall back to matching the climb's own difficulty string against the
-  // grade list so the menu can highlight the "current" grade even before
-  // the user picks an override.
   const climbGradeId = useMemo(() => {
     const source = tickTarget?.climb.difficulty ?? currentClimb?.difficulty;
     if (!source) return undefined;
@@ -84,10 +89,6 @@ export const QuickTickBar = forwardRef<QuickTickBarHandle, QuickTickBarProps>(({
   }, [tickTarget, currentClimb, grades]);
   const currentGradeId = difficulty ?? climbGradeId;
 
-  // When the climb already has an established grade, only show a narrow
-  // window of 5 grades (two softer, two harder) around it so the user can
-  // nudge up or down without scrolling through the full V0 → V16 list.
-  // Projects without a grade still see every option.
   const displayedGrades = useMemo(() => {
     if (climbGradeId === undefined) return grades;
     const idx = grades.findIndex((g) => g.difficulty_id === climbGradeId);
@@ -99,16 +100,28 @@ export const QuickTickBar = forwardRef<QuickTickBarHandle, QuickTickBarProps>(({
 
   const climbDifficulty = tickTarget?.climb.difficulty ?? currentClimb?.difficulty ?? undefined;
 
+  // Picker selection handlers — select the value and collapse the picker.
+  const handleStarSelect = useCallback((value: number | null) => {
+    setQuality(value);
+    setExpandedControl(null);
+  }, []);
+
+  const handleGradeSelect = useCallback((value: number | undefined) => {
+    setDifficulty(value);
+    setExpandedControl(null);
+  }, []);
+
+  const handleTriesSelect = useCallback((value: number) => {
+    setAttemptCount(value);
+    setExpandedControl(null);
+  }, []);
+
   const handleSave = useCallback(
     async (isAscent: boolean) => {
       if (!tickTarget || isSaving) return;
 
       const { climb, angle: targetAngle, boardDetails: targetBoard, hasPriorHistory } = tickTarget;
 
-      // Status is history-aware for sends: a first-go send with no prior
-      // history is a flash, otherwise it's a send. Multi-try sends can't be
-      // flashes by definition. Non-ascents always save as `attempt`, with
-      // the selected count representing how many tries the user made.
       let status: TickStatus;
       if (isAscent) {
         status = hasPriorHistory || attemptCount > 1 ? 'send' : 'flash';
@@ -147,7 +160,6 @@ export const QuickTickBar = forwardRef<QuickTickBarHandle, QuickTickBarProps>(({
 
         onSave();
       } catch {
-        // Error surfaced via snackbar inside useSaveTick.
         track('Quick Tick Failed', {
           boardLayout: targetBoard.layout_name || '',
         });
@@ -165,21 +177,57 @@ export const QuickTickBar = forwardRef<QuickTickBarHandle, QuickTickBarProps>(({
   }), [handleConfirm]);
 
   return (
-    <div data-testid="quick-tick-bar">
-      <Stack direction="row" spacing={0.5} sx={{ alignItems: 'center' }}>
-        <TickControls
-          quality={quality}
-          onQualityChange={setQuality}
-          attemptCount={attemptCount}
-          onAttemptCountChange={setAttemptCount}
-          difficulty={difficulty}
-          onDifficultyChange={setDifficulty}
-          climbDifficulty={climbDifficulty}
-          displayedGrades={displayedGrades}
-          currentGradeId={currentGradeId}
-          isSaving={isSaving}
-        />
-      </Stack>
+    <div data-testid="quick-tick-bar" className={styles.tickBar}>
+      {/* Picker panel — expands above the controls row when a control is active */}
+      <div className={`${styles.pickerPanel} ${expandedControl ? styles.pickerPanelExpanded : ''}`}>
+        <div className={styles.pickerPanelContent}>
+          {expandedControl === 'stars' && (
+            <InlineStarPicker quality={quality} onSelect={handleStarSelect} />
+          )}
+          {expandedControl === 'grade' && (
+            <InlineGradePicker
+              grades={displayedGrades}
+              currentGradeId={currentGradeId}
+              onSelect={handleGradeSelect}
+            />
+          )}
+          {expandedControl === 'tries' && (
+            <InlineTriesPicker attemptCount={attemptCount} onSelect={handleTriesSelect} />
+          )}
+        </div>
+      </div>
+
+      {/* Controls row — mirrors the queue bar layout:
+          [comment + grade (flex:1)] [stars + tries (flex:none)]
+          so user grade aligns with the consensus grade below. */}
+      <div className={styles.controlsRow}>
+        {/* Left section: comment fills space, grade sits at right edge —
+            mirrors the queue bar's [thumbnail + title + grade] column. */}
+        <div className={styles.leftSection}>
+          {commentSlot}
+          <TickGradeButton
+            difficulty={difficulty}
+            climbDifficulty={climbDifficulty}
+            displayedGrades={displayedGrades}
+            expandedControl={expandedControl}
+            onExpandedControlChange={setExpandedControl}
+          />
+        </div>
+
+        {/* Right section: stars + tries — mirrors the queue bar's button
+            cluster (Close + Tick) so widths match and grades align. */}
+        <div className={styles.rightControls}>
+          <Stack direction="row" spacing={0.5} sx={{ alignItems: 'center' }}>
+            <TickControls
+              quality={quality}
+              attemptCount={attemptCount}
+              isSaving={isSaving}
+              expandedControl={expandedControl}
+              onExpandedControlChange={setExpandedControl}
+            />
+          </Stack>
+        </div>
+      </div>
     </div>
   );
 });
@@ -188,13 +236,6 @@ QuickTickBar.displayName = 'QuickTickBar';
 
 /**
  * Decide whether the user has any prior history for a climb at open time.
- *
- * Fast path: the climb payload already carries `userAscents` and
- * `userAttempts` counts from the climb list query, so in the common case we
- * avoid walking the logbook entirely. When those fields are missing (e.g. the
- * climb was fetched through a slim query that does not include the user
- * aggregation), we fall back to filtering the in-memory logbook by climb
- * uuid. Exposed for tests.
  */
 export function hasPriorHistoryForClimb(
   climb: Climb,
@@ -205,7 +246,6 @@ export function hasPriorHistoryForClimb(
   if (ascents != null || attempts != null) {
     return (ascents ?? 0) + (attempts ?? 0) > 0;
   }
-  // Fallback: slim climb payload — consult the local logbook instead.
   return logbook.some((entry) => entry.climb_uuid === climb.uuid);
 }
 

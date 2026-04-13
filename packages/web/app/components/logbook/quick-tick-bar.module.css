@@ -1,6 +1,54 @@
 .tickBar {
   display: flex;
+  flex-direction: column;
   min-width: 0;
   will-change: transform, opacity;
   touch-action: pan-y;
+}
+
+/* Picker panel — smooth height animation via CSS grid */
+.pickerPanel {
+  display: grid;
+  grid-template-rows: 0fr;
+  transition: grid-template-rows 200ms ease-out;
+}
+
+.pickerPanelExpanded {
+  grid-template-rows: 1fr;
+}
+
+.pickerPanelContent {
+  overflow: hidden;
+  min-height: 0;
+}
+
+/* Controls row — mirrors the queue bar layout below:
+   [left: comment + grade (flex:1)] [right: stars + tries (flex:none)]
+   This ensures the user grade aligns vertically with the consensus
+   grade in the queue bar, since both sit at the right edge of their
+   respective flex:1 column. */
+.controlsRow {
+  display: flex;
+  align-items: center;
+}
+
+/* Left section: comment input fills space, grade button at right edge.
+   Mirrors queue bar's climbInfoCol (flex:1) which contains
+   [thumbnail + title (flex:1) + grade (flex-shrink:0)]. */
+.leftSection {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+
+/* Right section: stars + tries buttons.
+   Fixed 84px width matches the queue bar button cluster
+   (Close 40px + 4px gap + Tick 40px = 84px), ensuring the grade
+   in the left section aligns with the consensus grade below. */
+.rightControls {
+  flex: none;
+  margin-left: 4px;
+  width: 92px;
 }

@@ -606,44 +606,50 @@ const QueueControlBar: React.FC<QueueControlBarProps> = ({ boardDetails, angle }
             className={styles.tickRow}
             style={{ backgroundColor: gradeTintColor ?? (isDark ? 'transparent' : 'var(--semantic-surface)') }}
           >
-            {/* Comment input (70%) + tick controls (30%) */}
-            <div className={styles.tickRowInner}>
-              <div className={`${styles.tickComment} ${tickCommentFocused ? styles.tickCommentExpanded : ''}`}>
-                <TextField
-                  fullWidth
-                  size="small"
-                  variant="standard"
-                  placeholder="Comment..."
-                  multiline={tickCommentFocused}
-                  maxRows={4}
-                  value={tickComment}
-                  onChange={(e) => setTickComment(e.target.value)}
-                  onFocus={handleTickCommentFocus}
-                  onBlur={handleTickCommentBlur}
-                  slotProps={{
-                    htmlInput: { maxLength: 2000, 'aria-label': 'Tick comment' },
-                  }}
-                  InputProps={{
-                    startAdornment: (
-                      <InputAdornment position="start">
-                        <ChatBubbleOutlineOutlined sx={{ fontSize: 16, opacity: 0.5 }} />
-                      </InputAdornment>
-                    ),
-                  }}
-                />
-              </div>
-              <div className={styles.tickControls}>
-                <QuickTickBar
-                  ref={quickTickBarRef}
-                  currentClimb={currentClimb}
-                  angle={angle}
-                  boardDetails={boardDetails}
-                  onSave={() => setActiveDrawer('none')}
-                  onCancel={() => setActiveDrawer('none')}
-                  comment={tickComment}
-                />
-              </div>
-            </div>
+            <QuickTickBar
+              ref={quickTickBarRef}
+              currentClimb={currentClimb}
+              angle={angle}
+              boardDetails={boardDetails}
+              onSave={() => setActiveDrawer('none')}
+              onCancel={() => setActiveDrawer('none')}
+              comment={tickComment}
+              commentSlot={
+                <div className={`${styles.tickComment} ${tickCommentFocused ? styles.tickCommentExpanded : ''}`}>
+                  <TextField
+                    fullWidth
+                    size="small"
+                    variant="outlined"
+                    placeholder="Comment..."
+                    multiline={tickCommentFocused}
+                    maxRows={4}
+                    value={tickComment}
+                    onChange={(e) => setTickComment(e.target.value)}
+                    onFocus={handleTickCommentFocus}
+                    onBlur={handleTickCommentBlur}
+                    slotProps={{
+                      htmlInput: { maxLength: 2000, 'aria-label': 'Tick comment' },
+                    }}
+                    InputProps={{
+                      startAdornment: (
+                        <InputAdornment position="start">
+                          <ChatBubbleOutlineOutlined sx={{ fontSize: 16, opacity: 0.5 }} />
+                        </InputAdornment>
+                      ),
+                    }}
+                    sx={{
+                      '& .MuiOutlinedInput-root': {
+                        borderRadius: '8px',
+                        backgroundColor: 'var(--neutral-50)',
+                        '& .MuiOutlinedInput-notchedOutline': {
+                          borderColor: 'var(--neutral-200)',
+                        },
+                      },
+                    }}
+                  />
+                </div>
+              }
+            />
           </div>
         )}
         {/* Swipe container - captures swipe gestures, does NOT translate */}

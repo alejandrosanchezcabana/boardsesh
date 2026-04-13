@@ -315,22 +315,16 @@
     padding-bottom: 0;
   }
   to {
-    max-height: 120px;
+    max-height: 300px;
     opacity: 1;
     padding-top: 8px;
     padding-bottom: 8px;
   }
 }
 
-.tickRowInner {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-/* Comment input — fills ~70% of the tick row */
+/* Comment input — fills available space in the left section */
 .tickComment {
-  flex: 7;
+  flex: 1;
   min-width: 0;
 }
 
@@ -343,13 +337,6 @@
   z-index: 2;
   background: inherit;
   padding: 4px 0;
-}
-
-/* Tick controls — fills ~30% of the tick row */
-.tickControls {
-  flex: 3;
-  display: flex;
-  justify-content: flex-end;
 }
 
 /* Peek text — absolutely positioned to slide in from the edge during swipe */

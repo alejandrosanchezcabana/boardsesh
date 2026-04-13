@@ -96,9 +96,7 @@ const defaultProps = {
   onSave: vi.fn(),
   onCancel: vi.fn(),
   comment: '',
-  commentOpen: false,
-  onCommentToggle: vi.fn(),
-  commentFocused: false,
+  commentSlot: null,
 };
 
 describe('QuickTickBar grade format integration', () => {

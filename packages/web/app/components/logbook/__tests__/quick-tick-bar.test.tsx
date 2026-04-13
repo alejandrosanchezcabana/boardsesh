@@ -95,6 +95,7 @@ const defaultProps = {
   onSave: vi.fn(),
   onCancel: vi.fn(),
   comment: '',
+  commentSlot: null,
 };
 
 /**
@@ -163,7 +164,7 @@ describe('QuickTickBar', () => {
   });
 
   describe('layout', () => {
-    it('renders the controls in the expected order: rating, comment toggle, grade, tries counter, fail, confirm', async () => {
+    it('renders the controls: grade in left section, stars + tries in right section', async () => {
       render(<QuickTickBar {...defaultProps} />);
 
       // Grade label only appears after the async useGradeFormat hook loads.
@@ -171,18 +172,15 @@ describe('QuickTickBar', () => {
       const rating = screen.getByTestId('quick-tick-rating');
       const attemptBtn = screen.getByTestId('quick-tick-attempt');
 
-      // All controls sit inside the single flex row.
-      const controls = rating.parentElement!;
-      expect(gradeLabel.parentElement).toBe(controls);
-      expect(attemptBtn.parentElement).toBe(controls);
+      // Grade is in the left section (separate from stars/tries for alignment).
+      // Stars and tries share a parent (the Stack inside rightControls).
+      expect(rating.parentElement).toBe(attemptBtn.parentElement);
+      expect(gradeLabel.parentElement).not.toBe(rating.parentElement);
 
-      // Siblings must appear in this order: rating, grade, tries.
-      const siblings = Array.from(controls.children) as HTMLElement[];
-      const ratingIdx = siblings.indexOf(rating);
-      const gradeIdx = siblings.indexOf(gradeLabel);
-      const attemptIdx = siblings.indexOf(attemptBtn);
-      expect(ratingIdx).toBeLessThan(gradeIdx);
-      expect(gradeIdx).toBeLessThan(attemptIdx);
+      // All three are present.
+      expect(gradeLabel).toBeTruthy();
+      expect(rating).toBeTruthy();
+      expect(attemptBtn).toBeTruthy();
     });
 
     it('defaults the tries counter to 1 and exposes a "tries" byline for the user', () => {
