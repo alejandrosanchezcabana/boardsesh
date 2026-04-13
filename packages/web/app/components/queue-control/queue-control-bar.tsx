@@ -289,27 +289,14 @@ const QueueControlBar: React.FC<QueueControlBarProps> = ({ boardDetails, angle }
   const displayedClimb = tickBarActive ? (tickClimb ?? currentClimb) : currentClimb;
   const gradeTintColor = useMemo(() => getGradeTintColor(displayedClimb?.difficulty, 'default', isDark), [displayedClimb?.difficulty, isDark]);
 
-  // Clear tick-bar comment state whenever the tick bar closes so a fresh
-  // activation always starts empty.
-  useEffect(() => {
-    if (!tickBarActive) {
-      setTickComment('');
-      setTickCommentFocused(false);
-    }
-  }, [tickBarActive]);
-
-  // Reset swipe offset when tick mode deactivates.
-  useEffect(() => {
-    if (!tickBarActive) {
-      setTickSwipeOffset(0);
-    }
-  }, [tickBarActive]);
-
-  // Keep the tick row mounted during the 200ms close transition.
+  // Reset all tick-bar state on close; keep the row mounted during the 200ms collapse.
   useEffect(() => {
     if (tickBarActive) {
       setTickRowVisible(true);
     } else {
+      setTickComment('');
+      setTickCommentFocused(false);
+      setTickSwipeOffset(0);
       const timer = setTimeout(() => setTickRowVisible(false), 200);
       return () => clearTimeout(timer);
     }
@@ -349,25 +336,12 @@ const QueueControlBar: React.FC<QueueControlBarProps> = ({ boardDetails, angle }
     delta: 10,
   });
 
-  // During a down-swipe, progressively shrink the tick row's visible height.
-  // This makes the content appear to slide down into the queue bar below.
-  const tickDismissRowStyle = useMemo<React.CSSProperties | undefined>(() => {
-    if (tickSwipeOffset === 0) return undefined;
-    // Map swipe distance to a collapsing fraction (1 = fully open, 0 = collapsed)
+  const tickDismissStyle = useMemo<React.CSSProperties | undefined>(() => {
+    if (tickSwipeOffset === 0) {
+      return { transition: 'grid-template-rows 180ms ease-out, opacity 180ms ease-out' };
+    }
     const fraction = Math.max(0, 1 - tickSwipeOffset / 150);
-    return {
-      gridTemplateRows: `${fraction}fr`,
-      opacity: fraction,
-      transition: 'none',
-    };
-  }, [tickSwipeOffset]);
-
-  // Snap-back: smooth return to fully expanded when swipe doesn't trigger dismiss.
-  const tickDismissSnapBackStyle = useMemo<React.CSSProperties | undefined>(() => {
-    if (tickSwipeOffset !== 0) return undefined;
-    return {
-      transition: 'grid-template-rows 180ms ease-out, opacity 180ms ease-out',
-    };
+    return { gridTemplateRows: `${fraction}fr`, opacity: fraction, transition: 'none' };
   }, [tickSwipeOffset]);
 
   const { swipeHandlers, swipeOffset, isAnimating, animationDirection, enterDirection, clearEnterAnimation } = useCardSwipeNavigation({
@@ -469,7 +443,7 @@ const QueueControlBar: React.FC<QueueControlBarProps> = ({ boardDetails, angle }
     } else {
       showMessage('Unable to leave session. Please try again.', 'warning');
     }
-  }, [endSession, disconnect]);
+  }, [endSession, disconnect, showMessage]);
 
   // Reconnect-only view helpers
   const renderReconnectingRow = () => (
@@ -593,8 +567,7 @@ const QueueControlBar: React.FC<QueueControlBarProps> = ({ boardDetails, angle }
             className={`${styles.tickRow} ${tickBarActive ? styles.tickRowExpanded : ''}`}
             style={{
               backgroundColor: gradeTintColor ?? (isDark ? 'transparent' : 'var(--semantic-surface)'),
-              ...tickDismissSnapBackStyle,
-              ...tickDismissRowStyle,
+              ...tickDismissStyle,
             }}
           >
             {/* Close button — top-right corner of the tick bar */}
@@ -625,7 +598,6 @@ const QueueControlBar: React.FC<QueueControlBarProps> = ({ boardDetails, angle }
                 angle={angle}
                 boardDetails={boardDetails}
                 onSave={() => setActiveDrawer('none')}
-                onCancel={() => setActiveDrawer('none')}
                 comment={tickComment}
                 commentSlot={
                   <div className={`${styles.tickComment} ${tickCommentFocused ? styles.tickCommentExpanded : ''}`}>
@@ -697,7 +669,7 @@ const QueueControlBar: React.FC<QueueControlBarProps> = ({ boardDetails, angle }
                     <div
                       id="onboarding-queue-toggle"
                       onClick={tickBarActive ? undefined : handleClimbInfoClick}
-                      className={`${styles.queueToggle} ${isListPage ? styles.listPage : ''}`}
+                      className={styles.queueToggle}
                       style={{
                         transform: tickBarActive ? undefined : `translateX(${swipeOffset}px)`,
                         transition: tickBarActive ? undefined : getTextTransitionStyle(),

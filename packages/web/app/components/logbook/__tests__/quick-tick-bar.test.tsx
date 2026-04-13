@@ -93,7 +93,6 @@ const defaultProps = {
   angle: 40 as Angle,
   boardDetails: makeBoardDetails(),
   onSave: vi.fn(),
-  onCancel: vi.fn(),
   comment: '',
   commentSlot: null,
 };
@@ -129,7 +128,6 @@ describe('QuickTickBar', () => {
     mockLogbookRef.current = [];
     mockSaveTick.mockResolvedValue(undefined);
     defaultProps.onSave = vi.fn();
-    defaultProps.onCancel = vi.fn();
   });
 
   afterEach(() => {

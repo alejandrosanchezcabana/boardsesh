@@ -31,7 +31,6 @@ export interface QuickTickBarProps {
   angle: Angle;
   boardDetails: BoardDetails;
   onSave: () => void;
-  onCancel: () => void;
   /** Current comment text. Owned by the parent so the comment field can live
    *  outside this bar (above the queue control bar) without causing reflow. */
   comment: string;
@@ -57,22 +56,28 @@ export const QuickTickBar = forwardRef<QuickTickBarHandle, QuickTickBarProps>(({
   angle,
   boardDetails,
   onSave,
-  onCancel,
   comment,
   commentSlot,
 }, ref) => {
   const { saveTick, logbook } = useBoardProvider();
 
   // Snapshot the target climb the first time we get a non-null climb.
-  const [tickTarget, setTickTarget] = useState<TickTarget | null>(() =>
-    currentClimb ? buildTickTarget(currentClimb, angle, boardDetails, logbook) : null,
-  );
+  // Uses a ref flag so it only fires once, avoiding re-snapshot when
+  // angle/boardDetails/logbook change after the initial capture.
+  const tickTargetTaken = useRef(false);
+  const [tickTarget, setTickTarget] = useState<TickTarget | null>(() => {
+    if (currentClimb) {
+      tickTargetTaken.current = true;
+      return buildTickTarget(currentClimb, angle, boardDetails, logbook);
+    }
+    return null;
+  });
   useEffect(() => {
-    if (!tickTarget && currentClimb) {
+    if (!tickTargetTaken.current && currentClimb) {
+      tickTargetTaken.current = true;
       setTickTarget(buildTickTarget(currentClimb, angle, boardDetails, logbook));
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [currentClimb, tickTarget]);
+  }, [currentClimb, angle, boardDetails, logbook]);
 
   const [quality, setQuality] = useState<number | null>(null);
   const [difficulty, setDifficulty] = useState<number | undefined>(undefined);
@@ -109,9 +114,6 @@ export const QuickTickBar = forwardRef<QuickTickBarHandle, QuickTickBarProps>(({
     return grades.find((g) => g.difficulty_name === source)?.difficulty_id;
   }, [tickTarget, currentClimb, grades]);
   const currentGradeId = difficulty ?? climbGradeId;
-
-  // Show all grades — horizontal scroll replaces the old ±2 windowing.
-  const displayedGrades = grades;
 
   const climbDifficulty = tickTarget?.climb.difficulty ?? currentClimb?.difficulty ?? undefined;
 
@@ -201,7 +203,7 @@ export const QuickTickBar = forwardRef<QuickTickBarHandle, QuickTickBarProps>(({
           )}
           {renderedControl === 'grade' && (
             <InlineGradePicker
-              grades={displayedGrades}
+              grades={grades}
               currentGradeId={currentGradeId}
               onSelect={handleGradeSelect}
               gradeButtonRef={gradeButtonRef}
@@ -229,7 +231,7 @@ export const QuickTickBar = forwardRef<QuickTickBarHandle, QuickTickBarProps>(({
             ref={gradeButtonRef}
             difficulty={difficulty}
             climbDifficulty={climbDifficulty}
-            displayedGrades={displayedGrades}
+            displayedGrades={grades}
             expandedControl={expandedControl}
             onExpandedControlChange={setExpandedControl}
           />
@@ -242,7 +244,6 @@ export const QuickTickBar = forwardRef<QuickTickBarHandle, QuickTickBarProps>(({
             <TickControls
               quality={quality}
               attemptCount={attemptCount}
-              isSaving={isSaving}
               expandedControl={expandedControl}
               onExpandedControlChange={setExpandedControl}
               triesButtonRef={triesButtonRef}

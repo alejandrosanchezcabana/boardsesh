@@ -2,7 +2,6 @@
   display: flex;
   flex-direction: column;
   min-width: 0;
-  will-change: transform, opacity;
   touch-action: pan-y;
 }
 
@@ -44,8 +43,8 @@
 }
 
 /* Right section: stars + tries buttons.
-   Fixed 84px width matches the queue bar button cluster
-   (Close 40px + 4px gap + Tick 40px = 84px), ensuring the grade
+   Fixed 92px width matches the queue bar button cluster
+   (Close 40px + 4px gap + Tick 40px + margins = 92px), ensuring the grade
    in the left section aligns with the consensus grade below. */
 .rightControls {
   flex: none;

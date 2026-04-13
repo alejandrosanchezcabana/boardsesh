@@ -16,8 +16,14 @@ export type ExpandedControl = 'grade' | 'stars' | 'tries' | null;
 /**
  * Stops horizontal touch events from propagating to parent swipeable handlers,
  * while allowing vertical touches through so swipe-to-dismiss still works.
- * Tracks the initial touch direction and only stops propagation for
- * horizontal-dominant moves (protecting native picker scroll).
+ *
+ * Touch handling uses two layers:
+ * - CSS `touch-action: pan-x` on `.tickRow` prevents the browser from
+ *   scrolling the underlying page during vertical swipes (handled by JS).
+ * - This JS hook stops horizontal touch propagation so the parent
+ *   `useSwipeable` doesn't interfere with native picker scroll.
+ * Both are needed because `useSwipeable` intercepts events before the
+ * browser can apply `touch-action` constraints.
  */
 function useStopHorizontalTouchPropagation(ref: React.RefObject<HTMLElement | null>) {
   useEffect(() => {
@@ -191,8 +197,6 @@ export interface TickControlsProps {
   quality: number | null;
   /** Current attempt count. */
   attemptCount: number;
-  /** Whether save is in progress. */
-  isSaving: boolean;
   /** Which control's picker is currently expanded (null = none). */
   expandedControl: ExpandedControl;
   /** Toggle a control's picker open/closed. */
@@ -208,7 +212,6 @@ export interface TickControlsProps {
 export const TickControls: React.FC<TickControlsProps> = ({
   quality,
   attemptCount,
-  isSaving,
   expandedControl,
   onExpandedControlChange,
   triesButtonRef,
