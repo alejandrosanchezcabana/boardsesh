@@ -592,50 +592,52 @@ const QueueControlBar: React.FC<QueueControlBarProps> = ({ boardDetails, angle }
                   <div className={styles.tickDragHandleBar} />
                 </div>
               </div>
-              <QuickTickBar
-                ref={quickTickBarRef}
-                currentClimb={currentClimb}
-                angle={angle}
-                boardDetails={boardDetails}
-                onSave={() => setActiveDrawer('none')}
-                comment={tickComment}
-                commentSlot={
-                  <div className={`${styles.tickComment} ${tickCommentFocused ? styles.tickCommentExpanded : ''}`}>
-                    <TextField
-                      fullWidth
-                      size="small"
-                      variant="outlined"
-                      placeholder="Comment..."
-                      multiline
-                      minRows={1}
-                      maxRows={tickCommentFocused ? 4 : 1}
-                      value={tickComment}
-                      onChange={(e) => setTickComment(e.target.value)}
-                      onFocus={handleTickCommentFocus}
-                      onBlur={handleTickCommentBlur}
-                      slotProps={{
-                        htmlInput: { maxLength: 2000, 'aria-label': 'Tick comment' },
-                        input: {
-                          startAdornment: (
-                            <InputAdornment position="start">
-                              <ChatBubbleOutlineOutlined sx={{ fontSize: 16, opacity: 0.5 }} />
-                            </InputAdornment>
-                          ),
-                        },
-                      }}
-                      sx={{
-                        '& .MuiOutlinedInput-root': {
-                          borderRadius: '8px',
-                          backgroundColor: 'var(--neutral-50)',
-                          '& .MuiOutlinedInput-notchedOutline': {
-                            borderColor: 'var(--neutral-200)',
+              {tickBarActive && (
+                <QuickTickBar
+                  ref={quickTickBarRef}
+                  currentClimb={currentClimb}
+                  angle={angle}
+                  boardDetails={boardDetails}
+                  onSave={() => setActiveDrawer('none')}
+                  comment={tickComment}
+                  commentSlot={
+                    <div className={`${styles.tickComment} ${tickCommentFocused ? styles.tickCommentExpanded : ''}`}>
+                      <TextField
+                        fullWidth
+                        size="small"
+                        variant="outlined"
+                        placeholder="Comment..."
+                        multiline
+                        minRows={1}
+                        maxRows={tickCommentFocused ? 4 : 1}
+                        value={tickComment}
+                        onChange={(e) => setTickComment(e.target.value)}
+                        onFocus={handleTickCommentFocus}
+                        onBlur={handleTickCommentBlur}
+                        slotProps={{
+                          htmlInput: { maxLength: 2000, 'aria-label': 'Tick comment' },
+                          input: {
+                            startAdornment: (
+                              <InputAdornment position="start">
+                                <ChatBubbleOutlineOutlined sx={{ fontSize: 16, opacity: 0.5 }} />
+                              </InputAdornment>
+                            ),
                           },
-                        },
-                      }}
-                    />
-                  </div>
-                }
-              />
+                        }}
+                        sx={{
+                          '& .MuiOutlinedInput-root': {
+                            borderRadius: '8px',
+                            backgroundColor: 'var(--neutral-50)',
+                            '& .MuiOutlinedInput-notchedOutline': {
+                              borderColor: 'var(--neutral-200)',
+                            },
+                          },
+                        }}
+                      />
+                    </div>
+                  }
+                />
+              )}
             </div>
           </div>
         )}
