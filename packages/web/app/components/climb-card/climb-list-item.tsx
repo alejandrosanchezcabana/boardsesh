@@ -538,7 +538,7 @@ const ClimbListItem: React.FC<ClimbListItemProps> = React.memo(
                 preferImageLayers={preferImageLayers}
               />
               <HeartAnimationOverlay visible={showHeart} onAnimationEnd={dismissHeart} size={32} />
-              <AscentStatus climbUuid={climb.uuid} fontSize={12} className={styles.thumbnailBadge} />
+              <AscentStatus climbUuid={climb.uuid} fontSize={12} className={styles.thumbnailBadge} mirroredClassName={styles.thumbnailBadgeMirrored} />
             </div>
 
             {/* Center: Name, stars, setter, colorized grade */}
