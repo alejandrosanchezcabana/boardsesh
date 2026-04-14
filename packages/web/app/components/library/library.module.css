@@ -237,6 +237,12 @@
               linear-gradient(135deg, var(--color-error), #D87F7A);
 }
 
+/* Placeholder to prevent CLS while auth status resolves */
+.signInBannerPlaceholder {
+  height: 72px;
+  margin-bottom: 20px;
+}
+
 /* Sign-in Banner (compact, non-blocking) */
 .signInBanner {
   display: flex;

@@ -104,7 +104,7 @@ const BoardImageLayers = React.memo(function BoardImageLayers({
         />
       ) : (
         // No climb selected: just show background layers
-        backgroundUrls.map((url) => (
+        backgroundUrls.map((url, i) => (
           // eslint-disable-next-line @next/next/no-img-element
           <img
             key={url}
@@ -113,6 +113,7 @@ const BoardImageLayers = React.memo(function BoardImageLayers({
             width={imgWidth}
             height={imgHeight}
             style={imgStyle}
+            fetchPriority={i === 0 ? fetchPriority : undefined}
           />
         ))
       )}

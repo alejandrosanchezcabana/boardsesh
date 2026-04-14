@@ -42,6 +42,7 @@ export type PlaylistPreviewSquareProps = {
   isLikedClimbs?: boolean;
   index?: number;
   className?: string;
+  fetchPriority?: 'high' | 'low' | 'auto';
 };
 
 export default function PlaylistPreviewSquare({
@@ -52,6 +53,7 @@ export default function PlaylistPreviewSquare({
   isLikedClimbs,
   index = 0,
   className,
+  fetchPriority,
 }: PlaylistPreviewSquareProps) {
   const boardDetails = useMemo(
     () => getBoardDetailsForPlaylist(boardType, layoutId),
@@ -106,6 +108,7 @@ export default function PlaylistPreviewSquare({
           mirrored={false}
           thumbnail
           style={{ width: '100%', height: '100%' }}
+          fetchPriority={fetchPriority}
         />
       </div>
       <div

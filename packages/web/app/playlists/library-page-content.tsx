@@ -33,10 +33,25 @@ import { useAuthModal } from '@/app/components/providers/auth-modal-provider';
 import PlaylistCardGrid from '@/app/components/library/playlist-card-grid';
 import PlaylistScrollSection from '@/app/components/library/playlist-scroll-section';
 import PlaylistCard from '@/app/components/library/playlist-card';
-import LogbookFeed from '@/app/components/library/logbook-feed';
+import dynamic from 'next/dynamic';
+import Skeleton from '@mui/material/Skeleton';
 import BoardFilterStrip from '@/app/components/board-scroll/board-filter-strip';
 import { getPreference, setPreference } from '@/app/lib/user-preferences-db';
 import styles from '@/app/components/library/library.module.css';
+
+const LogbookFeed = dynamic(
+  () => import('@/app/components/library/logbook-feed'),
+  {
+    ssr: false,
+    loading: () => (
+      <div style={{ padding: '16px 0' }}>
+        <Skeleton variant="rounded" height={80} sx={{ mb: 1 }} />
+        <Skeleton variant="rounded" height={80} sx={{ mb: 1 }} />
+        <Skeleton variant="rounded" height={80} />
+      </div>
+    ),
+  },
+);
 
 type LibraryPageContentProps = {
   /** When set, the page was rendered from a board route and this board is pre-selected. */
@@ -61,13 +76,15 @@ export default function LibraryPageContent({
   const { data: session, status: sessionStatus } = useSession();
   const { token, isLoading: tokenLoading } = useWsAuthToken();
   const router = useRouter();
-  const isAuthenticated = sessionStatus === 'authenticated';
 
   const hasInitialBoardData = initialMyBoards != null && initialMyBoards.length > 0;
   const hasInitialPlaylistData = initialPlaylists != null;
   const hasInitialDiscoverData = initialDiscoverPlaylists != null;
 
-  const [hasMounted, setHasMounted] = useState(false);
+  // Trust SSR data: if the server fetched user data, treat as authenticated even while
+  // useSession() is still loading. This prevents SSR content from flashing away during hydration.
+  const hasServerUserData = hasInitialPlaylistData || hasInitialBoardData;
+  const isAuthenticated = sessionStatus === 'authenticated' || hasServerUserData;
   const [activeTab, setActiveTab] = useState<'playlists' | 'logbook'>('playlists');
   // Initialize selectedBoard from SSR data immediately when boardSlug is provided
   const [selectedBoard, setSelectedBoard] = useState<UserBoard | null>(
@@ -78,7 +95,7 @@ export default function LibraryPageContent({
 
   // Fetch user's boards for the board selector (with SSR initial data)
   const { boards: myBoards, isLoading: boardsLoading } = useMyBoards(
-    hasMounted || hasInitialBoardData,
+    hasInitialBoardData || sessionStatus === 'authenticated',
     50,
     initialMyBoards,
   );
@@ -87,7 +104,6 @@ export default function LibraryPageContent({
   const { boardDetails: currentBoardDetails, hasActiveQueue } = useQueueBridgeBoardInfo();
 
   useEffect(() => {
-    setHasMounted(true);
     getPreference<'playlists' | 'logbook'>('libraryTab').then((saved) => {
       if (saved) setActiveTab(saved);
     });
@@ -294,7 +310,7 @@ export default function LibraryPageContent({
     );
   }
 
-  const isLoading = (!hasMounted && !hasInitialPlaylistData) || playlistsLoading || tokenLoading || sessionStatus === 'loading';
+  const isLoading = playlistsLoading || tokenLoading || (!hasServerUserData && sessionStatus === 'loading');
   const discoverItems = getDiscoverPlaylists();
 
   // Server query already filters by boardType + layoutId; no client-side filter needed
@@ -320,8 +336,13 @@ export default function LibraryPageContent({
         onBoardSelect={handleBoardSelect}
       />
 
+      {/* Placeholder to reserve space while auth status resolves (prevents CLS) */}
+      {!hasServerUserData && sessionStatus === 'loading' && (
+        <div className={styles.signInBannerPlaceholder} aria-hidden="true" />
+      )}
+
       {/* Sign-in banner for non-authenticated users */}
-      {hasMounted && !isAuthenticated && sessionStatus !== 'loading' && (
+      {!hasServerUserData && !isAuthenticated && sessionStatus !== 'loading' && (
         <div className={styles.signInBanner}>
           <LoginOutlined sx={{ color: 'text.secondary', fontSize: 28 }} />
           <div className={styles.signInBannerText}>
@@ -403,6 +424,7 @@ export default function LibraryPageContent({
                   href={getPlaylistUrl(p.uuid)}
                   variant="scroll"
                   index={i}
+                  fetchPriority={i === 0 && !isAuthenticated ? 'high' : undefined}
                 />
               ))}
             </PlaylistScrollSection>

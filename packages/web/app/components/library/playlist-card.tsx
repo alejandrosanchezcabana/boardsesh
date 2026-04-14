@@ -16,6 +16,7 @@ export type PlaylistCardProps = {
   variant: 'grid' | 'scroll';
   index?: number;
   isLikedClimbs?: boolean;
+  fetchPriority?: 'high' | 'low' | 'auto';
 };
 
 export default function PlaylistCard({
@@ -29,6 +30,7 @@ export default function PlaylistCard({
   variant,
   index = 0,
   isLikedClimbs,
+  fetchPriority,
 }: PlaylistCardProps) {
   if (variant === 'grid') {
     return (
@@ -42,6 +44,7 @@ export default function PlaylistCard({
             isLikedClimbs={isLikedClimbs}
             index={index}
             className={styles.previewCompact}
+            fetchPriority={fetchPriority}
           />
         </div>
         <div className={styles.cardCompactInfo}>
@@ -67,6 +70,7 @@ export default function PlaylistCard({
           icon={icon}
           isLikedClimbs={isLikedClimbs}
           index={index}
+          fetchPriority={fetchPriority}
         />
       </div>
       <div className={styles.cardName}>{name}</div>
