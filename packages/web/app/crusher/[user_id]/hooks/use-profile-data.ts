@@ -190,15 +190,7 @@ export function useProfileData(userId: string, initialData?: InitialData) {
     if (hasChangedBoard && selectedBoard) {
       // Check if we already have ticks for this board from server data
       if (initialData?.initialAllBoardsTicks?.[selectedBoard]) {
-        const ticks = initialData.initialAllBoardsTicks[selectedBoard];
-        setLogbook(ticks.map((tick) => ({
-          climbed_at: tick.climbed_at,
-          difficulty: tick.difficulty,
-          tries: tick.tries,
-          angle: tick.angle,
-          status: tick.status,
-          climbUuid: tick.climbUuid,
-        })));
+        setLogbook(initialData.initialAllBoardsTicks[selectedBoard]);
         setLoadingStats(false);
       } else {
         fetchLogbook(selectedBoard);

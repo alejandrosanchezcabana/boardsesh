@@ -201,9 +201,10 @@ export async function cachedUserProfileStats(
   type Response = import('@/app/lib/graphql/operations/ticks').GetUserProfileStatsQueryResponse;
 
   try {
+    const tag = `user-profile-stats-${userId}`;
     const query = createCachedGraphQLQuery<Response>(
       GET_USER_PROFILE_STATS,
-      'user-profile-stats',
+      tag,
       300,
     );
     const result = await query({ userId });
@@ -224,9 +225,10 @@ export async function cachedUserTicks(
   type Response = import('@/app/lib/graphql/operations/ticks').GetUserTicksQueryResponse;
 
   try {
+    const tag = `user-ticks-${userId}`;
     const query = createCachedGraphQLQuery<Response>(
       GET_USER_TICKS,
-      'user-ticks',
+      tag,
       300,
     );
     const result = await query({ userId, boardType });
