@@ -1,10 +1,11 @@
 'use client';
 
-import React, { useState, useCallback, useRef } from 'react';
+import React, { useState, useCallback, useRef, useEffect } from 'react';
 import IconButton from '@mui/material/IconButton';
 import TextField from '@mui/material/TextField';
 import InputAdornment from '@mui/material/InputAdornment';
 import SearchOutlined from '@mui/icons-material/SearchOutlined';
+import ClearOutlined from '@mui/icons-material/ClearOutlined';
 import FilterListOutlined from '@mui/icons-material/FilterListOutlined';
 import PlayCircleOutlineOutlined from '@mui/icons-material/PlayCircleOutlineOutlined';
 import StopCircleOutlined from '@mui/icons-material/StopCircleOutlined';
@@ -13,6 +14,7 @@ import { useSearchDrawerBridge } from '@/app/components/search-drawer/search-dra
 import UserDrawer from '@/app/components/user-drawer/user-drawer';
 import StartSeshDrawer from '@/app/components/session-creation/start-sesh-drawer';
 import SeshSettingsDrawer from '@/app/components/sesh-settings/sesh-settings-drawer';
+import { SESH_SETTINGS_DRAWER_EVENT } from '@/app/components/sesh-settings/sesh-settings-drawer-event';
 import { usePersistentSessionState, useIsOnBoardRoute } from '@/app/components/persistent-session/persistent-session-context';
 import { BoardConfigData } from '@/app/lib/server-board-configs';
 import { isBoardCreatePath } from '@/app/lib/board-route-paths';
@@ -59,6 +61,16 @@ export default function GlobalHeader({ boardConfigs }: GlobalHeaderProps) {
   }, []);
   const handleSeshSettingsTransitionEnd = useCallback((open: boolean) => {
     if (!open) setSeshSettingsRendered(false);
+  }, []);
+
+  // Listen for session mini-bar events to open the sesh settings drawer
+  useEffect(() => {
+    const handleOpenSeshSettings = () => {
+      setSeshSettingsRendered(true);
+      setSeshSettingsOpen(true);
+    };
+    window.addEventListener(SESH_SETTINGS_DRAWER_EVENT, handleOpenSeshSettings);
+    return () => window.removeEventListener(SESH_SETTINGS_DRAWER_EVENT, handleOpenSeshSettings);
   }, []);
 
   // On board create routes, hide the header entirely
@@ -147,6 +159,19 @@ export default function GlobalHeader({ boardConfigs }: GlobalHeaderProps) {
                     <SearchOutlined sx={{ fontSize: 18 }} />
                   </InputAdornment>
                 ),
+                endAdornment: useClimbSearchBridge && nameFilter ? (
+                  <InputAdornment position="end">
+                    <IconButton
+                      size="small"
+                      onClick={() => setNameFilter?.('')}
+                      aria-label="Clear search"
+                      edge="end"
+                      sx={{ padding: '2px' }}
+                    >
+                      <ClearOutlined sx={{ fontSize: 16 }} />
+                    </IconButton>
+                  </InputAdornment>
+                ) : undefined,
               },
             }}
           />

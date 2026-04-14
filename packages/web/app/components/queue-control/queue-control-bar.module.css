@@ -124,6 +124,39 @@
   }
 }
 
+/* Session header strip — sits above the swipe container inside the card */
+@keyframes sessionHeaderFadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.sessionHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 4px 12px;
+  cursor: pointer;
+  touch-action: manipulation;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.06);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.08);
+  animation: sessionHeaderFadeIn 400ms ease-out;
+}
+
+:global(html[data-theme="dark"]) .sessionHeader {
+  border-bottom-color: rgba(0, 0, 0, 0.3);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.25);
+}
+
+.sessionName {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 12px;
+  font-weight: 600;
+}
+
 .swipeWrapper {
   position: relative;
   overflow: hidden;
@@ -236,6 +269,11 @@
 .tickRowExpanded {
   grid-template-rows: 1fr;
   opacity: 1;
+}
+
+/* Closing state: keep visible briefly so the collapse transition plays */
+.tickRow:not(.tickRowExpanded) {
+  pointer-events: none;
 }
 
 .tickRowInner {

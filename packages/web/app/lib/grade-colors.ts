@@ -251,7 +251,7 @@ function hexToHue(hex: string): number {
  * @param darkMode - When true, uses lower lightness values suitable for dark backgrounds
  * @returns HSL color string or undefined if no grade color found
  */
-export function getGradeTintColor(difficulty: string | null | undefined, variant: 'default' | 'light' = 'default', darkMode?: boolean): string | undefined {
+export function getGradeTintColor(difficulty: string | null | undefined, variant: 'default' | 'light' | 'session' = 'default', darkMode?: boolean): string | undefined {
   const color = getGradeColor(difficulty);
   if (!color) return undefined;
 
@@ -261,11 +261,17 @@ export function getGradeTintColor(difficulty: string | null | undefined, variant
     if (variant === 'light') {
       return `hsl(${hue}, 25%, 22%)`;
     }
+    if (variant === 'session') {
+      return `hsla(${hue}, 40%, 14%, 0.85)`;
+    }
     return `hsla(${hue}, 35%, 28%, 0.6)`;
   }
 
   if (variant === 'light') {
     return `hsl(${hue}, 20%, 94%)`;
+  }
+  if (variant === 'session') {
+    return `hsl(${hue}, 35%, 82%)`;
   }
   return `hsl(${hue}, 30%, 88%)`;
 }
