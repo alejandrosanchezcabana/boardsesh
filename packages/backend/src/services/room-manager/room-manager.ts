@@ -197,6 +197,7 @@ class RoomManager {
           username: client.username,
           isLeader: client.isLeader,
           avatarUrl: client.avatarUrl,
+          userId: client.userId,
         });
       }
     }

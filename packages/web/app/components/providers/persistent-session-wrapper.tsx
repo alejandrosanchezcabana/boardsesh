@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useMemo } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { usePathname } from 'next/navigation';
 import { PartyProfileProvider } from '../party-manager/party-profile-context';
 import { PersistentSessionProvider, usePersistentSession } from '../persistent-session';
@@ -24,6 +24,10 @@ import GlobalHeader from '../global-header/global-header';
 import SessionSummaryDialog from '../session-summary/session-summary-dialog';
 import { SearchDrawerBridgeProvider } from '../search-drawer/search-drawer-bridge-context';
 import { isNativeApp } from '@/app/lib/ble/capacitor-utils';
+import dynamic from 'next/dynamic';
+import { SESH_SETTINGS_DRAWER_EVENT } from '../sesh-settings/sesh-settings-drawer-event';
+
+const SeshSettingsDrawer = dynamic(() => import('../sesh-settings/sesh-settings-drawer'), { ssr: false });
 import { BoardSwitchConfirmProvider } from '../board-lock/board-switch-confirm-provider';
 
 interface PersistentSessionWrapperProps {
@@ -49,6 +53,7 @@ export default function PersistentSessionWrapper({ children, boardConfigs }: Per
               {children}
               <RootBottomBar boardConfigs={boardConfigs} />
               <RootSessionSummaryDialog />
+              <RootSeshSettingsDrawer />
             </SearchDrawerBridgeProvider>
           </BoardSwitchConfirmProvider>
         </QueueBridgeProvider>
@@ -65,6 +70,40 @@ export default function PersistentSessionWrapper({ children, boardConfigs }: Per
 function RootSessionSummaryDialog() {
   const { sessionSummary, dismissSessionSummary } = usePersistentSession();
   return <SessionSummaryDialog summary={sessionSummary} onDismiss={dismissSessionSummary} />;
+}
+
+/**
+ * Root-level sesh settings drawer.
+ * Listens for the SESH_SETTINGS_DRAWER_EVENT dispatched by the session header
+ * in the queue control bar. Rendered at the root so it works on every page.
+ */
+function RootSeshSettingsDrawer() {
+  const [open, setOpen] = useState(false);
+  const [rendered, setRendered] = useState(false);
+
+  useEffect(() => {
+    const handler = () => {
+      setRendered(true);
+      setOpen(true);
+    };
+    window.addEventListener(SESH_SETTINGS_DRAWER_EVENT, handler);
+    return () => window.removeEventListener(SESH_SETTINGS_DRAWER_EVENT, handler);
+  }, []);
+
+  const handleClose = useCallback(() => setOpen(false), []);
+  const handleTransitionEnd = useCallback((isOpen: boolean) => {
+    if (!isOpen) setRendered(false);
+  }, []);
+
+  if (!rendered) return null;
+
+  return (
+    <SeshSettingsDrawer
+      open={open}
+      onClose={handleClose}
+      onTransitionEnd={handleTransitionEnd}
+    />
+  );
 }
 
 /**

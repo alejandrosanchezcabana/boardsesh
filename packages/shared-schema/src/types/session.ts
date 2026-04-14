@@ -5,6 +5,8 @@ export type SessionUser = {
   username: string;
   isLeader: boolean;
   avatarUrl?: string;
+  /** Stable database user UUID (null for unauthenticated connections) */
+  userId?: string | null;
 };
 
 export type SessionGradeCount = {

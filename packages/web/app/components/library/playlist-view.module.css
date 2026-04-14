@@ -10,6 +10,9 @@
 
 /* Actions section - white card container */
 .actionsSection {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
   background-color: var(--semantic-surface);
   border-radius: 12px;
   padding: 16px;

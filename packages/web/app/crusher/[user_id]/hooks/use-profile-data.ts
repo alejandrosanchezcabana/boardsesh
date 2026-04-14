@@ -166,7 +166,6 @@ export function useProfileData(userId: string, initialData?: InitialData) {
     }
   }, [userId]);
 
-  // Skip client-side fetches when server data was provided
   useEffect(() => {
     if (!initialData?.initialProfile && !initialData?.initialNotFound) fetchProfile();
   }, [fetchProfile, initialData?.initialProfile, initialData?.initialNotFound]);
@@ -179,7 +178,6 @@ export function useProfileData(userId: string, initialData?: InitialData) {
     if (!initialData?.initialProfileStats) fetchProfileStats();
   }, [fetchProfileStats, initialData?.initialProfileStats]);
 
-  // Fetch logbook when board changes (skip initial if server data was provided for default board)
   const [hasChangedBoard, setHasChangedBoard] = useState(false);
   const handleBoardChange = useCallback((board: string) => {
     setSelectedBoard(board);

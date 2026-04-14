@@ -7,6 +7,7 @@ import { parseBoardRouteParamsWithSlugs } from '@/app/lib/url-utils.server';
 import { convertLitUpHoldsStringToMap, getImageUrl } from '@/app/components/board-renderer/util';
 import { HoldRenderData } from '@/app/components/board-renderer/types';
 import { darkTokens } from '@/app/theme/theme-config';
+import { formatBoardDisplayName } from '@/app/lib/string-utils';
 
 export const runtime = 'edge';
 
@@ -61,11 +62,7 @@ export async function GET(request: NextRequest) {
       return `${origin}${relativeUrl}`;
     });
 
-    // Render proper trademark-safe board name ("MoonBoard", not "Moonboard").
-    const boardDisplayName =
-      board_name === 'moonboard'
-        ? 'MoonBoard'
-        : board_name.charAt(0).toUpperCase() + board_name.slice(1);
+    const boardDisplayName = formatBoardDisplayName(board_name);
 
     return new ImageResponse(
       (

@@ -4,7 +4,8 @@ import React, { useState, useEffect, useCallback } from 'react';
 import Typography from '@mui/material/Typography';
 import Chip from '@mui/material/Chip';
 import Box from '@mui/material/Box';
-import { PersonOutlined, SentimentDissatisfiedOutlined } from '@mui/icons-material';
+import IconButton from '@mui/material/IconButton';
+import { PersonOutlined, SentimentDissatisfiedOutlined, IosShare } from '@mui/icons-material';
 import { useSession } from 'next-auth/react';
 import BackButton from '@/app/components/back-button';
 import FollowButton from '@/app/components/ui/follow-button';
@@ -19,6 +20,8 @@ import {
   type GetSetterProfileQueryResponse,
 } from '@/app/lib/graphql/operations';
 import { themeTokens } from '@/app/theme/theme-config';
+import { useSnackbar } from '@/app/components/providers/snackbar-provider';
+import { shareWithFallback } from '@/app/lib/share-utils';
 import type { SetterProfile } from '@boardsesh/shared-schema';
 import styles from '@/app/components/library/playlist-view.module.css';
 
@@ -28,6 +31,7 @@ interface SetterProfileContentProps {
 
 export default function SetterProfileContent({ username }: SetterProfileContentProps) {
   const { data: session } = useSession();
+  const { showMessage } = useSnackbar();
   const [loading, setLoading] = useState(true);
   const [profile, setProfile] = useState<SetterProfile | null>(null);
 
@@ -75,11 +79,27 @@ export default function SetterProfileContent({ username }: SetterProfileContentP
   const avatarUrl = profile.linkedUserAvatarUrl;
   const authToken = (session as { authToken?: string } | null)?.authToken ?? null;
 
+  const handleShare = useCallback(async () => {
+    const shareUrl = `${window.location.origin}/setter/${encodeURIComponent(username)}`;
+    await shareWithFallback({
+      url: shareUrl,
+      title: `${displayName} - Setter`,
+      text: `Check out ${displayName}'s climbs on Boardsesh`,
+      trackingEvent: 'Setter Shared',
+      trackingProps: { username },
+      onClipboardSuccess: () => showMessage('Link copied to clipboard!', 'success'),
+      onError: () => showMessage('Failed to share', 'error'),
+    });
+  }, [username, displayName, showMessage]);
+
   return (
     <>
-      {/* Back Button */}
+      {/* Back Button & Share */}
       <div className={styles.actionsSection}>
         <BackButton fallbackUrl="/" />
+        <IconButton onClick={handleShare} aria-label="Share setter profile">
+          <IosShare />
+        </IconButton>
       </div>
 
       {/* Main Content */}

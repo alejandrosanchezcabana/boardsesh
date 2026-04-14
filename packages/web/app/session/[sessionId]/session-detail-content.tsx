@@ -1,6 +1,9 @@
 'use client';
 
 import React, { useState, useCallback, useMemo } from 'react';
+import IosShare from '@mui/icons-material/IosShare';
+import { useSnackbar } from '@/app/components/providers/snackbar-provider';
+import { shareWithFallback } from '@/app/lib/share-utils';
 import Box from '@mui/material/Box';
 import Typography from '@mui/material/Typography';
 import Avatar from '@mui/material/Avatar';
@@ -272,6 +275,7 @@ export default function SessionDetailContent({
   const { data: authSession } = useSession();
   const router = useRouter();
   const deleteTick = useDeleteTick();
+  const { showMessage } = useSnackbar();
 
   const {
     session: hookSession,
@@ -404,6 +408,20 @@ export default function SessionDetailContent({
     }
   }, [router]);
 
+  const handleShare = useCallback(async () => {
+    const shareUrl = `${window.location.origin}/session/${sessionId}`;
+    const name = sessionName || 'Climbing Session';
+    await shareWithFallback({
+      url: shareUrl,
+      title: name,
+      text: 'Check out this climbing session on Boardsesh',
+      trackingEvent: 'Session Shared',
+      trackingProps: { sessionId },
+      onClipboardSuccess: () => showMessage('Link copied to clipboard!', 'success'),
+      onError: () => showMessage('Failed to share', 'error'),
+    });
+  }, [sessionId, sessionName, showMessage]);
+
   const handleDeleteTick = useCallback((uuid: string) => {
     deleteTick.mutate(uuid);
   }, [deleteTick]);
@@ -509,6 +527,7 @@ export default function SessionDetailContent({
         defaultSummary: 'Share link or QR code',
         getSummary: () => [],
         content: inviteContent,
+        defaultActive: true,
       });
     }
 
@@ -616,6 +635,11 @@ export default function SessionDetailContent({
               {formatDate(firstTickAt)}
             </Typography>
           </Box>
+          {!isEditing && (
+            <IconButton size="small" onClick={handleShare} aria-label="Share session">
+              <IosShare fontSize="small" />
+            </IconButton>
+          )}
           {canEdit && !isEditing && (
             <IconButton size="small" onClick={handleStartEdit}>
               <EditOutlined fontSize="small" />
@@ -647,7 +671,6 @@ export default function SessionDetailContent({
           />
         ) : (
           <SessionOverviewPanel
-            participants={participants}
             totalSends={totalSends}
             totalFlashes={totalFlashes}
             totalAttempts={totalAttempts}
@@ -657,12 +680,6 @@ export default function SessionDetailContent({
             hardestGrade={hardestGrade}
             durationMinutes={durationMinutes}
             goal={goal}
-            ownerUserId={ownerUserId}
-            canEditParticipants={canEdit && !saving}
-            onAddParticipant={() => setAddUserDialogOpen(true)}
-            onRemoveParticipant={handleRemoveUser}
-            removingUserId={removingUserId}
-            getParticipantHref={(userId) => `/crusher/${userId}`}
             afterParticipants={!embedded ? afterParticipants : undefined}
             compact={embedded}
           />

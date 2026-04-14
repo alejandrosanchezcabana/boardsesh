@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useCallback, useRef, useEffect } from 'react';
+import React, { useState, useCallback, useRef } from 'react';
 import IconButton from '@mui/material/IconButton';
 import TextField from '@mui/material/TextField';
 import InputAdornment from '@mui/material/InputAdornment';
@@ -10,8 +10,6 @@ import FilterListOutlined from '@mui/icons-material/FilterListOutlined';
 import UnifiedSearchDrawer from '@/app/components/search-drawer/unified-search-drawer';
 import { useSearchDrawerBridge } from '@/app/components/search-drawer/search-drawer-bridge-context';
 import UserDrawer from '@/app/components/user-drawer/user-drawer';
-import SeshSettingsDrawer from '@/app/components/sesh-settings/sesh-settings-drawer';
-import { SESH_SETTINGS_DRAWER_EVENT } from '@/app/components/sesh-settings/sesh-settings-drawer-event';
 import { useIsOnBoardRoute } from '@/app/components/persistent-session/persistent-session-context';
 import { BoardConfigData } from '@/app/lib/server-board-configs';
 import { isBoardCreatePath } from '@/app/lib/board-route-paths';
@@ -36,8 +34,7 @@ interface GlobalHeaderProps {
 export default function GlobalHeader({ boardConfigs }: GlobalHeaderProps) {
   const [searchOpen, setSearchOpen] = useState(false);
   const [searchRendered, setSearchRendered] = useState(false);
-  const [seshSettingsOpen, setSeshSettingsOpen] = useState(false);
-  const [seshSettingsRendered, setSeshSettingsRendered] = useState(false);
+
 
   const isOnBoardRoute = useIsOnBoardRoute();
   const { openClimbSearchDrawer, nameFilter, setNameFilter, hasActiveNonNameFilters: nonNameFiltersActive } = useSearchDrawerBridge();
@@ -50,19 +47,6 @@ export default function GlobalHeader({ boardConfigs }: GlobalHeaderProps) {
   // MUI Modal/Portal/FocusTrap infrastructure on every parent re-render.
   const handleSearchTransitionEnd = useCallback((open: boolean) => {
     if (!open) setSearchRendered(false);
-  }, []);
-  const handleSeshSettingsTransitionEnd = useCallback((open: boolean) => {
-    if (!open) setSeshSettingsRendered(false);
-  }, []);
-
-  // Listen for session mini-bar events to open the sesh settings drawer
-  useEffect(() => {
-    const handleOpenSeshSettings = () => {
-      setSeshSettingsRendered(true);
-      setSeshSettingsOpen(true);
-    };
-    window.addEventListener(SESH_SETTINGS_DRAWER_EVENT, handleOpenSeshSettings);
-    return () => window.removeEventListener(SESH_SETTINGS_DRAWER_EVENT, handleOpenSeshSettings);
   }, []);
 
   // On board create routes, hide the header entirely
@@ -184,13 +168,6 @@ export default function GlobalHeader({ boardConfigs }: GlobalHeaderProps) {
         />
       )}
 
-      {seshSettingsRendered && (
-        <SeshSettingsDrawer
-          open={seshSettingsOpen}
-          onClose={() => setSeshSettingsOpen(false)}
-          onTransitionEnd={handleSeshSettingsTransitionEnd}
-        />
-      )}
     </>
   );
 }

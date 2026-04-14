@@ -11,6 +11,8 @@ export const sessionTypeDefs = /* GraphQL */ `
     isLeader: Boolean!
     "URL to user's avatar image"
     avatarUrl: String
+    "Stable database user UUID (null for unauthenticated connections)"
+    userId: ID
   }
 
   """

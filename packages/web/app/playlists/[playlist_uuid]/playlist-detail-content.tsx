@@ -18,6 +18,7 @@ import {
   EditOutlined,
   DeleteOutlined,
   PeopleOutlined,
+  IosShare,
 } from '@mui/icons-material';
 import { useInfiniteQuery } from '@tanstack/react-query';
 import { Climb } from '@/app/lib/types';
@@ -41,6 +42,7 @@ import {
   DeletePlaylistMutationResponse,
 } from '@/app/lib/graphql/operations/playlists';
 import { useSnackbar } from '@/app/components/providers/snackbar-provider';
+import { shareWithFallback } from '@/app/lib/share-utils';
 import { LoadingSpinner } from '@/app/components/ui/loading-spinner';
 import { EmptyState } from '@/app/components/ui/empty-state';
 import FollowButton from '@/app/components/ui/follow-button';
@@ -280,6 +282,19 @@ export default function PlaylistDetailContent({
     setSelectedBoard(board);
   }, []);
 
+  const handleShare = useCallback(async () => {
+    const shareUrl = `${window.location.origin}/playlists/${playlistUuid}`;
+    await shareWithFallback({
+      url: shareUrl,
+      title: playlist?.name || 'Playlist',
+      text: 'Check out this climbing playlist on Boardsesh',
+      trackingEvent: 'Playlist Shared',
+      trackingProps: { playlistUuid },
+      onClipboardSuccess: () => showMessage('Link copied to clipboard!', 'success'),
+      onError: () => showMessage('Failed to share', 'error'),
+    });
+  }, [playlistUuid, playlist, showMessage]);
+
   const isOwner = playlist?.userRole === 'owner';
 
   const getPlaylistColor = () => {
@@ -394,14 +409,24 @@ export default function PlaylistDetailContent({
             </div>
           </div>
 
-          {/* Ellipsis Menu */}
-          <IconButton
-            className={styles.heroMenuButton}
-            onClick={(e: React.MouseEvent<HTMLButtonElement>) => setMenuAnchor(e.currentTarget)}
-            aria-label="Playlist actions"
-          >
-            <MoreVertOutlined />
-          </IconButton>
+          {/* Share + Ellipsis Menu */}
+          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.5 }}>
+            {playlist.isPublic && (
+              <IconButton
+                onClick={handleShare}
+                aria-label="Share playlist"
+              >
+                <IosShare />
+              </IconButton>
+            )}
+            <IconButton
+              className={styles.heroMenuButton}
+              onClick={(e: React.MouseEvent<HTMLButtonElement>) => setMenuAnchor(e.currentTarget)}
+              aria-label="Playlist actions"
+            >
+              <MoreVertOutlined />
+            </IconButton>
+          </Box>
 
           <Menu
             anchorEl={menuAnchor}

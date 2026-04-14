@@ -43,8 +43,9 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
     const displayName = row.displayName || row.name || 'Crusher';
     const description = `${displayName}'s climbing profile on Boardsesh`;
 
-    const ogImageUrl = new URL('/api/og/profile', 'https://boardsesh.com');
-    ogImageUrl.searchParams.set('user_id', user_id);
+    const ogParams = new URLSearchParams();
+    ogParams.set('user_id', user_id);
+    const ogImagePath = `/api/og/profile?${ogParams.toString()}`;
 
     return {
       title: `${displayName} | Boardsesh`,
@@ -56,7 +57,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
         url: `/crusher/${user_id}`,
         images: [
           {
-            url: ogImageUrl.toString(),
+            url: ogImagePath,
             width: 1200,
             height: 630,
             alt: `${displayName}'s climbing profile`,
@@ -67,7 +68,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
         card: 'summary_large_image',
         title: `${displayName} | Boardsesh`,
         description,
-        images: [ogImageUrl.toString()],
+        images: [ogImagePath],
       },
     };
   } catch {
@@ -89,18 +90,15 @@ export default async function ProfilePage({ params }: PageProps) {
     viewerUserId = session?.user?.id;
   }
 
-  // Check if user exists before fetching stats/ticks
-  const initialProfile = await getProfileData(user_id, viewerUserId);
+  const [initialProfile, initialProfileStats, ...ticksResults] = await Promise.all([
+    getProfileData(user_id, viewerUserId),
+    cachedUserProfileStats(user_id),
+    ...SUPPORTED_BOARDS.map((boardType) => cachedUserTicks(user_id, boardType)),
+  ]);
 
   if (!initialProfile) {
     return <ProfilePageContent userId={user_id} initialNotFound />;
   }
-
-  // User exists — fetch stats and ticks in parallel
-  const [initialProfileStats, ...ticksResults] = await Promise.all([
-    cachedUserProfileStats(user_id),
-    ...SUPPORTED_BOARDS.map((boardType) => cachedUserTicks(user_id, boardType)),
-  ]);
 
   // Build allBoardsTicks record
   const initialAllBoardsTicks: Record<string, LogbookEntry[]> = {};
@@ -120,7 +118,6 @@ export default async function ProfilePage({ params }: PageProps) {
       : [];
   });
 
-  // Default board logbook
   const defaultBoard = 'kilter';
   const initialLogbook = initialAllBoardsTicks[defaultBoard] ?? [];
 

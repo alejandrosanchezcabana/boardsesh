@@ -38,6 +38,8 @@ import ChatBubbleOutlineOutlined from '@mui/icons-material/ChatBubbleOutlineOutl
 import InputAdornment from '@mui/material/InputAdornment';
 import Avatar from '@mui/material/Avatar';
 import AvatarGroup from '@mui/material/AvatarGroup';
+import Badge from '@mui/material/Badge';
+import Typography from '@mui/material/Typography';
 import { getGradeTintColor } from '@/app/lib/grade-colors';
 import { useColorMode } from '@/app/hooks/use-color-mode';
 import { ConfirmPopover } from '@/app/components/ui/confirm-popover';
@@ -47,6 +49,10 @@ import PlayCircleOutlineOutlined from '@mui/icons-material/PlayCircleOutlineOutl
 import { dispatchOpenSeshSettingsDrawer } from '../sesh-settings/sesh-settings-drawer-event';
 import { generateSessionName } from '@/app/lib/session-utils';
 import StartSeshDrawer from '../session-creation/start-sesh-drawer';
+import IosShare from '@mui/icons-material/IosShare';
+import QrCode2Outlined from '@mui/icons-material/QrCode2Outlined';
+import { QRCodeSVG } from 'qrcode.react';
+import { shareWithFallback } from '@/app/lib/share-utils';
 import styles from './queue-control-bar.module.css';
 
 export type ActiveDrawer = 'none' | 'play' | 'queue' | 'tick';
@@ -58,6 +64,37 @@ export { PLAY_DRAWER_EVENT, dispatchOpenPlayDrawer } from './play-drawer-event';
 import { PLAY_DRAWER_EVENT as PLAY_DRAWER_EVENT_INTERNAL } from './play-drawer-event';
 
 const QUEUE_DRAWER_STYLES = { wrapper: { height: '70%' }, body: { padding: 0 } } as const;
+
+const TICK_BADGE_SX = {
+  '& .MuiBadge-badge': {
+    backgroundColor: themeTokens.colors.success,
+    color: 'common.white',
+    width: 16,
+    height: 16,
+    minWidth: 16,
+    borderRadius: '50%',
+    border: '2px solid transparent',
+  },
+} as const;
+
+function TickBadgeAvatar({ user, hasTicked, size = 28 }: {
+  user: { id: string; username: string; avatarUrl?: string };
+  hasTicked: boolean;
+  size?: number;
+}) {
+  const avatar = <Avatar alt={user.username} src={user.avatarUrl ?? undefined} sx={size !== 28 ? { width: size, height: size } : undefined} />;
+  if (!hasTicked) return avatar;
+  return (
+    <Badge
+      overlap="circular"
+      anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
+      badgeContent={<CheckOutlined sx={{ fontSize: 10 }} />}
+      sx={TICK_BADGE_SX}
+    >
+      {avatar}
+    </Badge>
+  );
+}
 
 export interface QueueControlBarProps {
   boardDetails: BoardDetails;
@@ -127,7 +164,7 @@ const QueueControlBar: React.FC<QueueControlBarProps> = ({ boardDetails, angle }
   const isPlayPage = pathname.includes('/play/');
   const { currentClimb } = useCurrentClimb();
   const { queue } = useQueueList();
-  const { viewOnlyMode, connectionState, sessionId, isDisconnected, users } = useSessionData();
+  const { viewOnlyMode, connectionState, sessionId, isDisconnected, users, clientId } = useSessionData();
   const { activeSession, session: persistentSession, users: sessionUsers } = usePersistentSessionState();
   const {
     mirrorClimb,
@@ -163,6 +200,29 @@ const QueueControlBar: React.FC<QueueControlBarProps> = ({ boardDetails, angle }
 
   // Keep the tick row mounted during the close animation so it can collapse.
   const [tickRowVisible, setTickRowVisible] = useState(false);
+  const [participantsExpanded, setParticipantsExpanded] = useState(false);
+  const [showInviteQr, setShowInviteQr] = useState(false);
+
+  const sessionShareUrl = activeSession?.sessionId
+    ? `${typeof window !== 'undefined' ? window.location.origin : ''}/join/${activeSession.sessionId}`
+    : '';
+
+  const handleInviteShare = useCallback(async () => {
+    if (!sessionShareUrl) return;
+    await shareWithFallback({
+      url: sessionShareUrl,
+      title: 'Join my climbing session',
+      text: 'Jump in and climb with me on Boardsesh',
+      trackingEvent: 'Session Shared',
+      trackingProps: { sessionId: activeSession?.sessionId ?? '' },
+      onClipboardSuccess: () => showMessage('Link copied!', 'success'),
+      onError: () => showMessage('Failed to share', 'error'),
+    });
+  }, [sessionShareUrl, activeSession?.sessionId, showMessage]);
+
+  // Local tracking of which climbs the current user ticked this session,
+  // since the backend doesn't populate tickedBy on queue items.
+  const [localTickedClimbs, setLocalTickedClimbs] = useState<Set<string>>(() => new Set());
   const handleTickCommentFocus = useCallback(() => setTickCommentFocused(true), []);
   const handleTickCommentBlur = useCallback(() => setTickCommentFocused(false), []);
 
@@ -299,6 +359,50 @@ const QueueControlBar: React.FC<QueueControlBarProps> = ({ boardDetails, angle }
   const gradeTintColor = useMemo(() => getGradeTintColor(displayedClimb?.difficulty, 'default', isDark), [displayedClimb?.difficulty, isDark]);
   const sessionTintColor = useMemo(() => getGradeTintColor(displayedClimb?.difficulty, 'session', isDark), [displayedClimb?.difficulty, isDark]);
 
+  // Deduplicate session users by userId (stable DB UUID).
+  // When userId is absent (unauthenticated), fall back to connection id
+  // so distinct participants with the same display name aren't merged.
+  const uniqueSessionUsers = useMemo(() => {
+    const seen = new Set<string>();
+    return sessionUsers.filter((user) => {
+      const key = user.userId ?? user.id;
+      if (seen.has(key)) return false;
+      seen.add(key);
+      return true;
+    });
+  }, [sessionUsers]);
+
+  // Resolve the current user's stable userId from the session users list
+  const myUserId = useMemo(() => {
+    if (!clientId) return null;
+    const me = sessionUsers.find((u) => u.id === clientId);
+    return me?.userId ?? clientId;
+  }, [sessionUsers, clientId]);
+
+  // Track which participants have ticked the current climb.
+  // Merges backend-provided tickedBy with locally tracked ticks.
+  // Uses both connection IDs and stable userIds so the badge matches
+  // regardless of which ID the avatar was deduped with.
+  const tickedBySet = useMemo(() => {
+    const climbUuid = currentClimb?.uuid;
+    const currentQueueItem = queue.find((item) => item.climb.uuid === climbUuid);
+    const set = new Set(currentQueueItem?.tickedBy ?? []);
+    if (myUserId && climbUuid && localTickedClimbs.has(climbUuid)) {
+      set.add(myUserId);
+    }
+    return set;
+  }, [queue, currentClimb?.uuid, myUserId, localTickedClimbs]);
+
+  // Reset local tick cache when the active session changes
+  useEffect(() => {
+    setLocalTickedClimbs(new Set());
+  }, [sessionId]);
+
+  // Close expanded participants when tick mode opens
+  useEffect(() => {
+    if (tickBarActive) setParticipantsExpanded(false);
+  }, [tickBarActive]);
+
   // Reset all tick-bar state on close; keep the row mounted during the 200ms collapse.
   useEffect(() => {
     if (tickBarActive) {
@@ -350,7 +454,7 @@ const QueueControlBar: React.FC<QueueControlBarProps> = ({ boardDetails, angle }
 
   const tickDismissStyle = useMemo<React.CSSProperties | undefined>(() => {
     if (tickSwipeOffset === 0) {
-      return { transition: 'grid-template-rows 180ms ease-out, opacity 180ms ease-out' };
+      return { transition: 'grid-template-rows 200ms ease-out, opacity 200ms ease-out' };
     }
     const fraction = Math.max(0, 1 - tickSwipeOffset / 150);
     return { gridTemplateRows: `${fraction}fr`, opacity: fraction, transition: 'none' };
@@ -425,7 +529,7 @@ const QueueControlBar: React.FC<QueueControlBarProps> = ({ boardDetails, angle }
     // the new text sliding in from the old exit position
     if (enterDirection) return 'none';
     if (isAnimating) return `transform ${EXIT_DURATION}ms ease-out`;
-    if (swipeOffset === 0) return `transform ${SNAP_BACK_DURATION}ms ease`;
+    if (swipeOffset === 0) return `transform ${SNAP_BACK_DURATION}ms ease-out`;
     return 'none';
   };
 
@@ -545,25 +649,6 @@ const QueueControlBar: React.FC<QueueControlBarProps> = ({ boardDetails, angle }
 
   return (
     <div id="onboarding-queue-bar" className={`queue-bar-shadow ${styles.queueBar}`} data-testid="queue-control-bar">
-      {/* Offline indicator */}
-      {isDisconnected && !dismissedDisconnect && (
-        <div
-          className={styles.offlineBanner}
-          onClick={() => setDismissedDisconnect(true)}
-          role="button"
-          tabIndex={0}
-          onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setDismissedDisconnect(true); } }}
-        >
-          <CloudOffOutlined sx={{ fontSize: 'body2.fontSize', flexShrink: 0 }} />
-          <span className={styles.offlineBannerText}>
-            {sessionId
-              ? users && users.length > 1
-                ? 'Offline. Queued climbs will still sync.'
-                : 'Offline. Changes will sync when you reconnect.'
-              : 'Offline'}
-          </span>
-        </div>
-      )}
       {/* Main Control Bar */}
       <MuiCard
         variant="outlined"
@@ -571,51 +656,143 @@ const QueueControlBar: React.FC<QueueControlBarProps> = ({ boardDetails, angle }
         sx={{ border: 'none', backgroundColor: 'transparent' }}
       >
         <CardContent sx={{ p: 0, '&:last-child': { pb: 0 } }}>
-        {/* Session header — name + avatars, or start sesh prompt */}
-        {!tickBarActive && !tickRowVisible && (
-          activeSession ? (
+        {/* Session header — name + avatars, or start sesh prompt.
+            Uses CSS grid collapse instead of unmounting so the transition
+            between session header and tick row is smooth. */}
+          <div className={`${styles.sessionHeaderWrapper} ${!tickBarActive && !tickRowVisible ? styles.sessionHeaderExpanded : ''}`}>
+          <div className={styles.sessionHeaderInner}>
+            {/* Offline overlay on session header */}
+            {isDisconnected && !dismissedDisconnect && (
+              <div
+                className={styles.offlineBanner}
+                onClick={() => setDismissedDisconnect(true)}
+                role="button"
+                tabIndex={0}
+                aria-label="Dismiss offline notice"
+                onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setDismissedDisconnect(true); } }}
+              >
+                <CloudOffOutlined sx={{ fontSize: 14, flexShrink: 0 }} />
+                <span className={styles.offlineBannerText}>
+                  {sessionId
+                    ? users && users.length > 1
+                      ? 'Offline. Queued climbs will still sync.'
+                      : 'Offline. Changes will sync when you reconnect.'
+                    : 'Offline'}
+                </span>
+                <CloseOutlined sx={{ fontSize: 14, flexShrink: 0, opacity: 0.6 }} />
+              </div>
+            )}
+            {activeSession ? (
+              <div
+                className={styles.sessionHeader}
+                onClick={dispatchOpenSeshSettingsDrawer}
+                role="button"
+                tabIndex={0}
+                onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') dispatchOpenSeshSettingsDrawer(); }}
+                style={{
+                  backgroundColor: sessionTintColor ?? (isDark ? 'transparent' : 'var(--semantic-surface)'),
+                }}
+              >
+                <span className={styles.sessionName}>
+                  {persistentSession?.name || activeSession.sessionName || generateSessionName(persistentSession?.startedAt ?? new Date().toISOString(), [boardDetails.board_name])}
+                </span>
+                {uniqueSessionUsers.length > 0 && (
+                  <div
+                    className={styles.avatarToggle}
+                    onClick={(e) => { e.stopPropagation(); setParticipantsExpanded((prev) => !prev); }}
+                    role="button"
+                    tabIndex={0}
+                    aria-label={participantsExpanded ? 'Hide participants' : 'Show participants'}
+                    onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.stopPropagation(); setParticipantsExpanded((prev) => !prev); } }}
+                  >
+                    {participantsExpanded ? (
+                      <IconButton size="small" component="span" tabIndex={-1} sx={{ p: 0.25 }}>
+                        <CloseOutlined sx={{ fontSize: 18 }} />
+                      </IconButton>
+                    ) : (
+                      <AvatarGroup
+                        max={3}
+                        sx={{
+                          '& .MuiAvatar-root': { width: 28, height: 28, fontSize: 11, border: '2px solid transparent' },
+                        }}
+                      >
+                        {uniqueSessionUsers.map((user) => (
+                          <TickBadgeAvatar
+                            key={user.id}
+                            user={user}
+                            hasTicked={tickedBySet.has(user.id) || (user.userId != null && tickedBySet.has(user.userId))}
+                          />
+                        ))}
+                      </AvatarGroup>
+                    )}
+                  </div>
+                )}
+              </div>
+            ) : (
+              <div
+                className={styles.sessionHeader}
+                onClick={() => setStartSeshOpen(true)}
+                role="button"
+                tabIndex={0}
+                onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') setStartSeshOpen(true); }}
+                style={{
+                  backgroundColor: gradeTintColor ?? (isDark ? 'transparent' : 'var(--semantic-surface)'),
+                  justifyContent: 'flex-end',
+                }}
+              >
+                <PlayCircleOutlineOutlined sx={{ fontSize: 16, opacity: 0.7 }} />
+                <span className={styles.sessionName}>Start sesh</span>
+              </div>
+            )}
+            {/* Expandable participant bar — only for active sessions with participants */}
+            {activeSession && uniqueSessionUsers.length > 0 && (
             <div
-              className={styles.sessionHeader}
-              onClick={dispatchOpenSeshSettingsDrawer}
-              role="button"
-              tabIndex={0}
-              onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') dispatchOpenSeshSettingsDrawer(); }}
+              className={`${styles.participantBar} ${participantsExpanded ? styles.participantBarExpanded : ''}`}
               style={{
                 backgroundColor: sessionTintColor ?? (isDark ? 'transparent' : 'var(--semantic-surface)'),
               }}
             >
-              <span className={styles.sessionName}>
-                {persistentSession?.name || activeSession.sessionName || generateSessionName(persistentSession?.startedAt ?? new Date().toISOString(), [boardDetails.board_name])}
-              </span>
-              {sessionUsers.length > 0 && (
-                <AvatarGroup
-                  max={3}
-                  sx={{
-                    '& .MuiAvatar-root': { width: 28, height: 28, fontSize: 11, border: '2px solid transparent' },
-                  }}
-                >
-                  {sessionUsers.map((user) => (
-                    <Avatar key={user.id} alt={user.username} src={user.avatarUrl ?? undefined} />
-                  ))}
-                </AvatarGroup>
-              )}
+              <div className={styles.participantBarInner}>
+                {uniqueSessionUsers.length === 1 ? (
+                  <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1, width: '100%', px: 1, py: 0.5 }}>
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                      <Typography variant="caption" color="text.secondary" sx={{ flex: 1 }}>
+                        Get your crew in by sharing this link or scanning the QR code
+                      </Typography>
+                      <IconButton size="small" onClick={handleInviteShare} aria-label="Share session link">
+                        <IosShare sx={{ fontSize: 18 }} />
+                      </IconButton>
+                      <IconButton size="small" onClick={() => setShowInviteQr((v) => !v)} aria-label={showInviteQr ? 'Hide QR code' : 'Show QR code'}>
+                        <QrCode2Outlined sx={{ fontSize: 18 }} color={showInviteQr ? 'primary' : 'inherit'} />
+                      </IconButton>
+                    </Box>
+                    {showInviteQr && sessionShareUrl && (
+                      <Box sx={{ display: 'flex', justifyContent: 'center', py: 1 }}>
+                        <QRCodeSVG value={sessionShareUrl} size={140} />
+                      </Box>
+                    )}
+                  </Box>
+                ) : (
+                  <div className={styles.participantScroll}>
+                    {uniqueSessionUsers.map((user) => (
+                      <div key={user.id} className={styles.participantItem}>
+                        <TickBadgeAvatar
+                          user={user}
+                          hasTicked={tickedBySet.has(user.id) || (user.userId != null && tickedBySet.has(user.userId))}
+                          size={32}
+                        />
+                        <Typography variant="caption" className={styles.participantName} noWrap>
+                          {user.username}
+                        </Typography>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
             </div>
-          ) : (
-            <div
-              className={styles.sessionHeader}
-              onClick={() => setStartSeshOpen(true)}
-              role="button"
-              tabIndex={0}
-              onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') setStartSeshOpen(true); }}
-              style={{
-                backgroundColor: gradeTintColor ?? (isDark ? 'transparent' : 'var(--semantic-surface)'),
-              }}
-            >
-              <PlayCircleOutlineOutlined sx={{ fontSize: 16, opacity: 0.7 }} />
-              <span className={styles.sessionName}>Start sesh</span>
-            </div>
-          )
-        )}
+            )}
+          </div>
+          </div>
         {/* Tick-mode controls — expands/collapses via CSS grid transition.
             Swipe-to-dismiss handlers are on the tick row only, not the whole card. */}
         {(tickBarActive || tickRowVisible) && (
@@ -655,7 +832,12 @@ const QueueControlBar: React.FC<QueueControlBarProps> = ({ boardDetails, angle }
                   currentClimb={currentClimb}
                   angle={angle}
                   boardDetails={boardDetails}
-                  onSave={() => setActiveDrawer('none')}
+                  onSave={() => {
+                    if (currentClimb) {
+                      setLocalTickedClimbs((prev) => new Set(prev).add(currentClimb.uuid));
+                    }
+                    setActiveDrawer('none');
+                  }}
                   onError={() => showMessage('Couldn\u2019t save your tick. Give it another go.', 'error')}
                   onDraftRestored={(draftComment) => setTickComment(draftComment)}
                   comment={tickComment}

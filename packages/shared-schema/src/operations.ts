@@ -57,6 +57,7 @@ export const JOIN_SESSION = `
         username
         isLeader
         avatarUrl
+        userId
       }
       queueState {
         sequence
@@ -186,6 +187,7 @@ export const CREATE_SESSION = `
         username
         isLeader
         avatarUrl
+        userId
       }
       queueState {
         sequence
@@ -212,6 +214,7 @@ export const SESSION_UPDATES = `
           username
           isLeader
           avatarUrl
+          userId
         }
       }
       ... on UserLeft {
