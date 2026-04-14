@@ -21,7 +21,11 @@ function rows<T>(result: unknown): T[] {
   return Array.isArray(r) ? r : r.rows ?? [];
 }
 
-// Mirror of the HOLD_STATE_MAP from the app, keyed by board → role code → role name
+// Simplified mirror of HOLD_STATE_MAP (role code → role name only).
+// Authoritative sources that must stay in sync:
+//   - packages/backend/src/db/queries/util/hold-state.ts (backend, includes colors)
+//   - packages/web/app/components/board-renderer/types.ts (frontend, includes colors + render styles)
+// When adding new products/roles, update all three locations.
 const HOLD_STATE_MAP: Record<string, Record<number, string>> = {
   kilter: {
     12: 'STARTING', 13: 'HAND', 14: 'FINISH', 15: 'FOOT',
@@ -237,7 +241,7 @@ async function main() {
 
       const totalProblematic = problemClimbs.length;
       console.log(`  Total climbs: ${climbs.length.toLocaleString()}`);
-      console.log(`  Problematic:  ${totalProblematic.toLocaleString()} (${((totalProblematic / climbs.length) * 100).toFixed(2)}%)`);
+      console.log(`  Problematic:  ${totalProblematic.toLocaleString()} (${climbs.length > 0 ? ((totalProblematic / climbs.length) * 100).toFixed(2) : '0.00'}%)`);
       console.log('');
       console.log('  Breakdown:');
       for (const [type, count] of Object.entries(problemCounts)) {

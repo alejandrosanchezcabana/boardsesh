@@ -199,7 +199,7 @@ describe('GoToQueueAction', () => {
       expect(screen.getByRole('button', { name: /go to queue/i })).toBeTruthy();
     });
 
-    it('calls onGoToQueue and onComplete when clicked', () => {
+    it('calls onGoToQueue when clicked, does not call onComplete', () => {
       mockUseOptionalQueueActions.mockReturnValue({ addToQueue: vi.fn() });
       const onGoToQueue = vi.fn();
       const onComplete = vi.fn();
@@ -215,7 +215,7 @@ describe('GoToQueueAction', () => {
       screen.getByRole('button', { name: /go to queue/i }).click();
 
       expect(onGoToQueue).toHaveBeenCalledTimes(1);
-      expect(onComplete).toHaveBeenCalledTimes(1);
+      expect(onComplete).not.toHaveBeenCalled();
     });
 
     it('is disabled when onGoToQueue is undefined', () => {
@@ -246,7 +246,7 @@ describe('GoToQueueAction', () => {
       expect(screen.getByTestId('action-icon')).toBeTruthy();
     });
 
-    it('calls onGoToQueue and onComplete when icon is clicked', () => {
+    it('calls onGoToQueue when icon is clicked, does not call onComplete', () => {
       mockUseOptionalQueueActions.mockReturnValue({ addToQueue: vi.fn() });
       const onGoToQueue = vi.fn();
       const onComplete = vi.fn();
@@ -262,7 +262,7 @@ describe('GoToQueueAction', () => {
       screen.getByTestId('action-icon').click();
 
       expect(onGoToQueue).toHaveBeenCalledTimes(1);
-      expect(onComplete).toHaveBeenCalledTimes(1);
+      expect(onComplete).not.toHaveBeenCalled();
     });
   });
 
@@ -279,7 +279,7 @@ describe('GoToQueueAction', () => {
       expect(screen.getByRole('button', { name: /go to queue/i })).toBeTruthy();
     });
 
-    it('calls onGoToQueue and onComplete when clicked in button mode', () => {
+    it('calls onGoToQueue when clicked, does not call onComplete in button mode', () => {
       mockUseOptionalQueueActions.mockReturnValue({ addToQueue: vi.fn() });
       const onGoToQueue = vi.fn();
       const onComplete = vi.fn();
@@ -295,7 +295,7 @@ describe('GoToQueueAction', () => {
       screen.getByRole('button', { name: /go to queue/i }).click();
 
       expect(onGoToQueue).toHaveBeenCalledTimes(1);
-      expect(onComplete).toHaveBeenCalledTimes(1);
+      expect(onComplete).not.toHaveBeenCalled();
     });
 
     it('is disabled when onGoToQueue is undefined in button mode', () => {

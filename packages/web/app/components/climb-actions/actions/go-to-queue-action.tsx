@@ -22,8 +22,7 @@ export function GoToQueueAction({
     e?.stopPropagation();
     e?.preventDefault();
     onGoToQueue?.();
-    onComplete?.();
-  }, [onGoToQueue, onComplete]);
+  }, [onGoToQueue]);
 
   const icon = <QueueMusicOutlined sx={{ fontSize: iconSize }} />;
 

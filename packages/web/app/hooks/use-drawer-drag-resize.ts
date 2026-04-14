@@ -81,6 +81,8 @@ export function useDrawerDragResize({
   expandedHeight = '90%',
 }: DrawerDragResizeOptions): DrawerDragResizeResult {
   const paperRef = useRef<HTMLDivElement>(null);
+  const scrollElRef = useRef<HTMLElement | null>(null);
+  const cleanupScrollRef = useRef<(() => void) | null>(null);
   const heightRef = useRef(initialHeight);
   const dragStartY = useRef(0);
   const dragStartHeightPx = useRef(0);
@@ -96,10 +98,11 @@ export function useDrawerDragResize({
     }
   }, []);
 
-  // Reset height when drawer closes
+  // Reset height and clear cached scroll element when drawer closes
   useEffect(() => {
     if (!open) {
       updateHeight(initialHeight);
+      scrollElRef.current = null;
     }
   }, [open, initialHeight, updateHeight]);
 
@@ -146,17 +149,25 @@ export function useDrawerDragResize({
     }
   }, []);
 
-  const scrollToTop = useCallback(() => {
+  /** Find and cache the scrollable element inside the paper. */
+  const findScrollEl = useCallback((): HTMLElement | null => {
+    if (scrollElRef.current && scrollElRef.current.isConnected) return scrollElRef.current;
     const paper = paperRef.current;
-    if (!paper) return;
+    if (!paper) return null;
     for (const el of paper.querySelectorAll<HTMLElement>('*')) {
       const overflow = getComputedStyle(el).overflowY;
-      if ((overflow === 'auto' || overflow === 'scroll') && el.scrollTop > 0) {
-        el.scrollTop = 0;
-        break;
+      if (overflow === 'auto' || overflow === 'scroll') {
+        scrollElRef.current = el;
+        return el;
       }
     }
+    return null;
   }, []);
+
+  const scrollToTop = useCallback(() => {
+    const el = findScrollEl();
+    if (el && el.scrollTop > 0) el.scrollTop = 0;
+  }, [findScrollEl]);
 
   const onTouchEnd = useCallback(() => {
     const paper = paperRef.current;
@@ -200,38 +211,29 @@ export function useDrawerDragResize({
   // Auto-expand when the user scrolls content inside the drawer.
   useEffect(() => {
     if (!open) return;
-    const paper = paperRef.current;
-    if (!paper) return;
 
-    let scrollEl: HTMLElement | null = null;
-    const candidates = paper.querySelectorAll<HTMLElement>('*');
-    for (const el of candidates) {
-      const overflow = getComputedStyle(el).overflowY;
-      if ((overflow === 'auto' || overflow === 'scroll') && el.scrollHeight > el.clientHeight) {
-        scrollEl = el;
-        break;
-      }
-    }
-    if (!scrollEl) {
-      for (const el of candidates) {
-        const overflow = getComputedStyle(el).overflowY;
-        if (overflow === 'auto' || overflow === 'scroll') {
-          scrollEl = el;
-          break;
+    // Small delay to let the drawer mount and populate the DOM
+    const timer = setTimeout(() => {
+      const scrollEl = findScrollEl();
+      if (!scrollEl) return;
+
+      const handleScroll = () => {
+        if (heightRef.current !== expandedHeight && scrollEl.scrollTop > 0) {
+          updateHeight(expandedHeight);
         }
-      }
-    }
-    if (!scrollEl) return;
+      };
 
-    const handleScroll = () => {
-      if (heightRef.current !== expandedHeight && scrollEl!.scrollTop > 0) {
-        updateHeight(expandedHeight);
-      }
+      scrollEl.addEventListener('scroll', handleScroll, { passive: true });
+      // Store cleanup in ref so the outer effect can call it
+      cleanupScrollRef.current = () => scrollEl.removeEventListener('scroll', handleScroll);
+    }, 50);
+
+    return () => {
+      clearTimeout(timer);
+      cleanupScrollRef.current?.();
+      cleanupScrollRef.current = null;
     };
-
-    scrollEl.addEventListener('scroll', handleScroll, { passive: true });
-    return () => scrollEl!.removeEventListener('scroll', handleScroll);
-  }, [open, expandedHeight, updateHeight]);
+  }, [open, expandedHeight, updateHeight, findScrollEl]);
 
   return {
     paperRef,
