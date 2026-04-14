@@ -15,6 +15,7 @@ import { MAX_PAGE_SIZE } from '@/app/components/board-page/constants';
 import { getServerSession } from 'next-auth/next';
 import { authOptions } from '@/app/lib/auth/auth-options';
 import { scheduleOverlayWarming } from '@/app/lib/warm-overlay-cache';
+import { buildOverlayUrl } from '@/app/components/board-renderer/util';
 
 export default async function DynamicResultsPage(props: {
   params: Promise<BoardRouteParametersWithUuid>;
@@ -121,5 +122,19 @@ export default async function DynamicResultsPage(props: {
 
   scheduleOverlayWarming({ boardDetails, climbs: searchResponse.climbs, variant: 'thumbnail' });
 
-  return <BoardPageClimbsList {...parsedParams} boardDetails={boardDetails} initialClimbs={searchResponse.climbs} />;
+  // Preload the first climb's thumbnail so the browser can fetch it before JS hydration.
+  // The climb list is virtualized (client-only), so the LCP image isn't in the initial HTML.
+  const firstClimb = searchResponse.climbs[0];
+  const preloadUrl = firstClimb?.frames
+    ? buildOverlayUrl(boardDetails, firstClimb.frames, true)
+    : null;
+
+  return (
+    <>
+      {preloadUrl && (
+        <link rel="preload" as="image" href={preloadUrl} fetchPriority="high" />
+      )}
+      <BoardPageClimbsList {...parsedParams} boardDetails={boardDetails} initialClimbs={searchResponse.climbs} />
+    </>
+  );
 }

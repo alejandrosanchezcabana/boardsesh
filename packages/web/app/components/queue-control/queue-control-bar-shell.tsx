@@ -27,7 +27,7 @@ export default function QueueControlBarShell({
             <div
               className={styles.swipeContainer}
               style={{
-                padding: `6px ${themeTokens.spacing[3]}px 6px ${themeTokens.spacing[3]}px`,
+                padding: `${themeTokens.spacing[2]}px ${themeTokens.spacing[3]}px`,
                 backgroundColor: 'var(--semantic-surface)',
               }}
             >

@@ -181,6 +181,8 @@ type ClimbListItemProps = {
   contentOpacity?: number;
   /** When true, prefer SSR image layers over the canvas renderer for this item. */
   preferImageLayers?: boolean;
+  /** Set fetchpriority="high" for LCP-critical images */
+  fetchPriority?: 'high' | 'low' | 'auto';
   /** Handler for thumbnail clicks. When set, stops propagation so the row onClick doesn't also fire. */
   onThumbnailClick?: () => void;
   /** When provided, the item delegates opening the actions drawer to the parent instead of rendering its own. */
@@ -210,6 +212,7 @@ const ClimbListItem: React.FC<ClimbListItemProps> = React.memo(
     backgroundColor,
     contentOpacity,
     preferImageLayers,
+    fetchPriority,
     onThumbnailClick,
     onOpenActions,
     onOpenPlaylistSelector,
@@ -561,6 +564,7 @@ const ClimbListItem: React.FC<ClimbListItemProps> = React.memo(
                 currentClimb={climb}
                 pathname={pathname}
                 preferImageLayers={preferImageLayers}
+                fetchPriority={fetchPriority}
               />
               <HeartAnimationOverlay visible={showHeart} onAnimationEnd={dismissHeart} size={32} />
               <AscentStatus climbUuid={climb.uuid} fontSize={12} className={styles.thumbnailBadge} mirroredClassName={styles.thumbnailBadgeMirrored} />

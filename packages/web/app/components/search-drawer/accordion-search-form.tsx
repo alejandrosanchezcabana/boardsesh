@@ -316,6 +316,7 @@ const AccordionSearchForm: React.FC<AccordionSearchFormProps> = ({
       title: 'Search by Hold',
       defaultSummary: 'Any',
       getSummary: () => getHoldsPanelSummary(uiSearchParams),
+      lazy: true,
       content: (
         <div className={styles.holdSearchContainer}>
           <ClimbHoldSearchForm boardDetails={boardDetails} />

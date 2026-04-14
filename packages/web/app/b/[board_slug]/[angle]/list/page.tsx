@@ -11,6 +11,7 @@ import { MAX_PAGE_SIZE } from '@/app/components/board-page/constants';
 import { getServerSession } from 'next-auth/next';
 import { authOptions } from '@/app/lib/auth/auth-options';
 import { scheduleOverlayWarming } from '@/app/lib/warm-overlay-cache';
+import { buildOverlayUrl } from '@/app/components/board-renderer/util';
 
 interface BoardSlugListPageProps {
   params: Promise<{ board_slug: string; angle: string }>;
@@ -79,5 +80,17 @@ export default async function BoardSlugListPage(props: BoardSlugListPageProps) {
 
   scheduleOverlayWarming({ boardDetails, climbs: searchResponse.climbs, variant: 'thumbnail' });
 
-  return <BoardPageClimbsList {...parsedParams} boardDetails={boardDetails} initialClimbs={searchResponse.climbs} />;
+  const firstClimb = searchResponse.climbs[0];
+  const preloadUrl = firstClimb?.frames
+    ? buildOverlayUrl(boardDetails, firstClimb.frames, true)
+    : null;
+
+  return (
+    <>
+      {preloadUrl && (
+        <link rel="preload" as="image" href={preloadUrl} fetchPriority="high" />
+      )}
+      <BoardPageClimbsList {...parsedParams} boardDetails={boardDetails} initialClimbs={searchResponse.climbs} />
+    </>
+  );
 }

@@ -1,4 +1,4 @@
-import React, { Suspense } from 'react';
+import React from 'react';
 import { PropsWithChildren } from 'react';
 import { notFound } from 'next/navigation';
 import { Metadata } from 'next';
@@ -10,7 +10,6 @@ import { ConnectionSettingsProvider } from '@/app/components/connection-manager/
 import { WebSocketConnectionProvider } from '@/app/components/connection-manager/websocket-connection-provider';
 import { PartyProvider } from '@/app/components/party-manager/party-context';
 import { BoardSessionBridge } from '@/app/components/persistent-session';
-import BoardPageSkeleton from '@/app/components/board-page/board-page-skeleton';
 import { BluetoothProvider } from '@/app/components/board-bluetooth-control/bluetooth-context';
 import { UISearchParamsProvider } from '@/app/components/queue-control/ui-searchparams-provider';
 import { BoardProvider } from '@/app/components/board-provider/board-provider-context';
@@ -91,9 +90,7 @@ export default async function BoardSlugLayout(props: PropsWithChildren<{ params:
                       }}
                     >
                       <BoardSeshHeader boardDetails={boardDetails} angle={angle} isAngleAdjustable={board.isAngleAdjustable} />
-                      <Suspense fallback={<BoardPageSkeleton aspectRatio={boardDetails.boardWidth / boardDetails.boardHeight} />}>
-                        {children}
-                      </Suspense>
+                      {children}
                     </main>
                   </UISearchParamsProvider>
                 </BluetoothProvider>

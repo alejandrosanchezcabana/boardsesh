@@ -28,6 +28,8 @@ export interface BoardImageLayersProps {
   contain?: boolean;
   /** Additional styles for the container div */
   style?: React.CSSProperties;
+  /** Set fetchpriority="high" for LCP-critical images */
+  fetchPriority?: 'high' | 'low' | 'auto';
 }
 
 /**
@@ -43,6 +45,7 @@ const BoardImageLayers = React.memo(function BoardImageLayers({
   thumbnail,
   contain,
   style,
+  fetchPriority,
 }: BoardImageLayersProps) {
   const overlayUrl = frames ? buildOverlayUrl(boardDetails, frames, thumbnail) : null;
   const backgroundUrls = useMemo(
@@ -95,6 +98,7 @@ const BoardImageLayers = React.memo(function BoardImageLayers({
           width={imgWidth}
           height={imgHeight}
           style={imgStyle}
+          fetchPriority={fetchPriority}
           onLoad={handleOverlayLoad}
           onError={handleOverlayError}
         />
