@@ -633,6 +633,7 @@ const ClimbsList = ({
                       pathname={pathname}
                       isDark={isDark}
                       preferImageLayers={index < initialImageCount}
+                      fetchPriority={index === 0 ? 'high' : undefined}
                       onSelect={() => handleClimbClickByIndex(index)}
                       onThumbnailClick={() => handleClimbThumbnailClickByIndex(index)}
                       disableSwipe={!hydrated}

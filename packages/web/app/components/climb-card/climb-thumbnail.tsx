@@ -14,6 +14,8 @@ type ClimbThumbnailProps = {
   onClick?: () => void;
   maxHeight?: string;
   preferImageLayers?: boolean;
+  /** Set fetchpriority="high" for LCP-critical images */
+  fetchPriority?: 'high' | 'low' | 'auto';
 };
 
 const ClimbThumbnail: React.FC<ClimbThumbnailProps> = React.memo(({
@@ -23,6 +25,7 @@ const ClimbThumbnail: React.FC<ClimbThumbnailProps> = React.memo(({
   onClick,
   maxHeight,
   preferImageLayers = false,
+  fetchPriority,
 }) => {
   const canvasReady = useCanvasRendererReady();
 
@@ -52,6 +55,7 @@ const ClimbThumbnail: React.FC<ClimbThumbnailProps> = React.memo(({
           mirrored={!!currentClimb.mirrored}
           thumbnail
           style={boardStyle}
+          fetchPriority={fetchPriority}
         />
       );
     }
@@ -100,7 +104,8 @@ const ClimbThumbnail: React.FC<ClimbThumbnailProps> = React.memo(({
     prev.pathname === next.pathname &&
     prev.onClick === next.onClick &&
     prev.maxHeight === next.maxHeight &&
-    prev.preferImageLayers === next.preferImageLayers
+    prev.preferImageLayers === next.preferImageLayers &&
+    prev.fetchPriority === next.fetchPriority
   );
 });
 
