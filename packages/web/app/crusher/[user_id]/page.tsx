@@ -89,9 +89,15 @@ export default async function ProfilePage({ params }: PageProps) {
     viewerUserId = session?.user?.id;
   }
 
-  // Fetch all data in parallel
-  const [initialProfile, initialProfileStats, ...ticksResults] = await Promise.all([
-    getProfileData(user_id, viewerUserId),
+  // Check if user exists before fetching stats/ticks
+  const initialProfile = await getProfileData(user_id, viewerUserId);
+
+  if (!initialProfile) {
+    return <ProfilePageContent userId={user_id} initialNotFound />;
+  }
+
+  // User exists — fetch stats and ticks in parallel
+  const [initialProfileStats, ...ticksResults] = await Promise.all([
     cachedUserProfileStats(user_id),
     ...SUPPORTED_BOARDS.map((boardType) => cachedUserTicks(user_id, boardType)),
   ]);
@@ -117,10 +123,6 @@ export default async function ProfilePage({ params }: PageProps) {
   // Default board logbook
   const defaultBoard = 'kilter';
   const initialLogbook = initialAllBoardsTicks[defaultBoard] ?? [];
-
-  if (!initialProfile) {
-    return <ProfilePageContent userId={user_id} initialNotFound />;
-  }
 
   return (
     <ProfilePageContent

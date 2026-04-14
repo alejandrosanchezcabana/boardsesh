@@ -19,10 +19,7 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
       return NextResponse.json({ error: "User not found" }, { status: 404 });
     }
 
-    return NextResponse.json({
-      ...profileData,
-      isOwnProfile: viewerUserId === userId,
-    });
+    return NextResponse.json(profileData);
   } catch (error) {
     console.error("Failed to get profile:", error);
     return NextResponse.json({ error: "Failed to get profile" }, { status: 500 });
