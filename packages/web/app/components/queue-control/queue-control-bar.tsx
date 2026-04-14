@@ -49,6 +49,10 @@ import PlayCircleOutlineOutlined from '@mui/icons-material/PlayCircleOutlineOutl
 import { dispatchOpenSeshSettingsDrawer } from '../sesh-settings/sesh-settings-drawer-event';
 import { generateSessionName } from '@/app/lib/session-utils';
 import StartSeshDrawer from '../session-creation/start-sesh-drawer';
+import IosShare from '@mui/icons-material/IosShare';
+import QrCode2Outlined from '@mui/icons-material/QrCode2Outlined';
+import { QRCodeSVG } from 'qrcode.react';
+import { shareWithFallback } from '@/app/lib/share-utils';
 import styles from './queue-control-bar.module.css';
 
 export type ActiveDrawer = 'none' | 'play' | 'queue' | 'tick';
@@ -166,6 +170,25 @@ const QueueControlBar: React.FC<QueueControlBarProps> = ({ boardDetails, angle }
   // Keep the tick row mounted during the close animation so it can collapse.
   const [tickRowVisible, setTickRowVisible] = useState(false);
   const [participantsExpanded, setParticipantsExpanded] = useState(false);
+  const [showInviteQr, setShowInviteQr] = useState(false);
+
+  const sessionShareUrl = activeSession?.sessionId
+    ? `${typeof window !== 'undefined' ? window.location.origin : ''}/join/${activeSession.sessionId}`
+    : '';
+
+  const handleInviteShare = useCallback(async () => {
+    if (!sessionShareUrl) return;
+    await shareWithFallback({
+      url: sessionShareUrl,
+      title: 'Join my climbing session',
+      text: 'Jump in and climb with me on Boardsesh',
+      trackingEvent: 'Session Shared',
+      trackingProps: { sessionId: activeSession?.sessionId ?? '' },
+      onClipboardSuccess: () => showMessage('Link copied!', 'success'),
+      onError: () => showMessage('Failed to share', 'error'),
+    });
+  }, [sessionShareUrl, activeSession?.sessionId, showMessage]);
+
   // Local tracking of which climbs the current user ticked this session,
   // since the backend doesn't populate tickedBy on queue items.
   const [localTickedClimbs, setLocalTickedClimbs] = useState<Set<string>>(() => new Set());
@@ -698,40 +721,61 @@ const QueueControlBar: React.FC<QueueControlBarProps> = ({ boardDetails, angle }
               }}
             >
               <div className={styles.participantBarInner}>
-                <div className={styles.participantScroll}>
-                  {uniqueSessionUsers.map((user) => {
-                    const hasTicked = tickedBySet.has(user.id);
-                    return (
-                      <div key={user.id} className={styles.participantItem}>
-                        {hasTicked ? (
-                          <Badge
-                            overlap="circular"
-                            anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
-                            badgeContent={<CheckOutlined sx={{ fontSize: 10 }} />}
-                            sx={{
-                              '& .MuiBadge-badge': {
-                                backgroundColor: themeTokens.colors.success,
-                                color: 'common.white',
-                                width: 16,
-                                height: 16,
-                                minWidth: 16,
-                                borderRadius: '50%',
-                                border: '2px solid transparent',
-                              },
-                            }}
-                          >
+                {uniqueSessionUsers.length === 1 ? (
+                  <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1, width: '100%', px: 1, py: 0.5 }}>
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                      <Typography variant="caption" color="text.secondary" sx={{ flex: 1 }}>
+                        Get your crew in by sharing this link or scanning the QR code
+                      </Typography>
+                      <IconButton size="small" onClick={handleInviteShare} aria-label="Share session link">
+                        <IosShare sx={{ fontSize: 18 }} />
+                      </IconButton>
+                      <IconButton size="small" onClick={() => setShowInviteQr((v) => !v)} aria-label={showInviteQr ? 'Hide QR code' : 'Show QR code'}>
+                        <QrCode2Outlined sx={{ fontSize: 18 }} color={showInviteQr ? 'primary' : 'inherit'} />
+                      </IconButton>
+                    </Box>
+                    {showInviteQr && sessionShareUrl && (
+                      <Box sx={{ display: 'flex', justifyContent: 'center', py: 1 }}>
+                        <QRCodeSVG value={sessionShareUrl} size={140} />
+                      </Box>
+                    )}
+                  </Box>
+                ) : (
+                  <div className={styles.participantScroll}>
+                    {uniqueSessionUsers.map((user) => {
+                      const hasTicked = tickedBySet.has(user.id);
+                      return (
+                        <div key={user.id} className={styles.participantItem}>
+                          {hasTicked ? (
+                            <Badge
+                              overlap="circular"
+                              anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
+                              badgeContent={<CheckOutlined sx={{ fontSize: 10 }} />}
+                              sx={{
+                                '& .MuiBadge-badge': {
+                                  backgroundColor: themeTokens.colors.success,
+                                  color: 'common.white',
+                                  width: 16,
+                                  height: 16,
+                                  minWidth: 16,
+                                  borderRadius: '50%',
+                                  border: '2px solid transparent',
+                                },
+                              }}
+                            >
+                              <Avatar alt={user.username} src={user.avatarUrl ?? undefined} sx={{ width: 32, height: 32 }} />
+                            </Badge>
+                          ) : (
                             <Avatar alt={user.username} src={user.avatarUrl ?? undefined} sx={{ width: 32, height: 32 }} />
-                          </Badge>
-                        ) : (
-                          <Avatar alt={user.username} src={user.avatarUrl ?? undefined} sx={{ width: 32, height: 32 }} />
-                        )}
-                        <Typography variant="caption" className={styles.participantName} noWrap>
-                          {user.username}
-                        </Typography>
-                      </div>
-                    );
-                  })}
-                </div>
+                          )}
+                          <Typography variant="caption" className={styles.participantName} noWrap>
+                            {user.username}
+                          </Typography>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
               </div>
             </div>
             )}
