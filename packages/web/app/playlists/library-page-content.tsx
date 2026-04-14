@@ -28,6 +28,7 @@ import { useMyBoards } from '@/app/hooks/use-my-boards';
 import { useQueueBridgeBoardInfo } from '@/app/components/queue-control/queue-bridge-context';
 import { constructBoardSlugPlaylistsUrl } from '@/app/lib/url-utils';
 import { findMatchingBoard } from '@/app/lib/find-matching-board';
+import { deriveIsAuthenticated } from '@/app/lib/derive-auth-status';
 import type { UserBoard } from '@boardsesh/shared-schema';
 import { useAuthModal } from '@/app/components/providers/auth-modal-provider';
 import PlaylistCardGrid from '@/app/components/library/playlist-card-grid';
@@ -44,7 +45,7 @@ const LogbookFeed = dynamic(
   {
     ssr: false,
     loading: () => (
-      <div style={{ padding: '16px 0' }}>
+      <div className={styles.tabSkeletonContainer}>
         <Skeleton variant="rounded" height={80} sx={{ mb: 1 }} />
         <Skeleton variant="rounded" height={80} sx={{ mb: 1 }} />
         <Skeleton variant="rounded" height={80} />
@@ -81,10 +82,8 @@ export default function LibraryPageContent({
   const hasInitialPlaylistData = initialPlaylists != null;
   const hasInitialDiscoverData = initialDiscoverPlaylists != null;
 
-  // Trust SSR data: if the server fetched user data, treat as authenticated even while
-  // useSession() is still loading. This prevents SSR content from flashing away during hydration.
   const hasServerUserData = hasInitialPlaylistData || hasInitialBoardData;
-  const isAuthenticated = sessionStatus === 'authenticated' || hasServerUserData;
+  const isAuthenticated = deriveIsAuthenticated(sessionStatus, hasServerUserData);
   const [activeTab, setActiveTab] = useState<'playlists' | 'logbook'>('playlists');
   // Initialize selectedBoard from SSR data immediately when boardSlug is provided
   const [selectedBoard, setSelectedBoard] = useState<UserBoard | null>(
@@ -424,7 +423,7 @@ export default function LibraryPageContent({
                   href={getPlaylistUrl(p.uuid)}
                   variant="scroll"
                   index={i}
-                  fetchPriority={i === 0 && !isAuthenticated ? 'high' : undefined}
+                  fetchPriority={i === 0 ? 'high' : undefined}
                 />
               ))}
             </PlaylistScrollSection>

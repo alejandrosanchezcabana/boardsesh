@@ -6,8 +6,7 @@ import { Metadata } from 'next';
 import { getServerAuthToken } from '@/app/lib/auth/server-auth';
 import { serverMyBoards, serverUserPlaylists, cachedDiscoverPlaylists } from '@/app/lib/graphql/server-cached-client';
 import LibraryPageContent from '@/app/playlists/library-page-content';
-import { getBoardDetailsForPlaylist } from '@/app/lib/board-config-for-playlist';
-import { getImageUrl } from '@/app/components/board-renderer/util';
+import { getPlaylistLcpPreloadUrl } from '@/app/lib/lcp-preload-url';
 import styles from '@/app/components/library/library.module.css';
 
 export async function generateMetadata(): Promise<Metadata> {
@@ -35,18 +34,9 @@ export default async function PlaylistsPage(props: { params: Promise<BoardRouteP
       cachedDiscoverPlaylists(playlistFilter),
     ]);
 
-    // Compute LCP preload: first playlist's board thumbnail image
-    const firstPlaylist = initialPlaylists?.[0] ?? initialDiscoverPlaylists?.popular?.[0];
-    let lcpPreloadUrl: string | null = null;
-    if (firstPlaylist) {
-      const boardDetails = getBoardDetailsForPlaylist(firstPlaylist.boardType, firstPlaylist.layoutId);
-      if (boardDetails) {
-        const firstImage = Object.keys(boardDetails.images_to_holds)[0];
-        if (firstImage) {
-          lcpPreloadUrl = getImageUrl(firstImage, boardDetails.board_name, true);
-        }
-      }
-    }
+    const lcpPreloadUrl = getPlaylistLcpPreloadUrl(
+      initialPlaylists?.[0] ?? initialDiscoverPlaylists?.popular?.[0],
+    );
 
     return (
       <>
