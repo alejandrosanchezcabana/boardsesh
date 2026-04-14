@@ -530,7 +530,7 @@ const ClimbsList = ({
   // never outpaces the render cycle and causes a blank screen.
   const virtualizer = useWindowVirtualizer({
     count: visibleClimbs.length,
-    estimateSize: () => 102,
+    estimateSize: () => 107,
     overscan: 25,
     getItemKey: (index) => visibleClimbs[index]?.uuid ?? index,
     // Provide a fake viewport so the virtualizer renders items during SSR.
