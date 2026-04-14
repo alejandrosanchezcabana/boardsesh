@@ -610,6 +610,9 @@ const QueueControlBar: React.FC<QueueControlBarProps> = ({ boardDetails, angle }
               role="button"
               tabIndex={0}
               onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') setStartSeshOpen(true); }}
+              style={{
+                backgroundColor: gradeTintColor ?? (isDark ? 'transparent' : 'var(--semantic-surface)'),
+              }}
             >
               <PlayCircleOutlineOutlined sx={{ fontSize: 16, opacity: 0.7 }} />
               <span className={styles.sessionName}>Start sesh</span>
