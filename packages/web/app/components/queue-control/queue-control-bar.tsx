@@ -53,6 +53,7 @@ import IosShare from '@mui/icons-material/IosShare';
 import QrCode2Outlined from '@mui/icons-material/QrCode2Outlined';
 import { QRCodeSVG } from 'qrcode.react';
 import { shareWithFallback } from '@/app/lib/share-utils';
+import { getPreference, setPreference } from '@/app/lib/user-preferences-db';
 import styles from './queue-control-bar.module.css';
 
 export type ActiveDrawer = 'none' | 'play' | 'queue' | 'tick';
@@ -301,7 +302,7 @@ const QueueControlBar: React.FC<QueueControlBarProps> = ({ boardDetails, angle }
     setCurrentClimbQueueItem(nextClimb);
     track('Queue Navigation', {
       direction: 'next',
-      method: 'swipe',
+      method: 'swipeQueueBar',
       boardLayout: boardDetails?.layout_name || '',
     });
 
@@ -323,7 +324,7 @@ const QueueControlBar: React.FC<QueueControlBarProps> = ({ boardDetails, angle }
     setCurrentClimbQueueItem(previousClimb);
     track('Queue Navigation', {
       direction: 'previous',
-      method: 'swipe',
+      method: 'swipeQueueBar',
       boardLayout: boardDetails?.layout_name || '',
     });
 
@@ -397,6 +398,62 @@ const QueueControlBar: React.FC<QueueControlBarProps> = ({ boardDetails, angle }
   useEffect(() => {
     setLocalTickedClimbs(new Set());
   }, [sessionId]);
+
+  // One-time swipe hint on the queue bar — briefly peek the text left
+  // to show users they can swipe to navigate between queued climbs.
+  const queueHintPlayedRef = useRef(false);
+  useEffect(() => {
+    if (!currentClimb || queue.length < 2 || tickBarActive || queueHintPlayedRef.current) return;
+
+    let cancelled = false;
+    let timer: ReturnType<typeof setTimeout>;
+    const animations: Animation[] = [];
+
+    // TODO: remove these bypasses after testing
+    Promise.resolve().then(() => {
+      // const seen = await getPreference('swipeHint:queueBarSeen');
+      // if (cancelled || seen) return;
+      // if (!window.matchMedia('(pointer: coarse)').matches) return;
+
+      timer = setTimeout(() => {
+        if (cancelled) return;
+        const el = document.getElementById('onboarding-queue-toggle');
+        if (!el) return;
+
+        queueHintPlayedRef.current = true;
+
+        const slideOut = el.animate(
+          [{ transform: 'translateX(0)' }, { transform: 'translateX(-40px)' }],
+          { duration: 350, easing: 'ease-out', fill: 'forwards' },
+        );
+        animations.push(slideOut);
+
+        slideOut.finished.then(() => {
+          if (cancelled) return;
+          return new Promise<void>((r) => { timer = setTimeout(r, 500); });
+        }).then(() => {
+          if (cancelled) return;
+          const slideBack = el.animate(
+            [{ transform: 'translateX(-40px)' }, { transform: 'translateX(0)' }],
+            { duration: 250, easing: 'ease-out', fill: 'forwards' },
+          );
+          animations.push(slideBack);
+          return slideBack.finished;
+        }).then(() => {
+          if (cancelled) return;
+          el.style.transform = '';
+          // TODO: re-enable after testing
+          // setPreference('swipeHint:queueBarSeen', true);
+        }).catch(() => { /* cancelled */ });
+      }, 800);
+    });
+
+    return () => {
+      cancelled = true;
+      clearTimeout(timer);
+      for (const a of animations) a.cancel();
+    };
+  }, [currentClimb, queue.length, tickBarActive]);
 
   // Close expanded participants when tick mode opens
   useEffect(() => {

@@ -32,6 +32,7 @@ export function QueueAction({
     queueActions.addToQueue(climb);
 
     track('Add to Queue', {
+      source: 'climbActions',
       boardLayout: boardDetails.layout_name || '',
     });
 

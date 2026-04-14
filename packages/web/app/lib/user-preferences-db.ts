@@ -6,6 +6,8 @@ const STORE_NAME = 'preferences';
 export type UserPreferenceKeyMap = {
   libraryTab: 'playlists' | 'logbook';
   logbookPreferences: LogbookPreferences;
+  'swipeHint:climbListSeen': boolean;
+  'swipeHint:queueBarSeen': boolean;
 };
 
 // Map of IDB preference keys to their legacy localStorage keys for one-time migration

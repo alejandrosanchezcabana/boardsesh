@@ -71,6 +71,7 @@ export default function PreviousClimbButton({ navigate = false, boardDetails }: 
     setCurrentClimbQueueItem(previousClimb);
     track('Queue Navigation', {
       direction: 'previous',
+      method: 'button',
       boardLayout: boardDetails?.layout_name || '',
     });
 
