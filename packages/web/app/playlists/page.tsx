@@ -2,6 +2,7 @@ import React from 'react';
 import { getServerAuthToken } from '@/app/lib/auth/server-auth';
 import { serverMyBoards, serverUserPlaylists, cachedDiscoverPlaylists } from '@/app/lib/graphql/server-cached-client';
 import LibraryPageContent from './library-page-content';
+import { getPlaylistLcpPreloadUrl } from '@/app/lib/lcp-preload-url';
 import styles from '@/app/components/library/library.module.css';
 import { createPageMetadata } from '@/app/lib/seo/metadata';
 
@@ -21,13 +22,22 @@ export default async function PlaylistsPage() {
     cachedDiscoverPlaylists(),
   ]);
 
+  const lcpPreloadUrl = getPlaylistLcpPreloadUrl(
+    initialPlaylists?.[0] ?? initialDiscoverPlaylists?.popular?.[0],
+  );
+
   return (
-    <div className={styles.pageContainer}>
-      <LibraryPageContent
-        initialMyBoards={initialMyBoards}
-        initialPlaylists={initialPlaylists}
-        initialDiscoverPlaylists={initialDiscoverPlaylists}
-      />
-    </div>
+    <>
+      {lcpPreloadUrl && (
+        <link rel="preload" as="image" href={lcpPreloadUrl} fetchPriority="high" />
+      )}
+      <div className={styles.pageContainer}>
+        <LibraryPageContent
+          initialMyBoards={initialMyBoards}
+          initialPlaylists={initialPlaylists}
+          initialDiscoverPlaylists={initialDiscoverPlaylists}
+        />
+      </div>
+    </>
   );
 }

@@ -54,6 +54,7 @@ export default function PlaylistCardGrid({
           href={getPlaylistUrl(playlist.uuid)}
           variant="grid"
           index={index}
+          fetchPriority={index === 0 ? 'high' : undefined}
         />
       ))}
     </div>

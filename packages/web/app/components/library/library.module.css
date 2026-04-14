@@ -237,16 +237,23 @@
               linear-gradient(135deg, var(--color-error), #D87F7A);
 }
 
+/* Placeholder to prevent CLS while auth status resolves.
+   Height matches .signInBanner: padding-top + content + padding-bottom. */
+.signInBannerPlaceholder {
+  height: calc(var(--spacing-4) * 2 + var(--spacing-10));
+  margin-bottom: var(--spacing-5);
+}
+
 /* Sign-in Banner (compact, non-blocking) */
 .signInBanner {
   display: flex;
   align-items: center;
-  gap: 16px;
-  padding: 16px;
+  gap: var(--spacing-4);
+  padding: var(--spacing-4);
   background-color: var(--semantic-surface);
   border-radius: 12px;
   box-shadow: var(--shadow-sm);
-  margin-bottom: 20px;
+  margin-bottom: var(--spacing-5);
 }
 
 .signInBannerText {
@@ -326,6 +333,11 @@
 
 .skeletonText {
   border-radius: 4px;
+}
+
+/* Loading skeleton for lazy-loaded tab content */
+.tabSkeletonContainer {
+  padding: var(--spacing-4) 0;
 }
 
 /* Mobile */

@@ -6,6 +6,7 @@ import { Metadata } from 'next';
 import { getServerAuthToken } from '@/app/lib/auth/server-auth';
 import { serverMyBoards, serverUserPlaylists, cachedDiscoverPlaylists } from '@/app/lib/graphql/server-cached-client';
 import LibraryPageContent from '@/app/playlists/library-page-content';
+import { getPlaylistLcpPreloadUrl } from '@/app/lib/lcp-preload-url';
 import styles from '@/app/components/library/library.module.css';
 
 export async function generateMetadata(): Promise<Metadata> {
@@ -33,15 +34,24 @@ export default async function PlaylistsPage(props: { params: Promise<BoardRouteP
       cachedDiscoverPlaylists(playlistFilter),
     ]);
 
+    const lcpPreloadUrl = getPlaylistLcpPreloadUrl(
+      initialPlaylists?.[0] ?? initialDiscoverPlaylists?.popular?.[0],
+    );
+
     return (
-      <div className={styles.pageContainer}>
-        <LibraryPageContent
-          playlistsBasePath={playlistsBasePath}
-          initialMyBoards={initialMyBoards}
-          initialPlaylists={initialPlaylists}
-          initialDiscoverPlaylists={initialDiscoverPlaylists}
-        />
-      </div>
+      <>
+        {lcpPreloadUrl && (
+          <link rel="preload" as="image" href={lcpPreloadUrl} fetchPriority="high" />
+        )}
+        <div className={styles.pageContainer}>
+          <LibraryPageContent
+            playlistsBasePath={playlistsBasePath}
+            initialMyBoards={initialMyBoards}
+            initialPlaylists={initialPlaylists}
+            initialDiscoverPlaylists={initialDiscoverPlaylists}
+          />
+        </div>
+      </>
     );
   } catch (error) {
     console.error('Error loading playlists page:', error);
