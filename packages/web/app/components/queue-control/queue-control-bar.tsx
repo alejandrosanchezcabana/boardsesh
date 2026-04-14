@@ -400,48 +400,58 @@ const QueueControlBar: React.FC<QueueControlBarProps> = ({ boardDetails, angle }
   }, [sessionId]);
 
   // One-time swipe hint on the queue bar — briefly peek the text left
-  // to show users they can swipe to navigate between queued climbs.
+  // twice to show users they can swipe to navigate between queued climbs.
+  // Triggers when there's an active climb (suggestions provide next/prev).
   const queueHintPlayedRef = useRef(false);
   useEffect(() => {
-    if (!currentClimb || queue.length < 2 || tickBarActive || queueHintPlayedRef.current) return;
+    if (!currentClimb || tickBarActive || queueHintPlayedRef.current) return;
 
     let cancelled = false;
     let timer: ReturnType<typeof setTimeout>;
     const animations: Animation[] = [];
 
+    const peekOnce = (el: HTMLElement): Promise<void> => {
+      const slideOut = el.animate(
+        [{ transform: 'translateX(0)' }, { transform: 'translateX(-40px)' }],
+        { duration: 350, easing: 'ease-out', fill: 'forwards' },
+      );
+      animations.push(slideOut);
+
+      return slideOut.finished.then(() => {
+        if (cancelled) return;
+        return new Promise<void>((r) => { timer = setTimeout(r, 500); });
+      }).then(() => {
+        if (cancelled) return;
+        const slideBack = el.animate(
+          [{ transform: 'translateX(-40px)' }, { transform: 'translateX(0)' }],
+          { duration: 250, easing: 'ease-out', fill: 'forwards' },
+        );
+        animations.push(slideBack);
+        return slideBack.finished as Promise<unknown> as Promise<void>;
+      });
+    };
+
     getPreference<boolean>('swipeHint:queueBarSeen').then((seen) => {
       if (cancelled || seen) return;
       if (!window.matchMedia('(pointer: coarse)').matches) return;
 
-      timer = setTimeout(() => {
+      timer = setTimeout(async () => {
         if (cancelled) return;
         const el = document.getElementById('onboarding-queue-toggle');
         if (!el) return;
 
         queueHintPlayedRef.current = true;
 
-        const slideOut = el.animate(
-          [{ transform: 'translateX(0)' }, { transform: 'translateX(-40px)' }],
-          { duration: 350, easing: 'ease-out', fill: 'forwards' },
-        );
-        animations.push(slideOut);
-
-        slideOut.finished.then(() => {
+        try {
+          await peekOnce(el);
           if (cancelled) return;
-          return new Promise<void>((r) => { timer = setTimeout(r, 500); });
-        }).then(() => {
+          await new Promise<void>((r) => { timer = setTimeout(r, 300); });
           if (cancelled) return;
-          const slideBack = el.animate(
-            [{ transform: 'translateX(-40px)' }, { transform: 'translateX(0)' }],
-            { duration: 250, easing: 'ease-out', fill: 'forwards' },
-          );
-          animations.push(slideBack);
-          return slideBack.finished;
-        }).then(() => {
+          await peekOnce(el);
           if (cancelled) return;
           el.style.transform = '';
           setPreference('swipeHint:queueBarSeen', true);
-        }).catch(() => { /* cancelled */ });
+        } catch { /* cancelled */ }
       }, 800);
     });
 
@@ -450,7 +460,7 @@ const QueueControlBar: React.FC<QueueControlBarProps> = ({ boardDetails, angle }
       clearTimeout(timer);
       for (const a of animations) a.cancel();
     };
-  }, [currentClimb, queue.length, tickBarActive]);
+  }, [currentClimb, tickBarActive]);
 
   // Close expanded participants when tick mode opens
   useEffect(() => {
