@@ -95,6 +95,7 @@ const QueueDrawer: React.FC<QueueDrawerProps> = ({
   const { paperRef: queuePaperRef, dragHandlers } = useDrawerDragResize({
     open,
     onClose: closeDrawer,
+    scrollElement: queueScrollEl,
   });
 
   // Swipe-to-close on queue scroll container

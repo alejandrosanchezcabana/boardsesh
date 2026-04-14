@@ -462,7 +462,7 @@ const ClimbListItem: React.FC<ClimbListItemProps> = React.memo(
       backgroundColor ??
       (selected
         ? (getGradeTintColor(climb.difficulty, 'light', isDark) ?? 'var(--semantic-selected)')
-        : 'var(--semantic-surface)');
+        : 'transparent');
 
     const swipeableContentStyle = useMemo(
       () => ({

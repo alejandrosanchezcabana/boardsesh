@@ -51,6 +51,9 @@ export interface DrawerDragResizeOptions {
   initialHeight?: string;
   /** Expanded height. Defaults to '90%'. */
   expandedHeight?: string;
+  /** Optional external scroll element for auto-expand detection.
+   *  When provided, the hook listens on this element instead of auto-detecting. */
+  scrollElement?: HTMLElement | null;
 }
 
 export interface DrawerDragResizeResult {
@@ -79,6 +82,7 @@ export function useDrawerDragResize({
   onClose,
   initialHeight = '60%',
   expandedHeight = '90%',
+  scrollElement,
 }: DrawerDragResizeOptions): DrawerDragResizeResult {
   const paperRef = useRef<HTMLDivElement>(null);
   const scrollElRef = useRef<HTMLElement | null>(null);
@@ -218,20 +222,29 @@ export function useDrawerDragResize({
   useEffect(() => {
     if (!open) return;
 
-    // Small delay to let the drawer mount and populate the DOM
-    const timer = setTimeout(() => {
-      const scrollEl = findScrollEl();
-      if (!scrollEl) return;
-
+    const attachListener = (scrollEl: HTMLElement) => {
       const handleScroll = () => {
         if (heightRef.current !== expandedHeight && scrollEl.scrollTop > 0) {
           updateHeight(expandedHeight);
         }
       };
-
       scrollEl.addEventListener('scroll', handleScroll, { passive: true });
-      // Store cleanup in ref so the outer effect can call it
       cleanupScrollRef.current = () => scrollEl.removeEventListener('scroll', handleScroll);
+    };
+
+    // If an external scroll element is provided, use it directly
+    if (scrollElement) {
+      attachListener(scrollElement);
+      return () => {
+        cleanupScrollRef.current?.();
+        cleanupScrollRef.current = null;
+      };
+    }
+
+    // Otherwise auto-detect with a small delay to let the DOM populate
+    const timer = setTimeout(() => {
+      const scrollEl = findScrollEl();
+      if (scrollEl) attachListener(scrollEl);
     }, 50);
 
     return () => {
@@ -239,7 +252,7 @@ export function useDrawerDragResize({
       cleanupScrollRef.current?.();
       cleanupScrollRef.current = null;
     };
-  }, [open, expandedHeight, updateHeight, findScrollEl]);
+  }, [open, expandedHeight, updateHeight, findScrollEl, scrollElement]);
 
   return {
     paperRef,
