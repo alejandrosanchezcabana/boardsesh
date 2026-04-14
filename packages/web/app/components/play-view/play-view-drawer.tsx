@@ -35,6 +35,7 @@ import type { ActiveDrawer } from '../queue-control/queue-control-bar';
 import { PLAY_DRAWER_EVENT } from '../queue-control/play-drawer-event';
 import type { BoardDetails, Angle, Climb } from '@/app/lib/types';
 import styles from './play-view-drawer.module.css';
+import drawerCss from '../swipeable-drawer/swipeable-drawer.module.css';
 import { useDrawerDragResize } from '@/app/hooks/use-drawer-drag-resize';
 import ClimbDetailShellClient from '@/app/components/climb-detail/climb-detail-shell.client';
 import { useBuildClimbDetailSections } from '@/app/components/climb-detail/build-climb-detail-sections';
@@ -793,7 +794,7 @@ const PlayViewDrawer: React.FC<PlayViewDrawerProps> = ({
             placement="bottom"
             title={
               currentClimb ? (
-                <div data-swipe-blocked="" {...actionsDragHandlers} style={{ touchAction: 'none' }}>
+                <div data-swipe-blocked="" {...actionsDragHandlers} className={drawerCss.dragHeaderWrapper}>
                   <DrawerClimbHeader climb={currentClimb} boardDetails={boardDetails} />
                 </div>
               ) : undefined
@@ -812,7 +813,6 @@ const PlayViewDrawer: React.FC<PlayViewDrawerProps> = ({
               body: { padding: `${themeTokens.spacing[2]}px 0` },
             }}
           >
-            <>
               <ClimbActions
                 climb={currentClimb}
                 boardDetails={boardDetails}
@@ -826,7 +826,6 @@ const PlayViewDrawer: React.FC<PlayViewDrawerProps> = ({
                 onActionComplete={handleCloseActions}
                 onGoToQueue={handleGoToQueueFromActions}
               />
-            </>
           </SwipeableDrawer>
         )}
 

@@ -51,6 +51,11 @@
   background-color: var(--neutral-300, #d9d9d9);
 }
 
+/* Drag header wrapper: blocks pan gestures so the drag-to-resize handlers work */
+.dragHeaderWrapper {
+  touch-action: none;
+}
+
 /* Title wrapper: handle injected above/below the user's title in the header */
 .titleWithHandle {
   margin: 0;

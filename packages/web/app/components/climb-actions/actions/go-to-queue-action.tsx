@@ -12,7 +12,6 @@ export function GoToQueueAction({
   showLabel,
   disabled,
   className,
-  onComplete,
   onGoToQueue,
 }: ClimbActionProps): ClimbActionResult {
   const queueActions = useOptionalQueueActions();

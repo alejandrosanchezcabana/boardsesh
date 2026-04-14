@@ -7,6 +7,7 @@ import Typography from '@mui/material/Typography';
 import Stack from '@mui/material/Stack';
 import MuiDivider from '@mui/material/Divider';
 import SwipeableDrawer from '../swipeable-drawer/swipeable-drawer';
+import drawerCss from '../swipeable-drawer/swipeable-drawer.module.css';
 import LoginOutlined from '@mui/icons-material/LoginOutlined';
 import { useQueueActions, useCurrentClimbUuid, useQueueList, useSearchData, useSessionData } from '../graphql-queue';
 import { Climb, BoardDetails } from '@/app/lib/types';
@@ -483,7 +484,7 @@ const QueueList = forwardRef<QueueListHandle, QueueListProps>(({ boardDetails, i
       {actionsClimb && (
         <SwipeableDrawer
           title={
-            <div data-swipe-blocked="" {...actionsDragHandlers} style={{ touchAction: 'none' }}>
+            <div data-swipe-blocked="" {...actionsDragHandlers} className={drawerCss.dragHeaderWrapper}>
               <DrawerClimbHeader climb={actionsClimb} boardDetails={boardDetails} />
             </div>
           }
@@ -538,7 +539,7 @@ const actionsDrawerStyles = {
     touchAction: 'pan-y' as const,
     transition: 'height 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
   },
-  body: { padding: 0 },
+  body: { padding: `${themeTokens.spacing[2]}px 0` },
 } as const;
 
 const playlistDrawerStyles = {

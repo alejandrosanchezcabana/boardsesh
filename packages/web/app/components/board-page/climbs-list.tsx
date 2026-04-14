@@ -12,6 +12,7 @@ import { track } from '@vercel/analytics';
 import dynamic from 'next/dynamic';
 import { useIsDarkMode } from '@/app/hooks/use-is-dark-mode';
 import { useDrawerDragResize } from '@/app/hooks/use-drawer-drag-resize';
+import drawerCss from '../swipeable-drawer/swipeable-drawer.module.css';
 import { useWindowVirtualizer } from '@tanstack/react-virtual';
 import { Climb, BoardDetails } from '@/app/lib/types';
 import ErrorBoundary from '../error-boundary';
@@ -124,7 +125,7 @@ const SharedDrawers = React.memo(forwardRef<SharedDrawerHandle, SharedDrawersPro
           placement="bottom"
           title={
             activeDrawerClimb ? (
-              <div data-swipe-blocked="" {...actionsDragHandlers} style={{ touchAction: 'none' }}>
+              <div data-swipe-blocked="" {...actionsDragHandlers} className={drawerCss.dragHeaderWrapper}>
                 <DrawerClimbHeader climb={activeDrawerClimb} boardDetails={activeDrawerBoardDetails} />
               </div>
             ) : undefined
@@ -138,7 +139,6 @@ const SharedDrawers = React.memo(forwardRef<SharedDrawerHandle, SharedDrawersPro
           styles={sharedDrawerStyles}
         >
           {activeDrawerClimb && (
-            <>
               <ClimbActions
                 climb={activeDrawerClimb}
                 boardDetails={activeDrawerBoardDetails}
@@ -150,7 +150,6 @@ const SharedDrawers = React.memo(forwardRef<SharedDrawerHandle, SharedDrawersPro
                 onActionComplete={handleCloseDrawer}
                 onGoToQueue={handleGoToQueue}
               />
-            </>
           )}
         </SwipeableDrawer>
 

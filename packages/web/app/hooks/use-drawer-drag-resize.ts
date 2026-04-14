@@ -241,14 +241,30 @@ export function useDrawerDragResize({
       };
     }
 
-    // Otherwise auto-detect with a small delay to let the DOM populate
-    const timer = setTimeout(() => {
-      const scrollEl = findScrollEl();
-      if (scrollEl) attachListener(scrollEl);
-    }, 50);
+    // Auto-detect: try immediately, then watch for DOM changes if not found yet
+    const scrollEl = findScrollEl();
+    if (scrollEl) {
+      attachListener(scrollEl);
+      return () => {
+        cleanupScrollRef.current?.();
+        cleanupScrollRef.current = null;
+      };
+    }
+
+    // Scroll container not yet in DOM — observe mutations until it appears
+    const paper = paperRef.current;
+    if (!paper) return;
+    const observer = new MutationObserver(() => {
+      const el = findScrollEl();
+      if (el) {
+        observer.disconnect();
+        attachListener(el);
+      }
+    });
+    observer.observe(paper, { childList: true, subtree: true });
 
     return () => {
-      clearTimeout(timer);
+      observer.disconnect();
       cleanupScrollRef.current?.();
       cleanupScrollRef.current = null;
     };
