@@ -10,7 +10,6 @@ import FilterListOutlined from '@mui/icons-material/FilterListOutlined';
 import UnifiedSearchDrawer from '@/app/components/search-drawer/unified-search-drawer';
 import { useSearchDrawerBridge } from '@/app/components/search-drawer/search-drawer-bridge-context';
 import UserDrawer from '@/app/components/user-drawer/user-drawer';
-import StartSeshDrawer from '@/app/components/session-creation/start-sesh-drawer';
 import SeshSettingsDrawer from '@/app/components/sesh-settings/sesh-settings-drawer';
 import { SESH_SETTINGS_DRAWER_EVENT } from '@/app/components/sesh-settings/sesh-settings-drawer-event';
 import { useIsOnBoardRoute } from '@/app/components/persistent-session/persistent-session-context';
@@ -37,8 +36,6 @@ interface GlobalHeaderProps {
 export default function GlobalHeader({ boardConfigs }: GlobalHeaderProps) {
   const [searchOpen, setSearchOpen] = useState(false);
   const [searchRendered, setSearchRendered] = useState(false);
-  const [startSeshOpen, setStartSeshOpen] = useState(false);
-  const [startSeshRendered, setStartSeshRendered] = useState(false);
   const [seshSettingsOpen, setSeshSettingsOpen] = useState(false);
   const [seshSettingsRendered, setSeshSettingsRendered] = useState(false);
 
@@ -53,9 +50,6 @@ export default function GlobalHeader({ boardConfigs }: GlobalHeaderProps) {
   // MUI Modal/Portal/FocusTrap infrastructure on every parent re-render.
   const handleSearchTransitionEnd = useCallback((open: boolean) => {
     if (!open) setSearchRendered(false);
-  }, []);
-  const handleStartSeshTransitionEnd = useCallback((open: boolean) => {
-    if (!open) setStartSeshRendered(false);
   }, []);
   const handleSeshSettingsTransitionEnd = useCallback((open: boolean) => {
     if (!open) setSeshSettingsRendered(false);
@@ -187,15 +181,6 @@ export default function GlobalHeader({ boardConfigs }: GlobalHeaderProps) {
           onClose={() => setSearchOpen(false)}
           onTransitionEnd={handleSearchTransitionEnd}
           defaultCategory={isOnBoardRoute ? 'climbs' : 'boards'}
-        />
-      )}
-
-      {startSeshRendered && (
-        <StartSeshDrawer
-          open={startSeshOpen}
-          onClose={() => setStartSeshOpen(false)}
-          onTransitionEnd={handleStartSeshTransitionEnd}
-          boardConfigs={boardConfigs}
         />
       )}
 

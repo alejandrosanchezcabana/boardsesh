@@ -280,7 +280,6 @@ const QueueControlBar: React.FC<QueueControlBarProps> = ({ boardDetails, angle }
   }, [previousClimb, viewOnlyMode, setCurrentClimbQueueItem, shouldNavigate, router, buildClimbUrl, boardDetails, isPlayPage]);
 
   const tickBarActive = activeDrawer === 'tick';
-  const [tickCloseCount, setTickCloseCount] = useState(0);
   const canSwipeNext = !viewOnlyMode && !!nextClimb && !tickBarActive;
   const canSwipePrevious = !viewOnlyMode && !!previousClimb && !tickBarActive;
 
@@ -310,7 +309,6 @@ const QueueControlBar: React.FC<QueueControlBarProps> = ({ boardDetails, angle }
         setTickRowVisible(false);
         setTickComment('');
         setTickCommentFocused(false);
-        setTickCloseCount((c) => c + 1);
       }, 200);
       return () => clearTimeout(timer);
     }
@@ -577,7 +575,6 @@ const QueueControlBar: React.FC<QueueControlBarProps> = ({ boardDetails, angle }
         {!tickBarActive && !tickRowVisible && (
           activeSession ? (
             <div
-              key={`session-header-${tickCloseCount}`}
               className={styles.sessionHeader}
               onClick={dispatchOpenSeshSettingsDrawer}
               role="button"
