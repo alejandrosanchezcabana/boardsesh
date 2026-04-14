@@ -1,50 +1,8 @@
 'use client';
 
 import { useState, useCallback, useMemo } from 'react';
-import { LitUpHoldsMap, HoldState, HOLD_STATE_MAP, HoldCode } from '../board-renderer/types';
+import { LitUpHoldsMap, HoldState, HOLD_STATE_MAP, STATE_TO_PRIMARY_CODE } from '../board-renderer/types';
 import { BoardName } from '@/app/lib/types';
-
-// Map from state name to the primary hold code for each board
-const STATE_TO_CODE: Record<BoardName, Partial<Record<HoldState, HoldCode>>> = {
-  kilter: {
-    STARTING: 42,
-    HAND: 43,
-    FINISH: 44,
-    FOOT: 45,
-  },
-  tension: {
-    STARTING: 1,
-    HAND: 2,
-    FINISH: 3,
-    FOOT: 4,
-  },
-  // MoonBoard uses different hook (use-moonboard-create-climb), but include for type safety
-  moonboard: {
-    STARTING: 1,
-    HAND: 2,
-    FINISH: 3,
-    // No FOOT holds on MoonBoard
-  },
-  // New Aurora boards use the same role codes as the Tension-style layouts.
-  decoy: {
-    STARTING: 1,
-    HAND: 2,
-    FINISH: 3,
-    FOOT: 4,
-  },
-  touchstone: {
-    STARTING: 1,
-    HAND: 2,
-    FINISH: 3,
-    FOOT: 4,
-  },
-  grasshopper: {
-    STARTING: 1,
-    HAND: 2,
-    FINISH: 3,
-    FOOT: 4,
-  },
-};
 
 interface UseCreateClimbOptions {
   initialHoldsMap?: LitUpHoldsMap;
@@ -97,7 +55,7 @@ export function useCreateClimb(boardName: BoardName, options?: UseCreateClimbOpt
           }
         }
 
-        const stateCode = STATE_TO_CODE[boardName][nextState];
+        const stateCode = STATE_TO_PRIMARY_CODE[boardName][nextState];
         if (stateCode === undefined) {
           return prev;
         }
@@ -122,7 +80,7 @@ export function useCreateClimb(boardName: BoardName, options?: UseCreateClimbOpt
 
   // Generate frames string in Aurora format: p{holdId}r{stateCode}p{holdId}r{stateCode}...
   const generateFramesString = useCallback(() => {
-    const stateToCode = STATE_TO_CODE[boardName];
+    const stateToCode = STATE_TO_PRIMARY_CODE[boardName];
     return Object.entries(litUpHoldsMap)
       .filter(([, hold]) => hold.state !== 'OFF')
       .map(([holdId, hold]) => {

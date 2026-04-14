@@ -19,10 +19,21 @@
       "types": "./src/led-placements.ts",
       "import": "./src/led-placements.ts",
       "default": "./src/led-placements.ts"
+    },
+    "./hold-states": {
+      "types": "./src/hold-states.ts",
+      "import": "./src/hold-states.ts",
+      "default": "./src/hold-states.ts"
+    },
+    "./grade-colors": {
+      "types": "./src/grade-colors.ts",
+      "import": "./src/grade-colors.ts",
+      "default": "./src/grade-colors.ts"
     }
   },
   "scripts": {
     "build": "tsc",
+    "test": "vitest run",
     "typecheck": "tsc --noEmit",
     "lint": "oxlint .",
     "generate": "node --import tsx scripts/generate-board-constants.ts"
@@ -34,6 +45,7 @@
     "@types/node": "^25.3.3",
     "dotenv": "^17.3.1",
     "oxlint": "^1.50.0",
+    "vitest": "*",
     "tsx": "^4.21.0",
     "typescript": "^5.9.3"
   }

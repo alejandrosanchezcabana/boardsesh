@@ -21,11 +21,9 @@ function rows<T>(result: unknown): T[] {
   return Array.isArray(r) ? r : r.rows ?? [];
 }
 
-// Simplified mirror of HOLD_STATE_MAP (role code → role name only).
-// Authoritative sources that must stay in sync:
-//   - packages/backend/src/db/queries/util/hold-state.ts (backend, includes colors)
-//   - packages/web/app/components/board-renderer/types.ts (frontend, includes colors + render styles)
-// When adding new products/roles, update all three locations.
+// Simplified local copy of HOLD_STATE_MAP (role code → role name only, no colors).
+// The canonical version lives in @boardsesh/board-constants/hold-states but the db
+// package intentionally does not depend on board-constants. Keep in sync manually.
 const HOLD_STATE_MAP: Record<string, Record<number, string>> = {
   kilter: {
     12: 'STARTING', 13: 'HAND', 14: 'FINISH', 15: 'FOOT',
