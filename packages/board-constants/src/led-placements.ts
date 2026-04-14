@@ -1,6 +1,7 @@
-import type { BoardName } from '@boardsesh/shared-schema';
+import type { BoardName, HoldState } from '@boardsesh/shared-schema';
 import { LED_PLACEMENTS } from './generated/led-placements-data';
 import type { LedPositionWithColor } from './types';
+import { STATE_TO_PRIMARY_CODE } from './hold-states';
 
 export { LED_PLACEMENTS };
 export type { LedPositionWithColor } from './types';
@@ -46,25 +47,9 @@ export const getReverseLedPlacements = (
   return reverseLookupCache[cacheKey];
 };
 
-const KILTER_ROLE_CODES = {
-  STARTING: 42,
-  HAND: 43,
-  FINISH: 44,
-  FOOT: 45,
-} as const;
-
-const TENSION_FAMILY_ROLE_CODES = {
-  STARTING: 1,
-  HAND: 2,
-  FINISH: 3,
-  FOOT: 4,
-} as const;
-
-const MOONBOARD_ROLE_CODES = {
-  STARTING: 42,
-  HAND: 43,
-  FINISH: 44,
-} as const;
+function getRoleCode(boardName: BoardName, state: HoldState): number {
+  return STATE_TO_PRIMARY_CODE[boardName]?.[state] ?? STATE_TO_PRIMARY_CODE[boardName]?.HAND ?? 0;
+}
 
 export function colorToRoleCode(r: number, g: number, b: number, boardName: BoardName): number {
   const hasRed = r > 127;
@@ -72,34 +57,26 @@ export function colorToRoleCode(r: number, g: number, b: number, boardName: Boar
   const hasBlue = b > 127;
 
   if (!hasRed && hasGreen && !hasBlue) {
-    return boardName === 'kilter' ? KILTER_ROLE_CODES.STARTING : TENSION_FAMILY_ROLE_CODES.STARTING;
+    return getRoleCode(boardName, 'STARTING');
   }
 
   if (!hasRed && !hasGreen && hasBlue) {
-    return boardName === 'kilter' ? KILTER_ROLE_CODES.HAND : TENSION_FAMILY_ROLE_CODES.HAND;
+    return getRoleCode(boardName, 'HAND');
   }
 
   if (hasRed && !hasGreen && !hasBlue) {
-    return boardName === 'moonboard'
-      ? MOONBOARD_ROLE_CODES.FINISH
-      : boardName === 'kilter'
-        ? KILTER_ROLE_CODES.FINISH
-        : TENSION_FAMILY_ROLE_CODES.FINISH;
+    return getRoleCode(boardName, 'FINISH');
   }
 
   if (hasRed && !hasGreen && hasBlue) {
-    return boardName === 'kilter' ? KILTER_ROLE_CODES.FINISH : TENSION_FAMILY_ROLE_CODES.FOOT;
+    return boardName === 'kilter' ? getRoleCode(boardName, 'FINISH') : getRoleCode(boardName, 'FOOT');
   }
 
   if (hasRed && hasGreen && !hasBlue) {
-    return boardName === 'kilter' ? KILTER_ROLE_CODES.FOOT : TENSION_FAMILY_ROLE_CODES.FOOT;
+    return getRoleCode(boardName, 'FOOT');
   }
 
-  if (boardName === 'moonboard') {
-    return MOONBOARD_ROLE_CODES.HAND;
-  }
-
-  return boardName === 'kilter' ? KILTER_ROLE_CODES.HAND : TENSION_FAMILY_ROLE_CODES.HAND;
+  return getRoleCode(boardName, 'HAND');
 }
 
 export function buildFramesString(

@@ -19,6 +19,16 @@
       "types": "./src/led-placements.ts",
       "import": "./src/led-placements.ts",
       "default": "./src/led-placements.ts"
+    },
+    "./hold-states": {
+      "types": "./src/hold-states.ts",
+      "import": "./src/hold-states.ts",
+      "default": "./src/hold-states.ts"
+    },
+    "./grade-colors": {
+      "types": "./src/grade-colors.ts",
+      "import": "./src/grade-colors.ts",
+      "default": "./src/grade-colors.ts"
     }
   },
   "scripts": {

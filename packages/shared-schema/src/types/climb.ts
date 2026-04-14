@@ -1,7 +1,7 @@
 // Climb and Hold types
 import type { MoonBoardHoldsInput } from './new-climb-feed';
 
-export type HoldState = 'OFF' | 'STARTING' | 'FINISH' | 'HAND' | 'FOOT' | 'ANY' | 'NOT';
+export type HoldState = 'OFF' | 'STARTING' | 'FINISH' | 'HAND' | 'FOOT' | 'ANY' | 'NOT' | 'AUX';
 export type LitupHold = { state: HoldState; color: string; displayColor: string };
 export type LitUpHoldsMap = Record<number, LitupHold>;
 
