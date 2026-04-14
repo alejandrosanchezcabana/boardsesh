@@ -3,14 +3,13 @@
 import React, { useCallback, useMemo, useRef, useState } from 'react';
 import Box from '@mui/material/Box';
 import Typography from '@mui/material/Typography';
-import Button from '@mui/material/Button';
 import CircularProgress from '@mui/material/CircularProgress';
 import Alert from '@mui/material/Alert';
 import StopCircleOutlined from '@mui/icons-material/StopCircleOutlined';
 import CloseOutlined from '@mui/icons-material/CloseOutlined';
-import ContentCopyOutlined from '@mui/icons-material/ContentCopyOutlined';
+import IosShare from '@mui/icons-material/IosShare';
+import QrCode2Outlined from '@mui/icons-material/QrCode2Outlined';
 import IconButton from '@mui/material/IconButton';
-import TextField from '@mui/material/TextField';
 import { QRCodeSVG } from 'qrcode.react';
 import { useQuery } from '@tanstack/react-query';
 import SwipeableDrawer from '@/app/components/swipeable-drawer/swipeable-drawer';
@@ -29,6 +28,7 @@ import {
   type GetSessionDetailQueryResponse,
 } from '@/app/lib/graphql/operations/activity-feed';
 import { clearClimbSessionCookie } from '@/app/lib/climb-session-cookie';
+import { shareWithFallback } from '@/app/lib/share-utils';
 import { useSnackbar } from '@/app/components/providers/snackbar-provider';
 import type { SessionDetail } from '@boardsesh/shared-schema';
 import { generateSessionName } from '@/app/lib/session-utils';
@@ -67,12 +67,19 @@ export default function SeshSettingsDrawer({ open, onClose, onTransitionEnd }: S
   });
   const lastSessionRef = useRef<SessionDetail | null>(null);
 
-  const copyToClipboard = useCallback(() => {
-    navigator.clipboard
-      .writeText(shareUrl)
-      .then(() => showMessage('Share URL copied!', 'success'))
-      .catch(() => showMessage('Failed to copy URL.', 'error'));
-  }, [shareUrl, showMessage]);
+  const [showQr, setShowQr] = useState(false);
+
+  const handleShareSession = useCallback(async () => {
+    await shareWithFallback({
+      url: shareUrl,
+      title: 'Join my climbing session',
+      text: 'Jump in and climb with me on Boardsesh',
+      trackingEvent: 'Session Shared',
+      trackingProps: { sessionId: sessionId ?? '' },
+      onClipboardSuccess: () => showMessage('Link copied!', 'success'),
+      onError: () => showMessage('Failed to share', 'error'),
+    });
+  }, [shareUrl, sessionId, showMessage]);
 
   const handleAngleChange = useCallback((newAngle: number) => {
     if (!boardDetails || angle === undefined) return;
@@ -214,22 +221,23 @@ export default function SeshSettingsDrawer({ open, onClose, onTransitionEnd }: S
     : 'Session';
 
   const inviteContent = !isStopped && shareUrl ? (
-    <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
-      <Box sx={{ display: 'flex', width: '100%', alignItems: 'center' }}>
-        <TextField
-          value={shareUrl}
-          slotProps={{ input: { readOnly: true } }}
-          variant="outlined"
-          size="small"
-          fullWidth
-        />
-        <IconButton onClick={copyToClipboard}>
-          <ContentCopyOutlined />
+    <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5 }}>
+      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+        <Typography variant="body2" color="text.secondary" sx={{ flex: 1 }}>
+          Get your crew in by sharing this link or scanning the QR code
+        </Typography>
+        <IconButton onClick={handleShareSession} aria-label="Share session link">
+          <IosShare />
+        </IconButton>
+        <IconButton onClick={() => setShowQr((v) => !v)} aria-label={showQr ? 'Hide QR code' : 'Show QR code'}>
+          <QrCode2Outlined color={showQr ? 'primary' : 'inherit'} />
         </IconButton>
       </Box>
-      <Box sx={{ display: 'flex', justifyContent: 'center' }}>
-        <QRCodeSVG value={shareUrl} size={160} />
-      </Box>
+      {showQr && (
+        <Box sx={{ display: 'flex', justifyContent: 'center', py: 1 }}>
+          <QRCodeSVG value={shareUrl} size={180} />
+        </Box>
+      )}
     </Box>
   ) : undefined;
 
