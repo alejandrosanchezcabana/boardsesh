@@ -32,13 +32,14 @@ export async function generateMetadata(props: { params: Promise<BoardRouteParame
       parsedParams.set_ids, parsedParams.angle, parsedParams.climb_uuid, climbName,
     ) ?? constructClimbViewUrl(parsedParams, parsedParams.climb_uuid, climbName);
 
-    const ogImageUrl = new URL('/api/og/climb', 'https://boardsesh.com');
-    ogImageUrl.searchParams.set('board_name', parsedParams.board_name);
-    ogImageUrl.searchParams.set('layout_id', parsedParams.layout_id.toString());
-    ogImageUrl.searchParams.set('size_id', parsedParams.size_id.toString());
-    ogImageUrl.searchParams.set('set_ids', parsedParams.set_ids.join(','));
-    ogImageUrl.searchParams.set('angle', parsedParams.angle.toString());
-    ogImageUrl.searchParams.set('climb_uuid', parsedParams.climb_uuid);
+    const ogParams = new URLSearchParams();
+    ogParams.set('board_name', parsedParams.board_name);
+    ogParams.set('layout_id', parsedParams.layout_id.toString());
+    ogParams.set('size_id', parsedParams.size_id.toString());
+    ogParams.set('set_ids', parsedParams.set_ids.join(','));
+    ogParams.set('angle', parsedParams.angle.toString());
+    ogParams.set('climb_uuid', parsedParams.climb_uuid);
+    const ogImagePath = `/api/og/climb?${ogParams.toString()}`;
 
     return {
       title: `${climbName} - ${climbGrade} | Boardsesh`,
@@ -50,7 +51,7 @@ export async function generateMetadata(props: { params: Promise<BoardRouteParame
         url: climbUrl,
         images: [
           {
-            url: ogImageUrl.toString(),
+            url: ogImagePath,
             width: 1200,
             height: 630,
             alt: `${climbName} - ${climbGrade} on ${boardDetails.board_name} board`,
@@ -61,7 +62,7 @@ export async function generateMetadata(props: { params: Promise<BoardRouteParame
         card: 'summary_large_image',
         title: `${climbName} - ${climbGrade}`,
         description,
-        images: [ogImageUrl.toString()],
+        images: [ogImagePath],
       },
     };
   } catch {

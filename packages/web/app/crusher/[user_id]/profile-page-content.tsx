@@ -1,6 +1,6 @@
 'use client';
 
-import React from 'react';
+import React, { useCallback } from 'react';
 import Box from '@mui/material/Box';
 import Tabs from '@mui/material/Tabs';
 import Tab from '@mui/material/Tab';
@@ -9,11 +9,14 @@ import CardContent from '@mui/material/CardContent';
 import Typography from '@mui/material/Typography';
 import CircularProgress from '@mui/material/CircularProgress';
 import MuiButton from '@mui/material/Button';
-import { HistoryOutlined } from '@mui/icons-material';
+import IconButton from '@mui/material/IconButton';
+import { HistoryOutlined, ShareOutlined } from '@mui/icons-material';
 import Link from 'next/link';
 import { EmptyState } from '@/app/components/ui/empty-state';
 import Logo from '@/app/components/brand/logo';
 import BackButton from '@/app/components/back-button';
+import { useSnackbar } from '@/app/components/providers/snackbar-provider';
+import { shareWithFallback } from '@/app/lib/share-utils';
 import AscentsFeed from '@/app/components/activity-feed';
 import SetterClimbList from '@/app/components/climb-list/setter-climb-list';
 import type { GetUserProfileStatsQueryResponse } from '@/app/lib/graphql/operations/ticks';
@@ -42,6 +45,7 @@ export default function ProfilePageContent({
   initialIsOwnProfile,
   initialNotFound,
 }: ProfilePageContentProps) {
+  const { showMessage } = useSnackbar();
   const {
     loading,
     notFound,
@@ -84,6 +88,21 @@ export default function ProfilePageContent({
     initialNotFound,
   });
 
+  const handleShare = useCallback(async () => {
+    const displayName = profile?.profile?.displayName || profile?.name || 'Crusher';
+    const shareUrl = `${window.location.origin}/crusher/${userId}`;
+
+    await shareWithFallback({
+      url: shareUrl,
+      title: `${displayName}'s climbing profile`,
+      text: `Check out ${displayName}'s climbing profile on Boardsesh`,
+      trackingEvent: 'Profile Shared',
+      trackingProps: { userId },
+      onClipboardSuccess: () => showMessage('Link copied to clipboard!', 'success'),
+      onError: () => showMessage('Failed to share', 'error'),
+    });
+  }, [profile, userId, showMessage]);
+
   if (loading) {
     return (
       <Box className={styles.layout}>
@@ -119,6 +138,11 @@ export default function ProfilePageContent({
         <Typography variant="h6" component="h4" className={styles.headerTitle}>
           Profile
         </Typography>
+        {profile && (
+          <IconButton onClick={handleShare} aria-label="Share profile">
+            <ShareOutlined />
+          </IconButton>
+        )}
       </Box>
 
       <Box component="main" className={styles.content}>

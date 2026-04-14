@@ -1,5 +1,6 @@
 import React from 'react';
 import { notFound } from 'next/navigation';
+import { Metadata } from 'next';
 import { resolveBoardBySlug, boardToRouteParams } from '@/app/lib/board-slug-utils';
 import { getBoardDetailsForBoard } from '@/app/lib/board-utils';
 import { getClimb } from '@/app/lib/data/queries';
@@ -10,6 +11,75 @@ import { extractUuidFromSlug } from '@/app/lib/url-utils';
 
 interface BoardSlugPlayPageProps {
   params: Promise<{ board_slug: string; angle: string; climb_uuid: string }>;
+}
+
+export async function generateMetadata(props: BoardSlugPlayPageProps): Promise<Metadata> {
+  const params = await props.params;
+
+  try {
+    const board = await resolveBoardBySlug(params.board_slug);
+    if (!board) {
+      return { title: 'Play Climb | Boardsesh', description: 'Play a climb on your board' };
+    }
+
+    const parsedParams = {
+      ...boardToRouteParams(board, Number(params.angle)),
+      climb_uuid: extractUuidFromSlug(params.climb_uuid),
+    };
+
+    const [boardDetails, currentClimb] = await Promise.all([
+      getBoardDetailsForBoard(parsedParams),
+      getClimb(parsedParams),
+    ]);
+
+    const climbName = currentClimb.name || `${boardDetails.board_name} Climb`;
+    const climbGrade = currentClimb.difficulty || 'Unknown Grade';
+    const setter = currentClimb.setter_username || 'Unknown Setter';
+    const description = `${climbName} - ${climbGrade} by ${setter}. Quality: ${currentClimb.quality_average || 0}/5. Ascents: ${currentClimb.ascensionist_count || 0}`;
+    const title = `${climbName} - ${climbGrade} | Boardsesh`;
+    const canonicalUrl = `/b/${params.board_slug}/${params.angle}/play/${params.climb_uuid}`;
+
+    const ogParams = new URLSearchParams();
+    ogParams.set('board_name', parsedParams.board_name);
+    ogParams.set('layout_id', parsedParams.layout_id.toString());
+    ogParams.set('size_id', parsedParams.size_id.toString());
+    ogParams.set('set_ids', parsedParams.set_ids.join(','));
+    ogParams.set('angle', parsedParams.angle.toString());
+    ogParams.set('climb_uuid', parsedParams.climb_uuid);
+    const ogImagePath = `/api/og/climb?${ogParams.toString()}`;
+
+    return {
+      title,
+      description,
+      alternates: { canonical: canonicalUrl },
+      robots: { index: false, follow: true },
+      openGraph: {
+        title: `${climbName} - ${climbGrade}`,
+        description,
+        type: 'website',
+        url: canonicalUrl,
+        images: [
+          {
+            url: ogImagePath,
+            width: 1200,
+            height: 630,
+            alt: `${climbName} - ${climbGrade} on ${boardDetails.board_name} board`,
+          },
+        ],
+      },
+      twitter: {
+        card: 'summary_large_image',
+        title: `${climbName} - ${climbGrade}`,
+        description,
+        images: [ogImagePath],
+      },
+    };
+  } catch {
+    return {
+      title: 'Play Climb | Boardsesh',
+      description: 'Play a climb on your board',
+    };
+  }
 }
 
 export default async function BoardSlugPlayPage(props: BoardSlugPlayPageProps) {

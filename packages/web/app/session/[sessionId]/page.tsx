@@ -37,9 +37,41 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     .map((p) => p.displayName || 'Climber')
     .join(', ');
 
+  const sessionName = session.sessionName || 'Climbing Session';
+  const title = `${sessionName} | Boardsesh`;
+
+  let description: string;
+  if (session.totalSends > 0 || session.totalFlashes > 0) {
+    const stats = `${session.totalSends} send${session.totalSends !== 1 ? 's' : ''}, ${session.totalFlashes} flash${session.totalFlashes !== 1 ? 'es' : ''}`;
+    description = participantNames ? `${participantNames} — ${stats}` : stats;
+  } else {
+    description = participantNames
+      ? `${participantNames} climbing on Boardsesh`
+      : `${sessionName} on Boardsesh`;
+  }
+
+  const ogParams = new URLSearchParams();
+  ogParams.set('sessionId', sessionId);
+  const ogImage = `/api/og/session?${ogParams.toString()}`;
+  const canonicalUrl = `/session/${sessionId}`;
+
   return {
-    title: `${session.sessionName || 'Climbing Session'} | Boardsesh`,
-    description: `${participantNames} - ${session.totalSends} sends, ${session.totalFlashes} flashes`,
+    title,
+    description,
+    alternates: { canonical: canonicalUrl },
+    openGraph: {
+      title,
+      description,
+      type: 'website',
+      url: `/session/${sessionId}`,
+      images: [{ url: ogImage, width: 1200, height: 630, alt: title }],
+    },
+    twitter: {
+      card: 'summary_large_image',
+      title,
+      description,
+      images: [ogImage],
+    },
   };
 }
 

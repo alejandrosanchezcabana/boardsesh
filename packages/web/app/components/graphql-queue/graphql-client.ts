@@ -120,9 +120,20 @@ export function createGraphQLClient(
   if (typeof window !== 'undefined') {
     const unregister = connectionManager.registerClient(client, managerConnectionName);
     const originalDispose = client.dispose.bind(client);
-    client.dispose = () => {
+    // graphql-ws dispose() is async and can reject with a raw DOM Event (ErrorEvent)
+    // when the WebSocket was mid-connection or retrying at teardown time. All call sites
+    // use fire-and-forget (no await), so an unhandled rejection with a DOM Event would
+    // escape to window.onunhandledrejection — exactly what Sentry captures as
+    // "Event `Event` (type=error) captured as promise rejection" on iOS WKWebView.
+    // Wrapping here silences the rejection at the source for all consumers.
+    client.dispose = async () => {
       unregister();
-      originalDispose();
+      try {
+        await originalDispose();
+      } catch {
+        // Suppress: dispose errors are non-fatal. The socket is being torn down
+        // and these rejections carry no actionable information.
+      }
     };
   }
 
@@ -229,7 +240,10 @@ export function subscribe<TData = unknown, TVariables = Record<string, unknown>>
       },
       error: (error) => {
         if (DEBUG) console.log(`[GraphQL] subscribe ERROR: ${opName}`, error);
-        sink.error?.(error);
+        // graphql-ws passes raw DOM Events (ErrorEvent/CloseEvent) when the WebSocket
+        // connection fails. Always forward a proper Error so callers and Sentry never
+        // receive "Event `Event` (type=error) captured as promise rejection".
+        sink.error?.(error instanceof Error ? error : new Error(String(error)));
       },
       complete: () => {
         if (DEBUG) console.log(`[GraphQL] subscribe COMPLETE: ${opName}`);

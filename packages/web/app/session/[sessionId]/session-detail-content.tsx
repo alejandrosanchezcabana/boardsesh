@@ -1,6 +1,9 @@
 'use client';
 
 import React, { useState, useCallback, useMemo } from 'react';
+import ShareOutlined from '@mui/icons-material/ShareOutlined';
+import { useSnackbar } from '@/app/components/providers/snackbar-provider';
+import { shareWithFallback } from '@/app/lib/share-utils';
 import Box from '@mui/material/Box';
 import Typography from '@mui/material/Typography';
 import Avatar from '@mui/material/Avatar';
@@ -272,6 +275,7 @@ export default function SessionDetailContent({
   const { data: authSession } = useSession();
   const router = useRouter();
   const deleteTick = useDeleteTick();
+  const { showMessage } = useSnackbar();
 
   const {
     session: hookSession,
@@ -403,6 +407,20 @@ export default function SessionDetailContent({
       console.error('Failed to navigate to climb:', error);
     }
   }, [router]);
+
+  const handleShare = useCallback(async () => {
+    const shareUrl = `${window.location.origin}/session/${sessionId}`;
+    const name = sessionName || 'Climbing Session';
+    await shareWithFallback({
+      url: shareUrl,
+      title: name,
+      text: 'Check out this climbing session on Boardsesh',
+      trackingEvent: 'Session Shared',
+      trackingProps: { sessionId },
+      onClipboardSuccess: () => showMessage('Link copied to clipboard!', 'success'),
+      onError: () => showMessage('Failed to share', 'error'),
+    });
+  }, [sessionId, sessionName, showMessage]);
 
   const handleDeleteTick = useCallback((uuid: string) => {
     deleteTick.mutate(uuid);
@@ -616,6 +634,11 @@ export default function SessionDetailContent({
               {formatDate(firstTickAt)}
             </Typography>
           </Box>
+          {!isEditing && (
+            <IconButton size="small" onClick={handleShare} aria-label="Share session">
+              <ShareOutlined fontSize="small" />
+            </IconButton>
+          )}
           {canEdit && !isEditing && (
             <IconButton size="small" onClick={handleStartEdit}>
               <EditOutlined fontSize="small" />

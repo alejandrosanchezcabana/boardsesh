@@ -3,12 +3,12 @@
 import React, { useCallback } from 'react';
 import { useSnackbar } from '@/app/components/providers/snackbar-provider';
 import ShareOutlined from '@mui/icons-material/ShareOutlined';
-import { track } from '@vercel/analytics';
 import { ClimbActionProps, ClimbActionResult } from '../types';
 import {
   getContextAwareClimbViewUrl,
 } from '@/app/lib/url-utils';
 import { buildActionResult, computeActionDisplay } from '../action-view-renderer';
+import { shareWithFallback } from '@/app/lib/share-utils';
 
 export function ShareAction({
   climb,
@@ -41,43 +41,19 @@ export function ShareAction({
       ? `${window.location.origin}${viewUrl}`
       : viewUrl;
 
-    const shareData = {
+    const shared = await shareWithFallback({
+      url: shareUrl,
       title: climb.name,
       text: `Check out "${climb.name}" (${climb.difficulty}) on Boardsesh`,
-      url: shareUrl,
-    };
-
-    try {
-      if (navigator.share && navigator.canShare?.(shareData)) {
-        await navigator.share(shareData);
-        track('Climb Shared', {
-          boardName: boardDetails.board_name,
-          climbUuid: climb.uuid,
-          method: 'native',
-        });
-      } else {
-        await navigator.clipboard.writeText(shareUrl);
-        showMessage('Link copied to clipboard!', 'success');
-        track('Climb Shared', {
-          boardName: boardDetails.board_name,
-          climbUuid: climb.uuid,
-          method: 'clipboard',
-        });
-      }
+      trackingEvent: 'Climb Shared',
+      trackingProps: { boardName: boardDetails.board_name, climbUuid: climb.uuid },
+      onClipboardSuccess: () => showMessage('Link copied to clipboard!', 'success'),
+      onError: () => showMessage('Failed to share', 'error'),
+    });
+    if (shared) {
       onComplete?.();
-    } catch (error) {
-      // User cancelled share or error occurred
-      if ((error as Error).name !== 'AbortError') {
-        // Fallback to clipboard
-        try {
-          await navigator.clipboard.writeText(shareUrl);
-          showMessage('Link copied to clipboard!', 'success');
-        } catch {
-          showMessage('Failed to share', 'error');
-        }
-      }
     }
-  }, [climb, viewUrl, boardDetails.board_name, onComplete]);
+  }, [climb, viewUrl, boardDetails.board_name, onComplete, showMessage]);
 
   const icon = <ShareOutlined sx={{ fontSize: iconSize }} />;
 
