@@ -1,4 +1,4 @@
-import { eq, and, desc, asc, inArray, sql, count, ilike, gte, lte } from 'drizzle-orm';
+import { eq, and, desc, inArray, sql, count, ilike, gte, lte } from 'drizzle-orm';
 import type { ConnectionContext, BoardName } from '@boardsesh/shared-schema';
 import { SUPPORTED_BOARDS } from '@boardsesh/shared-schema';
 import { db } from '../../../db/client';
