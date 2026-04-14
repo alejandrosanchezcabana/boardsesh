@@ -7,12 +7,16 @@ import Button from '@mui/material/Button';
 import CircularProgress from '@mui/material/CircularProgress';
 import Alert from '@mui/material/Alert';
 import StopCircleOutlined from '@mui/icons-material/StopCircleOutlined';
+import CloseOutlined from '@mui/icons-material/CloseOutlined';
 import ContentCopyOutlined from '@mui/icons-material/ContentCopyOutlined';
 import IconButton from '@mui/material/IconButton';
 import TextField from '@mui/material/TextField';
 import { QRCodeSVG } from 'qrcode.react';
 import { useQuery } from '@tanstack/react-query';
 import SwipeableDrawer from '@/app/components/swipeable-drawer/swipeable-drawer';
+import drawerCss from '@/app/components/swipeable-drawer/swipeable-drawer.module.css';
+import { useDrawerDragResize } from '@/app/hooks/use-drawer-drag-resize';
+import BoardRenderer from '@/app/components/board-renderer/board-renderer';
 import { usePersistentSession } from '@/app/components/persistent-session/persistent-session-context';
 import { useQueueBridgeBoardInfo } from '@/app/components/queue-control/queue-bridge-context';
 import { useRouter, usePathname } from 'next/navigation';
@@ -54,7 +58,13 @@ export default function SeshSettingsDrawer({ open, onClose, onTransitionEnd }: S
   const sessionId = activeSession?.sessionId ?? null;
   const shareUrl = getShareUrl(sessionId);
   const { showMessage } = useSnackbar();
+  const sessionBoardDetails = activeSession?.boardDetails ?? boardDetails;
   const [isStopped, setIsStopped] = useState(false);
+
+  const { paperRef, dragHandlers } = useDrawerDragResize({
+    open,
+    onClose,
+  });
   const lastSessionRef = useRef<SessionDetail | null>(null);
 
   const copyToClipboard = useCallback(() => {
@@ -227,59 +237,73 @@ export default function SeshSettingsDrawer({ open, onClose, onTransitionEnd }: S
 
   return (
     <SwipeableDrawer
-      title={drawerTitle}
-      placement="top"
-      showCloseButtonOnMobile
-      swipeEnabled
+      title={
+        <div data-swipe-blocked="" {...dragHandlers} className={drawerCss.dragHeaderWrapper}>
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
+            {sessionBoardDetails && (
+              <Box sx={{ width: 36, flexShrink: 0, borderRadius: '6px', overflow: 'hidden', background: 'var(--neutral-100)', aspectRatio: '1' }}>
+                <BoardRenderer
+                  boardDetails={sessionBoardDetails}
+                  mirrored={false}
+                  thumbnail
+                  fillHeight
+                />
+              </Box>
+            )}
+            <Typography variant="subtitle1" sx={{ fontWeight: 600, flex: 1, minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+              {drawerTitle}
+            </Typography>
+            {timerText && (
+              <Typography
+                variant="body2"
+                sx={{
+                  fontFamily: 'monospace',
+                  fontWeight: 600,
+                  color: 'text.secondary',
+                  whiteSpace: 'nowrap',
+                  flexShrink: 0,
+                }}
+              >
+                {timerText}
+              </Typography>
+            )}
+            {!isStopped ? (
+              <IconButton
+                size="small"
+                onClick={handleStopSession}
+                aria-label="Stop session"
+                sx={{
+                  color: themeTokens.colors.error,
+                  flexShrink: 0,
+                }}
+              >
+                <StopCircleOutlined />
+              </IconButton>
+            ) : (
+              <IconButton
+                size="small"
+                onClick={handleClose}
+                aria-label="Dismiss"
+                sx={{ flexShrink: 0 }}
+              >
+                <CloseOutlined />
+              </IconButton>
+            )}
+          </Box>
+        </div>
+      }
+      placement="bottom"
+      height="60%"
+      paperRef={paperRef}
       open={open}
       onClose={handleClose}
       onTransitionEnd={onTransitionEnd}
-      fullHeight
-      extra={timerText ? (
-        <Typography
-          variant="body2"
-          sx={{
-            fontFamily: 'monospace',
-            fontWeight: 600,
-            color: 'text.secondary',
-            whiteSpace: 'nowrap',
-          }}
-        >
-          {timerText}
-        </Typography>
-      ) : undefined}
+      swipeEnabled={false}
       styles={{
-        wrapper: { height: '100dvh' },
-        header: { paddingRight: '48px' },
-        body: { padding: 0, paddingBottom: 0 },
+        wrapper: { width: '100%', touchAction: 'pan-y' as const, transition: 'height 0.3s cubic-bezier(0.4, 0, 0.2, 1)' },
+        header: { paddingLeft: `${themeTokens.spacing[3]}px`, paddingRight: `${themeTokens.spacing[3]}px` },
+        body: { padding: `${themeTokens.spacing[2]}px 0` },
       }}
-      footer={isStopped ? (
-        <Button
-          variant="outlined"
-          onClick={handleClose}
-          fullWidth
-        >
-          Dismiss
-        </Button>
-      ) : (
-        <Button
-          variant="outlined"
-          color="error"
-          startIcon={<StopCircleOutlined />}
-          onClick={handleStopSession}
-          fullWidth
-          sx={{
-            borderColor: themeTokens.colors.error,
-            color: themeTokens.colors.error,
-            '&:hover': {
-              borderColor: themeTokens.colors.error,
-              backgroundColor: `${themeTokens.colors.error}10`,
-            },
-          }}
-        >
-          Stop Session
-        </Button>
-      )}
     >
       <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, pb: 2 }}>
         {isLoading && !displaySession && (
@@ -299,7 +323,7 @@ export default function SeshSettingsDrawer({ open, onClose, onTransitionEnd }: S
             key={displaySession.sessionId}
             session={displaySession}
             embedded
-            fallbackBoardDetails={boardDetails}
+            fallbackBoardDetails={sessionBoardDetails}
             inviteContent={inviteContent}
             currentAngle={angle}
             onAngleChange={!isStopped ? handleAngleChange : undefined}

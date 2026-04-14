@@ -78,9 +78,31 @@ vi.mock('@/app/hooks/use-my-boards', () => ({
   }),
 }));
 
+vi.mock('@/app/hooks/use-drawer-drag-resize', () => ({
+  useDrawerDragResize: () => ({
+    paperRef: { current: null },
+    dragHandlers: {},
+  }),
+}));
+
 vi.mock('@/app/components/swipeable-drawer/swipeable-drawer', () => ({
-  default: ({ children, open, footer }: { children: React.ReactNode; open: boolean; footer?: React.ReactNode }) =>
-    open ? <div data-testid="drawer">{children}{footer}</div> : null,
+  default: ({ children, open, footer, placement, paperRef }: {
+    children: React.ReactNode;
+    open: boolean;
+    footer?: React.ReactNode;
+    placement?: string;
+    paperRef?: React.Ref<HTMLDivElement>;
+  }) =>
+    open ? (
+      <div
+        data-testid="drawer"
+        data-placement={placement}
+        ref={typeof paperRef === 'function' ? undefined : paperRef}
+      >
+        {children}
+        {footer}
+      </div>
+    ) : null,
 }));
 
 vi.mock('@/app/components/board-scroll/board-discovery-scroll', () => ({
@@ -391,6 +413,8 @@ describe('StartSeshDrawer', () => {
           set_ids: [1, 2],
           angle: 40,
         },
+        namedBoardName: 'Kilter',
+        namedBoardUuid: 'board-1',
       });
     });
   });
@@ -424,5 +448,12 @@ describe('StartSeshDrawer', () => {
     });
 
     expect(mockActivateSession).not.toHaveBeenCalled();
+  });
+
+  it('renders with bottom placement', () => {
+    render(<StartSeshDrawer open onClose={vi.fn()} />);
+
+    const drawer = screen.getByTestId('drawer');
+    expect(drawer.getAttribute('data-placement')).toBe('bottom');
   });
 });

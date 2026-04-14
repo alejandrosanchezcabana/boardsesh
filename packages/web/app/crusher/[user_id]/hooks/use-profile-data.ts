@@ -29,30 +29,43 @@ import {
   buildVPointsTimeline,
 } from '../utils/chart-data-builders';
 
-export function useProfileData(userId: string) {
+interface InitialData {
+  initialProfile?: UserProfile;
+  initialProfileStats?: GetUserProfileStatsQueryResponse['userProfileStats'];
+  initialAllBoardsTicks?: Record<string, LogbookEntry[]>;
+  initialLogbook?: LogbookEntry[];
+  initialIsOwnProfile?: boolean;
+  initialNotFound?: boolean;
+}
+
+export function useProfileData(userId: string, initialData?: InitialData) {
   const { data: session } = useSession();
   const { showMessage } = useSnackbar();
   const { gradeFormat } = useGradeFormat();
 
-  const [loading, setLoading] = useState(true);
-  const [notFound, setNotFound] = useState(false);
-  const [profile, setProfile] = useState<UserProfile | null>(null);
+  const [loading, setLoading] = useState(!initialData?.initialProfile && !initialData?.initialNotFound);
+  const [notFound, setNotFound] = useState(initialData?.initialNotFound ?? false);
+  const [profile, setProfile] = useState<UserProfile | null>(initialData?.initialProfile ?? null);
   const [selectedBoard, setSelectedBoard] = useState<string>('kilter');
-  const [logbook, setLogbook] = useState<LogbookEntry[]>([]);
+  const [logbook, setLogbook] = useState<LogbookEntry[]>(initialData?.initialLogbook ?? []);
   const [loadingStats, setLoadingStats] = useState(false);
   const [timeframe, setTimeframe] = useState<TimeframeType>('all');
   const [fromDate, setFromDate] = useState<string>('');
   const [toDate, setToDate] = useState<string>('');
   const [aggregatedTimeframe, setAggregatedTimeframe] = useState<AggregatedTimeframeType>('all');
-  const [allBoardsTicks, setAllBoardsTicks] = useState<Record<string, LogbookEntry[]>>({});
-  const [loadingAggregated, setLoadingAggregated] = useState(false);
-  const [profileStats, setProfileStats] = useState<GetUserProfileStatsQueryResponse['userProfileStats'] | null>(null);
-  const [loadingProfileStats, setLoadingProfileStats] = useState(false);
+  const [allBoardsTicks, setAllBoardsTicks] = useState<Record<string, LogbookEntry[]>>(
+    initialData?.initialAllBoardsTicks ?? {},
+  );
+  const [loadingAggregated, setLoadingAggregated] = useState(!initialData?.initialAllBoardsTicks);
+  const [profileStats, setProfileStats] = useState<GetUserProfileStatsQueryResponse['userProfileStats'] | null>(
+    initialData?.initialProfileStats ?? null,
+  );
+  const [loadingProfileStats, setLoadingProfileStats] = useState(!initialData?.initialProfileStats);
   const [activeTab, setActiveTab] = useState<'activity' | 'createdClimbs'>('activity');
   const [weeklyFromDate, setWeeklyFromDate] = useState<string>('');
   const [weeklyToDate, setWeeklyToDate] = useState<string>('');
 
-  const isOwnProfile = session?.user?.id === userId;
+  const isOwnProfile = session?.user?.id ? session.user.id === userId : (initialData?.initialIsOwnProfile ?? false);
   const hasCredentials = (profile?.credentials?.length ?? 0) > 0;
   const authToken = (session as { authToken?: string } | null)?.authToken ?? null;
 
@@ -153,10 +166,39 @@ export function useProfileData(userId: string) {
     }
   }, [userId]);
 
-  useEffect(() => { fetchProfile(); }, [fetchProfile]);
-  useEffect(() => { fetchAllBoardsTicks(); }, [fetchAllBoardsTicks]);
-  useEffect(() => { fetchProfileStats(); }, [fetchProfileStats]);
-  useEffect(() => { if (selectedBoard) fetchLogbook(selectedBoard); }, [selectedBoard, fetchLogbook]);
+  // Skip client-side fetches when server data was provided
+  useEffect(() => {
+    if (!initialData?.initialProfile && !initialData?.initialNotFound) fetchProfile();
+  }, [fetchProfile, initialData?.initialProfile, initialData?.initialNotFound]);
+
+  useEffect(() => {
+    if (!initialData?.initialAllBoardsTicks) fetchAllBoardsTicks();
+  }, [fetchAllBoardsTicks, initialData?.initialAllBoardsTicks]);
+
+  useEffect(() => {
+    if (!initialData?.initialProfileStats) fetchProfileStats();
+  }, [fetchProfileStats, initialData?.initialProfileStats]);
+
+  // Fetch logbook when board changes (skip initial if server data was provided for default board)
+  const [hasChangedBoard, setHasChangedBoard] = useState(false);
+  const handleBoardChange = useCallback((board: string) => {
+    setSelectedBoard(board);
+    setHasChangedBoard(true);
+  }, []);
+
+  useEffect(() => {
+    if (hasChangedBoard && selectedBoard) {
+      // Check if we already have ticks for this board from server data
+      if (initialData?.initialAllBoardsTicks?.[selectedBoard]) {
+        setLogbook(initialData.initialAllBoardsTicks[selectedBoard]);
+        setLoadingStats(false);
+      } else {
+        fetchLogbook(selectedBoard);
+      }
+    } else if (!initialData?.initialLogbook && selectedBoard) {
+      fetchLogbook(selectedBoard);
+    }
+  }, [selectedBoard, hasChangedBoard, fetchLogbook, initialData?.initialAllBoardsTicks, initialData?.initialLogbook]);
 
   const filteredLogbook = useMemo(
     () => filterLogbookByTimeframe(logbook, timeframe, fromDate, toDate),
@@ -200,7 +242,7 @@ export function useProfileData(userId: string) {
 
     // Board selection
     selectedBoard,
-    setSelectedBoard,
+    setSelectedBoard: handleBoardChange,
 
     // Board stats
     loadingStats,

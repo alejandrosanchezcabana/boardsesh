@@ -191,6 +191,9 @@ export const InlineListTickBar: React.FC<InlineListTickBarProps> = ({
             >
               <CheckOutlined sx={{ fontSize: 18 }} />
             </IconButton>
+            {/* Intentional: both the attempt and cancel buttons use CloseOutlined.
+                The red "X" (attempt/fail) vs small muted "X" (cancel) distinction is
+                a deliberate design choice — do not change these icons. */}
             <IconButton
               ref={attemptButtonRef}
               size="small"

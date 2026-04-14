@@ -16,12 +16,32 @@ import Logo from '@/app/components/brand/logo';
 import BackButton from '@/app/components/back-button';
 import AscentsFeed from '@/app/components/activity-feed';
 import SetterClimbList from '@/app/components/climb-list/setter-climb-list';
+import type { GetUserProfileStatsQueryResponse } from '@/app/lib/graphql/operations/ticks';
 import styles from './profile-page.module.css';
 import { useProfileData } from './hooks/use-profile-data';
 import ProfileHeader from './components/profile-header';
 import BoardStatsSection from './components/board-stats-section';
+import type { UserProfile, LogbookEntry } from './utils/profile-constants';
 
-export default function ProfilePageContent({ userId }: { userId: string }) {
+interface ProfilePageContentProps {
+  userId: string;
+  initialProfile?: UserProfile | null;
+  initialProfileStats?: GetUserProfileStatsQueryResponse['userProfileStats'] | null;
+  initialAllBoardsTicks?: Record<string, LogbookEntry[]>;
+  initialLogbook?: LogbookEntry[];
+  initialIsOwnProfile?: boolean;
+  initialNotFound?: boolean;
+}
+
+export default function ProfilePageContent({
+  userId,
+  initialProfile,
+  initialProfileStats,
+  initialAllBoardsTicks,
+  initialLogbook,
+  initialIsOwnProfile,
+  initialNotFound,
+}: ProfilePageContentProps) {
   const {
     loading,
     notFound,
@@ -55,7 +75,14 @@ export default function ProfilePageContent({ userId }: { userId: string }) {
     statisticsSummary,
     activeTab,
     setActiveTab,
-  } = useProfileData(userId);
+  } = useProfileData(userId, {
+    initialProfile: initialProfile ?? undefined,
+    initialProfileStats: initialProfileStats ?? undefined,
+    initialAllBoardsTicks,
+    initialLogbook,
+    initialIsOwnProfile,
+    initialNotFound,
+  });
 
   if (loading) {
     return (

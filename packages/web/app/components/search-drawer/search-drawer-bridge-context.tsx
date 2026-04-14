@@ -16,12 +16,21 @@ interface SearchDrawerBridgeState {
   searchPillSummary: string | null;
   /** Whether any climb filters are active (for indicator dot). */
   hasActiveFilters: boolean;
+  /** Current name filter value for the header search input. */
+  nameFilter: string;
+  /** Callback to update the name filter from the header search input. null when not on list page. */
+  setNameFilter: ((name: string) => void) | null;
+  /** Whether any filters other than name are active (for filter button indicator). */
+  hasActiveNonNameFilters: boolean;
 }
 
 const SearchDrawerBridgeContext = createContext<SearchDrawerBridgeState>({
   openClimbSearchDrawer: null,
   searchPillSummary: null,
   hasActiveFilters: false,
+  nameFilter: '',
+  setNameFilter: null,
+  hasActiveNonNameFilters: false,
 });
 
 export function useSearchDrawerBridge() {
@@ -33,8 +42,8 @@ export function useSearchDrawerBridge() {
 // -------------------------------------------------------------------
 
 interface SearchDrawerBridgeSetters {
-  register: (openDrawer: () => void, summary: string, active: boolean) => void;
-  update: (summary: string, active: boolean) => void;
+  register: (openDrawer: () => void, summary: string, active: boolean, nameFilter: string, setNameFilter: (name: string) => void, nonNameActive: boolean) => void;
+  update: (summary: string, active: boolean, nameFilter: string, nonNameActive: boolean) => void;
   deregister: () => void;
 }
 
@@ -52,36 +61,54 @@ export function SearchDrawerBridgeProvider({ children }: { children: React.React
   const [isRegistered, setIsRegistered] = useState(false);
   const [summary, setSummary] = useState<string | null>(null);
   const [active, setActive] = useState(false);
+  const [nameFilter, setNameFilterState] = useState('');
+  const [nonNameActive, setNonNameActive] = useState(false);
   const openDrawerRef = useRef<(() => void) | null>(null);
+  const setNameFilterRef = useRef<((name: string) => void) | null>(null);
 
-  const register = useCallback((openDrawer: () => void, s: string, a: boolean) => {
+  const register = useCallback((openDrawer: () => void, s: string, a: boolean, nf: string, snf: (name: string) => void, nna: boolean) => {
     openDrawerRef.current = openDrawer;
+    setNameFilterRef.current = snf;
     setSummary(s);
     setActive(a);
+    setNameFilterState(nf);
+    setNonNameActive(nna);
     setIsRegistered(true);
   }, []);
 
-  const update = useCallback((s: string, a: boolean) => {
+  const update = useCallback((s: string, a: boolean, nf: string, nna: boolean) => {
     setSummary(s);
     setActive(a);
+    setNameFilterState(nf);
+    setNonNameActive(nna);
   }, []);
 
   const deregister = useCallback(() => {
     openDrawerRef.current = null;
+    setNameFilterRef.current = null;
     setIsRegistered(false);
     setSummary(null);
     setActive(false);
+    setNameFilterState('');
+    setNonNameActive(false);
   }, []);
 
   const stableOpenDrawer = useCallback(() => {
     openDrawerRef.current?.();
   }, []);
 
+  const stableSetNameFilter = useCallback((name: string) => {
+    setNameFilterRef.current?.(name);
+  }, []);
+
   const state = useMemo<SearchDrawerBridgeState>(() => ({
     openClimbSearchDrawer: isRegistered ? stableOpenDrawer : null,
     searchPillSummary: summary,
     hasActiveFilters: active,
-  }), [isRegistered, stableOpenDrawer, summary, active]);
+    nameFilter,
+    setNameFilter: isRegistered ? stableSetNameFilter : null,
+    hasActiveNonNameFilters: nonNameActive,
+  }), [isRegistered, stableOpenDrawer, stableSetNameFilter, summary, active, nameFilter, nonNameActive]);
 
   const setters = useMemo<SearchDrawerBridgeSetters>(
     () => ({ register, update, deregister }),
@@ -106,6 +133,9 @@ interface SearchDrawerBridgeInjectorProps {
   summary: string;
   hasActiveFilters: boolean;
   isOnListPage: boolean;
+  nameFilter: string;
+  onNameFilterChange: (name: string) => void;
+  hasActiveNonNameFilters: boolean;
 }
 
 export function SearchDrawerBridgeInjector({
@@ -113,6 +143,9 @@ export function SearchDrawerBridgeInjector({
   summary,
   hasActiveFilters: active,
   isOnListPage,
+  nameFilter,
+  onNameFilterChange,
+  hasActiveNonNameFilters: nonNameActive,
 }: SearchDrawerBridgeInjectorProps) {
   const { register, update, deregister } = useContext(SearchDrawerBridgeSetterContext);
 
@@ -120,26 +153,39 @@ export function SearchDrawerBridgeInjector({
   const openDrawerRef = useRef(openDrawer);
   const summaryRef = useRef(summary);
   const activeRef = useRef(active);
+  const nameFilterRef = useRef(nameFilter);
+  const onNameFilterChangeRef = useRef(onNameFilterChange);
+  const nonNameActiveRef = useRef(nonNameActive);
   openDrawerRef.current = openDrawer;
   summaryRef.current = summary;
   activeRef.current = active;
+  nameFilterRef.current = nameFilter;
+  onNameFilterChangeRef.current = onNameFilterChange;
+  nonNameActiveRef.current = nonNameActive;
 
   // Register/deregister based on whether we're on the list page
   useIsomorphicLayoutEffect(() => {
     if (isOnListPage) {
-      register(() => openDrawerRef.current(), summaryRef.current, activeRef.current);
+      register(
+        () => openDrawerRef.current(),
+        summaryRef.current,
+        activeRef.current,
+        nameFilterRef.current,
+        (name: string) => onNameFilterChangeRef.current(name),
+        nonNameActiveRef.current,
+      );
     } else {
       deregister();
     }
     return () => { deregister(); };
   }, [isOnListPage, register, deregister]);
 
-  // Update summary and active filters when they change (while on list page)
+  // Update summary, active filters, and name filter when they change (while on list page)
   useEffect(() => {
     if (isOnListPage) {
-      update(summary, active);
+      update(summary, active, nameFilter, nonNameActive);
     }
-  }, [summary, active, isOnListPage, update]);
+  }, [summary, active, nameFilter, nonNameActive, isOnListPage, update]);
 
   return null;
 }

@@ -3,7 +3,7 @@ import { SUPPORTED_BOARDS, BOULDER_GRADES } from '@/app/lib/board-data';
 
 export interface UserProfile {
   id: string;
-  email: string;
+  email: string | undefined;
   name: string | null;
   image: string | null;
   profile: {

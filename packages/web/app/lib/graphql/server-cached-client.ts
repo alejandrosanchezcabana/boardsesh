@@ -192,6 +192,53 @@ export async function cachedDiscoverPlaylists(
 }
 
 /**
+ * Cached server-side fetch of user profile stats (public, no auth needed).
+ */
+export async function cachedUserProfileStats(
+  userId: string,
+): Promise<import('@/app/lib/graphql/operations/ticks').GetUserProfileStatsQueryResponse['userProfileStats'] | null> {
+  const { GET_USER_PROFILE_STATS } = await import('@/app/lib/graphql/operations/ticks');
+  type Response = import('@/app/lib/graphql/operations/ticks').GetUserProfileStatsQueryResponse;
+
+  try {
+    const tag = `user-profile-stats-${userId}`;
+    const query = createCachedGraphQLQuery<Response>(
+      GET_USER_PROFILE_STATS,
+      tag,
+      300,
+    );
+    const result = await query({ userId });
+    return result.userProfileStats;
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Cached server-side fetch of user ticks for a specific board type (public, no auth needed).
+ */
+export async function cachedUserTicks(
+  userId: string,
+  boardType: string,
+): Promise<import('@/app/lib/graphql/operations/ticks').GetUserTicksQueryResponse['userTicks'] | null> {
+  const { GET_USER_TICKS } = await import('@/app/lib/graphql/operations/ticks');
+  type Response = import('@/app/lib/graphql/operations/ticks').GetUserTicksQueryResponse;
+
+  try {
+    const tag = `user-ticks-${userId}-${boardType}`;
+    const query = createCachedGraphQLQuery<Response>(
+      GET_USER_TICKS,
+      tag,
+      300,
+    );
+    const result = await query({ userId, boardType });
+    return result.userTicks;
+  } catch {
+    return null;
+  }
+}
+
+/**
  * Fetch the first page of grouped notifications server-side.
  * Returns null on failure so the client can fall back to client-side fetching.
  */

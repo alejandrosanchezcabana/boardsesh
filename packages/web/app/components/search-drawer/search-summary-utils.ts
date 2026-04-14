@@ -18,6 +18,16 @@ export function hasActiveFilters(params: SearchRequestPagination): boolean {
   });
 }
 
+export function hasActiveNonNameFilters(params: SearchRequestPagination): boolean {
+  return Object.entries(params).some(([key, value]) => {
+    if (key === 'name') return false;
+    if (key === 'holdsFilter') {
+      return Object.keys(value || {}).length > 0;
+    }
+    return value !== DEFAULT_SEARCH_PARAMS[key as keyof typeof DEFAULT_SEARCH_PARAMS];
+  });
+}
+
 export function getClimbPanelSummary(params: SearchRequestPagination): string[] {
   const parts: string[] = [];
 

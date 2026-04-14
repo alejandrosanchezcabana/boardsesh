@@ -90,8 +90,9 @@ export const QuickTickBar = forwardRef<QuickTickBarHandle, QuickTickBarProps>(({
   useEffect(() => {
     if (!tickTarget || draftLoaded.current) return;
     draftLoaded.current = true;
+    let cancelled = false;
     loadTickDraft(tickTarget.climb.uuid, Number(tickTarget.angle)).then((draft) => {
-      if (!draft) return;
+      if (cancelled || !draft) return;
       setQuality(draft.quality);
       setDifficulty(draft.difficulty);
       setAttemptCount(draft.attemptCount);
@@ -99,6 +100,7 @@ export const QuickTickBar = forwardRef<QuickTickBarHandle, QuickTickBarProps>(({
         onDraftRestored?.(draft.comment);
       }
     });
+    return () => { cancelled = true; };
   }, [tickTarget, onDraftRestored]);
   // Track which picker was last open so we can keep it mounted during collapse.
   const [lastExpandedControl, setLastExpandedControl] = useState<ExpandedControl>(null);

@@ -23,51 +23,32 @@
   touch-action: manipulation;
 }
 
-.searchPillButton {
-  display: flex;
-  align-items: center;
-  gap: 8px;
+.searchInput {
   flex: 1;
-  padding: 6px 14px;
-  border-radius: 8px;
-  background: var(--neutral-50);
-  border: 1px solid var(--neutral-200);
-  cursor: pointer;
-  transition: box-shadow 200ms ease;
+  min-width: 0;
+}
+
+.searchInput input {
   font-size: 14px;
-  color: var(--neutral-500);
-  line-height: 1.4;
+  padding: 6px 0;
 }
 
-.searchPillButton:hover {
-  box-shadow: var(--shadow-sm);
-}
-
-.searchPillButton:active {
-  background: var(--neutral-100);
-}
-
-.searchPillIcon {
+.filterButton {
+  position: relative;
   flex-shrink: 0;
-  font-size: 14px;
-  color: var(--neutral-400);
 }
 
-.searchPillText {
-  flex: 1;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-  text-align: left;
-}
-
-.searchPillActiveIndicator {
-  width: 6px;
-  height: 6px;
+.filterActiveIndicator {
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  width: 8px;
+  height: 8px;
   border-radius: 50%;
   background-color: var(--color-primary);
-  flex-shrink: 0;
+  pointer-events: none;
 }
+
 
 .headerTransparent {
   position: fixed;
@@ -98,21 +79,16 @@
   border-bottom: 1px solid rgba(255, 255, 255, 0.08);
 }
 
-:global(html[data-theme="dark"]) .searchPillButton {
+:global(html[data-theme="dark"]) .searchInput :global(.MuiOutlinedInput-root) {
   background: #FFFFFF;
-  border-color: #FFFFFF;
   color: #000000;
 }
 
-:global(html[data-theme="dark"]) .searchPillButton:hover {
-  background: #F3F4F6;
+:global(html[data-theme="dark"]) .searchInput :global(.MuiOutlinedInput-root) fieldset {
+  border-color: #FFFFFF;
 }
 
-:global(html[data-theme="dark"]) .searchPillButton:active {
-  background: #E5E7EB;
-}
-
-:global(html[data-theme="dark"]) .searchPillIcon {
+:global(html[data-theme="dark"]) .searchInput :global(.MuiSvgIcon-root) {
   color: #6B7280;
 }
 

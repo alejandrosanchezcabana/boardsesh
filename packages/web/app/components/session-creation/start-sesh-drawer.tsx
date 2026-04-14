@@ -10,6 +10,9 @@ import EditOutlined from '@mui/icons-material/EditOutlined';
 import PlayCircleOutlineOutlined from '@mui/icons-material/PlayCircleOutlineOutlined';
 import CircularProgress from '@mui/material/CircularProgress';
 import SwipeableDrawer from '../swipeable-drawer/swipeable-drawer';
+import drawerCss from '../swipeable-drawer/swipeable-drawer.module.css';
+import { useDrawerDragResize } from '@/app/hooks/use-drawer-drag-resize';
+import { themeTokens } from '@/app/theme/theme-config';
 import SessionCreationForm from './session-creation-form';
 import type { SessionCreationFormData } from './session-creation-form';
 import BoardSelectorDrawer from '@/app/components/board-selector-drawer/board-selector-drawer';
@@ -40,6 +43,7 @@ interface StartSeshDrawerProps {
 
 export default function StartSeshDrawer({ open, onClose, onTransitionEnd, boardConfigs }: StartSeshDrawerProps) {
   const { status } = useSession();
+  const { paperRef, dragHandlers } = useDrawerDragResize({ open, onClose });
   const router = useRouter();
   const { showMessage } = useSnackbar();
   const { createSession, isCreating } = useCreateSession();
@@ -301,13 +305,23 @@ export default function StartSeshDrawer({ open, onClose, onTransitionEnd, boardC
   return (
     <>
       <SwipeableDrawer
-        title="Start session"
-        placement="top"
-        showCloseButton={false}
-        swipeEnabled
+        title={
+          <div data-swipe-blocked="" {...dragHandlers} className={drawerCss.dragHeaderWrapper}>
+            <Typography variant="subtitle1" sx={{ fontWeight: 600 }}>Start session</Typography>
+          </div>
+        }
+        placement="bottom"
+        height="60%"
+        paperRef={paperRef}
+        swipeEnabled={false}
         open={open}
         onClose={handleClose}
         onTransitionEnd={onTransitionEnd}
+        styles={{
+          wrapper: { width: '100%', touchAction: 'pan-y' as const, transition: 'height 0.3s cubic-bezier(0.4, 0, 0.2, 1)' },
+          header: { paddingLeft: `${themeTokens.spacing[3]}px`, paddingRight: `${themeTokens.spacing[3]}px` },
+          body: { padding: `${themeTokens.spacing[2]}px 0` },
+        }}
         footer={
           <Button
             variant="contained"

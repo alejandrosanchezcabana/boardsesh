@@ -123,7 +123,7 @@ const SwipeableDrawer: React.FC<SwipeableDrawerProps> = ({
           alignItems: 'center',
           justifyContent: 'space-between',
           padding: `${themeTokens.spacing[4]}px ${themeTokens.spacing[6]}px`,
-          borderBottom: `1px solid ${themeTokens.neutral[200]}`,
+          borderBottom: '1px solid var(--neutral-200)',
           ...userStyles?.header,
         }}
       >
@@ -425,7 +425,7 @@ const SwipeableDrawer: React.FC<SwipeableDrawerProps> = ({
         <Box
           sx={{
             padding: `${themeTokens.spacing[3]}px ${themeTokens.spacing[4]}px`,
-            borderTop: `1px solid ${themeTokens.neutral[200]}`,
+            borderTop: '1px solid var(--neutral-200)',
             ...userStyles?.footer,
           }}
         >

@@ -665,10 +665,6 @@ export default function SessionDetailContent({
             getParticipantHref={(userId) => `/crusher/${userId}`}
             afterParticipants={!embedded ? afterParticipants : undefined}
             compact={embedded}
-            boardDetails={embedded ? effectiveBoardDetails : undefined}
-            currentAngle={embedded ? currentAngle : undefined}
-            onAngleChange={embedded ? onAngleChange : undefined}
-            namedBoardName={embedded ? namedBoardName : undefined}
           />
         )}
 

@@ -13,7 +13,7 @@ import { BoardDetails } from '@/app/lib/types';
 import { constructClimbListWithSlugs, generateLayoutSlug, generateSizeSlug, generateSetSlug } from '@/app/lib/url-utils';
 import { useCurrentClimb, useSearchData } from '../graphql-queue';
 import { useUISearchParams } from '../queue-control/ui-searchparams-provider';
-import { hasActiveFilters, getSearchPillSummary } from '../search-drawer/search-summary-utils';
+import { hasActiveFilters, hasActiveNonNameFilters as computeNonNameFilters, getSearchPillSummary } from '../search-drawer/search-summary-utils';
 import { addRecentSearch } from '../search-drawer/recent-searches-storage';
 import AddOutlined from '@mui/icons-material/AddOutlined';
 import ChevronLeftOutlined from '@mui/icons-material/ChevronLeftOutlined';
@@ -31,7 +31,7 @@ export default function BoardSeshHeader({ boardDetails, angle, isAngleAdjustable
   const pathname = usePathname();
   const { currentClimb } = useCurrentClimb();
   const { totalSearchResultCount, isFetchingClimbs } = useSearchData();
-  const { uiSearchParams, clearClimbSearchParams } = useUISearchParams();
+  const { uiSearchParams, clearClimbSearchParams, updateFilters } = useUISearchParams();
   const searchParams = useSearchParams();
   const router = useRouter();
   const [searchDropdownOpen, setSearchDropdownOpen] = useState(false);
@@ -48,6 +48,12 @@ export default function BoardSeshHeader({ boardDetails, angle, isAngleAdjustable
   // Compute filter summary for the bridge
   const summary = getSearchPillSummary(uiSearchParams);
   const filtersActive = hasActiveFilters(uiSearchParams);
+  const nonNameFiltersActive = computeNonNameFilters(uiSearchParams);
+
+  // Name filter callbacks for the bridge
+  const handleNameFilterChange = useCallback((name: string) => {
+    updateFilters({ name });
+  }, [updateFilters]);
 
   // Create mode has its own header in the form — hide the board toolbar
   if (isCreatePage) {
@@ -92,6 +98,9 @@ export default function BoardSeshHeader({ boardDetails, angle, isAngleAdjustable
         summary={summary}
         hasActiveFilters={filtersActive}
         isOnListPage={isListPage}
+        nameFilter={uiSearchParams.name}
+        onNameFilterChange={handleNameFilterChange}
+        hasActiveNonNameFilters={nonNameFiltersActive}
       />
 
       {(hasBackButton || hasAngleSelector || hasCreateButton) && (

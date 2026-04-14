@@ -6,6 +6,7 @@ import {
   getGradeColorWithOpacity,
   isLightColor,
   getGradeTextColor,
+  getGradeTintColor,
   formatVGrade,
   V_GRADE_COLORS,
   FONT_GRADE_COLORS,
@@ -207,6 +208,82 @@ describe('Grade Colors', () => {
       expect(formatVGrade(null)).toBeNull();
       expect(formatVGrade(undefined)).toBeNull();
       expect(formatVGrade('')).toBeNull();
+    });
+  });
+
+  describe('getGradeTintColor', () => {
+    describe('session variant', () => {
+      it('returns hsl with 35% saturation and 82% lightness in light mode', () => {
+        const result = getGradeTintColor('6a/V3', 'session', false);
+        expect(result).toBeDefined();
+        // Should be hsl(hue, 35%, 82%)
+        expect(result).toMatch(/^hsl\(\d+, 35%, 82%\)$/);
+      });
+
+      it('returns hsla with 40% saturation, 14% lightness, and 0.85 alpha in dark mode', () => {
+        const result = getGradeTintColor('6a/V3', 'session', true);
+        expect(result).toBeDefined();
+        // Should be hsla(hue, 40%, 14%, 0.85)
+        expect(result).toMatch(/^hsla\(\d+, 40%, 14%, 0\.85\)$/);
+      });
+
+      it('returns undefined when difficulty is null', () => {
+        expect(getGradeTintColor(null, 'session')).toBeUndefined();
+      });
+
+      it('returns undefined when difficulty is undefined', () => {
+        expect(getGradeTintColor(undefined, 'session')).toBeUndefined();
+      });
+
+      it('returns undefined when difficulty is empty string', () => {
+        expect(getGradeTintColor('', 'session')).toBeUndefined();
+      });
+
+      it('uses same hue as other variants for the same difficulty', () => {
+        const difficulty = '6c/V5';
+        const sessionLight = getGradeTintColor(difficulty, 'session', false);
+        const defaultLight = getGradeTintColor(difficulty, 'default', false);
+
+        // Both should have the same hue
+        const sessionHue = sessionLight?.match(/\d+/)?.[0];
+        const defaultHue = defaultLight?.match(/\d+/)?.[0];
+        expect(sessionHue).toBe(defaultHue);
+      });
+
+      it('produces different output in light vs dark mode', () => {
+        const lightResult = getGradeTintColor('6a/V3', 'session', false);
+        const darkResult = getGradeTintColor('6a/V3', 'session', true);
+        expect(lightResult).not.toBe(darkResult);
+      });
+    });
+
+    describe('default variant', () => {
+      it('returns hsl with 30% saturation and 88% lightness in light mode', () => {
+        const result = getGradeTintColor('6a/V3', 'default', false);
+        expect(result).toMatch(/^hsl\(\d+, 30%, 88%\)$/);
+      });
+
+      it('returns hsla with 35% saturation, 28% lightness, and 0.6 alpha in dark mode', () => {
+        const result = getGradeTintColor('6a/V3', 'default', true);
+        expect(result).toMatch(/^hsla\(\d+, 35%, 28%, 0\.6\)$/);
+      });
+    });
+
+    describe('light variant', () => {
+      it('returns hsl with 20% saturation and 94% lightness in light mode', () => {
+        const result = getGradeTintColor('6a/V3', 'light', false);
+        expect(result).toMatch(/^hsl\(\d+, 20%, 94%\)$/);
+      });
+
+      it('returns hsl with 25% saturation and 22% lightness in dark mode', () => {
+        const result = getGradeTintColor('6a/V3', 'light', true);
+        expect(result).toMatch(/^hsl\(\d+, 25%, 22%\)$/);
+      });
+    });
+
+    it('returns undefined for unrecognized difficulty strings', () => {
+      expect(getGradeTintColor('hard', 'session')).toBeUndefined();
+      expect(getGradeTintColor('unknown', 'default')).toBeUndefined();
     });
   });
 });

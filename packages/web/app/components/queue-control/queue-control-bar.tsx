@@ -36,10 +36,17 @@ import CloseOutlined from '@mui/icons-material/CloseOutlined';
 import CheckOutlined from '@mui/icons-material/CheckOutlined';
 import ChatBubbleOutlineOutlined from '@mui/icons-material/ChatBubbleOutlineOutlined';
 import InputAdornment from '@mui/material/InputAdornment';
+import Avatar from '@mui/material/Avatar';
+import AvatarGroup from '@mui/material/AvatarGroup';
 import { getGradeTintColor } from '@/app/lib/grade-colors';
 import { useColorMode } from '@/app/hooks/use-color-mode';
 import { ConfirmPopover } from '@/app/components/ui/confirm-popover';
 import { useSnackbar } from '@/app/components/providers/snackbar-provider';
+import { usePersistentSessionState } from '../persistent-session/persistent-session-context';
+import PlayCircleOutlineOutlined from '@mui/icons-material/PlayCircleOutlineOutlined';
+import { dispatchOpenSeshSettingsDrawer } from '../sesh-settings/sesh-settings-drawer-event';
+import { generateSessionName } from '@/app/lib/session-utils';
+import StartSeshDrawer from '../session-creation/start-sesh-drawer';
 import styles from './queue-control-bar.module.css';
 
 export type ActiveDrawer = 'none' | 'play' | 'queue' | 'tick';
@@ -59,6 +66,7 @@ export interface QueueControlBarProps {
 
 const QueueControlBar: React.FC<QueueControlBarProps> = ({ boardDetails, angle }) => {
   const [activeDrawer, setActiveDrawer] = useState<ActiveDrawer>('none');
+  const [startSeshOpen, setStartSeshOpen] = useState(false);
   const pathname = usePathname();
   const params = useParams<BoardRouteParameters>();
   const searchParams = useSearchParams();
@@ -120,6 +128,7 @@ const QueueControlBar: React.FC<QueueControlBarProps> = ({ boardDetails, angle }
   const { currentClimb } = useCurrentClimb();
   const { queue } = useQueueList();
   const { viewOnlyMode, connectionState, sessionId, isDisconnected, users } = useSessionData();
+  const { activeSession, session: persistentSession, users: sessionUsers } = usePersistentSessionState();
   const {
     mirrorClimb,
     setQueue,
@@ -288,16 +297,19 @@ const QueueControlBar: React.FC<QueueControlBarProps> = ({ boardDetails, angle }
   // The climb shown in the queue bar — frozen during tick mode.
   const displayedClimb = tickBarActive ? (tickClimb ?? currentClimb) : currentClimb;
   const gradeTintColor = useMemo(() => getGradeTintColor(displayedClimb?.difficulty, 'default', isDark), [displayedClimb?.difficulty, isDark]);
+  const sessionTintColor = useMemo(() => getGradeTintColor(displayedClimb?.difficulty, 'session', isDark), [displayedClimb?.difficulty, isDark]);
 
   // Reset all tick-bar state on close; keep the row mounted during the 200ms collapse.
   useEffect(() => {
     if (tickBarActive) {
       setTickRowVisible(true);
     } else {
-      setTickComment('');
-      setTickCommentFocused(false);
       setTickSwipeOffset(0);
-      const timer = setTimeout(() => setTickRowVisible(false), 200);
+      const timer = setTimeout(() => {
+        setTickRowVisible(false);
+        setTickComment('');
+        setTickCommentFocused(false);
+      }, 200);
       return () => clearTimeout(timer);
     }
   }, [tickBarActive]);
@@ -559,6 +571,51 @@ const QueueControlBar: React.FC<QueueControlBarProps> = ({ boardDetails, angle }
         sx={{ border: 'none', backgroundColor: 'transparent' }}
       >
         <CardContent sx={{ p: 0, '&:last-child': { pb: 0 } }}>
+        {/* Session header — name + avatars, or start sesh prompt */}
+        {!tickBarActive && !tickRowVisible && (
+          activeSession ? (
+            <div
+              className={styles.sessionHeader}
+              onClick={dispatchOpenSeshSettingsDrawer}
+              role="button"
+              tabIndex={0}
+              onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') dispatchOpenSeshSettingsDrawer(); }}
+              style={{
+                backgroundColor: sessionTintColor ?? (isDark ? 'transparent' : 'var(--semantic-surface)'),
+              }}
+            >
+              <span className={styles.sessionName}>
+                {persistentSession?.name || activeSession.sessionName || generateSessionName(persistentSession?.startedAt ?? new Date().toISOString(), [boardDetails.board_name])}
+              </span>
+              {sessionUsers.length > 0 && (
+                <AvatarGroup
+                  max={3}
+                  sx={{
+                    '& .MuiAvatar-root': { width: 28, height: 28, fontSize: 11, border: '2px solid transparent' },
+                  }}
+                >
+                  {sessionUsers.map((user) => (
+                    <Avatar key={user.id} alt={user.username} src={user.avatarUrl ?? undefined} />
+                  ))}
+                </AvatarGroup>
+              )}
+            </div>
+          ) : (
+            <div
+              className={styles.sessionHeader}
+              onClick={() => setStartSeshOpen(true)}
+              role="button"
+              tabIndex={0}
+              onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') setStartSeshOpen(true); }}
+              style={{
+                backgroundColor: gradeTintColor ?? (isDark ? 'transparent' : 'var(--semantic-surface)'),
+              }}
+            >
+              <PlayCircleOutlineOutlined sx={{ fontSize: 16, opacity: 0.7 }} />
+              <span className={styles.sessionName}>Start sesh</span>
+            </div>
+          )
+        )}
         {/* Tick-mode controls — expands/collapses via CSS grid transition.
             Swipe-to-dismiss handlers are on the tick row only, not the whole card. */}
         {(tickBarActive || tickRowVisible) && (
@@ -820,6 +877,11 @@ const QueueControlBar: React.FC<QueueControlBarProps> = ({ boardDetails, angle }
         setActiveDrawer={setActiveDrawer}
         boardDetails={boardDetails}
         angle={angle}
+      />
+
+      <StartSeshDrawer
+        open={startSeshOpen}
+        onClose={() => setStartSeshOpen(false)}
       />
     </div>
   );

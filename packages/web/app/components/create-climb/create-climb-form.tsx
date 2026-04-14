@@ -111,6 +111,8 @@ interface CreateClimbFormProps {
   holdSetImages?: string[];
 }
 
+const EDIT_WINDOW_MS = 24 * 60 * 60 * 1000;
+
 export default function CreateClimbForm({
   boardType,
   angle,
@@ -257,7 +259,6 @@ export default function CreateClimbForm({
   // Published climbs remain editable for 24 hours after their first publish.
   // Drafts are editable indefinitely. We re-check on every render so the lock
   // naturally engages while the form is open past the window.
-  const EDIT_WINDOW_MS = 24 * 60 * 60 * 1000;
   const [nowTick, setNowTick] = useState(() => Date.now());
   useEffect(() => {
     if (!savedClimb?.publishedAt) return;
@@ -271,7 +272,7 @@ export default function CreateClimbForm({
     // Tick once when the edit window expires so the button flips to locked.
     const timeoutId = window.setTimeout(() => setNowTick(Date.now()), remaining + 50);
     return () => window.clearTimeout(timeoutId);
-  }, [savedClimb?.publishedAt, EDIT_WINDOW_MS]);
+  }, [savedClimb?.publishedAt]);
 
   const editLocked = useMemo(() => {
     if (!savedClimb) return false;
@@ -280,7 +281,7 @@ export default function CreateClimbForm({
     const publishedMs = Date.parse(savedClimb.publishedAt);
     if (!Number.isFinite(publishedMs)) return false;
     return nowTick - publishedMs > EDIT_WINDOW_MS;
-  }, [savedClimb, nowTick, EDIT_WINDOW_MS]);
+  }, [savedClimb, nowTick]);
 
   // Aurora-specific state
   const [showHeatmap, setShowHeatmap] = useState(false);
@@ -805,7 +806,7 @@ export default function CreateClimbForm({
     } finally {
       setIsSaving(false);
     }
-  }, [boardDetails, generateFramesString, saveClimb, updateClimb, climbName, description, isDraft, angle, totalHolds, queryClient, markJustSaved, savedClimb, showMessage, EDIT_WINDOW_MS, syncSavedClimbToQueue]);
+  }, [boardDetails, generateFramesString, saveClimb, updateClimb, climbName, description, isDraft, angle, totalHolds, queryClient, markJustSaved, savedClimb, showMessage, syncSavedClimbToQueue]);
 
   // Save climb - MoonBoard
   //
@@ -969,7 +970,6 @@ export default function CreateClimbForm({
     markJustSaved,
     savedClimb,
     updateClimb,
-    EDIT_WINDOW_MS,
     syncSavedClimbToQueue,
   ]);
 

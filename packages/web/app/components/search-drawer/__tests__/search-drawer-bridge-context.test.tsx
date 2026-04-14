@@ -59,7 +59,7 @@ describe('search-drawer-bridge-context', () => {
       const wrapper = ({ children }: { children: React.ReactNode }) => (
         <SearchDrawerBridgeProvider>
           {children}
-          <SearchDrawerBridgeInjector {...props} />
+          <SearchDrawerBridgeInjector nameFilter="" onNameFilterChange={() => {}} hasActiveNonNameFilters={false} {...props} />
         </SearchDrawerBridgeProvider>
       );
       return renderHook(() => useSearchDrawerBridge(), { wrapper });
@@ -137,6 +137,9 @@ describe('search-drawer-bridge-context', () => {
             summary="V5-V7"
             hasActiveFilters={true}
             isOnListPage={isOnListPage}
+            nameFilter=""
+            onNameFilterChange={() => {}}
+            hasActiveNonNameFilters={false}
           />
         </SearchDrawerBridgeProvider>
       );
@@ -164,6 +167,9 @@ describe('search-drawer-bridge-context', () => {
             summary={summary}
             hasActiveFilters={hasActiveFilters}
             isOnListPage={true}
+            nameFilter=""
+            onNameFilterChange={() => {}}
+            hasActiveNonNameFilters={false}
           />
         </SearchDrawerBridgeProvider>
       );
@@ -192,6 +198,9 @@ describe('search-drawer-bridge-context', () => {
             summary={summary}
             hasActiveFilters={hasActiveFilters}
             isOnListPage={true}
+            nameFilter=""
+            onNameFilterChange={() => {}}
+            hasActiveNonNameFilters={false}
           />
         </SearchDrawerBridgeProvider>
       );
@@ -219,6 +228,9 @@ describe('search-drawer-bridge-context', () => {
             summary="V5-V7"
             hasActiveFilters={true}
             isOnListPage={isOnListPage}
+            nameFilter=""
+            onNameFilterChange={() => {}}
+            hasActiveNonNameFilters={false}
           />
         </SearchDrawerBridgeProvider>
       );
@@ -236,6 +248,110 @@ describe('search-drawer-bridge-context', () => {
       expect(result.current.searchPillSummary).toBe('V5-V7');
     });
 
+    it('propagates nameFilter value through the bridge', () => {
+      const { result } = renderWithInjector({
+        openDrawer: mockOpenDrawer,
+        summary: 'V5-V7',
+        hasActiveFilters: true,
+        isOnListPage: true,
+      });
+
+      // Default nameFilter is empty string from renderWithInjector
+      expect(result.current.nameFilter).toBe('');
+    });
+
+    it('updates nameFilter when injector prop changes', () => {
+      let nameFilter = '';
+      const wrapper = ({ children }: { children: React.ReactNode }) => (
+        <SearchDrawerBridgeProvider>
+          {children}
+          <SearchDrawerBridgeInjector
+            openDrawer={mockOpenDrawer}
+            summary="V5-V7"
+            hasActiveFilters={false}
+            isOnListPage={true}
+            nameFilter={nameFilter}
+            onNameFilterChange={() => {}}
+            hasActiveNonNameFilters={false}
+          />
+        </SearchDrawerBridgeProvider>
+      );
+
+      const { result, rerender } = renderHook(() => useSearchDrawerBridge(), { wrapper });
+      expect(result.current.nameFilter).toBe('');
+
+      nameFilter = 'crimpy';
+      rerender();
+
+      expect(result.current.nameFilter).toBe('crimpy');
+    });
+
+    it('calls onNameFilterChange via setNameFilter bridge callback', () => {
+      const onNameFilterChange = vi.fn();
+      const wrapper = ({ children }: { children: React.ReactNode }) => (
+        <SearchDrawerBridgeProvider>
+          {children}
+          <SearchDrawerBridgeInjector
+            openDrawer={mockOpenDrawer}
+            summary="V5-V7"
+            hasActiveFilters={false}
+            isOnListPage={true}
+            nameFilter=""
+            onNameFilterChange={onNameFilterChange}
+            hasActiveNonNameFilters={false}
+          />
+        </SearchDrawerBridgeProvider>
+      );
+
+      const { result } = renderHook(() => useSearchDrawerBridge(), { wrapper });
+
+      expect(result.current.setNameFilter).not.toBeNull();
+
+      act(() => {
+        result.current.setNameFilter!('slab master');
+      });
+
+      expect(onNameFilterChange).toHaveBeenCalledTimes(1);
+      expect(onNameFilterChange).toHaveBeenCalledWith('slab master');
+    });
+
+    it('propagates hasActiveNonNameFilters through the bridge', () => {
+      let nonNameActive = false;
+      const wrapper = ({ children }: { children: React.ReactNode }) => (
+        <SearchDrawerBridgeProvider>
+          {children}
+          <SearchDrawerBridgeInjector
+            openDrawer={mockOpenDrawer}
+            summary="V5-V7"
+            hasActiveFilters={true}
+            isOnListPage={true}
+            nameFilter=""
+            onNameFilterChange={() => {}}
+            hasActiveNonNameFilters={nonNameActive}
+          />
+        </SearchDrawerBridgeProvider>
+      );
+
+      const { result, rerender } = renderHook(() => useSearchDrawerBridge(), { wrapper });
+      expect(result.current.hasActiveNonNameFilters).toBe(false);
+
+      nonNameActive = true;
+      rerender();
+
+      expect(result.current.hasActiveNonNameFilters).toBe(true);
+    });
+
+    it('returns null setNameFilter when not on list page', () => {
+      const { result } = renderWithInjector({
+        openDrawer: mockOpenDrawer,
+        summary: 'V5-V7',
+        hasActiveFilters: false,
+        isOnListPage: false,
+      });
+
+      expect(result.current.setNameFilter).toBeNull();
+    });
+
     it('updates the openDrawer callback when it changes', () => {
       const openDrawer1 = vi.fn();
       const openDrawer2 = vi.fn();
@@ -249,6 +365,9 @@ describe('search-drawer-bridge-context', () => {
             summary="V5-V7"
             hasActiveFilters={false}
             isOnListPage={true}
+            nameFilter=""
+            onNameFilterChange={() => {}}
+            hasActiveNonNameFilters={false}
           />
         </SearchDrawerBridgeProvider>
       );
