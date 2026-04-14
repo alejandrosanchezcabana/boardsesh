@@ -113,6 +113,10 @@ vi.mock('@/app/lib/url-utils', () => ({
   constructClimbInfoUrl: vi.fn(() => 'https://app.example.com/climb/info'),
 }));
 
+vi.mock('@/app/lib/open-external-url', () => ({
+  openExternalUrl: vi.fn(),
+}));
+
 // Simplified component mocks
 vi.mock('../../swipeable-drawer/swipeable-drawer', () => ({
   default: ({ children, title, open }: { children: React.ReactNode; title: string; open: boolean }) =>
@@ -322,7 +326,7 @@ describe('TickAction', () => {
       setupMocks({ hasBoardProvider: true, isAuthenticated: true });
       const result = renderTickActionResult(defaultProps);
       expect(result.menuItem.key).toBe('tick');
-      expect(result.menuItem.label).toBe('Tick');
+      expect(result.menuItem.label).toBe('Log ascent');
     });
 
     it('includes badge count in menuItem label when logbook has entries', () => {
@@ -332,7 +336,7 @@ describe('TickAction', () => {
         logbook: [{ climb_uuid: 'climb-1', angle: 40, is_ascent: true }],
       });
       const result = renderTickActionResult(defaultProps);
-      expect(result.menuItem.label).toBe('Tick (1)');
+      expect(result.menuItem.label).toBe('Log ascent (1)');
     });
   });
 
@@ -744,7 +748,7 @@ describe('TickAction', () => {
     it('shows no badge when logbook is empty', () => {
       setupMocks({ hasBoardProvider: true, isAuthenticated: true, logbook: [] });
       const result = renderTickActionResult(defaultProps);
-      expect(result.menuItem.label).toBe('Tick');
+      expect(result.menuItem.label).toBe('Log ascent');
     });
 
     it('shows badge count matching climb and angle', () => {
@@ -757,7 +761,7 @@ describe('TickAction', () => {
         ],
       });
       const result = renderTickActionResult(defaultProps);
-      expect(result.menuItem.label).toBe('Tick (2)');
+      expect(result.menuItem.label).toBe('Log ascent (2)');
     });
 
     it('filters logbook by climb uuid and angle', () => {
@@ -772,13 +776,13 @@ describe('TickAction', () => {
       });
       const result = renderTickActionResult(defaultProps);
       // Only the first entry matches climb-1 at angle 40
-      expect(result.menuItem.label).toBe('Tick (1)');
+      expect(result.menuItem.label).toBe('Log ascent (1)');
     });
 
     it('defaults logbook to empty when no BoardProvider', () => {
       setupMocks({ isAuthenticated: true, boards: [] });
       const result = renderTickActionResult(defaultProps);
-      expect(result.menuItem.label).toBe('Tick');
+      expect(result.menuItem.label).toBe('Log ascent');
     });
   });
 

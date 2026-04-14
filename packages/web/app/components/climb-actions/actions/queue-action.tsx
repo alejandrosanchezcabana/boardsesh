@@ -7,7 +7,7 @@ import { track } from '@vercel/analytics';
 import { ClimbActionProps, ClimbActionResult } from '../types';
 import { useOptionalQueueActions } from '../../graphql-queue';
 import { themeTokens } from '@/app/theme/theme-config';
-import { buildActionResult, computeActionDisplay, ActionIconElement, ActionButtonElement } from '../action-view-renderer';
+import { buildActionResult, computeActionDisplay, ActionIconElement, ActionButtonElement, ActionListElement } from '../action-view-renderer';
 
 export function QueueAction({
   climb,
@@ -40,8 +40,12 @@ export function QueueAction({
       setRecentlyAdded(false);
     }, 5000);
 
-    onComplete?.();
-  }, [queueActions, recentlyAdded, climb, boardDetails.layout_name, onComplete]);
+    // Don't call onComplete in list mode — keep the drawer open so the user
+    // sees the "Added" confirmation. Other modes close as before.
+    if (viewMode !== 'list') {
+      onComplete?.();
+    }
+  }, [queueActions, recentlyAdded, climb, boardDetails.layout_name, onComplete, viewMode]);
 
   const label = recentlyAdded ? 'Added' : 'Add to Queue';
   const shortLabel = recentlyAdded ? 'Added' : 'Queue';
@@ -51,6 +55,8 @@ export function QueueAction({
     ? { color: themeTokens.colors.success, fontSize: iconSize }
     : { fontSize: iconSize };
   const icon = <Icon sx={iconStyle} />;
+  const ListIcon = recentlyAdded ? CheckCircleOutlined : AddCircleOutlined;
+  const listIcon = <ListIcon sx={{ fontSize: iconSize }} />;
 
   return buildActionResult({
     key: 'queue',
@@ -82,6 +88,9 @@ export function QueueAction({
         size={size}
         className={className}
       />
+    ),
+    listElementOverride: (
+      <ActionListElement icon={listIcon} label={label} onClick={handleClick} disabled={disabled || recentlyAdded} />
     ),
     menuItem: {
       key: 'queue',

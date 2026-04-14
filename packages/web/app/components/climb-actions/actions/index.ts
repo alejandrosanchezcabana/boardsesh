@@ -3,6 +3,7 @@ export { ForkAction } from './fork-action';
 export { FavoriteAction } from './favorite-action';
 export { SetActiveAction } from './set-active-action';
 export { QueueAction } from './queue-action';
+export { GoToQueueAction } from './go-to-queue-action';
 export { TickAction } from './tick-action';
 export { OpenInAppAction } from './open-in-app-action';
 export { MirrorAction } from './mirror-action';

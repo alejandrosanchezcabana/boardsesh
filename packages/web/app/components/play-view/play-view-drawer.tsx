@@ -35,6 +35,8 @@ import type { ActiveDrawer } from '../queue-control/queue-control-bar';
 import { PLAY_DRAWER_EVENT } from '../queue-control/play-drawer-event';
 import type { BoardDetails, Angle, Climb } from '@/app/lib/types';
 import styles from './play-view-drawer.module.css';
+import drawerCss from '../swipeable-drawer/swipeable-drawer.module.css';
+import { useDrawerDragResize } from '@/app/hooks/use-drawer-drag-resize';
 import ClimbDetailShellClient from '@/app/components/climb-detail/climb-detail-shell.client';
 import { useBuildClimbDetailSections } from '@/app/components/climb-detail/build-climb-detail-sections';
 import { renderBoard } from '@/app/lib/board-render-worker/worker-manager';
@@ -339,6 +341,15 @@ const PlayViewDrawer: React.FC<PlayViewDrawerProps> = ({
 
   const playPaperRef = useRef<HTMLDivElement>(null);
 
+  // Custom swipe-to-close for nested disablePortal drawers (actions + playlist)
+  const handleCloseActions = useCallback(() => setIsActionsOpen(false), []);
+
+  // Actions drawer drag-to-resize
+  const { paperRef: actionsPaperRef, dragHandlers: actionsDragHandlers } = useDrawerDragResize({
+    open: isActionsOpen,
+    onClose: handleCloseActions,
+  });
+
   const pathname = usePathname();
   const { showMessage } = useSnackbar();
 
@@ -479,9 +490,12 @@ const PlayViewDrawer: React.FC<PlayViewDrawerProps> = ({
 
   const isMirrored = !!currentClimb?.mirrored;
 
-  // Custom swipe-to-close for nested disablePortal drawers (actions + playlist)
-  const handleCloseActions = useCallback(() => setIsActionsOpen(false), []);
-  const actionsSwipe = useNestedDrawerSwipe(handleCloseActions);
+  // Go to queue from actions drawer
+  const handleGoToQueueFromActions = useCallback(() => {
+    handleCloseActions();
+    handleOpenQueueDrawer();
+  }, [handleCloseActions, handleOpenQueueDrawer]);
+
   const handleClosePlaylist = useCallback(() => setIsPlaylistSelectorOpen(false), []);
   const playlistSwipe = useNestedDrawerSwipe(handleClosePlaylist);
 
@@ -777,31 +791,41 @@ const PlayViewDrawer: React.FC<PlayViewDrawerProps> = ({
         {/* Climb actions drawer */}
         {isOpen && currentClimb && isActionsOpen && (
           <SwipeableDrawer
-            title={<DrawerClimbHeader climb={currentClimb} boardDetails={boardDetails} />}
             placement="bottom"
+            title={
+              currentClimb ? (
+                <div data-swipe-blocked="" {...actionsDragHandlers} className={drawerCss.dragHeaderWrapper}>
+                  <DrawerClimbHeader climb={currentClimb} boardDetails={boardDetails} />
+                </div>
+              ) : undefined
+            }
+            height="60%"
+            paperRef={actionsPaperRef}
             open={isActionsOpen}
             onClose={handleCloseActions}
-            paperRef={actionsSwipe.paperRef}
             swipeEnabled={false}
             disablePortal
             styles={{
-              wrapper: { height: 'auto' },
+              wrapper: {
+                touchAction: 'pan-y' as const,
+                transition: 'height 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+              },
               body: { padding: `${themeTokens.spacing[2]}px 0` },
-              header: { paddingLeft: `${themeTokens.spacing[3]}px`, paddingRight: `${themeTokens.spacing[3]}px` },
             }}
           >
-            <ClimbActions
-              climb={currentClimb}
-              boardDetails={boardDetails}
-              angle={currentAngle}
-              currentPathname={pathname}
-              viewMode="list"
-              onOpenPlaylistSelector={() => {
-                setIsActionsOpen(false);
-                setIsPlaylistSelectorOpen(true);
-              }}
-              onActionComplete={handleCloseActions}
-            />
+              <ClimbActions
+                climb={currentClimb}
+                boardDetails={boardDetails}
+                angle={currentAngle}
+                currentPathname={pathname}
+                viewMode="list"
+                onOpenPlaylistSelector={() => {
+                  setIsActionsOpen(false);
+                  setIsPlaylistSelectorOpen(true);
+                }}
+                onActionComplete={handleCloseActions}
+                onGoToQueue={handleGoToQueueFromActions}
+              />
           </SwipeableDrawer>
         )}
 

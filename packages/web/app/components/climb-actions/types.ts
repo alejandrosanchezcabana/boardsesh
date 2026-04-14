@@ -9,6 +9,7 @@ export type ClimbActionType =
   | 'favorite'
   | 'setActive'
   | 'queue'
+  | 'goToQueue'
   | 'tick'
   | 'openInApp'
   | 'mirror'
@@ -53,6 +54,8 @@ export interface ClimbActionProps extends ClimbActionBaseProps {
   onOpenPlaylistSelector?: () => void;
   /** When provided, the tick action calls this instead of its built-in drawer flow. */
   onTickAction?: () => void;
+  /** When provided, the goToQueue action calls this to open the queue list. */
+  onGoToQueue?: () => void;
 }
 
 /**
@@ -77,6 +80,8 @@ export interface ClimbActionsProps extends ClimbActionBaseProps {
   auroraAppUrl?: string;
   /** When provided, the tick action calls this instead of its built-in drawer flow. */
   onTickAction?: () => void;
+  /** When provided, the goToQueue action calls this to open the queue list. */
+  onGoToQueue?: () => void;
 }
 
 /**
@@ -139,16 +144,17 @@ export interface UseClimbActionsReturn {
  * Default order of actions when displayed
  */
 export const DEFAULT_ACTION_ORDER: ClimbActionType[] = [
-  'viewDetails',
-  'fork',
-  'favorite',
+  'mirror',
   'setActive',
   'queue',
-  'tick',
+  'goToQueue',
   'share',
+  'favorite',
+  'tick',
   'playlist',
+  'fork',
+  'viewDetails',
   'openInApp',
-  'mirror',
 ];
 
 /**

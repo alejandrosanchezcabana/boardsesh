@@ -85,7 +85,7 @@ const QueueClimbListItem: React.FC<QueueClimbListItemProps> = ({
       return getGradeTintColor(item.climb.difficulty, 'light', isDark) ?? 'var(--semantic-selected)';
     }
     if (isHistory) return 'var(--neutral-100)';
-    return 'var(--semantic-surface)';
+    return 'transparent';
   }, [isCurrent, isHistory, item.climb.difficulty, isDark]);
 
   const handleEditClick = useCallback(

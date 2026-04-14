@@ -49,6 +49,7 @@ export function MirrorAction({
     ? { color: themeTokens.colors.purple, fontSize: iconSize }
     : { fontSize: iconSize };
   const icon = <SwapHorizOutlined sx={iconStyle} />;
+  const listIcon = <SwapHorizOutlined sx={{ fontSize: iconSize }} />;
 
   // Mirror has custom rendering when unavailable (returns null elements)
   return buildActionResult({
@@ -82,7 +83,7 @@ export function MirrorAction({
       </MuiButton>
     ) : null,
     listElementOverride: canMirror ? (
-      <ActionListElement icon={icon} label={label} onClick={handleClick} disabled={disabled} />
+      <ActionListElement icon={listIcon} label={label} onClick={handleClick} disabled={disabled} />
     ) : null,
     menuItem: {
       key: 'mirror',

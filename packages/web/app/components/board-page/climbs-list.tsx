@@ -11,6 +11,8 @@ import { usePathname } from 'next/navigation';
 import { track } from '@vercel/analytics';
 import dynamic from 'next/dynamic';
 import { useIsDarkMode } from '@/app/hooks/use-is-dark-mode';
+import { useDrawerDragResize } from '@/app/hooks/use-drawer-drag-resize';
+import drawerCss from '../swipeable-drawer/swipeable-drawer.module.css';
 import { useWindowVirtualizer } from '@tanstack/react-virtual';
 import { Climb, BoardDetails } from '@/app/lib/types';
 import ErrorBoundary from '../error-boundary';
@@ -31,6 +33,7 @@ import { dispatchOpenPlayDrawer } from '../queue-control/play-drawer-event';
 import listStyles from './climbs-list.module.css';
 
 const SwipeableDrawer = dynamic(() => import('../swipeable-drawer/swipeable-drawer'), { ssr: false });
+const QueueDrawer = dynamic(() => import('../play-view/queue-drawer'), { ssr: false });
 
 type ViewMode = 'grid' | 'list';
 
@@ -38,7 +41,11 @@ const VIEW_MODE_PREFERENCE_KEY = 'climbListViewMode';
 
 // Static drawer style objects (hoisted to avoid per-render allocation)
 const sharedDrawerStyles = {
-  wrapper: { height: 'auto', width: '100%' },
+  wrapper: {
+    width: '100%',
+    touchAction: 'pan-y' as const,
+    transition: 'height 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+  },
   body: { padding: `${themeTokens.spacing[2]}px 0` },
   header: { paddingLeft: `${themeTokens.spacing[3]}px`, paddingRight: `${themeTokens.spacing[3]}px` },
 } as const;
@@ -67,6 +74,9 @@ const SharedDrawers = React.memo(forwardRef<SharedDrawerHandle, SharedDrawersPro
     const [activeDrawerClimb, setActiveDrawerClimb] = useState<Climb | null>(null);
     const [drawerMode, setDrawerMode] = useState<'actions' | 'playlist' | null>(null);
 
+    // Queue list drawer state
+    const [isQueueListOpen, setIsQueueListOpen] = useState(false);
+
     useImperativeHandle(ref, () => ({
       openActions: (climb: Climb) => {
         setActiveDrawerClimb(climb);
@@ -79,6 +89,11 @@ const SharedDrawers = React.memo(forwardRef<SharedDrawerHandle, SharedDrawersPro
     }), []);
 
     const handleCloseDrawer = useCallback(() => setDrawerMode(null), []);
+
+    const { paperRef: actionsPaperRef, dragHandlers: actionsDragHandlers } = useDrawerDragResize({
+      open: drawerMode === 'actions',
+      onClose: handleCloseDrawer,
+    });
     const handleSwitchToPlaylist = useCallback(() => setDrawerMode('playlist'), []);
     const handleDrawerTransitionEnd = useCallback((open: boolean) => {
       if (!open) setActiveDrawerClimb(null);
@@ -94,31 +109,47 @@ const SharedDrawers = React.memo(forwardRef<SharedDrawerHandle, SharedDrawersPro
       [activeDrawerClimb, resolveBoardDetails, boardDetails],
     );
 
+    // --- Queue list drawer handlers ---
+    const handleGoToQueue = useCallback(() => {
+      handleCloseDrawer();
+      setIsQueueListOpen(true);
+    }, [handleCloseDrawer]);
+
+    const handleCloseQueueList = useCallback(() => {
+      setIsQueueListOpen(false);
+    }, []);
+
     return (
       <>
         <SwipeableDrawer
+          placement="bottom"
           title={
             activeDrawerClimb ? (
-              <DrawerClimbHeader climb={activeDrawerClimb} boardDetails={activeDrawerBoardDetails} />
+              <div data-swipe-blocked="" {...actionsDragHandlers} className={drawerCss.dragHeaderWrapper}>
+                <DrawerClimbHeader climb={activeDrawerClimb} boardDetails={activeDrawerBoardDetails} />
+              </div>
             ) : undefined
           }
-          placement="bottom"
+          height="60%"
+          paperRef={actionsPaperRef}
           open={drawerMode === 'actions'}
           onClose={handleCloseDrawer}
           onTransitionEnd={handleDrawerTransitionEnd}
+          swipeEnabled={false}
           styles={sharedDrawerStyles}
         >
           {activeDrawerClimb && (
-            <ClimbActions
-              climb={activeDrawerClimb}
-              boardDetails={activeDrawerBoardDetails}
-              angle={activeDrawerClimb.angle}
-              currentPathname={pathname}
-              viewMode="list"
-              exclude={excludeActions}
-              onOpenPlaylistSelector={handleSwitchToPlaylist}
-              onActionComplete={handleCloseDrawer}
-            />
+              <ClimbActions
+                climb={activeDrawerClimb}
+                boardDetails={activeDrawerBoardDetails}
+                angle={activeDrawerClimb.angle}
+                currentPathname={pathname}
+                viewMode="list"
+                exclude={excludeActions}
+                onOpenPlaylistSelector={handleSwitchToPlaylist}
+                onActionComplete={handleCloseDrawer}
+                onGoToQueue={handleGoToQueue}
+              />
           )}
         </SwipeableDrawer>
 
@@ -143,6 +174,14 @@ const SharedDrawers = React.memo(forwardRef<SharedDrawerHandle, SharedDrawersPro
             />
           )}
         </SwipeableDrawer>
+
+        {isQueueListOpen && (
+          <QueueDrawer
+            open={isQueueListOpen}
+            onClose={handleCloseQueueList}
+            boardDetails={boardDetails}
+          />
+        )}
       </>
     );
   },
@@ -568,7 +607,7 @@ const ClimbsList = ({
           {isFetching && climbs.length === 0 ? (
             <ClimbsListSkeleton aspectRatio={boardDetails.boardWidth / boardDetails.boardHeight} viewMode="list" />
           ) : (
-            <div style={{ height: virtualizer.getTotalSize(), width: '100%', position: 'relative', backgroundColor: 'var(--semantic-surface)' }}>
+            <div style={{ height: virtualizer.getTotalSize(), width: '100%', position: 'relative', backgroundColor: 'inherit' }}>
               {virtualItems.map((virtualItem) => {
                 const climb = visibleClimbs[virtualItem.index];
                 const index = virtualItem.index;

@@ -17,6 +17,7 @@ import { useDoubleTapFavorite } from '../climb-actions/use-double-tap-favorite';
 import HeartAnimationOverlay from './heart-animation-overlay';
 import PlaylistSelectionContent from '../climb-actions/playlist-selection-content';
 import { useSwipeActions } from '@/app/hooks/use-swipe-actions';
+import { useDrawerDragResize } from '@/app/hooks/use-drawer-drag-resize';
 import { useDoubleTap } from '@/app/lib/hooks/use-double-tap';
 import { themeTokens } from '@/app/theme/theme-config';
 import { getGradeTintColor } from '@/app/lib/grade-colors';
@@ -26,8 +27,10 @@ import { InlineListTickBar } from '../logbook/inline-list-tick-bar';
 import { useOptionalBoardProvider } from '../board-provider/board-provider-context';
 import { useSnackbar } from '../providers/snackbar-provider';
 import styles from './climb-list-item.module.css';
+import drawerCss from '../swipeable-drawer/swipeable-drawer.module.css';
 
 const SwipeableDrawer = dynamic(() => import('../swipeable-drawer/swipeable-drawer'), { ssr: false });
+const QueueDrawer = dynamic(() => import('../play-view/queue-drawer'), { ssr: false });
 
 // Keep swipe visuals aligned with gesture max distance
 const MAX_GESTURE_SWIPE = 180;
@@ -125,8 +128,12 @@ const centerStyle: React.CSSProperties = { flex: 1, minWidth: 0 };
 
 const iconButtonStyle: React.CSSProperties = { flexShrink: 0, color: 'var(--neutral-400)' };
 
-const drawerStyles = {
-  wrapper: { height: 'auto', width: '100%' },
+const actionsDrawerStyles = {
+  wrapper: {
+    width: '100%',
+    touchAction: 'pan-y' as const,
+    transition: 'height 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+  },
   body: { padding: `${themeTokens.spacing[2]}px 0` },
   header: { paddingLeft: `${themeTokens.spacing[3]}px`, paddingRight: `${themeTokens.spacing[3]}px` },
 } as const;
@@ -389,6 +396,24 @@ const ClimbListItem: React.FC<ClimbListItemProps> = React.memo(
       showMessage("Couldn't save your tick — it's saved as a draft", 'error');
     }, [showMessage]);
 
+    // --- Actions drawer drag-to-resize (Spotify-style) ---
+    const { paperRef: actionsPaperRef, dragHandlers: actionsDragHandlers } = useDrawerDragResize({
+      open: isActionsOpen,
+      onClose: handleCloseActions,
+    });
+
+    // --- Queue drawer state ---
+    const [isQueueListOpen, setIsQueueListOpen] = useState(false);
+
+    const handleGoToQueue = useCallback(() => {
+      handleCloseActions();
+      setIsQueueListOpen(true);
+    }, [handleCloseActions]);
+
+    const handleCloseQueueList = useCallback(() => {
+      setIsQueueListOpen(false);
+    }, []);
+
     // Menu button click handler — extracted from inline to avoid per-render allocation
     const handleMenuClick = useCallback((e: React.MouseEvent) => {
       e.stopPropagation();
@@ -438,7 +463,7 @@ const ClimbListItem: React.FC<ClimbListItemProps> = React.memo(
       backgroundColor ??
       (selected
         ? (getGradeTintColor(climb.difficulty, 'light', isDark) ?? 'var(--semantic-selected)')
-        : 'var(--semantic-surface)');
+        : 'transparent');
 
     const swipeableContentStyle = useMemo(
       () => ({
@@ -447,7 +472,7 @@ const ClimbListItem: React.FC<ClimbListItemProps> = React.memo(
         padding: `${themeTokens.spacing[2]}px ${themeTokens.spacing[2]}px`,
         gap: themeTokens.spacing[3],
         backgroundColor: resolvedBg,
-        borderBottom: `1px solid var(--neutral-200)`,
+        borderBottom: '1px solid var(--neutral-200)',
         cursor: 'pointer' as const,
         userSelect: 'none' as const,
         opacity: contentOpacity ?? 1,
@@ -566,11 +591,18 @@ const ClimbListItem: React.FC<ClimbListItemProps> = React.memo(
         {!hasParentDrawers && (
           <>
             <SwipeableDrawer
-              title={<DrawerClimbHeader climb={climb} boardDetails={boardDetails} />}
+              title={
+                <div data-swipe-blocked="" {...actionsDragHandlers} className={drawerCss.dragHeaderWrapper}>
+                  <DrawerClimbHeader climb={climb} boardDetails={boardDetails} />
+                </div>
+              }
               placement="bottom"
+              height="60%"
+              paperRef={actionsPaperRef}
               open={isActionsOpen}
               onClose={handleCloseActions}
-              styles={drawerStyles}
+              swipeEnabled={false}
+              styles={actionsDrawerStyles}
             >
               <ClimbActions
                 climb={climb}
@@ -582,6 +614,7 @@ const ClimbListItem: React.FC<ClimbListItemProps> = React.memo(
                 onOpenPlaylistSelector={handleOpenPlaylistFromActions}
                 onActionComplete={handleCloseActions}
                 onTickAction={boardProvider?.isAuthenticated ? handleOpenInlineTickBar : undefined}
+                onGoToQueue={handleGoToQueue}
               />
             </SwipeableDrawer>
 
@@ -599,6 +632,14 @@ const ClimbListItem: React.FC<ClimbListItemProps> = React.memo(
                 onDone={handleClosePlaylist}
               />
             </SwipeableDrawer>
+
+            {isQueueListOpen && (
+              <QueueDrawer
+                open={isQueueListOpen}
+                onClose={handleCloseQueueList}
+                boardDetails={boardDetails}
+              />
+            )}
           </>
         )}
 

@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useCallback, useEffect, useRef, useState } from 'react';
+import React, { useCallback, useRef, useState } from 'react';
 import MuiButton from '@mui/material/Button';
 import IconButton from '@mui/material/IconButton';
 import Stack from '@mui/material/Stack';
@@ -14,6 +14,7 @@ import { useQueueActions, useQueueList, useSessionData } from '../graphql-queue'
 import QueueList, { QueueListHandle } from '../queue-control/queue-list';
 import SwipeableDrawer from '../swipeable-drawer/swipeable-drawer';
 import { usePullToClose } from '@/app/lib/hooks/pull-to-close';
+import { useDrawerDragResize } from '@/app/hooks/use-drawer-drag-resize';
 import { themeTokens } from '@/app/theme/theme-config';
 import type { BoardDetails } from '@/app/lib/types';
 import styles from './play-view-drawer.module.css';
@@ -30,7 +31,7 @@ const QUEUE_DRAWER_STYLES = {
 export interface QueueDrawerProps {
   open: boolean;
   onClose: () => void;
-  onTransitionEnd: (open: boolean) => void;
+  onTransitionEnd?: (open: boolean) => void;
   boardDetails: BoardDetails;
 }
 
@@ -46,8 +47,6 @@ const QueueDrawer: React.FC<QueueDrawerProps> = ({
   const [selectedItems, setSelectedItems] = useState<Set<string>>(new Set());
 
   // Refs
-  const queueDrawerHeightRef = useRef('60%');
-  const queuePaperRef = useRef<HTMLDivElement>(null);
   const queueListRef = useRef<QueueListHandle>(null);
   const queueScrollRef = useRef<HTMLDivElement>(null);
   const [queueScrollEl, setQueueScrollEl] = useState<HTMLDivElement | null>(null);
@@ -61,21 +60,6 @@ const QueueDrawer: React.FC<QueueDrawerProps> = ({
   const { queue } = useQueueList();
   const { setQueue } = useQueueActions();
   const { viewOnlyMode } = useSessionData();
-
-  // Height management
-  const updateQueueDrawerHeight = useCallback((height: string) => {
-    queueDrawerHeightRef.current = height;
-    if (queuePaperRef.current) {
-      queuePaperRef.current.style.height = height;
-    }
-  }, []);
-
-  // Reset drawer height when queue drawer closes
-  useEffect(() => {
-    if (!open) {
-      updateQueueDrawerHeight('60%');
-    }
-  }, [open, updateQueueDrawerHeight]);
 
   // Handlers
   const handleToggleSelect = useCallback((uuid: string) => {
@@ -108,43 +92,11 @@ const QueueDrawer: React.FC<QueueDrawerProps> = ({
     onClose();
   }, [onClose]);
 
-  // Drag-to-resize handlers for queue drawer header
-  const dragStartY = useRef<number>(0);
-  const dragStartHeightRef = useRef<string>('60%');
-  const isDragGestureRef = useRef(false);
-
-  const handleQueueDragStart = useCallback((e: React.TouchEvent) => {
-    dragStartY.current = e.touches[0].clientY;
-    dragStartHeightRef.current = queueDrawerHeightRef.current;
-    isDragGestureRef.current = false;
-  }, []);
-
-  const handleQueueDragMove = useCallback((e: React.TouchEvent) => {
-    const delta = Math.abs(e.touches[0].clientY - dragStartY.current);
-    if (delta > 10) {
-      isDragGestureRef.current = true;
-    }
-  }, []);
-
-  const handleQueueDragEnd = useCallback((e: React.TouchEvent) => {
-    if (!isDragGestureRef.current) return;
-
-    const deltaY = e.changedTouches[0].clientY - dragStartY.current;
-    const THRESHOLD = 30;
-
-    if (deltaY < -THRESHOLD) {
-      // Dragged up → expand to 100%
-      updateQueueDrawerHeight('100%');
-    } else if (deltaY > THRESHOLD) {
-      if (dragStartHeightRef.current === '100%') {
-        // Dragged down from 100% → collapse to 60%
-        updateQueueDrawerHeight('60%');
-      } else {
-        // Dragged down from 60% → close drawer
-        closeDrawer();
-      }
-    }
-  }, [closeDrawer, updateQueueDrawerHeight]);
+  const { paperRef: queuePaperRef, dragHandlers } = useDrawerDragResize({
+    open,
+    onClose: closeDrawer,
+    scrollElement: queueScrollEl,
+  });
 
   // Swipe-to-close on queue scroll container
   const queuePull = usePullToClose({
@@ -177,7 +129,7 @@ const QueueDrawer: React.FC<QueueDrawerProps> = ({
       }, 100);
     }
     // Always propagate to parent for lifecycle management
-    onTransitionEnd(transitionOpen);
+    onTransitionEnd?.(transitionOpen);
   }, [onTransitionEnd]);
 
   return (
@@ -198,9 +150,7 @@ const QueueDrawer: React.FC<QueueDrawerProps> = ({
       <div
         className={styles.queueDragHeader}
         data-swipe-blocked=""
-        onTouchStart={handleQueueDragStart}
-        onTouchMove={handleQueueDragMove}
-        onTouchEnd={handleQueueDragEnd}
+        {...dragHandlers}
       >
         <div className={drawerStyles.dragHandleZoneHorizontal}>
           <div className={drawerStyles.dragHandleBarHorizontal} />

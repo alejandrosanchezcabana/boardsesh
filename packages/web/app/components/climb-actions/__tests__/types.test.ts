@@ -8,13 +8,13 @@ import {
 
 describe('Climb Action Types & Constants', () => {
   describe('DEFAULT_ACTION_ORDER', () => {
-    it('contains all 10 action types', () => {
-      expect(DEFAULT_ACTION_ORDER).toHaveLength(10);
+    it('contains all 11 action types', () => {
+      expect(DEFAULT_ACTION_ORDER).toHaveLength(11);
     });
 
     it('has correct ordering', () => {
-      expect(DEFAULT_ACTION_ORDER[0]).toBe('viewDetails');
-      expect(DEFAULT_ACTION_ORDER[DEFAULT_ACTION_ORDER.length - 1]).toBe('mirror');
+      expect(DEFAULT_ACTION_ORDER[0]).toBe('mirror');
+      expect(DEFAULT_ACTION_ORDER[DEFAULT_ACTION_ORDER.length - 1]).toBe('openInApp');
     });
 
     it('contains all expected action types', () => {
@@ -24,6 +24,7 @@ describe('Climb Action Types & Constants', () => {
         'favorite',
         'setActive',
         'queue',
+        'goToQueue',
         'tick',
         'share',
         'playlist',

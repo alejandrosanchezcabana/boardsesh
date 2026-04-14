@@ -46,14 +46,43 @@ export const HOLD_STATE_MAP: Record<
   Record<HoldCode, { name: HoldState; color: HoldColor; displayColor?: HoldColor; renderStyle?: HoldRenderStyle }>
 > = {
   kilter: {
-    42: { name: 'STARTING', color: '#00FF00' },
-    43: { name: 'HAND', color: '#00FFFF' },
-    44: { name: 'FINISH', color: '#FF00FF' },
-    45: { name: 'FOOT', color: '#FFAA00' },
+    // Product 1 – Kilter Board Original
     12: { name: 'STARTING', color: '#00FF00' },
     13: { name: 'HAND', color: '#00FFFF' },
     14: { name: 'FINISH', color: '#FF00FF' },
     15: { name: 'FOOT', color: '#FFAA00' },
+    // Product 2 – JUUL
+    20: { name: 'STARTING', color: '#00FF00' },
+    21: { name: 'HAND', color: '#00FFFF' },
+    22: { name: 'FINISH', color: '#FF00FF' },
+    23: { name: 'FOOT', color: '#FFA500' },
+    // Product 3 – Demo Board
+    24: { name: 'STARTING', color: '#00FF00' },
+    25: { name: 'HAND', color: '#00FFFF' },
+    26: { name: 'FINISH', color: '#FF00FF' },
+    27: { name: 'FOOT', color: '#FFA500' },
+    // Product 4 – BKB Board
+    28: { name: 'STARTING', color: '#00FF00' },
+    29: { name: 'HAND', color: '#00FFFF' },
+    30: { name: 'FINISH', color: '#FF00FF' },
+    31: { name: 'FOOT', color: '#FFA500' },
+    // Product 5 – Spire
+    32: { name: 'STARTING', color: '#00FF00' },
+    33: { name: 'HAND', color: '#00FFFF' },
+    34: { name: 'FINISH', color: '#FF00FF' },
+    35: { name: 'FOOT', color: '#FFA500' },
+    // Product 6 – Tycho (color mode, no start/finish semantics)
+    36: { name: 'HAND', color: '#00FFFF' },
+    37: { name: 'HAND', color: '#FF00FF' },
+    38: { name: 'HAND', color: '#FFFF00' },
+    39: { name: 'HAND', color: '#00FF00' },
+    40: { name: 'HAND', color: '#FF0000' },
+    41: { name: 'HAND', color: '#0000FF' },
+    // Product 7 – Kilter Board Homewall
+    42: { name: 'STARTING', color: '#00FF00' },
+    43: { name: 'HAND', color: '#00FFFF' },
+    44: { name: 'FINISH', color: '#FF00FF' },
+    45: { name: 'FOOT', color: '#FFAA00' },
   },
   tension: {
     1: { name: 'STARTING', displayColor: '#00DD00', color: '#00FF00' },

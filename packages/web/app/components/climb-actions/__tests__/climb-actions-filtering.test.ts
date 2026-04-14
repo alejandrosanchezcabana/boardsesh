@@ -23,7 +23,23 @@ describe('ClimbActions filtering logic', () => {
   it('shows all actions in DEFAULT_ACTION_ORDER when no include/exclude provided', () => {
     const result = getActionsToShow();
     expect(result).toEqual(DEFAULT_ACTION_ORDER);
-    expect(result).toHaveLength(10);
+    expect(result).toHaveLength(11);
+  });
+
+  it('has the correct DEFAULT_ACTION_ORDER', () => {
+    expect(DEFAULT_ACTION_ORDER).toEqual([
+      'mirror',
+      'setActive',
+      'queue',
+      'goToQueue',
+      'share',
+      'favorite',
+      'tick',
+      'playlist',
+      'fork',
+      'viewDetails',
+      'openInApp',
+    ]);
   });
 
   it('shows only specified actions when include is provided', () => {
@@ -66,10 +82,10 @@ describe('ClimbActions filtering logic', () => {
     const exclude: ClimbActionType[] = ['fork'];
     const result = getActionsToShow(undefined, exclude);
 
-    // Check ordering: viewDetails should still come first
-    expect(result[0]).toBe('viewDetails');
-    // And mirror should still come last
-    expect(result[result.length - 1]).toBe('mirror');
+    // Check ordering: mirror should still come first
+    expect(result[0]).toBe('mirror');
+    // And openInApp should still come last
+    expect(result[result.length - 1]).toBe('openInApp');
   });
 
   it('handles excluding actions not in include list gracefully', () => {
@@ -88,5 +104,18 @@ describe('ClimbActions filtering logic', () => {
     const include: ClimbActionType[] = ['viewDetails'];
     const result = getActionsToShow(include);
     expect(result).toEqual(['viewDetails']);
+  });
+
+  it('excludes goToQueue when specified', () => {
+    const result = getActionsToShow(undefined, ['goToQueue']);
+    expect(result).not.toContain('goToQueue');
+    expect(result).toHaveLength(DEFAULT_ACTION_ORDER.length - 1);
+  });
+
+  it('includes goToQueue in a custom include list', () => {
+    const include: ClimbActionType[] = ['queue', 'goToQueue', 'viewDetails'];
+    const result = getActionsToShow(include);
+    expect(result).toEqual(['queue', 'goToQueue', 'viewDetails']);
+    expect(result).toContain('goToQueue');
   });
 });

@@ -7,6 +7,7 @@ import Typography from '@mui/material/Typography';
 import Stack from '@mui/material/Stack';
 import MuiDivider from '@mui/material/Divider';
 import SwipeableDrawer from '../swipeable-drawer/swipeable-drawer';
+import drawerCss from '../swipeable-drawer/swipeable-drawer.module.css';
 import LoginOutlined from '@mui/icons-material/LoginOutlined';
 import { useQueueActions, useCurrentClimbUuid, useQueueList, useSearchData, useSessionData } from '../graphql-queue';
 import { Climb, BoardDetails } from '@/app/lib/types';
@@ -16,6 +17,7 @@ import { reorder } from '@atlaskit/pragmatic-drag-and-drop/reorder';
 import { usePathname, useRouter, useParams } from 'next/navigation';
 import { useSession } from 'next-auth/react';
 import { useIsDarkMode } from '@/app/hooks/use-is-dark-mode';
+import { useDrawerDragResize } from '@/app/hooks/use-drawer-drag-resize';
 import QueueClimbListItem from './queue-climb-list-item';
 import { dispatchOpenPlayDrawer } from './play-drawer-event';
 import ClimbListItem from '../climb-card/climb-list-item';
@@ -121,6 +123,16 @@ const QueueList = forwardRef<QueueListHandle, QueueListProps>(({ boardDetails, i
     setPlaylistClimb(actionsClimb);
   }, [actionsClimb]);
   const handleClosePlaylist = useCallback(() => setPlaylistClimb(null), []);
+
+  const { paperRef: actionsPaperRef, dragHandlers: actionsDragHandlers } = useDrawerDragResize({
+    open: !!actionsClimb,
+    onClose: handleCloseActions,
+  });
+
+  // Since the user is already in the queue list, "go to queue" just closes the actions drawer
+  const handleGoToQueue = useCallback(() => {
+    handleCloseActions();
+  }, [handleCloseActions]);
 
   // Suggested climbs: clicking the thumbnail promotes the climb to current
   // (which also adds it to the queue) and opens the play drawer, matching
@@ -471,10 +483,17 @@ const QueueList = forwardRef<QueueListHandle, QueueListProps>(({ boardDetails, i
       {/* Shared actions drawer — only mount when a climb's actions are open */}
       {actionsClimb && (
         <SwipeableDrawer
-          title={<DrawerClimbHeader climb={actionsClimb} boardDetails={boardDetails} />}
+          title={
+            <div data-swipe-blocked="" {...actionsDragHandlers} className={drawerCss.dragHeaderWrapper}>
+              <DrawerClimbHeader climb={actionsClimb} boardDetails={boardDetails} />
+            </div>
+          }
           placement="bottom"
+          height="60%"
+          paperRef={actionsPaperRef}
           open
           onClose={handleCloseActions}
+          swipeEnabled={false}
           styles={actionsDrawerStyles}
         >
           <ClimbActions
@@ -486,6 +505,7 @@ const QueueList = forwardRef<QueueListHandle, QueueListProps>(({ boardDetails, i
             exclude={excludeActions}
             onOpenPlaylistSelector={handleOpenPlaylistFromActions}
             onActionComplete={handleCloseActions}
+            onGoToQueue={handleGoToQueue}
           />
         </SwipeableDrawer>
       )}
@@ -514,9 +534,12 @@ const QueueList = forwardRef<QueueListHandle, QueueListProps>(({ boardDetails, i
 
 // Static drawer styles — hoisted to avoid per-render allocation
 const actionsDrawerStyles = {
-  wrapper: { height: 'auto', width: '100%' },
+  wrapper: {
+    width: '100%',
+    touchAction: 'pan-y' as const,
+    transition: 'height 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+  },
   body: { padding: `${themeTokens.spacing[2]}px 0` },
-  header: { paddingLeft: `${themeTokens.spacing[3]}px`, paddingRight: `${themeTokens.spacing[3]}px` },
 } as const;
 
 const playlistDrawerStyles = {
