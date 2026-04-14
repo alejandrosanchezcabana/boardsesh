@@ -34,14 +34,6 @@ type SessionOverviewPanelProps = React.ComponentProps<typeof SessionOverviewPane
 
 function makeProps(overrides: Partial<SessionOverviewPanelProps> = {}): SessionOverviewPanelProps {
   return {
-    participants: [{
-      userId: 'user-1',
-      displayName: 'Alice',
-      avatarUrl: null,
-      sends: 5,
-      flashes: 2,
-      attempts: 3,
-    }],
     totalSends: 5,
     totalFlashes: 2,
     totalAttempts: 3,
@@ -56,50 +48,6 @@ function makeProps(overrides: Partial<SessionOverviewPanelProps> = {}): SessionO
 }
 
 describe('SessionOverviewPanel', () => {
-  it('renders single participant with avatar and name', () => {
-    render(<SessionOverviewPanel {...makeProps()} />);
-
-    expect(screen.getByText('Alice')).toBeTruthy();
-    expect(screen.getByText('1 participant')).toBeTruthy();
-  });
-
-  it('renders multiple participants with AvatarGroup and per-user stats breakdown', () => {
-    const props = makeProps({
-      participants: [
-        { userId: 'u1', displayName: 'Alice', avatarUrl: null, sends: 3, flashes: 1, attempts: 1 },
-        { userId: 'u2', displayName: 'Bob', avatarUrl: null, sends: 2, flashes: 1, attempts: 2 },
-      ],
-    });
-
-    render(<SessionOverviewPanel {...props} />);
-
-    expect(screen.getByText('Alice, Bob')).toBeTruthy();
-    expect(screen.getByText('2 participants')).toBeTruthy();
-    // Per-user stats breakdown
-    expect(screen.getByText('3S 1F 1A')).toBeTruthy();
-    expect(screen.getByText('2S 1F 2A')).toBeTruthy();
-  });
-
-  it('deduplicates participants by userId', () => {
-    const duplicate: SessionOverviewPanelProps['participants'][number] = {
-      userId: 'user-1',
-      displayName: 'Alice',
-      avatarUrl: null,
-      sends: 5,
-      flashes: 2,
-      attempts: 3,
-    };
-
-    const props = makeProps({
-      participants: [duplicate, duplicate],
-    });
-
-    render(<SessionOverviewPanel {...props} />);
-
-    // Should show 1 participant, not 2
-    expect(screen.getByText('1 participant')).toBeTruthy();
-  });
-
   it('shows sends/flashes/attempts/tickCount chips (sends excludes flashes)', () => {
     render(<SessionOverviewPanel {...makeProps()} />);
 
@@ -150,68 +98,6 @@ describe('SessionOverviewPanel', () => {
     render(<SessionOverviewPanel {...makeProps({ goal: 'Send V7' })} />);
 
     expect(screen.getByText('Goal: Send V7')).toBeTruthy();
-  });
-
-  it('shows add participant button when canEditParticipants=true', () => {
-    const onAddParticipant = vi.fn();
-
-    render(
-      <SessionOverviewPanel
-        {...makeProps({ canEditParticipants: true, onAddParticipant })}
-      />,
-    );
-
-    // The PersonAddOutlined icon button should be rendered
-    const addButton = screen.getByRole('button');
-    expect(addButton).toBeTruthy();
-  });
-
-  it('shows remove button for non-owner participants when canEditParticipants=true', () => {
-    const onRemoveParticipant = vi.fn();
-
-    const props = makeProps({
-      participants: [
-        { userId: 'owner-1', displayName: 'Owner', avatarUrl: null, sends: 3, flashes: 1, attempts: 1 },
-        { userId: 'user-2', displayName: 'Guest', avatarUrl: null, sends: 2, flashes: 1, attempts: 2 },
-      ],
-      ownerUserId: 'owner-1',
-      canEditParticipants: true,
-      onAddParticipant: vi.fn(),
-      onRemoveParticipant,
-    });
-
-    render(<SessionOverviewPanel {...props} />);
-
-    // Should have buttons: add participant + remove for non-owner only
-    const buttons = screen.getAllByRole('button');
-    // Add button + 1 remove button (not for owner)
-    expect(buttons.length).toBe(2);
-  });
-
-  it('does not show remove button for owner participant', () => {
-    const onRemoveParticipant = vi.fn();
-
-    const props = makeProps({
-      participants: [
-        { userId: 'owner-1', displayName: 'Owner', avatarUrl: null, sends: 3, flashes: 1, attempts: 1 },
-      ],
-      ownerUserId: 'owner-1',
-      canEditParticipants: true,
-      onAddParticipant: vi.fn(),
-      onRemoveParticipant,
-    });
-
-    render(<SessionOverviewPanel {...props} />);
-
-    // Only the add button, no remove button for owner
-    const buttons = screen.getAllByRole('button');
-    expect(buttons.length).toBe(1);
-  });
-
-  it('does not show edit buttons when canEditParticipants is false', () => {
-    render(<SessionOverviewPanel {...makeProps({ canEditParticipants: false })} />);
-
-    expect(screen.queryByRole('button')).toBeNull();
   });
 
   describe('formatDuration', () => {

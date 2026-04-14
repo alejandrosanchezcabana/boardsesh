@@ -88,8 +88,16 @@
   color: var(--neutral-100);
 }
 
-/* Offline banner */
+/* Session header wrapper — positioning context for offline overlay */
+.sessionHeaderWrapper {
+  position: relative;
+}
+
+/* Offline banner — overlays the session header */
 .offlineBanner {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
   display: flex;
   align-items: center;
   gap: var(--space-2, 8px);
@@ -99,8 +107,6 @@
   background-color: rgba(245, 245, 245, 0.85);
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
-  border-radius: 4px;
-  border: 1px solid rgba(0, 0, 0, 0.06);
   cursor: pointer;
   white-space: nowrap;
 }
@@ -111,17 +117,8 @@
 }
 
 :global(html[data-theme="dark"]) .offlineBanner {
-  background-color: rgba(0, 0, 0, 0.6);
+  background-color: rgba(0, 0, 0, 0.8);
   color: var(--neutral-400);
-  border-color: rgba(255, 255, 255, 0.08);
-}
-
-@media (min-width: 768px) {
-  .offlineBanner {
-    max-width: 480px;
-    margin: 0 auto 4px;
-    border-radius: 12px;
-  }
 }
 
 /* Session header strip — sits above the swipe container inside the card */
@@ -130,7 +127,6 @@
   align-items: center;
   gap: 6px;
   padding: 4px 12px;
-  cursor: pointer;
   touch-action: manipulation;
   border-bottom: 1px solid rgba(0, 0, 0, 0.06);
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.08);
@@ -149,6 +145,73 @@
   white-space: nowrap;
   font-size: 12px;
   font-weight: 600;
+  cursor: pointer;
+}
+
+/* Avatar toggle — clickable area for expanding participant bar */
+.avatarToggle {
+  cursor: pointer;
+  touch-action: manipulation;
+  flex-shrink: 0;
+}
+
+/* Expandable participant bar — same CSS grid collapse as tick row */
+.participantBar {
+  display: grid;
+  grid-template-rows: 0fr;
+  opacity: 0;
+  transition: grid-template-rows 200ms ease-out, opacity 200ms ease-out;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.06);
+}
+
+.participantBarExpanded {
+  grid-template-rows: 1fr;
+  opacity: 1;
+}
+
+.participantBar:not(.participantBarExpanded) {
+  pointer-events: none;
+  border-bottom: none;
+}
+
+:global(html[data-theme="dark"]) .participantBar {
+  border-bottom-color: rgba(0, 0, 0, 0.3);
+}
+
+.participantBarInner {
+  overflow: hidden;
+  min-height: 0;
+}
+
+.participantScroll {
+  display: flex;
+  gap: 12px;
+  padding: 0 12px;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+}
+
+.participantScroll::-webkit-scrollbar {
+  display: none;
+}
+
+.participantBarExpanded .participantScroll {
+  padding: 8px 12px;
+}
+
+.participantItem {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  flex-shrink: 0;
+}
+
+.participantName {
+  max-width: 56px;
+  font-size: 10px;
+  text-align: center;
 }
 
 .swipeWrapper {

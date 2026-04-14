@@ -193,6 +193,7 @@ export async function getSessionMembers(redis: Redis, sessionId: string): Promis
           username: connection.username,
           isLeader: connection.isLeader,
           avatarUrl: connection.avatarUrl || undefined,
+          userId: connection.userId,
         });
       } else if (!err) {
         // Connection hash expired — mark for removal from the session set

@@ -647,7 +647,6 @@ export default function SessionDetailContent({
           />
         ) : (
           <SessionOverviewPanel
-            participants={participants}
             totalSends={totalSends}
             totalFlashes={totalFlashes}
             totalAttempts={totalAttempts}
@@ -657,12 +656,6 @@ export default function SessionDetailContent({
             hardestGrade={hardestGrade}
             durationMinutes={durationMinutes}
             goal={goal}
-            ownerUserId={ownerUserId}
-            canEditParticipants={canEdit && !saving}
-            onAddParticipant={() => setAddUserDialogOpen(true)}
-            onRemoveParticipant={handleRemoveUser}
-            removingUserId={removingUserId}
-            getParticipantHref={(userId) => `/crusher/${userId}`}
             afterParticipants={!embedded ? afterParticipants : undefined}
             compact={embedded}
           />
