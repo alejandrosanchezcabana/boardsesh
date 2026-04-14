@@ -533,6 +533,10 @@ const ClimbsList = ({
     estimateSize: () => 102,
     overscan: 25,
     getItemKey: (index) => visibleClimbs[index]?.uuid ?? index,
+    // Provide a fake viewport so the virtualizer renders items during SSR.
+    // Without this, getVirtualItems() returns [] on the server and the
+    // climb list is entirely client-rendered (hurts LCP).
+    initialRect: { width: 375, height: 812 },
   });
 
   const virtualItems = virtualizer.getVirtualItems();
