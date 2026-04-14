@@ -737,6 +737,7 @@ const QueueControlBar: React.FC<QueueControlBarProps> = ({ boardDetails, angle }
                 onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') setStartSeshOpen(true); }}
                 style={{
                   backgroundColor: gradeTintColor ?? (isDark ? 'transparent' : 'var(--semantic-surface)'),
+                  justifyContent: 'flex-end',
                 }}
               >
                 <PlayCircleOutlineOutlined sx={{ fontSize: 16, opacity: 0.7 }} />
