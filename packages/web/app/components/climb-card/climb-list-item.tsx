@@ -7,6 +7,7 @@ import MoreHorizOutlined from '@mui/icons-material/MoreHorizOutlined';
 import AddOutlined from '@mui/icons-material/AddOutlined';
 import CheckOutlined from '@mui/icons-material/CheckOutlined';
 import LocalOfferOutlined from '@mui/icons-material/LocalOfferOutlined';
+import { track } from '@vercel/analytics';
 import { Climb, BoardDetails } from '@/app/lib/types';
 import ClimbThumbnail from './climb-thumbnail';
 import ClimbTitle, { type ClimbTitleProps } from './climb-title';
@@ -259,6 +260,7 @@ const ClimbListItem: React.FC<ClimbListItemProps> = React.memo(
     // Swipe left (right action): add to queue
     const handleDefaultSwipeLeft = useCallback(() => {
       addToQueueRef.current?.(climb);
+      track('Add to Queue', { source: 'swipe' });
     }, [climb]);
 
     // Swipe right short (left action): open playlist selector
@@ -526,11 +528,11 @@ const ClimbListItem: React.FC<ClimbListItemProps> = React.memo(
 
               {/* Right action (revealed on swipe left) */}
               {hasRightOverride ? (
-                <div ref={rightActionRef} style={rightOverrideActionStyle}>
+                <div ref={rightActionRef} style={rightOverrideActionStyle} data-swipe-right-action="">
                   {swipeRightAction?.icon ?? null}
                 </div>
               ) : (
-                <div ref={rightActionRef} style={defaultRightActionStyle}>
+                <div ref={rightActionRef} style={defaultRightActionStyle} data-swipe-right-action="">
                   {/* Default layer (Add icon) — opacity driven by swipe gesture via ref */}
                   <div ref={rightActionLayerRef} style={rightActionDefaultLayerStyle}>
                     <AddOutlined style={iconStyle} />
@@ -550,6 +552,7 @@ const ClimbListItem: React.FC<ClimbListItemProps> = React.memo(
             ref={contentCombinedRef}
             onClick={handleRowClick}
             style={swipeableContentStyle}
+            data-swipe-content=""
           >
             {/* Thumbnail with ascent status badge */}
             <div

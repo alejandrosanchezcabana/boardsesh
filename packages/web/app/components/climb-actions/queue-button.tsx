@@ -36,6 +36,7 @@ export default function QueueButton({
       addToQueue(climb);
 
       track('Add to Queue', {
+        source: 'queueButton',
         boardLayout: boardDetails.layout_name || '',
         queueLength: queue.length + 1,
       });

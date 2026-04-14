@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useCallback, useEffect, useRef } from 'react';
+import { track } from '@vercel/analytics';
 import Box from '@mui/material/Box';
 import Typography from '@mui/material/Typography';
 import Button from '@mui/material/Button';
@@ -234,6 +235,12 @@ export default function StartSeshDrawer({ open, onClose, onTransitionEnd, boardC
       }
 
       router.push(navigateUrl);
+
+      track('Session Started', {
+        boardName: localBoardDetails?.board_name ?? '',
+        hasGoal: !!formData.goal,
+        isDiscoverable: !!formData.discoverable,
+      });
 
       handleClose();
       showMessage('Session started!', 'success');

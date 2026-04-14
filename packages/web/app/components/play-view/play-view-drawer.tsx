@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useCallback, useEffect, useLayoutEffect, useRef, useState, useMemo, useDeferredValue } from 'react';
+import { track } from '@vercel/analytics';
 import MuiBadge from '@mui/material/Badge';
 import IconButton from '@mui/material/IconButton';
 import TextField from '@mui/material/TextField';
@@ -438,12 +439,14 @@ const PlayViewDrawer: React.FC<PlayViewDrawerProps> = ({
     const next = getNextClimbQueueItem();
     if (!next || viewOnlyMode) return;
     setCurrentClimbQueueItem(next);
+    track('Queue Navigation', { direction: 'next', method: 'swipePlayViewDrawer' });
   }, [getNextClimbQueueItem, setCurrentClimbQueueItem, viewOnlyMode]);
 
   const handleSwipePrevious = useCallback(() => {
     const prev = getPreviousClimbQueueItem();
     if (!prev || viewOnlyMode) return;
     setCurrentClimbQueueItem(prev);
+    track('Queue Navigation', { direction: 'previous', method: 'swipePlayViewDrawer' });
   }, [getPreviousClimbQueueItem, setCurrentClimbQueueItem, viewOnlyMode]);
 
   const canSwipeNext = !viewOnlyMode && !!nextItem;
@@ -470,11 +473,15 @@ const PlayViewDrawer: React.FC<PlayViewDrawerProps> = ({
 
   const handlePrevNavClick = useCallback(() => {
     const prev = getPreviousClimbQueueItem();
-    if (prev) setCurrentClimbQueueItem(prev);
+    if (!prev) return;
+    setCurrentClimbQueueItem(prev);
+    track('Queue Navigation', { direction: 'previous', method: 'playViewDrawer' });
   }, [getPreviousClimbQueueItem, setCurrentClimbQueueItem]);
   const handleNextNavClick = useCallback(() => {
     const next = getNextClimbQueueItem();
-    if (next) setCurrentClimbQueueItem(next);
+    if (!next) return;
+    setCurrentClimbQueueItem(next);
+    track('Queue Navigation', { direction: 'next', method: 'playViewDrawer' });
   }, [getNextClimbQueueItem, setCurrentClimbQueueItem]);
   const handleOpenActionsMenu = useCallback(() => {
     setIsQueueOpen(false);

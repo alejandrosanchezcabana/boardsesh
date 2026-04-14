@@ -23,6 +23,7 @@ import { getPreference, setPreference } from '@/app/lib/user-preferences-db';
 import { useInfiniteScroll } from '@/app/hooks/use-infinite-scroll';
 import { trackListBatchRender } from '@/app/lib/rendering-metrics';
 import { classifyClimbListChange } from './climb-list-utils';
+import SwipeHintOrchestrator from './swipe-hint-orchestrator';
 import { getExcludedClimbActions } from '@/app/lib/climb-action-utils';
 import { SelectionStoreContext, useSelectionStore } from './selected-climb-store';
 import { dispatchOpenPlayDrawer } from '../queue-control/play-drawer-event';
@@ -657,6 +658,8 @@ const ClimbsList = ({
         </div>
       )}
       </ErrorBoundary>
+
+      {viewMode === 'list' && climbs.length > 0 && <SwipeHintOrchestrator />}
 
       {/* Sentinel for infinite scroll — only needed for grid mode (list mode uses virtualizer) */}
       <Box ref={viewMode === 'grid' ? sentinelRef : undefined} sx={sentinelBoxSx}>

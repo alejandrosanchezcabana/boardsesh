@@ -70,6 +70,7 @@ export default function NextClimbButton({ navigate = false, boardDetails }: Next
     setCurrentClimbQueueItem(nextClimb);
     track('Queue Navigation', {
       direction: 'next',
+      method: 'button',
       boardLayout: boardDetails?.layout_name || '',
     });
 
