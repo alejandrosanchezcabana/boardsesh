@@ -5,6 +5,8 @@ import BoardImageLayers from '@/app/components/board-renderer/board-image-layers
 import BoardCanvasRenderer from '@/app/components/board-renderer/board-canvas-renderer';
 import { useDoubleTap } from '@/app/lib/hooks/use-double-tap';
 import { useCanvasRendererReady } from '@/app/lib/board-render-worker/worker-manager';
+import { AscentStatus } from './ascent-status';
+import styles from './ascent-status.module.css';
 
 type ClimbCardCoverProps = {
   climb?: Climb;
@@ -65,6 +67,14 @@ const ClimbCardCover = ({
       }}
     >
       {renderContent}
+      {climb && (
+        <AscentStatus
+          climbUuid={climb.uuid}
+          fontSize={12}
+          className={styles.badge}
+          mirroredClassName={styles.badgeMirrored}
+        />
+      )}
     </div>
   );
 };

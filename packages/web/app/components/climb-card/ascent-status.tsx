@@ -57,12 +57,12 @@ export const AscentStatus = ({ climbUuid, fontSize, className, mirroredClassName
     return (
       <>
         {regularBadge && (
-          <span className={className ?? ''} style={{ backgroundColor: regularBadge.color }}>
+          <span data-testid="ascent-badge" className={className ?? ''} style={{ backgroundColor: regularBadge.color }}>
             <regularBadge.Icon style={{ color: 'white', fontSize }} />
           </span>
         )}
         {mirroredBadge && (
-          <span className={mirroredClassName ?? className ?? ''} style={{ backgroundColor: mirroredBadge.color }}>
+          <span data-testid="ascent-badge-mirrored" className={mirroredClassName ?? className ?? ''} style={{ backgroundColor: mirroredBadge.color }}>
             <mirroredBadge.Icon style={{ color: 'white', fontSize, transform: 'scaleX(-1)' }} />
           </span>
         )}
@@ -73,11 +73,11 @@ export const AscentStatus = ({ climbUuid, fontSize, className, mirroredClassName
   // Single icon for non-mirroring boards
   const wrapperClass = className ?? '';
   return hasSuccessfulAscent ? (
-    <span className={wrapperClass} style={{ backgroundColor: successColor }}>
+    <span data-testid="ascent-badge" className={wrapperClass} style={{ backgroundColor: successColor }}>
       <CheckOutlined style={{ color: 'white', fontSize }} />
     </span>
   ) : (
-    <span className={wrapperClass} style={{ backgroundColor: attemptColor }}>
+    <span data-testid="ascent-badge" className={wrapperClass} style={{ backgroundColor: attemptColor }}>
       <CloseOutlined style={{ color: 'white', fontSize }} />
     </span>
   );

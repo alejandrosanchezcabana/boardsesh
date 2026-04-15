@@ -28,6 +28,7 @@ import { InlineListTickBar } from '../logbook/inline-list-tick-bar';
 import { useOptionalBoardProvider } from '../board-provider/board-provider-context';
 import { useSnackbar } from '../providers/snackbar-provider';
 import styles from './climb-list-item.module.css';
+import ascentStyles from './ascent-status.module.css';
 import drawerCss from '../swipeable-drawer/swipeable-drawer.module.css';
 
 const SwipeableDrawer = dynamic(() => import('../swipeable-drawer/swipeable-drawer'), { ssr: false });
@@ -570,7 +571,7 @@ const ClimbListItem: React.FC<ClimbListItemProps> = React.memo(
                 fetchPriority={fetchPriority}
               />
               <HeartAnimationOverlay visible={showHeart} onAnimationEnd={dismissHeart} size={32} />
-              <AscentStatus climbUuid={climb.uuid} fontSize={12} className={styles.thumbnailBadge} mirroredClassName={styles.thumbnailBadgeMirrored} />
+              <AscentStatus climbUuid={climb.uuid} fontSize={12} className={ascentStyles.badge} mirroredClassName={ascentStyles.badgeMirrored} />
             </div>
 
             {/* Center: Name, stars, setter, colorized grade */}
