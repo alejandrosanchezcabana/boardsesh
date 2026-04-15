@@ -111,7 +111,7 @@ export default function ProfilePageContent({
             Profile
           </Typography>
         </Box>
-        <Box component="main" className={styles.content} sx={{ pb: 'calc(120px + env(safe-area-inset-bottom, 0px))' }}>
+        <Box component="main" className={styles.content} sx={{ pb: 'calc(170px + env(safe-area-inset-bottom, 0px))' }}>
           <EmptyState description="User not found" />
         </Box>
       </Box>
@@ -133,7 +133,7 @@ export default function ProfilePageContent({
         )}
       </Box>
 
-      <Box component="main" className={styles.content} sx={{ pb: 'calc(120px + env(safe-area-inset-bottom, 0px))' }}>
+      <Box component="main" className={styles.content} sx={{ pb: 'calc(170px + env(safe-area-inset-bottom, 0px))' }}>
         {profile && (
           <UserCard
             userId={userId}
