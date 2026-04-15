@@ -84,6 +84,7 @@ function createDefaultProps(overrides: Partial<StatsSummaryProps> = {}): StatsSu
     },
     loadingProfileStats: false,
     loadingAggregated: false,
+    weeklyBars: null,
     aggregatedStackedBars: {
       bars: [
         { label: 'V3', segments: [{ value: 5, color: '#ff0000' }] },
@@ -124,7 +125,8 @@ describe('StatsSummary', () => {
   it('renders total ascents count', () => {
     render(<StatsSummary {...createDefaultProps()} />);
     expect(screen.getByText('42')).toBeTruthy();
-    expect(screen.getByText('Problems')).toBeTruthy();
+    expect(screen.getByText('problems')).toBeTruthy();
+    expect(screen.queryByText('Problems')).toBeNull();
   });
 
   it('renders hardest send and flash grades with status badges', () => {
@@ -170,7 +172,32 @@ describe('StatsSummary', () => {
   it('renders grade distribution section', () => {
     render(<StatsSummary {...createDefaultProps()} />);
     expect(screen.getByText('Grade Distribution')).toBeTruthy();
-    expect(screen.getByTestId('css-bar-chart')).toBeTruthy();
+    expect(
+      screen.getAllByTestId('css-bar-chart').some((chart) => chart.textContent === 'Grade distribution across boards'),
+    ).toBe(true);
+  });
+
+  it('renders weekly attempts before grade distribution when weekly bars are available', () => {
+    const weeklyBars: CssBarChartBar[] = [
+      { key: '2026-W1', label: 'W1', segments: [{ value: 2, color: '#00ff00', label: 'V3' }] },
+    ];
+
+    render(<StatsSummary {...createDefaultProps({ weeklyBars })} />);
+
+    expect(screen.getByText('Weekly Attempts')).toBeTruthy();
+
+    const chartLabels = screen.getAllByTestId('css-bar-chart').map((chart) => chart.textContent);
+    expect(chartLabels).toEqual([
+      'Weekly attempts by difficulty',
+      'Grade distribution across boards',
+    ]);
+  });
+
+  it('omits weekly attempts when no weekly bars are available', () => {
+    render(<StatsSummary {...createDefaultProps({ weeklyBars: null })} />);
+
+    expect(screen.queryByText('Weekly Attempts')).toBeNull();
+    expect(screen.getAllByTestId('css-bar-chart')).toHaveLength(1);
   });
 
   it('shows loading spinner when loadingAggregated is true', () => {

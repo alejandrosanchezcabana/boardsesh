@@ -32,6 +32,7 @@ export interface StatsSummaryProps {
   hardestFlash?: GradeHighlight | null;
   loadingProfileStats: boolean;
   loadingAggregated: boolean;
+  weeklyBars: CssBarChartBar[] | null;
   aggregatedStackedBars: { bars: CssBarChartBar[]; legendEntries: LayoutLegendEntry[] } | null;
   aggregatedFlashRedpointBars: GroupedBar[] | null;
   vPointsTimeline: VPointsTimelineData | null;
@@ -44,6 +45,7 @@ export default function StatsSummary({
   hardestFlash,
   loadingProfileStats,
   loadingAggregated,
+  weeklyBars,
   aggregatedStackedBars,
   aggregatedFlashRedpointBars,
   vPointsTimeline,
@@ -67,7 +69,7 @@ export default function StatsSummary({
       <Typography variant="h5" component="span" fontWeight={700}>
         {highlight.label}
       </Typography>
-      <Box sx={{ position: 'absolute', right: 8, bottom: 8, lineHeight: 0 }}>
+      <Box sx={{ position: 'absolute', right: 8, top: '50%', transform: 'translateY(-50%)', lineHeight: 0 }}>
         <AscentStatusIcon
           status={highlight.status}
           variant="badge"
@@ -87,13 +89,18 @@ export default function StatsSummary({
           borderRadius: `${themeTokens.borderRadius.md}px`,
           bgcolor: 'var(--neutral-100)',
           p: 1.5,
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          justifyContent: 'center',
+          gap: 0.125,
           textAlign: 'center',
         }}>
-          <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mb: 0.5 }}>
-            Problems
-          </Typography>
-          <Typography variant="h5" component="span" fontWeight={700}>
+          <Typography variant="h5" component="span" fontWeight={700} sx={{ display: 'block', lineHeight: 1 }}>
             {statisticsSummary.totalAscents}
+          </Typography>
+          <Typography variant="caption" color="text.secondary" sx={{ display: 'block', lineHeight: 1, opacity: 0.8 }}>
+            problems
           </Typography>
         </Box>
         {hardestSend && renderHighlightCard('hardest-send-status', hardestSend)}
@@ -154,7 +161,24 @@ export default function StatsSummary({
         </div>
       )}
 
-      <div className={styles.gradeDistributionSection}>
+      {weeklyBars && (
+        <div className={styles.gradeDistributionSection}>
+          <Typography variant="body2" component="span" fontWeight={600} className={styles.gradeDistributionTitle}>
+            Weekly Attempts
+          </Typography>
+          <CssBarChart
+            bars={weeklyBars}
+            height={180}
+            mobileHeight={120}
+            gap={3}
+            ariaLabel="Weekly attempts by difficulty"
+            angledLabels
+            maxLabels={12}
+          />
+        </div>
+      )}
+
+      <div className={weeklyBars ? styles.flashRedpointSection : styles.gradeDistributionSection}>
         <Typography variant="body2" component="span" fontWeight={600} className={styles.gradeDistributionTitle}>
           Grade Distribution
         </Typography>
