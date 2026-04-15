@@ -21,6 +21,7 @@ import { esp32Controllers, userBoards } from '@boardsesh/db/schema/app';
 import { sessionBoards, sessions } from '../../../db/schema';
 import { eq, inArray } from 'drizzle-orm';
 import { generateSessionSummary } from './session-summary';
+import { adoptRecentTicksForSession, extractBoardType } from '../../../jobs/inferred-session-builder';
 
 /**
  * Auto-authorize all controllers owned by a user for a session.
@@ -98,6 +99,12 @@ export const sessionMutations = {
     // Auto-authorize user's ESP32 controllers for this session (if authenticated)
     if (ctx.isAuthenticated && ctx.userId) {
       authorizeUserControllersForSession(ctx.userId, sessionId);
+      // Adopt recent solo ticks into this session. The session row exists at
+      // this point (ensureSessionRecordExists ran inside roomManager.joinSession).
+      const boardTypeFromPath = extractBoardType(boardPath);
+      adoptRecentTicksForSession(ctx.userId, sessionId, boardTypeFromPath).catch((err) => {
+        console.error(`[joinSession] Failed to adopt recent ticks for session ${sessionId}:`, err);
+      });
     }
 
     // Notify session about new user
@@ -208,7 +215,9 @@ export const sessionMutations = {
     const isHttpRequest = ctx.connectionId.startsWith('http-');
 
     if (!isHttpRequest) {
-      // WebSocket path: join the session as the creator
+      // WebSocket path: join the session as the creator.
+      // For non-discoverable sessions, this also creates the board_sessions row
+      // via ensureSessionRecordExists inside roomManager.joinSession.
       const result = await roomManager.joinSession(
         ctx.connectionId,
         sessionId,
@@ -222,6 +231,15 @@ export const sessionMutations = {
       if (DEBUG) console.log(`[createSession] Joined session - clientId: ${result.clientId}, isLeader: ${result.isLeader}`);
 
       updateContext(ctx.connectionId, { sessionId, userId: result.clientId });
+
+      // Adopt recent solo ticks now that the session row exists in board_sessions
+      // (boardsesh_ticks.session_id is a FK to board_sessions.id)
+      if (ctx.isAuthenticated && ctx.userId) {
+        const boardTypeFromPath = extractBoardType(input.boardPath);
+        adoptRecentTicksForSession(ctx.userId, sessionId, boardTypeFromPath).catch((err) => {
+          console.error(`[createSession] Failed to adopt recent ticks for session ${sessionId}:`, err);
+        });
+      }
 
       return {
         id: sessionId,
@@ -244,6 +262,9 @@ export const sessionMutations = {
         color: input.color || null,
       };
     }
+
+    // HTTP path: adoption is handled by joinSession when the client connects
+    // via WebSocket (avoids double invocation for HTTP + discoverable sessions).
 
     // HTTP path: return session metadata only; client joins via WebSocket later
     if (DEBUG) console.log(`[createSession] HTTP request - returning session metadata without joining`);

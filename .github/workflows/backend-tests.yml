@@ -21,6 +21,7 @@ jobs:
     permissions:
       checks: write
       pull-requests: write
+      packages: read
 
     strategy:
       fail-fast: false
@@ -30,6 +31,9 @@ jobs:
     services:
       postgres:
         image: ghcr.io/boardsesh/boardsesh-postgres-postgis:latest
+        credentials:
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
         env:
           POSTGRES_PASSWORD: postgres
           POSTGRES_DB: boardsesh_backend_test
