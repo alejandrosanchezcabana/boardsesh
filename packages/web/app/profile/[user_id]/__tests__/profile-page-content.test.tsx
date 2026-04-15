@@ -62,6 +62,16 @@ vi.mock('@/app/components/brand/logo', () => ({
   default: () => <div data-testid="logo" />,
 }));
 
+vi.mock('@/app/components/profile-header-bridge/profile-header-bridge-context', () => ({
+  ProfileHeaderShareInjector: (props: { displayName: string | null; isActive: boolean }) => (
+    <div
+      data-testid="profile-header-share-injector"
+      data-active={props.isActive ? 'true' : 'false'}
+      data-display-name={props.displayName ?? ''}
+    />
+  ),
+}));
+
 vi.mock('@/app/lib/share-utils', () => ({
   shareWithFallback: vi.fn(),
 }));
@@ -146,6 +156,7 @@ describe('ProfilePageContent', () => {
 
     expect(screen.getByTestId('empty-state')).toBeTruthy();
     expect(screen.getByText('User not found')).toBeTruthy();
+    expect(screen.getByTestId('profile-header-share-injector').getAttribute('data-active')).toBe('false');
   });
 
   it('renders user card with userId when profile exists', () => {
@@ -157,6 +168,8 @@ describe('ProfilePageContent', () => {
     const userCard = screen.getByTestId('user-card');
     expect(userCard).toBeTruthy();
     expect(userCard.getAttribute('data-user-id')).toBe('user-2');
+    expect(screen.getByTestId('profile-header-share-injector').getAttribute('data-active')).toBe('true');
+    expect(screen.getByTestId('profile-header-share-injector').getAttribute('data-display-name')).toBe('Test Climber');
   });
 
   it('renders Statistics and Sessions navigation cards', () => {
@@ -206,21 +219,14 @@ describe('ProfilePageContent', () => {
     expect(screen.getByTestId('overview-chart')).toBeTruthy();
   });
 
-  it('shows share button when profile exists', () => {
+  it('does not render a local share button or local header chrome', () => {
     const profile = makeProfile();
     mockUseProfileData.mockReturnValue(mockProfileDataReturn({ profile }));
 
     render(<ProfilePageContent userId="user-2" />);
 
-    expect(screen.getByLabelText('Share profile')).toBeTruthy();
-  });
-
-  it('shows "Profile" as header title', () => {
-    const profile = makeProfile();
-    mockUseProfileData.mockReturnValue(mockProfileDataReturn({ profile }));
-
-    render(<ProfilePageContent userId="user-2" />);
-
-    expect(screen.getByText('Profile')).toBeTruthy();
+    expect(screen.queryByLabelText('Share profile')).toBeNull();
+    expect(screen.queryByTestId('back-button')).toBeNull();
+    expect(screen.queryByTestId('logo')).toBeNull();
   });
 });

@@ -10,7 +10,7 @@ interface ClimbsContentProps {
 
 export default function ClimbsContent({ userId }: ClimbsContentProps) {
   return (
-    <ProfileSubPageLayout userId={userId} title="Created Climbs">
+    <ProfileSubPageLayout>
       <UserClimbList userId={userId} />
     </ProfileSubPageLayout>
   );

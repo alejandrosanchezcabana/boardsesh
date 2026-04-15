@@ -67,7 +67,7 @@ vi.mock('next/navigation', () => ({
 }));
 
 vi.mock('@/app/components/back-button', () => ({
-  default: () => <button data-testid="back-button">Back</button>,
+  default: (props: { fallbackUrl?: string }) => <button data-testid="back-button" data-fallback={props.fallbackUrl}>Back</button>,
 }));
 
 let mockSessionData: { user: { id: string; name: string } } | null = {
@@ -93,6 +93,29 @@ vi.mock('@/app/hooks/use-unread-notification-count', () => ({
   useUnreadNotificationCount: () => 3,
 }));
 
+let mockStatsFilterBridgeState = {
+  isActive: false,
+  pageTitle: null as string | null,
+  backUrl: null as string | null,
+  openFilterDrawer: null as (() => void) | null,
+  hasActiveFilters: false,
+};
+vi.mock('@/app/components/stats-filter-bridge/stats-filter-bridge-context', () => ({
+  useStatsFilterBridge: () => mockStatsFilterBridgeState,
+}));
+
+let mockProfileHeaderShareState = {
+  isActive: false,
+  displayName: null as string | null,
+};
+vi.mock('@/app/components/profile-header-bridge/profile-header-bridge-context', () => ({
+  useProfileHeaderShare: () => mockProfileHeaderShareState,
+}));
+
+vi.mock('@/app/components/providers/snackbar-provider', () => ({
+  useSnackbar: () => ({ showMessage: vi.fn() }),
+}));
+
 import GlobalHeader from '../global-header';
 
 const mockBoardConfigs = {} as Parameters<typeof GlobalHeader>[0]['boardConfigs'];
@@ -105,6 +128,17 @@ describe('GlobalHeader', () => {
     mockPathname = '/some-page';
     mockSessionData = { user: { id: 'user-1', name: 'Test User' } };
     mockSessionStatus = 'authenticated';
+    mockStatsFilterBridgeState = {
+      isActive: false,
+      pageTitle: null,
+      backUrl: null,
+      openFilterDrawer: null,
+      hasActiveFilters: false,
+    };
+    mockProfileHeaderShareState = {
+      isActive: false,
+      displayName: null,
+    };
     mockBridgeState = {
       openClimbSearchDrawer: null,
       searchPillSummary: null,
@@ -304,13 +338,27 @@ describe('GlobalHeader', () => {
   // /you and /settings header tests
   // -----------------------------------------------------------------------
   describe('on /you pages', () => {
-    it('renders settings cog icon linking to /settings', () => {
+    it('renders a centered "You" title on the root /you page', () => {
       mockPathname = '/you';
       render(<GlobalHeader boardConfigs={mockBoardConfigs} />);
+
+      expect(screen.getByText('You')).toBeTruthy();
+    });
+
+    it('renders settings cog icon linking to /settings', () => {
+      mockPathname = '/you';
+      const { container } = render(<GlobalHeader boardConfigs={mockBoardConfigs} />);
 
       const settingsLink = screen.getByLabelText('Settings');
       expect(settingsLink).toBeTruthy();
       expect(settingsLink.closest('a')?.getAttribute('href')).toBe('/settings');
+      const title = screen.getByText('You');
+      expect(
+        Boolean(
+          settingsLink.compareDocumentPosition(title) & Node.DOCUMENT_POSITION_FOLLOWING,
+        ),
+      ).toBe(true);
+      expect(container.querySelectorAll('[aria-label="Settings"]').length).toBe(1);
     });
 
     it('renders share button when user is authenticated', () => {
@@ -369,14 +417,98 @@ describe('GlobalHeader', () => {
         }),
       );
     });
+
+    it('renders the stats filter action on the root /you page when the bridge is active', () => {
+      mockPathname = '/you';
+      mockStatsFilterBridgeState = {
+        isActive: true,
+        pageTitle: 'Progress',
+        backUrl: null,
+        openFilterDrawer: vi.fn(),
+        hasActiveFilters: true,
+      };
+
+      const { container } = render(<GlobalHeader boardConfigs={mockBoardConfigs} />);
+
+      expect(screen.getByLabelText('Open stats filters')).toBeTruthy();
+      expect(container.querySelector('[class*="filterActiveIndicator"]')).toBeTruthy();
+    });
+  });
+
+  describe('on /profile pages', () => {
+    it('renders a back button instead of the user drawer on the root profile page', () => {
+      mockPathname = '/profile/user-2';
+      render(<GlobalHeader boardConfigs={mockBoardConfigs} />);
+
+      expect(screen.getByTestId('back-button')).toBeTruthy();
+      expect(screen.getByTestId('back-button').getAttribute('data-fallback')).toBe('/');
+      expect(screen.queryByTestId('user-drawer')).toBeNull();
+    });
+
+    it('renders a share button for the viewed profile when profile share state is active', () => {
+      mockPathname = '/profile/user-2';
+      mockProfileHeaderShareState = {
+        isActive: true,
+        displayName: 'Viewed User',
+      };
+
+      render(<GlobalHeader boardConfigs={mockBoardConfigs} />);
+
+      expect(screen.getByLabelText('Share profile')).toBeTruthy();
+    });
+
+    it('shares the viewed profile URL from the root profile header', () => {
+      mockPathname = '/profile/user-2';
+      mockProfileHeaderShareState = {
+        isActive: true,
+        displayName: 'Viewed User',
+      };
+
+      render(<GlobalHeader boardConfigs={mockBoardConfigs} />);
+      fireEvent.click(screen.getByLabelText('Share profile'));
+
+      expect(mockShareWithFallback).toHaveBeenCalledWith(
+        expect.objectContaining({
+          url: expect.stringContaining('/profile/user-2'),
+          title: expect.stringContaining('Viewed User'),
+          trackingEvent: 'Profile Shared',
+        }),
+      );
+    });
+
+    it('renders the child page title in the global header', () => {
+      mockPathname = '/profile/user-2/sessions';
+      render(<GlobalHeader boardConfigs={mockBoardConfigs} />);
+
+      expect(screen.getByText('Sessions')).toBeTruthy();
+      expect(screen.getByTestId('back-button').getAttribute('data-fallback')).toBe('/profile/user-2');
+    });
+
+    it('renders the statistics filter action in the profile header when the bridge is active', () => {
+      mockPathname = '/profile/user-2/statistics';
+      mockStatsFilterBridgeState = {
+        isActive: true,
+        pageTitle: 'Statistics',
+        backUrl: '/profile/user-2',
+        openFilterDrawer: vi.fn(),
+        hasActiveFilters: true,
+      };
+
+      const { container } = render(<GlobalHeader boardConfigs={mockBoardConfigs} />);
+
+      expect(screen.getByText('Statistics')).toBeTruthy();
+      expect(screen.getByLabelText('Open stats filters')).toBeTruthy();
+      expect(container.querySelector('[class*="filterActiveIndicator"]')).toBeTruthy();
+    });
   });
 
   describe('on /settings page', () => {
-    it('renders settings cog but no share button or search bar', () => {
+    it('renders the user drawer but no settings cog, share button, or search bar', () => {
       mockPathname = '/settings';
       render(<GlobalHeader boardConfigs={mockBoardConfigs} />);
 
-      expect(screen.getByLabelText('Settings')).toBeTruthy();
+      expect(screen.getByTestId('user-drawer')).toBeTruthy();
+      expect(screen.queryByLabelText('Settings')).toBeNull();
       expect(screen.queryByLabelText('Share profile')).toBeNull();
       expect(screen.queryByPlaceholderText('What do you want to climb?')).toBeNull();
     });

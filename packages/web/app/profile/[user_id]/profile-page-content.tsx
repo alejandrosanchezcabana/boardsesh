@@ -1,21 +1,16 @@
 'use client';
 
-import React, { useCallback, useMemo } from 'react';
+import React, { useMemo } from 'react';
 import Box from '@mui/material/Box';
 import Typography from '@mui/material/Typography';
 import CircularProgress from '@mui/material/CircularProgress';
-import IconButton from '@mui/material/IconButton';
 import MuiCard from '@mui/material/Card';
 import CardContent from '@mui/material/CardContent';
-import { IosShare } from '@mui/icons-material';
 import TimelineOutlined from '@mui/icons-material/TimelineOutlined';
 import FitnessCenterOutlined from '@mui/icons-material/FitnessCenterOutlined';
 import ShowChartOutlined from '@mui/icons-material/ShowChartOutlined';
 import { EmptyState } from '@/app/components/ui/empty-state';
-import Logo from '@/app/components/brand/logo';
-import BackButton from '@/app/components/back-button';
-import { useSnackbar } from '@/app/components/providers/snackbar-provider';
-import { shareWithFallback } from '@/app/lib/share-utils';
+import { ProfileHeaderShareInjector } from '@/app/components/profile-header-bridge/profile-header-bridge-context';
 import { CssBarChart } from '@/app/components/charts/css-bar-chart';
 import { useGradeFormat } from '@/app/hooks/use-grade-format';
 import type { GetUserProfileStatsQueryResponse } from '@/app/lib/graphql/operations/ticks';
@@ -45,7 +40,6 @@ export default function ProfilePageContent({
   initialIsOwnProfile,
   initialNotFound,
 }: ProfilePageContentProps) {
-  const { showMessage } = useSnackbar();
   const { gradeFormat } = useGradeFormat();
 
   const {
@@ -76,24 +70,15 @@ export default function ProfilePageContent({
     return buildWeeklyBars(allTicks, fromDate, toDate, gradeFormat);
   }, [initialAllBoardsTicks, gradeFormat]);
 
-  const handleShare = useCallback(async () => {
-    const displayName = profile?.profile?.displayName || profile?.name || 'Climber';
-    const shareUrl = `${window.location.origin}/profile/${userId}`;
-
-    await shareWithFallback({
-      url: shareUrl,
-      title: `${displayName}'s climbing profile`,
-      text: `Check out ${displayName}'s climbing profile on Boardsesh`,
-      trackingEvent: 'Profile Shared',
-      trackingProps: { userId },
-      onClipboardSuccess: () => showMessage('Link copied to clipboard!', 'success'),
-      onError: () => showMessage('Failed to share', 'error'),
-    });
-  }, [profile, userId, showMessage]);
+  const sharedDisplayName = useMemo(
+    () => profile?.profile?.displayName || profile?.name || null,
+    [profile],
+  );
 
   if (loading) {
     return (
       <Box className={styles.layout}>
+        <ProfileHeaderShareInjector displayName={null} isActive={false} />
         <Box component="main" className={styles.loadingContent}>
           <CircularProgress size={48} />
         </Box>
@@ -104,13 +89,7 @@ export default function ProfilePageContent({
   if (notFound) {
     return (
       <Box className={styles.layout}>
-        <Box component="header" className={styles.header}>
-          <BackButton fallbackUrl="/" />
-          <Logo size="sm" showText={false} />
-          <Typography variant="h6" component="h4" className={styles.headerTitle}>
-            Profile
-          </Typography>
-        </Box>
+        <ProfileHeaderShareInjector displayName={null} isActive={false} />
         <Box component="main" className={styles.content}>
           <EmptyState description="User not found" />
         </Box>
@@ -120,19 +99,7 @@ export default function ProfilePageContent({
 
   return (
     <Box className={styles.layout}>
-      <Box component="header" className={styles.header}>
-        <BackButton fallbackUrl="/" />
-        <Logo size="sm" showText={false} />
-        <Typography variant="h6" component="h4" className={styles.headerTitle}>
-          Profile
-        </Typography>
-        {profile && (
-          <IconButton onClick={handleShare} aria-label="Share profile">
-            <IosShare />
-          </IconButton>
-        )}
-      </Box>
-
+      <ProfileHeaderShareInjector displayName={sharedDisplayName} isActive={Boolean(profile)} />
       <Box component="main" className={styles.content}>
         {profile && (
           <UserCard

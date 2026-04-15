@@ -28,6 +28,8 @@ import { usePathname } from 'next/navigation';
 import BackButton from '@/app/components/back-button';
 import Typography from '@mui/material/Typography';
 import { useStatsFilterBridge } from '@/app/components/stats-filter-bridge/stats-filter-bridge-context';
+import { useProfileHeaderShare } from '@/app/components/profile-header-bridge/profile-header-bridge-context';
+import { useSnackbar } from '@/app/components/providers/snackbar-provider';
 import styles from './global-header.module.css';
 
 /** Route prefix → title for pages that show a simple title header instead of the default search/sesh header */
@@ -42,19 +44,130 @@ interface GlobalHeaderProps {
   boardConfigs: BoardConfigData;
 }
 
+interface CenteredHeaderProps {
+  left?: React.ReactNode;
+  title: string;
+  right?: React.ReactNode;
+}
+
+interface ProfileHeaderConfig {
+  userId: string;
+  title: string;
+  backUrl: string;
+  isRoot: boolean;
+}
+
+function CenteredHeader({ left, title, right }: CenteredHeaderProps) {
+  return (
+    <header className={styles.header}>
+      <Box
+        sx={{
+          display: 'grid',
+          gridTemplateColumns: 'minmax(48px, 1fr) auto minmax(48px, 1fr)',
+          columnGap: 1.5,
+          alignItems: 'center',
+          width: '100%',
+          minWidth: 0,
+          flex: '1 1 auto',
+        }}
+      >
+        <Box
+          sx={{
+            display: 'flex',
+            alignItems: 'center',
+            justifySelf: 'start',
+            minWidth: 0,
+          }}
+        >
+          {left}
+        </Box>
+        <Box
+          sx={{
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            minWidth: 0,
+            pointerEvents: 'none',
+          }}
+        >
+          <Typography
+            variant="h6"
+            component="h1"
+            sx={{
+              margin: 0,
+              maxWidth: 'min(60vw, 320px)',
+              textAlign: 'center',
+              whiteSpace: 'nowrap',
+              overflow: 'hidden',
+              textOverflow: 'ellipsis',
+            }}
+          >
+            {title}
+          </Typography>
+        </Box>
+        <Box
+          sx={{
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'flex-end',
+            justifySelf: 'end',
+            minWidth: 0,
+          }}
+        >
+          {right}
+        </Box>
+      </Box>
+    </header>
+  );
+}
+
+function getProfileHeaderConfig(pathname: string): ProfileHeaderConfig | null {
+  const segments = pathname.split('/').filter(Boolean);
+
+  if (segments[0] !== 'profile' || !segments[1]) {
+    return null;
+  }
+
+  const userId = segments[1];
+  const childPage = segments[2];
+
+  if (!childPage) {
+    return {
+      userId,
+      title: 'Profile',
+      backUrl: '/',
+      isRoot: true,
+    };
+  }
+
+  const childPageTitles: Record<string, string> = {
+    statistics: 'Statistics',
+    sessions: 'Sessions',
+    climbs: 'Created Climbs',
+  };
+
+  return {
+    userId,
+    title: childPageTitles[childPage] ?? 'Profile',
+    backUrl: `/profile/${userId}`,
+    isRoot: false,
+  };
+}
+
 export default function GlobalHeader({ boardConfigs }: GlobalHeaderProps) {
   const [searchOpen, setSearchOpen] = useState(false);
   const [searchRendered, setSearchRendered] = useState(false);
   const { data: session } = useSession();
+  const { showMessage } = useSnackbar();
 
   const isOnBoardRoute = useIsOnBoardRoute();
   const notificationUnreadCount = useUnreadNotificationCount();
   const { openClimbSearchDrawer, nameFilter, setNameFilter, hasActiveNonNameFilters: nonNameFiltersActive } = useSearchDrawerBridge();
   const statsFilterBridge = useStatsFilterBridge();
+  const profileHeaderShare = useProfileHeaderShare();
   const pathname = usePathname();
   const inputRef = useRef<HTMLInputElement>(null);
-
-
+  const profileHeaderConfig = getProfileHeaderConfig(pathname);
 
   // Unmount drawer trees after close animation finishes to avoid rendering
   // MUI Modal/Portal/FocusTrap infrastructure on every parent re-render.
@@ -62,80 +175,110 @@ export default function GlobalHeader({ boardConfigs }: GlobalHeaderProps) {
     if (!open) setSearchRendered(false);
   }, []);
 
+  const handleShareOwnProfile = useCallback(() => {
+    if (!session?.user?.id) return;
+
+    const shareUrl = `${window.location.origin}/profile/${session.user.id}`;
+    const displayName = session.user.name || 'My';
+
+    shareWithFallback({
+      url: shareUrl,
+      title: `${displayName}'s climbing profile`,
+      text: `Check out ${displayName}'s climbing profile on Boardsesh`,
+      trackingEvent: 'Profile Shared',
+      trackingProps: { source: 'you-header' },
+    });
+  }, [session]);
+
+  const handleShareViewedProfile = useCallback(async () => {
+    if (!profileHeaderConfig?.isRoot || !profileHeaderShare.isActive) return;
+
+    const displayName = profileHeaderShare.displayName || 'Climber';
+    const shareUrl = `${window.location.origin}/profile/${profileHeaderConfig.userId}`;
+
+    await shareWithFallback({
+      url: shareUrl,
+      title: `${displayName}'s climbing profile`,
+      text: `Check out ${displayName}'s climbing profile on Boardsesh`,
+      trackingEvent: 'Profile Shared',
+      trackingProps: {
+        source: 'profile-header',
+        userId: profileHeaderConfig.userId,
+      },
+      onClipboardSuccess: () => showMessage('Link copied to clipboard!', 'success'),
+      onError: () => showMessage('Failed to share', 'error'),
+    });
+  }, [profileHeaderConfig, profileHeaderShare.displayName, profileHeaderShare.isActive, showMessage]);
+
+  const notificationButton = (
+    <IconButton component={Link} href="/notifications" aria-label="Notifications" size="small">
+      <Badge
+        badgeContent={notificationUnreadCount}
+        color="error"
+        max={99}
+        sx={{ '& .MuiBadge-badge': { fontSize: 10, height: 16, minWidth: 16 } }}
+      >
+        <NotificationsOutlined />
+      </Badge>
+    </IconButton>
+  );
+
   // On board create routes, hide the header entirely
   if (isBoardCreatePath(pathname)) {
     return null;
   }
 
-  // On /you pages, show user drawer + share + settings cog, no search bar
-  if (pathname.startsWith('/you')) {
-    // When stats filter bridge is active (Progress tab), show title + filter button
-    if (statsFilterBridge.isActive) {
-      return (
-        <header className={styles.header}>
-          <UserDrawer boardConfigs={boardConfigs} />
-          <Typography variant="h6" sx={{ flex: 1, margin: 0 }}>
-            {statsFilterBridge.pageTitle}
-          </Typography>
-          <div className={styles.filterButton}>
-            <IconButton
-              onClick={() => statsFilterBridge.openFilterDrawer?.()}
-              aria-label="Open stats filters"
-              size="small"
-            >
-              <TuneOutlined />
+  // On the root /you page, show a centered title while keeping the avatar anchored left.
+  if (pathname === '/you') {
+    return (
+      <CenteredHeader
+        left={(
+          <div className={styles.headerActions}>
+            <UserDrawer boardConfigs={boardConfigs} />
+            <IconButton component={Link} href="/settings" aria-label="Settings" size="small">
+              <SettingsOutlined />
             </IconButton>
-            {statsFilterBridge.hasActiveFilters && <span className={styles.filterActiveIndicator} />}
           </div>
-          <IconButton component={Link} href="/notifications" aria-label="Notifications" size="small">
-            <Badge
-              badgeContent={notificationUnreadCount}
-              color="error"
-              max={99}
-              sx={{ '& .MuiBadge-badge': { fontSize: 10, height: 16, minWidth: 16 } }}
-            >
-              <NotificationsOutlined />
-            </Badge>
-          </IconButton>
-          <IconButton component={Link} href="/settings" aria-label="Settings" size="small">
-            <SettingsOutlined />
-          </IconButton>
-        </header>
-      );
-    }
+        )}
+        title="You"
+        right={(
+          <div className={styles.headerActions}>
+            {statsFilterBridge.isActive && (
+              <div className={styles.filterButton}>
+                <IconButton
+                  onClick={() => statsFilterBridge.openFilterDrawer?.()}
+                  aria-label="Open stats filters"
+                  size="small"
+                >
+                  <TuneOutlined />
+                </IconButton>
+                {statsFilterBridge.hasActiveFilters && <span className={styles.filterActiveIndicator} />}
+              </div>
+            )}
+            {session?.user?.id && (
+              <IconButton onClick={handleShareOwnProfile} aria-label="Share profile" size="small">
+                <IosShareOutlined />
+              </IconButton>
+            )}
+            {notificationButton}
+          </div>
+        )}
+      />
+    );
+  }
 
-    const handleShareProfile = () => {
-      if (!session?.user?.id) return;
-      const shareUrl = `${window.location.origin}/profile/${session.user.id}`;
-      const displayName = session.user.name || 'My';
-      shareWithFallback({
-        url: shareUrl,
-        title: `${displayName}'s climbing profile`,
-        text: `Check out ${displayName}'s climbing profile on Boardsesh`,
-        trackingEvent: 'Profile Shared',
-        trackingProps: { source: 'you-header' },
-      });
-    };
-
+  // On /you child pages, show user drawer + share + settings cog, no search bar
+  if (pathname.startsWith('/you')) {
     return (
       <header className={styles.header}>
         <UserDrawer boardConfigs={boardConfigs} />
         <Box sx={{ flex: 1 }} />
         {session?.user?.id && (
-          <IconButton onClick={handleShareProfile} aria-label="Share profile" size="small">
+          <IconButton onClick={handleShareOwnProfile} aria-label="Share profile" size="small">
             <IosShareOutlined />
           </IconButton>
         )}
-        <IconButton component={Link} href="/notifications" aria-label="Notifications" size="small">
-          <Badge
-            badgeContent={notificationUnreadCount}
-            color="error"
-            max={99}
-            sx={{ '& .MuiBadge-badge': { fontSize: 10, height: 16, minWidth: 16 } }}
-          >
-            <NotificationsOutlined />
-          </Badge>
-        </IconButton>
+        {notificationButton}
         <IconButton component={Link} href="/settings" aria-label="Settings" size="small">
           <SettingsOutlined />
         </IconButton>
@@ -153,34 +296,41 @@ export default function GlobalHeader({ boardConfigs }: GlobalHeaderProps) {
     );
   }
 
-  // On /profile pages, show minimal header or stats filter header
-  if (pathname.startsWith('/profile')) {
-    if (statsFilterBridge.isActive) {
-      return (
-        <header className={styles.header}>
-          {statsFilterBridge.backUrl && <BackButton fallbackUrl={statsFilterBridge.backUrl} />}
-          <Typography variant="h6" sx={{ flex: 1, margin: 0 }}>
-            {statsFilterBridge.pageTitle}
-          </Typography>
-          <div className={styles.filterButton}>
-            <IconButton
-              onClick={() => statsFilterBridge.openFilterDrawer?.()}
-              aria-label="Open stats filters"
-              size="small"
-            >
-              <TuneOutlined />
-            </IconButton>
-            {statsFilterBridge.hasActiveFilters && <span className={styles.filterActiveIndicator} />}
-          </div>
-        </header>
-      );
-    }
+  // On /profile pages, show a centered title with a back button in the left slot.
+  if (profileHeaderConfig) {
+    const title = statsFilterBridge.isActive
+      ? (statsFilterBridge.pageTitle ?? profileHeaderConfig.title)
+      : profileHeaderConfig.title;
+    const backUrl = statsFilterBridge.isActive
+      ? (statsFilterBridge.backUrl ?? profileHeaderConfig.backUrl)
+      : profileHeaderConfig.backUrl;
 
     return (
-      <header className={styles.header}>
-        <UserDrawer boardConfigs={boardConfigs} />
-        <Box sx={{ flex: 1 }} />
-      </header>
+      <CenteredHeader
+        left={<BackButton fallbackUrl={backUrl} />}
+        title={title}
+        right={(
+          <div className={styles.headerActions}>
+            {statsFilterBridge.isActive && (
+              <div className={styles.filterButton}>
+                <IconButton
+                  onClick={() => statsFilterBridge.openFilterDrawer?.()}
+                  aria-label="Open stats filters"
+                  size="small"
+                >
+                  <TuneOutlined />
+                </IconButton>
+                {statsFilterBridge.hasActiveFilters && <span className={styles.filterActiveIndicator} />}
+              </div>
+            )}
+            {!statsFilterBridge.isActive && profileHeaderConfig.isRoot && profileHeaderShare.isActive && (
+              <IconButton onClick={handleShareViewedProfile} aria-label="Share profile" size="small">
+                <IosShareOutlined />
+              </IconButton>
+            )}
+          </div>
+        )}
+      />
     );
   }
 
@@ -220,12 +370,10 @@ export default function GlobalHeader({ boardConfigs }: GlobalHeaderProps) {
   // Simple title header for specific pages (back button + title, no search/sesh)
   if (titleHeaderPage) {
     return (
-      <header className={styles.header}>
-        <BackButton fallbackUrl="/" />
-        <Typography variant="h6" sx={{ flex: 1, margin: 0 }}>
-          {titleHeaderPage[1]}
-        </Typography>
-      </header>
+      <CenteredHeader
+        left={<BackButton fallbackUrl="/" />}
+        title={titleHeaderPage[1]}
+      />
     );
   }
 

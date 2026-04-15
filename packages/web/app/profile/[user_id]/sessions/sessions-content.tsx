@@ -15,7 +15,7 @@ export default function ProfileSessionsContent({ userId, isAuthenticatedSSR }: P
   const isAuthenticated = status === 'authenticated' ? true : (status === 'loading' ? (isAuthenticatedSSR ?? false) : false);
 
   return (
-    <ProfileSubPageLayout userId={userId} title="Sessions">
+    <ProfileSubPageLayout>
       <ActivityFeed isAuthenticated={isAuthenticated} userId={userId} />
     </ProfileSubPageLayout>
   );

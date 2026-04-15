@@ -23,6 +23,12 @@
   touch-action: manipulation;
 }
 
+.headerActions {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
 .searchInput {
   flex: 1;
   min-width: 0;
@@ -48,7 +54,6 @@
   background-color: var(--color-primary);
   pointer-events: none;
 }
-
 
 .headerTransparent {
   position: fixed;
@@ -91,4 +96,3 @@
 :global(html[data-theme="dark"]) .searchInput :global(.MuiSvgIcon-root) {
   color: #6B7280;
 }
-
