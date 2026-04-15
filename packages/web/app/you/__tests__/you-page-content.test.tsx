@@ -76,6 +76,8 @@ function mockProfileDataReturn(overrides?: Partial<ReturnType<typeof useProfileD
     aggregatedStackedBars: null,
     loadingProfileStats: false,
     statisticsSummary: { totalAscents: 0, layoutPercentages: [] },
+    hardestSend: null,
+    hardestFlash: null,
     ...overrides,
   };
 }

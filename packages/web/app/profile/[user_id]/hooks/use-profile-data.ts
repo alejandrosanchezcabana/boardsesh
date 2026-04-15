@@ -19,7 +19,9 @@ import {
   type TimeframeType,
   type AggregatedTimeframeType,
   BOARD_TYPES,
+  getDifficultyMapping,
 } from '../utils/profile-constants';
+import { getGradeColor, getGradeTextColor } from '@/app/lib/grade-colors';
 import {
   filterLogbookByTimeframe,
   buildAggregatedStackedBars,
@@ -227,6 +229,36 @@ export function useProfileData(userId: string, initialData?: InitialData) {
     [allBoardsTicks, aggregatedTimeframe],
   );
 
+  // Compute hardest send and hardest flash from all ticks
+  const { hardestSend, hardestFlash } = useMemo(() => {
+    const allTicks = Object.values(allBoardsTicks).flat();
+    const mapping = getDifficultyMapping(gradeFormat);
+    let maxSendDifficulty = -1;
+    let maxFlashDifficulty = -1;
+
+    for (const tick of allTicks) {
+      if (tick.difficulty == null) continue;
+      if (tick.status === 'send' || tick.status === 'flash') {
+        if (tick.difficulty > maxSendDifficulty) maxSendDifficulty = tick.difficulty;
+      }
+      if (tick.status === 'flash') {
+        if (tick.difficulty > maxFlashDifficulty) maxFlashDifficulty = tick.difficulty;
+      }
+    }
+
+    const makeHighlight = (difficulty: number) => {
+      const label = mapping[difficulty] ?? `${difficulty}`;
+      const color = getGradeColor(label) ?? 'var(--neutral-200)';
+      const textColor = getGradeTextColor(color);
+      return { label, color, textColor };
+    };
+
+    return {
+      hardestSend: maxSendDifficulty >= 0 ? makeHighlight(maxSendDifficulty) : null,
+      hardestFlash: maxFlashDifficulty >= 0 ? makeHighlight(maxFlashDifficulty) : null,
+    };
+  }, [allBoardsTicks, gradeFormat]);
+
   return {
     // Profile state
     loading,
@@ -264,6 +296,8 @@ export function useProfileData(userId: string, initialData?: InitialData) {
     // Profile stats summary
     loadingProfileStats,
     statisticsSummary,
+    hardestSend,
+    hardestFlash,
 
     // V-Points timeline
     vPointsTimeline,

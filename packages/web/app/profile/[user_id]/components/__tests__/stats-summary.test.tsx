@@ -28,6 +28,7 @@ vi.mock('@/app/theme/theme-config', () => ({
   themeTokens: {
     transitions: { normal: '200ms ease' },
     shadows: { md: '0 4px 6px -1px rgba(0, 0, 0, 0.1)' },
+    borderRadius: { md: 8, lg: 12, xl: 16, full: 9999 },
   },
 }));
 

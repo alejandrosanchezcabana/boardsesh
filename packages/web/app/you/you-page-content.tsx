@@ -62,6 +62,8 @@ export default function YouPageContent({
     aggregatedStackedBars,
     loadingProfileStats,
     statisticsSummary,
+    hardestSend,
+    hardestFlash,
   } = useProfileData(userId, {
     initialProfile: initialProfile ?? undefined,
     initialProfileStats: initialProfileStats ?? undefined,
@@ -113,6 +115,8 @@ export default function YouPageContent({
           <>
             <StatsSummary
               statisticsSummary={statisticsSummary}
+              hardestSend={hardestSend}
+              hardestFlash={hardestFlash}
               loadingProfileStats={loadingProfileStats}
               aggregatedTimeframe={aggregatedTimeframe}
               onAggregatedTimeframeChange={setAggregatedTimeframe}

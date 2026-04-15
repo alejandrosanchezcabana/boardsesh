@@ -48,6 +48,8 @@ export default function AnalyticsContent({
     aggregatedStackedBars,
     loadingProfileStats,
     statisticsSummary,
+    hardestSend,
+    hardestFlash,
   } = useProfileData(userId, {
     initialProfileStats: initialProfileStats ?? undefined,
     initialAllBoardsTicks,
@@ -59,6 +61,8 @@ export default function AnalyticsContent({
     <ProfileSubPageLayout userId={userId} title="Statistics">
       <StatsSummary
         statisticsSummary={statisticsSummary}
+        hardestSend={hardestSend}
+        hardestFlash={hardestFlash}
         loadingProfileStats={loadingProfileStats}
         aggregatedTimeframe={aggregatedTimeframe}
         onAggregatedTimeframeChange={setAggregatedTimeframe}
