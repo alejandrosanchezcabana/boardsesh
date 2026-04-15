@@ -32,7 +32,7 @@ export const AscentStatus = ({ climbUuid, fontSize, className, mirroredClassName
   const hasRegularAttempt = ascentsForClimb.some(({ is_mirror }) => !is_mirror);
   const hasMirroredAttempt = ascentsForClimb.some(({ is_mirror }) => is_mirror);
   const hasAttempts = ascentsForClimb.length > 0;
-  const supportsMirroring = boardName === 'tension';
+  const supportsMirroring = boardName === 'tension' || boardName === 'decoy';
 
   if (!hasAttempts) return null;
 

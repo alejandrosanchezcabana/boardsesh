@@ -99,7 +99,7 @@ export const getBoardDetails = ({
     layout_id,
     size_id,
     set_ids,
-    supportsMirroring: board_name === 'tension' && layout_id !== 11,
+    supportsMirroring: (board_name === 'tension' && layout_id !== 11) || board_name === 'decoy',
     layout_name: layoutData?.name,
     size_name: sizeData.name,
     size_description: sizeData.description,
