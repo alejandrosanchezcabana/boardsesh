@@ -3,7 +3,7 @@ import type { ConnectionContext, BoardName } from '@boardsesh/shared-schema';
 import { SUPPORTED_BOARDS } from '@boardsesh/shared-schema';
 import { db } from '../../../db/client';
 import * as dbSchema from '@boardsesh/db/schema';
-import { requireAuthenticated, validateInput } from '../shared/helpers';
+import { requireAuthenticated, applyRateLimit, validateInput } from '../shared/helpers';
 import { consensusDifficultyNameExpr, consensusDifficultyExpr, difficultyNameWithFallbackExpr, consensusGradeTable, consensusGradeJoinCondition } from '../shared/sql-expressions';
 import { GetTicksInputSchema, BoardNameSchema, AscentFeedInputSchema } from '../../../validation/schemas';
 
@@ -635,7 +635,10 @@ export const tickQueries = {
   userClimbPercentile: async (
     _: unknown,
     { userId }: { userId: string },
+    ctx: ConnectionContext,
   ) => {
+    await applyRateLimit(ctx, 10, 'userClimbPercentile');
+
     if (!userId || typeof userId !== 'string' || userId.trim() === '') {
       return { totalDistinctClimbs: 0, percentile: 0, totalActiveUsers: 0 };
     }

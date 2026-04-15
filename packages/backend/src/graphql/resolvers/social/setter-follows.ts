@@ -433,60 +433,78 @@ export const setterFollowQueries = {
 
     const totalCount = Number(countResult?.count ?? 0);
 
-    // 4. Get climbs with stats (most popular angle)
-    const results = await db
-      .select({
-        uuid: tables.climbs.uuid,
-        layoutId: tables.climbs.layoutId,
-        boardType: tables.climbs.boardType,
-        setter_username: tables.climbs.setterUsername,
-        name: tables.climbs.name,
-        description: tables.climbs.description,
-        frames: tables.climbs.frames,
-        statsAngle: tables.climbStats.angle,
-        ascensionist_count: tables.climbStats.ascensionistCount,
-        difficulty_id: sql<number | null>`ROUND(${tables.climbStats.displayDifficulty}::numeric, 0)`,
-        quality_average: sql<number>`ROUND(${tables.climbStats.qualityAverage}::numeric, 2)`,
-        difficulty_error: sql<number>`ROUND(${tables.climbStats.difficultyAverage}::numeric - ${tables.climbStats.displayDifficulty}::numeric, 2)`,
-        benchmark_difficulty: tables.climbStats.benchmarkDifficulty,
-      })
-      .from(tables.climbs)
-      .leftJoin(
-        tables.climbStats,
-        and(
-          eq(tables.climbStats.boardType, tables.climbs.boardType),
-          eq(tables.climbStats.climbUuid, tables.climbs.uuid),
-          eq(tables.climbStats.angle, sql`(
-            SELECT s.angle FROM board_climb_stats s
-            WHERE s.board_type = ${tables.climbs.boardType}
-              AND s.climb_uuid = ${tables.climbs.uuid}
-            ORDER BY s.ascensionist_count DESC NULLS LAST
-            LIMIT 1
-          )`),
-        )
-      )
-      .where(whereCondition)
-      .orderBy(
-        sortBy === 'popular'
-          ? sql`COALESCE(${tables.climbStats.ascensionistCount}, 0) DESC`
-          : sql`${tables.climbs.createdAt} DESC NULLS LAST`
-      )
-      .limit(limit + 1)
-      .offset(offset);
+    // 4. Get climbs with stats at the most popular angle.
+    // Uses DISTINCT ON to pick the best angle per (board_type, climb_uuid)
+    // instead of a correlated subquery per row.
+    const ownershipSql = linkedUsernames.length > 0
+      ? sql`(c.user_id = ${userId} OR c.setter_username IN (${sql.join(linkedUsernames.map(u => sql`${u}`), sql`, `)}))`
+      : sql`c.user_id = ${userId}`;
 
-    const hasMore = results.length > limit;
-    const trimmedResults = hasMore ? results.slice(0, limit) : results;
+    const orderSql = sortBy === 'popular'
+      ? sql`COALESCE(best.ascensionist_count, 0) DESC`
+      : sql`c.created_at DESC NULLS LAST`;
+
+    const rawResult = await db.execute(sql`
+      WITH best_angle AS (
+        SELECT DISTINCT ON (board_type, climb_uuid)
+          board_type, climb_uuid, angle,
+          ascensionist_count, display_difficulty, quality_average,
+          difficulty_average, benchmark_difficulty
+        FROM board_climb_stats
+        ORDER BY board_type, climb_uuid, ascensionist_count DESC NULLS LAST
+      )
+      SELECT
+        c.uuid,
+        c.layout_id,
+        c.board_type,
+        c.setter_username,
+        c.name,
+        c.description,
+        c.frames,
+        best.angle AS stats_angle,
+        best.ascensionist_count,
+        ROUND(best.display_difficulty::numeric, 0)::int AS difficulty_id,
+        ROUND(best.quality_average::numeric, 2) AS quality_average,
+        ROUND(best.difficulty_average::numeric - best.display_difficulty::numeric, 2) AS difficulty_error,
+        best.benchmark_difficulty
+      FROM board_climbs c
+      LEFT JOIN best_angle best
+        ON best.board_type = c.board_type AND best.climb_uuid = c.uuid
+      WHERE ${ownershipSql} AND c.is_draft = false
+      ORDER BY ${orderSql}
+      LIMIT ${limit + 1}
+      OFFSET ${offset}
+    `);
+
+    const rawRows = (rawResult as unknown as { rows: Array<{
+      uuid: string;
+      layout_id: number | null;
+      board_type: string;
+      setter_username: string | null;
+      name: string | null;
+      description: string | null;
+      frames: string | null;
+      stats_angle: number | null;
+      ascensionist_count: number | null;
+      difficulty_id: number | null;
+      quality_average: number | null;
+      difficulty_error: number | null;
+      benchmark_difficulty: number | null;
+    }> }).rows;
+
+    const hasMore = rawRows.length > limit;
+    const trimmedResults = hasMore ? rawRows.slice(0, limit) : rawRows;
 
     const climbs: Climb[] = trimmedResults.map((result) => {
-      const bt = (result.boardType || 'kilter') as BoardName;
+      const bt = (result.board_type || 'kilter') as BoardName;
       return {
         uuid: result.uuid,
-        layoutId: result.layoutId,
+        layoutId: result.layout_id,
         setter_username: result.setter_username || '',
         name: result.name || '',
         description: result.description || '',
         frames: result.frames || '',
-        angle: result.statsAngle ?? DEFAULT_ANGLE,
+        angle: result.stats_angle ?? DEFAULT_ANGLE,
         ascensionist_count: Number(result.ascensionist_count || 0),
         difficulty: getGradeLabel(result.difficulty_id),
         quality_average: result.quality_average?.toString() || '0',

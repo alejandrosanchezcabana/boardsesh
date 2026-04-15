@@ -23,9 +23,11 @@ import { useIsOnBoardRoute } from '@/app/components/persistent-session/persisten
 import { BoardConfigData } from '@/app/lib/server-board-configs';
 import { isBoardCreatePath } from '@/app/lib/board-route-paths';
 
+import TuneOutlined from '@mui/icons-material/TuneOutlined';
 import { usePathname } from 'next/navigation';
 import BackButton from '@/app/components/back-button';
 import Typography from '@mui/material/Typography';
+import { useStatsFilterBridge } from '@/app/components/stats-filter-bridge/stats-filter-bridge-context';
 import styles from './global-header.module.css';
 
 /** Route prefix → title for pages that show a simple title header instead of the default search/sesh header */
@@ -48,6 +50,7 @@ export default function GlobalHeader({ boardConfigs }: GlobalHeaderProps) {
   const isOnBoardRoute = useIsOnBoardRoute();
   const notificationUnreadCount = useUnreadNotificationCount();
   const { openClimbSearchDrawer, nameFilter, setNameFilter, hasActiveNonNameFilters: nonNameFiltersActive } = useSearchDrawerBridge();
+  const statsFilterBridge = useStatsFilterBridge();
   const pathname = usePathname();
   const inputRef = useRef<HTMLInputElement>(null);
 
@@ -66,6 +69,41 @@ export default function GlobalHeader({ boardConfigs }: GlobalHeaderProps) {
 
   // On /you pages, show user drawer + share + settings cog, no search bar
   if (pathname.startsWith('/you')) {
+    // When stats filter bridge is active (Progress tab), show title + filter button
+    if (statsFilterBridge.isActive) {
+      return (
+        <header className={styles.header}>
+          <UserDrawer boardConfigs={boardConfigs} />
+          <Typography variant="h6" sx={{ flex: 1, margin: 0 }}>
+            {statsFilterBridge.pageTitle}
+          </Typography>
+          <div className={styles.filterButton}>
+            <IconButton
+              onClick={() => statsFilterBridge.openFilterDrawer?.()}
+              aria-label="Open stats filters"
+              size="small"
+            >
+              <TuneOutlined />
+            </IconButton>
+            {statsFilterBridge.hasActiveFilters && <span className={styles.filterActiveIndicator} />}
+          </div>
+          <IconButton component={Link} href="/notifications" aria-label="Notifications" size="small">
+            <Badge
+              badgeContent={notificationUnreadCount}
+              color="error"
+              max={99}
+              sx={{ '& .MuiBadge-badge': { fontSize: 10, height: 16, minWidth: 16 } }}
+            >
+              <NotificationsOutlined />
+            </Badge>
+          </IconButton>
+          <IconButton component={Link} href="/settings" aria-label="Settings" size="small">
+            <SettingsOutlined />
+          </IconButton>
+        </header>
+      );
+    }
+
     const handleShareProfile = () => {
       if (!session?.user?.id) return;
       const shareUrl = `${window.location.origin}/profile/${session.user.id}`;
@@ -105,21 +143,39 @@ export default function GlobalHeader({ boardConfigs }: GlobalHeaderProps) {
     );
   }
 
-  // On /settings pages, show user drawer + settings cog, no search bar or share
+  // On /settings pages, show user drawer only, no search bar or settings cog (already on settings)
   if (pathname.startsWith('/settings')) {
     return (
       <header className={styles.header}>
         <UserDrawer boardConfigs={boardConfigs} />
         <Box sx={{ flex: 1 }} />
-        <IconButton component={Link} href="/settings" aria-label="Settings" size="small">
-          <SettingsOutlined />
-        </IconButton>
       </header>
     );
   }
 
-  // On /profile pages, show minimal header (profile page has its own share button)
+  // On /profile pages, show minimal header or stats filter header
   if (pathname.startsWith('/profile')) {
+    if (statsFilterBridge.isActive) {
+      return (
+        <header className={styles.header}>
+          {statsFilterBridge.backUrl && <BackButton fallbackUrl={statsFilterBridge.backUrl} />}
+          <Typography variant="h6" sx={{ flex: 1, margin: 0 }}>
+            {statsFilterBridge.pageTitle}
+          </Typography>
+          <div className={styles.filterButton}>
+            <IconButton
+              onClick={() => statsFilterBridge.openFilterDrawer?.()}
+              aria-label="Open stats filters"
+              size="small"
+            >
+              <TuneOutlined />
+            </IconButton>
+            {statsFilterBridge.hasActiveFilters && <span className={styles.filterActiveIndicator} />}
+          </div>
+        </header>
+      );
+    }
+
     return (
       <header className={styles.header}>
         <UserDrawer boardConfigs={boardConfigs} />
