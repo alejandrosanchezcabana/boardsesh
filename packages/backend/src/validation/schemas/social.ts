@@ -76,6 +76,16 @@ export const SetterClimbsFullInputSchema = z.object({
 });
 
 /**
+ * User climbs input validation schema
+ */
+export const UserClimbsInputSchema = z.object({
+  userId: z.string().min(1).max(100),
+  sortBy: z.enum(['popular', 'new']).optional().default('popular'),
+  limit: z.number().int().min(1).max(100).optional().default(20),
+  offset: z.number().int().min(0).optional().default(0),
+});
+
+/**
  * Following ascents feed input validation schema
  */
 export const FollowingAscentsFeedInputSchema = z.object({

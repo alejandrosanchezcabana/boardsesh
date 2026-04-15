@@ -175,14 +175,12 @@ export default function ProfilePageContent({
             href={`/profile/${userId}/sessions`}
             icon={<TimelineOutlined />}
           />
-          {profile?.credentials && profile.credentials.length > 0 && (
-            <ProfileNavCard
-              title="Their Climbs"
-              subtitle="Problems they created"
-              href={`/profile/${userId}/climbs`}
-              icon={<FitnessCenterOutlined />}
-            />
-          )}
+          <ProfileNavCard
+            title="Setting"
+            subtitle="Climbs they created"
+            href={`/profile/${userId}/climbs`}
+            icon={<FitnessCenterOutlined />}
+          />
         </Box>
       </Box>
     </Box>

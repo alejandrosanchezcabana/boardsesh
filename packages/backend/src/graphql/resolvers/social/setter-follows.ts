@@ -11,6 +11,7 @@ import {
   SetterClimbsInputSchema,
   SetterClimbsFullInputSchema,
   SearchUsersInputSchema,
+  UserClimbsInputSchema,
 } from '../../../validation/schemas';
 import { publishSocialEvent } from '../../../events/index';
 import { getBoardTables, isValidBoardName } from '../../../db/queries/util/table-select';
@@ -388,6 +389,115 @@ export const setterFollowQueries = {
 
       return { climbs, totalCount, hasMore };
     }
+  },
+
+  /**
+   * Get all non-draft climbs created by a user.
+   * Includes both directly created climbs and Aurora-imported climbs linked via board credentials.
+   */
+  userClimbs: async (
+    _: unknown,
+    { input }: { input: { userId: string; sortBy?: string; limit?: number; offset?: number } },
+    _ctx: ConnectionContext
+  ): Promise<{ climbs: Climb[]; totalCount: number; hasMore: boolean }> => {
+    const validatedInput = validateInput(UserClimbsInputSchema, input, 'input');
+    const { userId, sortBy = 'popular', limit = 20, offset = 0 } = validatedInput;
+
+    // 1. Look up linked Aurora usernames
+    const mappings = await db
+      .select({ boardUsername: dbSchema.userBoardMappings.boardUsername })
+      .from(dbSchema.userBoardMappings)
+      .where(eq(dbSchema.userBoardMappings.userId, userId));
+
+    const linkedUsernames = mappings
+      .map(m => m.boardUsername)
+      .filter((u): u is string => u !== null && u.length > 0);
+
+    // 2. Build WHERE condition: userId match OR setterUsername in linked usernames, AND not draft
+    const tables = getBoardTables('kilter'); // All unified
+
+    const ownershipCondition = linkedUsernames.length > 0
+      ? sql`(${tables.climbs.userId} = ${userId} OR ${tables.climbs.setterUsername} IN (${sql.join(linkedUsernames.map(u => sql`${u}`), sql`, `)}))`
+      : eq(tables.climbs.userId, userId);
+
+    const whereCondition = and(
+      ownershipCondition,
+      eq(tables.climbs.isDraft, false),
+    );
+
+    // 3. Get total count
+    const [countResult] = await db
+      .select({ count: sql<number>`count(*)::int` })
+      .from(tables.climbs)
+      .where(whereCondition);
+
+    const totalCount = Number(countResult?.count ?? 0);
+
+    // 4. Get climbs with stats (most popular angle)
+    const results = await db
+      .select({
+        uuid: tables.climbs.uuid,
+        layoutId: tables.climbs.layoutId,
+        boardType: tables.climbs.boardType,
+        setter_username: tables.climbs.setterUsername,
+        name: tables.climbs.name,
+        description: tables.climbs.description,
+        frames: tables.climbs.frames,
+        statsAngle: tables.climbStats.angle,
+        ascensionist_count: tables.climbStats.ascensionistCount,
+        difficulty_id: sql<number | null>`ROUND(${tables.climbStats.displayDifficulty}::numeric, 0)`,
+        quality_average: sql<number>`ROUND(${tables.climbStats.qualityAverage}::numeric, 2)`,
+        difficulty_error: sql<number>`ROUND(${tables.climbStats.difficultyAverage}::numeric - ${tables.climbStats.displayDifficulty}::numeric, 2)`,
+        benchmark_difficulty: tables.climbStats.benchmarkDifficulty,
+      })
+      .from(tables.climbs)
+      .leftJoin(
+        tables.climbStats,
+        and(
+          eq(tables.climbStats.boardType, tables.climbs.boardType),
+          eq(tables.climbStats.climbUuid, tables.climbs.uuid),
+          eq(tables.climbStats.angle, sql`(
+            SELECT s.angle FROM board_climb_stats s
+            WHERE s.board_type = ${tables.climbs.boardType}
+              AND s.climb_uuid = ${tables.climbs.uuid}
+            ORDER BY s.ascensionist_count DESC NULLS LAST
+            LIMIT 1
+          )`),
+        )
+      )
+      .where(whereCondition)
+      .orderBy(
+        sortBy === 'popular'
+          ? sql`COALESCE(${tables.climbStats.ascensionistCount}, 0) DESC`
+          : sql`${tables.climbs.createdAt} DESC NULLS LAST`
+      )
+      .limit(limit + 1)
+      .offset(offset);
+
+    const hasMore = results.length > limit;
+    const trimmedResults = hasMore ? results.slice(0, limit) : results;
+
+    const climbs: Climb[] = trimmedResults.map((result) => {
+      const bt = (result.boardType || 'kilter') as BoardName;
+      return {
+        uuid: result.uuid,
+        layoutId: result.layoutId,
+        setter_username: result.setter_username || '',
+        name: result.name || '',
+        description: result.description || '',
+        frames: result.frames || '',
+        angle: result.statsAngle ?? DEFAULT_ANGLE,
+        ascensionist_count: Number(result.ascensionist_count || 0),
+        difficulty: getGradeLabel(result.difficulty_id),
+        quality_average: result.quality_average?.toString() || '0',
+        stars: Math.round((Number(result.quality_average) || 0) * 5),
+        difficulty_error: result.difficulty_error?.toString() || '0',
+        benchmark_difficulty: result.benchmark_difficulty && result.benchmark_difficulty > 0 ? result.benchmark_difficulty.toString() : null,
+        boardType: bt,
+      };
+    });
+
+    return { climbs, totalCount, hasMore };
   },
 
   /**

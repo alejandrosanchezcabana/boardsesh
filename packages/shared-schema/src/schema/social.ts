@@ -257,6 +257,21 @@ export const socialTypeDefs = /* GraphQL */ `
     offset: Int
   }
 
+  """
+  Input for fetching all climbs created by a user.
+  Looks up both directly created climbs (by userId) and Aurora-imported climbs (via linked setter usernames).
+  """
+  input UserClimbsInput {
+    "The Boardsesh user ID"
+    userId: ID!
+    "Sort order: 'popular' (default) or 'new'"
+    sortBy: String
+    "Maximum number of climbs to return (default 20)"
+    limit: Int
+    "Number of climbs to skip (for pagination)"
+    offset: Int
+  }
+
   # ============================================
   # Comments & Votes Types
   # ============================================

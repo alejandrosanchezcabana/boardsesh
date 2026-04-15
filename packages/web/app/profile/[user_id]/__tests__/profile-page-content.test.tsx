@@ -17,9 +17,9 @@ vi.mock('../hooks/use-profile-data', () => ({
   useProfileData: vi.fn(),
 }));
 
-const mockBuildWeeklyBars = vi.fn(() => [] as Array<{ label: string; segments: Array<{ value: number; color: string; label: string }> }>);
+const mockBuildWeeklyBars = vi.fn((): Array<{ label: string; segments: Array<{ value: number; color: string; label: string }> }> => []);
 vi.mock('../utils/chart-data-builders', () => ({
-  buildWeeklyBars: (...args: unknown[]) => mockBuildWeeklyBars(...args),
+  buildWeeklyBars: () => mockBuildWeeklyBars(),
 }));
 
 vi.mock('../components/user-card', () => ({
@@ -115,8 +115,8 @@ function makeProfile(overrides?: Record<string, unknown>) {
     email: 'climber@example.com',
     name: 'Test Climber',
     image: null,
-    profile: { displayName: 'Test Climber', bio: 'I climb things' },
-    credentials: [],
+    profile: { displayName: 'Test Climber', avatarUrl: null, instagramUrl: null },
+    credentials: [] as Array<{ boardType: string; auroraUsername: string }>,
     followerCount: 5,
     followingCount: 3,
     isFollowedByMe: false,
@@ -169,37 +169,24 @@ describe('ProfilePageContent', () => {
     expect(screen.getByTestId('nav-card-statistics')).toBeTruthy();
   });
 
-  it('shows "Their Climbs" nav card when user has credentials', () => {
-    const profile = makeProfile({
-      credentials: [{ id: 'cred-1', boardType: 'kilter' }],
-    });
+  it('always shows "Setting" nav card', () => {
+    const profile = makeProfile();
     mockUseProfileData.mockReturnValue(mockProfileDataReturn({ profile }));
 
     render(<ProfilePageContent userId="user-2" />);
 
-    expect(screen.getByTestId('nav-card-their-climbs')).toBeTruthy();
-  });
-
-  it('hides "Their Climbs" nav card when user has no credentials', () => {
-    const profile = makeProfile({ credentials: [] });
-    mockUseProfileData.mockReturnValue(mockProfileDataReturn({ profile }));
-
-    render(<ProfilePageContent userId="user-2" />);
-
-    expect(screen.queryByTestId('nav-card-their-climbs')).toBeNull();
+    expect(screen.getByTestId('nav-card-setting')).toBeTruthy();
   });
 
   it('nav cards link to correct sub-pages', () => {
-    const profile = makeProfile({
-      credentials: [{ id: 'cred-1', boardType: 'kilter' }],
-    });
+    const profile = makeProfile();
     mockUseProfileData.mockReturnValue(mockProfileDataReturn({ profile }));
 
     render(<ProfilePageContent userId="user-2" />);
 
     expect(screen.getByTestId('nav-card-sessions').getAttribute('data-href')).toBe('/profile/user-2/sessions');
     expect(screen.getByTestId('nav-card-statistics').getAttribute('data-href')).toBe('/profile/user-2/analytics');
-    expect(screen.getByTestId('nav-card-their-climbs').getAttribute('data-href')).toBe('/profile/user-2/climbs');
+    expect(screen.getByTestId('nav-card-setting').getAttribute('data-href')).toBe('/profile/user-2/climbs');
   });
 
   it('renders overview chart when tick data is available', () => {
@@ -210,7 +197,7 @@ describe('ProfilePageContent', () => {
 
     const allBoardsTicks = {
       kilter: [
-        { climbed_at: new Date().toISOString(), difficulty: 15, tries: 1, angle: 40, status: 1, climbUuid: 'c1' },
+        { climbed_at: new Date().toISOString(), difficulty: 15, tries: 1, angle: 40, status: 'send' as const, climbUuid: 'c1' },
       ],
     };
 

@@ -339,6 +339,52 @@ export interface GetSetterClimbsFullQueryResponse {
 }
 
 // ============================================
+// User Climbs (climbs created by a user, across all linked setters)
+// ============================================
+
+export const GET_USER_CLIMBS = gql`
+  query GetUserClimbs($input: UserClimbsInput!) {
+    userClimbs(input: $input) {
+      climbs {
+        uuid
+        layoutId
+        boardType
+        setter_username
+        name
+        description
+        frames
+        angle
+        ascensionist_count
+        difficulty
+        quality_average
+        stars
+        difficulty_error
+        benchmark_difficulty
+      }
+      totalCount
+      hasMore
+    }
+  }
+`;
+
+export interface GetUserClimbsQueryVariables {
+  input: {
+    userId: string;
+    sortBy?: string;
+    limit?: number;
+    offset?: number;
+  };
+}
+
+export interface GetUserClimbsQueryResponse {
+  userClimbs: {
+    climbs: import('@/app/lib/types').Climb[];
+    totalCount: number;
+    hasMore: boolean;
+  };
+}
+
+// ============================================
 // Unified Search
 // ============================================
 

@@ -285,6 +285,12 @@ export const queriesTypeDefs = /* GraphQL */ `
     setterClimbsFull(input: SetterClimbsFullInput!): PlaylistClimbsResult!
 
     """
+    Get all non-draft climbs created by a user.
+    Includes both directly created climbs and Aurora-imported climbs linked via board credentials.
+    """
+    userClimbs(input: UserClimbsInput!): PlaylistClimbsResult!
+
+    """
     Get activity feed of ascents from followed users.
     Requires authentication.
     Deprecated: Use activityFeed instead.

@@ -166,8 +166,9 @@ describe('StatsSummary', () => {
   it('renders flash vs redpoint chart when data available', () => {
     const flashRedpointBars: GroupedBar[] = [
       {
+        key: 'V3',
         label: 'V3',
-        groups: [
+        values: [
           { value: 3, color: '#00ff00', label: 'Flash' },
           { value: 2, color: '#ff0000', label: 'Redpoint' },
         ],

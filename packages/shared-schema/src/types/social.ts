@@ -97,6 +97,13 @@ export type SetterClimbsInput = {
   offset?: number;
 };
 
+export type UserClimbsInput = {
+  userId: string;
+  sortBy?: string;
+  limit?: number;
+  offset?: number;
+};
+
 // Social Event Types (Redis Streams)
 
 export type SocialEventType =
