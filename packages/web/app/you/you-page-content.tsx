@@ -97,7 +97,7 @@ export default function YouPageContent({
 
   return (
     <Box className={styles.layout}>
-      <Box component="main" className={styles.content} sx={{ pb: 'calc(170px + env(safe-area-inset-bottom, 0px))' }}>
+      <Box component="main" className={styles.content}>
         <Tabs
           value={activeTab}
           onChange={handleTabChange}

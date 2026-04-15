@@ -6,11 +6,9 @@ import { eq } from 'drizzle-orm';
 import { getServerAuthToken } from '@/app/lib/auth/server-auth';
 import { getServerSession } from 'next-auth/next';
 import { authOptions } from '@/app/lib/auth/auth-options';
-import { cachedUserProfileStats, cachedUserTicks } from '@/app/lib/graphql/server-cached-client';
-import { SUPPORTED_BOARDS } from '@/app/lib/board-data';
 import ProfilePageContent from './profile-page-content';
 import { getProfileData } from './server-profile-data';
-import type { LogbookEntry } from './utils/profile-constants';
+import { fetchProfileStatsData } from './server-profile-stats';
 
 type PageProps = {
   params: Promise<{ user_id: string }>;
@@ -36,6 +34,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
       return {
         title: 'Profile | Boardsesh',
         description: 'View climbing profile and stats',
+        alternates: { canonical: `/profile/${user_id}` },
       };
     }
 
@@ -92,44 +91,22 @@ export default async function ProfilePage({ params }: PageProps) {
     viewerUserId = session?.user?.id;
   }
 
-  const [initialProfile, initialProfileStats, ...ticksResults] = await Promise.all([
+  const [initialProfile, statsData] = await Promise.all([
     getProfileData(user_id, viewerUserId),
-    cachedUserProfileStats(user_id),
-    ...SUPPORTED_BOARDS.map((boardType) => cachedUserTicks(user_id, boardType)),
+    fetchProfileStatsData(user_id),
   ]);
 
   if (!initialProfile) {
     return <ProfilePageContent userId={user_id} initialNotFound />;
   }
 
-  // Build allBoardsTicks record
-  const initialAllBoardsTicks: Record<string, LogbookEntry[]> = {};
-  SUPPORTED_BOARDS.forEach((bt, i) => {
-    const ticks = ticksResults[i];
-    initialAllBoardsTicks[bt] = ticks
-      ? ticks.map((tick) => ({
-          climbed_at: tick.climbedAt,
-          difficulty: tick.difficulty,
-          tries: tick.attemptCount,
-          angle: tick.angle,
-          status: tick.status as LogbookEntry['status'],
-          layoutId: tick.layoutId,
-          boardType: bt,
-          climbUuid: tick.climbUuid,
-        }))
-      : [];
-  });
-
-  const defaultBoard = 'kilter';
-  const initialLogbook = initialAllBoardsTicks[defaultBoard] ?? [];
-
   return (
     <ProfilePageContent
       userId={user_id}
       initialProfile={initialProfile}
-      initialProfileStats={initialProfileStats}
-      initialAllBoardsTicks={initialAllBoardsTicks}
-      initialLogbook={initialLogbook}
+      initialProfileStats={statsData.initialProfileStats}
+      initialAllBoardsTicks={statsData.initialAllBoardsTicks}
+      initialLogbook={statsData.initialLogbook}
       initialIsOwnProfile={viewerUserId === user_id}
     />
   );

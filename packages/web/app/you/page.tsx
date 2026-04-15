@@ -3,10 +3,8 @@ import { Metadata } from 'next';
 import { redirect } from 'next/navigation';
 import { getServerSession } from 'next-auth/next';
 import { authOptions } from '@/app/lib/auth/auth-options';
-import { cachedUserProfileStats, cachedUserTicks } from '@/app/lib/graphql/server-cached-client';
-import { SUPPORTED_BOARDS } from '@/app/lib/board-data';
 import { getProfileData } from '../profile/[user_id]/server-profile-data';
-import type { LogbookEntry } from '../profile/[user_id]/utils/profile-constants';
+import { fetchProfileStatsData } from '../profile/[user_id]/server-profile-stats';
 import YouPageContent from './you-page-content';
 
 export const metadata: Metadata = {
@@ -23,40 +21,18 @@ export default async function YouPage() {
 
   const userId = session.user.id;
 
-  const [initialProfile, initialProfileStats, ...ticksResults] = await Promise.all([
+  const [initialProfile, statsData] = await Promise.all([
     getProfileData(userId, userId),
-    cachedUserProfileStats(userId),
-    ...SUPPORTED_BOARDS.map((boardType) => cachedUserTicks(userId, boardType)),
+    fetchProfileStatsData(userId),
   ]);
-
-  // Build allBoardsTicks record
-  const initialAllBoardsTicks: Record<string, LogbookEntry[]> = {};
-  SUPPORTED_BOARDS.forEach((bt, i) => {
-    const ticks = ticksResults[i];
-    initialAllBoardsTicks[bt] = ticks
-      ? ticks.map((tick) => ({
-          climbed_at: tick.climbedAt,
-          difficulty: tick.difficulty,
-          tries: tick.attemptCount,
-          angle: tick.angle,
-          status: tick.status as LogbookEntry['status'],
-          layoutId: tick.layoutId,
-          boardType: bt,
-          climbUuid: tick.climbUuid,
-        }))
-      : [];
-  });
-
-  const defaultBoard = 'kilter';
-  const initialLogbook = initialAllBoardsTicks[defaultBoard] ?? [];
 
   return (
     <YouPageContent
       userId={userId}
       initialProfile={initialProfile}
-      initialProfileStats={initialProfileStats}
-      initialAllBoardsTicks={initialAllBoardsTicks}
-      initialLogbook={initialLogbook}
+      initialProfileStats={statsData.initialProfileStats}
+      initialAllBoardsTicks={statsData.initialAllBoardsTicks}
+      initialLogbook={statsData.initialLogbook}
     />
   );
 }

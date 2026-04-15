@@ -27,6 +27,7 @@
 
 .content {
   padding: 24px; /* spacing.6 */
+  padding-bottom: calc(170px + env(safe-area-inset-bottom, 0px));
   max-width: 800px;
   margin: 0 auto;
   width: 100%;
