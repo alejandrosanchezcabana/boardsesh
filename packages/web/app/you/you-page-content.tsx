@@ -8,7 +8,7 @@ import CircularProgress from '@mui/material/CircularProgress';
 import ActivityFeed from '@/app/components/activity-feed/activity-feed';
 import LogbookFeed from '@/app/components/library/logbook-feed';
 import { useSession } from 'next-auth/react';
-import { useRouter, useSearchParams } from 'next/navigation';
+import { useRouter, usePathname } from 'next/navigation';
 import type { GetUserProfileStatsQueryResponse } from '@/app/lib/graphql/operations/ticks';
 import styles from '@/app/profile/[user_id]/profile-page.module.css';
 import { useProfileData } from '@/app/profile/[user_id]/hooks/use-profile-data';
@@ -19,7 +19,7 @@ import type { UserProfile, LogbookEntry } from '@/app/profile/[user_id]/utils/pr
 type YouTab = 'progress' | 'sessions' | 'logbook';
 const VALID_TABS: YouTab[] = ['progress', 'sessions', 'logbook'];
 
-interface YouPageContentProps {
+export interface YouPageContentProps {
   userId: string;
   initialProfile?: UserProfile | null;
   initialProfileStats?: GetUserProfileStatsQueryResponse['userProfileStats'] | null;
@@ -36,7 +36,7 @@ export default function YouPageContent({
 }: YouPageContentProps) {
   const { status: sessionStatus } = useSession();
   const router = useRouter();
-  const searchParams = useSearchParams();
+  const pathname = usePathname();
 
   const {
     loading,
@@ -71,22 +71,17 @@ export default function YouPageContent({
     initialIsOwnProfile: true,
   });
 
-  // Tab state from URL search params
-  const tabParam = searchParams.get('tab');
-  const activeTab: YouTab = VALID_TABS.includes(tabParam as YouTab)
-    ? (tabParam as YouTab)
-    : 'progress';
+  // Tab state from URL path
+  const activeTab: YouTab = pathname === '/you/sessions'
+    ? 'sessions'
+    : pathname === '/you/logbook'
+      ? 'logbook'
+      : 'progress';
 
   const handleTabChange = useCallback((_: React.SyntheticEvent, value: YouTab) => {
-    const params = new URLSearchParams(searchParams.toString());
-    if (value === 'progress') {
-      params.delete('tab');
-    } else {
-      params.set('tab', value);
-    }
-    const qs = params.toString();
-    router.push(qs ? `/you?${qs}` : '/you', { scroll: false });
-  }, [router, searchParams]);
+    const path = value === 'progress' ? '/you' : `/you/${value}`;
+    router.push(path, { scroll: false });
+  }, [router]);
 
   // Determine if user is authenticated (for ActivityFeed)
   const isAuthenticated = sessionStatus === 'authenticated';
