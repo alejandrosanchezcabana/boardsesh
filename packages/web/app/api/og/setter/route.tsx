@@ -6,6 +6,8 @@ import { sql } from 'drizzle-orm';
 import { themeTokens } from '@/app/theme/theme-config';
 import { FONT_GRADE_COLORS, getGradeColorWithOpacity } from '@/app/lib/grade-colors';
 import { BOULDER_GRADES } from '@/app/lib/board-data';
+import { createOgImageHeaders, OG_IMAGE_HEIGHT, OG_IMAGE_WIDTH } from '@/app/lib/seo/og';
+import { getSetterOgSummary } from '@/app/lib/seo/dynamic-og-data';
 
 export const runtime = 'edge';
 
@@ -19,29 +21,20 @@ const DIFFICULTY_TO_GRADE: Record<number, string> = Object.fromEntries(
 const GRADE_ORDER: string[] = BOULDER_GRADES.map((g) => g.font_grade);
 
 export async function GET(request: NextRequest) {
+  const routeT0 = performance.now();
+
   try {
     const { searchParams } = new URL(request.url);
     const username = searchParams.get('username');
+    const version = searchParams.get('v');
 
     if (!username) {
       return new Response('Missing username parameter', { status: 400 });
     }
 
-    // Fetch setter profile info and grade distribution in parallel
-    const [setterResult, gradeResult] = await Promise.all([
-      dbz.execute<{
-        user_id: string;
-        name: string | null;
-        display_name: string | null;
-        avatar_url: string | null;
-      }>(sql`
-        SELECT ubm.user_id, u.name, p.display_name, p.avatar_url
-        FROM user_board_mappings ubm
-        JOIN users u ON u.id = ubm.user_id
-        LEFT JOIN user_profiles p ON p.user_id = ubm.user_id
-        WHERE ubm.board_username = ${username}
-        LIMIT 1
-      `),
+    const dbT0 = performance.now();
+    const [summary, gradeResult] = await Promise.all([
+      getSetterOgSummary(username),
       dbz.execute<{
         difficulty: number;
         cnt: number;
@@ -56,14 +49,12 @@ export async function GET(request: NextRequest) {
         ORDER BY bt.difficulty
       `),
     ]);
-    const setterRows = setterResult.rows;
+    const dbMs = performance.now() - dbT0;
     const gradeRows = gradeResult.rows;
 
-    // Setter may not be linked to a user account — that's okay
-    const setter = setterRows.length > 0 ? setterRows[0] : null;
-    const displayName = setter?.display_name || setter?.name || username;
+    const displayName = summary.displayName;
     const origin = process.env.VERCEL_URL ? 'https://www.boardsesh.com' : 'http://localhost:3000';
-    const rawAvatarUrl = setter?.avatar_url || null;
+    const rawAvatarUrl = summary.avatarUrl || null;
     const avatarUrl = rawAvatarUrl && !rawAvatarUrl.startsWith('http') ? `${origin}${rawAvatarUrl}` : rawAvatarUrl;
 
     // Build grade bars from ascents of climbs this setter created
@@ -86,6 +77,7 @@ export async function GET(request: NextRequest) {
     gradeBars.sort((a, b) => GRADE_ORDER.indexOf(a.grade) - GRADE_ORDER.indexOf(b.grade));
 
     const maxCount = Math.max(...gradeBars.map((b) => b.count), 1);
+    const renderMs = performance.now() - routeT0 - dbMs;
 
     return new ImageResponse(
       (
@@ -243,8 +235,13 @@ export async function GET(request: NextRequest) {
         </div>
       ),
       {
-        width: 1200,
-        height: 630,
+        width: OG_IMAGE_WIDTH,
+        height: OG_IMAGE_HEIGHT,
+        headers: createOgImageHeaders({
+          contentType: 'image/png',
+          version,
+          serverTiming: `db;dur=${dbMs.toFixed(1)}, render;dur=${renderMs.toFixed(1)}, route;dur=${(performance.now() - routeT0).toFixed(1)}`,
+        }),
       },
     );
   } catch (error) {

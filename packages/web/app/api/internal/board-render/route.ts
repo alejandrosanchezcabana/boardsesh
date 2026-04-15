@@ -6,6 +6,7 @@ import sharp from 'sharp';
 import { getBoardDetailsForBoard } from '@/app/lib/board-utils';
 import { HOLD_STATE_MAP, THUMBNAIL_WIDTH } from '@/app/components/board-renderer/types';
 import type { BoardName } from '@/app/lib/types';
+import { createOgImageHeaders, OG_IMAGE_HEIGHT, OG_IMAGE_WIDTH } from '@/app/lib/seo/og';
 
 // Node.js runtime for reliable WASM loading via filesystem
 export const runtime = 'nodejs';
@@ -19,6 +20,14 @@ const THUMBNAIL_WEBP_OPTIONS: sharp.WebpOptions = {
 const DEFAULT_WEBP_OPTIONS: sharp.WebpOptions = {
   quality: 80,
 };
+
+const DEFAULT_PNG_OPTIONS: sharp.PngOptions = {
+  compressionLevel: 9,
+  adaptiveFiltering: true,
+};
+
+const OG_BOARD_PADDING_X = 48;
+const OG_BOARD_PADDING_Y = 48;
 
 // Lazily initialized WASM module with promise lock to prevent thundering herd
 let renderOverlay: ((configJson: string) => Uint8Array) | null = null;
@@ -130,6 +139,36 @@ function getBackgroundRelPaths(boardDetails: BoardDetailsForBg, isThumbnail: boo
   return paths;
 }
 
+function createOgBackgroundBuffer(boardWidth: number, boardHeight: number): Buffer {
+  const boardX = Math.round((OG_IMAGE_WIDTH - boardWidth) / 2);
+  const boardY = Math.round((OG_IMAGE_HEIGHT - boardHeight) / 2);
+  const frameX = Math.max(boardX - 16, 16);
+  const frameY = Math.max(boardY - 16, 16);
+  const frameWidth = Math.min(boardWidth + 32, OG_IMAGE_WIDTH - frameX * 2);
+  const frameHeight = Math.min(boardHeight + 32, OG_IMAGE_HEIGHT - frameY * 2);
+
+  return Buffer.from(
+    `
+      <svg width="${OG_IMAGE_WIDTH}" height="${OG_IMAGE_HEIGHT}" viewBox="0 0 ${OG_IMAGE_WIDTH} ${OG_IMAGE_HEIGHT}" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+          <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stop-color="#071018" />
+            <stop offset="100%" stop-color="#0D1218" />
+          </linearGradient>
+          <filter id="blur">
+            <feGaussianBlur stdDeviation="48" />
+          </filter>
+        </defs>
+        <rect width="${OG_IMAGE_WIDTH}" height="${OG_IMAGE_HEIGHT}" fill="url(#bg)" />
+        <circle cx="212" cy="144" r="156" fill="#5DBE94" opacity="0.18" filter="url(#blur)" />
+        <circle cx="984" cy="468" r="188" fill="#C75B64" opacity="0.16" filter="url(#blur)" />
+        <rect x="24" y="24" width="${OG_IMAGE_WIDTH - 48}" height="${OG_IMAGE_HEIGHT - 48}" rx="28" fill="none" stroke="rgba(255,255,255,0.08)" />
+        <rect x="${frameX}" y="${frameY}" width="${frameWidth}" height="${frameHeight}" rx="22" fill="rgba(6, 10, 14, 0.55)" stroke="rgba(255,255,255,0.10)" />
+      </svg>
+    `,
+  );
+}
+
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
@@ -141,6 +180,8 @@ export async function GET(request: NextRequest) {
     const frames = searchParams.get('frames');
     const thumbnail = searchParams.get('thumbnail') === '1';
     const includeBackground = searchParams.get('include_background') === '1';
+    const isOgVariant = searchParams.get('variant') === 'og';
+    const format = searchParams.get('format') ?? (isOgVariant ? 'png' : 'webp');
     // Mirroring is handled client-side via CSS scaleX(-1) to maximize cache hit rate
 
     if (!boardName || !layoutId || !sizeId || !setIds || !frames) {
@@ -149,6 +190,10 @@ export async function GET(request: NextRequest) {
 
     if (!VALID_BOARD_NAMES.has(boardName)) {
       return NextResponse.json({ error: 'Invalid board_name' }, { status: 400 });
+    }
+
+    if (format !== 'webp' && format !== 'png') {
+      return NextResponse.json({ error: 'Invalid format' }, { status: 400 });
     }
 
     const parsedSetIds = setIds.split(',').map(Number).filter((n) => !isNaN(n));
@@ -160,6 +205,17 @@ export async function GET(request: NextRequest) {
       size_id: Number(sizeId),
       set_ids: parsedSetIds,
     });
+    const ogScale = isOgVariant
+      ? Math.min(
+          (OG_IMAGE_WIDTH - OG_BOARD_PADDING_X * 2) / boardDetails.boardWidth,
+          (OG_IMAGE_HEIGHT - OG_BOARD_PADDING_Y * 2) / boardDetails.boardHeight,
+        )
+      : null;
+    const outputWidth = isOgVariant
+      ? Math.max(1, Math.round(boardDetails.boardWidth * (ogScale || 1)))
+      : thumbnail
+        ? THUMBNAIL_WIDTH
+        : boardDetails.boardWidth;
 
     // Build hold state map for this board
     const holdStateMap: Record<number, { color: string; renderStyle?: string }> = {};
@@ -176,7 +232,7 @@ export async function GET(request: NextRequest) {
       board_name: boardName,
       board_width: boardDetails.boardWidth,
       board_height: boardDetails.boardHeight,
-      output_width: thumbnail ? THUMBNAIL_WIDTH : boardDetails.boardWidth,
+      output_width: outputWidth,
       frames,
       mirrored: false,
       thumbnail,
@@ -209,8 +265,12 @@ export async function GET(request: NextRequest) {
     const overlayBuffer = Buffer.from(rgbaData.buffer, rgbaData.byteOffset, rgbaData.byteLength);
 
     const sharpT0 = performance.now();
-    let webpBuffer: Buffer;
+    let imageBuffer: Buffer | null = null;
+    let outputBuffer: Buffer | null = null;
+    let outputContentType = 'image/png';
     let bgMs = 0;
+    let composeMs = 0;
+    let didCompositeBackground = false;
 
     if (includeBackground) {
       const bgT0 = performance.now();
@@ -235,47 +295,115 @@ export async function GET(request: NextRequest) {
 
         if (firstBg) {
           // Composite: first background as base → remaining backgrounds → WASM overlay on top
-          webpBuffer = await sharp(firstBg)
-            .composite([
-              ...restBgs.map((buf) => ({ input: buf, blend: 'over' as const })),
-              {
-                input: overlayBuffer,
-                raw: { width, height, channels: 4 as const },
-                blend: 'over' as const,
-              },
-            ])
-            .webp(thumbnail ? THUMBNAIL_WEBP_OPTIONS : DEFAULT_WEBP_OPTIONS)
-            .toBuffer();
+          const composeT0 = performance.now();
+          const compositedImage = sharp(firstBg).composite([
+            ...restBgs.map((buf) => ({ input: buf, blend: 'over' as const })),
+            {
+              input: overlayBuffer,
+              raw: { width, height, channels: 4 as const },
+              blend: 'over' as const,
+            },
+          ]);
+          if (!isOgVariant && format === 'webp') {
+            outputBuffer = await compositedImage
+              .webp(thumbnail ? THUMBNAIL_WEBP_OPTIONS : DEFAULT_WEBP_OPTIONS)
+              .toBuffer();
+            outputContentType = 'image/webp';
+          } else {
+            imageBuffer = await compositedImage.png(DEFAULT_PNG_OPTIONS).toBuffer();
+          }
+          composeMs = performance.now() - composeT0;
+          didCompositeBackground = true;
         } else {
           // All background loads failed — fall back to overlay-only
-          webpBuffer = await sharp(overlayBuffer, { raw: { width, height, channels: 4 } })
-            .webp(thumbnail ? THUMBNAIL_WEBP_OPTIONS : { lossless: true })
-            .toBuffer();
+          const composeT0 = performance.now();
+          const overlayImage = sharp(overlayBuffer, { raw: { width, height, channels: 4 } });
+          if (!isOgVariant && format === 'webp') {
+            outputBuffer = await overlayImage
+              .webp(thumbnail ? THUMBNAIL_WEBP_OPTIONS : { lossless: true })
+              .toBuffer();
+            outputContentType = 'image/webp';
+          } else {
+            imageBuffer = await overlayImage.png(DEFAULT_PNG_OPTIONS).toBuffer();
+          }
+          composeMs = performance.now() - composeT0;
         }
       } else {
         // No background images found — fall back to overlay-only lossless
-        webpBuffer = await sharp(overlayBuffer, { raw: { width, height, channels: 4 } })
-          .webp(thumbnail ? THUMBNAIL_WEBP_OPTIONS : { lossless: true })
-          .toBuffer();
+        const composeT0 = performance.now();
+        const overlayImage = sharp(overlayBuffer, { raw: { width, height, channels: 4 } });
+        if (!isOgVariant && format === 'webp') {
+          outputBuffer = await overlayImage
+            .webp(thumbnail ? THUMBNAIL_WEBP_OPTIONS : { lossless: true })
+            .toBuffer();
+          outputContentType = 'image/webp';
+        } else {
+          imageBuffer = await overlayImage.png(DEFAULT_PNG_OPTIONS).toBuffer();
+        }
+        composeMs = performance.now() - composeT0;
       }
     } else {
       // Default: overlay-only lossless WebP (25-30% smaller than PNG)
-      webpBuffer = await sharp(overlayBuffer, { raw: { width, height, channels: 4 } })
-        .webp(thumbnail ? THUMBNAIL_WEBP_OPTIONS : { lossless: true })
-        .toBuffer();
+      const composeT0 = performance.now();
+      const overlayImage = sharp(overlayBuffer, { raw: { width, height, channels: 4 } });
+      if (!isOgVariant && format === 'webp') {
+        outputBuffer = await overlayImage
+          .webp(thumbnail ? THUMBNAIL_WEBP_OPTIONS : { lossless: true })
+          .toBuffer();
+        outputContentType = 'image/webp';
+      } else {
+        imageBuffer = await overlayImage.png(DEFAULT_PNG_OPTIONS).toBuffer();
+      }
+      composeMs = performance.now() - composeT0;
     }
+
+    const encodeT0 = performance.now();
+
+    if (outputBuffer === null && isOgVariant && imageBuffer) {
+      outputBuffer = await sharp(createOgBackgroundBuffer(width, height))
+        .composite([
+          {
+            input: imageBuffer,
+            left: Math.round((OG_IMAGE_WIDTH - width) / 2),
+            top: Math.round((OG_IMAGE_HEIGHT - height) / 2),
+            blend: 'over',
+          },
+        ])
+        .png(DEFAULT_PNG_OPTIONS)
+        .toBuffer();
+      outputContentType = 'image/png';
+    } else if (outputBuffer === null && imageBuffer && format === 'webp') {
+      outputBuffer = await sharp(imageBuffer)
+        .webp(thumbnail ? THUMBNAIL_WEBP_OPTIONS : didCompositeBackground ? DEFAULT_WEBP_OPTIONS : { lossless: true })
+        .toBuffer();
+      outputContentType = 'image/webp';
+    } else if (outputBuffer === null && imageBuffer) {
+      outputBuffer = imageBuffer;
+      outputContentType = 'image/png';
+    }
+
+    if (!outputBuffer) {
+      return NextResponse.json({ error: 'Render failed: no output buffer generated' }, { status: 500 });
+    }
+
+    const encodeMs = performance.now() - encodeT0;
     const sharpMs = performance.now() - sharpT0;
 
-    const timingParts = [`wasm;dur=${wasmMs.toFixed(1)}`, `sharp;dur=${sharpMs.toFixed(1)}`];
+    const timingParts = [
+      `wasm;dur=${wasmMs.toFixed(1)}`,
+      `sharp;dur=${sharpMs.toFixed(1)}`,
+      `compose;dur=${composeMs.toFixed(1)}`,
+      `encode;dur=${encodeMs.toFixed(1)}`,
+    ];
     if (bgMs > 0) timingParts.push(`bg;dur=${bgMs.toFixed(1)}`);
 
-    return new NextResponse(new Uint8Array(webpBuffer), {
+    return new NextResponse(new Uint8Array(outputBuffer), {
       headers: {
-        'Content-Type': 'image/webp',
-        // Climbs are immutable -- cache forever at both CDN (s-maxage) and browser (max-age)
-        'Cache-Control': 'public, s-maxage=31536000, max-age=31536000, immutable',
-        // Expose render timing in browser devtools Network panel
-        'Server-Timing': timingParts.join(', '),
+        ...createOgImageHeaders({
+          contentType: outputContentType,
+          version: 'immutable',
+          serverTiming: timingParts.join(', '),
+        }),
       },
     });
   } catch (error) {

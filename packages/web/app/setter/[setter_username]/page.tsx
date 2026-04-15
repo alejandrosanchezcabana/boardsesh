@@ -1,9 +1,9 @@
 import React from 'react';
 import type { Metadata } from 'next';
-import { dbz } from '@/app/lib/db/db';
-import { sql } from 'drizzle-orm';
 import SetterProfileContent from './setter-profile-content';
 import styles from '@/app/components/library/playlist-view.module.css';
+import { buildVersionedOgImagePath, OG_IMAGE_HEIGHT, OG_IMAGE_WIDTH } from '@/app/lib/seo/og';
+import { getSetterOgSummary } from '@/app/lib/seo/dynamic-og-data';
 
 export async function generateMetadata({
   params,
@@ -14,20 +14,13 @@ export async function generateMetadata({
   const username = decodeURIComponent(setter_username);
 
   try {
-    const result = await dbz.execute<{
-      display_name: string | null;
-      name: string | null;
-    }>(sql`
-      SELECT p.display_name, u.name
-      FROM user_board_mappings ubm
-      JOIN users u ON u.id = ubm.user_id
-      LEFT JOIN user_profiles p ON p.user_id = ubm.user_id
-      WHERE ubm.board_username = ${username}
-      LIMIT 1
-    `);
-
-    const displayName = result.rows[0]?.display_name || result.rows[0]?.name || username;
-    const ogImagePath = `/api/og/setter?username=${encodeURIComponent(setter_username)}`;
+    const summary = await getSetterOgSummary(username);
+    const displayName = summary.displayName;
+    const ogImagePath = buildVersionedOgImagePath(
+      '/api/og/setter',
+      { username },
+      summary.version,
+    );
     const title = `${displayName} - Setter | Boardsesh`;
     const description = `Climbs created by ${displayName} on Boardsesh`;
     const canonicalUrl = `/setter/${encodeURIComponent(setter_username)}`;
@@ -40,7 +33,7 @@ export async function generateMetadata({
         title,
         description,
         url: canonicalUrl,
-        images: [{ url: ogImagePath, width: 1200, height: 630, alt: `${displayName}'s setter profile` }],
+        images: [{ url: ogImagePath, width: OG_IMAGE_WIDTH, height: OG_IMAGE_HEIGHT, alt: `${displayName}'s setter profile` }],
       },
       twitter: {
         card: 'summary_large_image',

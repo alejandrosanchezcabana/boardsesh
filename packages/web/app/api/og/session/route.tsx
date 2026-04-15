@@ -1,11 +1,11 @@
 import React from 'react';
 import { ImageResponse } from '@vercel/og';
 import { NextRequest } from 'next/server';
-import { dbz } from '@/app/lib/db/db';
-import { sql } from 'drizzle-orm';
 import { themeTokens } from '@/app/theme/theme-config';
 import { FONT_GRADE_COLORS, getGradeColorWithOpacity } from '@/app/lib/grade-colors';
 import { BOULDER_GRADES } from '@/app/lib/board-data';
+import { createOgImageHeaders, OG_IMAGE_HEIGHT, OG_IMAGE_WIDTH } from '@/app/lib/seo/og';
+import { getSessionOgSummary } from '@/app/lib/seo/dynamic-og-data';
 
 export const runtime = 'edge';
 
@@ -16,76 +16,37 @@ const DIFFICULTY_TO_GRADE: Record<number, string> = Object.fromEntries(
 const GRADE_ORDER: string[] = BOULDER_GRADES.map((g) => g.font_grade);
 
 export async function GET(request: NextRequest) {
+  const routeT0 = performance.now();
+
   try {
     const { searchParams } = new URL(request.url);
     const sessionId = searchParams.get('sessionId');
     const variant = searchParams.get('variant');
+    const version = searchParams.get('v');
 
     if (!sessionId) {
       return new Response('Missing sessionId parameter', { status: 400 });
     }
 
-    // Fetch session info, participants, and grade distribution in parallel
-    const [sessionResult, participantResult, gradeResult] = await Promise.all([
-      dbz.execute<{
-        id: string;
-        session_name: string | null;
-        board_path: string | null;
-      }>(sql`
-        SELECT bs.id, bs.session_name, bs.board_path
-        FROM board_sessions bs
-        WHERE bs.id = ${sessionId}
-        LIMIT 1
-      `),
-      dbz.execute<{
-        display_name: string;
-      }>(sql`
-        SELECT DISTINCT
-          COALESCE(up.display_name, u.name, 'Climber') as display_name
-        FROM boardsesh_ticks bt
-        JOIN users u ON u.id = bt.user_id
-        LEFT JOIN user_profiles up ON up.user_id = bt.user_id
-        WHERE bt.session_id = ${sessionId}
-        LIMIT 6
-      `),
-      dbz.execute<{
-        difficulty: number;
-        cnt: number;
-      }>(sql`
-        SELECT bt.difficulty, COUNT(*) as cnt
-        FROM boardsesh_ticks bt
-        WHERE bt.session_id = ${sessionId}
-          AND bt.status IN ('flash', 'send')
-          AND bt.difficulty IS NOT NULL
-        GROUP BY bt.difficulty
-        ORDER BY bt.difficulty
-      `),
-    ]);
-    const sessionRows = sessionResult.rows;
-    const participantRows = participantResult.rows;
-    const gradeRows = gradeResult.rows;
+    const dbT0 = performance.now();
+    const summary = await getSessionOgSummary(sessionId);
+    const dbMs = performance.now() - dbT0;
 
-    if (sessionRows.length === 0) {
+    if (!summary.found) {
       return new Response('Session not found', { status: 404 });
     }
 
-    const session = sessionRows[0];
-    const sessionName = (session.session_name as string) || 'Climbing Session';
-    const participantNames = participantRows
-      .map((r) => r.display_name as string)
-      .join(', ');
+    const sessionName = summary.sessionName;
+    const participantNames = summary.participantNames.join(', ');
 
     // Build grade bars
     const gradeBars: Array<{ grade: string; count: number; color: string }> = [];
-    let totalSends = 0;
-
-    for (const row of gradeRows) {
-      const difficulty = Number(row.difficulty);
-      const count = Number(row.cnt);
+    for (const row of summary.gradeRows) {
+      const difficulty = row.difficulty;
+      const count = row.count;
       const grade = DIFFICULTY_TO_GRADE[difficulty];
       if (!grade) continue;
 
-      totalSends += count;
       const hex = FONT_GRADE_COLORS[grade.toLowerCase()];
       const color = hex ? getGradeColorWithOpacity(hex, 0.5) : 'rgba(200, 200, 200, 0.5)';
       gradeBars.push({ grade, count, color });
@@ -147,8 +108,8 @@ export async function GET(request: NextRequest) {
                 color: themeTokens.neutral[400],
               }}
             >
-              {totalSends > 0
-                ? `${totalSends} send${totalSends !== 1 ? 's' : ''}`
+              {summary.totalSends > 0
+                ? `${summary.totalSends} send${summary.totalSends !== 1 ? 's' : ''}`
                 : 'No sends yet'}
             </div>
           </div>
@@ -240,8 +201,13 @@ export async function GET(request: NextRequest) {
         </div>
       ),
       {
-        width: 1200,
-        height: 630,
+        width: OG_IMAGE_WIDTH,
+        height: OG_IMAGE_HEIGHT,
+        headers: createOgImageHeaders({
+          contentType: 'image/png',
+          version,
+          serverTiming: `db;dur=${dbMs.toFixed(1)}, render;dur=${(performance.now() - routeT0 - dbMs).toFixed(1)}, route;dur=${(performance.now() - routeT0).toFixed(1)}`,
+        }),
       },
     );
   } catch (error) {

@@ -8,6 +8,8 @@ import { getClimb } from '@/app/lib/data/queries';
 import PlayViewClient from '@/app/[board_name]/[layout_id]/[size_id]/[set_ids]/[angle]/play/[climb_uuid]/play-view-client';
 import { scheduleOverlayWarming } from '@/app/lib/warm-overlay-cache';
 import { extractUuidFromSlug } from '@/app/lib/url-utils';
+import { buildOgBoardRenderUrl } from '@/app/components/board-renderer/util';
+import { OG_IMAGE_HEIGHT, OG_IMAGE_WIDTH } from '@/app/lib/seo/og';
 
 interface BoardSlugPlayPageProps {
   params: Promise<{ board_slug: string; angle: string; climb_uuid: string }>;
@@ -39,14 +41,7 @@ export async function generateMetadata(props: BoardSlugPlayPageProps): Promise<M
     const title = `${climbName} - ${climbGrade} | Boardsesh`;
     const canonicalUrl = `/b/${params.board_slug}/${params.angle}/play/${params.climb_uuid}`;
 
-    const ogParams = new URLSearchParams();
-    ogParams.set('board_name', parsedParams.board_name);
-    ogParams.set('layout_id', parsedParams.layout_id.toString());
-    ogParams.set('size_id', parsedParams.size_id.toString());
-    ogParams.set('set_ids', parsedParams.set_ids.join(','));
-    ogParams.set('angle', parsedParams.angle.toString());
-    ogParams.set('climb_uuid', parsedParams.climb_uuid);
-    const ogImagePath = `/api/og/climb?${ogParams.toString()}`;
+    const ogImagePath = buildOgBoardRenderUrl(boardDetails, currentClimb.frames);
 
     return {
       title,
@@ -61,8 +56,8 @@ export async function generateMetadata(props: BoardSlugPlayPageProps): Promise<M
         images: [
           {
             url: ogImagePath,
-            width: 1200,
-            height: 630,
+            width: OG_IMAGE_WIDTH,
+            height: OG_IMAGE_HEIGHT,
             alt: `${climbName} - ${climbGrade} on ${boardDetails.board_name} board`,
           },
         ],

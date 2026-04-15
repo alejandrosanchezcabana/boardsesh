@@ -4,6 +4,8 @@ import { GraphQLClient } from 'graphql-request';
 import { getGraphQLHttpUrl } from '@/app/lib/graphql/client';
 import { GET_SESSION_DETAIL, type GetSessionDetailQueryResponse } from '@/app/lib/graphql/operations/activity-feed';
 import SessionDetailContent from './session-detail-content';
+import { buildVersionedOgImagePath, OG_IMAGE_HEIGHT, OG_IMAGE_WIDTH } from '@/app/lib/seo/og';
+import { getSessionOgSummary } from '@/app/lib/seo/dynamic-og-data';
 
 type Props = {
   params: Promise<{ sessionId: string }>;
@@ -27,22 +29,19 @@ const fetchSessionDetail = React.cache(async (sessionId: string) => {
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { sessionId: rawSessionId } = await params;
   const sessionId = decodeURIComponent(rawSessionId);
-  const session = await fetchSessionDetail(sessionId);
+  const summary = await getSessionOgSummary(sessionId);
 
-  if (!session) {
+  if (!summary.found) {
     return { title: 'Session Not Found | Boardsesh' };
   }
 
-  const participantNames = session.participants
-    .map((p) => p.displayName || 'Climber')
-    .join(', ');
-
-  const sessionName = session.sessionName || 'Climbing Session';
+  const participantNames = summary.participantNames.join(', ');
+  const sessionName = summary.sessionName;
   const title = `${sessionName} | Boardsesh`;
 
   let description: string;
-  if (session.totalSends > 0 || session.totalFlashes > 0) {
-    const stats = `${session.totalSends} send${session.totalSends !== 1 ? 's' : ''}, ${session.totalFlashes} flash${session.totalFlashes !== 1 ? 'es' : ''}`;
+  if (summary.totalSends > 0) {
+    const stats = `${summary.totalSends} send${summary.totalSends !== 1 ? 's' : ''}`;
     description = participantNames ? `${participantNames} — ${stats}` : stats;
   } else {
     description = participantNames
@@ -50,9 +49,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
       : `${sessionName} on Boardsesh`;
   }
 
-  const ogParams = new URLSearchParams();
-  ogParams.set('sessionId', sessionId);
-  const ogImage = `/api/og/session?${ogParams.toString()}`;
+  const ogImage = buildVersionedOgImagePath('/api/og/session', { sessionId }, summary.version);
   const canonicalUrl = `/session/${sessionId}`;
 
   return {
@@ -64,7 +61,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
       description,
       type: 'website',
       url: `/session/${sessionId}`,
-      images: [{ url: ogImage, width: 1200, height: 630, alt: title }],
+      images: [{ url: ogImage, width: OG_IMAGE_WIDTH, height: OG_IMAGE_HEIGHT, alt: title }],
     },
     twitter: {
       card: 'summary_large_image',

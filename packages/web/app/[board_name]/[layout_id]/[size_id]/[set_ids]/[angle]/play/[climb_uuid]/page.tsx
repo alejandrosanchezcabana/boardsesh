@@ -8,6 +8,8 @@ import { getClimb } from '@/app/lib/data/queries';
 import PlayViewClient from './play-view-client';
 import { Metadata } from 'next';
 import { scheduleOverlayWarming } from '@/app/lib/warm-overlay-cache';
+import { buildOgBoardRenderUrl } from '@/app/components/board-renderer/util';
+import { OG_IMAGE_HEIGHT, OG_IMAGE_WIDTH } from '@/app/lib/seo/og';
 
 
 export async function generateMetadata(props: { params: Promise<BoardRouteParametersWithUuid> }): Promise<Metadata> {
@@ -37,15 +39,7 @@ export async function generateMetadata(props: { params: Promise<BoardRouteParame
           )
         : `/${parsedParams.board_name}/${parsedParams.layout_id}/${parsedParams.size_id}/${parsedParams.set_ids.join(',')}/${parsedParams.angle}/play/${parsedParams.climb_uuid}`;
 
-    // Generate OG image URL - use parsed numeric IDs for better performance
-    const ogParams = new URLSearchParams();
-    ogParams.set('board_name', parsedParams.board_name);
-    ogParams.set('layout_id', parsedParams.layout_id.toString());
-    ogParams.set('size_id', parsedParams.size_id.toString());
-    ogParams.set('set_ids', parsedParams.set_ids.join(','));
-    ogParams.set('angle', parsedParams.angle.toString());
-    ogParams.set('climb_uuid', parsedParams.climb_uuid);
-    const ogImagePath = `/api/og/climb?${ogParams.toString()}`;
+    const ogImagePath = buildOgBoardRenderUrl(boardDetails, currentClimb.frames);
 
     return {
       title: `${climbName} - ${climbGrade} | Play Mode | Boardsesh`,
@@ -58,8 +52,8 @@ export async function generateMetadata(props: { params: Promise<BoardRouteParame
         images: [
           {
             url: ogImagePath,
-            width: 1200,
-            height: 630,
+            width: OG_IMAGE_WIDTH,
+            height: OG_IMAGE_HEIGHT,
             alt: `${climbName} - ${climbGrade} on ${boardDetails.board_name} board`,
           },
         ],

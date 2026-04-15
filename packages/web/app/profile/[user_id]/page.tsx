@@ -1,14 +1,13 @@
 import React from 'react';
 import { Metadata } from 'next';
-import { getDb } from '@/app/lib/db/db';
-import * as schema from '@/app/lib/db/schema';
-import { eq } from 'drizzle-orm';
 import { getServerAuthToken } from '@/app/lib/auth/server-auth';
 import { getServerSession } from 'next-auth/next';
 import { authOptions } from '@/app/lib/auth/auth-options';
 import ProfilePageContent from './profile-page-content';
 import { getProfileData } from './server-profile-data';
 import { fetchProfileStatsData } from './server-profile-stats';
+import { buildVersionedOgImagePath, OG_IMAGE_HEIGHT, OG_IMAGE_WIDTH } from '@/app/lib/seo/og';
+import { getProfileOgSummary } from '@/app/lib/seo/dynamic-og-data';
 
 type PageProps = {
   params: Promise<{ user_id: string }>;
@@ -18,19 +17,9 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   const { user_id } = await params;
 
   try {
-    const db = getDb();
-    const rows = await db
-      .select({
-        name: schema.users.name,
-        displayName: schema.userProfiles.displayName,
-        avatarUrl: schema.userProfiles.avatarUrl,
-      })
-      .from(schema.users)
-      .leftJoin(schema.userProfiles, eq(schema.userProfiles.userId, schema.users.id))
-      .where(eq(schema.users.id, user_id))
-      .limit(1);
+    const summary = await getProfileOgSummary(user_id);
 
-    if (rows.length === 0) {
+    if (!summary) {
       return {
         title: 'Profile | Boardsesh',
         description: 'View climbing profile and stats',
@@ -38,13 +27,9 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
       };
     }
 
-    const row = rows[0];
-    const displayName = row.displayName || row.name || 'Climber';
+    const displayName = summary.displayName;
     const description = `${displayName}'s climbing profile on Boardsesh`;
-
-    const ogParams = new URLSearchParams();
-    ogParams.set('user_id', user_id);
-    const ogImagePath = `/api/og/profile?${ogParams.toString()}`;
+    const ogImagePath = buildVersionedOgImagePath('/api/og/profile', { user_id }, summary.version);
 
     return {
       title: `${displayName} | Boardsesh`,
@@ -58,8 +43,8 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
         images: [
           {
             url: ogImagePath,
-            width: 1200,
-            height: 630,
+            width: OG_IMAGE_WIDTH,
+            height: OG_IMAGE_HEIGHT,
             alt: `${displayName}'s climbing profile`,
           },
         ],

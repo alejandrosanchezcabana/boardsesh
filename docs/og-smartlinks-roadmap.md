@@ -8,10 +8,10 @@ Status of Open Graph metadata, dynamic OG images, and share buttons across all r
 
 | Route | OG Image API | Share Button | Notes |
 |-------|-------------|--------------|-------|
-| `[board_name]/.../view/[climb_uuid]` | `/api/og/climb` | Yes (climb actions drawer) | Board render + hold overlay + climb info |
-| `[board_name]/.../play/[climb_uuid]` | `/api/og/climb` | Yes (climb actions drawer) | Same as view, canonical to view URL |
-| `/b/[board_slug]/[angle]/view/[climb_uuid]` | `/api/og/climb` | Yes (inherited) | Slug route, same OG as legacy |
-| `/b/[board_slug]/[angle]/play/[climb_uuid]` | `/api/og/climb` | Yes (inherited) | Slug route, same OG as legacy |
+| `[board_name]/.../view/[climb_uuid]` | `/api/internal/board-render?variant=og&format=png` | Yes (climb actions drawer) | Immutable Rust-rendered board preview, no text overlay |
+| `[board_name]/.../play/[climb_uuid]` | `/api/internal/board-render?variant=og&format=png` | Yes (climb actions drawer) | Same as view, canonical to view URL |
+| `/b/[board_slug]/[angle]/view/[climb_uuid]` | `/api/internal/board-render?variant=og&format=png` | Yes (inherited) | Slug route, same immutable board preview |
+| `/b/[board_slug]/[angle]/play/[climb_uuid]` | `/api/internal/board-render?variant=og&format=png` | Yes (inherited) | Slug route, same immutable board preview |
 | `/crusher/[user_id]` | `/api/og/profile` | Yes (header) | Avatar + grade distribution chart |
 | `/setter/[setter_username]` | `/api/og/setter` | Yes (header) | Avatar + ascents-per-grade chart for created climbs |
 | `/session/[sessionId]` | `/api/og/session` | Yes (header) | Session name + participants + grade chart |
@@ -55,7 +55,7 @@ Status of Open Graph metadata, dynamic OG images, and share buttons across all r
 
 | Endpoint | Params | Renders |
 |----------|--------|---------|
-| `/api/og/climb` | board_name, layout_id, size_id, set_ids, angle, climb_uuid | Board background + lit holds + climb name/grade/setter |
+| `/api/og/climb` | board_name, layout_id, size_id, set_ids, angle, climb_uuid | Legacy compatibility redirect to immutable Rust-rendered board OG URL |
 | `/api/og/profile` | user_id | Avatar + name + grade distribution bar chart |
 | `/api/og/setter` | username | Avatar + name + ascents-per-grade bar chart for created climbs |
 | `/api/og/session` | sessionId, variant? | Session name + participants + grade chart. variant=join adds CTA |

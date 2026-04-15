@@ -5,6 +5,8 @@ import { sql } from '@/app/lib/db/db';
 import { themeTokens } from '@/app/theme/theme-config';
 import { FONT_GRADE_COLORS, getGradeColorWithOpacity } from '@/app/lib/grade-colors';
 import { BOULDER_GRADES } from '@/app/lib/board-data';
+import { createOgImageHeaders, OG_IMAGE_HEIGHT, OG_IMAGE_WIDTH } from '@/app/lib/seo/og';
+import { getProfileOgSummary } from '@/app/lib/seo/dynamic-og-data';
 
 export const runtime = 'edge';
 
@@ -18,23 +20,20 @@ const DIFFICULTY_TO_GRADE: Record<number, string> = Object.fromEntries(
 const GRADE_ORDER: string[] = BOULDER_GRADES.map((g) => g.font_grade);
 
 export async function GET(request: NextRequest) {
+  const routeT0 = performance.now();
+
   try {
     const { searchParams } = new URL(request.url);
     const userId = searchParams.get('user_id');
+    const version = searchParams.get('v');
 
     if (!userId) {
       return new Response('Missing user_id parameter', { status: 400 });
     }
 
-    // Fetch user profile and grade distribution in parallel
-    const [userRows, gradeRows] = await Promise.all([
-      sql`
-        SELECT u.name, u.image, p.display_name, p.avatar_url
-        FROM users u
-        LEFT JOIN user_profiles p ON p.user_id = u.id
-        WHERE u.id = ${userId}
-        LIMIT 1
-      `,
+    const dbT0 = performance.now();
+    const [summary, gradeRows] = await Promise.all([
+      getProfileOgSummary(userId),
       sql`
         SELECT difficulty, COUNT(DISTINCT climb_uuid) as cnt
         FROM boardsesh_ticks
@@ -45,14 +44,14 @@ export async function GET(request: NextRequest) {
         ORDER BY difficulty
       `,
     ]);
+    const dbMs = performance.now() - dbT0;
 
-    if (userRows.length === 0) {
+    if (!summary) {
       return new Response('User not found', { status: 404 });
     }
 
-    const user = userRows[0];
-    const displayName = user.display_name || user.name || 'Crusher';
-    const avatarUrl = user.avatar_url || user.image;
+    const displayName = summary.displayName;
+    const avatarUrl = summary.avatarUrl || summary.fallbackImageUrl;
 
     // Build grade bars
     const gradeBars: Array<{ grade: string; count: number; color: string }> = [];
@@ -74,6 +73,7 @@ export async function GET(request: NextRequest) {
     gradeBars.sort((a, b) => GRADE_ORDER.indexOf(a.grade) - GRADE_ORDER.indexOf(b.grade));
 
     const maxCount = Math.max(...gradeBars.map((b) => b.count), 1);
+    const renderMs = performance.now() - routeT0 - dbMs;
 
     return new ImageResponse(
       (
@@ -231,8 +231,13 @@ export async function GET(request: NextRequest) {
         </div>
       ),
       {
-        width: 1200,
-        height: 630,
+        width: OG_IMAGE_WIDTH,
+        height: OG_IMAGE_HEIGHT,
+        headers: createOgImageHeaders({
+          contentType: 'image/png',
+          version,
+          serverTiming: `db;dur=${dbMs.toFixed(1)}, render;dur=${renderMs.toFixed(1)}, route;dur=${(performance.now() - routeT0).toFixed(1)}`,
+        }),
       },
     );
   } catch (error) {

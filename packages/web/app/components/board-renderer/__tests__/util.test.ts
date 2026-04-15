@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { getImageUrl, buildOverlayUrl } from '../util';
+import { getImageUrl, buildOverlayUrl, buildOgBoardRenderUrl } from '../util';
 import type { BoardDetails } from '@/app/lib/types';
 
 describe('getImageUrl', () => {
@@ -97,5 +97,32 @@ describe('buildOverlayUrl', () => {
   it('omits thumbnail param when false', () => {
     const url = buildOverlayUrl(boardDetails, 'p1r12', false);
     expect(url).not.toContain('thumbnail');
+  });
+});
+
+describe('buildOgBoardRenderUrl', () => {
+  const boardDetails: BoardDetails = {
+    board_name: 'kilter',
+    layout_id: 1,
+    size_id: 7,
+    set_ids: [1, 20],
+    images_to_holds: {},
+    holdsData: [],
+    edge_left: 0,
+    edge_right: 144,
+    edge_bottom: 0,
+    edge_top: 180,
+    boardWidth: 1080,
+    boardHeight: 1350,
+  } as unknown as BoardDetails;
+
+  it('builds the public OG board render URL', () => {
+    const url = buildOgBoardRenderUrl(boardDetails, 'p1r12,p2r13');
+
+    expect(url).toContain('/api/internal/board-render');
+    expect(url).toContain('include_background=1');
+    expect(url).toContain('variant=og');
+    expect(url).toContain('format=png');
+    expect(url).not.toContain('/api/og/climb');
   });
 });

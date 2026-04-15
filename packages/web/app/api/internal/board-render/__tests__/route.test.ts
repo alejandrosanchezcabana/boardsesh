@@ -36,6 +36,7 @@ vi.mock('fs', () => ({
 const mockComposite = vi.fn();
 const mockResize = vi.fn();
 const mockWebpOptions = vi.fn();
+const mockPngOptions = vi.fn();
 const mockSharpInstance = () => {
   const instance = {
     composite: vi.fn((...args: unknown[]) => {
@@ -49,6 +50,10 @@ const mockSharpInstance = () => {
     webp: vi.fn((opts: unknown) => {
       mockWebpOptions(opts);
       return { toBuffer: vi.fn(() => Promise.resolve(Buffer.from([0x52, 0x49, 0x46, 0x46]))) };
+    }),
+    png: vi.fn((opts: unknown) => {
+      mockPngOptions(opts);
+      return { toBuffer: vi.fn(() => Promise.resolve(Buffer.from([0x89, 0x50, 0x4E, 0x47]))) };
     }),
   };
   return instance;
@@ -143,7 +148,9 @@ describe('board-render API route', () => {
     const response = await GET(makeRequest(validParams));
     expect(response.status).toBe(200);
     expect(response.headers.get('Content-Type')).toBe('image/webp');
-    expect(response.headers.get('Cache-Control')).toBe('public, s-maxage=31536000, max-age=31536000, immutable');
+    expect(response.headers.get('Cache-Control')).toBe('public, max-age=31536000, s-maxage=31536000, immutable');
+    expect(response.headers.get('CDN-Cache-Control')).toBe('public, s-maxage=31536000, immutable');
+    expect(response.headers.get('Vercel-CDN-Cache-Control')).toBe('public, s-maxage=31536000, immutable');
   });
 
   it('returns 400 when board_name is missing', async () => {
@@ -165,6 +172,13 @@ describe('board-render API route', () => {
     expect(response.status).toBe(400);
     const body = await response.json();
     expect(body.error).toBe('Invalid board_name');
+  });
+
+  it('returns 400 for invalid output format', async () => {
+    const response = await GET(makeRequest({ ...validParams, format: 'gif' }));
+    expect(response.status).toBe(400);
+    const body = await response.json();
+    expect(body.error).toBe('Invalid format');
   });
 
   it.each(['decoy', 'touchstone', 'grasshopper'])('accepts %s as a valid board_name', async (board) => {
@@ -193,6 +207,20 @@ describe('board-render API route', () => {
     const configJson = mockRenderOverlay.mock.calls[0][0];
     const config = JSON.parse(configJson);
     expect(config.mirrored).toBe(false);
+  });
+
+  it('renders OG variant as PNG on a fixed social canvas', async () => {
+    const response = await GET(makeRequest({ ...validParams, variant: 'og', format: 'png', include_background: '1' }));
+
+    expect(response.status).toBe(200);
+    expect(response.headers.get('Content-Type')).toBe('image/png');
+    expect(response.headers.get('Cache-Control')).toContain('immutable');
+    expect(mockWebpOptions).not.toHaveBeenCalled();
+
+    const configJson = mockRenderOverlay.mock.calls[0][0];
+    const config = JSON.parse(configJson);
+    expect(config.output_width).toBeLessThan(1080);
+    expect(mockPngOptions).toHaveBeenCalled();
   });
 
   it('passes moonboard renderStyle metadata through to the WASM config', async () => {
@@ -314,6 +342,10 @@ describe('board-render API route', () => {
         webp: vi.fn((opts: unknown) => {
           mockWebpOptions(opts);
           return { toBuffer: vi.fn(() => Promise.resolve(Buffer.from([0x52, 0x49, 0x46, 0x46]))) };
+        }),
+        png: vi.fn((opts: unknown) => {
+          mockPngOptions(opts);
+          return { toBuffer: vi.fn(() => Promise.resolve(Buffer.from([0x89, 0x50, 0x4E, 0x47]))) };
         }),
       };
       return instance;
