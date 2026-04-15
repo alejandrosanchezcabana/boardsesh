@@ -56,8 +56,8 @@ export default function GlobalHeader({ boardConfigs }: GlobalHeaderProps) {
     return null;
   }
 
-  // On /you pages, show user drawer + settings cog, no search bar
-  if (pathname.startsWith('/you')) {
+  // On /you and /settings pages, show user drawer + settings cog, no search bar
+  if (pathname.startsWith('/you') || pathname.startsWith('/settings')) {
     return (
       <header className={styles.header}>
         <UserDrawer boardConfigs={boardConfigs} />
