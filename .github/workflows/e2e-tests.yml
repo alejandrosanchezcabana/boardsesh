@@ -62,6 +62,8 @@ jobs:
     needs: typecheck
     timeout-minutes: 25
     runs-on: ubuntu-latest
+    permissions:
+      packages: read
     strategy:
       fail-fast: false
       matrix:
@@ -72,6 +74,9 @@ jobs:
     services:
       postgres:
         image: ghcr.io/boardsesh/boardsesh-dev-db:latest
+        credentials:
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
         env:
           POSTGRES_USER: postgres
           POSTGRES_PASSWORD: password

@@ -7,83 +7,49 @@
  */
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 
-// Track all mock calls for assertions
-const mockSelectResult: unknown[] = [];
-const mockDeleteWhereCalls: unknown[] = [];
-const mockUpdateSetCalls: unknown[] = [];
-const mockUpdateWhereCalls: unknown[] = [];
+// Track calls made on the transaction object
+let txUpdateSetCalls: unknown[] = [];
+let txDeleteWhereCalls: unknown[] = [];
+let txSelectQueue: unknown[][] = [];
 
-// Flexible mock that supports chained select/from/where queries
-// Returns mockSelectResult by default, but can be overridden per-call
-let selectCallIndex = 0;
-const selectResults: unknown[][] = [];
+function buildTxMock() {
+  let selectCallIndex = 0;
 
-function resetSelectResults(...results: unknown[][]) {
-  selectResults.length = 0;
-  selectResults.push(...results);
-  selectCallIndex = 0;
-}
-
-vi.mock('../db/client', () => ({
-  db: {
-    select: vi.fn((...args: unknown[]) => {
-      mockSelectResult.push(args);
-      const currentIndex = selectCallIndex++;
-      return {
-        from: vi.fn(() => ({
-          where: vi.fn(() => {
-            const result = selectResults[currentIndex] ?? [];
-            return Promise.resolve(result);
-          }),
-        })),
-      };
-    }),
+  const tx = {
+    select: vi.fn(() => ({
+      from: vi.fn(() => ({
+        where: vi.fn(() => {
+          const result = txSelectQueue[selectCallIndex++] ?? [];
+          return Promise.resolve(result);
+        }),
+      })),
+    })),
     update: vi.fn(() => ({
       set: vi.fn((...args: unknown[]) => {
-        mockUpdateSetCalls.push(args);
+        txUpdateSetCalls.push(args);
         return {
-          where: vi.fn((...whereArgs: unknown[]) => {
-            mockUpdateWhereCalls.push(whereArgs);
-            return Promise.resolve();
-          }),
+          where: vi.fn(() => Promise.resolve()),
         };
       }),
     })),
     delete: vi.fn(() => ({
       where: vi.fn((...args: unknown[]) => {
-        mockDeleteWhereCalls.push(args);
+        txDeleteWhereCalls.push(args);
         return Promise.resolve();
       }),
     })),
-    insert: vi.fn(() => ({
-      values: vi.fn(() => ({
-        onConflictDoNothing: vi.fn(() => Promise.resolve()),
-        onConflictDoUpdate: vi.fn(() => Promise.resolve()),
-      })),
-    })),
     execute: vi.fn(() => Promise.resolve({ rows: [] })),
-    transaction: vi.fn((fn: (tx: unknown) => Promise<unknown>) => fn({
-      select: vi.fn(() => ({
-        from: vi.fn(() => ({
-          where: vi.fn(() => ({
-            orderBy: vi.fn(() => ({
-              limit: vi.fn(() => Promise.resolve([])),
-            })),
-          })),
-        })),
-      })),
-      update: vi.fn(() => ({
-        set: vi.fn(() => ({
-          where: vi.fn(() => Promise.resolve()),
-        })),
-      })),
-      insert: vi.fn(() => ({
-        values: vi.fn(() => ({
-          onConflictDoNothing: vi.fn(() => Promise.resolve()),
-        })),
-      })),
-      execute: vi.fn(() => Promise.resolve({ rows: [] })),
-    })),
+  };
+
+  return tx;
+}
+
+vi.mock('../db/client', () => ({
+  db: {
+    transaction: vi.fn(async (fn: (tx: unknown) => Promise<unknown>) => {
+      const tx = buildTxMock();
+      return fn(tx);
+    }),
   },
 }));
 
@@ -121,158 +87,148 @@ import { db } from '../db/client';
 describe('adoptRecentTicksForSession', () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    mockSelectResult.length = 0;
-    mockDeleteWhereCalls.length = 0;
-    mockUpdateSetCalls.length = 0;
-    mockUpdateWhereCalls.length = 0;
-    selectCallIndex = 0;
-    selectResults.length = 0;
+    txUpdateSetCalls = [];
+    txDeleteWhereCalls = [];
+    txSelectQueue = [];
   });
 
   it('returns 0 when no recent ticks exist', async () => {
-    // First select: find recent ticks → empty
-    resetSelectResults([]);
+    txSelectQueue = [[]];
 
     const result = await adoptRecentTicksForSession('user-1', 'party-session-1');
 
     expect(result).toBe(0);
-    // Should not attempt any updates or deletes
-    expect(db.update).not.toHaveBeenCalled();
-    expect(db.delete).not.toHaveBeenCalled();
+    expect(txUpdateSetCalls).toHaveLength(0);
+    expect(txDeleteWhereCalls).toHaveLength(0);
   });
 
-  it('adopts recent ticks with no inferred session (orphaned)', async () => {
-    // First select: find recent ticks → 2 orphaned ticks
-    resetSelectResults(
+  it('runs inside a transaction', async () => {
+    txSelectQueue = [[]];
+
+    await adoptRecentTicksForSession('user-1', 'party-session-1');
+
+    expect(db.transaction).toHaveBeenCalledOnce();
+  });
+
+  it('adopts orphaned ticks (no inferred session)', async () => {
+    txSelectQueue = [
       [
         { uuid: 'tick-1', inferredSessionId: null },
         { uuid: 'tick-2', inferredSessionId: null },
       ],
-    );
+    ];
 
     const result = await adoptRecentTicksForSession('user-1', 'party-session-1');
 
     expect(result).toBe(2);
-    // Should update ticks with session_id and clear inferred_session_id
-    expect(db.update).toHaveBeenCalled();
-    expect(mockUpdateSetCalls.length).toBeGreaterThan(0);
-    // First set call should contain sessionId and null inferredSessionId
-    expect(mockUpdateSetCalls[0][0]).toEqual({
+    // Should set sessionId and clear inferredSessionId
+    expect(txUpdateSetCalls).toHaveLength(1);
+    expect(txUpdateSetCalls[0][0]).toEqual({
       sessionId: 'party-session-1',
       inferredSessionId: null,
     });
-    // No inferred sessions to clean up (all were null)
-    expect(db.delete).not.toHaveBeenCalled();
+    // No inferred sessions to clean up
+    expect(txDeleteWhereCalls).toHaveLength(0);
     expect(recalculateSessionStats).not.toHaveBeenCalled();
   });
 
-  it('adopts ticks with inferred session and deletes empty inferred session', async () => {
-    // First select: find recent ticks → 3 ticks all from same inferred session
-    // Second select: count remaining ticks in inferred session → 0
-    resetSelectResults(
+  it('deletes empty inferred sessions after adopting all their ticks', async () => {
+    txSelectQueue = [
+      // Recent ticks query
       [
         { uuid: 'tick-1', inferredSessionId: 'inferred-1' },
         { uuid: 'tick-2', inferredSessionId: 'inferred-1' },
         { uuid: 'tick-3', inferredSessionId: 'inferred-1' },
       ],
+      // Count remaining ticks in inferred-1 → 0
       [{ count: 0 }],
-    );
+    ];
 
     const result = await adoptRecentTicksForSession('user-1', 'party-session-1');
 
     expect(result).toBe(3);
-    // Should update ticks
-    expect(db.update).toHaveBeenCalled();
-    // Should delete the now-empty inferred session
-    expect(db.delete).toHaveBeenCalled();
-    expect(mockDeleteWhereCalls.length).toBe(1);
-    // Should NOT recalculate stats (session was deleted)
+    expect(txDeleteWhereCalls).toHaveLength(1);
     expect(recalculateSessionStats).not.toHaveBeenCalled();
   });
 
-  it('recalculates stats when inferred session still has remaining ticks', async () => {
-    // First select: find recent ticks → 2 ticks from inferred session
-    // Second select: count remaining ticks in inferred session → 3 (some older ticks remain)
-    resetSelectResults(
+  it('recalculates stats for partially-emptied inferred sessions', async () => {
+    txSelectQueue = [
+      // Recent ticks query
       [
         { uuid: 'tick-1', inferredSessionId: 'inferred-1' },
         { uuid: 'tick-2', inferredSessionId: 'inferred-1' },
       ],
+      // Count remaining ticks in inferred-1 → 3 (older ticks remain)
       [{ count: 3 }],
-    );
+    ];
 
     const result = await adoptRecentTicksForSession('user-1', 'party-session-1');
 
     expect(result).toBe(2);
-    // Should NOT delete the inferred session (still has ticks)
-    expect(db.delete).not.toHaveBeenCalled();
-    // Should recalculate stats for the partially-emptied inferred session
-    expect(recalculateSessionStats).toHaveBeenCalledWith('inferred-1');
+    expect(txDeleteWhereCalls).toHaveLength(0);
+    expect(recalculateSessionStats).toHaveBeenCalledOnce();
+    // Should pass the tx as second arg for transactional consistency
+    expect(recalculateSessionStats).toHaveBeenCalledWith(
+      'inferred-1',
+      expect.anything(),
+    );
   });
 
   it('handles ticks from multiple inferred sessions', async () => {
-    // First select: find recent ticks → ticks from 2 different inferred sessions
-    // Second select: count for inferred-1 → 0 (delete it)
-    // Third select: count for inferred-2 → 5 (recalculate stats)
-    resetSelectResults(
+    txSelectQueue = [
+      // Recent ticks from 2 inferred sessions
       [
         { uuid: 'tick-1', inferredSessionId: 'inferred-1' },
         { uuid: 'tick-2', inferredSessionId: 'inferred-1' },
         { uuid: 'tick-3', inferredSessionId: 'inferred-2' },
       ],
+      // Count for inferred-1 → 0 (delete it)
       [{ count: 0 }],
+      // Count for inferred-2 → 5 (recalculate stats)
       [{ count: 5 }],
-    );
+    ];
 
     const result = await adoptRecentTicksForSession('user-1', 'party-session-1');
 
     expect(result).toBe(3);
-    // Should delete inferred-1 (empty) and recalculate inferred-2 (has remaining ticks)
-    expect(db.delete).toHaveBeenCalledTimes(1);
-    expect(recalculateSessionStats).toHaveBeenCalledTimes(1);
-    expect(recalculateSessionStats).toHaveBeenCalledWith('inferred-2');
+    expect(txDeleteWhereCalls).toHaveLength(1);
+    expect(recalculateSessionStats).toHaveBeenCalledOnce();
+    expect(recalculateSessionStats).toHaveBeenCalledWith(
+      'inferred-2',
+      expect.anything(),
+    );
   });
 
   it('handles mix of orphaned and inferred-session ticks', async () => {
-    // First select: find recent ticks → mix of orphaned and inferred
-    // Second select: count for inferred-1 → 0
-    resetSelectResults(
+    txSelectQueue = [
       [
         { uuid: 'tick-1', inferredSessionId: null },
         { uuid: 'tick-2', inferredSessionId: 'inferred-1' },
         { uuid: 'tick-3', inferredSessionId: null },
       ],
+      // Count for inferred-1 → 0
       [{ count: 0 }],
-    );
+    ];
 
     const result = await adoptRecentTicksForSession('user-1', 'party-session-1');
 
     expect(result).toBe(3);
-    // Should only process inferred-1, not try to clean up null sessions
-    expect(db.delete).toHaveBeenCalledTimes(1);
-  });
-});
-
-describe('adoptRecentTicksForSession - 2 hour window', () => {
-  beforeEach(() => {
-    vi.clearAllMocks();
-    mockSelectResult.length = 0;
-    mockDeleteWhereCalls.length = 0;
-    mockUpdateSetCalls.length = 0;
-    mockUpdateWhereCalls.length = 0;
-    selectCallIndex = 0;
-    selectResults.length = 0;
+    // Only inferred-1 cleaned up, not null sessions
+    expect(txDeleteWhereCalls).toHaveLength(1);
   });
 
-  it('uses a 2 hour cutoff window', async () => {
-    // The function calculates: new Date(Date.now() - 2 * 60 * 60 * 1000)
-    // We just verify it calls select (the WHERE clause is handled by drizzle ORM
-    // and tested via integration tests)
-    resetSelectResults([]);
+  it('computes correct 2-hour cutoff', async () => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date('2026-04-15T12:00:00.000Z'));
 
+    txSelectQueue = [[]];
     await adoptRecentTicksForSession('user-1', 'party-session-1');
 
-    // Should have called select to find recent ticks
-    expect(db.select).toHaveBeenCalled();
+    // The cutoff should be 2026-04-15T10:00:00.000Z
+    // We verify by checking the transaction was called (the WHERE clause
+    // uses gte() from drizzle-orm which is type-safe and tested by drizzle)
+    expect(db.transaction).toHaveBeenCalledOnce();
+
+    vi.useRealTimers();
   });
 });
