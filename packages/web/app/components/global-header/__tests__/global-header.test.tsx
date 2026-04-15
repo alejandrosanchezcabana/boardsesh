@@ -70,6 +70,25 @@ vi.mock('@/app/components/back-button', () => ({
   default: () => <button data-testid="back-button">Back</button>,
 }));
 
+let mockSessionData: { user: { id: string; name: string } } | null = {
+  user: { id: 'user-1', name: 'Test User' },
+};
+let mockSessionStatus = 'authenticated';
+vi.mock('next-auth/react', () => ({
+  useSession: () => ({ data: mockSessionData, status: mockSessionStatus }),
+}));
+
+vi.mock('next/link', () => ({
+  default: ({ children, href, ...props }: { children: React.ReactNode; href: string; [key: string]: unknown }) => (
+    <a href={href} {...props}>{children}</a>
+  ),
+}));
+
+const mockShareWithFallback = vi.fn();
+vi.mock('@/app/lib/share-utils', () => ({
+  shareWithFallback: (...args: unknown[]) => mockShareWithFallback(...args),
+}));
+
 import GlobalHeader from '../global-header';
 
 const mockBoardConfigs = {} as Parameters<typeof GlobalHeader>[0]['boardConfigs'];
@@ -80,6 +99,8 @@ describe('GlobalHeader', () => {
     mockActiveSession = null;
     mockIsOnBoardRoute = false;
     mockPathname = '/some-page';
+    mockSessionData = { user: { id: 'user-1', name: 'Test User' } };
+    mockSessionStatus = 'authenticated';
     mockBridgeState = {
       openClimbSearchDrawer: null,
       searchPillSummary: null,
@@ -273,5 +294,107 @@ describe('GlobalHeader', () => {
     render(<GlobalHeader boardConfigs={mockBoardConfigs} />);
 
     expect(screen.getByPlaceholderText('What do you want to climb?')).toBeTruthy();
+  });
+
+  // -----------------------------------------------------------------------
+  // /you and /settings header tests
+  // -----------------------------------------------------------------------
+  describe('on /you pages', () => {
+    it('renders settings cog icon linking to /settings', () => {
+      mockPathname = '/you';
+      render(<GlobalHeader boardConfigs={mockBoardConfigs} />);
+
+      const settingsLink = screen.getByLabelText('Settings');
+      expect(settingsLink).toBeTruthy();
+      expect(settingsLink.closest('a')?.getAttribute('href')).toBe('/settings');
+    });
+
+    it('renders share button when user is authenticated', () => {
+      mockPathname = '/you';
+      render(<GlobalHeader boardConfigs={mockBoardConfigs} />);
+
+      expect(screen.getByLabelText('Share profile')).toBeTruthy();
+    });
+
+    it('does NOT render search bar', () => {
+      mockPathname = '/you';
+      render(<GlobalHeader boardConfigs={mockBoardConfigs} />);
+
+      expect(screen.queryByPlaceholderText('What do you want to climb?')).toBeNull();
+      expect(screen.queryByPlaceholderText('Search climbs...')).toBeNull();
+    });
+
+    it('renders user drawer', () => {
+      mockPathname = '/you';
+      render(<GlobalHeader boardConfigs={mockBoardConfigs} />);
+
+      expect(screen.getByTestId('user-drawer')).toBeTruthy();
+    });
+
+    it('renders settings cog on /you/sessions path (starts with /you)', () => {
+      mockPathname = '/you/sessions';
+      render(<GlobalHeader boardConfigs={mockBoardConfigs} />);
+
+      const settingsLink = screen.getByLabelText('Settings');
+      expect(settingsLink).toBeTruthy();
+      expect(settingsLink.closest('a')?.getAttribute('href')).toBe('/settings');
+    });
+
+    it('does not render share button when user is not authenticated', () => {
+      mockPathname = '/you';
+      mockSessionData = null;
+      mockSessionStatus = 'unauthenticated';
+      render(<GlobalHeader boardConfigs={mockBoardConfigs} />);
+
+      expect(screen.queryByLabelText('Share profile')).toBeNull();
+      // Settings cog should still render
+      expect(screen.getByLabelText('Settings')).toBeTruthy();
+    });
+
+    it('calls shareWithFallback with profile URL when share button is clicked', () => {
+      mockPathname = '/you';
+      render(<GlobalHeader boardConfigs={mockBoardConfigs} />);
+
+      fireEvent.click(screen.getByLabelText('Share profile'));
+
+      expect(mockShareWithFallback).toHaveBeenCalledWith(
+        expect.objectContaining({
+          url: expect.stringContaining('/profile/user-1'),
+          title: expect.stringContaining('Test User'),
+          trackingEvent: 'Profile Shared',
+        }),
+      );
+    });
+  });
+
+  describe('on /settings page', () => {
+    it('renders settings cog and share button, no search bar', () => {
+      mockPathname = '/settings';
+      render(<GlobalHeader boardConfigs={mockBoardConfigs} />);
+
+      expect(screen.getByLabelText('Settings')).toBeTruthy();
+      expect(screen.getByLabelText('Share profile')).toBeTruthy();
+      expect(screen.queryByPlaceholderText('What do you want to climb?')).toBeNull();
+    });
+  });
+
+  describe('on home page (/)', () => {
+    it('renders transparent header with user drawer only', () => {
+      mockPathname = '/';
+      render(<GlobalHeader boardConfigs={mockBoardConfigs} />);
+
+      expect(screen.getByTestId('user-drawer')).toBeTruthy();
+      expect(screen.queryByPlaceholderText('What do you want to climb?')).toBeNull();
+      expect(screen.queryByLabelText('Settings')).toBeNull();
+    });
+  });
+
+  describe('on /feed page', () => {
+    it('renders search bar (default header)', () => {
+      mockPathname = '/feed';
+      render(<GlobalHeader boardConfigs={mockBoardConfigs} />);
+
+      expect(screen.getByPlaceholderText('What do you want to climb?')).toBeTruthy();
+    });
   });
 });

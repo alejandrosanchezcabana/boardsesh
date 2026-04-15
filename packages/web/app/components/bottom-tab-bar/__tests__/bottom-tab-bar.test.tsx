@@ -83,8 +83,10 @@ vi.mock('../../board-selector-drawer/board-selector-drawer', () => ({
     : null),
 }));
 
+let mockSessionData: { user: { id: string } } | null = null;
+let mockSessionStatus = 'unauthenticated';
 vi.mock('next-auth/react', () => ({
-  useSession: () => ({ data: null, status: 'unauthenticated' }),
+  useSession: () => ({ data: mockSessionData, status: mockSessionStatus }),
 }));
 
 vi.mock('@/app/components/board-scroll/board-discovery-scroll', () => ({
@@ -100,8 +102,9 @@ vi.mock('@/app/components/board-scroll/board-discovery-scroll', () => ({
   ),
 }));
 
+const mockOpenAuthModal = vi.fn();
 vi.mock('@/app/components/providers/auth-modal-provider', () => ({
-  useAuthModal: () => ({ openAuthModal: vi.fn() }),
+  useAuthModal: () => ({ openAuthModal: mockOpenAuthModal }),
 }));
 
 vi.mock('@/app/components/providers/snackbar-provider', () => ({
@@ -139,6 +142,18 @@ vi.mock('@/app/components/search-drawer/recent-searches-storage', () => ({
   getRecentSearches: () => Promise.resolve([]),
 }));
 
+vi.mock('@/app/components/board-lock/use-board-switch-guard', () => ({
+  useBoardSwitchGuard: () => vi.fn((_: unknown, cb: () => void) => cb()),
+}));
+
+vi.mock('@/app/lib/board-config-for-playlist', () => ({
+  getDefaultAngleForBoard: () => 40,
+}));
+
+vi.mock('@/app/lib/color-utils', () => ({
+  isValidHexColor: (c: string) => /^#[0-9a-f]{6}$/i.test(c),
+}));
+
 import BottomTabBar from '../bottom-tab-bar';
 
 const boardDetails = {
@@ -167,6 +182,8 @@ describe('BottomTabBar session preservation', () => {
     vi.clearAllMocks();
     mockPathname = '/';
     mockActiveSession = null;
+    mockSessionData = null;
+    mockSessionStatus = 'unauthenticated';
   });
 
   it('includes session param when navigating to climbs with active session on /b/ board', async () => {
@@ -224,30 +241,126 @@ describe('BottomTabBar create flow', () => {
     vi.clearAllMocks();
     mockPathname = '/kilter/original/12x12-square/screw_bolt/40/list';
     mockActiveSession = null;
+    mockSessionData = null;
+    mockSessionStatus = 'unauthenticated';
   });
 
-  it('opens create drawer without immediate navigation', () => {
+  it('navigates directly to create climb URL when board details are available', () => {
     render(<BottomTabBar boardDetails={boardDetails} angle={40} boardConfigs={boardConfigs} />);
 
     fireEvent.click(screen.getByRole('button', { name: 'Create' }));
 
-    expect(mockPush).not.toHaveBeenCalled();
-    expect(screen.getByTestId('drawer-Create')).toBeTruthy();
-    expect(screen.getByTestId('create-climb-option')).toBeTruthy();
-    expect(screen.getByTestId('create-playlist-option')).toBeTruthy();
+    expect(mockPush).toHaveBeenCalledWith(
+      expect.stringContaining('/create'),
+    );
   });
 
-  it('opens board selector for playlist without board context, then opens playlist drawer after board selection', () => {
+  it('opens board selector when no board context, then navigates to create after board selection', () => {
     render(<BottomTabBar boardConfigs={boardConfigs} />);
 
     fireEvent.click(screen.getByRole('button', { name: 'Create' }));
-    fireEvent.click(screen.getByTestId('create-playlist-option'));
 
     expect(screen.getByTestId('drawer-Pick a board')).toBeTruthy();
 
     fireEvent.click(screen.getByRole('button', { name: 'Select Board' }));
 
+    expect(mockPush).toHaveBeenCalledWith(
+      expect.stringContaining('/create'),
+    );
+  });
+});
+
+describe('BottomTabBar You tab', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    mockPathname = '/';
+    mockActiveSession = null;
+    mockSessionData = { user: { id: 'user-1' } };
+    mockSessionStatus = 'authenticated';
+  });
+
+  it('renders "You" tab label instead of "Notifications"', () => {
+    render(<BottomTabBar boardConfigs={boardConfigs} />);
+
+    expect(screen.getByRole('button', { name: 'You' })).toBeTruthy();
+    expect(screen.queryByRole('button', { name: 'Notifications' })).toBeNull();
+  });
+
+  it('renders PersonOutlined icon for You tab', () => {
+    render(<BottomTabBar boardConfigs={boardConfigs} />);
+
+    const youTab = screen.getByRole('button', { name: 'You' });
+    // PersonOutlined renders as an SVG with data-testid="PersonOutlinedIcon"
+    const icon = youTab.querySelector('[data-testid="PersonOutlinedIcon"]');
+    expect(icon).toBeTruthy();
+  });
+
+  it('You tab is selected when on /you path', () => {
+    mockPathname = '/you';
+    render(<BottomTabBar boardConfigs={boardConfigs} />);
+
+    const youTab = screen.getByRole('button', { name: 'You' });
+    expect(youTab.classList.contains('Mui-selected')).toBe(true);
+  });
+
+  it('You tab is selected when on /you/sessions path', () => {
+    mockPathname = '/you/sessions';
+    render(<BottomTabBar boardConfigs={boardConfigs} />);
+
+    const youTab = screen.getByRole('button', { name: 'You' });
+    expect(youTab.classList.contains('Mui-selected')).toBe(true);
+  });
+
+  it('You tab is selected when on /profile/some-id path', () => {
+    mockPathname = '/profile/some-id';
+    render(<BottomTabBar boardConfigs={boardConfigs} />);
+
+    const youTab = screen.getByRole('button', { name: 'You' });
+    expect(youTab.classList.contains('Mui-selected')).toBe(true);
+  });
+
+  it('Feed tab is selected when on /feed path', () => {
+    mockPathname = '/feed';
+    render(<BottomTabBar boardConfigs={boardConfigs} />);
+
+    const feedTab = screen.getByRole('button', { name: 'Feed' });
+    expect(feedTab.classList.contains('Mui-selected')).toBe(true);
+
+    const youTab = screen.getByRole('button', { name: 'You' });
+    expect(youTab.classList.contains('Mui-selected')).toBe(false);
+  });
+
+  it('Home tab is selected when on / path', () => {
+    mockPathname = '/';
+    render(<BottomTabBar boardConfigs={boardConfigs} />);
+
+    const homeTab = screen.getByRole('button', { name: 'Home' });
+    expect(homeTab.classList.contains('Mui-selected')).toBe(true);
+
+    const youTab = screen.getByRole('button', { name: 'You' });
+    expect(youTab.classList.contains('Mui-selected')).toBe(false);
+  });
+
+  it('navigates to /you when You tab is clicked (authenticated)', () => {
+    render(<BottomTabBar boardConfigs={boardConfigs} />);
+
+    fireEvent.click(screen.getByRole('button', { name: 'You' }));
+
+    expect(mockPush).toHaveBeenCalledWith('/you');
+  });
+
+  it('opens auth modal when You tab is clicked and not authenticated', () => {
+    mockSessionData = null;
+    mockSessionStatus = 'unauthenticated';
+    render(<BottomTabBar boardConfigs={boardConfigs} />);
+
+    fireEvent.click(screen.getByRole('button', { name: 'You' }));
+
+    expect(mockOpenAuthModal).toHaveBeenCalledWith(
+      expect.objectContaining({
+        title: 'Sign in to see your progress',
+      }),
+    );
     expect(mockPush).not.toHaveBeenCalled();
-    expect(screen.getByTestId('drawer-Create Playlist')).toBeTruthy();
   });
 });

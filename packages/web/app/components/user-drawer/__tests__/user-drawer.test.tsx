@@ -54,6 +54,10 @@ vi.mock('@/app/components/providers/auth-modal-provider', () => ({
   useAuthModal: () => ({ openAuthModal: vi.fn() }),
 }));
 
+vi.mock('@/app/hooks/use-unread-notification-count', () => ({
+  useUnreadNotificationCount: () => 0,
+}));
+
 vi.mock('@/app/components/board-lock/use-board-switch-guard', () => ({
   useBoardSwitchGuard: () => mockGuardBoardSwitch,
 }));
