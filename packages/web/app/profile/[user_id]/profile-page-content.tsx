@@ -164,16 +164,16 @@ export default function ProfilePageContent({
         {/* Navigation cards */}
         <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5 }}>
           <ProfileNavCard
+            title="Statistics"
+            subtitle={statisticsSummary.totalAscents > 0 ? `${statisticsSummary.totalAscents} distinct climbs` : 'Grades, progression, and more'}
+            href={`/profile/${userId}/analytics`}
+            icon={<ShowChartOutlined />}
+          />
+          <ProfileNavCard
             title="Sessions"
             subtitle="Climbing sessions and activity"
             href={`/profile/${userId}/sessions`}
             icon={<TimelineOutlined />}
-          />
-          <ProfileNavCard
-            title="Analytics"
-            subtitle={statisticsSummary.totalAscents > 0 ? `${statisticsSummary.totalAscents} distinct climbs` : 'Grades, progression, and more'}
-            href={`/profile/${userId}/analytics`}
-            icon={<ShowChartOutlined />}
           />
           {profile?.credentials && profile.credentials.length > 0 && (
             <ProfileNavCard

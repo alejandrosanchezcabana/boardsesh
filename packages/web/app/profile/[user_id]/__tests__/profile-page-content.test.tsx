@@ -159,14 +159,14 @@ describe('ProfilePageContent', () => {
     expect(userCard.getAttribute('data-user-id')).toBe('user-2');
   });
 
-  it('renders Sessions and Analytics navigation cards', () => {
+  it('renders Statistics and Sessions navigation cards', () => {
     const profile = makeProfile();
     mockUseProfileData.mockReturnValue(mockProfileDataReturn({ profile }));
 
     render(<ProfilePageContent userId="user-2" />);
 
     expect(screen.getByTestId('nav-card-sessions')).toBeTruthy();
-    expect(screen.getByTestId('nav-card-analytics')).toBeTruthy();
+    expect(screen.getByTestId('nav-card-statistics')).toBeTruthy();
   });
 
   it('shows "Their Climbs" nav card when user has credentials', () => {
@@ -198,7 +198,7 @@ describe('ProfilePageContent', () => {
     render(<ProfilePageContent userId="user-2" />);
 
     expect(screen.getByTestId('nav-card-sessions').getAttribute('data-href')).toBe('/profile/user-2/sessions');
-    expect(screen.getByTestId('nav-card-analytics').getAttribute('data-href')).toBe('/profile/user-2/analytics');
+    expect(screen.getByTestId('nav-card-statistics').getAttribute('data-href')).toBe('/profile/user-2/analytics');
     expect(screen.getByTestId('nav-card-their-climbs').getAttribute('data-href')).toBe('/profile/user-2/climbs');
   });
 

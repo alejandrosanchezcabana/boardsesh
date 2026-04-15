@@ -56,7 +56,7 @@ export default function AnalyticsContent({
   });
 
   return (
-    <ProfileSubPageLayout userId={userId} title="Analytics">
+    <ProfileSubPageLayout userId={userId} title="Statistics">
       <StatsSummary
         statisticsSummary={statisticsSummary}
         loadingProfileStats={loadingProfileStats}
