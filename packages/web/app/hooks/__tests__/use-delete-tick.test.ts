@@ -120,11 +120,12 @@ describe('useDeleteTick', () => {
     });
   });
 
-  it('invalidates relevant query caches on success', async () => {
+  it('refreshes relevant query caches on success', async () => {
     mockRequest.mockResolvedValue({ deleteTick: true });
 
     const { wrapper, queryClient } = createTestWrapper();
     const invalidateSpy = vi.spyOn(queryClient, 'invalidateQueries');
+    const removeSpy = vi.spyOn(queryClient, 'removeQueries');
 
     // Seed some cache data
     queryClient.setQueryData(['ascentsFeed', 'user-1', 10], { pages: [] });
@@ -143,9 +144,9 @@ describe('useDeleteTick', () => {
 
     const invalidatedKeys = invalidateSpy.mock.calls.map((call) => call[0]?.queryKey);
     expect(invalidatedKeys).toContainEqual(['ascentsFeed']);
-    expect(invalidatedKeys).toContainEqual(['logbook']);
     expect(invalidatedKeys).toContainEqual(['sessionDetail']);
     expect(invalidatedKeys).toContainEqual(['userProfileStats']);
+    expect(removeSpy).toHaveBeenCalledWith({ queryKey: ['logbook'] });
   });
 
   it('shows error snackbar on failure', async () => {

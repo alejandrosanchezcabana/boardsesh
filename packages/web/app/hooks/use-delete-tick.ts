@@ -37,7 +37,7 @@ export function useDeleteTick() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['ascentsFeed'] });
-      queryClient.invalidateQueries({ queryKey: ['logbook'] });
+      queryClient.removeQueries({ queryKey: ['logbook'] });
       queryClient.invalidateQueries({ queryKey: ['sessionDetail'] });
       queryClient.invalidateQueries({ queryKey: ['userProfileStats'] });
     },

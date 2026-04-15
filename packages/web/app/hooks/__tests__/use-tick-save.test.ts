@@ -122,11 +122,10 @@ describe('hasPriorHistoryForClimb', () => {
     expect(hasPriorHistoryForClimb(climb, [])).toBe(true);
   });
 
-  it('returns false when userAscents and userAttempts are both 0', () => {
+  it('returns true when cached logbook history outranks stale zero counts', () => {
     const climb = makeClimb({ uuid: 'c1', userAscents: 0, userAttempts: 0 });
-    // Even if the logbook has a matching entry, the counts take priority.
     const logbook = [makeLogbookEntry({ climb_uuid: 'c1' })];
-    expect(hasPriorHistoryForClimb(climb, logbook)).toBe(false);
+    expect(hasPriorHistoryForClimb(climb, logbook)).toBe(true);
   });
 
   it('returns true when logbook has matching entry (no counts on climb)', () => {

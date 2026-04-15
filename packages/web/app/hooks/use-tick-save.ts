@@ -34,12 +34,17 @@ export function hasPriorHistoryForClimb(
   climb: Climb,
   logbook: LogbookEntry[],
 ): boolean {
+  const logbookHasHistory = logbook.some((entry) => entry.climb_uuid === climb.uuid);
+  if (logbookHasHistory) {
+    return true;
+  }
+
   const ascents = climb.userAscents;
   const attempts = climb.userAttempts;
   if (ascents != null || attempts != null) {
     return (ascents ?? 0) + (attempts ?? 0) > 0;
   }
-  return logbook.some((entry) => entry.climb_uuid === climb.uuid);
+  return false;
 }
 
 export function buildTickTarget(

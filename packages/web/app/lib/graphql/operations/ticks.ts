@@ -37,6 +37,15 @@ export const SAVE_TICK = gql`
   mutation SaveTick($input: SaveTickInput!) {
     saveTick(input: $input) {
       uuid
+      climbUuid
+      angle
+      isMirror
+      status
+      attemptCount
+      quality
+      difficulty
+      comment
+      climbedAt
     }
   }
 `;
@@ -44,7 +53,7 @@ export const SAVE_TICK = gql`
 // Partial types matching the fields each query actually requests
 type TickFromGetTicks = Pick<Tick, 'uuid' | 'climbUuid' | 'angle' | 'isMirror' | 'status' | 'attemptCount' | 'quality' | 'difficulty' | 'isBenchmark' | 'comment' | 'climbedAt'>;
 type TickFromGetUserTicks = Pick<Tick, 'climbUuid' | 'angle' | 'status' | 'attemptCount' | 'difficulty' | 'climbedAt' | 'layoutId'>;
-type TickFromSaveTick = Pick<Tick, 'uuid'>;
+type TickFromSaveTick = Pick<Tick, 'uuid' | 'climbUuid' | 'angle' | 'isMirror' | 'status' | 'attemptCount' | 'quality' | 'difficulty' | 'comment' | 'climbedAt'>;
 
 export interface GetTicksQueryVariables {
   input: GetTicksInput;

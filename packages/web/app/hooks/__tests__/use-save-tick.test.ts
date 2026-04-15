@@ -29,7 +29,7 @@ vi.mock('@/app/lib/graphql/operations', () => ({
 import { useWsAuthToken } from '../use-ws-auth-token';
 import { useSession } from 'next-auth/react';
 import { useSaveTick, type SaveTickOptions } from '../use-save-tick';
-import type { LogbookEntry } from '../use-logbook';
+import { accumulatedLogbookQueryKey, type LogbookEntry } from '../use-logbook';
 
 const mockUseWsAuthToken = vi.mocked(useWsAuthToken);
 const mockUseSession = vi.mocked(useSession);
@@ -49,6 +49,22 @@ function createTickOptions(overrides: Partial<SaveTickOptions> = {}): SaveTickOp
     status: 'send',
     attemptCount: 3,
     isBenchmark: false,
+    comment: 'Great climb',
+    climbedAt: '2024-01-01',
+    ...overrides,
+  };
+}
+
+function createSavedTick(overrides: Record<string, unknown> = {}) {
+  return {
+    uuid: 'real-uuid',
+    climbUuid: 'climb-1',
+    angle: 40,
+    isMirror: false,
+    status: 'send',
+    attemptCount: 3,
+    quality: null,
+    difficulty: null,
     comment: 'Great climb',
     climbedAt: '2024-01-01',
     ...overrides,
@@ -120,11 +136,7 @@ describe('useSaveTick', () => {
 
   it('calls GraphQL mutation with correct variables', async () => {
     mockRequest.mockResolvedValue({
-      saveTick: {
-        uuid: 'real-uuid',
-        createdAt: '2024-01-01T12:00:00Z',
-        updatedAt: '2024-01-01T12:00:00Z',
-      },
+      saveTick: createSavedTick(),
     });
 
     const { wrapper } = createTestWrapper();
@@ -168,8 +180,7 @@ describe('useSaveTick', () => {
 
     const { wrapper, queryClient } = createTestWrapper();
 
-    // Seed existing logbook data
-    queryClient.setQueryData(['logbook', 'kilter', 'climb-1'], []);
+    queryClient.setQueryData(accumulatedLogbookQueryKey('kilter'), []);
 
     const { result } = renderHook(() => useSaveTick('kilter'), { wrapper });
 
@@ -179,7 +190,7 @@ describe('useSaveTick', () => {
 
     // Check that the optimistic entry was added
     await waitFor(() => {
-      const data = queryClient.getQueryData(['logbook', 'kilter', 'climb-1']) as LogbookEntry[];
+      const data = queryClient.getQueryData(accumulatedLogbookQueryKey('kilter')) as LogbookEntry[];
       expect(data?.length).toBe(1);
       expect(data?.[0].uuid).toMatch(/^temp-/);
       expect(data?.[0].climb_uuid).toBe('climb-1');
@@ -188,23 +199,21 @@ describe('useSaveTick', () => {
     // Resolve to clean up
     await act(async () => {
       resolveRequest!({
-        saveTick: { uuid: 'real-uuid', createdAt: '2024-01-01', updatedAt: '2024-01-01' },
+        saveTick: createSavedTick(),
       });
     });
   });
 
   it('replaces temp UUID with real UUID on success', async () => {
     mockRequest.mockResolvedValue({
-      saveTick: {
+      saveTick: createSavedTick({
         uuid: 'server-uuid-123',
-        createdAt: '2024-01-01T12:00:00Z',
-        updatedAt: '2024-01-01T12:00:00Z',
-      },
+      }),
     });
 
     const { wrapper, queryClient } = createTestWrapper();
 
-    queryClient.setQueryData(['logbook', 'kilter', 'climb-1'], []);
+    queryClient.setQueryData(accumulatedLogbookQueryKey('kilter'), []);
 
     const { result } = renderHook(() => useSaveTick('kilter'), { wrapper });
 
@@ -216,9 +225,10 @@ describe('useSaveTick', () => {
       expect(result.current.isSuccess).toBe(true);
     });
 
-    const data = queryClient.getQueryData(['logbook', 'kilter', 'climb-1']) as LogbookEntry[];
+    const data = queryClient.getQueryData(accumulatedLogbookQueryKey('kilter')) as LogbookEntry[];
     if (data && data.length > 0) {
       expect(data[0].uuid).toBe('server-uuid-123');
+      expect(data[0].comment).toBe('Great climb');
     }
   });
 
@@ -227,7 +237,7 @@ describe('useSaveTick', () => {
 
     const { wrapper, queryClient } = createTestWrapper();
 
-    queryClient.setQueryData(['logbook', 'kilter', 'climb-1'], []);
+    queryClient.setQueryData(accumulatedLogbookQueryKey('kilter'), []);
 
     const { result } = renderHook(() => useSaveTick('kilter'), { wrapper });
 
@@ -240,7 +250,7 @@ describe('useSaveTick', () => {
     });
 
     // The optimistic entry should have been rolled back
-    const data = queryClient.getQueryData(['logbook', 'kilter', 'climb-1']) as LogbookEntry[];
+    const data = queryClient.getQueryData(accumulatedLogbookQueryKey('kilter')) as LogbookEntry[];
     expect(data?.length).toBe(0);
   });
 
@@ -249,7 +259,7 @@ describe('useSaveTick', () => {
 
     const { wrapper, queryClient } = createTestWrapper();
 
-    queryClient.setQueryData(['logbook', 'kilter', 'accumulated'], []);
+    queryClient.setQueryData(accumulatedLogbookQueryKey('kilter'), []);
 
     const { result } = renderHook(() => useSaveTick('kilter'), { wrapper });
 
@@ -262,7 +272,7 @@ describe('useSaveTick', () => {
     });
 
     // Optimistic entry should be rolled back
-    const data = queryClient.getQueryData(['logbook', 'kilter', 'accumulated']) as LogbookEntry[];
+    const data = queryClient.getQueryData(accumulatedLogbookQueryKey('kilter')) as LogbookEntry[];
     expect(data).toEqual([]);
 
     // Snackbar is NOT called — callers handle their own error feedback
@@ -277,7 +287,7 @@ describe('useSaveTick', () => {
 
     const { wrapper, queryClient } = createTestWrapper();
 
-    queryClient.setQueryData(['logbook', 'kilter', 'climb-1'], []);
+    queryClient.setQueryData(accumulatedLogbookQueryKey('kilter'), []);
 
     const { result } = renderHook(() => useSaveTick('kilter'), { wrapper });
 
@@ -287,14 +297,18 @@ describe('useSaveTick', () => {
     });
 
     await waitFor(() => {
-      const data = queryClient.getQueryData(['logbook', 'kilter', 'climb-1']) as LogbookEntry[];
+      const data = queryClient.getQueryData(accumulatedLogbookQueryKey('kilter')) as LogbookEntry[];
       expect(data?.length).toBe(1);
       expect(data?.[0].is_ascent).toBe(true);
     });
 
     await act(async () => {
       resolveRequest!({
-        saveTick: { uuid: 'real-1', createdAt: '2024-01-01', updatedAt: '2024-01-01' },
+        saveTick: createSavedTick({
+          uuid: 'real-1',
+          status: 'flash',
+          attemptCount: 1,
+        }),
       });
     });
   });
@@ -307,7 +321,7 @@ describe('useSaveTick', () => {
 
     const { wrapper, queryClient } = createTestWrapper();
 
-    queryClient.setQueryData(['logbook', 'kilter', 'climb-1'], []);
+    queryClient.setQueryData(accumulatedLogbookQueryKey('kilter'), []);
 
     const { result } = renderHook(() => useSaveTick('kilter'), { wrapper });
 
@@ -316,14 +330,49 @@ describe('useSaveTick', () => {
     });
 
     await waitFor(() => {
-      const data = queryClient.getQueryData(['logbook', 'kilter', 'climb-1']) as LogbookEntry[];
+      const data = queryClient.getQueryData(accumulatedLogbookQueryKey('kilter')) as LogbookEntry[];
       expect(data?.length).toBe(1);
       expect(data?.[0].is_ascent).toBe(false);
     });
 
     await act(async () => {
       resolveRequest!({
-        saveTick: { uuid: 'real-2', createdAt: '2024-01-01', updatedAt: '2024-01-01' },
+        saveTick: createSavedTick({
+          uuid: 'real-2',
+          status: 'attempt',
+        }),
+      });
+    });
+  });
+
+  it('creates the accumulated cache entry on first save even when no prior ticks were fetched', async () => {
+    let resolveRequest: (value: unknown) => void;
+    mockRequest.mockReturnValue(
+      new Promise((resolve) => { resolveRequest = resolve; }),
+    );
+
+    const { wrapper, queryClient } = createTestWrapper();
+
+    const { result } = renderHook(() => useSaveTick('kilter'), { wrapper });
+
+    act(() => {
+      result.current.mutate(createTickOptions({ status: 'flash', attemptCount: 1 }));
+    });
+
+    await waitFor(() => {
+      const data = queryClient.getQueryData(accumulatedLogbookQueryKey('kilter')) as LogbookEntry[] | undefined;
+      expect(data?.length).toBe(1);
+      expect(data?.[0].uuid).toMatch(/^temp-/);
+      expect(data?.[0].status).toBe('flash');
+    });
+
+    await act(async () => {
+      resolveRequest!({
+        saveTick: createSavedTick({
+          uuid: 'real-first',
+          status: 'flash',
+          attemptCount: 1,
+        }),
       });
     });
   });

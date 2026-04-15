@@ -10,7 +10,13 @@ import {
   type SaveTickMutationResponse,
 } from '@/app/lib/graphql/operations';
 import type { BoardName } from '@/app/lib/types';
-import type { TickStatus, LogbookEntry } from './use-logbook';
+import {
+  accumulatedLogbookQueryKey,
+  fetchLogbookQueryKeyPrefix,
+  toLogbookEntry,
+  type TickStatus,
+  type LogbookEntry,
+} from './use-logbook';
 import { clearTickDraft } from '@/app/lib/tick-draft-db';
 
 // Options for saving a tick (local storage, no Aurora required)
@@ -33,12 +39,13 @@ export interface SaveTickOptions {
 
 /**
  * Hook to save a tick (logbook entry) via GraphQL mutation.
- * Provides optimistic updates and automatic cache invalidation.
+ * Provides optimistic updates against the accumulated logbook cache.
  */
 export function useSaveTick(boardName: BoardName) {
   const { token } = useWsAuthToken();
   const { status: sessionStatus } = useSession();
   const queryClient = useQueryClient();
+  const accumulatedKey = accumulatedLogbookQueryKey(boardName);
 
   return useMutation({
     mutationFn: async (options: SaveTickOptions) => {
@@ -74,8 +81,9 @@ export function useSaveTick(boardName: BoardName) {
       return response.saveTick;
     },
     onMutate: async (options) => {
-      // Cancel outgoing logbook queries
-      await queryClient.cancelQueries({ queryKey: ['logbook', boardName] });
+      // Cancel outgoing fetch batches so stale responses merge against the
+      // latest accumulated cache entry instead of racing the optimistic write.
+      await queryClient.cancelQueries({ queryKey: fetchLogbookQueryKeyPrefix(boardName) });
 
       // Create optimistic entry
       const tempUuid = `temp-${Date.now()}`;
@@ -93,27 +101,45 @@ export function useSaveTick(boardName: BoardName) {
         status: options.status,
       };
 
-      // Optimistically update all matching logbook queries
-      queryClient.setQueriesData<LogbookEntry[]>(
-        { queryKey: ['logbook', boardName] },
-        (old) => (old ? [optimisticEntry, ...old] : [optimisticEntry]),
+      queryClient.setQueryData<LogbookEntry[]>(
+        accumulatedKey,
+        (existing = []) => [optimisticEntry, ...existing],
       );
 
       return { tempUuid };
     },
     onSuccess: (savedTick, options, context) => {
-      // Replace temp entry with real data
-      if (context?.tempUuid) {
-        queryClient.setQueriesData<LogbookEntry[]>(
-          { queryKey: ['logbook', boardName] },
-          (old) =>
-            old?.map((entry) =>
-              entry.uuid === context.tempUuid
-                ? { ...entry, uuid: savedTick.uuid }
-                : entry,
-            ),
-        );
-      }
+      const savedEntry = toLogbookEntry(savedTick);
+      queryClient.setQueryData<LogbookEntry[]>(
+        accumulatedKey,
+        (existing = []) => {
+          if (!context?.tempUuid) {
+            return existing.some((entry) => entry.uuid === savedEntry.uuid)
+              ? existing
+              : [savedEntry, ...existing];
+          }
+
+          let replaced = false;
+          const next = existing.map((entry) => {
+            if (entry.uuid !== context.tempUuid) return entry;
+            replaced = true;
+            return savedEntry;
+          });
+
+          if (replaced) {
+            const seen = new Set<string>();
+            return next.filter((entry) => {
+              if (seen.has(entry.uuid)) return false;
+              seen.add(entry.uuid);
+              return true;
+            });
+          }
+          return existing.some((entry) => entry.uuid === savedEntry.uuid)
+            ? existing
+            : [savedEntry, ...existing];
+        },
+      );
+
       // Clear any IndexedDB draft for this climb (belt-and-suspenders with QuickTickBar's .then)
       clearTickDraft(options.climbUuid, options.angle);
     },
@@ -122,9 +148,9 @@ export function useSaveTick(boardName: BoardName) {
       // the caller (e.g. QuickTickBar's .catch → onError callback) to avoid
       // duplicate snackbars.
       if (context?.tempUuid) {
-        queryClient.setQueriesData<LogbookEntry[]>(
-          { queryKey: ['logbook', boardName] },
-          (old) => old?.filter((entry) => entry.uuid !== context.tempUuid),
+        queryClient.setQueryData<LogbookEntry[]>(
+          accumulatedKey,
+          (existing = []) => existing.filter((entry) => entry.uuid !== context.tempUuid),
         );
       }
     },

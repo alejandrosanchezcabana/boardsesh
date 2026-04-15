@@ -1,7 +1,7 @@
 import React from 'react';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { renderHook, waitFor, act } from '@testing-library/react';
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { QueryClientProvider } from '@tanstack/react-query';
 import { createQueryWrapper, createTestQueryClient } from '@/app/test-utils/test-providers';
 
 vi.mock('../use-ws-auth-token', () => ({
@@ -87,6 +87,26 @@ describe('useLogbook', () => {
 
     expect(result.current.logbook).toEqual([]);
     expect(mockRequest).not.toHaveBeenCalled();
+  });
+
+  it('creates the accumulated cache entry even when the initial fetch is empty', async () => {
+    mockRequest.mockResolvedValue({ ticks: [] });
+
+    const queryClient = createTestQueryClient();
+    const wrapper = ({ children }: { children: React.ReactNode }) =>
+      React.createElement(QueryClientProvider, { client: queryClient }, children);
+
+    const { result } = renderHook(
+      () => useLogbook('kilter', ['climb-1']),
+      { wrapper },
+    );
+
+    await waitFor(() => {
+      expect(mockRequest).toHaveBeenCalledTimes(1);
+    });
+
+    expect(result.current.logbook).toEqual([]);
+    expect(queryClient.getQueryData(accumulatedLogbookQueryKey('kilter'))).toEqual([]);
   });
 
   it('fetches and transforms ticks when enabled', async () => {
@@ -390,7 +410,7 @@ describe('useLogbook', () => {
       expect(result.current.logbook.length).toBe(1);
     });
 
-    // Simulate useSaveTick's optimistic update via setQueriesData
+    // Simulate useSaveTick's optimistic update against the accumulated query.
     const optimisticEntry: LogbookEntry = {
       uuid: 'temp-123',
       climb_uuid: 'climb-1',
@@ -406,9 +426,9 @@ describe('useLogbook', () => {
     };
 
     act(() => {
-      queryClient.setQueriesData<LogbookEntry[]>(
-        { queryKey: ['logbook', 'kilter'] },
-        (old) => (old ? [optimisticEntry, ...old] : [optimisticEntry]),
+      queryClient.setQueryData<LogbookEntry[]>(
+        accumulatedLogbookQueryKey('kilter'),
+        (old = []) => [optimisticEntry, ...old],
       );
     });
 

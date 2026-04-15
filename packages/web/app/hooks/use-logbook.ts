@@ -30,8 +30,21 @@ export interface LogbookEntry {
   status?: TickStatus;
 }
 
-function transformTicks(ticks: GetTicksQueryResponse['ticks']): LogbookEntry[] {
-  return ticks.map((tick) => ({
+type LogbookSourceTick = {
+  uuid: string;
+  climbUuid: string;
+  angle: number;
+  isMirror: boolean;
+  status: TickStatus;
+  attemptCount: number;
+  quality: number | null;
+  difficulty: number | null;
+  comment: string;
+  climbedAt: string;
+};
+
+export function toLogbookEntry(tick: LogbookSourceTick): LogbookEntry {
+  return {
     uuid: tick.uuid,
     climb_uuid: tick.climbUuid,
     angle: tick.angle,
@@ -43,24 +56,43 @@ function transformTicks(ticks: GetTicksQueryResponse['ticks']): LogbookEntry[] {
     climbed_at: tick.climbedAt,
     is_ascent: tick.status === 'flash' || tick.status === 'send',
     status: tick.status,
-  }));
+  };
+}
+
+function transformTicks(ticks: GetTicksQueryResponse['ticks']): LogbookEntry[] {
+  return ticks.map(toLogbookEntry);
+}
+
+export function mergeLogbookEntries(
+  existing: LogbookEntry[],
+  incoming: LogbookEntry[],
+): LogbookEntry[] {
+  if (incoming.length === 0) return existing;
+
+  const existingUuids = new Set(existing.map((entry) => entry.uuid));
+  const uniqueIncoming = incoming.filter((entry) => !existingUuids.has(entry.uuid));
+
+  if (uniqueIncoming.length === 0) return existing;
+  return [...existing, ...uniqueIncoming];
 }
 
 /**
- * Stable key for accumulated logbook data.
- * useSaveTick's partial key match { queryKey: ['logbook', boardName] } matches this,
- * so optimistic updates propagate automatically to the cache.
+ * Stable key for accumulated logbook data. This is the single source of truth
+ * for board-route tick rendering.
  */
 export function accumulatedLogbookQueryKey(boardName: BoardName) {
   return ['logbook', boardName, 'accumulated'] as const;
 }
 
+export function fetchLogbookQueryKeyPrefix(boardName: BoardName) {
+  return ['logbook', boardName, 'fetch'] as const;
+}
+
 /**
  * Dynamic key for each incremental fetch batch.
- * Also matched by useSaveTick's partial key.
  */
 function fetchLogbookQueryKey(boardName: BoardName, climbUuids: ClimbUuid[]) {
-  return ['logbook', boardName, 'fetch', [...climbUuids].sort().join(',')] as const;
+  return [...fetchLogbookQueryKeyPrefix(boardName), [...climbUuids].sort().join(',')] as const;
 }
 
 /** Backward-compatible export used by tests. */
@@ -72,23 +104,28 @@ export function logbookQueryKey(boardName: BoardName, climbUuids: ClimbUuid[]) {
  * Hook to fetch logbook entries (ticks) for specific climbs.
  *
  * Uses incremental fetching: only fetches data for UUIDs that haven't been
- * fetched yet, and accumulates results in local state plus a React Query
- * cache entry. This prevents indicator flicker when new pages load in the
- * climb list, because existing logbook data is never cleared during a fetch.
- *
- * Compatible with useSaveTick's optimistic updates via partial key matching:
- * useSaveTick uses setQueriesData({ queryKey: ['logbook', boardName] }) which
- * matches the accumulated cache key ['logbook', boardName, 'accumulated'].
- * A cache subscription detects these external updates and syncs them to state.
+ * fetched yet, and merges the results into a stable accumulated React Query
+ * entry. This prevents indicator flicker when new pages load in the climb
+ * list, because existing logbook data is never cleared during a fetch.
  */
 export function useLogbook(boardName: BoardName, climbUuids: ClimbUuid[]) {
   const { token } = useWsAuthToken();
   const { status: sessionStatus } = useSession();
   const queryClient = useQueryClient();
+  const accumulatedKey = useMemo(() => accumulatedLogbookQueryKey(boardName), [boardName]);
   const fetchedUuidsRef = useRef<Set<string>>(new Set());
   const [invalidationCount, setInvalidationCount] = useState(0);
 
   const isEnabled = sessionStatus === 'authenticated' && !!token;
+
+  const accumulatedQuery = useQuery<LogbookEntry[]>({
+    queryKey: accumulatedKey,
+    queryFn: async () => [],
+    initialData: [],
+    staleTime: Infinity,
+    enabled: false,
+  });
+  const logbook = accumulatedQuery.data ?? [];
 
   // Determine which UUIDs haven't been fetched yet.
   // invalidationCount forces recomputation after cache invalidation clears
@@ -123,18 +160,11 @@ export function useLogbook(boardName: BoardName, climbUuids: ClimbUuid[]) {
     staleTime: Infinity,
   });
 
-  // Accumulated logbook state — direct useState for guaranteed re-renders
-  const [logbook, setLogbook] = useState<LogbookEntry[]>([]);
-
-  // When fetch completes, merge new entries into state and cache.
+  // When fetch completes, merge new entries into the accumulated cache.
   // IMPORTANT: Mark UUIDs as fetched here (not in queryFn) so the query key
   // remains stable until the data is consumed. If we mutated the ref inside
   // queryFn, useMemo would recompute newUuids on the re-render triggered by
   // the resolved query, changing the query key before the data could be read.
-  //
-  // NOTE: We compute the merge using `logbook` from the closure rather than
-  // a functional updater, because React 18 defers updater execution to the
-  // render phase — so capturing results from within the updater is unreliable.
   const lastMergedRef = useRef<LogbookEntry[] | undefined>(undefined);
   useEffect(() => {
     if (!fetchQuery.data || fetchQuery.data === lastMergedRef.current) return;
@@ -143,46 +173,26 @@ export function useLogbook(boardName: BoardName, climbUuids: ClimbUuid[]) {
     // Mark these UUIDs as fetched (including those with no ticks)
     newUuids.forEach((uuid) => fetchedUuidsRef.current.add(uuid));
 
-    const newEntries = fetchQuery.data;
-    const existingUuids = new Set(logbook.map((e: LogbookEntry) => e.uuid));
-    const uniqueNew = newEntries.filter((e: LogbookEntry) => !existingUuids.has(e.uuid));
+    queryClient.setQueryData<LogbookEntry[]>(
+      accumulatedKey,
+      (existing = []) => mergeLogbookEntries(existing, fetchQuery.data),
+    );
+  }, [fetchQuery.data, newUuids, accumulatedKey, queryClient]);
 
-    if (uniqueNew.length > 0) {
-      const merged = [...logbook, ...uniqueNew];
-      setLogbook(merged);
-      queryClient.setQueryData(accumulatedLogbookQueryKey(boardName), merged);
-    }
-  }, [fetchQuery.data, newUuids, logbook, boardName, queryClient]);
-
-  // Subscribe to cache changes for the accumulated key only.
-  // Handles two scenarios:
-  // 1. useSaveTick optimistic updates (setQueriesData modifies the cache externally)
-  // 2. Cache invalidation (useInvalidateLogbook removes queries) — resets
-  //    fetchedUuidsRef so all UUIDs are re-fetched on the next render.
+  // Reset UUID tracking when the accumulated cache entry is removed.
   useEffect(() => {
-    const key = accumulatedLogbookQueryKey(boardName);
-
     const unsubscribe = queryClient.getQueryCache().subscribe((event) => {
-      // Only react to events for our accumulated key
-      const qk = event.query.queryKey;
-      if (qk[0] !== key[0] || qk[1] !== key[1] || qk[2] !== key[2]) return;
+      if (event.type !== 'removed') return;
 
-      if (event.type === 'removed') {
-        // Cache was cleared (e.g., useInvalidateLogbook) — reset tracking
-        // so all current climbUuids are re-fetched on the next render.
-        fetchedUuidsRef.current = new Set();
-        lastMergedRef.current = undefined;
-        setLogbook([]);
-        setInvalidationCount((c) => c + 1);
-      } else if (event.type === 'updated') {
-        const cached = queryClient.getQueryData<LogbookEntry[]>(key);
-        if (cached !== undefined) {
-          setLogbook(cached);
-        }
-      }
+      const qk = event.query.queryKey;
+      if (qk[0] !== accumulatedKey[0] || qk[1] !== accumulatedKey[1] || qk[2] !== accumulatedKey[2]) return;
+
+      fetchedUuidsRef.current = new Set();
+      lastMergedRef.current = undefined;
+      setInvalidationCount((c) => c + 1);
     });
     return unsubscribe;
-  }, [queryClient, boardName]);
+  }, [queryClient, accumulatedKey]);
 
   // Reset when auth is lost (e.g., user logs out) so that a different
   // user logging in doesn't see stale data. Uses removeQueries to also
@@ -192,7 +202,6 @@ export function useLogbook(boardName: BoardName, climbUuids: ClimbUuid[]) {
     if (!isEnabled) {
       fetchedUuidsRef.current = new Set();
       lastMergedRef.current = undefined;
-      setLogbook([]);
       queryClient.removeQueries({ queryKey: ['logbook', boardName] });
     }
   }, [isEnabled, boardName, queryClient]);
