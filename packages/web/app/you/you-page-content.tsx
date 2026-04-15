@@ -4,10 +4,7 @@ import React, { useCallback } from 'react';
 import Box from '@mui/material/Box';
 import Tabs from '@mui/material/Tabs';
 import Tab from '@mui/material/Tab';
-import Typography from '@mui/material/Typography';
 import CircularProgress from '@mui/material/CircularProgress';
-import Logo from '@/app/components/brand/logo';
-import BackButton from '@/app/components/back-button';
 import ActivityFeed from '@/app/components/activity-feed/activity-feed';
 import LogbookFeed from '@/app/components/library/logbook-feed';
 import { useSession } from 'next-auth/react';
@@ -106,15 +103,7 @@ export default function YouPageContent({
 
   return (
     <Box className={styles.layout}>
-      <Box component="header" className={styles.header}>
-        <BackButton fallbackUrl="/" />
-        <Logo size="sm" showText={false} />
-        <Typography variant="h6" component="h4" className={styles.headerTitle}>
-          You
-        </Typography>
-      </Box>
-
-      <Box component="main" className={styles.content}>
+      <Box component="main" className={styles.content} sx={{ pt: 'calc(var(--global-header-height) + 8px)' }}>
         <Tabs
           value={activeTab}
           onChange={handleTabChange}
