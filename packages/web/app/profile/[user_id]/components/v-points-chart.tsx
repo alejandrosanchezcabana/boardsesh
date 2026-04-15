@@ -16,6 +16,13 @@ export default function VPointsChart({ data }: VPointsChartProps) {
   // Downsample labels for readability — show at most ~12 labels
   const labelInterval = Math.max(1, Math.floor(weekLabels.length / 12));
 
+  // Compute stacked max for a tight y-axis (sum all series per week, add 10% headroom)
+  const stackedMax = weekLabels.reduce((max, _, i) => {
+    const sum = series.reduce((s, ser) => s + (ser.data[i] ?? 0), 0);
+    return Math.max(max, sum);
+  }, 0);
+  const yMax = Math.ceil(stackedMax * 1.1);
+
   return (
     <Box>
       <Box sx={{ display: 'flex', alignItems: 'baseline', gap: 1, mb: 0.5 }}>
@@ -43,6 +50,7 @@ export default function VPointsChart({ data }: VPointsChartProps) {
           tickInterval: (_value: string, index: number) => index % labelInterval === 0,
         }]}
         yAxis={[{
+          max: yMax,
           tickLabelStyle: { fontSize: 10 },
           valueFormatter: (value: number | null) => {
             if (value == null) return '';
@@ -50,8 +58,8 @@ export default function VPointsChart({ data }: VPointsChartProps) {
             return value.toString();
           },
         }]}
-        height={200}
-        margin={{ top: 10, bottom: 30, left: 30, right: 10 }}
+        height={160}
+        margin={{ top: 5, bottom: 30, left: 28, right: 5 }}
         hideLegend
       />
     </Box>
