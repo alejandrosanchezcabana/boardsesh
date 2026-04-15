@@ -21,6 +21,7 @@ import { esp32Controllers, userBoards } from '@boardsesh/db/schema/app';
 import { sessionBoards, sessions } from '../../../db/schema';
 import { eq, inArray } from 'drizzle-orm';
 import { generateSessionSummary } from './session-summary';
+import { adoptRecentTicksForSession } from '../../../jobs/inferred-session-builder';
 
 /**
  * Auto-authorize all controllers owned by a user for a session.
@@ -201,6 +202,13 @@ export const sessionMutations = {
           }))
         );
       }
+    }
+
+    // Adopt recent solo ticks into the new session (if authenticated)
+    if (ctx.isAuthenticated && ctx.userId) {
+      adoptRecentTicksForSession(ctx.userId, sessionId).catch((err) => {
+        console.error(`[createSession] Failed to adopt recent ticks for session ${sessionId}:`, err);
+      });
     }
 
     // For HTTP requests (stateless), skip joining the session in-memory.

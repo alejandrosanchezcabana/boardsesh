@@ -384,3 +384,77 @@ export async function runInferredSessionBuilderBatched(options?: {
 
   return { usersProcessed: usersWithUnassigned.length, ticksAssigned: totalAssigned };
 }
+
+// 2 hours in milliseconds
+const ADOPT_WINDOW_MS = 2 * 60 * 60 * 1000;
+
+/**
+ * When a user starts a party session, adopt any recent solo ticks (within 2 hours)
+ * that don't already belong to a party session. This prevents the common case where
+ * a user logs a few climbs, then starts a party session, and ends up with two
+ * separate sessions for what was clearly one climbing session.
+ */
+export async function adoptRecentTicksForSession(
+  userId: string,
+  sessionId: string,
+): Promise<number> {
+  const cutoff = new Date(Date.now() - ADOPT_WINDOW_MS).toISOString();
+
+  // Find recent ticks with no party session assignment
+  const recentTicks = await db
+    .select({
+      uuid: dbSchema.boardseshTicks.uuid,
+      inferredSessionId: dbSchema.boardseshTicks.inferredSessionId,
+    })
+    .from(dbSchema.boardseshTicks)
+    .where(
+      and(
+        eq(dbSchema.boardseshTicks.userId, userId),
+        isNull(dbSchema.boardseshTicks.sessionId),
+        sql`${dbSchema.boardseshTicks.climbedAt} >= ${cutoff}`,
+      ),
+    );
+
+  if (recentTicks.length === 0) return 0;
+
+  const tickUuids = recentTicks.map((t) => t.uuid);
+
+  // Collect affected inferred session IDs (some ticks may not have one yet)
+  const affectedInferredSessionIds = [
+    ...new Set(
+      recentTicks
+        .map((t) => t.inferredSessionId)
+        .filter((id): id is string => id !== null),
+    ),
+  ];
+
+  // Reassign ticks to the party session
+  await db
+    .update(dbSchema.boardseshTicks)
+    .set({ sessionId, inferredSessionId: null })
+    .where(inArray(dbSchema.boardseshTicks.uuid, tickUuids));
+
+  // Recalculate stats for affected inferred sessions and clean up empty ones
+  for (const inferredId of affectedInferredSessionIds) {
+    const [remaining] = await db
+      .select({ count: sql<number>`COUNT(*)::int` })
+      .from(dbSchema.boardseshTicks)
+      .where(eq(dbSchema.boardseshTicks.inferredSessionId, inferredId));
+
+    if (remaining.count === 0) {
+      // No ticks left — delete the inferred session
+      await db
+        .delete(dbSchema.inferredSessions)
+        .where(eq(dbSchema.inferredSessions.id, inferredId));
+    } else {
+      // Some ticks remain (older than 2h window) — recalculate stats
+      await recalculateSessionStats(inferredId);
+    }
+  }
+
+  console.log(
+    `[adoptRecentTicks] Adopted ${tickUuids.length} tick(s) into session ${sessionId} for user ${userId}`,
+  );
+
+  return tickUuids.length;
+}
