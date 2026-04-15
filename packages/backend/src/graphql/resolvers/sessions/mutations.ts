@@ -99,6 +99,11 @@ export const sessionMutations = {
     // Auto-authorize user's ESP32 controllers for this session (if authenticated)
     if (ctx.isAuthenticated && ctx.userId) {
       authorizeUserControllersForSession(ctx.userId, sessionId);
+      // Adopt recent solo ticks into this session. The session row exists at
+      // this point (ensureSessionRecordExists ran inside roomManager.joinSession).
+      adoptRecentTicksForSession(ctx.userId, sessionId).catch((err) => {
+        console.error(`[joinSession] Failed to adopt recent ticks for session ${sessionId}:`, err);
+      });
     }
 
     // Notify session about new user
@@ -204,19 +209,14 @@ export const sessionMutations = {
       }
     }
 
-    // Adopt recent solo ticks into the new session (if authenticated)
-    if (ctx.isAuthenticated && ctx.userId) {
-      adoptRecentTicksForSession(ctx.userId, sessionId).catch((err) => {
-        console.error(`[createSession] Failed to adopt recent ticks for session ${sessionId}:`, err);
-      });
-    }
-
     // For HTTP requests (stateless), skip joining the session in-memory.
     // The creator will join via WebSocket when they navigate to the board page.
     const isHttpRequest = ctx.connectionId.startsWith('http-');
 
     if (!isHttpRequest) {
-      // WebSocket path: join the session as the creator
+      // WebSocket path: join the session as the creator.
+      // For non-discoverable sessions, this also creates the board_sessions row
+      // via ensureSessionRecordExists inside roomManager.joinSession.
       const result = await roomManager.joinSession(
         ctx.connectionId,
         sessionId,
@@ -230,6 +230,14 @@ export const sessionMutations = {
       if (DEBUG) console.log(`[createSession] Joined session - clientId: ${result.clientId}, isLeader: ${result.isLeader}`);
 
       updateContext(ctx.connectionId, { sessionId, userId: result.clientId });
+
+      // Adopt recent solo ticks now that the session row exists in board_sessions
+      // (boardsesh_ticks.session_id is a FK to board_sessions.id)
+      if (ctx.isAuthenticated && ctx.userId) {
+        adoptRecentTicksForSession(ctx.userId, sessionId).catch((err) => {
+          console.error(`[createSession] Failed to adopt recent ticks for session ${sessionId}:`, err);
+        });
+      }
 
       return {
         id: sessionId,
@@ -252,6 +260,16 @@ export const sessionMutations = {
         color: input.color || null,
       };
     }
+
+    // HTTP + discoverable: session row was already created by createDiscoverableSession above.
+    // Adopt recent solo ticks into it.
+    if (input.discoverable && ctx.isAuthenticated && ctx.userId) {
+      adoptRecentTicksForSession(ctx.userId, sessionId).catch((err) => {
+        console.error(`[createSession] Failed to adopt recent ticks for session ${sessionId}:`, err);
+      });
+    }
+    // HTTP + non-discoverable: no board_sessions row exists yet (created when
+    // the client joins via WebSocket). Adoption is handled by joinSession below.
 
     // HTTP path: return session metadata only; client joins via WebSocket later
     if (DEBUG) console.log(`[createSession] HTTP request - returning session metadata without joining`);
