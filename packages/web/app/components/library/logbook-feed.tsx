@@ -282,7 +282,8 @@ export default function LogbookFeed() {
     };
     setDraftSortState(nextSortState);
     setSortState(nextSortState);
-  }, [sortState]);
+    closeSortMenu();
+  }, [closeSortMenu, sortState]);
 
   const persistedPreferences = useMemo<LogbookPreferences>(() => ({
     version: 1,
