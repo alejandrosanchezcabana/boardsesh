@@ -55,6 +55,21 @@ export default function SetterProfileContent({ username }: SetterProfileContentP
     fetchProfile();
   }, [fetchProfile]);
 
+  const shareDisplayName = profile?.linkedUserDisplayName || profile?.username || username;
+
+  const handleShare = useCallback(async () => {
+    const shareUrl = `${window.location.origin}/setter/${encodeURIComponent(username)}`;
+    await shareWithFallback({
+      url: shareUrl,
+      title: `${shareDisplayName} - Setter`,
+      text: `Check out ${shareDisplayName}'s climbs on Boardsesh`,
+      trackingEvent: 'Setter Shared',
+      trackingProps: { username },
+      onClipboardSuccess: () => showMessage('Link copied to clipboard!', 'success'),
+      onError: () => showMessage('Failed to share', 'error'),
+    });
+  }, [username, shareDisplayName, showMessage]);
+
   if (loading) {
     return (
       <div className={styles.loadingContainer}>
@@ -78,19 +93,6 @@ export default function SetterProfileContent({ username }: SetterProfileContentP
   const displayName = profile.linkedUserDisplayName || profile.username;
   const avatarUrl = profile.linkedUserAvatarUrl;
   const authToken = (session as { authToken?: string } | null)?.authToken ?? null;
-
-  async function handleShare() {
-    const shareUrl = `${window.location.origin}/setter/${encodeURIComponent(username)}`;
-    await shareWithFallback({
-      url: shareUrl,
-      title: `${displayName} - Setter`,
-      text: `Check out ${displayName}'s climbs on Boardsesh`,
-      trackingEvent: 'Setter Shared',
-      trackingProps: { username },
-      onClipboardSuccess: () => showMessage('Link copied to clipboard!', 'success'),
-      onError: () => showMessage('Failed to share', 'error'),
-    });
-  }
 
   return (
     <>
