@@ -79,7 +79,7 @@ export default function SetterProfileContent({ username }: SetterProfileContentP
   const avatarUrl = profile.linkedUserAvatarUrl;
   const authToken = (session as { authToken?: string } | null)?.authToken ?? null;
 
-  const handleShare = useCallback(async () => {
+  async function handleShare() {
     const shareUrl = `${window.location.origin}/setter/${encodeURIComponent(username)}`;
     await shareWithFallback({
       url: shareUrl,
@@ -90,7 +90,7 @@ export default function SetterProfileContent({ username }: SetterProfileContentP
       onClipboardSuccess: () => showMessage('Link copied to clipboard!', 'success'),
       onError: () => showMessage('Failed to share', 'error'),
     });
-  }, [username, displayName, showMessage]);
+  }
 
   return (
     <>
