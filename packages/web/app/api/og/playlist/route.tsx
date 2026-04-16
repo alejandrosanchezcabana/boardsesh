@@ -8,6 +8,29 @@ import { getPlaylistOgSummary } from '@/app/lib/seo/dynamic-og-data';
 
 export const runtime = 'edge';
 
+const PLAYLIST_NAME_MAX_LENGTH = 34;
+const PLAYLIST_DESCRIPTION_MAX_LENGTH = 120;
+
+function truncateOgText(value: string, maxLength: number): string {
+  const normalized = value.trim();
+  if (normalized.length <= maxLength) {
+    return normalized;
+  }
+
+  return `${normalized.slice(0, maxLength - 3).trimEnd()}...`;
+}
+
+function getPlaylistFallbackMark(icon: string | null, name: string, boardLabel: string): string {
+  const normalizedIcon = icon?.trim() || '';
+  const safeIcon = normalizedIcon.replace(/[^A-Za-z0-9!?#+&]/g, '').toUpperCase();
+  if (safeIcon) {
+    return safeIcon.slice(0, 2);
+  }
+
+  const fallbackSource = `${name} ${boardLabel}`.replace(/[^A-Za-z0-9]/g, '').toUpperCase();
+  return fallbackSource.slice(0, 2) || 'PL';
+}
+
 export async function GET(request: NextRequest) {
   const routeT0 = performance.now();
 
@@ -33,12 +56,15 @@ export async function GET(request: NextRequest) {
     }
 
     const name = playlist.name || 'Playlist';
-    const description = playlist.description;
-    const color = playlist.color || themeTokens.colors.primary;
-    const icon = playlist.icon || null;
+    const description = playlist.description?.trim() || null;
+    const color = playlist.color?.trim() || themeTokens.colors.primary;
+    const icon = playlist.icon?.trim() || null;
     const boardType = playlist.boardType;
     const climbCount = playlist.climbCount;
     const boardLabel = formatBoardDisplayName(boardType);
+    const displayName = truncateOgText(name, PLAYLIST_NAME_MAX_LENGTH);
+    const displayDescription = description ? truncateOgText(description, PLAYLIST_DESCRIPTION_MAX_LENGTH) : null;
+    const displayMark = getPlaylistFallbackMark(icon, name, boardLabel);
 
     return new ImageResponse(
       (
@@ -73,7 +99,7 @@ export async function GET(request: NextRequest) {
                 color: '#FFFFFF',
               }}
             >
-              {icon || '\u{1F3B5}'}
+              {displayMark}
             </div>
           </div>
 
@@ -93,24 +119,20 @@ export async function GET(request: NextRequest) {
                 fontWeight: 'bold',
                 color: themeTokens.neutral[900],
                 lineHeight: 1.2,
-                overflow: 'hidden',
-                textOverflow: 'ellipsis',
               }}
             >
-              {name}
+              {displayName}
             </div>
 
-            {description && (
+            {displayDescription && (
               <div
                 style={{
                   fontSize: '24px',
                   color: themeTokens.neutral[500],
                   lineHeight: 1.4,
-                  overflow: 'hidden',
-                  textOverflow: 'ellipsis',
                 }}
               >
-                {description.length > 120 ? `${description.slice(0, 120)}...` : description}
+                {displayDescription}
               </div>
             )}
 
@@ -128,7 +150,7 @@ export async function GET(request: NextRequest) {
                   fontWeight: 600,
                 }}
               >
-                {climbCount} {climbCount === 1 ? 'climb' : 'climbs'}
+                {`${climbCount} ${climbCount === 1 ? 'climb' : 'climbs'}`}
               </div>
               <div
                 style={{

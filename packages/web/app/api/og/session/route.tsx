@@ -1,7 +1,7 @@
 import React from 'react';
 import { ImageResponse } from '@vercel/og';
 import { NextRequest } from 'next/server';
-import { themeTokens } from '@/app/theme/theme-config';
+import { darkTokens, themeTokens } from '@/app/theme/theme-config';
 import { FONT_GRADE_COLORS, getGradeColorWithOpacity } from '@/app/lib/grade-colors';
 import { BOULDER_GRADES } from '@/app/lib/board-data';
 import { createOgImageHeaders, OG_IMAGE_HEIGHT, OG_IMAGE_WIDTH } from '@/app/lib/seo/og';
@@ -14,6 +14,26 @@ const DIFFICULTY_TO_GRADE: Record<number, string> = Object.fromEntries(
 );
 
 const GRADE_ORDER: string[] = BOULDER_GRADES.map((g) => g.font_grade);
+
+function buildGradeBars(gradeRows: Array<{ difficulty: number; count: number }>) {
+  const gradeBars: Array<{ grade: string; count: number; color: string }> = [];
+
+  for (const row of gradeRows) {
+    const grade = DIFFICULTY_TO_GRADE[row.difficulty];
+    if (!grade) continue;
+
+    const hex = FONT_GRADE_COLORS[grade.toLowerCase()];
+    const color = hex ? getGradeColorWithOpacity(hex, 0.72) : 'rgba(209, 213, 219, 0.65)';
+    gradeBars.push({ grade, count: row.count, color });
+  }
+
+  gradeBars.sort((a, b) => GRADE_ORDER.indexOf(a.grade) - GRADE_ORDER.indexOf(b.grade));
+  return gradeBars;
+}
+
+function buildJoinHeadline(leaderName: string | null) {
+  return leaderName ? `Join ${leaderName} on the wall` : 'Join the crew on the wall';
+}
 
 export async function GET(request: NextRequest) {
   const routeT0 = performance.now();
@@ -38,175 +58,430 @@ export async function GET(request: NextRequest) {
 
     const sessionName = summary.sessionName;
     const participantNames = summary.participantNames.join(', ');
-
-    // Build grade bars
-    const gradeBars: Array<{ grade: string; count: number; color: string }> = [];
-    for (const row of summary.gradeRows) {
-      const difficulty = row.difficulty;
-      const count = row.count;
-      const grade = DIFFICULTY_TO_GRADE[difficulty];
-      if (!grade) continue;
-
-      const hex = FONT_GRADE_COLORS[grade.toLowerCase()];
-      const color = hex ? getGradeColorWithOpacity(hex, 0.5) : 'rgba(200, 200, 200, 0.5)';
-      gradeBars.push({ grade, count, color });
-    }
-
-    // Sort by grade order
-    gradeBars.sort((a, b) => GRADE_ORDER.indexOf(a.grade) - GRADE_ORDER.indexOf(b.grade));
-
+    const gradeBars = buildGradeBars(summary.gradeRows);
     const maxCount = Math.max(...gradeBars.map((b) => b.count), 1);
     const isJoinVariant = variant === 'join';
+    const renderMs = performance.now() - routeT0 - dbMs;
+    const joinHeadline = buildJoinHeadline(summary.leaderName);
+    const boardInfoLine = summary.boardLabel
+      ? `${summary.boardLabel}${summary.boardAngle != null ? ` • ${summary.boardAngle}°` : ''}`
+      : 'Boardsesh session';
+    const statsLine = summary.participantCount > 0
+      ? `${summary.participantCount} climber${summary.participantCount !== 1 ? 's' : ''} • ${summary.totalSends} send${summary.totalSends !== 1 ? 's' : ''} so far`
+      : 'No one is here yet';
+    const previewUrl = summary.boardPreviewPath
+      ? new URL(summary.boardPreviewPath, request.nextUrl.origin).toString()
+      : null;
 
-    return new ImageResponse(
-      (
+    const image = isJoinVariant ? (
+      <div
+        style={{
+          width: '100%',
+          height: '100%',
+          display: 'flex',
+          position: 'relative',
+          overflow: 'hidden',
+          background: darkTokens.semantic.background,
+          color: darkTokens.neutral[900],
+          padding: '42px',
+          gap: '34px',
+        }}
+      >
         <div
           style={{
-            width: '100%',
-            height: '100%',
+            position: 'absolute',
+            inset: 0,
+            display: 'flex',
+            overflow: 'hidden',
+          }}
+        >
+          <div
+            style={{
+              position: 'absolute',
+              top: '-110px',
+              left: '-70px',
+              width: '310px',
+              height: '310px',
+              borderRadius: '999px',
+              background: themeTokens.colors.logoGreen,
+              opacity: 0.18,
+            }}
+          />
+          <div
+            style={{
+              position: 'absolute',
+              right: '-100px',
+              bottom: '-120px',
+              width: '360px',
+              height: '360px',
+              borderRadius: '999px',
+              background: themeTokens.colors.logoRose,
+              opacity: 0.18,
+            }}
+          />
+        </div>
+
+        <div
+          style={{
+            width: '366px',
+            height: '546px',
+            borderRadius: '28px',
+            background: darkTokens.semantic.surfaceElevated,
+            border: `1px solid ${darkTokens.neutral[300]}`,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            position: 'relative',
+            overflow: 'hidden',
+            boxShadow: darkTokens.shadows.lg,
+            flexShrink: 0,
+          }}
+        >
+          {previewUrl ? (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img
+              src={previewUrl}
+              alt=""
+              width={366}
+              height={546}
+              style={{
+                width: '100%',
+                height: '100%',
+                objectFit: 'cover',
+              }}
+            />
+          ) : (
+            <div
+              style={{
+                display: 'flex',
+                flexDirection: 'column',
+                gap: '12px',
+                alignItems: 'center',
+                justifyContent: 'center',
+                padding: '32px',
+                color: darkTokens.neutral[600],
+                textAlign: 'center',
+              }}
+            >
+              <div style={{ fontSize: '22px', fontWeight: 700 }}>
+                {summary.boardLabel || 'Board ready'}
+              </div>
+              <div style={{ fontSize: '18px' }}>
+                {summary.boardAngle != null ? `${summary.boardAngle}°` : 'Session invite'}
+              </div>
+            </div>
+          )}
+        </div>
+
+        <div
+          style={{
             display: 'flex',
             flexDirection: 'column',
             justifyContent: 'center',
-            alignItems: 'center',
-            background: '#FFFFFF',
-            padding: '60px 80px',
-            gap: '32px',
+            flex: 1,
+            minWidth: 0,
+            gap: '22px',
+            position: 'relative',
           }}
         >
-          {/* Top section: Session name + participants */}
           <div
             style={{
               display: 'flex',
               flexDirection: 'column',
               gap: '12px',
-              width: '100%',
             }}
           >
             <div
               style={{
-                fontSize: '48px',
-                fontWeight: 'bold',
-                color: themeTokens.neutral[900],
-                lineHeight: 1.2,
+                fontSize: '20px',
+                fontWeight: 700,
+                letterSpacing: '0.08em',
+                textTransform: 'uppercase',
+                color: darkTokens.neutral[500],
               }}
             >
-              {sessionName}
+              {boardInfoLine}
             </div>
+            <div
+              style={{
+                fontSize: '62px',
+                fontWeight: 700,
+                lineHeight: 1.04,
+                color: darkTokens.neutral[900],
+              }}
+            >
+              {joinHeadline}
+            </div>
+            <div
+              style={{
+                fontSize: '27px',
+                color: darkTokens.neutral[700],
+                lineHeight: 1.35,
+              }}
+            >
+              {sessionName && sessionName !== 'Climbing Session' ? sessionName : statsLine}
+            </div>
+            {sessionName && sessionName !== 'Climbing Session' && (
+              <div
+                style={{
+                  fontSize: '22px',
+                  color: darkTokens.neutral[600],
+                }}
+              >
+                {statsLine}
+              </div>
+            )}
             {participantNames && (
               <div
                 style={{
-                  fontSize: '24px',
-                  color: themeTokens.neutral[500],
+                  fontSize: '19px',
+                  color: darkTokens.neutral[500],
                 }}
               >
                 {participantNames}
               </div>
             )}
-            <div
-              style={{
-                fontSize: '20px',
-                color: themeTokens.neutral[400],
-              }}
-            >
-              {summary.totalSends > 0
-                ? `${summary.totalSends} send${summary.totalSends !== 1 ? 's' : ''}`
-                : 'No sends yet'}
-            </div>
           </div>
 
-          {/* Grade chart */}
-          {gradeBars.length > 0 && (
+          <div
+            style={{
+              display: 'flex',
+              flexDirection: 'column',
+              gap: '14px',
+              borderRadius: '24px',
+              padding: '24px 26px',
+              background: darkTokens.semantic.surface,
+              border: `1px solid ${darkTokens.neutral[300]}`,
+              boxShadow: darkTokens.shadows.md,
+            }}
+          >
+            <div
+              style={{
+                fontSize: '22px',
+                fontWeight: 700,
+                color: darkTokens.neutral[900],
+              }}
+            >
+              Grades climbed so far
+            </div>
+
+            {gradeBars.length > 0 ? (
+              <>
+                <div
+                  style={{
+                    display: 'flex',
+                    alignItems: 'flex-end',
+                    gap: '6px',
+                    width: '100%',
+                    height: '156px',
+                  }}
+                >
+                  {gradeBars.map((bar) => (
+                    <div
+                      key={bar.grade}
+                      style={{
+                        display: 'flex',
+                        flex: 1,
+                        height: '100%',
+                        alignItems: 'flex-end',
+                      }}
+                    >
+                      <div
+                        style={{
+                          width: '100%',
+                          height: `${Math.max((bar.count / maxCount) * 100, 7)}%`,
+                          backgroundColor: bar.color,
+                          borderRadius: '10px 10px 0 0',
+                        }}
+                      />
+                    </div>
+                  ))}
+                </div>
+                <div
+                  style={{
+                    display: 'flex',
+                    gap: '6px',
+                    width: '100%',
+                    alignItems: 'flex-start',
+                    borderTop: `1px solid ${darkTokens.neutral[300]}`,
+                    paddingTop: '10px',
+                  }}
+                >
+                  {gradeBars.map((bar) => (
+                    <div
+                      key={bar.grade}
+                      style={{
+                        flex: 1,
+                        fontSize: '17px',
+                        fontWeight: 700,
+                        textAlign: 'center',
+                        color: darkTokens.neutral[700],
+                      }}
+                    >
+                      {bar.grade}
+                    </div>
+                  ))}
+                </div>
+              </>
+            ) : (
+              <div
+                style={{
+                  fontSize: '20px',
+                  color: darkTokens.neutral[600],
+                }}
+              >
+                No sends yet.
+              </div>
+            )}
+          </div>
+        </div>
+
+        <div
+          style={{
+            position: 'absolute',
+            bottom: '24px',
+            right: '34px',
+            fontSize: '18px',
+            color: darkTokens.neutral[500],
+            fontWeight: 700,
+            letterSpacing: '0.04em',
+          }}
+        >
+          boardsesh.com
+        </div>
+      </div>
+    ) : (
+      <div
+        style={{
+          width: '100%',
+          height: '100%',
+          display: 'flex',
+          flexDirection: 'column',
+          justifyContent: 'center',
+          alignItems: 'center',
+          background: '#FFFFFF',
+          padding: '60px 80px',
+          gap: '32px',
+        }}
+      >
+        <div
+          style={{
+            display: 'flex',
+            flexDirection: 'column',
+            gap: '12px',
+            width: '100%',
+          }}
+        >
+          <div
+            style={{
+              fontSize: '48px',
+              fontWeight: 'bold',
+              color: themeTokens.neutral[900],
+              lineHeight: 1.2,
+            }}
+          >
+            {sessionName}
+          </div>
+          {participantNames && (
+            <div
+              style={{
+                fontSize: '24px',
+                color: themeTokens.neutral[500],
+              }}
+            >
+              {participantNames}
+            </div>
+          )}
+          <div
+            style={{
+              fontSize: '20px',
+              color: themeTokens.neutral[400],
+            }}
+          >
+            {summary.totalSends > 0
+              ? `${summary.totalSends} send${summary.totalSends !== 1 ? 's' : ''}`
+              : 'No sends yet'}
+          </div>
+        </div>
+
+        {gradeBars.length > 0 && (
+          <div
+            style={{
+              display: 'flex',
+              flexDirection: 'column',
+              width: '100%',
+              gap: '8px',
+            }}
+          >
             <div
               style={{
                 display: 'flex',
-                flexDirection: 'column',
+                alignItems: 'flex-end',
+                gap: '4px',
+                height: '180px',
                 width: '100%',
-                gap: '8px',
               }}
             >
-              {/* Bars */}
-              <div
-                style={{
-                  display: 'flex',
-                  alignItems: 'flex-end',
-                  gap: '4px',
-                  height: '180px',
-                  width: '100%',
-                }}
-              >
-                {gradeBars.map((bar) => (
-                  <div
-                    key={bar.grade}
-                    style={{
-                      flex: 1,
-                      height: `${Math.max((bar.count / maxCount) * 100, 5)}%`,
-                      backgroundColor: bar.color,
-                      borderRadius: '3px 3px 0 0',
-                    }}
-                  />
-                ))}
-              </div>
-              {/* Labels */}
-              <div
-                style={{
-                  display: 'flex',
-                  gap: '4px',
-                  width: '100%',
-                }}
-              >
-                {gradeBars.map((bar) => (
-                  <div
-                    key={bar.grade}
-                    style={{
-                      flex: 1,
-                      fontSize: '14px',
-                      textAlign: 'center',
-                      color: themeTokens.neutral[400],
-                    }}
-                  >
-                    {bar.grade}
-                  </div>
-                ))}
-              </div>
+              {gradeBars.map((bar) => (
+                <div
+                  key={bar.grade}
+                  style={{
+                    flex: 1,
+                    height: `${Math.max((bar.count / maxCount) * 100, 5)}%`,
+                    backgroundColor: bar.color,
+                    borderRadius: '3px 3px 0 0',
+                  }}
+                />
+              ))}
             </div>
-          )}
-
-          {/* Join CTA */}
-          {isJoinVariant && (
             <div
               style={{
-                fontSize: '36px',
-                fontWeight: 'bold',
-                color: themeTokens.colors.primary,
-                marginTop: '8px',
+                display: 'flex',
+                gap: '4px',
+                width: '100%',
               }}
             >
-              Get on the wall
+              {gradeBars.map((bar) => (
+                <div
+                  key={bar.grade}
+                  style={{
+                    flex: 1,
+                    fontSize: '14px',
+                    textAlign: 'center',
+                    color: themeTokens.neutral[400],
+                  }}
+                >
+                  {bar.grade}
+                </div>
+              ))}
             </div>
-          )}
-
-          {/* Branding */}
-          <div
-            style={{
-              position: 'absolute',
-              bottom: '24px',
-              right: '40px',
-              fontSize: '20px',
-              color: themeTokens.neutral[300],
-              fontWeight: 600,
-            }}
-          >
-            boardsesh.com
           </div>
+        )}
+
+        <div
+          style={{
+            position: 'absolute',
+            bottom: '24px',
+            right: '40px',
+            fontSize: '20px',
+            color: themeTokens.neutral[300],
+            fontWeight: 600,
+          }}
+        >
+          boardsesh.com
         </div>
-      ),
+      </div>
+    );
+
+    return new ImageResponse(
+      image,
       {
         width: OG_IMAGE_WIDTH,
         height: OG_IMAGE_HEIGHT,
         headers: createOgImageHeaders({
           contentType: 'image/png',
           version,
-          serverTiming: `db;dur=${dbMs.toFixed(1)}, render;dur=${(performance.now() - routeT0 - dbMs).toFixed(1)}, route;dur=${(performance.now() - routeT0).toFixed(1)}`,
+          serverTiming: `db;dur=${dbMs.toFixed(1)}, render;dur=${renderMs.toFixed(1)}, route;dur=${(performance.now() - routeT0).toFixed(1)}`,
         }),
       },
     );

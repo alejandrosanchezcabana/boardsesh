@@ -184,7 +184,7 @@ export async function GET(request: NextRequest) {
     const format = searchParams.get('format') ?? (isOgVariant ? 'png' : 'webp');
     // Mirroring is handled client-side via CSS scaleX(-1) to maximize cache hit rate
 
-    if (!boardName || !layoutId || !sizeId || !setIds || !frames) {
+    if (!boardName || !layoutId || !sizeId || !setIds || frames === null) {
       return NextResponse.json({ error: 'Missing required parameters' }, { status: 400 });
     }
 

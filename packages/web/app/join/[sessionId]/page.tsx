@@ -13,6 +13,22 @@ const DIFFICULTY_TO_GRADE: Record<number, string> = Object.fromEntries(
   BOULDER_GRADES.map((g) => [g.difficulty_id, g.font_grade]),
 );
 
+function buildJoinHeadline(leaderName: string | null) {
+  return leaderName ? `Join ${leaderName} on the wall` : 'Join the crew on the wall';
+}
+
+function buildGradeSummary(grades: string[]): string {
+  if (grades.length === 0) {
+    return '';
+  }
+
+  if (grades.length === 1) {
+    return ` on ${grades[0]}`;
+  }
+
+  return ` from ${grades[0]} to ${grades[grades.length - 1]}`;
+}
+
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { sessionId: rawSessionId } = await params;
   const sessionId = decodeURIComponent(rawSessionId);
@@ -25,16 +41,23 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     }
 
     const sessionName = summary.sessionName;
-    const participantNames = summary.participantNames.join(', ');
     const grades = summary.gradeRows
       .map((r) => DIFFICULTY_TO_GRADE[r.difficulty])
       .filter(Boolean);
-    const gradeRange = grades.length > 0 ? `${grades[0]} - ${grades[grades.length - 1]}` : '';
+    const gradeSummary = buildGradeSummary(grades);
+    const joinHeadline = buildJoinHeadline(summary.leaderName);
+    const boardInfo = summary.boardLabel
+      ? `${summary.boardLabel}${summary.boardAngle != null ? ` at ${summary.boardAngle}°` : ''}`
+      : null;
 
-    const title = `Join ${sessionName} | Boardsesh`;
-    const description = participantNames
-      ? `${participantNames} sent ${summary.totalSends} climbs${gradeRange ? ` (${gradeRange})` : ''}. Get on the wall!`
-      : `Join this climbing session on Boardsesh`;
+    const title = `${joinHeadline} | Boardsesh`;
+    const description = boardInfo
+      ? summary.totalSends > 0
+        ? `${boardInfo}. ${summary.totalSends} send${summary.totalSends !== 1 ? 's' : ''} so far${gradeSummary}. Get on the wall.`
+        : `${boardInfo}. No sends yet. Get on the wall.`
+      : sessionName && sessionName !== 'Climbing Session'
+        ? `${sessionName} is live on Boardsesh. Get on the wall.`
+        : 'Jump into this climbing session on Boardsesh. Get on the wall.';
 
     const ogImagePath = buildVersionedOgImagePath('/api/og/session', { sessionId, variant: 'join' }, summary.version);
 
@@ -52,7 +75,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
             url: ogImagePath,
             width: OG_IMAGE_WIDTH,
             height: OG_IMAGE_HEIGHT,
-            alt: `Join ${sessionName}`,
+            alt: joinHeadline,
           },
         ],
       },

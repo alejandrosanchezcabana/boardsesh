@@ -120,6 +120,17 @@ vi.mock('@/app/components/board-renderer/types', () => ({
   },
 }));
 
+vi.mock('@/app/lib/seo/og', () => ({
+  OG_IMAGE_WIDTH: 1200,
+  OG_IMAGE_HEIGHT: 630,
+  createOgImageHeaders: vi.fn(({ contentType }: { contentType: string }) => ({
+    'Content-Type': contentType,
+    'Cache-Control': 'public, max-age=31536000, s-maxage=31536000, immutable',
+    'CDN-Cache-Control': 'public, s-maxage=31536000, immutable',
+    'Vercel-CDN-Cache-Control': 'public, s-maxage=31536000, immutable',
+  })),
+}));
+
 import { GET } from '../route';
 
 function makeRequest(params: Record<string, string>): NextRequest {
@@ -165,6 +176,15 @@ describe('board-render API route', () => {
     const { frames: _, ...params } = validParams;
     const response = await GET(makeRequest(params));
     expect(response.status).toBe(400);
+  });
+
+  it('accepts an empty frames string for board-only previews', async () => {
+    const response = await GET(makeRequest({ ...validParams, frames: '', include_background: '1', format: 'png' }));
+
+    expect(response.status).toBe(200);
+    const configJson = mockRenderOverlay.mock.calls[0][0];
+    const config = JSON.parse(configJson);
+    expect(config.frames).toBe('');
   });
 
   it('returns 400 for invalid board_name', async () => {

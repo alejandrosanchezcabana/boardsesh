@@ -1,5 +1,6 @@
 import React from 'react';
 import { Metadata } from 'next';
+import { notFound } from 'next/navigation';
 import { getServerAuthToken } from '@/app/lib/auth/server-auth';
 import { getServerSession } from 'next-auth/next';
 import { authOptions } from '@/app/lib/auth/auth-options';
@@ -21,9 +22,9 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
 
     if (!summary) {
       return {
-        title: 'Profile | Boardsesh',
-        description: 'View climbing profile and stats',
-        alternates: { canonical: `/profile/${user_id}` },
+        title: 'Profile Not Found | Boardsesh',
+        description: 'This climbing profile could not be found.',
+        robots: { index: false, follow: false },
       };
     }
 
@@ -76,14 +77,13 @@ export default async function ProfilePage({ params }: PageProps) {
     viewerUserId = session?.user?.id;
   }
 
-  const [initialProfile, statsData] = await Promise.all([
-    getProfileData(user_id, viewerUserId),
-    fetchProfileStatsData(user_id),
-  ]);
+  const initialProfile = await getProfileData(user_id, viewerUserId);
 
   if (!initialProfile) {
-    return <ProfilePageContent userId={user_id} initialNotFound />;
+    notFound();
   }
+
+  const statsData = await fetchProfileStatsData(user_id);
 
   return (
     <ProfilePageContent
