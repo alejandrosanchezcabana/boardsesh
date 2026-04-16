@@ -333,6 +333,13 @@ export const mutationsTypeDefs = /* GraphQL */ `
     """
     removeUserFromSession(input: RemoveUserFromSessionInput!): SessionDetail
 
+    """
+    Record that an inferred session has been mirrored to Apple HealthKit,
+    storing the workout UUID for de-duplication and UI status.
+    Must be a participant of the session.
+    """
+    setInferredSessionHealthKitWorkoutId(sessionId: ID!, workoutId: String!): Boolean!
+
     # ============================================
     # Notification Mutations (require auth)
     # ============================================

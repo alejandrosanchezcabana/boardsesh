@@ -176,6 +176,12 @@ export const REMOVE_USER_FROM_SESSION = gql`
   }
 `;
 
+export const SET_SESSION_HEALTHKIT_WORKOUT_ID = gql`
+  mutation SetSessionHealthKitWorkoutId($sessionId: ID!, $workoutId: String!) {
+    setInferredSessionHealthKitWorkoutId(sessionId: $sessionId, workoutId: $workoutId)
+  }
+`;
+
 // ============================================
 // Query Variable Types
 // ============================================

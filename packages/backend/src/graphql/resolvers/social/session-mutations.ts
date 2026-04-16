@@ -24,6 +24,11 @@ const RemoveUserFromSessionSchema = z.object({
   userId: z.string().min(1),
 });
 
+const SetHealthKitWorkoutIdSchema = z.object({
+  sessionId: z.string().min(1),
+  workoutId: z.string().min(1),
+});
+
 /**
  * Check if a user is a participant of an inferred session
  * (either the original owner or an added member via overrides).
@@ -320,6 +325,71 @@ export const sessionEditMutations = {
     });
 
     return sessionFeedQueries.sessionDetail(null, { sessionId: validated.sessionId });
+  },
+
+  /**
+   * Record that a session (inferred or party) has been mirrored to Apple HealthKit.
+   * Stores the HKWorkout UUID so the client can show "already synced" state
+   * and skip duplicate writes.
+   */
+  setInferredSessionHealthKitWorkoutId: async (
+    _: unknown,
+    args: { sessionId: string; workoutId: string },
+    ctx: ConnectionContext,
+  ): Promise<boolean> => {
+    requireAuthenticated(ctx);
+    const validated = validateInput(SetHealthKitWorkoutIdSchema, args, 'args');
+    const userId = ctx.userId!;
+
+    // Try inferred session first (most common case), fall back to party session.
+    const [inferred] = await db
+      .select({ userId: dbSchema.inferredSessions.userId })
+      .from(dbSchema.inferredSessions)
+      .where(eq(dbSchema.inferredSessions.id, validated.sessionId))
+      .limit(1);
+
+    if (inferred) {
+      await requireSessionParticipant(validated.sessionId, userId);
+      await db
+        .update(dbSchema.inferredSessions)
+        .set({ healthKitWorkoutId: validated.workoutId })
+        .where(eq(dbSchema.inferredSessions.id, validated.sessionId));
+      return true;
+    }
+
+    const [party] = await db
+      .select({ createdByUserId: dbSchema.boardSessions.createdByUserId })
+      .from(dbSchema.boardSessions)
+      .where(eq(dbSchema.boardSessions.id, validated.sessionId))
+      .limit(1);
+
+    if (!party) {
+      throw new Error('Session not found');
+    }
+
+    // For party sessions, anyone who participated (had ticks in the session) can tag it.
+    if (party.createdByUserId !== userId) {
+      const [participantTick] = await db
+        .select({ uuid: dbSchema.boardseshTicks.uuid })
+        .from(dbSchema.boardseshTicks)
+        .where(
+          and(
+            eq(dbSchema.boardseshTicks.sessionId, validated.sessionId),
+            eq(dbSchema.boardseshTicks.userId, userId),
+          ),
+        )
+        .limit(1);
+      if (!participantTick) {
+        throw new Error('Not a participant of this session');
+      }
+    }
+
+    await db
+      .update(dbSchema.boardSessions)
+      .set({ healthKitWorkoutId: validated.workoutId })
+      .where(eq(dbSchema.boardSessions.id, validated.sessionId));
+
+    return true;
   },
 };
 

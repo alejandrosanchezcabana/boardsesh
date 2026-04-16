@@ -35,6 +35,8 @@ export const boardSessions = pgTable('board_sessions', {
   isPermanent: boolean('is_permanent').default(false).notNull(),
   // Hex color for multi-session display
   color: text('color'),
+  // Apple HealthKit workout UUID once the session has been mirrored to HealthKit.
+  healthKitWorkoutId: text('health_kit_workout_id'),
 }, (table) => ({
   locationIdx: index('board_sessions_location_idx').on(table.latitude, table.longitude),
   discoverableIdx: index('board_sessions_discoverable_idx').on(table.discoverable),

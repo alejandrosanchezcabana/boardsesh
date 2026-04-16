@@ -33,6 +33,10 @@ import { getBackendHttpUrl } from '@/app/lib/backend-url';
 import { useGradeFormat } from '@/app/hooks/use-grade-format';
 import ToggleButton from '@mui/material/ToggleButton';
 import ToggleButtonGroup from '@mui/material/ToggleButtonGroup';
+import Switch from '@mui/material/Switch';
+import FormControlLabel from '@mui/material/FormControlLabel';
+import { useHealthKitAutoSync } from '@/app/hooks/use-healthkit-sync';
+import { isHealthKitAvailable } from '@/app/lib/healthkit/healthkit-bridge';
 
 const MAX_INPUT_SIZE = 10 * 1024 * 1024; // 10MB input ceiling before compression
 const MAX_DIMENSION = 1024; // resize longest side to ≤ 1024 px
@@ -124,6 +128,13 @@ export default function SettingsPageContent() {
   const { showMessage } = useSnackbar();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { gradeFormat, setGradeFormat, loaded: gradeFormatLoaded } = useGradeFormat();
+  const { enabled: healthKitAutoSync, loaded: healthKitAutoSyncLoaded, setEnabled: setHealthKitAutoSyncEnabled } = useHealthKitAutoSync();
+  const [healthKitAvailable, setHealthKitAvailable] = useState(false);
+  useEffect(() => {
+    let cancelled = false;
+    isHealthKitAvailable().then((v) => { if (!cancelled) setHealthKitAvailable(v); });
+    return () => { cancelled = true; };
+  }, []);
 
   // Redirect unauthenticated users to login with a return URL
   useEffect(() => {
@@ -497,6 +508,25 @@ export default function SettingsPageContent() {
                 </ToggleButton>
               </ToggleButtonGroup>
             </Box>
+
+            {healthKitAvailable && (
+              <Box sx={{ mt: 3 }}>
+                <Typography variant="body2" fontWeight={600} sx={{ mb: 1 }}>Apple Health</Typography>
+                <FormControlLabel
+                  control={
+                    <Switch
+                      checked={healthKitAutoSync}
+                      onChange={(e) => void setHealthKitAutoSyncEnabled(e.target.checked)}
+                      disabled={!healthKitAutoSyncLoaded}
+                    />
+                  }
+                  label="Save sessions to Apple Health automatically"
+                />
+                <Typography variant="body2" color="text.secondary" sx={{ fontSize: 12 }}>
+                  Turn this off to save sessions only when you tap the Save to Apple Health button.
+                </Typography>
+              </Box>
+            )}
           </CardContent>
         </Card>
 

@@ -540,6 +540,20 @@
       "when": 1776470400000,
       "tag": "0076_fix_split_sessions",
       "breakpoints": true
+    },
+    {
+      "idx": 77,
+      "version": "7",
+      "when": 1776299037733,
+      "tag": "0077_mixed_lady_deathstrike",
+      "breakpoints": true
+    },
+    {
+      "idx": 78,
+      "version": "7",
+      "when": 1776299787420,
+      "tag": "0078_yummy_kylun",
+      "breakpoints": true
     }
   ]
 }

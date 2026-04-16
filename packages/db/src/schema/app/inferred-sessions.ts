@@ -35,6 +35,9 @@ export const inferredSessions = pgTable(
     tickCount: integer('tick_count').default(0).notNull(),
     name: text('name'), // User-editable session name
     description: text('description'), // User-editable notes (maps to "goal" in the feed)
+    // Apple HealthKit workout UUID once the session has been mirrored to HealthKit.
+    // Set means "already synced"; used to skip duplicate writes and show status in UI.
+    healthKitWorkoutId: text('health_kit_workout_id'),
     createdAt: timestamp('created_at', { mode: 'string' }).defaultNow().notNull(),
   },
   (table) => ({

@@ -76,6 +76,8 @@
 		<string>www.boardsesh.com</string>
 		<string>ts.net</string>
 	</array>
+	<key>NSHealthUpdateUsageDescription</key>
+	<string>Boardsesh saves your climbing sessions to Apple Health as workouts so they count toward your activity rings.</string>
 	<key>NSBluetoothAlwaysUsageDescription</key>
 	<string>Boardsesh uses Bluetooth to connect to your Kilter Board, Tension Board, or MoonBoard and light up climbing holds. No personal data is sent over Bluetooth.</string>
 	<key>NSLocationWhenInUseUsageDescription</key>

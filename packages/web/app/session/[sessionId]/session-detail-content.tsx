@@ -48,6 +48,8 @@ import { useGradeFormat } from '@/app/hooks/use-grade-format';
 import { generateSessionName } from '@/app/lib/session-utils';
 import { ConfirmPopover } from '@/app/components/ui/confirm-popover';
 import { useDeleteTick } from '@/app/hooks/use-delete-tick';
+import SaveToHealthKitButton from '@/app/components/healthkit/save-to-healthkit-button';
+import type { SessionSummary } from '@boardsesh/shared-schema';
 
 interface SessionDetailContentProps {
   session: SessionDetail | null;
@@ -347,6 +349,26 @@ export default function SessionDetailContent({
 
   const isMultiUser = participants.length > 1;
   const displayName = sessionName || generateSessionName(firstTickAt, boardTypes);
+
+  const lastTickAt = session.lastTickAt;
+  const healthKitSummary: SessionSummary | null = isParticipant
+    ? {
+        sessionId,
+        totalSends,
+        totalAttempts,
+        gradeDistribution: gradeDistribution.map((g) => ({
+          grade: g.grade,
+          count: (g.flash ?? 0) + (g.send ?? 0),
+        })),
+        hardestClimb: null,
+        participants: [],
+        startedAt: firstTickAt,
+        endedAt: lastTickAt,
+        durationMinutes: durationMinutes ?? null,
+        goal: goal ?? null,
+      }
+    : null;
+  const healthKitBoardType = boardTypes[0] ?? '';
 
   // Build a lookup from userId to participant info (memoized to avoid recreating on every render)
   const participantMap = useMemo(() => {
@@ -724,6 +746,14 @@ export default function SessionDetailContent({
               <Collapse in={sessionCommentsOpen} unmountOnExit>
                 <CommentSection entityType="session" entityId={sessionId} title="Comments" />
               </Collapse>
+              {healthKitSummary && (
+                <Box sx={{ mt: 1 }}>
+                  <SaveToHealthKitButton
+                    summary={healthKitSummary}
+                    boardType={healthKitBoardType}
+                  />
+                </Box>
+              )}
             </Box>
 
             <Divider />
