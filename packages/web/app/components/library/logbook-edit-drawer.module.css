@@ -1,0 +1,68 @@
+.drawerBody {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  max-width: 720px;
+  margin: 0 auto;
+}
+
+.summary {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.pickerPanel {
+  display: grid;
+  grid-template-rows: 0fr;
+  transition: grid-template-rows 200ms ease-out;
+}
+
+.pickerPanelExpanded {
+  grid-template-rows: 1fr;
+}
+
+.pickerPanelContent {
+  overflow: hidden;
+  min-height: 0;
+}
+
+.editorCard {
+  overflow: hidden;
+  border: 1px solid var(--neutral-200);
+  border-radius: 16px;
+  background-color: var(--semantic-surface);
+}
+
+.controlsRow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 10px 10px;
+}
+
+.leftSection {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+}
+
+.commentWrapper {
+  flex: 1;
+  min-width: 0;
+}
+
+.rightControls {
+  flex: none;
+  display: flex;
+  align-items: center;
+}
+
+.actionsRow {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  padding: 0 10px 10px;
+}

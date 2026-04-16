@@ -105,8 +105,7 @@ export const UpdateTickInputSchema = z.object({
 }).refine(
   (data) => {
     if (data.status === 'flash' && data.attemptCount !== undefined && data.attemptCount !== 1) return false;
-    if (data.status === 'send' && data.attemptCount !== undefined && data.attemptCount <= 1) return false;
     return true;
   },
-  { message: 'Flash requires attemptCount of 1, send requires attemptCount > 1', path: ['attemptCount'] }
+  { message: 'Flash requires attemptCount of 1', path: ['attemptCount'] }
 );

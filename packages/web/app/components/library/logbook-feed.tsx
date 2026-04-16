@@ -183,6 +183,7 @@ export default function LogbookFeed() {
   const [filterAnchorEl, setFilterAnchorEl] = useState<HTMLElement | null>(null);
   const [sortAnchorEl, setSortAnchorEl] = useState<HTMLElement | null>(null);
   const [boardAnchorEl, setBoardAnchorEl] = useState<HTMLElement | null>(null);
+  const [editingItem, setEditingItem] = useState<AscentFeedItem | null>(null);
   const [layoutSelections, setLayoutSelections] = useState<Record<Exclude<BoardFilter, 'all'>, number[]>>({
     ...ALL_LAYOUT_SELECTIONS,
   });
@@ -425,6 +426,14 @@ export default function LogbookFeed() {
     }
   }, [token, queryClient, showMessage]);
 
+  const handleEdit = useCallback((item: AscentFeedItem) => {
+    setEditingItem(item);
+  }, []);
+
+  const handleCloseEditDrawer = useCallback(() => {
+    setEditingItem(null);
+  }, []);
+
   const showBoardType = boardFilter === 'all';
   const hasFilters = boardFilter !== 'all' || debouncedSearch.length > 0 || !isDefaultFilters(filters);
   const enableInstagramPosting = pathname === '/you/logbook' && isNarrowViewport && isInstagramPostingSupported();
@@ -583,6 +592,7 @@ export default function LogbookFeed() {
               key={item.uuid}
               item={item}
               showBoardType={showBoardType}
+              onEdit={handleEdit}
               onDelete={handleDelete}
               allowInstagramPosting={enableInstagramPosting}
               allowInstagramLinking={enableInstagramLinking && !enableInstagramPosting}

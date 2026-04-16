@@ -1,7 +1,6 @@
 'use client';
 
 import React, { useState, useCallback } from 'react';
-import useMediaQuery from '@mui/material/useMediaQuery';
 import MuiCard from '@mui/material/Card';
 import CardContent from '@mui/material/CardContent';
 import MuiTypography from '@mui/material/Typography';
@@ -18,13 +17,11 @@ import ElectricBoltOutlined from '@mui/icons-material/ElectricBoltOutlined';
 import CancelOutlined from '@mui/icons-material/CancelOutlined';
 import LocationOnOutlined from '@mui/icons-material/LocationOnOutlined';
 import MoreVertOutlined from '@mui/icons-material/MoreVertOutlined';
+import EditOutlined from '@mui/icons-material/EditOutlined';
 import DeleteOutlined from '@mui/icons-material/DeleteOutlined';
-import InstagramIcon from '@mui/icons-material/Instagram';
 import dayjs from 'dayjs';
 import relativeTime from 'dayjs/plugin/relativeTime';
 import AscentThumbnail from '@/app/components/activity-feed/ascent-thumbnail';
-import AttachBetaLinkDialog from '@/app/components/beta-videos/attach-beta-link-dialog';
-import PostToInstagramDialog from './post-to-instagram-dialog';
 import type { AscentFeedItem } from '@/app/lib/graphql/operations/ticks';
 import { themeTokens } from '@/app/theme/theme-config';
 import styles from '@/app/components/activity-feed/ascents-feed.module.css';
@@ -62,52 +59,15 @@ const getStatusDisplay = (status: AscentFeedItem['status'], attemptCount: number
   }
 };
 
-const getCompactStatusDisplay = (status: AscentFeedItem['status'], attemptCount: number) => {
-  switch (status) {
-    case 'flash':
-      return { label: '', icon: <ElectricBoltOutlined />, color: 'gold' as const };
-    case 'send':
-      return { label: `${attemptCount}`, icon: <CheckCircleOutlined />, color: 'green' as const };
-    case 'attempt':
-      return { label: `${attemptCount}`, icon: <CancelOutlined />, color: 'default' as const };
-  }
-};
-
-const getCompactRelativeTime = (isoDate: string) =>
-  dayjs(isoDate)
-    .fromNow()
-    .replace(/\ba year ago\b/i, '1y ago')
-    .replace(/\byears ago\b/i, 'y ago')
-    .replace(/\ba month ago\b/i, '1mo ago')
-    .replace(/\bmonths ago\b/i, 'mo ago')
-    .replace(/\ba day ago\b/i, '1d ago')
-    .replace(/\bdays ago\b/i, 'd ago')
-    .replace(/\ban hour ago\b/i, '1h ago')
-    .replace(/\bhours ago\b/i, 'h ago')
-    .replace(/\ba minute ago\b/i, '1m ago')
-    .replace(/\bminutes ago\b/i, 'm ago')
-    .replace(/\ba second ago\b/i, '1s ago')
-    .replace(/\bseconds ago\b/i, 's ago');
-
 interface LogbookFeedItemProps {
   item: AscentFeedItem;
   showBoardType?: boolean;
+  onEdit?: (item: AscentFeedItem) => void;
   onDelete?: (uuid: string) => void;
-  allowInstagramPosting?: boolean;
-  allowInstagramLinking?: boolean;
 }
 
-const LogbookFeedItem: React.FC<LogbookFeedItemProps> = ({
-  item,
-  showBoardType,
-  onDelete,
-  allowInstagramPosting = false,
-  allowInstagramLinking = false,
-}) => {
-  const isMobile = useMediaQuery('(max-width: 768px)', { noSsr: true });
+const LogbookFeedItem: React.FC<LogbookFeedItemProps> = ({ item, showBoardType, onEdit, onDelete }) => {
   const [anchorEl, setAnchorEl] = useState<HTMLElement | null>(null);
-  const [postDialogOpen, setPostDialogOpen] = useState(false);
-  const [linkDialogOpen, setLinkDialogOpen] = useState(false);
   const menuOpen = Boolean(anchorEl);
 
   const handleMenuOpen = useCallback((e: React.MouseEvent<HTMLElement>) => {
@@ -124,24 +84,15 @@ const LogbookFeedItem: React.FC<LogbookFeedItemProps> = ({
     onDelete?.(item.uuid);
   }, [onDelete, item.uuid, handleMenuClose]);
 
-  const handlePostToInstagram = useCallback(() => {
+  const handleEdit = useCallback(() => {
     handleMenuClose();
-    setPostDialogOpen(true);
-  }, [handleMenuClose]);
+    onEdit?.(item);
+  }, [handleMenuClose, item, onEdit]);
 
-  const handleLinkInstagram = useCallback(() => {
-    handleMenuClose();
-    setLinkDialogOpen(true);
-  }, [handleMenuClose]);
-
-  const timeAgo = isMobile ? getCompactRelativeTime(item.climbedAt) : dayjs(item.climbedAt).fromNow();
-  const statusDisplay = isMobile
-    ? getCompactStatusDisplay(item.status, item.attemptCount)
-    : getStatusDisplay(item.status, item.attemptCount);
+  const timeAgo = dayjs(item.climbedAt).fromNow();
+  const statusDisplay = getStatusDisplay(item.status, item.attemptCount);
   const boardDisplay = getLayoutDisplayName(item.boardType, item.layoutId);
   const hasSuccess = item.status === 'flash' || item.status === 'send';
-  const canPostToInstagram = allowInstagramPosting && item.boardType === 'kilter';
-  const canLinkInstagram = allowInstagramLinking && hasSuccess;
 
   return (
     <MuiCard className={styles.feedItem}>
@@ -167,22 +118,7 @@ const LogbookFeedItem: React.FC<LogbookFeedItemProps> = ({
                   label={statusDisplay.label}
                   size="small"
                   color={statusDisplay.color === 'green' ? 'success' : undefined}
-                  sx={{
-                    ...(statusDisplay.color === 'gold'
-                      ? { bgcolor: themeTokens.colors.amber, color: 'var(--neutral-900)' }
-                      : {}),
-                    ...(isMobile
-                      ? {
-                          minWidth: 0,
-                          '& .MuiChip-label': {
-                            px: statusDisplay.label ? 0.75 : 0.25,
-                          },
-                          '& .MuiChip-icon': {
-                            mx: statusDisplay.label ? 0 : '4px',
-                          },
-                        }
-                      : {}),
-                  }}
+                  sx={statusDisplay.color === 'gold' ? { bgcolor: themeTokens.colors.amber, color: 'var(--neutral-900)' } : undefined}
                   className={styles.statusTag}
                 />
                 <MuiTypography variant="body2" component="span" fontWeight={600} className={styles.climbName}>
@@ -193,9 +129,9 @@ const LogbookFeedItem: React.FC<LogbookFeedItemProps> = ({
                 <MuiTypography variant="body2" component="span" color="text.secondary" className={styles.timeAgo}>
                   {timeAgo}
                 </MuiTypography>
-                {(canPostToInstagram || canLinkInstagram || onDelete) && (
+                {(onEdit || onDelete) && (
                   <>
-                    <IconButton size="small" onClick={handleMenuOpen} sx={{ ml: 0.25, p: 0.5 }} aria-label="Open climb actions">
+                    <IconButton size="small" onClick={handleMenuOpen} sx={{ ml: 0.25, p: 0.5 }} aria-label="Open tick actions">
                       <MoreVertOutlined sx={{ fontSize: 18 }} />
                     </IconButton>
                     <Menu
@@ -205,16 +141,10 @@ const LogbookFeedItem: React.FC<LogbookFeedItemProps> = ({
                       anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
                       transformOrigin={{ vertical: 'top', horizontal: 'right' }}
                     >
-                      {canPostToInstagram && (
-                        <MuiMenuItem onClick={handlePostToInstagram}>
-                          <ListItemIcon><InstagramIcon fontSize="small" /></ListItemIcon>
-                          <ListItemText>Post to Instagram</ListItemText>
-                        </MuiMenuItem>
-                      )}
-                      {canLinkInstagram && (
-                        <MuiMenuItem onClick={handleLinkInstagram}>
-                          <ListItemIcon><InstagramIcon fontSize="small" /></ListItemIcon>
-                          <ListItemText>Link Instagram video</ListItemText>
+                      {onEdit && (
+                        <MuiMenuItem onClick={handleEdit}>
+                          <ListItemIcon><EditOutlined fontSize="small" /></ListItemIcon>
+                          <ListItemText>Edit</ListItemText>
                         </MuiMenuItem>
                       )}
                       {onDelete && (
@@ -246,7 +176,7 @@ const LogbookFeedItem: React.FC<LogbookFeedItemProps> = ({
               {item.isBenchmark && <Chip label="Benchmark" size="small" />}
             </Box>
 
-            {(item.status === 'flash' || item.status === 'send') && item.quality && (
+            {hasSuccess && item.quality && (
               <Rating readOnly value={item.quality} max={5} className={styles.rating} />
             )}
 
@@ -264,19 +194,6 @@ const LogbookFeedItem: React.FC<LogbookFeedItemProps> = ({
           </Box>
         </Box>
       </CardContent>
-      <PostToInstagramDialog
-        open={postDialogOpen}
-        onClose={() => setPostDialogOpen(false)}
-        item={item}
-      />
-      <AttachBetaLinkDialog
-        open={linkDialogOpen}
-        onClose={() => setLinkDialogOpen(false)}
-        boardType={item.boardType}
-        climbUuid={item.climbUuid}
-        climbName={item.climbName}
-        angle={item.angle}
-      />
     </MuiCard>
   );
 };
