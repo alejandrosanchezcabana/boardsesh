@@ -42,9 +42,17 @@ export type SaveTickInput = {
   layoutId?: number;
   sizeId?: number;
   setIds?: string;
+  videoUrl?: string | null;
 };
 
 export type GetTicksInput = {
   boardType: string;
   climbUuids?: string[];
+};
+
+export type AttachBetaLinkInput = {
+  boardType: string;
+  climbUuid: string;
+  link: string;
+  angle?: number | null;
 };

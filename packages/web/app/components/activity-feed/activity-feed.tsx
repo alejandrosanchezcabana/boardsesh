@@ -41,7 +41,7 @@ export default function ActivityFeed({
   onFindClimbers,
   initialFeedResult,
 }: ActivityFeedProps) {
-  const { token, isLoading: authLoading } = useWsAuthToken();
+  const { token, isLoading: authLoading, error: authError } = useWsAuthToken();
 
   const hasInitialData = !!initialFeedResult && initialFeedResult.sessions.length > 0;
 
@@ -116,6 +116,14 @@ export default function ActivityFeed({
       {!isAuthenticated && (
         <MuiAlert severity="info" sx={{ mb: 1 }}>
           Sign in to see a personalized feed from climbers you follow.
+        </MuiAlert>
+      )}
+
+      {isAuthenticated && !authLoading && !token && (
+        <MuiAlert severity="warning" sx={{ mb: 1 }}>
+          {authError
+            ? 'Signed in, but Boardsesh could not load authenticated session data on this device.'
+            : 'Signed in, but Boardsesh could not access authenticated session data on this device.'}
         </MuiAlert>
       )}
 

@@ -16,6 +16,7 @@ import FormControl from '@mui/material/FormControl';
 import Button from '@mui/material/Button';
 import Popover from '@mui/material/Popover';
 import Divider from '@mui/material/Divider';
+import Alert from '@mui/material/Alert';
 import Switch from '@mui/material/Switch';
 import FormControlLabel from '@mui/material/FormControlLabel';
 import Slider from '@mui/material/Slider';
@@ -25,6 +26,7 @@ import AccordionDetails from '@mui/material/AccordionDetails';
 import Checkbox from '@mui/material/Checkbox';
 import FormGroup from '@mui/material/FormGroup';
 import IconButton from '@mui/material/IconButton';
+import useMediaQuery from '@mui/material/useMediaQuery';
 import { HistoryOutlined, SearchOutlined, FilterListOutlined, SwapVertOutlined, ExpandMoreOutlined, CloseOutlined } from '@mui/icons-material';
 import { BOULDER_GRADES } from '@/app/lib/board-data';
 import { getAllLayouts } from '@/app/lib/board-constants';
@@ -44,6 +46,7 @@ import {
   type SortPreset,
 } from '@/app/lib/logbook-preferences';
 import { useSession } from 'next-auth/react';
+import { usePathname } from 'next/navigation';
 import { useInfiniteQuery } from '@tanstack/react-query';
 import { createGraphQLHttpClient } from '@/app/lib/graphql/client';
 import { useWsAuthToken } from '@/app/hooks/use-ws-auth-token';
@@ -59,6 +62,7 @@ import {
 } from '@/app/lib/graphql/operations/ticks';
 import { useSnackbar } from '@/app/components/providers/snackbar-provider';
 import LogbookFeedItem from './logbook-feed-item';
+import { isInstagramPostingSupported } from '@/app/lib/instagram-posting';
 import styles from './library.module.css';
 import feedStyles from '@/app/components/activity-feed/ascents-feed.module.css';
 
@@ -160,8 +164,10 @@ function getDirectionOptions(field: SortField): { value: SortDirection; label: s
 
 export default function LogbookFeed() {
   const { data: session } = useSession();
-  const { token } = useWsAuthToken();
+  const pathname = usePathname();
+  const { token, isLoading: authLoading, error: authError } = useWsAuthToken();
   const userId = session?.user?.id;
+  const isNarrowViewport = useMediaQuery('(max-width: 768px)', { noSsr: true });
 
   const queryClient = useQueryClient();
   const { showMessage } = useSnackbar();
@@ -276,7 +282,8 @@ export default function LogbookFeed() {
     };
     setDraftSortState(nextSortState);
     setSortState(nextSortState);
-  }, [sortState]);
+    closeSortMenu();
+  }, [closeSortMenu, sortState]);
 
   const persistedPreferences = useMemo<LogbookPreferences>(() => ({
     version: 1,
@@ -420,6 +427,8 @@ export default function LogbookFeed() {
 
   const showBoardType = boardFilter === 'all';
   const hasFilters = boardFilter !== 'all' || debouncedSearch.length > 0 || !isDefaultFilters(filters);
+  const enableInstagramPosting = pathname === '/you/logbook' && isNarrowViewport && isInstagramPostingSupported();
+  const enableInstagramLinking = pathname === '/you/logbook';
 
   const filterButtonActive = !isDefaultFilters(filters);
   const sortButtonActive = !isDefaultSort(sortState);
@@ -432,6 +441,13 @@ export default function LogbookFeed() {
         value={searchText}
         onChange={handleSearchChange}
         slotProps={{
+          htmlInput: {
+            suppressHydrationWarning: true,
+            autoComplete: 'off',
+            autoCapitalize: 'off',
+            autoCorrect: 'off',
+            spellCheck: false,
+          },
           input: {
             startAdornment: (
               <InputAdornment position="start">
@@ -501,13 +517,28 @@ export default function LogbookFeed() {
     return (
       <>
         {filterBar}
+        {userId && !authLoading && !token && (
+          <Alert severity="warning" sx={{ mb: 2 }}>
+            {authError
+              ? 'Signed in, but Boardsesh could not load your authenticated logbook data on this device.'
+              : 'Signed in, but Boardsesh could not access your authenticated logbook data on this device.'}
+          </Alert>
+        )}
         <div className={styles.emptyContainer}>
           <HistoryOutlined className={styles.emptyIcon} />
           <Typography variant="h6" component="h4" sx={{ mb: 1 }}>
-            {hasFilters ? 'No matching climbs' : 'No logged climbs yet'}
+            {userId && !authLoading && !token
+              ? 'Logbook unavailable on this device'
+              : hasFilters
+                ? 'No matching climbs'
+                : 'No logged climbs yet'}
           </Typography>
           <Typography variant="body2" color="text.secondary" sx={{ maxWidth: 300 }}>
-            {hasFilters ? 'Try adjusting your filters or sort.' : 'Tick your sends and they show up here.'}
+            {userId && !authLoading && !token
+              ? 'Your account is signed in, but the authenticated data connection did not become available.'
+              : hasFilters
+                ? 'Try adjusting your filters or sort.'
+                : 'Tick your sends and they show up here.'}
           </Typography>
         </div>
         <FilterPopover
@@ -548,7 +579,14 @@ export default function LogbookFeed() {
       <div className={feedStyles.feed}>
         <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5 }}>
           {items.map((item) => (
-            <LogbookFeedItem key={item.uuid} item={item} showBoardType={showBoardType} onDelete={handleDelete} />
+            <LogbookFeedItem
+              key={item.uuid}
+              item={item}
+              showBoardType={showBoardType}
+              onDelete={handleDelete}
+              allowInstagramPosting={enableInstagramPosting}
+              allowInstagramLinking={enableInstagramLinking && !enableInstagramPosting}
+            />
           ))}
         </Box>
 

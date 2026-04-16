@@ -37,6 +37,59 @@ describe('deriveWsUrlFromHost', () => {
   });
 });
 
+describe('getBackendWsUrl (client runtime local-network fallback)', () => {
+  const originalEnv = process.env;
+  const originalWindow = global.window;
+
+  beforeEach(() => {
+    vi.resetModules();
+    process.env = { ...originalEnv };
+  });
+
+  afterEach(() => {
+    process.env = originalEnv;
+    Object.defineProperty(global, 'window', {
+      configurable: true,
+      value: originalWindow,
+    });
+  });
+
+  it('rewrites localhost fallback to the current host for LAN mobile access', async () => {
+    process.env.NEXT_PUBLIC_WS_URL = 'ws://localhost:8080/graphql';
+
+    Object.defineProperty(global, 'window', {
+      configurable: true,
+      value: {
+        location: {
+          hostname: '192.168.1.42',
+          protocol: 'http:',
+        },
+      },
+    });
+
+    const { getBackendWsUrl, getGraphQLHttpUrl } = await import('../backend-url');
+    expect(getBackendWsUrl()).toBe('ws://192.168.1.42:8080/graphql');
+    expect(getGraphQLHttpUrl()).toBe('http://192.168.1.42:8080/graphql');
+  });
+
+  it('keeps the baked URL when it already points to a non-loopback host', async () => {
+    process.env.NEXT_PUBLIC_WS_URL = 'wss://backend.example.com/graphql';
+
+    Object.defineProperty(global, 'window', {
+      configurable: true,
+      value: {
+        location: {
+          hostname: '192.168.1.42',
+          protocol: 'https:',
+        },
+      },
+    });
+
+    const { getBackendWsUrl } = await import('../backend-url');
+    expect(getBackendWsUrl()).toBe('wss://backend.example.com/graphql');
+  });
+});
+
 describe('getBackendWsUrl (SSR context)', () => {
   const originalEnv = process.env;
 

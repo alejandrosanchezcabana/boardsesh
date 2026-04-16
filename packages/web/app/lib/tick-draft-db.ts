@@ -11,6 +11,7 @@ export interface TickDraft {
   attemptCount: number;
   comment: string;
   status: TickStatus;
+  videoUrl?: string;
 }
 
 function draftKey(climbUuid: string, angle: number): string {

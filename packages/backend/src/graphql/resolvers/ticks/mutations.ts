@@ -6,7 +6,7 @@ import * as dbSchema from '@boardsesh/db/schema';
 import { sessions } from '../../../db/schema';
 import { requireAuthenticated, validateInput } from '../shared/helpers';
 import { getConsensusDifficultyName } from '../shared/sql-expressions';
-import { SaveTickInputSchema, UpdateTickInputSchema } from '../../../validation/schemas';
+import { SaveTickInputSchema, UpdateTickInputSchema, AttachBetaLinkInputSchema } from '../../../validation/schemas';
 import { resolveBoardFromPath } from '../social/boards';
 import { publishSocialEvent } from '../../../events';
 import { assignInferredSession } from '../../../jobs/inferred-session-builder';
@@ -154,6 +154,27 @@ export const tickMutations = {
           .where(eq(sessions.id, validatedInput.sessionId));
       }
 
+      // Attach the Instagram URL as community beta for this climb if the
+      // user provided one on a successful ascent. Zod already validated the
+      // URL format; the (boardType, climbUuid, link) PK makes re-submission
+      // idempotent.
+      const shouldAttachBeta =
+        validatedInput.videoUrl &&
+        (validatedInput.status === 'flash' || validatedInput.status === 'send');
+      if (shouldAttachBeta) {
+        await tx
+          .insert(dbSchema.boardBetaLinks)
+          .values({
+            boardType: validatedInput.boardType,
+            climbUuid: validatedInput.climbUuid,
+            link: validatedInput.videoUrl!,
+            angle: validatedInput.angle,
+            isListed: true,
+            createdAt: now,
+          })
+          .onConflictDoNothing();
+      }
+
       return [createdTick];
     });
 
@@ -202,6 +223,35 @@ export const tickMutations = {
     }
 
     return result;
+  },
+
+  /**
+   * Attach an Instagram post or reel as beta for a climb.
+   * Idempotent on (boardType, climbUuid, link).
+   */
+  attachBetaLink: async (
+    _: unknown,
+    { input }: { input: unknown },
+    ctx: ConnectionContext
+  ): Promise<boolean> => {
+    requireAuthenticated(ctx);
+
+    const validated = validateInput(AttachBetaLinkInputSchema, input, 'input');
+    const now = new Date().toISOString();
+
+    await db
+      .insert(dbSchema.boardBetaLinks)
+      .values({
+        boardType: validated.boardType,
+        climbUuid: validated.climbUuid,
+        link: validated.link,
+        angle: validated.angle ?? null,
+        isListed: true,
+        createdAt: now,
+      })
+      .onConflictDoNothing();
+
+    return true;
   },
 
   /**

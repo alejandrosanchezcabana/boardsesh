@@ -1,5 +1,5 @@
 import { gql } from 'graphql-request';
-import type { Tick, SaveTickInput, GetTicksInput } from '@boardsesh/shared-schema';
+import type { Tick, SaveTickInput, GetTicksInput, AttachBetaLinkInput } from '@boardsesh/shared-schema';
 
 export const GET_TICKS = gql`
   query GetTicks($input: GetTicksInput!) {
@@ -78,6 +78,20 @@ export interface SaveTickMutationVariables {
 
 export interface SaveTickMutationResponse {
   saveTick: TickFromSaveTick;
+}
+
+export const ATTACH_BETA_LINK = gql`
+  mutation AttachBetaLink($input: AttachBetaLinkInput!) {
+    attachBetaLink(input: $input)
+  }
+`;
+
+export interface AttachBetaLinkMutationVariables {
+  input: AttachBetaLinkInput;
+}
+
+export interface AttachBetaLinkMutationResponse {
+  attachBetaLink: boolean;
 }
 
 export const DELETE_TICK = gql`

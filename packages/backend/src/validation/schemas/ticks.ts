@@ -1,6 +1,8 @@
 import { z } from 'zod';
 import { ExternalUUIDSchema, BoardNameSchema } from './primitives';
 
+const INSTAGRAM_URL_REGEX = /(?:instagram\.com|instagr\.am)\/(?:p|reel|tv)\/([\w-]+)/;
+
 /**
  * Tick status validation schema
  */
@@ -27,6 +29,7 @@ export const SaveTickInputSchema = z.object({
   layoutId: z.number().int().positive().optional(),
   sizeId: z.number().int().positive().optional(),
   setIds: z.string().min(1).optional(),
+  videoUrl: z.string().max(500).regex(INSTAGRAM_URL_REGEX, 'Must be an Instagram post or reel URL').optional().nullable(),
 }).refine(
   (data) => {
     // A flash is by definition a first-try ascent, so attemptCount must be 1.
@@ -52,6 +55,16 @@ export const SaveTickInputSchema = z.object({
 export const GetTicksInputSchema = z.object({
   boardType: BoardNameSchema,
   climbUuids: z.array(ExternalUUIDSchema).optional(),
+});
+
+/**
+ * Attach beta link input validation schema
+ */
+export const AttachBetaLinkInputSchema = z.object({
+  boardType: BoardNameSchema,
+  climbUuid: ExternalUUIDSchema,
+  link: z.string().max(500).regex(INSTAGRAM_URL_REGEX, 'Must be an Instagram post or reel URL'),
+  angle: z.number().int().min(0).max(90).optional().nullable(),
 });
 
 /**

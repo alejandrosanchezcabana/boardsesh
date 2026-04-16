@@ -37,6 +37,36 @@ export function deriveWsUrlFromHost(hostname: string, secure: boolean): string |
   return null;
 }
 
+function isLoopbackHostname(hostname: string): boolean {
+  return hostname === 'localhost' || hostname === '127.0.0.1' || hostname === '0.0.0.0';
+}
+
+function deriveWsUrlFromFallbackForCurrentHost(
+  hostname: string,
+  secure: boolean,
+  fallbackWsUrl: string | null | undefined,
+): string | null {
+  if (!fallbackWsUrl || isLoopbackHostname(hostname)) {
+    return null;
+  }
+
+  try {
+    const fallbackUrl = new URL(fallbackWsUrl);
+    if (!isLoopbackHostname(fallbackUrl.hostname)) {
+      return null;
+    }
+
+    const protocol = secure ? 'wss:' : 'ws:';
+    const port =
+      fallbackUrl.port ||
+      (fallbackUrl.protocol === 'wss:' || fallbackUrl.protocol === 'https:' ? '443' : '80');
+
+    return `${protocol}//${hostname}:${port}${fallbackUrl.pathname}`;
+  } catch {
+    return null;
+  }
+}
+
 /**
  * Resolve the backend WebSocket URL at runtime.
  *
@@ -49,6 +79,8 @@ export function getBackendWsUrl(): string | null {
     return process.env.BACKEND_INTERNAL_URL || process.env.NEXT_PUBLIC_WS_URL || null;
   }
 
+  const fallbackWsUrl = process.env.NEXT_PUBLIC_WS_URL || null;
+
   // 1. Host-derived URL for known domain patterns
   const derived = deriveWsUrlFromHost(
     window.location.hostname,
@@ -56,8 +88,19 @@ export function getBackendWsUrl(): string | null {
   );
   if (derived) return derived;
 
-  // 2. Build-time fallback
-  return process.env.NEXT_PUBLIC_WS_URL || null;
+  // 2. Local-network dev fallback:
+  // If the baked client URL points at localhost but the page is being opened
+  // from another host (for example a laptop IP on a phone), reuse the current
+  // hostname so the browser reaches the same machine that served the page.
+  const localNetworkDerived = deriveWsUrlFromFallbackForCurrentHost(
+    window.location.hostname,
+    window.location.protocol === 'https:',
+    fallbackWsUrl,
+  );
+  if (localNetworkDerived) return localNetworkDerived;
+
+  // 3. Build-time fallback
+  return fallbackWsUrl;
 }
 
 /**

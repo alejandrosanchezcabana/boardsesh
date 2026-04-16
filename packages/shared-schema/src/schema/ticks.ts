@@ -97,6 +97,8 @@ export const ticksTypeDefs = /* GraphQL */ `
     sizeId: Int
     "Set IDs for board resolution"
     setIds: String
+    "Optional Instagram post or reel URL to attach as beta for the climb"
+    videoUrl: String
   }
 
   """
@@ -126,5 +128,19 @@ export const ticksTypeDefs = /* GraphQL */ `
     boardType: String!
     "Optional list of climb UUIDs to filter by"
     climbUuids: [String!]
+  }
+
+  """
+  Input for attaching an Instagram video as beta for a climb.
+  """
+  input AttachBetaLinkInput {
+    "Board type"
+    boardType: String!
+    "Climb UUID"
+    climbUuid: String!
+    "Instagram post or reel URL"
+    link: String!
+    "Optional angle the video was climbed at"
+    angle: Int
   }
 `;

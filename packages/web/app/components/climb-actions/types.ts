@@ -14,6 +14,7 @@ export type ClimbActionType =
   | 'openInApp'
   | 'mirror'
   | 'share'
+  | 'instagram'
   | 'playlist';
 
 /**

@@ -35,6 +35,7 @@ export interface SaveTickOptions {
   layoutId?: number;
   sizeId?: number;
   setIds?: string;
+  videoUrl?: string;
 }
 
 /**
@@ -74,6 +75,7 @@ export function useSaveTick(boardName: BoardName) {
           layoutId: options.layoutId,
           sizeId: options.sizeId,
           setIds: options.setIds,
+          videoUrl: options.videoUrl,
         },
       };
 
@@ -142,6 +144,14 @@ export function useSaveTick(boardName: BoardName) {
 
       // Clear any IndexedDB draft for this climb (belt-and-suspenders with QuickTickBar's .then)
       clearTickDraft(options.climbUuid, options.angle);
+
+      // If the user attached an Instagram video, refresh the beta-videos section
+      // so the new embed shows up without a page reload.
+      if (options.videoUrl) {
+        queryClient.invalidateQueries({
+          queryKey: ['betaLinks', boardName, options.climbUuid],
+        });
+      }
     },
     onError: (_err, _options, context) => {
       // Rollback optimistic update. User-facing error feedback is handled by

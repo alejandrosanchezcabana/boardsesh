@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import Dialog from '@mui/material/Dialog';
 import DialogTitle from '@mui/material/DialogTitle';
 import DialogContent from '@mui/material/DialogContent';
@@ -14,6 +14,7 @@ import { Instagram, PersonOutlined, ExpandLessOutlined } from '@mui/icons-materi
 import ExpandMoreOutlined from '@mui/icons-material/ExpandMoreOutlined';
 import { EmptyState } from '@/app/components/ui/empty-state';
 import { BetaLink } from '@/app/lib/api-wrappers/sync-api-types';
+import { dedupeBetaLinks, getInstagramEmbedUrl } from '@/app/lib/instagram-url';
 import { themeTokens } from '@/app/theme/theme-config';
 
 interface BetaVideosProps {
@@ -25,17 +26,7 @@ const BetaVideos: React.FC<BetaVideosProps> = ({ betaLinks }) => {
   const [selectedVideo, setSelectedVideo] = useState<BetaLink | null>(null);
   const [iframeKey, setIframeKey] = useState(0);
   const [showAllVideos, setShowAllVideos] = useState(false);
-
-  const getInstagramEmbedUrl = (link: string) => {
-    const instagramRegex = /(?:instagram\.com|instagr\.am)\/(?:p|reel|tv)\/([\w-]+)/;
-    const match = link.match(instagramRegex);
-
-    if (match && match[1]) {
-      return `https://www.instagram.com/p/${match[1]}/embed`;
-    }
-
-    return null;
-  };
+  const uniqueBetaLinks = useMemo(() => dedupeBetaLinks(betaLinks), [betaLinks]);
 
   const handleVideoClick = (betaLink: BetaLink) => {
     setSelectedVideo(betaLink);
@@ -134,12 +125,12 @@ const BetaVideos: React.FC<BetaVideosProps> = ({ betaLinks }) => {
     );
   };
 
-  if (betaLinks.length === 0) {
+  if (uniqueBetaLinks.length === 0) {
     return <EmptyState description="No beta videos available" />;
   }
 
-  const visibleVideos = showAllVideos ? betaLinks : betaLinks.slice(0, 1);
-  const hasMoreVideos = betaLinks.length > 1;
+  const visibleVideos = showAllVideos ? uniqueBetaLinks : uniqueBetaLinks.slice(0, 1);
+  const hasMoreVideos = uniqueBetaLinks.length > 1;
 
   return (
     <>
@@ -157,7 +148,7 @@ const BetaVideos: React.FC<BetaVideosProps> = ({ betaLinks }) => {
           }}
           startIcon={showAllVideos ? <ExpandLessOutlined /> : <ExpandMoreOutlined />}
         >
-          {showAllVideos ? 'Show less' : `Show ${betaLinks.length - 1} more video${betaLinks.length - 1 !== 1 ? 's' : ''}`}
+          {showAllVideos ? 'Show less' : `Show ${uniqueBetaLinks.length - 1} more video${uniqueBetaLinks.length - 1 !== 1 ? 's' : ''}`}
         </Button>
       )}
 

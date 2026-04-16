@@ -6,6 +6,8 @@ const VERCEL_PREVIEW_REGEX = /^https:\/\/boardsesh-[a-z0-9]+-marcodejonghs-proje
 
 // Homelab branch deploy pattern: https://{N}.preview.boardsesh.com
 const PREVIEW_ORIGIN_REGEX = /^https:\/\/\d+\.preview\.boardsesh\.com$/;
+const DEV_PRIVATE_LAN_ORIGIN_REGEX =
+  /^http:\/\/(?:(?:10(?:\.\d{1,3}){3})|(?:192\.168(?:\.\d{1,3}){2})|(?:172\.(?:1[6-9]|2\d|3[0-1])(?:\.\d{1,3}){2})):(?:3000|3001)$/;
 const DEV_WEB_PORTS = [3000, 3001];
 const TAILSCALE_STATUS_TIMEOUT_MS = 1500;
 
@@ -117,6 +119,7 @@ export function isOriginAllowed(origin: string): boolean {
   if (allowedOrigins.includes(origin)) return true;
   if (VERCEL_PREVIEW_REGEX.test(origin)) return true;
   if (PREVIEW_ORIGIN_REGEX.test(origin)) return true;
+  if (process.env.NODE_ENV !== 'production' && DEV_PRIVATE_LAN_ORIGIN_REGEX.test(origin)) return true;
   return false;
 }
 

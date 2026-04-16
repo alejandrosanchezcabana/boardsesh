@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import Box from '@mui/material/Box';
 import Typography from '@mui/material/Typography';
 import Dialog from '@mui/material/Dialog';
@@ -14,18 +14,10 @@ import VideocamOutlined from '@mui/icons-material/VideocamOutlined';
 import { Instagram, PersonOutlined } from '@mui/icons-material';
 import { useQuery } from '@tanstack/react-query';
 import { BetaLink } from '@/app/lib/api-wrappers/sync-api-types';
+import { dedupeBetaLinks, getInstagramEmbedUrl } from '@/app/lib/instagram-url';
 import { themeTokens } from '@/app/theme/theme-config';
 
 const THUMB_SIZE = themeTokens.spacing[16]; // 64px
-
-function getInstagramEmbedUrl(link: string): string | null {
-  const instagramRegex = /(?:instagram\.com|instagr\.am)\/(?:p|reel|tv)\/([\w-]+)/;
-  const match = link.match(instagramRegex);
-  if (match && match[1]) {
-    return `https://www.instagram.com/p/${match[1]}/embed`;
-  }
-  return null;
-}
 
 interface PlayViewBetaSliderProps {
   boardName: string;
@@ -45,8 +37,9 @@ const PlayViewBetaSlider: React.FC<PlayViewBetaSliderProps> = ({ boardName, clim
   });
   const [selectedVideo, setSelectedVideo] = useState<BetaLink | null>(null);
   const [iframeKey, setIframeKey] = useState(0);
+  const uniqueBetaLinks = useMemo(() => dedupeBetaLinks(betaLinks), [betaLinks]);
 
-  if (betaLinks.length === 0) return null;
+  if (uniqueBetaLinks.length === 0) return null;
 
   const handleClose = () => {
     setIframeKey((prev) => prev + 1);
@@ -71,7 +64,7 @@ const PlayViewBetaSlider: React.FC<PlayViewBetaSliderProps> = ({ boardName, clim
           }}
         >
           <VideocamOutlined sx={{ fontSize: themeTokens.typography.fontSize.sm }} />
-          Beta ({betaLinks.length})
+          Beta ({uniqueBetaLinks.length})
         </Typography>
 
         <Box
@@ -84,7 +77,7 @@ const PlayViewBetaSlider: React.FC<PlayViewBetaSliderProps> = ({ boardName, clim
             pb: `${themeTokens.spacing[1]}px`,
           }}
         >
-          {betaLinks.map((link) => (
+          {uniqueBetaLinks.map((link) => (
             <Box
               key={link.link}
               onClick={() => setSelectedVideo(link)}

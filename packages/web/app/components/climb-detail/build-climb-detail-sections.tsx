@@ -1,6 +1,6 @@
 'use client';
 
-import React from 'react';
+import React, { useMemo } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { useQuery } from '@tanstack/react-query';
 import type { CollapsibleSectionConfig } from '@/app/components/collapsible-section/collapsible-section';
@@ -9,6 +9,7 @@ import { LogbookSection, useLogbookSummary } from '@/app/components/logbook/logb
 import ClimbSocialSection from '@/app/components/social/climb-social-section';
 import ClimbAnalytics from '@/app/components/charts/climb-analytics';
 import type { BetaLink } from '@/app/lib/api-wrappers/sync-api-types';
+import { dedupeBetaLinks } from '@/app/lib/instagram-url';
 import type { Climb } from '@/app/lib/types';
 
 interface BuildClimbDetailSectionsProps {
@@ -50,6 +51,7 @@ export function useBuildClimbDetailSections({
     staleTime: 5 * 60 * 1000,
     initialData: initialBetaLinks,
   });
+  const uniqueBetaLinks = useMemo(() => dedupeBetaLinks(betaLinks), [betaLinks]);
   const logbookSummary = useLogbookSummary(climb.uuid);
 
   if (!enabledProp) return [];
@@ -74,11 +76,11 @@ export function useBuildClimbDetailSections({
       title: 'Beta Videos',
       defaultSummary: 'No videos',
       getSummary: () =>
-        betaLinks.length > 0
-          ? [`${betaLinks.length} video${betaLinks.length !== 1 ? 's' : ''}`]
+        uniqueBetaLinks.length > 0
+          ? [`${uniqueBetaLinks.length} video${uniqueBetaLinks.length !== 1 ? 's' : ''}`]
           : [],
       lazy: true,
-      content: <BetaVideos betaLinks={betaLinks} />,
+      content: <BetaVideos betaLinks={uniqueBetaLinks} />,
     },
     {
       key: 'logbook',

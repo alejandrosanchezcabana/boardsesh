@@ -110,7 +110,8 @@
 
 @media (max-width: 768px) {
   .climbName {
-    max-width: 150px;
+    max-width: 180px;
+    font-size: 15px;
   }
 
   .feedItem {
@@ -120,5 +121,14 @@
   .thumbnailContainer {
     width: 56px;
     height: 56px;
+  }
+
+  .statusTag {
+    max-width: 84px;
+  }
+
+  .timeAgo {
+    font-size: 11px;
+    letter-spacing: -0.01em;
   }
 }

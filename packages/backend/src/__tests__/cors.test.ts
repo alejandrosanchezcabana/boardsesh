@@ -167,6 +167,16 @@ describe('CORS Handler', () => {
       expect(isOriginAllowed('http://localhost:3000')).toBe(true);
       expect(isOriginAllowed('http://127.0.0.1:3001')).toBe(true);
     });
+
+    it('returns true for private LAN origins in non-production', () => {
+      expect(isOriginAllowed('http://192.168.0.42:3000')).toBe(true);
+      expect(isOriginAllowed('http://10.0.1.15:3001')).toBe(true);
+      expect(isOriginAllowed('http://172.20.10.3:3000')).toBe(true);
+    });
+
+    it('returns false for non-dev ports on private LAN origins', () => {
+      expect(isOriginAllowed('http://192.168.0.42:8080')).toBe(false);
+    });
   });
 
   describe('applyCorsHeaders', () => {

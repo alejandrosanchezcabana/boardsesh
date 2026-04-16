@@ -20,6 +20,7 @@ import { track } from '@vercel/analytics';
 import { Climb, BoardDetails } from '@/app/lib/types';
 import { useBoardProvider, TickStatus } from '../board-provider/board-provider-context';
 import { TENSION_KILTER_GRADES, ANGLES } from '@/app/lib/board-data';
+import { isInstagramUrl } from '@/app/lib/instagram-url';
 
 import dayjs from 'dayjs';
 
@@ -32,6 +33,7 @@ interface LogAscentFormValues {
   quality: number;
   difficulty: number;
   notes?: string;
+  videoUrl?: string;
 }
 
 // Helper to determine tick status from attempt count (for ascents)
@@ -89,6 +91,11 @@ export const LogAscentForm: React.FC<LogAscentFormProps> = ({ currentClimb, boar
     setIsMirrored((prev) => !prev);
   };
 
+  const videoUrlError =
+    logType === 'ascent' && formValues.videoUrl && !isInstagramUrl(formValues.videoUrl)
+      ? 'Needs to be an Instagram post or reel URL'
+      : null;
+
   // Validation function matching backend rules
   const validateTickInput = (values: LogAscentFormValues): string | null => {
     // Attempts don't need flash/send validation
@@ -106,6 +113,10 @@ export const LogAscentForm: React.FC<LogAscentFormProps> = ({ currentClimb, boar
     // Send requires attemptCount > 1
     if (status === 'send' && values.attempts <= 1) {
       return 'Send requires more than 1 attempt';
+    }
+
+    if (values.videoUrl && !isInstagramUrl(values.videoUrl)) {
+      return 'Needs to be an Instagram post or reel URL';
     }
 
     return null; // Valid
@@ -128,6 +139,7 @@ export const LogAscentForm: React.FC<LogAscentFormProps> = ({ currentClimb, boar
     const status = getTickStatus(logType, values.attempts);
 
     try {
+      const trimmedVideoUrl = values.videoUrl?.trim();
       await saveTick({
         climbUuid: currentClimb.uuid,
         angle: Number(values.angle),
@@ -142,6 +154,7 @@ export const LogAscentForm: React.FC<LogAscentFormProps> = ({ currentClimb, boar
         layoutId: boardDetails.layout_id,
         sizeId: boardDetails.size_id,
         setIds: Array.isArray(boardDetails.set_ids) ? boardDetails.set_ids.join(',') : String(boardDetails.set_ids),
+        videoUrl: logType === 'ascent' && trimmedVideoUrl ? trimmedVideoUrl : undefined,
       });
 
       track('Tick Logged', {
@@ -291,11 +304,29 @@ export const LogAscentForm: React.FC<LogAscentFormProps> = ({ currentClimb, boar
         </Box>
       </Box>
 
+      {logType === 'ascent' && (
+        <Box sx={{ display: 'flex', alignItems: 'flex-start', mb: 1.5 }}>
+          <Typography sx={{ width: 120, flexShrink: 0, pt: 1 }}>Video</Typography>
+          <Box sx={{ flex: 1 }}>
+            <TextField
+              placeholder="https://www.instagram.com/reel/..."
+              variant="outlined"
+              size="small"
+              fullWidth
+              value={formValues.videoUrl || ''}
+              onChange={(e) => setFormValues((prev) => ({ ...prev, videoUrl: e.target.value }))}
+              error={!!videoUrlError}
+              helperText={videoUrlError ?? 'Paste a reel link so others can see your beta. (Optional)'}
+            />
+          </Box>
+        </Box>
+      )}
+
       <Box sx={{ mb: 1 }}>
         <Button
           variant="contained"
           type="submit"
-          disabled={isSaving}
+          disabled={isSaving || !!videoUrlError}
           startIcon={isSaving ? <CircularProgress size={16} /> : undefined}
           fullWidth
           size="large"
