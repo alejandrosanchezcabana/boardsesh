@@ -11,7 +11,7 @@ import { HoldRenderData } from '../board-renderer/types';
 import { useWakeLock } from './use-wake-lock';
 import type { BluetoothAdapter, DevicePickerFn, DiscoveredDevice } from '@/app/lib/ble/types';
 import { createBluetoothAdapter } from '@/app/lib/ble/adapter-factory';
-import { isCapacitor } from '@/app/lib/ble/capacitor-utils';
+import { supportsCapacitorBleManualScan } from '@/app/lib/ble/capacitor-utils';
 
 export interface PickerState {
   devices: DiscoveredDevice[];
@@ -196,11 +196,11 @@ export function useBoardBluetooth({ boardDetails, onConnectionChange }: UseBoard
 
       try {
         // Create a fresh adapter for each connection attempt.
-        // On Capacitor, inject our custom device picker so we control
-        // the scan UI and can deduplicate discovered devices.
+        // Only inject our custom picker when the native BLE bridge supports
+        // manual scan APIs. Older app installs stay on requestDevice().
         const adapter = await createBluetoothAdapter(
           boardDetails.board_name,
-          isCapacitor() ? devicePicker : undefined,
+          supportsCapacitorBleManualScan() ? devicePicker : undefined,
         );
 
         const available = await adapter.isAvailable();

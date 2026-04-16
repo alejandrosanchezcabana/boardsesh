@@ -5,6 +5,7 @@ import {
   AURORA_SCAN_SERVICE_UUIDS,
 } from '@/app/components/board-bluetooth-control/bluetooth-aurora';
 import {
+  isMoonboardDeviceName,
   MOONBOARD_OPTIONAL_SERVICE_UUIDS,
   MOONBOARD_SCAN_SERVICE_UUIDS,
 } from '@/app/components/board-bluetooth-control/bluetooth-moonboard';
@@ -43,11 +44,11 @@ interface CapacitorBlePlugin {
     services: string[];
     optionalServices?: string[];
   }): Promise<{ deviceId: string; name?: string }>;
-  requestLEScan(
+  requestLEScan?(
     options: { services?: string[] },
     callback: (result: CapacitorScanResult) => void,
   ): Promise<void>;
-  stopLEScan(): Promise<void>;
+  stopLEScan?(): Promise<void>;
   connect(options: {
     deviceId: string;
   }): Promise<void>;
@@ -103,6 +104,13 @@ function toHexString(data: Uint8Array): string {
 
 const delay = (ms: number) => new Promise<void>((resolve) => setTimeout(resolve, ms));
 
+function stopScanQuietly(ble: CapacitorBlePlugin): Promise<void> {
+  if (!ble.stopLEScan) {
+    return Promise.resolve();
+  }
+  return ble.stopLEScan().catch(() => {});
+}
+
 export class CapacitorBleAdapter implements BluetoothAdapter {
   constructor(
     private readonly boardName: BoardName = 'kilter',
@@ -132,18 +140,23 @@ export class CapacitorBleAdapter implements BluetoothAdapter {
     const services = this.boardName === 'moonboard'
       ? [...MOONBOARD_SCAN_SERVICE_UUIDS]
       : [...AURORA_SCAN_SERVICE_UUIDS];
+    const optionalServices = this.boardName === 'moonboard'
+      ? [...MOONBOARD_OPTIONAL_SERVICE_UUIDS]
+      : [...AURORA_OPTIONAL_SERVICE_UUIDS];
 
     let selectedDeviceId: string;
     let selectedDeviceName: string | undefined;
 
-    if (this.devicePicker) {
+    if (this.devicePicker && ble.requestLEScan && ble.stopLEScan) {
       // Manual scan with custom picker — deduplicates devices ourselves
       const devices = new Map<string, DiscoveredDevice>();
       let updateListener: ((devices: DiscoveredDevice[]) => void) | null = null;
+      const pushDevices = () => updateListener?.([...devices.values()]);
 
       // Start the picker promise (resolves when user selects a device)
       const selectionPromise = this.devicePicker((onUpdate) => {
         updateListener = onUpdate;
+        pushDevices();
       });
 
       // Start scanning — each callback adds/updates the device map
@@ -153,23 +166,24 @@ export class CapacitorBleAdapter implements BluetoothAdapter {
           name: result.localName || result.device.name,
           rssi: result.rssi,
         };
+
+        if (this.boardName === 'moonboard' && !isMoonboardDeviceName(device.name)) {
+          return;
+        }
+
         devices.set(device.deviceId, device);
-        updateListener?.([...devices.values()]);
+        pushDevices();
       });
 
       try {
         selectedDeviceId = await selectionPromise;
       } finally {
-        await ble.stopLEScan();
+        await stopScanQuietly(ble);
       }
 
       selectedDeviceName = devices.get(selectedDeviceId)?.name;
     } else {
       // Fallback: use the plugin's built-in device picker
-      const optionalServices = this.boardName === 'moonboard'
-        ? [...MOONBOARD_OPTIONAL_SERVICE_UUIDS]
-        : [...AURORA_OPTIONAL_SERVICE_UUIDS];
-
       const device = await ble.requestDevice({
         services,
         optionalServices,

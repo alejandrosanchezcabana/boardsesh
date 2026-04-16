@@ -1,6 +1,17 @@
 export const isCapacitor = (): boolean =>
   typeof window !== 'undefined' && window.Capacitor !== undefined;
 
+interface CapacitorBleManualScanPlugin {
+  requestLEScan?: unknown;
+  stopLEScan?: unknown;
+}
+
+export const supportsCapacitorBleManualScan = (): boolean => {
+  if (!isCapacitor()) return false;
+  const plugin = window.Capacitor?.Plugins?.BluetoothLe as CapacitorBleManualScanPlugin | undefined;
+  return typeof plugin?.requestLEScan === 'function' && typeof plugin?.stopLEScan === 'function';
+};
+
 /**
  * Detect if we're running inside a Capacitor WebView even before
  * window.Capacitor is injected, using user-agent heuristics.

@@ -9,6 +9,7 @@ const {
   mockGetAuroraBluetoothPacket,
   mockGetMoonboardBluetoothPacket,
   mockGetLedPlacements,
+  mockSupportsCapacitorBleManualScan,
   mockShowMessage,
 } = vi.hoisted(() => {
   const mockAdapter = {
@@ -21,7 +22,7 @@ const {
 
   return {
     mockAdapter,
-    mockCreateBluetoothAdapter: vi.fn<(boardName: string) => Promise<typeof mockAdapter>>(
+    mockCreateBluetoothAdapter: vi.fn<(boardName: string, devicePicker?: unknown) => Promise<typeof mockAdapter>>(
       () => Promise.resolve(mockAdapter),
     ),
     mockGetAuroraBluetoothPacket: vi.fn<
@@ -33,6 +34,7 @@ const {
     mockGetLedPlacements: vi.fn<
       (boardName: string, layoutId: number, sizeId: number) => Record<number, number>
     >(() => ({ 4131: 39 })),
+    mockSupportsCapacitorBleManualScan: vi.fn(() => false),
     mockShowMessage: vi.fn(),
   };
 });
@@ -65,6 +67,10 @@ vi.mock('@/app/components/providers/snackbar-provider', () => ({
 
 vi.mock('@vercel/analytics', () => ({
   track: vi.fn(),
+}));
+
+vi.mock('@/app/lib/ble/capacitor-utils', () => ({
+  supportsCapacitorBleManualScan: mockSupportsCapacitorBleManualScan,
 }));
 
 import { useBoardBluetooth } from '../use-board-bluetooth';
@@ -110,6 +116,7 @@ describe('useBoardBluetooth', () => {
     mockGetAuroraBluetoothPacket.mockReturnValue(new Uint8Array([1, 2, 3]));
     mockGetMoonboardBluetoothPacket.mockReturnValue(new Uint8Array([9, 8, 7]));
     mockGetLedPlacements.mockReturnValue({ 4131: 39 });
+    mockSupportsCapacitorBleManualScan.mockReturnValue(false);
   });
 
   it('initial state: not connected, not loading', () => {
@@ -206,6 +213,33 @@ describe('useBoardBluetooth', () => {
     });
 
     expect(mockCreateBluetoothAdapter).toHaveBeenCalledWith('moonboard', undefined);
+  });
+
+  it('injects the custom picker when native manual scan is supported', async () => {
+    mockSupportsCapacitorBleManualScan.mockReturnValue(true);
+
+    const { result } = renderHook(() =>
+      useBoardBluetooth({ boardDetails: mockBoardDetails }),
+    );
+
+    await act(async () => {
+      await result.current.connect();
+    });
+
+    expect(mockCreateBluetoothAdapter).toHaveBeenCalledWith('kilter', expect.any(Function));
+  });
+
+  it('keeps pickerState unset when falling back to the legacy native picker', async () => {
+    const { result } = renderHook(() =>
+      useBoardBluetooth({ boardDetails: mockBoardDetails }),
+    );
+
+    await act(async () => {
+      await result.current.connect();
+    });
+
+    expect(mockCreateBluetoothAdapter).toHaveBeenCalledWith('kilter', undefined);
+    expect(result.current.pickerState).toBeNull();
   });
 
   it('handles connect failure', async () => {

@@ -3,7 +3,7 @@ import { UART_SERVICE_UUID } from './bluetooth-shared';
 
 const MOONBOARD_FRAME_PREFIX = 'l#';
 const MOONBOARD_FRAME_SUFFIX = '#';
-const MOONBOARD_DEVICE_NAME_PREFIXES = ['MoonBoard', 'Moonboard'] as const;
+export const MOONBOARD_DEVICE_NAME_PREFIXES = ['MoonBoard', 'Moonboard'] as const;
 
 // Boardsesh persists MoonBoard frames with the shared basic role codes only.
 // The newer controller firmware can render extra preview-only roles, but the
@@ -27,6 +27,10 @@ export const MOONBOARD_REQUEST_DEVICE_OPTIONS: RequestDeviceOptions = {
   })),
   optionalServices: [...MOONBOARD_OPTIONAL_SERVICE_UUIDS],
 };
+
+export function isMoonboardDeviceName(name?: string): boolean {
+  return !!name && MOONBOARD_DEVICE_NAME_PREFIXES.some((prefix) => name.startsWith(prefix));
+}
 
 export function getMoonboardSerialPosition(holdId: number): number {
   const maxHoldId = MOONBOARD_GRID.numColumns * MOONBOARD_GRID.numRows;
