@@ -9,7 +9,7 @@
 Run the automated setup script:
 
 ```bash
-./setup-dev.sh
+./packages/web/setup-dev.sh
 ```
 
 This script will:
