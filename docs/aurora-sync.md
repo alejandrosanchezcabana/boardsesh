@@ -85,6 +85,10 @@ bunx aurora-sync <command>
 aurora-sync all
 aurora-sync all -v  # Verbose output
 
+# Run the one-user daemon with Sydney quiet hours
+aurora-sync daemon
+aurora-sync daemon -v  # Verbose output
+
 # Sync specific user
 aurora-sync user <nextauth-user-id> -b kilter
 aurora-sync user <nextauth-user-id> -b tension -v
@@ -113,7 +117,16 @@ Run with:
 
 ```bash
 op run --env-file=packages/aurora-sync/.env.1password -- bunx aurora-sync all -v
+op run --env-file=packages/aurora-sync/.env.1password -- bunx aurora-sync daemon -v
 ```
+
+### Daemon Mode
+
+- `aurora-sync daemon` runs forever and syncs exactly one user per cycle.
+- The daemon picks the user with the oldest `lastSyncAt`, with `NULL` values first.
+- Between cycles it waits a random `1` to `15` minutes.
+- It does not sync between `10:00 PM` and `7:00 AM` in `Australia/Sydney`, but the process stays alive and checks again every minute.
+- Aurora HTTP, timeout, network, and rate-limit failures are treated as transient and retried later without marking the credential as errored.
 
 ## Railway Deployment
 

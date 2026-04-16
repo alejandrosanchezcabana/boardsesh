@@ -1,4 +1,5 @@
 export * from './types';
+export * from './errors';
 export * from './sync-api-types';
 export { userSync } from './user-sync-api';
 export { sharedSync } from './shared-sync-api';
