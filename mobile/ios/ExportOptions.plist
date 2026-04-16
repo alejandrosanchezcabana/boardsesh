@@ -11,7 +11,7 @@
     <key>provisioningProfiles</key>
     <dict>
         <key>com.boardsesh.app</key>
-        <string>Boardsesh App Store Distribution</string>
+        <string>Boardsesh App Store Distribution Second</string>
         <key>com.boardsesh.app.widgets</key>
         <string>Boardsesh Widgets App Store Distribution</string>
     </dict>
