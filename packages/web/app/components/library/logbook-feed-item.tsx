@@ -695,9 +695,8 @@ const LogbookFeedItem: React.FC<LogbookFeedItemProps> = React.memo(({
           )}
         </div>
 
-        {/* Comment area — full width below the content row.
-            Container is always rendered so edit-mode toggling transitions
-            smoothly rather than popping the row in and out. */}
+        {/* Comment area — always mounted so edit-mode toggling animates
+            via grid-template-rows rather than popping in/out. */}
         <div
           className={
             !isEditing && !item.comment
@@ -705,46 +704,48 @@ const LogbookFeedItem: React.FC<LogbookFeedItemProps> = React.memo(({
               : styles.commentRow
           }
         >
-          {isEditing ? (
-            <TextField
-              fullWidth
-              size="small"
-              variant="outlined"
-              placeholder="Comment..."
-              multiline
-              minRows={1}
-              maxRows={commentFocused ? 4 : 1}
-              value={editComment}
-              onChange={(event) => setEditComment(event.target.value)}
-              onFocus={handleCommentFocus}
-              onBlur={handleCommentBlur}
-              slotProps={{
-                htmlInput: { maxLength: 2000, 'aria-label': 'Edit tick comment' },
-                input: {
-                  startAdornment: (
-                    <InputAdornment position="start">
-                      <ChatBubbleOutlineOutlined sx={{ fontSize: 16, opacity: 0.5 }} />
-                    </InputAdornment>
-                  ),
-                },
-              }}
-              sx={{
-                '& .MuiOutlinedInput-root': {
-                  borderRadius: `${themeTokens.borderRadius.md}px`,
-                  backgroundColor: 'var(--input-bg)',
-                  '& .MuiOutlinedInput-notchedOutline': {
-                    borderColor: 'var(--neutral-200)',
+          <div className={styles.commentRowContent}>
+            {isEditing ? (
+              <TextField
+                fullWidth
+                size="small"
+                variant="outlined"
+                placeholder="Comment..."
+                multiline
+                minRows={1}
+                maxRows={commentFocused ? 4 : 1}
+                value={editComment}
+                onChange={(event) => setEditComment(event.target.value)}
+                onFocus={handleCommentFocus}
+                onBlur={handleCommentBlur}
+                slotProps={{
+                  htmlInput: { maxLength: 2000, 'aria-label': 'Edit tick comment' },
+                  input: {
+                    startAdornment: (
+                      <InputAdornment position="start">
+                        <ChatBubbleOutlineOutlined sx={{ fontSize: 16, opacity: 0.5 }} />
+                      </InputAdornment>
+                    ),
                   },
-                },
-              }}
-            />
-          ) : (
-            item.comment && (
-              <Typography sx={commentBoxSx}>
-                {item.comment}
-              </Typography>
-            )
-          )}
+                }}
+                sx={{
+                  '& .MuiOutlinedInput-root': {
+                    borderRadius: `${themeTokens.borderRadius.md}px`,
+                    backgroundColor: 'var(--input-bg)',
+                    '& .MuiOutlinedInput-notchedOutline': {
+                      borderColor: 'var(--neutral-200)',
+                    },
+                  },
+                }}
+              />
+            ) : (
+              item.comment && (
+                <Typography sx={commentBoxSx}>
+                  {item.comment}
+                </Typography>
+              )
+            )}
+          </div>
         </div>
         </div>
       </div>

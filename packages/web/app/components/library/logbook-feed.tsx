@@ -497,10 +497,7 @@ export default function LogbookFeed() {
 
   const showBoardType = boardFilter === 'all';
   const hasFilters = boardFilter !== 'all' || debouncedSearch.length > 0 || !isDefaultFilters(filters);
-  // Posting and linking are mutually exclusive (see `allowInstagramLinking` prop below).
-  // Posting opens PostToInstagramDialog — full caption/copy flow, mobile-only where
-  // the Instagram app can be launched. Linking opens AttachBetaLinkDialog — a compact
-  // form to paste an existing Instagram URL, shown everywhere else on /you/logbook.
+  // Posting and linking are mutually exclusive — see `allowInstagramLinking` below.
   const enableInstagramPosting = pathname === '/you/logbook' && isNarrowViewport && isInstagramPostingSupported();
   const enableInstagramLinking = pathname === '/you/logbook';
 

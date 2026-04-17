@@ -215,18 +215,21 @@
 }
 
 /* Full-width comment row below the content row.
-   Height and padding transition to avoid a jump when the comment field
-   swaps between Typography and TextField on edit-mode toggle. */
+   Uses the grid-template-rows 0fr/1fr trick to get a smooth collapse
+   between edit and non-edit modes — height auto cannot interpolate. */
 .commentRow {
+  display: grid;
+  grid-template-rows: 1fr;
   padding: 0 var(--spacing-2) var(--spacing-2);
-  transition: height 180ms ease-out, padding 180ms ease-out;
+  transition: grid-template-rows 180ms ease-out, padding 180ms ease-out;
 }
 
-/* When empty (no comment, not editing) the row collapses to zero height
-   with no padding. Explicit height:0 + overflow:hidden so a stray
-   conditional child can't reopen the row by its own intrinsic size. */
 .commentRowEmpty {
+  grid-template-rows: 0fr;
   padding: 0 var(--spacing-2);
-  height: 0;
+}
+
+.commentRowContent {
   overflow: hidden;
+  min-height: 0;
 }

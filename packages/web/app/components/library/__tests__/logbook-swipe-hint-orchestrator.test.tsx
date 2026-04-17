@@ -2,6 +2,12 @@ import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { render, act } from '@testing-library/react';
 import React from 'react';
 
+// Mirrors REPEAT_COUNT in logbook-swipe-hint-orchestrator.tsx. The
+// orchestrator invokes element.animate 4x per cycle (slide out, fade in,
+// slide back, fade out), so total calls = REPEAT_COUNT * ANIMATIONS_PER_CYCLE.
+const REPEAT_COUNT = 2;
+const ANIMATIONS_PER_CYCLE = 4;
+
 const getPreferenceMock = vi.fn();
 const setPreferenceMock = vi.fn();
 
@@ -131,15 +137,15 @@ describe('LogbookSwipeHintOrchestrator', () => {
     expect(animate).toHaveBeenCalledTimes(2);
 
     // Drive every animation to completion; advance holds/gaps between them.
-    for (let i = 0; i < 12; i++) {
+    const totalAnimations = REPEAT_COUNT * ANIMATIONS_PER_CYCLE;
+    for (let i = 0; i < totalAnimations + 4; i++) {
       if (animations[i]) {
         animations[i].resolve();
       }
       await act(async () => { await vi.advanceTimersByTimeAsync(1000); });
     }
 
-    // REPEAT_COUNT=2 cycles × (slideOut + fadeIn + slideBack + fadeOut) = 8 animate calls
-    expect(animate).toHaveBeenCalledTimes(8);
+    expect(animate).toHaveBeenCalledTimes(totalAnimations);
     expect(setPreferenceMock).toHaveBeenCalledWith('swipeHint:logbookSeen', true);
   });
 

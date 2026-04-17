@@ -316,9 +316,12 @@ describe('LogbookFeedItem', () => {
 
   it('marks both swipe action layers aria-hidden', () => {
     const { container } = render(<LogbookFeedItem item={makeItem()} />);
-    const hiddenLayers = container.querySelectorAll('[aria-hidden="true"]');
-    // At minimum the two action layer divs must be aria-hidden.
-    expect(hiddenLayers.length).toBeGreaterThanOrEqual(2);
+    // The CSS-module Proxy mock returns the prop name as the class,
+    // so both action layers are reachable via their source class names.
+    const left = container.querySelector('.leftActionLayer');
+    const right = container.querySelector('.rightActionLayer');
+    expect(left?.getAttribute('aria-hidden')).toBe('true');
+    expect(right?.getAttribute('aria-hidden')).toBe('true');
   });
 
   it('reflects updateTick.isPending via the getter mock without remount', () => {
