@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import React from 'react';
 import type { ActiveSessionInfo } from '@/app/components/persistent-session/types';
@@ -11,6 +11,15 @@ vi.mock('next/navigation', () => ({
   useRouter: () => ({ push: mockPush, replace: vi.fn(), back: vi.fn() }),
   usePathname: () => '/',
   useSearchParams: () => new URLSearchParams(),
+}));
+
+const mockIsNativeApp = vi.fn<() => boolean>(() => false);
+const mockIsCapacitorWebView = vi.fn<() => boolean>(() => false);
+const mockWaitForCapacitor = vi.fn<() => Promise<boolean>>(() => Promise.resolve(false));
+vi.mock('@/app/lib/ble/capacitor-utils', () => ({
+  isNativeApp: () => mockIsNativeApp(),
+  isCapacitorWebView: () => mockIsCapacitorWebView(),
+  waitForCapacitor: () => mockWaitForCapacitor(),
 }));
 
 vi.mock('@/app/lib/climb-session-cookie', () => ({
@@ -185,6 +194,82 @@ describe('HomePageContent', () => {
       fireEvent.click(screen.getByRole('button', { name: /continue climbing/i }));
       expect(mockSetClimbSessionCookie).toHaveBeenCalledWith('session-123');
       expect(mockPush).toHaveBeenCalledWith('/b/tension-board/-20/list');
+    });
+  });
+
+  describe('install app card', () => {
+    const originalUA = Object.getOwnPropertyDescriptor(window.navigator, 'userAgent');
+    const ANDROID_UA =
+      'Mozilla/5.0 (Linux; Android 14; Pixel 8) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0 Mobile Safari/537.36';
+    const IOS_SAFARI_UA =
+      'Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.0 Mobile/15E148 Safari/604.1';
+
+    function setUserAgent(ua: string) {
+      Object.defineProperty(window.navigator, 'userAgent', {
+        value: ua,
+        configurable: true,
+      });
+    }
+
+    beforeEach(() => {
+      mockIsNativeApp.mockReturnValue(false);
+      mockIsCapacitorWebView.mockReturnValue(false);
+      mockWaitForCapacitor.mockResolvedValue(false);
+    });
+
+    afterEach(() => {
+      if (originalUA) {
+        Object.defineProperty(window.navigator, 'userAgent', originalUA);
+      }
+    });
+
+    it('shows the iOS App Store CTA on a regular browser', async () => {
+      setUserAgent(IOS_SAFARI_UA);
+      render(<HomePageContent {...defaultProps} />);
+      await waitFor(() => {
+        expect(screen.getByText(/Get the Boardsesh app/i)).toBeTruthy();
+      });
+      expect(
+        screen.getByText(/Lights up holds on your board straight from your phone/i),
+      ).toBeTruthy();
+    });
+
+    it('shows the Android pre-launch sideload CTA on Android UA', async () => {
+      setUserAgent(ANDROID_UA);
+      render(<HomePageContent {...defaultProps} />);
+      await waitFor(() => {
+        expect(screen.getByText(/Android app is almost here/i)).toBeTruthy();
+      });
+      expect(screen.getByText(/Tap to sideload the preview build/i)).toBeTruthy();
+    });
+
+    it('hides the install card once running in the native Capacitor app', async () => {
+      mockIsNativeApp.mockReturnValue(true);
+      render(<HomePageContent {...defaultProps} />);
+      await waitFor(() => {
+        expect(screen.queryByText(/Get the Boardsesh app/i)).toBeNull();
+        expect(screen.queryByText(/Android app is almost here/i)).toBeNull();
+      });
+    });
+
+    it('waits for the Capacitor bridge before classifying a WebView as web', async () => {
+      setUserAgent(ANDROID_UA);
+      mockIsCapacitorWebView.mockReturnValue(true);
+      // Simulate the bridge appearing: waitForCapacitor resolves true and
+      // a subsequent isNativeApp() check then returns true.
+      let nativeAfterBridge = false;
+      mockIsNativeApp.mockImplementation(() => nativeAfterBridge);
+      mockWaitForCapacitor.mockImplementation(() => {
+        nativeAfterBridge = true;
+        return Promise.resolve(true);
+      });
+
+      render(<HomePageContent {...defaultProps} />);
+      await waitFor(() => {
+        // Card must not render since we now know we're native.
+        expect(screen.queryByText(/Android app is almost here/i)).toBeNull();
+      });
+      expect(mockWaitForCapacitor).toHaveBeenCalledTimes(1);
     });
   });
 

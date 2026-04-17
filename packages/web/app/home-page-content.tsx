@@ -18,6 +18,7 @@ import AndroidOutlined from '@mui/icons-material/Android';
 import Skeleton from '@mui/material/Skeleton';
 import SvgIcon from '@mui/material/SvgIcon';
 import { isNativeApp, isCapacitorWebView, waitForCapacitor } from '@/app/lib/ble/capacitor-utils';
+import { useCountdown } from '@/app/lib/hooks/use-countdown';
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import { themeTokens } from '@/app/theme/theme-config';
@@ -148,26 +149,6 @@ function InstallAppShadowCard() {
       </Box>
     </Card>
   );
-}
-
-function useCountdown(target: Date, active: boolean) {
-  const [remaining, setRemaining] = useState(() => Math.max(0, target.getTime() - Date.now()));
-
-  useEffect(() => {
-    if (!active) return;
-    setRemaining(Math.max(0, target.getTime() - Date.now()));
-    const id = setInterval(() => {
-      setRemaining(Math.max(0, target.getTime() - Date.now()));
-    }, 1000);
-    return () => clearInterval(id);
-  }, [active, target]);
-
-  const totalSeconds = Math.floor(remaining / 1000);
-  const days = Math.floor(totalSeconds / 86400);
-  const hours = Math.floor((totalSeconds % 86400) / 3600);
-  const minutes = Math.floor((totalSeconds % 3600) / 60);
-  const seconds = totalSeconds % 60;
-  return { days, hours, minutes, seconds, done: remaining <= 0 };
 }
 
 function InstallAppCard({ platform }: { platform: InstallPlatform }) {
