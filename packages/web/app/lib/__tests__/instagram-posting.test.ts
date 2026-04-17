@@ -2,6 +2,7 @@ import { describe, expect, it, vi, beforeEach, afterEach } from 'vitest';
 import {
   buildInstagramCaption,
   copyAndOpenInstagram,
+  getBoardDisplayName,
   getInstagramPostingPlatform,
   isInstagramPostingSupported,
 } from '../instagram-posting';
@@ -87,10 +88,13 @@ describe('instagram-posting', () => {
     });
   });
 
-  it('builds the caption for Kilter (default)', () => {
+  it('builds the Kilter caption when boardType is omitted', () => {
     expect(buildInstagramCaption({ climbName: 'Texas Sun', angle: 35 })).toBe(
       `"Texas Sun" @ 35° on the Kilter Board.\n@kilterboard #kilterboard #kiltergrips`,
     );
+  });
+
+  it('builds the Kilter caption when boardType is kilter', () => {
     expect(buildInstagramCaption({ climbName: 'Texas Sun', angle: 35, boardType: 'kilter' })).toBe(
       `"Texas Sun" @ 35° on the Kilter Board.\n@kilterboard #kilterboard #kiltergrips`,
     );
@@ -106,6 +110,24 @@ describe('instagram-posting', () => {
     expect(buildInstagramCaption({ climbName: 'Wheel of Fortune', angle: 40, boardType: 'moonboard' })).toBe(
       `"Wheel of Fortune" @ 40° on the MoonBoard.\n@moon_climbing #moonboard`,
     );
+  });
+
+  it('falls back to Kilter caption for an unknown boardType', () => {
+    expect(buildInstagramCaption({ climbName: 'Mystery Route', angle: 50, boardType: 'unknownboard' })).toBe(
+      `"Mystery Route" @ 50° on the Kilter Board.\n@kilterboard #kilterboard #kiltergrips`,
+    );
+  });
+
+  describe('getBoardDisplayName', () => {
+    it('returns the short display name for known boards', () => {
+      expect(getBoardDisplayName('kilter')).toBe('Kilter');
+      expect(getBoardDisplayName('tension')).toBe('Tension');
+      expect(getBoardDisplayName('moonboard')).toBe('MoonBoard');
+    });
+
+    it('capitalises and returns the raw boardType for unknown boards', () => {
+      expect(getBoardDisplayName('futureboard')).toBe('Futureboard');
+    });
   });
 
   it('detects iPhone web as supported', () => {

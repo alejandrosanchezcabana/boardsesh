@@ -20,6 +20,7 @@ import { useSnackbar } from '@/app/components/providers/snackbar-provider';
 import {
   buildInstagramCaption,
   copyAndOpenInstagram,
+  getBoardDisplayName,
 } from '@/app/lib/instagram-posting';
 import type { BetaLink } from '@/app/lib/api-wrappers/sync-api-types';
 import { themeTokens } from '@/app/theme/theme-config';
@@ -35,16 +36,6 @@ interface PostToInstagramDialogProps {
   open: boolean;
   onClose: () => void;
   item: InstagramPostingTarget | null;
-}
-
-const BOARD_DISPLAY_NAMES: Record<string, string> = {
-  kilter: 'Kilter',
-  tension: 'Tension',
-  moonboard: 'MoonBoard',
-};
-
-function boardDisplayName(boardType: string): string {
-  return BOARD_DISPLAY_NAMES[boardType] ?? boardType.charAt(0).toUpperCase() + boardType.slice(1);
 }
 
 const instructions = [
@@ -183,7 +174,7 @@ export default function PostToInstagramDialog({
             </Box>
 
             <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>
-              <Chip size="small" label={boardDisplayName(item.boardType)} color="primary" variant="outlined" />
+              <Chip size="small" label={getBoardDisplayName(item.boardType)} color="primary" variant="outlined" />
               <Chip size="small" label={`${item.angle}°`} variant="outlined" />
               <Chip
                 size="small"
