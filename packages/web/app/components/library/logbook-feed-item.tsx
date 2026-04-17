@@ -480,11 +480,11 @@ const LogbookFeedItem: React.FC<LogbookFeedItemProps> = React.memo(({
   const leftSwipeLayerRef = useRef<HTMLDivElement>(null);
   const rightSwipeLayerRef = useRef<HTMLDivElement>(null);
 
-  const handleSwipeRight = useCallback(() => {
+  const handleSwipeLeft = useCallback(() => {
     onEdit?.(item);
   }, [onEdit, item]);
 
-  const handleSwipeLeftLong = useCallback(() => {
+  const handleSwipeRightLong = useCallback(() => {
     onDelete?.(item.uuid);
   }, [onDelete, item.uuid]);
 
@@ -498,8 +498,9 @@ const LogbookFeedItem: React.FC<LogbookFeedItemProps> = React.memo(({
   }, []);
 
   const { swipeHandlers, contentRef, leftActionRef, rightActionRef } = useSwipeActions({
-    onSwipeRight: handleSwipeRight,
-    onSwipeLeft: handleSwipeLeftLong,
+    onSwipeLeft: handleSwipeLeft,
+    onSwipeRight: handleSwipeRightLong,
+    onSwipeRightLong: handleSwipeRightLong,
     onSwipeOffsetChange: handleSwipeOffset,
     swipeThreshold: SWIPE_THRESHOLD,
     longSwipeRightThreshold: LONG_SWIPE_THRESHOLD,
@@ -547,14 +548,14 @@ const LogbookFeedItem: React.FC<LogbookFeedItemProps> = React.memo(({
   return (
     <>
       <div className={styles.container}>
-        {/* Left action layer -- Edit (revealed on swipe right) */}
+        {/* Left action layer — Delete (revealed on long swipe right) */}
         <div ref={leftActionCombinedRef} className={styles.leftActionLayer}>
-          <EditOutlined style={iconStyle} />
+          <DeleteOutlined style={iconStyle} />
         </div>
 
-        {/* Right action layer -- Delete (revealed on swipe left) */}
+        {/* Right action layer — Edit (revealed on swipe left) */}
         <div ref={rightActionRef} className={styles.rightActionLayer}>
-          <DeleteOutlined style={iconStyle} />
+          <EditOutlined style={iconStyle} />
         </div>
 
         {/* Swipeable content */}
