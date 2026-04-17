@@ -188,6 +188,25 @@ describe('BoardSearchDrawer', () => {
     expect(lastSearchInput!.query).toBe('');
   });
 
+  it('resets coords to null when the drawer is closed and reopened', () => {
+    const { rerender } = render(
+      <BoardSearchDrawer open onClose={vi.fn()} onBoardOpen={vi.fn()} />,
+    );
+
+    // Simulate the user panning the map to a real location
+    fireEvent.click(screen.getByTestId('board-search-map'));
+    expect(lastSearchInput!.latitude).toBe(51.5);
+    expect(lastSearchInput!.longitude).toBe(-0.1);
+
+    // Close the drawer — locationResolved should reset
+    rerender(<BoardSearchDrawer open={false} onClose={vi.fn()} onBoardOpen={vi.fn()} />);
+
+    // Reopen without any further panning — coords must be null again
+    rerender(<BoardSearchDrawer open onClose={vi.fn()} onBoardOpen={vi.fn()} />);
+    expect(lastSearchInput!.latitude).toBeNull();
+    expect(lastSearchInput!.longitude).toBeNull();
+  });
+
   it('invokes onBoardOpen when the Open button on a selected board is clicked', () => {
     mockBoards = [makeBoard('b1')];
     const onBoardOpen = vi.fn();

@@ -231,11 +231,10 @@ export default function BoardSearchMap({
       // Suppress the regular fireViewport debounce for this animation so the
       // parent's center/zoom isn't updated mid-flight — that would re-render
       // and trigger the pan effect's setView, racing the flyTo.
-      programmaticMoveRef.current = true;
-      // Once the animation finishes (or the user interrupts it), report the
-      // actual final viewport directly. By that point map.getCenter() matches
-      // the target, so the pan effect's distance guard short-circuits and no
-      // second animation runs.
+      // Register the one-shot listener BEFORE setting programmaticMoveRef and
+      // calling flyTo. In environments where flyTo fires moveend synchronously
+      // (e.g. test mocks), the listener must already be attached or the
+      // viewport callback is silently dropped.
       map.once('moveend', () => {
         const c = map.getCenter();
         onViewportChangeRef.current({
@@ -244,6 +243,10 @@ export default function BoardSearchMap({
           zoom: map.getZoom(),
         });
       });
+      // Suppress the regular fireViewport debounce for this animation so the
+      // parent's center/zoom isn't updated mid-flight — that would re-render
+      // and trigger the pan effect's setView, racing the flyTo.
+      programmaticMoveRef.current = true;
       map.flyTo([coords.latitude, coords.longitude], 13);
     },
     [],
@@ -273,7 +276,7 @@ export default function BoardSearchMap({
       data-swipe-blocked="true"
       sx={{ position: 'relative', width: '100%', height: '100%' }}
     >
-      <div ref={containerRef} style={{ width: '100%', height: '100%' }} />
+      <div ref={containerRef} className={markerStyles.mapContainer} />
       {mapReady && (
         <MuiButton
           size="small"

@@ -43,6 +43,10 @@ export default function BoardSearchDrawer({ open, onClose, onBoardOpen }: BoardS
   const [zoom, setZoom] = useState(DEFAULT_ZOOM);
   const [selectedBoardUuid, setSelectedBoardUuid] = useState<string | null>(null);
   const [requestedGeo, setRequestedGeo] = useState(false);
+  // True once the map has been panned by the user or geolocation has resolved.
+  // Kept separate from `center` to avoid the footgun where center === DEFAULT_CENTER
+  // would silently suppress coordinate-based queries for users at exactly (20, 0).
+  const [locationResolved, setLocationResolved] = useState(false);
 
   const carouselRef = useRef<HTMLDivElement>(null);
   const cardRefs = useRef<Map<string, HTMLDivElement>>(new Map());
@@ -55,14 +59,11 @@ export default function BoardSearchDrawer({ open, onClose, onBoardOpen }: BoardS
   }, [open, requestedGeo, requestPermission]);
 
   useEffect(() => {
-    if (!userCoords) return;
-    setCenter((prev) => {
-      // Only auto-center if we're still at the default world view
-      if (prev.lat !== DEFAULT_CENTER.lat || prev.lng !== DEFAULT_CENTER.lng) return prev;
-      return { lat: userCoords.latitude, lng: userCoords.longitude };
-    });
+    if (!userCoords || locationResolved) return;
+    setCenter({ lat: userCoords.latitude, lng: userCoords.longitude });
     setZoom((prev) => (prev === DEFAULT_ZOOM ? NEARBY_ZOOM : prev));
-  }, [userCoords]);
+    setLocationResolved(true);
+  }, [userCoords, locationResolved]);
 
   // Reset transient drawer state each time the drawer is closed. Clearing
   // requestedGeo lets us retry the permission prompt if the user denied it
@@ -77,18 +78,17 @@ export default function BoardSearchDrawer({ open, onClose, onBoardOpen }: BoardS
       setRequestedGeo(false);
       setCenter(DEFAULT_CENTER);
       setZoom(DEFAULT_ZOOM);
+      setLocationResolved(false);
     }
   }, [open]);
 
-  // While the drawer is still at the default world-view fallback, don't fire a
-  // coordinate-based search — the 300 km bucket at zoom 3 would surface a
-  // cluster of boards in Kansas to every user until geolocation resolves.
-  const hasResolvedLocation = center.lat !== DEFAULT_CENTER.lat || center.lng !== DEFAULT_CENTER.lng;
-
   const { boards, isLoading, isFetching, radiusKm, hasMore, isFetchingNextPage, fetchNextPage } = useSearchBoardsMap({
     query,
-    latitude: hasResolvedLocation ? center.lat : null,
-    longitude: hasResolvedLocation ? center.lng : null,
+    // While the map is still at the default world-view fallback (locationResolved=false),
+    // don't fire a coordinate-based search — the 300 km bucket at zoom 3 would surface a
+    // cluster of boards in Kansas to every user until geolocation resolves.
+    latitude: locationResolved ? center.lat : null,
+    longitude: locationResolved ? center.lng : null,
     zoom,
     enabled: open,
   });
@@ -111,6 +111,7 @@ export default function BoardSearchDrawer({ open, onClose, onBoardOpen }: BoardS
     ({ lat, lng, zoom: z }: { lat: number; lng: number; zoom: number }) => {
       setCenter({ lat, lng });
       setZoom(z);
+      setLocationResolved(true);
     },
     [],
   );

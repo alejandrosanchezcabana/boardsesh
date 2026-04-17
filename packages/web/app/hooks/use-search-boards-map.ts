@@ -1,7 +1,7 @@
 'use client';
 
 import { useMemo } from 'react';
-import { useInfiniteQuery } from '@tanstack/react-query';
+import { useInfiniteQuery, type InfiniteData, type QueryKey } from '@tanstack/react-query';
 import { useWsAuthToken } from '@/app/hooks/use-ws-auth-token';
 import { useDebouncedValue } from '@/app/hooks/use-debounced-value';
 import { createGraphQLHttpClient } from '@/app/lib/graphql/client';
@@ -81,7 +81,7 @@ export function useSearchBoardsMap({
   const client = useMemo(() => createGraphQLHttpClient(token ?? undefined), [token]);
 
   const { data, isLoading, isFetching, fetchNextPage, hasNextPage, isFetchingNextPage } =
-    useInfiniteQuery<UserBoardConnection, Error>({
+    useInfiniteQuery<UserBoardConnection, Error, InfiniteData<UserBoardConnection>, QueryKey, number>({
       queryKey: ['searchBoardsMap', debouncedQuery, lat, lon, radiusKm, token],
       queryFn: async ({ pageParam }) => {
         const input: SearchBoardsQueryVariables['input'] = {
@@ -90,7 +90,7 @@ export function useSearchBoardsMap({
           longitude: hasCoords ? lon : undefined,
           radiusKm: hasCoords ? radiusKm : undefined,
           limit: PAGE_LIMIT,
-          offset: pageParam as number,
+          offset: pageParam,
         };
         const response = await client.request<SearchBoardsQueryResponse, SearchBoardsQueryVariables>(
           SEARCH_BOARDS,
@@ -101,7 +101,7 @@ export function useSearchBoardsMap({
       initialPageParam: 0,
       getNextPageParam: (lastPage, _allPages, lastPageParam) => {
         if (!lastPage.hasMore) return undefined;
-        return (lastPageParam as number) + lastPage.boards.length;
+        return lastPageParam + lastPage.boards.length;
       },
       enabled: queryEnabled,
       staleTime: 30 * 1000,
