@@ -34,9 +34,7 @@ vi.mock('@/app/lib/board-render-worker/worker-manager', () => ({
 }));
 
 vi.mock('@/app/lib/rendering-metrics', () => ({
-  trackRenderComplete: vi.fn(),
   trackRenderError: vi.fn(),
-  trackListBatchRender: vi.fn(),
 }));
 
 vi.mock('../board-image-layers', () => ({

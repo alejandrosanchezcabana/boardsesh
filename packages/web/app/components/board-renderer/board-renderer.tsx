@@ -1,11 +1,10 @@
-import React, { useEffect, useMemo, useRef } from 'react';
+import React, { useMemo } from 'react';
 import { getImageUrl } from './util';
 import { BoardDetails } from '@/app/lib/types';
 import BoardLitupHolds from './board-litup-holds';
 import { LitUpHoldsMap } from './types';
 import styles from './board-renderer.module.css';
 import MoonBoardRenderer from '../moonboard-renderer/moonboard-renderer';
-import { trackRenderComplete, type RenderContext } from '@/app/lib/rendering-metrics';
 
 export type BoardProps = {
   boardDetails: BoardDetails;
@@ -21,16 +20,7 @@ export type BoardProps = {
 
 const BoardRenderer = React.memo(
   ({ boardDetails, thumbnail, maxHeight, fillHeight, litUpHoldsMap, mirrored, onHoldClick }: BoardProps) => {
-    // Render timing: measure mount → paint (useEffect fires after DOM update)
-    const mountTime = useRef(performance.now());
-    const hasFired = useRef(false);
     const isMoonBoard = boardDetails.board_name === 'moonboard' && !!boardDetails.layoutFolder;
-    const renderContext: RenderContext = thumbnail ? 'thumbnail' : fillHeight ? 'full-board' : 'card';
-    useEffect(() => {
-      if (hasFired.current || isMoonBoard) return;
-      hasFired.current = true;
-      trackRenderComplete(performance.now() - mountTime.current, renderContext, 'svg');
-    }, [isMoonBoard, renderContext]);
 
     // Delegate to MoonBoardRenderer for Moonboard (uses grid-based rendering)
     if (isMoonBoard) {

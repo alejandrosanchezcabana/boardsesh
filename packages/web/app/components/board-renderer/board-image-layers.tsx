@@ -1,8 +1,8 @@
-import React, { useCallback, useMemo, useRef } from 'react';
+import React, { useCallback, useMemo } from 'react';
 import type { BoardDetails } from '@/app/lib/types';
 import { getImageUrl, buildOverlayUrl } from './util';
 import { THUMBNAIL_WIDTH } from './types';
-import { trackRenderComplete, trackRenderError, type RenderContext } from '@/app/lib/rendering-metrics';
+import { trackRenderError, type RenderContext } from '@/app/lib/rendering-metrics';
 
 // Use CSS Grid stacking (gridArea: 1/1) instead of absolute positioning to avoid
 // iOS 18.x WebKit bugs with absolutely positioned images in aspect-ratio containers.
@@ -65,16 +65,7 @@ const BoardImageLayers = React.memo(function BoardImageLayers({
 
   const imgStyle = (contain || thumbnail) ? layerContainStyle : layerStyle;
 
-  // Render timing: measure mount → overlay loaded
-  const mountTime = useRef(performance.now());
-  const hasFired = useRef(false);
   const renderContext: RenderContext = thumbnail ? 'thumbnail' : contain ? 'full-board' : 'card';
-
-  const handleOverlayLoad = useCallback(() => {
-    if (hasFired.current) return;
-    hasFired.current = true;
-    trackRenderComplete(performance.now() - mountTime.current, renderContext, 'wasm');
-  }, [renderContext]);
 
   const handleOverlayError = useCallback(() => {
     trackRenderError(renderContext, 'wasm');
@@ -99,7 +90,6 @@ const BoardImageLayers = React.memo(function BoardImageLayers({
           height={imgHeight}
           style={imgStyle}
           fetchPriority={fetchPriority}
-          onLoad={handleOverlayLoad}
           onError={handleOverlayError}
         />
       ) : (

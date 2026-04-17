@@ -89,8 +89,6 @@ vi.mock('@/app/hooks/use-infinite-scroll', () => ({
 }));
 
 vi.mock('@/app/lib/rendering-metrics', () => ({
-  trackListBatchRender: vi.fn(),
-  trackRenderComplete: vi.fn(),
   trackRenderError: vi.fn(),
 }));
 
