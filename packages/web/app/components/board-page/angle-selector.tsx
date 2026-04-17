@@ -8,7 +8,7 @@ import Typography from '@mui/material/Typography';
 import CircularProgress from '@mui/material/CircularProgress';
 import Box from '@mui/material/Box';
 import SwipeableDrawer from '../swipeable-drawer/swipeable-drawer';
-import { useRouter, usePathname } from 'next/navigation';
+import { useRouter, usePathname, useSearchParams } from 'next/navigation';
 import { track } from '@vercel/analytics';
 import { useQuery } from '@tanstack/react-query';
 import { ANGLES } from '@/app/lib/board-data';
@@ -32,6 +32,7 @@ export default function AngleSelector({ boardName, boardDetails, currentAngle, c
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
   const router = useRouter();
   const pathname = usePathname();
+  const searchParams = useSearchParams();
   const currentAngleRef = useRef<HTMLDivElement>(null);
   const isDark = useIsDarkMode();
 
@@ -79,7 +80,12 @@ export default function AngleSelector({ boardName, boardDetails, currentAngle, c
 
       if (angleIndex !== -1) {
         pathSegments[angleIndex] = newAngle.toString();
-        const newPath = pathSegments.join('/');
+        let newPath = pathSegments.join('/');
+        // Preserve search params when changing angle
+        const queryString = searchParams.toString();
+        if (queryString) {
+          newPath = `${newPath}?${queryString}`;
+        }
         router.push(newPath);
       }
     }
