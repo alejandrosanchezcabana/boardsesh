@@ -168,23 +168,22 @@
   gap: 4px;
 }
 
-/* Status badge button — 44x44 touch target in edit mode */
+/* Status badge button — visible 18x18 badge (matches non-edit placement).
+   A ::before pseudo-element extends the tap area to 44x44 for accessibility
+   without affecting layout. */
 .statusBadgeButton {
+  position: absolute;
   bottom: 6px;
-  min-width: 44px;
-  min-height: 44px;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
+  right: 2px;
+  width: 18px;
+  height: 18px;
   cursor: pointer;
 }
 
-/* Badge edit label */
-.badgeEditLabel {
-  margin-top: 2px;
-  width: 18px;
-  text-align: center;
+.statusBadgeButton::before {
+  content: '';
+  position: absolute;
+  inset: -13px;
 }
 
 /* Picker panel — animated expand/collapse */

@@ -569,7 +569,6 @@ const LogbookFeedItem: React.FC<LogbookFeedItemProps> = React.memo(({
                   variant="badge"
                   fontSize={12}
                 />
-                <span className={`${styles.statLabel} ${styles.badgeEditLabel}`}>edit</span>
               </ButtonBase>
             ) : (
               <div className={ascentStyles.badge} style={{ bottom: 6 }}>
