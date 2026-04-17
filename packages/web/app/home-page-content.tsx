@@ -14,7 +14,7 @@ import BluetoothOutlined from '@mui/icons-material/BluetoothOutlined';
 import LocalOfferOutlined from '@mui/icons-material/LocalOfferOutlined';
 import WarningAmberOutlined from '@mui/icons-material/WarningAmberOutlined';
 import AppleOutlined from '@mui/icons-material/Apple';
-import AndroidOutlined from '@mui/icons-material/Android';
+import AndroidOutlined from '@mui/icons-material/AndroidOutlined';
 import Skeleton from '@mui/material/Skeleton';
 import SvgIcon from '@mui/material/SvgIcon';
 import { isNativeApp, isCapacitorWebView, waitForCapacitor } from '@/app/lib/ble/capacitor-utils';
