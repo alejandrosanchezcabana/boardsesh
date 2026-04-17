@@ -7,7 +7,14 @@ export type InstagramPostingPlatform = 'ios' | 'android' | 'unsupported';
 export interface InstagramCaptionInput {
   climbName: string;
   angle: number;
+  boardType?: string;
 }
+
+const BOARD_CAPTION_CONFIG: Record<string, { name: string; handle: string; hashtags: string }> = {
+  kilter: { name: 'Kilter Board', handle: '@kilterboard', hashtags: '#kilterboard #kiltergrips' },
+  tension: { name: 'Tension Board', handle: '@tensionclimbing', hashtags: '#tensionboard' },
+  moonboard: { name: 'MoonBoard', handle: '@moon_climbing', hashtags: '#moonboard' },
+};
 
 export interface CopyAndOpenInstagramResult {
   copied: boolean;
@@ -121,8 +128,10 @@ export function isInstagramPostingSupported(): boolean {
 export function buildInstagramCaption({
   climbName,
   angle,
+  boardType = 'kilter',
 }: InstagramCaptionInput): string {
-  return `"${climbName}" @ ${angle}\u00b0 on the Kilter Board.\n@kilterboard #kilterboard #kiltergrips`;
+  const config = BOARD_CAPTION_CONFIG[boardType] ?? BOARD_CAPTION_CONFIG.kilter;
+  return `"${climbName}" @ ${angle}\u00b0 on the ${config.name}.\n${config.handle} ${config.hashtags}`;
 }
 
 function getInstagramLaunchUrl(platform: InstagramPostingPlatform): string | null {

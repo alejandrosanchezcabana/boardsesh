@@ -54,6 +54,10 @@ import styles from './logbook-feed-item.module.css';
 
 const SwipeableDrawer = dynamic(() => import('../swipeable-drawer/swipeable-drawer'), { ssr: false });
 const PostToInstagramDialog = dynamic(() => import('./post-to-instagram-dialog'), { ssr: false });
+const AttachBetaLinkDialog = dynamic(
+  () => import('@/app/components/beta-videos/attach-beta-link-dialog').then((m) => ({ default: m.AttachBetaLinkDialog })),
+  { ssr: false },
+);
 
 dayjs.extend(relativeTime);
 
@@ -278,6 +282,7 @@ const LogbookFeedItem: React.FC<LogbookFeedItemProps> = React.memo(({
 }) => {
   const [isActionsOpen, setIsActionsOpen] = useState(false);
   const [instagramDialogOpen, setInstagramDialogOpen] = useState(false);
+  const [betaLinkDialogOpen, setBetaLinkDialogOpen] = useState(false);
 
   // --- Edit state ---
   const { mutateAsync: updateTickAsync, isPending: isSaving } = useUpdateTick();
@@ -509,6 +514,15 @@ const LogbookFeedItem: React.FC<LogbookFeedItemProps> = React.memo(({
     setInstagramDialogOpen(false);
   }, []);
 
+  const handleOpenBetaLink = useCallback(() => {
+    handleCloseActions();
+    setBetaLinkDialogOpen(true);
+  }, [handleCloseActions]);
+
+  const handleCloseBetaLink = useCallback(() => {
+    setBetaLinkDialogOpen(false);
+  }, []);
+
   return (
     <>
       <div className={styles.container}>
@@ -699,7 +713,7 @@ const LogbookFeedItem: React.FC<LogbookFeedItemProps> = React.memo(({
               }}
               sx={{
                 '& .MuiOutlinedInput-root': {
-                  borderRadius: '8px',
+                  borderRadius: `${themeTokens.borderRadius.md}px`,
                   backgroundColor: 'var(--input-bg)',
                   '& .MuiOutlinedInput-notchedOutline': {
                     borderColor: 'var(--neutral-200)',
@@ -778,7 +792,7 @@ const LogbookFeedItem: React.FC<LogbookFeedItemProps> = React.memo(({
             </MenuItem>
           )}
           {allowInstagramLinking && (
-            <MenuItem onClick={handleOpenInstagram}>
+            <MenuItem onClick={handleOpenBetaLink}>
               <ListItemIcon><LinkOutlined fontSize="small" /></ListItemIcon>
               <ListItemText>Link Instagram post</ListItemText>
             </MenuItem>
@@ -796,7 +810,7 @@ const LogbookFeedItem: React.FC<LogbookFeedItemProps> = React.memo(({
         </SwipeableDrawer>
       )}
 
-      {(allowInstagramPosting || allowInstagramLinking) && (
+      {allowInstagramPosting && (
         <PostToInstagramDialog
           open={instagramDialogOpen}
           onClose={handleCloseInstagram}
@@ -806,6 +820,16 @@ const LogbookFeedItem: React.FC<LogbookFeedItemProps> = React.memo(({
             climbName: item.climbName,
             angle: item.angle,
           } : null}
+        />
+      )}
+      {allowInstagramLinking && (
+        <AttachBetaLinkDialog
+          open={betaLinkDialogOpen}
+          onClose={handleCloseBetaLink}
+          boardType={item.boardType}
+          climbUuid={item.climbUuid}
+          climbName={item.climbName}
+          angle={item.angle}
         />
       )}
     </>

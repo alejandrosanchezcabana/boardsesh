@@ -49,6 +49,16 @@
   --overlay-dark: rgba(0, 0, 0, 0.6);
   --overlay-text: rgba(255, 255, 255, 0.9);
 
+  /* Typography scale (matches themeTokens.typography.fontSize in theme-config.ts) */
+  --font-size-2xs: 8px;
+  --font-size-xs: 12px;
+  --font-size-sm: 14px;
+  --font-size-base: 16px;
+  --font-size-lg: 18px;
+  --font-size-xl: 20px;
+  --font-size-2xl: 24px;
+  --font-size-3xl: 30px;
+
   /* Spacing scale (matches themeTokens.spacing in theme-config.ts) */
   --spacing-1: 4px;
   --spacing-2: 8px;

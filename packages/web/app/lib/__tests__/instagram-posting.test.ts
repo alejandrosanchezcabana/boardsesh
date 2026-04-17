@@ -87,9 +87,24 @@ describe('instagram-posting', () => {
     });
   });
 
-  it('builds the exact caption format for Kilter', () => {
+  it('builds the caption for Kilter (default)', () => {
     expect(buildInstagramCaption({ climbName: 'Texas Sun', angle: 35 })).toBe(
       `"Texas Sun" @ 35° on the Kilter Board.\n@kilterboard #kilterboard #kiltergrips`,
+    );
+    expect(buildInstagramCaption({ climbName: 'Texas Sun', angle: 35, boardType: 'kilter' })).toBe(
+      `"Texas Sun" @ 35° on the Kilter Board.\n@kilterboard #kilterboard #kiltergrips`,
+    );
+  });
+
+  it('builds the caption for Tension', () => {
+    expect(buildInstagramCaption({ climbName: 'High Hopes', angle: 40, boardType: 'tension' })).toBe(
+      `"High Hopes" @ 40° on the Tension Board.\n@tensionclimbing #tensionboard`,
+    );
+  });
+
+  it('builds the caption for MoonBoard', () => {
+    expect(buildInstagramCaption({ climbName: 'Wheel of Fortune', angle: 40, boardType: 'moonboard' })).toBe(
+      `"Wheel of Fortune" @ 40° on the MoonBoard.\n@moon_climbing #moonboard`,
     );
   });
 

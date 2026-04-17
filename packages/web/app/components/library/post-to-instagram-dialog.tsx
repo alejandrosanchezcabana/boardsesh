@@ -37,6 +37,16 @@ interface PostToInstagramDialogProps {
   item: InstagramPostingTarget | null;
 }
 
+const BOARD_DISPLAY_NAMES: Record<string, string> = {
+  kilter: 'Kilter',
+  tension: 'Tension',
+  moonboard: 'MoonBoard',
+};
+
+function boardDisplayName(boardType: string): string {
+  return BOARD_DISPLAY_NAMES[boardType] ?? boardType.charAt(0).toUpperCase() + boardType.slice(1);
+}
+
 const instructions = [
   'Copy the caption and open Instagram.',
   'Paste the caption when creating your post.',
@@ -68,6 +78,7 @@ export default function PostToInstagramDialog({
     return buildInstagramCaption({
       climbName: item.climbName,
       angle: item.angle,
+      boardType: item.boardType,
     });
   }, [item]);
 
@@ -172,7 +183,7 @@ export default function PostToInstagramDialog({
             </Box>
 
             <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>
-              <Chip size="small" label="Kilter" color="primary" variant="outlined" />
+              <Chip size="small" label={boardDisplayName(item.boardType)} color="primary" variant="outlined" />
               <Chip size="small" label={`${item.angle}°`} variant="outlined" />
               <Chip
                 size="small"
