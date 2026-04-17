@@ -13,7 +13,7 @@ import PeopleOutlined from '@mui/icons-material/PeopleOutlined';
 import BluetoothOutlined from '@mui/icons-material/BluetoothOutlined';
 import LocalOfferOutlined from '@mui/icons-material/LocalOfferOutlined';
 import WarningAmberOutlined from '@mui/icons-material/WarningAmberOutlined';
-import AppleOutlined from '@mui/icons-material/Apple';
+import AppleIcon from '@mui/icons-material/Apple';
 import AndroidOutlined from '@mui/icons-material/AndroidOutlined';
 import Skeleton from '@mui/material/Skeleton';
 import SvgIcon from '@mui/material/SvgIcon';
@@ -119,7 +119,7 @@ function OnboardingCard({ icon, title, description, onClick }: OnboardingCardPro
 
 const IOS_APP_STORE_URL = 'https://apps.apple.com/app/boardsesh/id6761350784';
 const ANDROID_PLAY_STORE_URL = 'https://play.google.com/store/apps/details?id=com.boardsesh.app';
-const ANDROID_SIDELOAD_URL = 'https://github.com/boardsesh/boardsesh/releases/tag/android-build-138';
+const ANDROID_SIDELOAD_URL = 'https://github.com/boardsesh/boardsesh/releases/latest';
 const ANDROID_LAUNCH_DATE = new Date('2026-04-29T00:00:00Z');
 
 type InstallPlatform = 'unknown' | 'native' | 'android-web' | 'other-web';
@@ -181,7 +181,7 @@ function InstallAppCard({ platform }: { platform: InstallPlatform }) {
 
   return (
     <OnboardingCard
-      icon={<AppleOutlined />}
+      icon={<AppleIcon />}
       title="Get the Boardsesh app"
       description="Lights up holds on your board straight from your phone"
       onClick={() => window.open(IOS_APP_STORE_URL, '_blank', 'noopener,noreferrer')}
@@ -217,6 +217,8 @@ export default function HomePageContent({ boardConfigs, initialPopularConfigs }:
       waitForCapacitor().then((appeared) => {
         if (cancelled) return;
         setInstallPlatform(appeared && isNativeApp() ? 'native' : classifyWeb());
+      }).catch(() => {
+        if (!cancelled) setInstallPlatform(classifyWeb());
       });
       return () => {
         cancelled = true;

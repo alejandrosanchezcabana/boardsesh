@@ -40,6 +40,9 @@ export function useCountdown(target: Date, active: boolean): Countdown {
     hours: Math.floor((totalSeconds % 86400) / 3600),
     minutes: Math.floor((totalSeconds % 3600) / 60),
     seconds: totalSeconds % 60,
+    // When active=false, remaining is always 0, so done=true. Callers must
+    // guard on their own active condition before reading done, or they'll
+    // see the countdown as "complete" even when it was never started.
     done: remaining <= 0,
   };
 }
