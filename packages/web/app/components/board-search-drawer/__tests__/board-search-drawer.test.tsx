@@ -188,7 +188,8 @@ describe('BoardSearchDrawer', () => {
     expect(lastSearchInput!.query).toBe('');
   });
 
-  it('resets coords to null when the drawer is closed and reopened', () => {
+  it('resets coords to null when the drawer is closed and reopened without geolocation', () => {
+    // userCoords is null (no geo) — only a manual pan had resolved coords.
     const { rerender } = render(
       <BoardSearchDrawer open onClose={vi.fn()} onBoardOpen={vi.fn()} />,
     );
@@ -201,10 +202,55 @@ describe('BoardSearchDrawer', () => {
     // Close the drawer — locationResolved should reset
     rerender(<BoardSearchDrawer open={false} onClose={vi.fn()} onBoardOpen={vi.fn()} />);
 
-    // Reopen without any further panning — coords must be null again
+    // Reopen without geo or further panning — coords must be null again
     rerender(<BoardSearchDrawer open onClose={vi.fn()} onBoardOpen={vi.fn()} />);
     expect(lastSearchInput!.latitude).toBeNull();
     expect(lastSearchInput!.longitude).toBeNull();
+  });
+
+  it('auto-centers to user location when geolocation has resolved, and re-centers after reopen', () => {
+    // Geolocation was already granted before the drawer opens.
+    mockUserCoords = { latitude: 48.8, longitude: 2.3, accuracy: 10 };
+
+    const { rerender } = render(
+      <BoardSearchDrawer open onClose={vi.fn()} onBoardOpen={vi.fn()} />,
+    );
+
+    // Should auto-center to the resolved location immediately
+    expect(lastSearchInput!.latitude).toBe(48.8);
+    expect(lastSearchInput!.longitude).toBe(2.3);
+
+    // Close and reopen — the close-effect reset must NOT leave coords null on
+    // the next open when geolocation is still resolved. The !open guard in the
+    // userCoords effect defers re-centering until open=true.
+    rerender(<BoardSearchDrawer open={false} onClose={vi.fn()} onBoardOpen={vi.fn()} />);
+    rerender(<BoardSearchDrawer open onClose={vi.fn()} onBoardOpen={vi.fn()} />);
+
+    expect(lastSearchInput!.latitude).toBe(48.8);
+    expect(lastSearchInput!.longitude).toBe(2.3);
+  });
+
+  it('does not override a board-card selection when geolocation resolves afterward', () => {
+    // Start with no geolocation — user picks a board first.
+    mockBoards = [makeBoard('b1', { latitude: 51.5, longitude: -0.1 })];
+    mockUserCoords = null;
+
+    const { rerender } = render(
+      <BoardSearchDrawer open onClose={vi.fn()} onBoardOpen={vi.fn()} />,
+    );
+
+    // Click the card — handleCardClick sets center and locationResolved=true
+    fireEvent.click(screen.getByTestId('board-card-b1'));
+    expect(lastSearchInput!.latitude).toBe(51.5);
+    expect(lastSearchInput!.longitude).toBe(-0.1);
+
+    // Geolocation now resolves to a different location
+    mockUserCoords = { latitude: 48.8, longitude: 2.3, accuracy: 10 };
+    rerender(<BoardSearchDrawer open onClose={vi.fn()} onBoardOpen={vi.fn()} />);
+
+    // Center must stay at the board's location, not jump to the user's coords
+    expect(lastSearchInput!.latitude).toBe(51.5);
+    expect(lastSearchInput!.longitude).toBe(-0.1);
   });
 
   it('invokes onBoardOpen when the Open button on a selected board is clicked', () => {

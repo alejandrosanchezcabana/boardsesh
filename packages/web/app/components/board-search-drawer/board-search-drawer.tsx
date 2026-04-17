@@ -59,11 +59,14 @@ export default function BoardSearchDrawer({ open, onClose, onBoardOpen }: BoardS
   }, [open, requestedGeo, requestPermission]);
 
   useEffect(() => {
-    if (!userCoords || locationResolved) return;
+    // !open guard: the close-effect sets locationResolved=false which re-triggers
+    // this effect while the drawer is still closed. Bail out then; the dep change
+    // on open=true when the drawer reopens will run the effect at the right time.
+    if (!userCoords || !open || locationResolved) return;
     setCenter({ lat: userCoords.latitude, lng: userCoords.longitude });
     setZoom((prev) => (prev === DEFAULT_ZOOM ? NEARBY_ZOOM : prev));
     setLocationResolved(true);
-  }, [userCoords, locationResolved]);
+  }, [userCoords, open, locationResolved]);
 
   // Reset transient drawer state each time the drawer is closed. Clearing
   // requestedGeo lets us retry the permission prompt if the user denied it
@@ -135,6 +138,7 @@ export default function BoardSearchDrawer({ open, onClose, onBoardOpen }: BoardS
     setSelectedBoardUuid(board.uuid);
     if (board.latitude != null && board.longitude != null) {
       setCenter({ lat: board.latitude, lng: board.longitude });
+      setLocationResolved(true);
       // Keep zoom — user's spatial context shouldn't jump
     }
   }, []);
