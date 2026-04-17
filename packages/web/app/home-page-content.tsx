@@ -116,7 +116,8 @@ function OnboardingCard({ icon, title, description, onClick }: OnboardingCardPro
   );
 }
 
-const IOS_APP_STORE_URL = 'https://apps.apple.com/au/app/boardsesh/id6761350784';
+const IOS_APP_STORE_URL = 'https://apps.apple.com/app/boardsesh/id6761350784';
+const ANDROID_PLAY_STORE_URL = 'https://play.google.com/store/apps/details?id=com.boardsesh.app';
 const ANDROID_LAUNCH_DATE = new Date('2026-04-29T00:00:00Z');
 
 type InstallPlatform = 'unknown' | 'native' | 'android-web' | 'other-web';
@@ -129,6 +130,7 @@ function InstallAppShadowCard() {
       sx={{
         borderRadius: `${themeTokens.borderRadius.lg}px`,
         border: '1px solid var(--neutral-200)',
+        transition: themeTokens.transitions.fast,
       }}
     >
       <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, py: 2, px: 2.5 }}>
@@ -175,14 +177,21 @@ function InstallAppCard({ platform }: { platform: InstallPlatform }) {
   if (platform === 'native') return null;
 
   if (isAndroid) {
-    const description = done
-      ? 'The Android app is live — check Google Play.'
-      : `Landing in ${days}d ${hours}h ${minutes}m ${seconds}s`;
+    if (done) {
+      return (
+        <OnboardingCard
+          icon={<AndroidOutlined />}
+          title="Get the Boardsesh app"
+          description="Now on Google Play"
+          onClick={() => window.open(ANDROID_PLAY_STORE_URL, '_blank', 'noopener,noreferrer')}
+        />
+      );
+    }
     return (
       <OnboardingCard
         icon={<AndroidOutlined />}
         title="Android app is almost here"
-        description={description}
+        description={`Landing in ${days}d ${hours}h ${minutes}m ${seconds}s`}
         onClick={() => {}}
       />
     );
@@ -215,8 +224,7 @@ export default function HomePageContent({ boardConfigs, initialPopularConfigs }:
       setInstallPlatform('native');
       return;
     }
-    const ua = typeof navigator === 'undefined' ? '' : navigator.userAgent;
-    setInstallPlatform(/Android/i.test(ua) ? 'android-web' : 'other-web');
+    setInstallPlatform(/Android/i.test(navigator.userAgent) ? 'android-web' : 'other-web');
   }, []);
 
   useEffect(() => {
