@@ -554,199 +554,199 @@ const LogbookFeedItem: React.FC<LogbookFeedItemProps> = React.memo(({
           className={styles.swipeableContent}
           data-swipe-content=""
         >
-        <div className={styles.content}>
-          {/* Thumbnail with ascent status badge */}
-          <div className={styles.thumbnail}>
-            {item.frames && item.layoutId && (
-              <AscentThumbnail
-                boardType={item.boardType}
-                layoutId={item.layoutId}
-                angle={item.angle}
-                climbUuid={item.climbUuid}
-                climbName={item.climbName}
-                frames={item.frames}
-                isMirror={item.isMirror}
-              />
-            )}
-            {isEditing ? (
-              <ButtonBase
-                className={`${ascentStyles.badge} ${styles.statusBadgeButton}`}
-                onClick={handleStatusBadgeClick}
-                aria-label={`Change ascent status, currently ${editStatus}`}
-              >
-                <AscentStatusIcon
-                  status={editStatus}
-                  variant="badge"
-                  fontSize={12}
+          <div className={styles.content}>
+            {/* Thumbnail with ascent status badge */}
+            <div className={styles.thumbnail}>
+              {item.frames && item.layoutId && (
+                <AscentThumbnail
+                  boardType={item.boardType}
+                  layoutId={item.layoutId}
+                  angle={item.angle}
+                  climbUuid={item.climbUuid}
+                  climbName={item.climbName}
+                  frames={item.frames}
+                  isMirror={item.isMirror}
                 />
-              </ButtonBase>
-            ) : (
-              <div className={ascentStyles.badge} style={{ bottom: 6 }}>
-                <AscentStatusIcon
-                  status={item.status}
-                  variant="badge"
-                  fontSize={12}
-                />
-              </div>
-            )}
-          </div>
-
-          {/* Center section */}
-          <div className={styles.center}>
-            <Typography variant="body2" component="div" sx={nameSx}>
-              {item.climbName}
-            </Typography>
-            <Typography variant="body2" component="div" color="text.secondary" sx={subtitleSx}>
-              {subtitle}
-            </Typography>
-
-            {/* Picker panel (edit mode only) */}
-            {isEditing && (
-              <div className={styles.pickerPanel + (expandedControl ? ' ' + styles.pickerPanelExpanded : '')}>
-                <div className={styles.pickerPanelContent}>
-                  {renderedControl === 'stars' && (
-                    <div className={styles.compactStarPicker}>
-                      <InlineStarPicker quality={editQuality} onSelect={handleStarSelect} />
-                    </div>
-                  )}
-                  {renderedControl === 'grade' && (
-                    <InlineGradePicker
-                      grades={grades}
-                      currentGradeId={editDifficulty}
-                      focusGradeId={focusGradeId}
-                      onSelect={handleGradeSelect}
-                      gradeButtonRef={gradeButtonRef}
-                    />
-                  )}
-                  {renderedControl === 'tries' && (
-                    <InlineTriesPicker
-                      attemptCount={editAttemptCount}
-                      onSelect={handleTriesSelect}
-                      triesButtonRef={triesButtonRef}
-                    />
-                  )}
+              )}
+              {isEditing ? (
+                <ButtonBase
+                  className={`${ascentStyles.badge} ${styles.statusBadgeButton}`}
+                  onClick={handleStatusBadgeClick}
+                  aria-label={`Change ascent status, currently ${editStatus}`}
+                >
+                  <AscentStatusIcon
+                    status={editStatus}
+                    variant="badge"
+                    fontSize={12}
+                  />
+                </ButtonBase>
+              ) : (
+                <div className={ascentStyles.badge} style={{ bottom: 6 }}>
+                  <AscentStatusIcon
+                    status={item.status}
+                    variant="badge"
+                    fontSize={12}
+                  />
                 </div>
-              </div>
-            )}
-
-            <LogbookGradeRow
-              consensusDifficultyName={item.consensusDifficultyName}
-              qualityAverage={item.qualityAverage}
-              difficultyName={item.difficultyName}
-              quality={item.quality}
-              attemptCount={item.attemptCount}
-              isEditing={isEditing}
-              editQuality={editQuality}
-              editDifficulty={editDifficulty}
-              editAttemptCount={editAttemptCount}
-              expandedControl={expandedControl}
-              onExpandControl={setExpandedControl}
-              gradeButtonRef={gradeButtonRef}
-              triesButtonRef={triesButtonRef}
-            />
-
-          </div>
-
-          {/* Menu / save-cancel buttons */}
-          {isEditing ? (
-            <div className={styles.editControls}>
-              <IconButton
-                size="small"
-                onClick={onCancelEdit}
-                aria-label="Cancel editing"
-                sx={{
-                  width: 44,
-                  height: 44,
-                  color: 'text.disabled',
-                }}
-              >
-                <CloseOutlined sx={{ fontSize: 18 }} />
-              </IconButton>
-              <IconButton
-                size="small"
-                onClick={handleSave}
-                disabled={isSaving}
-                aria-label="Save"
-                sx={{
-                  width: 44,
-                  height: 44,
-                  backgroundColor: themeTokens.colors.success,
-                  color: 'common.white',
-                  '&:hover': { backgroundColor: themeTokens.colors.success },
-                }}
-              >
-                {isSaving ? (
-                  <CircularProgress size={18} color="inherit" />
-                ) : (
-                  <SaveOutlined sx={{ fontSize: 18 }} />
-                )}
-              </IconButton>
+              )}
             </div>
-          ) : (
-            <IconButton
-              size="small"
-              aria-label="More actions"
-              onClick={handleOpenActions}
-              className={styles.menuButton}
-              disableRipple
-            >
-              <MoreHorizOutlined />
-            </IconButton>
-          )}
-        </div>
 
-        {/* Comment area — always mounted so edit-mode toggling animates
-            via grid-template-rows rather than popping in/out. */}
-        <div
-          className={
-            !isEditing && !item.comment
-              ? `${styles.commentRow} ${styles.commentRowEmpty}`
-              : styles.commentRow
-          }
-        >
-          <div className={styles.commentRowContent}>
-            {isEditing ? (
-              <TextField
-                fullWidth
-                size="small"
-                variant="outlined"
-                placeholder="Comment..."
-                multiline
-                minRows={1}
-                maxRows={commentFocused ? 4 : 1}
-                value={editComment}
-                onChange={(event) => setEditComment(event.target.value)}
-                onFocus={handleCommentFocus}
-                onBlur={handleCommentBlur}
-                slotProps={{
-                  htmlInput: { maxLength: 2000, 'aria-label': 'Edit tick comment' },
-                  input: {
-                    startAdornment: (
-                      <InputAdornment position="start">
-                        <ChatBubbleOutlineOutlined sx={{ fontSize: 16, opacity: 0.5 }} />
-                      </InputAdornment>
-                    ),
-                  },
-                }}
-                sx={{
-                  '& .MuiOutlinedInput-root': {
-                    borderRadius: `${themeTokens.borderRadius.md}px`,
-                    backgroundColor: 'var(--input-bg)',
-                    '& .MuiOutlinedInput-notchedOutline': {
-                      borderColor: 'var(--neutral-200)',
-                    },
-                  },
-                }}
+            {/* Center section */}
+            <div className={styles.center}>
+              <Typography variant="body2" component="div" sx={nameSx}>
+                {item.climbName}
+              </Typography>
+              <Typography variant="body2" component="div" color="text.secondary" sx={subtitleSx}>
+                {subtitle}
+              </Typography>
+
+              {/* Picker panel (edit mode only) */}
+              {isEditing && (
+                <div className={styles.pickerPanel + (expandedControl ? ' ' + styles.pickerPanelExpanded : '')}>
+                  <div className={styles.pickerPanelContent}>
+                    {renderedControl === 'stars' && (
+                      <div className={styles.compactStarPicker}>
+                        <InlineStarPicker quality={editQuality} onSelect={handleStarSelect} />
+                      </div>
+                    )}
+                    {renderedControl === 'grade' && (
+                      <InlineGradePicker
+                        grades={grades}
+                        currentGradeId={editDifficulty}
+                        focusGradeId={focusGradeId}
+                        onSelect={handleGradeSelect}
+                        gradeButtonRef={gradeButtonRef}
+                      />
+                    )}
+                    {renderedControl === 'tries' && (
+                      <InlineTriesPicker
+                        attemptCount={editAttemptCount}
+                        onSelect={handleTriesSelect}
+                        triesButtonRef={triesButtonRef}
+                      />
+                    )}
+                  </div>
+                </div>
+              )}
+
+              <LogbookGradeRow
+                consensusDifficultyName={item.consensusDifficultyName}
+                qualityAverage={item.qualityAverage}
+                difficultyName={item.difficultyName}
+                quality={item.quality}
+                attemptCount={item.attemptCount}
+                isEditing={isEditing}
+                editQuality={editQuality}
+                editDifficulty={editDifficulty}
+                editAttemptCount={editAttemptCount}
+                expandedControl={expandedControl}
+                onExpandControl={setExpandedControl}
+                gradeButtonRef={gradeButtonRef}
+                triesButtonRef={triesButtonRef}
               />
+
+            </div>
+
+            {/* Menu / save-cancel buttons */}
+            {isEditing ? (
+              <div className={styles.editControls}>
+                <IconButton
+                  size="small"
+                  onClick={onCancelEdit}
+                  aria-label="Cancel editing"
+                  sx={{
+                    width: 44,
+                    height: 44,
+                    color: 'text.disabled',
+                  }}
+                >
+                  <CloseOutlined sx={{ fontSize: 18 }} />
+                </IconButton>
+                <IconButton
+                  size="small"
+                  onClick={handleSave}
+                  disabled={isSaving}
+                  aria-label="Save"
+                  sx={{
+                    width: 44,
+                    height: 44,
+                    backgroundColor: themeTokens.colors.success,
+                    color: 'common.white',
+                    '&:hover': { backgroundColor: themeTokens.colors.success },
+                  }}
+                >
+                  {isSaving ? (
+                    <CircularProgress size={18} color="inherit" />
+                  ) : (
+                    <SaveOutlined sx={{ fontSize: 18 }} />
+                  )}
+                </IconButton>
+              </div>
             ) : (
-              item.comment && (
-                <Typography sx={commentBoxSx}>
-                  {item.comment}
-                </Typography>
-              )
+              <IconButton
+                size="small"
+                aria-label="More actions"
+                onClick={handleOpenActions}
+                className={styles.menuButton}
+                disableRipple
+              >
+                <MoreHorizOutlined />
+              </IconButton>
             )}
           </div>
-        </div>
+
+          {/* Comment area — always mounted so edit-mode toggling animates
+              via grid-template-rows rather than popping in/out. */}
+          <div
+            className={
+              !isEditing && !item.comment
+                ? `${styles.commentRow} ${styles.commentRowEmpty}`
+                : styles.commentRow
+            }
+          >
+            <div className={styles.commentRowContent}>
+              {isEditing ? (
+                <TextField
+                  fullWidth
+                  size="small"
+                  variant="outlined"
+                  placeholder="Comment..."
+                  multiline
+                  minRows={1}
+                  maxRows={commentFocused ? 4 : 1}
+                  value={editComment}
+                  onChange={(event) => setEditComment(event.target.value)}
+                  onFocus={handleCommentFocus}
+                  onBlur={handleCommentBlur}
+                  slotProps={{
+                    htmlInput: { maxLength: 2000, 'aria-label': 'Edit tick comment' },
+                    input: {
+                      startAdornment: (
+                        <InputAdornment position="start">
+                          <ChatBubbleOutlineOutlined sx={{ fontSize: 16, opacity: 0.5 }} />
+                        </InputAdornment>
+                      ),
+                    },
+                  }}
+                  sx={{
+                    '& .MuiOutlinedInput-root': {
+                      borderRadius: `${themeTokens.borderRadius.md}px`,
+                      backgroundColor: 'var(--input-bg)',
+                      '& .MuiOutlinedInput-notchedOutline': {
+                        borderColor: 'var(--neutral-200)',
+                      },
+                    },
+                  }}
+                />
+              ) : (
+                item.comment && (
+                  <Typography sx={commentBoxSx}>
+                    {item.comment}
+                  </Typography>
+                )
+              )}
+            </div>
+          </div>
         </div>
       </div>
 

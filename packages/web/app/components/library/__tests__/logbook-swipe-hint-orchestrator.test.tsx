@@ -137,8 +137,10 @@ describe('LogbookSwipeHintOrchestrator', () => {
     expect(animate).toHaveBeenCalledTimes(2);
 
     // Drive every animation to completion; advance holds/gaps between them.
+    // One iteration per scheduled animation is enough — each call's
+    // advanceTimersByTimeAsync covers any pending HOLD/GAP setTimeout.
     const totalAnimations = REPEAT_COUNT * ANIMATIONS_PER_CYCLE;
-    for (let i = 0; i < totalAnimations + 4; i++) {
+    for (let i = 0; i < totalAnimations; i++) {
       if (animations[i]) {
         animations[i].resolve();
       }

@@ -30,14 +30,21 @@ export default function LogbookSwipeHintOrchestrator() {
 
   useEffect(() => {
     let cancelled = false;
-    let timer: ReturnType<typeof setTimeout>;
+    // Collect every timer we schedule so unmount can clear all of them.
+    // A single `let timer` would only track the most recently assigned id.
+    const timers: ReturnType<typeof setTimeout>[] = [];
+    const schedule = (cb: () => void, ms: number) => {
+      const id = setTimeout(cb, ms);
+      timers.push(id);
+      return id;
+    };
 
     const run = async () => {
       const seen = await getPreference<boolean>(PREF_KEY);
       if (cancelled || seen) return;
       if (!window.matchMedia('(pointer: coarse)').matches) return;
 
-      timer = setTimeout(async () => {
+      schedule(async () => {
         if (cancelled) return;
 
         const contentEl = document.querySelector<HTMLElement>(
@@ -73,7 +80,7 @@ export default function LogbookSwipeHintOrchestrator() {
             if (cancelled) return;
 
             // Hold
-            await new Promise<void>((r) => { timer = setTimeout(r, HOLD_MS); });
+            await new Promise<void>((r) => { schedule(r, HOLD_MS); });
             if (cancelled) return;
 
             // Slide back
@@ -98,7 +105,7 @@ export default function LogbookSwipeHintOrchestrator() {
 
             // Gap before next repeat
             if (i < REPEAT_COUNT - 1) {
-              await new Promise<void>((r) => { timer = setTimeout(r, GAP_BETWEEN_MS); });
+              await new Promise<void>((r) => { schedule(r, GAP_BETWEEN_MS); });
             }
           }
 
@@ -115,7 +122,7 @@ export default function LogbookSwipeHintOrchestrator() {
 
     return () => {
       cancelled = true;
-      clearTimeout(timer);
+      for (const id of timers) clearTimeout(id);
       for (const anim of animationsRef.current) anim.cancel();
       animationsRef.current = [];
     };

@@ -661,6 +661,7 @@ export default function LogbookFeed() {
               onCancelEdit={handleCloseEdit}
               allowInstagramPosting={enableInstagramPosting}
               allowInstagramLinking={enableInstagramLinking && !enableInstagramPosting}
+              // Orchestrator re-queries DOM at animation time, so re-sorts are safe.
               isSwipeHintTarget={index === 0}
             />
           ))}
