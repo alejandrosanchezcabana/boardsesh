@@ -66,12 +66,17 @@ export default function BoardSearchDrawer({ open, onClose, onBoardOpen }: BoardS
 
   // Reset transient drawer state each time the drawer is closed. Clearing
   // requestedGeo lets us retry the permission prompt if the user denied it
-  // last time (e.g. after they grant it in site settings).
+  // last time (e.g. after they grant it in site settings). Resetting the
+  // viewport ensures the next open either auto-centers on the user's
+  // location (if granted) or shows the world fallback — not a half-panned
+  // state left over from the previous session.
   useEffect(() => {
     if (!open) {
       setSelectedBoardUuid(null);
       setQuery('');
       setRequestedGeo(false);
+      setCenter(DEFAULT_CENTER);
+      setZoom(DEFAULT_ZOOM);
     }
   }, [open]);
 
@@ -196,6 +201,8 @@ export default function BoardSearchDrawer({ open, onClose, onBoardOpen }: BoardS
             zoom={zoom}
             boards={boards}
             selectedBoardUuid={selectedBoardUuid}
+            userCoords={userCoords}
+            requestPermission={requestPermission}
             onBoardClick={handleMarkerClick}
             onViewportChange={handleViewportChange}
           />

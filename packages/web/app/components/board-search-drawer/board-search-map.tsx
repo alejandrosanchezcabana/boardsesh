@@ -6,7 +6,6 @@ import MuiButton from '@mui/material/Button';
 import MyLocationOutlined from '@mui/icons-material/MyLocationOutlined';
 import type { Map as LeafletMap, Marker as LeafletMarker, LayerGroup as LeafletLayerGroup } from 'leaflet';
 import type { UserBoard } from '@boardsesh/shared-schema';
-import { useGeolocation } from '@/app/hooks/use-geolocation';
 import { themeTokens } from '@/app/theme/theme-config';
 import markerStyles from './board-search-map.module.css';
 
@@ -19,6 +18,11 @@ interface BoardSearchMapProps {
   zoom: number;
   boards: UserBoard[];
   selectedBoardUuid: string | null;
+  /** Resolved geolocation coordinates (null until the user grants permission). */
+  userCoords: { latitude: number; longitude: number } | null;
+  /** Trigger the browser/OS geolocation prompt. Parent owns the state so this
+   *  doesn't fire a duplicate permission request — the drawer already asked on open. */
+  requestPermission: () => void | Promise<void>;
   onBoardClick: (board: UserBoard) => void;
   onViewportChange: (viewport: { lat: number; lng: number; zoom: number }) => void;
 }
@@ -36,6 +40,8 @@ export default function BoardSearchMap({
   zoom,
   boards,
   selectedBoardUuid,
+  userCoords,
+  requestPermission,
   onBoardClick,
   onViewportChange,
 }: BoardSearchMapProps) {
@@ -63,8 +69,6 @@ export default function BoardSearchMap({
   zoomRef.current = zoom;
   selectedBoardUuidRef.current = selectedBoardUuid;
 
-  const { coordinates: userCoords, requestPermission } = useGeolocation();
-
   // Initialize the map once.
   useEffect(() => {
     const container = containerRef.current;
@@ -73,6 +77,11 @@ export default function BoardSearchMap({
     let cancelled = false;
     let resizeObserver: ResizeObserver | null = null;
 
+    // The `leaflet/dist/leaflet.css` import loads the Leaflet stylesheet via
+    // Next.js's CSS import handling. It isn't a real ES module so TypeScript
+    // can't type-check it — hence the @ts-expect-error. Do NOT remove the
+    // import thinking it's dead code: without it, tile panes, zoom controls,
+    // and attribution render unstyled.
     // @ts-expect-error — CSS dynamic import handled by Next.js bundler
     Promise.all([import('leaflet'), import('leaflet/dist/leaflet.css')]).then(([L]) => {
       if (cancelled || !containerRef.current) return;
