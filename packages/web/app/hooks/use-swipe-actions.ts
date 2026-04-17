@@ -10,6 +10,12 @@ const DEFAULT_SWIPE_THRESHOLD = 100;
 const DEFAULT_MAX_SWIPE = 120;
 // Duration the confirmation checkmark is shown before snapping back
 const CONFIRMATION_DISPLAY_MS = 600;
+/**
+ * Default peek distance in pixels shown while the post-swipe confirmation
+ * is displayed. Shared so coach-mark animations can preview the same offset
+ * users see during a real gesture.
+ */
+export const DEFAULT_CONFIRMATION_PEEK_OFFSET = 76;
 
 export type SwipeZone = 'none' | 'left-short' | 'left-long' | 'right-short' | 'right-long';
 
@@ -80,7 +86,7 @@ export function useSwipeActions({
   maxSwipeLeft,
   maxSwipeRight,
   disabled = false,
-  confirmationPeekOffset = 76,
+  confirmationPeekOffset = DEFAULT_CONFIRMATION_PEEK_OFFSET,
 }: UseSwipeActionsOptions): UseSwipeActionsReturn {
   const [swipeLeftConfirmed, setSwipeLeftConfirmed] = useState(false);
   const confirmationTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);

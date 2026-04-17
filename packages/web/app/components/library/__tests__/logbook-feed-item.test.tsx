@@ -15,7 +15,10 @@ type SwipeOptions = {
 
 let capturedSwipeOptions: SwipeOptions | null = null;
 const updateTickAsyncMock = vi.fn();
-let updateTickIsPending = false;
+// Holder object so tests can mutate isPending and the mock reads the
+// current value on every render (avoids the stale-by-value closure
+// that would result from binding a plain `let` into the mock factory).
+const updateTickState = { isPending: false };
 
 // --- Mocks ---
 
@@ -47,7 +50,9 @@ vi.mock('@/app/hooks/use-swipe-actions', () => ({
 vi.mock('@/app/hooks/use-update-tick', () => ({
   useUpdateTick: () => ({
     mutateAsync: updateTickAsyncMock,
-    isPending: updateTickIsPending,
+    get isPending() {
+      return updateTickState.isPending;
+    },
   }),
 }));
 
@@ -173,7 +178,7 @@ function makeItem(overrides: Partial<AscentFeedItem> = {}): AscentFeedItem {
 beforeEach(() => {
   capturedSwipeOptions = null;
   updateTickAsyncMock.mockReset();
-  updateTickIsPending = false;
+  updateTickState.isPending = false;
 });
 
 // --- Tests ---
@@ -314,6 +319,18 @@ describe('LogbookFeedItem', () => {
     const hiddenLayers = container.querySelectorAll('[aria-hidden="true"]');
     // At minimum the two action layer divs must be aria-hidden.
     expect(hiddenLayers.length).toBeGreaterThanOrEqual(2);
+  });
+
+  it('reflects updateTick.isPending via the getter mock without remount', () => {
+    updateTickState.isPending = true;
+    const { rerender } = render(<LogbookFeedItem item={makeItem()} isEditing />);
+    const saveBtn = screen.getByLabelText('Save') as HTMLButtonElement;
+    expect(saveBtn.disabled).toBe(true);
+
+    updateTickState.isPending = false;
+    rerender(<LogbookFeedItem item={makeItem()} isEditing />);
+    const saveBtn2 = screen.getByLabelText('Save') as HTMLButtonElement;
+    expect(saveBtn2.disabled).toBe(false);
   });
 
   it('keeps the comment row container mounted in both modes (U8)', () => {

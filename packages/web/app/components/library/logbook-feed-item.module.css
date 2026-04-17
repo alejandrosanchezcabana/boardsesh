@@ -219,12 +219,14 @@
    swaps between Typography and TextField on edit-mode toggle. */
 .commentRow {
   padding: 0 var(--spacing-2) var(--spacing-2);
-  transition: min-height 180ms ease-out, padding 180ms ease-out;
+  transition: height 180ms ease-out, padding 180ms ease-out;
 }
 
 /* When empty (no comment, not editing) the row collapses to zero height
-   with no padding, so transitioning back into edit preserves a visible frame. */
+   with no padding. Explicit height:0 + overflow:hidden so a stray
+   conditional child can't reopen the row by its own intrinsic size. */
 .commentRowEmpty {
   padding: 0 var(--spacing-2);
-  min-height: 0;
+  height: 0;
+  overflow: hidden;
 }

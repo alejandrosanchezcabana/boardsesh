@@ -2,10 +2,13 @@
 
 import { useEffect, useRef } from 'react';
 import { getPreference, setPreference } from '@/app/lib/user-preferences-db';
+import { DEFAULT_CONFIRMATION_PEEK_OFFSET } from '@/app/hooks/use-swipe-actions';
 
 const PREF_KEY = 'swipeHint:logbookSeen' as const;
 const INITIAL_DELAY_MS = 1500;
-const PEEK_DISTANCE = 60; // Matches SWIPE_THRESHOLD in logbook-feed-item.tsx
+// Matches the confirmation peek users see after a real swipe-left commit,
+// so the hint previews the exact resting state of the gesture.
+const PEEK_DISTANCE = DEFAULT_CONFIRMATION_PEEK_OFFSET;
 const SLIDE_OUT_MS = 400;
 const HOLD_MS = 600;
 const SLIDE_BACK_MS = 300;
