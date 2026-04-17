@@ -61,18 +61,26 @@ export default function BoardSearchDrawer({ open, onClose, onBoardOpen }: BoardS
     setZoom((prev) => (prev === DEFAULT_ZOOM ? NEARBY_ZOOM : prev));
   }, [userCoords]);
 
-  // Reset selection + query each time the drawer is closed
+  // Reset transient drawer state each time the drawer is closed. Clearing
+  // requestedGeo lets us retry the permission prompt if the user denied it
+  // last time (e.g. after they grant it in site settings).
   useEffect(() => {
     if (!open) {
       setSelectedBoardUuid(null);
       setQuery('');
+      setRequestedGeo(false);
     }
   }, [open]);
 
+  // While the drawer is still at the default world-view fallback, don't fire a
+  // coordinate-based search — the 300 km bucket at zoom 3 would surface a
+  // cluster of boards in Kansas to every user until geolocation resolves.
+  const hasResolvedLocation = center.lat !== DEFAULT_CENTER.lat || center.lng !== DEFAULT_CENTER.lng;
+
   const { boards, isLoading, isFetching, radiusKm, hasMore, isFetchingNextPage, fetchNextPage } = useSearchBoardsMap({
     query,
-    latitude: center.lat,
-    longitude: center.lng,
+    latitude: hasResolvedLocation ? center.lat : null,
+    longitude: hasResolvedLocation ? center.lng : null,
     zoom,
     enabled: open,
   });
@@ -150,7 +158,6 @@ export default function BoardSearchDrawer({ open, onClose, onBoardOpen }: BoardS
           <TextField
             fullWidth
             size="small"
-            autoFocus
             placeholder="Search boards by name or location"
             value={query}
             onChange={(e) => setQuery(e.target.value)}
@@ -222,7 +229,6 @@ export default function BoardSearchDrawer({ open, onClose, onBoardOpen }: BoardS
                 px: 2,
                 py: 1.5,
                 scrollSnapType: 'x proximity',
-                WebkitOverflowScrolling: 'touch',
                 scrollbarWidth: 'none',
                 '&::-webkit-scrollbar': { display: 'none' },
               }}

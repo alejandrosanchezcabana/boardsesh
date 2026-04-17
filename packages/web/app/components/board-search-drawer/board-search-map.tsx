@@ -42,10 +42,18 @@ export default function BoardSearchMap({
   const onBoardClickRef = useRef(onBoardClick);
   const viewportTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const programmaticMoveRef = useRef(false);
+  // Keep the latest center/zoom accessible to the async Leaflet import callback
+  // so the map mounts at whatever the parent has settled on by then, not the
+  // values that were current at first render.
+  const centerRef = useRef(center);
+  const zoomRef = useRef(zoom);
   const [mapReady, setMapReady] = useState(false);
+  const [pendingMyLocation, setPendingMyLocation] = useState(false);
 
   onViewportChangeRef.current = onViewportChange;
   onBoardClickRef.current = onBoardClick;
+  centerRef.current = center;
+  zoomRef.current = zoom;
 
   const { coordinates: userCoords, requestPermission } = useGeolocation();
 
@@ -64,7 +72,7 @@ export default function BoardSearchMap({
       const map = L.map(containerRef.current, {
         zoomControl: true,
         attributionControl: true,
-      }).setView([center.lat, center.lng], zoom);
+      }).setView([centerRef.current.lat, centerRef.current.lng], zoomRef.current);
 
       L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
         maxZoom: 19,
@@ -193,19 +201,39 @@ export default function BoardSearchMap({
     }
   }, [selectedBoardUuid]);
 
-  const handleUseMyLocation = useCallback(() => {
-    if (userCoords) {
+  const flyToUserCoords = useCallback(
+    (coords: { latitude: number; longitude: number }) => {
+      const map = mapRef.current;
+      if (!map) return;
       programmaticMoveRef.current = true;
-      mapRef.current?.flyTo([userCoords.latitude, userCoords.longitude], 13);
+      map.flyTo([coords.latitude, coords.longitude], 13);
       onViewportChangeRef.current({
-        lat: Math.round(userCoords.latitude * 1000000) / 1000000,
-        lng: Math.round(userCoords.longitude * 1000000) / 1000000,
+        lat: Math.round(coords.latitude * 1000000) / 1000000,
+        lng: Math.round(coords.longitude * 1000000) / 1000000,
         zoom: 13,
       });
+    },
+    [],
+  );
+
+  const handleUseMyLocation = useCallback(() => {
+    if (userCoords) {
+      flyToUserCoords(userCoords);
     } else {
+      // Remember the user's intent so we can finish the recenter once the
+      // async permission request resolves — otherwise the first tap just
+      // triggers the permission prompt and looks like a no-op.
+      setPendingMyLocation(true);
       requestPermission();
     }
-  }, [userCoords, requestPermission]);
+  }, [userCoords, requestPermission, flyToUserCoords]);
+
+  // Finish a pending "My location" tap once geolocation resolves.
+  useEffect(() => {
+    if (!pendingMyLocation || !userCoords || !mapReady) return;
+    setPendingMyLocation(false);
+    flyToUserCoords(userCoords);
+  }, [pendingMyLocation, userCoords, mapReady, flyToUserCoords]);
 
   return (
     <Box
