@@ -350,16 +350,18 @@ export default function LogbookFeed() {
     benchmarkOnly: filters.benchmarkOnly || undefined,
   }), [filters]);
 
+  const feedQueryKey = useMemo(() => [
+    'logbookFeed',
+    userId,
+    boardTypeParam ?? 'all',
+    selectedLayoutIds?.join(',') ?? 'all-layouts',
+    climbNameParam ?? '',
+    JSON.stringify(activeFilters),
+    JSON.stringify(sortParams),
+  ], [userId, boardTypeParam, selectedLayoutIds, climbNameParam, activeFilters, sortParams]);
+
   const { data, fetchNextPage, hasNextPage, isFetchingNextPage, isLoading } = useInfiniteQuery({
-    queryKey: [
-      'logbookFeed',
-      userId,
-      boardTypeParam ?? 'all',
-      selectedLayoutIds?.join(',') ?? 'all-layouts',
-      climbNameParam ?? '',
-      JSON.stringify(activeFilters),
-      JSON.stringify(sortParams),
-    ],
+    queryKey: feedQueryKey,
     queryFn: async ({ pageParam }) => {
       const client = createGraphQLHttpClient(token ?? null);
       const variables: GetUserAscentsFeedQueryVariables = {
@@ -427,14 +429,12 @@ export default function LogbookFeed() {
     }
 
     // Find and capture the item before removing it from the cache
-    const currentData = queryClient.getQueryData<{ pages: { items: AscentFeedItem[]; hasMore: boolean }[] }>(
-      ['logbookFeed', userId, boardTypeParam ?? 'all', selectedLayoutIds?.join(',') ?? 'all-layouts', climbNameParam ?? '', JSON.stringify(activeFilters), JSON.stringify(sortParams)]
-    );
+    const currentData = queryClient.getQueryData<{ pages: { items: AscentFeedItem[]; hasMore: boolean }[] }>(feedQueryKey);
     const itemToDelete = currentData?.pages.flatMap((p) => p.items).find((i) => i.uuid === uuid);
 
     // Optimistically remove the item from the cache
     queryClient.setQueryData(
-      ['logbookFeed', userId, boardTypeParam ?? 'all', selectedLayoutIds?.join(',') ?? 'all-layouts', climbNameParam ?? '', JSON.stringify(activeFilters), JSON.stringify(sortParams)],
+      feedQueryKey,
       (old: { pages: { items: AscentFeedItem[]; hasMore: boolean }[]; pageParams: number[] } | undefined) => {
         if (!old) return old;
         return {
@@ -477,7 +477,7 @@ export default function LogbookFeed() {
         }
       },
     }, 5000);
-  }, [token, queryClient, showMessage, userId, boardTypeParam, selectedLayoutIds, climbNameParam, activeFilters, sortParams]);
+  }, [token, queryClient, showMessage, feedQueryKey]);
 
   const handleEdit = useCallback((item: AscentFeedItem) => {
     setEditingItemUuid(item.uuid);

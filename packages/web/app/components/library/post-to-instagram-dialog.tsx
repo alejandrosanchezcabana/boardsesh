@@ -20,6 +20,7 @@ import { useSnackbar } from '@/app/components/providers/snackbar-provider';
 import {
   buildInstagramCaption,
   copyAndOpenInstagram,
+  getBoardDisplayName,
 } from '@/app/lib/instagram-posting';
 import type { BetaLink } from '@/app/lib/api-wrappers/sync-api-types';
 import { themeTokens } from '@/app/theme/theme-config';
@@ -68,6 +69,7 @@ export default function PostToInstagramDialog({
     return buildInstagramCaption({
       climbName: item.climbName,
       angle: item.angle,
+      boardType: item.boardType,
     });
   }, [item]);
 
@@ -172,7 +174,7 @@ export default function PostToInstagramDialog({
             </Box>
 
             <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>
-              <Chip size="small" label="Kilter" color="primary" variant="outlined" />
+              <Chip size="small" label={getBoardDisplayName(item.boardType)} color="primary" variant="outlined" />
               <Chip size="small" label={`${item.angle}°`} variant="outlined" />
               <Chip
                 size="small"

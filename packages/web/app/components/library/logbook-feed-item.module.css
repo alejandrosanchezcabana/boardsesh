@@ -13,8 +13,8 @@
   display: flex;
   align-items: center;
   justify-content: flex-start;
-  padding-left: 16px;
-  gap: 8px;
+  padding-left: var(--spacing-4);
+  gap: var(--spacing-2);
   background-color: var(--color-primary);
   opacity: 0;
   will-change: opacity;
@@ -54,7 +54,7 @@
   display: flex;
   align-items: center;
   justify-content: flex-end;
-  padding-right: 16px;
+  padding-right: var(--spacing-4);
   background-color: var(--color-success);
   opacity: 0;
   will-change: opacity;
@@ -79,8 +79,8 @@
 .content {
   display: flex;
   align-items: flex-start;
-  padding: 12px 8px;
-  gap: 12px;
+  padding: var(--spacing-3) var(--spacing-2);
+  gap: var(--spacing-3);
 }
 
 /* Thumbnail — 50% larger than the standard 64px via scale transform.
@@ -134,13 +134,13 @@
 }
 
 .statValue {
-  font-size: 14px;
+  font-size: var(--font-size-sm);
   font-weight: 700;
   line-height: 1;
 }
 
 .statLabel {
-  font-size: 8px;
+  font-size: var(--font-size-2xs);
   font-weight: 500;
   line-height: 1;
   letter-spacing: 0.02em;
@@ -211,10 +211,10 @@
 }
 
 .compactStarPicker svg {
-  font-size: 18px !important;
+  font-size: var(--font-size-lg) !important;
 }
 
 /* Full-width comment row below the content row */
 .commentRow {
-  padding: 0 8px 8px;
+  padding: 0 var(--spacing-2) var(--spacing-2);
 }
