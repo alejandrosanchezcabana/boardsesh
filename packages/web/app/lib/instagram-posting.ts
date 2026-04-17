@@ -29,6 +29,7 @@ const CLIPBOARD_SETTLE_DELAY_MS = 180;
 function legacyTextareaCopy(text: string): boolean {
   if (typeof document === 'undefined') return false;
 
+  const previouslyFocused = document.activeElement as HTMLElement | null;
   const textarea = document.createElement('textarea');
   textarea.value = text;
   textarea.style.position = 'fixed';
@@ -46,12 +47,14 @@ function legacyTextareaCopy(text: string): boolean {
     return document.execCommand('copy');
   } finally {
     document.body.removeChild(textarea);
+    previouslyFocused?.focus();
   }
 }
 
 function legacyContentEditableCopy(text: string): boolean {
   if (typeof document === 'undefined' || typeof window === 'undefined') return false;
 
+  const previouslyFocused = document.activeElement as HTMLElement | null;
   const container = document.createElement('div');
   container.textContent = text;
   container.contentEditable = 'true';
@@ -77,6 +80,7 @@ function legacyContentEditableCopy(text: string): boolean {
   } finally {
     selection?.removeAllRanges();
     document.body.removeChild(container);
+    previouslyFocused?.focus();
   }
 }
 

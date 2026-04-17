@@ -52,7 +52,12 @@ export default function PostToInstagramDialog({
 }: PostToInstagramDialogProps) {
   const { showMessage } = useSnackbar();
   const [isLaunching, setIsLaunching] = useState(false);
-  const { data: betaLinks = [], isLoading: betaLinksLoading } = useQuery<BetaLink[]>({
+  const {
+    data: betaLinks = [],
+    isLoading: betaLinksLoading,
+    isError: betaLinksError,
+    refetch: refetchBetaLinks,
+  } = useQuery<BetaLink[]>({
     queryKey: ['betaLinks', item?.boardType, item?.climbUuid],
     queryFn: async () => {
       if (!item) return [];
@@ -309,6 +314,15 @@ export default function PostToInstagramDialog({
             {betaLinksLoading ? (
               <Box sx={{ display: 'flex', justifyContent: 'center', py: 4 }}>
                 <CircularProgress size={24} />
+              </Box>
+            ) : betaLinksError ? (
+              <Box sx={{ mt: 1, display: 'flex', alignItems: 'center', gap: 1.5 }}>
+                <Typography variant="body2" color="error">
+                  Couldn&apos;t load beta videos.
+                </Typography>
+                <Button size="small" onClick={() => { void refetchBetaLinks(); }}>
+                  Retry
+                </Button>
               </Box>
             ) : (
               <Box sx={{ mt: 1 }}>
