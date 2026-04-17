@@ -105,7 +105,7 @@ export const ShareBoardButton = () => {
             <Button
               variant="contained"
               startIcon={<AppleOutlined />}
-              href="https://apps.apple.com/au/app/boardsesh/id6761350784"
+              href="https://apps.apple.com/app/boardsesh/id6761350784"
               target="_blank"
               onClick={() => setUnsupportedOpen(false)}
             >
