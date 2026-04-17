@@ -43,9 +43,17 @@ export default function BoardSearchDrawer({ open, onClose, onBoardOpen }: BoardS
   const [zoom, setZoom] = useState(DEFAULT_ZOOM);
   const [selectedBoardUuid, setSelectedBoardUuid] = useState<string | null>(null);
   const [requestedGeo, setRequestedGeo] = useState(false);
+  // True once the map has been panned by the user or geolocation has resolved.
+  // Kept separate from `center` to avoid the footgun where center === DEFAULT_CENTER
+  // would silently suppress coordinate-based queries for users at exactly (20, 0).
+  const [locationResolved, setLocationResolved] = useState(false);
 
   const carouselRef = useRef<HTMLDivElement>(null);
   const cardRefs = useRef<Map<string, HTMLDivElement>>(new Map());
+  // Mirrors locationResolved state so the geolocation effect can guard against
+  // re-running without adding locationResolved to its dep array (which would
+  // cause a second no-op run every time the effect sets it to true).
+  const locationResolvedRef = useRef(false);
 
   // Ask for the user's location on first open. If granted we'll recenter to ~20km view.
   useEffect(() => {
@@ -55,14 +63,17 @@ export default function BoardSearchDrawer({ open, onClose, onBoardOpen }: BoardS
   }, [open, requestedGeo, requestPermission]);
 
   useEffect(() => {
-    if (!userCoords) return;
-    setCenter((prev) => {
-      // Only auto-center if we're still at the default world view
-      if (prev.lat !== DEFAULT_CENTER.lat || prev.lng !== DEFAULT_CENTER.lng) return prev;
-      return { lat: userCoords.latitude, lng: userCoords.longitude };
-    });
+    // !open guard: the close-effect sets locationResolved=false which re-triggers
+    // this effect while the drawer is still closed. Bail out then; the dep change
+    // on open=true when the drawer reopens will run the effect at the right time.
+    // locationResolvedRef (not state) is used here so adding it to deps doesn't
+    // cause a second no-op run after this effect sets locationResolved=true.
+    if (!userCoords || !open || locationResolvedRef.current) return;
+    setCenter({ lat: userCoords.latitude, lng: userCoords.longitude });
     setZoom((prev) => (prev === DEFAULT_ZOOM ? NEARBY_ZOOM : prev));
-  }, [userCoords]);
+    locationResolvedRef.current = true;
+    setLocationResolved(true);
+  }, [userCoords, open]);
 
   // Reset transient drawer state each time the drawer is closed. Clearing
   // requestedGeo lets us retry the permission prompt if the user denied it
@@ -77,18 +88,18 @@ export default function BoardSearchDrawer({ open, onClose, onBoardOpen }: BoardS
       setRequestedGeo(false);
       setCenter(DEFAULT_CENTER);
       setZoom(DEFAULT_ZOOM);
+      locationResolvedRef.current = false;
+      setLocationResolved(false);
     }
   }, [open]);
 
-  // While the drawer is still at the default world-view fallback, don't fire a
-  // coordinate-based search — the 300 km bucket at zoom 3 would surface a
-  // cluster of boards in Kansas to every user until geolocation resolves.
-  const hasResolvedLocation = center.lat !== DEFAULT_CENTER.lat || center.lng !== DEFAULT_CENTER.lng;
-
   const { boards, isLoading, isFetching, radiusKm, hasMore, isFetchingNextPage, fetchNextPage } = useSearchBoardsMap({
     query,
-    latitude: hasResolvedLocation ? center.lat : null,
-    longitude: hasResolvedLocation ? center.lng : null,
+    // While the map is still at the default world-view fallback (locationResolved=false),
+    // don't fire a coordinate-based search — the 300 km bucket at zoom 3 would surface a
+    // cluster of boards in Kansas to every user until geolocation resolves.
+    latitude: locationResolved ? center.lat : null,
+    longitude: locationResolved ? center.lng : null,
     zoom,
     enabled: open,
   });
@@ -111,6 +122,8 @@ export default function BoardSearchDrawer({ open, onClose, onBoardOpen }: BoardS
     ({ lat, lng, zoom: z }: { lat: number; lng: number; zoom: number }) => {
       setCenter({ lat, lng });
       setZoom(z);
+      locationResolvedRef.current = true;
+      setLocationResolved(true);
     },
     [],
   );
@@ -134,6 +147,8 @@ export default function BoardSearchDrawer({ open, onClose, onBoardOpen }: BoardS
     setSelectedBoardUuid(board.uuid);
     if (board.latitude != null && board.longitude != null) {
       setCenter({ lat: board.latitude, lng: board.longitude });
+      locationResolvedRef.current = true;
+      setLocationResolved(true);
       // Keep zoom — user's spatial context shouldn't jump
     }
   }, []);
