@@ -28,6 +28,7 @@ import { constructBoardSlugListUrl, constructClimbListWithSlugs, tryConstructSlu
 import { getDefaultAngleForBoard } from '@/app/lib/board-config-for-playlist';
 import type { BoardConfigData } from '@/app/lib/server-board-configs';
 import type { UserBoard, PopularBoardConfig } from '@boardsesh/shared-schema';
+import { track } from '@vercel/analytics';
 import { setClimbSessionCookie } from '@/app/lib/climb-session-cookie';
 
 const StartSeshDrawer = dynamic(
@@ -165,7 +166,10 @@ function InstallAppCard({ platform }: { platform: InstallPlatform }) {
           icon={<AndroidOutlined />}
           title="Get the Boardsesh app"
           description="Now on Google Play"
-          onClick={() => window.open(ANDROID_PLAY_STORE_URL, '_blank', 'noopener,noreferrer')}
+          onClick={() => {
+            track('App Install Click', { platform: 'android', source: 'google-play' });
+            window.open(ANDROID_PLAY_STORE_URL, '_blank', 'noopener,noreferrer');
+          }}
         />
       );
     }
@@ -174,7 +178,10 @@ function InstallAppCard({ platform }: { platform: InstallPlatform }) {
         icon={<AndroidOutlined />}
         title="Android app is almost here"
         description={`Landing in ${days}d ${hours}h ${minutes}m ${seconds}s. Tap to sideload the preview build.`}
-        onClick={() => window.open(ANDROID_SIDELOAD_URL, '_blank', 'noopener,noreferrer')}
+        onClick={() => {
+          track('App Install Click', { platform: 'android', source: 'github-sideload' });
+          window.open(ANDROID_SIDELOAD_URL, '_blank', 'noopener,noreferrer');
+        }}
       />
     );
   }
@@ -184,7 +191,10 @@ function InstallAppCard({ platform }: { platform: InstallPlatform }) {
       icon={<AppleIcon />}
       title="Get the Boardsesh app"
       description="Lights up holds on your board straight from your phone"
-      onClick={() => window.open(IOS_APP_STORE_URL, '_blank', 'noopener,noreferrer')}
+      onClick={() => {
+        track('App Install Click', { platform: 'ios', source: 'app-store' });
+        window.open(IOS_APP_STORE_URL, '_blank', 'noopener,noreferrer');
+      }}
     />
   );
 }
