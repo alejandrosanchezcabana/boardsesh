@@ -5,11 +5,8 @@ import Skeleton from '@mui/material/Skeleton';
 export default function YouLoading() {
   return (
     <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-      {/* Stats summary skeleton */}
       <Skeleton variant="rounded" height={120} animation="wave" sx={{ borderRadius: '12px' }} />
-      {/* Charts skeleton */}
       <Skeleton variant="rounded" height={200} animation="wave" sx={{ borderRadius: '12px' }} />
-      {/* Board stats skeleton */}
       <Skeleton variant="rounded" height={160} animation="wave" sx={{ borderRadius: '12px' }} />
     </Box>
   );
