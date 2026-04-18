@@ -60,6 +60,7 @@ import {
 } from '@/app/lib/graphql/operations/ticks';
 import { useSnackbar } from '@/app/components/providers/snackbar-provider';
 import LogbookFeedItem from './logbook-feed-item';
+import LogbookSwipeHintOrchestrator from './logbook-swipe-hint-orchestrator';
 import { isInstagramPostingSupported } from '@/app/lib/instagram-posting';
 import styles from './library.module.css';
 import feedStyles from '@/app/components/activity-feed/ascents-feed.module.css';
@@ -416,13 +417,20 @@ export default function LogbookFeed() {
     };
   }, []);
 
+  // Keep token in a ref so handleDelete stays stable across auth refreshes,
+  // which would otherwise invalidate React.memo on every LogbookFeedItem.
+  const tokenRef = useRef(token);
+  useEffect(() => {
+    tokenRef.current = token;
+  }, [token]);
+
   const handleDelete = useCallback((uuid: string) => {
     // If there's already a pending delete for a different item, flush it immediately
     if (pendingDeleteRef.current && pendingDeleteRef.current.uuid !== uuid) {
       const { uuid: prevUuid, timerId } = pendingDeleteRef.current;
       clearTimeout(timerId);
       pendingDeleteRef.current = null;
-      const client = createGraphQLHttpClient(token ?? null);
+      const client = createGraphQLHttpClient(tokenRef.current ?? null);
       client.request<{ deleteTick: boolean }, DeleteTickMutationVariables>(DELETE_TICK, { uuid: prevUuid }).catch(() => {
         showMessage('Failed to delete tick', 'error');
       });
@@ -449,7 +457,7 @@ export default function LogbookFeed() {
 
     const timerId = setTimeout(() => {
       pendingDeleteRef.current = null;
-      const client = createGraphQLHttpClient(token ?? null);
+      const client = createGraphQLHttpClient(tokenRef.current ?? null);
       client
         .request<{ deleteTick: boolean }, DeleteTickMutationVariables>(DELETE_TICK, { uuid })
         .then(() => {
@@ -477,7 +485,7 @@ export default function LogbookFeed() {
         }
       },
     }, 5000);
-  }, [token, queryClient, showMessage, feedQueryKey]);
+  }, [queryClient, showMessage, feedQueryKey]);
 
   const handleEdit = useCallback((item: AscentFeedItem) => {
     setEditingItemUuid(item.uuid);
@@ -489,6 +497,7 @@ export default function LogbookFeed() {
 
   const showBoardType = boardFilter === 'all';
   const hasFilters = boardFilter !== 'all' || debouncedSearch.length > 0 || !isDefaultFilters(filters);
+  // Posting and linking are mutually exclusive — see `allowInstagramLinking` below.
   const enableInstagramPosting = pathname === '/you/logbook' && isNarrowViewport && isInstagramPostingSupported();
   const enableInstagramLinking = pathname === '/you/logbook';
 
@@ -638,9 +647,10 @@ export default function LogbookFeed() {
   return (
     <>
       {filterBar}
+      <LogbookSwipeHintOrchestrator />
       <div className={feedStyles.feed}>
         <Box sx={{ display: 'flex', flexDirection: 'column' }}>
-          {items.map((item) => (
+          {items.map((item, index) => (
             <LogbookFeedItem
               key={item.uuid}
               item={item}
@@ -651,6 +661,8 @@ export default function LogbookFeed() {
               onCancelEdit={handleCloseEdit}
               allowInstagramPosting={enableInstagramPosting}
               allowInstagramLinking={enableInstagramLinking && !enableInstagramPosting}
+              // Orchestrator re-queries DOM at animation time, so re-sorts are safe.
+              isSwipeHintTarget={index === 0}
             />
           ))}
         </Box>

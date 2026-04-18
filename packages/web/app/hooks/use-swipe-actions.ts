@@ -10,6 +10,12 @@ const DEFAULT_SWIPE_THRESHOLD = 100;
 const DEFAULT_MAX_SWIPE = 120;
 // Duration the confirmation checkmark is shown before snapping back
 const CONFIRMATION_DISPLAY_MS = 600;
+/**
+ * Default peek distance in pixels shown while the post-swipe confirmation
+ * is displayed. Shared so coach-mark animations can preview the same offset
+ * users see during a real gesture.
+ */
+export const DEFAULT_CONFIRMATION_PEEK_OFFSET = 76;
 
 export type SwipeZone = 'none' | 'left-short' | 'left-long' | 'right-short' | 'right-long';
 
@@ -80,7 +86,7 @@ export function useSwipeActions({
   maxSwipeLeft,
   maxSwipeRight,
   disabled = false,
-  confirmationPeekOffset = 76,
+  confirmationPeekOffset = DEFAULT_CONFIRMATION_PEEK_OFFSET,
 }: UseSwipeActionsOptions): UseSwipeActionsReturn {
   const [swipeLeftConfirmed, setSwipeLeftConfirmed] = useState(false);
   const confirmationTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -170,6 +176,9 @@ export function useSwipeActions({
       contentEl.current.style.transition = 'transform 120ms ease-out';
       contentEl.current.style.transform = `translateX(${-confirmationPeekOffset}px)`;
     }
+    // Keep offsetRef in sync with the visual peek state so gesture handlers
+    // (e.g. onTouchEndOrOnMouseUp) read the true position if a new gesture lands.
+    offsetRef.current = -confirmationPeekOffset;
 
     // Keep the right action layer fully visible during confirmation
     if (rightActionEl.current) {
@@ -180,15 +189,18 @@ export function useSwipeActions({
     // After the confirmation display, snap back
     confirmationTimerRef.current = setTimeout(() => {
       confirmationTimerRef.current = null;
+      // If the element has unmounted (e.g. list virtualization), skip DOM work.
+      if (!contentEl.current) {
+        setSwipeLeftConfirmed(false);
+        return;
+      }
       // Set transition on right action before applyOffset changes values so it fades out smoothly
       if (rightActionEl.current) {
         rightActionEl.current.style.transition = 'opacity 200ms ease-out, visibility 0s 200ms';
       }
       applyOffset(0);
       // Override content transition with a gentler one for the confirmation snap-back
-      if (contentEl.current) {
-        contentEl.current.style.transition = 'transform 200ms ease-out';
-      }
+      contentEl.current.style.transition = 'transform 200ms ease-out';
       updateSwipeZone('none');
       setSwipeLeftConfirmed(false);
     }, CONFIRMATION_DISPLAY_MS);

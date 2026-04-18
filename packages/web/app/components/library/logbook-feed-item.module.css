@@ -71,7 +71,6 @@
 .swipeableContent {
   position: relative;
   background-color: var(--semantic-surface, #fff);
-  cursor: pointer;
   user-select: none;
 }
 
@@ -84,7 +83,8 @@
 }
 
 /* Thumbnail — 50% larger than the standard 64px via scale transform.
-   The wrapper reserves 96px of space while the inner 64px content scales up to fill it. */
+   The wrapper reserves 96px of space while the inner 64px content scales up to fill it.
+   overflow:hidden keeps the scale(1.5) transform clipped to the 96px box. */
 .thumbnail {
   width: 96px;
   height: 96px;
@@ -93,6 +93,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
+  overflow: hidden;
 }
 
 .thumbnail > :first-child {
@@ -213,7 +214,22 @@
   font-size: var(--font-size-lg) !important;
 }
 
-/* Full-width comment row below the content row */
+/* Full-width comment row below the content row.
+   Uses the grid-template-rows 0fr/1fr trick to get a smooth collapse
+   between edit and non-edit modes — height auto cannot interpolate. */
 .commentRow {
+  display: grid;
+  grid-template-rows: 1fr;
   padding: 0 var(--spacing-2) var(--spacing-2);
+  transition: grid-template-rows 180ms ease-out, padding 180ms ease-out;
+}
+
+.commentRowEmpty {
+  grid-template-rows: 0fr;
+  padding: 0 var(--spacing-2);
+}
+
+.commentRowContent {
+  overflow: hidden;
+  min-height: 0;
 }
