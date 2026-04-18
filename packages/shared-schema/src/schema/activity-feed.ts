@@ -126,6 +126,8 @@ export const activityFeedTypeDefs = /* GraphQL */ `
     offset: Int
     "Optional board type filter (kilter, tension, moonboard)"
     boardType: String
+    "Optional board type filter for multiple board types"
+    boardTypes: [String!]
     "Optional layout filters within the selected board type"
     layoutIds: [Int!]
     "Legacy status filter (flash, send, attempt)"

@@ -1,4 +1,4 @@
-import { eq, and, desc, inArray, sql, count, ilike, gte, lte } from 'drizzle-orm';
+import { eq, and, or, desc, inArray, sql, count, ilike, gte, lte } from 'drizzle-orm';
 import type { ConnectionContext, BoardName } from '@boardsesh/shared-schema';
 import { SUPPORTED_BOARDS } from '@boardsesh/shared-schema';
 import { db } from '../../../db/client';
@@ -142,6 +142,7 @@ export const tickQueries = {
         limit?: number;
         offset?: number;
         boardType?: string;
+        boardTypes?: string[];
         layoutIds?: number[];
         status?: string;
         statusMode?: string;
@@ -170,6 +171,7 @@ export const tickQueries = {
     const limit = validatedInput.limit ?? 20;
     const offset = validatedInput.offset ?? 0;
     const boardType = validatedInput.boardType;
+    const boardTypes = validatedInput.boardTypes;
     const layoutIds = validatedInput.layoutIds;
     const climbName = validatedInput.climbName;
     const sortBy = validatedInput.sortBy ?? 'recent';
@@ -196,6 +198,7 @@ export const tickQueries = {
     const tickConditions = [
       eq(dbSchema.boardseshTicks.userId, userId),
       ...(boardType ? [eq(dbSchema.boardseshTicks.boardType, boardType)] : []),
+      ...(boardTypes && boardTypes.length > 0 && !boardType ? [inArray(dbSchema.boardseshTicks.boardType, boardTypes)] : []),
       ...(minDifficulty !== undefined ? [gte(dbSchema.boardseshTicks.difficulty, minDifficulty)] : []),
       ...(maxDifficulty !== undefined ? [lte(dbSchema.boardseshTicks.difficulty, maxDifficulty)] : []),
       ...(minAngle !== undefined ? [gte(dbSchema.boardseshTicks.angle, minAngle)] : []),
@@ -267,7 +270,10 @@ export const tickQueries = {
     const allConditions = [
       ...tickConditions,
       ...(layoutIds && layoutIds.length > 0 ? [inArray(dbSchema.boardClimbs.layoutId, layoutIds)] : []),
-      ...(climbName ? [ilike(dbSchema.boardClimbs.name, `%${escapeLikePattern(climbName)}%`)] : []),
+      ...(climbName ? [or(
+        ilike(dbSchema.boardClimbs.name, `%${escapeLikePattern(climbName)}%`),
+        ilike(dbSchema.boardseshTicks.comment, `%${escapeLikePattern(climbName)}%`),
+      )] : []),
     ];
 
     // Get total count

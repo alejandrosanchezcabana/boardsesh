@@ -271,6 +271,7 @@ export function useProfileData(userId: string, initialData?: InitialData) {
 
     // Profile stats summary
     loadingProfileStats,
+    layoutStats: profileStats?.layoutStats ?? [],
     statisticsSummary,
     hardestSend,
     hardestFlash,

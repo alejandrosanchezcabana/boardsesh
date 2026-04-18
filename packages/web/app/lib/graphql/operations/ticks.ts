@@ -174,6 +174,7 @@ export interface GetUserAscentsFeedQueryVariables {
     limit?: number;
     offset?: number;
     boardType?: string;
+    boardTypes?: string[];
     layoutIds?: number[];
     status?: 'flash' | 'send' | 'attempt';
     statusMode?: 'both' | 'send' | 'attempt';

@@ -74,6 +74,7 @@ export const AscentFeedInputSchema = z.object({
   limit: z.number().int().min(1).max(50).optional().default(20),
   offset: z.number().int().min(0).optional().default(0),
   boardType: BoardNameSchema.optional(),
+  boardTypes: z.array(BoardNameSchema).optional(),
   layoutIds: z.array(z.number().int().positive()).optional(),
   status: z.enum(['flash', 'send', 'attempt']).optional(),
   statusMode: z.enum(['both', 'send', 'attempt']).optional(),

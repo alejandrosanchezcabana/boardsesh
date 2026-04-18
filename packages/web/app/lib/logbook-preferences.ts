@@ -38,7 +38,7 @@ export const DEFAULT_ANGLE_RANGE: [number, number] = [0, 70];
 
 export const DEFAULT_FILTERS: LogbookFilterState = {
   includeSends: true,
-  includeAttempts: false,
+  includeAttempts: true,
   flashOnly: false,
   minGrade: '',
   maxGrade: '',
