@@ -4,6 +4,12 @@
 
 # Getting Started
 
+## How to get everything going
+
+If you want to fix bugs, build features, or make this app even better, follow the instructions described in this [blogpost](https://www.linkedin.com/pulse/git-github-demystified-guide-open-source-contribution-nishan-baral-i4ndc), take into account that the blogpost is generic and it's not specifically targeted to boardeash contributions.
+
+You can also check out this [video](https://www.youtube.com/watch?v=dSl_qnWO104) which explains the procedure (yes, it is super old, but the concepts are still valid).
+
 ## One-Command Setup
 
 Run the automated setup script:
@@ -22,11 +28,11 @@ This script will:
 - Run database migrations
 - Perform final checks
 
-Once you've ran setup, you will have a copy of both the Tension and Kilter climbs database on your computer!!
+Once you've run setup, you will have a copy of both the Tension and Kilter climbs database on your computer!!
 
 ## Start Developing
 
-After setup completes, there will be a docker container running with the database and shared date, you can then start the development server:
+After setup completes, there will be a Docker container running with the database and shared data; you can then start the development server:
 
 ```bash
 bun run dev
@@ -34,9 +40,9 @@ bun run dev
 
 Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
 
-### Keeping local data up to date
+## Keeping local data up to date
 
-#### Shared Data Sync (Public Climbs)
+### Shared Data Sync (Public Climbs)
 
 Once your server is running, you can manually trigger shared sync by visiting:
 
@@ -45,11 +51,12 @@ Once your server is running, you can manually trigger shared sync by visiting:
 
 This will sync the latest climbs, climb stats, beta links, and other data from Aurora's servers.
 
-#### Aurora User Data Sync (One-Way Only)
+### Aurora User Data Sync (One-Way Only)
 
 **Important**: Aurora user data sync is **one-way only** (Aurora → Boardsesh).
 
 When you link your Aurora account in the app settings:
+
 - Your Aurora data (logbook, ascents, climbs) is automatically imported to Boardsesh
 - Data syncs immediately when you first link your account
 - Automatic background sync runs every 6 hours to keep your data up-to-date
@@ -59,13 +66,13 @@ This is due to Aurora API limitations. Any ascents, climbs, or other data you cr
 
 # Current status
 
-Basic board use works, and the app already has queue controls, open to feedback and contributions!
+Basic board use works, and the app already has queue controls. Open to feedback and contributions!
 Using the share button in the top right corner, users can connect to each other and control the board and queue together.
-Similar to Spotify Jams, no more "What climb was that?", "what climb was the last one?", "Mind if I change it?", questions during a sesh
+Similar to Spotify Jams, no more "What climb was that?" "What climb was the last one?" "Mind if I change it?" questions during a sesh
 
-## IOS support
+## iOS support
 
-Unfortunately mobile safari doesn't support web bluetooth. So to use this website on your phone you could install a ios browser that does have web ble support, for example: https://apps.apple.com/us/app/bluefy-web-ble-browser/id1492822055
+Unfortunately, mobile Safari doesn't support web bluetooth. So to use this website on your phone, you could install an iOS browser that does have WebBLE support, for example, https://apps.apple.com/us/app/bluefy-web-ble-browser/id1492822055
 
 Bluefy is what I tested boardsesh in on my iphone and it worked like expected.
 

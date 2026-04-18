@@ -80,3 +80,6 @@ packages/web/public/openapi.json
 .claude/settings.local.json
 packages/db/docker/tmp/g
 packages/db/docker/tmp/
+
+# local environment variables
+.env.local
