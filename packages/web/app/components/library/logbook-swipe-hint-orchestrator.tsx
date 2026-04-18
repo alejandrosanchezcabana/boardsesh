@@ -13,7 +13,10 @@ const SLIDE_OUT_MS = 400;
 const HOLD_MS = 600;
 const SLIDE_BACK_MS = 300;
 const GAP_BETWEEN_MS = 300;
-const REPEAT_COUNT = 2;
+export const REPEAT_COUNT = 2;
+// Each iteration invokes element.animate() 4 times: slide out, fade in,
+// slide back, fade out. Exported so tests stay in sync if the sequence changes.
+export const ANIMATIONS_PER_CYCLE = 4;
 
 /**
  * Plays a one-time swipe-hint animation on the first logbook feed item.
@@ -110,7 +113,8 @@ export default function LogbookSwipeHintOrchestrator() {
           }
 
           if (!cancelled) {
-            setPreference(PREF_KEY, true);
+            // Fire-and-forget: if this write fails, the hint replays next visit.
+            setPreference(PREF_KEY, true).catch(() => {});
           }
         } catch {
           // Animation cancelled

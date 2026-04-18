@@ -2,12 +2,6 @@ import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { render, act } from '@testing-library/react';
 import React from 'react';
 
-// Mirrors REPEAT_COUNT in logbook-swipe-hint-orchestrator.tsx. The
-// orchestrator invokes element.animate 4x per cycle (slide out, fade in,
-// slide back, fade out), so total calls = REPEAT_COUNT * ANIMATIONS_PER_CYCLE.
-const REPEAT_COUNT = 2;
-const ANIMATIONS_PER_CYCLE = 4;
-
 const getPreferenceMock = vi.fn();
 const setPreferenceMock = vi.fn();
 
@@ -16,7 +10,10 @@ vi.mock('@/app/lib/user-preferences-db', () => ({
   setPreference: (...args: unknown[]) => setPreferenceMock(...args),
 }));
 
-import LogbookSwipeHintOrchestrator from '../logbook-swipe-hint-orchestrator';
+import LogbookSwipeHintOrchestrator, {
+  REPEAT_COUNT,
+  ANIMATIONS_PER_CYCLE,
+} from '../logbook-swipe-hint-orchestrator';
 
 type FakeAnimation = {
   finished: Promise<void>;
@@ -76,6 +73,8 @@ function mountTarget() {
 beforeEach(() => {
   getPreferenceMock.mockReset();
   setPreferenceMock.mockReset();
+  // Default to a resolved promise so the orchestrator's .catch() chain is safe.
+  setPreferenceMock.mockResolvedValue(undefined);
   document.body.innerHTML = '';
   vi.useFakeTimers();
 });
@@ -149,6 +148,28 @@ describe('LogbookSwipeHintOrchestrator', () => {
 
     expect(animate).toHaveBeenCalledTimes(totalAnimations);
     expect(setPreferenceMock).toHaveBeenCalledWith('swipeHint:logbookSeen', true);
+  });
+
+  it('swallows setPreference rejection without raising unhandled errors', async () => {
+    getPreferenceMock.mockResolvedValue(null);
+    setPreferenceMock.mockRejectedValue(new Error('idb write failed'));
+    installMatchMedia(true);
+    const { animations } = installFakeAnimations();
+    mountTarget();
+
+    render(<LogbookSwipeHintOrchestrator />);
+    await act(async () => { await vi.advanceTimersByTimeAsync(1600); });
+
+    const totalAnimations = REPEAT_COUNT * ANIMATIONS_PER_CYCLE;
+    for (let i = 0; i < totalAnimations; i++) {
+      if (animations[i]) {
+        animations[i].resolve();
+      }
+      await act(async () => { await vi.advanceTimersByTimeAsync(1000); });
+    }
+
+    expect(setPreferenceMock).toHaveBeenCalledWith('swipeHint:logbookSeen', true);
+    // A missing .catch() here would surface as an unhandled rejection and fail the test.
   });
 
   it('cancels in-flight animations and does not mark seen when unmounted early', async () => {

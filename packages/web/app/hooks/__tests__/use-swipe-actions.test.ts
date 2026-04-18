@@ -468,6 +468,50 @@ describe('useSwipeActions', () => {
     expect(mockContent.style.transform).toBe('translateX(0px)');
   });
 
+  it('syncs offsetRef to peek offset during confirmation so a follow-up gesture snaps back', () => {
+    // Regression: before the E4 fix, offsetRef retained the gesture's end delta
+    // (e.g. -110) while the visual state was at the peek offset (-76). A touch/mouse-up
+    // landing during confirmation would see |offsetRef| >= threshold and skip resetOffset,
+    // leaving the content stuck at the peek position.
+    const options = createDefaultOptions();
+    const { result } = renderHook(() => useSwipeActions(options));
+
+    const mockContent = {
+      style: { transform: '', transition: '', opacity: '', visibility: '' },
+    } as unknown as HTMLElement;
+
+    act(() => {
+      result.current.contentRef(mockContent);
+    });
+
+    mockIsHorizontalRef.current = true;
+    mockDetect.mockReturnValue(true);
+
+    // Commit a left swipe past threshold — content is now at peek offset.
+    act(() => {
+      capturedSwipeableConfig.onSwiping({
+        deltaX: -110,
+        deltaY: 0,
+        event: { nativeEvent: { preventDefault: vi.fn() } },
+      });
+    });
+    act(() => {
+      capturedSwipeableConfig.onSwipedLeft({ deltaX: -110 });
+    });
+
+    expect(mockContent.style.transform).toBe('translateX(-76px)');
+
+    // A new touch/mouse-up fires while the confirmation peek is still visible.
+    // With the sync, |offsetRef| = 76 < threshold(100), so resetOffset runs and
+    // content snaps back to 0. Without the sync, offsetRef would still be -110
+    // and the content would remain stuck at -76 until the confirmation timer fires.
+    act(() => {
+      capturedSwipeableConfig.onTouchEndOrOnMouseUp();
+    });
+
+    expect(mockContent.style.transform).toBe('translateX(0px)');
+  });
+
   it('handles rapid double-swipe without duplicate actions', () => {
     const options = createDefaultOptions();
     renderHook(() => useSwipeActions(options));
