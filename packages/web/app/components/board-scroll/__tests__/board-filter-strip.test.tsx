@@ -284,3 +284,142 @@ describe('BoardFilterStrip', () => {
     expect(onBoardSelect).toHaveBeenCalledWith(tensionBoard);
   });
 });
+
+// ---------- Multi-select mode ----------
+
+describe('BoardFilterStrip (multiSelect)', () => {
+  let onBoardToggle: ReturnType<typeof vi.fn<(board: UserBoard | null) => void>>;
+
+  beforeEach(() => {
+    onBoardToggle = vi.fn<(board: UserBoard | null) => void>();
+  });
+
+  it('renders all boards in multi-select mode', () => {
+    const { getByText } = render(
+      <BoardFilterStrip
+        multiSelect
+        boards={[kilterBoard, tensionBoard]}
+        loading={false}
+        selectedBoards={[]}
+        onBoardToggle={onBoardToggle}
+      />,
+    );
+
+    expect(getByText('All Boards')).toBeDefined();
+    expect(getByText('My Kilter')).toBeDefined();
+    expect(getByText('My Tension')).toBeDefined();
+  });
+
+  it('"All" is selected when selectedBoards is empty', () => {
+    const { getByText } = render(
+      <BoardFilterStrip
+        multiSelect
+        boards={[kilterBoard]}
+        loading={false}
+        selectedBoards={[]}
+        onBoardToggle={onBoardToggle}
+      />,
+    );
+
+    const allCard = getByText('All').parentElement!;
+    expect(allCard.className).toContain('cardSquareSelected');
+  });
+
+  it('"All" is not selected when boards are selected', () => {
+    const { getByText } = render(
+      <BoardFilterStrip
+        multiSelect
+        boards={[kilterBoard, tensionBoard]}
+        loading={false}
+        selectedBoards={[kilterBoard]}
+        onBoardToggle={onBoardToggle}
+      />,
+    );
+
+    const allCard = getByText('All').parentElement!;
+    expect(allCard.className).not.toContain('cardSquareSelected');
+  });
+
+  it('clicking "All" calls onBoardToggle(null)', () => {
+    const { getByText } = render(
+      <BoardFilterStrip
+        multiSelect
+        boards={[kilterBoard]}
+        loading={false}
+        selectedBoards={[kilterBoard]}
+        onBoardToggle={onBoardToggle}
+      />,
+    );
+
+    fireEvent.click(getByText('All Boards'));
+    expect(onBoardToggle).toHaveBeenCalledWith(null);
+  });
+
+  it('clicking a board card calls onBoardToggle with the board', () => {
+    const { getByText } = render(
+      <BoardFilterStrip
+        multiSelect
+        boards={[kilterBoard, tensionBoard]}
+        loading={false}
+        selectedBoards={[]}
+        onBoardToggle={onBoardToggle}
+      />,
+    );
+
+    fireEvent.click(getByText('My Tension').parentElement!);
+    expect(onBoardToggle).toHaveBeenCalledWith(tensionBoard);
+  });
+
+  it('marks a selected board as selected', () => {
+    const { getByText } = render(
+      <BoardFilterStrip
+        multiSelect
+        boards={[kilterBoard, tensionBoard]}
+        loading={false}
+        selectedBoards={[kilterBoard]}
+        onBoardToggle={onBoardToggle}
+      />,
+    );
+
+    // The BoardScrollCard renders the name inside a nested structure;
+    // the selected class is on an inner square, not the name's direct parent.
+    const kilterName = getByText('My Kilter');
+    expect(kilterName.className).toContain('cardNameSelected');
+  });
+
+  it('supports multiple boards selected simultaneously', () => {
+    const { getByText } = render(
+      <BoardFilterStrip
+        multiSelect
+        boards={[kilterBoard, tensionBoard]}
+        loading={false}
+        selectedBoards={[kilterBoard, tensionBoard]}
+        onBoardToggle={onBoardToggle}
+      />,
+    );
+
+    // "All" should not be selected when specific boards are
+    const allCard = getByText('All').parentElement!;
+    expect(allCard.className).not.toContain('cardSquareSelected');
+
+    // Both boards should show as selected
+    expect(getByText('My Kilter')).toBeDefined();
+    expect(getByText('My Tension')).toBeDefined();
+  });
+
+  it('Enter key on "All" calls onBoardToggle(null)', () => {
+    const { getByRole } = render(
+      <BoardFilterStrip
+        multiSelect
+        boards={[kilterBoard]}
+        loading={false}
+        selectedBoards={[kilterBoard]}
+        onBoardToggle={onBoardToggle}
+      />,
+    );
+
+    const allButton = getByRole('button');
+    fireEvent.keyDown(allButton, { key: 'Enter' });
+    expect(onBoardToggle).toHaveBeenCalledWith(null);
+  });
+});

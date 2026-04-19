@@ -13,8 +13,8 @@ import {
   sanitizeLogbookPreferences,
   type LogbookFilterState as FilterState,
   type LogbookSortState as SortState,
-  type SortField,
 } from '@/app/lib/logbook-preferences';
+import { readFiltersFromQuery, readSortFromQuery, filtersToQueryParams } from '@/app/lib/logbook-url-utils';
 import { getPreference, setPreference } from '@/app/lib/user-preferences-db';
 import { useSession } from 'next-auth/react';
 import { usePathname, useSearchParams, useRouter } from 'next/navigation';
@@ -33,7 +33,7 @@ import {
   type LayoutStats,
 } from '@/app/lib/graphql/operations/ticks';
 import { getLayoutDisplayName } from '@/app/profile/[user_id]/utils/profile-constants';
-import { getDefaultSizeForLayout, getSetsForLayoutAndSize } from '@boardsesh/board-constants/product-sizes';
+import { getDefaultSizeForLayout, getSetsForLayoutAndSize, ORPHANED_KILTER_LAYOUT_DEFAULTS } from '@boardsesh/board-constants/product-sizes';
 import { getLayoutById, MOONBOARD_SETS, type MoonBoardLayoutKey } from '@/app/lib/moonboard-config';
 import type { BoardName } from '@/app/lib/types';
 import useMediaQuery from '@mui/material/useMediaQuery';
@@ -49,128 +49,6 @@ import feedStyles from '@/app/components/activity-feed/ascents-feed.module.css';
 
 const PAGE_SIZE = 20;
 type StatusMode = 'both' | 'send' | 'attempt';
-
-// Orphaned layouts not in LAYOUTS config but with valid sets data
-const ORPHANED_KILTER_DEFAULTS: Record<number, { sizeId: number; setIds: string }> = {
-  2: { sizeId: 11, setIds: '21' },   // JUUL Full Wall
-  3: { sizeId: 12, setIds: '22' },   // Demo
-  4: { sizeId: 13, setIds: '23' },   // BKB
-  5: { sizeId: 15, setIds: '24' },   // Spire
-  6: { sizeId: 16, setIds: '25' },   // Orbit
-  7: { sizeId: 16, setIds: '25' },   // Orbit
-};
-
-// ---------- URL query param helpers ----------
-
-function parseQueryParamBoolean(params: URLSearchParams, key: string): boolean | undefined {
-  const val = params.get(key);
-  if (val === '1' || val === 'true') return true;
-  if (val === '0' || val === 'false') return false;
-  return undefined;
-}
-
-function parseQueryParamInt(params: URLSearchParams, key: string): number | undefined {
-  const val = params.get(key);
-  if (val === null) return undefined;
-  const num = parseInt(val, 10);
-  return Number.isFinite(num) ? num : undefined;
-}
-
-function readFiltersFromQuery(params: URLSearchParams): Partial<FilterState> {
-  const partial: Partial<FilterState> = {};
-
-  const sends = parseQueryParamBoolean(params, 'sends');
-  if (sends !== undefined) partial.includeSends = sends;
-
-  const attempts = parseQueryParamBoolean(params, 'attempts');
-  if (attempts !== undefined) partial.includeAttempts = attempts;
-
-  const flash = parseQueryParamBoolean(params, 'flash');
-  if (flash !== undefined) partial.flashOnly = flash;
-
-  const benchmark = parseQueryParamBoolean(params, 'benchmark');
-  if (benchmark !== undefined) partial.benchmarkOnly = benchmark;
-
-  const minGrade = parseQueryParamInt(params, 'minGrade');
-  if (minGrade !== undefined) partial.minGrade = minGrade;
-
-  const maxGrade = parseQueryParamInt(params, 'maxGrade');
-  if (maxGrade !== undefined) partial.maxGrade = maxGrade;
-
-  const from = params.get('from');
-  if (from) partial.fromDate = from;
-
-  const to = params.get('to');
-  if (to) partial.toDate = to;
-
-  const minAngle = parseQueryParamInt(params, 'minAngle');
-  const maxAngle = parseQueryParamInt(params, 'maxAngle');
-  if (minAngle !== undefined || maxAngle !== undefined) {
-    partial.angleRange = [
-      minAngle ?? DEFAULT_ANGLE_RANGE[0],
-      maxAngle ?? DEFAULT_ANGLE_RANGE[1],
-    ];
-  }
-
-  return partial;
-}
-
-const VALID_SORT_FIELDS: Set<SortField> = new Set(['climbName', 'loggedGrade', 'consensusGrade', 'date', 'attemptCount']);
-
-function isValidSortField(value: string): value is SortField {
-  return VALID_SORT_FIELDS.has(value as SortField);
-}
-
-function readSortFromQuery(params: URLSearchParams): Partial<SortState> {
-  const partial: Partial<SortState> = {};
-  const sort = params.get('sort');
-  if (sort && isValidSortField(sort)) {
-    partial.mode = 'custom';
-    partial.primaryField = sort;
-  }
-  const order = params.get('order');
-  if (order === 'asc' || order === 'desc') {
-    partial.primaryDirection = order;
-  }
-  const sort2 = params.get('sort2');
-  if (sort2 && isValidSortField(sort2)) partial.secondaryField = sort2;
-  const order2 = params.get('order2');
-  if (order2 === 'asc' || order2 === 'desc') partial.secondaryDirection = order2;
-  return partial;
-}
-
-function filtersToQueryParams(
-  searchText: string,
-  filters: FilterState,
-  sortState: SortState,
-  selectedBoardUuids: string[],
-): Record<string, string> {
-  const params: Record<string, string> = {};
-
-  if (searchText) params.q = searchText;
-  if (selectedBoardUuids.length > 0) params.boards = selectedBoardUuids.join(',');
-  if (filters.minGrade !== '' && filters.minGrade !== undefined) params.minGrade = String(filters.minGrade);
-  if (filters.maxGrade !== '' && filters.maxGrade !== undefined) params.maxGrade = String(filters.maxGrade);
-
-  // Only write non-default filter values
-  if (!filters.includeSends) params.sends = '0';
-  if (!filters.includeAttempts) params.attempts = '0';
-  if (filters.flashOnly) params.flash = '1';
-  if (filters.benchmarkOnly) params.benchmark = '1';
-  if (filters.fromDate) params.from = filters.fromDate;
-  if (filters.toDate) params.to = filters.toDate;
-  if (filters.angleRange[0] !== DEFAULT_ANGLE_RANGE[0]) params.minAngle = String(filters.angleRange[0]);
-  if (filters.angleRange[1] !== DEFAULT_ANGLE_RANGE[1]) params.maxAngle = String(filters.angleRange[1]);
-
-  if (sortState.mode === 'custom') {
-    if (sortState.primaryField !== DEFAULT_SORT.primaryField) params.sort = sortState.primaryField;
-    if (sortState.primaryDirection !== DEFAULT_SORT.primaryDirection) params.order = sortState.primaryDirection;
-    if (sortState.secondaryField) params.sort2 = sortState.secondaryField;
-    if (sortState.secondaryField && sortState.secondaryDirection !== 'desc') params.order2 = sortState.secondaryDirection;
-  }
-
-  return params;
-}
 
 // ---------- Component ----------
 
@@ -215,7 +93,7 @@ export default function LogbookFeed({ layoutStats, loadingLayoutStats }: Logbook
           const sets = getSetsForLayoutAndSize(boardName, layoutId, sizeId);
           setIds = sets.map((s) => s.id).join(',');
         } else {
-          const fallback = boardName === 'kilter' ? ORPHANED_KILTER_DEFAULTS[layoutId] : undefined;
+          const fallback = boardName === 'kilter' ? ORPHANED_KILTER_LAYOUT_DEFAULTS[layoutId] : undefined;
           if (fallback) {
             sizeId = fallback.sizeId;
             setIds = fallback.setIds;
@@ -577,7 +455,7 @@ export default function LogbookFeed({ layoutStats, loadingLayoutStats }: Logbook
   const hasFilters = selectedBoards.length > 0 || debouncedSearch.length > 0 ||
     filters.minGrade !== '' || filters.maxGrade !== '' ||
     filters.flashOnly || filters.benchmarkOnly ||
-    !filters.includeSends || filters.includeAttempts ||
+    !filters.includeSends || !filters.includeAttempts ||
     filters.fromDate !== '' || filters.toDate !== '' ||
     filters.angleRange[0] !== DEFAULT_ANGLE_RANGE[0] || filters.angleRange[1] !== DEFAULT_ANGLE_RANGE[1];
   // Posting and linking are mutually exclusive — see `allowInstagramLinking` below.

@@ -14,6 +14,31 @@ import { getBoardDetailsForBoard } from '@/app/lib/board-utils';
 import { MOONBOARD_LAYOUTS } from '@/app/lib/moonboard-config';
 import { PAGE_LIMIT } from '../components/board-page/constants';
 
+// ---------- Shared URL query param helpers ----------
+
+/**
+ * Parse a URL query param as a boolean.
+ * Accepts '1'/'true' as true, '0'/'false' as false.
+ */
+export function parseQueryParamBoolean(params: URLSearchParams, key: string): boolean | undefined {
+  const val = params.get(key);
+  if (val === '1' || val === 'true') return true;
+  if (val === '0' || val === 'false') return false;
+  return undefined;
+}
+
+/**
+ * Parse a URL query param as a finite integer.
+ */
+export function parseQueryParamInt(params: URLSearchParams, key: string): number | undefined {
+  const val = params.get(key);
+  if (val === null) return undefined;
+  const num = parseInt(val, 10);
+  return Number.isFinite(num) ? num : undefined;
+}
+
+// ---------- Board route params ----------
+
 export function parseBoardRouteParams<T extends BoardRouteParameters>(
   params: T,
 ): T extends BoardRouteParametersWithUuid ? ParsedBoardRouteParametersWithUuid : ParsedBoardRouteParameters {

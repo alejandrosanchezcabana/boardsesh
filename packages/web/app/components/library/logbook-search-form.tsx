@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useMemo } from 'react';
 import Box from '@mui/material/Box';
 import TextField from '@mui/material/TextField';
 import MuiSelect, { type SelectChangeEvent } from '@mui/material/Select';
@@ -152,7 +152,7 @@ const LogbookSearchForm: React.FC<LogbookSearchFormProps> = ({
     });
   };
 
-  const boardsSectionConfig: CollapsibleSectionConfig = {
+  const boardsSectionConfig: CollapsibleSectionConfig = useMemo(() => ({
     key: 'boards',
     label: 'Boards',
     title: 'Filter by Board',
@@ -172,7 +172,7 @@ const LogbookSearchForm: React.FC<LogbookSearchFormProps> = ({
         onBoardToggle={onBoardToggle}
       />
     ),
-  };
+  }), [boards, boardsLoading, selectedBoards, onBoardToggle]);
 
   // Collapsible sections inside the drawer
   const sections: CollapsibleSectionConfig[] = [
@@ -371,7 +371,7 @@ const LogbookSearchForm: React.FC<LogbookSearchFormProps> = ({
         footer={drawerFooter}
         styles={{
           body: {
-            padding: '0 16px 16px',
+            padding: `0 ${themeTokens.spacing[4]}px ${themeTokens.spacing[4]}px`,
             backgroundColor: `var(--semantic-background, ${themeTokens.neutral[100]})`,
           },
           footer: { padding: 0, border: 'none' },
