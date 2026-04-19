@@ -2,13 +2,7 @@
 
 import React, { useCallback, useState } from 'react';
 import Box from '@mui/material/Box';
-import Tabs from '@mui/material/Tabs';
-import Tab from '@mui/material/Tab';
 import CircularProgress from '@mui/material/CircularProgress';
-import ActivityFeed from '@/app/components/activity-feed/activity-feed';
-import LogbookFeed from '@/app/components/library/logbook-feed';
-import { useSession } from 'next-auth/react';
-import { useRouter, usePathname } from 'next/navigation';
 import type { GetUserProfileStatsQueryResponse } from '@/app/lib/graphql/operations/ticks';
 import styles from '@/app/profile/[user_id]/profile-page.module.css';
 import { useProfileData } from '@/app/profile/[user_id]/hooks/use-profile-data';
@@ -18,9 +12,7 @@ import type { UserProfile, LogbookEntry } from '@/app/profile/[user_id]/utils/pr
 import { StatsFilterBridgeInjector } from '@/app/components/stats-filter-bridge/stats-filter-bridge-context';
 import StatsFilterDrawer from '@/app/components/stats-filter-drawer/stats-filter-drawer';
 
-type YouTab = 'progress' | 'sessions' | 'logbook';
-
-export interface YouPageContentProps {
+export interface YouProgressContentProps {
   userId: string;
   initialProfile?: UserProfile | null;
   initialProfileStats?: GetUserProfileStatsQueryResponse['userProfileStats'] | null;
@@ -28,17 +20,13 @@ export interface YouPageContentProps {
   initialLogbook?: LogbookEntry[];
 }
 
-export default function YouPageContent({
+export default function YouProgressContent({
   userId,
   initialProfile,
   initialProfileStats,
   initialAllBoardsTicks,
   initialLogbook,
-}: YouPageContentProps) {
-  const { status: sessionStatus } = useSession();
-  const router = useRouter();
-  const pathname = usePathname();
-
+}: YouProgressContentProps) {
   const {
     loading,
     selectedBoard,
@@ -68,19 +56,6 @@ export default function YouPageContent({
     initialIsOwnProfile: true,
   });
 
-  // Tab state from URL path
-  const activeTab: YouTab = pathname === '/you/sessions'
-    ? 'sessions'
-    : pathname === '/you/logbook'
-      ? 'logbook'
-      : 'progress';
-
-  const handleTabChange = useCallback((_: React.SyntheticEvent, value: YouTab) => {
-    const path = value === 'progress' ? '/you' : `/you/${value}`;
-    router.push(path, { scroll: false });
-  }, [router]);
-
-  // Filter drawer state
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [drawerRendered, setDrawerRendered] = useState(false);
 
@@ -98,76 +73,42 @@ export default function YouPageContent({
   }, []);
 
   const hasActiveFilters = unifiedTimeframe !== 'all' || selectedBoard !== 'all';
-  const isOnProgressTab = activeTab === 'progress';
-
-  // Determine if user is authenticated (for ActivityFeed)
-  const isAuthenticated = sessionStatus === 'authenticated';
 
   if (loading) {
     return (
-      <Box className={styles.layout}>
-        <Box component="main" className={styles.loadingContent}>
-          <CircularProgress size={48} />
-        </Box>
+      <Box className={styles.loadingContent}>
+        <CircularProgress size={48} />
       </Box>
     );
   }
 
   return (
-    <Box className={styles.layout}>
+    <>
       <StatsFilterBridgeInjector
         openDrawer={openDrawer}
         pageTitle="Progress"
         backUrl={null}
         hasActiveFilters={hasActiveFilters}
-        isActive={isOnProgressTab}
+        isActive={true}
       />
-      <Box component="main" className={styles.content}>
-        <Tabs
-          value={activeTab}
-          onChange={handleTabChange}
-          variant="fullWidth"
-          sx={{ mb: 2 }}
-        >
-          <Tab label="Progress" value="progress" />
-          <Tab label="Sessions" value="sessions" />
-          <Tab label="Logbook" value="logbook" />
-        </Tabs>
-
-        {activeTab === 'progress' && (
-          <>
-            <StatsSummary
-              statisticsSummary={statisticsSummary}
-              hardestSend={hardestSend}
-              hardestFlash={hardestFlash}
-              loadingProfileStats={loadingProfileStats}
-              loadingAggregated={loadingAggregated}
-              weeklyBars={weeklyBars}
-              aggregatedStackedBars={aggregatedStackedBars}
-              aggregatedFlashRedpointBars={aggregatedFlashRedpointBars}
-              vPointsTimeline={vPointsTimeline}
-              percentile={percentile}
-            />
-            <BoardStatsSection
-              selectedBoard={selectedBoard}
-              loading={loadingAggregated}
-              filteredLogbook={filteredLogbook}
-              isOwnProfile={true}
-            />
-          </>
-        )}
-
-        {activeTab === 'sessions' && (
-          <ActivityFeed
-            isAuthenticated={isAuthenticated}
-            userId={userId}
-          />
-        )}
-
-        {activeTab === 'logbook' && (
-          <LogbookFeed />
-        )}
-      </Box>
+      <StatsSummary
+        statisticsSummary={statisticsSummary}
+        hardestSend={hardestSend}
+        hardestFlash={hardestFlash}
+        loadingProfileStats={loadingProfileStats}
+        loadingAggregated={loadingAggregated}
+        weeklyBars={weeklyBars}
+        aggregatedStackedBars={aggregatedStackedBars}
+        aggregatedFlashRedpointBars={aggregatedFlashRedpointBars}
+        vPointsTimeline={vPointsTimeline}
+        percentile={percentile}
+      />
+      <BoardStatsSection
+        selectedBoard={selectedBoard}
+        loading={loadingAggregated}
+        filteredLogbook={filteredLogbook}
+        isOwnProfile={true}
+      />
       {drawerRendered && (
         <StatsFilterDrawer
           open={drawerOpen}
@@ -183,6 +124,6 @@ export default function YouPageContent({
           onTransitionEnd={handleDrawerTransitionEnd}
         />
       )}
-    </Box>
+    </>
   );
 }

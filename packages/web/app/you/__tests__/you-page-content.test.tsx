@@ -1,15 +1,17 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { render, screen } from '@testing-library/react';
+import { render, screen, fireEvent } from '@testing-library/react';
 import React from 'react';
 
 // --- Mocks (before component imports) ---
+
+const mockPush = vi.fn();
 
 vi.mock('next-auth/react', () => ({
   useSession: vi.fn(() => ({ status: 'authenticated', data: { user: { id: 'user-1' } } })),
 }));
 
 vi.mock('next/navigation', () => ({
-  useRouter: vi.fn(() => ({ push: vi.fn() })),
+  useRouter: vi.fn(() => ({ push: mockPush })),
   usePathname: vi.fn(() => '/you'),
 }));
 
@@ -35,19 +37,18 @@ vi.mock('@/app/profile/[user_id]/components/board-stats-section', () => ({
   ),
 }));
 
-vi.mock('@/app/components/activity-feed/activity-feed', () => ({
-  default: (props: { userId?: string; isAuthenticated?: boolean }) => (
-    <div data-testid="activity-feed" data-user-id={props.userId} />
-  ),
+vi.mock('@/app/components/stats-filter-bridge/stats-filter-bridge-context', () => ({
+  StatsFilterBridgeInjector: () => <div data-testid="stats-filter-bridge" />,
 }));
 
-vi.mock('@/app/components/library/logbook-feed', () => ({
-  default: () => <div data-testid="logbook-feed" />,
+vi.mock('@/app/components/stats-filter-drawer/stats-filter-drawer', () => ({
+  default: () => <div data-testid="stats-filter-drawer" />,
 }));
 
 // --- Imports after mocks ---
 
-import YouPageContent from '../you-page-content';
+import YouProgressContent from '../you-progress-content';
+import YouTabBar from '../you-tab-bar';
 import { useProfileData } from '@/app/profile/[user_id]/hooks/use-profile-data';
 import { usePathname } from 'next/navigation';
 
@@ -86,40 +87,26 @@ function mockProfileDataReturn(overrides?: Partial<ReturnType<typeof useProfileD
   };
 }
 
-describe('YouPageContent', () => {
+describe('YouProgressContent', () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    mockUsePathname.mockReturnValue('/you');
     mockUseProfileData.mockReturnValue(mockProfileDataReturn());
   });
 
   it('shows loading spinner when loading is true', () => {
     mockUseProfileData.mockReturnValue(mockProfileDataReturn({ loading: true }));
 
-    render(<YouPageContent userId="user-1" />);
+    render(<YouProgressContent userId="user-1" />);
 
     expect(screen.getByRole('progressbar')).toBeTruthy();
     expect(screen.queryByTestId('stats-summary')).toBeNull();
   });
 
-  it('has three tabs: Progress, Sessions, Logbook', () => {
-    render(<YouPageContent userId="user-1" />);
+  it('renders stats summary and board stats section', () => {
+    render(<YouProgressContent userId="user-1" />);
 
-    expect(screen.getByRole('tab', { name: 'Progress' })).toBeTruthy();
-    expect(screen.getByRole('tab', { name: 'Sessions' })).toBeTruthy();
-    expect(screen.getByRole('tab', { name: 'Logbook' })).toBeTruthy();
-  });
-
-  it('renders Progress tab content on /you path', () => {
-    mockUsePathname.mockReturnValue('/you');
-
-    render(<YouPageContent userId="user-1" />);
-
-    expect(screen.getByRole('tab', { name: 'Progress', selected: true })).toBeTruthy();
     expect(screen.getByTestId('stats-summary')).toBeTruthy();
     expect(screen.getByTestId('board-stats-section')).toBeTruthy();
-    expect(screen.queryByTestId('activity-feed')).toBeNull();
-    expect(screen.queryByTestId('logbook-feed')).toBeNull();
   });
 
   it('passes weekly bars into StatsSummary and keeps BoardStatsSection fallback-only', () => {
@@ -137,40 +124,72 @@ describe('YouPageContent', () => {
       ],
     }));
 
-    render(<YouPageContent userId="user-1" />);
+    render(<YouProgressContent userId="user-1" />);
 
     expect(screen.getByTestId('stats-summary').getAttribute('data-has-weekly-bars')).toBe('true');
     expect(screen.getByTestId('board-stats-section').getAttribute('data-has-weekly-bars-prop')).toBe('false');
   });
+});
 
-  it('renders Sessions tab content on /you/sessions path', () => {
+describe('YouTabBar', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  it('has three tabs: Progress, Sessions, Logbook', () => {
+    mockUsePathname.mockReturnValue('/you');
+    render(<YouTabBar />);
+
+    expect(screen.getByRole('tab', { name: 'Progress' })).toBeTruthy();
+    expect(screen.getByRole('tab', { name: 'Sessions' })).toBeTruthy();
+    expect(screen.getByRole('tab', { name: 'Logbook' })).toBeTruthy();
+  });
+
+  it('highlights Progress tab on /you path', () => {
+    mockUsePathname.mockReturnValue('/you');
+    render(<YouTabBar />);
+
+    expect(screen.getByRole('tab', { name: 'Progress', selected: true })).toBeTruthy();
+  });
+
+  it('highlights Sessions tab on /you/sessions path', () => {
     mockUsePathname.mockReturnValue('/you/sessions');
-
-    render(<YouPageContent userId="user-1" />);
+    render(<YouTabBar />);
 
     expect(screen.getByRole('tab', { name: 'Sessions', selected: true })).toBeTruthy();
-    expect(screen.getByTestId('activity-feed')).toBeTruthy();
-    expect(screen.queryByTestId('stats-summary')).toBeNull();
-    expect(screen.queryByTestId('logbook-feed')).toBeNull();
   });
 
-  it('renders Logbook tab content on /you/logbook path', () => {
+  it('highlights Logbook tab on /you/logbook path', () => {
     mockUsePathname.mockReturnValue('/you/logbook');
-
-    render(<YouPageContent userId="user-1" />);
+    render(<YouTabBar />);
 
     expect(screen.getByRole('tab', { name: 'Logbook', selected: true })).toBeTruthy();
-    expect(screen.getByTestId('logbook-feed')).toBeTruthy();
-    expect(screen.queryByTestId('stats-summary')).toBeNull();
-    expect(screen.queryByTestId('activity-feed')).toBeNull();
   });
 
-  it('activity feed receives userId prop', () => {
+  it('navigates to /you/sessions when Sessions tab is clicked', () => {
+    mockUsePathname.mockReturnValue('/you');
+    render(<YouTabBar />);
+
+    fireEvent.click(screen.getByRole('tab', { name: 'Sessions' }));
+
+    expect(mockPush).toHaveBeenCalledWith('/you/sessions', { scroll: false });
+  });
+
+  it('navigates to /you/logbook when Logbook tab is clicked', () => {
+    mockUsePathname.mockReturnValue('/you');
+    render(<YouTabBar />);
+
+    fireEvent.click(screen.getByRole('tab', { name: 'Logbook' }));
+
+    expect(mockPush).toHaveBeenCalledWith('/you/logbook', { scroll: false });
+  });
+
+  it('navigates to /you when Progress tab is clicked', () => {
     mockUsePathname.mockReturnValue('/you/sessions');
+    render(<YouTabBar />);
 
-    render(<YouPageContent userId="user-1" />);
+    fireEvent.click(screen.getByRole('tab', { name: 'Progress' }));
 
-    const feed = screen.getByTestId('activity-feed');
-    expect(feed.getAttribute('data-user-id')).toBe('user-1');
+    expect(mockPush).toHaveBeenCalledWith('/you', { scroll: false });
   });
 });

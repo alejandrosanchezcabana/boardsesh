@@ -4,7 +4,6 @@ import React, { useMemo, useState, useCallback, useRef, useEffect } from 'react'
 import Box from '@mui/material/Box';
 import CircularProgress from '@mui/material/CircularProgress';
 import Typography from '@mui/material/Typography';
-import Skeleton from '@mui/material/Skeleton';
 import TextField from '@mui/material/TextField';
 import InputAdornment from '@mui/material/InputAdornment';
 import Chip from '@mui/material/Chip';
@@ -62,6 +61,7 @@ import { useSnackbar } from '@/app/components/providers/snackbar-provider';
 import LogbookFeedItem from './logbook-feed-item';
 import LogbookSwipeHintOrchestrator from './logbook-swipe-hint-orchestrator';
 import { isInstagramPostingSupported } from '@/app/lib/instagram-posting';
+import LogbookItemSkeleton from './logbook-item-skeleton';
 import styles from './library.module.css';
 import feedStyles from '@/app/components/activity-feed/ascents-feed.module.css';
 
@@ -93,19 +93,6 @@ const SORT_FIELD_OPTIONS: { value: SortField; label: string }[] = [
   { value: 'date', label: 'Date' },
   { value: 'attemptCount', label: 'Number of attempts' },
 ];
-
-function LogbookItemSkeleton() {
-  return (
-    <Box sx={{ display: 'flex', alignItems: 'center', p: 1, gap: 1.5, borderBottom: '1px solid var(--neutral-200)' }}>
-      <Skeleton variant="rounded" width={64} height={64} animation="wave" sx={{ flexShrink: 0 }} />
-      <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.5, flex: 1, minWidth: 0 }}>
-        <Skeleton variant="rounded" width={120} height={18} animation="wave" />
-        <Skeleton variant="rounded" width={180} height={14} animation="wave" />
-      </Box>
-      <Skeleton variant="rounded" width={40} height={18} animation="wave" sx={{ flexShrink: 0 }} />
-    </Box>
-  );
-}
 
 function isDefaultFilters(filters: FilterState): boolean {
   return (
