@@ -18,20 +18,7 @@ public class HealthKitPlugin: CAPPlugin, CAPBridgedPlugin {
     // MARK: - isAvailable
 
     @objc func isAvailable(_ call: CAPPluginCall) {
-        guard HKHealthStore.isHealthDataAvailable() else {
-            call.resolve(["available": false])
-            return
-        }
-        // Probe with empty type sets to verify the entitlement exists.
-        // This does NOT show any prompt to the user.
-        healthStore.requestAuthorization(toShare: [], read: []) { [weak self] _, error in
-            if let error = error {
-                self?.logger.warning("HealthKit entitlement probe failed: \(error.localizedDescription, privacy: .public)")
-                call.resolve(["available": false])
-                return
-            }
-            call.resolve(["available": true])
-        }
+        call.resolve(["available": HKHealthStore.isHealthDataAvailable()])
     }
 
     // MARK: - requestAuthorization
