@@ -18,7 +18,20 @@ public class HealthKitPlugin: CAPPlugin, CAPBridgedPlugin {
     // MARK: - isAvailable
 
     @objc func isAvailable(_ call: CAPPluginCall) {
-        call.resolve(["available": HKHealthStore.isHealthDataAvailable()])
+        guard HKHealthStore.isHealthDataAvailable() else {
+            call.resolve(["available": false])
+            return
+        }
+        // Probe with empty type sets to verify the entitlement exists.
+        // This does NOT show any prompt to the user.
+        healthStore.requestAuthorization(toShare: [], read: []) { [weak self] _, error in
+            if let error = error {
+                self?.logger.warning("HealthKit entitlement probe failed: \(error.localizedDescription, privacy: .public)")
+                call.resolve(["available": false])
+                return
+            }
+            call.resolve(["available": true])
+        }
     }
 
     // MARK: - requestAuthorization
@@ -32,12 +45,14 @@ public class HealthKitPlugin: CAPPlugin, CAPBridgedPlugin {
         healthStore.requestAuthorization(toShare: types, read: nil) { [weak self] success, error in
             if let error = error {
                 self?.logger.error("HealthKit auth error: \(error.localizedDescription, privacy: .public)")
+                call.resolve(["granted": false])
+                return
             }
-            // Apple's API returns `success = true` even when the user declines;
-            // true here means the prompt completed. For share types we can check
-            // authorizationStatus to confirm.
             let status = self?.healthStore.authorizationStatus(for: HKObjectType.workoutType())
             let granted = success && status == .sharingAuthorized
+            if !granted {
+                self?.logger.warning("HealthKit auth not granted. success=\(success), status=\(String(describing: status?.rawValue))")
+            }
             call.resolve(["granted": granted])
         }
     }

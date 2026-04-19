@@ -11,5 +11,7 @@
 	<array>
 		<string>group.com.boardsesh.app</string>
 	</array>
+	<key>com.apple.developer.healthkit</key>
+	<true/>
 </dict>
 </plist>
