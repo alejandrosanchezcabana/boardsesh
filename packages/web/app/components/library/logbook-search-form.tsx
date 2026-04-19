@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useCallback } from 'react';
+import Box from '@mui/material/Box';
 import TextField from '@mui/material/TextField';
 import MuiSelect, { type SelectChangeEvent } from '@mui/material/Select';
 import MenuItem from '@mui/material/MenuItem';
@@ -151,29 +152,31 @@ const LogbookSearchForm: React.FC<LogbookSearchFormProps> = ({
     });
   };
 
+  const boardsSectionConfig: CollapsibleSectionConfig = {
+    key: 'boards',
+    label: 'Boards',
+    title: 'Filter by Board',
+    defaultSummary: 'All boards',
+    getSummary: () => {
+      if (selectedBoards.length === 0) return [];
+      const names = selectedBoards.map((b) => b.name);
+      if (names.length <= 2) return names;
+      return [`${names[0]}, ${names[1]}`, `+${names.length - 2} more`];
+    },
+    content: (
+      <BoardFilterStrip
+        multiSelect
+        boards={boards}
+        loading={boardsLoading}
+        selectedBoards={selectedBoards}
+        onBoardToggle={onBoardToggle}
+      />
+    ),
+  };
+
   // Collapsible sections inside the drawer
   const sections: CollapsibleSectionConfig[] = [
-    {
-      key: 'boards',
-      label: 'Boards',
-      title: 'Filter by Board',
-      defaultSummary: 'All boards',
-      getSummary: () => {
-        if (selectedBoards.length === 0) return [];
-        const names = selectedBoards.map((b) => b.name);
-        if (names.length <= 2) return names;
-        return [`${names[0]}, ${names[1]}`, `+${names.length - 2} more`];
-      },
-      content: (
-        <BoardFilterStrip
-          multiSelect
-          boards={boards}
-          loading={boardsLoading}
-          selectedBoards={selectedBoards}
-          onBoardToggle={onBoardToggle}
-        />
-      ),
-    },
+    boardsSectionConfig,
     {
       key: 'resultType',
       label: 'Result Type',
@@ -299,7 +302,7 @@ const LogbookSearchForm: React.FC<LogbookSearchFormProps> = ({
     <div className={footerStyles.searchFooter}>
       <div className={footerStyles.resultCount}>
         <Stack direction="row" spacing={1}>
-          <FilterListOutlined style={{ color: themeTokens.colors.primary }} />
+          <FilterListOutlined sx={{ color: themeTokens.colors.primary }} />
           <MuiTypography variant="body2" component="span" color="text.secondary">
             <span className={footerStyles.resultBadge}>{activeFilterCount}</span> active {activeFilterCount === 1 ? 'filter' : 'filters'}
           </MuiTypography>
@@ -323,7 +326,7 @@ const LogbookSearchForm: React.FC<LogbookSearchFormProps> = ({
       <div className={styles.formWrapper}>
         <div className={styles.primaryContent}>
           <div className={styles.panelContent}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
               <TextField
                 value={searchText}
                 onChange={onSearchChange}
@@ -350,33 +353,11 @@ const LogbookSearchForm: React.FC<LogbookSearchFormProps> = ({
                 </IconButton>
                 {activeFilterCount > 0 && <span className={headerStyles.filterActiveIndicator} />}
               </div>
-            </div>
+            </Box>
 
           </div>
         </div>
-        <CollapsibleSection
-          sections={[{
-            key: 'boards',
-            label: 'Boards',
-            title: 'Filter by Board',
-            defaultSummary: 'All boards',
-            getSummary: () => {
-              if (selectedBoards.length === 0) return [];
-              const names = selectedBoards.map((b) => b.name);
-              if (names.length <= 2) return names;
-              return [`${names[0]}, ${names[1]}`, `+${names.length - 2} more`];
-            },
-            content: (
-              <BoardFilterStrip
-                multiSelect
-                boards={boards}
-                loading={boardsLoading}
-                selectedBoards={selectedBoards}
-                onBoardToggle={onBoardToggle}
-              />
-            ),
-          }]}
-        />
+        <CollapsibleSection sections={[boardsSectionConfig]} />
       </div>
 
       {/* Filter drawer — matches climb list UnifiedSearchDrawer in climb mode */}
@@ -391,11 +372,11 @@ const LogbookSearchForm: React.FC<LogbookSearchFormProps> = ({
         styles={{
           body: {
             padding: '0 16px 16px',
-            backgroundColor: 'var(--semantic-background, #F3F4F6)',
+            backgroundColor: `var(--semantic-background, ${themeTokens.neutral[100]})`,
           },
           footer: { padding: 0, border: 'none' },
           header: { display: 'none' },
-          mask: { backgroundColor: 'rgba(128, 128, 128, 0.7)' },
+          mask: { backgroundColor: themeTokens.semantic.overlayDark },
         }}
       >
         {/* Same structure as AccordionSearchForm: primaryContent + CollapsibleSection */}

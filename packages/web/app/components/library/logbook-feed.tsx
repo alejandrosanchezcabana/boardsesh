@@ -36,6 +36,7 @@ import { getLayoutDisplayName } from '@/app/profile/[user_id]/utils/profile-cons
 import { getDefaultSizeForLayout, getSetsForLayoutAndSize } from '@boardsesh/board-constants/product-sizes';
 import { getLayoutById, MOONBOARD_SETS, type MoonBoardLayoutKey } from '@/app/lib/moonboard-config';
 import type { BoardName } from '@/app/lib/types';
+import useMediaQuery from '@mui/material/useMediaQuery';
 import { useSnackbar } from '@/app/components/providers/snackbar-provider';
 import { isInstagramPostingSupported } from '@/app/lib/instagram-posting';
 import type { UserBoard } from '@boardsesh/shared-schema';
@@ -48,6 +49,16 @@ import feedStyles from '@/app/components/activity-feed/ascents-feed.module.css';
 
 const PAGE_SIZE = 20;
 type StatusMode = 'both' | 'send' | 'attempt';
+
+// Orphaned layouts not in LAYOUTS config but with valid sets data
+const ORPHANED_KILTER_DEFAULTS: Record<number, { sizeId: number; setIds: string }> = {
+  2: { sizeId: 11, setIds: '21' },   // JUUL Full Wall
+  3: { sizeId: 12, setIds: '22' },   // Demo
+  4: { sizeId: 13, setIds: '23' },   // BKB
+  5: { sizeId: 15, setIds: '24' },   // Spire
+  6: { sizeId: 16, setIds: '25' },   // Orbit
+  7: { sizeId: 16, setIds: '25' },   // Orbit
+};
 
 // ---------- URL query param helpers ----------
 
@@ -104,19 +115,25 @@ function readFiltersFromQuery(params: URLSearchParams): Partial<FilterState> {
   return partial;
 }
 
+const VALID_SORT_FIELDS: Set<SortField> = new Set(['climbName', 'loggedGrade', 'consensusGrade', 'date', 'attemptCount']);
+
+function isValidSortField(value: string): value is SortField {
+  return VALID_SORT_FIELDS.has(value as SortField);
+}
+
 function readSortFromQuery(params: URLSearchParams): Partial<SortState> {
   const partial: Partial<SortState> = {};
   const sort = params.get('sort');
-  if (sort) {
+  if (sort && isValidSortField(sort)) {
     partial.mode = 'custom';
-    partial.primaryField = sort as SortField;
+    partial.primaryField = sort;
   }
   const order = params.get('order');
   if (order === 'asc' || order === 'desc') {
     partial.primaryDirection = order;
   }
   const sort2 = params.get('sort2');
-  if (sort2) partial.secondaryField = sort2 as '' | SortField;
+  if (sort2 && isValidSortField(sort2)) partial.secondaryField = sort2;
   const order2 = params.get('order2');
   if (order2 === 'asc' || order2 === 'desc') partial.secondaryDirection = order2;
   return partial;
@@ -137,7 +154,7 @@ function filtersToQueryParams(
 
   // Only write non-default filter values
   if (!filters.includeSends) params.sends = '0';
-  if (filters.includeAttempts) params.attempts = '1';
+  if (!filters.includeAttempts) params.attempts = '0';
   if (filters.flashOnly) params.flash = '1';
   if (filters.benchmarkOnly) params.benchmark = '1';
   if (filters.fromDate) params.from = filters.fromDate;
@@ -169,7 +186,7 @@ export default function LogbookFeed({ layoutStats, loadingLayoutStats }: Logbook
   const router = useRouter();
   const { token, isLoading: authLoading, error: authError } = useWsAuthToken();
   const userId = session?.user?.id;
-  const isNarrowViewport = typeof window !== 'undefined' && window.matchMedia('(max-width: 768px)').matches;
+  const isNarrowViewport = useMediaQuery('(max-width: 768px)', { noSsr: true });
 
   const queryClient = useQueryClient();
   const { showMessage } = useSnackbar();
@@ -198,15 +215,6 @@ export default function LogbookFeed({ layoutStats, loadingLayoutStats }: Logbook
           const sets = getSetsForLayoutAndSize(boardName, layoutId, sizeId);
           setIds = sets.map((s) => s.id).join(',');
         } else {
-          // Orphaned layouts not in LAYOUTS config but with valid sets data
-          const ORPHANED_KILTER_DEFAULTS: Record<number, { sizeId: number; setIds: string }> = {
-            2: { sizeId: 11, setIds: '21' },   // JUUL Full Wall
-            3: { sizeId: 12, setIds: '22' },   // Demo
-            4: { sizeId: 13, setIds: '23' },   // BKB
-            5: { sizeId: 15, setIds: '24' },   // Spire
-            6: { sizeId: 16, setIds: '25' },   // Orbit
-            7: { sizeId: 16, setIds: '25' },   // Orbit
-          };
           const fallback = boardName === 'kilter' ? ORPHANED_KILTER_DEFAULTS[layoutId] : undefined;
           if (fallback) {
             sizeId = fallback.sizeId;
@@ -248,8 +256,8 @@ export default function LogbookFeed({ layoutStats, loadingLayoutStats }: Logbook
   const [selectedBoards, setSelectedBoards] = useState<UserBoard[]>([]);
   const [editingItemUuid, setEditingItemUuid] = useState<string | null>(null);
   const [preferencesLoaded, setPreferencesLoaded] = useState(false);
+  const [boardsInitialized, setBoardsInitialized] = useState(() => !searchParams.get('boards'));
   const debounceRef = useRef<ReturnType<typeof setTimeout>>(undefined);
-  const initializedFromUrl = useRef(false);
 
   // Debounced search text
   const handleSearchChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
@@ -287,8 +295,6 @@ export default function LogbookFeed({ layoutStats, loadingLayoutStats }: Logbook
 
         const querySort = readSortFromQuery(searchParams);
         baseSort = { ...baseSort, ...querySort };
-
-        initializedFromUrl.current = true;
       }
 
       setFilters(baseFilters);
@@ -304,23 +310,24 @@ export default function LogbookFeed({ layoutStats, loadingLayoutStats }: Logbook
 
   // Resolve selected boards from URL param after boards load
   useEffect(() => {
-    if (loadingLayoutStats || logbookBoards.length === 0) return;
+    if (loadingLayoutStats) return;
 
     const boardsParam = searchParams.get('boards');
-    if (!boardsParam) return;
-
-    const uuids = boardsParam.split(',');
-    const matched = logbookBoards.filter((b) => uuids.includes(b.uuid));
-    if (matched.length > 0) {
-      setSelectedBoards(matched);
+    if (boardsParam && logbookBoards.length > 0) {
+      const uuids = boardsParam.split(',');
+      const matched = logbookBoards.filter((b) => uuids.includes(b.uuid));
+      if (matched.length > 0) {
+        setSelectedBoards(matched);
+      }
     }
+    setBoardsInitialized(true);
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [loadingLayoutStats, logbookBoards]);
 
   // Update URL query params when state changes
   const updateUrlRef = useRef<ReturnType<typeof setTimeout>>(undefined);
   useEffect(() => {
-    if (!preferencesLoaded) return;
+    if (!preferencesLoaded || !boardsInitialized) return;
 
     clearTimeout(updateUrlRef.current);
     updateUrlRef.current = setTimeout(() => {
@@ -342,7 +349,7 @@ export default function LogbookFeed({ layoutStats, loadingLayoutStats }: Logbook
 
     return () => clearTimeout(updateUrlRef.current);
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [debouncedSearch, filters, sortState, selectedBoards, preferencesLoaded]);
+  }, [debouncedSearch, filters, sortState, selectedBoards, preferencesLoaded, boardsInitialized]);
 
   // Persist to IndexedDB
   useEffect(() => {

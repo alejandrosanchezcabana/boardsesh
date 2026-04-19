@@ -35,48 +35,34 @@ type BoardFilterStripProps = BoardFilterStripSingleProps | BoardFilterStripMulti
 export default function BoardFilterStrip(props: BoardFilterStripProps) {
   const { boards, loading, boardTypes, disabledText } = props;
 
+  // Extract the appropriate handler based on mode to avoid depending on the whole props object
+  const onClear = props.multiSelect ? props.onBoardToggle : props.onBoardSelect;
+  const onSelect = props.multiSelect ? props.onBoardToggle : props.onBoardSelect;
+
   const handleAllKeyDown = useCallback(
     (e: React.KeyboardEvent) => {
       if (e.key === 'Enter' || e.key === ' ') {
         e.preventDefault();
-        if (props.multiSelect) {
-          props.onBoardToggle(null);
-        } else {
-          props.onBoardSelect(null);
-        }
+        onClear(null);
       }
     },
-    [props],
+    [onClear],
   );
 
   const handleAllClick = useCallback(() => {
-    if (props.multiSelect) {
-      props.onBoardToggle(null);
-    } else {
-      props.onBoardSelect(null);
-    }
-  }, [props]);
+    onClear(null);
+  }, [onClear]);
 
   const handleBoardClick = useCallback(
     (board: UserBoard) => {
-      if (props.multiSelect) {
-        props.onBoardToggle(board);
-      } else {
-        props.onBoardSelect(board);
-      }
+      onSelect(board);
     },
-    [props],
+    [onSelect],
   );
 
-  const isBoardSelected = useCallback(
-    (board: UserBoard) => {
-      if (props.multiSelect) {
-        return props.selectedBoards.some((b) => b.uuid === board.uuid);
-      }
-      return props.selectedBoard?.uuid === board.uuid;
-    },
-    [props],
-  );
+  const isBoardSelected = props.multiSelect
+    ? (board: UserBoard) => props.selectedBoards.some((b) => b.uuid === board.uuid)
+    : (board: UserBoard) => props.selectedBoard?.uuid === board.uuid;
 
   const isAllSelected = props.multiSelect
     ? props.selectedBoards.length === 0
