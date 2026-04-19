@@ -1,15 +1,17 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { render, screen } from '@testing-library/react';
+import { render, screen, fireEvent } from '@testing-library/react';
 import React from 'react';
 
 // --- Mocks (before component imports) ---
+
+const mockPush = vi.fn();
 
 vi.mock('next-auth/react', () => ({
   useSession: vi.fn(() => ({ status: 'authenticated', data: { user: { id: 'user-1' } } })),
 }));
 
 vi.mock('next/navigation', () => ({
-  useRouter: vi.fn(() => ({ push: vi.fn() })),
+  useRouter: vi.fn(() => ({ push: mockPush })),
   usePathname: vi.fn(() => '/you'),
 }));
 
@@ -162,5 +164,32 @@ describe('YouTabBar', () => {
     render(<YouTabBar />);
 
     expect(screen.getByRole('tab', { name: 'Logbook', selected: true })).toBeTruthy();
+  });
+
+  it('navigates to /you/sessions when Sessions tab is clicked', () => {
+    mockUsePathname.mockReturnValue('/you');
+    render(<YouTabBar />);
+
+    fireEvent.click(screen.getByRole('tab', { name: 'Sessions' }));
+
+    expect(mockPush).toHaveBeenCalledWith('/you/sessions', { scroll: false });
+  });
+
+  it('navigates to /you/logbook when Logbook tab is clicked', () => {
+    mockUsePathname.mockReturnValue('/you');
+    render(<YouTabBar />);
+
+    fireEvent.click(screen.getByRole('tab', { name: 'Logbook' }));
+
+    expect(mockPush).toHaveBeenCalledWith('/you/logbook', { scroll: false });
+  });
+
+  it('navigates to /you when Progress tab is clicked', () => {
+    mockUsePathname.mockReturnValue('/you/sessions');
+    render(<YouTabBar />);
+
+    fireEvent.click(screen.getByRole('tab', { name: 'Progress' }));
+
+    expect(mockPush).toHaveBeenCalledWith('/you', { scroll: false });
   });
 });

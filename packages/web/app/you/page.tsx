@@ -1,6 +1,5 @@
 import React from 'react';
 import { Metadata } from 'next';
-import { redirect } from 'next/navigation';
 import { getProfileData } from '../profile/[user_id]/server-profile-data';
 import { fetchProfileStatsData } from '../profile/[user_id]/server-profile-stats';
 import { getYouSession } from './you-auth';
@@ -13,11 +12,9 @@ export const metadata: Metadata = {
 };
 
 export default async function YouPage() {
+  // Layout already redirects unauthenticated users; session is guaranteed here.
   const session = await getYouSession();
-  if (!session?.user?.id) {
-    redirect('/');
-  }
-  const userId = session.user.id;
+  const userId = session!.user!.id;
 
   const [initialProfile, statsData] = await Promise.all([
     getProfileData(userId, userId),
