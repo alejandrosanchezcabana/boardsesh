@@ -292,9 +292,9 @@ const PlayViewTickBar = React.memo<PlayViewTickBarProps>(function PlayViewTickBa
                 <IconButton
                   onClick={(e) => quickTickBarRef.current?.saveAttempt(e.currentTarget)}
                   sx={{
-                    backgroundColor: 'rgba(184, 82, 76, 0.18)',
+                    backgroundColor: themeTokens.colors.errorMuted,
                     color: themeTokens.colors.error,
-                    '&:hover': { backgroundColor: 'rgba(184, 82, 76, 0.28)' },
+                    '&:hover': { backgroundColor: themeTokens.colors.errorMutedHover },
                   }}
                   aria-label="Log attempt"
                 >

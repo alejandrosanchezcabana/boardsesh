@@ -162,23 +162,47 @@ describe('TickButton', () => {
     });
   });
 
+  describe('accessibility', () => {
+    it('has aria-label "Log flash" when tickBarActive and isFlash', () => {
+      render(<TickButton {...defaultProps} tickBarActive={true} isFlash={true} />);
+      const button = document.getElementById('button-tick');
+      expect(button?.getAttribute('aria-label')).toBe('Log flash');
+    });
+
+    it('has aria-label "Log ascent" when tickBarActive and not isFlash', () => {
+      render(<TickButton {...defaultProps} tickBarActive={true} isFlash={false} />);
+      const button = document.getElementById('button-tick');
+      expect(button?.getAttribute('aria-label')).toBe('Log ascent');
+    });
+
+    it('has aria-label "Log ascent" when tickBarActive is false', () => {
+      render(<TickButton {...defaultProps} tickBarActive={false} />);
+      const button = document.getElementById('button-tick');
+      expect(button?.getAttribute('aria-label')).toBe('Log ascent');
+    });
+  });
+
   describe('styling', () => {
-    it('applies amber background when tickBarActive and isFlash', () => {
+    it('renders the tick button when tickBarActive and isFlash', () => {
       render(<TickButton {...defaultProps} tickBarActive={true} isFlash={true} />);
       const button = document.getElementById('button-tick');
       expect(button).toBeTruthy();
+      // MUI applies styles via CSS classes — verify the class list is non-trivial
+      expect(button!.className).toContain('MuiIconButton');
     });
 
-    it('applies success background when tickBarActive and not isFlash', () => {
+    it('renders the tick button when tickBarActive and not isFlash', () => {
       render(<TickButton {...defaultProps} tickBarActive={true} isFlash={false} />);
       const button = document.getElementById('button-tick');
       expect(button).toBeTruthy();
+      expect(button!.className).toContain('MuiIconButton');
     });
 
-    it('applies subtle opacity when tickBarActive is false', () => {
+    it('renders the tick button when tickBarActive is false', () => {
       render(<TickButton {...defaultProps} tickBarActive={false} />);
       const button = document.getElementById('button-tick');
       expect(button).toBeTruthy();
+      expect(button!.className).toContain('MuiIconButton');
     });
   });
 

@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback } from 'react';
+import { useCallback, useEffect, useRef } from 'react';
 import { track } from '@vercel/analytics';
 import type { Climb, BoardDetails, Angle } from '@/app/lib/types';
 import { useBoardProvider } from '../components/board-provider/board-provider-context';
@@ -34,17 +34,15 @@ export function hasPriorHistoryForClimb(
   climb: Climb,
   logbook: LogbookEntry[],
 ): boolean {
-  const logbookHasHistory = logbook.some((entry) => entry.climb_uuid === climb.uuid);
-  if (logbookHasHistory) {
-    return true;
-  }
-
+  // Check server-side counts first — these are available immediately
+  // and prevent cold-cache flicker when logbook hasn't loaded yet.
   const ascents = climb.userAscents;
   const attempts = climb.userAttempts;
   if (ascents != null || attempts != null) {
     return (ascents ?? 0) + (attempts ?? 0) > 0;
   }
-  return false;
+
+  return logbook.some((entry) => entry.climb_uuid === climb.uuid);
 }
 
 export function buildTickTarget(
@@ -76,10 +74,20 @@ export function useTickSave(options: UseTickSaveOptions): {
   const { tickTarget, quality, difficulty, attemptCount, comment, onSave, onError } = options;
   const { saveTick } = useBoardProvider();
   const fireConfetti = useConfetti();
+  const saving = useRef(false);
+  const flashDelayTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  // Clear the flash delay timeout on unmount to prevent state updates on unmounted components.
+  useEffect(() => {
+    return () => {
+      if (flashDelayTimer.current) clearTimeout(flashDelayTimer.current);
+    };
+  }, []);
 
   const handleSave = useCallback(
     (isAscent: boolean, confettiOrigin?: HTMLElement | null) => {
-      if (!tickTarget) return;
+      if (!tickTarget || saving.current) return;
+      saving.current = true;
 
       const { climb, angle: targetAngle, boardDetails: targetBoard, hasPriorHistory } = tickTarget;
 
@@ -98,7 +106,10 @@ export function useTickSave(options: UseTickSaveOptions): {
       fireConfetti(confettiOrigin ?? null, variant);
       // Flash: brief 300ms delay so the button pulse + sparks play before the bar closes.
       if (variant === 'flash') {
-        setTimeout(onSave, 300);
+        flashDelayTimer.current = setTimeout(() => {
+          flashDelayTimer.current = null;
+          onSave();
+        }, 300);
       } else {
         onSave();
       }

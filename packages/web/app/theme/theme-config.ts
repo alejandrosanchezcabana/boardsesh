@@ -15,6 +15,8 @@ export const themeTokens = {
     warningBg: '#FAF5EC',
     error: '#B8524C', // Muted brick red
     errorBg: '#F9EFEE',
+    errorMuted: 'rgba(184, 82, 76, 0.18)', // Translucent error for non-destructive action buttons
+    errorMutedHover: 'rgba(184, 82, 76, 0.28)',
     purple: '#7C3AED', // For mirror button
     purpleHover: '#6D28D9',
     amber: '#FBBF24', // For flash/benchmark badges
@@ -76,6 +78,7 @@ export const themeTokens = {
     fontFamily:
       '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif',
     fontSize: {
+      xxs: 8,
       xs: 12,
       sm: 14,
       base: 16,
@@ -137,6 +140,7 @@ export const themeTokens = {
     modal: 1040,
     popover: 1050,
     tooltip: 1060,
+    animation: 1500,
   },
 
   // Opacity
