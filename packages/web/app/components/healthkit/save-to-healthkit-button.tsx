@@ -2,6 +2,8 @@
 
 import React from 'react';
 import Button from '@mui/material/Button';
+import Typography from '@mui/material/Typography';
+import Box from '@mui/material/Box';
 import FavoriteOutlined from '@mui/icons-material/FavoriteOutlined';
 import type { SessionSummary } from '@boardsesh/shared-schema';
 import { useHealthKitSync } from '@/app/hooks/use-healthkit-sync';
@@ -33,17 +35,26 @@ export default function SaveToHealthKitButton({
       ? 'Saved to Apple Health'
       : state === 'error'
         ? 'Save to Apple Health (retry)'
-        : 'Save to Apple Health';
+        : state === 'auth_denied'
+          ? 'Apple Health access denied'
+          : 'Save to Apple Health';
 
   return (
-    <Button
-      onClick={() => void save()}
-      variant="outlined"
-      size={size}
-      startIcon={<FavoriteOutlined />}
-      disabled={state === 'saving' || state === 'saved'}
-    >
-      {label}
-    </Button>
+    <Box>
+      <Button
+        onClick={() => void save()}
+        variant="outlined"
+        size={size}
+        startIcon={<FavoriteOutlined />}
+        disabled={state === 'saving' || state === 'saved' || state === 'auth_denied'}
+      >
+        {label}
+      </Button>
+      {state === 'auth_denied' && (
+        <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5, fontSize: 12 }}>
+          Allow Boardsesh in Settings &gt; Health &gt; Data Access &amp; Devices.
+        </Typography>
+      )}
+    </Box>
   );
 }

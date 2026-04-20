@@ -13,7 +13,7 @@ import { createGraphQLHttpClient } from '@/app/lib/graphql/client';
 import { SET_SESSION_HEALTHKIT_WORKOUT_ID } from '@/app/lib/graphql/operations/activity-feed';
 import { useWsAuthToken } from './use-ws-auth-token';
 
-export type HealthKitSaveState = 'idle' | 'saving' | 'saved' | 'error' | 'unavailable';
+export type HealthKitSaveState = 'idle' | 'saving' | 'saved' | 'error' | 'auth_denied' | 'unavailable';
 
 interface UseHealthKitSyncOptions {
   summary: SessionSummary | null;
@@ -56,7 +56,7 @@ export function useHealthKitSync({ summary, boardType, existingWorkoutId }: UseH
     setState('saving');
     const granted = await requestHealthKitAuthorization();
     if (!granted) {
-      setState('error');
+      setState('auth_denied');
       return false;
     }
     const result = await saveSessionToHealthKit(summary, boardType);
