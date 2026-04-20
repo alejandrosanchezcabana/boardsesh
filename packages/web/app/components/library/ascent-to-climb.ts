@@ -2,9 +2,12 @@ import type { Climb } from '@/app/lib/types';
 import type { AscentFeedItem } from '@/app/lib/graphql/operations/ticks';
 
 /**
- * Maps an AscentFeedItem (logbook tick) to a Climb object so it can be
- * rendered by ClimbListItem. Fields not available on the ascent get safe
- * defaults — the logbook wrapper overrides title/subtitle via titleProps.
+ * Maps an AscentFeedItem (logbook tick) to a Climb object. The logbook row
+ * has its own layout (LogbookGradeRow) so it doesn't render ClimbTitle —
+ * but this Climb is still fed to ClimbActions / setCurrentClimb, meaning
+ * the queue bar and play drawer render it via ClimbTitle. Populate
+ * difficulty + quality_average from the consensus so those surfaces show
+ * the real grade instead of falling back to "project".
  */
 export function ascentFeedItemToClimb(item: AscentFeedItem): Climb {
   return {
@@ -13,10 +16,8 @@ export function ascentFeedItemToClimb(item: AscentFeedItem): Climb {
     setter_username: item.setterUsername ?? '',
     frames: item.frames ?? '',
     angle: item.angle,
-    // Empty string suppresses ClimbTitle's built-in grade — logbook renders
-    // both consensus and user grades in a shared grid via rightAddon.
-    difficulty: '',
-    quality_average: '0',
+    difficulty: item.consensusDifficultyName ?? item.difficultyName ?? '',
+    quality_average: item.qualityAverage != null ? String(item.qualityAverage) : '0',
     stars: 0,
     difficulty_error: '0',
     ascensionist_count: 0,

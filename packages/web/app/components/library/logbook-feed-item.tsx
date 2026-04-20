@@ -25,8 +25,11 @@ import LinkOutlined from '@mui/icons-material/LinkOutlined';
 import dynamic from 'next/dynamic';
 import dayjs from 'dayjs';
 import relativeTime from 'dayjs/plugin/relativeTime';
+import { track } from '@vercel/analytics';
 import type { AscentFeedItem } from '@/app/lib/graphql/operations/ticks';
 import type { BoardDetails, BoardName } from '@/app/lib/types';
+import { useOptionalQueueActions } from '@/app/components/graphql-queue';
+import { dispatchOpenPlayDrawer } from '@/app/components/queue-control/play-drawer-event';
 import { AscentStatusIcon } from '@/app/components/ascent-status/ascent-status-icon';
 import { ClimbActions } from '@/app/components/climb-actions';
 import DrawerClimbHeader from '@/app/components/climb-card/drawer-climb-header';
@@ -287,6 +290,8 @@ const LogbookFeedItem: React.FC<LogbookFeedItemProps> = React.memo(({
   const [instagramDialogOpen, setInstagramDialogOpen] = useState(false);
   const [betaLinkDialogOpen, setBetaLinkDialogOpen] = useState(false);
 
+  const queueActions = useOptionalQueueActions();
+
   // --- Edit state ---
   const { mutateAsync: updateTickAsync, isPending: isSaving } = useUpdateTick();
   const grades = useMemo(() => getGradesForBoard(item.boardType as BoardName), [item.boardType]);
@@ -396,8 +401,34 @@ const LogbookFeedItem: React.FC<LogbookFeedItemProps> = React.memo(({
     setStatusAnchorEl(null);
   }, []);
 
-  // Map ascent to Climb for ClimbActions
+  // Map ascent to Climb for ClimbActions + set-active handlers
   const climb = useMemo(() => ascentFeedItemToClimb(item), [item]);
+
+  // Row tap: set active (no drawer). Mirrors climbs-list.handleClimbClickByIndex.
+  const handleRowClick = useCallback(() => {
+    if (isEditing || !queueActions) return;
+    queueActions.setCurrentClimb(climb);
+    track('Logbook Row Clicked', { climbUuid: climb.uuid });
+  }, [isEditing, queueActions, climb]);
+
+  // Row keyboard activation (Enter/Space) to match role=button semantics.
+  const handleRowKeyDown = useCallback((e: React.KeyboardEvent) => {
+    if (isEditing || !queueActions) return;
+    if (e.key !== 'Enter' && e.key !== ' ') return;
+    if (e.target !== e.currentTarget) return;
+    e.preventDefault();
+    handleRowClick();
+  }, [isEditing, queueActions, handleRowClick]);
+
+  // Thumbnail tap: set active + open play drawer. Mirrors
+  // climbs-list.handleClimbThumbnailClickByIndex.
+  const handleThumbnailClick = useCallback((e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (isEditing || !queueActions) return;
+    queueActions.setCurrentClimb(climb);
+    dispatchOpenPlayDrawer();
+    track('Logbook Thumbnail Clicked', { climbUuid: climb.uuid });
+  }, [isEditing, queueActions, climb]);
 
   // Build BoardDetails for ClimbActions (same pattern as AscentThumbnail)
   const boardDetails = useMemo<BoardDetails | null>(() => {
@@ -547,12 +578,19 @@ const LogbookFeedItem: React.FC<LogbookFeedItemProps> = React.memo(({
           <EditOutlined className={styles.swipeIcon} />
         </div>
 
-        {/* Swipeable wrapper — covers entire item including comment row */}
+        {/* Swipeable wrapper — covers entire item including comment row.
+            Tapping anywhere that isn't a nested interactive element sets the
+            climb active (no drawer). */}
         <div
           {...swipeHandlers}
           ref={contentCombinedRef}
           className={styles.swipeableContent}
           data-swipe-content=""
+          role={!isEditing && queueActions ? 'button' : undefined}
+          tabIndex={!isEditing && queueActions ? 0 : undefined}
+          onClick={handleRowClick}
+          onKeyDown={handleRowKeyDown}
+          aria-label={!isEditing && queueActions ? `Set ${item.climbName} as active climb` : undefined}
         >
           <div className={styles.content}>
             {/* Thumbnail with ascent status badge */}
@@ -566,6 +604,7 @@ const LogbookFeedItem: React.FC<LogbookFeedItemProps> = React.memo(({
                   climbName={item.climbName}
                   frames={item.frames}
                   isMirror={item.isMirror}
+                  onClick={queueActions && !isEditing ? handleThumbnailClick : undefined}
                 />
               )}
               {isEditing ? (

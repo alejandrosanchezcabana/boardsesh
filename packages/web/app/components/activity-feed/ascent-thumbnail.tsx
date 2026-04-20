@@ -20,6 +20,10 @@ interface AscentThumbnailProps {
   climbName: string;
   frames: string | null;
   isMirror: boolean;
+  /** When provided, the thumbnail renders as a <button> and calls this
+   * instead of navigating to the climb view page. Used by the logbook to
+   * set the climb active + open the play drawer. */
+  onClick?: (e: React.MouseEvent) => void;
 }
 
 const AscentThumbnail: React.FC<AscentThumbnailProps> = ({
@@ -30,6 +34,7 @@ const AscentThumbnail: React.FC<AscentThumbnailProps> = ({
   climbName,
   frames,
   isMirror,
+  onClick,
 }) => {
   const canvasReady = useCanvasRendererReady();
   // Memoize board details to avoid recomputing on every render
@@ -85,7 +90,7 @@ const AscentThumbnail: React.FC<AscentThumbnailProps> = ({
   }, [boardDetails, boardType, layoutId, angle, climbUuid, climbName]);
 
   // If we can't render the thumbnail, don't show anything
-  if (!boardDetails || !climbViewPath) {
+  if (!boardDetails || (!onClick && !climbViewPath)) {
     return null;
   }
 
@@ -121,8 +126,22 @@ const AscentThumbnail: React.FC<AscentThumbnailProps> = ({
     );
   }
 
+  if (onClick) {
+    return (
+      <button
+        type="button"
+        onClick={onClick}
+        className={styles.thumbnailLink}
+        title={`Open ${climbName}`}
+        aria-label={`Open ${climbName}`}
+      >
+        <div className={styles.thumbnailContainer}>{thumbnailContent}</div>
+      </button>
+    );
+  }
+
   return (
-    <Link href={climbViewPath} className={styles.thumbnailLink} title={`View ${climbName}`}>
+    <Link href={climbViewPath!} className={styles.thumbnailLink} title={`View ${climbName}`}>
       <div className={styles.thumbnailContainer}>{thumbnailContent}</div>
     </Link>
   );

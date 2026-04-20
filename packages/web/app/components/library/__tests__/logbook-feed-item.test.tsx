@@ -15,6 +15,12 @@ type SwipeOptions = {
 
 let capturedSwipeOptions: SwipeOptions | null = null;
 const updateTickAsyncMock = vi.fn();
+const setCurrentClimbMock = vi.fn();
+const dispatchOpenPlayDrawerMock = vi.fn();
+// Holder so tests can swap queue-actions availability without remounting.
+const queueActionsState: { value: { setCurrentClimb: typeof setCurrentClimbMock } | null } = {
+  value: { setCurrentClimb: setCurrentClimbMock },
+};
 // Holder object so tests can mutate isPending and the mock reads the
 // current value on every render (avoids the stale-by-value closure
 // that would result from binding a plain `let` into the mock factory).
@@ -102,7 +108,25 @@ vi.mock('@/app/lib/board-data', () => ({
 }));
 
 vi.mock('@/app/components/activity-feed/ascent-thumbnail', () => ({
-  default: () => <div data-testid="ascent-thumbnail" />,
+  default: ({ onClick }: { onClick?: (e: React.MouseEvent) => void }) => (
+    <button
+      type="button"
+      data-testid="ascent-thumbnail"
+      onClick={(e) => onClick?.(e)}
+    />
+  ),
+}));
+
+vi.mock('@/app/components/graphql-queue', () => ({
+  useOptionalQueueActions: () => queueActionsState.value,
+}));
+
+vi.mock('@/app/components/queue-control/play-drawer-event', () => ({
+  dispatchOpenPlayDrawer: () => dispatchOpenPlayDrawerMock(),
+}));
+
+vi.mock('@vercel/analytics', () => ({
+  track: vi.fn(),
 }));
 
 vi.mock('@/app/components/ascent-status/ascent-status-icon', () => ({
@@ -178,6 +202,9 @@ function makeItem(overrides: Partial<AscentFeedItem> = {}): AscentFeedItem {
 beforeEach(() => {
   capturedSwipeOptions = null;
   updateTickAsyncMock.mockReset();
+  setCurrentClimbMock.mockReset();
+  dispatchOpenPlayDrawerMock.mockReset();
+  queueActionsState.value = { setCurrentClimb: setCurrentClimbMock };
   updateTickState.isPending = false;
 });
 
@@ -334,6 +361,53 @@ describe('LogbookFeedItem', () => {
     rerender(<LogbookFeedItem item={makeItem()} isEditing />);
     const saveBtn2 = screen.getByLabelText('Save') as HTMLButtonElement;
     expect(saveBtn2.disabled).toBe(false);
+  });
+
+  it('row tap calls setCurrentClimb without opening the play drawer', () => {
+    const { container } = render(<LogbookFeedItem item={makeItem()} />);
+    const row = container.querySelector('.swipeableContent') as HTMLElement;
+    fireEvent.click(row);
+    expect(setCurrentClimbMock).toHaveBeenCalledTimes(1);
+    expect(setCurrentClimbMock).toHaveBeenCalledWith(
+      expect.objectContaining({ uuid: 'climb-1', name: 'Test Climb' }),
+    );
+    expect(dispatchOpenPlayDrawerMock).not.toHaveBeenCalled();
+  });
+
+  it('row tap is a no-op in edit mode', () => {
+    const { container } = render(<LogbookFeedItem item={makeItem()} isEditing />);
+    const row = container.querySelector('.swipeableContent') as HTMLElement;
+    fireEvent.click(row);
+    expect(setCurrentClimbMock).not.toHaveBeenCalled();
+  });
+
+  it('row tap is a no-op when queue actions are unavailable', () => {
+    queueActionsState.value = null;
+    const { container } = render(<LogbookFeedItem item={makeItem()} />);
+    const row = container.querySelector('.swipeableContent') as HTMLElement;
+    fireEvent.click(row);
+    expect(setCurrentClimbMock).not.toHaveBeenCalled();
+  });
+
+  it('thumbnail tap sets active and opens the play drawer', () => {
+    render(<LogbookFeedItem item={makeItem()} />);
+    fireEvent.click(screen.getByTestId('ascent-thumbnail'));
+    expect(setCurrentClimbMock).toHaveBeenCalledTimes(1);
+    expect(dispatchOpenPlayDrawerMock).toHaveBeenCalledTimes(1);
+  });
+
+  it('thumbnail tap does not bubble to the row handler', () => {
+    render(<LogbookFeedItem item={makeItem()} />);
+    fireEvent.click(screen.getByTestId('ascent-thumbnail'));
+    // Thumbnail fires setCurrentClimb once; the row handler would fire it a
+    // second time if propagation wasn't stopped.
+    expect(setCurrentClimbMock).toHaveBeenCalledTimes(1);
+  });
+
+  it('3-dot menu click opens the actions drawer without setting active', () => {
+    render(<LogbookFeedItem item={makeItem()} />);
+    fireEvent.click(screen.getByLabelText('More actions'));
+    expect(setCurrentClimbMock).not.toHaveBeenCalled();
   });
 
   it('keeps the comment row container mounted in both modes (U8)', () => {
