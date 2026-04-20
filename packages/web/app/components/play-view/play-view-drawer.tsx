@@ -198,13 +198,12 @@ const PlayViewTickBar = React.memo<PlayViewTickBarProps>(function PlayViewTickBa
     onClose();
   }, [onClose]);
 
-  // Reset comment when the climb changes.
-  // Note: isFlash is not reset here — QuickTickBar is the sole authority
-  // and will fire onIsFlashChange with the correct value when its tickTarget updates.
+  // Reset comment and recompute flash state when the climb changes.
   useEffect(() => {
     setTickComment('');
     setCommentFocused(false);
-  }, [currentClimb.uuid]);
+    setIsFlash(!hasPriorHistoryForClimb(currentClimb, logbook));
+  }, [currentClimb.uuid, currentClimb, logbook]);
 
   return (
     <div className={`${styles.tickBarContainer} ${isTickBarActive ? styles.tickBarContainerActive : ''}`}>

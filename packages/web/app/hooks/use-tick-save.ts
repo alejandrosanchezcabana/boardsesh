@@ -146,6 +146,7 @@ export function useTickSave(options: UseTickSaveOptions): {
           boardLayout: targetBoard.layout_name || '',
         });
         saveTickDraft(draftValues);
+        saving.current = false;
         onError?.();
       });
     },
