@@ -26,7 +26,7 @@ interface TickButtonProps {
   boardDetails: BoardDetails;
   onActivateTickBar?: () => void;
   /** Called when the tick button is pressed while tick mode is already active (saves the tick). */
-  onTickSave?: () => void;
+  onTickSave?: (originElement?: HTMLElement) => void;
   tickBarActive?: boolean;
   /** Whether the current tick will be logged as a flash (no prior history, 1 try). */
   isFlash?: boolean;
@@ -44,7 +44,7 @@ export const TickButton: React.FC<TickButtonProps> = ({ currentClimb, angle, boa
     [boardDetails, currentClimb]
   );
 
-  const showDrawer = () => {
+  const showDrawer = (e?: React.MouseEvent<HTMLButtonElement>) => {
     track('Tick Button Clicked', {
       boardLayout: boardDetails.layout_name || '',
       existingAscentCount: badgeCount,
@@ -52,7 +52,7 @@ export const TickButton: React.FC<TickButtonProps> = ({ currentClimb, angle, boa
 
     // When tick mode is already active, save the tick
     if (tickBarActive && onTickSave) {
-      onTickSave();
+      onTickSave(e?.currentTarget);
       return;
     }
 

@@ -754,6 +754,105 @@ describe('QuickTickBar', () => {
     });
   });
 
+  describe('onIsFlashChange callback', () => {
+    it('fires with true on mount when logbook is empty and attemptCount defaults to 1', () => {
+      mockLogbookRef.current = [];
+      const onIsFlashChange = vi.fn();
+      render(<QuickTickBar {...defaultProps} onIsFlashChange={onIsFlashChange} />);
+
+      expect(onIsFlashChange).toHaveBeenCalledWith(true);
+    });
+
+    it('fires with false on mount when the logbook has prior history for the climb', () => {
+      mockLogbookRef.current = [
+        makeLogbookEntry({ uuid: 'p1', climb_uuid: 'climb-1', angle: 40 }),
+      ];
+      const onIsFlashChange = vi.fn();
+      render(<QuickTickBar {...defaultProps} onIsFlashChange={onIsFlashChange} />);
+
+      expect(onIsFlashChange).toHaveBeenCalledWith(false);
+    });
+
+    it('fires with false on mount when the climb has userAscents > 0', () => {
+      mockLogbookRef.current = [];
+      const climbWithHistory = makeClimb({ userAscents: 1, userAttempts: 0 });
+      const onIsFlashChange = vi.fn();
+      render(
+        <QuickTickBar {...defaultProps} currentClimb={climbWithHistory} onIsFlashChange={onIsFlashChange} />,
+      );
+
+      expect(onIsFlashChange).toHaveBeenCalledWith(false);
+    });
+
+    it('fires with false on mount when the climb has userAttempts > 0', () => {
+      mockLogbookRef.current = [];
+      const climbWithAttempts = makeClimb({ userAscents: 0, userAttempts: 3 });
+      const onIsFlashChange = vi.fn();
+      render(
+        <QuickTickBar {...defaultProps} currentClimb={climbWithAttempts} onIsFlashChange={onIsFlashChange} />,
+      );
+
+      expect(onIsFlashChange).toHaveBeenCalledWith(false);
+    });
+
+    it('transitions from true to false when attemptCount changes from 1 to 2', async () => {
+      mockLogbookRef.current = [];
+      const onIsFlashChange = vi.fn();
+      render(<QuickTickBar {...defaultProps} onIsFlashChange={onIsFlashChange} />);
+
+      // Initially flash
+      expect(onIsFlashChange).toHaveBeenLastCalledWith(true);
+
+      // Open tries picker and select 2
+      await act(async () => {
+        screen.getByTestId('quick-tick-attempt').click();
+      });
+      await act(async () => {
+        screen.getByRole('option', { name: '2 tries' }).click();
+      });
+
+      expect(onIsFlashChange).toHaveBeenLastCalledWith(false);
+    });
+
+    it('transitions back to true when attemptCount changes back to 1', async () => {
+      mockLogbookRef.current = [];
+      const onIsFlashChange = vi.fn();
+      render(<QuickTickBar {...defaultProps} onIsFlashChange={onIsFlashChange} />);
+
+      // Change to 2 tries
+      await act(async () => {
+        screen.getByTestId('quick-tick-attempt').click();
+      });
+      await act(async () => {
+        screen.getByRole('option', { name: '2 tries' }).click();
+      });
+      expect(onIsFlashChange).toHaveBeenLastCalledWith(false);
+
+      // Change back to 1 try
+      await act(async () => {
+        screen.getByTestId('quick-tick-attempt').click();
+      });
+      await act(async () => {
+        screen.getByRole('option', { name: '1 try' }).click();
+      });
+      expect(onIsFlashChange).toHaveBeenLastCalledWith(true);
+    });
+
+    it('does not fire when currentClimb is null (no tickTarget)', () => {
+      const onIsFlashChange = vi.fn();
+      render(<QuickTickBar {...defaultProps} currentClimb={null} onIsFlashChange={onIsFlashChange} />);
+
+      // isFlash is false when tickTarget is null, so it fires with false
+      expect(onIsFlashChange).toHaveBeenCalledWith(false);
+    });
+
+    it('does not crash when onIsFlashChange is not provided', () => {
+      mockLogbookRef.current = [];
+      // Should not throw
+      expect(() => render(<QuickTickBar {...defaultProps} />)).not.toThrow();
+    });
+  });
+
   describe('aria-expanded state', () => {
     it('toggles aria-expanded on the rating button', async () => {
       render(<QuickTickBar {...defaultProps} />);

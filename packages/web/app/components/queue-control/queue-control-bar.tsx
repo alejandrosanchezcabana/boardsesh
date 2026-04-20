@@ -1086,7 +1086,7 @@ const QueueControlBar: React.FC<QueueControlBarProps> = ({ boardDetails, angle }
                     angle={angle}
                     boardDetails={boardDetails}
                     onActivateTickBar={() => setActiveDrawer('tick')}
-                    onTickSave={() => quickTickBarRef.current?.save()}
+                    onTickSave={(el) => quickTickBarRef.current?.save(el)}
                     tickBarActive={tickBarActive}
                     isFlash={isFlash}
                   />
