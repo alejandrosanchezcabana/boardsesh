@@ -420,10 +420,21 @@ describe('LogbookFeedItem', () => {
     expect(setCurrentClimbMock).not.toHaveBeenCalled();
   });
 
-  it('thumbnail tap sets active and opens the play drawer', () => {
+  it('thumbnail tap sets active then opens the play drawer after the promise settles', async () => {
+    // Make the mock actually return a Promise so we can assert ordering.
+    let resolveSet: (() => void) | undefined;
+    setCurrentClimbMock.mockImplementationOnce(
+      () => new Promise<void>((resolve) => { resolveSet = () => resolve(); }),
+    );
     render(<LogbookFeedItem item={makeItem()} />);
     fireEvent.click(screen.getByTestId('ascent-thumbnail'));
+    // setCurrentClimb called synchronously; drawer NOT opened yet (still awaiting).
     expect(setCurrentClimbMock).toHaveBeenCalledTimes(1);
+    expect(dispatchOpenPlayDrawerMock).not.toHaveBeenCalled();
+    // Resolve and flush microtasks.
+    await act(async () => {
+      resolveSet?.();
+    });
     expect(dispatchOpenPlayDrawerMock).toHaveBeenCalledTimes(1);
   });
 

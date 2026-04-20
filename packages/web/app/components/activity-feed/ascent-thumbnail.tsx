@@ -130,8 +130,8 @@ const AscentThumbnail: React.FC<AscentThumbnailProps> = ({
         type="button"
         onClick={onClick}
         className={styles.thumbnailLink}
-        title={`Open ${climbName}`}
-        aria-label={`Open ${climbName}`}
+        title={`Set ${climbName} as active climb`}
+        aria-label={`Set ${climbName} as active climb`}
       >
         <div className={styles.thumbnailContainer}>{thumbnailContent}</div>
       </button>

@@ -404,23 +404,24 @@ const LogbookFeedItem: React.FC<LogbookFeedItemProps> = React.memo(({
   // Map ascent to Climb for ClimbActions + set-active handlers
   const climb = useMemo(() => ascentFeedItemToClimb(item), [item]);
 
-  const handleRowClick = useCallback(() => {
+  const handleRowClick = useCallback(async () => {
     if (isEditing || !queueActions) return;
-    queueActions.setCurrentClimb(climb);
+    await queueActions.setCurrentClimb(climb);
     track('Logbook Row Clicked', { climbUuid: climb.uuid });
   }, [isEditing, queueActions, climb]);
 
   const handleRowKeyDown = useCallback((e: React.KeyboardEvent) => {
+    if (isEditing || !queueActions) return;
     if (e.key !== 'Enter' && e.key !== ' ') return;
     if (e.target !== e.currentTarget) return;
     e.preventDefault();
-    handleRowClick();
-  }, [handleRowClick]);
+    void handleRowClick();
+  }, [isEditing, queueActions, handleRowClick]);
 
-  const handleThumbnailClick = useCallback((e: React.MouseEvent) => {
+  const handleThumbnailClick = useCallback(async (e: React.MouseEvent) => {
     e.stopPropagation();
     if (isEditing || !queueActions) return;
-    queueActions.setCurrentClimb(climb);
+    await queueActions.setCurrentClimb(climb);
     dispatchOpenPlayDrawer();
     track('Logbook Thumbnail Clicked', { climbUuid: climb.uuid });
   }, [isEditing, queueActions, climb]);
@@ -580,7 +581,7 @@ const LogbookFeedItem: React.FC<LogbookFeedItemProps> = React.memo(({
           tabIndex={!isEditing && queueActions ? 0 : undefined}
           aria-label={!isEditing && queueActions ? `Set ${item.climbName} as active climb` : undefined}
           onClick={handleRowClick}
-          onKeyDown={!isEditing && queueActions ? handleRowKeyDown : undefined}
+          onKeyDown={handleRowKeyDown}
         >
           <div className={styles.content}>
             {/* Thumbnail with ascent status badge */}
