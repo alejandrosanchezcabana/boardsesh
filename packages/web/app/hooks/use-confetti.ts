@@ -23,7 +23,7 @@ function fireThunderstrike(targetElement: HTMLElement) {
 
   // Generate 5 short jagged arcs that crawl outward from the button edge
   // like snakes — the head leads and the tail follows behind.
-  const arcCount = 5;
+  const arcCount = 8;
   const buttonRadius = Math.max(rect.width, rect.height) / 2;
   let paths = '';
   for (let i = 0; i < arcCount; i++) {

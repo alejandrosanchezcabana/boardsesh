@@ -381,9 +381,9 @@ describe('useTickSave', () => {
       act(() => { result.current.save(el); });
 
       expect(mockFireConfetti).toHaveBeenCalledWith(el, 'flash');
-      // Flash delays onSave by 250ms
+      // Flash delays onSave by 300ms
       expect(onSave).not.toHaveBeenCalled();
-      act(() => { vi.advanceTimersByTime(250); });
+      act(() => { vi.advanceTimersByTime(300); });
       expect(onSave).toHaveBeenCalledTimes(1);
     });
 

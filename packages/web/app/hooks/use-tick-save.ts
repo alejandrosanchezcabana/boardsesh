@@ -96,9 +96,9 @@ export function useTickSave(options: UseTickSaveOptions): {
       // Fire celebration and close the bar -- don't wait for the network.
       const variant = !isAscent ? 'attempt' : status === 'flash' ? 'flash' : 'ascent';
       fireConfetti(confettiOrigin ?? null, variant);
-      // Flash: brief 250ms delay so the button pulse plays before the bar closes.
+      // Flash: brief 300ms delay so the button pulse + sparks play before the bar closes.
       if (variant === 'flash') {
-        setTimeout(onSave, 250);
+        setTimeout(onSave, 300);
       } else {
         onSave();
       }
