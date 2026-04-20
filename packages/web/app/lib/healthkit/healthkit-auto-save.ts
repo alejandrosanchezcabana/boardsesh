@@ -44,15 +44,18 @@ export async function autoSaveToHealthKit(
   boardType: string,
   authToken: string | null,
 ): Promise<string | null> {
-  if (savedOrInFlight.has(summary.sessionId)) return null;
-  savedOrInFlight.add(summary.sessionId);
-
   try {
     const autoSyncEnabled = await getHealthKitAutoSync();
     if (!autoSyncEnabled) return null;
 
     const available = await isHealthKitAvailable();
     if (!available) return null;
+
+    // Only claim the guard once we know we'll actually attempt the save.
+    // Earlier returns (auto-sync off, unavailable) must not block the
+    // manual save button.
+    if (savedOrInFlight.has(summary.sessionId)) return null;
+    savedOrInFlight.add(summary.sessionId);
 
     const granted = await requestHealthKitAuthorization();
     if (!granted) return null;

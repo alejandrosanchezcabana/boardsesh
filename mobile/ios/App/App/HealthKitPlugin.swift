@@ -28,13 +28,6 @@ public class HealthKitPlugin: CAPPlugin, CAPBridgedPlugin {
         return f
     }()
 
-    private static let fallbackFormatter: DateFormatter = {
-        let df = DateFormatter()
-        df.locale = Locale(identifier: "en_US_POSIX")
-        df.timeZone = TimeZone(secondsFromGMT: 0)
-        return df
-    }()
-
     private static let fallbackFormats = [
         "yyyy-MM-dd'T'HH:mm:ss.SSSZ",
         "yyyy-MM-dd'T'HH:mm:ssZ",
@@ -144,8 +137,11 @@ public class HealthKitPlugin: CAPPlugin, CAPBridgedPlugin {
         if let date = Self.isoWithFrac.date(from: string) { return date }
         if let date = Self.isoPlain.date(from: string) { return date }
 
-        // Fallback: try common non-ISO formats (e.g. SQL timestamp)
-        let df = Self.fallbackFormatter
+        // Fallback: try common non-ISO formats (e.g. SQL timestamp).
+        // Allocate per call — DateFormatter is not thread-safe.
+        let df = DateFormatter()
+        df.locale = Locale(identifier: "en_US_POSIX")
+        df.timeZone = TimeZone(secondsFromGMT: 0)
         for fmt in Self.fallbackFormats {
             df.dateFormat = fmt
             if let date = df.date(from: string) { return date }

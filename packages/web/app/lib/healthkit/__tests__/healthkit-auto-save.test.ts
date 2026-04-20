@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import type { SessionSummary } from '@boardsesh/shared-schema';
-import { autoSaveToHealthKit, _resetAutoSaveGuard } from '../healthkit-auto-save';
+import { autoSaveToHealthKit, _resetAutoSaveGuard, isSessionSavedOrInFlight } from '../healthkit-auto-save';
 
 // Mock dependencies
 vi.mock('../healthkit-bridge', () => ({
@@ -58,6 +58,25 @@ describe('autoSaveToHealthKit', () => {
 
     expect(result).toBeNull();
     expect(mockIsAvailable).not.toHaveBeenCalled();
+  });
+
+  it('does not add to guard when auto-sync is disabled', async () => {
+    mockGetAutoSync.mockResolvedValue(false);
+
+    const summary = makeSummary({ sessionId: 'auto-sync-off' });
+    await autoSaveToHealthKit(summary, 'kilter', 'token');
+
+    expect(isSessionSavedOrInFlight('auto-sync-off')).toBe(false);
+  });
+
+  it('does not add to guard when HealthKit is unavailable', async () => {
+    mockGetAutoSync.mockResolvedValue(true);
+    mockIsAvailable.mockResolvedValue(false);
+
+    const summary = makeSummary({ sessionId: 'unavailable' });
+    await autoSaveToHealthKit(summary, 'kilter', 'token');
+
+    expect(isSessionSavedOrInFlight('unavailable')).toBe(false);
   });
 
   it('returns null when HealthKit is unavailable', async () => {
