@@ -109,12 +109,17 @@ describe('readFiltersFromQuery', () => {
     expect(result.toDate).toBeUndefined();
   });
 
-  it('accepts ISO date that regex allows even if month/day are out of range', () => {
-    // Regex-only validation (per review) — month/day range checking is left
-    // to downstream consumers. Documents current behaviour.
-    const params = new URLSearchParams('from=2024-13-40');
-    const result = readFiltersFromQuery(params);
-    expect(result.fromDate).toBe('2024-13-40');
+  it('rejects semantically invalid dates', () => {
+    // 2024-13-40 matches the regex but is not a real date. The backend
+    // forwards unchecked strings to PostgreSQL, so catching this on the
+    // client avoids a cryptic DB error later.
+    expect(readFiltersFromQuery(new URLSearchParams('from=2024-13-40')).fromDate).toBeUndefined();
+    expect(readFiltersFromQuery(new URLSearchParams('to=2024-02-30')).toDate).toBeUndefined();
+    expect(readFiltersFromQuery(new URLSearchParams('from=2023-02-29')).fromDate).toBeUndefined();
+  });
+
+  it('accepts valid leap-day dates', () => {
+    expect(readFiltersFromQuery(new URLSearchParams('from=2024-02-29')).fromDate).toBe('2024-02-29');
   });
 
   it('parses angle range with both params', () => {
@@ -180,6 +185,22 @@ describe('readSortFromQuery', () => {
   it('ignores invalid sort direction', () => {
     const params = new URLSearchParams('order=sideways');
     const result = readSortFromQuery(params);
+    expect(result.primaryDirection).toBeUndefined();
+  });
+
+  it('applies direction with default field when sort is empty and order is present', () => {
+    const params = new URLSearchParams('sort=&order=asc');
+    const result = readSortFromQuery(params);
+    expect(result.mode).toBe('custom');
+    expect(result.primaryField).toBe(DEFAULT_SORT.primaryField);
+    expect(result.primaryDirection).toBe('asc');
+  });
+
+  it('does not apply direction when sort is invalid and order is present', () => {
+    const params = new URLSearchParams('sort=invalid&order=asc');
+    const result = readSortFromQuery(params);
+    expect(result.mode).toBeUndefined();
+    expect(result.primaryField).toBeUndefined();
     expect(result.primaryDirection).toBeUndefined();
   });
 });

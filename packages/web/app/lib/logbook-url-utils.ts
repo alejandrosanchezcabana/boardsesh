@@ -17,7 +17,12 @@ function isValidSortField(value: string): value is SortField {
 const ISO_DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
 
 function isIsoDate(value: string | null): value is string {
-  return !!value && ISO_DATE_RE.test(value);
+  if (!value || !ISO_DATE_RE.test(value)) return false;
+  const parsed = new Date(`${value}T00:00:00Z`);
+  if (Number.isNaN(parsed.getTime())) return false;
+  // Round-trip check catches values Date silently coerces (e.g. '2024-13-40'
+  // would become '2025-02-09' on some runtimes, or NaN on others).
+  return parsed.toISOString().slice(0, 10) === value;
 }
 
 export function readFiltersFromQuery(params: URLSearchParams): Partial<LogbookFilterState> {

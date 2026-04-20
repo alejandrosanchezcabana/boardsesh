@@ -6,12 +6,12 @@ import { createTestQueryClient } from '@/app/test-utils/test-providers';
 import type { LayoutStats } from '@/app/lib/graphql/operations/ticks';
 
 // --- Capture hook arguments ---
+// vi.fn() holds its own call history and is reset in beforeEach, so tests stay
+// isolated even if Vitest's scheduling changes in the future.
 
 const mockRequest = vi.fn();
-let capturedSearchFormProps: {
-  selectedBoards: Array<{ uuid: string }>;
-  boards: Array<{ uuid: string }>;
-} | null = null;
+const getPreferenceMock = vi.fn().mockResolvedValue(null);
+const searchFormSpy = vi.fn();
 
 // --- Mocks (must come before component import) ---
 
@@ -60,7 +60,7 @@ vi.mock('@/app/hooks/use-infinite-scroll', () => ({
 
 // Preferences load resolves to null → defaults.
 vi.mock('@/app/lib/user-preferences-db', () => ({
-  getPreference: vi.fn().mockResolvedValue(null),
+  getPreference: (...args: unknown[]) => getPreferenceMock(...args),
   setPreference: vi.fn().mockResolvedValue(undefined),
 }));
 
@@ -113,7 +113,7 @@ vi.mock('../logbook-item-skeleton', () => ({
 
 vi.mock('../logbook-search-form', () => ({
   default: (props: { selectedBoards: Array<{ uuid: string }>; boards: Array<{ uuid: string }> }) => {
-    capturedSearchFormProps = { selectedBoards: props.selectedBoards, boards: props.boards };
+    searchFormSpy(props);
     return <div data-testid="logbook-search-form" />;
   },
 }));
@@ -157,9 +157,16 @@ beforeEach(() => {
   mockRequest.mockResolvedValue({
     userAscentsFeed: { items: [], hasMore: false },
   });
-  capturedSearchFormProps = null;
+  searchFormSpy.mockClear();
+  getPreferenceMock.mockClear();
   mockSearchParams.current = new URLSearchParams();
 });
+
+function lastSelectedBoards(): Array<{ uuid: string }> {
+  const calls = searchFormSpy.mock.calls;
+  if (calls.length === 0) return [];
+  return (calls[calls.length - 1][0] as { selectedBoards: Array<{ uuid: string }> }).selectedBoards;
+}
 
 // --- Tests ---
 
@@ -175,10 +182,14 @@ describe('LogbookFeed — boards URL round-trip', () => {
       </QueryClientProvider>,
     );
 
-    // Let React/effects/microtasks settle; the query must remain disabled.
-    await act(async () => {
-      await new Promise((resolve) => setTimeout(resolve, 20));
+    // Wait for preferences to load (positive signal): this is the async gate
+    // that fires after the 'boardsInitialized' gate is evaluated. Once this
+    // resolves, any query that were ever going to fire would have fired.
+    await waitFor(() => {
+      expect(getPreferenceMock).toHaveBeenCalled();
     });
+    // Flush the resolved preferences promise's state update.
+    await act(async () => {});
     expect(mockRequest).not.toHaveBeenCalled();
 
     // Now layoutStats load with the matching board. boardsInitialized flips true
@@ -207,7 +218,7 @@ describe('LogbookFeed — boards URL round-trip', () => {
     expect(variables.input.boardType).toBe('kilter');
     expect(variables.input.layoutIds).toEqual([1]);
 
-    expect(capturedSearchFormProps?.selectedBoards.map((b) => b.uuid)).toEqual(['logbook-kilter-1']);
+    expect(lastSelectedBoards().map((b) => b.uuid)).toEqual(['logbook-kilter-1']);
   });
 
   it('drops unknown UUIDs silently and fires the query with no board filter', async () => {
@@ -224,7 +235,7 @@ describe('LogbookFeed — boards URL round-trip', () => {
     expect(variables.input.boardTypes).toBeUndefined();
     expect(variables.input.layoutIds).toBeUndefined();
 
-    expect(capturedSearchFormProps?.selectedBoards).toEqual([]);
+    expect(lastSelectedBoards()).toEqual([]);
   });
 
   it('supports multiple UUIDs and sends boardTypes when they span board types', async () => {
@@ -240,7 +251,7 @@ describe('LogbookFeed — boards URL round-trip', () => {
     expect(variables.input.boardTypes).toEqual(['kilter', 'tension']);
     expect(variables.input.layoutIds?.sort()).toEqual([1, 9]);
 
-    expect(capturedSearchFormProps?.selectedBoards.map((b) => b.uuid).sort()).toEqual([
+    expect(lastSelectedBoards().map((b) => b.uuid).sort()).toEqual([
       'logbook-kilter-1',
       'logbook-tension-9',
     ]);
