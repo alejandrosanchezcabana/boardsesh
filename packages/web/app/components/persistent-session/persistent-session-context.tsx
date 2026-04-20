@@ -166,10 +166,13 @@ export const PersistentSessionProvider: React.FC<{ children: React.ReactNode }> 
       lastReceivedSequenceRef,
       liveSessionStats: eventProcessor.liveSessionStats,
       sessionSummary: lifecycle.sessionSummary,
+      sessionSummaryBoardType: lifecycle.sessionSummaryBoardType,
+      sessionSummaryHealthKitWorkoutId: lifecycle.sessionSummaryHealthKitWorkoutId,
     }),
     [
       lifecycle.activeSession, lifecycle.session, lifecycle.isConnecting,
       lifecycle.hasConnected, lifecycle.error, lifecycle.sessionSummary,
+      lifecycle.sessionSummaryBoardType, lifecycle.sessionSummaryHealthKitWorkoutId,
       eventProcessor.currentClimbQueueItem, eventProcessor.queue, eventProcessor.liveSessionStats,
       queueStorage.localQueue, queueStorage.localCurrentClimbQueueItem,
       queueStorage.localBoardPath, queueStorage.localBoardDetails, queueStorage.isLocalQueueLoaded,

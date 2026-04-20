@@ -112,6 +112,8 @@ export interface PersistentSessionStateType {
 
   liveSessionStats: SessionLiveStats | null;
   sessionSummary: SessionSummary | null;
+  sessionSummaryBoardType: string | null;
+  sessionSummaryHealthKitWorkoutId: string | null;
 }
 
 // Combined type for backward compatibility

@@ -55,6 +55,8 @@ const mockPersistentSession = {
   endSessionWithSummary: vi.fn(),
   liveSessionStats: null,
   sessionSummary: null,
+  sessionSummaryBoardType: null,
+  sessionSummaryHealthKitWorkoutId: null,
   dismissSessionSummary: vi.fn(),
 };
 

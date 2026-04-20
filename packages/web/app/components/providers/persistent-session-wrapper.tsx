@@ -74,8 +74,20 @@ export default function PersistentSessionWrapper({ children, boardConfigs }: Per
  * so session ending works from any page (not just board routes).
  */
 function RootSessionSummaryDialog() {
-  const { sessionSummary, dismissSessionSummary } = usePersistentSession();
-  return <SessionSummaryDialog summary={sessionSummary} onDismiss={dismissSessionSummary} />;
+  const {
+    sessionSummary,
+    sessionSummaryBoardType,
+    sessionSummaryHealthKitWorkoutId,
+    dismissSessionSummary,
+  } = usePersistentSession();
+  return (
+    <SessionSummaryDialog
+      summary={sessionSummary}
+      boardType={sessionSummaryBoardType ?? ''}
+      existingWorkoutId={sessionSummaryHealthKitWorkoutId}
+      onDismiss={dismissSessionSummary}
+    />
+  );
 }
 
 /**

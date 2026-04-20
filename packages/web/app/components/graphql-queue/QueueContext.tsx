@@ -81,7 +81,9 @@ export const GraphQLQueueProvider = ({ parsedParams, boardDetails, children, bas
   const {
     sessionId, baseBoardPath, isPersistentSessionActive, persistentSession,
     backendUrl, searchParams, pathname,
-    startSession, joinSession, endSession, sessionSummary, dismissSessionSummary,
+    startSession, joinSession, endSession,
+    sessionSummary, sessionSummaryBoardType, sessionSummaryHealthKitWorkoutId,
+    dismissSessionSummary,
   } = useSessionIdManagement({
     isOffBoardMode,
     propsBaseBoardPath,
@@ -615,7 +617,12 @@ export const GraphQLQueueProvider = ({ parsedParams, boardDetails, children, bas
                       {children}
                     </PlaylistsProvider>
                   </FavoritesProvider>
-                  <SessionSummaryDialog summary={sessionSummary} onDismiss={stableDismissSessionSummary} />
+                  <SessionSummaryDialog
+                    summary={sessionSummary}
+                    boardType={sessionSummaryBoardType ?? ''}
+                    existingWorkoutId={sessionSummaryHealthKitWorkoutId}
+                    onDismiss={stableDismissSessionSummary}
+                  />
                 </SessionContext.Provider>
               </SearchContext.Provider>
             </QueueListContext.Provider>

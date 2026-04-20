@@ -26,6 +26,7 @@ import {
   type EndSessionResponse,
 } from '@/app/lib/graphql/operations/sessions';
 import type { SessionSummary } from '@boardsesh/shared-schema';
+import { autoSaveToHealthKit } from '@/app/lib/healthkit/healthkit-auto-save';
 import { upsertSessionUser } from '../event-utils';
 import { TransientJoinError } from '../errors';
 import type { Session, ActiveSessionInfo, PendingInitialQueue, SharedRefs } from '../types';
@@ -78,6 +79,8 @@ export interface SessionLifecycleState {
   hasConnected: boolean;
   error: Error | null;
   sessionSummary: SessionSummary | null;
+  sessionSummaryBoardType: string | null;
+  sessionSummaryHealthKitWorkoutId: string | null;
 }
 
 export interface SessionLifecycleActions {
@@ -117,6 +120,8 @@ export function useSessionLifecycle({
   const [hasConnected, setHasConnected] = useState(false);
   const [error, setError] = useState<Error | null>(null);
   const [sessionSummary, setSessionSummary] = useState<SessionSummary | null>(null);
+  const [sessionSummaryBoardType, setSessionSummaryBoardType] = useState<string | null>(null);
+  const [sessionSummaryHealthKitWorkoutId, setSessionSummaryHealthKitWorkoutId] = useState<string | null>(null);
 
   // Pending initial queue for new sessions
   const [pendingInitialQueue, setPendingInitialQueue] = useState<PendingInitialQueue | null>(null);
@@ -163,20 +168,30 @@ export function useSessionLifecycle({
 
   const dismissSessionSummary = useCallback(() => {
     setSessionSummary(null);
+    setSessionSummaryBoardType(null);
+    setSessionSummaryHealthKitWorkoutId(null);
   }, []);
 
   const endSessionWithSummary = useCallback(() => {
     const endingSessionId = activeSessionRef.current?.sessionId;
     const token = wsAuthTokenRef.current;
+    // Capture board type before deactivation clears the active session
+    const boardType = activeSessionRef.current?.parsedParams?.board_name ?? '';
 
     deactivateSession();
 
     if (endingSessionId && token) {
       const httpClient = createGraphQLHttpClient(token);
       httpClient.request<EndSessionResponse>(END_SESSION_GQL, { sessionId: endingSessionId })
-        .then((response) => {
+        .then(async (response) => {
           if (response.endSession) {
             setSessionSummary(response.endSession);
+            setSessionSummaryBoardType(boardType);
+            // Fire-and-forget HealthKit auto-save
+            const workoutId = await autoSaveToHealthKit(response.endSession, boardType, token);
+            if (workoutId) {
+              setSessionSummaryHealthKitWorkoutId(workoutId);
+            }
           }
         })
         .catch((err) => {
@@ -560,6 +575,8 @@ export function useSessionLifecycle({
     hasConnected,
     error,
     sessionSummary,
+    sessionSummaryBoardType,
+    sessionSummaryHealthKitWorkoutId,
     activateSession,
     deactivateSession,
     setInitialQueueForSession,

@@ -21,6 +21,8 @@ vi.mock('@/app/components/graphql-queue', () => ({
     isSessionActive: !!(mockQueueContext as Record<string, unknown>).sessionId,
     sessionId: (mockQueueContext as Record<string, unknown>).sessionId ?? null,
     sessionSummary: null,
+    sessionSummaryBoardType: null,
+    sessionSummaryHealthKitWorkoutId: null,
     sessionGoal: null,
     connectionState: (mockQueueContext as Record<string, unknown>).connectionState ?? 'idle',
     canMutate: (mockQueueContext as Record<string, unknown>).canMutate ?? true,

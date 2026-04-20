@@ -13,6 +13,7 @@ import {
   type EndSessionResponse,
 } from '@/app/lib/graphql/operations/sessions';
 import type { SessionSummary } from '@boardsesh/shared-schema';
+import { autoSaveToHealthKit } from '@/app/lib/healthkit/healthkit-auto-save';
 import type { ClimbQueueItem } from '../../queue-control/types';
 
 interface UseSessionIdManagementParams {
@@ -95,7 +96,13 @@ export function useSessionIdManagement({
 
   // Session summary state
   const [sessionSummary, setSessionSummary] = useState<SessionSummary | null>(null);
-  const dismissSessionSummary = useCallback(() => setSessionSummary(null), []);
+  const [sessionSummaryBoardType, setSessionSummaryBoardType] = useState<string | null>(null);
+  const [sessionSummaryHealthKitWorkoutId, setSessionSummaryHealthKitWorkoutId] = useState<string | null>(null);
+  const dismissSessionSummary = useCallback(() => {
+    setSessionSummary(null);
+    setSessionSummaryBoardType(null);
+    setSessionSummaryHealthKitWorkoutId(null);
+  }, []);
 
   // Session management functions
   const startSession = useCallback(
@@ -148,15 +155,27 @@ export function useSessionIdManagement({
 
   const endSession = useCallback(() => {
     const endingSessionId = activeSessionId;
+    // Capture board type before deactivation clears the active session
+    const boardType = persistentSession.activeSession?.parsedParams?.board_name ?? '';
+    const token = wsAuthToken;
+
     persistentSession.deactivateSession();
     clearClimbSessionCookie();
     setActiveSessionId(null);
 
-    if (endingSessionId && wsAuthToken) {
-      const client = createGraphQLHttpClient(wsAuthToken);
+    if (endingSessionId && token) {
+      const client = createGraphQLHttpClient(token);
       client.request<EndSessionResponse>(END_SESSION_GQL, { sessionId: endingSessionId })
-        .then((response: EndSessionResponse) => {
-          if (response.endSession) setSessionSummary(response.endSession);
+        .then(async (response: EndSessionResponse) => {
+          if (response.endSession) {
+            setSessionSummary(response.endSession);
+            setSessionSummaryBoardType(boardType);
+            // Fire-and-forget HealthKit auto-save
+            const workoutId = await autoSaveToHealthKit(response.endSession, boardType, token);
+            if (workoutId) {
+              setSessionSummaryHealthKitWorkoutId(workoutId);
+            }
+          }
         })
         .catch((err: unknown) => console.error('[QueueContext] Failed to get session summary:', err));
     }
@@ -177,6 +196,8 @@ export function useSessionIdManagement({
     joinSession,
     endSession,
     sessionSummary,
+    sessionSummaryBoardType,
+    sessionSummaryHealthKitWorkoutId,
     dismissSessionSummary,
   };
 }

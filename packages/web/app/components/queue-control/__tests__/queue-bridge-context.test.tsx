@@ -234,6 +234,8 @@ function createFakeQueueContext(overrides?: Partial<GraphQLQueueContextType>): G
     joinSession: vi.fn(async () => {}),
     endSession: vi.fn(),
     sessionSummary: null,
+    sessionSummaryBoardType: null,
+    sessionSummaryHealthKitWorkoutId: null,
     dismissSessionSummary: vi.fn(),
     sessionGoal: null,
     users: [],

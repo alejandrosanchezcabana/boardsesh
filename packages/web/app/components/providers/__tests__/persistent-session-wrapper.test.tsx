@@ -26,10 +26,14 @@ vi.mock('../../persistent-session', () => ({
   PersistentSessionProvider: ({ children }: { children: React.ReactNode }) => <>{children}</>,
   usePersistentSession: () => ({
     sessionSummary: null,
+    sessionSummaryBoardType: null,
+    sessionSummaryHealthKitWorkoutId: null,
     dismissSessionSummary: vi.fn(),
   }),
   usePersistentSessionState: () => ({
     sessionSummary: null,
+    sessionSummaryBoardType: null,
+    sessionSummaryHealthKitWorkoutId: null,
   }),
   usePersistentSessionActions: () => ({
     dismissSessionSummary: vi.fn(),

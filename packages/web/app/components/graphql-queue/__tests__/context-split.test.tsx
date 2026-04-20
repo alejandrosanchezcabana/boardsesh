@@ -32,6 +32,8 @@ interface SessionDataType {
   isSessionActive: boolean;
   sessionId: string | null;
   sessionSummary: unknown;
+  sessionSummaryBoardType: string | null;
+  sessionSummaryHealthKitWorkoutId: string | null;
   sessionGoal: string | null;
   connectionState: string;
   canMutate: boolean;
@@ -179,6 +181,8 @@ function makeSessionData(overrides: Partial<SessionDataType> = {}): SessionDataT
     isSessionActive: false,
     sessionId: null,
     sessionSummary: null,
+    sessionSummaryBoardType: null,
+    sessionSummaryHealthKitWorkoutId: null,
     sessionGoal: null,
     connectionState: 'idle',
     canMutate: true,
