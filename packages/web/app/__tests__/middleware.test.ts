@@ -168,6 +168,7 @@ describe('hasUserSpecificFilters', () => {
     showOnlyAttempted: false,
     showOnlyCompleted: false,
     onlyDrafts: false,
+    projectsOnly: false,
     page: 0,
     pageSize: 20,
   };

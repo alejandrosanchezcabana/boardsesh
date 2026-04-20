@@ -135,6 +135,7 @@ export interface ClimbSearchInputVariables {
     showOnlyAttempted?: boolean;
     showOnlyCompleted?: boolean;
     onlyDrafts?: boolean;
+    projectsOnly?: boolean;
   };
 }
 

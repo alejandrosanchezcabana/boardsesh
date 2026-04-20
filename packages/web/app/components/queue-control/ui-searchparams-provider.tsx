@@ -44,11 +44,31 @@ export const UISearchParamsProvider: React.FC<{ children: React.ReactNode }> = (
     if (uiSearchParams.showOnlyAttempted) activeFilters.push('showOnlyAttempted');
     if (uiSearchParams.showOnlyCompleted) activeFilters.push('showOnlyCompleted');
     if (uiSearchParams.onlyDrafts) activeFilters.push('onlyDrafts');
+    if (uiSearchParams.projectsOnly) activeFilters.push('projectsOnly');
 
     if (activeFilters.length > 0) {
       track('Climb Search Performed', {
         searchType: 'filters',
         activeFiltersCount: activeFilters.length,
+        sortBy: uiSearchParams.sortBy,
+        sortOrder: uiSearchParams.sortOrder,
+        hasName: Boolean(uiSearchParams.name),
+        minGrade: uiSearchParams.minGrade,
+        maxGrade: uiSearchParams.maxGrade,
+        minAscents: uiSearchParams.minAscents,
+        minRating: uiSearchParams.minRating,
+        gradeAccuracy: uiSearchParams.gradeAccuracy,
+        onlyClassics: uiSearchParams.onlyClassics,
+        projectsOnly: uiSearchParams.projectsOnly,
+        establishedOnly: uiSearchParams.minAscents >= 2 && !uiSearchParams.projectsOnly,
+        onlyTallClimbs: uiSearchParams.onlyTallClimbs,
+        onlyDrafts: uiSearchParams.onlyDrafts,
+        hideAttempted: uiSearchParams.hideAttempted,
+        hideCompleted: uiSearchParams.hideCompleted,
+        showOnlyAttempted: uiSearchParams.showOnlyAttempted,
+        showOnlyCompleted: uiSearchParams.showOnlyCompleted,
+        holdsCount: Object.keys(uiSearchParams.holdsFilter || {}).length,
+        setterCount: uiSearchParams.settername.length,
       });
     }
 

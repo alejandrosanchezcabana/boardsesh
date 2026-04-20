@@ -135,6 +135,8 @@ export const climbTypeDefs = /* GraphQL */ `
     showOnlyCompleted: Boolean
     "Show only the user's draft climbs (requires auth)"
     onlyDrafts: Boolean
+    "Show only unclimbed projects (climbs with 0 ascents)"
+    projectsOnly: Boolean
   }
 
   """

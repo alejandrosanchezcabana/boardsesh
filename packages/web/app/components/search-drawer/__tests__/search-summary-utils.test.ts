@@ -1,5 +1,11 @@
 import { describe, it, expect } from 'vitest';
-import { hasActiveNonNameFilters, hasActiveFilters } from '../search-summary-utils';
+import {
+  hasActiveNonNameFilters,
+  hasActiveFilters,
+  getStatusPanelSummary,
+  getQualityPanelSummary,
+  getSearchPillSummary,
+} from '../search-summary-utils';
 import { DEFAULT_SEARCH_PARAMS } from '@/app/lib/url-utils';
 import type { SearchRequestPagination } from '@/app/lib/types';
 
@@ -76,5 +82,64 @@ describe('hasActiveFilters', () => {
 
   it('returns true when holdsFilter has entries', () => {
     expect(hasActiveFilters(makeParams({ holdsFilter: { 1: { state: 'HAND' as const, color: '#ff0000', displayColor: '#ff0000' } } }))).toBe(true);
+  });
+});
+
+describe('getStatusPanelSummary', () => {
+  it('returns empty for defaults', () => {
+    expect(getStatusPanelSummary(makeParams())).toEqual([]);
+  });
+
+  it('returns ["Drafts"] when onlyDrafts is true (takes precedence over minAscents)', () => {
+    expect(getStatusPanelSummary(makeParams({ onlyDrafts: true, minAscents: 5 }))).toEqual(['Drafts']);
+  });
+
+  it('returns ["Projects"] when projectsOnly is true', () => {
+    expect(getStatusPanelSummary(makeParams({ projectsOnly: true }))).toEqual(['Projects']);
+  });
+
+  it('returns ["Established"] when minAscents is exactly 2', () => {
+    expect(getStatusPanelSummary(makeParams({ minAscents: 2 }))).toEqual(['Established']);
+  });
+
+  it('returns ["Established"] when minAscents is >= 2 (e.g. 3, 10)', () => {
+    expect(getStatusPanelSummary(makeParams({ minAscents: 3 }))).toEqual(['Established']);
+    expect(getStatusPanelSummary(makeParams({ minAscents: 10 }))).toEqual(['Established']);
+  });
+
+  it('returns empty when minAscents is 1 (below the established threshold)', () => {
+    expect(getStatusPanelSummary(makeParams({ minAscents: 1 }))).toEqual([]);
+  });
+});
+
+describe('getQualityPanelSummary vs Status (no duplication)', () => {
+  it('includes "1+ ascents" when minAscents is 1 (below Established)', () => {
+    expect(getQualityPanelSummary(makeParams({ minAscents: 1 }))).toContain('1+ ascents');
+  });
+
+  it('does not include "N+ ascents" when minAscents is 2 (Established handles it)', () => {
+    const parts = getQualityPanelSummary(makeParams({ minAscents: 2 }));
+    expect(parts.find((p) => p.includes('ascents'))).toBeUndefined();
+  });
+
+  it('does not include "N+ ascents" when minAscents is 3 (Established handles it)', () => {
+    const parts = getQualityPanelSummary(makeParams({ minAscents: 3 }));
+    expect(parts.find((p) => p.includes('ascents'))).toBeUndefined();
+  });
+
+  it('pill summary for minAscents=3 shows "Established" only, no duplicate', () => {
+    const pill = getSearchPillSummary(makeParams({ minAscents: 3 }));
+    expect(pill).toContain('Established');
+    expect(pill).not.toContain('3+ ascents');
+  });
+
+  it('pill summary for projects shows "Projects"', () => {
+    const pill = getSearchPillSummary(makeParams({ projectsOnly: true }));
+    expect(pill).toContain('Projects');
+  });
+
+  it('pill summary for drafts shows "Drafts"', () => {
+    const pill = getSearchPillSummary(makeParams({ onlyDrafts: true }));
+    expect(pill).toContain('Drafts');
   });
 });

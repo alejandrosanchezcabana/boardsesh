@@ -92,6 +92,7 @@ export type ClimbSearchInput = {
   showOnlyAttempted?: boolean;
   showOnlyCompleted?: boolean;
   onlyDrafts?: boolean;
+  projectsOnly?: boolean;
 };
 
 /**

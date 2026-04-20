@@ -64,6 +64,7 @@ async function _executeClimbSearch(
     showOnlyAttempted: searchParams.showOnlyAttempted || undefined,
     showOnlyCompleted: searchParams.showOnlyCompleted || undefined,
     onlyDrafts: searchParams.onlyDrafts || undefined,
+    projectsOnly: searchParams.projectsOnly || undefined,
   }, userId);
 
   const climbs: Climb[] = result.climbs.map((row) => ({
@@ -153,6 +154,7 @@ export async function cachedSearchClimbs(
     showOnlyAttempted: searchParams.showOnlyAttempted,
     showOnlyCompleted: searchParams.showOnlyCompleted,
     onlyDrafts: searchParams.onlyDrafts,
+    projectsOnly: searchParams.projectsOnly,
   }));
 
   if (!cacheable) {

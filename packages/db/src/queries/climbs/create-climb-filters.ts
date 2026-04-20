@@ -90,10 +90,19 @@ export const createClimbFilters = (
     sql`${params.size_id} = ANY(${boardClimbs.compatibleSizeIds})`,
   ];
 
+  // Projects-only: match climbs with 0 ascents OR no stats row at all.
+  // Must live outside climbStatsConditions so it doesn't trigger the stats-driven
+  // INNER JOIN path (which would exclude no-stats climbs).
+  const projectsOnlyConditions: SQL[] = searchParams.projectsOnly
+    ? [sql`COALESCE(${boardClimbStats.ascensionistCount}, 0) = 0`]
+    : [];
+
   // Conditions for climb stats
   const climbStatsConditions: SQL[] = [];
 
-  if (searchParams.minAscents) {
+  // Skip minAscents when projectsOnly is active (they're mutually exclusive in the UI,
+  // but guard here too so a stale query param can't produce a contradictory filter).
+  if (searchParams.minAscents && !searchParams.projectsOnly) {
     climbStatsConditions.push(gte(boardClimbStats.ascensionistCount, searchParams.minAscents));
   }
 
@@ -290,6 +299,7 @@ export const createClimbFilters = (
       ...tallClimbsConditions,
       ...setIdsConditions,
       ...personalProgressConditions,
+      ...projectsOnlyConditions,
     ],
     getSizeConditions: () => sizeConditions,
     getClimbStatsConditions: () => climbStatsConditions,
@@ -320,6 +330,7 @@ export const createClimbFilters = (
     setIdsConditions,
     sizeConditions,
     personalProgressConditions,
+    projectsOnlyConditions,
     anyHolds,
     notHolds,
     holdStateFilters,

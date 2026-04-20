@@ -83,8 +83,10 @@ export const searchClimbs = async (
   // making LEFT JOIN and INNER JOIN equivalent.
   // When no stats filters are active, fall through to the LEFT JOIN path.
   const hasStatsFilters = filters.getClimbStatsConditions().length > 0;
+  // projectsOnly includes climbs with NO stats row (ascents NULL), so the INNER-JOIN
+  // stats-driven path would drop exactly the climbs we want. Force the LEFT-JOIN path.
   const useStatsDriven = sortBy === 'ascents' && sortOrder === 'desc'
-    && !isDraftsQuery && hasStatsFilters;
+    && !isDraftsQuery && hasStatsFilters && !searchParams.projectsOnly;
 
   if (useStatsDriven) {
     return statsDrivenSearch(db, params, filters, page, pageSize);

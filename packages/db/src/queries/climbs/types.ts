@@ -42,6 +42,7 @@ export interface ClimbSearchParams {
   showOnlyAttempted?: boolean;
   showOnlyCompleted?: boolean;
   onlyDrafts?: boolean;
+  projectsOnly?: boolean;
   // Allow dynamic hold keys (e.g., hold_123)
   [key: `hold_${number}`]: any;
 }

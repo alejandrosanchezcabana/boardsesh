@@ -57,7 +57,8 @@ export function getClimbPanelSummary(params: SearchRequestPagination): string[] 
 export function getQualityPanelSummary(params: SearchRequestPagination): string[] {
   const parts: string[] = [];
 
-  if (params.minAscents) {
+  // minAscents >= 2 is reflected by the Ascent Status "Established" chip; avoid dup.
+  if (params.minAscents && params.minAscents < 2) {
     parts.push(`${params.minAscents}+ ascents`);
   }
   if (params.minRating) {
@@ -77,6 +78,13 @@ export function getQualityPanelSummary(params: SearchRequestPagination): string[
   return parts;
 }
 
+export function getStatusPanelSummary(params: SearchRequestPagination): string[] {
+  if (params.onlyDrafts) return ['Drafts'];
+  if (params.projectsOnly) return ['Projects'];
+  if (params.minAscents >= 2) return ['Established'];
+  return [];
+}
+
 export function getUserPanelSummary(params: SearchRequestPagination): string[] {
   // Merge "Hide" filters into single entry
   const hideFilters: string[] = [];
@@ -89,9 +97,6 @@ export function getUserPanelSummary(params: SearchRequestPagination): string[] {
   if (params.showOnlyCompleted) onlyFilters.push('completed');
 
   const parts: string[] = [];
-  if (params.onlyDrafts) {
-    parts.push('Drafts');
-  }
   if (hideFilters.length > 0) {
     parts.push(`Hide ${hideFilters.join(', ')}`);
   }
@@ -115,6 +120,7 @@ export function getSearchPillSummary(params: SearchRequestPagination): string {
   const allParts = [
     ...getClimbPanelSummary(params),
     ...getQualityPanelSummary(params),
+    ...getStatusPanelSummary(params),
     ...getUserPanelSummary(params),
     ...getHoldsPanelSummary(params),
   ];
@@ -137,6 +143,7 @@ export function getSearchPillFullSummary(params: SearchRequestPagination): strin
   const allParts = [
     ...getClimbPanelSummary(params),
     ...getQualityPanelSummary(params),
+    ...getStatusPanelSummary(params),
     ...getUserPanelSummary(params),
     ...getHoldsPanelSummary(params),
   ];

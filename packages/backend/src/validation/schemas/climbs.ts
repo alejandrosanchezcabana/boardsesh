@@ -85,6 +85,7 @@ export const ClimbSearchInputSchema = z.object({
   showOnlyAttempted: z.boolean().optional(),
   showOnlyCompleted: z.boolean().optional(),
   onlyDrafts: z.boolean().optional(),
+  projectsOnly: z.boolean().optional(),
 });
 
 export const SaveClimbInputSchema = z.object({

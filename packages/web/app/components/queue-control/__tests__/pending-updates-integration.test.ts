@@ -41,7 +41,8 @@ const mockSearchParams: SearchRequestPagination = {
   hideCompleted: false,
   showOnlyAttempted: false,
   showOnlyCompleted: false,
-  onlyDrafts: false
+  onlyDrafts: false,
+  projectsOnly: false,
 };
 
 const initialState: QueueState = {

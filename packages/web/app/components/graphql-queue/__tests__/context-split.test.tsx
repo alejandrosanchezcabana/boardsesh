@@ -136,6 +136,7 @@ function makeSearchParams(overrides: Partial<SearchRequestPagination> = {}): Sea
     showOnlyAttempted: false,
     showOnlyCompleted: false,
     onlyDrafts: false,
+    projectsOnly: false,
     page: 0,
     pageSize: 20,
     ...overrides,

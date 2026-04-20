@@ -107,6 +107,7 @@ export type SearchRequest = {
   showOnlyAttempted: boolean;
   showOnlyCompleted: boolean;
   onlyDrafts: boolean;
+  projectsOnly: boolean;
   [key: `hold_${number}`]: HoldFilterValue; // Allow dynamic hold keys directly in the search params
 };
 

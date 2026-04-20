@@ -55,7 +55,7 @@
     "lint-fix": "oxlint --fix .",
     "db:generate": "drizzle-kit generate",
     "db:migrate": "bun scripts/migrate.ts",
-    "test": "tsx --test scripts/**/*.test.ts",
+    "test": "tsx --test scripts/**/*.test.ts src/**/*.test.ts",
     "db:studio": "drizzle-kit studio",
     "db:import-moonboard": "tsx scripts/import-moonboard-problems.ts",
     "db:import-aurora-unified": "tsx scripts/import-aurora-board-unified.ts",

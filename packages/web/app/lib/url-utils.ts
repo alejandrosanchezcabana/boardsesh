@@ -85,6 +85,7 @@ export const searchParamsToUrlParams = ({
   showOnlyAttempted,
   showOnlyCompleted,
   onlyDrafts,
+  projectsOnly,
   page,
   pageSize,
 }: SearchRequestPagination): URLSearchParams => {
@@ -148,6 +149,9 @@ export const searchParamsToUrlParams = ({
   if (onlyDrafts !== DEFAULT_SEARCH_PARAMS.onlyDrafts) {
     params.onlyDrafts = onlyDrafts.toString();
   }
+  if (projectsOnly !== DEFAULT_SEARCH_PARAMS.projectsOnly) {
+    params.projectsOnly = projectsOnly.toString();
+  }
 
   // Add holds filter entries only if they exist
   if (holdsFilter && Object.keys(holdsFilter).length > 0) {
@@ -177,6 +181,7 @@ export const DEFAULT_SEARCH_PARAMS: SearchRequestPagination = {
   showOnlyAttempted: false,
   showOnlyCompleted: false,
   onlyDrafts: false,
+  projectsOnly: false,
   page: 0,
   pageSize: PAGE_LIMIT,
 };
@@ -209,6 +214,7 @@ export const urlParamsToSearchParams = (urlParams: URLSearchParams): SearchReque
     showOnlyAttempted: urlParams.get('showOnlyAttempted') === 'true',
     showOnlyCompleted: urlParams.get('showOnlyCompleted') === 'true',
     onlyDrafts: urlParams.get('onlyDrafts') === 'true',
+    projectsOnly: urlParams.get('projectsOnly') === 'true',
     page: Number(urlParams.get('page') ?? DEFAULT_SEARCH_PARAMS.page),
     pageSize: Number(urlParams.get('pageSize') ?? DEFAULT_SEARCH_PARAMS.pageSize),
   };

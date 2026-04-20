@@ -9,6 +9,9 @@ import MuiSelect, { SelectChangeEvent } from '@mui/material/Select';
 import MenuItem from '@mui/material/MenuItem';
 import MuiSwitch from '@mui/material/Switch';
 import TextField from '@mui/material/TextField';
+import FormControlLabel from '@mui/material/FormControlLabel';
+import Radio from '@mui/material/Radio';
+import RadioGroup from '@mui/material/RadioGroup';
 import LoginOutlined from '@mui/icons-material/LoginOutlined';
 import ArrowUpwardOutlined from '@mui/icons-material/ArrowUpwardOutlined';
 import { TENSION_KILTER_GRADES } from '@/app/lib/board-data';
@@ -22,6 +25,7 @@ import { buildGradeRangeUpdate } from './grade-range-utils';
 import { useAuthModal } from '@/app/components/providers/auth-modal-provider';
 import {
   getQualityPanelSummary,
+  getStatusPanelSummary,
   getUserPanelSummary,
   getHoldsPanelSummary,
 } from './search-summary-utils';
@@ -50,6 +54,12 @@ const AccordionSearchForm: React.FC<AccordionSearchFormProps> = ({
   const isKilterHomewall = boardDetails.board_name === 'kilter' && boardDetails.layout_id === KILTER_HOMEWALL_LAYOUT_ID;
   const isLargestSize = boardDetails.size_name?.toLowerCase().includes('12');
   const showTallClimbsFilter = isKilterHomewall && isLargestSize;
+
+  const statusValue: 'any' | 'drafts' | 'established' | 'projects' =
+    uiSearchParams.onlyDrafts ? 'drafts'
+    : uiSearchParams.projectsOnly ? 'projects'
+    : uiSearchParams.minAscents >= 2 ? 'established'
+    : 'any';
 
   const handleGradeChange = (type: 'min' | 'max', value: number | undefined) => {
     updateFilters(buildGradeRangeUpdate(type, value, uiSearchParams.minGrade, uiSearchParams.maxGrade));
@@ -100,17 +110,23 @@ const AccordionSearchForm: React.FC<AccordionSearchFormProps> = ({
 
       {showTallClimbsFilter && (
         <div className={styles.switchGroup}>
-          <div className={styles.switchRow}>
-            <MuiTooltip title="Show only climbs that use holds in the bottom 8 rows (only available on 10x12 boards)">
-              <MuiTypography variant="body2" component="span">Tall Climbs Only</MuiTypography>
-            </MuiTooltip>
-            <MuiSwitch
-              size="small"
-              color="primary"
-              checked={uiSearchParams.onlyTallClimbs}
-              onChange={(_, checked) => updateFilters({ onlyTallClimbs: checked })}
-            />
-          </div>
+          <FormControlLabel
+            className={styles.switchRow}
+            labelPlacement="start"
+            control={
+              <MuiSwitch
+                size="small"
+                color="primary"
+                checked={uiSearchParams.onlyTallClimbs}
+                onChange={(_, checked) => updateFilters({ onlyTallClimbs: checked })}
+              />
+            }
+            label={
+              <MuiTooltip title="Show only climbs that use holds in the bottom 8 rows (only available on 10x12 boards)">
+                <MuiTypography variant="body2" component="span">Tall Climbs Only</MuiTypography>
+              </MuiTooltip>
+            }
+          />
         </div>
       )}
 
@@ -215,16 +231,124 @@ const AccordionSearchForm: React.FC<AccordionSearchFormProps> = ({
           </div>
 
           <div className={styles.switchGroup}>
-            <div className={styles.switchRow}>
-              <MuiTypography variant="body2" component="span">Classics Only</MuiTypography>
-              <MuiSwitch
-                size="small"
-                color="primary"
-                checked={uiSearchParams.onlyClassics}
-                onChange={(_, checked) => updateFilters({ onlyClassics: checked })}
-              />
-            </div>
+            <FormControlLabel
+              className={styles.switchRow}
+              labelPlacement="start"
+              control={
+                <MuiSwitch
+                  size="small"
+                  color="primary"
+                  checked={uiSearchParams.onlyClassics}
+                  onChange={(_, checked) => updateFilters({ onlyClassics: checked })}
+                />
+              }
+              label={<MuiTypography variant="body2" component="span">Classics Only</MuiTypography>}
+            />
           </div>
+        </div>
+      ),
+    },
+    {
+      key: 'status',
+      label: 'Ascent Status',
+      title: 'Ascent Status',
+      defaultSummary: 'Any',
+      getSummary: () => getStatusPanelSummary(uiSearchParams),
+      content: (
+        <div className={styles.panelContent}>
+          <RadioGroup
+            className={styles.radioGroup}
+            value={statusValue}
+            onChange={(e) => {
+              const value = e.target.value as 'any' | 'drafts' | 'established' | 'projects';
+              if (value === 'drafts') {
+                updateFilters({
+                  onlyDrafts: true,
+                  projectsOnly: false,
+                  minAscents: 0,
+                  sortBy: 'creation',
+                  sortOrder: 'desc',
+                });
+              } else if (value === 'established') {
+                updateFilters({
+                  onlyDrafts: false,
+                  projectsOnly: false,
+                  minAscents: 2,
+                });
+              } else if (value === 'projects') {
+                updateFilters({
+                  onlyDrafts: false,
+                  projectsOnly: true,
+                  minAscents: 0,
+                });
+              } else {
+                updateFilters({
+                  onlyDrafts: false,
+                  projectsOnly: false,
+                  minAscents: 0,
+                });
+              }
+            }}
+          >
+            <FormControlLabel
+              className={styles.radioRow}
+              value="any"
+              control={<Radio size="small" color="primary" />}
+              label={<MuiTypography variant="body2" component="span">Any</MuiTypography>}
+            />
+            <FormControlLabel
+              className={styles.radioRow}
+              value="established"
+              control={<Radio size="small" color="primary" />}
+              label={
+                <MuiTooltip title="Climbs with 2 or more ascents">
+                  <MuiTypography variant="body2" component="span">Established</MuiTypography>
+                </MuiTooltip>
+              }
+            />
+            <FormControlLabel
+              className={styles.radioRow}
+              value="projects"
+              control={<Radio size="small" color="primary" />}
+              label={
+                <MuiTooltip title="Climbs with zero recorded ascents">
+                  <MuiTypography variant="body2" component="span">Projects</MuiTypography>
+                </MuiTooltip>
+              }
+            />
+            <FormControlLabel
+              className={styles.radioRow}
+              value="drafts"
+              disabled={!isAuthenticated}
+              control={<Radio size="small" color="primary" />}
+              label={
+                <MuiTypography variant="body2" component="span">
+                  My Drafts{!isAuthenticated ? ' (sign in)' : ''}
+                </MuiTypography>
+              }
+            />
+          </RadioGroup>
+          {!isAuthenticated && (
+            <MuiAlert
+              severity="info"
+              className={styles.progressAlert}
+              action={
+                <MuiButton
+                  size="small"
+                  variant="contained"
+                  startIcon={<LoginOutlined />}
+                  onClick={() => openAuthModal({
+                    title: 'Sign in to Boardsesh',
+                    description: 'Sign in to browse your draft climbs.',
+                  })}
+                >
+                  Sign In
+                </MuiButton>
+              }
+            >
+              Sign in to filter by your drafts.
+            </MuiAlert>
+          )}
         </div>
       ),
     },
@@ -257,54 +381,58 @@ const AccordionSearchForm: React.FC<AccordionSearchFormProps> = ({
             </MuiAlert>
           ) : (
             <div className={styles.switchGroup}>
-              <div className={styles.switchRow}>
-                <MuiTypography variant="body2" component="span">My Drafts</MuiTypography>
-                <MuiSwitch
-                  size="small"
-                  color="primary"
-                  checked={uiSearchParams.onlyDrafts}
-                  onChange={(_, checked) => updateFilters({
-                    onlyDrafts: checked,
-                    ...(checked ? { sortBy: 'creation', sortOrder: 'desc' } : {}),
-                  })}
-                />
-              </div>
-              <div className={styles.switchRow}>
-                <MuiTypography variant="body2" component="span">Hide Attempted</MuiTypography>
-                <MuiSwitch
-                  size="small"
-                  color="primary"
-                  checked={uiSearchParams.hideAttempted}
-                  onChange={(_, checked) => updateFilters({ hideAttempted: checked })}
-                />
-              </div>
-              <div className={styles.switchRow}>
-                <MuiTypography variant="body2" component="span">Hide Completed</MuiTypography>
-                <MuiSwitch
-                  size="small"
-                  color="primary"
-                  checked={uiSearchParams.hideCompleted}
-                  onChange={(_, checked) => updateFilters({ hideCompleted: checked })}
-                />
-              </div>
-              <div className={styles.switchRow}>
-                <MuiTypography variant="body2" component="span">Only Attempted</MuiTypography>
-                <MuiSwitch
-                  size="small"
-                  color="primary"
-                  checked={uiSearchParams.showOnlyAttempted}
-                  onChange={(_, checked) => updateFilters({ showOnlyAttempted: checked })}
-                />
-              </div>
-              <div className={styles.switchRow}>
-                <MuiTypography variant="body2" component="span">Only Completed</MuiTypography>
-                <MuiSwitch
-                  size="small"
-                  color="primary"
-                  checked={uiSearchParams.showOnlyCompleted}
-                  onChange={(_, checked) => updateFilters({ showOnlyCompleted: checked })}
-                />
-              </div>
+              <FormControlLabel
+                className={styles.switchRow}
+                labelPlacement="start"
+                control={
+                  <MuiSwitch
+                    size="small"
+                    color="primary"
+                    checked={uiSearchParams.hideAttempted}
+                    onChange={(_, checked) => updateFilters({ hideAttempted: checked })}
+                  />
+                }
+                label={<MuiTypography variant="body2" component="span">Hide Attempted</MuiTypography>}
+              />
+              <FormControlLabel
+                className={styles.switchRow}
+                labelPlacement="start"
+                control={
+                  <MuiSwitch
+                    size="small"
+                    color="primary"
+                    checked={uiSearchParams.hideCompleted}
+                    onChange={(_, checked) => updateFilters({ hideCompleted: checked })}
+                  />
+                }
+                label={<MuiTypography variant="body2" component="span">Hide Completed</MuiTypography>}
+              />
+              <FormControlLabel
+                className={styles.switchRow}
+                labelPlacement="start"
+                control={
+                  <MuiSwitch
+                    size="small"
+                    color="primary"
+                    checked={uiSearchParams.showOnlyAttempted}
+                    onChange={(_, checked) => updateFilters({ showOnlyAttempted: checked })}
+                  />
+                }
+                label={<MuiTypography variant="body2" component="span">Only Attempted</MuiTypography>}
+              />
+              <FormControlLabel
+                className={styles.switchRow}
+                labelPlacement="start"
+                control={
+                  <MuiSwitch
+                    size="small"
+                    color="primary"
+                    checked={uiSearchParams.showOnlyCompleted}
+                    onChange={(_, checked) => updateFilters({ showOnlyCompleted: checked })}
+                  />
+                }
+                label={<MuiTypography variant="body2" component="span">Only Completed</MuiTypography>}
+              />
             </div>
           )}
         </div>
