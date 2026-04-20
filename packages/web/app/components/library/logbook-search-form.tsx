@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useCallback, useMemo } from 'react';
+import React, { useState, useCallback } from 'react';
 import Box from '@mui/material/Box';
 import TextField from '@mui/material/TextField';
 import MuiSelect, { type SelectChangeEvent } from '@mui/material/Select';
@@ -152,7 +152,11 @@ const LogbookSearchForm: React.FC<LogbookSearchFormProps> = ({
     });
   };
 
-  const boardsSectionConfig: CollapsibleSectionConfig = useMemo(() => ({
+  // Factory: creates a fresh config with its own JSX element each call.
+  // Avoids sharing the same ReactNode reference across two render locations
+  // (outside the drawer and inside the drawer), which can confuse React's
+  // reconciliation and cause unexpected unmount/remount cycles.
+  const makeBoardsSectionConfig = useCallback((): CollapsibleSectionConfig => ({
     key: 'boards',
     label: 'Boards',
     title: 'Filter by Board',
@@ -176,7 +180,7 @@ const LogbookSearchForm: React.FC<LogbookSearchFormProps> = ({
 
   // Collapsible sections inside the drawer
   const sections: CollapsibleSectionConfig[] = [
-    boardsSectionConfig,
+    makeBoardsSectionConfig(),
     {
       key: 'resultType',
       label: 'Result Type',
@@ -357,7 +361,7 @@ const LogbookSearchForm: React.FC<LogbookSearchFormProps> = ({
 
           </div>
         </div>
-        <CollapsibleSection sections={[boardsSectionConfig]} />
+        <CollapsibleSection sections={[makeBoardsSectionConfig()]} />
       </div>
 
       {/* Filter drawer — matches climb list UnifiedSearchDrawer in climb mode */}
@@ -384,7 +388,7 @@ const LogbookSearchForm: React.FC<LogbookSearchFormProps> = ({
           <div className={styles.primaryContent}>
             <div className={styles.panelContent}>
               <div className={styles.inputGroup}>
-                <span className={styles.fieldLabel}>Climb Name</span>
+                <span className={styles.fieldLabel}>Search</span>
                 <TextField
                   value={searchText}
                   onChange={onSearchChange}

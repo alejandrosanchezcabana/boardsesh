@@ -98,6 +98,10 @@ export default function LogbookFeed({ layoutStats, loadingLayoutStats }: Logbook
             sizeId = fallback.sizeId;
             setIds = fallback.setIds;
           }
+          // Non-Kilter orphaned layouts (sizeId=0, setIds='') will render with
+          // the fallback icon in BoardScrollCard since useBoardDetails returns
+          // null when board config can't be resolved. The card still works for
+          // filtering by boardType/layoutId.
         }
       }
 
@@ -183,6 +187,9 @@ export default function LogbookFeed({ layoutStats, loadingLayoutStats }: Logbook
     return () => {
       isCancelled = true;
     };
+  // Intentionally run-once on mount: loads persisted preferences from IndexedDB
+  // and overlays URL query params. searchParams is read once and should not
+  // re-trigger this effect when Next.js re-renders with the same URL.
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -199,6 +206,9 @@ export default function LogbookFeed({ layoutStats, loadingLayoutStats }: Logbook
       }
     }
     setBoardsInitialized(true);
+  // Omits searchParams from deps: the boards param is read once after layout
+  // stats load, not re-evaluated on every URL change (URL is output, not input
+  // for this effect).
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [loadingLayoutStats, logbookBoards]);
 
@@ -226,6 +236,9 @@ export default function LogbookFeed({ layoutStats, loadingLayoutStats }: Logbook
     }, 300);
 
     return () => clearTimeout(updateUrlRef.current);
+  // Omits router, pathname, searchParams: these are output targets, not inputs.
+  // Including them would cause an infinite loop (effect writes URL → URL changes
+  // → effect re-runs).
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [debouncedSearch, filters, sortState, selectedBoards, preferencesLoaded, boardsInitialized]);
 
