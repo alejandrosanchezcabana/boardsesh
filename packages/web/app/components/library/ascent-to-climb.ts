@@ -8,6 +8,7 @@ export function ascentFeedItemToClimb(item: AscentFeedItem): Climb {
     setter_username: item.setterUsername ?? '',
     frames: item.frames ?? '',
     angle: item.angle,
+    // Populated so downstream ClimbTitle renders the grade instead of "project".
     difficulty: item.consensusDifficultyName ?? item.difficultyName ?? '',
     quality_average: item.qualityAverage != null ? String(item.qualityAverage) : '0',
     stars: 0,

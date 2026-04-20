@@ -410,6 +410,13 @@ const LogbookFeedItem: React.FC<LogbookFeedItemProps> = React.memo(({
     track('Logbook Row Clicked', { climbUuid: climb.uuid });
   }, [isEditing, queueActions, climb]);
 
+  const handleRowKeyDown = useCallback((e: React.KeyboardEvent) => {
+    if (e.key !== 'Enter' && e.key !== ' ') return;
+    if (e.target !== e.currentTarget) return;
+    e.preventDefault();
+    handleRowClick();
+  }, [handleRowClick]);
+
   const handleThumbnailClick = useCallback((e: React.MouseEvent) => {
     e.stopPropagation();
     if (isEditing || !queueActions) return;
@@ -548,11 +555,13 @@ const LogbookFeedItem: React.FC<LogbookFeedItemProps> = React.memo(({
   return (
     <>
       <div className={styles.container} id={isSwipeHintTarget ? 'onboarding-logbook-card' : undefined}>
+        {/* aria-hidden: the 3-dot menu exposes Delete to assistive tech. */}
         <div ref={leftActionCombinedRef} className={styles.leftActionLayer} aria-hidden="true">
           <DeleteOutlined className={styles.swipeIcon} />
           <span className={styles.deleteLabel}>Delete</span>
         </div>
 
+        {/* aria-hidden: the 3-dot menu exposes Edit to assistive tech. */}
         <div
           ref={rightActionRef}
           className={styles.rightActionLayer}
@@ -567,7 +576,11 @@ const LogbookFeedItem: React.FC<LogbookFeedItemProps> = React.memo(({
           ref={contentCombinedRef}
           className={styles.swipeableContent}
           data-swipe-content=""
+          role={!isEditing && queueActions ? 'button' : undefined}
+          tabIndex={!isEditing && queueActions ? 0 : undefined}
+          aria-label={!isEditing && queueActions ? `Set ${item.climbName} as active climb` : undefined}
           onClick={handleRowClick}
+          onKeyDown={!isEditing && queueActions ? handleRowKeyDown : undefined}
         >
           <div className={styles.content}>
             {/* Thumbnail with ascent status badge */}

@@ -389,6 +389,37 @@ describe('LogbookFeedItem', () => {
     expect(setCurrentClimbMock).not.toHaveBeenCalled();
   });
 
+  it('row is keyboard-accessible with role/tabIndex/aria-label', () => {
+    const { container } = render(<LogbookFeedItem item={makeItem()} />);
+    const row = container.querySelector('.swipeableContent') as HTMLElement;
+    expect(row.getAttribute('role')).toBe('button');
+    expect(row.getAttribute('tabIndex')).toBe('0');
+    expect(row.getAttribute('aria-label')).toBe('Set Test Climb as active climb');
+  });
+
+  it('row is not focusable when edit mode is active', () => {
+    const { container } = render(<LogbookFeedItem item={makeItem()} isEditing />);
+    const row = container.querySelector('.swipeableContent') as HTMLElement;
+    expect(row.getAttribute('role')).toBeNull();
+    expect(row.getAttribute('tabIndex')).toBeNull();
+  });
+
+  it('Enter/Space on the row fires setCurrentClimb', () => {
+    const { container } = render(<LogbookFeedItem item={makeItem()} />);
+    const row = container.querySelector('.swipeableContent') as HTMLElement;
+    fireEvent.keyDown(row, { key: 'Enter', target: row, currentTarget: row });
+    fireEvent.keyDown(row, { key: ' ', target: row, currentTarget: row });
+    expect(setCurrentClimbMock).toHaveBeenCalledTimes(2);
+  });
+
+  it('other keys on the row do not fire setCurrentClimb', () => {
+    const { container } = render(<LogbookFeedItem item={makeItem()} />);
+    const row = container.querySelector('.swipeableContent') as HTMLElement;
+    fireEvent.keyDown(row, { key: 'Tab', target: row, currentTarget: row });
+    fireEvent.keyDown(row, { key: 'a', target: row, currentTarget: row });
+    expect(setCurrentClimbMock).not.toHaveBeenCalled();
+  });
+
   it('thumbnail tap sets active and opens the play drawer', () => {
     render(<LogbookFeedItem item={makeItem()} />);
     fireEvent.click(screen.getByTestId('ascent-thumbnail'));
