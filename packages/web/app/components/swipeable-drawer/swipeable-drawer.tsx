@@ -395,7 +395,7 @@ const SwipeableDrawer: React.FC<SwipeableDrawerProps> = ({
       nativeEvent.defaultMuiPrevented = true;
       return;
     }
-    const target = e.target as HTMLElement | null;
+    const target = e.target as Element | null;
     if (target?.closest('[data-swipe-blocked]')) {
       nativeEvent.defaultMuiPrevented = true;
     }

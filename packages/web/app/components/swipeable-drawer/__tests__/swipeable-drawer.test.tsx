@@ -200,7 +200,12 @@ describe('SwipeableDrawer', () => {
       expect(dispatchAndReadFlagPostReact(screen.getByTestId('inner'))).toBe(true);
     });
 
-    it('does not set defaultMuiPrevented when touchstart originates outside a [data-swipe-blocked] zone', () => {
+    it('leaves defaultMuiPrevented unset when touchstart target has no [data-swipe-blocked] ancestor', () => {
+      // The target still sits inside the drawer paper; what matters is that
+      // no ancestor in its chain carries the swipe-blocked attribute, so our
+      // handler should not claim the touch. (MUI's own document listener
+      // will set the flag later — our helper reads it at document.body,
+      // before that listener runs.)
       render(
         <SwipeableDrawer {...baseProps} disablePortal={false} placement="bottom">
           <div data-testid="unblocked">regular content</div>
@@ -219,6 +224,32 @@ describe('SwipeableDrawer', () => {
 
       // baseProps.disablePortal is true → handler sets flag regardless of zone.
       expect(dispatchAndReadFlagPostReact(screen.getByTestId('anywhere'))).toBe(true);
+    });
+
+    // Regression test for #1621: a touchstart inside a [data-swipe-blocked]
+    // zone must not trigger the swipe-to-close flow. We can't simulate a full
+    // touchmove/touchend swipe gesture under jsdom (no TouchEvent
+    // constructor), but we can verify the upstream guard: because our handler
+    // sets defaultMuiPrevented on touchstart, MUI's handleBodyTouchStart
+    // returns early (SwipeableDrawer.js:398-400) without calling
+    // startMaybeSwiping, so the subsequent touchend will not dispatch onClose.
+    it('does not call onClose from a touchstart originating in a [data-swipe-blocked] zone', () => {
+      const onClose = vi.fn();
+      render(
+        <SwipeableDrawer {...baseProps} disablePortal={false} placement="bottom" onClose={onClose}>
+          <div data-swipe-blocked="true">
+            <div data-testid="inner">map content</div>
+          </div>
+        </SwipeableDrawer>,
+      );
+
+      const event = new Event('touchstart', { bubbles: true, cancelable: true });
+      Object.defineProperty(event, 'touches', {
+        value: [{ pageX: 0, pageY: 0, clientX: 0, clientY: 0 }],
+      });
+      screen.getByTestId('inner').dispatchEvent(event);
+
+      expect(onClose).not.toHaveBeenCalled();
     });
   });
 });
