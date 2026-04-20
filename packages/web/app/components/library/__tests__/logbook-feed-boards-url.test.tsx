@@ -12,6 +12,7 @@ import type { LayoutStats } from '@/app/lib/graphql/operations/ticks';
 const mockRequest = vi.fn();
 const getPreferenceMock = vi.fn().mockResolvedValue(null);
 const searchFormSpy = vi.fn();
+const showMessageSpy = vi.fn();
 
 // --- Mocks (must come before component import) ---
 
@@ -65,7 +66,7 @@ vi.mock('@/app/lib/user-preferences-db', () => ({
 }));
 
 vi.mock('@/app/components/providers/snackbar-provider', () => ({
-  useSnackbar: () => ({ showMessage: vi.fn() }),
+  useSnackbar: () => ({ showMessage: showMessageSpy }),
 }));
 
 vi.mock('@/app/lib/instagram-posting', () => ({
@@ -159,6 +160,7 @@ beforeEach(() => {
   });
   searchFormSpy.mockClear();
   getPreferenceMock.mockClear();
+  showMessageSpy.mockClear();
   mockSearchParams.current = new URLSearchParams();
 });
 
@@ -221,7 +223,7 @@ describe('LogbookFeed — boards URL round-trip', () => {
     expect(lastSelectedBoards().map((b) => b.uuid)).toEqual(['logbook-kilter-1']);
   });
 
-  it('drops unknown UUIDs silently and fires the query with no board filter', async () => {
+  it('drops unknown UUIDs, fires query with no board filter, and shows a warning', async () => {
     mockSearchParams.current = new URLSearchParams('boards=logbook-kilter-999');
 
     renderFeed(false, [makeLayoutStats('kilter', 1)]);
@@ -236,6 +238,28 @@ describe('LogbookFeed — boards URL round-trip', () => {
     expect(variables.input.layoutIds).toBeUndefined();
 
     expect(lastSelectedBoards()).toEqual([]);
+    expect(showMessageSpy).toHaveBeenCalledWith(
+      "Couldn't find the linked board — showing all your entries.",
+      'warning',
+    );
+  });
+
+  it('treats ?boards= (empty string) identically to no boards param', async () => {
+    mockSearchParams.current = new URLSearchParams('boards=');
+
+    renderFeed(false, [makeLayoutStats('kilter', 1)]);
+
+    await waitFor(() => {
+      expect(mockRequest).toHaveBeenCalled();
+    });
+
+    const [, variables] = mockRequest.mock.calls[0];
+    expect(variables.input.boardType).toBeUndefined();
+    expect(variables.input.boardTypes).toBeUndefined();
+    expect(variables.input.layoutIds).toBeUndefined();
+
+    expect(lastSelectedBoards()).toEqual([]);
+    expect(showMessageSpy).not.toHaveBeenCalled();
   });
 
   it('supports multiple UUIDs and sends boardTypes when they span board types', async () => {

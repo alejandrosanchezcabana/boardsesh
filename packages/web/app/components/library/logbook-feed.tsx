@@ -203,6 +203,8 @@ export default function LogbookFeed({ layoutStats, loadingLayoutStats }: Logbook
       const matched = logbookBoards.filter((b) => uuids.includes(b.uuid));
       if (matched.length > 0) {
         setSelectedBoards(matched);
+      } else {
+        showMessage("Couldn't find the linked board — showing all your entries.", 'warning');
       }
     }
     setBoardsInitialized(true);
@@ -210,7 +212,7 @@ export default function LogbookFeed({ layoutStats, loadingLayoutStats }: Logbook
   // stats load, not re-evaluated on every URL change (URL is output, not input
   // for this effect).
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [loadingLayoutStats, logbookBoards]);
+  }, [loadingLayoutStats, logbookBoards, showMessage]);
 
   // Update URL query params when state changes
   const updateUrlRef = useRef<ReturnType<typeof setTimeout>>(undefined);
