@@ -404,15 +404,12 @@ const LogbookFeedItem: React.FC<LogbookFeedItemProps> = React.memo(({
   // Map ascent to Climb for ClimbActions + set-active handlers
   const climb = useMemo(() => ascentFeedItemToClimb(item), [item]);
 
-  // Row tap: set active (no drawer). Mirrors climb-list-item.handleRowClick.
   const handleRowClick = useCallback(() => {
     if (isEditing || !queueActions) return;
     queueActions.setCurrentClimb(climb);
     track('Logbook Row Clicked', { climbUuid: climb.uuid });
   }, [isEditing, queueActions, climb]);
 
-  // Thumbnail tap: set active + open play drawer. Mirrors
-  // climb-list-item.handleThumbnailClick.
   const handleThumbnailClick = useCallback((e: React.MouseEvent) => {
     e.stopPropagation();
     if (isEditing || !queueActions) return;
@@ -551,15 +548,11 @@ const LogbookFeedItem: React.FC<LogbookFeedItemProps> = React.memo(({
   return (
     <>
       <div className={styles.container} id={isSwipeHintTarget ? 'onboarding-logbook-card' : undefined}>
-        {/* Left action layer — Delete (revealed on long swipe right).
-            Decorative; the three-dot menu exposes Delete to assistive tech. */}
         <div ref={leftActionCombinedRef} className={styles.leftActionLayer} aria-hidden="true">
           <DeleteOutlined className={styles.swipeIcon} />
           <span className={styles.deleteLabel}>Delete</span>
         </div>
 
-        {/* Right action layer — Edit (revealed on swipe left).
-            Decorative; the three-dot menu exposes Edit to assistive tech. */}
         <div
           ref={rightActionRef}
           className={styles.rightActionLayer}
@@ -569,9 +562,6 @@ const LogbookFeedItem: React.FC<LogbookFeedItemProps> = React.memo(({
           <EditOutlined className={styles.swipeIcon} />
         </div>
 
-        {/* Swipeable wrapper — covers entire item including comment row.
-            Tapping anywhere that isn't a nested interactive element sets the
-            climb active (no drawer). */}
         <div
           {...swipeHandlers}
           ref={contentCombinedRef}

@@ -20,9 +20,7 @@ interface AscentThumbnailProps {
   climbName: string;
   frames: string | null;
   isMirror: boolean;
-  /** When provided, the thumbnail renders as a <button> and calls this
-   * instead of navigating to the climb view page. Used by the logbook to
-   * set the climb active + open the play drawer. */
+  /** When provided, renders as a <button> instead of the climb-view <Link>. */
   onClick?: (e: React.MouseEvent) => void;
 }
 
