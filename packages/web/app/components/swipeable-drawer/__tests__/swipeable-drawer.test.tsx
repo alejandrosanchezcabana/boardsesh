@@ -156,4 +156,69 @@ describe('SwipeableDrawer', () => {
       expect(screen.getByText('My title')).toBeTruthy();
     });
   });
+
+  describe('swipe blocking', () => {
+    // MUI's handleBodyTouchStart bails out when nativeEvent.defaultMuiPrevented
+    // is true (SwipeableDrawer.js:398), but also sets the flag itself when the
+    // drawer is open and the touch is inside the paper (line 426). To isolate
+    // what OUR handler did, we observe the flag from a bubble-phase listener
+    // on document.body — React's delegated listener on the root container
+    // dispatches synthetic handlers during bubble phase before the event
+    // reaches document.body, while MUI's listener is on document (one step
+    // later in the bubble chain).
+    function dispatchAndReadFlagPostReact(target: HTMLElement): boolean {
+      let flag = false;
+      const read = (e: Event) => {
+        flag = Boolean((e as unknown as Record<string, unknown>).defaultMuiPrevented);
+      };
+      document.body.addEventListener('touchstart', read);
+      const event = new Event('touchstart', { bubbles: true, cancelable: true });
+      // jsdom lacks a TouchEvent constructor; stub `touches` so MUI's
+      // calculateCurrentX/Y don't throw when its document listener fires.
+      Object.defineProperty(event, 'touches', {
+        value: [{ pageX: 0, pageY: 0, clientX: 0, clientY: 0 }],
+      });
+      try {
+        target.dispatchEvent(event);
+      } finally {
+        document.body.removeEventListener('touchstart', read);
+      }
+      return flag;
+    }
+
+    it('sets defaultMuiPrevented when touchstart originates inside a [data-swipe-blocked] zone', () => {
+      // Override disablePortal: the nested-drawer branch otherwise sets the
+      // flag unconditionally, which would hide whether the zone check ran.
+      render(
+        <SwipeableDrawer {...baseProps} disablePortal={false} placement="bottom">
+          <div data-swipe-blocked="true">
+            <div data-testid="inner">map content</div>
+          </div>
+        </SwipeableDrawer>,
+      );
+
+      expect(dispatchAndReadFlagPostReact(screen.getByTestId('inner'))).toBe(true);
+    });
+
+    it('does not set defaultMuiPrevented when touchstart originates outside a [data-swipe-blocked] zone', () => {
+      render(
+        <SwipeableDrawer {...baseProps} disablePortal={false} placement="bottom">
+          <div data-testid="unblocked">regular content</div>
+        </SwipeableDrawer>,
+      );
+
+      expect(dispatchAndReadFlagPostReact(screen.getByTestId('unblocked'))).toBe(false);
+    });
+
+    it('sets defaultMuiPrevented on any touch when disablePortal is set (nested-drawer case)', () => {
+      render(
+        <SwipeableDrawer {...baseProps} placement="bottom">
+          <div data-testid="anywhere">regular content</div>
+        </SwipeableDrawer>,
+      );
+
+      // baseProps.disablePortal is true → handler sets flag regardless of zone.
+      expect(dispatchAndReadFlagPostReact(screen.getByTestId('anywhere'))).toBe(true);
+    });
+  });
 });

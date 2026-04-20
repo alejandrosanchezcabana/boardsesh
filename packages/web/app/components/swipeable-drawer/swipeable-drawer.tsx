@@ -374,14 +374,30 @@ const SwipeableDrawer: React.FC<SwipeableDrawerProps> = ({
     [paperSx],
   );
 
-  // Prevent parent MUI SwipeableDrawer from claiming touches inside nested
-  // drawers. MUI registers touchstart handlers on `document` in effect order,
-  // so the parent's handler always fires first and sets defaultMuiPrevented,
-  // stealing the touch from the child. React synthetic handlers fire at the
-  // React root (before document), so we can set the flag first.
+  // Prevent MUI SwipeableDrawer from claiming touches that belong to the
+  // drawer's inner content. We set `defaultMuiPrevented` on the native event
+  // before MUI's document-level touchstart listener fires — React synthetic
+  // handlers dispatch from the React root during bubbling, which beats
+  // document listeners. Two cases:
+  //
+  // 1. Nested drawers (disablePortal + open): the parent drawer's document
+  //    listener would otherwise claim every touch inside the child.
+  //
+  // 2. Any open drawer with a touch starting inside `[data-swipe-blocked]`:
+  //    the attribute is also checked in `allowSwipeInChildren`, but that
+  //    callback is only consulted when the drawer is closed (MUI v7 gates
+  //    it behind `if (!open)`), so we need this second path to actually
+  //    block swipe-to-close from map/zoom/drag-handle zones.
   const handleNestedTouchStart = useCallback((e: React.TouchEvent) => {
-    if (disablePortal && (open ?? false)) {
-      (e.nativeEvent as unknown as Record<string, unknown>).defaultMuiPrevented = true;
+    if (!(open ?? false)) return;
+    const nativeEvent = e.nativeEvent as unknown as Record<string, unknown>;
+    if (disablePortal) {
+      nativeEvent.defaultMuiPrevented = true;
+      return;
+    }
+    const target = e.target as HTMLElement | null;
+    if (target?.closest('[data-swipe-blocked]')) {
+      nativeEvent.defaultMuiPrevented = true;
     }
   }, [disablePortal, open]);
 
