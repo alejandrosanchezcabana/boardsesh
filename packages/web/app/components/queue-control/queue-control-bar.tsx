@@ -23,6 +23,8 @@ import PreviousClimbButton from './previous-climb-button';
 import QueueList, { QueueListHandle } from './queue-list';
 import { useSwipeable } from 'react-swipeable';
 import { TickButton } from '../logbook/tick-button';
+import { TickButtonWithLabel } from '../logbook/tick-icon';
+import { PersonFallingIcon } from '@/app/components/icons/person-falling-icon';
 import { QuickTickBar, type QuickTickBarHandle } from '../logbook/quick-tick-bar';
 import { hasPriorHistoryForClimb } from '@/app/hooks/use-tick-save';
 import { useBoardProvider } from '../board-provider/board-provider-context';
@@ -202,6 +204,9 @@ const QueueControlBar: React.FC<QueueControlBarProps> = ({ boardDetails, angle }
   const [tickCommentFocused, setTickCommentFocused] = useState(false);
   const [isFlash, setIsFlash] = useState(
     () => !!currentClimb && !hasPriorHistoryForClimb(currentClimb, logbook),
+  );
+  const [ascentType, setAscentType] = useState<'flash' | 'send' | 'attempt'>(
+    () => isFlash ? 'flash' : 'send',
   );
   const quickTickBarRef = useRef<QuickTickBarHandle>(null);
 
@@ -486,6 +491,7 @@ const QueueControlBar: React.FC<QueueControlBarProps> = ({ boardDetails, angle }
     } else {
       setTickSwipeOffset(0);
       setIsFlash(false);
+      setAscentType('send');
       setTickBarExpanded(false);
       const timer = setTimeout(() => {
         setTickRowVisible(false);
@@ -907,15 +913,13 @@ const QueueControlBar: React.FC<QueueControlBarProps> = ({ boardDetails, angle }
               ...tickDismissStyle,
             }}
           >
+            {/* Drag handle — centered across full tick bar width */}
+            <div className={styles.tickDragHandleBar} />
             <div className={styles.tickRowInner}>
-              {/* Drag handle — swipe hint, always at top */}
+              {/* Toolbar: expand left, close right */}
               <div className={styles.tickDragHandleRow}>
-                <div className={styles.tickDragHandleBar} />
-              </div>
-              {/* Toolbar: expand on left, close on right */}
-              <div className={styles.tickToolbar}>
                 <div
-                  className={styles.tickExpandHeader}
+                  className={styles.tickExpandButton}
                   onClick={() => setTickBarExpanded((v) => !v)}
                   role="button"
                   tabIndex={0}
@@ -927,7 +931,7 @@ const QueueControlBar: React.FC<QueueControlBarProps> = ({ boardDetails, angle }
                   ) : (
                     <KeyboardArrowUpOutlined sx={{ fontSize: 16, opacity: 0.7 }} />
                   )}
-                  <span className={styles.tickExpandLabel}>{tickBarExpanded ? 'collapse' : 'expand'}</span>
+                  <span className={styles.tickExpandLabel}>{tickBarExpanded ? 'Collapse' : 'Expand'}</span>
                 </div>
                 <div className={styles.tickCloseButton}>
                   <IconButton
@@ -961,6 +965,7 @@ const QueueControlBar: React.FC<QueueControlBarProps> = ({ boardDetails, angle }
                   onError={() => showMessage('Couldn\u2019t save your tick. Give it another go.', 'error')}
                   onDraftRestored={(draftComment) => setTickComment(draftComment)}
                   onIsFlashChange={setIsFlash}
+                  onAscentTypeChange={setAscentType}
                   comment={tickComment}
                   commentSlot={
                     <div className={`${styles.tickComment} ${tickCommentFocused ? styles.tickCommentExpanded : ''}`}>
@@ -1149,7 +1154,23 @@ const QueueControlBar: React.FC<QueueControlBarProps> = ({ boardDetails, angle }
                       <NextClimbButton navigate={isViewPage || isPlayPage} boardDetails={boardDetails} />
                     </Stack>
                   </span>
-                  <ShareBoardButton />
+                  {/* Attempt button — only visible in tick mode (collapsed) */}
+                  {tickBarActive && !tickBarExpanded && (
+                    <TickButtonWithLabel label="attempt">
+                      <IconButton
+                        onClick={(e) => quickTickBarRef.current?.saveAttempt(e.currentTarget)}
+                        sx={{
+                          backgroundColor: themeTokens.colors.errorMuted,
+                          color: themeTokens.colors.error,
+                          '&:hover': { backgroundColor: themeTokens.colors.errorMutedHover },
+                        }}
+                        aria-label="Log attempt"
+                      >
+                        <PersonFallingIcon />
+                      </IconButton>
+                    </TickButtonWithLabel>
+                  )}
+                  {!tickBarActive && <ShareBoardButton />}
                   {/* Tick button — activates tick mode, or saves when already active */}
                   <TickButton
                     currentClimb={displayedClimb}
@@ -1159,6 +1180,7 @@ const QueueControlBar: React.FC<QueueControlBarProps> = ({ boardDetails, angle }
                     onTickSave={(el) => quickTickBarRef.current?.save(el)}
                     tickBarActive={tickBarActive}
                     isFlash={isFlash}
+                    ascentType={tickBarExpanded ? ascentType : undefined}
                   />
                 </Stack>
               </Box>

@@ -2,10 +2,8 @@
 
 import React, { useState, useCallback, useEffect, useMemo, useImperativeHandle, useRef, forwardRef } from 'react';
 import Stack from '@mui/material/Stack';
-import IconButton from '@mui/material/IconButton';
 import KeyboardArrowUpOutlined from '@mui/icons-material/KeyboardArrowUpOutlined';
 import KeyboardArrowDownOutlined from '@mui/icons-material/KeyboardArrowDownOutlined';
-import SaveOutlined from '@mui/icons-material/SaveOutlined';
 import ElectricBoltOutlined from '@mui/icons-material/ElectricBoltOutlined';
 import { Angle, Climb, BoardDetails } from '@/app/lib/types';
 import { useBoardProvider } from '../board-provider/board-provider-context';
@@ -36,6 +34,8 @@ export interface QuickTickBarProps {
   onDraftRestored?: (comment: string) => void;
   /** Called when the flash state changes (true = will log as flash, false = send/attempt). */
   onIsFlashChange?: (isFlash: boolean) => void;
+  /** Called when the ascent type changes (flash, send, or attempt). */
+  onAscentTypeChange?: (ascentType: TickStatus) => void;
   /** Current comment text. Owned by the parent so the comment field can live
    *  outside this bar (above the queue control bar) without causing reflow. */
   comment: string;
@@ -75,6 +75,7 @@ export const QuickTickBar = forwardRef<QuickTickBarHandle, QuickTickBarProps>(({
   onError,
   onDraftRestored,
   onIsFlashChange,
+  onAscentTypeChange,
   comment,
   commentSlot,
   expanded = false,
@@ -126,11 +127,15 @@ export const QuickTickBar = forwardRef<QuickTickBarHandle, QuickTickBarProps>(({
     setAscentType(value);
   }, []);
 
-  // Report flash state to the parent so tick buttons can show the flash icon.
+  // Report ascent type to the parent so tick buttons can update their appearance.
   const isFlash = ascentType === 'flash';
   useEffect(() => {
     onIsFlashChange?.(isFlash);
   }, [isFlash, onIsFlashChange]);
+
+  useEffect(() => {
+    onAscentTypeChange?.(ascentType);
+  }, [ascentType, onAscentTypeChange]);
 
   // Restore draft values from a previous failed save for this climb.
   const draftLoaded = useRef(false);
@@ -214,15 +219,6 @@ export const QuickTickBar = forwardRef<QuickTickBarHandle, QuickTickBarProps>(({
     save,
     saveAttempt,
   }), [save, saveAttempt]);
-
-  // Color for the save button based on selected ascent type.
-  const saveButtonColor = ascentType === 'flash'
-    ? themeTokens.colors.amber
-    : ascentType === 'attempt'
-      ? themeTokens.colors.error
-      : themeTokens.colors.success;
-
-  const saveButtonTextColor = ascentType === 'flash' ? 'var(--neutral-900)' : 'white';
 
   return (
     <div data-testid="quick-tick-bar" className={styles.tickBar}>
@@ -308,22 +304,6 @@ export const QuickTickBar = forwardRef<QuickTickBarHandle, QuickTickBarProps>(({
               {expandedCommentSlot}
             </div>
           )}
-
-          {/* Save button */}
-          <div className={styles.saveRow}>
-            <IconButton
-              onClick={(e) => save(e.currentTarget)}
-              aria-label="Save tick"
-              sx={{
-                backgroundColor: saveButtonColor,
-                color: saveButtonTextColor,
-                transition: 'background-color 150ms ease, color 150ms ease',
-                '&:hover': { backgroundColor: saveButtonColor },
-              }}
-            >
-              <SaveOutlined />
-            </IconButton>
-          </div>
           </div>
         </div>
       )}

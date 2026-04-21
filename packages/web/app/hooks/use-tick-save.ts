@@ -23,6 +23,8 @@ export interface UseTickSaveOptions {
   difficulty: number | undefined;
   attemptCount: number;
   comment: string;
+  /** Explicit ascent type. When provided, overrides the inferred status logic. */
+  ascentType?: TickStatus;
   onSave: () => void;
   onError?: () => void;
 }
@@ -71,7 +73,7 @@ export function useTickSave(options: UseTickSaveOptions): {
   save: (originElement?: HTMLElement | null) => void;
   saveAttempt: (originElement?: HTMLElement | null) => void;
 } {
-  const { tickTarget, quality, difficulty, attemptCount, comment, onSave, onError } = options;
+  const { tickTarget, quality, difficulty, attemptCount, comment, ascentType: explicitAscentType, onSave, onError } = options;
   const { saveTick } = useBoardProvider();
   const fireConfetti = useConfetti();
   const saving = useRef(false);
@@ -85,14 +87,18 @@ export function useTickSave(options: UseTickSaveOptions): {
   }, []);
 
   const handleSave = useCallback(
-    (isAscent: boolean, confettiOrigin?: HTMLElement | null) => {
+    (isAscent: boolean, confettiOrigin?: HTMLElement | null, forceAttempt?: boolean) => {
       if (!tickTarget || saving.current) return;
       saving.current = true;
 
       const { climb, angle: targetAngle, boardDetails: targetBoard, hasPriorHistory } = tickTarget;
 
       let status: TickStatus;
-      if (isAscent) {
+      if (forceAttempt) {
+        status = 'attempt';
+      } else if (explicitAscentType) {
+        status = explicitAscentType;
+      } else if (isAscent) {
         status = hasPriorHistory || attemptCount > 1 ? 'send' : 'flash';
       } else {
         status = 'attempt';
@@ -102,7 +108,11 @@ export function useTickSave(options: UseTickSaveOptions): {
       const draftValues = { climbUuid: climb.uuid, angle: Number(targetAngle), quality, difficulty, attemptCount, comment, status };
 
       // Fire celebration and close the bar -- don't wait for the network.
-      const variant = !isAscent ? 'attempt' : status === 'flash' ? 'flash' : 'ascent';
+      // When an explicit ascentType is provided, derive the variant from status
+      // (the isAscent boolean is only meaningful for the legacy two-method API).
+      const variant = explicitAscentType
+        ? (status === 'attempt' ? 'attempt' : status === 'flash' ? 'flash' : 'ascent')
+        : (!isAscent ? 'attempt' : status === 'flash' ? 'flash' : 'ascent');
       fireConfetti(confettiOrigin ?? null, variant);
       // Flash: brief 300ms delay so the button pulse + sparks play before the bar closes.
       if (variant === 'flash') {
@@ -150,11 +160,11 @@ export function useTickSave(options: UseTickSaveOptions): {
         onError?.();
       });
     },
-    [tickTarget, quality, difficulty, comment, saveTick, onSave, attemptCount, fireConfetti, onError],
+    [tickTarget, quality, difficulty, comment, explicitAscentType, saveTick, onSave, attemptCount, fireConfetti, onError],
   );
 
-  const save = useCallback((originElement?: HTMLElement | null) => handleSave(true, originElement), [handleSave]);
-  const saveAttempt = useCallback((originElement?: HTMLElement | null) => handleSave(false, originElement), [handleSave]);
+  const save = useCallback((originElement?: HTMLElement | null) => handleSave(true, originElement, false), [handleSave]);
+  const saveAttempt = useCallback((originElement?: HTMLElement | null) => handleSave(false, originElement, true), [handleSave]);
 
   return { save, saveAttempt };
 }

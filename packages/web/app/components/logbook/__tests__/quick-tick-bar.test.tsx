@@ -200,6 +200,7 @@ describe('QuickTickBar', () => {
 
   describe('save behaviour — history-aware default', () => {
     it('saves as flash with attemptCount 1 when the logbook is empty', async () => {
+      vi.useFakeTimers();
       mockLogbookRef.current = [];
       const ref = React.createRef<QuickTickBarHandle>();
       render(<QuickTickBar ref={ref} {...defaultProps} />);
@@ -213,6 +214,8 @@ describe('QuickTickBar', () => {
       expect(call.status).toBe('flash');
       expect(call.attemptCount).toBe(1);
       expect(call.climbUuid).toBe('climb-1');
+      // Flash saves have a 300ms delay before calling onSave (for button pulse animation).
+      await act(async () => { vi.advanceTimersByTime(300); });
       expect(defaultProps.onSave).toHaveBeenCalledTimes(1);
     });
 
