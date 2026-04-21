@@ -101,6 +101,22 @@
   font-size: 20px;
 }
 
+/* Backdrop overlay — covers the board area when the tick bar is active */
+.tickBarOverlay {
+  position: absolute;
+  inset: 0;
+  z-index: 9;
+  background-color: var(--overlay-light);
+  opacity: 0;
+  transition: opacity 200ms ease-out;
+  pointer-events: none;
+}
+
+.tickBarOverlayActive {
+  opacity: 1;
+  pointer-events: auto;
+}
+
 /* Floating tick bar — overlays the bottom of the board section, no reflow */
 .tickBarContainer {
   position: absolute;

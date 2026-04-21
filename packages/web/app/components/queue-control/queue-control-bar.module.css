@@ -480,6 +480,23 @@
   will-change: transform;
 }
 
+/* Backdrop overlay — covers page behind the queue bar when tick mode is active.
+   Rendered via portal to document.body so it escapes the fixed bottom-bar stacking context. */
+.tickOverlay {
+  position: fixed;
+  inset: 0;
+  z-index: 9;
+  background-color: var(--overlay-light);
+  opacity: 0;
+  transition: opacity 200ms ease-out;
+  pointer-events: none;
+}
+
+.tickOverlayActive {
+  opacity: 1;
+  pointer-events: auto;
+}
+
 @keyframes thumbnailFadeIn {
   from { opacity: 0; transform: scale(0.85); }
   to { opacity: 1; transform: scale(1); }

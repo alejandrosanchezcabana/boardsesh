@@ -51,6 +51,7 @@ import { usePullToClose, findScrollContainer } from '@/app/lib/hooks/pull-to-clo
 import { useSnackbar } from '../providers/snackbar-provider';
 import { getGradeTintColor } from '@/app/lib/grade-colors';
 import { useIsDarkMode } from '@/app/hooks/use-is-dark-mode';
+import { getPreference, setPreference } from '@/app/lib/user-preferences-db';
 import QueueDrawer from './queue-drawer';
 
 
@@ -167,7 +168,7 @@ interface PlayViewTickBarProps {
   onError: () => void;
 }
 
-const PlayViewTickBar = React.memo<PlayViewTickBarProps>(function PlayViewTickBar({
+export const PlayViewTickBar = React.memo<PlayViewTickBarProps>(function PlayViewTickBar({
   isTickBarActive,
   currentClimb,
   angle,
@@ -190,6 +191,21 @@ const PlayViewTickBar = React.memo<PlayViewTickBarProps>(function PlayViewTickBa
     () => getGradeTintColor(currentClimb.difficulty, 'default', isDark),
     [currentClimb.difficulty, isDark],
   );
+
+  // Restore persisted tick bar expanded state when tick bar opens
+  useEffect(() => {
+    if (isTickBarActive) {
+      getPreference<boolean>('tickBarExpanded').then((persisted) => {
+        if (persisted === true) setTickBarExpanded(true);
+      });
+    }
+  }, [isTickBarActive]);
+
+  // Persist expanded state on user-initiated toggle (not on automatic resets)
+  const handleTickBarExpandedChange = useCallback((expanded: boolean) => {
+    setTickBarExpanded(expanded);
+    setPreference('tickBarExpanded', expanded);
+  }, []);
 
   const handleCommentFocus = useCallback(() => setCommentFocused(true), []);
   const handleCommentBlur = useCallback(() => setCommentFocused(false), []);
@@ -227,10 +243,10 @@ const PlayViewTickBar = React.memo<PlayViewTickBarProps>(function PlayViewTickBa
             <div className={styles.tickBarToolbar}>
               <div
                 className={styles.tickBarExpandButton}
-                onClick={() => setTickBarExpanded((v) => !v)}
+                onClick={() => handleTickBarExpandedChange(!tickBarExpanded)}
                 role="button"
                 tabIndex={0}
-                onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') setTickBarExpanded((v) => !v); }}
+                onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') handleTickBarExpandedChange(!tickBarExpanded); }}
                 aria-label={tickBarExpanded ? 'Collapse tick bar' : 'Expand tick bar'}
               >
                 {tickBarExpanded ? (
@@ -731,6 +747,15 @@ const PlayViewDrawer: React.FC<PlayViewDrawerProps> = ({
               )}
             </button>
           </div>
+        )}
+
+        {/* Tick bar backdrop overlay */}
+        {isOpen && (
+          <div
+            className={`${styles.tickBarOverlay} ${isTickBarActive ? styles.tickBarOverlayActive : ''}`}
+            onClick={handleTickBarClose}
+            aria-hidden="true"
+          />
         )}
 
         {/* Floating tick bar — overlays bottom of board section, no reflow */}

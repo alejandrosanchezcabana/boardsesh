@@ -1,5 +1,6 @@
 'use client';
 import React, { useState, useCallback, useRef, useEffect, useMemo } from 'react';
+import { createPortal } from 'react-dom';
 import MuiButton from '@mui/material/Button';
 import IconButton from '@mui/material/IconButton';
 import MuiCard from '@mui/material/Card';
@@ -479,6 +480,21 @@ const QueueControlBar: React.FC<QueueControlBarProps> = ({ boardDetails, angle }
     };
   }, [currentClimb, tickBarActive]);
 
+  // Restore persisted tick bar expanded state when tick mode opens
+  useEffect(() => {
+    if (tickBarActive) {
+      getPreference<boolean>('tickBarExpanded').then((persisted) => {
+        if (persisted === true) setTickBarExpanded(true);
+      });
+    }
+  }, [tickBarActive]);
+
+  // Persist expanded state on user-initiated toggle (not on automatic resets)
+  const handleTickBarExpandedChange = useCallback((expanded: boolean) => {
+    setTickBarExpanded(expanded);
+    setPreference('tickBarExpanded', expanded);
+  }, []);
+
   // Close expanded participants when tick mode opens
   useEffect(() => {
     if (tickBarActive) setParticipantsExpanded(false);
@@ -524,7 +540,7 @@ const QueueControlBar: React.FC<QueueControlBarProps> = ({ boardDetails, angle }
       const target = eventData.event.target as HTMLElement | null;
       if (target?.closest('[data-scrollable-picker]')) return;
       if (!tickBarExpanded && Math.abs(eventData.deltaY) >= 50) {
-        setTickBarExpanded(true);
+        handleTickBarExpandedChange(true);
       }
       setTickSwipeOffset(0);
     },
@@ -536,7 +552,7 @@ const QueueControlBar: React.FC<QueueControlBarProps> = ({ boardDetails, angle }
         if (Math.abs(eventData.deltaY) >= 120 || eventData.velocity > 0.5) {
           setActiveDrawer('none');
         } else if (Math.abs(eventData.deltaY) >= 50) {
-          setTickBarExpanded(false);
+          handleTickBarExpandedChange(false);
         }
       } else {
         if (Math.abs(eventData.deltaY) >= 80) {
@@ -920,10 +936,10 @@ const QueueControlBar: React.FC<QueueControlBarProps> = ({ boardDetails, angle }
               <div className={styles.tickDragHandleRow}>
                 <div
                   className={styles.tickExpandButton}
-                  onClick={() => setTickBarExpanded((v) => !v)}
+                  onClick={() => handleTickBarExpandedChange(!tickBarExpanded)}
                   role="button"
                   tabIndex={0}
-                  onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') setTickBarExpanded((v) => !v); }}
+                  onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') handleTickBarExpandedChange(!tickBarExpanded); }}
                   aria-label={tickBarExpanded ? 'Collapse tick bar' : 'Expand tick bar'}
                 >
                   {tickBarExpanded ? (
@@ -1221,6 +1237,17 @@ const QueueControlBar: React.FC<QueueControlBarProps> = ({ boardDetails, angle }
         open={startSeshOpen}
         onClose={() => setStartSeshOpen(false)}
       />
+
+      {/* Backdrop overlay — rendered via portal so it escapes the fixed bottom-bar stacking context */}
+      {typeof document !== 'undefined' && (tickBarActive || tickRowVisible) && createPortal(
+        <div
+          data-testid="tick-backdrop-overlay"
+          className={`${styles.tickOverlay} ${tickBarActive ? styles.tickOverlayActive : ''}`}
+          onClick={() => setActiveDrawer('none')}
+          aria-hidden="true"
+        />,
+        document.body,
+      )}
     </div>
   );
 };

@@ -9,6 +9,7 @@ export type UserPreferenceKeyMap = {
   'swipeHint:climbListSeen': boolean;
   'swipeHint:queueBarSeen': boolean;
   'swipeHint:logbookSeen': boolean;
+  tickBarExpanded: boolean;
 };
 
 // Map of IDB preference keys to their legacy localStorage keys for one-time migration
