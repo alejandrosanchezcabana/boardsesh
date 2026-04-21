@@ -36,6 +36,8 @@ jobs:
     if: github.event.workflow.name == 'Backend Integration Tests'
     runs-on: ubuntu-latest
     steps:
+      - uses: actions/checkout@v6
+
       - name: Download all shard results
         uses: actions/download-artifact@v4
         with:
@@ -48,7 +50,6 @@ jobs:
       - name: Publish Backend Integration Tests report
         uses: turing85/publish-report@v2
         with:
-          checkout: 'true'
           comment-header: backend-test-report
           comment-enabled: 'true'
           report-name: Backend Integration Tests

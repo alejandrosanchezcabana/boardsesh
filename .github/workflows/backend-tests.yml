@@ -105,6 +105,8 @@ jobs:
       pull-requests: write
 
     steps:
+      - uses: actions/checkout@v6
+
       - name: Download all shard results
         uses: actions/download-artifact@v4
         with:
@@ -115,7 +117,6 @@ jobs:
       - name: Publish test report
         uses: turing85/publish-report@v2
         with:
-          checkout: 'true'
           comment-header: backend-integration-tests
           comment-enabled: 'true'
           report-name: Backend Integration Tests
