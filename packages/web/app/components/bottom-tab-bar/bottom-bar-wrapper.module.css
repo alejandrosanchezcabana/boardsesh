@@ -30,6 +30,14 @@
   }
 }
 
+/* Android Capacitor: env(safe-area-inset-bottom) is not forwarded from
+   WindowInsets by Capacitor 8 and reports 0, but with targetSdk 35+ the
+   WebView draws under the gesture/nav bar. Use a minimum of 24px so the
+   tab-bar icons sit above the Android system gesture area. */
+.androidNative {
+  --tab-bar-safe-area-padding: max(env(safe-area-inset-bottom, 0px), 24px);
+}
+
 @media (min-width: 768px) {
   .bottomBarWrapper {
     left: 0;

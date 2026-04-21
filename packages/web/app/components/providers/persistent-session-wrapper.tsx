@@ -25,7 +25,7 @@ import SessionSummaryDialog from '../session-summary/session-summary-dialog';
 import { SearchDrawerBridgeProvider } from '../search-drawer/search-drawer-bridge-context';
 import { StatsFilterBridgeProvider } from '../stats-filter-bridge/stats-filter-bridge-context';
 import { ProfileHeaderShareProvider } from '../profile-header-bridge/profile-header-bridge-context';
-import { isNativeApp } from '@/app/lib/ble/capacitor-utils';
+import { isNativeApp, getPlatform } from '@/app/lib/ble/capacitor-utils';
 import dynamic from 'next/dynamic';
 import { SESH_SETTINGS_DRAWER_EVENT } from '../sesh-settings/sesh-settings-drawer-event';
 
@@ -136,13 +136,14 @@ export function RootBottomBar({ boardConfigs }: { boardConfigs: BoardConfigData 
   const { boardDetails, angle, hasActiveQueue } = useQueueBridgeBoardInfo();
   const pathname = usePathname();
   const isNative = isNativeApp();
+  const isAndroidNative = isNative && getPlatform() === 'android';
 
   const hideTabBar = HIDE_TAB_BAR_PAGES.some((prefix) => pathname.startsWith(prefix)) && !hasActiveQueue;
   const shouldShowQueueShell = isBoardRoutePath(pathname) && !hasActiveQueue && !boardDetails;
 
   return (
     <div
-      className={`${bottomBarStyles.bottomBarWrapper} ${isNative ? bottomBarStyles.nativeApp : ''}`}
+      className={`${bottomBarStyles.bottomBarWrapper} ${isNative ? bottomBarStyles.nativeApp : ''} ${isAndroidNative ? bottomBarStyles.androidNative : ''}`}
       data-testid="bottom-bar-wrapper"
     >
       {hasActiveQueue && boardDetails && (
