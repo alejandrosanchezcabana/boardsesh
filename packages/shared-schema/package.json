@@ -30,7 +30,7 @@
   "scripts": {
     "build": "tsc",
     "dev": "tsc --watch",
-    "typecheck": "vp check --no-fmt --no-lint",
+    "typecheck": "tsc --noEmit",
     "lint": "vp lint",
     "lint-fix": "vp lint --fix"
   },

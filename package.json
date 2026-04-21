@@ -13,7 +13,7 @@
     "build:crypto": "bun run --filter=@boardsesh/crypto build",
     "build:db": "bun run --filter=@boardsesh/db build",
     "lint": "vp lint",
-    "typecheck": "vp check --no-fmt --no-lint",
+    "typecheck": "bun run --filter='*' typecheck",
     "typecheck:web": "bun run --filter=@boardsesh/web typecheck",
     "typecheck:backend": "bun run --filter=boardsesh-backend typecheck",
     "typecheck:db": "bun run --filter=@boardsesh/db typecheck",
@@ -54,6 +54,7 @@
   },
   "devDependencies": {
     "@vitest/coverage-v8": "^4.1.4",
+    "oxlint-tsgolint": "^0.21.1",
     "vite-plus": "^0.1.18",
     "vitest": "^4.1.4"
   },

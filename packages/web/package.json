@@ -10,7 +10,7 @@
     "start": "next start",
     "lint": "vp lint",
     "lint-fix": "vp lint --fix",
-    "typecheck": "vp check --no-fmt --no-lint",
+    "typecheck": "tsc --noEmit",
     "format": "vp fmt",
     "test": "vp test",
     "test:ui": "vp test --ui",

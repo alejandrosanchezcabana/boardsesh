@@ -7,7 +7,7 @@
   "scripts": {
     "dev": "NODE_ENV=development DOTENV_CONFIG_PATH=.env.development tsx watch src/index.ts",
     "build": "tsc",
-    "typecheck": "vp check --no-fmt --no-lint",
+    "typecheck": "tsc --noEmit",
     "start": "tsx src/index.ts",
     "test": "vp test",
     "test:run": "vp test run",
