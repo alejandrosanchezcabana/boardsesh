@@ -3,6 +3,7 @@ import path from 'path';
 import { execFileSync } from 'child_process';
 import { fileURLToPath } from 'url';
 import { eq, sql } from 'drizzle-orm';
+import type { PgDatabase, PgQueryResultHKT, PgTable } from 'drizzle-orm/pg-core';
 import {
   boardAttempts,
   boardBetaLinks,
@@ -491,8 +492,8 @@ function createImportConfigs(): ImportConfig[] {
 }
 
 async function insertBatches(
-  tx: any,
-  destination: unknown,
+  tx: PgDatabase<PgQueryResultHKT>,
+  destination: PgTable,
   rows: Record<string, unknown>[],
   label: string,
   conflictMode: 'ignore' | 'allowDuplicates' = 'ignore',
@@ -506,7 +507,7 @@ async function insertBatches(
 
   for (let index = 0; index < rows.length; index += BATCH_SIZE) {
     const batch = rows.slice(index, index + BATCH_SIZE);
-    const insertQuery = tx.insert(destination as any).values(batch);
+    const insertQuery = tx.insert(destination).values(batch);
     if (conflictMode === 'ignore') {
       await insertQuery.onConflictDoNothing();
     } else {
@@ -515,7 +516,7 @@ async function insertBatches(
   }
 }
 
-async function clearBoardData(tx: any, boardName: DirectAuroraBoard) {
+async function clearBoardData(tx: PgDatabase<PgQueryResultHKT>, boardName: DirectAuroraBoard) {
   await tx.delete(boardTags).where(eq(boardTags.boardType, boardName));
   await tx.delete(boardCircuitsClimbs).where(eq(boardCircuitsClimbs.boardType, boardName));
   await tx.delete(boardBetaLinks).where(eq(boardBetaLinks.boardType, boardName));
@@ -610,8 +611,8 @@ async function main() {
   const { db, close } = createScriptDb(databaseUrl);
 
   try {
-    const transactionalDb = db as any;
-    await transactionalDb.transaction(async (tx: any) => {
+    const transactionalDb = db as unknown as PgDatabase<PgQueryResultHKT>;
+    await transactionalDb.transaction(async (tx) => {
       console.log(`Clearing existing ${boardName} rows from unified tables...`);
       await clearBoardData(tx, boardName);
 

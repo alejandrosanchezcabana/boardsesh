@@ -54,6 +54,7 @@ const createTablesSQL = `
     "ended_at" timestamp,
     "is_permanent" boolean DEFAULT false NOT NULL,
     "color" text,
+    "health_kit_workout_id" text,
     CONSTRAINT "board_sessions_status_check" CHECK (status IN ('active', 'inactive', 'ended'))
   );
 

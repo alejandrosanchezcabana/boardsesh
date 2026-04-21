@@ -34,8 +34,8 @@ export interface ClimbSearchParams {
   onlyClassics?: boolean;
   onlyTallClimbs?: boolean;
   // Hold filters - 'ANY', 'NOT', or specific states like 'STARTING', 'HAND', etc.
-  // Record<string, any> allows for both simple strings and the object-based LitUpHoldsMap
-  holdsFilter?: Record<string, any>;
+  // Record<string, unknown> allows for both simple strings and the object-based LitUpHoldsMap
+  holdsFilter?: Record<string, unknown>;
   // Personal progress filters
   hideAttempted?: boolean;
   hideCompleted?: boolean;
@@ -44,7 +44,7 @@ export interface ClimbSearchParams {
   onlyDrafts?: boolean;
   projectsOnly?: boolean;
   // Allow dynamic hold keys (e.g., hold_123)
-  [key: `hold_${number}`]: any;
+  [key: `hold_${number}`]: unknown;
 }
 
 /**
