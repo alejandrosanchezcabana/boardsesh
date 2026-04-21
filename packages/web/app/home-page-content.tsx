@@ -121,7 +121,7 @@ function OnboardingCard({ icon, title, description, onClick }: OnboardingCardPro
 const IOS_APP_STORE_URL = 'https://apps.apple.com/app/boardsesh/id6761350784';
 const ANDROID_PLAY_STORE_URL = 'https://play.google.com/store/apps/details?id=com.boardsesh.app';
 const ANDROID_SIDELOAD_URL = 'https://github.com/boardsesh/boardsesh/releases/latest';
-const ANDROID_LAUNCH_DATE = new Date('2026-04-29T00:00:00Z');
+const ANDROID_LAUNCH_DATE = new Date('2026-05-03T00:00:00Z');
 
 type InstallPlatform = 'unknown' | 'native' | 'android-web' | 'other-web';
 

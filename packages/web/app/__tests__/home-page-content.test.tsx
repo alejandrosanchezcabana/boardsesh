@@ -250,7 +250,7 @@ describe('HomePageContent', () => {
     });
 
     it('switches to the Google Play CTA on Android once the launch date has passed', async () => {
-      vi.setSystemTime(new Date('2026-05-01T00:00:00Z'));
+      vi.setSystemTime(new Date('2026-05-05T00:00:00Z'));
       setUserAgent(ANDROID_UA);
       render(<HomePageContent {...defaultProps} />);
       await waitFor(() => {
