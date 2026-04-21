@@ -1,8 +1,8 @@
-import { AURORA_BOARDS, SUPPORTED_BOARDS } from '@boardsesh/shared-schema';
-import type { AuroraBoardName } from '@boardsesh/shared-schema';
-import type { HoldRenderData } from '@/app/components/board-renderer/types';
-import type { BoardDetails, ImageFileName } from '@/app/lib/types';
-import type { SetIdList } from '@/app/lib/board-data';
+import { AURORA_BOARDS, SUPPORTED_BOARDS } from "@boardsesh/shared-schema";
+import type { AuroraBoardName } from "@boardsesh/shared-schema";
+import type { HoldRenderData } from "@/app/components/board-renderer/types";
+import type { BoardDetails, ImageFileName } from "@/app/lib/types";
+import type { SetIdList } from "@/app/lib/board-data";
 import {
   PRODUCT_SIZES,
   getProductSize,
@@ -10,17 +10,26 @@ import {
   getSetsForLayoutAndSize,
   getImageFilename,
   getHolePlacements,
-} from '@boardsesh/board-constants/product-sizes';
-import { BOARD_IMAGE_DIMENSIONS } from './board-data';
-import type { BoardName, HoldTuple } from './types';
+} from "@boardsesh/board-constants/product-sizes";
+import { BOARD_IMAGE_DIMENSIONS } from "./board-data";
+import type { BoardName, HoldTuple } from "./types";
 
-export * from '@boardsesh/board-constants/product-sizes';
-export type { HoldTuple, LayoutData, ProductSizeData, SetData, SizeEdges } from '@boardsesh/board-constants/product-sizes';
+export * from "@boardsesh/board-constants/product-sizes";
+export type {
+  HoldTuple,
+  LayoutData,
+  ProductSizeData,
+  SetData,
+  SizeEdges,
+} from "@boardsesh/board-constants/product-sizes";
 
 export const AURORA_BOARD_NAMES = [...AURORA_BOARDS];
 export const KILTER_HOMEWALL_LAYOUT_ID = 8;
 export const KILTER_HOMEWALL_PRODUCT_ID = 7;
-export const BOARD_NAME_PREFIX_REGEX = new RegExp(`^(?:${SUPPORTED_BOARDS.join('|')})\\s*(?:board)?\\s*`, 'i');
+export const BOARD_NAME_PREFIX_REGEX = new RegExp(
+  `^(?:${SUPPORTED_BOARDS.join("|")})\\s*(?:board)?\\s*`,
+  "i",
+);
 
 export function isAuroraBoardName(boardName: string): boardName is AuroraBoardName {
   return AURORA_BOARD_NAMES.includes(boardName as AuroraBoardName);
@@ -41,7 +50,7 @@ export const getBoardDetails = ({
   if (!sizeData) {
     const availableSizes = Object.keys(PRODUCT_SIZES[board_name] || {});
     throw new Error(
-      `Size dimensions not found for board_name=${board_name}, size_id=${size_id}. Available sizes: [${availableSizes.join(', ')}]`,
+      `Size dimensions not found for board_name=${board_name}, size_id=${size_id}. Available sizes: [${availableSizes.join(", ")}]`,
     );
   }
 
@@ -52,7 +61,9 @@ export const getBoardDetails = ({
   for (const setId of set_ids) {
     const imageFilename = getImageFilename(board_name, layout_id, size_id, setId);
     if (!imageFilename) {
-      throw new Error(`Could not find image for set_id ${setId} for layout_id: ${layout_id} and size_id: ${size_id}`);
+      throw new Error(
+        `Could not find image for set_id ${setId} for layout_id: ${layout_id} and size_id: ${size_id}`,
+      );
     }
     imagesToHolds[imageFilename] = getHolePlacements(board_name, layout_id, setId);
   }
@@ -99,7 +110,7 @@ export const getBoardDetails = ({
     layout_id,
     size_id,
     set_ids,
-    supportsMirroring: (board_name === 'tension' && layout_id !== 11) || board_name === 'decoy',
+    supportsMirroring: (board_name === "tension" && layout_id !== 11) || board_name === "decoy",
     layout_name: layoutData?.name,
     size_name: sizeData.name,
     size_description: sizeData.description,

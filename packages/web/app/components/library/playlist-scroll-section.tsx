@@ -1,8 +1,8 @@
-'use client';
+"use client";
 
-import React from 'react';
-import Skeleton from '@mui/material/Skeleton';
-import styles from './library.module.css';
+import React from "react";
+import Skeleton from "@mui/material/Skeleton";
+import styles from "./library.module.css";
 
 type PlaylistScrollSectionProps = {
   title: string;
@@ -35,9 +35,7 @@ export default function PlaylistScrollSection({
   return (
     <div className={styles.scrollSection}>
       <div className={styles.sectionTitle}>{title}</div>
-      <div className={styles.scrollContainer}>
-        {children}
-      </div>
+      <div className={styles.scrollContainer}>{children}</div>
     </div>
   );
 }

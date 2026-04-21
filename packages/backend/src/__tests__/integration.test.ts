@@ -1,9 +1,9 @@
-import { describe, it, expect, beforeAll, afterAll, afterEach } from 'vitest';
-import { createClient, Client } from 'graphql-ws';
-import WebSocket from 'ws';
-import { v4 as uuidv4 } from 'uuid';
-import { startServer } from '../server';
-import type { ClimbQueueItem } from '@boardsesh/shared-schema';
+import { describe, it, expect, beforeAll, afterAll, afterEach } from "vite-plus/test";
+import { createClient, Client } from "graphql-ws";
+import WebSocket from "ws";
+import { v4 as uuidv4 } from "uuid";
+import { startServer } from "../server";
+import type { ClimbQueueItem } from "@boardsesh/shared-schema";
 
 interface JoinSessionResult {
   id: string;
@@ -51,7 +51,7 @@ interface SessionEvent {
 }
 
 // Test fixtures
-const TEST_BOARD_PATH = '/kilter/1/2/3/40';
+const TEST_BOARD_PATH = "/kilter/1/2/3/40";
 const TEST_PORT = 8082;
 
 // Helper to generate unique session IDs for each test
@@ -71,20 +71,20 @@ const createTestClimb = (label: string): ClimbQueueItem => ({
   uuid: getTestClimbUuid(label),
   climb: {
     uuid: `climb-${label}`,
-    setter_username: 'test-setter',
+    setter_username: "test-setter",
     name: `Test Climb ${label}`,
-    description: 'A test climb',
-    frames: 'test-frames',
+    description: "A test climb",
+    frames: "test-frames",
     angle: 40,
     ascensionist_count: 10,
-    difficulty: 'V5',
-    quality_average: '4.5',
+    difficulty: "V5",
+    quality_average: "4.5",
     stars: 4.5,
-    difficulty_error: '0.5',
+    difficulty_error: "0.5",
     mirrored: false,
-    benchmark_difficulty: 'V5',
+    benchmark_difficulty: "V5",
   },
-  addedBy: 'test-user',
+  addedBy: "test-user",
   tickedBy: [],
   suggested: false,
 });
@@ -92,21 +92,21 @@ const createTestClimb = (label: string): ClimbQueueItem => ({
 // Helper to execute GraphQL operations (mutations and queries)
 async function execute<T>(
   client: Client,
-  operation: { query: string; variables?: Record<string, unknown> }
+  operation: { query: string; variables?: Record<string, unknown> },
 ): Promise<T> {
   return new Promise((resolve, reject) => {
     let result: T;
     client.subscribe<T>(operation, {
       next: (data) => {
         if (data.errors) {
-          console.error('GraphQL errors:', JSON.stringify(data.errors, null, 2));
+          console.error("GraphQL errors:", JSON.stringify(data.errors, null, 2));
           reject(new Error(data.errors[0].message));
           return;
         }
         result = data.data as T;
       },
       error: (err) => {
-        console.error('Subscription error:', err);
+        console.error("Subscription error:", err);
         reject(err);
       },
       complete: () => resolve(result),
@@ -119,7 +119,7 @@ function waitForEvent<T>(
   client: Client,
   query: string,
   predicate: (event: T) => boolean,
-  timeout = 5000
+  timeout = 5000,
 ): Promise<T> {
   return new Promise((resolve, reject) => {
     const timeoutId = setTimeout(() => {
@@ -143,7 +143,7 @@ function waitForEvent<T>(
           reject(err);
         },
         complete: () => {},
-      }
+      },
     );
   });
 }
@@ -153,7 +153,7 @@ function collectEvents<T>(
   client: Client,
   query: string,
   count: number,
-  timeout = 5000
+  timeout = 5000,
 ): Promise<T[]> {
   return new Promise((resolve, reject) => {
     const events: T[] = [];
@@ -181,12 +181,12 @@ function collectEvents<T>(
           reject(err);
         },
         complete: () => {},
-      }
+      },
     );
   });
 }
 
-describe('Daemon Integration Tests', () => {
+describe("Daemon Integration Tests", () => {
   let server: Awaited<ReturnType<typeof startServer>>;
   const activeClients: Client[] = [];
 
@@ -221,8 +221,8 @@ describe('Daemon Integration Tests', () => {
     testClimbUuids.clear();
   });
 
-  describe('Session Management', () => {
-    it('should allow a client to join a session and receive initial state', async () => {
+  describe("Session Management", () => {
+    it("should allow a client to join a session and receive initial state", async () => {
       const sessionId = createTestSessionId();
       const client = createTestClient();
 
@@ -242,7 +242,7 @@ describe('Daemon Integration Tests', () => {
         variables: {
           sessionId,
           boardPath: TEST_BOARD_PATH,
-          username: 'TestUser1',
+          username: "TestUser1",
         },
       });
 
@@ -250,11 +250,11 @@ describe('Daemon Integration Tests', () => {
       expect(result.joinSession.boardPath).toBe(TEST_BOARD_PATH);
       expect(result.joinSession.isLeader).toBe(true);
       expect(result.joinSession.users).toHaveLength(1);
-      expect(result.joinSession.users[0].username).toBe('TestUser1');
+      expect(result.joinSession.users[0].username).toBe("TestUser1");
       expect(result.joinSession.queueState.queue).toEqual([]);
     });
 
-    it('should assign first client as leader', async () => {
+    it("should assign first client as leader", async () => {
       const sessionId = createTestSessionId();
       const client = createTestClient();
 
@@ -271,7 +271,7 @@ describe('Daemon Integration Tests', () => {
       expect(result.joinSession.isLeader).toBe(true);
     });
 
-    it('should assign second client as non-leader', async () => {
+    it("should assign second client as non-leader", async () => {
       const sessionId = createTestSessionId();
       const client1 = createTestClient();
       const client2 = createTestClient();
@@ -297,8 +297,8 @@ describe('Daemon Integration Tests', () => {
     });
   });
 
-  describe('Queue Subscriptions', () => {
-    it('should receive FullSync when subscribing to queueUpdates', async () => {
+  describe("Queue Subscriptions", () => {
+    it("should receive FullSync when subscribing to queueUpdates", async () => {
       const sessionId = createTestSessionId();
       const client = createTestClient();
 
@@ -311,16 +311,16 @@ describe('Daemon Integration Tests', () => {
       const event = await waitForEvent<QueueEvent | SessionEvent>(
         client,
         `subscription { queueUpdates(sessionId: "${sessionId}") { __typename ... on FullSync { state { queue { uuid } } } } }`,
-        (e) => e.__typename === 'FullSync'
+        (e) => e.__typename === "FullSync",
       );
 
-      expect(event.__typename).toBe('FullSync');
+      expect(event.__typename).toBe("FullSync");
       expect(event.state.queue).toEqual([]);
     });
   });
 
-  describe('Queue Operations', () => {
-    it('should add a queue item successfully', async () => {
+  describe("Queue Operations", () => {
+    it("should add a queue item successfully", async () => {
       const sessionId = createTestSessionId();
       const client = createTestClient();
 
@@ -330,7 +330,7 @@ describe('Daemon Integration Tests', () => {
       });
 
       // Add a queue item
-      const testClimb = createTestClimb('test-climb-1');
+      const testClimb = createTestClimb("test-climb-1");
       const result = await execute<{ addQueueItem: AddQueueItemResult }>(client, {
         query: `
           mutation AddQueueItem($item: ClimbQueueItemInput!) {
@@ -340,11 +340,11 @@ describe('Daemon Integration Tests', () => {
         variables: { item: testClimb },
       });
 
-      expect(result.addQueueItem.uuid).toBe(getTestClimbUuid('test-climb-1'));
-      expect(result.addQueueItem.climb.name).toBe('Test Climb test-climb-1');
+      expect(result.addQueueItem.uuid).toBe(getTestClimbUuid("test-climb-1"));
+      expect(result.addQueueItem.climb.name).toBe("Test Climb test-climb-1");
     });
 
-    it('should set current climb successfully', async () => {
+    it("should set current climb successfully", async () => {
       const sessionId = createTestSessionId();
       const client = createTestClient();
 
@@ -354,7 +354,7 @@ describe('Daemon Integration Tests', () => {
       });
 
       // Set current climb
-      const testClimb = createTestClimb('current-test');
+      const testClimb = createTestClimb("current-test");
       const result = await execute<{ setCurrentClimb: SetCurrentClimbResult }>(client, {
         query: `
           mutation SetCurrentClimb($item: ClimbQueueItemInput) {
@@ -364,10 +364,10 @@ describe('Daemon Integration Tests', () => {
         variables: { item: testClimb },
       });
 
-      expect(result.setCurrentClimb.uuid).toBe(getTestClimbUuid('current-test'));
+      expect(result.setCurrentClimb.uuid).toBe(getTestClimbUuid("current-test"));
     });
 
-    it('should mirror current climb successfully', async () => {
+    it("should mirror current climb successfully", async () => {
       const sessionId = createTestSessionId();
       const client = createTestClient();
 
@@ -377,7 +377,7 @@ describe('Daemon Integration Tests', () => {
       });
 
       // Set a current climb first
-      const testClimb = createTestClimb('mirror-test');
+      const testClimb = createTestClimb("mirror-test");
       await execute(client, {
         query: `mutation SetCurrentClimb($item: ClimbQueueItemInput) { setCurrentClimb(item: $item) { uuid } }`,
         variables: { item: testClimb },
@@ -391,7 +391,7 @@ describe('Daemon Integration Tests', () => {
       expect(result.mirrorCurrentClimb.climb.mirrored).toBe(true);
     });
 
-    it('should remove a queue item', async () => {
+    it("should remove a queue item", async () => {
       const sessionId = createTestSessionId();
       const client = createTestClient();
 
@@ -401,7 +401,7 @@ describe('Daemon Integration Tests', () => {
       });
 
       // Add an item first
-      const testClimb = createTestClimb('to-remove');
+      const testClimb = createTestClimb("to-remove");
       await execute(client, {
         query: `mutation AddQueueItem($item: ClimbQueueItemInput!) { addQueueItem(item: $item) { uuid } }`,
         variables: { item: testClimb },
@@ -409,13 +409,13 @@ describe('Daemon Integration Tests', () => {
 
       // Remove the item
       const result = await execute<{ removeQueueItem: boolean }>(client, {
-        query: `mutation { removeQueueItem(uuid: "${getTestClimbUuid('to-remove')}") }`,
+        query: `mutation { removeQueueItem(uuid: "${getTestClimbUuid("to-remove")}") }`,
       });
 
       expect(result.removeQueueItem).toBe(true);
     });
 
-    it('should reorder queue items', async () => {
+    it("should reorder queue items", async () => {
       const sessionId = createTestSessionId();
       const client = createTestClient();
 
@@ -427,20 +427,20 @@ describe('Daemon Integration Tests', () => {
       // Add multiple items
       await execute(client, {
         query: `mutation AddQueueItem($item: ClimbQueueItemInput!) { addQueueItem(item: $item) { uuid } }`,
-        variables: { item: createTestClimb('item-0') },
+        variables: { item: createTestClimb("item-0") },
       });
       await execute(client, {
         query: `mutation AddQueueItem($item: ClimbQueueItemInput!) { addQueueItem(item: $item) { uuid } }`,
-        variables: { item: createTestClimb('item-1') },
+        variables: { item: createTestClimb("item-1") },
       });
       await execute(client, {
         query: `mutation AddQueueItem($item: ClimbQueueItemInput!) { addQueueItem(item: $item) { uuid } }`,
-        variables: { item: createTestClimb('item-2') },
+        variables: { item: createTestClimb("item-2") },
       });
 
       // Reorder: move item-2 from index 2 to index 0
       const result = await execute<{ reorderQueueItem: boolean }>(client, {
-        query: `mutation { reorderQueueItem(uuid: "${getTestClimbUuid('item-2')}", oldIndex: 2, newIndex: 0) }`,
+        query: `mutation { reorderQueueItem(uuid: "${getTestClimbUuid("item-2")}", oldIndex: 2, newIndex: 0) }`,
       });
 
       expect(result.reorderQueueItem).toBe(true);
@@ -450,14 +450,14 @@ describe('Daemon Integration Tests', () => {
         query: `query { session(sessionId: "${sessionId}") { queueState { queue { uuid } } } }`,
       });
 
-      expect(sessionResult.session.queueState.queue[0].uuid).toBe(getTestClimbUuid('item-2'));
-      expect(sessionResult.session.queueState.queue[1].uuid).toBe(getTestClimbUuid('item-0'));
-      expect(sessionResult.session.queueState.queue[2].uuid).toBe(getTestClimbUuid('item-1'));
+      expect(sessionResult.session.queueState.queue[0].uuid).toBe(getTestClimbUuid("item-2"));
+      expect(sessionResult.session.queueState.queue[1].uuid).toBe(getTestClimbUuid("item-0"));
+      expect(sessionResult.session.queueState.queue[2].uuid).toBe(getTestClimbUuid("item-1"));
     });
   });
 
-  describe('Multi-Client Sync', () => {
-    it('should sync queue additions across clients', async () => {
+  describe("Multi-Client Sync", () => {
+    it("should sync queue additions across clients", async () => {
       const sessionId = createTestSessionId();
       const client1 = createTestClient();
       const client2 = createTestClient();
@@ -474,7 +474,7 @@ describe('Daemon Integration Tests', () => {
       const eventPromise = collectEvents<QueueEvent>(
         client2,
         `subscription { queueUpdates(sessionId: "${sessionId}") { __typename ... on FullSync { state { queue { uuid } } } ... on QueueItemAdded { item { uuid climb { name } } } } }`,
-        2 // FullSync + QueueItemAdded
+        2, // FullSync + QueueItemAdded
       );
 
       // Wait for subscription to be established
@@ -483,18 +483,18 @@ describe('Daemon Integration Tests', () => {
       // Client 1 adds an item
       await execute(client1, {
         query: `mutation AddQueueItem($item: ClimbQueueItemInput!) { addQueueItem(item: $item) { uuid } }`,
-        variables: { item: createTestClimb('sync-test') },
+        variables: { item: createTestClimb("sync-test") },
       });
 
       const events = await eventPromise;
 
       // First event should be FullSync, second should be QueueItemAdded
-      expect(events[0].__typename).toBe('FullSync');
-      expect(events[1].__typename).toBe('QueueItemAdded');
-      expect(events[1].item.uuid).toBe(getTestClimbUuid('sync-test'));
+      expect(events[0].__typename).toBe("FullSync");
+      expect(events[1].__typename).toBe("QueueItemAdded");
+      expect(events[1].item.uuid).toBe(getTestClimbUuid("sync-test"));
     });
 
-    it('should sync current climb changes across clients', async () => {
+    it("should sync current climb changes across clients", async () => {
       const sessionId = createTestSessionId();
       const client1 = createTestClient();
       const client2 = createTestClient();
@@ -511,7 +511,7 @@ describe('Daemon Integration Tests', () => {
       const eventPromise = collectEvents<QueueEvent>(
         client2,
         `subscription { queueUpdates(sessionId: "${sessionId}") { __typename ... on FullSync { state { currentClimbQueueItem { uuid } } } ... on CurrentClimbChanged { item { uuid } } } }`,
-        2 // FullSync + CurrentClimbChanged
+        2, // FullSync + CurrentClimbChanged
       );
 
       await new Promise((resolve) => setTimeout(resolve, 100));
@@ -519,16 +519,16 @@ describe('Daemon Integration Tests', () => {
       // Client 1 sets current climb
       await execute(client1, {
         query: `mutation SetCurrentClimb($item: ClimbQueueItemInput) { setCurrentClimb(item: $item) { uuid } }`,
-        variables: { item: createTestClimb('current-sync') },
+        variables: { item: createTestClimb("current-sync") },
       });
 
       const events = await eventPromise;
 
-      expect(events[1].__typename).toBe('CurrentClimbChanged');
-      expect(events[1].item.uuid).toBe(getTestClimbUuid('current-sync'));
+      expect(events[1].__typename).toBe("CurrentClimbChanged");
+      expect(events[1].item.uuid).toBe(getTestClimbUuid("current-sync"));
     });
 
-    it('should sync queue reordering across clients', async () => {
+    it("should sync queue reordering across clients", async () => {
       const sessionId = createTestSessionId();
       const client1 = createTestClient();
       const client2 = createTestClient();
@@ -544,38 +544,38 @@ describe('Daemon Integration Tests', () => {
       // Client 1 adds items
       await execute(client1, {
         query: `mutation AddQueueItem($item: ClimbQueueItemInput!) { addQueueItem(item: $item) { uuid } }`,
-        variables: { item: createTestClimb('reorder-0') },
+        variables: { item: createTestClimb("reorder-0") },
       });
       await execute(client1, {
         query: `mutation AddQueueItem($item: ClimbQueueItemInput!) { addQueueItem(item: $item) { uuid } }`,
-        variables: { item: createTestClimb('reorder-1') },
+        variables: { item: createTestClimb("reorder-1") },
       });
 
       // Client 2 subscribes
       const eventPromise = waitForEvent<QueueEvent | SessionEvent>(
         client2,
         `subscription { queueUpdates(sessionId: "${sessionId}") { __typename ... on FullSync { state { queue { uuid } } } ... on QueueReordered { uuid oldIndex newIndex } } }`,
-        (e) => e.__typename === 'QueueReordered'
+        (e) => e.__typename === "QueueReordered",
       );
 
       await new Promise((resolve) => setTimeout(resolve, 100));
 
       // Client 1 reorders
       await execute(client1, {
-        query: `mutation { reorderQueueItem(uuid: "${getTestClimbUuid('reorder-1')}", oldIndex: 1, newIndex: 0) }`,
+        query: `mutation { reorderQueueItem(uuid: "${getTestClimbUuid("reorder-1")}", oldIndex: 1, newIndex: 0) }`,
       });
 
       const event = await eventPromise;
 
-      expect(event.__typename).toBe('QueueReordered');
-      expect(event.uuid).toBe(getTestClimbUuid('reorder-1'));
+      expect(event.__typename).toBe("QueueReordered");
+      expect(event.uuid).toBe(getTestClimbUuid("reorder-1"));
       expect(event.oldIndex).toBe(1);
       expect(event.newIndex).toBe(0);
     });
   });
 
-  describe('Leader Election', () => {
-    it('should elect new leader when current leader disconnects', async () => {
+  describe("Leader Election", () => {
+    it("should elect new leader when current leader disconnects", async () => {
       const sessionId = createTestSessionId();
       const client1 = createTestClient();
       const client2 = createTestClient();
@@ -596,7 +596,7 @@ describe('Daemon Integration Tests', () => {
       const eventPromise = waitForEvent<QueueEvent | SessionEvent>(
         client2,
         `subscription { sessionUpdates(sessionId: "${sessionId}") { __typename ... on LeaderChanged { leaderId } ... on UserLeft { userId } } }`,
-        (e) => e.__typename === 'LeaderChanged'
+        (e) => e.__typename === "LeaderChanged",
       );
 
       // Client 1 disconnects
@@ -607,11 +607,11 @@ describe('Daemon Integration Tests', () => {
 
       const event = await eventPromise;
 
-      expect(event.__typename).toBe('LeaderChanged');
+      expect(event.__typename).toBe("LeaderChanged");
       expect(event.leaderId).toBe(result2.joinSession.clientId);
     });
 
-    it('should maintain leader when non-leader disconnects', async () => {
+    it("should maintain leader when non-leader disconnects", async () => {
       const sessionId = createTestSessionId();
       const client1 = createTestClient();
       const client2 = createTestClient();
@@ -631,7 +631,7 @@ describe('Daemon Integration Tests', () => {
       const eventPromise = waitForEvent<QueueEvent | SessionEvent>(
         client1,
         `subscription { sessionUpdates(sessionId: "${sessionId}") { __typename ... on UserLeft { userId } ... on LeaderChanged { leaderId } } }`,
-        (e) => e.__typename === 'UserLeft'
+        (e) => e.__typename === "UserLeft",
       );
 
       // Client 2 disconnects
@@ -642,12 +642,12 @@ describe('Daemon Integration Tests', () => {
       const event = await eventPromise;
 
       // Should only get UserLeft, not LeaderChanged (leader is still client1)
-      expect(event.__typename).toBe('UserLeft');
+      expect(event.__typename).toBe("UserLeft");
     });
   });
 
-  describe('Session Events', () => {
-    it('should emit UserJoined when client joins', async () => {
+  describe("Session Events", () => {
+    it("should emit UserJoined when client joins", async () => {
       const sessionId = createTestSessionId();
       const client1 = createTestClient();
       const client2 = createTestClient();
@@ -660,7 +660,7 @@ describe('Daemon Integration Tests', () => {
       const eventPromise = waitForEvent<QueueEvent | SessionEvent>(
         client1,
         `subscription { sessionUpdates(sessionId: "${sessionId}") { __typename ... on UserJoined { user { id username } } } }`,
-        (e) => e.__typename === 'UserJoined'
+        (e) => e.__typename === "UserJoined",
       );
 
       await new Promise((resolve) => setTimeout(resolve, 100));
@@ -672,11 +672,11 @@ describe('Daemon Integration Tests', () => {
 
       const event = await eventPromise;
 
-      expect(event.__typename).toBe('UserJoined');
-      expect(event.user.username).toBe('Second');
+      expect(event.__typename).toBe("UserJoined");
+      expect(event.user.username).toBe("Second");
     });
 
-    it('should emit UserLeft when client disconnects', async () => {
+    it("should emit UserLeft when client disconnects", async () => {
       const sessionId = createTestSessionId();
       const client1 = createTestClient();
       const client2 = createTestClient();
@@ -693,7 +693,7 @@ describe('Daemon Integration Tests', () => {
       const eventPromise = waitForEvent<QueueEvent | SessionEvent>(
         client1,
         `subscription { sessionUpdates(sessionId: "${sessionId}") { __typename ... on UserLeft { userId } } }`,
-        (e) => e.__typename === 'UserLeft'
+        (e) => e.__typename === "UserLeft",
       );
 
       await new Promise((resolve) => setTimeout(resolve, 100));
@@ -705,11 +705,11 @@ describe('Daemon Integration Tests', () => {
 
       const event = await eventPromise;
 
-      expect(event.__typename).toBe('UserLeft');
+      expect(event.__typename).toBe("UserLeft");
       expect(event.userId).toBe(result2.joinSession.clientId);
     });
 
-    it('should emit LeaderChanged when leader leaves', async () => {
+    it("should emit LeaderChanged when leader leaves", async () => {
       const sessionId = createTestSessionId();
       const client1 = createTestClient();
       const client2 = createTestClient();
@@ -728,7 +728,7 @@ describe('Daemon Integration Tests', () => {
       const eventPromise = collectEvents<SessionEvent>(
         client2,
         `subscription { sessionUpdates(sessionId: "${sessionId}") { __typename ... on UserLeft { userId } ... on LeaderChanged { leaderId } } }`,
-        2 // UserLeft + LeaderChanged
+        2, // UserLeft + LeaderChanged
       );
 
       await new Promise((resolve) => setTimeout(resolve, 100));
@@ -741,8 +741,8 @@ describe('Daemon Integration Tests', () => {
       const events = await eventPromise;
 
       // Should get both UserLeft and LeaderChanged
-      const userLeftEvent = events.find((e) => e.__typename === 'UserLeft');
-      const leaderChangedEvent = events.find((e) => e.__typename === 'LeaderChanged');
+      const userLeftEvent = events.find((e) => e.__typename === "UserLeft");
+      const leaderChangedEvent = events.find((e) => e.__typename === "LeaderChanged");
 
       expect(userLeftEvent).toBeDefined();
       expect(userLeftEvent.userId).toBe(result1.joinSession.clientId);
@@ -751,8 +751,8 @@ describe('Daemon Integration Tests', () => {
     });
   });
 
-  describe('Disconnect Handling', () => {
-    it('should cleanup session when all clients disconnect', async () => {
+  describe("Disconnect Handling", () => {
+    it("should cleanup session when all clients disconnect", async () => {
       const sessionId = createTestSessionId();
       const client1 = createTestClient();
 
@@ -762,7 +762,7 @@ describe('Daemon Integration Tests', () => {
       });
       await execute(client1, {
         query: `mutation AddQueueItem($item: ClimbQueueItemInput!) { addQueueItem(item: $item) { uuid } }`,
-        variables: { item: createTestClimb('cleanup-test') },
+        variables: { item: createTestClimb("cleanup-test") },
       });
 
       // Disconnect
@@ -785,7 +785,7 @@ describe('Daemon Integration Tests', () => {
       expect(result.joinSession.users).toHaveLength(1);
     });
 
-    it('should continue session when one of multiple clients disconnects', async () => {
+    it("should continue session when one of multiple clients disconnects", async () => {
       const sessionId = createTestSessionId();
       const client1 = createTestClient();
       const client2 = createTestClient();
@@ -801,7 +801,7 @@ describe('Daemon Integration Tests', () => {
       // Add queue item
       await execute(client1, {
         query: `mutation AddQueueItem($item: ClimbQueueItemInput!) { addQueueItem(item: $item) { uuid } }`,
-        variables: { item: createTestClimb('persist-test') },
+        variables: { item: createTestClimb("persist-test") },
       });
 
       // Client 1 disconnects
@@ -817,7 +817,7 @@ describe('Daemon Integration Tests', () => {
       });
 
       expect(result.session.queueState.queue).toHaveLength(1);
-      expect(result.session.queueState.queue[0].uuid).toBe(getTestClimbUuid('persist-test'));
+      expect(result.session.queueState.queue[0].uuid).toBe(getTestClimbUuid("persist-test"));
       expect(result.session.users).toHaveLength(1); // Only client2 remains
     });
   });

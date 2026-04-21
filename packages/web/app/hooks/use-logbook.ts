@@ -1,19 +1,19 @@
-'use client';
+"use client";
 
-import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { useRef, useEffect, useMemo, useState, useCallback } from 'react';
-import { useWsAuthToken } from './use-ws-auth-token';
-import { useSession } from 'next-auth/react';
-import { createGraphQLHttpClient } from '@/app/lib/graphql/client';
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useRef, useEffect, useMemo, useState, useCallback } from "react";
+import { useWsAuthToken } from "./use-ws-auth-token";
+import { useSession } from "next-auth/react";
+import { createGraphQLHttpClient } from "@/app/lib/graphql/client";
 import {
   GET_TICKS,
   type GetTicksQueryVariables,
   type GetTicksQueryResponse,
-} from '@/app/lib/graphql/operations';
-import type { BoardName, ClimbUuid } from '@/app/lib/types';
+} from "@/app/lib/graphql/operations";
+import type { BoardName, ClimbUuid } from "@/app/lib/types";
 
 // Tick status type matching the database enum
-export type TickStatus = 'flash' | 'send' | 'attempt';
+export type TickStatus = "flash" | "send" | "attempt";
 
 // Logbook entry representing a user's tick on a climb
 export interface LogbookEntry {
@@ -54,12 +54,12 @@ export function toLogbookEntry(tick: LogbookSourceTick): LogbookEntry {
     difficulty: tick.difficulty,
     comment: tick.comment,
     climbed_at: tick.climbedAt,
-    is_ascent: tick.status === 'flash' || tick.status === 'send',
+    is_ascent: tick.status === "flash" || tick.status === "send",
     status: tick.status,
   };
 }
 
-function transformTicks(ticks: GetTicksQueryResponse['ticks']): LogbookEntry[] {
+function transformTicks(ticks: GetTicksQueryResponse["ticks"]): LogbookEntry[] {
   return ticks.map(toLogbookEntry);
 }
 
@@ -81,23 +81,23 @@ export function mergeLogbookEntries(
  * for board-route tick rendering.
  */
 export function accumulatedLogbookQueryKey(boardName: BoardName) {
-  return ['logbook', boardName, 'accumulated'] as const;
+  return ["logbook", boardName, "accumulated"] as const;
 }
 
 export function fetchLogbookQueryKeyPrefix(boardName: BoardName) {
-  return ['logbook', boardName, 'fetch'] as const;
+  return ["logbook", boardName, "fetch"] as const;
 }
 
 /**
  * Dynamic key for each incremental fetch batch.
  */
 function fetchLogbookQueryKey(boardName: BoardName, climbUuids: ClimbUuid[]) {
-  return [...fetchLogbookQueryKeyPrefix(boardName), [...climbUuids].sort().join(',')] as const;
+  return [...fetchLogbookQueryKeyPrefix(boardName), [...climbUuids].sort().join(",")] as const;
 }
 
 /** Backward-compatible export used by tests. */
 export function logbookQueryKey(boardName: BoardName, climbUuids: ClimbUuid[]) {
-  return ['logbook', boardName, [...climbUuids].sort().join(',')] as const;
+  return ["logbook", boardName, [...climbUuids].sort().join(",")] as const;
 }
 
 /**
@@ -116,7 +116,7 @@ export function useLogbook(boardName: BoardName, climbUuids: ClimbUuid[]) {
   const fetchedUuidsRef = useRef<Set<string>>(new Set());
   const [invalidationCount, setInvalidationCount] = useState(0);
 
-  const isEnabled = sessionStatus === 'authenticated' && !!token;
+  const isEnabled = sessionStatus === "authenticated" && !!token;
 
   const accumulatedQuery = useQuery<LogbookEntry[]>({
     queryKey: accumulatedKey,
@@ -141,7 +141,7 @@ export function useLogbook(boardName: BoardName, climbUuids: ClimbUuid[]) {
     queryFn: async ({ queryKey }: { queryKey: readonly unknown[] }): Promise<LogbookEntry[]> => {
       // Extract UUIDs from query key to avoid stale closure issues
       const uuidsString = queryKey[3] as string;
-      const uuidsToFetch = uuidsString ? uuidsString.split(',') : [];
+      const uuidsToFetch = uuidsString ? uuidsString.split(",") : [];
 
       if (uuidsToFetch.length === 0) return [];
 
@@ -173,19 +173,19 @@ export function useLogbook(boardName: BoardName, climbUuids: ClimbUuid[]) {
     // Mark these UUIDs as fetched (including those with no ticks)
     newUuids.forEach((uuid) => fetchedUuidsRef.current.add(uuid));
 
-    queryClient.setQueryData<LogbookEntry[]>(
-      accumulatedKey,
-      (existing = []) => mergeLogbookEntries(existing, fetchQuery.data),
+    queryClient.setQueryData<LogbookEntry[]>(accumulatedKey, (existing = []) =>
+      mergeLogbookEntries(existing, fetchQuery.data),
     );
   }, [fetchQuery.data, newUuids, accumulatedKey, queryClient]);
 
   // Reset UUID tracking when the accumulated cache entry is removed.
   useEffect(() => {
     const unsubscribe = queryClient.getQueryCache().subscribe((event) => {
-      if (event.type !== 'removed') return;
+      if (event.type !== "removed") return;
 
       const qk = event.query.queryKey;
-      if (qk[0] !== accumulatedKey[0] || qk[1] !== accumulatedKey[1] || qk[2] !== accumulatedKey[2]) return;
+      if (qk[0] !== accumulatedKey[0] || qk[1] !== accumulatedKey[1] || qk[2] !== accumulatedKey[2])
+        return;
 
       fetchedUuidsRef.current = new Set();
       lastMergedRef.current = undefined;
@@ -202,7 +202,7 @@ export function useLogbook(boardName: BoardName, climbUuids: ClimbUuid[]) {
     if (!isEnabled) {
       fetchedUuidsRef.current = new Set();
       lastMergedRef.current = undefined;
-      queryClient.removeQueries({ queryKey: ['logbook', boardName] });
+      queryClient.removeQueries({ queryKey: ["logbook", boardName] });
     }
   }, [isEnabled, boardName, queryClient]);
 
@@ -221,6 +221,6 @@ export function useLogbook(boardName: BoardName, climbUuids: ClimbUuid[]) {
 export function useInvalidateLogbook(boardName: BoardName) {
   const queryClient = useQueryClient();
   return useCallback(() => {
-    queryClient.removeQueries({ queryKey: ['logbook', boardName] });
+    queryClient.removeQueries({ queryKey: ["logbook", boardName] });
   }, [queryClient, boardName]);
 }

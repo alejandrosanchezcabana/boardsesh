@@ -1,11 +1,14 @@
-import React from 'react';
-import type { Metadata } from 'next';
-import { GraphQLClient } from 'graphql-request';
-import { getGraphQLHttpUrl } from '@/app/lib/graphql/client';
-import { GET_SESSION_DETAIL, type GetSessionDetailQueryResponse } from '@/app/lib/graphql/operations/activity-feed';
-import SessionDetailContent from './session-detail-content';
-import { buildVersionedOgImagePath, OG_IMAGE_HEIGHT, OG_IMAGE_WIDTH } from '@/app/lib/seo/og';
-import { getSessionOgSummary } from '@/app/lib/seo/dynamic-og-data';
+import React from "react";
+import type { Metadata } from "next";
+import { GraphQLClient } from "graphql-request";
+import { getGraphQLHttpUrl } from "@/app/lib/graphql/client";
+import {
+  GET_SESSION_DETAIL,
+  type GetSessionDetailQueryResponse,
+} from "@/app/lib/graphql/operations/activity-feed";
+import SessionDetailContent from "./session-detail-content";
+import { buildVersionedOgImagePath, OG_IMAGE_HEIGHT, OG_IMAGE_WIDTH } from "@/app/lib/seo/og";
+import { getSessionOgSummary } from "@/app/lib/seo/dynamic-og-data";
 
 type Props = {
   params: Promise<{ sessionId: string }>;
@@ -15,13 +18,12 @@ const fetchSessionDetail = React.cache(async (sessionId: string) => {
   const url = getGraphQLHttpUrl();
   const client = new GraphQLClient(url);
   try {
-    const data = await client.request<GetSessionDetailQueryResponse>(
-      GET_SESSION_DETAIL,
-      { sessionId },
-    );
+    const data = await client.request<GetSessionDetailQueryResponse>(GET_SESSION_DETAIL, {
+      sessionId,
+    });
     return data.sessionDetail;
   } catch (err) {
-    console.error('[SessionDetailPage] Failed to fetch session:', sessionId, err);
+    console.error("[SessionDetailPage] Failed to fetch session:", sessionId, err);
     return null;
   }
 });
@@ -32,16 +34,16 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const summary = await getSessionOgSummary(sessionId);
 
   if (!summary.found) {
-    return { title: 'Session Not Found | Boardsesh' };
+    return { title: "Session Not Found | Boardsesh" };
   }
 
-  const participantNames = summary.participantNames.join(', ');
+  const participantNames = summary.participantNames.join(", ");
   const sessionName = summary.sessionName;
   const title = `${sessionName} | Boardsesh`;
 
   let description: string;
   if (summary.totalSends > 0) {
-    const stats = `${summary.totalSends} send${summary.totalSends !== 1 ? 's' : ''}`;
+    const stats = `${summary.totalSends} send${summary.totalSends !== 1 ? "s" : ""}`;
     description = participantNames ? `${participantNames} — ${stats}` : stats;
   } else {
     description = participantNames
@@ -49,7 +51,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
       : `${sessionName} on Boardsesh`;
   }
 
-  const ogImage = buildVersionedOgImagePath('/api/og/session', { sessionId }, summary.version);
+  const ogImage = buildVersionedOgImagePath("/api/og/session", { sessionId }, summary.version);
   const canonicalUrl = `/session/${sessionId}`;
 
   return {
@@ -59,12 +61,12 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     openGraph: {
       title,
       description,
-      type: 'website',
+      type: "website",
       url: `/session/${sessionId}`,
       images: [{ url: ogImage, width: OG_IMAGE_WIDTH, height: OG_IMAGE_HEIGHT, alt: title }],
     },
     twitter: {
-      card: 'summary_large_image',
+      card: "summary_large_image",
       title,
       description,
       images: [ogImage],

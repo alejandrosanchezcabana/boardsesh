@@ -1,7 +1,7 @@
 // Queue types
 
-import type { UserId } from './user';
-import type { Climb, ClimbInput } from './climb';
+import type { UserId } from "./user";
+import type { Climb, ClimbInput } from "./climb";
 
 export type QueueItemUser = {
   id: string;

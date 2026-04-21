@@ -1,10 +1,10 @@
-'use client';
+"use client";
 
-import { useEffect, useRef } from 'react';
-import { getPreference, setPreference } from '@/app/lib/user-preferences-db';
-import { DEFAULT_CONFIRMATION_PEEK_OFFSET } from '@/app/hooks/use-swipe-actions';
+import { useEffect, useRef } from "react";
+import { getPreference, setPreference } from "@/app/lib/user-preferences-db";
+import { DEFAULT_CONFIRMATION_PEEK_OFFSET } from "@/app/hooks/use-swipe-actions";
 
-const PREF_KEY = 'swipeHint:logbookSeen' as const;
+const PREF_KEY = "swipeHint:logbookSeen" as const;
 const INITIAL_DELAY_MS = 1500;
 // Matches the confirmation peek users see after a real swipe-left commit,
 // so the hint previews the exact resting state of the gesture.
@@ -45,16 +45,16 @@ export default function LogbookSwipeHintOrchestrator() {
     const run = async () => {
       const seen = await getPreference<boolean>(PREF_KEY);
       if (cancelled || seen) return;
-      if (!window.matchMedia('(pointer: coarse)').matches) return;
+      if (!window.matchMedia("(pointer: coarse)").matches) return;
 
       schedule(async () => {
         if (cancelled) return;
 
         const contentEl = document.querySelector<HTMLElement>(
-          '#onboarding-logbook-card [data-swipe-content]',
+          "#onboarding-logbook-card [data-swipe-content]",
         );
         const actionEl = document.querySelector<HTMLElement>(
-          '#onboarding-logbook-card [data-swipe-right-action]',
+          "#onboarding-logbook-card [data-swipe-right-action]",
         );
         if (!contentEl || !actionEl) return;
 
@@ -65,50 +65,56 @@ export default function LogbookSwipeHintOrchestrator() {
             if (cancelled) return;
 
             // Show action layer
-            actionEl.style.visibility = 'visible';
-            if (iconLayer) iconLayer.style.opacity = '1';
+            actionEl.style.visibility = "visible";
+            if (iconLayer) iconLayer.style.opacity = "1";
 
             // Slide out
             const slideOut = contentEl.animate(
-              [{ transform: 'translateX(0)' }, { transform: `translateX(-${PEEK_DISTANCE}px)` }],
-              { duration: SLIDE_OUT_MS, easing: 'ease-out', fill: 'forwards' },
+              [{ transform: "translateX(0)" }, { transform: `translateX(-${PEEK_DISTANCE}px)` }],
+              { duration: SLIDE_OUT_MS, easing: "ease-out", fill: "forwards" },
             );
-            const fadeIn = actionEl.animate(
-              [{ opacity: 0 }, { opacity: 1 }],
-              { duration: SLIDE_OUT_MS, easing: 'ease-out', fill: 'forwards' },
-            );
+            const fadeIn = actionEl.animate([{ opacity: 0 }, { opacity: 1 }], {
+              duration: SLIDE_OUT_MS,
+              easing: "ease-out",
+              fill: "forwards",
+            });
             animationsRef.current.push(slideOut, fadeIn);
 
             await slideOut.finished;
             if (cancelled) return;
 
             // Hold
-            await new Promise<void>((r) => { schedule(r, HOLD_MS); });
+            await new Promise<void>((r) => {
+              schedule(r, HOLD_MS);
+            });
             if (cancelled) return;
 
             // Slide back
             const slideBack = contentEl.animate(
-              [{ transform: `translateX(-${PEEK_DISTANCE}px)` }, { transform: 'translateX(0)' }],
-              { duration: SLIDE_BACK_MS, easing: 'ease-out', fill: 'forwards' },
+              [{ transform: `translateX(-${PEEK_DISTANCE}px)` }, { transform: "translateX(0)" }],
+              { duration: SLIDE_BACK_MS, easing: "ease-out", fill: "forwards" },
             );
-            const fadeOut = actionEl.animate(
-              [{ opacity: 1 }, { opacity: 0 }],
-              { duration: SLIDE_BACK_MS, easing: 'ease-out', fill: 'forwards' },
-            );
+            const fadeOut = actionEl.animate([{ opacity: 1 }, { opacity: 0 }], {
+              duration: SLIDE_BACK_MS,
+              easing: "ease-out",
+              fill: "forwards",
+            });
             animationsRef.current.push(slideBack, fadeOut);
 
             await slideBack.finished;
             if (cancelled) return;
 
             // Clean up inline styles
-            contentEl.style.transform = '';
-            actionEl.style.opacity = '';
-            actionEl.style.visibility = '';
-            if (iconLayer) iconLayer.style.opacity = '';
+            contentEl.style.transform = "";
+            actionEl.style.opacity = "";
+            actionEl.style.visibility = "";
+            if (iconLayer) iconLayer.style.opacity = "";
 
             // Gap before next repeat
             if (i < REPEAT_COUNT - 1) {
-              await new Promise<void>((r) => { schedule(r, GAP_BETWEEN_MS); });
+              await new Promise<void>((r) => {
+                schedule(r, GAP_BETWEEN_MS);
+              });
             }
           }
 

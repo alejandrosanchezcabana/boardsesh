@@ -9,7 +9,7 @@ watchPaths = [
   "packages/aurora-sync/**",
   "package.json",
   "bun.lock",
-  "Dockerfile.backend"
+  "Dockerfile.backend",
 ]
 
 [deploy]

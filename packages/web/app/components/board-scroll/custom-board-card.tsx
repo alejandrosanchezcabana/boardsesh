@@ -1,21 +1,21 @@
-'use client';
+"use client";
 
-import React from 'react';
-import AddOutlined from '@mui/icons-material/AddOutlined';
-import BoardThumbnailGrid from './board-thumbnail-grid';
-import styles from './board-scroll.module.css';
+import React from "react";
+import AddOutlined from "@mui/icons-material/AddOutlined";
+import BoardThumbnailGrid from "./board-thumbnail-grid";
+import styles from "./board-scroll.module.css";
 
 interface CustomBoardCardProps {
   onClick: () => void;
-  size?: 'default' | 'small';
+  size?: "default" | "small";
 }
 
-export default function CustomBoardCard({ onClick, size = 'default' }: CustomBoardCardProps) {
-  const isSmall = size === 'small';
+export default function CustomBoardCard({ onClick, size = "default" }: CustomBoardCardProps) {
+  const isSmall = size === "small";
   const iconSize = isSmall ? 28 : 36;
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLDivElement>) => {
-    if (e.key === 'Enter' || e.key === ' ') {
+    if (e.key === "Enter" || e.key === " ") {
       e.preventDefault();
       onClick();
     }
@@ -23,7 +23,7 @@ export default function CustomBoardCard({ onClick, size = 'default' }: CustomBoa
 
   return (
     <div
-      className={`${styles.cardScroll} ${isSmall ? styles.cardScrollSmall : ''}`}
+      className={`${styles.cardScroll} ${isSmall ? styles.cardScrollSmall : ""}`}
       onClick={onClick}
       onKeyDown={handleKeyDown}
       role="button"
@@ -33,7 +33,7 @@ export default function CustomBoardCard({ onClick, size = 'default' }: CustomBoa
       <div className={styles.cardSquare}>
         <BoardThumbnailGrid />
         <div className={styles.findNearbyOverlay}>
-          <AddOutlined sx={{ fontSize: iconSize, color: 'var(--color-primary)' }} />
+          <AddOutlined sx={{ fontSize: iconSize, color: "var(--color-primary)" }} />
         </div>
       </div>
       <div className={styles.cardName}>Custom board</div>

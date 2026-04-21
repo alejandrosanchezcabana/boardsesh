@@ -1,9 +1,9 @@
-'use client';
+"use client";
 
-import { useParams, usePathname, useSearchParams } from 'next/navigation';
-import { parseBoardRouteParams, isNumericId } from '@/app/lib/url-utils';
-import { BoardRouteParametersWithUuid, BoardDetails, BoardRouteIdentity } from '@/app/lib/types';
-import { getBoardDetailsForBoard } from '@/app/lib/board-utils';
+import { useParams, usePathname, useSearchParams } from "next/navigation";
+import { parseBoardRouteParams, isNumericId } from "@/app/lib/url-utils";
+import { BoardRouteParametersWithUuid, BoardDetails, BoardRouteIdentity } from "@/app/lib/types";
+import { getBoardDetailsForBoard } from "@/app/lib/board-utils";
 
 /**
  * Resolves board details for URL construction in queue navigation buttons.
@@ -14,11 +14,10 @@ import { getBoardDetailsForBoard } from '@/app/lib/board-utils';
  */
 export function useResolvedBoardDetails(boardDetails?: BoardDetails) {
   const rawParams = useParams<BoardRouteParametersWithUuid>();
-  const { board_name, layout_id, size_id, set_ids, angle } =
-    parseBoardRouteParams(rawParams);
+  const { board_name, layout_id, size_id, set_ids, angle } = parseBoardRouteParams(rawParams);
   const pathname = usePathname();
   const searchParams = useSearchParams();
-  const isPlayPage = pathname.includes('/play/');
+  const isPlayPage = pathname.includes("/play/");
 
   let resolvedDetails: BoardRouteIdentity;
   if (boardDetails) {
@@ -27,7 +26,10 @@ export function useResolvedBoardDetails(boardDetails?: BoardDetails) {
     try {
       resolvedDetails = getBoardDetailsForBoard({ board_name, layout_id, size_id, set_ids });
     } catch (error) {
-      console.warn('[useResolvedBoardDetails] Failed to resolve board details from static data:', error);
+      console.warn(
+        "[useResolvedBoardDetails] Failed to resolve board details from static data:",
+        error,
+      );
       resolvedDetails = { board_name, layout_id, size_id, set_ids };
     }
   } else {

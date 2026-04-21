@@ -11,7 +11,7 @@ const MAX_SUBSCRIPTION_QUEUE_SIZE = 1000;
  * setup to ensure multi-instance pub/sub is ready before yielding events.
  */
 export async function createAsyncIterator<T>(
-  subscribe: (push: (value: T) => void) => Promise<() => void>
+  subscribe: (push: (value: T) => void) => Promise<() => void>,
 ): Promise<AsyncIterable<T>> {
   const queue: T[] = [];
   const pending: Array<(value: IteratorResult<T>) => void> = [];
@@ -25,7 +25,7 @@ export async function createAsyncIterator<T>(
       // Bounded queue: drop oldest events if queue is full
       if (queue.length >= MAX_SUBSCRIPTION_QUEUE_SIZE) {
         queue.shift(); // Drop oldest
-        console.warn('[Subscription] Queue full, dropping oldest event');
+        console.warn("[Subscription] Queue full, dropping oldest event");
       }
       queue.push(value);
     }
@@ -65,7 +65,7 @@ export async function createAsyncIterator<T>(
  * setup to ensure multi-instance pub/sub is ready before yielding events.
  */
 export async function createEagerAsyncIterator<T>(
-  subscribe: (push: (value: T) => void) => Promise<() => void>
+  subscribe: (push: (value: T) => void) => Promise<() => void>,
 ): Promise<AsyncIterable<T>> {
   const queue: T[] = [];
   const pending: Array<(value: IteratorResult<T>) => void> = [];
@@ -79,7 +79,7 @@ export async function createEagerAsyncIterator<T>(
       // Bounded queue: drop oldest events if queue is full
       if (queue.length >= MAX_SUBSCRIPTION_QUEUE_SIZE) {
         queue.shift(); // Drop oldest
-        console.warn('[Subscription] Queue full, dropping oldest event');
+        console.warn("[Subscription] Queue full, dropping oldest event");
       }
       queue.push(value);
     }

@@ -1,9 +1,9 @@
-import type { ImportProgressEvent, ImportResult } from './json-import';
+import type { ImportProgressEvent, ImportResult } from "./json-import";
 
 const CHUNK_SIZE = 500;
 
 interface ChunkPayload {
-  boardType: 'kilter' | 'tension';
+  boardType: "kilter" | "tension";
   data: {
     user: { username: string; email_address?: string; created_at?: string };
     ascents: unknown[];
@@ -62,14 +62,14 @@ async function sendChunk(
   payload: ChunkPayload,
   onEvent: (event: ImportProgressEvent) => void,
 ): Promise<ImportResult> {
-  const response = await fetch('/api/internal/aurora-import', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+  const response = await fetch("/api/internal/aurora-import", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
     body: JSON.stringify(payload),
   });
 
   if (!response.ok) {
-    let message = 'Import failed';
+    let message = "Import failed";
     try {
       const errorBody = await response.json();
       message = errorBody.error || message;
@@ -80,12 +80,12 @@ async function sendChunk(
   }
 
   if (!response.body) {
-    throw new Error('No response body');
+    throw new Error("No response body");
   }
 
   const reader = response.body.getReader();
   const decoder = new TextDecoder();
-  let buffer = '';
+  let buffer = "";
   let result: ImportResult | null = null;
 
   while (true) {
@@ -93,7 +93,7 @@ async function sendChunk(
     if (done) break;
 
     buffer += decoder.decode(value, { stream: true });
-    const lines = buffer.split('\n');
+    const lines = buffer.split("\n");
     buffer = lines.pop()!;
 
     for (const line of lines) {
@@ -102,14 +102,14 @@ async function sendChunk(
         try {
           event = JSON.parse(line);
         } catch {
-          console.warn('Failed to parse import stream line:', line);
+          console.warn("Failed to parse import stream line:", line);
           continue;
         }
-        if (event.type === 'complete') {
+        if (event.type === "complete") {
           result = event.results;
-        } else if (event.type === 'error') {
+        } else if (event.type === "error") {
           throw new Error(event.error);
-        } else if (event.type === 'progress') {
+        } else if (event.type === "progress") {
           onEvent(event);
         }
       }
@@ -121,21 +121,21 @@ async function sendChunk(
     try {
       event = JSON.parse(buffer);
     } catch {
-      console.warn('Failed to parse import stream buffer:', buffer);
+      console.warn("Failed to parse import stream buffer:", buffer);
       if (!result) {
-        throw new Error('Import was interrupted: server response ended without a result');
+        throw new Error("Import was interrupted: server response ended without a result");
       }
       return result;
     }
-    if (event.type === 'complete') {
+    if (event.type === "complete") {
       result = event.results;
-    } else if (event.type === 'error') {
+    } else if (event.type === "error") {
       throw new Error(event.error);
     }
   }
 
   if (!result) {
-    throw new Error('Import was interrupted: server response ended without a result');
+    throw new Error("Import was interrupted: server response ended without a result");
   }
 
   return result;
@@ -147,7 +147,7 @@ async function sendChunk(
  * and results are merged client-side.
  */
 export async function streamImport(
-  boardType: 'kilter' | 'tension',
+  boardType: "kilter" | "tension",
   data: unknown,
   onEvent: (event: ImportProgressEvent) => void,
 ): Promise<void> {
@@ -170,7 +170,13 @@ export async function streamImport(
   const attemptChunks = chunk(attempts, CHUNK_SIZE);
 
   const allChunks: ChunkPayload[] = [];
-  const emptyData = { user, ascents: [] as unknown[], attempts: [] as unknown[], circuits: [] as unknown[], climbs: [] as unknown[] };
+  const emptyData = {
+    user,
+    ascents: [] as unknown[],
+    attempts: [] as unknown[],
+    circuits: [] as unknown[],
+    climbs: [] as unknown[],
+  };
 
   // Climbs go in the FIRST chunk so they're imported before name resolution
   if (climbs.length > 0) {
@@ -231,8 +237,8 @@ export async function streamImport(
 
   for (let i = 0; i < totalChunks; i++) {
     onEvent({
-      type: 'progress',
-      step: 'resolving',
+      type: "progress",
+      step: "resolving",
       message: `Processing batch ${i + 1} of ${totalChunks}...`,
     });
 
@@ -240,5 +246,5 @@ export async function streamImport(
     merged = mergeResults(merged, chunkResult);
   }
 
-  onEvent({ type: 'complete', results: merged });
+  onEvent({ type: "complete", results: merged });
 }

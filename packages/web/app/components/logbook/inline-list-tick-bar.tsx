@@ -1,17 +1,17 @@
-'use client';
+"use client";
 
-import React, { useState, useCallback, useEffect, useMemo, useRef } from 'react';
-import IconButton from '@mui/material/IconButton';
-import Stack from '@mui/material/Stack';
-import CheckOutlined from '@mui/icons-material/CheckOutlined';
-import CloseOutlined from '@mui/icons-material/CloseOutlined';
-import { PersonFallingIcon } from '@/app/components/icons/person-falling-icon';
-import { Climb, BoardDetails, Angle } from '@/app/lib/types';
-import { useBoardProvider } from '../board-provider/board-provider-context';
-import { TENSION_KILTER_GRADES } from '@/app/lib/board-data';
-import { loadTickDraft } from '@/app/lib/tick-draft-db';
-import { useTickSave, buildTickTarget, type TickTarget } from '@/app/hooks/use-tick-save';
-import { themeTokens } from '@/app/theme/theme-config';
+import React, { useState, useCallback, useEffect, useMemo, useRef } from "react";
+import IconButton from "@mui/material/IconButton";
+import Stack from "@mui/material/Stack";
+import CheckOutlined from "@mui/icons-material/CheckOutlined";
+import CloseOutlined from "@mui/icons-material/CloseOutlined";
+import { PersonFallingIcon } from "@/app/components/icons/person-falling-icon";
+import { Climb, BoardDetails, Angle } from "@/app/lib/types";
+import { useBoardProvider } from "../board-provider/board-provider-context";
+import { TENSION_KILTER_GRADES } from "@/app/lib/board-data";
+import { loadTickDraft } from "@/app/lib/tick-draft-db";
+import { useTickSave, buildTickTarget, type TickTarget } from "@/app/hooks/use-tick-save";
+import { themeTokens } from "@/app/theme/theme-config";
 import {
   TickControls,
   TickGradeButton,
@@ -19,8 +19,8 @@ import {
   InlineGradePicker,
   InlineTriesPicker,
   type ExpandedControl,
-} from './tick-controls';
-import styles from './inline-list-tick-bar.module.css';
+} from "./tick-controls";
+import styles from "./inline-list-tick-bar.module.css";
 
 export interface InlineListTickBarProps {
   climb: Climb;
@@ -44,8 +44,8 @@ export const InlineListTickBar: React.FC<InlineListTickBarProps> = ({
   // initializer always produces a value. This avoids recomputing
   // hasPriorHistory on every logbook mutation (logbook is a new array
   // reference after each optimistic save).
-  const [tickTarget] = useState<TickTarget | null>(
-    () => buildTickTarget(climb, angle, boardDetails, logbook),
+  const [tickTarget] = useState<TickTarget | null>(() =>
+    buildTickTarget(climb, angle, boardDetails, logbook),
   );
 
   const [quality, setQuality] = useState<number | null>(null);
@@ -65,7 +65,9 @@ export const InlineListTickBar: React.FC<InlineListTickBarProps> = ({
       setDifficulty(draft.difficulty);
       setAttemptCount(draft.attemptCount);
     });
-    return () => { cancelled = true; };
+    return () => {
+      cancelled = true;
+    };
   }, [tickTarget]);
 
   // Track picker visibility for collapse animation
@@ -119,7 +121,7 @@ export const InlineListTickBar: React.FC<InlineListTickBarProps> = ({
     quality,
     difficulty,
     attemptCount,
-    comment: '',
+    comment: "",
     onSave: onClose,
     onError,
   });
@@ -136,12 +138,14 @@ export const InlineListTickBar: React.FC<InlineListTickBarProps> = ({
     <div className={styles.tickBarWrapper}>
       <div className={styles.tickBarInner}>
         {/* Picker panel — expands above the controls row */}
-        <div className={`${styles.pickerPanel} ${expandedControl ? styles.pickerPanelExpanded : ''}`}>
+        <div
+          className={`${styles.pickerPanel} ${expandedControl ? styles.pickerPanelExpanded : ""}`}
+        >
           <div className={styles.pickerPanelContent}>
-            {renderedControl === 'stars' && (
+            {renderedControl === "stars" && (
               <InlineStarPicker quality={quality} onSelect={handleStarSelect} />
             )}
-            {renderedControl === 'grade' && (
+            {renderedControl === "grade" && (
               <InlineGradePicker
                 grades={grades}
                 currentGradeId={currentGradeId}
@@ -150,8 +154,12 @@ export const InlineListTickBar: React.FC<InlineListTickBarProps> = ({
                 gradeButtonRef={gradeButtonRef}
               />
             )}
-            {renderedControl === 'tries' && (
-              <InlineTriesPicker attemptCount={attemptCount} onSelect={handleTriesSelect} triesButtonRef={triesButtonRef} />
+            {renderedControl === "tries" && (
+              <InlineTriesPicker
+                attemptCount={attemptCount}
+                onSelect={handleTriesSelect}
+                triesButtonRef={triesButtonRef}
+              />
             )}
           </div>
         </div>
@@ -166,7 +174,7 @@ export const InlineListTickBar: React.FC<InlineListTickBarProps> = ({
               expandedControl={expandedControl}
               onExpandedControlChange={setExpandedControl}
             />
-            <Stack direction="row" spacing={0.5} sx={{ alignItems: 'center' }}>
+            <Stack direction="row" spacing={0.5} sx={{ alignItems: "center" }}>
               <TickControls
                 quality={quality}
                 attemptCount={attemptCount}
@@ -186,8 +194,8 @@ export const InlineListTickBar: React.FC<InlineListTickBarProps> = ({
                 width: 36,
                 height: 36,
                 backgroundColor: themeTokens.colors.success,
-                color: 'common.white',
-                '&:hover': { backgroundColor: themeTokens.colors.success },
+                color: "common.white",
+                "&:hover": { backgroundColor: themeTokens.colors.success },
               }}
             >
               <CheckOutlined sx={{ fontSize: 18 }} />
@@ -201,8 +209,8 @@ export const InlineListTickBar: React.FC<InlineListTickBarProps> = ({
                 width: 36,
                 height: 36,
                 backgroundColor: themeTokens.colors.error,
-                color: 'common.white',
-                '&:hover': { backgroundColor: themeTokens.colors.error },
+                color: "common.white",
+                "&:hover": { backgroundColor: themeTokens.colors.error },
               }}
             >
               <PersonFallingIcon sx={{ fontSize: 18 }} />
@@ -214,7 +222,7 @@ export const InlineListTickBar: React.FC<InlineListTickBarProps> = ({
               sx={{
                 width: 28,
                 height: 28,
-                color: 'text.disabled',
+                color: "text.disabled",
               }}
             >
               <CloseOutlined sx={{ fontSize: 16 }} />

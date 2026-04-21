@@ -1,7 +1,7 @@
-'use client';
+"use client";
 
-import React, { createContext, useCallback, useContext, useRef, useState } from 'react';
-import AuthModal from '@/app/components/auth/auth-modal';
+import React, { createContext, useCallback, useContext, useRef, useState } from "react";
+import AuthModal from "@/app/components/auth/auth-modal";
 
 type AuthModalConfig = {
   title?: string;

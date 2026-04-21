@@ -1,5 +1,5 @@
 // Aurora boards only (kilter/tension) - different from main BoardName which includes moonboard
-export type AuroraBoardName = 'kilter' | 'tension';
+export type AuroraBoardName = "kilter" | "tension";
 
 export interface BoardUser {
   id: number;
@@ -77,8 +77,8 @@ export type UserSyncData = LastSyncData & {
 };
 
 export const HOST_BASES: Record<AuroraBoardName, string> = {
-  kilter: 'kilterboardapp',
-  tension: 'tensionboardapp2',
+  kilter: "kilterboardapp",
+  tension: "tensionboardapp2",
 };
 
 export const API_HOSTS: Record<AuroraBoardName, string> = Object.fromEntries(
@@ -90,32 +90,32 @@ export const WEB_HOSTS: Record<AuroraBoardName, string> = Object.fromEntries(
 ) as Record<AuroraBoardName, string>;
 
 export const USER_TABLES = [
-  'users',
-  'walls',
-  'wall_expungements',
-  'draft_climbs',
-  'ascents',
-  'bids',
-  'tags',
-  'circuits',
+  "users",
+  "walls",
+  "wall_expungements",
+  "draft_climbs",
+  "ascents",
+  "bids",
+  "tags",
+  "circuits",
 ];
 
 export const SHARED_SYNC_TABLES = [
-  'products',
-  'product_sizes',
-  'holes',
-  'leds',
-  'products_angles',
-  'layouts',
-  'product_sizes_layouts_sets',
-  'placements',
-  'sets',
-  'placement_roles',
-  'climbs',
-  'climb_stats',
-  'beta_links',
-  'attempts',
-  'kits',
+  "products",
+  "product_sizes",
+  "holes",
+  "leds",
+  "products_angles",
+  "layouts",
+  "product_sizes_layouts_sets",
+  "placements",
+  "sets",
+  "placement_roles",
+  "climbs",
+  "climb_stats",
+  "beta_links",
+  "attempts",
+  "kits",
 ];
 
 export interface ClientOptions {

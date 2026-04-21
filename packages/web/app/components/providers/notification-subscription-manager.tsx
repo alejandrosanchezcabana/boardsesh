@@ -1,6 +1,6 @@
-'use client';
+"use client";
 
-import { useNotificationSubscription } from '@/app/hooks/use-notification-subscription';
+import { useNotificationSubscription } from "@/app/hooks/use-notification-subscription";
 
 /**
  * Lightweight component that sets up the real-time notification subscription.

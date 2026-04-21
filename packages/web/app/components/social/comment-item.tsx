@@ -1,22 +1,22 @@
-'use client';
+"use client";
 
-import React, { useState, useCallback } from 'react';
-import Box from '@mui/material/Box';
-import MuiTypography from '@mui/material/Typography';
-import MuiAvatar from '@mui/material/Avatar';
-import MuiButton from '@mui/material/Button';
-import IconButton from '@mui/material/IconButton';
-import PersonOutlined from '@mui/icons-material/PersonOutlined';
-import EditOutlined from '@mui/icons-material/EditOutlined';
-import DeleteOutlined from '@mui/icons-material/DeleteOutlined';
-import ReplyOutlined from '@mui/icons-material/ReplyOutlined';
-import dayjs from 'dayjs';
-import relativeTime from 'dayjs/plugin/relativeTime';
-import Link from 'next/link';
-import type { Comment as CommentType, SocialEntityType } from '@boardsesh/shared-schema';
-import { useWsAuthToken } from '@/app/hooks/use-ws-auth-token';
-import { useSnackbar } from '@/app/components/providers/snackbar-provider';
-import { createGraphQLHttpClient } from '@/app/lib/graphql/client';
+import React, { useState, useCallback } from "react";
+import Box from "@mui/material/Box";
+import MuiTypography from "@mui/material/Typography";
+import MuiAvatar from "@mui/material/Avatar";
+import MuiButton from "@mui/material/Button";
+import IconButton from "@mui/material/IconButton";
+import PersonOutlined from "@mui/icons-material/PersonOutlined";
+import EditOutlined from "@mui/icons-material/EditOutlined";
+import DeleteOutlined from "@mui/icons-material/DeleteOutlined";
+import ReplyOutlined from "@mui/icons-material/ReplyOutlined";
+import dayjs from "dayjs";
+import relativeTime from "dayjs/plugin/relativeTime";
+import Link from "next/link";
+import type { Comment as CommentType, SocialEntityType } from "@boardsesh/shared-schema";
+import { useWsAuthToken } from "@/app/hooks/use-ws-auth-token";
+import { useSnackbar } from "@/app/components/providers/snackbar-provider";
+import { createGraphQLHttpClient } from "@/app/lib/graphql/client";
 import {
   UPDATE_COMMENT,
   DELETE_COMMENT,
@@ -30,11 +30,11 @@ import {
   type AddCommentMutationResponse,
   type GetCommentsQueryVariables,
   type GetCommentsQueryResponse,
-} from '@/app/lib/graphql/operations';
-import { themeTokens } from '@/app/theme/theme-config';
-import { ConfirmPopover } from '@/app/components/ui/confirm-popover';
-import VoteButton from './vote-button';
-import CommentForm from './comment-form';
+} from "@/app/lib/graphql/operations";
+import { themeTokens } from "@/app/theme/theme-config";
+import { ConfirmPopover } from "@/app/components/ui/confirm-popover";
+import VoteButton from "./vote-button";
+import CommentForm from "./comment-form";
 
 dayjs.extend(relativeTime);
 
@@ -74,14 +74,14 @@ export default function CommentItem({
       if (!token) return;
       try {
         const client = createGraphQLHttpClient(token);
-        const response = await client.request<UpdateCommentMutationResponse, UpdateCommentMutationVariables>(
-          UPDATE_COMMENT,
-          { input: { commentUuid: comment.uuid, body } },
-        );
+        const response = await client.request<
+          UpdateCommentMutationResponse,
+          UpdateCommentMutationVariables
+        >(UPDATE_COMMENT, { input: { commentUuid: comment.uuid, body } });
         onCommentUpdated(response.updateComment);
         setIsEditing(false);
       } catch {
-        showMessage('Failed to update comment', 'error');
+        showMessage("Failed to update comment", "error");
       }
     },
     [token, comment.uuid, onCommentUpdated, showMessage],
@@ -97,7 +97,7 @@ export default function CommentItem({
       );
       onCommentDeleted(comment.uuid);
     } catch {
-      showMessage('Failed to delete comment', 'error');
+      showMessage("Failed to delete comment", "error");
     }
   }, [token, comment.uuid, onCommentDeleted, showMessage]);
 
@@ -106,22 +106,22 @@ export default function CommentItem({
       if (!token) return;
       try {
         const client = createGraphQLHttpClient(token);
-        const response = await client.request<AddCommentMutationResponse, AddCommentMutationVariables>(
-          ADD_COMMENT,
-          {
-            input: {
-              entityType,
-              entityId,
-              parentCommentUuid: comment.uuid,
-              body,
-            },
+        const response = await client.request<
+          AddCommentMutationResponse,
+          AddCommentMutationVariables
+        >(ADD_COMMENT, {
+          input: {
+            entityType,
+            entityId,
+            parentCommentUuid: comment.uuid,
+            body,
           },
-        );
+        });
         setReplies((prev) => [response.addComment, ...prev]);
         setShowReplyForm(false);
         setRepliesLoaded(true);
       } catch {
-        showMessage('Failed to post reply', 'error');
+        showMessage("Failed to post reply", "error");
       }
     },
     [token, entityType, entityId, comment.uuid, showMessage],
@@ -139,7 +139,7 @@ export default function CommentItem({
             entityType,
             entityId,
             parentCommentUuid: comment.uuid,
-            sortBy: 'new',
+            sortBy: "new",
             limit: 50,
             offset: 0,
           },
@@ -148,7 +148,7 @@ export default function CommentItem({
       setReplies(response.comments.comments);
       setRepliesLoaded(true);
     } catch {
-      showMessage('Failed to load replies', 'error');
+      showMessage("Failed to load replies", "error");
     } finally {
       setRepliesLoading(false);
     }
@@ -169,7 +169,7 @@ export default function CommentItem({
   if (comment.isDeleted) {
     return (
       <Box sx={{ pl: depth > 0 ? 6 : 0, py: 0.5 }}>
-        <MuiTypography variant="body2" color="text.disabled" sx={{ fontStyle: 'italic' }}>
+        <MuiTypography variant="body2" color="text.disabled" sx={{ fontStyle: "italic" }}>
           [deleted]
         </MuiTypography>
         {/* Still show replies if they exist */}
@@ -178,9 +178,9 @@ export default function CommentItem({
             size="small"
             onClick={loadReplies}
             disabled={repliesLoading}
-            sx={{ textTransform: 'none', ml: -0.5 }}
+            sx={{ textTransform: "none", ml: -0.5 }}
           >
-            Show {comment.replyCount} {comment.replyCount === 1 ? 'reply' : 'replies'}
+            Show {comment.replyCount} {comment.replyCount === 1 ? "reply" : "replies"}
           </MuiButton>
         )}
         {replies.map((reply) => (
@@ -201,7 +201,7 @@ export default function CommentItem({
 
   return (
     <Box sx={{ pl: depth > 0 ? 6 : 0, py: 1 }}>
-      <Box sx={{ display: 'flex', gap: 1.5 }}>
+      <Box sx={{ display: "flex", gap: 1.5 }}>
         {/* Avatar */}
         <MuiAvatar
           src={comment.userAvatarUrl ?? undefined}
@@ -214,15 +214,15 @@ export default function CommentItem({
 
         <Box sx={{ flex: 1, minWidth: 0 }}>
           {/* Header */}
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+          <Box sx={{ display: "flex", alignItems: "center", gap: 0.5 }}>
             <MuiTypography
               variant="body2"
               fontWeight={600}
               component={Link}
               href={`/profile/${comment.userId}`}
-              sx={{ textDecoration: 'none', color: 'text.primary' }}
+              sx={{ textDecoration: "none", color: "text.primary" }}
             >
-              {comment.userDisplayName || 'User'}
+              {comment.userDisplayName || "User"}
             </MuiTypography>
             <MuiTypography variant="caption" color="text.secondary">
               {timeAgo}
@@ -237,21 +237,21 @@ export default function CommentItem({
           {/* Body or Edit Form */}
           {isEditing ? (
             <CommentForm
-              initialBody={comment.body || ''}
+              initialBody={comment.body || ""}
               onSubmit={handleEdit}
               onCancel={() => setIsEditing(false)}
               submitLabel="Save"
               autoFocus
             />
           ) : (
-            <MuiTypography variant="body2" sx={{ mt: 0.25, whiteSpace: 'pre-wrap' }}>
+            <MuiTypography variant="body2" sx={{ mt: 0.25, whiteSpace: "pre-wrap" }}>
               {comment.body}
             </MuiTypography>
           )}
 
           {/* Actions */}
           {!isEditing && (
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, mt: 0.5 }}>
+            <Box sx={{ display: "flex", alignItems: "center", gap: 0.5, mt: 0.5 }}>
               <VoteButton
                 entityType="comment"
                 entityId={comment.uuid}
@@ -265,8 +265,8 @@ export default function CommentItem({
                   startIcon={<ReplyOutlined sx={{ fontSize: 16 }} />}
                   onClick={() => setShowReplyForm(!showReplyForm)}
                   sx={{
-                    textTransform: 'none',
-                    color: 'var(--neutral-500)',
+                    textTransform: "none",
+                    color: "var(--neutral-500)",
                     fontSize: themeTokens.typography.fontSize.xs,
                   }}
                 >
@@ -278,7 +278,7 @@ export default function CommentItem({
                   <IconButton
                     size="small"
                     onClick={() => setIsEditing(true)}
-                    sx={{ color: 'var(--neutral-400)' }}
+                    sx={{ color: "var(--neutral-400)" }}
                     aria-label="Edit comment"
                   >
                     <EditOutlined sx={{ fontSize: 16 }} />
@@ -289,11 +289,11 @@ export default function CommentItem({
                     description="Are you sure you want to delete this comment? This cannot be undone."
                     onConfirm={handleDelete}
                     okText="Delete"
-                    okButtonProps={{ color: 'error' }}
+                    okButtonProps={{ color: "error" }}
                   >
                     <IconButton
                       size="small"
-                      sx={{ color: 'var(--neutral-400)' }}
+                      sx={{ color: "var(--neutral-400)" }}
                       aria-label="Delete comment"
                     >
                       <DeleteOutlined sx={{ fontSize: 16 }} />
@@ -322,9 +322,9 @@ export default function CommentItem({
               size="small"
               onClick={loadReplies}
               disabled={repliesLoading}
-              sx={{ textTransform: 'none', mt: 0.5, ml: -0.5 }}
+              sx={{ textTransform: "none", mt: 0.5, ml: -0.5 }}
             >
-              Show {comment.replyCount} {comment.replyCount === 1 ? 'reply' : 'replies'}
+              Show {comment.replyCount} {comment.replyCount === 1 ? "reply" : "replies"}
             </MuiButton>
           )}
           {replies.map((reply) => (

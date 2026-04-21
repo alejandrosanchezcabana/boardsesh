@@ -1,4 +1,4 @@
-import type { Climb, BoardDetails } from './types';
+import type { Climb, BoardDetails } from "./types";
 
 /**
  * Parse an Aurora-format climb frames string into an array of hold IDs.
@@ -21,7 +21,7 @@ export function parseClimbFrameHoldIds(frames: string | null | undefined): numbe
 
 export type BoardCompatibilityResult =
   | { ok: true }
-  | { ok: false; reason: 'board_name' | 'layout' | 'holds_out_of_range' };
+  | { ok: false; reason: "board_name" | "layout" | "holds_out_of_range" };
 
 // Cache valid hold ID sets per BoardDetails object so repeated queue-add
 // validation doesn't rebuild the Set on every call.
@@ -57,10 +57,10 @@ function getValidHoldIds(target: BoardDetails): Set<number> | null {
  */
 export function canAddClimbToBoard(climb: Climb, target: BoardDetails): BoardCompatibilityResult {
   if (climb.boardType && climb.boardType !== target.board_name) {
-    return { ok: false, reason: 'board_name' };
+    return { ok: false, reason: "board_name" };
   }
   if (climb.layoutId != null && climb.layoutId !== target.layout_id) {
-    return { ok: false, reason: 'layout' };
+    return { ok: false, reason: "layout" };
   }
   const validIds = getValidHoldIds(target);
   if (!validIds) {
@@ -73,7 +73,7 @@ export function canAddClimbToBoard(climb: Climb, target: BoardDetails): BoardCom
   const climbHoldIds = parseClimbFrameHoldIds(climb.frames);
   for (const id of climbHoldIds) {
     if (!validIds.has(id)) {
-      return { ok: false, reason: 'holds_out_of_range' };
+      return { ok: false, reason: "holds_out_of_range" };
     }
   }
   return { ok: true };

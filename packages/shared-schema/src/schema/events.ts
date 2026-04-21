@@ -72,7 +72,7 @@ export const eventsTypeDefs = /* GraphQL */ `
   Union of possible queue events.
   """
   union QueueEvent =
-      FullSync
+    | FullSync
     | QueueItemAdded
     | QueueItemRemoved
     | QueueReordered

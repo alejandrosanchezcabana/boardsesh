@@ -1,13 +1,13 @@
-'use client';
+"use client";
 
-import React, { useEffect, useState } from 'react';
-import Skeleton from '@mui/material/Skeleton';
-import Button from '@mui/material/Button';
-import Box from '@mui/material/Box';
+import React, { useEffect, useState } from "react";
+import Skeleton from "@mui/material/Skeleton";
+import Button from "@mui/material/Button";
+import Box from "@mui/material/Box";
 
-import { signIn } from 'next-auth/react';
-import { isNativeApp } from '@/app/lib/ble/capacitor-utils';
-import { buildNativeOAuthSignInUrl } from '@/app/lib/auth/native-oauth-url';
+import { signIn } from "next-auth/react";
+import { isNativeApp } from "@/app/lib/ble/capacitor-utils";
+import { buildNativeOAuthSignInUrl } from "@/app/lib/auth/native-oauth-url";
 
 // Note: OAuth provider icons and button colors use brand-specific colors
 // per Google/Apple/Facebook brand guidelines, not design system tokens
@@ -57,7 +57,7 @@ type SocialLoginButtonsProps = {
 };
 
 export default function SocialLoginButtons({
-  callbackUrl = '/',
+  callbackUrl = "/",
   disabled = false,
 }: SocialLoginButtonsProps) {
   const [providers, setProviders] = useState<ProvidersConfig | null>(null);
@@ -69,7 +69,7 @@ export default function SocialLoginButtons({
   }, []);
 
   useEffect(() => {
-    fetch('/api/auth/providers-config')
+    fetch("/api/auth/providers-config")
       .then((res) => res.json())
       .then((data) => {
         setProviders(data);
@@ -115,20 +115,20 @@ export default function SocialLoginButtons({
 
   // Apple button needs custom colors per brand guidelines
   const appleButtonStyles = {
-    backgroundColor: 'var(--neutral-900)',
-    color: 'var(--semantic-surface)',
-    borderColor: 'var(--neutral-900)',
+    backgroundColor: "var(--neutral-900)",
+    color: "var(--semantic-surface)",
+    borderColor: "var(--neutral-900)",
   };
 
   return (
-    <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+    <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
       {providers.google && (
         <Button
           fullWidth
           size="large"
           variant="outlined"
           startIcon={<GoogleIcon />}
-          onClick={() => handleSocialSignIn('google')}
+          onClick={() => handleSocialSignIn("google")}
           disabled={disabled}
         >
           Continue with Google
@@ -141,7 +141,7 @@ export default function SocialLoginButtons({
           size="large"
           variant="outlined"
           startIcon={<AppleIcon />}
-          onClick={() => handleSocialSignIn('apple')}
+          onClick={() => handleSocialSignIn("apple")}
           disabled={disabled}
           sx={appleButtonStyles}
         >
@@ -155,7 +155,7 @@ export default function SocialLoginButtons({
           size="large"
           variant="outlined"
           startIcon={<FacebookIcon />}
-          onClick={() => handleSocialSignIn('facebook')}
+          onClick={() => handleSocialSignIn("facebook")}
           disabled={disabled}
         >
           Continue with Facebook

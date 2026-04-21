@@ -1,23 +1,23 @@
-'use client';
+"use client";
 
-import React from 'react';
-import MuiCard from '@mui/material/Card';
-import CardHeader from '@mui/material/CardHeader';
-import CardContent from '@mui/material/CardContent';
-import CardActions from '@mui/material/CardActions';
-import { usePathname } from 'next/navigation';
+import React from "react";
+import MuiCard from "@mui/material/Card";
+import CardHeader from "@mui/material/CardHeader";
+import CardContent from "@mui/material/CardContent";
+import CardActions from "@mui/material/CardActions";
+import { usePathname } from "next/navigation";
 
-import ClimbCardCover from './climb-card-cover';
-import ClimbTitle from './climb-title';
-import HeartAnimationOverlay from './heart-animation-overlay';
-import { Climb, BoardDetails } from '@/app/lib/types';
-import { ClimbActions } from '../climb-actions';
-import { useDoubleTapFavorite } from '../climb-actions/use-double-tap-favorite';
-import { themeTokens } from '@/app/theme/theme-config';
-import { getGradeTintColor } from '@/app/lib/grade-colors';
-import { useColorMode } from '@/app/hooks/use-color-mode';
-import { getExcludedClimbActions } from '@/app/lib/climb-action-utils';
-import { useIsClimbSelected } from '../board-page/selected-climb-store';
+import ClimbCardCover from "./climb-card-cover";
+import ClimbTitle from "./climb-title";
+import HeartAnimationOverlay from "./heart-animation-overlay";
+import { Climb, BoardDetails } from "@/app/lib/types";
+import { ClimbActions } from "../climb-actions";
+import { useDoubleTapFavorite } from "../climb-actions/use-double-tap-favorite";
+import { themeTokens } from "@/app/theme/theme-config";
+import { getGradeTintColor } from "@/app/lib/grade-colors";
+import { useColorMode } from "@/app/hooks/use-color-mode";
+import { getExcludedClimbActions } from "@/app/lib/climb-action-utils";
+import { useIsClimbSelected } from "../board-page/selected-climb-store";
 
 type ClimbCardProps = {
   climb?: Climb;
@@ -37,7 +37,10 @@ type ClimbCardProps = {
  * Compare actions arrays for memo equality.
  * Handles common cases: both undefined, both empty arrays, or same reference.
  */
-const areActionsEqual = (prev: React.JSX.Element[] | undefined, next: React.JSX.Element[] | undefined): boolean => {
+const areActionsEqual = (
+  prev: React.JSX.Element[] | undefined,
+  next: React.JSX.Element[] | undefined,
+): boolean => {
   // Same reference (including both undefined)
   if (prev === next) return true;
   // One undefined, one not
@@ -74,14 +77,12 @@ function ClimbCardWithActions({
 }) {
   const pathname = usePathname();
   const { mode } = useColorMode();
-  const isDark = mode === 'dark';
+  const isDark = mode === "dark";
   const selected = useIsClimbSelected(climb.uuid);
 
-  const {
-    handleDoubleTap,
-    showHeart,
-    dismissHeart,
-  } = useDoubleTapFavorite({ climbUuid: climb.uuid });
+  const { handleDoubleTap, showHeart, dismissHeart } = useDoubleTapFavorite({
+    climbUuid: climb.uuid,
+  });
 
   const cover = (
     <ClimbCardCover
@@ -94,24 +95,31 @@ function ClimbCardWithActions({
   );
   const cardTitle = <ClimbTitle climb={climb} layout="horizontal" showSetterInfo />;
 
-  const excludeActions = getExcludedClimbActions(boardDetails.board_name, 'card');
+  const excludeActions = getExcludedClimbActions(boardDetails.board_name, "card");
 
   return (
-    <div data-testid="climb-card" style={unsupported ? { opacity: 0.5, filter: 'grayscale(80%)' } : undefined}>
+    <div
+      data-testid="climb-card"
+      style={unsupported ? { opacity: 0.5, filter: "grayscale(80%)" } : undefined}
+    >
       <MuiCard>
         <CardHeader
           title={cardTitle}
-          sx={{ paddingTop: `${themeTokens.spacing[2]}px`, paddingBottom: `${themeTokens.spacing[1] + 2}px` }}
+          sx={{
+            paddingTop: `${themeTokens.spacing[2]}px`,
+            paddingBottom: `${themeTokens.spacing[1] + 2}px`,
+          }}
         />
         <CardContent
           sx={{
             padding: `${themeTokens.spacing[1] + 2}px`,
             backgroundColor: selected
-              ? (getGradeTintColor(climb.difficulty, 'light', isDark) ?? 'var(--semantic-selected-light)')
+              ? (getGradeTintColor(climb.difficulty, "light", isDark) ??
+                "var(--semantic-selected-light)")
               : undefined,
           }}
         >
-          <div style={{ position: 'relative' }}>
+          <div style={{ position: "relative" }}>
             {cover}
             <HeartAnimationOverlay visible={showHeart} onAnimationEnd={dismissHeart} />
           </div>
@@ -119,7 +127,7 @@ function ClimbCardWithActions({
         {/* Actions rendered as a proper component to support hooks */}
         <CardActions
           sx={{
-            justifyContent: 'space-around',
+            justifyContent: "space-around",
             borderTop: `1px solid var(--neutral-200)`,
           }}
         >
@@ -151,8 +159,8 @@ const ClimbCardStatic = React.memo(
     expandedContent,
   }: ClimbCardProps) => {
     const { mode } = useColorMode();
-    const isDark = mode === 'dark';
-    const selected = useIsClimbSelected(climb?.uuid ?? '');
+    const isDark = mode === "dark";
+    const selected = useIsClimbSelected(climb?.uuid ?? "");
     const cover = (
       <ClimbCardCover
         climb={climb}
@@ -162,30 +170,40 @@ const ClimbCardStatic = React.memo(
         preferImageLayers={preferImageLayers}
       />
     );
-    const cardTitle = climb ? <ClimbTitle climb={climb} layout="horizontal" showSetterInfo /> : 'Loading...';
+    const cardTitle = climb ? (
+      <ClimbTitle climb={climb} layout="horizontal" showSetterInfo />
+    ) : (
+      "Loading..."
+    );
 
     return (
       <div data-testid="climb-card">
         <MuiCard>
           <CardHeader
             title={cardTitle}
-            sx={{ paddingTop: `${themeTokens.spacing[2]}px`, paddingBottom: `${themeTokens.spacing[1] + 2}px` }}
+            sx={{
+              paddingTop: `${themeTokens.spacing[2]}px`,
+              paddingBottom: `${themeTokens.spacing[1] + 2}px`,
+            }}
           />
           <CardContent
             sx={{
               padding: `${themeTokens.spacing[1] + 2}px`,
               backgroundColor: selected
-                ? (getGradeTintColor(climb?.difficulty, 'light', isDark) ?? 'var(--semantic-selected-light)')
+                ? (getGradeTintColor(climb?.difficulty, "light", isDark) ??
+                  "var(--semantic-selected-light)")
                 : undefined,
             }}
           >
-            <div style={{ position: 'relative' }}>
+            <div style={{ position: "relative" }}>
               {cover}
               {expandedContent}
             </div>
           </CardContent>
           {actions && actions.length > 0 && (
-            <CardActions sx={{ justifyContent: 'space-around', borderTop: `1px solid var(--neutral-200)` }}>
+            <CardActions
+              sx={{ justifyContent: "space-around", borderTop: `1px solid var(--neutral-200)` }}
+            >
               {actions}
             </CardActions>
           )}
@@ -222,7 +240,7 @@ const ClimbCardStatic = React.memo(
   },
 );
 
-ClimbCardStatic.displayName = 'ClimbCardStatic';
+ClimbCardStatic.displayName = "ClimbCardStatic";
 
 /**
  * ClimbCard component that displays a climb in a card format.
@@ -233,8 +251,15 @@ ClimbCardStatic.displayName = 'ClimbCardStatic';
  * - When no climb, shows loading state
  */
 function ClimbCard(props: ClimbCardProps) {
-  const { climb, boardDetails, onCoverClick, onCoverDoubleClick, unsupported, actions, expandedContent } =
-    props;
+  const {
+    climb,
+    boardDetails,
+    onCoverClick,
+    onCoverDoubleClick,
+    unsupported,
+    actions,
+    expandedContent,
+  } = props;
   const { preferImageLayers } = props;
 
   // When actions or expandedContent are provided externally, use the memoized static version

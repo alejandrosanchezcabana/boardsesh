@@ -1,4 +1,4 @@
-import type { QueueEvent } from '@boardsesh/shared-schema';
+import type { QueueEvent } from "@boardsesh/shared-schema";
 
 /**
  * Union type resolver for QueueEvent

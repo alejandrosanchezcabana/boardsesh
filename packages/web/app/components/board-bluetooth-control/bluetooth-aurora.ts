@@ -1,24 +1,24 @@
-import { LedPlacements } from '@/app/lib/types';
-import { HOLD_STATE_MAP } from '../board-renderer/types';
+import { LedPlacements } from "@/app/lib/types";
+import { HOLD_STATE_MAP } from "../board-renderer/types";
 import {
   AURORA_ADVERTISED_SERVICE_UUID,
   MESSAGE_BODY_MAX_LENGTH,
   UART_SERVICE_UUID,
-} from './bluetooth-shared';
-import { AuroraBoardName } from '@/app/lib/api-wrappers/aurora/types';
-import { BoardName } from '@boardsesh/shared-schema';
+} from "./bluetooth-shared";
+import { AuroraBoardName } from "@/app/lib/api-wrappers/aurora/types";
+import { BoardName } from "@boardsesh/shared-schema";
 
 // --- API v3 command bytes (3 bytes per LED, 16-bit positions) ---
 const V3_PACKET_MIDDLE = 81; // 'Q'
-const V3_PACKET_FIRST = 82;  // 'R'
-const V3_PACKET_LAST = 83;   // 'S'
-const V3_PACKET_ONLY = 84;   // 'T'
+const V3_PACKET_FIRST = 82; // 'R'
+const V3_PACKET_LAST = 83; // 'S'
+const V3_PACKET_ONLY = 84; // 'T'
 
 // --- API v2 command bytes (2 bytes per LED, 10-bit positions) ---
 const V2_PACKET_MIDDLE = 77; // 'M'
-const V2_PACKET_FIRST = 78;  // 'N'
-const V2_PACKET_LAST = 79;   // 'O'
-const V2_PACKET_ONLY = 80;   // 'P'
+const V2_PACKET_FIRST = 78; // 'N'
+const V2_PACKET_LAST = 79; // 'O'
+const V2_PACKET_ONLY = 80; // 'P'
 
 // --- v2 power budget constants ---
 const V2_MAX_BOARD_POWER = 18.0;
@@ -30,7 +30,7 @@ const KILTER_LEDS_PER_HOLD = 2;
 const DEFAULT_LEDS_PER_HOLD = 1;
 
 const getLedsPerHold = (boardName: AuroraBoardName): number =>
-  boardName === 'kilter' ? KILTER_LEDS_PER_HOLD : DEFAULT_LEDS_PER_HOLD;
+  boardName === "kilter" ? KILTER_LEDS_PER_HOLD : DEFAULT_LEDS_PER_HOLD;
 
 export const AURORA_SCAN_SERVICE_UUIDS = [AURORA_ADVERTISED_SERVICE_UUID] as const;
 export const AURORA_OPTIONAL_SERVICE_UUIDS = [UART_SERVICE_UUID] as const;
@@ -41,7 +41,8 @@ export const AURORA_REQUEST_DEVICE_OPTIONS: RequestDeviceOptions = {
 };
 
 // Shared helpers — exported for testing
-export const checksum = (data: number[]) => data.reduce((acc, value) => (acc + value) & 255, 0) ^ 255;
+export const checksum = (data: number[]) =>
+  data.reduce((acc, value) => (acc + value) & 255, 0) ^ 255;
 
 export const wrapBytes = (data: number[]) =>
   data.length > MESSAGE_BODY_MAX_LENGTH ? [] : [1, data.length, checksum(data), 2, ...data, 3];
@@ -108,7 +109,11 @@ export const scaledColorV2 = (value8bit: number, scale: number): number =>
  * Byte 1: position[7:0]
  * Byte 2: (red_2bit << 6) | (green_2bit << 4) | (blue_2bit << 2) | position[9:8]
  */
-export const encodePositionAndColorV2 = (position: number, ledColor: string, scale: number): number[] => {
+export const encodePositionAndColorV2 = (
+  position: number,
+  ledColor: string,
+  scale: number,
+): number[] => {
   if (position > 1023) {
     console.warn(`[BLE v2] Position ${position} exceeds 10-bit limit (1023), skipping`);
     return [];
@@ -165,9 +170,9 @@ export const getAuroraBluetoothPacket = (
   let skippedPositionCount = 0;
   let skippedRoleCount = 0;
 
-  frames.split('p').forEach((frame) => {
+  frames.split("p").forEach((frame) => {
     if (!frame) return;
-    const [placement, role] = frame.split('r');
+    const [placement, role] = frame.split("r");
     const placementId = Number(placement);
     const ledPosition = placementPositions[placementId];
 
@@ -184,7 +189,7 @@ export const getAuroraBluetoothPacket = (
       return;
     }
 
-    const color = state.color.replace('#', '');
+    const color = state.color.replace("#", "");
     ledEntries.push({ position: ledPosition, color });
   });
 
@@ -192,8 +197,8 @@ export const getAuroraBluetoothPacket = (
     const skippedCount = skippedPositionCount + skippedRoleCount;
     throw new Error(
       `[BLE] ${skippedCount} of ${skippedCount + ledEntries.length} placements have no LED mapping ` +
-      `for this board configuration. The climb is incompatible with the connected board — ` +
-      `search filters should have prevented this selection.`,
+        `for this board configuration. The climb is incompatible with the connected board — ` +
+        `search filters should have prevented this selection.`,
     );
   }
 
@@ -213,7 +218,7 @@ export const getAuroraBluetoothPacket = (
       // v2 position > 1023 — should never happen with real Aurora boards (max ~641)
       throw new Error(
         `[BLE v2] LED position ${position} exceeds 10-bit limit (1023). ` +
-        `This board may require API v3 — check the device name for @3.`,
+          `This board may require API v3 — check the device name for @3.`,
       );
     }
 

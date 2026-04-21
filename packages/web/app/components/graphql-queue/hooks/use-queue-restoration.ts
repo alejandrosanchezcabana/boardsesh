@@ -1,5 +1,5 @@
-import { useState, useEffect, Dispatch } from 'react';
-import type { QueueAction, ClimbQueue, ClimbQueueItem } from '../../queue-control/types';
+import { useState, useEffect, Dispatch } from "react";
+import type { QueueAction, ClimbQueue, ClimbQueueItem } from "../../queue-control/types";
 
 interface UseQueueRestorationParams {
   isPersistentSessionActive: boolean;
@@ -43,17 +43,29 @@ export function useQueueRestoration({
     if (isPersistentSessionActive && persistentSession.hasConnected) {
       if (persistentSession.queue.length > 0 || persistentSession.currentClimbQueueItem) {
         dispatch({
-          type: 'INITIAL_QUEUE_DATA',
+          type: "INITIAL_QUEUE_DATA",
           payload: {
-            queue: persistentSession.queue as Parameters<typeof dispatch>[0] extends { payload: infer P } ? P extends { queue: infer Q } ? Q : never : never,
-            currentClimbQueueItem: persistentSession.currentClimbQueueItem as Parameters<typeof dispatch>[0] extends { payload: infer P } ? P extends { currentClimbQueueItem?: infer C } ? C : never : never,
+            queue: persistentSession.queue as Parameters<typeof dispatch>[0] extends {
+              payload: infer P;
+            }
+              ? P extends { queue: infer Q }
+                ? Q
+                : never
+              : never,
+            currentClimbQueueItem: persistentSession.currentClimbQueueItem as Parameters<
+              typeof dispatch
+            >[0] extends { payload: infer P }
+              ? P extends { currentClimbQueueItem?: infer C }
+                ? C
+                : never
+              : never,
           },
         });
       }
       setHasRestored(true);
     }
-  // Only run on mount and when session becomes active
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // Only run on mount and when session becomes active
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isPersistentSessionActive, persistentSession.hasConnected]);
 
   // Initialize queue state from in-memory local queue (SPA navigation, non-party mode)
@@ -66,10 +78,11 @@ export function useQueueRestoration({
       (persistentSession.localQueue.length > 0 || persistentSession.localCurrentClimbQueueItem)
     ) {
       dispatch({
-        type: 'INITIAL_QUEUE_DATA',
+        type: "INITIAL_QUEUE_DATA",
         payload: {
           queue: persistentSession.localQueue as unknown as ClimbQueue,
-          currentClimbQueueItem: persistentSession.localCurrentClimbQueueItem as unknown as ClimbQueueItem | null,
+          currentClimbQueueItem:
+            persistentSession.localCurrentClimbQueueItem as unknown as ClimbQueueItem | null,
         },
       });
       setHasRestored(true);
@@ -78,8 +91,8 @@ export function useQueueRestoration({
 
     // Local queue is loaded but empty or for a different board
     setHasRestored(true);
-  // Only run on mount and when isLocalQueueLoaded changes
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // Only run on mount and when isLocalQueueLoaded changes
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [persistentSession.isLocalQueueLoaded]);
 
   // Clear local queue if navigating to a different board configuration
@@ -88,5 +101,4 @@ export function useQueueRestoration({
       persistentSession.clearLocalQueue();
     }
   }, [baseBoardPath, persistentSession]);
-
 }

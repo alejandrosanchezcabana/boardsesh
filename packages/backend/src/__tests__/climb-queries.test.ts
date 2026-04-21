@@ -1,25 +1,25 @@
-import { describe, it, expect, beforeAll, afterAll } from 'vitest';
-import { searchClimbs, countClimbs, getClimbByUuid } from '../db/queries/climbs/index';
-import type { ParsedBoardRouteParameters, ClimbSearchParams } from '../db/queries/climbs/index';
-import { db } from '../db/client';
-import { sql } from 'drizzle-orm';
+import { describe, it, expect, beforeAll, afterAll } from "vite-plus/test";
+import { searchClimbs, countClimbs, getClimbByUuid } from "../db/queries/climbs/index";
+import type { ParsedBoardRouteParameters, ClimbSearchParams } from "../db/queries/climbs/index";
+import { db } from "../db/client";
+import { sql } from "drizzle-orm";
 
-describe('Climb Query Functions', () => {
+describe("Climb Query Functions", () => {
   const testParams: ParsedBoardRouteParameters = {
-    board_name: 'kilter',
+    board_name: "kilter",
     layout_id: 1,
     size_id: 7,
     set_ids: [1, 2],
     angle: 40,
   };
 
-  describe('searchClimbs', () => {
-    it('should return climbs with basic filters', async () => {
+  describe("searchClimbs", () => {
+    it("should return climbs with basic filters", async () => {
       const searchParams: ClimbSearchParams = {
         page: 0,
         pageSize: 10,
-        sortBy: 'ascents',
-        sortOrder: 'desc',
+        sortBy: "ascents",
+        sortOrder: "desc",
       };
 
       const result = await searchClimbs(testParams, searchParams);
@@ -27,12 +27,12 @@ describe('Climb Query Functions', () => {
       expect(result).toBeDefined();
       expect(result.climbs).toBeInstanceOf(Array);
       expect(result.hasMore).toBeDefined();
-      expect(typeof result.hasMore).toBe('boolean');
+      expect(typeof result.hasMore).toBe("boolean");
       expect(result.totalCount).toBeDefined();
-      expect(typeof result.totalCount).toBe('number');
+      expect(typeof result.totalCount).toBe("number");
     });
 
-    it('should enforce MAX_PAGE_SIZE limit', async () => {
+    it("should enforce MAX_PAGE_SIZE limit", async () => {
       const searchParams: ClimbSearchParams = {
         page: 0,
         pageSize: 200, // Exceeds MAX_PAGE_SIZE of 100
@@ -45,7 +45,7 @@ describe('Climb Query Functions', () => {
       expect(result.climbs.length).toBeLessThanOrEqual(100);
     });
 
-    it('should respect pageSize parameter', async () => {
+    it("should respect pageSize parameter", async () => {
       const searchParams: ClimbSearchParams = {
         page: 0,
         pageSize: 5,
@@ -57,7 +57,7 @@ describe('Climb Query Functions', () => {
       expect(result.climbs.length).toBeLessThanOrEqual(5);
     });
 
-    it('should filter by grade range', async () => {
+    it("should filter by grade range", async () => {
       const searchParams: ClimbSearchParams = {
         page: 0,
         pageSize: 10,
@@ -77,7 +77,7 @@ describe('Climb Query Functions', () => {
       });
     });
 
-    it('should filter by minimum ascents', async () => {
+    it("should filter by minimum ascents", async () => {
       const searchParams: ClimbSearchParams = {
         page: 0,
         pageSize: 10,
@@ -93,11 +93,11 @@ describe('Climb Query Functions', () => {
       });
     });
 
-    it('should filter by climb name', async () => {
+    it("should filter by climb name", async () => {
       const searchParams: ClimbSearchParams = {
         page: 0,
         pageSize: 10,
-        name: 'test',
+        name: "test",
       };
 
       const result = await searchClimbs(testParams, searchParams);
@@ -106,12 +106,12 @@ describe('Climb Query Functions', () => {
       // All climbs should match name pattern (case insensitive)
       result.climbs.forEach((climb) => {
         if (climb.name) {
-          expect(climb.name.toLowerCase()).toContain('test');
+          expect(climb.name.toLowerCase()).toContain("test");
         }
       });
     });
 
-    it('should indicate hasMore correctly', async () => {
+    it("should indicate hasMore correctly", async () => {
       const searchParams: ClimbSearchParams = {
         page: 0,
         pageSize: 1,
@@ -125,9 +125,9 @@ describe('Climb Query Functions', () => {
       }
     });
 
-    it('should handle invalid board parameters gracefully', async () => {
+    it("should handle invalid board parameters gracefully", async () => {
       const invalidParams: ParsedBoardRouteParameters = {
-        board_name: 'kilter',
+        board_name: "kilter",
         layout_id: 1,
         size_id: 999999, // Invalid size_id
         set_ids: [1],
@@ -147,19 +147,19 @@ describe('Climb Query Functions', () => {
       expect(result.hasMore).toBe(false);
     });
 
-    it('should accept userId for personal progress filters without error', async () => {
+    it("should accept userId for personal progress filters without error", async () => {
       const searchParams: ClimbSearchParams = {
         page: 0,
         pageSize: 10,
       };
 
-      const result = await searchClimbs(testParams, searchParams, 'some-user-id');
+      const result = await searchClimbs(testParams, searchParams, "some-user-id");
 
       expect(result).toBeDefined();
       expect(result.climbs).toBeInstanceOf(Array);
     });
 
-    it('should handle pagination correctly', async () => {
+    it("should handle pagination correctly", async () => {
       const page0Params: ClimbSearchParams = {
         page: 0,
         pageSize: 5,
@@ -185,8 +185,8 @@ describe('Climb Query Functions', () => {
     });
   });
 
-  describe('countClimbs', () => {
-    it('should return accurate total count', async () => {
+  describe("countClimbs", () => {
+    it("should return accurate total count", async () => {
       const searchParams: ClimbSearchParams = {
         page: 0,
         pageSize: 10,
@@ -199,7 +199,7 @@ describe('Climb Query Functions', () => {
       expect(count).toBe(searchResult.totalCount);
     });
 
-    it('should respect filters in count', async () => {
+    it("should respect filters in count", async () => {
       const filteredParams: ClimbSearchParams = {
         page: 0,
         pageSize: 10,
@@ -219,52 +219,52 @@ describe('Climb Query Functions', () => {
     });
   });
 
-  describe('getClimbByUuid', () => {
-    it('should return null for non-existent UUID', async () => {
+  describe("getClimbByUuid", () => {
+    it("should return null for non-existent UUID", async () => {
       const result = await getClimbByUuid({
-        board_name: 'kilter',
+        board_name: "kilter",
         layout_id: 1,
         size_id: 1,
         angle: 40,
-        climb_uuid: 'non-existent-uuid-12345',
+        climb_uuid: "non-existent-uuid-12345",
       });
 
       expect(result).toBeNull();
     });
 
-    it('should handle different board names', async () => {
+    it("should handle different board names", async () => {
       // Test with kilter
       const kilterResult = await getClimbByUuid({
-        board_name: 'kilter',
+        board_name: "kilter",
         layout_id: 1,
         size_id: 1,
         angle: 40,
-        climb_uuid: 'test-uuid',
+        climb_uuid: "test-uuid",
       });
 
       // Test with tension
       const tensionResult = await getClimbByUuid({
-        board_name: 'tension',
+        board_name: "tension",
         layout_id: 1,
         size_id: 1,
         angle: 40,
-        climb_uuid: 'test-uuid',
+        climb_uuid: "test-uuid",
       });
 
       // Both should execute without errors (may return null if no data)
-      expect(kilterResult === null || typeof kilterResult === 'object').toBe(true);
-      expect(tensionResult === null || typeof tensionResult === 'object').toBe(true);
+      expect(kilterResult === null || typeof kilterResult === "object").toBe(true);
+      expect(tensionResult === null || typeof tensionResult === "object").toBe(true);
     });
   });
 
-  describe('set_ids filtering', () => {
+  describe("set_ids filtering", () => {
     // Seed data for set_ids tests
     // - Placement 100 belongs to set 1 (mainline), layout 1
     // - Placement 200 belongs to set 2 (full ride), layout 1
     // - Climb "mainline-only" uses only placement 100 (set 1)
     // - Climb "full-ride-only" uses only placement 200 (set 2)
     // - Climb "mixed-sets" uses both placement 100 (set 1) and 200 (set 2)
-    const SET_IDS_TEST_PREFIX = 'set-ids-test-';
+    const SET_IDS_TEST_PREFIX = "set-ids-test-";
 
     beforeAll(async () => {
       // Insert placements for two different sets
@@ -280,9 +280,9 @@ describe('Climb Query Functions', () => {
       await db.execute(sql`
         INSERT INTO board_climbs (uuid, board_type, layout_id, setter_username, name, frames, frames_count, is_draft, is_listed, edge_left, edge_right, edge_bottom, edge_top, created_at, required_set_ids, compatible_size_ids)
         VALUES
-          (${SET_IDS_TEST_PREFIX + 'mainline'}, 'kilter', 1, 'test-setter', 'Mainline Only', 'p100r43', 1, false, true, 10, 100, 10, 150, '2024-01-01', ARRAY[1], ARRAY[7]),
-          (${SET_IDS_TEST_PREFIX + 'fullride'}, 'kilter', 1, 'test-setter', 'Full Ride Only', 'p200r43', 1, false, true, 10, 100, 10, 150, '2024-01-01', ARRAY[2], ARRAY[7]),
-          (${SET_IDS_TEST_PREFIX + 'mixed'}, 'kilter', 1, 'test-setter', 'Mixed Sets', 'p100r43p200r44', 1, false, true, 10, 100, 10, 150, '2024-01-01', ARRAY[1, 2], ARRAY[7])
+          (${SET_IDS_TEST_PREFIX + "mainline"}, 'kilter', 1, 'test-setter', 'Mainline Only', 'p100r43', 1, false, true, 10, 100, 10, 150, '2024-01-01', ARRAY[1], ARRAY[7]),
+          (${SET_IDS_TEST_PREFIX + "fullride"}, 'kilter', 1, 'test-setter', 'Full Ride Only', 'p200r43', 1, false, true, 10, 100, 10, 150, '2024-01-01', ARRAY[2], ARRAY[7]),
+          (${SET_IDS_TEST_PREFIX + "mixed"}, 'kilter', 1, 'test-setter', 'Mixed Sets', 'p100r43p200r44', 1, false, true, 10, 100, 10, 150, '2024-01-01', ARRAY[1, 2], ARRAY[7])
         ON CONFLICT DO NOTHING
       `);
 
@@ -290,61 +290,75 @@ describe('Climb Query Functions', () => {
       await db.execute(sql`
         INSERT INTO board_climb_holds (board_type, climb_uuid, hold_id, frame_number, hold_state)
         VALUES
-          ('kilter', ${SET_IDS_TEST_PREFIX + 'mainline'}, 100, 0, 'HAND'),
-          ('kilter', ${SET_IDS_TEST_PREFIX + 'fullride'}, 200, 0, 'HAND'),
-          ('kilter', ${SET_IDS_TEST_PREFIX + 'mixed'}, 100, 0, 'HAND'),
-          ('kilter', ${SET_IDS_TEST_PREFIX + 'mixed'}, 200, 0, 'FINISH')
+          ('kilter', ${SET_IDS_TEST_PREFIX + "mainline"}, 100, 0, 'HAND'),
+          ('kilter', ${SET_IDS_TEST_PREFIX + "fullride"}, 200, 0, 'HAND'),
+          ('kilter', ${SET_IDS_TEST_PREFIX + "mixed"}, 100, 0, 'HAND'),
+          ('kilter', ${SET_IDS_TEST_PREFIX + "mixed"}, 200, 0, 'FINISH')
         ON CONFLICT DO NOTHING
       `);
     });
 
     afterAll(async () => {
       // Clean up test data
-      await db.execute(sql`DELETE FROM board_climb_holds WHERE climb_uuid LIKE ${SET_IDS_TEST_PREFIX + '%'}`);
-      await db.execute(sql`DELETE FROM board_climbs WHERE uuid LIKE ${SET_IDS_TEST_PREFIX + '%'}`);
-      await db.execute(sql`DELETE FROM board_placements WHERE board_type = 'kilter' AND id IN (100, 200)`);
+      await db.execute(
+        sql`DELETE FROM board_climb_holds WHERE climb_uuid LIKE ${SET_IDS_TEST_PREFIX + "%"}`,
+      );
+      await db.execute(sql`DELETE FROM board_climbs WHERE uuid LIKE ${SET_IDS_TEST_PREFIX + "%"}`);
+      await db.execute(
+        sql`DELETE FROM board_placements WHERE board_type = 'kilter' AND id IN (100, 200)`,
+      );
     });
 
-    it('should only return climbs whose holds all belong to selected sets', async () => {
+    it("should only return climbs whose holds all belong to selected sets", async () => {
       const params: ParsedBoardRouteParameters = {
-        board_name: 'kilter',
+        board_name: "kilter",
         layout_id: 1,
         size_id: 7,
         set_ids: [1], // mainline only
         angle: 40,
       };
 
-      const result = await searchClimbs(params, { page: 0, pageSize: 100, sortBy: 'creation', sortOrder: 'desc' });
+      const result = await searchClimbs(params, {
+        page: 0,
+        pageSize: 100,
+        sortBy: "creation",
+        sortOrder: "desc",
+      });
       const uuids = result.climbs.map((c) => c.uuid);
 
       // Should include mainline-only climb
-      expect(uuids).toContain(SET_IDS_TEST_PREFIX + 'mainline');
+      expect(uuids).toContain(SET_IDS_TEST_PREFIX + "mainline");
       // Should NOT include full-ride-only or mixed (has a full-ride hold)
-      expect(uuids).not.toContain(SET_IDS_TEST_PREFIX + 'fullride');
-      expect(uuids).not.toContain(SET_IDS_TEST_PREFIX + 'mixed');
+      expect(uuids).not.toContain(SET_IDS_TEST_PREFIX + "fullride");
+      expect(uuids).not.toContain(SET_IDS_TEST_PREFIX + "mixed");
     });
 
-    it('should return climbs from all selected sets', async () => {
+    it("should return climbs from all selected sets", async () => {
       const params: ParsedBoardRouteParameters = {
-        board_name: 'kilter',
+        board_name: "kilter",
         layout_id: 1,
         size_id: 7,
         set_ids: [1, 2], // both mainline and full ride
         angle: 40,
       };
 
-      const result = await searchClimbs(params, { page: 0, pageSize: 100, sortBy: 'creation', sortOrder: 'desc' });
+      const result = await searchClimbs(params, {
+        page: 0,
+        pageSize: 100,
+        sortBy: "creation",
+        sortOrder: "desc",
+      });
       const uuids = result.climbs.map((c) => c.uuid);
 
       // All three climbs should appear when both sets are selected
-      expect(uuids).toContain(SET_IDS_TEST_PREFIX + 'mainline');
-      expect(uuids).toContain(SET_IDS_TEST_PREFIX + 'fullride');
-      expect(uuids).toContain(SET_IDS_TEST_PREFIX + 'mixed');
+      expect(uuids).toContain(SET_IDS_TEST_PREFIX + "mainline");
+      expect(uuids).toContain(SET_IDS_TEST_PREFIX + "fullride");
+      expect(uuids).toContain(SET_IDS_TEST_PREFIX + "mixed");
     });
 
-    it('should skip set_ids filter for moonboard', async () => {
+    it("should skip set_ids filter for moonboard", async () => {
       const params: ParsedBoardRouteParameters = {
-        board_name: 'moonboard',
+        board_name: "moonboard",
         layout_id: 1,
         size_id: 1,
         set_ids: [1],
@@ -357,9 +371,9 @@ describe('Climb Query Functions', () => {
       expect(result.climbs).toBeInstanceOf(Array);
     });
 
-    it('should skip set_ids filter when set_ids is empty', async () => {
+    it("should skip set_ids filter when set_ids is empty", async () => {
       const params: ParsedBoardRouteParameters = {
-        board_name: 'kilter',
+        board_name: "kilter",
         layout_id: 1,
         size_id: 7,
         set_ids: [],
@@ -367,18 +381,23 @@ describe('Climb Query Functions', () => {
       };
 
       // Should not throw and should return results (no set filtering applied)
-      const result = await searchClimbs(params, { page: 0, pageSize: 100, sortBy: 'creation', sortOrder: 'desc' });
+      const result = await searchClimbs(params, {
+        page: 0,
+        pageSize: 100,
+        sortBy: "creation",
+        sortOrder: "desc",
+      });
       const uuids = result.climbs.map((c) => c.uuid);
 
       // All test climbs should appear since no set filter is applied
-      expect(uuids).toContain(SET_IDS_TEST_PREFIX + 'mainline');
-      expect(uuids).toContain(SET_IDS_TEST_PREFIX + 'fullride');
-      expect(uuids).toContain(SET_IDS_TEST_PREFIX + 'mixed');
+      expect(uuids).toContain(SET_IDS_TEST_PREFIX + "mainline");
+      expect(uuids).toContain(SET_IDS_TEST_PREFIX + "fullride");
+      expect(uuids).toContain(SET_IDS_TEST_PREFIX + "mixed");
     });
   });
 
-  describe('Performance and Edge Cases', () => {
-    it('should handle empty search results', async () => {
+  describe("Performance and Edge Cases", () => {
+    it("should handle empty search results", async () => {
       const searchParams: ClimbSearchParams = {
         page: 999, // Very high page number
         pageSize: 10,
@@ -390,19 +409,19 @@ describe('Climb Query Functions', () => {
       expect(result.hasMore).toBe(false);
     });
 
-    it('should handle sorting options', async () => {
+    it("should handle sorting options", async () => {
       const sortByAscents: ClimbSearchParams = {
         page: 0,
         pageSize: 10,
-        sortBy: 'ascents',
-        sortOrder: 'desc',
+        sortBy: "ascents",
+        sortOrder: "desc",
       };
 
       const sortByQuality: ClimbSearchParams = {
         page: 0,
         pageSize: 10,
-        sortBy: 'quality',
-        sortOrder: 'desc',
+        sortBy: "quality",
+        sortOrder: "desc",
       };
 
       const ascentsResult = await searchClimbs(testParams, sortByAscents);
@@ -413,11 +432,11 @@ describe('Climb Query Functions', () => {
       expect(qualityResult).toBeDefined();
     });
 
-    it('should handle multiple setters filter', async () => {
+    it("should handle multiple setters filter", async () => {
       const searchParams: ClimbSearchParams = {
         page: 0,
         pageSize: 10,
-        settername: ['setter1', 'setter2'],
+        settername: ["setter1", "setter2"],
       };
 
       const result = await searchClimbs(testParams, searchParams);

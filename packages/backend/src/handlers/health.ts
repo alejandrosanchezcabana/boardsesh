@@ -1,6 +1,6 @@
-import type { IncomingMessage, ServerResponse } from 'http';
-import { applyCorsHeaders } from './cors';
-import { pubsub } from '../pubsub/index';
+import type { IncomingMessage, ServerResponse } from "http";
+import { applyCorsHeaders } from "./cors";
+import { pubsub } from "../pubsub/index";
 
 /**
  * Health check endpoint handler
@@ -14,10 +14,10 @@ export async function handleHealthCheck(req: IncomingMessage, res: ServerRespons
 
   // If Redis is required but not connected, report unhealthy
   if (redisRequired && !redisConnected) {
-    res.writeHead(503, { 'Content-Type': 'application/json' });
+    res.writeHead(503, { "Content-Type": "application/json" });
     res.end(
       JSON.stringify({
-        status: 'unhealthy',
+        status: "unhealthy",
         timestamp: Date.now(),
         redis: { required: true, connected: false },
       }),
@@ -25,10 +25,10 @@ export async function handleHealthCheck(req: IncomingMessage, res: ServerRespons
     return;
   }
 
-  res.writeHead(200, { 'Content-Type': 'application/json' });
+  res.writeHead(200, { "Content-Type": "application/json" });
   res.end(
     JSON.stringify({
-      status: 'healthy',
+      status: "healthy",
       timestamp: Date.now(),
       redis: { required: redisRequired, connected: redisConnected },
     }),

@@ -1,17 +1,17 @@
-import { beforeAll, beforeEach, afterAll } from 'vitest';
-import { drizzle } from 'drizzle-orm/postgres-js';
-import postgres from 'postgres';
-import { sql } from 'drizzle-orm';
-import * as schema from '../db/schema';
-import { roomManager } from '../services/room-manager';
-import { resetAllRateLimits } from '../utils/rate-limiter';
+import { beforeAll, beforeEach, afterAll } from "vite-plus/test";
+import { drizzle } from "drizzle-orm/postgres-js";
+import postgres from "postgres";
+import { sql } from "drizzle-orm";
+import * as schema from "../db/schema";
+import { roomManager } from "../services/room-manager";
+import { resetAllRateLimits } from "../utils/rate-limiter";
 
-const TEST_DB_NAME = 'boardsesh_backend_test';
+const TEST_DB_NAME = "boardsesh_backend_test";
 const connectionString =
   process.env.DATABASE_URL || `postgresql://postgres:postgres@localhost:5433/${TEST_DB_NAME}`;
 
 // Parse connection string to get base URL (without database name)
-const baseConnectionString = connectionString.replace(/\/[^/]+$/, '/postgres');
+const baseConnectionString = connectionString.replace(/\/[^/]+$/, "/postgres");
 
 let migrationClient: ReturnType<typeof postgres>;
 let db: ReturnType<typeof drizzle>;
@@ -259,7 +259,7 @@ beforeAll(async () => {
     }
   } catch (error) {
     // Database might already exist, that's okay
-    console.log('Test database check:', error);
+    console.log("Test database check:", error);
   } finally {
     await adminClient.end();
   }

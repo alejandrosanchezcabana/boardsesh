@@ -1,16 +1,16 @@
-'use client';
+"use client";
 
-import React, { useMemo } from 'react';
-import Link from 'next/link';
-import { BoardDetails, BoardName } from '@/app/lib/types';
-import BoardImageLayers from '@/app/components/board-renderer/board-image-layers';
-import BoardCanvasRenderer from '@/app/components/board-renderer/board-canvas-renderer';
-import { useCanvasRendererReady } from '@/app/lib/board-render-worker/worker-manager';
-import { getBoardDetailsForBoard } from '@/app/lib/board-utils';
-import { getDefaultBoardConfig } from '@/app/lib/default-board-configs';
-import { constructClimbViewUrlWithSlugs, constructClimbViewUrl } from '@/app/lib/url-utils';
-import type { SetIdList } from '@/app/lib/board-data';
-import styles from './ascents-feed.module.css';
+import React, { useMemo } from "react";
+import Link from "next/link";
+import { BoardDetails, BoardName } from "@/app/lib/types";
+import BoardImageLayers from "@/app/components/board-renderer/board-image-layers";
+import BoardCanvasRenderer from "@/app/components/board-renderer/board-canvas-renderer";
+import { useCanvasRendererReady } from "@/app/lib/board-render-worker/worker-manager";
+import { getBoardDetailsForBoard } from "@/app/lib/board-utils";
+import { getDefaultBoardConfig } from "@/app/lib/default-board-configs";
+import { constructClimbViewUrlWithSlugs, constructClimbViewUrl } from "@/app/lib/url-utils";
+import type { SetIdList } from "@/app/lib/board-data";
+import styles from "./ascents-feed.module.css";
 
 interface AscentThumbnailProps {
   boardType: string;
@@ -51,7 +51,7 @@ const AscentThumbnail: React.FC<AscentThumbnailProps> = ({
         set_ids: config.setIds,
       });
     } catch (error) {
-      console.error('Failed to get board details for thumbnail:', error);
+      console.error("Failed to get board details for thumbnail:", error);
       return null;
     }
   }, [boardType, layoutId]);
@@ -93,8 +93,8 @@ const AscentThumbnail: React.FC<AscentThumbnailProps> = ({
   }
 
   const thumbnailStyle: React.CSSProperties = {
-    width: '100%',
-    height: '100%',
+    width: "100%",
+    height: "100%",
   };
 
   let thumbnailContent: React.ReactNode;
@@ -120,7 +120,12 @@ const AscentThumbnail: React.FC<AscentThumbnailProps> = ({
     );
   } else {
     thumbnailContent = (
-      <BoardImageLayers boardDetails={boardDetails} mirrored={isMirror} thumbnail style={thumbnailStyle} />
+      <BoardImageLayers
+        boardDetails={boardDetails}
+        mirrored={isMirror}
+        thumbnail
+        style={thumbnailStyle}
+      />
     );
   }
 

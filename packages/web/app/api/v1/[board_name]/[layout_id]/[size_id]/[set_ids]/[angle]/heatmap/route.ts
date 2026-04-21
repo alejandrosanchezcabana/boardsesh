@@ -1,11 +1,11 @@
-import { getHoldHeatmapData } from '@/app/lib/db/queries/climbs/holds-heatmap';
-import { cachedGetHoldHeatmapData } from '@/app/lib/db/queries/climbs/holds-heatmap-cache';
-import { BoardRouteParameters, ErrorResponse, SearchRequestPagination } from '@/app/lib/types';
-import { urlParamsToSearchParams } from '@/app/lib/url-utils';
-import { parseBoardRouteParamsWithSlugs } from '@/app/lib/url-utils.server';
-import { NextResponse } from 'next/server';
-import { getServerSession } from 'next-auth/next';
-import { authOptions } from '@/app/lib/auth/auth-options';
+import { getHoldHeatmapData } from "@/app/lib/db/queries/climbs/holds-heatmap";
+import { cachedGetHoldHeatmapData } from "@/app/lib/db/queries/climbs/holds-heatmap-cache";
+import { BoardRouteParameters, ErrorResponse, SearchRequestPagination } from "@/app/lib/types";
+import { urlParamsToSearchParams } from "@/app/lib/url-utils";
+import { parseBoardRouteParamsWithSlugs } from "@/app/lib/url-utils.server";
+import { NextResponse } from "next/server";
+import { getServerSession } from "next-auth/next";
+import { authOptions } from "@/app/lib/auth/auth-options";
 
 export interface HoldHeatmapResponse {
   holdStats: Array<{
@@ -34,7 +34,7 @@ export async function GET(
     const parsedParams = await parseBoardRouteParamsWithSlugs(params);
 
     // MoonBoard doesn't have database tables for heatmap - return empty results
-    if (parsedParams.board_name === 'moonboard') {
+    if (parsedParams.board_name === "moonboard") {
       return NextResponse.json({
         holdStats: [],
       });
@@ -57,7 +57,7 @@ export async function GET(
       holdStats,
     });
   } catch (error) {
-    console.error('Error generating heatmap data:', error);
-    return NextResponse.json({ error: 'Failed to generate hold heatmap data' }, { status: 500 });
+    console.error("Error generating heatmap data:", error);
+    return NextResponse.json({ error: "Failed to generate hold heatmap data" }, { status: 500 });
   }
 }

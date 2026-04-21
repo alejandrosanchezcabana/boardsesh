@@ -1,26 +1,26 @@
-'use client';
+"use client";
 
-import React from 'react';
-import MuiButton from '@mui/material/Button';
-import { ActionTooltip } from '../action-tooltip';
-import CallSplitOutlined from '@mui/icons-material/CallSplitOutlined';
-import EditOutlined from '@mui/icons-material/EditOutlined';
-import Link from 'next/link';
-import { track } from '@vercel/analytics';
-import { useSession } from 'next-auth/react';
-import { ClimbActionProps, ClimbActionResult } from '../types';
-import { constructCreateClimbUrl } from '@/app/lib/url-utils';
-import { themeTokens } from '@/app/theme/theme-config';
-import { buildActionResult, computeActionDisplay } from '../action-view-renderer';
+import React from "react";
+import MuiButton from "@mui/material/Button";
+import { ActionTooltip } from "../action-tooltip";
+import CallSplitOutlined from "@mui/icons-material/CallSplitOutlined";
+import EditOutlined from "@mui/icons-material/EditOutlined";
+import Link from "next/link";
+import { track } from "@vercel/analytics";
+import { useSession } from "next-auth/react";
+import { ClimbActionProps, ClimbActionResult } from "../types";
+import { constructCreateClimbUrl } from "@/app/lib/url-utils";
+import { themeTokens } from "@/app/theme/theme-config";
+import { buildActionResult, computeActionDisplay } from "../action-view-renderer";
 
-const linkResetStyle: React.CSSProperties = { color: 'inherit', textDecoration: 'none' };
+const linkResetStyle: React.CSSProperties = { color: "inherit", textDecoration: "none" };
 
 export function ForkAction({
   climb,
   boardDetails,
   angle,
   viewMode,
-  size = 'default',
+  size = "default",
   showLabel,
   disabled,
   className,
@@ -30,8 +30,10 @@ export function ForkAction({
   const { data: session } = useSession();
 
   // Fork is not supported for moonboard yet
-  const isMoonboard = boardDetails.board_name === 'moonboard';
-  const canFork = !isMoonboard && !!(boardDetails.layout_name && boardDetails.size_name && boardDetails.set_names);
+  const isMoonboard = boardDetails.board_name === "moonboard";
+  const canFork =
+    !isMoonboard &&
+    !!(boardDetails.layout_name && boardDetails.size_name && boardDetails.set_names);
 
   const isEdit = !!climb.is_draft && !!climb.userId && climb.userId === session?.user?.id;
 
@@ -44,28 +46,35 @@ export function ForkAction({
         boardDetails.set_names!,
         angle,
         isEdit
-          ? { frames: climb.frames, name: climb.name, description: climb.description, editClimbUuid: climb.uuid }
+          ? {
+              frames: climb.frames,
+              name: climb.name,
+              description: climb.description,
+              editClimbUuid: climb.uuid,
+            }
           : { frames: climb.frames, name: climb.name },
       )
     : null;
 
   const handleClick = () => {
-    track(isEdit ? 'Draft Edited' : 'Climb Forked', {
-      boardLayout: boardDetails.layout_name || '',
+    track(isEdit ? "Draft Edited" : "Climb Forked", {
+      boardLayout: boardDetails.layout_name || "",
       originalClimb: climb.uuid,
     });
     onComplete?.();
   };
 
-  const label = isEdit ? 'Edit' : 'Remix this climb';
-  const tooltip = isEdit ? 'Edit this draft' : 'Remix this climb';
-  const icon = isEdit
-    ? <EditOutlined sx={{ fontSize: iconSize }} />
-    : <CallSplitOutlined sx={{ fontSize: iconSize }} />;
+  const label = isEdit ? "Edit" : "Remix this climb";
+  const tooltip = isEdit ? "Edit this draft" : "Remix this climb";
+  const icon = isEdit ? (
+    <EditOutlined sx={{ fontSize: iconSize }} />
+  ) : (
+    <CallSplitOutlined sx={{ fontSize: iconSize }} />
+  );
 
   // Link-based actions need custom elements since they wrap with Next.js Link
   return buildActionResult({
-    key: 'fork',
+    key: "fork",
     label,
     icon,
     onClick: handleClick,
@@ -77,7 +86,13 @@ export function ForkAction({
     available: canFork,
     iconElementOverride: url ? (
       <ActionTooltip title={tooltip}>
-        <Link href={url} prefetch={false} onClick={handleClick} className={className} style={linkResetStyle}>
+        <Link
+          href={url}
+          prefetch={false}
+          onClick={handleClick}
+          className={className}
+          style={linkResetStyle}
+        >
           {icon}
         </Link>
       </ActionTooltip>
@@ -87,7 +102,7 @@ export function ForkAction({
         <MuiButton
           variant="outlined"
           startIcon={icon}
-          size={size === 'large' ? 'large' : 'small'}
+          size={size === "large" ? "large" : "small"}
           disabled={disabled}
           className={className}
         >
@@ -104,15 +119,15 @@ export function ForkAction({
           disabled={disabled}
           sx={{
             height: 48,
-            justifyContent: 'flex-start',
+            justifyContent: "flex-start",
             paddingLeft: `${themeTokens.spacing[4]}px`,
             fontSize: themeTokens.typography.fontSize.base,
-            color: 'text.primary',
-            '& .MuiButton-startIcon': {
-              color: 'text.secondary',
+            color: "text.primary",
+            "& .MuiButton-startIcon": {
+              color: "text.secondary",
             },
-            '&:hover': {
-              backgroundColor: 'action.hover',
+            "&:hover": {
+              backgroundColor: "action.hover",
             },
           }}
         >
@@ -122,7 +137,7 @@ export function ForkAction({
     ) : null,
     menuItem: url
       ? {
-          key: 'fork',
+          key: "fork",
           label: (
             <Link href={url} prefetch={false} onClick={handleClick} style={linkResetStyle}>
               {label}
@@ -131,7 +146,7 @@ export function ForkAction({
           icon,
         }
       : {
-          key: 'fork',
+          key: "fork",
           label,
           icon,
           disabled: true,

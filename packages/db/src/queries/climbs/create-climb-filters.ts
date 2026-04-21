@@ -1,12 +1,12 @@
-import { eq, gte, sql, like, notLike, inArray, or, and, SQL } from 'drizzle-orm';
+import { eq, gte, sql, like, notLike, inArray, or, and, SQL } from "drizzle-orm";
 import {
   boardClimbs,
   boardClimbStats,
   boardseshTicks,
   boardProductSizes,
   boardClimbHolds,
-} from '../../schema/index';
-import type { BoardRouteParams, ClimbSearchParams } from './types';
+} from "../../schema/index";
+import type { BoardRouteParams, ClimbSearchParams } from "./types";
 
 // Kilter Homewall constants for tall-climb filtering
 const KILTER_HOMEWALL_LAYOUT_ID = 8;
@@ -31,21 +31,24 @@ export const createClimbFilters = (
   // - 'NOT': hold must NOT be present in the climb
   // - { state: 'STARTING' | 'HAND' | 'FOOT' | 'FINISH' }: hold must be present with that specific state
   // - 'STARTING' | 'HAND' | 'FOOT' | 'FINISH': (after URL parsing) same as above
-  const holdsToFilter = Object.entries(searchParams.holdsFilter || {}).map(([key, stateOrValue]) => {
-    const holdId = key.replace('hold_', '');
-    // Handle both object form { state: 'STARTING' } and string form 'STARTING'
-    const state = typeof stateOrValue === 'object' && stateOrValue !== null
-      ? (stateOrValue as { state: string }).state
-      : stateOrValue;
-    return [holdId, state] as const;
-  });
+  const holdsToFilter = Object.entries(searchParams.holdsFilter || {}).map(
+    ([key, stateOrValue]) => {
+      const holdId = key.replace("hold_", "");
+      // Handle both object form { state: 'STARTING' } and string form 'STARTING'
+      const state =
+        typeof stateOrValue === "object" && stateOrValue !== null
+          ? (stateOrValue as { state: string }).state
+          : stateOrValue;
+      return [holdId, state] as const;
+    },
+  );
 
-  const anyHolds = holdsToFilter.filter(([, value]) => value === 'ANY').map(([key]) => Number(key));
-  const notHolds = holdsToFilter.filter(([, value]) => value === 'NOT').map(([key]) => Number(key));
+  const anyHolds = holdsToFilter.filter(([, value]) => value === "ANY").map(([key]) => Number(key));
+  const notHolds = holdsToFilter.filter(([, value]) => value === "NOT").map(([key]) => Number(key));
 
   // Hold state filters - hold must be present with specific state (STARTING, HAND, FOOT, FINISH)
   const holdStateFilters = holdsToFilter
-    .filter(([, value]) => ['STARTING', 'HAND', 'FOOT', 'FINISH'].includes(value as string))
+    .filter(([, value]) => ["STARTING", "HAND", "FOOT", "FINISH"].includes(value as string))
     .map(([key, state]) => ({ holdId: Number(key), state: state as string }));
 
   // When onlyDrafts is enabled, show ONLY the user's own draft climbs.
@@ -70,9 +73,7 @@ export const createClimbFilters = (
     : eq(boardClimbs.isDraft, false);
 
   // When showing only drafts, skip the isListed filter (drafts are never listed)
-  const isListedCondition: SQL | null = isOnlyDrafts
-    ? null
-    : eq(boardClimbs.isListed, true);
+  const isListedCondition: SQL | null = isOnlyDrafts ? null : eq(boardClimbs.isListed, true);
 
   // Base conditions for filtering climbs
   const baseConditions: SQL[] = [
@@ -86,9 +87,10 @@ export const createClimbFilters = (
   // Size filter: check if this climb fits on the selected board size.
   // Uses denormalized compatible_size_ids array (pre-computed from edge comparison).
   // MoonBoard has a single fixed size, so skip.
-  const sizeConditions: SQL[] = params.board_name === 'moonboard' ? [] : [
-    sql`${params.size_id} = ANY(${boardClimbs.compatibleSizeIds})`,
-  ];
+  const sizeConditions: SQL[] =
+    params.board_name === "moonboard"
+      ? []
+      : [sql`${params.size_id} = ANY(${boardClimbs.compatibleSizeIds})`];
 
   // Projects-only: match climbs with 0 ascents OR no stats row at all.
   // Must live outside climbStatsConditions so it doesn't trigger the stats-driven
@@ -131,12 +133,15 @@ export const createClimbFilters = (
   }
 
   // Name search condition
-  const nameCondition: SQL[] = searchParams.name ? [sql`${boardClimbs.name} ILIKE ${`%${searchParams.name}%`}`] : [];
+  const nameCondition: SQL[] = searchParams.name
+    ? [sql`${boardClimbs.name} ILIKE ${`%${searchParams.name}%`}`]
+    : [];
 
   // Setter name filter condition
-  const setterNameCondition: SQL[] = searchParams.settername && searchParams.settername.length > 0
-    ? [inArray(boardClimbs.setterUsername, searchParams.settername)]
-    : [];
+  const setterNameCondition: SQL[] =
+    searchParams.settername && searchParams.settername.length > 0
+      ? [inArray(boardClimbs.setterUsername, searchParams.settername)]
+      : [];
 
   // Hold filter conditions
   const holdConditions: SQL[] = [
@@ -145,20 +150,25 @@ export const createClimbFilters = (
   ];
 
   // State-specific hold conditions - use board_climb_holds table
-  const holdStateConditions: SQL[] = holdStateFilters.map(({ holdId, state }) =>
-    sql`EXISTS (
+  const holdStateConditions: SQL[] = holdStateFilters.map(
+    ({ holdId, state }) =>
+      sql`EXISTS (
       SELECT 1 FROM ${boardClimbHolds} ch
       WHERE ch.board_type = ${params.board_name}
       AND ch.climb_uuid = ${boardClimbs.uuid}
       AND ch.hold_id = ${holdId}
       AND ch.hold_state = ${state}
-    )`
+    )`,
   );
 
   // Tall climbs filter condition
   const tallClimbsConditions: SQL[] = [];
 
-  if (searchParams.onlyTallClimbs && params.board_name === 'kilter' && params.layout_id === KILTER_HOMEWALL_LAYOUT_ID) {
+  if (
+    searchParams.onlyTallClimbs &&
+    params.board_name === "kilter" &&
+    params.layout_id === KILTER_HOMEWALL_LAYOUT_ID
+  ) {
     tallClimbsConditions.push(
       sql`${boardClimbs.edgeBottom} < (
         SELECT MAX(ps.edge_bottom)
@@ -166,7 +176,7 @@ export const createClimbFilters = (
         WHERE ps.board_type = ${params.board_name}
         AND ps.product_id = ${KILTER_HOMEWALL_PRODUCT_ID}
         AND ps.id != ${params.size_id}
-      )`
+      )`,
     );
   }
 
@@ -177,11 +187,20 @@ export const createClimbFilters = (
   //
   // For draft queries, allow NULL required_set_ids — denormalized columns are populated
   // asynchronously and may be NULL for freshly saved drafts, so we must not exclude them.
-  const setIdsConditions: SQL[] = params.board_name === 'moonboard' || params.set_ids.length === 0 ? [] : [
-    isOnlyDrafts
-      ? sql`(${boardClimbs.requiredSetIds} IS NULL OR ${boardClimbs.requiredSetIds} <@ ARRAY[${sql.join(params.set_ids.map(id => sql`${id}`), sql`, `)}]::int[])`
-      : sql`${boardClimbs.requiredSetIds} <@ ARRAY[${sql.join(params.set_ids.map(id => sql`${id}`), sql`, `)}]::int[]`,
-  ];
+  const setIdsConditions: SQL[] =
+    params.board_name === "moonboard" || params.set_ids.length === 0
+      ? []
+      : [
+          isOnlyDrafts
+            ? sql`(${boardClimbs.requiredSetIds} IS NULL OR ${boardClimbs.requiredSetIds} <@ ARRAY[${sql.join(
+                params.set_ids.map((id) => sql`${id}`),
+                sql`, `,
+              )}]::int[])`
+            : sql`${boardClimbs.requiredSetIds} <@ ARRAY[${sql.join(
+                params.set_ids.map((id) => sql`${id}`),
+                sql`, `,
+              )}]::int[]`,
+        ];
 
   // Personal progress filter conditions
   const personalProgressConditions: SQL[] = [];
@@ -196,7 +215,7 @@ export const createClimbFilters = (
           AND ${boardseshTicks.boardType} = ${params.board_name}
           AND ${boardseshTicks.angle} = ${params.angle}
           AND ${boardseshTicks.status} = 'attempt'
-        )`
+        )`,
       );
     }
 
@@ -209,7 +228,7 @@ export const createClimbFilters = (
           AND ${boardseshTicks.boardType} = ${params.board_name}
           AND ${boardseshTicks.angle} = ${params.angle}
           AND ${boardseshTicks.status} IN ('flash', 'send')
-        )`
+        )`,
       );
     }
 
@@ -223,7 +242,7 @@ export const createClimbFilters = (
           AND ${boardseshTicks.boardType} = ${params.board_name}
           AND ${boardseshTicks.angle} = ${params.angle}
           AND ${boardseshTicks.status} = 'attempt'
-        )`
+        )`,
       );
     }
 
@@ -236,7 +255,7 @@ export const createClimbFilters = (
           AND ${boardseshTicks.boardType} = ${params.board_name}
           AND ${boardseshTicks.angle} = ${params.angle}
           AND ${boardseshTicks.status} IN ('flash', 'send')
-        )`
+        )`,
       );
     }
   }
@@ -248,7 +267,7 @@ export const createClimbFilters = (
         SELECT COUNT(*)
         FROM ${boardseshTicks}
         WHERE ${boardseshTicks.climbUuid} = ${boardClimbs.uuid}
-        AND ${boardseshTicks.userId} = ${userId || ''}
+        AND ${boardseshTicks.userId} = ${userId || ""}
         AND ${boardseshTicks.boardType} = ${params.board_name}
         AND ${boardseshTicks.angle} = ${params.angle}
         AND ${boardseshTicks.status} IN ('flash', 'send')
@@ -257,7 +276,7 @@ export const createClimbFilters = (
         SELECT COUNT(*)
         FROM ${boardseshTicks}
         WHERE ${boardseshTicks.climbUuid} = ${boardClimbs.uuid}
-        AND ${boardseshTicks.userId} = ${userId || ''}
+        AND ${boardseshTicks.userId} = ${userId || ""}
         AND ${boardseshTicks.boardType} = ${params.board_name}
         AND ${boardseshTicks.angle} = ${params.angle}
         AND ${boardseshTicks.status} = 'attempt'
@@ -272,7 +291,7 @@ export const createClimbFilters = (
         SELECT COUNT(*)
         FROM ${boardseshTicks}
         WHERE ${boardseshTicks.climbUuid} = ${climbHoldsTable.climbUuid}
-        AND ${boardseshTicks.userId} = ${userId || ''}
+        AND ${boardseshTicks.userId} = ${userId || ""}
         AND ${boardseshTicks.boardType} = ${params.board_name}
         AND ${boardseshTicks.angle} = ${params.angle}
         AND ${boardseshTicks.status} IN ('flash', 'send')
@@ -281,7 +300,7 @@ export const createClimbFilters = (
         SELECT COUNT(*)
         FROM ${boardseshTicks}
         WHERE ${boardseshTicks.climbUuid} = ${climbHoldsTable.climbUuid}
-        AND ${boardseshTicks.userId} = ${userId || ''}
+        AND ${boardseshTicks.userId} = ${userId || ""}
         AND ${boardseshTicks.boardType} = ${params.board_name}
         AND ${boardseshTicks.angle} = ${params.angle}
         AND ${boardseshTicks.status} = 'attempt'

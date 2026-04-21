@@ -14,7 +14,7 @@ export function fnv1aHash(str: string): string {
   }
 
   // Convert to unsigned 32-bit integer and hex string
-  return (hash >>> 0).toString(16).padStart(8, '0');
+  return (hash >>> 0).toString(16).padStart(8, "0");
 }
 
 /**
@@ -27,16 +27,19 @@ export function fnv1aHash(str: string): string {
  */
 export function computeQueueStateHash(
   queue: Array<{ uuid: string } | null | undefined>,
-  currentItemUuid: string | null
+  currentItemUuid: string | null,
 ): string {
   // Sort queue UUIDs for deterministic ordering
   // Defensive filter for null/undefined items that may have been introduced by state corruption
   const queueUuids = queue
-    .filter((item): item is { uuid: string } => item != null && typeof item === 'object' && item.uuid != null)
-    .map(item => item.uuid)
+    .filter(
+      (item): item is { uuid: string } =>
+        item != null && typeof item === "object" && item.uuid != null,
+    )
+    .map((item) => item.uuid)
     .sort()
-    .join(',');
-  const currentUuid = currentItemUuid || 'null';
+    .join(",");
+  const currentUuid = currentItemUuid || "null";
 
   // Create canonical string representation
   const canonical = `${queueUuids}|${currentUuid}`;

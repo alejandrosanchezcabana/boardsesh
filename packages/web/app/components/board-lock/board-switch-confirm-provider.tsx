@@ -1,15 +1,15 @@
-'use client';
+"use client";
 
-import React, { createContext, useCallback, useContext, useMemo, useRef, useState } from 'react';
-import Dialog from '@mui/material/Dialog';
-import DialogTitle from '@mui/material/DialogTitle';
-import DialogContent from '@mui/material/DialogContent';
-import DialogContentText from '@mui/material/DialogContentText';
-import DialogActions from '@mui/material/DialogActions';
-import Button from '@mui/material/Button';
-import type { BoardDetails, BoardRouteIdentity } from '@/app/lib/types';
-import type { BoardLockReason } from './use-active-board-lock';
-import { capitalizeFirst } from '@/app/lib/string-utils';
+import React, { createContext, useCallback, useContext, useMemo, useRef, useState } from "react";
+import Dialog from "@mui/material/Dialog";
+import DialogTitle from "@mui/material/DialogTitle";
+import DialogContent from "@mui/material/DialogContent";
+import DialogContentText from "@mui/material/DialogContentText";
+import DialogActions from "@mui/material/DialogActions";
+import Button from "@mui/material/Button";
+import type { BoardDetails, BoardRouteIdentity } from "@/app/lib/types";
+import type { BoardLockReason } from "./use-active-board-lock";
+import { capitalizeFirst } from "@/app/lib/string-utils";
 
 interface ConfirmArgs {
   reason: BoardLockReason;
@@ -39,7 +39,7 @@ function formatBoardLabel(board: BoardDetails | BoardRouteIdentity): string {
   const parts = [capitalizeFirst(board.board_name)];
   if (board.layout_name) parts.push(board.layout_name);
   if (board.size_name) parts.push(board.size_name);
-  return parts.join(' · ');
+  return parts.join(" · ");
 }
 
 interface DialogState {
@@ -86,10 +86,9 @@ export function BoardSwitchConfirmProvider({ children }: { children: React.React
     [confirmBoardSwitch],
   );
 
-  const title =
-    state?.reason === 'session' ? 'Leave your session?' : 'Disconnect your board?';
+  const title = state?.reason === "session" ? "Leave your session?" : "Disconnect your board?";
   const body =
-    state?.reason === 'session'
+    state?.reason === "session"
       ? `You're in a session on ${state?.lockedLabel}. Switching to ${state?.targetLabel} disconnects your board but keeps the session running.`
       : `Your ${state?.lockedLabel} is still connected. Switching to ${state?.targetLabel} disconnects it.`;
 

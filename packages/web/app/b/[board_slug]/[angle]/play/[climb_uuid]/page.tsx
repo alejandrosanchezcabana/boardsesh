@@ -1,15 +1,15 @@
-import React from 'react';
-import { notFound } from 'next/navigation';
-import { Metadata } from 'next';
-import { resolveBoardBySlug, boardToRouteParams } from '@/app/lib/board-slug-utils';
-import { getBoardDetailsForBoard } from '@/app/lib/board-utils';
-import { getClimb } from '@/app/lib/data/queries';
+import React from "react";
+import { notFound } from "next/navigation";
+import { Metadata } from "next";
+import { resolveBoardBySlug, boardToRouteParams } from "@/app/lib/board-slug-utils";
+import { getBoardDetailsForBoard } from "@/app/lib/board-utils";
+import { getClimb } from "@/app/lib/data/queries";
 
-import PlayViewClient from '@/app/[board_name]/[layout_id]/[size_id]/[set_ids]/[angle]/play/[climb_uuid]/play-view-client';
-import { scheduleOverlayWarming } from '@/app/lib/warm-overlay-cache';
-import { extractUuidFromSlug } from '@/app/lib/url-utils';
-import { buildOgBoardRenderUrl } from '@/app/components/board-renderer/util';
-import { OG_IMAGE_HEIGHT, OG_IMAGE_WIDTH } from '@/app/lib/seo/og';
+import PlayViewClient from "@/app/[board_name]/[layout_id]/[size_id]/[set_ids]/[angle]/play/[climb_uuid]/play-view-client";
+import { scheduleOverlayWarming } from "@/app/lib/warm-overlay-cache";
+import { extractUuidFromSlug } from "@/app/lib/url-utils";
+import { buildOgBoardRenderUrl } from "@/app/components/board-renderer/util";
+import { OG_IMAGE_HEIGHT, OG_IMAGE_WIDTH } from "@/app/lib/seo/og";
 
 interface BoardSlugPlayPageProps {
   params: Promise<{ board_slug: string; angle: string; climb_uuid: string }>;
@@ -21,7 +21,7 @@ export async function generateMetadata(props: BoardSlugPlayPageProps): Promise<M
   try {
     const board = await resolveBoardBySlug(params.board_slug);
     if (!board) {
-      return { title: 'Play Climb | Boardsesh', description: 'Play a climb on your board' };
+      return { title: "Play Climb | Boardsesh", description: "Play a climb on your board" };
     }
 
     const parsedParams = {
@@ -35,8 +35,8 @@ export async function generateMetadata(props: BoardSlugPlayPageProps): Promise<M
     ]);
 
     const climbName = currentClimb.name || `${boardDetails.board_name} Climb`;
-    const climbGrade = currentClimb.difficulty || 'Unknown Grade';
-    const setter = currentClimb.setter_username || 'Unknown Setter';
+    const climbGrade = currentClimb.difficulty || "Unknown Grade";
+    const setter = currentClimb.setter_username || "Unknown Setter";
     const description = `${climbName} - ${climbGrade} by ${setter}. Quality: ${currentClimb.quality_average || 0}/5. Ascents: ${currentClimb.ascensionist_count || 0}`;
     const title = `${climbName} - ${climbGrade} | Boardsesh`;
     const canonicalUrl = `/b/${params.board_slug}/${params.angle}/play/${params.climb_uuid}`;
@@ -51,7 +51,7 @@ export async function generateMetadata(props: BoardSlugPlayPageProps): Promise<M
       openGraph: {
         title: `${climbName} - ${climbGrade}`,
         description,
-        type: 'website',
+        type: "website",
         url: canonicalUrl,
         images: [
           {
@@ -63,7 +63,7 @@ export async function generateMetadata(props: BoardSlugPlayPageProps): Promise<M
         ],
       },
       twitter: {
-        card: 'summary_large_image',
+        card: "summary_large_image",
         title: `${climbName} - ${climbGrade}`,
         description,
         images: [ogImagePath],
@@ -71,8 +71,8 @@ export async function generateMetadata(props: BoardSlugPlayPageProps): Promise<M
     };
   } catch {
     return {
-      title: 'Play Climb | Boardsesh',
-      description: 'Play a climb on your board',
+      title: "Play Climb | Boardsesh",
+      description: "Play a climb on your board",
     };
   }
 }
@@ -103,7 +103,7 @@ export default async function BoardSlugPlayPage(props: BoardSlugPlayPageProps) {
   }
 
   if (initialClimb) {
-    scheduleOverlayWarming({ boardDetails, climbs: [initialClimb], variant: 'full' });
+    scheduleOverlayWarming({ boardDetails, climbs: [initialClimb], variant: "full" });
   }
 
   return (

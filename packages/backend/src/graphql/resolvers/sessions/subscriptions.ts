@@ -1,7 +1,7 @@
-import type { ConnectionContext, SessionEvent } from '@boardsesh/shared-schema';
-import { pubsub } from '../../../pubsub/index';
-import { requireSessionMember } from '../shared/helpers';
-import { createAsyncIterator } from '../shared/async-iterators';
+import type { ConnectionContext, SessionEvent } from "@boardsesh/shared-schema";
+import { pubsub } from "../../../pubsub/index";
+import { requireSessionMember } from "../shared/helpers";
+import { createAsyncIterator } from "../shared/async-iterators";
 
 export const sessionSubscriptions = {
   /**
@@ -10,7 +10,11 @@ export const sessionSubscriptions = {
    * Requires user to be a member of the session
    */
   sessionUpdates: {
-    subscribe: async function* (_: unknown, { sessionId }: { sessionId: string }, ctx: ConnectionContext) {
+    subscribe: async function* (
+      _: unknown,
+      { sessionId }: { sessionId: string },
+      ctx: ConnectionContext,
+    ) {
       // Verify user is a member of the session they're subscribing to
       // Uses retry logic to handle race conditions with joinSession
       await requireSessionMember(ctx, sessionId);

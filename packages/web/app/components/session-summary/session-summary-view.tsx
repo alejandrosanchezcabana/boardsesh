@@ -1,26 +1,26 @@
-'use client';
+"use client";
 
-import React from 'react';
-import Box from '@mui/material/Box';
-import Card from '@mui/material/Card';
-import CardContent from '@mui/material/CardContent';
-import Typography from '@mui/material/Typography';
-import Avatar from '@mui/material/Avatar';
-import List from '@mui/material/List';
-import ListItem from '@mui/material/ListItem';
-import ListItemAvatar from '@mui/material/ListItemAvatar';
-import ListItemText from '@mui/material/ListItemText';
-import LinearProgress from '@mui/material/LinearProgress';
-import Skeleton from '@mui/material/Skeleton';
-import Stack from '@mui/material/Stack';
-import Chip from '@mui/material/Chip';
-import EmojiEventsOutlined from '@mui/icons-material/EmojiEventsOutlined';
-import TimerOutlined from '@mui/icons-material/TimerOutlined';
-import FlagOutlined from '@mui/icons-material/FlagOutlined';
-import PersonOutlined from '@mui/icons-material/PersonOutlined';
-import type { SessionSummary } from '@boardsesh/shared-schema';
-import { getGradeColor as getVividGradeColor } from '@/app/lib/grade-colors';
-import { useGradeFormat } from '@/app/hooks/use-grade-format';
+import React from "react";
+import Box from "@mui/material/Box";
+import Card from "@mui/material/Card";
+import CardContent from "@mui/material/CardContent";
+import Typography from "@mui/material/Typography";
+import Avatar from "@mui/material/Avatar";
+import List from "@mui/material/List";
+import ListItem from "@mui/material/ListItem";
+import ListItemAvatar from "@mui/material/ListItemAvatar";
+import ListItemText from "@mui/material/ListItemText";
+import LinearProgress from "@mui/material/LinearProgress";
+import Skeleton from "@mui/material/Skeleton";
+import Stack from "@mui/material/Stack";
+import Chip from "@mui/material/Chip";
+import EmojiEventsOutlined from "@mui/icons-material/EmojiEventsOutlined";
+import TimerOutlined from "@mui/icons-material/TimerOutlined";
+import FlagOutlined from "@mui/icons-material/FlagOutlined";
+import PersonOutlined from "@mui/icons-material/PersonOutlined";
+import type { SessionSummary } from "@boardsesh/shared-schema";
+import { getGradeColor as getVividGradeColor } from "@/app/lib/grade-colors";
+import { useGradeFormat } from "@/app/hooks/use-grade-format";
 
 interface SessionSummaryViewProps {
   summary: SessionSummary;
@@ -41,9 +41,9 @@ export default function SessionSummaryView({ summary }: SessionSummaryViewProps)
   return (
     <Stack spacing={2}>
       {/* Header stats */}
-      <Box sx={{ display: 'flex', gap: 2, flexWrap: 'wrap' }}>
+      <Box sx={{ display: "flex", gap: 2, flexWrap: "wrap" }}>
         <Card sx={{ flex: 1, minWidth: 120 }}>
-          <CardContent sx={{ p: 1.5, '&:last-child': { pb: 1.5 }, textAlign: 'center' }}>
+          <CardContent sx={{ p: 1.5, "&:last-child": { pb: 1.5 }, textAlign: "center" }}>
             <Typography variant="h4" fontWeight={700} color="primary">
               {summary.totalSends}
             </Typography>
@@ -53,7 +53,7 @@ export default function SessionSummaryView({ summary }: SessionSummaryViewProps)
           </CardContent>
         </Card>
         <Card sx={{ flex: 1, minWidth: 120 }}>
-          <CardContent sx={{ p: 1.5, '&:last-child': { pb: 1.5 }, textAlign: 'center' }}>
+          <CardContent sx={{ p: 1.5, "&:last-child": { pb: 1.5 }, textAlign: "center" }}>
             <Typography variant="h4" fontWeight={700}>
               {summary.totalAttempts}
             </Typography>
@@ -64,8 +64,10 @@ export default function SessionSummaryView({ summary }: SessionSummaryViewProps)
         </Card>
         {summary.durationMinutes != null && (
           <Card sx={{ flex: 1, minWidth: 120 }}>
-            <CardContent sx={{ p: 1.5, '&:last-child': { pb: 1.5 }, textAlign: 'center' }}>
-              <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 0.5 }}>
+            <CardContent sx={{ p: 1.5, "&:last-child": { pb: 1.5 }, textAlign: "center" }}>
+              <Box
+                sx={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 0.5 }}
+              >
                 <TimerOutlined fontSize="small" color="action" />
                 <Typography variant="h5" fontWeight={700}>
                   {formatDuration(summary.durationMinutes)}
@@ -82,8 +84,8 @@ export default function SessionSummaryView({ summary }: SessionSummaryViewProps)
       {/* Goal */}
       {summary.goal && (
         <Card>
-          <CardContent sx={{ p: 1.5, '&:last-child': { pb: 1.5 } }}>
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+          <CardContent sx={{ p: 1.5, "&:last-child": { pb: 1.5 } }}>
+            <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
               <FlagOutlined fontSize="small" color="action" />
               <Typography variant="body2" color="text.secondary">
                 Goal:
@@ -99,9 +101,9 @@ export default function SessionSummaryView({ summary }: SessionSummaryViewProps)
       {/* Hardest Climb */}
       {summary.hardestClimb && (
         <Card>
-          <CardContent sx={{ p: 1.5, '&:last-child': { pb: 1.5 } }}>
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-              <EmojiEventsOutlined fontSize="small" sx={{ color: 'warning.main' }} />
+          <CardContent sx={{ p: 1.5, "&:last-child": { pb: 1.5 } }}>
+            <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+              <EmojiEventsOutlined fontSize="small" sx={{ color: "warning.main" }} />
               <Typography variant="body2" color="text.secondary">
                 Hardest send:
               </Typography>
@@ -114,7 +116,7 @@ export default function SessionSummaryView({ summary }: SessionSummaryViewProps)
                   size="small"
                   sx={{
                     bgcolor: getVividGradeColor(summary.hardestClimb.grade),
-                    color: '#fff',
+                    color: "#fff",
                     fontWeight: 600,
                   }}
                 />
@@ -129,22 +131,22 @@ export default function SessionSummaryView({ summary }: SessionSummaryViewProps)
       {/* Grade Distribution */}
       {summary.gradeDistribution.length > 0 && (
         <Card>
-          <CardContent sx={{ p: 1.5, '&:last-child': { pb: 1.5 } }}>
+          <CardContent sx={{ p: 1.5, "&:last-child": { pb: 1.5 } }}>
             <Typography variant="subtitle2" gutterBottom>
               Grade Distribution
             </Typography>
             <Stack spacing={0.75}>
               {summary.gradeDistribution.map((g) => (
-                <Box key={g.grade} sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                <Box key={g.grade} sx={{ display: "flex", alignItems: "center", gap: 1 }}>
                   {gradeFormatLoaded ? (
                     <Typography
                       variant="body2"
-                      sx={{ minWidth: 40, fontWeight: 600, textAlign: 'right' }}
+                      sx={{ minWidth: 40, fontWeight: 600, textAlign: "right" }}
                     >
                       {formatGrade(g.grade) ?? g.grade}
                     </Typography>
                   ) : (
-                    <Skeleton variant="text" width={40} sx={{ fontSize: '0.875rem' }} />
+                    <Skeleton variant="text" width={40} sx={{ fontSize: "0.875rem" }} />
                   )}
                   <LinearProgress
                     variant="determinate"
@@ -153,9 +155,9 @@ export default function SessionSummaryView({ summary }: SessionSummaryViewProps)
                       flex: 1,
                       height: 16,
                       borderRadius: 1,
-                      bgcolor: 'action.hover',
-                      '& .MuiLinearProgress-bar': {
-                        bgcolor: getVividGradeColor(g.grade) ?? 'action.selected',
+                      bgcolor: "action.hover",
+                      "& .MuiLinearProgress-bar": {
+                        bgcolor: getVividGradeColor(g.grade) ?? "action.selected",
                         borderRadius: 1,
                       },
                     }}
@@ -173,7 +175,7 @@ export default function SessionSummaryView({ summary }: SessionSummaryViewProps)
       {/* Participants */}
       {summary.participants.length > 0 && (
         <Card>
-          <CardContent sx={{ p: 1.5, '&:last-child': { pb: 1.5 } }}>
+          <CardContent sx={{ p: 1.5, "&:last-child": { pb: 1.5 } }}>
             <Typography variant="subtitle2" gutterBottom>
               Participants
             </Typography>
@@ -186,10 +188,10 @@ export default function SessionSummaryView({ summary }: SessionSummaryViewProps)
                     </Avatar>
                   </ListItemAvatar>
                   <ListItemText
-                    primary={p.displayName || 'Anonymous'}
+                    primary={p.displayName || "Anonymous"}
                     secondary={`${p.sends} sends / ${p.attempts} attempts`}
-                    primaryTypographyProps={{ variant: 'body2', fontWeight: 600 }}
-                    secondaryTypographyProps={{ variant: 'caption' }}
+                    primaryTypographyProps={{ variant: "body2", fontWeight: 600 }}
+                    secondaryTypographyProps={{ variant: "caption" }}
                   />
                 </ListItem>
               ))}

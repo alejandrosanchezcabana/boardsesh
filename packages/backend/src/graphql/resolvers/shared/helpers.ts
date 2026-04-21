@@ -1,16 +1,16 @@
-import type { ConnectionContext } from '@boardsesh/shared-schema';
-import { checkRateLimit } from '../../../utils/rate-limiter';
-import { checkRateLimitRedis } from '../../../utils/redis-rate-limiter';
-import { getContext } from '../../context';
-import { getDistributedState } from '../../../services/distributed-state';
-import { db } from '../../../db/client';
-import { esp32Controllers } from '@boardsesh/db/schema/app';
-import { eq } from 'drizzle-orm';
+import type { ConnectionContext } from "@boardsesh/shared-schema";
+import { checkRateLimit } from "../../../utils/rate-limiter";
+import { checkRateLimitRedis } from "../../../utils/redis-rate-limiter";
+import { getContext } from "../../context";
+import { getDistributedState } from "../../../services/distributed-state";
+import { db } from "../../../db/client";
+import { esp32Controllers } from "@boardsesh/db/schema/app";
+import { eq } from "drizzle-orm";
 
 // Re-export validateInput from validation schemas
-export { validateInput } from '../../../validation/schemas';
+export { validateInput } from "../../../validation/schemas";
 // Re-export MAX_RETRIES from types
-export { MAX_RETRIES } from './types';
+export { MAX_RETRIES } from "./types";
 
 /**
  * Configuration for session membership retry behavior.
@@ -33,8 +33,12 @@ export const SESSION_MEMBER_RETRY_CONFIG = {
  */
 export function requireSession(ctx: ConnectionContext): string {
   if (!ctx.sessionId) {
-    console.error(`[Auth] requireSession failed: connectionId=${ctx.connectionId}, sessionId=${ctx.sessionId}`);
-    throw new Error(`Must be in a session to perform this operation (connectionId: ${ctx.connectionId})`);
+    console.error(
+      `[Auth] requireSession failed: connectionId=${ctx.connectionId}, sessionId=${ctx.sessionId}`,
+    );
+    throw new Error(
+      `Must be in a session to perform this operation (connectionId: ${ctx.connectionId})`,
+    );
   }
   return ctx.sessionId;
 }
@@ -46,7 +50,7 @@ export function requireSession(ctx: ConnectionContext): string {
  */
 export function requireAuthenticated(ctx: ConnectionContext): void {
   if (!ctx.isAuthenticated) {
-    throw new Error('Authentication required to perform this operation');
+    throw new Error("Authentication required to perform this operation");
   }
 }
 
@@ -65,7 +69,7 @@ export async function requireSessionMember(
   ctx: ConnectionContext,
   sessionId: string,
   maxRetries = SESSION_MEMBER_RETRY_CONFIG.maxRetries,
-  initialDelayMs = SESSION_MEMBER_RETRY_CONFIG.initialDelayMs
+  initialDelayMs = SESSION_MEMBER_RETRY_CONFIG.initialDelayMs,
 ): Promise<void> {
   for (let i = 0; i < maxRetries; i++) {
     // First check local context (fast path for same-instance)
@@ -90,7 +94,7 @@ export async function requireSessionMember(
       // Exponential backoff: 50ms, 100ms, 200ms, 400ms, 800ms, 1600ms, 3200ms
       // Total max wait: ~6.4 seconds
       const delay = initialDelayMs * Math.pow(2, i);
-      await new Promise(resolve => setTimeout(resolve, delay));
+      await new Promise((resolve) => setTimeout(resolve, delay));
     }
   }
 
@@ -107,12 +111,20 @@ export async function requireSessionMember(
   }
 
   if (!finalCtx?.sessionId) {
-    console.error(`[Auth] requireSessionMember failed after ${maxRetries} retries: not in any session. connectionId=${ctx.connectionId}, requested=${sessionId}`);
-    throw new Error(`Unauthorized: not in any session (connectionId: ${ctx.connectionId}, requested: ${sessionId})`);
+    console.error(
+      `[Auth] requireSessionMember failed after ${maxRetries} retries: not in any session. connectionId=${ctx.connectionId}, requested=${sessionId}`,
+    );
+    throw new Error(
+      `Unauthorized: not in any session (connectionId: ${ctx.connectionId}, requested: ${sessionId})`,
+    );
   }
   if (finalCtx.sessionId !== sessionId) {
-    console.error(`[Auth] requireSessionMember failed: session mismatch. connectionId=${ctx.connectionId}, have=${finalCtx.sessionId}, requested=${sessionId}`);
-    throw new Error(`Unauthorized: session mismatch (have: ${finalCtx.sessionId}, requested: ${sessionId})`);
+    console.error(
+      `[Auth] requireSessionMember failed: session mismatch. connectionId=${ctx.connectionId}, have=${finalCtx.sessionId}, requested=${sessionId}`,
+    );
+    throw new Error(
+      `Unauthorized: session mismatch (have: ${finalCtx.sessionId}, requested: ${sessionId})`,
+    );
   }
 }
 
@@ -142,19 +154,24 @@ export async function requireSessionMember(
  * @param limit - Optional custom limit (default: 60 requests per minute)
  * @param operation - Operation name for Redis key namespacing (default: 'default')
  */
-export async function applyRateLimit(ctx: ConnectionContext, limit?: number, operation = 'default'): Promise<void> {
-  if (process.env.NODE_ENV === 'development') return;
+export async function applyRateLimit(
+  ctx: ConnectionContext,
+  limit?: number,
+  operation = "default",
+): Promise<void> {
+  if (process.env.NODE_ENV === "development") return;
 
   const maxRequests = limit ?? 60;
 
   // Tier 1: Synchronous in-memory rate limiting (fast path, per-instance)
   // Use userId for authenticated users, clientIp for anonymous HTTP requests,
   // or connectionId as fallback (WebSocket connections)
-  const key = ctx.isAuthenticated && ctx.userId
-    ? `${ctx.userId}:${operation}`
-    : ctx.clientIp
-      ? `ip:${ctx.clientIp}:${operation}`
-      : ctx.connectionId;
+  const key =
+    ctx.isAuthenticated && ctx.userId
+      ? `${ctx.userId}:${operation}`
+      : ctx.clientIp
+        ? `ip:${ctx.clientIp}:${operation}`
+        : ctx.connectionId;
   checkRateLimit(key, maxRequests);
 
   // Tier 2: Distributed Redis rate limiting (authenticated users only)
@@ -167,9 +184,14 @@ export async function applyRateLimit(ctx: ConnectionContext, limit?: number, ope
  * Helper to require controller authentication via connectionParams.
  * Throws if the connection is not authenticated as a controller.
  */
-export function requireControllerAuth(ctx: ConnectionContext): { controllerId: string; controllerApiKey: string } {
+export function requireControllerAuth(ctx: ConnectionContext): {
+  controllerId: string;
+  controllerApiKey: string;
+} {
   if (!ctx.controllerId || !ctx.controllerApiKey) {
-    throw new Error('Controller authentication required. Pass controllerApiKey in connectionParams.');
+    throw new Error(
+      "Controller authentication required. Pass controllerApiKey in connectionParams.",
+    );
   }
   return { controllerId: ctx.controllerId, controllerApiKey: ctx.controllerApiKey };
 }
@@ -187,7 +209,7 @@ export function requireControllerAuth(ctx: ConnectionContext): { controllerId: s
  */
 export async function requireControllerAuthorizedForSession(
   ctx: ConnectionContext,
-  sessionId: string
+  sessionId: string,
 ): Promise<{ controllerId: string; controllerApiKey: string }> {
   const { controllerId, controllerApiKey } = requireControllerAuth(ctx);
 
@@ -199,7 +221,7 @@ export async function requireControllerAuthorizedForSession(
     .limit(1);
 
   if (!controller) {
-    throw new Error('Controller not found');
+    throw new Error("Controller not found");
   }
 
   // Update the controller's authorized session (for tracking purposes)

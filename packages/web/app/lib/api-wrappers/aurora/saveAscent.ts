@@ -1,9 +1,9 @@
-import { BoardName } from '../../types';
-import { SaveAscentOptions, SaveAscentResponse, Ascent } from './types';
-import dayjs from 'dayjs';
-import { dbz } from '@/app/lib/db/db';
-import { boardseshTicks } from '@/app/lib/db/schema';
-import { randomUUID } from 'crypto';
+import { BoardName } from "../../types";
+import { SaveAscentOptions, SaveAscentResponse, Ascent } from "./types";
+import dayjs from "dayjs";
+import { dbz } from "@/app/lib/db/db";
+import { boardseshTicks } from "@/app/lib/db/schema";
+import { randomUUID } from "crypto";
 
 /**
  * Saves an ascent to boardsesh_ticks.
@@ -23,11 +23,11 @@ export async function saveAscent(
   nextAuthUserId: string,
 ): Promise<SaveAscentResponse> {
   // Convert the ISO date to the required format
-  const formattedDate = dayjs(options.climbed_at).format('YYYY-MM-DD HH:mm:ss');
+  const formattedDate = dayjs(options.climbed_at).format("YYYY-MM-DD HH:mm:ss");
   const now = new Date().toISOString();
 
   // Determine status based on attempt_id (1 = flash, otherwise send)
-  const status = options.attempt_id === 1 ? 'flash' : 'send';
+  const status = options.attempt_id === 1 ? "flash" : "send";
 
   // Generate a new UUID for the tick (different from the ascent uuid which is Aurora's)
   const tickUuid = randomUUID();
@@ -46,11 +46,11 @@ export async function saveAscent(
       quality: options.quality,
       difficulty: options.difficulty,
       isBenchmark: options.is_benchmark,
-      comment: options.comment || '',
+      comment: options.comment || "",
       climbedAt: formattedDate,
       createdAt: now,
       updatedAt: now,
-      auroraType: 'ascents',
+      auroraType: "ascents",
       auroraId: options.uuid, // Store Aurora's UUID for sync reference
     })
     .onConflictDoUpdate({
@@ -64,7 +64,7 @@ export async function saveAscent(
         quality: options.quality,
         difficulty: options.difficulty,
         isBenchmark: options.is_benchmark,
-        comment: options.comment || '',
+        comment: options.comment || "",
         climbedAt: formattedDate,
         updatedAt: now,
       },
@@ -94,7 +94,7 @@ export async function saveAscent(
   return {
     events: [
       {
-        _type: 'ascent_saved' as const,
+        _type: "ascent_saved" as const,
         ascent: localAscent,
       },
     ],

@@ -1,11 +1,11 @@
-import { v5 as uuidv5 } from 'uuid';
-import { z } from 'zod';
-import { getDb } from '@/app/lib/db/db';
-import { boardseshTicks, inferredSessions } from '@/app/lib/db/schema';
-import { sql, eq, and, isNull, desc, inArray } from 'drizzle-orm';
+import { v5 as uuidv5 } from "uuid";
+import { z } from "zod";
+import { getDb } from "@/app/lib/db/db";
+import { boardseshTicks, inferredSessions } from "@/app/lib/db/schema";
+import { sql, eq, and, isNull, desc, inArray } from "drizzle-orm";
 
 // Same namespace as the backend builder — must match to produce identical IDs
-const INFERRED_SESSION_NAMESPACE = '6ba7b812-9dad-11d1-80b4-00c04fd430c8';
+const INFERRED_SESSION_NAMESPACE = "6ba7b812-9dad-11d1-80b4-00c04fd430c8";
 
 // 4 hours in milliseconds
 const SESSION_GAP_MS = 4 * 60 * 60 * 1000;
@@ -69,9 +69,14 @@ function buildGroup(userId: string, ticks: TickForGrouping[]): SessionGroup {
   let totalFlashes = 0;
   let totalAttempts = 0;
   for (const t of ticks) {
-    if (t.status === 'flash') { totalFlashes++; totalSends++; }
-    else if (t.status === 'send') { totalSends++; }
-    else if (t.status === 'attempt') { totalAttempts++; }
+    if (t.status === "flash") {
+      totalFlashes++;
+      totalSends++;
+    } else if (t.status === "send") {
+      totalSends++;
+    } else if (t.status === "attempt") {
+      totalAttempts++;
+    }
   }
 
   return {
@@ -186,12 +191,7 @@ export async function buildInferredSessionsForUser(
         lastTickAt: inferredSessions.lastTickAt,
       })
       .from(inferredSessions)
-      .where(
-        and(
-          eq(inferredSessions.userId, userId),
-          isNull(inferredSessions.endedAt),
-        ),
-      )
+      .where(and(eq(inferredSessions.userId, userId), isNull(inferredSessions.endedAt)))
       .orderBy(desc(inferredSessions.lastTickAt))
       .limit(1);
 
@@ -202,7 +202,10 @@ export async function buildInferredSessionsForUser(
       const latestSessionTime = new Date(latestSession.lastTickAt).getTime();
       const firstTickTime = new Date(groups[0].firstTickAt).getTime();
 
-      if (firstTickTime - latestSessionTime <= SESSION_GAP_MS && firstTickTime >= latestSessionTime) {
+      if (
+        firstTickTime - latestSessionTime <= SESSION_GAP_MS &&
+        firstTickTime >= latestSessionTime
+      ) {
         groups[0] = { ...groups[0], sessionId: latestSession.id };
       }
     }

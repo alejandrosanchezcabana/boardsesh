@@ -1,9 +1,9 @@
-import { NextResponse } from 'next/server';
-import { dbz } from '@/app/lib/db/db';
-import { boardSessions } from '@/app/lib/db/schema';
-import { eq } from 'drizzle-orm';
-import { SessionIdSchema } from '@/app/lib/validation/session';
-import { CLIMB_SESSION_COOKIE } from '@/app/lib/climb-session-cookie';
+import { NextResponse } from "next/server";
+import { dbz } from "@/app/lib/db/db";
+import { boardSessions } from "@/app/lib/db/schema";
+import { eq } from "drizzle-orm";
+import { SessionIdSchema } from "@/app/lib/validation/session";
+import { CLIMB_SESSION_COOKIE } from "@/app/lib/climb-session-cookie";
 
 const DEFAULT_ANGLE = 40;
 
@@ -19,13 +19,13 @@ function ensureViewSegment(path: string): string {
 
 function getBaseUrl(request: Request): string {
   const headers = request.headers;
-  const host = headers.get('host');
+  const host = headers.get("host");
 
-  if (process.env.NODE_ENV === 'development') {
-    const forwardedHost = headers.get('x-forwarded-host');
-    const forwardedProto = headers.get('x-forwarded-proto');
+  if (process.env.NODE_ENV === "development") {
+    const forwardedHost = headers.get("x-forwarded-host");
+    const forwardedProto = headers.get("x-forwarded-proto");
     if (forwardedHost) {
-      const proto = forwardedProto?.split(',')[0].trim() ?? 'http';
+      const proto = forwardedProto?.split(",")[0].trim() ?? "http";
       return `${proto}://${forwardedHost}`;
     }
   }
@@ -39,14 +39,17 @@ function getBaseUrl(request: Request): string {
   return `${url.protocol}//${url.host}`;
 }
 
-export async function GET(request: Request, { params }: { params: Promise<{ sessionId: string }> }) {
+export async function GET(
+  request: Request,
+  { params }: { params: Promise<{ sessionId: string }> },
+) {
   const { sessionId } = await params;
   const baseUrl = getBaseUrl(request);
 
   const validationResult = SessionIdSchema.safeParse(sessionId);
 
   if (!validationResult.success) {
-    return new NextResponse('Invalid session ID format', { status: 400 });
+    return new NextResponse("Invalid session ID format", { status: 400 });
   }
 
   const validatedSessionId = validationResult.data;
@@ -61,17 +64,17 @@ export async function GET(request: Request, { params }: { params: Promise<{ sess
     .limit(1);
 
   if (session.length === 0) {
-    return new NextResponse('Session not found', { status: 404 });
+    return new NextResponse("Session not found", { status: 404 });
   }
 
   const { boardPath } = session[0];
-  const cleanPath = boardPath.replace(/^\/+/, '');
+  const cleanPath = boardPath.replace(/^\/+/, "");
   const redirectPath = ensureViewSegment(cleanPath);
 
   const response = NextResponse.redirect(`${baseUrl}/${redirectPath}`, 307);
   response.cookies.set(CLIMB_SESSION_COOKIE, validatedSessionId, {
-    path: '/',
-    sameSite: 'lax',
+    path: "/",
+    sameSite: "lax",
     maxAge: 86400,
   });
 

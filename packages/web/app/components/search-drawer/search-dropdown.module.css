@@ -4,8 +4,8 @@
   justify-content: space-between;
   align-items: center;
   padding: 16px 24px;
-  background: var(--semantic-surface, #FFFFFF);
-  border-top: 1px solid var(--neutral-100, #F0F0F0);
+  background: var(--semantic-surface, #ffffff);
+  border-top: 1px solid var(--neutral-100, #f0f0f0);
 }
 
 /* Clear all - underlined text link */
@@ -22,7 +22,7 @@
 }
 
 .clearAllButton:hover {
-  color: var(--neutral-500, #6B7280);
+  color: var(--neutral-500, #6b7280);
 }
 
 .clearAllButton:active {

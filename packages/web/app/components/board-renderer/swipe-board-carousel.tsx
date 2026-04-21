@@ -1,20 +1,20 @@
-'use client';
+"use client";
 
-import React, { useEffect, useRef, useCallback, useState } from 'react';
-import BoardImageLayers from './board-image-layers';
-import BoardCanvasRenderer from './board-canvas-renderer';
+import React, { useEffect, useRef, useCallback, useState } from "react";
+import BoardImageLayers from "./board-image-layers";
+import BoardCanvasRenderer from "./board-canvas-renderer";
 import {
   useCardSwipeNavigation,
   EXIT_DURATION,
   SNAP_BACK_DURATION,
   ENTER_ANIMATION_DURATION,
-} from '@/app/hooks/use-card-swipe-navigation';
-import type { BoardDetails } from '@/app/lib/types';
-import { useCanvasRendererReady } from '@/app/lib/board-render-worker/worker-manager';
-import { useDoubleTap } from '@/app/lib/hooks/use-double-tap';
-import ZoomableBoard from './zoomable-board';
-import ZoomHint from './zoom-hint';
-import styles from './swipe-board-carousel.module.css';
+} from "@/app/hooks/use-card-swipe-navigation";
+import type { BoardDetails } from "@/app/lib/types";
+import { useCanvasRendererReady } from "@/app/lib/board-render-worker/worker-manager";
+import { useDoubleTap } from "@/app/lib/hooks/use-double-tap";
+import ZoomableBoard from "./zoomable-board";
+import ZoomHint from "./zoom-hint";
+import styles from "./swipe-board-carousel.module.css";
 
 interface ClimbBoardData {
   frames: string;
@@ -40,29 +40,37 @@ export interface SwipeBoardCarouselProps {
   onZoomChange?: (zoomed: boolean) => void;
 }
 
-const SwipeBoardCarousel = React.memo<SwipeBoardCarouselProps>(({
-  boardDetails,
-  currentClimb,
-  nextClimb,
-  previousClimb,
-  onSwipeNext,
-  onSwipePrevious,
-  canSwipeNext,
-  canSwipePrevious,
-  className,
-  boardContainerClassName,
-  fillContainer,
-  onDoubleTap,
-  showZoomHint,
-  isDrawerOpen,
-  overlay,
-  onZoomChange: onZoomChangeProp,
-}) => {
-  const enterFallbackRef = useRef<NodeJS.Timeout | null>(null);
-  const [isZoomed, setIsZoomed] = useState(false);
+const SwipeBoardCarousel = React.memo<SwipeBoardCarouselProps>(
+  ({
+    boardDetails,
+    currentClimb,
+    nextClimb,
+    previousClimb,
+    onSwipeNext,
+    onSwipePrevious,
+    canSwipeNext,
+    canSwipePrevious,
+    className,
+    boardContainerClassName,
+    fillContainer,
+    onDoubleTap,
+    showZoomHint,
+    isDrawerOpen,
+    overlay,
+    onZoomChange: onZoomChangeProp,
+  }) => {
+    const enterFallbackRef = useRef<NodeJS.Timeout | null>(null);
+    const [isZoomed, setIsZoomed] = useState(false);
 
-  const { swipeHandlers, swipeOffset, isAnimating, animationDirection, enterDirection, clearEnterAnimation, isHorizontalSwipeRef } =
-    useCardSwipeNavigation({
+    const {
+      swipeHandlers,
+      swipeOffset,
+      isAnimating,
+      animationDirection,
+      enterDirection,
+      clearEnterAnimation,
+      isHorizontalSwipeRef,
+    } = useCardSwipeNavigation({
       onSwipeNext,
       onSwipePrevious,
       canSwipeNext,
@@ -72,137 +80,145 @@ const SwipeBoardCarousel = React.memo<SwipeBoardCarouselProps>(({
       enabled: !isZoomed,
     });
 
-  useEffect(() => {
-    if (enterDirection) {
-      enterFallbackRef.current = setTimeout(() => {
-        clearEnterAnimation();
-      }, ENTER_ANIMATION_DURATION);
-    }
-    return () => {
-      if (enterFallbackRef.current) {
-        clearTimeout(enterFallbackRef.current);
-        enterFallbackRef.current = null;
+    useEffect(() => {
+      if (enterDirection) {
+        enterFallbackRef.current = setTimeout(() => {
+          clearEnterAnimation();
+        }, ENTER_ANIMATION_DURATION);
       }
+      return () => {
+        if (enterFallbackRef.current) {
+          clearTimeout(enterFallbackRef.current);
+          enterFallbackRef.current = null;
+        }
+      };
+    }, [enterDirection, clearEnterAnimation]);
+
+    const getSwipeTransition = () => {
+      if (enterDirection) return "none";
+      if (isAnimating) return `transform ${EXIT_DURATION}ms ease-out`;
+      if (swipeOffset === 0) return `transform ${SNAP_BACK_DURATION}ms ease`;
+      return "none";
     };
-  }, [enterDirection, clearEnterAnimation]);
 
-  const getSwipeTransition = () => {
-    if (enterDirection) return 'none';
-    if (isAnimating) return `transform ${EXIT_DURATION}ms ease-out`;
-    if (swipeOffset === 0) return `transform ${SNAP_BACK_DURATION}ms ease`;
-    return 'none';
-  };
+    const showPeek = swipeOffset !== 0 || isAnimating;
+    const peekIsNext =
+      animationDirection === "left" || (animationDirection === null && swipeOffset < 0);
+    const peekClimb = peekIsNext ? nextClimb : previousClimb;
 
-  const showPeek = swipeOffset !== 0 || isAnimating;
-  const peekIsNext = animationDirection === 'left' || (animationDirection === null && swipeOffset < 0);
-  const peekClimb = peekIsNext ? nextClimb : previousClimb;
-
-  const getPeekTransform = () => {
-    return peekIsNext
-      ? `translateX(max(0px, calc(100% + ${swipeOffset}px)))`
-      : `translateX(min(0px, calc(-100% + ${swipeOffset}px)))`;
-  };
-
-  const transition = getSwipeTransition();
-  const canvasReady = useCanvasRendererReady();
-  const { ref: doubleTapRef, onDoubleClick: handleDoubleTapClick } = useDoubleTap(isZoomed ? undefined : onDoubleTap);
-
-  const handleZoomChange = useCallback((zoomed: boolean) => {
-    setIsZoomed(zoomed);
-    onZoomChangeProp?.(zoomed);
-  }, [onZoomChangeProp]);
-
-  // Prevent vertical scroll during horizontal card swipes.
-  // touch-action: pan-y enables compositor-driven scroll that ignores React 18's
-  // passive preventDefault(). A native non-passive listener forces the compositor
-  // to wait for our decision before scrolling.
-  const carouselElRef = useRef<HTMLElement | null>(null);
-  useEffect(() => {
-    const el = carouselElRef.current;
-    if (!el) return;
-    const handler = (e: TouchEvent) => {
-      if (isHorizontalSwipeRef.current === true) {
-        e.preventDefault();
-      }
+    const getPeekTransform = () => {
+      return peekIsNext
+        ? `translateX(max(0px, calc(100% + ${swipeOffset}px)))`
+        : `translateX(min(0px, calc(-100% + ${swipeOffset}px)))`;
     };
-    el.addEventListener('touchmove', handler, { passive: false });
-    return () => el.removeEventListener('touchmove', handler);
-  }, [isHorizontalSwipeRef]);
 
-  // Merge swipe ref, double-tap ref, and carousel ref into one callback ref
-  const mergedRef = useCallback(
-    (node: HTMLElement | null) => {
-      carouselElRef.current = node;
-      doubleTapRef(node);
-      if (swipeHandlers.ref) {
-        // react-swipeable ref callback
-        (swipeHandlers.ref as React.RefCallback<HTMLElement>)(node);
+    const transition = getSwipeTransition();
+    const canvasReady = useCanvasRendererReady();
+    const { ref: doubleTapRef, onDoubleClick: handleDoubleTapClick } = useDoubleTap(
+      isZoomed ? undefined : onDoubleTap,
+    );
+
+    const handleZoomChange = useCallback(
+      (zoomed: boolean) => {
+        setIsZoomed(zoomed);
+        onZoomChangeProp?.(zoomed);
+      },
+      [onZoomChangeProp],
+    );
+
+    // Prevent vertical scroll during horizontal card swipes.
+    // touch-action: pan-y enables compositor-driven scroll that ignores React 18's
+    // passive preventDefault(). A native non-passive listener forces the compositor
+    // to wait for our decision before scrolling.
+    const carouselElRef = useRef<HTMLElement | null>(null);
+    useEffect(() => {
+      const el = carouselElRef.current;
+      if (!el) return;
+      const handler = (e: TouchEvent) => {
+        if (isHorizontalSwipeRef.current === true) {
+          e.preventDefault();
+        }
+      };
+      el.addEventListener("touchmove", handler, { passive: false });
+      return () => el.removeEventListener("touchmove", handler);
+    }, [isHorizontalSwipeRef]);
+
+    // Merge swipe ref, double-tap ref, and carousel ref into one callback ref
+    const mergedRef = useCallback(
+      (node: HTMLElement | null) => {
+        carouselElRef.current = node;
+        doubleTapRef(node);
+        if (swipeHandlers.ref) {
+          // react-swipeable ref callback
+          (swipeHandlers.ref as React.RefCallback<HTMLElement>)(node);
+        }
+      },
+      [doubleTapRef, swipeHandlers.ref],
+    );
+
+    const renderBoard = (climb: ClimbBoardData) => {
+      if (canvasReady) {
+        return (
+          <BoardCanvasRenderer
+            boardDetails={boardDetails}
+            frames={climb.frames}
+            mirrored={!!climb.mirrored}
+            contain
+            style={{ width: "100%", height: "100%" }}
+          />
+        );
       }
-    },
-    [doubleTapRef, swipeHandlers.ref],
-  );
-
-  const renderBoard = (climb: ClimbBoardData) => {
-    if (canvasReady) {
       return (
-        <BoardCanvasRenderer
+        <BoardImageLayers
           boardDetails={boardDetails}
           frames={climb.frames}
           mirrored={!!climb.mirrored}
           contain
-          style={{ width: '100%', height: '100%' }}
+          style={{ width: "100%", height: "100%" }}
         />
       );
-    }
-    return (
-      <BoardImageLayers
-        boardDetails={boardDetails}
-        frames={climb.frames}
-        mirrored={!!climb.mirrored}
-        contain
-        style={{ width: '100%', height: '100%' }}
-      />
-    );
-  };
+    };
 
-  return (
-    <div
-      className={`${styles.carouselContainer} ${className ?? ''}`}
-      style={fillContainer ? undefined : { aspectRatio: `${boardDetails.boardWidth} / ${boardDetails.boardHeight}` }}
-      {...swipeHandlers}
-      ref={mergedRef}
-      onDoubleClick={handleDoubleTapClick}
-    >
+    return (
       <div
-        className={boardContainerClassName}
-        style={{
-          transform: `translateX(${swipeOffset}px)`,
-          transition,
-        }}
+        className={`${styles.carouselContainer} ${className ?? ""}`}
+        style={
+          fillContainer
+            ? undefined
+            : { aspectRatio: `${boardDetails.boardWidth} / ${boardDetails.boardHeight}` }
+        }
+        {...swipeHandlers}
+        ref={mergedRef}
+        onDoubleClick={handleDoubleTapClick}
       >
-        <ZoomableBoard
-          onZoomChange={handleZoomChange}
-          resetKey={currentClimb.frames}
-        >
-          {renderBoard(currentClimb)}
-        </ZoomableBoard>
-      </div>
-      {overlay}
-      {showZoomHint && <ZoomHint visible={!isZoomed && !!isDrawerOpen} />}
-      {showPeek && peekClimb && (
         <div
-          className={styles.peekBoardContainer}
+          className={boardContainerClassName}
           style={{
-            transform: getPeekTransform(),
+            transform: `translateX(${swipeOffset}px)`,
             transition,
           }}
         >
-          {renderBoard(peekClimb)}
+          <ZoomableBoard onZoomChange={handleZoomChange} resetKey={currentClimb.frames}>
+            {renderBoard(currentClimb)}
+          </ZoomableBoard>
         </div>
-      )}
-    </div>
-  );
-});
-SwipeBoardCarousel.displayName = 'SwipeBoardCarousel';
+        {overlay}
+        {showZoomHint && <ZoomHint visible={!isZoomed && !!isDrawerOpen} />}
+        {showPeek && peekClimb && (
+          <div
+            className={styles.peekBoardContainer}
+            style={{
+              transform: getPeekTransform(),
+              transition,
+            }}
+          >
+            {renderBoard(peekClimb)}
+          </div>
+        )}
+      </div>
+    );
+  },
+);
+SwipeBoardCarousel.displayName = "SwipeBoardCarousel";
 
 export default SwipeBoardCarousel;

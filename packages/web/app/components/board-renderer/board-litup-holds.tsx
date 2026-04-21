@@ -1,5 +1,5 @@
-import React from 'react';
-import { HoldRenderData, LitUpHoldsMap } from './types';
+import React from "react";
+import { HoldRenderData, LitUpHoldsMap } from "./types";
 
 interface BoardLitupHoldsProps {
   holdsData: HoldRenderData[];
@@ -39,15 +39,15 @@ const BoardLitupHolds = React.memo(
     const holdsToRender = skipTransparent
       ? holdsData.filter((hold) => {
           const entry = litUpHoldsMap[hold.id];
-          return entry?.state && entry.state !== 'OFF';
+          return entry?.state && entry.state !== "OFF";
         })
       : holdsData;
 
     return (
       <>
         {holdsToRender.map((hold) => {
-          const isLitUp = litUpHoldsMap[hold.id]?.state && litUpHoldsMap[hold.id].state !== 'OFF';
-          const color = isLitUp ? litUpHoldsMap[hold.id].color : 'transparent';
+          const isLitUp = litUpHoldsMap[hold.id]?.state && litUpHoldsMap[hold.id].state !== "OFF";
+          const color = isLitUp ? litUpHoldsMap[hold.id].color : "transparent";
 
           let renderHold = hold;
           if (mirrored && hold.mirroredHoldId) {
@@ -70,8 +70,10 @@ const BoardLitupHolds = React.memo(
               strokeWidth={thumbnail ? 8 : 6}
               fillOpacity={thumbnail ? 0.3 : 0}
               fill={thumbnail ? color : undefined}
-              style={{ cursor: onHoldClick ? 'pointer' : 'default' }}
-              onClick={onHoldClick ? (event) => onHoldClick(renderHold.id, event.currentTarget) : undefined}
+              style={{ cursor: onHoldClick ? "pointer" : "default" }}
+              onClick={
+                onHoldClick ? (event) => onHoldClick(renderHold.id, event.currentTarget) : undefined
+              }
             />
           );
         })}
@@ -89,6 +91,6 @@ const BoardLitupHolds = React.memo(
   },
 );
 
-BoardLitupHolds.displayName = 'BoardLitupHolds';
+BoardLitupHolds.displayName = "BoardLitupHolds";
 
 export default BoardLitupHolds;

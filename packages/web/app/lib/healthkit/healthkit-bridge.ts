@@ -1,6 +1,6 @@
-import type { SessionSummary } from '@boardsesh/shared-schema';
-import { isNativeApp, getPlatform } from '../ble/capacitor-utils';
-import { getPreference, setPreference } from '../user-preferences-db';
+import type { SessionSummary } from "@boardsesh/shared-schema";
+import { isNativeApp, getPlatform } from "../ble/capacitor-utils";
+import { getPreference, setPreference } from "../user-preferences-db";
 
 interface HealthKitPlugin {
   isAvailable(): Promise<{ available: boolean }>;
@@ -16,10 +16,10 @@ interface HealthKitPlugin {
   }): Promise<{ workoutId: string }>;
 }
 
-const HEALTHKIT_AUTO_SYNC_KEY = 'healthKitAutoSync';
+const HEALTHKIT_AUTO_SYNC_KEY = "healthKitAutoSync";
 
 function getPlugin(): HealthKitPlugin | null {
-  if (!isNativeApp() || getPlatform() !== 'ios') return null;
+  if (!isNativeApp() || getPlatform() !== "ios") return null;
   const plugins = window.Capacitor?.Plugins;
   if (!plugins) return null;
   return (plugins.HealthKit as HealthKitPlugin | undefined) ?? null;
@@ -43,7 +43,7 @@ export async function requestHealthKitAuthorization(): Promise<boolean> {
     const { granted } = await plugin.requestAuthorization();
     return granted;
   } catch (e) {
-    console.warn('[HealthKit] Authorization request failed:', e);
+    console.warn("[HealthKit] Authorization request failed:", e);
     return false;
   }
 }
@@ -59,7 +59,7 @@ export async function saveSessionToHealthKit(
   const plugin = getPlugin();
   if (!plugin) return null;
   if (!summary.startedAt || !summary.endedAt) {
-    console.warn('[HealthKit] Skipping save: missing startedAt/endedAt');
+    console.warn("[HealthKit] Skipping save: missing startedAt/endedAt");
     return null;
   }
   const startMs = new Date(summary.startedAt).getTime();
@@ -83,7 +83,7 @@ export async function saveSessionToHealthKit(
     });
     return result;
   } catch (e) {
-    console.warn('[HealthKit] Failed to save workout:', e);
+    console.warn("[HealthKit] Failed to save workout:", e);
     return null;
   }
 }

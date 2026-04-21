@@ -38,11 +38,13 @@ No need to manually create certificates or profiles — Xcode's automatic signin
 ## Step 3: App Icons & Launch Screen
 
 **App Icon:**
+
 - You need a single 1024x1024 PNG (no transparency, no alpha channel)
 - Place it in `mobile/ios/App/App/Assets.xcassets/AppIcon.appiconset/`
 - Xcode 15+ generates all sizes from the single 1024x1024 image automatically
 
 **Launch Screen:**
+
 - Already configured via `mobile/ios/App/App/Assets.xcassets/Splash.imageset/`
 - Verify it looks good on different device sizes in Xcode previews
 
@@ -64,6 +66,7 @@ No need to manually create certificates or profiles — Xcode's automatic signin
 ### Required Metadata
 
 **Description** (4000 char max):
+
 > Boardsesh connects to your climbing training board via Bluetooth and illuminates routes directly on the wall. Works with Kilter Board, Tension Board, and other Aurora Climbing boards.
 >
 > - Browse and search thousands of climbs
@@ -83,11 +86,13 @@ No need to manually create certificates or profiles — Xcode's automatic signin
 ### Screenshots
 
 Required sizes (minimum 1 per size class):
+
 - **6.7" iPhone** (1290 x 2796) — iPhone 15 Pro Max / 16 Pro Max
 - **6.5" iPhone** (1242 x 2688) — iPhone 11 Pro Max (if supporting older)
 - **5.5" iPhone** (1242 x 2208) — only if you want to support iPhone 8 Plus class
 
 Take screenshots of:
+
 1. The board view showing an illuminated climb
 2. The climb search/list view
 3. The BLE connection screen
@@ -111,12 +116,12 @@ Use Xcode Simulator or a physical device to capture these.
 
 In App Store Connect under **App Privacy**, declare data collection:
 
-| Data Type | Collected? | Linked to User? | Used for Tracking? |
-|-----------|------------|-----------------|-------------------|
-| Email Address | Yes (account) | Yes | No |
-| Name / User ID | Yes (account) | Yes | No |
-| Usage Data | Yes (climbs logged) | Yes | No |
-| Diagnostics | No | — | — |
+| Data Type      | Collected?          | Linked to User? | Used for Tracking? |
+| -------------- | ------------------- | --------------- | ------------------ |
+| Email Address  | Yes (account)       | Yes             | No                 |
+| Name / User ID | Yes (account)       | Yes             | No                 |
+| Usage Data     | Yes (climbs logged) | Yes             | No                 |
+| Diagnostics    | No                  | —               | —                  |
 
 ## Step 6: Review Info.plist
 
@@ -173,6 +178,7 @@ Include this in the **App Review Information > Notes** field:
 ### Demo Video
 
 Record a 30-60 second video showing:
+
 1. Opening the app
 2. Searching for a climb
 3. Tapping "Connect" to start BLE scanning
@@ -184,6 +190,7 @@ Upload to YouTube (unlisted) or similar, and paste the URL in review notes.
 ### Guideline 4.2 Mitigation
 
 The app loads from `boardsesh.com` (hosted mode), which means Apple may see it as a web wrapper. Counter this by emphasizing:
+
 - **Native BLE** is the core feature — impossible in Safari
 - The app is **not functional without the native shell** for its primary use case (board control)
 - Future: if you add the embedded SQLite climb database (from `docs/mobile-app-plan.md`), this further strengthens the case
@@ -213,18 +220,18 @@ The app loads from `boardsesh.com` (hosted mode), which means Apple may see it a
 
 ## Timeline Estimate
 
-| Step | Duration | Blocker? |
-|------|----------|----------|
-| Developer Account enrollment | 1-2 days | Yes — blocks everything |
-| Certificates & signing | 30 minutes | No |
-| App icons & screenshots | 1-2 hours | No |
-| App Store Connect setup | 1 hour | No |
-| Privacy policy | 1-2 hours | Blocks submission |
-| Build & upload | 30 minutes | No |
-| TestFlight testing | 3-7 days | Good practice, not strictly required |
-| App Review submission | 1-3 days for review | Yes |
-| **Total (fast path)** | **~1 week** | |
-| **Total (with proper testing)** | **~2 weeks** | |
+| Step                            | Duration            | Blocker?                             |
+| ------------------------------- | ------------------- | ------------------------------------ |
+| Developer Account enrollment    | 1-2 days            | Yes — blocks everything              |
+| Certificates & signing          | 30 minutes          | No                                   |
+| App icons & screenshots         | 1-2 hours           | No                                   |
+| App Store Connect setup         | 1 hour              | No                                   |
+| Privacy policy                  | 1-2 hours           | Blocks submission                    |
+| Build & upload                  | 30 minutes          | No                                   |
+| TestFlight testing              | 3-7 days            | Good practice, not strictly required |
+| App Review submission           | 1-3 days for review | Yes                                  |
+| **Total (fast path)**           | **~1 week**         |                                      |
+| **Total (with proper testing)** | **~2 weeks**        |                                      |
 
 ---
 

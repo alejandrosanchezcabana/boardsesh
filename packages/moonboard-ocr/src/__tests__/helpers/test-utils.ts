@@ -2,9 +2,9 @@
  * Shared test utilities for validating parser results.
  */
 
-import { expect } from 'vitest';
-import type { ParseResult } from '../../types';
-import type { ExpectedClimbResult } from '../fixtures/expected-results';
+import { expect } from "vite-plus/test";
+import type { ParseResult } from "../../types";
+import type { ExpectedClimbResult } from "../fixtures/expected-results";
 
 export interface ValidationOptions {
   /** Whether to validate OCR fields (name, setter, grades) */
@@ -19,7 +19,7 @@ export interface ValidationOptions {
 export function validateParseResult(
   result: ParseResult,
   expected: ExpectedClimbResult,
-  options: ValidationOptions = { validateOcr: true, partialNameMatch: false }
+  options: ValidationOptions = { validateOcr: true, partialNameMatch: false },
 ): void {
   // Basic success checks
   expect(result.success).toBe(true);
@@ -35,8 +35,8 @@ export function validateParseResult(
         // Split on spaces but filter out small words and punctuation
         const keyWords = expected.name
           .split(/\s+/)
-          .filter(w => w.length > 2)
-          .map(w => w.replace(/[^A-Za-z0-9]/g, '')); // Remove punctuation
+          .filter((w) => w.length > 2)
+          .map((w) => w.replace(/[^A-Za-z0-9]/g, "")); // Remove punctuation
 
         for (const word of keyWords) {
           if (word.length > 0) {
@@ -52,8 +52,7 @@ export function validateParseResult(
       if (options.partialNameMatch) {
         // Check if setter contains the expected value or vice versa
         const setterMatch =
-          climb.setter.includes(expected.setter) ||
-          expected.setter.includes(climb.setter);
+          climb.setter.includes(expected.setter) || expected.setter.includes(climb.setter);
         expect(setterMatch).toBe(true);
       } else {
         expect(climb.setter).toBe(expected.setter);

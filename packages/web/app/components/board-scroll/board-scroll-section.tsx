@@ -1,13 +1,13 @@
-'use client';
+"use client";
 
-import React, { useRef, useEffect, useCallback } from 'react';
-import Skeleton from '@mui/material/Skeleton';
-import styles from './board-scroll.module.css';
+import React, { useRef, useEffect, useCallback } from "react";
+import Skeleton from "@mui/material/Skeleton";
+import styles from "./board-scroll.module.css";
 
 interface BoardScrollSectionProps {
   title?: string;
   loading?: boolean;
-  size?: 'default' | 'small';
+  size?: "default" | "small";
   onLoadMore?: () => void;
   hasMore?: boolean;
   isLoadingMore?: boolean;
@@ -18,8 +18,11 @@ function SkeletonCards({ count, isSmall }: { count: number; isSmall: boolean }) 
   return (
     <>
       {Array.from({ length: count }).map((_, i) => (
-        <div key={`skeleton-${i}`} className={`${styles.cardScroll} ${isSmall ? styles.cardScrollSmall : ''}`}>
-          <Skeleton variant="rounded" className={styles.skeletonSquare} sx={{ height: 'auto' }} />
+        <div
+          key={`skeleton-${i}`}
+          className={`${styles.cardScroll} ${isSmall ? styles.cardScrollSmall : ""}`}
+        >
+          <Skeleton variant="rounded" className={styles.skeletonSquare} sx={{ height: "auto" }} />
           <Skeleton variant="text" width="80%" className={styles.skeletonText} />
           <Skeleton variant="text" width="50%" className={styles.skeletonText} />
         </div>
@@ -31,13 +34,13 @@ function SkeletonCards({ count, isSmall }: { count: number; isSmall: boolean }) 
 export default function BoardScrollSection({
   title,
   loading,
-  size = 'default',
+  size = "default",
   onLoadMore,
   hasMore,
   isLoadingMore,
   children,
 }: BoardScrollSectionProps) {
-  const isSmall = size === 'small';
+  const isSmall = size === "small";
   const scrollRef = useRef<HTMLDivElement>(null);
   const sentinelRef = useRef<HTMLDivElement>(null);
   const onLoadMoreRef = useRef(onLoadMore);
@@ -56,7 +59,7 @@ export default function BoardScrollSection({
 
     const observer = new IntersectionObserver(handleIntersection, {
       root: scrollContainer,
-      rootMargin: '0px 300px 0px 0px',
+      rootMargin: "0px 300px 0px 0px",
       threshold: 0,
     });
 
@@ -65,15 +68,13 @@ export default function BoardScrollSection({
   }, [hasMore, handleIntersection]);
 
   return (
-    <div className={`${styles.scrollSection} ${isSmall ? styles.scrollSectionSmall : ''}`}>
+    <div className={`${styles.scrollSection} ${isSmall ? styles.scrollSectionSmall : ""}`}>
       {title && <div className={styles.sectionTitle}>{title}</div>}
       <div
         ref={scrollRef}
-        className={`${styles.scrollContainer} ${isSmall ? styles.scrollContainerSmall : ''}`}
+        className={`${styles.scrollContainer} ${isSmall ? styles.scrollContainerSmall : ""}`}
       >
-        {loading
-          ? <SkeletonCards count={4} isSmall={isSmall} />
-          : children}
+        {loading ? <SkeletonCards count={4} isSmall={isSmall} /> : children}
         {hasMore && (
           <>
             <div ref={sentinelRef} className={styles.loadMoreSentinel} />

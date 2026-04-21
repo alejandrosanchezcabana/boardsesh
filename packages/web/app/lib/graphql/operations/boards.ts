@@ -1,4 +1,4 @@
-import { gql } from 'graphql-request';
+import { gql } from "graphql-request";
 import type {
   UserBoard,
   UserBoardConnection,
@@ -11,7 +11,7 @@ import type {
   SearchBoardsInput,
   PopularBoardConfigConnection,
   PopularBoardConfigsInput,
-} from '@boardsesh/shared-schema';
+} from "@boardsesh/shared-schema";
 
 // ============================================
 // Board Queries

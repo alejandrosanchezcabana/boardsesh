@@ -1,21 +1,26 @@
-import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { render, screen, fireEvent, act } from '@testing-library/react';
-import React from 'react';
+import { describe, it, expect, vi, beforeEach, afterEach } from "vite-plus/test";
+import { render, screen, fireEvent, act } from "@testing-library/react";
+import React from "react";
 
 // -- All mocks before imports --
 
 const mockShowMessage = vi.fn();
-vi.mock('@/app/components/providers/snackbar-provider', () => ({
+vi.mock("@/app/components/providers/snackbar-provider", () => ({
   useSnackbar: () => ({ showMessage: mockShowMessage }),
 }));
 
 let mockQueueContext: Record<string, unknown> = {};
-vi.mock('@/app/components/graphql-queue', () => ({
+vi.mock("@/app/components/graphql-queue", () => ({
   useQueueContext: () => mockQueueContext,
   useQueueData: () => mockQueueContext,
   useQueueActions: () => mockQueueContext,
-  useCurrentClimb: () => ({ currentClimb: (mockQueueContext as Record<string, unknown>).currentClimb }),
-  useQueueList: () => ({ queue: (mockQueueContext as Record<string, unknown>).queue, suggestedClimbs: [] }),
+  useCurrentClimb: () => ({
+    currentClimb: (mockQueueContext as Record<string, unknown>).currentClimb,
+  }),
+  useQueueList: () => ({
+    queue: (mockQueueContext as Record<string, unknown>).queue,
+    suggestedClimbs: [],
+  }),
   useSessionData: () => ({
     viewOnlyMode: (mockQueueContext as Record<string, unknown>).viewOnlyMode ?? false,
     isSessionActive: !!(mockQueueContext as Record<string, unknown>).sessionId,
@@ -24,7 +29,7 @@ vi.mock('@/app/components/graphql-queue', () => ({
     sessionSummaryBoardType: null,
     sessionSummaryHealthKitWorkoutId: null,
     sessionGoal: null,
-    connectionState: (mockQueueContext as Record<string, unknown>).connectionState ?? 'idle',
+    connectionState: (mockQueueContext as Record<string, unknown>).connectionState ?? "idle",
     canMutate: (mockQueueContext as Record<string, unknown>).canMutate ?? true,
     isDisconnected: (mockQueueContext as Record<string, unknown>).isDisconnected ?? false,
     users: (mockQueueContext as Record<string, unknown>).users ?? [],
@@ -36,21 +41,27 @@ vi.mock('@/app/components/graphql-queue', () => ({
   }),
 }));
 
-vi.mock('next/navigation', () => ({
-  usePathname: () => '/kilter/1/1/1/40',
-  useParams: () => ({ board_name: 'kilter', layout_id: '1', size_id: '1', set_ids: '1', angle: '40' }),
+vi.mock("next/navigation", () => ({
+  usePathname: () => "/kilter/1/1/1/40",
+  useParams: () => ({
+    board_name: "kilter",
+    layout_id: "1",
+    size_id: "1",
+    set_ids: "1",
+    angle: "40",
+  }),
   useSearchParams: () => new URLSearchParams(),
   useRouter: () => ({ push: vi.fn(), replace: vi.fn() }),
 }));
 
-vi.mock('next/link', () => ({
+vi.mock("next/link", () => ({
   default: ({ children, ...props }: { children: React.ReactNode; [key: string]: unknown }) =>
-    React.createElement('a', props, children),
+    React.createElement("a", props, children),
 }));
 
-vi.mock('@vercel/analytics', () => ({ track: vi.fn() }));
+vi.mock("@vercel/analytics", () => ({ track: vi.fn() }));
 
-vi.mock('@/app/hooks/use-card-swipe-navigation', () => ({
+vi.mock("@/app/hooks/use-card-swipe-navigation", () => ({
   useCardSwipeNavigation: () => ({
     swipeHandlers: {},
     swipeOffset: 0,
@@ -67,63 +78,63 @@ vi.mock('@/app/hooks/use-card-swipe-navigation', () => ({
   ENTER_ANIMATION_DURATION: 300,
 }));
 
-vi.mock('@/app/hooks/use-color-mode', () => ({
-  useColorMode: () => ({ mode: 'light' }),
+vi.mock("@/app/hooks/use-color-mode", () => ({
+  useColorMode: () => ({ mode: "light" }),
 }));
 
-vi.mock('@/app/lib/grade-colors', async (importOriginal) => {
-  const actual = await importOriginal<typeof import('@/app/lib/grade-colors')>();
+vi.mock("@/app/lib/grade-colors", async (importOriginal) => {
+  const actual = await importOriginal<typeof import("@/app/lib/grade-colors")>();
   return {
     ...actual,
     getGradeTintColor: () => null,
   };
 });
 
-vi.mock('@/app/components/climb-card/climb-thumbnail', () => ({
-  default: () => React.createElement('div', { 'data-testid': 'climb-thumbnail' }),
+vi.mock("@/app/components/climb-card/climb-thumbnail", () => ({
+  default: () => React.createElement("div", { "data-testid": "climb-thumbnail" }),
 }));
 
-vi.mock('@/app/components/climb-card/climb-title', () => ({
-  default: () => React.createElement('div', { 'data-testid': 'climb-title' }),
+vi.mock("@/app/components/climb-card/climb-title", () => ({
+  default: () => React.createElement("div", { "data-testid": "climb-title" }),
 }));
 
-vi.mock('@/app/components/queue-control/queue-list', () => ({
-  default: React.forwardRef(() => React.createElement('div', { 'data-testid': 'queue-list' })),
+vi.mock("@/app/components/queue-control/queue-list", () => ({
+  default: React.forwardRef(() => React.createElement("div", { "data-testid": "queue-list" })),
 }));
 
-vi.mock('@/app/components/queue-control/next-climb-button', () => ({
-  default: () => React.createElement('button', { 'data-testid': 'next-climb' }),
+vi.mock("@/app/components/queue-control/next-climb-button", () => ({
+  default: () => React.createElement("button", { "data-testid": "next-climb" }),
 }));
 
-vi.mock('@/app/components/queue-control/previous-climb-button', () => ({
-  default: () => React.createElement('button', { 'data-testid': 'prev-climb' }),
+vi.mock("@/app/components/queue-control/previous-climb-button", () => ({
+  default: () => React.createElement("button", { "data-testid": "prev-climb" }),
 }));
 
-vi.mock('@/app/components/logbook/tick-button', () => ({
-  TickButton: () => React.createElement('button', { 'data-testid': 'tick-button' }),
+vi.mock("@/app/components/logbook/tick-button", () => ({
+  TickButton: () => React.createElement("button", { "data-testid": "tick-button" }),
 }));
 
-vi.mock('@/app/components/board-page/share-button', () => ({
+vi.mock("@/app/components/board-page/share-button", () => ({
   ShareBoardButton: () => null,
 }));
 
-vi.mock('@/app/components/play-view/play-view-drawer', () => ({
+vi.mock("@/app/components/play-view/play-view-drawer", () => ({
   default: () => null,
 }));
 
-vi.mock('@/app/components/onboarding/onboarding-tour', () => ({
-  TOUR_DRAWER_EVENT: 'tour-drawer',
+vi.mock("@/app/components/onboarding/onboarding-tour", () => ({
+  TOUR_DRAWER_EVENT: "tour-drawer",
 }));
 
-vi.mock('@/app/components/ui/confirm-popover', () => ({
+vi.mock("@/app/components/ui/confirm-popover", () => ({
   ConfirmPopover: () => null,
 }));
 
-vi.mock('next-auth/react', () => ({
-  useSession: () => ({ status: 'unauthenticated', data: null }),
+vi.mock("next-auth/react", () => ({
+  useSession: () => ({ status: "unauthenticated", data: null }),
 }));
 
-vi.mock('@/app/components/persistent-session', () => ({
+vi.mock("@/app/components/persistent-session", () => ({
   usePersistentSession: () => ({
     activeSession: null,
     localBoardDetails: null,
@@ -137,7 +148,7 @@ vi.mock('@/app/components/persistent-session', () => ({
   usePersistentSessionActions: () => ({}),
 }));
 
-vi.mock('@/app/components/board-bluetooth-control/bluetooth-context', () => ({
+vi.mock("@/app/components/board-bluetooth-control/bluetooth-context", () => ({
   useBluetoothContext: () => ({
     isConnected: false,
     isConnecting: false,
@@ -148,20 +159,20 @@ vi.mock('@/app/components/board-bluetooth-control/bluetooth-context', () => ({
 }));
 
 // Import after mocks
-import QueueControlBar from '../queue-control-bar';
+import QueueControlBar from "../queue-control-bar";
 
 const mockClimb = {
-  uuid: 'climb-1',
-  setter_username: 'setter1',
-  name: 'Test Climb',
-  description: '',
-  frames: '',
+  uuid: "climb-1",
+  setter_username: "setter1",
+  name: "Test Climb",
+  description: "",
+  frames: "",
   angle: 40,
   ascensionist_count: 5,
-  difficulty: '7',
-  quality_average: '3.5',
+  difficulty: "7",
+  quality_average: "3.5",
   stars: 3,
-  difficulty_error: '',
+  difficulty_error: "",
   mirrored: false,
   benchmark_difficulty: null,
   userAscents: 0,
@@ -169,8 +180,8 @@ const mockClimb = {
 };
 
 const baseQueueContext = {
-  queue: [{ uuid: 'item-1', climb: mockClimb, addedBy: 'user-1', suggested: false }],
-  currentClimbQueueItem: { uuid: 'item-1', climb: mockClimb, addedBy: 'user-1', suggested: false },
+  queue: [{ uuid: "item-1", climb: mockClimb, addedBy: "user-1", suggested: false }],
+  currentClimbQueueItem: { uuid: "item-1", climb: mockClimb, addedBy: "user-1", suggested: false },
   currentClimb: mockClimb,
   climbSearchResults: [],
   suggestedClimbs: [],
@@ -178,12 +189,15 @@ const baseQueueContext = {
   isFetchingNextPage: false,
   hasDoneFirstFetch: true,
   viewOnlyMode: false,
-  parsedParams: { board_name: 'kilter', layout_id: '1', size_id: '1', set_ids: ['1'], angle: '40' },
-  connectionState: 'connected',
-  sessionId: 'session-1',
+  parsedParams: { board_name: "kilter", layout_id: "1", size_id: "1", set_ids: ["1"], angle: "40" },
+  connectionState: "connected",
+  sessionId: "session-1",
   canMutate: true,
   isDisconnected: false,
-  users: [{ id: 'me', username: 'me', isLeader: true }, { id: 'other', username: 'other', isLeader: false }],
+  users: [
+    { id: "me", username: "me", isLeader: true },
+    { id: "other", username: "other", isLeader: false },
+  ],
   endSession: vi.fn(),
   disconnect: vi.fn(),
   addToQueue: vi.fn(),
@@ -200,42 +214,42 @@ const baseQueueContext = {
 };
 
 const defaultProps = {
-  angle: '40' as unknown as number,
+  angle: "40" as unknown as number,
   boardDetails: {
-    board_name: 'kilter',
+    board_name: "kilter",
     layout_id: 1,
     size_id: 1,
-    set_ids: '1',
+    set_ids: "1",
     images_to_holds: {},
-    layout_name: 'Original',
-    size_name: '12x12',
-    size_description: 'Standard',
-    set_names: ['Base'],
+    layout_name: "Original",
+    size_name: "12x12",
+    size_description: "Standard",
+    set_names: ["Base"],
     edge_left: 0,
     edge_right: 0,
     edge_bottom: 0,
     edge_top: 0,
   } as never,
-  activeDrawer: 'none' as const,
+  activeDrawer: "none" as const,
   setActiveDrawer: vi.fn(),
 };
 
-describe('QueueControlBar offline UI', () => {
+describe("QueueControlBar offline UI", () => {
   beforeEach(() => {
     mockQueueContext = { ...baseQueueContext };
   });
 
-  it('renders normal controls when online with active session', () => {
+  it("renders normal controls when online with active session", () => {
     render(<QueueControlBar {...defaultProps} />);
 
     expect(screen.queryByText(/Reconnecting/)).toBeNull();
     expect(screen.queryByText(/Offline/i)).toBeNull();
   });
 
-  it('shows reconnecting view when online but WebSocket reconnecting', () => {
+  it("shows reconnecting view when online but WebSocket reconnecting", () => {
     mockQueueContext = {
       ...baseQueueContext,
-      connectionState: 'reconnecting',
+      connectionState: "reconnecting",
       isDisconnected: false,
     };
 
@@ -244,12 +258,15 @@ describe('QueueControlBar offline UI', () => {
     expect(screen.getByText(/Reconnecting/)).toBeTruthy();
   });
 
-  it('shows offline indicator with multi-user message when offline in party mode', () => {
+  it("shows offline indicator with multi-user message when offline in party mode", () => {
     mockQueueContext = {
       ...baseQueueContext,
-      connectionState: 'reconnecting',
+      connectionState: "reconnecting",
       isDisconnected: true,
-      users: [{ id: 'me', username: 'me', isLeader: true }, { id: 'other', username: 'other', isLeader: false }],
+      users: [
+        { id: "me", username: "me", isLeader: true },
+        { id: "other", username: "other", isLeader: false },
+      ],
     };
 
     render(<QueueControlBar {...defaultProps} />);
@@ -261,12 +278,12 @@ describe('QueueControlBar offline UI', () => {
     expect(screen.getByText(/Queued climbs will still sync/i)).toBeTruthy();
   });
 
-  it('shows offline indicator with solo message when solo in party mode', () => {
+  it("shows offline indicator with solo message when solo in party mode", () => {
     mockQueueContext = {
       ...baseQueueContext,
-      connectionState: 'reconnecting',
+      connectionState: "reconnecting",
       isDisconnected: true,
-      users: [{ id: 'me', username: 'me', isLeader: true }],
+      users: [{ id: "me", username: "me", isLeader: true }],
     };
 
     render(<QueueControlBar {...defaultProps} />);
@@ -276,10 +293,10 @@ describe('QueueControlBar offline UI', () => {
     expect(screen.queryByText(/Queued climbs/i)).toBeNull();
   });
 
-  it('shows normal controls when offline in solo mode (no session)', () => {
+  it("shows normal controls when offline in solo mode (no session)", () => {
     mockQueueContext = {
       ...baseQueueContext,
-      connectionState: 'idle',
+      connectionState: "idle",
       sessionId: null,
       isDisconnected: false,
     };
@@ -289,12 +306,12 @@ describe('QueueControlBar offline UI', () => {
     expect(screen.queryByText(/Reconnecting/)).toBeNull();
   });
 
-  it('dismisses offline banner when clicked', () => {
+  it("dismisses offline banner when clicked", () => {
     mockQueueContext = {
       ...baseQueueContext,
-      connectionState: 'reconnecting',
+      connectionState: "reconnecting",
       isDisconnected: true,
-      users: [{ id: 'me', username: 'me', isLeader: true }],
+      users: [{ id: "me", username: "me", isLeader: true }],
     };
 
     render(<QueueControlBar {...defaultProps} />);
@@ -307,12 +324,12 @@ describe('QueueControlBar offline UI', () => {
     expect(screen.queryByText(/Offline/i)).toBeNull();
   });
 
-  it('reappears after reconnect then disconnect again', () => {
+  it("reappears after reconnect then disconnect again", () => {
     mockQueueContext = {
       ...baseQueueContext,
-      connectionState: 'reconnecting',
+      connectionState: "reconnecting",
       isDisconnected: true,
-      users: [{ id: 'me', username: 'me', isLeader: true }],
+      users: [{ id: "me", username: "me", isLeader: true }],
     };
 
     const { rerender } = render(<QueueControlBar {...defaultProps} />);
@@ -327,13 +344,17 @@ describe('QueueControlBar offline UI', () => {
     // (defaultProps.boardDetails is cast `as never` for the prop type; we need a
     // plain object reference to spread, so we re-cast to unknown first.)
     const bd = defaultProps.boardDetails as unknown as Record<string, unknown>;
-    mockQueueContext = { ...baseQueueContext, isDisconnected: false, connectionState: 'connected' };
+    mockQueueContext = { ...baseQueueContext, isDisconnected: false, connectionState: "connected" };
     act(() => {
       rerender(<QueueControlBar {...defaultProps} boardDetails={{ ...bd } as never} />);
     });
 
     // Simulate disconnection again
-    mockQueueContext = { ...baseQueueContext, isDisconnected: true, connectionState: 'reconnecting' };
+    mockQueueContext = {
+      ...baseQueueContext,
+      isDisconnected: true,
+      connectionState: "reconnecting",
+    };
     act(() => {
       rerender(<QueueControlBar {...defaultProps} boardDetails={{ ...bd } as never} />);
     });

@@ -31,7 +31,9 @@
   border: 0;
   background: transparent;
   cursor: pointer;
-  transition: transform 0.2s ease, opacity 0.2s ease;
+  transition:
+    transform 0.2s ease,
+    opacity 0.2s ease;
 }
 
 .thumbnailLink:hover {

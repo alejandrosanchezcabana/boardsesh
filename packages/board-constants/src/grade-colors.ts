@@ -12,56 +12,56 @@
 
 // V-grade to hex color mapping
 export const V_GRADE_COLORS: Record<string, string> = {
-  V0: '#FFEB3B',   // Yellow
-  V1: '#FFC107',   // Amber/Yellow-orange
-  V2: '#FF9800',   // Orange
-  V3: '#FF7043',   // Deep orange
-  V4: '#FF5722',   // Red-orange
-  V5: '#F44336',   // Red
-  V6: '#E53935',   // Red (slightly darker)
-  V7: '#D32F2F',   // Dark red
-  V8: '#C62828',   // Darker red
-  V9: '#B71C1C',   // Deep red
-  V10: '#A11B4A',  // Red-purple transition
-  V11: '#9C27B0',  // Purple
-  V12: '#7B1FA2',  // Dark purple
-  V13: '#6A1B9A',  // Darker purple
-  V14: '#5C1A87',  // Deep purple
-  V15: '#4A148C',  // Very deep purple
-  V16: '#38006B',  // Near black purple
-  V17: '#2A0054',  // Darkest purple
+  V0: "#FFEB3B", // Yellow
+  V1: "#FFC107", // Amber/Yellow-orange
+  V2: "#FF9800", // Orange
+  V3: "#FF7043", // Deep orange
+  V4: "#FF5722", // Red-orange
+  V5: "#F44336", // Red
+  V6: "#E53935", // Red (slightly darker)
+  V7: "#D32F2F", // Dark red
+  V8: "#C62828", // Darker red
+  V9: "#B71C1C", // Deep red
+  V10: "#A11B4A", // Red-purple transition
+  V11: "#9C27B0", // Purple
+  V12: "#7B1FA2", // Dark purple
+  V13: "#6A1B9A", // Darker purple
+  V14: "#5C1A87", // Deep purple
+  V15: "#4A148C", // Very deep purple
+  V16: "#38006B", // Near black purple
+  V17: "#2A0054", // Darkest purple
 };
 
 // Font grade to hex color mapping (uses same color as corresponding V-grade)
 export const FONT_GRADE_COLORS: Record<string, string> = {
-  '4a': '#FFEB3B',   // V0
-  '4b': '#FFEB3B',   // V0
-  '4c': '#FFEB3B',   // V0
-  '5a': '#FFC107',   // V1
-  '5b': '#FFC107',   // V1
-  '5c': '#FF9800',   // V2
-  '6a': '#FF7043',   // V3
-  '6a+': '#FF7043',  // V3
-  '6b': '#FF5722',   // V4
-  '6b+': '#FF5722',  // V4
-  '6c': '#F44336',   // V5
-  '6c+': '#F44336',  // V5
-  '7a': '#E53935',   // V6
-  '7a+': '#D32F2F',  // V7
-  '7b': '#C62828',   // V8
-  '7b+': '#C62828',  // V8
-  '7c': '#B71C1C',   // V9
-  '7c+': '#A11B4A',  // V10
-  '8a': '#9C27B0',   // V11
-  '8a+': '#7B1FA2',  // V12
-  '8b': '#6A1B9A',   // V13
-  '8b+': '#5C1A87',  // V14
-  '8c': '#4A148C',   // V15
-  '8c+': '#38006B',  // V16
+  "4a": "#FFEB3B", // V0
+  "4b": "#FFEB3B", // V0
+  "4c": "#FFEB3B", // V0
+  "5a": "#FFC107", // V1
+  "5b": "#FFC107", // V1
+  "5c": "#FF9800", // V2
+  "6a": "#FF7043", // V3
+  "6a+": "#FF7043", // V3
+  "6b": "#FF5722", // V4
+  "6b+": "#FF5722", // V4
+  "6c": "#F44336", // V5
+  "6c+": "#F44336", // V5
+  "7a": "#E53935", // V6
+  "7a+": "#D32F2F", // V7
+  "7b": "#C62828", // V8
+  "7b+": "#C62828", // V8
+  "7c": "#B71C1C", // V9
+  "7c+": "#A11B4A", // V10
+  "8a": "#9C27B0", // V11
+  "8a+": "#7B1FA2", // V12
+  "8b": "#6A1B9A", // V13
+  "8b+": "#5C1A87", // V14
+  "8c": "#4A148C", // V15
+  "8c+": "#38006B", // V16
 };
 
 // Default color when grade cannot be determined
-export const DEFAULT_GRADE_COLOR = '#808080';
+export const DEFAULT_GRADE_COLOR = "#808080";
 
 /**
  * Get color for a V-grade string (e.g., "V3", "V10", "V5+")
@@ -70,7 +70,7 @@ export const DEFAULT_GRADE_COLOR = '#808080';
 export function getVGradeColor(vGrade: string | null | undefined): string | undefined {
   if (!vGrade) return undefined;
   // Strip trailing "+" so "V5+" looks up the same color as "V5"
-  const normalized = vGrade.toUpperCase().replace(/\+$/, '');
+  const normalized = vGrade.toUpperCase().replace(/\+$/, "");
   return V_GRADE_COLORS[normalized];
 }
 

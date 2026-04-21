@@ -1,8 +1,15 @@
-import type { ConnectionContext, CommentEvent } from '@boardsesh/shared-schema';
-import { pubsub } from '../../../pubsub/index';
-import { createAsyncIterator } from '../shared/async-iterators';
+import type { ConnectionContext, CommentEvent } from "@boardsesh/shared-schema";
+import { pubsub } from "../../../pubsub/index";
+import { createAsyncIterator } from "../shared/async-iterators";
 
-const VALID_ENTITY_TYPES = new Set(['playlist_climb', 'climb', 'tick', 'comment', 'proposal', 'board']);
+const VALID_ENTITY_TYPES = new Set([
+  "playlist_climb",
+  "climb",
+  "tick",
+  "comment",
+  "proposal",
+  "board",
+]);
 
 // Composite entity IDs (e.g. "playlist_uuid:climb_uuid") can be long but
 // should never exceed a reasonable bound. UUIDs are 36 chars, so a composite
@@ -21,7 +28,7 @@ export const socialCommentSubscriptions = {
         throw new Error(`Invalid entity type: ${entityType}`);
       }
       if (!entityId || entityId.length > MAX_ENTITY_ID_LENGTH) {
-        throw new Error('Invalid entity ID');
+        throw new Error("Invalid entity ID");
       }
 
       const entityKey = `${entityType}:${entityId}`;

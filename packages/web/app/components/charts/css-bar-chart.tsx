@@ -1,9 +1,9 @@
-'use client';
+"use client";
 
-import React, { useMemo } from 'react';
-import Box from '@mui/material/Box';
-import Typography from '@mui/material/Typography';
-import { BarChart } from '@mui/x-charts/BarChart';
+import React, { useMemo } from "react";
+import Box from "@mui/material/Box";
+import Typography from "@mui/material/Typography";
+import { BarChart } from "@mui/x-charts/BarChart";
 
 export interface BarSegment {
   value: number;
@@ -35,7 +35,7 @@ export const CssBarChart = React.memo(function CssBarChart({
   height = 48,
   mobileHeight = 36,
   showLegend = true,
-  ariaLabel = 'Bar chart',
+  ariaLabel = "Bar chart",
   maxLabels,
   angledLabels = false,
 }: CssBarChartProps) {
@@ -60,8 +60,8 @@ export const CssBarChart = React.memo(function CssBarChart({
       if (!refSegment) continue;
 
       seriesArr.push({
-        data: bars.map((b) => (b.segments[i]?.value ?? null)),
-        stack: 'total',
+        data: bars.map((b) => b.segments[i]?.value ?? null),
+        stack: "total",
         color: refSegment.color,
         label: refSegment.label ?? `Series ${i + 1}`,
       });
@@ -95,24 +95,26 @@ export const CssBarChart = React.memo(function CssBarChart({
       aria-label={ariaLabel}
       sx={{
         height: `${height}px`,
-        '@media (max-width: 768px)': {
+        "@media (max-width: 768px)": {
           height: `${mobileHeight}px`,
         },
       }}
     >
       <BarChart
         series={series}
-        xAxis={[{
-          data: categories,
-          scaleType: 'band' as const,
-          ...(tickInterval ? { tickInterval } : {}),
-          tickLabelStyle: angledLabels
-            ? { angle: -45, textAnchor: 'end', fontSize: 9 }
-            : { fontSize: 9 },
-        }]}
+        xAxis={[
+          {
+            data: categories,
+            scaleType: "band" as const,
+            ...(tickInterval ? { tickInterval } : {}),
+            tickLabelStyle: angledLabels
+              ? { angle: -45, textAnchor: "end", fontSize: 9 }
+              : { fontSize: 9 },
+          },
+        ]}
         height={height}
         margin={{ top: 4, bottom: bottomMargin, left: 0, right: 0 }}
-        yAxis={[{ position: 'none' }]}
+        yAxis={[{ position: "none" }]}
         hideLegend
         borderRadius={4}
       />
@@ -141,7 +143,7 @@ export const GroupedBarChart = React.memo(function GroupedBarChart({
   height = 48,
   mobileHeight = 36,
   showLegend = true,
-  ariaLabel = 'Grouped bar chart',
+  ariaLabel = "Grouped bar chart",
 }: GroupedBarChartProps) {
   const { series, categories, legendEntries } = useMemo(() => {
     if (bars.length === 0) return { series: [], categories: [], legendEntries: [] };
@@ -181,30 +183,40 @@ export const GroupedBarChart = React.memo(function GroupedBarChart({
       aria-label={ariaLabel}
       sx={{
         height: `${height}px`,
-        '@media (max-width: 768px)': {
+        "@media (max-width: 768px)": {
           height: `${mobileHeight}px`,
         },
       }}
     >
       <BarChart
         series={series}
-        xAxis={[{
-          data: categories,
-          scaleType: 'band' as const,
-          tickLabelStyle: { fontSize: 9 },
-        }]}
+        xAxis={[
+          {
+            data: categories,
+            scaleType: "band" as const,
+            tickLabelStyle: { fontSize: 9 },
+          },
+        ]}
         height={height}
         margin={{ top: 4, bottom: 24, left: 0, right: 0 }}
-        yAxis={[{ position: 'none' }]}
+        yAxis={[{ position: "none" }]}
         hideLegend
         borderRadius={4}
       />
       {showLegend && legendEntries.length > 1 && (
-        <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1, mt: 1 }}>
+        <Box sx={{ display: "flex", flexWrap: "wrap", gap: 1, mt: 1 }}>
           {legendEntries.map((entry) => (
-            <Box key={entry.label} sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-              <Box sx={{ width: 8, height: 8, borderRadius: '2px', bgcolor: entry.color, flexShrink: 0 }} />
-              <Typography variant="caption" color="text.secondary" sx={{ fontSize: '11px' }}>
+            <Box key={entry.label} sx={{ display: "flex", alignItems: "center", gap: 0.5 }}>
+              <Box
+                sx={{
+                  width: 8,
+                  height: 8,
+                  borderRadius: "2px",
+                  bgcolor: entry.color,
+                  flexShrink: 0,
+                }}
+              />
+              <Typography variant="caption" color="text.secondary" sx={{ fontSize: "11px" }}>
                 {entry.label}
               </Typography>
             </Box>

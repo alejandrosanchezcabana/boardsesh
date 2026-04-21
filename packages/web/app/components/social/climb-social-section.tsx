@@ -1,10 +1,10 @@
-'use client';
+"use client";
 
-import React from 'react';
-import Box from '@mui/material/Box';
-import VoteButton from './vote-button';
-import CommentSection from './comment-section';
-import ProposalSection from './proposal-section';
+import React from "react";
+import Box from "@mui/material/Box";
+import VoteButton from "./vote-button";
+import CommentSection from "./comment-section";
+import ProposalSection from "./proposal-section";
 
 interface ClimbSocialSectionProps {
   climbUuid: string;
@@ -15,7 +15,14 @@ interface ClimbSocialSectionProps {
   highlightProposalUuid?: string;
 }
 
-export default function ClimbSocialSection({ climbUuid, boardType, angle, currentClimbDifficulty, boardName, highlightProposalUuid }: ClimbSocialSectionProps) {
+export default function ClimbSocialSection({
+  climbUuid,
+  boardType,
+  angle,
+  currentClimbDifficulty,
+  boardName,
+  highlightProposalUuid,
+}: ClimbSocialSectionProps) {
   return (
     <Box>
       {boardType && angle != null && (
@@ -28,7 +35,7 @@ export default function ClimbSocialSection({ climbUuid, boardType, angle, curren
           highlightProposalUuid={highlightProposalUuid}
         />
       )}
-      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 2 }}>
+      <Box sx={{ display: "flex", alignItems: "center", gap: 1, mb: 2 }}>
         <VoteButton entityType="climb" entityId={climbUuid} />
       </Box>
       <CommentSection entityType="climb" entityId={climbUuid} title="Discussion" />

@@ -1,12 +1,12 @@
-import { eq, and, sql, isNull, inArray } from 'drizzle-orm';
-import { db } from '../../../db/client';
-import * as dbSchema from '@boardsesh/db/schema';
-import { requireAuthenticated, validateInput } from '../shared/helpers';
-import type { ConnectionContext } from '@boardsesh/shared-schema';
-import type { SessionDetail } from '@boardsesh/shared-schema';
-import { sessionFeedQueries } from './session-feed';
-import { assignInferredSession } from '../../../jobs/inferred-session-builder';
-import { z } from 'zod';
+import { eq, and, sql, isNull, inArray } from "drizzle-orm";
+import { db } from "../../../db/client";
+import * as dbSchema from "@boardsesh/db/schema";
+import { requireAuthenticated, validateInput } from "../shared/helpers";
+import type { ConnectionContext } from "@boardsesh/shared-schema";
+import type { SessionDetail } from "@boardsesh/shared-schema";
+import { sessionFeedQueries } from "./session-feed";
+import { assignInferredSession } from "../../../jobs/inferred-session-builder";
+import { z } from "zod";
 
 const UpdateInferredSessionSchema = z.object({
   sessionId: z.string().min(1),
@@ -42,7 +42,7 @@ async function requireSessionParticipant(sessionId: string, userId: string): Pro
     .limit(1);
 
   if (!session) {
-    throw new Error('Session not found');
+    throw new Error("Session not found");
   }
 
   if (session.userId === userId) return;
@@ -60,7 +60,7 @@ async function requireSessionParticipant(sessionId: string, userId: string): Pro
     .limit(1);
 
   if (!override) {
-    throw new Error('Not a participant of this session');
+    throw new Error("Not a participant of this session");
   }
 }
 
@@ -74,7 +74,7 @@ export const sessionEditMutations = {
     ctx: ConnectionContext,
   ): Promise<SessionDetail | null> => {
     requireAuthenticated(ctx);
-    const validated = validateInput(UpdateInferredSessionSchema, input, 'input');
+    const validated = validateInput(UpdateInferredSessionSchema, input, "input");
     const userId = ctx.userId!;
 
     await requireSessionParticipant(validated.sessionId, userId);
@@ -108,7 +108,7 @@ export const sessionEditMutations = {
     ctx: ConnectionContext,
   ): Promise<SessionDetail | null> => {
     requireAuthenticated(ctx);
-    const validated = validateInput(AddUserToSessionSchema, input, 'input');
+    const validated = validateInput(AddUserToSessionSchema, input, "input");
     const userId = ctx.userId!;
 
     await requireSessionParticipant(validated.sessionId, userId);
@@ -121,7 +121,7 @@ export const sessionEditMutations = {
       .limit(1);
 
     if (!targetUser) {
-      throw new Error('User not found');
+      throw new Error("User not found");
     }
 
     // Get the session's time boundaries
@@ -135,7 +135,7 @@ export const sessionEditMutations = {
       .limit(1);
 
     if (!session) {
-      throw new Error('Session not found');
+      throw new Error("Session not found");
     }
 
     // Find the target user's ticks within the session's time window (±30 min buffer)
@@ -156,7 +156,7 @@ export const sessionEditMutations = {
       );
 
     if (ticksToReassign.length === 0) {
-      throw new Error('No ticks found for this user in the session time range');
+      throw new Error("No ticks found for this user in the session time range");
     }
 
     // Collect original session IDs that will need stats recalculated
@@ -212,7 +212,7 @@ export const sessionEditMutations = {
     ctx: ConnectionContext,
   ): Promise<SessionDetail | null> => {
     requireAuthenticated(ctx);
-    const validated = validateInput(RemoveUserFromSessionSchema, input, 'input');
+    const validated = validateInput(RemoveUserFromSessionSchema, input, "input");
     const userId = ctx.userId!;
 
     await requireSessionParticipant(validated.sessionId, userId);
@@ -225,11 +225,11 @@ export const sessionEditMutations = {
       .limit(1);
 
     if (!session) {
-      throw new Error('Session not found');
+      throw new Error("Session not found");
     }
 
     if (session.userId === validated.userId) {
-      throw new Error('Cannot remove the session owner');
+      throw new Error("Cannot remove the session owner");
     }
 
     // Wrap tick restoration + override deletion + stats recalculation in a transaction
@@ -283,7 +283,10 @@ export const sessionEditMutations = {
             .set({ inferredSessionId: null })
             .where(
               and(
-                inArray(dbSchema.boardseshTicks.uuid, orphanedTicks.map((t) => t.uuid)),
+                inArray(
+                  dbSchema.boardseshTicks.uuid,
+                  orphanedTicks.map((t) => t.uuid),
+                ),
                 eq(dbSchema.boardseshTicks.inferredSessionId, validated.sessionId),
               ),
             );
@@ -297,7 +300,12 @@ export const sessionEditMutations = {
               status: dbSchema.boardseshTicks.status,
             })
             .from(dbSchema.boardseshTicks)
-            .where(inArray(dbSchema.boardseshTicks.uuid, orphanedTicks.map((t) => t.uuid)));
+            .where(
+              inArray(
+                dbSchema.boardseshTicks.uuid,
+                orphanedTicks.map((t) => t.uuid),
+              ),
+            );
 
           for (const tick of orphanedTickData) {
             await assignInferredSession(tick.uuid, tick.userId, tick.climbedAt, tick.status, tx);
@@ -338,7 +346,7 @@ export const sessionEditMutations = {
     ctx: ConnectionContext,
   ): Promise<boolean> => {
     requireAuthenticated(ctx);
-    const validated = validateInput(SetHealthKitWorkoutIdSchema, args, 'args');
+    const validated = validateInput(SetHealthKitWorkoutIdSchema, args, "args");
     const userId = ctx.userId!;
 
     // Try inferred session first (most common case), fall back to party session.
@@ -364,7 +372,7 @@ export const sessionEditMutations = {
       .limit(1);
 
     if (!party) {
-      throw new Error('Session not found');
+      throw new Error("Session not found");
     }
 
     // For party sessions, anyone who participated (had ticks in the session) can tag it.
@@ -380,7 +388,7 @@ export const sessionEditMutations = {
         )
         .limit(1);
       if (!participantTick) {
-        throw new Error('Not a participant of this session');
+        throw new Error("Not a participant of this session");
       }
     }
 
@@ -409,7 +417,7 @@ const SessionStatsRowSchema = z.object({
  */
 export async function recalculateSessionStats(
   sessionId: string,
-  conn: Pick<typeof db, 'execute' | 'update'> = db,
+  conn: Pick<typeof db, "execute" | "update"> = db,
 ): Promise<void> {
   const result = await conn.execute(sql`
     SELECT

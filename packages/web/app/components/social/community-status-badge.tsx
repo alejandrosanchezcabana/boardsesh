@@ -1,12 +1,12 @@
-'use client';
+"use client";
 
-import React from 'react';
-import Box from '@mui/material/Box';
-import Chip from '@mui/material/Chip';
-import StarIcon from '@mui/icons-material/Star';
-import LockIcon from '@mui/icons-material/Lock';
-import EmojiEventsIcon from '@mui/icons-material/EmojiEvents';
-import { themeTokens } from '@/app/theme/theme-config';
+import React from "react";
+import Box from "@mui/material/Box";
+import Chip from "@mui/material/Chip";
+import StarIcon from "@mui/icons-material/Star";
+import LockIcon from "@mui/icons-material/Lock";
+import EmojiEventsIcon from "@mui/icons-material/EmojiEvents";
+import { themeTokens } from "@/app/theme/theme-config";
 
 interface CommunityStatusBadgeProps {
   communityGrade?: string | null;
@@ -47,7 +47,7 @@ export default function CommunityStatusBadge({
       <Chip
         key="classic"
         icon={<StarIcon sx={{ fontSize: compact ? 12 : 14 }} />}
-        label={compact ? undefined : 'Classic'}
+        label={compact ? undefined : "Classic"}
         size="small"
         sx={{
           bgcolor: `${themeTokens.colors.amber}22`,
@@ -55,8 +55,8 @@ export default function CommunityStatusBadge({
           fontWeight: 600,
           fontSize: compact ? 10 : 11,
           height: compact ? 20 : 24,
-          '& .MuiChip-icon': { color: themeTokens.colors.amber },
-          ...(compact && { '& .MuiChip-label': { display: 'none' } }),
+          "& .MuiChip-icon": { color: themeTokens.colors.amber },
+          ...(compact && { "& .MuiChip-label": { display: "none" } }),
         }}
       />,
     );
@@ -67,7 +67,7 @@ export default function CommunityStatusBadge({
       <Chip
         key="benchmark"
         icon={<EmojiEventsIcon sx={{ fontSize: compact ? 12 : 14 }} />}
-        label={compact ? undefined : 'Benchmark'}
+        label={compact ? undefined : "Benchmark"}
         size="small"
         sx={{
           bgcolor: `${themeTokens.colors.purple}14`,
@@ -75,8 +75,8 @@ export default function CommunityStatusBadge({
           fontWeight: 600,
           fontSize: compact ? 10 : 11,
           height: compact ? 20 : 24,
-          '& .MuiChip-icon': { color: themeTokens.colors.purple },
-          ...(compact && { '& .MuiChip-label': { display: 'none' } }),
+          "& .MuiChip-icon": { color: themeTokens.colors.purple },
+          ...(compact && { "& .MuiChip-label": { display: "none" } }),
         }}
       />,
     );
@@ -87,7 +87,7 @@ export default function CommunityStatusBadge({
       <Chip
         key="frozen"
         icon={<LockIcon sx={{ fontSize: compact ? 12 : 14 }} />}
-        label={compact ? undefined : 'Frozen'}
+        label={compact ? undefined : "Frozen"}
         size="small"
         sx={{
           bgcolor: themeTokens.colors.warningBg,
@@ -95,8 +95,8 @@ export default function CommunityStatusBadge({
           fontWeight: 600,
           fontSize: compact ? 10 : 11,
           height: compact ? 20 : 24,
-          '& .MuiChip-icon': { color: themeTokens.colors.warning },
-          ...(compact && { '& .MuiChip-label': { display: 'none' } }),
+          "& .MuiChip-icon": { color: themeTokens.colors.warning },
+          ...(compact && { "& .MuiChip-label": { display: "none" } }),
         }}
       />,
     );
@@ -105,8 +105,6 @@ export default function CommunityStatusBadge({
   if (badges.length === 0) return null;
 
   return (
-    <Box sx={{ display: 'flex', gap: 0.5, flexWrap: 'wrap', alignItems: 'center' }}>
-      {badges}
-    </Box>
+    <Box sx={{ display: "flex", gap: 0.5, flexWrap: "wrap", alignItems: "center" }}>{badges}</Box>
   );
 }

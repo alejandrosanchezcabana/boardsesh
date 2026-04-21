@@ -1,9 +1,9 @@
-import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { renderHook, act } from '@testing-library/react';
+import { describe, it, expect, vi, beforeEach, afterEach } from "vite-plus/test";
+import { renderHook, act } from "@testing-library/react";
 
 // Capture the config passed to useSwipeable
 let capturedSwipeableConfig: Record<string, (...args: unknown[]) => unknown> = {};
-vi.mock('react-swipeable', () => ({
+vi.mock("react-swipeable", () => ({
   useSwipeable: (config: Record<string, (...args: unknown[]) => unknown>) => {
     capturedSwipeableConfig = config;
     return { ref: vi.fn() };
@@ -14,7 +14,7 @@ vi.mock('react-swipeable', () => ({
 const mockDetect = vi.fn();
 const mockReset = vi.fn();
 const mockIsHorizontalRef = { current: null as boolean | null };
-vi.mock('../use-swipe-direction', () => ({
+vi.mock("../use-swipe-direction", () => ({
   useSwipeDirection: () => ({
     detect: mockDetect,
     reset: mockReset,
@@ -22,7 +22,7 @@ vi.mock('../use-swipe-direction', () => ({
   }),
 }));
 
-import { useSwipeActions, type UseSwipeActionsOptions } from '../use-swipe-actions';
+import { useSwipeActions, type UseSwipeActionsOptions } from "../use-swipe-actions";
 
 function createDefaultOptions(): UseSwipeActionsOptions {
   return {
@@ -31,7 +31,7 @@ function createDefaultOptions(): UseSwipeActionsOptions {
   };
 }
 
-describe('useSwipeActions', () => {
+describe("useSwipeActions", () => {
   beforeEach(() => {
     vi.useFakeTimers();
     capturedSwipeableConfig = {};
@@ -44,17 +44,17 @@ describe('useSwipeActions', () => {
     vi.useRealTimers();
   });
 
-  it('returns swipeHandlers, swipeLeftConfirmed, contentRef, leftActionRef, rightActionRef', () => {
+  it("returns swipeHandlers, swipeLeftConfirmed, contentRef, leftActionRef, rightActionRef", () => {
     const { result } = renderHook(() => useSwipeActions(createDefaultOptions()));
 
     expect(result.current.swipeHandlers).toBeDefined();
     expect(result.current.swipeLeftConfirmed).toBe(false);
-    expect(typeof result.current.contentRef).toBe('function');
-    expect(typeof result.current.leftActionRef).toBe('function');
-    expect(typeof result.current.rightActionRef).toBe('function');
+    expect(typeof result.current.contentRef).toBe("function");
+    expect(typeof result.current.leftActionRef).toBe("function");
+    expect(typeof result.current.rightActionRef).toBe("function");
   });
 
-  it('does nothing when disabled', () => {
+  it("does nothing when disabled", () => {
     const options = { ...createDefaultOptions(), disabled: true };
     renderHook(() => useSwipeActions(options));
 
@@ -69,7 +69,7 @@ describe('useSwipeActions', () => {
     expect(mockDetect).not.toHaveBeenCalled();
   });
 
-  it('calls onSwipeLeft immediately when swiped left past threshold', () => {
+  it("calls onSwipeLeft immediately when swiped left past threshold", () => {
     const options = createDefaultOptions();
     renderHook(() => useSwipeActions(options));
 
@@ -92,7 +92,7 @@ describe('useSwipeActions', () => {
     expect(options.onSwipeLeft).toHaveBeenCalledTimes(1);
   });
 
-  it('calls onSwipeRight when swiped right past threshold and detected horizontal', () => {
+  it("calls onSwipeRight when swiped right past threshold and detected horizontal", () => {
     const options = createDefaultOptions();
     renderHook(() => useSwipeActions(options));
 
@@ -114,7 +114,7 @@ describe('useSwipeActions', () => {
     expect(options.onSwipeRight).toHaveBeenCalledTimes(1);
   });
 
-  it('snaps back when swipe below threshold', () => {
+  it("snaps back when swipe below threshold", () => {
     const options = createDefaultOptions();
     renderHook(() => useSwipeActions(options));
 
@@ -139,7 +139,7 @@ describe('useSwipeActions', () => {
     expect(mockReset).toHaveBeenCalled();
   });
 
-  it('swipeLeftConfirmed becomes true immediately and resets after 600ms', () => {
+  it("swipeLeftConfirmed becomes true immediately and resets after 600ms", () => {
     const options = createDefaultOptions();
     const { result } = renderHook(() => useSwipeActions(options));
 
@@ -177,7 +177,7 @@ describe('useSwipeActions', () => {
     expect(result.current.swipeLeftConfirmed).toBe(false);
   });
 
-  it('does not trigger action for vertical swipes (isHorizontalRef.current = false)', () => {
+  it("does not trigger action for vertical swipes (isHorizontalRef.current = false)", () => {
     const options = createDefaultOptions();
     renderHook(() => useSwipeActions(options));
 
@@ -200,7 +200,7 @@ describe('useSwipeActions', () => {
     expect(options.onSwipeLeft).not.toHaveBeenCalled();
   });
 
-  it('onTouchEndOrOnMouseUp resets if below threshold', () => {
+  it("onTouchEndOrOnMouseUp resets if below threshold", () => {
     const options = createDefaultOptions();
     renderHook(() => useSwipeActions(options));
 
@@ -224,11 +224,11 @@ describe('useSwipeActions', () => {
     expect(mockReset).toHaveBeenCalled();
   });
 
-  it('DOM refs apply transform via contentRef callback', () => {
+  it("DOM refs apply transform via contentRef callback", () => {
     const { result } = renderHook(() => useSwipeActions(createDefaultOptions()));
 
     const mockElement = {
-      style: { transform: '', transition: '', opacity: '', visibility: '' },
+      style: { transform: "", transition: "", opacity: "", visibility: "" },
     } as unknown as HTMLElement;
 
     // Set the content ref
@@ -248,10 +248,10 @@ describe('useSwipeActions', () => {
       });
     });
 
-    expect(mockElement.style.transform).toBe('translateX(50px)');
+    expect(mockElement.style.transform).toBe("translateX(50px)");
   });
 
-  it('respects custom swipeThreshold', () => {
+  it("respects custom swipeThreshold", () => {
     const options = { ...createDefaultOptions(), swipeThreshold: 50 };
     renderHook(() => useSwipeActions(options));
 
@@ -275,12 +275,12 @@ describe('useSwipeActions', () => {
     expect(options.onSwipeLeft).toHaveBeenCalledTimes(1);
   });
 
-  it('respects custom maxSwipe (clamps offset)', () => {
+  it("respects custom maxSwipe (clamps offset)", () => {
     const options = { ...createDefaultOptions(), maxSwipe: 80 };
     const { result } = renderHook(() => useSwipeActions(options));
 
     const mockElement = {
-      style: { transform: '', transition: '', opacity: '', visibility: '' },
+      style: { transform: "", transition: "", opacity: "", visibility: "" },
     } as unknown as HTMLElement;
 
     act(() => {
@@ -300,10 +300,10 @@ describe('useSwipeActions', () => {
     });
 
     // Should be clamped to maxSwipe
-    expect(mockElement.style.transform).toBe('translateX(80px)');
+    expect(mockElement.style.transform).toBe("translateX(80px)");
   });
 
-  it('resets direction on swipe completion', () => {
+  it("resets direction on swipe completion", () => {
     const options = createDefaultOptions();
     renderHook(() => useSwipeActions(options));
 
@@ -325,7 +325,7 @@ describe('useSwipeActions', () => {
     expect(mockReset).toHaveBeenCalled();
   });
 
-  it('calls onSwipeLeftLong when swiped past long left threshold', () => {
+  it("calls onSwipeLeftLong when swiped past long left threshold", () => {
     const options = {
       ...createDefaultOptions(),
       onSwipeLeftLong: vi.fn(),
@@ -353,7 +353,7 @@ describe('useSwipeActions', () => {
     expect(options.onSwipeLeft).not.toHaveBeenCalled();
   });
 
-  it('uses short swipe callback when left swipe is below long threshold', () => {
+  it("uses short swipe callback when left swipe is below long threshold", () => {
     const options = {
       ...createDefaultOptions(),
       onSwipeLeftLong: vi.fn(),
@@ -382,7 +382,7 @@ describe('useSwipeActions', () => {
     expect(options.onSwipeLeftLong).not.toHaveBeenCalled();
   });
 
-  it('emits swipe zone changes when crossing long-right threshold', () => {
+  it("emits swipe zone changes when crossing long-right threshold", () => {
     const onSwipeZoneChange = vi.fn();
     const options = {
       ...createDefaultOptions(),
@@ -416,21 +416,21 @@ describe('useSwipeActions', () => {
       capturedSwipeableConfig.onSwipedRight({ deltaX: 160 });
     });
 
-    expect(onSwipeZoneChange).toHaveBeenCalledWith('right-short');
-    expect(onSwipeZoneChange).toHaveBeenCalledWith('right-long');
-    expect(onSwipeZoneChange).toHaveBeenCalledWith('none');
+    expect(onSwipeZoneChange).toHaveBeenCalledWith("right-short");
+    expect(onSwipeZoneChange).toHaveBeenCalledWith("right-long");
+    expect(onSwipeZoneChange).toHaveBeenCalledWith("none");
     expect(options.onSwipeRightLong).toHaveBeenCalledTimes(1);
   });
 
-  it('peeks content and keeps action layer visible during left swipe confirmation', () => {
+  it("peeks content and keeps action layer visible during left swipe confirmation", () => {
     const options = createDefaultOptions();
     const { result } = renderHook(() => useSwipeActions(options));
 
     const mockContent = {
-      style: { transform: '', transition: '', opacity: '', visibility: '' },
+      style: { transform: "", transition: "", opacity: "", visibility: "" },
     } as unknown as HTMLElement;
     const mockRightAction = {
-      style: { transform: '', transition: '', opacity: '', visibility: '' },
+      style: { transform: "", transition: "", opacity: "", visibility: "" },
     } as unknown as HTMLElement;
 
     act(() => {
@@ -454,21 +454,21 @@ describe('useSwipeActions', () => {
     });
 
     // Content should be at peek offset
-    expect(mockContent.style.transform).toBe('translateX(-76px)');
-    expect(mockContent.style.transition).toBe('transform 120ms ease-out');
+    expect(mockContent.style.transform).toBe("translateX(-76px)");
+    expect(mockContent.style.transition).toBe("transform 120ms ease-out");
     // Right action layer should be fully visible
-    expect(mockRightAction.style.opacity).toBe('1');
-    expect(mockRightAction.style.visibility).toBe('visible');
+    expect(mockRightAction.style.opacity).toBe("1");
+    expect(mockRightAction.style.visibility).toBe("visible");
 
     // After confirmation timer, content snaps back
     act(() => {
       vi.advanceTimersByTime(600);
     });
 
-    expect(mockContent.style.transform).toBe('translateX(0px)');
+    expect(mockContent.style.transform).toBe("translateX(0px)");
   });
 
-  it('syncs offsetRef to peek offset during confirmation so a follow-up gesture snaps back', () => {
+  it("syncs offsetRef to peek offset during confirmation so a follow-up gesture snaps back", () => {
     // Regression: before the E4 fix, offsetRef retained the gesture's end delta
     // (e.g. -110) while the visual state was at the peek offset (-76). A touch/mouse-up
     // landing during confirmation would see |offsetRef| >= threshold and skip resetOffset,
@@ -477,7 +477,7 @@ describe('useSwipeActions', () => {
     const { result } = renderHook(() => useSwipeActions(options));
 
     const mockContent = {
-      style: { transform: '', transition: '', opacity: '', visibility: '' },
+      style: { transform: "", transition: "", opacity: "", visibility: "" },
     } as unknown as HTMLElement;
 
     act(() => {
@@ -499,7 +499,7 @@ describe('useSwipeActions', () => {
       capturedSwipeableConfig.onSwipedLeft({ deltaX: -110 });
     });
 
-    expect(mockContent.style.transform).toBe('translateX(-76px)');
+    expect(mockContent.style.transform).toBe("translateX(-76px)");
 
     // A new touch/mouse-up fires while the confirmation peek is still visible.
     // With the sync, |offsetRef| = 76 < threshold(100), so resetOffset runs and
@@ -509,10 +509,10 @@ describe('useSwipeActions', () => {
       capturedSwipeableConfig.onTouchEndOrOnMouseUp();
     });
 
-    expect(mockContent.style.transform).toBe('translateX(0px)');
+    expect(mockContent.style.transform).toBe("translateX(0px)");
   });
 
-  it('handles rapid double-swipe without duplicate actions', () => {
+  it("handles rapid double-swipe without duplicate actions", () => {
     const options = createDefaultOptions();
     renderHook(() => useSwipeActions(options));
 
@@ -555,7 +555,7 @@ describe('useSwipeActions', () => {
     expect(options.onSwipeLeft).toHaveBeenCalledTimes(2);
   });
 
-  it('cleans up confirmation timer on unmount', () => {
+  it("cleans up confirmation timer on unmount", () => {
     const options = createDefaultOptions();
     const { result, unmount } = renderHook(() => useSwipeActions(options));
 
@@ -585,18 +585,18 @@ describe('useSwipeActions', () => {
     });
   });
 
-  it('nulls DOM element refs on unmount to prevent detached DOM retention', () => {
+  it("nulls DOM element refs on unmount to prevent detached DOM retention", () => {
     const options = createDefaultOptions();
     const { result, unmount } = renderHook(() => useSwipeActions(options));
 
     const mockContent = {
-      style: { transform: '', transition: '', opacity: '', visibility: '' },
+      style: { transform: "", transition: "", opacity: "", visibility: "" },
     } as unknown as HTMLElement;
     const mockLeftAction = {
-      style: { opacity: '', visibility: '' },
+      style: { opacity: "", visibility: "" },
     } as unknown as HTMLElement;
     const mockRightAction = {
-      style: { opacity: '', visibility: '' },
+      style: { opacity: "", visibility: "" },
     } as unknown as HTMLElement;
 
     act(() => {

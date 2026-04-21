@@ -1,11 +1,15 @@
-'use client';
+"use client";
 
-import React, { useEffect, useRef, useState } from 'react';
-import type { BoardDetails } from '@/app/lib/types';
-import { isWorkerRenderingSupported, renderBoard, computeCropTop } from '@/app/lib/board-render-worker/worker-manager';
-import { trackRenderError, type RenderContext } from '@/app/lib/rendering-metrics';
-import { THUMBNAIL_WIDTH } from './types';
-import BoardImageLayers from './board-image-layers';
+import React, { useEffect, useRef, useState } from "react";
+import type { BoardDetails } from "@/app/lib/types";
+import {
+  isWorkerRenderingSupported,
+  renderBoard,
+  computeCropTop,
+} from "@/app/lib/board-render-worker/worker-manager";
+import { trackRenderError, type RenderContext } from "@/app/lib/rendering-metrics";
+import { THUMBNAIL_WIDTH } from "./types";
+import BoardImageLayers from "./board-image-layers";
 
 export interface BoardCanvasRendererProps {
   boardDetails: BoardDetails;
@@ -56,23 +60,23 @@ const BoardCanvasRenderer = React.memo(function BoardCanvasRenderer({
     if (!canvas) return;
 
     let cancelled = false;
-    const context: RenderContext = thumbnail ? 'thumbnail' : contain ? 'full-board' : 'card';
+    const context: RenderContext = thumbnail ? "thumbnail" : contain ? "full-board" : "card";
 
     renderBoard({ boardDetails, frames, mirrored, thumbnail, cropTop })
       .then((bitmap) => {
         if (cancelled) return;
         canvas.width = bitmap.width;
         canvas.height = bitmap.height;
-        const ctx = canvas.getContext('2d');
+        const ctx = canvas.getContext("2d");
         if (ctx) {
           ctx.drawImage(bitmap, 0, 0);
         }
       })
       .catch((err) => {
         if (!cancelled) {
-          console.error('Board canvas render failed:', err);
+          console.error("Board canvas render failed:", err);
           setFailed(true);
-          trackRenderError(context, 'wasm');
+          trackRenderError(context, "wasm");
         }
       });
 
@@ -108,10 +112,10 @@ const BoardCanvasRenderer = React.memo(function BoardCanvasRenderer({
     return (
       <div
         style={{
-          display: 'flex',
-          justifyContent: 'center',
-          alignItems: topAlign ? 'flex-start' : 'center',
-          overflow: 'hidden',
+          display: "flex",
+          justifyContent: "center",
+          alignItems: topAlign ? "flex-start" : "center",
+          overflow: "hidden",
           ...style,
         }}
       >
@@ -120,10 +124,10 @@ const BoardCanvasRenderer = React.memo(function BoardCanvasRenderer({
           width={initialWidth}
           height={initialHeight}
           style={{
-            maxWidth: '100%',
-            maxHeight: '100%',
-            width: 'auto',
-            height: 'auto',
+            maxWidth: "100%",
+            maxHeight: "100%",
+            width: "auto",
+            height: "auto",
           }}
         />
       </div>
@@ -131,16 +135,16 @@ const BoardCanvasRenderer = React.memo(function BoardCanvasRenderer({
   }
 
   return (
-    <div style={{ display: 'grid', overflow: 'hidden', ...style }}>
+    <div style={{ display: "grid", overflow: "hidden", ...style }}>
       <canvas
         ref={canvasRef}
         width={initialWidth}
         height={initialHeight}
         style={{
-          gridArea: '1 / 1',
-          width: '100%',
-          height: '100%',
-          display: 'block',
+          gridArea: "1 / 1",
+          width: "100%",
+          height: "100%",
+          display: "block",
         }}
       />
     </div>

@@ -1,8 +1,8 @@
-'use client';
+"use client";
 
-import { useCallback, useContext, useSyncExternalStore } from 'react';
-import { FavoritesContext } from './favorites-batch-context';
-import { favoritesStore } from './favorites-store';
+import { useCallback, useContext, useSyncExternalStore } from "react";
+import { FavoritesContext } from "./favorites-batch-context";
+import { favoritesStore } from "./favorites-store";
 
 type UseFavoriteOptions = {
   climbUuid: string;

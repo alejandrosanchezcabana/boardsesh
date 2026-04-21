@@ -1,14 +1,14 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { render, screen, fireEvent } from '@testing-library/react';
-import React from 'react';
-import type { UserBoard } from '@boardsesh/shared-schema';
+import { describe, it, expect, vi, beforeEach } from "vite-plus/test";
+import { render, screen, fireEvent } from "@testing-library/react";
+import React from "react";
+import type { UserBoard } from "@boardsesh/shared-schema";
 
 // --- Mocks (declared before the import that pulls them in) ---
 
 const mockRequestPermission = vi.fn();
 let mockUserCoords: { latitude: number; longitude: number; accuracy: number } | null = null;
 
-vi.mock('@/app/hooks/use-geolocation', () => ({
+vi.mock("@/app/hooks/use-geolocation", () => ({
   useGeolocation: () => ({
     coordinates: mockUserCoords,
     error: null,
@@ -30,7 +30,7 @@ let lastSearchInput: SearchBoardsMapInputCapture | null = null;
 let mockBoards: UserBoard[] = [];
 const mockFetchNextPage = vi.fn();
 
-vi.mock('@/app/hooks/use-search-boards-map', () => ({
+vi.mock("@/app/hooks/use-search-boards-map", () => ({
   useSearchBoardsMap: (input: SearchBoardsMapInputCapture) => {
     lastSearchInput = input;
     return {
@@ -45,13 +45,17 @@ vi.mock('@/app/hooks/use-search-boards-map', () => ({
   },
 }));
 
-vi.mock('@/app/components/swipeable-drawer/swipeable-drawer', () => ({
+vi.mock("@/app/components/swipeable-drawer/swipeable-drawer", () => ({
   default: ({ open, children }: { open?: boolean; children?: React.ReactNode }) =>
     open ? <div data-testid="drawer">{children}</div> : null,
 }));
 
-vi.mock('@/app/components/board-entity/board-card', () => ({
-  default: ({ board, onClick, trailingAction }: {
+vi.mock("@/app/components/board-entity/board-card", () => ({
+  default: ({
+    board,
+    onClick,
+    trailingAction,
+  }: {
     board: UserBoard;
     onClick?: (b: UserBoard) => void;
     trailingAction?: React.ReactNode;
@@ -63,12 +67,14 @@ vi.mock('@/app/components/board-entity/board-card', () => ({
   ),
 }));
 
-vi.mock('@/app/components/ui/follow-button', () => ({
+vi.mock("@/app/components/ui/follow-button", () => ({
   default: () => <div data-testid="follow-button" />,
 }));
 
-vi.mock('../board-search-map', () => ({
-  default: ({ onViewportChange }: {
+vi.mock("../board-search-map", () => ({
+  default: ({
+    onViewportChange,
+  }: {
     onViewportChange: (v: { lat: number; lng: number; zoom: number }) => void;
   }) => (
     <div
@@ -78,23 +84,23 @@ vi.mock('../board-search-map', () => ({
   ),
 }));
 
-vi.mock('@/app/lib/graphql/operations', () => ({
-  FOLLOW_BOARD: 'FOLLOW_BOARD',
-  UNFOLLOW_BOARD: 'UNFOLLOW_BOARD',
+vi.mock("@/app/lib/graphql/operations", () => ({
+  FOLLOW_BOARD: "FOLLOW_BOARD",
+  UNFOLLOW_BOARD: "UNFOLLOW_BOARD",
 }));
 
 // --- Import under test ---
 
-import BoardSearchDrawer from '../board-search-drawer';
+import BoardSearchDrawer from "../board-search-drawer";
 
 function makeBoard(uuid: string, overrides: Partial<UserBoard> = {}): UserBoard {
   return {
     uuid,
     name: `Board ${uuid}`,
-    boardType: 'kilter',
+    boardType: "kilter",
     layoutId: 1,
     sizeId: 1,
-    setIds: '1',
+    setIds: "1",
     angle: 40,
     totalAscents: 0,
     slug: `kilter/1/1/1`,
@@ -102,11 +108,11 @@ function makeBoard(uuid: string, overrides: Partial<UserBoard> = {}): UserBoard 
     latitude: 51.5,
     longitude: -0.1,
     isFollowedByMe: false,
-    ownerId: 'owner-1',
+    ownerId: "owner-1",
     isPublic: true,
     isOwned: false,
     isAngleAdjustable: false,
-    createdAt: '2025-01-01T00:00:00Z',
+    createdAt: "2025-01-01T00:00:00Z",
     uniqueClimbers: 0,
     followerCount: 0,
     commentCount: 0,
@@ -114,7 +120,7 @@ function makeBoard(uuid: string, overrides: Partial<UserBoard> = {}): UserBoard 
   } as UserBoard;
 }
 
-describe('BoardSearchDrawer', () => {
+describe("BoardSearchDrawer", () => {
   beforeEach(() => {
     mockRequestPermission.mockReset();
     mockFetchNextPage.mockReset();
@@ -123,15 +129,13 @@ describe('BoardSearchDrawer', () => {
     lastSearchInput = null;
   });
 
-  it('does not request geolocation while the drawer is closed', () => {
+  it("does not request geolocation while the drawer is closed", () => {
     render(<BoardSearchDrawer open={false} onClose={vi.fn()} onBoardOpen={vi.fn()} />);
     expect(mockRequestPermission).not.toHaveBeenCalled();
   });
 
-  it('requests geolocation exactly once on the first open', () => {
-    const { rerender } = render(
-      <BoardSearchDrawer open onClose={vi.fn()} onBoardOpen={vi.fn()} />,
-    );
+  it("requests geolocation exactly once on the first open", () => {
+    const { rerender } = render(<BoardSearchDrawer open onClose={vi.fn()} onBoardOpen={vi.fn()} />);
     expect(mockRequestPermission).toHaveBeenCalledTimes(1);
 
     // Re-rendering while still open must not re-fire the prompt
@@ -139,10 +143,8 @@ describe('BoardSearchDrawer', () => {
     expect(mockRequestPermission).toHaveBeenCalledTimes(1);
   });
 
-  it('re-requests geolocation when the drawer is reopened (requestedGeo resets on close)', () => {
-    const { rerender } = render(
-      <BoardSearchDrawer open onClose={vi.fn()} onBoardOpen={vi.fn()} />,
-    );
+  it("re-requests geolocation when the drawer is reopened (requestedGeo resets on close)", () => {
+    const { rerender } = render(<BoardSearchDrawer open onClose={vi.fn()} onBoardOpen={vi.fn()} />);
     expect(mockRequestPermission).toHaveBeenCalledTimes(1);
 
     rerender(<BoardSearchDrawer open={false} onClose={vi.fn()} onBoardOpen={vi.fn()} />);
@@ -151,7 +153,7 @@ describe('BoardSearchDrawer', () => {
     expect(mockRequestPermission).toHaveBeenCalledTimes(2);
   });
 
-  it('passes null coords to the hook until the user pans or geolocation resolves', () => {
+  it("passes null coords to the hook until the user pans or geolocation resolves", () => {
     render(<BoardSearchDrawer open onClose={vi.fn()} onBoardOpen={vi.fn()} />);
     expect(lastSearchInput).not.toBeNull();
     expect(lastSearchInput!.latitude).toBeNull();
@@ -159,41 +161,39 @@ describe('BoardSearchDrawer', () => {
     expect(lastSearchInput!.enabled).toBe(true);
   });
 
-  it('forwards real coords once the map reports a viewport change', () => {
+  it("forwards real coords once the map reports a viewport change", () => {
     render(<BoardSearchDrawer open onClose={vi.fn()} onBoardOpen={vi.fn()} />);
-    fireEvent.click(screen.getByTestId('board-search-map'));
+    fireEvent.click(screen.getByTestId("board-search-map"));
     expect(lastSearchInput!.latitude).toBe(51.5);
     expect(lastSearchInput!.longitude).toBe(-0.1);
     expect(lastSearchInput!.zoom).toBe(12);
   });
 
-  it('clears the typed query when the drawer closes', () => {
-    mockBoards = [makeBoard('b1')];
+  it("clears the typed query when the drawer closes", () => {
+    mockBoards = [makeBoard("b1")];
 
     const { rerender, container } = render(
       <BoardSearchDrawer open onClose={vi.fn()} onBoardOpen={vi.fn()} />,
     );
-    const input = container.querySelector('input') as HTMLInputElement;
+    const input = container.querySelector("input") as HTMLInputElement;
     expect(input).toBeTruthy();
 
-    fireEvent.change(input, { target: { value: 'kilter' } });
-    expect(lastSearchInput!.query).toBe('kilter');
+    fireEvent.change(input, { target: { value: "kilter" } });
+    expect(lastSearchInput!.query).toBe("kilter");
 
     // Close and reopen — query should be empty
     rerender(<BoardSearchDrawer open={false} onClose={vi.fn()} onBoardOpen={vi.fn()} />);
     rerender(<BoardSearchDrawer open onClose={vi.fn()} onBoardOpen={vi.fn()} />);
 
-    expect(lastSearchInput!.query).toBe('');
+    expect(lastSearchInput!.query).toBe("");
   });
 
-  it('resets coords to null when the drawer is closed and reopened without geolocation', () => {
+  it("resets coords to null when the drawer is closed and reopened without geolocation", () => {
     // userCoords is null (no geo) — only a manual pan had resolved coords.
-    const { rerender } = render(
-      <BoardSearchDrawer open onClose={vi.fn()} onBoardOpen={vi.fn()} />,
-    );
+    const { rerender } = render(<BoardSearchDrawer open onClose={vi.fn()} onBoardOpen={vi.fn()} />);
 
     // Simulate the user panning the map to a real location
-    fireEvent.click(screen.getByTestId('board-search-map'));
+    fireEvent.click(screen.getByTestId("board-search-map"));
     expect(lastSearchInput!.latitude).toBe(51.5);
     expect(lastSearchInput!.longitude).toBe(-0.1);
 
@@ -206,13 +206,11 @@ describe('BoardSearchDrawer', () => {
     expect(lastSearchInput!.longitude).toBeNull();
   });
 
-  it('auto-centers to user location when geolocation has resolved, and re-centers after reopen', () => {
+  it("auto-centers to user location when geolocation has resolved, and re-centers after reopen", () => {
     // Geolocation was already granted before the drawer opens.
     mockUserCoords = { latitude: 48.8, longitude: 2.3, accuracy: 10 };
 
-    const { rerender } = render(
-      <BoardSearchDrawer open onClose={vi.fn()} onBoardOpen={vi.fn()} />,
-    );
+    const { rerender } = render(<BoardSearchDrawer open onClose={vi.fn()} onBoardOpen={vi.fn()} />);
 
     // Should auto-center to the resolved location immediately
     expect(lastSearchInput!.latitude).toBe(48.8);
@@ -228,17 +226,15 @@ describe('BoardSearchDrawer', () => {
     expect(lastSearchInput!.longitude).toBe(2.3);
   });
 
-  it('does not override a board-card selection when geolocation resolves afterward', () => {
+  it("does not override a board-card selection when geolocation resolves afterward", () => {
     // Start with no geolocation — user picks a board first.
-    mockBoards = [makeBoard('b1', { latitude: 51.5, longitude: -0.1 })];
+    mockBoards = [makeBoard("b1", { latitude: 51.5, longitude: -0.1 })];
     mockUserCoords = null;
 
-    const { rerender } = render(
-      <BoardSearchDrawer open onClose={vi.fn()} onBoardOpen={vi.fn()} />,
-    );
+    const { rerender } = render(<BoardSearchDrawer open onClose={vi.fn()} onBoardOpen={vi.fn()} />);
 
     // Click the card — handleCardClick sets center and locationResolved=true
-    fireEvent.click(screen.getByTestId('board-card-b1'));
+    fireEvent.click(screen.getByTestId("board-card-b1"));
     expect(lastSearchInput!.latitude).toBe(51.5);
     expect(lastSearchInput!.longitude).toBe(-0.1);
 
@@ -251,18 +247,18 @@ describe('BoardSearchDrawer', () => {
     expect(lastSearchInput!.longitude).toBe(-0.1);
   });
 
-  it('invokes onBoardOpen when the Open button on a selected board is clicked', () => {
-    mockBoards = [makeBoard('b1')];
+  it("invokes onBoardOpen when the Open button on a selected board is clicked", () => {
+    mockBoards = [makeBoard("b1")];
     const onBoardOpen = vi.fn();
 
     render(<BoardSearchDrawer open onClose={vi.fn()} onBoardOpen={onBoardOpen} />);
 
     // Click the card to select it
-    fireEvent.click(screen.getByTestId('board-card-b1'));
+    fireEvent.click(screen.getByTestId("board-card-b1"));
 
     // The Open button is rendered for the selected board
-    fireEvent.click(screen.getByRole('button', { name: /open/i }));
+    fireEvent.click(screen.getByRole("button", { name: /open/i }));
 
-    expect(onBoardOpen).toHaveBeenCalledWith(expect.objectContaining({ uuid: 'b1' }));
+    expect(onBoardOpen).toHaveBeenCalledWith(expect.objectContaining({ uuid: "b1" }));
   });
 });

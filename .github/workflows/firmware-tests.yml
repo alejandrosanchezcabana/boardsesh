@@ -4,12 +4,12 @@ on:
   push:
     branches: [main]
     paths:
-      - 'embedded/**'
-      - '.github/workflows/firmware-tests.yml'
+      - "embedded/**"
+      - ".github/workflows/firmware-tests.yml"
   pull_request:
     paths:
-      - 'embedded/**'
-      - '.github/workflows/firmware-tests.yml'
+      - "embedded/**"
+      - ".github/workflows/firmware-tests.yml"
 
 jobs:
   test:
@@ -22,8 +22,8 @@ jobs:
       - name: Setup Python
         uses: actions/setup-python@v5
         with:
-          python-version: '3.11'
-          cache: 'pip'
+          python-version: "3.11"
+          cache: "pip"
 
       - name: Install PlatformIO
         run: |

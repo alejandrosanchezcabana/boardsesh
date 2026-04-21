@@ -1,14 +1,18 @@
-'use client';
+"use client";
 
-import { useState, useRef, useCallback } from 'react';
-import ToggleButton from '@mui/material/ToggleButton';
-import NotificationsNoneOutlined from '@mui/icons-material/NotificationsNoneOutlined';
-import NotificationsActiveOutlined from '@mui/icons-material/NotificationsActiveOutlined';
-import CircularProgress from '@mui/material/CircularProgress';
-import { useSnackbar } from '@/app/components/providers/snackbar-provider';
-import { useWsAuthToken } from '@/app/hooks/use-ws-auth-token';
-import { createGraphQLClient, execute, type Client } from '@/app/components/graphql-queue/graphql-client';
-import { getBackendWsUrl } from '@/app/lib/backend-url';
+import { useState, useRef, useCallback } from "react";
+import ToggleButton from "@mui/material/ToggleButton";
+import NotificationsNoneOutlined from "@mui/icons-material/NotificationsNoneOutlined";
+import NotificationsActiveOutlined from "@mui/icons-material/NotificationsActiveOutlined";
+import CircularProgress from "@mui/material/CircularProgress";
+import { useSnackbar } from "@/app/components/providers/snackbar-provider";
+import { useWsAuthToken } from "@/app/hooks/use-ws-auth-token";
+import {
+  createGraphQLClient,
+  execute,
+  type Client,
+} from "@/app/components/graphql-queue/graphql-client";
+import { getBackendWsUrl } from "@/app/lib/backend-url";
 import {
   SUBSCRIBE_NEW_CLIMBS,
   UNSUBSCRIBE_NEW_CLIMBS,
@@ -16,7 +20,7 @@ import {
   type SubscribeNewClimbsResponse,
   type UnsubscribeNewClimbsVariables,
   type UnsubscribeNewClimbsResponse,
-} from '@/app/lib/graphql/operations/new-climb-feed';
+} from "@/app/lib/graphql/operations/new-climb-feed";
 
 interface SubscribeButtonProps {
   boardType: string;
@@ -51,7 +55,7 @@ export default function SubscribeButton({
   const handleToggle = async () => {
     if (loading || disabled) return;
     if (!wsAuthToken) {
-      showMessage('Please sign in to manage subscriptions', 'warning');
+      showMessage("Please sign in to manage subscriptions", "warning");
       return;
     }
 
@@ -68,7 +72,7 @@ export default function SubscribeButton({
           variables,
         });
         onSubscriptionChange?.(false);
-        showMessage('Unsubscribed from new climbs', 'success');
+        showMessage("Unsubscribed from new climbs", "success");
       } else {
         const variables: SubscribeNewClimbsVariables = {
           input: { boardType, layoutId },
@@ -78,11 +82,11 @@ export default function SubscribeButton({
           variables,
         });
         onSubscriptionChange?.(true);
-        showMessage('Subscribed to new climbs', 'success');
+        showMessage("Subscribed to new climbs", "success");
       }
     } catch (err) {
-      console.error('Subscription toggle failed', err);
-      showMessage('Could not update subscription', 'error');
+      console.error("Subscription toggle failed", err);
+      showMessage("Could not update subscription", "error");
     } finally {
       setLoading(false);
     }
@@ -95,7 +99,7 @@ export default function SubscribeButton({
       selected={isSubscribed}
       onChange={handleToggle}
       disabled={disabled || loading}
-      sx={{ gap: 0.5, textTransform: 'none' }}
+      sx={{ gap: 0.5, textTransform: "none" }}
     >
       {loading ? (
         <CircularProgress size={16} />
@@ -104,7 +108,7 @@ export default function SubscribeButton({
       ) : (
         <NotificationsNoneOutlined fontSize="small" />
       )}
-      {isSubscribed ? 'Subscribed' : 'Subscribe'}
+      {isSubscribed ? "Subscribed" : "Subscribe"}
     </ToggleButton>
   );
 }

@@ -1,26 +1,25 @@
-'use client';
+"use client";
 
-import React, { useEffect, useState } from 'react';
-import Typography from '@mui/material/Typography';
-import TextField from '@mui/material/TextField';
-import Dialog from '@mui/material/Dialog';
-import DialogTitle from '@mui/material/DialogTitle';
-import DialogContent from '@mui/material/DialogContent';
-import DialogActions from '@mui/material/DialogActions';
-import Button from '@mui/material/Button';
-import Stack from '@mui/material/Stack';
-import MoonBoardRenderer from '../moonboard-renderer/moonboard-renderer';
-import { useMoonBoardCreateClimb } from '../create-climb/use-moonboard-create-climb';
-import HoldIndicator from '../create-climb/hold-indicator';
-import HoldTypePicker from '../create-climb/hold-type-picker';
-import { useHoldTypePicker } from '../create-climb/use-hold-type-picker';
-import { themeTokens } from '@/app/theme/theme-config';
-import { coordinateToHoldId, MOONBOARD_HOLD_STATES } from '@/app/lib/moonboard-config';
-import { convertLitUpHoldsMapToMoonBoardHolds } from '@/app/lib/moonboard-climb-helpers';
-import type { MoonBoardClimb, GridCoordinate } from '@boardsesh/moonboard-ocr/browser';
-import type { LitUpHoldsMap } from '../board-renderer/types';
-import styles from './moonboard-edit-modal.module.css';
-
+import React, { useEffect, useState } from "react";
+import Typography from "@mui/material/Typography";
+import TextField from "@mui/material/TextField";
+import Dialog from "@mui/material/Dialog";
+import DialogTitle from "@mui/material/DialogTitle";
+import DialogContent from "@mui/material/DialogContent";
+import DialogActions from "@mui/material/DialogActions";
+import Button from "@mui/material/Button";
+import Stack from "@mui/material/Stack";
+import MoonBoardRenderer from "../moonboard-renderer/moonboard-renderer";
+import { useMoonBoardCreateClimb } from "../create-climb/use-moonboard-create-climb";
+import HoldIndicator from "../create-climb/hold-indicator";
+import HoldTypePicker from "../create-climb/hold-type-picker";
+import { useHoldTypePicker } from "../create-climb/use-hold-type-picker";
+import { themeTokens } from "@/app/theme/theme-config";
+import { coordinateToHoldId, MOONBOARD_HOLD_STATES } from "@/app/lib/moonboard-config";
+import { convertLitUpHoldsMapToMoonBoardHolds } from "@/app/lib/moonboard-climb-helpers";
+import type { MoonBoardClimb, GridCoordinate } from "@boardsesh/moonboard-ocr/browser";
+import type { LitUpHoldsMap } from "../board-renderer/types";
+import styles from "./moonboard-edit-modal.module.css";
 
 interface MoonBoardEditModalProps {
   open: boolean;
@@ -40,7 +39,7 @@ function convertClimbToHoldsMap(climb: MoonBoardClimb): LitUpHoldsMap {
   climb.holds.start.forEach((coord) => {
     const holdId = coordinateToHoldId(coord);
     map[holdId] = {
-      state: 'STARTING',
+      state: "STARTING",
       color: MOONBOARD_HOLD_STATES.start.color,
       displayColor: MOONBOARD_HOLD_STATES.start.displayColor,
     };
@@ -49,7 +48,7 @@ function convertClimbToHoldsMap(climb: MoonBoardClimb): LitUpHoldsMap {
   climb.holds.hand.forEach((coord) => {
     const holdId = coordinateToHoldId(coord);
     map[holdId] = {
-      state: 'HAND',
+      state: "HAND",
       color: MOONBOARD_HOLD_STATES.hand.color,
       displayColor: MOONBOARD_HOLD_STATES.hand.displayColor,
     };
@@ -58,7 +57,7 @@ function convertClimbToHoldsMap(climb: MoonBoardClimb): LitUpHoldsMap {
   climb.holds.finish.forEach((coord) => {
     const holdId = coordinateToHoldId(coord);
     map[holdId] = {
-      state: 'FINISH',
+      state: "FINISH",
       color: MOONBOARD_HOLD_STATES.finish.color,
       displayColor: MOONBOARD_HOLD_STATES.finish.displayColor,
     };
@@ -70,7 +69,7 @@ function convertClimbToHoldsMap(climb: MoonBoardClimb): LitUpHoldsMap {
 /**
  * Convert lit up holds map back to OCR hold format
  */
-function convertHoldsMapToOcrFormat(holdsMap: LitUpHoldsMap): MoonBoardClimb['holds'] {
+function convertHoldsMapToOcrFormat(holdsMap: LitUpHoldsMap): MoonBoardClimb["holds"] {
   const holds = convertLitUpHoldsMapToMoonBoardHolds(holdsMap);
   return {
     start: holds.start as GridCoordinate[],
@@ -124,13 +123,7 @@ export default function MoonBoardEditModal({
   };
 
   return (
-    <Dialog
-      open={open}
-      onClose={onCancel}
-      maxWidth="sm"
-      fullWidth
-      className={styles.modal}
-    >
+    <Dialog open={open} onClose={onCancel} maxWidth="sm" fullWidth className={styles.modal}>
       <DialogTitle>Edit Climb</DialogTitle>
       <DialogContent>
         <div className={styles.content}>
@@ -152,15 +145,40 @@ export default function MoonBoardEditModal({
               onClose={picker.handleClose}
             />
 
-            <Stack direction="row" spacing={1.5} flexWrap="wrap" justifyContent="center" className={styles.holdCounts}>
-              <HoldIndicator count={startingCount} max={2} color={themeTokens.colors.error} label="Start" />
+            <Stack
+              direction="row"
+              spacing={1.5}
+              flexWrap="wrap"
+              justifyContent="center"
+              className={styles.holdCounts}
+            >
+              <HoldIndicator
+                count={startingCount}
+                max={2}
+                color={themeTokens.colors.error}
+                label="Start"
+              />
               <HoldIndicator count={handCount} color={themeTokens.colors.primary} label="Hand" />
-              <HoldIndicator count={finishCount} max={2} color={themeTokens.colors.success} label="Finish" />
-              <HoldIndicator count={totalHolds} color={themeTokens.colors.secondary} label="Total" />
+              <HoldIndicator
+                count={finishCount}
+                max={2}
+                color={themeTokens.colors.success}
+                label="Finish"
+              />
+              <HoldIndicator
+                count={totalHolds}
+                color={themeTokens.colors.secondary}
+                label="Total"
+              />
             </Stack>
 
             {!isValid && totalHolds > 0 && (
-              <Typography variant="body2" component="span" color="text.secondary" className={styles.validationHint}>
+              <Typography
+                variant="body2"
+                component="span"
+                color="text.secondary"
+                className={styles.validationHint}
+              >
                 A valid climb needs at least 1 start hold and 1 finish hold
               </Typography>
             )}
@@ -177,20 +195,28 @@ export default function MoonBoardEditModal({
               placeholder="Climb name"
               slotProps={{ htmlInput: { maxLength: 100 } }}
               error={!climbName.trim()}
-              helperText={!climbName.trim() ? 'Please enter a name' : undefined}
+              helperText={!climbName.trim() ? "Please enter a name" : undefined}
             />
 
             <div className={styles.climbInfo}>
-              <Typography variant="body2" component="span" color="text.secondary">Setter: {climb.setter || 'Unknown'}</Typography>
-              <Typography variant="body2" component="span" color="text.secondary">Grade: {climb.userGrade || 'Unknown'}</Typography>
-              <Typography variant="body2" component="span" color="text.secondary">Angle: {climb.angle}°</Typography>
+              <Typography variant="body2" component="span" color="text.secondary">
+                Setter: {climb.setter || "Unknown"}
+              </Typography>
+              <Typography variant="body2" component="span" color="text.secondary">
+                Grade: {climb.userGrade || "Unknown"}
+              </Typography>
+              <Typography variant="body2" component="span" color="text.secondary">
+                Angle: {climb.angle}°
+              </Typography>
             </div>
           </div>
         </div>
       </DialogContent>
       <DialogActions>
         <Button onClick={onCancel}>Cancel</Button>
-        <Button variant="contained" onClick={handleOk} disabled={!isValid}>Save Changes</Button>
+        <Button variant="contained" onClick={handleOk} disabled={!isValid}>
+          Save Changes
+        </Button>
       </DialogActions>
     </Dialog>
   );

@@ -1,7 +1,7 @@
-import { describe, it, expect } from 'vitest';
-import { render, screen, act } from '@testing-library/react';
-import React, { createRef, forwardRef, useState, useCallback, useImperativeHandle } from 'react';
-import type { Climb, BoardDetails } from '@/app/lib/types';
+import { describe, it, expect } from "vite-plus/test";
+import { render, screen, act } from "@testing-library/react";
+import React, { createRef, forwardRef, useState, useCallback, useImperativeHandle } from "react";
+import type { Climb, BoardDetails } from "@/app/lib/types";
 
 // SharedDrawers is not exported from climbs-list.tsx (it's a private component).
 // We reproduce the imperative handle contract here to verify the state machine
@@ -19,18 +19,18 @@ const SharedDrawers = forwardRef<
   { boardDetails: BoardDetails; resolveBoardDetails: (climb: Climb) => BoardDetails }
 >(({ boardDetails, resolveBoardDetails }, ref) => {
   const [activeDrawerClimb, setActiveDrawerClimb] = useState<Climb | null>(null);
-  const [drawerMode, setDrawerMode] = useState<'actions' | 'playlist' | null>(null);
+  const [drawerMode, setDrawerMode] = useState<"actions" | "playlist" | null>(null);
 
   useImperativeHandle(
     ref,
     () => ({
       openActions: (climb: Climb) => {
         setActiveDrawerClimb(climb);
-        setDrawerMode('actions');
+        setDrawerMode("actions");
       },
       openPlaylistSelector: (climb: Climb) => {
         setActiveDrawerClimb(climb);
-        setDrawerMode('playlist');
+        setDrawerMode("playlist");
       },
     }),
     [],
@@ -42,32 +42,32 @@ const SharedDrawers = forwardRef<
     <>
       <div
         data-testid="actions-drawer"
-        data-open={String(drawerMode === 'actions')}
-        data-climb-uuid={activeDrawerClimb?.uuid ?? ''}
+        data-open={String(drawerMode === "actions")}
+        data-climb-uuid={activeDrawerClimb?.uuid ?? ""}
       >
-        {activeDrawerClimb && drawerMode === 'actions' && (
+        {activeDrawerClimb && drawerMode === "actions" && (
           <div data-testid="actions-content">{activeDrawerClimb.name}</div>
         )}
         <button data-testid="close-actions" onClick={handleCloseDrawer} />
       </div>
       <div
         data-testid="playlist-drawer"
-        data-open={String(drawerMode === 'playlist')}
-        data-climb-uuid={activeDrawerClimb?.uuid ?? ''}
+        data-open={String(drawerMode === "playlist")}
+        data-climb-uuid={activeDrawerClimb?.uuid ?? ""}
       >
-        {activeDrawerClimb && drawerMode === 'playlist' && (
+        {activeDrawerClimb && drawerMode === "playlist" && (
           <div data-testid="playlist-content">{activeDrawerClimb.name}</div>
         )}
       </div>
     </>
   );
 });
-SharedDrawers.displayName = 'SharedDrawers';
+SharedDrawers.displayName = "SharedDrawers";
 
 // --- Test fixtures ---
 
 const boardDetails = {
-  board_name: 'kilter',
+  board_name: "kilter",
   layout_id: 1,
   size_id: 2,
   set_ids: [3],
@@ -79,25 +79,25 @@ const boardDetails = {
   edge_top: 100,
   boardHeight: 100,
   boardWidth: 100,
-  layout_name: 'Original',
-  size_name: '12x12',
-  size_description: 'Main',
-  set_names: ['Default'],
+  layout_name: "Original",
+  size_name: "12x12",
+  size_description: "Main",
+  set_names: ["Default"],
 } as BoardDetails;
 
 function makeClimb(overrides: Partial<Climb> = {}): Climb {
   return {
-    uuid: 'climb-abc',
-    name: 'Test Boulder',
-    setter_username: 'setter',
-    description: '',
-    frames: 'p1r14',
+    uuid: "climb-abc",
+    name: "Test Boulder",
+    setter_username: "setter",
+    description: "",
+    frames: "p1r14",
     angle: 40,
     ascensionist_count: 5,
-    difficulty: 'V4',
-    quality_average: '3.0',
+    difficulty: "V4",
+    quality_average: "3.0",
     stars: 3,
-    difficulty_error: '0.5',
+    difficulty_error: "0.5",
     benchmark_difficulty: null,
     ...overrides,
   };
@@ -107,92 +107,106 @@ const identityResolve = (_climb: Climb) => boardDetails;
 
 // --- Tests ---
 
-describe('SharedDrawers imperative handle', () => {
-  it('starts with both drawers closed', () => {
+describe("SharedDrawers imperative handle", () => {
+  it("starts with both drawers closed", () => {
     const ref = createRef<SharedDrawerHandle>();
-    render(<SharedDrawers ref={ref} boardDetails={boardDetails} resolveBoardDetails={identityResolve} />);
+    render(
+      <SharedDrawers ref={ref} boardDetails={boardDetails} resolveBoardDetails={identityResolve} />,
+    );
 
-    expect(screen.getByTestId('actions-drawer').dataset.open).toBe('false');
-    expect(screen.getByTestId('playlist-drawer').dataset.open).toBe('false');
+    expect(screen.getByTestId("actions-drawer").dataset.open).toBe("false");
+    expect(screen.getByTestId("playlist-drawer").dataset.open).toBe("false");
   });
 
-  it('openActions sets the climb and opens the actions drawer', () => {
+  it("openActions sets the climb and opens the actions drawer", () => {
     const ref = createRef<SharedDrawerHandle>();
-    render(<SharedDrawers ref={ref} boardDetails={boardDetails} resolveBoardDetails={identityResolve} />);
+    render(
+      <SharedDrawers ref={ref} boardDetails={boardDetails} resolveBoardDetails={identityResolve} />,
+    );
 
-    const climb = makeClimb({ uuid: 'open-test', name: 'Open Me' });
+    const climb = makeClimb({ uuid: "open-test", name: "Open Me" });
     act(() => ref.current!.openActions(climb));
 
-    expect(screen.getByTestId('actions-drawer').dataset.open).toBe('true');
-    expect(screen.getByTestId('actions-drawer').dataset.climbUuid).toBe('open-test');
-    expect(screen.getByTestId('actions-content').textContent).toBe('Open Me');
+    expect(screen.getByTestId("actions-drawer").dataset.open).toBe("true");
+    expect(screen.getByTestId("actions-drawer").dataset.climbUuid).toBe("open-test");
+    expect(screen.getByTestId("actions-content").textContent).toBe("Open Me");
     // Playlist drawer stays closed
-    expect(screen.getByTestId('playlist-drawer').dataset.open).toBe('false');
+    expect(screen.getByTestId("playlist-drawer").dataset.open).toBe("false");
   });
 
-  it('openPlaylistSelector sets the climb and opens the playlist drawer', () => {
+  it("openPlaylistSelector sets the climb and opens the playlist drawer", () => {
     const ref = createRef<SharedDrawerHandle>();
-    render(<SharedDrawers ref={ref} boardDetails={boardDetails} resolveBoardDetails={identityResolve} />);
+    render(
+      <SharedDrawers ref={ref} boardDetails={boardDetails} resolveBoardDetails={identityResolve} />,
+    );
 
-    const climb = makeClimb({ uuid: 'playlist-test', name: 'Playlist Me' });
+    const climb = makeClimb({ uuid: "playlist-test", name: "Playlist Me" });
     act(() => ref.current!.openPlaylistSelector(climb));
 
-    expect(screen.getByTestId('playlist-drawer').dataset.open).toBe('true');
-    expect(screen.getByTestId('playlist-drawer').dataset.climbUuid).toBe('playlist-test');
-    expect(screen.getByTestId('playlist-content').textContent).toBe('Playlist Me');
+    expect(screen.getByTestId("playlist-drawer").dataset.open).toBe("true");
+    expect(screen.getByTestId("playlist-drawer").dataset.climbUuid).toBe("playlist-test");
+    expect(screen.getByTestId("playlist-content").textContent).toBe("Playlist Me");
     // Actions drawer stays closed
-    expect(screen.getByTestId('actions-drawer').dataset.open).toBe('false');
+    expect(screen.getByTestId("actions-drawer").dataset.open).toBe("false");
   });
 
-  it('switching from actions to playlist updates correctly', () => {
+  it("switching from actions to playlist updates correctly", () => {
     const ref = createRef<SharedDrawerHandle>();
-    render(<SharedDrawers ref={ref} boardDetails={boardDetails} resolveBoardDetails={identityResolve} />);
+    render(
+      <SharedDrawers ref={ref} boardDetails={boardDetails} resolveBoardDetails={identityResolve} />,
+    );
 
-    const climb = makeClimb({ uuid: 'switch-test' });
+    const climb = makeClimb({ uuid: "switch-test" });
     act(() => ref.current!.openActions(climb));
-    expect(screen.getByTestId('actions-drawer').dataset.open).toBe('true');
+    expect(screen.getByTestId("actions-drawer").dataset.open).toBe("true");
 
     act(() => ref.current!.openPlaylistSelector(climb));
-    expect(screen.getByTestId('actions-drawer').dataset.open).toBe('false');
-    expect(screen.getByTestId('playlist-drawer').dataset.open).toBe('true');
+    expect(screen.getByTestId("actions-drawer").dataset.open).toBe("false");
+    expect(screen.getByTestId("playlist-drawer").dataset.open).toBe("true");
   });
 
-  it('opening for a different climb updates the climb reference', () => {
+  it("opening for a different climb updates the climb reference", () => {
     const ref = createRef<SharedDrawerHandle>();
-    render(<SharedDrawers ref={ref} boardDetails={boardDetails} resolveBoardDetails={identityResolve} />);
+    render(
+      <SharedDrawers ref={ref} boardDetails={boardDetails} resolveBoardDetails={identityResolve} />,
+    );
 
-    const climbA = makeClimb({ uuid: 'climb-a', name: 'Boulder A' });
-    const climbB = makeClimb({ uuid: 'climb-b', name: 'Boulder B' });
+    const climbA = makeClimb({ uuid: "climb-a", name: "Boulder A" });
+    const climbB = makeClimb({ uuid: "climb-b", name: "Boulder B" });
 
     act(() => ref.current!.openActions(climbA));
-    expect(screen.getByTestId('actions-drawer').dataset.climbUuid).toBe('climb-a');
+    expect(screen.getByTestId("actions-drawer").dataset.climbUuid).toBe("climb-a");
 
     act(() => ref.current!.openActions(climbB));
-    expect(screen.getByTestId('actions-drawer').dataset.climbUuid).toBe('climb-b');
-    expect(screen.getByTestId('actions-content').textContent).toBe('Boulder B');
+    expect(screen.getByTestId("actions-drawer").dataset.climbUuid).toBe("climb-b");
+    expect(screen.getByTestId("actions-content").textContent).toBe("Boulder B");
   });
 
-  it('close resets drawer mode', () => {
+  it("close resets drawer mode", () => {
     const ref = createRef<SharedDrawerHandle>();
-    render(<SharedDrawers ref={ref} boardDetails={boardDetails} resolveBoardDetails={identityResolve} />);
+    render(
+      <SharedDrawers ref={ref} boardDetails={boardDetails} resolveBoardDetails={identityResolve} />,
+    );
 
     const climb = makeClimb();
     act(() => ref.current!.openActions(climb));
-    expect(screen.getByTestId('actions-drawer').dataset.open).toBe('true');
+    expect(screen.getByTestId("actions-drawer").dataset.open).toBe("true");
 
     // Simulate close via the button
-    act(() => screen.getByTestId('close-actions').click());
-    expect(screen.getByTestId('actions-drawer').dataset.open).toBe('false');
+    act(() => screen.getByTestId("close-actions").click());
+    expect(screen.getByTestId("actions-drawer").dataset.open).toBe("false");
   });
 
-  it('handle is stable across re-renders (ref identity)', () => {
+  it("handle is stable across re-renders (ref identity)", () => {
     const ref = createRef<SharedDrawerHandle>();
     const { rerender } = render(
       <SharedDrawers ref={ref} boardDetails={boardDetails} resolveBoardDetails={identityResolve} />,
     );
     const firstHandle = ref.current;
 
-    rerender(<SharedDrawers ref={ref} boardDetails={boardDetails} resolveBoardDetails={identityResolve} />);
+    rerender(
+      <SharedDrawers ref={ref} boardDetails={boardDetails} resolveBoardDetails={identityResolve} />,
+    );
     expect(ref.current).toBe(firstHandle);
   });
 });

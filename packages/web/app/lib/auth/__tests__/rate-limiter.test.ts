@@ -1,14 +1,14 @@
-import { describe, it, expect, beforeEach, vi } from 'vitest';
-import { checkRateLimit, getClientIp } from '../rate-limiter';
+import { describe, it, expect, beforeEach, vi } from "vite-plus/test";
+import { checkRateLimit, getClientIp } from "../rate-limiter";
 
-describe('rate-limiter', () => {
+describe("rate-limiter", () => {
   beforeEach(() => {
     // Reset the module to clear the in-memory store between tests
     vi.resetModules();
   });
 
-  describe('checkRateLimit', () => {
-    it('should allow requests under the limit', async () => {
+  describe("checkRateLimit", () => {
+    it("should allow requests under the limit", async () => {
       const identifier = `test-${Date.now()}-1`;
 
       // First request should be allowed
@@ -21,7 +21,7 @@ describe('rate-limiter', () => {
       expect(result2.limited).toBe(false);
     });
 
-    it('should block requests when limit is exceeded', async () => {
+    it("should block requests when limit is exceeded", async () => {
       const identifier = `test-${Date.now()}-2`;
       const maxRequests = 3;
 
@@ -37,7 +37,7 @@ describe('rate-limiter', () => {
       expect(blockedResult.retryAfterSeconds).toBeGreaterThan(0);
     });
 
-    it('should use different limits for different identifiers', async () => {
+    it("should use different limits for different identifiers", async () => {
       const identifier1 = `test-${Date.now()}-3a`;
       const identifier2 = `test-${Date.now()}-3b`;
 
@@ -55,7 +55,7 @@ describe('rate-limiter', () => {
       expect(result2.limited).toBe(false);
     });
 
-    it('should reset after window expires', async () => {
+    it("should reset after window expires", async () => {
       const identifier = `test-${Date.now()}-4`;
       const shortWindow = 100; // 100ms window for testing
 
@@ -76,7 +76,7 @@ describe('rate-limiter', () => {
       expect(allowedResult.limited).toBe(false);
     });
 
-    it('should use default values when not specified', async () => {
+    it("should use default values when not specified", async () => {
       const identifier = `test-${Date.now()}-5`;
 
       // Should use defaults (5 requests, 60 seconds)
@@ -86,68 +86,68 @@ describe('rate-limiter', () => {
     });
   });
 
-  describe('getClientIp', () => {
-    it('should extract IP from x-forwarded-for header', () => {
-      const request = new Request('http://localhost', {
+  describe("getClientIp", () => {
+    it("should extract IP from x-forwarded-for header", () => {
+      const request = new Request("http://localhost", {
         headers: {
-          'x-forwarded-for': '192.168.1.1, 10.0.0.1',
+          "x-forwarded-for": "192.168.1.1, 10.0.0.1",
         },
       });
 
       const ip = getClientIp(request);
-      expect(ip).toBe('192.168.1.1');
+      expect(ip).toBe("192.168.1.1");
     });
 
-    it('should extract IP from single x-forwarded-for value', () => {
-      const request = new Request('http://localhost', {
+    it("should extract IP from single x-forwarded-for value", () => {
+      const request = new Request("http://localhost", {
         headers: {
-          'x-forwarded-for': '203.0.113.195',
+          "x-forwarded-for": "203.0.113.195",
         },
       });
 
       const ip = getClientIp(request);
-      expect(ip).toBe('203.0.113.195');
+      expect(ip).toBe("203.0.113.195");
     });
 
-    it('should use x-real-ip when x-forwarded-for is not present', () => {
-      const request = new Request('http://localhost', {
+    it("should use x-real-ip when x-forwarded-for is not present", () => {
+      const request = new Request("http://localhost", {
         headers: {
-          'x-real-ip': '10.0.0.1',
+          "x-real-ip": "10.0.0.1",
         },
       });
 
       const ip = getClientIp(request);
-      expect(ip).toBe('10.0.0.1');
+      expect(ip).toBe("10.0.0.1");
     });
 
-    it('should prefer x-forwarded-for over x-real-ip', () => {
-      const request = new Request('http://localhost', {
+    it("should prefer x-forwarded-for over x-real-ip", () => {
+      const request = new Request("http://localhost", {
         headers: {
-          'x-forwarded-for': '192.168.1.1',
-          'x-real-ip': '10.0.0.1',
+          "x-forwarded-for": "192.168.1.1",
+          "x-real-ip": "10.0.0.1",
         },
       });
 
       const ip = getClientIp(request);
-      expect(ip).toBe('192.168.1.1');
+      expect(ip).toBe("192.168.1.1");
     });
 
     it('should return "unknown" when no IP headers are present', () => {
-      const request = new Request('http://localhost');
+      const request = new Request("http://localhost");
 
       const ip = getClientIp(request);
-      expect(ip).toBe('unknown');
+      expect(ip).toBe("unknown");
     });
 
-    it('should trim whitespace from IP addresses', () => {
-      const request = new Request('http://localhost', {
+    it("should trim whitespace from IP addresses", () => {
+      const request = new Request("http://localhost", {
         headers: {
-          'x-forwarded-for': '  192.168.1.1  ',
+          "x-forwarded-for": "  192.168.1.1  ",
         },
       });
 
       const ip = getClientIp(request);
-      expect(ip).toBe('192.168.1.1');
+      expect(ip).toBe("192.168.1.1");
     });
   });
 });

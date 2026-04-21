@@ -1,8 +1,8 @@
-'use client';
+"use client";
 
-import React from 'react';
-import Box from '@mui/material/Box';
-import styles from '../profile-page.module.css';
+import React from "react";
+import Box from "@mui/material/Box";
+import styles from "../profile-page.module.css";
 
 interface ProfileSubPageLayoutProps {
   children: React.ReactNode;

@@ -1,6 +1,6 @@
 // aurora-api-client.ts
 
-import { ClientOptions, HOST_BASES, LoginResponse, Session } from './types';
+import { ClientOptions, HOST_BASES, LoginResponse, Session } from "./types";
 
 /**
  * Aurora Climbing API Client
@@ -15,7 +15,7 @@ class AuroraClimbingClient {
    * Create a new API client instance
    * @param options - Configuration options
    */
-  constructor({ boardName, token = null, apiVersion = 'v1' }: ClientOptions) {
+  constructor({ boardName, token = null, apiVersion = "v1" }: ClientOptions) {
     this.token = token;
     this.session = null;
     this.apiVersion = apiVersion;
@@ -40,16 +40,18 @@ class AuroraClimbingClient {
    * @param data - Data to encode
    * @returns URL encoded string
    */
-  private encodeFormData(data: Record<string, string | number | boolean | null | undefined>): string {
+  private encodeFormData(
+    data: Record<string, string | number | boolean | null | undefined>,
+  ): string {
     return Object.keys(data)
       .map((key) => {
         if (data[key] === null || data[key] === undefined) {
-          return '';
+          return "";
         }
         return `${encodeURIComponent(key)}=${encodeURIComponent(data[key])}`;
       })
-      .filter((part) => part !== '')
-      .join('&');
+      .filter((part) => part !== "")
+      .join("&");
   }
 
   /**
@@ -59,16 +61,16 @@ class AuroraClimbingClient {
    */
   private createHeaders(contentType?: string): HeadersInit {
     const headers: HeadersInit = {
-      Accept: 'application/json',
-      'Content-Type': contentType || 'application/x-www-form-urlencoded',
-      Connection: 'keep-alive',
-      'Accept-Language': 'en-AU,en;q=0.9',
-      'Accept-Encoding': 'gzip, deflate, br',
-      'User-Agent': 'Kilter Board/202 CFNetwork/1568.100.1 Darwin/24.0.0',
+      Accept: "application/json",
+      "Content-Type": contentType || "application/x-www-form-urlencoded",
+      Connection: "keep-alive",
+      "Accept-Language": "en-AU,en;q=0.9",
+      "Accept-Encoding": "gzip, deflate, br",
+      "User-Agent": "Kilter Board/202 CFNetwork/1568.100.1 Darwin/24.0.0",
     };
 
     if (this.token) {
-      headers['Cookie'] = `token=${this.token}`;
+      headers["Cookie"] = `token=${this.token}`;
     }
 
     return headers;
@@ -85,12 +87,14 @@ class AuroraClimbingClient {
     fetchOptions: RequestInit = {},
     options: { apiUrl: boolean } = { apiUrl: false },
   ): Promise<T> {
-    const url = `https://${options.apiUrl ? 'api.' : ''}${this.baseURL}${options.apiUrl ? `/${this.apiVersion}` : ''}${endpoint}`;
+    const url = `https://${options.apiUrl ? "api." : ""}${this.baseURL}${options.apiUrl ? `/${this.apiVersion}` : ""}${endpoint}`;
 
     try {
       const contentType =
-        fetchOptions.headers && typeof fetchOptions.headers === 'object' && !Array.isArray(fetchOptions.headers)
-          ? (fetchOptions.headers as Record<string, string>)['Content-Type']
+        fetchOptions.headers &&
+        typeof fetchOptions.headers === "object" &&
+        !Array.isArray(fetchOptions.headers)
+          ? (fetchOptions.headers as Record<string, string>)["Content-Type"]
           : undefined;
 
       const response = await fetch(url, {
@@ -115,7 +119,7 @@ class AuroraClimbingClient {
           try {
             errorData = await responseClone.text();
           } catch {
-            errorData = 'Could not read error response';
+            errorData = "Could not read error response";
           }
         }
         console.error(`API Error - ${url}:`, {
@@ -139,16 +143,18 @@ class AuroraClimbingClient {
 
       // Enhance error messages for common issues
       if (error instanceof Error) {
-        if (error.name === 'AbortError') {
+        if (error.name === "AbortError") {
           throw new Error(`Request timeout: ${url} took longer than 30 seconds`);
         }
-        if (error.message.includes('fetch')) {
+        if (error.message.includes("fetch")) {
           throw new Error(
             `Network error: Unable to connect to ${url}. Check internet connection and Aurora API status.`,
           );
         }
-        if (error.message.includes('Failed to fetch')) {
-          throw new Error(`DNS/Connection error: Cannot resolve ${url}. Aurora servers may be unavailable.`);
+        if (error.message.includes("Failed to fetch")) {
+          throw new Error(
+            `DNS/Connection error: Cannot resolve ${url}. Aurora servers may be unavailable.`,
+          );
         }
       }
 
@@ -168,16 +174,16 @@ class AuroraClimbingClient {
     try {
       // Use /sessions endpoint on web host only
       const data = await this.request<LoginResponse>(
-        '/sessions',
+        "/sessions",
         {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
             username,
             password,
-            tou: 'accepted',
-            pp: 'accepted',
-            ua: 'app',
+            tou: "accepted",
+            pp: "accepted",
+            ua: "app",
           }),
         },
         { apiUrl: false }, // Use web host only
@@ -192,7 +198,7 @@ class AuroraClimbingClient {
           token: data.session.token,
           user_id: data.session.user_id,
           username: username, // Use the provided username since API doesn't return it
-          error: '', // No error
+          error: "", // No error
           login: {
             created_at: new Date().toISOString(), // Use current time since API doesn't provide it
             token: data.session.token,
@@ -201,7 +207,7 @@ class AuroraClimbingClient {
           user: {
             id: data.session.user_id,
             username: username,
-            email_address: '', // These will be filled by subsequent API calls
+            email_address: "", // These will be filled by subsequent API calls
             created_at: new Date().toISOString(),
             updated_at: new Date().toISOString(),
             is_listed: true,
@@ -219,16 +225,16 @@ class AuroraClimbingClient {
         this.setSession({ token: data.token, user_id: data.user_id });
         return data;
       }
-      throw new Error('Login failed: Invalid response format');
+      throw new Error("Login failed: Invalid response format");
     } catch (error) {
       // Parse error message
-      if (typeof error === 'object' && error !== null && 'message' in error) {
+      if (typeof error === "object" && error !== null && "message" in error) {
         try {
           const errorObj = JSON.parse((error as Error).message);
           if (errorObj.status === 422) {
-            throw new Error('Invalid username or password');
+            throw new Error("Invalid username or password");
           } else if (errorObj.status === 429) {
-            throw new Error('Too many login attempts. Please try again later.');
+            throw new Error("Too many login attempts. Please try again later.");
           }
         } catch {
           // If parsing fails, just throw the original error

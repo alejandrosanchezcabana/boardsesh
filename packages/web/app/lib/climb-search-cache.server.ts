@@ -1,11 +1,11 @@
-import 'server-only';
+import "server-only";
 
-import { track } from '@vercel/analytics/server';
-import { revalidateTag } from 'next/cache';
-import type { BoardName } from '@/app/lib/types';
-import { getBoardClimbSearchTag } from '@/app/lib/climb-search-cache';
+import { track } from "@vercel/analytics/server";
+import { revalidateTag } from "next/cache";
+import type { BoardName } from "@/app/lib/types";
+import { getBoardClimbSearchTag } from "@/app/lib/climb-search-cache";
 
-export type ClimbSearchInvalidationSource = 'internal-route' | 'save-climb-proxy';
+export type ClimbSearchInvalidationSource = "internal-route" | "save-climb-proxy";
 
 interface RevalidateClimbSearchTagsOptions {
   boardName: BoardName;
@@ -29,7 +29,7 @@ export async function revalidateClimbSearchTags({
   }
 
   await track(
-    'Climb Search Cache Invalidated',
+    "Climb Search Cache Invalidated",
     {
       boardName,
       layoutId: layoutId ?? null,

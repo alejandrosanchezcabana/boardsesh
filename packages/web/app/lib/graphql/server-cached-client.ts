@@ -1,17 +1,13 @@
-import 'server-only';
-import { unstable_cache } from 'next/cache';
-import { GraphQLClient, RequestDocument, Variables } from 'graphql-request';
-import { sortObjectKeys } from '@/app/lib/cache-utils';
-import { getGraphQLHttpUrl } from './client';
-import { executeAuthenticatedGraphQL } from './server-graphql';
+import "server-only";
+import { unstable_cache } from "next/cache";
+import { GraphQLClient, RequestDocument, Variables } from "graphql-request";
+import { sortObjectKeys } from "@/app/lib/cache-utils";
+import { getGraphQLHttpUrl } from "./client";
+import { executeAuthenticatedGraphQL } from "./server-graphql";
 
 // Re-export uncached authenticated server functions so existing imports
 // from this file continue to work without changes.
-export {
-  serverMyBoards,
-  serverUserPlaylists,
-  serverGroupedNotifications,
-} from './server-graphql';
+export { serverMyBoards, serverUserPlaylists, serverGroupedNotifications } from "./server-graphql";
 
 /**
  * Execute a GraphQL query via HTTP (non-cached version for internal use)
@@ -23,7 +19,7 @@ async function executeGraphQLInternal<T = unknown, V extends Variables = Variabl
   const url = getGraphQLHttpUrl();
   const client = new GraphQLClient(url, {
     headers: {
-      'Content-Type': 'application/json',
+      "Content-Type": "application/json",
     },
   });
 
@@ -35,7 +31,7 @@ async function executeGraphQLInternal<T = unknown, V extends Variables = Variabl
  * Recursively sorts all object keys to ensure consistent key generation
  */
 function createCacheKeyFromVariables(variables: Variables | undefined): string[] {
-  if (!variables) return ['no-variables'];
+  if (!variables) return ["no-variables"];
 
   // Recursively sort all keys for stable JSON representation
   const sortedVariables = sortObjectKeys(variables);
@@ -61,11 +57,11 @@ export function createCachedGraphQLQuery<T = unknown, V extends Variables = Vari
   return async (variables?: V): Promise<T> => {
     const cachedFn = unstable_cache(
       async () => executeGraphQLInternal<T, V>(document, variables),
-      ['graphql', cacheTag, ...createCacheKeyFromVariables(variables)],
+      ["graphql", cacheTag, ...createCacheKeyFromVariables(variables)],
       {
         revalidate,
         tags: [cacheTag],
-      }
+      },
     );
 
     return cachedFn();
@@ -80,15 +76,15 @@ export async function cachedSessionGroupedFeed(
   boardUuid?: string,
   isAuthenticated: boolean = false,
 ) {
-  const { GET_SESSION_GROUPED_FEED } = await import('@/app/lib/graphql/operations/activity-feed');
+  const { GET_SESSION_GROUPED_FEED } = await import("@/app/lib/graphql/operations/activity-feed");
 
   const revalidate = isAuthenticated ? 300 : 86400;
 
   const query = createCachedGraphQLQuery<{
-    sessionGroupedFeed: import('@boardsesh/shared-schema').SessionFeedResult;
+    sessionGroupedFeed: import("@boardsesh/shared-schema").SessionFeedResult;
   }>(
     GET_SESSION_GROUPED_FEED,
-    isAuthenticated ? 'session-grouped-feed-auth' : 'session-grouped-feed-public',
+    isAuthenticated ? "session-grouped-feed-auth" : "session-grouped-feed-public",
     revalidate,
   );
 
@@ -101,13 +97,10 @@ export async function cachedSessionGroupedFeed(
  * Used for SSR on the /you/sessions page.
  * Cache is per-user (tag includes userId) with a 2-minute TTL.
  */
-export async function cachedUserSessionGroupedFeed(
-  authToken: string,
-  userId: string,
-) {
-  const { GET_SESSION_GROUPED_FEED } = await import('@/app/lib/graphql/operations/activity-feed');
+export async function cachedUserSessionGroupedFeed(authToken: string, userId: string) {
+  const { GET_SESSION_GROUPED_FEED } = await import("@/app/lib/graphql/operations/activity-feed");
 
-  type Response = { sessionGroupedFeed: import('@boardsesh/shared-schema').SessionFeedResult };
+  type Response = { sessionGroupedFeed: import("@boardsesh/shared-schema").SessionFeedResult };
   const tag = `user-session-feed-${userId}`;
 
   const cachedFn = unstable_cache(
@@ -119,7 +112,7 @@ export async function cachedUserSessionGroupedFeed(
       );
       return result.sessionGroupedFeed;
     },
-    ['graphql', tag, JSON.stringify({ userId })],
+    ["graphql", tag, JSON.stringify({ userId })],
     { revalidate: 120, tags: [tag] },
   );
 
@@ -132,27 +125,27 @@ export async function cachedUserSessionGroupedFeed(
 export async function cachedDiscoverPlaylists(
   input: { boardType?: string; layoutId?: number } = {},
 ): Promise<{
-  popular: import('@/app/lib/graphql/operations/playlists').DiscoverablePlaylist[];
-  recent: import('@/app/lib/graphql/operations/playlists').DiscoverablePlaylist[];
+  popular: import("@/app/lib/graphql/operations/playlists").DiscoverablePlaylist[];
+  recent: import("@/app/lib/graphql/operations/playlists").DiscoverablePlaylist[];
 } | null> {
-  const { DISCOVER_PLAYLISTS } = await import('@/app/lib/graphql/operations/playlists');
-  type Response = import('@/app/lib/graphql/operations/playlists').DiscoverPlaylistsQueryResponse;
+  const { DISCOVER_PLAYLISTS } = await import("@/app/lib/graphql/operations/playlists");
+  type Response = import("@/app/lib/graphql/operations/playlists").DiscoverPlaylistsQueryResponse;
 
   try {
     const popularQuery = createCachedGraphQLQuery<Response>(
       DISCOVER_PLAYLISTS,
-      'discover-playlists-popular',
+      "discover-playlists-popular",
       300, // 5 min cache
     );
     const recentQuery = createCachedGraphQLQuery<Response>(
       DISCOVER_PLAYLISTS,
-      'discover-playlists-recent',
+      "discover-playlists-recent",
       300,
     );
 
     const [popularRes, recentRes] = await Promise.all([
-      popularQuery({ input: { ...input, pageSize: 10, sortBy: 'popular' } }),
-      recentQuery({ input: { ...input, pageSize: 10, sortBy: 'recent' } }),
+      popularQuery({ input: { ...input, pageSize: 10, sortBy: "popular" } }),
+      recentQuery({ input: { ...input, pageSize: 10, sortBy: "recent" } }),
     ]);
 
     return {
@@ -169,17 +162,16 @@ export async function cachedDiscoverPlaylists(
  */
 export async function cachedUserProfileStats(
   userId: string,
-): Promise<import('@/app/lib/graphql/operations/ticks').GetUserProfileStatsQueryResponse['userProfileStats'] | null> {
-  const { GET_USER_PROFILE_STATS } = await import('@/app/lib/graphql/operations/ticks');
-  type Response = import('@/app/lib/graphql/operations/ticks').GetUserProfileStatsQueryResponse;
+): Promise<
+  | import("@/app/lib/graphql/operations/ticks").GetUserProfileStatsQueryResponse["userProfileStats"]
+  | null
+> {
+  const { GET_USER_PROFILE_STATS } = await import("@/app/lib/graphql/operations/ticks");
+  type Response = import("@/app/lib/graphql/operations/ticks").GetUserProfileStatsQueryResponse;
 
   try {
     const tag = `user-profile-stats-${userId}`;
-    const query = createCachedGraphQLQuery<Response>(
-      GET_USER_PROFILE_STATS,
-      tag,
-      300,
-    );
+    const query = createCachedGraphQLQuery<Response>(GET_USER_PROFILE_STATS, tag, 300);
     const result = await query({ userId });
     return result.userProfileStats;
   } catch {
@@ -193,17 +185,15 @@ export async function cachedUserProfileStats(
 export async function cachedUserTicks(
   userId: string,
   boardType: string,
-): Promise<import('@/app/lib/graphql/operations/ticks').GetUserTicksQueryResponse['userTicks'] | null> {
-  const { GET_USER_TICKS } = await import('@/app/lib/graphql/operations/ticks');
-  type Response = import('@/app/lib/graphql/operations/ticks').GetUserTicksQueryResponse;
+): Promise<
+  import("@/app/lib/graphql/operations/ticks").GetUserTicksQueryResponse["userTicks"] | null
+> {
+  const { GET_USER_TICKS } = await import("@/app/lib/graphql/operations/ticks");
+  type Response = import("@/app/lib/graphql/operations/ticks").GetUserTicksQueryResponse;
 
   try {
     const tag = `user-ticks-${userId}-${boardType}`;
-    const query = createCachedGraphQLQuery<Response>(
-      GET_USER_TICKS,
-      tag,
-      300,
-    );
+    const query = createCachedGraphQLQuery<Response>(GET_USER_TICKS, tag, 300);
     const result = await query({ userId, boardType });
     return result.userTicks;
   } catch {

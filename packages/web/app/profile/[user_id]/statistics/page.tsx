@@ -1,14 +1,14 @@
-import React from 'react';
-import { Metadata } from 'next';
-import { getServerSession } from 'next-auth/next';
-import { authOptions } from '@/app/lib/auth/auth-options';
-import { fetchProfileStatsData } from '../server-profile-stats';
-import AnalyticsContent from './analytics-content';
+import React from "react";
+import { Metadata } from "next";
+import { getServerSession } from "next-auth/next";
+import { authOptions } from "@/app/lib/auth/auth-options";
+import { fetchProfileStatsData } from "../server-profile-stats";
+import AnalyticsContent from "./analytics-content";
 
 type PageProps = { params: Promise<{ user_id: string }> };
 
 export const metadata: Metadata = {
-  title: 'Statistics | Boardsesh',
+  title: "Statistics | Boardsesh",
   robots: { index: false, follow: true },
 };
 

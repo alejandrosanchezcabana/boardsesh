@@ -1,47 +1,61 @@
-import { describe, it, expect } from 'vitest';
-import { EventBroker } from '../event-broker';
-import type { SocialEvent } from '@boardsesh/shared-schema';
+import { describe, it, expect } from "vite-plus/test";
+import { EventBroker } from "../event-broker";
+import type { SocialEvent } from "@boardsesh/shared-schema";
 
 class TestableEventBroker extends EventBroker {
   public testParseEvent(fields: string[]): SocialEvent | null {
-    return (this as unknown as { parseEvent(fields: string[]): SocialEvent | null }).parseEvent(fields);
+    return (this as unknown as { parseEvent(fields: string[]): SocialEvent | null }).parseEvent(
+      fields,
+    );
   }
 }
 
-describe('EventBroker', () => {
-  describe('parseEvent', () => {
+describe("EventBroker", () => {
+  describe("parseEvent", () => {
     const broker = new TestableEventBroker();
 
-    it('parses a valid event from Redis Stream fields', () => {
+    it("parses a valid event from Redis Stream fields", () => {
       const fields = [
-        'type', 'comment.created',
-        'actorId', 'user-123',
-        'entityType', 'tick',
-        'entityId', 'tick-456',
-        'timestamp', '1700000000000',
-        'metadata', '{"commentUuid":"abc-def"}',
+        "type",
+        "comment.created",
+        "actorId",
+        "user-123",
+        "entityType",
+        "tick",
+        "entityId",
+        "tick-456",
+        "timestamp",
+        "1700000000000",
+        "metadata",
+        '{"commentUuid":"abc-def"}',
       ];
 
       const event = broker.testParseEvent(fields);
 
       expect(event).toEqual({
-        type: 'comment.created',
-        actorId: 'user-123',
-        entityType: 'tick',
-        entityId: 'tick-456',
+        type: "comment.created",
+        actorId: "user-123",
+        entityType: "tick",
+        entityId: "tick-456",
         timestamp: 1700000000000,
-        metadata: { commentUuid: 'abc-def' },
+        metadata: { commentUuid: "abc-def" },
       });
     });
 
-    it('parses event with empty metadata', () => {
+    it("parses event with empty metadata", () => {
       const fields = [
-        'type', 'follow.created',
-        'actorId', 'user-1',
-        'entityType', 'user',
-        'entityId', 'user-2',
-        'timestamp', '1700000000000',
-        'metadata', '{}',
+        "type",
+        "follow.created",
+        "actorId",
+        "user-1",
+        "entityType",
+        "user",
+        "entityId",
+        "user-2",
+        "timestamp",
+        "1700000000000",
+        "metadata",
+        "{}",
       ];
 
       const event = broker.testParseEvent(fields);
@@ -49,13 +63,18 @@ describe('EventBroker', () => {
       expect(event!.metadata).toEqual({});
     });
 
-    it('handles missing metadata field gracefully', () => {
+    it("handles missing metadata field gracefully", () => {
       const fields = [
-        'type', 'vote.cast',
-        'actorId', 'user-1',
-        'entityType', 'tick',
-        'entityId', 'tick-1',
-        'timestamp', '1700000000000',
+        "type",
+        "vote.cast",
+        "actorId",
+        "user-1",
+        "entityType",
+        "tick",
+        "entityId",
+        "tick-1",
+        "timestamp",
+        "1700000000000",
       ];
 
       const event = broker.testParseEvent(fields);
@@ -63,21 +82,27 @@ describe('EventBroker', () => {
       expect(event!.metadata).toEqual({});
     });
 
-    it('returns null for invalid JSON in metadata', () => {
+    it("returns null for invalid JSON in metadata", () => {
       const fields = [
-        'type', 'comment.created',
-        'actorId', 'user-1',
-        'entityType', 'tick',
-        'entityId', 'tick-1',
-        'timestamp', '1700000000000',
-        'metadata', 'not-valid-json{',
+        "type",
+        "comment.created",
+        "actorId",
+        "user-1",
+        "entityType",
+        "tick",
+        "entityId",
+        "tick-1",
+        "timestamp",
+        "1700000000000",
+        "metadata",
+        "not-valid-json{",
       ];
 
       const event = broker.testParseEvent(fields);
       expect(event).toBeNull();
     });
 
-    it('returns null for empty fields array', () => {
+    it("returns null for empty fields array", () => {
       const event = broker.testParseEvent([]);
       // Should parse but with undefined values
       expect(event).not.toBeNull();
@@ -85,27 +110,33 @@ describe('EventBroker', () => {
       expect(event!.actorId).toBeUndefined();
     });
 
-    it('parses all supported event types', () => {
+    it("parses all supported event types", () => {
       const eventTypes = [
-        'comment.created',
-        'comment.reply',
-        'vote.cast',
-        'follow.created',
-        'climb.created',
-        'proposal.created',
-        'proposal.voted',
-        'proposal.approved',
-        'proposal.rejected',
+        "comment.created",
+        "comment.reply",
+        "vote.cast",
+        "follow.created",
+        "climb.created",
+        "proposal.created",
+        "proposal.voted",
+        "proposal.approved",
+        "proposal.rejected",
       ];
 
       for (const type of eventTypes) {
         const fields = [
-          'type', type,
-          'actorId', 'user-1',
-          'entityType', 'tick',
-          'entityId', 'entity-1',
-          'timestamp', '1700000000000',
-          'metadata', '{}',
+          "type",
+          type,
+          "actorId",
+          "user-1",
+          "entityType",
+          "tick",
+          "entityId",
+          "entity-1",
+          "timestamp",
+          "1700000000000",
+          "metadata",
+          "{}",
         ];
 
         const event = broker.testParseEvent(fields);
@@ -114,38 +145,44 @@ describe('EventBroker', () => {
       }
     });
 
-    it('correctly converts timestamp string to number', () => {
+    it("correctly converts timestamp string to number", () => {
       const fields = [
-        'type', 'vote.cast',
-        'actorId', 'user-1',
-        'entityType', 'tick',
-        'entityId', 'tick-1',
-        'timestamp', '1700000000123',
-        'metadata', '{}',
+        "type",
+        "vote.cast",
+        "actorId",
+        "user-1",
+        "entityType",
+        "tick",
+        "entityId",
+        "tick-1",
+        "timestamp",
+        "1700000000123",
+        "metadata",
+        "{}",
       ];
 
       const event = broker.testParseEvent(fields);
       expect(event!.timestamp).toBe(1700000000123);
-      expect(typeof event!.timestamp).toBe('number');
+      expect(typeof event!.timestamp).toBe("number");
     });
   });
 
-  describe('isInitialized', () => {
-    it('returns false when not initialized', () => {
+  describe("isInitialized", () => {
+    it("returns false when not initialized", () => {
       const broker = new EventBroker();
       expect(broker.isInitialized()).toBe(false);
     });
   });
 
-  describe('publish without initialization', () => {
-    it('does not throw when publishing without Redis', async () => {
+  describe("publish without initialization", () => {
+    it("does not throw when publishing without Redis", async () => {
       const broker = new EventBroker();
       await expect(
         broker.publish({
-          type: 'comment.created',
-          actorId: 'user-1',
-          entityType: 'tick',
-          entityId: 'tick-1',
+          type: "comment.created",
+          actorId: "user-1",
+          entityType: "tick",
+          entityId: "tick-1",
           timestamp: Date.now(),
           metadata: {},
         }),
@@ -153,15 +190,15 @@ describe('EventBroker', () => {
     });
   });
 
-  describe('startConsumer without initialization', () => {
-    it('does not throw when starting consumer without Redis', () => {
+  describe("startConsumer without initialization", () => {
+    it("does not throw when starting consumer without Redis", () => {
       const broker = new EventBroker();
       expect(() => broker.startConsumer(async () => {})).not.toThrow();
     });
   });
 
-  describe('shutdown', () => {
-    it('can be called safely even when not running', () => {
+  describe("shutdown", () => {
+    it("can be called safely even when not running", () => {
       const broker = new EventBroker();
       expect(() => broker.shutdown()).not.toThrow();
     });

@@ -1,11 +1,11 @@
-'use client';
+"use client";
 
-import { useCallback } from 'react';
-import { useWsAuthToken } from '@/app/hooks/use-ws-auth-token';
-import { useSnackbar } from '@/app/components/providers/snackbar-provider';
-import { createGraphQLHttpClient } from '@/app/lib/graphql/client';
-import type { TypedDocumentNode } from '@graphql-typed-document-node/core';
-import type { Variables } from 'graphql-request';
+import { useCallback } from "react";
+import { useWsAuthToken } from "@/app/hooks/use-ws-auth-token";
+import { useSnackbar } from "@/app/components/providers/snackbar-provider";
+import { createGraphQLHttpClient } from "@/app/lib/graphql/client";
+import type { TypedDocumentNode } from "@graphql-typed-document-node/core";
+import type { Variables } from "graphql-request";
 
 interface UseEntityMutationOptions {
   successMessage?: string;
@@ -15,7 +15,11 @@ interface UseEntityMutationOptions {
 
 export function useEntityMutation<TResponse, TVariables extends Variables = Variables>(
   mutation: TypedDocumentNode | string,
-  { successMessage, errorMessage, authRequiredMessage = 'You must be signed in' }: UseEntityMutationOptions,
+  {
+    successMessage,
+    errorMessage,
+    authRequiredMessage = "You must be signed in",
+  }: UseEntityMutationOptions,
 ) {
   const { token } = useWsAuthToken();
   const { showMessage } = useSnackbar();
@@ -23,7 +27,7 @@ export function useEntityMutation<TResponse, TVariables extends Variables = Vari
   const execute = useCallback(
     async (variables: TVariables): Promise<TResponse | null> => {
       if (!token) {
-        showMessage(authRequiredMessage, 'error');
+        showMessage(authRequiredMessage, "error");
         return null;
       }
 
@@ -31,12 +35,12 @@ export function useEntityMutation<TResponse, TVariables extends Variables = Vari
         const client = createGraphQLHttpClient(token);
         const data = await client.request<TResponse>(mutation, variables as Variables);
         if (successMessage) {
-          showMessage(successMessage, 'success');
+          showMessage(successMessage, "success");
         }
         return data;
       } catch (error) {
         console.error(errorMessage, error);
-        showMessage(errorMessage, 'error');
+        showMessage(errorMessage, "error");
         return null;
       }
     },

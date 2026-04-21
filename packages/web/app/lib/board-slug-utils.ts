@@ -1,6 +1,6 @@
-import { cache } from 'react';
-import { ParsedBoardRouteParameters, BoardName } from '@/app/lib/types';
-import { getGraphQLHttpUrl } from '@/app/lib/graphql/client';
+import { cache } from "react";
+import { ParsedBoardRouteParameters, BoardName } from "@/app/lib/types";
+import { getGraphQLHttpUrl } from "@/app/lib/graphql/client";
 
 export type ResolvedBoard = {
   uuid: string;
@@ -48,8 +48,8 @@ export const resolveBoardBySlug = cache(async (slug: string): Promise<ResolvedBo
 
   try {
     const response = await fetch(url, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ query, variables: { slug } }),
       next: { revalidate: 300 }, // Cache for 5 minutes
     });
@@ -68,12 +68,15 @@ export const resolveBoardBySlug = cache(async (slug: string): Promise<ResolvedBo
 /**
  * Convert a resolved board entity to ParsedBoardRouteParameters.
  */
-export function boardToRouteParams(board: ResolvedBoard, angle: number): ParsedBoardRouteParameters {
+export function boardToRouteParams(
+  board: ResolvedBoard,
+  angle: number,
+): ParsedBoardRouteParameters {
   return {
     board_name: board.boardType as BoardName,
     layout_id: board.layoutId,
     size_id: board.sizeId,
-    set_ids: board.setIds.split(',').map(Number),
+    set_ids: board.setIds.split(",").map(Number),
     angle,
   };
 }

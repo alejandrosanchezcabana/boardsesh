@@ -1,18 +1,22 @@
-import React from 'react';
-import { notFound } from 'next/navigation';
-import { BoardRouteParameters } from '@/app/lib/types';
-import { parseBoardRouteParamsWithSlugs } from '@/app/lib/url-utils.server';
-import { Metadata } from 'next';
-import { getServerAuthToken } from '@/app/lib/auth/server-auth';
-import { serverMyBoards, serverUserPlaylists, cachedDiscoverPlaylists } from '@/app/lib/graphql/server-cached-client';
-import LibraryPageContent from '@/app/playlists/library-page-content';
-import { getPlaylistLcpPreloadUrl } from '@/app/lib/lcp-preload-url';
-import styles from '@/app/components/library/library.module.css';
+import React from "react";
+import { notFound } from "next/navigation";
+import { BoardRouteParameters } from "@/app/lib/types";
+import { parseBoardRouteParamsWithSlugs } from "@/app/lib/url-utils.server";
+import { Metadata } from "next";
+import { getServerAuthToken } from "@/app/lib/auth/server-auth";
+import {
+  serverMyBoards,
+  serverUserPlaylists,
+  cachedDiscoverPlaylists,
+} from "@/app/lib/graphql/server-cached-client";
+import LibraryPageContent from "@/app/playlists/library-page-content";
+import { getPlaylistLcpPreloadUrl } from "@/app/lib/lcp-preload-url";
+import styles from "@/app/components/library/library.module.css";
 
 export async function generateMetadata(): Promise<Metadata> {
   return {
-    title: 'Playlists | Boardsesh',
-    description: 'View and manage your climb playlists',
+    title: "Playlists | Boardsesh",
+    description: "View and manage your climb playlists",
   };
 }
 
@@ -54,7 +58,7 @@ export default async function PlaylistsPage(props: { params: Promise<BoardRouteP
       </>
     );
   } catch (error) {
-    console.error('Error loading playlists page:', error);
+    console.error("Error loading playlists page:", error);
     notFound();
   }
 }

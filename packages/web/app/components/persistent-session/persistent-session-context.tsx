@@ -1,30 +1,49 @@
-'use client';
+"use client";
 
-import React, { createContext, useContext, useCallback, useMemo, useRef, useEffect } from 'react';
-import { usePathname } from 'next/navigation';
-import type { SubscriptionQueueEvent, SessionEvent } from '@boardsesh/shared-schema';
-import type { ClimbQueueItem as LocalClimbQueueItem } from '../queue-control/types';
-import { useWsAuthToken } from '@/app/hooks/use-ws-auth-token';
-import { usePartyProfile } from '../party-manager/party-profile-context';
-import { isBoardRoutePath } from '@/app/lib/board-route-paths';
+import React, { createContext, useContext, useCallback, useMemo, useRef, useEffect } from "react";
+import { usePathname } from "next/navigation";
+import type { SubscriptionQueueEvent, SessionEvent } from "@boardsesh/shared-schema";
+import type { ClimbQueueItem as LocalClimbQueueItem } from "../queue-control/types";
+import { useWsAuthToken } from "@/app/hooks/use-ws-auth-token";
+import { usePartyProfile } from "../party-manager/party-profile-context";
+import { isBoardRoutePath } from "@/app/lib/board-route-paths";
 
-import type { PersistentSessionContextType, PersistentSessionActionsType, PersistentSessionStateType, Session, ActiveSessionInfo, SharedRefs } from './types';
-import { useEventProcessor } from './hooks/use-event-processor';
-import { useQueueStorage } from './hooks/use-queue-storage';
-import { useQueueMutations } from './hooks/use-queue-mutations';
-import { useSessionSubscriptions } from './hooks/use-session-subscriptions';
-import { useSessionLifecycle } from './hooks/use-session-lifecycle';
+import type {
+  PersistentSessionContextType,
+  PersistentSessionActionsType,
+  PersistentSessionStateType,
+  Session,
+  ActiveSessionInfo,
+  SharedRefs,
+} from "./types";
+import { useEventProcessor } from "./hooks/use-event-processor";
+import { useQueueStorage } from "./hooks/use-queue-storage";
+import { useQueueMutations } from "./hooks/use-queue-mutations";
+import { useSessionSubscriptions } from "./hooks/use-session-subscriptions";
+import { useSessionLifecycle } from "./hooks/use-session-lifecycle";
 
 // Re-export types for backwards compatibility
-export type { PersistentSessionContextType, PersistentSessionActionsType, PersistentSessionStateType, Session, ActiveSessionInfo } from './types';
+export type {
+  PersistentSessionContextType,
+  PersistentSessionActionsType,
+  PersistentSessionStateType,
+  Session,
+  ActiveSessionInfo,
+} from "./types";
 
 // Split contexts: actions (stable) vs state (changes frequently)
-const PersistentSessionActionsContext = createContext<PersistentSessionActionsType | undefined>(undefined);
-const PersistentSessionStateContext = createContext<PersistentSessionStateType | undefined>(undefined);
+const PersistentSessionActionsContext = createContext<PersistentSessionActionsType | undefined>(
+  undefined,
+);
+const PersistentSessionStateContext = createContext<PersistentSessionStateType | undefined>(
+  undefined,
+);
 // Combined context for backward compatibility
 const PersistentSessionContext = createContext<PersistentSessionContextType | undefined>(undefined);
 
-export const PersistentSessionProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+export const PersistentSessionProvider: React.FC<{ children: React.ReactNode }> = ({
+  children,
+}) => {
   const { token: wsAuthToken, isLoading: isAuthLoading } = useWsAuthToken();
   const { username, avatarUrl } = usePartyProfile();
 
@@ -51,9 +70,15 @@ export const PersistentSessionProvider: React.FC<{ children: React.ReactNode }> 
   const sessionEventSubscribersRef = useRef<Set<(event: SessionEvent) => void>>(new Set());
 
   // Keep auth/profile refs in sync
-  useEffect(() => { wsAuthTokenRef.current = wsAuthToken; }, [wsAuthToken]);
-  useEffect(() => { usernameRef.current = username; }, [username]);
-  useEffect(() => { avatarUrlRef.current = avatarUrl; }, [avatarUrl]);
+  useEffect(() => {
+    wsAuthTokenRef.current = wsAuthToken;
+  }, [wsAuthToken]);
+  useEffect(() => {
+    usernameRef.current = username;
+  }, [username]);
+  useEffect(() => {
+    avatarUrlRef.current = avatarUrl;
+  }, [avatarUrl]);
 
   // Stable no-op: session is managed internally by lifecycle hook.
   // MUST be useCallback to avoid recreating on every render, which would
@@ -61,22 +86,38 @@ export const PersistentSessionProvider: React.FC<{ children: React.ReactNode }> 
   const noopSetSession = useCallback(() => {}, []);
 
   const refs: SharedRefs = {
-    offlineBufferRef, wsAuthTokenRef, usernameRef, avatarUrlRef,
-    sessionRef, activeSessionRef,
-    queueRef, currentClimbQueueItemRef,
-    mountedRef, isConnectingRef, isReconnectingRef,
-    connectionGenerationRef, triggerResyncRef, lastReceivedSequenceRef,
-    lastCorruptionResyncRef, isFilteringCorruptedItemsRef,
-    queueUnsubscribeRef, sessionUnsubscribeRef,
-    queueEventSubscribersRef, sessionEventSubscribersRef,
+    offlineBufferRef,
+    wsAuthTokenRef,
+    usernameRef,
+    avatarUrlRef,
+    sessionRef,
+    activeSessionRef,
+    queueRef,
+    currentClimbQueueItemRef,
+    mountedRef,
+    isConnectingRef,
+    isReconnectingRef,
+    connectionGenerationRef,
+    triggerResyncRef,
+    lastReceivedSequenceRef,
+    lastCorruptionResyncRef,
+    isFilteringCorruptedItemsRef,
+    queueUnsubscribeRef,
+    sessionUnsubscribeRef,
+    queueEventSubscribersRef,
+    sessionEventSubscribersRef,
   };
 
   // 1. Event processor: queue state + event handling
   const eventProcessor = useEventProcessor({ refs });
 
   // Keep queue refs in sync with event processor state
-  useEffect(() => { queueRef.current = eventProcessor.queue; }, [eventProcessor.queue]);
-  useEffect(() => { currentClimbQueueItemRef.current = eventProcessor.currentClimbQueueItem; }, [eventProcessor.currentClimbQueueItem]);
+  useEffect(() => {
+    queueRef.current = eventProcessor.queue;
+  }, [eventProcessor.queue]);
+  useEffect(() => {
+    currentClimbQueueItemRef.current = eventProcessor.currentClimbQueueItem;
+  }, [eventProcessor.currentClimbQueueItem]);
 
   // 2. Session lifecycle: connect/disconnect, join/leave
   const lifecycle = useSessionLifecycle({
@@ -135,12 +176,22 @@ export const PersistentSessionProvider: React.FC<{ children: React.ReactNode }> 
       dismissSessionSummary: lifecycle.dismissSessionSummary,
     }),
     [
-      lifecycle.activateSession, lifecycle.deactivateSession, lifecycle.setInitialQueueForSession,
-      lifecycle.endSessionWithSummary, lifecycle.dismissSessionSummary,
-      mutations.addQueueItem, mutations.removeQueueItem, mutations.setCurrentClimb,
-      mutations.mirrorCurrentClimb, mutations.setQueue, mutations.replaceQueueItem,
-      queueStorage.setLocalQueueState, queueStorage.clearLocalQueue,
-      subscriptions.subscribeToQueueEvents, subscriptions.subscribeToSessionEvents, subscriptions.triggerResync,
+      lifecycle.activateSession,
+      lifecycle.deactivateSession,
+      lifecycle.setInitialQueueForSession,
+      lifecycle.endSessionWithSummary,
+      lifecycle.dismissSessionSummary,
+      mutations.addQueueItem,
+      mutations.removeQueueItem,
+      mutations.setCurrentClimb,
+      mutations.mirrorCurrentClimb,
+      mutations.setQueue,
+      mutations.replaceQueueItem,
+      queueStorage.setLocalQueueState,
+      queueStorage.clearLocalQueue,
+      subscriptions.subscribeToQueueEvents,
+      subscriptions.subscribeToSessionEvents,
+      subscriptions.triggerResync,
     ],
   );
 
@@ -166,16 +217,22 @@ export const PersistentSessionProvider: React.FC<{ children: React.ReactNode }> 
       lastReceivedSequenceRef,
       liveSessionStats: eventProcessor.liveSessionStats,
       sessionSummary: lifecycle.sessionSummary,
-      sessionSummaryBoardType: lifecycle.sessionSummaryBoardType,
-      sessionSummaryHealthKitWorkoutId: lifecycle.sessionSummaryHealthKitWorkoutId,
     }),
     [
-      lifecycle.activeSession, lifecycle.session, lifecycle.isConnecting,
-      lifecycle.hasConnected, lifecycle.error, lifecycle.sessionSummary,
-      lifecycle.sessionSummaryBoardType, lifecycle.sessionSummaryHealthKitWorkoutId,
-      eventProcessor.currentClimbQueueItem, eventProcessor.queue, eventProcessor.liveSessionStats,
-      queueStorage.localQueue, queueStorage.localCurrentClimbQueueItem,
-      queueStorage.localBoardPath, queueStorage.localBoardDetails, queueStorage.isLocalQueueLoaded,
+      lifecycle.activeSession,
+      lifecycle.session,
+      lifecycle.isConnecting,
+      lifecycle.hasConnected,
+      lifecycle.error,
+      lifecycle.sessionSummary,
+      eventProcessor.currentClimbQueueItem,
+      eventProcessor.queue,
+      eventProcessor.liveSessionStats,
+      queueStorage.localQueue,
+      queueStorage.localCurrentClimbQueueItem,
+      queueStorage.localBoardPath,
+      queueStorage.localBoardDetails,
+      queueStorage.isLocalQueueLoaded,
     ],
   );
 
@@ -201,7 +258,7 @@ export const PersistentSessionProvider: React.FC<{ children: React.ReactNode }> 
 export function usePersistentSessionActions() {
   const context = useContext(PersistentSessionActionsContext);
   if (!context) {
-    throw new Error('usePersistentSessionActions must be used within a PersistentSessionProvider');
+    throw new Error("usePersistentSessionActions must be used within a PersistentSessionProvider");
   }
   return context;
 }
@@ -209,7 +266,7 @@ export function usePersistentSessionActions() {
 export function usePersistentSessionState() {
   const context = useContext(PersistentSessionStateContext);
   if (!context) {
-    throw new Error('usePersistentSessionState must be used within a PersistentSessionProvider');
+    throw new Error("usePersistentSessionState must be used within a PersistentSessionProvider");
   }
   return context;
 }
@@ -219,7 +276,7 @@ export function usePersistentSessionState() {
 export function usePersistentSession() {
   const context = useContext(PersistentSessionContext);
   if (!context) {
-    throw new Error('usePersistentSession must be used within a PersistentSessionProvider');
+    throw new Error("usePersistentSession must be used within a PersistentSessionProvider");
   }
   return context;
 }

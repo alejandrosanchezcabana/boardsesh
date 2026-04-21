@@ -8,24 +8,29 @@ import type {
   BoardName,
   SendDeviceLogsInput,
   SendDeviceLogsResponse,
-} from '@boardsesh/shared-schema';
-import { findClimbIndex } from './navigation-helpers';
-import { db } from '../../../db/client';
-import { esp32Controllers } from '@boardsesh/db/schema/app';
-import { eq, and } from 'drizzle-orm';
-import { requireAuthenticated, applyRateLimit, requireControllerAuth, requireControllerAuthorizedForSession } from '../shared/helpers';
-import { randomBytes, randomUUID } from 'crypto';
-import { matchClimbByFrames, getClimbByUuid } from '../../../db/queries/climbs';
-import { roomManager } from '../../../services/room-manager';
-import { pubsub } from '../../../pubsub';
-import { buildFramesString } from '@boardsesh/board-constants/led-placements';
-import { forwardLogs, type DeviceLog } from '../../../services/axiom';
+} from "@boardsesh/shared-schema";
+import { findClimbIndex } from "./navigation-helpers";
+import { db } from "../../../db/client";
+import { esp32Controllers } from "@boardsesh/db/schema/app";
+import { eq, and } from "drizzle-orm";
+import {
+  requireAuthenticated,
+  applyRateLimit,
+  requireControllerAuth,
+  requireControllerAuthorizedForSession,
+} from "../shared/helpers";
+import { randomBytes, randomUUID } from "crypto";
+import { matchClimbByFrames, getClimbByUuid } from "../../../db/queries/climbs";
+import { roomManager } from "../../../services/room-manager";
+import { pubsub } from "../../../pubsub";
+import { buildFramesString } from "@boardsesh/board-constants/led-placements";
+import { forwardLogs, type DeviceLog } from "../../../services/axiom";
 
 /**
  * Generate a secure random API key
  */
 function generateApiKey(): string {
-  return randomBytes(32).toString('hex');
+  return randomBytes(32).toString("hex");
 }
 
 export const controllerMutations = {
@@ -37,13 +42,13 @@ export const controllerMutations = {
   registerController: async (
     _: unknown,
     { input }: { input: RegisterControllerInput },
-    ctx: ConnectionContext
+    ctx: ConnectionContext,
   ): Promise<ControllerRegistration> => {
     requireAuthenticated(ctx);
     await applyRateLimit(ctx, 10); // Lower limit for controller registration
 
     if (!ctx.userId) {
-      throw new Error('User ID not available');
+      throw new Error("User ID not available");
     }
 
     const apiKey = generateApiKey();
@@ -75,23 +80,18 @@ export const controllerMutations = {
   deleteController: async (
     _: unknown,
     { controllerId }: { controllerId: string },
-    ctx: ConnectionContext
+    ctx: ConnectionContext,
   ): Promise<boolean> => {
     requireAuthenticated(ctx);
     await applyRateLimit(ctx);
 
     if (!ctx.userId) {
-      throw new Error('User ID not available');
+      throw new Error("User ID not available");
     }
 
     await db
       .delete(esp32Controllers)
-      .where(
-        and(
-          eq(esp32Controllers.id, controllerId),
-          eq(esp32Controllers.userId, ctx.userId)
-        )
-      );
+      .where(and(eq(esp32Controllers.id, controllerId), eq(esp32Controllers.userId, ctx.userId)));
 
     return true;
   },
@@ -115,7 +115,7 @@ export const controllerMutations = {
       frames?: string;
       positions?: LedCommand[];
     },
-    ctx: ConnectionContext
+    ctx: ConnectionContext,
   ): Promise<ClimbMatchResult> => {
     await applyRateLimit(ctx, 30); // Moderate limit for LED position updates
 
@@ -130,7 +130,7 @@ export const controllerMutations = {
       .limit(1);
 
     if (!controller) {
-      throw new Error('Controller not found');
+      throw new Error("Controller not found");
     }
 
     // Update lastSeenAt
@@ -154,7 +154,7 @@ export const controllerMutations = {
     const angle = currentState.currentClimbQueueItem?.climb?.angle ?? 40;
 
     console.log(
-      `[Controller] Matching climb for session ${sessionId} at angle ${angle}, frames: ${frames ? 'provided' : 'not provided'}, positions: ${positions?.length ?? 0}`
+      `[Controller] Matching climb for session ${sessionId} at angle ${angle}, frames: ${frames ? "provided" : "not provided"}, positions: ${positions?.length ?? 0}`,
     );
 
     // Build frames string from positions if not provided directly
@@ -170,9 +170,11 @@ export const controllerMutations = {
         })),
         controller.boardName as BoardName,
         controller.layoutId,
-        controller.sizeId
+        controller.sizeId,
       );
-      console.log(`[Controller] Built frames string from ${positions.length} positions: ${framesString}`);
+      console.log(
+        `[Controller] Built frames string from ${positions.length} positions: ${framesString}`,
+      );
     }
 
     if (!framesString) {
@@ -189,7 +191,7 @@ export const controllerMutations = {
       controller.boardName as BoardName,
       controller.layoutId,
       framesString,
-      angle
+      angle,
     );
 
     if (!match) {
@@ -198,9 +200,11 @@ export const controllerMutations = {
       // Publish event so ESP32 display shows "Unknown Climb" with ability to navigate back
       // Use controllerMac as clientId so ESP32 can compare with its own MAC address
       const clientIdForEvent = ctx.controllerMac || controllerId;
-      console.log(`[Controller] Publishing CurrentClimbChanged (no match) with clientId: ${clientIdForEvent}`);
+      console.log(
+        `[Controller] Publishing CurrentClimbChanged (no match) with clientId: ${clientIdForEvent}`,
+      );
       pubsub.publishQueueEvent(sessionId, {
-        __typename: 'CurrentClimbChanged',
+        __typename: "CurrentClimbChanged",
         sequence: currentState.sequence,
         item: null, // No queue item for unknown climb
         clientId: clientIdForEvent, // ESP32 compares this with its MAC
@@ -241,7 +245,9 @@ export const controllerMutations = {
 
     // Insert the new climb after the current climb in the queue (matching double-click behavior)
     const currentIndex = currentState.currentClimbQueueItem
-      ? currentState.queue.findIndex(({ uuid }) => uuid === currentState.currentClimbQueueItem?.uuid)
+      ? currentState.queue.findIndex(
+          ({ uuid }) => uuid === currentState.currentClimbQueueItem?.uuid,
+        )
       : -1;
 
     // Insert after current climb, or at end if no current climb
@@ -257,15 +263,11 @@ export const controllerMutations = {
     // Calculate the position where the item was inserted
     const insertPosition = currentIndex === -1 ? currentState.queue.length : currentIndex + 1;
 
-    const { sequence } = await roomManager.updateQueueState(
-      sessionId,
-      updatedQueue,
-      queueItem
-    );
+    const { sequence } = await roomManager.updateQueueState(sessionId, updatedQueue, queueItem);
 
     // Publish QueueItemAdded event for the new item
     pubsub.publishQueueEvent(sessionId, {
-      __typename: 'QueueItemAdded',
+      __typename: "QueueItemAdded",
       sequence,
       item: queueItem,
       position: insertPosition,
@@ -276,7 +278,7 @@ export const controllerMutations = {
     const matchClientId = ctx.controllerMac || controllerId;
     console.log(`[Controller] Publishing CurrentClimbChanged with clientId: ${matchClientId}`);
     pubsub.publishQueueEvent(sessionId, {
-      __typename: 'CurrentClimbChanged',
+      __typename: "CurrentClimbChanged",
       sequence,
       item: queueItem,
       clientId: matchClientId,
@@ -298,7 +300,7 @@ export const controllerMutations = {
   controllerHeartbeat: async (
     _: unknown,
     { sessionId }: { sessionId: string },
-    ctx: ConnectionContext
+    ctx: ConnectionContext,
   ): Promise<boolean> => {
     await applyRateLimit(ctx, 120); // Allow frequent heartbeats
 
@@ -322,29 +324,24 @@ export const controllerMutations = {
   authorizeControllerForSession: async (
     _: unknown,
     { controllerId, sessionId }: { controllerId: string; sessionId: string },
-    ctx: ConnectionContext
+    ctx: ConnectionContext,
   ): Promise<boolean> => {
     requireAuthenticated(ctx);
     await applyRateLimit(ctx);
 
     if (!ctx.userId) {
-      throw new Error('User ID not available');
+      throw new Error("User ID not available");
     }
 
     // Verify the user owns this controller
     const [controller] = await db
       .select()
       .from(esp32Controllers)
-      .where(
-        and(
-          eq(esp32Controllers.id, controllerId),
-          eq(esp32Controllers.userId, ctx.userId)
-        )
-      )
+      .where(and(eq(esp32Controllers.id, controllerId), eq(esp32Controllers.userId, ctx.userId)))
       .limit(1);
 
     if (!controller) {
-      throw new Error('Controller not found or not owned by user');
+      throw new Error("Controller not found or not owned by user");
     }
 
     // Update the controller's authorized session
@@ -369,8 +366,13 @@ export const controllerMutations = {
    */
   navigateQueue: async (
     _: unknown,
-    { sessionId, direction, currentClimbUuid, queueItemUuid }: { sessionId: string; direction: string; currentClimbUuid?: string; queueItemUuid?: string },
-    ctx: ConnectionContext
+    {
+      sessionId,
+      direction,
+      currentClimbUuid,
+      queueItemUuid,
+    }: { sessionId: string; direction: string; currentClimbUuid?: string; queueItemUuid?: string },
+    ctx: ConnectionContext,
   ): Promise<ClimbQueueItem | null> => {
     await applyRateLimit(ctx, 30);
 
@@ -397,14 +399,16 @@ export const controllerMutations = {
         // Fall back to direction-based navigation
       } else {
         newCurrentClimb = queue[targetIndex];
-        console.log(`[Controller] Navigate: direct to queueItemUuid ${queueItemUuid}, index ${targetIndex}, climb: ${newCurrentClimb.climb.name}`);
+        console.log(
+          `[Controller] Navigate: direct to queueItemUuid ${queueItemUuid}, index ${targetIndex}, climb: ${newCurrentClimb.climb.name}`,
+        );
 
         // Update queue state
         const { sequence } = await roomManager.updateQueueState(sessionId, queue, newCurrentClimb);
 
         // Publish CurrentClimbChanged event
         pubsub.publishQueueEvent(sessionId, {
-          __typename: 'CurrentClimbChanged',
+          __typename: "CurrentClimbChanged",
           sequence,
           item: newCurrentClimb,
           clientId: null,
@@ -416,7 +420,7 @@ export const controllerMutations = {
     }
 
     // Validate direction for fallback navigation
-    if (direction !== 'next' && direction !== 'previous') {
+    if (direction !== "next" && direction !== "previous") {
       throw new Error('Invalid direction. Must be "next" or "previous".');
     }
 
@@ -424,10 +428,12 @@ export const controllerMutations = {
     const referenceUuid = currentClimbUuid || currentClimbQueueItem?.uuid;
     const currentIndex = findClimbIndex(queue, referenceUuid);
 
-    console.log(`[Controller] Navigate ${direction}: using referenceUuid=${referenceUuid} (from ESP32: ${!!currentClimbUuid}), found at index ${currentIndex}`);
+    console.log(
+      `[Controller] Navigate ${direction}: using referenceUuid=${referenceUuid} (from ESP32: ${!!currentClimbUuid}), found at index ${currentIndex}`,
+    );
 
     // Calculate target index based on direction
-    if (direction === 'next') {
+    if (direction === "next") {
       // Move forward in queue
       if (currentIndex === -1) {
         // No current climb, start at beginning
@@ -457,9 +463,11 @@ export const controllerMutations = {
     newCurrentClimb = queue[targetIndex];
 
     console.log(
-      `[Controller] Navigate ${direction}: index ${currentIndex} -> ${targetIndex}, climb: ${newCurrentClimb.climb.name} (queueItem uuid: ${newCurrentClimb.uuid})`
+      `[Controller] Navigate ${direction}: index ${currentIndex} -> ${targetIndex}, climb: ${newCurrentClimb.climb.name} (queueItem uuid: ${newCurrentClimb.uuid})`,
     );
-    console.log(`[Controller] Queue has ${queue.length} items, updating current to index ${targetIndex}`);
+    console.log(
+      `[Controller] Queue has ${queue.length} items, updating current to index ${targetIndex}`,
+    );
 
     // Update queue state (keep the same queue, just change current climb)
     const { sequence } = await roomManager.updateQueueState(sessionId, queue, newCurrentClimb);
@@ -468,7 +476,7 @@ export const controllerMutations = {
     // Unlike setClimbFromLedPositions (where we skip because ESP32 already has LEDs from BLE),
     // navigation NEEDS to send LedUpdate back to the ESP32 since it's moving to a different climb
     pubsub.publishQueueEvent(sessionId, {
-      __typename: 'CurrentClimbChanged',
+      __typename: "CurrentClimbChanged",
       sequence,
       item: newCurrentClimb,
       clientId: null, // Don't skip - ESP32 needs the new climb data
@@ -485,7 +493,7 @@ export const controllerMutations = {
   sendDeviceLogs: async (
     _: unknown,
     { input }: { input: SendDeviceLogsInput },
-    ctx: ConnectionContext
+    ctx: ConnectionContext,
   ): Promise<SendDeviceLogsResponse> => {
     await applyRateLimit(ctx, 100); // Allow frequent log batches
 

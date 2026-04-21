@@ -1,22 +1,25 @@
-import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { renderHook, act } from '@testing-library/react';
-import { useOfflineReconciliation, type UseOfflineReconciliationParams } from '../use-offline-reconciliation';
-import type { ClimbQueueItem } from '../../../queue-control/types';
-import type { Climb } from '@/app/lib/types';
-import type { SubscriptionQueueEvent, SessionUser } from '@boardsesh/shared-schema';
+import { describe, it, expect, vi, beforeEach, afterEach } from "vite-plus/test";
+import { renderHook, act } from "@testing-library/react";
+import {
+  useOfflineReconciliation,
+  type UseOfflineReconciliationParams,
+} from "../use-offline-reconciliation";
+import type { ClimbQueueItem } from "../../../queue-control/types";
+import type { Climb } from "@/app/lib/types";
+import type { SubscriptionQueueEvent, SessionUser } from "@boardsesh/shared-schema";
 
 const mockClimb: Climb = {
-  uuid: 'climb-1',
-  setter_username: 'setter1',
-  name: 'Test Climb',
-  description: '',
-  frames: '',
+  uuid: "climb-1",
+  setter_username: "setter1",
+  name: "Test Climb",
+  description: "",
+  frames: "",
   angle: 40,
   ascensionist_count: 5,
-  difficulty: '7',
-  quality_average: '3.5',
+  difficulty: "7",
+  quality_average: "3.5",
   stars: 3,
-  difficulty_error: '',
+  difficulty_error: "",
   mirrored: false,
   benchmark_difficulty: null,
   userAscents: 0,
@@ -27,7 +30,7 @@ function createItem(uuid: string): ClimbQueueItem {
   return {
     uuid,
     climb: { ...mockClimb, uuid: `climb-${uuid}` },
-    addedBy: 'user-1',
+    addedBy: "user-1",
     suggested: false,
   };
 }
@@ -36,7 +39,7 @@ function createUser(id: string): SessionUser {
   return { id, username: `user-${id}`, isLeader: false } as SessionUser;
 }
 
-describe('useOfflineReconciliation', () => {
+describe("useOfflineReconciliation", () => {
   const mockAddQueueItem = vi.fn().mockResolvedValue(undefined);
   const mockSetQueue = vi.fn().mockResolvedValue(undefined);
   const mockSetCurrentClimb = vi.fn().mockResolvedValue(undefined);
@@ -45,7 +48,9 @@ describe('useOfflineReconciliation', () => {
   let subscriberCallback: ((event: SubscriptionQueueEvent) => void) | null = null;
   const mockSubscribeToQueueEvents = vi.fn((cb: (event: SubscriptionQueueEvent) => void) => {
     subscriberCallback = cb;
-    return () => { subscriberCallback = null; };
+    return () => {
+      subscriberCallback = null;
+    };
   });
 
   // Shared ref that simulates the persistent session's lastReceivedSequenceRef
@@ -63,15 +68,17 @@ describe('useOfflineReconciliation', () => {
     vi.useRealTimers();
   });
 
-  function renderReconciliation(overrides: {
-    isDisconnected?: boolean;
-    isPersistentSessionActive?: boolean;
-    hasConnected?: boolean;
-    currentQueue?: ClimbQueueItem[];
-    currentClimbQueueItem?: ClimbQueueItem | null;
-    users?: SessionUser[];
-    lastReceivedSequence?: number | null;
-  } = {}) {
+  function renderReconciliation(
+    overrides: {
+      isDisconnected?: boolean;
+      isPersistentSessionActive?: boolean;
+      hasConnected?: boolean;
+      currentQueue?: ClimbQueueItem[];
+      currentClimbQueueItem?: ClimbQueueItem | null;
+      users?: SessionUser[];
+      lastReceivedSequence?: number | null;
+    } = {},
+  ) {
     if (overrides.lastReceivedSequence !== undefined) {
       mockLastReceivedSequenceRef.current = overrides.lastReceivedSequence;
     }
@@ -88,7 +95,7 @@ describe('useOfflineReconciliation', () => {
           isDisconnected: overrides.isDisconnected ?? false,
           isPersistentSessionActive: overrides.isPersistentSessionActive ?? true,
           hasConnected: overrides.hasConnected ?? true,
-          users: overrides.users ?? [createUser('me'), createUser('other')],
+          users: overrides.users ?? [createUser("me"), createUser("other")],
           lastReceivedSequenceRef: mockLastReceivedSequenceRef,
           persistentSession: {
             addQueueItem: mockAddQueueItem,
@@ -103,11 +110,14 @@ describe('useOfflineReconciliation', () => {
     );
   }
 
-  function goOnline(hook: ReturnType<typeof renderReconciliation>, overrides: {
-    users?: SessionUser[];
-    currentQueue?: ClimbQueueItem[];
-    currentClimbQueueItem?: ClimbQueueItem | null;
-  } = {}) {
+  function goOnline(
+    hook: ReturnType<typeof renderReconciliation>,
+    overrides: {
+      users?: SessionUser[];
+      currentQueue?: ClimbQueueItem[];
+      currentClimbQueueItem?: ClimbQueueItem | null;
+    } = {},
+  ) {
     hook.rerender({
       offlineBuffer: {
         getBufferedAdditions: mockGetBufferedAdditions,
@@ -118,7 +128,7 @@ describe('useOfflineReconciliation', () => {
       isDisconnected: false,
       isPersistentSessionActive: true,
       hasConnected: true,
-      users: overrides.users ?? [createUser('me'), createUser('other')],
+      users: overrides.users ?? [createUser("me"), createUser("other")],
       lastReceivedSequenceRef: mockLastReceivedSequenceRef,
       persistentSession: {
         addQueueItem: mockAddQueueItem,
@@ -133,8 +143,8 @@ describe('useOfflineReconciliation', () => {
 
   // --- Additions-only reconciliation (server wins, multi-user, sequence changed) ---
 
-  describe('additions-only reconciliation (server wins)', () => {
-    it('does nothing when no pending additions on reconnect', () => {
+  describe("additions-only reconciliation (server wins)", () => {
+    it("does nothing when no pending additions on reconnect", () => {
       const hook = renderReconciliation({ isDisconnected: true });
 
       hook.rerender({
@@ -147,7 +157,7 @@ describe('useOfflineReconciliation', () => {
         isDisconnected: false,
         isPersistentSessionActive: true,
         hasConnected: true,
-        users: [createUser('me'), createUser('other')],
+        users: [createUser("me"), createUser("other")],
         lastReceivedSequenceRef: mockLastReceivedSequenceRef,
         persistentSession: {
           addQueueItem: mockAddQueueItem,
@@ -163,27 +173,32 @@ describe('useOfflineReconciliation', () => {
       expect(mockSetQueue).not.toHaveBeenCalled();
     });
 
-    it('pushes buffered additions after FullSync when multi-user and sequence changed', async () => {
-      const item1 = createItem('offline-1');
-      const item2 = createItem('offline-2');
+    it("pushes buffered additions after FullSync when multi-user and sequence changed", async () => {
+      const item1 = createItem("offline-1");
+      const item2 = createItem("offline-2");
       mockGetBufferedAdditions.mockReturnValue([item1, item2]);
 
       const hook = renderReconciliation({
         isDisconnected: true,
         lastReceivedSequence: 5,
-        users: [createUser('me'), createUser('other')],
+        users: [createUser("me"), createUser("other")],
       });
 
       goOnline(hook, {
-        users: [createUser('me'), createUser('other')],
+        users: [createUser("me"), createUser("other")],
       });
 
       // FullSync with advanced sequence (server changed)
       await act(async () => {
         subscriberCallback!({
-          __typename: 'FullSync',
+          __typename: "FullSync",
           sequence: 10,
-          state: { queue: [] as never[], currentClimbQueueItem: null, stateHash: 'abc', sequence: 10 },
+          state: {
+            queue: [] as never[],
+            currentClimbQueueItem: null,
+            stateHash: "abc",
+            sequence: 10,
+          },
         });
       });
 
@@ -193,9 +208,9 @@ describe('useOfflineReconciliation', () => {
       expect(mockClearBuffer).toHaveBeenCalled();
     });
 
-    it('skips items already in server queue by UUID', async () => {
-      const item1 = createItem('offline-1');
-      const existingItem = createItem('existing-1');
+    it("skips items already in server queue by UUID", async () => {
+      const item1 = createItem("offline-1");
+      const existingItem = createItem("existing-1");
       mockGetBufferedAdditions.mockReturnValue([item1, existingItem]);
 
       const hook = renderReconciliation({ isDisconnected: true, lastReceivedSequence: 5 });
@@ -203,12 +218,12 @@ describe('useOfflineReconciliation', () => {
 
       await act(async () => {
         subscriberCallback!({
-          __typename: 'FullSync',
+          __typename: "FullSync",
           sequence: 10,
           state: {
             queue: [existingItem as never],
             currentClimbQueueItem: null,
-            stateHash: 'abc',
+            stateHash: "abc",
             sequence: 10,
           },
         });
@@ -218,14 +233,14 @@ describe('useOfflineReconciliation', () => {
       expect(mockAddQueueItem).toHaveBeenCalledWith(item1);
     });
 
-    it('continues reconciliation even if one addQueueItem fails', async () => {
-      const item1 = createItem('offline-1');
-      const item2 = createItem('offline-2');
-      const item3 = createItem('offline-3');
+    it("continues reconciliation even if one addQueueItem fails", async () => {
+      const item1 = createItem("offline-1");
+      const item2 = createItem("offline-2");
+      const item3 = createItem("offline-3");
       mockGetBufferedAdditions.mockReturnValue([item1, item2, item3]);
       mockAddQueueItem
         .mockResolvedValueOnce(undefined)
-        .mockRejectedValueOnce(new Error('Network error'))
+        .mockRejectedValueOnce(new Error("Network error"))
         .mockResolvedValueOnce(undefined);
 
       const hook = renderReconciliation({ isDisconnected: true, lastReceivedSequence: 5 });
@@ -233,9 +248,14 @@ describe('useOfflineReconciliation', () => {
 
       await act(async () => {
         subscriberCallback!({
-          __typename: 'FullSync',
+          __typename: "FullSync",
           sequence: 10,
-          state: { queue: [] as never[], currentClimbQueueItem: null, stateHash: 'abc', sequence: 10 },
+          state: {
+            queue: [] as never[],
+            currentClimbQueueItem: null,
+            stateHash: "abc",
+            sequence: 10,
+          },
         });
       });
 
@@ -243,8 +263,8 @@ describe('useOfflineReconciliation', () => {
       expect(mockClearBuffer).toHaveBeenCalled();
     });
 
-    it('reconciles via safety timeout if no FullSync arrives', async () => {
-      const item1 = createItem('offline-1');
+    it("reconciles via safety timeout if no FullSync arrives", async () => {
+      const item1 = createItem("offline-1");
       mockGetBufferedAdditions.mockReturnValue([item1]);
 
       const hook = renderReconciliation({ isDisconnected: true, lastReceivedSequence: 5 });
@@ -263,23 +283,23 @@ describe('useOfflineReconciliation', () => {
 
   // --- Client-wins reconciliation ---
 
-  describe('client-wins reconciliation', () => {
-    it('pushes full local state when only 1 user in session', async () => {
-      const item1 = createItem('offline-1');
-      const localQueue = [createItem('local-1'), createItem('local-2'), item1];
+  describe("client-wins reconciliation", () => {
+    it("pushes full local state when only 1 user in session", async () => {
+      const item1 = createItem("offline-1");
+      const localQueue = [createItem("local-1"), createItem("local-2"), item1];
       const currentClimb = localQueue[0];
       mockGetBufferedAdditions.mockReturnValue([item1]);
 
       const hook = renderReconciliation({
         isDisconnected: true,
-        users: [createUser('me')],
+        users: [createUser("me")],
         lastReceivedSequence: 5,
         currentQueue: localQueue,
         currentClimbQueueItem: currentClimb,
       });
 
       goOnline(hook, {
-        users: [createUser('me')],
+        users: [createUser("me")],
         currentQueue: localQueue,
         currentClimbQueueItem: currentClimb,
       });
@@ -287,9 +307,14 @@ describe('useOfflineReconciliation', () => {
       // FullSync arrives (sequence advanced doesn't matter — solo session)
       await act(async () => {
         subscriberCallback!({
-          __typename: 'FullSync',
+          __typename: "FullSync",
           sequence: 10,
-          state: { queue: [] as never[], currentClimbQueueItem: null, stateHash: 'abc', sequence: 10 },
+          state: {
+            queue: [] as never[],
+            currentClimbQueueItem: null,
+            stateHash: "abc",
+            sequence: 10,
+          },
         });
       });
 
@@ -301,29 +326,34 @@ describe('useOfflineReconciliation', () => {
       expect(mockClearBuffer).toHaveBeenCalled();
     });
 
-    it('pushes full local state when sequence unchanged (multi-user, no remote changes)', async () => {
-      const item1 = createItem('offline-1');
-      const localQueue = [createItem('local-1'), item1];
+    it("pushes full local state when sequence unchanged (multi-user, no remote changes)", async () => {
+      const item1 = createItem("offline-1");
+      const localQueue = [createItem("local-1"), item1];
       mockGetBufferedAdditions.mockReturnValue([item1]);
 
       const hook = renderReconciliation({
         isDisconnected: true,
-        users: [createUser('me'), createUser('other')],
+        users: [createUser("me"), createUser("other")],
         lastReceivedSequence: 5,
         currentQueue: localQueue,
       });
 
       goOnline(hook, {
-        users: [createUser('me'), createUser('other')],
+        users: [createUser("me"), createUser("other")],
         currentQueue: localQueue,
       });
 
       // FullSync with same sequence as when we disconnected
       await act(async () => {
         subscriberCallback!({
-          __typename: 'FullSync',
+          __typename: "FullSync",
           sequence: 5,
-          state: { queue: [] as never[], currentClimbQueueItem: null, stateHash: 'abc', sequence: 5 },
+          state: {
+            queue: [] as never[],
+            currentClimbQueueItem: null,
+            stateHash: "abc",
+            sequence: 5,
+          },
         });
       });
 
@@ -332,26 +362,31 @@ describe('useOfflineReconciliation', () => {
       expect(mockClearBuffer).toHaveBeenCalled();
     });
 
-    it('falls back to additions-only when multi-user and sequence changed', async () => {
-      const item1 = createItem('offline-1');
+    it("falls back to additions-only when multi-user and sequence changed", async () => {
+      const item1 = createItem("offline-1");
       mockGetBufferedAdditions.mockReturnValue([item1]);
 
       const hook = renderReconciliation({
         isDisconnected: true,
-        users: [createUser('me'), createUser('other')],
+        users: [createUser("me"), createUser("other")],
         lastReceivedSequence: 5,
       });
 
       goOnline(hook, {
-        users: [createUser('me'), createUser('other')],
+        users: [createUser("me"), createUser("other")],
       });
 
       // FullSync with advanced sequence
       await act(async () => {
         subscriberCallback!({
-          __typename: 'FullSync',
+          __typename: "FullSync",
           sequence: 10,
-          state: { queue: [] as never[], currentClimbQueueItem: null, stateHash: 'abc', sequence: 10 },
+          state: {
+            queue: [] as never[],
+            currentClimbQueueItem: null,
+            stateHash: "abc",
+            sequence: 10,
+          },
         });
       });
 
@@ -363,9 +398,9 @@ describe('useOfflineReconciliation', () => {
 
   // --- Edge cases ---
 
-  describe('edge cases', () => {
-    it('does not reconcile when session is not active', () => {
-      const item1 = createItem('offline-1');
+  describe("edge cases", () => {
+    it("does not reconcile when session is not active", () => {
+      const item1 = createItem("offline-1");
       mockGetBufferedAdditions.mockReturnValue([item1]);
 
       const hook = renderReconciliation({
@@ -399,26 +434,31 @@ describe('useOfflineReconciliation', () => {
       expect(mockSetQueue).not.toHaveBeenCalled();
     });
 
-    it('does not set current climb if none was selected locally', async () => {
-      const item1 = createItem('offline-1');
+    it("does not set current climb if none was selected locally", async () => {
+      const item1 = createItem("offline-1");
       mockGetBufferedAdditions.mockReturnValue([item1]);
 
       const hook = renderReconciliation({
         isDisconnected: true,
-        users: [createUser('me')],
+        users: [createUser("me")],
         currentClimbQueueItem: null,
       });
 
       goOnline(hook, {
-        users: [createUser('me')],
+        users: [createUser("me")],
         currentClimbQueueItem: null,
       });
 
       await act(async () => {
         subscriberCallback!({
-          __typename: 'FullSync',
+          __typename: "FullSync",
           sequence: 10,
-          state: { queue: [] as never[], currentClimbQueueItem: null, stateHash: 'abc', sequence: 10 },
+          state: {
+            queue: [] as never[],
+            currentClimbQueueItem: null,
+            stateHash: "abc",
+            sequence: 10,
+          },
         });
       });
 
@@ -426,14 +466,19 @@ describe('useOfflineReconciliation', () => {
       expect(mockSetCurrentClimb).not.toHaveBeenCalled();
     });
 
-    it('does not double-reconcile when going offline again during active reconciliation', async () => {
-      const item1 = createItem('offline-1');
-      const item2 = createItem('offline-2');
+    it("does not double-reconcile when going offline again during active reconciliation", async () => {
+      const item1 = createItem("offline-1");
+      const item2 = createItem("offline-2");
       mockGetBufferedAdditions.mockReturnValue([item1, item2]);
 
       // Use a slow addQueueItem to simulate in-flight reconciliation
       let resolveAdd: (() => void) | null = null;
-      mockAddQueueItem.mockImplementation(() => new Promise<void>((resolve) => { resolveAdd = resolve; }));
+      mockAddQueueItem.mockImplementation(
+        () =>
+          new Promise<void>((resolve) => {
+            resolveAdd = resolve;
+          }),
+      );
 
       const hook = renderReconciliation({
         isDisconnected: true,
@@ -446,9 +491,14 @@ describe('useOfflineReconciliation', () => {
       // FullSync arrives, reconciliation starts (but addQueueItem is slow)
       await act(async () => {
         subscriberCallback!({
-          __typename: 'FullSync',
+          __typename: "FullSync",
           sequence: 10,
-          state: { queue: [] as never[], currentClimbQueueItem: null, stateHash: 'abc', sequence: 10 },
+          state: {
+            queue: [] as never[],
+            currentClimbQueueItem: null,
+            stateHash: "abc",
+            sequence: 10,
+          },
         });
       });
 
@@ -467,7 +517,7 @@ describe('useOfflineReconciliation', () => {
         isDisconnected: true,
         isPersistentSessionActive: true,
         hasConnected: true,
-        users: [createUser('me'), createUser('other')],
+        users: [createUser("me"), createUser("other")],
         lastReceivedSequenceRef: mockLastReceivedSequenceRef,
         persistentSession: {
           addQueueItem: mockAddQueueItem,

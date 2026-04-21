@@ -1,13 +1,13 @@
-'use client';
+"use client";
 
-import React, { useState, useCallback } from 'react';
-import Box from '@mui/material/Box';
-import IconButton from '@mui/material/IconButton';
-import Typography from '@mui/material/Typography';
-import Collapse from '@mui/material/Collapse';
-import ChatBubbleOutlineOutlined from '@mui/icons-material/ChatBubbleOutlineOutlined';
-import type { SocialEntityType } from '@boardsesh/shared-schema';
-import CommentSection from './comment-section';
+import React, { useState, useCallback } from "react";
+import Box from "@mui/material/Box";
+import IconButton from "@mui/material/IconButton";
+import Typography from "@mui/material/Typography";
+import Collapse from "@mui/material/Collapse";
+import ChatBubbleOutlineOutlined from "@mui/icons-material/ChatBubbleOutlineOutlined";
+import type { SocialEntityType } from "@boardsesh/shared-schema";
+import CommentSection from "./comment-section";
 
 interface FeedCommentButtonProps {
   entityType: SocialEntityType;
@@ -34,8 +34,8 @@ export default function FeedCommentButton({
     <Box>
       <IconButton
         size="small"
-        aria-label={open ? 'Hide comments' : 'Show comments'}
-        sx={{ p: 0.5, color: open ? 'text.primary' : 'text.secondary' }}
+        aria-label={open ? "Hide comments" : "Show comments"}
+        sx={{ p: 0.5, color: open ? "text.primary" : "text.secondary" }}
         onClick={handleToggle}
       >
         <ChatBubbleOutlineOutlined sx={{ fontSize: 18 }} />
@@ -43,7 +43,7 @@ export default function FeedCommentButton({
           <Typography
             variant="caption"
             component="span"
-            sx={{ ml: 0.5, color: 'inherit', userSelect: 'none', fontSize: 12 }}
+            sx={{ ml: 0.5, color: "inherit", userSelect: "none", fontSize: 12 }}
           >
             {commentCount}
           </Typography>

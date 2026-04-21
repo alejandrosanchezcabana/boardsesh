@@ -1,40 +1,39 @@
-'use client';
+"use client";
 
-import React, { useState } from 'react';
-import MuiAlert from '@mui/material/Alert';
-import MuiTooltip from '@mui/material/Tooltip';
-import MuiTypography from '@mui/material/Typography';
-import MuiButton from '@mui/material/Button';
-import MuiSelect, { SelectChangeEvent } from '@mui/material/Select';
-import MenuItem from '@mui/material/MenuItem';
-import MuiSwitch from '@mui/material/Switch';
-import TextField from '@mui/material/TextField';
-import FormControlLabel from '@mui/material/FormControlLabel';
-import Radio from '@mui/material/Radio';
-import RadioGroup from '@mui/material/RadioGroup';
-import LoginOutlined from '@mui/icons-material/LoginOutlined';
-import ArrowUpwardOutlined from '@mui/icons-material/ArrowUpwardOutlined';
-import { TENSION_KILTER_GRADES } from '@/app/lib/board-data';
-import { useUISearchParams } from '@/app/components/queue-control/ui-searchparams-provider';
-import { useBoardProvider } from '@/app/components/board-provider/board-provider-context';
-import SearchClimbNameInput from './search-climb-name-input';
-import SetterNameSelect from './setter-name-select';
-import ClimbHoldSearchForm from './climb-hold-search-form';
-import { BoardDetails } from '@/app/lib/types';
-import { buildGradeRangeUpdate } from './grade-range-utils';
-import { useAuthModal } from '@/app/components/providers/auth-modal-provider';
+import React, { useState } from "react";
+import MuiAlert from "@mui/material/Alert";
+import MuiTooltip from "@mui/material/Tooltip";
+import MuiTypography from "@mui/material/Typography";
+import MuiButton from "@mui/material/Button";
+import MuiSelect, { SelectChangeEvent } from "@mui/material/Select";
+import MenuItem from "@mui/material/MenuItem";
+import MuiSwitch from "@mui/material/Switch";
+import TextField from "@mui/material/TextField";
+import FormControlLabel from "@mui/material/FormControlLabel";
+import Radio from "@mui/material/Radio";
+import RadioGroup from "@mui/material/RadioGroup";
+import LoginOutlined from "@mui/icons-material/LoginOutlined";
+import ArrowUpwardOutlined from "@mui/icons-material/ArrowUpwardOutlined";
+import { TENSION_KILTER_GRADES } from "@/app/lib/board-data";
+import { useUISearchParams } from "@/app/components/queue-control/ui-searchparams-provider";
+import { useBoardProvider } from "@/app/components/board-provider/board-provider-context";
+import SearchClimbNameInput from "./search-climb-name-input";
+import SetterNameSelect from "./setter-name-select";
+import ClimbHoldSearchForm from "./climb-hold-search-form";
+import { BoardDetails } from "@/app/lib/types";
+import { buildGradeRangeUpdate } from "./grade-range-utils";
+import { useAuthModal } from "@/app/components/providers/auth-modal-provider";
 import {
   getQualityPanelSummary,
   getStatusPanelSummary,
   getUserPanelSummary,
   getHoldsPanelSummary,
-} from './search-summary-utils';
-import CollapsibleSection from '@/app/components/collapsible-section/collapsible-section';
-import type { CollapsibleSectionConfig } from '@/app/components/collapsible-section/collapsible-section';
-import styles from './accordion-search-form.module.css';
+} from "./search-summary-utils";
+import CollapsibleSection from "@/app/components/collapsible-section/collapsible-section";
+import type { CollapsibleSectionConfig } from "@/app/components/collapsible-section/collapsible-section";
+import styles from "./accordion-search-form.module.css";
 
-
-import { KILTER_HOMEWALL_LAYOUT_ID } from '@/app/lib/board-constants';
+import { KILTER_HOMEWALL_LAYOUT_ID } from "@/app/lib/board-constants";
 
 interface AccordionSearchFormProps {
   boardDetails: BoardDetails;
@@ -51,18 +50,23 @@ const AccordionSearchForm: React.FC<AccordionSearchFormProps> = ({
   const { openAuthModal } = useAuthModal();
   const [showSort, setShowSort] = useState(false);
 
-  const isKilterHomewall = boardDetails.board_name === 'kilter' && boardDetails.layout_id === KILTER_HOMEWALL_LAYOUT_ID;
-  const isLargestSize = boardDetails.size_name?.toLowerCase().includes('12');
+  const isKilterHomewall =
+    boardDetails.board_name === "kilter" && boardDetails.layout_id === KILTER_HOMEWALL_LAYOUT_ID;
+  const isLargestSize = boardDetails.size_name?.toLowerCase().includes("12");
   const showTallClimbsFilter = isKilterHomewall && isLargestSize;
 
-  const statusValue: 'any' | 'drafts' | 'established' | 'projects' =
-    uiSearchParams.onlyDrafts ? 'drafts'
-    : uiSearchParams.projectsOnly ? 'projects'
-    : uiSearchParams.minAscents >= 2 ? 'established'
-    : 'any';
+  const statusValue: "any" | "drafts" | "established" | "projects" = uiSearchParams.onlyDrafts
+    ? "drafts"
+    : uiSearchParams.projectsOnly
+      ? "projects"
+      : uiSearchParams.minAscents >= 2
+        ? "established"
+        : "any";
 
-  const handleGradeChange = (type: 'min' | 'max', value: number | undefined) => {
-    updateFilters(buildGradeRangeUpdate(type, value, uiSearchParams.minGrade, uiSearchParams.maxGrade));
+  const handleGradeChange = (type: "min" | "max", value: number | undefined) => {
+    updateFilters(
+      buildGradeRangeUpdate(type, value, uiSearchParams.minGrade, uiSearchParams.maxGrade),
+    );
   };
 
   const climbContent = (
@@ -77,7 +81,9 @@ const AccordionSearchForm: React.FC<AccordionSearchFormProps> = ({
         <div className={styles.gradeRow}>
           <MuiSelect
             value={uiSearchParams.minGrade || 0}
-            onChange={(e: SelectChangeEvent<number>) => handleGradeChange('min', e.target.value as number || undefined)}
+            onChange={(e: SelectChangeEvent<number>) =>
+              handleGradeChange("min", (e.target.value as number) || undefined)
+            }
             className={styles.fullWidth}
             size="small"
             displayEmpty
@@ -92,7 +98,9 @@ const AccordionSearchForm: React.FC<AccordionSearchFormProps> = ({
           </MuiSelect>
           <MuiSelect
             value={uiSearchParams.maxGrade || 0}
-            onChange={(e: SelectChangeEvent<number>) => handleGradeChange('max', e.target.value as number || undefined)}
+            onChange={(e: SelectChangeEvent<number>) =>
+              handleGradeChange("max", (e.target.value as number) || undefined)
+            }
             className={styles.fullWidth}
             size="small"
             displayEmpty
@@ -123,7 +131,9 @@ const AccordionSearchForm: React.FC<AccordionSearchFormProps> = ({
             }
             label={
               <MuiTooltip title="Show only climbs that use holds in the bottom 8 rows (only available on 10x12 boards)">
-                <MuiTypography variant="body2" component="span">Tall Climbs Only</MuiTypography>
+                <MuiTypography variant="body2" component="span">
+                  Tall Climbs Only
+                </MuiTypography>
               </MuiTooltip>
             }
           />
@@ -150,7 +160,9 @@ const AccordionSearchForm: React.FC<AccordionSearchFormProps> = ({
           <div className={styles.sortRow}>
             <MuiSelect
               value={uiSearchParams.sortBy}
-              onChange={(e) => updateFilters({ sortBy: e.target.value as typeof uiSearchParams.sortBy })}
+              onChange={(e) =>
+                updateFilters({ sortBy: e.target.value as typeof uiSearchParams.sortBy })
+              }
               className={styles.fullWidth}
               size="small"
               MenuProps={{ disableScrollLock: true }}
@@ -164,7 +176,9 @@ const AccordionSearchForm: React.FC<AccordionSearchFormProps> = ({
             </MuiSelect>
             <MuiSelect
               value={uiSearchParams.sortOrder}
-              onChange={(e) => updateFilters({ sortOrder: e.target.value as typeof uiSearchParams.sortOrder })}
+              onChange={(e) =>
+                updateFilters({ sortOrder: e.target.value as typeof uiSearchParams.sortOrder })
+              }
               className={styles.fullWidth}
               size="small"
               MenuProps={{ disableScrollLock: true }}
@@ -180,10 +194,10 @@ const AccordionSearchForm: React.FC<AccordionSearchFormProps> = ({
 
   const sections: CollapsibleSectionConfig[] = [
     {
-      key: 'quality',
-      label: 'Quality',
-      title: 'Quality',
-      defaultSummary: 'Any',
+      key: "quality",
+      label: "Quality",
+      title: "Quality",
+      defaultSummary: "Any",
       getSummary: () => getQualityPanelSummary(uiSearchParams),
       content: (
         <div className={styles.panelContent}>
@@ -193,7 +207,7 @@ const AccordionSearchForm: React.FC<AccordionSearchFormProps> = ({
               <TextField
                 type="number"
                 slotProps={{ htmlInput: { min: 1 } }}
-                value={uiSearchParams.minAscents ?? ''}
+                value={uiSearchParams.minAscents ?? ""}
                 onChange={(e) => updateFilters({ minAscents: Number(e.target.value) || undefined })}
                 className={styles.fullWidth}
                 placeholder="Any"
@@ -205,7 +219,7 @@ const AccordionSearchForm: React.FC<AccordionSearchFormProps> = ({
               <TextField
                 type="number"
                 slotProps={{ htmlInput: { min: 1.0, max: 3.0, step: 0.1 } }}
-                value={uiSearchParams.minRating ?? ''}
+                value={uiSearchParams.minRating ?? ""}
                 onChange={(e) => updateFilters({ minRating: Number(e.target.value) || undefined })}
                 className={styles.fullWidth}
                 placeholder="Any"
@@ -218,7 +232,9 @@ const AccordionSearchForm: React.FC<AccordionSearchFormProps> = ({
             <span className={styles.fieldLabel}>Grade Accuracy</span>
             <MuiSelect
               value={uiSearchParams.gradeAccuracy ?? 0}
-              onChange={(e) => updateFilters({ gradeAccuracy: (e.target.value as number) || undefined })}
+              onChange={(e) =>
+                updateFilters({ gradeAccuracy: (e.target.value as number) || undefined })
+              }
               className={styles.fullWidth}
               size="small"
               MenuProps={{ disableScrollLock: true }}
@@ -242,17 +258,21 @@ const AccordionSearchForm: React.FC<AccordionSearchFormProps> = ({
                   onChange={(_, checked) => updateFilters({ onlyClassics: checked })}
                 />
               }
-              label={<MuiTypography variant="body2" component="span">Classics Only</MuiTypography>}
+              label={
+                <MuiTypography variant="body2" component="span">
+                  Classics Only
+                </MuiTypography>
+              }
             />
           </div>
         </div>
       ),
     },
     {
-      key: 'status',
-      label: 'Ascent Status',
-      title: 'Ascent Status',
-      defaultSummary: 'Any',
+      key: "status",
+      label: "Ascent Status",
+      title: "Ascent Status",
+      defaultSummary: "Any",
       getSummary: () => getStatusPanelSummary(uiSearchParams),
       content: (
         <div className={styles.panelContent}>
@@ -260,22 +280,22 @@ const AccordionSearchForm: React.FC<AccordionSearchFormProps> = ({
             className={styles.radioGroup}
             value={statusValue}
             onChange={(e) => {
-              const value = e.target.value as 'any' | 'drafts' | 'established' | 'projects';
-              if (value === 'drafts') {
+              const value = e.target.value as "any" | "drafts" | "established" | "projects";
+              if (value === "drafts") {
                 updateFilters({
                   onlyDrafts: true,
                   projectsOnly: false,
                   minAscents: 0,
-                  sortBy: 'creation',
-                  sortOrder: 'desc',
+                  sortBy: "creation",
+                  sortOrder: "desc",
                 });
-              } else if (value === 'established') {
+              } else if (value === "established") {
                 updateFilters({
                   onlyDrafts: false,
                   projectsOnly: false,
                   minAscents: 2,
                 });
-              } else if (value === 'projects') {
+              } else if (value === "projects") {
                 updateFilters({
                   onlyDrafts: false,
                   projectsOnly: true,
@@ -294,7 +314,11 @@ const AccordionSearchForm: React.FC<AccordionSearchFormProps> = ({
               className={styles.radioRow}
               value="any"
               control={<Radio size="small" color="primary" />}
-              label={<MuiTypography variant="body2" component="span">Any</MuiTypography>}
+              label={
+                <MuiTypography variant="body2" component="span">
+                  Any
+                </MuiTypography>
+              }
             />
             <FormControlLabel
               className={styles.radioRow}
@@ -302,7 +326,9 @@ const AccordionSearchForm: React.FC<AccordionSearchFormProps> = ({
               control={<Radio size="small" color="primary" />}
               label={
                 <MuiTooltip title="Climbs with 2 or more ascents">
-                  <MuiTypography variant="body2" component="span">Established</MuiTypography>
+                  <MuiTypography variant="body2" component="span">
+                    Established
+                  </MuiTypography>
                 </MuiTooltip>
               }
             />
@@ -312,7 +338,9 @@ const AccordionSearchForm: React.FC<AccordionSearchFormProps> = ({
               control={<Radio size="small" color="primary" />}
               label={
                 <MuiTooltip title="Climbs with zero recorded ascents">
-                  <MuiTypography variant="body2" component="span">Projects</MuiTypography>
+                  <MuiTypography variant="body2" component="span">
+                    Projects
+                  </MuiTypography>
                 </MuiTooltip>
               }
             />
@@ -323,7 +351,7 @@ const AccordionSearchForm: React.FC<AccordionSearchFormProps> = ({
               control={<Radio size="small" color="primary" />}
               label={
                 <MuiTypography variant="body2" component="span">
-                  My Drafts{!isAuthenticated ? ' (sign in)' : ''}
+                  My Drafts{!isAuthenticated ? " (sign in)" : ""}
                 </MuiTypography>
               }
             />
@@ -337,10 +365,12 @@ const AccordionSearchForm: React.FC<AccordionSearchFormProps> = ({
                   size="small"
                   variant="contained"
                   startIcon={<LoginOutlined />}
-                  onClick={() => openAuthModal({
-                    title: 'Sign in to Boardsesh',
-                    description: 'Sign in to browse your draft climbs.',
-                  })}
+                  onClick={() =>
+                    openAuthModal({
+                      title: "Sign in to Boardsesh",
+                      description: "Sign in to browse your draft climbs.",
+                    })
+                  }
                 >
                   Sign In
                 </MuiButton>
@@ -353,10 +383,10 @@ const AccordionSearchForm: React.FC<AccordionSearchFormProps> = ({
       ),
     },
     {
-      key: 'user',
-      label: 'Progress',
-      title: 'Progress',
-      defaultSummary: 'All climbs',
+      key: "user",
+      label: "Progress",
+      title: "Progress",
+      defaultSummary: "All climbs",
       getSummary: () => getUserPanelSummary(uiSearchParams),
       content: (
         <div className={styles.panelContent}>
@@ -369,7 +399,13 @@ const AccordionSearchForm: React.FC<AccordionSearchFormProps> = ({
                   size="small"
                   variant="contained"
                   startIcon={<LoginOutlined />}
-                  onClick={() => openAuthModal({ title: 'Sign in to Boardsesh', description: 'Create an account to filter by your climbing progress and save favorites.' })}
+                  onClick={() =>
+                    openAuthModal({
+                      title: "Sign in to Boardsesh",
+                      description:
+                        "Create an account to filter by your climbing progress and save favorites.",
+                    })
+                  }
                 >
                   Sign In
                 </MuiButton>
@@ -392,7 +428,11 @@ const AccordionSearchForm: React.FC<AccordionSearchFormProps> = ({
                     onChange={(_, checked) => updateFilters({ hideAttempted: checked })}
                   />
                 }
-                label={<MuiTypography variant="body2" component="span">Hide Attempted</MuiTypography>}
+                label={
+                  <MuiTypography variant="body2" component="span">
+                    Hide Attempted
+                  </MuiTypography>
+                }
               />
               <FormControlLabel
                 className={styles.switchRow}
@@ -405,7 +445,11 @@ const AccordionSearchForm: React.FC<AccordionSearchFormProps> = ({
                     onChange={(_, checked) => updateFilters({ hideCompleted: checked })}
                   />
                 }
-                label={<MuiTypography variant="body2" component="span">Hide Completed</MuiTypography>}
+                label={
+                  <MuiTypography variant="body2" component="span">
+                    Hide Completed
+                  </MuiTypography>
+                }
               />
               <FormControlLabel
                 className={styles.switchRow}
@@ -418,7 +462,11 @@ const AccordionSearchForm: React.FC<AccordionSearchFormProps> = ({
                     onChange={(_, checked) => updateFilters({ showOnlyAttempted: checked })}
                   />
                 }
-                label={<MuiTypography variant="body2" component="span">Only Attempted</MuiTypography>}
+                label={
+                  <MuiTypography variant="body2" component="span">
+                    Only Attempted
+                  </MuiTypography>
+                }
               />
               <FormControlLabel
                 className={styles.switchRow}
@@ -431,7 +479,11 @@ const AccordionSearchForm: React.FC<AccordionSearchFormProps> = ({
                     onChange={(_, checked) => updateFilters({ showOnlyCompleted: checked })}
                   />
                 }
-                label={<MuiTypography variant="body2" component="span">Only Completed</MuiTypography>}
+                label={
+                  <MuiTypography variant="body2" component="span">
+                    Only Completed
+                  </MuiTypography>
+                }
               />
             </div>
           )}
@@ -439,10 +491,10 @@ const AccordionSearchForm: React.FC<AccordionSearchFormProps> = ({
       ),
     },
     {
-      key: 'holds',
-      label: 'Holds',
-      title: 'Search by Hold',
-      defaultSummary: 'Any',
+      key: "holds",
+      label: "Holds",
+      title: "Search by Hold",
+      defaultSummary: "Any",
       getSummary: () => getHoldsPanelSummary(uiSearchParams),
       lazy: true,
       content: (
@@ -456,10 +508,7 @@ const AccordionSearchForm: React.FC<AccordionSearchFormProps> = ({
   return (
     <div className={styles.formWrapper}>
       <div className={styles.primaryContent}>{climbContent}</div>
-      <CollapsibleSection
-        sections={sections}
-        defaultActiveKey={defaultActiveKey?.[0]}
-      />
+      <CollapsibleSection sections={sections} defaultActiveKey={defaultActiveKey?.[0]} />
     </div>
   );
 };

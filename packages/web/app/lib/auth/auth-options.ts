@@ -11,7 +11,7 @@ import bcrypt from "bcryptjs";
 import { verifyNativeOAuthTransferToken } from "@/app/lib/auth/native-oauth-transfer";
 
 // Build providers array conditionally based on available env vars
-const providers: NextAuthOptions['providers'] = [];
+const providers: NextAuthOptions["providers"] = [];
 
 // Only add Google provider if credentials are configured
 if (process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET) {
@@ -20,7 +20,7 @@ if (process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET) {
       clientId: process.env.GOOGLE_CLIENT_ID,
       clientSecret: process.env.GOOGLE_CLIENT_SECRET,
       allowDangerousEmailAccountLinking: true,
-    })
+    }),
   );
 }
 
@@ -32,7 +32,7 @@ if (process.env.APPLE_ID && process.env.APPLE_SECRET) {
       clientSecret: process.env.APPLE_SECRET,
       checks: ["pkce"],
       allowDangerousEmailAccountLinking: true,
-    })
+    }),
   );
 }
 
@@ -43,7 +43,7 @@ if (process.env.FACEBOOK_CLIENT_ID && process.env.FACEBOOK_CLIENT_SECRET) {
       clientId: process.env.FACEBOOK_CLIENT_ID,
       clientSecret: process.env.FACEBOOK_CLIENT_SECRET,
       allowDangerousEmailAccountLinking: true,
-    })
+    }),
   );
 }
 
@@ -90,69 +90,68 @@ providers.push(
 // Always add email/password credentials provider
 providers.push(
   CredentialsProvider({
-      name: "Email",
-      credentials: {
-        email: { label: "Email", type: "email", placeholder: "your@email.com" },
-        password: { label: "Password", type: "password" },
-      },
-      async authorize(credentials) {
-        if (!credentials?.email || !credentials?.password) {
-          return null;
-        }
+    name: "Email",
+    credentials: {
+      email: { label: "Email", type: "email", placeholder: "your@email.com" },
+      password: { label: "Password", type: "password" },
+    },
+    async authorize(credentials) {
+      if (!credentials?.email || !credentials?.password) {
+        return null;
+      }
 
-        const db = getDb();
+      const db = getDb();
 
-        // Look up user by email
-        const users = await db
-          .select()
-          .from(schema.users)
-          .where(eq(schema.users.email, credentials.email))
-          .limit(1);
+      // Look up user by email
+      const users = await db
+        .select()
+        .from(schema.users)
+        .where(eq(schema.users.email, credentials.email))
+        .limit(1);
 
-        if (users.length === 0) {
-          return null;
-        }
+      if (users.length === 0) {
+        return null;
+      }
 
-        const user = users[0];
+      const user = users[0];
 
-        // Get user credentials (password hash)
-        const userCredentials = await db
-          .select()
-          .from(schema.userCredentials)
-          .where(eq(schema.userCredentials.userId, user.id))
-          .limit(1);
+      // Get user credentials (password hash)
+      const userCredentials = await db
+        .select()
+        .from(schema.userCredentials)
+        .where(eq(schema.userCredentials.userId, user.id))
+        .limit(1);
 
-        if (userCredentials.length === 0) {
-          // User exists but has no password (e.g., OAuth only)
-          return null;
-        }
+      if (userCredentials.length === 0) {
+        // User exists but has no password (e.g., OAuth only)
+        return null;
+      }
 
-        // Verify password
-        const isValidPassword = await bcrypt.compare(
-          credentials.password,
-          userCredentials[0].passwordHash
-        );
+      // Verify password
+      const isValidPassword = await bcrypt.compare(
+        credentials.password,
+        userCredentials[0].passwordHash,
+      );
 
-        if (!isValidPassword) {
-          return null;
-        }
+      if (!isValidPassword) {
+        return null;
+      }
 
-        return {
-          id: user.id,
-          email: user.email,
-          name: user.name,
-          image: user.image,
-        };
-      },
-    })
+      return {
+        id: user.id,
+        email: user.email,
+        name: user.name,
+        image: user.image,
+      };
+    },
+  }),
 );
 
 // Apple Sign-In posts its callback cross-origin (response_mode=form_post),
 // so verification cookies need SameSite=None (which requires Secure).
 // We override callbackUrl, state, nonce, and pkceCodeVerifier cookies for this reason.
 const useSecureCookies =
-  process.env.NEXTAUTH_URL?.startsWith("https://") ??
-  !!process.env.VERCEL_URL;
+  process.env.NEXTAUTH_URL?.startsWith("https://") ?? !!process.env.VERCEL_URL;
 
 export const authOptions: NextAuthOptions = {
   adapter: DrizzleAdapter(getDb(), {
@@ -286,9 +285,12 @@ export const authOptions: NextAuthOptions = {
       // Create profile for new OAuth users
       if (user.id) {
         const db = getDb();
-        await db.insert(schema.userProfiles).values({
-          userId: user.id,
-        }).onConflictDoNothing();
+        await db
+          .insert(schema.userProfiles)
+          .values({
+            userId: user.id,
+          })
+          .onConflictDoNothing();
       }
     },
   },

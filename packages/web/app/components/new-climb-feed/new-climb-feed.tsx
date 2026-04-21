@@ -1,28 +1,31 @@
-'use client';
+"use client";
 
-import { useCallback, useEffect, useRef, useState, useMemo } from 'react';
-import Box from '@mui/material/Box';
-import CircularProgress from '@mui/material/CircularProgress';
-import Typography from '@mui/material/Typography';
-import Alert from '@mui/material/Alert';
-import { useInfiniteQuery, useQueryClient } from '@tanstack/react-query';
-import type { InfiniteData } from '@tanstack/react-query';
-import type { Client } from '../graphql-queue/graphql-client';
-import { createGraphQLClient, subscribe } from '../graphql-queue/graphql-client';
-import { getBackendWsUrl } from '@/app/lib/backend-url';
-import { createGraphQLHttpClient } from '@/app/lib/graphql/client';
+import { useCallback, useEffect, useRef, useState, useMemo } from "react";
+import Box from "@mui/material/Box";
+import CircularProgress from "@mui/material/CircularProgress";
+import Typography from "@mui/material/Typography";
+import Alert from "@mui/material/Alert";
+import { useInfiniteQuery, useQueryClient } from "@tanstack/react-query";
+import type { InfiniteData } from "@tanstack/react-query";
+import type { Client } from "../graphql-queue/graphql-client";
+import { createGraphQLClient, subscribe } from "../graphql-queue/graphql-client";
+import { getBackendWsUrl } from "@/app/lib/backend-url";
+import { createGraphQLHttpClient } from "@/app/lib/graphql/client";
 import {
   GET_NEW_CLIMB_FEED,
   NEW_CLIMB_CREATED_SUBSCRIPTION,
   type GetNewClimbFeedResponse,
   type GetNewClimbFeedVariables,
   type NewClimbCreatedSubscriptionPayload,
-} from '@/app/lib/graphql/operations/new-climb-feed';
-import type { NewClimbFeedItem as NewClimbFeedItemType, NewClimbFeedResult } from '@boardsesh/shared-schema';
-import NewClimbFeedItem from './new-climb-feed-item';
-import SubscribeButton from './subscribe-button';
-import { useWsAuthToken } from '@/app/hooks/use-ws-auth-token';
-import { useInfiniteScroll } from '@/app/hooks/use-infinite-scroll';
+} from "@/app/lib/graphql/operations/new-climb-feed";
+import type {
+  NewClimbFeedItem as NewClimbFeedItemType,
+  NewClimbFeedResult,
+} from "@boardsesh/shared-schema";
+import NewClimbFeedItem from "./new-climb-feed-item";
+import SubscribeButton from "./subscribe-button";
+import { useWsAuthToken } from "@/app/hooks/use-ws-auth-token";
+import { useInfiniteScroll } from "@/app/hooks/use-infinite-scroll";
 
 interface NewClimbFeedProps {
   boardType: string;
@@ -33,14 +36,19 @@ interface NewClimbFeedProps {
 
 const PAGE_SIZE = 20;
 
-export default function NewClimbFeed({ boardType, layoutId, isAuthenticated, isSubscribed = false }: NewClimbFeedProps) {
+export default function NewClimbFeed({
+  boardType,
+  layoutId,
+  isAuthenticated,
+  isSubscribed = false,
+}: NewClimbFeedProps) {
   const { token: wsAuthToken } = useWsAuthToken();
   const clientRef = useRef<Client | null>(null);
   const subscriptionRef = useRef<(() => void) | undefined>(undefined);
   const [subscribed, setSubscribed] = useState(isSubscribed);
   const queryClient = useQueryClient();
 
-  const queryKey = ['newClimbFeed', boardType, layoutId] as const;
+  const queryKey = ["newClimbFeed", boardType, layoutId] as const;
 
   const ensureWsClient = useCallback(() => {
     if (!clientRef.current) {
@@ -52,29 +60,27 @@ export default function NewClimbFeed({ boardType, layoutId, isAuthenticated, isS
     return clientRef.current;
   }, [wsAuthToken]);
 
-  const { data, fetchNextPage, hasNextPage, isFetchingNextPage, isLoading, error } = useInfiniteQuery<
-    NewClimbFeedResult,
-    Error
-  >({
-    queryKey,
-    queryFn: async ({ pageParam }) => {
-      const client = createGraphQLHttpClient(wsAuthToken);
-      const variables: GetNewClimbFeedVariables = {
-        input: { boardType, layoutId, limit: PAGE_SIZE, offset: pageParam as number },
-      };
-      const response = await client.request<GetNewClimbFeedResponse>(
-        GET_NEW_CLIMB_FEED,
-        variables,
-      );
-      return response.newClimbFeed;
-    },
-    initialPageParam: 0,
-    getNextPageParam: (lastPage, _allPages, lastPageParam) => {
-      if (!lastPage.hasMore) return undefined;
-      return (lastPageParam as number) + lastPage.items.length;
-    },
-    staleTime: 60 * 1000,
-  });
+  const { data, fetchNextPage, hasNextPage, isFetchingNextPage, isLoading, error } =
+    useInfiniteQuery<NewClimbFeedResult, Error>({
+      queryKey,
+      queryFn: async ({ pageParam }) => {
+        const client = createGraphQLHttpClient(wsAuthToken);
+        const variables: GetNewClimbFeedVariables = {
+          input: { boardType, layoutId, limit: PAGE_SIZE, offset: pageParam as number },
+        };
+        const response = await client.request<GetNewClimbFeedResponse>(
+          GET_NEW_CLIMB_FEED,
+          variables,
+        );
+        return response.newClimbFeed;
+      },
+      initialPageParam: 0,
+      getNextPageParam: (lastPage, _allPages, lastPageParam) => {
+        if (!lastPage.hasMore) return undefined;
+        return (lastPageParam as number) + lastPage.items.length;
+      },
+      staleTime: 60 * 1000,
+    });
 
   const items: NewClimbFeedItemType[] = useMemo(
     () => data?.pages.flatMap((p) => p.items) ?? [],
@@ -99,27 +105,24 @@ export default function NewClimbFeed({ boardType, layoutId, isAuthenticated, isS
       {
         next: (subData) => {
           const newItem = subData.newClimbCreated.climb;
-          queryClient.setQueryData<InfiniteData<NewClimbFeedResult>>(
-            queryKey,
-            (old) => {
-              if (!old) return old;
-              const firstPage = old.pages[0];
-              if (firstPage.items.some((i) => i.uuid === newItem.uuid)) return old;
-              return {
-                ...old,
-                pages: [
-                  {
-                    ...firstPage,
-                    items: [newItem, ...firstPage.items].slice(0, PAGE_SIZE),
-                    totalCount: firstPage.totalCount + 1,
-                  },
-                  ...old.pages.slice(1),
-                ],
-              };
-            },
-          );
+          queryClient.setQueryData<InfiniteData<NewClimbFeedResult>>(queryKey, (old) => {
+            if (!old) return old;
+            const firstPage = old.pages[0];
+            if (firstPage.items.some((i) => i.uuid === newItem.uuid)) return old;
+            return {
+              ...old,
+              pages: [
+                {
+                  ...firstPage,
+                  items: [newItem, ...firstPage.items].slice(0, PAGE_SIZE),
+                  totalCount: firstPage.totalCount + 1,
+                },
+                ...old.pages.slice(1),
+              ],
+            };
+          });
         },
-        error: (err) => console.error('New climb subscription error', err),
+        error: (err) => console.error("New climb subscription error", err),
         complete: () => {},
       },
     );
@@ -132,7 +135,7 @@ export default function NewClimbFeed({ boardType, layoutId, isAuthenticated, isS
 
   return (
     <Box>
-      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1 }}>
+      <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", mb: 1 }}>
         <Typography variant="h6" fontWeight={700}>
           New Climbs
         </Typography>
@@ -145,20 +148,27 @@ export default function NewClimbFeed({ boardType, layoutId, isAuthenticated, isS
         />
       </Box>
 
-      {error && <Alert severity="error" sx={{ mb: 1 }}>Failed to load climbs. Please try again.</Alert>}
+      {error && (
+        <Alert severity="error" sx={{ mb: 1 }}>
+          Failed to load climbs. Please try again.
+        </Alert>
+      )}
 
       {items.map((item) => (
         <NewClimbFeedItem key={item.uuid} item={item} />
       ))}
 
       {isLoading && (
-        <Box sx={{ display: 'flex', justifyContent: 'center', py: 2 }}>
+        <Box sx={{ display: "flex", justifyContent: "center", py: 2 }}>
           <CircularProgress size={24} />
         </Box>
       )}
 
       {!isLoading && items.length > 0 && (
-        <Box ref={sentinelRef} sx={{ display: 'flex', justifyContent: 'center', py: 2, minHeight: 20 }}>
+        <Box
+          ref={sentinelRef}
+          sx={{ display: "flex", justifyContent: "center", py: 2, minHeight: 20 }}
+        >
           {isFetchingNextPage && <CircularProgress size={24} />}
         </Box>
       )}

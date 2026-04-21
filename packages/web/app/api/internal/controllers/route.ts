@@ -38,7 +38,7 @@ const ONLINE_THRESHOLD_MS = 60 * 1000;
  * Generate a secure random API key
  */
 function generateApiKey(): string {
-  return randomBytes(32).toString('hex');
+  return randomBytes(32).toString("hex");
 }
 
 /**
@@ -100,7 +100,7 @@ export async function POST(request: NextRequest) {
     if (!validationResult.success) {
       return NextResponse.json(
         { error: validationResult.error.issues[0].message },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -161,7 +161,7 @@ export async function DELETE(request: NextRequest) {
     if (!validationResult.success) {
       return NextResponse.json(
         { error: validationResult.error.issues[0].message },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -172,10 +172,7 @@ export async function DELETE(request: NextRequest) {
     await db
       .delete(esp32Controllers)
       .where(
-        and(
-          eq(esp32Controllers.id, controllerId),
-          eq(esp32Controllers.userId, session.user.id)
-        )
+        and(eq(esp32Controllers.id, controllerId), eq(esp32Controllers.userId, session.user.id)),
       );
 
     return NextResponse.json({ success: true });

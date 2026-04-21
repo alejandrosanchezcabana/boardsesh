@@ -1,40 +1,28 @@
 // @vitest-environment jsdom
-import { describe, expect, it } from 'vitest';
-import { render, screen } from '@testing-library/react';
-import React from 'react';
-import { AscentStatusIcon } from '../ascent-status-icon';
+import { describe, expect, it } from "vite-plus/test";
+import { render, screen } from "@testing-library/react";
+import React from "react";
+import { AscentStatusIcon } from "../ascent-status-icon";
 
-describe('AscentStatusIcon', () => {
-  it('renders the flash icon variant with explicit status metadata', () => {
+describe("AscentStatusIcon", () => {
+  it("renders the flash icon variant with explicit status metadata", () => {
     render(
-      <AscentStatusIcon
-        status="flash"
-        variant="icon"
-        fontSize={18}
-        testId="flash-status-icon"
-      />,
+      <AscentStatusIcon status="flash" variant="icon" fontSize={18} testId="flash-status-icon" />,
     );
 
-    const icon = screen.getByTestId('flash-status-icon');
-    expect(icon.getAttribute('data-status')).toBe('flash');
-    expect((icon as HTMLElement).style.color).toBe('rgb(251, 191, 36)');
-    expect(icon.getAttribute('style')).toContain('font-size: 18px');
+    const icon = screen.getByTestId("flash-status-icon");
+    expect(icon.getAttribute("data-status")).toBe("flash");
+    expect((icon as HTMLElement).style.color).toBe("rgb(251, 191, 36)");
+    expect(icon.getAttribute("style")).toContain("font-size: 18px");
   });
 
-  it('normalizes legacy successful ascents to send when tries are greater than 1', () => {
-    render(
-      <AscentStatusIcon
-        isAscent
-        tries={3}
-        variant="icon"
-        testId="legacy-send-status"
-      />,
-    );
+  it("normalizes legacy successful ascents to send when tries are greater than 1", () => {
+    render(<AscentStatusIcon isAscent tries={3} variant="icon" testId="legacy-send-status" />);
 
-    expect(screen.getByTestId('legacy-send-status').getAttribute('data-status')).toBe('send');
+    expect(screen.getByTestId("legacy-send-status").getAttribute("data-status")).toBe("send");
   });
 
-  it('renders badge styling and mirrored transform for attempt badges', () => {
+  it("renders badge styling and mirrored transform for attempt badges", () => {
     render(
       <AscentStatusIcon
         status="attempt"
@@ -46,10 +34,10 @@ describe('AscentStatusIcon', () => {
       />,
     );
 
-    const badge = screen.getByTestId('attempt-badge');
-    expect(badge.getAttribute('data-status')).toBe('attempt');
-    expect((badge as HTMLElement).style.backgroundColor).toBe('rgb(184, 82, 76)');
-    expect(badge.getAttribute('style')).toContain('width: 20px');
-    expect(badge.firstElementChild?.getAttribute('style')).toContain('transform: scaleX(-1)');
+    const badge = screen.getByTestId("attempt-badge");
+    expect(badge.getAttribute("data-status")).toBe("attempt");
+    expect((badge as HTMLElement).style.backgroundColor).toBe("rgb(184, 82, 76)");
+    expect(badge.getAttribute("style")).toContain("width: 20px");
+    expect(badge.firstElementChild?.getAttribute("style")).toContain("transform: scaleX(-1)");
   });
 });

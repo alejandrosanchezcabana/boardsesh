@@ -1,4 +1,4 @@
-import { describe, it, expect, vi } from 'vitest';
+import { describe, it, expect, vi } from 'vite-plus/test';
 import { render, screen, within, fireEvent } from '@testing-library/react';
 import { DevicePickerDialog } from '../device-picker-dialog';
 import type { DiscoveredDevice } from '@/app/lib/ble/types';

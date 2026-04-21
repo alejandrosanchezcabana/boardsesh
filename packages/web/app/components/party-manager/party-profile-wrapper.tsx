@@ -1,7 +1,7 @@
-'use client';
+"use client";
 
-import React from 'react';
-import { PartyProfileProvider } from './party-profile-context';
+import React from "react";
+import { PartyProfileProvider } from "./party-profile-context";
 
 interface PartyProfileWrapperProps {
   children: React.ReactNode;

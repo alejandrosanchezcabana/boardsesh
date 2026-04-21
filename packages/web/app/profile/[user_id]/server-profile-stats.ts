@@ -1,10 +1,10 @@
-import { cachedUserProfileStats, cachedUserTicks } from '@/app/lib/graphql/server-cached-client';
-import { SUPPORTED_BOARDS } from '@/app/lib/board-data';
-import type { LogbookEntry } from './utils/profile-constants';
-import type { GetUserProfileStatsQueryResponse } from '@/app/lib/graphql/operations/ticks';
+import { cachedUserProfileStats, cachedUserTicks } from "@/app/lib/graphql/server-cached-client";
+import { SUPPORTED_BOARDS } from "@/app/lib/board-data";
+import type { LogbookEntry } from "./utils/profile-constants";
+import type { GetUserProfileStatsQueryResponse } from "@/app/lib/graphql/operations/ticks";
 
 export interface ProfileStatsData {
-  initialProfileStats: GetUserProfileStatsQueryResponse['userProfileStats'] | null;
+  initialProfileStats: GetUserProfileStatsQueryResponse["userProfileStats"] | null;
   initialAllBoardsTicks: Record<string, LogbookEntry[]>;
   initialLogbook: LogbookEntry[];
 }
@@ -28,7 +28,7 @@ export async function fetchProfileStatsData(userId: string): Promise<ProfileStat
           difficulty: tick.difficulty,
           tries: tick.attemptCount,
           angle: tick.angle,
-          status: tick.status as LogbookEntry['status'],
+          status: tick.status as LogbookEntry["status"],
           layoutId: tick.layoutId,
           boardType: bt,
           climbUuid: tick.climbUuid,
@@ -36,7 +36,7 @@ export async function fetchProfileStatsData(userId: string): Promise<ProfileStat
       : [];
   });
 
-  const initialLogbook = initialAllBoardsTicks['kilter'] ?? [];
+  const initialLogbook = initialAllBoardsTicks["kilter"] ?? [];
 
   return { initialProfileStats, initialAllBoardsTicks, initialLogbook };
 }

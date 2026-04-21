@@ -1,9 +1,9 @@
-'use client';
+"use client";
 
-import { useMutation } from '@tanstack/react-query';
-import { useWsAuthToken } from './use-ws-auth-token';
-import { useSession } from 'next-auth/react';
-import { useSnackbar } from '@/app/components/providers/snackbar-provider';
+import { useMutation } from "@tanstack/react-query";
+import { useWsAuthToken } from "./use-ws-auth-token";
+import { useSession } from "next-auth/react";
+import { useSnackbar } from "@/app/components/providers/snackbar-provider";
 import {
   SAVE_CLIMB_MUTATION,
   UPDATE_CLIMB_MUTATION,
@@ -11,12 +11,12 @@ import {
   type SaveClimbMutationResponse,
   type UpdateClimbMutationVariables,
   type UpdateClimbMutationResponse,
-} from '@/app/lib/graphql/operations/new-climb-feed';
-import { createGraphQLClient, execute } from '@/app/components/graphql-queue/graphql-client';
-import { getBackendWsUrl } from '@/app/lib/backend-url';
-import type { BoardName } from '@/app/lib/types';
-import type { SaveClimbOptions } from '@/app/lib/api-wrappers/aurora/types';
-import type { UpdateClimbInput } from '@boardsesh/shared-schema';
+} from "@/app/lib/graphql/operations/new-climb-feed";
+import { createGraphQLClient, execute } from "@/app/components/graphql-queue/graphql-client";
+import { getBackendWsUrl } from "@/app/lib/backend-url";
+import type { BoardName } from "@/app/lib/types";
+import type { SaveClimbOptions } from "@/app/lib/api-wrappers/aurora/types";
+import type { UpdateClimbInput } from "@boardsesh/shared-schema";
 
 export interface SaveClimbResponse {
   uuid: string;
@@ -40,9 +40,11 @@ export function useSaveClimb(boardName: BoardName) {
   const { showMessage } = useSnackbar();
 
   return useMutation({
-    mutationFn: async (options: Omit<SaveClimbOptions, 'setter_id' | 'user_id'>): Promise<SaveClimbResponse> => {
-      if (sessionStatus !== 'authenticated' || !session?.user?.id || !token) {
-        throw new Error('Authentication required to create climbs');
+    mutationFn: async (
+      options: Omit<SaveClimbOptions, "setter_id" | "user_id">,
+    ): Promise<SaveClimbResponse> => {
+      if (sessionStatus !== "authenticated" || !session?.user?.id || !token) {
+        throw new Error("Authentication required to create climbs");
       }
 
       // Create a fresh client per mutation to avoid stale token refs.
@@ -58,7 +60,7 @@ export function useSaveClimb(boardName: BoardName) {
             boardType: boardName,
             layoutId: options.layout_id,
             name: options.name,
-            description: options.description || '',
+            description: options.description || "",
             isDraft: options.is_draft,
             frames: options.frames,
             framesCount: options.frames_count,
@@ -78,7 +80,7 @@ export function useSaveClimb(boardName: BoardName) {
       }
     },
     onError: () => {
-      showMessage('Failed to save climb', 'error');
+      showMessage("Failed to save climb", "error");
     },
   });
 }
@@ -94,8 +96,8 @@ export function useUpdateClimb() {
 
   return useMutation({
     mutationFn: async (input: UpdateClimbInput): Promise<UpdateClimbResponse> => {
-      if (sessionStatus !== 'authenticated' || !session?.user?.id || !token) {
-        throw new Error('Authentication required to update climbs');
+      if (sessionStatus !== "authenticated" || !session?.user?.id || !token) {
+        throw new Error("Authentication required to update climbs");
       }
 
       const client = createGraphQLClient({

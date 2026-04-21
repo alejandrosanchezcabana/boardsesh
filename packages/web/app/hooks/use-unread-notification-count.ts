@@ -1,14 +1,14 @@
-'use client';
+"use client";
 
-import { useQuery } from '@tanstack/react-query';
-import { useWsAuthToken } from './use-ws-auth-token';
-import { createGraphQLHttpClient } from '@/app/lib/graphql/client';
+import { useQuery } from "@tanstack/react-query";
+import { useWsAuthToken } from "./use-ws-auth-token";
+import { createGraphQLHttpClient } from "@/app/lib/graphql/client";
 import {
   GET_UNREAD_NOTIFICATION_COUNT,
   type GetUnreadNotificationCountQueryResponse,
-} from '@/app/lib/graphql/operations';
+} from "@/app/lib/graphql/operations";
 
-export const UNREAD_COUNT_QUERY_KEY = ['notifications', 'unreadCount'] as const;
+export const UNREAD_COUNT_QUERY_KEY = ["notifications", "unreadCount"] as const;
 
 /**
  * Hook to get the current unread notification count.

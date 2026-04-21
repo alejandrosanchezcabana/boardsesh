@@ -85,14 +85,14 @@
 }
 
 :global(html[data-theme="dark"]) .searchInput :global(.MuiOutlinedInput-root) {
-  background: #FFFFFF;
+  background: #ffffff;
   color: #000000;
 }
 
 :global(html[data-theme="dark"]) .searchInput :global(.MuiOutlinedInput-root) fieldset {
-  border-color: #FFFFFF;
+  border-color: #ffffff;
 }
 
 :global(html[data-theme="dark"]) .searchInput :global(.MuiSvgIcon-root) {
-  color: #6B7280;
+  color: #6b7280;
 }

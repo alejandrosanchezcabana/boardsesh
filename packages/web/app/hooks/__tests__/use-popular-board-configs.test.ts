@@ -1,22 +1,22 @@
-import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { renderHook, waitFor, act } from '@testing-library/react';
-import type { PopularBoardConfig, PopularBoardConfigConnection } from '@boardsesh/shared-schema';
+import { describe, it, expect, vi, beforeEach, afterEach } from "vite-plus/test";
+import { renderHook, waitFor, act } from "@testing-library/react";
+import type { PopularBoardConfig, PopularBoardConfigConnection } from "@boardsesh/shared-schema";
 
 // --- Mocks ---
 
 const mockRequest = vi.fn();
 
-vi.mock('@/app/lib/graphql/client', () => ({
+vi.mock("@/app/lib/graphql/client", () => ({
   createGraphQLHttpClient: () => ({ request: mockRequest }),
 }));
 
-vi.mock('@/app/lib/graphql/operations', () => ({
-  GET_POPULAR_BOARD_CONFIGS: 'GET_POPULAR_BOARD_CONFIGS_QUERY',
+vi.mock("@/app/lib/graphql/operations", () => ({
+  GET_POPULAR_BOARD_CONFIGS: "GET_POPULAR_BOARD_CONFIGS_QUERY",
 }));
 
 // --- Import after mocks ---
 
-import { usePopularBoardConfigs } from '../use-popular-board-configs';
+import { usePopularBoardConfigs } from "../use-popular-board-configs";
 
 // --- Helpers ---
 
@@ -33,7 +33,7 @@ function makeConfig(
     sizeName: `Size 10`,
     sizeDescription: `10x10`,
     setIds: [1, 2],
-    setNames: ['Set A', 'Set B'],
+    setNames: ["Set A", "Set B"],
     climbCount,
     totalAscents: climbCount * 10,
     boardCount: 5,
@@ -57,7 +57,7 @@ function makeResponse(
 
 // --- Tests ---
 
-describe('usePopularBoardConfigs', () => {
+describe("usePopularBoardConfigs", () => {
   beforeEach(() => {
     vi.clearAllMocks();
   });
@@ -66,7 +66,7 @@ describe('usePopularBoardConfigs', () => {
     vi.restoreAllMocks();
   });
 
-  it('returns isLoading=true and empty configs initially', () => {
+  it("returns isLoading=true and empty configs initially", () => {
     // Never resolve so we stay in loading state
     mockRequest.mockReturnValue(new Promise(() => {}));
 
@@ -79,11 +79,8 @@ describe('usePopularBoardConfigs', () => {
     expect(result.current.hasMore).toBe(false);
   });
 
-  it('fetches first page on mount and sets configs/hasMore correctly', async () => {
-    const page1 = [
-      makeConfig('kilter', 500),
-      makeConfig('tension', 300),
-    ];
+  it("fetches first page on mount and sets configs/hasMore correctly", async () => {
+    const page1 = [makeConfig("kilter", 500), makeConfig("tension", 300)];
     mockRequest.mockResolvedValueOnce(makeResponse(page1, true));
 
     const { result } = renderHook(() => usePopularBoardConfigs());
@@ -93,13 +90,13 @@ describe('usePopularBoardConfigs', () => {
     });
 
     expect(result.current.configs).toHaveLength(2);
-    expect(result.current.configs[0].boardType).toBe('kilter');
-    expect(result.current.configs[1].boardType).toBe('tension');
+    expect(result.current.configs[0].boardType).toBe("kilter");
+    expect(result.current.configs[1].boardType).toBe("tension");
     expect(result.current.hasMore).toBe(true);
     expect(result.current.error).toBeNull();
   });
 
-  it('passes limit and offset=0 to the initial request', async () => {
+  it("passes limit and offset=0 to the initial request", async () => {
     mockRequest.mockResolvedValueOnce(makeResponse([], false));
 
     const { result } = renderHook(() => usePopularBoardConfigs({ limit: 5 }));
@@ -109,13 +106,12 @@ describe('usePopularBoardConfigs', () => {
     });
 
     expect(mockRequest).toHaveBeenCalledTimes(1);
-    expect(mockRequest).toHaveBeenCalledWith(
-      'GET_POPULAR_BOARD_CONFIGS_QUERY',
-      { input: { limit: 5, offset: 0 } },
-    );
+    expect(mockRequest).toHaveBeenCalledWith("GET_POPULAR_BOARD_CONFIGS_QUERY", {
+      input: { limit: 5, offset: 0 },
+    });
   });
 
-  it('uses default limit of 12 when none provided', async () => {
+  it("uses default limit of 12 when none provided", async () => {
     mockRequest.mockResolvedValueOnce(makeResponse([], false));
 
     const { result } = renderHook(() => usePopularBoardConfigs());
@@ -124,15 +120,14 @@ describe('usePopularBoardConfigs', () => {
       expect(result.current.isLoading).toBe(false);
     });
 
-    expect(mockRequest).toHaveBeenCalledWith(
-      'GET_POPULAR_BOARD_CONFIGS_QUERY',
-      { input: { limit: 12, offset: 0 } },
-    );
+    expect(mockRequest).toHaveBeenCalledWith("GET_POPULAR_BOARD_CONFIGS_QUERY", {
+      input: { limit: 12, offset: 0 },
+    });
   });
 
-  it('loadMore fetches next page and appends to existing configs', async () => {
-    const page1 = [makeConfig('kilter', 500), makeConfig('tension', 300)];
-    const page2 = [makeConfig('moonboard', 200), makeConfig('decoy', 100)];
+  it("loadMore fetches next page and appends to existing configs", async () => {
+    const page1 = [makeConfig("kilter", 500), makeConfig("tension", 300)];
+    const page2 = [makeConfig("moonboard", 200), makeConfig("decoy", 100)];
 
     mockRequest.mockResolvedValueOnce(makeResponse(page1, true));
 
@@ -159,15 +154,15 @@ describe('usePopularBoardConfigs', () => {
 
     // Should have appended page2 to page1
     expect(result.current.configs).toHaveLength(4);
-    expect(result.current.configs[0].boardType).toBe('kilter');
-    expect(result.current.configs[1].boardType).toBe('tension');
-    expect(result.current.configs[2].boardType).toBe('moonboard');
-    expect(result.current.configs[3].boardType).toBe('decoy');
+    expect(result.current.configs[0].boardType).toBe("kilter");
+    expect(result.current.configs[1].boardType).toBe("tension");
+    expect(result.current.configs[2].boardType).toBe("moonboard");
+    expect(result.current.configs[3].boardType).toBe("decoy");
     expect(result.current.hasMore).toBe(false);
   });
 
-  it('passes correct offset for subsequent pages', async () => {
-    const page1 = [makeConfig('a', 100), makeConfig('b', 90), makeConfig('c', 80)];
+  it("passes correct offset for subsequent pages", async () => {
+    const page1 = [makeConfig("a", 100), makeConfig("b", 90), makeConfig("c", 80)];
     mockRequest.mockResolvedValueOnce(makeResponse(page1, true));
 
     const { result } = renderHook(() => usePopularBoardConfigs({ limit: 3 }));
@@ -176,7 +171,7 @@ describe('usePopularBoardConfigs', () => {
       expect(result.current.isLoading).toBe(false);
     });
 
-    const page2 = [makeConfig('d', 70)];
+    const page2 = [makeConfig("d", 70)];
     mockRequest.mockResolvedValueOnce(makeResponse(page2, false));
 
     act(() => {
@@ -189,13 +184,13 @@ describe('usePopularBoardConfigs', () => {
 
     // Second call should have offset = 3 (length of first page)
     expect(mockRequest).toHaveBeenCalledTimes(2);
-    expect(mockRequest).toHaveBeenNthCalledWith(2, 'GET_POPULAR_BOARD_CONFIGS_QUERY', {
+    expect(mockRequest).toHaveBeenNthCalledWith(2, "GET_POPULAR_BOARD_CONFIGS_QUERY", {
       input: { limit: 3, offset: 3 },
     });
   });
 
-  it('sets isLoadingMore=true while fetching next page', async () => {
-    const page1 = [makeConfig('kilter', 500)];
+  it("sets isLoadingMore=true while fetching next page", async () => {
+    const page1 = [makeConfig("kilter", 500)];
     mockRequest.mockResolvedValueOnce(makeResponse(page1, true));
 
     const { result } = renderHook(() => usePopularBoardConfigs());
@@ -221,8 +216,8 @@ describe('usePopularBoardConfigs', () => {
     expect(result.current.configs).toHaveLength(1);
   });
 
-  it('sets error when initial fetch fails', async () => {
-    mockRequest.mockRejectedValueOnce(new Error('Network error'));
+  it("sets error when initial fetch fails", async () => {
+    mockRequest.mockRejectedValueOnce(new Error("Network error"));
 
     const { result } = renderHook(() => usePopularBoardConfigs());
 
@@ -230,12 +225,12 @@ describe('usePopularBoardConfigs', () => {
       expect(result.current.isLoading).toBe(false);
     });
 
-    expect(result.current.error).toBe('Failed to load board configurations');
+    expect(result.current.error).toBe("Failed to load board configurations");
     expect(result.current.configs).toEqual([]);
   });
 
-  it('does not clear existing configs when loadMore fails', async () => {
-    const page1 = [makeConfig('kilter', 500), makeConfig('tension', 300)];
+  it("does not clear existing configs when loadMore fails", async () => {
+    const page1 = [makeConfig("kilter", 500), makeConfig("tension", 300)];
     mockRequest.mockResolvedValueOnce(makeResponse(page1, true));
 
     const { result } = renderHook(() => usePopularBoardConfigs());
@@ -247,7 +242,7 @@ describe('usePopularBoardConfigs', () => {
     expect(result.current.configs).toHaveLength(2);
 
     // Fail the loadMore request
-    mockRequest.mockRejectedValueOnce(new Error('Server error'));
+    mockRequest.mockRejectedValueOnce(new Error("Server error"));
 
     act(() => {
       result.current.loadMore();
@@ -259,13 +254,13 @@ describe('usePopularBoardConfigs', () => {
 
     // Existing configs should be preserved
     expect(result.current.configs).toHaveLength(2);
-    expect(result.current.configs[0].boardType).toBe('kilter');
+    expect(result.current.configs[0].boardType).toBe("kilter");
     // Error should NOT be set for loadMore failures (only initial)
     expect(result.current.error).toBeNull();
   });
 
-  it('prevents concurrent loadMore calls (no-op while fetching)', async () => {
-    const page1 = [makeConfig('kilter', 500)];
+  it("prevents concurrent loadMore calls (no-op while fetching)", async () => {
+    const page1 = [makeConfig("kilter", 500)];
     mockRequest.mockResolvedValueOnce(makeResponse(page1, true));
 
     const { result } = renderHook(() => usePopularBoardConfigs());
@@ -295,7 +290,7 @@ describe('usePopularBoardConfigs', () => {
     expect(mockRequest).toHaveBeenCalledTimes(2);
 
     // Resolve to clean up
-    const page2 = [makeConfig('tension', 300)];
+    const page2 = [makeConfig("tension", 300)];
     resolvePage2!(makeResponse(page2, false));
 
     await waitFor(() => {
@@ -305,7 +300,7 @@ describe('usePopularBoardConfigs', () => {
     expect(result.current.configs).toHaveLength(2);
   });
 
-  it('handles empty results from backend', async () => {
+  it("handles empty results from backend", async () => {
     mockRequest.mockResolvedValueOnce(makeResponse([], false));
 
     const { result } = renderHook(() => usePopularBoardConfigs());
@@ -319,8 +314,8 @@ describe('usePopularBoardConfigs', () => {
     expect(result.current.error).toBeNull();
   });
 
-  it('does not call loadMore when hasMore is false', async () => {
-    const page1 = [makeConfig('kilter', 500)];
+  it("does not call loadMore when hasMore is false", async () => {
+    const page1 = [makeConfig("kilter", 500)];
     mockRequest.mockResolvedValueOnce(makeResponse(page1, false));
 
     const { result } = renderHook(() => usePopularBoardConfigs());
@@ -340,10 +335,10 @@ describe('usePopularBoardConfigs', () => {
     expect(mockRequest).toHaveBeenCalledTimes(1);
   });
 
-  it('supports multiple pagination cycles', async () => {
-    const page1 = [makeConfig('a', 100)];
-    const page2 = [makeConfig('b', 90)];
-    const page3 = [makeConfig('c', 80)];
+  it("supports multiple pagination cycles", async () => {
+    const page1 = [makeConfig("a", 100)];
+    const page2 = [makeConfig("b", 90)];
+    const page3 = [makeConfig("c", 80)];
 
     mockRequest.mockResolvedValueOnce(makeResponse(page1, true));
 
@@ -376,7 +371,7 @@ describe('usePopularBoardConfigs', () => {
     });
     expect(result.current.configs).toHaveLength(3);
     expect(result.current.hasMore).toBe(false);
-    expect(result.current.configs.map((c) => c.boardType)).toEqual(['a', 'b', 'c']);
+    expect(result.current.configs.map((c) => c.boardType)).toEqual(["a", "b", "c"]);
 
     // No more pages - loadMore should be a no-op
     act(() => {
@@ -385,8 +380,8 @@ describe('usePopularBoardConfigs', () => {
     expect(mockRequest).toHaveBeenCalledTimes(3);
   });
 
-  it('re-fetches from offset 0 when limit changes', async () => {
-    const page1 = [makeConfig('kilter', 500)];
+  it("re-fetches from offset 0 when limit changes", async () => {
+    const page1 = [makeConfig("kilter", 500)];
     mockRequest.mockResolvedValueOnce(makeResponse(page1, false));
 
     const { result, rerender } = renderHook(
@@ -398,12 +393,12 @@ describe('usePopularBoardConfigs', () => {
       expect(result.current.isLoading).toBe(false);
     });
 
-    expect(mockRequest).toHaveBeenCalledWith('GET_POPULAR_BOARD_CONFIGS_QUERY', {
+    expect(mockRequest).toHaveBeenCalledWith("GET_POPULAR_BOARD_CONFIGS_QUERY", {
       input: { limit: 5, offset: 0 },
     });
 
     // Change the limit
-    const newPage = [makeConfig('tension', 300), makeConfig('moonboard', 200)];
+    const newPage = [makeConfig("tension", 300), makeConfig("moonboard", 200)];
     mockRequest.mockResolvedValueOnce(makeResponse(newPage, false));
 
     rerender({ limit: 10 });
@@ -413,15 +408,15 @@ describe('usePopularBoardConfigs', () => {
     });
 
     // Should have re-fetched with the new limit and offset=0
-    expect(mockRequest).toHaveBeenLastCalledWith('GET_POPULAR_BOARD_CONFIGS_QUERY', {
+    expect(mockRequest).toHaveBeenLastCalledWith("GET_POPULAR_BOARD_CONFIGS_QUERY", {
       input: { limit: 10, offset: 0 },
     });
   });
 
   // --- initialData (SSR) tests ---
 
-  it('skips initial fetch when initialData is provided', async () => {
-    const ssrData = [makeConfig('kilter', 500), makeConfig('tension', 300)];
+  it("skips initial fetch when initialData is provided", async () => {
+    const ssrData = [makeConfig("kilter", 500), makeConfig("tension", 300)];
 
     renderHook(() => usePopularBoardConfigs({ initialData: ssrData }));
 
@@ -431,23 +426,27 @@ describe('usePopularBoardConfigs', () => {
     expect(mockRequest).not.toHaveBeenCalled();
   });
 
-  it('starts with isLoading=false and configs populated from initialData', () => {
-    const ssrData = [makeConfig('kilter', 500), makeConfig('tension', 300)];
+  it("starts with isLoading=false and configs populated from initialData", () => {
+    const ssrData = [makeConfig("kilter", 500), makeConfig("tension", 300)];
 
     const { result } = renderHook(() => usePopularBoardConfigs({ initialData: ssrData }));
 
     expect(result.current.isLoading).toBe(false);
     expect(result.current.configs).toHaveLength(2);
-    expect(result.current.configs[0].boardType).toBe('kilter');
-    expect(result.current.configs[1].boardType).toBe('tension');
+    expect(result.current.configs[0].boardType).toBe("kilter");
+    expect(result.current.configs[1].boardType).toBe("tension");
     // 2 items < default limit of 12, so hasMore is false (server returned everything)
     expect(result.current.hasMore).toBe(false);
     expect(result.current.error).toBeNull();
   });
 
-  it('loadMore uses correct offset from initialData length', async () => {
-    const ssrData = [makeConfig('kilter', 500), makeConfig('tension', 300), makeConfig('moonboard', 200)];
-    const page2 = [makeConfig('decoy', 100)];
+  it("loadMore uses correct offset from initialData length", async () => {
+    const ssrData = [
+      makeConfig("kilter", 500),
+      makeConfig("tension", 300),
+      makeConfig("moonboard", 200),
+    ];
+    const page2 = [makeConfig("decoy", 100)];
     mockRequest.mockResolvedValueOnce(makeResponse(page2, false));
 
     const { result } = renderHook(() => usePopularBoardConfigs({ limit: 3, initialData: ssrData }));
@@ -462,18 +461,18 @@ describe('usePopularBoardConfigs', () => {
 
     // Offset should be 3 (initialData.length)
     expect(mockRequest).toHaveBeenCalledTimes(1);
-    expect(mockRequest).toHaveBeenCalledWith('GET_POPULAR_BOARD_CONFIGS_QUERY', {
+    expect(mockRequest).toHaveBeenCalledWith("GET_POPULAR_BOARD_CONFIGS_QUERY", {
       input: { limit: 3, offset: 3 },
     });
 
     // Should append to initial data
     expect(result.current.configs).toHaveLength(4);
-    expect(result.current.configs[3].boardType).toBe('decoy');
+    expect(result.current.configs[3].boardType).toBe("decoy");
     expect(result.current.hasMore).toBe(false);
   });
 
-  it('treats empty initialData array as no initial data and fetches', async () => {
-    mockRequest.mockResolvedValueOnce(makeResponse([makeConfig('kilter', 500)], false));
+  it("treats empty initialData array as no initial data and fetches", async () => {
+    mockRequest.mockResolvedValueOnce(makeResponse([makeConfig("kilter", 500)], false));
 
     const { result } = renderHook(() => usePopularBoardConfigs({ initialData: [] }));
 

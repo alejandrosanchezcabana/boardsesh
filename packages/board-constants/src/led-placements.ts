@@ -1,10 +1,10 @@
-import type { BoardName, HoldState } from '@boardsesh/shared-schema';
-import { LED_PLACEMENTS } from './generated/led-placements-data';
-import type { LedPositionWithColor } from './types';
-import { STATE_TO_PRIMARY_CODE } from './hold-states';
+import type { BoardName, HoldState } from "@boardsesh/shared-schema";
+import { LED_PLACEMENTS } from "./generated/led-placements-data";
+import type { LedPositionWithColor } from "./types";
+import { STATE_TO_PRIMARY_CODE } from "./hold-states";
 
 export { LED_PLACEMENTS };
-export type { LedPositionWithColor } from './types';
+export type { LedPositionWithColor } from "./types";
 
 export const getLedPlacements = (
   boardName: BoardName,
@@ -16,7 +16,7 @@ export const getLedPlacements = (
   if (!placements) {
     console.warn(
       `[LED] No LED placements found for ${boardName} layout=${layoutId} size=${sizeId}. ` +
-      `Available keys: ${Object.keys(LED_PLACEMENTS[boardName] || {}).join(', ')}`,
+        `Available keys: ${Object.keys(LED_PLACEMENTS[boardName] || {}).join(", ")}`,
     );
     return {};
   }
@@ -57,26 +57,28 @@ export function colorToRoleCode(r: number, g: number, b: number, boardName: Boar
   const hasBlue = b > 127;
 
   if (!hasRed && hasGreen && !hasBlue) {
-    return getRoleCode(boardName, 'STARTING');
+    return getRoleCode(boardName, "STARTING");
   }
 
   if (!hasRed && !hasGreen && hasBlue) {
-    return getRoleCode(boardName, 'HAND');
+    return getRoleCode(boardName, "HAND");
   }
 
   if (hasRed && !hasGreen && !hasBlue) {
-    return getRoleCode(boardName, 'FINISH');
+    return getRoleCode(boardName, "FINISH");
   }
 
   if (hasRed && !hasGreen && hasBlue) {
-    return boardName === 'kilter' ? getRoleCode(boardName, 'FINISH') : getRoleCode(boardName, 'FOOT');
+    return boardName === "kilter"
+      ? getRoleCode(boardName, "FINISH")
+      : getRoleCode(boardName, "FOOT");
   }
 
   if (hasRed && hasGreen && !hasBlue) {
-    return getRoleCode(boardName, 'FOOT');
+    return getRoleCode(boardName, "FOOT");
   }
 
-  return getRoleCode(boardName, 'HAND');
+  return getRoleCode(boardName, "HAND");
 }
 
 export function buildFramesString(
@@ -103,5 +105,5 @@ export function buildFramesString(
   }
 
   placementEntries.sort((a, b) => a.placementId - b.placementId);
-  return placementEntries.map((entry) => `p${entry.placementId}r${entry.roleCode}`).join('');
+  return placementEntries.map((entry) => `p${entry.placementId}r${entry.roleCode}`).join("");
 }

@@ -1,7 +1,7 @@
-import 'server-only';
-import { cache } from 'react';
-import { getServerSession } from 'next-auth/next';
-import { authOptions } from '@/app/lib/auth/auth-options';
+import "server-only";
+import { cache } from "react";
+import { getServerSession } from "next-auth/next";
+import { authOptions } from "@/app/lib/auth/auth-options";
 
 /**
  * Cached session getter for /you pages.

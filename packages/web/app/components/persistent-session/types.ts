@@ -1,10 +1,17 @@
-import type { MutableRefObject } from 'react';
-import { getBackendWsUrl } from '@/app/lib/backend-url';
-import type { SessionUser, SubscriptionQueueEvent, SessionEvent, SessionLiveStats, SessionSummary, QueueState } from '@boardsesh/shared-schema';
-import type { ClimbQueueItem as LocalClimbQueueItem } from '../queue-control/types';
-import type { BoardDetails, ParsedBoardRouteParameters } from '@/app/lib/types';
+import type { MutableRefObject } from "react";
+import { getBackendWsUrl } from "@/app/lib/backend-url";
+import type {
+  SessionUser,
+  SubscriptionQueueEvent,
+  SessionEvent,
+  SessionLiveStats,
+  SessionSummary,
+  QueueState,
+} from "@boardsesh/shared-schema";
+import type { ClimbQueueItem as LocalClimbQueueItem } from "../queue-control/types";
+import type { BoardDetails, ParsedBoardRouteParameters } from "@/app/lib/types";
 // Re-export QueueState from shared-schema for convenience
-export type { QueueState } from '@boardsesh/shared-schema';
+export type { QueueState } from "@boardsesh/shared-schema";
 
 // Session type matching the GraphQL response
 export interface Session {
@@ -60,9 +67,16 @@ export interface PersistentSessionActionsType {
   // Mutation functions
   addQueueItem: (item: LocalClimbQueueItem, position?: number) => Promise<void>;
   removeQueueItem: (uuid: string) => Promise<void>;
-  setCurrentClimb: (item: LocalClimbQueueItem | null, shouldAddToQueue?: boolean, correlationId?: string) => Promise<void>;
+  setCurrentClimb: (
+    item: LocalClimbQueueItem | null,
+    shouldAddToQueue?: boolean,
+    correlationId?: string,
+  ) => Promise<void>;
   mirrorCurrentClimb: (mirrored: boolean) => Promise<void>;
-  setQueue: (queue: LocalClimbQueueItem[], currentClimbQueueItem?: LocalClimbQueueItem | null) => Promise<void>;
+  setQueue: (
+    queue: LocalClimbQueueItem[],
+    currentClimbQueueItem?: LocalClimbQueueItem | null,
+  ) => Promise<void>;
   replaceQueueItem: (uuid: string, item: LocalClimbQueueItem) => Promise<void>;
 
   // Event subscription for board-level components
@@ -117,7 +131,8 @@ export interface PersistentSessionStateType {
 }
 
 // Combined type for backward compatibility
-export type PersistentSessionContextType = PersistentSessionStateType & PersistentSessionActionsType;
+export type PersistentSessionContextType = PersistentSessionStateType &
+  PersistentSessionActionsType;
 
 // Pending initial queue for new sessions
 export interface PendingInitialQueue {
@@ -138,7 +153,7 @@ export function toClimbQueueItemInput(item: LocalClimbQueueItem) {
       // 24h post-publish window). Null/undefined for Aurora-synced climbs.
       userId: item.climb.userId ?? null,
       name: item.climb.name,
-      description: item.climb.description || '',
+      description: item.climb.description || "",
       frames: item.climb.frames,
       angle: item.climb.angle,
       ascensionist_count: item.climb.ascensionist_count,
@@ -196,9 +211,9 @@ export interface SharedRefs {
 export const DEFAULT_BACKEND_URL = getBackendWsUrl();
 
 // Key for persisting ActiveSessionInfo in user-preferences IndexedDB
-export const ACTIVE_SESSION_KEY = 'activeSession';
+export const ACTIVE_SESSION_KEY = "activeSession";
 
 // Cooldown for corruption-triggered resyncs to prevent infinite loops
 export const CORRUPTION_RESYNC_COOLDOWN_MS = 30000; // 30 seconds
 
-export const DEBUG = process.env.NODE_ENV === 'development';
+export const DEBUG = process.env.NODE_ENV === "development";

@@ -1,10 +1,14 @@
-import { eq, and, desc, inArray } from 'drizzle-orm';
-import type { ConnectionContext } from '@boardsesh/shared-schema';
-import { db } from '../../../db/client';
-import * as dbSchema from '@boardsesh/db/schema';
-import { requireAuthenticated, validateInput } from '../shared/helpers';
-import { difficultyNameWithFallbackExpr, consensusGradeTable, consensusGradeJoinCondition } from '../shared/sql-expressions';
-import { FollowingAscentsFeedInputSchema } from '../../../validation/schemas';
+import { eq, and, desc, inArray } from "drizzle-orm";
+import type { ConnectionContext } from "@boardsesh/shared-schema";
+import { db } from "../../../db/client";
+import * as dbSchema from "@boardsesh/db/schema";
+import { requireAuthenticated, validateInput } from "../shared/helpers";
+import {
+  difficultyNameWithFallbackExpr,
+  consensusGradeTable,
+  consensusGradeJoinCondition,
+} from "../shared/sql-expressions";
+import { FollowingAscentsFeedInputSchema } from "../../../validation/schemas";
 
 export const socialFeedQueries = {
   /**
@@ -14,12 +18,12 @@ export const socialFeedQueries = {
   followingAscentsFeed: async (
     _: unknown,
     { input }: { input?: { limit?: number; offset?: number } },
-    ctx: ConnectionContext
+    ctx: ConnectionContext,
   ) => {
     requireAuthenticated(ctx);
     const myUserId = ctx.userId!;
 
-    const validatedInput = validateInput(FollowingAscentsFeedInputSchema, input || {}, 'input');
+    const validatedInput = validateInput(FollowingAscentsFeedInputSchema, input || {}, "input");
     const limit = validatedInput.limit ?? 20;
     const offset = validatedInput.offset ?? 0;
 
@@ -55,28 +59,31 @@ export const socialFeedQueries = {
       })
       .from(dbSchema.boardseshTicks)
       .innerJoin(dbSchema.users, eq(dbSchema.boardseshTicks.userId, dbSchema.users.id))
-      .leftJoin(dbSchema.userProfiles, eq(dbSchema.boardseshTicks.userId, dbSchema.userProfiles.userId))
+      .leftJoin(
+        dbSchema.userProfiles,
+        eq(dbSchema.boardseshTicks.userId, dbSchema.userProfiles.userId),
+      )
       .leftJoin(
         dbSchema.boardClimbs,
         and(
           eq(dbSchema.boardseshTicks.climbUuid, dbSchema.boardClimbs.uuid),
-          eq(dbSchema.boardseshTicks.boardType, dbSchema.boardClimbs.boardType)
-        )
+          eq(dbSchema.boardseshTicks.boardType, dbSchema.boardClimbs.boardType),
+        ),
       )
       .leftJoin(
         dbSchema.boardDifficultyGrades,
         and(
           eq(dbSchema.boardseshTicks.difficulty, dbSchema.boardDifficultyGrades.difficulty),
-          eq(dbSchema.boardseshTicks.boardType, dbSchema.boardDifficultyGrades.boardType)
-        )
+          eq(dbSchema.boardseshTicks.boardType, dbSchema.boardDifficultyGrades.boardType),
+        ),
       )
       .leftJoin(
         dbSchema.boardClimbStats,
         and(
           eq(dbSchema.boardseshTicks.climbUuid, dbSchema.boardClimbStats.climbUuid),
           eq(dbSchema.boardseshTicks.boardType, dbSchema.boardClimbStats.boardType),
-          eq(dbSchema.boardseshTicks.angle, dbSchema.boardClimbStats.angle)
-        )
+          eq(dbSchema.boardseshTicks.angle, dbSchema.boardClimbStats.angle),
+        ),
       )
       .leftJoin(consensusGradeTable, consensusGradeJoinCondition)
       .where(inArray(dbSchema.boardseshTicks.userId, followedUserIds))
@@ -87,28 +94,41 @@ export const socialFeedQueries = {
     const hasMore = results.length > limit;
     const resultRows = hasMore ? results.slice(0, limit) : results;
 
-    const items = resultRows.map(({ tick, userName, userImage, userDisplayName, userAvatarUrl, climbName, setterUsername, layoutId, frames, difficultyName }) => ({
-      uuid: tick.uuid,
-      userId: tick.userId,
-      userDisplayName: userDisplayName || userName || undefined,
-      userAvatarUrl: userAvatarUrl || userImage || undefined,
-      climbUuid: tick.climbUuid,
-      climbName: climbName || 'Unknown Climb',
-      setterUsername,
-      boardType: tick.boardType,
-      layoutId,
-      angle: tick.angle,
-      isMirror: tick.isMirror ?? false,
-      status: tick.status,
-      attemptCount: tick.attemptCount,
-      quality: tick.quality,
-      difficulty: tick.difficulty,
-      difficultyName,
-      isBenchmark: tick.isBenchmark ?? false,
-      comment: tick.comment || '',
-      climbedAt: tick.climbedAt,
-      frames,
-    }));
+    const items = resultRows.map(
+      ({
+        tick,
+        userName,
+        userImage,
+        userDisplayName,
+        userAvatarUrl,
+        climbName,
+        setterUsername,
+        layoutId,
+        frames,
+        difficultyName,
+      }) => ({
+        uuid: tick.uuid,
+        userId: tick.userId,
+        userDisplayName: userDisplayName || userName || undefined,
+        userAvatarUrl: userAvatarUrl || userImage || undefined,
+        climbUuid: tick.climbUuid,
+        climbName: climbName || "Unknown Climb",
+        setterUsername,
+        boardType: tick.boardType,
+        layoutId,
+        angle: tick.angle,
+        isMirror: tick.isMirror ?? false,
+        status: tick.status,
+        attemptCount: tick.attemptCount,
+        quality: tick.quality,
+        difficulty: tick.difficulty,
+        difficultyName,
+        isBenchmark: tick.isBenchmark ?? false,
+        comment: tick.comment || "",
+        climbedAt: tick.climbedAt,
+        frames,
+      }),
+    );
 
     return {
       items,
@@ -125,7 +145,7 @@ export const socialFeedQueries = {
     _: unknown,
     { input }: { input?: { limit?: number; offset?: number } },
   ) => {
-    const validatedInput = validateInput(FollowingAscentsFeedInputSchema, input || {}, 'input');
+    const validatedInput = validateInput(FollowingAscentsFeedInputSchema, input || {}, "input");
     const limit = validatedInput.limit ?? 20;
     const offset = validatedInput.offset ?? 0;
 
@@ -145,28 +165,31 @@ export const socialFeedQueries = {
       })
       .from(dbSchema.boardseshTicks)
       .innerJoin(dbSchema.users, eq(dbSchema.boardseshTicks.userId, dbSchema.users.id))
-      .leftJoin(dbSchema.userProfiles, eq(dbSchema.boardseshTicks.userId, dbSchema.userProfiles.userId))
+      .leftJoin(
+        dbSchema.userProfiles,
+        eq(dbSchema.boardseshTicks.userId, dbSchema.userProfiles.userId),
+      )
       .leftJoin(
         dbSchema.boardClimbs,
         and(
           eq(dbSchema.boardseshTicks.climbUuid, dbSchema.boardClimbs.uuid),
-          eq(dbSchema.boardseshTicks.boardType, dbSchema.boardClimbs.boardType)
-        )
+          eq(dbSchema.boardseshTicks.boardType, dbSchema.boardClimbs.boardType),
+        ),
       )
       .leftJoin(
         dbSchema.boardDifficultyGrades,
         and(
           eq(dbSchema.boardseshTicks.difficulty, dbSchema.boardDifficultyGrades.difficulty),
-          eq(dbSchema.boardseshTicks.boardType, dbSchema.boardDifficultyGrades.boardType)
-        )
+          eq(dbSchema.boardseshTicks.boardType, dbSchema.boardDifficultyGrades.boardType),
+        ),
       )
       .leftJoin(
         dbSchema.boardClimbStats,
         and(
           eq(dbSchema.boardseshTicks.climbUuid, dbSchema.boardClimbStats.climbUuid),
           eq(dbSchema.boardseshTicks.boardType, dbSchema.boardClimbStats.boardType),
-          eq(dbSchema.boardseshTicks.angle, dbSchema.boardClimbStats.angle)
-        )
+          eq(dbSchema.boardseshTicks.angle, dbSchema.boardClimbStats.angle),
+        ),
       )
       .leftJoin(consensusGradeTable, consensusGradeJoinCondition)
       .orderBy(desc(dbSchema.boardseshTicks.climbedAt))
@@ -176,28 +199,41 @@ export const socialFeedQueries = {
     const hasMore = results.length > limit;
     const resultRows = hasMore ? results.slice(0, limit) : results;
 
-    const items = resultRows.map(({ tick, userName, userImage, userDisplayName, userAvatarUrl, climbName, setterUsername, layoutId, frames, difficultyName }) => ({
-      uuid: tick.uuid,
-      userId: tick.userId,
-      userDisplayName: userDisplayName || userName || undefined,
-      userAvatarUrl: userAvatarUrl || userImage || undefined,
-      climbUuid: tick.climbUuid,
-      climbName: climbName || 'Unknown Climb',
-      setterUsername,
-      boardType: tick.boardType,
-      layoutId,
-      angle: tick.angle,
-      isMirror: tick.isMirror ?? false,
-      status: tick.status,
-      attemptCount: tick.attemptCount,
-      quality: tick.quality,
-      difficulty: tick.difficulty,
-      difficultyName,
-      isBenchmark: tick.isBenchmark ?? false,
-      comment: tick.comment || '',
-      climbedAt: tick.climbedAt,
-      frames,
-    }));
+    const items = resultRows.map(
+      ({
+        tick,
+        userName,
+        userImage,
+        userDisplayName,
+        userAvatarUrl,
+        climbName,
+        setterUsername,
+        layoutId,
+        frames,
+        difficultyName,
+      }) => ({
+        uuid: tick.uuid,
+        userId: tick.userId,
+        userDisplayName: userDisplayName || userName || undefined,
+        userAvatarUrl: userAvatarUrl || userImage || undefined,
+        climbUuid: tick.climbUuid,
+        climbName: climbName || "Unknown Climb",
+        setterUsername,
+        boardType: tick.boardType,
+        layoutId,
+        angle: tick.angle,
+        isMirror: tick.isMirror ?? false,
+        status: tick.status,
+        attemptCount: tick.attemptCount,
+        quality: tick.quality,
+        difficulty: tick.difficulty,
+        difficultyName,
+        isBenchmark: tick.isBenchmark ?? false,
+        comment: tick.comment || "",
+        climbedAt: tick.climbedAt,
+        frames,
+      }),
+    );
 
     return {
       items,

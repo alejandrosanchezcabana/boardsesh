@@ -1,10 +1,10 @@
-'use client';
+"use client";
 
-import { useEffect, useRef } from 'react';
-import { useLiveActivity } from './use-live-activity';
-import { isNativeApp, getPlatform } from '../ble/capacitor-utils';
-import type { ClimbQueueItem } from '@/app/components/queue-control/types';
-import type { BoardDetails } from '../types';
+import { useEffect, useRef } from "react";
+import { useLiveActivity } from "./use-live-activity";
+import { isNativeApp, getPlatform } from "../ble/capacitor-utils";
+import type { ClimbQueueItem } from "@/app/components/queue-control/types";
+import type { BoardDetails } from "../types";
 
 interface LiveActivityBridgeProps {
   queue: ClimbQueueItem[];
@@ -33,11 +33,11 @@ export default function LiveActivityBridge({
   onWidgetNavigateRef.current = onWidgetNavigate;
 
   useEffect(() => {
-    if (!isNativeApp() || getPlatform() !== 'ios') return;
+    if (!isNativeApp() || getPlatform() !== "ios") return;
     const plugin = window.Capacitor?.Plugins?.LiveActivity;
     if (!plugin?.addListener) return;
 
-    const handle = plugin.addListener('queueNavigate', (data: Record<string, unknown>) => {
+    const handle = plugin.addListener("queueNavigate", (data: Record<string, unknown>) => {
       const currentIndex = data.currentIndex as number;
       const correlationId = data.correlationId as string | undefined;
       const queue = queueRef.current;
@@ -62,11 +62,15 @@ export default function LiveActivityBridge({
     let cleaned = false;
     const removeRef: { remove?: () => void } = {};
     const applyHandle = (h: { remove: () => void }) => {
-      if (cleaned) { h.remove(); } else { removeRef.remove = h.remove; }
+      if (cleaned) {
+        h.remove();
+      } else {
+        removeRef.remove = h.remove;
+      }
     };
-    if (handle && typeof (handle as { remove?: () => void }).remove === 'function') {
+    if (handle && typeof (handle as { remove?: () => void }).remove === "function") {
       applyHandle(handle as { remove: () => void });
-    } else if (handle && typeof (handle as Promise<{ remove: () => void }>).then === 'function') {
+    } else if (handle && typeof (handle as Promise<{ remove: () => void }>).then === "function") {
       (handle as Promise<{ remove: () => void }>).then(applyHandle);
     }
 

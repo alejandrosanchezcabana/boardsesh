@@ -16,11 +16,11 @@
  * Prerequisites:
  *   - Dev server running (or use `bun run test:e2e:setup` first)
  */
-import { test } from '@playwright/test';
-import path from 'path';
-import { mkdirSync } from 'fs';
+import { test } from "@playwright/test";
+import path from "path";
+import { mkdirSync } from "fs";
 
-const SCREENSHOT_DIR = path.resolve(__dirname, 'screenshots/layouts');
+const SCREENSHOT_DIR = path.resolve(__dirname, "screenshots/layouts");
 mkdirSync(SCREENSHOT_DIR, { recursive: true });
 
 // iPhone 15 Pro Max logical viewport — matches app-store-screenshots viewport
@@ -41,34 +41,34 @@ const DEVICE_SCALE_FACTOR = 3;
  */
 const LAYOUTS = [
   {
-    name: 'kilter-original',
-    label: 'Kilter Board Original',
-    url: '/kilter/1/28/1,20/40/list',
+    name: "kilter-original",
+    label: "Kilter Board Original",
+    url: "/kilter/1/28/1,20/40/list",
   },
   {
-    name: 'kilter-homewall',
-    label: 'Kilter Board Homewall',
-    url: '/kilter/8/25/26,27,28,29/40/list',
+    name: "kilter-homewall",
+    label: "Kilter Board Homewall",
+    url: "/kilter/8/25/26,27,28,29/40/list",
   },
   {
-    name: 'tension-original',
-    label: 'Tension Original Layout',
-    url: '/tension/9/1/8,9,10,11/40/list',
+    name: "tension-original",
+    label: "Tension Original Layout",
+    url: "/tension/9/1/8,9,10,11/40/list",
   },
   {
-    name: 'tension-two-mirror',
-    label: 'Tension Board 2 Mirror',
-    url: '/tension/10/6/12,13/40/list',
+    name: "tension-two-mirror",
+    label: "Tension Board 2 Mirror",
+    url: "/tension/10/6/12,13/40/list",
   },
   {
-    name: 'tension-two-spray',
-    label: 'Tension Board 2 Spray',
-    url: '/tension/11/6/12,13/40/list',
+    name: "tension-two-spray",
+    label: "Tension Board 2 Spray",
+    url: "/tension/11/6/12,13/40/list",
   },
 ] as const;
 
-test.describe('Layout Screenshots', () => {
-  test.skip(true, 'Temporarily disabled — screenshot tests not working as expected');
+test.describe("Layout Screenshots", () => {
+  test.skip(true, "Temporarily disabled — screenshot tests not working as expected");
 
   // Board image assets can be large — give each test plenty of headroom
   test.setTimeout(90_000);
@@ -79,18 +79,18 @@ test.describe('Layout Screenshots', () => {
     isMobile: true,
     hasTouch: true,
     userAgent:
-      'Mozilla/5.0 (iPhone; CPU iPhone OS 18_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.0 Mobile/15E148 Safari/604.1',
+      "Mozilla/5.0 (iPhone; CPU iPhone OS 18_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.0 Mobile/15E148 Safari/604.1",
   });
 
   for (const layout of LAYOUTS) {
     test(`${layout.label}`, async ({ page }) => {
       // ── 1. Navigate to the climb list ──────────────────────────────────────
-      await page.goto(layout.url, { waitUntil: 'domcontentloaded', timeout: 60_000 });
+      await page.goto(layout.url, { waitUntil: "domcontentloaded", timeout: 60_000 });
 
       // Wait for the first climb card to render (board image assets may be slow)
       await page
         .waitForSelector('#onboarding-climb-card, [data-testid="climb-card"]', { timeout: 60_000 })
-        .catch(() => page.waitForLoadState('networkidle'));
+        .catch(() => page.waitForLoadState("networkidle"));
 
       // ── 2. Screenshot: climb list ───────────────────────────────────────────
       await page.screenshot({
@@ -100,10 +100,8 @@ test.describe('Layout Screenshots', () => {
       // ── 3. Tap the first climb's thumbnail ─────────────────────────────────
       // Clicking the thumbnail activates the climb AND dispatches the
       // open-play-drawer event (see climbs-list.tsx → handleClimbThumbnailClickByIndex).
-      const thumbnail = page.locator(
-        '#onboarding-climb-card [data-testid="climb-thumbnail"]',
-      );
-      await thumbnail.waitFor({ state: 'visible', timeout: 10_000 });
+      const thumbnail = page.locator('#onboarding-climb-card [data-testid="climb-thumbnail"]');
+      await thumbnail.waitFor({ state: "visible", timeout: 10_000 });
       await thumbnail.click();
 
       // ── 4. Wait for the play-view drawer ───────────────────────────────────

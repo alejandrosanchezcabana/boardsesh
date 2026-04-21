@@ -12,7 +12,7 @@ export async function GET(request: NextRequest) {
 
   if (rateLimitResult.limited) {
     return NextResponse.redirect(
-      new URL("/auth/verify-request?error=TooManyAttempts", request.url)
+      new URL("/auth/verify-request?error=TooManyAttempts", request.url),
     );
   }
 
@@ -21,9 +21,7 @@ export async function GET(request: NextRequest) {
   const email = searchParams.get("email");
 
   if (!token || !email) {
-    return NextResponse.redirect(
-      new URL("/auth/verify-request?error=InvalidToken", request.url)
-    );
+    return NextResponse.redirect(new URL("/auth/verify-request?error=InvalidToken", request.url));
   }
 
   const db = getDb();
@@ -35,15 +33,13 @@ export async function GET(request: NextRequest) {
     .where(
       and(
         eq(schema.verificationTokens.identifier, email),
-        eq(schema.verificationTokens.token, token)
-      )
+        eq(schema.verificationTokens.token, token),
+      ),
     )
     .limit(1);
 
   if (verificationToken.length === 0) {
-    return NextResponse.redirect(
-      new URL("/auth/verify-request?error=InvalidToken", request.url)
-    );
+    return NextResponse.redirect(new URL("/auth/verify-request?error=InvalidToken", request.url));
   }
 
   const tokenData = verificationToken[0];
@@ -56,21 +52,15 @@ export async function GET(request: NextRequest) {
       .where(
         and(
           eq(schema.verificationTokens.identifier, email),
-          eq(schema.verificationTokens.token, token)
-        )
+          eq(schema.verificationTokens.token, token),
+        ),
       );
 
-    return NextResponse.redirect(
-      new URL("/auth/verify-request?error=TokenExpired", request.url)
-    );
+    return NextResponse.redirect(new URL("/auth/verify-request?error=TokenExpired", request.url));
   }
 
   // Verify user exists before updating
-  const user = await db
-    .select()
-    .from(schema.users)
-    .where(eq(schema.users.email, email))
-    .limit(1);
+  const user = await db.select().from(schema.users).where(eq(schema.users.email, email)).limit(1);
 
   if (user.length === 0) {
     // Token exists but user doesn't - cleanup the orphan token
@@ -79,13 +69,11 @@ export async function GET(request: NextRequest) {
       .where(
         and(
           eq(schema.verificationTokens.identifier, email),
-          eq(schema.verificationTokens.token, token)
-        )
+          eq(schema.verificationTokens.token, token),
+        ),
       );
 
-    return NextResponse.redirect(
-      new URL("/auth/verify-request?error=InvalidToken", request.url)
-    );
+    return NextResponse.redirect(new URL("/auth/verify-request?error=InvalidToken", request.url));
   }
 
   // Update user and delete token atomically
@@ -100,13 +88,11 @@ export async function GET(request: NextRequest) {
       .where(
         and(
           eq(schema.verificationTokens.identifier, email),
-          eq(schema.verificationTokens.token, token)
-        )
+          eq(schema.verificationTokens.token, token),
+        ),
       );
   });
 
   // Redirect to login with success message
-  return NextResponse.redirect(
-    new URL("/auth/login?verified=true", request.url)
-  );
+  return NextResponse.redirect(new URL("/auth/login?verified=true", request.url));
 }

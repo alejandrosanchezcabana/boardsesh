@@ -1,15 +1,15 @@
-'use client';
+"use client";
 
-import React from 'react';
-import Link from 'next/link';
-import { useQueueActions, useSessionData } from '../graphql-queue';
-import { constructPlayUrlWithSlugs, getContextAwareClimbViewUrl } from '@/app/lib/url-utils';
-import { BoardDetails } from '@/app/lib/types';
-import { useResolvedBoardDetails } from '@/app/hooks/use-resolved-board-details';
-import FastForwardOutlined from '@mui/icons-material/FastForwardOutlined';
-import { track } from '@vercel/analytics';
-import IconButton from '@mui/material/IconButton';
-import type { IconButtonProps } from '@mui/material/IconButton';
+import React from "react";
+import Link from "next/link";
+import { useQueueActions, useSessionData } from "../graphql-queue";
+import { constructPlayUrlWithSlugs, getContextAwareClimbViewUrl } from "@/app/lib/url-utils";
+import { BoardDetails } from "@/app/lib/types";
+import { useResolvedBoardDetails } from "@/app/hooks/use-resolved-board-details";
+import FastForwardOutlined from "@mui/icons-material/FastForwardOutlined";
+import { track } from "@vercel/analytics";
+import IconButton from "@mui/material/IconButton";
+import type { IconButtonProps } from "@mui/material/IconButton";
 
 type NextClimbButtonProps = {
   navigate: boolean;
@@ -17,7 +17,9 @@ type NextClimbButtonProps = {
 };
 
 const NextButton = (props: IconButtonProps) => (
-  <IconButton {...props} aria-label="Next climb"><FastForwardOutlined /></IconButton>
+  <IconButton {...props} aria-label="Next climb">
+    <FastForwardOutlined />
+  </IconButton>
 );
 
 export default function NextClimbButton({ navigate = false, boardDetails }: NextClimbButtonProps) {
@@ -29,8 +31,8 @@ export default function NextClimbButton({ navigate = false, boardDetails }: Next
   const nextClimb = getNextClimbQueueItem();
 
   const buildClimbUrl = () => {
-    if (!nextClimb) return '';
-    let climbUrl = '';
+    if (!nextClimb) return "";
+    let climbUrl = "";
 
     if (isPlayPage) {
       if (resolvedDetails.layout_name && resolvedDetails.size_name && resolvedDetails.set_names) {
@@ -68,15 +70,15 @@ export default function NextClimbButton({ navigate = false, boardDetails }: Next
   const handleClick = () => {
     if (!nextClimb) return;
     setCurrentClimbQueueItem(nextClimb);
-    track('Queue Navigation', {
-      direction: 'next',
-      method: 'button',
-      boardLayout: boardDetails?.layout_name || '',
+    track("Queue Navigation", {
+      direction: "next",
+      method: "button",
+      boardLayout: boardDetails?.layout_name || "",
     });
 
     if (navigate && isPlayPage) {
       const url = buildClimbUrl();
-      if (url) window.history.pushState(null, '', url);
+      if (url) window.history.pushState(null, "", url);
     }
   };
 

@@ -1,16 +1,19 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { SESH_SETTINGS_DRAWER_EVENT, dispatchOpenSeshSettingsDrawer } from '../sesh-settings-drawer-event';
+import { describe, it, expect, vi, beforeEach } from "vite-plus/test";
+import {
+  SESH_SETTINGS_DRAWER_EVENT,
+  dispatchOpenSeshSettingsDrawer,
+} from "../sesh-settings-drawer-event";
 
-describe('sesh-settings-drawer-event', () => {
+describe("sesh-settings-drawer-event", () => {
   beforeEach(() => {
     vi.clearAllMocks();
   });
 
-  it('exports the expected event name constant', () => {
-    expect(SESH_SETTINGS_DRAWER_EVENT).toBe('boardsesh:open-sesh-settings-drawer');
+  it("exports the expected event name constant", () => {
+    expect(SESH_SETTINGS_DRAWER_EVENT).toBe("boardsesh:open-sesh-settings-drawer");
   });
 
-  it('dispatches a CustomEvent on the window', () => {
+  it("dispatches a CustomEvent on the window", () => {
     const listener = vi.fn();
     window.addEventListener(SESH_SETTINGS_DRAWER_EVENT, listener);
 
@@ -24,12 +27,12 @@ describe('sesh-settings-drawer-event', () => {
     window.removeEventListener(SESH_SETTINGS_DRAWER_EVENT, listener);
   });
 
-  it('does not throw when window is undefined (SSR safety)', () => {
+  it("does not throw when window is undefined (SSR safety)", () => {
     const originalWindow = globalThis.window;
 
     // Temporarily make window undefined to simulate SSR
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    Object.defineProperty(globalThis, 'window', {
+    Object.defineProperty(globalThis, "window", {
       value: undefined,
       writable: true,
       configurable: true,
@@ -38,7 +41,7 @@ describe('sesh-settings-drawer-event', () => {
     expect(() => dispatchOpenSeshSettingsDrawer()).not.toThrow();
 
     // Restore window
-    Object.defineProperty(globalThis, 'window', {
+    Object.defineProperty(globalThis, "window", {
       value: originalWindow,
       writable: true,
       configurable: true,

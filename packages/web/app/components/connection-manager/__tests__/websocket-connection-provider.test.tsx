@@ -1,9 +1,12 @@
-import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { render, screen, act } from '@testing-library/react';
-import React from 'react';
-import { connectionManager } from '../websocket-connection-manager';
-import { WebSocketConnectionProvider, useWebSocketConnection } from '../websocket-connection-provider';
-import type { Client } from 'graphql-ws';
+import { describe, it, expect, vi, beforeEach, afterEach } from "vite-plus/test";
+import { render, screen, act } from "@testing-library/react";
+import React from "react";
+import { connectionManager } from "../websocket-connection-manager";
+import {
+  WebSocketConnectionProvider,
+  useWebSocketConnection,
+} from "../websocket-connection-provider";
+import type { Client } from "graphql-ws";
 
 class FakeClient {
   listeners = new Map<string, (...args: unknown[]) => void>();
@@ -23,10 +26,14 @@ class FakeClient {
 
 function TestConsumer() {
   const { state, name } = useWebSocketConnection();
-  return <div data-testid="state">{state}:{name ?? 'none'}</div>;
+  return (
+    <div data-testid="state">
+      {state}:{name ?? "none"}
+    </div>
+  );
 }
 
-describe('WebSocketConnectionProvider', () => {
+describe("WebSocketConnectionProvider", () => {
   beforeEach(() => {
     vi.useFakeTimers();
     connectionManager.__resetForTests();
@@ -36,17 +43,17 @@ describe('WebSocketConnectionProvider', () => {
     vi.useRealTimers();
   });
 
-  it('delivers idle state when no clients are registered', () => {
+  it("delivers idle state when no clients are registered", () => {
     render(
       <WebSocketConnectionProvider>
         <TestConsumer />
       </WebSocketConnectionProvider>,
     );
 
-    expect(screen.getByTestId('state').textContent).toBe('idle:none');
+    expect(screen.getByTestId("state").textContent).toBe("idle:none");
   });
 
-  it('updates state when a client connects', () => {
+  it("updates state when a client connects", () => {
     const client = new FakeClient();
 
     render(
@@ -56,19 +63,19 @@ describe('WebSocketConnectionProvider', () => {
     );
 
     act(() => {
-      connectionManager.registerClient(client as unknown as Client, 'session');
+      connectionManager.registerClient(client as unknown as Client, "session");
     });
 
-    expect(screen.getByTestId('state').textContent).toBe('connecting:session');
+    expect(screen.getByTestId("state").textContent).toBe("connecting:session");
 
     act(() => {
-      client.emit('connected');
+      client.emit("connected");
     });
 
-    expect(screen.getByTestId('state').textContent).toBe('connected:session');
+    expect(screen.getByTestId("state").textContent).toBe("connected:session");
   });
 
-  it('updates state through reconnection cycle', () => {
+  it("updates state through reconnection cycle", () => {
     const client = new FakeClient();
 
     render(
@@ -78,32 +85,32 @@ describe('WebSocketConnectionProvider', () => {
     );
 
     act(() => {
-      connectionManager.registerClient(client as unknown as Client, 'session');
-      client.emit('connected');
+      connectionManager.registerClient(client as unknown as Client, "session");
+      client.emit("connected");
     });
 
-    expect(screen.getByTestId('state').textContent).toBe('connected:session');
+    expect(screen.getByTestId("state").textContent).toBe("connected:session");
 
     act(() => {
-      client.emit('closed');
+      client.emit("closed");
     });
 
-    expect(screen.getByTestId('state').textContent).toBe('reconnecting:session');
+    expect(screen.getByTestId("state").textContent).toBe("reconnecting:session");
 
     act(() => {
-      client.emit('connecting');
+      client.emit("connecting");
     });
 
-    expect(screen.getByTestId('state').textContent).toBe('connecting:session');
+    expect(screen.getByTestId("state").textContent).toBe("connecting:session");
 
     act(() => {
-      client.emit('connected');
+      client.emit("connected");
     });
 
-    expect(screen.getByTestId('state').textContent).toBe('connected:session');
+    expect(screen.getByTestId("state").textContent).toBe("connected:session");
   });
 
-  it('returns idle when unregistered', () => {
+  it("returns idle when unregistered", () => {
     const client = new FakeClient();
     let unregister: () => void;
 
@@ -114,21 +121,21 @@ describe('WebSocketConnectionProvider', () => {
     );
 
     act(() => {
-      unregister = connectionManager.registerClient(client as unknown as Client, 'session');
-      client.emit('connected');
+      unregister = connectionManager.registerClient(client as unknown as Client, "session");
+      client.emit("connected");
     });
 
-    expect(screen.getByTestId('state').textContent).toBe('connected:session');
+    expect(screen.getByTestId("state").textContent).toBe("connected:session");
 
     act(() => {
       unregister();
     });
 
-    expect(screen.getByTestId('state').textContent).toBe('idle:none');
+    expect(screen.getByTestId("state").textContent).toBe("idle:none");
   });
 });
 
-describe('useWebSocketConnection fallback (no provider)', () => {
+describe("useWebSocketConnection fallback (no provider)", () => {
   beforeEach(() => {
     vi.useFakeTimers();
     connectionManager.__resetForTests();
@@ -138,13 +145,13 @@ describe('useWebSocketConnection fallback (no provider)', () => {
     vi.useRealTimers();
   });
 
-  it('returns idle snapshot without a provider', () => {
+  it("returns idle snapshot without a provider", () => {
     render(<TestConsumer />);
 
-    expect(screen.getByTestId('state').textContent).toBe('idle:none');
+    expect(screen.getByTestId("state").textContent).toBe("idle:none");
   });
 
-  it('returns a stable reference across renders without a provider', () => {
+  it("returns a stable reference across renders without a provider", () => {
     const refs: ReturnType<typeof useWebSocketConnection>[] = [];
 
     function RefTracker() {

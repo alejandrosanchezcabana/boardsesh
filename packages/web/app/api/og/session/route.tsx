@@ -1,13 +1,13 @@
-import React from 'react';
-import { ImageResponse } from '@vercel/og';
-import { NextRequest } from 'next/server';
-import { darkTokens, themeTokens } from '@/app/theme/theme-config';
-import { FONT_GRADE_COLORS, getGradeColorWithOpacity } from '@/app/lib/grade-colors';
-import { BOULDER_GRADES } from '@/app/lib/board-data';
-import { createOgImageHeaders, OG_IMAGE_HEIGHT, OG_IMAGE_WIDTH } from '@/app/lib/seo/og';
-import { getSessionOgSummary } from '@/app/lib/seo/dynamic-og-data';
+import React from "react";
+import { ImageResponse } from "@vercel/og";
+import { NextRequest } from "next/server";
+import { darkTokens, themeTokens } from "@/app/theme/theme-config";
+import { FONT_GRADE_COLORS, getGradeColorWithOpacity } from "@/app/lib/grade-colors";
+import { BOULDER_GRADES } from "@/app/lib/board-data";
+import { createOgImageHeaders, OG_IMAGE_HEIGHT, OG_IMAGE_WIDTH } from "@/app/lib/seo/og";
+import { getSessionOgSummary } from "@/app/lib/seo/dynamic-og-data";
 
-export const runtime = 'edge';
+export const runtime = "edge";
 
 const DIFFICULTY_TO_GRADE: Record<number, string> = Object.fromEntries(
   BOULDER_GRADES.map((g) => [g.difficulty_id, g.font_grade]),
@@ -23,7 +23,7 @@ function buildGradeBars(gradeRows: Array<{ difficulty: number; count: number }>)
     if (!grade) continue;
 
     const hex = FONT_GRADE_COLORS[grade.toLowerCase()];
-    const color = hex ? getGradeColorWithOpacity(hex, 0.72) : 'rgba(209, 213, 219, 0.65)';
+    const color = hex ? getGradeColorWithOpacity(hex, 0.72) : "rgba(209, 213, 219, 0.65)";
     gradeBars.push({ grade, count: row.count, color });
   }
 
@@ -32,7 +32,7 @@ function buildGradeBars(gradeRows: Array<{ difficulty: number; count: number }>)
 }
 
 function buildJoinHeadline(leaderName: string | null) {
-  return leaderName ? `Join ${leaderName} on the wall` : 'Join the crew on the wall';
+  return leaderName ? `Join ${leaderName} on the wall` : "Join the crew on the wall";
 }
 
 export async function GET(request: NextRequest) {
@@ -40,12 +40,12 @@ export async function GET(request: NextRequest) {
 
   try {
     const { searchParams } = new URL(request.url);
-    const sessionId = searchParams.get('sessionId');
-    const variant = searchParams.get('variant');
-    const version = searchParams.get('v');
+    const sessionId = searchParams.get("sessionId");
+    const variant = searchParams.get("variant");
+    const version = searchParams.get("v");
 
     if (!sessionId) {
-      return new Response('Missing sessionId parameter', { status: 400 });
+      return new Response("Missing sessionId parameter", { status: 400 });
     }
 
     const dbT0 = performance.now();
@@ -53,22 +53,23 @@ export async function GET(request: NextRequest) {
     const dbMs = performance.now() - dbT0;
 
     if (!summary.found) {
-      return new Response('Session not found', { status: 404 });
+      return new Response("Session not found", { status: 404 });
     }
 
     const sessionName = summary.sessionName;
-    const participantNames = summary.participantNames.join(', ');
+    const participantNames = summary.participantNames.join(", ");
     const gradeBars = buildGradeBars(summary.gradeRows);
     const maxCount = Math.max(...gradeBars.map((b) => b.count), 1);
-    const isJoinVariant = variant === 'join';
+    const isJoinVariant = variant === "join";
     const renderMs = performance.now() - routeT0 - dbMs;
     const joinHeadline = buildJoinHeadline(summary.leaderName);
     const boardInfoLine = summary.boardLabel
-      ? `${summary.boardLabel}${summary.boardAngle != null ? ` • ${summary.boardAngle}°` : ''}`
-      : 'Boardsesh session';
-    const statsLine = summary.participantCount > 0
-      ? `${summary.participantCount} climber${summary.participantCount !== 1 ? 's' : ''} • ${summary.totalSends} send${summary.totalSends !== 1 ? 's' : ''} so far`
-      : 'No one is here yet';
+      ? `${summary.boardLabel}${summary.boardAngle != null ? ` • ${summary.boardAngle}°` : ""}`
+      : "Boardsesh session";
+    const statsLine =
+      summary.participantCount > 0
+        ? `${summary.participantCount} climber${summary.participantCount !== 1 ? "s" : ""} • ${summary.totalSends} send${summary.totalSends !== 1 ? "s" : ""} so far`
+        : "No one is here yet";
     const previewUrl = summary.boardPreviewPath
       ? new URL(summary.boardPreviewPath, request.nextUrl.origin).toString()
       : null;
@@ -76,45 +77,45 @@ export async function GET(request: NextRequest) {
     const image = isJoinVariant ? (
       <div
         style={{
-          width: '100%',
-          height: '100%',
-          display: 'flex',
-          position: 'relative',
-          overflow: 'hidden',
+          width: "100%",
+          height: "100%",
+          display: "flex",
+          position: "relative",
+          overflow: "hidden",
           background: darkTokens.semantic.background,
           color: darkTokens.neutral[900],
-          padding: '42px',
-          gap: '34px',
+          padding: "42px",
+          gap: "34px",
         }}
       >
         <div
           style={{
-            position: 'absolute',
+            position: "absolute",
             inset: 0,
-            display: 'flex',
-            overflow: 'hidden',
+            display: "flex",
+            overflow: "hidden",
           }}
         >
           <div
             style={{
-              position: 'absolute',
-              top: '-110px',
-              left: '-70px',
-              width: '310px',
-              height: '310px',
-              borderRadius: '999px',
+              position: "absolute",
+              top: "-110px",
+              left: "-70px",
+              width: "310px",
+              height: "310px",
+              borderRadius: "999px",
               background: themeTokens.colors.logoGreen,
               opacity: 0.18,
             }}
           />
           <div
             style={{
-              position: 'absolute',
-              right: '-100px',
-              bottom: '-120px',
-              width: '360px',
-              height: '360px',
-              borderRadius: '999px',
+              position: "absolute",
+              right: "-100px",
+              bottom: "-120px",
+              width: "360px",
+              height: "360px",
+              borderRadius: "999px",
               background: themeTokens.colors.logoRose,
               opacity: 0.18,
             }}
@@ -123,16 +124,16 @@ export async function GET(request: NextRequest) {
 
         <div
           style={{
-            width: '366px',
-            height: '546px',
-            borderRadius: '28px',
+            width: "366px",
+            height: "546px",
+            borderRadius: "28px",
             background: darkTokens.semantic.surfaceElevated,
             border: `1px solid ${darkTokens.neutral[300]}`,
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            position: 'relative',
-            overflow: 'hidden',
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            position: "relative",
+            overflow: "hidden",
             boxShadow: darkTokens.shadows.lg,
             flexShrink: 0,
           }}
@@ -145,29 +146,29 @@ export async function GET(request: NextRequest) {
               width={366}
               height={546}
               style={{
-                width: '100%',
-                height: '100%',
-                objectFit: 'cover',
+                width: "100%",
+                height: "100%",
+                objectFit: "cover",
               }}
             />
           ) : (
             <div
               style={{
-                display: 'flex',
-                flexDirection: 'column',
-                gap: '12px',
-                alignItems: 'center',
-                justifyContent: 'center',
-                padding: '32px',
+                display: "flex",
+                flexDirection: "column",
+                gap: "12px",
+                alignItems: "center",
+                justifyContent: "center",
+                padding: "32px",
                 color: darkTokens.neutral[600],
-                textAlign: 'center',
+                textAlign: "center",
               }}
             >
-              <div style={{ fontSize: '22px', fontWeight: 700 }}>
-                {summary.boardLabel || 'Board ready'}
+              <div style={{ fontSize: "22px", fontWeight: 700 }}>
+                {summary.boardLabel || "Board ready"}
               </div>
-              <div style={{ fontSize: '18px' }}>
-                {summary.boardAngle != null ? `${summary.boardAngle}°` : 'Session invite'}
+              <div style={{ fontSize: "18px" }}>
+                {summary.boardAngle != null ? `${summary.boardAngle}°` : "Session invite"}
               </div>
             </div>
           )}
@@ -175,28 +176,28 @@ export async function GET(request: NextRequest) {
 
         <div
           style={{
-            display: 'flex',
-            flexDirection: 'column',
-            justifyContent: 'center',
+            display: "flex",
+            flexDirection: "column",
+            justifyContent: "center",
             flex: 1,
             minWidth: 0,
-            gap: '22px',
-            position: 'relative',
+            gap: "22px",
+            position: "relative",
           }}
         >
           <div
             style={{
-              display: 'flex',
-              flexDirection: 'column',
-              gap: '12px',
+              display: "flex",
+              flexDirection: "column",
+              gap: "12px",
             }}
           >
             <div
               style={{
-                fontSize: '20px',
+                fontSize: "20px",
                 fontWeight: 700,
-                letterSpacing: '0.08em',
-                textTransform: 'uppercase',
+                letterSpacing: "0.08em",
+                textTransform: "uppercase",
                 color: darkTokens.neutral[500],
               }}
             >
@@ -204,7 +205,7 @@ export async function GET(request: NextRequest) {
             </div>
             <div
               style={{
-                fontSize: '62px',
+                fontSize: "62px",
                 fontWeight: 700,
                 lineHeight: 1.04,
                 color: darkTokens.neutral[900],
@@ -214,17 +215,17 @@ export async function GET(request: NextRequest) {
             </div>
             <div
               style={{
-                fontSize: '27px',
+                fontSize: "27px",
                 color: darkTokens.neutral[700],
                 lineHeight: 1.35,
               }}
             >
-              {sessionName && sessionName !== 'Climbing Session' ? sessionName : statsLine}
+              {sessionName && sessionName !== "Climbing Session" ? sessionName : statsLine}
             </div>
-            {sessionName && sessionName !== 'Climbing Session' && (
+            {sessionName && sessionName !== "Climbing Session" && (
               <div
                 style={{
-                  fontSize: '22px',
+                  fontSize: "22px",
                   color: darkTokens.neutral[600],
                 }}
               >
@@ -234,7 +235,7 @@ export async function GET(request: NextRequest) {
             {participantNames && (
               <div
                 style={{
-                  fontSize: '19px',
+                  fontSize: "19px",
                   color: darkTokens.neutral[500],
                 }}
               >
@@ -245,11 +246,11 @@ export async function GET(request: NextRequest) {
 
           <div
             style={{
-              display: 'flex',
-              flexDirection: 'column',
-              gap: '14px',
-              borderRadius: '24px',
-              padding: '24px 26px',
+              display: "flex",
+              flexDirection: "column",
+              gap: "14px",
+              borderRadius: "24px",
+              padding: "24px 26px",
               background: darkTokens.semantic.surface,
               border: `1px solid ${darkTokens.neutral[300]}`,
               boxShadow: darkTokens.shadows.md,
@@ -257,7 +258,7 @@ export async function GET(request: NextRequest) {
           >
             <div
               style={{
-                fontSize: '22px',
+                fontSize: "22px",
                 fontWeight: 700,
                 color: darkTokens.neutral[900],
               }}
@@ -269,53 +270,53 @@ export async function GET(request: NextRequest) {
               <>
                 <div
                   style={{
-                    display: 'flex',
-                    gap: '6px',
-                    width: '100%',
-                    height: '190px',
+                    display: "flex",
+                    gap: "6px",
+                    width: "100%",
+                    height: "190px",
                   }}
                 >
                   {gradeBars.map((bar) => (
                     <div
                       key={bar.grade}
                       style={{
-                        display: 'flex',
-                        flexDirection: 'column',
+                        display: "flex",
+                        flexDirection: "column",
                         flex: 1,
-                        height: '100%',
-                        justifyContent: 'flex-end',
-                        alignItems: 'stretch',
+                        height: "100%",
+                        justifyContent: "flex-end",
+                        alignItems: "stretch",
                       }}
                     >
                       <div
                         style={{
-                          display: 'flex',
-                          alignItems: 'flex-end',
-                          width: '100%',
-                          height: '156px',
+                          display: "flex",
+                          alignItems: "flex-end",
+                          width: "100%",
+                          height: "156px",
                           borderBottom: `1px solid ${darkTokens.neutral[300]}`,
-                          paddingBottom: '10px',
+                          paddingBottom: "10px",
                         }}
                       >
                         <div
                           style={{
-                            width: '100%',
+                            width: "100%",
                             height: `${Math.max((bar.count / maxCount) * 100, 7)}%`,
                             backgroundColor: bar.color,
-                            borderRadius: '10px 10px 0 0',
+                            borderRadius: "10px 10px 0 0",
                           }}
                         />
                       </div>
                       <div
                         style={{
-                          display: 'flex',
-                          justifyContent: 'center',
-                          alignItems: 'center',
-                          width: '100%',
-                          paddingTop: '10px',
-                          fontSize: '17px',
+                          display: "flex",
+                          justifyContent: "center",
+                          alignItems: "center",
+                          width: "100%",
+                          paddingTop: "10px",
+                          fontSize: "17px",
                           fontWeight: 700,
-                          textAlign: 'center',
+                          textAlign: "center",
                           color: darkTokens.neutral[700],
                         }}
                       >
@@ -328,7 +329,7 @@ export async function GET(request: NextRequest) {
             ) : (
               <div
                 style={{
-                  fontSize: '20px',
+                  fontSize: "20px",
                   color: darkTokens.neutral[600],
                 }}
               >
@@ -340,13 +341,13 @@ export async function GET(request: NextRequest) {
 
         <div
           style={{
-            position: 'absolute',
-            bottom: '24px',
-            right: '34px',
-            fontSize: '18px',
+            position: "absolute",
+            bottom: "24px",
+            right: "34px",
+            fontSize: "18px",
             color: darkTokens.neutral[500],
             fontWeight: 700,
-            letterSpacing: '0.04em',
+            letterSpacing: "0.04em",
           }}
         >
           boardsesh.com
@@ -355,29 +356,29 @@ export async function GET(request: NextRequest) {
     ) : (
       <div
         style={{
-          width: '100%',
-          height: '100%',
-          display: 'flex',
-          flexDirection: 'column',
-          justifyContent: 'center',
-          alignItems: 'center',
-          background: '#FFFFFF',
-          padding: '60px 80px',
-          gap: '32px',
+          width: "100%",
+          height: "100%",
+          display: "flex",
+          flexDirection: "column",
+          justifyContent: "center",
+          alignItems: "center",
+          background: "#FFFFFF",
+          padding: "60px 80px",
+          gap: "32px",
         }}
       >
         <div
           style={{
-            display: 'flex',
-            flexDirection: 'column',
-            gap: '12px',
-            width: '100%',
+            display: "flex",
+            flexDirection: "column",
+            gap: "12px",
+            width: "100%",
           }}
         >
           <div
             style={{
-              fontSize: '48px',
-              fontWeight: 'bold',
+              fontSize: "48px",
+              fontWeight: "bold",
               color: themeTokens.neutral[900],
               lineHeight: 1.2,
             }}
@@ -387,7 +388,7 @@ export async function GET(request: NextRequest) {
           {participantNames && (
             <div
               style={{
-                fontSize: '24px',
+                fontSize: "24px",
                 color: themeTokens.neutral[500],
               }}
             >
@@ -396,32 +397,32 @@ export async function GET(request: NextRequest) {
           )}
           <div
             style={{
-              fontSize: '20px',
+              fontSize: "20px",
               color: themeTokens.neutral[400],
             }}
           >
             {summary.totalSends > 0
-              ? `${summary.totalSends} send${summary.totalSends !== 1 ? 's' : ''}`
-              : 'No sends yet'}
+              ? `${summary.totalSends} send${summary.totalSends !== 1 ? "s" : ""}`
+              : "No sends yet"}
           </div>
         </div>
 
         {gradeBars.length > 0 && (
           <div
             style={{
-              display: 'flex',
-              flexDirection: 'column',
-              width: '100%',
-              gap: '8px',
+              display: "flex",
+              flexDirection: "column",
+              width: "100%",
+              gap: "8px",
             }}
           >
             <div
               style={{
-                display: 'flex',
-                alignItems: 'flex-end',
-                gap: '4px',
-                height: '180px',
-                width: '100%',
+                display: "flex",
+                alignItems: "flex-end",
+                gap: "4px",
+                height: "180px",
+                width: "100%",
               }}
             >
               {gradeBars.map((bar) => (
@@ -431,16 +432,16 @@ export async function GET(request: NextRequest) {
                     flex: 1,
                     height: `${Math.max((bar.count / maxCount) * 100, 5)}%`,
                     backgroundColor: bar.color,
-                    borderRadius: '3px 3px 0 0',
+                    borderRadius: "3px 3px 0 0",
                   }}
                 />
               ))}
             </div>
             <div
               style={{
-                display: 'flex',
-                gap: '4px',
-                width: '100%',
+                display: "flex",
+                gap: "4px",
+                width: "100%",
               }}
             >
               {gradeBars.map((bar) => (
@@ -448,8 +449,8 @@ export async function GET(request: NextRequest) {
                   key={bar.grade}
                   style={{
                     flex: 1,
-                    fontSize: '14px',
-                    textAlign: 'center',
+                    fontSize: "14px",
+                    textAlign: "center",
                     color: themeTokens.neutral[400],
                   }}
                 >
@@ -462,10 +463,10 @@ export async function GET(request: NextRequest) {
 
         <div
           style={{
-            position: 'absolute',
-            bottom: '24px',
-            right: '40px',
-            fontSize: '20px',
+            position: "absolute",
+            bottom: "24px",
+            right: "40px",
+            fontSize: "20px",
             color: themeTokens.neutral[300],
             fontWeight: 600,
           }}
@@ -475,20 +476,17 @@ export async function GET(request: NextRequest) {
       </div>
     );
 
-    return new ImageResponse(
-      image,
-      {
-        width: OG_IMAGE_WIDTH,
-        height: OG_IMAGE_HEIGHT,
-        headers: createOgImageHeaders({
-          contentType: 'image/png',
-          version,
-          serverTiming: `db;dur=${dbMs.toFixed(1)}, render;dur=${renderMs.toFixed(1)}, route;dur=${(performance.now() - routeT0).toFixed(1)}`,
-        }),
-      },
-    );
+    return new ImageResponse(image, {
+      width: OG_IMAGE_WIDTH,
+      height: OG_IMAGE_HEIGHT,
+      headers: createOgImageHeaders({
+        contentType: "image/png",
+        version,
+        serverTiming: `db;dur=${dbMs.toFixed(1)}, render;dur=${renderMs.toFixed(1)}, route;dur=${(performance.now() - routeT0).toFixed(1)}`,
+      }),
+    });
   } catch (error) {
-    console.error('Error generating session OG image:', error);
+    console.error("Error generating session OG image:", error);
     const message = error instanceof Error ? error.message : String(error);
     return new Response(`Error generating image: ${message}`, { status: 500 });
   }

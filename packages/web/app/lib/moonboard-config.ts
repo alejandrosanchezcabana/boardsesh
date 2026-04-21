@@ -8,86 +8,97 @@ export const MOONBOARD_ENABLED = true;
 // These grades match the board_difficulty_grades table and BOULDER_GRADES in board-data.ts
 // MoonBoard supports grades from 5+ (V1) and above
 export const MOONBOARD_GRADES = [
-  { value: '5+', label: '5+ (V1)', difficultyId: 13 },
-  { value: '5B', label: '5B (V1)', difficultyId: 14 },
-  { value: '5C', label: '5C (V2)', difficultyId: 15 },
-  { value: '6A', label: '6A (V3)', difficultyId: 16 },
-  { value: '6A+', label: '6A+ (V3)', difficultyId: 17 },
-  { value: '6B', label: '6B (V4)', difficultyId: 18 },
-  { value: '6B+', label: '6B+ (V4)', difficultyId: 19 },
-  { value: '6C', label: '6C (V5)', difficultyId: 20 },
-  { value: '6C+', label: '6C+ (V5)', difficultyId: 21 },
-  { value: '7A', label: '7A (V6)', difficultyId: 22 },
-  { value: '7A+', label: '7A+ (V7)', difficultyId: 23 },
-  { value: '7B', label: '7B (V8)', difficultyId: 24 },
-  { value: '7B+', label: '7B+ (V8)', difficultyId: 25 },
-  { value: '7C', label: '7C (V9)', difficultyId: 26 },
-  { value: '7C+', label: '7C+ (V10)', difficultyId: 27 },
-  { value: '8A', label: '8A (V11)', difficultyId: 28 },
-  { value: '8A+', label: '8A+ (V12)', difficultyId: 29 },
-  { value: '8B', label: '8B (V13)', difficultyId: 30 },
-  { value: '8B+', label: '8B+ (V14)', difficultyId: 31 },
+  { value: "5+", label: "5+ (V1)", difficultyId: 13 },
+  { value: "5B", label: "5B (V1)", difficultyId: 14 },
+  { value: "5C", label: "5C (V2)", difficultyId: 15 },
+  { value: "6A", label: "6A (V3)", difficultyId: 16 },
+  { value: "6A+", label: "6A+ (V3)", difficultyId: 17 },
+  { value: "6B", label: "6B (V4)", difficultyId: 18 },
+  { value: "6B+", label: "6B+ (V4)", difficultyId: 19 },
+  { value: "6C", label: "6C (V5)", difficultyId: 20 },
+  { value: "6C+", label: "6C+ (V5)", difficultyId: 21 },
+  { value: "7A", label: "7A (V6)", difficultyId: 22 },
+  { value: "7A+", label: "7A+ (V7)", difficultyId: 23 },
+  { value: "7B", label: "7B (V8)", difficultyId: 24 },
+  { value: "7B+", label: "7B+ (V8)", difficultyId: 25 },
+  { value: "7C", label: "7C (V9)", difficultyId: 26 },
+  { value: "7C+", label: "7C+ (V10)", difficultyId: 27 },
+  { value: "8A", label: "8A (V11)", difficultyId: 28 },
+  { value: "8A+", label: "8A+ (V12)", difficultyId: 29 },
+  { value: "8B", label: "8B (V13)", difficultyId: 30 },
+  { value: "8B+", label: "8B+ (V14)", difficultyId: 31 },
 ] as const;
 
 // MoonBoard layout types (equivalent to Aurora "layouts")
 export const MOONBOARD_LAYOUTS = {
-  'moonboard-2010': { id: 1, name: 'MoonBoard 2010', folder: 'moonboard2010' },
-  'moonboard-2016': { id: 2, name: 'MoonBoard 2016', folder: 'moonboard2016' },
-  'moonboard-2024': { id: 3, name: 'MoonBoard 2024', folder: 'moonboard2024' },
-  'moonboard-masters-2017': { id: 4, name: 'MoonBoard Masters 2017', folder: 'moonboardmasters2017' },
-  'moonboard-masters-2019': { id: 5, name: 'MoonBoard Masters 2019', folder: 'moonboardmasters2019' },
-  'mini-moonboard-2020': { id: 6, name: 'Mini MoonBoard 2020', folder: 'minimoonboard2020' },
+  "moonboard-2010": { id: 1, name: "MoonBoard 2010", folder: "moonboard2010" },
+  "moonboard-2016": { id: 2, name: "MoonBoard 2016", folder: "moonboard2016" },
+  "moonboard-2024": { id: 3, name: "MoonBoard 2024", folder: "moonboard2024" },
+  "moonboard-masters-2017": {
+    id: 4,
+    name: "MoonBoard Masters 2017",
+    folder: "moonboardmasters2017",
+  },
+  "moonboard-masters-2019": {
+    id: 5,
+    name: "MoonBoard Masters 2019",
+    folder: "moonboardmasters2019",
+  },
+  "mini-moonboard-2020": { id: 6, name: "Mini MoonBoard 2020", folder: "minimoonboard2020" },
 } as const;
 
 export type MoonBoardLayoutKey = keyof typeof MOONBOARD_LAYOUTS;
 
 // Hold sets available per layout
-export const MOONBOARD_SETS: Record<MoonBoardLayoutKey, { id: number; name: string; imageFile: string }[]> = {
-  'moonboard-2010': [
-    { id: 1, name: 'Original School Holds', imageFile: 'originalschoolholds.png' },
+export const MOONBOARD_SETS: Record<
+  MoonBoardLayoutKey,
+  { id: number; name: string; imageFile: string }[]
+> = {
+  "moonboard-2010": [
+    { id: 1, name: "Original School Holds", imageFile: "originalschoolholds.png" },
   ],
-  'moonboard-2016': [
-    { id: 2, name: 'Hold Set A', imageFile: 'holdseta.png' },
-    { id: 3, name: 'Hold Set B', imageFile: 'holdsetb.png' },
-    { id: 4, name: 'Original School Holds', imageFile: 'originalschoolholds.png' },
+  "moonboard-2016": [
+    { id: 2, name: "Hold Set A", imageFile: "holdseta.png" },
+    { id: 3, name: "Hold Set B", imageFile: "holdsetb.png" },
+    { id: 4, name: "Original School Holds", imageFile: "originalschoolholds.png" },
   ],
-  'moonboard-2024': [
-    { id: 5, name: 'Hold Set D', imageFile: 'holdsetd.png' },
-    { id: 6, name: 'Hold Set E', imageFile: 'holdsete.png' },
-    { id: 7, name: 'Hold Set F', imageFile: 'holdsetf.png' },
-    { id: 8, name: 'Wooden Holds', imageFile: 'woodenholds.png' },
-    { id: 9, name: 'Wooden Holds B', imageFile: 'woodenholdsb.png' },
-    { id: 10, name: 'Wooden Holds C', imageFile: 'woodenholdsc.png' },
+  "moonboard-2024": [
+    { id: 5, name: "Hold Set D", imageFile: "holdsetd.png" },
+    { id: 6, name: "Hold Set E", imageFile: "holdsete.png" },
+    { id: 7, name: "Hold Set F", imageFile: "holdsetf.png" },
+    { id: 8, name: "Wooden Holds", imageFile: "woodenholds.png" },
+    { id: 9, name: "Wooden Holds B", imageFile: "woodenholdsb.png" },
+    { id: 10, name: "Wooden Holds C", imageFile: "woodenholdsc.png" },
   ],
-  'moonboard-masters-2017': [
-    { id: 11, name: 'Hold Set A', imageFile: 'holdseta.png' },
-    { id: 12, name: 'Hold Set B', imageFile: 'holdsetb.png' },
-    { id: 13, name: 'Hold Set C', imageFile: 'holdsetc.png' },
-    { id: 14, name: 'Original School Holds', imageFile: 'originalschoolholds.png' },
-    { id: 15, name: 'Screw-on Feet', imageFile: 'screw-onfeet.png' },
-    { id: 16, name: 'Wooden Holds', imageFile: 'woodenholds.png' },
+  "moonboard-masters-2017": [
+    { id: 11, name: "Hold Set A", imageFile: "holdseta.png" },
+    { id: 12, name: "Hold Set B", imageFile: "holdsetb.png" },
+    { id: 13, name: "Hold Set C", imageFile: "holdsetc.png" },
+    { id: 14, name: "Original School Holds", imageFile: "originalschoolholds.png" },
+    { id: 15, name: "Screw-on Feet", imageFile: "screw-onfeet.png" },
+    { id: 16, name: "Wooden Holds", imageFile: "woodenholds.png" },
   ],
-  'moonboard-masters-2019': [
-    { id: 17, name: 'Hold Set A', imageFile: 'holdseta.png' },
-    { id: 18, name: 'Hold Set B', imageFile: 'holdsetb.png' },
-    { id: 19, name: 'Original School Holds', imageFile: 'originalschoolholds.png' },
-    { id: 20, name: 'Screw-on Feet', imageFile: 'screw-onfeet.png' },
-    { id: 21, name: 'Wooden Holds', imageFile: 'woodenholds.png' },
-    { id: 22, name: 'Wooden Holds B', imageFile: 'woodenholdsb.png' },
-    { id: 23, name: 'Wooden Holds C', imageFile: 'woodenholdsc.png' },
+  "moonboard-masters-2019": [
+    { id: 17, name: "Hold Set A", imageFile: "holdseta.png" },
+    { id: 18, name: "Hold Set B", imageFile: "holdsetb.png" },
+    { id: 19, name: "Original School Holds", imageFile: "originalschoolholds.png" },
+    { id: 20, name: "Screw-on Feet", imageFile: "screw-onfeet.png" },
+    { id: 21, name: "Wooden Holds", imageFile: "woodenholds.png" },
+    { id: 22, name: "Wooden Holds B", imageFile: "woodenholdsb.png" },
+    { id: 23, name: "Wooden Holds C", imageFile: "woodenholdsc.png" },
   ],
-  'mini-moonboard-2020': [
-    { id: 24, name: 'Original School Holds', imageFile: 'originalschoolholds.png' },
-    { id: 25, name: 'Wooden Holds', imageFile: 'woodenholds.png' },
-    { id: 26, name: 'Wooden Holds B', imageFile: 'woodenholdsb.png' },
-    { id: 27, name: 'Wooden Holds C', imageFile: 'woodenholdsc.png' },
+  "mini-moonboard-2020": [
+    { id: 24, name: "Original School Holds", imageFile: "originalschoolholds.png" },
+    { id: 25, name: "Wooden Holds", imageFile: "woodenholds.png" },
+    { id: 26, name: "Wooden Holds B", imageFile: "woodenholdsb.png" },
+    { id: 27, name: "Wooden Holds C", imageFile: "woodenholdsc.png" },
   ],
 };
 
 // MoonBoard grid configuration (same for all standard layouts)
 // 11 columns (A-K) x 18 rows (1-18, bottom to top)
 export const MOONBOARD_GRID = {
-  columns: ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K'] as const,
+  columns: ["A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K"] as const,
   rows: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18] as const,
   numColumns: 11,
   numRows: 18,
@@ -99,8 +110,8 @@ export const MOONBOARD_ANGLES = [25, 40] as const;
 // MoonBoard has a single fixed size (all boards are same dimensions)
 export const MOONBOARD_SIZE = {
   id: 1,
-  name: 'Standard',
-  description: '11x18 Grid',
+  name: "Standard",
+  description: "11x18 Grid",
   // Image dimensions from decompiled assets
   width: 650,
   height: 1000,
@@ -109,9 +120,9 @@ export const MOONBOARD_SIZE = {
 // MoonBoard hold states (different color scheme from Aurora)
 // Green for start holds, Blue for hand/intermediate holds, Red for finish holds
 export const MOONBOARD_HOLD_STATES = {
-  start: { name: 'STARTING' as const, color: '#00FF00', displayColor: '#44FF44' },
-  hand: { name: 'HAND' as const, color: '#0000FF', displayColor: '#4444FF' },
-  finish: { name: 'FINISH' as const, color: '#FF0000', displayColor: '#FF3333' },
+  start: { name: "STARTING" as const, color: "#00FF00", displayColor: "#44FF44" },
+  hand: { name: "HAND" as const, color: "#0000FF", displayColor: "#4444FF" },
+  finish: { name: "FINISH" as const, color: "#FF0000", displayColor: "#FF3333" },
 } as const;
 
 // Hold state codes for frames encoding (compatible with Aurora format).
@@ -259,13 +270,13 @@ export function getMoonBoardDetails({
   // Build images_to_holds with background + hold set images as keys.
   // Values are empty arrays — only keys are used for background URL construction
   // in the WASM worker and BoardImageLayers rendering paths.
-  const images_to_holds: Record<string, []> = { 'moonboard-bg.png': [] };
+  const images_to_holds: Record<string, []> = { "moonboard-bg.png": [] };
   for (const set of selectedSets) {
     images_to_holds[`${layoutData.folder}/${set.imageFile}`] = [];
   }
 
   return {
-    board_name: 'moonboard' as const,
+    board_name: "moonboard" as const,
     layout_id,
     size_id: MOONBOARD_SIZE.id,
     set_ids,
@@ -314,5 +325,5 @@ export function encodeMoonBoardHoldsToFrames(holds: {
     parts.push(`p${holdId}r${MOONBOARD_HOLD_STATE_CODES.finish}`);
   });
 
-  return parts.join('');
+  return parts.join("");
 }

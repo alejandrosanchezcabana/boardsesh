@@ -1,18 +1,14 @@
-import React from 'react';
-import { notFound, redirect } from 'next/navigation';
-import { resolveBoardBySlug, boardToRouteParams } from '@/app/lib/board-slug-utils';
-import { constructBoardSlugListUrl } from '@/app/lib/url-utils';
-import MoonBoardBulkImport from '@/app/components/moonboard-import/moonboard-bulk-import';
-import {
-  MOONBOARD_LAYOUTS,
-  MOONBOARD_SETS,
-  MoonBoardLayoutKey,
-} from '@/app/lib/moonboard-config';
-import { Metadata } from 'next';
+import React from "react";
+import { notFound, redirect } from "next/navigation";
+import { resolveBoardBySlug, boardToRouteParams } from "@/app/lib/board-slug-utils";
+import { constructBoardSlugListUrl } from "@/app/lib/url-utils";
+import MoonBoardBulkImport from "@/app/components/moonboard-import/moonboard-bulk-import";
+import { MOONBOARD_LAYOUTS, MOONBOARD_SETS, MoonBoardLayoutKey } from "@/app/lib/moonboard-config";
+import { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: 'Import Climbs | Boardsesh',
-  description: 'Import MoonBoard climbs from screenshots',
+  title: "Import Climbs | Boardsesh",
+  description: "Import MoonBoard climbs from screenshots",
 };
 
 function getMoonBoardLayoutInfo(layoutId: number) {
@@ -42,7 +38,7 @@ export default async function BoardSlugImportPage(props: ImportPageProps) {
   const parsedParams = boardToRouteParams(board, Number(params.angle));
 
   // Only MoonBoard supports bulk import
-  if (parsedParams.board_name !== 'moonboard') {
+  if (parsedParams.board_name !== "moonboard") {
     redirect(constructBoardSlugListUrl(board.slug, parsedParams.angle));
   }
 

@@ -1,8 +1,8 @@
-import type { ConnectionContext, ControllerInfo } from '@boardsesh/shared-schema';
-import { db } from '../../../db/client';
-import { esp32Controllers } from '@boardsesh/db/schema/app';
-import { eq } from 'drizzle-orm';
-import { requireAuthenticated } from '../shared/helpers';
+import type { ConnectionContext, ControllerInfo } from "@boardsesh/shared-schema";
+import { db } from "../../../db/client";
+import { esp32Controllers } from "@boardsesh/db/schema/app";
+import { eq } from "drizzle-orm";
+import { requireAuthenticated } from "../shared/helpers";
 
 // Consider controller online if seen within last 60 seconds
 const ONLINE_THRESHOLD_MS = 60 * 1000;
@@ -15,12 +15,12 @@ export const controllerQueries = {
   myControllers: async (
     _: unknown,
     __: unknown,
-    ctx: ConnectionContext
+    ctx: ConnectionContext,
   ): Promise<ControllerInfo[]> => {
     requireAuthenticated(ctx);
 
     if (!ctx.userId) {
-      throw new Error('User ID not available');
+      throw new Error("User ID not available");
     }
 
     const controllers = await db

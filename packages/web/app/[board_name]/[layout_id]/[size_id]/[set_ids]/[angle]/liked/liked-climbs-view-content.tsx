@@ -1,33 +1,33 @@
-'use client';
+"use client";
 
-import React, { useState, useCallback, useRef } from 'react';
-import Typography from '@mui/material/Typography';
-import IconButton from '@mui/material/IconButton';
-import Menu from '@mui/material/Menu';
-import MenuItem from '@mui/material/MenuItem';
-import ListItemIcon from '@mui/material/ListItemIcon';
-import ListItemText from '@mui/material/ListItemText';
+import React, { useState, useCallback, useRef } from "react";
+import Typography from "@mui/material/Typography";
+import IconButton from "@mui/material/IconButton";
+import Menu from "@mui/material/Menu";
+import MenuItem from "@mui/material/MenuItem";
+import ListItemIcon from "@mui/material/ListItemIcon";
+import ListItemText from "@mui/material/ListItemText";
 import {
   FavoriteOutlined,
   SentimentDissatisfiedOutlined,
   MoreVertOutlined,
   AddOutlined,
-} from '@mui/icons-material';
-import { track } from '@vercel/analytics';
-import { BoardDetails, Climb } from '@/app/lib/types';
-import { executeGraphQL } from '@/app/lib/graphql/client';
+} from "@mui/icons-material";
+import { track } from "@vercel/analytics";
+import { BoardDetails, Climb } from "@/app/lib/types";
+import { executeGraphQL } from "@/app/lib/graphql/client";
 import {
   GET_USER_FAVORITE_CLIMBS,
   GetUserFavoriteClimbsQueryResponse,
   GetUserFavoriteClimbsQueryVariables,
-} from '@/app/lib/graphql/operations/favorites';
-import { useSnackbar } from '@/app/components/providers/snackbar-provider';
-import { LoadingSpinner } from '@/app/components/ui/loading-spinner';
-import { useWsAuthToken } from '@/app/hooks/use-ws-auth-token';
-import { useQueueActions } from '@/app/components/graphql-queue';
-import BackButton from '@/app/components/back-button';
-import LikedClimbsList from './liked-climbs-list';
-import styles from '@/app/components/library/playlist-view.module.css';
+} from "@/app/lib/graphql/operations/favorites";
+import { useSnackbar } from "@/app/components/providers/snackbar-provider";
+import { LoadingSpinner } from "@/app/components/ui/loading-spinner";
+import { useWsAuthToken } from "@/app/hooks/use-ws-auth-token";
+import { useQueueActions } from "@/app/components/graphql-queue";
+import BackButton from "@/app/components/back-button";
+import LikedClimbsList from "./liked-climbs-list";
+import styles from "@/app/components/library/playlist-view.module.css";
 
 type LikedClimbsViewContentProps = {
   boardDetails: BoardDetails;
@@ -47,7 +47,7 @@ export default function LikedClimbsViewContent({
   const { addToQueue } = useQueueActions();
 
   const getBackUrl = () => {
-    return '/playlists';
+    return "/playlists";
   };
 
   const handleAddAllToQueue = useCallback(async () => {
@@ -80,7 +80,7 @@ export default function LikedClimbsViewContent({
               boardName: boardDetails.board_name,
               layoutId: boardDetails.layout_id,
               sizeId: boardDetails.size_id,
-              setIds: boardDetails.set_ids.join(','),
+              setIds: boardDetails.set_ids.join(","),
               angle,
               page,
               pageSize,
@@ -100,7 +100,7 @@ export default function LikedClimbsViewContent({
       }
 
       if (allClimbs.length === 0) {
-        showMessage('No climbs to add', 'info');
+        showMessage("No climbs to add", "info");
         return;
       }
 
@@ -108,15 +108,18 @@ export default function LikedClimbsViewContent({
         addToQueue(climb);
       }
 
-      track('Liked Climbs Add All To Queue', {
+      track("Liked Climbs Add All To Queue", {
         climbCount: allClimbs.length,
       });
 
-      showMessage(`Added ${allClimbs.length} ${allClimbs.length === 1 ? 'climb' : 'climbs'} to queue`, 'success');
+      showMessage(
+        `Added ${allClimbs.length} ${allClimbs.length === 1 ? "climb" : "climbs"} to queue`,
+        "success",
+      );
     } catch (err) {
       if (abortController.signal.aborted) return;
-      console.error('Error adding climbs to queue:', err);
-      showMessage('Failed to add climbs to queue', 'error');
+      console.error("Error adding climbs to queue:", err);
+      showMessage("Failed to add climbs to queue", "error");
     } finally {
       addingToQueueRef.current = false;
       setIsAddingToQueue(false);
@@ -136,9 +139,7 @@ export default function LikedClimbsViewContent({
       <div className={styles.errorContainer}>
         <SentimentDissatisfiedOutlined className={styles.errorIcon} />
         <div className={styles.errorTitle}>Sign In Required</div>
-        <div className={styles.errorMessage}>
-          Please sign in to view your liked climbs.
-        </div>
+        <div className={styles.errorMessage}>Please sign in to view your liked climbs.</div>
       </div>
     );
   }
@@ -157,7 +158,7 @@ export default function LikedClimbsViewContent({
           <div className={styles.heroContent}>
             <div
               className={styles.heroSquare}
-              style={{ background: 'linear-gradient(135deg, var(--color-error), #D87F7A)' }}
+              style={{ background: "linear-gradient(135deg, var(--color-error), #D87F7A)" }}
             >
               <FavoriteOutlined className={styles.heroSquareIcon} />
             </div>
@@ -166,9 +167,7 @@ export default function LikedClimbsViewContent({
                 Liked Climbs
               </Typography>
               <div className={styles.heroMeta}>
-                <span className={styles.heroMetaItem}>
-                  Your favorite climbs
-                </span>
+                <span className={styles.heroMetaItem}>Your favorite climbs</span>
               </div>
             </div>
           </div>
@@ -187,21 +186,17 @@ export default function LikedClimbsViewContent({
             open={Boolean(menuAnchor)}
             onClose={() => setMenuAnchor(null)}
           >
-            <MenuItem
-              onClick={handleAddAllToQueue}
-              disabled={isAddingToQueue}
-            >
-              <ListItemIcon><AddOutlined /></ListItemIcon>
-              <ListItemText>{isAddingToQueue ? 'Adding...' : 'Queue All'}</ListItemText>
+            <MenuItem onClick={handleAddAllToQueue} disabled={isAddingToQueue}>
+              <ListItemIcon>
+                <AddOutlined />
+              </ListItemIcon>
+              <ListItemText>{isAddingToQueue ? "Adding..." : "Queue All"}</ListItemText>
             </MenuItem>
           </Menu>
         </div>
 
         {/* Climbs List */}
-        <LikedClimbsList
-          boardDetails={boardDetails}
-          angle={angle}
-        />
+        <LikedClimbsList boardDetails={boardDetails} angle={angle} />
       </div>
     </>
   );

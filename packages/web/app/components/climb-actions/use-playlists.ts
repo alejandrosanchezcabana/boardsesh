@@ -1,7 +1,7 @@
-'use client';
+"use client";
 
-import { useCallback, useContext } from 'react';
-import { PlaylistsContext, type Playlist } from './playlists-batch-context';
+import { useCallback, useContext } from "react";
+import { PlaylistsContext, type Playlist } from "./playlists-batch-context";
 
 type UsePlaylistsOptions = {
   climbUuid: string;
@@ -17,7 +17,7 @@ type UsePlaylistsReturn = {
     name: string,
     description?: string,
     color?: string,
-    icon?: string
+    icon?: string,
   ) => Promise<Playlist>;
   isLoading: boolean;
   isAuthenticated: boolean;
@@ -28,13 +28,13 @@ const emptySet = new Set<string>();
 const noopAsync = async () => {};
 const noopCreatePlaylist = async (): Promise<Playlist> => {
   return {
-    id: '',
-    uuid: '',
-    boardType: '',
-    name: '',
+    id: "",
+    uuid: "",
+    boardType: "",
+    name: "",
     isPublic: false,
-    createdAt: '',
-    updatedAt: '',
+    createdAt: "",
+    updatedAt: "",
     climbCount: 0,
     followerCount: 0,
     isFollowedByMe: false,
@@ -55,7 +55,7 @@ export function usePlaylists({ climbUuid, angle }: UsePlaylistsOptions): UsePlay
       if (!context) return;
       return context.addToPlaylist(playlistId, climbUuid, angle);
     },
-    [context, climbUuid, angle]
+    [context, climbUuid, angle],
   );
 
   const removeFromPlaylist = useCallback(
@@ -63,7 +63,7 @@ export function usePlaylists({ climbUuid, angle }: UsePlaylistsOptions): UsePlay
       if (!context) return;
       return context.removeFromPlaylist(playlistId, climbUuid);
     },
-    [context, climbUuid]
+    [context, climbUuid],
   );
 
   if (!context) {

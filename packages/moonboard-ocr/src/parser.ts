@@ -5,10 +5,10 @@
  * For browser usage, import from '@boardsesh/moonboard-ocr/browser' instead.
  */
 
-import path from 'path';
-import { SharpImageProcessor } from './image-processor/sharp-processor';
-import { MoonBoardClimb, ParseResult } from './types';
-import { parseWithProcessor, deduplicateClimbs } from './parser-core';
+import path from "path";
+import { SharpImageProcessor } from "./image-processor/sharp-processor";
+import { MoonBoardClimb, ParseResult } from "./types";
+import { parseWithProcessor, deduplicateClimbs } from "./parser-core";
 
 // Re-export browser-safe core functions for backward compatibility
 export { parseWithProcessor, deduplicateClimbs };
@@ -28,7 +28,7 @@ export async function parseScreenshot(imagePath: string): Promise<ParseResult> {
  */
 export async function parseMultipleScreenshots(
   imagePaths: string[],
-  onProgress?: (current: number, total: number, file: string) => void
+  onProgress?: (current: number, total: number, file: string) => void,
 ): Promise<{ climbs: MoonBoardClimb[]; errors: Array<{ file: string; error: string }> }> {
   const climbs: MoonBoardClimb[] = [];
   const errors: Array<{ file: string; error: string }> = [];
@@ -41,7 +41,7 @@ export async function parseMultipleScreenshots(
     if (result.success && result.climb) {
       climbs.push(result.climb);
     } else {
-      errors.push({ file: path.basename(imagePath), error: result.error || 'Unknown error' });
+      errors.push({ file: path.basename(imagePath), error: result.error || "Unknown error" });
     }
   }
 

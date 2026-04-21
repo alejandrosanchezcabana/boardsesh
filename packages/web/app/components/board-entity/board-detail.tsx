@@ -1,26 +1,26 @@
-'use client';
+"use client";
 
-import React, { useState, useEffect, useCallback } from 'react';
-import Box from '@mui/material/Box';
-import Avatar from '@mui/material/Avatar';
-import MuiTypography from '@mui/material/Typography';
-import Chip from '@mui/material/Chip';
-import Tab from '@mui/material/Tab';
-import Tabs from '@mui/material/Tabs';
-import Divider from '@mui/material/Divider';
-import MuiButton from '@mui/material/Button';
-import CircularProgress from '@mui/material/CircularProgress';
-import LocationOnOutlined from '@mui/icons-material/LocationOnOutlined';
-import EditOutlined from '@mui/icons-material/EditOutlined';
-import DeleteOutlined from '@mui/icons-material/DeleteOutlined';
-import TrendingUpOutlined from '@mui/icons-material/TrendingUpOutlined';
-import PersonOutlined from '@mui/icons-material/PersonOutlined';
-import PeopleOutlined from '@mui/icons-material/PeopleOutlined';
-import ChatBubbleOutlined from '@mui/icons-material/ChatBubbleOutlineOutlined';
-import type { UserBoard } from '@boardsesh/shared-schema';
-import { useWsAuthToken } from '@/app/hooks/use-ws-auth-token';
-import { useSnackbar } from '@/app/components/providers/snackbar-provider';
-import { createGraphQLHttpClient } from '@/app/lib/graphql/client';
+import React, { useState, useEffect, useCallback } from "react";
+import Box from "@mui/material/Box";
+import Avatar from "@mui/material/Avatar";
+import MuiTypography from "@mui/material/Typography";
+import Chip from "@mui/material/Chip";
+import Tab from "@mui/material/Tab";
+import Tabs from "@mui/material/Tabs";
+import Divider from "@mui/material/Divider";
+import MuiButton from "@mui/material/Button";
+import CircularProgress from "@mui/material/CircularProgress";
+import LocationOnOutlined from "@mui/icons-material/LocationOnOutlined";
+import EditOutlined from "@mui/icons-material/EditOutlined";
+import DeleteOutlined from "@mui/icons-material/DeleteOutlined";
+import TrendingUpOutlined from "@mui/icons-material/TrendingUpOutlined";
+import PersonOutlined from "@mui/icons-material/PersonOutlined";
+import PeopleOutlined from "@mui/icons-material/PeopleOutlined";
+import ChatBubbleOutlined from "@mui/icons-material/ChatBubbleOutlineOutlined";
+import type { UserBoard } from "@boardsesh/shared-schema";
+import { useWsAuthToken } from "@/app/hooks/use-ws-auth-token";
+import { useSnackbar } from "@/app/components/providers/snackbar-provider";
+import { createGraphQLHttpClient } from "@/app/lib/graphql/client";
 import {
   GET_BOARD,
   DELETE_BOARD,
@@ -33,27 +33,27 @@ import {
   type DeleteBoardMutationResponse,
   type LinkBoardToGymMutationVariables,
   type LinkBoardToGymMutationResponse,
-} from '@/app/lib/graphql/operations';
-import { useSession } from 'next-auth/react';
-import { themeTokens } from '@/app/theme/theme-config';
-import FitnessCenterOutlined from '@mui/icons-material/FitnessCenterOutlined';
-import AddOutlined from '@mui/icons-material/AddOutlined';
-import FollowButton from '@/app/components/ui/follow-button';
-import BoardLeaderboard from './board-leaderboard';
-import EditBoardForm from './edit-board-form';
-import CommentSection from '@/app/components/social/comment-section';
-import SwipeableDrawer from '@/app/components/swipeable-drawer/swipeable-drawer';
-import GymDetail from '@/app/components/gym-entity/gym-detail';
-import GymSelector from '@/app/components/gym-entity/gym-selector';
+} from "@/app/lib/graphql/operations";
+import { useSession } from "next-auth/react";
+import { themeTokens } from "@/app/theme/theme-config";
+import FitnessCenterOutlined from "@mui/icons-material/FitnessCenterOutlined";
+import AddOutlined from "@mui/icons-material/AddOutlined";
+import FollowButton from "@/app/components/ui/follow-button";
+import BoardLeaderboard from "./board-leaderboard";
+import EditBoardForm from "./edit-board-form";
+import CommentSection from "@/app/components/social/comment-section";
+import SwipeableDrawer from "@/app/components/swipeable-drawer/swipeable-drawer";
+import GymDetail from "@/app/components/gym-entity/gym-detail";
+import GymSelector from "@/app/components/gym-entity/gym-selector";
 
 const BOARD_TYPE_LABELS: Record<string, string> = {
-  kilter: 'Kilter',
-  tension: 'Tension',
-  moonboard: 'MoonBoard',
-  decoy: 'Decoy',
-  touchstone: 'Touchstone',
-  grasshopper: 'Grasshopper',
-  soill: 'So iLL',
+  kilter: "Kilter",
+  tension: "Tension",
+  moonboard: "MoonBoard",
+  decoy: "Decoy",
+  touchstone: "Touchstone",
+  grasshopper: "Grasshopper",
+  soill: "So iLL",
 };
 
 export interface BoardDetailContentProps {
@@ -88,17 +88,16 @@ export function BoardDetailContent({
     setIsLoading(true);
     try {
       const client = createGraphQLHttpClient(token);
-      const data = await client.request<GetBoardQueryResponse, GetBoardQueryVariables>(
-        GET_BOARD,
-        { boardUuid },
-      );
+      const data = await client.request<GetBoardQueryResponse, GetBoardQueryVariables>(GET_BOARD, {
+        boardUuid,
+      });
       const fetchedBoard = data.board ?? null;
       if (fetchedBoard && initialIsFollowing !== undefined) {
         fetchedBoard.isFollowedByMe = initialIsFollowing;
       }
       setBoard(fetchedBoard);
     } catch (error) {
-      console.error('Failed to fetch board:', error);
+      console.error("Failed to fetch board:", error);
     } finally {
       setIsLoading(false);
     }
@@ -123,11 +122,11 @@ export function BoardDetailContent({
         DELETE_BOARD,
         { boardUuid: board.uuid },
       );
-      showMessage('Board deleted', 'success');
+      showMessage("Board deleted", "success");
       onDeleted?.();
     } catch (error) {
-      console.error('Failed to delete board:', error);
-      showMessage('Failed to delete board', 'error');
+      console.error("Failed to delete board:", error);
+      showMessage("Failed to delete board", "error");
     } finally {
       setIsDeleting(false);
     }
@@ -146,25 +145,28 @@ export function BoardDetailContent({
         LINK_BOARD_TO_GYM,
         { input: { boardUuid: board.uuid, gymUuid } },
       );
-      showMessage(gymUuid ? 'Board linked to gym' : 'Board unlinked from gym', 'success');
+      showMessage(gymUuid ? "Board linked to gym" : "Board unlinked from gym", "success");
       setShowGymSelector(false);
       fetchBoard();
     } catch (error) {
-      console.error('Failed to link board to gym:', error);
-      showMessage('Failed to link board to gym', 'error');
+      console.error("Failed to link board to gym:", error);
+      showMessage("Failed to link board to gym", "error");
     }
   };
 
-  const handleFollowChange = useCallback((isFollowing: boolean) => {
-    if (board) {
-      onFollowChange?.(board.uuid, isFollowing);
-    }
-    fetchBoard();
-  }, [board, onFollowChange, fetchBoard]);
+  const handleFollowChange = useCallback(
+    (isFollowing: boolean) => {
+      if (board) {
+        onFollowChange?.(board.uuid, isFollowing);
+      }
+      fetchBoard();
+    },
+    [board, onFollowChange, fetchBoard],
+  );
 
   if (isLoading) {
     return (
-      <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', flex: 1 }}>
+      <Box sx={{ display: "flex", justifyContent: "center", alignItems: "center", flex: 1 }}>
         <CircularProgress />
       </Box>
     );
@@ -172,7 +174,7 @@ export function BoardDetailContent({
 
   if (!board) {
     return (
-      <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', flex: 1 }}>
+      <Box sx={{ display: "flex", justifyContent: "center", alignItems: "center", flex: 1 }}>
         <MuiTypography color="text.secondary">Board not found</MuiTypography>
       </Box>
     );
@@ -180,7 +182,7 @@ export function BoardDetailContent({
 
   if (isEditing) {
     return (
-      <Box sx={{ px: 2, pb: 2, overflow: 'auto', flex: 1 }}>
+      <Box sx={{ px: 2, pb: 2, overflow: "auto", flex: 1 }}>
         <EditBoardForm
           board={board}
           totalAscents={board.totalAscents}
@@ -195,17 +197,21 @@ export function BoardDetailContent({
     <>
       {/* Header */}
       <Box sx={{ px: 2, pb: 2 }}>
-        <Box sx={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 1 }}>
+        <Box
+          sx={{
+            display: "flex",
+            alignItems: "flex-start",
+            justifyContent: "space-between",
+            gap: 1,
+          }}
+        >
           <Box sx={{ flex: 1, minWidth: 0 }}>
-            <MuiTypography
-              variant="h5"
-              sx={{ fontWeight: themeTokens.typography.fontWeight.bold }}
-            >
+            <MuiTypography variant="h5" sx={{ fontWeight: themeTokens.typography.fontWeight.bold }}>
               {board.name}
             </MuiTypography>
             {board.locationName && (
-              <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, mt: 0.5 }}>
-                <LocationOnOutlined sx={{ fontSize: 16, color: 'var(--neutral-400)' }} />
+              <Box sx={{ display: "flex", alignItems: "center", gap: 0.5, mt: 0.5 }}>
+                <LocationOnOutlined sx={{ fontSize: 16, color: "var(--neutral-400)" }} />
                 <MuiTypography variant="body2" color="text.secondary">
                   {board.locationName}
                 </MuiTypography>
@@ -220,7 +226,7 @@ export function BoardDetailContent({
         </Box>
 
         {/* Owner info */}
-        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mt: 1.5 }}>
+        <Box sx={{ display: "flex", alignItems: "center", gap: 1, mt: 1.5 }}>
           <Avatar
             src={board.ownerAvatarUrl ?? undefined}
             sx={{ width: 24, height: 24, fontSize: 11 }}
@@ -233,13 +239,13 @@ export function BoardDetailContent({
         </Box>
 
         {board.description && (
-          <MuiTypography variant="body2" sx={{ mt: 1.5, color: 'var(--neutral-600)' }}>
+          <MuiTypography variant="body2" sx={{ mt: 1.5, color: "var(--neutral-600)" }}>
             {board.description}
           </MuiTypography>
         )}
 
         {isOwner && (board.isUnlisted || board.hideLocation) && (
-          <Box sx={{ display: 'flex', gap: 1, mt: 1.5, flexWrap: 'wrap' }}>
+          <Box sx={{ display: "flex", gap: 1, mt: 1.5, flexWrap: "wrap" }}>
             {board.isUnlisted && (
               <Chip label="Unlisted" size="small" variant="outlined" color="warning" />
             )}
@@ -253,17 +259,17 @@ export function BoardDetailContent({
         {board.gymName && board.gymUuid && (
           <Box
             sx={{
-              display: 'flex',
-              alignItems: 'center',
+              display: "flex",
+              alignItems: "center",
               gap: 0.5,
               mt: 1.5,
-              cursor: 'pointer',
-              '&:hover': { opacity: 0.8 },
+              cursor: "pointer",
+              "&:hover": { opacity: 0.8 },
             }}
             onClick={() => setShowGymDetail(true)}
           >
-            <FitnessCenterOutlined sx={{ fontSize: 16, color: 'var(--neutral-400)' }} />
-            <MuiTypography variant="body2" color="primary" sx={{ textDecoration: 'underline' }}>
+            <FitnessCenterOutlined sx={{ fontSize: 16, color: "var(--neutral-400)" }} />
+            <MuiTypography variant="body2" color="primary" sx={{ textDecoration: "underline" }}>
               {board.gymName}
             </MuiTypography>
           </Box>
@@ -274,7 +280,7 @@ export function BoardDetailContent({
             size="small"
             startIcon={<AddOutlined />}
             onClick={() => setShowGymSelector(true)}
-            sx={{ textTransform: 'none', mt: 1, alignSelf: 'flex-start' }}
+            sx={{ textTransform: "none", mt: 1, alignSelf: "flex-start" }}
           >
             Add to Gym
           </MuiButton>
@@ -289,15 +295,31 @@ export function BoardDetailContent({
         )}
 
         {/* Stats */}
-        <Box sx={{ display: 'flex', gap: 2.5, mt: 2, flexWrap: 'wrap' }}>
-          <StatChip icon={<TrendingUpOutlined sx={{ fontSize: 16 }} />} value={board.totalAscents} label="ascents" />
-          <StatChip icon={<PersonOutlined sx={{ fontSize: 16 }} />} value={board.uniqueClimbers} label="climbers" />
-          <StatChip icon={<PeopleOutlined sx={{ fontSize: 16 }} />} value={board.followerCount} label="followers" />
-          <StatChip icon={<ChatBubbleOutlined sx={{ fontSize: 16 }} />} value={board.commentCount} label="comments" />
+        <Box sx={{ display: "flex", gap: 2.5, mt: 2, flexWrap: "wrap" }}>
+          <StatChip
+            icon={<TrendingUpOutlined sx={{ fontSize: 16 }} />}
+            value={board.totalAscents}
+            label="ascents"
+          />
+          <StatChip
+            icon={<PersonOutlined sx={{ fontSize: 16 }} />}
+            value={board.uniqueClimbers}
+            label="climbers"
+          />
+          <StatChip
+            icon={<PeopleOutlined sx={{ fontSize: 16 }} />}
+            value={board.followerCount}
+            label="followers"
+          />
+          <StatChip
+            icon={<ChatBubbleOutlined sx={{ fontSize: 16 }} />}
+            value={board.commentCount}
+            label="comments"
+          />
         </Box>
 
         {/* Actions */}
-        <Box sx={{ display: 'flex', gap: 1, mt: 2 }}>
+        <Box sx={{ display: "flex", gap: 1, mt: 2 }}>
           {!isOwner && (
             <FollowButton
               entityId={board.uuid}
@@ -316,7 +338,7 @@ export function BoardDetailContent({
                 size="small"
                 startIcon={<EditOutlined />}
                 onClick={() => setIsEditing(true)}
-                sx={{ textTransform: 'none' }}
+                sx={{ textTransform: "none" }}
               >
                 Edit
               </MuiButton>
@@ -327,9 +349,9 @@ export function BoardDetailContent({
                 startIcon={<DeleteOutlined />}
                 onClick={handleDelete}
                 disabled={isDeleting}
-                sx={{ textTransform: 'none' }}
+                sx={{ textTransform: "none" }}
               >
-                {isDeleting ? <CircularProgress size={16} /> : 'Delete'}
+                {isDeleting ? <CircularProgress size={16} /> : "Delete"}
               </MuiButton>
             </>
           )}
@@ -339,24 +361,16 @@ export function BoardDetailContent({
       <Divider />
 
       {/* Tabs */}
-      <Tabs
-        value={activeTab}
-        onChange={(_, v) => setActiveTab(v)}
-        sx={{ px: 2 }}
-      >
-        <Tab label="Leaderboard" sx={{ textTransform: 'none' }} />
-        <Tab label="Comments" sx={{ textTransform: 'none' }} />
+      <Tabs value={activeTab} onChange={(_, v) => setActiveTab(v)} sx={{ px: 2 }}>
+        <Tab label="Leaderboard" sx={{ textTransform: "none" }} />
+        <Tab label="Comments" sx={{ textTransform: "none" }} />
       </Tabs>
 
       {/* Tab content */}
-      <Box sx={{ flex: 1, overflow: 'auto', px: 2, py: 2 }}>
+      <Box sx={{ flex: 1, overflow: "auto", px: 2, py: 2 }}>
         {activeTab === 0 && <BoardLeaderboard boardUuid={board.uuid} />}
         {activeTab === 1 && (
-          <CommentSection
-            entityType="board"
-            entityId={board.uuid}
-            title="Board Discussion"
-          />
+          <CommentSection entityType="board" entityId={board.uuid} title="Board Discussion" />
         )}
       </Box>
 
@@ -378,17 +392,23 @@ interface BoardDetailProps {
   open: boolean;
   onClose: () => void;
   onDeleted?: () => void;
-  anchor?: 'top' | 'bottom';
+  anchor?: "top" | "bottom";
 }
 
-export default function BoardDetail({ boardUuid, open, onClose, onDeleted, anchor = 'bottom' }: BoardDetailProps) {
+export default function BoardDetail({
+  boardUuid,
+  open,
+  onClose,
+  onDeleted,
+  anchor = "bottom",
+}: BoardDetailProps) {
   return (
     <SwipeableDrawer
       placement={anchor}
       open={open}
       onClose={onClose}
       height="90dvh"
-      styles={{ body: { padding: 0, overflow: 'hidden' } }}
+      styles={{ body: { padding: 0, overflow: "hidden" } }}
     >
       {open && (
         <BoardDetailContent
@@ -405,9 +425,12 @@ export default function BoardDetail({ boardUuid, open, onClose, onDeleted, ancho
 
 function StatChip({ icon, value, label }: { icon: React.ReactNode; value: number; label: string }) {
   return (
-    <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-      <Box sx={{ color: 'var(--neutral-400)', display: 'flex' }}>{icon}</Box>
-      <MuiTypography variant="body2" sx={{ fontWeight: themeTokens.typography.fontWeight.semibold }}>
+    <Box sx={{ display: "flex", alignItems: "center", gap: 0.5 }}>
+      <Box sx={{ color: "var(--neutral-400)", display: "flex" }}>{icon}</Box>
+      <MuiTypography
+        variant="body2"
+        sx={{ fontWeight: themeTokens.typography.fontWeight.semibold }}
+      >
         {value}
       </MuiTypography>
       <MuiTypography variant="body2" color="text.secondary">

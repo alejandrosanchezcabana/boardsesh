@@ -15,8 +15,8 @@ interface CapacitorGeolocationPlugin {
     };
     timestamp: number;
   }>;
-  checkPermissions(): Promise<{ location: 'prompt' | 'granted' | 'denied' }>;
-  requestPermissions(): Promise<{ location: 'prompt' | 'granted' | 'denied' }>;
+  checkPermissions(): Promise<{ location: "prompt" | "granted" | "denied" }>;
+  requestPermissions(): Promise<{ location: "prompt" | "granted" | "denied" }>;
 }
 
 interface CapacitorKeepAwakePlugin {
@@ -33,7 +33,7 @@ interface CapacitorBrowserPlugin {
 
 interface CapacitorAppPlugin {
   addListener(
-    eventName: 'appUrlOpen',
+    eventName: "appUrlOpen",
     listenerFunc: (event: { url: string }) => void,
   ): Promise<{ remove: () => Promise<void> }>;
 }
@@ -52,7 +52,10 @@ interface CapacitorGlobal {
       startSession(options: Record<string, unknown>): Promise<void>;
       endSession(): Promise<void>;
       updateActivity(options: Record<string, unknown>): Promise<void>;
-      addListener(eventName: string, callback: (data: Record<string, unknown>) => void): { remove: () => void } | Promise<{ remove: () => void }>;
+      addListener(
+        eventName: string,
+        callback: (data: Record<string, unknown>) => void,
+      ): { remove: () => void } | Promise<{ remove: () => void }>;
     };
     [key: string]: unknown;
   };

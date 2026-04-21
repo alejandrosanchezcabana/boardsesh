@@ -1,20 +1,20 @@
-import { z } from 'zod';
-import { UUIDSchema, LatitudeSchema, LongitudeSchema, SlugSchema } from './primitives';
+import { z } from "zod";
+import { UUIDSchema, LatitudeSchema, LongitudeSchema, SlugSchema } from "./primitives";
 
 /**
  * Gym member role validation schema
  */
-export const GymMemberRoleSchema = z.enum(['admin', 'member']);
+export const GymMemberRoleSchema = z.enum(["admin", "member"]);
 
 /**
  * Create gym input validation schema
  */
 export const CreateGymInputSchema = z.object({
-  name: z.string().min(1, 'Gym name cannot be empty').max(100, 'Gym name too long'),
-  description: z.string().max(500, 'Description too long').optional(),
-  address: z.string().max(300, 'Address too long').optional(),
-  contactEmail: z.string().email('Invalid email').max(200).optional(),
-  contactPhone: z.string().max(30, 'Phone number too long').optional(),
+  name: z.string().min(1, "Gym name cannot be empty").max(100, "Gym name too long"),
+  description: z.string().max(500, "Description too long").optional(),
+  address: z.string().max(300, "Address too long").optional(),
+  contactEmail: z.string().email("Invalid email").max(200).optional(),
+  contactPhone: z.string().max(30, "Phone number too long").optional(),
   latitude: LatitudeSchema.optional(),
   longitude: LongitudeSchema.optional(),
   isPublic: z.boolean().optional(),
@@ -44,7 +44,7 @@ export const UpdateGymInputSchema = z.object({
  */
 export const AddGymMemberInputSchema = z.object({
   gymUuid: UUIDSchema,
-  userId: z.string().min(1, 'User ID cannot be empty'),
+  userId: z.string().min(1, "User ID cannot be empty"),
   role: GymMemberRoleSchema,
 });
 
@@ -53,7 +53,7 @@ export const AddGymMemberInputSchema = z.object({
  */
 export const RemoveGymMemberInputSchema = z.object({
   gymUuid: UUIDSchema,
-  userId: z.string().min(1, 'User ID cannot be empty'),
+  userId: z.string().min(1, "User ID cannot be empty"),
 });
 
 /**

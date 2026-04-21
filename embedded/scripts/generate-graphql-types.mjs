@@ -12,60 +12,60 @@
  *   bun run controller:codegen
  */
 
-import * as fs from 'fs';
-import * as path from 'path';
-import { fileURLToPath } from 'url';
+import * as fs from "fs";
+import * as path from "path";
+import { fileURLToPath } from "url";
 
 // ESM-compatible __dirname
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 // Path configuration
-const SCHEMA_PATH = path.join(__dirname, '../../packages/shared-schema/src/schema.ts');
-const OUTPUT_DIR = path.join(__dirname, '../libs/graphql-types/src');
-const OUTPUT_FILE = path.join(OUTPUT_DIR, 'graphql_types.h');
+const SCHEMA_PATH = path.join(__dirname, "../../packages/shared-schema/src/schema.ts");
+const OUTPUT_DIR = path.join(__dirname, "../libs/graphql-types/src");
+const OUTPUT_FILE = path.join(OUTPUT_DIR, "graphql_types.h");
 
 // Types that the firmware needs (controller-relevant subset)
 const CONTROLLER_TYPES = [
-  'LedCommand',
-  'LedCommandInput',
-  'LedUpdate',
-  'ControllerPing',
-  'ControllerEvent',
-  'ClimbMatchResult',
-  'DeviceLogEntry',
-  'SendDeviceLogsInput',
-  'SendDeviceLogsResponse',
+  "LedCommand",
+  "LedCommandInput",
+  "LedUpdate",
+  "ControllerPing",
+  "ControllerEvent",
+  "ClimbMatchResult",
+  "DeviceLogEntry",
+  "SendDeviceLogsInput",
+  "SendDeviceLogsResponse",
 ];
 
 // GraphQL to C++ type mapping
 const TYPE_MAP = {
-  'Int': 'int32_t',
-  'Int!': 'int32_t',
-  'Float': 'float',
-  'Float!': 'float',
-  'String': 'const char*',
-  'String!': 'const char*',
-  'Boolean': 'bool',
-  'Boolean!': 'bool',
-  'ID': 'const char*',
-  'ID!': 'const char*',
+  Int: "int32_t",
+  "Int!": "int32_t",
+  Float: "float",
+  "Float!": "float",
+  String: "const char*",
+  "String!": "const char*",
+  Boolean: "bool",
+  "Boolean!": "bool",
+  ID: "const char*",
+  "ID!": "const char*",
 };
 
 // Field-specific type overrides for embedded optimization
 // These override the default mappings for specific fields
 const FIELD_TYPE_OVERRIDES = {
-  'LedCommand.r': 'uint8_t',
-  'LedCommand.g': 'uint8_t',
-  'LedCommand.b': 'uint8_t',
-  'LedCommandInput.r': 'uint8_t',
-  'LedCommandInput.g': 'uint8_t',
-  'LedCommandInput.b': 'uint8_t',
+  "LedCommand.r": "uint8_t",
+  "LedCommand.g": "uint8_t",
+  "LedCommand.b": "uint8_t",
+  "LedCommandInput.r": "uint8_t",
+  "LedCommandInput.g": "uint8_t",
+  "LedCommandInput.b": "uint8_t",
 };
 
 // Sentinel values for optional fields (use specific values to indicate "not set")
 const ROLE_NOT_SET = -1;
-const ANGLE_NOT_SET = -32768;  // INT16_MIN - unlikely valid angle value
+const ANGLE_NOT_SET = -32768; // INT16_MIN - unlikely valid angle value
 
 /**
  * ESP32 Memory Optimization: Field Exclusions
@@ -80,12 +80,12 @@ const ANGLE_NOT_SET = -32768;  // INT16_MIN - unlikely valid angle value
  */
 const ESP32_FIELD_EXCLUSIONS = {
   LedUpdate: new Set([
-    'queueItemUuid',  // Not needed for LED display on ESP32
-    'climbGrade',     // Grade info not displayed on ESP32 hardware
-    'gradeColor',     // Color info not displayed on ESP32 hardware
-    'boardPath',      // Board path not used by ESP32 controller
-    'navigation',     // Complex nested type (QueueNavigationContext), exceeds ESP32 memory budget
-    'clientId',       // BLE disconnect logic uses different mechanism on ESP32
+    "queueItemUuid", // Not needed for LED display on ESP32
+    "climbGrade", // Grade info not displayed on ESP32 hardware
+    "gradeColor", // Color info not displayed on ESP32 hardware
+    "boardPath", // Board path not used by ESP32 controller
+    "navigation", // Complex nested type (QueueNavigationContext), exceeds ESP32 memory budget
+    "clientId", // BLE disconnect logic uses different mechanism on ESP32
   ]),
 };
 
@@ -99,7 +99,7 @@ function parseGraphQLSchema(schemaContent) {
 
   // Remove doc comments for easier parsing
   const cleanSchema = schemaContent
-    .replace(/"""[\s\S]*?"""/g, '')
+    .replace(/"""[\s\S]*?"""/g, "")
     // Simplify single-line string literals to prevent mismatched braces inside strings
     // from confusing the brace-counting parser (e.g., "Use {foo}" would be simplified to "")
     .replace(/"[^"]*"/g, '""');
@@ -119,8 +119,8 @@ function parseGraphQLSchema(schemaContent) {
     let depth = 1;
     let i = bodyStart;
     while (i < cleanSchema.length && depth > 0) {
-      if (cleanSchema[i] === '{') depth++;
-      else if (cleanSchema[i] === '}') depth--;
+      if (cleanSchema[i] === "{") depth++;
+      else if (cleanSchema[i] === "}") depth--;
       i++;
     }
 
@@ -141,11 +141,11 @@ function parseGraphQLSchema(schemaContent) {
       const fieldName = fieldMatch[1];
       let fieldType = fieldMatch[2];
 
-      const isArray = fieldType.startsWith('[');
-      const isNullable = !fieldType.endsWith('!');
+      const isArray = fieldType.startsWith("[");
+      const isNullable = !fieldType.endsWith("!");
 
       // Clean up type
-      fieldType = fieldType.replace(/[\[\]!]/g, '');
+      fieldType = fieldType.replace(/[\[\]!]/g, "");
 
       fields.push({
         name: fieldName,
@@ -166,10 +166,10 @@ function parseGraphQLSchema(schemaContent) {
 
     if (!CONTROLLER_TYPES.includes(name)) continue;
 
-    const unionTypes = unionBody.split('|').map(t => t.trim());
+    const unionTypes = unionBody.split("|").map((t) => t.trim());
     types.set(name, {
       name,
-      kind: 'union',
+      kind: "union",
       fields: [],
       unionTypes,
     });
@@ -200,7 +200,7 @@ function graphqlTypeToCpp(graphqlType, isNullable, isArray) {
 }
 
 // Types that need include guards (defined elsewhere for native test compatibility)
-const GUARDED_TYPES = ['LedCommand'];
+const GUARDED_TYPES = ["LedCommand"];
 
 /**
  * Generate C++ struct for a GraphQL type
@@ -208,8 +208,8 @@ const GUARDED_TYPES = ['LedCommand'];
  * @returns {string}
  */
 function generateCppStruct(type) {
-  if (type.kind === 'union') {
-    return `// Union type: ${type.name} = ${type.unionTypes?.join(' | ')}
+  if (type.kind === "union") {
+    return `// Union type: ${type.name} = ${type.unionTypes?.join(" | ")}
 // Use __typename field to determine actual type`;
   }
 
@@ -218,13 +218,15 @@ function generateCppStruct(type) {
   const guardName = `${type.name.toUpperCase()}_DEFINED`;
 
   if (needsGuard) {
-    lines.push(`// Include guard: ${type.name} may also be defined in led_controller.h for native tests`);
+    lines.push(
+      `// Include guard: ${type.name} may also be defined in led_controller.h for native tests`,
+    );
     lines.push(`#ifndef ${guardName}`);
     lines.push(`#define ${guardName}`);
   }
 
   lines.push(`/**`);
-  lines.push(` * ${type.kind === 'input' ? 'Input' : 'Output'} type: ${type.name}`);
+  lines.push(` * ${type.kind === "input" ? "Input" : "Output"} type: ${type.name}`);
   lines.push(` * Generated from GraphQL schema`);
   lines.push(` */`);
   lines.push(`struct ${type.name} {`);
@@ -253,7 +255,7 @@ function generateCppStruct(type) {
     lines.push(`#endif // ${guardName}`);
   }
 
-  return lines.join('\n');
+  return lines.join("\n");
 }
 
 /**
@@ -267,24 +269,24 @@ function generateCppStruct(type) {
  * @returns {string} Field selection string for use in GraphQL operations
  */
 function generateFieldSelection(typeName, types, depth = 0) {
-  if (depth > 3) return '';
+  if (depth > 3) return "";
 
   const type = types.get(typeName);
-  if (!type || type.kind === 'union') return '';
+  if (!type || type.kind === "union") return "";
 
   const exclusions = ESP32_FIELD_EXCLUSIONS[typeName] || new Set();
 
   return type.fields
-    .filter(f => !exclusions.has(f.name))
-    .map(f => {
+    .filter((f) => !exclusions.has(f.name))
+    .map((f) => {
       const subType = types.get(f.type);
-      if (subType && subType.kind !== 'union' && subType.fields.length > 0) {
+      if (subType && subType.kind !== "union" && subType.fields.length > 0) {
         const subSelection = generateFieldSelection(f.type, types, depth + 1);
         return subSelection ? `${f.name} { ${subSelection} }` : f.name;
       }
       return f.name;
     })
-    .join(' ');
+    .join(" ");
 }
 
 /**
@@ -296,10 +298,10 @@ function generateFieldSelection(typeName, types, depth = 0) {
  * @returns {string}
  */
 function generateOperations(types) {
-  const ledUpdateFields = generateFieldSelection('LedUpdate', types);
-  const controllerPingFields = generateFieldSelection('ControllerPing', types);
-  const climbMatchResultFields = generateFieldSelection('ClimbMatchResult', types);
-  const sendDeviceLogsResponseFields = generateFieldSelection('SendDeviceLogsResponse', types);
+  const ledUpdateFields = generateFieldSelection("LedUpdate", types);
+  const controllerPingFields = generateFieldSelection("ControllerPing", types);
+  const climbMatchResultFields = generateFieldSelection("ClimbMatchResult", types);
+  const sendDeviceLogsResponseFields = generateFieldSelection("SendDeviceLogsResponse", types);
 
   return `
 // ============================================
@@ -394,25 +396,25 @@ namespace GraphQLTypename {
 
   // Generate structs in dependency order
   const orderedTypes = [
-    'LedCommand',
-    'LedCommandInput',
-    'LedUpdate',
-    'ControllerPing',
-    'ClimbMatchResult',
-    'DeviceLogEntry',
-    'SendDeviceLogsInput',
-    'SendDeviceLogsResponse',
+    "LedCommand",
+    "LedCommandInput",
+    "LedUpdate",
+    "ControllerPing",
+    "ClimbMatchResult",
+    "DeviceLogEntry",
+    "SendDeviceLogsInput",
+    "SendDeviceLogsResponse",
   ];
 
   for (const typeName of orderedTypes) {
     const type = types.get(typeName);
     if (type) {
-      content += generateCppStruct(type) + '\n\n';
+      content += generateCppStruct(type) + "\n\n";
     }
   }
 
   // Add union comment
-  const controllerEvent = types.get('ControllerEvent');
+  const controllerEvent = types.get("ControllerEvent");
   if (controllerEvent) {
     content += `// ${generateCppStruct(controllerEvent)}\n\n`;
   }
@@ -563,8 +565,8 @@ inline void serializeDeviceLogEntry(JsonObject& obj, const DeviceLogEntry& entry
 }
 
 async function main() {
-  console.log('GraphQL to C++ Type Generator');
-  console.log('==============================\n');
+  console.log("GraphQL to C++ Type Generator");
+  console.log("==============================\n");
 
   // Read schema
   console.log(`Reading schema from: ${SCHEMA_PATH}`);
@@ -573,10 +575,10 @@ async function main() {
     process.exit(1);
   }
 
-  const schemaContent = fs.readFileSync(SCHEMA_PATH, 'utf-8');
+  const schemaContent = fs.readFileSync(SCHEMA_PATH, "utf-8");
 
   // Parse schema
-  console.log('Parsing GraphQL schema...');
+  console.log("Parsing GraphQL schema...");
   const types = parseGraphQLSchema(schemaContent);
   console.log(`Found ${types.size} controller-relevant types`);
 
@@ -585,7 +587,7 @@ async function main() {
   }
 
   // Generate header
-  console.log('\nGenerating C++ header...');
+  console.log("\nGenerating C++ header...");
   const header = generateHeader(types);
 
   // Ensure output directory exists
@@ -598,14 +600,13 @@ async function main() {
   console.log(`Written to: ${OUTPUT_FILE}`);
 
   // Show stats
-  const lineCount = header.split('\n').length;
+  const lineCount = header.split("\n").length;
   console.log(`\nGenerated ${lineCount} lines of C++ code`);
-  console.log('\nDone!');
+  console.log("\nDone!");
 }
 
 // Run main only when script is executed directly (not when imported for testing)
-const isMainModule = process.argv[1] &&
-  fileURLToPath(import.meta.url) === process.argv[1];
+const isMainModule = process.argv[1] && fileURLToPath(import.meta.url) === process.argv[1];
 
 if (isMainModule) {
   main().catch(console.error);

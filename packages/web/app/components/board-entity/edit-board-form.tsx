@@ -1,18 +1,18 @@
-'use client';
+"use client";
 
-import React, { useCallback, useMemo } from 'react';
-import { useSnackbar } from '@/app/components/providers/snackbar-provider';
-import { useEntityMutation } from '@/app/hooks/use-entity-mutation';
+import React, { useCallback, useMemo } from "react";
+import { useSnackbar } from "@/app/components/providers/snackbar-provider";
+import { useEntityMutation } from "@/app/hooks/use-entity-mutation";
 import {
   UPDATE_BOARD,
   type UpdateBoardMutationVariables,
   type UpdateBoardMutationResponse,
-} from '@/app/lib/graphql/operations';
-import type { UserBoard } from '@boardsesh/shared-schema';
-import type { BoardName } from '@/app/lib/types';
-import { ANGLES } from '@/app/lib/board-data';
-import { getBoardSelectorOptions } from '@/app/lib/board-constants';
-import BoardForm from './board-form';
+} from "@/app/lib/graphql/operations";
+import type { UserBoard } from "@boardsesh/shared-schema";
+import type { BoardName } from "@/app/lib/types";
+import { ANGLES } from "@/app/lib/board-data";
+import { getBoardSelectorOptions } from "@/app/lib/board-constants";
+import BoardForm from "./board-form";
 
 interface EditBoardFormProps {
   board: UserBoard;
@@ -21,7 +21,12 @@ interface EditBoardFormProps {
   onCancel?: () => void;
 }
 
-export default function EditBoardForm({ board, totalAscents, onSuccess, onCancel }: EditBoardFormProps) {
+export default function EditBoardForm({
+  board,
+  totalAscents,
+  onSuccess,
+  onCancel,
+}: EditBoardFormProps) {
   const { showMessage } = useSnackbar();
 
   const availableAngles = ANGLES[board.boardType as BoardName] ?? [];
@@ -29,8 +34,8 @@ export default function EditBoardForm({ board, totalAscents, onSuccess, onCancel
   const { execute } = useEntityMutation<UpdateBoardMutationResponse, UpdateBoardMutationVariables>(
     UPDATE_BOARD,
     {
-      successMessage: 'Board updated!',
-      errorMessage: 'Failed to update board',
+      successMessage: "Board updated!",
+      errorMessage: "Failed to update board",
     },
   );
 
@@ -44,9 +49,26 @@ export default function EditBoardForm({ board, totalAscents, onSuccess, onCancel
   }, [totalAscents, board.boardType]);
 
   const handleSubmit = useCallback(
-    async (values: { name: string; slug?: string; description: string; locationName: string; latitude?: number | null; longitude?: number | null; isPublic: boolean; isUnlisted: boolean; hideLocation: boolean; isOwned: boolean; angle?: number; isAngleAdjustable?: boolean; layoutId?: number; sizeId?: number; setIds?: string; serialNumber?: string }) => {
+    async (values: {
+      name: string;
+      slug?: string;
+      description: string;
+      locationName: string;
+      latitude?: number | null;
+      longitude?: number | null;
+      isPublic: boolean;
+      isUnlisted: boolean;
+      hideLocation: boolean;
+      isOwned: boolean;
+      angle?: number;
+      isAngleAdjustable?: boolean;
+      layoutId?: number;
+      sizeId?: number;
+      setIds?: string;
+      serialNumber?: string;
+    }) => {
       if (!values.name) {
-        showMessage('Board name is required', 'error');
+        showMessage("Board name is required", "error");
         return;
       }
 
@@ -65,11 +87,13 @@ export default function EditBoardForm({ board, totalAscents, onSuccess, onCancel
           isOwned: values.isOwned,
           angle: values.angle,
           isAngleAdjustable: values.isAngleAdjustable,
-          ...(configEditable ? {
-            layoutId: values.layoutId,
-            sizeId: values.sizeId,
-            setIds: values.setIds,
-          } : {}),
+          ...(configEditable
+            ? {
+                layoutId: values.layoutId,
+                sizeId: values.sizeId,
+                setIds: values.setIds,
+              }
+            : {}),
           serialNumber: values.serialNumber,
         },
       });
@@ -88,8 +112,8 @@ export default function EditBoardForm({ board, totalAscents, onSuccess, onCancel
       initialValues={{
         name: board.name,
         slug: board.slug,
-        description: board.description ?? '',
-        locationName: board.locationName ?? '',
+        description: board.description ?? "",
+        locationName: board.locationName ?? "",
         latitude: board.latitude ?? null,
         longitude: board.longitude ?? null,
         isPublic: board.isPublic,
@@ -101,7 +125,7 @@ export default function EditBoardForm({ board, totalAscents, onSuccess, onCancel
         layoutId: board.layoutId,
         sizeId: board.sizeId,
         setIds: board.setIds,
-        serialNumber: board.serialNumber ?? '',
+        serialNumber: board.serialNumber ?? "",
       }}
       showSlugField
       availableAngles={availableAngles}

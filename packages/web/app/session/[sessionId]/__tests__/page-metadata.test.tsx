@@ -1,33 +1,31 @@
-import { describe, expect, it, vi } from 'vitest';
+import { describe, expect, it, vi } from "vite-plus/test";
 
-vi.mock('graphql-request', () => ({
+vi.mock("graphql-request", () => ({
   gql: (strings: TemplateStringsArray, ...values: unknown[]) =>
-    strings.reduce((result, chunk, index) => result + chunk + (values[index] ?? ''), ''),
+    strings.reduce((result, chunk, index) => result + chunk + (values[index] ?? ""), ""),
   GraphQLClient: vi.fn(() => ({
     request: vi.fn(),
   })),
 }));
 
-vi.mock('@/app/lib/graphql/client', () => ({
-  getGraphQLHttpUrl: vi.fn(() => 'http://localhost:4000/graphql'),
+vi.mock("@/app/lib/graphql/client", () => ({
+  getGraphQLHttpUrl: vi.fn(() => "http://localhost:4000/graphql"),
 }));
 
-vi.mock('@/app/lib/seo/dynamic-og-data', () => ({
+vi.mock("@/app/lib/seo/dynamic-og-data", () => ({
   getSessionOgSummary: vi.fn(),
 }));
 
-const pageModule = await import('../page');
-const { getSessionOgSummary } = await import('@/app/lib/seo/dynamic-og-data');
+const pageModule = await import("../page");
+const { getSessionOgSummary } = await import("@/app/lib/seo/dynamic-og-data");
 const getSessionOgSummaryMock = vi.mocked(getSessionOgSummary);
 
-function getOpenGraphImageUrl(
-  image: string | URL | { url: string | URL } | undefined,
-) {
+function getOpenGraphImageUrl(image: string | URL | { url: string | URL } | undefined) {
   if (!image) {
     return undefined;
   }
 
-  if (typeof image === 'string') {
+  if (typeof image === "string") {
     return image;
   }
 
@@ -35,43 +33,45 @@ function getOpenGraphImageUrl(
     return image.toString();
   }
 
-  return typeof image.url === 'string' ? image.url : image.url.toString();
+  return typeof image.url === "string" ? image.url : image.url.toString();
 }
 
-describe('session page metadata', () => {
-  it('builds versioned OG metadata for inferred sessions', async () => {
+describe("session page metadata", () => {
+  it("builds versioned OG metadata for inferred sessions", async () => {
     getSessionOgSummaryMock.mockResolvedValue({
-      sessionType: 'inferred',
-      sessionName: 'Solo Volume Day',
-      leaderName: 'Alex',
-      participantNames: ['Alex'],
+      sessionType: "inferred",
+      sessionName: "Solo Volume Day",
+      leaderName: "Alex",
+      participantNames: ["Alex"],
       participantCount: 1,
       totalSends: 3,
       gradeRows: [{ difficulty: 10, count: 3 }],
       boardLabel: null,
       boardAngle: null,
       boardPreviewPath: null,
-      version: 'abc123',
+      version: "abc123",
       found: true,
     });
 
     const metadata = await pageModule.generateMetadata({
-      params: Promise.resolve({ sessionId: 'inferred-session-1' }),
+      params: Promise.resolve({ sessionId: "inferred-session-1" }),
     });
 
     const image = Array.isArray(metadata.openGraph?.images)
       ? metadata.openGraph.images[0]
       : metadata.openGraph?.images;
 
-    expect(metadata.title).toBe('Solo Volume Day | Boardsesh');
-    expect(metadata.description).toBe('Alex — 3 sends');
-    expect(getOpenGraphImageUrl(image)).toBe('/api/og/session?sessionId=inferred-session-1&v=abc123');
+    expect(metadata.title).toBe("Solo Volume Day | Boardsesh");
+    expect(metadata.description).toBe("Alex — 3 sends");
+    expect(getOpenGraphImageUrl(image)).toBe(
+      "/api/og/session?sessionId=inferred-session-1&v=abc123",
+    );
   });
 
-  it('returns not-found metadata when the summary is missing', async () => {
+  it("returns not-found metadata when the summary is missing", async () => {
     getSessionOgSummaryMock.mockResolvedValue({
       sessionType: null,
-      sessionName: 'Climbing Session',
+      sessionName: "Climbing Session",
       leaderName: null,
       participantNames: [],
       participantCount: 0,
@@ -80,14 +80,14 @@ describe('session page metadata', () => {
       boardLabel: null,
       boardAngle: null,
       boardPreviewPath: null,
-      version: '0',
+      version: "0",
       found: false,
     });
 
     const metadata = await pageModule.generateMetadata({
-      params: Promise.resolve({ sessionId: 'missing-session' }),
+      params: Promise.resolve({ sessionId: "missing-session" }),
     });
 
-    expect(metadata.title).toBe('Session Not Found | Boardsesh');
+    expect(metadata.title).toBe("Session Not Found | Boardsesh");
   });
 });

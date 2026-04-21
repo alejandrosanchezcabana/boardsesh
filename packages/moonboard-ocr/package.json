@@ -2,8 +2,16 @@
   "name": "@boardsesh/moonboard-ocr",
   "version": "0.2.0",
   "description": "Extract MoonBoard climb data from screenshots - works in Node.js and browser",
+  "bin": {
+    "moonboard-ocr": "./dist/cli.js"
+  },
   "type": "module",
   "main": "./src/index.ts",
+  "browser": {
+    "./src/index.ts": "./src/browser.ts",
+    "./src/image-processor/sharp-processor.ts": false,
+    "sharp": false
+  },
   "types": "./src/index.ts",
   "exports": {
     ".": {
@@ -17,22 +25,14 @@
       "default": "./src/browser.ts"
     }
   },
-  "browser": {
-    "./src/index.ts": "./src/browser.ts",
-    "./src/image-processor/sharp-processor.ts": false,
-    "sharp": false
-  },
-  "bin": {
-    "moonboard-ocr": "./dist/cli.js"
-  },
   "scripts": {
     "build": "tsc",
     "dev": "tsx src/cli.ts",
     "start": "node dist/cli.js",
-    "test": "vitest run",
-    "test:watch": "vitest",
-    "lint": "oxlint .",
-    "lint-fix": "oxlint --fix ."
+    "test": "vp test run",
+    "test:watch": "vp test",
+    "lint": "vp lint",
+    "lint-fix": "vp lint --fix"
   },
   "dependencies": {
     "commander": "^14.0.3",
@@ -41,7 +41,6 @@
   },
   "devDependencies": {
     "@types/node": "^25.3.3",
-    "oxlint": "^1.60.0",
     "tsx": "^4.21.0",
     "typescript": "^5.9.3",
     "vitest": "^4.0.18"

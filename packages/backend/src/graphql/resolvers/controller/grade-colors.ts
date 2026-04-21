@@ -3,7 +3,7 @@ import {
   getFontGradeColor as _getFontGradeColor,
   getGradeColor as _getGradeColor,
   DEFAULT_GRADE_COLOR,
-} from '@boardsesh/board-constants/grade-colors';
+} from "@boardsesh/board-constants/grade-colors";
 
 /**
  * Get color for a V-grade string (e.g., "V3", "V10")

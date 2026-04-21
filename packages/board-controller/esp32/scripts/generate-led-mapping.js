@@ -10,18 +10,21 @@
  * Example: node generate-led-mapping.js kilter 1 7
  */
 
-const fs = require('fs');
-const path = require('path');
+const fs = require("fs");
+const path = require("path");
 
 // Read the LED placements TypeScript file and extract the data
 function extractLedPlacements() {
-  const filePath = path.join(__dirname, '../../../board-constants/src/generated/led-placements-data.ts');
-  const content = fs.readFileSync(filePath, 'utf8');
+  const filePath = path.join(
+    __dirname,
+    "../../../board-constants/src/generated/led-placements-data.ts",
+  );
+  const content = fs.readFileSync(filePath, "utf8");
 
   // Find the start of the object after LED_PLACEMENTS declaration
   const startMatch = content.match(/export const LED_PLACEMENTS[^{]*\{/);
   if (!startMatch) {
-    throw new Error('Could not find LED_PLACEMENTS in file');
+    throw new Error("Could not find LED_PLACEMENTS in file");
   }
 
   const startIndex = startMatch.index + startMatch[0].length - 1;
@@ -30,18 +33,18 @@ function extractLedPlacements() {
   let braceCount = 1;
   let endIndex = startIndex + 1;
   while (braceCount > 0 && endIndex < content.length) {
-    if (content[endIndex] === '{') braceCount++;
-    if (content[endIndex] === '}') braceCount--;
+    if (content[endIndex] === "{") braceCount++;
+    if (content[endIndex] === "}") braceCount--;
     endIndex++;
   }
 
   let objStr = content.substring(startIndex, endIndex);
 
   // Clean up TypeScript syntax
-  objStr = objStr.replace(/as\s+const/g, '');
+  objStr = objStr.replace(/as\s+const/g, "");
 
   // Use Function constructor to evaluate (safer than eval)
-  const fn = new Function('return ' + objStr);
+  const fn = new Function("return " + objStr);
   return fn();
 }
 
@@ -52,13 +55,17 @@ function generateHeader(boardName, layoutId, sizeId) {
   const boardData = placements[boardName];
 
   if (!boardData) {
-    console.error(`Board "${boardName}" not found. Available: ${Object.keys(placements).join(', ')}`);
+    console.error(
+      `Board "${boardName}" not found. Available: ${Object.keys(placements).join(", ")}`,
+    );
     process.exit(1);
   }
 
   const layoutData = boardData[key];
   if (!layoutData) {
-    console.error(`Layout "${key}" not found for ${boardName}. Available: ${Object.keys(boardData).join(', ')}`);
+    console.error(
+      `Layout "${key}" not found for ${boardName}. Available: ${Object.keys(boardData).join(", ")}`,
+    );
     process.exit(1);
   }
 
@@ -111,9 +118,9 @@ function generateHeader(boardName, layoutId, sizeId) {
 inline const std::map<uint16_t, uint16_t>& getLedToPlacementMap() {
     static const std::map<uint16_t, uint16_t> ledToPlacement = {
 ${Object.entries(reverseMap)
-    .sort(([a], [b]) => parseInt(a) - parseInt(b))
-    .map(([ledPos, placementId]) => `        {${ledPos}, ${placementId}}`)
-    .join(',\n')}
+  .sort(([a], [b]) => parseInt(a) - parseInt(b))
+  .map(([ledPos, placementId]) => `        {${ledPos}, ${placementId}}`)
+  .join(",\n")}
     };
     return ledToPlacement;
 }
@@ -140,7 +147,7 @@ inline uint16_t ledPositionToPlacementId(uint16_t ledPosition) {
 
 // Main
 const args = process.argv.slice(2);
-const boardName = args[0] || 'kilter';
+const boardName = args[0] || "kilter";
 const layoutId = parseInt(args[1], 10) || 1;
 const sizeId = parseInt(args[2], 10) || 7;
 
@@ -149,11 +156,11 @@ console.log(`Generating LED mapping for ${boardName} layout ${layoutId} size ${s
 try {
   const header = generateHeader(boardName, layoutId, sizeId);
 
-  const outputPath = path.join(__dirname, '../src/config/led_placement_map.h');
+  const outputPath = path.join(__dirname, "../src/config/led_placement_map.h");
   fs.writeFileSync(outputPath, header);
 
   console.log(`Generated: ${outputPath}`);
 } catch (error) {
-  console.error('Error:', error.message);
+  console.error("Error:", error.message);
   process.exit(1);
 }

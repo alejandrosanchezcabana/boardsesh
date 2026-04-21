@@ -1,9 +1,9 @@
-import React from 'react';
-import { PropsWithChildren } from 'react';
-import { notFound } from 'next/navigation';
-import { resolveBoardBySlug, boardToRouteParams } from '@/app/lib/board-slug-utils';
-import { getBoardDetailsForBoard } from '@/app/lib/board-utils';
-import ListLayoutClient from '@/app/[board_name]/[layout_id]/[size_id]/[set_ids]/[angle]/list/layout-client';
+import React from "react";
+import { PropsWithChildren } from "react";
+import { notFound } from "next/navigation";
+import { resolveBoardBySlug, boardToRouteParams } from "@/app/lib/board-slug-utils";
+import { getBoardDetailsForBoard } from "@/app/lib/board-utils";
+import ListLayoutClient from "@/app/[board_name]/[layout_id]/[size_id]/[set_ids]/[angle]/list/layout-client";
 
 interface LayoutProps {
   params: Promise<{ board_slug: string; angle: string }>;

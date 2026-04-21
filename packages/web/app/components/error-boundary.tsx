@@ -1,6 +1,6 @@
-'use client';
+"use client";
 
-import React, { Component, type ReactNode } from 'react';
+import React, { Component, type ReactNode } from "react";
 
 const MAX_RECOVERY_ATTEMPTS = 3;
 /** Reset the retry counter after this many ms without errors. */
@@ -33,12 +33,12 @@ export default class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBo
     this.state = { hasError: false, retryCount: 0 };
   }
 
-  static getDerivedStateFromError(): Pick<ErrorBoundaryState, 'hasError'> {
+  static getDerivedStateFromError(): Pick<ErrorBoundaryState, "hasError"> {
     return { hasError: true };
   }
 
   componentDidCatch(error: Error, errorInfo: React.ErrorInfo) {
-    console.error('ErrorBoundary caught:', error, errorInfo);
+    console.error("ErrorBoundary caught:", error, errorInfo);
 
     if (this.props.recoverable && this.state.retryCount < MAX_RECOVERY_ATTEMPTS) {
       // Schedule a reset so the children remount on the next frame.

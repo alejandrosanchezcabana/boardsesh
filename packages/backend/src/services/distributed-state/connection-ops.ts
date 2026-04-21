@@ -1,4 +1,4 @@
-import type Redis from 'ioredis';
+import type Redis from "ioredis";
 import {
   KEYS,
   TTL,
@@ -6,8 +6,8 @@ import {
   connectionToHash,
   hashToConnection,
   type DistributedConnection,
-} from './constants';
-import { ELECT_NEW_LEADER_SCRIPT } from './lua-scripts';
+} from "./constants";
+import { ELECT_NEW_LEADER_SCRIPT } from "./lua-scripts";
 
 /**
  * Register a new connection in distributed state.
@@ -18,7 +18,7 @@ export async function registerConnection(
   connectionId: string,
   username: string,
   userId?: string | null,
-  avatarUrl?: string | null
+  avatarUrl?: string | null,
 ): Promise<void> {
   validateConnectionId(connectionId);
 
@@ -46,7 +46,7 @@ export async function registerConnection(
   await multi.exec();
 
   console.log(
-    `[DistributedState] Registered connection: ${connectionId.slice(0, 8)} on instance: ${instanceId.slice(0, 8)}`
+    `[DistributedState] Registered connection: ${connectionId.slice(0, 8)} on instance: ${instanceId.slice(0, 8)}`,
   );
 }
 
@@ -55,7 +55,7 @@ export async function registerConnection(
  */
 export async function getConnection(
   redis: Redis,
-  connectionId: string
+  connectionId: string,
 ): Promise<DistributedConnection | null> {
   validateConnectionId(connectionId);
   const data = await redis.hgetall(KEYS.connection(connectionId));
@@ -73,7 +73,7 @@ export async function removeConnection(
   redis: Redis,
   instanceId: string,
   connectionId: string,
-  electNewLeader: boolean = true
+  electNewLeader: boolean = true,
 ): Promise<{ sessionId: string | null; wasLeader: boolean; newLeaderId: string | null }> {
   validateConnectionId(connectionId);
 
@@ -118,7 +118,7 @@ export async function removeConnection(
 async function electLeaderAfterRemoval(
   redis: Redis,
   sessionId: string,
-  connectionId: string
+  connectionId: string,
 ): Promise<string | null> {
   try {
     const newLeaderId = (await redis.eval(
@@ -128,19 +128,19 @@ async function electLeaderAfterRemoval(
       KEYS.sessionLeader(sessionId),
       connectionId,
       TTL.sessionMembership.toString(),
-      TTL.sessionMembership.toString() // Leader TTL matches session TTL
+      TTL.sessionMembership.toString(), // Leader TTL matches session TTL
     )) as string | null;
 
     if (newLeaderId) {
       console.log(
-        `[DistributedState] Elected new leader: ${newLeaderId.slice(0, 8)} after removing ${connectionId.slice(0, 8)}`
+        `[DistributedState] Elected new leader: ${newLeaderId.slice(0, 8)} after removing ${connectionId.slice(0, 8)}`,
       );
     }
     return newLeaderId;
   } catch (err) {
     console.error(
       `[DistributedState] Failed to elect new leader after removing ${connectionId.slice(0, 8)}:`,
-      err
+      err,
     );
     // Fallback: try to manually elect a leader from remaining members
     return electLeaderFallback(redis, sessionId, connectionId);
@@ -153,7 +153,7 @@ async function electLeaderAfterRemoval(
 async function electLeaderFallback(
   redis: Redis,
   sessionId: string,
-  connectionId: string
+  connectionId: string,
 ): Promise<string | null> {
   try {
     const remainingMembers = await redis.smembers(KEYS.sessionMembers(sessionId));
@@ -163,7 +163,7 @@ async function electLeaderFallback(
       // Get connection data to find earliest connected
       const pipeline = redis.pipeline();
       for (const candidateId of candidates) {
-        pipeline.hget(KEYS.connection(candidateId), 'connectedAt');
+        pipeline.hget(KEYS.connection(candidateId), "connectedAt");
       }
       const results = await pipeline.exec();
 
@@ -186,10 +186,10 @@ async function electLeaderFallback(
 
       // Fall back to first candidate if no valid timestamps
       const chosenLeader = earliestCandidate || candidates[0];
-      await redis.set(KEYS.sessionLeader(sessionId), chosenLeader, 'EX', TTL.sessionMembership);
-      await redis.hset(KEYS.connection(chosenLeader), 'isLeader', 'true');
+      await redis.set(KEYS.sessionLeader(sessionId), chosenLeader, "EX", TTL.sessionMembership);
+      await redis.hset(KEYS.connection(chosenLeader), "isLeader", "true");
       console.log(
-        `[DistributedState] Fallback elected leader: ${chosenLeader.slice(0, 8)} after removing ${connectionId.slice(0, 8)}`
+        `[DistributedState] Fallback elected leader: ${chosenLeader.slice(0, 8)} after removing ${connectionId.slice(0, 8)}`,
       );
       return chosenLeader;
     } else {
@@ -215,12 +215,12 @@ export async function updateUsername(
   redis: Redis,
   connectionId: string,
   username: string,
-  avatarUrl?: string
+  avatarUrl?: string,
 ): Promise<void> {
   validateConnectionId(connectionId);
   const updates: Record<string, string> = { username };
   if (avatarUrl !== undefined) {
-    updates.avatarUrl = avatarUrl || '';
+    updates.avatarUrl = avatarUrl || "";
   }
   await redis.hmset(KEYS.connection(connectionId), updates);
 }

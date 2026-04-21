@@ -1,15 +1,15 @@
-'use client';
+"use client";
 
-import React, { useCallback } from 'react';
-import { useSnackbar } from '@/app/components/providers/snackbar-provider';
-import { useEntityMutation } from '@/app/hooks/use-entity-mutation';
+import React, { useCallback } from "react";
+import { useSnackbar } from "@/app/components/providers/snackbar-provider";
+import { useEntityMutation } from "@/app/hooks/use-entity-mutation";
 import {
   UPDATE_GYM,
   type UpdateGymMutationVariables,
   type UpdateGymMutationResponse,
-} from '@/app/lib/graphql/operations';
-import type { Gym } from '@boardsesh/shared-schema';
-import GymForm, { type GymFormFieldValues } from './gym-form';
+} from "@/app/lib/graphql/operations";
+import type { Gym } from "@boardsesh/shared-schema";
+import GymForm, { type GymFormFieldValues } from "./gym-form";
 
 interface EditGymFormProps {
   gym: Gym;
@@ -23,15 +23,15 @@ export default function EditGymForm({ gym, onSuccess, onCancel }: EditGymFormPro
   const { execute } = useEntityMutation<UpdateGymMutationResponse, UpdateGymMutationVariables>(
     UPDATE_GYM,
     {
-      successMessage: 'Gym updated!',
-      errorMessage: 'Failed to update gym',
+      successMessage: "Gym updated!",
+      errorMessage: "Failed to update gym",
     },
   );
 
   const handleSubmit = useCallback(
     async (values: GymFormFieldValues) => {
       if (!values.name) {
-        showMessage('Gym name is required', 'error');
+        showMessage("Gym name is required", "error");
         return;
       }
 
@@ -61,11 +61,11 @@ export default function EditGymForm({ gym, onSuccess, onCancel }: EditGymFormPro
       submitLabel="Save Changes"
       initialValues={{
         name: gym.name,
-        slug: gym.slug ?? '',
-        description: gym.description ?? '',
-        address: gym.address ?? '',
-        contactEmail: gym.contactEmail ?? '',
-        contactPhone: gym.contactPhone ?? '',
+        slug: gym.slug ?? "",
+        description: gym.description ?? "",
+        address: gym.address ?? "",
+        contactEmail: gym.contactEmail ?? "",
+        contactPhone: gym.contactPhone ?? "",
         isPublic: gym.isPublic,
       }}
       showSlugField

@@ -8,7 +8,7 @@ export function logMutationMetrics(
 ) {
   const rounded = Math.round(durationMs);
   const payload = {
-    type: 'mutation_metrics',
+    type: "mutation_metrics",
     operation,
     durationMs: rounded,
     sessionId,
@@ -18,7 +18,7 @@ export function logMutationMetrics(
 
   if (rounded > SLOW_MUTATION_THRESHOLD_MS) {
     console.warn(`[MutationMetrics] SLOW ${operation}: ${rounded}ms`, JSON.stringify(payload));
-  } else if (process.env.NODE_ENV === 'development') {
+  } else if (process.env.NODE_ENV === "development") {
     console.log(`[MutationMetrics] ${operation}: ${rounded}ms`, JSON.stringify(payload));
   }
 }

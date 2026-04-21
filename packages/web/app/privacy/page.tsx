@@ -1,14 +1,14 @@
-import Box from '@mui/material/Box';
-import Typography from '@mui/material/Typography';
-import Container from '@mui/material/Container';
-import Divider from '@mui/material/Divider';
-import Link from '@mui/material/Link';
-import { createPageMetadata } from '@/app/lib/seo/metadata';
+import Box from "@mui/material/Box";
+import Typography from "@mui/material/Typography";
+import Container from "@mui/material/Container";
+import Divider from "@mui/material/Divider";
+import Link from "@mui/material/Link";
+import { createPageMetadata } from "@/app/lib/seo/metadata";
 
 export const metadata = createPageMetadata({
-  title: 'Privacy Policy',
-  description: 'Boardsesh privacy policy - how we handle your data.',
-  path: '/privacy',
+  title: "Privacy Policy",
+  description: "Boardsesh privacy policy - how we handle your data.",
+  path: "/privacy",
 });
 
 function Section({ title, children }: { title: string; children: React.ReactNode }) {
@@ -100,7 +100,7 @@ export default function PrivacyPolicyPage() {
       <Section title="Third-party services">
         <Paragraph>
           <strong>Vercel.</strong> We use Vercel for hosting and analytics. Vercel processes
-          requests to serve the app and collects anonymous usage metrics. See{' '}
+          requests to serve the app and collects anonymous usage metrics. See{" "}
           <Link href="https://vercel.com/legal/privacy-policy" target="_blank" rel="noopener">
             Vercel&apos;s privacy policy
           </Link>
@@ -109,10 +109,10 @@ export default function PrivacyPolicyPage() {
         <Paragraph>
           <strong>Aurora Climbing API.</strong> If you link your Aurora Climbing account (used by
           Kilter and Tension boards), we sync your climb data with Aurora&apos;s servers so your
-          logbook stays consistent across apps. This sync only happens when you initiate it. See{' '}
+          logbook stays consistent across apps. This sync only happens when you initiate it. See{" "}
           <Link href="https://auroraclimbing.com" target="_blank" rel="noopener">
             Aurora Climbing
-          </Link>{' '}
+          </Link>{" "}
           for their data practices.
         </Paragraph>
       </Section>
@@ -120,13 +120,13 @@ export default function PrivacyPolicyPage() {
       <Section title="Data sharing">
         <Paragraph>
           We do not sell your data. We do not run ads. We do not share your information with
-          third-party marketers or data brokers. The only data shared externally is what is described
-          above (Vercel hosting/analytics, Aurora Climbing sync when you opt in).
+          third-party marketers or data brokers. The only data shared externally is what is
+          described above (Vercel hosting/analytics, Aurora Climbing sync when you opt in).
         </Paragraph>
         <Paragraph>
-          Other Boardsesh users can see your username, profile, and logged climbs if you
-          participate in social features like Party Mode. This is visible in the app and is part of
-          how the product works.
+          Other Boardsesh users can see your username, profile, and logged climbs if you participate
+          in social features like Party Mode. This is visible in the app and is part of how the
+          product works.
         </Paragraph>
       </Section>
 
@@ -178,12 +178,12 @@ export default function PrivacyPolicyPage() {
 
       <Section title="Contact">
         <Paragraph>
-          Questions about this policy or your data? Email us at{' '}
+          Questions about this policy or your data? Email us at{" "}
           <Link href="mailto:support@boardsesh.com">support@boardsesh.com</Link>.
         </Paragraph>
         <Paragraph>
           Boardsesh is open source. You can see exactly what data the app collects and how it is
-          processed by reading the source code on{' '}
+          processed by reading the source code on{" "}
           <Link href="https://github.com/boardsesh/boardsesh" target="_blank" rel="noopener">
             GitHub
           </Link>

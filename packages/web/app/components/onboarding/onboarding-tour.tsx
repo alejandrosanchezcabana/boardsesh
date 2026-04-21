@@ -1,13 +1,13 @@
-'use client';
+"use client";
 
-import React, { useState, useEffect, useCallback, useRef } from 'react';
-import Backdrop from '@mui/material/Backdrop';
-import Popper from '@mui/material/Popper';
-import Paper from '@mui/material/Paper';
-import MuiButton from '@mui/material/Button';
-import MuiTypography from '@mui/material/Typography';
-import Stack from '@mui/material/Stack';
-import Box from '@mui/material/Box';
+import React, { useState, useEffect, useCallback, useRef } from "react";
+import Backdrop from "@mui/material/Backdrop";
+import Popper from "@mui/material/Popper";
+import Paper from "@mui/material/Paper";
+import MuiButton from "@mui/material/Button";
+import MuiTypography from "@mui/material/Typography";
+import Stack from "@mui/material/Stack";
+import Box from "@mui/material/Box";
 import {
   FormatListBulletedOutlined,
   ViewWeekOutlined,
@@ -15,10 +15,10 @@ import {
   SearchOutlined,
   GridOnOutlined,
   DragIndicatorOutlined,
-} from '@mui/icons-material';
-import { useSession } from 'next-auth/react';
-import { shouldShowOnboarding, saveOnboardingStatus } from '@/app/lib/onboarding-db';
-import styles from './onboarding-tour.module.css';
+} from "@mui/icons-material";
+import { useSession } from "next-auth/react";
+import { shouldShowOnboarding, saveOnboardingStatus } from "@/app/lib/onboarding-db";
+import styles from "./onboarding-tour.module.css";
 
 // Delay in ms before the tour starts after the page loads
 const TOUR_START_DELAY = 800;
@@ -26,7 +26,7 @@ const TOUR_START_DELAY = 800;
 const DRAWER_ANIMATION_DELAY = 450;
 
 // Custom event name for controlling the queue drawer from the tour
-export const TOUR_DRAWER_EVENT = 'onboarding-tour:set-queue-drawer';
+export const TOUR_DRAWER_EVENT = "onboarding-tour:set-queue-drawer";
 
 // Helper to create a target function that resolves a CSS selector to an element
 const getTarget = (selector: string): (() => HTMLElement) | null => {
@@ -42,7 +42,7 @@ interface TourStep {
   title: string;
   description: React.ReactNode;
   target: (() => HTMLElement) | null;
-  placement?: 'top' | 'bottom' | 'left' | 'right';
+  placement?: "top" | "bottom" | "left" | "right";
   mask?: boolean;
   cover?: React.ReactNode;
 }
@@ -68,7 +68,7 @@ function CustomTour({
     const el = step?.target?.() || null;
     setTargetEl(el);
     if (el) {
-      el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      el.scrollIntoView({ behavior: "smooth", block: "center" });
     }
   }, [current, open, step]);
 
@@ -77,44 +77,58 @@ function CustomTour({
   const stepContent = (
     <>
       {step.cover}
-      <MuiTypography variant="subtitle1" fontWeight={600} sx={{ mb: 1 }}>{step.title}</MuiTypography>
-      <MuiTypography variant="body2" component="div" color="text.secondary">{step.description}</MuiTypography>
+      <MuiTypography variant="subtitle1" fontWeight={600} sx={{ mb: 1 }}>
+        {step.title}
+      </MuiTypography>
+      <MuiTypography variant="body2" component="div" color="text.secondary">
+        {step.description}
+      </MuiTypography>
       <Stack direction="row" spacing={1} justifyContent="flex-end" sx={{ mt: 2 }}>
-        {current > 0 && <MuiButton size="small" onClick={() => onStepChange(current - 1)}>Back</MuiButton>}
-        {current < steps.length - 1
-          ? <MuiButton size="small" variant="contained" onClick={() => onStepChange(current + 1)}>Next</MuiButton>
-          : <MuiButton size="small" variant="contained" onClick={onClose}>Done</MuiButton>}
+        {current > 0 && (
+          <MuiButton size="small" onClick={() => onStepChange(current - 1)}>
+            Back
+          </MuiButton>
+        )}
+        {current < steps.length - 1 ? (
+          <MuiButton size="small" variant="contained" onClick={() => onStepChange(current + 1)}>
+            Next
+          </MuiButton>
+        ) : (
+          <MuiButton size="small" variant="contained" onClick={onClose}>
+            Done
+          </MuiButton>
+        )}
       </Stack>
     </>
   );
 
   return (
     <>
-      <Backdrop open sx={{ zIndex: 1100, backgroundColor: 'rgba(0,0,0,0.5)' }} onClick={onClose} />
+      <Backdrop open sx={{ zIndex: 1100, backgroundColor: "rgba(0,0,0,0.5)" }} onClick={onClose} />
 
       {targetEl ? (
         <Popper
           open
           anchorEl={targetEl}
-          placement={step.placement || 'bottom'}
+          placement={step.placement || "bottom"}
           sx={{ zIndex: 1101 }}
-          modifiers={[{ name: 'offset', options: { offset: [0, 12] } }]}
+          modifiers={[{ name: "offset", options: { offset: [0, 12] } }]}
         >
-          <Paper sx={{ p: 2, maxWidth: 320, borderRadius: 2 }}>
-            {stepContent}
-          </Paper>
+          <Paper sx={{ p: 2, maxWidth: 320, borderRadius: 2 }}>{stepContent}</Paper>
         </Popper>
       ) : (
-        <Paper sx={{
-          position: 'fixed',
-          top: '50%',
-          left: '50%',
-          transform: 'translate(-50%, -50%)',
-          zIndex: 1101,
-          p: 2,
-          maxWidth: 320,
-          borderRadius: 2,
-        }}>
+        <Paper
+          sx={{
+            position: "fixed",
+            top: "50%",
+            left: "50%",
+            transform: "translate(-50%, -50%)",
+            zIndex: 1101,
+            p: 2,
+            maxWidth: 320,
+            borderRadius: 2,
+          }}
+        >
           {stepContent}
         </Paper>
       )}
@@ -122,17 +136,17 @@ function CustomTour({
       {targetEl && step.mask !== false && (
         <Box
           sx={{
-            position: 'fixed',
+            position: "fixed",
             ...(() => {
               const r = targetEl.getBoundingClientRect();
               return { top: r.top - 4, left: r.left - 4, width: r.width + 8, height: r.height + 8 };
             })(),
-            border: '2px solid',
-            borderColor: 'primary.main',
+            border: "2px solid",
+            borderColor: "primary.main",
             borderRadius: 1,
             zIndex: 1101,
-            pointerEvents: 'none',
-            boxShadow: '0 0 0 9999px rgba(0,0,0,0.5)',
+            pointerEvents: "none",
+            boxShadow: "0 0 0 9999px rgba(0,0,0,0.5)",
           }}
         />
       )}
@@ -140,7 +154,7 @@ function CustomTour({
   );
 }
 
-const isOnboardingTourEnabled = process.env.NEXT_PUBLIC_ENABLE_ONBOARDING_TOUR === 'true';
+const isOnboardingTourEnabled = process.env.NEXT_PUBLIC_ENABLE_ONBOARDING_TOUR === "true";
 
 const OnboardingTour: React.FC = () => {
   const [open, setOpen] = useState(false);
@@ -154,7 +168,7 @@ const OnboardingTour: React.FC = () => {
 
     // Only show on mobile
     const checkMobile = () => {
-      isMobileRef.current = window.matchMedia('(max-width: 768px)').matches;
+      isMobileRef.current = window.matchMedia("(max-width: 768px)").matches;
     };
     checkMobile();
 
@@ -167,7 +181,7 @@ const OnboardingTour: React.FC = () => {
         // Wait for the page to settle before showing the tour
         setTimeout(() => {
           // Double-check that the climb card exists (page has loaded)
-          const climbCard = document.getElementById('onboarding-climb-card');
+          const climbCard = document.getElementById("onboarding-climb-card");
           if (climbCard) {
             setOpen(true);
           }
@@ -238,15 +252,19 @@ const OnboardingTour: React.FC = () => {
 
   const tourSteps: TourStep[] = [
     {
-      title: 'Select a Climb',
-      description: withSkip('Double-tap any climb card to make it the active climb and add it to your queue.'),
-      target: getTarget('#onboarding-climb-card'),
-      placement: 'bottom',
+      title: "Select a Climb",
+      description: withSkip(
+        "Double-tap any climb card to make it the active climb and add it to your queue.",
+      ),
+      target: getTarget("#onboarding-climb-card"),
+      placement: "bottom",
     },
     {
-      title: 'Navigate Your Queue',
-      description: withSkip('Swipe left or right on this bar to go to the next or previous climb in your queue.'),
-      target: getTarget('#onboarding-queue-bar'),
+      title: "Navigate Your Queue",
+      description: withSkip(
+        "Swipe left or right on this bar to go to the next or previous climb in your queue.",
+      ),
+      target: getTarget("#onboarding-queue-bar"),
       cover: (
         <div className={styles.stepIcon}>
           <ViewWeekOutlined />
@@ -254,9 +272,11 @@ const OnboardingTour: React.FC = () => {
       ),
     },
     {
-      title: 'View Your Queue',
-      description: withSkip('Tap here to open the queue drawer and see all your climbs, history, and suggestions.'),
-      target: getTarget('#onboarding-queue-toggle'),
+      title: "View Your Queue",
+      description: withSkip(
+        "Tap here to open the queue drawer and see all your climbs, history, and suggestions.",
+      ),
+      target: getTarget("#onboarding-queue-toggle"),
       cover: (
         <div className={styles.stepIcon}>
           <FormatListBulletedOutlined />
@@ -264,9 +284,9 @@ const OnboardingTour: React.FC = () => {
       ),
     },
     {
-      title: 'Queue Item Actions',
+      title: "Queue Item Actions",
       description: withSkip(
-        'Swipe queue items left to log an ascent, or swipe right to add to a playlist.',
+        "Swipe queue items left to log an ascent, or swipe right to add to a playlist.",
       ),
       target: getTarget('[data-testid="queue-item"]'),
       mask: false,
@@ -277,9 +297,9 @@ const OnboardingTour: React.FC = () => {
       ),
     },
     {
-      title: 'Reorder Your Queue',
+      title: "Reorder Your Queue",
       description: withSkip(
-        'Press and hold a queue item, then drag it up or down to reorder your queue.',
+        "Press and hold a queue item, then drag it up or down to reorder your queue.",
       ),
       target: getTarget('[data-testid="queue-item"]'),
       mask: false,
@@ -290,8 +310,8 @@ const OnboardingTour: React.FC = () => {
       ),
     },
     {
-      title: 'Close the Queue',
-      description: withSkip('Tap outside the drawer to close it and return to the climb list.'),
+      title: "Close the Queue",
+      description: withSkip("Tap outside the drawer to close it and return to the climb list."),
       target: null,
       mask: false,
       cover: (
@@ -301,11 +321,11 @@ const OnboardingTour: React.FC = () => {
       ),
     },
     {
-      title: 'Search by Hold',
+      title: "Search by Hold",
       description: withSkip(
         'Open the search panel and use the "Search by Hold" tab to find climbs that use specific holds on the board.',
       ),
-      target: getTarget('#onboarding-search-button'),
+      target: getTarget("#onboarding-search-button"),
       cover: (
         <div className={styles.stepIcon}>
           <SearchOutlined />
@@ -313,11 +333,11 @@ const OnboardingTour: React.FC = () => {
       ),
     },
     {
-      title: 'Heatmap',
+      title: "Heatmap",
       description: withSkip(
-        'The heatmap shows how frequently each hold is used across matching climbs. It uses your current search filters (grades, ascents, etc.), so adjust those first to see relevant hold usage.',
+        "The heatmap shows how frequently each hold is used across matching climbs. It uses your current search filters (grades, ascents, etc.), so adjust those first to see relevant hold usage.",
       ),
-      target: getTarget('#onboarding-search-button'),
+      target: getTarget("#onboarding-search-button"),
       cover: (
         <div className={styles.stepIcon}>
           <GridOnOutlined />

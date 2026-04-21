@@ -1,10 +1,10 @@
-'use client';
+"use client";
 
-import React from 'react';
-import Skeleton from '@mui/material/Skeleton';
-import { Playlist } from '@/app/lib/graphql/operations/playlists';
-import PlaylistCard from './playlist-card';
-import styles from './library.module.css';
+import React from "react";
+import Skeleton from "@mui/material/Skeleton";
+import { Playlist } from "@/app/lib/graphql/operations/playlists";
+import PlaylistCard from "./playlist-card";
+import styles from "./library.module.css";
 
 type PlaylistCardGridProps = {
   playlists: Playlist[];
@@ -54,7 +54,7 @@ export default function PlaylistCardGrid({
           href={getPlaylistUrl(playlist.uuid)}
           variant="grid"
           index={index}
-          fetchPriority={index === 0 ? 'high' : undefined}
+          fetchPriority={index === 0 ? "high" : undefined}
         />
       ))}
     </div>

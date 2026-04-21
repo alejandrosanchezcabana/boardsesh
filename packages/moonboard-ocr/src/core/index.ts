@@ -6,12 +6,8 @@ export {
   findNearestGridPosition,
   mapCirclesToHolds,
   detectHoldsFromPixelData,
-} from './holds';
+} from "./holds";
 
-export { runOCR, parseHeaderText, type OcrResult } from './ocr';
+export { runOCR, parseHeaderText, type OcrResult } from "./ocr";
 
-export {
-  calculateRegions,
-  calculateRegionsFromDetectedBoard,
-  type ImageRegions,
-} from './regions';
+export { calculateRegions, calculateRegionsFromDetectedBoard, type ImageRegions } from "./regions";

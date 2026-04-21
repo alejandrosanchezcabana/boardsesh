@@ -1,12 +1,16 @@
-import { WEB_HOSTS, SaveAttemptOptions, AuroraBoardName } from './types';
-import { generateUuid } from './util';
-import dayjs from 'dayjs';
+import { WEB_HOSTS, SaveAttemptOptions, AuroraBoardName } from "./types";
+import { generateUuid } from "./util";
+import dayjs from "dayjs";
 
-export async function saveAttempt(board: AuroraBoardName, token: string, options: SaveAttemptOptions): Promise<unknown> {
+export async function saveAttempt(
+  board: AuroraBoardName,
+  token: string,
+  options: SaveAttemptOptions,
+): Promise<unknown> {
   const uuid = generateUuid();
 
   // Convert the ISO date to the required format "YYYY-MM-DD HH:mm:ss"
-  const formattedDate = dayjs(options.climbed_at).format('YYYY-MM-DD HH:mm:ss');
+  const formattedDate = dayjs(options.climbed_at).format("YYYY-MM-DD HH:mm:ss");
 
   // Match the Kotlin implementation structure
   const requestData = {
@@ -31,10 +35,10 @@ export async function saveAttempt(board: AuroraBoardName, token: string, options
   console.log(`Saving attempt to: ${url}`);
 
   const response = await fetch(url, {
-    method: 'POST',
+    method: "POST",
     headers: {
-      'Content-Type': 'application/x-www-form-urlencoded',
-      'User-Agent': 'Kilter Board/202 CFNetwork/1568.100.1 Darwin/24.0.0',
+      "Content-Type": "application/x-www-form-urlencoded",
+      "User-Agent": "Kilter Board/202 CFNetwork/1568.100.1 Darwin/24.0.0",
       Cookie: `token=${token}`,
     },
     body: requestBody.toString(),
@@ -52,15 +56,17 @@ export async function saveAttempt(board: AuroraBoardName, token: string, options
       try {
         errorData = await responseClone.text();
       } catch {
-        errorData = 'Could not read error response';
+        errorData = "Could not read error response";
       }
     }
-    console.error('Error response:', {
+    console.error("Error response:", {
       status: response.status,
       statusText: response.statusText,
       errors: errorData,
     });
-    throw new Error(`HTTP error! status: ${response.status}, details: ${JSON.stringify(errorData)}`);
+    throw new Error(
+      `HTTP error! status: ${response.status}, details: ${JSON.stringify(errorData)}`,
+    );
   }
 
   // Handle response
@@ -69,12 +75,12 @@ export async function saveAttempt(board: AuroraBoardName, token: string, options
     const responseText = await response.text();
     console.log(`Save attempt response body: ${responseText}`);
 
-    if (!responseText || responseText.trim() === '') {
-      throw new Error('Empty response from API');
+    if (!responseText || responseText.trim() === "") {
+      throw new Error("Empty response from API");
     }
     responseData = JSON.parse(responseText);
   } catch (parseError) {
-    console.error('Failed to parse response:', parseError);
+    console.error("Failed to parse response:", parseError);
     throw new Error(`Failed to parse API response: ${parseError}`);
   }
 

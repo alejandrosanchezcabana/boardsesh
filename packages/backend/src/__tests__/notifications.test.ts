@@ -1,31 +1,30 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { GroupedNotificationsInputSchema } from '../validation/schemas';
+import { describe, it, expect, vi, beforeEach } from "vite-plus/test";
+import { GroupedNotificationsInputSchema } from "../validation/schemas";
 
 // All mock variables must be inside vi.hoisted() to avoid "Cannot access before initialization" errors
-const {
-  mockExecute, mockSelect, mockFrom, mockWhere, mockSet, mockReturning, mockUpdate,
-} = vi.hoisted(() => {
-  const mockFrom = vi.fn();
-  const mockWhere = vi.fn();
-  const mockSet = vi.fn();
-  const mockReturning = vi.fn();
-  const mockUpdate = vi.fn();
-  const mockSelect = vi.fn();
-  const mockExecute = vi.fn();
+const { mockExecute, mockSelect, mockFrom, mockWhere, mockSet, mockReturning, mockUpdate } =
+  vi.hoisted(() => {
+    const mockFrom = vi.fn();
+    const mockWhere = vi.fn();
+    const mockSet = vi.fn();
+    const mockReturning = vi.fn();
+    const mockUpdate = vi.fn();
+    const mockSelect = vi.fn();
+    const mockExecute = vi.fn();
 
-  // Wire up chain: select().from().where()
-  mockSelect.mockReturnValue({ from: mockFrom });
-  mockFrom.mockReturnThis();
+    // Wire up chain: select().from().where()
+    mockSelect.mockReturnValue({ from: mockFrom });
+    mockFrom.mockReturnThis();
 
-  // Wire up chain: update().set().where().returning()
-  mockUpdate.mockReturnValue({ set: mockSet });
-  mockSet.mockReturnValue({ where: mockWhere });
-  mockWhere.mockReturnValue({ returning: mockReturning });
+    // Wire up chain: update().set().where().returning()
+    mockUpdate.mockReturnValue({ set: mockSet });
+    mockSet.mockReturnValue({ where: mockWhere });
+    mockWhere.mockReturnValue({ returning: mockReturning });
 
-  return { mockExecute, mockSelect, mockFrom, mockWhere, mockSet, mockReturning, mockUpdate };
-});
+    return { mockExecute, mockSelect, mockFrom, mockWhere, mockSet, mockReturning, mockUpdate };
+  });
 
-vi.mock('../db/client', () => ({
+vi.mock("../db/client", () => ({
   db: {
     execute: mockExecute,
     select: mockSelect,
@@ -33,30 +32,33 @@ vi.mock('../db/client', () => ({
   },
 }));
 
-vi.mock('../pubsub/index', () => ({
+vi.mock("../pubsub/index", () => ({
   pubsub: { subscribeNotifications: vi.fn() },
 }));
 
-vi.mock('../graphql/resolvers/shared/async-iterators', () => ({
+vi.mock("../graphql/resolvers/shared/async-iterators", () => ({
   createAsyncIterator: vi.fn(),
 }));
 
-vi.mock('../utils/rate-limiter', () => ({
+vi.mock("../utils/rate-limiter", () => ({
   checkRateLimit: vi.fn(),
 }));
 
-vi.mock('../utils/redis-rate-limiter', () => ({
+vi.mock("../utils/redis-rate-limiter", () => ({
   checkRateLimitRedis: vi.fn(),
 }));
 
-import type { ConnectionContext } from '@boardsesh/shared-schema';
-import { socialNotificationQueries, socialNotificationMutations } from '../graphql/resolvers/social/notifications';
+import type { ConnectionContext } from "@boardsesh/shared-schema";
+import {
+  socialNotificationQueries,
+  socialNotificationMutations,
+} from "../graphql/resolvers/social/notifications";
 
 function makeCtx(overrides: Partial<ConnectionContext> = {}): ConnectionContext {
   return {
-    connectionId: 'conn-1',
+    connectionId: "conn-1",
     isAuthenticated: true,
-    userId: 'user-123',
+    userId: "user-123",
     sessionId: null,
     boardPath: null,
     controllerId: null,
@@ -69,8 +71,8 @@ function makeCtx(overrides: Partial<ConnectionContext> = {}): ConnectionContext 
 // GroupedNotificationsInputSchema validation
 // ============================================
 
-describe('GroupedNotificationsInputSchema', () => {
-  it('should accept empty input with defaults', () => {
+describe("GroupedNotificationsInputSchema", () => {
+  it("should accept empty input with defaults", () => {
     const result = GroupedNotificationsInputSchema.safeParse({});
     expect(result.success).toBe(true);
     if (result.success) {
@@ -79,7 +81,7 @@ describe('GroupedNotificationsInputSchema', () => {
     }
   });
 
-  it('should accept custom limit and offset', () => {
+  it("should accept custom limit and offset", () => {
     const result = GroupedNotificationsInputSchema.safeParse({ limit: 10, offset: 5 });
     expect(result.success).toBe(true);
     if (result.success) {
@@ -88,27 +90,27 @@ describe('GroupedNotificationsInputSchema', () => {
     }
   });
 
-  it('should reject limit exceeding max (50)', () => {
+  it("should reject limit exceeding max (50)", () => {
     const result = GroupedNotificationsInputSchema.safeParse({ limit: 100 });
     expect(result.success).toBe(false);
   });
 
-  it('should reject limit less than 1', () => {
+  it("should reject limit less than 1", () => {
     const result = GroupedNotificationsInputSchema.safeParse({ limit: 0 });
     expect(result.success).toBe(false);
   });
 
-  it('should reject negative offset', () => {
+  it("should reject negative offset", () => {
     const result = GroupedNotificationsInputSchema.safeParse({ offset: -1 });
     expect(result.success).toBe(false);
   });
 
-  it('should reject non-integer limit', () => {
+  it("should reject non-integer limit", () => {
     const result = GroupedNotificationsInputSchema.safeParse({ limit: 10.5 });
     expect(result.success).toBe(false);
   });
 
-  it('should reject non-integer offset', () => {
+  it("should reject non-integer offset", () => {
     const result = GroupedNotificationsInputSchema.safeParse({ offset: 2.5 });
     expect(result.success).toBe(false);
   });
@@ -118,7 +120,7 @@ describe('GroupedNotificationsInputSchema', () => {
 // groupedNotifications resolver
 // ============================================
 
-describe('groupedNotifications resolver', () => {
+describe("groupedNotifications resolver", () => {
   beforeEach(() => {
     vi.resetAllMocks();
     // Re-setup mock chain after reset
@@ -129,21 +131,21 @@ describe('groupedNotifications resolver', () => {
     mockUpdate.mockReturnValue({ set: mockSet });
   });
 
-  it('should throw for unauthenticated users', async () => {
+  it("should throw for unauthenticated users", async () => {
     const ctx = makeCtx({ isAuthenticated: false });
-    await expect(
-      socialNotificationQueries.groupedNotifications(null, {}, ctx),
-    ).rejects.toThrow('Authentication required');
+    await expect(socialNotificationQueries.groupedNotifications(null, {}, ctx)).rejects.toThrow(
+      "Authentication required",
+    );
   });
 
-  it('should reject invalid input (limit too high)', async () => {
+  it("should reject invalid input (limit too high)", async () => {
     const ctx = makeCtx();
     await expect(
       socialNotificationQueries.groupedNotifications(null, { limit: 999 }, ctx),
     ).rejects.toThrow();
   });
 
-  it('should return empty groups when no notifications', async () => {
+  it("should return empty groups when no notifications", async () => {
     const ctx = makeCtx();
     mockExecute.mockResolvedValueOnce({ rows: [] });
     mockFrom.mockReturnValueOnce({ where: vi.fn().mockResolvedValueOnce([{ count: 0 }]) });
@@ -154,25 +156,25 @@ describe('groupedNotifications resolver', () => {
     expect(result.hasMore).toBe(false);
   });
 
-  it('should map grouped rows correctly', async () => {
+  it("should map grouped rows correctly", async () => {
     const ctx = makeCtx();
-    const now = new Date('2024-01-15T12:00:00Z');
+    const now = new Date("2024-01-15T12:00:00Z");
 
     mockExecute.mockResolvedValueOnce({
       rows: [
         {
-          type: 'vote',
-          entityType: 'climb',
-          entityId: 'climb-1',
-          actorCount: '3',
-          latestUuid: 'notif-uuid-1',
+          type: "vote",
+          entityType: "climb",
+          entityId: "climb-1",
+          actorCount: "3",
+          latestUuid: "notif-uuid-1",
           latestCreatedAt: now,
           allRead: false,
           commentBody: null,
-          actorIds: ['user-a', 'user-b', 'user-c'],
-          actorDisplayNames: ['Alice', 'Bob', 'Charlie'],
-          actorAvatarUrls: ['https://example.com/a.png', null, 'https://example.com/c.png'],
-          totalGroupCount: '1',
+          actorIds: ["user-a", "user-b", "user-c"],
+          actorDisplayNames: ["Alice", "Bob", "Charlie"],
+          actorAvatarUrls: ["https://example.com/a.png", null, "https://example.com/c.png"],
+          totalGroupCount: "1",
         },
       ],
     });
@@ -182,40 +184,40 @@ describe('groupedNotifications resolver', () => {
 
     expect(result.groups).toHaveLength(1);
     const group = result.groups[0];
-    expect(group.uuid).toBe('notif-uuid-1');
-    expect(group.type).toBe('vote');
-    expect(group.entityType).toBe('climb');
-    expect(group.entityId).toBe('climb-1');
+    expect(group.uuid).toBe("notif-uuid-1");
+    expect(group.type).toBe("vote");
+    expect(group.entityType).toBe("climb");
+    expect(group.entityId).toBe("climb-1");
     expect(group.actorCount).toBe(3);
     expect(group.isRead).toBe(false);
-    expect(group.createdAt).toBe('2024-01-15T12:00:00.000Z');
+    expect(group.createdAt).toBe("2024-01-15T12:00:00.000Z");
     expect(group.actors).toEqual([
-      { id: 'user-a', displayName: 'Alice', avatarUrl: 'https://example.com/a.png' },
-      { id: 'user-b', displayName: 'Bob', avatarUrl: undefined },
-      { id: 'user-c', displayName: 'Charlie', avatarUrl: 'https://example.com/c.png' },
+      { id: "user-a", displayName: "Alice", avatarUrl: "https://example.com/a.png" },
+      { id: "user-b", displayName: "Bob", avatarUrl: undefined },
+      { id: "user-c", displayName: "Charlie", avatarUrl: "https://example.com/c.png" },
     ]);
     expect(result.unreadCount).toBe(2);
   });
 
-  it('should truncate long comment bodies', async () => {
+  it("should truncate long comment bodies", async () => {
     const ctx = makeCtx();
-    const longComment = 'A'.repeat(150);
+    const longComment = "A".repeat(150);
 
     mockExecute.mockResolvedValueOnce({
       rows: [
         {
-          type: 'comment',
-          entityType: 'climb',
-          entityId: 'climb-2',
-          actorCount: '1',
-          latestUuid: 'notif-uuid-2',
-          latestCreatedAt: new Date('2024-01-15T12:00:00Z'),
+          type: "comment",
+          entityType: "climb",
+          entityId: "climb-2",
+          actorCount: "1",
+          latestUuid: "notif-uuid-2",
+          latestCreatedAt: new Date("2024-01-15T12:00:00Z"),
           allRead: true,
           commentBody: longComment,
-          actorIds: ['user-a'],
-          actorDisplayNames: ['Alice'],
+          actorIds: ["user-a"],
+          actorDisplayNames: ["Alice"],
           actorAvatarUrls: [null],
-          totalGroupCount: '1',
+          totalGroupCount: "1",
         },
       ],
     });
@@ -223,18 +225,18 @@ describe('groupedNotifications resolver', () => {
 
     const result = await socialNotificationQueries.groupedNotifications(null, {}, ctx);
 
-    expect(result.groups[0].commentBody).toBe('A'.repeat(100) + '...');
+    expect(result.groups[0].commentBody).toBe("A".repeat(100) + "...");
   });
 
-  it('should compute hasMore correctly', async () => {
+  it("should compute hasMore correctly", async () => {
     const ctx = makeCtx();
     const now = new Date();
 
     const rows = Array.from({ length: 20 }, (_, i) => ({
-      type: 'vote',
-      entityType: 'climb',
+      type: "vote",
+      entityType: "climb",
       entityId: `climb-${i}`,
-      actorCount: '1',
+      actorCount: "1",
       latestUuid: `uuid-${i}`,
       latestCreatedAt: now,
       allRead: true,
@@ -242,7 +244,7 @@ describe('groupedNotifications resolver', () => {
       actorIds: [`user-${i}`],
       actorDisplayNames: [`User ${i}`],
       actorAvatarUrls: [null],
-      totalGroupCount: '25',
+      totalGroupCount: "25",
     }));
 
     mockExecute.mockResolvedValueOnce({ rows });
@@ -255,24 +257,24 @@ describe('groupedNotifications resolver', () => {
     expect(result.hasMore).toBe(true);
   });
 
-  it('should filter null actor ids', async () => {
+  it("should filter null actor ids", async () => {
     const ctx = makeCtx();
 
     mockExecute.mockResolvedValueOnce({
       rows: [
         {
-          type: 'vote',
-          entityType: 'climb',
-          entityId: 'climb-1',
-          actorCount: '2',
-          latestUuid: 'uuid-1',
+          type: "vote",
+          entityType: "climb",
+          entityId: "climb-1",
+          actorCount: "2",
+          latestUuid: "uuid-1",
           latestCreatedAt: new Date(),
           allRead: false,
           commentBody: null,
-          actorIds: ['user-a', null],
-          actorDisplayNames: ['Alice', null],
+          actorIds: ["user-a", null],
+          actorDisplayNames: ["Alice", null],
           actorAvatarUrls: [null, null],
-          totalGroupCount: '1',
+          totalGroupCount: "1",
         },
       ],
     });
@@ -282,7 +284,7 @@ describe('groupedNotifications resolver', () => {
 
     // null actor id should be filtered out
     expect(result.groups[0].actors).toHaveLength(1);
-    expect(result.groups[0].actors[0].id).toBe('user-a');
+    expect(result.groups[0].actors[0].id).toBe("user-a");
   });
 });
 
@@ -290,7 +292,7 @@ describe('groupedNotifications resolver', () => {
 // markGroupNotificationsRead mutation
 // ============================================
 
-describe('markGroupNotificationsRead mutation', () => {
+describe("markGroupNotificationsRead mutation", () => {
   beforeEach(() => {
     vi.resetAllMocks();
     mockSelect.mockReturnValue({ from: mockFrom });
@@ -300,46 +302,46 @@ describe('markGroupNotificationsRead mutation', () => {
     mockUpdate.mockReturnValue({ set: mockSet });
   });
 
-  it('should throw for unauthenticated users', async () => {
+  it("should throw for unauthenticated users", async () => {
     const ctx = makeCtx({ isAuthenticated: false });
     await expect(
-      socialNotificationMutations.markGroupNotificationsRead(null, { type: 'vote' }, ctx),
-    ).rejects.toThrow('Authentication required');
+      socialNotificationMutations.markGroupNotificationsRead(null, { type: "vote" }, ctx),
+    ).rejects.toThrow("Authentication required");
   });
 
-  it('should return count of marked notifications', async () => {
+  it("should return count of marked notifications", async () => {
     const ctx = makeCtx();
-    mockReturning.mockResolvedValueOnce([{ uuid: 'a' }, { uuid: 'b' }, { uuid: 'c' }]);
+    mockReturning.mockResolvedValueOnce([{ uuid: "a" }, { uuid: "b" }, { uuid: "c" }]);
 
     const count = await socialNotificationMutations.markGroupNotificationsRead(
       null,
-      { type: 'vote', entityType: 'climb', entityId: 'climb-1' },
+      { type: "vote", entityType: "climb", entityId: "climb-1" },
       ctx,
     );
 
     expect(count).toBe(3);
   });
 
-  it('should return 0 when no notifications to mark', async () => {
+  it("should return 0 when no notifications to mark", async () => {
     const ctx = makeCtx();
     mockReturning.mockResolvedValueOnce([]);
 
     const count = await socialNotificationMutations.markGroupNotificationsRead(
       null,
-      { type: 'vote', entityType: 'climb', entityId: 'climb-1' },
+      { type: "vote", entityType: "climb", entityId: "climb-1" },
       ctx,
     );
 
     expect(count).toBe(0);
   });
 
-  it('should handle null entityType and entityId', async () => {
+  it("should handle null entityType and entityId", async () => {
     const ctx = makeCtx();
-    mockReturning.mockResolvedValueOnce([{ uuid: 'a' }]);
+    mockReturning.mockResolvedValueOnce([{ uuid: "a" }]);
 
     const count = await socialNotificationMutations.markGroupNotificationsRead(
       null,
-      { type: 'new_follower', entityType: null, entityId: null },
+      { type: "new_follower", entityType: null, entityId: null },
       ctx,
     );
 
@@ -348,13 +350,13 @@ describe('markGroupNotificationsRead mutation', () => {
     expect(mockUpdate).toHaveBeenCalled();
   });
 
-  it('should handle undefined entityType and entityId', async () => {
+  it("should handle undefined entityType and entityId", async () => {
     const ctx = makeCtx();
-    mockReturning.mockResolvedValueOnce([{ uuid: 'a' }, { uuid: 'b' }]);
+    mockReturning.mockResolvedValueOnce([{ uuid: "a" }, { uuid: "b" }]);
 
     const count = await socialNotificationMutations.markGroupNotificationsRead(
       null,
-      { type: 'new_follower' },
+      { type: "new_follower" },
       ctx,
     );
 

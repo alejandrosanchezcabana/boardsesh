@@ -92,10 +92,10 @@ IncludeCategories:
   - Regex: '^".*"$'
     Priority: 2
   # Arduino/ESP headers
-  - Regex: '^<(Arduino|ESP|WiFi|BLE|NimBLE|FastLED|WebServer|Preferences).*>'
+  - Regex: "^<(Arduino|ESP|WiFi|BLE|NimBLE|FastLED|WebServer|Preferences).*>"
     Priority: 3
   # Standard library
-  - Regex: '^<.*>'
+  - Regex: "^<.*>"
     Priority: 4
 SortIncludes: CaseSensitive
 

@@ -25,7 +25,7 @@ const DEFAULT_MAX_REQUESTS = 60; // 60 requests per minute per connection
 export function checkRateLimit(
   connectionId: string,
   maxRequests: number = DEFAULT_MAX_REQUESTS,
-  windowMs: number = DEFAULT_WINDOW_MS
+  windowMs: number = DEFAULT_WINDOW_MS,
 ): void {
   const now = Date.now();
   const entry = rateLimitMap.get(connectionId);

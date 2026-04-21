@@ -1,13 +1,13 @@
-'use client';
+"use client";
 
-import React, { useState } from 'react';
-import Box from '@mui/material/Box';
-import TextField from '@mui/material/TextField';
-import Switch from '@mui/material/Switch';
-import FormControlLabel from '@mui/material/FormControlLabel';
-import MuiButton from '@mui/material/Button';
-import CircularProgress from '@mui/material/CircularProgress';
-import MuiTypography from '@mui/material/Typography';
+import React, { useState } from "react";
+import Box from "@mui/material/Box";
+import TextField from "@mui/material/TextField";
+import Switch from "@mui/material/Switch";
+import FormControlLabel from "@mui/material/FormControlLabel";
+import MuiButton from "@mui/material/Button";
+import CircularProgress from "@mui/material/CircularProgress";
+import MuiTypography from "@mui/material/Typography";
 
 export interface GymFormFieldValues {
   name: string;
@@ -37,7 +37,7 @@ export default function GymForm({
   onCancel,
 }: GymFormProps) {
   const [name, setName] = useState(initialValues.name);
-  const [slug, setSlug] = useState(initialValues.slug ?? '');
+  const [slug, setSlug] = useState(initialValues.slug ?? "");
   const [description, setDescription] = useState(initialValues.description);
   const [address, setAddress] = useState(initialValues.address);
   const [contactEmail, setContactEmail] = useState(initialValues.contactEmail);
@@ -65,7 +65,11 @@ export default function GymForm({
   };
 
   return (
-    <Box component="form" onSubmit={handleSubmit} sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+    <Box
+      component="form"
+      onSubmit={handleSubmit}
+      sx={{ display: "flex", flexDirection: "column", gap: 2 }}
+    >
       <MuiTypography variant="h6">{title}</MuiTypography>
 
       <TextField
@@ -83,10 +87,10 @@ export default function GymForm({
         <TextField
           label="URL Slug"
           value={slug}
-          onChange={(e) => setSlug(e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, ''))}
+          onChange={(e) => setSlug(e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, ""))}
           fullWidth
           size="small"
-          helperText={`boardsesh.com/gym/${slug || '...'}`}
+          helperText={`boardsesh.com/gym/${slug || "..."}`}
         />
       )}
 
@@ -135,17 +139,13 @@ export default function GymForm({
         label="Public gym"
       />
 
-      <Box sx={{ display: 'flex', gap: 1, justifyContent: 'flex-end', mt: 1 }}>
+      <Box sx={{ display: "flex", gap: 1, justifyContent: "flex-end", mt: 1 }}>
         {onCancel && (
           <MuiButton variant="text" onClick={onCancel} disabled={isSubmitting}>
             Cancel
           </MuiButton>
         )}
-        <MuiButton
-          type="submit"
-          variant="contained"
-          disabled={isSubmitting || !name.trim()}
-        >
+        <MuiButton type="submit" variant="contained" disabled={isSubmitting || !name.trim()}>
           {isSubmitting ? <CircularProgress size={20} color="inherit" /> : submitLabel}
         </MuiButton>
       </Box>

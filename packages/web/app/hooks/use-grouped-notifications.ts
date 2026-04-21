@@ -1,20 +1,20 @@
-'use client';
+"use client";
 
-import { useInfiniteQuery, useQueryClient, type InfiniteData } from '@tanstack/react-query';
-import { useMemo } from 'react';
-import { useWsAuthToken } from './use-ws-auth-token';
-import { createGraphQLHttpClient } from '@/app/lib/graphql/client';
+import { useInfiniteQuery, useQueryClient, type InfiniteData } from "@tanstack/react-query";
+import { useMemo } from "react";
+import { useWsAuthToken } from "./use-ws-auth-token";
+import { createGraphQLHttpClient } from "@/app/lib/graphql/client";
 import {
   GET_GROUPED_NOTIFICATIONS,
   type GetGroupedNotificationsQueryResponse,
   type GetGroupedNotificationsQueryVariables,
-} from '@/app/lib/graphql/operations';
-import type { GroupedNotification, GroupedNotificationConnection } from '@boardsesh/shared-schema';
-import { UNREAD_COUNT_QUERY_KEY } from './use-unread-notification-count';
+} from "@/app/lib/graphql/operations";
+import type { GroupedNotification, GroupedNotificationConnection } from "@boardsesh/shared-schema";
+import { UNREAD_COUNT_QUERY_KEY } from "./use-unread-notification-count";
 
 const PAGE_SIZE = 20;
 
-export const GROUPED_NOTIFICATIONS_QUERY_KEY = ['notifications', 'grouped'] as const;
+export const GROUPED_NOTIFICATIONS_QUERY_KEY = ["notifications", "grouped"] as const;
 
 /**
  * Hook to fetch paginated grouped notifications using useInfiniteQuery.
@@ -24,7 +24,13 @@ export function useGroupedNotifications(initialData?: GroupedNotificationConnect
   const { token, isAuthenticated } = useWsAuthToken();
   const queryClient = useQueryClient();
 
-  const query = useInfiniteQuery<GroupedNotificationConnection, Error, InfiniteData<GroupedNotificationConnection>, typeof GROUPED_NOTIFICATIONS_QUERY_KEY, number>({
+  const query = useInfiniteQuery<
+    GroupedNotificationConnection,
+    Error,
+    InfiniteData<GroupedNotificationConnection>,
+    typeof GROUPED_NOTIFICATIONS_QUERY_KEY,
+    number
+  >({
     queryKey: GROUPED_NOTIFICATIONS_QUERY_KEY,
     queryFn: async ({ pageParam }) => {
       const client = createGraphQLHttpClient(token!);

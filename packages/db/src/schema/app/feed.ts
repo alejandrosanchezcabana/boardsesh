@@ -1,64 +1,57 @@
-import {
-  pgTable,
-  bigserial,
-  text,
-  timestamp,
-  index,
-  jsonb,
-  pgEnum,
-} from 'drizzle-orm/pg-core';
-import { desc } from 'drizzle-orm';
-import { users } from '../auth/users';
-import { socialEntityTypeEnum } from './social';
+import { pgTable, bigserial, text, timestamp, index, jsonb, pgEnum } from "drizzle-orm/pg-core";
+import { desc } from "drizzle-orm";
+import { users } from "../auth/users";
+import { socialEntityTypeEnum } from "./social";
 
-export const feedItemTypeEnum = pgEnum('feed_item_type', [
-  'ascent',
-  'new_climb',
-  'comment',
-  'proposal_approved',
-  'session_summary',
+export const feedItemTypeEnum = pgEnum("feed_item_type", [
+  "ascent",
+  "new_climb",
+  "comment",
+  "proposal_approved",
+  "session_summary",
 ]);
 
 export const feedItems = pgTable(
-  'feed_items',
+  "feed_items",
   {
-    id: bigserial('id', { mode: 'number' }).primaryKey(),
-    recipientId: text('recipient_id')
-      .references(() => users.id, { onDelete: 'cascade' })
+    id: bigserial("id", { mode: "number" }).primaryKey(),
+    recipientId: text("recipient_id")
+      .references(() => users.id, { onDelete: "cascade" })
       .notNull(),
-    actorId: text('actor_id')
-      .references(() => users.id, { onDelete: 'set null' }),
-    type: feedItemTypeEnum('type').notNull(),
-    entityType: socialEntityTypeEnum('entity_type').notNull(),
-    entityId: text('entity_id').notNull(),
-    boardUuid: text('board_uuid'),
-    metadata: jsonb('metadata').$type<Record<string, unknown>>(),
-    createdAt: timestamp('created_at').defaultNow().notNull(),
+    actorId: text("actor_id").references(() => users.id, { onDelete: "set null" }),
+    type: feedItemTypeEnum("type").notNull(),
+    entityType: socialEntityTypeEnum("entity_type").notNull(),
+    entityId: text("entity_id").notNull(),
+    boardUuid: text("board_uuid"),
+    metadata: jsonb("metadata").$type<Record<string, unknown>>(),
+    createdAt: timestamp("created_at").defaultNow().notNull(),
   },
   (table) => ({
-    recipientCreatedAtIdx: index('feed_items_recipient_created_at_idx').on(
+    recipientCreatedAtIdx: index("feed_items_recipient_created_at_idx").on(
       table.recipientId,
       desc(table.createdAt),
       desc(table.id),
     ),
-    recipientBoardCreatedAtIdx: index('feed_items_recipient_board_created_at_idx').on(
+    recipientBoardCreatedAtIdx: index("feed_items_recipient_board_created_at_idx").on(
       table.recipientId,
       table.boardUuid,
       desc(table.createdAt),
       desc(table.id),
     ),
-    actorCreatedAtIdx: index('feed_items_actor_created_at_idx').on(
-      table.actorId,
-      table.createdAt
-    ),
-    createdAtIdx: index('feed_items_created_at_idx').on(table.createdAt),
-    entityTypeEntityIdIdx: index('feed_items_entity_type_entity_id_idx').on(
+    actorCreatedAtIdx: index("feed_items_actor_created_at_idx").on(table.actorId, table.createdAt),
+    createdAtIdx: index("feed_items_created_at_idx").on(table.createdAt),
+    entityTypeEntityIdIdx: index("feed_items_entity_type_entity_id_idx").on(
       table.entityType,
       table.entityId,
     ),
-  })
+  }),
 );
 
 export type FeedItem = typeof feedItems.$inferSelect;
 export type NewFeedItem = typeof feedItems.$inferInsert;
-export type FeedItemType = 'ascent' | 'new_climb' | 'comment' | 'proposal_approved' | 'session_summary';
+export type FeedItemType =
+  | "ascent"
+  | "new_climb"
+  | "comment"
+  | "proposal_approved"
+  | "session_summary";

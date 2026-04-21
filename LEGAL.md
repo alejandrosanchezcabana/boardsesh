@@ -14,7 +14,7 @@ We believe climbers should have the freedom to choose how they interact with har
 
 A climb on a standardised board is a list of hold positions on a fixed, standardised layout (e.g. "start on A5, use B12, C3, D18, finish on K11"), combined with a grade and wall angle. This is factual, functional information — comparable to a chess position, a set of GPS coordinates, or a phone number — not a creative work of authorship.
 
-Under U.S. copyright law, **facts are not copyrightable** (*Feist Publications, Inc. v. Rural Telephone Service Co.*, 499 U.S. 340 (1991)). A standardised board with a finite number of holds (typically 200–500) produces climb definitions that are inherently constrained, factual, and functional.
+Under U.S. copyright law, **facts are not copyrightable** (_Feist Publications, Inc. v. Rural Telephone Service Co._, 499 U.S. 340 (1991)). A standardised board with a finite number of holds (typically 200–500) produces climb definitions that are inherently constrained, factual, and functional.
 
 ### The database is community-created
 
@@ -22,13 +22,13 @@ The climb databases for these boards are almost entirely **user-generated conten
 
 The licensing position varies by manufacturer, but in no case does a manufacturer own the community's climb data:
 
-**Aurora Climbing** (Kilter Board, Tension Board, and others): Aurora's Terms of Use grant them a *"perpetual, unrestricted, unlimited, non-exclusive, irrevocable license"* over user-submitted content ("Contributed Content"). Crucially, this license is **non-exclusive** — it does not transfer ownership to Aurora, nor does it prevent the original creator (or third parties) from independently using, collecting, or presenting the same factual data. A non-exclusive license grants the licensee the right to use the content; it does not grant standing to prevent others from doing the same.
+**Aurora Climbing** (Kilter Board, Tension Board, and others): Aurora's Terms of Use grant them a _"perpetual, unrestricted, unlimited, non-exclusive, irrevocable license"_ over user-submitted content ("Contributed Content"). Crucially, this license is **non-exclusive** — it does not transfer ownership to Aurora, nor does it prevent the original creator (or third parties) from independently using, collecting, or presenting the same factual data. A non-exclusive license grants the licensee the right to use the content; it does not grant standing to prevent others from doing the same.
 
 **Moon Climbing** (MoonBoard): As of the last review of Moon Climbing's public-facing legal documents (February 2026), Moon Climbing has **no app-specific Terms of Service, no End User License Agreement, and no contributed content license** governing the MoonBoard app or its climb database. Their website Terms and Conditions cover only e-commerce matters (shipping, returns, pricing). Their Privacy Policy covers only personal data under GDPR. Neither document addresses user-generated climb data, intellectual property licensing, or restrictions on data use. In the absence of any such agreement, Moon Climbing has no contractual claim over climbs created and submitted by its users.
 
 ### Comprehensive databases have weak compilation protection
 
-Even where a database *arrangement* might qualify for thin copyright protection as a compilation, the U.S. Supreme Court has held that protection extends only to creative selection or arrangement — not to the underlying facts. A database that comprehensively collects *all* user submissions without editorial curation (as these platforms do) is analogous to an alphabetical phone directory, which the Court found unprotectable in *Feist*.
+Even where a database _arrangement_ might qualify for thin copyright protection as a compilation, the U.S. Supreme Court has held that protection extends only to creative selection or arrangement — not to the underlying facts. A database that comprehensively collects _all_ user submissions without editorial curation (as these platforms do) is analogous to an alphabetical phone directory, which the Court found unprotectable in _Feist_.
 
 ---
 
@@ -48,7 +48,7 @@ This project provides software and hardware designs that are compatible with sta
 
 ### Software interoperability
 
-Our app communicates with board controllers over standard Bluetooth protocols. The Bluetooth communication protocol used by these boards is unencrypted and based on commodity hardware (WS2812B addressable LEDs driven by standard Bluetooth controllers). Implementing a compatible Bluetooth interface for the purpose of interoperability is well-established as lawful under both U.S. and EU law (*Sega Enterprises Ltd. v. Accolade, Inc.*, 977 F.2d 1510 (9th Cir. 1992); EU Directive 2009/24/EC, Article 6).
+Our app communicates with board controllers over standard Bluetooth protocols. The Bluetooth communication protocol used by these boards is unencrypted and based on commodity hardware (WS2812B addressable LEDs driven by standard Bluetooth controllers). Implementing a compatible Bluetooth interface for the purpose of interoperability is well-established as lawful under both U.S. and EU law (_Sega Enterprises Ltd. v. Accolade, Inc._, 977 F.2d 1510 (9th Cir. 1992); EU Directive 2009/24/EC, Article 6).
 
 ### Open-source controller
 
@@ -94,4 +94,4 @@ If you are a board manufacturer and would like to discuss collaboration or have 
 
 ---
 
-*This document is provided for informational purposes and does not constitute legal advice. Last updated: 08-02-2026*
+_This document is provided for informational purposes and does not constitute legal advice. Last updated: 08-02-2026_

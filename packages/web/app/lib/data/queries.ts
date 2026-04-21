@@ -4,20 +4,21 @@
  * when fetching data in server components, as it will leverage the next cache and be more
  * performant.
  */
-import 'server-only';
-import { cache } from 'react';
-import { sql } from '@/app/lib/db/db';
-import { getGradeLabel } from '@boardsesh/db/queries';
+import "server-only";
+import { cache } from "react";
+import { sql } from "@/app/lib/db/db";
+import { getGradeLabel } from "@boardsesh/db/queries";
 
-import { Climb, ParsedBoardRouteParametersWithUuid, BoardName, LayoutId, Size } from '../types';
+import { Climb, ParsedBoardRouteParametersWithUuid, BoardName, LayoutId, Size } from "../types";
 import {
   getSizesForLayoutId,
   getAllLayouts,
   getSetsForLayoutAndSize,
-} from '@/app/lib/board-constants';
+} from "@/app/lib/board-constants";
 
-export const getClimb = cache(async (params: ParsedBoardRouteParametersWithUuid): Promise<Climb> => {
-  const result = await sql`
+export const getClimb = cache(
+  async (params: ParsedBoardRouteParametersWithUuid): Promise<Climb> => {
+    const result = await sql`
         SELECT climbs.uuid, climbs.setter_username, climbs.user_id as "userId", climbs.name, climbs.description,
         climbs.frames, COALESCE(climb_stats.angle, ${params.angle}) as angle, COALESCE(climb_stats.ascensionist_count, 0) as ascensionist_count,
         ROUND(climb_stats.display_difficulty::numeric, 0) as difficulty_id,
@@ -36,9 +37,10 @@ export const getClimb = cache(async (params: ParsedBoardRouteParametersWithUuid)
         AND climbs.frames_count = 1
         limit 1
       `;
-  const row = result[0] as Climb & { difficulty_id: number | null };
-  return { ...row, difficulty: getGradeLabel(row.difficulty_id) } as Climb;
-});
+    const row = result[0] as Climb & { difficulty_id: number | null };
+    return { ...row, difficulty: getGradeLabel(row.difficulty_id) } as Climb;
+  },
+);
 
 export interface ClimbStatsForAngle {
   angle: number;
@@ -52,7 +54,7 @@ export interface ClimbStatsForAngle {
 }
 
 export const getClimbStatsForAllAngles = async (
-  params: ParsedBoardRouteParametersWithUuid
+  params: ParsedBoardRouteParametersWithUuid,
 ): Promise<ClimbStatsForAngle[]> => {
   const result = await sql`
     SELECT
@@ -114,4 +116,3 @@ export const getSets = (board_name: BoardName, layout_id: LayoutId, size_id: Siz
   // Use hardcoded data instead of database query
   return getSetsForLayoutAndSize(board_name, layout_id, size_id);
 };
-

@@ -1,17 +1,22 @@
-import type Redis from 'ioredis';
-import type { ClimbQueueItem, SessionUser } from '@boardsesh/shared-schema';
+import type Redis from "ioredis";
+import type { ClimbQueueItem, SessionUser } from "@boardsesh/shared-schema";
 
 /**
  * Safely parse JSON with fallback for empty strings and malformed data.
  */
 function safeJSONParse<T>(value: string | undefined | null, fallback: T): T {
-  if (!value || value === '') {
+  if (!value || value === "") {
     return fallback;
   }
   try {
     return JSON.parse(value) as T;
   } catch (error) {
-    console.error('[RedisSessionStore] JSON parse error:', error, 'Value:', value?.substring(0, 100));
+    console.error(
+      "[RedisSessionStore] JSON parse error:",
+      error,
+      "Value:",
+      value?.substring(0, 100),
+    );
     return fallback;
   }
 }
@@ -59,16 +64,16 @@ export class RedisSessionStore {
       queue: JSON.stringify(data.queue),
       currentClimbQueueItem: data.currentClimbQueueItem
         ? JSON.stringify(data.currentClimbQueueItem)
-        : '',
+        : "",
       version: data.version.toString(),
       sequence: data.sequence.toString(),
       stateHash: data.stateHash,
       lastActivity: data.lastActivity.getTime().toString(),
-      discoverable: data.discoverable ? '1' : '0',
-      latitude: data.latitude?.toString() || '',
-      longitude: data.longitude?.toString() || '',
-      name: data.name || '',
-      createdByUserId: data.createdByUserId || '',
+      discoverable: data.discoverable ? "1" : "0",
+      latitude: data.latitude?.toString() || "",
+      longitude: data.longitude?.toString() || "",
+      name: data.name || "",
+      createdByUserId: data.createdByUserId || "",
       createdAt: data.createdAt.getTime().toString(),
     });
 
@@ -76,7 +81,7 @@ export class RedisSessionStore {
     multi.expire(key, this.TTL);
 
     // Add to recent sessions sorted set (score = timestamp)
-    multi.zadd('boardsesh:session:recent', Date.now(), data.sessionId);
+    multi.zadd("boardsesh:session:recent", Date.now(), data.sessionId);
 
     await multi.exec();
   }
@@ -90,7 +95,7 @@ export class RedisSessionStore {
     currentClimbQueueItem: ClimbQueueItem | null,
     version: number,
     sequence: number,
-    stateHash: string
+    stateHash: string,
   ): Promise<void> {
     const key = `boardsesh:session:${sessionId}`;
     const multi = this.redis.multi();
@@ -98,9 +103,7 @@ export class RedisSessionStore {
     multi.hmset(key, {
       sessionId,
       queue: JSON.stringify(queue),
-      currentClimbQueueItem: currentClimbQueueItem
-        ? JSON.stringify(currentClimbQueueItem)
-        : '',
+      currentClimbQueueItem: currentClimbQueueItem ? JSON.stringify(currentClimbQueueItem) : "",
       version: version.toString(),
       sequence: sequence.toString(),
       stateHash: stateHash,
@@ -108,7 +111,7 @@ export class RedisSessionStore {
     });
 
     multi.expire(key, this.TTL);
-    multi.zadd('boardsesh:session:recent', Date.now(), sessionId);
+    multi.zadd("boardsesh:session:recent", Date.now(), sessionId);
 
     await multi.exec();
   }
@@ -131,9 +134,9 @@ export class RedisSessionStore {
       currentClimbQueueItem: safeJSONParse(data.currentClimbQueueItem, null),
       version: parseInt(data.version, 10) || 0,
       sequence: parseInt(data.sequence, 10) || 0,
-      stateHash: data.stateHash || '',
+      stateHash: data.stateHash || "",
       lastActivity: new Date(parseInt(data.lastActivity, 10)),
-      discoverable: data.discoverable === '1',
+      discoverable: data.discoverable === "1",
       latitude: data.latitude ? parseFloat(data.latitude) : null,
       longitude: data.longitude ? parseFloat(data.longitude) : null,
       name: data.name || null,
@@ -185,14 +188,14 @@ export class RedisSessionStore {
    * Mark session as active (has connected users).
    */
   async markActive(sessionId: string): Promise<void> {
-    await this.redis.sadd('boardsesh:session:active', sessionId);
+    await this.redis.sadd("boardsesh:session:active", sessionId);
   }
 
   /**
    * Mark session as inactive (no connected users).
    */
   async markInactive(sessionId: string): Promise<void> {
-    await this.redis.srem('boardsesh:session:active', sessionId);
+    await this.redis.srem("boardsesh:session:active", sessionId);
   }
 
   /**
@@ -241,7 +244,7 @@ export class RedisSessionStore {
     const multi = this.redis.multi();
     multi.expire(`boardsesh:session:${sessionId}`, this.TTL);
     multi.expire(`boardsesh:session:${sessionId}:users`, this.TTL);
-    multi.zadd('boardsesh:session:recent', Date.now(), sessionId);
+    multi.zadd("boardsesh:session:recent", Date.now(), sessionId);
     await multi.exec();
   }
 
@@ -252,8 +255,8 @@ export class RedisSessionStore {
     const multi = this.redis.multi();
     multi.del(`boardsesh:session:${sessionId}`);
     multi.del(`boardsesh:session:${sessionId}:users`);
-    multi.srem('boardsesh:session:active', sessionId);
-    multi.zrem('boardsesh:session:recent', sessionId);
+    multi.srem("boardsesh:session:active", sessionId);
+    multi.zrem("boardsesh:session:recent", sessionId);
     await multi.exec();
   }
 
@@ -261,15 +264,11 @@ export class RedisSessionStore {
    * Acquire a distributed lock for concurrent session restoration.
    * Returns true if lock acquired, false if already locked.
    */
-  async acquireLock(
-    key: string,
-    value: string,
-    ttlSeconds: number
-  ): Promise<boolean> {
+  async acquireLock(key: string, value: string, ttlSeconds: number): Promise<boolean> {
     // SET key value EX ttlSeconds NX
     // NX = only set if key doesn't exist
-    const result = await this.redis.set(key, value, 'EX', ttlSeconds, 'NX');
-    return result === 'OK';
+    const result = await this.redis.set(key, value, "EX", ttlSeconds, "NX");
+    return result === "OK";
   }
 
   /**

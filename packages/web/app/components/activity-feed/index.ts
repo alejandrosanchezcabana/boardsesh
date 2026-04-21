@@ -1,1 +1,1 @@
-export { AscentsFeed, default } from './ascents-feed';
+export { AscentsFeed, default } from "./ascents-feed";

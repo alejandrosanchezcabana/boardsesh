@@ -1,37 +1,37 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { render, screen } from '@testing-library/react';
-import React from 'react';
-import type { Climb, BoardDetails, BoardName } from '@/app/lib/types';
-import type { ClimbActionProps, ClimbActionResult } from '../types';
+import { describe, it, expect, vi, beforeEach } from "vite-plus/test";
+import { render, screen } from "@testing-library/react";
+import React from "react";
+import type { Climb, BoardDetails, BoardName } from "@/app/lib/types";
+import type { ClimbActionProps, ClimbActionResult } from "../types";
 
 // --- Mock factories ---
 
 function createMockClimb(overrides?: Partial<Climb>): Climb {
   return {
-    uuid: 'climb-1',
-    name: 'Test Climb',
-    difficulty: 'V5',
-    frames: 'p1r42',
-    quality_average: '3.5',
+    uuid: "climb-1",
+    name: "Test Climb",
+    difficulty: "V5",
+    frames: "p1r42",
+    quality_average: "3.5",
     angle: 40,
     ascensionist_count: 10,
     display_difficulty: 5,
     difficulty_average: 12.5,
-    setter_username: 'setter',
+    setter_username: "setter",
     ...overrides,
   } as Climb;
 }
 
 function createMockBoardDetails(overrides?: Partial<BoardDetails>): BoardDetails {
   return {
-    board_name: 'kilter' as BoardName,
+    board_name: "kilter" as BoardName,
     layout_id: 1,
     size_id: 10,
     set_ids: [1, 2],
-    layout_name: 'Original',
-    size_name: '12x12',
-    size_description: 'Full',
-    set_names: ['Standard'],
+    layout_name: "Original",
+    size_name: "12x12",
+    size_description: "Full",
+    set_names: ["Standard"],
     supportsMirroring: true,
     images_to_holds: {},
     holdsData: {},
@@ -48,84 +48,84 @@ function createMockBoardDetails(overrides?: Partial<BoardDetails>): BoardDetails
 // --- Mocks ---
 
 const mockUseSession = vi.fn();
-vi.mock('next-auth/react', () => ({
+vi.mock("next-auth/react", () => ({
   useSession: () => mockUseSession(),
 }));
 
-vi.mock('@vercel/analytics', () => ({
+vi.mock("@vercel/analytics", () => ({
   track: vi.fn(),
 }));
 
-vi.mock('@/app/lib/url-utils', () => ({
-  constructCreateClimbUrl: vi.fn(() => '/create-climb-url'),
-  constructClimbInfoUrl: vi.fn(() => 'https://app.example.com/climb/info'),
+vi.mock("@/app/lib/url-utils", () => ({
+  constructCreateClimbUrl: vi.fn(() => "/create-climb-url"),
+  constructClimbInfoUrl: vi.fn(() => "https://app.example.com/climb/info"),
 }));
 
-vi.mock('@/app/lib/open-external-url', () => ({
+vi.mock("@/app/lib/open-external-url", () => ({
   openExternalUrl: vi.fn(),
 }));
 
 const mockUseOptionalBoardProvider = vi.fn();
-vi.mock('../../board-provider/board-provider-context', () => ({
+vi.mock("../../board-provider/board-provider-context", () => ({
   useOptionalBoardProvider: () => mockUseOptionalBoardProvider(),
   BoardProvider: ({ children }: { children: React.ReactNode }) => <>{children}</>,
 }));
 
-vi.mock('@/app/hooks/use-my-boards', () => ({
+vi.mock("@/app/hooks/use-my-boards", () => ({
   useMyBoards: () => ({ boards: [], isLoading: false }),
 }));
 
-vi.mock('@/app/hooks/use-always-tick-in-app', () => ({
+vi.mock("@/app/hooks/use-always-tick-in-app", () => ({
   useAlwaysTickInApp: () => ({ alwaysUseApp: false, loaded: true, enableAlwaysUseApp: vi.fn() }),
 }));
 
 const mockUseFavorite = vi.fn();
-vi.mock('../use-favorite', () => ({
+vi.mock("../use-favorite", () => ({
   useFavorite: () => mockUseFavorite(),
 }));
 
-vi.mock('@/app/components/providers/auth-modal-provider', () => ({
+vi.mock("@/app/components/providers/auth-modal-provider", () => ({
   useAuthModal: () => ({ openAuthModal: vi.fn() }),
 }));
 
 const mockUseOptionalQueueActions = vi.fn();
 const mockUseOptionalQueueData = vi.fn();
-vi.mock('../../graphql-queue', () => ({
+vi.mock("../../graphql-queue", () => ({
   useOptionalQueueActions: () => mockUseOptionalQueueActions(),
   useOptionalQueueData: () => mockUseOptionalQueueData(),
 }));
 
-vi.mock('../../swipeable-drawer/swipeable-drawer', () => ({
+vi.mock("../../swipeable-drawer/swipeable-drawer", () => ({
   default: ({ children, open }: { children: React.ReactNode; open: boolean }) =>
     open ? <div>{children}</div> : null,
 }));
 
-vi.mock('../action-tooltip', () => ({
+vi.mock("../action-tooltip", () => ({
   ActionTooltip: ({ children }: { children: React.ReactNode }) => <>{children}</>,
 }));
 
-vi.mock('../../logbook/log-ascent-drawer', () => ({
+vi.mock("../../logbook/log-ascent-drawer", () => ({
   LogAscentDrawer: () => null,
 }));
 
-vi.mock('../../logbook/logascent-form', () => ({
+vi.mock("../../logbook/logascent-form", () => ({
   LogAscentForm: () => null,
 }));
 
-vi.mock('../../board-scroll/board-scroll-section', () => ({
+vi.mock("../../board-scroll/board-scroll-section", () => ({
   default: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
 }));
 
-vi.mock('../../board-scroll/board-scroll-card', () => ({
+vi.mock("../../board-scroll/board-scroll-card", () => ({
   default: () => null,
 }));
 
 // Import after mocks
-import { ForkAction } from '../actions/fork-action';
-import { TickAction } from '../actions/tick-action';
-import { FavoriteAction } from '../actions/favorite-action';
-import { QueueAction } from '../actions/queue-action';
-import { MirrorAction } from '../actions/mirror-action';
+import { ForkAction } from "../actions/fork-action";
+import { TickAction } from "../actions/tick-action";
+import { FavoriteAction } from "../actions/favorite-action";
+import { QueueAction } from "../actions/queue-action";
+import { MirrorAction } from "../actions/mirror-action";
 
 // --- Test data ---
 
@@ -136,7 +136,7 @@ const defaultProps: ClimbActionProps = {
   climb: mockClimb,
   boardDetails: mockBoardDetails,
   angle: 40,
-  viewMode: 'list',
+  viewMode: "list",
   onComplete: vi.fn(),
 };
 
@@ -183,7 +183,7 @@ beforeEach(() => {
 
   // Defaults: unauthenticated session, no board provider
   mockUseSession.mockReturnValue({
-    status: 'unauthenticated',
+    status: "unauthenticated",
     data: null,
     update: vi.fn(),
   });
@@ -207,70 +207,70 @@ beforeEach(() => {
 // Label Tests
 // =============================================================================
 
-describe('Action label text', () => {
-  describe('ForkAction', () => {
+describe("Action label text", () => {
+  describe("ForkAction", () => {
     it('returns label "Remix this climb" for a non-draft climb', () => {
       mockUseSession.mockReturnValue({
-        status: 'authenticated',
-        data: { user: { id: 'user-1' }, expires: '' },
+        status: "authenticated",
+        data: { user: { id: "user-1" }, expires: "" },
         update: vi.fn(),
       });
 
       const result = captureActionResult(ForkAction, {
         ...defaultProps,
-        viewMode: 'dropdown',
+        viewMode: "dropdown",
       });
 
       // The menuItem label is a Link element wrapping the text for fork action
       // when a URL is available, so we render the element to check the text
       const { container } = render(<>{result.menuItem.label}</>);
-      expect(container.textContent).toBe('Remix this climb');
+      expect(container.textContent).toBe("Remix this climb");
     });
 
     it('returns label "Edit" when the climb is a draft owned by the current user', () => {
       const draftClimb = createMockClimb({
         is_draft: true,
-        userId: 'user-1',
+        userId: "user-1",
       });
 
       mockUseSession.mockReturnValue({
-        status: 'authenticated',
-        data: { user: { id: 'user-1' }, expires: '' },
+        status: "authenticated",
+        data: { user: { id: "user-1" }, expires: "" },
         update: vi.fn(),
       });
 
       const result = captureActionResult(ForkAction, {
         ...defaultProps,
         climb: draftClimb,
-        viewMode: 'dropdown',
+        viewMode: "dropdown",
       });
 
       const { container } = render(<>{result.menuItem.label}</>);
-      expect(container.textContent).toBe('Edit');
+      expect(container.textContent).toBe("Edit");
     });
 
     it('renders "Remix this climb" text in list mode element', () => {
       mockUseSession.mockReturnValue({
-        status: 'authenticated',
-        data: { user: { id: 'user-1' }, expires: '' },
+        status: "authenticated",
+        data: { user: { id: "user-1" }, expires: "" },
         update: vi.fn(),
       });
 
       renderAction(ForkAction, {
         ...defaultProps,
-        viewMode: 'list',
+        viewMode: "list",
       });
 
-      expect(screen.getByText('Remix this climb')).toBeTruthy();
+      expect(screen.getByText("Remix this climb")).toBeTruthy();
     });
   });
 
-  describe('TickAction', () => {
+  describe("TickAction", () => {
     it('returns label "Log ascent" in the menuItem', () => {
       mockUseOptionalBoardProvider.mockReturnValue({
         isAuthenticated: true,
         logbook: [],
-        boardName: 'kilter',
+        boardName: "kilter",
         isLoading: false,
         error: null,
         isInitialized: true,
@@ -279,21 +279,21 @@ describe('Action label text', () => {
         saveClimb: vi.fn(),
       });
       mockUseSession.mockReturnValue({
-        status: 'authenticated',
-        data: { user: { id: 'user-1' }, expires: '' },
+        status: "authenticated",
+        data: { user: { id: "user-1" }, expires: "" },
         update: vi.fn(),
       });
 
       const result = captureActionResult(TickAction, defaultProps);
 
-      expect(result.menuItem.label).toBe('Log ascent');
+      expect(result.menuItem.label).toBe("Log ascent");
     });
 
     it('renders "Log ascent" text in list mode element', () => {
       mockUseOptionalBoardProvider.mockReturnValue({
         isAuthenticated: true,
         logbook: [],
-        boardName: 'kilter',
+        boardName: "kilter",
         isLoading: false,
         error: null,
         isInitialized: true,
@@ -302,24 +302,24 @@ describe('Action label text', () => {
         saveClimb: vi.fn(),
       });
       mockUseSession.mockReturnValue({
-        status: 'authenticated',
-        data: { user: { id: 'user-1' }, expires: '' },
+        status: "authenticated",
+        data: { user: { id: "user-1" }, expires: "" },
         update: vi.fn(),
       });
 
       renderAction(TickAction, {
         ...defaultProps,
-        viewMode: 'list',
+        viewMode: "list",
       });
 
-      expect(screen.getByText('Log ascent')).toBeTruthy();
+      expect(screen.getByText("Log ascent")).toBeTruthy();
     });
 
-    it('includes badge count in menuItem label when logbook has entries', () => {
+    it("includes badge count in menuItem label when logbook has entries", () => {
       mockUseOptionalBoardProvider.mockReturnValue({
         isAuthenticated: true,
-        logbook: [{ climb_uuid: 'climb-1', angle: 40, is_ascent: true }],
-        boardName: 'kilter',
+        logbook: [{ climb_uuid: "climb-1", angle: 40, is_ascent: true }],
+        boardName: "kilter",
         isLoading: false,
         error: null,
         isInitialized: true,
@@ -328,14 +328,14 @@ describe('Action label text', () => {
         saveClimb: vi.fn(),
       });
       mockUseSession.mockReturnValue({
-        status: 'authenticated',
-        data: { user: { id: 'user-1' }, expires: '' },
+        status: "authenticated",
+        data: { user: { id: "user-1" }, expires: "" },
         update: vi.fn(),
       });
 
       const result = captureActionResult(TickAction, defaultProps);
 
-      expect(result.menuItem.label).toBe('Log ascent (1)');
+      expect(result.menuItem.label).toBe("Log ascent (1)");
     });
   });
 });
@@ -344,9 +344,9 @@ describe('Action label text', () => {
 // List Mode Neutral Color Tests
 // =============================================================================
 
-describe('List mode uses neutral colors (no per-action colored icons)', () => {
-  describe('FavoriteAction', () => {
-    it('uses ActionListElement with uncolored icon (not red)', () => {
+describe("List mode uses neutral colors (no per-action colored icons)", () => {
+  describe("FavoriteAction", () => {
+    it("uses ActionListElement with uncolored icon (not red)", () => {
       // Even when favorited, the list mode icon should be neutral
       mockUseFavorite.mockReturnValue({
         isFavorited: true,
@@ -357,16 +357,16 @@ describe('List mode uses neutral colors (no per-action colored icons)', () => {
 
       renderAction(FavoriteAction, {
         ...defaultProps,
-        viewMode: 'list',
+        viewMode: "list",
       });
 
-      const button = screen.getByRole('button');
+      const button = screen.getByRole("button");
       // The button uses text.primary color (neutral), not red
       expect(button).toBeTruthy();
 
       // Verify the button has the standard list styling by checking it renders as full-width text variant
       // The button text should be visible (Favorited since isFavorited=true)
-      expect(screen.getByText('Favorited')).toBeTruthy();
+      expect(screen.getByText("Favorited")).toBeTruthy();
 
       // The list element icon should NOT have the red error color applied.
       // In favorite-action.tsx the listIcon is created as:
@@ -374,13 +374,13 @@ describe('List mode uses neutral colors (no per-action colored icons)', () => {
       // (no color property) while the icon-mode icon uses:
       //   { color: themeTokens.colors.error, fontSize: iconSize }
       // We verify the rendered SVG icon does not have an inline red color style.
-      const svg = button.querySelector('svg');
+      const svg = button.querySelector("svg");
       expect(svg).toBeTruthy();
-      const svgStyle = svg!.getAttribute('style') || '';
-      expect(svgStyle).not.toContain('color');
+      const svgStyle = svg!.getAttribute("style") || "";
+      expect(svgStyle).not.toContain("color");
     });
 
-    it('renders neutral icon even when not favorited', () => {
+    it("renders neutral icon even when not favorited", () => {
       mockUseFavorite.mockReturnValue({
         isFavorited: false,
         isLoading: false,
@@ -390,92 +390,92 @@ describe('List mode uses neutral colors (no per-action colored icons)', () => {
 
       renderAction(FavoriteAction, {
         ...defaultProps,
-        viewMode: 'list',
+        viewMode: "list",
       });
 
-      const button = screen.getByRole('button');
-      expect(screen.getByText('Favorite')).toBeTruthy();
+      const button = screen.getByRole("button");
+      expect(screen.getByText("Favorite")).toBeTruthy();
 
-      const svg = button.querySelector('svg');
+      const svg = button.querySelector("svg");
       expect(svg).toBeTruthy();
-      const svgStyle = svg!.getAttribute('style') || '';
-      expect(svgStyle).not.toContain('color');
+      const svgStyle = svg!.getAttribute("style") || "";
+      expect(svgStyle).not.toContain("color");
     });
   });
 
-  describe('QueueAction', () => {
-    it('uses ActionListElement with uncolored icon (not green)', () => {
+  describe("QueueAction", () => {
+    it("uses ActionListElement with uncolored icon (not green)", () => {
       renderAction(QueueAction, {
         ...defaultProps,
-        viewMode: 'list',
+        viewMode: "list",
       });
 
-      const button = screen.getByRole('button');
-      expect(screen.getByText('Add to Queue')).toBeTruthy();
+      const button = screen.getByRole("button");
+      expect(screen.getByText("Add to Queue")).toBeTruthy();
 
       // The list icon is created as:
       //   const listIcon = <Icon sx={{ fontSize: iconSize }} />;
       // (no color) while the icon-mode icon uses { color: themeTokens.colors.success }
       // when recentlyAdded is true. Either way, list mode should have no color.
-      const svg = button.querySelector('svg');
+      const svg = button.querySelector("svg");
       expect(svg).toBeTruthy();
-      const svgStyle = svg!.getAttribute('style') || '';
-      expect(svgStyle).not.toContain('color');
+      const svgStyle = svg!.getAttribute("style") || "";
+      expect(svgStyle).not.toContain("color");
     });
   });
 
-  describe('MirrorAction', () => {
-    it('uses ActionListElement with uncolored icon (not purple) when mirrored', () => {
+  describe("MirrorAction", () => {
+    it("uses ActionListElement with uncolored icon (not purple) when mirrored", () => {
       mockUseOptionalQueueData.mockReturnValue({
         currentClimb: { mirrored: true },
       });
 
       renderAction(MirrorAction, {
         ...defaultProps,
-        viewMode: 'list',
+        viewMode: "list",
         boardDetails: createMockBoardDetails({ supportsMirroring: true }),
       });
 
-      const button = screen.getByRole('button');
-      expect(screen.getByText('Mirrored')).toBeTruthy();
+      const button = screen.getByRole("button");
+      expect(screen.getByText("Mirrored")).toBeTruthy();
 
       // The list icon is created as:
       //   const listIcon = <SwapHorizOutlined sx={{ fontSize: iconSize }} />;
       // (no color) while the icon-mode icon uses { color: themeTokens.colors.purple }
       // when isMirrored is true.
-      const svg = button.querySelector('svg');
+      const svg = button.querySelector("svg");
       expect(svg).toBeTruthy();
-      const svgStyle = svg!.getAttribute('style') || '';
-      expect(svgStyle).not.toContain('color');
+      const svgStyle = svg!.getAttribute("style") || "";
+      expect(svgStyle).not.toContain("color");
     });
 
-    it('uses ActionListElement with uncolored icon when not mirrored', () => {
+    it("uses ActionListElement with uncolored icon when not mirrored", () => {
       mockUseOptionalQueueData.mockReturnValue({
         currentClimb: { mirrored: false },
       });
 
       renderAction(MirrorAction, {
         ...defaultProps,
-        viewMode: 'list',
+        viewMode: "list",
         boardDetails: createMockBoardDetails({ supportsMirroring: true }),
       });
 
-      const button = screen.getByRole('button');
-      expect(screen.getByText('Mirror')).toBeTruthy();
+      const button = screen.getByRole("button");
+      expect(screen.getByText("Mirror")).toBeTruthy();
 
-      const svg = button.querySelector('svg');
+      const svg = button.querySelector("svg");
       expect(svg).toBeTruthy();
-      const svgStyle = svg!.getAttribute('style') || '';
-      expect(svgStyle).not.toContain('color');
+      const svgStyle = svg!.getAttribute("style") || "";
+      expect(svgStyle).not.toContain("color");
     });
   });
 
-  describe('TickAction', () => {
-    it('uses text.primary color in list mode (standard neutral styling)', () => {
+  describe("TickAction", () => {
+    it("uses text.primary color in list mode (standard neutral styling)", () => {
       mockUseOptionalBoardProvider.mockReturnValue({
         isAuthenticated: true,
         logbook: [],
-        boardName: 'kilter',
+        boardName: "kilter",
         isLoading: false,
         error: null,
         isInitialized: true,
@@ -484,26 +484,26 @@ describe('List mode uses neutral colors (no per-action colored icons)', () => {
         saveClimb: vi.fn(),
       });
       mockUseSession.mockReturnValue({
-        status: 'authenticated',
-        data: { user: { id: 'user-1' }, expires: '' },
+        status: "authenticated",
+        data: { user: { id: "user-1" }, expires: "" },
         update: vi.fn(),
       });
 
       renderAction(TickAction, {
         ...defaultProps,
-        viewMode: 'list',
+        viewMode: "list",
       });
 
-      const button = screen.getByRole('button');
-      expect(screen.getByText('Log ascent')).toBeTruthy();
+      const button = screen.getByRole("button");
+      expect(screen.getByText("Log ascent")).toBeTruthy();
 
       // TickAction list mode uses inline sx with color: 'text.primary' and
       // '& .MuiButton-startIcon': { color: 'text.secondary' }
       // Verify the icon SVG has no colored inline style
-      const svg = button.querySelector('svg');
+      const svg = button.querySelector("svg");
       expect(svg).toBeTruthy();
-      const svgStyle = svg!.getAttribute('style') || '';
-      expect(svgStyle).not.toContain('color');
+      const svgStyle = svg!.getAttribute("style") || "";
+      expect(svgStyle).not.toContain("color");
     });
   });
 });

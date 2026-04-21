@@ -1,12 +1,12 @@
-'use client';
+"use client";
 
-import React from 'react';
-import { usePathname } from 'next/navigation';
-import { Climb, BoardDetails } from '@/app/lib/types';
-import styles from './climb-view-actions.module.css';
-import { constructClimbListWithSlugs } from '@/app/lib/url-utils';
-import BackButton from '../back-button';
-import { ClimbActions } from '../climb-actions';
+import React from "react";
+import { usePathname } from "next/navigation";
+import { Climb, BoardDetails } from "@/app/lib/types";
+import styles from "./climb-view-actions.module.css";
+import { constructClimbListWithSlugs } from "@/app/lib/url-utils";
+import BackButton from "../back-button";
+import { ClimbActions } from "../climb-actions";
 
 type ClimbViewActionsProps = {
   climb: Climb;
@@ -23,11 +23,18 @@ const ClimbViewActions = ({ climb, boardDetails, auroraAppUrl, angle }: ClimbVie
 
     // Use slug-based URL construction if slug names are available
     if (layout_name && size_name && set_names) {
-      return constructClimbListWithSlugs(board_name, layout_name, size_name, size_description, set_names, angle);
+      return constructClimbListWithSlugs(
+        board_name,
+        layout_name,
+        size_name,
+        size_description,
+        set_names,
+        angle,
+      );
     }
 
     // Fallback to numeric format
-    return `/${board_name}/${boardDetails.layout_id}/${boardDetails.size_id}/${boardDetails.set_ids.join(',')}/${angle}/list`;
+    return `/${board_name}/${boardDetails.layout_id}/${boardDetails.size_id}/${boardDetails.set_ids.join(",")}/${angle}/list`;
   };
 
   return (
@@ -45,7 +52,7 @@ const ClimbViewActions = ({ climb, boardDetails, auroraAppUrl, angle }: ClimbVie
             angle={angle}
             currentPathname={pathname}
             viewMode="button"
-            include={['favorite', 'queue']}
+            include={["favorite", "queue"]}
             size="default"
             auroraAppUrl={auroraAppUrl}
           />
@@ -55,7 +62,7 @@ const ClimbViewActions = ({ climb, boardDetails, auroraAppUrl, angle }: ClimbVie
             angle={angle}
             currentPathname={pathname}
             viewMode="dropdown"
-            include={['instagram', 'tick', 'share', 'openInApp']}
+            include={["instagram", "tick", "share", "openInApp"]}
             auroraAppUrl={auroraAppUrl}
           />
         </div>
@@ -72,7 +79,7 @@ const ClimbViewActions = ({ climb, boardDetails, auroraAppUrl, angle }: ClimbVie
             angle={angle}
             currentPathname={pathname}
             viewMode="button"
-            include={['favorite', 'instagram', 'tick', 'queue', 'share', 'openInApp']}
+            include={["favorite", "instagram", "tick", "queue", "share", "openInApp"]}
             auroraAppUrl={auroraAppUrl}
           />
         </div>

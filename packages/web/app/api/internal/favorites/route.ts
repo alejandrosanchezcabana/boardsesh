@@ -33,7 +33,7 @@ export async function POST(request: NextRequest) {
     if (!validationResult.success) {
       return NextResponse.json(
         { error: validationResult.error.issues[0].message },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -49,8 +49,8 @@ export async function POST(request: NextRequest) {
           eq(schema.userFavorites.userId, session.user.id),
           eq(schema.userFavorites.boardName, boardName),
           eq(schema.userFavorites.climbUuid, climbUuid),
-          eq(schema.userFavorites.angle, angle)
-        )
+          eq(schema.userFavorites.angle, angle),
+        ),
       )
       .limit(1);
 
@@ -63,8 +63,8 @@ export async function POST(request: NextRequest) {
             eq(schema.userFavorites.userId, session.user.id),
             eq(schema.userFavorites.boardName, boardName),
             eq(schema.userFavorites.climbUuid, climbUuid),
-            eq(schema.userFavorites.angle, angle)
-          )
+            eq(schema.userFavorites.angle, angle),
+          ),
         );
       return NextResponse.json({ favorited: false });
     } else {
@@ -99,20 +99,14 @@ export async function GET(request: NextRequest) {
     const angleParam = searchParams.get("angle");
 
     if (!boardName || !climbUuidsParam || !angleParam) {
-      return NextResponse.json(
-        { error: "Missing required parameters" },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: "Missing required parameters" }, { status: 400 });
     }
 
     const climbUuids = climbUuidsParam.split(",");
     const angle = parseInt(angleParam, 10);
 
     if (isNaN(angle)) {
-      return NextResponse.json(
-        { error: "Invalid angle parameter" },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: "Invalid angle parameter" }, { status: 400 });
     }
 
     const validationResult = checkFavoriteSchema.safeParse({
@@ -124,7 +118,7 @@ export async function GET(request: NextRequest) {
     if (!validationResult.success) {
       return NextResponse.json(
         { error: validationResult.error.issues[0].message },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -138,8 +132,8 @@ export async function GET(request: NextRequest) {
         and(
           eq(schema.userFavorites.userId, session.user.id),
           eq(schema.userFavorites.boardName, boardName),
-          eq(schema.userFavorites.angle, angle)
-        )
+          eq(schema.userFavorites.angle, angle),
+        ),
       );
 
     // Filter to only the requested climb UUIDs

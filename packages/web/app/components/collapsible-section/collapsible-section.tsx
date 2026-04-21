@@ -1,7 +1,7 @@
-'use client';
+"use client";
 
-import React, { useState } from 'react';
-import styles from './collapsible-section.module.css';
+import React, { useState } from "react";
+import styles from "./collapsible-section.module.css";
 
 export interface CollapsibleSectionConfig {
   key: string;
@@ -23,10 +23,7 @@ interface CollapsibleSectionProps {
   defaultActiveKey?: string;
 }
 
-const CollapsibleSection: React.FC<CollapsibleSectionProps> = ({
-  sections,
-  defaultActiveKey,
-}) => {
+const CollapsibleSection: React.FC<CollapsibleSectionProps> = ({ sections, defaultActiveKey }) => {
   const sectionDefaultActive = sections.find((s) => s.defaultActive);
   const [activeKey, setActiveKey] = useState<string | null>(
     sectionDefaultActive?.key ?? defaultActiveKey ?? null,
@@ -37,30 +34,39 @@ const CollapsibleSection: React.FC<CollapsibleSectionProps> = ({
       {sections.map((section) => {
         const isActive = activeKey === section.key;
         const summaryParts = section.getSummary();
-        const summaryText = summaryParts.length > 0
-          ? summaryParts.join(' \u00B7 ')
-          : section.defaultSummary;
+        const summaryText =
+          summaryParts.length > 0 ? summaryParts.join(" \u00B7 ") : section.defaultSummary;
 
         const shouldRenderContent = section.lazy ? isActive : true;
 
         return (
           <div
             key={section.key}
-            className={`${styles.sectionCard} ${isActive ? styles.sectionCardActive : ''}`}
+            className={`${styles.sectionCard} ${isActive ? styles.sectionCardActive : ""}`}
             {...(!isActive ? { onClick: () => setActiveKey(section.key) } : {})}
           >
             <div
-              className={`${styles.collapsedRow} ${isActive ? styles.collapsedRowActive : ''}`}
+              className={`${styles.collapsedRow} ${isActive ? styles.collapsedRowActive : ""}`}
               {...(isActive ? { onClick: () => setActiveKey(null) } : {})}
             >
-              <span className={styles.collapsedLabel}>{isActive ? section.title : section.label}</span>
-              <span className={`${styles.collapsedSummary} ${isActive ? styles.collapsedSummaryHidden : ''}`}>
+              <span className={styles.collapsedLabel}>
+                {isActive ? section.title : section.label}
+              </span>
+              <span
+                className={`${styles.collapsedSummary} ${isActive ? styles.collapsedSummaryHidden : ""}`}
+              >
                 {summaryText}
               </span>
             </div>
-            <div className={`${styles.expandableContent} ${isActive ? styles.expandableContentOpen : ''}`}>
+            <div
+              className={`${styles.expandableContent} ${isActive ? styles.expandableContentOpen : ""}`}
+            >
               <div className={styles.expandableInner}>
-                <div className={section.flush ? styles.expandableInnerFlush : styles.expandableInnerPadding}>
+                <div
+                  className={
+                    section.flush ? styles.expandableInnerFlush : styles.expandableInnerPadding
+                  }
+                >
                   {shouldRenderContent ? section.content : null}
                 </div>
               </div>

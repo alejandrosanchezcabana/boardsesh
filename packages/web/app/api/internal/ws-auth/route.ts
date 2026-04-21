@@ -1,5 +1,5 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { getToken } from 'next-auth/jwt';
+import { NextRequest, NextResponse } from "next/server";
+import { getToken } from "next-auth/jwt";
 
 /**
  * API endpoint to get a WebSocket authentication token.
@@ -24,7 +24,10 @@ export async function GET(request: NextRequest) {
       authenticated: true,
     });
   } catch (error) {
-    console.error('[ws-auth] Error getting token:', error);
-    return NextResponse.json({ token: null, authenticated: false, error: 'Failed to get token' }, { status: 500 });
+    console.error("[ws-auth] Error getting token:", error);
+    return NextResponse.json(
+      { token: null, authenticated: false, error: "Failed to get token" },
+      { status: 500 },
+    );
   }
 }

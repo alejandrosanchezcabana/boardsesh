@@ -1,5 +1,5 @@
 // Aurora boards only - different from main BoardName which includes moonboard
-export type AuroraBoardName = 'kilter' | 'tension' | 'decoy' | 'touchstone' | 'grasshopper';
+export type AuroraBoardName = "kilter" | "tension" | "decoy" | "touchstone" | "grasshopper";
 
 export interface BoardUser {
   id: number;
@@ -104,11 +104,11 @@ export interface SaveClimbOptions {
   setter_username?: string;
 }
 export const HOST_BASES: Record<AuroraBoardName, string> = {
-  kilter: 'kilterboardapp',
-  tension: 'tensionboardapp2',
-  decoy: 'decoyboardapp',
-  touchstone: 'touchstoneboardapp',
-  grasshopper: 'grasshopperboardapp',
+  kilter: "kilterboardapp",
+  tension: "tensionboardapp2",
+  decoy: "decoyboardapp",
+  touchstone: "touchstoneboardapp",
+  grasshopper: "grasshopperboardapp",
 };
 
 export const WEB_HOSTS: Record<AuroraBoardName, string> = Object.fromEntries(
@@ -134,7 +134,7 @@ export interface Ascent {
   updated_at: string;
 }
 
-export type LogbookEntry = Omit<Ascent, 'bid_count'> & {
+export type LogbookEntry = Omit<Ascent, "bid_count"> & {
   tries: number;
   is_ascent: boolean;
 };
@@ -153,7 +153,7 @@ export interface ClimbStat {
 }
 
 export interface AscentSavedEvent {
-  _type: 'ascent_saved';
+  _type: "ascent_saved";
   ascent: Ascent & {
     is_listed: boolean;
     created_at: string;
@@ -162,7 +162,7 @@ export interface AscentSavedEvent {
 }
 
 export interface ClimbStatSavedEvent {
-  _type: 'climb_stat_saved';
+  _type: "climb_stat_saved";
   climb_stat: ClimbStat;
 }
 
@@ -179,29 +179,29 @@ export type UserSyncData = LastSyncData & {
 };
 
 export const USER_TABLES = [
-  'users',
-  'walls',
-  'wall_expungements',
-  'draft_climbs',
-  'ascents',
-  'bids',
-  'tags',
-  'circuits',
+  "users",
+  "walls",
+  "wall_expungements",
+  "draft_climbs",
+  "ascents",
+  "bids",
+  "tags",
+  "circuits",
 ];
 export const SHARED_SYNC_TABLES = [
-  'products',
-  'product_sizes',
-  'holes',
-  'leds',
-  'products_angles',
-  'layouts',
-  'product_sizes_layouts_sets',
-  'placements',
-  'sets',
-  'placement_roles',
-  'climbs',
-  'climb_stats',
-  'beta_links',
-  'attempts',
-  'kits',
+  "products",
+  "product_sizes",
+  "holes",
+  "leds",
+  "products_angles",
+  "layouts",
+  "product_sizes_layouts_sets",
+  "placements",
+  "sets",
+  "placement_roles",
+  "climbs",
+  "climb_stats",
+  "beta_links",
+  "attempts",
+  "kits",
 ];

@@ -1,13 +1,13 @@
-'use client';
+"use client";
 
-import React, { useMemo } from 'react';
-import Box from '@mui/material/Box';
-import Typography from '@mui/material/Typography';
-import { TENSION_KILTER_GRADES } from '@/app/lib/board-data';
-import { themeTokens } from '@/app/theme/theme-config';
-import { CssBarChart } from '@/app/components/charts/css-bar-chart';
-import type { CssBarChartBar } from '@/app/components/charts/css-bar-chart';
-import { PlannedClimbSlot } from './types';
+import React, { useMemo } from "react";
+import Box from "@mui/material/Box";
+import Typography from "@mui/material/Typography";
+import { TENSION_KILTER_GRADES } from "@/app/lib/board-data";
+import { themeTokens } from "@/app/theme/theme-config";
+import { CssBarChart } from "@/app/components/charts/css-bar-chart";
+import type { CssBarChartBar } from "@/app/components/charts/css-bar-chart";
+import { PlannedClimbSlot } from "./types";
 
 interface GradeProgressionChartProps {
   plannedSlots: PlannedClimbSlot[];
@@ -15,7 +15,10 @@ interface GradeProgressionChartProps {
 }
 
 function getGradeName(difficultyId: number): string {
-  return TENSION_KILTER_GRADES.find((g) => g.difficulty_id === difficultyId)?.difficulty_name ?? `Grade ${difficultyId}`;
+  return (
+    TENSION_KILTER_GRADES.find((g) => g.difficulty_id === difficultyId)?.difficulty_name ??
+    `Grade ${difficultyId}`
+  );
 }
 
 const GradeProgressionChart: React.FC<GradeProgressionChartProps> = ({
@@ -37,10 +40,12 @@ const GradeProgressionChart: React.FC<GradeProgressionChartProps> = ({
     return sortedGrades.map((gradeId) => ({
       key: String(gradeId),
       label: getGradeName(gradeId),
-      segments: [{
-        value: gradeCounts.get(gradeId)!,
-        color: themeTokens.colors.primary,
-      }],
+      segments: [
+        {
+          value: gradeCounts.get(gradeId)!,
+          color: themeTokens.colors.primary,
+        },
+      ],
     }));
   }, [plannedSlots]);
 
@@ -49,12 +54,12 @@ const GradeProgressionChart: React.FC<GradeProgressionChartProps> = ({
       <Box
         sx={{
           height,
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          bgcolor: 'var(--neutral-50)',
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          bgcolor: "var(--neutral-50)",
           borderRadius: 2,
-          border: '1px dashed var(--neutral-300)',
+          border: "1px dashed var(--neutral-300)",
         }}
       >
         <Typography variant="body2" color="text.secondary">

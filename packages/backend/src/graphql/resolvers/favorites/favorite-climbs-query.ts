@@ -1,35 +1,41 @@
-import { eq, and, sql, desc } from 'drizzle-orm';
-import type { ConnectionContext, Climb, BoardName } from '@boardsesh/shared-schema';
-import { SUPPORTED_BOARDS } from '@boardsesh/shared-schema';
-import { db } from '../../../db/client';
-import * as dbSchema from '@boardsesh/db/schema';
-import { getGradeLabel } from '@boardsesh/db/queries';
-import { requireAuthenticated, validateInput } from '../shared/helpers';
-import { GetUserFavoriteClimbsInputSchema } from '../../../validation/schemas';
-import { UNIFIED_TABLES, isValidBoardName } from '../../../db/queries/util/table-select';
+import { eq, and, sql, desc } from "drizzle-orm";
+import type { ConnectionContext, Climb, BoardName } from "@boardsesh/shared-schema";
+import { SUPPORTED_BOARDS } from "@boardsesh/shared-schema";
+import { db } from "../../../db/client";
+import * as dbSchema from "@boardsesh/db/schema";
+import { getGradeLabel } from "@boardsesh/db/queries";
+import { requireAuthenticated, validateInput } from "../shared/helpers";
+import { GetUserFavoriteClimbsInputSchema } from "../../../validation/schemas";
+import { UNIFIED_TABLES, isValidBoardName } from "../../../db/queries/util/table-select";
 
 export const favoriteClimbsQuery = {
   userFavoriteClimbs: async (
     _: unknown,
-    { input }: { input: {
-      boardName: string;
-      layoutId: number;
-      sizeId: number;
-      setIds: string;
-      angle: number;
-      page?: number;
-      pageSize?: number;
-    } },
-    ctx: ConnectionContext
+    {
+      input,
+    }: {
+      input: {
+        boardName: string;
+        layoutId: number;
+        sizeId: number;
+        setIds: string;
+        angle: number;
+        page?: number;
+        pageSize?: number;
+      };
+    },
+    ctx: ConnectionContext,
   ): Promise<{ climbs: Climb[]; totalCount: number; hasMore: boolean }> => {
     requireAuthenticated(ctx);
-    validateInput(GetUserFavoriteClimbsInputSchema, input, 'input');
+    validateInput(GetUserFavoriteClimbsInputSchema, input, "input");
 
     const userId = ctx.userId!;
     const boardName = input.boardName as BoardName;
 
     if (!isValidBoardName(boardName)) {
-      throw new Error(`Invalid board name: ${boardName}. Must be one of: ${SUPPORTED_BOARDS.join(', ')}`);
+      throw new Error(
+        `Invalid board name: ${boardName}. Must be one of: ${SUPPORTED_BOARDS.join(", ")}`,
+      );
     }
 
     const page = input.page ?? 0;
@@ -44,7 +50,7 @@ export const favoriteClimbsQuery = {
         and(
           eq(dbSchema.userFavorites.userId, userId),
           eq(dbSchema.userFavorites.boardName, boardName),
-        )
+        ),
       );
 
     const totalCount = countResult[0]?.count || 0;
@@ -63,7 +69,9 @@ export const favoriteClimbsQuery = {
         frames: tables.climbs.frames,
         // Stats data
         ascensionist_count: tables.climbStats.ascensionistCount,
-        difficulty_id: sql<number | null>`ROUND(${tables.climbStats.displayDifficulty}::numeric, 0)`,
+        difficulty_id: sql<
+          number | null
+        >`ROUND(${tables.climbStats.displayDifficulty}::numeric, 0)`,
         quality_average: sql<number>`ROUND(${tables.climbStats.qualityAverage}::numeric, 2)`,
         difficulty_error: sql<number>`ROUND(${tables.climbStats.difficultyAverage}::numeric - ${tables.climbStats.displayDifficulty}::numeric, 2)`,
         benchmark_difficulty: tables.climbStats.benchmarkDifficulty,
@@ -73,22 +81,22 @@ export const favoriteClimbsQuery = {
         tables.climbs,
         and(
           eq(tables.climbs.uuid, dbSchema.userFavorites.climbUuid),
-          eq(tables.climbs.boardType, boardName)
-        )
+          eq(tables.climbs.boardType, boardName),
+        ),
       )
       .leftJoin(
         tables.climbStats,
         and(
           eq(tables.climbStats.climbUuid, dbSchema.userFavorites.climbUuid),
           eq(tables.climbStats.boardType, boardName),
-          eq(tables.climbStats.angle, input.angle)
-        )
+          eq(tables.climbStats.angle, input.angle),
+        ),
       )
       .where(
         and(
           eq(dbSchema.userFavorites.userId, userId),
           eq(dbSchema.userFavorites.boardName, boardName),
-        )
+        ),
       )
       .orderBy(desc(dbSchema.userFavorites.createdAt))
       .limit(pageSize + 1)
@@ -100,17 +108,20 @@ export const favoriteClimbsQuery = {
     const climbs: Climb[] = trimmedResults.map((result) => ({
       uuid: result.uuid || result.climbUuid,
       layoutId: result.layoutId,
-      setter_username: result.setter_username || '',
-      name: result.name || '',
-      description: result.description || '',
-      frames: result.frames || '',
+      setter_username: result.setter_username || "",
+      name: result.name || "",
+      description: result.description || "",
+      frames: result.frames || "",
       angle: input.angle,
       ascensionist_count: Number(result.ascensionist_count || 0),
       difficulty: getGradeLabel(result.difficulty_id),
-      quality_average: result.quality_average?.toString() || '0',
+      quality_average: result.quality_average?.toString() || "0",
       stars: Math.round((Number(result.quality_average) || 0) * 5),
-      difficulty_error: result.difficulty_error?.toString() || '0',
-      benchmark_difficulty: result.benchmark_difficulty && result.benchmark_difficulty > 0 ? result.benchmark_difficulty.toString() : null,
+      difficulty_error: result.difficulty_error?.toString() || "0",
+      benchmark_difficulty:
+        result.benchmark_difficulty && result.benchmark_difficulty > 0
+          ? result.benchmark_difficulty.toString()
+          : null,
     }));
 
     return {

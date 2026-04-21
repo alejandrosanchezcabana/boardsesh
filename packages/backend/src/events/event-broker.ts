@@ -1,9 +1,9 @@
-import type Redis from 'ioredis';
-import type { SocialEvent } from '@boardsesh/shared-schema';
-import { v4 as uuidv4 } from 'uuid';
+import type Redis from "ioredis";
+import type { SocialEvent } from "@boardsesh/shared-schema";
+import { v4 as uuidv4 } from "uuid";
 
-const STREAM_KEY = 'boardsesh:events';
-const CONSUMER_GROUP = 'notification-workers';
+const STREAM_KEY = "boardsesh:events";
+const CONSUMER_GROUP = "notification-workers";
 const BATCH_SIZE = 50;
 const BLOCK_MS = 5000;
 const CLAIM_IDLE_MS = 30000;
@@ -28,11 +28,11 @@ export class EventBroker {
 
     // Create consumer group (idempotent) - uses publisher (non-blocking)
     try {
-      await this.publisher.xgroup('CREATE', STREAM_KEY, CONSUMER_GROUP, '$', 'MKSTREAM');
+      await this.publisher.xgroup("CREATE", STREAM_KEY, CONSUMER_GROUP, "$", "MKSTREAM");
       console.log(`[EventBroker] Created consumer group "${CONSUMER_GROUP}" on "${STREAM_KEY}"`);
     } catch (error: unknown) {
       // BUSYGROUP means group already exists, which is fine
-      if (error instanceof Error && error.message.includes('BUSYGROUP')) {
+      if (error instanceof Error && error.message.includes("BUSYGROUP")) {
         console.log(`[EventBroker] Consumer group "${CONSUMER_GROUP}" already exists`);
       } else {
         throw error;
@@ -48,30 +48,38 @@ export class EventBroker {
 
   async publish(event: SocialEvent): Promise<void> {
     if (!this.publisher) {
-      console.warn('[EventBroker] Not initialized, skipping publish');
+      console.warn("[EventBroker] Not initialized, skipping publish");
       return;
     }
 
     try {
       await this.publisher.xadd(
         STREAM_KEY,
-        'MAXLEN', '~', String(MAX_STREAM_LEN),
-        '*',
-        'type', event.type,
-        'actorId', event.actorId,
-        'entityType', event.entityType,
-        'entityId', event.entityId,
-        'timestamp', String(event.timestamp),
-        'metadata', JSON.stringify(event.metadata),
+        "MAXLEN",
+        "~",
+        String(MAX_STREAM_LEN),
+        "*",
+        "type",
+        event.type,
+        "actorId",
+        event.actorId,
+        "entityType",
+        event.entityType,
+        "entityId",
+        event.entityId,
+        "timestamp",
+        String(event.timestamp),
+        "metadata",
+        JSON.stringify(event.metadata),
       );
     } catch (error) {
-      console.error('[EventBroker] Failed to publish event:', error);
+      console.error("[EventBroker] Failed to publish event:", error);
     }
   }
 
   startConsumer(handler: (event: SocialEvent) => Promise<void>): void {
     if (!this.publisher || !this.consumer) {
-      console.warn('[EventBroker] Not initialized, cannot start consumer');
+      console.warn("[EventBroker] Not initialized, cannot start consumer");
       return;
     }
 
@@ -83,8 +91,10 @@ export class EventBroker {
 
       while (this.running) {
         // Check if Redis connection is permanently closed
-        if (this.consumer?.status === 'end') {
-          console.error('[EventBroker] Redis connection permanently closed, stopping consumer loop');
+        if (this.consumer?.status === "end") {
+          console.error(
+            "[EventBroker] Redis connection permanently closed, stopping consumer loop",
+          );
           this.running = false;
           break;
         }
@@ -100,8 +110,11 @@ export class EventBroker {
         } catch (error) {
           consecutiveErrors++;
           const delay = Math.min(1000 * Math.pow(2, consecutiveErrors - 1), 30000);
-          console.error(`[EventBroker] Consumer loop error (attempt ${consecutiveErrors}, retry in ${delay}ms):`, error);
-          await new Promise(resolve => setTimeout(resolve, delay));
+          console.error(
+            `[EventBroker] Consumer loop error (attempt ${consecutiveErrors}, retry in ${delay}ms):`,
+            error,
+          );
+          await new Promise((resolve) => setTimeout(resolve, delay));
         }
       }
     };
@@ -109,7 +122,9 @@ export class EventBroker {
     runLoop();
   }
 
-  private async reclaimPendingEvents(handler: (event: SocialEvent) => Promise<void>): Promise<void> {
+  private async reclaimPendingEvents(
+    handler: (event: SocialEvent) => Promise<void>,
+  ): Promise<void> {
     if (!this.consumer || !this.publisher) return;
 
     try {
@@ -118,8 +133,9 @@ export class EventBroker {
         CONSUMER_GROUP,
         this.consumerName,
         CLAIM_IDLE_MS,
-        '0-0',
-        'COUNT', 10,
+        "0-0",
+        "COUNT",
+        10,
       );
 
       // xautoclaim returns [nextStartId, claimedEntries, ...]
@@ -134,7 +150,10 @@ export class EventBroker {
               // Only acknowledge after successful processing (non-blocking)
               await this.publisher.xack(STREAM_KEY, CONSUMER_GROUP, messageId);
             } catch (error) {
-              console.error(`[EventBroker] Error processing reclaimed event ${messageId}, will retry:`, error);
+              console.error(
+                `[EventBroker] Error processing reclaimed event ${messageId}, will retry:`,
+                error,
+              );
             }
           } else {
             // Unparseable event - ack to avoid infinite retry
@@ -144,13 +163,13 @@ export class EventBroker {
       }
     } catch (error) {
       // xautoclaim may not be available on older Redis versions
-      if (error instanceof Error && error.message.includes('ERR unknown command')) {
+      if (error instanceof Error && error.message.includes("ERR unknown command")) {
         // Silently skip - xautoclaim requires Redis 6.2+
-      } else if (error instanceof Error && error.message.includes('Connection is closed')) {
+      } else if (error instanceof Error && error.message.includes("Connection is closed")) {
         // Re-throw connection errors so the outer loop handles them with backoff
         throw error;
       } else {
-        console.error('[EventBroker] Error reclaiming events:', error);
+        console.error("[EventBroker] Error reclaiming events:", error);
       }
     }
   }
@@ -159,10 +178,16 @@ export class EventBroker {
     if (!this.consumer || !this.publisher) return;
 
     const result = await this.consumer.xreadgroup(
-      'GROUP', CONSUMER_GROUP, this.consumerName,
-      'COUNT', BATCH_SIZE,
-      'BLOCK', BLOCK_MS,
-      'STREAMS', STREAM_KEY, '>',
+      "GROUP",
+      CONSUMER_GROUP,
+      this.consumerName,
+      "COUNT",
+      BATCH_SIZE,
+      "BLOCK",
+      BLOCK_MS,
+      "STREAMS",
+      STREAM_KEY,
+      ">",
     );
 
     if (!result) return; // Timed out with no new events
@@ -195,15 +220,15 @@ export class EventBroker {
       }
 
       return {
-        type: map.get('type') as SocialEvent['type'],
-        actorId: map.get('actorId')!,
-        entityType: map.get('entityType')!,
-        entityId: map.get('entityId')!,
-        timestamp: Number(map.get('timestamp')),
-        metadata: JSON.parse(map.get('metadata') || '{}'),
+        type: map.get("type") as SocialEvent["type"],
+        actorId: map.get("actorId")!,
+        entityType: map.get("entityType")!,
+        entityId: map.get("entityId")!,
+        timestamp: Number(map.get("timestamp")),
+        metadata: JSON.parse(map.get("metadata") || "{}"),
       };
     } catch (error) {
-      console.error('[EventBroker] Failed to parse event:', error);
+      console.error("[EventBroker] Failed to parse event:", error);
       return null;
     }
   }

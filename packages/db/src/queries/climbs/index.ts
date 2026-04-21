@@ -1,10 +1,5 @@
-export { searchClimbs } from './search-climbs';
-export { createClimbFilters } from './create-climb-filters';
-export { getGradeLabel } from './grade-lookup';
-export { populateDenormalizedColumns } from './populate-denormalized-columns';
-export type {
-  BoardRouteParams,
-  ClimbSearchParams,
-  ClimbRow,
-  ClimbSearchResult,
-} from './types';
+export { searchClimbs } from "./search-climbs";
+export { createClimbFilters } from "./create-climb-filters";
+export { getGradeLabel } from "./grade-lookup";
+export { populateDenormalizedColumns } from "./populate-denormalized-columns";
+export type { BoardRouteParams, ClimbSearchParams, ClimbRow, ClimbSearchResult } from "./types";

@@ -9,19 +9,19 @@
  * different image processing pipelines. Hold detection should be consistent.
  */
 
-import { describe, it } from 'vitest';
-import path from 'path';
-import { NodeCanvasImageProcessor } from './helpers/node-canvas-processor';
-import { parseWithProcessor } from '../parser';
-import { EXPECTED_RESULTS } from './fixtures/expected-results';
-import { validateParseResult } from './helpers/test-utils';
+import { describe, it } from "vite-plus/test";
+import path from "path";
+import { NodeCanvasImageProcessor } from "./helpers/node-canvas-processor";
+import { parseWithProcessor } from "../parser";
+import { EXPECTED_RESULTS } from "./fixtures/expected-results";
+import { validateParseResult } from "./helpers/test-utils";
 
-const FIXTURES_DIR = path.join(__dirname, 'fixtures');
+const FIXTURES_DIR = path.join(__dirname, "fixtures");
 
-describe('MoonBoard OCR Parser (Canvas Implementation)', () => {
+describe("MoonBoard OCR Parser (Canvas Implementation)", () => {
   for (const expected of EXPECTED_RESULTS) {
     describe(expected.fixture, () => {
-      it('should extract correct climb data', async () => {
+      it("should extract correct climb data", async () => {
         const processor = new NodeCanvasImageProcessor();
         await processor.load(path.join(FIXTURES_DIR, expected.fixture));
         const result = await parseWithProcessor(processor);

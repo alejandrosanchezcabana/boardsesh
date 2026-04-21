@@ -62,18 +62,18 @@ On first boot, the controller starts in AP mode:
 
 ## Configuration Options
 
-| Setting | Description |
-|---------|-------------|
-| API Key | Your BoardSesh controller API key |
-| Session ID | The BoardSesh session to connect to |
+| Setting     | Description                                                  |
+| ----------- | ------------------------------------------------------------ |
+| API Key     | Your BoardSesh controller API key                            |
+| Session ID  | The BoardSesh session to connect to                          |
 | Backend URL | WebSocket URL (default: wss://backend.boardsesh.com/graphql) |
-| LED Count | Number of LEDs in your strip |
-| Brightness | Global brightness (0-255) |
+| LED Count   | Number of LEDs in your strip                                 |
+| Brightness  | Global brightness (0-255)                                    |
 
 ## Pin Configuration
 
-| Pin | Function |
-|-----|----------|
+| Pin    | Function              |
+| ------ | --------------------- |
 | GPIO 5 | WS2811 data (default) |
 
 ## BLE Features
@@ -85,22 +85,24 @@ The controller advertises as "Kilter Board" and implements the Nordic UART Servi
 - Any app using the Aurora Climbing protocol
 
 When the official app sends a climb via Bluetooth:
+
 1. LEDs are updated immediately
 2. (Optional) Climb data can be forwarded to your BoardSesh session
 
 ## REST API
 
-| Endpoint | Method | Description |
-|----------|--------|-------------|
-| `/` | GET | Configuration web UI |
-| `/api/status` | GET | Current status JSON |
-| `/api/config` | POST | Update configuration |
-| `/api/test-led` | POST | Run LED test pattern |
-| `/api/reset` | POST | Factory reset |
+| Endpoint        | Method | Description          |
+| --------------- | ------ | -------------------- |
+| `/`             | GET    | Configuration web UI |
+| `/api/status`   | GET    | Current status JSON  |
+| `/api/config`   | POST   | Update configuration |
+| `/api/test-led` | POST   | Run LED test pattern |
+| `/api/reset`    | POST   | Factory reset        |
 
 ## LED Test Pattern
 
 Access via web UI or:
+
 ```bash
 curl -X POST http://<controller-ip>/api/test-led
 ```
@@ -108,20 +110,24 @@ curl -X POST http://<controller-ip>/api/test-led
 ## Troubleshooting
 
 ### WiFi won't connect
+
 - Press reset button for 10 seconds to enter AP mode
 - Reconfigure WiFi through captive portal
 
 ### WebSocket not connecting
+
 - Verify API key is correct
 - Check session ID exists
 - Ensure backend URL is correct
 
 ### LEDs not working
+
 - Check power supply capacity
 - Verify logic level shifter is connected
 - Test with `/api/test-led`
 
 ### BLE not visible
+
 - Ensure no other device is connected
 - Controller only allows one BLE connection at a time
 

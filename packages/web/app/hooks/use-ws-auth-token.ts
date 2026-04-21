@@ -1,7 +1,7 @@
-'use client';
+"use client";
 
-import { useQuery } from '@tanstack/react-query';
-import { useSession } from 'next-auth/react';
+import { useQuery } from "@tanstack/react-query";
+import { useSession } from "next-auth/react";
 
 interface WsAuthResponse {
   token: string | null;
@@ -10,7 +10,7 @@ interface WsAuthResponse {
 }
 
 async function fetchWsAuthToken(): Promise<WsAuthResponse> {
-  const response = await fetch('/api/internal/ws-auth');
+  const response = await fetch("/api/internal/ws-auth");
   if (!response.ok) {
     throw new Error(`Failed to fetch auth token: ${response.status}`);
   }
@@ -29,17 +29,21 @@ export function useWsAuthToken() {
   const { status } = useSession();
 
   const { data, isLoading, error } = useQuery({
-    queryKey: ['wsAuthToken', status],
+    queryKey: ["wsAuthToken", status],
     queryFn: fetchWsAuthToken,
     staleTime: Infinity,
     retry: 1,
-    enabled: status !== 'loading',
+    enabled: status !== "loading",
   });
 
   return {
     token: data?.token ?? null,
     isAuthenticated: data?.authenticated ?? false,
-    isLoading: isLoading || status === 'loading',
-    error: error ? (error instanceof Error ? error.message : 'Unknown error') : (data?.error ?? null),
+    isLoading: isLoading || status === "loading",
+    error: error
+      ? error instanceof Error
+        ? error.message
+        : "Unknown error"
+      : (data?.error ?? null),
   };
 }

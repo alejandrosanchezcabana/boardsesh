@@ -18,17 +18,17 @@ Migrate the backend from Express to GraphQL Yoga, then reimplement Next.js REST 
 
 ### Changes Made
 
-| File | Description |
-|------|-------------|
-| `src/server.ts` | Rewritten with Yoga + custom request router |
-| `src/handlers/cors.ts` | CORS utility with origin validation |
-| `src/handlers/health.ts` | Health check endpoint |
-| `src/handlers/join.ts` | Session redirect handler |
-| `src/handlers/avatars.ts` | Avatar upload with busboy (replaced multer) |
-| `src/handlers/static.ts` | Static file serving |
-| `src/graphql/yoga.ts` | Yoga instance configuration |
-| `src/websocket/setup.ts` | graphql-ws integration |
-| `package.json` | Added graphql-yoga, busboy; removed express, multer |
+| File                      | Description                                         |
+| ------------------------- | --------------------------------------------------- |
+| `src/server.ts`           | Rewritten with Yoga + custom request router         |
+| `src/handlers/cors.ts`    | CORS utility with origin validation                 |
+| `src/handlers/health.ts`  | Health check endpoint                               |
+| `src/handlers/join.ts`    | Session redirect handler                            |
+| `src/handlers/avatars.ts` | Avatar upload with busboy (replaced multer)         |
+| `src/handlers/static.ts`  | Static file serving                                 |
+| `src/graphql/yoga.ts`     | Yoga instance configuration                         |
+| `src/websocket/setup.ts`  | graphql-ws integration                              |
+| `package.json`            | Added graphql-yoga, busboy; removed express, multer |
 
 ### Architecture
 
@@ -51,72 +51,73 @@ Reimplement Next.js REST APIs as GraphQL queries/mutations. Only endpoints that 
 
 ### 2.1 Board Configuration Queries (High Priority)
 
-| REST Endpoint | GraphQL Operation | Status |
-|---------------|-------------------|--------|
-| `GET /api/v1/grades/[board_name]` | `Query.grades(boardName: String!)` | ✅ DONE |
-| `GET /api/v1/angles/[board_name]/[layout_id]` | `Query.angles(boardName: String!, layoutId: Int!)` | ✅ DONE |
-| `GET /api/v1/[board_name]/[layout_id]/[size_id]/[set_ids]/details` | `Query.boardDetails(...)` | SKIP (being removed) |
+| REST Endpoint                                                      | GraphQL Operation                                  | Status               |
+| ------------------------------------------------------------------ | -------------------------------------------------- | -------------------- |
+| `GET /api/v1/grades/[board_name]`                                  | `Query.grades(boardName: String!)`                 | ✅ DONE              |
+| `GET /api/v1/angles/[board_name]/[layout_id]`                      | `Query.angles(boardName: String!, layoutId: Int!)` | ✅ DONE              |
+| `GET /api/v1/[board_name]/[layout_id]/[size_id]/[set_ids]/details` | `Query.boardDetails(...)`                          | SKIP (being removed) |
 
 **Source files:**
+
 - `packages/web/app/api/v1/grades/[board_name]/route.ts`
 - `packages/web/app/api/v1/angles/[board_name]/[layout_id]/route.ts`
 - `packages/web/app/api/v1/[board_name]/[layout_id]/[size_id]/[set_ids]/details/route.ts`
 
 ### 2.2 Climb Queries (High Priority)
 
-| REST Endpoint | GraphQL Operation | Status |
-|---------------|-------------------|--------|
-| `GET /api/v1/[board_name]/.../search` | `Query.searchClimbs(input: ClimbSearchInput!)` | ✅ DONE (stub - returns empty) |
-| `GET /api/v1/[board_name]/.../[climb_uuid]` | `Query.climb(...)` | ✅ DONE (stub - returns null) |
+| REST Endpoint                               | GraphQL Operation                              | Status                         |
+| ------------------------------------------- | ---------------------------------------------- | ------------------------------ |
+| `GET /api/v1/[board_name]/.../search`       | `Query.searchClimbs(input: ClimbSearchInput!)` | ✅ DONE (stub - returns empty) |
+| `GET /api/v1/[board_name]/.../[climb_uuid]` | `Query.climb(...)`                             | ✅ DONE (stub - returns null)  |
 
 **Medium Priority:**
 
-| REST Endpoint | GraphQL Operation | Status |
-|---------------|-------------------|--------|
-| `GET /api/v1/[board_name]/climb-stats/[climb_uuid]` | `Query.climbStats(...)` | TODO |
-| `GET /api/v1/[board_name]/.../heatmap` | `Query.heatmap(...)` | TODO |
-| `GET /api/v1/[board_name]/.../setters` | `Query.setters(...)` | TODO |
+| REST Endpoint                                       | GraphQL Operation       | Status |
+| --------------------------------------------------- | ----------------------- | ------ |
+| `GET /api/v1/[board_name]/climb-stats/[climb_uuid]` | `Query.climbStats(...)` | TODO   |
+| `GET /api/v1/[board_name]/.../heatmap`              | `Query.heatmap(...)`    | TODO   |
+| `GET /api/v1/[board_name]/.../setters`              | `Query.setters(...)`    | TODO   |
 
 **Low Priority:**
 
-| REST Endpoint | GraphQL Operation | Status |
-|---------------|-------------------|--------|
-| `GET /api/v1/[board_name]/beta/[climb_uuid]` | `Query.betaLinks(...)` | TODO |
+| REST Endpoint                                | GraphQL Operation      | Status |
+| -------------------------------------------- | ---------------------- | ------ |
+| `GET /api/v1/[board_name]/beta/[climb_uuid]` | `Query.betaLinks(...)` | TODO   |
 
 ### 2.3 Slug Lookups (Medium Priority)
 
-| REST Endpoint | GraphQL Operation | Status |
-|---------------|-------------------|--------|
-| `GET /api/v1/[board_name]/slugs/layout/[slug]` | `Query.layoutBySlug(...)` | TODO |
-| `GET /api/v1/[board_name]/slugs/size/[layout_id]/[slug]` | `Query.sizeBySlug(...)` | TODO |
-| `GET /api/v1/[board_name]/slugs/sets/.../[slug]` | `Query.setsBySlug(...)` | TODO |
+| REST Endpoint                                            | GraphQL Operation         | Status |
+| -------------------------------------------------------- | ------------------------- | ------ |
+| `GET /api/v1/[board_name]/slugs/layout/[slug]`           | `Query.layoutBySlug(...)` | TODO   |
+| `GET /api/v1/[board_name]/slugs/size/[layout_id]/[slug]` | `Query.sizeBySlug(...)`   | TODO   |
+| `GET /api/v1/[board_name]/slugs/sets/.../[slug]`         | `Query.setsBySlug(...)`   | TODO   |
 
 ### 2.4 User Management (High Priority)
 
-| REST Endpoint | GraphQL Operation | Status |
-|---------------|-------------------|--------|
-| `GET /api/internal/profile` | `Query.profile` | ✅ DONE |
-| `PUT /api/internal/profile` | `Mutation.updateProfile(...)` | ✅ DONE |
-| `POST /api/internal/profile/avatar` | `Mutation.uploadAvatar(...)` | TODO |
-| `GET /api/internal/favorites` | `Query.favorites(...)` | ✅ DONE |
-| `POST /api/internal/favorites` | `Mutation.toggleFavorite(...)` | ✅ DONE |
-| `GET /api/internal/aurora-credentials` | `Query.auroraCredentials` | ✅ DONE |
-| `GET /api/internal/aurora-credentials/[board_type]` | `Query.auroraCredential(...)` | ✅ DONE |
-| `POST /api/internal/aurora-credentials` | `Mutation.saveAuroraCredential(...)` | ✅ DONE |
-| `DELETE /api/internal/aurora-credentials` | `Mutation.deleteAuroraCredential(...)` | ✅ DONE |
-| `GET /api/internal/aurora-credentials/unsynced` | `Query.unsyncedCounts` | TODO |
-| `GET /api/internal/user-board-mapping` | `Query.userBoardMappings` | TODO |
-| `POST /api/internal/user-board-mapping` | `Mutation.createUserBoardMapping(...)` | TODO |
+| REST Endpoint                                       | GraphQL Operation                      | Status  |
+| --------------------------------------------------- | -------------------------------------- | ------- |
+| `GET /api/internal/profile`                         | `Query.profile`                        | ✅ DONE |
+| `PUT /api/internal/profile`                         | `Mutation.updateProfile(...)`          | ✅ DONE |
+| `POST /api/internal/profile/avatar`                 | `Mutation.uploadAvatar(...)`           | TODO    |
+| `GET /api/internal/favorites`                       | `Query.favorites(...)`                 | ✅ DONE |
+| `POST /api/internal/favorites`                      | `Mutation.toggleFavorite(...)`         | ✅ DONE |
+| `GET /api/internal/aurora-credentials`              | `Query.auroraCredentials`              | ✅ DONE |
+| `GET /api/internal/aurora-credentials/[board_type]` | `Query.auroraCredential(...)`          | ✅ DONE |
+| `POST /api/internal/aurora-credentials`             | `Mutation.saveAuroraCredential(...)`   | ✅ DONE |
+| `DELETE /api/internal/aurora-credentials`           | `Mutation.deleteAuroraCredential(...)` | ✅ DONE |
+| `GET /api/internal/aurora-credentials/unsynced`     | `Query.unsyncedCounts`                 | TODO    |
+| `GET /api/internal/user-board-mapping`              | `Query.userBoardMappings`              | TODO    |
+| `POST /api/internal/user-board-mapping`             | `Mutation.createUserBoardMapping(...)` | TODO    |
 
 ### 2.5 Endpoints Staying in Next.js
 
-| Endpoint | Reason |
-|----------|--------|
-| `/api/v1/[board_name]/proxy/*` | Aurora API proxy (external API) |
-| `/api/auth/*` | NextAuth authentication |
-| `/api/internal/ws-auth` | WebSocket auth token fetch |
-| `/api/internal/shared-sync/[board_name]` | Cron job / server-side sync |
-| `/api/og/climb` | Image generation (Edge runtime) |
+| Endpoint                                 | Reason                          |
+| ---------------------------------------- | ------------------------------- |
+| `/api/v1/[board_name]/proxy/*`           | Aurora API proxy (external API) |
+| `/api/auth/*`                            | NextAuth authentication         |
+| `/api/internal/ws-auth`                  | WebSocket auth token fetch      |
+| `/api/internal/shared-sync/[board_name]` | Cron job / server-side sync     |
+| `/api/og/climb`                          | Image generation (Edge runtime) |
 
 ---
 
@@ -158,6 +159,7 @@ type Favorite { climbUuid: String!, angle: Int! }
 ## Phase 4: Feature Parity Testing (TODO)
 
 ### Strategy
+
 1. Run both servers simultaneously (Next.js on 3000, backend on 8080)
 2. For each migrated endpoint:
    - Call REST API, capture JSON response
@@ -170,6 +172,7 @@ type Favorite { climbUuid: String!, angle: Int! }
 ## Implementation Order
 
 ### Milestone 1: Yoga Migration ✅
+
 - [x] Add graphql-yoga and related packages
 - [x] Rewrite server.ts for pure Yoga
 - [x] Implement non-GraphQL routes (health, avatars, static)
@@ -177,6 +180,7 @@ type Favorite { climbUuid: String!, angle: Int! }
 - [x] Remove Express dependency
 
 ### Milestone 2: Core Queries (High Priority) ✅ PARTIAL
+
 - [x] Add new types to shared-schema
 - [x] Implement `grades`, `angles` queries (boardDetails skipped - being removed)
 - [x] Implement `searchClimbs`, `climb` queries (stub implementations)
@@ -186,12 +190,14 @@ type Favorite { climbUuid: String!, angle: Int! }
 - [x] Add REST vs GraphQL parity tests
 
 ### Milestone 3: Supporting Queries (Medium Priority)
+
 - [ ] Implement `climbStats`, `heatmap`, `setters` queries
 - [ ] Implement slug lookup queries
 - [ ] Implement `userBoardMappings` query/mutation
 - [ ] Complete `searchClimbs` and `climb` with full query logic
 
 ### Milestone 4: Remaining Items (Low Priority)
+
 - [ ] Implement `betaLinks` query
 - [ ] Implement `unsyncedCounts` query
 - [ ] Implement `uploadAvatar` mutation (file upload via GraphQL)
@@ -228,5 +234,6 @@ bun run test -w boardsesh-backend -- --config vitest.parity.config.ts
 ```
 
 **Note:** Parity tests are excluded from CI (`vitest.config.ts` excludes `*parity*.test.ts`). They require:
+
 - Local development database running (`bun run db:up`)
 - Access to public REST API at www.boardsesh.com

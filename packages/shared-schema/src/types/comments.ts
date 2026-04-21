@@ -1,18 +1,18 @@
 // Comments & Votes types
 
 export type SocialEntityType =
-  | 'playlist_climb'
-  | 'climb'
-  | 'tick'
-  | 'comment'
-  | 'proposal'
-  | 'board'
-  | 'gym'
-  | 'session';
+  | "playlist_climb"
+  | "climb"
+  | "tick"
+  | "comment"
+  | "proposal"
+  | "board"
+  | "gym"
+  | "session";
 
-export type SortMode = 'new' | 'top' | 'controversial' | 'hot';
+export type SortMode = "new" | "top" | "controversial" | "hot";
 
-export type TimePeriod = 'hour' | 'day' | 'week' | 'month' | 'year' | 'all';
+export type TimePeriod = "hour" | "day" | "week" | "month" | "year" | "all";
 
 export type Comment = {
   uuid: string;
@@ -83,17 +83,17 @@ export type BulkVoteSummaryInput = {
 };
 
 export type CommentAdded = {
-  __typename: 'CommentAdded';
+  __typename: "CommentAdded";
   comment: Comment;
 };
 
 export type CommentUpdated = {
-  __typename: 'CommentUpdated';
+  __typename: "CommentUpdated";
   comment: Comment;
 };
 
 export type CommentDeleted = {
-  __typename: 'CommentDeleted';
+  __typename: "CommentDeleted";
   commentUuid: string;
   entityType: SocialEntityType;
   entityId: string;

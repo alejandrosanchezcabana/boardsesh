@@ -1,21 +1,21 @@
-import { Climb, BoardDetails } from '@/app/lib/types';
+import { Climb, BoardDetails } from "@/app/lib/types";
 
 /**
  * Available action types for climbs
  */
 export type ClimbActionType =
-  | 'viewDetails'
-  | 'fork'
-  | 'favorite'
-  | 'setActive'
-  | 'queue'
-  | 'goToQueue'
-  | 'tick'
-  | 'openInApp'
-  | 'mirror'
-  | 'share'
-  | 'instagram'
-  | 'playlist';
+  | "viewDetails"
+  | "fork"
+  | "favorite"
+  | "setActive"
+  | "queue"
+  | "goToQueue"
+  | "tick"
+  | "openInApp"
+  | "mirror"
+  | "share"
+  | "instagram"
+  | "playlist";
 
 /**
  * View modes for rendering climb actions
@@ -24,12 +24,12 @@ export type ClimbActionType =
  * - dropdown: Menu items for Dropdown component
  * - compact: Small buttons with labels on hover
  */
-export type ClimbActionsViewMode = 'icon' | 'button' | 'dropdown' | 'compact' | 'list';
+export type ClimbActionsViewMode = "icon" | "button" | "dropdown" | "compact" | "list";
 
 /**
  * Size options for action buttons/icons
  */
-export type ClimbActionSize = 'small' | 'default' | 'large';
+export type ClimbActionSize = "small" | "default" | "large";
 
 /**
  * Base props required for all action components
@@ -145,25 +145,25 @@ export interface UseClimbActionsReturn {
  * Default order of actions when displayed
  */
 export const DEFAULT_ACTION_ORDER: ClimbActionType[] = [
-  'mirror',
-  'setActive',
-  'queue',
-  'goToQueue',
-  'share',
-  'favorite',
-  'tick',
-  'playlist',
-  'fork',
-  'viewDetails',
-  'openInApp',
+  "mirror",
+  "setActive",
+  "queue",
+  "goToQueue",
+  "share",
+  "favorite",
+  "tick",
+  "playlist",
+  "fork",
+  "viewDetails",
+  "openInApp",
 ];
 
 /**
  * Actions that require authentication
  */
-export const AUTH_REQUIRED_ACTIONS: ClimbActionType[] = ['favorite', 'playlist'];
+export const AUTH_REQUIRED_ACTIONS: ClimbActionType[] = ["favorite", "playlist"];
 
 /**
  * Actions that require Aurora credentials
  */
-export const AURORA_CREDENTIALS_REQUIRED_ACTIONS: ClimbActionType[] = ['tick'];
+export const AURORA_CREDENTIALS_REQUIRED_ACTIONS: ClimbActionType[] = ["tick"];

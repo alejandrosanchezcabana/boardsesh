@@ -14,14 +14,14 @@ export interface DeviceLog {
   [key: string]: unknown; // Additional metadata
 }
 
-const AXIOM_INGEST_URL = 'https://api.axiom.co/v1/datasets';
+const AXIOM_INGEST_URL = "https://api.axiom.co/v1/datasets";
 
 /**
  * Check if Axiom logging is configured and enabled
  */
 export function isAxiomConfigured(): boolean {
   // Only enable in production
-  if (process.env.NODE_ENV !== 'production') {
+  if (process.env.NODE_ENV !== "production") {
     return false;
   }
 
@@ -37,7 +37,7 @@ export function isAxiomConfigured(): boolean {
 export async function forwardLogs(logs: DeviceLog[]): Promise<boolean> {
   if (!isAxiomConfigured()) {
     // In development, just log that we would have sent logs
-    if (process.env.NODE_ENV !== 'production') {
+    if (process.env.NODE_ENV !== "production") {
       console.log(`[Axiom] Would forward ${logs.length} logs (disabled in development)`);
     }
     return true;
@@ -47,16 +47,16 @@ export async function forwardLogs(logs: DeviceLog[]): Promise<boolean> {
   const dataset = process.env.AXIOM_DATASET;
 
   if (!token || !dataset) {
-    console.error('[Axiom] Missing AXIOM_TOKEN or AXIOM_DATASET');
+    console.error("[Axiom] Missing AXIOM_TOKEN or AXIOM_DATASET");
     return false;
   }
 
   try {
     const response = await fetch(`${AXIOM_INGEST_URL}/${dataset}/ingest`, {
-      method: 'POST',
+      method: "POST",
       headers: {
         Authorization: `Bearer ${token}`,
-        'Content-Type': 'application/json',
+        "Content-Type": "application/json",
       },
       body: JSON.stringify(logs),
     });
@@ -71,7 +71,7 @@ export async function forwardLogs(logs: DeviceLog[]): Promise<boolean> {
     return true;
   } catch (error) {
     // Fire-and-forget: log error but don't throw
-    console.error('[Axiom] Ingest error:', error);
+    console.error("[Axiom] Ingest error:", error);
     return false;
   }
 }

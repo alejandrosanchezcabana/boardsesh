@@ -1,13 +1,13 @@
-import { eq, and, asc, sql } from 'drizzle-orm';
-import type { ConnectionContext, Climb, BoardName } from '@boardsesh/shared-schema';
-import { SUPPORTED_BOARDS } from '@boardsesh/shared-schema';
-import { db } from '../../../../db/client';
-import * as dbSchema from '@boardsesh/db/schema';
-import { getGradeLabel } from '@boardsesh/db/queries';
-import { validateInput } from '../../shared/helpers';
-import { GetPlaylistClimbsInputSchema } from '../../../../validation/schemas';
-import { UNIFIED_TABLES, isValidBoardName } from '../../../../db/queries/util/table-select';
-import { verifyPlaylistAccess } from '../helpers/enrichment';
+import { eq, and, asc, sql } from "drizzle-orm";
+import type { ConnectionContext, Climb, BoardName } from "@boardsesh/shared-schema";
+import { SUPPORTED_BOARDS } from "@boardsesh/shared-schema";
+import { db } from "../../../../db/client";
+import * as dbSchema from "@boardsesh/db/schema";
+import { getGradeLabel } from "@boardsesh/db/queries";
+import { validateInput } from "../../shared/helpers";
+import { GetPlaylistClimbsInputSchema } from "../../../../validation/schemas";
+import { UNIFIED_TABLES, isValidBoardName } from "../../../../db/queries/util/table-select";
+import { verifyPlaylistAccess } from "../helpers/enrichment";
 
 export interface PlaylistClimbsInput {
   playlistId: string;
@@ -36,7 +36,9 @@ async function fetchSpecificBoardClimbs(
 ): Promise<{ climbs: Climb[]; hasMore: boolean }> {
   const boardName = input.boardName as BoardName;
   if (!isValidBoardName(boardName)) {
-    throw new Error(`Invalid board name: ${boardName}. Must be one of: ${SUPPORTED_BOARDS.join(', ')}`);
+    throw new Error(
+      `Invalid board name: ${boardName}. Must be one of: ${SUPPORTED_BOARDS.join(", ")}`,
+    );
   }
 
   const tables = UNIFIED_TABLES;
@@ -52,9 +54,7 @@ async function fetchSpecificBoardClimbs(
   }
 
   if (input.sizeId != null) {
-    climbJoinConditions.push(
-      sql`${input.sizeId} = ANY(${tables.climbs.compatibleSizeIds})`,
-    );
+    climbJoinConditions.push(sql`${input.sizeId} = ANY(${tables.climbs.compatibleSizeIds})`);
   }
 
   const inputAngle = input.angle ?? 40;
@@ -96,17 +96,20 @@ async function fetchSpecificBoardClimbs(
   const climbs: Climb[] = items.map((result) => ({
     uuid: result.uuid || result.climbUuid,
     layoutId: result.layoutId,
-    setter_username: result.setter_username || '',
-    name: result.name || '',
-    description: result.description || '',
-    frames: result.frames || '',
+    setter_username: result.setter_username || "",
+    name: result.name || "",
+    description: result.description || "",
+    frames: result.frames || "",
     angle: inputAngle,
     ascensionist_count: Number(result.ascensionist_count || 0),
     difficulty: getGradeLabel(result.difficulty_id),
-    quality_average: result.quality_average?.toString() || '0',
+    quality_average: result.quality_average?.toString() || "0",
     stars: Math.round((Number(result.quality_average) || 0) * 5),
-    difficulty_error: result.difficulty_error?.toString() || '0',
-    benchmark_difficulty: result.benchmark_difficulty && result.benchmark_difficulty > 0 ? result.benchmark_difficulty.toString() : null,
+    difficulty_error: result.difficulty_error?.toString() || "0",
+    benchmark_difficulty:
+      result.benchmark_difficulty && result.benchmark_difficulty > 0
+        ? result.benchmark_difficulty.toString()
+        : null,
     boardType: boardName,
   }));
 
@@ -144,22 +147,22 @@ async function fetchAllBoardsClimbs(
       benchmark_difficulty: tables.climbStats.benchmarkDifficulty,
     })
     .from(dbSchema.playlistClimbs)
-    .innerJoin(
-      tables.climbs,
-      eq(tables.climbs.uuid, dbSchema.playlistClimbs.climbUuid),
-    )
+    .innerJoin(tables.climbs, eq(tables.climbs.uuid, dbSchema.playlistClimbs.climbUuid))
     .leftJoin(
       tables.climbStats,
       and(
         eq(tables.climbStats.boardType, tables.climbs.boardType),
         eq(tables.climbStats.climbUuid, tables.climbs.uuid),
-        eq(tables.climbStats.angle, sql`(
+        eq(
+          tables.climbStats.angle,
+          sql`(
           SELECT s.angle FROM board_climb_stats s
           WHERE s.board_type = ${tables.climbs.boardType}
             AND s.climb_uuid = ${tables.climbs.uuid}
           ORDER BY s.ascensionist_count DESC NULLS LAST
           LIMIT 1
-        )`),
+        )`,
+        ),
       ),
     )
     .where(eq(dbSchema.playlistClimbs.playlistId, playlistId))
@@ -170,21 +173,24 @@ async function fetchAllBoardsClimbs(
   const { items, hasMore } = paginateResults(results, pageSize);
 
   const climbs: Climb[] = items.map((result) => {
-    const bt = (result.boardType || 'kilter') as BoardName;
+    const bt = (result.boardType || "kilter") as BoardName;
     return {
       uuid: result.uuid || result.climbUuid,
       layoutId: result.layoutId,
-      setter_username: result.setter_username || '',
-      name: result.name || '',
-      description: result.description || '',
-      frames: result.frames || '',
+      setter_username: result.setter_username || "",
+      name: result.name || "",
+      description: result.description || "",
+      frames: result.frames || "",
       angle: result.playlistAngle ?? result.statsAngle ?? DEFAULT_ANGLE,
       ascensionist_count: Number(result.ascensionist_count || 0),
       difficulty: getGradeLabel(result.difficulty_id),
-      quality_average: result.quality_average?.toString() || '0',
+      quality_average: result.quality_average?.toString() || "0",
       stars: Math.round((Number(result.quality_average) || 0) * 5),
-      difficulty_error: result.difficulty_error?.toString() || '0',
-      benchmark_difficulty: result.benchmark_difficulty && result.benchmark_difficulty > 0 ? result.benchmark_difficulty.toString() : null,
+      difficulty_error: result.difficulty_error?.toString() || "0",
+      benchmark_difficulty:
+        result.benchmark_difficulty && result.benchmark_difficulty > 0
+          ? result.benchmark_difficulty.toString()
+          : null,
       boardType: bt,
     };
   });
@@ -201,7 +207,7 @@ export const playlistClimbs = async (
   { input }: { input: PlaylistClimbsInput },
   ctx: ConnectionContext,
 ): Promise<{ climbs: Climb[]; totalCount: number; hasMore: boolean }> => {
-  validateInput(GetPlaylistClimbsInputSchema, input, 'input');
+  validateInput(GetPlaylistClimbsInputSchema, input, "input");
 
   const page = input.page ?? 0;
   const pageSize = input.pageSize ?? 20;

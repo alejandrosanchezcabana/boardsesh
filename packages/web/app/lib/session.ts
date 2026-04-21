@@ -1,26 +1,26 @@
-import { getIronSession } from 'iron-session';
-import 'server-only';
-import { BoardName } from './types';
-import { SerializeOptions } from 'cookie';
+import { getIronSession } from "iron-session";
+import "server-only";
+import { BoardName } from "./types";
+import { SerializeOptions } from "cookie";
 
 /**
  * {@link https://wicg.github.io/cookie-store/#dictdef-cookielistitem CookieListItem}
  * as specified by W3C.
  */
-interface CookieListItem extends Pick<SerializeOptions, 'domain' | 'path' | 'sameSite' | 'secure'> {
+interface CookieListItem extends Pick<SerializeOptions, "domain" | "path" | "sameSite" | "secure"> {
   /** A string with the name of a cookie. */
   name: string;
   /** A string containing the value of the cookie. */
   value: string;
   /** A number of milliseconds or Date interface containing the expires of the cookie. */
-  expires?: SerializeOptions['expires'] | number;
+  expires?: SerializeOptions["expires"] | number;
 }
 
 /**
  * Superset of {@link CookieListItem} extending it with
  * the `httpOnly`, `maxAge` and `priority` properties.
  */
-type ResponseCookie = CookieListItem & Pick<SerializeOptions, 'httpOnly' | 'maxAge' | 'priority'>;
+type ResponseCookie = CookieListItem & Pick<SerializeOptions, "httpOnly" | "maxAge" | "priority">;
 /**
  * The high-level type definition of the .get() and .set() methods
  * of { cookies() } from "next/headers"
@@ -46,7 +46,7 @@ interface BoardSessionData {
 
 export const getSession = async (cookies: CookieStore, boardName: BoardName) => {
   if (!process.env.IRON_SESSION_PASSWORD) {
-    throw new Error('IRON_SESSION_PASSWORD is not set');
+    throw new Error("IRON_SESSION_PASSWORD is not set");
   }
   const password = JSON.parse(process.env.IRON_SESSION_PASSWORD);
   return getIronSession<BoardSessionData>(cookies, {
@@ -54,8 +54,8 @@ export const getSession = async (cookies: CookieStore, boardName: BoardName) => 
     cookieName: `${boardName}_session`,
     cookieOptions: {
       httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: 'lax' as const,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "lax" as const,
     },
   });
 };

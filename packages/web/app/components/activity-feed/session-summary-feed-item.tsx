@@ -1,22 +1,22 @@
-'use client';
+"use client";
 
-import React from 'react';
-import Box from '@mui/material/Box';
-import Card from '@mui/material/Card';
-import CardContent from '@mui/material/CardContent';
-import Typography from '@mui/material/Typography';
-import Avatar from '@mui/material/Avatar';
-import AvatarGroup from '@mui/material/AvatarGroup';
-import Chip from '@mui/material/Chip';
-import LinearProgress from '@mui/material/LinearProgress';
-import Skeleton from '@mui/material/Skeleton';
-import TimerOutlined from '@mui/icons-material/TimerOutlined';
-import FlagOutlined from '@mui/icons-material/FlagOutlined';
-import GroupsOutlined from '@mui/icons-material/GroupsOutlined';
-import PersonOutlined from '@mui/icons-material/PersonOutlined';
-import type { ActivityFeedItem } from '@boardsesh/shared-schema';
-import { getGradeColor } from '@/app/lib/grade-colors';
-import { useGradeFormat } from '@/app/hooks/use-grade-format';
+import React from "react";
+import Box from "@mui/material/Box";
+import Card from "@mui/material/Card";
+import CardContent from "@mui/material/CardContent";
+import Typography from "@mui/material/Typography";
+import Avatar from "@mui/material/Avatar";
+import AvatarGroup from "@mui/material/AvatarGroup";
+import Chip from "@mui/material/Chip";
+import LinearProgress from "@mui/material/LinearProgress";
+import Skeleton from "@mui/material/Skeleton";
+import TimerOutlined from "@mui/icons-material/TimerOutlined";
+import FlagOutlined from "@mui/icons-material/FlagOutlined";
+import GroupsOutlined from "@mui/icons-material/GroupsOutlined";
+import PersonOutlined from "@mui/icons-material/PersonOutlined";
+import type { ActivityFeedItem } from "@boardsesh/shared-schema";
+import { getGradeColor } from "@/app/lib/grade-colors";
+import { useGradeFormat } from "@/app/hooks/use-grade-format";
 
 interface SessionSummaryMetadata {
   totalSends?: number;
@@ -36,15 +36,22 @@ export default function SessionSummaryFeedItem({ item }: SessionSummaryFeedItemP
 
   let metadata: SessionSummaryMetadata = {};
   try {
-    if (typeof item.metadata === 'string') {
+    if (typeof item.metadata === "string") {
       metadata = JSON.parse(item.metadata) as SessionSummaryMetadata;
-    } else if (item.metadata && typeof item.metadata === 'object') {
+    } else if (item.metadata && typeof item.metadata === "object") {
       metadata = item.metadata as unknown as SessionSummaryMetadata;
     }
   } catch {
     // Ignore parse errors
   }
-  const { totalSends = 0, totalAttempts = 0, durationMinutes, goal, gradeDistribution = [], participants = [] } = metadata;
+  const {
+    totalSends = 0,
+    totalAttempts = 0,
+    durationMinutes,
+    goal,
+    gradeDistribution = [],
+    participants = [],
+  } = metadata;
 
   const maxGradeCount = Math.max(...gradeDistribution.map((g) => g.count), 1);
 
@@ -57,9 +64,9 @@ export default function SessionSummaryFeedItem({ item }: SessionSummaryFeedItemP
 
   return (
     <Card data-testid="activity-feed-item">
-      <CardContent sx={{ p: 1.5, '&:last-child': { pb: 1.5 } }}>
+      <CardContent sx={{ p: 1.5, "&:last-child": { pb: 1.5 } }}>
         {/* Header */}
-        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}>
+        <Box sx={{ display: "flex", alignItems: "center", gap: 1, mb: 1 }}>
           <GroupsOutlined fontSize="small" color="primary" />
           <Typography variant="body2" fontWeight={600}>
             Session completed
@@ -73,7 +80,7 @@ export default function SessionSummaryFeedItem({ item }: SessionSummaryFeedItemP
 
         {/* Goal */}
         {goal && (
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, mb: 1 }}>
+          <Box sx={{ display: "flex", alignItems: "center", gap: 0.5, mb: 1 }}>
             <FlagOutlined sx={{ fontSize: 14 }} color="action" />
             <Typography variant="caption" color="text.secondary">
               {goal}
@@ -82,7 +89,7 @@ export default function SessionSummaryFeedItem({ item }: SessionSummaryFeedItemP
         )}
 
         {/* Stats row */}
-        <Box sx={{ display: 'flex', gap: 1, mb: 1, flexWrap: 'wrap', alignItems: 'center' }}>
+        <Box sx={{ display: "flex", gap: 1, mb: 1, flexWrap: "wrap", alignItems: "center" }}>
           <Chip label={`${totalSends} sends`} size="small" color="primary" />
           <Chip label={`${totalAttempts} attempts`} size="small" variant="outlined" />
           {durationMinutes != null && (
@@ -97,15 +104,15 @@ export default function SessionSummaryFeedItem({ item }: SessionSummaryFeedItemP
 
         {/* Mini grade distribution */}
         {gradeDistribution.length > 0 && (
-          <Box sx={{ display: 'flex', gap: 0.5, mb: 1, flexWrap: 'wrap' }}>
+          <Box sx={{ display: "flex", gap: 0.5, mb: 1, flexWrap: "wrap" }}>
             {gradeDistribution.slice(0, 6).map((g) => (
-              <Box key={g.grade} sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+              <Box key={g.grade} sx={{ display: "flex", alignItems: "center", gap: 0.5 }}>
                 {gradeFormatLoaded ? (
                   <Typography variant="caption" sx={{ fontWeight: 600, minWidth: 24 }}>
                     {formatGrade(g.grade) ?? g.grade}
                   </Typography>
                 ) : (
-                  <Skeleton variant="text" width={24} sx={{ fontSize: '0.75rem' }} />
+                  <Skeleton variant="text" width={24} sx={{ fontSize: "0.75rem" }} />
                 )}
                 <LinearProgress
                   variant="determinate"
@@ -114,8 +121,8 @@ export default function SessionSummaryFeedItem({ item }: SessionSummaryFeedItemP
                     width: 40,
                     height: 8,
                     borderRadius: 0.5,
-                    bgcolor: 'action.hover',
-                    '& .MuiLinearProgress-bar': {
+                    bgcolor: "action.hover",
+                    "& .MuiLinearProgress-bar": {
                       bgcolor: getGradeColor(g.grade),
                       borderRadius: 0.5,
                     },
@@ -128,13 +135,9 @@ export default function SessionSummaryFeedItem({ item }: SessionSummaryFeedItemP
 
         {/* Participant avatars */}
         {participants.length > 0 && (
-          <AvatarGroup max={5} sx={{ justifyContent: 'flex-start' }}>
+          <AvatarGroup max={5} sx={{ justifyContent: "flex-start" }}>
             {participants.map((p) => (
-              <Avatar
-                key={p.userId}
-                src={p.avatarUrl ?? undefined}
-                sx={{ width: 24, height: 24 }}
-              >
+              <Avatar key={p.userId} src={p.avatarUrl ?? undefined} sx={{ width: 24, height: 24 }}>
                 {!p.avatarUrl && <PersonOutlined sx={{ fontSize: 12 }} />}
               </Avatar>
             ))}

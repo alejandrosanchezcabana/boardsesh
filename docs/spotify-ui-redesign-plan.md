@@ -8,22 +8,22 @@ This plan transforms Boardsesh's UI into a Spotify-like experience with a persis
 
 ## Current Architecture Reference
 
-| Component | File | Role |
-|---|---|---|
-| Main Layout | `packages/web/app/[board_name]/[layout_id]/[size_id]/[set_ids]/[angle]/layout.tsx` | Server component. Header + Content + Affixed QueueControlBar. Wraps children in `BoardSessionBridge > ConnectionSettingsProvider > GraphQLQueueProvider > PartyProvider`. |
-| List Layout | `.../[angle]/list/layout-client.tsx` | Client component. Main content + desktop sidebar with 3 tabs (Queue/Search/Search by Hold). Sidebar uses AntD `Sider` at 400px width. |
-| Header | `packages/web/app/components/board-page/header.tsx` | Client component. Logo, angle selector, create (desktop), party, LED, user menu. Mobile has a meatball menu dropdown. Uses `usePageMode()` to adapt layout per page type. |
-| QueueControlBar | `packages/web/app/components/queue-control/queue-control-bar.tsx` | Now-playing bar (~45px compact, 36px thumbnail) with swipe left/right (prev/next), queue drawer (bottom, 70%), play button link, mirror, prev/next buttons (desktop-only via `.navButtons` CSS), tick. **Persistent globally**: rendered at root level via `GlobalQueueControlBar` when off board routes, or by board `layout.tsx` when on board routes. Replaces `FloatingSessionThumbnail`. |
-| ClimbCard | `packages/web/app/components/climb-card/climb-card.tsx` | Card view with cover image, horizontal ClimbTitle header, action footer. Has two render paths: `ClimbCardWithActions` (generates actions dynamically) and `ClimbCardStatic` (memoized with external actions). |
-| ClimbTitle | `packages/web/app/components/climb-card/climb-title.tsx` | Name, grade (colorized), quality stars, setter info. Supports `layout="horizontal"` and stacked modes. |
-| QueueListItem | `packages/web/app/components/queue-control/queue-list-item.tsx` | Compact row with thumbnail, swipe right=tick, swipe left=delete. Includes drag-and-drop via `@atlaskit/pragmatic-drag-and-drop`. Uses direction detection (horizontal vs vertical) to avoid scroll conflicts. Has ellipsis dropdown menu with View/Tick/Open in App/Remove actions. |
-| PlayView | `.../play/[climb_uuid]/play-view-client.tsx` | Full board renderer with swipe navigation. Uses `SWIPE_THRESHOLD=80` (different from queue items' 100). Shows swipe hint that auto-hides after 3 seconds. |
-| ShareBoardButton | `packages/web/app/components/board-page/share-button.tsx` | Party mode drawer (top placement, 70vh height). Has Start/Join session tabs. Shows users list, QR code, share URL when connected. |
-| SendClimbToBoardButton | `packages/web/app/components/board-bluetooth-control/send-climb-to-board-button.tsx` | Bluetooth LED connection. Dynamically imported (`next/dynamic`, SSR disabled). Auto-sends climb on `currentClimbQueueItem` change when connected. Uses `useWakeLock` to prevent sleep while connected. Shows iOS Bluefy browser recommendation modal. |
-| SearchButton/Drawer | `packages/web/app/components/search-drawer/` | Desktop sidebar filter column (hidden on mobile via CSS module). Mobile search is `SearchClimbNameInput` in header + `SearchButton` icon for advanced filters. After redesign, search moves entirely to the Search tab/page (bottom tab bar) and desktop sidebar. |
-| ClimbActions | `packages/web/app/components/climb-actions/` | Modular action system with 9 action types: viewDetails, fork, favorite, queue, tick, openInApp, mirror, share, playlist. Supports `icon`, `button`, `compact`, and `dropdown` view modes. |
-| BoardRenderer | `packages/web/app/components/board-renderer/board-renderer.tsx` | SVG board visualization with `fillHeight` option |
-| ClimbsList | `packages/web/app/components/board-page/climbs-list.tsx` | Client component. Paginated climb list with IntersectionObserver infinite scroll. Uses `Row`/`Col` grid layout (xs=24, lg=12). Deduplicates by UUID. Hash-based scroll position restoration. |
+| Component              | File                                                                                 | Role                                                                                                                                                                                                                                                                                                                                                                                          |
+| ---------------------- | ------------------------------------------------------------------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Main Layout            | `packages/web/app/[board_name]/[layout_id]/[size_id]/[set_ids]/[angle]/layout.tsx`   | Server component. Header + Content + Affixed QueueControlBar. Wraps children in `BoardSessionBridge > ConnectionSettingsProvider > GraphQLQueueProvider > PartyProvider`.                                                                                                                                                                                                                     |
+| List Layout            | `.../[angle]/list/layout-client.tsx`                                                 | Client component. Main content + desktop sidebar with 3 tabs (Queue/Search/Search by Hold). Sidebar uses AntD `Sider` at 400px width.                                                                                                                                                                                                                                                         |
+| Header                 | `packages/web/app/components/board-page/header.tsx`                                  | Client component. Logo, angle selector, create (desktop), party, LED, user menu. Mobile has a meatball menu dropdown. Uses `usePageMode()` to adapt layout per page type.                                                                                                                                                                                                                     |
+| QueueControlBar        | `packages/web/app/components/queue-control/queue-control-bar.tsx`                    | Now-playing bar (~45px compact, 36px thumbnail) with swipe left/right (prev/next), queue drawer (bottom, 70%), play button link, mirror, prev/next buttons (desktop-only via `.navButtons` CSS), tick. **Persistent globally**: rendered at root level via `GlobalQueueControlBar` when off board routes, or by board `layout.tsx` when on board routes. Replaces `FloatingSessionThumbnail`. |
+| ClimbCard              | `packages/web/app/components/climb-card/climb-card.tsx`                              | Card view with cover image, horizontal ClimbTitle header, action footer. Has two render paths: `ClimbCardWithActions` (generates actions dynamically) and `ClimbCardStatic` (memoized with external actions).                                                                                                                                                                                 |
+| ClimbTitle             | `packages/web/app/components/climb-card/climb-title.tsx`                             | Name, grade (colorized), quality stars, setter info. Supports `layout="horizontal"` and stacked modes.                                                                                                                                                                                                                                                                                        |
+| QueueListItem          | `packages/web/app/components/queue-control/queue-list-item.tsx`                      | Compact row with thumbnail, swipe right=tick, swipe left=delete. Includes drag-and-drop via `@atlaskit/pragmatic-drag-and-drop`. Uses direction detection (horizontal vs vertical) to avoid scroll conflicts. Has ellipsis dropdown menu with View/Tick/Open in App/Remove actions.                                                                                                           |
+| PlayView               | `.../play/[climb_uuid]/play-view-client.tsx`                                         | Full board renderer with swipe navigation. Uses `SWIPE_THRESHOLD=80` (different from queue items' 100). Shows swipe hint that auto-hides after 3 seconds.                                                                                                                                                                                                                                     |
+| ShareBoardButton       | `packages/web/app/components/board-page/share-button.tsx`                            | Party mode drawer (top placement, 70vh height). Has Start/Join session tabs. Shows users list, QR code, share URL when connected.                                                                                                                                                                                                                                                             |
+| SendClimbToBoardButton | `packages/web/app/components/board-bluetooth-control/send-climb-to-board-button.tsx` | Bluetooth LED connection. Dynamically imported (`next/dynamic`, SSR disabled). Auto-sends climb on `currentClimbQueueItem` change when connected. Uses `useWakeLock` to prevent sleep while connected. Shows iOS Bluefy browser recommendation modal.                                                                                                                                         |
+| SearchButton/Drawer    | `packages/web/app/components/search-drawer/`                                         | Desktop sidebar filter column (hidden on mobile via CSS module). Mobile search is `SearchClimbNameInput` in header + `SearchButton` icon for advanced filters. After redesign, search moves entirely to the Search tab/page (bottom tab bar) and desktop sidebar.                                                                                                                             |
+| ClimbActions           | `packages/web/app/components/climb-actions/`                                         | Modular action system with 9 action types: viewDetails, fork, favorite, queue, tick, openInApp, mirror, share, playlist. Supports `icon`, `button`, `compact`, and `dropdown` view modes.                                                                                                                                                                                                     |
+| BoardRenderer          | `packages/web/app/components/board-renderer/board-renderer.tsx`                      | SVG board visualization with `fillHeight` option                                                                                                                                                                                                                                                                                                                                              |
+| ClimbsList             | `packages/web/app/components/board-page/climbs-list.tsx`                             | Client component. Paginated climb list with IntersectionObserver infinite scroll. Uses `Row`/`Col` grid layout (xs=24, lg=12). Deduplicates by UUID. Hash-based scroll position restoration.                                                                                                                                                                                                  |
 
 ---
 
@@ -41,6 +41,7 @@ This plan transforms Boardsesh's UI into a Spotify-like experience with a persis
 ## Wireframes (ASCII)
 
 ### Mobile Layout - List View (Compact Mode)
+
 ```
 ┌────────────────────────────────────┐
 │ [👤]  [Logo]        [Angle ▾]     │  ← Simplified header
@@ -66,6 +67,7 @@ This plan transforms Boardsesh's UI into a Spotify-like experience with a persis
 > **Note**: The now-playing bar is persistent and appears on **every screen** when there is an active queue (local or party mode). The thumbnail `[T]` is 36px wide (compact). When navigating away from the board route, the bar remains visible and tapping it returns to the board.
 
 ### Mobile Layout - List View (Expanded/Card Mode)
+
 ```
 ┌────────────────────────────────────┐
 │ [👤]  [Logo]        [Angle ▾]     │
@@ -90,6 +92,7 @@ This plan transforms Boardsesh's UI into a Spotify-like experience with a persis
 ```
 
 ### Now Playing Expanded (Full-screen Drawer)
+
 ```
 ┌────────────────────────────────────┐
 │  ⌄ (drag handle)                   │  ← Drag down to dismiss
@@ -117,6 +120,7 @@ This plan transforms Boardsesh's UI into a Spotify-like experience with a persis
 **Swipe navigation**: Spotify-style card swiping where the board renderer card physically translates with the user's finger, and the next/previous card slides in from the edge. No static arrow indicators - the motion itself provides feedback.
 
 ### Desktop Layout
+
 ```
 ┌─────────────────────────────────────────────────────────────┐
 │ [👤] [Logo]  [Angle ▾]  [Create] [Party] [LED]             │
@@ -141,6 +145,7 @@ This plan transforms Boardsesh's UI into a Spotify-like experience with a persis
 ## Phase 1: Bottom Tab Bar
 
 ### What changes
+
 Add a persistent bottom tab bar below the QueueControlBar with three tabs: **Climb**, **Discover**, and **Create**.
 
 **Note:** Search functionality remains in the header on mobile list pages (search input + advanced search button). The bottom tab bar provides navigation, not search.
@@ -150,14 +155,17 @@ Add a persistent bottom tab bar below the QueueControlBar with three tabs: **Cli
 A new landing/home screen accessible via the first tab. This is a placeholder for a future discovery/dashboard experience.
 
 **New file: `packages/web/app/[board_name]/[layout_id]/[size_id]/[set_ids]/[angle]/home/page.tsx`**
+
 - Server component, minimal placeholder content
 - For now: a centered message like "Home - Coming Soon" or a redirect to `/list`
 - This will eventually become a discovery/dashboard screen (recent climbs, suggested climbs, activity feed, etc.)
 
 **New file: `packages/web/app/[board_name]/[layout_id]/[size_id]/[set_ids]/[angle]/home/home-placeholder.tsx`**
+
 - Client component with placeholder UI
 
 **Feature flag**: `NEXT_PUBLIC_ENABLE_HOME_SCREEN`
+
 - When `'true'`: Home tab navigates to the `/home` route
 - When falsy (default): Home tab navigates to `/list` instead (acts as the Climb tab)
 - This matches the existing feature flag pattern (e.g., `NEXT_PUBLIC_ENABLE_ONBOARDING_TOUR` in `onboarding-tour.tsx`)
@@ -204,6 +212,7 @@ A new landing/home screen accessible via the first tab. This is a placeholder fo
    - Simple AntD Drawer with bottom placement, auto height
 
 ### Behavior
+
 - **Climb tab**: Navigates to the `/list` route (the climb list). This is the default/first tab.
 - **Discover tab**: Navigates to the `/playlists` route. Shows as active when on playlists page.
 - **Create tab**: Opens the CreateDrawer with options (Climb, Playlist). The Playlist option opens a Create Playlist form directly.
@@ -212,16 +221,19 @@ A new landing/home screen accessible via the first tab. This is a placeholder fo
 - **On play/view/create pages**: Tab bar remains visible. On play pages the user may want to quickly return to the list or access playlists.
 
 ### Integration with header
+
 - **Keep** the mobile `SearchClimbNameInput` and `SearchButton` in the header on list pages - search stays accessible while browsing
 - Keep the desktop sidebar search
 - Remove "Create Climb" from the mobile meatball menu (`mobileMenuItems` in header.tsx, key `create-climb`) - moved to bottom tab bar's New drawer
 
 ### Home screen route
+
 - Add the `/home` route alongside the existing `/list` route under the `[angle]` segment
 - The home page reuses the same layout as list (header + content + queue bar + tab bar)
 - The home page is purely a placeholder - feature-flagged off by default, so the Home tab acts as a `/list` navigation until enabled
 
 ### Considerations
+
 - **Onboarding tour**: The existing `OnboardingTour` component in `layout-client.tsx` may reference the old header elements. Verify tour steps still point to valid targets after moving buttons.
 - **Controller mode**: When in controller mode (URL has `controllerUrl` param), the Create tab may not be relevant. Consider hiding it or adjusting behavior.
 
@@ -230,6 +242,7 @@ A new landing/home screen accessible via the first tab. This is a placeholder fo
 ## Phase 2: Compact Climb List Mode [DONE]
 
 ### What changes
+
 Add a "compact" display mode for the climb list that renders climbs as slim rows (similar to QueueListItem) instead of full cards.
 
 ### Files to modify/create
@@ -271,7 +284,7 @@ Add a "compact" display mode for the climb list that renders climbs as slim rows
    - Header: ClimbTitle (stacked layout) with thumbnail
    - Body: Full list of actions as large tap targets (rows, not icons):
      - ♡ Favorite / Unfavorite
-     - + Add to Queue
+     - - Add to Queue
      - ✓ Log Ascent
      - 🔗 Share
      - 📋 Add to Playlist
@@ -300,6 +313,7 @@ Add a "compact" display mode for the climb list that renders climbs as slim rows
    - No changes needed - already supports the 48px fixed-width pattern
 
 ### Performance considerations
+
 - ClimbListItem should be `React.memo`'d with custom comparator (compare by `climb.uuid` and `selected` state)
 - Swipe state is local to each item (no parent re-renders)
 - Virtual scrolling is not needed yet (existing infinite scroll pagination handles this)
@@ -310,6 +324,7 @@ Add a "compact" display mode for the climb list that renders climbs as slim rows
 ## Phase 3: Now Playing Bar Redesign + Full-screen Play Drawer [DONE]
 
 ### What changes
+
 - Redesign QueueControlBar to be simpler with only essential controls
 - Tapping the bar opens a full-screen drawer (the "play view") instead of navigating to `/play/[uuid]`
 - Remove the `ExpandOutlined` (play mode) button; the bar itself is the entry point
@@ -327,20 +342,22 @@ The QueueControlBar becomes a **persistent, globally visible** component that ap
 #### Compact vertical sizing
 
 The bar is **20% shorter vertically** than the current implementation. This is achieved by:
+
 - Reducing the board thumbnail from **48px** width to **36px** width (maintains aspect ratio, so height also shrinks proportionally)
 - Reducing vertical padding from `4px 12px 0px 12px` to `2px 12px 0px 12px`
 - This brings the total bar height from ~56px to ~45px, making it less intrusive as a persistent global element
 
 Updated `boardPreviewContainerStyle`:
+
 ```tsx
 const boardPreviewContainerStyle = {
   width: 36, // Reduced from 48 for compact bar
-  height: 'auto',
+  height: "auto",
   flexShrink: 0,
-  display: 'flex',
-  justifyContent: 'center',
-  alignItems: 'center',
-  overflow: 'hidden',
+  display: "flex",
+  justifyContent: "center",
+  alignItems: "center",
+  overflow: "hidden",
 };
 ```
 
@@ -355,6 +372,7 @@ New mobile button cluster: `[Party] [Queue] [Tick]`
 New desktop button cluster: `[Mirror] [Play] [Prev] [Next] [Party] [Queue] [Tick]`
 
 Changes:
+
 - **Remove (mobile only)**: `ExpandOutlined` play mode link button - replaced by tapping the bar itself
 - **Move (mobile only)**: Mirror button to full-screen play view action bar
 - **Keep (desktop)**: `ExpandOutlined` play link and mirror button - desktop still navigates to `/play/` route
@@ -365,21 +383,25 @@ Changes:
 - **Remove**: "Added by" avatar indicator from the bar (move to play drawer or remove - it clutters the simplified bar)
 
 New mobile layout:
+
 ```
 ┌────────────────────────────────────────────────────────┐
 │ [Thumb] "Climb Name" V4 ★★★  │  [👥Party] [≡Q] [✓]  │
 │  36px    @ 40°                │                        │
 └────────────────────────────────────────────────────────┘
 ```
+
 (Bar height: ~45px, down from ~56px)
 
 Tap behavior:
+
 - Tapping the **left section** (thumbnail + climb info) navigates back to the board route (when on non-board pages) or opens the full-screen play drawer (when on board pages, mobile only)
 - Tapping **Queue button** opens the existing queue drawer
 - Tapping **Party button** opens the party mode drawer (see Phase 5)
 - Tapping **Tick button** logs ascent (existing behavior)
 
 Swipe behavior (Spotify-style card swipe):
+
 - Swipe left/right on the bar to navigate between climbs
 - **Replace** the current arrow-indicator swipe pattern (FastBackwardOutlined/FastForwardOutlined backgrounds) with a card-swipe animation
 - During swipe: the current climb info (thumbnail + ClimbTitle section) translates horizontally with the finger
@@ -389,6 +411,7 @@ Swipe behavior (Spotify-style card swipe):
 - The swipe action backgrounds (cyan with arrow icons) should be removed entirely
 
 The click handler on the climb info section needs conditional behavior:
+
 - **On non-board pages**: Always navigate back to the board route (same behavior as current `FloatingSessionThumbnail` tap)
 - **On board pages, mobile**: Open the full-screen play drawer (new behavior)
 - **On board pages, desktop list page**: Currently does nothing (the `toggleQueueDrawer` already returns early on desktop list page). Change to keep existing no-op on desktop list, open play drawer on desktop non-list pages.
@@ -423,6 +446,7 @@ A wrapper component that handles rendering the QueueControlBar globally:
 ```
 
 **Data sourcing** (when on non-board pages):
+
 - `boardDetails` → from `PersistentSessionContext`: `localBoardDetails` (local mode) or `activeSession.boardDetails` (party mode)
 - `currentClimb` → from `PersistentSessionContext`: `localCurrentClimbQueueItem` (local) or `currentClimbQueueItem` (party)
 - `queue` → from `PersistentSessionContext`: `localQueue` (local) or `queue` (party)
@@ -430,6 +454,7 @@ A wrapper component that handles rendering the QueueControlBar globally:
 - **Note**: The `PersistentSessionContext` already stores all of this data — no new state management needed
 
 **Modify: Root layout (`packages/web/app/layout.tsx`)** or the relevant parent layout:
+
 - Add `<GlobalQueueControlBar />` as a fixed-bottom element
 - Position: `position: fixed; bottom: 0; width: 100%; z-index: 999`
 - When on a board route, this component renders nothing (the board layout renders its own `QueueControlBar` via `<Affix>`)
@@ -437,10 +462,12 @@ A wrapper component that handles rendering the QueueControlBar globally:
 - Other page content needs `padding-bottom` to account for the bar when it's visible
 
 **Modify: `packages/web/app/components/persistent-session/floating-session-thumbnail.tsx`**
+
 - **Delete this file entirely** — the `GlobalQueueControlBar` replaces it
 - Remove the `FloatingSessionThumbnail` import from wherever it's rendered (likely in root layout or persistent session provider)
 
 **Modify: `packages/web/app/[board_name]/[layout_id]/[size_id]/[set_ids]/[angle]/layout.tsx`**
+
 - The existing `<Affix offsetBottom={0}><QueueControlBar /></Affix>` continues to work as-is for board pages
 - The QueueControlBar on board pages uses the full QueueContext (with all queue operations)
 - Apply the same compact sizing (36px thumbnail, reduced padding) to the board-route instance too
@@ -461,6 +488,7 @@ A drawer component that replaces the `/play/` route for mobile interaction:
   - **Recommended**: Start with AntD Drawer + a custom drag handle using `react-swipeable` (already a dependency). If the UX isn't smooth enough, revisit with a custom solution.
 
 Content (reuse existing PlayView logic):
+
 ```
 ┌──────────────────────────────────────┐
 │  ── (drag handle bar) ──            │
@@ -488,6 +516,7 @@ Content (reuse existing PlayView logic):
 **Swipe navigation**: Uses a Spotify-style card swipe pattern. The board renderer is contained in a "card" that translates with the user's finger during horizontal swipe. When the swipe exceeds the threshold, the current card animates off-screen and the next/previous card slides in from the opposite edge. No static arrow indicators are shown - the physical card motion provides all navigation feedback.
 
 Action bar buttons:
+
 - **Mirror** (`SyncOutlined`): Toggle mirrored state (purple when active, using `themeTokens.colors.purple`). Use existing `mirrorClimb()` from QueueContext.
 - **Favorite** (`HeartOutlined`/`HeartFilled`): Toggle favorite. Use `useFavorite()` hook.
 - **Party** (`TeamOutlined`): Open party drawer. Render `ShareBoardButton` or trigger its drawer.
@@ -495,11 +524,13 @@ Action bar buttons:
 - **Tick** (`CheckOutlined`): Log ascent. Use `TickButton` component.
 
 Mini transport controls:
+
 - Shows previous/current/next climb names
 - Tap previous/next to navigate
 - Current climb name centered, truncated with ellipsis
 
 Key implementation details:
+
 - Extract the swipe navigation logic from `play-view-client.tsx` into a shared hook: `usePlayViewNavigation()`
 - **Note on swipe thresholds**: `play-view-client.tsx` uses `SWIPE_THRESHOLD=80`, while `queue-control-bar.tsx` and `queue-list-item.tsx` use `SWIPE_THRESHOLD=100`. The shared hook should use 80 (the play view value) since it's for navigating between climbs in the renderer view.
 - The drawer should manage its own URL state - when opened, push a `#playing` hash to enable back-button closing via `popstate` event listener
@@ -509,6 +540,7 @@ Key implementation details:
 - **Wake lock**: The play drawer should also use `useWakeLock(true)` when open, matching the behavior of `SendClimbToBoardButton` when Bluetooth is connected.
 
 **Card-swipe navigation pattern (Spotify-style)**:
+
 - Remove the static arrow indicators (`LeftOutlined`/`RightOutlined` overlays) from the current play view
 - Instead, the board renderer area becomes a horizontally swipeable card container
 - During a swipe: the current card (board renderer) translates with the finger via `transform: translateX(${swipeOffset}px)`
@@ -522,6 +554,7 @@ Key implementation details:
   - **Recommended**: Option 3 (defer rendering) for simplicity. The transition is fast enough (~300ms) that a brief placeholder is acceptable.
 
 **New file: `packages/web/app/components/play-view/use-play-view-navigation.ts`**
+
 - Shared hook extracting swipe logic from play-view-client.tsx
 - Handles: handleNext, handlePrevious, swipeHandlers, swipeOffset, isAnimating, direction
 - **No longer provides**: showSwipeHint (removed - the card motion itself is the feedback)
@@ -532,6 +565,7 @@ Key implementation details:
 ### 3C: Impact on existing Play route
 
 **Modify: `.../play/[climb_uuid]/play-view-client.tsx`**
+
 - Keep the full page play view for desktop users and direct URL access
 - Extract navigation logic to the shared hook (`usePlayViewNavigation` with `navigateOnChange: true`)
 - **Replace** the static arrow indicator overlays (`LeftOutlined`/`RightOutlined` with opacity transitions) with the Spotify-style card-swipe animation (board renderer card translates with finger, next card slides in)
@@ -539,9 +573,11 @@ Key implementation details:
 - On mobile, consider auto-redirecting to list view with the drawer open (or just keep both paths working). **Recommendation**: Keep both working. Direct links to `/play/` should work on mobile without redirect - forcing a redirect would break shared URLs.
 
 **Modify: `.../play/layout-client.tsx`**
+
 - No changes needed for desktop sidebar behavior
 
 ### Drawer state management
+
 - The play drawer state (`isPlayDrawerOpen`) lives in `QueueControlBar` as local state
 - **Potential issue**: If the play drawer is open and the user taps the Queue button, both drawers could overlap. Solution: Close the play drawer before opening the queue drawer. Use a single `activeDrawer` state: `'none' | 'play' | 'queue'`
 - **Potential issue**: If the play drawer is open and the user triggers a page navigation (e.g., tapping a bottom tab), the drawer should auto-close. Listen for pathname changes via `usePathname()` to close the drawer.
@@ -551,6 +587,7 @@ Key implementation details:
 ## Phase 4: Header Redesign — Board Selector, User Drawer, Simplified Layout [DONE]
 
 ### What changes
+
 - **Remove** the top-right meatball/ellipsis menu entirely
 - **Add** a board selector next to the angle selector for switching boards
 - **Add** a user avatar button in the top-right that opens a left-side user drawer
@@ -566,12 +603,14 @@ Key implementation details:
 A left-side drawer triggered by tapping the user avatar in the top-right corner of the header.
 
 Trigger button:
+
 - Logged in: User's avatar image (`session.user.image`) or initials fallback in a small circular AntD `Avatar`
 - Not logged in: Generic `UserOutlined` icon in a circular avatar (neutral background)
 - Position: Top-right of header (replaces the meatball menu on mobile, replaces the user dropdown on desktop)
 - Works on both mobile and desktop (same component, same behavior)
 
 Drawer:
+
 - **Placement**: `"left"` (slides in from the left edge)
 - **Width**: ~300px on desktop, ~85vw on mobile
 - **Content**:
@@ -617,24 +656,28 @@ Drawer:
 **Modify: `packages/web/app/components/board-page/header.tsx`**
 
 All pages:
+
 ```
 Mobile:   [Avatar]  [Logo]  [Angle ▾]
 Desktop:  [Avatar]  [Logo]  [Angle ▾]  [+ Create]  [👥 Party]  [💡 LED]
 ```
 
 Create page (unchanged):
+
 ```
 Mobile:   [Logo]  [Cancel]  [Beta]  [Publish]
 Desktop:  [Logo]  [Cancel]  [Beta]  [Publish]
 ```
 
 Play/view pages:
+
 ```
 Mobile:   [Avatar]  [← Back]  [Logo]  [Angle ▾]
 Desktop:  [Avatar]  [Logo]  [Angle ▾]  [+ Create]  [👥 Party]  [💡 LED]
 ```
 
 Key changes:
+
 - **Avatar** is now the leftmost element (before Logo) — tapping opens the left user drawer
 - **Meatball menu** (`MoreOutlined`) is completely removed — all items move to the user drawer
 - **Desktop user dropdown** is completely removed — replaced by the same avatar → drawer
@@ -648,6 +691,7 @@ Key changes:
 **Modify: `packages/web/app/components/board-page/header.tsx`**
 
 Removals:
+
 - **Remove**: `ShareBoardButton` (party mode) from `onboarding-party-light-buttons` span (mobile only) — moved to QueueControlBar in Phase 3
 - **Remove**: `SendClimbToBoardButton` (LED) from `onboarding-party-light-buttons` span (mobile only) — moved to play view drawer in Phase 3
 - **Remove**: Mobile `SearchButton` — moved to bottom tab bar in Phase 1
@@ -658,23 +702,29 @@ Removals:
 - **Remove**: All `signOut`, `setShowAuthModal`, `setShowHoldClassification` handlers from header (they move to user drawer)
 
 Additions:
+
 - **Add**: `<UserDrawerButton />` component (avatar that opens the drawer) — leftmost position
 
 **New file: `packages/web/app/components/user-drawer/user-drawer.tsx`**
+
 - Left-side drawer with user info, navigation links, and actions
 
 **New file: `packages/web/app/components/user-drawer/user-drawer.module.css`**
+
 - Styles for drawer sections, avatar area, menu items
 
 **Modify: `packages/web/app/components/board-page/header.module.css`**
+
 - Remove `.mobileMenuButton` class (no longer needed)
 - May need new positioning for avatar button
 
 ### Header height
+
 - Keep at `8dvh` / min 48px
 - The added board selector may make the header slightly more crowded — if needed, make the board selector icon-only on mobile with a tooltip
 
 ### Considerations
+
 - **Onboarding tour references**: Tour steps referencing `onboarding-party-light-buttons` need updating (Party/LED moved in earlier phases). The user avatar is a new stable target for a "profile" tour step.
 - **Dynamic import of SendClimbToBoardButton**: After this phase, only loaded on desktop in the header. Play drawer (Phase 3) handles its own LED button.
 - **HoldClassificationWizard**: Currently rendered in `header.tsx` and triggered by meatball menu. After redesign, the wizard should be rendered within or triggered from the user drawer. The drawer can manage its own `showHoldClassification` state.
@@ -686,11 +736,13 @@ Additions:
 ## Phase 5: Party Mode & LED as Drawer [DONE]
 
 ### What changes
+
 Convert party mode into a bottom drawer (instead of top drawer) and integrate LED connection into it.
 
 ### Files to modify
 
 **Modify: `packages/web/app/components/board-page/share-button.tsx`**
+
 - Change drawer placement from `"top"` to `"bottom"`
 - Change drawer styles from `wrapper: { height: '70vh' }` to appropriate bottom drawer height
 - Rename component to `PartyModeButton` (optional, for clarity). **Note**: This requires updating all import sites: `header.tsx`, `queue-control-bar.tsx` (added in Phase 3), and `play-view-drawer.tsx` (added in Phase 3B). If renaming, also update the named export `ShareBoardButton`.
@@ -701,6 +753,7 @@ Convert party mode into a bottom drawer (instead of top drawer) and integrate LE
 - When a session is active (connected state), the tab structure collapses to show session info + LED tab
 
 **New section within the party drawer: LED Connection tab**
+
 - "Connect to Board" button (replaces the header LED button on mobile)
 - Connection status indicator (connected/disconnected)
 - When connected: "Connected to [device name]" with disconnect option
@@ -710,12 +763,14 @@ Convert party mode into a bottom drawer (instead of top drawer) and integrate LE
 - **Note**: The auto-send on climb change behavior (the `useEffect` watching `currentClimbQueueItem` in `SendClimbToBoardButton`) must be preserved. The extracted `useBluetoothConnection` hook should include this auto-send effect.
 
 **Modify: `packages/web/app/components/board-bluetooth-control/send-climb-to-board-button.tsx`**
+
 - Extract connection logic into a shared hook: `useBluetoothConnection()`
 - The button component becomes a thin wrapper around the hook
 - The party drawer's LED section also uses the same hook
 - **Keep the dynamic import pattern** - the button still needs `next/dynamic` with `ssr: false` for the header usage on desktop
 
 **New file: `packages/web/app/components/board-bluetooth-control/use-bluetooth-connection.ts`**
+
 - Extracts: device ref, characteristic ref, connect/disconnect, send climb, connection state
 - Returns: `{ isConnected, isLoading, connect, disconnect, sendClimb, showBluetoothWarning, isBluetoothSupported }`
 - **Must include**: The `useWakeLock(isConnected)` call to prevent device sleep while connected
@@ -726,11 +781,13 @@ Convert party mode into a bottom drawer (instead of top drawer) and integrate LE
 - **Dependency**: Needs `currentClimbQueueItem` from `useQueueContext()` - decide whether the hook subscribes to context internally or receives it as a parameter. Recommend: receive as parameter for flexibility.
 
 ### Party mode trigger locations
+
 - **QueueControlBar**: Party mode button (badge shows connected user count)
 - **Play view drawer action bar**: Party mode button
 - **Desktop header**: Keeps existing position (ShareBoardButton)
 
 ### Considerations
+
 - **Multiple instances of ShareBoardButton**: After Phase 3, `ShareBoardButton` renders in QueueControlBar, the play drawer action bar, and the desktop header. Each instance manages its own drawer state independently, which is fine since only one drawer opens at a time. However, the button's badge (user count) relies on `useQueueContext()` which is shared.
 - **Bluetooth singleton**: The `useBluetoothConnection` hook manages refs to a single Bluetooth device/characteristic. If multiple components mount this hook simultaneously, they'll each have independent refs, potentially causing conflicts. Solution: Either use a React context to share Bluetooth state, or ensure only one component mounts the hook at a time (e.g., the party drawer tab is the single source, with only a status indicator elsewhere).
 
@@ -739,11 +796,13 @@ Convert party mode into a bottom drawer (instead of top drawer) and integrate LE
 ## Phase 6: Queue List Improvements
 
 ### What changes
+
 Minor refinements to the queue list to match the new design language.
 
 ### Files to modify
 
 **Modify: `packages/web/app/components/queue-control/queue-list-item.tsx`**
+
 - Ensure visual consistency with the new `ClimbListItem` compact format
 - Same height (~60-64px), typography, grade coloring
 - Keep existing swipe actions (swipe right=tick, swipe left=delete) - these are intentionally different from ClimbListItem's swipe actions (heart/queue) because queue items need tick and remove operations
@@ -752,6 +811,7 @@ Minor refinements to the queue list to match the new design language.
 - **Note**: QueueListItem currently uses `Row`/`Col` with `xs`/`sm` breakpoints for layout. Consider switching to flexbox to match ClimbListItem and avoid layout inconsistency at different viewport sizes.
 
 **Modify: queue drawer behavior in `queue-control-bar.tsx`**
+
 - Queue drawer now opens from the dedicated Queue button on the bar (not from tapping climb info)
 - Placement stays bottom, height stays 70%
 - Add a count badge on the Queue button showing queue length
@@ -763,6 +823,7 @@ Minor refinements to the queue list to match the new design language.
 ## Phase 7: Desktop Adaptation
 
 ### What changes
+
 Ensure the desktop experience remains cohesive while the mobile experience is transformed.
 
 ### Desktop-specific behavior
@@ -775,12 +836,14 @@ Ensure the desktop experience remains cohesive while the mobile experience is tr
 6. **QueueControlBar** - Shows additional prev/next buttons on desktop (existing `.navButtons` CSS class already handles this), keeps mirror button visible, keeps play link
 
 ### Files to modify
+
 - **`packages/web/app/components/bottom-tab-bar/bottom-tab-bar.module.css`**: `display: none` for >= 768px
 - **`packages/web/app/components/queue-control/queue-control-bar.tsx`**: Conditional rendering of play link and mirror button on desktop (since desktop doesn't use the drawer). Use the existing `.navButtons` CSS pattern or add a new `.desktopOnly` class.
 - **`packages/web/app/components/board-page/header.tsx`**: Desktop keeps party + LED + create buttons via `.desktopOnly` class. Avatar + user drawer works the same on both breakpoints.
 - **`packages/web/app/components/queue-control/queue-control-bar.module.css`**: May need new CSS classes for desktop-only buttons (mirror, play link)
 
 ### Verification checklist
+
 - The 3-tab sidebar (Queue/Search/Search by Hold) works unchanged
 - Desktop header shows: Avatar, Logo, Angle, Create, Party, LED
 - Desktop QueueControlBar shows: Mirror, Play link, Prev, Next, Party, Queue, Tick
@@ -909,9 +972,9 @@ Board layout.tsx (server component)
 
 ## Shared Hooks to Extract
 
-| Hook | Source | Used By | Key Dependencies |
-|---|---|---|---|
-| `usePlayViewNavigation` | `play-view-client.tsx` | PlayViewDrawer, PlayViewClient | `useQueueContext()`, `react-swipeable`, `boardDetails`, `angle`. Parameterized with `navigateOnChange` to control URL push behavior. |
+| Hook                     | Source                           | Used By                                                                    | Key Dependencies                                                                                                                                                                                                                                                                                                    |
+| ------------------------ | -------------------------------- | -------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `usePlayViewNavigation`  | `play-view-client.tsx`           | PlayViewDrawer, PlayViewClient                                             | `useQueueContext()`, `react-swipeable`, `boardDetails`, `angle`. Parameterized with `navigateOnChange` to control URL push behavior.                                                                                                                                                                                |
 | `useBluetoothConnection` | `send-climb-to-board-button.tsx` | SendClimbToBoardButton, PartyDrawer LED section, PlayViewDrawer LED button | `boardDetails` (for LED placements), `currentClimbQueueItem` (for auto-send). Includes `useWakeLock`, disconnect listener, mirrored frames conversion. **Singleton concern**: Must ensure only one active Bluetooth connection across all consumers - consider a BluetoothContext provider instead of a plain hook. |
 
 ---
@@ -930,17 +993,17 @@ Board layout.tsx (server component)
 
 ## Transition Animations
 
-| Transition | Type | Duration |
-|---|---|---|
-| Play drawer open/close | Drawer slide-up | 300ms (AntD default) |
-| Bottom tab active state | Color transition | 150ms ease |
-| Card swipe (play view) | Transform translateX | Immediate (follows finger), 300ms ease-out on release |
-| Card swipe (queue bar) | Transform translateX | Immediate (follows finger), 200ms ease-out on release |
-| Card swipe snap-back | Transform translateX | 200ms ease (when below threshold) |
-| List item swipe action reveal | Transform + opacity | Immediate (follows finger) |
-| List item swipe snap-back | Transform | 150ms ease (existing) |
-| List mode toggle | Fade / layout shift | 200ms ease |
-| Create drawer open | Drawer slide-up | 300ms |
+| Transition                    | Type                 | Duration                                              |
+| ----------------------------- | -------------------- | ----------------------------------------------------- |
+| Play drawer open/close        | Drawer slide-up      | 300ms (AntD default)                                  |
+| Bottom tab active state       | Color transition     | 150ms ease                                            |
+| Card swipe (play view)        | Transform translateX | Immediate (follows finger), 300ms ease-out on release |
+| Card swipe (queue bar)        | Transform translateX | Immediate (follows finger), 200ms ease-out on release |
+| Card swipe snap-back          | Transform translateX | 200ms ease (when below threshold)                     |
+| List item swipe action reveal | Transform + opacity  | Immediate (follows finger)                            |
+| List item swipe snap-back     | Transform            | 150ms ease (existing)                                 |
+| List mode toggle              | Fade / layout shift  | 200ms ease                                            |
+| Create drawer open            | Drawer slide-up      | 300ms                                                 |
 
 ---
 
@@ -969,27 +1032,28 @@ Board layout.tsx (server component)
 
 ## Risk Areas & Mitigations
 
-| Risk | Impact | Mitigation |
-|---|---|---|
-| Play drawer performance | BoardRenderer in drawer renders complex SVG with hundreds of hold elements | Lazy-render: only mount BoardRenderer when drawer `open=true`. Use AntD Drawer's `destroyOnClose` or conditional render. |
-| Swipe conflict with scroll | Horizontal swipes on ClimbListItem could interfere with vertical scroll in the list | Copy the direction-detection pattern from `queue-list-item.tsx` (not `queue-control-bar.tsx`). The `isHorizontalSwipe` state with `absX > absY` check on first 10px of movement is critical. |
-| Desktop regression | Moving buttons around might break desktop flow | Phase 7 explicitly verifies desktop. Use existing `.desktopOnly`/`.mobileOnly` CSS classes from `header.module.css`. Add equivalent classes to `queue-control-bar.module.css`. |
-| Deep link to /play/ | Existing play URLs must still work on mobile | Keep the `/play/` route fully functional. Don't auto-redirect to list+drawer. Both paths work. |
-| Party mode button discovery | Moving from header to bar might confuse users | Badge with user count draws attention. Consider a one-time tooltip on the new party button location using the existing onboarding tour system. |
-| Double drawer stacking | Play drawer open + queue drawer open simultaneously | Use single `activeDrawer` state in QueueControlBar: `'none' | 'play' | 'queue'`. Opening one automatically closes the other. |
-| Bluetooth singleton conflict | Multiple components mounting `useBluetoothConnection` create independent connections | Use a BluetoothContext provider or ensure hook is mounted in exactly one place with state shared via props/context. |
+| Risk                         | Impact                                                                                                                          | Mitigation                                                                                                                                                                                                                                                                                          |
+| ---------------------------- | ------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------ | ----------------------------------------------------- |
+| Play drawer performance      | BoardRenderer in drawer renders complex SVG with hundreds of hold elements                                                      | Lazy-render: only mount BoardRenderer when drawer `open=true`. Use AntD Drawer's `destroyOnClose` or conditional render.                                                                                                                                                                            |
+| Swipe conflict with scroll   | Horizontal swipes on ClimbListItem could interfere with vertical scroll in the list                                             | Copy the direction-detection pattern from `queue-list-item.tsx` (not `queue-control-bar.tsx`). The `isHorizontalSwipe` state with `absX > absY` check on first 10px of movement is critical.                                                                                                        |
+| Desktop regression           | Moving buttons around might break desktop flow                                                                                  | Phase 7 explicitly verifies desktop. Use existing `.desktopOnly`/`.mobileOnly` CSS classes from `header.module.css`. Add equivalent classes to `queue-control-bar.module.css`.                                                                                                                      |
+| Deep link to /play/          | Existing play URLs must still work on mobile                                                                                    | Keep the `/play/` route fully functional. Don't auto-redirect to list+drawer. Both paths work.                                                                                                                                                                                                      |
+| Party mode button discovery  | Moving from header to bar might confuse users                                                                                   | Badge with user count draws attention. Consider a one-time tooltip on the new party button location using the existing onboarding tour system.                                                                                                                                                      |
+| Double drawer stacking       | Play drawer open + queue drawer open simultaneously                                                                             | Use single `activeDrawer` state in QueueControlBar: `'none'                                                                                                                                                                                                                                         | 'play' | 'queue'`. Opening one automatically closes the other. |
+| Bluetooth singleton conflict | Multiple components mounting `useBluetoothConnection` create independent connections                                            | Use a BluetoothContext provider or ensure hook is mounted in exactly one place with state shared via props/context.                                                                                                                                                                                 |
 | Global bar data availability | `GlobalQueueControlBar` needs board details and queue data from `PersistentSessionContext` which may have stale or missing data | `PersistentSessionContext` already persists `localBoardDetails`, `localQueue`, `localCurrentClimbQueueItem`. For party mode, `activeSession.boardDetails` is always set on activation. If data is missing, the global bar simply doesn't render (same as current `FloatingSessionThumbnail` logic). |
-| Global bar z-index conflicts | Persistent bar at root level may overlap modals, drawers, or other fixed-position elements on non-board pages | Use `z-index: 999` (below AntD modals at 1000+). Add `padding-bottom` to page content when bar is visible. Test with auth modals, setup wizard, and board selection pages. |
-| AntD Drawer drag-to-dismiss | AntD Drawer doesn't natively support drag-to-close gesture | Implement custom drag handle with `react-swipeable` at the top of the drawer. On downward swipe past threshold, call `onClose`. May feel less smooth than native sheet - test early. |
-| LED data bundle size | LED placement data (~50KB) loaded via `getLedPlacements()` | Currently dynamically imported in header. After redesign, also needed in play drawer. Use dynamic import in both locations, or move to BluetoothContext that lazy-loads data on first connection attempt. |
-| Onboarding tour breakage | Tour steps reference element IDs that move or disappear on mobile | Audit all tour step selectors (`onboarding-queue-bar`, `onboarding-party-light-buttons`, `onboarding-climb-card`, `onboarding-queue-toggle`) and update targets for the new layout. |
-| Create URL construction | BottomTabBar and CreateDrawer need board route context to build `/create` and `/playlists` URLs | Pass `boardDetails` and `angle` as props from `layout.tsx`, or use `useParams()` to read from URL. Prefer props from the server component for accuracy. |
+| Global bar z-index conflicts | Persistent bar at root level may overlap modals, drawers, or other fixed-position elements on non-board pages                   | Use `z-index: 999` (below AntD modals at 1000+). Add `padding-bottom` to page content when bar is visible. Test with auth modals, setup wizard, and board selection pages.                                                                                                                          |
+| AntD Drawer drag-to-dismiss  | AntD Drawer doesn't natively support drag-to-close gesture                                                                      | Implement custom drag handle with `react-swipeable` at the top of the drawer. On downward swipe past threshold, call `onClose`. May feel less smooth than native sheet - test early.                                                                                                                |
+| LED data bundle size         | LED placement data (~50KB) loaded via `getLedPlacements()`                                                                      | Currently dynamically imported in header. After redesign, also needed in play drawer. Use dynamic import in both locations, or move to BluetoothContext that lazy-loads data on first connection attempt.                                                                                           |
+| Onboarding tour breakage     | Tour steps reference element IDs that move or disappear on mobile                                                               | Audit all tour step selectors (`onboarding-queue-bar`, `onboarding-party-light-buttons`, `onboarding-climb-card`, `onboarding-queue-toggle`) and update targets for the new layout.                                                                                                                 |
+| Create URL construction      | BottomTabBar and CreateDrawer need board route context to build `/create` and `/playlists` URLs                                 | Pass `boardDetails` and `angle` as props from `layout.tsx`, or use `useParams()` to read from URL. Prefer props from the server component for accuracy.                                                                                                                                             |
 
 ---
 
 ## Testing Checklist
 
 ### Phase 1
+
 - [x] Bottom tab bar renders on mobile, hidden on desktop
 - [x] Climb tab navigates to /list
 - [x] Discover tab navigates to /playlists
@@ -1005,6 +1069,7 @@ Board layout.tsx (server component)
 - [x] Search input and advanced search button remain in header on list pages (mobile)
 
 ### Phase 2
+
 - [x] Compact list items render correctly with proper layout
 - [x] Grade colors match existing ClimbTitle colors
 - [x] AscentStatus icon shows on compact list items
@@ -1020,6 +1085,7 @@ Board layout.tsx (server component)
 - [x] Selected climb highlighting works in compact mode
 
 ### Phase 3
+
 - [x] QueueControlBar is ~45px tall (20% shorter than before) with 36px thumbnail
 - [x] Bar appears on **all pages** when there is an active local queue
 - [x] Bar appears on **all pages** when there is an active party session
@@ -1044,6 +1110,7 @@ Board layout.tsx (server component)
 - [x] Page content has proper bottom padding when global bar is visible
 
 ### Phase 4
+
 - [x] Meatball menu is completely removed (mobile and desktop)
 - [x] Desktop user dropdown is completely removed
 - [x] User avatar button appears top-left on all pages
@@ -1061,6 +1128,7 @@ Board layout.tsx (server component)
 - [x] SendClimbToBoardButton dynamic import only loads on desktop
 
 ### Phase 5
+
 - [x] Party drawer opens from bottom (not top)
 - [x] Party drawer has 3 tabs: Start, Join, Connect to Board
 - [x] LED connection tab shows Bluefy recommendation on iOS
@@ -1071,12 +1139,14 @@ Board layout.tsx (server component)
 - [x] No duplicate Bluetooth connections from multiple hook instances
 
 ### Phase 6
+
 - [ ] Queue list items visually match compact climb list items (height, typography)
 - [ ] Drag-and-drop reordering still works
 - [ ] Queue badge shows correct count on Queue button
 - [ ] Onboarding tour can still open/close queue drawer
 
 ### Phase 7
+
 - [ ] Desktop sidebar works unchanged (3 tabs: Queue, Search, Search by Hold)
 - [ ] Desktop header has all expected buttons
 - [ ] Desktop play page works as before (full route with sidebar)
@@ -1094,6 +1164,7 @@ The UI redesign touches many of the same files where duplicated patterns exist. 
 ### 1. URL Construction Consolidation (do in Phase 1)
 
 **Problem**: The slug-vs-numeric URL fallback pattern is copy-pasted 20+ times across 9+ files:
+
 ```tsx
 // This pattern repeats everywhere:
 const url = boardDetails.layout_name && boardDetails.size_name && boardDetails.set_names
@@ -1102,6 +1173,7 @@ const url = boardDetails.layout_name && boardDetails.size_name && boardDetails.s
 ```
 
 **Files with duplication**:
+
 - `queue-control-bar.tsx` (2 instances: `buildClimbUrl()`, `getPlayUrl()`)
 - `next-climb-button.tsx` (1 instance)
 - `previous-climb-button.tsx` (1 instance)
@@ -1113,6 +1185,7 @@ const url = boardDetails.layout_name && boardDetails.size_name && boardDetails.s
 - `header.tsx` (2 instances: `getBackToListUrl()`, `createClimbUrl`)
 
 **Consolidation**: Add safe wrapper functions to `url-utils.ts`:
+
 ```tsx
 // url-utils.ts - new functions
 export const buildClimbPlayUrl = (boardDetails: BoardDetails, angle: Angle, climbUuid: string, climbName?: string) => { ... }
@@ -1130,11 +1203,11 @@ Each function internally handles the slug-vs-numeric check. All 20+ call sites b
 
 **Problem**: Three swipe implementations with overlapping but inconsistent code:
 
-| File | Purpose | Threshold | MAX_SWIPE | Direction Detection | preventScrollOnSwipe |
-|------|---------|-----------|-----------|--------------------|--------------------|
-| `queue-control-bar.tsx` | Prev/next climb | 100 | 120 | None | `true` |
-| `queue-list-item.tsx` | Tick/delete reveal | 100 | 120 | State-based (`isHorizontalSwipe`) | `false` + manual |
-| `play-view-client.tsx` | Prev/next climb | 80 | Unclamped | Inline check | `false` |
+| File                    | Purpose            | Threshold | MAX_SWIPE | Direction Detection               | preventScrollOnSwipe |
+| ----------------------- | ------------------ | --------- | --------- | --------------------------------- | -------------------- |
+| `queue-control-bar.tsx` | Prev/next climb    | 100       | 120       | None                              | `true`               |
+| `queue-list-item.tsx`   | Tick/delete reveal | 100       | 120       | State-based (`isHorizontalSwipe`) | `false` + manual     |
+| `play-view-client.tsx`  | Prev/next climb    | 80        | Unclamped | Inline check                      | `false`              |
 
 **Consolidation**: Create two shared hooks in `packages/web/app/hooks/`:
 
@@ -1154,20 +1227,27 @@ Each function internally handles the slug-vs-numeric check. All 20+ call sites b
 ### 3. "Added By" Avatar Component (do in Phase 6)
 
 **Problem**: Identical avatar rendering code (~15 lines) in `queue-control-bar.tsx` and `queue-list-item.tsx`:
+
 ```tsx
-{item.addedByUser ? (
-  <Tooltip title={item.addedByUser.username}>
-    <Avatar size="small" src={item.addedByUser.avatarUrl} icon={<UserOutlined />} />
-  </Tooltip>
-) : (
-  <Tooltip title="Added via Bluetooth">
-    <Avatar size="small" style={{ backgroundColor: 'transparent' }}
-      icon={<BluetoothIcon style={{ color: themeTokens.neutral[400] }} />} />
-  </Tooltip>
-)}
+{
+  item.addedByUser ? (
+    <Tooltip title={item.addedByUser.username}>
+      <Avatar size="small" src={item.addedByUser.avatarUrl} icon={<UserOutlined />} />
+    </Tooltip>
+  ) : (
+    <Tooltip title="Added via Bluetooth">
+      <Avatar
+        size="small"
+        style={{ backgroundColor: "transparent" }}
+        icon={<BluetoothIcon style={{ color: themeTokens.neutral[400] }} />}
+      />
+    </Tooltip>
+  );
+}
 ```
 
 **Consolidation**: Extract to `packages/web/app/components/queue-control/added-by-avatar.tsx`:
+
 ```tsx
 export const AddedByAvatar: React.FC<{ addedByUser?: QueueUser }> = ({ addedByUser }) => { ... }
 ```
@@ -1177,6 +1257,7 @@ export const AddedByAvatar: React.FC<{ addedByUser?: QueueUser }> = ({ addedByUs
 After moving components around, the following become dead code and should be deleted:
 
 **After Phase 3**:
+
 - `floating-session-thumbnail.tsx`: **Delete entirely** — replaced by `GlobalQueueControlBar`
 - Remove `FloatingSessionThumbnail` import and rendering from wherever it's mounted (root layout / persistent session area)
 - `play-view-client.tsx`: `showSwipeHint` state and the 3-second timer effect
@@ -1187,6 +1268,7 @@ After moving components around, the following become dead code and should be del
 - `queue-control-bar.module.css`: `.swipeAction` class (if no longer used)
 
 **After Phase 4**:
+
 - `header.tsx`: Entire `mobileMenuItems` array and the meatball `Dropdown` component
 - `header.tsx`: Entire `userMenuItems` array and the desktop user `Dropdown` component
 - `header.tsx`: `signOut` import and `handleSignOut` handler (moves to user drawer)
@@ -1197,6 +1279,7 @@ After moving components around, the following become dead code and should be del
 - **Note**: `SearchButton`, `SearchClimbNameInput`, and `UISearchParamsProvider` remain in header (search stays in header)
 
 **After Phase 5**:
+
 - `send-climb-to-board-button.tsx`: Connection logic that moves to `use-bluetooth-connection.ts` (the component becomes a thin wrapper)
 
 ### 5. Inline Style Cleanup (ongoing)
@@ -1204,11 +1287,13 @@ After moving components around, the following become dead code and should be del
 **Problem**: `CLAUDE.md` says "Try to avoid use of the style property", but several key files have 20-40+ inline style objects.
 
 **Worst offenders being modified in the redesign**:
+
 - `queue-control-bar.tsx` - heavy inline styles for the bar layout, swipe backgrounds, drawer
 - `share-button.tsx` - inline styles for party mode drawer sections
 - `queue-list-item.tsx` - inline styles for swipe backgrounds, item layout
 
 **Approach**: As each file is modified during a phase, migrate inline styles to its CSS module. Don't do a separate refactor pass - do it incrementally as code is touched. Priority targets:
+
 - Swipe action backgrounds → CSS module classes
 - Flex layout containers → CSS module classes
 - Theme token references → CSS custom properties (already partially done in `index.css`)
@@ -1218,14 +1303,15 @@ After moving components around, the following become dead code and should be del
 **Problem**: `boardDetails.board_name === 'moonboard'` checks scattered across files. The redesign adds more MoonBoard-conditional behavior (CreateDrawer, ClimbListItem mirror action, PlayViewDrawer mirror button).
 
 **Consolidation**: Create a utility or use existing `boardDetails` properties:
+
 ```tsx
 // Already exists but underused:
-boardDetails.supportsMirroring  // Use this instead of name checks for mirror
+boardDetails.supportsMirroring; // Use this instead of name checks for mirror
 
 // Add to BoardDetails type if missing:
-boardDetails.supportsPlaylists
-boardDetails.supportsHoldClassification
-boardDetails.supportsClimbCreation
+boardDetails.supportsPlaylists;
+boardDetails.supportsHoldClassification;
+boardDetails.supportsClimbCreation;
 ```
 
 This avoids the new components needing to know about specific board names.
@@ -1233,11 +1319,13 @@ This avoids the new components needing to know about specific board names.
 ### 7. Queue Clear Confirmation Pattern (do in Phase 6)
 
 **Problem**: Queue clear with confirmation dialog duplicated in:
+
 - `queue-control-bar.tsx` (queue drawer header)
 - `list/layout-client.tsx` (desktop sidebar queue tab)
 - `play/layout-client.tsx` (desktop play sidebar)
 
 **Consolidation**: Extract to `packages/web/app/components/queue-control/clear-queue-button.tsx`:
+
 ```tsx
 export const ClearQueueButton: React.FC<{ boardDetails: BoardDetails }> = ({ boardDetails }) => { ... }
 ```
@@ -1246,16 +1334,16 @@ Includes the Popconfirm, analytics tracking, and `setQueue([])` call.
 
 ### Summary
 
-| Consolidation | Phase | Files Affected | LOC Saved (est.) |
-|---|---|---|---|
-| URL construction wrappers | 1 | 9+ files | ~200 lines |
-| Swipe hooks extraction | 2-3 | 3 files → 2 hooks | ~150 lines |
-| AddedByAvatar component | 6 | 2 files | ~25 lines |
-| Dead code removal | 3-5 | 4+ files | ~80 lines |
-| Inline style migration | Ongoing | 3+ files | Net zero (moves to CSS) |
-| Board feature checks | 2 | 5+ files | ~20 lines + maintainability |
-| ClearQueueButton | 6 | 3 files | ~40 lines |
-| **Total** | | | **~515 lines** |
+| Consolidation             | Phase   | Files Affected    | LOC Saved (est.)            |
+| ------------------------- | ------- | ----------------- | --------------------------- |
+| URL construction wrappers | 1       | 9+ files          | ~200 lines                  |
+| Swipe hooks extraction    | 2-3     | 3 files → 2 hooks | ~150 lines                  |
+| AddedByAvatar component   | 6       | 2 files           | ~25 lines                   |
+| Dead code removal         | 3-5     | 4+ files          | ~80 lines                   |
+| Inline style migration    | Ongoing | 3+ files          | Net zero (moves to CSS)     |
+| Board feature checks      | 2       | 5+ files          | ~20 lines + maintainability |
+| ClearQueueButton          | 6       | 3 files           | ~40 lines                   |
+| **Total**                 |         |                   | **~515 lines**              |
 
 ---
 
@@ -1295,6 +1383,7 @@ The codebase has three distinct swipe implementations that will be consolidated:
 3. **`play-view-client.tsx`** - Swipe left/right for prev/next. Shows static arrow indicators on swipe progress. `SWIPE_THRESHOLD=80`. **Changing to**: Spotify card-swipe animation. Arrow indicators removed.
 
 After redesign:
+
 - **Card swipe pattern** (Spotify-style): Used in PlayViewDrawer, PlayViewClient, QueueControlBar. Shared via `usePlayViewNavigation` hook.
 - **Action reveal pattern**: Used in ClimbListItem (heart/queue), QueueListItem (tick/delete). Each implements locally but shares the same threshold constants and direction-detection logic.
 
@@ -1315,6 +1404,7 @@ One new route (`/home`) is added. The play drawer is purely a client-side UI ove
 ### MoonBoard Considerations
 
 Several features have MoonBoard-specific behavior:
+
 - `boardDetails.board_name === 'moonboard'` checks exist in header.tsx
 - MoonBoard doesn't support: playlists, hold classification, mirroring
 - MoonBoard has its own renderer (`moonboard-renderer/`)

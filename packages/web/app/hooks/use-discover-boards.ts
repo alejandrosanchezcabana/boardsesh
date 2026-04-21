@@ -1,8 +1,8 @@
-import { useState, useEffect, useCallback, useRef } from 'react';
-import { useWsAuthToken } from '@/app/hooks/use-ws-auth-token';
-import { createGraphQLHttpClient } from '@/app/lib/graphql/client';
-import { SEARCH_BOARDS, type SearchBoardsQueryResponse } from '@/app/lib/graphql/operations';
-import type { UserBoard } from '@boardsesh/shared-schema';
+import { useState, useEffect, useCallback, useRef } from "react";
+import { useWsAuthToken } from "@/app/hooks/use-ws-auth-token";
+import { createGraphQLHttpClient } from "@/app/lib/graphql/client";
+import { SEARCH_BOARDS, type SearchBoardsQueryResponse } from "@/app/lib/graphql/operations";
+import type { UserBoard } from "@boardsesh/shared-schema";
 
 interface UseDiscoverBoardsOptions {
   /** Maximum number of boards to return */
@@ -41,11 +41,14 @@ export function useDiscoverBoards({
   const coordsRef = useRef<{ latitude: number; longitude: number } | null>(null);
   const geoResolvedRef = useRef(false);
 
-  const resolveGeolocation = useCallback((): Promise<{ latitude: number; longitude: number } | null> => {
+  const resolveGeolocation = useCallback((): Promise<{
+    latitude: number;
+    longitude: number;
+  } | null> => {
     if (coordsRef.current) return Promise.resolve(coordsRef.current);
     if (geoResolvedRef.current) return Promise.resolve(null);
 
-    if (!enableLocation || typeof navigator === 'undefined' || !navigator.geolocation) {
+    if (!enableLocation || typeof navigator === "undefined" || !navigator.geolocation) {
       return Promise.resolve(null);
     }
 
@@ -58,13 +61,15 @@ export function useDiscoverBoards({
         maximumAge: 300000,
         enableHighAccuracy: false,
       });
-    }).then((position) => {
-      coordsRef.current = {
-        latitude: position.coords.latitude,
-        longitude: position.coords.longitude,
-      };
-      return coordsRef.current;
-    }).catch(() => null);
+    })
+      .then((position) => {
+        coordsRef.current = {
+          latitude: position.coords.latitude,
+          longitude: position.coords.longitude,
+        };
+        return coordsRef.current;
+      })
+      .catch(() => null);
   }, [enableLocation]);
 
   useEffect(() => {
@@ -104,7 +109,7 @@ export function useDiscoverBoards({
         }
       } catch {
         if (!cancelled) {
-          setError('Failed to load nearby boards');
+          setError("Failed to load nearby boards");
         }
       }
 

@@ -1,6 +1,6 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { render, screen, fireEvent } from '@testing-library/react';
-import ZoomableBoard from '../zoomable-board';
+import { describe, it, expect, vi, beforeEach } from "vite-plus/test";
+import { render, screen, fireEvent } from "@testing-library/react";
+import ZoomableBoard from "../zoomable-board";
 
 // Mock the useZoomPan hook
 const mockResetZoom = vi.fn();
@@ -11,14 +11,14 @@ const mockUseZoomPan = vi.fn(() => ({
   resetZoom: mockResetZoom,
 }));
 
-vi.mock('@/app/lib/hooks/use-zoom-pan', () => ({
+vi.mock("@/app/lib/hooks/use-zoom-pan", () => ({
   useZoomPan: () => mockUseZoomPan(),
 }));
 
-describe('ZoomableBoard', () => {
+describe("ZoomableBoard", () => {
   const defaultProps = {
     onZoomChange: vi.fn(),
-    resetKey: 'climb-1',
+    resetKey: "climb-1",
   };
 
   beforeEach(() => {
@@ -31,38 +31,38 @@ describe('ZoomableBoard', () => {
     });
   });
 
-  it('renders children', () => {
+  it("renders children", () => {
     render(
       <ZoomableBoard {...defaultProps}>
         <div data-testid="board-content">Board</div>
       </ZoomableBoard>,
     );
 
-    expect(screen.getByTestId('board-content')).toBeTruthy();
+    expect(screen.getByTestId("board-content")).toBeTruthy();
   });
 
-  it('renders reset button', () => {
+  it("renders reset button", () => {
     render(
       <ZoomableBoard {...defaultProps}>
         <div>Board</div>
       </ZoomableBoard>,
     );
 
-    expect(screen.getByLabelText('Reset zoom')).toBeTruthy();
+    expect(screen.getByLabelText("Reset zoom")).toBeTruthy();
   });
 
-  it('reset button is not interactive when not zoomed', () => {
+  it("reset button is not interactive when not zoomed", () => {
     render(
       <ZoomableBoard {...defaultProps}>
         <div>Board</div>
       </ZoomableBoard>,
     );
 
-    const resetButton = screen.getByLabelText('Reset zoom');
-    expect(resetButton.getAttribute('tabindex')).toBe('-1');
+    const resetButton = screen.getByLabelText("Reset zoom");
+    expect(resetButton.getAttribute("tabindex")).toBe("-1");
   });
 
-  it('reset button is interactive when zoomed', () => {
+  it("reset button is interactive when zoomed", () => {
     mockUseZoomPan.mockReturnValue({
       containerRef: vi.fn(),
       contentRef: { current: null },
@@ -76,11 +76,11 @@ describe('ZoomableBoard', () => {
       </ZoomableBoard>,
     );
 
-    const resetButton = screen.getByLabelText('Reset zoom');
-    expect(resetButton.getAttribute('tabindex')).toBe('0');
+    const resetButton = screen.getByLabelText("Reset zoom");
+    expect(resetButton.getAttribute("tabindex")).toBe("0");
   });
 
-  it('clicking reset button calls resetZoom', () => {
+  it("clicking reset button calls resetZoom", () => {
     mockUseZoomPan.mockReturnValue({
       containerRef: vi.fn(),
       contentRef: { current: null },
@@ -94,11 +94,11 @@ describe('ZoomableBoard', () => {
       </ZoomableBoard>,
     );
 
-    fireEvent.click(screen.getByLabelText('Reset zoom'));
+    fireEvent.click(screen.getByLabelText("Reset zoom"));
     expect(mockResetZoom).toHaveBeenCalledTimes(1);
   });
 
-  it('calls onZoomChange when zoom state changes', () => {
+  it("calls onZoomChange when zoom state changes", () => {
     const onZoomChange = vi.fn();
 
     const { rerender } = render(
@@ -126,7 +126,7 @@ describe('ZoomableBoard', () => {
     expect(onZoomChange).toHaveBeenCalledWith(true);
   });
 
-  it('resets zoom when resetKey changes', () => {
+  it("resets zoom when resetKey changes", () => {
     const { rerender } = render(
       <ZoomableBoard {...defaultProps} resetKey="climb-1">
         <div>Board</div>
@@ -146,7 +146,7 @@ describe('ZoomableBoard', () => {
     expect(mockResetZoom).toHaveBeenCalledTimes(1);
   });
 
-  it('does not reset zoom when resetKey stays the same', () => {
+  it("does not reset zoom when resetKey stays the same", () => {
     const { rerender } = render(
       <ZoomableBoard {...defaultProps} resetKey="climb-1">
         <div>Board</div>
@@ -162,7 +162,7 @@ describe('ZoomableBoard', () => {
     expect(mockResetZoom).not.toHaveBeenCalled();
   });
 
-  it('sets touch-action to pan-y when not zoomed', () => {
+  it("sets touch-action to pan-y when not zoomed", () => {
     render(
       <ZoomableBoard {...defaultProps}>
         <div data-testid="board">Board</div>
@@ -170,12 +170,12 @@ describe('ZoomableBoard', () => {
     );
 
     // The container div should have touch-action: pan-y
-    const board = screen.getByTestId('board');
+    const board = screen.getByTestId("board");
     const container = board.parentElement?.parentElement;
-    expect(container?.style.touchAction).toBe('pan-y');
+    expect(container?.style.touchAction).toBe("pan-y");
   });
 
-  it('sets touch-action to none when zoomed', () => {
+  it("sets touch-action to none when zoomed", () => {
     mockUseZoomPan.mockReturnValue({
       containerRef: vi.fn(),
       contentRef: { current: null },
@@ -189,12 +189,12 @@ describe('ZoomableBoard', () => {
       </ZoomableBoard>,
     );
 
-    const board = screen.getByTestId('board');
+    const board = screen.getByTestId("board");
     const container = board.parentElement?.parentElement;
-    expect(container?.style.touchAction).toBe('none');
+    expect(container?.style.touchAction).toBe("none");
   });
 
-  it('adds data-swipe-blocked attribute when zoomed', () => {
+  it("adds data-swipe-blocked attribute when zoomed", () => {
     mockUseZoomPan.mockReturnValue({
       containerRef: vi.fn(),
       contentRef: { current: null },
@@ -208,20 +208,20 @@ describe('ZoomableBoard', () => {
       </ZoomableBoard>,
     );
 
-    const board = screen.getByTestId('board');
+    const board = screen.getByTestId("board");
     const container = board.parentElement?.parentElement;
-    expect(container?.hasAttribute('data-swipe-blocked')).toBe(true);
+    expect(container?.hasAttribute("data-swipe-blocked")).toBe(true);
   });
 
-  it('does not have data-swipe-blocked attribute when not zoomed', () => {
+  it("does not have data-swipe-blocked attribute when not zoomed", () => {
     render(
       <ZoomableBoard {...defaultProps}>
         <div data-testid="board">Board</div>
       </ZoomableBoard>,
     );
 
-    const board = screen.getByTestId('board');
+    const board = screen.getByTestId("board");
     const container = board.parentElement?.parentElement;
-    expect(container?.hasAttribute('data-swipe-blocked')).toBe(false);
+    expect(container?.hasAttribute("data-swipe-blocked")).toBe(false);
   });
 });

@@ -1,15 +1,12 @@
-import {
-  pgTable,
-  text,
-  integer,
-  timestamp,
-  primaryKey,
-} from 'drizzle-orm/pg-core';
+import { pgTable, text, integer, timestamp, primaryKey } from "drizzle-orm/pg-core";
 import type { AdapterAccount } from "next-auth/adapters";
 
 // NextAuth.js tables
 export const users = pgTable("users", {
-  id: text("id").notNull().primaryKey().$defaultFn(() => crypto.randomUUID()),
+  id: text("id")
+    .notNull()
+    .primaryKey()
+    .$defaultFn(() => crypto.randomUUID()),
   name: text("name"),
   email: text("email").notNull(),
   emailVerified: timestamp("emailVerified", { mode: "date" }),
@@ -39,7 +36,7 @@ export const accounts = pgTable(
     compoundKey: primaryKey({
       columns: [account.provider, account.providerAccountId],
     }),
-  })
+  }),
 );
 
 export const sessions = pgTable("sessions", {
@@ -59,5 +56,5 @@ export const verificationTokens = pgTable(
   },
   (vt) => ({
     compoundKey: primaryKey({ columns: [vt.identifier, vt.token] }),
-  })
+  }),
 );

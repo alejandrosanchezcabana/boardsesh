@@ -1,4 +1,4 @@
-import type { Climb } from '@/app/lib/types';
+import type { Climb } from "@/app/lib/types";
 
 // Users can edit their own drafts indefinitely, and their own published
 // climbs for the first 24 hours after publish. The backend enforces the

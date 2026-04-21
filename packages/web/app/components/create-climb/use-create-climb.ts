@@ -1,8 +1,13 @@
-'use client';
+"use client";
 
-import { useState, useCallback, useMemo } from 'react';
-import { LitUpHoldsMap, HoldState, HOLD_STATE_MAP, STATE_TO_PRIMARY_CODE } from '../board-renderer/types';
-import { BoardName } from '@/app/lib/types';
+import { useState, useCallback, useMemo } from "react";
+import {
+  LitUpHoldsMap,
+  HoldState,
+  HOLD_STATE_MAP,
+  STATE_TO_PRIMARY_CODE,
+} from "../board-renderer/types";
+import { BoardName } from "@/app/lib/types";
 
 interface UseCreateClimbOptions {
   initialHoldsMap?: LitUpHoldsMap;
@@ -13,27 +18,27 @@ export function useCreateClimb(boardName: BoardName, options?: UseCreateClimbOpt
 
   // Derived state: count holds by type
   const startingCount = useMemo(
-    () => Object.values(litUpHoldsMap).filter((h) => h.state === 'STARTING').length,
+    () => Object.values(litUpHoldsMap).filter((h) => h.state === "STARTING").length,
     [litUpHoldsMap],
   );
 
   const finishCount = useMemo(
-    () => Object.values(litUpHoldsMap).filter((h) => h.state === 'FINISH').length,
+    () => Object.values(litUpHoldsMap).filter((h) => h.state === "FINISH").length,
     [litUpHoldsMap],
   );
 
   const totalHolds = useMemo(
-    () => Object.values(litUpHoldsMap).filter((h) => h.state !== 'OFF').length,
+    () => Object.values(litUpHoldsMap).filter((h) => h.state !== "OFF").length,
     [litUpHoldsMap],
   );
 
   const isValid = totalHolds > 0;
 
   const setHoldState = useCallback(
-    (holdId: number, nextState: HoldState | 'OFF') => {
+    (holdId: number, nextState: HoldState | "OFF") => {
       setLitUpHoldsMap((prev) => {
         // Clearing a hold removes it from the map.
-        if (nextState === 'OFF') {
+        if (nextState === "OFF") {
           if (!(holdId in prev)) return prev;
           const { [holdId]: _removed, ...rest } = prev;
           void _removed;
@@ -45,12 +50,12 @@ export function useCreateClimb(boardName: BoardName, options?: UseCreateClimbOpt
         const currentHold = prev[holdId];
         const isAlreadyThisState = currentHold?.state === nextState;
         if (!isAlreadyThisState) {
-          if (nextState === 'STARTING') {
-            const startingCount = Object.values(prev).filter((h) => h.state === 'STARTING').length;
+          if (nextState === "STARTING") {
+            const startingCount = Object.values(prev).filter((h) => h.state === "STARTING").length;
             if (startingCount >= 2) return prev;
           }
-          if (nextState === 'FINISH') {
-            const finishCount = Object.values(prev).filter((h) => h.state === 'FINISH').length;
+          if (nextState === "FINISH") {
+            const finishCount = Object.values(prev).filter((h) => h.state === "FINISH").length;
             if (finishCount >= 2) return prev;
           }
         }
@@ -82,12 +87,12 @@ export function useCreateClimb(boardName: BoardName, options?: UseCreateClimbOpt
   const generateFramesString = useCallback(() => {
     const stateToCode = STATE_TO_PRIMARY_CODE[boardName];
     return Object.entries(litUpHoldsMap)
-      .filter(([, hold]) => hold.state !== 'OFF')
+      .filter(([, hold]) => hold.state !== "OFF")
       .map(([holdId, hold]) => {
         const code = stateToCode[hold.state];
         return `p${holdId}r${code}`;
       })
-      .join('');
+      .join("");
   }, [litUpHoldsMap, boardName]);
 
   // Reset all holds

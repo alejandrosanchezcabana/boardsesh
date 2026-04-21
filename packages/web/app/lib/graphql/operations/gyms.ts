@@ -1,4 +1,4 @@
-import { gql } from 'graphql-request';
+import { gql } from "graphql-request";
 import type {
   Gym,
   GymConnection,
@@ -12,7 +12,7 @@ import type {
   SearchGymsInput,
   GymMembersInput,
   LinkBoardToGymInput,
-} from '@boardsesh/shared-schema';
+} from "@boardsesh/shared-schema";
 
 // ============================================
 // Gym Queries

@@ -1,7 +1,10 @@
-import { sql } from '@/app/lib/db/db';
-import { NextResponse } from 'next/server';
+import { sql } from "@/app/lib/db/db";
+import { NextResponse } from "next/server";
 
-export async function GET(req: Request, props: { params: Promise<{ board_name: string; layout_id: string }> }) {
+export async function GET(
+  req: Request,
+  props: { params: Promise<{ board_name: string; layout_id: string }> },
+) {
   const params = await props.params;
   const { /*board_name,*/ layout_id } = params;
 
@@ -15,6 +18,6 @@ export async function GET(req: Request, props: { params: Promise<{ board_name: s
     `;
     return NextResponse.json(angles);
   } catch {
-    return NextResponse.json({ error: 'Failed to fetch angles' }, { status: 500 });
+    return NextResponse.json({ error: "Failed to fetch angles" }, { status: 500 });
   }
 }

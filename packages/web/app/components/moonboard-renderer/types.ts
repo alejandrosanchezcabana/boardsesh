@@ -1,8 +1,8 @@
-import { MoonBoardCoordinate } from '@/app/lib/moonboard-config';
-import { LitUpHoldsMap } from '../board-renderer/types';
+import { MoonBoardCoordinate } from "@/app/lib/moonboard-config";
+import { LitUpHoldsMap } from "../board-renderer/types";
 
 // MoonBoard hold types (simpler than Aurora) - used for internal conversions
-export type MoonBoardHoldType = 'start' | 'hand' | 'finish';
+export type MoonBoardHoldType = "start" | "hand" | "finish";
 
 // A hold on the MoonBoard
 export interface MoonBoardHold {

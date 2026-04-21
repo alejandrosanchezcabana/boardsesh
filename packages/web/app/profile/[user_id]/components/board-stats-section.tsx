@@ -1,11 +1,11 @@
-'use client';
+"use client";
 
-import React from 'react';
-import CircularProgress from '@mui/material/CircularProgress';
-import { EmptyState } from '@/app/components/ui/empty-state';
-import BoardImportPrompt from '@/app/components/settings/board-import-prompt';
-import type { LogbookEntry } from '../utils/profile-constants';
-import styles from '../profile-page.module.css';
+import React from "react";
+import CircularProgress from "@mui/material/CircularProgress";
+import { EmptyState } from "@/app/components/ui/empty-state";
+import BoardImportPrompt from "@/app/components/settings/board-import-prompt";
+import type { LogbookEntry } from "../utils/profile-constants";
+import styles from "../profile-page.module.css";
 
 interface BoardStatsSectionProps {
   selectedBoard: string;
@@ -32,7 +32,11 @@ export default function BoardStatsSection({
     return null;
   }
 
-  if (isOwnProfile && selectedBoard !== 'all' && (selectedBoard === 'kilter' || selectedBoard === 'tension')) {
+  if (
+    isOwnProfile &&
+    selectedBoard !== "all" &&
+    (selectedBoard === "kilter" || selectedBoard === "tension")
+  ) {
     return <BoardImportPrompt boardType={selectedBoard} />;
   }
 

@@ -1,21 +1,21 @@
-import { sql } from 'drizzle-orm';
+import { sql } from "drizzle-orm";
 import type {
   MoonBoardClimbDuplicateCandidateInput,
   MoonBoardClimbDuplicateMatch,
   MoonBoardHoldsInput,
-} from '@boardsesh/shared-schema';
-import * as dbSchema from '@boardsesh/db/schema';
-import { db } from '../../../db/client';
-import { convertLitUpHoldsStringToMap } from '../../../db/queries/util/hold-state';
+} from "@boardsesh/shared-schema";
+import * as dbSchema from "@boardsesh/db/schema";
+import { db } from "../../../db/client";
+import { convertLitUpHoldsStringToMap } from "../../../db/queries/util/hold-state";
 
-type MoonBoardHoldState = 'STARTING' | 'HAND' | 'FINISH';
+type MoonBoardHoldState = "STARTING" | "HAND" | "FINISH";
 
 type NormalizedMoonBoardHold = {
   holdId: number;
   holdState: MoonBoardHoldState;
 };
 
-type DuplicateCandidate = Pick<MoonBoardClimbDuplicateCandidateInput, 'clientKey' | 'holds'>;
+type DuplicateCandidate = Pick<MoonBoardClimbDuplicateCandidateInput, "clientKey" | "holds">;
 
 type DuplicateLookupRow = {
   uuid: string;
@@ -41,21 +41,20 @@ const MOONBOARD_COORDINATE_GROUPS: Array<{
   key: keyof MoonBoardHoldsInput;
   state: MoonBoardHoldState;
 }> = [
-  { key: 'start', state: 'STARTING' },
-  { key: 'hand', state: 'HAND' },
-  { key: 'finish', state: 'FINISH' },
+  { key: "start", state: "STARTING" },
+  { key: "hand", state: "HAND" },
+  { key: "finish", state: "FINISH" },
 ];
 
-export const MOONBOARD_DUPLICATE_ERROR_PREFIX = 'A MoonBoard climb with the same holds already exists';
+export const MOONBOARD_DUPLICATE_ERROR_PREFIX =
+  "A MoonBoard climb with the same holds already exists";
 
 function getExecuteRows<T extends Record<string, unknown>>(result: unknown): T[] {
-  return Array.isArray(result)
-    ? (result as T[])
-    : ((result as { rows?: T[] }).rows ?? []);
+  return Array.isArray(result) ? (result as T[]) : ((result as { rows?: T[] }).rows ?? []);
 }
 
 function coordinateToHoldId(coord: string): number {
-  const colIndex = coord[0].toUpperCase().charCodeAt(0) - 'A'.charCodeAt(0);
+  const colIndex = coord[0].toUpperCase().charCodeAt(0) - "A".charCodeAt(0);
   const row = parseInt(coord.slice(1), 10);
   const numColumns = 11;
   return (row - 1) * numColumns + colIndex + 1;
@@ -78,16 +77,16 @@ export function normalizeMoonBoardHolds(holds: MoonBoardHoldsInput): NormalizedM
 }
 
 function buildMoonBoardHoldSignature(entries: NormalizedMoonBoardHold[]): string {
-  return entries.map(({ holdId, holdState }) => `${holdId}:${holdState}`).join(',');
+  return entries.map(({ holdId, holdState }) => `${holdId}:${holdState}`).join(",");
 }
 
 function buildMoonBoardHoldSignatureFromFrames(frames: string | null | undefined): string {
-  if (!frames) return '';
+  if (!frames) return "";
 
-  const parsedFrame = convertLitUpHoldsStringToMap(frames, 'moonboard')[0] || {};
+  const parsedFrame = convertLitUpHoldsStringToMap(frames, "moonboard")[0] || {};
   const entries = Object.entries(parsedFrame)
     .map(([holdId, hold]) => {
-      if (hold.state === 'STARTING' || hold.state === 'HAND' || hold.state === 'FINISH') {
+      if (hold.state === "STARTING" || hold.state === "HAND" || hold.state === "FINISH") {
         return { holdId: Number(holdId), holdState: hold.state };
       }
       return null;
@@ -101,12 +100,12 @@ function buildMoonBoardHoldSignatureFromFrames(frames: string | null | undefined
 export function encodeMoonBoardHoldsToFrames(holds: MoonBoardHoldsInput): string {
   return normalizeMoonBoardHolds(holds)
     .map(({ holdId, holdState }) => `p${holdId}r${MOONBOARD_ROLE_CODE_BY_STATE[holdState]}`)
-    .join('');
+    .join("");
 }
 
 export function buildMoonBoardClimbHoldRows(climbUuid: string, holds: MoonBoardHoldsInput) {
   return normalizeMoonBoardHolds(holds).map(({ holdId, holdState }) => ({
-    boardType: 'moonboard' as const,
+    boardType: "moonboard" as const,
     climbUuid,
     holdId,
     frameNumber: 0,
@@ -120,7 +119,10 @@ type DuplicateMatchRow = {
   ascensionistCount: number;
 };
 
-function shouldReplaceMatch(current: DuplicateMatchRow | undefined, next: DuplicateMatchRow): boolean {
+function shouldReplaceMatch(
+  current: DuplicateMatchRow | undefined,
+  next: DuplicateMatchRow,
+): boolean {
   if (!current) return true;
   if (next.ascensionistCount !== current.ascensionistCount) {
     return next.ascensionistCount > current.ascensionistCount;
@@ -148,13 +150,20 @@ export async function findMoonBoardDuplicateMatches(
   }));
 
   const uniqueSignatures = Array.from(
-    new Set(candidateSignatures.map((candidate) => candidate.signature).filter((signature) => signature.length > 0)),
+    new Set(
+      candidateSignatures
+        .map((candidate) => candidate.signature)
+        .filter((signature) => signature.length > 0),
+    ),
   );
 
   const bestMatchBySignature = new Map<string, DuplicateMatchRow>();
 
   if (uniqueSignatures.length > 0) {
-    const signatureValues = sql.join(uniqueSignatures.map((signature) => sql`${signature}`), sql`, `);
+    const signatureValues = sql.join(
+      uniqueSignatures.map((signature) => sql`${signature}`),
+      sql`, `,
+    );
     const exactMatchResult = await db.execute(sql`
       SELECT
         ${dbSchema.boardClimbs.uuid} AS uuid,
@@ -259,6 +268,8 @@ export async function findMoonBoardDuplicateMatch(
   angle: number,
   holds: MoonBoardHoldsInput,
 ): Promise<MoonBoardClimbDuplicateMatch | null> {
-  const [match] = await findMoonBoardDuplicateMatches(layoutId, angle, [{ clientKey: 'save', holds }]);
+  const [match] = await findMoonBoardDuplicateMatches(layoutId, angle, [
+    { clientKey: "save", holds },
+  ]);
   return match?.exists ? match : null;
 }

@@ -12,8 +12,6 @@
     "bblanchon/ArduinoJson": "^7.0.0"
   },
   "build": {
-    "flags": [
-      "-I src"
-    ]
+    "flags": ["-I src"]
   }
 }

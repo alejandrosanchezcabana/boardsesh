@@ -1,12 +1,12 @@
-import { useMemo } from 'react';
-import type { UserBoard } from '@boardsesh/shared-schema';
-import type { Climb, BoardDetails, BoardName } from '@/app/lib/types';
+import { useMemo } from "react";
+import type { UserBoard } from "@boardsesh/shared-schema";
+import type { Climb, BoardDetails, BoardName } from "@/app/lib/types";
 import {
   getUserBoardDetails,
   getBoardDetailsForPlaylist,
   resolveBoardDetailsForClimb,
   type SessionBoardConfig,
-} from '@/app/lib/board-config-for-playlist';
+} from "@/app/lib/board-config-for-playlist";
 
 interface UseBoardDetailsMapResult {
   /** BoardDetails keyed by climb uuid — resolved per climb. */
@@ -52,7 +52,7 @@ export function useBoardDetailsMap(
             layoutId: selectedBoard.layoutId,
             sizeId: selectedBoard.sizeId,
             setIds: selectedBoard.setIds
-              .split(',')
+              .split(",")
               .map(Number)
               .filter((n) => Number.isFinite(n) && n > 0),
           }
@@ -72,9 +72,9 @@ export function useBoardDetailsMap(
       const resolved = resolveBoardDetailsForClimb(climb, effectiveSession);
       if (!resolved) continue;
       byClimb[climb.uuid] = resolved.details;
-      if (resolved.status === 'upsized') {
+      if (resolved.status === "upsized") {
         upsized.add(climb.uuid);
-      } else if (resolved.status === 'incompatible' && userBoardTypes) {
+      } else if (resolved.status === "incompatible" && userBoardTypes) {
         unsupported.add(climb.uuid);
       }
     }
@@ -88,7 +88,7 @@ export function useBoardDetailsMap(
       defaultDetails = getUserBoardDetails(myBoards[0]);
     }
     if (!defaultDetails) {
-      const fallbackBoardType = fallbackBoardTypes?.[0] || climbs[0]?.boardType || 'kilter';
+      const fallbackBoardType = fallbackBoardTypes?.[0] || climbs[0]?.boardType || "kilter";
       const fallbackLayoutId = climbs[0]?.layoutId ?? null;
       defaultDetails = getBoardDetailsForPlaylist(fallbackBoardType, fallbackLayoutId);
     }

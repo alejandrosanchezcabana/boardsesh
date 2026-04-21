@@ -1,30 +1,30 @@
-import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
-import { v4 as uuidv4 } from 'uuid';
-import { roomManager } from '../services/room-manager';
-import { db } from '../db/client';
-import { sessions, sessionQueues, boardSessionParticipants } from '../db/schema';
-import { eq } from 'drizzle-orm';
-import type { ClimbQueueItem } from '@boardsesh/shared-schema';
-import { createMockRedis, type MockRedis } from './helpers/mock-redis';
+import { describe, it, expect, beforeEach, afterEach, vi } from "vite-plus/test";
+import { v4 as uuidv4 } from "uuid";
+import { roomManager } from "../services/room-manager";
+import { db } from "../db/client";
+import { sessions, sessionQueues, boardSessionParticipants } from "../db/schema";
+import { eq } from "drizzle-orm";
+import type { ClimbQueueItem } from "@boardsesh/shared-schema";
+import { createMockRedis, type MockRedis } from "./helpers/mock-redis";
 
 const createTestClimb = (): ClimbQueueItem => ({
   uuid: uuidv4(),
   climb: {
     uuid: uuidv4(),
-    setter_username: 'TestSetter',
-    name: 'Test Climb',
-    description: 'A test climb',
-    frames: '{}',
+    setter_username: "TestSetter",
+    name: "Test Climb",
+    description: "A test climb",
+    frames: "{}",
     angle: 40,
     ascensionist_count: 10,
-    difficulty: '6A',
-    quality_average: '3.5',
+    difficulty: "6A",
+    quality_average: "3.5",
     stars: 3.5,
-    difficulty_error: '0.5',
+    difficulty_error: "0.5",
     mirrored: false,
     benchmark_difficulty: null,
   },
-  addedBy: 'test-user',
+  addedBy: "test-user",
   tickedBy: [],
   suggested: false,
 });
@@ -34,13 +34,13 @@ const registerAndJoinSession = async (
   clientId: string,
   sessionId: string,
   boardPath: string,
-  username?: string
+  username?: string,
 ) => {
   await roomManager.registerClient(clientId);
   return roomManager.joinSession(clientId, sessionId, boardPath, username);
 };
 
-describe('Session Persistence - Hybrid Redis + Postgres', () => {
+describe("Session Persistence - Hybrid Redis + Postgres", () => {
   let mockRedis: MockRedis;
 
   beforeEach(async () => {
@@ -56,122 +56,102 @@ describe('Session Persistence - Hybrid Redis + Postgres', () => {
     vi.clearAllTimers();
   });
 
-  describe('Session Lifecycle Transitions', () => {
-    it('should keep a durable session row without marking it inactive on last leave', async () => {
+  describe("Session Lifecycle Transitions", () => {
+    it("should keep a durable session row without marking it inactive on last leave", async () => {
       const sessionId = uuidv4();
-      const boardPath = '/kilter/1/2/3/40';
+      const boardPath = "/kilter/1/2/3/40";
 
       // Create and join session
-      await registerAndJoinSession('client-1', sessionId, boardPath, 'User1');
+      await registerAndJoinSession("client-1", sessionId, boardPath, "User1");
 
       // Verify active status
-      let session = await db
-        .select()
-        .from(sessions)
-        .where(eq(sessions.id, sessionId))
-        .limit(1);
-      expect(session[0]?.status).toBe('active');
+      let session = await db.select().from(sessions).where(eq(sessions.id, sessionId)).limit(1);
+      expect(session[0]?.status).toBe("active");
 
       // Leave session
-      await roomManager.leaveSession('client-1');
+      await roomManager.leaveSession("client-1");
 
       // Verify durable state remains not-ended
-      session = await db
-        .select()
-        .from(sessions)
-        .where(eq(sessions.id, sessionId))
-        .limit(1);
-      expect(session[0]?.status).toBe('active');
+      session = await db.select().from(sessions).where(eq(sessions.id, sessionId)).limit(1);
+      expect(session[0]?.status).toBe("active");
       expect(session[0]?.endedAt).toBeNull();
 
       // Verify session not deleted from Postgres
       expect(session.length).toBe(1);
     });
 
-    it('should allow rejoining without changing the durable lifecycle status', async () => {
+    it("should allow rejoining without changing the durable lifecycle status", async () => {
       const sessionId = uuidv4();
-      const boardPath = '/kilter/1/2/3/40';
+      const boardPath = "/kilter/1/2/3/40";
 
       // Create session, join, and leave
-      await registerAndJoinSession('client-1', sessionId, boardPath, 'User1');
-      await roomManager.leaveSession('client-1');
+      await registerAndJoinSession("client-1", sessionId, boardPath, "User1");
+      await roomManager.leaveSession("client-1");
 
       // Verify durable state remains active until explicit end
-      let session = await db
-        .select()
-        .from(sessions)
-        .where(eq(sessions.id, sessionId))
-        .limit(1);
-      expect(session[0]?.status).toBe('active');
+      let session = await db.select().from(sessions).where(eq(sessions.id, sessionId)).limit(1);
+      expect(session[0]?.status).toBe("active");
 
       // Rejoin
-      await registerAndJoinSession('client-2', sessionId, boardPath, 'User2');
+      await registerAndJoinSession("client-2", sessionId, boardPath, "User2");
 
       // Verify durable state is unchanged
-      session = await db
-        .select()
-        .from(sessions)
-        .where(eq(sessions.id, sessionId))
-        .limit(1);
-      expect(session[0]?.status).toBe('active');
+      session = await db.select().from(sessions).where(eq(sessions.id, sessionId)).limit(1);
+      expect(session[0]?.status).toBe("active");
     });
 
-    it('should transition to ended when endSession is called', async () => {
+    it("should transition to ended when endSession is called", async () => {
       const sessionId = uuidv4();
-      const boardPath = '/kilter/1/2/3/40';
+      const boardPath = "/kilter/1/2/3/40";
 
       // Create session
-      await registerAndJoinSession('client-1', sessionId, boardPath, 'User1');
+      await registerAndJoinSession("client-1", sessionId, boardPath, "User1");
 
       // End session
       await roomManager.endSession(sessionId);
 
       // Verify ended status
-      const session = await db
-        .select()
-        .from(sessions)
-        .where(eq(sessions.id, sessionId))
-        .limit(1);
-      expect(session[0]?.status).toBe('ended');
+      const session = await db.select().from(sessions).where(eq(sessions.id, sessionId)).limit(1);
+      expect(session[0]?.status).toBe("ended");
 
       // Verify removed from Redis (deleteSession uses multi.del)
       expect(mockRedis.del).toHaveBeenCalledWith(`boardsesh:session:${sessionId}`);
     });
   });
 
-  describe('Lazy Restoration from Redis', () => {
-    it('should restore a Redis-backed session when user rejoins', async () => {
+  describe("Lazy Restoration from Redis", () => {
+    it("should restore a Redis-backed session when user rejoins", async () => {
       const sessionId = uuidv4();
-      const boardPath = '/kilter/1/2/3/40';
+      const boardPath = "/kilter/1/2/3/40";
       const climb = createTestClimb();
 
       // Create session and add climb to queue
-      await registerAndJoinSession('client-1', sessionId, boardPath, 'User1');
+      await registerAndJoinSession("client-1", sessionId, boardPath, "User1");
       const currentState = await roomManager.getQueueState(sessionId);
       await roomManager.updateQueueState(sessionId, [climb], null, currentState.version);
 
       // Leave session (makes it inactive but keeps in Redis)
-      await roomManager.leaveSession('client-1');
+      await roomManager.leaveSession("client-1");
 
       // Clear in-memory state to simulate server restart
       roomManager.reset();
       await roomManager.initialize(mockRedis);
 
       // Rejoin should restore from Redis
-      const result = await registerAndJoinSession('client-2', sessionId, boardPath, 'User2');
+      const result = await registerAndJoinSession("client-2", sessionId, boardPath, "User2");
 
       // Verify queue was restored from Redis
       expect(result.queue).toHaveLength(1);
       expect(result.queue[0]?.uuid).toBe(climb.uuid);
     });
 
-    it('should handle multiple users joining a Redis-backed session concurrently', async () => {
+    it("should handle multiple users joining a Redis-backed session concurrently", async () => {
       const sessionId = uuidv4();
-      const boardPath = '/kilter/1/2/3/40';
+      const boardPath = "/kilter/1/2/3/40";
 
       // Create session and make it inactive
-      await registerAndJoinSession('client-1', sessionId, boardPath, 'User1');
-      await roomManager.leaveSession('client-1');
+      await registerAndJoinSession("client-1", sessionId, boardPath, "User1");
+      await roomManager.leaveSession("client-1");
 
       // Clear in-memory state
       roomManager.reset();
@@ -179,16 +159,16 @@ describe('Session Persistence - Hybrid Redis + Postgres', () => {
 
       // Register clients before joining
       await Promise.all([
-        roomManager.registerClient('client-2'),
-        roomManager.registerClient('client-3'),
-        roomManager.registerClient('client-4'),
+        roomManager.registerClient("client-2"),
+        roomManager.registerClient("client-3"),
+        roomManager.registerClient("client-4"),
       ]);
 
       // Multiple users join concurrently
       const results = await Promise.all([
-        roomManager.joinSession('client-2', sessionId, boardPath, 'User2'),
-        roomManager.joinSession('client-3', sessionId, boardPath, 'User3'),
-        roomManager.joinSession('client-4', sessionId, boardPath, 'User4'),
+        roomManager.joinSession("client-2", sessionId, boardPath, "User2"),
+        roomManager.joinSession("client-3", sessionId, boardPath, "User3"),
+        roomManager.joinSession("client-4", sessionId, boardPath, "User4"),
       ]);
 
       // Verify all joined successfully
@@ -198,14 +178,14 @@ describe('Session Persistence - Hybrid Redis + Postgres', () => {
     });
   });
 
-  describe('Lazy Restoration from Postgres', () => {
-    it('should restore dormant session from Postgres when Redis expires', async () => {
+  describe("Lazy Restoration from Postgres", () => {
+    it("should restore dormant session from Postgres when Redis expires", async () => {
       const sessionId = uuidv4();
-      const boardPath = '/kilter/1/2/3/40';
+      const boardPath = "/kilter/1/2/3/40";
       const climb = createTestClimb();
 
       // Create session and add climb to queue
-      await registerAndJoinSession('client-1', sessionId, boardPath, 'User1');
+      await registerAndJoinSession("client-1", sessionId, boardPath, "User1");
       const currentState = await roomManager.getQueueState(sessionId);
       await roomManager.updateQueueState(sessionId, [climb], null, currentState.version);
 
@@ -213,7 +193,7 @@ describe('Session Persistence - Hybrid Redis + Postgres', () => {
       await roomManager.flushPendingWrites();
 
       // Leave session
-      await roomManager.leaveSession('client-1');
+      await roomManager.leaveSession("client-1");
 
       // Simulate Redis expiry by clearing Redis and resetting room manager
       const redisHashes = mockRedis._hashes;
@@ -223,19 +203,19 @@ describe('Session Persistence - Hybrid Redis + Postgres', () => {
       await roomManager.initialize(mockRedis);
 
       // Rejoin should restore from Postgres
-      const result = await registerAndJoinSession('client-2', sessionId, boardPath, 'User2');
+      const result = await registerAndJoinSession("client-2", sessionId, boardPath, "User2");
 
       // Verify queue was restored from Postgres
       expect(result.queue).toHaveLength(1);
       expect(result.queue[0]?.uuid).toBe(climb.uuid);
     });
 
-    it('should not restore ended sessions from Postgres', async () => {
+    it("should not restore ended sessions from Postgres", async () => {
       const sessionId = uuidv4();
-      const boardPath = '/kilter/1/2/3/40';
+      const boardPath = "/kilter/1/2/3/40";
 
       // Create and end session
-      await registerAndJoinSession('client-1', sessionId, boardPath, 'User1');
+      await registerAndJoinSession("client-1", sessionId, boardPath, "User1");
       await roomManager.endSession(sessionId);
 
       // Clear in-memory state
@@ -243,14 +223,14 @@ describe('Session Persistence - Hybrid Redis + Postgres', () => {
       await roomManager.initialize(mockRedis);
 
       // Try to rejoin ended session - should create a new session instead of restoring
-      const result = await registerAndJoinSession('client-2', sessionId, boardPath, 'User2');
+      const result = await registerAndJoinSession("client-2", sessionId, boardPath, "User2");
 
       // Session should be created fresh (empty queue)
       expect(result.queue).toHaveLength(0);
     });
   });
 
-  describe('Debounced Writes and Flush', () => {
+  describe("Debounced Writes and Flush", () => {
     beforeEach(() => {
       // shouldAdvanceTime: true allows real I/O (Postgres queries) to complete
       // while still giving control over timer advancement via advanceTimersByTimeAsync
@@ -261,14 +241,14 @@ describe('Session Persistence - Hybrid Redis + Postgres', () => {
       vi.useRealTimers();
     });
 
-    it('should debounce Postgres writes for 30 seconds', async () => {
+    it("should debounce Postgres writes for 30 seconds", async () => {
       const sessionId = uuidv4();
-      const boardPath = '/kilter/1/2/3/40';
+      const boardPath = "/kilter/1/2/3/40";
       const climb1 = createTestClimb();
       const climb2 = createTestClimb();
 
       // Create session
-      await registerAndJoinSession('client-1', sessionId, boardPath, 'User1');
+      await registerAndJoinSession("client-1", sessionId, boardPath, "User1");
 
       // Add multiple climbs rapidly
       let currentState = await roomManager.getQueueState(sessionId);
@@ -295,7 +275,7 @@ describe('Session Persistence - Hybrid Redis + Postgres', () => {
       // The debounce callback fires and starts writeQueueStateToPostgres asynchronously.
       // Switch to real timers and wait briefly for the Postgres I/O to complete.
       vi.useRealTimers();
-      await new Promise(resolve => setTimeout(resolve, 200));
+      await new Promise((resolve) => setTimeout(resolve, 200));
 
       // Now check Postgres - should have latest state
       queueRows = await db
@@ -308,13 +288,13 @@ describe('Session Persistence - Hybrid Redis + Postgres', () => {
       expect(queue).toHaveLength(2);
     });
 
-    it('should flush pending writes on flushPendingWrites call', async () => {
+    it("should flush pending writes on flushPendingWrites call", async () => {
       const sessionId = uuidv4();
-      const boardPath = '/kilter/1/2/3/40';
+      const boardPath = "/kilter/1/2/3/40";
       const climb = createTestClimb();
 
       // Create session and update queue
-      await registerAndJoinSession('client-1', sessionId, boardPath, 'User1');
+      await registerAndJoinSession("client-1", sessionId, boardPath, "User1");
       const currentState = await roomManager.getQueueState(sessionId);
       await roomManager.updateQueueState(sessionId, [climb], null, currentState.version);
 
@@ -332,14 +312,14 @@ describe('Session Persistence - Hybrid Redis + Postgres', () => {
       expect(queue).toHaveLength(1);
     });
 
-    it('should cancel pending timer when new update arrives', async () => {
+    it("should cancel pending timer when new update arrives", async () => {
       const sessionId = uuidv4();
-      const boardPath = '/kilter/1/2/3/40';
+      const boardPath = "/kilter/1/2/3/40";
       const climb1 = createTestClimb();
       const climb2 = createTestClimb();
 
       // Create session
-      await registerAndJoinSession('client-1', sessionId, boardPath, 'User1');
+      await registerAndJoinSession("client-1", sessionId, boardPath, "User1");
 
       // First update
       let currentState = await roomManager.getQueueState(sessionId);
@@ -372,7 +352,7 @@ describe('Session Persistence - Hybrid Redis + Postgres', () => {
       // The debounce callback fires and starts writeQueueStateToPostgres asynchronously.
       // Switch to real timers and wait briefly for the Postgres I/O to complete.
       vi.useRealTimers();
-      await new Promise(resolve => setTimeout(resolve, 200));
+      await new Promise((resolve) => setTimeout(resolve, 200));
 
       // Now should be written
       queueRows = await db
@@ -386,22 +366,22 @@ describe('Session Persistence - Hybrid Redis + Postgres', () => {
     });
   });
 
-  describe('isActive Field Calculation', () => {
-    it('should mark session as active when users are connected', async () => {
+  describe("isActive Field Calculation", () => {
+    it("should mark session as active when users are connected", async () => {
       const sessionId = uuidv4();
-      const boardPath = '/kilter/1/2/3/40';
+      const boardPath = "/kilter/1/2/3/40";
 
       // Create discoverable session
       await roomManager.createDiscoverableSession(
         sessionId,
         boardPath,
-        'user-123',
+        "user-123",
         37.7749,
         -122.4194,
-        'Test Session'
+        "Test Session",
       );
 
-      await registerAndJoinSession('client-1', sessionId, boardPath, 'User1');
+      await registerAndJoinSession("client-1", sessionId, boardPath, "User1");
 
       // Query nearby sessions
       const nearby = await roomManager.findNearbySessions(37.7749, -122.4194, 10000);
@@ -411,22 +391,22 @@ describe('Session Persistence - Hybrid Redis + Postgres', () => {
       expect(session?.participantCount).toBe(1);
     });
 
-    it('should mark session as active when in Redis even without connected users', async () => {
+    it("should mark session as active when in Redis even without connected users", async () => {
       const sessionId = uuidv4();
-      const boardPath = '/kilter/1/2/3/40';
+      const boardPath = "/kilter/1/2/3/40";
 
       // Create discoverable session
       await roomManager.createDiscoverableSession(
         sessionId,
         boardPath,
-        'user-123',
+        "user-123",
         37.7749,
         -122.4194,
-        'Test Session'
+        "Test Session",
       );
 
-      await registerAndJoinSession('client-1', sessionId, boardPath, 'User1');
-      await roomManager.leaveSession('client-1');
+      await registerAndJoinSession("client-1", sessionId, boardPath, "User1");
+      await roomManager.leaveSession("client-1");
 
       // Clear in-memory state but Redis still has it
       roomManager.reset();
@@ -440,22 +420,22 @@ describe('Session Persistence - Hybrid Redis + Postgres', () => {
       expect(session?.participantCount).toBe(0);
     });
 
-    it('should exclude sessions that exist only in Postgres from discovery', async () => {
+    it("should exclude sessions that exist only in Postgres from discovery", async () => {
       const sessionId = uuidv4();
-      const boardPath = '/kilter/1/2/3/40';
+      const boardPath = "/kilter/1/2/3/40";
 
       // Create discoverable session
       await roomManager.createDiscoverableSession(
         sessionId,
         boardPath,
-        'user-123',
+        "user-123",
         37.7749,
         -122.4194,
-        'Test Session'
+        "Test Session",
       );
 
-      await registerAndJoinSession('client-1', sessionId, boardPath, 'User1');
-      await roomManager.leaveSession('client-1');
+      await registerAndJoinSession("client-1", sessionId, boardPath, "User1");
+      await roomManager.leaveSession("client-1");
 
       // Clear both in-memory and Redis (simulate TTL expiry)
       const redisHashes = mockRedis._hashes;
@@ -471,21 +451,21 @@ describe('Session Persistence - Hybrid Redis + Postgres', () => {
       expect(session).toBeUndefined();
     });
 
-    it('should exclude ended sessions from discovery', async () => {
+    it("should exclude ended sessions from discovery", async () => {
       const sessionId = uuidv4();
-      const boardPath = '/kilter/1/2/3/40';
+      const boardPath = "/kilter/1/2/3/40";
 
       // Create discoverable session
       await roomManager.createDiscoverableSession(
         sessionId,
         boardPath,
-        'user-123',
+        "user-123",
         37.7749,
         -122.4194,
-        'Test Session'
+        "Test Session",
       );
 
-      await registerAndJoinSession('client-1', sessionId, boardPath, 'User1');
+      await registerAndJoinSession("client-1", sessionId, boardPath, "User1");
       await roomManager.endSession(sessionId);
 
       // Query nearby sessions
@@ -496,18 +476,18 @@ describe('Session Persistence - Hybrid Redis + Postgres', () => {
     });
   });
 
-  describe('Graceful Degradation - Redis Unavailable', () => {
-    it('should work in Postgres-only mode when Redis is not available', async () => {
+  describe("Graceful Degradation - Redis Unavailable", () => {
+    it("should work in Postgres-only mode when Redis is not available", async () => {
       // Reset without Redis
       roomManager.reset();
       await roomManager.initialize();
 
       const sessionId = uuidv4();
-      const boardPath = '/kilter/1/2/3/40';
+      const boardPath = "/kilter/1/2/3/40";
       const climb = createTestClimb();
 
       // Should still work
-      await registerAndJoinSession('client-1', sessionId, boardPath, 'User1');
+      await registerAndJoinSession("client-1", sessionId, boardPath, "User1");
       const currentState = await roomManager.getQueueState(sessionId);
       await roomManager.updateQueueState(sessionId, [climb], null, currentState.version);
 
@@ -517,50 +497,46 @@ describe('Session Persistence - Hybrid Redis + Postgres', () => {
       expect(state.queue[0]?.uuid).toBe(climb.uuid);
 
       // Leave session
-      await roomManager.leaveSession('client-1');
+      await roomManager.leaveSession("client-1");
 
       // Durable session row should remain not-ended; liveness is not persisted to SQL
-      const session = await db
-        .select()
-        .from(sessions)
-        .where(eq(sessions.id, sessionId))
-        .limit(1);
-      expect(session[0]?.status).toBe('active');
+      const session = await db.select().from(sessions).where(eq(sessions.id, sessionId)).limit(1);
+      expect(session[0]?.status).toBe("active");
       expect(await roomManager.isSessionActive(sessionId)).toBe(false);
     });
 
-    it('should not restore sessions in Postgres-only mode after server restart', async () => {
+    it("should not restore sessions in Postgres-only mode after server restart", async () => {
       // Run without Redis
       roomManager.reset();
       await roomManager.initialize();
 
       const sessionId = uuidv4();
-      const boardPath = '/kilter/1/2/3/40';
+      const boardPath = "/kilter/1/2/3/40";
 
       // Create session and leave
-      await registerAndJoinSession('client-1', sessionId, boardPath, 'User1');
-      await roomManager.leaveSession('client-1');
+      await registerAndJoinSession("client-1", sessionId, boardPath, "User1");
+      await roomManager.leaveSession("client-1");
 
       // Reset (simulate server restart)
       roomManager.reset();
       await roomManager.initialize();
 
       // Try to rejoin - should create new session (no restoration in Postgres-only mode)
-      const result = await registerAndJoinSession('client-2', sessionId, boardPath, 'User2');
+      const result = await registerAndJoinSession("client-2", sessionId, boardPath, "User2");
 
       // Should be fresh session
       expect(result.queue).toHaveLength(0);
     });
   });
 
-  describe('Data Ownership and Separation', () => {
-    it('should store queue state in both Redis and Postgres', async () => {
+  describe("Data Ownership and Separation", () => {
+    it("should store queue state in both Redis and Postgres", async () => {
       const sessionId = uuidv4();
-      const boardPath = '/kilter/1/2/3/40';
+      const boardPath = "/kilter/1/2/3/40";
       const climb = createTestClimb();
 
       // Create session and update queue
-      await registerAndJoinSession('client-1', sessionId, boardPath, 'User1');
+      await registerAndJoinSession("client-1", sessionId, boardPath, "User1");
       const currentState = await roomManager.getQueueState(sessionId);
       await roomManager.updateQueueState(sessionId, [climb], null, currentState.version);
 
@@ -578,17 +554,17 @@ describe('Session Persistence - Hybrid Redis + Postgres', () => {
         .from(sessionQueues)
         .where(eq(sessionQueues.sessionId, sessionId));
       expect(pgQueue).toHaveLength(1);
-      expect((pgQueue[0]?.queue as unknown[])).toHaveLength(1);
+      expect(pgQueue[0]?.queue as unknown[]).toHaveLength(1);
     });
 
-    it('should only store connected users in Redis, not Postgres', async () => {
+    it("should only store connected users in Redis, not Postgres", async () => {
       const sessionId = uuidv4();
-      const boardPath = '/kilter/1/2/3/40';
+      const boardPath = "/kilter/1/2/3/40";
       const climb = createTestClimb();
 
       // Create session and join users
-      await registerAndJoinSession('client-1', sessionId, boardPath, 'User1');
-      await registerAndJoinSession('client-2', sessionId, boardPath, 'User2');
+      await registerAndJoinSession("client-1", sessionId, boardPath, "User1");
+      await registerAndJoinSession("client-2", sessionId, boardPath, "User2");
 
       // Update queue to trigger Redis session hash creation
       // (new sessions only get their Redis hash written on queue update, not on creation)
@@ -614,12 +590,12 @@ describe('Session Persistence - Hybrid Redis + Postgres', () => {
     });
   });
 
-  describe('Edge Cases and Error Handling', () => {
-    it('should handle version conflicts with retry logic', async () => {
+  describe("Edge Cases and Error Handling", () => {
+    it("should handle version conflicts with retry logic", async () => {
       const sessionId = uuidv4();
-      const boardPath = '/kilter/1/2/3/40';
+      const boardPath = "/kilter/1/2/3/40";
 
-      await registerAndJoinSession('client-1', sessionId, boardPath, 'User1');
+      await registerAndJoinSession("client-1", sessionId, boardPath, "User1");
 
       // Simulate concurrent updates with same version
       const currentState = await roomManager.getQueueState(sessionId);
@@ -637,26 +613,26 @@ describe('Session Persistence - Hybrid Redis + Postgres', () => {
       expect(finalState.queue.length).toBeGreaterThan(0);
     });
 
-    it('should handle Redis operations failing gracefully', async () => {
+    it("should handle Redis operations failing gracefully", async () => {
       // Create Redis mock that fails on hmset
       const failingRedis = createMockRedis();
       failingRedis.hmset = vi.fn(async () => {
-        throw new Error('Redis connection error');
+        throw new Error("Redis connection error");
       });
 
       roomManager.reset();
       await roomManager.initialize(failingRedis);
 
       const sessionId = uuidv4();
-      const boardPath = '/kilter/1/2/3/40';
+      const boardPath = "/kilter/1/2/3/40";
 
       // When hmset fails, registerClient's distributed state registerConnection()
       // calls redis.multi().hmset()...exec() which triggers the error. The room
       // manager catches this and throws "Failed to register client: distributed
       // state error", preventing the client from being in an inconsistent state.
       await expect(
-        registerAndJoinSession('client-1', sessionId, boardPath, 'User1')
-      ).rejects.toThrow('Failed to register client: distributed state error');
+        registerAndJoinSession("client-1", sessionId, boardPath, "User1"),
+      ).rejects.toThrow("Failed to register client: distributed state error");
     });
   });
 });

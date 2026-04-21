@@ -1,13 +1,10 @@
-import { eq, and } from 'drizzle-orm';
-import type { ConnectionContext } from '@boardsesh/shared-schema';
-import { db } from '../../../../db/client';
-import * as dbSchema from '@boardsesh/db/schema';
-import { requireAuthenticated, applyRateLimit, validateInput } from '../../shared/helpers';
-import {
-  SetterOverrideInputSchema,
-  FreezeClimbInputSchema,
-} from '../../../../validation/schemas';
-import { requireAdminOrLeader } from '../roles';
+import { eq, and } from "drizzle-orm";
+import type { ConnectionContext } from "@boardsesh/shared-schema";
+import { db } from "../../../../db/client";
+import * as dbSchema from "@boardsesh/db/schema";
+import { requireAuthenticated, applyRateLimit, validateInput } from "../../shared/helpers";
+import { SetterOverrideInputSchema, FreezeClimbInputSchema } from "../../../../validation/schemas";
+import { requireAdminOrLeader } from "../roles";
 
 /**
  * Setter override: directly set community grade/benchmark status on a climb.
@@ -20,7 +17,7 @@ export async function setterOverrideCommunityStatus(
   requireAuthenticated(ctx);
   await applyRateLimit(ctx, 10);
 
-  const validated = validateInput(SetterOverrideInputSchema, input, 'input');
+  const validated = validateInput(SetterOverrideInputSchema, input, "input");
   const { climbUuid, boardType, angle, communityGrade, isBenchmark } = validated;
   const userId = ctx.userId!;
 
@@ -37,7 +34,7 @@ export async function setterOverrideCommunityStatus(
     .limit(1);
 
   if (!climb) {
-    throw new Error('Climb not found');
+    throw new Error("Climb not found");
   }
 
   // Check if caller is the setter
@@ -131,20 +128,20 @@ export async function freezeClimb(
   { input }: { input: unknown },
   ctx: ConnectionContext,
 ) {
-  const validated = validateInput(FreezeClimbInputSchema, input, 'input');
+  const validated = validateInput(FreezeClimbInputSchema, input, "input");
   const { climbUuid, boardType, frozen, reason } = validated;
 
   await requireAdminOrLeader(ctx, boardType);
   const userId = ctx.userId!;
 
   // UPSERT community setting for freeze
-  const freezeKey = 'climb_frozen';
+  const freezeKey = "climb_frozen";
   const [existing] = await db
     .select()
     .from(dbSchema.communitySettings)
     .where(
       and(
-        eq(dbSchema.communitySettings.scope, 'climb'),
+        eq(dbSchema.communitySettings.scope, "climb"),
         eq(dbSchema.communitySettings.scopeKey, climbUuid),
         eq(dbSchema.communitySettings.key, freezeKey),
       ),
@@ -157,26 +154,24 @@ export async function freezeClimb(
       .set({ value: String(frozen), setBy: userId, updatedAt: new Date() })
       .where(eq(dbSchema.communitySettings.id, existing.id));
   } else {
-    await db
-      .insert(dbSchema.communitySettings)
-      .values({
-        scope: 'climb',
-        scopeKey: climbUuid,
-        key: freezeKey,
-        value: String(frozen),
-        setBy: userId,
-      });
+    await db.insert(dbSchema.communitySettings).values({
+      scope: "climb",
+      scopeKey: climbUuid,
+      key: freezeKey,
+      value: String(frozen),
+      setBy: userId,
+    });
   }
 
   // Also save freeze reason
   if (reason) {
-    const reasonKey = 'climb_freeze_reason';
+    const reasonKey = "climb_freeze_reason";
     const [existingReason] = await db
       .select()
       .from(dbSchema.communitySettings)
       .where(
         and(
-          eq(dbSchema.communitySettings.scope, 'climb'),
+          eq(dbSchema.communitySettings.scope, "climb"),
           eq(dbSchema.communitySettings.scopeKey, climbUuid),
           eq(dbSchema.communitySettings.key, reasonKey),
         ),
@@ -189,15 +184,13 @@ export async function freezeClimb(
         .set({ value: reason, setBy: userId, updatedAt: new Date() })
         .where(eq(dbSchema.communitySettings.id, existingReason.id));
     } else {
-      await db
-        .insert(dbSchema.communitySettings)
-        .values({
-          scope: 'climb',
-          scopeKey: climbUuid,
-          key: reasonKey,
-          value: reason,
-          setBy: userId,
-        });
+      await db.insert(dbSchema.communitySettings).values({
+        scope: "climb",
+        scopeKey: climbUuid,
+        key: reasonKey,
+        value: reason,
+        setBy: userId,
+      });
     }
   }
 

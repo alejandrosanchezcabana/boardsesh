@@ -1,8 +1,8 @@
-'use client';
+"use client";
 
-import React, { useContext, createContext, useMemo } from 'react';
-import { useSession } from 'next-auth/react';
-import { useSessionData } from '../graphql-queue';
+import React, { useContext, createContext, useMemo } from "react";
+import { useSession } from "next-auth/react";
+import { useSessionData } from "../graphql-queue";
 
 type ConnectedUser = {
   username: string;
@@ -22,7 +22,7 @@ export const PartyProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   const { data: session } = useSession();
   const { users, clientId, isBackendMode, hasConnected } = useSessionData();
 
-  const username = session?.user?.name || '';
+  const username = session?.user?.name || "";
 
   // Convert SessionUser[] to ConnectedUser[]
   const connectedUsers: ConnectedUser[] = useMemo(() => {
@@ -39,9 +39,9 @@ export const PartyProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   // Get the effective username based on mode
   const effectiveUserName = useMemo(() => {
     if (isBackendMode && hasConnected && users) {
-      return users.find((u) => u.id === clientId)?.username || username || clientId || '';
+      return users.find((u) => u.id === clientId)?.username || username || clientId || "";
     }
-    return username || '';
+    return username || "";
   }, [isBackendMode, hasConnected, users, clientId, username]);
 
   const contextValue: PartyContextType = {
@@ -55,7 +55,7 @@ export const PartyProvider: React.FC<{ children: React.ReactNode }> = ({ childre
 export const usePartyContext = () => {
   const context = useContext(PartyContext);
   if (!context) {
-    throw new Error('usePartyContext must be used within a PartyProvider');
+    throw new Error("usePartyContext must be used within a PartyProvider");
   }
   return context;
 };

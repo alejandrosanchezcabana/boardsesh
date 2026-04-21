@@ -1,15 +1,19 @@
-'use client';
+"use client";
 
-import { useCallback, useEffect, useRef } from 'react';
+import { useCallback, useEffect, useRef } from "react";
 
 export const DRAG_MOVE_THRESHOLD = 10;
 /** Minimum velocity (px/ms) for a flick to close the drawer. */
 export const FLICK_VELOCITY_THRESHOLD = 0.5;
 
-export type DragResult = 'expand' | 'collapse' | 'close' | 'none';
+export type DragResult = "expand" | "collapse" | "close" | "none";
 
 /** Pure decision function: determines if finger movement qualifies as a drag gesture. */
-export function isDragGestureDetected(startY: number, currentY: number, threshold = DRAG_MOVE_THRESHOLD): boolean {
+export function isDragGestureDetected(
+  startY: number,
+  currentY: number,
+  threshold = DRAG_MOVE_THRESHOLD,
+): boolean {
   return Math.abs(currentY - startY) > threshold;
 }
 
@@ -31,15 +35,15 @@ export function computeDragResult(
   const currentFraction = currentHeightPx / viewportHeight;
 
   // Fast downward flick always closes
-  if (velocity > FLICK_VELOCITY_THRESHOLD) return 'close';
+  if (velocity > FLICK_VELOCITY_THRESHOLD) return "close";
 
   // Below half of initial height → close
-  if (currentFraction < initialFraction * 0.5) return 'close';
+  if (currentFraction < initialFraction * 0.5) return "close";
 
   // Snap to nearest of initial or expanded
   const midpoint = (initialFraction + expandedFraction) / 2;
-  if (currentFraction < midpoint) return 'collapse';
-  return 'expand';
+  if (currentFraction < midpoint) return "collapse";
+  return "expand";
 }
 
 export interface DrawerDragResizeOptions {
@@ -80,8 +84,8 @@ function parseFraction(pct: string): number {
 export function useDrawerDragResize({
   open,
   onClose,
-  initialHeight = '60%',
-  expandedHeight = '90%',
+  initialHeight = "60%",
+  expandedHeight = "90%",
   scrollElement,
 }: DrawerDragResizeOptions): DrawerDragResizeResult {
   const paperRef = useRef<HTMLDivElement>(null);
@@ -121,7 +125,7 @@ export function useDrawerDragResize({
     dragStartHeightPx.current = paperRef.current?.offsetHeight ?? 0;
     // Disable height transition during drag for instant feedback
     if (paperRef.current) {
-      paperRef.current.style.transition = 'none';
+      paperRef.current.style.transition = "none";
     }
   }, []);
 
@@ -165,7 +169,7 @@ export function useDrawerDragResize({
       for (const grandchild of child.children) {
         const el = grandchild as HTMLElement;
         const overflow = getComputedStyle(el).overflowY;
-        if (overflow === 'auto' || overflow === 'scroll') {
+        if (overflow === "auto" || overflow === "scroll") {
           scrollElRef.current = el;
           return el;
         }
@@ -184,7 +188,7 @@ export function useDrawerDragResize({
 
     // Re-enable transition for the snap animation
     if (paper) {
-      paper.style.transition = 'height 0.3s cubic-bezier(0.4, 0, 0.2, 1)';
+      paper.style.transition = "height 0.3s cubic-bezier(0.4, 0, 0.2, 1)";
     }
 
     if (!isDragGesture.current) return;
@@ -205,14 +209,14 @@ export function useDrawerDragResize({
     );
 
     switch (result) {
-      case 'expand':
+      case "expand":
         updateHeight(expandedHeight);
         break;
-      case 'collapse':
+      case "collapse":
         updateHeight(initialHeight);
         scrollToTop();
         break;
-      case 'close':
+      case "close":
         onClose();
         break;
     }
@@ -228,8 +232,8 @@ export function useDrawerDragResize({
           updateHeight(expandedHeight);
         }
       };
-      scrollEl.addEventListener('scroll', handleScroll, { passive: true });
-      cleanupScrollRef.current = () => scrollEl.removeEventListener('scroll', handleScroll);
+      scrollEl.addEventListener("scroll", handleScroll, { passive: true });
+      cleanupScrollRef.current = () => scrollEl.removeEventListener("scroll", handleScroll);
     };
 
     // If an external scroll element is provided, use it directly

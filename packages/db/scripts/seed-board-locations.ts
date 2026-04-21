@@ -6,15 +6,15 @@
  * Usage: bunx tsx scripts/seed-board-locations.ts
  */
 
-import { eq, and, sql, isNull } from 'drizzle-orm';
-import { readFileSync } from 'node:fs';
-import { createRequire } from 'node:module';
-import { createHash } from 'node:crypto';
+import { eq, and, sql, isNull } from "drizzle-orm";
+import { readFileSync } from "node:fs";
+import { createRequire } from "node:module";
+import { createHash } from "node:crypto";
 
-import { users } from '../src/schema/auth/users.js';
-import { userBoards } from '../src/schema/app/boards.js';
-import { gyms } from '../src/schema/app/gyms.js';
-import { createScriptDb, getScriptDatabaseUrl } from './db-connection.js';
+import { users } from "../src/schema/auth/users.js";
+import { userBoards } from "../src/schema/app/boards.js";
+import { gyms } from "../src/schema/app/gyms.js";
+import { createScriptDb, getScriptDatabaseUrl } from "./db-connection.js";
 
 // =============================================================================
 // Constants
@@ -22,24 +22,24 @@ import { createScriptDb, getScriptDatabaseUrl } from './db-connection.js';
 
 const BATCH_SIZE = 50;
 
-const SYSTEM_USER_ID = '00000000-0000-0000-0000-000000000000';
-const SYSTEM_USER_EMAIL = 'system@boardsesh.com';
+const SYSTEM_USER_ID = "00000000-0000-0000-0000-000000000000";
+const SYSTEM_USER_EMAIL = "system@boardsesh.com";
 
-const GEOJSON_PACKAGE = '@hangtime/climbing-boards';
+const GEOJSON_PACKAGE = "@hangtime/climbing-boards";
 
 // =============================================================================
 // GeoJSON types
 // =============================================================================
 
 interface GeoJsonFeature<P> {
-  type: 'Feature';
+  type: "Feature";
   id?: string | number;
   properties: P;
-  geometry: { type: 'Point'; coordinates: [number, number] };
+  geometry: { type: "Point"; coordinates: [number, number] };
 }
 
 interface GeoJsonFeatureCollection<P> {
-  type: 'FeatureCollection';
+  type: "FeatureCollection";
   features: GeoJsonFeature<P>[];
 }
 
@@ -102,8 +102,8 @@ interface SetMapping {
 
 /** Layout ID lookup by Kilter product name */
 const KILTER_PRODUCT_TO_LAYOUT: Record<string, number> = {
-  'Kilter Board Original': 1,
-  'Kilter Board Homewall': 8,
+  "Kilter Board Original": 1,
+  "Kilter Board Homewall": 8,
 };
 
 /** Product size IDs that belong to each layout */
@@ -114,28 +114,70 @@ const KILTER_LAYOUT_SIZES: Record<number, number[]> = {
 
 /** Sets indexed by "layoutId-sizeId" */
 const KILTER_SETS: Record<string, SetMapping[]> = {
-  '1-7': [{ id: 1, name: 'Bolt Ons' }, { id: 20, name: 'Screw Ons' }],
-  '1-8': [{ id: 1, name: 'Bolt Ons' }, { id: 20, name: 'Screw Ons' }],
-  '1-10': [{ id: 1, name: 'Bolt Ons' }, { id: 20, name: 'Screw Ons' }],
-  '1-14': [{ id: 1, name: 'Bolt Ons' }, { id: 20, name: 'Screw Ons' }],
-  '1-27': [{ id: 1, name: 'Bolt Ons' }, { id: 20, name: 'Screw Ons' }],
-  '1-28': [{ id: 1, name: 'Bolt Ons' }, { id: 20, name: 'Screw Ons' }],
-  '8-17': [{ id: 26, name: 'Mainline' }, { id: 27, name: 'Auxiliary' }],
-  '8-18': [{ id: 26, name: 'Mainline' }],
-  '8-19': [{ id: 27, name: 'Auxiliary' }],
-  '8-21': [{ id: 26, name: 'Mainline' }, { id: 27, name: 'Auxiliary' }],
-  '8-22': [{ id: 26, name: 'Mainline' }],
-  '8-23': [{ id: 26, name: 'Mainline' }, { id: 27, name: 'Auxiliary' }, { id: 28, name: 'Mainline Kickboard' }, { id: 29, name: 'Auxiliary Kickboard' }],
-  '8-24': [{ id: 26, name: 'Mainline' }, { id: 28, name: 'Mainline Kickboard' }, { id: 29, name: 'Auxiliary Kickboard' }],
-  '8-25': [{ id: 26, name: 'Mainline' }, { id: 27, name: 'Auxiliary' }, { id: 28, name: 'Mainline Kickboard' }, { id: 29, name: 'Auxiliary Kickboard' }],
-  '8-26': [{ id: 26, name: 'Mainline' }, { id: 28, name: 'Mainline Kickboard' }, { id: 29, name: 'Auxiliary Kickboard' }],
-  '8-29': [{ id: 27, name: 'Auxiliary' }],
+  "1-7": [
+    { id: 1, name: "Bolt Ons" },
+    { id: 20, name: "Screw Ons" },
+  ],
+  "1-8": [
+    { id: 1, name: "Bolt Ons" },
+    { id: 20, name: "Screw Ons" },
+  ],
+  "1-10": [
+    { id: 1, name: "Bolt Ons" },
+    { id: 20, name: "Screw Ons" },
+  ],
+  "1-14": [
+    { id: 1, name: "Bolt Ons" },
+    { id: 20, name: "Screw Ons" },
+  ],
+  "1-27": [
+    { id: 1, name: "Bolt Ons" },
+    { id: 20, name: "Screw Ons" },
+  ],
+  "1-28": [
+    { id: 1, name: "Bolt Ons" },
+    { id: 20, name: "Screw Ons" },
+  ],
+  "8-17": [
+    { id: 26, name: "Mainline" },
+    { id: 27, name: "Auxiliary" },
+  ],
+  "8-18": [{ id: 26, name: "Mainline" }],
+  "8-19": [{ id: 27, name: "Auxiliary" }],
+  "8-21": [
+    { id: 26, name: "Mainline" },
+    { id: 27, name: "Auxiliary" },
+  ],
+  "8-22": [{ id: 26, name: "Mainline" }],
+  "8-23": [
+    { id: 26, name: "Mainline" },
+    { id: 27, name: "Auxiliary" },
+    { id: 28, name: "Mainline Kickboard" },
+    { id: 29, name: "Auxiliary Kickboard" },
+  ],
+  "8-24": [
+    { id: 26, name: "Mainline" },
+    { id: 28, name: "Mainline Kickboard" },
+    { id: 29, name: "Auxiliary Kickboard" },
+  ],
+  "8-25": [
+    { id: 26, name: "Mainline" },
+    { id: 27, name: "Auxiliary" },
+    { id: 28, name: "Mainline Kickboard" },
+    { id: 29, name: "Auxiliary Kickboard" },
+  ],
+  "8-26": [
+    { id: 26, name: "Mainline" },
+    { id: 28, name: "Mainline Kickboard" },
+    { id: 29, name: "Auxiliary Kickboard" },
+  ],
+  "8-29": [{ id: 27, name: "Auxiliary" }],
 };
 
 /** Default configs for boards without wall-level detail */
 const DEFAULT_CONFIGS = {
-  tension: { layoutId: 10, sizeId: 6, setIds: '12,13' },
-  moonboard: { layoutId: 2, sizeId: 1, setIds: '2,3,4' },
+  tension: { layoutId: 10, sizeId: 6, setIds: "12,13" },
+  moonboard: { layoutId: 2, sizeId: 1, setIds: "2,3,4" },
 };
 
 // =============================================================================
@@ -144,15 +186,15 @@ const DEFAULT_CONFIGS = {
 
 /** Generate a deterministic UUID from a string key */
 function deterministicUuid(key: string): string {
-  const hash = createHash('sha256').update(key).digest('hex');
+  const hash = createHash("sha256").update(key).digest("hex");
   // Format as UUID v4-compatible (set version nibble to 4 and variant bits)
   return [
     hash.slice(0, 8),
     hash.slice(8, 12),
-    '4' + hash.slice(13, 16),
+    "4" + hash.slice(13, 16),
     ((parseInt(hash[16], 16) & 0x3) | 0x8).toString(16) + hash.slice(17, 20),
     hash.slice(20, 32),
-  ].join('-');
+  ].join("-");
 }
 
 /** Generate a URL-safe slug from a name, using the board's deterministic UUID
@@ -160,27 +202,31 @@ function deterministicUuid(key: string): string {
 function slugify(name: string, uuid: string): string {
   const base = name
     .toLowerCase()
-    .replace(/[^a-z0-9]+/g, '-')
-    .replace(/^-+|-+$/g, '')
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "")
     .slice(0, 80);
 
   // Use last 8 chars of the deterministic UUID (no hyphens) as suffix
-  const suffix = uuid.replace(/-/g, '').slice(-8);
-  return `${base || 'board'}-${suffix}`;
+  const suffix = uuid.replace(/-/g, "").slice(-8);
+  return `${base || "board"}-${suffix}`;
 }
 
 /**
  * Resolve setIds from accumulated_hold_set_value bitmask.
  * Each bit position maps to a set in the ordered KILTER_SETS array.
  */
-function resolveKilterSetIds(layoutId: number, sizeId: number, accumulatedValue: number | null): string | null {
+function resolveKilterSetIds(
+  layoutId: number,
+  sizeId: number,
+  accumulatedValue: number | null,
+): string | null {
   const key = `${layoutId}-${sizeId}`;
   const availableSets = KILTER_SETS[key];
   if (!availableSets || availableSets.length === 0) return null;
 
   // If no bitmask or 0, use all available sets
   if (!accumulatedValue || accumulatedValue === 0) {
-    return availableSets.map((s) => s.id).join(',');
+    return availableSets.map((s) => s.id).join(",");
   }
 
   const selectedIds: number[] = [];
@@ -190,13 +236,13 @@ function resolveKilterSetIds(layoutId: number, sizeId: number, accumulatedValue:
     }
   }
 
-  return selectedIds.length > 0 ? selectedIds.join(',') : availableSets.map((s) => s.id).join(',');
+  return selectedIds.length > 0 ? selectedIds.join(",") : availableSets.map((s) => s.id).join(",");
 }
 
 /** Validate lat/lon are reasonable values */
 function isValidCoord(lat: number | null | undefined, lon: number | null | undefined): boolean {
   if (lat == null || lon == null) return false;
-  if (typeof lat !== 'number' || typeof lon !== 'number') return false;
+  if (typeof lat !== "number" || typeof lon !== "number") return false;
   if (isNaN(lat) || isNaN(lon)) return false;
   return lat >= -90 && lat <= 90 && lon >= -180 && lon <= 180;
 }
@@ -210,7 +256,7 @@ const require = createRequire(import.meta.url);
 function loadGeoJson<P>(filename: string): GeoJsonFeatureCollection<P> {
   // The npm package exports "./*.geojson" → "./geojson/*.geojson"
   const filepath = require.resolve(`${GEOJSON_PACKAGE}/${filename}`);
-  const raw = readFileSync(filepath, 'utf-8');
+  const raw = readFileSync(filepath, "utf-8");
   return JSON.parse(raw) as GeoJsonFeatureCollection<P>;
 }
 
@@ -237,7 +283,7 @@ interface BoardRecord {
 }
 
 function buildKilterRecords(): BoardRecord[] {
-  const fc = loadGeoJson<KilterGym>('kilterboardapp.geojson');
+  const fc = loadGeoJson<KilterGym>("kilterboardapp.geojson");
   const records: BoardRecord[] = [];
 
   for (const feature of fc.features) {
@@ -264,14 +310,14 @@ function buildKilterRecords(): BoardRecord[] {
 
       const gymName = gym.name || `Kilter Gym ${gym.gym_uuid}`;
       const locationParts = [gym.city, gym.country].filter(Boolean);
-      const locationName = locationParts.length > 0 ? locationParts.join(', ') : null;
+      const locationName = locationParts.length > 0 ? locationParts.join(", ") : null;
 
       const sourceKey = `kilter:${gym.gym_uuid}:${wall.wall_uuid}`;
       const boardUuid = deterministicUuid(sourceKey);
       records.push({
         uuid: boardUuid,
         slug: slugify(`${gymName}-kilter`, boardUuid),
-        boardType: 'kilter',
+        boardType: "kilter",
         layoutId,
         sizeId,
         setIds,
@@ -283,7 +329,7 @@ function buildKilterRecords(): BoardRecord[] {
         isAngleAdjustable: wall.is_adjustable === 1,
         gymSourceKey: `kilter:${gym.gym_uuid}`,
         gymName,
-        gymAddress: [gym.address, gym.city, gym.country].filter(Boolean).join(', ') || null,
+        gymAddress: [gym.address, gym.city, gym.country].filter(Boolean).join(", ") || null,
       });
     }
   }
@@ -292,7 +338,7 @@ function buildKilterRecords(): BoardRecord[] {
 }
 
 function buildTensionRecords(): BoardRecord[] {
-  const fc = loadGeoJson<TensionGym>('tensionboardapp2.geojson');
+  const fc = loadGeoJson<TensionGym>("tensionboardapp2.geojson");
   const records: BoardRecord[] = [];
   const config = DEFAULT_CONFIGS.tension;
 
@@ -307,7 +353,7 @@ function buildTensionRecords(): BoardRecord[] {
     records.push({
       uuid: boardUuid,
       slug: slugify(`${gymName}-tension`, boardUuid),
-      boardType: 'tension',
+      boardType: "tension",
       layoutId: config.layoutId,
       sizeId: config.sizeId,
       setIds: config.setIds,
@@ -327,7 +373,7 @@ function buildTensionRecords(): BoardRecord[] {
 }
 
 function buildMoonboardRecords(): BoardRecord[] {
-  const fc = loadGeoJson<MoonboardGym>('moonboard.geojson');
+  const fc = loadGeoJson<MoonboardGym>("moonboard.geojson");
   const records: BoardRecord[] = [];
   const config = DEFAULT_CONFIGS.moonboard;
 
@@ -335,7 +381,7 @@ function buildMoonboardRecords(): BoardRecord[] {
     const gym = feature.properties;
     if (!isValidCoord(gym.Latitude, gym.Longitude)) continue;
 
-    const gymName = gym.Name || 'MoonBoard Gym';
+    const gymName = gym.Name || "MoonBoard Gym";
     // Use name + coords as source key since moonboard has no numeric IDs
     const sourceKey = `moonboard:${gymName}:${gym.Latitude}:${gym.Longitude}`;
     const boardUuid = deterministicUuid(sourceKey);
@@ -343,7 +389,7 @@ function buildMoonboardRecords(): BoardRecord[] {
     records.push({
       uuid: boardUuid,
       slug: slugify(`${gymName}-moonboard`, boardUuid),
-      boardType: 'moonboard',
+      boardType: "moonboard",
       layoutId: config.layoutId,
       sizeId: config.sizeId,
       setIds: config.setIds,
@@ -371,7 +417,7 @@ async function seedBoardLocations() {
   const { db, close } = createScriptDb(databaseUrl);
 
   try {
-    console.log('Starting board location seed...');
+    console.log("Starting board location seed...");
 
     // Step 1: Ensure system user exists
     const [existingUser] = await db
@@ -384,21 +430,21 @@ async function seedBoardLocations() {
       await db.insert(users).values({
         id: SYSTEM_USER_ID,
         email: SYSTEM_USER_EMAIL,
-        name: 'Boardsesh',
+        name: "Boardsesh",
       });
-      console.log('Created system user');
+      console.log("Created system user");
     }
 
     // Step 2: Build all board records
-    console.log('Loading Kilter data...');
+    console.log("Loading Kilter data...");
     const kilterRecords = buildKilterRecords();
     console.log(`  ${kilterRecords.length} Kilter boards`);
 
-    console.log('Loading Tension data...');
+    console.log("Loading Tension data...");
     const tensionRecords = buildTensionRecords();
     console.log(`  ${tensionRecords.length} Tension boards`);
 
-    console.log('Loading MoonBoard data...');
+    console.log("Loading MoonBoard data...");
     const moonboardRecords = buildMoonboardRecords();
     console.log(`  ${moonboardRecords.length} MoonBoard boards`);
 
@@ -421,7 +467,10 @@ async function seedBoardLocations() {
       const batch = gymEntries.slice(i, i + BATCH_SIZE);
       for (const [sourceKey, rec] of batch) {
         const gymUuid = deterministicUuid(`gym:${sourceKey}`);
-        const gymSlug = slugify(rec.gymName, createHash('md5').update(sourceKey).digest('hex').slice(0, 6));
+        const gymSlug = slugify(
+          rec.gymName,
+          createHash("md5").update(sourceKey).digest("hex").slice(0, 6),
+        );
 
         // Upsert gym: insert or update on UUID conflict
         const result = await db
@@ -459,7 +508,7 @@ async function seedBoardLocations() {
     // constraint specifically. The ORM's onConflictDoNothing would also trigger
     // on the (ownerId, boardType, layoutId, sizeId, setIds) partial unique index,
     // silently dropping boards with common configs across different gyms.
-    console.log('Upserting board entries...');
+    console.log("Upserting board entries...");
     let upserted = 0;
 
     for (let i = 0; i < allRecords.length; i += BATCH_SIZE) {
@@ -498,7 +547,9 @@ async function seedBoardLocations() {
       }
 
       if ((i + BATCH_SIZE) % 200 === 0 || i + BATCH_SIZE >= allRecords.length) {
-        console.log(`  Progress: ${Math.min(i + BATCH_SIZE, allRecords.length)}/${allRecords.length}`);
+        console.log(
+          `  Progress: ${Math.min(i + BATCH_SIZE, allRecords.length)}/${allRecords.length}`,
+        );
       }
     }
 
@@ -511,6 +562,6 @@ async function seedBoardLocations() {
 }
 
 seedBoardLocations().catch((err) => {
-  console.error('Seed failed:', err);
+  console.error("Seed failed:", err);
   process.exit(1);
 });

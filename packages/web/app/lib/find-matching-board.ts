@@ -1,4 +1,4 @@
-import type { UserBoard } from '@boardsesh/shared-schema';
+import type { UserBoard } from "@boardsesh/shared-schema";
 
 export type BoardConfig = { boardType: string; layoutId: number; sizeId: number };
 
@@ -16,11 +16,14 @@ export function findMatchingBoard(
     return boards.find((b) => b.slug === boardSlug) ?? null;
   }
   if (boardConfig) {
-    return boards.find((b) =>
-      b.boardType === boardConfig.boardType &&
-      b.layoutId === boardConfig.layoutId &&
-      b.sizeId === boardConfig.sizeId,
-    ) ?? null;
+    return (
+      boards.find(
+        (b) =>
+          b.boardType === boardConfig.boardType &&
+          b.layoutId === boardConfig.layoutId &&
+          b.sizeId === boardConfig.sizeId,
+      ) ?? null
+    );
   }
   return null;
 }

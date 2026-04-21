@@ -1,9 +1,9 @@
-import React from 'react';
-import type { Metadata } from 'next';
-import SetterProfileContent from './setter-profile-content';
-import styles from '@/app/components/library/playlist-view.module.css';
-import { buildVersionedOgImagePath, OG_IMAGE_HEIGHT, OG_IMAGE_WIDTH } from '@/app/lib/seo/og';
-import { getSetterOgSummary } from '@/app/lib/seo/dynamic-og-data';
+import React from "react";
+import type { Metadata } from "next";
+import SetterProfileContent from "./setter-profile-content";
+import styles from "@/app/components/library/playlist-view.module.css";
+import { buildVersionedOgImagePath, OG_IMAGE_HEIGHT, OG_IMAGE_WIDTH } from "@/app/lib/seo/og";
+import { getSetterOgSummary } from "@/app/lib/seo/dynamic-og-data";
 
 export async function generateMetadata({
   params,
@@ -16,11 +16,7 @@ export async function generateMetadata({
   try {
     const summary = await getSetterOgSummary(username);
     const displayName = summary.displayName;
-    const ogImagePath = buildVersionedOgImagePath(
-      '/api/og/setter',
-      { username },
-      summary.version,
-    );
+    const ogImagePath = buildVersionedOgImagePath("/api/og/setter", { username }, summary.version);
     const title = `${displayName} - Setter | Boardsesh`;
     const description = `Climbs created by ${displayName} on Boardsesh`;
     const canonicalUrl = `/setter/${encodeURIComponent(setter_username)}`;
@@ -33,10 +29,17 @@ export async function generateMetadata({
         title,
         description,
         url: canonicalUrl,
-        images: [{ url: ogImagePath, width: OG_IMAGE_WIDTH, height: OG_IMAGE_HEIGHT, alt: `${displayName}'s setter profile` }],
+        images: [
+          {
+            url: ogImagePath,
+            width: OG_IMAGE_WIDTH,
+            height: OG_IMAGE_HEIGHT,
+            alt: `${displayName}'s setter profile`,
+          },
+        ],
       },
       twitter: {
-        card: 'summary_large_image',
+        card: "summary_large_image",
         title,
         description,
         images: [ogImagePath],
@@ -44,8 +47,8 @@ export async function generateMetadata({
     };
   } catch {
     return {
-      title: 'Setter Profile | Boardsesh',
-      description: 'View setter profile and climbs on Boardsesh',
+      title: "Setter Profile | Boardsesh",
+      description: "View setter profile and climbs on Boardsesh",
     };
   }
 }

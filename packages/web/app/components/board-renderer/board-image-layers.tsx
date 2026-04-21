@@ -1,22 +1,22 @@
-import React, { useCallback, useMemo } from 'react';
-import type { BoardDetails } from '@/app/lib/types';
-import { getImageUrl, buildOverlayUrl } from './util';
-import { THUMBNAIL_WIDTH } from './types';
-import { trackRenderError, type RenderContext } from '@/app/lib/rendering-metrics';
+import React, { useCallback, useMemo } from "react";
+import type { BoardDetails } from "@/app/lib/types";
+import { getImageUrl, buildOverlayUrl } from "./util";
+import { THUMBNAIL_WIDTH } from "./types";
+import { trackRenderError, type RenderContext } from "@/app/lib/rendering-metrics";
 
 // Use CSS Grid stacking (gridArea: 1/1) instead of absolute positioning to avoid
 // iOS 18.x WebKit bugs with absolutely positioned images in aspect-ratio containers.
 const layerStyle: React.CSSProperties = {
-  gridArea: '1 / 1',
-  width: '100%',
-  height: '100%',
-  objectFit: 'fill',
-  display: 'block',
+  gridArea: "1 / 1",
+  width: "100%",
+  height: "100%",
+  objectFit: "fill",
+  display: "block",
 };
 
 const layerContainStyle: React.CSSProperties = {
   ...layerStyle,
-  objectFit: 'contain',
+  objectFit: "contain",
 };
 
 export interface BoardImageLayersProps {
@@ -29,7 +29,7 @@ export interface BoardImageLayersProps {
   /** Additional styles for the container div */
   style?: React.CSSProperties;
   /** Set fetchpriority="high" for LCP-critical images */
-  fetchPriority?: 'high' | 'low' | 'auto';
+  fetchPriority?: "high" | "low" | "auto";
 }
 
 /**
@@ -49,26 +49,29 @@ const BoardImageLayers = React.memo(function BoardImageLayers({
 }: BoardImageLayersProps) {
   const overlayUrl = frames ? buildOverlayUrl(boardDetails, frames, thumbnail) : null;
   const backgroundUrls = useMemo(
-    () => Object.keys(boardDetails.images_to_holds).map((img) => getImageUrl(img, boardDetails.board_name, thumbnail)),
+    () =>
+      Object.keys(boardDetails.images_to_holds).map((img) =>
+        getImageUrl(img, boardDetails.board_name, thumbnail),
+      ),
     [boardDetails.images_to_holds, boardDetails.board_name, thumbnail],
   );
 
   const containerStyle = useMemo<React.CSSProperties>(
     () => ({
-      display: 'grid',
-      overflow: 'hidden',
+      display: "grid",
+      overflow: "hidden",
       ...style,
-      transform: mirrored ? 'scaleX(-1)' : style?.transform,
+      transform: mirrored ? "scaleX(-1)" : style?.transform,
     }),
     [style, mirrored],
   );
 
-  const imgStyle = (contain || thumbnail) ? layerContainStyle : layerStyle;
+  const imgStyle = contain || thumbnail ? layerContainStyle : layerStyle;
 
-  const renderContext: RenderContext = thumbnail ? 'thumbnail' : contain ? 'full-board' : 'card';
+  const renderContext: RenderContext = thumbnail ? "thumbnail" : contain ? "full-board" : "card";
 
   const handleOverlayError = useCallback(() => {
-    trackRenderError(renderContext, 'wasm');
+    trackRenderError(renderContext, "wasm");
   }, [renderContext]);
 
   // Use actual thumbnail dimensions for HTML width/height hints so the browser

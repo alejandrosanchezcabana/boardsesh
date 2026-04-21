@@ -1,7 +1,7 @@
-import { getPreference, setPreference, removePreference } from './user-preferences-db';
+import { getPreference, setPreference, removePreference } from "./user-preferences-db";
 
-const KEY = 'lastUsedBoard';
-const LEGACY_COOKIE_NAME = 'default_board_url';
+const KEY = "lastUsedBoard";
+const LEGACY_COOKIE_NAME = "default_board_url";
 
 export interface LastUsedBoardData {
   url: string;
@@ -22,20 +22,20 @@ export const getLastUsedBoard = async (): Promise<LastUsedBoardData | null> => {
     if (stored) return stored;
 
     // One-time migration from default_board_url cookie
-    if (!migrationDone && typeof document !== 'undefined') {
+    if (!migrationDone && typeof document !== "undefined") {
       migrationDone = true;
-      const cookies = document.cookie.split(';');
+      const cookies = document.cookie.split(";");
       for (const cookie of cookies) {
-        const [name, value] = cookie.trim().split('=');
+        const [name, value] = cookie.trim().split("=");
         if (name === LEGACY_COOKIE_NAME && value) {
           const url = decodeURIComponent(value);
           // We only have the URL from the cookie, not the full metadata.
           // Store a partial record so at least the URL is preserved.
           const partial: LastUsedBoardData = {
             url,
-            boardName: '',
-            layoutName: '',
-            sizeName: '',
+            boardName: "",
+            layoutName: "",
+            sizeName: "",
             setNames: [],
             angle: 0,
           };
@@ -49,7 +49,7 @@ export const getLastUsedBoard = async (): Promise<LastUsedBoardData | null> => {
 
     return null;
   } catch (error) {
-    console.error('Failed to get last used board:', error);
+    console.error("Failed to get last used board:", error);
     return null;
   }
 };
@@ -58,7 +58,7 @@ export const setLastUsedBoard = async (data: LastUsedBoardData): Promise<void> =
   try {
     await setPreference(KEY, data);
   } catch (error) {
-    console.error('Failed to set last used board:', error);
+    console.error("Failed to set last used board:", error);
   }
 };
 
@@ -66,6 +66,6 @@ export const clearLastUsedBoard = async (): Promise<void> => {
   try {
     await removePreference(KEY);
   } catch (error) {
-    console.error('Failed to clear last used board:', error);
+    console.error("Failed to clear last used board:", error);
   }
 };

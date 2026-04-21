@@ -1,14 +1,14 @@
-import React from 'react';
-import { BoardName, BoardDetails } from '@/app/lib/types';
-import { LayoutRow, SizeRow, SetRow } from '@/app/lib/data/queries';
-import { getBoardDetails, getBoardSelectorOptions } from '@/app/lib/board-constants';
+import React from "react";
+import { BoardName, BoardDetails } from "@/app/lib/types";
+import { LayoutRow, SizeRow, SetRow } from "@/app/lib/data/queries";
+import { getBoardDetails, getBoardSelectorOptions } from "@/app/lib/board-constants";
 import {
   MOONBOARD_ENABLED,
   MOONBOARD_LAYOUTS,
   MOONBOARD_SETS,
   MOONBOARD_SIZE,
   MoonBoardLayoutKey,
-} from '@/app/lib/moonboard-config';
+} from "@/app/lib/moonboard-config";
 
 export type BoardConfigData = {
   layouts: Record<BoardName, LayoutRow[]>;
@@ -67,15 +67,15 @@ export const getAllBoardConfigs = React.cache(async (): Promise<BoardConfigData>
 
   // Fetch board details for common configurations
   const commonConfigs = [
-    { board: 'kilter' as BoardName, layoutId: 8, sizeId: 25, setIds: [26, 27, 28, 29] },
-    { board: 'kilter' as BoardName, layoutId: 8, sizeId: 17, setIds: [26, 27] },
-    { board: 'tension' as BoardName, layoutId: 10, sizeId: 6, setIds: [12, 13] },
-    { board: 'tension' as BoardName, layoutId: 9, sizeId: 1, setIds: [8, 9, 10, 11] },
-    { board: 'tension' as BoardName, layoutId: 11, sizeId: 6, setIds: [12, 13] },
+    { board: "kilter" as BoardName, layoutId: 8, sizeId: 25, setIds: [26, 27, 28, 29] },
+    { board: "kilter" as BoardName, layoutId: 8, sizeId: 17, setIds: [26, 27] },
+    { board: "tension" as BoardName, layoutId: 10, sizeId: 6, setIds: [12, 13] },
+    { board: "tension" as BoardName, layoutId: 9, sizeId: 1, setIds: [8, 9, 10, 11] },
+    { board: "tension" as BoardName, layoutId: 11, sizeId: 6, setIds: [12, 13] },
   ];
 
   const detailPromises = commonConfigs.map(async ({ board, layoutId, sizeId, setIds }) => {
-    const key = `${board}-${layoutId}-${sizeId}-${setIds.join(',')}`;
+    const key = `${board}-${layoutId}-${sizeId}-${setIds.join(",")}`;
     try {
       const details = await getBoardDetails({
         board_name: board,

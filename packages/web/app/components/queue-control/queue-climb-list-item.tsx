@@ -1,26 +1,32 @@
-'use client';
+"use client";
 
-import React, { useEffect, useRef, useState, useCallback, useMemo } from 'react';
-import MuiTooltip from '@mui/material/Tooltip';
-import MuiAvatar from '@mui/material/Avatar';
-import MuiCheckbox from '@mui/material/Checkbox';
-import MuiIconButton from '@mui/material/IconButton';
-import MuiStack from '@mui/material/Stack';
-import CheckOutlined from '@mui/icons-material/CheckOutlined';
-import EditOutlined from '@mui/icons-material/EditOutlined';
-import PersonOutlined from '@mui/icons-material/PersonOutlined';
-import { BoardDetails, Climb } from '@/app/lib/types';
-import { draggable, dropTargetForElements } from '@atlaskit/pragmatic-drag-and-drop/element/adapter';
-import { DropIndicator } from '@atlaskit/pragmatic-drag-and-drop-react-drop-indicator/box';
-import { attachClosestEdge, extractClosestEdge } from '@atlaskit/pragmatic-drag-and-drop-hitbox/closest-edge';
-import type { Edge } from '@atlaskit/pragmatic-drag-and-drop-hitbox/types';
-import { combine } from '@atlaskit/pragmatic-drag-and-drop/combine';
-import BluetoothIcon from './bluetooth-icon';
-import { ClimbQueueItem } from './types';
-import ClimbListItem, { type SwipeActionOverride } from '../climb-card/climb-list-item';
-import { dispatchOpenPlayDrawer } from './play-drawer-event';
-import { themeTokens } from '@/app/theme/theme-config';
-import { getGradeTintColor } from '@/app/lib/grade-colors';
+import React, { useEffect, useRef, useState, useCallback, useMemo } from "react";
+import MuiTooltip from "@mui/material/Tooltip";
+import MuiAvatar from "@mui/material/Avatar";
+import MuiCheckbox from "@mui/material/Checkbox";
+import MuiIconButton from "@mui/material/IconButton";
+import MuiStack from "@mui/material/Stack";
+import CheckOutlined from "@mui/icons-material/CheckOutlined";
+import EditOutlined from "@mui/icons-material/EditOutlined";
+import PersonOutlined from "@mui/icons-material/PersonOutlined";
+import { BoardDetails, Climb } from "@/app/lib/types";
+import {
+  draggable,
+  dropTargetForElements,
+} from "@atlaskit/pragmatic-drag-and-drop/element/adapter";
+import { DropIndicator } from "@atlaskit/pragmatic-drag-and-drop-react-drop-indicator/box";
+import {
+  attachClosestEdge,
+  extractClosestEdge,
+} from "@atlaskit/pragmatic-drag-and-drop-hitbox/closest-edge";
+import type { Edge } from "@atlaskit/pragmatic-drag-and-drop-hitbox/types";
+import { combine } from "@atlaskit/pragmatic-drag-and-drop/combine";
+import BluetoothIcon from "./bluetooth-icon";
+import { ClimbQueueItem } from "./types";
+import ClimbListItem, { type SwipeActionOverride } from "../climb-card/climb-list-item";
+import { dispatchOpenPlayDrawer } from "./play-drawer-event";
+import { themeTokens } from "@/app/theme/theme-config";
+import { getGradeTintColor } from "@/app/lib/grade-colors";
 
 type QueueClimbListItemProps = {
   item: ClimbQueueItem;
@@ -72,7 +78,7 @@ const QueueClimbListItem: React.FC<QueueClimbListItemProps> = ({
   // since these items are already in the queue. Swipe-right retains default playlist/actions.
   const swipeRightAction: SwipeActionOverride = useMemo(
     () => ({
-      icon: <CheckOutlined style={{ color: 'white', fontSize: 20 }} />,
+      icon: <CheckOutlined style={{ color: "white", fontSize: 20 }} />,
       color: themeTokens.colors.success,
       onAction: () => onTickClick(item.climb),
     }),
@@ -82,10 +88,12 @@ const QueueClimbListItem: React.FC<QueueClimbListItemProps> = ({
   // Background color based on current/history state
   const backgroundColor = useMemo(() => {
     if (isCurrent) {
-      return getGradeTintColor(item.climb.difficulty, 'light', isDark) ?? 'var(--semantic-selected)';
+      return (
+        getGradeTintColor(item.climb.difficulty, "light", isDark) ?? "var(--semantic-selected)"
+      );
     }
-    if (isHistory) return 'var(--neutral-100)';
-    return 'transparent';
+    if (isHistory) return "var(--neutral-100)";
+    return "transparent";
   }, [isCurrent, isHistory, item.climb.difficulty, isDark]);
 
   const handleEditClick = useCallback(
@@ -102,7 +110,7 @@ const QueueClimbListItem: React.FC<QueueClimbListItemProps> = ({
   // "Added by" avatar slot (plus an Edit affordance for editable climbs)
   const afterTitleSlot = useMemo(() => {
     const avatarStyle = { width: 24, height: 24 };
-    const avatarBluetoothStyle = { width: 24, height: 24, backgroundColor: 'transparent' };
+    const avatarBluetoothStyle = { width: 24, height: 24, backgroundColor: "transparent" };
 
     const avatar = item.addedByUser ? (
       <MuiTooltip title={item.addedByUser.username}>
@@ -113,7 +121,7 @@ const QueueClimbListItem: React.FC<QueueClimbListItemProps> = ({
     ) : (
       <MuiTooltip title="Added via Bluetooth">
         <MuiAvatar sx={avatarBluetoothStyle}>
-          <BluetoothIcon style={{ color: 'var(--neutral-400)' }} />
+          <BluetoothIcon style={{ color: "var(--neutral-400)" }} />
         </MuiAvatar>
       </MuiTooltip>
     );
@@ -125,11 +133,7 @@ const QueueClimbListItem: React.FC<QueueClimbListItemProps> = ({
     return (
       <MuiStack direction="row" spacing={0.5} alignItems="center">
         <MuiTooltip title="Edit this climb">
-          <MuiIconButton
-            size="small"
-            onClick={handleEditClick}
-            sx={{ width: 24, height: 24 }}
-          >
+          <MuiIconButton size="small" onClick={handleEditClick} sx={{ width: 24, height: 24 }}>
             <EditOutlined sx={{ fontSize: 16 }} />
           </MuiIconButton>
         </MuiTooltip>
@@ -167,7 +171,7 @@ const QueueClimbListItem: React.FC<QueueClimbListItemProps> = ({
         getData: ({ input }) =>
           attachClosestEdge(
             { index, id: item.uuid },
-            { element, input, allowedEdges: ['top', 'bottom'] },
+            { element, input, allowedEdges: ["top", "bottom"] },
           ),
         onDrag({ self }) {
           const edge = extractClosestEdge(self.data);
@@ -185,8 +189,8 @@ const QueueClimbListItem: React.FC<QueueClimbListItemProps> = ({
 
   const editModeContainerStyle = useMemo(
     () => ({
-      display: 'flex' as const,
-      alignItems: 'center' as const,
+      display: "flex" as const,
+      alignItems: "center" as const,
     }),
     [],
   );
@@ -219,20 +223,15 @@ const QueueClimbListItem: React.FC<QueueClimbListItemProps> = ({
   );
 
   return (
-    <div ref={itemRef} data-testid="queue-item" style={isEditMode ? undefined : { cursor: 'grab' }}>
+    <div ref={itemRef} data-testid="queue-item" style={isEditMode ? undefined : { cursor: "grab" }}>
       {isEditMode ? (
-        <div
-          style={editModeContainerStyle}
-          onClick={() => onToggleSelect?.(item.uuid)}
-        >
+        <div style={editModeContainerStyle} onClick={() => onToggleSelect?.(item.uuid)}>
           <MuiCheckbox
             checked={isSelected}
             onClick={(e) => e.stopPropagation()}
             onChange={() => onToggleSelect?.(item.uuid)}
           />
-          <div style={editModeContentStyle}>
-            {content}
-          </div>
+          <div style={editModeContentStyle}>{content}</div>
         </div>
       ) : (
         content

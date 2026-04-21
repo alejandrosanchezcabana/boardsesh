@@ -1,17 +1,17 @@
-'use client';
+"use client";
 
-import React from 'react';
-import MuiSelect from '@mui/material/Select';
-import MenuItem from '@mui/material/MenuItem';
-import MuiSwitch from '@mui/material/Switch';
-import TextField from '@mui/material/TextField';
-import MuiTooltip from '@mui/material/Tooltip';
-import Typography from '@mui/material/Typography';
-import IconButton from '@mui/material/IconButton';
-import MuiButton from '@mui/material/Button';
-import { RemoveOutlined, AddOutlined, RefreshOutlined } from '@mui/icons-material';
-import { TENSION_KILTER_GRADES } from '@/app/lib/board-data';
-import { BoardDetails } from '@/app/lib/types';
+import React from "react";
+import MuiSelect from "@mui/material/Select";
+import MenuItem from "@mui/material/MenuItem";
+import MuiSwitch from "@mui/material/Switch";
+import TextField from "@mui/material/TextField";
+import MuiTooltip from "@mui/material/Tooltip";
+import Typography from "@mui/material/Typography";
+import IconButton from "@mui/material/IconButton";
+import MuiButton from "@mui/material/Button";
+import { RemoveOutlined, AddOutlined, RefreshOutlined } from "@mui/icons-material";
+import { TENSION_KILTER_GRADES } from "@/app/lib/board-data";
+import { BoardDetails } from "@/app/lib/types";
 import {
   WorkoutType,
   GeneratorOptions,
@@ -25,11 +25,10 @@ import {
   PyramidOptions,
   LadderOptions,
   GradeFocusOptions,
-} from './types';
-import styles from './generator-options-form.module.css';
+} from "./types";
+import styles from "./generator-options-form.module.css";
 
-
-import { KILTER_HOMEWALL_LAYOUT_ID } from '@/app/lib/board-constants';
+import { KILTER_HOMEWALL_LAYOUT_ID } from "@/app/lib/board-constants";
 
 interface GeneratorOptionsFormProps {
   workoutType: WorkoutType;
@@ -50,8 +49,9 @@ const GeneratorOptionsForm: React.FC<GeneratorOptionsFormProps> = ({
 
   // Check if we should show the tall climbs filter
   // Only show for Kilter Homewall on the largest size (10x12)
-  const isKilterHomewall = boardDetails.board_name === 'kilter' && boardDetails.layout_id === KILTER_HOMEWALL_LAYOUT_ID;
-  const isLargestSize = boardDetails.size_name?.toLowerCase().includes('12');
+  const isKilterHomewall =
+    boardDetails.board_name === "kilter" && boardDetails.layout_id === KILTER_HOMEWALL_LAYOUT_ID;
+  const isLargestSize = boardDetails.size_name?.toLowerCase().includes("12");
   const showTallClimbsFilter = isKilterHomewall && isLargestSize;
 
   // Helper to update options
@@ -65,10 +65,12 @@ const GeneratorOptionsForm: React.FC<GeneratorOptionsFormProps> = ({
     value: number,
     onUpdate: (newValue: number) => void,
     min: number = 1,
-    max: number = 50
+    max: number = 50,
   ) => (
     <div className={styles.formRow}>
-      <Typography variant="body2" component="span" className={styles.label}>{label}</Typography>
+      <Typography variant="body2" component="span" className={styles.label}>
+        {label}
+      </Typography>
       <div className={styles.stepperContainer}>
         <span className={styles.stepperValue}>{value}</span>
         <div className={styles.stepperButtons}>
@@ -98,16 +100,18 @@ const GeneratorOptionsForm: React.FC<GeneratorOptionsFormProps> = ({
     label: string,
     value: T,
     optionsList: { value: T; label: string }[],
-    onUpdate: (newValue: T) => void
+    onUpdate: (newValue: T) => void,
   ) => (
     <div className={styles.formRow}>
-      <Typography variant="body2" component="span" className={styles.label}>{label}</Typography>
+      <Typography variant="body2" component="span" className={styles.label}>
+        {label}
+      </Typography>
       <MuiSelect
         value={value}
         onChange={(e) => onUpdate(e.target.value as T)}
         className={styles.select}
         size="small"
-        MenuProps={{ sx: { width: 'auto' } }}
+        MenuProps={{ sx: { width: "auto" } }}
       >
         {optionsList.map((opt) => (
           <MenuItem key={String(opt.value)} value={opt.value}>
@@ -122,17 +126,19 @@ const GeneratorOptionsForm: React.FC<GeneratorOptionsFormProps> = ({
   const renderCommonOptions = () => (
     <>
       {/* Warm Up */}
-      {renderSelect('Warm Up', options.warmUp, WARM_UP_OPTIONS, (v) => updateOption('warmUp', v))}
+      {renderSelect("Warm Up", options.warmUp, WARM_UP_OPTIONS, (v) => updateOption("warmUp", v))}
 
       {/* Target Grade */}
       <div className={styles.formRow}>
-        <Typography variant="body2" component="span" className={styles.label}>Target Grade</Typography>
+        <Typography variant="body2" component="span" className={styles.label}>
+          Target Grade
+        </Typography>
         <MuiSelect
           value={options.targetGrade}
-          onChange={(e) => updateOption('targetGrade', e.target.value as number)}
+          onChange={(e) => updateOption("targetGrade", e.target.value as number)}
           className={styles.select}
           size="small"
-          MenuProps={{ sx: { width: 'auto' } }}
+          MenuProps={{ sx: { width: "auto" } }}
         >
           {grades.map((grade) => (
             <MenuItem key={grade.difficulty_id} value={grade.difficulty_id}>
@@ -148,41 +154,49 @@ const GeneratorOptionsForm: React.FC<GeneratorOptionsFormProps> = ({
   const renderQualityFilters = () => (
     <>
       <div className={styles.formRow}>
-        <Typography variant="body2" component="span" className={styles.label}>Min Ascents</Typography>
+        <Typography variant="body2" component="span" className={styles.label}>
+          Min Ascents
+        </Typography>
         <TextField
           type="number"
           size="small"
           value={options.minAscents}
-          onChange={(e) => updateOption('minAscents', Number(e.target.value) || 0)}
+          onChange={(e) => updateOption("minAscents", Number(e.target.value) || 0)}
           slotProps={{ htmlInput: { min: 0, max: 1000 } }}
           className={styles.inputNumber}
         />
       </div>
 
       <div className={styles.formRow}>
-        <Typography variant="body2" component="span" className={styles.label}>Min Rating</Typography>
+        <Typography variant="body2" component="span" className={styles.label}>
+          Min Rating
+        </Typography>
         <TextField
           type="number"
           size="small"
           value={options.minRating}
-          onChange={(e) => updateOption('minRating', Number(e.target.value) || 0)}
+          onChange={(e) => updateOption("minRating", Number(e.target.value) || 0)}
           slotProps={{ htmlInput: { min: 0, max: 3, step: 0.5 } }}
           className={styles.inputNumber}
         />
       </div>
 
       {/* Climb Bias */}
-      {renderSelect('Climb Bias', options.climbBias, CLIMB_BIAS_OPTIONS, (v) => updateOption('climbBias', v))}
+      {renderSelect("Climb Bias", options.climbBias, CLIMB_BIAS_OPTIONS, (v) =>
+        updateOption("climbBias", v),
+      )}
 
       {/* Tall Climbs Only - only for Kilter Homewall large size */}
       {showTallClimbsFilter && (
         <div className={styles.formRow}>
           <MuiTooltip title="Show only climbs that use holds in the bottom 8 rows (only available on 10x12 boards)">
-            <Typography variant="body2" component="span" className={styles.label}>Tall Climbs Only</Typography>
+            <Typography variant="body2" component="span" className={styles.label}>
+              Tall Climbs Only
+            </Typography>
           </MuiTooltip>
           <MuiSwitch
             checked={options.onlyTallClimbs}
-            onChange={(_, checked) => updateOption('onlyTallClimbs', checked)}
+            onChange={(_, checked) => updateOption("onlyTallClimbs", checked)}
           />
         </div>
       )}
@@ -196,12 +210,16 @@ const GeneratorOptionsForm: React.FC<GeneratorOptionsFormProps> = ({
       <>
         {renderCommonOptions()}
 
-        {renderStepper('Main Set Climbs', volumeOptions.mainSetClimbs, (v) =>
-          onChange({ ...volumeOptions, mainSetClimbs: v })
+        {renderStepper("Main Set Climbs", volumeOptions.mainSetClimbs, (v) =>
+          onChange({ ...volumeOptions, mainSetClimbs: v }),
         )}
 
-        {renderStepper('Main Set Variability', volumeOptions.mainSetVariability, (v) =>
-          onChange({ ...volumeOptions, mainSetVariability: v }), 0, 5
+        {renderStepper(
+          "Main Set Variability",
+          volumeOptions.mainSetVariability,
+          (v) => onChange({ ...volumeOptions, mainSetVariability: v }),
+          0,
+          5,
         )}
 
         {renderQualityFilters()}
@@ -216,12 +234,20 @@ const GeneratorOptionsForm: React.FC<GeneratorOptionsFormProps> = ({
       <>
         {renderCommonOptions()}
 
-        {renderStepper('Number of Steps', pyramidOptions.numberOfSteps, (v) =>
-          onChange({ ...pyramidOptions, numberOfSteps: v }), 3, 15
+        {renderStepper(
+          "Number of Steps",
+          pyramidOptions.numberOfSteps,
+          (v) => onChange({ ...pyramidOptions, numberOfSteps: v }),
+          3,
+          15,
         )}
 
-        {renderStepper('Climbs per Step', pyramidOptions.climbsPerStep, (v) =>
-          onChange({ ...pyramidOptions, climbsPerStep: v }), 1, 5
+        {renderStepper(
+          "Climbs per Step",
+          pyramidOptions.climbsPerStep,
+          (v) => onChange({ ...pyramidOptions, climbsPerStep: v }),
+          1,
+          5,
         )}
 
         {renderQualityFilters()}
@@ -236,12 +262,20 @@ const GeneratorOptionsForm: React.FC<GeneratorOptionsFormProps> = ({
       <>
         {renderCommonOptions()}
 
-        {renderStepper('Number of Steps', ladderOptions.numberOfSteps, (v) =>
-          onChange({ ...ladderOptions, numberOfSteps: v }), 3, 15
+        {renderStepper(
+          "Number of Steps",
+          ladderOptions.numberOfSteps,
+          (v) => onChange({ ...ladderOptions, numberOfSteps: v }),
+          3,
+          15,
         )}
 
-        {renderStepper('Climbs per Step', ladderOptions.climbsPerStep, (v) =>
-          onChange({ ...ladderOptions, climbsPerStep: v }), 1, 5
+        {renderStepper(
+          "Climbs per Step",
+          ladderOptions.climbsPerStep,
+          (v) => onChange({ ...ladderOptions, climbsPerStep: v }),
+          1,
+          5,
         )}
 
         {renderQualityFilters()}
@@ -256,8 +290,12 @@ const GeneratorOptionsForm: React.FC<GeneratorOptionsFormProps> = ({
       <>
         {renderCommonOptions()}
 
-        {renderStepper('Number of Climbs', focusOptions.numberOfClimbs, (v) =>
-          onChange({ ...focusOptions, numberOfClimbs: v }), 1, 50
+        {renderStepper(
+          "Number of Climbs",
+          focusOptions.numberOfClimbs,
+          (v) => onChange({ ...focusOptions, numberOfClimbs: v }),
+          1,
+          50,
         )}
 
         {renderQualityFilters()}
@@ -268,13 +306,13 @@ const GeneratorOptionsForm: React.FC<GeneratorOptionsFormProps> = ({
   // Render the appropriate options form
   const renderOptionsForm = () => {
     switch (workoutType) {
-      case 'volume':
+      case "volume":
         return renderVolumeOptions();
-      case 'pyramid':
+      case "pyramid":
         return renderPyramidOptions();
-      case 'ladder':
+      case "ladder":
         return renderLadderOptions();
-      case 'gradeFocus':
+      case "gradeFocus":
         return renderGradeFocusOptions();
       default:
         return null;
@@ -283,9 +321,7 @@ const GeneratorOptionsForm: React.FC<GeneratorOptionsFormProps> = ({
 
   return (
     <div className={styles.container}>
-      <div className={styles.form}>
-        {renderOptionsForm()}
-      </div>
+      <div className={styles.form}>{renderOptionsForm()}</div>
 
       <div className={styles.resetContainer}>
         <MuiButton
@@ -304,15 +340,18 @@ const GeneratorOptionsForm: React.FC<GeneratorOptionsFormProps> = ({
 export default GeneratorOptionsForm;
 
 // Helper to get default options for a workout type
-export const getDefaultOptions = (workoutType: WorkoutType, targetGrade: number): GeneratorOptions => {
+export const getDefaultOptions = (
+  workoutType: WorkoutType,
+  targetGrade: number,
+): GeneratorOptions => {
   switch (workoutType) {
-    case 'volume':
+    case "volume":
       return { ...DEFAULT_VOLUME_OPTIONS, targetGrade };
-    case 'pyramid':
+    case "pyramid":
       return { ...DEFAULT_PYRAMID_OPTIONS, targetGrade };
-    case 'ladder':
+    case "ladder":
       return { ...DEFAULT_LADDER_OPTIONS, targetGrade };
-    case 'gradeFocus':
+    case "gradeFocus":
       return { ...DEFAULT_GRADE_FOCUS_OPTIONS, targetGrade };
   }
 };

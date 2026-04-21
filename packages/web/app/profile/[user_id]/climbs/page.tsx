@@ -1,11 +1,11 @@
-import React from 'react';
-import { Metadata } from 'next';
-import ClimbsContent from './climbs-content';
+import React from "react";
+import { Metadata } from "next";
+import ClimbsContent from "./climbs-content";
 
 type PageProps = { params: Promise<{ user_id: string }> };
 
 export const metadata: Metadata = {
-  title: 'Created Climbs | Boardsesh',
+  title: "Created Climbs | Boardsesh",
   robots: { index: false, follow: true },
 };
 

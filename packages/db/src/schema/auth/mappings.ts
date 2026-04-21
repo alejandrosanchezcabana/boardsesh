@@ -6,14 +6,14 @@ import {
   timestamp,
   index,
   uniqueIndex,
-} from 'drizzle-orm/pg-core';
-import { users } from './users';
+} from "drizzle-orm/pg-core";
+import { users } from "./users";
 
 // User board mappings table to link NextAuth users with Aurora board users
 export const userBoardMappings = pgTable(
   "user_board_mappings",
   {
-    id: bigserial({ mode: 'bigint' }).primaryKey().notNull(),
+    id: bigserial({ mode: "bigint" }).primaryKey().notNull(),
     userId: text("user_id")
       .notNull()
       .references(() => users.id, { onDelete: "cascade" }),
@@ -24,23 +24,17 @@ export const userBoardMappings = pgTable(
   },
   (table) => ({
     // Ensure unique mapping per board type for each user
-    uniqueUserBoard: uniqueIndex("unique_user_board_mapping").on(
-      table.userId,
-      table.boardType
-    ),
+    uniqueUserBoard: uniqueIndex("unique_user_board_mapping").on(table.userId, table.boardType),
     // Index for efficient lookup by board user
-    boardUserIdx: index("board_user_mapping_idx").on(
-      table.boardType,
-      table.boardUserId
-    ),
-  })
+    boardUserIdx: index("board_user_mapping_idx").on(table.boardType, table.boardUserId),
+  }),
 );
 
 // Aurora credentials for Kilter/Tension board accounts (encrypted)
 export const auroraCredentials = pgTable(
   "aurora_credentials",
   {
-    id: bigserial({ mode: 'bigint' }).primaryKey().notNull(),
+    id: bigserial({ mode: "bigint" }).primaryKey().notNull(),
     userId: text("user_id")
       .notNull()
       .references(() => users.id, { onDelete: "cascade" }),
@@ -59,9 +53,9 @@ export const auroraCredentials = pgTable(
     // Ensure unique credential per board type for each user
     uniqueUserBoardCredential: uniqueIndex("unique_user_board_credential").on(
       table.userId,
-      table.boardType
+      table.boardType,
     ),
     // Index for efficient lookup by user
     userCredentialsIdx: index("aurora_credentials_user_idx").on(table.userId),
-  })
+  }),
 );

@@ -1,7 +1,7 @@
-import { eq, sql, and, ilike } from 'drizzle-orm';
-import { dbz as db } from '@/app/lib/db/db';
-import { ParsedBoardRouteParameters } from '@/app/lib/types';
-import { UNIFIED_TABLES } from '@/lib/db/queries/util/table-select';
+import { eq, sql, and, ilike } from "drizzle-orm";
+import { dbz as db } from "@/app/lib/db/db";
+import { ParsedBoardRouteParameters } from "@/app/lib/types";
+import { UNIFIED_TABLES } from "@/lib/db/queries/util/table-select";
 
 export interface SetterStat {
   setter_username: string;
@@ -36,10 +36,10 @@ export const getSetterStats = async (
         climb_count: sql<number>`count(*)::int`,
       })
       .from(climbs)
-      .innerJoin(climbStats, and(
-        eq(climbStats.climbUuid, climbs.uuid),
-        eq(climbStats.boardType, params.board_name),
-      ))
+      .innerJoin(
+        climbStats,
+        and(eq(climbStats.climbUuid, climbs.uuid), eq(climbStats.boardType, params.board_name)),
+      )
       .where(and(...whereConditions))
       .groupBy(climbs.setterUsername)
       .orderBy(sql`count(*) DESC`)
@@ -48,7 +48,7 @@ export const getSetterStats = async (
     // Filter out any nulls that might have slipped through
     return result.filter((stat): stat is SetterStat => stat.setter_username !== null);
   } catch (error) {
-    console.error('Error fetching setter stats:', error);
+    console.error("Error fetching setter stats:", error);
     throw error;
   }
 };

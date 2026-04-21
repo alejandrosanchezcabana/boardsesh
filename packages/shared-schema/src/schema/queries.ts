@@ -19,7 +19,11 @@ export const queriesTypeDefs = /* GraphQL */ `
     Find discoverable sessions near a GPS location.
     Default radius is 1000 meters.
     """
-    nearbySessions(latitude: Float!, longitude: Float!, radiusMeters: Float): [DiscoverableSession!]!
+    nearbySessions(
+      latitude: Float!
+      longitude: Float!
+      radiusMeters: Float
+    ): [DiscoverableSession!]!
 
     """
     Get current user's recently joined sessions.
@@ -61,7 +65,9 @@ export const queriesTypeDefs = /* GraphQL */ `
     Check whether MoonBoard climbs with exact hold-role selections already exist.
     Returns one result per submitted candidate.
     """
-    checkMoonBoardClimbDuplicates(input: CheckMoonBoardClimbDuplicatesInput!): [MoonBoardClimbDuplicateMatch!]!
+    checkMoonBoardClimbDuplicates(
+      input: CheckMoonBoardClimbDuplicatesInput!
+    ): [MoonBoardClimbDuplicateMatch!]!
 
     """
     Get a single climb by its UUID.
@@ -300,14 +306,16 @@ export const queriesTypeDefs = /* GraphQL */ `
     Requires authentication.
     Deprecated: Use activityFeed instead.
     """
-    followingAscentsFeed(input: FollowingAscentsFeedInput): FollowingAscentsFeedResult! @deprecated(reason: "Use activityFeed query instead")
+    followingAscentsFeed(input: FollowingAscentsFeedInput): FollowingAscentsFeedResult!
+      @deprecated(reason: "Use activityFeed query instead")
 
     """
     Get global activity feed of all recent ascents.
     No authentication required.
     Deprecated: Use trendingFeed instead.
     """
-    globalAscentsFeed(input: FollowingAscentsFeedInput): FollowingAscentsFeedResult! @deprecated(reason: "Use trendingFeed query instead")
+    globalAscentsFeed(input: FollowingAscentsFeedInput): FollowingAscentsFeedResult!
+      @deprecated(reason: "Use trendingFeed query instead")
 
     """
     Get materialized activity feed for the authenticated user.
@@ -455,7 +463,11 @@ export const queriesTypeDefs = /* GraphQL */ `
     """
     Get community status for multiple climbs (batch).
     """
-    bulkClimbCommunityStatus(climbUuids: [String!]!, boardType: String!, angle: Int!): [ClimbCommunityStatus!]!
+    bulkClimbCommunityStatus(
+      climbUuids: [String!]!
+      boardType: String!
+      angle: Int!
+    ): [ClimbCommunityStatus!]!
 
     """
     Get classic status for a climb (angle-independent).

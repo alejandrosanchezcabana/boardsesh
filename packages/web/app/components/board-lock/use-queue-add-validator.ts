@@ -1,12 +1,12 @@
-'use client';
+"use client";
 
-import { useCallback } from 'react';
-import type { Climb } from '@/app/lib/types';
-import { canAddClimbToBoard } from '@/app/lib/board-compatibility';
-import { useActiveBoardLock } from './use-active-board-lock';
-import { useQueueBridgeBoardInfo } from '../queue-control/queue-bridge-context';
-import { useSnackbar } from '../providers/snackbar-provider';
-import { queueAddErrorMessage } from './queue-add-error-messages';
+import { useCallback } from "react";
+import type { Climb } from "@/app/lib/types";
+import { canAddClimbToBoard } from "@/app/lib/board-compatibility";
+import { useActiveBoardLock } from "./use-active-board-lock";
+import { useQueueBridgeBoardInfo } from "../queue-control/queue-bridge-context";
+import { useSnackbar } from "../providers/snackbar-provider";
+import { queueAddErrorMessage } from "./queue-add-error-messages";
 
 /**
  * Returns a validator that checks whether a climb can be added to the
@@ -29,7 +29,7 @@ export function useQueueAddValidator(): (climb: Climb) => boolean {
       if (!target) return true;
       const result = canAddClimbToBoard(climb, target);
       if (result.ok) return true;
-      showMessage(queueAddErrorMessage(climb, target, result), 'error');
+      showMessage(queueAddErrorMessage(climb, target, result), "error");
       return false;
     },
     [lockedBoard, fallbackBoard, showMessage],

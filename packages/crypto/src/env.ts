@@ -2,8 +2,8 @@
  * Environment configuration for encryption
  */
 
-export const ENV_VAR_NAME = 'AURORA_CREDENTIALS_SECRET';
-const DEFAULT_DEV_KEY = 'changeme-development-key';
+export const ENV_VAR_NAME = "AURORA_CREDENTIALS_SECRET";
+const DEFAULT_DEV_KEY = "changeme-development-key";
 
 /**
  * Get the encryption secret, with optional development fallback
@@ -18,8 +18,8 @@ export function getEncryptionSecret(): string {
   }
 
   // Check if we're in development mode
-  const isVercelDev = process.env.VERCEL_ENV === 'development';
-  const isNodeDev = process.env.NODE_ENV === 'development';
+  const isVercelDev = process.env.VERCEL_ENV === "development";
+  const isNodeDev = process.env.NODE_ENV === "development";
   const isDevelopment = isVercelDev || isNodeDev;
 
   if (isDevelopment) {

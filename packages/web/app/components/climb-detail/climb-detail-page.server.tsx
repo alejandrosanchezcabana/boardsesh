@@ -1,10 +1,10 @@
-import React from 'react';
-import ClimbViewActions from '@/app/components/climb-view/climb-view-actions';
-import ClimbDetailInfoShellClient from '@/app/components/climb-detail/climb-detail-info-shell.client';
-import { constructClimbInfoUrl } from '@/app/lib/url-utils';
-import type { BetaLink } from '@/app/lib/api-wrappers/sync-api-types';
-import type { BoardDetails, Climb } from '@/app/lib/types';
-import styles from '@/app/[board_name]/[layout_id]/[size_id]/[set_ids]/[angle]/view/[climb_uuid]/climb-view.module.css';
+import React from "react";
+import ClimbViewActions from "@/app/components/climb-view/climb-view-actions";
+import ClimbDetailInfoShellClient from "@/app/components/climb-detail/climb-detail-info-shell.client";
+import { constructClimbInfoUrl } from "@/app/lib/url-utils";
+import type { BetaLink } from "@/app/lib/api-wrappers/sync-api-types";
+import type { BoardDetails, Climb } from "@/app/lib/types";
+import styles from "@/app/[board_name]/[layout_id]/[size_id]/[set_ids]/[angle]/view/[climb_uuid]/climb-view.module.css";
 
 interface ClimbDetailPageServerProps {
   climb: Climb;
@@ -27,10 +27,7 @@ export default function ClimbDetailPageServer({
   currentClimbDifficulty,
   boardName,
 }: ClimbDetailPageServerProps) {
-  const auroraAppUrl = constructClimbInfoUrl(
-    boardDetails,
-    climb.uuid,
-  ) ?? undefined;
+  const auroraAppUrl = constructClimbInfoUrl(boardDetails, climb.uuid) ?? undefined;
 
   return (
     <div className={styles.pageContainer}>

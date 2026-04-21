@@ -1,31 +1,29 @@
-'use client';
+"use client";
 
-import { useState, useCallback, useMemo } from 'react';
-import { LitUpHoldsMap, HoldState } from '../board-renderer/types';
-import { MOONBOARD_HOLD_STATES } from '@/app/lib/moonboard-config';
+import { useState, useCallback, useMemo } from "react";
+import { LitUpHoldsMap, HoldState } from "../board-renderer/types";
+import { MOONBOARD_HOLD_STATES } from "@/app/lib/moonboard-config";
 
 interface UseMoonBoardCreateClimbOptions {
   initialHoldsMap?: LitUpHoldsMap;
 }
 
 export function useMoonBoardCreateClimb(options?: UseMoonBoardCreateClimbOptions) {
-  const [litUpHoldsMap, setLitUpHoldsMap] = useState<LitUpHoldsMap>(
-    options?.initialHoldsMap ?? {},
-  );
+  const [litUpHoldsMap, setLitUpHoldsMap] = useState<LitUpHoldsMap>(options?.initialHoldsMap ?? {});
 
   // Derived state: count holds by state
   const startingCount = useMemo(
-    () => Object.values(litUpHoldsMap).filter((h) => h.state === 'STARTING').length,
+    () => Object.values(litUpHoldsMap).filter((h) => h.state === "STARTING").length,
     [litUpHoldsMap],
   );
 
   const finishCount = useMemo(
-    () => Object.values(litUpHoldsMap).filter((h) => h.state === 'FINISH').length,
+    () => Object.values(litUpHoldsMap).filter((h) => h.state === "FINISH").length,
     [litUpHoldsMap],
   );
 
   const handCount = useMemo(
-    () => Object.values(litUpHoldsMap).filter((h) => h.state === 'HAND').length,
+    () => Object.values(litUpHoldsMap).filter((h) => h.state === "HAND").length,
     [litUpHoldsMap],
   );
 
@@ -34,10 +32,10 @@ export function useMoonBoardCreateClimb(options?: UseMoonBoardCreateClimbOptions
   // MoonBoard climbs need at least 1 start hold and 1 finish hold
   const isValid = totalHolds > 0 && startingCount >= 1 && finishCount >= 1;
 
-  const setHoldState = useCallback((holdId: number, nextState: HoldState | 'OFF') => {
+  const setHoldState = useCallback((holdId: number, nextState: HoldState | "OFF") => {
     setLitUpHoldsMap((prev) => {
       // Clearing a hold removes it from the map.
-      if (nextState === 'OFF') {
+      if (nextState === "OFF") {
         if (!(holdId in prev)) return prev;
         const { [holdId]: _removed, ...rest } = prev;
         void _removed;
@@ -45,7 +43,7 @@ export function useMoonBoardCreateClimb(options?: UseMoonBoardCreateClimbOptions
       }
 
       // MoonBoard has no FOOT state — silently no-op if asked.
-      if (nextState !== 'STARTING' && nextState !== 'HAND' && nextState !== 'FINISH') {
+      if (nextState !== "STARTING" && nextState !== "HAND" && nextState !== "FINISH") {
         return prev;
       }
 
@@ -53,12 +51,12 @@ export function useMoonBoardCreateClimb(options?: UseMoonBoardCreateClimbOptions
       const currentHold = prev[holdId];
       const isAlreadyThisState = currentHold?.state === nextState;
       if (!isAlreadyThisState) {
-        if (nextState === 'STARTING') {
-          const startingCount = Object.values(prev).filter((h) => h.state === 'STARTING').length;
+        if (nextState === "STARTING") {
+          const startingCount = Object.values(prev).filter((h) => h.state === "STARTING").length;
           if (startingCount >= 2) return prev;
         }
-        if (nextState === 'FINISH') {
-          const finishCount = Object.values(prev).filter((h) => h.state === 'FINISH').length;
+        if (nextState === "FINISH") {
+          const finishCount = Object.values(prev).filter((h) => h.state === "FINISH").length;
           if (finishCount >= 2) return prev;
         }
       }

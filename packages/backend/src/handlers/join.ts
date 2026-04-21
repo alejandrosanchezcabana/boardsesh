@@ -1,24 +1,24 @@
-import type { IncomingMessage, ServerResponse } from 'http';
-import { applyCorsHeaders } from './cors';
-import { roomManager } from '../services/room-manager';
+import type { IncomingMessage, ServerResponse } from "http";
+import { applyCorsHeaders } from "./cors";
+import { roomManager } from "../services/room-manager";
 
 /**
  * Determine WebSocket protocol based on request headers and environment
  */
-function getWebSocketProtocol(req: IncomingMessage): 'wss' | 'ws' {
+function getWebSocketProtocol(req: IncomingMessage): "wss" | "ws" {
   // Check X-Forwarded-Proto header (set by reverse proxies like Railway, Vercel, etc.)
-  const forwardedProto = req.headers['x-forwarded-proto'];
-  if (forwardedProto === 'https') {
-    return 'wss';
+  const forwardedProto = req.headers["x-forwarded-proto"];
+  if (forwardedProto === "https") {
+    return "wss";
   }
 
   // Check if running in production environment
-  if (process.env.NODE_ENV === 'production') {
-    return 'wss';
+  if (process.env.NODE_ENV === "production") {
+    return "wss";
   }
 
   // Default to ws for development
-  return 'ws';
+  return "ws";
 }
 
 /**
@@ -37,15 +37,15 @@ export async function handleSessionJoin(
   if (!applyCorsHeaders(req, res)) return;
 
   if (!sessionId) {
-    res.writeHead(400, { 'Content-Type': 'application/json' });
-    res.end(JSON.stringify({ error: 'Session ID is required' }));
+    res.writeHead(400, { "Content-Type": "application/json" });
+    res.end(JSON.stringify({ error: "Session ID is required" }));
     return;
   }
 
   const sessionInfo = await roomManager.getSessionById(sessionId);
   if (!sessionInfo) {
-    res.writeHead(404, { 'Content-Type': 'application/json' });
-    res.end(JSON.stringify({ error: 'Session not found' }));
+    res.writeHead(404, { "Content-Type": "application/json" });
+    res.end(JSON.stringify({ error: "Session not found" }));
     return;
   }
 

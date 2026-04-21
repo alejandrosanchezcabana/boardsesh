@@ -1,47 +1,51 @@
-import React from 'react';
-import { PropsWithChildren } from 'react';
-import { notFound } from 'next/navigation';
-import { Metadata } from 'next';
-import { resolveBoardBySlug, boardToRouteParams } from '@/app/lib/board-slug-utils';
-import { getBoardDetailsForBoard } from '@/app/lib/board-utils';
-import BoardSeshHeader from '@/app/components/board-page/header';
-import { GraphQLQueueProvider } from '@/app/components/graphql-queue';
-import { ConnectionSettingsProvider } from '@/app/components/connection-manager/connection-settings-context';
-import { WebSocketConnectionProvider } from '@/app/components/connection-manager/websocket-connection-provider';
-import { PartyProvider } from '@/app/components/party-manager/party-context';
-import { BoardSessionBridge } from '@/app/components/persistent-session';
-import { BluetoothProvider } from '@/app/components/board-bluetooth-control/bluetooth-context';
-import { UISearchParamsProvider } from '@/app/components/queue-control/ui-searchparams-provider';
-import { BoardProvider } from '@/app/components/board-provider/board-provider-context';
-import { QueueBridgeInjector } from '@/app/components/queue-control/queue-bridge-context';
-import LastUsedBoardTracker from '@/app/components/board-page/last-used-board-tracker';
+import React from "react";
+import { PropsWithChildren } from "react";
+import { notFound } from "next/navigation";
+import { Metadata } from "next";
+import { resolveBoardBySlug, boardToRouteParams } from "@/app/lib/board-slug-utils";
+import { getBoardDetailsForBoard } from "@/app/lib/board-utils";
+import BoardSeshHeader from "@/app/components/board-page/header";
+import { GraphQLQueueProvider } from "@/app/components/graphql-queue";
+import { ConnectionSettingsProvider } from "@/app/components/connection-manager/connection-settings-context";
+import { WebSocketConnectionProvider } from "@/app/components/connection-manager/websocket-connection-provider";
+import { PartyProvider } from "@/app/components/party-manager/party-context";
+import { BoardSessionBridge } from "@/app/components/persistent-session";
+import { BluetoothProvider } from "@/app/components/board-bluetooth-control/bluetooth-context";
+import { UISearchParamsProvider } from "@/app/components/queue-control/ui-searchparams-provider";
+import { BoardProvider } from "@/app/components/board-provider/board-provider-context";
+import { QueueBridgeInjector } from "@/app/components/queue-control/queue-bridge-context";
+import LastUsedBoardTracker from "@/app/components/board-page/last-used-board-tracker";
 
-import { constructBoardSlugListUrl } from '@/app/lib/url-utils';
-import { themeTokens } from '@/app/theme/theme-config';
+import { constructBoardSlugListUrl } from "@/app/lib/url-utils";
+import { themeTokens } from "@/app/theme/theme-config";
 
 interface BoardSlugRouteParams {
   board_slug: string;
   angle: string;
 }
 
-export async function generateMetadata(props: { params: Promise<BoardSlugRouteParams> }): Promise<Metadata> {
+export async function generateMetadata(props: {
+  params: Promise<BoardSlugRouteParams>;
+}): Promise<Metadata> {
   const params = await props.params;
 
   try {
     const board = await resolveBoardBySlug(params.board_slug);
     if (!board) {
-      return { title: 'Board Not Found | Boardsesh' };
+      return { title: "Board Not Found | Boardsesh" };
     }
 
     return {
       title: `${board.name} | Boardsesh`,
     };
   } catch {
-    return { title: 'Boardsesh' };
+    return { title: "Boardsesh" };
   }
 }
 
-export default async function BoardSlugLayout(props: PropsWithChildren<{ params: Promise<BoardSlugRouteParams> }>) {
+export default async function BoardSlugLayout(
+  props: PropsWithChildren<{ params: Promise<BoardSlugRouteParams> }>,
+) {
   const params = await props.params;
   const { children } = props;
 
@@ -58,12 +62,20 @@ export default async function BoardSlugLayout(props: PropsWithChildren<{ params:
   const listUrl = constructBoardSlugListUrl(board.slug, angle);
 
   return (
-    <div style={{ minHeight: '100dvh', display: 'flex', flexDirection: 'column', padding: 0, background: 'var(--semantic-surface)' }}>
+    <div
+      style={{
+        minHeight: "100dvh",
+        display: "flex",
+        flexDirection: "column",
+        padding: 0,
+        background: "var(--semantic-surface)",
+      }}
+    >
       <LastUsedBoardTracker
         url={listUrl}
         boardName={boardDetails.board_name}
-        layoutName={boardDetails.layout_name || ''}
-        sizeName={boardDetails.size_name || ''}
+        layoutName={boardDetails.layout_name || ""}
+        sizeName={boardDetails.size_name || ""}
         sizeDescription={boardDetails.size_description}
         setNames={boardDetails.set_names || []}
         angle={angle}
@@ -74,27 +86,31 @@ export default async function BoardSlugLayout(props: PropsWithChildren<{ params:
           <ConnectionSettingsProvider>
             <WebSocketConnectionProvider>
               <GraphQLQueueProvider parsedParams={parsedParams} boardDetails={boardDetails}>
-              <PartyProvider>
-                <BluetoothProvider boardDetails={boardDetails}>
-                  <UISearchParamsProvider>
-                    <QueueBridgeInjector boardDetails={boardDetails} angle={angle} />
+                <PartyProvider>
+                  <BluetoothProvider boardDetails={boardDetails}>
+                    <UISearchParamsProvider>
+                      <QueueBridgeInjector boardDetails={boardDetails} angle={angle} />
 
-                    <main
-                      id="content-for-scrollable"
-                      style={{
-                        flex: 1,
-                        paddingLeft: `${themeTokens.spacing[2]}px`,
-                        paddingRight: `${themeTokens.spacing[2]}px`,
-                        paddingTop: 'var(--global-header-height)',
-                        paddingBottom: 'calc(120px + env(safe-area-inset-bottom, 0px))',
-                      }}
-                    >
-                      <BoardSeshHeader boardDetails={boardDetails} angle={angle} isAngleAdjustable={board.isAngleAdjustable} />
-                      {children}
-                    </main>
-                  </UISearchParamsProvider>
-                </BluetoothProvider>
-              </PartyProvider>
+                      <main
+                        id="content-for-scrollable"
+                        style={{
+                          flex: 1,
+                          paddingLeft: `${themeTokens.spacing[2]}px`,
+                          paddingRight: `${themeTokens.spacing[2]}px`,
+                          paddingTop: "var(--global-header-height)",
+                          paddingBottom: "calc(120px + env(safe-area-inset-bottom, 0px))",
+                        }}
+                      >
+                        <BoardSeshHeader
+                          boardDetails={boardDetails}
+                          angle={angle}
+                          isAngleAdjustable={board.isAngleAdjustable}
+                        />
+                        {children}
+                      </main>
+                    </UISearchParamsProvider>
+                  </BluetoothProvider>
+                </PartyProvider>
               </GraphQLQueueProvider>
             </WebSocketConnectionProvider>
           </ConnectionSettingsProvider>

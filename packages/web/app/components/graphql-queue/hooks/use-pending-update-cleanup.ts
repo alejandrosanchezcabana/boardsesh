@@ -1,5 +1,5 @@
-import { useEffect, useRef, Dispatch } from 'react';
-import type { QueueAction } from '../../queue-control/types';
+import { useEffect, useRef, Dispatch } from "react";
+import type { QueueAction } from "../../queue-control/types";
 
 interface UsePendingUpdateCleanupParams {
   isPersistentSessionActive: boolean;
@@ -29,7 +29,7 @@ export function usePendingUpdateCleanup({
     const pendingTimestamps = pendingTimestampsRef.current;
 
     // Add timestamps for NEW correlation IDs only
-    pendingCurrentClimbUpdates.forEach(id => {
+    pendingCurrentClimbUpdates.forEach((id) => {
       if (!pendingTimestamps.has(id)) {
         pendingTimestamps.set(id, Date.now());
       }
@@ -54,12 +54,12 @@ export function usePendingUpdateCleanup({
       });
 
       if (staleIds.length > 0) {
-        console.warn('[QueueContext] Cleaning up orphaned pending updates:', staleIds);
+        console.warn("[QueueContext] Cleaning up orphaned pending updates:", staleIds);
         dispatch({
-          type: 'CLEANUP_PENDING_UPDATES_BATCH',
+          type: "CLEANUP_PENDING_UPDATES_BATCH",
           payload: { correlationIds: staleIds },
         });
-        staleIds.forEach(id => pendingTimestamps.delete(id));
+        staleIds.forEach((id) => pendingTimestamps.delete(id));
       }
     }, 2000);
 

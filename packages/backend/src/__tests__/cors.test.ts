@@ -1,18 +1,18 @@
-import { execFileSync } from 'node:child_process';
-import { describe, it, expect, beforeEach, vi } from 'vitest';
+import { execFileSync } from "node:child_process";
+import { describe, it, expect, beforeEach, vi } from "vite-plus/test";
 
-vi.mock('node:child_process', () => ({
+vi.mock("node:child_process", () => ({
   execFileSync: vi.fn(),
 }));
 
-import { initCors, isOriginAllowed, applyCorsHeaders, getAllowedOrigins } from '../handlers/cors';
+import { initCors, isOriginAllowed, applyCorsHeaders, getAllowedOrigins } from "../handlers/cors";
 
-describe('CORS Handler', () => {
+describe("CORS Handler", () => {
   beforeEach(() => {
     vi.mocked(execFileSync).mockReset();
     vi.mocked(execFileSync).mockImplementation(() => {
-      const error = new Error('tailscale command not found') as NodeJS.ErrnoException;
-      error.code = 'ENOENT';
+      const error = new Error("tailscale command not found") as NodeJS.ErrnoException;
+      error.code = "ENOENT";
       throw error;
     });
     delete process.env.TAILSCALE_HOSTNAME;
@@ -21,170 +21,174 @@ describe('CORS Handler', () => {
     // Reset to a known state before each test.
     // initCors invokes execFileSync (for Tailscale discovery), so clear the
     // call history afterwards so individual tests start with a clean count.
-    initCors('https://boardsesh.com');
+    initCors("https://boardsesh.com");
     vi.mocked(execFileSync).mockClear();
   });
 
-  describe('initCors', () => {
-    it('adds the provided URL to allowed origins', () => {
-      initCors('https://example.com');
-      expect(getAllowedOrigins()).toContain('https://example.com');
+  describe("initCors", () => {
+    it("adds the provided URL to allowed origins", () => {
+      initCors("https://example.com");
+      expect(getAllowedOrigins()).toContain("https://example.com");
     });
 
-    it('adds www. subdomain variant when hostname does not start with www.', () => {
-      initCors('https://boardsesh.com');
+    it("adds www. subdomain variant when hostname does not start with www.", () => {
+      initCors("https://boardsesh.com");
       const origins = getAllowedOrigins();
-      expect(origins).toContain('https://boardsesh.com');
-      expect(origins).toContain('https://www.boardsesh.com');
+      expect(origins).toContain("https://boardsesh.com");
+      expect(origins).toContain("https://www.boardsesh.com");
     });
 
-    it('skips www. variant when hostname already starts with www.', () => {
-      initCors('https://www.boardsesh.com');
+    it("skips www. variant when hostname already starts with www.", () => {
+      initCors("https://www.boardsesh.com");
       const origins = getAllowedOrigins();
-      expect(origins).toContain('https://www.boardsesh.com');
+      expect(origins).toContain("https://www.boardsesh.com");
       // Should NOT have https://www.www.boardsesh.com
-      expect(origins).not.toContain('https://www.www.boardsesh.com');
+      expect(origins).not.toContain("https://www.www.boardsesh.com");
     });
 
-    it('handles invalid URL gracefully without crashing', () => {
-      expect(() => initCors('not-a-valid-url')).not.toThrow();
+    it("handles invalid URL gracefully without crashing", () => {
+      expect(() => initCors("not-a-valid-url")).not.toThrow();
       // The invalid string is still added as-is
-      expect(getAllowedOrigins()).toContain('not-a-valid-url');
+      expect(getAllowedOrigins()).toContain("not-a-valid-url");
     });
 
-    it('adds localhost origins in non-production env', () => {
+    it("adds localhost origins in non-production env", () => {
       // vitest env is 'test', not 'production'
-      initCors('https://boardsesh.com');
+      initCors("https://boardsesh.com");
       const origins = getAllowedOrigins();
-      expect(origins).toContain('http://localhost:3000');
-      expect(origins).toContain('http://127.0.0.1:3000');
-      expect(origins).toContain('http://localhost:3001');
-      expect(origins).toContain('http://127.0.0.1:3001');
+      expect(origins).toContain("http://localhost:3000");
+      expect(origins).toContain("http://127.0.0.1:3000");
+      expect(origins).toContain("http://localhost:3001");
+      expect(origins).toContain("http://127.0.0.1:3001");
     });
 
-    it('parses DEV_ALLOWED_ORIGINS env var (comma-separated, trimmed)', () => {
-      process.env.DEV_ALLOWED_ORIGINS = ' http://192.168.0.1:3000 , http://10.0.0.1:3000 ';
-      initCors('https://boardsesh.com');
+    it("parses DEV_ALLOWED_ORIGINS env var (comma-separated, trimmed)", () => {
+      process.env.DEV_ALLOWED_ORIGINS = " http://192.168.0.1:3000 , http://10.0.0.1:3000 ";
+      initCors("https://boardsesh.com");
       const origins = getAllowedOrigins();
-      expect(origins).toContain('http://192.168.0.1:3000');
-      expect(origins).toContain('http://10.0.0.1:3000');
+      expect(origins).toContain("http://192.168.0.1:3000");
+      expect(origins).toContain("http://10.0.0.1:3000");
       delete process.env.DEV_ALLOWED_ORIGINS;
     });
 
-    it('ignores empty strings from DEV_ALLOWED_ORIGINS', () => {
-      process.env.DEV_ALLOWED_ORIGINS = 'http://192.168.0.1:3000,,, ,';
-      initCors('https://boardsesh.com');
+    it("ignores empty strings from DEV_ALLOWED_ORIGINS", () => {
+      process.env.DEV_ALLOWED_ORIGINS = "http://192.168.0.1:3000,,, ,";
+      initCors("https://boardsesh.com");
       const origins = getAllowedOrigins();
-      expect(origins).toContain('http://192.168.0.1:3000');
+      expect(origins).toContain("http://192.168.0.1:3000");
       // Should not contain empty strings
       expect(origins.every((o) => o.length > 0)).toBe(true);
       delete process.env.DEV_ALLOWED_ORIGINS;
     });
 
-    it('adds Tailscale hostname origins from TAILSCALE_HOSTNAME env var', () => {
-      process.env.TAILSCALE_HOSTNAME = 'My-Laptop.tailnet123.ts.net';
-      initCors('https://boardsesh.com');
+    it("adds Tailscale hostname origins from TAILSCALE_HOSTNAME env var", () => {
+      process.env.TAILSCALE_HOSTNAME = "My-Laptop.tailnet123.ts.net";
+      initCors("https://boardsesh.com");
 
       const origins = getAllowedOrigins();
-      expect(origins).toContain('http://my-laptop.tailnet123.ts.net:3000');
-      expect(origins).toContain('http://my-laptop.tailnet123.ts.net:3001');
+      expect(origins).toContain("http://my-laptop.tailnet123.ts.net:3000");
+      expect(origins).toContain("http://my-laptop.tailnet123.ts.net:3001");
       expect(execFileSync).not.toHaveBeenCalled();
     });
 
-    it('adds Tailscale hostname origins from tailscale status when available', () => {
+    it("adds Tailscale hostname origins from tailscale status when available", () => {
       vi.mocked(execFileSync).mockReturnValue(
-        JSON.stringify({ Self: { DNSName: 'my-mac.tailnet123.ts.net.' } })
+        JSON.stringify({ Self: { DNSName: "my-mac.tailnet123.ts.net." } }),
       );
 
-      initCors('https://boardsesh.com');
+      initCors("https://boardsesh.com");
 
       const origins = getAllowedOrigins();
-      expect(origins).toContain('http://my-mac.tailnet123.ts.net:3000');
-      expect(origins).toContain('http://my-mac.tailnet123.ts.net:3001');
-      expect(execFileSync).toHaveBeenCalledWith('tailscale', ['status', '--json'], expect.any(Object));
+      expect(origins).toContain("http://my-mac.tailnet123.ts.net:3000");
+      expect(origins).toContain("http://my-mac.tailnet123.ts.net:3001");
+      expect(execFileSync).toHaveBeenCalledWith(
+        "tailscale",
+        ["status", "--json"],
+        expect.any(Object),
+      );
     });
 
-    it('fails gracefully when tailscale is unavailable', () => {
-      expect(() => initCors('https://boardsesh.com')).not.toThrow();
+    it("fails gracefully when tailscale is unavailable", () => {
+      expect(() => initCors("https://boardsesh.com")).not.toThrow();
       const origins = getAllowedOrigins();
-      expect(origins).not.toContain('http://my-mac.tailnet123.ts.net:3000');
-      expect(origins).toContain('http://localhost:3000');
+      expect(origins).not.toContain("http://my-mac.tailnet123.ts.net:3000");
+      expect(origins).toContain("http://localhost:3000");
     });
   });
 
-  describe('isOriginAllowed', () => {
+  describe("isOriginAllowed", () => {
     beforeEach(() => {
-      initCors('https://boardsesh.com');
+      initCors("https://boardsesh.com");
     });
 
-    it('returns true for origins in the allowed list', () => {
-      expect(isOriginAllowed('https://boardsesh.com')).toBe(true);
-      expect(isOriginAllowed('https://www.boardsesh.com')).toBe(true);
+    it("returns true for origins in the allowed list", () => {
+      expect(isOriginAllowed("https://boardsesh.com")).toBe(true);
+      expect(isOriginAllowed("https://www.boardsesh.com")).toBe(true);
     });
 
-    it('returns true for Vercel preview deployments matching regex', () => {
+    it("returns true for Vercel preview deployments matching regex", () => {
+      expect(isOriginAllowed("https://boardsesh-abc123-marcodejonghs-projects.vercel.app")).toBe(
+        true,
+      );
+    });
+
+    it("returns true for homelab preview deployments matching regex", () => {
+      expect(isOriginAllowed("https://42.preview.boardsesh.com")).toBe(true);
+      expect(isOriginAllowed("https://123.preview.boardsesh.com")).toBe(true);
+    });
+
+    it("returns false for non-numeric preview subdomains", () => {
+      expect(isOriginAllowed("https://abc.preview.boardsesh.com")).toBe(false);
+      expect(isOriginAllowed("https://pr-5.preview.boardsesh.com")).toBe(false);
+    });
+
+    it("returns false for preview origins with http (not https)", () => {
+      expect(isOriginAllowed("http://42.preview.boardsesh.com")).toBe(false);
+    });
+
+    it("returns false for preview origins with extra path or suffix", () => {
+      expect(isOriginAllowed("https://42.preview.boardsesh.com.evil.com")).toBe(false);
+    });
+
+    it("returns false for origins not in list and not matching regex", () => {
+      expect(isOriginAllowed("https://evil.com")).toBe(false);
+      expect(isOriginAllowed("https://notboardsesh.com")).toBe(false);
+    });
+
+    it("returns false for partial regex matches with wrong prefix", () => {
+      expect(isOriginAllowed("http://boardsesh-abc123-marcodejonghs-projects.vercel.app")).toBe(
+        false,
+      ); // http not https
+    });
+
+    it("returns false for partial regex matches with wrong suffix", () => {
       expect(
-        isOriginAllowed('https://boardsesh-abc123-marcodejonghs-projects.vercel.app'),
-      ).toBe(true);
-    });
-
-    it('returns true for homelab preview deployments matching regex', () => {
-      expect(isOriginAllowed('https://42.preview.boardsesh.com')).toBe(true);
-      expect(isOriginAllowed('https://123.preview.boardsesh.com')).toBe(true);
-    });
-
-    it('returns false for non-numeric preview subdomains', () => {
-      expect(isOriginAllowed('https://abc.preview.boardsesh.com')).toBe(false);
-      expect(isOriginAllowed('https://pr-5.preview.boardsesh.com')).toBe(false);
-    });
-
-    it('returns false for preview origins with http (not https)', () => {
-      expect(isOriginAllowed('http://42.preview.boardsesh.com')).toBe(false);
-    });
-
-    it('returns false for preview origins with extra path or suffix', () => {
-      expect(isOriginAllowed('https://42.preview.boardsesh.com.evil.com')).toBe(false);
-    });
-
-    it('returns false for origins not in list and not matching regex', () => {
-      expect(isOriginAllowed('https://evil.com')).toBe(false);
-      expect(isOriginAllowed('https://notboardsesh.com')).toBe(false);
-    });
-
-    it('returns false for partial regex matches with wrong prefix', () => {
-      expect(
-        isOriginAllowed('http://boardsesh-abc123-marcodejonghs-projects.vercel.app'),
-      ).toBe(false); // http not https
-    });
-
-    it('returns false for partial regex matches with wrong suffix', () => {
-      expect(
-        isOriginAllowed('https://boardsesh-abc123-marcodejonghs-projects.vercel.app.evil.com'),
+        isOriginAllowed("https://boardsesh-abc123-marcodejonghs-projects.vercel.app.evil.com"),
       ).toBe(false);
     });
 
-    it('returns true for localhost origins in non-production', () => {
-      expect(isOriginAllowed('http://localhost:3000')).toBe(true);
-      expect(isOriginAllowed('http://127.0.0.1:3001')).toBe(true);
+    it("returns true for localhost origins in non-production", () => {
+      expect(isOriginAllowed("http://localhost:3000")).toBe(true);
+      expect(isOriginAllowed("http://127.0.0.1:3001")).toBe(true);
     });
 
-    it('returns true for private LAN origins in non-production', () => {
-      expect(isOriginAllowed('http://192.168.0.42:3000')).toBe(true);
-      expect(isOriginAllowed('http://10.0.1.15:3001')).toBe(true);
-      expect(isOriginAllowed('http://172.20.10.3:3000')).toBe(true);
+    it("returns true for private LAN origins in non-production", () => {
+      expect(isOriginAllowed("http://192.168.0.42:3000")).toBe(true);
+      expect(isOriginAllowed("http://10.0.1.15:3001")).toBe(true);
+      expect(isOriginAllowed("http://172.20.10.3:3000")).toBe(true);
     });
 
-    it('returns false for non-dev ports on private LAN origins', () => {
-      expect(isOriginAllowed('http://192.168.0.42:8080')).toBe(false);
+    it("returns false for non-dev ports on private LAN origins", () => {
+      expect(isOriginAllowed("http://192.168.0.42:8080")).toBe(false);
     });
   });
 
-  describe('applyCorsHeaders', () => {
+  describe("applyCorsHeaders", () => {
     function createMockReq(method: string, origin?: string) {
       return {
         method,
         headers: origin ? { origin } : {},
-      } as unknown as import('http').IncomingMessage;
+      } as unknown as import("http").IncomingMessage;
     }
 
     function createMockRes() {
@@ -196,52 +200,67 @@ describe('CORS Handler', () => {
         writeHead: vi.fn(),
         end: vi.fn(),
         _headers: headers,
-      } as unknown as import('http').ServerResponse & { _headers: Record<string, string> };
+      } as unknown as import("http").ServerResponse & { _headers: Record<string, string> };
     }
 
-    it('sets Access-Control-Allow-Origin to request origin when allowed', () => {
-      const req = createMockReq('GET', 'https://boardsesh.com');
+    it("sets Access-Control-Allow-Origin to request origin when allowed", () => {
+      const req = createMockReq("GET", "https://boardsesh.com");
       const res = createMockRes();
       applyCorsHeaders(req, res);
 
-      expect(res.setHeader).toHaveBeenCalledWith('Access-Control-Allow-Origin', 'https://boardsesh.com');
+      expect(res.setHeader).toHaveBeenCalledWith(
+        "Access-Control-Allow-Origin",
+        "https://boardsesh.com",
+      );
     });
 
-    it('sets Access-Control-Allow-Credentials to true when origin is allowed', () => {
-      const req = createMockReq('GET', 'https://boardsesh.com');
+    it("sets Access-Control-Allow-Credentials to true when origin is allowed", () => {
+      const req = createMockReq("GET", "https://boardsesh.com");
       const res = createMockRes();
       applyCorsHeaders(req, res);
 
-      expect(res.setHeader).toHaveBeenCalledWith('Access-Control-Allow-Credentials', 'true');
+      expect(res.setHeader).toHaveBeenCalledWith("Access-Control-Allow-Credentials", "true");
     });
 
-    it('does NOT set origin-specific headers when origin is not allowed', () => {
-      const req = createMockReq('GET', 'https://evil.com');
+    it("does NOT set origin-specific headers when origin is not allowed", () => {
+      const req = createMockReq("GET", "https://evil.com");
       const res = createMockRes();
       applyCorsHeaders(req, res);
 
-      expect(res.setHeader).not.toHaveBeenCalledWith('Access-Control-Allow-Origin', expect.anything());
-      expect(res.setHeader).not.toHaveBeenCalledWith('Access-Control-Allow-Credentials', expect.anything());
+      expect(res.setHeader).not.toHaveBeenCalledWith(
+        "Access-Control-Allow-Origin",
+        expect.anything(),
+      );
+      expect(res.setHeader).not.toHaveBeenCalledWith(
+        "Access-Control-Allow-Credentials",
+        expect.anything(),
+      );
     });
 
-    it('always sets Access-Control-Allow-Methods', () => {
-      const req = createMockReq('GET', 'https://evil.com');
+    it("always sets Access-Control-Allow-Methods", () => {
+      const req = createMockReq("GET", "https://evil.com");
       const res = createMockRes();
       applyCorsHeaders(req, res);
 
-      expect(res.setHeader).toHaveBeenCalledWith('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
+      expect(res.setHeader).toHaveBeenCalledWith(
+        "Access-Control-Allow-Methods",
+        "GET, POST, OPTIONS",
+      );
     });
 
-    it('always sets Access-Control-Allow-Headers', () => {
-      const req = createMockReq('GET');
+    it("always sets Access-Control-Allow-Headers", () => {
+      const req = createMockReq("GET");
       const res = createMockRes();
       applyCorsHeaders(req, res);
 
-      expect(res.setHeader).toHaveBeenCalledWith('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+      expect(res.setHeader).toHaveBeenCalledWith(
+        "Access-Control-Allow-Headers",
+        "Content-Type, Authorization",
+      );
     });
 
-    it('returns false and sends 200 for OPTIONS requests', () => {
-      const req = createMockReq('OPTIONS', 'https://boardsesh.com');
+    it("returns false and sends 200 for OPTIONS requests", () => {
+      const req = createMockReq("OPTIONS", "https://boardsesh.com");
       const res = createMockRes();
       const result = applyCorsHeaders(req, res);
 
@@ -250,8 +269,8 @@ describe('CORS Handler', () => {
       expect(res.end).toHaveBeenCalled();
     });
 
-    it('returns true for non-OPTIONS requests', () => {
-      const req = createMockReq('GET', 'https://boardsesh.com');
+    it("returns true for non-OPTIONS requests", () => {
+      const req = createMockReq("GET", "https://boardsesh.com");
       const res = createMockRes();
       const result = applyCorsHeaders(req, res);
 
@@ -260,8 +279,8 @@ describe('CORS Handler', () => {
       expect(res.end).not.toHaveBeenCalled();
     });
 
-    it('returns true for POST requests', () => {
-      const req = createMockReq('POST', 'https://boardsesh.com');
+    it("returns true for POST requests", () => {
+      const req = createMockReq("POST", "https://boardsesh.com");
       const res = createMockRes();
       const result = applyCorsHeaders(req, res);
 
@@ -269,12 +288,12 @@ describe('CORS Handler', () => {
     });
   });
 
-  describe('getAllowedOrigins', () => {
-    it('returns the current allowed origins list', () => {
-      initCors('https://test.com');
+  describe("getAllowedOrigins", () => {
+    it("returns the current allowed origins list", () => {
+      initCors("https://test.com");
       const origins = getAllowedOrigins();
       expect(Array.isArray(origins)).toBe(true);
-      expect(origins).toContain('https://test.com');
+      expect(origins).toContain("https://test.com");
     });
   });
 });

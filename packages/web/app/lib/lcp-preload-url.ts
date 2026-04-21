@@ -1,5 +1,5 @@
-import { getBoardDetailsForPlaylist } from './board-config-for-playlist';
-import { getImageUrl } from '@/app/components/board-renderer/util';
+import { getBoardDetailsForPlaylist } from "./board-config-for-playlist";
+import { getImageUrl } from "@/app/components/board-renderer/util";
 
 /**
  * Compute the thumbnail URL for the first playlist's board image.

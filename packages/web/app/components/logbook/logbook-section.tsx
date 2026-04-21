@@ -1,12 +1,12 @@
-'use client';
+"use client";
 
-import React, { useMemo } from 'react';
-import Typography from '@mui/material/Typography';
-import BookOutlined from '@mui/icons-material/BookOutlined';
-import { LogbookView } from './logbook-view';
-import { Climb } from '@/app/lib/types';
-import { useBoardProvider } from '../board-provider/board-provider-context';
-import dayjs from 'dayjs';
+import React, { useMemo } from "react";
+import Typography from "@mui/material/Typography";
+import BookOutlined from "@mui/icons-material/BookOutlined";
+import { LogbookView } from "./logbook-view";
+import { Climb } from "@/app/lib/types";
+import { useBoardProvider } from "../board-provider/board-provider-context";
+import dayjs from "dayjs";
 
 interface LogbookSectionProps {
   climb: Climb;
@@ -33,7 +33,7 @@ export function useLogbookSummary(climbUuid: string): LogbookSummary | null {
     const totalAttempts = climbAscents.reduce((sum, ascent) => sum + (ascent.tries || 1), 0);
 
     const sessionDates = new Set(
-      climbAscents.map((ascent) => dayjs(ascent.climbed_at).format('YYYY-MM-DD'))
+      climbAscents.map((ascent) => dayjs(ascent.climbed_at).format("YYYY-MM-DD")),
     );
     const sessionCount = sessionDates.size;
 
@@ -54,8 +54,13 @@ export const LogbookSection: React.FC<LogbookSectionProps> = ({ climb }) => {
 
   if (!summary) {
     return (
-      <Typography variant="body2" component="span" color="text.secondary" sx={{ display: 'block', textAlign: 'center', py: 2 }}>
-        <BookOutlined sx={{ mr: 1, verticalAlign: 'middle' }} />
+      <Typography
+        variant="body2"
+        component="span"
+        color="text.secondary"
+        sx={{ display: "block", textAlign: "center", py: 2 }}
+      >
+        <BookOutlined sx={{ mr: 1, verticalAlign: "middle" }} />
         No ascents logged for this climb
       </Typography>
     );

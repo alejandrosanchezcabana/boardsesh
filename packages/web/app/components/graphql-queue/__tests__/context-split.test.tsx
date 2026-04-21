@@ -1,9 +1,9 @@
 // @vitest-environment jsdom
-import { describe, it, expect } from 'vitest';
-import React, { createContext, useContext, useRef, useState } from 'react';
-import { renderHook, act } from '@testing-library/react';
-import type { Climb, SearchRequestPagination, ParsedBoardRouteParameters } from '@/app/lib/types';
-import type { ClimbQueueItem } from '../../queue-control/types';
+import { describe, it, expect } from "vite-plus/test";
+import React, { createContext, useContext, useRef, useState } from "react";
+import { renderHook, act } from "@testing-library/react";
+import type { Climb, SearchRequestPagination, ParsedBoardRouteParameters } from "@/app/lib/types";
+import type { ClimbQueueItem } from "../../queue-control/types";
 
 // Re-define the types locally to avoid importing from QueueContext (which pulls in the full dep tree)
 interface CurrentClimbDataType {
@@ -56,7 +56,7 @@ const SessionContext = createContext<SessionDataType | undefined>(undefined);
 // Standalone hooks (same pattern as the real ones)
 function useCurrentClimb(): CurrentClimbDataType {
   const ctx = useContext(CurrentClimbContext);
-  if (!ctx) throw new Error('missing CurrentClimbContext');
+  if (!ctx) throw new Error("missing CurrentClimbContext");
   return ctx;
 }
 function useCurrentClimbUuid(): string | null {
@@ -64,17 +64,17 @@ function useCurrentClimbUuid(): string | null {
 }
 function useQueueList(): QueueListDataType {
   const ctx = useContext(QueueListContext);
-  if (!ctx) throw new Error('missing QueueListContext');
+  if (!ctx) throw new Error("missing QueueListContext");
   return ctx;
 }
 function useSearchData(): SearchDataType {
   const ctx = useContext(SearchContext);
-  if (!ctx) throw new Error('missing SearchContext');
+  if (!ctx) throw new Error("missing SearchContext");
   return ctx;
 }
 function useSessionData(): SessionDataType {
   const ctx = useContext(SessionContext);
-  if (!ctx) throw new Error('missing SessionContext');
+  if (!ctx) throw new Error("missing SessionContext");
   return ctx;
 }
 
@@ -84,16 +84,16 @@ function useSessionData(): SessionDataType {
 
 function makeClimb(overrides: Partial<Climb> = {}): Climb {
   return {
-    uuid: 'climb-1',
-    setter_username: 'tester',
-    name: 'Test Climb',
-    frames: 'p1r12',
+    uuid: "climb-1",
+    setter_username: "tester",
+    name: "Test Climb",
+    frames: "p1r12",
     angle: 40,
     ascensionist_count: 10,
-    difficulty: '5',
-    quality_average: '3.5',
+    difficulty: "5",
+    quality_average: "3.5",
     stars: 4,
-    difficulty_error: '0.5',
+    difficulty_error: "0.5",
     benchmark_difficulty: null,
     ...overrides,
   };
@@ -102,14 +102,16 @@ function makeClimb(overrides: Partial<Climb> = {}): Climb {
 function makeClimbQueueItem(overrides: Partial<ClimbQueueItem> = {}): ClimbQueueItem {
   return {
     climb: makeClimb(),
-    uuid: 'queue-item-1',
+    uuid: "queue-item-1",
     ...overrides,
   };
 }
 
-function makeParsedParams(overrides: Partial<ParsedBoardRouteParameters> = {}): ParsedBoardRouteParameters {
+function makeParsedParams(
+  overrides: Partial<ParsedBoardRouteParameters> = {},
+): ParsedBoardRouteParameters {
   return {
-    board_name: 'kilter',
+    board_name: "kilter",
     layout_id: 1,
     size_id: 1,
     set_ids: [1],
@@ -118,20 +120,22 @@ function makeParsedParams(overrides: Partial<ParsedBoardRouteParameters> = {}): 
   };
 }
 
-function makeSearchParams(overrides: Partial<SearchRequestPagination> = {}): SearchRequestPagination {
+function makeSearchParams(
+  overrides: Partial<SearchRequestPagination> = {},
+): SearchRequestPagination {
   return {
     gradeAccuracy: 1,
     maxGrade: 30,
     minAscents: 0,
     minGrade: 0,
     minRating: 0,
-    sortBy: 'popular',
-    sortOrder: 'desc',
-    name: '',
+    sortBy: "popular",
+    sortOrder: "desc",
+    name: "",
     onlyClassics: false,
     onlyTallClimbs: false,
     settername: [],
-    setternameSuggestion: '',
+    setternameSuggestion: "",
     holdsFilter: {},
     hideAttempted: false,
     hideCompleted: false,
@@ -184,7 +188,7 @@ function makeSessionData(overrides: Partial<SessionDataType> = {}): SessionDataT
     sessionSummaryBoardType: null,
     sessionSummaryHealthKitWorkoutId: null,
     sessionGoal: null,
-    connectionState: 'idle',
+    connectionState: "idle",
     canMutate: true,
     isDisconnected: false,
     users: [],
@@ -228,9 +232,7 @@ function createTestWrapper() {
         <CurrentClimbUuidContext.Provider value={currentClimbUuid}>
           <QueueListContext.Provider value={queueList}>
             <SearchContext.Provider value={search}>
-              <SessionContext.Provider value={session}>
-                {children}
-              </SessionContext.Provider>
+              <SessionContext.Provider value={session}>{children}</SessionContext.Provider>
             </SearchContext.Provider>
           </QueueListContext.Provider>
         </CurrentClimbUuidContext.Provider>
@@ -265,8 +267,8 @@ function useWithRenderCount<T>(useHook: () => T) {
 // Tests
 // ---------------------------------------------------------------------------
 
-describe('Fine-grained context split isolation', () => {
-  it('useCurrentClimb does not re-render when queue changes', () => {
+describe("Fine-grained context split isolation", () => {
+  it("useCurrentClimb does not re-render when queue changes", () => {
     const { Wrapper, update } = createTestWrapper();
 
     const { result } = renderHook(() => useWithRenderCount(useCurrentClimb), {
@@ -278,15 +280,15 @@ describe('Fine-grained context split isolation', () => {
     // Update queue list context -- should NOT trigger a re-render for useCurrentClimb
     update.queueList({
       queue: [
-        makeClimbQueueItem({ uuid: 'new-item-1' }),
-        makeClimbQueueItem({ uuid: 'new-item-2' }),
+        makeClimbQueueItem({ uuid: "new-item-1" }),
+        makeClimbQueueItem({ uuid: "new-item-2" }),
       ],
     });
 
     expect(result.current.renderCount.current).toBe(initialRenderCount);
   });
 
-  it('useQueueList does not re-render when currentClimb changes', () => {
+  it("useQueueList does not re-render when currentClimb changes", () => {
     const { Wrapper, update } = createTestWrapper();
 
     const { result } = renderHook(() => useWithRenderCount(useQueueList), {
@@ -299,17 +301,17 @@ describe('Fine-grained context split isolation', () => {
     update.currentClimb(
       makeCurrentClimbData({
         currentClimbQueueItem: makeClimbQueueItem({
-          uuid: 'different-item',
-          climb: makeClimb({ uuid: 'different-climb', name: 'Different Climb' }),
+          uuid: "different-item",
+          climb: makeClimb({ uuid: "different-climb", name: "Different Climb" }),
         }),
-        currentClimb: makeClimb({ uuid: 'different-climb', name: 'Different Climb' }),
+        currentClimb: makeClimb({ uuid: "different-climb", name: "Different Climb" }),
       }),
     );
 
     expect(result.current.renderCount.current).toBe(initialRenderCount);
   });
 
-  it('useSearchData does not re-render when currentClimb or queue changes', () => {
+  it("useSearchData does not re-render when currentClimb or queue changes", () => {
     const { Wrapper, update } = createTestWrapper();
 
     const { result } = renderHook(() => useWithRenderCount(useSearchData), {
@@ -321,19 +323,19 @@ describe('Fine-grained context split isolation', () => {
     // Update current climb context
     update.currentClimb(
       makeCurrentClimbData({
-        currentClimbQueueItem: makeClimbQueueItem({ uuid: 'changed' }),
+        currentClimbQueueItem: makeClimbQueueItem({ uuid: "changed" }),
       }),
     );
 
     // Update queue list context
     update.queueList({
-      queue: [makeClimbQueueItem({ uuid: 'q1' }), makeClimbQueueItem({ uuid: 'q2' })],
+      queue: [makeClimbQueueItem({ uuid: "q1" }), makeClimbQueueItem({ uuid: "q2" })],
     });
 
     expect(result.current.renderCount.current).toBe(initialRenderCount);
   });
 
-  it('useSessionData does not re-render when currentClimb or queue changes', () => {
+  it("useSessionData does not re-render when currentClimb or queue changes", () => {
     const { Wrapper, update } = createTestWrapper();
 
     const { result } = renderHook(() => useWithRenderCount(useSessionData), {
@@ -345,7 +347,7 @@ describe('Fine-grained context split isolation', () => {
     // Update current climb context
     update.currentClimb(
       makeCurrentClimbData({
-        currentClimbQueueItem: makeClimbQueueItem({ uuid: 'x' }),
+        currentClimbQueueItem: makeClimbQueueItem({ uuid: "x" }),
       }),
     );
 
@@ -355,7 +357,7 @@ describe('Fine-grained context split isolation', () => {
     expect(result.current.renderCount.current).toBe(initialRenderCount);
   });
 
-  it('useCurrentClimb re-renders when its own data changes', () => {
+  it("useCurrentClimb re-renders when its own data changes", () => {
     const { Wrapper, update } = createTestWrapper();
 
     const { result } = renderHook(() => useWithRenderCount(useCurrentClimb), {
@@ -364,8 +366,8 @@ describe('Fine-grained context split isolation', () => {
 
     const initialRenderCount = result.current.renderCount.current;
 
-    const newClimb = makeClimb({ uuid: 'updated-climb', name: 'Updated Climb' });
-    const newItem = makeClimbQueueItem({ uuid: 'updated-item', climb: newClimb });
+    const newClimb = makeClimb({ uuid: "updated-climb", name: "Updated Climb" });
+    const newItem = makeClimbQueueItem({ uuid: "updated-item", climb: newClimb });
 
     update.currentClimb({
       currentClimbQueueItem: newItem,
@@ -375,11 +377,11 @@ describe('Fine-grained context split isolation', () => {
     // Should have re-rendered
     expect(result.current.renderCount.current).toBeGreaterThan(initialRenderCount);
     // Should return the updated values
-    expect(result.current.data.currentClimb?.uuid).toBe('updated-climb');
-    expect(result.current.data.currentClimbQueueItem?.uuid).toBe('updated-item');
+    expect(result.current.data.currentClimb?.uuid).toBe("updated-climb");
+    expect(result.current.data.currentClimbQueueItem?.uuid).toBe("updated-item");
   });
 
-  it('useQueueList re-renders when its own data changes', () => {
+  it("useQueueList re-renders when its own data changes", () => {
     const { Wrapper, update } = createTestWrapper();
 
     const { result } = renderHook(() => useWithRenderCount(useQueueList), {
@@ -390,9 +392,9 @@ describe('Fine-grained context split isolation', () => {
 
     update.queueList({
       queue: [
-        makeClimbQueueItem({ uuid: 'a' }),
-        makeClimbQueueItem({ uuid: 'b' }),
-        makeClimbQueueItem({ uuid: 'c' }),
+        makeClimbQueueItem({ uuid: "a" }),
+        makeClimbQueueItem({ uuid: "b" }),
+        makeClimbQueueItem({ uuid: "c" }),
       ],
     });
 
@@ -400,7 +402,7 @@ describe('Fine-grained context split isolation', () => {
     expect(result.current.data.queue).toHaveLength(3);
   });
 
-  it('useSearchData re-renders when its own data changes', () => {
+  it("useSearchData re-renders when its own data changes", () => {
     const { Wrapper, update } = createTestWrapper();
 
     const { result } = renderHook(() => useWithRenderCount(useSearchData), {
@@ -412,7 +414,7 @@ describe('Fine-grained context split isolation', () => {
     update.search(
       makeSearchData({
         isFetchingClimbs: true,
-        climbSearchResults: [makeClimb({ uuid: 'result-1' })],
+        climbSearchResults: [makeClimb({ uuid: "result-1" })],
       }),
     );
 
@@ -421,7 +423,7 @@ describe('Fine-grained context split isolation', () => {
     expect(result.current.data.climbSearchResults).toHaveLength(1);
   });
 
-  it('useSessionData re-renders when its own data changes', () => {
+  it("useSessionData re-renders when its own data changes", () => {
     const { Wrapper, update } = createTestWrapper();
 
     const { result } = renderHook(() => useWithRenderCount(useSessionData), {
@@ -433,17 +435,17 @@ describe('Fine-grained context split isolation', () => {
     update.session(
       makeSessionData({
         isSessionActive: true,
-        sessionId: 'session-123',
-        connectionState: 'connected',
+        sessionId: "session-123",
+        connectionState: "connected",
       }),
     );
 
     expect(result.current.renderCount.current).toBeGreaterThan(initialRenderCount);
     expect(result.current.data.isSessionActive).toBe(true);
-    expect(result.current.data.sessionId).toBe('session-123');
+    expect(result.current.data.sessionId).toBe("session-123");
   });
 
-  it('hooks return correct initial data', () => {
+  it("hooks return correct initial data", () => {
     const { Wrapper } = createTestWrapper();
 
     const { result: currentClimbResult } = renderHook(() => useCurrentClimb(), {
@@ -461,24 +463,24 @@ describe('Fine-grained context split isolation', () => {
 
     // CurrentClimb
     expect(currentClimbResult.current.currentClimbQueueItem).not.toBeNull();
-    expect(currentClimbResult.current.currentClimb?.uuid).toBe('climb-1');
+    expect(currentClimbResult.current.currentClimb?.uuid).toBe("climb-1");
 
     // QueueList
     expect(queueListResult.current.queue).toHaveLength(1);
-    expect(queueListResult.current.queue[0].uuid).toBe('queue-item-1');
+    expect(queueListResult.current.queue[0].uuid).toBe("queue-item-1");
 
     // Search
     expect(searchResult.current.climbSearchResults).toBeNull();
     expect(searchResult.current.isFetchingClimbs).toBe(false);
-    expect(searchResult.current.parsedParams.board_name).toBe('kilter');
+    expect(searchResult.current.parsedParams.board_name).toBe("kilter");
 
     // Session
     expect(sessionResult.current.isSessionActive).toBe(false);
-    expect(sessionResult.current.connectionState).toBe('idle');
+    expect(sessionResult.current.connectionState).toBe("idle");
     expect(sessionResult.current.users).toHaveLength(0);
   });
 
-  it('CurrentClimbUuidContext does not re-render when CurrentClimbContext changes but UUID stays the same', () => {
+  it("CurrentClimbUuidContext does not re-render when CurrentClimbContext changes but UUID stays the same", () => {
     // Simulates the real provider pattern: CurrentClimbContext holds the full
     // climb object and changes whenever any field on it changes, while
     // CurrentClimbUuidContext holds only the UUID string. When the climb
@@ -505,10 +507,9 @@ describe('Fine-grained context split isolation', () => {
     let setCurrentClimb: React.Dispatch<React.SetStateAction<CurrentClimbDataType>>;
 
     function TestTree({ children }: { children: React.ReactNode }) {
-      const [currentClimb, _setCurrentClimb] = useState<CurrentClimbDataType>(
-        makeCurrentClimbData(),
-      );
-      const [currentClimbUuid] = useState<string | null>('queue-item-1');
+      const [currentClimb, _setCurrentClimb] =
+        useState<CurrentClimbDataType>(makeCurrentClimbData());
+      const [currentClimbUuid] = useState<string | null>("queue-item-1");
 
       setCurrentClimb = _setCurrentClimb;
 
@@ -532,10 +533,10 @@ describe('Fine-grained context split isolation', () => {
       setCurrentClimb(
         makeCurrentClimbData({
           currentClimbQueueItem: makeClimbQueueItem({
-            uuid: 'queue-item-1', // same UUID
-            climb: makeClimb({ uuid: 'climb-1', name: 'Renamed Climb', quality_average: '5' }),
+            uuid: "queue-item-1", // same UUID
+            climb: makeClimb({ uuid: "climb-1", name: "Renamed Climb", quality_average: "5" }),
           }),
-          currentClimb: makeClimb({ uuid: 'climb-1', name: 'Renamed Climb', quality_average: '5' }),
+          currentClimb: makeClimb({ uuid: "climb-1", name: "Renamed Climb", quality_average: "5" }),
         }),
       ),
     );
@@ -546,7 +547,7 @@ describe('Fine-grained context split isolation', () => {
     expect(counts.currentClimbUuid).toBe(initialCounts.currentClimbUuid);
   });
 
-  it('CurrentClimbUuidContext re-renders only when UUID changes', () => {
+  it("CurrentClimbUuidContext re-renders only when UUID changes", () => {
     const counts = {
       currentClimbUuid: 0,
     };
@@ -560,7 +561,7 @@ describe('Fine-grained context split isolation', () => {
     let setCurrentClimbUuid: React.Dispatch<React.SetStateAction<string | null>>;
 
     function TestTree({ children }: { children: React.ReactNode }) {
-      const [currentClimbUuid, _setCurrentClimbUuid] = useState<string | null>('queue-item-1');
+      const [currentClimbUuid, _setCurrentClimbUuid] = useState<string | null>("queue-item-1");
       setCurrentClimbUuid = _setCurrentClimbUuid;
 
       return (
@@ -576,11 +577,11 @@ describe('Fine-grained context split isolation', () => {
     const initialCount = counts.currentClimbUuid;
 
     // Set to the SAME UUID — should NOT re-render (React skips equal primitives)
-    act(() => setCurrentClimbUuid('queue-item-1'));
+    act(() => setCurrentClimbUuid("queue-item-1"));
     expect(counts.currentClimbUuid).toBe(initialCount);
 
     // Set to a DIFFERENT UUID — SHOULD re-render
-    act(() => setCurrentClimbUuid('queue-item-2'));
+    act(() => setCurrentClimbUuid("queue-item-2"));
     expect(counts.currentClimbUuid).toBeGreaterThan(initialCount);
 
     const afterChangeCount = counts.currentClimbUuid;
@@ -590,7 +591,7 @@ describe('Fine-grained context split isolation', () => {
     expect(counts.currentClimbUuid).toBeGreaterThan(afterChangeCount);
   });
 
-  it('changing one context does not trigger re-renders in any other context subscriber', () => {
+  it("changing one context does not trigger re-renders in any other context subscriber", () => {
     // To test cross-context isolation we need multiple independent consumer
     // components sharing a single provider tree. We achieve this by rendering
     // a custom component that uses React.memo children, each subscribing to
@@ -636,7 +637,8 @@ describe('Fine-grained context split isolation', () => {
     let setSession: React.Dispatch<React.SetStateAction<SessionDataType>>;
 
     function TestTree() {
-      const [currentClimb, _setCurrentClimb] = useState<CurrentClimbDataType>(makeCurrentClimbData());
+      const [currentClimb, _setCurrentClimb] =
+        useState<CurrentClimbDataType>(makeCurrentClimbData());
       const [queueList, _setQueueList] = useState<QueueListDataType>(makeQueueListData());
       const [search, _setSearch] = useState<SearchDataType>(makeSearchData());
       const [session, _setSession] = useState<SessionDataType>(makeSessionData());
@@ -669,7 +671,7 @@ describe('Fine-grained context split isolation', () => {
     const initialCounts = { ...counts };
 
     // Update ONLY session context
-    act(() => setSession(makeSessionData({ isSessionActive: true, sessionId: 'ses-1' })));
+    act(() => setSession(makeSessionData({ isSessionActive: true, sessionId: "ses-1" })));
 
     // Only session consumer should have re-rendered
     expect(counts.currentClimb).toBe(initialCounts.currentClimb);
@@ -696,7 +698,7 @@ describe('Fine-grained context split isolation', () => {
     act(() =>
       setCurrentClimb(
         makeCurrentClimbData({
-          currentClimbQueueItem: makeClimbQueueItem({ uuid: 'new-cc' }),
+          currentClimbQueueItem: makeClimbQueueItem({ uuid: "new-cc" }),
         }),
       ),
     );
@@ -710,7 +712,7 @@ describe('Fine-grained context split isolation', () => {
     const afterCurrentClimbCounts = { ...counts };
 
     // Update ONLY queueList context
-    act(() => setQueueList({ queue: [makeClimbQueueItem({ uuid: 'ql-new' })] }));
+    act(() => setQueueList({ queue: [makeClimbQueueItem({ uuid: "ql-new" })] }));
 
     expect(counts.currentClimb).toBe(afterCurrentClimbCounts.currentClimb);
     expect(counts.queueList).toBeGreaterThan(afterCurrentClimbCounts.queueList);

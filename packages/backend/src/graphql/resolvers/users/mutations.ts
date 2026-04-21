@@ -1,10 +1,20 @@
-import { eq, and } from 'drizzle-orm';
-import type { ConnectionContext, UserProfile, AuroraCredentialStatus, DeleteAccountInput } from '@boardsesh/shared-schema';
-import { db } from '../../../db/client';
-import * as dbSchema from '@boardsesh/db/schema';
-import { requireAuthenticated, validateInput } from '../shared/helpers';
-import { UpdateProfileInputSchema, SaveAuroraCredentialInputSchema, BoardNameSchema, DeleteAccountInputSchema } from '../../../validation/schemas';
-import { encrypt } from '@boardsesh/crypto';
+import { eq, and } from "drizzle-orm";
+import type {
+  ConnectionContext,
+  UserProfile,
+  AuroraCredentialStatus,
+  DeleteAccountInput,
+} from "@boardsesh/shared-schema";
+import { db } from "../../../db/client";
+import * as dbSchema from "@boardsesh/db/schema";
+import { requireAuthenticated, validateInput } from "../shared/helpers";
+import {
+  UpdateProfileInputSchema,
+  SaveAuroraCredentialInputSchema,
+  BoardNameSchema,
+  DeleteAccountInputSchema,
+} from "../../../validation/schemas";
+import { encrypt } from "@boardsesh/crypto";
 
 export const userMutations = {
   /**
@@ -13,10 +23,10 @@ export const userMutations = {
   updateProfile: async (
     _: unknown,
     { input }: { input: { displayName?: string; avatarUrl?: string } },
-    ctx: ConnectionContext
+    ctx: ConnectionContext,
   ): Promise<UserProfile> => {
     requireAuthenticated(ctx);
-    validateInput(UpdateProfileInputSchema, input, 'input');
+    validateInput(UpdateProfileInputSchema, input, "input");
 
     const userId = ctx.userId!;
 
@@ -75,12 +85,12 @@ export const userMutations = {
   saveAuroraCredential: async (
     _: unknown,
     { input }: { input: { boardType: string; username: string; password: string } },
-    ctx: ConnectionContext
+    ctx: ConnectionContext,
   ): Promise<AuroraCredentialStatus> => {
     requireAuthenticated(ctx);
 
     // Validate input
-    validateInput(SaveAuroraCredentialInputSchema, input, 'input');
+    validateInput(SaveAuroraCredentialInputSchema, input, "input");
 
     const userId = ctx.userId!;
 
@@ -94,8 +104,8 @@ export const userMutations = {
       .where(
         and(
           eq(dbSchema.auroraCredentials.userId, userId),
-          eq(dbSchema.auroraCredentials.boardType, input.boardType)
-        )
+          eq(dbSchema.auroraCredentials.boardType, input.boardType),
+        ),
       )
       .limit(1);
 
@@ -117,8 +127,8 @@ export const userMutations = {
         .where(
           and(
             eq(dbSchema.auroraCredentials.userId, userId),
-            eq(dbSchema.auroraCredentials.boardType, input.boardType)
-          )
+            eq(dbSchema.auroraCredentials.boardType, input.boardType),
+          ),
         );
     }
 
@@ -135,18 +145,18 @@ export const userMutations = {
   deleteAuroraCredential: async (
     _: unknown,
     { boardType }: { boardType: string },
-    ctx: ConnectionContext
+    ctx: ConnectionContext,
   ): Promise<boolean> => {
     requireAuthenticated(ctx);
-    validateInput(BoardNameSchema, boardType, 'boardType');
+    validateInput(BoardNameSchema, boardType, "boardType");
 
     await db
       .delete(dbSchema.auroraCredentials)
       .where(
         and(
           eq(dbSchema.auroraCredentials.userId, ctx.userId!),
-          eq(dbSchema.auroraCredentials.boardType, boardType)
-        )
+          eq(dbSchema.auroraCredentials.boardType, boardType),
+        ),
       );
 
     return true;
@@ -161,10 +171,10 @@ export const userMutations = {
   deleteAccount: async (
     _: unknown,
     { input }: { input: DeleteAccountInput },
-    ctx: ConnectionContext
+    ctx: ConnectionContext,
   ): Promise<boolean> => {
     requireAuthenticated(ctx);
-    validateInput(DeleteAccountInputSchema, input, 'input');
+    validateInput(DeleteAccountInputSchema, input, "input");
 
     const userId = ctx.userId!;
 
@@ -173,10 +183,7 @@ export const userMutations = {
       await tx
         .delete(dbSchema.boardClimbs)
         .where(
-          and(
-            eq(dbSchema.boardClimbs.userId, userId),
-            eq(dbSchema.boardClimbs.isDraft, true)
-          )
+          and(eq(dbSchema.boardClimbs.userId, userId), eq(dbSchema.boardClimbs.isDraft, true)),
         );
 
       // Optionally remove setter name from published climbs
@@ -185,10 +192,7 @@ export const userMutations = {
           .update(dbSchema.boardClimbs)
           .set({ setterUsername: null })
           .where(
-            and(
-              eq(dbSchema.boardClimbs.userId, userId),
-              eq(dbSchema.boardClimbs.isDraft, false)
-            )
+            and(eq(dbSchema.boardClimbs.userId, userId), eq(dbSchema.boardClimbs.isDraft, false)),
           );
       }
 
@@ -196,9 +200,7 @@ export const userMutations = {
       // will be cleaned up automatically by the database.
       // boardClimbs.userId has onDelete: 'set null', so published climbs
       // will have their userId set to null (preserved).
-      await tx
-        .delete(dbSchema.users)
-        .where(eq(dbSchema.users.id, userId));
+      await tx.delete(dbSchema.users).where(eq(dbSchema.users.id, userId));
     });
 
     return true;

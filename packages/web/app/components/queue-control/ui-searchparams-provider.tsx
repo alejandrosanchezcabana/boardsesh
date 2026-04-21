@@ -1,10 +1,10 @@
-'use client';
-import React, { createContext, useContext, useState } from 'react';
-import { SearchRequestPagination } from '@/lib/types';
-import { useDebouncedCallback } from 'use-debounce';
-import { track } from '@vercel/analytics';
-import { useQueueActions, useSearchData } from '../graphql-queue';
-import { DEFAULT_SEARCH_PARAMS } from '@/app/lib/url-utils';
+"use client";
+import React, { createContext, useContext, useState } from "react";
+import { SearchRequestPagination } from "@/lib/types";
+import { useDebouncedCallback } from "use-debounce";
+import { track } from "@vercel/analytics";
+import { useQueueActions, useSearchData } from "../graphql-queue";
+import { DEFAULT_SEARCH_PARAMS } from "@/app/lib/url-utils";
 
 interface UISearchParamsContextType {
   uiSearchParams: SearchRequestPagination;
@@ -29,26 +29,26 @@ export const UISearchParamsProvider: React.FC<{ children: React.ReactNode }> = (
   const debouncedUpdate = useDebouncedCallback(() => {
     // Track search performed
     const activeFilters = [];
-    if (uiSearchParams.name) activeFilters.push('climbName');
-    if (uiSearchParams.minGrade || uiSearchParams.maxGrade) activeFilters.push('gradeRange');
-    if (uiSearchParams.minAscents) activeFilters.push('minAscents');
-    if (uiSearchParams.minRating) activeFilters.push('minRating');
-    if (uiSearchParams.onlyClassics) activeFilters.push('classics');
-    if (uiSearchParams.gradeAccuracy) activeFilters.push('gradeAccuracy');
-    if (uiSearchParams.settername.length > 0) activeFilters.push('setter');
+    if (uiSearchParams.name) activeFilters.push("climbName");
+    if (uiSearchParams.minGrade || uiSearchParams.maxGrade) activeFilters.push("gradeRange");
+    if (uiSearchParams.minAscents) activeFilters.push("minAscents");
+    if (uiSearchParams.minRating) activeFilters.push("minRating");
+    if (uiSearchParams.onlyClassics) activeFilters.push("classics");
+    if (uiSearchParams.gradeAccuracy) activeFilters.push("gradeAccuracy");
+    if (uiSearchParams.settername.length > 0) activeFilters.push("setter");
     if (uiSearchParams.holdsFilter && Object.entries(uiSearchParams.holdsFilter).length > 0)
-      activeFilters.push('holds');
-    if (uiSearchParams.onlyTallClimbs) activeFilters.push('onlyTallClimbs');
-    if (uiSearchParams.hideAttempted) activeFilters.push('hideAttempted');
-    if (uiSearchParams.hideCompleted) activeFilters.push('hideCompleted');
-    if (uiSearchParams.showOnlyAttempted) activeFilters.push('showOnlyAttempted');
-    if (uiSearchParams.showOnlyCompleted) activeFilters.push('showOnlyCompleted');
-    if (uiSearchParams.onlyDrafts) activeFilters.push('onlyDrafts');
-    if (uiSearchParams.projectsOnly) activeFilters.push('projectsOnly');
+      activeFilters.push("holds");
+    if (uiSearchParams.onlyTallClimbs) activeFilters.push("onlyTallClimbs");
+    if (uiSearchParams.hideAttempted) activeFilters.push("hideAttempted");
+    if (uiSearchParams.hideCompleted) activeFilters.push("hideCompleted");
+    if (uiSearchParams.showOnlyAttempted) activeFilters.push("showOnlyAttempted");
+    if (uiSearchParams.showOnlyCompleted) activeFilters.push("showOnlyCompleted");
+    if (uiSearchParams.onlyDrafts) activeFilters.push("onlyDrafts");
+    if (uiSearchParams.projectsOnly) activeFilters.push("projectsOnly");
 
     if (activeFilters.length > 0) {
-      track('Climb Search Performed', {
-        searchType: 'filters',
+      track("Climb Search Performed", {
+        searchType: "filters",
         activeFiltersCount: activeFilters.length,
         sortBy: uiSearchParams.sortBy,
         sortOrder: uiSearchParams.sortOrder,
@@ -96,7 +96,9 @@ export const UISearchParamsProvider: React.FC<{ children: React.ReactNode }> = (
   const clearClimbSearchParams = () => updateFilters(DEFAULT_SEARCH_PARAMS, true);
 
   return (
-    <UISearchParamsContext.Provider value={{ uiSearchParams, updateFilters, clearClimbSearchParams }}>
+    <UISearchParamsContext.Provider
+      value={{ uiSearchParams, updateFilters, clearClimbSearchParams }}
+    >
       {children}
     </UISearchParamsContext.Provider>
   );
@@ -106,7 +108,7 @@ export const UISearchParamsProvider: React.FC<{ children: React.ReactNode }> = (
 export const useUISearchParams = () => {
   const context = useContext(UISearchParamsContext);
   if (!context) {
-    throw new Error('useUISearchParams must be used within a SearchParamsProvider');
+    throw new Error("useUISearchParams must be used within a SearchParamsProvider");
   }
   return context;
 };

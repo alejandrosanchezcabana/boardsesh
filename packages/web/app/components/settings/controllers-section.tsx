@@ -1,37 +1,37 @@
-'use client';
+"use client";
 
-import React, { useState, useEffect, useMemo } from 'react';
-import Box from '@mui/material/Box';
-import Stack from '@mui/material/Stack';
-import MuiSelect from '@mui/material/Select';
-import MenuItem from '@mui/material/MenuItem';
-import FormControl from '@mui/material/FormControl';
-import InputLabel from '@mui/material/InputLabel';
-import Chip from '@mui/material/Chip';
-import MuiAlert from '@mui/material/Alert';
-import AlertTitle from '@mui/material/AlertTitle';
-import Dialog from '@mui/material/Dialog';
-import DialogTitle from '@mui/material/DialogTitle';
-import DialogContent from '@mui/material/DialogContent';
-import DialogActions from '@mui/material/DialogActions';
-import { ConfirmPopover } from '@/app/components/ui/confirm-popover';
-import Typography from '@mui/material/Typography';
-import Button from '@mui/material/Button';
-import Card from '@mui/material/Card';
-import CardContent from '@mui/material/CardContent';
-import TextField from '@mui/material/TextField';
-import CircularProgress from '@mui/material/CircularProgress';
-import CheckCircleOutlined from '@mui/icons-material/CheckCircleOutlined';
-import AccessTimeOutlined from '@mui/icons-material/AccessTimeOutlined';
-import DeleteOutlined from '@mui/icons-material/DeleteOutlined';
-import AddOutlined from '@mui/icons-material/AddOutlined';
-import ContentCopyOutlined from '@mui/icons-material/ContentCopyOutlined';
-import WarningOutlined from '@mui/icons-material/WarningOutlined';
-import type { ControllerInfo } from '@/app/api/internal/controllers/route';
-import { getBoardSelectorOptions } from '@/app/lib/board-constants';
-import { BoardName } from '@/app/lib/types';
-import styles from './controllers-section.module.css';
-import { useSnackbar } from '@/app/components/providers/snackbar-provider';
+import React, { useState, useEffect, useMemo } from "react";
+import Box from "@mui/material/Box";
+import Stack from "@mui/material/Stack";
+import MuiSelect from "@mui/material/Select";
+import MenuItem from "@mui/material/MenuItem";
+import FormControl from "@mui/material/FormControl";
+import InputLabel from "@mui/material/InputLabel";
+import Chip from "@mui/material/Chip";
+import MuiAlert from "@mui/material/Alert";
+import AlertTitle from "@mui/material/AlertTitle";
+import Dialog from "@mui/material/Dialog";
+import DialogTitle from "@mui/material/DialogTitle";
+import DialogContent from "@mui/material/DialogContent";
+import DialogActions from "@mui/material/DialogActions";
+import { ConfirmPopover } from "@/app/components/ui/confirm-popover";
+import Typography from "@mui/material/Typography";
+import Button from "@mui/material/Button";
+import Card from "@mui/material/Card";
+import CardContent from "@mui/material/CardContent";
+import TextField from "@mui/material/TextField";
+import CircularProgress from "@mui/material/CircularProgress";
+import CheckCircleOutlined from "@mui/icons-material/CheckCircleOutlined";
+import AccessTimeOutlined from "@mui/icons-material/AccessTimeOutlined";
+import DeleteOutlined from "@mui/icons-material/DeleteOutlined";
+import AddOutlined from "@mui/icons-material/AddOutlined";
+import ContentCopyOutlined from "@mui/icons-material/ContentCopyOutlined";
+import WarningOutlined from "@mui/icons-material/WarningOutlined";
+import type { ControllerInfo } from "@/app/api/internal/controllers/route";
+import { getBoardSelectorOptions } from "@/app/lib/board-constants";
+import { BoardName } from "@/app/lib/types";
+import styles from "./controllers-section.module.css";
+import { useSnackbar } from "@/app/components/providers/snackbar-provider";
 
 // Get board config data (synchronous - from generated data)
 const boardSelectorOptions = getBoardSelectorOptions();
@@ -47,32 +47,26 @@ function ControllerCard({ controller, onRemove, isRemoving }: ControllerCardProp
 
   const getStatusTag = () => {
     if (controller.isOnline) {
-      return (
-        <Chip icon={<CheckCircleOutlined />} label="Online" size="small" color="success" />
-      );
+      return <Chip icon={<CheckCircleOutlined />} label="Online" size="small" color="success" />;
     }
     if (controller.lastSeen) {
-      return (
-        <Chip icon={<AccessTimeOutlined />} label="Offline" size="small" color="default" />
-      );
+      return <Chip icon={<AccessTimeOutlined />} label="Offline" size="small" color="default" />;
     }
-    return (
-      <Chip label="Never connected" size="small" color="default" />
-    );
+    return <Chip label="Never connected" size="small" color="default" />;
   };
 
   const formatLastSeen = (dateString: string | null) => {
-    if (!dateString) return 'Never';
+    if (!dateString) return "Never";
     const date = new Date(dateString);
     const now = new Date();
     const diffMs = now.getTime() - date.getTime();
     const diffMinutes = Math.floor(diffMs / 60000);
 
-    if (diffMinutes < 1) return 'Just now';
-    if (diffMinutes < 60) return `${diffMinutes} minute${diffMinutes > 1 ? 's' : ''} ago`;
+    if (diffMinutes < 1) return "Just now";
+    if (diffMinutes < 60) return `${diffMinutes} minute${diffMinutes > 1 ? "s" : ""} ago`;
     const diffHours = Math.floor(diffMinutes / 60);
-    if (diffHours < 24) return `${diffHours} hour${diffHours > 1 ? 's' : ''} ago`;
-    return date.toLocaleDateString() + ' ' + date.toLocaleTimeString();
+    if (diffHours < 24) return `${diffHours} hour${diffHours > 1 ? "s" : ""} ago`;
+    return date.toLocaleDateString() + " " + date.toLocaleTimeString();
   };
 
   return (
@@ -80,22 +74,32 @@ function ControllerCard({ controller, onRemove, isRemoving }: ControllerCardProp
       <CardContent>
         <div className={styles.cardHeader}>
           <Typography variant="h5" sx={{ margin: 0 }}>
-            {controller.name || 'Unnamed Controller'}
+            {controller.name || "Unnamed Controller"}
           </Typography>
           {getStatusTag()}
         </div>
         <div className={styles.controllerInfo}>
           <div className={styles.infoRow}>
-            <Typography variant="body2" component="span" color="text.secondary">Board:</Typography>
+            <Typography variant="body2" component="span" color="text.secondary">
+              Board:
+            </Typography>
             <Chip label={boardName} size="small" color="primary" />
           </div>
           <div className={styles.infoRow}>
-            <Typography variant="body2" component="span" color="text.secondary">Layout:</Typography>
-            <Typography variant="body2" component="span">{controller.layoutId} / Size {controller.sizeId}</Typography>
+            <Typography variant="body2" component="span" color="text.secondary">
+              Layout:
+            </Typography>
+            <Typography variant="body2" component="span">
+              {controller.layoutId} / Size {controller.sizeId}
+            </Typography>
           </div>
           <div className={styles.infoRow}>
-            <Typography variant="body2" component="span" color="text.secondary">Last seen:</Typography>
-            <Typography variant="body2" component="span">{formatLastSeen(controller.lastSeen)}</Typography>
+            <Typography variant="body2" component="span" color="text.secondary">
+              Last seen:
+            </Typography>
+            <Typography variant="body2" component="span">
+              {formatLastSeen(controller.lastSeen)}
+            </Typography>
           </div>
         </div>
         <ConfirmPopover
@@ -104,7 +108,7 @@ function ControllerCard({ controller, onRemove, isRemoving }: ControllerCardProp
           onConfirm={onRemove}
           okText="Yes, delete"
           cancelText="Cancel"
-          okButtonProps={{ color: 'error' }}
+          okButtonProps={{ color: "error" }}
         >
           <Button
             color="error"
@@ -134,28 +138,24 @@ function ApiKeySuccessModal({ isOpen, apiKey, controllerName, onClose }: ApiKeyS
   const handleCopy = async () => {
     try {
       await navigator.clipboard.writeText(apiKey);
-      showMessage('API key copied to clipboard', 'success');
+      showMessage("API key copied to clipboard", "success");
     } catch {
-      showMessage('Failed to copy - please select and copy manually', 'error');
+      showMessage("Failed to copy - please select and copy manually", "error");
     }
   };
 
   return (
-    <Dialog
-      open={isOpen}
-      onClose={onClose}
-      disableEscapeKeyDown
-      maxWidth="sm"
-      fullWidth
-    >
+    <Dialog open={isOpen} onClose={onClose} disableEscapeKeyDown maxWidth="sm" fullWidth>
       <DialogTitle>Controller Registered</DialogTitle>
       <DialogContent>
         <MuiAlert severity="warning" icon={<WarningOutlined />} sx={{ marginBottom: 2 }}>
           <AlertTitle>Save this API key now!</AlertTitle>
-          This is the only time you'll see this key. If you lose it, you'll need to delete and re-register the controller.
+          This is the only time you'll see this key. If you lose it, you'll need to delete and
+          re-register the controller.
         </MuiAlert>
         <Typography variant="body1" component="p">
-          Your controller <strong>{controllerName || 'Unnamed Controller'}</strong> has been registered.
+          Your controller <strong>{controllerName || "Unnamed Controller"}</strong> has been
+          registered.
         </Typography>
         <Typography variant="body1" component="p" color="text.secondary">
           Enter this API key in your ESP32 configuration:
@@ -167,10 +167,15 @@ function ApiKeySuccessModal({ isOpen, apiKey, controllerName, onClose }: ApiKeyS
           fullWidth
           variant="outlined"
           size="small"
-          slotProps={{ input: { readOnly: true, style: { fontFamily: 'monospace' } } }}
+          slotProps={{ input: { readOnly: true, style: { fontFamily: "monospace" } } }}
           sx={{ marginBottom: 1 }}
         />
-        <Button variant="outlined" startIcon={<ContentCopyOutlined />} onClick={handleCopy} fullWidth>
+        <Button
+          variant="outlined"
+          startIcon={<ContentCopyOutlined />}
+          onClick={handleCopy}
+          fullWidth
+        >
           Copy API Key
         </Button>
       </DialogContent>
@@ -189,7 +194,7 @@ export default function ControllersSection() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [removingId, setRemovingId] = useState<string | null>(null);
-  const [formValues, setFormValues] = useState({ name: '' });
+  const [formValues, setFormValues] = useState({ name: "" });
   const { showMessage } = useSnackbar();
 
   // Board configuration selection state
@@ -199,38 +204,40 @@ export default function ControllersSection() {
   const [selectedSets, setSelectedSets] = useState<number[]>([]);
 
   // Derived data for dropdowns
-  const layouts = useMemo(() =>
-    selectedBoard ? boardSelectorOptions.layouts[selectedBoard] || [] : [],
-    [selectedBoard]
+  const layouts = useMemo(
+    () => (selectedBoard ? boardSelectorOptions.layouts[selectedBoard] || [] : []),
+    [selectedBoard],
   );
 
-  const sizes = useMemo(() =>
-    selectedBoard && selectedLayout
-      ? boardSelectorOptions.sizes[`${selectedBoard}-${selectedLayout}`] || []
-      : [],
-    [selectedBoard, selectedLayout]
+  const sizes = useMemo(
+    () =>
+      selectedBoard && selectedLayout
+        ? boardSelectorOptions.sizes[`${selectedBoard}-${selectedLayout}`] || []
+        : [],
+    [selectedBoard, selectedLayout],
   );
 
-  const sets = useMemo(() =>
-    selectedBoard && selectedLayout && selectedSize
-      ? boardSelectorOptions.sets[`${selectedBoard}-${selectedLayout}-${selectedSize}`] || []
-      : [],
-    [selectedBoard, selectedLayout, selectedSize]
+  const sets = useMemo(
+    () =>
+      selectedBoard && selectedLayout && selectedSize
+        ? boardSelectorOptions.sets[`${selectedBoard}-${selectedLayout}-${selectedSize}`] || []
+        : [],
+    [selectedBoard, selectedLayout, selectedSize],
   );
 
   // Success state for showing API key
   const [successApiKey, setSuccessApiKey] = useState<string | null>(null);
-  const [successControllerName, setSuccessControllerName] = useState('');
+  const [successControllerName, setSuccessControllerName] = useState("");
 
   const fetchControllers = async () => {
     try {
-      const response = await fetch('/api/internal/controllers');
+      const response = await fetch("/api/internal/controllers");
       if (response.ok) {
         const data = await response.json();
         setControllers(data.controllers);
       }
     } catch (error) {
-      console.error('Failed to fetch controllers:', error);
+      console.error("Failed to fetch controllers:", error);
     } finally {
       setLoading(false);
     }
@@ -241,7 +248,7 @@ export default function ControllersSection() {
   }, []);
 
   const handleAddClick = () => {
-    setFormValues({ name: '' });
+    setFormValues({ name: "" });
     setSelectedBoard(undefined);
     setSelectedLayout(undefined);
     setSelectedSize(undefined);
@@ -251,7 +258,7 @@ export default function ControllersSection() {
 
   const handleModalCancel = () => {
     setIsModalOpen(false);
-    setFormValues({ name: '' });
+    setFormValues({ name: "" });
     setSelectedBoard(undefined);
     setSelectedLayout(undefined);
     setSelectedSize(undefined);
@@ -274,9 +281,10 @@ export default function ControllersSection() {
   const handleSizeChange = (value: number) => {
     setSelectedSize(value);
     // Auto-select all sets when size is selected
-    const availableSets = selectedBoard && selectedLayout
-      ? boardSelectorOptions.sets[`${selectedBoard}-${selectedLayout}-${value}`] || []
-      : [];
+    const availableSets =
+      selectedBoard && selectedLayout
+        ? boardSelectorOptions.sets[`${selectedBoard}-${selectedLayout}-${value}`] || []
+        : [];
     const allSetIds = availableSets.map((s) => s.id);
     setSelectedSets(allSetIds);
   };
@@ -294,36 +302,39 @@ export default function ControllersSection() {
   }) => {
     setIsSaving(true);
     try {
-      const response = await fetch('/api/internal/controllers', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+      const response = await fetch("/api/internal/controllers", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           name: values.name,
           boardName: values.boardName,
           layoutId: values.layoutId,
           sizeId: values.sizeId,
-          setIds: Array.isArray(values.setIds) ? values.setIds.join(',') : values.setIds,
+          setIds: Array.isArray(values.setIds) ? values.setIds.join(",") : values.setIds,
         }),
       });
 
       if (!response.ok) {
         const error = await response.json();
-        throw new Error(error.error || 'Failed to register controller');
+        throw new Error(error.error || "Failed to register controller");
       }
 
       const data = await response.json();
 
       // Close the registration modal
       setIsModalOpen(false);
-      setFormValues({ name: '' });
+      setFormValues({ name: "" });
 
       // Show the API key success modal
       setSuccessApiKey(data.apiKey);
-      setSuccessControllerName(values.name || '');
+      setSuccessControllerName(values.name || "");
 
       await fetchControllers();
     } catch (error) {
-      showMessage(error instanceof Error ? error.message : 'Failed to register controller', 'error');
+      showMessage(
+        error instanceof Error ? error.message : "Failed to register controller",
+        "error",
+      );
     } finally {
       setIsSaving(false);
     }
@@ -332,21 +343,21 @@ export default function ControllersSection() {
   const handleRemove = async (controllerId: string) => {
     setRemovingId(controllerId);
     try {
-      const response = await fetch('/api/internal/controllers', {
-        method: 'DELETE',
-        headers: { 'Content-Type': 'application/json' },
+      const response = await fetch("/api/internal/controllers", {
+        method: "DELETE",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ controllerId }),
       });
 
       if (!response.ok) {
         const error = await response.json();
-        throw new Error(error.error || 'Failed to delete controller');
+        throw new Error(error.error || "Failed to delete controller");
       }
 
-      showMessage('Controller deleted successfully', 'success');
+      showMessage("Controller deleted successfully", "success");
       await fetchControllers();
     } catch (error) {
-      showMessage(error instanceof Error ? error.message : 'Failed to delete controller', 'error');
+      showMessage(error instanceof Error ? error.message : "Failed to delete controller", "error");
     } finally {
       setRemovingId(null);
     }
@@ -354,7 +365,7 @@ export default function ControllersSection() {
 
   const handleSuccessClose = () => {
     setSuccessApiKey(null);
-    setSuccessControllerName('');
+    setSuccessControllerName("");
   };
 
   if (loading) {
@@ -374,9 +385,14 @@ export default function ControllersSection() {
       <Card>
         <CardContent>
           <Typography variant="h5">ESP32 Controllers</Typography>
-          <Typography variant="body2" component="span" color="text.secondary" className={styles.sectionDescription}>
-            Register ESP32 devices to control your board via Bluetooth bridge.
-            This allows you to use BoardSesh with official Kilter/Tension apps.
+          <Typography
+            variant="body2"
+            component="span"
+            color="text.secondary"
+            className={styles.sectionDescription}
+          >
+            Register ESP32 devices to control your board via Bluetooth bridge. This allows you to
+            use BoardSesh with official Kilter/Tension apps.
           </Typography>
 
           {controllers.length === 0 ? (
@@ -410,112 +426,119 @@ export default function ControllersSection() {
         </CardContent>
       </Card>
 
-      <Dialog
-        open={isModalOpen}
-        onClose={handleModalCancel}
-        maxWidth="sm"
-        fullWidth
-      >
+      <Dialog open={isModalOpen} onClose={handleModalCancel} maxWidth="sm" fullWidth>
         <DialogTitle>Register ESP32 Controller</DialogTitle>
         <DialogContent>
-          <Typography variant="body2" component="span" color="text.secondary" className={styles.modalDescription}>
-            Register a new ESP32 controller to receive LED commands from BoardSesh.
-            You'll receive an API key to configure on the device.
-          </Typography>
-        <Box
-          component="form"
-          onSubmit={(e: React.FormEvent) => {
-            e.preventDefault();
-            if (!selectedBoard || !selectedLayout || !selectedSize || selectedSets.length === 0) return;
-            handleRegister({
-              name: formValues.name,
-              boardName: selectedBoard,
-              layoutId: selectedLayout,
-              sizeId: selectedSize,
-              setIds: selectedSets,
-            });
-          }}
-          sx={{ display: 'flex', flexDirection: 'column', gap: 2, mt: 2 }}
-        >
-          <TextField
-            label="Controller Name (optional)"
-            placeholder="e.g., Living Room Board"
-            variant="outlined"
-            size="small"
-            fullWidth
-            value={formValues.name}
-            onChange={(e) => setFormValues((prev) => ({ ...prev, name: e.target.value }))}
-            inputProps={{ maxLength: 100 }}
-          />
-
-          <FormControl fullWidth required>
-            <InputLabel>Board Type</InputLabel>
-            <MuiSelect
-              value={selectedBoard || ''}
-              label="Board Type"
-              onChange={(e) => handleBoardChange(e.target.value as BoardName)}
-            >
-              <MenuItem value="kilter">Kilter</MenuItem>
-              <MenuItem value="tension">Tension</MenuItem>
-            </MuiSelect>
-          </FormControl>
-
-          <FormControl fullWidth required disabled={!selectedBoard}>
-            <InputLabel>Layout</InputLabel>
-            <MuiSelect
-              value={selectedLayout ?? ''}
-              label="Layout"
-              onChange={(e) => handleLayoutChange(e.target.value as number)}
-            >
-              {layouts.map(({ id, name }) => (
-                <MenuItem key={id} value={id}>{name}</MenuItem>
-              ))}
-            </MuiSelect>
-          </FormControl>
-
-          <FormControl fullWidth required disabled={!selectedLayout}>
-            <InputLabel>Size</InputLabel>
-            <MuiSelect
-              value={selectedSize ?? ''}
-              label="Size"
-              onChange={(e) => handleSizeChange(e.target.value as number)}
-            >
-              {sizes.map(({ id, name, description }) => (
-                <MenuItem key={id} value={id}>{name} {description}</MenuItem>
-              ))}
-            </MuiSelect>
-          </FormControl>
-
-          <FormControl fullWidth required disabled={!selectedSize}>
-            <InputLabel>Hold Sets</InputLabel>
-            <MuiSelect
-              multiple
-              value={selectedSets}
-              label="Hold Sets"
-              onChange={(e) => handleSetsChange(e.target.value as number[])}
-            >
-              {sets.map(({ id, name }) => (
-                <MenuItem key={id} value={id}>{name}</MenuItem>
-              ))}
-            </MuiSelect>
-          </FormControl>
-
-          <Button
-            variant="contained"
-            type="submit"
-            disabled={isSaving}
-            startIcon={isSaving ? <CircularProgress size={16} /> : undefined}
-            fullWidth
+          <Typography
+            variant="body2"
+            component="span"
+            color="text.secondary"
+            className={styles.modalDescription}
           >
-            {isSaving ? 'Registering...' : 'Register Controller'}
-          </Button>
-        </Box>
+            Register a new ESP32 controller to receive LED commands from BoardSesh. You'll receive
+            an API key to configure on the device.
+          </Typography>
+          <Box
+            component="form"
+            onSubmit={(e: React.FormEvent) => {
+              e.preventDefault();
+              if (!selectedBoard || !selectedLayout || !selectedSize || selectedSets.length === 0)
+                return;
+              handleRegister({
+                name: formValues.name,
+                boardName: selectedBoard,
+                layoutId: selectedLayout,
+                sizeId: selectedSize,
+                setIds: selectedSets,
+              });
+            }}
+            sx={{ display: "flex", flexDirection: "column", gap: 2, mt: 2 }}
+          >
+            <TextField
+              label="Controller Name (optional)"
+              placeholder="e.g., Living Room Board"
+              variant="outlined"
+              size="small"
+              fullWidth
+              value={formValues.name}
+              onChange={(e) => setFormValues((prev) => ({ ...prev, name: e.target.value }))}
+              inputProps={{ maxLength: 100 }}
+            />
+
+            <FormControl fullWidth required>
+              <InputLabel>Board Type</InputLabel>
+              <MuiSelect
+                value={selectedBoard || ""}
+                label="Board Type"
+                onChange={(e) => handleBoardChange(e.target.value as BoardName)}
+              >
+                <MenuItem value="kilter">Kilter</MenuItem>
+                <MenuItem value="tension">Tension</MenuItem>
+              </MuiSelect>
+            </FormControl>
+
+            <FormControl fullWidth required disabled={!selectedBoard}>
+              <InputLabel>Layout</InputLabel>
+              <MuiSelect
+                value={selectedLayout ?? ""}
+                label="Layout"
+                onChange={(e) => handleLayoutChange(e.target.value as number)}
+              >
+                {layouts.map(({ id, name }) => (
+                  <MenuItem key={id} value={id}>
+                    {name}
+                  </MenuItem>
+                ))}
+              </MuiSelect>
+            </FormControl>
+
+            <FormControl fullWidth required disabled={!selectedLayout}>
+              <InputLabel>Size</InputLabel>
+              <MuiSelect
+                value={selectedSize ?? ""}
+                label="Size"
+                onChange={(e) => handleSizeChange(e.target.value as number)}
+              >
+                {sizes.map(({ id, name, description }) => (
+                  <MenuItem key={id} value={id}>
+                    {name} {description}
+                  </MenuItem>
+                ))}
+              </MuiSelect>
+            </FormControl>
+
+            <FormControl fullWidth required disabled={!selectedSize}>
+              <InputLabel>Hold Sets</InputLabel>
+              <MuiSelect
+                multiple
+                value={selectedSets}
+                label="Hold Sets"
+                onChange={(e) => handleSetsChange(e.target.value as number[])}
+              >
+                {sets.map(({ id, name }) => (
+                  <MenuItem key={id} value={id}>
+                    {name}
+                  </MenuItem>
+                ))}
+              </MuiSelect>
+            </FormControl>
+
+            <Button
+              variant="contained"
+              type="submit"
+              disabled={isSaving}
+              startIcon={isSaving ? <CircularProgress size={16} /> : undefined}
+              fullWidth
+            >
+              {isSaving ? "Registering..." : "Register Controller"}
+            </Button>
+          </Box>
         </DialogContent>
       </Dialog>
 
       <ApiKeySuccessModal
         isOpen={!!successApiKey}
-        apiKey={successApiKey || ''}
+        apiKey={successApiKey || ""}
         controllerName={successControllerName}
         onClose={handleSuccessClose}
       />

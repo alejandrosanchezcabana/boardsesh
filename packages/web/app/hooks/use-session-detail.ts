@@ -1,20 +1,20 @@
-'use client';
+"use client";
 
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { useWsAuthToken } from './use-ws-auth-token';
-import { useSnackbar } from '@/app/components/providers/snackbar-provider';
-import { createGraphQLHttpClient } from '@/app/lib/graphql/client';
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useWsAuthToken } from "./use-ws-auth-token";
+import { useSnackbar } from "@/app/components/providers/snackbar-provider";
+import { createGraphQLHttpClient } from "@/app/lib/graphql/client";
 import {
   GET_SESSION_DETAIL,
   UPDATE_INFERRED_SESSION,
   ADD_USER_TO_SESSION,
   REMOVE_USER_FROM_SESSION,
   type GetSessionDetailQueryResponse,
-} from '@/app/lib/graphql/operations/activity-feed';
-import type { SessionDetail } from '@boardsesh/shared-schema';
+} from "@/app/lib/graphql/operations/activity-feed";
+import type { SessionDetail } from "@boardsesh/shared-schema";
 
 export const SESSION_DETAIL_QUERY_KEY = (sessionId: string) =>
-  ['sessionDetail', sessionId] as const;
+  ["sessionDetail", sessionId] as const;
 
 interface UseSessionDetailOptions {
   sessionId?: string;
@@ -31,16 +31,15 @@ export function useSessionDetail({
   const { showMessage } = useSnackbar();
   const queryClient = useQueryClient();
 
-  const queryKey = SESSION_DETAIL_QUERY_KEY(sessionId ?? '');
+  const queryKey = SESSION_DETAIL_QUERY_KEY(sessionId ?? "");
 
   const query = useQuery<SessionDetail | null>({
     queryKey,
     queryFn: async () => {
       const client = createGraphQLHttpClient(token);
-      const data = await client.request<GetSessionDetailQueryResponse>(
-        GET_SESSION_DETAIL,
-        { sessionId },
-      );
+      const data = await client.request<GetSessionDetailQueryResponse>(GET_SESSION_DETAIL, {
+        sessionId,
+      });
       return data.sessionDetail;
     },
     enabled: enabled && !!sessionId && isAuthenticated && !!token,
@@ -64,11 +63,11 @@ export function useSessionDetail({
     },
     onSuccess: (data) => {
       queryClient.setQueryData(queryKey, data);
-      showMessage('Session updated', 'success');
+      showMessage("Session updated", "success");
     },
     onError: (err) => {
-      console.error('Failed to update session:', err);
-      showMessage('Failed to update session', 'error');
+      console.error("Failed to update session:", err);
+      showMessage("Failed to update session", "error");
     },
   });
 
@@ -83,11 +82,11 @@ export function useSessionDetail({
     },
     onSuccess: (data) => {
       queryClient.setQueryData(queryKey, data);
-      showMessage('User added to session', 'success');
+      showMessage("User added to session", "success");
     },
     onError: (err) => {
-      console.error('Failed to add user:', err);
-      showMessage('Failed to add user to session', 'error');
+      console.error("Failed to add user:", err);
+      showMessage("Failed to add user to session", "error");
     },
   });
 
@@ -102,11 +101,11 @@ export function useSessionDetail({
     },
     onSuccess: (data) => {
       queryClient.setQueryData(queryKey, data);
-      showMessage('User removed from session', 'success');
+      showMessage("User removed from session", "success");
     },
     onError: (err) => {
-      console.error('Failed to remove user:', err);
-      showMessage('Failed to remove user', 'error');
+      console.error("Failed to remove user:", err);
+      showMessage("Failed to remove user", "error");
     },
   });
 

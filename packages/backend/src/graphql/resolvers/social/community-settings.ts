@@ -1,18 +1,18 @@
-import { eq, and } from 'drizzle-orm';
-import type { ConnectionContext } from '@boardsesh/shared-schema';
-import { db } from '../../../db/client';
-import * as dbSchema from '@boardsesh/db/schema';
-import { requireAuthenticated, applyRateLimit, validateInput } from '../shared/helpers';
-import { SetCommunitySettingInputSchema } from '../../../validation/schemas';
-import { requireAdminOrLeader } from './roles';
+import { eq, and } from "drizzle-orm";
+import type { ConnectionContext } from "@boardsesh/shared-schema";
+import { db } from "../../../db/client";
+import * as dbSchema from "@boardsesh/db/schema";
+import { requireAuthenticated, applyRateLimit, validateInput } from "../shared/helpers";
+import { SetCommunitySettingInputSchema } from "../../../validation/schemas";
+import { requireAdminOrLeader } from "./roles";
 
 // Default community settings
 export const DEFAULTS: Record<string, string> = {
-  approval_threshold: '5',
-  outlier_min_ascents: '10',
-  outlier_grade_diff: '2',
-  admin_vote_weight: '3',
-  leader_vote_weight: '2',
+  approval_threshold: "5",
+  outlier_min_ascents: "10",
+  outlier_grade_diff: "2",
+  admin_vote_weight: "3",
+  leader_vote_weight: "2",
 };
 
 /**
@@ -31,7 +31,7 @@ export async function resolveCommunitySetting(
       .from(dbSchema.communitySettings)
       .where(
         and(
-          eq(dbSchema.communitySettings.scope, 'climb'),
+          eq(dbSchema.communitySettings.scope, "climb"),
           eq(dbSchema.communitySettings.scopeKey, climbUuid),
           eq(dbSchema.communitySettings.key, key),
         ),
@@ -47,7 +47,7 @@ export async function resolveCommunitySetting(
       .from(dbSchema.communitySettings)
       .where(
         and(
-          eq(dbSchema.communitySettings.scope, 'board'),
+          eq(dbSchema.communitySettings.scope, "board"),
           eq(dbSchema.communitySettings.scopeKey, boardType),
           eq(dbSchema.communitySettings.key, key),
         ),
@@ -62,8 +62,8 @@ export async function resolveCommunitySetting(
     .from(dbSchema.communitySettings)
     .where(
       and(
-        eq(dbSchema.communitySettings.scope, 'global'),
-        eq(dbSchema.communitySettings.scopeKey, ''),
+        eq(dbSchema.communitySettings.scope, "global"),
+        eq(dbSchema.communitySettings.scopeKey, ""),
         eq(dbSchema.communitySettings.key, key),
       ),
     )
@@ -71,7 +71,7 @@ export async function resolveCommunitySetting(
   if (globalSetting) return globalSetting.value;
 
   // 4. Default
-  return DEFAULTS[key] || '0';
+  return DEFAULTS[key] || "0";
 }
 
 export const socialCommunitySettingsQueries = {
@@ -114,7 +114,7 @@ export const socialCommunitySettingsMutations = {
     await requireAdminOrLeader(ctx);
     await applyRateLimit(ctx, 10);
 
-    const validated = validateInput(SetCommunitySettingInputSchema, input, 'input');
+    const validated = validateInput(SetCommunitySettingInputSchema, input, "input");
     const { scope, scopeKey, key, value } = validated;
     const userId = ctx.userId!;
 

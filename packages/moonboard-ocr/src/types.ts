@@ -1,12 +1,12 @@
 // Grid coordinates for MoonBoard 2024
 // Columns: A-K (11 columns)
 // Rows: 1-18 (bottom to top)
-export type Column = 'A' | 'B' | 'C' | 'D' | 'E' | 'F' | 'G' | 'H' | 'I' | 'J' | 'K';
+export type Column = "A" | "B" | "C" | "D" | "E" | "F" | "G" | "H" | "I" | "J" | "K";
 export type Row = 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12 | 13 | 14 | 15 | 16 | 17 | 18;
 
 export type GridCoordinate = `${Column}${Row}`;
 
-export type HoldType = 'start' | 'hand' | 'finish';
+export type HoldType = "start" | "hand" | "finish";
 
 export interface DetectedHold {
   type: HoldType;
@@ -25,7 +25,7 @@ export interface MoonBoardClimb {
   angle: number;
   userGrade: string;
   setterGrade: string;
-  isBenchmark: boolean;  // Orange "B" icon indicates official benchmark climb
+  isBenchmark: boolean; // Orange "B" icon indicates official benchmark climb
 
   // Hold positions
   holds: {
@@ -106,7 +106,7 @@ export const HOLD_COLORS: Record<HoldType, ColorRange> = {
 
 // MoonBoard 2024 grid configuration
 export const GRID_CONFIG = {
-  columns: ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K'] as Column[],
+  columns: ["A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K"] as Column[],
   rows: [18, 17, 16, 15, 14, 13, 12, 11, 10, 9, 8, 7, 6, 5, 4, 3, 2, 1] as Row[],
   numColumns: 11,
   numRows: 18,
@@ -123,7 +123,7 @@ export const GRID_CONFIG = {
  */
 export const GRID_POSITIONS: Record<GridCoordinate, { x: number; y: number }> = (() => {
   const positions: Record<string, { x: number; y: number }> = {};
-  const columns: Column[] = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K'];
+  const columns: Column[] = ["A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K"];
 
   for (let colIdx = 0; colIdx < 11; colIdx++) {
     for (let row = 1; row <= 18; row++) {

@@ -1,11 +1,11 @@
-import { gql } from 'graphql-request';
+import { gql } from "graphql-request";
 import type {
   Notification,
   NotificationConnection,
   GroupedNotificationConnection,
   NotificationType,
   SocialEntityType,
-} from '@boardsesh/shared-schema';
+} from "@boardsesh/shared-schema";
 
 // ============================================
 // Notification Queries
@@ -84,7 +84,11 @@ export const MARK_NOTIFICATION_READ = gql`
 `;
 
 export const MARK_GROUP_NOTIFICATIONS_READ = gql`
-  mutation MarkGroupNotificationsRead($type: NotificationType!, $entityType: SocialEntityType, $entityId: String) {
+  mutation MarkGroupNotificationsRead(
+    $type: NotificationType!
+    $entityType: SocialEntityType
+    $entityId: String
+  ) {
     markGroupNotificationsRead(type: $type, entityType: $entityType, entityId: $entityId)
   }
 `;
@@ -241,7 +245,12 @@ export interface CommentUpdatesSubscriptionVariables {
 
 export type CommentUpdatesSubscriptionResponse = {
   commentUpdates:
-    | { __typename: 'CommentAdded'; comment: import('@boardsesh/shared-schema').Comment }
-    | { __typename: 'CommentUpdated'; comment: import('@boardsesh/shared-schema').Comment }
-    | { __typename: 'CommentDeleted'; commentUuid: string; entityType: SocialEntityType; entityId: string };
+    | { __typename: "CommentAdded"; comment: import("@boardsesh/shared-schema").Comment }
+    | { __typename: "CommentUpdated"; comment: import("@boardsesh/shared-schema").Comment }
+    | {
+        __typename: "CommentDeleted";
+        commentUuid: string;
+        entityType: SocialEntityType;
+        entityId: string;
+      };
 };

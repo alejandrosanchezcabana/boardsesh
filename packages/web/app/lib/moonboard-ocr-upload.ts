@@ -1,4 +1,4 @@
-import type { MoonBoardClimb } from '@boardsesh/moonboard-ocr/browser';
+import type { MoonBoardClimb } from "@boardsesh/moonboard-ocr/browser";
 
 /**
  * Upload OCR test data to S3 for training/testing purposes
@@ -24,7 +24,7 @@ export async function uploadOcrTestData(
     const formData = new FormData();
 
     // Add the image file
-    formData.append('image', image);
+    formData.append("image", image);
 
     // Add metadata as JSON
     const metadata = {
@@ -32,10 +32,10 @@ export async function uploadOcrTestData(
       angle,
       climb: parsedResult,
     };
-    formData.append('metadata', JSON.stringify(metadata));
+    formData.append("metadata", JSON.stringify(metadata));
 
     const response = await fetch(`${backendUrl}/api/ocr-test-data`, {
-      method: 'POST',
+      method: "POST",
       headers: {
         Authorization: `Bearer ${authToken}`,
       },
@@ -45,23 +45,23 @@ export async function uploadOcrTestData(
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({}));
       console.warn(
-        `[OCR Upload] Upload failed for climb "${parsedResult.name || 'Unknown'}":`,
-        errorData.error || response.statusText
+        `[OCR Upload] Upload failed for climb "${parsedResult.name || "Unknown"}":`,
+        errorData.error || response.statusText,
       );
       return;
     }
 
     const result = await response.json();
     if (result.skipped) {
-      console.log('[OCR Upload] Upload skipped:', result.reason);
+      console.log("[OCR Upload] Upload skipped:", result.reason);
     } else {
-      console.log('[OCR Upload] Successfully uploaded test data');
+      console.log("[OCR Upload] Successfully uploaded test data");
     }
   } catch (error) {
     // Fire-and-forget: log but don't throw
     console.warn(
-      `[OCR Upload] Failed to upload test data for climb "${parsedResult.name || 'Unknown'}":`,
-      error
+      `[OCR Upload] Failed to upload test data for climb "${parsedResult.name || "Unknown"}":`,
+      error,
     );
   }
 }

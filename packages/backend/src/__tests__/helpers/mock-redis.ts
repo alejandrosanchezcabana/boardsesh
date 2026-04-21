@@ -1,5 +1,5 @@
-import { vi } from 'vitest';
-import type Redis from 'ioredis';
+import { vi } from "vite-plus/test";
+import type Redis from "ioredis";
 
 export type MockRedis = Redis & {
   _store: Map<string, string>;
@@ -10,7 +10,7 @@ export type MockRedis = Redis & {
  * Sentinel value matching UNSET_SENTINEL in distributed-state.ts.
  * Used in JOIN_SESSION_SCRIPT Lua to mean "don't update this field".
  */
-const UNSET_SENTINEL = '__UNSET__';
+const UNSET_SENTINEL = "__UNSET__";
 
 /**
  * Create a mock Redis instance for testing.
@@ -28,12 +28,12 @@ export const createMockRedis = (): MockRedis => {
   const mockRedis = {
     set: vi.fn(async (key: string, value: string, ...opts: unknown[]) => {
       // Support NX flag (only set if key doesn't exist) used by acquireLock
-      const hasNX = opts.some(o => typeof o === 'string' && o.toUpperCase() === 'NX');
+      const hasNX = opts.some((o) => typeof o === "string" && o.toUpperCase() === "NX");
       if (hasNX && store.has(key)) {
         return null; // Key exists, NX prevents overwrite
       }
       store.set(key, value);
-      return 'OK';
+      return "OK";
     }),
     get: vi.fn(async (key: string) => {
       return store.get(key) || null;
@@ -54,7 +54,7 @@ export const createMockRedis = (): MockRedis => {
     expire: vi.fn(async () => 1),
     hmset: vi.fn(async (key: string, obj: Record<string, string>) => {
       hashes.set(key, { ...hashes.get(key), ...obj });
-      return 'OK';
+      return "OK";
     }),
     hgetall: vi.fn(async (key: string) => {
       return hashes.get(key) || {};
@@ -119,10 +119,10 @@ export const createMockRedis = (): MockRedis => {
     }),
     setex: vi.fn(async (key: string, _seconds: number, value: string) => {
       store.set(key, value);
-      return 'OK';
+      return "OK";
     }),
-    watch: vi.fn(async () => 'OK'),
-    unwatch: vi.fn(async () => 'OK'),
+    watch: vi.fn(async () => "OK"),
+    unwatch: vi.fn(async () => "OK"),
     multi: vi.fn(() => {
       const commands: Array<() => Promise<unknown>> = [];
       const chainable = {
@@ -218,11 +218,11 @@ export const createMockRedis = (): MockRedis => {
         // Clear old leader's isLeader flag
         const oldLeader = store.get(leaderKey);
         if (oldLeader) {
-          const oldLeaderConnKey = Array.from(hashes.keys()).find(k =>
-            hashes.get(k)?.connectionId === oldLeader
+          const oldLeaderConnKey = Array.from(hashes.keys()).find(
+            (k) => hashes.get(k)?.connectionId === oldLeader,
           );
           if (oldLeaderConnKey) {
-            hashes.get(oldLeaderConnKey)!.isLeader = 'false';
+            hashes.get(oldLeaderConnKey)!.isLeader = "false";
           }
         }
 
@@ -233,7 +233,7 @@ export const createMockRedis = (): MockRedis => {
           return null;
         }
 
-        const candidates = Array.from(memberSet).filter(id => id !== leavingConnectionId);
+        const candidates = Array.from(memberSet).filter((id) => id !== leavingConnectionId);
         if (candidates.length === 0) {
           store.delete(leaderKey);
           return null;
@@ -241,11 +241,11 @@ export const createMockRedis = (): MockRedis => {
 
         const newLeader = candidates[0];
         store.set(leaderKey, newLeader);
-        const newLeaderConnKey = Array.from(hashes.keys()).find(k =>
-          hashes.get(k)?.connectionId === newLeader
+        const newLeaderConnKey = Array.from(hashes.keys()).find(
+          (k) => hashes.get(k)?.connectionId === newLeader,
         );
         if (newLeaderConnKey) {
-          hashes.get(newLeaderConnKey)!.isLeader = 'true';
+          hashes.get(newLeaderConnKey)!.isLeader = "true";
         }
         return newLeader;
       }
@@ -268,8 +268,9 @@ export const createMockRedis = (): MockRedis => {
           connData.connectionId = connectionId;
           connData.sessionId = args[4] as string;
           if (username && username !== UNSET_SENTINEL) connData.username = username;
-          if (avatarUrl !== undefined && avatarUrl !== UNSET_SENTINEL) connData.avatarUrl = avatarUrl;
-          connData.isLeader = 'false';
+          if (avatarUrl !== undefined && avatarUrl !== UNSET_SENTINEL)
+            connData.avatarUrl = avatarUrl;
+          connData.isLeader = "false";
 
           // Add to session members set
           if (!sets.has(sessionMembersKey)) sets.set(sessionMembersKey, new Set());
@@ -278,7 +279,7 @@ export const createMockRedis = (): MockRedis => {
           // Leader election: if no leader exists, become leader
           if (!store.has(leaderKey)) {
             store.set(leaderKey, connectionId);
-            connData.isLeader = 'true';
+            connData.isLeader = "true";
             return 1; // Became leader
           }
           return 0; // Not leader
@@ -302,11 +303,11 @@ export const createMockRedis = (): MockRedis => {
             const newLeader = Array.from(memberSet)[0];
             store.set(leaderKey, newLeader);
             // Update new leader's connection data
-            const newLeaderConnKey = Array.from(hashes.keys()).find(k =>
-              hashes.get(k)?.connectionId === newLeader
+            const newLeaderConnKey = Array.from(hashes.keys()).find(
+              (k) => hashes.get(k)?.connectionId === newLeader,
             );
             if (newLeaderConnKey) {
-              hashes.get(newLeaderConnKey)!.isLeader = 'true';
+              hashes.get(newLeaderConnKey)!.isLeader = "true";
             }
             return newLeader;
           }

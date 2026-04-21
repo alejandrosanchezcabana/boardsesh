@@ -1,15 +1,15 @@
-'use client';
+"use client";
 
-import React, { useMemo } from 'react';
-import type { LogbookEntry } from '@/app/hooks/use-logbook';
-import { AscentStatusIcon } from '@/app/components/ascent-status/ascent-status-icon';
+import React, { useMemo } from "react";
+import type { LogbookEntry } from "@/app/hooks/use-logbook";
+import { AscentStatusIcon } from "@/app/components/ascent-status/ascent-status-icon";
 import {
   normalizeAscentStatus,
   pickHighestAscentStatus,
   type AscentStatusValue,
-} from '@/app/components/ascent-status/ascent-status-utils';
-import { ClimbUuid } from '@/app/lib/types';
-import { useOptionalBoardProvider } from '../board-provider/board-provider-context';
+} from "@/app/components/ascent-status/ascent-status-utils";
+import { ClimbUuid } from "@/app/lib/types";
+import { useOptionalBoardProvider } from "../board-provider/board-provider-context";
 
 interface AscentStatusProps {
   climbUuid: ClimbUuid;
@@ -41,7 +41,7 @@ export const AscentStatus = ({
 }: AscentStatusProps) => {
   const boardProvider = useOptionalBoardProvider();
   const logbook = boardProvider?.logbook ?? [];
-  const boardName = boardProvider?.boardName ?? 'kilter';
+  const boardName = boardProvider?.boardName ?? "kilter";
 
   const ascentsForClimb = useMemo(
     () => logbook.filter((ascent) => ascent.climb_uuid === climbUuid),
@@ -57,7 +57,7 @@ export const AscentStatus = ({
     () => getHighestStatus(ascentsForClimb.filter(({ is_mirror }) => is_mirror)),
     [ascentsForClimb],
   );
-  const supportsMirroring = boardName === 'tension' || boardName === 'decoy';
+  const supportsMirroring = boardName === "tension" || boardName === "decoy";
 
   if (supportsMirroring) {
     if (!regularStatus && !mirroredStatus) return null;

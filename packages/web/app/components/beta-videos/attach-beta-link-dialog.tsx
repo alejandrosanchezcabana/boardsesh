@@ -1,10 +1,10 @@
-'use client';
+"use client";
 
-import React from 'react';
-import Dialog from '@mui/material/Dialog';
-import DialogTitle from '@mui/material/DialogTitle';
-import DialogContent from '@mui/material/DialogContent';
-import AttachBetaLinkForm from './attach-beta-link-form';
+import React from "react";
+import Dialog from "@mui/material/Dialog";
+import DialogTitle from "@mui/material/DialogTitle";
+import DialogContent from "@mui/material/DialogContent";
+import AttachBetaLinkForm from "./attach-beta-link-form";
 
 interface AttachBetaLinkDialogProps {
   open: boolean;
@@ -25,9 +25,7 @@ export const AttachBetaLinkDialog: React.FC<AttachBetaLinkDialogProps> = ({
 }) => {
   return (
     <Dialog open={open} onClose={onClose} maxWidth="sm" fullWidth>
-      <DialogTitle>
-        {climbName ? `Share beta for ${climbName}` : 'Share beta video'}
-      </DialogTitle>
+      <DialogTitle>{climbName ? `Share beta for ${climbName}` : "Share beta video"}</DialogTitle>
       <DialogContent>
         <AttachBetaLinkForm
           boardType={boardType}

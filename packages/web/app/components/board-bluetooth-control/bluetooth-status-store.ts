@@ -1,6 +1,6 @@
-'use client';
+"use client";
 
-import { useSyncExternalStore } from 'react';
+import { useSyncExternalStore } from "react";
 
 /**
  * Module-level store that tracks whether any mounted `BluetoothProvider`
@@ -69,7 +69,7 @@ export function disconnectAllBluetooth(): void {
     try {
       disconnect();
     } catch (err) {
-      console.error('Failed to disconnect bluetooth:', err);
+      console.error("Failed to disconnect bluetooth:", err);
     }
   }
 }

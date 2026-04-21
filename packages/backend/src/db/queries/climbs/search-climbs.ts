@@ -1,6 +1,10 @@
-import { db } from '../../client';
-import { searchClimbs as sharedSearchClimbs, type BoardRouteParams, type ClimbSearchParams } from '@boardsesh/db/queries';
-import type { Climb, ClimbSearchResult } from '@boardsesh/shared-schema';
+import { db } from "../../client";
+import {
+  searchClimbs as sharedSearchClimbs,
+  type BoardRouteParams,
+  type ClimbSearchParams,
+} from "@boardsesh/db/queries";
+import type { Climb, ClimbSearchResult } from "@boardsesh/shared-schema";
 
 // Re-export shared types for backward compatibility
 export type { ClimbSearchParams, BoardRouteParams as ParsedBoardRouteParameters };
@@ -25,7 +29,7 @@ export const searchClimbs = async (
       totalCount: 0, // Resolved lazily by the totalCount field resolver
     };
   } catch (error) {
-    console.error('Error in searchClimbs:', error);
+    console.error("Error in searchClimbs:", error);
     throw error;
   }
 };

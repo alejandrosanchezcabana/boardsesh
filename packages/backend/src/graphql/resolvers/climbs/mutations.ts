@@ -1,30 +1,34 @@
-import crypto from 'crypto';
-import { and, eq, sql } from 'drizzle-orm';
-import type { ConnectionContext, SaveClimbResult, UpdateClimbResult } from '@boardsesh/shared-schema';
-import { SUPPORTED_BOARDS } from '@boardsesh/shared-schema';
-import { db } from '../../../db/client';
-import * as dbSchema from '@boardsesh/db/schema';
-import { UNIFIED_TABLES, isValidBoardName } from '../../../db/queries/util/table-select';
-import { populateDenormalizedColumns } from '@boardsesh/db/queries';
-import { publishSocialEvent } from '../../../events';
-import { requireAuthenticated, applyRateLimit, validateInput } from '../shared/helpers';
+import crypto from "crypto";
+import { and, eq, sql } from "drizzle-orm";
+import type {
+  ConnectionContext,
+  SaveClimbResult,
+  UpdateClimbResult,
+} from "@boardsesh/shared-schema";
+import { SUPPORTED_BOARDS } from "@boardsesh/shared-schema";
+import { db } from "../../../db/client";
+import * as dbSchema from "@boardsesh/db/schema";
+import { UNIFIED_TABLES, isValidBoardName } from "../../../db/queries/util/table-select";
+import { populateDenormalizedColumns } from "@boardsesh/db/queries";
+import { publishSocialEvent } from "../../../events";
+import { requireAuthenticated, applyRateLimit, validateInput } from "../shared/helpers";
 import {
   buildMoonBoardClimbHoldRows,
   buildMoonBoardDuplicateError,
   encodeMoonBoardHoldsToFrames,
   findMoonBoardDuplicateMatch,
-} from './moonboard-duplicates';
+} from "./moonboard-duplicates";
 import {
   SaveClimbInputSchema,
   SaveMoonBoardClimbInputSchema,
   UpdateClimbInputSchema,
-} from '../../../validation/schemas';
+} from "../../../validation/schemas";
 
 type SaveClimbArgs = { input: unknown };
 
 function generateClimbUuid(): string {
   // Match Aurora-style uppercase UUID without dashes
-  return crypto.randomUUID().replace(/-/g, '').toUpperCase();
+  return crypto.randomUUID().replace(/-/g, "").toUpperCase();
 }
 
 async function getUserProfile(userId: string) {
@@ -41,15 +45,18 @@ async function getUserProfile(userId: string) {
     .limit(1);
 
   return {
-    displayName: user?.displayName || user?.name || '',
-    name: user?.name || '',
+    displayName: user?.displayName || user?.name || "",
+    name: user?.name || "",
     avatarUrl: user?.avatarUrl || user?.image || undefined,
   };
 }
 
-async function resolveDifficultyId(boardType: string, grade?: string | null): Promise<number | null> {
+async function resolveDifficultyId(
+  boardType: string,
+  grade?: string | null,
+): Promise<number | null> {
   if (!grade) return null;
-  const fontPart = grade.split('/')[0].trim().toLowerCase();
+  const fontPart = grade.split("/")[0].trim().toLowerCase();
 
   const [row] = await db
     .select({ difficulty: dbSchema.boardDifficultyGrades.difficulty })
@@ -57,8 +64,8 @@ async function resolveDifficultyId(boardType: string, grade?: string | null): Pr
     .where(
       and(
         eq(dbSchema.boardDifficultyGrades.boardType, boardType),
-        sql`LOWER(${dbSchema.boardDifficultyGrades.boulderName}) = ${fontPart}`
-      )
+        sql`LOWER(${dbSchema.boardDifficultyGrades.boulderName}) = ${fontPart}`,
+      ),
     )
     .limit(1);
 
@@ -73,16 +80,18 @@ export const climbMutations = {
   saveClimb: async (
     _: unknown,
     { input }: SaveClimbArgs,
-    ctx: ConnectionContext
+    ctx: ConnectionContext,
   ): Promise<SaveClimbResult> => {
     requireAuthenticated(ctx);
     await applyRateLimit(ctx, 10);
 
-    const validated = validateInput(SaveClimbInputSchema, input, 'input');
+    const validated = validateInput(SaveClimbInputSchema, input, "input");
     const isListed = !validated.isDraft;
 
     if (!isValidBoardName(validated.boardType)) {
-      throw new Error(`Invalid board type: ${validated.boardType}. Must be one of ${SUPPORTED_BOARDS.join(', ')}`);
+      throw new Error(
+        `Invalid board type: ${validated.boardType}. Must be one of ${SUPPORTED_BOARDS.join(", ")}`,
+      );
     }
 
     const now = new Date().toISOString();
@@ -100,7 +109,7 @@ export const climbMutations = {
       setterId: null,
       setterUsername: preferredSetter,
       name: validated.name,
-      description: validated.description ?? '',
+      description: validated.description ?? "",
       angle: validated.angle,
       framesCount: validated.framesCount ?? 1,
       framesPace: validated.framesPace ?? 0,
@@ -117,9 +126,9 @@ export const climbMutations = {
     await populateDenormalizedColumns(db, validated.boardType, [uuid]);
 
     await publishSocialEvent({
-      type: 'climb.created',
+      type: "climb.created",
       actorId: ctx.userId!,
-      entityType: 'climb',
+      entityType: "climb",
       entityId: uuid,
       timestamp: Date.now(),
       metadata: {
@@ -129,8 +138,8 @@ export const climbMutations = {
         climbUuid: uuid,
         angle: String(validated.angle),
         frames: validated.frames,
-        setterDisplayName: preferredSetter || '',
-        setterAvatarUrl: avatarUrl || '',
+        setterDisplayName: preferredSetter || "",
+        setterAvatarUrl: avatarUrl || "",
       },
     });
 
@@ -144,17 +153,17 @@ export const climbMutations = {
   saveMoonBoardClimb: async (
     _: unknown,
     { input }: SaveClimbArgs,
-    ctx: ConnectionContext
+    ctx: ConnectionContext,
   ): Promise<SaveClimbResult> => {
     requireAuthenticated(ctx);
     await applyRateLimit(ctx, 10);
 
-    const validated = validateInput(SaveMoonBoardClimbInputSchema, input, 'input');
+    const validated = validateInput(SaveMoonBoardClimbInputSchema, input, "input");
     const isDraft = validated.isDraft ?? false;
     const isListed = !isDraft;
 
-    if (validated.boardType !== 'moonboard') {
-      throw new Error('saveMoonBoardClimb is only supported for boardType=moonboard');
+    if (validated.boardType !== "moonboard") {
+      throw new Error("saveMoonBoardClimb is only supported for boardType=moonboard");
     }
 
     const uuid = generateClimbUuid();
@@ -163,7 +172,11 @@ export const climbMutations = {
     const { displayName, name, avatarUrl } = await getUserProfile(ctx.userId!);
     const preferredSetter = validated.setter || displayName || name || null;
 
-    const duplicateMatch = await findMoonBoardDuplicateMatch(validated.layoutId, validated.angle, validated.holds);
+    const duplicateMatch = await findMoonBoardDuplicateMatch(
+      validated.layoutId,
+      validated.angle,
+      validated.holds,
+    );
     if (duplicateMatch) {
       throw new Error(buildMoonBoardDuplicateError(duplicateMatch.existingClimbName));
     }
@@ -178,7 +191,7 @@ export const climbMutations = {
       setterId: null,
       setterUsername: preferredSetter,
       name: validated.name,
-      description: validated.description ?? '',
+      description: validated.description ?? "",
       angle: validated.angle,
       framesCount: 1,
       framesPace: 0,
@@ -228,9 +241,9 @@ export const climbMutations = {
     }
 
     await publishSocialEvent({
-      type: 'climb.created',
+      type: "climb.created",
       actorId: ctx.userId!,
-      entityType: 'climb',
+      entityType: "climb",
       entityId: uuid,
       timestamp: Date.now(),
       metadata: {
@@ -240,9 +253,9 @@ export const climbMutations = {
         climbUuid: uuid,
         angle: String(validated.angle),
         frames,
-        setterDisplayName: preferredSetter || '',
-        setterAvatarUrl: avatarUrl || '',
-        difficultyName: validated.userGrade || '',
+        setterDisplayName: preferredSetter || "",
+        setterAvatarUrl: avatarUrl || "",
+        difficultyName: validated.userGrade || "",
       },
     });
 
@@ -260,15 +273,17 @@ export const climbMutations = {
   updateClimb: async (
     _: unknown,
     { input }: { input: unknown },
-    ctx: ConnectionContext
+    ctx: ConnectionContext,
   ): Promise<UpdateClimbResult> => {
     requireAuthenticated(ctx);
     await applyRateLimit(ctx, 20);
 
-    const validated = validateInput(UpdateClimbInputSchema, input, 'input');
+    const validated = validateInput(UpdateClimbInputSchema, input, "input");
 
     if (!isValidBoardName(validated.boardType)) {
-      throw new Error(`Invalid board type: ${validated.boardType}. Must be one of ${SUPPORTED_BOARDS.join(', ')}`);
+      throw new Error(
+        `Invalid board type: ${validated.boardType}. Must be one of ${SUPPORTED_BOARDS.join(", ")}`,
+      );
     }
 
     // Load the existing row and verify ownership + edit window.
@@ -285,16 +300,16 @@ export const climbMutations = {
         and(
           eq(dbSchema.boardClimbs.uuid, validated.uuid),
           eq(dbSchema.boardClimbs.boardType, validated.boardType),
-        )
+        ),
       )
       .limit(1);
 
     if (!existing) {
-      throw new Error('Climb not found');
+      throw new Error("Climb not found");
     }
 
     if (existing.userId !== ctx.userId!) {
-      throw new Error('You can only update your own climbs');
+      throw new Error("You can only update your own climbs");
     }
 
     const EDIT_WINDOW_MS = 24 * 60 * 60 * 1000;
@@ -303,19 +318,22 @@ export const climbMutations = {
     if (!currentlyDraft) {
       // Non-draft: only editable within 24h of the first publish.
       if (!existing.publishedAt) {
-        throw new Error('This climb can no longer be edited');
+        throw new Error("This climb can no longer be edited");
       }
       const publishedMs = Date.parse(existing.publishedAt);
       if (!Number.isFinite(publishedMs) || Date.now() - publishedMs > EDIT_WINDOW_MS) {
-        throw new Error('The 24 hour edit window has expired');
+        throw new Error("The 24 hour edit window has expired");
       }
     }
 
     // Decide the next draft/publish state. We only honor a transition from
     // draft → published; a publish → draft attempt is silently ignored.
-    const nextIsDraft = validated.isDraft === undefined
-      ? existing.isDraft ?? false
-      : (currentlyDraft && validated.isDraft === false ? false : existing.isDraft ?? false);
+    const nextIsDraft =
+      validated.isDraft === undefined
+        ? (existing.isDraft ?? false)
+        : currentlyDraft && validated.isDraft === false
+          ? false
+          : (existing.isDraft ?? false);
 
     const transitioningToPublished = currentlyDraft && validated.isDraft === false;
     const now = new Date().toISOString();
@@ -341,7 +359,7 @@ export const climbMutations = {
         and(
           eq(dbSchema.boardClimbs.uuid, validated.uuid),
           eq(dbSchema.boardClimbs.boardType, validated.boardType),
-        )
+        ),
       );
 
     // If frames changed we need to refresh the denormalized edge/set columns
@@ -356,20 +374,20 @@ export const climbMutations = {
       const { displayName, name, avatarUrl } = await getUserProfile(ctx.userId!);
       const preferredSetter = displayName || name || null;
       await publishSocialEvent({
-        type: 'climb.created',
+        type: "climb.created",
         actorId: ctx.userId!,
-        entityType: 'climb',
+        entityType: "climb",
         entityId: validated.uuid,
         timestamp: Date.now(),
         metadata: {
           boardType: validated.boardType,
-          layoutId: '',
-          climbName: validated.name ?? '',
+          layoutId: "",
+          climbName: validated.name ?? "",
           climbUuid: validated.uuid,
-          angle: validated.angle !== undefined ? String(validated.angle) : '',
-          frames: validated.frames ?? '',
-          setterDisplayName: preferredSetter || '',
-          setterAvatarUrl: avatarUrl || '',
+          angle: validated.angle !== undefined ? String(validated.angle) : "",
+          frames: validated.frames ?? "",
+          setterDisplayName: preferredSetter || "",
+          setterAvatarUrl: avatarUrl || "",
         },
       });
     }

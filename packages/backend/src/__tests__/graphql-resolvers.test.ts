@@ -1,11 +1,11 @@
-import { describe, it, expect, beforeAll, afterAll } from 'vitest';
-import { createClient, Client } from 'graphql-ws';
-import WebSocket from 'ws';
-import { SUPPORTED_BOARDS } from '@boardsesh/shared-schema';
-import { startServer } from '../server';
+import { describe, it, expect, beforeAll, afterAll } from "vite-plus/test";
+import { createClient, Client } from "graphql-ws";
+import WebSocket from "ws";
+import { SUPPORTED_BOARDS } from "@boardsesh/shared-schema";
+import { startServer } from "../server";
 
 const TEST_PORT = 8084; // Different port to avoid conflicts
-const BOARD_NAME_ERROR = `Board name must be ${SUPPORTED_BOARDS.join(', ')}`;
+const BOARD_NAME_ERROR = `Board name must be ${SUPPORTED_BOARDS.join(", ")}`;
 
 // Helper to execute GraphQL operations
 async function execute<T>(
@@ -43,16 +43,16 @@ async function expectError(
           }
           resolve();
         } else {
-          reject(new Error('Expected GraphQL error but got success'));
+          reject(new Error("Expected GraphQL error but got success"));
         }
       },
       error: () => resolve(), // Connection errors are also acceptable
-      complete: () => reject(new Error('Expected error but query completed successfully')),
+      complete: () => reject(new Error("Expected error but query completed successfully")),
     });
   });
 }
 
-describe('GraphQL Resolver Input Validation', () => {
+describe("GraphQL Resolver Input Validation", () => {
   let server: Awaited<ReturnType<typeof startServer>>;
   let client: Client;
 
@@ -78,8 +78,8 @@ describe('GraphQL Resolver Input Validation', () => {
     });
   });
 
-  describe('Session Query Validation', () => {
-    it('should reject invalid session ID with special characters', async () => {
+  describe("Session Query Validation", () => {
+    it("should reject invalid session ID with special characters", async () => {
       const query = `
         query TestSession($sessionId: ID!) {
           session(sessionId: $sessionId) {
@@ -92,13 +92,13 @@ describe('GraphQL Resolver Input Validation', () => {
         client,
         {
           query,
-          variables: { sessionId: 'test<script>alert(1)</script>' },
+          variables: { sessionId: "test<script>alert(1)</script>" },
         },
-        'Invalid sessionId',
+        "Invalid sessionId",
       );
     });
 
-    it('should reject empty session ID', async () => {
+    it("should reject empty session ID", async () => {
       const query = `
         query TestSession($sessionId: ID!) {
           session(sessionId: $sessionId) {
@@ -111,15 +111,15 @@ describe('GraphQL Resolver Input Validation', () => {
         client,
         {
           query,
-          variables: { sessionId: '' },
+          variables: { sessionId: "" },
         },
-        'Session ID cannot be empty',
+        "Session ID cannot be empty",
       );
     });
   });
 
-  describe('Climb Query Validation', () => {
-    it('should reject invalid layoutId (negative)', async () => {
+  describe("Climb Query Validation", () => {
+    it("should reject invalid layoutId (negative)", async () => {
       const query = `
         query TestClimb(
           $boardName: String!
@@ -147,19 +147,19 @@ describe('GraphQL Resolver Input Validation', () => {
         {
           query,
           variables: {
-            boardName: 'kilter',
+            boardName: "kilter",
             layoutId: -1,
             sizeId: 1,
-            setIds: '1',
+            setIds: "1",
             angle: 40,
-            climbUuid: 'test-uuid',
+            climbUuid: "test-uuid",
           },
         },
-        'Invalid layoutId',
+        "Invalid layoutId",
       );
     });
 
-    it('should reject invalid angle (> 90)', async () => {
+    it("should reject invalid angle (> 90)", async () => {
       const query = `
         query TestClimb(
           $boardName: String!
@@ -187,19 +187,19 @@ describe('GraphQL Resolver Input Validation', () => {
         {
           query,
           variables: {
-            boardName: 'kilter',
+            boardName: "kilter",
             layoutId: 1,
             sizeId: 1,
-            setIds: '1',
+            setIds: "1",
             angle: 100,
-            climbUuid: 'test-uuid',
+            climbUuid: "test-uuid",
           },
         },
-        'Invalid angle',
+        "Invalid angle",
       );
     });
 
-    it('should reject invalid board name', async () => {
+    it("should reject invalid board name", async () => {
       const query = `
         query TestClimb(
           $boardName: String!
@@ -227,12 +227,12 @@ describe('GraphQL Resolver Input Validation', () => {
         {
           query,
           variables: {
-            boardName: 'invalid-board',
+            boardName: "invalid-board",
             layoutId: 1,
             sizeId: 1,
-            setIds: '1',
+            setIds: "1",
             angle: 40,
-            climbUuid: 'test-uuid',
+            climbUuid: "test-uuid",
           },
         },
         BOARD_NAME_ERROR,
@@ -240,8 +240,8 @@ describe('GraphQL Resolver Input Validation', () => {
     });
   });
 
-  describe('Search Climbs Validation', () => {
-    it('should reject pageSize exceeding MAX_PAGE_SIZE', async () => {
+  describe("Search Climbs Validation", () => {
+    it("should reject pageSize exceeding MAX_PAGE_SIZE", async () => {
       const query = `
         query SearchClimbs($input: ClimbSearchInput!) {
           searchClimbs(input: $input) {
@@ -259,21 +259,21 @@ describe('GraphQL Resolver Input Validation', () => {
           query,
           variables: {
             input: {
-              boardName: 'kilter',
+              boardName: "kilter",
               layoutId: 1,
               sizeId: 1,
-              setIds: '1',
+              setIds: "1",
               angle: 40,
               page: 0,
               pageSize: 200, // Exceeds MAX_PAGE_SIZE of 100
             },
           },
         },
-        'Page size cannot exceed 100',
+        "Page size cannot exceed 100",
       );
     });
 
-    it('should accept valid pageSize', async () => {
+    it("should accept valid pageSize", async () => {
       const query = `
         query SearchClimbs($input: ClimbSearchInput!) {
           searchClimbs(input: $input) {
@@ -286,14 +286,16 @@ describe('GraphQL Resolver Input Validation', () => {
       `;
 
       // This should succeed (not throw)
-      const result = await execute<{ searchClimbs: { climbs: Array<{ uuid: string }>; hasMore: boolean } }>(client, {
+      const result = await execute<{
+        searchClimbs: { climbs: Array<{ uuid: string }>; hasMore: boolean };
+      }>(client, {
         query,
         variables: {
           input: {
-            boardName: 'kilter',
+            boardName: "kilter",
             layoutId: 1,
             sizeId: 7,
-            setIds: '1',
+            setIds: "1",
             angle: 40,
             page: 0,
             pageSize: 50, // Valid
@@ -306,8 +308,8 @@ describe('GraphQL Resolver Input Validation', () => {
     });
   });
 
-  describe('Board Name Validation (SQL Injection Prevention)', () => {
-    it('should reject SQL injection attempt in board name', async () => {
+  describe("Board Name Validation (SQL Injection Prevention)", () => {
+    it("should reject SQL injection attempt in board name", async () => {
       const query = `
         query SearchClimbs($input: ClimbSearchInput!) {
           searchClimbs(input: $input) {
@@ -327,7 +329,7 @@ describe('GraphQL Resolver Input Validation', () => {
               boardName: "kilter'; DROP TABLE users; --",
               layoutId: 1,
               sizeId: 1,
-              setIds: '1',
+              setIds: "1",
               angle: 40,
             },
           },

@@ -1,15 +1,15 @@
-'use client';
+"use client";
 
-import React from 'react';
-import Box from '@mui/material/Box';
-import Typography from '@mui/material/Typography';
-import CheckCircleOutlined from '@mui/icons-material/CheckCircleOutlined';
-import ErrorOutlined from '@mui/icons-material/ErrorOutlined';
-import InfoOutlined from '@mui/icons-material/InfoOutlined';
-import WarningAmberOutlined from '@mui/icons-material/WarningAmberOutlined';
-import type { SxProps, Theme } from '@mui/material/styles';
+import React from "react";
+import Box from "@mui/material/Box";
+import Typography from "@mui/material/Typography";
+import CheckCircleOutlined from "@mui/icons-material/CheckCircleOutlined";
+import ErrorOutlined from "@mui/icons-material/ErrorOutlined";
+import InfoOutlined from "@mui/icons-material/InfoOutlined";
+import WarningAmberOutlined from "@mui/icons-material/WarningAmberOutlined";
+import type { SxProps, Theme } from "@mui/material/styles";
 
-type ResultStatus = 'success' | 'error' | 'info' | 'warning';
+type ResultStatus = "success" | "error" | "info" | "warning";
 
 type ResultPageProps = {
   status: ResultStatus;
@@ -21,22 +21,22 @@ type ResultPageProps = {
 };
 
 const statusIcons: Record<ResultStatus, React.ReactNode> = {
-  success: <CheckCircleOutlined sx={{ fontSize: 72, color: 'success.main' }} />,
-  error: <ErrorOutlined sx={{ fontSize: 72, color: 'error.main' }} />,
-  info: <InfoOutlined sx={{ fontSize: 72, color: 'info.main' }} />,
-  warning: <WarningAmberOutlined sx={{ fontSize: 72, color: 'warning.main' }} />,
+  success: <CheckCircleOutlined sx={{ fontSize: 72, color: "success.main" }} />,
+  error: <ErrorOutlined sx={{ fontSize: 72, color: "error.main" }} />,
+  info: <InfoOutlined sx={{ fontSize: 72, color: "info.main" }} />,
+  warning: <WarningAmberOutlined sx={{ fontSize: 72, color: "warning.main" }} />,
 };
 
 export function ResultPage({ status, title, subTitle, extra, icon, sx }: ResultPageProps) {
   return (
     <Box
       sx={{
-        display: 'flex',
-        flexDirection: 'column',
-        alignItems: 'center',
-        justifyContent: 'center',
+        display: "flex",
+        flexDirection: "column",
+        alignItems: "center",
+        justifyContent: "center",
         padding: 4,
-        textAlign: 'center',
+        textAlign: "center",
         ...sx,
       }}
     >
@@ -49,7 +49,7 @@ export function ResultPage({ status, title, subTitle, extra, icon, sx }: ResultP
           {subTitle}
         </Typography>
       )}
-      {extra && <Box sx={{ display: 'flex', gap: 1, justifyContent: 'center' }}>{extra}</Box>}
+      {extra && <Box sx={{ display: "flex", gap: 1, justifyContent: "center" }}>{extra}</Box>}
     </Box>
   );
 }

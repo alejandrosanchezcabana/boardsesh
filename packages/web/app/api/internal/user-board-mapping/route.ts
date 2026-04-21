@@ -29,20 +29,12 @@ export async function POST(request: NextRequest) {
 
     const { boardType, boardUserId, boardUsername } = result.data;
 
-    await createUserBoardMapping(
-      session.user.id,
-      boardType,
-      boardUserId,
-      boardUsername
-    );
+    await createUserBoardMapping(session.user.id, boardType, boardUserId, boardUsername);
 
     return NextResponse.json({ success: true });
   } catch (error) {
     console.error("Failed to create board mapping:", error);
-    return NextResponse.json(
-      { error: "Failed to create board mapping" },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: "Failed to create board mapping" }, { status: 500 });
   }
 }
 
@@ -58,9 +50,6 @@ export async function GET() {
     return NextResponse.json({ mappings });
   } catch (error) {
     console.error("Failed to get board mappings:", error);
-    return NextResponse.json(
-      { error: "Failed to get board mappings" },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: "Failed to get board mappings" }, { status: 500 });
   }
 }

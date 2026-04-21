@@ -1,7 +1,7 @@
-import { createIndexedDBStore } from './idb-helper';
-import { BoardName } from '@/app/lib/types';
+import { createIndexedDBStore } from "./idb-helper";
+import { BoardName } from "@/app/lib/types";
 
-const STORE_NAME = 'board-configurations';
+const STORE_NAME = "board-configurations";
 
 export type StoredBoardConfig = {
   name: string;
@@ -14,9 +14,9 @@ export type StoredBoardConfig = {
   lastUsed?: string;
 };
 
-const getDB = createIndexedDBStore('boardsesh-config', STORE_NAME, 1, (db) => {
+const getDB = createIndexedDBStore("boardsesh-config", STORE_NAME, 1, (db) => {
   if (!db.objectStoreNames.contains(STORE_NAME)) {
-    db.createObjectStore(STORE_NAME, { keyPath: 'name' });
+    db.createObjectStore(STORE_NAME, { keyPath: "name" });
   }
 });
 
@@ -29,7 +29,7 @@ export const loadSavedBoards = async (): Promise<StoredBoardConfig[]> => {
       (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
     );
   } catch (error) {
-    console.error('Failed to load saved boards:', error);
+    console.error("Failed to load saved boards:", error);
     return [];
   }
 };
@@ -40,7 +40,7 @@ export const saveBoardConfig = async (config: StoredBoardConfig): Promise<void> 
     if (!db) return;
     await db.put(STORE_NAME, config);
   } catch (error) {
-    console.error('Failed to save board config:', error);
+    console.error("Failed to save board config:", error);
   }
 };
 
@@ -50,6 +50,6 @@ export const deleteBoardConfig = async (configName: string): Promise<void> => {
     if (!db) return;
     await db.delete(STORE_NAME, configName);
   } catch (error) {
-    console.error('Failed to delete board config:', error);
+    console.error("Failed to delete board config:", error);
   }
 };

@@ -1,4 +1,4 @@
-import { gql } from 'graphql-request';
+import { gql } from "graphql-request";
 
 // Fragment for playlist fields
 export const PLAYLIST_FIELDS = gql`
@@ -380,7 +380,7 @@ export interface DiscoverPlaylistsInput {
   layoutId?: number;
   name?: string;
   creatorIds?: string[];
-  sortBy?: 'recent' | 'popular';
+  sortBy?: "recent" | "popular";
   page?: number;
   pageSize?: number;
 }

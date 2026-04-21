@@ -46,4 +46,4 @@ We're always looking to collaborate with climbers, developers, and anyone passio
 
 ---
 
-*Together, we can build the best training companion for board climbers everywhere.*
+_Together, we can build the best training companion for board climbers everywhere._

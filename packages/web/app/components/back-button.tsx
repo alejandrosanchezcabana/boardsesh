@@ -1,9 +1,9 @@
-'use client';
+"use client";
 
-import React, { useEffect, useState } from 'react';
-import IconButton from '@mui/material/IconButton';
-import ArrowBackOutlined from '@mui/icons-material/ArrowBackOutlined';
-import { useRouter } from 'next/navigation';
+import React, { useEffect, useState } from "react";
+import IconButton from "@mui/material/IconButton";
+import ArrowBackOutlined from "@mui/icons-material/ArrowBackOutlined";
+import { useRouter } from "next/navigation";
 
 type BackButtonProps = {
   fallbackUrl?: string;
@@ -15,7 +15,7 @@ const BackButton = ({ fallbackUrl, className }: BackButtonProps) => {
   const [canGoBack, setCanGoBack] = useState(false);
 
   useEffect(() => {
-    if (typeof window !== 'undefined') {
+    if (typeof window !== "undefined") {
       const hasHistory = window.history.length > 1;
       const referrer = document.referrer;
       let isBoardseshReferrer = false;
@@ -27,9 +27,9 @@ const BackButton = ({ fallbackUrl, className }: BackButtonProps) => {
           const currentHost = window.location.hostname;
           isBoardseshReferrer =
             host === currentHost ||
-            host.endsWith('boardsesh.com') ||
-            host.endsWith('boardsesh.io') ||
-            host === 'localhost';
+            host.endsWith("boardsesh.com") ||
+            host.endsWith("boardsesh.io") ||
+            host === "localhost";
         } catch {
           isBoardseshReferrer = false;
         }
@@ -56,7 +56,11 @@ const BackButton = ({ fallbackUrl, className }: BackButtonProps) => {
     }
   };
 
-  return <IconButton onClick={handleClick} className={className}><ArrowBackOutlined /></IconButton>;
+  return (
+    <IconButton onClick={handleClick} className={className}>
+      <ArrowBackOutlined />
+    </IconButton>
+  );
 };
 
 export default BackButton;

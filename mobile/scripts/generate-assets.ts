@@ -111,7 +111,9 @@ function buildLogoSvg(
 
   const parts: string[] = [];
 
-  parts.push(`<svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}" viewBox="0 0 ${width} ${height}">`);
+  parts.push(
+    `<svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}" viewBox="0 0 ${width} ${height}">`,
+  );
 
   // Background
   if (bg !== "none" && bg !== "transparent") {
@@ -119,20 +121,12 @@ function buildLogoSvg(
   }
 
   // Rose shadow layers (drawn first, offset by shadowOffset)
-  parts.push(
-    buildPixelRects(B_PIXELS, bx(B_START_X) + so, by(B_START_Y) + so, ps, LOGO_ROSE),
-  );
-  parts.push(
-    buildPixelRects(S_PIXELS, bx(S_START_X) + so, by(S_START_Y) + so, ps, LOGO_ROSE),
-  );
+  parts.push(buildPixelRects(B_PIXELS, bx(B_START_X) + so, by(B_START_Y) + so, ps, LOGO_ROSE));
+  parts.push(buildPixelRects(S_PIXELS, bx(S_START_X) + so, by(S_START_Y) + so, ps, LOGO_ROSE));
 
   // Green letters on top
-  parts.push(
-    buildPixelRects(B_PIXELS, bx(B_START_X), by(B_START_Y), ps, LOGO_GREEN),
-  );
-  parts.push(
-    buildPixelRects(S_PIXELS, bx(S_START_X), by(S_START_Y), ps, LOGO_GREEN),
-  );
+  parts.push(buildPixelRects(B_PIXELS, bx(B_START_X), by(B_START_Y), ps, LOGO_GREEN));
+  parts.push(buildPixelRects(S_PIXELS, bx(S_START_X), by(S_START_Y), ps, LOGO_GREEN));
 
   parts.push("</svg>");
   return parts.join("\n");
@@ -156,10 +150,7 @@ async function writePng(
   height: number,
 ): Promise<void> {
   ensureDir(outputPath);
-  await sharp(Buffer.from(svgString))
-    .resize(width, height)
-    .png()
-    .toFile(outputPath);
+  await sharp(Buffer.from(svgString)).resize(width, height).png().toFile(outputPath);
   console.log(`  -> ${path.relative(MOBILE_ROOT, outputPath)} (${width}x${height})`);
 }
 
@@ -202,16 +193,10 @@ async function main() {
       "splash-2732x2732-2.png",
     ];
     // Generate the PNG once, then copy for the other two
-    const pngBuffer = await sharp(Buffer.from(svg))
-      .resize(size, size)
-      .png()
-      .toBuffer();
+    const pngBuffer = await sharp(Buffer.from(svg)).resize(size, size).png().toBuffer();
 
     for (const name of splashNames) {
-      const outPath = path.join(
-        MOBILE_ROOT,
-        `ios/App/App/Assets.xcassets/Splash.imageset/${name}`,
-      );
+      const outPath = path.join(MOBILE_ROOT, `ios/App/App/Assets.xcassets/Splash.imageset/${name}`);
       ensureDir(outPath);
       fs.writeFileSync(outPath, pngBuffer);
       console.log(`  -> ${path.relative(MOBILE_ROOT, outPath)} (${size}x${size})`);
@@ -231,18 +216,12 @@ async function main() {
   ];
 
   for (const { name, size } of androidDensities) {
-    const resDir = path.join(
-      MOBILE_ROOT,
-      `android/app/src/main/res/mipmap-${name}`,
-    );
+    const resDir = path.join(MOBILE_ROOT, `android/app/src/main/res/mipmap-${name}`);
 
     // ic_launcher.png and ic_launcher_round.png - full icon with background
     const logoScale = (size * 0.65) / VIEWBOX_SIZE;
     const svg = buildLogoSvg(size, size, logoScale);
-    const pngBuffer = await sharp(Buffer.from(svg))
-      .resize(size, size)
-      .png()
-      .toBuffer();
+    const pngBuffer = await sharp(Buffer.from(svg)).resize(size, size).png().toBuffer();
 
     for (const iconName of ["ic_launcher.png", "ic_launcher_round.png"]) {
       const outPath = path.join(resDir, iconName);
@@ -255,10 +234,7 @@ async function main() {
     const fgSvg = buildLogoSvg(size, size, logoScale, { background: "none" });
     const fgPath = path.join(resDir, "ic_launcher_foreground.png");
     ensureDir(fgPath);
-    await sharp(Buffer.from(fgSvg))
-      .resize(size, size)
-      .png()
-      .toFile(fgPath);
+    await sharp(Buffer.from(fgSvg)).resize(size, size).png().toFile(fgPath);
     console.log(`  -> ${path.relative(MOBILE_ROOT, fgPath)} (${size}x${size})`);
   }
 

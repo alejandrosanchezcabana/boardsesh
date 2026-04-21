@@ -1,16 +1,16 @@
-import React from 'react';
-import { notFound } from 'next/navigation';
-import { Metadata } from 'next';
-import { resolveBoardBySlug, boardToRouteParams } from '@/app/lib/board-slug-utils';
-import { getBoardDetailsForBoard } from '@/app/lib/board-utils';
-import { getClimb } from '@/app/lib/data/queries';
+import React from "react";
+import { notFound } from "next/navigation";
+import { Metadata } from "next";
+import { resolveBoardBySlug, boardToRouteParams } from "@/app/lib/board-slug-utils";
+import { getBoardDetailsForBoard } from "@/app/lib/board-utils";
+import { getClimb } from "@/app/lib/data/queries";
 
-import ClimbDetailPageServer from '@/app/components/climb-detail/climb-detail-page.server';
-import { fetchClimbDetailData } from '@/app/lib/data/climb-detail-data.server';
-import { scheduleOverlayWarming } from '@/app/lib/warm-overlay-cache';
-import { extractUuidFromSlug } from '@/app/lib/url-utils';
-import { buildOgBoardRenderUrl } from '@/app/components/board-renderer/util';
-import { OG_IMAGE_HEIGHT, OG_IMAGE_WIDTH } from '@/app/lib/seo/og';
+import ClimbDetailPageServer from "@/app/components/climb-detail/climb-detail-page.server";
+import { fetchClimbDetailData } from "@/app/lib/data/climb-detail-data.server";
+import { scheduleOverlayWarming } from "@/app/lib/warm-overlay-cache";
+import { extractUuidFromSlug } from "@/app/lib/url-utils";
+import { buildOgBoardRenderUrl } from "@/app/components/board-renderer/util";
+import { OG_IMAGE_HEIGHT, OG_IMAGE_WIDTH } from "@/app/lib/seo/og";
 
 interface BoardSlugViewPageProps {
   params: Promise<{ board_slug: string; angle: string; climb_uuid: string }>;
@@ -22,7 +22,7 @@ export async function generateMetadata(props: BoardSlugViewPageProps): Promise<M
   try {
     const board = await resolveBoardBySlug(params.board_slug);
     if (!board) {
-      return { title: 'Climb View | Boardsesh', description: 'View climb details and beta videos' };
+      return { title: "Climb View | Boardsesh", description: "View climb details and beta videos" };
     }
 
     const parsedParams = {
@@ -36,8 +36,8 @@ export async function generateMetadata(props: BoardSlugViewPageProps): Promise<M
     ]);
 
     const climbName = currentClimb.name || `${boardDetails.board_name} Climb`;
-    const climbGrade = currentClimb.difficulty || 'Unknown Grade';
-    const setter = currentClimb.setter_username || 'Unknown Setter';
+    const climbGrade = currentClimb.difficulty || "Unknown Grade";
+    const setter = currentClimb.setter_username || "Unknown Setter";
     const description = `${climbName} - ${climbGrade} by ${setter}. Quality: ${currentClimb.quality_average || 0}/5. Ascents: ${currentClimb.ascensionist_count || 0}`;
     const title = `${climbName} - ${climbGrade} | Boardsesh`;
     const climbUrl = `/b/${params.board_slug}/${params.angle}/view/${params.climb_uuid}`;
@@ -51,7 +51,7 @@ export async function generateMetadata(props: BoardSlugViewPageProps): Promise<M
       openGraph: {
         title: `${climbName} - ${climbGrade}`,
         description,
-        type: 'website',
+        type: "website",
         url: climbUrl,
         images: [
           {
@@ -63,7 +63,7 @@ export async function generateMetadata(props: BoardSlugViewPageProps): Promise<M
         ],
       },
       twitter: {
-        card: 'summary_large_image',
+        card: "summary_large_image",
         title: `${climbName} - ${climbGrade}`,
         description,
         images: [ogImagePath],
@@ -71,8 +71,8 @@ export async function generateMetadata(props: BoardSlugViewPageProps): Promise<M
     };
   } catch {
     return {
-      title: 'Climb View | Boardsesh',
-      description: 'View climb details and beta videos',
+      title: "Climb View | Boardsesh",
+      description: "View climb details and beta videos",
     };
   }
 }
@@ -105,7 +105,7 @@ export default async function BoardSlugViewPage(props: BoardSlugViewPageProps) {
       notFound();
     }
 
-    scheduleOverlayWarming({ boardDetails, climbs: [currentClimb], variant: 'full' });
+    scheduleOverlayWarming({ boardDetails, climbs: [currentClimb], variant: "full" });
 
     const climbWithProcessedData = {
       ...currentClimb,
@@ -125,7 +125,7 @@ export default async function BoardSlugViewPage(props: BoardSlugViewPageProps) {
       />
     );
   } catch (error) {
-    console.error('Error fetching climb view:', error);
+    console.error("Error fetching climb view:", error);
     notFound();
   }
 }

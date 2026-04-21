@@ -1,17 +1,17 @@
-import { v4 as uuidv4 } from 'uuid';
-import { createIndexedDBStore, migrateFromLocalStorage } from './idb-helper';
+import { v4 as uuidv4 } from "uuid";
+import { createIndexedDBStore, migrateFromLocalStorage } from "./idb-helper";
 
-const STORE_NAME = 'profile';
-const PROFILE_KEY = 'party-profile';
+const STORE_NAME = "profile";
+const PROFILE_KEY = "party-profile";
 
 // Legacy localStorage keys to migrate from
-const LEGACY_USER_ID_KEY = 'boardsesh:userId';
+const LEGACY_USER_ID_KEY = "boardsesh:userId";
 
 export interface PartyProfile {
   id: string; // UUID, auto-generated
 }
 
-const getDB = createIndexedDBStore('boardsesh-party', STORE_NAME);
+const getDB = createIndexedDBStore("boardsesh-party", STORE_NAME);
 
 /**
  * Get the party profile from IndexedDB
@@ -27,7 +27,7 @@ export const getPartyProfile = async (): Promise<PartyProfile | null> => {
     }
     return null;
   } catch (error) {
-    console.error('Failed to get party profile:', error);
+    console.error("Failed to get party profile:", error);
     return null;
   }
 };
@@ -41,7 +41,7 @@ export const savePartyProfile = async (profile: PartyProfile): Promise<void> => 
     if (!db) return;
     await db.put(STORE_NAME, profile, PROFILE_KEY);
   } catch (error) {
-    console.error('Failed to save party profile:', error);
+    console.error("Failed to save party profile:", error);
     throw error;
   }
 };
@@ -55,7 +55,7 @@ export const clearPartyProfile = async (): Promise<void> => {
     if (!db) return;
     await db.delete(STORE_NAME, PROFILE_KEY);
   } catch (error) {
-    console.error('Failed to clear party profile:', error);
+    console.error("Failed to clear party profile:", error);
     throw error;
   }
 };
@@ -65,7 +65,7 @@ export const clearPartyProfile = async (): Promise<void> => {
  * Returns true if migration was performed, false otherwise
  */
 const migrateFromLegacyStorage = async (): Promise<boolean> => {
-  if (typeof window === 'undefined') {
+  if (typeof window === "undefined") {
     return false;
   }
 
@@ -84,13 +84,13 @@ const migrateFromLegacyStorage = async (): Promise<boolean> => {
 
     if (migrated) {
       // Also clean up legacy username key if present
-      localStorage.removeItem('boardsesh:username');
-      console.log('Successfully migrated party profile from localStorage to IndexedDB');
+      localStorage.removeItem("boardsesh:username");
+      console.log("Successfully migrated party profile from localStorage to IndexedDB");
     }
 
     return migrated;
   } catch (error) {
-    console.error('Failed to migrate from localStorage:', error);
+    console.error("Failed to migrate from localStorage:", error);
     return false;
   }
 };
@@ -119,7 +119,7 @@ export const ensurePartyProfile = async (): Promise<PartyProfile> => {
     await savePartyProfile(newProfile);
     return newProfile;
   } catch (error) {
-    console.error('Failed to ensure party profile:', error);
+    console.error("Failed to ensure party profile:", error);
     // Return a fallback in-memory profile
     return {
       id: uuidv4(),

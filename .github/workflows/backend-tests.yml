@@ -4,16 +4,16 @@ on:
   push:
     branches: [main]
     paths:
-      - 'packages/backend/**'
-      - 'packages/shared-schema/**'
-      - 'packages/db/**'
-      - '.github/workflows/backend-tests.yml'
+      - "packages/backend/**"
+      - "packages/shared-schema/**"
+      - "packages/db/**"
+      - ".github/workflows/backend-tests.yml"
   pull_request:
     paths:
-      - 'packages/backend/**'
-      - 'packages/shared-schema/**'
-      - 'packages/db/**'
-      - '.github/workflows/backend-tests.yml'
+      - "packages/backend/**"
+      - "packages/shared-schema/**"
+      - "packages/db/**"
+      - ".github/workflows/backend-tests.yml"
 
 jobs:
   test:
@@ -64,7 +64,7 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '22'
+          node-version: "22"
 
       - name: Setup Bun
         uses: oven-sh/setup-bun@v2
@@ -125,6 +125,6 @@ jobs:
         uses: dorny/test-reporter@v1
         with:
           name: Backend Integration Tests
-          path: 'test-results/**/*.xml'
+          path: "test-results/**/*.xml"
           reporter: java-junit
           fail-on-error: false

@@ -1,4 +1,4 @@
-import type { SessionEvent } from '@boardsesh/shared-schema';
+import type { SessionEvent } from "@boardsesh/shared-schema";
 
 /**
  * Union type resolver for SessionEvent

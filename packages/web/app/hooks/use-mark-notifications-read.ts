@@ -1,17 +1,17 @@
-'use client';
+"use client";
 
-import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { useWsAuthToken } from './use-ws-auth-token';
-import { createGraphQLHttpClient } from '@/app/lib/graphql/client';
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useWsAuthToken } from "./use-ws-auth-token";
+import { createGraphQLHttpClient } from "@/app/lib/graphql/client";
 import {
   MARK_GROUP_NOTIFICATIONS_READ,
   MARK_ALL_NOTIFICATIONS_READ,
   type MarkGroupNotificationsReadMutationVariables,
   type MarkGroupNotificationsReadMutationResponse,
-} from '@/app/lib/graphql/operations';
-import type { GroupedNotification, GroupedNotificationConnection } from '@boardsesh/shared-schema';
-import { UNREAD_COUNT_QUERY_KEY } from './use-unread-notification-count';
-import { GROUPED_NOTIFICATIONS_QUERY_KEY } from './use-grouped-notifications';
+} from "@/app/lib/graphql/operations";
+import type { GroupedNotification, GroupedNotificationConnection } from "@boardsesh/shared-schema";
+import { UNREAD_COUNT_QUERY_KEY } from "./use-unread-notification-count";
+import { GROUPED_NOTIFICATIONS_QUERY_KEY } from "./use-grouped-notifications";
 
 /**
  * Hook to mark a notification group as read.

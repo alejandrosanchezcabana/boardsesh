@@ -46,7 +46,7 @@ export async function GET() {
     for (const cred of credentials) {
       if (!cred.auroraUserId) continue;
 
-      const boardType = cred.boardType as 'kilter' | 'tension';
+      const boardType = cred.boardType as "kilter" | "tension";
 
       // Count unsynced ticks (ascents/bids) for this user from boardsesh_ticks
       // Note: boardsesh_ticks uses NextAuth userId, not Aurora user_id
@@ -74,10 +74,10 @@ export async function GET() {
           ),
         );
 
-      if (boardType === 'kilter') {
+      if (boardType === "kilter") {
         counts.kilter.ascents = ascentResult?.count ?? 0;
         counts.kilter.climbs = climbResult?.count ?? 0;
-      } else if (boardType === 'tension') {
+      } else if (boardType === "tension") {
         counts.tension.ascents = ascentResult?.count ?? 0;
         counts.tension.climbs = climbResult?.count ?? 0;
       }

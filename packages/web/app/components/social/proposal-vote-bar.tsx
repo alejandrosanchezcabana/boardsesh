@@ -1,12 +1,12 @@
-'use client';
+"use client";
 
-import React from 'react';
-import Box from '@mui/material/Box';
-import LinearProgress from '@mui/material/LinearProgress';
-import Typography from '@mui/material/Typography';
-import Chip from '@mui/material/Chip';
-import CheckCircleIcon from '@mui/icons-material/CheckCircle';
-import { themeTokens } from '@/app/theme/theme-config';
+import React from "react";
+import Box from "@mui/material/Box";
+import LinearProgress from "@mui/material/LinearProgress";
+import Typography from "@mui/material/Typography";
+import Chip from "@mui/material/Chip";
+import CheckCircleIcon from "@mui/icons-material/CheckCircle";
+import { themeTokens } from "@/app/theme/theme-config";
 
 interface ProposalVoteBarProps {
   weightedUpvotes: number;
@@ -21,13 +21,14 @@ export default function ProposalVoteBar({
   requiredUpvotes,
   status,
 }: ProposalVoteBarProps) {
-  const progress = requiredUpvotes > 0 ? Math.min((weightedUpvotes / requiredUpvotes) * 100, 100) : 0;
-  const isApproved = status === 'approved';
-  const isRejected = status === 'rejected';
+  const progress =
+    requiredUpvotes > 0 ? Math.min((weightedUpvotes / requiredUpvotes) * 100, 100) : 0;
+  const isApproved = status === "approved";
+  const isRejected = status === "rejected";
 
   if (isApproved) {
     return (
-      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+      <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
         <Chip
           icon={<CheckCircleIcon />}
           label="Approved"
@@ -36,7 +37,7 @@ export default function ProposalVoteBar({
             bgcolor: themeTokens.colors.successBg,
             color: themeTokens.colors.success,
             fontWeight: 600,
-            '& .MuiChip-icon': { color: themeTokens.colors.success },
+            "& .MuiChip-icon": { color: themeTokens.colors.success },
           }}
         />
       </Box>
@@ -45,7 +46,7 @@ export default function ProposalVoteBar({
 
   if (isRejected) {
     return (
-      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+      <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
         <Chip
           label="Rejected"
           size="small"
@@ -60,8 +61,8 @@ export default function ProposalVoteBar({
   }
 
   return (
-    <Box sx={{ width: '100%' }}>
-      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 0.5 }}>
+    <Box sx={{ width: "100%" }}>
+      <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", mb: 0.5 }}>
         <Typography variant="caption" sx={{ color: themeTokens.neutral[500] }}>
           {weightedUpvotes} / {requiredUpvotes} votes needed
         </Typography>
@@ -78,7 +79,7 @@ export default function ProposalVoteBar({
           height: 6,
           borderRadius: 3,
           bgcolor: themeTokens.neutral[200],
-          '& .MuiLinearProgress-bar': {
+          "& .MuiLinearProgress-bar": {
             borderRadius: 3,
             bgcolor: progress >= 100 ? themeTokens.colors.success : themeTokens.colors.primary,
           },

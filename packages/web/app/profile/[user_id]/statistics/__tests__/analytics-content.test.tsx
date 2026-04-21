@@ -1,31 +1,30 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { render, screen } from '@testing-library/react';
-import React from 'react';
+import { describe, it, expect, vi, beforeEach } from "vite-plus/test";
+import { render, screen } from "@testing-library/react";
+import React from "react";
 
-vi.mock('../../hooks/use-profile-data', () => ({
+vi.mock("../../hooks/use-profile-data", () => ({
   useProfileData: vi.fn(),
 }));
 
-vi.mock('../../components/stats-summary', () => ({
+vi.mock("../../components/stats-summary", () => ({
   default: (props: { weeklyBars?: unknown[] | null }) => (
-    <div
-      data-testid="stats-summary"
-      data-has-weekly-bars={props.weeklyBars ? 'true' : 'false'}
-    />
+    <div data-testid="stats-summary" data-has-weekly-bars={props.weeklyBars ? "true" : "false"} />
   ),
 }));
 
-vi.mock('../../components/board-stats-section', () => ({
+vi.mock("../../components/board-stats-section", () => ({
   default: (props: Record<string, unknown>) => (
     <div
       data-testid="board-stats-section"
-      data-has-weekly-bars-prop={Object.prototype.hasOwnProperty.call(props, 'weeklyBars') ? 'true' : 'false'}
+      data-has-weekly-bars-prop={
+        Object.prototype.hasOwnProperty.call(props, "weeklyBars") ? "true" : "false"
+      }
     />
   ),
 }));
 
-import AnalyticsContent from '../analytics-content';
-import { useProfileData } from '../../hooks/use-profile-data';
+import AnalyticsContent from "../analytics-content";
+import { useProfileData } from "../../hooks/use-profile-data";
 
 const mockUseProfileData = vi.mocked(useProfileData);
 
@@ -36,14 +35,14 @@ function mockProfileDataReturn(overrides?: Partial<ReturnType<typeof useProfileD
     profile: null,
     setProfile: vi.fn(),
     isOwnProfile: false,
-    selectedBoard: 'all',
+    selectedBoard: "all",
     setSelectedBoard: vi.fn(),
     filteredLogbook: [],
-    unifiedTimeframe: 'all' as const,
+    unifiedTimeframe: "all" as const,
     setUnifiedTimeframe: vi.fn(),
-    fromDate: '',
+    fromDate: "",
     setFromDate: vi.fn(),
-    toDate: '',
+    toDate: "",
     setToDate: vi.fn(),
     weeklyBars: null,
     aggregatedFlashRedpointBars: null,
@@ -60,37 +59,43 @@ function mockProfileDataReturn(overrides?: Partial<ReturnType<typeof useProfileD
   };
 }
 
-describe('AnalyticsContent', () => {
+describe("AnalyticsContent", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     mockUseProfileData.mockReturnValue(mockProfileDataReturn());
   });
 
-  it('renders the statistics summary and fallback section', () => {
+  it("renders the statistics summary and fallback section", () => {
     render(<AnalyticsContent userId="user-2" />);
 
-    expect(screen.getByTestId('stats-summary')).toBeTruthy();
-    expect(screen.getByTestId('board-stats-section')).toBeTruthy();
+    expect(screen.getByTestId("stats-summary")).toBeTruthy();
+    expect(screen.getByTestId("board-stats-section")).toBeTruthy();
   });
 
-  it('passes weekly bars into StatsSummary and not BoardStatsSection', () => {
-    mockUseProfileData.mockReturnValue(mockProfileDataReturn({
-      filteredLogbook: [{
-        climbed_at: new Date().toISOString(),
-        difficulty: 10,
-        tries: 1,
-        angle: 40,
-        status: 'send',
-        climbUuid: 'climb-1',
-      }],
-      weeklyBars: [
-        { key: '2026-W1', label: 'W1', segments: [{ value: 2, color: '#ccc', label: 'V3' }] },
-      ],
-    }));
+  it("passes weekly bars into StatsSummary and not BoardStatsSection", () => {
+    mockUseProfileData.mockReturnValue(
+      mockProfileDataReturn({
+        filteredLogbook: [
+          {
+            climbed_at: new Date().toISOString(),
+            difficulty: 10,
+            tries: 1,
+            angle: 40,
+            status: "send",
+            climbUuid: "climb-1",
+          },
+        ],
+        weeklyBars: [
+          { key: "2026-W1", label: "W1", segments: [{ value: 2, color: "#ccc", label: "V3" }] },
+        ],
+      }),
+    );
 
     render(<AnalyticsContent userId="user-2" />);
 
-    expect(screen.getByTestId('stats-summary').getAttribute('data-has-weekly-bars')).toBe('true');
-    expect(screen.getByTestId('board-stats-section').getAttribute('data-has-weekly-bars-prop')).toBe('false');
+    expect(screen.getByTestId("stats-summary").getAttribute("data-has-weekly-bars")).toBe("true");
+    expect(
+      screen.getByTestId("board-stats-section").getAttribute("data-has-weekly-bars-prop"),
+    ).toBe("false");
   });
 });

@@ -1,9 +1,9 @@
-import { describe, it, expect, beforeEach } from 'vitest';
-import { randomUUID } from 'crypto';
-import { roomManager } from '../services/room-manager';
-import { db } from '../db/client';
-import { sessions, sessionQueues } from '../db/schema';
-import type { ClimbQueueItem } from '@boardsesh/shared-schema';
+import { describe, it, expect, beforeEach } from "vite-plus/test";
+import { randomUUID } from "crypto";
+import { roomManager } from "../services/room-manager";
+import { db } from "../db/client";
+import { sessions, sessionQueues } from "../db/schema";
+import type { ClimbQueueItem } from "@boardsesh/shared-schema";
 
 // Generate unique session IDs to prevent conflicts with parallel tests
 const uniqueId = () => `ws-sync-${randomUUID().slice(0, 8)}`;
@@ -14,46 +14,46 @@ function createTestClimbQueueItem(uuid: string, name: string): ClimbQueueItem {
     uuid,
     climb: {
       uuid: `climb-${uuid}`,
-      setter_username: 'test-setter',
+      setter_username: "test-setter",
       name,
-      description: 'Test climb',
-      frames: 'test-frames',
+      description: "Test climb",
+      frames: "test-frames",
       angle: 40,
       ascensionist_count: 10,
-      difficulty: 'V5',
-      quality_average: '4.5',
+      difficulty: "V5",
+      quality_average: "4.5",
       stars: 4.5,
-      difficulty_error: '0.5',
+      difficulty_error: "0.5",
       mirrored: false,
       benchmark_difficulty: null,
     },
     tickedBy: [],
-    addedBy: 'test-user',
+    addedBy: "test-user",
     suggested: false,
   };
 }
 
-describe('WebSocket Sync - getQueueState Redis Priority', () => {
-  describe('Unit Tests (mocked Redis)', () => {
+describe("WebSocket Sync - getQueueState Redis Priority", () => {
+  describe("Unit Tests (mocked Redis)", () => {
     beforeEach(() => {
       // Reset room manager state
       roomManager.reset();
     });
 
-    it('should return Redis data when available (not fall back to Postgres)', async () => {
+    it("should return Redis data when available (not fall back to Postgres)", async () => {
       const sessionId = uniqueId();
 
       // Create session in Postgres with old data
       await db.insert(sessions).values({
         id: sessionId,
-        boardPath: '/kilter/test',
+        boardPath: "/kilter/test",
         createdAt: new Date(),
         lastActivity: new Date(),
       });
 
       await db.insert(sessionQueues).values({
         sessionId,
-        queue: [createTestClimbQueueItem('old-1', 'Old Climb from Postgres')],
+        queue: [createTestClimbQueueItem("old-1", "Old Climb from Postgres")],
         currentClimbQueueItem: null,
         version: 5,
         sequence: 5,
@@ -65,11 +65,11 @@ describe('WebSocket Sync - getQueueState Redis Priority', () => {
 
       expect(state.sequence).toBe(5);
       expect(state.queue.length).toBe(1);
-      expect(state.queue[0].climb.name).toBe('Old Climb from Postgres');
+      expect(state.queue[0].climb.name).toBe("Old Climb from Postgres");
     });
 
-    it('should return empty state for non-existent session', async () => {
-      const state = await roomManager.getQueueState('non-existent-session');
+    it("should return empty state for non-existent session", async () => {
+      const state = await roomManager.getQueueState("non-existent-session");
 
       expect(state.queue).toEqual([]);
       expect(state.currentClimbQueueItem).toBeNull();
@@ -82,25 +82,25 @@ describe('WebSocket Sync - getQueueState Redis Priority', () => {
 // Note: Full WebSocket subscription tests require proper auth and session setup.
 // These tests verify the subscription logic indirectly through unit tests.
 // The subscription filtering logic is tested in the resolver itself.
-describe('WebSocket Sync - Subscription Event Filtering (Unit)', () => {
+describe("WebSocket Sync - Subscription Event Filtering (Unit)", () => {
   beforeEach(async () => {
     roomManager.reset();
   });
 
-  it('should have sequence in FullSync state from getQueueState', async () => {
+  it("should have sequence in FullSync state from getQueueState", async () => {
     const sessionId = uniqueId();
 
     // Create session with queue state
     await db.insert(sessions).values({
       id: sessionId,
-      boardPath: '/kilter/test',
+      boardPath: "/kilter/test",
       createdAt: new Date(),
       lastActivity: new Date(),
     });
 
     await db.insert(sessionQueues).values({
       sessionId,
-      queue: [createTestClimbQueueItem('item-1', 'Test Climb')],
+      queue: [createTestClimbQueueItem("item-1", "Test Climb")],
       currentClimbQueueItem: null,
       version: 3,
       sequence: 10,
@@ -115,20 +115,20 @@ describe('WebSocket Sync - Subscription Event Filtering (Unit)', () => {
     expect(state.version).toBe(3);
   });
 
-  it('should have stateHash for state change detection', async () => {
+  it("should have stateHash for state change detection", async () => {
     const sessionId = uniqueId();
 
     // Create session with queue state
     await db.insert(sessions).values({
       id: sessionId,
-      boardPath: '/kilter/test',
+      boardPath: "/kilter/test",
       createdAt: new Date(),
       lastActivity: new Date(),
     });
 
     await db.insert(sessionQueues).values({
       sessionId,
-      queue: [createTestClimbQueueItem('item-1', 'Test Climb')],
+      queue: [createTestClimbQueueItem("item-1", "Test Climb")],
       currentClimbQueueItem: null,
       version: 1,
       sequence: 5,
@@ -143,18 +143,18 @@ describe('WebSocket Sync - Subscription Event Filtering (Unit)', () => {
   });
 });
 
-describe('WebSocket Sync - Sequence Number Consistency', () => {
+describe("WebSocket Sync - Sequence Number Consistency", () => {
   beforeEach(async () => {
     roomManager.reset();
   });
 
-  it('should increment sequence on each queue update', async () => {
+  it("should increment sequence on each queue update", async () => {
     const sessionId = uniqueId();
 
     // Create session with initial queue state
     await db.insert(sessions).values({
       id: sessionId,
-      boardPath: '/kilter/test',
+      boardPath: "/kilter/test",
       createdAt: new Date(),
       lastActivity: new Date(),
     });
@@ -176,7 +176,7 @@ describe('WebSocket Sync - Sequence Number Consistency', () => {
     // Use updateQueueStateImmediate for immediate Postgres writes (no Redis in tests)
     const version1 = await roomManager.updateQueueStateImmediate(
       sessionId,
-      [createTestClimbQueueItem('item-1', 'Climb 1')],
+      [createTestClimbQueueItem("item-1", "Climb 1")],
       null,
       1, // Pass current version for optimistic locking
     );
@@ -189,8 +189,8 @@ describe('WebSocket Sync - Sequence Number Consistency', () => {
     await roomManager.updateQueueStateImmediate(
       sessionId,
       [
-        createTestClimbQueueItem('item-1', 'Climb 1'),
-        createTestClimbQueueItem('item-2', 'Climb 2'),
+        createTestClimbQueueItem("item-1", "Climb 1"),
+        createTestClimbQueueItem("item-2", "Climb 2"),
       ],
       null,
       version1, // Pass previous version
@@ -201,13 +201,13 @@ describe('WebSocket Sync - Sequence Number Consistency', () => {
     expect(state.sequence).toBe(initialSequence + 2);
   });
 
-  it('should return consistent sequence from getQueueState after updates', async () => {
+  it("should return consistent sequence from getQueueState after updates", async () => {
     const sessionId = uniqueId();
 
     // Create session with initial queue state
     await db.insert(sessions).values({
       id: sessionId,
-      boardPath: '/kilter/test',
+      boardPath: "/kilter/test",
       createdAt: new Date(),
       lastActivity: new Date(),
     });

@@ -1,16 +1,16 @@
-'use client';
+"use client";
 
-import { useMemo } from 'react';
-import { useInfiniteQuery, type InfiniteData, type QueryKey } from '@tanstack/react-query';
-import { useWsAuthToken } from '@/app/hooks/use-ws-auth-token';
-import { useDebouncedValue } from '@/app/hooks/use-debounced-value';
-import { createGraphQLHttpClient } from '@/app/lib/graphql/client';
+import { useMemo } from "react";
+import { useInfiniteQuery, type InfiniteData, type QueryKey } from "@tanstack/react-query";
+import { useWsAuthToken } from "@/app/hooks/use-ws-auth-token";
+import { useDebouncedValue } from "@/app/hooks/use-debounced-value";
+import { createGraphQLHttpClient } from "@/app/lib/graphql/client";
 import {
   SEARCH_BOARDS,
   type SearchBoardsQueryResponse,
   type SearchBoardsQueryVariables,
-} from '@/app/lib/graphql/operations';
-import type { UserBoard, UserBoardConnection } from '@boardsesh/shared-schema';
+} from "@/app/lib/graphql/operations";
+import type { UserBoard, UserBoardConnection } from "@boardsesh/shared-schema";
 
 export interface SearchBoardsMapInput {
   query: string;
@@ -81,10 +81,16 @@ export function useSearchBoardsMap({
   const client = useMemo(() => createGraphQLHttpClient(token ?? undefined), [token]);
 
   const { data, isLoading, isFetching, fetchNextPage, hasNextPage, isFetchingNextPage } =
-    useInfiniteQuery<UserBoardConnection, Error, InfiniteData<UserBoardConnection>, QueryKey, number>({
-      queryKey: ['searchBoardsMap', debouncedQuery, lat, lon, radiusKm, token],
+    useInfiniteQuery<
+      UserBoardConnection,
+      Error,
+      InfiniteData<UserBoardConnection>,
+      QueryKey,
+      number
+    >({
+      queryKey: ["searchBoardsMap", debouncedQuery, lat, lon, radiusKm, token],
       queryFn: async ({ pageParam }) => {
-        const input: SearchBoardsQueryVariables['input'] = {
+        const input: SearchBoardsQueryVariables["input"] = {
           query: hasQuery ? debouncedQuery.trim() : undefined,
           latitude: hasCoords ? lat : undefined,
           longitude: hasCoords ? lon : undefined,
@@ -92,10 +98,10 @@ export function useSearchBoardsMap({
           limit: PAGE_LIMIT,
           offset: pageParam,
         };
-        const response = await client.request<SearchBoardsQueryResponse, SearchBoardsQueryVariables>(
-          SEARCH_BOARDS,
-          { input },
-        );
+        const response = await client.request<
+          SearchBoardsQueryResponse,
+          SearchBoardsQueryVariables
+        >(SEARCH_BOARDS, { input });
         return response.searchBoards;
       },
       initialPageParam: 0,
@@ -107,10 +113,7 @@ export function useSearchBoardsMap({
       staleTime: 30 * 1000,
     });
 
-  const boards = useMemo<UserBoard[]>(
-    () => data?.pages.flatMap((p) => p.boards) ?? [],
-    [data],
-  );
+  const boards = useMemo<UserBoard[]>(() => data?.pages.flatMap((p) => p.boards) ?? [], [data]);
 
   return {
     boards,

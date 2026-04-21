@@ -1,12 +1,18 @@
-import { eq, and, desc, sql, count as drizzleCount, isNull, inArray } from 'drizzle-orm';
-import { db } from '../../../db/client';
-import * as dbSchema from '@boardsesh/db/schema';
-import { getGradeLabel } from '@boardsesh/db/queries';
-import { validateInput } from '../shared/helpers';
-import { ActivityFeedInputSchema } from '../../../validation/schemas';
-import { encodeOffsetCursor, decodeOffsetCursor } from '../../../utils/feed-cursor';
-import type { SessionFeedItem, SessionDetail, SessionGradeDistributionItem, SessionFeedParticipant, SessionDetailTick } from '@boardsesh/shared-schema';
-import { buildGradeDistributionFromTicks, computeSessionAggregates } from './session-feed-utils';
+import { eq, and, desc, sql, count as drizzleCount, isNull, inArray } from "drizzle-orm";
+import { db } from "../../../db/client";
+import * as dbSchema from "@boardsesh/db/schema";
+import { getGradeLabel } from "@boardsesh/db/queries";
+import { validateInput } from "../shared/helpers";
+import { ActivityFeedInputSchema } from "../../../validation/schemas";
+import { encodeOffsetCursor, decodeOffsetCursor } from "../../../utils/feed-cursor";
+import type {
+  SessionFeedItem,
+  SessionDetail,
+  SessionGradeDistributionItem,
+  SessionFeedParticipant,
+  SessionDetailTick,
+} from "@boardsesh/shared-schema";
+import { buildGradeDistributionFromTicks, computeSessionAggregates } from "./session-feed-utils";
 
 type SessionFeedFilterOptions = {
   boardTypeFilter: string | null;
@@ -20,28 +26,26 @@ export const sessionFeedQueries = {
    * Every tick now has either session_id or inferred_session_id set.
    * Always chronological (newest first). Uses offset pagination.
    */
-  sessionGroupedFeed: async (
-    _: unknown,
-    { input }: { input?: Record<string, unknown> },
-  ) => {
-    const validatedInput = validateInput(ActivityFeedInputSchema, input || {}, 'input');
+  sessionGroupedFeed: async (_: unknown, { input }: { input?: Record<string, unknown> }) => {
+    const validatedInput = validateInput(ActivityFeedInputSchema, input || {}, "input");
     const limit = validatedInput.limit ?? 20;
     const userId = validatedInput.userId || null;
 
-    const offset = validatedInput.cursor
-      ? (decodeOffsetCursor(validatedInput.cursor) ?? 0)
-      : 0;
+    const offset = validatedInput.cursor ? (decodeOffsetCursor(validatedInput.cursor) ?? 0) : 0;
 
     // Board filter
     let boardTypeFilter: string | null = null;
     let layoutIdFilter: number | null = null;
     if (validatedInput.boardUuid) {
       const board = await db
-        .select({ boardType: dbSchema.userBoards.boardType, layoutId: dbSchema.userBoards.layoutId })
+        .select({
+          boardType: dbSchema.userBoards.boardType,
+          layoutId: dbSchema.userBoards.layoutId,
+        })
         .from(dbSchema.userBoards)
         .where(eq(dbSchema.userBoards.uuid, validatedInput.boardUuid))
         .limit(1)
-        .then(rows => rows[0]);
+        .then((rows) => rows[0]);
 
       if (board) {
         boardTypeFilter = board.boardType;
@@ -66,15 +70,13 @@ export const sessionFeedQueries = {
         : sql``;
 
       // Build board filter conditions for party session ticks
-      const partyBoardFilter = boardTypeFilter
-        ? sql`AND t.board_type = ${boardTypeFilter}`
-        : sql``;
-      const partyLayoutFilter = layoutIdFilter !== null
-        ? sql`AND cf.layout_id = ${layoutIdFilter}`
-        : sql``;
-      const partyLayoutJoin = layoutIdFilter !== null
-        ? sql`LEFT JOIN board_climbs cf ON cf.uuid = t.climb_uuid AND cf.board_type = t.board_type`
-        : sql``;
+      const partyBoardFilter = boardTypeFilter ? sql`AND t.board_type = ${boardTypeFilter}` : sql``;
+      const partyLayoutFilter =
+        layoutIdFilter !== null ? sql`AND cf.layout_id = ${layoutIdFilter}` : sql``;
+      const partyLayoutJoin =
+        layoutIdFilter !== null
+          ? sql`LEFT JOIN board_climbs cf ON cf.uuid = t.climb_uuid AND cf.board_type = t.board_type`
+          : sql``;
 
       sessionRows = await db.execute(sql`
         WITH eligible_party_sessions AS (
@@ -149,25 +151,29 @@ export const sessionFeedQueries = {
         LIMIT ${limit + 1}
       `);
     } catch (err) {
-      console.error('[sessionGroupedFeed] SQL error:', err);
+      console.error("[sessionGroupedFeed] SQL error:", err);
       throw err;
     }
 
     // db.execute() returns QueryResult (neon-serverless) with .rows property
-    const rows = (sessionRows as unknown as { rows: Array<{
-      session_id: string;
-      session_type: string;
-      session_first_tick: string;
-      session_last_tick: string;
-      tick_count: number;
-      total_sends: number;
-      total_flashes: number;
-      total_attempts: number;
-      vote_score: number;
-      vote_up: number;
-      vote_down: number;
-      comment_count: number;
-    }> }).rows;
+    const rows = (
+      sessionRows as unknown as {
+        rows: Array<{
+          session_id: string;
+          session_type: string;
+          session_first_tick: string;
+          session_last_tick: string;
+          tick_count: number;
+          total_sends: number;
+          total_flashes: number;
+          total_attempts: number;
+          vote_score: number;
+          vote_up: number;
+          vote_down: number;
+          comment_count: number;
+        }>;
+      }
+    ).rows;
 
     const hasMore = rows.length > limit;
     const resultRows = hasMore ? rows.slice(0, limit) : rows;
@@ -196,7 +202,7 @@ export const sessionFeedQueries = {
 
       return {
         sessionId: row.session_id,
-        sessionType: row.session_type as 'party' | 'inferred',
+        sessionType: row.session_type as "party" | "inferred",
         sessionName: sessionMeta?.name || null,
         ownerUserId: sessionMeta?.ownerUserId || null,
         participants,
@@ -207,12 +213,14 @@ export const sessionFeedQueries = {
         gradeDistribution,
         boardTypes,
         hardestGrade: gradeDistribution.length > 0 ? gradeDistribution[0].grade : null,
-        firstTickAt: typeof row.session_first_tick === 'object'
-          ? (row.session_first_tick as unknown as Date).toISOString()
-          : String(row.session_first_tick),
-        lastTickAt: typeof row.session_last_tick === 'object'
-          ? (row.session_last_tick as unknown as Date).toISOString()
-          : String(row.session_last_tick),
+        firstTickAt:
+          typeof row.session_first_tick === "object"
+            ? (row.session_first_tick as unknown as Date).toISOString()
+            : String(row.session_first_tick),
+        lastTickAt:
+          typeof row.session_last_tick === "object"
+            ? (row.session_last_tick as unknown as Date).toISOString()
+            : String(row.session_last_tick),
         durationMinutes,
         goal: sessionMeta?.goal || null,
         upvotes: Number(row.vote_up),
@@ -303,54 +311,66 @@ export const sessionFeedQueries = {
 
     // Batch-fetch tick vote counts
     const tickUuids = tickRows.map((r) => r.tick.uuid);
-    const tickVoteCounts = tickUuids.length > 0
-      ? await db
-          .select({
-            entityId: dbSchema.voteCounts.entityId,
-            upvotes: sql<number>`COALESCE(${dbSchema.voteCounts.upvotes}, 0)`,
-          })
-          .from(dbSchema.voteCounts)
-          .where(
-            and(
-              eq(dbSchema.voteCounts.entityType, 'tick'),
-              inArray(dbSchema.voteCounts.entityId, tickUuids),
-            ),
-          )
-      : [];
+    const tickVoteCounts =
+      tickUuids.length > 0
+        ? await db
+            .select({
+              entityId: dbSchema.voteCounts.entityId,
+              upvotes: sql<number>`COALESCE(${dbSchema.voteCounts.upvotes}, 0)`,
+            })
+            .from(dbSchema.voteCounts)
+            .where(
+              and(
+                eq(dbSchema.voteCounts.entityType, "tick"),
+                inArray(dbSchema.voteCounts.entityId, tickUuids),
+              ),
+            )
+        : [];
     const tickVoteMap = new Map(tickVoteCounts.map((v) => [v.entityId, Number(v.upvotes)]));
 
     // Build ticks (totalAttempts added below)
     const ticks: SessionDetailTick[] = tickRows.map((row) => {
-      const effectiveDifficulty = row.tick.difficulty ?? (row.consensusDifficulty != null ? Math.round(row.consensusDifficulty) : null);
-      const effectiveDifficultyName = row.difficultyName || (effectiveDifficulty != null ? getGradeLabel(effectiveDifficulty) : null) || null;
+      const effectiveDifficulty =
+        row.tick.difficulty ??
+        (row.consensusDifficulty != null ? Math.round(row.consensusDifficulty) : null);
+      const effectiveDifficultyName =
+        row.difficultyName ||
+        (effectiveDifficulty != null ? getGradeLabel(effectiveDifficulty) : null) ||
+        null;
       return {
-      uuid: row.tick.uuid,
-      userId: row.tick.userId,
-      climbUuid: row.tick.climbUuid,
-      climbName: row.climbName || null,
-      boardType: row.tick.boardType,
-      layoutId: row.layoutId,
-      angle: row.tick.angle,
-      status: row.tick.status,
-      attemptCount: row.tick.attemptCount,
-      difficulty: effectiveDifficulty,
-      difficultyName: effectiveDifficultyName,
-      quality: row.tick.quality,
-      isMirror: row.tick.isMirror ?? false,
-      isBenchmark: row.tick.isBenchmark ?? false,
-      comment: row.tick.comment || null,
-      frames: row.frames || null,
-      setterUsername: row.setterUsername || null,
-      climbedAt: row.tick.climbedAt,
-      upvotes: tickVoteMap.get(row.tick.uuid) ?? 0,
-      totalAttempts: null,
-    };});
+        uuid: row.tick.uuid,
+        userId: row.tick.userId,
+        climbUuid: row.tick.climbUuid,
+        climbName: row.climbName || null,
+        boardType: row.tick.boardType,
+        layoutId: row.layoutId,
+        angle: row.tick.angle,
+        status: row.tick.status,
+        attemptCount: row.tick.attemptCount,
+        difficulty: effectiveDifficulty,
+        difficultyName: effectiveDifficultyName,
+        quality: row.tick.quality,
+        isMirror: row.tick.isMirror ?? false,
+        isBenchmark: row.tick.isBenchmark ?? false,
+        comment: row.tick.comment || null,
+        frames: row.frames || null,
+        setterUsername: row.setterUsername || null,
+        climbedAt: row.tick.climbedAt,
+        upvotes: tickVoteMap.get(row.tick.uuid) ?? 0,
+        totalAttempts: null,
+      };
+    });
 
     // Compute totalAttempts for each tick: sum of attemptCount since last
     // successful ascent (flash/send) by the same user on the same climb.
     // Build unique combos of (userId, climbUuid, boardType, angle) from ticks
     const comboSet = new Set<string>();
-    const comboValues: Array<{ userId: string; climbUuid: string; boardType: string; angle: number }> = [];
+    const comboValues: Array<{
+      userId: string;
+      climbUuid: string;
+      boardType: string;
+      angle: number;
+    }> = [];
     for (const row of tickRows) {
       const key = `${row.tick.userId}|${row.tick.climbUuid}|${row.tick.boardType}|${row.tick.angle}`;
       if (!comboSet.has(key)) {
@@ -367,9 +387,7 @@ export const sessionFeedQueries = {
     if (comboValues.length > 0) {
       // Build VALUES clause for the combos
       const valuesSql = sql.join(
-        comboValues.map(
-          (c) => sql`(${c.userId}, ${c.climbUuid}, ${c.boardType}, ${c.angle})`,
-        ),
+        comboValues.map((c) => sql`(${c.userId}, ${c.climbUuid}, ${c.boardType}, ${c.angle})`),
         sql`, `,
       );
 
@@ -417,15 +435,17 @@ export const sessionFeedQueries = {
         SELECT * FROM attempts_since
       `);
 
-      const attemptsRows = (totalAttemptsResult as unknown as {
-        rows: Array<{
-          user_id: string;
-          climb_uuid: string;
-          board_type: string;
-          angle: number;
-          total: number;
-        }>;
-      }).rows;
+      const attemptsRows = (
+        totalAttemptsResult as unknown as {
+          rows: Array<{
+            user_id: string;
+            climb_uuid: string;
+            board_type: string;
+            angle: number;
+            total: number;
+          }>;
+        }
+      ).rows;
 
       // Build lookup map
       const attemptsMap = new Map<string, number>();
@@ -446,7 +466,11 @@ export const sessionFeedQueries = {
 
     const { totalSends, totalFlashes, totalAttempts } = computeSessionAggregates(tickRows);
 
-    const participants = await fetchParticipants(sessionId, isParty ? 'party' : 'inferred', userIds);
+    const participants = await fetchParticipants(
+      sessionId,
+      isParty ? "party" : "inferred",
+      userIds,
+    );
     const gradeDistribution = buildGradeDistributionFromTicks(tickRows);
 
     // Timestamps
@@ -455,18 +479,21 @@ export const sessionFeedQueries = {
     );
     const firstTickAt = sortedTicks[0].tick.climbedAt;
     const lastTickAt = sortedTicks[sortedTicks.length - 1].tick.climbedAt;
-    const durationMinutes = Math.round(
-      (new Date(lastTickAt).getTime() - new Date(firstTickAt).getTime()) / 60000,
-    ) || null;
+    const durationMinutes =
+      Math.round((new Date(lastTickAt).getTime() - new Date(firstTickAt).getTime()) / 60000) ||
+      null;
 
     // Hardest grade (use effective difficulty with consensus fallback)
     const gradesSorted = tickRows
       .map((r) => {
-        const effDiff = r.tick.difficulty ?? (r.consensusDifficulty != null ? Math.round(r.consensusDifficulty) : null);
-        const effName = r.difficultyName || (effDiff != null ? getGradeLabel(effDiff) : null) || null;
+        const effDiff =
+          r.tick.difficulty ??
+          (r.consensusDifficulty != null ? Math.round(r.consensusDifficulty) : null);
+        const effName =
+          r.difficultyName || (effDiff != null ? getGradeLabel(effDiff) : null) || null;
         return { ...r, effDiff, effName };
       })
-      .filter((r) => r.effName && (r.tick.status === 'flash' || r.tick.status === 'send'))
+      .filter((r) => r.effName && (r.tick.status === "flash" || r.tick.status === "send"))
       .sort((a, b) => (b.effDiff ?? 0) - (a.effDiff ?? 0));
     const hardestGrade = gradesSorted.length > 0 ? gradesSorted[0].effName : null;
 
@@ -498,19 +525,15 @@ export const sessionFeedQueries = {
       );
 
     // Session metadata
-    const sessionName = isParty
-      ? partySession?.name || null
-      : inferredSession?.name || null;
-    const goal = isParty
-      ? partySession?.goal || null
-      : inferredSession?.description || null;
+    const sessionName = isParty ? partySession?.name || null : inferredSession?.name || null;
+    const goal = isParty ? partySession?.goal || null : inferredSession?.description || null;
     const ownerUserId = isParty
       ? partySession?.createdByUserId || null
       : inferredSession?.userId || null;
 
     return {
       sessionId,
-      sessionType: isParty ? 'party' : 'inferred',
+      sessionType: isParty ? "party" : "inferred",
       sessionName,
       ownerUserId,
       participants,
@@ -543,7 +566,7 @@ export const sessionFeedQueries = {
  * - Inferred: filter by inferred_session_id
  */
 function tickSessionFilter(sessionId: string, sessionType: string) {
-  return sessionType === 'party'
+  return sessionType === "party"
     ? sql`t.session_id = ${sessionId}`
     : sql`t.inferred_session_id = ${sessionId}`;
 }
@@ -580,14 +603,18 @@ async function fetchParticipants(
   `);
 
   // db.execute() returns QueryResult with .rows property
-  return ((participantRows as unknown as { rows: Array<{
-    userId: string;
-    displayName: string | null;
-    avatarUrl: string | null;
-    sends: number;
-    flashes: number;
-    attempts: number;
-  }> }).rows).map((r) => ({
+  return (
+    participantRows as unknown as {
+      rows: Array<{
+        userId: string;
+        displayName: string | null;
+        avatarUrl: string | null;
+        sends: number;
+        flashes: number;
+        attempts: number;
+      }>;
+    }
+  ).rows.map((r) => ({
     userId: r.userId,
     displayName: r.displayName,
     avatarUrl: r.avatarUrl,
@@ -613,15 +640,13 @@ async function fetchParticipantsBatch(
 ): Promise<Map<string, SessionFeedParticipant[]>> {
   if (sessionIds.length === 0) return new Map();
 
-  const batchLayoutJoin = layoutIdFilter !== null
-    ? sql`LEFT JOIN board_climbs cf ON cf.uuid = t.climb_uuid AND cf.board_type = t.board_type`
-    : sql``;
-  const batchBoardFilter = boardTypeFilter
-    ? sql`AND t.board_type = ${boardTypeFilter}`
-    : sql``;
-  const batchLayoutFilter = layoutIdFilter !== null
-    ? sql`AND cf.layout_id = ${layoutIdFilter}`
-    : sql``;
+  const batchLayoutJoin =
+    layoutIdFilter !== null
+      ? sql`LEFT JOIN board_climbs cf ON cf.uuid = t.climb_uuid AND cf.board_type = t.board_type`
+      : sql``;
+  const batchBoardFilter = boardTypeFilter ? sql`AND t.board_type = ${boardTypeFilter}` : sql``;
+  const batchLayoutFilter =
+    layoutIdFilter !== null ? sql`AND cf.layout_id = ${layoutIdFilter}` : sql``;
 
   const result = await db.execute(sql`
     SELECT
@@ -639,22 +664,29 @@ async function fetchParticipantsBatch(
     ${batchLayoutJoin}
     LEFT JOIN users u ON u.id = t.user_id
     LEFT JOIN user_profiles up ON up.user_id = t.user_id
-    WHERE COALESCE(t.session_id, t.inferred_session_id) IN ${sql`(${sql.join(sessionIds.map(id => sql`${id}`), sql`, `)})`}
+    WHERE COALESCE(t.session_id, t.inferred_session_id) IN ${sql`(${sql.join(
+      sessionIds.map((id) => sql`${id}`),
+      sql`, `,
+    )})`}
       ${batchBoardFilter}
       ${batchLayoutFilter}
     GROUP BY effective_session_id, t.user_id, up.display_name, u.name, up.avatar_url, u.image
     ORDER BY sends DESC
   `);
 
-  const rows = (result as unknown as { rows: Array<{
-    effective_session_id: string;
-    userId: string;
-    displayName: string | null;
-    avatarUrl: string | null;
-    sends: number;
-    flashes: number;
-    attempts: number;
-  }> }).rows;
+  const rows = (
+    result as unknown as {
+      rows: Array<{
+        effective_session_id: string;
+        userId: string;
+        displayName: string | null;
+        avatarUrl: string | null;
+        sends: number;
+        flashes: number;
+        attempts: number;
+      }>;
+    }
+  ).rows;
 
   const map = new Map<string, SessionFeedParticipant[]>();
   for (const r of rows) {
@@ -682,15 +714,13 @@ async function fetchGradeDistributionBatch(
 ): Promise<Map<string, SessionGradeDistributionItem[]>> {
   if (sessionIds.length === 0) return new Map();
 
-  const batchLayoutJoin = layoutIdFilter !== null
-    ? sql`LEFT JOIN board_climbs cf ON cf.uuid = t.climb_uuid AND cf.board_type = t.board_type`
-    : sql``;
-  const batchBoardFilter = boardTypeFilter
-    ? sql`AND t.board_type = ${boardTypeFilter}`
-    : sql``;
-  const batchLayoutFilter = layoutIdFilter !== null
-    ? sql`AND cf.layout_id = ${layoutIdFilter}`
-    : sql``;
+  const batchLayoutJoin =
+    layoutIdFilter !== null
+      ? sql`LEFT JOIN board_climbs cf ON cf.uuid = t.climb_uuid AND cf.board_type = t.board_type`
+      : sql``;
+  const batchBoardFilter = boardTypeFilter ? sql`AND t.board_type = ${boardTypeFilter}` : sql``;
+  const batchLayoutFilter =
+    layoutIdFilter !== null ? sql`AND cf.layout_id = ${layoutIdFilter}` : sql``;
 
   const result = await db.execute(sql`
     SELECT
@@ -705,7 +735,10 @@ async function fetchGradeDistributionBatch(
     FROM boardsesh_ticks t
     ${batchLayoutJoin}
     LEFT JOIN board_climb_stats bcs ON bcs.climb_uuid = t.climb_uuid AND bcs.board_type = t.board_type AND bcs.angle = t.angle
-    WHERE COALESCE(t.session_id, t.inferred_session_id) IN ${sql`(${sql.join(sessionIds.map(id => sql`${id}`), sql`, `)})`}
+    WHERE COALESCE(t.session_id, t.inferred_session_id) IN ${sql`(${sql.join(
+      sessionIds.map((id) => sql`${id}`),
+      sql`, `,
+    )})`}
       ${batchBoardFilter}
       ${batchLayoutFilter}
       AND COALESCE(t.difficulty, ROUND(bcs.display_difficulty)::int) IS NOT NULL
@@ -713,13 +746,17 @@ async function fetchGradeDistributionBatch(
     ORDER BY diff_num DESC
   `);
 
-  const rows = (result as unknown as { rows: Array<{
-    effective_session_id: string;
-    diff_num: number;
-    flash: number;
-    send: number;
-    attempt: number;
-  }> }).rows;
+  const rows = (
+    result as unknown as {
+      rows: Array<{
+        effective_session_id: string;
+        diff_num: number;
+        flash: number;
+        send: number;
+        attempt: number;
+      }>;
+    }
+  ).rows;
 
   const map = new Map<string, SessionGradeDistributionItem[]>();
   for (const r of rows) {
@@ -742,10 +779,13 @@ async function fetchSessionMetaBatch(
 ): Promise<Map<string, { name: string | null; goal: string | null; ownerUserId: string | null }>> {
   if (sessionIds.length === 0) return new Map();
 
-  const partyIds = sessionIds.filter((id) => sessionTypes.get(id) === 'party');
-  const inferredIds = sessionIds.filter((id) => sessionTypes.get(id) === 'inferred');
+  const partyIds = sessionIds.filter((id) => sessionTypes.get(id) === "party");
+  const inferredIds = sessionIds.filter((id) => sessionTypes.get(id) === "inferred");
 
-  const map = new Map<string, { name: string | null; goal: string | null; ownerUserId: string | null }>();
+  const map = new Map<
+    string,
+    { name: string | null; goal: string | null; ownerUserId: string | null }
+  >();
 
   // Batch fetch party sessions
   if (partyIds.length > 0) {
@@ -794,15 +834,13 @@ async function fetchBoardTypesBatch(
 ): Promise<Map<string, string[]>> {
   if (sessionIds.length === 0) return new Map();
 
-  const batchLayoutJoin = layoutIdFilter !== null
-    ? sql`LEFT JOIN board_climbs cf ON cf.uuid = t.climb_uuid AND cf.board_type = t.board_type`
-    : sql``;
-  const batchBoardFilter = boardTypeFilter
-    ? sql`AND t.board_type = ${boardTypeFilter}`
-    : sql``;
-  const batchLayoutFilter = layoutIdFilter !== null
-    ? sql`AND cf.layout_id = ${layoutIdFilter}`
-    : sql``;
+  const batchLayoutJoin =
+    layoutIdFilter !== null
+      ? sql`LEFT JOIN board_climbs cf ON cf.uuid = t.climb_uuid AND cf.board_type = t.board_type`
+      : sql``;
+  const batchBoardFilter = boardTypeFilter ? sql`AND t.board_type = ${boardTypeFilter}` : sql``;
+  const batchLayoutFilter =
+    layoutIdFilter !== null ? sql`AND cf.layout_id = ${layoutIdFilter}` : sql``;
 
   const result = await db.execute(sql`
     SELECT
@@ -810,16 +848,23 @@ async function fetchBoardTypesBatch(
       ARRAY_AGG(DISTINCT t.board_type) AS board_types
     FROM boardsesh_ticks t
     ${batchLayoutJoin}
-    WHERE COALESCE(t.session_id, t.inferred_session_id) IN ${sql`(${sql.join(sessionIds.map(id => sql`${id}`), sql`, `)})`}
+    WHERE COALESCE(t.session_id, t.inferred_session_id) IN ${sql`(${sql.join(
+      sessionIds.map((id) => sql`${id}`),
+      sql`, `,
+    )})`}
       ${batchBoardFilter}
       ${batchLayoutFilter}
     GROUP BY effective_session_id
   `);
 
-  const rows = (result as unknown as { rows: Array<{
-    effective_session_id: string;
-    board_types: string[];
-  }> }).rows;
+  const rows = (
+    result as unknown as {
+      rows: Array<{
+        effective_session_id: string;
+        board_types: string[];
+      }>;
+    }
+  ).rows;
 
   const map = new Map<string, string[]>();
   for (const r of rows) {

@@ -54,7 +54,7 @@ export async function GET() {
         username = decrypt(cred.encryptedUsername);
       } catch (decryptError) {
         console.error(`Failed to decrypt username for ${cred.boardType} credential:`, decryptError);
-        username = '[Decryption Failed]';
+        username = "[Decryption Failed]";
       }
 
       return {
@@ -92,7 +92,7 @@ export async function POST(request: NextRequest) {
     if (!validationResult.success) {
       return NextResponse.json(
         { error: validationResult.error.issues[0].message },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -129,8 +129,8 @@ export async function POST(request: NextRequest) {
       .where(
         and(
           eq(schema.auroraCredentials.userId, session.user.id),
-          eq(schema.auroraCredentials.boardType, boardType)
-        )
+          eq(schema.auroraCredentials.boardType, boardType),
+        ),
       )
       .limit(1);
 
@@ -151,8 +151,8 @@ export async function POST(request: NextRequest) {
         .where(
           and(
             eq(schema.auroraCredentials.userId, session.user.id),
-            eq(schema.auroraCredentials.boardType, boardType)
-          )
+            eq(schema.auroraCredentials.boardType, boardType),
+          ),
         );
     } else {
       // Insert new credentials
@@ -176,8 +176,8 @@ export async function POST(request: NextRequest) {
       .where(
         and(
           eq(schema.userBoardMappings.userId, session.user.id),
-          eq(schema.userBoardMappings.boardType, boardType)
-        )
+          eq(schema.userBoardMappings.boardType, boardType),
+        ),
       )
       .limit(1);
 
@@ -192,8 +192,8 @@ export async function POST(request: NextRequest) {
         .where(
           and(
             eq(schema.userBoardMappings.userId, session.user.id),
-            eq(schema.userBoardMappings.boardType, boardType)
-          )
+            eq(schema.userBoardMappings.boardType, boardType),
+          ),
         );
     } else {
       await db.insert(schema.userBoardMappings).values({
@@ -239,7 +239,7 @@ export async function DELETE(request: NextRequest) {
     if (!validationResult.success) {
       return NextResponse.json(
         { error: validationResult.error.issues[0].message },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -252,8 +252,8 @@ export async function DELETE(request: NextRequest) {
       .where(
         and(
           eq(schema.auroraCredentials.userId, session.user.id),
-          eq(schema.auroraCredentials.boardType, boardType)
-        )
+          eq(schema.auroraCredentials.boardType, boardType),
+        ),
       );
 
     // Also remove the board mapping
@@ -262,8 +262,8 @@ export async function DELETE(request: NextRequest) {
       .where(
         and(
           eq(schema.userBoardMappings.userId, session.user.id),
-          eq(schema.userBoardMappings.boardType, boardType)
-        )
+          eq(schema.userBoardMappings.boardType, boardType),
+        ),
       );
 
     return NextResponse.json({ success: true });

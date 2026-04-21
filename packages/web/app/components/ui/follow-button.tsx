@@ -1,10 +1,10 @@
-'use client';
+"use client";
 
-import React from 'react';
-import MuiButton from '@mui/material/Button';
-import CircularProgress from '@mui/material/CircularProgress';
-import { useFollowToggle } from '@/app/hooks/use-follow-toggle';
-import type { TypedDocumentNode } from '@graphql-typed-document-node/core';
+import React from "react";
+import MuiButton from "@mui/material/Button";
+import CircularProgress from "@mui/material/CircularProgress";
+import { useFollowToggle } from "@/app/hooks/use-follow-toggle";
+import type { TypedDocumentNode } from "@graphql-typed-document-node/core";
 
 interface FollowButtonProps {
   entityId: string;
@@ -25,15 +25,16 @@ export default function FollowButton({
   getFollowVariables,
   onFollowChange,
 }: FollowButtonProps) {
-  const { isFollowing, isLoading, isHovered, isAuthenticated, handleToggle, setIsHovered } = useFollowToggle({
-    entityId,
-    initialIsFollowing,
-    followMutation,
-    unfollowMutation,
-    entityLabel,
-    getFollowVariables,
-    onFollowChange,
-  });
+  const { isFollowing, isLoading, isHovered, isAuthenticated, handleToggle, setIsHovered } =
+    useFollowToggle({
+      entityId,
+      initialIsFollowing,
+      followMutation,
+      unfollowMutation,
+      entityLabel,
+      getFollowVariables,
+      onFollowChange,
+    });
 
   if (!isAuthenticated) {
     return null;
@@ -41,21 +42,21 @@ export default function FollowButton({
 
   const getButtonLabel = () => {
     if (isLoading) return <CircularProgress size={16} color="inherit" />;
-    if (isFollowing && isHovered) return 'Unfollow';
-    if (isFollowing) return 'Following';
-    return 'Follow';
+    if (isFollowing && isHovered) return "Unfollow";
+    if (isFollowing) return "Following";
+    return "Follow";
   };
 
   return (
     <MuiButton
-      variant={isFollowing ? 'outlined' : 'contained'}
+      variant={isFollowing ? "outlined" : "contained"}
       size="small"
       onClick={handleToggle}
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
       disabled={isLoading}
-      color={isFollowing && isHovered ? 'error' : 'primary'}
-      sx={{ minWidth: 90, textTransform: 'none' }}
+      color={isFollowing && isHovered ? "error" : "primary"}
+      sx={{ minWidth: 90, textTransform: "none" }}
     >
       {getButtonLabel()}
     </MuiButton>

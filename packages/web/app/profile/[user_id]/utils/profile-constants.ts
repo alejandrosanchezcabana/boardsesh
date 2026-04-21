@@ -1,8 +1,11 @@
-import { V_GRADE_COLORS, FONT_GRADE_COLORS, type GradeDisplayFormat } from '@/app/lib/grade-colors';
-import { SUPPORTED_BOARDS, BOULDER_GRADES } from '@/app/lib/board-data';
-import { getLayout, ORPHANED_KILTER_LAYOUT_DEFAULTS } from '@boardsesh/board-constants/product-sizes';
-import { MOONBOARD_LAYOUTS } from '@/app/lib/moonboard-config';
-import type { BoardName } from '@/app/lib/types';
+import { V_GRADE_COLORS, FONT_GRADE_COLORS, type GradeDisplayFormat } from "@/app/lib/grade-colors";
+import { SUPPORTED_BOARDS, BOULDER_GRADES } from "@/app/lib/board-data";
+import {
+  getLayout,
+  ORPHANED_KILTER_LAYOUT_DEFAULTS,
+} from "@boardsesh/board-constants/product-sizes";
+import { MOONBOARD_LAYOUTS } from "@/app/lib/moonboard-config";
+import type { BoardName } from "@/app/lib/types";
 
 export interface UserProfile {
   id: string;
@@ -28,13 +31,19 @@ export interface LogbookEntry {
   difficulty: number | null;
   tries: number;
   angle: number;
-  status?: 'flash' | 'send' | 'attempt';
+  status?: "flash" | "send" | "attempt";
   layoutId?: number | null;
   boardType?: string;
   climbUuid?: string;
 }
 
-export type UnifiedTimeframeType = 'all' | 'lastYear' | 'lastMonth' | 'lastWeek' | 'today' | 'custom';
+export type UnifiedTimeframeType =
+  | "all"
+  | "lastYear"
+  | "lastMonth"
+  | "lastWeek"
+  | "today"
+  | "custom";
 
 export const BOARD_TYPES = SUPPORTED_BOARDS;
 
@@ -52,7 +61,7 @@ const fontGradeDifficultyMapping: Record<number, string> = Object.fromEntries(
 
 // Get difficulty mapping based on format preference
 export const getDifficultyMapping = (format: GradeDisplayFormat): Record<number, string> => {
-  return format === 'font' ? fontGradeDifficultyMapping : difficultyMapping;
+  return format === "font" ? fontGradeDifficultyMapping : difficultyMapping;
 };
 
 // Build reverse mapping from grade string to numeric difficulty for sorting
@@ -73,7 +82,7 @@ const fontGradeOrderMap = buildGradeOrder(fontGradeDifficultyMapping);
 
 // Sort grades by their numeric difficulty value
 export const sortGrades = (grades: string[], format: GradeDisplayFormat): string[] => {
-  const gradeOrder = format === 'font' ? fontGradeOrderMap : vGradeOrder;
+  const gradeOrder = format === "font" ? fontGradeOrderMap : vGradeOrder;
   return [...grades].sort((a, b) => {
     const orderA = gradeOrder.get(a) ?? 999;
     const orderB = gradeOrder.get(b) ?? 999;
@@ -84,21 +93,21 @@ export const sortGrades = (grades: string[], format: GradeDisplayFormat): string
 // Display name overrides for layouts whose constant name doesn't match the
 // desired display style (e.g. "Original Layout" → "Tension Classic").
 const LAYOUT_DISPLAY_OVERRIDES: Record<string, string> = {
-  'tension-9': 'Tension Classic',
+  "tension-9": "Tension Classic",
 };
 
 // Colors for each layout — soft, muted palette that feels cohesive
 const layoutColors: Record<string, string> = {
-  'kilter-1': 'hsla(190, 55%, 52%, 0.7)',   // Muted teal
-  'kilter-8': 'hsla(160, 40%, 50%, 0.7)',    // Soft sage green
-  'tension-9': 'hsla(350, 50%, 58%, 0.7)',   // Dusty rose
-  'tension-10': 'hsla(20, 55%, 58%, 0.7)',   // Warm terracotta
-  'tension-11': 'hsla(42, 50%, 55%, 0.7)',   // Muted gold
-  'moonboard-1': 'hsla(270, 40%, 58%, 0.7)', // Soft lavender
-  'moonboard-2': 'hsla(250, 40%, 55%, 0.7)', // Muted indigo
-  'moonboard-3': 'hsla(290, 35%, 55%, 0.7)', // Soft plum
-  'moonboard-4': 'hsla(230, 40%, 58%, 0.7)', // Dusty blue
-  'moonboard-5': 'hsla(210, 45%, 55%, 0.7)', // Slate blue
+  "kilter-1": "hsla(190, 55%, 52%, 0.7)", // Muted teal
+  "kilter-8": "hsla(160, 40%, 50%, 0.7)", // Soft sage green
+  "tension-9": "hsla(350, 50%, 58%, 0.7)", // Dusty rose
+  "tension-10": "hsla(20, 55%, 58%, 0.7)", // Warm terracotta
+  "tension-11": "hsla(42, 50%, 55%, 0.7)", // Muted gold
+  "moonboard-1": "hsla(270, 40%, 58%, 0.7)", // Soft lavender
+  "moonboard-2": "hsla(250, 40%, 55%, 0.7)", // Muted indigo
+  "moonboard-3": "hsla(290, 35%, 55%, 0.7)", // Soft plum
+  "moonboard-4": "hsla(230, 40%, 58%, 0.7)", // Dusty blue
+  "moonboard-5": "hsla(210, 45%, 55%, 0.7)", // Slate blue
 };
 
 export const getLayoutKey = (boardType: string, layoutId: number | null | undefined): string => {
@@ -108,7 +117,10 @@ export const getLayoutKey = (boardType: string, layoutId: number | null | undefi
   return `${boardType}-${layoutId}`;
 };
 
-export const getLayoutDisplayName = (boardType: string, layoutId: number | null | undefined): string => {
+export const getLayoutDisplayName = (
+  boardType: string,
+  layoutId: number | null | undefined,
+): string => {
   if (layoutId === null || layoutId === undefined) {
     return `${boardType.charAt(0).toUpperCase() + boardType.slice(1)} (Unknown Layout)`;
   }
@@ -119,7 +131,7 @@ export const getLayoutDisplayName = (boardType: string, layoutId: number | null 
   if (LAYOUT_DISPLAY_OVERRIDES[key]) return LAYOUT_DISPLAY_OVERRIDES[key];
 
   // MoonBoard layouts are defined separately from Aurora layouts
-  if (boardType === 'moonboard') {
+  if (boardType === "moonboard") {
     const entry = Object.values(MOONBOARD_LAYOUTS).find((l) => l.id === layoutId);
     if (entry) return entry.name;
   } else {
@@ -127,11 +139,11 @@ export const getLayoutDisplayName = (boardType: string, layoutId: number | null 
     const layout = getLayout(boardType as BoardName, layoutId);
     if (layout) {
       // Strip " Board " from names like "Kilter Board Original" → "Kilter Original"
-      return layout.name.replace(' Board ', ' ');
+      return layout.name.replace(" Board ", " ");
     }
 
     // Orphaned Kilter layouts not in the main LAYOUTS config
-    if (boardType === 'kilter') {
+    if (boardType === "kilter") {
       const orphaned = ORPHANED_KILTER_LAYOUT_DEFAULTS[layoutId];
       if (orphaned) return orphaned.name;
     }
@@ -142,7 +154,10 @@ export const getLayoutDisplayName = (boardType: string, layoutId: number | null 
 
 export const getLayoutColor = (boardType: string, layoutId: number | null | undefined): string => {
   const key = getLayoutKey(boardType, layoutId);
-  return layoutColors[key] || (boardType === 'kilter' ? 'rgba(6, 182, 212, 0.5)' : 'rgba(239, 68, 68, 0.5)');
+  return (
+    layoutColors[key] ||
+    (boardType === "kilter" ? "rgba(6, 182, 212, 0.5)" : "rgba(239, 68, 68, 0.5)")
+  );
 };
 
 /**
@@ -151,12 +166,12 @@ export const getLayoutColor = (boardType: string, layoutId: number | null | unde
  */
 export const getGradeChartColor = (grade: string): string => {
   // Try V-grade first (strip trailing "+"), then Font grade (lowercase)
-  const normalized = grade.replace(/\+$/, '');
+  const normalized = grade.replace(/\+$/, "");
   const hexColor = V_GRADE_COLORS[normalized] ?? FONT_GRADE_COLORS[grade.toLowerCase()];
-  if (!hexColor) return 'hsla(0, 0%, 78%, 0.7)';
+  if (!hexColor) return "hsla(0, 0%, 78%, 0.7)";
 
   // Convert hex to HSL for smoother control
-  const hex = hexColor.replace('#', '');
+  const hex = hexColor.replace("#", "");
   const r = parseInt(hex.substring(0, 2), 16) / 255;
   const g = parseInt(hex.substring(2, 4), 16) / 255;
   const b = parseInt(hex.substring(4, 6), 16) / 255;
@@ -181,7 +196,7 @@ export const getGradeChartColor = (grade: string): string => {
 };
 
 export const boardOptions = [
-  { label: 'All', value: 'all' },
+  { label: "All", value: "all" },
   ...BOARD_TYPES.map((boardType) => ({
     label: boardType.charAt(0).toUpperCase() + boardType.slice(1),
     value: boardType,
@@ -189,10 +204,10 @@ export const boardOptions = [
 ];
 
 export const unifiedTimeframeOptions: { label: string; value: UnifiedTimeframeType }[] = [
-  { label: 'All', value: 'all' },
-  { label: 'Year', value: 'lastYear' },
-  { label: 'Month', value: 'lastMonth' },
-  { label: 'Week', value: 'lastWeek' },
-  { label: 'Today', value: 'today' },
-  { label: 'Custom', value: 'custom' },
+  { label: "All", value: "all" },
+  { label: "Year", value: "lastYear" },
+  { label: "Month", value: "lastMonth" },
+  { label: "Week", value: "lastWeek" },
+  { label: "Today", value: "today" },
+  { label: "Custom", value: "custom" },
 ];

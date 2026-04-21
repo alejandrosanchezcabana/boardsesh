@@ -1,6 +1,6 @@
-import { NextResponse } from 'next/server';
-import { getLayoutBySlug, LayoutRow } from '@/app/lib/slug-utils';
-import { BoardName } from '@/app/lib/types';
+import { NextResponse } from "next/server";
+import { getLayoutBySlug, LayoutRow } from "@/app/lib/slug-utils";
+import { BoardName } from "@/app/lib/types";
 
 export async function GET(
   req: Request,
@@ -18,7 +18,7 @@ export async function GET(
         {
           status: 404,
           headers: {
-            'Cache-Control': 'public, s-maxage=31536000, immutable', // Even 404s can be cached - layouts don't change
+            "Cache-Control": "public, s-maxage=31536000, immutable", // Even 404s can be cached - layouts don't change
           },
         },
       );
@@ -26,11 +26,11 @@ export async function GET(
 
     return NextResponse.json(layout, {
       headers: {
-        'Cache-Control': 'public, s-maxage=31536000, immutable', // Cache for 1 year, immutable
+        "Cache-Control": "public, s-maxage=31536000, immutable", // Cache for 1 year, immutable
       },
     });
   } catch (error) {
-    console.error('Route: Error fetching layout by slug:', error);
-    return NextResponse.json({ error: 'Failed to fetch layout' }, { status: 500 });
+    console.error("Route: Error fetching layout by slug:", error);
+    return NextResponse.json({ error: "Failed to fetch layout" }, { status: 500 });
   }
 }

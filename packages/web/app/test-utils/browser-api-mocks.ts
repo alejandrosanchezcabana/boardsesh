@@ -1,4 +1,4 @@
-import { vi } from 'vitest';
+import { vi } from "vite-plus/test";
 
 /**
  * Mocks navigator.geolocation for testing.
@@ -9,7 +9,7 @@ export function setupGeolocationMock() {
   const watchPosition = vi.fn();
   const clearWatch = vi.fn();
 
-  Object.defineProperty(navigator, 'geolocation', {
+  Object.defineProperty(navigator, "geolocation", {
     value: { getCurrentPosition, watchPosition, clearWatch },
     configurable: true,
     writable: true,
@@ -30,16 +30,16 @@ export function setupWakeLockMock() {
     released: false,
     release: releaseFn,
     addEventListener: vi.fn((event: string, handler: () => void) => {
-      if (event === 'release') releaseHandler = handler;
+      if (event === "release") releaseHandler = handler;
     }),
     removeEventListener: vi.fn(),
-    type: 'screen' as WakeLockType,
+    type: "screen" as WakeLockType,
     onrelease: null,
   };
 
   const requestFn = vi.fn().mockResolvedValue(sentinel);
 
-  Object.defineProperty(navigator, 'wakeLock', {
+  Object.defineProperty(navigator, "wakeLock", {
     value: { request: requestFn },
     configurable: true,
     writable: true,
@@ -70,23 +70,20 @@ export function setupIntersectionObserverMock() {
       disconnect: disconnectFn,
       unobserve: vi.fn(),
       root: null,
-      rootMargin: '',
+      rootMargin: "",
       thresholds: [],
       takeRecords: vi.fn().mockReturnValue([]),
     };
   });
 
-  vi.stubGlobal('IntersectionObserver', MockIntersectionObserver);
+  vi.stubGlobal("IntersectionObserver", MockIntersectionObserver);
 
   return {
     observe: observeFn,
     disconnect: disconnectFn,
     /** Trigger the observer callback with a mock entry */
     triggerIntersect: (isIntersecting: boolean) => {
-      lastCallback?.(
-        [{ isIntersecting } as IntersectionObserverEntry],
-        {} as IntersectionObserver,
-      );
+      lastCallback?.([{ isIntersecting } as IntersectionObserverEntry], {} as IntersectionObserver);
     },
   };
 }
@@ -94,14 +91,16 @@ export function setupIntersectionObserverMock() {
 /**
  * Mocks navigator.permissions.query() for geolocation permission tests.
  */
-export function setupPermissionsApiMock(initialState: PermissionState = 'prompt') {
+export function setupPermissionsApiMock(initialState: PermissionState = "prompt") {
   let currentState = initialState;
   let changeHandler: (() => void) | null = null;
 
   const permissionStatus = {
-    get state() { return currentState; },
+    get state() {
+      return currentState;
+    },
     addEventListener: vi.fn((event: string, handler: () => void) => {
-      if (event === 'change') changeHandler = handler;
+      if (event === "change") changeHandler = handler;
     }),
     removeEventListener: vi.fn(),
     onchange: null,
@@ -110,7 +109,7 @@ export function setupPermissionsApiMock(initialState: PermissionState = 'prompt'
 
   const queryFn = vi.fn().mockResolvedValue(permissionStatus);
 
-  Object.defineProperty(navigator, 'permissions', {
+  Object.defineProperty(navigator, "permissions", {
     value: { query: queryFn },
     configurable: true,
     writable: true,

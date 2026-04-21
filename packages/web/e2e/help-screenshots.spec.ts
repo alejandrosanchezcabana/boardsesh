@@ -16,79 +16,85 @@
  *   - Dev server running: bun run dev
  *   - For authenticated tests: 1Password CLI installed and signed in
  */
-import { test, expect } from '@playwright/test';
+import { test, expect } from "@playwright/test";
 
-const SCREENSHOT_DIR = 'public/help';
-const boardUrl = '/kilter/original/12x12-square/screw_bolt/40/list';
+const SCREENSHOT_DIR = "public/help";
+const boardUrl = "/kilter/original/12x12-square/screw_bolt/40/list";
 
 // Viewport (390×844) is set at the project level in playwright.config.ts.
 // Both describe blocks here inherit it without needing their own test.use() calls.
 
-test.describe('Help Page Screenshots', () => {
-  test.skip(true, 'Temporarily disabled — screenshot tests not working as expected');
+test.describe("Help Page Screenshots", () => {
+  test.skip(true, "Temporarily disabled — screenshot tests not working as expected");
 
   test.beforeEach(async ({ page }) => {
     await page.goto(boardUrl);
-    await page.waitForSelector('#onboarding-climb-card, [data-testid="climb-card"]', { timeout: 30000 })
-      .catch(() => page.waitForLoadState('domcontentloaded'));
+    await page
+      .waitForSelector('#onboarding-climb-card, [data-testid="climb-card"]', { timeout: 30000 })
+      .catch(() => page.waitForLoadState("domcontentloaded"));
   });
 
-  test('main interface', async ({ page }) => {
+  test("main interface", async ({ page }) => {
     await page.screenshot({ path: `${SCREENSHOT_DIR}/main-interface.png` });
   });
 
-  test('search filters', async ({ page }) => {
+  test("search filters", async ({ page }) => {
     // Open search drawer via the search pill in the header
-    await page.locator('#onboarding-search-button').click();
+    await page.locator("#onboarding-search-button").click();
     // Wait for the search form content to appear
-    await page.getByText('Grade').first().waitFor({ state: 'visible' });
+    await page.getByText("Grade").first().waitFor({ state: "visible" });
     await page.screenshot({ path: `${SCREENSHOT_DIR}/search-filters.png` });
   });
 
-  test('search by hold', async ({ page }) => {
+  test("search by hold", async ({ page }) => {
     // Open search drawer and expand the "Holds" section
-    await page.locator('#onboarding-search-button').click();
-    await page.getByText('Grade').first().waitFor({ state: 'visible' });
+    await page.locator("#onboarding-search-button").click();
+    await page.getByText("Grade").first().waitFor({ state: "visible" });
     // Click the "Holds" collapsible section to expand it (exact match to avoid "Classify Holds" etc.)
-    await page.getByText('Holds', { exact: true }).click();
+    await page.getByText("Holds", { exact: true }).click();
     await page.screenshot({ path: `${SCREENSHOT_DIR}/search-by-hold.png` });
   });
 
-  test('heatmap', async ({ page }) => {
+  test("heatmap", async ({ page }) => {
     // Open search drawer and expand the "Holds" section
-    await page.locator('#onboarding-search-button').click();
-    await page.getByText('Grade').first().waitFor({ state: 'visible' });
-    await page.getByText('Holds', { exact: true }).click();
+    await page.locator("#onboarding-search-button").click();
+    await page.getByText("Grade").first().waitFor({ state: "visible" });
+    await page.getByText("Holds", { exact: true }).click();
 
     // Click "Show Heatmap" button within the holds section
-    await page.getByRole('button', { name: 'Show Heatmap' }).click();
+    await page.getByRole("button", { name: "Show Heatmap" }).click();
 
     // Wait for heatmap loading to complete
-    await page.waitForSelector('text=Loading heatmap...', { state: 'hidden', timeout: 10000 }).catch(() => {});
-    await page.waitForSelector('button:has-text("Hide Heatmap")', { state: 'visible' });
+    await page
+      .waitForSelector("text=Loading heatmap...", { state: "hidden", timeout: 10000 })
+      .catch(() => {});
+    await page.waitForSelector('button:has-text("Hide Heatmap")', { state: "visible" });
 
     await page.screenshot({ path: `${SCREENSHOT_DIR}/heatmap.png` });
   });
 
-  test('climb detail', async ({ page }) => {
+  test("climb detail", async ({ page }) => {
     // Double-click first climb to add it to the queue
-    const climbCard = page.locator('#onboarding-climb-card');
+    const climbCard = page.locator("#onboarding-climb-card");
     await climbCard.dblclick();
 
     // Wait for queue bar to appear, then click it to open the play drawer
     const queueBar = page.locator('[data-testid="queue-control-bar"]');
     await expect(queueBar).toBeVisible({ timeout: 10000 });
     // Click the queue toggle text to open play drawer with climb details
-    await page.locator('#onboarding-queue-toggle').click();
+    await page.locator("#onboarding-queue-toggle").click();
     // Wait for play drawer to open
-    await page.locator('[data-swipeable-drawer="true"]:visible').first().waitFor({ timeout: 10000 });
+    await page
+      .locator('[data-swipeable-drawer="true"]:visible')
+      .first()
+      .waitFor({ timeout: 10000 });
 
     await page.screenshot({ path: `${SCREENSHOT_DIR}/climb-detail.png` });
   });
 
-  test('party mode modal', async ({ page }) => {
+  test("party mode modal", async ({ page }) => {
     // First add a climb to queue so the queue bar appears
-    const climbCard = page.locator('#onboarding-climb-card');
+    const climbCard = page.locator("#onboarding-climb-card");
     await climbCard.dblclick();
 
     // Wait for queue bar
@@ -96,30 +102,33 @@ test.describe('Help Page Screenshots', () => {
     await expect(queueBar).toBeVisible({ timeout: 10000 });
 
     // Click "Sesh" button in the global header to open the start session drawer
-    await page.getByRole('button', { name: 'Sesh', exact: true }).click();
-    await page.locator('[data-swipeable-drawer="true"]:visible').first().waitFor({ timeout: 10000 });
+    await page.getByRole("button", { name: "Sesh", exact: true }).click();
+    await page
+      .locator('[data-swipeable-drawer="true"]:visible')
+      .first()
+      .waitFor({ timeout: 10000 });
 
     await page.screenshot({ path: `${SCREENSHOT_DIR}/party-mode.png` });
   });
 
-  test('login modal', async ({ page }) => {
+  test("login modal", async ({ page }) => {
     // Open user drawer
-    await page.getByLabel('User menu').click();
+    await page.getByLabel("User menu").click();
     // Wait for user drawer content to appear
-    await page.getByRole('button', { name: 'Sign in' }).waitFor({ state: 'visible' });
+    await page.getByRole("button", { name: "Sign in" }).waitFor({ state: "visible" });
 
     // Click "Sign in" button in the user drawer
-    await page.getByRole('button', { name: 'Sign in' }).click();
+    await page.getByRole("button", { name: "Sign in" }).click();
     // Wait for auth modal with login form
-    await page.waitForSelector('input#login_email', { state: 'visible' });
+    await page.waitForSelector("input#login_email", { state: "visible" });
 
     await page.screenshot({ path: `${SCREENSHOT_DIR}/login-modal.png` });
   });
 });
 
 // Authenticated tests - requires TEST_USER_EMAIL and TEST_USER_PASSWORD env vars
-test.describe('Help Page Screenshots - Authenticated', () => {
-  test.skip(true, 'Temporarily disabled — screenshot tests not working as expected');
+test.describe("Help Page Screenshots - Authenticated", () => {
+  test.skip(true, "Temporarily disabled — screenshot tests not working as expected");
 
   const testEmail = process.env.TEST_USER_EMAIL;
   const testPassword = process.env.TEST_USER_PASSWORD;
@@ -128,43 +137,44 @@ test.describe('Help Page Screenshots - Authenticated', () => {
 
   test.beforeEach(async ({ page }) => {
     await page.goto(boardUrl);
-    await page.waitForSelector('#onboarding-climb-card, [data-testid="climb-card"]', { timeout: 30000 })
-      .catch(() => page.waitForLoadState('domcontentloaded'));
+    await page
+      .waitForSelector('#onboarding-climb-card, [data-testid="climb-card"]', { timeout: 30000 })
+      .catch(() => page.waitForLoadState("domcontentloaded"));
 
     // Login via user drawer
-    await page.getByLabel('User menu').click();
-    await page.getByRole('button', { name: 'Sign in' }).waitFor({ state: 'visible' });
-    await page.getByRole('button', { name: 'Sign in' }).click();
-    await page.waitForSelector('input#login_email', { state: 'visible' });
+    await page.getByLabel("User menu").click();
+    await page.getByRole("button", { name: "Sign in" }).waitFor({ state: "visible" });
+    await page.getByRole("button", { name: "Sign in" }).click();
+    await page.waitForSelector("input#login_email", { state: "visible" });
 
     // Fill login form
-    await page.locator('input#login_email').fill(testEmail!);
-    await page.locator('input#login_password').fill(testPassword!);
-    await page.locator('button[type="submit"]').filter({ hasText: 'Login' }).click();
+    await page.locator("input#login_email").fill(testEmail!);
+    await page.locator("input#login_password").fill(testPassword!);
+    await page.locator('button[type="submit"]').filter({ hasText: "Login" }).click();
 
     // Wait for login to complete - auth modal should close
-    await page.waitForSelector('input#login_email', { state: 'hidden', timeout: 10000 });
+    await page.waitForSelector("input#login_email", { state: "hidden", timeout: 10000 });
   });
 
-  test('personal progress filters', async ({ page }) => {
+  test("personal progress filters", async ({ page }) => {
     // Open search drawer to show filters including personal progress
-    await page.locator('#onboarding-search-button').click();
-    await page.getByText('Grade').first().waitFor({ state: 'visible' });
+    await page.locator("#onboarding-search-button").click();
+    await page.getByText("Grade").first().waitFor({ state: "visible" });
 
     // Expand the Progress section (user-specific filters: attempts, completions, etc.)
-    await page.getByText('Progress', { exact: true }).click();
+    await page.getByText("Progress", { exact: true }).click();
 
     await page.screenshot({ path: `${SCREENSHOT_DIR}/personal-progress.png` });
   });
 
-  test('party mode active session', async ({ page, context }) => {
+  test("party mode active session", async ({ page, context }) => {
     test.slow(); // WebSocket connection setup can be slow in CI
 
     // Grant geolocation permission so session creation doesn't wait for permission prompt
-    await context.grantPermissions(['geolocation']);
+    await context.grantPermissions(["geolocation"]);
 
     // First add a climb to queue (also sets localBoardDetails for session creation)
-    const climbCard = page.locator('#onboarding-climb-card');
+    const climbCard = page.locator("#onboarding-climb-card");
     await climbCard.dblclick();
 
     // Wait for queue bar
@@ -172,47 +182,54 @@ test.describe('Help Page Screenshots - Authenticated', () => {
     await expect(queueBar).toBeVisible({ timeout: 10000 });
 
     // Open start session drawer via "Sesh" button in the global header
-    await page.getByRole('button', { name: 'Sesh', exact: true }).click();
-    await page.locator('[data-swipeable-drawer="true"]:visible').first().waitFor({ timeout: 10000 });
+    await page.getByRole("button", { name: "Sesh", exact: true }).click();
+    await page
+      .locator('[data-swipeable-drawer="true"]:visible')
+      .first()
+      .waitFor({ timeout: 10000 });
 
     // Start the session — we're already on a board route so no board selection needed.
     // The footer "Sesh" button submits the session creation form.
-    await page.getByRole('button', { name: 'Sesh', exact: true }).last().click();
+    await page.getByRole("button", { name: "Sesh", exact: true }).last().click();
 
     // Wait for session to start — success snackbar appears after creation
-    await expect(page.getByText('Session started!')).toBeVisible({ timeout: 30000 });
+    await expect(page.getByText("Session started!")).toBeVisible({ timeout: 30000 });
 
     await page.screenshot({ path: `${SCREENSHOT_DIR}/party-mode-active.png` });
 
     // Clean up: open session settings and stop the session
-    await page.getByRole('button', { name: 'Sesh', exact: true }).click();
-    await page.getByRole('button', { name: 'Stop Session' }).click();
+    await page.getByRole("button", { name: "Sesh", exact: true }).click();
+    await page.getByRole("button", { name: "Stop Session" }).click();
   });
 
-  test('hold classification wizard', async ({ page }) => {
+  test("hold classification wizard", async ({ page }) => {
     // Open user drawer and click Classify Holds
-    await page.getByLabel('User menu').click();
-    await page.getByText('Classify Holds').waitFor({ state: 'visible' });
-    await page.getByText('Classify Holds').click();
+    await page.getByLabel("User menu").click();
+    await page.getByText("Classify Holds").waitFor({ state: "visible" });
+    await page.getByText("Classify Holds").click();
 
     // Wait for wizard content to load
-    await page.waitForSelector('.MuiRating-root, .MuiLinearProgress-root', { state: 'visible', timeout: 10000 });
+    await page.waitForSelector(".MuiRating-root, .MuiLinearProgress-root", {
+      state: "visible",
+      timeout: 10000,
+    });
 
     await page.screenshot({ path: `${SCREENSHOT_DIR}/hold-classification.png` });
   });
 
-  test('settings aurora sync', async ({ page }) => {
+  test("settings aurora sync", async ({ page }) => {
     // Navigate to settings page
-    await page.goto('/settings');
+    await page.goto("/settings");
     // Wait for settings page content to load
-    await page.waitForSelector('.MuiCard-root', { state: 'visible' });
+    await page.waitForSelector(".MuiCard-root", { state: "visible" });
 
     // Scroll to Board Accounts section
     await page.evaluate(() => {
-      const heading = Array.from(document.querySelectorAll('h4, .MuiCardHeader-title'))
-        .find(el => el.textContent?.includes('Board Accounts'));
+      const heading = Array.from(document.querySelectorAll("h4, .MuiCardHeader-title")).find((el) =>
+        el.textContent?.includes("Board Accounts"),
+      );
       if (heading) {
-        heading.scrollIntoView({ behavior: 'instant', block: 'start' });
+        heading.scrollIntoView({ behavior: "instant", block: "start" });
       }
     });
 

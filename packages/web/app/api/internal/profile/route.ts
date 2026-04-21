@@ -7,7 +7,11 @@ import { z } from "zod";
 import { authOptions } from "@/app/lib/auth/auth-options";
 
 const updateProfileSchema = z.object({
-  displayName: z.string().max(100, "Display name must be less than 100 characters").optional().nullable(),
+  displayName: z
+    .string()
+    .max(100, "Display name must be less than 100 characters")
+    .optional()
+    .nullable(),
   avatarUrl: z.string().url("Invalid avatar URL").optional().nullable(),
   instagramUrl: z.string().url("Invalid Instagram URL").optional().nullable(),
 });
@@ -29,11 +33,7 @@ export async function GET() {
         .from(schema.userProfiles)
         .where(eq(schema.userProfiles.userId, session.user.id))
         .limit(1),
-      db
-        .select()
-        .from(schema.users)
-        .where(eq(schema.users.id, session.user.id))
-        .limit(1),
+      db.select().from(schema.users).where(eq(schema.users.id, session.user.id)).limit(1),
       db
         .select({ userId: schema.userCredentials.userId })
         .from(schema.userCredentials)
@@ -88,7 +88,7 @@ export async function PUT(request: NextRequest) {
     if (!validationResult.success) {
       return NextResponse.json(
         { error: validationResult.error.issues[0].message },
-        { status: 400 }
+        { status: 400 },
       );
     }
 

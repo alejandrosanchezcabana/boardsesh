@@ -1,19 +1,19 @@
-import { describe, expect, it, vi } from 'vitest';
+import { describe, expect, it, vi } from "vite-plus/test";
 
-vi.mock('next/navigation', () => ({
+vi.mock("next/navigation", () => ({
   notFound: vi.fn(),
 }));
 
-vi.mock('@/app/lib/board-slug-utils', () => ({
+vi.mock("@/app/lib/board-slug-utils", () => ({
   resolveBoardBySlug: vi.fn(async () => ({
-    slug: 'my-board',
-    boardType: 'kilter',
+    slug: "my-board",
+    boardType: "kilter",
     layoutId: 1,
     sizeId: 7,
-    setIds: '1,20',
+    setIds: "1,20",
   })),
   boardToRouteParams: vi.fn(() => ({
-    board_name: 'kilter',
+    board_name: "kilter",
     layout_id: 1,
     size_id: 7,
     set_ids: [1, 20],
@@ -21,9 +21,9 @@ vi.mock('@/app/lib/board-slug-utils', () => ({
   })),
 }));
 
-vi.mock('@/app/lib/board-utils', () => ({
+vi.mock("@/app/lib/board-utils", () => ({
   getBoardDetailsForBoard: vi.fn(() => ({
-    board_name: 'kilter',
+    board_name: "kilter",
     layout_id: 1,
     size_id: 7,
     set_ids: [1, 20],
@@ -38,50 +38,50 @@ vi.mock('@/app/lib/board-utils', () => ({
   })),
 }));
 
-vi.mock('@/app/lib/data/queries', () => ({
+vi.mock("@/app/lib/data/queries", () => ({
   getClimb: vi.fn(async () => ({
-    name: 'Test Climb',
-    difficulty: 'V5',
-    setter_username: 'setter',
+    name: "Test Climb",
+    difficulty: "V5",
+    setter_username: "setter",
     quality_average: 4,
     ascensionist_count: 12,
-    frames: 'p1r12,p2r13',
+    frames: "p1r12,p2r13",
   })),
 }));
 
-vi.mock('@/app/lib/data/climb-detail-data.server', () => ({
+vi.mock("@/app/lib/data/climb-detail-data.server", () => ({
   fetchClimbDetailData: vi.fn(async () => ({
     communityGrade: null,
     betaLinks: [],
   })),
 }));
 
-vi.mock('@/app/lib/warm-overlay-cache', () => ({
+vi.mock("@/app/lib/warm-overlay-cache", () => ({
   scheduleOverlayWarming: vi.fn(),
 }));
 
-vi.mock('@/app/lib/url-utils', () => ({
+vi.mock("@/app/lib/url-utils", () => ({
   extractUuidFromSlug: vi.fn((value: string) => value),
 }));
 
-vi.mock('@/app/components/climb-detail/climb-detail-page.server', () => ({
+vi.mock("@/app/components/climb-detail/climb-detail-page.server", () => ({
   default: () => null,
 }));
 
-vi.mock('@/app/components/board-renderer/util', () => ({
-  buildOgBoardRenderUrl: vi.fn(() => '/api/internal/board-render?board_name=kilter&variant=og&format=png'),
+vi.mock("@/app/components/board-renderer/util", () => ({
+  buildOgBoardRenderUrl: vi.fn(
+    () => "/api/internal/board-render?board_name=kilter&variant=og&format=png",
+  ),
 }));
 
-const pageModule = await import('../page');
+const pageModule = await import("../page");
 
-function getOpenGraphImageUrl(
-  image: string | URL | { url: string | URL } | undefined,
-) {
+function getOpenGraphImageUrl(image: string | URL | { url: string | URL } | undefined) {
   if (!image) {
     return undefined;
   }
 
-  if (typeof image === 'string') {
+  if (typeof image === "string") {
     return image;
   }
 
@@ -89,16 +89,16 @@ function getOpenGraphImageUrl(
     return image.toString();
   }
 
-  return typeof image.url === 'string' ? image.url : image.url.toString();
+  return typeof image.url === "string" ? image.url : image.url.toString();
 }
 
-describe('board slug climb metadata', () => {
-  it('uses the immutable Rust board render URL for social images', async () => {
+describe("board slug climb metadata", () => {
+  it("uses the immutable Rust board render URL for social images", async () => {
     const metadata = await pageModule.generateMetadata({
       params: Promise.resolve({
-        board_slug: 'my-board',
-        angle: '40',
-        climb_uuid: 'test-climb',
+        board_slug: "my-board",
+        angle: "40",
+        climb_uuid: "test-climb",
       }),
     });
 
@@ -107,7 +107,7 @@ describe('board slug climb metadata', () => {
       : metadata.openGraph?.images;
     const imageUrl = getOpenGraphImageUrl(image);
 
-    expect(imageUrl).toBe('/api/internal/board-render?board_name=kilter&variant=og&format=png');
-    expect(imageUrl).not.toContain('/api/og/climb');
+    expect(imageUrl).toBe("/api/internal/board-render?board_name=kilter&variant=og&format=png");
+    expect(imageUrl).not.toContain("/api/og/climb");
   });
 });

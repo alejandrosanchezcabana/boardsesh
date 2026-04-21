@@ -1,12 +1,12 @@
-import { eq, and, isNull, count, sql, inArray } from 'drizzle-orm';
-import type { ConnectionContext } from '@boardsesh/shared-schema';
-import { db } from '../../../db/client';
-import * as dbSchema from '@boardsesh/db/schema';
-import { requireAuthenticated, applyRateLimit, validateInput } from '../shared/helpers';
-import { GroupedNotificationsInputSchema } from '../../../validation/schemas';
-import { pubsub } from '../../../pubsub/index';
-import { createAsyncIterator } from '../shared/async-iterators';
-import type { NotificationEvent } from '@boardsesh/shared-schema';
+import { eq, and, isNull, count, sql, inArray } from "drizzle-orm";
+import type { ConnectionContext } from "@boardsesh/shared-schema";
+import { db } from "../../../db/client";
+import * as dbSchema from "@boardsesh/db/schema";
+import { requireAuthenticated, applyRateLimit, validateInput } from "../shared/helpers";
+import { GroupedNotificationsInputSchema } from "../../../validation/schemas";
+import { pubsub } from "../../../pubsub/index";
+import { createAsyncIterator } from "../shared/async-iterators";
+import type { NotificationEvent } from "@boardsesh/shared-schema";
 
 interface NotificationRow {
   uuid: string;
@@ -34,7 +34,9 @@ function mapNotificationRow(row: NotificationRow) {
     entityType: row.entityType,
     entityId: row.entityId,
     commentBody: row.commentBody
-      ? (row.commentBody.length > 100 ? row.commentBody.slice(0, 100) + '...' : row.commentBody)
+      ? row.commentBody.length > 100
+        ? row.commentBody.slice(0, 100) + "..."
+        : row.commentBody
       : undefined,
     climbName: undefined,
     climbUuid: undefined,
@@ -47,7 +49,11 @@ function mapNotificationRow(row: NotificationRow) {
 export const socialNotificationQueries = {
   notifications: async (
     _: unknown,
-    { unreadOnly, limit = 20, offset = 0 }: { unreadOnly?: boolean; limit?: number; offset?: number },
+    {
+      unreadOnly,
+      limit = 20,
+      offset = 0,
+    }: { unreadOnly?: boolean; limit?: number; offset?: number },
     ctx: ConnectionContext,
   ) => {
     requireAuthenticated(ctx);
@@ -88,7 +94,11 @@ export const socialNotificationQueries = {
       OFFSET ${offset}
     `);
 
-    const rows = (rawResult as unknown as { rows: (NotificationRow & { totalCount: string; unreadCount: string })[] }).rows;
+    const rows = (
+      rawResult as unknown as {
+        rows: (NotificationRow & { totalCount: string; unreadCount: string })[];
+      }
+    ).rows;
     const notifications = rows.map(mapNotificationRow);
     const totalCount = rows.length > 0 ? Number(rows[0].totalCount) : 0;
     const unreadCount = rows.length > 0 ? Number(rows[0].unreadCount) : 0;
@@ -109,7 +119,7 @@ export const socialNotificationQueries = {
     requireAuthenticated(ctx);
     const userId = ctx.userId!;
 
-    const validated = validateInput(GroupedNotificationsInputSchema, args, 'groupedNotifications');
+    const validated = validateInput(GroupedNotificationsInputSchema, args, "groupedNotifications");
     const limit = validated.limit ?? 20;
     const offset = validated.offset ?? 0;
 
@@ -200,7 +210,9 @@ export const socialNotificationQueries = {
         actorCount: Number(row.actorCount),
         actors,
         commentBody: row.commentBody
-          ? (row.commentBody.length > 100 ? row.commentBody.slice(0, 100) + '...' : row.commentBody)
+          ? row.commentBody.length > 100
+            ? row.commentBody.slice(0, 100) + "..."
+            : row.commentBody
           : undefined,
         climbName: undefined as string | undefined,
         climbUuid: undefined as string | undefined,
@@ -208,22 +220,28 @@ export const socialNotificationQueries = {
         proposalUuid: undefined as string | undefined,
         setterUsername: undefined as string | undefined,
         isRead: row.allRead,
-        createdAt: row.latestCreatedAt instanceof Date
-          ? row.latestCreatedAt.toISOString()
-          : String(row.latestCreatedAt),
+        createdAt:
+          row.latestCreatedAt instanceof Date
+            ? row.latestCreatedAt.toISOString()
+            : String(row.latestCreatedAt),
       };
     });
 
     // Enrich groups with climb/proposal data (batched to avoid N+1)
-    const proposalTypes = ['proposal_created', 'proposal_approved', 'proposal_rejected', 'proposal_vote'];
-    const climbTypes = ['new_climb', 'new_climb_global'];
+    const proposalTypes = [
+      "proposal_created",
+      "proposal_approved",
+      "proposal_rejected",
+      "proposal_vote",
+    ];
+    const climbTypes = ["new_climb", "new_climb_global"];
 
     // Collect entity IDs by type
     const climbEntityIds: string[] = [];
     const proposalEntityIds: string[] = [];
     for (const group of groups) {
       if (!group.entityId) continue;
-      if (group.type === 'new_climbs_synced' || climbTypes.includes(group.type)) {
+      if (group.type === "new_climbs_synced" || climbTypes.includes(group.type)) {
         climbEntityIds.push(group.entityId);
       } else if (proposalTypes.includes(group.type)) {
         proposalEntityIds.push(group.entityId);
@@ -231,7 +249,10 @@ export const socialNotificationQueries = {
     }
 
     // Batch-fetch climbs
-    const climbMap = new Map<string, { name: string | null; boardType: string; setterUsername: string | null }>();
+    const climbMap = new Map<
+      string,
+      { name: string | null; boardType: string; setterUsername: string | null }
+    >();
     if (climbEntityIds.length > 0) {
       const climbRows = await db
         .select({
@@ -243,7 +264,11 @@ export const socialNotificationQueries = {
         .from(dbSchema.boardClimbs)
         .where(inArray(dbSchema.boardClimbs.uuid, climbEntityIds));
       for (const row of climbRows) {
-        climbMap.set(row.uuid, { name: row.name, boardType: row.boardType, setterUsername: row.setterUsername });
+        climbMap.set(row.uuid, {
+          name: row.name,
+          boardType: row.boardType,
+          setterUsername: row.setterUsername,
+        });
       }
     }
 
@@ -276,7 +301,11 @@ export const socialNotificationQueries = {
           .where(inArray(dbSchema.boardClimbs.uuid, proposalClimbUuids));
         for (const row of proposalClimbRows) {
           if (!climbMap.has(row.uuid)) {
-            climbMap.set(row.uuid, { name: row.name, boardType: row.boardType, setterUsername: row.setterUsername });
+            climbMap.set(row.uuid, {
+              name: row.name,
+              boardType: row.boardType,
+              setterUsername: row.setterUsername,
+            });
           }
         }
       }
@@ -286,7 +315,7 @@ export const socialNotificationQueries = {
     for (const group of groups) {
       if (!group.entityId) continue;
 
-      if (group.type === 'new_climbs_synced') {
+      if (group.type === "new_climbs_synced") {
         const climb = climbMap.get(group.entityId);
         if (climb) {
           group.climbUuid = group.entityId;
@@ -318,10 +347,7 @@ export const socialNotificationQueries = {
       .select({ count: count() })
       .from(dbSchema.notifications)
       .where(
-        and(
-          eq(dbSchema.notifications.recipientId, userId),
-          isNull(dbSchema.notifications.readAt),
-        ),
+        and(eq(dbSchema.notifications.recipientId, userId), isNull(dbSchema.notifications.readAt)),
       );
     const unreadCount = Number(unreadCountResult[0]?.count || 0);
 
@@ -345,10 +371,7 @@ export const socialNotificationQueries = {
       .select({ count: count() })
       .from(dbSchema.notifications)
       .where(
-        and(
-          eq(dbSchema.notifications.recipientId, userId),
-          isNull(dbSchema.notifications.readAt),
-        ),
+        and(eq(dbSchema.notifications.recipientId, userId), isNull(dbSchema.notifications.readAt)),
       );
 
     return Number(result[0]?.count || 0);
@@ -362,7 +385,7 @@ export const socialNotificationMutations = {
     ctx: ConnectionContext,
   ): Promise<boolean> => {
     requireAuthenticated(ctx);
-    await applyRateLimit(ctx, 60, 'notification_read');
+    await applyRateLimit(ctx, 60, "notification_read");
     const userId = ctx.userId!;
 
     await db
@@ -380,11 +403,15 @@ export const socialNotificationMutations = {
 
   markGroupNotificationsRead: async (
     _: unknown,
-    { type, entityType, entityId }: { type: string; entityType?: string | null; entityId?: string | null },
+    {
+      type,
+      entityType,
+      entityId,
+    }: { type: string; entityType?: string | null; entityId?: string | null },
     ctx: ConnectionContext,
   ): Promise<number> => {
     requireAuthenticated(ctx);
-    await applyRateLimit(ctx, 60, 'notification_read');
+    await applyRateLimit(ctx, 60, "notification_read");
     const userId = ctx.userId!;
 
     // Build conditions for the group
@@ -421,17 +448,14 @@ export const socialNotificationMutations = {
     ctx: ConnectionContext,
   ): Promise<boolean> => {
     requireAuthenticated(ctx);
-    await applyRateLimit(ctx, 5, 'notification_read_all');
+    await applyRateLimit(ctx, 5, "notification_read_all");
     const userId = ctx.userId!;
 
     await db
       .update(dbSchema.notifications)
       .set({ readAt: new Date() })
       .where(
-        and(
-          eq(dbSchema.notifications.recipientId, userId),
-          isNull(dbSchema.notifications.readAt),
-        ),
+        and(eq(dbSchema.notifications.recipientId, userId), isNull(dbSchema.notifications.readAt)),
       );
 
     return true;

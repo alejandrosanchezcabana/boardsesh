@@ -1,15 +1,26 @@
-import { getPool } from '@/app/lib/db/db';
-import { userSync } from '../../api-wrappers/aurora/userSync';
-import { SyncOptions, USER_TABLES, UserSyncData, AuroraBoardName } from '../../api-wrappers/aurora/types';
-import { eq, and, inArray } from 'drizzle-orm';
-import { drizzle } from 'drizzle-orm/neon-serverless';
-import { NeonDatabase } from 'drizzle-orm/neon-serverless';
-import { UNIFIED_TABLES } from '../../db/queries/util/table-select';
-import { boardseshTicks, auroraCredentials, playlists, playlistClimbs, playlistOwnership } from '../../db/schema';
-import { randomUUID } from 'crypto';
-import { convertQuality } from './convert-quality';
+import { getPool } from "@/app/lib/db/db";
+import { userSync } from "../../api-wrappers/aurora/userSync";
+import {
+  SyncOptions,
+  USER_TABLES,
+  UserSyncData,
+  AuroraBoardName,
+} from "../../api-wrappers/aurora/types";
+import { eq, and, inArray } from "drizzle-orm";
+import { drizzle } from "drizzle-orm/neon-serverless";
+import { NeonDatabase } from "drizzle-orm/neon-serverless";
+import { UNIFIED_TABLES } from "../../db/queries/util/table-select";
+import {
+  boardseshTicks,
+  auroraCredentials,
+  playlists,
+  playlistClimbs,
+  playlistOwnership,
+} from "../../db/schema";
+import { randomUUID } from "crypto";
+import { convertQuality } from "./convert-quality";
 
-import { buildInferredSessionsForUser } from './inferred-session-builder';
+import { buildInferredSessionsForUser } from "./inferred-session-builder";
 
 type AuroraRowData = Record<string, string>;
 
@@ -24,7 +35,12 @@ async function getNextAuthUserId(
   const result = await db
     .select({ userId: auroraCredentials.userId })
     .from(auroraCredentials)
-    .where(and(eq(auroraCredentials.boardType, boardName), eq(auroraCredentials.auroraUserId, auroraUserId)))
+    .where(
+      and(
+        eq(auroraCredentials.boardType, boardName),
+        eq(auroraCredentials.auroraUserId, auroraUserId),
+      ),
+    )
     .limit(1);
 
   return result[0]?.userId || null;
@@ -41,7 +57,7 @@ async function upsertTableData(
   if (data.length === 0) return;
 
   switch (tableName) {
-    case 'users': {
+    case "users": {
       const usersSchema = UNIFIED_TABLES.users;
       for (const item of data) {
         await db
@@ -62,7 +78,7 @@ async function upsertTableData(
       break;
     }
 
-    case 'walls': {
+    case "walls": {
       const wallsSchema = UNIFIED_TABLES.walls;
       for (const item of data) {
         await db
@@ -97,7 +113,7 @@ async function upsertTableData(
       break;
     }
 
-    case 'draft_climbs': {
+    case "draft_climbs": {
       const climbsSchema = UNIFIED_TABLES.climbs;
       for (const item of data) {
         await db
@@ -107,9 +123,9 @@ async function upsertTableData(
             boardType: boardName,
             layoutId: Number(item.layout_id),
             setterId: Number(auroraUserId),
-            setterUsername: item.setter_username || '',
-            name: item.name || 'Untitled Draft',
-            description: item.description || '',
+            setterUsername: item.setter_username || "",
+            name: item.name || "Untitled Draft",
+            description: item.description || "",
             hsm: Number(item.hsm),
             edgeLeft: Number(item.edge_left),
             edgeRight: Number(item.edge_right),
@@ -118,7 +134,7 @@ async function upsertTableData(
             angle: Number(item.angle),
             framesCount: Number(item.frames_count || 1),
             framesPace: Number(item.frames_pace || 0),
-            frames: item.frames || '',
+            frames: item.frames || "",
             isDraft: true,
             isListed: false,
             createdAt: item.created_at || new Date().toISOString(),
@@ -128,9 +144,9 @@ async function upsertTableData(
             set: {
               layoutId: Number(item.layout_id),
               setterId: Number(auroraUserId),
-              setterUsername: item.setter_username || '',
-              name: item.name || 'Untitled Draft',
-              description: item.description || '',
+              setterUsername: item.setter_username || "",
+              name: item.name || "Untitled Draft",
+              description: item.description || "",
               hsm: Number(item.hsm),
               edgeLeft: Number(item.edge_left),
               edgeRight: Number(item.edge_right),
@@ -139,7 +155,7 @@ async function upsertTableData(
               angle: Number(item.angle),
               framesCount: Number(item.frames_count || 1),
               framesPace: Number(item.frames_pace || 0),
-              frames: item.frames || '',
+              frames: item.frames || "",
               isDraft: true,
               isListed: false,
             },
@@ -148,10 +164,10 @@ async function upsertTableData(
       break;
     }
 
-    case 'ascents': {
+    case "ascents": {
       // Write directly to boardsesh_ticks (requires NextAuth user ID)
       for (const item of data) {
-        const status = Number(item.attempt_id) === 1 ? 'flash' : 'send';
+        const status = Number(item.attempt_id) === 1 ? "flash" : "send";
         const convertedQuality = convertQuality(item.quality ? Number(item.quality) : null);
 
         await db
@@ -168,11 +184,13 @@ async function upsertTableData(
             quality: convertedQuality,
             difficulty: item.difficulty ? Number(item.difficulty) : null,
             isBenchmark: Boolean(item.is_benchmark || 0),
-            comment: item.comment || '',
+            comment: item.comment || "",
             climbedAt: new Date(item.climbed_at).toISOString(),
-            createdAt: item.created_at ? new Date(item.created_at).toISOString() : new Date().toISOString(),
+            createdAt: item.created_at
+              ? new Date(item.created_at).toISOString()
+              : new Date().toISOString(),
             updatedAt: new Date().toISOString(),
-            auroraType: 'ascents',
+            auroraType: "ascents",
             auroraId: item.uuid,
             auroraSyncedAt: new Date().toISOString(),
           })
@@ -187,7 +205,7 @@ async function upsertTableData(
               quality: convertedQuality,
               difficulty: item.difficulty ? Number(item.difficulty) : null,
               isBenchmark: Boolean(item.is_benchmark || 0),
-              comment: item.comment || '',
+              comment: item.comment || "",
               climbedAt: new Date(item.climbed_at).toISOString(),
               updatedAt: new Date().toISOString(),
               auroraSyncedAt: new Date().toISOString(),
@@ -197,7 +215,7 @@ async function upsertTableData(
       break;
     }
 
-    case 'bids': {
+    case "bids": {
       // Write directly to boardsesh_ticks (requires NextAuth user ID)
       for (const item of data) {
         await db
@@ -209,16 +227,16 @@ async function upsertTableData(
             climbUuid: item.climb_uuid,
             angle: Number(item.angle),
             isMirror: Boolean(item.is_mirror),
-            status: 'attempt',
+            status: "attempt",
             attemptCount: Number(item.bid_count || 1),
             quality: null,
             difficulty: null,
             isBenchmark: false,
-            comment: item.comment || '',
+            comment: item.comment || "",
             climbedAt: new Date(item.climbed_at).toISOString(),
             createdAt: new Date(item.created_at).toISOString(),
             updatedAt: new Date().toISOString(),
-            auroraType: 'bids',
+            auroraType: "bids",
             auroraId: item.uuid,
             auroraSyncedAt: new Date().toISOString(),
           })
@@ -229,7 +247,7 @@ async function upsertTableData(
               angle: Number(item.angle),
               isMirror: Boolean(item.is_mirror),
               attemptCount: Number(item.bid_count || 1),
-              comment: item.comment || '',
+              comment: item.comment || "",
               climbedAt: new Date(item.climbed_at).toISOString(),
               updatedAt: new Date().toISOString(),
               auroraSyncedAt: new Date().toISOString(),
@@ -239,7 +257,7 @@ async function upsertTableData(
       break;
     }
 
-    case 'tags': {
+    case "tags": {
       const tagsSchema = UNIFIED_TABLES.tags;
       for (const item of data) {
         // First try to update existing record
@@ -272,7 +290,7 @@ async function upsertTableData(
       break;
     }
 
-    case 'circuits': {
+    case "circuits": {
       const circuitsSchema = UNIFIED_TABLES.circuits;
       for (const item of data) {
         // 1. Write to unified circuits table
@@ -312,11 +330,11 @@ async function upsertTableData(
               uuid: item.uuid, // Use same UUID as Aurora circuit
               boardType: boardName,
               layoutId: null, // Nullable for Aurora-synced circuits
-              name: item.name || 'Untitled Circuit',
+              name: item.name || "Untitled Circuit",
               description: item.description || null,
               isPublic: Boolean(item.is_public),
               color: formattedColor,
-              auroraType: 'circuits',
+              auroraType: "circuits",
               auroraId: item.uuid,
               auroraSyncedAt: new Date(),
               createdAt: item.created_at ? new Date(item.created_at) : new Date(),
@@ -325,7 +343,7 @@ async function upsertTableData(
             .onConflictDoUpdate({
               target: playlists.auroraId,
               set: {
-                name: item.name || 'Untitled Circuit',
+                name: item.name || "Untitled Circuit",
                 description: item.description || null,
                 isPublic: Boolean(item.is_public),
                 color: formattedColor,
@@ -341,7 +359,7 @@ async function upsertTableData(
             .values({
               playlistId: playlist.id,
               userId: nextAuthUserId,
-              role: 'owner',
+              role: "owner",
             })
             .onConflictDoNothing();
 
@@ -358,7 +376,7 @@ async function upsertTableData(
               const climbAngle = climb.angle ?? null;
               const climbPosition = climb.position ?? i;
 
-              if (typeof climbUuid === 'string') {
+              if (typeof climbUuid === "string") {
                 await db.insert(playlistClimbs).values({
                   playlistId: playlist.id,
                   climbUuid: climbUuid,
@@ -404,7 +422,11 @@ async function updateUserSyncs(
   }
 }
 
-export async function getLastSyncTimes(boardName: AuroraBoardName, userId: number, tableNames: string[]) {
+export async function getLastSyncTimes(
+  boardName: AuroraBoardName,
+  userId: number,
+  tableNames: string[],
+) {
   const userSyncsSchema = UNIFIED_TABLES.userSyncs;
   const pool = getPool();
   const client = await pool.connect();
@@ -443,10 +465,12 @@ export async function syncUserData(
     const allSyncTimes = await getLastSyncTimes(board, userId, tables);
 
     // Create a map of existing sync times
-    const userSyncMap = new Map(allSyncTimes.map((sync) => [sync.tableName, sync.lastSynchronizedAt]));
+    const userSyncMap = new Map(
+      allSyncTimes.map((sync) => [sync.tableName, sync.lastSynchronizedAt]),
+    );
 
     // Ensure all user tables have a sync entry (default to 1970 if not synced)
-    const defaultTimestamp = '1970-01-01 00:00:00.000000';
+    const defaultTimestamp = "1970-01-01 00:00:00.000000";
 
     syncParams.userSyncs = tables.map((tableName) => ({
       table_name: tableName,
@@ -454,7 +478,7 @@ export async function syncUserData(
       user_id: Number(userId),
     }));
 
-    console.log('syncParams', syncParams);
+    console.log("syncParams", syncParams);
 
     // Initialize results tracking
     const totalResults: Record<string, { synced: number }> = {};
@@ -470,13 +494,13 @@ export async function syncUserData(
       console.log(`Sync attempt ${syncAttempts} for user ${userId}`);
 
       const syncResults = await userSync(board, userId, currentSyncParams, token);
-      console.log('syncResults', syncResults);
+      console.log("syncResults", syncResults);
 
       // Process this batch in a transaction
       const pool = getPool();
       const client = await pool.connect();
       try {
-        await client.query('BEGIN');
+        await client.query("BEGIN");
 
         // Create a drizzle instance for this transaction
         const tx = drizzle(client);
@@ -484,7 +508,9 @@ export async function syncUserData(
         // Get NextAuth user ID for dual write to boardsesh_ticks
         const nextAuthUserId = await getNextAuthUserId(tx, board, userId);
         if (!nextAuthUserId) {
-          console.warn(`No NextAuth user found for Aurora user ${userId} on ${board}, skipping ascents/bids sync`);
+          console.warn(
+            `No NextAuth user found for Aurora user ${userId} on ${board}, skipping ascents/bids sync`,
+          );
           // We can still sync other tables (users, walls, etc.) that don't need NextAuth user ID
         }
 
@@ -495,12 +521,14 @@ export async function syncUserData(
             const data = syncResults[tableName];
 
             // Skip ascents/bids if no NextAuth user (can't dual write)
-            if ((tableName === 'ascents' || tableName === 'bids') && !nextAuthUserId) {
-              console.warn(`Skipping ${tableName} sync for Aurora user ${userId} - no NextAuth mapping`);
+            if ((tableName === "ascents" || tableName === "bids") && !nextAuthUserId) {
+              console.warn(
+                `Skipping ${tableName} sync for Aurora user ${userId} - no NextAuth mapping`,
+              );
               continue;
             }
 
-            await upsertTableData(tx, board, tableName, userId, nextAuthUserId || '', data);
+            await upsertTableData(tx, board, tableName, userId, nextAuthUserId || "", data);
 
             // Accumulate results
             if (!totalResults[tableName]) {
@@ -513,11 +541,11 @@ export async function syncUserData(
         }
 
         // Update user_syncs table with new sync times from this batch
-        if (syncResults['user_syncs']) {
-          await updateUserSyncs(tx, board, syncResults['user_syncs']);
+        if (syncResults["user_syncs"]) {
+          await updateUserSyncs(tx, board, syncResults["user_syncs"]);
 
           // Update sync params for next iteration with new timestamps
-          const newUserSyncs = syncResults['user_syncs'].map(
+          const newUserSyncs = syncResults["user_syncs"].map(
             (sync: { table_name: string; last_synchronized_at: string }) => ({
               table_name: sync.table_name,
               last_synchronized_at: sync.last_synchronized_at,
@@ -531,10 +559,10 @@ export async function syncUserData(
           };
         }
 
-        await client.query('COMMIT');
+        await client.query("COMMIT");
       } catch (error) {
-        await client.query('ROLLBACK');
-        console.error('Failed to commit sync database transaction:', error);
+        await client.query("ROLLBACK");
+        console.error("Failed to commit sync database transaction:", error);
         throw error;
       } finally {
         client.release();
@@ -555,7 +583,8 @@ export async function syncUserData(
     }
 
     // Build inferred sessions for any newly-imported ticks
-    const hasTickData = (totalResults['ascents']?.synced ?? 0) > 0 || (totalResults['bids']?.synced ?? 0) > 0;
+    const hasTickData =
+      (totalResults["ascents"]?.synced ?? 0) > 0 || (totalResults["bids"]?.synced ?? 0) > 0;
     if (hasTickData) {
       try {
         const pool = getPool();
@@ -566,20 +595,22 @@ export async function syncUserData(
           if (nextAuthUserId) {
             const assigned = await buildInferredSessionsForUser(nextAuthUserId);
             if (assigned > 0) {
-              console.log(`Built inferred sessions: assigned ${assigned} ticks for user ${nextAuthUserId}`);
+              console.log(
+                `Built inferred sessions: assigned ${assigned} ticks for user ${nextAuthUserId}`,
+              );
             }
           }
         } finally {
           client.release();
         }
       } catch (error) {
-        console.error('Error building inferred sessions after sync:', error);
+        console.error("Error building inferred sessions after sync:", error);
       }
     }
 
     return totalResults;
   } catch (error) {
-    console.error('Error syncing user data:', error);
+    console.error("Error syncing user data:", error);
     throw error;
   }
 }

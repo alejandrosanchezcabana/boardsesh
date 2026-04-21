@@ -1,8 +1,8 @@
-'use client';
+"use client";
 
-import React, { useState, useEffect } from 'react';
-import CircularProgress from '@mui/material/CircularProgress';
-import Typography from '@mui/material/Typography';
+import React, { useState, useEffect } from "react";
+import CircularProgress from "@mui/material/CircularProgress";
+import Typography from "@mui/material/Typography";
 
 const loadingMessages = [
   "Setting up your board...",
@@ -41,18 +41,18 @@ const FullPageLoadingOverlay: React.FC<FullPageLoadingOverlayProps> = ({ isVisib
   return (
     <div
       style={{
-        position: 'fixed',
+        position: "fixed",
         top: 0,
         left: 0,
         right: 0,
         bottom: 0,
-        backgroundColor: 'rgba(0, 0, 0, 0.7)',
-        display: 'flex',
-        flexDirection: 'column',
-        justifyContent: 'center',
-        alignItems: 'center',
+        backgroundColor: "rgba(0, 0, 0, 0.7)",
+        display: "flex",
+        flexDirection: "column",
+        justifyContent: "center",
+        alignItems: "center",
         zIndex: 9999,
-        gap: '24px',
+        gap: "24px",
       }}
     >
       <CircularProgress size={48} />
@@ -60,11 +60,11 @@ const FullPageLoadingOverlay: React.FC<FullPageLoadingOverlayProps> = ({ isVisib
         variant="body2"
         component="span"
         style={{
-          color: 'white',
-          fontSize: '16px',
-          textAlign: 'center',
+          color: "white",
+          fontSize: "16px",
+          textAlign: "center",
           opacity: 0.9,
-          maxWidth: '300px',
+          maxWidth: "300px",
           lineHeight: 1.4,
         }}
       >

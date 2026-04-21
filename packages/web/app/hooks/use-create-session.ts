@@ -1,15 +1,15 @@
-'use client';
+"use client";
 
-import { useState, useCallback } from 'react';
-import { useWsAuthToken } from '@/app/hooks/use-ws-auth-token';
-import { createGraphQLHttpClient } from '@/app/lib/graphql/client';
+import { useState, useCallback } from "react";
+import { useWsAuthToken } from "@/app/hooks/use-ws-auth-token";
+import { createGraphQLHttpClient } from "@/app/lib/graphql/client";
 import {
   CREATE_SESSION,
   type CreateSessionInput,
   type CreateSessionResponse,
-} from '@/app/lib/graphql/operations/create-session';
-import type { SessionCreationFormData } from '@/app/components/session-creation/session-creation-form';
-import { isNativeApp } from '@/app/lib/ble/capacitor-utils';
+} from "@/app/lib/graphql/operations/create-session";
+import type { SessionCreationFormData } from "@/app/components/session-creation/session-creation-form";
+import { isNativeApp } from "@/app/lib/ble/capacitor-utils";
 
 function getGeolocation(): Promise<{ latitude: number; longitude: number }> {
   // Use Capacitor Geolocation plugin on native

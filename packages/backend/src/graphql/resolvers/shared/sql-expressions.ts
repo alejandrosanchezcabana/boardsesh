@@ -1,7 +1,7 @@
-import { sql, eq, and } from 'drizzle-orm';
-import { aliasedTable } from 'drizzle-orm/alias';
-import * as dbSchema from '@boardsesh/db/schema';
-import { db } from '../../../db/client';
+import { sql, eq, and } from "drizzle-orm";
+import { aliasedTable } from "drizzle-orm/alias";
+import * as dbSchema from "@boardsesh/db/schema";
+import { db } from "../../../db/client";
 
 /**
  * Aliased board_difficulty_grades table for consensus grade lookups.
@@ -28,7 +28,7 @@ import { db } from '../../../db/client';
  * If a required join is missing the query will produce nulls (not an error)
  * because these are LEFT JOINs with nullable column references.
  */
-export const consensusGradeTable = aliasedTable(dbSchema.boardDifficultyGrades, 'consensus_grade');
+export const consensusGradeTable = aliasedTable(dbSchema.boardDifficultyGrades, "consensus_grade");
 
 /**
  * JOIN condition for consensusGradeTable.
@@ -60,7 +60,9 @@ export const difficultyNameWithFallbackExpr = sql<string | null>`COALESCE(
  * Rounded consensus difficulty ID.
  * Requires `boardClimbStats` to be joined in the query.
  */
-export const consensusDifficultyExpr = sql<number | null>`ROUND(${dbSchema.boardClimbStats.displayDifficulty})`;
+export const consensusDifficultyExpr = sql<
+  number | null
+>`ROUND(${dbSchema.boardClimbStats.displayDifficulty})`;
 
 /**
  * Imperative query: look up consensus grade name for a specific climb+angle.
@@ -77,7 +79,10 @@ export async function getConsensusDifficultyName(
     .innerJoin(
       dbSchema.boardDifficultyGrades,
       and(
-        eq(dbSchema.boardDifficultyGrades.difficulty, sql`ROUND(${dbSchema.boardClimbStats.displayDifficulty})`),
+        eq(
+          dbSchema.boardDifficultyGrades.difficulty,
+          sql`ROUND(${dbSchema.boardClimbStats.displayDifficulty})`,
+        ),
         eq(dbSchema.boardDifficultyGrades.boardType, dbSchema.boardClimbStats.boardType),
       ),
     )

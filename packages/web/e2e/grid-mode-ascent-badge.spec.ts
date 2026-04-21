@@ -11,17 +11,17 @@
  *
  * See: https://github.com/boardsesh/boardsesh/issues/1559
  */
-import { test, expect, type Page } from '@playwright/test';
+import { test, expect, type Page } from "@playwright/test";
 
-const BOARD_URL = '/kilter/original/12x12-square/screw_bolt/40/list';
+const BOARD_URL = "/kilter/original/12x12-square/screw_bolt/40/list";
 const ASCENT_BADGE = '[data-testid="ascent-badge"]';
 const CLIMB_CARD = '[data-testid="climb-card"]';
 
 async function login(page: Page) {
-  await page.goto('/auth/login?callbackUrl=' + encodeURIComponent(BOARD_URL));
-  await page.getByLabel('Email').fill('test@boardsesh.com');
-  await page.getByLabel('Password').fill('test');
-  await page.getByRole('button', { name: 'Login' }).click();
+  await page.goto("/auth/login?callbackUrl=" + encodeURIComponent(BOARD_URL));
+  await page.getByLabel("Email").fill("test@boardsesh.com");
+  await page.getByLabel("Password").fill("test");
+  await page.getByRole("button", { name: "Login" }).click();
   await page.waitForURL(BOARD_URL, { timeout: 20_000 });
 }
 
@@ -29,15 +29,15 @@ async function waitForClimbs(page: Page) {
   await page.waitForSelector(`${CLIMB_CARD}, #onboarding-climb-card`, { timeout: 30_000 });
 }
 
-test.describe('Grid mode — ascent badge', () => {
+test.describe("Grid mode — ascent badge", () => {
   test.setTimeout(90_000);
 
-  test('ascent badge appears on climb cards in grid mode', async ({ page }) => {
+  test("ascent badge appears on climb cards in grid mode", async ({ page }) => {
     await login(page);
     await waitForClimbs(page);
 
     // Switch to grid mode
-    const gridButton = page.getByRole('button', { name: 'Grid view' });
+    const gridButton = page.getByRole("button", { name: "Grid view" });
     await expect(gridButton).toBeVisible({ timeout: 10_000 });
     await gridButton.click();
 
@@ -50,7 +50,7 @@ test.describe('Grid mode — ascent badge', () => {
     expect(await badges.count()).toBeGreaterThan(0);
   });
 
-  test('ascent badge is visible in both list and grid mode', async ({ page }) => {
+  test("ascent badge is visible in both list and grid mode", async ({ page }) => {
     await login(page);
     await waitForClimbs(page);
 
@@ -61,7 +61,7 @@ test.describe('Grid mode — ascent badge', () => {
     expect(listCount).toBeGreaterThan(0);
 
     // Switch to grid mode
-    await page.getByRole('button', { name: 'Grid view' }).click();
+    await page.getByRole("button", { name: "Grid view" }).click();
     await expect(page.locator(CLIMB_CARD).first()).toBeVisible({ timeout: 15_000 });
 
     // Grid mode must also show badges
@@ -70,13 +70,13 @@ test.describe('Grid mode — ascent badge', () => {
     expect(await gridBadges.count()).toBeGreaterThan(0);
   });
 
-  test('no ascent badge shown when logged out', async ({ page }) => {
+  test("no ascent badge shown when logged out", async ({ page }) => {
     // Visit without logging in
-    await page.goto(BOARD_URL, { waitUntil: 'domcontentloaded' });
+    await page.goto(BOARD_URL, { waitUntil: "domcontentloaded" });
     await waitForClimbs(page);
 
     // Switch to grid mode
-    await page.getByRole('button', { name: 'Grid view' }).click();
+    await page.getByRole("button", { name: "Grid view" }).click();
     await expect(page.locator(CLIMB_CARD).first()).toBeVisible({ timeout: 15_000 });
 
     // No badges should appear when unauthenticated

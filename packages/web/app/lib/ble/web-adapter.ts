@@ -1,23 +1,23 @@
-import type { BoardName } from '@/app/lib/types';
-import { AURORA_REQUEST_DEVICE_OPTIONS } from '@/app/components/board-bluetooth-control/bluetooth-aurora';
-import { MOONBOARD_REQUEST_DEVICE_OPTIONS } from '@/app/components/board-bluetooth-control/bluetooth-moonboard';
+import type { BoardName } from "@/app/lib/types";
+import { AURORA_REQUEST_DEVICE_OPTIONS } from "@/app/components/board-bluetooth-control/bluetooth-aurora";
+import { MOONBOARD_REQUEST_DEVICE_OPTIONS } from "@/app/components/board-bluetooth-control/bluetooth-moonboard";
 import {
   getUartCharacteristic,
   requestBluetoothDevice,
   splitMessages,
   writeCharacteristicSeries,
-} from '@/app/components/board-bluetooth-control/bluetooth-shared';
-import type { BleConnection, BluetoothAdapter } from './types';
+} from "@/app/components/board-bluetooth-control/bluetooth-shared";
+import type { BleConnection, BluetoothAdapter } from "./types";
 
 export class WebBluetoothAdapter implements BluetoothAdapter {
-  constructor(private readonly boardName: BoardName = 'kilter') {}
+  constructor(private readonly boardName: BoardName = "kilter") {}
 
   private device: BluetoothDevice | null = null;
   private characteristic: BluetoothRemoteGATTCharacteristic | null = null;
   private disconnectHandler: (() => void) | null = null;
 
   async isAvailable(): Promise<boolean> {
-    return typeof navigator !== 'undefined' && !!navigator.bluetooth;
+    return typeof navigator !== "undefined" && !!navigator.bluetooth;
   }
 
   async requestAndConnect(): Promise<BleConnection> {
@@ -25,7 +25,7 @@ export class WebBluetoothAdapter implements BluetoothAdapter {
     this.cleanupListeners();
 
     const requestOptions =
-      this.boardName === 'moonboard'
+      this.boardName === "moonboard"
         ? MOONBOARD_REQUEST_DEVICE_OPTIONS
         : AURORA_REQUEST_DEVICE_OPTIONS;
 
@@ -33,10 +33,10 @@ export class WebBluetoothAdapter implements BluetoothAdapter {
     const characteristic = await getUartCharacteristic(device);
 
     if (!characteristic) {
-      throw new Error('Failed to get UART characteristic');
+      throw new Error("Failed to get UART characteristic");
     }
 
-    device.addEventListener('gattserverdisconnected', this.handleDisconnect);
+    device.addEventListener("gattserverdisconnected", this.handleDisconnect);
 
     this.device = device;
     this.characteristic = characteristic;
@@ -58,7 +58,7 @@ export class WebBluetoothAdapter implements BluetoothAdapter {
 
   async write(data: Uint8Array, signal?: AbortSignal): Promise<void> {
     if (!this.characteristic) {
-      throw new Error('Not connected');
+      throw new Error("Not connected");
     }
     const messages = splitMessages(data);
     await writeCharacteristicSeries(this.characteristic, messages, signal);
@@ -78,7 +78,7 @@ export class WebBluetoothAdapter implements BluetoothAdapter {
 
   private cleanupListeners(): void {
     if (this.device) {
-      this.device.removeEventListener('gattserverdisconnected', this.handleDisconnect);
+      this.device.removeEventListener("gattserverdisconnected", this.handleDisconnect);
     }
   }
 }

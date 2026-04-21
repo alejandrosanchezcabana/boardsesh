@@ -1,10 +1,10 @@
-import { useState, useEffect, useCallback, useRef } from 'react';
-import { createGraphQLHttpClient } from '@/app/lib/graphql/client';
+import { useState, useEffect, useCallback, useRef } from "react";
+import { createGraphQLHttpClient } from "@/app/lib/graphql/client";
 import {
   GET_POPULAR_BOARD_CONFIGS,
   type GetPopularBoardConfigsQueryResponse,
-} from '@/app/lib/graphql/operations';
-import type { PopularBoardConfig } from '@boardsesh/shared-schema';
+} from "@/app/lib/graphql/operations";
+import type { PopularBoardConfig } from "@boardsesh/shared-schema";
 
 interface UsePopularBoardConfigsOptions {
   /** Number of configs per page */
@@ -44,51 +44,54 @@ export function usePopularBoardConfigs({
   const isFetchingRef = useRef(false);
   const loadMoreFailCountRef = useRef(0);
 
-  const fetchPage = useCallback(async (offset: number, isInitial: boolean) => {
-    if (isFetchingRef.current) return;
-    isFetchingRef.current = true;
+  const fetchPage = useCallback(
+    async (offset: number, isInitial: boolean) => {
+      if (isFetchingRef.current) return;
+      isFetchingRef.current = true;
 
-    if (isInitial) {
-      setIsLoading(true);
-    } else {
-      setIsLoadingMore(true);
-    }
-
-    try {
-      const client = createGraphQLHttpClient();
-      const result = await client.request<GetPopularBoardConfigsQueryResponse>(
-        GET_POPULAR_BOARD_CONFIGS,
-        { input: { limit, offset } },
-      );
-
-      const { configs: newConfigs, hasMore: more } = result.popularBoardConfigs;
-
-      setConfigs((prev) => isInitial ? newConfigs : [...prev, ...newConfigs]);
-      setHasMore(more);
-      hasMoreRef.current = more;
-      offsetRef.current = offset + newConfigs.length;
-      loadMoreFailCountRef.current = 0;
-    } catch (err) {
-      console.error('Failed to fetch popular board configs:', err);
       if (isInitial) {
-        setError('Failed to load board configurations');
+        setIsLoading(true);
       } else {
-        // Stop infinite retries from IntersectionObserver by disabling loadMore after 3 failures
-        loadMoreFailCountRef.current += 1;
-        if (loadMoreFailCountRef.current >= 3) {
-          setHasMore(false);
-          hasMoreRef.current = false;
+        setIsLoadingMore(true);
+      }
+
+      try {
+        const client = createGraphQLHttpClient();
+        const result = await client.request<GetPopularBoardConfigsQueryResponse>(
+          GET_POPULAR_BOARD_CONFIGS,
+          { input: { limit, offset } },
+        );
+
+        const { configs: newConfigs, hasMore: more } = result.popularBoardConfigs;
+
+        setConfigs((prev) => (isInitial ? newConfigs : [...prev, ...newConfigs]));
+        setHasMore(more);
+        hasMoreRef.current = more;
+        offsetRef.current = offset + newConfigs.length;
+        loadMoreFailCountRef.current = 0;
+      } catch (err) {
+        console.error("Failed to fetch popular board configs:", err);
+        if (isInitial) {
+          setError("Failed to load board configurations");
+        } else {
+          // Stop infinite retries from IntersectionObserver by disabling loadMore after 3 failures
+          loadMoreFailCountRef.current += 1;
+          if (loadMoreFailCountRef.current >= 3) {
+            setHasMore(false);
+            hasMoreRef.current = false;
+          }
         }
+      } finally {
+        if (isInitial) {
+          setIsLoading(false);
+        } else {
+          setIsLoadingMore(false);
+        }
+        isFetchingRef.current = false;
       }
-    } finally {
-      if (isInitial) {
-        setIsLoading(false);
-      } else {
-        setIsLoadingMore(false);
-      }
-      isFetchingRef.current = false;
-    }
-  }, [limit]);
+    },
+    [limit],
+  );
 
   useEffect(() => {
     // Skip the initial fetch when SSR data is provided

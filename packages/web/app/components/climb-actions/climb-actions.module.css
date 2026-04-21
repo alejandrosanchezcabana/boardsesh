@@ -20,7 +20,9 @@
   opacity: 0;
   max-width: 0;
   overflow: hidden;
-  transition: opacity 0.2s ease, max-width 0.2s ease;
+  transition:
+    opacity 0.2s ease,
+    max-width 0.2s ease;
   white-space: nowrap;
 }
 

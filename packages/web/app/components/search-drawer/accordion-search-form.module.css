@@ -6,7 +6,7 @@
 
 /* Primary content shown inline (no collapsible header) */
 .primaryContent {
-  background: var(--semantic-surface, #FFFFFF);
+  background: var(--semantic-surface, #ffffff);
   border-radius: 16px;
   box-shadow: var(--shadow-xs);
   padding: 20px 24px;
@@ -33,7 +33,7 @@
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.6px;
-  color: var(--neutral-400, #9CA3AF);
+  color: var(--neutral-400, #9ca3af);
   margin-bottom: 2px;
 }
 
@@ -76,18 +76,20 @@
 
 /* Scoped MUI input overrides for modern filled-background look */
 .panelContent :global(.MuiOutlinedInput-root) {
-  background-color: var(--input-bg, #F9FAFB);
+  background-color: var(--input-bg, #f9fafb);
   border-radius: 12px;
-  transition: background-color 200ms ease, box-shadow 200ms ease;
+  transition:
+    background-color 200ms ease,
+    box-shadow 200ms ease;
 }
 
 .panelContent :global(.MuiOutlinedInput-root:hover) {
-  background-color: var(--input-bg-hover, #F3F4F6);
+  background-color: var(--input-bg-hover, #f3f4f6);
 }
 
 .panelContent :global(.MuiOutlinedInput-root.Mui-focused) {
-  background-color: var(--input-bg-focused, #FFFFFF);
-  box-shadow: 0 0 0 2px var(--color-primary, #8C4A52);
+  background-color: var(--input-bg-focused, #ffffff);
+  box-shadow: 0 0 0 2px var(--color-primary, #8c4a52);
 }
 
 .panelContent :global(.MuiOutlinedInput-notchedOutline) {
@@ -124,7 +126,7 @@
   display: flex;
   flex-direction: column;
   gap: 0;
-  background-color: var(--neutral-50, #F9FAFB);
+  background-color: var(--neutral-50, #f9fafb);
   border-radius: 12px;
   padding: 4px 0;
 }
@@ -141,12 +143,12 @@
 }
 
 .switchRow:hover {
-  background-color: var(--neutral-100, #F3F4F6);
+  background-color: var(--neutral-100, #f3f4f6);
 }
 
 /* Subtle divider between switch rows */
 .switchRow + .switchRow {
-  border-top: 1px solid var(--neutral-200, #E5E7EB);
+  border-top: 1px solid var(--neutral-200, #e5e7eb);
 }
 
 /* Let the label text expand to the full available width so the whole row is clickable. */
@@ -159,7 +161,7 @@
   display: flex;
   flex-direction: column;
   gap: 0;
-  background-color: var(--neutral-50, #F9FAFB);
+  background-color: var(--neutral-50, #f9fafb);
   border-radius: 12px;
   padding: 4px 0;
 }
@@ -173,11 +175,11 @@
 }
 
 .radioRow:hover {
-  background-color: var(--neutral-100, #F3F4F6);
+  background-color: var(--neutral-100, #f3f4f6);
 }
 
 .radioRow + .radioRow {
-  border-top: 1px solid var(--neutral-200, #E5E7EB);
+  border-top: 1px solid var(--neutral-200, #e5e7eb);
 }
 
 .radioRow :global(.MuiFormControlLabel-label) {
@@ -188,7 +190,7 @@
 /* Sort toggle */
 .sortToggle {
   font-size: 13px;
-  color: var(--neutral-500, #6B7280);
+  color: var(--neutral-500, #6b7280);
   padding: 0;
   height: auto;
 }

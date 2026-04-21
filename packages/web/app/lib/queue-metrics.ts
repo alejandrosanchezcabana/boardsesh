@@ -1,15 +1,15 @@
-import { track } from '@vercel/analytics';
+import { track } from "@vercel/analytics";
 
 export type QueueOperation =
-  | 'setCurrentClimbQueueItem'
-  | 'setCurrentClimb'
-  | 'addToQueue'
-  | 'removeFromQueue'
-  | 'mirrorClimb'
-  | 'setQueue'
-  | 'replaceQueueItem';
+  | "setCurrentClimbQueueItem"
+  | "setCurrentClimb"
+  | "addToQueue"
+  | "removeFromQueue"
+  | "mirrorClimb"
+  | "setQueue"
+  | "replaceQueueItem";
 
-export type QueueOperationMode = 'local' | 'party' | 'party-offline';
+export type QueueOperationMode = "local" | "party" | "party-offline";
 
 // Per-operation caps to ensure coverage of all operation types.
 // With 6 operations, worst case is 30 events per session.
@@ -28,21 +28,18 @@ export function trackQueueOperation(
   if (count >= MAX_EVENTS_PER_OPERATION) return;
   operationEventCounts.set(operation, count + 1);
 
-  track('Queue Operation', {
+  track("Queue Operation", {
     operation,
     durationMs: Math.round(durationMs),
     mode,
   });
 }
 
-export function trackQueueOperationError(
-  operation: QueueOperation,
-  mode: QueueOperationMode,
-) {
+export function trackQueueOperationError(operation: QueueOperation, mode: QueueOperationMode) {
   if (errorEventCount >= MAX_ERROR_EVENTS) return;
   errorEventCount++;
 
-  track('Queue Operation Error', {
+  track("Queue Operation Error", {
     operation,
     mode,
   });

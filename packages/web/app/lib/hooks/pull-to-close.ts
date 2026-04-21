@@ -1,10 +1,10 @@
-'use client';
+"use client";
 
-import { useRef, useCallback, useEffect } from 'react';
+import { useRef, useCallback, useEffect } from "react";
 
 // ── Shared constants ──────────────────────────────────────────────────────────
 
-export const DECELERATE_EASING = 'cubic-bezier(0.0, 0, 0.2, 1)';
+export const DECELERATE_EASING = "cubic-bezier(0.0, 0, 0.2, 1)";
 export const CLOSE_ANIMATION_MS = 200;
 export const ANIMATION_DELAY_MS = 210; // CLOSE_ANIMATION_MS + safety margin
 
@@ -22,7 +22,7 @@ export function findScrollContainer(
   let el: HTMLElement | null = target;
   while (el && el !== stopAt) {
     const style = window.getComputedStyle(el);
-    if (style.overflowY === 'auto' || style.overflowY === 'scroll') {
+    if (style.overflowY === "auto" || style.overflowY === "scroll") {
       return el;
     }
     el = el.parentElement;
@@ -122,67 +122,73 @@ export function usePullToClose({
     const el = paperElRef.current;
     if (!el) return;
     el.style.transform = `translateY(${translateY}px)`;
-    el.style.transition = 'none';
+    el.style.transition = "none";
   }, []);
 
   const clearTransform = useCallback(() => {
     const el = paperElRef.current;
     if (!el) return;
-    el.style.transform = '';
-    el.style.transition = '';
+    el.style.transform = "";
+    el.style.transition = "";
   }, []);
 
-  const onTouchStart = useCallback((clientY: number, scrollContainer: HTMLElement | null) => {
-    const atTop = !scrollContainer || scrollContainer.scrollTop <= 0;
-    stateRef.current = {
-      startY: clientY,
-      pullOriginY: trackPullOrigin ? (atTop ? clientY : 0) : clientY,
-      scrollContainer,
-      isPulling: false,
-      translateY: 0,
-    };
-  }, [trackPullOrigin]);
+  const onTouchStart = useCallback(
+    (clientY: number, scrollContainer: HTMLElement | null) => {
+      const atTop = !scrollContainer || scrollContainer.scrollTop <= 0;
+      stateRef.current = {
+        startY: clientY,
+        pullOriginY: trackPullOrigin ? (atTop ? clientY : 0) : clientY,
+        scrollContainer,
+        isPulling: false,
+        translateY: 0,
+      };
+    },
+    [trackPullOrigin],
+  );
 
-  const onTouchMove = useCallback((clientY: number, touchCount: number, cancelled?: boolean) => {
-    const state = stateRef.current;
+  const onTouchMove = useCallback(
+    (clientY: number, touchCount: number, cancelled?: boolean) => {
+      const state = stateRef.current;
 
-    // Multi-touch or externally cancelled — abort any active pull
-    if (touchCount > 1 || cancelled) {
-      if (state.isPulling) {
+      // Multi-touch or externally cancelled — abort any active pull
+      if (touchCount > 1 || cancelled) {
+        if (state.isPulling) {
+          state.isPulling = false;
+          state.translateY = 0;
+          clearTransform();
+        }
+        return;
+      }
+
+      const atTop = !state.scrollContainer || state.scrollContainer.scrollTop <= 0;
+      const movingDown = clientY > state.startY;
+
+      if (atTop && movingDown) {
+        // Record where we first hit scroll top (for trackPullOrigin)
+        if (trackPullOrigin && !state.pullOriginY) {
+          state.pullOriginY = clientY;
+        }
+
+        const origin = trackPullOrigin ? state.pullOriginY : state.startY;
+        const deltaY = clientY - origin;
+
+        if (!state.isPulling && deltaY > deadZone) {
+          state.isPulling = true;
+        }
+        if (state.isPulling) {
+          const pullDistance = offsetByDeadZone ? deltaY - deadZone : deltaY;
+          state.translateY = pullDistance;
+          setTransform(pullDistance);
+        }
+      } else if (state.isPulling) {
+        // User reversed direction or scrolled — cancel pull
         state.isPulling = false;
         state.translateY = 0;
         clearTransform();
       }
-      return;
-    }
-
-    const atTop = !state.scrollContainer || state.scrollContainer.scrollTop <= 0;
-    const movingDown = clientY > state.startY;
-
-    if (atTop && movingDown) {
-      // Record where we first hit scroll top (for trackPullOrigin)
-      if (trackPullOrigin && !state.pullOriginY) {
-        state.pullOriginY = clientY;
-      }
-
-      const origin = trackPullOrigin ? state.pullOriginY : state.startY;
-      const deltaY = clientY - origin;
-
-      if (!state.isPulling && deltaY > deadZone) {
-        state.isPulling = true;
-      }
-      if (state.isPulling) {
-        const pullDistance = offsetByDeadZone ? deltaY - deadZone : deltaY;
-        state.translateY = pullDistance;
-        setTransform(pullDistance);
-      }
-    } else if (state.isPulling) {
-      // User reversed direction or scrolled — cancel pull
-      state.isPulling = false;
-      state.translateY = 0;
-      clearTransform();
-    }
-  }, [deadZone, trackPullOrigin, offsetByDeadZone, setTransform, clearTransform]);
+    },
+    [deadZone, trackPullOrigin, offsetByDeadZone, setTransform, clearTransform],
+  );
 
   const onTouchEnd = useCallback(() => {
     const state = stateRef.current;
@@ -207,11 +213,11 @@ export function usePullToClose({
     } else if (el) {
       // Snap back
       el.style.transition = `transform ${CLOSE_ANIMATION_MS}ms ${DECELERATE_EASING}`;
-      el.style.transform = '';
+      el.style.transform = "";
       scheduleTimer(() => {
         const currentEl = paperElRef.current;
         if (currentEl) {
-          currentEl.style.transition = '';
+          currentEl.style.transition = "";
         }
       }, ANIMATION_DELAY_MS);
     }

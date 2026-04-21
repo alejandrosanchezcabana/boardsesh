@@ -6,8 +6,7 @@ import * as Sentry from "@sentry/nextjs";
 
 // Only enable Sentry on boardsesh.com to avoid polluting error tracking
 const isProductionDomain =
-  typeof window !== "undefined" &&
-  window.location.hostname.includes("boardsesh.com");
+  typeof window !== "undefined" && window.location.hostname.includes("boardsesh.com");
 
 Sentry.init({
   dsn: "https://f55e6626faf787ae5291ad75b010ea14@o4510644927660032.ingest.us.sentry.io/4510644930150400",
@@ -25,8 +24,7 @@ Sentry.init({
   // Filter out errors from browser extensions and third-party scripts
   beforeSend(event, hint) {
     const error = hint.originalException;
-    const errorMessage =
-      error instanceof Error ? error.message : String(error);
+    const errorMessage = error instanceof Error ? error.message : String(error);
 
     // Ignore browser extension errors (runtime.sendMessage, etc.)
     if (
@@ -50,10 +48,7 @@ Sentry.init({
 
     // Ignore DuckDuckGo browser-internal feature detection errors
     // (e.g., "feature named `pageContext` was not found")
-    if (
-      errorMessage.includes("feature named") &&
-      errorMessage.includes("was not found")
-    ) {
+    if (errorMessage.includes("feature named") && errorMessage.includes("was not found")) {
       return null;
     }
 

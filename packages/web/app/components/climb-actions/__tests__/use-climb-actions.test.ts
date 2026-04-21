@@ -1,23 +1,23 @@
-import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { renderHook, act } from '@testing-library/react';
+import { describe, it, expect, vi, beforeEach, afterEach } from "vite-plus/test";
+import { renderHook, act } from "@testing-library/react";
 
 // --- Mocks ---
 
 const mockPush = vi.fn();
-let mockPathname = '/kilter/original/12x12/default/40/list';
-vi.mock('next/navigation', () => ({
+let mockPathname = "/kilter/original/12x12/default/40/list";
+vi.mock("next/navigation", () => ({
   useRouter: () => ({ push: mockPush }),
   usePathname: () => mockPathname,
 }));
 
 const mockTrack = vi.fn();
-vi.mock('@vercel/analytics', () => ({
+vi.mock("@vercel/analytics", () => ({
   track: (...args: unknown[]) => mockTrack(...args),
 }));
 
 const mockAddToQueue = vi.fn();
 const mockMirrorClimb = vi.fn();
-vi.mock('../../graphql-queue', () => ({
+vi.mock("../../graphql-queue", () => ({
   useQueueContext: () => ({
     addToQueue: mockAddToQueue,
     queue: [],
@@ -33,12 +33,12 @@ vi.mock('../../graphql-queue', () => ({
 }));
 
 const mockShowMessage = vi.fn();
-vi.mock('@/app/components/providers/snackbar-provider', () => ({
+vi.mock("@/app/components/providers/snackbar-provider", () => ({
   useSnackbar: () => ({ showMessage: mockShowMessage }),
 }));
 
 const mockToggleFavorite = vi.fn().mockResolvedValue(true);
-vi.mock('../use-favorite', () => ({
+vi.mock("../use-favorite", () => ({
   useFavorite: () => ({
     isFavorited: false,
     isLoading: false,
@@ -48,38 +48,38 @@ vi.mock('../use-favorite', () => ({
 }));
 
 const mockOpenAuthModal = vi.fn();
-vi.mock('@/app/components/providers/auth-modal-provider', () => ({
+vi.mock("@/app/components/providers/auth-modal-provider", () => ({
   useAuthModal: () => ({ openAuthModal: mockOpenAuthModal }),
 }));
 
-vi.mock('@/app/lib/url-utils', () => ({
-  getContextAwareClimbViewUrl: vi.fn(() => '/climb/view-context'),
-  constructCreateClimbUrl: vi.fn(() => '/climb/create'),
-  constructClimbInfoUrl: vi.fn(() => '/climb/info'),
+vi.mock("@/app/lib/url-utils", () => ({
+  getContextAwareClimbViewUrl: vi.fn(() => "/climb/view-context"),
+  constructCreateClimbUrl: vi.fn(() => "/climb/create"),
+  constructClimbInfoUrl: vi.fn(() => "/climb/info"),
 }));
 
-import { useClimbActions } from '../use-climb-actions';
+import { useClimbActions } from "../use-climb-actions";
 
 // --- Test data ---
 
 const mockClimb = {
-  uuid: 'climb-1',
-  name: 'Test Climb',
-  difficulty: 'V5',
-  frames: 'p1r42',
-} as unknown as Parameters<typeof useClimbActions>[0]['climb'];
+  uuid: "climb-1",
+  name: "Test Climb",
+  difficulty: "V5",
+  frames: "p1r42",
+} as unknown as Parameters<typeof useClimbActions>[0]["climb"];
 
 const mockBoardDetails = {
-  board_name: 'kilter',
+  board_name: "kilter",
   layout_id: 1,
   size_id: 10,
-  set_ids: '1,2',
-  layout_name: 'Original',
-  size_name: '12x12',
-  size_description: 'Full',
-  set_names: ['Standard'],
+  set_ids: "1,2",
+  layout_name: "Original",
+  size_name: "12x12",
+  size_description: "Full",
+  set_names: ["Standard"],
   supportsMirroring: true,
-} as unknown as Parameters<typeof useClimbActions>[0]['boardDetails'];
+} as unknown as Parameters<typeof useClimbActions>[0]["boardDetails"];
 
 const defaultOptions = {
   climb: mockClimb,
@@ -88,14 +88,14 @@ const defaultOptions = {
   onActionComplete: vi.fn(),
 };
 
-describe('useClimbActions', () => {
+describe("useClimbActions", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     vi.useFakeTimers();
-    mockPathname = '/kilter/original/12x12/default/40/list';
+    mockPathname = "/kilter/original/12x12/default/40/list";
 
     // Provide navigator.share and clipboard mocks
-    Object.defineProperty(global, 'navigator', {
+    Object.defineProperty(global, "navigator", {
       value: {
         share: undefined,
         canShare: undefined,
@@ -106,11 +106,11 @@ describe('useClimbActions', () => {
     });
 
     // Mock window.open
-    Object.defineProperty(global, 'window', {
+    Object.defineProperty(global, "window", {
       value: {
         ...global.window,
         open: vi.fn(),
-        location: { origin: 'https://boardsesh.com' },
+        location: { origin: "https://boardsesh.com" },
       },
       writable: true,
       configurable: true,
@@ -121,32 +121,35 @@ describe('useClimbActions', () => {
     vi.useRealTimers();
   });
 
-  it('handleViewDetails navigates and tracks analytics', () => {
+  it("handleViewDetails navigates and tracks analytics", () => {
     const { result } = renderHook(() => useClimbActions(defaultOptions));
 
     act(() => {
       result.current.handleViewDetails();
     });
 
-    expect(mockTrack).toHaveBeenCalledWith('Climb Info Viewed', expect.objectContaining({
-      climbUuid: 'climb-1',
-    }));
-    expect(mockPush).toHaveBeenCalledWith('/climb/view-context');
-    expect(defaultOptions.onActionComplete).toHaveBeenCalledWith('viewDetails');
+    expect(mockTrack).toHaveBeenCalledWith(
+      "Climb Info Viewed",
+      expect.objectContaining({
+        climbUuid: "climb-1",
+      }),
+    );
+    expect(mockPush).toHaveBeenCalledWith("/climb/view-context");
+    expect(defaultOptions.onActionComplete).toHaveBeenCalledWith("viewDetails");
   });
 
-  it('handleFork navigates to create URL', () => {
+  it("handleFork navigates to create URL", () => {
     const { result } = renderHook(() => useClimbActions(defaultOptions));
 
     act(() => {
       result.current.handleFork();
     });
 
-    expect(mockPush).toHaveBeenCalledWith('/climb/create');
-    expect(defaultOptions.onActionComplete).toHaveBeenCalledWith('fork');
+    expect(mockPush).toHaveBeenCalledWith("/climb/create");
+    expect(defaultOptions.onActionComplete).toHaveBeenCalledWith("fork");
   });
 
-  it('handleFavorite calls toggleFavorite when authenticated', async () => {
+  it("handleFavorite calls toggleFavorite when authenticated", async () => {
     const { result } = renderHook(() => useClimbActions(defaultOptions));
 
     await act(async () => {
@@ -154,20 +157,20 @@ describe('useClimbActions', () => {
     });
 
     expect(mockToggleFavorite).toHaveBeenCalled();
-    expect(defaultOptions.onActionComplete).toHaveBeenCalledWith('favorite');
+    expect(defaultOptions.onActionComplete).toHaveBeenCalledWith("favorite");
   });
 
-  it('handleFavorite calls openAuthModal when not authenticated', async () => {
+  it("handleFavorite calls openAuthModal when not authenticated", async () => {
     // The useFavorite mock returns isAuthenticated=true by default,
     // so we can't directly test the unauthenticated path without changing the mock.
     // Instead we verify the hook no longer exposes showAuthModal/setShowAuthModal.
     const { result } = renderHook(() => useClimbActions(defaultOptions));
 
-    expect(result.current).not.toHaveProperty('showAuthModal');
-    expect(result.current).not.toHaveProperty('setShowAuthModal');
+    expect(result.current).not.toHaveProperty("showAuthModal");
+    expect(result.current).not.toHaveProperty("setShowAuthModal");
   });
 
-  it('handleQueue adds to queue and tracks analytics', () => {
+  it("handleQueue adds to queue and tracks analytics", () => {
     const { result } = renderHook(() => useClimbActions(defaultOptions));
 
     act(() => {
@@ -175,13 +178,16 @@ describe('useClimbActions', () => {
     });
 
     expect(mockAddToQueue).toHaveBeenCalledWith(mockClimb);
-    expect(mockTrack).toHaveBeenCalledWith('Add to Queue', expect.objectContaining({
-      boardLayout: 'Original',
-    }));
-    expect(defaultOptions.onActionComplete).toHaveBeenCalledWith('queue');
+    expect(mockTrack).toHaveBeenCalledWith(
+      "Add to Queue",
+      expect.objectContaining({
+        boardLayout: "Original",
+      }),
+    );
+    expect(defaultOptions.onActionComplete).toHaveBeenCalledWith("queue");
   });
 
-  it('handleQueue prevents double-add (recentlyAddedToQueue)', () => {
+  it("handleQueue prevents double-add (recentlyAddedToQueue)", () => {
     const { result } = renderHook(() => useClimbActions(defaultOptions));
 
     // First add
@@ -204,9 +210,9 @@ describe('useClimbActions', () => {
     expect(result.current.recentlyAddedToQueue).toBe(false);
   });
 
-  it('handleShare uses native share when available', async () => {
+  it("handleShare uses native share when available", async () => {
     const mockShare = vi.fn().mockResolvedValue(undefined);
-    Object.defineProperty(global, 'navigator', {
+    Object.defineProperty(global, "navigator", {
       value: {
         share: mockShare,
         canShare: () => true,
@@ -222,17 +228,22 @@ describe('useClimbActions', () => {
       await result.current.handleShare();
     });
 
-    expect(mockShare).toHaveBeenCalledWith(expect.objectContaining({
-      title: 'Test Climb',
-    }));
-    expect(mockTrack).toHaveBeenCalledWith('Climb Shared', expect.objectContaining({
-      method: 'native',
-    }));
+    expect(mockShare).toHaveBeenCalledWith(
+      expect.objectContaining({
+        title: "Test Climb",
+      }),
+    );
+    expect(mockTrack).toHaveBeenCalledWith(
+      "Climb Shared",
+      expect.objectContaining({
+        method: "native",
+      }),
+    );
   });
 
-  it('handleShare falls back to clipboard when share not available', async () => {
+  it("handleShare falls back to clipboard when share not available", async () => {
     const mockWriteText = vi.fn().mockResolvedValue(undefined);
-    Object.defineProperty(global, 'navigator', {
+    Object.defineProperty(global, "navigator", {
       value: {
         share: undefined,
         canShare: undefined,
@@ -249,15 +260,18 @@ describe('useClimbActions', () => {
     });
 
     expect(mockWriteText).toHaveBeenCalled();
-    expect(mockShowMessage).toHaveBeenCalledWith('Link copied to clipboard!', 'success');
-    expect(mockTrack).toHaveBeenCalledWith('Climb Shared', expect.objectContaining({
-      method: 'clipboard',
-    }));
+    expect(mockShowMessage).toHaveBeenCalledWith("Link copied to clipboard!", "success");
+    expect(mockTrack).toHaveBeenCalledWith(
+      "Climb Shared",
+      expect.objectContaining({
+        method: "clipboard",
+      }),
+    );
   });
 
-  it('handleOpenInApp opens URL in new tab', () => {
+  it("handleOpenInApp opens URL in new tab", () => {
     const mockOpen = vi.fn();
-    Object.defineProperty(global.window, 'open', {
+    Object.defineProperty(global.window, "open", {
       value: mockOpen,
       writable: true,
       configurable: true,
@@ -269,11 +283,11 @@ describe('useClimbActions', () => {
       result.current.handleOpenInApp();
     });
 
-    expect(mockOpen).toHaveBeenCalledWith(expect.any(String), '_blank', 'noopener');
-    expect(defaultOptions.onActionComplete).toHaveBeenCalledWith('openInApp');
+    expect(mockOpen).toHaveBeenCalledWith(expect.any(String), "_blank", "noopener");
+    expect(defaultOptions.onActionComplete).toHaveBeenCalledWith("openInApp");
   });
 
-  it('handleMirror calls mirrorClimb', () => {
+  it("handleMirror calls mirrorClimb", () => {
     const { result } = renderHook(() => useClimbActions(defaultOptions));
 
     act(() => {
@@ -281,28 +295,28 @@ describe('useClimbActions', () => {
     });
 
     expect(mockMirrorClimb).toHaveBeenCalled();
-    expect(defaultOptions.onActionComplete).toHaveBeenCalledWith('mirror');
+    expect(defaultOptions.onActionComplete).toHaveBeenCalledWith("mirror");
   });
 
-  it('canFork computed from boardDetails', () => {
+  it("canFork computed from boardDetails", () => {
     const { result } = renderHook(() => useClimbActions(defaultOptions));
 
     expect(result.current.canFork).toBe(true);
   });
 
-  it('canMirror computed from supportsMirroring', () => {
+  it("canMirror computed from supportsMirroring", () => {
     const { result } = renderHook(() => useClimbActions(defaultOptions));
 
     expect(result.current.canMirror).toBe(true);
   });
 
-  it('viewDetailsUrl uses slug URL when names available', () => {
+  it("viewDetailsUrl uses slug URL when names available", () => {
     const { result } = renderHook(() => useClimbActions(defaultOptions));
 
-    expect(result.current.viewDetailsUrl).toBe('/climb/view-context');
+    expect(result.current.viewDetailsUrl).toBe("/climb/view-context");
   });
 
-  it('forkUrl is null when canFork is false', () => {
+  it("forkUrl is null when canFork is false", () => {
     const boardDetailsNoFork = {
       ...mockBoardDetails,
       layout_name: undefined,
@@ -318,7 +332,7 @@ describe('useClimbActions', () => {
     expect(result.current.forkUrl).toBeNull();
   });
 
-  it('onActionComplete callback is called', () => {
+  it("onActionComplete callback is called", () => {
     const onComplete = vi.fn();
     const { result } = renderHook(() =>
       useClimbActions({ ...defaultOptions, onActionComplete: onComplete }),
@@ -328,22 +342,22 @@ describe('useClimbActions', () => {
       result.current.handleViewDetails();
     });
 
-    expect(onComplete).toHaveBeenCalledWith('viewDetails');
+    expect(onComplete).toHaveBeenCalledWith("viewDetails");
   });
 
-  it('isFavorited state is returned', () => {
+  it("isFavorited state is returned", () => {
     const { result } = renderHook(() => useClimbActions(defaultOptions));
 
     expect(result.current.isFavorited).toBe(false);
   });
 
-  it('handleTick calls onActionComplete', () => {
+  it("handleTick calls onActionComplete", () => {
     const { result } = renderHook(() => useClimbActions(defaultOptions));
 
     act(() => {
       result.current.handleTick();
     });
 
-    expect(defaultOptions.onActionComplete).toHaveBeenCalledWith('tick');
+    expect(defaultOptions.onActionComplete).toHaveBeenCalledWith("tick");
   });
 });

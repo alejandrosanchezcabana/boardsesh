@@ -1,36 +1,36 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { render, screen, fireEvent, waitFor } from '@testing-library/react';
-import type { BoardDetails } from '@/app/lib/types';
+import { describe, it, expect, vi, beforeEach } from "vite-plus/test";
+import { render, screen, fireEvent, waitFor } from "@testing-library/react";
+import type { BoardDetails } from "@/app/lib/types";
 
 const mockUsePlaylists = vi.fn();
 const mockShowMessage = vi.fn();
 
-vi.mock('../use-playlists', () => ({
+vi.mock("../use-playlists", () => ({
   usePlaylists: (args: unknown) => mockUsePlaylists(args),
 }));
 
-vi.mock('../../providers/snackbar-provider', () => ({
+vi.mock("../../providers/snackbar-provider", () => ({
   useSnackbar: () => ({
     showMessage: mockShowMessage,
   }),
 }));
 
-vi.mock('@/app/components/providers/auth-modal-provider', () => ({
+vi.mock("@/app/components/providers/auth-modal-provider", () => ({
   useAuthModal: () => ({ openAuthModal: vi.fn() }),
 }));
 
-vi.mock('@vercel/analytics', () => ({
+vi.mock("@vercel/analytics", () => ({
   track: vi.fn(),
 }));
 
-import PlaylistSelectionContent from '../playlist-selection-content';
+import PlaylistSelectionContent from "../playlist-selection-content";
 
 function createBoardDetails(overrides?: Partial<BoardDetails>): BoardDetails {
   return {
-    board_name: 'kilter',
+    board_name: "kilter",
     layout_id: 1,
     size_id: 1,
-    set_ids: '1',
+    set_ids: "1",
     images_to_holds: {},
     holdsData: {},
     edge_left: 0,
@@ -43,16 +43,16 @@ function createBoardDetails(overrides?: Partial<BoardDetails>): BoardDetails {
   } as BoardDetails;
 }
 
-describe('PlaylistSelectionContent failures', () => {
+describe("PlaylistSelectionContent failures", () => {
   beforeEach(() => {
     vi.clearAllMocks();
   });
 
-  it('shows add failure message when addToPlaylist rejects', async () => {
+  it("shows add failure message when addToPlaylist rejects", async () => {
     mockUsePlaylists.mockReturnValue({
-      playlists: [{ uuid: 'pl-1', id: '1', name: 'Test Playlist', climbCount: 3, color: null }],
+      playlists: [{ uuid: "pl-1", id: "1", name: "Test Playlist", climbCount: 3, color: null }],
       playlistsContainingClimb: new Set<string>(),
-      addToPlaylist: vi.fn().mockRejectedValue(new Error('network')),
+      addToPlaylist: vi.fn().mockRejectedValue(new Error("network")),
       removeFromPlaylist: vi.fn(),
       createPlaylist: vi.fn(),
       isAuthenticated: true,
@@ -64,22 +64,22 @@ describe('PlaylistSelectionContent failures', () => {
         climbUuid="climb-1"
         angle={40}
         boardDetails={createBoardDetails()}
-      />
+      />,
     );
 
-    fireEvent.click(screen.getByText('Test Playlist'));
+    fireEvent.click(screen.getByText("Test Playlist"));
 
     await waitFor(() => {
-      expect(mockShowMessage).toHaveBeenCalledWith('Failed to add to playlist', 'error');
+      expect(mockShowMessage).toHaveBeenCalledWith("Failed to add to playlist", "error");
     });
   });
 
-  it('shows remove failure message when removeFromPlaylist rejects', async () => {
+  it("shows remove failure message when removeFromPlaylist rejects", async () => {
     mockUsePlaylists.mockReturnValue({
-      playlists: [{ uuid: 'pl-1', id: '1', name: 'Test Playlist', climbCount: 3, color: null }],
-      playlistsContainingClimb: new Set<string>(['pl-1']),
+      playlists: [{ uuid: "pl-1", id: "1", name: "Test Playlist", climbCount: 3, color: null }],
+      playlistsContainingClimb: new Set<string>(["pl-1"]),
       addToPlaylist: vi.fn(),
-      removeFromPlaylist: vi.fn().mockRejectedValue(new Error('network')),
+      removeFromPlaylist: vi.fn().mockRejectedValue(new Error("network")),
       createPlaylist: vi.fn(),
       isAuthenticated: true,
       isLoading: false,
@@ -90,24 +90,24 @@ describe('PlaylistSelectionContent failures', () => {
         climbUuid="climb-1"
         angle={40}
         boardDetails={createBoardDetails()}
-      />
+      />,
     );
 
-    fireEvent.click(screen.getByText('Test Playlist'));
+    fireEvent.click(screen.getByText("Test Playlist"));
 
     await waitFor(() => {
-      expect(mockShowMessage).toHaveBeenCalledWith('Failed to remove from playlist', 'error');
+      expect(mockShowMessage).toHaveBeenCalledWith("Failed to remove from playlist", "error");
     });
   });
 
-  it('shows create failure message when createPlaylist rejects', async () => {
+  it("shows create failure message when createPlaylist rejects", async () => {
     const onDone = vi.fn();
     mockUsePlaylists.mockReturnValue({
-      playlists: [{ uuid: 'pl-1', id: '1', name: 'Test Playlist', climbCount: 3, color: null }],
+      playlists: [{ uuid: "pl-1", id: "1", name: "Test Playlist", climbCount: 3, color: null }],
       playlistsContainingClimb: new Set<string>(),
       addToPlaylist: vi.fn(),
       removeFromPlaylist: vi.fn(),
-      createPlaylist: vi.fn().mockRejectedValue(new Error('network')),
+      createPlaylist: vi.fn().mockRejectedValue(new Error("network")),
       isAuthenticated: true,
       isLoading: false,
     });
@@ -118,23 +118,25 @@ describe('PlaylistSelectionContent failures', () => {
         angle={40}
         boardDetails={createBoardDetails()}
         onDone={onDone}
-      />
+      />,
     );
 
-    fireEvent.click(screen.getByRole('button', { name: /create new playlist/i }));
-    fireEvent.change(screen.getByPlaceholderText('e.g., Hard Crimps'), { target: { value: 'My Playlist' } });
-    fireEvent.click(screen.getByRole('button', { name: /^create$/i }));
+    fireEvent.click(screen.getByRole("button", { name: /create new playlist/i }));
+    fireEvent.change(screen.getByPlaceholderText("e.g., Hard Crimps"), {
+      target: { value: "My Playlist" },
+    });
+    fireEvent.click(screen.getByRole("button", { name: /^create$/i }));
 
     await waitFor(() => {
-      expect(mockShowMessage).toHaveBeenCalledWith('Failed to create playlist', 'error');
+      expect(mockShowMessage).toHaveBeenCalledWith("Failed to create playlist", "error");
     });
     expect(onDone).not.toHaveBeenCalled();
   });
 
-  it('supports keyboard selection on playlist items', async () => {
+  it("supports keyboard selection on playlist items", async () => {
     const addToPlaylist = vi.fn().mockResolvedValue(undefined);
     mockUsePlaylists.mockReturnValue({
-      playlists: [{ uuid: 'pl-1', id: '1', name: 'Keyboard Playlist', climbCount: 3, color: null }],
+      playlists: [{ uuid: "pl-1", id: "1", name: "Keyboard Playlist", climbCount: 3, color: null }],
       playlistsContainingClimb: new Set<string>(),
       addToPlaylist,
       removeFromPlaylist: vi.fn(),
@@ -148,30 +150,30 @@ describe('PlaylistSelectionContent failures', () => {
         climbUuid="climb-1"
         angle={40}
         boardDetails={createBoardDetails()}
-      />
+      />,
     );
 
-    const playlistItem = screen.getByRole('button', { name: /add to playlist keyboard playlist/i });
-    expect(playlistItem.getAttribute('tabindex')).toBe('0');
-    fireEvent.keyDown(playlistItem, { key: 'Enter' });
+    const playlistItem = screen.getByRole("button", { name: /add to playlist keyboard playlist/i });
+    expect(playlistItem.getAttribute("tabindex")).toBe("0");
+    fireEvent.keyDown(playlistItem, { key: "Enter" });
 
     await waitFor(() => {
-      expect(addToPlaylist).toHaveBeenCalledWith('pl-1');
+      expect(addToPlaylist).toHaveBeenCalledWith("pl-1");
     });
   });
 
-  it('uses newPlaylist.uuid (not id) when auto-adding after create', async () => {
+  it("uses newPlaylist.uuid (not id) when auto-adding after create", async () => {
     const addToPlaylist = vi.fn().mockResolvedValue(undefined);
     const createPlaylist = vi.fn().mockResolvedValue({
-      id: 'numeric-id',
-      uuid: 'uuid-id',
-      name: 'Created Playlist',
+      id: "numeric-id",
+      uuid: "uuid-id",
+      name: "Created Playlist",
       climbCount: 0,
       color: null,
     });
 
     mockUsePlaylists.mockReturnValue({
-      playlists: [{ uuid: 'pl-1', id: '1', name: 'Existing Playlist', climbCount: 3, color: null }],
+      playlists: [{ uuid: "pl-1", id: "1", name: "Existing Playlist", climbCount: 3, color: null }],
       playlistsContainingClimb: new Set<string>(),
       addToPlaylist,
       removeFromPlaylist: vi.fn(),
@@ -185,16 +187,18 @@ describe('PlaylistSelectionContent failures', () => {
         climbUuid="climb-1"
         angle={40}
         boardDetails={createBoardDetails()}
-      />
+      />,
     );
 
-    fireEvent.click(screen.getByRole('button', { name: /create new playlist/i }));
-    fireEvent.change(screen.getByPlaceholderText('e.g., Hard Crimps'), { target: { value: 'Created Playlist' } });
-    fireEvent.click(screen.getByRole('button', { name: /^create$/i }));
+    fireEvent.click(screen.getByRole("button", { name: /create new playlist/i }));
+    fireEvent.change(screen.getByPlaceholderText("e.g., Hard Crimps"), {
+      target: { value: "Created Playlist" },
+    });
+    fireEvent.click(screen.getByRole("button", { name: /^create$/i }));
 
     await waitFor(() => {
       expect(createPlaylist).toHaveBeenCalled();
-      expect(addToPlaylist).toHaveBeenCalledWith('uuid-id');
+      expect(addToPlaylist).toHaveBeenCalledWith("uuid-id");
     });
   });
 });

@@ -1,18 +1,18 @@
-'use client';
+"use client";
 
-import React from 'react';
-import Box from '@mui/material/Box';
-import MuiCard from '@mui/material/Card';
-import CardContent from '@mui/material/CardContent';
-import MuiTypography from '@mui/material/Typography';
-import MuiAvatar from '@mui/material/Avatar';
-import PersonOutlined from '@mui/icons-material/PersonOutlined';
-import Link from 'next/link';
-import dayjs from 'dayjs';
-import relativeTime from 'dayjs/plugin/relativeTime';
-import type { ActivityFeedItem } from '@boardsesh/shared-schema';
-import VoteButton from '@/app/components/social/vote-button';
-import styles from './ascents-feed.module.css';
+import React from "react";
+import Box from "@mui/material/Box";
+import MuiCard from "@mui/material/Card";
+import CardContent from "@mui/material/CardContent";
+import MuiTypography from "@mui/material/Typography";
+import MuiAvatar from "@mui/material/Avatar";
+import PersonOutlined from "@mui/icons-material/PersonOutlined";
+import Link from "next/link";
+import dayjs from "dayjs";
+import relativeTime from "dayjs/plugin/relativeTime";
+import type { ActivityFeedItem } from "@boardsesh/shared-schema";
+import VoteButton from "@/app/components/social/vote-button";
+import styles from "./ascents-feed.module.css";
 
 dayjs.extend(relativeTime);
 
@@ -26,9 +26,9 @@ export default function FeedItemComment({ item }: FeedItemCommentProps) {
 
   return (
     <MuiCard className={styles.feedItem} data-testid="activity-feed-item">
-      <CardContent sx={{ p: 1.5, '&:last-child': { pb: 1.5 } }}>
+      <CardContent sx={{ p: 1.5, "&:last-child": { pb: 1.5 } }}>
         {/* User header */}
-        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}>
+        <Box sx={{ display: "flex", alignItems: "center", gap: 1, mb: 1 }}>
           <MuiAvatar
             src={item.actorAvatarUrl ?? undefined}
             sx={{ width: 32, height: 32 }}
@@ -41,17 +41,19 @@ export default function FeedItemComment({ item }: FeedItemCommentProps) {
               variant="body2"
               fontWeight={600}
               {...(actorProfileHref ? { component: Link, href: actorProfileHref } : {})}
-              sx={{ textDecoration: 'none', color: 'text.primary' }}
+              sx={{ textDecoration: "none", color: "text.primary" }}
             >
-              {item.actorDisplayName || 'User'}
+              {item.actorDisplayName || "User"}
             </MuiTypography>
             <MuiTypography variant="body2" component="span" color="text.secondary">
-              {' '}commented
+              {" "}
+              commented
             </MuiTypography>
             {item.climbName && (
               <>
                 <MuiTypography variant="body2" component="span" color="text.secondary">
-                  {' '}on{' '}
+                  {" "}
+                  on{" "}
                 </MuiTypography>
                 <MuiTypography variant="body2" component="span" fontWeight={600}>
                   {item.climbName}
@@ -68,8 +70,8 @@ export default function FeedItemComment({ item }: FeedItemCommentProps) {
         {item.commentBody && (
           <Box
             sx={{
-              bgcolor: 'var(--neutral-50)',
-              borderLeft: '3px solid var(--neutral-300)',
+              bgcolor: "var(--neutral-50)",
+              borderLeft: "3px solid var(--neutral-300)",
               borderRadius: 1,
               px: 1.5,
               py: 1,

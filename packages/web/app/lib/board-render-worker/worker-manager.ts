@@ -6,21 +6,26 @@
  * requests so the same board+frames combo is only rendered once.
  */
 
-import React from 'react';
-import type { RenderRequest, RenderResponse, PreloadImagesMessage } from './board-render.worker';
-import type { BoardDetails } from '@/app/lib/types';
-import type { HoldRenderData } from '@/app/components/board-renderer/types';
-import { getImageUrl } from '@/app/components/board-renderer/util';
-import { HOLD_STATE_MAP, THUMBNAIL_WIDTH } from '@/app/components/board-renderer/types';
-import { isCapacitor } from '@/app/lib/ble/capacitor-utils';
-import { trackWorkerRenderingDisabled } from '@/app/lib/rendering-metrics';
+import React from "react";
+import type { RenderRequest, RenderResponse, PreloadImagesMessage } from "./board-render.worker";
+import type { BoardDetails } from "@/app/lib/types";
+import type { HoldRenderData } from "@/app/components/board-renderer/types";
+import { getImageUrl } from "@/app/components/board-renderer/util";
+import { HOLD_STATE_MAP, THUMBNAIL_WIDTH } from "@/app/components/board-renderer/types";
+import { isCapacitor } from "@/app/lib/ble/capacitor-utils";
+import { trackWorkerRenderingDisabled } from "@/app/lib/rendering-metrics";
 
 // LRU cache for rendered bitmaps
 const CACHE_MAX = 150;
 const bitmapCache = new Map<string, ImageBitmap>();
 
-function cacheKey(boardDetails: BoardDetails, frames: string, mirrored: boolean, thumbnail: boolean): string {
-  return `${boardDetails.board_name}:${boardDetails.layout_id}:${boardDetails.size_id}:${boardDetails.set_ids.join(',')}:${frames}:${mirrored ? 1 : 0}:${thumbnail ? 1 : 0}`;
+function cacheKey(
+  boardDetails: BoardDetails,
+  frames: string,
+  mirrored: boolean,
+  thumbnail: boolean,
+): string {
+  return `${boardDetails.board_name}:${boardDetails.layout_id}:${boardDetails.size_id}:${boardDetails.set_ids.join(",")}:${frames}:${mirrored ? 1 : 0}:${thumbnail ? 1 : 0}`;
 }
 
 /**
@@ -63,7 +68,7 @@ function cachePut(key: string, bitmap: ImageBitmap): void {
 // Capacitor WebView is a dedicated app context — can afford more workers.
 // Browser tabs share resources, so keep it lighter.
 function getPoolSize(): number {
-  if (typeof window === 'undefined') return 1;
+  if (typeof window === "undefined") return 1;
   return isCapacitor() ? 5 : 3;
 }
 
@@ -85,18 +90,18 @@ const inflightRequests = new Map<string, Promise<ImageBitmap>>();
 
 function getWorkerPool(): Worker[] {
   if (workerPoolDisabled) {
-    throw new Error('Worker rendering is disabled after a worker load/runtime failure');
+    throw new Error("Worker rendering is disabled after a worker load/runtime failure");
   }
   if (!workers) {
     workers = Array.from({ length: getPoolSize() }, (_, workerIdx) => {
       workerRequestIds.set(workerIdx, new Set());
       let w: Worker;
       try {
-        w = new Worker(new URL('./board-render.worker.ts', import.meta.url));
+        w = new Worker(new URL("./board-render.worker.ts", import.meta.url));
       } catch (err) {
         workerPoolDisabled = true;
         markCanvasNotReady();
-        trackWorkerRenderingDisabled('construct-failed');
+        trackWorkerRenderingDisabled("construct-failed");
         throw err;
       }
       w.onmessage = (event: MessageEvent<RenderResponse>) => {
@@ -106,7 +111,7 @@ function getWorkerPool(): Worker[] {
         pendingRequests.delete(response.id);
         workerRequestIds.get(workerIdx)?.delete(response.id);
 
-        if ('error' in response) {
+        if ("error" in response) {
           pending.reject(new Error(response.error));
         } else {
           pending.resolve(response.bitmap);
@@ -121,7 +126,7 @@ function getWorkerPool(): Worker[] {
         // when worker loading is broken in this runtime.
         workerPoolDisabled = true;
         markCanvasNotReady();
-        trackWorkerRenderingDisabled('load-failed');
+        trackWorkerRenderingDisabled("load-failed");
 
         // Only reject requests assigned to this worker, not the entire pool
         const ids = workerRequestIds.get(workerIdx);
@@ -178,7 +183,7 @@ async function ensureImagesPreloaded(urls: string[]): Promise<void> {
         const bitmap = await promise;
         return { url, bitmap };
       } catch (err) {
-        console.warn('Failed to preload background image:', url, err);
+        console.warn("Failed to preload background image:", url, err);
         return null;
       } finally {
         preloadInflight.delete(url);
@@ -197,7 +202,7 @@ async function ensureImagesPreloaded(urls: string[]): Promise<void> {
         bitmap: await createImageBitmap(bitmap),
       })),
     );
-    const msg: PreloadImagesMessage = { type: 'preload-images', images: copies };
+    const msg: PreloadImagesMessage = { type: "preload-images", images: copies };
     pool[i].postMessage(msg, { transfer: copies.map((c) => c.bitmap) });
   }
 
@@ -226,9 +231,9 @@ export interface RenderBoardOptions {
  * Check if the browser supports OffscreenCanvas (required for worker rendering).
  */
 export function isWorkerRenderingSupported(): boolean {
-  if (typeof window === 'undefined') return false;
+  if (typeof window === "undefined") return false;
   if (workerPoolDisabled) return false;
-  return typeof OffscreenCanvas !== 'undefined' && typeof Worker !== 'undefined';
+  return typeof OffscreenCanvas !== "undefined" && typeof Worker !== "undefined";
 }
 
 /**
@@ -286,8 +291,8 @@ export function useCanvasRendererReady(): boolean {
  * Returns a cached ImageBitmap if available, otherwise queues a render request.
  */
 export function renderBoard(options: RenderBoardOptions): Promise<ImageBitmap> {
-  if (typeof window === 'undefined') {
-    return Promise.reject(new Error('renderBoard is not available during SSR'));
+  if (typeof window === "undefined") {
+    return Promise.reject(new Error("renderBoard is not available during SSR"));
   }
 
   const { boardDetails, frames, mirrored, thumbnail = false, cropTop: cropTopOverride } = options;
@@ -326,7 +331,7 @@ export function renderBoard(options: RenderBoardOptions): Promise<ImageBitmap> {
   const origin = window.location.origin;
   const backgroundUrls = Object.keys(boardDetails.images_to_holds).map((img) => {
     const url = getImageUrl(img, boardDetails.board_name, thumbnail);
-    return url.startsWith('/') ? `${origin}${url}` : url;
+    return url.startsWith("/") ? `${origin}${url}` : url;
   });
 
   const request: RenderRequest = {

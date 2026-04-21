@@ -1,13 +1,13 @@
-'use client';
+"use client";
 
-import React, { createContext, useContext, useState, useEffect, useCallback, useMemo } from 'react';
-import { useSession } from 'next-auth/react';
+import React, { createContext, useContext, useState, useEffect, useCallback, useMemo } from "react";
+import { useSession } from "next-auth/react";
 import {
   PartyProfile,
   getPartyProfile,
   clearPartyProfile,
   ensurePartyProfile,
-} from '@/app/lib/party-profile-db';
+} from "@/app/lib/party-profile-db";
 
 interface UserProfileData {
   displayName: string | null;
@@ -46,7 +46,7 @@ export const PartyProfileProvider: React.FC<{ children: React.ReactNode }> = ({ 
           setProfile(loadedProfile);
         }
       } catch (error) {
-        console.error('Failed to load party profile:', error);
+        console.error("Failed to load party profile:", error);
       } finally {
         if (mounted) {
           setIsLoading(false);
@@ -66,13 +66,13 @@ export const PartyProfileProvider: React.FC<{ children: React.ReactNode }> = ({ 
     let mounted = true;
 
     const fetchUserProfile = async () => {
-      if (sessionStatus !== 'authenticated') {
+      if (sessionStatus !== "authenticated") {
         setUserProfile(null);
         return;
       }
 
       try {
-        const response = await fetch('/api/internal/profile');
+        const response = await fetch("/api/internal/profile");
         if (response.ok) {
           const data = await response.json();
           if (mounted) {
@@ -80,7 +80,7 @@ export const PartyProfileProvider: React.FC<{ children: React.ReactNode }> = ({ 
           }
         }
       } catch (error) {
-        console.error('Failed to fetch user profile:', error);
+        console.error("Failed to fetch user profile:", error);
       }
     };
 
@@ -98,15 +98,15 @@ export const PartyProfileProvider: React.FC<{ children: React.ReactNode }> = ({ 
       setProfile(loadedProfile);
 
       // Also refresh user profile from API if authenticated
-      if (sessionStatus === 'authenticated') {
-        const response = await fetch('/api/internal/profile');
+      if (sessionStatus === "authenticated") {
+        const response = await fetch("/api/internal/profile");
         if (response.ok) {
           const data = await response.json();
           setUserProfile(data.profile || null);
         }
       }
     } catch (error) {
-      console.error('Failed to refresh party profile:', error);
+      console.error("Failed to refresh party profile:", error);
     }
   }, [sessionStatus]);
 
@@ -118,7 +118,7 @@ export const PartyProfileProvider: React.FC<{ children: React.ReactNode }> = ({ 
       const newProfile = await ensurePartyProfile();
       setProfile(newProfile);
     } catch (error) {
-      console.error('Failed to clear party profile:', error);
+      console.error("Failed to clear party profile:", error);
       throw error;
     } finally {
       setIsLoading(false);
@@ -136,7 +136,7 @@ export const PartyProfileProvider: React.FC<{ children: React.ReactNode }> = ({ 
     () => userProfile?.avatarUrl || session?.user?.image || undefined,
     [userProfile?.avatarUrl, session?.user?.image],
   );
-  const isAuthenticated = useMemo(() => sessionStatus === 'authenticated', [sessionStatus]);
+  const isAuthenticated = useMemo(() => sessionStatus === "authenticated", [sessionStatus]);
 
   const value = useMemo<PartyProfileContextType>(
     () => ({
@@ -149,7 +149,16 @@ export const PartyProfileProvider: React.FC<{ children: React.ReactNode }> = ({ 
       clearProfile: clearProfileHandler,
       refreshProfile,
     }),
-    [profile, isLoading, hasProfile, username, avatarUrl, isAuthenticated, clearProfileHandler, refreshProfile],
+    [
+      profile,
+      isLoading,
+      hasProfile,
+      username,
+      avatarUrl,
+      isAuthenticated,
+      clearProfileHandler,
+      refreshProfile,
+    ],
   );
 
   return <PartyProfileContext.Provider value={value}>{children}</PartyProfileContext.Provider>;
@@ -158,7 +167,7 @@ export const PartyProfileProvider: React.FC<{ children: React.ReactNode }> = ({ 
 export const usePartyProfile = (): PartyProfileContextType => {
   const context = useContext(PartyProfileContext);
   if (!context) {
-    throw new Error('usePartyProfile must be used within a PartyProfileProvider');
+    throw new Error("usePartyProfile must be used within a PartyProfileProvider");
   }
   return context;
 };

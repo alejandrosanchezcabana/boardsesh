@@ -1,12 +1,12 @@
-import React from 'react';
-import { render, screen, act } from '@testing-library/react';
-import '@testing-library/jest-dom/vitest';
-import { describe, expect, it, vi, beforeEach, afterEach } from 'vitest';
-import ErrorBoundary from '../error-boundary';
+import React from "react";
+import { render, screen, act } from "@testing-library/react";
+import "@testing-library/jest-dom/vitest";
+import { describe, expect, it, vi, beforeEach, afterEach } from "vite-plus/test";
+import ErrorBoundary from "../error-boundary";
 
 // Suppress React error boundary console noise in tests
 beforeEach(() => {
-  vi.spyOn(console, 'error').mockImplementation(() => {});
+  vi.spyOn(console, "error").mockImplementation(() => {});
   vi.useFakeTimers({ shouldAdvanceTime: true });
 });
 afterEach(() => {
@@ -15,43 +15,43 @@ afterEach(() => {
 });
 
 const AlwaysThrow = () => {
-  throw new Error('persistent error');
+  throw new Error("persistent error");
 };
 
-describe('ErrorBoundary', () => {
-  it('renders children when no error', () => {
+describe("ErrorBoundary", () => {
+  it("renders children when no error", () => {
     render(
       <ErrorBoundary>
         <div>hello</div>
       </ErrorBoundary>,
     );
-    expect(screen.getByText('hello')).toBeInTheDocument();
+    expect(screen.getByText("hello")).toBeInTheDocument();
   });
 
-  it('renders fallback on error', () => {
+  it("renders fallback on error", () => {
     render(
       <ErrorBoundary fallback={<div>oops</div>}>
         <AlwaysThrow />
       </ErrorBoundary>,
     );
-    expect(screen.getByText('oops')).toBeInTheDocument();
+    expect(screen.getByText("oops")).toBeInTheDocument();
   });
 
-  it('renders nothing when error and no fallback', () => {
+  it("renders nothing when error and no fallback", () => {
     const { container } = render(
       <ErrorBoundary>
         <AlwaysThrow />
       </ErrorBoundary>,
     );
-    expect(container.innerHTML).toBe('');
+    expect(container.innerHTML).toBe("");
   });
 
-  describe('recoverable mode', () => {
-    it('auto-resets after a transient error', async () => {
+  describe("recoverable mode", () => {
+    it("auto-resets after a transient error", async () => {
       let shouldThrow = true;
 
       const Conditional = () => {
-        if (shouldThrow) throw new Error('transient');
+        if (shouldThrow) throw new Error("transient");
         return <div>recovered</div>;
       };
 
@@ -62,7 +62,7 @@ describe('ErrorBoundary', () => {
       );
 
       // Error caught, fallback rendered (null)
-      expect(screen.queryByText('recovered')).not.toBeInTheDocument();
+      expect(screen.queryByText("recovered")).not.toBeInTheDocument();
 
       // Fix the error before the rAF fires
       shouldThrow = false;
@@ -72,10 +72,10 @@ describe('ErrorBoundary', () => {
         vi.advanceTimersByTime(16);
       });
 
-      expect(screen.getByText('recovered')).toBeInTheDocument();
+      expect(screen.getByText("recovered")).toBeInTheDocument();
     });
 
-    it('stops retrying after max attempts', async () => {
+    it("stops retrying after max attempts", async () => {
       render(
         <ErrorBoundary recoverable fallback={<div>gave up</div>}>
           <AlwaysThrow />
@@ -90,14 +90,14 @@ describe('ErrorBoundary', () => {
       }
 
       // Should have given up and show the fallback permanently
-      expect(screen.getByText('gave up')).toBeInTheDocument();
+      expect(screen.getByText("gave up")).toBeInTheDocument();
     });
 
-    it('resets retry budget after quiet period', async () => {
+    it("resets retry budget after quiet period", async () => {
       let shouldThrow = true;
 
       const Conditional = () => {
-        if (shouldThrow) throw new Error('transient');
+        if (shouldThrow) throw new Error("transient");
         return <div>recovered</div>;
       };
 
@@ -119,7 +119,7 @@ describe('ErrorBoundary', () => {
       await act(async () => {
         vi.advanceTimersByTime(16);
       });
-      expect(screen.getByText('recovered')).toBeInTheDocument();
+      expect(screen.getByText("recovered")).toBeInTheDocument();
 
       // Wait for the 30 s reset timer to fire
       await act(async () => {
@@ -131,18 +131,18 @@ describe('ErrorBoundary', () => {
       // Force a re-render that throws
       await act(async () => {
         // Unmount and remount to trigger a fresh error
-        screen.getByText('recovered').textContent = '';
+        screen.getByText("recovered").textContent = "";
       });
     });
 
-    it('does not auto-reset when recoverable is false', async () => {
+    it("does not auto-reset when recoverable is false", async () => {
       render(
         <ErrorBoundary fallback={<div>stuck</div>}>
           <AlwaysThrow />
         </ErrorBoundary>,
       );
 
-      expect(screen.getByText('stuck')).toBeInTheDocument();
+      expect(screen.getByText("stuck")).toBeInTheDocument();
 
       // Flush rAF
       await act(async () => {
@@ -150,7 +150,7 @@ describe('ErrorBoundary', () => {
       });
 
       // Still stuck on fallback
-      expect(screen.getByText('stuck')).toBeInTheDocument();
+      expect(screen.getByText("stuck")).toBeInTheDocument();
     });
   });
 });

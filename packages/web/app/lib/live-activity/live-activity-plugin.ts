@@ -1,4 +1,4 @@
-import { isNativeApp, getPlatform } from '../ble/capacitor-utils';
+import { isNativeApp, getPlatform } from "../ble/capacitor-utils";
 
 interface LiveActivityStartOptions {
   sessionId: string;
@@ -53,7 +53,7 @@ interface LiveActivityPlugin {
 }
 
 function getPlugin(): LiveActivityPlugin | null {
-  if (!isNativeApp() || getPlatform() !== 'ios') return null;
+  if (!isNativeApp() || getPlatform() !== "ios") return null;
   const plugins = window.Capacitor?.Plugins;
   if (!plugins) return null;
   return (plugins.LiveActivity as LiveActivityPlugin | undefined) ?? null;
@@ -76,7 +76,7 @@ export async function startLiveActivitySession(options: LiveActivityStartOptions
   try {
     await plugin.startSession(options);
   } catch (e) {
-    console.warn('[LiveActivity] Failed to start session:', e);
+    console.warn("[LiveActivity] Failed to start session:", e);
   }
 }
 
@@ -86,7 +86,7 @@ export async function endLiveActivitySession(): Promise<void> {
   try {
     await plugin.endSession();
   } catch (e) {
-    console.warn('[LiveActivity] Failed to end session:', e);
+    console.warn("[LiveActivity] Failed to end session:", e);
   }
 }
 
@@ -96,19 +96,26 @@ export async function updateLiveActivity(options: LiveActivityUpdateOptions): Pr
   try {
     await plugin.updateActivity(options);
   } catch (e) {
-    console.warn('[LiveActivity] Failed to update activity:', e);
+    console.warn("[LiveActivity] Failed to update activity:", e);
   }
 }
 
 /** Lightweight climb-only update — skips queue serialization across the bridge. */
-export async function updateLiveActivityClimb(options: LiveActivityClimbUpdateOptions): Promise<void> {
+export async function updateLiveActivityClimb(
+  options: LiveActivityClimbUpdateOptions,
+): Promise<void> {
   const plugin = getPlugin();
   if (!plugin) return;
   try {
     await plugin.updateActivityClimb(options);
   } catch (e) {
-    console.warn('[LiveActivity] Failed to update activity climb:', e);
+    console.warn("[LiveActivity] Failed to update activity climb:", e);
   }
 }
 
-export type { LiveActivityStartOptions, LiveActivityUpdateOptions, LiveActivityClimbUpdateOptions, LiveActivityPlugin };
+export type {
+  LiveActivityStartOptions,
+  LiveActivityUpdateOptions,
+  LiveActivityClimbUpdateOptions,
+  LiveActivityPlugin,
+};

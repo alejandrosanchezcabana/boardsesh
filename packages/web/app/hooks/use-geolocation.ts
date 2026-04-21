@@ -1,7 +1,7 @@
-'use client';
+"use client";
 
-import { useState, useCallback, useEffect } from 'react';
-import { isNativeApp } from '@/app/lib/ble/capacitor-utils';
+import { useState, useCallback, useEffect } from "react";
+import { isNativeApp } from "@/app/lib/ble/capacitor-utils";
 
 export type GeolocationCoordinates = {
   latitude: number;
@@ -31,7 +31,7 @@ const defaultOptions: PositionOptions = {
 async function getCapacitorPosition(options: PositionOptions): Promise<GeolocationCoordinates> {
   const plugin = window.Capacitor?.Plugins?.Geolocation;
   if (!plugin) {
-    throw new Error('Capacitor Geolocation plugin not available');
+    throw new Error("Capacitor Geolocation plugin not available");
   }
   const result = await plugin.getCurrentPosition({
     enableHighAccuracy: options.enableHighAccuracy,
@@ -48,7 +48,7 @@ async function getCapacitorPosition(options: PositionOptions): Promise<Geolocati
 /** Check permission state using Capacitor Geolocation plugin */
 async function checkCapacitorPermission(): Promise<PermissionState> {
   const plugin = window.Capacitor?.Plugins?.Geolocation;
-  if (!plugin) return 'denied';
+  if (!plugin) return "denied";
   const result = await plugin.checkPermissions();
   return result.location;
 }
@@ -75,20 +75,23 @@ export function useGeolocation(options: PositionOptions = defaultOptions): UseGe
       return;
     }
 
-    if (typeof navigator === 'undefined' || !navigator.permissions) {
+    if (typeof navigator === "undefined" || !navigator.permissions) {
       return;
     }
 
-    navigator.permissions.query({ name: 'geolocation' }).then((result) => {
-      setState((prev) => ({ ...prev, permissionState: result.state }));
-
-      // Listen for permission changes
-      result.addEventListener('change', () => {
+    navigator.permissions
+      .query({ name: "geolocation" })
+      .then((result) => {
         setState((prev) => ({ ...prev, permissionState: result.state }));
+
+        // Listen for permission changes
+        result.addEventListener("change", () => {
+          setState((prev) => ({ ...prev, permissionState: result.state }));
+        });
+      })
+      .catch(() => {
+        // Permission API not supported, that's okay
       });
-    }).catch(() => {
-      // Permission API not supported, that's okay
-    });
   }, []);
 
   const getCurrentPosition = useCallback((): Promise<GeolocationCoordinates> => {
@@ -97,8 +100,8 @@ export function useGeolocation(options: PositionOptions = defaultOptions): UseGe
     }
 
     return new Promise((resolve, reject) => {
-      if (typeof navigator === 'undefined' || !navigator.geolocation) {
-        reject(new Error('Geolocation is not supported by this browser'));
+      if (typeof navigator === "undefined" || !navigator.geolocation) {
+        reject(new Error("Geolocation is not supported by this browser"));
         return;
       }
 
@@ -113,7 +116,7 @@ export function useGeolocation(options: PositionOptions = defaultOptions): UseGe
         (error) => {
           reject(error);
         },
-        options
+        options,
       );
     });
   }, [options]);
@@ -136,7 +139,7 @@ export function useGeolocation(options: PositionOptions = defaultOptions): UseGe
         coordinates: coords,
         loading: false,
         error: null,
-        permissionState: 'granted',
+        permissionState: "granted",
       }));
     } catch (error) {
       const geoError = error as GeolocationPositionError;
@@ -145,13 +148,13 @@ export function useGeolocation(options: PositionOptions = defaultOptions): UseGe
         coordinates: null,
         loading: false,
         error: geoError,
-        permissionState: geoError.code === 1 ? 'denied' : prev.permissionState,
+        permissionState: geoError.code === 1 ? "denied" : prev.permissionState,
       }));
     }
   }, [getCurrentPosition]);
 
   const refresh = useCallback(async () => {
-    if (state.permissionState !== 'granted') {
+    if (state.permissionState !== "granted") {
       return requestPermission();
     }
 
@@ -187,12 +190,12 @@ export function useGeolocation(options: PositionOptions = defaultOptions): UseGe
 export function getGeolocationErrorMessage(error: GeolocationPositionError): string {
   switch (error.code) {
     case error.PERMISSION_DENIED:
-      return 'Location permission was denied. Please enable location access in your browser settings.';
+      return "Location permission was denied. Please enable location access in your browser settings.";
     case error.POSITION_UNAVAILABLE:
-      return 'Location information is unavailable. Please try again later.';
+      return "Location information is unavailable. Please try again later.";
     case error.TIMEOUT:
-      return 'Location request timed out. Please try again.';
+      return "Location request timed out. Please try again.";
     default:
-      return 'An unknown error occurred while getting your location.';
+      return "An unknown error occurred while getting your location.";
   }
 }

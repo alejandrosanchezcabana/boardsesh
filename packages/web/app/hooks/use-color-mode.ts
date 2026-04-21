@@ -1,8 +1,8 @@
-'use client';
+"use client";
 
-import { useContext, createContext } from 'react';
+import { useContext, createContext } from "react";
 
-export type ColorMode = 'light' | 'dark';
+export type ColorMode = "light" | "dark";
 
 export interface ColorModeContextValue {
   mode: ColorMode;
@@ -10,7 +10,7 @@ export interface ColorModeContextValue {
 }
 
 export const ColorModeContext = createContext<ColorModeContextValue>({
-  mode: 'dark',
+  mode: "dark",
   toggleMode: () => {},
 });
 

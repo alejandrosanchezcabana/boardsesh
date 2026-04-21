@@ -21,17 +21,17 @@ export {
   parseMultipleScreenshots,
   parseWithProcessor,
   deduplicateClimbs,
-} from './parser';
+} from "./parser";
 
 // Image processor for advanced use cases
-export { SharpImageProcessor } from './image-processor/sharp-processor';
+export { SharpImageProcessor } from "./image-processor/sharp-processor";
 export type {
   ImageProcessor,
   RawPixelData,
   ImageMetadata,
   ImageRegion,
   NodeImageSource,
-} from './image-processor/types';
+} from "./image-processor/types";
 
 // Core algorithms (for advanced use cases)
 export {
@@ -40,12 +40,9 @@ export {
   detectHoldsFromPixelData,
   classifyPixelColor,
   findNearestGridPosition,
-} from './core/holds';
-export { runOCR, parseHeaderText } from './core/ocr';
-export {
-  calculateRegions,
-  calculateRegionsFromDetectedBoard,
-} from './core/regions';
+} from "./core/holds";
+export { runOCR, parseHeaderText } from "./core/ocr";
+export { calculateRegions, calculateRegionsFromDetectedBoard } from "./core/regions";
 
 // Types
 export type {
@@ -58,7 +55,7 @@ export type {
   Row,
   BoardRegion,
   HeaderRegion,
-} from './types';
+} from "./types";
 
 // Constants
-export { GRID_POSITIONS, GRID_CONFIG, HOLD_COLORS } from './types';
+export { GRID_POSITIONS, GRID_CONFIG, HOLD_COLORS } from "./types";

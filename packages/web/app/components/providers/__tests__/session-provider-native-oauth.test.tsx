@@ -1,25 +1,25 @@
-import { describe, expect, it, vi, beforeEach, afterEach } from 'vitest';
-import { render, act, cleanup } from '@testing-library/react';
-import React from 'react';
+import { describe, expect, it, vi, beforeEach, afterEach } from "vite-plus/test";
+import { render, act, cleanup } from "@testing-library/react";
+import React from "react";
 
 // Mock next-auth/react
 const mockSignIn = vi.fn();
-vi.mock('next-auth/react', () => ({
+vi.mock("next-auth/react", () => ({
   SessionProvider: ({ children }: { children: React.ReactNode }) => <>{children}</>,
   signIn: (...args: unknown[]) => mockSignIn(...args),
 }));
 
 // Mock capacitor-utils
 const mockIsNativeApp = vi.fn();
-vi.mock('@/app/lib/ble/capacitor-utils', () => ({
+vi.mock("@/app/lib/ble/capacitor-utils", () => ({
   isNativeApp: () => mockIsNativeApp(),
 }));
 
-import SessionProviderWrapper from '../session-provider';
+import SessionProviderWrapper from "../session-provider";
 
 type AppUrlOpenListener = (event: { url: string }) => void;
 
-describe('SessionProviderWrapper native OAuth deep link', () => {
+describe("SessionProviderWrapper native OAuth deep link", () => {
   let capturedListener: AppUrlOpenListener | null = null;
   const mockRemove = vi.fn().mockResolvedValue(undefined);
   const mockClose = vi.fn().mockResolvedValue(undefined);
@@ -36,25 +36,23 @@ describe('SessionProviderWrapper native OAuth deep link', () => {
     mockLocationAssign.mockClear();
     mockIsNativeApp.mockReturnValue(false);
 
-    mockAddListener.mockImplementation(
-      (_event: string, listener: AppUrlOpenListener) => {
-        capturedListener = listener;
-        return Promise.resolve({ remove: mockRemove });
-      },
-    );
+    mockAddListener.mockImplementation((_event: string, listener: AppUrlOpenListener) => {
+      capturedListener = listener;
+      return Promise.resolve({ remove: mockRemove });
+    });
 
     // Mock window.location.assign — jsdom marks location properties as
     // non-configurable, so vi.spyOn fails on repeated calls. Replace the
     // entire location object instead.
     originalLocation = window.location;
-    Object.defineProperty(window, 'location', {
+    Object.defineProperty(window, "location", {
       value: { ...originalLocation, assign: mockLocationAssign },
       writable: true,
       configurable: true,
     });
 
     // Reset window.Capacitor mock
-    Object.defineProperty(window, 'Capacitor', {
+    Object.defineProperty(window, "Capacitor", {
       value: undefined,
       writable: true,
       configurable: true,
@@ -63,12 +61,12 @@ describe('SessionProviderWrapper native OAuth deep link', () => {
 
   afterEach(() => {
     cleanup();
-    Object.defineProperty(window, 'location', {
+    Object.defineProperty(window, "location", {
       value: originalLocation,
       writable: true,
       configurable: true,
     });
-    Object.defineProperty(window, 'Capacitor', {
+    Object.defineProperty(window, "Capacitor", {
       value: undefined,
       writable: true,
       configurable: true,
@@ -77,10 +75,10 @@ describe('SessionProviderWrapper native OAuth deep link', () => {
 
   function setupCapacitorMock() {
     mockIsNativeApp.mockReturnValue(true);
-    Object.defineProperty(window, 'Capacitor', {
+    Object.defineProperty(window, "Capacitor", {
       value: {
         isNativePlatform: () => true,
-        getPlatform: () => 'android',
+        getPlatform: () => "android",
         Plugins: {
           App: { addListener: mockAddListener },
           Browser: { close: mockClose },
@@ -91,7 +89,7 @@ describe('SessionProviderWrapper native OAuth deep link', () => {
     });
   }
 
-  it('does not register listener when not a native app', () => {
+  it("does not register listener when not a native app", () => {
     mockIsNativeApp.mockReturnValue(false);
     render(
       <SessionProviderWrapper>
@@ -101,7 +99,7 @@ describe('SessionProviderWrapper native OAuth deep link', () => {
     expect(mockAddListener).not.toHaveBeenCalled();
   });
 
-  it('registers appUrlOpen listener in native app', async () => {
+  it("registers appUrlOpen listener in native app", async () => {
     setupCapacitorMock();
     render(
       <SessionProviderWrapper>
@@ -113,14 +111,11 @@ describe('SessionProviderWrapper native OAuth deep link', () => {
       await new Promise((r) => setTimeout(r, 0));
     });
 
-    expect(mockAddListener).toHaveBeenCalledWith(
-      'appUrlOpen',
-      expect.any(Function),
-    );
+    expect(mockAddListener).toHaveBeenCalledWith("appUrlOpen", expect.any(Function));
     expect(capturedListener).not.toBeNull();
   });
 
-  it('handles malformed deep link URL gracefully', async () => {
+  it("handles malformed deep link URL gracefully", async () => {
     setupCapacitorMock();
 
     render(
@@ -135,16 +130,16 @@ describe('SessionProviderWrapper native OAuth deep link', () => {
 
     await act(async () => {
       capturedListener?.({
-        url: 'com.boardsesh.app://auth/callback%%%malformed',
+        url: "com.boardsesh.app://auth/callback%%%malformed",
       });
     });
 
     expect(mockClose).toHaveBeenCalled();
     expect(mockSignIn).not.toHaveBeenCalled();
-    expect(mockLocationAssign).toHaveBeenCalledWith('/auth/login?error=OAuthCallback');
+    expect(mockLocationAssign).toHaveBeenCalledWith("/auth/login?error=OAuthCallback");
   });
 
-  it('ignores non-auth deep links', async () => {
+  it("ignores non-auth deep links", async () => {
     setupCapacitorMock();
     render(
       <SessionProviderWrapper>
@@ -157,14 +152,14 @@ describe('SessionProviderWrapper native OAuth deep link', () => {
     });
 
     await act(async () => {
-      capturedListener?.({ url: 'com.boardsesh.app://some/other/path' });
+      capturedListener?.({ url: "com.boardsesh.app://some/other/path" });
     });
 
     expect(mockSignIn).not.toHaveBeenCalled();
     expect(mockClose).not.toHaveBeenCalled();
   });
 
-  it('closes browser and redirects to login on error param', async () => {
+  it("closes browser and redirects to login on error param", async () => {
     setupCapacitorMock();
 
     render(
@@ -179,16 +174,16 @@ describe('SessionProviderWrapper native OAuth deep link', () => {
 
     await act(async () => {
       capturedListener?.({
-        url: 'com.boardsesh.app://auth/callback?error=session_missing',
+        url: "com.boardsesh.app://auth/callback?error=session_missing",
       });
     });
 
     expect(mockClose).toHaveBeenCalled();
     expect(mockSignIn).not.toHaveBeenCalled();
-    expect(mockLocationAssign).toHaveBeenCalledWith('/auth/login?error=OAuthCallback');
+    expect(mockLocationAssign).toHaveBeenCalledWith("/auth/login?error=OAuthCallback");
   });
 
-  it('closes browser and redirects to login when transfer token is missing', async () => {
+  it("closes browser and redirects to login when transfer token is missing", async () => {
     setupCapacitorMock();
 
     render(
@@ -203,18 +198,18 @@ describe('SessionProviderWrapper native OAuth deep link', () => {
 
     await act(async () => {
       capturedListener?.({
-        url: 'com.boardsesh.app://auth/callback',
+        url: "com.boardsesh.app://auth/callback",
       });
     });
 
     expect(mockClose).toHaveBeenCalled();
     expect(mockSignIn).not.toHaveBeenCalled();
-    expect(mockLocationAssign).toHaveBeenCalledWith('/auth/login?error=OAuthCallback');
+    expect(mockLocationAssign).toHaveBeenCalledWith("/auth/login?error=OAuthCallback");
   });
 
-  it('calls signIn with transfer token and redirects on success', async () => {
+  it("calls signIn with transfer token and redirects on success", async () => {
     setupCapacitorMock();
-    mockSignIn.mockResolvedValue({ url: '/dashboard', error: null });
+    mockSignIn.mockResolvedValue({ url: "/dashboard", error: null });
 
     render(
       <SessionProviderWrapper>
@@ -228,22 +223,22 @@ describe('SessionProviderWrapper native OAuth deep link', () => {
 
     await act(async () => {
       capturedListener?.({
-        url: 'com.boardsesh.app://auth/callback?transferToken=abc123&next=/dashboard',
+        url: "com.boardsesh.app://auth/callback?transferToken=abc123&next=/dashboard",
       });
     });
 
     expect(mockClose).toHaveBeenCalled();
-    expect(mockSignIn).toHaveBeenCalledWith('native-oauth', {
-      transferToken: 'abc123',
-      callbackUrl: '/dashboard',
+    expect(mockSignIn).toHaveBeenCalledWith("native-oauth", {
+      transferToken: "abc123",
+      callbackUrl: "/dashboard",
       redirect: false,
     });
-    expect(mockLocationAssign).toHaveBeenCalledWith('/dashboard');
+    expect(mockLocationAssign).toHaveBeenCalledWith("/dashboard");
   });
 
-  it('redirects to login when signIn returns an error', async () => {
+  it("redirects to login when signIn returns an error", async () => {
     setupCapacitorMock();
-    mockSignIn.mockResolvedValue({ url: null, error: 'CredentialsSignin' });
+    mockSignIn.mockResolvedValue({ url: null, error: "CredentialsSignin" });
 
     render(
       <SessionProviderWrapper>
@@ -257,16 +252,16 @@ describe('SessionProviderWrapper native OAuth deep link', () => {
 
     await act(async () => {
       capturedListener?.({
-        url: 'com.boardsesh.app://auth/callback?transferToken=bad-token&next=/settings',
+        url: "com.boardsesh.app://auth/callback?transferToken=bad-token&next=/settings",
       });
     });
 
-    expect(mockLocationAssign).toHaveBeenCalledWith('/auth/login?error=OAuthCallback');
+    expect(mockLocationAssign).toHaveBeenCalledWith("/auth/login?error=OAuthCallback");
   });
 
-  it('sanitizes non-relative next path to root', async () => {
+  it("sanitizes non-relative next path to root", async () => {
     setupCapacitorMock();
-    mockSignIn.mockResolvedValue({ url: '/', error: null });
+    mockSignIn.mockResolvedValue({ url: "/", error: null });
 
     render(
       <SessionProviderWrapper>
@@ -280,18 +275,18 @@ describe('SessionProviderWrapper native OAuth deep link', () => {
 
     await act(async () => {
       capturedListener?.({
-        url: 'com.boardsesh.app://auth/callback?transferToken=abc&next=https://evil.com',
+        url: "com.boardsesh.app://auth/callback?transferToken=abc&next=https://evil.com",
       });
     });
 
-    expect(mockSignIn).toHaveBeenCalledWith('native-oauth', {
-      transferToken: 'abc',
-      callbackUrl: '/',
+    expect(mockSignIn).toHaveBeenCalledWith("native-oauth", {
+      transferToken: "abc",
+      callbackUrl: "/",
       redirect: false,
     });
   });
 
-  it('removes listener on unmount', async () => {
+  it("removes listener on unmount", async () => {
     setupCapacitorMock();
     const { unmount } = render(
       <SessionProviderWrapper>
@@ -307,17 +302,15 @@ describe('SessionProviderWrapper native OAuth deep link', () => {
     expect(mockRemove).toHaveBeenCalled();
   });
 
-  it('removes listener if component unmounts before registration completes', async () => {
+  it("removes listener if component unmounts before registration completes", async () => {
     setupCapacitorMock();
     let resolveListener: ((value: { remove: () => Promise<void> }) => void) | null = null;
-    mockAddListener.mockImplementation(
-      (_event: string, listener: AppUrlOpenListener) => {
-        capturedListener = listener;
-        return new Promise((resolve) => {
-          resolveListener = resolve;
-        });
-      },
-    );
+    mockAddListener.mockImplementation((_event: string, listener: AppUrlOpenListener) => {
+      capturedListener = listener;
+      return new Promise((resolve) => {
+        resolveListener = resolve;
+      });
+    });
 
     const { unmount } = render(
       <SessionProviderWrapper>

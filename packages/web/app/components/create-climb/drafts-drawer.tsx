@@ -1,33 +1,33 @@
-'use client';
+"use client";
 
-import React, { useCallback, useEffect, useMemo, useRef } from 'react';
-import Box from '@mui/material/Box';
-import Typography from '@mui/material/Typography';
-import CircularProgress from '@mui/material/CircularProgress';
-import { useQuery } from '@tanstack/react-query';
-import { useRouter } from 'next/navigation';
-import SwipeableDrawer from '../swipeable-drawer/swipeable-drawer';
-import ClimbListItem from '../climb-card/climb-list-item';
-import { useColorMode } from '@/app/hooks/use-color-mode';
-import { createGraphQLHttpClient } from '@/app/lib/graphql/client';
+import React, { useCallback, useEffect, useMemo, useRef } from "react";
+import Box from "@mui/material/Box";
+import Typography from "@mui/material/Typography";
+import CircularProgress from "@mui/material/CircularProgress";
+import { useQuery } from "@tanstack/react-query";
+import { useRouter } from "next/navigation";
+import SwipeableDrawer from "../swipeable-drawer/swipeable-drawer";
+import ClimbListItem from "../climb-card/climb-list-item";
+import { useColorMode } from "@/app/hooks/use-color-mode";
+import { createGraphQLHttpClient } from "@/app/lib/graphql/client";
 import {
   SEARCH_DRAFT_CLIMBS,
   type ClimbSearchInputVariables,
   type ClimbSearchResponse,
-} from '@/app/lib/graphql/operations/climb-search';
-import { useWsAuthToken } from '@/app/hooks/use-ws-auth-token';
-import { themeTokens } from '@/app/theme/theme-config';
-import { constructClimbViewUrl } from '@/app/lib/url-utils';
-import type { BoardDetails, Climb } from '@/app/lib/types';
-import queueStyles from '../play-view/play-view-drawer.module.css';
-import drawerStyles from '../swipeable-drawer/swipeable-drawer.module.css';
+} from "@/app/lib/graphql/operations/climb-search";
+import { useWsAuthToken } from "@/app/hooks/use-ws-auth-token";
+import { themeTokens } from "@/app/theme/theme-config";
+import { constructClimbViewUrl } from "@/app/lib/url-utils";
+import type { BoardDetails, Climb } from "@/app/lib/types";
+import queueStyles from "../play-view/play-view-drawer.module.css";
+import drawerStyles from "../swipeable-drawer/swipeable-drawer.module.css";
 
 const DRAFTS_DRAWER_STYLES = {
   wrapper: {
-    touchAction: 'pan-y' as const,
-    transition: 'height 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+    touchAction: "pan-y" as const,
+    transition: "height 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
   },
-  body: { padding: 0, overflow: 'hidden' as const, touchAction: 'pan-y' as const },
+  body: { padding: 0, overflow: "hidden" as const, touchAction: "pan-y" as const },
 } as const;
 
 export interface DraftsDrawerProps {
@@ -44,13 +44,19 @@ export interface DraftsDrawerProps {
   onLoadDraft?: (climb: Climb) => void;
 }
 
-const DraftsDrawer: React.FC<DraftsDrawerProps> = ({ open, onClose, boardDetails, angle, onLoadDraft }) => {
+const DraftsDrawer: React.FC<DraftsDrawerProps> = ({
+  open,
+  onClose,
+  boardDetails,
+  angle,
+  onLoadDraft,
+}) => {
   const router = useRouter();
   const { mode } = useColorMode();
-  const isDark = mode === 'dark';
+  const isDark = mode === "dark";
   const { token: wsAuthToken } = useWsAuthToken();
 
-  const draftsDrawerHeightRef = useRef('60%');
+  const draftsDrawerHeightRef = useRef("60%");
   const draftsPaperRef = useRef<HTMLDivElement>(null);
 
   const updateDraftsDrawerHeight = useCallback((height: string) => {
@@ -62,13 +68,13 @@ const DraftsDrawer: React.FC<DraftsDrawerProps> = ({ open, onClose, boardDetails
 
   useEffect(() => {
     if (!open) {
-      updateDraftsDrawerHeight('60%');
+      updateDraftsDrawerHeight("60%");
     }
   }, [open, updateDraftsDrawerHeight]);
 
   // Drag-to-resize handlers on the header
   const dragStartY = useRef<number>(0);
-  const dragStartHeightRef = useRef<string>('60%');
+  const dragStartHeightRef = useRef<string>("60%");
   const isDragGestureRef = useRef(false);
 
   const handleDragStart = useCallback((e: React.TouchEvent) => {
@@ -84,49 +90,59 @@ const DraftsDrawer: React.FC<DraftsDrawerProps> = ({ open, onClose, boardDetails
     }
   }, []);
 
-  const handleDragEnd = useCallback((e: React.TouchEvent) => {
-    if (!isDragGestureRef.current) return;
-    const deltaY = e.changedTouches[0].clientY - dragStartY.current;
-    const THRESHOLD = 30;
+  const handleDragEnd = useCallback(
+    (e: React.TouchEvent) => {
+      if (!isDragGestureRef.current) return;
+      const deltaY = e.changedTouches[0].clientY - dragStartY.current;
+      const THRESHOLD = 30;
 
-    if (deltaY < -THRESHOLD) {
-      updateDraftsDrawerHeight('100%');
-    } else if (deltaY > THRESHOLD) {
-      if (dragStartHeightRef.current === '100%') {
-        updateDraftsDrawerHeight('60%');
-      } else {
-        onClose();
+      if (deltaY < -THRESHOLD) {
+        updateDraftsDrawerHeight("100%");
+      } else if (deltaY > THRESHOLD) {
+        if (dragStartHeightRef.current === "100%") {
+          updateDraftsDrawerHeight("60%");
+        } else {
+          onClose();
+        }
       }
-    }
-  }, [onClose, updateDraftsDrawerHeight]);
+    },
+    [onClose, updateDraftsDrawerHeight],
+  );
 
   // Query: only run when drawer is open and user has a token
   const queryKey = useMemo(
-    () => [
-      'climbDrafts',
+    () =>
+      [
+        "climbDrafts",
+        boardDetails.board_name,
+        boardDetails.layout_id,
+        boardDetails.size_id,
+        boardDetails.set_ids.join(","),
+        angle,
+      ] as const,
+    [
       boardDetails.board_name,
       boardDetails.layout_id,
       boardDetails.size_id,
-      boardDetails.set_ids.join(','),
+      boardDetails.set_ids,
       angle,
-    ] as const,
-    [boardDetails.board_name, boardDetails.layout_id, boardDetails.size_id, boardDetails.set_ids, angle],
+    ],
   );
 
   const { data, isLoading, error } = useQuery({
     queryKey,
     enabled: open && !!wsAuthToken,
     queryFn: async (): Promise<Climb[]> => {
-      const input: ClimbSearchInputVariables['input'] = {
+      const input: ClimbSearchInputVariables["input"] = {
         boardName: boardDetails.board_name,
         layoutId: boardDetails.layout_id,
         sizeId: boardDetails.size_id,
-        setIds: boardDetails.set_ids.join(','),
+        setIds: boardDetails.set_ids.join(","),
         angle,
         page: 0,
         pageSize: 100,
-        sortBy: 'ascents',
-        sortOrder: 'desc',
+        sortBy: "ascents",
+        sortOrder: "desc",
         onlyDrafts: true,
       };
       const client = createGraphQLHttpClient(wsAuthToken);
@@ -166,7 +182,7 @@ const DraftsDrawer: React.FC<DraftsDrawerProps> = ({ open, onClose, boardDetails
   // Current page pathname for ClimbListItem (used for thumbnail prefetch hints)
   const pathname = useMemo(
     () =>
-      `/${boardDetails.board_name}/${boardDetails.layout_id}/${boardDetails.size_id}/${boardDetails.set_ids.join(',')}/${angle}/create`,
+      `/${boardDetails.board_name}/${boardDetails.layout_id}/${boardDetails.size_id}/${boardDetails.set_ids.join(",")}/${angle}/create`,
     [boardDetails, angle],
   );
 
@@ -195,11 +211,11 @@ const DraftsDrawer: React.FC<DraftsDrawerProps> = ({ open, onClose, boardDetails
         </div>
         <Box
           sx={{
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'space-between',
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between",
             padding: `${themeTokens.spacing[4]}px ${themeTokens.spacing[6]}px`,
-            borderBottom: '1px solid var(--neutral-200)',
+            borderBottom: "1px solid var(--neutral-200)",
           }}
         >
           <Typography
@@ -214,7 +230,7 @@ const DraftsDrawer: React.FC<DraftsDrawerProps> = ({ open, onClose, boardDetails
           </Typography>
           {drafts.length > 0 && (
             <Typography variant="body2" color="text.secondary">
-              {drafts.length} draft{drafts.length === 1 ? '' : 's'}
+              {drafts.length} draft{drafts.length === 1 ? "" : "s"}
             </Typography>
           )}
         </Box>
@@ -225,23 +241,26 @@ const DraftsDrawer: React.FC<DraftsDrawerProps> = ({ open, onClose, boardDetails
           {isLoading ? (
             <Box
               sx={{
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
                 padding: themeTokens.spacing[8],
               }}
             >
               <CircularProgress size={24} />
             </Box>
           ) : error ? (
-            <Box sx={{ padding: themeTokens.spacing[6], textAlign: 'center' }}>
+            <Box sx={{ padding: themeTokens.spacing[6], textAlign: "center" }}>
               <Typography variant="body2" color="text.secondary">
                 Couldn&apos;t load your drafts. Try again.
               </Typography>
             </Box>
           ) : drafts.length === 0 ? (
-            <Box sx={{ padding: themeTokens.spacing[8], textAlign: 'center' }}>
-              <Typography variant="body1" sx={{ fontWeight: themeTokens.typography.fontWeight.semibold }}>
+            <Box sx={{ padding: themeTokens.spacing[8], textAlign: "center" }}>
+              <Typography
+                variant="body1"
+                sx={{ fontWeight: themeTokens.typography.fontWeight.semibold }}
+              >
                 No drafts yet
               </Typography>
               <Typography variant="body2" color="text.secondary" sx={{ marginTop: 1 }}>

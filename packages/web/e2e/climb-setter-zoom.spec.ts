@@ -8,7 +8,7 @@
  * Screenshots are saved as per-test attachments (test-results/<test>/*.png)
  * and embedded in the Playwright HTML report.
  */
-import { test, expect, type Page } from '@playwright/test';
+import { test, expect, type Page } from "@playwright/test";
 
 // Touch emulation is required so @use-gesture/react's pinch handler fires
 // from CDP-dispatched touch events. Override the chromium project defaults.
@@ -18,7 +18,7 @@ test.use({
   isMobile: true,
 });
 
-const createUrl = '/kilter/original/12x12-square/screw_bolt/40/create';
+const createUrl = "/kilter/original/12x12-square/screw_bolt/40/create";
 
 /**
  * Dispatch a two-finger pinch gesture via CDP. Playwright has no native pinch
@@ -40,72 +40,72 @@ async function pinchZoom(
     { x: center.x + offset / 2, y: center.y, id: 1, radiusX: 2, radiusY: 2, force: 1 },
   ];
 
-  await client.send('Input.dispatchTouchEvent', {
-    type: 'touchStart',
+  await client.send("Input.dispatchTouchEvent", {
+    type: "touchStart",
     touchPoints: pointsAt(fromDistance),
   });
 
   for (let i = 1; i <= steps; i++) {
     const progress = i / steps;
     const offset = fromDistance + (toDistance - fromDistance) * progress;
-    await client.send('Input.dispatchTouchEvent', {
-      type: 'touchMove',
+    await client.send("Input.dispatchTouchEvent", {
+      type: "touchMove",
       touchPoints: pointsAt(offset),
     });
     await page.waitForTimeout(16);
   }
 
-  await client.send('Input.dispatchTouchEvent', {
-    type: 'touchEnd',
+  await client.send("Input.dispatchTouchEvent", {
+    type: "touchEnd",
     touchPoints: [],
   });
 
   await client.detach();
 }
 
-test.describe('Climb Setter - Zoomable Board', () => {
+test.describe("Climb Setter - Zoomable Board", () => {
   test.setTimeout(90_000);
 
-  test('renders create screen and pinch-zooms the board', async ({ page }, testInfo) => {
-    await page.goto(createUrl, { waitUntil: 'domcontentloaded', timeout: 60_000 });
+  test("renders create screen and pinch-zooms the board", async ({ page }, testInfo) => {
+    await page.goto(createUrl, { waitUntil: "domcontentloaded", timeout: 60_000 });
 
-    const setter = page.getByTestId('climb-setter');
+    const setter = page.getByTestId("climb-setter");
     await expect(setter).toBeVisible({ timeout: 30_000 });
 
-    const boardSection = page.getByTestId('climb-setter-board');
+    const boardSection = page.getByTestId("climb-setter-board");
     await expect(boardSection).toBeVisible();
 
     // Wait for the board SVG (BoardRenderer) to mount inside the zoom container.
-    const boardSvg = boardSection.locator('svg').first();
+    const boardSvg = boardSection.locator("svg").first();
     await expect(boardSvg).toBeVisible({ timeout: 30_000 });
 
     // Give images a moment to finish decoding before capturing the baseline.
-    await page.waitForLoadState('networkidle').catch(() => {});
+    await page.waitForLoadState("networkidle").catch(() => {});
 
     // Baseline screenshot: zoomed-out board with header + action bar visible.
-    const beforePath = testInfo.outputPath('create-screen-initial.png');
+    const beforePath = testInfo.outputPath("create-screen-initial.png");
     await page.screenshot({ path: beforePath, fullPage: false });
-    await testInfo.attach('create-screen-initial', { path: beforePath, contentType: 'image/png' });
+    await testInfo.attach("create-screen-initial", { path: beforePath, contentType: "image/png" });
 
     // Reset button should NOT be visible before zooming.
-    const resetButton = page.getByRole('button', { name: 'Reset zoom' });
+    const resetButton = page.getByRole("button", { name: "Reset zoom" });
     await expect(resetButton).not.toBeVisible();
 
     // Pinch out from the center of the board.
     const box = await boardSection.boundingBox();
-    if (!box) throw new Error('climb-setter-board has no bounding box');
+    if (!box) throw new Error("climb-setter-board has no bounding box");
     const center = { x: box.x + box.width / 2, y: box.y + box.height / 2 };
     await pinchZoom(page, center, 80, 260);
 
     // Once the pinch ends, useZoomPan flips isZoomed=true, which causes
     // ZoomableBoard to set data-swipe-blocked on the container and tabIndex=0
     // on the reset button. We assert both as a sanity check.
-    await expect(boardSection.locator('[data-swipe-blocked]')).toHaveCount(1, { timeout: 5_000 });
-    await expect(resetButton).toHaveAttribute('tabindex', '0', { timeout: 5_000 });
+    await expect(boardSection.locator("[data-swipe-blocked]")).toHaveCount(1, { timeout: 5_000 });
+    await expect(resetButton).toHaveAttribute("tabindex", "0", { timeout: 5_000 });
 
     // Zoomed screenshot: board should appear magnified compared to baseline.
-    const afterPath = testInfo.outputPath('create-screen-zoomed.png');
+    const afterPath = testInfo.outputPath("create-screen-zoomed.png");
     await page.screenshot({ path: afterPath, fullPage: false });
-    await testInfo.attach('create-screen-zoomed', { path: afterPath, contentType: 'image/png' });
+    await testInfo.attach("create-screen-zoomed", { path: afterPath, contentType: "image/png" });
   });
 });

@@ -1,13 +1,18 @@
-import type { UserBoard } from '@boardsesh/shared-schema';
-import { BoardName, BoardDetails, Climb } from './types';
+import type { UserBoard } from "@boardsesh/shared-schema";
+import { BoardName, BoardDetails, Climb } from "./types";
 import {
   getSizesForLayoutId,
   getSetsForLayoutAndSize,
   getBoardDetails,
   LAYOUTS,
-} from './board-constants';
-import { getMoonBoardDetails, MOONBOARD_LAYOUTS, MOONBOARD_SETS, MoonBoardLayoutKey } from './moonboard-config';
-import { canAddClimbToBoard } from './board-compatibility';
+} from "./board-constants";
+import {
+  getMoonBoardDetails,
+  MOONBOARD_LAYOUTS,
+  MOONBOARD_SETS,
+  MoonBoardLayoutKey,
+} from "./moonboard-config";
+import { canAddClimbToBoard } from "./board-compatibility";
 
 /**
  * Derive BoardDetails for a playlist using the largest available size and all sets.
@@ -19,7 +24,7 @@ export function getBoardDetailsForPlaylist(
 ): BoardDetails | null {
   const boardName = boardType as BoardName;
 
-  if (boardName === 'moonboard') {
+  if (boardName === "moonboard") {
     return getMoonBoardDetailsForPlaylist(layoutId);
   }
 
@@ -54,7 +59,7 @@ export function getBoardDetailsForPlaylist(
 }
 
 function getMoonBoardDetailsForPlaylist(layoutId: number | null | undefined): BoardDetails | null {
-  const effectiveLayoutId = layoutId ?? MOONBOARD_LAYOUTS['moonboard-2024'].id;
+  const effectiveLayoutId = layoutId ?? MOONBOARD_LAYOUTS["moonboard-2024"].id;
 
   const layoutEntry = Object.entries(MOONBOARD_LAYOUTS).find(
     ([, layout]) => layout.id === effectiveLayoutId,
@@ -80,8 +85,8 @@ function getMoonBoardDetailsForPlaylist(layoutId: number | null | undefined): Bo
  * Returns the first layout in the LAYOUTS map.
  */
 export function getDefaultLayoutForBoard(boardType: string): number | null {
-  if (boardType === 'moonboard') {
-    return MOONBOARD_LAYOUTS['moonboard-2024'].id;
+  if (boardType === "moonboard") {
+    return MOONBOARD_LAYOUTS["moonboard-2024"].id;
   }
 
   const boardLayouts = LAYOUTS[boardType as BoardName];
@@ -111,8 +116,8 @@ export function getDefaultAngleForBoard(boardType: string): number {
  */
 export function getUserBoardDetails(board: UserBoard): BoardDetails | null {
   try {
-    const setIds = board.setIds.split(',').map(Number);
-    if (board.boardType === 'moonboard') {
+    const setIds = board.setIds.split(",").map(Number);
+    if (board.boardType === "moonboard") {
       return getMoonBoardDetails({ layout_id: board.layoutId, set_ids: setIds }) as BoardDetails;
     }
     return getBoardDetails({
@@ -133,7 +138,7 @@ export type SessionBoardConfig = {
   setIds: number[];
 };
 
-export type ClimbFitStatus = 'exact' | 'upsized' | 'incompatible';
+export type ClimbFitStatus = "exact" | "upsized" | "incompatible";
 
 export type ClimbFitResult = {
   details: BoardDetails;
@@ -146,7 +151,7 @@ function buildDetailsSafely(
   sizeId: number,
   setIds: number[],
 ): BoardDetails | null {
-  if (boardName === 'moonboard') {
+  if (boardName === "moonboard") {
     try {
       return getMoonBoardDetails({ layout_id: layoutId, set_ids: setIds }) as BoardDetails;
     } catch {
@@ -181,8 +186,8 @@ export function resolveBoardDetailsForClimb(
 
   // No session at all — behave like before: pick the generic (largest) preview.
   if (!sessionBoard) {
-    const details = getBoardDetailsForPlaylist(climbBoardType ?? '', climbLayoutId);
-    return details ? { details, status: 'exact' } : null;
+    const details = getBoardDetailsForPlaylist(climbBoardType ?? "", climbLayoutId);
+    return details ? { details, status: "exact" } : null;
   }
 
   // Layout or board type mismatch — fully incompatible, render on generic preview.
@@ -192,8 +197,11 @@ export function resolveBoardDetailsForClimb(
     climbLayoutId == null ||
     climbLayoutId !== sessionBoard.layoutId
   ) {
-    const details = getBoardDetailsForPlaylist(climbBoardType ?? sessionBoard.boardType, climbLayoutId);
-    return details ? { details, status: 'incompatible' } : null;
+    const details = getBoardDetailsForPlaylist(
+      climbBoardType ?? sessionBoard.boardType,
+      climbLayoutId,
+    );
+    return details ? { details, status: "incompatible" } : null;
   }
 
   // Try the exact session config first.
@@ -206,7 +214,7 @@ export function resolveBoardDetailsForClimb(
   if (exactDetails) {
     const fit = canAddClimbToBoard(climb, exactDetails);
     if (fit.ok) {
-      return { details: exactDetails, status: 'exact' };
+      return { details: exactDetails, status: "exact" };
     }
   }
 
@@ -215,7 +223,7 @@ export function resolveBoardDetailsForClimb(
   // when the exact session details couldn't be built: without them we don't
   // know the session's area, and defaulting to 0 would let smaller sizes slip
   // through as "upsized" candidates.
-  if (sessionBoard.boardType !== 'moonboard' && exactDetails) {
+  if (sessionBoard.boardType !== "moonboard" && exactDetails) {
     const sessionArea =
       (exactDetails.edge_right - exactDetails.edge_left) *
       (exactDetails.edge_top - exactDetails.edge_bottom);
@@ -230,14 +238,19 @@ export function resolveBoardDetailsForClimb(
       .sort((a, b) => a.area - b.area);
 
     for (const { size } of candidates) {
-      const availableSets = getSetsForLayoutAndSize(sessionBoard.boardType, sessionBoard.layoutId, size.id);
+      const availableSets = getSetsForLayoutAndSize(
+        sessionBoard.boardType,
+        sessionBoard.layoutId,
+        size.id,
+      );
       if (availableSets.length === 0) continue;
 
       const availableSetIds = new Set(availableSets.map((s) => s.id));
       const preferredSetIds = sessionBoard.setIds.filter((id) => availableSetIds.has(id));
       // If the user's session sets don't exist on this size, use every set the
       // size publishes so the climb's holds stand a chance of rendering.
-      const setIdsToTry = preferredSetIds.length > 0 ? preferredSetIds : availableSets.map((s) => s.id);
+      const setIdsToTry =
+        preferredSetIds.length > 0 ? preferredSetIds : availableSets.map((s) => s.id);
 
       const candidateDetails = buildDetailsSafely(
         sessionBoard.boardType,
@@ -249,12 +262,12 @@ export function resolveBoardDetailsForClimb(
 
       const fit = canAddClimbToBoard(climb, candidateDetails);
       if (fit.ok) {
-        return { details: candidateDetails, status: 'upsized' };
+        return { details: candidateDetails, status: "upsized" };
       }
     }
   }
 
   // Nothing fit — fall back to the generic (largest) preview and mark incompatible.
   const fallback = getBoardDetailsForPlaylist(climbBoardType, climbLayoutId);
-  return fallback ? { details: fallback, status: 'incompatible' } : null;
+  return fallback ? { details: fallback, status: "incompatible" } : null;
 }

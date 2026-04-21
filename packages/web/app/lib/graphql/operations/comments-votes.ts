@@ -1,4 +1,4 @@
-import { gql } from 'graphql-request';
+import { gql } from "graphql-request";
 import type {
   Comment,
   CommentConnection,
@@ -6,7 +6,7 @@ import type {
   SocialEntityType,
   SortMode,
   TimePeriod,
-} from '@boardsesh/shared-schema';
+} from "@boardsesh/shared-schema";
 
 // ============================================
 // Comment Queries

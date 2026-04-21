@@ -1,4 +1,4 @@
-'use client';
+"use client";
 
 import React, {
   createContext,
@@ -8,9 +8,9 @@ import React, {
   useMemo,
   useLayoutEffect,
   useEffect,
-} from 'react';
+} from "react";
 
-const useIsomorphicLayoutEffect = typeof window !== 'undefined' ? useLayoutEffect : useEffect;
+const useIsomorphicLayoutEffect = typeof window !== "undefined" ? useLayoutEffect : useEffect;
 
 interface ProfileHeaderShareState {
   isActive: boolean;
@@ -50,15 +50,21 @@ export function ProfileHeaderShareProvider({ children }: { children: React.React
     setIsActive(false);
   }, []);
 
-  const state = useMemo<ProfileHeaderShareState>(() => ({
-    isActive,
-    displayName,
-  }), [isActive, displayName]);
+  const state = useMemo<ProfileHeaderShareState>(
+    () => ({
+      isActive,
+      displayName,
+    }),
+    [isActive, displayName],
+  );
 
-  const setters = useMemo<ProfileHeaderShareSetters>(() => ({
-    register,
-    deregister,
-  }), [register, deregister]);
+  const setters = useMemo<ProfileHeaderShareSetters>(
+    () => ({
+      register,
+      deregister,
+    }),
+    [register, deregister],
+  );
 
   return (
     <ProfileHeaderShareSetterContext.Provider value={setters}>

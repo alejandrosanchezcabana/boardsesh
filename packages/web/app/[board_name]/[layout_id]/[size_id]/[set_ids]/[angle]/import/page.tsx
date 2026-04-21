@@ -1,18 +1,14 @@
-import React from 'react';
-import { BoardRouteParameters } from '@/app/lib/types';
-import { parseRouteParams } from '@/app/lib/url-utils.server';
-import MoonBoardBulkImport from '@/app/components/moonboard-import/moonboard-bulk-import';
-import {
-  MOONBOARD_LAYOUTS,
-  MOONBOARD_SETS,
-  MoonBoardLayoutKey,
-} from '@/app/lib/moonboard-config';
-import { Metadata } from 'next';
-import { redirect } from 'next/navigation';
+import React from "react";
+import { BoardRouteParameters } from "@/app/lib/types";
+import { parseRouteParams } from "@/app/lib/url-utils.server";
+import MoonBoardBulkImport from "@/app/components/moonboard-import/moonboard-bulk-import";
+import { MOONBOARD_LAYOUTS, MOONBOARD_SETS, MoonBoardLayoutKey } from "@/app/lib/moonboard-config";
+import { Metadata } from "next";
+import { redirect } from "next/navigation";
 
 export const metadata: Metadata = {
-  title: 'Import Climbs | Boardsesh',
-  description: 'Import MoonBoard climbs from screenshots',
+  title: "Import Climbs | Boardsesh",
+  description: "Import MoonBoard climbs from screenshots",
 };
 
 interface ImportPageProps {
@@ -39,9 +35,11 @@ export default async function ImportPage(props: ImportPageProps) {
   const { parsedParams } = await parseRouteParams(params);
 
   // Only MoonBoard supports bulk import for now
-  if (parsedParams.board_name !== 'moonboard') {
+  if (parsedParams.board_name !== "moonboard") {
     // Redirect to the board's climb list page
-    redirect(`/${params.board_name}/${params.layout_id}/${params.size_id}/${params.set_ids}/${params.angle}`);
+    redirect(
+      `/${params.board_name}/${params.layout_id}/${params.size_id}/${params.set_ids}/${params.angle}`,
+    );
   }
 
   const layoutInfo = getMoonBoardLayoutInfo(parsedParams.layout_id);

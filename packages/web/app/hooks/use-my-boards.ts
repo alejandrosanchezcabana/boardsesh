@@ -1,8 +1,8 @@
-import { useState, useEffect, useRef } from 'react';
-import { useWsAuthToken } from '@/app/hooks/use-ws-auth-token';
-import { createGraphQLHttpClient } from '@/app/lib/graphql/client';
-import { GET_MY_BOARDS, type GetMyBoardsQueryResponse } from '@/app/lib/graphql/operations';
-import type { UserBoard } from '@boardsesh/shared-schema';
+import { useState, useEffect, useRef } from "react";
+import { useWsAuthToken } from "@/app/hooks/use-ws-auth-token";
+import { createGraphQLHttpClient } from "@/app/lib/graphql/client";
+import { GET_MY_BOARDS, type GetMyBoardsQueryResponse } from "@/app/lib/graphql/operations";
+import type { UserBoard } from "@boardsesh/shared-schema";
 
 /**
  * Fetches the current user's boards (owned + followed) via GraphQL.
@@ -44,8 +44,8 @@ export function useMyBoards(enabled: boolean, limit = 50, initialBoards?: UserBo
         }
       })
       .catch((err) => {
-        console.error('Failed to fetch boards:', err);
-        if (!cancelled) setError('Failed to load your boards');
+        console.error("Failed to fetch boards:", err);
+        if (!cancelled) setError("Failed to load your boards");
       })
       .finally(() => {
         if (!cancelled) setIsLoading(false);
@@ -54,7 +54,7 @@ export function useMyBoards(enabled: boolean, limit = 50, initialBoards?: UserBo
     return () => {
       cancelled = true;
     };
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [enabled, isAuthenticated, token, limit]);
 
   return { boards, isLoading, error };

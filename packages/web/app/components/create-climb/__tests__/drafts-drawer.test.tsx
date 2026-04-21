@@ -1,45 +1,51 @@
-import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { render, screen, waitFor, fireEvent } from '@testing-library/react';
-import React from 'react';
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { beforeEach, describe, expect, it, vi } from "vite-plus/test";
+import { render, screen, waitFor, fireEvent } from "@testing-library/react";
+import React from "react";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 
 const mockPush = vi.fn();
 const mockRequest = vi.fn();
 
-vi.mock('next/navigation', () => ({
+vi.mock("next/navigation", () => ({
   useRouter: () => ({ push: mockPush }),
 }));
 
-vi.mock('@/app/hooks/use-color-mode', () => ({
-  useColorMode: () => ({ mode: 'light' }),
+vi.mock("@/app/hooks/use-color-mode", () => ({
+  useColorMode: () => ({ mode: "light" }),
 }));
 
-vi.mock('@/app/hooks/use-ws-auth-token', () => ({
-  useWsAuthToken: () => ({ token: 'auth-token' }),
+vi.mock("@/app/hooks/use-ws-auth-token", () => ({
+  useWsAuthToken: () => ({ token: "auth-token" }),
 }));
 
-vi.mock('@/app/lib/graphql/client', () => ({
+vi.mock("@/app/lib/graphql/client", () => ({
   createGraphQLHttpClient: () => ({ request: mockRequest }),
 }));
 
-vi.mock('../../swipeable-drawer/swipeable-drawer', () => ({
+vi.mock("../../swipeable-drawer/swipeable-drawer", () => ({
   default: ({ children, open }: { children: React.ReactNode; open: boolean }) =>
     open ? <div data-testid="swipeable-drawer">{children}</div> : null,
 }));
 
-vi.mock('../../climb-card/climb-list-item', () => ({
-  default: ({ climb, onSelect }: { climb: { uuid: string; name: string }; onSelect: () => void }) => (
+vi.mock("../../climb-card/climb-list-item", () => ({
+  default: ({
+    climb,
+    onSelect,
+  }: {
+    climb: { uuid: string; name: string };
+    onSelect: () => void;
+  }) => (
     <div data-testid={`climb-item-${climb.uuid}`} onClick={onSelect}>
       {climb.name}
     </div>
   ),
 }));
 
-import DraftsDrawer from '../drafts-drawer';
-import type { BoardDetails } from '@/app/lib/types';
+import DraftsDrawer from "../drafts-drawer";
+import type { BoardDetails } from "@/app/lib/types";
 
 const boardDetails: BoardDetails = {
-  board_name: 'kilter',
+  board_name: "kilter",
   layout_id: 1,
   size_id: 2,
   set_ids: [3, 4],
@@ -66,68 +72,68 @@ function renderDrawer(open = true) {
   return { ...result, onClose, queryClient };
 }
 
-describe('DraftsDrawer', () => {
+describe("DraftsDrawer", () => {
   beforeEach(() => {
     vi.clearAllMocks();
   });
 
-  it('renders nothing when closed', () => {
+  it("renders nothing when closed", () => {
     renderDrawer(false);
-    expect(screen.queryByTestId('swipeable-drawer')).toBeNull();
+    expect(screen.queryByTestId("swipeable-drawer")).toBeNull();
   });
 
-  it('shows loading spinner while fetching drafts', async () => {
+  it("shows loading spinner while fetching drafts", async () => {
     // Never resolve so we stay in loading state
     mockRequest.mockReturnValue(new Promise(() => {}));
     renderDrawer();
     await waitFor(() => {
-      expect(screen.getByRole('progressbar')).toBeTruthy();
+      expect(screen.getByRole("progressbar")).toBeTruthy();
     });
   });
 
-  it('shows error message when query fails', async () => {
-    mockRequest.mockRejectedValue(new Error('network error'));
+  it("shows error message when query fails", async () => {
+    mockRequest.mockRejectedValue(new Error("network error"));
     renderDrawer();
     await waitFor(() => {
       expect(screen.getByText(/Couldn't load your drafts/)).toBeTruthy();
     });
   });
 
-  it('shows empty state when no drafts are returned', async () => {
+  it("shows empty state when no drafts are returned", async () => {
     mockRequest.mockResolvedValue({ searchClimbs: { climbs: [], hasMore: false } });
     renderDrawer();
     await waitFor(() => {
-      expect(screen.getByText('No drafts yet')).toBeTruthy();
+      expect(screen.getByText("No drafts yet")).toBeTruthy();
     });
   });
 
-  it('renders draft climbs when query returns results', async () => {
+  it("renders draft climbs when query returns results", async () => {
     mockRequest.mockResolvedValue({
       searchClimbs: {
         climbs: [
-          { uuid: 'draft-1', name: 'Draft Alpha', frames: '', angle: 40 },
-          { uuid: 'draft-2', name: 'Draft Beta', frames: '', angle: 40 },
+          { uuid: "draft-1", name: "Draft Alpha", frames: "", angle: 40 },
+          { uuid: "draft-2", name: "Draft Beta", frames: "", angle: 40 },
         ],
         hasMore: false,
       },
     });
     renderDrawer();
     await waitFor(() => {
-      expect(screen.getByTestId('climb-item-draft-1')).toBeTruthy();
-      expect(screen.getByTestId('climb-item-draft-2')).toBeTruthy();
+      expect(screen.getByTestId("climb-item-draft-1")).toBeTruthy();
+      expect(screen.getByTestId("climb-item-draft-2")).toBeTruthy();
     });
   });
 
   it('shows singular "draft" label for a single result', async () => {
     mockRequest.mockResolvedValue({
       searchClimbs: {
-        climbs: [{ uuid: 'draft-1', name: 'Solo Draft', frames: '', angle: 40 }],
+        climbs: [{ uuid: "draft-1", name: "Solo Draft", frames: "", angle: 40 }],
         hasMore: false,
       },
     });
     renderDrawer();
     await waitFor(() => {
-      expect(screen.getByText('1 draft')).toBeTruthy();
+      expect(screen.getByText("1 draft")).toBeTruthy();
     });
   });
 
@@ -135,23 +141,23 @@ describe('DraftsDrawer', () => {
     mockRequest.mockResolvedValue({
       searchClimbs: {
         climbs: [
-          { uuid: 'draft-1', name: 'A', frames: '', angle: 40 },
-          { uuid: 'draft-2', name: 'B', frames: '', angle: 40 },
+          { uuid: "draft-1", name: "A", frames: "", angle: 40 },
+          { uuid: "draft-2", name: "B", frames: "", angle: 40 },
         ],
         hasMore: false,
       },
     });
     renderDrawer();
     await waitFor(() => {
-      expect(screen.getByText('2 drafts')).toBeTruthy();
+      expect(screen.getByText("2 drafts")).toBeTruthy();
     });
   });
 
-  it('navigates to the climb view and closes when no onLoadDraft is provided', async () => {
+  it("navigates to the climb view and closes when no onLoadDraft is provided", async () => {
     const onClose = vi.fn();
     mockRequest.mockResolvedValue({
       searchClimbs: {
-        climbs: [{ uuid: 'draft-1', name: 'My Draft', frames: '', angle: 40 }],
+        climbs: [{ uuid: "draft-1", name: "My Draft", frames: "", angle: 40 }],
         hasMore: false,
       },
     });
@@ -162,23 +168,23 @@ describe('DraftsDrawer', () => {
       </QueryClientProvider>,
     );
 
-    await waitFor(() => screen.getByTestId('climb-item-draft-1'));
-    fireEvent.click(screen.getByTestId('climb-item-draft-1'));
+    await waitFor(() => screen.getByTestId("climb-item-draft-1"));
+    fireEvent.click(screen.getByTestId("climb-item-draft-1"));
 
     expect(onClose).toHaveBeenCalledTimes(1);
     expect(mockPush).toHaveBeenCalledTimes(1);
     // URL should include the board name, layout, size, sets, angle and climb uuid/name
     const pushedUrl: string = mockPush.mock.calls[0][0];
-    expect(pushedUrl).toContain('kilter');
-    expect(pushedUrl).toContain('draft-1');
+    expect(pushedUrl).toContain("kilter");
+    expect(pushedUrl).toContain("draft-1");
   });
 
-  it('calls onLoadDraft with the climb and closes instead of navigating', async () => {
+  it("calls onLoadDraft with the climb and closes instead of navigating", async () => {
     const onClose = vi.fn();
     const onLoadDraft = vi.fn();
     mockRequest.mockResolvedValue({
       searchClimbs: {
-        climbs: [{ uuid: 'draft-1', name: 'My Draft', frames: 'p1r42', angle: 40 }],
+        climbs: [{ uuid: "draft-1", name: "My Draft", frames: "p1r42", angle: 40 }],
         hasMore: false,
       },
     });
@@ -195,24 +201,27 @@ describe('DraftsDrawer', () => {
       </QueryClientProvider>,
     );
 
-    await waitFor(() => screen.getByTestId('climb-item-draft-1'));
-    fireEvent.click(screen.getByTestId('climb-item-draft-1'));
+    await waitFor(() => screen.getByTestId("climb-item-draft-1"));
+    fireEvent.click(screen.getByTestId("climb-item-draft-1"));
 
     expect(onLoadDraft).toHaveBeenCalledTimes(1);
-    expect(onLoadDraft.mock.calls[0][0]).toMatchObject({ uuid: 'draft-1', name: 'My Draft' });
+    expect(onLoadDraft.mock.calls[0][0]).toMatchObject({ uuid: "draft-1", name: "My Draft" });
     expect(onClose).toHaveBeenCalledTimes(1);
     expect(mockPush).not.toHaveBeenCalled();
   });
 
-  it('passes onlyDrafts: true in the query variables', async () => {
+  it("passes onlyDrafts: true in the query variables", async () => {
     mockRequest.mockResolvedValue({ searchClimbs: { climbs: [], hasMore: false } });
     renderDrawer();
     await waitFor(() => expect(mockRequest).toHaveBeenCalled());
-    const [, variables] = mockRequest.mock.calls[0] as [unknown, { input: Record<string, unknown> }];
+    const [, variables] = mockRequest.mock.calls[0] as [
+      unknown,
+      { input: Record<string, unknown> },
+    ];
     expect(variables.input.onlyDrafts).toBe(true);
   });
 
-  it('does not fetch when drawer is closed', () => {
+  it("does not fetch when drawer is closed", () => {
     mockRequest.mockResolvedValue({ searchClimbs: { climbs: [], hasMore: false } });
     renderDrawer(false);
     expect(mockRequest).not.toHaveBeenCalled();

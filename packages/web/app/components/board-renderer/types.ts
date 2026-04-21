@@ -1,10 +1,19 @@
-import { MOONBOARD_ENABLED } from '@/app/lib/moonboard-config';
-import type { BoardName } from '@/app/lib/types';
+import { MOONBOARD_ENABLED } from "@/app/lib/moonboard-config";
+import type { BoardName } from "@/app/lib/types";
 
 // Re-export hold state types and constants from the canonical source
-export { HOLD_STATE_MAP, convertLitUpHoldsStringToMap, STATE_TO_PRIMARY_CODE } from '@boardsesh/board-constants/hold-states';
-export type { HoldCode, HoldColor, HoldRenderStyle, HoldStateInfo } from '@boardsesh/board-constants/hold-states';
-export type { HoldState, LitupHold, LitUpHoldsMap } from '@boardsesh/shared-schema';
+export {
+  HOLD_STATE_MAP,
+  convertLitUpHoldsStringToMap,
+  STATE_TO_PRIMARY_CODE,
+} from "@boardsesh/board-constants/hold-states";
+export type {
+  HoldCode,
+  HoldColor,
+  HoldRenderStyle,
+  HoldStateInfo,
+} from "@boardsesh/board-constants/hold-states";
+export type { HoldState, LitupHold, LitUpHoldsMap } from "@boardsesh/shared-schema";
 
 export type LitUpHolds = string;
 
@@ -36,5 +45,5 @@ export const THUMBNAIL_WIDTH = 200;
 
 // If adding more boards be sure to increment the DB version number for indexeddb
 export const supported_boards: BoardName[] = MOONBOARD_ENABLED
-  ? ['kilter', 'tension', 'moonboard', 'decoy', 'touchstone', 'grasshopper']
-  : ['kilter', 'tension', 'decoy', 'touchstone', 'grasshopper'];
+  ? ["kilter", "tension", "moonboard", "decoy", "touchstone", "grasshopper"]
+  : ["kilter", "tension", "decoy", "touchstone", "grasshopper"];

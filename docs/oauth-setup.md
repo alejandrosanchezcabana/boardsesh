@@ -96,31 +96,31 @@ Add these to `packages/web/.env.development.local` (local) or your production en
 
 ### Required Variables
 
-| Variable | Description | Example |
-|----------|-------------|---------|
+| Variable          | Description                        | Example                   |
+| ----------------- | ---------------------------------- | ------------------------- |
 | `NEXTAUTH_SECRET` | Session encryption key (32+ chars) | `openssl rand -base64 32` |
-| `NEXTAUTH_URL` | Your app's base URL | `http://localhost:3000` |
+| `NEXTAUTH_URL`    | Your app's base URL                | `http://localhost:3000`   |
 
 ### OAuth Providers (Optional - configure as needed)
 
-| Variable | Provider | Description |
-|----------|----------|-------------|
-| `GOOGLE_CLIENT_ID` | Google | OAuth Client ID |
-| `GOOGLE_CLIENT_SECRET` | Google | OAuth Client Secret |
-| `APPLE_ID` | Apple | Services ID (e.g., `com.boardsesh.signin`) |
-| `APPLE_SECRET` | Apple | JWT secret (regenerate every 6 months) |
-| `FACEBOOK_CLIENT_ID` | Facebook | App ID |
-| `FACEBOOK_CLIENT_SECRET` | Facebook | App Secret |
+| Variable                 | Provider | Description                                |
+| ------------------------ | -------- | ------------------------------------------ |
+| `GOOGLE_CLIENT_ID`       | Google   | OAuth Client ID                            |
+| `GOOGLE_CLIENT_SECRET`   | Google   | OAuth Client Secret                        |
+| `APPLE_ID`               | Apple    | Services ID (e.g., `com.boardsesh.signin`) |
+| `APPLE_SECRET`           | Apple    | JWT secret (regenerate every 6 months)     |
+| `FACEBOOK_CLIENT_ID`     | Facebook | App ID                                     |
+| `FACEBOOK_CLIENT_SECRET` | Facebook | App Secret                                 |
 
 ### Email (Required for email verification)
 
-| Variable | Description | Default |
-|----------|-------------|---------|
-| `SMTP_HOST` | SMTP server hostname | `smtp.fastmail.com` |
-| `SMTP_PORT` | SMTP port | `465` |
-| `SMTP_USER` | SMTP username/email | - |
-| `SMTP_PASSWORD` | SMTP app password | - |
-| `EMAIL_FROM` | Sender email address | Same as `SMTP_USER` |
+| Variable        | Description          | Default             |
+| --------------- | -------------------- | ------------------- |
+| `SMTP_HOST`     | SMTP server hostname | `smtp.fastmail.com` |
+| `SMTP_PORT`     | SMTP port            | `465`               |
+| `SMTP_USER`     | SMTP username/email  | -                   |
+| `SMTP_PASSWORD` | SMTP app password    | -                   |
+| `EMAIL_FROM`    | Sender email address | Same as `SMTP_USER` |
 
 ### Example Configuration
 
@@ -164,10 +164,10 @@ EMAIL_FROM=your-email@fastmail.com
 5. Select **Web application** as the application type
 6. Configure authorized origins and redirects:
 
-   | Environment | JavaScript Origins | Redirect URIs |
-   |-------------|-------------------|---------------|
-   | Development | `http://localhost:3000` | `http://localhost:3000/api/auth/callback/google` |
-   | Production | `https://your-domain.com` | `https://your-domain.com/api/auth/callback/google` |
+   | Environment | JavaScript Origins        | Redirect URIs                                      |
+   | ----------- | ------------------------- | -------------------------------------------------- |
+   | Development | `http://localhost:3000`   | `http://localhost:3000/api/auth/callback/google`   |
+   | Production  | `https://your-domain.com` | `https://your-domain.com/api/auth/callback/google` |
 
 7. Copy **Client ID** and **Client Secret** to environment variables
 
@@ -223,31 +223,32 @@ Apple requires a JWT that expires every 6 months. Create it with this script:
 
 ```javascript
 // generate-apple-secret.js
-const jwt = require('jsonwebtoken');
-const fs = require('fs');
+const jwt = require("jsonwebtoken");
+const fs = require("fs");
 
 // Your values from Apple Developer Portal
-const TEAM_ID = 'XXXXXXXXXX';      // Found in Membership details
-const KEY_ID = 'XXXXXXXXXX';        // Key ID from Step 3
-const SERVICE_ID = 'com.boardsesh.signin';  // Services ID from Step 2
-const KEY_FILE = './AuthKey_XXXXXXXX.p8';   // Downloaded key file
+const TEAM_ID = "XXXXXXXXXX"; // Found in Membership details
+const KEY_ID = "XXXXXXXXXX"; // Key ID from Step 3
+const SERVICE_ID = "com.boardsesh.signin"; // Services ID from Step 2
+const KEY_FILE = "./AuthKey_XXXXXXXX.p8"; // Downloaded key file
 
 const privateKey = fs.readFileSync(KEY_FILE);
 
 const token = jwt.sign({}, privateKey, {
-  algorithm: 'ES256',
-  expiresIn: '180d',
-  audience: 'https://appleid.apple.com',
+  algorithm: "ES256",
+  expiresIn: "180d",
+  audience: "https://appleid.apple.com",
   issuer: TEAM_ID,
   subject: SERVICE_ID,
   keyid: KEY_ID,
 });
 
-console.log('APPLE_SECRET=' + token);
-console.log('\nThis token expires in 180 days. Set a reminder to regenerate!');
+console.log("APPLE_SECRET=" + token);
+console.log("\nThis token expires in 180 days. Set a reminder to regenerate!");
 ```
 
 Run it:
+
 ```bash
 bun add jsonwebtoken
 node generate-apple-secret.js
@@ -307,12 +308,12 @@ Email verification is required for email/password accounts. OAuth accounts are p
 
 ### Other SMTP Providers
 
-| Provider | Host | Port | Notes |
-|----------|------|------|-------|
-| Fastmail | `smtp.fastmail.com` | 465 (SSL) | Recommended |
-| Gmail | `smtp.gmail.com` | 587 (TLS) | Requires App Password |
-| SendGrid | `smtp.sendgrid.net` | 587 | Use API key as password |
-| Mailgun | `smtp.mailgun.org` | 587 | Use SMTP credentials |
+| Provider | Host                | Port      | Notes                   |
+| -------- | ------------------- | --------- | ----------------------- |
+| Fastmail | `smtp.fastmail.com` | 465 (SSL) | Recommended             |
+| Gmail    | `smtp.gmail.com`    | 587 (TLS) | Requires App Password   |
+| SendGrid | `smtp.sendgrid.net` | 587       | Use API key as password |
+| Mailgun  | `smtp.mailgun.org`  | 587       | Use SMTP credentials    |
 
 ### Email Template
 
@@ -347,6 +348,7 @@ open http://localhost:3000/auth/login
 ### 2. Test OAuth Providers
 
 **Google:**
+
 1. Ensure `GOOGLE_CLIENT_ID` and `GOOGLE_CLIENT_SECRET` are set
 2. Restart dev server
 3. Click "Continue with Google"
@@ -354,6 +356,7 @@ open http://localhost:3000/auth/login
 5. Verify redirect back to app
 
 **Apple:**
+
 1. Start ngrok: `ngrok http 3000`
 2. Update `NEXTAUTH_URL` to ngrok URL
 3. Ensure Apple Services ID has ngrok domain
@@ -361,6 +364,7 @@ open http://localhost:3000/auth/login
 5. Complete Apple sign-in
 
 **Facebook:**
+
 1. Ensure Facebook app is in Development mode (for testing)
 2. Add your Facebook account as a tester
 3. Click "Continue with Facebook"
@@ -431,6 +435,7 @@ curl http://localhost:3000/api/auth/providers-config
 **Cause**: OAuth callback URL doesn't match registered URL
 
 **Solution**:
+
 1. Check redirect URI in provider console exactly matches
 2. Watch for:
    - Trailing slashes (`/api/auth/callback/google` vs `/api/auth/callback/google/`)
@@ -440,20 +445,24 @@ curl http://localhost:3000/api/auth/providers-config
 ### Apple Sign-In Not Working
 
 **Cause 1**: Using HTTP instead of HTTPS
+
 - Apple requires HTTPS
 - Use ngrok for local development
 
 **Cause 2**: Expired Apple Secret JWT
+
 - JWT expires every 6 months
 - Regenerate using the script above
 
 **Cause 3**: Domain not registered
+
 - Add domain to Apple Services ID configuration
 - Include ngrok domains for development
 
 ### Email Not Sending
 
 **Check**:
+
 1. SMTP credentials are correct
 2. App password is active (not main password)
 3. Server logs for SMTP errors:
@@ -473,6 +482,7 @@ curl http://localhost:3000/api/auth/providers-config
 ### Social Buttons Not Appearing
 
 **Check**:
+
 1. Provider environment variables are set
 2. Server was restarted after adding variables
 3. Check API response:
@@ -483,6 +493,7 @@ curl http://localhost:3000/api/auth/providers-config
 ### Session Not Persisting
 
 **Check**:
+
 1. `NEXTAUTH_SECRET` is consistent across deployments
 2. Cookies are not being blocked by browser
 3. Session callback in `auth-options.ts` includes user ID
@@ -508,16 +519,16 @@ Instead, the entire OAuth flow runs in the external browser, and the result is t
 
 ### Key Files
 
-| File | Purpose |
-|------|---------|
-| `packages/web/app/lib/auth/native-oauth-url.ts` | Build the URL that opens in the external browser for native OAuth |
-| `packages/web/app/lib/auth/native-oauth-config.ts` | Shared deep link scheme constant (`com.boardsesh.app://auth/callback`) |
-| `packages/web/app/lib/auth/native-oauth-transfer.ts` | Issue and verify HMAC-signed transfer tokens |
-| `packages/web/app/api/auth/native/callback/route.ts` | Server endpoint that issues a transfer token and redirects to the deep link |
-| `packages/web/app/auth/native-start/` | Auto-submit page that fetches a CSRF token and POSTs to the NextAuth sign-in endpoint |
-| `packages/web/app/components/providers/session-provider.tsx` | Listens for `appUrlOpen` deep links and completes the sign-in in the WebView |
-| `packages/web/app/components/auth/social-login-buttons.tsx` | Detects Capacitor and opens the external browser instead of calling `signIn()` |
-| `packages/web/app/lib/auth/auth-options.ts` | Contains the `native-oauth` credentials provider |
+| File                                                         | Purpose                                                                               |
+| ------------------------------------------------------------ | ------------------------------------------------------------------------------------- |
+| `packages/web/app/lib/auth/native-oauth-url.ts`              | Build the URL that opens in the external browser for native OAuth                     |
+| `packages/web/app/lib/auth/native-oauth-config.ts`           | Shared deep link scheme constant (`com.boardsesh.app://auth/callback`)                |
+| `packages/web/app/lib/auth/native-oauth-transfer.ts`         | Issue and verify HMAC-signed transfer tokens                                          |
+| `packages/web/app/api/auth/native/callback/route.ts`         | Server endpoint that issues a transfer token and redirects to the deep link           |
+| `packages/web/app/auth/native-start/`                        | Auto-submit page that fetches a CSRF token and POSTs to the NextAuth sign-in endpoint |
+| `packages/web/app/components/providers/session-provider.tsx` | Listens for `appUrlOpen` deep links and completes the sign-in in the WebView          |
+| `packages/web/app/components/auth/social-login-buttons.tsx`  | Detects Capacitor and opens the external browser instead of calling `signIn()`        |
+| `packages/web/app/lib/auth/auth-options.ts`                  | Contains the `native-oauth` credentials provider                                      |
 
 ### Security Properties
 

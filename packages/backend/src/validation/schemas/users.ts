@@ -1,5 +1,5 @@
-import { z } from 'zod';
-import { BoardNameSchema } from './primitives';
+import { z } from "zod";
+import { BoardNameSchema } from "./primitives";
 
 /**
  * Update profile input validation schema
@@ -14,8 +14,8 @@ export const UpdateProfileInputSchema = z.object({
  */
 export const SaveAuroraCredentialInputSchema = z.object({
   boardType: BoardNameSchema,
-  username: z.string().min(1, 'Username cannot be empty').max(100),
-  password: z.string().min(1, 'Password cannot be empty').max(100),
+  username: z.string().min(1, "Username cannot be empty").max(100),
+  password: z.string().min(1, "Password cannot be empty").max(100),
 });
 
 /**

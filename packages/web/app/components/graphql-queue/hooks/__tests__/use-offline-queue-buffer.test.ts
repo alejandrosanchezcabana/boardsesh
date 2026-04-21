@@ -1,21 +1,21 @@
-import { describe, it, expect } from 'vitest';
-import { renderHook, act } from '@testing-library/react';
-import { useOfflineQueueBuffer } from '../use-offline-queue-buffer';
-import type { ClimbQueueItem } from '../../../queue-control/types';
-import type { Climb } from '@/app/lib/types';
+import { describe, it, expect } from "vite-plus/test";
+import { renderHook, act } from "@testing-library/react";
+import { useOfflineQueueBuffer } from "../use-offline-queue-buffer";
+import type { ClimbQueueItem } from "../../../queue-control/types";
+import type { Climb } from "@/app/lib/types";
 
 const mockClimb: Climb = {
-  uuid: 'climb-1',
-  setter_username: 'setter1',
-  name: 'Test Climb',
-  description: 'A test climb',
-  frames: '',
+  uuid: "climb-1",
+  setter_username: "setter1",
+  name: "Test Climb",
+  description: "A test climb",
+  frames: "",
   angle: 40,
   ascensionist_count: 5,
-  difficulty: '7',
-  quality_average: '3.5',
+  difficulty: "7",
+  quality_average: "3.5",
   stars: 3,
-  difficulty_error: '',
+  difficulty_error: "",
   mirrored: false,
   benchmark_difficulty: null,
   userAscents: 0,
@@ -26,22 +26,22 @@ function createItem(uuid: string): ClimbQueueItem {
   return {
     uuid,
     climb: { ...mockClimb, uuid: `climb-${uuid}` },
-    addedBy: 'user-1',
+    addedBy: "user-1",
     suggested: false,
   };
 }
 
-describe('useOfflineQueueBuffer', () => {
-  it('starts with no pending additions', () => {
+describe("useOfflineQueueBuffer", () => {
+  it("starts with no pending additions", () => {
     const { result } = renderHook(() => useOfflineQueueBuffer());
 
     expect(result.current.hasPendingAdditions).toBe(false);
     expect(result.current.getBufferedAdditions()).toEqual([]);
   });
 
-  it('bufferAddition adds an item', () => {
+  it("bufferAddition adds an item", () => {
     const { result } = renderHook(() => useOfflineQueueBuffer());
-    const item = createItem('item-1');
+    const item = createItem("item-1");
 
     act(() => {
       result.current.bufferAddition(item);
@@ -51,11 +51,11 @@ describe('useOfflineQueueBuffer', () => {
     expect(result.current.getBufferedAdditions()).toEqual([item]);
   });
 
-  it('accumulates multiple additions in order', () => {
+  it("accumulates multiple additions in order", () => {
     const { result } = renderHook(() => useOfflineQueueBuffer());
-    const item1 = createItem('item-1');
-    const item2 = createItem('item-2');
-    const item3 = createItem('item-3');
+    const item1 = createItem("item-1");
+    const item2 = createItem("item-2");
+    const item3 = createItem("item-3");
 
     act(() => {
       result.current.bufferAddition(item1);
@@ -66,12 +66,12 @@ describe('useOfflineQueueBuffer', () => {
     expect(result.current.getBufferedAdditions()).toEqual([item1, item2, item3]);
   });
 
-  it('clearBuffer empties the buffer', () => {
+  it("clearBuffer empties the buffer", () => {
     const { result } = renderHook(() => useOfflineQueueBuffer());
 
     act(() => {
-      result.current.bufferAddition(createItem('item-1'));
-      result.current.bufferAddition(createItem('item-2'));
+      result.current.bufferAddition(createItem("item-1"));
+      result.current.bufferAddition(createItem("item-2"));
     });
 
     expect(result.current.hasPendingAdditions).toBe(true);
@@ -84,7 +84,7 @@ describe('useOfflineQueueBuffer', () => {
     expect(result.current.getBufferedAdditions()).toEqual([]);
   });
 
-  it('caps buffer at 500 items', () => {
+  it("caps buffer at 500 items", () => {
     const { result } = renderHook(() => useOfflineQueueBuffer());
 
     act(() => {
@@ -95,11 +95,11 @@ describe('useOfflineQueueBuffer', () => {
 
     expect(result.current.getBufferedAdditions()).toHaveLength(500);
     // Should contain the first 500 items
-    expect(result.current.getBufferedAdditions()[0].uuid).toBe('item-0');
-    expect(result.current.getBufferedAdditions()[499].uuid).toBe('item-499');
+    expect(result.current.getBufferedAdditions()[0].uuid).toBe("item-0");
+    expect(result.current.getBufferedAdditions()[499].uuid).toBe("item-499");
   });
 
-  it('can add items again after clearing', () => {
+  it("can add items again after clearing", () => {
     const { result } = renderHook(() => useOfflineQueueBuffer());
 
     act(() => {
@@ -115,16 +115,16 @@ describe('useOfflineQueueBuffer', () => {
     });
 
     act(() => {
-      result.current.bufferAddition(createItem('new-item'));
+      result.current.bufferAddition(createItem("new-item"));
     });
 
     expect(result.current.getBufferedAdditions()).toHaveLength(1);
-    expect(result.current.getBufferedAdditions()[0].uuid).toBe('new-item');
+    expect(result.current.getBufferedAdditions()[0].uuid).toBe("new-item");
   });
 
-  it('getBufferedAdditions returns a copy, not a reference', () => {
+  it("getBufferedAdditions returns a copy, not a reference", () => {
     const { result } = renderHook(() => useOfflineQueueBuffer());
-    const item = createItem('item-1');
+    const item = createItem("item-1");
 
     act(() => {
       result.current.bufferAddition(item);

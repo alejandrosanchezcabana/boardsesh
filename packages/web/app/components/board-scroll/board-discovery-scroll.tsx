@@ -1,19 +1,19 @@
-'use client';
+"use client";
 
-import React, { useState, useCallback, useEffect } from 'react';
-import { useSession } from 'next-auth/react';
-import BoardScrollSection from './board-scroll-section';
-import BoardScrollCard from './board-scroll-card';
-import FindNearbyCard, { type FindNearbyStatus } from './find-nearby-card';
-import CustomBoardCard from './custom-board-card';
-import SearchBoardsCard from './search-boards-card';
-import BluetoothQuickStartCard from './bluetooth-quick-start-card';
-import BoardSearchDrawer from '../board-search-drawer/board-search-drawer';
-import { useDiscoverBoards } from '@/app/hooks/use-discover-boards';
-import { usePopularBoardConfigs } from '@/app/hooks/use-popular-board-configs';
-import { useMyBoards } from '@/app/hooks/use-my-boards';
-import type { UserBoard, PopularBoardConfig } from '@boardsesh/shared-schema';
-import styles from './board-scroll.module.css';
+import React, { useState, useCallback, useEffect } from "react";
+import { useSession } from "next-auth/react";
+import BoardScrollSection from "./board-scroll-section";
+import BoardScrollCard from "./board-scroll-card";
+import FindNearbyCard, { type FindNearbyStatus } from "./find-nearby-card";
+import CustomBoardCard from "./custom-board-card";
+import SearchBoardsCard from "./search-boards-card";
+import BluetoothQuickStartCard from "./bluetooth-quick-start-card";
+import BoardSearchDrawer from "../board-search-drawer/board-search-drawer";
+import { useDiscoverBoards } from "@/app/hooks/use-discover-boards";
+import { usePopularBoardConfigs } from "@/app/hooks/use-popular-board-configs";
+import { useMyBoards } from "@/app/hooks/use-my-boards";
+import type { UserBoard, PopularBoardConfig } from "@boardsesh/shared-schema";
+import styles from "./board-scroll.module.css";
 
 function deriveFindNearbyStatus({
   locationEnabled,
@@ -26,11 +26,11 @@ function deriveFindNearbyStatus({
   error: string | null;
   hasLocation: boolean;
 }): FindNearbyStatus {
-  if (!locationEnabled) return 'idle';
-  if (isLoading) return 'loading';
-  if (error) return 'error';
-  if (!hasLocation) return 'geo-denied';
-  return 'no-results';
+  if (!locationEnabled) return "idle";
+  if (isLoading) return "loading";
+  if (error) return "error";
+  if (!hasLocation) return "geo-denied";
+  return "no-results";
 }
 
 interface BoardDiscoveryScrollProps {
@@ -52,7 +52,7 @@ export default function BoardDiscoveryScroll({
   myBoards: externalMyBoards,
 }: BoardDiscoveryScrollProps) {
   const { status } = useSession();
-  const isAuthenticated = status === 'authenticated';
+  const isAuthenticated = status === "authenticated";
 
   const [locationEnabled, setLocationEnabled] = useState(false);
   const [searchDrawerOpen, setSearchDrawerOpen] = useState(false);
@@ -71,7 +71,9 @@ export default function BoardDiscoveryScroll({
   } = usePopularBoardConfigs({ limit: 12, initialData: initialPopularConfigs });
 
   // Use externally-provided boards if available, otherwise fetch internally
-  const { boards: internalMyBoards } = useMyBoards(externalMyBoards === undefined && isAuthenticated);
+  const { boards: internalMyBoards } = useMyBoards(
+    externalMyBoards === undefined && isAuthenticated,
+  );
   const myBoards = externalMyBoards ?? internalMyBoards;
   const [myBoardsVisible, setMyBoardsVisible] = useState(false);
 
@@ -147,7 +149,7 @@ export default function BoardDiscoveryScroll({
         {myBoards.map((board) => (
           <div
             key={board.uuid}
-            className={`${styles.myBoardCardFadeIn} ${myBoardsVisible ? styles.myBoardCardFadeInVisible : ''}`}
+            className={`${styles.myBoardCardFadeIn} ${myBoardsVisible ? styles.myBoardCardFadeInVisible : ""}`}
           >
             <BoardScrollCard
               userBoard={board}

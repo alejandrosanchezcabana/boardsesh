@@ -1,4 +1,4 @@
-import crypto from 'crypto';
+import crypto from "crypto";
 
 const NATIVE_OAUTH_TRANSFER_TTL_SECONDS = 120;
 const CLOCK_SKEW_TOLERANCE_SECONDS = 5;
@@ -10,22 +10,19 @@ type NativeOAuthTransferPayload = {
   exp: number;
 };
 
-const base64UrlEncode = (value: string): string =>
-  Buffer.from(value, 'utf8').toString('base64url');
+const base64UrlEncode = (value: string): string => Buffer.from(value, "utf8").toString("base64url");
 
-const base64UrlDecode = (value: string): string =>
-  Buffer.from(value, 'base64url').toString('utf8');
+const base64UrlDecode = (value: string): string => Buffer.from(value, "base64url").toString("utf8");
 
 const getNativeOAuthSecret = (): string => {
   const secret = process.env.NEXTAUTH_SECRET;
   if (!secret) {
-    throw new Error('NEXTAUTH_SECRET is required for native OAuth transfer flow');
+    throw new Error("NEXTAUTH_SECRET is required for native OAuth transfer flow");
   }
   return secret;
 };
 
-const sanitizeNextPath = (nextPath: string): string =>
-  nextPath.startsWith('/') ? nextPath : '/';
+const sanitizeNextPath = (nextPath: string): string => (nextPath.startsWith("/") ? nextPath : "/");
 
 export const issueNativeOAuthTransferToken = ({
   userId,
@@ -44,9 +41,9 @@ export const issueNativeOAuthTransferToken = ({
 
   const encodedPayload = base64UrlEncode(JSON.stringify(payload));
   const signature = crypto
-    .createHmac('sha256', getNativeOAuthSecret())
+    .createHmac("sha256", getNativeOAuthSecret())
     .update(encodedPayload)
-    .digest('base64url');
+    .digest("base64url");
 
   return `${encodedPayload}.${signature}`;
 };
@@ -61,16 +58,16 @@ export const verifyNativeOAuthTransferToken = (
     return null;
   }
 
-  const parts = token.split('.');
+  const parts = token.split(".");
   if (parts.length !== 2 || !parts[0] || !parts[1]) {
     return null;
   }
   const [encodedPayload, signature] = parts;
 
   const expectedSignature = crypto
-    .createHmac('sha256', secret)
+    .createHmac("sha256", secret)
     .update(encodedPayload)
-    .digest('base64url');
+    .digest("base64url");
 
   const sigBuffer = Buffer.from(signature);
   const expectedSigBuffer = Buffer.from(expectedSignature);

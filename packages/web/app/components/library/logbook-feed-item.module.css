@@ -23,7 +23,7 @@
 
 /* Delete-ready state: swipe has crossed the long-right threshold */
 .leftActionLayer.deleteReady {
-  background-color: var(--color-error, #B8524C);
+  background-color: var(--color-error, #b8524c);
 }
 
 .leftActionLayer.deleteReady .swipeIcon {
@@ -43,7 +43,9 @@
   letter-spacing: 0.02em;
   opacity: 0;
   transform: translateX(-6px);
-  transition: opacity 120ms ease-out, transform 120ms ease-out;
+  transition:
+    opacity 120ms ease-out,
+    transform 120ms ease-out;
   pointer-events: none;
   white-space: nowrap;
 }
@@ -182,7 +184,7 @@
 }
 
 .statusBadgeButton::before {
-  content: '';
+  content: "";
   position: absolute;
   inset: -13px;
 }
@@ -221,7 +223,9 @@
   display: grid;
   grid-template-rows: 1fr;
   padding: 0 var(--spacing-2) var(--spacing-2);
-  transition: grid-template-rows 180ms ease-out, padding 180ms ease-out;
+  transition:
+    grid-template-rows 180ms ease-out,
+    padding 180ms ease-out;
 }
 
 .commentRowEmpty {

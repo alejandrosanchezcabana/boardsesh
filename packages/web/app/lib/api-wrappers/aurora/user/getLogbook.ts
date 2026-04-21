@@ -8,7 +8,7 @@
 
 // Common fields for all logbook entries
 interface BaseLogbookEntry {
-  _type: 'bid' | 'ascent'; // Discriminator type, e.g., "bid" or "ascent"
+  _type: "bid" | "ascent"; // Discriminator type, e.g., "bid" or "ascent"
   uuid: string; // Unique identifier for the logbook entry
   user_id: number; // ID of the user who made the entry
   climb_uuid: string; // Unique identifier for the climb
@@ -21,12 +21,12 @@ interface BaseLogbookEntry {
 
 // Logbook entry type for "bid"
 export interface BidLogbookEntry extends BaseLogbookEntry {
-  _type: 'bid'; // Specific type for bid entries
+  _type: "bid"; // Specific type for bid entries
 }
 
 // Logbook entry type for "ascent"
 export interface AscentLogbookEntry extends BaseLogbookEntry {
-  _type: 'ascent'; // Specific type for ascent entries
+  _type: "ascent"; // Specific type for ascent entries
   attempt_id: number; // ID of the attempt (specific to ascents)
   quality: number; // Quality rating of the climb (1-5)
   difficulty: number; // Difficulty rating of the climb

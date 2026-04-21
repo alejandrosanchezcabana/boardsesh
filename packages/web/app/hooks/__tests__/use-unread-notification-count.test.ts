@@ -1,32 +1,35 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { renderHook, waitFor } from '@testing-library/react';
-import { createQueryWrapper } from '@/app/test-utils/test-providers';
+import { describe, it, expect, vi, beforeEach } from "vite-plus/test";
+import { renderHook, waitFor } from "@testing-library/react";
+import { createQueryWrapper } from "@/app/test-utils/test-providers";
 
-vi.mock('../use-ws-auth-token', () => ({
+vi.mock("../use-ws-auth-token", () => ({
   useWsAuthToken: vi.fn(),
 }));
 
 const mockRequest = vi.fn();
-vi.mock('@/app/lib/graphql/client', () => ({
+vi.mock("@/app/lib/graphql/client", () => ({
   createGraphQLHttpClient: () => ({ request: mockRequest }),
 }));
 
-vi.mock('@/app/lib/graphql/operations', () => ({
-  GET_UNREAD_NOTIFICATION_COUNT: 'GET_UNREAD_NOTIFICATION_COUNT_QUERY',
+vi.mock("@/app/lib/graphql/operations", () => ({
+  GET_UNREAD_NOTIFICATION_COUNT: "GET_UNREAD_NOTIFICATION_COUNT_QUERY",
 }));
 
-import { useWsAuthToken } from '../use-ws-auth-token';
-import { useUnreadNotificationCount, UNREAD_COUNT_QUERY_KEY } from '../use-unread-notification-count';
+import { useWsAuthToken } from "../use-ws-auth-token";
+import {
+  useUnreadNotificationCount,
+  UNREAD_COUNT_QUERY_KEY,
+} from "../use-unread-notification-count";
 
 const mockUseWsAuthToken = vi.mocked(useWsAuthToken);
 
-describe('useUnreadNotificationCount', () => {
+describe("useUnreadNotificationCount", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     mockRequest.mockReset();
   });
 
-  it('returns 0 when not authenticated', () => {
+  it("returns 0 when not authenticated", () => {
     mockUseWsAuthToken.mockReturnValue({
       token: null,
       isAuthenticated: false,
@@ -42,7 +45,7 @@ describe('useUnreadNotificationCount', () => {
     expect(mockRequest).not.toHaveBeenCalled();
   });
 
-  it('returns 0 while loading', () => {
+  it("returns 0 while loading", () => {
     mockUseWsAuthToken.mockReturnValue({
       token: null,
       isAuthenticated: false,
@@ -57,9 +60,9 @@ describe('useUnreadNotificationCount', () => {
     expect(result.current).toBe(0);
   });
 
-  it('returns count from GraphQL response', async () => {
+  it("returns count from GraphQL response", async () => {
     mockUseWsAuthToken.mockReturnValue({
-      token: 'test-token',
+      token: "test-token",
       isAuthenticated: true,
       isLoading: false,
       error: null,
@@ -78,11 +81,11 @@ describe('useUnreadNotificationCount', () => {
     });
   });
 
-  it('uses correct query key', () => {
-    expect(UNREAD_COUNT_QUERY_KEY).toEqual(['notifications', 'unreadCount']);
+  it("uses correct query key", () => {
+    expect(UNREAD_COUNT_QUERY_KEY).toEqual(["notifications", "unreadCount"]);
   });
 
-  it('disabled when no token', () => {
+  it("disabled when no token", () => {
     mockUseWsAuthToken.mockReturnValue({
       token: null,
       isAuthenticated: true,

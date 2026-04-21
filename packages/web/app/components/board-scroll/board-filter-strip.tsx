@@ -1,10 +1,10 @@
-'use client';
+"use client";
 
-import React, { useCallback } from 'react';
-import type { UserBoard } from '@boardsesh/shared-schema';
-import BoardScrollSection from './board-scroll-section';
-import BoardScrollCard from './board-scroll-card';
-import styles from './board-scroll.module.css';
+import React, { useCallback } from "react";
+import type { UserBoard } from "@boardsesh/shared-schema";
+import BoardScrollSection from "./board-scroll-section";
+import BoardScrollCard from "./board-scroll-card";
+import styles from "./board-scroll.module.css";
 
 interface BoardFilterStripSingleProps {
   boards: UserBoard[];
@@ -41,7 +41,7 @@ export default function BoardFilterStrip(props: BoardFilterStripProps) {
 
   const handleAllKeyDown = useCallback(
     (e: React.KeyboardEvent) => {
-      if (e.key === 'Enter' || e.key === ' ') {
+      if (e.key === "Enter" || e.key === " ") {
         e.preventDefault();
         onClear(null);
       }
@@ -82,13 +82,11 @@ export default function BoardFilterStrip(props: BoardFilterStripProps) {
         onKeyDown={handleAllKeyDown}
       >
         <div
-          className={`${styles.cardSquare} ${styles.filterSquare} ${isAllSelected ? styles.cardSquareSelected : ''}`}
+          className={`${styles.cardSquare} ${styles.filterSquare} ${isAllSelected ? styles.cardSquareSelected : ""}`}
         >
           <span className={styles.filterLabel}>All</span>
         </div>
-        <div
-          className={`${styles.cardName} ${isAllSelected ? styles.cardNameSelected : ''}`}
-        >
+        <div className={`${styles.cardName} ${isAllSelected ? styles.cardNameSelected : ""}`}>
           All Boards
         </div>
       </div>

@@ -1,47 +1,47 @@
-'use client';
+"use client";
 
-import React, { useState, useEffect, useRef } from 'react';
-import Box from '@mui/material/Box';
-import Stack from '@mui/material/Stack';
-import MuiDivider from '@mui/material/Divider';
-import MuiAvatar from '@mui/material/Avatar';
-import Typography from '@mui/material/Typography';
-import Button from '@mui/material/Button';
-import Card from '@mui/material/Card';
-import CardContent from '@mui/material/CardContent';
-import TextField from '@mui/material/TextField';
-import InputAdornment from '@mui/material/InputAdornment';
-import CircularProgress from '@mui/material/CircularProgress';
-import PersonOutlined from '@mui/icons-material/PersonOutlined';
-import UploadOutlined from '@mui/icons-material/UploadOutlined';
-import Instagram from '@mui/icons-material/Instagram';
-import HistoryOutlined from '@mui/icons-material/HistoryOutlined';
-import ChevronRightOutlined from '@mui/icons-material/ChevronRightOutlined';
-import { useSession } from 'next-auth/react';
-import { useRouter } from 'next/navigation';
-import Logo from '@/app/components/brand/logo';
-import AuroraCredentialsSection from '@/app/components/settings/aurora-credentials-section';
-import ControllersSection from '@/app/components/settings/controllers-section';
-import DeleteAccountSection from '@/app/components/settings/delete-account-section';
-import SetPasswordSection from '@/app/components/settings/set-password-section';
-import Link from 'next/link';
-import BackButton from '@/app/components/back-button';
-import { useWsAuthToken } from '@/app/hooks/use-ws-auth-token';
-import { usePartyProfile } from '@/app/components/party-manager/party-profile-context';
-import { useSnackbar } from '@/app/components/providers/snackbar-provider';
-import { getBackendHttpUrl } from '@/app/lib/backend-url';
-import { useGradeFormat } from '@/app/hooks/use-grade-format';
-import ToggleButton from '@mui/material/ToggleButton';
-import ToggleButtonGroup from '@mui/material/ToggleButtonGroup';
-import Switch from '@mui/material/Switch';
-import FormControlLabel from '@mui/material/FormControlLabel';
-import { useHealthKitAutoSync } from '@/app/hooks/use-healthkit-sync';
-import { isHealthKitAvailable } from '@/app/lib/healthkit/healthkit-bridge';
+import React, { useState, useEffect, useRef } from "react";
+import Box from "@mui/material/Box";
+import Stack from "@mui/material/Stack";
+import MuiDivider from "@mui/material/Divider";
+import MuiAvatar from "@mui/material/Avatar";
+import Typography from "@mui/material/Typography";
+import Button from "@mui/material/Button";
+import Card from "@mui/material/Card";
+import CardContent from "@mui/material/CardContent";
+import TextField from "@mui/material/TextField";
+import InputAdornment from "@mui/material/InputAdornment";
+import CircularProgress from "@mui/material/CircularProgress";
+import PersonOutlined from "@mui/icons-material/PersonOutlined";
+import UploadOutlined from "@mui/icons-material/UploadOutlined";
+import Instagram from "@mui/icons-material/Instagram";
+import HistoryOutlined from "@mui/icons-material/HistoryOutlined";
+import ChevronRightOutlined from "@mui/icons-material/ChevronRightOutlined";
+import { useSession } from "next-auth/react";
+import { useRouter } from "next/navigation";
+import Logo from "@/app/components/brand/logo";
+import AuroraCredentialsSection from "@/app/components/settings/aurora-credentials-section";
+import ControllersSection from "@/app/components/settings/controllers-section";
+import DeleteAccountSection from "@/app/components/settings/delete-account-section";
+import SetPasswordSection from "@/app/components/settings/set-password-section";
+import Link from "next/link";
+import BackButton from "@/app/components/back-button";
+import { useWsAuthToken } from "@/app/hooks/use-ws-auth-token";
+import { usePartyProfile } from "@/app/components/party-manager/party-profile-context";
+import { useSnackbar } from "@/app/components/providers/snackbar-provider";
+import { getBackendHttpUrl } from "@/app/lib/backend-url";
+import { useGradeFormat } from "@/app/hooks/use-grade-format";
+import ToggleButton from "@mui/material/ToggleButton";
+import ToggleButtonGroup from "@mui/material/ToggleButtonGroup";
+import Switch from "@mui/material/Switch";
+import FormControlLabel from "@mui/material/FormControlLabel";
+import { useHealthKitAutoSync } from "@/app/hooks/use-healthkit-sync";
+import { isHealthKitAvailable } from "@/app/lib/healthkit/healthkit-bridge";
 
 const MAX_INPUT_SIZE = 10 * 1024 * 1024; // 10MB input ceiling before compression
 const MAX_DIMENSION = 1024; // resize longest side to ≤ 1024 px
 const COMPRESSION_QUALITY = 0.85;
-const ALLOWED_TYPES = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
+const ALLOWED_TYPES = ["image/jpeg", "image/png", "image/gif", "image/webp"];
 
 async function compressImage(file: File): Promise<File> {
   return new Promise((resolve, reject) => {
@@ -62,37 +62,37 @@ async function compressImage(file: File): Promise<File> {
         }
       }
 
-      const canvas = document.createElement('canvas');
+      const canvas = document.createElement("canvas");
       canvas.width = width;
       canvas.height = height;
-      const ctx = canvas.getContext('2d');
+      const ctx = canvas.getContext("2d");
       if (!ctx) {
-        reject(new Error('Canvas not supported'));
+        reject(new Error("Canvas not supported"));
         return;
       }
 
       // Fill white before drawing so transparent areas become white, not black,
       // when encoding as JPEG (which has no alpha channel).
-      ctx.fillStyle = '#ffffff';
+      ctx.fillStyle = "#ffffff";
       ctx.fillRect(0, 0, width, height);
       ctx.drawImage(img, 0, 0, width, height);
 
       canvas.toBlob(
         (blob) => {
           if (!blob) {
-            reject(new Error('Compression failed'));
+            reject(new Error("Compression failed"));
             return;
           }
-          resolve(new File([blob], 'avatar.jpg', { type: 'image/jpeg' }));
+          resolve(new File([blob], "avatar.jpg", { type: "image/jpeg" }));
         },
-        'image/jpeg',
+        "image/jpeg",
         COMPRESSION_QUALITY,
       );
     };
 
     img.onerror = () => {
       URL.revokeObjectURL(objectUrl);
-      reject(new Error('Failed to load image'));
+      reject(new Error("Failed to load image"));
     };
 
     img.src = objectUrl;
@@ -116,7 +116,7 @@ interface UserProfile {
 export default function SettingsPageContent() {
   const { data: session, status } = useSession();
   const router = useRouter();
-  const [formValues, setFormValues] = useState({ displayName: '', instagramUrl: '' });
+  const [formValues, setFormValues] = useState({ displayName: "", instagramUrl: "" });
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [uploading, setUploading] = useState(false);
@@ -128,24 +128,32 @@ export default function SettingsPageContent() {
   const { showMessage } = useSnackbar();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { gradeFormat, setGradeFormat, loaded: gradeFormatLoaded } = useGradeFormat();
-  const { enabled: healthKitAutoSync, loaded: healthKitAutoSyncLoaded, setEnabled: setHealthKitAutoSyncEnabled } = useHealthKitAutoSync();
+  const {
+    enabled: healthKitAutoSync,
+    loaded: healthKitAutoSyncLoaded,
+    setEnabled: setHealthKitAutoSyncEnabled,
+  } = useHealthKitAutoSync();
   const [healthKitAvailable, setHealthKitAvailable] = useState(false);
   useEffect(() => {
     let cancelled = false;
-    isHealthKitAvailable().then((v) => { if (!cancelled) setHealthKitAvailable(v); });
-    return () => { cancelled = true; };
+    isHealthKitAvailable().then((v) => {
+      if (!cancelled) setHealthKitAvailable(v);
+    });
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
   // Redirect unauthenticated users to login with a return URL
   useEffect(() => {
-    if (status === 'unauthenticated') {
-      router.push('/auth/login?callbackUrl=%2Fsettings');
+    if (status === "unauthenticated") {
+      router.push("/auth/login?callbackUrl=%2Fsettings");
     }
   }, [status, router]);
 
   // Fetch profile on mount
   useEffect(() => {
-    if (status === 'authenticated') {
+    if (status === "authenticated") {
       fetchProfile();
     }
   }, [status]);
@@ -153,7 +161,7 @@ export default function SettingsPageContent() {
   // Clean up preview URL when component unmounts
   useEffect(() => {
     return () => {
-      if (previewUrl && previewUrl.startsWith('blob:')) {
+      if (previewUrl && previewUrl.startsWith("blob:")) {
         URL.revokeObjectURL(previewUrl);
       }
     };
@@ -161,20 +169,20 @@ export default function SettingsPageContent() {
 
   const fetchProfile = async () => {
     try {
-      const response = await fetch('/api/internal/profile');
+      const response = await fetch("/api/internal/profile");
       if (!response.ok) {
-        throw new Error('Failed to fetch profile');
+        throw new Error("Failed to fetch profile");
       }
       const data = await response.json();
       setProfile(data);
       setFormValues({
-        displayName: data.profile?.displayName || data.name || '',
-        instagramUrl: data.profile?.instagramUrl || '',
+        displayName: data.profile?.displayName || data.name || "",
+        instagramUrl: data.profile?.instagramUrl || "",
       });
       setPreviewUrl(data.profile?.avatarUrl || data.image || undefined);
     } catch (error) {
-      console.error('Failed to fetch profile:', error);
-      showMessage('Failed to load profile', 'error');
+      console.error("Failed to fetch profile:", error);
+      showMessage("Failed to load profile", "error");
     } finally {
       setLoading(false);
     }
@@ -182,33 +190,33 @@ export default function SettingsPageContent() {
 
   const handleFileSelect = async (file: File): Promise<void> => {
     if (!ALLOWED_TYPES.includes(file.type)) {
-      showMessage('Only JPG, PNG, GIF, and WebP images are allowed', 'error');
+      showMessage("Only JPG, PNG, GIF, and WebP images are allowed", "error");
       return;
     }
 
     if (file.size > MAX_INPUT_SIZE) {
-      showMessage('Image must be smaller than 10MB', 'error');
+      showMessage("Image must be smaller than 10MB", "error");
       return;
     }
 
     // Show preview immediately with the original file
     const objectUrl = URL.createObjectURL(file);
-    if (previewUrl?.startsWith('blob:')) URL.revokeObjectURL(previewUrl);
+    if (previewUrl?.startsWith("blob:")) URL.revokeObjectURL(previewUrl);
     setPreviewUrl(objectUrl);
 
     try {
       const compressed = await compressImage(file);
       setSelectedFile(compressed);
     } catch (err) {
-      console.error('Image compression failed:', err);
-      if (previewUrl?.startsWith('blob:')) URL.revokeObjectURL(previewUrl);
+      console.error("Image compression failed:", err);
+      if (previewUrl?.startsWith("blob:")) URL.revokeObjectURL(previewUrl);
       setPreviewUrl(undefined);
-      showMessage('Could not compress — please try a smaller image', 'error');
+      showMessage("Could not compress — please try a smaller image", "error");
     }
   };
 
   const handleRemoveAvatar = () => {
-    if (previewUrl && previewUrl.startsWith('blob:')) {
+    if (previewUrl && previewUrl.startsWith("blob:")) {
       URL.revokeObjectURL(previewUrl);
     }
     setPreviewUrl(undefined);
@@ -220,11 +228,14 @@ export default function SettingsPageContent() {
       // Inline validation
       const values = { ...formValues };
       if (values.displayName && values.displayName.length > 100) {
-        showMessage('Display name must be less than 100 characters', 'error');
+        showMessage("Display name must be less than 100 characters", "error");
         return;
       }
-      if (values.instagramUrl && !/^(https?:\/\/)?(www\.)?instagram\.com\/[a-zA-Z0-9._]+\/?$/.test(values.instagramUrl)) {
-        showMessage('Please enter a valid Instagram profile URL', 'error');
+      if (
+        values.instagramUrl &&
+        !/^(https?:\/\/)?(www\.)?instagram\.com\/[a-zA-Z0-9._]+\/?$/.test(values.instagramUrl)
+      ) {
+        showMessage("Please enter a valid Instagram profile URL", "error");
         return;
       }
 
@@ -238,23 +249,23 @@ export default function SettingsPageContent() {
         try {
           const backendUrl = getBackendHttpUrl();
           if (!backendUrl) {
-            throw new Error('Backend URL not configured');
+            throw new Error("Backend URL not configured");
           }
 
           if (!authToken) {
-            throw new Error('Authentication required for avatar upload');
+            throw new Error("Authentication required for avatar upload");
           }
 
           if (!profile?.id) {
-            throw new Error('User profile not loaded');
+            throw new Error("User profile not loaded");
           }
 
           const formData = new FormData();
-          formData.append('avatar', selectedFile);
-          formData.append('userId', profile.id);
+          formData.append("avatar", selectedFile);
+          formData.append("userId", profile.id);
 
           const uploadResponse = await fetch(`${backendUrl}/api/avatars`, {
-            method: 'POST',
+            method: "POST",
             headers: {
               Authorization: `Bearer ${authToken}`,
             },
@@ -264,26 +275,26 @@ export default function SettingsPageContent() {
           if (uploadResponse.ok) {
             const uploadData = await uploadResponse.json();
             // The backend returns a relative URL, need to make it absolute
-            avatarUrl = uploadData.avatarUrl.startsWith('/')
+            avatarUrl = uploadData.avatarUrl.startsWith("/")
               ? `${backendUrl}${uploadData.avatarUrl}`
               : uploadData.avatarUrl;
           } else {
             const errorData = await uploadResponse.json().catch(() => ({}));
-            showMessage(errorData.error || 'Avatar upload failed', 'warning');
+            showMessage(errorData.error || "Avatar upload failed", "warning");
           }
         } catch (error) {
-          console.error('Avatar upload failed:', error);
-          showMessage(error instanceof Error ? error.message : 'Avatar upload failed', 'warning');
+          console.error("Avatar upload failed:", error);
+          showMessage(error instanceof Error ? error.message : "Avatar upload failed", "warning");
         } finally {
           setUploading(false);
         }
       }
 
       // Update profile
-      const response = await fetch('/api/internal/profile', {
-        method: 'PUT',
+      const response = await fetch("/api/internal/profile", {
+        method: "PUT",
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
         },
         body: JSON.stringify({
           displayName: values.displayName?.trim() || null,
@@ -294,17 +305,17 @@ export default function SettingsPageContent() {
 
       if (!response.ok) {
         const error = await response.json();
-        throw new Error(error.error || 'Failed to update profile');
+        throw new Error(error.error || "Failed to update profile");
       }
 
-      showMessage('Settings saved successfully', 'success');
+      showMessage("Settings saved successfully", "success");
       setSelectedFile(null);
       // Refresh profile locally and in context (so queue items show updated avatar)
       await fetchProfile();
       await refreshPartyProfile();
     } catch (error) {
-      console.error('Failed to save settings:', error);
-      showMessage(error instanceof Error ? error.message : 'Failed to save settings', 'error');
+      console.error("Failed to save settings:", error);
+      showMessage(error instanceof Error ? error.message : "Failed to save settings", "error");
     } finally {
       setSaving(false);
     }
@@ -312,31 +323,51 @@ export default function SettingsPageContent() {
 
   const isSaving = saving || uploading;
 
-  if (status === 'loading' || loading) {
+  if (status === "loading" || loading) {
     return (
-      <Box sx={{ minHeight: '100vh', paddingTop: 'var(--global-header-height)', background: 'var(--semantic-background)' }}>
-        <Box component="main" sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '100vh' }}>
+      <Box
+        sx={{
+          minHeight: "100vh",
+          paddingTop: "var(--global-header-height)",
+          background: "var(--semantic-background)",
+        }}
+      >
+        <Box
+          component="main"
+          sx={{
+            display: "flex",
+            justifyContent: "center",
+            alignItems: "center",
+            minHeight: "100vh",
+          }}
+        >
           <CircularProgress size={48} />
         </Box>
       </Box>
     );
   }
 
-  if (status === 'unauthenticated') {
+  if (status === "unauthenticated") {
     return null;
   }
 
   return (
-    <Box sx={{ minHeight: '100vh', paddingTop: 'var(--global-header-height)', background: 'var(--semantic-background)' }}>
+    <Box
+      sx={{
+        minHeight: "100vh",
+        paddingTop: "var(--global-header-height)",
+        background: "var(--semantic-background)",
+      }}
+    >
       <Box
         component="header"
         sx={{
-          background: 'var(--semantic-surface)',
-          padding: '0 16px',
-          display: 'flex',
-          alignItems: 'center',
+          background: "var(--semantic-surface)",
+          padding: "0 16px",
+          display: "flex",
+          alignItems: "center",
           gap: 2,
-          boxShadow: 'var(--shadow-xs)',
+          boxShadow: "var(--shadow-xs)",
           height: 64,
         }}
       >
@@ -347,18 +378,34 @@ export default function SettingsPageContent() {
         </Typography>
       </Box>
 
-      <Box component="main" sx={{ padding: '24px', paddingBottom: 'calc(120px + env(safe-area-inset-bottom, 0px))', maxWidth: 600, margin: '0 auto', width: '100%' }}>
+      <Box
+        component="main"
+        sx={{
+          padding: "24px",
+          paddingBottom: "calc(120px + env(safe-area-inset-bottom, 0px))",
+          maxWidth: 600,
+          margin: "0 auto",
+          width: "100%",
+        }}
+      >
         <Card>
           <CardContent>
             <Typography variant="h5">Profile</Typography>
-            <Typography variant="body2" component="span" color="text.secondary" sx={{ display: 'block', marginBottom: 3 }}>
+            <Typography
+              variant="body2"
+              component="span"
+              color="text.secondary"
+              sx={{ display: "block", marginBottom: 3 }}
+            >
               Customize how you appear on Boardsesh
             </Typography>
 
-            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+            <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
               <Box>
-                <Typography variant="body2" fontWeight={600} sx={{ mb: 0.5 }}>Avatar</Typography>
-                <Stack spacing={1} alignItems="center" sx={{ width: '100%' }}>
+                <Typography variant="body2" fontWeight={600} sx={{ mb: 0.5 }}>
+                  Avatar
+                </Typography>
+                <Stack spacing={1} alignItems="center" sx={{ width: "100%" }}>
                   <MuiAvatar sx={{ width: 96, height: 96 }} src={previewUrl ?? undefined}>
                     {!previewUrl && <PersonOutlined />}
                   </MuiAvatar>
@@ -366,12 +413,12 @@ export default function SettingsPageContent() {
                     <input
                       type="file"
                       ref={fileInputRef}
-                      accept={ALLOWED_TYPES.join(',')}
-                      style={{ display: 'none' }}
+                      accept={ALLOWED_TYPES.join(",")}
+                      style={{ display: "none" }}
                       onChange={async (e) => {
                         const file = e.target.files?.[0];
                         if (file) await handleFileSelect(file);
-                        e.target.value = '';
+                        e.target.value = "";
                       }}
                     />
                     <Button
@@ -380,7 +427,7 @@ export default function SettingsPageContent() {
                       disabled={isSaving}
                       onClick={() => fileInputRef.current?.click()}
                     >
-                      {previewUrl ? 'Change' : 'Upload'}
+                      {previewUrl ? "Change" : "Upload"}
                     </Button>
                     {previewUrl && (
                       <Button variant="outlined" onClick={handleRemoveAvatar} disabled={isSaving}>
@@ -388,21 +435,30 @@ export default function SettingsPageContent() {
                       </Button>
                     )}
                   </Stack>
-                  <Typography variant="body2" component="span" color="text.secondary" sx={{ fontSize: 12 }}>
+                  <Typography
+                    variant="body2"
+                    component="span"
+                    color="text.secondary"
+                    sx={{ fontSize: 12 }}
+                  >
                     JPG, PNG, GIF, or WebP. Up to 10MB — auto-compressed.
                   </Typography>
                 </Stack>
               </Box>
 
               <Box>
-                <Typography variant="body2" fontWeight={600} sx={{ mb: 0.5 }}>Display Name</Typography>
+                <Typography variant="body2" fontWeight={600} sx={{ mb: 0.5 }}>
+                  Display Name
+                </Typography>
                 <TextField
                   placeholder="Enter your display name"
                   variant="outlined"
                   size="small"
                   fullWidth
                   value={formValues.displayName}
-                  onChange={(e) => setFormValues((prev) => ({ ...prev, displayName: e.target.value }))}
+                  onChange={(e) =>
+                    setFormValues((prev) => ({ ...prev, displayName: e.target.value }))
+                  }
                   slotProps={{
                     input: {
                       startAdornment: (
@@ -417,14 +473,18 @@ export default function SettingsPageContent() {
               </Box>
 
               <Box>
-                <Typography variant="body2" fontWeight={600} sx={{ mb: 0.5 }}>Instagram Profile</Typography>
+                <Typography variant="body2" fontWeight={600} sx={{ mb: 0.5 }}>
+                  Instagram Profile
+                </Typography>
                 <TextField
                   placeholder="https://instagram.com/username"
                   variant="outlined"
                   size="small"
                   fullWidth
                   value={formValues.instagramUrl}
-                  onChange={(e) => setFormValues((prev) => ({ ...prev, instagramUrl: e.target.value }))}
+                  onChange={(e) =>
+                    setFormValues((prev) => ({ ...prev, instagramUrl: e.target.value }))
+                  }
                   slotProps={{
                     input: {
                       startAdornment: (
@@ -440,9 +500,11 @@ export default function SettingsPageContent() {
               <MuiDivider sx={{ my: 2 }} />
 
               <Box>
-                <Typography variant="body2" fontWeight={600} sx={{ mb: 0.5 }}>Email</Typography>
+                <Typography variant="body2" fontWeight={600} sx={{ mb: 0.5 }}>
+                  Email
+                </Typography>
                 <TextField
-                  value={profile?.email || session?.user?.email || ''}
+                  value={profile?.email || session?.user?.email || ""}
                   disabled
                   variant="outlined"
                   size="small"
@@ -457,7 +519,12 @@ export default function SettingsPageContent() {
                     },
                   }}
                 />
-                <Typography variant="body2" component="span" color="text.secondary" sx={{ fontSize: 12, marginTop: 0.5, display: 'block' }}>
+                <Typography
+                  variant="body2"
+                  component="span"
+                  color="text.secondary"
+                  sx={{ fontSize: 12, marginTop: 0.5, display: "block" }}
+                >
                   Email cannot be changed
                 </Typography>
               </Box>
@@ -482,12 +549,19 @@ export default function SettingsPageContent() {
         <Card>
           <CardContent>
             <Typography variant="h5">Display Preferences</Typography>
-            <Typography variant="body2" component="span" color="text.secondary" sx={{ display: 'block', marginBottom: 3 }}>
+            <Typography
+              variant="body2"
+              component="span"
+              color="text.secondary"
+              sx={{ display: "block", marginBottom: 3 }}
+            >
               Customize how grades and other data are displayed
             </Typography>
 
             <Box>
-              <Typography variant="body2" fontWeight={600} sx={{ mb: 1 }}>Grade Display Format</Typography>
+              <Typography variant="body2" fontWeight={600} sx={{ mb: 1 }}>
+                Grade Display Format
+              </Typography>
               <ToggleButtonGroup
                 value={gradeFormat}
                 exclusive
@@ -500,18 +574,16 @@ export default function SettingsPageContent() {
                 size="small"
                 fullWidth
               >
-                <ToggleButton value="v-grade">
-                  V-Grade (V3, V6, ...)
-                </ToggleButton>
-                <ToggleButton value="font">
-                  Font (6A, 7C+, ...)
-                </ToggleButton>
+                <ToggleButton value="v-grade">V-Grade (V3, V6, ...)</ToggleButton>
+                <ToggleButton value="font">Font (6A, 7C+, ...)</ToggleButton>
               </ToggleButtonGroup>
             </Box>
 
             {healthKitAvailable && (
               <Box sx={{ mt: 3 }}>
-                <Typography variant="body2" fontWeight={600} sx={{ mb: 1 }}>Apple Health</Typography>
+                <Typography variant="body2" fontWeight={600} sx={{ mb: 1 }}>
+                  Apple Health
+                </Typography>
                 <FormControlLabel
                   control={
                     <Switch
@@ -534,7 +606,7 @@ export default function SettingsPageContent() {
 
         <SetPasswordSection
           hasPassword={profile?.hasPassword ?? false}
-          userEmail={profile?.email || session?.user?.email || ''}
+          userEmail={profile?.email || session?.user?.email || ""}
           linkedProviders={profile?.linkedProviders ?? []}
           onPasswordSet={fetchProfile}
         />
@@ -546,13 +618,13 @@ export default function SettingsPageContent() {
             component={Link}
             href="/playlists"
             sx={{
-              display: 'flex',
-              alignItems: 'center',
+              display: "flex",
+              alignItems: "center",
               gap: 2,
-              textDecoration: 'none',
-              color: 'inherit',
-              '&:hover': { bgcolor: 'action.hover' },
-              cursor: 'pointer',
+              textDecoration: "none",
+              color: "inherit",
+              "&:hover": { bgcolor: "action.hover" },
+              cursor: "pointer",
             }}
           >
             <HistoryOutlined color="action" />

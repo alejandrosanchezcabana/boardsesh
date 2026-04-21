@@ -42,13 +42,13 @@ embedded/
 
 The project uses PlatformIO with multiple build environments defined in `embedded/projects/board-controller/platformio.ini`:
 
-| Environment | Target Hardware | Display | BLE Proxy | Board Image |
-|---|---|---|---|---|
-| `esp32s3dev` | ESP32-S3 DevKit | No | No | No |
-| `esp32s3dev-proxy` | ESP32-S3 DevKit | No | Yes | No |
-| `tdisplay-s3` | LilyGo T-Display-S3 | 170x320 LCD | Yes | No |
-| `waveshare-7inch` | Waveshare 7" Touch LCD | 480x800 RGB | Yes | Yes |
-| `esp32dev` | Original ESP32 (legacy) | No | No | No |
+| Environment        | Target Hardware         | Display     | BLE Proxy | Board Image |
+| ------------------ | ----------------------- | ----------- | --------- | ----------- |
+| `esp32s3dev`       | ESP32-S3 DevKit         | No          | No        | No          |
+| `esp32s3dev-proxy` | ESP32-S3 DevKit         | No          | Yes       | No          |
+| `tdisplay-s3`      | LilyGo T-Display-S3     | 170x320 LCD | Yes       | No          |
+| `waveshare-7inch`  | Waveshare 7" Touch LCD  | 480x800 RGB | Yes       | Yes         |
+| `esp32dev`         | Original ESP32 (legacy) | No          | No        | No          |
 
 Feature flags are controlled via build defines: `ENABLE_BLE_PROXY`, `ENABLE_DISPLAY`, `ENABLE_WAVESHARE_DISPLAY`, `ENABLE_BOARD_IMAGE`.
 
@@ -72,6 +72,7 @@ The ESP32 bridges between the official app and an existing board:
 4. Additionally syncs with the BoardSesh backend via WebSocket
 
 The proxy's state machine:
+
 ```
 DISABLED → IDLE → SCANNING → CONNECTING → CONNECTED
                                   ↑              ↓
@@ -90,16 +91,16 @@ When no WiFi credentials are stored (first boot or after reset), the device ente
 
 The web server (`esp-web-server`) provides these endpoints in both AP and station modes:
 
-| Endpoint | Method | Purpose |
-|---|---|---|
-| `/` | GET | Configuration web page |
-| `/api/config` | GET/POST | Read/write device settings |
-| `/api/wifi/scan` | GET | Scan available networks |
-| `/api/wifi/connect` | POST | Connect to a WiFi network |
-| `/api/wifi/status` | GET | Current connection state |
-| `/api/restart` | POST | Reboot the device |
-| `/api/firmware/version` | GET | Current firmware version |
-| `/api/firmware/upload` | POST | OTA firmware update |
+| Endpoint                | Method   | Purpose                    |
+| ----------------------- | -------- | -------------------------- |
+| `/`                     | GET      | Configuration web page     |
+| `/api/config`           | GET/POST | Read/write device settings |
+| `/api/wifi/scan`        | GET      | Scan available networks    |
+| `/api/wifi/connect`     | POST     | Connect to a WiFi network  |
+| `/api/wifi/status`      | GET      | Current connection state   |
+| `/api/restart`          | POST     | Reboot the device          |
+| `/api/firmware/version` | GET      | Current firmware version   |
+| `/api/firmware/upload`  | POST     | OTA firmware update        |
 
 ## Settings Screen (Waveshare Display)
 
@@ -117,19 +118,19 @@ All device settings are stored in ESP32 NVS (Non-Volatile Storage) via the `Conf
 
 Key stored values:
 
-| Key | Type | Purpose |
-|---|---|---|
-| `wifi_ssid` | String | WiFi network name |
-| `wifi_pass` | String | WiFi password |
+| Key            | Type   | Purpose                       |
+| -------------- | ------ | ----------------------------- |
+| `wifi_ssid`    | String | WiFi network name             |
+| `wifi_pass`    | String | WiFi password                 |
 | `backend_host` | String | GraphQL WebSocket server host |
-| `backend_port` | Int | Server port |
-| `backend_path` | String | Server path |
-| `api_key` | String | Authentication key |
-| `session_id` | String | BoardSesh session ID |
-| `proxy_en` | Bool | BLE proxy enabled |
-| `proxy_mac` | String | Target board MAC address |
-| `brightness` | Int | LED brightness |
-| `disp_br` | Int | Display brightness |
+| `backend_port` | Int    | Server port                   |
+| `backend_path` | String | Server path                   |
+| `api_key`      | String | Authentication key            |
+| `session_id`   | String | BoardSesh session ID          |
+| `proxy_en`     | Bool   | BLE proxy enabled             |
+| `proxy_mac`    | String | Target board MAC address      |
+| `brightness`   | Int    | LED brightness                |
+| `disp_br`      | Int    | Display brightness            |
 
 All setter methods (`setString`, `setBool`, `setInt`, `setBytes`) return `bool` indicating whether the write succeeded, allowing callers to detect and log persistence failures.
 
@@ -154,17 +155,20 @@ Navigation mutations are debounced (100ms) to coalesce rapid button presses into
 Display support uses an abstract base class (`DisplayBase`) with two concrete implementations:
 
 ### LilyGo T-Display-S3 (170x320)
+
 - Parallel 8-bit interface via LovyanGFX
 - Layout: status bar, climb info, QR code, navigation indicator, history
 - Input: 2 physical buttons (GPIO 0 & GPIO 14) with debouncing
 
 ### Waveshare 7" Touch (480x800)
+
 - RGB bus interface with bounce buffer for DMA transfers
 - GT911 capacitive touch via I2C with CH422G IO expander
 - All LilyGo features plus: touch navigation, settings screen, board image rendering
 - Board image: JPEG decoded to PSRAM sprite with LED hold overlay
 
 Both displays share common state management in `DisplayBase`:
+
 - Current climb (name, grade, color, angle)
 - Queue state (local copy of 150 items, current index)
 - Navigation context (previous/next climb previews)
@@ -174,19 +178,20 @@ Both displays share common state management in `DisplayBase`:
 
 ## Memory Budget
 
-| Component | Size | Notes |
-|---|---|---|
-| Queue buffer | ~13 KB | 150 items x ~88 bytes (static allocation) |
-| Log buffer | 2 KB | Circular ring buffer |
-| Climb history | ~1 KB | 5 entries |
-| QR code | 211 bytes | 41x41 module grid |
-| Board image sprite | ~768 KB | PSRAM only (Waveshare) |
+| Component          | Size      | Notes                                     |
+| ------------------ | --------- | ----------------------------------------- |
+| Queue buffer       | ~13 KB    | 150 items x ~88 bytes (static allocation) |
+| Log buffer         | 2 KB      | Circular ring buffer                      |
+| Climb history      | ~1 KB     | 5 entries                                 |
+| QR code            | 211 bytes | 41x41 module grid                         |
+| Board image sprite | ~768 KB   | PSRAM only (Waveshare)                    |
 
 ## Testing
 
 Native unit tests run on the host machine without hardware, using mock implementations of Arduino, BLE, WiFi, and other ESP32 APIs. Test suites exist for all core libraries.
 
 Run tests from `embedded/test/`:
+
 ```bash
 pio test -e native
 ```

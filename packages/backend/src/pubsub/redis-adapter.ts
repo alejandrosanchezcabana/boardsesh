@@ -1,13 +1,19 @@
-import type { QueueEvent, SessionEvent, NotificationEvent, CommentEvent, NewClimbCreatedEvent } from '@boardsesh/shared-schema';
-import type Redis from 'ioredis';
-import { v4 as uuidv4 } from 'uuid';
+import type {
+  QueueEvent,
+  SessionEvent,
+  NotificationEvent,
+  CommentEvent,
+  NewClimbCreatedEvent,
+} from "@boardsesh/shared-schema";
+import type Redis from "ioredis";
+import { v4 as uuidv4 } from "uuid";
 
 // Channel naming convention
-const QUEUE_CHANNEL_PREFIX = 'boardsesh:queue:';
-const SESSION_CHANNEL_PREFIX = 'boardsesh:session:';
-const NOTIFICATION_CHANNEL_PREFIX = 'boardsesh:notifications:';
-const COMMENT_CHANNEL_PREFIX = 'boardsesh:comments:';
-const NEW_CLIMB_CHANNEL_PREFIX = 'boardsesh:new-climbs:';
+const QUEUE_CHANNEL_PREFIX = "boardsesh:queue:";
+const SESSION_CHANNEL_PREFIX = "boardsesh:session:";
+const NOTIFICATION_CHANNEL_PREFIX = "boardsesh:notifications:";
+const COMMENT_CHANNEL_PREFIX = "boardsesh:comments:";
+const NEW_CLIMB_CHANNEL_PREFIX = "boardsesh:new-climbs:";
 
 interface RedisMessage {
   instanceId: string;
@@ -39,10 +45,7 @@ export interface RedisPubSubAdapter {
   getInstanceId(): string;
 }
 
-export function createRedisPubSubAdapter(
-  publisher: Redis,
-  subscriber: Redis
-): RedisPubSubAdapter {
+export function createRedisPubSubAdapter(publisher: Redis, subscriber: Redis): RedisPubSubAdapter {
   const instanceId = uuidv4();
   const subscribedQueueChannels = new Set<string>();
   const subscribedSessionChannels = new Set<string>();
@@ -52,12 +55,14 @@ export function createRedisPubSubAdapter(
 
   let queueMessageCallback: ((sessionId: string, event: QueueEvent) => void) | null = null;
   let sessionMessageCallback: ((sessionId: string, event: SessionEvent) => void) | null = null;
-  let notificationMessageCallback: ((userId: string, event: NotificationEvent) => void) | null = null;
+  let notificationMessageCallback: ((userId: string, event: NotificationEvent) => void) | null =
+    null;
   let commentMessageCallback: ((entityKey: string, event: CommentEvent) => void) | null = null;
-  let newClimbMessageCallback: ((channelKey: string, event: NewClimbCreatedEvent) => void) | null = null;
+  let newClimbMessageCallback: ((channelKey: string, event: NewClimbCreatedEvent) => void) | null =
+    null;
 
   // Set up message handler
-  subscriber.on('message', (channel: string, message: string) => {
+  subscriber.on("message", (channel: string, message: string) => {
     try {
       const parsed = JSON.parse(message) as RedisMessage;
 
@@ -66,7 +71,9 @@ export function createRedisPubSubAdapter(
         return;
       }
 
-      console.log(`[Redis] Received cross-instance message from ${parsed.instanceId.slice(0, 8)} on channel: ${channel}`);
+      console.log(
+        `[Redis] Received cross-instance message from ${parsed.instanceId.slice(0, 8)} on channel: ${channel}`,
+      );
 
       if (channel.startsWith(QUEUE_CHANNEL_PREFIX)) {
         const sessionId = channel.slice(QUEUE_CHANNEL_PREFIX.length);
@@ -95,7 +102,7 @@ export function createRedisPubSubAdapter(
         }
       }
     } catch (error) {
-      console.error('[Redis] Failed to parse message:', error);
+      console.error("[Redis] Failed to parse message:", error);
     }
   });
 
@@ -107,7 +114,9 @@ export function createRedisPubSubAdapter(
         event,
         timestamp: Date.now(),
       };
-      console.log(`[Redis] Publishing queue event to channel: ${sessionId} (type: ${event.__typename})`);
+      console.log(
+        `[Redis] Publishing queue event to channel: ${sessionId} (type: ${event.__typename})`,
+      );
       await publisher.publish(channel, JSON.stringify(message));
     },
 
@@ -118,7 +127,9 @@ export function createRedisPubSubAdapter(
         event,
         timestamp: Date.now(),
       };
-      console.log(`[Redis] Publishing session event to channel: ${sessionId} (type: ${event.__typename})`);
+      console.log(
+        `[Redis] Publishing session event to channel: ${sessionId} (type: ${event.__typename})`,
+      );
       await publisher.publish(channel, JSON.stringify(message));
     },
 

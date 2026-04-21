@@ -42,9 +42,9 @@ bun start
 
 Environment variables:
 
-| Variable | Default | Description |
-|----------|---------|-------------|
-| `PORT` | `8080` | WebSocket server port |
+| Variable       | Default                                                           | Description                  |
+| -------------- | ----------------------------------------------------------------- | ---------------------------- |
+| `PORT`         | `8080`                                                            | WebSocket server port        |
 | `DATABASE_URL` | `postgresql://postgres:postgres@localhost:5432/boardsesh_backend` | PostgreSQL connection string |
 
 ## Network Setup
@@ -112,7 +112,7 @@ services:
         condition: service_healthy
     restart: unless-stopped
     networks:
-      - traefik  # Your Traefik network
+      - traefik # Your Traefik network
       - internal
 
   db:
@@ -144,6 +144,7 @@ volumes:
 ### Usage
 
 Once deployed, users connect via:
+
 ```
 https://boardsesh.com?backendUrl=wss://boardsesh-ws.yourdomain.com
 ```

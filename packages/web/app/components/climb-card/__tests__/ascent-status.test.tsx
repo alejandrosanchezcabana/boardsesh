@@ -1,45 +1,41 @@
 // @vitest-environment jsdom
-import React from 'react';
-import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { render, screen, waitFor, act } from '@testing-library/react';
-import { QueryClientProvider } from '@tanstack/react-query';
-import { createTestQueryClient } from '@/app/test-utils/test-providers';
+import React from "react";
+import { describe, it, expect, vi, beforeEach } from "vite-plus/test";
+import { render, screen, waitFor, act } from "@testing-library/react";
+import { QueryClientProvider } from "@tanstack/react-query";
+import { createTestQueryClient } from "@/app/test-utils/test-providers";
 
-vi.mock('@/app/hooks/use-ws-auth-token', () => ({
+vi.mock("@/app/hooks/use-ws-auth-token", () => ({
   useWsAuthToken: vi.fn(),
 }));
 
-vi.mock('next-auth/react', () => ({
+vi.mock("next-auth/react", () => ({
   useSession: vi.fn(),
 }));
 
 const mockRequest = vi.fn();
-vi.mock('@/app/lib/graphql/client', () => ({
+vi.mock("@/app/lib/graphql/client", () => ({
   createGraphQLHttpClient: () => ({ request: mockRequest }),
 }));
 
-vi.mock('@/app/lib/graphql/operations', () => ({
-  GET_TICKS: 'GET_TICKS_QUERY',
+vi.mock("@/app/lib/graphql/operations", () => ({
+  GET_TICKS: "GET_TICKS_QUERY",
 }));
 
-import { useWsAuthToken } from '@/app/hooks/use-ws-auth-token';
-import { useSession } from 'next-auth/react';
-import {
-  useLogbook,
-  accumulatedLogbookQueryKey,
-  type LogbookEntry,
-} from '@/app/hooks/use-logbook';
-import { AscentStatus } from '../ascent-status';
-import { BoardContext, type BoardContextType } from '../../board-provider/board-provider-context';
+import { useWsAuthToken } from "@/app/hooks/use-ws-auth-token";
+import { useSession } from "next-auth/react";
+import { useLogbook, accumulatedLogbookQueryKey, type LogbookEntry } from "@/app/hooks/use-logbook";
+import { AscentStatus } from "../ascent-status";
+import { BoardContext, type BoardContextType } from "../../board-provider/board-provider-context";
 
 const mockUseWsAuthToken = vi.mocked(useWsAuthToken);
 const mockUseSession = vi.mocked(useSession);
 
 function createBoardContextValue({
-  boardName = 'kilter',
+  boardName = "kilter",
   logbook = [],
 }: {
-  boardName?: BoardContextType['boardName'];
+  boardName?: BoardContextType["boardName"];
   logbook?: LogbookEntry[];
 } = {}): BoardContextType {
   return {
@@ -52,10 +48,10 @@ function createBoardContextValue({
     getLogbook: async () => {},
     saveTick: async () => {},
     saveClimb: async () => {
-      throw new Error('unused in test');
+      throw new Error("unused in test");
     },
     updateClimb: async () => {
-      throw new Error('unused in test');
+      throw new Error("unused in test");
     },
   };
 }
@@ -69,7 +65,7 @@ function renderWithBoardContext(contextValue: BoardContextType) {
 }
 
 function AscentStatusHarness() {
-  const { logbook } = useLogbook('kilter', ['climb-1']);
+  const { logbook } = useLogbook("kilter", ["climb-1"]);
 
   return (
     <BoardContext.Provider value={createBoardContextValue({ logbook })}>
@@ -78,119 +74,119 @@ function AscentStatusHarness() {
   );
 }
 
-describe('AscentStatus', () => {
+describe("AscentStatus", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     mockRequest.mockReset();
     mockUseWsAuthToken.mockReturnValue({
-      token: 'test-token',
+      token: "test-token",
       isAuthenticated: true,
       isLoading: false,
       error: null,
     });
     mockUseSession.mockReturnValue({
-      status: 'authenticated',
-      data: { user: { id: '1' }, expires: '' },
+      status: "authenticated",
+      data: { user: { id: "1" }, expires: "" },
       update: vi.fn(),
     });
   });
 
-  it('renders nothing when the climb has no logbook entries', () => {
+  it("renders nothing when the climb has no logbook entries", () => {
     const { container } = render(<AscentStatus climbUuid="climb-1" />);
-    expect(container.innerHTML).toBe('');
+    expect(container.innerHTML).toBe("");
   });
 
-  it('prefers flash over send and attempt for the same climb', () => {
+  it("prefers flash over send and attempt for the same climb", () => {
     renderWithBoardContext(
       createBoardContextValue({
-        boardName: 'kilter',
+        boardName: "kilter",
         logbook: [
           {
-            uuid: '1',
-            climb_uuid: 'climb-1',
+            uuid: "1",
+            climb_uuid: "climb-1",
             angle: 40,
             is_mirror: false,
             tries: 3,
             quality: null,
             difficulty: null,
-            comment: '',
-            climbed_at: '2025-01-01T00:00:00.000Z',
+            comment: "",
+            climbed_at: "2025-01-01T00:00:00.000Z",
             is_ascent: true,
-            status: 'send',
+            status: "send",
           },
           {
-            uuid: '2',
-            climb_uuid: 'climb-1',
+            uuid: "2",
+            climb_uuid: "climb-1",
             angle: 40,
             is_mirror: false,
             tries: 1,
             quality: null,
             difficulty: null,
-            comment: '',
-            climbed_at: '2025-01-02T00:00:00.000Z',
+            comment: "",
+            climbed_at: "2025-01-02T00:00:00.000Z",
             is_ascent: true,
-            status: 'flash',
+            status: "flash",
           },
           {
-            uuid: '3',
-            climb_uuid: 'climb-1',
+            uuid: "3",
+            climb_uuid: "climb-1",
             angle: 40,
             is_mirror: false,
             tries: 2,
             quality: null,
             difficulty: null,
-            comment: '',
-            climbed_at: '2025-01-03T00:00:00.000Z',
+            comment: "",
+            climbed_at: "2025-01-03T00:00:00.000Z",
             is_ascent: false,
-            status: 'attempt',
+            status: "attempt",
           },
         ],
       }),
     );
 
-    expect(screen.getByTestId('ascent-badge').getAttribute('data-status')).toBe('flash');
+    expect(screen.getByTestId("ascent-badge").getAttribute("data-status")).toBe("flash");
   });
 
-  it('renders separate mirrored and regular statuses on mirroring boards', () => {
+  it("renders separate mirrored and regular statuses on mirroring boards", () => {
     renderWithBoardContext(
       createBoardContextValue({
-        boardName: 'tension',
+        boardName: "tension",
         logbook: [
           {
-            uuid: '1',
-            climb_uuid: 'climb-1',
+            uuid: "1",
+            climb_uuid: "climb-1",
             angle: 40,
             is_mirror: false,
             tries: 2,
             quality: null,
             difficulty: null,
-            comment: '',
-            climbed_at: '2025-01-01T00:00:00.000Z',
+            comment: "",
+            climbed_at: "2025-01-01T00:00:00.000Z",
             is_ascent: true,
-            status: 'send',
+            status: "send",
           },
           {
-            uuid: '2',
-            climb_uuid: 'climb-1',
+            uuid: "2",
+            climb_uuid: "climb-1",
             angle: 40,
             is_mirror: true,
             tries: 1,
             quality: null,
             difficulty: null,
-            comment: '',
-            climbed_at: '2025-01-02T00:00:00.000Z',
+            comment: "",
+            climbed_at: "2025-01-02T00:00:00.000Z",
             is_ascent: true,
-            status: 'flash',
+            status: "flash",
           },
         ],
       }),
     );
 
-    expect(screen.getByTestId('ascent-badge').getAttribute('data-status')).toBe('send');
-    expect(screen.getByTestId('ascent-badge-mirrored').getAttribute('data-status')).toBe('flash');
+    expect(screen.getByTestId("ascent-badge").getAttribute("data-status")).toBe("send");
+    expect(screen.getByTestId("ascent-badge-mirrored").getAttribute("data-status")).toBe("flash");
   });
 
-  it('renders the badge immediately from accumulated logbook cache updates without a refetch', async () => {
+  it("renders the badge immediately from accumulated logbook cache updates without a refetch", async () => {
     mockRequest.mockResolvedValue({ ticks: [] });
 
     const queryClient = createTestQueryClient();
@@ -203,30 +199,32 @@ describe('AscentStatus', () => {
     await waitFor(() => {
       expect(mockRequest).toHaveBeenCalledTimes(1);
     });
-    expect(screen.queryByTestId('ascent-badge')).toBeNull();
+    expect(screen.queryByTestId("ascent-badge")).toBeNull();
 
     const optimisticEntry: LogbookEntry = {
-      uuid: 'temp-1',
-      climb_uuid: 'climb-1',
+      uuid: "temp-1",
+      climb_uuid: "climb-1",
       angle: 40,
       is_mirror: false,
       tries: 1,
       quality: null,
       difficulty: null,
-      comment: '',
-      climbed_at: '2024-02-01',
+      comment: "",
+      climbed_at: "2024-02-01",
       is_ascent: true,
-      status: 'flash',
+      status: "flash",
     };
 
     act(() => {
-      queryClient.setQueryData<LogbookEntry[]>(accumulatedLogbookQueryKey('kilter'), [optimisticEntry]);
+      queryClient.setQueryData<LogbookEntry[]>(accumulatedLogbookQueryKey("kilter"), [
+        optimisticEntry,
+      ]);
     });
 
     await waitFor(() => {
-      expect(screen.getByTestId('ascent-badge')).not.toBeNull();
+      expect(screen.getByTestId("ascent-badge")).not.toBeNull();
     });
-    expect(screen.getByTestId('ascent-badge').getAttribute('data-status')).toBe('flash');
+    expect(screen.getByTestId("ascent-badge").getAttribute("data-status")).toBe("flash");
     expect(mockRequest).toHaveBeenCalledTimes(1);
   });
 });

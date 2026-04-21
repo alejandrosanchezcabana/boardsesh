@@ -1,29 +1,29 @@
-'use client';
+"use client";
 
-import { useCallback, useEffect, useRef, useState } from 'react';
-import { useSnackbar } from '@/app/components/providers/snackbar-provider';
-import { track } from '@vercel/analytics';
-import * as Sentry from '@sentry/nextjs';
-import { BoardDetails } from '@/app/lib/types';
-import { getAuroraBluetoothPacket, parseApiLevel } from './bluetooth-aurora';
-import { getMoonboardBluetoothPacket } from './bluetooth-moonboard';
-import { HoldRenderData } from '../board-renderer/types';
-import { useWakeLock } from './use-wake-lock';
-import type { BluetoothAdapter, DevicePickerFn, DiscoveredDevice } from '@/app/lib/ble/types';
-import { createBluetoothAdapter } from '@/app/lib/ble/adapter-factory';
-import { supportsCapacitorBleManualScan } from '@/app/lib/ble/capacitor-utils';
-
-export interface PickerState {
-  devices: DiscoveredDevice[];
-  onSelect: (deviceId: string) => void;
-  onCancel: () => void;
-}
+import { useCallback, useEffect, useRef, useState } from "react";
+import { useSnackbar } from "@/app/components/providers/snackbar-provider";
+import { track } from "@vercel/analytics";
+import * as Sentry from "@sentry/nextjs";
+import { BoardDetails } from "@/app/lib/types";
+import { getAuroraBluetoothPacket, parseApiLevel } from "./bluetooth-aurora";
+import { getMoonboardBluetoothPacket } from "./bluetooth-moonboard";
+import { HoldRenderData } from "../board-renderer/types";
+import { useWakeLock } from "./use-wake-lock";
+import type { BluetoothAdapter } from "@/app/lib/ble/types";
+import { createBluetoothAdapter } from "@/app/lib/ble/adapter-factory";
 
 // Module-level cache for Aurora LED placements loader to avoid repeated dynamic import overhead
-type GetLedPlacementsFn = (boardName: string, layoutId: number, sizeId: number) => Record<number, number>;
+type GetLedPlacementsFn = (
+  boardName: string,
+  layoutId: number,
+  sizeId: number,
+) => Record<number, number>;
 let cachedGetLedPlacements: GetLedPlacementsFn | null = null;
 
-export const convertToMirroredFramesString = (frames: string, holdsData: HoldRenderData[]): string => {
+export const convertToMirroredFramesString = (
+  frames: string,
+  holdsData: HoldRenderData[],
+): string => {
   // Create a map for quick lookup of mirroredHoldId
   const holdIdToMirroredIdMap = new Map<number, number>();
   holdsData.forEach((hold) => {
@@ -33,10 +33,10 @@ export const convertToMirroredFramesString = (frames: string, holdsData: HoldRen
   });
 
   return frames
-    .split('p') // Split into hold data entries
+    .split("p") // Split into hold data entries
     .filter((hold) => hold) // Remove empty entries
     .map((holdData) => {
-      const [holdId, stateCode] = holdData.split('r').map((str) => Number(str)); // Split hold data into holdId and stateCode
+      const [holdId, stateCode] = holdData.split("r").map((str) => Number(str)); // Split hold data into holdId and stateCode
       const mirroredHoldId = holdIdToMirroredIdMap.get(holdId);
 
       if (mirroredHoldId === undefined) {
@@ -46,7 +46,7 @@ export const convertToMirroredFramesString = (frames: string, holdsData: HoldRen
       // Construct the mirrored hold data
       return `p${mirroredHoldId}r${stateCode}`;
     })
-    .join(''); // Reassemble into a single string
+    .join(""); // Reassemble into a single string
 };
 
 interface UseBoardBluetoothOptions {
@@ -67,42 +67,6 @@ export function useBoardBluetooth({ boardDetails, onConnectionChange }: UseBoard
   const apiLevelRef = useRef<number>(3);
   const unsubDisconnectRef = useRef<(() => void) | null>(null);
 
-  // Device picker state for custom Capacitor scanning.
-  // pickerRejectRef holds the pending promise's reject so unmount cleanup
-  // can drain it, which causes the adapter's finally block to call stopLEScan.
-  const [pickerState, setPickerState] = useState<PickerState | null>(null);
-  const pickerRejectRef = useRef<((error: Error) => void) | null>(null);
-
-  // Stable device picker function for the Capacitor adapter
-  const devicePicker = useCallback<DevicePickerFn>((subscribe) => {
-    return new Promise<string>((resolve, reject) => {
-      pickerRejectRef.current = reject;
-
-      const cleanup = () => {
-        pickerRejectRef.current = null;
-        setPickerState(null);
-      };
-
-      const handleSelect = (deviceId: string) => {
-        cleanup();
-        resolve(deviceId);
-      };
-
-      const handleCancel = () => {
-        cleanup();
-        reject(new Error('Device selection cancelled'));
-      };
-
-      setPickerState({ devices: [], onSelect: handleSelect, onCancel: handleCancel });
-
-      subscribe((devices) => {
-        setPickerState((prev) =>
-          prev ? { ...prev, devices } : null,
-        );
-      });
-    });
-  }, []);
-
   // Handler for device disconnection
   const handleDisconnection = useCallback(() => {
     setIsConnected(false);
@@ -115,7 +79,7 @@ export function useBoardBluetooth({ boardDetails, onConnectionChange }: UseBoard
       if (!adapterRef.current || !frames || !boardDetails) return;
 
       try {
-        if (boardDetails.board_name === 'moonboard') {
+        if (boardDetails.board_name === "moonboard") {
           const bluetoothPacket = getMoonboardBluetoothPacket(frames);
           await adapterRef.current.write(bluetoothPacket, signal);
           return true;
@@ -125,14 +89,14 @@ export function useBoardBluetooth({ boardDetails, onConnectionChange }: UseBoard
 
         if (mirrored && boardDetails.supportsMirroring === true) {
           if (!boardDetails.holdsData || Object.keys(boardDetails.holdsData).length === 0) {
-            console.error('Cannot mirror frames: holdsData is missing or empty');
+            console.error("Cannot mirror frames: holdsData is missing or empty");
             return false;
           }
           framesToSend = convertToMirroredFramesString(frames, boardDetails.holdsData);
         }
 
         if (!cachedGetLedPlacements) {
-          const mod = await import('@boardsesh/board-constants/led-placements');
+          const mod = await import("@boardsesh/board-constants/led-placements");
           cachedGetLedPlacements = mod.getLedPlacements as GetLedPlacementsFn;
         }
         const getLedPlacementsFn = cachedGetLedPlacements;
@@ -145,9 +109,12 @@ export function useBoardBluetooth({ boardDetails, onConnectionChange }: UseBoard
         if (Object.keys(placementPositions).length === 0) {
           console.error(
             `[BLE] LED placement map is empty for ${boardDetails.board_name} layout=${boardDetails.layout_id} size=${boardDetails.size_id}. ` +
-            'Board configuration may be incorrect or LED data may need regeneration.',
+              "Board configuration may be incorrect or LED data may need regeneration.",
           );
-          showMessage('Could not send to board — LED data missing for this board configuration.', 'error');
+          showMessage(
+            "Could not send to board — LED data missing for this board configuration.",
+            "error",
+          );
           return false;
         }
 
@@ -163,10 +130,14 @@ export function useBoardBluetooth({ boardDetails, onConnectionChange }: UseBoard
           );
         } catch (error) {
           Sentry.captureException(error, {
-            tags: { board: boardDetails.board_name, layout: boardDetails.layout_id, size: boardDetails.size_id },
+            tags: {
+              board: boardDetails.board_name,
+              layout: boardDetails.layout_id,
+              size: boardDetails.size_id,
+            },
           });
-          console.error('[BLE] Packet generation failed:', error);
-          showMessage('This climb is not compatible with your board.', 'error');
+          console.error("[BLE] Packet generation failed:", error);
+          showMessage("This climb is not compatible with your board.", "error");
           return false;
         }
 
@@ -174,10 +145,10 @@ export function useBoardBluetooth({ boardDetails, onConnectionChange }: UseBoard
         return true;
       } catch (error) {
         // Abort errors are expected during rapid swiping — don't log or show them
-        if (error instanceof DOMException && error.name === 'AbortError') {
+        if (error instanceof DOMException && error.name === "AbortError") {
           return;
         }
-        console.error('Error sending frames to board:', error);
+        console.error("Error sending frames to board:", error);
         return false;
       }
     },
@@ -188,24 +159,19 @@ export function useBoardBluetooth({ boardDetails, onConnectionChange }: UseBoard
   const connect = useCallback(
     async (initialFrames?: string, mirrored?: boolean) => {
       if (!boardDetails) {
-        console.error('Cannot connect to Bluetooth without board details');
+        console.error("Cannot connect to Bluetooth without board details");
         return false;
       }
 
       setLoading(true);
 
       try {
-        // Create a fresh adapter for each connection attempt.
-        // Only inject our custom picker when the native BLE bridge supports
-        // manual scan APIs. Older app installs stay on requestDevice().
-        const adapter = await createBluetoothAdapter(
-          boardDetails.board_name,
-          supportsCapacitorBleManualScan() ? devicePicker : undefined,
-        );
+        // Create a fresh adapter for each connection attempt
+        const adapter = await createBluetoothAdapter(boardDetails.board_name);
 
         const available = await adapter.isAvailable();
         if (!available) {
-          showMessage('Bluetooth is not available on this device.', 'error');
+          showMessage("Bluetooth is not available on this device.", "error");
           return false;
         }
 
@@ -223,7 +189,7 @@ export function useBoardBluetooth({ boardDetails, onConnectionChange }: UseBoard
         unsubDisconnectRef.current = adapter.onDisconnect(handleDisconnection);
         adapterRef.current = adapter;
 
-        track('Bluetooth Connection Success', {
+        track("Bluetooth Connection Success", {
           boardLayout: `${boardDetails.layout_name}`,
         });
 
@@ -236,9 +202,9 @@ export function useBoardBluetooth({ boardDetails, onConnectionChange }: UseBoard
         onConnectionChange?.(true);
         return true;
       } catch (error) {
-        console.error('Error connecting to Bluetooth:', error);
+        console.error("Error connecting to Bluetooth:", error);
         setIsConnected(false);
-        track('Bluetooth Connection Failed', {
+        track("Bluetooth Connection Failed", {
           boardLayout: `${boardDetails.layout_name}`,
         });
       } finally {
@@ -247,27 +213,22 @@ export function useBoardBluetooth({ boardDetails, onConnectionChange }: UseBoard
 
       return false;
     },
-    [handleDisconnection, boardDetails, onConnectionChange, sendFramesToBoard, showMessage, devicePicker],
+    [handleDisconnection, boardDetails, onConnectionChange, sendFramesToBoard, showMessage],
   );
 
-  // Disconnect from the board — update state synchronously for immediate UI
-  // feedback, then await the native BLE disconnect in the background.
-  const disconnect = useCallback(async () => {
+  // Disconnect from the board
+  const disconnect = useCallback(() => {
     unsubDisconnectRef.current?.();
     unsubDisconnectRef.current = null;
-    const adapter = adapterRef.current;
+    adapterRef.current?.disconnect();
     adapterRef.current = null;
     setIsConnected(false);
     onConnectionChange?.(false);
-    await adapter?.disconnect();
   }, [onConnectionChange]);
 
-  // Clean up on unmount — reject any pending picker promise so the adapter's
-  // finally block calls stopLEScan, then tear down the BLE connection.
+  // Clean up on unmount
   useEffect(() => {
     return () => {
-      pickerRejectRef.current?.(new Error('Component unmounted'));
-      pickerRejectRef.current = null;
       unsubDisconnectRef.current?.();
       adapterRef.current?.disconnect();
     };
@@ -279,6 +240,5 @@ export function useBoardBluetooth({ boardDetails, onConnectionChange }: UseBoard
     connect,
     disconnect,
     sendFramesToBoard,
-    pickerState,
   };
 }

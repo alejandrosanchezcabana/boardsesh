@@ -8,8 +8,8 @@ import {
   timestamp,
   index,
   uniqueIndex,
-} from 'drizzle-orm/pg-core';
-import { users } from '../auth/users';
+} from "drizzle-orm/pg-core";
+import { users } from "../auth/users";
 
 /**
  * Playlists - User-created collections of climbs
@@ -17,111 +17,99 @@ import { users } from '../auth/users';
  * Can be synced from Aurora circuits via user sync
  */
 export const playlists = pgTable(
-  'playlists',
+  "playlists",
   {
-    id: bigserial({ mode: 'bigint' }).primaryKey().notNull(),
-    uuid: text('uuid').notNull().unique(),
-    boardType: text('board_type').notNull(), // 'kilter' | 'tension'
-    layoutId: integer('layout_id'), // Nullable for Aurora-synced circuits
+    id: bigserial({ mode: "bigint" }).primaryKey().notNull(),
+    uuid: text("uuid").notNull().unique(),
+    boardType: text("board_type").notNull(), // 'kilter' | 'tension'
+    layoutId: integer("layout_id"), // Nullable for Aurora-synced circuits
 
     // Metadata
-    name: text('name').notNull(),
-    description: text('description'),
-    isPublic: boolean('is_public').default(false).notNull(),
-    color: text('color'), // Hex color (e.g., '#06B6D4')
-    icon: text('icon'), // MUI icon name (e.g., 'StarOutlined')
+    name: text("name").notNull(),
+    description: text("description"),
+    isPublic: boolean("is_public").default(false).notNull(),
+    color: text("color"), // Hex color (e.g., '#06B6D4')
+    icon: text("icon"), // MUI icon name (e.g., 'StarOutlined')
 
     // Aurora sync tracking (for circuits synced from Aurora)
-    auroraType: text('aurora_type'), // 'circuits' when synced from Aurora
-    auroraId: text('aurora_id'), // The circuit UUID from Aurora
-    auroraSyncedAt: timestamp('aurora_synced_at'), // Last sync timestamp
+    auroraType: text("aurora_type"), // 'circuits' when synced from Aurora
+    auroraId: text("aurora_id"), // The circuit UUID from Aurora
+    auroraSyncedAt: timestamp("aurora_synced_at"), // Last sync timestamp
 
     // Timestamps
-    createdAt: timestamp('created_at').defaultNow().notNull(),
-    updatedAt: timestamp('updated_at').defaultNow().notNull(),
-    lastAccessedAt: timestamp('last_accessed_at'),
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+    updatedAt: timestamp("updated_at").defaultNow().notNull(),
+    lastAccessedAt: timestamp("last_accessed_at"),
   },
   (table) => ({
     // Index for efficient lookup by board + layout
-    boardLayoutIdx: index('playlists_board_layout_idx').on(
-      table.boardType,
-      table.layoutId
-    ),
+    boardLayoutIdx: index("playlists_board_layout_idx").on(table.boardType, table.layoutId),
     // Index for UUID lookups
-    uuidIdx: index('playlists_uuid_idx').on(table.uuid),
+    uuidIdx: index("playlists_uuid_idx").on(table.uuid),
     // Index for ordering by updatedAt (used in userPlaylists query)
-    updatedAtIdx: index('playlists_updated_at_idx').on(table.updatedAt),
+    updatedAtIdx: index("playlists_updated_at_idx").on(table.updatedAt),
     // Index for ordering by lastAccessedAt (used in library view)
-    lastAccessedAtIdx: index('playlists_last_accessed_at_idx').on(table.lastAccessedAt),
+    lastAccessedAtIdx: index("playlists_last_accessed_at_idx").on(table.lastAccessedAt),
     // Index for Aurora sync conflict resolution
-    auroraIdIdx: uniqueIndex('playlists_aurora_id_idx').on(table.auroraId),
-  })
+    auroraIdIdx: uniqueIndex("playlists_aurora_id_idx").on(table.auroraId),
+  }),
 );
 
 /**
  * Playlist Climbs - Junction table for climbs in playlists
  */
 export const playlistClimbs = pgTable(
-  'playlist_climbs',
+  "playlist_climbs",
   {
-    id: bigserial({ mode: 'bigint' }).primaryKey().notNull(),
-    playlistId: bigint('playlist_id', { mode: 'bigint' })
+    id: bigserial({ mode: "bigint" }).primaryKey().notNull(),
+    playlistId: bigint("playlist_id", { mode: "bigint" })
       .notNull()
-      .references(() => playlists.id, { onDelete: 'cascade' }),
-    climbUuid: text('climb_uuid').notNull(), // Aurora climb UUID
-    angle: integer('angle'), // Nullable for Aurora-synced circuits
+      .references(() => playlists.id, { onDelete: "cascade" }),
+    climbUuid: text("climb_uuid").notNull(), // Aurora climb UUID
+    angle: integer("angle"), // Nullable for Aurora-synced circuits
 
     // Position for manual ordering within playlist
-    position: integer('position').notNull().default(0),
+    position: integer("position").notNull().default(0),
 
     // Timestamps
-    addedAt: timestamp('added_at').defaultNow().notNull(),
+    addedAt: timestamp("added_at").defaultNow().notNull(),
   },
   (table) => ({
     // Ensure unique climb per playlist
-    uniquePlaylistClimb: uniqueIndex('unique_playlist_climb').on(
-      table.playlistId,
-      table.climbUuid
-    ),
+    uniquePlaylistClimb: uniqueIndex("unique_playlist_climb").on(table.playlistId, table.climbUuid),
     // Index for efficient lookup of playlists containing a climb
-    climbIdx: index('playlist_climbs_climb_idx').on(table.climbUuid),
+    climbIdx: index("playlist_climbs_climb_idx").on(table.climbUuid),
     // Index for ordered retrieval
-    playlistPositionIdx: index('playlist_climbs_position_idx').on(
-      table.playlistId,
-      table.position
-    ),
-  })
+    playlistPositionIdx: index("playlist_climbs_position_idx").on(table.playlistId, table.position),
+  }),
 );
 
 /**
  * Playlist Ownership - Separate ownership for future collaboration
  */
 export const playlistOwnership = pgTable(
-  'playlist_ownership',
+  "playlist_ownership",
   {
-    id: bigserial({ mode: 'bigint' }).primaryKey().notNull(),
-    playlistId: bigint('playlist_id', { mode: 'bigint' })
+    id: bigserial({ mode: "bigint" }).primaryKey().notNull(),
+    playlistId: bigint("playlist_id", { mode: "bigint" })
       .notNull()
-      .references(() => playlists.id, { onDelete: 'cascade' }),
-    userId: text('user_id')
+      .references(() => playlists.id, { onDelete: "cascade" }),
+    userId: text("user_id")
       .notNull()
-      .references(() => users.id, { onDelete: 'cascade' }),
+      .references(() => users.id, { onDelete: "cascade" }),
 
     // Role for future collaboration features
-    role: text('role').notNull().default('owner'), // 'owner' | 'editor' | 'viewer'
+    role: text("role").notNull().default("owner"), // 'owner' | 'editor' | 'viewer'
 
     // Timestamps
-    createdAt: timestamp('created_at').defaultNow().notNull(),
+    createdAt: timestamp("created_at").defaultNow().notNull(),
   },
   (table) => ({
     // Ensure unique user-playlist ownership
-    uniqueOwnership: uniqueIndex('unique_playlist_ownership').on(
-      table.playlistId,
-      table.userId
-    ),
+    uniqueOwnership: uniqueIndex("unique_playlist_ownership").on(table.playlistId, table.userId),
     // Index for efficient user playlist queries
-    userIdx: index('playlist_ownership_user_idx').on(table.userId),
-  })
+    userIdx: index("playlist_ownership_user_idx").on(table.userId),
+  }),
 );
 
 // Type exports for use in application code

@@ -1,7 +1,7 @@
-import type { BoardDetails, ParsedBoardRouteParameters } from './types';
-import type { SetIdList } from './board-data';
-import { getBoardDetails } from './board-constants';
-import { getMoonBoardDetails } from './moonboard-config';
+import type { BoardDetails, ParsedBoardRouteParameters } from "./types";
+import type { SetIdList } from "./board-data";
+import { getBoardDetails } from "./board-constants";
+import { getMoonBoardDetails } from "./moonboard-config";
 
 /**
  * Get board details for any board type (Aurora or MoonBoard).
@@ -18,14 +18,15 @@ export function generateBoardTitle(boardDetails: BoardDetails): string {
   const parts: string[] = [];
 
   // Capitalize board name
-  const boardName = boardDetails.board_name.charAt(0).toUpperCase() + boardDetails.board_name.slice(1);
+  const boardName =
+    boardDetails.board_name.charAt(0).toUpperCase() + boardDetails.board_name.slice(1);
   parts.push(boardName);
 
   // Add layout name if available, but strip out board name prefix to avoid duplication
   if (boardDetails.layout_name) {
     // Remove board name prefix (e.g., "Kilter Board Original" -> "Original")
     const layoutName = boardDetails.layout_name
-      .replace(new RegExp(`^${boardDetails.board_name}\\s*(board)?\\s*`, 'i'), '')
+      .replace(new RegExp(`^${boardDetails.board_name}\\s*(board)?\\s*`, "i"), "")
       .trim();
 
     if (layoutName) {
@@ -46,13 +47,15 @@ export function generateBoardTitle(boardDetails: BoardDetails): string {
     parts.push(boardDetails.size_description);
   }
 
-  return `${parts.join(' ')} | Boardsesh`;
+  return `${parts.join(" ")} | Boardsesh`;
 }
 
 export function getBoardDetailsForBoard(
-  params: ParsedBoardRouteParameters | { board_name: string; layout_id: number; size_id: number; set_ids: SetIdList }
+  params:
+    | ParsedBoardRouteParameters
+    | { board_name: string; layout_id: number; size_id: number; set_ids: SetIdList },
 ): BoardDetails {
-  if (params.board_name === 'moonboard') {
+  if (params.board_name === "moonboard") {
     return getMoonBoardDetails({
       layout_id: params.layout_id,
       set_ids: params.set_ids,

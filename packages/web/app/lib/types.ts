@@ -1,6 +1,6 @@
-import { HoldRenderData, LitUpHoldsMap } from '../components/board-renderer/types';
-import type { BoardName as SharedBoardName } from '@boardsesh/shared-schema';
-import { SetIdList } from './board-data';
+import { HoldRenderData, LitUpHoldsMap } from "../components/board-renderer/types";
+import type { BoardName as SharedBoardName } from "@boardsesh/shared-schema";
+import { SetIdList } from "./board-data";
 
 export type Climb = {
   uuid: string;
@@ -70,7 +70,7 @@ export type SetsResponse = {
 
 // Search Request Type
 export type HoldCode = 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 42 | 43 | 44 | 45 | 12 | 13 | 14 | 15;
-export type HoldState = 'STARTING' | 'HAND' | 'FOOT' | 'FINISH' | 'OFF' | 'ANY' | 'NOT';
+export type HoldState = "STARTING" | "HAND" | "FOOT" | "FINISH" | "OFF" | "ANY" | "NOT";
 
 export type HoldStateFilter = {
   holdId: string;
@@ -94,8 +94,8 @@ export type SearchRequest = {
   minAscents: number;
   minGrade: number;
   minRating: number;
-  sortBy: 'ascents' | 'difficulty' | 'name' | 'quality' | 'popular' | 'creation';
-  sortOrder: 'asc' | 'desc';
+  sortBy: "ascents" | "difficulty" | "name" | "quality" | "popular" | "creation";
+  sortOrder: "asc" | "desc";
   name: string;
   onlyClassics: boolean;
   onlyTallClimbs: boolean;

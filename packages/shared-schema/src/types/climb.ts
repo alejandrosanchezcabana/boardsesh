@@ -1,7 +1,7 @@
 // Climb and Hold types
-import type { MoonBoardHoldsInput } from './new-climb-feed';
+import type { MoonBoardHoldsInput } from "./new-climb-feed";
 
-export type HoldState = 'OFF' | 'STARTING' | 'FINISH' | 'HAND' | 'FOOT' | 'ANY' | 'NOT' | 'AUX';
+export type HoldState = "OFF" | "STARTING" | "FINISH" | "HAND" | "FOOT" | "ANY" | "NOT" | "AUX";
 export type LitupHold = { state: HoldState; color: string; displayColor: string };
 export type LitUpHoldsMap = Record<number, LitupHold>;
 
@@ -104,11 +104,11 @@ export type ClimbSearchInput = {
  * causes a compile error if the type doesn't match.
  */
 export const USER_SPECIFIC_SEARCH_PARAMS = [
-  'hideAttempted',
-  'hideCompleted',
-  'showOnlyAttempted',
-  'showOnlyCompleted',
-  'onlyDrafts',
+  "hideAttempted",
+  "hideCompleted",
+  "showOnlyAttempted",
+  "showOnlyCompleted",
+  "onlyDrafts",
 ] as const satisfies ReadonlyArray<keyof ClimbSearchInput>;
 
 export type ClimbSearchResult = {

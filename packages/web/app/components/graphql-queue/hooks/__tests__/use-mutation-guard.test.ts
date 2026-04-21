@@ -1,13 +1,13 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { renderHook, act } from '@testing-library/react';
+import { describe, it, expect, vi, beforeEach } from "vite-plus/test";
+import { renderHook, act } from "@testing-library/react";
 
 const mockShowMessage = vi.fn();
-vi.mock('@/app/components/providers/snackbar-provider', () => ({
+vi.mock("@/app/components/providers/snackbar-provider", () => ({
   useSnackbar: () => ({ showMessage: mockShowMessage }),
 }));
 
-import { useMutationGuard } from '../use-mutation-guard';
-import type { ConnectionState } from '../../../connection-manager/websocket-connection-manager';
+import { useMutationGuard } from "../use-mutation-guard";
+import type { ConnectionState } from "../../../connection-manager/websocket-connection-manager";
 
 interface TestParams {
   sessionId: string | null;
@@ -20,23 +20,21 @@ interface TestParams {
 
 const defaultParams: TestParams = {
   sessionId: null,
-  backendUrl: 'wss://example.com/graphql',
+  backendUrl: "wss://example.com/graphql",
   hasConnected: false,
-  connectionState: 'idle',
+  connectionState: "idle",
   isSessionActive: false,
   isSessionReady: false,
 };
 
-describe('useMutationGuard', () => {
+describe("useMutationGuard", () => {
   beforeEach(() => {
     mockShowMessage.mockClear();
   });
 
-  describe('solo mode (no session)', () => {
-    it('viewOnlyMode is false, guardMutation allows, isDisconnected is false', () => {
-      const { result } = renderHook(() =>
-        useMutationGuard({ ...defaultParams, sessionId: null }),
-      );
+  describe("solo mode (no session)", () => {
+    it("viewOnlyMode is false, guardMutation allows, isDisconnected is false", () => {
+      const { result } = renderHook(() => useMutationGuard({ ...defaultParams, sessionId: null }));
 
       expect(result.current.viewOnlyMode).toBe(false);
       expect(result.current.isDisconnected).toBe(false);
@@ -44,14 +42,14 @@ describe('useMutationGuard', () => {
     });
   });
 
-  describe('session, not yet connected', () => {
-    it('viewOnlyMode is true, guardMutation blocks, isDisconnected is false', () => {
+  describe("session, not yet connected", () => {
+    it("viewOnlyMode is true, guardMutation blocks, isDisconnected is false", () => {
       const { result } = renderHook(() =>
         useMutationGuard({
           ...defaultParams,
-          sessionId: 'session-1',
+          sessionId: "session-1",
           hasConnected: false,
-          connectionState: 'connecting',
+          connectionState: "connecting",
           isSessionActive: false,
           isSessionReady: false,
         }),
@@ -64,14 +62,14 @@ describe('useMutationGuard', () => {
     });
   });
 
-  describe('session, connected and ready', () => {
-    it('viewOnlyMode is false, guardMutation allows, isDisconnected is false', () => {
+  describe("session, connected and ready", () => {
+    it("viewOnlyMode is false, guardMutation allows, isDisconnected is false", () => {
       const { result } = renderHook(() =>
         useMutationGuard({
           ...defaultParams,
-          sessionId: 'session-1',
+          sessionId: "session-1",
           hasConnected: true,
-          connectionState: 'connected',
+          connectionState: "connected",
           isSessionActive: true,
           isSessionReady: true,
         }),
@@ -84,14 +82,14 @@ describe('useMutationGuard', () => {
     });
   });
 
-  describe('session, was connected, now reconnecting', () => {
-    it('viewOnlyMode is false, guardMutation allows, isDisconnected is true', () => {
+  describe("session, was connected, now reconnecting", () => {
+    it("viewOnlyMode is false, guardMutation allows, isDisconnected is true", () => {
       const { result } = renderHook(() =>
         useMutationGuard({
           ...defaultParams,
-          sessionId: 'session-1',
+          sessionId: "session-1",
           hasConnected: true,
-          connectionState: 'reconnecting',
+          connectionState: "reconnecting",
           isSessionActive: true,
           isSessionReady: false,
         }),
@@ -104,14 +102,14 @@ describe('useMutationGuard', () => {
     });
   });
 
-  describe('session, was connected, now stale', () => {
-    it('isDisconnected is true, mutations allowed', () => {
+  describe("session, was connected, now stale", () => {
+    it("isDisconnected is true, mutations allowed", () => {
       const { result } = renderHook(() =>
         useMutationGuard({
           ...defaultParams,
-          sessionId: 'session-1',
+          sessionId: "session-1",
           hasConnected: true,
-          connectionState: 'stale',
+          connectionState: "stale",
           isSessionActive: true,
           isSessionReady: false,
         }),
@@ -123,14 +121,14 @@ describe('useMutationGuard', () => {
     });
   });
 
-  describe('session, was connected, error state', () => {
-    it('isDisconnected is true, mutations allowed', () => {
+  describe("session, was connected, error state", () => {
+    it("isDisconnected is true, mutations allowed", () => {
       const { result } = renderHook(() =>
         useMutationGuard({
           ...defaultParams,
-          sessionId: 'session-1',
+          sessionId: "session-1",
           hasConnected: true,
-          connectionState: 'error',
+          connectionState: "error",
           isSessionActive: true,
           isSessionReady: false,
         }),
@@ -142,14 +140,14 @@ describe('useMutationGuard', () => {
     });
   });
 
-  describe('toast behavior', () => {
-    it('shows toast when guardMutation blocks (never connected)', () => {
+  describe("toast behavior", () => {
+    it("shows toast when guardMutation blocks (never connected)", () => {
       const { result } = renderHook(() =>
         useMutationGuard({
           ...defaultParams,
-          sessionId: 'session-1',
+          sessionId: "session-1",
           hasConnected: false,
-          connectionState: 'connecting',
+          connectionState: "connecting",
           isSessionActive: false,
           isSessionReady: false,
         }),
@@ -160,18 +158,18 @@ describe('useMutationGuard', () => {
       });
 
       expect(mockShowMessage).toHaveBeenCalledWith(
-        expect.stringContaining('Reconnecting'),
-        'warning',
+        expect.stringContaining("Reconnecting"),
+        "warning",
       );
     });
 
-    it('debounces toast within 3 seconds', () => {
+    it("debounces toast within 3 seconds", () => {
       const { result } = renderHook(() =>
         useMutationGuard({
           ...defaultParams,
-          sessionId: 'session-1',
+          sessionId: "session-1",
           hasConnected: false,
-          connectionState: 'connecting',
+          connectionState: "connecting",
           isSessionActive: false,
           isSessionReady: false,
         }),
@@ -187,13 +185,13 @@ describe('useMutationGuard', () => {
       expect(mockShowMessage).toHaveBeenCalledTimes(1);
     });
 
-    it('does not show toast when mutation is allowed (offline but previously connected)', () => {
+    it("does not show toast when mutation is allowed (offline but previously connected)", () => {
       const { result } = renderHook(() =>
         useMutationGuard({
           ...defaultParams,
-          sessionId: 'session-1',
+          sessionId: "session-1",
           hasConnected: true,
-          connectionState: 'reconnecting',
+          connectionState: "reconnecting",
           isSessionActive: true,
           isSessionReady: false,
         }),

@@ -24,6 +24,7 @@ Before working on a specific part of the codebase, check the `docs/` directory f
 - `docs/ai-design-guidelines.md` - Comprehensive UI design guidelines, patterns, and tokens for redesigning components
 
 **Important:**
+
 - Read the relevant documentation first to understand the architecture and design decisions before making changes
 - When making significant changes to documented systems, update the corresponding documentation to keep it in sync
 
@@ -44,6 +45,9 @@ Before working on a specific part of the codebase, check the `docs/` directory f
 The development database uses a **pre-built Docker image** (`ghcr.io/boardsesh/boardsesh-dev-db`) that already contains all Kilter, Tension, and MoonBoard board data, a test user, and social seed data with migrations applied. This means `bun run db:up` is fast — it just pulls the image, starts containers, and runs any newer migrations.
 
 ```bash
+# Install Vite+ CLI (one-time, manages Node.js, linting, formatting, testing)
+curl -fsSL https://vite.plus | bash
+
 # Start development databases (PostgreSQL, Neon proxy, Redis)
 # First run pulls the pre-built image (~1GB) with all board data included.
 # Subsequent runs start in seconds.
@@ -81,11 +85,17 @@ The `boardsesh-dev-db` image is published to GHCR and contains PostgreSQL 17 + P
 
 ### Common Commands (from root)
 
+This project uses [Vite+](https://viteplus.dev) (`vp`) as its unified toolchain for testing, linting, formatting, and type checking. The `bun run` aliases still work and delegate to `vp` internally.
+
+- `vp check` - Run format, lint, and type checks (or `bun run check`)
+- `vp test` - Run all tests (or `bun run test`)
+- `vp test run` - Run tests once without watch mode (or `bun run test:run`)
+- `vp lint` - Lint all packages (or `bun run lint`)
+- `vp fmt` - Format all files with Oxfmt (or `bun run format`)
 - `bun run dev` - Start web development server with Turbopack
 - `bun run build` - Build all packages
 - `bun run build:web` - Build web package only
 - `bun run build:backend` - Build backend package only
-- `bun run lint` - Run oxlint on web package
 - `bun run typecheck` - Type check all packages (use this instead of build for validation)
 - `bun run typecheck:web` - Type check web package only
 - `bun run typecheck:backend` - Type check backend package only
@@ -110,6 +120,7 @@ The `boardsesh-dev-db` image is published to GHCR and contains PostgreSQL 17 + P
 ### Creating Database Migrations
 
 **IMPORTANT**: Always use `bunx drizzle-kit generate` from `packages/db/` to create new migrations. This command:
+
 1. Detects schema changes in `packages/db/src/schema/`
 2. Generates the SQL migration file in `packages/db/drizzle/`
 3. Automatically adds the migration to `packages/db/drizzle/meta/_journal.json`
@@ -188,14 +199,17 @@ We are using next.js app router, it's important we try to use server side compon
 
 ### Testing
 
-- Vitest configured but tests not yet implemented
-- Run tests with `bun test` when available
+- Tests use Vitest via Vite+ (`vp test` or `bun run test`)
+- Run `vp test run --reporter=agent` for CI-friendly output
+- Run `vp test --project web` to run only web tests
+- Run `vp test --project backend` to run only backend tests
+- `packages/db` uses Node.js native test runner (`tsx --test`), not Vitest
 
 ## Development Guidelines
 
 ### Important rules
 
-- **Use `bun run typecheck` instead of `bun run build` for TypeScript validation** - Running build interferes with the local dev server and `bunx` commands can mess with lock files. Use the typecheck scripts for validating TypeScript.
+- **Use `vp check` or `bun run typecheck` instead of `bun run build` for validation** - Running build interferes with the local dev server and `bunx` commands can mess with lock files. Use `vp check` to run lint + format + typecheck together, or `bun run typecheck` for type checking only.
 - Always try to use server side rendering wherever possibe. But do note that for some parts such as the QueueList and related components, thats impossible, so dont try to force SSR there.
 - Always use MUI (Material UI) components and their properties.
 - Try to avoid use of the style property

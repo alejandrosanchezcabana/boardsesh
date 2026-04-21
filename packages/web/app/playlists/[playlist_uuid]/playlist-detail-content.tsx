@@ -1,14 +1,14 @@
-'use client';
+"use client";
 
-import React, { useState, useEffect, useCallback, useRef, useMemo } from 'react';
-import MuiButton from '@mui/material/Button';
-import Box from '@mui/material/Box';
-import Typography from '@mui/material/Typography';
-import IconButton from '@mui/material/IconButton';
-import Menu from '@mui/material/Menu';
-import MenuItem from '@mui/material/MenuItem';
-import ListItemIcon from '@mui/material/ListItemIcon';
-import ListItemText from '@mui/material/ListItemText';
+import React, { useState, useEffect, useCallback, useRef, useMemo } from "react";
+import MuiButton from "@mui/material/Button";
+import Box from "@mui/material/Box";
+import Typography from "@mui/material/Typography";
+import IconButton from "@mui/material/IconButton";
+import Menu from "@mui/material/Menu";
+import MenuItem from "@mui/material/MenuItem";
+import ListItemIcon from "@mui/material/ListItemIcon";
+import ListItemText from "@mui/material/ListItemText";
 import {
   PublicOutlined,
   LockOutlined,
@@ -19,10 +19,10 @@ import {
   DeleteOutlined,
   PeopleOutlined,
   IosShare,
-} from '@mui/icons-material';
-import { useInfiniteQuery } from '@tanstack/react-query';
-import { Climb } from '@/app/lib/types';
-import { executeGraphQL, createGraphQLHttpClient } from '@/app/lib/graphql/client';
+} from "@mui/icons-material";
+import { useInfiniteQuery } from "@tanstack/react-query";
+import { Climb } from "@/app/lib/types";
+import { executeGraphQL, createGraphQLHttpClient } from "@/app/lib/graphql/client";
 import {
   GET_PLAYLIST,
   GET_PLAYLIST_CLIMBS,
@@ -40,26 +40,29 @@ import {
   UpdatePlaylistLastAccessedMutationResponse,
   DeletePlaylistMutationVariables,
   DeletePlaylistMutationResponse,
-} from '@/app/lib/graphql/operations/playlists';
-import { useSnackbar } from '@/app/components/providers/snackbar-provider';
-import { shareWithFallback } from '@/app/lib/share-utils';
-import { LoadingSpinner } from '@/app/components/ui/loading-spinner';
-import { EmptyState } from '@/app/components/ui/empty-state';
-import FollowButton from '@/app/components/ui/follow-button';
-import PlaylistPreviewSquare from '@/app/components/library/playlist-preview-square';
-import { useWsAuthToken } from '@/app/hooks/use-ws-auth-token';
-import { getBoardDetailsForPlaylist, getDefaultAngleForBoard } from '@/app/lib/board-config-for-playlist';
-import { themeTokens } from '@/app/theme/theme-config';
-import { useRouter } from 'next/navigation';
-import BackButton from '@/app/components/back-button';
-import { PlaylistGeneratorDrawer } from '@/app/components/playlist-generator';
-import PlaylistEditDrawer from '@/app/components/library/playlist-edit-drawer';
-import CommentSection from '@/app/components/social/comment-section';
-import MultiboardClimbList from '@/app/components/climb-list/multiboard-climb-list';
-import { useMyBoards } from '@/app/hooks/use-my-boards';
-import { findMatchingBoard, type BoardConfig } from '@/app/lib/find-matching-board';
-import type { UserBoard } from '@boardsesh/shared-schema';
-import styles from '@/app/components/library/playlist-view.module.css';
+} from "@/app/lib/graphql/operations/playlists";
+import { useSnackbar } from "@/app/components/providers/snackbar-provider";
+import { shareWithFallback } from "@/app/lib/share-utils";
+import { LoadingSpinner } from "@/app/components/ui/loading-spinner";
+import { EmptyState } from "@/app/components/ui/empty-state";
+import FollowButton from "@/app/components/ui/follow-button";
+import PlaylistPreviewSquare from "@/app/components/library/playlist-preview-square";
+import { useWsAuthToken } from "@/app/hooks/use-ws-auth-token";
+import {
+  getBoardDetailsForPlaylist,
+  getDefaultAngleForBoard,
+} from "@/app/lib/board-config-for-playlist";
+import { themeTokens } from "@/app/theme/theme-config";
+import { useRouter } from "next/navigation";
+import BackButton from "@/app/components/back-button";
+import { PlaylistGeneratorDrawer } from "@/app/components/playlist-generator";
+import PlaylistEditDrawer from "@/app/components/library/playlist-edit-drawer";
+import CommentSection from "@/app/components/social/comment-section";
+import MultiboardClimbList from "@/app/components/climb-list/multiboard-climb-list";
+import { useMyBoards } from "@/app/hooks/use-my-boards";
+import { findMatchingBoard, type BoardConfig } from "@/app/lib/find-matching-board";
+import type { UserBoard } from "@boardsesh/shared-schema";
+import styles from "@/app/components/library/playlist-view.module.css";
 
 // Validate hex color format
 const isValidHexColor = (color: string): boolean => {
@@ -91,7 +94,7 @@ type PlaylistDetailContentProps = {
 
 export default function PlaylistDetailContent({
   playlistUuid,
-  playlistsBasePath = '/playlists',
+  playlistsBasePath = "/playlists",
   boardSlug,
   boardConfig,
   initialMyBoards,
@@ -106,8 +109,8 @@ export default function PlaylistDetailContent({
   const [listRefreshKey, setListRefreshKey] = useState(0);
   const [menuAnchor, setMenuAnchor] = useState<null | HTMLElement>(null);
   // Initialize selectedBoard from SSR data immediately (avoids flash from "All" to selected board)
-  const [selectedBoard, setSelectedBoard] = useState<UserBoard | null>(
-    () => findMatchingBoard(initialMyBoards, boardSlug, boardConfig),
+  const [selectedBoard, setSelectedBoard] = useState<UserBoard | null>(() =>
+    findMatchingBoard(initialMyBoards, boardSlug, boardConfig),
   );
   const lastAccessedUpdatedRef = useRef(false);
   const defaultBoardAppliedRef = useRef(!!selectedBoard);
@@ -149,14 +152,14 @@ export default function PlaylistDetailContent({
       );
 
       if (!response.playlist) {
-        setError('Playlist not found');
+        setError("Playlist not found");
         return;
       }
 
       setPlaylist(response.playlist);
     } catch (err) {
-      console.error('Error fetching playlist:', err);
-      setError('Failed to load playlist');
+      console.error("Error fetching playlist:", err);
+      setError("Failed to load playlist");
     } finally {
       setLoading(false);
     }
@@ -168,13 +171,12 @@ export default function PlaylistDetailContent({
 
   // Update lastAccessedAt when playlist loads (fire-and-forget, only for owners)
   useEffect(() => {
-    if (playlist && token && playlist.userRole === 'owner' && !lastAccessedUpdatedRef.current) {
+    if (playlist && token && playlist.userRole === "owner" && !lastAccessedUpdatedRef.current) {
       lastAccessedUpdatedRef.current = true;
-      executeGraphQL<UpdatePlaylistLastAccessedMutationResponse, UpdatePlaylistLastAccessedMutationVariables>(
-        UPDATE_PLAYLIST_LAST_ACCESSED,
-        { playlistId: playlistUuid },
-        token,
-      ).catch(() => {
+      executeGraphQL<
+        UpdatePlaylistLastAccessedMutationResponse,
+        UpdatePlaylistLastAccessedMutationVariables
+      >(UPDATE_PLAYLIST_LAST_ACCESSED, { playlistId: playlistUuid }, token).catch(() => {
         // Silently ignore - this is fire-and-forget
       });
     }
@@ -190,12 +192,7 @@ export default function PlaylistDetailContent({
     isFetchingNextPage,
     isLoading: isClimbsLoading,
   } = useInfiniteQuery({
-    queryKey: [
-      'playlistClimbs',
-      playlistUuid,
-      selectedBoard?.uuid ?? 'all',
-      listRefreshKey,
-    ],
+    queryKey: ["playlistClimbs", playlistUuid, selectedBoard?.uuid ?? "all", listRefreshKey],
     queryFn: async ({ pageParam = 0 }) => {
       const client = createGraphQLHttpClient(token);
 
@@ -213,10 +210,9 @@ export default function PlaylistDetailContent({
         }),
       };
 
-      const response = await client.request<GetPlaylistClimbsQueryResponse>(
-        GET_PLAYLIST_CLIMBS,
-        { input } satisfies GetPlaylistClimbsQueryVariables,
-      );
+      const response = await client.request<GetPlaylistClimbsQueryResponse>(GET_PLAYLIST_CLIMBS, {
+        input,
+      } satisfies GetPlaylistClimbsQueryVariables);
       return response.playlistClimbs;
     },
     enabled: !tokenLoading && !!token,
@@ -270,11 +266,11 @@ export default function PlaylistDetailContent({
         token,
       );
 
-      showMessage('Playlist deleted', 'success');
+      showMessage("Playlist deleted", "success");
       router.push(playlistsBasePath);
     } catch (err) {
-      console.error('Error deleting playlist:', err);
-      showMessage('Failed to delete playlist', 'error');
+      console.error("Error deleting playlist:", err);
+      showMessage("Failed to delete playlist", "error");
     }
   }, [token, playlist, playlistUuid, router, showMessage, playlistsBasePath]);
 
@@ -286,16 +282,16 @@ export default function PlaylistDetailContent({
     const shareUrl = `${window.location.origin}/playlists/${playlistUuid}`;
     await shareWithFallback({
       url: shareUrl,
-      title: playlist?.name || 'Playlist',
-      text: 'Check out this climbing playlist on Boardsesh',
-      trackingEvent: 'Playlist Shared',
+      title: playlist?.name || "Playlist",
+      text: "Check out this climbing playlist on Boardsesh",
+      trackingEvent: "Playlist Shared",
       trackingProps: { playlistUuid },
-      onClipboardSuccess: () => showMessage('Link copied to clipboard!', 'success'),
-      onError: () => showMessage('Failed to share', 'error'),
+      onClipboardSuccess: () => showMessage("Link copied to clipboard!", "success"),
+      onError: () => showMessage("Failed to share", "error"),
     });
   }, [playlistUuid, playlist, showMessage]);
 
-  const isOwner = playlist?.userRole === 'owner';
+  const isOwner = playlist?.userRole === "owner";
 
   const getPlaylistColor = () => {
     if (playlist?.color && isValidHexColor(playlist.color)) {
@@ -325,14 +321,16 @@ export default function PlaylistDetailContent({
       <div className={styles.errorContainer}>
         <SentimentDissatisfiedOutlined className={styles.errorIcon} />
         <div className={styles.errorTitle}>
-          {error === 'Playlist not found' ? 'Playlist Not Found' : 'Unable to Load Playlist'}
+          {error === "Playlist not found" ? "Playlist Not Found" : "Unable to Load Playlist"}
         </div>
         <div className={styles.errorMessage}>
-          {error === 'Playlist not found'
-            ? 'This playlist may have been deleted or you may not have permission to view it.'
-            : 'There was an error loading this playlist. Please try again.'}
+          {error === "Playlist not found"
+            ? "This playlist may have been deleted or you may not have permission to view it."
+            : "There was an error loading this playlist. Please try again."}
         </div>
-        <MuiButton variant="outlined" onClick={fetchPlaylist}>Try Again</MuiButton>
+        <MuiButton variant="outlined" onClick={fetchPlaylist}>
+          Try Again
+        </MuiButton>
       </div>
     );
   }
@@ -363,11 +361,11 @@ export default function PlaylistDetailContent({
               </Typography>
               <div className={styles.heroMeta}>
                 <span className={styles.heroMetaItem}>
-                  {playlist.climbCount} {playlist.climbCount === 1 ? 'climb' : 'climbs'}
+                  {playlist.climbCount} {playlist.climbCount === 1 ? "climb" : "climbs"}
                 </span>
                 <span className={styles.heroMetaItem}>
-                  <PeopleOutlined sx={{ fontSize: 14, verticalAlign: 'middle', mr: 0.5 }} />
-                  {playlist.followerCount} {playlist.followerCount === 1 ? 'follower' : 'followers'}
+                  <PeopleOutlined sx={{ fontSize: 14, verticalAlign: "middle", mr: 0.5 }} />
+                  {playlist.followerCount} {playlist.followerCount === 1 ? "follower" : "followers"}
                 </span>
                 <span
                   className={`${styles.visibilityBadge} ${
@@ -375,9 +373,13 @@ export default function PlaylistDetailContent({
                   }`}
                 >
                   {playlist.isPublic ? (
-                    <><PublicOutlined sx={{ fontSize: 14 }} /> Public</>
+                    <>
+                      <PublicOutlined sx={{ fontSize: 14 }} /> Public
+                    </>
                   ) : (
-                    <><LockOutlined sx={{ fontSize: 14 }} /> Private</>
+                    <>
+                      <LockOutlined sx={{ fontSize: 14 }} /> Private
+                    </>
                   )}
                 </span>
               </div>
@@ -410,12 +412,9 @@ export default function PlaylistDetailContent({
           </div>
 
           {/* Share + Ellipsis Menu */}
-          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.5 }}>
+          <Box sx={{ display: "flex", flexDirection: "column", gap: 0.5 }}>
             {playlist.isPublic && (
-              <IconButton
-                onClick={handleShare}
-                aria-label="Share playlist"
-              >
+              <IconButton onClick={handleShare} aria-label="Share playlist">
                 <IosShare />
               </IconButton>
             )}
@@ -434,20 +433,36 @@ export default function PlaylistDetailContent({
             onClose={() => setMenuAnchor(null)}
           >
             {isOwner && (
-              <MenuItem onClick={() => { setMenuAnchor(null); setGeneratorOpen(true); }}>
-                <ListItemIcon><ElectricBoltOutlined /></ListItemIcon>
+              <MenuItem
+                onClick={() => {
+                  setMenuAnchor(null);
+                  setGeneratorOpen(true);
+                }}
+              >
+                <ListItemIcon>
+                  <ElectricBoltOutlined />
+                </ListItemIcon>
                 <ListItemText>Generate</ListItemText>
               </MenuItem>
             )}
             {isOwner && (
-              <MenuItem onClick={() => { setMenuAnchor(null); setEditDrawerOpen(true); }}>
-                <ListItemIcon><EditOutlined /></ListItemIcon>
+              <MenuItem
+                onClick={() => {
+                  setMenuAnchor(null);
+                  setEditDrawerOpen(true);
+                }}
+              >
+                <ListItemIcon>
+                  <EditOutlined />
+                </ListItemIcon>
                 <ListItemText>Edit</ListItemText>
               </MenuItem>
             )}
             {isOwner && (
               <MenuItem onClick={handleDelete} sx={{ color: themeTokens.colors.error }}>
-                <ListItemIcon><DeleteOutlined sx={{ color: themeTokens.colors.error }} /></ListItemIcon>
+                <ListItemIcon>
+                  <DeleteOutlined sx={{ color: themeTokens.colors.error }} />
+                </ListItemIcon>
                 <ListItemText>Delete</ListItemText>
               </MenuItem>
             )}

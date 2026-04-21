@@ -1,4 +1,4 @@
-import { gql } from 'graphql-request';
+import { gql } from "graphql-request";
 import type {
   CheckMoonBoardClimbDuplicatesInput,
   NewClimbFeedInput,
@@ -12,7 +12,7 @@ import type {
   SaveMoonBoardClimbInput,
   UpdateClimbInput,
   UpdateClimbResult,
-} from '@boardsesh/shared-schema';
+} from "@boardsesh/shared-schema";
 
 export const GET_NEW_CLIMB_FEED = gql`
   query GetNewClimbFeed($input: NewClimbFeedInput!) {

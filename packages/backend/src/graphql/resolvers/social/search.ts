@@ -1,9 +1,9 @@
-import { eq, and, or, ilike, sql, count, desc, asc } from 'drizzle-orm';
-import type { ConnectionContext } from '@boardsesh/shared-schema';
-import { db } from '../../../db/client';
-import * as dbSchema from '@boardsesh/db/schema';
-import { applyRateLimit, validateInput } from '../shared/helpers';
-import { SearchUsersInputSchema } from '../../../validation/schemas';
+import { eq, and, or, ilike, sql, count, desc, asc } from "drizzle-orm";
+import type { ConnectionContext } from "@boardsesh/shared-schema";
+import { db } from "../../../db/client";
+import * as dbSchema from "@boardsesh/db/schema";
+import { applyRateLimit, validateInput } from "../shared/helpers";
+import { SearchUsersInputSchema } from "../../../validation/schemas";
 
 export const socialSearchQueries = {
   /**
@@ -12,17 +12,17 @@ export const socialSearchQueries = {
   searchUsers: async (
     _: unknown,
     { input }: { input: { query: string; boardType?: string; limit?: number; offset?: number } },
-    ctx: ConnectionContext
+    ctx: ConnectionContext,
   ) => {
     await applyRateLimit(ctx, 20);
 
-    const validatedInput = validateInput(SearchUsersInputSchema, input, 'input');
+    const validatedInput = validateInput(SearchUsersInputSchema, input, "input");
     const query = validatedInput.query;
     const boardType = validatedInput.boardType;
     const limit = validatedInput.limit ?? 20;
     const offset = validatedInput.offset ?? 0;
     // Escape LIKE wildcards (%, _) in user input to prevent pattern injection
-    const escapedQuery = query.replace(/[%_\\]/g, '\\$&');
+    const escapedQuery = query.replace(/[%_\\]/g, "\\$&");
     const searchPattern = `%${escapedQuery}%`;
     const prefixPattern = `${escapedQuery}%`;
 
@@ -47,8 +47,8 @@ export const socialSearchQueries = {
           dbSchema.userBoardMappings,
           and(
             eq(dbSchema.users.id, dbSchema.userBoardMappings.userId),
-            eq(dbSchema.userBoardMappings.boardType, boardType)
-          )
+            eq(dbSchema.userBoardMappings.boardType, boardType),
+          ),
         )
         .where(searchConditions!);
     }
@@ -71,15 +71,20 @@ export const socialSearchQueries = {
       followerCount: sql<number>`(select count(*)::int from user_follows where following_id = ${dbSchema.users.id})`,
       followingCount: sql<number>`(select count(*)::int from user_follows where follower_id = ${dbSchema.users.id})`,
       recentAscentCount: sql<number>`(select count(*)::int from boardsesh_ticks where user_id = ${dbSchema.users.id} and created_at > ${thirtyDaysAgoIso})`,
-      isFollowedByMe: (ctx.isAuthenticated && ctx.userId)
-        ? sql<boolean>`exists(select 1 from user_follows where follower_id = ${ctx.userId} and following_id = ${dbSchema.users.id})`
-        : sql<boolean>`false`,
+      isFollowedByMe:
+        ctx.isAuthenticated && ctx.userId
+          ? sql<boolean>`exists(select 1 from user_follows where follower_id = ${ctx.userId} and following_id = ${dbSchema.users.id})`
+          : sql<boolean>`false`,
     };
 
     // Sort in SQL: prefix matches first, then by recent ascent count DESC
     const orderByExpressions = [
-      asc(sql`case when ${dbSchema.userProfiles.displayName} ilike ${prefixPattern} or ${dbSchema.users.name} ilike ${prefixPattern} then 0 else 1 end`),
-      desc(sql`(select count(*)::int from boardsesh_ticks where user_id = ${dbSchema.users.id} and created_at > ${thirtyDaysAgoIso})`),
+      asc(
+        sql`case when ${dbSchema.userProfiles.displayName} ilike ${prefixPattern} or ${dbSchema.users.name} ilike ${prefixPattern} then 0 else 1 end`,
+      ),
+      desc(
+        sql`(select count(*)::int from boardsesh_ticks where user_id = ${dbSchema.users.id} and created_at > ${thirtyDaysAgoIso})`,
+      ),
     ];
 
     // Build query with appropriate joins
@@ -93,8 +98,8 @@ export const socialSearchQueries = {
           dbSchema.userBoardMappings,
           and(
             eq(dbSchema.users.id, dbSchema.userBoardMappings.userId),
-            eq(dbSchema.userBoardMappings.boardType, boardType)
-          )
+            eq(dbSchema.userBoardMappings.boardType, boardType),
+          ),
         )
         .where(searchConditions!)
         .orderBy(...orderByExpressions)
@@ -117,8 +122,11 @@ export const socialSearchQueries = {
     const searchResults = results.map((row) => {
       const lowerQuery = query.toLowerCase();
       let matchReason: string | undefined;
-      if (row.displayName?.toLowerCase().includes(lowerQuery) || row.name?.toLowerCase().includes(lowerQuery)) {
-        matchReason = 'name match';
+      if (
+        row.displayName?.toLowerCase().includes(lowerQuery) ||
+        row.name?.toLowerCase().includes(lowerQuery)
+      ) {
+        matchReason = "name match";
       }
 
       return {

@@ -1,4 +1,4 @@
-import { sql } from 'drizzle-orm';
+import { sql } from "drizzle-orm";
 
 /**
  * A minimal database interface that supports raw SQL execution.
@@ -34,7 +34,7 @@ export async function populateDenormalizedColumns(
   boardType: string,
   climbUuids: string[],
 ): Promise<void> {
-  if (climbUuids.length === 0 || boardType === 'moonboard') return;
+  if (climbUuids.length === 0 || boardType === "moonboard") return;
 
   // Drizzle's `sql` template expands a JS array into comma-separated parameters
   // wrapped in parentheses, producing a ROW literal like `($1, $2, $3)` which

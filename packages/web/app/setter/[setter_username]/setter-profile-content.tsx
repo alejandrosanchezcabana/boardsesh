@@ -1,29 +1,29 @@
-'use client';
+"use client";
 
-import React, { useState, useEffect, useCallback } from 'react';
-import Typography from '@mui/material/Typography';
-import Chip from '@mui/material/Chip';
-import Box from '@mui/material/Box';
-import IconButton from '@mui/material/IconButton';
-import { PersonOutlined, SentimentDissatisfiedOutlined, IosShare } from '@mui/icons-material';
-import { useSession } from 'next-auth/react';
-import BackButton from '@/app/components/back-button';
-import FollowButton from '@/app/components/ui/follow-button';
-import SetterClimbList from '@/app/components/climb-list/setter-climb-list';
-import { LoadingSpinner } from '@/app/components/ui/loading-spinner';
-import { createGraphQLHttpClient } from '@/app/lib/graphql/client';
+import React, { useState, useEffect, useCallback } from "react";
+import Typography from "@mui/material/Typography";
+import Chip from "@mui/material/Chip";
+import Box from "@mui/material/Box";
+import IconButton from "@mui/material/IconButton";
+import { PersonOutlined, SentimentDissatisfiedOutlined, IosShare } from "@mui/icons-material";
+import { useSession } from "next-auth/react";
+import BackButton from "@/app/components/back-button";
+import FollowButton from "@/app/components/ui/follow-button";
+import SetterClimbList from "@/app/components/climb-list/setter-climb-list";
+import { LoadingSpinner } from "@/app/components/ui/loading-spinner";
+import { createGraphQLHttpClient } from "@/app/lib/graphql/client";
 import {
   GET_SETTER_PROFILE,
   FOLLOW_SETTER,
   UNFOLLOW_SETTER,
   type GetSetterProfileQueryVariables,
   type GetSetterProfileQueryResponse,
-} from '@/app/lib/graphql/operations';
-import { themeTokens } from '@/app/theme/theme-config';
-import { useSnackbar } from '@/app/components/providers/snackbar-provider';
-import { shareWithFallback } from '@/app/lib/share-utils';
-import type { SetterProfile } from '@boardsesh/shared-schema';
-import styles from '@/app/components/library/playlist-view.module.css';
+} from "@/app/lib/graphql/operations";
+import { themeTokens } from "@/app/theme/theme-config";
+import { useSnackbar } from "@/app/components/providers/snackbar-provider";
+import { shareWithFallback } from "@/app/lib/share-utils";
+import type { SetterProfile } from "@boardsesh/shared-schema";
+import styles from "@/app/components/library/playlist-view.module.css";
 
 interface SetterProfileContentProps {
   username: string;
@@ -39,13 +39,13 @@ export default function SetterProfileContent({ username }: SetterProfileContentP
     try {
       const authToken = (session as { authToken?: string } | null)?.authToken ?? null;
       const client = createGraphQLHttpClient(authToken);
-      const response = await client.request<GetSetterProfileQueryResponse, GetSetterProfileQueryVariables>(
-        GET_SETTER_PROFILE,
-        { input: { username } }
-      );
+      const response = await client.request<
+        GetSetterProfileQueryResponse,
+        GetSetterProfileQueryVariables
+      >(GET_SETTER_PROFILE, { input: { username } });
       setProfile(response.setterProfile);
     } catch (error) {
-      console.error('Failed to fetch setter profile:', error);
+      console.error("Failed to fetch setter profile:", error);
     } finally {
       setLoading(false);
     }
@@ -63,10 +63,10 @@ export default function SetterProfileContent({ username }: SetterProfileContentP
       url: shareUrl,
       title: `${shareDisplayName} - Setter`,
       text: `Check out ${shareDisplayName}'s climbs on Boardsesh`,
-      trackingEvent: 'Setter Shared',
+      trackingEvent: "Setter Shared",
       trackingProps: { username },
-      onClipboardSuccess: () => showMessage('Link copied to clipboard!', 'success'),
-      onError: () => showMessage('Failed to share', 'error'),
+      onClipboardSuccess: () => showMessage("Link copied to clipboard!", "success"),
+      onError: () => showMessage("Failed to share", "error"),
     });
   }, [username, shareDisplayName, showMessage]);
 
@@ -111,13 +111,13 @@ export default function SetterProfileContent({ username }: SetterProfileContentP
           <div className={styles.heroContent}>
             <div
               className={styles.heroSquare}
-              style={{ backgroundColor: themeTokens.colors.primary, overflow: 'hidden' }}
+              style={{ backgroundColor: themeTokens.colors.primary, overflow: "hidden" }}
             >
               {avatarUrl ? (
                 <img
                   src={avatarUrl}
                   alt={displayName}
-                  style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                  style={{ width: "100%", height: "100%", objectFit: "cover" }}
                 />
               ) : (
                 <PersonOutlined className={styles.heroSquareIcon} />
@@ -129,13 +129,13 @@ export default function SetterProfileContent({ username }: SetterProfileContentP
               </Typography>
               <div className={styles.heroMeta}>
                 <span className={styles.heroMetaItem}>
-                  {profile.followerCount} {profile.followerCount === 1 ? 'follower' : 'followers'}
+                  {profile.followerCount} {profile.followerCount === 1 ? "follower" : "followers"}
                 </span>
                 <span className={styles.heroMetaItem}>
-                  {profile.climbCount} {profile.climbCount === 1 ? 'climb' : 'climbs'}
+                  {profile.climbCount} {profile.climbCount === 1 ? "climb" : "climbs"}
                 </span>
               </div>
-              <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap', mb: 1 }}>
+              <Box sx={{ display: "flex", gap: 1, flexWrap: "wrap", mb: 1 }}>
                 {profile.boardTypes.map((bt) => (
                   <Chip
                     key={bt}

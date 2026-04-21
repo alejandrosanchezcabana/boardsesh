@@ -1,9 +1,9 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { renderHook, act } from '@testing-library/react';
-import React from 'react';
-import { FavoritesContext } from '../favorites-batch-context';
-import { favoritesStore } from '../favorites-store';
-import { useFavorite } from '../use-favorite';
+import { describe, it, expect, vi, beforeEach } from "vite-plus/test";
+import { renderHook, act } from "@testing-library/react";
+import React from "react";
+import { FavoritesContext } from "../favorites-batch-context";
+import { favoritesStore } from "../favorites-store";
+import { useFavorite } from "../use-favorite";
 
 // Helper to create a wrapper with FavoritesContext.Provider
 function createWrapper(contextValue: React.ContextType<typeof FavoritesContext>) {
@@ -12,7 +12,7 @@ function createWrapper(contextValue: React.ContextType<typeof FavoritesContext>)
   };
 }
 
-describe('useFavorite', () => {
+describe("useFavorite", () => {
   const mockToggleFavorite = vi.fn().mockResolvedValue(true);
 
   const defaultContext = {
@@ -27,19 +27,19 @@ describe('useFavorite', () => {
     favoritesStore.setMeta(false, true); // isLoading=false, isAuthenticated=true
   });
 
-  describe('with FavoritesProvider', () => {
-    it('reads isFavorited from the external store', () => {
-      favoritesStore.setFavorites(new Set(['climb-123']));
+  describe("with FavoritesProvider", () => {
+    it("reads isFavorited from the external store", () => {
+      favoritesStore.setFavorites(new Set(["climb-123"]));
 
-      const { result } = renderHook(() => useFavorite({ climbUuid: 'climb-123' }), {
+      const { result } = renderHook(() => useFavorite({ climbUuid: "climb-123" }), {
         wrapper: createWrapper(defaultContext),
       });
 
       expect(result.current.isFavorited).toBe(true);
     });
 
-    it('calls toggleFavorite with climbUuid when toggle invoked', async () => {
-      const { result } = renderHook(() => useFavorite({ climbUuid: 'climb-123' }), {
+    it("calls toggleFavorite with climbUuid when toggle invoked", async () => {
+      const { result } = renderHook(() => useFavorite({ climbUuid: "climb-123" }), {
         wrapper: createWrapper(defaultContext),
       });
 
@@ -47,42 +47,42 @@ describe('useFavorite', () => {
         await result.current.toggleFavorite();
       });
 
-      expect(mockToggleFavorite).toHaveBeenCalledWith('climb-123');
+      expect(mockToggleFavorite).toHaveBeenCalledWith("climb-123");
     });
 
-    it('returns isLoading from the external store', () => {
-      const { result } = renderHook(() => useFavorite({ climbUuid: 'climb-123' }), {
+    it("returns isLoading from the external store", () => {
+      const { result } = renderHook(() => useFavorite({ climbUuid: "climb-123" }), {
         wrapper: createWrapper(defaultContext),
       });
 
       expect(result.current.isLoading).toBe(false);
     });
 
-    it('returns isAuthenticated from the external store', () => {
-      const { result } = renderHook(() => useFavorite({ climbUuid: 'climb-123' }), {
+    it("returns isAuthenticated from the external store", () => {
+      const { result } = renderHook(() => useFavorite({ climbUuid: "climb-123" }), {
         wrapper: createWrapper(defaultContext),
       });
 
       expect(result.current.isAuthenticated).toBe(true);
     });
 
-    it('returns isFavorited result for the specific climb', () => {
-      favoritesStore.setFavorites(new Set(['climb-123']));
+    it("returns isFavorited result for the specific climb", () => {
+      favoritesStore.setFavorites(new Set(["climb-123"]));
 
-      const { result } = renderHook(() => useFavorite({ climbUuid: 'climb-123' }), {
+      const { result } = renderHook(() => useFavorite({ climbUuid: "climb-123" }), {
         wrapper: createWrapper(defaultContext),
       });
 
       expect(result.current.isFavorited).toBe(true);
     });
 
-    it('handles different climbUuids correctly', () => {
-      favoritesStore.setFavorites(new Set(['climb-A']));
+    it("handles different climbUuids correctly", () => {
+      favoritesStore.setFavorites(new Set(["climb-A"]));
 
-      const { result: resultA } = renderHook(() => useFavorite({ climbUuid: 'climb-A' }), {
+      const { result: resultA } = renderHook(() => useFavorite({ climbUuid: "climb-A" }), {
         wrapper: createWrapper(defaultContext),
       });
-      const { result: resultB } = renderHook(() => useFavorite({ climbUuid: 'climb-B' }), {
+      const { result: resultB } = renderHook(() => useFavorite({ climbUuid: "climb-B" }), {
         wrapper: createWrapper(defaultContext),
       });
 
@@ -91,17 +91,17 @@ describe('useFavorite', () => {
     });
   });
 
-  describe('without FavoritesProvider', () => {
-    it('returns safe defaults when no FavoritesProvider is present', () => {
-      const { result } = renderHook(() => useFavorite({ climbUuid: 'climb-123' }));
+  describe("without FavoritesProvider", () => {
+    it("returns safe defaults when no FavoritesProvider is present", () => {
+      const { result } = renderHook(() => useFavorite({ climbUuid: "climb-123" }));
 
       expect(result.current.isFavorited).toBe(false);
       expect(result.current.isLoading).toBe(false);
       expect(result.current.isAuthenticated).toBe(false);
     });
 
-    it('toggleFavorite returns false when no provider', async () => {
-      const { result } = renderHook(() => useFavorite({ climbUuid: 'climb-123' }));
+    it("toggleFavorite returns false when no provider", async () => {
+      const { result } = renderHook(() => useFavorite({ climbUuid: "climb-123" }));
 
       let toggled: boolean | undefined;
       await act(async () => {
@@ -111,9 +111,9 @@ describe('useFavorite', () => {
       expect(toggled).toBe(false);
     });
 
-    it('does not throw when rendered without provider', () => {
+    it("does not throw when rendered without provider", () => {
       expect(() => {
-        renderHook(() => useFavorite({ climbUuid: 'climb-123' }));
+        renderHook(() => useFavorite({ climbUuid: "climb-123" }));
       }).not.toThrow();
     });
   });

@@ -1,7 +1,7 @@
-'use client';
+"use client";
 
-import React, { createContext, useContext, useEffect, useMemo, useRef, useState } from 'react';
-import { connectionManager, ConnectionState } from './websocket-connection-manager';
+import React, { createContext, useContext, useEffect, useMemo, useRef, useState } from "react";
+import { connectionManager, ConnectionState } from "./websocket-connection-manager";
 
 interface ConnectionContextValue {
   state: ConnectionState;
@@ -13,20 +13,25 @@ interface ConnectionContextValue {
 
 const WebSocketConnectionContext = createContext<ConnectionContextValue | null>(null);
 
-export const WebSocketConnectionProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+export const WebSocketConnectionProvider: React.FC<{ children: React.ReactNode }> = ({
+  children,
+}) => {
   const [snapshot, setSnapshot] = useState(connectionManager.getSnapshot());
 
   useEffect(() => {
     return connectionManager.subscribe((next) => setSnapshot(next));
   }, []);
 
-  const value = useMemo<ConnectionContextValue>(() => ({
-    state: snapshot.state,
-    lastActivity: snapshot.lastActivity,
-    name: snapshot.name,
-    error: snapshot.error,
-    forceReconnect: () => connectionManager.forceReconnect(snapshot.name ?? undefined),
-  }), [snapshot]);
+  const value = useMemo<ConnectionContextValue>(
+    () => ({
+      state: snapshot.state,
+      lastActivity: snapshot.lastActivity,
+      name: snapshot.name,
+      error: snapshot.error,
+      forceReconnect: () => connectionManager.forceReconnect(snapshot.name ?? undefined),
+    }),
+    [snapshot],
+  );
 
   return (
     <WebSocketConnectionContext.Provider value={value}>
@@ -36,7 +41,7 @@ export const WebSocketConnectionProvider: React.FC<{ children: React.ReactNode }
 };
 
 const IDLE_FALLBACK: ConnectionContextValue = {
-  state: 'idle',
+  state: "idle",
   lastActivity: null,
   name: null,
   error: null,

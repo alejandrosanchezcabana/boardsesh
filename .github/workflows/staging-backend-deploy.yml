@@ -5,14 +5,14 @@ on:
     branches: [main]
     # Backend-affecting paths — keep in sync with detect-changes in branch-deploy.yml
     paths:
-      - 'packages/backend/**'
-      - 'packages/shared-schema/**'
-      - 'packages/db/**'
-      - 'packages/crypto/**'
-      - 'packages/aurora-sync/**'
-      - 'Dockerfile.backend'
-      - 'bun.lock'
-      - 'package.json'
+      - "packages/backend/**"
+      - "packages/shared-schema/**"
+      - "packages/db/**"
+      - "packages/crypto/**"
+      - "packages/aurora-sync/**"
+      - "Dockerfile.backend"
+      - "bun.lock"
+      - "package.json"
 
 concurrency:
   group: staging-backend-deploy

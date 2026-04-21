@@ -8,7 +8,7 @@
 // Types
 // =============================================================================
 
-export type TickStatus = 'flash' | 'send' | 'attempt';
+export type TickStatus = "flash" | "send" | "attempt";
 
 /** Thread template: a parent comment + 1-3 coherent replies */
 export interface ThreadTemplate {
@@ -850,115 +850,746 @@ export const SALTY_SOCIAL_COMMENTS: string[] = [
 // =============================================================================
 
 export const GENERAL_THREADS: ThreadTemplate[] = [
-  { parent: "What beta did you use for the crux?", replies: ["I matched on the sloper then bumped right", "Oh interesting, I went left hand to the pinch instead", "The pinch beta is way better for short people"] },
-  { parent: "Is it just me or is this way harder at 40 degrees?", replies: ["Definitely harder, the slopers become useless above 35", "I actually think 45 is the sweet spot, forces you to use your feet"] },
-  { parent: "The footwork on this one is everything", replies: ["For real, if you miss that toe hook you are done", "I kept slipping off the smear until I switched shoes", "Which shoes are you climbing in? My Scarpa Drago grips perfectly there"] },
-  { parent: "Anyone else think the left hand start hold is garbage?", replies: ["It is terrible but you can wrap your thumb over for a full crimp", "I skip it entirely and go straight to the second hold from a jump"] },
-  { parent: "Tried the mirror and it felt like a completely different climb", replies: ["Mirror versions always mess me up, my left side is so weak", "That is actually a great way to train your off hand though"] },
-  { parent: "How important is the kneebar here?", replies: ["Absolutely critical, it gives you a full rest before the crux", "You can skip it but you need to be way stronger through the top", "I did not even see the kneebar until my tenth attempt, changed everything"] },
-  { parent: "The hold set matters a lot on this one", replies: ["Yeah on the older set the crimp at the top is way better", "I only have the base set and it still goes, just need stronger fingers"] },
-  { parent: "Can someone explain the toe hook at the lip?", replies: ["You need to flag your left foot hard and place your right toe on the arete hold", "Honestly I just campus past it, the toe hook never worked for me"] },
-  { parent: "This climb teaches you so much about body tension", replies: ["No joke, I could feel every muscle in my core screaming", "It is like a moving plank, legs have to stay engaged the whole time", "Board climbing is the best core workout disguised as fun"] },
-  { parent: "The sequence through the middle is so unintuitive", replies: ["Right? I kept trying to go right hand first but left hand is the move", "Once someone showed me the cross through it clicked immediately"] },
-  { parent: "Does hand size matter on this one? The pinches feel enormous", replies: ["I have small hands and I use an open hand grip instead, works fine", "Big hands definitely help but technique can compensate"] },
-  { parent: "That last move is pure coordination", replies: ["It took me forever to time the bump correctly", "I find it helps to exhale as you hit the hold, steadies everything", "Yeah it is almost a deadpoint, you barely need to pull"] },
-  { parent: "Anyone done this with feet only on the footholds?", replies: ["That is how it is intended and it makes it significantly harder", "Wait, people use hand holds as feet on this? That explains the grade discrepancy"] },
-  { parent: "The compression at the top is sneaky hard", replies: ["Agreed, I thought it was over and then the last two moves wrecked me", "You need to squeeze those volumes like your life depends on it"] },
-  { parent: "Which angle do you all think is the definitive one for this?", replies: ["The setter intended 40 but 30 is more fun in my opinion", "I think 45 degrees makes the movement puzzle more interesting", "Every angle feels like a different problem honestly"] },
-  { parent: "Is the undercling beta legit or just cheating?", replies: ["Totally legit, the hold is there to be used however you want", "It skips the whole crux though, kind of ruins the climb", "The setter themselves said any beta goes"] },
-  { parent: "My skin was gone after three attempts on this", replies: ["Those crimps are skin destroyers, use tape for projecting", "Climb it first thing in the session before your skin wears down"] },
-  { parent: "The grade on this does not feel right", replies: ["Hard agree, it should be at least two grades higher", "Depends on your style, strong crimpers will find it soft", "Grades are just suggestions anyway, what matters is the movement"] },
-  { parent: "I love how this one forces you to climb statically", replies: ["Static climbing on steep boards is its own beast", "If you try to rush through you just peel off, patience is key"] },
-  { parent: "The gaston at the crux is shoulder intensive", replies: ["I warmed up my shoulders extra before trying this one", "If your shoulder is tweaky maybe skip this for now, not worth getting injured", "I could barely lift my arms the next day after projecting this"] },
-  { parent: "Do you flag left or right at the fourth move?", replies: ["Left flag gives you way more reach to the next hold", "I backstep with my right, feels more balanced", "I think it depends on your height, tall climbers can skip the flag entirely"] },
-  { parent: "This climb flows so well once you unlock the sequence", replies: ["It went from impossible to effortless once the beta clicked", "That is the magic of board climbing, pure puzzle solving"] },
-  { parent: "Anyone use a drop knee on the third move?", replies: ["Yes, it is the key to saving energy for the crux above", "I did not know there was a drop knee there, going to try tonight"] },
-  { parent: "The hold at move five is so angle dependent", replies: ["At 30 degrees it is a jug, at 45 it is basically a sloper", "That is what makes the angle selector so interesting on these boards"] },
-  { parent: "I have been working this for a month and still cannot stick the dyno", replies: ["Have you tried generating from your hips instead of pulling with your arms?", "The dyno is optional if you have good reach, try a static bump instead", "It took me three weeks just on the dyno alone, hang in there"] },
+  {
+    parent: "What beta did you use for the crux?",
+    replies: [
+      "I matched on the sloper then bumped right",
+      "Oh interesting, I went left hand to the pinch instead",
+      "The pinch beta is way better for short people",
+    ],
+  },
+  {
+    parent: "Is it just me or is this way harder at 40 degrees?",
+    replies: [
+      "Definitely harder, the slopers become useless above 35",
+      "I actually think 45 is the sweet spot, forces you to use your feet",
+    ],
+  },
+  {
+    parent: "The footwork on this one is everything",
+    replies: [
+      "For real, if you miss that toe hook you are done",
+      "I kept slipping off the smear until I switched shoes",
+      "Which shoes are you climbing in? My Scarpa Drago grips perfectly there",
+    ],
+  },
+  {
+    parent: "Anyone else think the left hand start hold is garbage?",
+    replies: [
+      "It is terrible but you can wrap your thumb over for a full crimp",
+      "I skip it entirely and go straight to the second hold from a jump",
+    ],
+  },
+  {
+    parent: "Tried the mirror and it felt like a completely different climb",
+    replies: [
+      "Mirror versions always mess me up, my left side is so weak",
+      "That is actually a great way to train your off hand though",
+    ],
+  },
+  {
+    parent: "How important is the kneebar here?",
+    replies: [
+      "Absolutely critical, it gives you a full rest before the crux",
+      "You can skip it but you need to be way stronger through the top",
+      "I did not even see the kneebar until my tenth attempt, changed everything",
+    ],
+  },
+  {
+    parent: "The hold set matters a lot on this one",
+    replies: [
+      "Yeah on the older set the crimp at the top is way better",
+      "I only have the base set and it still goes, just need stronger fingers",
+    ],
+  },
+  {
+    parent: "Can someone explain the toe hook at the lip?",
+    replies: [
+      "You need to flag your left foot hard and place your right toe on the arete hold",
+      "Honestly I just campus past it, the toe hook never worked for me",
+    ],
+  },
+  {
+    parent: "This climb teaches you so much about body tension",
+    replies: [
+      "No joke, I could feel every muscle in my core screaming",
+      "It is like a moving plank, legs have to stay engaged the whole time",
+      "Board climbing is the best core workout disguised as fun",
+    ],
+  },
+  {
+    parent: "The sequence through the middle is so unintuitive",
+    replies: [
+      "Right? I kept trying to go right hand first but left hand is the move",
+      "Once someone showed me the cross through it clicked immediately",
+    ],
+  },
+  {
+    parent: "Does hand size matter on this one? The pinches feel enormous",
+    replies: [
+      "I have small hands and I use an open hand grip instead, works fine",
+      "Big hands definitely help but technique can compensate",
+    ],
+  },
+  {
+    parent: "That last move is pure coordination",
+    replies: [
+      "It took me forever to time the bump correctly",
+      "I find it helps to exhale as you hit the hold, steadies everything",
+      "Yeah it is almost a deadpoint, you barely need to pull",
+    ],
+  },
+  {
+    parent: "Anyone done this with feet only on the footholds?",
+    replies: [
+      "That is how it is intended and it makes it significantly harder",
+      "Wait, people use hand holds as feet on this? That explains the grade discrepancy",
+    ],
+  },
+  {
+    parent: "The compression at the top is sneaky hard",
+    replies: [
+      "Agreed, I thought it was over and then the last two moves wrecked me",
+      "You need to squeeze those volumes like your life depends on it",
+    ],
+  },
+  {
+    parent: "Which angle do you all think is the definitive one for this?",
+    replies: [
+      "The setter intended 40 but 30 is more fun in my opinion",
+      "I think 45 degrees makes the movement puzzle more interesting",
+      "Every angle feels like a different problem honestly",
+    ],
+  },
+  {
+    parent: "Is the undercling beta legit or just cheating?",
+    replies: [
+      "Totally legit, the hold is there to be used however you want",
+      "It skips the whole crux though, kind of ruins the climb",
+      "The setter themselves said any beta goes",
+    ],
+  },
+  {
+    parent: "My skin was gone after three attempts on this",
+    replies: [
+      "Those crimps are skin destroyers, use tape for projecting",
+      "Climb it first thing in the session before your skin wears down",
+    ],
+  },
+  {
+    parent: "The grade on this does not feel right",
+    replies: [
+      "Hard agree, it should be at least two grades higher",
+      "Depends on your style, strong crimpers will find it soft",
+      "Grades are just suggestions anyway, what matters is the movement",
+    ],
+  },
+  {
+    parent: "I love how this one forces you to climb statically",
+    replies: [
+      "Static climbing on steep boards is its own beast",
+      "If you try to rush through you just peel off, patience is key",
+    ],
+  },
+  {
+    parent: "The gaston at the crux is shoulder intensive",
+    replies: [
+      "I warmed up my shoulders extra before trying this one",
+      "If your shoulder is tweaky maybe skip this for now, not worth getting injured",
+      "I could barely lift my arms the next day after projecting this",
+    ],
+  },
+  {
+    parent: "Do you flag left or right at the fourth move?",
+    replies: [
+      "Left flag gives you way more reach to the next hold",
+      "I backstep with my right, feels more balanced",
+      "I think it depends on your height, tall climbers can skip the flag entirely",
+    ],
+  },
+  {
+    parent: "This climb flows so well once you unlock the sequence",
+    replies: [
+      "It went from impossible to effortless once the beta clicked",
+      "That is the magic of board climbing, pure puzzle solving",
+    ],
+  },
+  {
+    parent: "Anyone use a drop knee on the third move?",
+    replies: [
+      "Yes, it is the key to saving energy for the crux above",
+      "I did not know there was a drop knee there, going to try tonight",
+    ],
+  },
+  {
+    parent: "The hold at move five is so angle dependent",
+    replies: [
+      "At 30 degrees it is a jug, at 45 it is basically a sloper",
+      "That is what makes the angle selector so interesting on these boards",
+    ],
+  },
+  {
+    parent: "I have been working this for a month and still cannot stick the dyno",
+    replies: [
+      "Have you tried generating from your hips instead of pulling with your arms?",
+      "The dyno is optional if you have good reach, try a static bump instead",
+      "It took me three weeks just on the dyno alone, hang in there",
+    ],
+  },
 ];
 
 export const FLASH_THREADS: ThreadTemplate[] = [
-  { parent: "How did you flash this? I have been working it for weeks", replies: ["The trick is reading the holds from below first", "That is wild, I could barely do the first move"] },
-  { parent: "Clean flash, the beta was so obvious once I saw the toe hook", replies: ["Nothing obvious about that toe hook, you are just talented", "I spent an hour trying to figure out what you did on your first go"] },
-  { parent: "Flashed it but my heart was pounding on the last move", replies: ["Those sketchy topouts are the worst for flash attempts", "Keeping composure at the end is what separates flashers from mortals"] },
-  { parent: "First try, felt like it was set for my body type", replies: ["Must be nice being the right height for once", "This is one of those climbs that really punishes shorter climbers", "I am the same height and I cannot even start it so maybe you are just strong"] },
-  { parent: "Managed to flash the sit start variant too", replies: ["Now you are just showing off", "The sit start is way harder, that is seriously impressive"] },
-  { parent: "Flash at 45 degrees, felt like the angle made it easier", replies: ["Interesting, most people find it harder steeper", "Your contact strength must be insane to flash this at 45"] },
-  { parent: "Just flashed my all time hardest grade on the board", replies: ["Breaking into a new grade is such a good feeling", "What did the previous hardest take you? Wondering how long until I level up", "That first flash at a new grade means you are ready for even harder stuff"] },
-  { parent: "I cannot believe I flashed this after warming up on it mentally", replies: ["Visualization is so underrated in climbing", "I always picture the sequence three times before I pull on"] },
-  { parent: "Flashed it but it definitely felt sandbagged", replies: ["A flash is a flash regardless of the grade", "If you flashed it maybe it is not that sandbagged for your style"] },
-  { parent: "Onsight flash no beta spray needed", replies: ["Humble brag of the year right here", "Respect for not watching the video beta first"] },
-  { parent: "Finally flashed something I thought was impossible last month", replies: ["Proof that consistency pays off even when you are not projecting", "Your strength gains are clearly kicking in"] },
-  { parent: "My partner could not believe I flashed this", replies: ["Having a witness makes it even sweeter", "Show them the attempt count, one and done"] },
-  { parent: "Warmed up on this expecting to project it, sent first go", replies: ["Best surprise sends are the ones you do not expect", "This happened to me last week, completely different when there is no pressure", "Low expectations are the secret to flashing hard"] },
-  { parent: "Third flash of the session, everything clicked today", replies: ["Those sessions where your body just works are magical", "Save some sends for the rest of us"] },
-  { parent: "Flashed it then immediately tried the next grade and got destroyed", replies: ["That is climbing in a nutshell, hero to zero in one move", "The grade jump on this board is brutal between those two levels"] },
-  { parent: "Flash despite being pumped from the last three climbs", replies: ["Pumped flashes hit different, pure grit", "Your endurance must be next level right now"] },
-  { parent: "Casual flash while waiting for my friend to finish their project", replies: ["The least stressful flash of all time", "No pressure sends are the best sends"] },
-  { parent: "Flashed it on the LED board, the lights made the sequence so clear", replies: ["Reading the color coding definitely helps with onsighting", "I find the lights distracting honestly but glad it worked for you"] },
-  { parent: "Finally got a flash after a two month dry spell", replies: ["Breaking a flash drought feels incredible", "Sometimes you need to step back and let your body catch up to your brain", "Two months is tough, glad you pushed through"] },
-  { parent: "Watched someone else climb it once then flashed it, does that count?", replies: ["Beta watching before your first attempt is still a flash in my book", "Technically yes, you did not attempt it before sending", "Some purists would call that a beta flash but it still counts"] },
-  { parent: "Flashed a classic, feeling on top of the world", replies: ["The classics always feel good because everyone knows the climb", "Which classic? Some of those are notoriously hard to flash"] },
-  { parent: "My first ever flash on this board, been climbing here six months", replies: ["Six months to your first flash is solid progress", "That first one opens the floodgates, more will come"] },
-  { parent: "Speed flash, barely two minutes on the wall", replies: ["When the beta is right the climb just happens", "Two minutes? I spend longer chalking up than that"] },
-  { parent: "Flashed it lefty after my right hand got tweaked", replies: ["Climbing with your off hand and still flashing is next level", "Maybe your left side was the answer all along"] },
-  { parent: "Somehow flashed this at the end of a four hour session", replies: ["End of session flashes should count double", "Your muscles were probably so loose by then, rubber arms beta"] },
+  {
+    parent: "How did you flash this? I have been working it for weeks",
+    replies: [
+      "The trick is reading the holds from below first",
+      "That is wild, I could barely do the first move",
+    ],
+  },
+  {
+    parent: "Clean flash, the beta was so obvious once I saw the toe hook",
+    replies: [
+      "Nothing obvious about that toe hook, you are just talented",
+      "I spent an hour trying to figure out what you did on your first go",
+    ],
+  },
+  {
+    parent: "Flashed it but my heart was pounding on the last move",
+    replies: [
+      "Those sketchy topouts are the worst for flash attempts",
+      "Keeping composure at the end is what separates flashers from mortals",
+    ],
+  },
+  {
+    parent: "First try, felt like it was set for my body type",
+    replies: [
+      "Must be nice being the right height for once",
+      "This is one of those climbs that really punishes shorter climbers",
+      "I am the same height and I cannot even start it so maybe you are just strong",
+    ],
+  },
+  {
+    parent: "Managed to flash the sit start variant too",
+    replies: [
+      "Now you are just showing off",
+      "The sit start is way harder, that is seriously impressive",
+    ],
+  },
+  {
+    parent: "Flash at 45 degrees, felt like the angle made it easier",
+    replies: [
+      "Interesting, most people find it harder steeper",
+      "Your contact strength must be insane to flash this at 45",
+    ],
+  },
+  {
+    parent: "Just flashed my all time hardest grade on the board",
+    replies: [
+      "Breaking into a new grade is such a good feeling",
+      "What did the previous hardest take you? Wondering how long until I level up",
+      "That first flash at a new grade means you are ready for even harder stuff",
+    ],
+  },
+  {
+    parent: "I cannot believe I flashed this after warming up on it mentally",
+    replies: [
+      "Visualization is so underrated in climbing",
+      "I always picture the sequence three times before I pull on",
+    ],
+  },
+  {
+    parent: "Flashed it but it definitely felt sandbagged",
+    replies: [
+      "A flash is a flash regardless of the grade",
+      "If you flashed it maybe it is not that sandbagged for your style",
+    ],
+  },
+  {
+    parent: "Onsight flash no beta spray needed",
+    replies: [
+      "Humble brag of the year right here",
+      "Respect for not watching the video beta first",
+    ],
+  },
+  {
+    parent: "Finally flashed something I thought was impossible last month",
+    replies: [
+      "Proof that consistency pays off even when you are not projecting",
+      "Your strength gains are clearly kicking in",
+    ],
+  },
+  {
+    parent: "My partner could not believe I flashed this",
+    replies: [
+      "Having a witness makes it even sweeter",
+      "Show them the attempt count, one and done",
+    ],
+  },
+  {
+    parent: "Warmed up on this expecting to project it, sent first go",
+    replies: [
+      "Best surprise sends are the ones you do not expect",
+      "This happened to me last week, completely different when there is no pressure",
+      "Low expectations are the secret to flashing hard",
+    ],
+  },
+  {
+    parent: "Third flash of the session, everything clicked today",
+    replies: [
+      "Those sessions where your body just works are magical",
+      "Save some sends for the rest of us",
+    ],
+  },
+  {
+    parent: "Flashed it then immediately tried the next grade and got destroyed",
+    replies: [
+      "That is climbing in a nutshell, hero to zero in one move",
+      "The grade jump on this board is brutal between those two levels",
+    ],
+  },
+  {
+    parent: "Flash despite being pumped from the last three climbs",
+    replies: [
+      "Pumped flashes hit different, pure grit",
+      "Your endurance must be next level right now",
+    ],
+  },
+  {
+    parent: "Casual flash while waiting for my friend to finish their project",
+    replies: ["The least stressful flash of all time", "No pressure sends are the best sends"],
+  },
+  {
+    parent: "Flashed it on the LED board, the lights made the sequence so clear",
+    replies: [
+      "Reading the color coding definitely helps with onsighting",
+      "I find the lights distracting honestly but glad it worked for you",
+    ],
+  },
+  {
+    parent: "Finally got a flash after a two month dry spell",
+    replies: [
+      "Breaking a flash drought feels incredible",
+      "Sometimes you need to step back and let your body catch up to your brain",
+      "Two months is tough, glad you pushed through",
+    ],
+  },
+  {
+    parent: "Watched someone else climb it once then flashed it, does that count?",
+    replies: [
+      "Beta watching before your first attempt is still a flash in my book",
+      "Technically yes, you did not attempt it before sending",
+      "Some purists would call that a beta flash but it still counts",
+    ],
+  },
+  {
+    parent: "Flashed a classic, feeling on top of the world",
+    replies: [
+      "The classics always feel good because everyone knows the climb",
+      "Which classic? Some of those are notoriously hard to flash",
+    ],
+  },
+  {
+    parent: "My first ever flash on this board, been climbing here six months",
+    replies: [
+      "Six months to your first flash is solid progress",
+      "That first one opens the floodgates, more will come",
+    ],
+  },
+  {
+    parent: "Speed flash, barely two minutes on the wall",
+    replies: [
+      "When the beta is right the climb just happens",
+      "Two minutes? I spend longer chalking up than that",
+    ],
+  },
+  {
+    parent: "Flashed it lefty after my right hand got tweaked",
+    replies: [
+      "Climbing with your off hand and still flashing is next level",
+      "Maybe your left side was the answer all along",
+    ],
+  },
+  {
+    parent: "Somehow flashed this at the end of a four hour session",
+    replies: [
+      "End of session flashes should count double",
+      "Your muscles were probably so loose by then, rubber arms beta",
+    ],
+  },
 ];
 
 export const SEND_THREADS: ThreadTemplate[] = [
-  { parent: "Welcome to the send club! That crux is no joke", replies: ["Thanks! The heel hook changed everything", "Which heel hook? I brute forced it with a campus move"] },
-  { parent: "Finally sent after 47 attempts across eight sessions", replies: ["That persistence is inspiring, nice work", "47 attempts is dedication, I gave up at around 20", "The best sends are the ones you have to fight for"] },
-  { parent: "Sent it clean after resting for a week, rest days are real", replies: ["Rest is the most underrated training tool", "I always come back stronger after a deload week"] },
-  { parent: "That finishing jug never felt so good", replies: ["The relief of latching the last hold on a project is unmatched", "I screamed when I topped out, no shame"] },
-  { parent: "Sent this at a new personal best grade", replies: ["Breaking into a new grade is the best feeling in climbing", "What grade? Curious where you are at", "The next grade will come even faster, the learning compounds"] },
-  { parent: "Took me three months but I finally closed this project", replies: ["Three months of discipline, you earned that send", "My current project is at month two so this gives me hope"] },
-  { parent: "Sent on my last attempt of the day, almost gave up", replies: ["Clutch sends are the most memorable", "Something about the last try of the day just works", "Your body was probably so warmed up by then"] },
-  { parent: "Broke it down move by move and linked it all today", replies: ["The segmented approach always works for hard projects", "How many individual sections did you break it into?"] },
-  { parent: "Sent this thanks to the beta from this community", replies: ["That is what we are here for, collective brain power", "Which tip was the game changer?", "Love hearing the community actually helps people send"] },
-  { parent: "My kids watched me send my project, best audience ever", replies: ["That is awesome, getting the family stoked on climbing", "Future crushers in the making"] },
-  { parent: "First V double digit send on the board, speechless", replies: ["Welcome to double digits, it only gets harder from here", "That is a massive milestone, congratulations", "Proof that board training actually works"] },
-  { parent: "Sent it so fast after finding the right beta, sequence is everything", replies: ["Good beta can make a climb feel three grades easier", "What was the key change?"] },
-  { parent: "Lost skin on the send go but held on anyway", replies: ["Blood sends count double in my book", "Tape it up and celebrate, you earned it", "The skin grows back, the send is forever"] },
-  { parent: "Sent this after switching to a half crimp grip on the crux", replies: ["Half crimp is so much more sustainable than full crimp", "I cannot half crimp to save my life, full crimp or open hand for me"] },
-  { parent: "Quiet send, no screaming, just pure satisfaction", replies: ["The silent nod of accomplishment, classic", "I wish I had that composure, I yelled so loud the whole gym looked"] },
-  { parent: "Projecting this at home and finally sent, home wall for the win", replies: ["Home walls are the secret weapon for projecting", "Must be nice to have unlimited attempts with no wait"] },
-  { parent: "Sent it after dropping five pounds, weight matters on crimpy stuff", replies: ["Body composition is a real factor on hard crimps", "I noticed the same thing, lighter means easier lock offs", "Just be careful about going too far with weight cuts, health first"] },
-  { parent: "Managed to link the whole thing without resting on the kneebar", replies: ["Skipping the rest and still sending is beastly", "I literally cannot do this without the kneebar rest, strong work"] },
-  { parent: "Second ascent of this climb, first was a year ago and it felt easy now", replies: ["Repeating old projects and finding them easy is the best progress metric", "That growth over a year is real"] },
-  { parent: "Sent it in front of the setter, they gave me a fist bump", replies: ["Setter approval is the ultimate validation", "That is honestly cooler than the send itself"] },
-  { parent: "Everything aligned today, perfect conditions and a clean send", replies: ["When humidity and temps are right everything feels better", "Conditions matter more than people think on the board"] },
-  { parent: "Sent my long term project at the buzzer, gym was closing", replies: ["Nothing like a deadline to focus the mind", "Pressure creates diamonds, or in this case sends"] },
-  { parent: "Finally found the foot beta that unlocks this whole climb", replies: ["Feet are always the answer on these boards", "What was the foot trick? I am stuck on this one too", "People focus on hands but the feet do eighty percent of the work"] },
-  { parent: "Sent after watching the replay of my failed attempts frame by frame", replies: ["Video analysis is such a powerful tool for climbing", "Did you notice something specific on the replay?"] },
-  { parent: "Training hangboard for two months just for this climb and it paid off", replies: ["Targeted finger training is so effective for board climbing", "Which hangboard protocol did you use?", "Dedication to a single climb goal is admirable"] },
+  {
+    parent: "Welcome to the send club! That crux is no joke",
+    replies: [
+      "Thanks! The heel hook changed everything",
+      "Which heel hook? I brute forced it with a campus move",
+    ],
+  },
+  {
+    parent: "Finally sent after 47 attempts across eight sessions",
+    replies: [
+      "That persistence is inspiring, nice work",
+      "47 attempts is dedication, I gave up at around 20",
+      "The best sends are the ones you have to fight for",
+    ],
+  },
+  {
+    parent: "Sent it clean after resting for a week, rest days are real",
+    replies: [
+      "Rest is the most underrated training tool",
+      "I always come back stronger after a deload week",
+    ],
+  },
+  {
+    parent: "That finishing jug never felt so good",
+    replies: [
+      "The relief of latching the last hold on a project is unmatched",
+      "I screamed when I topped out, no shame",
+    ],
+  },
+  {
+    parent: "Sent this at a new personal best grade",
+    replies: [
+      "Breaking into a new grade is the best feeling in climbing",
+      "What grade? Curious where you are at",
+      "The next grade will come even faster, the learning compounds",
+    ],
+  },
+  {
+    parent: "Took me three months but I finally closed this project",
+    replies: [
+      "Three months of discipline, you earned that send",
+      "My current project is at month two so this gives me hope",
+    ],
+  },
+  {
+    parent: "Sent on my last attempt of the day, almost gave up",
+    replies: [
+      "Clutch sends are the most memorable",
+      "Something about the last try of the day just works",
+      "Your body was probably so warmed up by then",
+    ],
+  },
+  {
+    parent: "Broke it down move by move and linked it all today",
+    replies: [
+      "The segmented approach always works for hard projects",
+      "How many individual sections did you break it into?",
+    ],
+  },
+  {
+    parent: "Sent this thanks to the beta from this community",
+    replies: [
+      "That is what we are here for, collective brain power",
+      "Which tip was the game changer?",
+      "Love hearing the community actually helps people send",
+    ],
+  },
+  {
+    parent: "My kids watched me send my project, best audience ever",
+    replies: [
+      "That is awesome, getting the family stoked on climbing",
+      "Future crushers in the making",
+    ],
+  },
+  {
+    parent: "First V double digit send on the board, speechless",
+    replies: [
+      "Welcome to double digits, it only gets harder from here",
+      "That is a massive milestone, congratulations",
+      "Proof that board training actually works",
+    ],
+  },
+  {
+    parent: "Sent it so fast after finding the right beta, sequence is everything",
+    replies: ["Good beta can make a climb feel three grades easier", "What was the key change?"],
+  },
+  {
+    parent: "Lost skin on the send go but held on anyway",
+    replies: [
+      "Blood sends count double in my book",
+      "Tape it up and celebrate, you earned it",
+      "The skin grows back, the send is forever",
+    ],
+  },
+  {
+    parent: "Sent this after switching to a half crimp grip on the crux",
+    replies: [
+      "Half crimp is so much more sustainable than full crimp",
+      "I cannot half crimp to save my life, full crimp or open hand for me",
+    ],
+  },
+  {
+    parent: "Quiet send, no screaming, just pure satisfaction",
+    replies: [
+      "The silent nod of accomplishment, classic",
+      "I wish I had that composure, I yelled so loud the whole gym looked",
+    ],
+  },
+  {
+    parent: "Projecting this at home and finally sent, home wall for the win",
+    replies: [
+      "Home walls are the secret weapon for projecting",
+      "Must be nice to have unlimited attempts with no wait",
+    ],
+  },
+  {
+    parent: "Sent it after dropping five pounds, weight matters on crimpy stuff",
+    replies: [
+      "Body composition is a real factor on hard crimps",
+      "I noticed the same thing, lighter means easier lock offs",
+      "Just be careful about going too far with weight cuts, health first",
+    ],
+  },
+  {
+    parent: "Managed to link the whole thing without resting on the kneebar",
+    replies: [
+      "Skipping the rest and still sending is beastly",
+      "I literally cannot do this without the kneebar rest, strong work",
+    ],
+  },
+  {
+    parent: "Second ascent of this climb, first was a year ago and it felt easy now",
+    replies: [
+      "Repeating old projects and finding them easy is the best progress metric",
+      "That growth over a year is real",
+    ],
+  },
+  {
+    parent: "Sent it in front of the setter, they gave me a fist bump",
+    replies: [
+      "Setter approval is the ultimate validation",
+      "That is honestly cooler than the send itself",
+    ],
+  },
+  {
+    parent: "Everything aligned today, perfect conditions and a clean send",
+    replies: [
+      "When humidity and temps are right everything feels better",
+      "Conditions matter more than people think on the board",
+    ],
+  },
+  {
+    parent: "Sent my long term project at the buzzer, gym was closing",
+    replies: [
+      "Nothing like a deadline to focus the mind",
+      "Pressure creates diamonds, or in this case sends",
+    ],
+  },
+  {
+    parent: "Finally found the foot beta that unlocks this whole climb",
+    replies: [
+      "Feet are always the answer on these boards",
+      "What was the foot trick? I am stuck on this one too",
+      "People focus on hands but the feet do eighty percent of the work",
+    ],
+  },
+  {
+    parent: "Sent after watching the replay of my failed attempts frame by frame",
+    replies: [
+      "Video analysis is such a powerful tool for climbing",
+      "Did you notice something specific on the replay?",
+    ],
+  },
+  {
+    parent: "Training hangboard for two months just for this climb and it paid off",
+    replies: [
+      "Targeted finger training is so effective for board climbing",
+      "Which hangboard protocol did you use?",
+      "Dedication to a single climb goal is admirable",
+    ],
+  },
 ];
 
 export const SALTY_THREADS: ThreadTemplate[] = [
-  { parent: "This climb has me questioning my life choices", replies: ["Honestly same, I have been on it for a month", "Have you tried the undercling start? Changed the whole sequence for me"] },
-  { parent: "Fell off the last hold for the fifth time today, I am going to lose it", replies: ["The last move curse is so real on this one", "Take a break and come back fresh, you clearly have the strength", "I fell on the last hold seven times before I sent, you will get it"] },
-  { parent: "My fingers just slide off the crux hold no matter what", replies: ["Have you tried chalking up more? That hold eats chalk", "Open hand grip works better than crimping on that one", "Some days the humidity just kills any chance on slopers"] },
-  { parent: "Watched someone half my size flash my month long project", replies: ["Height and weight advantages are real but so is your determination", "Different body types unlock different beta, do not compare"] },
-  { parent: "Three sessions in a row with zero sends, what is wrong with me", replies: ["Plateaus are part of the process, you are building strength even if it does not show", "Try switching to easier climbs for a session, rebuild your confidence"] },
-  { parent: "The grade on this is an absolute lie", replies: ["Some climbs just do not match the consensus grade for certain body types", "Which grade do you think it should be?", "I agree, this feels at least two grades harder than listed"] },
-  { parent: "Just tweaked my finger on the second move, project over for now", replies: ["Take care of that finger, no climb is worth a serious injury", "A2 pulley? Ice it and rest, I have been there"] },
-  { parent: "I can do every move in isolation but cannot link them together", replies: ["Linking problems are the real crux of projecting", "Try overlapping the sections, link moves two and three then three and four", "Endurance is probably the limiting factor, do some laps on easier stuff"] },
-  { parent: "This is my nemesis climb, it will haunt me forever", replies: ["Everyone has that one climb, mine took six months", "Come back in a year when you are stronger, it will feel different"] },
-  { parent: "Fell on the jug finish and I am not okay", replies: ["Falling on a jug is a special kind of pain", "You were probably so pumped you could not close your hand, happens to everyone"] },
-  { parent: "I hate slopers, I hate this board, I hate everything", replies: ["Sloper rage is a legitimate climbing emotion", "Try training open hand on a hangboard, it transfers directly to slopers", "We have all been there, go climb some crimps and come back happy"] },
-  { parent: "Set my attempt count record today and not in a good way", replies: ["High attempts just mean you are pushing your limits", "What is the count? I need to know if it beats my record of shame"] },
-  { parent: "Literally cannot figure out the start of this climb", replies: ["The start is the crux honestly, once you are past move two it eases up", "Try a different hand order, right hand first instead of left", "I had to watch three videos before the start made sense"] },
-  { parent: "My forearms are so pumped I cannot open my water bottle", replies: ["The true test of a good session", "Shake it out for five minutes then try one more burn, sometimes the pump helps you grip harder"] },
-  { parent: "Gravity felt extra strong today, nothing went right", replies: ["Some days you are the climber, some days you are the floor", "Those sessions build character even if they do not build sends"] },
-  { parent: "Everyone says this is a classic and I think it is terrible", replies: ["Hot take but I kind of agree, the movement feels forced", "You might change your mind once you send it, hate turns to love", "Not every classic works for every climber, move on to something better"] },
-  { parent: "I keep barn dooring off the wall on the fourth move", replies: ["You need a flag or a toe hook to stay in balance there", "Press harder with your outside foot, it acts as a counterweight", "Body tension is the answer, engage your core before you reach"] },
-  { parent: "Partner sent my project in half the attempts, trying not to be salty", replies: ["Climbing is not a competition except when it is", "Use them as a pace car, their beta might help you", "Everyone progresses differently, your time will come"] },
-  { parent: "This hold is so bad it should not count as a hold", replies: ["Welcome to board climbing where the holds are small and the grades are stiff", "That hold actually improves a lot if you shift your hand slightly right"] },
-  { parent: "Who set this and do they hate short people?", replies: ["The reachy moves on this are rough below average height", "There is usually an alternative beta for shorter climbers, try a higher foot", "As a short climber I feel this in my soul"] },
-  { parent: "Just slipped off a dry hold in perfect conditions, no excuses left", replies: ["Sometimes you just have to accept it was not your day", "Did you try wiping the hold? Chalk buildup can make things slippery"] },
-  { parent: "My session today was a complete disaster from start to finish", replies: ["Bad sessions are data points, figure out why and adjust", "Sleep and nutrition matter more than people think, how is your recovery?", "Tomorrow is a new day, shake it off"] },
-  { parent: "Watching the leaderboard and everyone has sent this but me", replies: ["The leaderboard only shows the survivors, plenty of people struggled too", "Ignore the leaderboard and climb for yourself"] },
-  { parent: "I have tried every beta on the internet and none of them work for me", replies: ["Sometimes you need to invent your own sequence", "Post a video of your attempts, fresh eyes might spot something", "Have you tried the opposite hand sequence from what feels natural?"] },
-  { parent: "This climb defeated me today but I will be back", replies: ["That is the right attitude, projects are earned not given", "Rest up and come back swinging, you got this"] },
+  {
+    parent: "This climb has me questioning my life choices",
+    replies: [
+      "Honestly same, I have been on it for a month",
+      "Have you tried the undercling start? Changed the whole sequence for me",
+    ],
+  },
+  {
+    parent: "Fell off the last hold for the fifth time today, I am going to lose it",
+    replies: [
+      "The last move curse is so real on this one",
+      "Take a break and come back fresh, you clearly have the strength",
+      "I fell on the last hold seven times before I sent, you will get it",
+    ],
+  },
+  {
+    parent: "My fingers just slide off the crux hold no matter what",
+    replies: [
+      "Have you tried chalking up more? That hold eats chalk",
+      "Open hand grip works better than crimping on that one",
+      "Some days the humidity just kills any chance on slopers",
+    ],
+  },
+  {
+    parent: "Watched someone half my size flash my month long project",
+    replies: [
+      "Height and weight advantages are real but so is your determination",
+      "Different body types unlock different beta, do not compare",
+    ],
+  },
+  {
+    parent: "Three sessions in a row with zero sends, what is wrong with me",
+    replies: [
+      "Plateaus are part of the process, you are building strength even if it does not show",
+      "Try switching to easier climbs for a session, rebuild your confidence",
+    ],
+  },
+  {
+    parent: "The grade on this is an absolute lie",
+    replies: [
+      "Some climbs just do not match the consensus grade for certain body types",
+      "Which grade do you think it should be?",
+      "I agree, this feels at least two grades harder than listed",
+    ],
+  },
+  {
+    parent: "Just tweaked my finger on the second move, project over for now",
+    replies: [
+      "Take care of that finger, no climb is worth a serious injury",
+      "A2 pulley? Ice it and rest, I have been there",
+    ],
+  },
+  {
+    parent: "I can do every move in isolation but cannot link them together",
+    replies: [
+      "Linking problems are the real crux of projecting",
+      "Try overlapping the sections, link moves two and three then three and four",
+      "Endurance is probably the limiting factor, do some laps on easier stuff",
+    ],
+  },
+  {
+    parent: "This is my nemesis climb, it will haunt me forever",
+    replies: [
+      "Everyone has that one climb, mine took six months",
+      "Come back in a year when you are stronger, it will feel different",
+    ],
+  },
+  {
+    parent: "Fell on the jug finish and I am not okay",
+    replies: [
+      "Falling on a jug is a special kind of pain",
+      "You were probably so pumped you could not close your hand, happens to everyone",
+    ],
+  },
+  {
+    parent: "I hate slopers, I hate this board, I hate everything",
+    replies: [
+      "Sloper rage is a legitimate climbing emotion",
+      "Try training open hand on a hangboard, it transfers directly to slopers",
+      "We have all been there, go climb some crimps and come back happy",
+    ],
+  },
+  {
+    parent: "Set my attempt count record today and not in a good way",
+    replies: [
+      "High attempts just mean you are pushing your limits",
+      "What is the count? I need to know if it beats my record of shame",
+    ],
+  },
+  {
+    parent: "Literally cannot figure out the start of this climb",
+    replies: [
+      "The start is the crux honestly, once you are past move two it eases up",
+      "Try a different hand order, right hand first instead of left",
+      "I had to watch three videos before the start made sense",
+    ],
+  },
+  {
+    parent: "My forearms are so pumped I cannot open my water bottle",
+    replies: [
+      "The true test of a good session",
+      "Shake it out for five minutes then try one more burn, sometimes the pump helps you grip harder",
+    ],
+  },
+  {
+    parent: "Gravity felt extra strong today, nothing went right",
+    replies: [
+      "Some days you are the climber, some days you are the floor",
+      "Those sessions build character even if they do not build sends",
+    ],
+  },
+  {
+    parent: "Everyone says this is a classic and I think it is terrible",
+    replies: [
+      "Hot take but I kind of agree, the movement feels forced",
+      "You might change your mind once you send it, hate turns to love",
+      "Not every classic works for every climber, move on to something better",
+    ],
+  },
+  {
+    parent: "I keep barn dooring off the wall on the fourth move",
+    replies: [
+      "You need a flag or a toe hook to stay in balance there",
+      "Press harder with your outside foot, it acts as a counterweight",
+      "Body tension is the answer, engage your core before you reach",
+    ],
+  },
+  {
+    parent: "Partner sent my project in half the attempts, trying not to be salty",
+    replies: [
+      "Climbing is not a competition except when it is",
+      "Use them as a pace car, their beta might help you",
+      "Everyone progresses differently, your time will come",
+    ],
+  },
+  {
+    parent: "This hold is so bad it should not count as a hold",
+    replies: [
+      "Welcome to board climbing where the holds are small and the grades are stiff",
+      "That hold actually improves a lot if you shift your hand slightly right",
+    ],
+  },
+  {
+    parent: "Who set this and do they hate short people?",
+    replies: [
+      "The reachy moves on this are rough below average height",
+      "There is usually an alternative beta for shorter climbers, try a higher foot",
+      "As a short climber I feel this in my soul",
+    ],
+  },
+  {
+    parent: "Just slipped off a dry hold in perfect conditions, no excuses left",
+    replies: [
+      "Sometimes you just have to accept it was not your day",
+      "Did you try wiping the hold? Chalk buildup can make things slippery",
+    ],
+  },
+  {
+    parent: "My session today was a complete disaster from start to finish",
+    replies: [
+      "Bad sessions are data points, figure out why and adjust",
+      "Sleep and nutrition matter more than people think, how is your recovery?",
+      "Tomorrow is a new day, shake it off",
+    ],
+  },
+  {
+    parent: "Watching the leaderboard and everyone has sent this but me",
+    replies: [
+      "The leaderboard only shows the survivors, plenty of people struggled too",
+      "Ignore the leaderboard and climb for yourself",
+    ],
+  },
+  {
+    parent: "I have tried every beta on the internet and none of them work for me",
+    replies: [
+      "Sometimes you need to invent your own sequence",
+      "Post a video of your attempts, fresh eyes might spot something",
+      "Have you tried the opposite hand sequence from what feels natural?",
+    ],
+  },
+  {
+    parent: "This climb defeated me today but I will be back",
+    replies: [
+      "That is the right attitude, projects are earned not given",
+      "Rest up and come back swinging, you got this",
+    ],
+  },
 ];
 
 // =============================================================================
@@ -966,9 +1597,12 @@ export const SALTY_THREADS: ThreadTemplate[] = [
 // =============================================================================
 
 export function pickTickComment(status: TickStatus): string {
-  const pool = status === 'flash' ? FLASH_TICK_COMMENTS
-    : status === 'send' ? SEND_TICK_COMMENTS
-    : ATTEMPT_TICK_COMMENTS;
+  const pool =
+    status === "flash"
+      ? FLASH_TICK_COMMENTS
+      : status === "send"
+        ? SEND_TICK_COMMENTS
+        : ATTEMPT_TICK_COMMENTS;
 
   // 70% status-specific, 30% general
   const useGeneral = Math.random() < 0.3;
@@ -982,8 +1616,8 @@ export function pickTickComment(status: TickStatus): string {
 
 export function pickSocialComment(status: TickStatus): string {
   let pool: string[];
-  if (status === 'flash') pool = FLASH_SOCIAL_COMMENTS;
-  else if (status === 'send') pool = SEND_SOCIAL_COMMENTS;
+  if (status === "flash") pool = FLASH_SOCIAL_COMMENTS;
+  else if (status === "send") pool = SEND_SOCIAL_COMMENTS;
   else pool = SALTY_SOCIAL_COMMENTS;
 
   // 50% status-specific, 50% general
@@ -998,8 +1632,8 @@ export function pickSocialComment(status: TickStatus): string {
 
 export function pickThread(status: TickStatus): ThreadTemplate {
   let pool: ThreadTemplate[];
-  if (status === 'flash') pool = FLASH_THREADS;
-  else if (status === 'send') pool = SEND_THREADS;
+  if (status === "flash") pool = FLASH_THREADS;
+  else if (status === "send") pool = SEND_THREADS;
   else pool = SALTY_THREADS;
 
   // 40% status-specific, 60% general (threads tend toward general discussion)

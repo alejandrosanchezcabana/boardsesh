@@ -15,4 +15,4 @@ export {
   type NewSessionBoard,
   type BoardSessionParticipant,
   type NewBoardSessionParticipant,
-} from '@boardsesh/db/schema/app';
+} from "@boardsesh/db/schema/app";

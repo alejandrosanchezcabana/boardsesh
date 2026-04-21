@@ -1,7 +1,7 @@
-'use client';
+"use client";
 
-import { useCallback, useEffect, useState } from 'react';
-import { usePullToClose, findScrollContainer } from './pull-to-close';
+import { useCallback, useEffect, useState } from "react";
+import { usePullToClose, findScrollContainer } from "./pull-to-close";
 
 /**
  * Custom swipe-to-close for nested disablePortal drawers.
@@ -41,14 +41,14 @@ export function useNestedDrawerSwipe(onClose: () => void) {
       onTouchEnd();
     };
 
-    paperEl.addEventListener('touchstart', handleTouchStart, { passive: true });
-    paperEl.addEventListener('touchmove', handleTouchMove, { passive: true });
-    paperEl.addEventListener('touchend', handleTouchEnd, { passive: true });
+    paperEl.addEventListener("touchstart", handleTouchStart, { passive: true });
+    paperEl.addEventListener("touchmove", handleTouchMove, { passive: true });
+    paperEl.addEventListener("touchend", handleTouchEnd, { passive: true });
 
     return () => {
-      paperEl.removeEventListener('touchstart', handleTouchStart);
-      paperEl.removeEventListener('touchmove', handleTouchMove);
-      paperEl.removeEventListener('touchend', handleTouchEnd);
+      paperEl.removeEventListener("touchstart", handleTouchStart);
+      paperEl.removeEventListener("touchmove", handleTouchMove);
+      paperEl.removeEventListener("touchend", handleTouchEnd);
     };
   }, [paperEl, onTouchStart, onTouchMove, onTouchEnd]);
 

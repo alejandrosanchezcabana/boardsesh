@@ -1,7 +1,7 @@
-'use client';
+"use client";
 
-import { useRef, useState, useCallback, useEffect } from 'react';
-import { useGesture } from '@use-gesture/react';
+import { useRef, useState, useCallback, useEffect } from "react";
+import { useGesture } from "@use-gesture/react";
 
 const MIN_SCALE = 1;
 const MAX_SCALE = 4;
@@ -50,24 +50,25 @@ export function useZoomPan({ enabled = true }: UseZoomPanOptions = {}): UseZoomP
     const el = contentRef.current;
     if (!el) return;
 
-    const newTransform = scale === 1 ? '' : `scale(${scale}) translate(${x / scale}px, ${y / scale}px)`;
+    const newTransform =
+      scale === 1 ? "" : `scale(${scale}) translate(${x / scale}px, ${y / scale}px)`;
 
     if (animate && el.style.transform !== newTransform) {
       isTransitioningRef.current = true;
-      el.style.transition = 'transform 0.25s ease-out';
+      el.style.transition = "transform 0.25s ease-out";
       const onEnd = () => {
-        el.style.transition = '';
+        el.style.transition = "";
         isTransitioningRef.current = false;
-        el.removeEventListener('transitionend', onEnd);
+        el.removeEventListener("transitionend", onEnd);
       };
-      el.addEventListener('transitionend', onEnd, { once: true });
+      el.addEventListener("transitionend", onEnd, { once: true });
       // Fallback: clear transitioning state if transitionend doesn't fire
       // (e.g. element hidden by parent animation, browser skips transition)
       setTimeout(() => {
         isTransitioningRef.current = false;
       }, 300);
     } else {
-      el.style.transition = '';
+      el.style.transition = "";
       isTransitioningRef.current = false;
     }
 
@@ -103,7 +104,11 @@ export function useZoomPan({ enabled = true }: UseZoomPanOptions = {}): UseZoomP
               y: oy - rect.top - rect.height / 2,
             };
           }
-          return { startScale: scaleRef.current, startX: translateRef.current.x, startY: translateRef.current.y };
+          return {
+            startScale: scaleRef.current,
+            startX: translateRef.current.x,
+            startY: translateRef.current.y,
+          };
         }
 
         const newScale = Math.max(MIN_SCALE, Math.min(MAX_SCALE, s));
@@ -147,7 +152,7 @@ export function useZoomPan({ enabled = true }: UseZoomPanOptions = {}): UseZoomP
         if (first) {
           // Prevent text selection during drag
           const el = contentRef.current;
-          if (el) el.style.userSelect = 'none';
+          if (el) el.style.userSelect = "none";
         }
 
         const newX = translateRef.current.x + dx;
@@ -159,7 +164,7 @@ export function useZoomPan({ enabled = true }: UseZoomPanOptions = {}): UseZoomP
       },
       onDragEnd: () => {
         const el = contentRef.current;
-        if (el) el.style.userSelect = '';
+        if (el) el.style.userSelect = "";
       },
       onWheel: ({ event, delta: [, dy], ctrlKey, pinching }) => {
         if (!enabled || pinching || isTransitioningRef.current) return;

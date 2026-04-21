@@ -1,16 +1,16 @@
-import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { renderHook, act, waitFor } from '@testing-library/react';
-import { useWakeLock } from '../use-wake-lock';
+import { describe, it, expect, vi, beforeEach, afterEach } from "vite-plus/test";
+import { renderHook, act, waitFor } from "@testing-library/react";
+import { useWakeLock } from "../use-wake-lock";
 
 function createMockWakeLockSentinel(): WakeLockSentinel {
   const listeners: Record<string, Array<() => void>> = {};
   return {
     released: false,
-    type: 'screen' as const,
+    type: "screen" as const,
     release: vi.fn(async function (this: WakeLockSentinel) {
       (this as unknown as { released: boolean }).released = true;
       // Trigger release listeners
-      listeners['release']?.forEach((fn) => fn());
+      listeners["release"]?.forEach((fn) => fn());
     }),
     addEventListener: vi.fn((event: string, handler: () => void) => {
       if (!listeners[event]) listeners[event] = [];
@@ -26,22 +26,22 @@ function createMockWakeLockSentinel(): WakeLockSentinel {
   };
 }
 
-describe('useWakeLock', () => {
+describe("useWakeLock", () => {
   let mockRequest: ReturnType<typeof vi.fn>;
 
   beforeEach(() => {
     mockRequest = vi.fn();
 
     // Set up navigator.wakeLock
-    Object.defineProperty(navigator, 'wakeLock', {
+    Object.defineProperty(navigator, "wakeLock", {
       value: { request: mockRequest },
       writable: true,
       configurable: true,
     });
 
     // Reset document.visibilityState to 'visible'
-    Object.defineProperty(document, 'visibilityState', {
-      value: 'visible',
+    Object.defineProperty(document, "visibilityState", {
+      value: "visible",
       writable: true,
       configurable: true,
     });
@@ -51,25 +51,25 @@ describe('useWakeLock', () => {
     vi.restoreAllMocks();
   });
 
-  it('isSupported reflects navigator.wakeLock availability', () => {
+  it("isSupported reflects navigator.wakeLock availability", () => {
     const { result } = renderHook(() => useWakeLock(false));
     expect(result.current.isSupported).toBe(true);
   });
 
-  it('isSupported is false when navigator.wakeLock is not available', () => {
+  it("isSupported is false when navigator.wakeLock is not available", () => {
     // Remove the property entirely to make 'wakeLock' in navigator return false
-    Object.defineProperty(navigator, 'wakeLock', {
+    Object.defineProperty(navigator, "wakeLock", {
       value: undefined,
       writable: true,
       configurable: true,
     });
-    Reflect.deleteProperty(navigator as unknown as Record<string, unknown>, 'wakeLock');
+    Reflect.deleteProperty(navigator as unknown as Record<string, unknown>, "wakeLock");
 
     const { result } = renderHook(() => useWakeLock(false));
     expect(result.current.isSupported).toBe(false);
   });
 
-  it('requests wake lock when enabled and supported', async () => {
+  it("requests wake lock when enabled and supported", async () => {
     const sentinel = createMockWakeLockSentinel();
     mockRequest.mockResolvedValue(sentinel);
 
@@ -79,10 +79,10 @@ describe('useWakeLock', () => {
       expect(result.current.isActive).toBe(true);
     });
 
-    expect(mockRequest).toHaveBeenCalledWith('screen');
+    expect(mockRequest).toHaveBeenCalledWith("screen");
   });
 
-  it('does not request wake lock when not enabled', async () => {
+  it("does not request wake lock when not enabled", async () => {
     const sentinel = createMockWakeLockSentinel();
     mockRequest.mockResolvedValue(sentinel);
 
@@ -97,14 +97,13 @@ describe('useWakeLock', () => {
     expect(result.current.isActive).toBe(false);
   });
 
-  it('releases wake lock when disabled after being enabled', async () => {
+  it("releases wake lock when disabled after being enabled", async () => {
     const sentinel = createMockWakeLockSentinel();
     mockRequest.mockResolvedValue(sentinel);
 
-    const { result, rerender } = renderHook(
-      ({ enabled }) => useWakeLock(enabled),
-      { initialProps: { enabled: true } },
-    );
+    const { result, rerender } = renderHook(({ enabled }) => useWakeLock(enabled), {
+      initialProps: { enabled: true },
+    });
 
     await waitFor(() => {
       expect(result.current.isActive).toBe(true);
@@ -120,7 +119,7 @@ describe('useWakeLock', () => {
     expect(sentinel.release).toHaveBeenCalled();
   });
 
-  it('re-acquires wake lock on visibility change when document becomes visible', async () => {
+  it("re-acquires wake lock on visibility change when document becomes visible", async () => {
     const sentinel1 = createMockWakeLockSentinel();
     const sentinel2 = createMockWakeLockSentinel();
     mockRequest.mockResolvedValueOnce(sentinel1).mockResolvedValueOnce(sentinel2);
@@ -134,14 +133,14 @@ describe('useWakeLock', () => {
     expect(mockRequest).toHaveBeenCalledTimes(1);
 
     // Simulate visibility change to visible
-    Object.defineProperty(document, 'visibilityState', {
-      value: 'visible',
+    Object.defineProperty(document, "visibilityState", {
+      value: "visible",
       writable: true,
       configurable: true,
     });
 
     await act(async () => {
-      document.dispatchEvent(new Event('visibilitychange'));
+      document.dispatchEvent(new Event("visibilitychange"));
     });
 
     await waitFor(() => {
@@ -149,7 +148,7 @@ describe('useWakeLock', () => {
     });
   });
 
-  it('does not re-acquire wake lock on visibility change when disabled', async () => {
+  it("does not re-acquire wake lock on visibility change when disabled", async () => {
     const sentinel = createMockWakeLockSentinel();
     mockRequest.mockResolvedValue(sentinel);
 
@@ -163,51 +162,45 @@ describe('useWakeLock', () => {
     expect(mockRequest).not.toHaveBeenCalled();
 
     // Simulate visibility change
-    Object.defineProperty(document, 'visibilityState', {
-      value: 'visible',
+    Object.defineProperty(document, "visibilityState", {
+      value: "visible",
       writable: true,
       configurable: true,
     });
 
     await act(async () => {
-      document.dispatchEvent(new Event('visibilitychange'));
+      document.dispatchEvent(new Event("visibilitychange"));
     });
 
     // Should still not have been called
     expect(mockRequest).not.toHaveBeenCalled();
   });
 
-  it('handles request failure gracefully', async () => {
-    const consoleWarnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
-    mockRequest.mockRejectedValue(new Error('Document is not visible'));
+  it("handles request failure gracefully", async () => {
+    const consoleWarnSpy = vi.spyOn(console, "warn").mockImplementation(() => {});
+    mockRequest.mockRejectedValue(new Error("Document is not visible"));
 
     const { result } = renderHook(() => useWakeLock(true));
 
     await waitFor(() => {
-      expect(consoleWarnSpy).toHaveBeenCalledWith(
-        'Wake Lock request failed:',
-        expect.any(Error),
-      );
+      expect(consoleWarnSpy).toHaveBeenCalledWith("Wake Lock request failed:", expect.any(Error));
     });
 
     expect(result.current.isActive).toBe(false);
     consoleWarnSpy.mockRestore();
   });
 
-  it('handles release failure gracefully', async () => {
-    const consoleWarnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
+  it("handles release failure gracefully", async () => {
+    const consoleWarnSpy = vi.spyOn(console, "warn").mockImplementation(() => {});
     const sentinel = createMockWakeLockSentinel();
     mockRequest.mockResolvedValue(sentinel);
 
     // Make release fail
-    (sentinel.release as ReturnType<typeof vi.fn>).mockRejectedValue(
-      new Error('Release failed'),
-    );
+    (sentinel.release as ReturnType<typeof vi.fn>).mockRejectedValue(new Error("Release failed"));
 
-    const { result, rerender } = renderHook(
-      ({ enabled }) => useWakeLock(enabled),
-      { initialProps: { enabled: true } },
-    );
+    const { result, rerender } = renderHook(({ enabled }) => useWakeLock(enabled), {
+      initialProps: { enabled: true },
+    });
 
     await waitFor(() => {
       expect(result.current.isActive).toBe(true);
@@ -217,16 +210,13 @@ describe('useWakeLock', () => {
     rerender({ enabled: false });
 
     await waitFor(() => {
-      expect(consoleWarnSpy).toHaveBeenCalledWith(
-        'Wake Lock release failed:',
-        expect.any(Error),
-      );
+      expect(consoleWarnSpy).toHaveBeenCalledWith("Wake Lock release failed:", expect.any(Error));
     });
 
     consoleWarnSpy.mockRestore();
   });
 
-  it('cleans up on unmount', async () => {
+  it("cleans up on unmount", async () => {
     const sentinel = createMockWakeLockSentinel();
     mockRequest.mockResolvedValue(sentinel);
 
@@ -242,14 +232,13 @@ describe('useWakeLock', () => {
     expect(sentinel.release).toHaveBeenCalled();
   });
 
-  it('sets isActive correctly through lifecycle', async () => {
+  it("sets isActive correctly through lifecycle", async () => {
     const sentinel = createMockWakeLockSentinel();
     mockRequest.mockResolvedValue(sentinel);
 
-    const { result, rerender } = renderHook(
-      ({ enabled }) => useWakeLock(enabled),
-      { initialProps: { enabled: false } },
-    );
+    const { result, rerender } = renderHook(({ enabled }) => useWakeLock(enabled), {
+      initialProps: { enabled: false },
+    });
 
     // Initially not active
     expect(result.current.isActive).toBe(false);

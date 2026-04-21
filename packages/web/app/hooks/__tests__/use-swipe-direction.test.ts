@@ -1,9 +1,9 @@
-import { describe, it, expect } from 'vitest';
-import { renderHook, act } from '@testing-library/react';
-import { useSwipeDirection } from '../use-swipe-direction';
+import { describe, it, expect } from "vite-plus/test";
+import { renderHook, act } from "@testing-library/react";
+import { useSwipeDirection } from "../use-swipe-direction";
 
-describe('useSwipeDirection', () => {
-  it('returns null when movement is below threshold', () => {
+describe("useSwipeDirection", () => {
+  it("returns null when movement is below threshold", () => {
     const { result } = renderHook(() => useSwipeDirection());
 
     let direction: boolean | null;
@@ -14,7 +14,7 @@ describe('useSwipeDirection', () => {
     expect(direction!).toBeNull();
   });
 
-  it('returns true (horizontal) when horizontal movement exceeds threshold', () => {
+  it("returns true (horizontal) when horizontal movement exceeds threshold", () => {
     const { result } = renderHook(() => useSwipeDirection());
 
     let direction: boolean | null;
@@ -25,7 +25,7 @@ describe('useSwipeDirection', () => {
     expect(direction!).toBe(true);
   });
 
-  it('returns false (vertical) when vertical movement exceeds threshold', () => {
+  it("returns false (vertical) when vertical movement exceeds threshold", () => {
     const { result } = renderHook(() => useSwipeDirection());
 
     let direction: boolean | null;
@@ -36,7 +36,7 @@ describe('useSwipeDirection', () => {
     expect(direction!).toBe(false);
   });
 
-  it('direction is sticky once locked to horizontal', () => {
+  it("direction is sticky once locked to horizontal", () => {
     const { result } = renderHook(() => useSwipeDirection());
 
     // Lock to horizontal
@@ -53,7 +53,7 @@ describe('useSwipeDirection', () => {
     expect(direction!).toBe(true);
   });
 
-  it('direction is sticky once locked to vertical', () => {
+  it("direction is sticky once locked to vertical", () => {
     const { result } = renderHook(() => useSwipeDirection());
 
     // Lock to vertical
@@ -70,7 +70,7 @@ describe('useSwipeDirection', () => {
     expect(direction!).toBe(false);
   });
 
-  it('reset() unlocks the direction', () => {
+  it("reset() unlocks the direction", () => {
     const { result } = renderHook(() => useSwipeDirection());
 
     // Lock to horizontal
@@ -94,7 +94,7 @@ describe('useSwipeDirection', () => {
     expect(direction!).toBe(false);
   });
 
-  it('equal but above-threshold movement favors vertical (absX > absY is false when equal)', () => {
+  it("equal but above-threshold movement favors vertical (absX > absY is false when equal)", () => {
     const { result } = renderHook(() => useSwipeDirection());
 
     let direction: boolean | null;
@@ -106,7 +106,7 @@ describe('useSwipeDirection', () => {
     expect(direction!).toBe(false);
   });
 
-  it('negative deltas work correctly for horizontal', () => {
+  it("negative deltas work correctly for horizontal", () => {
     const { result } = renderHook(() => useSwipeDirection());
 
     let direction: boolean | null;
@@ -117,7 +117,7 @@ describe('useSwipeDirection', () => {
     expect(direction!).toBe(true);
   });
 
-  it('negative deltas work correctly for vertical', () => {
+  it("negative deltas work correctly for vertical", () => {
     const { result } = renderHook(() => useSwipeDirection());
 
     let direction: boolean | null;

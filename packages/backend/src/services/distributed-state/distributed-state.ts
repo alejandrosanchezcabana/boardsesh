@@ -1,13 +1,13 @@
-import type Redis from 'ioredis';
-import { v4 as uuidv4 } from 'uuid';
-import type { SessionUser } from '@boardsesh/shared-schema';
-import { KEYS, type DistributedConnection } from './constants';
+import type Redis from "ioredis";
+import { v4 as uuidv4 } from "uuid";
+import type { SessionUser } from "@boardsesh/shared-schema";
+import { KEYS, type DistributedConnection } from "./constants";
 import {
   registerConnection,
   getConnection,
   removeConnection,
   updateUsername,
-} from './connection-ops';
+} from "./connection-ops";
 import {
   joinSession,
   leaveSession,
@@ -20,13 +20,13 @@ import {
   hasSessionMembers,
   cleanupStaleSessionMembers,
   cleanupEmptySession,
-} from './session-ops';
+} from "./session-ops";
 import {
   updateHeartbeat,
   discoverDeadInstances,
   cleanupDeadInstanceConnections,
   cleanupInstanceConnections,
-} from './heartbeat';
+} from "./heartbeat";
 
 /**
  * DistributedStateManager provides cross-instance state management for:
@@ -47,7 +47,7 @@ export class DistributedStateManager {
 
   constructor(
     private readonly redis: Redis,
-    instanceId?: string
+    instanceId?: string,
   ) {
     this.instanceId = instanceId || uuidv4();
   }
@@ -77,7 +77,7 @@ export class DistributedStateManager {
 
     // Clean up connections from dead instances asynchronously on startup
     this.cleanupDeadInstanceConnections().catch((err) => {
-      console.error('[DistributedState] Startup dead instance cleanup failed:', err);
+      console.error("[DistributedState] Startup dead instance cleanup failed:", err);
     });
 
     console.log(`[DistributedState] Started with instance ID: ${this.instanceId.slice(0, 8)}`);
@@ -108,15 +108,22 @@ export class DistributedStateManager {
     connectionId: string,
     username: string,
     userId?: string | null,
-    avatarUrl?: string | null
+    avatarUrl?: string | null,
   ): Promise<void> {
-    return registerConnection(this.redis, this.instanceId, connectionId, username, userId, avatarUrl);
+    return registerConnection(
+      this.redis,
+      this.instanceId,
+      connectionId,
+      username,
+      userId,
+      avatarUrl,
+    );
   }
 
   /** Remove a connection from distributed state. */
   async removeConnection(
     connectionId: string,
-    electNewLeader: boolean = true
+    electNewLeader: boolean = true,
   ): Promise<{ sessionId: string | null; wasLeader: boolean; newLeaderId: string | null }> {
     return removeConnection(this.redis, this.instanceId, connectionId, electNewLeader);
   }
@@ -136,7 +143,7 @@ export class DistributedStateManager {
     connectionId: string,
     sessionId: string,
     username?: string,
-    avatarUrl?: string | null
+    avatarUrl?: string | null,
   ): Promise<{ isLeader: boolean }> {
     return joinSession(this.redis, connectionId, sessionId, username, avatarUrl);
   }
@@ -144,7 +151,7 @@ export class DistributedStateManager {
   /** Leave a session. Handles leader election if leaving member was leader. */
   async leaveSession(
     connectionId: string,
-    sessionId: string
+    sessionId: string,
   ): Promise<{ newLeaderId: string | null }> {
     return leaveSession(this.redis, connectionId, sessionId);
   }
@@ -219,14 +226,14 @@ export class DistributedStateManager {
 
     const pipeline = this.redis.pipeline();
     for (const connId of connectionIds) {
-      pipeline.hget(KEYS.connection(connId), 'sessionId');
+      pipeline.hget(KEYS.connection(connId), "sessionId");
     }
     const results = await pipeline.exec();
 
     const sessionIds = new Set<string>();
     if (results) {
       for (const [err, sessionId] of results) {
-        if (!err && sessionId && typeof sessionId === 'string' && sessionId !== '') {
+        if (!err && sessionId && typeof sessionId === "string" && sessionId !== "") {
           sessionIds.add(sessionId);
         }
       }
@@ -245,12 +252,12 @@ export class DistributedStateManager {
       // Heartbeat succeeded - reset failure counter and restore health
       if (this.consecutiveHeartbeatFailures > 0) {
         console.log(
-          `[DistributedState] Heartbeat recovered after ${this.consecutiveHeartbeatFailures} failures`
+          `[DistributedState] Heartbeat recovered after ${this.consecutiveHeartbeatFailures} failures`,
         );
         this.consecutiveHeartbeatFailures = 0;
       }
       if (!this.isHealthy) {
-        console.log('[DistributedState] Redis connection restored, marking as healthy');
+        console.log("[DistributedState] Redis connection restored, marking as healthy");
         this.isHealthy = true;
       }
 
@@ -259,28 +266,28 @@ export class DistributedStateManager {
       if (this.heartbeatCount % this.cleanupEveryNHeartbeats === 0) {
         // Clean up connections from dead backend instances
         this.cleanupDeadInstanceConnections().catch((err) => {
-          console.error('[DistributedState] Periodic dead instance cleanup failed:', err);
+          console.error("[DistributedState] Periodic dead instance cleanup failed:", err);
         });
         // Clean up stale members from sessions this instance participates in
         this.cleanupActiveSessionMembers().catch((err) => {
-          console.error('[DistributedState] Periodic active session cleanup failed:', err);
+          console.error("[DistributedState] Periodic active session cleanup failed:", err);
         });
       }
     } catch (err) {
       this.consecutiveHeartbeatFailures++;
-      const errorMessage = err instanceof Error ? err.message : 'Unknown error';
+      const errorMessage = err instanceof Error ? err.message : "Unknown error";
 
       if (this.consecutiveHeartbeatFailures >= this.maxHeartbeatFailures) {
         if (this.isHealthy) {
           console.error(
             `[DistributedState] Heartbeat failed ${this.consecutiveHeartbeatFailures} times, ` +
-              `marking as unhealthy: ${errorMessage}`
+              `marking as unhealthy: ${errorMessage}`,
           );
           this.isHealthy = false;
         }
       } else {
         console.warn(
-          `[DistributedState] Heartbeat failed (${this.consecutiveHeartbeatFailures}/${this.maxHeartbeatFailures}): ${errorMessage}`
+          `[DistributedState] Heartbeat failed (${this.consecutiveHeartbeatFailures}/${this.maxHeartbeatFailures}): ${errorMessage}`,
         );
       }
     }

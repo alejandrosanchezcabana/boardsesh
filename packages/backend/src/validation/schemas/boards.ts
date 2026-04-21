@@ -1,17 +1,23 @@
-import { z } from 'zod';
-import { UUIDSchema, BoardNameSchema, LatitudeSchema, LongitudeSchema, SlugSchema } from './primitives';
+import { z } from "zod";
+import {
+  UUIDSchema,
+  BoardNameSchema,
+  LatitudeSchema,
+  LongitudeSchema,
+  SlugSchema,
+} from "./primitives";
 
 /**
  * Create board input validation schema
  */
 export const CreateBoardInputSchema = z.object({
   boardType: BoardNameSchema,
-  layoutId: z.number().int().positive('Layout ID must be positive'),
-  sizeId: z.number().int().positive('Size ID must be positive'),
-  setIds: z.string().min(1, 'Set IDs cannot be empty'),
-  name: z.string().min(1, 'Board name cannot be empty').max(100, 'Board name too long'),
-  description: z.string().max(500, 'Description too long').optional(),
-  locationName: z.string().max(200, 'Location name too long').optional(),
+  layoutId: z.number().int().positive("Layout ID must be positive"),
+  sizeId: z.number().int().positive("Size ID must be positive"),
+  setIds: z.string().min(1, "Set IDs cannot be empty"),
+  name: z.string().min(1, "Board name cannot be empty").max(100, "Board name too long"),
+  description: z.string().max(500, "Description too long").optional(),
+  locationName: z.string().max(200, "Location name too long").optional(),
   latitude: LatitudeSchema.optional(),
   longitude: LongitudeSchema.optional(),
   isPublic: z.boolean().optional(),
@@ -41,9 +47,9 @@ export const UpdateBoardInputSchema = z.object({
   isOwned: z.boolean().optional(),
   angle: z.number().int().min(0).max(70).optional(),
   isAngleAdjustable: z.boolean().optional(),
-  layoutId: z.number().int().positive('Layout ID must be positive').optional(),
-  sizeId: z.number().int().positive('Size ID must be positive').optional(),
-  setIds: z.string().min(1, 'Set IDs cannot be empty').optional(),
+  layoutId: z.number().int().positive("Layout ID must be positive").optional(),
+  sizeId: z.number().int().positive("Size ID must be positive").optional(),
+  setIds: z.string().min(1, "Set IDs cannot be empty").optional(),
   serialNumber: z.string().max(100).optional().nullable(),
 });
 
@@ -52,7 +58,7 @@ export const UpdateBoardInputSchema = z.object({
  */
 export const BoardLeaderboardInputSchema = z.object({
   boardUuid: UUIDSchema,
-  period: z.enum(['week', 'month', 'year', 'all']).optional().default('all'),
+  period: z.enum(["week", "month", "year", "all"]).optional().default("all"),
   limit: z.number().int().min(1).max(100).optional().default(50),
   offset: z.number().int().min(0).optional().default(0),
 });

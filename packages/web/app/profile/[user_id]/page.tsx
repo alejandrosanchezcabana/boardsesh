@@ -1,14 +1,14 @@
-import React from 'react';
-import { Metadata } from 'next';
-import { notFound } from 'next/navigation';
-import { getServerAuthToken } from '@/app/lib/auth/server-auth';
-import { getServerSession } from 'next-auth/next';
-import { authOptions } from '@/app/lib/auth/auth-options';
-import ProfilePageContent from './profile-page-content';
-import { getProfileData } from './server-profile-data';
-import { fetchProfileStatsData } from './server-profile-stats';
-import { buildVersionedOgImagePath, OG_IMAGE_HEIGHT, OG_IMAGE_WIDTH } from '@/app/lib/seo/og';
-import { getProfileOgSummary } from '@/app/lib/seo/dynamic-og-data';
+import React from "react";
+import { Metadata } from "next";
+import { notFound } from "next/navigation";
+import { getServerAuthToken } from "@/app/lib/auth/server-auth";
+import { getServerSession } from "next-auth/next";
+import { authOptions } from "@/app/lib/auth/auth-options";
+import ProfilePageContent from "./profile-page-content";
+import { getProfileData } from "./server-profile-data";
+import { fetchProfileStatsData } from "./server-profile-stats";
+import { buildVersionedOgImagePath, OG_IMAGE_HEIGHT, OG_IMAGE_WIDTH } from "@/app/lib/seo/og";
+import { getProfileOgSummary } from "@/app/lib/seo/dynamic-og-data";
 
 type PageProps = {
   params: Promise<{ user_id: string }>;
@@ -22,15 +22,15 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
 
     if (!summary) {
       return {
-        title: 'Profile Not Found | Boardsesh',
-        description: 'This climbing profile could not be found.',
+        title: "Profile Not Found | Boardsesh",
+        description: "This climbing profile could not be found.",
         robots: { index: false, follow: false },
       };
     }
 
     const displayName = summary.displayName;
     const description = `${displayName}'s climbing profile on Boardsesh`;
-    const ogImagePath = buildVersionedOgImagePath('/api/og/profile', { user_id }, summary.version);
+    const ogImagePath = buildVersionedOgImagePath("/api/og/profile", { user_id }, summary.version);
 
     return {
       title: `${displayName} | Boardsesh`,
@@ -39,7 +39,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
       openGraph: {
         title: `${displayName} | Boardsesh`,
         description,
-        type: 'profile',
+        type: "profile",
         url: `/profile/${user_id}`,
         images: [
           {
@@ -51,7 +51,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
         ],
       },
       twitter: {
-        card: 'summary_large_image',
+        card: "summary_large_image",
         title: `${displayName} | Boardsesh`,
         description,
         images: [ogImagePath],
@@ -59,8 +59,8 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
     };
   } catch {
     return {
-      title: 'Profile | Boardsesh',
-      description: 'View climbing profile and stats',
+      title: "Profile | Boardsesh",
+      description: "View climbing profile and stats",
       alternates: { canonical: `/profile/${user_id}` },
     };
   }

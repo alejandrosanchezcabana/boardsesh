@@ -1,7 +1,7 @@
-import type Redis from 'ioredis';
-import { KEYS, TTL } from './constants';
-import { cleanupStaleSessionMembers } from './session-ops';
-import { removeConnection, getConnection } from './connection-ops';
+import type Redis from "ioredis";
+import { KEYS, TTL } from "./constants";
+import { cleanupStaleSessionMembers } from "./session-ops";
+import { removeConnection, getConnection } from "./connection-ops";
 
 /**
  * Update instance heartbeat in Redis.
@@ -24,11 +24,11 @@ export async function updateHeartbeat(redis: Redis, instanceId: string): Promise
  */
 export async function discoverDeadInstances(redis: Redis, instanceId: string): Promise<string[]> {
   const deadInstances: string[] = [];
-  let cursor = '0';
-  const pattern = 'boardsesh:instance:*:conns';
+  let cursor = "0";
+  const pattern = "boardsesh:instance:*:conns";
 
   do {
-    const [nextCursor, keys] = await redis.scan(cursor, 'MATCH', pattern, 'COUNT', 100);
+    const [nextCursor, keys] = await redis.scan(cursor, "MATCH", pattern, "COUNT", 100);
     cursor = nextCursor;
 
     for (const key of keys) {
@@ -44,7 +44,7 @@ export async function discoverDeadInstances(redis: Redis, instanceId: string): P
         deadInstances.push(foundInstanceId);
       }
     }
-  } while (cursor !== '0');
+  } while (cursor !== "0");
 
   return deadInstances;
 }
@@ -56,7 +56,7 @@ export async function discoverDeadInstances(redis: Redis, instanceId: string): P
  */
 export async function cleanupDeadInstanceConnections(
   redis: Redis,
-  instanceId: string
+  instanceId: string,
 ): Promise<{
   deadInstances: string[];
   staleConnections: string[];
@@ -68,7 +68,7 @@ export async function cleanupDeadInstanceConnections(
   }
 
   console.log(
-    `[DistributedState] Found ${deadInstances.length} dead instances: ${deadInstances.map((id) => id.slice(0, 8)).join(', ')}`
+    `[DistributedState] Found ${deadInstances.length} dead instances: ${deadInstances.map((id) => id.slice(0, 8)).join(", ")}`,
   );
 
   const allStaleConnections: string[] = [];
@@ -83,21 +83,21 @@ export async function cleanupDeadInstanceConnections(
     }
 
     console.log(
-      `[DistributedState] Dead instance ${deadInstanceId.slice(0, 8)} has ${connectionIds.length} orphaned connections`
+      `[DistributedState] Dead instance ${deadInstanceId.slice(0, 8)} has ${connectionIds.length} orphaned connections`,
     );
 
     // Group connections by session for batch pruning
     const sessionConnections = new Map<string, string[]>();
     const pipeline = redis.pipeline();
     for (const connId of connectionIds) {
-      pipeline.hget(KEYS.connection(connId), 'sessionId');
+      pipeline.hget(KEYS.connection(connId), "sessionId");
     }
     const results = await pipeline.exec();
 
     if (results) {
       for (let i = 0; i < connectionIds.length; i++) {
         const [err, sessionId] = results[i] as [Error | null, string | null];
-        if (!err && sessionId && sessionId !== '') {
+        if (!err && sessionId && sessionId !== "") {
           const conns = sessionConnections.get(sessionId) || [];
           conns.push(connectionIds[i]);
           sessionConnections.set(sessionId, conns);
@@ -122,17 +122,14 @@ export async function cleanupDeadInstanceConnections(
       try {
         await cleanupStaleSessionMembers(redis, sessionId);
       } catch (err) {
-        console.error(
-          `[DistributedState] Failed to prune session ${sessionId.slice(0, 8)}:`,
-          err
-        );
+        console.error(`[DistributedState] Failed to prune session ${sessionId.slice(0, 8)}:`, err);
       }
     }
   }
 
   console.log(
     `[DistributedState] Cleanup complete: removed ${allStaleConnections.length} stale connections ` +
-      `from ${deadInstances.length} dead instances affecting ${allSessionsAffected.size} sessions`
+      `from ${deadInstances.length} dead instances affecting ${allSessionsAffected.size} sessions`,
   );
 
   return {
@@ -146,10 +143,7 @@ export async function cleanupDeadInstanceConnections(
  * Clean up all connections belonging to an instance.
  * Called on graceful shutdown. Uses parallel cleanup with Promise.allSettled.
  */
-export async function cleanupInstanceConnections(
-  redis: Redis,
-  instanceId: string
-): Promise<void> {
+export async function cleanupInstanceConnections(redis: Redis, instanceId: string): Promise<void> {
   const connectionIds = await redis.smembers(KEYS.instanceConnections(instanceId));
 
   if (connectionIds.length === 0) {
@@ -158,17 +152,17 @@ export async function cleanupInstanceConnections(
 
   // Use Promise.allSettled for parallel cleanup - faster than sequential
   const results = await Promise.allSettled(
-    connectionIds.map((connectionId) => removeConnection(redis, instanceId, connectionId))
+    connectionIds.map((connectionId) => removeConnection(redis, instanceId, connectionId)),
   );
 
   // Collect failed connection IDs
   const failedConnectionIds: string[] = [];
   for (let i = 0; i < results.length; i++) {
     const result = results[i];
-    if (result.status === 'rejected') {
+    if (result.status === "rejected") {
       console.error(
         `[DistributedState] Failed to remove connection ${connectionIds[i].slice(0, 8)} during cleanup:`,
-        result.reason
+        result.reason,
       );
       failedConnectionIds.push(connectionIds[i]);
     }
@@ -177,7 +171,7 @@ export async function cleanupInstanceConnections(
   // Force cleanup of failed connections to prevent orphaned data
   if (failedConnectionIds.length > 0) {
     console.warn(
-      `[DistributedState] Force cleaning ${failedConnectionIds.length} failed connections`
+      `[DistributedState] Force cleaning ${failedConnectionIds.length} failed connections`,
     );
     const cleanupMulti = redis.multi();
     for (const connectionId of failedConnectionIds) {
@@ -186,7 +180,7 @@ export async function cleanupInstanceConnections(
     try {
       await cleanupMulti.exec();
     } catch (err) {
-      console.error('[DistributedState] Failed to force cleanup connections:', err);
+      console.error("[DistributedState] Failed to force cleanup connections:", err);
     }
   }
 
@@ -197,6 +191,6 @@ export async function cleanupInstanceConnections(
   await multi.exec();
 
   console.log(
-    `[DistributedState] Cleaned up ${connectionIds.length} connections for instance: ${instanceId.slice(0, 8)}`
+    `[DistributedState] Cleaned up ${connectionIds.length} connections for instance: ${instanceId.slice(0, 8)}`,
   );
 }

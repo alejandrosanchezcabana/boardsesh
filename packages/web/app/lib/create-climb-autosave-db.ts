@@ -1,7 +1,7 @@
-import { createIndexedDBStore } from './idb-helper';
+import { createIndexedDBStore } from "./idb-helper";
 
-const STORE_NAME = 'autosave';
-const AUTOSAVE_KEY = 'create-climb';
+const STORE_NAME = "autosave";
+const AUTOSAVE_KEY = "create-climb";
 
 export interface CreateClimbAutosave {
   /** Serialised holds map (JSON stringified LitUpHoldsMap) */
@@ -13,7 +13,7 @@ export interface CreateClimbAutosave {
   boardKey: string;
 }
 
-const getDB = createIndexedDBStore('boardsesh-create-climb', STORE_NAME);
+const getDB = createIndexedDBStore("boardsesh-create-climb", STORE_NAME);
 
 export async function saveAutosave(data: CreateClimbAutosave): Promise<void> {
   try {
@@ -29,7 +29,7 @@ export async function loadAutosave(boardKey: string): Promise<CreateClimbAutosav
   try {
     const db = await getDB();
     if (!db) return null;
-    const data = await db.get(STORE_NAME, AUTOSAVE_KEY) as CreateClimbAutosave | undefined;
+    const data = (await db.get(STORE_NAME, AUTOSAVE_KEY)) as CreateClimbAutosave | undefined;
     if (!data || data.boardKey !== boardKey) return null;
     return data;
   } catch {

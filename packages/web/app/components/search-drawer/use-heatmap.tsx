@@ -1,7 +1,7 @@
-import { useEffect, useState, useMemo } from 'react';
-import { BoardName, SearchRequestPagination } from '@/app/lib/types';
-import { HeatmapData } from '../board-renderer/types';
-import { searchParamsToUrlParams } from '@/app/lib/url-utils';
+import { useEffect, useState, useMemo } from "react";
+import { BoardName, SearchRequestPagination } from "@/app/lib/types";
+import { HeatmapData } from "../board-renderer/types";
+import { searchParamsToUrlParams } from "@/app/lib/url-utils";
 
 interface UseHeatmapDataProps {
   boardName: BoardName;
@@ -50,7 +50,7 @@ export default function useHeatmapData({
         if (cancelled) return;
 
         if (!response.ok) {
-          throw new Error('Failed to fetch heatmap data');
+          throw new Error("Failed to fetch heatmap data");
         }
 
         const data = await response.json();
@@ -61,8 +61,8 @@ export default function useHeatmapData({
         setError(null);
       } catch (err) {
         if (cancelled) return;
-        setError(err instanceof Error ? err : new Error('Unknown error'));
-        console.error('Error fetching heatmap data:', err);
+        setError(err instanceof Error ? err : new Error("Unknown error"));
+        console.error("Error fetching heatmap data:", err);
       } finally {
         if (!cancelled) {
           setLoading(false);
@@ -75,7 +75,7 @@ export default function useHeatmapData({
     return () => {
       cancelled = true;
     };
-  // eslint-disable-next-line react-hooks/exhaustive-deps -- filtersKey is a serialized version of filters
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- filtersKey is a serialized version of filters
   }, [boardName, layoutId, sizeId, setIds, angle, filtersKey, enabled]);
 
   return { data: heatmapData, loading, error };

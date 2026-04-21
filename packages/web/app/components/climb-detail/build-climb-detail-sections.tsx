@@ -1,16 +1,16 @@
-'use client';
+"use client";
 
-import React, { useMemo } from 'react';
-import { useSearchParams } from 'next/navigation';
-import { useQuery } from '@tanstack/react-query';
-import type { CollapsibleSectionConfig } from '@/app/components/collapsible-section/collapsible-section';
-import BetaVideos from '@/app/components/beta-videos/beta-videos';
-import { LogbookSection, useLogbookSummary } from '@/app/components/logbook/logbook-section';
-import ClimbSocialSection from '@/app/components/social/climb-social-section';
-import ClimbAnalytics from '@/app/components/charts/climb-analytics';
-import type { BetaLink } from '@/app/lib/api-wrappers/sync-api-types';
-import { dedupeBetaLinks } from '@/app/lib/instagram-url';
-import type { Climb } from '@/app/lib/types';
+import React, { useMemo } from "react";
+import { useSearchParams } from "next/navigation";
+import { useQuery } from "@tanstack/react-query";
+import type { CollapsibleSectionConfig } from "@/app/components/collapsible-section/collapsible-section";
+import BetaVideos from "@/app/components/beta-videos/beta-videos";
+import { LogbookSection, useLogbookSummary } from "@/app/components/logbook/logbook-section";
+import ClimbSocialSection from "@/app/components/social/climb-social-section";
+import ClimbAnalytics from "@/app/components/charts/climb-analytics";
+import type { BetaLink } from "@/app/lib/api-wrappers/sync-api-types";
+import { dedupeBetaLinks } from "@/app/lib/instagram-url";
+import type { Climb } from "@/app/lib/types";
 
 interface BuildClimbDetailSectionsProps {
   climb: Climb;
@@ -39,9 +39,9 @@ export function useBuildClimbDetailSections({
   enabled: enabledProp = true,
 }: BuildClimbDetailSectionsProps): CollapsibleSectionConfig[] {
   const searchParams = useSearchParams();
-  const highlightProposalUuid = searchParams.get('proposalUuid') ?? undefined;
+  const highlightProposalUuid = searchParams.get("proposalUuid") ?? undefined;
   const { data: betaLinks = [] } = useQuery<BetaLink[]>({
-    queryKey: ['betaLinks', boardType, climbUuid],
+    queryKey: ["betaLinks", boardType, climbUuid],
     queryFn: async () => {
       const res = await fetch(`/api/v1/${boardType}/beta/${climbUuid}`);
       if (!res.ok) return [];
@@ -60,10 +60,14 @@ export function useBuildClimbDetailSections({
     if (!logbookSummary) return [];
 
     const parts: string[] = [];
-    parts.push(`${logbookSummary.totalAttempts} attempt${logbookSummary.totalAttempts !== 1 ? 's' : ''}`);
+    parts.push(
+      `${logbookSummary.totalAttempts} attempt${logbookSummary.totalAttempts !== 1 ? "s" : ""}`,
+    );
 
     if (logbookSummary.successfulAscents > 0) {
-      parts.push(`${logbookSummary.successfulAscents} send${logbookSummary.successfulAscents !== 1 ? 's' : ''}`);
+      parts.push(
+        `${logbookSummary.successfulAscents} send${logbookSummary.successfulAscents !== 1 ? "s" : ""}`,
+      );
     }
 
     return parts;
@@ -71,32 +75,32 @@ export function useBuildClimbDetailSections({
 
   return [
     {
-      key: 'beta',
-      label: 'Beta Videos',
-      title: 'Beta Videos',
-      defaultSummary: 'No videos',
+      key: "beta",
+      label: "Beta Videos",
+      title: "Beta Videos",
+      defaultSummary: "No videos",
       getSummary: () =>
         uniqueBetaLinks.length > 0
-          ? [`${uniqueBetaLinks.length} video${uniqueBetaLinks.length !== 1 ? 's' : ''}`]
+          ? [`${uniqueBetaLinks.length} video${uniqueBetaLinks.length !== 1 ? "s" : ""}`]
           : [],
       lazy: true,
       content: <BetaVideos betaLinks={uniqueBetaLinks} />,
     },
     {
-      key: 'logbook',
-      label: 'Your Logbook',
-      title: 'Your Logbook',
-      defaultSummary: 'No ascents',
+      key: "logbook",
+      label: "Your Logbook",
+      title: "Your Logbook",
+      defaultSummary: "No ascents",
       getSummary: getLogbookSummaryParts,
       lazy: true,
       content: <LogbookSection climb={climb} />,
     },
     {
-      key: 'community',
-      label: 'Community',
-      title: 'Community',
-      defaultSummary: 'Votes, comments, proposals',
-      getSummary: () => ['Votes', 'Comments', 'Proposals'],
+      key: "community",
+      label: "Community",
+      title: "Community",
+      defaultSummary: "Votes, comments, proposals",
+      getSummary: () => ["Votes", "Comments", "Proposals"],
       lazy: true,
       defaultActive: !!highlightProposalUuid,
       content: (
@@ -111,18 +115,13 @@ export function useBuildClimbDetailSections({
       ),
     },
     {
-      key: 'analytics',
-      label: 'Analytics',
-      title: 'Analytics',
-      defaultSummary: 'Ascents, quality trends',
-      getSummary: () => ['Ascents', 'Quality', 'Trends'],
+      key: "analytics",
+      label: "Analytics",
+      title: "Analytics",
+      defaultSummary: "Ascents, quality trends",
+      getSummary: () => ["Ascents", "Quality", "Trends"],
       lazy: true,
-      content: (
-        <ClimbAnalytics
-          climbUuid={climbUuid}
-          boardType={boardType}
-        />
-      ),
+      content: <ClimbAnalytics climbUuid={climbUuid} boardType={boardType} />,
     },
   ];
 }

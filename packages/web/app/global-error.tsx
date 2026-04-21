@@ -36,9 +36,7 @@ export default function GlobalError({
             textAlign: "center",
           }}
         >
-          <p style={{ fontSize: 18, fontWeight: 500, margin: "0 0 8px" }}>
-            Something went wrong
-          </p>
+          <p style={{ fontSize: 18, fontWeight: 500, margin: "0 0 8px" }}>Something went wrong</p>
           <p style={{ fontSize: 14, color: "#9CA3AF", margin: "0 0 24px" }}>
             Try reloading to get back on track
           </p>

@@ -23,8 +23,8 @@ import {
   boardTags,
   boardUserSyncs,
   boardSharedSyncs,
-} from '@/lib/db/schema';
-import { AuroraBoardName } from '@/app/lib/api-wrappers/aurora/types';
+} from "@/lib/db/schema";
+import { AuroraBoardName } from "@/app/lib/api-wrappers/aurora/types";
 
 // Re-export AuroraBoardName as BoardName for backward compatibility within this module
 export type BoardName = AuroraBoardName;
@@ -69,16 +69,14 @@ export type UnifiedTableSet = typeof UNIFIED_TABLES;
  * @param tableName The name of the unified table to retrieve
  * @returns The unified table
  */
-export function getUnifiedTable<K extends keyof UnifiedTableSet>(
-  tableName: K
-): UnifiedTableSet[K] {
+export function getUnifiedTable<K extends keyof UnifiedTableSet>(tableName: K): UnifiedTableSet[K] {
   return UNIFIED_TABLES[tableName];
 }
 
 /**
  * Board name type that includes all supported boards (kilter, tension, moonboard, decoy, touchstone, grasshopper)
  */
-export type UnifiedBoardName = BoardName | 'moonboard';
+export type UnifiedBoardName = BoardName | "moonboard";
 
 /**
  * Check if a board name is valid (includes all supported boards)
@@ -86,8 +84,14 @@ export type UnifiedBoardName = BoardName | 'moonboard';
  * @returns True if the board name is valid
  */
 export function isValidBoardName(boardName: string): boardName is UnifiedBoardName {
-  return boardName === 'kilter' || boardName === 'tension' || boardName === 'moonboard' ||
-         boardName === 'decoy' || boardName === 'touchstone' || boardName === 'grasshopper';
+  return (
+    boardName === "kilter" ||
+    boardName === "tension" ||
+    boardName === "moonboard" ||
+    boardName === "decoy" ||
+    boardName === "touchstone" ||
+    boardName === "grasshopper"
+  );
 }
 
 /** @deprecated Use isValidBoardName instead */

@@ -1,5 +1,5 @@
-import { HoldType, GridCoordinate, GRID_POSITIONS, DetectedHold } from '../types';
-import { RawPixelData, ImageRegion } from '../image-processor/types';
+import { HoldType, GridCoordinate, GRID_POSITIONS, DetectedHold } from "../types";
+import { RawPixelData, ImageRegion } from "../image-processor/types";
 
 interface CircleCenter {
   x: number;
@@ -14,25 +14,14 @@ interface CircleCenter {
 function isYellowPixel(r: number, g: number, b: number): boolean {
   // MoonBoard yellow: ~RGB(238, 223, 80)
   // Allow some tolerance for compression artifacts
-  return (
-    r >= 200 &&
-    r <= 255 &&
-    g >= 180 &&
-    g <= 240 &&
-    b >= 40 &&
-    b <= 120 &&
-    r > b &&
-    g > b
-  ); // Yellow has high R and G, low B
+  return r >= 200 && r <= 255 && g >= 180 && g <= 240 && b >= 40 && b <= 120 && r > b && g > b; // Yellow has high R and G, low B
 }
 
 /**
  * Auto-detect the yellow MoonBoard region in raw pixel data.
  * The board is yellow (#eedf50) surrounded by gray UI elements.
  */
-export function detectBoardRegion(
-  pixelData: RawPixelData
-): ImageRegion | null {
+export function detectBoardRegion(pixelData: RawPixelData): ImageRegion | null {
   const { data, width, height, channels } = pixelData;
 
   // Find bounding box of yellow pixels
@@ -90,44 +79,30 @@ export function detectBoardRegion(
  * - BLUE circles (#2961ff) = HAND holds (intermediate)
  * - GREEN circles (#4caf50) = START holds (bottom of climb)
  */
-export function classifyPixelColor(
-  r: number,
-  g: number,
-  b: number
-): HoldType | null {
+export function classifyPixelColor(r: number, g: number, b: number): HoldType | null {
   // Red circle (FINISH holds) - top of climb
   // Exact color: #f44336 = RGB(244, 67, 54)
   // Also matches rendered color ~RGB(225, 82, 64)
-  const redDist = Math.sqrt(
-    Math.pow(r - 244, 2) + Math.pow(g - 67, 2) + Math.pow(b - 54, 2)
-  );
-  const redDist2 = Math.sqrt(
-    Math.pow(r - 225, 2) + Math.pow(g - 82, 2) + Math.pow(b - 64, 2)
-  );
+  const redDist = Math.sqrt(Math.pow(r - 244, 2) + Math.pow(g - 67, 2) + Math.pow(b - 54, 2));
+  const redDist2 = Math.sqrt(Math.pow(r - 225, 2) + Math.pow(g - 82, 2) + Math.pow(b - 64, 2));
   if (redDist < 50 || redDist2 < 50) {
-    return 'finish';
+    return "finish";
   }
 
   // Blue circle (HAND holds) - intermediate moves
   // Exact color: #2961ff = RGB(41, 97, 255)
-  const blueDist = Math.sqrt(
-    Math.pow(r - 41, 2) + Math.pow(g - 97, 2) + Math.pow(b - 255, 2)
-  );
+  const blueDist = Math.sqrt(Math.pow(r - 41, 2) + Math.pow(g - 97, 2) + Math.pow(b - 255, 2));
   if (blueDist < 50) {
-    return 'hand';
+    return "hand";
   }
 
   // Green circle (START holds) - bottom of climb
   // Design color: #4caf50 = RGB(76, 175, 80)
   // Actual rendered: ~RGB(85, 171, 103) or ~RGB(100, 160, 80)
-  const greenDist1 = Math.sqrt(
-    Math.pow(r - 76, 2) + Math.pow(g - 175, 2) + Math.pow(b - 80, 2)
-  );
-  const greenDist2 = Math.sqrt(
-    Math.pow(r - 100, 2) + Math.pow(g - 160, 2) + Math.pow(b - 80, 2)
-  );
+  const greenDist1 = Math.sqrt(Math.pow(r - 76, 2) + Math.pow(g - 175, 2) + Math.pow(b - 80, 2));
+  const greenDist2 = Math.sqrt(Math.pow(r - 100, 2) + Math.pow(g - 160, 2) + Math.pow(b - 80, 2));
   if ((greenDist1 < 40 || greenDist2 < 40) && g > r && g > b) {
-    return 'start';
+    return "start";
   }
 
   return null;
@@ -144,7 +119,7 @@ function floodFill(
   startX: number,
   startY: number,
   targetType: HoldType,
-  visited: Set<number>
+  visited: Set<number>,
 ): { x: number; y: number }[] {
   const pixels: { x: number; y: number }[] = [];
   const stack: { x: number; y: number }[] = [{ x: startX, y: startY }];
@@ -190,10 +165,7 @@ export function findCircleCenters(pixelData: RawPixelData): CircleCenter[] {
   // Minimum pixels to be considered a valid circle (filters noise).
   // Scale with image resolution: 5% of average cell area (11 cols x 18 rows).
   // For 1097x1764 (1290 phone): ~489, for 992x1595 (1206 phone): ~399
-  const minPixels = Math.max(
-    100,
-    Math.round((width * height) / (11 * 18) * 0.05)
-  );
+  const minPixels = Math.max(100, Math.round(((width * height) / (11 * 18)) * 0.05));
 
   for (let y = 0; y < height; y++) {
     for (let x = 0; x < width; x++) {
@@ -209,16 +181,7 @@ export function findCircleCenters(pixelData: RawPixelData): CircleCenter[] {
       if (!holdType) continue;
 
       // Flood fill to find all connected pixels of same type
-      const component = floodFill(
-        data,
-        width,
-        height,
-        channels,
-        x,
-        y,
-        holdType,
-        visited
-      );
+      const component = floodFill(data, width, height, channels, x, y, holdType, visited);
 
       if (component.length >= minPixels) {
         // Calculate center of mass
@@ -247,9 +210,9 @@ export function findCircleCenters(pixelData: RawPixelData): CircleCenter[] {
  */
 export function findNearestGridPosition(
   relX: number,
-  relY: number
+  relY: number,
 ): { coordinate: GridCoordinate; distance: number } {
-  let nearestCoord: GridCoordinate = 'A1';
+  let nearestCoord: GridCoordinate = "A1";
   let minDistance = Infinity;
 
   for (const [coord, pos] of Object.entries(GRID_POSITIONS)) {
@@ -272,7 +235,7 @@ export function findNearestGridPosition(
 export function mapCirclesToHolds(
   circles: CircleCenter[],
   boardRegion: ImageRegion,
-  pixelDataDimensions: { width: number; height: number }
+  pixelDataDimensions: { width: number; height: number },
 ): DetectedHold[] {
   return circles
     .map((circle) => {
@@ -304,16 +267,7 @@ export function mapCirclesToHolds(
  * Color samples: RGB(211,175,88), RGB(214,165,62), RGB(229,168,88)
  */
 function isOrangePixel(r: number, g: number, b: number): boolean {
-  return (
-    r >= 180 &&
-    r <= 255 &&
-    g >= 130 &&
-    g <= 210 &&
-    b >= 20 &&
-    b <= 100 &&
-    r > g &&
-    g > b
-  );
+  return r >= 180 && r <= 255 && g >= 130 && g <= 210 && b >= 20 && b <= 100 && r > g && g > b;
 }
 
 /**
@@ -333,8 +287,7 @@ export function detectBenchmarkCircle(pixelData: RawPixelData): boolean {
       if (visited.has(idx)) continue;
 
       const pixelIdx = idx * channels;
-      if (!isOrangePixel(data[pixelIdx], data[pixelIdx + 1], data[pixelIdx + 2]))
-        continue;
+      if (!isOrangePixel(data[pixelIdx], data[pixelIdx + 1], data[pixelIdx + 2])) continue;
 
       // Flood-fill this orange component
       let count = 0;
@@ -361,7 +314,7 @@ export function detectBenchmarkCircle(pixelData: RawPixelData): boolean {
           { x: p.x + 1, y: p.y },
           { x: p.x - 1, y: p.y },
           { x: p.x, y: p.y + 1 },
-          { x: p.x, y: p.y - 1 }
+          { x: p.x, y: p.y - 1 },
         );
       }
 
@@ -372,8 +325,7 @@ export function detectBenchmarkCircle(pixelData: RawPixelData): boolean {
       const bboxWidth = maxX - minX + 1;
       const bboxHeight = maxY - minY + 1;
       const density = count / (bboxWidth * bboxHeight);
-      const aspectRatio =
-        Math.max(bboxWidth, bboxHeight) / Math.min(bboxWidth, bboxHeight);
+      const aspectRatio = Math.max(bboxWidth, bboxHeight) / Math.min(bboxWidth, bboxHeight);
 
       if (density > 0.5 && aspectRatio < 1.3 && bboxWidth < 100) {
         return true;
@@ -389,7 +341,7 @@ export function detectBenchmarkCircle(pixelData: RawPixelData): boolean {
  */
 export function detectHoldsFromPixelData(
   pixelData: RawPixelData,
-  boardRegion: ImageRegion
+  boardRegion: ImageRegion,
 ): DetectedHold[] {
   const circles = findCircleCenters(pixelData);
   return mapCirclesToHolds(circles, boardRegion, {

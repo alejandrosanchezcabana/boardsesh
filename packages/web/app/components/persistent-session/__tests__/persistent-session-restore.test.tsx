@@ -1,17 +1,17 @@
-import 'fake-indexeddb/auto';
-import { openDB } from 'idb';
-import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { renderHook, act, waitFor } from '@testing-library/react';
-import React from 'react';
-import { getPreference, setPreference, removePreference } from '@/app/lib/user-preferences-db';
-import type { BoardDetails } from '@/app/lib/types';
+import "fake-indexeddb/auto";
+import { openDB } from "idb";
+import { describe, it, expect, vi, beforeEach, afterEach } from "vite-plus/test";
+import { renderHook, act, waitFor } from "@testing-library/react";
+import React from "react";
+import { getPreference, setPreference, removePreference } from "@/app/lib/user-preferences-db";
+import type { BoardDetails } from "@/app/lib/types";
 
 // ---------------------------------------------------------------------------
 // Mock heavy dependencies that PersistentSessionProvider relies on
 // ---------------------------------------------------------------------------
 
 // Mock the WebSocket/GraphQL layer — we don't want real connections in tests
-vi.mock('../../graphql-queue/graphql-client', () => ({
+vi.mock("../../graphql-queue/graphql-client", () => ({
   createGraphQLClient: vi.fn(() => ({
     dispose: vi.fn(),
   })),
@@ -20,41 +20,41 @@ vi.mock('../../graphql-queue/graphql-client', () => ({
 }));
 
 // Mock auth token hook
-vi.mock('@/app/hooks/use-ws-auth-token', () => ({
-  useWsAuthToken: () => ({ token: 'test-token', isLoading: false }),
+vi.mock("@/app/hooks/use-ws-auth-token", () => ({
+  useWsAuthToken: () => ({ token: "test-token", isLoading: false }),
 }));
 
 // Mock party profile
-vi.mock('../../party-manager/party-profile-context', () => ({
+vi.mock("../../party-manager/party-profile-context", () => ({
   usePartyProfile: () => ({
-    profile: { id: 'test-user' },
-    username: 'tester',
+    profile: { id: "test-user" },
+    username: "tester",
     avatarUrl: null,
   }),
   PartyProfileProvider: ({ children }: { children: React.ReactNode }) => children,
 }));
 
 // Mock next/navigation
-vi.mock('next/navigation', () => ({
-  usePathname: () => '/',
+vi.mock("next/navigation", () => ({
+  usePathname: () => "/",
   useSearchParams: () => new URLSearchParams(),
   useRouter: () => ({ replace: vi.fn(), push: vi.fn() }),
 }));
 
 // Mock hash utility
-vi.mock('@/app/utils/hash', () => ({
-  computeQueueStateHash: () => 'mock-hash',
+vi.mock("@/app/utils/hash", () => ({
+  computeQueueStateHash: () => "mock-hash",
 }));
 
 // Import AFTER mocks are set up
-import { PersistentSessionProvider, usePersistentSession } from '../persistent-session-context';
+import { PersistentSessionProvider, usePersistentSession } from "../persistent-session-context";
 
 // ---------------------------------------------------------------------------
 // Constants matching the source
 // ---------------------------------------------------------------------------
-const ACTIVE_SESSION_KEY = 'activeSession';
-const PREFS_DB_NAME = 'boardsesh-user-preferences';
-const PREFS_STORE_NAME = 'preferences';
+const ACTIVE_SESSION_KEY = "activeSession";
+const PREFS_DB_NAME = "boardsesh-user-preferences";
+const PREFS_STORE_NAME = "preferences";
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -62,10 +62,10 @@ const PREFS_STORE_NAME = 'preferences';
 
 function createTestBoardDetails(overrides?: Partial<BoardDetails>): BoardDetails {
   return {
-    board_name: 'kilter',
+    board_name: "kilter",
     layout_id: 1,
     size_id: 10,
-    set_ids: '1,2',
+    set_ids: "1,2",
     images_to_holds: {},
     holdsData: {},
     edge_left: 0,
@@ -74,8 +74,8 @@ function createTestBoardDetails(overrides?: Partial<BoardDetails>): BoardDetails
     edge_top: 100,
     boardHeight: 100,
     boardWidth: 100,
-    layout_name: 'Original',
-    size_name: '12x12',
+    layout_name: "Original",
+    size_name: "12x12",
     ...overrides,
   } as BoardDetails;
 }
@@ -113,13 +113,19 @@ afterEach(() => {
 // Tests: Session persistence via user-preferences-db
 // ---------------------------------------------------------------------------
 
-describe('Active session persistence', () => {
-  it('stores and retrieves ActiveSessionInfo via user-preferences-db', async () => {
+describe("Active session persistence", () => {
+  it("stores and retrieves ActiveSessionInfo via user-preferences-db", async () => {
     const sessionInfo = {
-      sessionId: 'session-123',
-      boardPath: '/kilter/1/10/1,2/40/list',
+      sessionId: "session-123",
+      boardPath: "/kilter/1/10/1,2/40/list",
       boardDetails: createTestBoardDetails(),
-      parsedParams: { board_name: 'kilter' as const, layout_id: 1, size_id: 10, set_ids: [1, 2], angle: 40 },
+      parsedParams: {
+        board_name: "kilter" as const,
+        layout_id: 1,
+        size_id: 10,
+        set_ids: [1, 2],
+        angle: 40,
+      },
     };
 
     await setPreference(ACTIVE_SESSION_KEY, sessionInfo);
@@ -128,8 +134,8 @@ describe('Active session persistence', () => {
     expect(result).toEqual(sessionInfo);
   });
 
-  it('returns null after clearing', async () => {
-    await setPreference(ACTIVE_SESSION_KEY, { sessionId: 'test' });
+  it("returns null after clearing", async () => {
+    await setPreference(ACTIVE_SESSION_KEY, { sessionId: "test" });
     await removePreference(ACTIVE_SESSION_KEY);
 
     const result = await getPreference(ACTIVE_SESSION_KEY);
@@ -141,8 +147,8 @@ describe('Active session persistence', () => {
 // Tests: PersistentSessionProvider mount restore behavior
 // ---------------------------------------------------------------------------
 
-describe('PersistentSessionProvider auto-restore on mount', () => {
-  it('sets isLocalQueueLoaded=true when no stored data exists', async () => {
+describe("PersistentSessionProvider auto-restore on mount", () => {
+  it("sets isLocalQueueLoaded=true when no stored data exists", async () => {
     const { result } = renderHook(() => usePersistentSession(), { wrapper });
 
     await waitFor(() => {
@@ -154,13 +160,19 @@ describe('PersistentSessionProvider auto-restore on mount', () => {
     expect(result.current.activeSession).toBeNull();
   });
 
-  it('restores persisted party session on mount', async () => {
+  it("restores persisted party session on mount", async () => {
     const boardDetails = createTestBoardDetails();
     const sessionInfo = {
-      sessionId: 'session-abc',
-      boardPath: '/kilter/1/10/1,2/40/list',
+      sessionId: "session-abc",
+      boardPath: "/kilter/1/10/1,2/40/list",
       boardDetails,
-      parsedParams: { board_name: 'kilter' as const, layout_id: 1, size_id: 10, set_ids: [1, 2], angle: 40 },
+      parsedParams: {
+        board_name: "kilter" as const,
+        layout_id: 1,
+        size_id: 10,
+        set_ids: [1, 2],
+        angle: 40,
+      },
     };
 
     await setPreference(ACTIVE_SESSION_KEY, sessionInfo);
@@ -177,7 +189,7 @@ describe('PersistentSessionProvider auto-restore on mount', () => {
     expect(result.current.localQueue).toEqual([]);
   });
 
-  it('activateSession persists to IndexedDB', async () => {
+  it("activateSession persists to IndexedDB", async () => {
     const { result } = renderHook(() => usePersistentSession(), { wrapper });
 
     await waitFor(() => {
@@ -185,10 +197,16 @@ describe('PersistentSessionProvider auto-restore on mount', () => {
     });
 
     const sessionInfo = {
-      sessionId: 'new-session',
-      boardPath: '/kilter/1/10/1,2/40/list',
+      sessionId: "new-session",
+      boardPath: "/kilter/1/10/1,2/40/list",
       boardDetails: createTestBoardDetails(),
-      parsedParams: { board_name: 'kilter' as const, layout_id: 1, size_id: 10, set_ids: [1, 2], angle: 40 },
+      parsedParams: {
+        board_name: "kilter" as const,
+        layout_id: 1,
+        size_id: 10,
+        set_ids: [1, 2],
+        angle: 40,
+      },
     };
 
     act(() => {
@@ -202,13 +220,19 @@ describe('PersistentSessionProvider auto-restore on mount', () => {
     });
   });
 
-  it('deactivateSession clears from IndexedDB', async () => {
+  it("deactivateSession clears from IndexedDB", async () => {
     // Pre-populate a persisted session
     const sessionInfo = {
-      sessionId: 'to-deactivate',
-      boardPath: '/kilter/1/10/1,2/40/list',
+      sessionId: "to-deactivate",
+      boardPath: "/kilter/1/10/1,2/40/list",
       boardDetails: createTestBoardDetails(),
-      parsedParams: { board_name: 'kilter' as const, layout_id: 1, size_id: 10, set_ids: [1, 2], angle: 40 },
+      parsedParams: {
+        board_name: "kilter" as const,
+        layout_id: 1,
+        size_id: 10,
+        set_ids: [1, 2],
+        angle: 40,
+      },
     };
     await setPreference(ACTIVE_SESSION_KEY, sessionInfo);
 

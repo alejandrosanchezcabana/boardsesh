@@ -1,20 +1,20 @@
-'use client';
+"use client";
 
-import React, { useState, useEffect } from 'react';
-import TextField from '@mui/material/TextField';
-import Button from '@mui/material/Button';
-import CircularProgress from '@mui/material/CircularProgress';
-import Box from '@mui/material/Box';
-import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { createGraphQLHttpClient } from '@/app/lib/graphql/client';
-import { useWsAuthToken } from '@/app/hooks/use-ws-auth-token';
+import React, { useState, useEffect } from "react";
+import TextField from "@mui/material/TextField";
+import Button from "@mui/material/Button";
+import CircularProgress from "@mui/material/CircularProgress";
+import Box from "@mui/material/Box";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { createGraphQLHttpClient } from "@/app/lib/graphql/client";
+import { useWsAuthToken } from "@/app/hooks/use-ws-auth-token";
 import {
   ATTACH_BETA_LINK,
   type AttachBetaLinkMutationVariables,
   type AttachBetaLinkMutationResponse,
-} from '@/app/lib/graphql/operations';
-import { isInstagramUrl } from '@/app/lib/instagram-url';
-import { useSnackbar } from '@/app/components/providers/snackbar-provider';
+} from "@/app/lib/graphql/operations";
+import { isInstagramUrl } from "@/app/lib/instagram-url";
+import { useSnackbar } from "@/app/components/providers/snackbar-provider";
 
 interface AttachBetaLinkFormProps {
   boardType: string;
@@ -37,32 +37,30 @@ export const AttachBetaLinkForm: React.FC<AttachBetaLinkFormProps> = ({
   climbName,
   angle,
   resetTrigger,
-  submitLabel = 'Share beta',
-  helperText = 'Paste a reel or post link so others can see your beta.',
+  submitLabel = "Share beta",
+  helperText = "Paste a reel or post link so others can see your beta.",
   onSuccess,
   onCancel,
   showCancel = false,
   autoFocus = false,
   compact = false,
 }) => {
-  const [url, setUrl] = useState('');
+  const [url, setUrl] = useState("");
   const { token } = useWsAuthToken();
   const queryClient = useQueryClient();
   const { showMessage } = useSnackbar();
 
   useEffect(() => {
-    setUrl('');
+    setUrl("");
   }, [resetTrigger]);
 
   const trimmed = url.trim();
   const validationError =
-    trimmed && !isInstagramUrl(trimmed)
-      ? 'Needs to be an Instagram post or reel URL'
-      : null;
+    trimmed && !isInstagramUrl(trimmed) ? "Needs to be an Instagram post or reel URL" : null;
 
   const mutation = useMutation({
     mutationFn: async () => {
-      if (!token) throw new Error('Auth token not available');
+      if (!token) throw new Error("Auth token not available");
       const client = createGraphQLHttpClient(token);
       const variables: AttachBetaLinkMutationVariables = {
         input: {
@@ -75,38 +73,38 @@ export const AttachBetaLinkForm: React.FC<AttachBetaLinkFormProps> = ({
       await client.request<AttachBetaLinkMutationResponse>(ATTACH_BETA_LINK, variables);
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['betaLinks', boardType, climbUuid] });
-      showMessage('Video added to beta', 'success');
-      setUrl('');
+      queryClient.invalidateQueries({ queryKey: ["betaLinks", boardType, climbUuid] });
+      showMessage("Video added to beta", "success");
+      setUrl("");
       onSuccess?.();
     },
     onError: () => {
-      showMessage('Couldn’t add video. Try again.', 'error');
+      showMessage("Couldn’t add video. Try again.", "error");
     },
   });
 
   const canSubmit = !!trimmed && !validationError && !mutation.isPending;
 
   return (
-    <Box sx={{ display: 'flex', flexDirection: 'column', gap: compact ? 1.25 : 1.5 }}>
+    <Box sx={{ display: "flex", flexDirection: "column", gap: compact ? 1.25 : 1.5 }}>
       <TextField
         autoFocus={autoFocus}
         fullWidth
         placeholder="https://www.instagram.com/reel/..."
-        label={climbName ? `Instagram URL for ${climbName}` : 'Instagram URL'}
+        label={climbName ? `Instagram URL for ${climbName}` : "Instagram URL"}
         value={url}
         onChange={(e) => setUrl(e.target.value)}
         error={!!validationError}
         helperText={validationError ?? helperText}
         onKeyDown={(e) => {
-          if (e.key === 'Enter' && canSubmit) {
+          if (e.key === "Enter" && canSubmit) {
             e.preventDefault();
             mutation.mutate();
           }
         }}
       />
 
-      <Box sx={{ display: 'flex', justifyContent: 'flex-end', gap: 1 }}>
+      <Box sx={{ display: "flex", justifyContent: "flex-end", gap: 1 }}>
         {showCancel && onCancel && (
           <Button onClick={onCancel} disabled={mutation.isPending}>
             Cancel

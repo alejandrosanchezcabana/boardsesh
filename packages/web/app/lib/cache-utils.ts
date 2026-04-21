@@ -4,7 +4,7 @@
  * produce the same cache key string
  */
 export function sortObjectKeys<T>(obj: T): T {
-  if (obj === null || typeof obj !== 'object') {
+  if (obj === null || typeof obj !== "object") {
     return obj;
   }
 

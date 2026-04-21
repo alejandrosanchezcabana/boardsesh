@@ -1,70 +1,70 @@
-import { describe, it, expect } from 'vitest';
-import { getImageUrl, buildOverlayUrl, buildOgBoardRenderUrl } from '../util';
-import type { BoardDetails } from '@/app/lib/types';
+import { describe, it, expect } from "vite-plus/test";
+import { getImageUrl, buildOverlayUrl, buildOgBoardRenderUrl } from "../util";
+import type { BoardDetails } from "@/app/lib/types";
 
-describe('getImageUrl', () => {
-  describe('self-hosted Kilter/Tension images (relative paths)', () => {
-    it('converts PNG to WebP', () => {
-      expect(getImageUrl('product_sizes_layouts_sets/36-1.png', 'kilter')).toBe(
-        '/images/kilter/product_sizes_layouts_sets/36-1.webp',
+describe("getImageUrl", () => {
+  describe("self-hosted Kilter/Tension images (relative paths)", () => {
+    it("converts PNG to WebP", () => {
+      expect(getImageUrl("product_sizes_layouts_sets/36-1.png", "kilter")).toBe(
+        "/images/kilter/product_sizes_layouts_sets/36-1.webp",
       );
     });
 
-    it('returns WebP path unchanged if already .webp', () => {
-      expect(getImageUrl('product_sizes_layouts_sets/36-1.webp', 'kilter')).toBe(
-        '/images/kilter/product_sizes_layouts_sets/36-1.webp',
+    it("returns WebP path unchanged if already .webp", () => {
+      expect(getImageUrl("product_sizes_layouts_sets/36-1.webp", "kilter")).toBe(
+        "/images/kilter/product_sizes_layouts_sets/36-1.webp",
       );
     });
 
-    it('inserts /thumbs/ for thumbnail=true', () => {
-      expect(getImageUrl('product_sizes_layouts_sets/36-1.png', 'kilter', true)).toBe(
-        '/images/kilter/product_sizes_layouts_sets/thumbs/36-1.webp',
+    it("inserts /thumbs/ for thumbnail=true", () => {
+      expect(getImageUrl("product_sizes_layouts_sets/36-1.png", "kilter", true)).toBe(
+        "/images/kilter/product_sizes_layouts_sets/thumbs/36-1.webp",
       );
     });
 
-    it('works for tension board', () => {
-      expect(getImageUrl('product_sizes_layouts_sets/1.png', 'tension', true)).toBe(
-        '/images/tension/product_sizes_layouts_sets/thumbs/1.webp',
+    it("works for tension board", () => {
+      expect(getImageUrl("product_sizes_layouts_sets/1.png", "tension", true)).toBe(
+        "/images/tension/product_sizes_layouts_sets/thumbs/1.webp",
       );
     });
   });
 
-  describe('absolute paths (MoonBoard images starting with /)', () => {
-    it('converts PNG to WebP for full-size', () => {
-      expect(getImageUrl('/images/moonboard/moonboard-bg.png', 'moonboard' as never)).toBe(
-        '/images/moonboard/moonboard-bg.webp',
+  describe("absolute paths (MoonBoard images starting with /)", () => {
+    it("converts PNG to WebP for full-size", () => {
+      expect(getImageUrl("/images/moonboard/moonboard-bg.png", "moonboard" as never)).toBe(
+        "/images/moonboard/moonboard-bg.webp",
       );
     });
 
-    it('passes through already-.webp absolute URL', () => {
-      expect(getImageUrl('/images/moonboard/moonboard-bg.webp', 'moonboard' as never)).toBe(
-        '/images/moonboard/moonboard-bg.webp',
+    it("passes through already-.webp absolute URL", () => {
+      expect(getImageUrl("/images/moonboard/moonboard-bg.webp", "moonboard" as never)).toBe(
+        "/images/moonboard/moonboard-bg.webp",
       );
     });
 
-    it('inserts /thumbs/ for thumbnail=true', () => {
-      expect(getImageUrl('/images/moonboard/moonboard-bg.png', 'moonboard' as never, true)).toBe(
-        '/images/moonboard/thumbs/moonboard-bg.webp',
+    it("inserts /thumbs/ for thumbnail=true", () => {
+      expect(getImageUrl("/images/moonboard/moonboard-bg.png", "moonboard" as never, true)).toBe(
+        "/images/moonboard/thumbs/moonboard-bg.webp",
       );
     });
 
-    it('inserts /thumbs/ correctly for nested MoonBoard layout paths', () => {
+    it("inserts /thumbs/ correctly for nested MoonBoard layout paths", () => {
       expect(
-        getImageUrl('/images/moonboard/moonboard2024/holdsete.png', 'moonboard' as never, true),
-      ).toBe('/images/moonboard/moonboard2024/thumbs/holdsete.webp');
+        getImageUrl("/images/moonboard/moonboard2024/holdsete.png", "moonboard" as never, true),
+      ).toBe("/images/moonboard/moonboard2024/thumbs/holdsete.webp");
     });
 
-    it('inserts /thumbs/ for already-.webp absolute URL with thumbnail=true', () => {
-      expect(getImageUrl('/images/moonboard/moonboard-bg.webp', 'moonboard' as never, true)).toBe(
-        '/images/moonboard/thumbs/moonboard-bg.webp',
+    it("inserts /thumbs/ for already-.webp absolute URL with thumbnail=true", () => {
+      expect(getImageUrl("/images/moonboard/moonboard-bg.webp", "moonboard" as never, true)).toBe(
+        "/images/moonboard/thumbs/moonboard-bg.webp",
       );
     });
   });
 });
 
-describe('buildOverlayUrl', () => {
+describe("buildOverlayUrl", () => {
   const boardDetails: BoardDetails = {
-    board_name: 'kilter',
+    board_name: "kilter",
     layout_id: 1,
     size_id: 7,
     set_ids: [1, 20],
@@ -78,31 +78,31 @@ describe('buildOverlayUrl', () => {
     boardHeight: 1350,
   } as unknown as BoardDetails;
 
-  it('builds a correctly structured URL', () => {
-    const url = buildOverlayUrl(boardDetails, 'p1r12,p2r13');
-    expect(url).toContain('/api/internal/board-render');
-    expect(url).toContain('board_name=kilter');
-    expect(url).toContain('layout_id=1');
-    expect(url).toContain('size_id=7');
-    expect(url).toContain('set_ids=1,20');
-    expect(url).toContain('frames=p1r12%2Cp2r13');
-    expect(url).not.toContain('thumbnail');
+  it("builds a correctly structured URL", () => {
+    const url = buildOverlayUrl(boardDetails, "p1r12,p2r13");
+    expect(url).toContain("/api/internal/board-render");
+    expect(url).toContain("board_name=kilter");
+    expect(url).toContain("layout_id=1");
+    expect(url).toContain("size_id=7");
+    expect(url).toContain("set_ids=1,20");
+    expect(url).toContain("frames=p1r12%2Cp2r13");
+    expect(url).not.toContain("thumbnail");
   });
 
-  it('appends thumbnail=1 when thumbnail is true', () => {
-    const url = buildOverlayUrl(boardDetails, 'p1r12', true);
-    expect(url).toContain('&thumbnail=1');
+  it("appends thumbnail=1 when thumbnail is true", () => {
+    const url = buildOverlayUrl(boardDetails, "p1r12", true);
+    expect(url).toContain("&thumbnail=1");
   });
 
-  it('omits thumbnail param when false', () => {
-    const url = buildOverlayUrl(boardDetails, 'p1r12', false);
-    expect(url).not.toContain('thumbnail');
+  it("omits thumbnail param when false", () => {
+    const url = buildOverlayUrl(boardDetails, "p1r12", false);
+    expect(url).not.toContain("thumbnail");
   });
 });
 
-describe('buildOgBoardRenderUrl', () => {
+describe("buildOgBoardRenderUrl", () => {
   const boardDetails: BoardDetails = {
-    board_name: 'kilter',
+    board_name: "kilter",
     layout_id: 1,
     size_id: 7,
     set_ids: [1, 20],
@@ -116,13 +116,13 @@ describe('buildOgBoardRenderUrl', () => {
     boardHeight: 1350,
   } as unknown as BoardDetails;
 
-  it('builds the public OG board render URL', () => {
-    const url = buildOgBoardRenderUrl(boardDetails, 'p1r12,p2r13');
+  it("builds the public OG board render URL", () => {
+    const url = buildOgBoardRenderUrl(boardDetails, "p1r12,p2r13");
 
-    expect(url).toContain('/api/internal/board-render');
-    expect(url).toContain('include_background=1');
-    expect(url).toContain('variant=og');
-    expect(url).toContain('format=png');
-    expect(url).not.toContain('/api/og/climb');
+    expect(url).toContain("/api/internal/board-render");
+    expect(url).toContain("include_background=1");
+    expect(url).toContain("variant=og");
+    expect(url).toContain("format=png");
+    expect(url).not.toContain("/api/og/climb");
   });
 });

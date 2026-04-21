@@ -1,26 +1,26 @@
-'use client';
+"use client";
 
-import React, { useState, useCallback, useEffect, useRef } from 'react';
-import Dialog from '@mui/material/Dialog';
-import DialogTitle from '@mui/material/DialogTitle';
-import DialogContent from '@mui/material/DialogContent';
-import TextField from '@mui/material/TextField';
-import List from '@mui/material/List';
-import ListItemButton from '@mui/material/ListItemButton';
-import ListItemAvatar from '@mui/material/ListItemAvatar';
-import ListItemText from '@mui/material/ListItemText';
-import Avatar from '@mui/material/Avatar';
-import Typography from '@mui/material/Typography';
-import CircularProgress from '@mui/material/CircularProgress';
-import Box from '@mui/material/Box';
-import PersonOutlined from '@mui/icons-material/PersonOutlined';
-import { createGraphQLHttpClient } from '@/app/lib/graphql/client';
-import { useWsAuthToken } from '@/app/hooks/use-ws-auth-token';
+import React, { useState, useCallback, useEffect, useRef } from "react";
+import Dialog from "@mui/material/Dialog";
+import DialogTitle from "@mui/material/DialogTitle";
+import DialogContent from "@mui/material/DialogContent";
+import TextField from "@mui/material/TextField";
+import List from "@mui/material/List";
+import ListItemButton from "@mui/material/ListItemButton";
+import ListItemAvatar from "@mui/material/ListItemAvatar";
+import ListItemText from "@mui/material/ListItemText";
+import Avatar from "@mui/material/Avatar";
+import Typography from "@mui/material/Typography";
+import CircularProgress from "@mui/material/CircularProgress";
+import Box from "@mui/material/Box";
+import PersonOutlined from "@mui/icons-material/PersonOutlined";
+import { createGraphQLHttpClient } from "@/app/lib/graphql/client";
+import { useWsAuthToken } from "@/app/hooks/use-ws-auth-token";
 import {
   SEARCH_USERS,
   type SearchUsersQueryVariables,
   type SearchUsersQueryResponse,
-} from '@/app/lib/graphql/operations/social';
+} from "@/app/lib/graphql/operations/social";
 
 interface UserSearchDialogProps {
   open: boolean;
@@ -42,7 +42,7 @@ export default function UserSearchDialog({
   excludeUserIds = [],
 }: UserSearchDialogProps) {
   const { token: authToken } = useWsAuthToken();
-  const [query, setQuery] = useState('');
+  const [query, setQuery] = useState("");
   const [results, setResults] = useState<SearchResult[]>([]);
   const [loading, setLoading] = useState(false);
   const searchTimeout = useRef<ReturnType<typeof setTimeout>>(undefined);
@@ -74,7 +74,7 @@ export default function UserSearchDialog({
 
         setResults(filtered);
       } catch (err) {
-        console.error('User search failed:', err);
+        console.error("User search failed:", err);
         setResults([]);
       } finally {
         setLoading(false);
@@ -86,7 +86,7 @@ export default function UserSearchDialog({
 
   const handleSelect = useCallback(
     (userId: string) => {
-      setQuery('');
+      setQuery("");
       setResults([]);
       onSelectUser(userId);
     },
@@ -94,7 +94,7 @@ export default function UserSearchDialog({
   );
 
   const handleClose = useCallback(() => {
-    setQuery('');
+    setQuery("");
     setResults([]);
     onClose();
   }, [onClose]);
@@ -114,13 +114,13 @@ export default function UserSearchDialog({
         />
 
         {loading && (
-          <Box sx={{ display: 'flex', justifyContent: 'center', py: 2 }}>
+          <Box sx={{ display: "flex", justifyContent: "center", py: 2 }}>
             <CircularProgress size={24} />
           </Box>
         )}
 
         {!loading && results.length === 0 && query.trim().length >= 2 && (
-          <Typography variant="body2" color="text.secondary" sx={{ py: 2, textAlign: 'center' }}>
+          <Typography variant="body2" color="text.secondary" sx={{ py: 2, textAlign: "center" }}>
             No users found
           </Typography>
         )}
@@ -135,8 +135,8 @@ export default function UserSearchDialog({
                   </Avatar>
                 </ListItemAvatar>
                 <ListItemText
-                  primary={user.displayName || 'Climber'}
-                  primaryTypographyProps={{ variant: 'body2' }}
+                  primary={user.displayName || "Climber"}
+                  primaryTypographyProps={{ variant: "body2" }}
                 />
               </ListItemButton>
             ))}

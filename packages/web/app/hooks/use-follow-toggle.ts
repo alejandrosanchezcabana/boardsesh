@@ -1,10 +1,10 @@
-'use client';
+"use client";
 
-import { useState, useCallback, useEffect } from 'react';
-import { useWsAuthToken } from '@/app/hooks/use-ws-auth-token';
-import { useSnackbar } from '@/app/components/providers/snackbar-provider';
-import { createGraphQLHttpClient } from '@/app/lib/graphql/client';
-import type { TypedDocumentNode } from '@graphql-typed-document-node/core';
+import { useState, useCallback, useEffect } from "react";
+import { useWsAuthToken } from "@/app/hooks/use-ws-auth-token";
+import { useSnackbar } from "@/app/components/providers/snackbar-provider";
+import { createGraphQLHttpClient } from "@/app/lib/graphql/client";
+import type { TypedDocumentNode } from "@graphql-typed-document-node/core";
 
 interface UseFollowToggleConfig {
   entityId: string;
@@ -37,7 +37,7 @@ export function useFollowToggle({
 
   const handleToggle = useCallback(async () => {
     if (!isAuthenticated || !token) {
-      showMessage(`Sign in to follow ${entityLabel}s`, 'info');
+      showMessage(`Sign in to follow ${entityLabel}s`, "info");
       return;
     }
 
@@ -58,12 +58,23 @@ export function useFollowToggle({
     } catch (error) {
       setIsFollowing(previousState);
       onFollowChange?.(previousState);
-      showMessage('Failed to update follow status', 'error');
+      showMessage("Failed to update follow status", "error");
       console.error(`${entityLabel} follow toggle error:`, error);
     } finally {
       setIsLoading(false);
     }
-  }, [isFollowing, isAuthenticated, token, entityId, entityLabel, followMutation, unfollowMutation, getFollowVariables, onFollowChange, showMessage]);
+  }, [
+    isFollowing,
+    isAuthenticated,
+    token,
+    entityId,
+    entityLabel,
+    followMutation,
+    unfollowMutation,
+    getFollowVariables,
+    onFollowChange,
+    showMessage,
+  ]);
 
   return {
     isFollowing,

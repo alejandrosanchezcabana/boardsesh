@@ -1,9 +1,9 @@
-'use client';
+"use client";
 
-import React from 'react';
-import Link from 'next/link';
-import PlaylistPreviewSquare from './playlist-preview-square';
-import styles from './library.module.css';
+import React from "react";
+import Link from "next/link";
+import PlaylistPreviewSquare from "./playlist-preview-square";
+import styles from "./library.module.css";
 
 export type PlaylistCardProps = {
   name: string;
@@ -13,10 +13,10 @@ export type PlaylistCardProps = {
   color?: string;
   icon?: string;
   href: string;
-  variant: 'grid' | 'scroll';
+  variant: "grid" | "scroll";
   index?: number;
   isLikedClimbs?: boolean;
-  fetchPriority?: 'high' | 'low' | 'auto';
+  fetchPriority?: "high" | "low" | "auto";
 };
 
 export default function PlaylistCard({
@@ -32,7 +32,7 @@ export default function PlaylistCard({
   isLikedClimbs,
   fetchPriority,
 }: PlaylistCardProps) {
-  if (variant === 'grid') {
+  if (variant === "grid") {
     return (
       <Link href={href} className={styles.cardCompact}>
         <div className={styles.cardCompactSquare}>
@@ -50,7 +50,7 @@ export default function PlaylistCard({
         <div className={styles.cardCompactInfo}>
           <div className={styles.cardCompactName}>{name}</div>
           <div className={styles.cardMeta}>
-            {climbCount} {climbCount === 1 ? 'climb' : 'climbs'}
+            {climbCount} {climbCount === 1 ? "climb" : "climbs"}
           </div>
         </div>
       </Link>
@@ -58,10 +58,7 @@ export default function PlaylistCard({
   }
 
   return (
-    <Link
-      href={href}
-      className={`${styles.card} ${styles.cardScroll}`}
-    >
+    <Link href={href} className={`${styles.card} ${styles.cardScroll}`}>
       <div className={styles.cardSquare}>
         <PlaylistPreviewSquare
           boardType={boardType}
@@ -75,7 +72,7 @@ export default function PlaylistCard({
       </div>
       <div className={styles.cardName}>{name}</div>
       <div className={styles.cardMeta}>
-        {climbCount} {climbCount === 1 ? 'climb' : 'climbs'}
+        {climbCount} {climbCount === 1 ? "climb" : "climbs"}
       </div>
     </Link>
   );

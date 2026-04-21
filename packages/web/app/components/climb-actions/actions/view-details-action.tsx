@@ -1,19 +1,17 @@
-'use client';
+"use client";
 
-import React from 'react';
-import MuiButton from '@mui/material/Button';
-import { ActionTooltip } from '../action-tooltip';
-import InfoOutlined from '@mui/icons-material/InfoOutlined';
-import Link from 'next/link';
-import { track } from '@vercel/analytics';
-import { ClimbActionProps, ClimbActionResult } from '../types';
-import {
-  getContextAwareClimbViewUrl,
-} from '@/app/lib/url-utils';
-import { themeTokens } from '@/app/theme/theme-config';
-import { buildActionResult, computeActionDisplay } from '../action-view-renderer';
+import React from "react";
+import MuiButton from "@mui/material/Button";
+import { ActionTooltip } from "../action-tooltip";
+import InfoOutlined from "@mui/icons-material/InfoOutlined";
+import Link from "next/link";
+import { track } from "@vercel/analytics";
+import { ClimbActionProps, ClimbActionResult } from "../types";
+import { getContextAwareClimbViewUrl } from "@/app/lib/url-utils";
+import { themeTokens } from "@/app/theme/theme-config";
+import { buildActionResult, computeActionDisplay } from "../action-view-renderer";
 
-const linkResetStyle: React.CSSProperties = { color: 'inherit', textDecoration: 'none' };
+const linkResetStyle: React.CSSProperties = { color: "inherit", textDecoration: "none" };
 
 export function ViewDetailsAction({
   climb,
@@ -21,7 +19,7 @@ export function ViewDetailsAction({
   angle,
   currentPathname,
   viewMode,
-  size = 'default',
+  size = "default",
   showLabel,
   disabled,
   className,
@@ -30,7 +28,7 @@ export function ViewDetailsAction({
   const { iconSize, shouldShowLabel } = computeActionDisplay(viewMode, size, showLabel);
 
   const url = getContextAwareClimbViewUrl(
-    currentPathname ?? '',
+    currentPathname ?? "",
     boardDetails,
     angle,
     climb.uuid,
@@ -38,19 +36,19 @@ export function ViewDetailsAction({
   );
 
   const handleClick = () => {
-    track('Climb Info Viewed', {
-      boardLayout: boardDetails.layout_name || '',
+    track("Climb Info Viewed", {
+      boardLayout: boardDetails.layout_name || "",
       climbUuid: climb.uuid,
     });
     onComplete?.();
   };
 
-  const label = 'View Details';
+  const label = "View Details";
   const icon = <InfoOutlined sx={{ fontSize: iconSize }} />;
 
   // Link-based actions need custom elements since they wrap with Next.js Link
   return buildActionResult({
-    key: 'viewDetails',
+    key: "viewDetails",
     label,
     icon,
     onClick: handleClick,
@@ -61,7 +59,13 @@ export function ViewDetailsAction({
     className,
     iconElementOverride: (
       <ActionTooltip title={label}>
-        <Link href={url} prefetch={false} onClick={handleClick} className={className} style={linkResetStyle}>
+        <Link
+          href={url}
+          prefetch={false}
+          onClick={handleClick}
+          className={className}
+          style={linkResetStyle}
+        >
           {icon}
         </Link>
       </ActionTooltip>
@@ -71,7 +75,7 @@ export function ViewDetailsAction({
         <MuiButton
           variant="outlined"
           startIcon={icon}
-          size={size === 'large' ? 'large' : 'small'}
+          size={size === "large" ? "large" : "small"}
           disabled={disabled}
           className={className}
         >
@@ -88,15 +92,15 @@ export function ViewDetailsAction({
           disabled={disabled}
           sx={{
             height: 48,
-            justifyContent: 'flex-start',
+            justifyContent: "flex-start",
             paddingLeft: `${themeTokens.spacing[4]}px`,
             fontSize: themeTokens.typography.fontSize.base,
-            color: 'text.primary',
-            '& .MuiButton-startIcon': {
-              color: 'text.secondary',
+            color: "text.primary",
+            "& .MuiButton-startIcon": {
+              color: "text.secondary",
             },
-            '&:hover': {
-              backgroundColor: 'action.hover',
+            "&:hover": {
+              backgroundColor: "action.hover",
             },
           }}
         >
@@ -105,7 +109,7 @@ export function ViewDetailsAction({
       </Link>
     ),
     menuItem: {
-      key: 'viewDetails',
+      key: "viewDetails",
       label: (
         <Link href={url} prefetch={false} onClick={handleClick} style={linkResetStyle}>
           {label}

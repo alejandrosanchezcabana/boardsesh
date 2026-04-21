@@ -1,30 +1,29 @@
-'use client';
+"use client";
 
-import React, { useMemo } from 'react';
-import DashboardOutlined from '@mui/icons-material/DashboardOutlined';
-import BoardRenderer from '../board-renderer/board-renderer';
-import { useBoardDetails } from './board-thumbnail';
-import { formatCount, formatSends } from '@/app/lib/format-climb-stats';
-import { BoardConfigData } from '@/app/lib/server-board-configs';
-import { StoredBoardConfig } from '@/app/lib/saved-boards-db';
-import type { UserBoard, PopularBoardConfig } from '@boardsesh/shared-schema';
-import styles from './board-scroll.module.css';
+import React, { useMemo } from "react";
+import DashboardOutlined from "@mui/icons-material/DashboardOutlined";
+import BoardRenderer from "../board-renderer/board-renderer";
+import { useBoardDetails } from "./board-thumbnail";
+import { formatCount, formatSends } from "@/app/lib/format-climb-stats";
+import { BoardConfigData } from "@/app/lib/server-board-configs";
+import { StoredBoardConfig } from "@/app/lib/saved-boards-db";
+import type { UserBoard, PopularBoardConfig } from "@boardsesh/shared-schema";
+import styles from "./board-scroll.module.css";
 
 const BOARD_TYPE_LABELS: Record<string, string> = {
-  kilter: 'Kilter',
-  tension: 'Tension',
-  moonboard: 'MoonBoard',
-  decoy: 'Decoy',
-  touchstone: 'Touchstone',
-  grasshopper: 'Grasshopper',
-  soill: 'So iLL',
+  kilter: "Kilter",
+  tension: "Tension",
+  moonboard: "MoonBoard",
+  decoy: "Decoy",
+  touchstone: "Touchstone",
+  grasshopper: "Grasshopper",
+  soill: "So iLL",
 };
 
 function formatDistance(meters: number): string {
   if (meters < 1000) return `${Math.round(meters)}m`;
   return `${(meters / 1000).toFixed(1)}km`;
 }
-
 
 interface BoardScrollCardProps {
   userBoard?: UserBoard;
@@ -35,7 +34,7 @@ interface BoardScrollCardProps {
   disabled?: boolean;
   disabledText?: string;
   distanceMeters?: number | null;
-  size?: 'default' | 'small';
+  size?: "default" | "small";
   onClick: () => void;
 }
 
@@ -48,14 +47,14 @@ export default function BoardScrollCard({
   disabled,
   disabledText,
   distanceMeters,
-  size = 'default',
+  size = "default",
   onClick,
 }: BoardScrollCardProps) {
   const boardDetails = useBoardDetails(userBoard, storedConfig, popularConfig);
 
   const { name, meta } = useMemo(() => {
-    let cardName = '';
-    let cardMeta = '';
+    let cardName = "";
+    let cardMeta = "";
 
     if (userBoard) {
       cardName = userBoard.name;
@@ -73,7 +72,8 @@ export default function BoardScrollCard({
       if (boardConfigs) {
         const layouts = boardConfigs.layouts[storedConfig.board] || [];
         const layout = layouts.find((l) => l.id === storedConfig.layoutId);
-        cardMeta = layout?.name || (storedConfig.board.charAt(0).toUpperCase() + storedConfig.board.slice(1));
+        cardMeta =
+          layout?.name || storedConfig.board.charAt(0).toUpperCase() + storedConfig.board.slice(1);
       } else {
         cardMeta = storedConfig.board.charAt(0).toUpperCase() + storedConfig.board.slice(1);
       }
@@ -81,32 +81,31 @@ export default function BoardScrollCard({
     } else if (popularConfig) {
       cardName = popularConfig.displayName;
       const parts: string[] = [];
-      if (popularConfig.boardCount > 0) parts.push(`${formatCount(popularConfig.boardCount)} boards`);
+      if (popularConfig.boardCount > 0)
+        parts.push(`${formatCount(popularConfig.boardCount)} boards`);
       parts.push(formatSends(popularConfig.totalAscents));
-      cardMeta = parts.join(' \u00B7 ');
+      cardMeta = parts.join(" \u00B7 ");
     }
 
     return { name: cardName, meta: cardMeta };
   }, [userBoard, storedConfig, popularConfig, boardConfigs]);
 
-  const isSmall = size === 'small';
+  const isSmall = size === "small";
   const iconSize = isSmall ? 24 : 32;
 
   const handleClick = disabled ? undefined : onClick;
   const displayMeta = disabled && disabledText ? disabledText : meta;
 
   return (
-    <div className={`${styles.cardScroll} ${isSmall ? styles.cardScrollSmall : ''}`} onClick={handleClick}>
+    <div
+      className={`${styles.cardScroll} ${isSmall ? styles.cardScrollSmall : ""}`}
+      onClick={handleClick}
+    >
       <div
-        className={`${styles.cardSquare} ${selected ? styles.cardSquareSelected : ''} ${disabled ? styles.cardSquareDisabled : ''}`}
+        className={`${styles.cardSquare} ${selected ? styles.cardSquareSelected : ""} ${disabled ? styles.cardSquareDisabled : ""}`}
       >
         {boardDetails ? (
-          <BoardRenderer
-            mirrored={false}
-            boardDetails={boardDetails}
-            thumbnail
-            fillHeight
-          />
+          <BoardRenderer mirrored={false} boardDetails={boardDetails} thumbnail fillHeight />
         ) : (
           <div className={styles.cardFallback}>
             <DashboardOutlined sx={{ fontSize: iconSize }} />
@@ -116,10 +115,16 @@ export default function BoardScrollCard({
           <div className={styles.distanceBadge}>{formatDistance(distanceMeters)}</div>
         )}
       </div>
-      <div className={`${styles.cardName} ${selected ? styles.cardNameSelected : ''} ${disabled ? styles.cardNameDisabled : ''}`}>
+      <div
+        className={`${styles.cardName} ${selected ? styles.cardNameSelected : ""} ${disabled ? styles.cardNameDisabled : ""}`}
+      >
         {name}
       </div>
-      {displayMeta && <div className={`${styles.cardMeta} ${disabled ? styles.cardNameDisabled : ''}`}>{displayMeta}</div>}
+      {displayMeta && (
+        <div className={`${styles.cardMeta} ${disabled ? styles.cardNameDisabled : ""}`}>
+          {displayMeta}
+        </div>
+      )}
     </div>
   );
 }

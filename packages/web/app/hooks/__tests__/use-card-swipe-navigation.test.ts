@@ -1,9 +1,9 @@
-import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { renderHook, act } from '@testing-library/react';
+import { describe, it, expect, vi, beforeEach, afterEach } from "vite-plus/test";
+import { renderHook, act } from "@testing-library/react";
 
 // Capture the config passed to useSwipeable
 let capturedSwipeableConfig: Record<string, (...args: unknown[]) => unknown> = {};
-vi.mock('react-swipeable', () => ({
+vi.mock("react-swipeable", () => ({
   useSwipeable: (config: Record<string, (...args: unknown[]) => unknown>) => {
     capturedSwipeableConfig = config;
     return { ref: vi.fn() };
@@ -14,7 +14,7 @@ import {
   useCardSwipeNavigation,
   EXIT_DURATION,
   SNAP_BACK_DURATION,
-} from '../use-card-swipe-navigation';
+} from "../use-card-swipe-navigation";
 
 function createDefaultOptions() {
   return {
@@ -25,7 +25,7 @@ function createDefaultOptions() {
   };
 }
 
-describe('useCardSwipeNavigation', () => {
+describe("useCardSwipeNavigation", () => {
   beforeEach(() => {
     vi.useFakeTimers();
     capturedSwipeableConfig = {};
@@ -35,18 +35,18 @@ describe('useCardSwipeNavigation', () => {
     vi.useRealTimers();
   });
 
-  describe('exported constants', () => {
-    it('EXIT_DURATION is 300', () => {
+  describe("exported constants", () => {
+    it("EXIT_DURATION is 300", () => {
       expect(EXIT_DURATION).toBe(300);
     });
 
-    it('SNAP_BACK_DURATION is 200', () => {
+    it("SNAP_BACK_DURATION is 200", () => {
       expect(SNAP_BACK_DURATION).toBe(200);
     });
   });
 
-  describe('direction detection', () => {
-    it('sets horizontal mode when first movement >10px horizontal', () => {
+  describe("direction detection", () => {
+    it("sets horizontal mode when first movement >10px horizontal", () => {
       const { result } = renderHook(() => useCardSwipeNavigation(createDefaultOptions()));
 
       // First call — determining direction with >10px horizontal
@@ -61,7 +61,7 @@ describe('useCardSwipeNavigation', () => {
       expect(result.current.swipeOffset).toBe(30);
     });
 
-    it('sets vertical mode when first movement >10px vertical', () => {
+    it("sets vertical mode when first movement >10px vertical", () => {
       const { result } = renderHook(() => useCardSwipeNavigation(createDefaultOptions()));
 
       // First call — determining direction with >10px vertical
@@ -76,7 +76,7 @@ describe('useCardSwipeNavigation', () => {
       expect(result.current.swipeOffset).toBe(0);
     });
 
-    it('does not commit direction when movement <10px in both axes', () => {
+    it("does not commit direction when movement <10px in both axes", () => {
       const { result } = renderHook(() => useCardSwipeNavigation(createDefaultOptions()));
 
       act(() => {
@@ -87,8 +87,8 @@ describe('useCardSwipeNavigation', () => {
     });
   });
 
-  describe('threshold-based completion', () => {
-    it('calls onSwipeNext when swiped left >= threshold', () => {
+  describe("threshold-based completion", () => {
+    it("calls onSwipeNext when swiped left >= threshold", () => {
       const options = createDefaultOptions();
       renderHook(() => useCardSwipeNavigation(options));
 
@@ -104,7 +104,7 @@ describe('useCardSwipeNavigation', () => {
       expect(options.onSwipeNext).toHaveBeenCalledTimes(1);
     });
 
-    it('calls onSwipePrevious when swiped right >= threshold', () => {
+    it("calls onSwipePrevious when swiped right >= threshold", () => {
       const options = createDefaultOptions();
       renderHook(() => useCardSwipeNavigation(options));
 
@@ -119,7 +119,7 @@ describe('useCardSwipeNavigation', () => {
       expect(options.onSwipePrevious).toHaveBeenCalledTimes(1);
     });
 
-    it('snaps back when left swipe < threshold', () => {
+    it("snaps back when left swipe < threshold", () => {
       const options = createDefaultOptions();
       const { result } = renderHook(() => useCardSwipeNavigation(options));
 
@@ -139,7 +139,7 @@ describe('useCardSwipeNavigation', () => {
       expect(options.onSwipeNext).not.toHaveBeenCalled();
     });
 
-    it('snaps back when right swipe < threshold', () => {
+    it("snaps back when right swipe < threshold", () => {
       const options = createDefaultOptions();
       const { result } = renderHook(() => useCardSwipeNavigation(options));
 
@@ -159,8 +159,8 @@ describe('useCardSwipeNavigation', () => {
     });
   });
 
-  describe('boundary constraints', () => {
-    it('constrains leftward offset to 0 when canSwipeNext is false', () => {
+  describe("boundary constraints", () => {
+    it("constrains leftward offset to 0 when canSwipeNext is false", () => {
       const options = { ...createDefaultOptions(), canSwipeNext: false };
       const { result } = renderHook(() => useCardSwipeNavigation(options));
 
@@ -176,7 +176,7 @@ describe('useCardSwipeNavigation', () => {
       expect(result.current.swipeOffset).toBe(0);
     });
 
-    it('constrains rightward offset to 0 when canSwipePrevious is false', () => {
+    it("constrains rightward offset to 0 when canSwipePrevious is false", () => {
       const options = { ...createDefaultOptions(), canSwipePrevious: false };
       const { result } = renderHook(() => useCardSwipeNavigation(options));
 
@@ -193,8 +193,8 @@ describe('useCardSwipeNavigation', () => {
     });
   });
 
-  describe('animation modes', () => {
-    it('fires callback immediately when delayNavigation is false', () => {
+  describe("animation modes", () => {
+    it("fires callback immediately when delayNavigation is false", () => {
       const options = { ...createDefaultOptions(), delayNavigation: false };
       renderHook(() => useCardSwipeNavigation(options));
 
@@ -209,7 +209,7 @@ describe('useCardSwipeNavigation', () => {
       expect(options.onSwipeNext).toHaveBeenCalledTimes(1);
     });
 
-    it('fires callback after CLIP_EXIT_DURATION when delayNavigation is true', () => {
+    it("fires callback after CLIP_EXIT_DURATION when delayNavigation is true", () => {
       const options = { ...createDefaultOptions(), delayNavigation: true };
       renderHook(() => useCardSwipeNavigation(options));
 
@@ -232,8 +232,8 @@ describe('useCardSwipeNavigation', () => {
     });
   });
 
-  describe('animation blocking', () => {
-    it('ignores second swipe during animation', () => {
+  describe("animation blocking", () => {
+    it("ignores second swipe during animation", () => {
       const options = createDefaultOptions();
       renderHook(() => useCardSwipeNavigation(options));
 
@@ -257,8 +257,8 @@ describe('useCardSwipeNavigation', () => {
     });
   });
 
-  describe('enter direction', () => {
-    it('sets enterDirection to from-right after left swipe with delayNavigation', () => {
+  describe("enter direction", () => {
+    it("sets enterDirection to from-right after left swipe with delayNavigation", () => {
       const options = { ...createDefaultOptions(), delayNavigation: true };
       const { result } = renderHook(() => useCardSwipeNavigation(options));
 
@@ -273,10 +273,10 @@ describe('useCardSwipeNavigation', () => {
         vi.advanceTimersByTime(100);
       });
 
-      expect(result.current.enterDirection).toBe('from-right');
+      expect(result.current.enterDirection).toBe("from-right");
     });
 
-    it('sets enterDirection to from-left after right swipe with delayNavigation', () => {
+    it("sets enterDirection to from-left after right swipe with delayNavigation", () => {
       const options = { ...createDefaultOptions(), delayNavigation: true };
       const { result } = renderHook(() => useCardSwipeNavigation(options));
 
@@ -291,17 +291,16 @@ describe('useCardSwipeNavigation', () => {
         vi.advanceTimersByTime(100);
       });
 
-      expect(result.current.enterDirection).toBe('from-left');
+      expect(result.current.enterDirection).toBe("from-left");
     });
   });
 
-  describe('prop changes during animation', () => {
-    it('ignores canSwipeNext changing to false during exit animation', () => {
+  describe("prop changes during animation", () => {
+    it("ignores canSwipeNext changing to false during exit animation", () => {
       const options = createDefaultOptions();
-      const { result, rerender } = renderHook(
-        (props) => useCardSwipeNavigation(props),
-        { initialProps: options },
-      );
+      const { result, rerender } = renderHook((props) => useCardSwipeNavigation(props), {
+        initialProps: options,
+      });
 
       // Commit horizontal direction
       act(() => {
@@ -330,12 +329,11 @@ describe('useCardSwipeNavigation', () => {
       expect(result.current.isAnimating).toBe(false);
     });
 
-    it('respects canSwipeNext changing to false before swipe completes', () => {
+    it("respects canSwipeNext changing to false before swipe completes", () => {
       const options = createDefaultOptions();
-      const { result, rerender } = renderHook(
-        (props) => useCardSwipeNavigation(props),
-        { initialProps: options },
-      );
+      const { result, rerender } = renderHook((props) => useCardSwipeNavigation(props), {
+        initialProps: options,
+      });
 
       // Commit horizontal direction
       act(() => {
@@ -360,8 +358,8 @@ describe('useCardSwipeNavigation', () => {
     });
   });
 
-  describe('reset and clear', () => {
-    it('resetSwipe resets all state to initial', () => {
+  describe("reset and clear", () => {
+    it("resetSwipe resets all state to initial", () => {
       const options = createDefaultOptions();
       const { result } = renderHook(() => useCardSwipeNavigation(options));
 
@@ -382,7 +380,7 @@ describe('useCardSwipeNavigation', () => {
       expect(result.current.animationDirection).toBeNull();
     });
 
-    it('clearEnterAnimation clears enterDirection', () => {
+    it("clearEnterAnimation clears enterDirection", () => {
       const options = { ...createDefaultOptions(), delayNavigation: true };
       const { result } = renderHook(() => useCardSwipeNavigation(options));
 
@@ -396,7 +394,7 @@ describe('useCardSwipeNavigation', () => {
       act(() => {
         vi.advanceTimersByTime(100);
       });
-      expect(result.current.enterDirection).toBe('from-right');
+      expect(result.current.enterDirection).toBe("from-right");
 
       act(() => {
         result.current.clearEnterAnimation();

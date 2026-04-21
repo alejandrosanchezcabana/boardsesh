@@ -1,23 +1,23 @@
-import { describe, expect, it, vi, beforeEach, afterEach } from 'vitest';
+import { describe, expect, it, vi, beforeEach, afterEach } from "vite-plus/test";
 import {
   buildInstagramCaption,
   copyAndOpenInstagram,
   getBoardDisplayName,
   getInstagramPostingPlatform,
   isInstagramPostingSupported,
-} from '../instagram-posting';
+} from "../instagram-posting";
 
 const originalNavigator = global.navigator;
 const originalWindow = global.window;
 const originalDocument = global.document;
 
-describe('instagram-posting', () => {
+describe("instagram-posting", () => {
   beforeEach(() => {
-    Object.defineProperty(global, 'window', {
+    Object.defineProperty(global, "window", {
       configurable: true,
       value: {
         Capacitor: undefined,
-        location: { href: '' },
+        location: { href: "" },
         addEventListener: vi.fn(),
         removeEventListener: vi.fn(),
         clearTimeout: vi.fn(),
@@ -28,17 +28,17 @@ describe('instagram-posting', () => {
       },
     });
 
-    Object.defineProperty(global, 'navigator', {
+    Object.defineProperty(global, "navigator", {
       configurable: true,
       value: {
-        userAgent: 'Mozilla/5.0 (iPhone; CPU iPhone OS 18_0 like Mac OS X)',
+        userAgent: "Mozilla/5.0 (iPhone; CPU iPhone OS 18_0 like Mac OS X)",
       },
     });
 
-    Object.defineProperty(global, 'document', {
+    Object.defineProperty(global, "document", {
       configurable: true,
       value: {
-        visibilityState: 'hidden',
+        visibilityState: "hidden",
         hidden: true,
         body: {
           appendChild: vi.fn(),
@@ -47,9 +47,9 @@ describe('instagram-posting', () => {
         createElement: vi.fn((tag: string) => ({
           tagName: tag.toUpperCase(),
           style: {},
-          value: '',
-          textContent: '',
-          contentEditable: '',
+          value: "",
+          textContent: "",
+          contentEditable: "",
           focus: vi.fn(),
           select: vi.fn(),
           setSelectionRange: vi.fn(),
@@ -64,7 +64,7 @@ describe('instagram-posting', () => {
       },
     });
 
-    Object.defineProperty(global.window, 'getSelection', {
+    Object.defineProperty(global.window, "getSelection", {
       configurable: true,
       value: vi.fn(() => ({
         removeAllRanges: vi.fn(),
@@ -74,103 +74,105 @@ describe('instagram-posting', () => {
   });
 
   afterEach(() => {
-    Object.defineProperty(global, 'navigator', {
+    Object.defineProperty(global, "navigator", {
       configurable: true,
       value: originalNavigator,
     });
-    Object.defineProperty(global, 'window', {
+    Object.defineProperty(global, "window", {
       configurable: true,
       value: originalWindow,
     });
-    Object.defineProperty(global, 'document', {
+    Object.defineProperty(global, "document", {
       configurable: true,
       value: originalDocument,
     });
   });
 
-  it('builds the Kilter caption when boardType is omitted', () => {
-    expect(buildInstagramCaption({ climbName: 'Texas Sun', angle: 35 })).toBe(
+  it("builds the Kilter caption when boardType is omitted", () => {
+    expect(buildInstagramCaption({ climbName: "Texas Sun", angle: 35 })).toBe(
       `"Texas Sun" @ 35° on the Kilter Board.\n@kilterboard #kilterboard #kiltergrips`,
     );
   });
 
-  it('builds the Kilter caption when boardType is kilter', () => {
-    expect(buildInstagramCaption({ climbName: 'Texas Sun', angle: 35, boardType: 'kilter' })).toBe(
+  it("builds the Kilter caption when boardType is kilter", () => {
+    expect(buildInstagramCaption({ climbName: "Texas Sun", angle: 35, boardType: "kilter" })).toBe(
       `"Texas Sun" @ 35° on the Kilter Board.\n@kilterboard #kilterboard #kiltergrips`,
     );
   });
 
-  it('builds the caption for Tension', () => {
-    expect(buildInstagramCaption({ climbName: 'High Hopes', angle: 40, boardType: 'tension' })).toBe(
-      `"High Hopes" @ 40° on the Tension Board.\n@tensionclimbing #tensionboard`,
-    );
+  it("builds the caption for Tension", () => {
+    expect(
+      buildInstagramCaption({ climbName: "High Hopes", angle: 40, boardType: "tension" }),
+    ).toBe(`"High Hopes" @ 40° on the Tension Board.\n@tensionclimbing #tensionboard`);
   });
 
-  it('builds the caption for MoonBoard', () => {
-    expect(buildInstagramCaption({ climbName: 'Wheel of Fortune', angle: 40, boardType: 'moonboard' })).toBe(
-      `"Wheel of Fortune" @ 40° on the MoonBoard.\n@moon_climbing #moonboard`,
-    );
+  it("builds the caption for MoonBoard", () => {
+    expect(
+      buildInstagramCaption({ climbName: "Wheel of Fortune", angle: 40, boardType: "moonboard" }),
+    ).toBe(`"Wheel of Fortune" @ 40° on the MoonBoard.\n@moon_climbing #moonboard`);
   });
 
-  it('falls back to Kilter caption for an unknown boardType', () => {
-    expect(buildInstagramCaption({ climbName: 'Mystery Route', angle: 50, boardType: 'unknownboard' })).toBe(
-      `"Mystery Route" @ 50° on the Kilter Board.\n@kilterboard #kilterboard #kiltergrips`,
-    );
+  it("falls back to Kilter caption for an unknown boardType", () => {
+    expect(
+      buildInstagramCaption({ climbName: "Mystery Route", angle: 50, boardType: "unknownboard" }),
+    ).toBe(`"Mystery Route" @ 50° on the Kilter Board.\n@kilterboard #kilterboard #kiltergrips`);
   });
 
-  describe('getBoardDisplayName', () => {
-    it('returns the short display name for known boards', () => {
-      expect(getBoardDisplayName('kilter')).toBe('Kilter');
-      expect(getBoardDisplayName('tension')).toBe('Tension');
-      expect(getBoardDisplayName('moonboard')).toBe('MoonBoard');
+  describe("getBoardDisplayName", () => {
+    it("returns the short display name for known boards", () => {
+      expect(getBoardDisplayName("kilter")).toBe("Kilter");
+      expect(getBoardDisplayName("tension")).toBe("Tension");
+      expect(getBoardDisplayName("moonboard")).toBe("MoonBoard");
     });
 
-    it('capitalises and returns the raw boardType for unknown boards', () => {
-      expect(getBoardDisplayName('futureboard')).toBe('Futureboard');
+    it("capitalises and returns the raw boardType for unknown boards", () => {
+      expect(getBoardDisplayName("futureboard")).toBe("Futureboard");
     });
   });
 
-  it('detects iPhone web as supported', () => {
-    expect(getInstagramPostingPlatform()).toBe('ios');
+  it("detects iPhone web as supported", () => {
+    expect(getInstagramPostingPlatform()).toBe("ios");
     expect(isInstagramPostingSupported()).toBe(true);
   });
 
-  it('detects Android mobile web as supported', () => {
-    Object.defineProperty(global, 'navigator', {
+  it("detects Android mobile web as supported", () => {
+    Object.defineProperty(global, "navigator", {
       configurable: true,
       value: {
-        userAgent: 'Mozilla/5.0 (Linux; Android 15; Pixel 9) AppleWebKit/537.36 Chrome/136.0 Mobile Safari/537.36',
+        userAgent:
+          "Mozilla/5.0 (Linux; Android 15; Pixel 9) AppleWebKit/537.36 Chrome/136.0 Mobile Safari/537.36",
       },
     });
 
-    expect(getInstagramPostingPlatform()).toBe('android');
+    expect(getInstagramPostingPlatform()).toBe("android");
     expect(isInstagramPostingSupported()).toBe(true);
   });
 
-  it('treats desktop web as unsupported', () => {
-    Object.defineProperty(global, 'navigator', {
+  it("treats desktop web as unsupported", () => {
+    Object.defineProperty(global, "navigator", {
       configurable: true,
       value: {
-        userAgent: 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 Chrome/136.0 Safari/537.36',
+        userAgent:
+          "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 Chrome/136.0 Safari/537.36",
       },
     });
 
-    expect(getInstagramPostingPlatform()).toBe('unsupported');
+    expect(getInstagramPostingPlatform()).toBe("unsupported");
     expect(isInstagramPostingSupported()).toBe(false);
   });
 
-  it('falls back to legacy copy and still opens instagram on iPhone web', async () => {
-    Object.defineProperty(global, 'navigator', {
+  it("falls back to legacy copy and still opens instagram on iPhone web", async () => {
+    Object.defineProperty(global, "navigator", {
       configurable: true,
       value: {
-        userAgent: 'Mozilla/5.0 (iPhone; CPU iPhone OS 18_0 like Mac OS X)',
+        userAgent: "Mozilla/5.0 (iPhone; CPU iPhone OS 18_0 like Mac OS X)",
       },
     });
 
     const result = await copyAndOpenInstagram('"There, There" @ 40° on the Kilter Board.');
 
-    expect(global.document.execCommand).toHaveBeenCalledWith('copy');
+    expect(global.document.execCommand).toHaveBeenCalledWith("copy");
     expect(result).toEqual({ copied: true, opened: true });
-    expect(global.window.location.href).toBe('instagram://camera');
+    expect(global.window.location.href).toBe("instagram://camera");
   });
 });

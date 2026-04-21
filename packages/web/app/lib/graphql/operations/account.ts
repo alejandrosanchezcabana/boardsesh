@@ -1,5 +1,5 @@
-import { gql } from 'graphql-request';
-import type { DeleteAccountInfo } from '@boardsesh/shared-schema';
+import { gql } from "graphql-request";
+import type { DeleteAccountInfo } from "@boardsesh/shared-schema";
 
 export const GET_DELETE_ACCOUNT_INFO = gql`
   query GetDeleteAccountInfo {

@@ -1,4 +1,4 @@
-import { ImageRegion } from '../image-processor/types';
+import { ImageRegion } from "../image-processor/types";
 
 export interface ImageRegions {
   header: ImageRegion;
@@ -57,15 +57,11 @@ const GRID_RIGHT_INSET = 0.0359; // Small margin on right
 export function calculateRegionsFromDetectedBoard(
   yellowRegion: ImageRegion,
   imageWidth: number,
-  imageHeight: number
+  imageHeight: number,
 ): ImageRegions {
   // Horizontal: use yellow detection (accurate across different resolutions)
-  const gridLeft = Math.round(
-    yellowRegion.x + yellowRegion.width * GRID_LEFT_INSET
-  );
-  const gridRight = Math.round(
-    yellowRegion.x + yellowRegion.width * (1 - GRID_RIGHT_INSET)
-  );
+  const gridLeft = Math.round(yellowRegion.x + yellowRegion.width * GRID_LEFT_INSET);
+  const gridRight = Math.round(yellowRegion.x + yellowRegion.width * (1 - GRID_RIGHT_INSET));
   const gridWidth = gridRight - gridLeft;
 
   // Vertical: use proportional calculation (yellow top/bottom vary too much)

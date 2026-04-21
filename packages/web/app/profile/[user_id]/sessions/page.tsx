@@ -1,12 +1,12 @@
-import React from 'react';
-import { Metadata } from 'next';
-import { getServerAuthToken } from '@/app/lib/auth/server-auth';
-import ProfileSessionsContent from './sessions-content';
+import React from "react";
+import { Metadata } from "next";
+import { getServerAuthToken } from "@/app/lib/auth/server-auth";
+import ProfileSessionsContent from "./sessions-content";
 
 type PageProps = { params: Promise<{ user_id: string }> };
 
 export const metadata: Metadata = {
-  title: 'Sessions | Boardsesh',
+  title: "Sessions | Boardsesh",
   robots: { index: false, follow: true },
 };
 

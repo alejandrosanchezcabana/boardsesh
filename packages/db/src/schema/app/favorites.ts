@@ -6,14 +6,14 @@ import {
   timestamp,
   index,
   uniqueIndex,
-} from 'drizzle-orm/pg-core';
-import { users } from '../auth/users';
+} from "drizzle-orm/pg-core";
+import { users } from "../auth/users";
 
 // User favorites for saved/hearted climbs
 export const userFavorites = pgTable(
   "user_favorites",
   {
-    id: bigserial({ mode: 'bigint' }).primaryKey().notNull(),
+    id: bigserial({ mode: "bigint" }).primaryKey().notNull(),
     userId: text("user_id")
       .notNull()
       .references(() => users.id, { onDelete: "cascade" }),
@@ -28,7 +28,7 @@ export const userFavorites = pgTable(
       table.userId,
       table.boardName,
       table.climbUuid,
-      table.angle
+      table.angle,
     ),
     // Index for efficient lookup by user
     userFavoritesIdx: index("user_favorites_user_idx").on(table.userId),
@@ -36,7 +36,7 @@ export const userFavorites = pgTable(
     climbFavoriteIdx: index("user_favorites_climb_idx").on(
       table.boardName,
       table.climbUuid,
-      table.angle
+      table.angle,
     ),
-  })
+  }),
 );

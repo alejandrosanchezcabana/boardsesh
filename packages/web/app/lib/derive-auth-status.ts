@@ -10,10 +10,8 @@
  * reverts the UI.
  */
 export function deriveIsAuthenticated(
-  sessionStatus: 'loading' | 'authenticated' | 'unauthenticated',
+  sessionStatus: "loading" | "authenticated" | "unauthenticated",
   hasServerUserData: boolean,
 ): boolean {
-  return (
-    sessionStatus === 'authenticated' || (sessionStatus === 'loading' && hasServerUserData)
-  );
+  return sessionStatus === "authenticated" || (sessionStatus === "loading" && hasServerUserData);
 }

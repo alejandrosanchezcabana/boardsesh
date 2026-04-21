@@ -1,11 +1,11 @@
-import { v5 as uuidv5 } from 'uuid';
-import { db } from '../db/client';
-import * as dbSchema from '@boardsesh/db/schema';
-import { sql, eq, and, isNull, desc, inArray, gte } from 'drizzle-orm';
-import { recalculateSessionStats } from '../graphql/resolvers/social/session-mutations';
+import { v5 as uuidv5 } from "uuid";
+import { db } from "../db/client";
+import * as dbSchema from "@boardsesh/db/schema";
+import { sql, eq, and, isNull, desc, inArray, gte } from "drizzle-orm";
+import { recalculateSessionStats } from "../graphql/resolvers/social/session-mutations";
 
 // Namespace UUID for generating deterministic inferred session IDs
-const INFERRED_SESSION_NAMESPACE = '6ba7b812-9dad-11d1-80b4-00c04fd430c8';
+const INFERRED_SESSION_NAMESPACE = "6ba7b812-9dad-11d1-80b4-00c04fd430c8";
 
 // 4 hours in milliseconds
 const SESSION_GAP_MS = 4 * 60 * 60 * 1000;
@@ -53,9 +53,7 @@ export function generateInferredSessionId(userId: string, firstTickTimestamp: st
  */
 export function groupTicksIntoSessions(ticks: TickForGrouping[]): InferredSessionGroup[] {
   // Filter to ticks that need assignment
-  const unassigned = ticks.filter(
-    (t) => t.sessionId === null && t.inferredSessionId === null,
-  );
+  const unassigned = ticks.filter((t) => t.sessionId === null && t.inferredSessionId === null);
 
   if (unassigned.length === 0) return [];
 
@@ -71,9 +69,7 @@ export function groupTicksIntoSessions(ticks: TickForGrouping[]): InferredSessio
 
   for (const [userId, userTicks] of byUser) {
     // Sort by climbedAt ascending
-    userTicks.sort(
-      (a, b) => new Date(a.climbedAt).getTime() - new Date(b.climbedAt).getTime(),
-    );
+    userTicks.sort((a, b) => new Date(a.climbedAt).getTime() - new Date(b.climbedAt).getTime());
 
     let currentGroup: TickForGrouping[] = [userTicks[0]];
 
@@ -108,12 +104,12 @@ function buildSessionGroup(userId: string, ticks: TickForGrouping[]): InferredSe
   let totalAttempts = 0;
 
   for (const tick of ticks) {
-    if (tick.status === 'flash') {
+    if (tick.status === "flash") {
       totalFlashes++;
       totalSends++;
-    } else if (tick.status === 'send') {
+    } else if (tick.status === "send") {
       totalSends++;
-    } else if (tick.status === 'attempt') {
+    } else if (tick.status === "attempt") {
       totalAttempts++;
     }
   }
@@ -141,7 +137,7 @@ function buildSessionGroup(userId: string, ticks: TickForGrouping[]): InferredSe
  * Extracted so it can be called with either a transaction or the global db.
  */
 async function assignInferredSessionWithConn(
-  conn: Pick<typeof db, 'select' | 'insert' | 'update' | 'execute'>,
+  conn: Pick<typeof db, "select" | "insert" | "update" | "execute">,
   tickUuid: string,
   userId: string,
   climbedAt: string,
@@ -189,16 +185,19 @@ async function assignInferredSessionWithConn(
   // No previous tick within 4h or no previous inferred session — create a new one
   const sessionId = generateInferredSessionId(userId, climbedAt);
 
-  await conn.insert(dbSchema.inferredSessions).values({
-    id: sessionId,
-    userId,
-    firstTickAt: climbedAt,
-    lastTickAt: climbedAt,
-    totalSends: 0,
-    totalFlashes: 0,
-    totalAttempts: 0,
-    tickCount: 0,
-  }).onConflictDoNothing();
+  await conn
+    .insert(dbSchema.inferredSessions)
+    .values({
+      id: sessionId,
+      userId,
+      firstTickAt: climbedAt,
+      lastTickAt: climbedAt,
+      totalSends: 0,
+      totalFlashes: 0,
+      totalAttempts: 0,
+      tickCount: 0,
+    })
+    .onConflictDoNothing();
 
   // Assign tick to the new session
   await conn
@@ -235,7 +234,7 @@ export async function assignInferredSession(
   userId: string,
   climbedAt: string,
   _status: string,
-  conn?: Pick<typeof db, 'select' | 'insert' | 'update' | 'execute'>,
+  conn?: Pick<typeof db, "select" | "insert" | "update" | "execute">,
 ): Promise<string | null> {
   if (conn) {
     return assignInferredSessionWithConn(conn, tickUuid, userId, climbedAt);
@@ -393,8 +392,8 @@ const ADOPT_WINDOW_MS = 2 * 60 * 60 * 1000;
  * Returns null for slug-based paths (/b/...) where the type isn't in the URL.
  */
 export function extractBoardType(boardPath: string): string | null {
-  if (boardPath.startsWith('/b/')) return null;
-  const segments = boardPath.split('/').filter(Boolean);
+  if (boardPath.startsWith("/b/")) return null;
+  const segments = boardPath.split("/").filter(Boolean);
   return segments[0] || null;
 }
 
@@ -441,9 +440,7 @@ export async function adoptRecentTicksForSession(
     // Collect affected inferred session IDs (some ticks may not have one yet)
     const affectedInferredSessionIds = [
       ...new Set(
-        recentTicks
-          .map((t) => t.inferredSessionId)
-          .filter((id): id is string => id !== null),
+        recentTicks.map((t) => t.inferredSessionId).filter((id): id is string => id !== null),
       ),
     ];
 

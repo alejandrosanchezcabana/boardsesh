@@ -26,7 +26,7 @@
  * Exported for testing only.
  */
 export function deriveWsUrlFromHost(hostname: string, secure: boolean): string | null {
-  const protocol = secure ? 'wss' : 'ws';
+  const protocol = secure ? "wss" : "ws";
 
   // Match {N}.preview.boardsesh.com → {N}.ws.preview.boardsesh.com
   const previewMatch = hostname.match(/^(\d+)\.preview\.boardsesh\.com$/);
@@ -38,7 +38,7 @@ export function deriveWsUrlFromHost(hostname: string, secure: boolean): string |
 }
 
 function isLoopbackHostname(hostname: string): boolean {
-  return hostname === 'localhost' || hostname === '127.0.0.1' || hostname === '0.0.0.0';
+  return hostname === "localhost" || hostname === "127.0.0.1" || hostname === "0.0.0.0";
 }
 
 function deriveWsUrlFromFallbackForCurrentHost(
@@ -56,10 +56,10 @@ function deriveWsUrlFromFallbackForCurrentHost(
       return null;
     }
 
-    const protocol = secure ? 'wss:' : 'ws:';
+    const protocol = secure ? "wss:" : "ws:";
     const port =
       fallbackUrl.port ||
-      (fallbackUrl.protocol === 'wss:' || fallbackUrl.protocol === 'https:' ? '443' : '80');
+      (fallbackUrl.protocol === "wss:" || fallbackUrl.protocol === "https:" ? "443" : "80");
 
     return `${protocol}//${hostname}:${port}${fallbackUrl.pathname}`;
   } catch {
@@ -75,7 +75,7 @@ function deriveWsUrlFromFallbackForCurrentHost(
  */
 export function getBackendWsUrl(): string | null {
   // Server-side: prefer internal URL for Docker networking, fall back to public URL
-  if (typeof window === 'undefined') {
+  if (typeof window === "undefined") {
     return process.env.BACKEND_INTERNAL_URL || process.env.NEXT_PUBLIC_WS_URL || null;
   }
 
@@ -84,7 +84,7 @@ export function getBackendWsUrl(): string | null {
   // 1. Host-derived URL for known domain patterns
   const derived = deriveWsUrlFromHost(
     window.location.hostname,
-    window.location.protocol === 'https:',
+    window.location.protocol === "https:",
   );
   if (derived) return derived;
 
@@ -94,7 +94,7 @@ export function getBackendWsUrl(): string | null {
   // hostname so the browser reaches the same machine that served the page.
   const localNetworkDerived = deriveWsUrlFromFallbackForCurrentHost(
     window.location.hostname,
-    window.location.protocol === 'https:',
+    window.location.protocol === "https:",
     fallbackWsUrl,
   );
   if (localNetworkDerived) return localNetworkDerived;
@@ -112,11 +112,11 @@ export function getGraphQLHttpUrl(): string {
   const wsUrl = getBackendWsUrl();
   if (!wsUrl) {
     throw new Error(
-      'Backend WebSocket URL could not be determined. ' +
-        'Set NEXT_PUBLIC_WS_URL or access the app from a known domain.',
+      "Backend WebSocket URL could not be determined. " +
+        "Set NEXT_PUBLIC_WS_URL or access the app from a known domain.",
     );
   }
-  return wsUrl.replace(/^ws(s?):\/\//, 'http$1://');
+  return wsUrl.replace(/^ws(s?):\/\//, "http$1://");
 }
 
 /**
@@ -129,9 +129,9 @@ export function getBackendHttpUrl(): string | null {
 
   try {
     const url = new URL(wsUrl);
-    url.protocol = url.protocol === 'wss:' ? 'https:' : 'http:';
-    url.pathname = '';
-    return url.toString().replace(/\/$/, '');
+    url.protocol = url.protocol === "wss:" ? "https:" : "http:";
+    url.pathname = "";
+    return url.toString().replace(/\/$/, "");
   } catch {
     return null;
   }

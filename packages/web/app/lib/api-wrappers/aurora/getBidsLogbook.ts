@@ -1,5 +1,5 @@
-import { AuroraBoardName } from './types';
-import { userSync } from './userSync';
+import { AuroraBoardName } from "./types";
+import { userSync } from "./userSync";
 
 interface Bid {
   uuid: string;
@@ -13,7 +13,11 @@ interface Bid {
   created_at: string;
 }
 
-export async function getBidsLogbook(board: AuroraBoardName, token: string, userId: string): Promise<Bid[]> {
-  const syncResults = await userSync(board, Number(userId), { tables: ['bids'] }, token);
+export async function getBidsLogbook(
+  board: AuroraBoardName,
+  token: string,
+  userId: string,
+): Promise<Bid[]> {
+  const syncResults = await userSync(board, Number(userId), { tables: ["bids"] }, token);
   return (syncResults.bids as Bid[]) || [];
 }

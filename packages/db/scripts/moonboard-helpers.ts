@@ -1,11 +1,11 @@
-import crypto from 'crypto';
+import crypto from "crypto";
 
 // =============================================================================
 // Mapping constants
 // =============================================================================
 
 // Fixed namespace UUID for deterministic v5 UUID generation
-export const MOONBOARD_UUID_NAMESPACE = '6ba7b810-9dad-11d1-80b4-00c04fd430c8'; // DNS namespace
+export const MOONBOARD_UUID_NAMESPACE = "6ba7b810-9dad-11d1-80b4-00c04fd430c8"; // DNS namespace
 
 // Hold state codes for frames encoding
 export const HOLD_STATE_CODES = {
@@ -15,7 +15,7 @@ export const HOLD_STATE_CODES = {
 };
 
 // MoonBoard grid: 11 columns (A-K)
-export const COLUMNS = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K'];
+export const COLUMNS = ["A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K"];
 export const NUM_COLUMNS = 11;
 
 // =============================================================================
@@ -38,10 +38,10 @@ export interface MoonBoardMove {
  */
 export function uuidv5(name: string, namespace: string): string {
   // Parse namespace UUID into bytes
-  const nsBytes = Buffer.from(namespace.replace(/-/g, ''), 'hex');
+  const nsBytes = Buffer.from(namespace.replace(/-/g, ""), "hex");
 
   // Hash namespace + name with SHA-1
-  const hash = crypto.createHash('sha1');
+  const hash = crypto.createHash("sha1");
   hash.update(nsBytes);
   hash.update(name);
   const bytes = hash.digest();
@@ -51,7 +51,7 @@ export function uuidv5(name: string, namespace: string): string {
   bytes[8] = (bytes[8] & 0x3f) | 0x80;
 
   // Format as UUID string
-  const hex = bytes.subarray(0, 16).toString('hex');
+  const hex = bytes.subarray(0, 16).toString("hex");
   return `${hex.slice(0, 8)}-${hex.slice(8, 12)}-${hex.slice(12, 16)}-${hex.slice(16, 20)}-${hex.slice(20, 32)}`;
 }
 
@@ -72,25 +72,27 @@ export function coordinateToHoldId(coord: string): number {
  * Format: p{holdId}r{roleCode}
  */
 export function movesToFrames(moves: MoonBoardMove[]): string {
-  return moves.map((move) => {
-    const holdId = coordinateToHoldId(move.description);
-    let role: number;
-    if (move.isStart) {
-      role = HOLD_STATE_CODES.start;
-    } else if (move.isEnd) {
-      role = HOLD_STATE_CODES.finish;
-    } else {
-      role = HOLD_STATE_CODES.hand;
-    }
-    return `p${holdId}r${role}`;
-  }).join('');
+  return moves
+    .map((move) => {
+      const holdId = coordinateToHoldId(move.description);
+      let role: number;
+      if (move.isStart) {
+        role = HOLD_STATE_CODES.start;
+      } else if (move.isEnd) {
+        role = HOLD_STATE_CODES.finish;
+      } else {
+        role = HOLD_STATE_CODES.hand;
+      }
+      return `p${holdId}r${role}`;
+    })
+    .join("");
 }
 
 /**
  * Get the hold state name for a move.
  */
 export function moveToHoldState(move: MoonBoardMove): string {
-  if (move.isStart) return 'STARTING';
-  if (move.isEnd) return 'FINISH';
-  return 'HAND';
+  if (move.isStart) return "STARTING";
+  if (move.isEnd) return "FINISH";
+  return "HAND";
 }

@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { describe, it, expect, vi, beforeEach } from 'vite-plus/test';
 import type { SessionSummary } from '@boardsesh/shared-schema';
 import { autoSaveToHealthKit, _resetAutoSaveGuard, isSessionSavedOrInFlight } from '../healthkit-auto-save';
 

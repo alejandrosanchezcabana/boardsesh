@@ -1,23 +1,23 @@
-'use client';
+"use client";
 
-import React, { useState, useRef, useEffect } from 'react';
-import MuiButton from '@mui/material/Button';
-import MuiCard from '@mui/material/Card';
-import CardContent from '@mui/material/CardContent';
-import Typography from '@mui/material/Typography';
-import CircularProgress from '@mui/material/CircularProgress';
-import Box from '@mui/material/Box';
-import SwipeableDrawer from '../swipeable-drawer/swipeable-drawer';
-import { useRouter, usePathname, useSearchParams } from 'next/navigation';
-import { track } from '@vercel/analytics';
-import { useQuery } from '@tanstack/react-query';
-import { ANGLES } from '@/app/lib/board-data';
-import { BoardName, BoardDetails, Climb } from '@/app/lib/types';
-import { ClimbStatsForAngle } from '@/app/lib/data/queries';
-import { themeTokens } from '@/app/theme/theme-config';
-import { useIsDarkMode } from '@/app/hooks/use-is-dark-mode';
-import DrawerClimbHeader from '../climb-card/drawer-climb-header';
-import styles from './angle-selector.module.css';
+import React, { useState, useRef, useEffect } from "react";
+import MuiButton from "@mui/material/Button";
+import MuiCard from "@mui/material/Card";
+import CardContent from "@mui/material/CardContent";
+import Typography from "@mui/material/Typography";
+import CircularProgress from "@mui/material/CircularProgress";
+import Box from "@mui/material/Box";
+import SwipeableDrawer from "../swipeable-drawer/swipeable-drawer";
+import { useRouter, usePathname, useSearchParams } from "next/navigation";
+import { track } from "@vercel/analytics";
+import { useQuery } from "@tanstack/react-query";
+import { ANGLES } from "@/app/lib/board-data";
+import { BoardName, BoardDetails, Climb } from "@/app/lib/types";
+import { ClimbStatsForAngle } from "@/app/lib/data/queries";
+import { themeTokens } from "@/app/theme/theme-config";
+import { useIsDarkMode } from "@/app/hooks/use-is-dark-mode";
+import DrawerClimbHeader from "../climb-card/drawer-climb-header";
+import styles from "./angle-selector.module.css";
 
 type AngleSelectorProps = {
   boardName: BoardName;
@@ -28,7 +28,14 @@ type AngleSelectorProps = {
   onAngleChange?: (angle: number) => void;
 };
 
-export default function AngleSelector({ boardName, boardDetails, currentAngle, currentClimb, isAngleAdjustable = true, onAngleChange: onAngleChangeProp }: AngleSelectorProps) {
+export default function AngleSelector({
+  boardName,
+  boardDetails,
+  currentAngle,
+  currentClimb,
+  isAngleAdjustable = true,
+  onAngleChange: onAngleChangeProp,
+}: AngleSelectorProps) {
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
   const router = useRouter();
   const pathname = usePathname();
@@ -38,8 +45,9 @@ export default function AngleSelector({ boardName, boardDetails, currentAngle, c
 
   // Fetch climb stats for all angles when there's a current climb
   const { data: climbStats, isLoading } = useQuery<ClimbStatsForAngle[]>({
-    queryKey: ['climbStats', boardName, currentClimb?.uuid],
-    queryFn: () => fetch(`/api/v1/${boardName}/climb-stats/${currentClimb!.uuid}`).then(res => res.json()),
+    queryKey: ["climbStats", boardName, currentClimb?.uuid],
+    queryFn: () =>
+      fetch(`/api/v1/${boardName}/climb-stats/${currentClimb!.uuid}`).then((res) => res.json()),
     enabled: !!currentClimb && isDrawerOpen,
     staleTime: 5 * 60 * 1000,
   });
@@ -47,7 +55,7 @@ export default function AngleSelector({ boardName, boardDetails, currentAngle, c
   // Create a map for easy lookup of stats by angle
   const statsMap = React.useMemo(() => {
     if (!climbStats) return new Map();
-    return new Map(climbStats.map(stat => [stat.angle, stat]));
+    return new Map(climbStats.map((stat) => [stat.angle, stat]));
   }, [climbStats]);
 
   // Scroll to current angle when drawer opens
@@ -56,8 +64,8 @@ export default function AngleSelector({ boardName, boardDetails, currentAngle, c
       // Small delay to ensure drawer is fully rendered
       const timeoutId = setTimeout(() => {
         currentAngleRef.current?.scrollIntoView({
-          behavior: 'instant',
-          block: 'center',
+          behavior: "instant",
+          block: "center",
         });
       }, 50);
       return () => clearTimeout(timeoutId);
@@ -67,7 +75,7 @@ export default function AngleSelector({ boardName, boardDetails, currentAngle, c
   const handleAngleChange = (newAngle: number) => {
     if (!isAngleAdjustable) return;
 
-    track('Angle Changed', {
+    track("Angle Changed", {
       angle: newAngle,
     });
 
@@ -75,12 +83,12 @@ export default function AngleSelector({ boardName, boardDetails, currentAngle, c
       onAngleChangeProp(newAngle);
     } else {
       // Replace the current angle in the URL with the new one
-      const pathSegments = pathname.split('/');
+      const pathSegments = pathname.split("/");
       const angleIndex = pathSegments.findIndex((segment) => segment === currentAngle.toString());
 
       if (angleIndex !== -1) {
         pathSegments[angleIndex] = newAngle.toString();
-        let newPath = pathSegments.join('/');
+        let newPath = pathSegments.join("/");
         // Preserve search params when changing angle
         const queryString = searchParams.toString();
         if (queryString) {
@@ -103,47 +111,88 @@ export default function AngleSelector({ boardName, boardDetails, currentAngle, c
         <MuiCard
           onClick={() => handleAngleChange(angle)}
           sx={{
-            cursor: 'pointer',
-            '&:hover': { boxShadow: 3 },
-            backgroundColor: isSelected ? 'var(--semantic-selected)' : undefined,
+            cursor: "pointer",
+            "&:hover": { boxShadow: 3 },
+            backgroundColor: isSelected ? "var(--semantic-selected)" : undefined,
             borderColor: isSelected ? themeTokens.colors.primary : undefined,
             borderWidth: isSelected ? 2 : 1,
-            borderStyle: 'solid',
+            borderStyle: "solid",
           }}
         >
           <CardContent
             sx={{
-              p: '12px 8px',
+              p: "12px 8px",
               minHeight: 80,
-              display: 'flex',
-              flexDirection: 'column',
-              alignItems: 'center',
-              justifyContent: 'center',
-              '&:last-child': { pb: '12px' },
+              display: "flex",
+              flexDirection: "column",
+              alignItems: "center",
+              justifyContent: "center",
+              "&:last-child": { pb: "12px" },
             }}
           >
-            <Typography variant="body2" component="span" fontWeight={600} sx={{ fontSize: 20, lineHeight: 1.2 }}>
+            <Typography
+              variant="body2"
+              component="span"
+              fontWeight={600}
+              sx={{ fontSize: 20, lineHeight: 1.2 }}
+            >
               {angle}°
             </Typography>
             {hasStats && (
-              <Box sx={{ display: 'flex', flexDirection: 'column', gap: '2px', alignItems: 'center', marginTop: '4px' }}>
+              <Box
+                sx={{
+                  display: "flex",
+                  flexDirection: "column",
+                  gap: "2px",
+                  alignItems: "center",
+                  marginTop: "4px",
+                }}
+              >
                 {stats.difficulty && (
-                  <Typography variant="body2" component="span" sx={{ fontSize: 12, fontWeight: 500 }}>{stats.difficulty}</Typography>
+                  <Typography
+                    variant="body2"
+                    component="span"
+                    sx={{ fontSize: 12, fontWeight: 500 }}
+                  >
+                    {stats.difficulty}
+                  </Typography>
                 )}
-                <Box sx={{ display: 'flex', gap: '4px', alignItems: 'center', justifyContent: 'center', flexWrap: 'wrap' }}>
+                <Box
+                  sx={{
+                    display: "flex",
+                    gap: "4px",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    flexWrap: "wrap",
+                  }}
+                >
                   {stats.quality_average !== null && Number(stats.quality_average) > 0 && (
-                    <Typography variant="body2" component="span" sx={{ fontSize: 11, color: themeTokens.colors.warning }}>
+                    <Typography
+                      variant="body2"
+                      component="span"
+                      sx={{ fontSize: 11, color: themeTokens.colors.warning }}
+                    >
                       ★{Number(stats.quality_average).toFixed(1)}
                     </Typography>
                   )}
-                  <Typography variant="body2" component="span" color="text.secondary" sx={{ fontSize: 10 }}>
+                  <Typography
+                    variant="body2"
+                    component="span"
+                    color="text.secondary"
+                    sx={{ fontSize: 10 }}
+                  >
                     {stats.ascensionist_count} sends
                   </Typography>
                 </Box>
               </Box>
             )}
             {currentClimb && !hasStats && !isLoading && (
-              <Typography variant="body2" component="span" color="text.secondary" sx={{ fontSize: 10, marginTop: '4px' }}>
+              <Typography
+                variant="body2"
+                component="span"
+                color="text.secondary"
+                sx={{ fontSize: 10, marginTop: "4px" }}
+              >
                 No data
               </Typography>
             )}
@@ -160,10 +209,10 @@ export default function AngleSelector({ boardName, boardDetails, currentAngle, c
         className={styles.anglePill}
         onClick={() => setIsDrawerOpen(true)}
         sx={{
-          textTransform: 'none',
-          minWidth: '38px',
-          padding: '4px 6px',
-          color: isDark ? '#ffffff' : 'primary.main',
+          textTransform: "none",
+          minWidth: "38px",
+          padding: "4px 6px",
+          color: isDark ? "#ffffff" : "primary.main",
         }}
       >
         {currentAngle}°
@@ -174,24 +223,39 @@ export default function AngleSelector({ boardName, boardDetails, currentAngle, c
         placement="right"
         onClose={() => setIsDrawerOpen(false)}
         open={isDrawerOpen}
-        styles={{ wrapper: { width: '90%' }, body: { padding: 12 } }}
+        styles={{ wrapper: { width: "90%" }, body: { padding: 12 } }}
       >
         {currentClimb && (
-          <Box sx={{ mb: 2, pb: 2, borderBottom: 1, borderColor: 'divider' }}>
+          <Box sx={{ mb: 2, pb: 2, borderBottom: 1, borderColor: "divider" }}>
             <DrawerClimbHeader climb={currentClimb} boardDetails={boardDetails} />
           </Box>
         )}
         {currentClimb && isLoading && (
-          <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 1, mb: 2 }}>
+          <Box
+            sx={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 1, mb: 2 }}
+          >
             <CircularProgress size={20} />
-            <Typography variant="body2" component="span" color="text.secondary" sx={{ fontSize: 12 }}>Loading stats...</Typography>
+            <Typography
+              variant="body2"
+              component="span"
+              color="text.secondary"
+              sx={{ fontSize: 12 }}
+            >
+              Loading stats...
+            </Typography>
           </Box>
         )}
-        <Box sx={{
-          display: 'grid',
-          gridTemplateColumns: { xs: 'repeat(3, 1fr)', sm: 'repeat(4, 1fr)', md: 'repeat(6, 1fr)' },
-          gap: 1,
-        }}>
+        <Box
+          sx={{
+            display: "grid",
+            gridTemplateColumns: {
+              xs: "repeat(3, 1fr)",
+              sm: "repeat(4, 1fr)",
+              md: "repeat(6, 1fr)",
+            },
+            gap: 1,
+          }}
+        >
           {ANGLES[boardName].map(renderAngleCard)}
         </Box>
       </SwipeableDrawer>

@@ -1,7 +1,7 @@
-import { v4 as uuidv4 } from 'uuid';
-import type { RedisSessionStore } from '../redis-session-store';
-import type { Session } from '../../db/schema';
-import { getQueueState } from './queue-state';
+import { v4 as uuidv4 } from "uuid";
+import type { RedisSessionStore } from "../redis-session-store";
+import type { Session } from "../../db/schema";
+import { getQueueState } from "./queue-state";
 
 /**
  * Get the Redis lock key for session restoration.
@@ -20,7 +20,7 @@ export async function restoreSessionWithLock(
   sessionId: string,
   sessionsMap: Map<string, Set<string>>,
   redisStore: RedisSessionStore,
-  getSessionById: (id: string) => Promise<Session | null>
+  getSessionById: (id: string) => Promise<Session | null>,
 ): Promise<boolean> {
   const lockKey = getSessionRestoreLockKey(sessionId);
   const lockValue = uuidv4();
@@ -33,7 +33,12 @@ export async function restoreSessionWithLock(
     try {
       // Double-check after acquiring lock (another instance might have initialized)
       if (!sessionsMap.has(sessionId)) {
-        const isNew = await tryRestoreFromStores(sessionId, sessionsMap, redisStore, getSessionById);
+        const isNew = await tryRestoreFromStores(
+          sessionId,
+          sessionsMap,
+          redisStore,
+          getSessionById,
+        );
         return isNew;
       }
       return false;
@@ -56,7 +61,7 @@ async function tryRestoreFromStores(
   sessionId: string,
   sessionsMap: Map<string, Set<string>>,
   redisStore: RedisSessionStore,
-  getSessionById: (id: string) => Promise<Session | null>
+  getSessionById: (id: string) => Promise<Session | null>,
 ): Promise<boolean> {
   let isNewSession = false;
 
@@ -80,10 +85,10 @@ async function tryRestoreFromStores(
 async function restoreFromPostgres(
   sessionId: string,
   redisStore: RedisSessionStore,
-  getSessionById: (id: string) => Promise<Session | null>
+  getSessionById: (id: string) => Promise<Session | null>,
 ): Promise<boolean> {
   const pgSession = await getSessionById(sessionId);
-  if (pgSession && pgSession.status !== 'ended') {
+  if (pgSession && pgSession.status !== "ended") {
     console.log(`[RoomManager] Restoring session ${sessionId} from Postgres (dormant session)`);
     const queueState = await getQueueState(sessionId, redisStore);
     await redisStore.saveSession({
@@ -117,7 +122,7 @@ async function waitForRestoration(
   sessionId: string,
   sessionsMap: Map<string, Set<string>>,
   redisStore: RedisSessionStore,
-  getSessionById: (id: string) => Promise<Session | null>
+  getSessionById: (id: string) => Promise<Session | null>,
 ): Promise<boolean> {
   console.log(`[RoomManager] Lock not acquired for session ${sessionId}, waiting with backoff...`);
   let waitTime = 50;
@@ -126,11 +131,13 @@ async function waitForRestoration(
   let sessionRestored = false;
 
   for (let attempt = 0; attempt < maxAttempts; attempt++) {
-    await new Promise(resolve => setTimeout(resolve, waitTime));
+    await new Promise((resolve) => setTimeout(resolve, waitTime));
 
     // Check if session was restored by another instance
     if (sessionsMap.has(sessionId)) {
-      console.log(`[RoomManager] Session ${sessionId} restored by another instance after ${attempt + 1} attempts`);
+      console.log(
+        `[RoomManager] Session ${sessionId} restored by another instance after ${attempt + 1} attempts`,
+      );
       sessionRestored = true;
       break;
     }
@@ -144,7 +151,9 @@ async function waitForRestoration(
     // Check Redis to see if the session was restored by another instance
     const redisSession = await redisStore.getSession(sessionId);
     if (redisSession) {
-      console.log(`[RoomManager] Session ${sessionId} found in Redis after backoff, using restored state`);
+      console.log(
+        `[RoomManager] Session ${sessionId} found in Redis after backoff, using restored state`,
+      );
       sessionsMap.set(sessionId, new Set());
       return false;
     }
@@ -154,7 +163,9 @@ async function waitForRestoration(
     if (!isNew) {
       console.log(`[RoomManager] Session ${sessionId} found in Postgres after backoff, restoring`);
     } else {
-      console.log(`[RoomManager] Session ${sessionId} not found after backoff, treating as new session`);
+      console.log(
+        `[RoomManager] Session ${sessionId} not found after backoff, treating as new session`,
+      );
     }
     sessionsMap.set(sessionId, new Set());
     return isNew;

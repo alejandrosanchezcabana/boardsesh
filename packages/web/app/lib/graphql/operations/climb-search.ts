@@ -1,5 +1,5 @@
-import { gql } from 'graphql-request';
-import type { Climb, HoldState } from '@/app/lib/types';
+import { gql } from "graphql-request";
+import type { Climb, HoldState } from "@/app/lib/types";
 
 // Slim fragment for search/list views. Intentionally omits `description` to
 // keep the list payload small — descriptions can be long and no list UI

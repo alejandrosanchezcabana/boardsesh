@@ -1,9 +1,9 @@
 // @vitest-environment jsdom
-import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { renderHook, act } from '@testing-library/react';
-import React from 'react';
-import type { BoardDetails, BoardRouteIdentity } from '@/app/lib/types';
-import type { ActiveBoardLock } from '../use-active-board-lock';
+import { describe, it, expect, vi, beforeEach } from "vite-plus/test";
+import { renderHook, act } from "@testing-library/react";
+import React from "react";
+import type { BoardDetails, BoardRouteIdentity } from "@/app/lib/types";
+import type { ActiveBoardLock } from "../use-active-board-lock";
 
 let mockLock: ActiveBoardLock = { lockedBoard: null, reason: null };
 const mockConfirmBoardSwitch = vi.fn();
@@ -12,19 +12,19 @@ let mockConfirmCtx: { confirmBoardSwitch: typeof mockConfirmBoardSwitch } | null
 };
 const mockDisconnectAll = vi.fn();
 
-vi.mock('../use-active-board-lock', () => ({
+vi.mock("../use-active-board-lock", () => ({
   useActiveBoardLock: () => mockLock,
 }));
 
-vi.mock('../board-switch-confirm-provider', () => ({
+vi.mock("../board-switch-confirm-provider", () => ({
   useBoardSwitchConfirm: () => mockConfirmCtx,
 }));
 
-vi.mock('../../board-bluetooth-control/bluetooth-status-store', () => ({
+vi.mock("../../board-bluetooth-control/bluetooth-status-store", () => ({
   disconnectAllBluetooth: () => mockDisconnectAll(),
 }));
 
-import { useBoardSwitchGuard } from '../use-board-switch-guard';
+import { useBoardSwitchGuard } from "../use-board-switch-guard";
 
 function makeBoard(partial: Partial<BoardDetails> = {}): BoardDetails {
   return {
@@ -36,7 +36,7 @@ function makeBoard(partial: Partial<BoardDetails> = {}): BoardDetails {
     edge_top: 0,
     boardHeight: 0,
     boardWidth: 0,
-    board_name: 'kilter',
+    board_name: "kilter",
     layout_id: 1,
     size_id: 1,
     set_ids: [1],
@@ -46,7 +46,7 @@ function makeBoard(partial: Partial<BoardDetails> = {}): BoardDetails {
 
 function makeTarget(partial: Partial<BoardRouteIdentity> = {}): BoardRouteIdentity {
   return {
-    board_name: 'kilter',
+    board_name: "kilter",
     layout_id: 1,
     size_id: 1,
     set_ids: [1],
@@ -54,7 +54,7 @@ function makeTarget(partial: Partial<BoardRouteIdentity> = {}): BoardRouteIdenti
   };
 }
 
-describe('useBoardSwitchGuard', () => {
+describe("useBoardSwitchGuard", () => {
   beforeEach(() => {
     mockLock = { lockedBoard: null, reason: null };
     mockConfirmBoardSwitch.mockReset();
@@ -62,29 +62,29 @@ describe('useBoardSwitchGuard', () => {
     mockDisconnectAll.mockReset();
   });
 
-  it('calls onConfirmed immediately when no lock is active', () => {
+  it("calls onConfirmed immediately when no lock is active", () => {
     const { result } = renderHook(() => useBoardSwitchGuard());
     const onConfirmed = vi.fn();
 
     act(() => {
-      result.current(makeTarget({ board_name: 'tension' }), onConfirmed);
+      result.current(makeTarget({ board_name: "tension" }), onConfirmed);
     });
 
     expect(onConfirmed).toHaveBeenCalledOnce();
     expect(mockConfirmBoardSwitch).not.toHaveBeenCalled();
   });
 
-  it('calls onConfirmed immediately when switching to the same board', () => {
+  it("calls onConfirmed immediately when switching to the same board", () => {
     mockLock = {
-      lockedBoard: makeBoard({ board_name: 'kilter', layout_id: 1, size_id: 2, set_ids: [1, 2] }),
-      reason: 'session',
+      lockedBoard: makeBoard({ board_name: "kilter", layout_id: 1, size_id: 2, set_ids: [1, 2] }),
+      reason: "session",
     };
     const { result } = renderHook(() => useBoardSwitchGuard());
     const onConfirmed = vi.fn();
 
     act(() => {
       result.current(
-        makeTarget({ board_name: 'kilter', layout_id: 1, size_id: 2, set_ids: [2, 1] }),
+        makeTarget({ board_name: "kilter", layout_id: 1, size_id: 2, set_ids: [2, 1] }),
         onConfirmed,
       );
     });
@@ -93,17 +93,17 @@ describe('useBoardSwitchGuard', () => {
     expect(mockConfirmBoardSwitch).not.toHaveBeenCalled();
   });
 
-  it('does not open dialog when only set_ids differ', () => {
+  it("does not open dialog when only set_ids differ", () => {
     mockLock = {
-      lockedBoard: makeBoard({ board_name: 'kilter', layout_id: 1, size_id: 1, set_ids: [1, 2] }),
-      reason: 'session',
+      lockedBoard: makeBoard({ board_name: "kilter", layout_id: 1, size_id: 1, set_ids: [1, 2] }),
+      reason: "session",
     };
     const { result } = renderHook(() => useBoardSwitchGuard());
     const onConfirmed = vi.fn();
 
     act(() => {
       result.current(
-        makeTarget({ board_name: 'kilter', layout_id: 1, size_id: 1, set_ids: [3, 4] }),
+        makeTarget({ board_name: "kilter", layout_id: 1, size_id: 1, set_ids: [3, 4] }),
         onConfirmed,
       );
     });
@@ -112,66 +112,66 @@ describe('useBoardSwitchGuard', () => {
     expect(mockConfirmBoardSwitch).not.toHaveBeenCalled();
   });
 
-  it('opens confirmation dialog when layout changes within the same board', () => {
+  it("opens confirmation dialog when layout changes within the same board", () => {
     mockLock = {
-      lockedBoard: makeBoard({ board_name: 'kilter', layout_id: 1, size_id: 1 }),
-      reason: 'session',
+      lockedBoard: makeBoard({ board_name: "kilter", layout_id: 1, size_id: 1 }),
+      reason: "session",
     };
     const { result } = renderHook(() => useBoardSwitchGuard());
     const onConfirmed = vi.fn();
 
     act(() => {
-      result.current(makeTarget({ board_name: 'kilter', layout_id: 2, size_id: 1 }), onConfirmed);
+      result.current(makeTarget({ board_name: "kilter", layout_id: 2, size_id: 1 }), onConfirmed);
     });
 
     expect(mockConfirmBoardSwitch).toHaveBeenCalledOnce();
     expect(onConfirmed).not.toHaveBeenCalled();
   });
 
-  it('opens confirmation dialog when size changes within the same board and layout', () => {
+  it("opens confirmation dialog when size changes within the same board and layout", () => {
     mockLock = {
-      lockedBoard: makeBoard({ board_name: 'kilter', layout_id: 1, size_id: 1 }),
-      reason: 'bluetooth',
+      lockedBoard: makeBoard({ board_name: "kilter", layout_id: 1, size_id: 1 }),
+      reason: "bluetooth",
     };
     const { result } = renderHook(() => useBoardSwitchGuard());
     const onConfirmed = vi.fn();
 
     act(() => {
-      result.current(makeTarget({ board_name: 'kilter', layout_id: 1, size_id: 2 }), onConfirmed);
+      result.current(makeTarget({ board_name: "kilter", layout_id: 1, size_id: 2 }), onConfirmed);
     });
 
     expect(mockConfirmBoardSwitch).toHaveBeenCalledOnce();
     expect(onConfirmed).not.toHaveBeenCalled();
   });
 
-  it('opens confirmation dialog when switching to a different board', () => {
+  it("opens confirmation dialog when switching to a different board", () => {
     mockLock = {
-      lockedBoard: makeBoard({ board_name: 'kilter', layout_id: 1 }),
-      reason: 'session',
+      lockedBoard: makeBoard({ board_name: "kilter", layout_id: 1 }),
+      reason: "session",
     };
     const { result } = renderHook(() => useBoardSwitchGuard());
     const onConfirmed = vi.fn();
 
     act(() => {
-      result.current(makeTarget({ board_name: 'tension', layout_id: 2 }), onConfirmed);
+      result.current(makeTarget({ board_name: "tension", layout_id: 2 }), onConfirmed);
     });
 
     expect(mockConfirmBoardSwitch).toHaveBeenCalledOnce();
     expect(onConfirmed).not.toHaveBeenCalled();
     const call = mockConfirmBoardSwitch.mock.calls[0][0];
-    expect(call.reason).toBe('session');
+    expect(call.reason).toBe("session");
   });
 
-  it('disconnects bluetooth and invokes onConfirmed when the dialog is confirmed', () => {
+  it("disconnects bluetooth and invokes onConfirmed when the dialog is confirmed", () => {
     mockLock = {
-      lockedBoard: makeBoard({ board_name: 'kilter', layout_id: 1 }),
-      reason: 'bluetooth',
+      lockedBoard: makeBoard({ board_name: "kilter", layout_id: 1 }),
+      reason: "bluetooth",
     };
     const { result } = renderHook(() => useBoardSwitchGuard());
     const onConfirmed = vi.fn();
 
     act(() => {
-      result.current(makeTarget({ board_name: 'tension', layout_id: 2 }), onConfirmed);
+      result.current(makeTarget({ board_name: "tension", layout_id: 2 }), onConfirmed);
     });
 
     // Simulate the provider firing the dialog's confirm callback.
@@ -184,18 +184,18 @@ describe('useBoardSwitchGuard', () => {
     expect(onConfirmed).toHaveBeenCalledOnce();
   });
 
-  it('still disconnects bluetooth even when onConfirmed throws', () => {
+  it("still disconnects bluetooth even when onConfirmed throws", () => {
     mockLock = {
-      lockedBoard: makeBoard({ board_name: 'kilter', layout_id: 1 }),
-      reason: 'bluetooth',
+      lockedBoard: makeBoard({ board_name: "kilter", layout_id: 1 }),
+      reason: "bluetooth",
     };
     const { result } = renderHook(() => useBoardSwitchGuard());
     const onConfirmed = vi.fn().mockImplementation(() => {
-      throw new Error('navigation failed');
+      throw new Error("navigation failed");
     });
 
     act(() => {
-      result.current(makeTarget({ board_name: 'tension', layout_id: 2 }), onConfirmed);
+      result.current(makeTarget({ board_name: "tension", layout_id: 2 }), onConfirmed);
     });
 
     const args = mockConfirmBoardSwitch.mock.calls[0][0];
@@ -203,16 +203,16 @@ describe('useBoardSwitchGuard', () => {
       act(() => {
         args.onConfirmed();
       });
-    }).toThrow('navigation failed');
+    }).toThrow("navigation failed");
 
     expect(mockDisconnectAll).toHaveBeenCalledOnce();
     expect(onConfirmed).toHaveBeenCalledOnce();
   });
 
-  it('falls back to immediate call-through when the confirm provider is missing', () => {
+  it("falls back to immediate call-through when the confirm provider is missing", () => {
     mockLock = {
-      lockedBoard: makeBoard({ board_name: 'kilter' }),
-      reason: 'session',
+      lockedBoard: makeBoard({ board_name: "kilter" }),
+      reason: "session",
     };
     mockConfirmCtx = null;
 
@@ -220,7 +220,7 @@ describe('useBoardSwitchGuard', () => {
     const onConfirmed = vi.fn();
 
     act(() => {
-      result.current(makeTarget({ board_name: 'tension' }), onConfirmed);
+      result.current(makeTarget({ board_name: "tension" }), onConfirmed);
     });
 
     expect(onConfirmed).toHaveBeenCalledOnce();

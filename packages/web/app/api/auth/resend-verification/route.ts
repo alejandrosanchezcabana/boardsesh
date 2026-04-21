@@ -26,7 +26,8 @@ async function consistentDelay(startTime: number): Promise<void> {
 
 export async function POST(request: NextRequest) {
   const startTime = Date.now();
-  const genericMessage = "If an account exists and needs verification, a verification email will be sent";
+  const genericMessage =
+    "If an account exists and needs verification, a verification email will be sent";
 
   try {
     // Rate limiting - 5 requests per minute per IP
@@ -42,7 +43,7 @@ export async function POST(request: NextRequest) {
           headers: {
             "Retry-After": String(rateLimitResult.retryAfterSeconds),
           },
-        }
+        },
       );
     }
 
@@ -54,7 +55,7 @@ export async function POST(request: NextRequest) {
       await consistentDelay(startTime);
       return NextResponse.json(
         { error: validationResult.error.issues[0].message },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -62,20 +63,13 @@ export async function POST(request: NextRequest) {
     const db = getDb();
 
     // Check if user exists and is unverified
-    const user = await db
-      .select()
-      .from(schema.users)
-      .where(eq(schema.users.email, email))
-      .limit(1);
+    const user = await db.select().from(schema.users).where(eq(schema.users.email, email)).limit(1);
 
     // Don't reveal user status - return same message for all cases
     // Use consistent delay for all paths to prevent timing attacks
     if (user.length === 0 || user[0].emailVerified) {
       await consistentDelay(startTime);
-      return NextResponse.json(
-        { message: genericMessage },
-        { status: 200 }
-      );
+      return NextResponse.json({ message: genericMessage }, { status: 200 });
     }
 
     // Generate new token
@@ -95,20 +89,14 @@ export async function POST(request: NextRequest) {
       });
     });
 
-    const baseUrl = process.env.NEXTAUTH_URL || 'http://localhost:3000';
+    const baseUrl = process.env.NEXTAUTH_URL || "http://localhost:3000";
     await sendVerificationEmail(email, token, baseUrl);
 
     await consistentDelay(startTime);
-    return NextResponse.json(
-      { message: genericMessage },
-      { status: 200 }
-    );
+    return NextResponse.json({ message: genericMessage }, { status: 200 });
   } catch (error) {
     console.error("Resend verification error:", error);
     await consistentDelay(startTime);
-    return NextResponse.json(
-      { error: "Failed to send verification email" },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: "Failed to send verification email" }, { status: 500 });
   }
 }

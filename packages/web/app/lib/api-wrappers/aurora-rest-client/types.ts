@@ -1,11 +1,11 @@
-import { AuroraBoardName } from '../aurora/types';
+import { AuroraBoardName } from "../aurora/types";
 
 export const HOST_BASES: Record<AuroraBoardName, string> = {
-  kilter: 'kilterboardapp',
-  tension: 'tensionboardapp2',
-  decoy: 'decoyboardapp',
-  touchstone: 'touchstoneboardapp',
-  grasshopper: 'grasshopperboardapp',
+  kilter: "kilterboardapp",
+  tension: "tensionboardapp2",
+  decoy: "decoyboardapp",
+  touchstone: "touchstoneboardapp",
+  grasshopper: "grasshopperboardapp",
 };
 
 /**

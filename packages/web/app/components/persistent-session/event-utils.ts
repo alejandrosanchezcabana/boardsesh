@@ -1,4 +1,4 @@
-import type { SessionUser } from '@boardsesh/shared-schema';
+import type { SessionUser } from "@boardsesh/shared-schema";
 
 interface UuidItem {
   uuid: string;
@@ -37,23 +37,23 @@ export function insertQueueItemIdempotent<T extends UuidItem>(
   return nextQueue;
 }
 
-export type QueueSequenceDecision = 'apply' | 'ignore-stale' | 'gap';
+export type QueueSequenceDecision = "apply" | "ignore-stale" | "gap";
 
 export function evaluateQueueEventSequence(
   lastSequence: number | null,
   eventSequence: number,
 ): QueueSequenceDecision {
   if (lastSequence === null) {
-    return 'apply';
+    return "apply";
   }
 
   if (eventSequence <= lastSequence) {
-    return 'ignore-stale';
+    return "ignore-stale";
   }
 
   if (eventSequence > lastSequence + 1) {
-    return 'gap';
+    return "gap";
   }
 
-  return 'apply';
+  return "apply";
 }

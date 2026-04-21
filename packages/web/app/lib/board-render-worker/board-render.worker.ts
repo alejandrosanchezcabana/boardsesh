@@ -7,7 +7,7 @@
 
 // Message types shared with worker-manager.ts
 export type RenderRequest = {
-  type?: 'render';
+  type?: "render";
   id: number;
   boardWidth: number;
   boardHeight: number;
@@ -26,15 +26,13 @@ export type RenderRequest = {
 
 /** Pre-decoded background images sent from main thread to avoid per-worker fetching */
 export type PreloadImagesMessage = {
-  type: 'preload-images';
+  type: "preload-images";
   images: Array<{ url: string; bitmap: ImageBitmap }>;
 };
 
 export type WorkerMessage = RenderRequest | PreloadImagesMessage;
 
-export type RenderResponse =
-  | { id: number; bitmap: ImageBitmap }
-  | { id: number; error: string };
+export type RenderResponse = { id: number; bitmap: ImageBitmap } | { id: number; error: string };
 
 // --- WASM module state ---
 let wasmRenderOverlay: ((configJson: string) => Uint8Array) | null = null;
@@ -85,8 +83,18 @@ async function fetchBackgroundImage(url: string): Promise<ImageBitmap> {
 async function renderBoard(request: RenderRequest): Promise<ImageBitmap> {
   await ensureWasmInitialized();
 
-  const { boardWidth, boardHeight, outputWidth, frames, mirrored, thumbnail, holds, holdStateMap, backgroundUrls, cropTop = 0 } =
-    request;
+  const {
+    boardWidth,
+    boardHeight,
+    outputWidth,
+    frames,
+    mirrored,
+    thumbnail,
+    holds,
+    holdStateMap,
+    backgroundUrls,
+    cropTop = 0,
+  } = request;
 
   const fullOutputHeight = Math.round((outputWidth * boardHeight) / boardWidth);
   const outputHeight = fullOutputHeight - cropTop;
@@ -96,9 +104,9 @@ async function renderBoard(request: RenderRequest): Promise<ImageBitmap> {
 
   // Create OffscreenCanvas at target resolution (cropped height)
   const canvas = new OffscreenCanvas(outputWidth, outputHeight);
-  const ctx = canvas.getContext('2d');
+  const ctx = canvas.getContext("2d");
   if (!ctx) {
-    throw new Error('Failed to get 2d context from OffscreenCanvas');
+    throw new Error("Failed to get 2d context from OffscreenCanvas");
   }
 
   // Apply mirroring transform before drawing anything
@@ -134,11 +142,21 @@ async function renderBoard(request: RenderRequest): Promise<ImageBitmap> {
     // .slice() creates an owned copy of the pixel data, detached from WASM memory.
     // This is critical — WASM memory can grow/relocate, invalidating views into it.
     const rgbaSlice = rawBytes.slice(8);
-    const rgbaData = new Uint8ClampedArray(rgbaSlice.buffer, rgbaSlice.byteOffset, rgbaSlice.byteLength);
+    const rgbaData = new Uint8ClampedArray(
+      rgbaSlice.buffer,
+      rgbaSlice.byteOffset,
+      rgbaSlice.byteLength,
+    );
 
     // Draw overlay on top of backgrounds (shifted up by cropTop to match background)
     const overlayImageData = new ImageData(rgbaData, overlayWidth, overlayHeight);
-    ctx.drawImage(await createImageBitmap(overlayImageData), 0, -cropTop, outputWidth, fullOutputHeight);
+    ctx.drawImage(
+      await createImageBitmap(overlayImageData),
+      0,
+      -cropTop,
+      outputWidth,
+      fullOutputHeight,
+    );
   }
 
   // Transfer as ImageBitmap
@@ -150,7 +168,7 @@ self.onmessage = async (event: MessageEvent<WorkerMessage>) => {
   const msg = event.data;
 
   // Handle pre-loaded background images from main thread
-  if (msg.type === 'preload-images') {
+  if (msg.type === "preload-images") {
     for (const { url, bitmap } of msg.images) {
       bgImageCache.set(url, bitmap);
     }

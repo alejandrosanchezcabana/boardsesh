@@ -1,25 +1,22 @@
-import { z } from 'zod';
-import { ExternalUUIDSchema, BoardNameSchema } from './primitives';
+import { z } from "zod";
+import { ExternalUUIDSchema, BoardNameSchema } from "./primitives";
 
 export const PlaylistNameSchema = z
   .string()
-  .min(1, 'Playlist name cannot be empty')
-  .max(100, 'Playlist name too long');
+  .min(1, "Playlist name cannot be empty")
+  .max(100, "Playlist name too long");
 
 export const PlaylistDescriptionSchema = z
   .string()
-  .max(500, 'Playlist description too long')
+  .max(500, "Playlist description too long")
   .optional();
 
 export const PlaylistColorSchema = z
   .string()
-  .regex(/^#[0-9A-Fa-f]{6}$/, 'Invalid color format (must be hex)')
+  .regex(/^#[0-9A-Fa-f]{6}$/, "Invalid color format (must be hex)")
   .optional();
 
-export const PlaylistIconSchema = z
-  .string()
-  .max(50, 'Icon name too long')
-  .optional();
+export const PlaylistIconSchema = z.string().max(50, "Icon name too long").optional();
 
 export const CreatePlaylistInputSchema = z.object({
   boardType: BoardNameSchema,
@@ -88,7 +85,7 @@ export const DiscoverPlaylistsInputSchema = z.object({
   layoutId: z.number().int().positive().optional(),
   name: z.string().max(100).optional(),
   creatorIds: z.array(z.string().min(1)).optional(),
-  sortBy: z.enum(['recent', 'popular']).optional(),
+  sortBy: z.enum(["recent", "popular"]).optional(),
   page: z.number().int().min(0).optional(),
   pageSize: z.number().int().min(1).max(100).optional(),
 });

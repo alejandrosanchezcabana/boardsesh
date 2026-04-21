@@ -1,10 +1,10 @@
-import { eq, and, sql } from 'drizzle-orm';
-import type { SocialEvent } from '@boardsesh/shared-schema';
-import type { NotificationType } from '@boardsesh/db/schema';
-import { db } from '../db/client';
-import * as dbSchema from '@boardsesh/db/schema';
-import { pubsub } from '../pubsub/index';
-import type { EventBroker } from './event-broker';
+import { eq, and, sql } from "drizzle-orm";
+import type { SocialEvent } from "@boardsesh/shared-schema";
+import type { NotificationType } from "@boardsesh/db/schema";
+import { db } from "../db/client";
+import * as dbSchema from "@boardsesh/db/schema";
+import { pubsub } from "../pubsub/index";
+import type { EventBroker } from "./event-broker";
 import {
   resolveCommentRecipients,
   resolveVoteRecipients,
@@ -15,9 +15,9 @@ import {
   resolveProposalCreatedRecipients,
   resolveClimbCreatedFollowerRecipients,
   resolveClimbCreatedSubscriptionRecipients,
-} from './recipient-resolution';
-import { fanoutFeedItems, fanoutNewClimbFeedItems } from './feed-fanout';
-import crypto from 'crypto';
+} from "./recipient-resolution";
+import { fanoutFeedItems, fanoutNewClimbFeedItems } from "./feed-fanout";
+import crypto from "crypto";
 
 export class NotificationWorker {
   private eventBroker: EventBroker;
@@ -28,40 +28,40 @@ export class NotificationWorker {
 
   start(): void {
     this.eventBroker.startConsumer(this.processEvent.bind(this));
-    console.log('[NotificationWorker] Started');
+    console.log("[NotificationWorker] Started");
   }
 
   private async processEvent(event: SocialEvent): Promise<void> {
     try {
       switch (event.type) {
-        case 'comment.created':
+        case "comment.created":
           await this.handleCommentCreated(event);
           break;
-        case 'comment.reply':
+        case "comment.reply":
           await this.handleCommentReply(event);
           break;
-        case 'vote.cast':
+        case "vote.cast":
           await this.handleVoteCast(event);
           break;
-        case 'follow.created':
+        case "follow.created":
           await this.handleFollowCreated(event);
           break;
-        case 'ascent.logged':
+        case "ascent.logged":
           await this.handleAscentLogged(event);
           break;
-        case 'proposal.voted':
+        case "proposal.voted":
           await this.handleProposalVoted(event);
           break;
-        case 'proposal.approved':
+        case "proposal.approved":
           await this.handleProposalApproved(event);
           break;
-        case 'proposal.rejected':
+        case "proposal.rejected":
           await this.handleProposalRejected(event);
           break;
-        case 'proposal.created':
+        case "proposal.created":
           await this.handleProposalCreated(event);
           break;
-        case 'climb.created':
+        case "climb.created":
           await this.handleClimbCreated(event);
           break;
         default:
@@ -73,10 +73,7 @@ export class NotificationWorker {
   }
 
   private async handleCommentCreated(event: SocialEvent): Promise<void> {
-    const recipients = await resolveCommentRecipients(
-      event.entityType,
-      event.entityId,
-    );
+    const recipients = await resolveCommentRecipients(event.entityType, event.entityId);
 
     for (const recipient of recipients) {
       await this.createAndPublishNotification(
@@ -110,10 +107,7 @@ export class NotificationWorker {
   }
 
   private async handleVoteCast(event: SocialEvent): Promise<void> {
-    const recipients = await resolveVoteRecipients(
-      event.entityType,
-      event.entityId,
-    );
+    const recipients = await resolveVoteRecipients(event.entityType, event.entityId);
 
     for (const recipient of recipients) {
       // Deduplicate: skip if same actor voted on same entity recently (1 hour)
@@ -247,8 +241,8 @@ export class NotificationWorker {
    */
   private async handleClimbCreated(event: SocialEvent): Promise<void> {
     const boardType = event.metadata.boardType;
-    const layoutId = parseInt(event.metadata.layoutId || '0', 10);
-    const climbName = event.metadata.climbName || '';
+    const layoutId = parseInt(event.metadata.layoutId || "0", 10);
+    const climbName = event.metadata.climbName || "";
 
     if (!boardType || !layoutId) return;
 
@@ -270,7 +264,7 @@ export class NotificationWorker {
         recipient.recipientId,
         event.actorId,
         recipient.notificationType,
-        'climb',
+        "climb",
         event.entityId,
       );
     }
@@ -381,20 +375,25 @@ export class NotificationWorker {
     }
 
     // Persist notification
-    await db
-      .insert(dbSchema.notifications)
-      .values({
-        uuid,
-        recipientId,
-        actorId,
-        type,
-        entityType: entityType as dbSchema.SocialEntityType | null,
-        entityId,
-        commentId,
-      });
+    await db.insert(dbSchema.notifications).values({
+      uuid,
+      recipientId,
+      actorId,
+      type,
+      entityType: entityType as dbSchema.SocialEntityType | null,
+      entityId,
+      commentId,
+    });
 
     // Enrich for real-time delivery
-    const enriched = await this.enrichNotification(uuid, actorId, type, entityType, entityId, commentUuid);
+    const enriched = await this.enrichNotification(
+      uuid,
+      actorId,
+      type,
+      entityType,
+      entityId,
+      commentUuid,
+    );
 
     // Push to connected WS clients via PubSub
     pubsub.publishNotificationEvent(recipientId, { notification: enriched });
@@ -430,9 +429,7 @@ export class NotificationWorker {
         .where(eq(dbSchema.comments.uuid, commentUuid))
         .limit(1);
       if (comment?.body) {
-        commentBody = comment.body.length > 100
-          ? comment.body.slice(0, 100) + '...'
-          : comment.body;
+        commentBody = comment.body.length > 100 ? comment.body.slice(0, 100) + "..." : comment.body;
       }
     }
 
@@ -441,7 +438,7 @@ export class NotificationWorker {
     let climbBoardType: string | undefined;
     let proposalUuid: string | undefined;
 
-    if (type === 'new_climb' || type === 'new_climb_global') {
+    if (type === "new_climb" || type === "new_climb_global") {
       const [climb] = await db
         .select({
           name: dbSchema.boardClimbs.name,
@@ -456,10 +453,10 @@ export class NotificationWorker {
         climbBoardType = climb.boardType;
       }
     } else if (
-      type === 'proposal_created' ||
-      type === 'proposal_approved' ||
-      type === 'proposal_rejected' ||
-      type === 'proposal_vote'
+      type === "proposal_created" ||
+      type === "proposal_approved" ||
+      type === "proposal_rejected" ||
+      type === "proposal_vote"
     ) {
       // entityId is the proposal UUID — look up the associated climb
       const [proposal] = await db

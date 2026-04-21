@@ -1,7 +1,7 @@
-import type { Metadata } from 'next';
+import type { Metadata } from "next";
 
-export const SITE_NAME = 'Boardsesh';
-export const DEFAULT_OG_IMAGE_PATH = '/opengraph-image';
+export const SITE_NAME = "Boardsesh";
+export const DEFAULT_OG_IMAGE_PATH = "/opengraph-image";
 
 type PageMetadataOptions = {
   title: string;
@@ -9,10 +9,10 @@ type PageMetadataOptions = {
   path?: string;
   imagePath?: string | null;
   imageAlt?: string;
-  robots?: Metadata['robots'];
+  robots?: Metadata["robots"];
   keywords?: string[];
-  openGraphType?: 'website' | 'article' | 'profile';
-  twitterCard?: 'summary' | 'summary_large_image' | 'app' | 'player';
+  openGraphType?: "website" | "article" | "profile";
+  twitterCard?: "summary" | "summary_large_image" | "app" | "player";
 };
 
 function normalizePath(path?: string): string | undefined {
@@ -20,11 +20,11 @@ function normalizePath(path?: string): string | undefined {
     return undefined;
   }
 
-  if (path === '/') {
-    return '/';
+  if (path === "/") {
+    return "/";
   }
 
-  return path.startsWith('/') ? path : `/${path}`;
+  return path.startsWith("/") ? path : `/${path}`;
 }
 
 export function withBrandTitle(title: string): string {
@@ -43,8 +43,8 @@ export function createPageMetadata({
   imageAlt,
   robots,
   keywords,
-  openGraphType = 'website',
-  twitterCard = 'summary_large_image',
+  openGraphType = "website",
+  twitterCard = "summary_large_image",
 }: PageMetadataOptions): Metadata {
   const canonicalPath = normalizePath(path);
   const fullTitle = withBrandTitle(title);
@@ -80,7 +80,7 @@ export function createPageMetadata({
   };
 }
 
-export function createNoIndexMetadata(options: Omit<PageMetadataOptions, 'robots'>): Metadata {
+export function createNoIndexMetadata(options: Omit<PageMetadataOptions, "robots">): Metadata {
   return createPageMetadata({
     ...options,
     robots: { index: false, follow: true },

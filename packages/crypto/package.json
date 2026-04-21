@@ -15,12 +15,11 @@
   "scripts": {
     "build": "tsc",
     "dev": "tsc --watch",
-    "lint": "oxlint .",
-    "lint-fix": "oxlint --fix ."
+    "lint": "vp lint",
+    "lint-fix": "vp lint --fix"
   },
   "devDependencies": {
     "@types/node": "^25",
-    "oxlint": "^1.60.0",
     "typescript": "^5.9.3"
   }
 }

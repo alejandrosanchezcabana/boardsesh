@@ -1,8 +1,8 @@
-'use client';
+"use client";
 
-import React from 'react';
-import ProfileSubPageLayout from '../components/profile-sub-page-layout';
-import UserClimbList from '@/app/components/climb-list/user-climb-list';
+import React from "react";
+import ProfileSubPageLayout from "../components/profile-sub-page-layout";
+import UserClimbList from "@/app/components/climb-list/user-climb-list";
 
 interface ClimbsContentProps {
   userId: string;

@@ -1,36 +1,29 @@
-import { MOONBOARD_GRID } from '@/app/lib/moonboard-config';
-import { UART_SERVICE_UUID } from './bluetooth-shared';
+import { MOONBOARD_GRID } from "@/app/lib/moonboard-config";
+import { UART_SERVICE_UUID } from "./bluetooth-shared";
 
-const MOONBOARD_FRAME_PREFIX = 'l#';
-const MOONBOARD_FRAME_SUFFIX = '#';
-export const MOONBOARD_DEVICE_NAME_PREFIXES = ['MoonBoard', 'Moonboard'] as const;
+const MOONBOARD_FRAME_PREFIX = "l#";
+const MOONBOARD_FRAME_SUFFIX = "#";
+const MOONBOARD_DEVICE_NAME_PREFIXES = ["MoonBoard", "Moonboard"] as const;
 
 // Boardsesh persists MoonBoard frames with the shared basic role codes only.
 // The newer controller firmware can render extra preview-only roles, but the
 // web client does not emit them in climb frames.
 const MOONBOARD_ROLE_MAP = {
-  42: 'S',
-  43: 'P',
-  44: 'E',
+  42: "S",
+  43: "P",
+  44: "E",
 } as const;
 
 export const MOONBOARD_SCAN_SERVICE_UUIDS = [UART_SERVICE_UUID] as const;
-// UART service is already in the scan filter — no additional services needed
-export const MOONBOARD_OPTIONAL_SERVICE_UUIDS = [] as const;
+export const MOONBOARD_OPTIONAL_SERVICE_UUIDS = [UART_SERVICE_UUID] as const;
 
-// Each filter AND's service UUID + name prefix. Two filters are OR'd so we
-// match both capitalization variants without showing the same device twice.
 export const MOONBOARD_REQUEST_DEVICE_OPTIONS: RequestDeviceOptions = {
-  filters: MOONBOARD_DEVICE_NAME_PREFIXES.map((namePrefix) => ({
-    services: [...MOONBOARD_SCAN_SERVICE_UUIDS],
-    namePrefix,
-  })),
+  filters: [
+    { services: [...MOONBOARD_SCAN_SERVICE_UUIDS] },
+    ...MOONBOARD_DEVICE_NAME_PREFIXES.map((namePrefix) => ({ namePrefix })),
+  ],
   optionalServices: [...MOONBOARD_OPTIONAL_SERVICE_UUIDS],
 };
-
-export function isMoonboardDeviceName(name?: string): boolean {
-  return !!name && MOONBOARD_DEVICE_NAME_PREFIXES.some((prefix) => name.startsWith(prefix));
-}
 
 export function getMoonboardSerialPosition(holdId: number): number {
   const maxHoldId = MOONBOARD_GRID.numColumns * MOONBOARD_GRID.numRows;
@@ -54,10 +47,10 @@ export function getMoonboardBluetoothPacket(frames: string): Uint8Array {
   let skippedCount = 0;
 
   frames
-    .split('p')
+    .split("p")
     .filter(Boolean)
     .forEach((frame) => {
-      const [placement, role] = frame.split('r');
+      const [placement, role] = frame.split("r");
       const holdId = Number(placement);
       const holdType = MOONBOARD_ROLE_MAP[Number(role) as keyof typeof MOONBOARD_ROLE_MAP];
 
@@ -76,7 +69,9 @@ export function getMoonboardBluetoothPacket(frames: string): Uint8Array {
     console.warn(`[BLE] Skipped ${skippedCount} MoonBoard holds with invalid ids for this payload`);
   }
 
-  const holdPayload = encodedHolds.join(',');
+  const holdPayload = encodedHolds.join(",");
 
-  return new TextEncoder().encode(`${MOONBOARD_FRAME_PREFIX}${holdPayload}${MOONBOARD_FRAME_SUFFIX}`);
+  return new TextEncoder().encode(
+    `${MOONBOARD_FRAME_PREFIX}${holdPayload}${MOONBOARD_FRAME_SUFFIX}`,
+  );
 }

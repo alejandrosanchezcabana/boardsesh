@@ -1,13 +1,13 @@
-'use client';
+"use client";
 
-import React, { useMemo } from 'react';
+import React, { useMemo } from "react";
 import {
   MOONBOARD_GRID,
   MOONBOARD_SIZE,
   getGridPosition,
   MOONBOARD_HOLD_STATES,
-} from '@/app/lib/moonboard-config';
-import { MoonBoardRendererProps } from './types';
+} from "@/app/lib/moonboard-config";
+import { MoonBoardRendererProps } from "./types";
 
 const MoonBoardRenderer: React.FC<MoonBoardRendererProps> = ({
   layoutFolder,
@@ -44,41 +44,44 @@ const MoonBoardRenderer: React.FC<MoonBoardRendererProps> = ({
 
   const getHoldColor = (holdId: number): string => {
     const hold = litUpHoldsMap[holdId];
-    if (!hold) return 'transparent';
+    if (!hold) return "transparent";
 
     // Use displayColor from the hold if available, otherwise map state to Moonboard colors
     if (hold.displayColor) return hold.displayColor;
 
     switch (hold.state) {
-      case 'STARTING':
+      case "STARTING":
         return MOONBOARD_HOLD_STATES.start.displayColor;
-      case 'HAND':
+      case "HAND":
         return MOONBOARD_HOLD_STATES.hand.displayColor;
-      case 'FINISH':
+      case "FINISH":
         return MOONBOARD_HOLD_STATES.finish.displayColor;
       default:
-        return 'transparent';
+        return "transparent";
     }
   };
 
   // Memoize SVG style object to prevent recreation on every render
-  const svgStyle = useMemo(() => ({
-    width: '100%',
-    height: 'auto',
-    display: 'block' as const,
-    maxHeight: thumbnail ? '10vh' : '55vh',
-    transform: mirrored ? 'scaleX(-1)' : undefined,
-  }), [thumbnail, mirrored]);
+  const svgStyle = useMemo(
+    () => ({
+      width: "100%",
+      height: "auto",
+      display: "block" as const,
+      maxHeight: thumbnail ? "10vh" : "55vh",
+      transform: mirrored ? "scaleX(-1)" : undefined,
+    }),
+    [thumbnail, mirrored],
+  );
 
   return (
-    <svg
-      viewBox={`0 0 ${width} ${height}`}
-      preserveAspectRatio="xMidYMid meet"
-      style={svgStyle}
-    >
+    <svg viewBox={`0 0 ${width} ${height}`} preserveAspectRatio="xMidYMid meet" style={svgStyle}>
       {/* Render MoonBoard background first */}
       <image
-        href={thumbnail ? "/images/moonboard/thumbs/moonboard-bg.webp" : "/images/moonboard/moonboard-bg.webp"}
+        href={
+          thumbnail
+            ? "/images/moonboard/thumbs/moonboard-bg.webp"
+            : "/images/moonboard/moonboard-bg.webp"
+        }
         width="100%"
         height="100%"
       />
@@ -87,7 +90,7 @@ const MoonBoardRenderer: React.FC<MoonBoardRendererProps> = ({
       {holdSetImages.map((imageFile) => (
         <image
           key={imageFile}
-          href={`/images/moonboard/${layoutFolder}/${thumbnail ? 'thumbs/' : ''}${imageFile.replace(/\.png$/, '.webp')}`}
+          href={`/images/moonboard/${layoutFolder}/${thumbnail ? "thumbs/" : ""}${imageFile.replace(/\.png$/, ".webp")}`}
           width="100%"
           height="100%"
         />
@@ -96,7 +99,7 @@ const MoonBoardRenderer: React.FC<MoonBoardRendererProps> = ({
       {/* Render hold circles - skip transparent ones when they serve no purpose */}
       {gridHolds.map((hold) => {
         const color = getHoldColor(hold.id);
-        const isLitUp = color !== 'transparent';
+        const isLitUp = color !== "transparent";
 
         // Skip transparent circles in thumbnail mode or when there's no click handler
         if (!isLitUp && (thumbnail || !onHoldClick)) return null;
@@ -111,8 +114,8 @@ const MoonBoardRenderer: React.FC<MoonBoardRendererProps> = ({
             stroke={color}
             strokeWidth={thumbnail ? 8 : 6}
             fillOpacity={thumbnail && isLitUp ? 1 : 0}
-            fill={thumbnail && isLitUp ? color : 'transparent'}
-            style={{ cursor: onHoldClick ? 'pointer' : 'default' }}
+            fill={thumbnail && isLitUp ? color : "transparent"}
+            style={{ cursor: onHoldClick ? "pointer" : "default" }}
             onClick={onHoldClick ? (event) => onHoldClick(hold.id, event.currentTarget) : undefined}
           />
         );

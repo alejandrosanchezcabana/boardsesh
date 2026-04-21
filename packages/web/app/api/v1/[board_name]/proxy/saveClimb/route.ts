@@ -1,12 +1,12 @@
 // app/api/v1/[board_name]/proxy/saveClimb/route.ts
-import { saveClimb, saveClimbStats } from '@/app/lib/api-wrappers/aurora/saveClimb';
-import { AuroraBoardName } from '@/app/lib/api-wrappers/aurora/types';
-import { BoardName } from '@/app/lib/types';
-import { encodeMoonBoardHoldsToFrames } from '@/app/lib/moonboard-config';
-import { fontGradeToDifficultyId } from '@/app/lib/board-data';
-import { revalidateClimbSearchTags } from '@/app/lib/climb-search-cache.server';
-import { NextResponse } from 'next/server';
-import { z } from 'zod';
+import { saveClimb, saveClimbStats } from "@/app/lib/api-wrappers/aurora/saveClimb";
+import { AuroraBoardName } from "@/app/lib/api-wrappers/aurora/types";
+import { BoardName } from "@/app/lib/types";
+import { encodeMoonBoardHoldsToFrames } from "@/app/lib/moonboard-config";
+import { fontGradeToDifficultyId } from "@/app/lib/board-data";
+import { revalidateClimbSearchTags } from "@/app/lib/climb-search-cache.server";
+import { NextResponse } from "next/server";
+import { z } from "zod";
 
 const saveClimbSchema = z.object({
   options: z
@@ -51,7 +51,7 @@ export async function POST(request: Request, props: { params: Promise<{ board_na
   const board_name = params.board_name as BoardName;
 
   const revalidateMoonBoardSearch = async (layoutId: number) => {
-    if (board_name !== 'moonboard') {
+    if (board_name !== "moonboard") {
       return;
     }
 
@@ -59,7 +59,7 @@ export async function POST(request: Request, props: { params: Promise<{ board_na
       boardName: board_name,
       layoutId,
       requestHeaders: request.headers,
-      source: 'save-climb-proxy',
+      source: "save-climb-proxy",
     });
   };
 
@@ -67,11 +67,11 @@ export async function POST(request: Request, props: { params: Promise<{ board_na
     const body = await request.json();
 
     // Handle Moonboard separately (uses holds instead of frames)
-    if (board_name === 'moonboard') {
+    if (board_name === "moonboard") {
       const validatedData = saveMoonBoardClimbSchema.parse(body);
       const frames = encodeMoonBoardHoldsToFrames(validatedData.options.holds);
 
-      const response = await saveClimb('moonboard', {
+      const response = await saveClimb("moonboard", {
         layout_id: validatedData.options.layout_id,
         user_id: validatedData.options.user_id,
         name: validatedData.options.name,
@@ -88,7 +88,7 @@ export async function POST(request: Request, props: { params: Promise<{ board_na
       if (validatedData.options.user_grade) {
         const difficultyId = fontGradeToDifficultyId(validatedData.options.user_grade);
         if (difficultyId !== null) {
-          await saveClimbStats('moonboard', {
+          await saveClimbStats("moonboard", {
             climbUuid: response.uuid,
             angle: validatedData.options.angle,
             displayDifficulty: difficultyId,
@@ -112,17 +112,20 @@ export async function POST(request: Request, props: { params: Promise<{ board_na
     const response = await saveClimb(aurora_board_name, validatedData.options);
     return NextResponse.json(response);
   } catch (error) {
-    console.error('SaveClimb error details:', {
+    console.error("SaveClimb error details:", {
       error: error instanceof Error ? error.message : error,
       stack: error instanceof Error ? error.stack : undefined,
       board_name,
     });
 
     if (error instanceof z.ZodError) {
-      return NextResponse.json({ error: 'Invalid request data', details: error.issues }, { status: 400 });
+      return NextResponse.json(
+        { error: "Invalid request data", details: error.issues },
+        { status: 400 },
+      );
     }
 
     // Only database errors should reach here now
-    return NextResponse.json({ error: 'Failed to save climb' }, { status: 500 });
+    return NextResponse.json({ error: "Failed to save climb" }, { status: 500 });
   }
 }

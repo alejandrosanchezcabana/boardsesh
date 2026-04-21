@@ -43,11 +43,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Also rate limit by user ID
-    const userRateLimit = checkRateLimit(
-      `set-password:user:${session.user.id}`,
-      5,
-      60_000,
-    );
+    const userRateLimit = checkRateLimit(`set-password:user:${session.user.id}`, 5, 60_000);
     if (userRateLimit.limited) {
       return NextResponse.json(
         { error: "Too many requests. Please try again later." },
@@ -62,10 +58,7 @@ export async function POST(request: NextRequest) {
     try {
       body = await request.json();
     } catch {
-      return NextResponse.json(
-        { error: "Invalid request body" },
-        { status: 400 },
-      );
+      return NextResponse.json({ error: "Invalid request body" }, { status: 400 });
     }
 
     // Validate input
@@ -88,10 +81,7 @@ export async function POST(request: NextRequest) {
       .limit(1);
 
     if (existing.length > 0) {
-      return NextResponse.json(
-        { error: "Password already set." },
-        { status: 409 },
-      );
+      return NextResponse.json({ error: "Password already set." }, { status: 409 });
     }
 
     // Hash password and insert
@@ -110,12 +100,7 @@ export async function POST(request: NextRequest) {
         await tx
           .update(schema.users)
           .set({ emailVerified: new Date(), updatedAt: new Date() })
-          .where(
-            and(
-              eq(schema.users.id, session.user.id),
-              isNull(schema.users.emailVerified),
-            ),
-          );
+          .where(and(eq(schema.users.id, session.user.id), isNull(schema.users.emailVerified)));
       });
     } catch (insertError) {
       // Handle race condition: another request inserted credentials between our check and insert
@@ -125,17 +110,13 @@ export async function POST(request: NextRequest) {
         "code" in insertError &&
         insertError.code === "23505"
       ) {
-        return NextResponse.json(
-          { error: "Password already set." },
-          { status: 409 },
-        );
+        return NextResponse.json({ error: "Password already set." }, { status: 409 });
       }
       throw insertError;
     }
 
     return NextResponse.json({
-      message:
-        "Password set successfully. You can now log in with your email and password.",
+      message: "Password set successfully. You can now log in with your email and password.",
     });
   } catch (error) {
     console.error("Set password error:", error);

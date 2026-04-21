@@ -22,5 +22,5 @@ name = "render_bench"
 harness = false
 
 [profile.release]
-opt-level = 3       # Optimize for speed (rendering perf > binary size)
+opt-level = 3 # Optimize for speed (rendering perf > binary size)
 lto = true

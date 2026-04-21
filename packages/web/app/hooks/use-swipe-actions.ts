@@ -1,8 +1,8 @@
-'use client';
+"use client";
 
-import { useRef, useCallback, useState, useEffect } from 'react';
-import { useSwipeable } from 'react-swipeable';
-import { useSwipeDirection } from './use-swipe-direction';
+import { useRef, useCallback, useState, useEffect } from "react";
+import { useSwipeable } from "react-swipeable";
+import { useSwipeDirection } from "./use-swipe-direction";
 
 // Threshold in pixels to trigger the swipe action
 const DEFAULT_SWIPE_THRESHOLD = 100;
@@ -17,7 +17,7 @@ const CONFIRMATION_DISPLAY_MS = 600;
  */
 export const DEFAULT_CONFIRMATION_PEEK_OFFSET = 76;
 
-export type SwipeZone = 'none' | 'left-short' | 'left-long' | 'right-short' | 'right-long';
+export type SwipeZone = "none" | "left-short" | "left-long" | "right-short" | "right-long";
 
 export interface UseSwipeActionsOptions {
   /** Called when the user swipes left past the threshold */
@@ -109,14 +109,17 @@ export function useSwipeActions({
 
   // Gesture state (not React state -- no re-renders)
   const offsetRef = useRef(0);
-  const swipeZoneRef = useRef<SwipeZone>('none');
+  const swipeZoneRef = useRef<SwipeZone>("none");
   const { detect: detectDirection, reset: resetDirection, isHorizontalRef } = useSwipeDirection();
 
-  const updateSwipeZone = useCallback((zone: SwipeZone) => {
-    if (swipeZoneRef.current === zone) return;
-    swipeZoneRef.current = zone;
-    onSwipeZoneChange?.(zone);
-  }, [onSwipeZoneChange]);
+  const updateSwipeZone = useCallback(
+    (zone: SwipeZone) => {
+      if (swipeZoneRef.current === zone) return;
+      swipeZoneRef.current = zone;
+      onSwipeZoneChange?.(zone);
+    },
+    [onSwipeZoneChange],
+  );
 
   const contentRef = useCallback((node: HTMLElement | null) => {
     contentEl.current = node;
@@ -131,36 +134,40 @@ export function useSwipeActions({
   }, []);
 
   /** Apply the current offset to the DOM elements directly */
-  const applyOffset = useCallback((offset: number) => {
-    offsetRef.current = offset;
-    onSwipeOffsetChange?.(offset);
+  const applyOffset = useCallback(
+    (offset: number) => {
+      offsetRef.current = offset;
+      onSwipeOffsetChange?.(offset);
 
-    if (contentEl.current) {
-      contentEl.current.style.transform = `translateX(${offset}px)`;
-      // Only apply transition when snapping back to zero
-      contentEl.current.style.transition = offset === 0 ? 'transform 150ms ease-out, opacity 150ms ease-out' : 'none';
-    }
+      if (contentEl.current) {
+        contentEl.current.style.transform = `translateX(${offset}px)`;
+        // Only apply transition when snapping back to zero
+        contentEl.current.style.transition =
+          offset === 0 ? "transform 150ms ease-out, opacity 150ms ease-out" : "none";
+      }
 
-    const absOffset = Math.abs(offset);
-    const opacity = Math.min(1, absOffset / swipeThreshold);
+      const absOffset = Math.abs(offset);
+      const opacity = Math.min(1, absOffset / swipeThreshold);
 
-    // Left action (revealed on swipe right, offset > 0)
-    if (leftActionEl.current) {
-      leftActionEl.current.style.opacity = String(offset > 0 ? opacity : 0);
-      leftActionEl.current.style.visibility = offset > 0 ? 'visible' : 'hidden';
-    }
+      // Left action (revealed on swipe right, offset > 0)
+      if (leftActionEl.current) {
+        leftActionEl.current.style.opacity = String(offset > 0 ? opacity : 0);
+        leftActionEl.current.style.visibility = offset > 0 ? "visible" : "hidden";
+      }
 
-    // Right action (revealed on swipe left, offset < 0)
-    if (rightActionEl.current) {
-      rightActionEl.current.style.opacity = String(offset < 0 ? opacity : 0);
-      rightActionEl.current.style.visibility = offset < 0 ? 'visible' : 'hidden';
-    }
-  }, [swipeThreshold, onSwipeOffsetChange]);
+      // Right action (revealed on swipe left, offset < 0)
+      if (rightActionEl.current) {
+        rightActionEl.current.style.opacity = String(offset < 0 ? opacity : 0);
+        rightActionEl.current.style.visibility = offset < 0 ? "visible" : "hidden";
+      }
+    },
+    [swipeThreshold, onSwipeOffsetChange],
+  );
 
   /** Snap offset back to zero (no action taken) */
   const resetOffset = useCallback(() => {
     applyOffset(0);
-    updateSwipeZone('none');
+    updateSwipeZone("none");
   }, [applyOffset, updateSwipeZone]);
 
   const handleSwipeLeftComplete = useCallback(() => {
@@ -173,7 +180,7 @@ export function useSwipeActions({
 
     // Animate content to a peek offset so the action layer (checkmark) stays visible
     if (contentEl.current) {
-      contentEl.current.style.transition = 'transform 120ms ease-out';
+      contentEl.current.style.transition = "transform 120ms ease-out";
       contentEl.current.style.transform = `translateX(${-confirmationPeekOffset}px)`;
     }
     // Keep offsetRef in sync with the visual peek state so gesture handlers
@@ -182,8 +189,8 @@ export function useSwipeActions({
 
     // Keep the right action layer fully visible during confirmation
     if (rightActionEl.current) {
-      rightActionEl.current.style.opacity = '1';
-      rightActionEl.current.style.visibility = 'visible';
+      rightActionEl.current.style.opacity = "1";
+      rightActionEl.current.style.visibility = "visible";
     }
 
     // After the confirmation display, snap back
@@ -196,31 +203,31 @@ export function useSwipeActions({
       }
       // Set transition on right action before applyOffset changes values so it fades out smoothly
       if (rightActionEl.current) {
-        rightActionEl.current.style.transition = 'opacity 200ms ease-out, visibility 0s 200ms';
+        rightActionEl.current.style.transition = "opacity 200ms ease-out, visibility 0s 200ms";
       }
       applyOffset(0);
       // Override content transition with a gentler one for the confirmation snap-back
-      contentEl.current.style.transition = 'transform 200ms ease-out';
-      updateSwipeZone('none');
+      contentEl.current.style.transition = "transform 200ms ease-out";
+      updateSwipeZone("none");
       setSwipeLeftConfirmed(false);
     }, CONFIRMATION_DISPLAY_MS);
   }, [onSwipeLeft, applyOffset, updateSwipeZone, confirmationPeekOffset]);
 
   const handleSwipeRightComplete = useCallback(() => {
     applyOffset(0);
-    updateSwipeZone('none');
+    updateSwipeZone("none");
     onSwipeRight();
   }, [onSwipeRight, applyOffset, updateSwipeZone]);
 
   const handleSwipeLeftLongComplete = useCallback(() => {
     applyOffset(0);
-    updateSwipeZone('none');
+    updateSwipeZone("none");
     onSwipeLeftLong?.();
   }, [applyOffset, onSwipeLeftLong, updateSwipeZone]);
 
   const handleSwipeRightLongComplete = useCallback(() => {
     applyOffset(0);
-    updateSwipeZone('none');
+    updateSwipeZone("none");
     onSwipeRightLong?.();
   }, [applyOffset, onSwipeRightLong, updateSwipeZone]);
 
@@ -236,12 +243,12 @@ export function useSwipeActions({
 
       // Let vertical swipes pass through for scrolling
       if (!isHorizontal) {
-        updateSwipeZone('none');
+        updateSwipeZone("none");
         return;
       }
 
       // Horizontal swipe -- prevent scroll and update offset via DOM
-      if ('nativeEvent' in event) {
+      if ("nativeEvent" in event) {
         event.nativeEvent.preventDefault();
       } else {
         event.preventDefault();
@@ -254,24 +261,25 @@ export function useSwipeActions({
 
       const absOffset = Math.abs(clampedOffset);
       if (clampedOffset > 0) {
-        if (typeof longSwipeRightThreshold === 'number' && absOffset >= longSwipeRightThreshold) {
-          updateSwipeZone('right-long');
+        if (typeof longSwipeRightThreshold === "number" && absOffset >= longSwipeRightThreshold) {
+          updateSwipeZone("right-long");
         } else {
-          updateSwipeZone('right-short');
+          updateSwipeZone("right-short");
         }
       } else if (clampedOffset < 0) {
-        if (typeof longSwipeLeftThreshold === 'number' && absOffset >= longSwipeLeftThreshold) {
-          updateSwipeZone('left-long');
+        if (typeof longSwipeLeftThreshold === "number" && absOffset >= longSwipeLeftThreshold) {
+          updateSwipeZone("left-long");
         } else {
-          updateSwipeZone('left-short');
+          updateSwipeZone("left-short");
         }
       } else {
-        updateSwipeZone('none');
+        updateSwipeZone("none");
       }
     },
     onSwipedLeft: (eventData) => {
       const swipeDistance = Math.abs(eventData.deltaX);
-      const longSwipeReady = typeof longSwipeLeftThreshold === 'number' && swipeDistance >= longSwipeLeftThreshold;
+      const longSwipeReady =
+        typeof longSwipeLeftThreshold === "number" && swipeDistance >= longSwipeLeftThreshold;
 
       if (isHorizontalRef.current && longSwipeReady && onSwipeLeftLong) {
         handleSwipeLeftLongComplete();
@@ -284,7 +292,8 @@ export function useSwipeActions({
     },
     onSwipedRight: (eventData) => {
       const swipeDistance = Math.abs(eventData.deltaX);
-      const longSwipeReady = typeof longSwipeRightThreshold === 'number' && swipeDistance >= longSwipeRightThreshold;
+      const longSwipeReady =
+        typeof longSwipeRightThreshold === "number" && swipeDistance >= longSwipeRightThreshold;
 
       if (isHorizontalRef.current && longSwipeReady && onSwipeRightLong) {
         handleSwipeRightLongComplete();
@@ -300,7 +309,7 @@ export function useSwipeActions({
         resetOffset();
       }
       resetDirection();
-      updateSwipeZone('none');
+      updateSwipeZone("none");
     },
     trackMouse: false,
     trackTouch: true,

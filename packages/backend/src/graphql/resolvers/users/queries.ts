@@ -1,9 +1,14 @@
-import { eq, and, count } from 'drizzle-orm';
-import type { ConnectionContext, UserProfile, AuroraCredentialStatus, DeleteAccountInfo } from '@boardsesh/shared-schema';
-import { db } from '../../../db/client';
-import * as dbSchema from '@boardsesh/db/schema';
-import { requireAuthenticated, validateInput } from '../shared/helpers';
-import { BoardNameSchema } from '../../../validation/schemas';
+import { eq, and, count } from "drizzle-orm";
+import type {
+  ConnectionContext,
+  UserProfile,
+  AuroraCredentialStatus,
+  DeleteAccountInfo,
+} from "@boardsesh/shared-schema";
+import { db } from "../../../db/client";
+import * as dbSchema from "@boardsesh/db/schema";
+import { requireAuthenticated, validateInput } from "../shared/helpers";
+import { BoardNameSchema } from "../../../validation/schemas";
 
 export const userQueries = {
   /**
@@ -43,7 +48,11 @@ export const userQueries = {
   /**
    * Get all Aurora credentials for the authenticated user
    */
-  auroraCredentials: async (_: unknown, __: unknown, ctx: ConnectionContext): Promise<AuroraCredentialStatus[]> => {
+  auroraCredentials: async (
+    _: unknown,
+    __: unknown,
+    ctx: ConnectionContext,
+  ): Promise<AuroraCredentialStatus[]> => {
     if (!ctx.isAuthenticated || !ctx.userId) {
       return [];
     }
@@ -53,7 +62,7 @@ export const userQueries = {
       .from(dbSchema.auroraCredentials)
       .where(eq(dbSchema.auroraCredentials.userId, ctx.userId));
 
-    return credentials.map(c => ({
+    return credentials.map((c) => ({
       boardType: c.boardType,
       username: c.encryptedUsername, // Username is stored as-is (not encrypted)
       userId: c.auroraUserId || undefined,
@@ -65,12 +74,16 @@ export const userQueries = {
   /**
    * Get a specific Aurora credential for the authenticated user by board type
    */
-  auroraCredential: async (_: unknown, { boardType }: { boardType: string }, ctx: ConnectionContext) => {
+  auroraCredential: async (
+    _: unknown,
+    { boardType }: { boardType: string },
+    ctx: ConnectionContext,
+  ) => {
     if (!ctx.isAuthenticated || !ctx.userId) {
       return null;
     }
 
-    validateInput(BoardNameSchema, boardType, 'boardType');
+    validateInput(BoardNameSchema, boardType, "boardType");
 
     const credentials = await db
       .select()
@@ -78,8 +91,8 @@ export const userQueries = {
       .where(
         and(
           eq(dbSchema.auroraCredentials.userId, ctx.userId),
-          eq(dbSchema.auroraCredentials.boardType, boardType)
-        )
+          eq(dbSchema.auroraCredentials.boardType, boardType),
+        ),
       )
       .limit(1);
 
@@ -94,7 +107,7 @@ export const userQueries = {
       userId: c.auroraUserId || undefined,
       syncedAt: c.lastSyncAt?.toISOString() || undefined,
       // Note: We don't expose the actual token for security
-      token: c.auroraToken ? '[ENCRYPTED]' : undefined,
+      token: c.auroraToken ? "[ENCRYPTED]" : undefined,
     };
   },
 
@@ -104,7 +117,7 @@ export const userQueries = {
   deleteAccountInfo: async (
     _: unknown,
     __: unknown,
-    ctx: ConnectionContext
+    ctx: ConnectionContext,
   ): Promise<DeleteAccountInfo> => {
     requireAuthenticated(ctx);
 
@@ -112,10 +125,7 @@ export const userQueries = {
       .select({ count: count() })
       .from(dbSchema.boardClimbs)
       .where(
-        and(
-          eq(dbSchema.boardClimbs.userId, ctx.userId!),
-          eq(dbSchema.boardClimbs.isDraft, false)
-        )
+        and(eq(dbSchema.boardClimbs.userId, ctx.userId!), eq(dbSchema.boardClimbs.isDraft, false)),
       );
 
     return {

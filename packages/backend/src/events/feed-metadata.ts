@@ -1,4 +1,4 @@
-import type { SocialEvent } from '@boardsesh/shared-schema';
+import type { SocialEvent } from "@boardsesh/shared-schema";
 
 /**
  * Build a feed item metadata object from a SocialEvent.
@@ -21,8 +21,8 @@ export function buildFeedItemMetadata(event: SocialEvent): Record<string, unknow
     difficultyName: event.metadata.difficultyName,
     status: event.metadata.status,
     angle: event.metadata.angle ? Number(event.metadata.angle) : null,
-    isMirror: event.metadata.isMirror === 'true',
-    isBenchmark: event.metadata.isBenchmark === 'true',
+    isMirror: event.metadata.isMirror === "true",
+    isBenchmark: event.metadata.isBenchmark === "true",
     quality: event.metadata.quality ? Number(event.metadata.quality) : null,
     attemptCount: event.metadata.attemptCount ? Number(event.metadata.attemptCount) : null,
     comment: event.metadata.comment,

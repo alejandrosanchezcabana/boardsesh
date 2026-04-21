@@ -1,6 +1,6 @@
-'use client';
+"use client";
 
-import { useColorMode } from '@/app/hooks/use-color-mode';
+import { useColorMode } from "@/app/hooks/use-color-mode";
 
 /**
  * Convenience hook that returns whether the app is in dark mode.
@@ -8,5 +8,5 @@ import { useColorMode } from '@/app/hooks/use-color-mode';
  */
 export function useIsDarkMode(): boolean {
   const { mode } = useColorMode();
-  return mode === 'dark';
+  return mode === "dark";
 }

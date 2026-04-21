@@ -1,16 +1,16 @@
-import { eq, asc, and, sql } from 'drizzle-orm';
-import type { Grade, Angle } from '@boardsesh/shared-schema';
-import { db } from '../../../db/client';
-import * as dbSchema from '@boardsesh/db/schema';
-import { validateInput } from '../shared/helpers';
-import { BoardNameSchema } from '../../../validation/schemas';
+import { eq, asc, and, sql } from "drizzle-orm";
+import type { Grade, Angle } from "@boardsesh/shared-schema";
+import { db } from "../../../db/client";
+import * as dbSchema from "@boardsesh/db/schema";
+import { validateInput } from "../shared/helpers";
+import { BoardNameSchema } from "../../../validation/schemas";
 
 export const boardQueries = {
   /**
    * Get difficulty grades for a specific board type
    */
   grades: async (_: unknown, { boardName }: { boardName: string }): Promise<Grade[]> => {
-    validateInput(BoardNameSchema, boardName, 'boardName');
+    validateInput(BoardNameSchema, boardName, "boardName");
 
     // Use unified table with board_type filter
     const grades = await db
@@ -27,17 +27,20 @@ export const boardQueries = {
       )
       .orderBy(asc(dbSchema.boardDifficultyGrades.difficulty));
 
-    return grades.map(g => ({
+    return grades.map((g) => ({
       difficultyId: g.difficultyId,
-      name: g.name || '',
+      name: g.name || "",
     }));
   },
 
   /**
    * Get available angles for a specific board layout
    */
-  angles: async (_: unknown, { boardName, layoutId }: { boardName: string; layoutId: number }): Promise<Angle[]> => {
-    validateInput(BoardNameSchema, boardName, 'boardName');
+  angles: async (
+    _: unknown,
+    { boardName, layoutId }: { boardName: string; layoutId: number },
+  ): Promise<Angle[]> => {
+    validateInput(BoardNameSchema, boardName, "boardName");
 
     // Use raw SQL with unified tables
     // This query joins layouts to products to get available angles for a layout
@@ -52,6 +55,6 @@ export const boardQueries = {
 
     // Handle both possible return types from execute
     const rows = Array.isArray(result) ? result : (result as { rows: { angle: number }[] }).rows;
-    return rows.map(r => ({ angle: r.angle }));
+    return rows.map((r) => ({ angle: r.angle }));
   },
 };

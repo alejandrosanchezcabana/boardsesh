@@ -1,7 +1,7 @@
-import { eq, and, isNull } from 'drizzle-orm';
-import { db } from '../../../db/client';
-import * as dbSchema from '@boardsesh/db/schema';
-import type { SocialEntityType } from '@boardsesh/shared-schema';
+import { eq, and, isNull } from "drizzle-orm";
+import { db } from "../../../db/client";
+import * as dbSchema from "@boardsesh/db/schema";
+import type { SocialEntityType } from "@boardsesh/shared-schema";
 
 /**
  * Validates that a target entity exists before allowing a comment or vote.
@@ -12,35 +12,37 @@ export async function validateEntityExists(
   entityId: string,
 ): Promise<void> {
   switch (entityType) {
-    case 'climb': {
+    case "climb": {
       const [climb] = await db
         .select({ uuid: dbSchema.boardClimbs.uuid })
         .from(dbSchema.boardClimbs)
         .where(eq(dbSchema.boardClimbs.uuid, entityId))
         .limit(1);
       if (!climb) {
-        throw new Error('Climb not found');
+        throw new Error("Climb not found");
       }
       break;
     }
 
-    case 'tick': {
+    case "tick": {
       const [tick] = await db
         .select({ uuid: dbSchema.boardseshTicks.uuid })
         .from(dbSchema.boardseshTicks)
         .where(eq(dbSchema.boardseshTicks.uuid, entityId))
         .limit(1);
       if (!tick) {
-        throw new Error('Tick not found');
+        throw new Error("Tick not found");
       }
       break;
     }
 
-    case 'playlist_climb': {
+    case "playlist_climb": {
       // Format: "playlistUuid:climbUuid" or "playlistUuid:_all" for general playlist discussion
-      const parts = entityId.split(':');
+      const parts = entityId.split(":");
       if (parts.length !== 2) {
-        throw new Error('Invalid playlist_climb entity ID format. Expected "playlistUuid:climbUuid"');
+        throw new Error(
+          'Invalid playlist_climb entity ID format. Expected "playlistUuid:climbUuid"',
+        );
       }
       const [playlistUuid, climbUuid] = parts;
 
@@ -51,11 +53,11 @@ export async function validateEntityExists(
         .limit(1);
 
       if (!playlist) {
-        throw new Error('Playlist not found');
+        throw new Error("Playlist not found");
       }
 
       // "_all" is used for general playlist discussion — only validate playlist exists
-      if (climbUuid !== '_all') {
+      if (climbUuid !== "_all") {
         const [playlistClimb] = await db
           .select({ id: dbSchema.playlistClimbs.id })
           .from(dbSchema.playlistClimbs)
@@ -68,76 +70,61 @@ export async function validateEntityExists(
           .limit(1);
 
         if (!playlistClimb) {
-          throw new Error('Climb not found in playlist');
+          throw new Error("Climb not found in playlist");
         }
       }
       break;
     }
 
-    case 'comment': {
+    case "comment": {
       const [comment] = await db
         .select({ id: dbSchema.comments.id })
         .from(dbSchema.comments)
-        .where(
-          and(
-            eq(dbSchema.comments.uuid, entityId),
-            isNull(dbSchema.comments.deletedAt),
-          ),
-        )
+        .where(and(eq(dbSchema.comments.uuid, entityId), isNull(dbSchema.comments.deletedAt)))
         .limit(1);
       if (!comment) {
-        throw new Error('Comment not found');
+        throw new Error("Comment not found");
       }
       break;
     }
 
-    case 'board': {
+    case "board": {
       const [board] = await db
         .select({ uuid: dbSchema.userBoards.uuid })
         .from(dbSchema.userBoards)
-        .where(
-          and(
-            eq(dbSchema.userBoards.uuid, entityId),
-            isNull(dbSchema.userBoards.deletedAt),
-          ),
-        )
+        .where(and(eq(dbSchema.userBoards.uuid, entityId), isNull(dbSchema.userBoards.deletedAt)))
         .limit(1);
       if (!board) {
-        throw new Error('Board not found');
+        throw new Error("Board not found");
       }
       break;
     }
 
-    case 'gym': {
+    case "gym": {
       const [gym] = await db
         .select({ uuid: dbSchema.gyms.uuid })
         .from(dbSchema.gyms)
-        .where(
-          and(
-            eq(dbSchema.gyms.uuid, entityId),
-            isNull(dbSchema.gyms.deletedAt),
-          ),
-        )
+        .where(and(eq(dbSchema.gyms.uuid, entityId), isNull(dbSchema.gyms.deletedAt)))
         .limit(1);
       if (!gym) {
-        throw new Error('Gym not found');
+        throw new Error("Gym not found");
       }
       break;
     }
 
-    case 'proposal': {
+    case "proposal": {
       const [proposal] = await db
         .select({ uuid: dbSchema.climbProposals.uuid })
         .from(dbSchema.climbProposals)
         .where(eq(dbSchema.climbProposals.uuid, entityId))
         .limit(1);
       if (!proposal) {
-        throw new Error('Proposal not found');
+        throw new Error("Proposal not found");
       }
       break;
     }
 
-    case 'session': {
+    case "session": {
       // Check both inferred sessions and party mode sessions
       const [inferred] = await db
         .select({ id: dbSchema.inferredSessions.id })
@@ -153,7 +140,7 @@ export async function validateEntityExists(
         .limit(1);
       if (party) break;
 
-      throw new Error('Session not found');
+      throw new Error("Session not found");
     }
 
     default: {

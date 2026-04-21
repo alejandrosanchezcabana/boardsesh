@@ -1,5 +1,5 @@
 // Re-export db client from @boardsesh/db
-import { createDb } from '@boardsesh/db/client';
+import { createDb } from "@boardsesh/db/client";
 
 // Create singleton db instance for backend
 export const db = createDb();

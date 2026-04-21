@@ -1,7 +1,7 @@
-'use client';
+"use client";
 
-import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { useRef, useEffect, useMemo, useState, useCallback } from 'react';
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useRef, useEffect, useMemo, useState, useCallback } from "react";
 
 const DEFAULT_CHUNK_SIZE = 500;
 
@@ -110,7 +110,7 @@ export function useIncrementalQuery<T>(
 
   // Dynamic fetch key includes only the new UUIDs
   const fetchKey = useMemo(
-    () => [...fetchKeyPrefix, [...newUuids].sort().join(',')] as const,
+    () => [...fetchKeyPrefix, [...newUuids].sort().join(",")] as const,
     [fetchKeyPrefix, newUuids],
   );
 
@@ -120,7 +120,7 @@ export function useIncrementalQuery<T>(
     queryFn: async ({ queryKey }: { queryKey: readonly unknown[] }): Promise<T> => {
       // Extract UUIDs from query key to avoid stale closure issues
       const uuidsString = queryKey[queryKey.length - 1] as string;
-      const uuidsToFetch = uuidsString ? uuidsString.split(',') : [];
+      const uuidsToFetch = uuidsString ? uuidsString.split(",") : [];
 
       if (uuidsToFetch.length === 0) return initialValue;
 
@@ -199,14 +199,14 @@ export function useIncrementalQuery<T>(
       const qk = event.query.queryKey;
       if (qk.length !== key.length || qk.some((v: unknown, i: number) => v !== key[i])) return;
 
-      if (event.type === 'removed') {
+      if (event.type === "removed") {
         // Cache was cleared — reset tracking so all current UUIDs are re-fetched
         fetchedUuidsRef.current = new Set();
         lastMergedRef.current = undefined;
         lastCacheWriteRef.current = undefined;
         setAccumulated(initialValue);
         setInvalidationCount((c) => c + 1);
-      } else if (event.type === 'updated') {
+      } else if (event.type === "updated") {
         const cached = queryClient.getQueryData<T>(key);
         if (cached !== undefined) {
           // Skip the self-triggered event from our own merge effect (same reference

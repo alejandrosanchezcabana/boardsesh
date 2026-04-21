@@ -1,8 +1,8 @@
-import crypto from 'crypto';
-import { deriveKey } from './key-derivation';
-import { getEncryptionSecret } from './env';
+import crypto from "crypto";
+import { deriveKey } from "./key-derivation";
+import { getEncryptionSecret } from "./env";
 
-const ALGORITHM = 'aes-256-gcm';
+const ALGORITHM = "aes-256-gcm";
 const IV_LENGTH = 16;
 const TAG_LENGTH = 16;
 
@@ -19,19 +19,15 @@ export function encrypt(text: string): string {
 
   const cipher = crypto.createCipheriv(ALGORITHM, key, iv);
 
-  let encrypted = cipher.update(text, 'utf8', 'hex');
-  encrypted += cipher.final('hex');
+  let encrypted = cipher.update(text, "utf8", "hex");
+  encrypted += cipher.final("hex");
 
   const authTag = cipher.getAuthTag();
 
   // Combine IV + authTag + encrypted data
-  const combined = Buffer.concat([
-    iv,
-    authTag,
-    Buffer.from(encrypted, 'hex'),
-  ]);
+  const combined = Buffer.concat([iv, authTag, Buffer.from(encrypted, "hex")]);
 
-  return combined.toString('base64');
+  return combined.toString("base64");
 }
 
 /**
@@ -44,7 +40,7 @@ export function encrypt(text: string): string {
 export function decrypt(encryptedText: string): string {
   const secret = getEncryptionSecret();
   const key = deriveKey(secret);
-  const combined = Buffer.from(encryptedText, 'base64');
+  const combined = Buffer.from(encryptedText, "base64");
 
   // Extract IV, authTag, and encrypted data
   const iv = combined.subarray(0, IV_LENGTH);
@@ -54,8 +50,8 @@ export function decrypt(encryptedText: string): string {
   const decipher = crypto.createDecipheriv(ALGORITHM, key, iv);
   decipher.setAuthTag(authTag);
 
-  let decrypted = decipher.update(encrypted.toString('hex'), 'hex', 'utf8');
-  decrypted += decipher.final('utf8');
+  let decrypted = decipher.update(encrypted.toString("hex"), "hex", "utf8");
+  decrypted += decipher.final("utf8");
 
   return decrypted;
 }
@@ -66,7 +62,7 @@ export function decrypt(encryptedText: string): string {
  */
 export function isEncrypted(value: string): boolean {
   try {
-    const decoded = Buffer.from(value, 'base64');
+    const decoded = Buffer.from(value, "base64");
     // Minimum length: IV + AuthTag + at least 1 byte of data
     return decoded.length >= IV_LENGTH + TAG_LENGTH + 1;
   } catch {

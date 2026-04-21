@@ -1,14 +1,17 @@
 // app/api/cron/sync-shared-data/route.ts
-import { NextResponse } from 'next/server';
-import { syncSharedData as syncSharedDataFunction, type NewClimbInfo } from '@/lib/data-sync/aurora/shared-sync';
-import { AuroraBoardName } from '@/app/lib/api-wrappers/aurora/types';
-import { AURORA_BOARD_NAMES } from '@/app/lib/board-constants';
-import { getDb } from '@/app/lib/db/db';
-import { setterFollows, notifications, userBoardMappings, userFollows } from '@boardsesh/db/schema';
-import { inArray } from 'drizzle-orm';
-import crypto from 'crypto';
+import { NextResponse } from "next/server";
+import {
+  syncSharedData as syncSharedDataFunction,
+  type NewClimbInfo,
+} from "@/lib/data-sync/aurora/shared-sync";
+import { AuroraBoardName } from "@/app/lib/api-wrappers/aurora/types";
+import { AURORA_BOARD_NAMES } from "@/app/lib/board-constants";
+import { getDb } from "@/app/lib/db/db";
+import { setterFollows, notifications, userBoardMappings, userFollows } from "@boardsesh/db/schema";
+import { inArray } from "drizzle-orm";
+import crypto from "crypto";
 
-export const dynamic = 'force-dynamic';
+export const dynamic = "force-dynamic";
 export const maxDuration = 300;
 // This is a simple way to secure the endpoint, should be replaced with a better solution
 const CRON_SECRET = process.env.CRON_SECRET;
@@ -35,7 +38,7 @@ const internalSyncSharedData = async (
 ): Promise<MergedSyncResult> => {
   console.log(`Recursion count: ${recursionCount}`);
   if (recursionCount >= 100) {
-    console.warn('Maximum recursion depth reached for shared sync');
+    console.warn("Maximum recursion depth reached for shared sync");
     return { ...previousResults, complete: true };
   }
 
@@ -47,10 +50,13 @@ const internalSyncSharedData = async (
     complete: false,
     newClimbs: [...previousResults.newClimbs, ...currentResult.newClimbs],
   };
-  const categories = new Set([...Object.keys(previousResults.results), ...Object.keys(currentResult.results)]);
+  const categories = new Set([
+    ...Object.keys(previousResults.results),
+    ...Object.keys(currentResult.results),
+  ]);
 
   for (const category of categories) {
-    if (category === 'complete') {
+    if (category === "complete") {
       mergedResults.complete = currentResult.complete;
       continue;
     }
@@ -167,8 +173,8 @@ async function createSetterSyncNotifications(
         uuid: crypto.randomUUID(),
         recipientId,
         actorId: linkedUserId ?? null,
-        type: 'new_climbs_synced' as const,
-        entityType: 'climb' as const,
+        type: "new_climbs_synced" as const,
+        entityType: "climb" as const,
         entityId: firstClimbUuid,
       }));
 
@@ -180,7 +186,7 @@ async function createSetterSyncNotifications(
       }
     }
   } catch (error) {
-    console.error('[SharedSync] Failed to create setter sync notifications:', error);
+    console.error("[SharedSync] Failed to create setter sync notifications:", error);
   }
 }
 
@@ -198,9 +204,9 @@ export async function GET(request: Request, props: { params: Promise<SharedSyncR
     console.log(`Starting shared sync for ${board_name}`);
 
     // Auth check - always require valid CRON_SECRET
-    const authHeader = request.headers.get('authorization');
+    const authHeader = request.headers.get("authorization");
     if (!CRON_SECRET || authHeader !== `Bearer ${CRON_SECRET}`) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
     const AURORA_TOKENS: Record<string, string | undefined> = {
@@ -216,7 +222,10 @@ export async function GET(request: Request, props: { params: Promise<SharedSyncR
       console.error(
         `No sync token configured for ${board_name}. Set ${board_name.toUpperCase()}_SYNC_TOKEN env variable.`,
       );
-      return NextResponse.json({ error: `No sync token configured for ${board_name}` }, { status: 500 });
+      return NextResponse.json(
+        { error: `No sync token configured for ${board_name}` },
+        { status: 500 },
+      );
     }
 
     const result = await internalSyncSharedData(board_name, token);
@@ -233,7 +242,7 @@ export async function GET(request: Request, props: { params: Promise<SharedSyncR
       newClimbsCount: result.newClimbs.length,
     });
   } catch (error) {
-    console.error('Cron job failed:', error);
-    return NextResponse.json({ success: false, error: 'Sync failed' }, { status: 500 });
+    console.error("Cron job failed:", error);
+    return NextResponse.json({ success: false, error: "Sync failed" }, { status: 500 });
   }
 }

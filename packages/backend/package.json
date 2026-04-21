@@ -7,17 +7,17 @@
   "scripts": {
     "dev": "NODE_ENV=development DOTENV_CONFIG_PATH=.env.development tsx watch src/index.ts",
     "build": "tsc",
-    "typecheck": "tsc --noEmit",
+    "typecheck": "vp check --no-fmt --no-lint",
     "start": "tsx src/index.ts",
-    "test": "vitest",
-    "test:run": "vitest run",
-    "test:coverage": "vitest run --coverage",
-    "lint": "oxlint .",
-    "lint-fix": "oxlint --fix .",
+    "test": "vp test",
+    "test:run": "vp test run",
+    "test:coverage": "vp test run --coverage",
+    "lint": "vp lint",
+    "lint-fix": "vp lint --fix",
     "test:db:up": "docker-compose up -d db",
     "test:db:migrate": "DATABASE_URL=postgresql://postgres:postgres@localhost:5433/boardsesh_backend_test drizzle-kit migrate",
-    "test:integration": "vitest run src/__tests__/integration.test.ts",
-    "test:redis": "vitest run src/__tests__/redis-pubsub.test.ts",
+    "test:integration": "vp test run src/__tests__/integration.test.ts",
+    "test:redis": "vp test run src/__tests__/redis-pubsub.test.ts",
     "backfill-sessions": "tsx src/scripts/backfill-inferred-sessions.ts",
     "db:generate": "drizzle-kit generate",
     "db:migrate": "drizzle-kit migrate",
@@ -56,7 +56,6 @@
     "drizzle-kit": "^0.31.9",
     "postgres": "^3.4.8",
     "typescript": "^5.9.3",
-    "oxlint": "^1.60.0",
     "vitest": "^4.0.18"
   }
 }

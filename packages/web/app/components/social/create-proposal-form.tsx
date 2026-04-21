@@ -1,29 +1,29 @@
-'use client';
+"use client";
 
-import React, { useState, useCallback } from 'react';
-import Box from '@mui/material/Box';
-import Button from '@mui/material/Button';
-import TextField from '@mui/material/TextField';
-import ToggleButton from '@mui/material/ToggleButton';
-import ToggleButtonGroup from '@mui/material/ToggleButtonGroup';
-import Select from '@mui/material/Select';
-import MenuItem from '@mui/material/MenuItem';
-import FormControl from '@mui/material/FormControl';
-import InputLabel from '@mui/material/InputLabel';
-import Typography from '@mui/material/Typography';
-import Snackbar from '@mui/material/Snackbar';
-import Alert from '@mui/material/Alert';
-import AddIcon from '@mui/icons-material/Add';
-import { themeTokens } from '@/app/theme/theme-config';
-import { useWsAuthToken } from '@/app/hooks/use-ws-auth-token';
-import { ClientError } from 'graphql-request';
-import { createGraphQLHttpClient } from '@/app/lib/graphql/client';
-import { CREATE_PROPOSAL } from '@/app/lib/graphql/operations/proposals';
-import { BOULDER_GRADES, ANGLES } from '@/app/lib/board-data';
-import { getGradeTintColor } from '@/app/lib/grade-colors';
-import SwipeableDrawer from '@/app/components/swipeable-drawer/swipeable-drawer';
-import type { Proposal, ProposalType } from '@boardsesh/shared-schema';
-import type { BoardName } from '@/app/lib/types';
+import React, { useState, useCallback } from "react";
+import Box from "@mui/material/Box";
+import Button from "@mui/material/Button";
+import TextField from "@mui/material/TextField";
+import ToggleButton from "@mui/material/ToggleButton";
+import ToggleButtonGroup from "@mui/material/ToggleButtonGroup";
+import Select from "@mui/material/Select";
+import MenuItem from "@mui/material/MenuItem";
+import FormControl from "@mui/material/FormControl";
+import InputLabel from "@mui/material/InputLabel";
+import Typography from "@mui/material/Typography";
+import Snackbar from "@mui/material/Snackbar";
+import Alert from "@mui/material/Alert";
+import AddIcon from "@mui/icons-material/Add";
+import { themeTokens } from "@/app/theme/theme-config";
+import { useWsAuthToken } from "@/app/hooks/use-ws-auth-token";
+import { ClientError } from "graphql-request";
+import { createGraphQLHttpClient } from "@/app/lib/graphql/client";
+import { CREATE_PROPOSAL } from "@/app/lib/graphql/operations/proposals";
+import { BOULDER_GRADES, ANGLES } from "@/app/lib/board-data";
+import { getGradeTintColor } from "@/app/lib/grade-colors";
+import SwipeableDrawer from "@/app/components/swipeable-drawer/swipeable-drawer";
+import type { Proposal, ProposalType } from "@boardsesh/shared-schema";
+import type { BoardName } from "@/app/lib/types";
 
 interface CreateProposalFormProps {
   climbUuid: string;
@@ -48,46 +48,49 @@ export default function CreateProposalForm({
 }: CreateProposalFormProps) {
   const { token } = useWsAuthToken();
   const [open, setOpen] = useState(false);
-  const [type, setType] = useState<ProposalType>('grade');
-  const [proposedValue, setProposedValue] = useState(currentClimbDifficulty || '');
-  const [reason, setReason] = useState('');
-  const [selectedAngle, setSelectedAngle] = useState<number | 'all'>(angle);
+  const [type, setType] = useState<ProposalType>("grade");
+  const [proposedValue, setProposedValue] = useState(currentClimbDifficulty || "");
+  const [reason, setReason] = useState("");
+  const [selectedAngle, setSelectedAngle] = useState<number | "all">(angle);
   const [loading, setLoading] = useState(false);
-  const [snackbar, setSnackbar] = useState('');
+  const [snackbar, setSnackbar] = useState("");
 
-  const boardAngles = boardName ? (ANGLES[boardName as BoardName] || []) : [];
+  const boardAngles = boardName ? ANGLES[boardName as BoardName] || [] : [];
 
   const handleClose = useCallback(() => {
     setOpen(false);
   }, []);
 
-  const handleTypeChange = useCallback((_: React.MouseEvent, val: ProposalType | null) => {
-    if (!val) return;
-    setType(val);
-    // Reset proposed value when changing type
-    if (val === 'grade' || val === 'benchmark') {
-      setSelectedAngle(angle);
-    } else {
-      setSelectedAngle('all');
-    }
-    if (val === 'grade') {
-      setProposedValue(currentClimbDifficulty || '');
-    } else {
-      setProposedValue('');
-    }
-  }, [currentClimbDifficulty, angle]);
+  const handleTypeChange = useCallback(
+    (_: React.MouseEvent, val: ProposalType | null) => {
+      if (!val) return;
+      setType(val);
+      // Reset proposed value when changing type
+      if (val === "grade" || val === "benchmark") {
+        setSelectedAngle(angle);
+      } else {
+        setSelectedAngle("all");
+      }
+      if (val === "grade") {
+        setProposedValue(currentClimbDifficulty || "");
+      } else {
+        setProposedValue("");
+      }
+    },
+    [currentClimbDifficulty, angle],
+  );
 
   const handleSubmit = useCallback(async () => {
     if (!token) {
-      setSnackbar('Sign in to create proposals');
+      setSnackbar("Sign in to create proposals");
       return;
     }
     if (!proposedValue) {
-      setSnackbar('Please enter a proposed value');
+      setSnackbar("Please enter a proposed value");
       return;
     }
-    if (type === 'grade' && proposedValue === currentClimbDifficulty) {
-      setSnackbar('Proposed grade is the same as the current grade');
+    if (type === "grade" && proposedValue === currentClimbDifficulty) {
+      setSnackbar("Proposed grade is the same as the current grade");
       return;
     }
 
@@ -98,7 +101,7 @@ export default function CreateProposalForm({
         input: {
           climbUuid,
           boardType,
-          angle: type === 'classic' ? null : (selectedAngle === 'all' ? null : selectedAngle),
+          angle: type === "classic" ? null : selectedAngle === "all" ? null : selectedAngle,
           type,
           proposedValue,
           reason: reason || null,
@@ -106,32 +109,42 @@ export default function CreateProposalForm({
       });
 
       if (!result.createProposal) {
-        setSnackbar('Failed to create proposal: no data returned');
+        setSnackbar("Failed to create proposal: no data returned");
         return;
       }
 
       onCreated?.(result.createProposal);
       handleClose();
-      setProposedValue(type === 'grade' ? (currentClimbDifficulty || '') : '');
-      setReason('');
-      setSnackbar('Proposal created');
+      setProposedValue(type === "grade" ? currentClimbDifficulty || "" : "");
+      setReason("");
+      setSnackbar("Proposal created");
     } catch (err) {
       if (err instanceof ClientError) {
         const msg = err.response?.errors?.[0]?.message;
-        setSnackbar(msg || 'Failed to create proposal');
+        setSnackbar(msg || "Failed to create proposal");
       } else {
-        setSnackbar(err instanceof Error ? err.message : 'Failed to create proposal');
+        setSnackbar(err instanceof Error ? err.message : "Failed to create proposal");
       }
     } finally {
       setLoading(false);
     }
-  }, [token, climbUuid, boardType, selectedAngle, type, proposedValue, reason, onCreated, handleClose, currentClimbDifficulty]);
+  }, [
+    token,
+    climbUuid,
+    boardType,
+    selectedAngle,
+    type,
+    proposedValue,
+    reason,
+    onCreated,
+    handleClose,
+    currentClimbDifficulty,
+  ]);
 
   if (isFrozen) return null;
 
-  const gradeBackground = type === 'grade' && proposedValue
-    ? getGradeTintColor(proposedValue, 'light')
-    : undefined;
+  const gradeBackground =
+    type === "grade" && proposedValue ? getGradeTintColor(proposedValue, "light") : undefined;
 
   return (
     <>
@@ -141,13 +154,13 @@ export default function CreateProposalForm({
         startIcon={<AddIcon />}
         onClick={() => {
           if (!token) {
-            setSnackbar('Sign in to create proposals');
+            setSnackbar("Sign in to create proposals");
             return;
           }
           setOpen(true);
         }}
         sx={{
-          textTransform: 'none',
+          textTransform: "none",
           borderColor: themeTokens.neutral[300],
           color: themeTokens.neutral[600],
           fontSize: 13,
@@ -162,24 +175,30 @@ export default function CreateProposalForm({
         open={open}
         onClose={handleClose}
         footer={
-          <Box sx={{ display: 'flex', justifyContent: 'flex-end', gap: 1 }}>
-            <Button onClick={handleClose} sx={{ textTransform: 'none' }}>Cancel</Button>
+          <Box sx={{ display: "flex", justifyContent: "flex-end", gap: 1 }}>
+            <Button onClick={handleClose} sx={{ textTransform: "none" }}>
+              Cancel
+            </Button>
             <Button
               onClick={handleSubmit}
               variant="contained"
-              disabled={loading || !proposedValue || (type === 'grade' && proposedValue === currentClimbDifficulty)}
+              disabled={
+                loading ||
+                !proposedValue ||
+                (type === "grade" && proposedValue === currentClimbDifficulty)
+              }
               sx={{
-                textTransform: 'none',
+                textTransform: "none",
                 bgcolor: themeTokens.colors.primary,
-                '&:hover': { bgcolor: themeTokens.colors.primaryHover },
+                "&:hover": { bgcolor: themeTokens.colors.primaryHover },
               }}
             >
-              {loading ? 'Creating...' : 'Create Proposal'}
+              {loading ? "Creating..." : "Create Proposal"}
             </Button>
           </Box>
         }
       >
-        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+        <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
           {/* Type selector */}
           <ToggleButtonGroup
             value={type}
@@ -194,24 +213,26 @@ export default function CreateProposalForm({
           </ToggleButtonGroup>
 
           {/* Angle selector */}
-          {boardAngles.length > 0 && type !== 'classic' && (
+          {boardAngles.length > 0 && type !== "classic" && (
             <FormControl size="small" fullWidth>
               <InputLabel>Angle</InputLabel>
               <Select
                 value={selectedAngle}
                 label="Angle"
-                onChange={(e) => setSelectedAngle(e.target.value as number | 'all')}
+                onChange={(e) => setSelectedAngle(e.target.value as number | "all")}
                 MenuProps={{ PaperProps: { sx: { maxHeight: 300 } } }}
               >
                 {boardAngles.map((a) => (
-                  <MenuItem key={a} value={a}>{a}°</MenuItem>
+                  <MenuItem key={a} value={a}>
+                    {a}°
+                  </MenuItem>
                 ))}
               </Select>
             </FormControl>
           )}
 
           {/* Grade dropdown */}
-          {type === 'grade' && (
+          {type === "grade" && (
             <FormControl size="small" fullWidth>
               <InputLabel>Proposed Grade</InputLabel>
               <Select
@@ -231,12 +252,12 @@ export default function CreateProposalForm({
           )}
 
           {/* Classic/Benchmark status selector */}
-          {(type === 'classic' || type === 'benchmark') && (
+          {(type === "classic" || type === "benchmark") && (
             <>
               <Typography variant="caption" sx={{ color: themeTokens.neutral[500] }}>
-                {type === 'classic'
-                  ? 'Classic proposals apply to all angles.'
-                  : 'Benchmark proposals are per-angle.'}
+                {type === "classic"
+                  ? "Classic proposals apply to all angles."
+                  : "Benchmark proposals are per-angle."}
               </Typography>
               <FormControl size="small" fullWidth>
                 <InputLabel>Proposed Status</InputLabel>
@@ -265,10 +286,10 @@ export default function CreateProposalForm({
           />
 
           {/* Outlier warning */}
-          {outlierWarning && type === 'grade' && (
+          {outlierWarning && type === "grade" && (
             <Alert severity="info" sx={{ fontSize: 13 }}>
-              The grade at this angle appears to be an outlier compared to adjacent angles.
-              This proposal may be auto-approved if it aligns with neighboring data.
+              The grade at this angle appears to be an outlier compared to adjacent angles. This
+              proposal may be auto-approved if it aligns with neighboring data.
             </Alert>
           )}
         </Box>
@@ -277,7 +298,7 @@ export default function CreateProposalForm({
       <Snackbar
         open={!!snackbar}
         autoHideDuration={3000}
-        onClose={() => setSnackbar('')}
+        onClose={() => setSnackbar("")}
         message={snackbar}
       />
     </>

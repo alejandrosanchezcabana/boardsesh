@@ -1,6 +1,6 @@
-import { eq, and, inArray, sql } from 'drizzle-orm';
-import { db } from '../../../../db/client';
-import * as dbSchema from '@boardsesh/db/schema';
+import { eq, and, inArray, sql } from "drizzle-orm";
+import { db } from "../../../../db/client";
+import * as dbSchema from "@boardsesh/db/schema";
 
 /** Raw playlist row shape from owned-playlist queries (userPlaylists, allUserPlaylists). */
 export interface OwnedPlaylistRow {
@@ -20,9 +20,7 @@ export interface OwnedPlaylistRow {
 }
 
 /** Fetch climb counts for a list of playlist numeric IDs. Returns Map<stringId, count>. */
-export async function getClimbCounts(
-  playlistIds: bigint[],
-): Promise<Map<string, number>> {
+export async function getClimbCounts(playlistIds: bigint[]): Promise<Map<string, number>> {
   if (playlistIds.length === 0) return new Map();
 
   const climbCounts = await db
@@ -34,7 +32,7 @@ export async function getClimbCounts(
     .where(inArray(dbSchema.playlistClimbs.playlistId, playlistIds))
     .groupBy(dbSchema.playlistClimbs.playlistId);
 
-  return new Map(climbCounts.map(c => [c.playlistId.toString(), c.count]));
+  return new Map(climbCounts.map((c) => [c.playlistId.toString(), c.count]));
 }
 
 /** Transform an owned playlist DB row into the GraphQL response shape. */
@@ -118,12 +116,12 @@ export async function verifyPlaylistAccess(
     .limit(1);
 
   if (playlistResult.length === 0) {
-    throw new Error('Playlist not found or access denied');
+    throw new Error("Playlist not found or access denied");
   }
 
   if (!playlistResult[0].isPublic) {
     if (!userId) {
-      throw new Error('Playlist not found or access denied');
+      throw new Error("Playlist not found or access denied");
     }
 
     const ownershipResult = await db
@@ -132,13 +130,13 @@ export async function verifyPlaylistAccess(
       .where(
         and(
           eq(dbSchema.playlistOwnership.playlistId, playlistResult[0].id),
-          eq(dbSchema.playlistOwnership.userId, userId)
-        )
+          eq(dbSchema.playlistOwnership.userId, userId),
+        ),
       )
       .limit(1);
 
     if (ownershipResult.length === 0) {
-      throw new Error('Playlist not found or access denied');
+      throw new Error("Playlist not found or access denied");
     }
   }
 

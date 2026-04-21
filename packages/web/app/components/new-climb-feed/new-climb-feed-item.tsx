@@ -1,22 +1,22 @@
-'use client';
+"use client";
 
-import Box from '@mui/material/Box';
-import Card from '@mui/material/Card';
-import CardContent from '@mui/material/CardContent';
-import Avatar from '@mui/material/Avatar';
-import Typography from '@mui/material/Typography';
-import Chip from '@mui/material/Chip';
-import PersonOutlined from '@mui/icons-material/PersonOutlined';
-import LocationOnOutlined from '@mui/icons-material/LocationOnOutlined';
-import dayjs from 'dayjs';
-import relativeTime from 'dayjs/plugin/relativeTime';
-import type { NewClimbFeedItem } from '@boardsesh/shared-schema';
-import AscentThumbnail from '@/app/components/activity-feed/ascent-thumbnail';
-import { getDefaultBoardConfig, getDefaultClimbViewPath } from '@/app/lib/default-board-configs';
-import { getBoardDetailsForBoard } from '@/app/lib/board-utils';
-import { constructClimbViewUrlWithSlugs } from '@/app/lib/url-utils';
-import type { BoardName } from '@/app/lib/types';
-import Link from 'next/link';
+import Box from "@mui/material/Box";
+import Card from "@mui/material/Card";
+import CardContent from "@mui/material/CardContent";
+import Avatar from "@mui/material/Avatar";
+import Typography from "@mui/material/Typography";
+import Chip from "@mui/material/Chip";
+import PersonOutlined from "@mui/icons-material/PersonOutlined";
+import LocationOnOutlined from "@mui/icons-material/LocationOnOutlined";
+import dayjs from "dayjs";
+import relativeTime from "dayjs/plugin/relativeTime";
+import type { NewClimbFeedItem } from "@boardsesh/shared-schema";
+import AscentThumbnail from "@/app/components/activity-feed/ascent-thumbnail";
+import { getDefaultBoardConfig, getDefaultClimbViewPath } from "@/app/lib/default-board-configs";
+import { getBoardDetailsForBoard } from "@/app/lib/board-utils";
+import { constructClimbViewUrlWithSlugs } from "@/app/lib/url-utils";
+import type { BoardName } from "@/app/lib/types";
+import Link from "next/link";
 
 dayjs.extend(relativeTime);
 
@@ -55,51 +55,63 @@ export default function NewClimbFeedItem({ item }: NewClimbFeedItemProps) {
     }
 
     // Fallback to default path
-    return getDefaultClimbViewPath(boardName, item.layoutId, angle, item.uuid, item.name || undefined);
+    return getDefaultClimbViewPath(
+      boardName,
+      item.layoutId,
+      angle,
+      item.uuid,
+      item.name || undefined,
+    );
   })();
 
   return (
     <Card variant="outlined" sx={{ mb: 1.5 }}>
-      <CardContent sx={{ p: 1.5, '&:last-child': { pb: 1.5 } }}>
-        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}>
+      <CardContent sx={{ p: 1.5, "&:last-child": { pb: 1.5 } }}>
+        <Box sx={{ display: "flex", alignItems: "center", gap: 1, mb: 1 }}>
           <Avatar src={item.setterAvatarUrl ?? undefined} sx={{ width: 32, height: 32 }}>
             {!item.setterAvatarUrl && <PersonOutlined fontSize="small" />}
           </Avatar>
           <Box sx={{ flex: 1, minWidth: 0 }}>
             <Typography variant="body2" fontWeight={600} noWrap>
-              {item.setterDisplayName || 'Setter'}
+              {item.setterDisplayName || "Setter"}
             </Typography>
             <Typography variant="caption" color="text.secondary">
               {timeAgo}
             </Typography>
           </Box>
           {item.boardType && (
-            <Typography variant="caption" color="text.secondary" sx={{ textTransform: 'capitalize' }}>
+            <Typography
+              variant="caption"
+              color="text.secondary"
+              sx={{ textTransform: "capitalize" }}
+            >
               {item.boardType}
             </Typography>
           )}
         </Box>
 
-        <Link href={climbViewPath ?? '#'} style={{ textDecoration: 'none', color: 'inherit' }}>
-          <Box sx={{ display: 'flex', gap: 1.25 }}>
+        <Link href={climbViewPath ?? "#"} style={{ textDecoration: "none", color: "inherit" }}>
+          <Box sx={{ display: "flex", gap: 1.25 }}>
             {item.frames && (
               <AscentThumbnail
                 boardType={item.boardType}
                 layoutId={item.layoutId}
                 angle={item.angle ?? 0}
                 climbUuid={item.uuid}
-                climbName={item.name || ''}
+                climbName={item.name || ""}
                 frames={item.frames}
                 isMirror={false}
               />
             )}
 
-            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.75, flex: 1, minWidth: 0 }}>
+            <Box sx={{ display: "flex", flexDirection: "column", gap: 0.75, flex: 1, minWidth: 0 }}>
               <Typography variant="subtitle1" fontWeight={700} noWrap>
-                {item.name || 'Untitled climb'}
+                {item.name || "Untitled climb"}
               </Typography>
-              <Box sx={{ display: 'flex', gap: 0.75, flexWrap: 'wrap', alignItems: 'center' }}>
-                {item.difficultyName && <Chip label={item.difficultyName} size="small" color="primary" />}
+              <Box sx={{ display: "flex", gap: 0.75, flexWrap: "wrap", alignItems: "center" }}>
+                {item.difficultyName && (
+                  <Chip label={item.difficultyName} size="small" color="primary" />
+                )}
                 {item.angle != null && (
                   <Chip icon={<LocationOnOutlined />} label={`${item.angle}\u00B0`} size="small" />
                 )}

@@ -1,13 +1,17 @@
-import { NextResponse } from 'next/server';
-import { sql } from 'drizzle-orm';
-import { AURORA_BOARD_NAMES, getBoardSelectorOptions, isAuroraBoardName } from '@/app/lib/board-constants';
-import type { AuroraBoardName } from '@boardsesh/shared-schema';
-import { dbz as db } from '@/app/lib/db/db';
-import { cachedGetHoldHeatmapData } from '@/app/lib/db/queries/climbs/holds-heatmap-cache';
-import { DEFAULT_SEARCH_PARAMS } from '@/app/lib/url-utils';
-import type { ParsedBoardRouteParameters } from '@/app/lib/types';
+import { NextResponse } from "next/server";
+import { sql } from "drizzle-orm";
+import {
+  AURORA_BOARD_NAMES,
+  getBoardSelectorOptions,
+  isAuroraBoardName,
+} from "@/app/lib/board-constants";
+import type { AuroraBoardName } from "@boardsesh/shared-schema";
+import { dbz as db } from "@/app/lib/db/db";
+import { cachedGetHoldHeatmapData } from "@/app/lib/db/queries/climbs/holds-heatmap-cache";
+import { DEFAULT_SEARCH_PARAMS } from "@/app/lib/url-utils";
+import type { ParsedBoardRouteParameters } from "@/app/lib/types";
 
-export const dynamic = 'force-dynamic';
+export const dynamic = "force-dynamic";
 export const maxDuration = 300;
 
 const CRON_SECRET = process.env.CRON_SECRET;
@@ -111,7 +115,7 @@ async function runWithConcurrency<T>(
         warmed++;
       } catch (error) {
         failed++;
-        console.error('[prewarm-heatmap] warm failed:', error);
+        console.error("[prewarm-heatmap] warm failed:", error);
       }
     }
   }
@@ -128,15 +132,15 @@ export async function GET(request: Request, props: { params: Promise<PrewarmRout
   const { board_name: boardNameParam } = params;
 
   // Auth check — always require valid CRON_SECRET.
-  const authHeader = request.headers.get('authorization');
+  const authHeader = request.headers.get("authorization");
   if (!CRON_SECRET || authHeader !== `Bearer ${CRON_SECRET}`) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
   if (!isAuroraBoardName(boardNameParam)) {
     return NextResponse.json(
       {
-        error: `Invalid board name: ${boardNameParam}. Expected one of: ${AURORA_BOARD_NAMES.join(', ')}`,
+        error: `Invalid board name: ${boardNameParam}. Expected one of: ${AURORA_BOARD_NAMES.join(", ")}`,
       },
       { status: 400 },
     );
@@ -187,6 +191,6 @@ export async function GET(request: Request, props: { params: Promise<PrewarmRout
     });
   } catch (error) {
     console.error(`[prewarm-heatmap] ${boardName} failed:`, error);
-    return NextResponse.json({ success: false, error: 'Prewarm failed' }, { status: 500 });
+    return NextResponse.json({ success: false, error: "Prewarm failed" }, { status: 500 });
   }
 }

@@ -80,8 +80,16 @@
 
 @keyframes zoomHintFade {
   /* Duration must match AUTO_DISMISS_MS in zoom-hint.tsx (4000ms) */
-  0% { opacity: 0; }
-  10% { opacity: 1; }
-  75% { opacity: 1; }
-  100% { opacity: 0; }
+  0% {
+    opacity: 0;
+  }
+  10% {
+    opacity: 1;
+  }
+  75% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+  }
 }

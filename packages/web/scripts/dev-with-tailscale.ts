@@ -1,20 +1,20 @@
-import { execFileSync, spawn } from 'node:child_process';
+import { execFileSync, spawn } from "node:child_process";
 
 type HostResolution = {
   hostname: string;
-  source: 'env' | 'tailscale' | 'fallback';
+  source: "env" | "tailscale" | "fallback";
   reason?: string;
 };
 
-const DEFAULT_WEB_PORT = '3000';
-const DEFAULT_BACKEND_PORT = '8080';
+const DEFAULT_WEB_PORT = "3000";
+const DEFAULT_BACKEND_PORT = "8080";
 const TAILSCALE_STATUS_TIMEOUT_MS = 1500;
 
 function normalizeHostname(value: string): string | null {
-  const trimmed = value.trim().replace(/\.$/, '');
+  const trimmed = value.trim().replace(/\.$/, "");
   if (!trimmed) return null;
 
-  if (trimmed.includes('://') || trimmed.includes('/') || trimmed.includes(':')) {
+  if (trimmed.includes("://") || trimmed.includes("/") || trimmed.includes(":")) {
     return null;
   }
 
@@ -30,21 +30,21 @@ function resolveHostname(): HostResolution {
   if (envHostnameRaw !== undefined) {
     const envHostname = normalizeHostname(envHostnameRaw);
     if (envHostname) {
-      return { hostname: envHostname, source: 'env' };
+      return { hostname: envHostname, source: "env" };
     }
 
     return {
-      hostname: 'localhost',
-      source: 'fallback',
-      reason: 'TAILSCALE_HOSTNAME is invalid; falling back to localhost',
+      hostname: "localhost",
+      source: "fallback",
+      reason: "TAILSCALE_HOSTNAME is invalid; falling back to localhost",
     };
   }
 
   try {
-    const statusJson = execFileSync('tailscale', ['status', '--json'], {
-      encoding: 'utf8',
+    const statusJson = execFileSync("tailscale", ["status", "--json"], {
+      encoding: "utf8",
       timeout: TAILSCALE_STATUS_TIMEOUT_MS,
-      stdio: ['ignore', 'pipe', 'pipe'],
+      stdio: ["ignore", "pipe", "pipe"],
     });
 
     const parsed = JSON.parse(statusJson) as { Self?: { DNSName?: string } };
@@ -52,36 +52,36 @@ function resolveHostname(): HostResolution {
 
     if (!dnsName) {
       return {
-        hostname: 'localhost',
-        source: 'fallback',
-        reason: 'tailscale status missing Self.DNSName; falling back to localhost',
+        hostname: "localhost",
+        source: "fallback",
+        reason: "tailscale status missing Self.DNSName; falling back to localhost",
       };
     }
 
     const normalizedDnsName = normalizeHostname(dnsName);
     if (!normalizedDnsName) {
       return {
-        hostname: 'localhost',
-        source: 'fallback',
-        reason: 'tailscale DNSName invalid; falling back to localhost',
+        hostname: "localhost",
+        source: "fallback",
+        reason: "tailscale DNSName invalid; falling back to localhost",
       };
     }
 
-    return { hostname: normalizedDnsName, source: 'tailscale' };
+    return { hostname: normalizedDnsName, source: "tailscale" };
   } catch (error) {
     const errorCode = (error as NodeJS.ErrnoException).code;
-    if (errorCode === 'ENOENT') {
+    if (errorCode === "ENOENT") {
       return {
-        hostname: 'localhost',
-        source: 'fallback',
-        reason: 'tailscale CLI not installed; falling back to localhost',
+        hostname: "localhost",
+        source: "fallback",
+        reason: "tailscale CLI not installed; falling back to localhost",
       };
     }
 
     return {
-      hostname: 'localhost',
-      source: 'fallback',
-      reason: 'tailscale unavailable; falling back to localhost',
+      hostname: "localhost",
+      source: "fallback",
+      reason: "tailscale unavailable; falling back to localhost",
     };
   }
 }
@@ -97,9 +97,9 @@ function main(): void {
   const backendPort = process.env.BACKEND_PORT || DEFAULT_BACKEND_PORT;
   const resolution = resolveHostname();
 
-  setDefaultEnv('NEXT_PUBLIC_WS_URL', `ws://${resolution.hostname}:${backendPort}/graphql`);
-  setDefaultEnv('NEXTAUTH_URL', `http://${resolution.hostname}:${webPort}`);
-  setDefaultEnv('BASE_URL', `http://${resolution.hostname}:${webPort}`);
+  setDefaultEnv("NEXT_PUBLIC_WS_URL", `ws://${resolution.hostname}:${backendPort}/graphql`);
+  setDefaultEnv("NEXTAUTH_URL", `http://${resolution.hostname}:${webPort}`);
+  setDefaultEnv("BASE_URL", `http://${resolution.hostname}:${webPort}`);
 
   console.log(`[dev] Hostname: ${resolution.hostname} (${resolution.source})`);
   if (resolution.reason) {
@@ -108,17 +108,17 @@ function main(): void {
   console.log(`[dev] Web URL: http://${resolution.hostname}:${webPort}`);
   console.log(`[dev] Backend WS URL: ${process.env.NEXT_PUBLIC_WS_URL}`);
 
-  const nextProcess = spawn('next', ['dev', '--hostname', '0.0.0.0', '--turbopack'], {
+  const nextProcess = spawn("next", ["dev", "--hostname", "0.0.0.0", "--turbopack"], {
     env: process.env,
-    stdio: 'inherit',
+    stdio: "inherit",
   });
 
-  nextProcess.on('error', (error) => {
-    console.error('[dev] Failed to start Next.js dev server:', error);
+  nextProcess.on("error", (error) => {
+    console.error("[dev] Failed to start Next.js dev server:", error);
     process.exit(1);
   });
 
-  nextProcess.on('exit', (code, signal) => {
+  nextProcess.on("exit", (code, signal) => {
     if (signal) {
       process.kill(process.pid, signal);
       return;

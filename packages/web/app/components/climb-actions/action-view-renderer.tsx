@@ -1,22 +1,28 @@
-'use client';
+"use client";
 
-import React from 'react';
-import MuiButton from '@mui/material/Button';
-import { ActionTooltip } from './action-tooltip';
-import { themeTokens } from '@/app/theme/theme-config';
-import type { ClimbActionsViewMode, ClimbActionSize, ClimbActionResult, ClimbActionMenuItem, ClimbActionType } from './types';
+import React from "react";
+import MuiButton from "@mui/material/Button";
+import { ActionTooltip } from "./action-tooltip";
+import { themeTokens } from "@/app/theme/theme-config";
+import type {
+  ClimbActionsViewMode,
+  ClimbActionSize,
+  ClimbActionResult,
+  ClimbActionMenuItem,
+  ClimbActionType,
+} from "./types";
 
 /**
  * Computed display properties shared across all action components.
  */
 export function computeActionDisplay(
   viewMode: ClimbActionsViewMode,
-  size: ClimbActionSize = 'default',
+  size: ClimbActionSize = "default",
   showLabel?: boolean,
 ) {
   return {
-    shouldShowLabel: showLabel ?? (viewMode === 'button' || viewMode === 'dropdown'),
-    iconSize: size === 'small' ? 14 : size === 'large' ? 20 : 16,
+    shouldShowLabel: showLabel ?? (viewMode === "button" || viewMode === "dropdown"),
+    iconSize: size === "small" ? 14 : size === "large" ? 20 : 16,
   };
 }
 
@@ -40,7 +46,7 @@ export function ActionIconElement({
   return (
     <>
       <ActionTooltip title={tooltip}>
-        <span onClick={onClick} style={{ cursor: 'pointer' }} className={className}>
+        <span onClick={onClick} style={{ cursor: "pointer" }} className={className}>
           {children}
         </span>
       </ActionTooltip>
@@ -58,9 +64,9 @@ export function ActionButtonElement({
   showLabel,
   onClick,
   disabled,
-  size = 'default',
+  size = "default",
   className,
-  variant = 'outlined',
+  variant = "outlined",
   extraContent,
 }: {
   icon: React.ReactNode;
@@ -70,7 +76,7 @@ export function ActionButtonElement({
   disabled?: boolean;
   size?: ClimbActionSize;
   className?: string;
-  variant?: 'outlined' | 'contained' | 'text';
+  variant?: "outlined" | "contained" | "text";
   extraContent?: React.ReactNode;
 }) {
   return (
@@ -80,7 +86,7 @@ export function ActionButtonElement({
         startIcon={icon}
         onClick={onClick}
         disabled={disabled}
-        size={size === 'large' ? 'large' : 'small'}
+        size={size === "large" ? "large" : "small"}
         className={className}
       >
         {showLabel && label}
@@ -117,15 +123,15 @@ export function ActionListElement({
         disabled={disabled}
         sx={{
           height: 48,
-          justifyContent: 'flex-start',
+          justifyContent: "flex-start",
           paddingLeft: `${themeTokens.spacing[4]}px`,
           fontSize: themeTokens.typography.fontSize.base,
-          color: 'text.primary',
-          '& .MuiButton-startIcon': {
-            color: 'text.secondary',
+          color: "text.primary",
+          "& .MuiButton-startIcon": {
+            color: "text.secondary",
           },
-          '&:hover': {
-            backgroundColor: 'action.hover',
+          "&:hover": {
+            backgroundColor: "action.hover",
           },
         }}
       >
@@ -150,14 +156,14 @@ export function resolveActionViewMode(
   },
 ): React.ReactNode {
   switch (viewMode) {
-    case 'icon':
+    case "icon":
       return elements.iconElement;
-    case 'button':
-    case 'compact':
+    case "button":
+    case "compact":
       return elements.buttonElement;
-    case 'list':
+    case "list":
       return elements.listElement;
-    case 'dropdown':
+    case "dropdown":
       return elements.dropdownElement ?? null;
     default:
       return elements.iconElement;
@@ -176,7 +182,7 @@ export function buildActionResult({
   icon,
   onClick,
   viewMode,
-  size = 'default',
+  size = "default",
   showLabel,
   disabled,
   className,

@@ -1,12 +1,12 @@
-import { createHash } from 'crypto';
-import { redisClientManager } from '../redis/client';
-import type { ClimbSearchParams, ParsedBoardRouteParameters } from '../db/queries/climbs/index';
+import { createHash } from "crypto";
+import { redisClientManager } from "../redis/client";
+import type { ClimbSearchParams, ParsedBoardRouteParameters } from "../db/queries/climbs/index";
 
 /** Default TTL for cached search results: 24 hours. */
 export const DEFAULT_SEARCH_CACHE_TTL = 86400;
 
 /** Bump when the cached data shape changes to invalidate all stale entries. */
-const CACHE_VERSION = 'v2';
+const CACHE_VERSION = "v2";
 
 /**
  * Recursively sorts the keys of an object so that JSON.stringify produces
@@ -16,7 +16,7 @@ function sortKeysRecursively(value: unknown): unknown {
   if (Array.isArray(value)) {
     return value.map(sortKeysRecursively);
   }
-  if (value !== null && typeof value === 'object') {
+  if (value !== null && typeof value === "object") {
     const sorted: Record<string, unknown> = {};
     for (const key of Object.keys(value as Record<string, unknown>).sort()) {
       sorted[key] = sortKeysRecursively((value as Record<string, unknown>)[key]);
@@ -44,7 +44,7 @@ export class SearchCacheService {
   buildCacheKey(
     params: ParsedBoardRouteParameters,
     searchParams: ClimbSearchParams,
-    suffix: string
+    suffix: string,
   ): string {
     // Filter out undefined values before hashing for a stable representation.
     const defined: Record<string, unknown> = {};
@@ -55,15 +55,15 @@ export class SearchCacheService {
     }
 
     const sorted = sortKeysRecursively(defined);
-    const paramsHash = createHash('sha256')
+    const paramsHash = createHash("sha256")
       .update(JSON.stringify(sorted))
-      .digest('hex')
+      .digest("hex")
       .slice(0, 16);
 
-    const setsPart = [...params.set_ids].sort((a, b) => a - b).join(',');
+    const setsPart = [...params.set_ids].sort((a, b) => a - b).join(",");
 
     return [
-      'boardsesh:climb-search',
+      "boardsesh:climb-search",
       CACHE_VERSION,
       suffix,
       params.board_name,
@@ -72,7 +72,7 @@ export class SearchCacheService {
       setsPart,
       params.angle,
       paramsHash,
-    ].join(':');
+    ].join(":");
   }
 
   /**
@@ -92,7 +92,7 @@ export class SearchCacheService {
       }
       return JSON.parse(raw) as T;
     } catch (error) {
-      console.error('[SearchCache] Error reading cache key', key, error);
+      console.error("[SearchCache] Error reading cache key", key, error);
       return null;
     }
   }
@@ -109,11 +109,11 @@ export class SearchCacheService {
 
     try {
       const { publisher } = redisClientManager.getClients();
-      publisher.set(key, JSON.stringify(data), 'EX', ttlSeconds).catch((error: unknown) => {
-        console.error('[SearchCache] Error writing cache key', key, error);
+      publisher.set(key, JSON.stringify(data), "EX", ttlSeconds).catch((error: unknown) => {
+        console.error("[SearchCache] Error writing cache key", key, error);
       });
     } catch (error) {
-      console.error('[SearchCache] Error initiating cache write for key', key, error);
+      console.error("[SearchCache] Error initiating cache write for key", key, error);
     }
   }
 }

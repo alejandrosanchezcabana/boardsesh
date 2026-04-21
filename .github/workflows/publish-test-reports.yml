@@ -23,7 +23,7 @@ jobs:
         with:
           artifact: web-test-results
           name: Web Unit Tests
-          path: '*.xml'
+          path: "*.xml"
           reporter: java-junit
           fail-on-error: false
 
@@ -36,6 +36,6 @@ jobs:
         with:
           artifact: backend-test-results
           name: Backend Integration Tests
-          path: '*.xml'
+          path: "*.xml"
           reporter: java-junit
           fail-on-error: false

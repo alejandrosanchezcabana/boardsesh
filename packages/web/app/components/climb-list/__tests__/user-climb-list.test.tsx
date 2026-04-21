@@ -1,33 +1,49 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { render, screen, waitFor } from '@testing-library/react';
-import React from 'react';
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { describe, it, expect, vi, beforeEach } from "vite-plus/test";
+import { render, screen, waitFor } from "@testing-library/react";
+import React from "react";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 
 // --- Mocks ---
 
 const mockRequest = vi.fn();
 
-vi.mock('@/app/lib/graphql/client', () => ({
+vi.mock("@/app/lib/graphql/client", () => ({
   createGraphQLHttpClient: () => ({ request: mockRequest }),
 }));
 
-vi.mock('@/app/hooks/use-ws-auth-token', () => ({
-  useWsAuthToken: () => ({ token: 'mock-token', isLoading: false, isAuthenticated: true, error: null }),
+vi.mock("@/app/hooks/use-ws-auth-token", () => ({
+  useWsAuthToken: () => ({
+    token: "mock-token",
+    isLoading: false,
+    isAuthenticated: true,
+    error: null,
+  }),
 }));
 
-vi.mock('@/app/lib/graphql/operations', () => ({
-  GET_USER_CLIMBS: 'GET_USER_CLIMBS',
+vi.mock("@/app/lib/graphql/operations", () => ({
+  GET_USER_CLIMBS: "GET_USER_CLIMBS",
 }));
 
-vi.mock('../multiboard-climb-list', () => ({
-  default: (props: { climbs: unknown[]; totalCount: number; isLoading: boolean; hasMore: boolean }) => (
-    <div data-testid="multiboard-climb-list" data-count={props.climbs.length} data-total={props.totalCount} data-loading={props.isLoading} data-has-more={props.hasMore} />
+vi.mock("../multiboard-climb-list", () => ({
+  default: (props: {
+    climbs: unknown[];
+    totalCount: number;
+    isLoading: boolean;
+    hasMore: boolean;
+  }) => (
+    <div
+      data-testid="multiboard-climb-list"
+      data-count={props.climbs.length}
+      data-total={props.totalCount}
+      data-loading={props.isLoading}
+      data-has-more={props.hasMore}
+    />
   ),
 }));
 
 // --- Import after mocks ---
 
-import UserClimbList from '../user-climb-list';
+import UserClimbList from "../user-climb-list";
 
 // --- Helpers ---
 
@@ -47,17 +63,17 @@ function makeClimbsResponse(count: number, hasMore = false) {
         uuid: `climb-${i}`,
         name: `Climb ${i}`,
         layoutId: 1,
-        setter_username: 'setter',
-        description: '',
-        frames: '',
+        setter_username: "setter",
+        description: "",
+        frames: "",
         angle: 40,
         ascensionist_count: 10 - i,
-        difficulty: 'V3',
-        quality_average: '3.5',
+        difficulty: "V3",
+        quality_average: "3.5",
         stars: 4,
-        difficulty_error: '0.1',
+        difficulty_error: "0.1",
         benchmark_difficulty: null,
-        boardType: 'kilter',
+        boardType: "kilter",
       })),
       totalCount: count,
       hasMore,
@@ -65,67 +81,67 @@ function makeClimbsResponse(count: number, hasMore = false) {
   };
 }
 
-describe('UserClimbList', () => {
+describe("UserClimbList", () => {
   beforeEach(() => {
     vi.clearAllMocks();
   });
 
-  it('renders MultiboardClimbList with fetched climbs', async () => {
+  it("renders MultiboardClimbList with fetched climbs", async () => {
     mockRequest.mockResolvedValueOnce(makeClimbsResponse(3));
 
     render(<UserClimbList userId="user-1" />, { wrapper: createWrapper() });
 
     await waitFor(() => {
-      const list = screen.getByTestId('multiboard-climb-list');
-      expect(list.getAttribute('data-count')).toBe('3');
-      expect(list.getAttribute('data-total')).toBe('3');
+      const list = screen.getByTestId("multiboard-climb-list");
+      expect(list.getAttribute("data-count")).toBe("3");
+      expect(list.getAttribute("data-total")).toBe("3");
     });
   });
 
-  it('shows loading state initially', () => {
+  it("shows loading state initially", () => {
     mockRequest.mockReturnValue(new Promise(() => {})); // Never resolves
 
     render(<UserClimbList userId="user-1" />, { wrapper: createWrapper() });
 
-    const list = screen.getByTestId('multiboard-climb-list');
-    expect(list.getAttribute('data-loading')).toBe('true');
+    const list = screen.getByTestId("multiboard-climb-list");
+    expect(list.getAttribute("data-loading")).toBe("true");
   });
 
-  it('passes userId to the GraphQL query', async () => {
+  it("passes userId to the GraphQL query", async () => {
     mockRequest.mockResolvedValueOnce(makeClimbsResponse(0));
 
     render(<UserClimbList userId="user-42" />, { wrapper: createWrapper() });
 
     await waitFor(() => {
       expect(mockRequest).toHaveBeenCalledWith(
-        'GET_USER_CLIMBS',
+        "GET_USER_CLIMBS",
         expect.objectContaining({
-          input: expect.objectContaining({ userId: 'user-42' }),
+          input: expect.objectContaining({ userId: "user-42" }),
         }),
       );
     });
   });
 
-  it('passes hasMore from response', async () => {
+  it("passes hasMore from response", async () => {
     mockRequest.mockResolvedValueOnce(makeClimbsResponse(20, true));
 
     render(<UserClimbList userId="user-1" />, { wrapper: createWrapper() });
 
     await waitFor(() => {
-      const list = screen.getByTestId('multiboard-climb-list');
-      expect(list.getAttribute('data-has-more')).toBe('true');
+      const list = screen.getByTestId("multiboard-climb-list");
+      expect(list.getAttribute("data-has-more")).toBe("true");
     });
   });
 
-  it('renders empty list when no climbs', async () => {
+  it("renders empty list when no climbs", async () => {
     mockRequest.mockResolvedValueOnce(makeClimbsResponse(0));
 
     render(<UserClimbList userId="user-1" />, { wrapper: createWrapper() });
 
     await waitFor(() => {
-      const list = screen.getByTestId('multiboard-climb-list');
-      expect(list.getAttribute('data-count')).toBe('0');
-      expect(list.getAttribute('data-total')).toBe('0');
+      const list = screen.getByTestId("multiboard-climb-list");
+      expect(list.getAttribute("data-count")).toBe("0");
+      expect(list.getAttribute("data-total")).toBe("0");
     });
   });
 });

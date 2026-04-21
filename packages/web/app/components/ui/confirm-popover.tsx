@@ -1,10 +1,10 @@
-'use client';
+"use client";
 
-import React, { useState } from 'react';
-import Popover from '@mui/material/Popover';
-import Box from '@mui/material/Box';
-import Typography from '@mui/material/Typography';
-import Button from '@mui/material/Button';
+import React, { useState } from "react";
+import Popover from "@mui/material/Popover";
+import Box from "@mui/material/Box";
+import Typography from "@mui/material/Typography";
+import Button from "@mui/material/Button";
 
 type ConfirmPopoverProps = {
   title: React.ReactNode;
@@ -22,8 +22,8 @@ export function ConfirmPopover({
   description,
   onConfirm,
   onCancel,
-  okText = 'Yes',
-  cancelText = 'No',
+  okText = "Yes",
+  cancelText = "No",
   okButtonProps,
   children,
 }: ConfirmPopoverProps) {
@@ -50,8 +50,8 @@ export function ConfirmPopover({
         open={Boolean(anchorEl)}
         anchorEl={anchorEl}
         onClose={handleClose}
-        anchorOrigin={{ vertical: 'top', horizontal: 'center' }}
-        transformOrigin={{ vertical: 'bottom', horizontal: 'center' }}
+        anchorOrigin={{ vertical: "top", horizontal: "center" }}
+        transformOrigin={{ vertical: "bottom", horizontal: "center" }}
       >
         <Box sx={{ p: 2, maxWidth: 300 }}>
           <Typography variant="body2" sx={{ fontWeight: 500, mb: description ? 0.5 : 1 }}>
@@ -62,7 +62,7 @@ export function ConfirmPopover({
               {description}
             </Typography>
           )}
-          <Box sx={{ display: 'flex', justifyContent: 'flex-end', gap: 1 }}>
+          <Box sx={{ display: "flex", justifyContent: "flex-end", gap: 1 }}>
             <Button size="small" onClick={handleClose}>
               {cancelText}
             </Button>

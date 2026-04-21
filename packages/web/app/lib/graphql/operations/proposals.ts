@@ -1,4 +1,4 @@
-import { gql } from 'graphql-request';
+import { gql } from "graphql-request";
 import type {
   ProposalType,
   ProposalStatus,
@@ -8,7 +8,7 @@ import type {
   CommunityRoleAssignment,
   CommunityRoleType,
   CommunitySettingType,
-} from '@boardsesh/shared-schema';
+} from "@boardsesh/shared-schema";
 
 // ============================================
 // Proposal Queries
@@ -439,7 +439,7 @@ export interface VoteOnProposalResponse {
 export interface ResolveProposalVariables {
   input: {
     proposalUuid: string;
-    status: 'approved' | 'rejected';
+    status: "approved" | "rejected";
     reason?: string | null;
   };
 }

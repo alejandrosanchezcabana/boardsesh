@@ -1,11 +1,11 @@
-import { eq, and, count } from 'drizzle-orm';
-import type { ConnectionContext } from '@boardsesh/shared-schema';
-import { db } from '../../../db/client';
-import * as dbSchema from '@boardsesh/db/schema';
-import { requireAuthenticated, applyRateLimit, validateInput } from '../shared/helpers';
-import { FollowInputSchema, FollowListInputSchema } from '../../../validation/schemas';
-import { batchEnrichUserProfiles } from './helpers';
-import { publishSocialEvent } from '../../../events/index';
+import { eq, and, count } from "drizzle-orm";
+import type { ConnectionContext } from "@boardsesh/shared-schema";
+import { db } from "../../../db/client";
+import * as dbSchema from "@boardsesh/db/schema";
+import { requireAuthenticated, applyRateLimit, validateInput } from "../shared/helpers";
+import { FollowInputSchema, FollowListInputSchema } from "../../../validation/schemas";
+import { batchEnrichUserProfiles } from "./helpers";
+import { publishSocialEvent } from "../../../events/index";
 
 export const socialFollowQueries = {
   /**
@@ -14,9 +14,9 @@ export const socialFollowQueries = {
   followers: async (
     _: unknown,
     { input }: { input: { userId: string; limit?: number; offset?: number } },
-    ctx: ConnectionContext
+    ctx: ConnectionContext,
   ) => {
-    const validatedInput = validateInput(FollowListInputSchema, input, 'input');
+    const validatedInput = validateInput(FollowListInputSchema, input, "input");
     const userId = validatedInput.userId;
     const limit = validatedInput.limit ?? 20;
     const offset = validatedInput.offset ?? 0;
@@ -40,7 +40,10 @@ export const socialFollowQueries = {
       })
       .from(dbSchema.userFollows)
       .innerJoin(dbSchema.users, eq(dbSchema.userFollows.followerId, dbSchema.users.id))
-      .leftJoin(dbSchema.userProfiles, eq(dbSchema.userFollows.followerId, dbSchema.userProfiles.userId))
+      .leftJoin(
+        dbSchema.userProfiles,
+        eq(dbSchema.userFollows.followerId, dbSchema.userProfiles.userId),
+      )
       .where(eq(dbSchema.userFollows.followingId, userId))
       .orderBy(dbSchema.userFollows.createdAt)
       .limit(limit)
@@ -78,9 +81,9 @@ export const socialFollowQueries = {
   following: async (
     _: unknown,
     { input }: { input: { userId: string; limit?: number; offset?: number } },
-    ctx: ConnectionContext
+    ctx: ConnectionContext,
   ) => {
-    const validatedInput = validateInput(FollowListInputSchema, input, 'input');
+    const validatedInput = validateInput(FollowListInputSchema, input, "input");
     const userId = validatedInput.userId;
     const limit = validatedInput.limit ?? 20;
     const offset = validatedInput.offset ?? 0;
@@ -104,7 +107,10 @@ export const socialFollowQueries = {
       })
       .from(dbSchema.userFollows)
       .innerJoin(dbSchema.users, eq(dbSchema.userFollows.followingId, dbSchema.users.id))
-      .leftJoin(dbSchema.userProfiles, eq(dbSchema.userFollows.followingId, dbSchema.userProfiles.userId))
+      .leftJoin(
+        dbSchema.userProfiles,
+        eq(dbSchema.userFollows.followingId, dbSchema.userProfiles.userId),
+      )
       .where(eq(dbSchema.userFollows.followerId, userId))
       .orderBy(dbSchema.userFollows.createdAt)
       .limit(limit)
@@ -142,7 +148,7 @@ export const socialFollowQueries = {
   isFollowing: async (
     _: unknown,
     { userId: targetUserId }: { userId: string },
-    ctx: ConnectionContext
+    ctx: ConnectionContext,
   ): Promise<boolean> => {
     requireAuthenticated(ctx);
     const myUserId = ctx.userId!;
@@ -153,8 +159,8 @@ export const socialFollowQueries = {
       .where(
         and(
           eq(dbSchema.userFollows.followerId, myUserId),
-          eq(dbSchema.userFollows.followingId, targetUserId)
-        )
+          eq(dbSchema.userFollows.followingId, targetUserId),
+        ),
       );
 
     return Number(result?.count || 0) > 0;
@@ -163,11 +169,7 @@ export const socialFollowQueries = {
   /**
    * Get a public user profile by ID
    */
-  publicProfile: async (
-    _: unknown,
-    { userId }: { userId: string },
-    ctx: ConnectionContext
-  ) => {
+  publicProfile: async (_: unknown, { userId }: { userId: string }, ctx: ConnectionContext) => {
     // Get user and profile
     const users = await db
       .select({
@@ -213,17 +215,17 @@ export const socialFollowMutations = {
   followUser: async (
     _: unknown,
     { input }: { input: { userId: string } },
-    ctx: ConnectionContext
+    ctx: ConnectionContext,
   ): Promise<boolean> => {
     requireAuthenticated(ctx);
-    await applyRateLimit(ctx, 30, 'follow');
+    await applyRateLimit(ctx, 30, "follow");
 
-    const validatedInput = validateInput(FollowInputSchema, input, 'input');
+    const validatedInput = validateInput(FollowInputSchema, input, "input");
     const myUserId = ctx.userId!;
     const targetUserId = validatedInput.userId;
 
     if (myUserId === targetUserId) {
-      throw new Error('Cannot follow yourself');
+      throw new Error("Cannot follow yourself");
     }
 
     // Verify target user exists
@@ -234,7 +236,7 @@ export const socialFollowMutations = {
       .limit(1);
 
     if (!targetUser) {
-      throw new Error('User not found');
+      throw new Error("User not found");
     }
 
     // Insert follow (ON CONFLICT DO NOTHING for idempotency)
@@ -250,13 +252,13 @@ export const socialFollowMutations = {
     // Only publish event if a new follow was created (not idempotent duplicate)
     if (result.length > 0) {
       publishSocialEvent({
-        type: 'follow.created',
+        type: "follow.created",
         actorId: myUserId,
-        entityType: 'user',
+        entityType: "user",
         entityId: targetUserId,
         timestamp: Date.now(),
         metadata: { followedUserId: targetUserId },
-      }).catch((err) => console.error('[Follows] Failed to publish social event:', err));
+      }).catch((err) => console.error("[Follows] Failed to publish social event:", err));
     }
 
     return true;
@@ -268,12 +270,12 @@ export const socialFollowMutations = {
   unfollowUser: async (
     _: unknown,
     { input }: { input: { userId: string } },
-    ctx: ConnectionContext
+    ctx: ConnectionContext,
   ): Promise<boolean> => {
     requireAuthenticated(ctx);
-    await applyRateLimit(ctx, 30, 'follow');
+    await applyRateLimit(ctx, 30, "follow");
 
-    const validatedInput = validateInput(FollowInputSchema, input, 'input');
+    const validatedInput = validateInput(FollowInputSchema, input, "input");
     const myUserId = ctx.userId!;
     const targetUserId = validatedInput.userId;
 
@@ -282,8 +284,8 @@ export const socialFollowMutations = {
       .where(
         and(
           eq(dbSchema.userFollows.followerId, myUserId),
-          eq(dbSchema.userFollows.followingId, targetUserId)
-        )
+          eq(dbSchema.userFollows.followingId, targetUserId),
+        ),
       );
 
     return true;

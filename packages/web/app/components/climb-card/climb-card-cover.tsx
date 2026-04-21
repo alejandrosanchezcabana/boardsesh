@@ -1,12 +1,12 @@
-'use client';
-import React from 'react';
-import type { Climb, BoardDetails } from '@/app/lib/types';
-import BoardImageLayers from '@/app/components/board-renderer/board-image-layers';
-import BoardCanvasRenderer from '@/app/components/board-renderer/board-canvas-renderer';
-import { useDoubleTap } from '@/app/lib/hooks/use-double-tap';
-import { useCanvasRendererReady } from '@/app/lib/board-render-worker/worker-manager';
-import { AscentStatus } from './ascent-status';
-import styles from './ascent-status.module.css';
+"use client";
+import React from "react";
+import type { Climb, BoardDetails } from "@/app/lib/types";
+import BoardImageLayers from "@/app/components/board-renderer/board-image-layers";
+import BoardCanvasRenderer from "@/app/components/board-renderer/board-canvas-renderer";
+import { useDoubleTap } from "@/app/lib/hooks/use-double-tap";
+import { useCanvasRendererReady } from "@/app/lib/board-render-worker/worker-manager";
+import { AscentStatus } from "./ascent-status";
+import styles from "./ascent-status.module.css";
 
 type ClimbCardCoverProps = {
   climb?: Climb;
@@ -28,12 +28,14 @@ const ClimbCardCover = ({
 
   const boardStyle: React.CSSProperties = {
     aspectRatio: `${boardDetails.boardWidth} / ${boardDetails.boardHeight}`,
-    width: '100%',
+    width: "100%",
   };
 
   let renderContent: React.ReactNode;
   if (!climb) {
-    renderContent = <BoardImageLayers boardDetails={boardDetails} mirrored={false} style={boardStyle} />;
+    renderContent = (
+      <BoardImageLayers boardDetails={boardDetails} mirrored={false} style={boardStyle} />
+    );
   } else if (!preferImageLayers && canvasReady) {
     renderContent = (
       <BoardCanvasRenderer
@@ -60,10 +62,10 @@ const ClimbCardCover = ({
       onClick={onClick}
       onDoubleClick={handleDoubleClick}
       style={{
-        width: '100%',
-        height: 'auto',
-        position: 'relative',
-        cursor: onClick || onDoubleClick ? 'pointer' : 'default',
+        width: "100%",
+        height: "auto",
+        position: "relative",
+        cursor: onClick || onDoubleClick ? "pointer" : "default",
       }}
     >
       {renderContent}

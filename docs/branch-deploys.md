@@ -6,11 +6,11 @@
 
 Boardsesh is a monorepo with three deployable services:
 
-| Service | Production | Branch Deploys |
-|---------|-----------|----------------|
-| **Web** (`packages/web`) | Vercel (Next.js 15) | Docker container at `{PRID}.preview.boardsesh.com` |
-| **Backend** (`packages/backend`) | Railway (Node.js) | Docker container at `{PRID}.ws.preview.boardsesh.com` |
-| **Database** (`packages/db`) | Neon PostgreSQL | `boardsesh-dev-db` Docker image (per PR) |
+| Service                          | Production          | Branch Deploys                                        |
+| -------------------------------- | ------------------- | ----------------------------------------------------- |
+| **Web** (`packages/web`)         | Vercel (Next.js 15) | Docker container at `{PRID}.preview.boardsesh.com`    |
+| **Backend** (`packages/backend`) | Railway (Node.js)   | Docker container at `{PRID}.ws.preview.boardsesh.com` |
+| **Database** (`packages/db`)     | Neon PostgreSQL     | `boardsesh-dev-db` Docker image (per PR)              |
 
 ### What Broke
 
@@ -29,7 +29,8 @@ Branch deploys stopped working after migrating from Vercel Postgres (which was a
 - Vercel still creates preview deployments for every PR (frontend builds succeed)
 - The backend CORS handler already allows Vercel preview origins (`packages/backend/src/handlers/cors.ts:4`):
   ```ts
-  const VERCEL_PREVIEW_REGEX = /^https:\/\/boardsesh-[a-z0-9]+-marcodejonghs-projects\.vercel\.app$/;
+  const VERCEL_PREVIEW_REGEX =
+    /^https:\/\/boardsesh-[a-z0-9]+-marcodejonghs-projects\.vercel\.app$/;
   ```
 - The join handler already uses a `backendUrl` query param pattern (`packages/backend/src/handlers/join.ts:56`)
 - GitHub Actions CI runs on PRs (typecheck, lint, tests)
@@ -46,6 +47,7 @@ Branch deploys stopped working after migrating from Vercel Postgres (which was a
 Drizzle migrations are idempotent - running them against the development database is safe. The current skip was a workaround for the broken Neon branching (to avoid running migrations against a non-existent branch DB). Since branch deploys use the pre-built `boardsesh-dev-db` Docker image (not the production database), migrations should run unconditionally.
 
 **Change in `vercel.json`:**
+
 ```json
 {
   "buildCommand": "npm run db:migrate && npm run build --workspace=@boardsesh/web"
@@ -65,6 +67,7 @@ NEXT_PUBLIC_WS_URL=wss://backend-production.up.railway.app/graphql
 This points all preview deployments at the production backend. Party mode, sessions, and real-time features will work against production data.
 
 **Files affected:**
+
 - `packages/web/app/components/connection-manager/connection-settings-context.tsx:9` - reads `NEXT_PUBLIC_WS_URL`
 - `packages/web/app/lib/graphql/client.ts:10-11` - converts WS URL to HTTP for GraphQL queries
 
@@ -126,6 +129,7 @@ jobs:
 ### Phase 1 Result
 
 After Phase 1, every Vercel preview deployment:
+
 - Runs migrations (safe, idempotent)
 - Connects to the production backend for party mode
 - Has full functionality for testing frontend changes
@@ -178,29 +182,30 @@ Traffic flow: Cloudflare edge → cloudflared on branch-deploy VM → Traefik on
 
 ### Key Decisions
 
-| Decision | Choice | Rationale |
-|----------|--------|-----------|
-| **Infrastructure** | New dedicated Proxmox VM | Keeps branch deploys isolated from production services |
-| **Runtime** | Docker Compose per PR on a single VM | Simplest for 5-10 deploys; no k8s overhead |
-| **Frontend** | Docker container (standalone Next.js) | Full-stack isolation; no Vercel dependency for previews |
-| **Build location** | GitHub Actions → GHCR | Keeps build load off home cluster |
-| **Orchestration** | Ansible playbook on self-hosted runner | Consistent with existing infra-as-code patterns |
-| **Routing** | Traefik with Docker labels provider | Automatic discovery, no file templating needed |
-| **Internal access** | Tailscale | Already in use, zero-config VPN |
-| **External access** | Cloudflare Tunnel | Secure, no port forwarding needed |
+| Decision            | Choice                                 | Rationale                                               |
+| ------------------- | -------------------------------------- | ------------------------------------------------------- |
+| **Infrastructure**  | New dedicated Proxmox VM               | Keeps branch deploys isolated from production services  |
+| **Runtime**         | Docker Compose per PR on a single VM   | Simplest for 5-10 deploys; no k8s overhead              |
+| **Frontend**        | Docker container (standalone Next.js)  | Full-stack isolation; no Vercel dependency for previews |
+| **Build location**  | GitHub Actions → GHCR                  | Keeps build load off home cluster                       |
+| **Orchestration**   | Ansible playbook on self-hosted runner | Consistent with existing infra-as-code patterns         |
+| **Routing**         | Traefik with Docker labels provider    | Automatic discovery, no file templating needed          |
+| **Internal access** | Tailscale                              | Already in use, zero-config VPN                         |
+| **External access** | Cloudflare Tunnel                      | Secure, no port forwarding needed                       |
 
 ### 2.2 Domain Scheme & DNS
 
 **Domain patterns:**
 
-| Access | Web URL | WebSocket URL |
-|--------|---------|---------------|
+| Access                | Web URL                             | WebSocket URL                                |
+| --------------------- | ----------------------------------- | -------------------------------------------- |
 | External (Cloudflare) | `https://{N}.preview.boardsesh.com` | `wss://{N}.ws.preview.boardsesh.com/graphql` |
-| Internal (Tailscale) | Same as external (via split DNS) | Same as external (via split DNS) |
+| Internal (Tailscale)  | Same as external (via split DNS)    | Same as external (via split DNS)             |
 
 Where `{N}` is the PR number.
 
 **DNS configuration:**
+
 - Cloudflare DNS: wildcard CNAME `*.preview.boardsesh.com` → Cloudflare Tunnel
 - Cloudflare DNS: wildcard CNAME `*.ws.preview.boardsesh.com` → Cloudflare Tunnel
 - Tailscale split DNS: `*.preview.boardsesh.com` → branch-deploy VM's Tailscale IP
@@ -214,11 +219,13 @@ Where `{N}` is the PR number.
 **A) Update `deriveWsUrlFromHost()` pattern**
 
 Currently produces a dash-delimited backend hostname:
+
 ```
 42.preview.boardsesh.com → wss://42.ws.preview.boardsesh.com/graphql
 ```
 
 Must use dot subdomain to match the Cloudflare Tunnel / Traefik routing scheme:
+
 ```
 {N}.preview.boardsesh.com → wss://{N}.ws.preview.boardsesh.com/graphql
 ```
@@ -303,16 +310,14 @@ CMD ["node", "packages/web/server.js"]
 > **Prerequisites:**
 >
 > 1. **Migrate the repo to Bun** — the project needs to use a package manager with a centralized module cache to avoid duplicating `node_modules` across 10+ concurrent Docker stacks on the branch-deploy VM. Bun's global cache means installs are near-instant and disk-efficient. Other options that solve the same problem include Yarn PNP (zero-install with zip archives) or pnpm (content-addressable store with hardlinks). The key requirement is **not** duplicating hundreds of megabytes of `node_modules` per PR environment.
->
 > 2. **Add `output: 'standalone'` to `next.config.mjs`:**
 >    ```js
 >    const nextConfig = {
->      output: 'standalone',
+>      output: "standalone",
 >      // ... existing config
 >    };
 >    ```
 >    The standalone output creates a self-contained server that doesn't need `node_modules` at runtime. Vercel ignores this setting and uses its own build pipeline, so it's safe to add.
->
 > 3. **Note on the runner stage**: The final production image uses `node:22-alpine` (not Bun) because Next.js standalone output is designed to run on Node. Bun is only used for package installation and building.
 
 #### Existing: `Dockerfile.backend`
@@ -353,7 +358,7 @@ services:
       resources:
         limits:
           memory: 512M
-          cpus: '0.5'
+          cpus: "0.5"
     labels:
       - "traefik.enable=true"
       - "traefik.http.routers.web-pr-{{ pr_number }}.rule=Host(`{{ pr_number }}.preview.boardsesh.com`)"
@@ -384,7 +389,7 @@ services:
       resources:
         limits:
           memory: 256M
-          cpus: '0.25'
+          cpus: "0.25"
     labels:
       - "traefik.enable=true"
       - "traefik.http.routers.backend-pr-{{ pr_number }}.rule=Host(`{{ pr_number }}.ws.preview.boardsesh.com`)"
@@ -406,7 +411,7 @@ services:
     image: ghcr.io/marcodejongh/boardsesh-dev-db:latest
     container_name: postgres-pr-{{ pr_number }}
     restart: unless-stopped
-    shm_size: '256mb'
+    shm_size: "256mb"
     command: postgres -c max_connections=100 -c log_min_messages=warning -c shared_buffers=128MB
     environment:
       - POSTGRES_USER=postgres
@@ -421,7 +426,7 @@ services:
       resources:
         limits:
           memory: 1G
-          cpus: '0.5'
+          cpus: "0.5"
     networks:
       - pr-{{ pr_number }}
 
@@ -439,7 +444,7 @@ services:
       resources:
         limits:
           memory: 128M
-          cpus: '0.1'
+          cpus: "0.1"
     networks:
       - pr-{{ pr_number }}
 
@@ -448,7 +453,7 @@ services:
     container_name: redis-pr-{{ pr_number }}
     restart: unless-stopped
     healthcheck:
-      test: ['CMD', 'redis-cli', 'ping']
+      test: ["CMD", "redis-cli", "ping"]
       interval: 5s
       timeout: 3s
       retries: 5
@@ -456,7 +461,7 @@ services:
       resources:
         limits:
           memory: 64M
-          cpus: '0.1'
+          cpus: "0.1"
     networks:
       - pr-{{ pr_number }}
 
@@ -487,7 +492,7 @@ Traefik runs on the branch-deploy VM using the Docker labels provider. No file-b
 ```yaml
 api:
   dashboard: true
-  insecure: true  # Dashboard on :8080 — restrict via Tailscale ACLs
+  insecure: true # Dashboard on :8080 — restrict via Tailscale ACLs
 
 entryPoints:
   web:
@@ -528,6 +533,7 @@ certificatesResolvers:
 Existing Cloudflare Tunnel setup, with cloudflared running on the branch-deploy VM itself.
 
 **Setup:**
+
 1. Create a Cloudflare Tunnel in the Cloudflare Zero Trust dashboard
 2. Note the tunnel ID and token
 3. Configure DNS: CNAME `*.preview.boardsesh.com` → `<tunnel-id>.cfargotunnel.com`
@@ -536,7 +542,7 @@ Existing Cloudflare Tunnel setup, with cloudflared running on the branch-deploy 
 **Cloudflared config (`/etc/cloudflared/config.yml`, Ansible template):**
 
 ```yaml
-tunnel: {{ cloudflare_tunnel_id }}
+tunnel: { { cloudflare_tunnel_id } }
 credentials-file: /etc/cloudflared/credentials.json
 
 ingress:
@@ -544,7 +550,7 @@ ingress:
   - hostname: "*.preview.boardsesh.com"
     service: https://localhost:443
     originRequest:
-      noTLSVerify: true  # Traefik handles TLS internally
+      noTLSVerify: true # Traefik handles TLS internally
   - hostname: "*.ws.preview.boardsesh.com"
     service: https://localhost:443
     originRequest:
@@ -554,6 +560,7 @@ ingress:
 ```
 
 **How it works:**
+
 1. External user visits `https://42.preview.boardsesh.com`
 2. Cloudflare DNS resolves to the Cloudflare Tunnel
 3. `cloudflared` on the branch-deploy VM receives the request
@@ -567,12 +574,14 @@ WebSocket support: Cloudflare Tunnels support WebSocket natively. `wss://42.ws.p
 For team members on the tailnet to access branch deploys without going through Cloudflare.
 
 **Setup:**
+
 1. Install Tailscale on the branch-deploy VM (handled by Ansible)
 2. The VM appears in your tailnet as `branch-deploy` (or whatever hostname you set)
 
 **DNS options for `*.preview.boardsesh.com` resolution on tailnet:**
 
 **Option A: Tailscale Split DNS (recommended)**
+
 - In Tailscale admin console → DNS → Add nameserver
 - Set the deploy VM as a nameserver for `preview.boardsesh.com`
 - Run a lightweight DNS server (e.g., dnsmasq) on the VM that resolves `*.preview.boardsesh.com` to `127.0.0.1`
@@ -583,6 +592,7 @@ address=/preview.boardsesh.com/100.x.y.z  # VM's Tailscale IP
 ```
 
 **Option B: Homelab DNS (Pi-hole / AdGuard / Unbound)**
+
 - Add wildcard DNS records: `*.preview.boardsesh.com` and `*.ws.preview.boardsesh.com` → VM's LAN IP
 - Works for devices on the home network without Tailscale
 
@@ -592,11 +602,11 @@ This is the core of Phase 2. A single playbook that manages all PR environments 
 
 #### Modes of operation
 
-| Mode | Invocation | What it does |
-|------|-----------|--------------|
-| **Deploy** | `-e pr_number=123 -e action=deploy` | Create/update containers for PR #123 |
-| **Cleanup** | `-e pr_number=123 -e action=cleanup` | Remove containers + volumes for PR #123 |
-| **Sweep** | `-e action=sweep` | Query GitHub API for open PRs, remove environments for closed PRs |
+| Mode        | Invocation                           | What it does                                                      |
+| ----------- | ------------------------------------ | ----------------------------------------------------------------- |
+| **Deploy**  | `-e pr_number=123 -e action=deploy`  | Create/update containers for PR #123                              |
+| **Cleanup** | `-e pr_number=123 -e action=cleanup` | Remove containers + volumes for PR #123                           |
+| **Sweep**   | `-e action=sweep`                    | Query GitHub API for open PRs, remove environments for closed PRs |
 
 #### New role: `branch_deploy_host`
 
@@ -644,7 +654,7 @@ roles/branch_deploy_host/
     state: directory
     owner: "{{ deploy_user }}"
     group: "{{ deploy_user }}"
-    mode: '0755'
+    mode: "0755"
   loop:
     - /opt/branch-deploys
     - /var/log/branch-deploys
@@ -659,7 +669,7 @@ roles/branch_deploy_host/
     src: traefik.yml.j2
     dest: /opt/traefik/traefik.yml
     owner: root
-    mode: '0644'
+    mode: "0644"
   notify: restart traefik
 
 - name: Run Traefik container
@@ -702,7 +712,7 @@ roles/branch_deploy_host/
     src: cloudflared-config.yml.j2
     dest: /etc/cloudflared/config.yml
     owner: root
-    mode: '0600'
+    mode: "0600"
   notify: restart cloudflared
 
 - name: Enable cloudflared service
@@ -715,7 +725,7 @@ roles/branch_deploy_host/
   ansible.builtin.copy:
     src: "{{ item }}"
     dest: /etc/systemd/system/
-    mode: '0644'
+    mode: "0644"
   loop:
     - stale-deploy-cleanup.timer
     - stale-deploy-cleanup.service
@@ -737,14 +747,14 @@ roles/branch_deploy_host/
     path: "/opt/branch-deploys/pr-{{ pr_number }}"
     state: directory
     owner: "{{ deploy_user }}"
-    mode: '0755'
+    mode: "0755"
 
 - name: Template docker-compose for PR
   ansible.builtin.template:
     src: docker-compose.pr.yml.j2
     dest: "/opt/branch-deploys/pr-{{ pr_number }}/docker-compose.yml"
     owner: "{{ deploy_user }}"
-    mode: '0644'
+    mode: "0644"
 
 - name: Pull images for PR {{ pr_number }}
   ansible.builtin.command:
@@ -821,6 +831,7 @@ roles/branch_deploy_host/
 #### Systemd timer for stale cleanup
 
 **`stale-deploy-cleanup.timer`:**
+
 ```ini
 [Unit]
 Description=Clean up stale branch deploys
@@ -834,6 +845,7 @@ WantedBy=timers.target
 ```
 
 **`stale-deploy-cleanup.service`:**
+
 ```ini
 [Unit]
 Description=Sweep stale branch deploys (closed PRs)
@@ -1037,7 +1049,7 @@ on:
   push:
     branches: [main]
   schedule:
-    - cron: '0 3 * * *'  # Daily at 3am
+    - cron: "0 3 * * *" # Daily at 3am
 
 jobs:
   sweep:
@@ -1059,26 +1071,27 @@ Already handled — `VERCEL_PREVIEW_REGEX` in `packages/backend/src/handlers/cor
 
 ### 2.12 Resource Limits & Capacity
 
-| Metric | Value |
-|--------|-------|
-| **Per PR** | ~2GB RAM, ~1.5 CPU cores, ~2GB disk |
-| **VM spec** | 8+ cores, 40GB RAM, 200GB SSD |
-| **Max concurrent PRs** | 10-12 (with headroom) |
-| **Cleanup** | Sweep daily at 3am + on every push to main + on PR close |
+| Metric                 | Value                                                    |
+| ---------------------- | -------------------------------------------------------- |
+| **Per PR**             | ~2GB RAM, ~1.5 CPU cores, ~2GB disk                      |
+| **VM spec**            | 8+ cores, 40GB RAM, 200GB SSD                            |
+| **Max concurrent PRs** | 10-12 (with headroom)                                    |
+| **Cleanup**            | Sweep daily at 3am + on every push to main + on PR close |
 
 Resource breakdown per PR:
 
-| Service | Memory | CPU | Disk |
-|---------|--------|-----|------|
-| Web (Next.js) | 512MB | 0.5 | ~200MB image |
-| Backend (Node) | 256MB | 0.25 | ~150MB image |
-| PostgreSQL (dev-db) | 1GB | 0.5 | ~1.5GB (data) |
-| Neon Proxy | 128MB | 0.1 | ~50MB |
-| Redis | 64MB | 0.1 | ~10MB |
+| Service             | Memory | CPU  | Disk          |
+| ------------------- | ------ | ---- | ------------- |
+| Web (Next.js)       | 512MB  | 0.5  | ~200MB image  |
+| Backend (Node)      | 256MB  | 0.25 | ~150MB image  |
+| PostgreSQL (dev-db) | 1GB    | 0.5  | ~1.5GB (data) |
+| Neon Proxy          | 128MB  | 0.1  | ~50MB         |
+| Redis               | 64MB   | 0.1  | ~10MB         |
 
 ### Phase 2 Result
 
 After Phase 2, PRs get:
+
 - An isolated full-stack environment (web + backend + database + neon-proxy + redis)
 - The database uses the `boardsesh-dev-db` Docker image (full board data, seed users)
 - Frontend and backend containers built per-PR and pushed to GHCR
@@ -1097,6 +1110,7 @@ After Phase 2, PRs get:
 ### Why This Matters for Branch Deploys
 
 Currently, both the Next.js frontend (via API routes) and the backend need `DATABASE_URL`. This means branch deploys require:
+
 1. A branch database
 2. A branch backend
 3. A preview frontend configured to use both
@@ -1107,48 +1121,51 @@ If API routes move to the backend's GraphQL layer, the frontend only needs `NEXT
 
 These routes are tightly coupled to Next.js auth/middleware and should remain:
 
-| Route | Reason |
-|-------|--------|
-| `/api/internal/ws-auth` | Issues JWT tokens for WebSocket auth, uses Next.js session |
-| `/api/internal/aurora-credentials` | Manages Aurora API tokens, auth-gated |
-| `/api/internal/controllers` | Board controller registration, auth-gated |
+| Route                              | Reason                                                     |
+| ---------------------------------- | ---------------------------------------------------------- |
+| `/api/internal/ws-auth`            | Issues JWT tokens for WebSocket auth, uses Next.js session |
+| `/api/internal/aurora-credentials` | Manages Aurora API tokens, auth-gated                      |
+| `/api/internal/controllers`        | Board controller registration, auth-gated                  |
 
 ### What Moves to Backend GraphQL
 
 Organized by migration priority (pure reads first, then mutations, then proxies):
 
 #### Batch 1: Pure Reads (lowest risk)
-| Current Route | GraphQL Query |
-|---------------|---------------|
-| `/api/v1/[board]/[layout]/[size]/[sets]/[angle]/[climb_uuid]` | `query climb(board, uuid)` |
-| `/api/v1/[board]/[layout]/[size]/[sets]/[angle]/setters` | `query setters(board, ...)` |
-| `/api/v1/[board]/[layout]/[size]/[sets]/[angle]/heatmap` | `query heatmap(board, ...)` |
-| `/api/v1/[board]/climb-stats/[climb_uuid]` | `query climbStats(board, uuid)` |
-| `/api/v1/[board]/beta/[climb_uuid]` | `query beta(board, uuid)` |
-| `/api/v1/[board]/grades` | `query grades(board)` |
-| `/api/v1/angles/[board]/[layout]` | `query angles(board, layout)` |
-| `/api/v1/grades/[board]` | `query gradeSystem(board)` |
-| `/api/v1/[board]/slugs/**` | `query slugs(board, ...)` |
-| `/api/internal/profile/[userId]` | `query profile(userId)` |
-| `/api/internal/favorites` | `query favorites` |
-| `/api/internal/hold-classifications` | `query holdClassifications` |
-| `/api/internal/user-board-mapping` | `query userBoardMapping` |
-| `/api/internal/climb-redirect` | `query climbRedirect(...)` |
+
+| Current Route                                                 | GraphQL Query                   |
+| ------------------------------------------------------------- | ------------------------------- |
+| `/api/v1/[board]/[layout]/[size]/[sets]/[angle]/[climb_uuid]` | `query climb(board, uuid)`      |
+| `/api/v1/[board]/[layout]/[size]/[sets]/[angle]/setters`      | `query setters(board, ...)`     |
+| `/api/v1/[board]/[layout]/[size]/[sets]/[angle]/heatmap`      | `query heatmap(board, ...)`     |
+| `/api/v1/[board]/climb-stats/[climb_uuid]`                    | `query climbStats(board, uuid)` |
+| `/api/v1/[board]/beta/[climb_uuid]`                           | `query beta(board, uuid)`       |
+| `/api/v1/[board]/grades`                                      | `query grades(board)`           |
+| `/api/v1/angles/[board]/[layout]`                             | `query angles(board, layout)`   |
+| `/api/v1/grades/[board]`                                      | `query gradeSystem(board)`      |
+| `/api/v1/[board]/slugs/**`                                    | `query slugs(board, ...)`       |
+| `/api/internal/profile/[userId]`                              | `query profile(userId)`         |
+| `/api/internal/favorites`                                     | `query favorites`               |
+| `/api/internal/hold-classifications`                          | `query holdClassifications`     |
+| `/api/internal/user-board-mapping`                            | `query userBoardMapping`        |
+| `/api/internal/climb-redirect`                                | `query climbRedirect(...)`      |
 
 #### Batch 2: Mutations
-| Current Route | GraphQL Mutation |
-|---------------|-----------------|
-| `/api/internal/profile` (POST/PUT) | `mutation updateProfile(...)` |
+
+| Current Route                           | GraphQL Mutation               |
+| --------------------------------------- | ------------------------------ |
+| `/api/internal/profile` (POST/PUT)      | `mutation updateProfile(...)`  |
 | `/api/internal/favorites` (POST/DELETE) | `mutation toggleFavorite(...)` |
 
 #### Batch 3: Aurora API Proxies
-| Current Route | GraphQL Query/Mutation |
-|---------------|----------------------|
-| `/api/v1/[board]/proxy/login` | `mutation auroraLogin(board, ...)` |
-| `/api/v1/[board]/proxy/getLogbook` | `query auroraLogbook(board, ...)` |
+
+| Current Route                      | GraphQL Query/Mutation                  |
+| ---------------------------------- | --------------------------------------- |
+| `/api/v1/[board]/proxy/login`      | `mutation auroraLogin(board, ...)`      |
+| `/api/v1/[board]/proxy/getLogbook` | `query auroraLogbook(board, ...)`       |
 | `/api/v1/[board]/proxy/saveAscent` | `mutation auroraSaveAscent(board, ...)` |
-| `/api/v1/[board]/proxy/saveClimb` | `mutation auroraSaveClimb(board, ...)` |
-| `/api/v1/[board]/proxy/user-sync` | `mutation auroraUserSync(board, ...)` |
+| `/api/v1/[board]/proxy/saveClimb`  | `mutation auroraSaveClimb(board, ...)`  |
+| `/api/v1/[board]/proxy/user-sync`  | `mutation auroraUserSync(board, ...)`   |
 
 #### Migration Approach
 
@@ -1163,6 +1180,7 @@ For each route being migrated:
 ### Phase 3 Result
 
 After API consolidation:
+
 - Frontend has no direct database dependency (except auth routes)
 - Branch deploys only need: dev-db container + backend container
 - Frontend previews connect to branch backend via `getBackendWsUrl()`
@@ -1194,12 +1212,13 @@ Sync runs in two places:
 2. **Add user migration to backend** - Move the `migrate-users-cron` logic to a backend endpoint.
 
 3. **Set up external cron triggers** - Use GitHub Actions scheduled workflow to hit the backend sync endpoints:
+
    ```yaml
    # .github/workflows/sync-cron.yml
    name: Sync Cron
    on:
      schedule:
-       - cron: '0 */2 * * *'  # Every 2 hours
+       - cron: "0 */2 * * *" # Every 2 hours
    jobs:
      sync:
        runs-on: ubuntu-latest
@@ -1219,6 +1238,7 @@ Sync runs in two places:
 ### Branch Deploy Sync Strategy
 
 Sync should be **disabled by default** for branch deployments:
+
 - Branch backends don't need to sync with Aurora API (they use snapshot data from the dev-db image)
 - Running sync on branch databases would waste Aurora API rate limits
 - If sync testing is needed, it can be triggered manually via the endpoint
@@ -1229,15 +1249,15 @@ Sync should be **disabled by default** for branch deployments:
 
 What changed → what gets deployed:
 
-| Changed Package | Branch Web | Branch DB | Branch Backend | Notes |
-|----------------|:-:|:-:|:-:|-------|
-| `packages/web` only | Yes | Yes | Yes | Full stack for complete isolation |
-| `packages/shared-schema` | Yes | Yes | Yes | Shared types affect both |
-| `packages/backend` only | Yes | Yes | Yes | Full stack for complete isolation |
-| `packages/db/src/schema` | Yes | Yes | Yes | Schema change needs isolated DB |
-| `packages/db/drizzle` | Yes | Yes | Yes | Migration needs isolated DB |
-| `packages/aurora-sync` | No | No | Optional | Test via manual sync trigger |
-| Multiple packages | Yes | Yes | Yes | Full stack always deployed together |
+| Changed Package          | Branch Web | Branch DB | Branch Backend | Notes                               |
+| ------------------------ | :--------: | :-------: | :------------: | ----------------------------------- |
+| `packages/web` only      |    Yes     |    Yes    |      Yes       | Full stack for complete isolation   |
+| `packages/shared-schema` |    Yes     |    Yes    |      Yes       | Shared types affect both            |
+| `packages/backend` only  |    Yes     |    Yes    |      Yes       | Full stack for complete isolation   |
+| `packages/db/src/schema` |    Yes     |    Yes    |      Yes       | Schema change needs isolated DB     |
+| `packages/db/drizzle`    |    Yes     |    Yes    |      Yes       | Migration needs isolated DB         |
+| `packages/aurora-sync`   |     No     |    No     |    Optional    | Test via manual sync trigger        |
+| Multiple packages        |    Yes     |    Yes    |      Yes       | Full stack always deployed together |
 
 **Implementation:** The `dorny/paths-filter` step from Phase 1 (Section 1.3) drives this matrix. The build-images job builds both web and backend images. The deploy job invokes the Ansible playbook on a self-hosted runner.
 
@@ -1289,39 +1309,39 @@ What changed → what gets deployed:
 
 ### Phase 1 (Frontend-Only)
 
-| Item | Cost | Complexity |
-|------|------|------------|
-| Vercel preview deploys | Free (included in plan) | Minimal - one `vercel.json` change |
-| GitHub Actions minutes | Free tier (~2000 min/month) | Low - simple workflow |
-| **Total** | **$0/month** | **~1-2 days** |
+| Item                   | Cost                        | Complexity                         |
+| ---------------------- | --------------------------- | ---------------------------------- |
+| Vercel preview deploys | Free (included in plan)     | Minimal - one `vercel.json` change |
+| GitHub Actions minutes | Free tier (~2000 min/month) | Low - simple workflow              |
+| **Total**              | **$0/month**                | **~1-2 days**                      |
 
 ### Phase 2 (Full-Stack on Homelab)
 
-| Item | Cost | Complexity |
-|------|------|------------|
-| New Proxmox VM (8 cores, 40GB, 200GB SSD) | $0 (homelab resources) | Medium - VM provisioning |
-| Docker containers on VM | $0 | Medium - Ansible role |
-| Cloudflare Tunnel routing | $0 (free tier) | Low - config addition |
-| Traefik (Docker labels) | $0 | Low - automatic via compose labels |
-| GitHub Actions (self-hosted runner + GHCR build) | $0 | Medium - workflow setup |
-| **Total** | **$0/month** | **~3-5 days** |
+| Item                                             | Cost                   | Complexity                         |
+| ------------------------------------------------ | ---------------------- | ---------------------------------- |
+| New Proxmox VM (8 cores, 40GB, 200GB SSD)        | $0 (homelab resources) | Medium - VM provisioning           |
+| Docker containers on VM                          | $0                     | Medium - Ansible role              |
+| Cloudflare Tunnel routing                        | $0 (free tier)         | Low - config addition              |
+| Traefik (Docker labels)                          | $0                     | Low - automatic via compose labels |
+| GitHub Actions (self-hosted runner + GHCR build) | $0                     | Medium - workflow setup            |
+| **Total**                                        | **$0/month**           | **~3-5 days**                      |
 
 ### Phase 3 (API Consolidation)
 
-| Item | Cost | Complexity |
-|------|------|------------|
-| Development time | N/A | High - incremental refactor |
-| Runtime cost change | Slight reduction (fewer Vercel function invocations) | N/A |
-| **Total** | **Net neutral or slight savings** | **~2-4 weeks** |
+| Item                | Cost                                                 | Complexity                  |
+| ------------------- | ---------------------------------------------------- | --------------------------- |
+| Development time    | N/A                                                  | High - incremental refactor |
+| Runtime cost change | Slight reduction (fewer Vercel function invocations) | N/A                         |
+| **Total**           | **Net neutral or slight savings**                    | **~2-4 weeks**              |
 
 ### Phase 4 (Sync Migration)
 
-| Item | Cost | Complexity |
-|------|------|------------|
-| Remove Vercel crons | Slight savings (fewer function invocations) | Low |
-| Backend sync endpoints | Already partially done | Low-Medium |
-| External cron | Free (GitHub Actions scheduled) | Low |
-| **Total** | **Slight savings** | **~1-2 weeks** |
+| Item                   | Cost                                        | Complexity     |
+| ---------------------- | ------------------------------------------- | -------------- |
+| Remove Vercel crons    | Slight savings (fewer function invocations) | Low            |
+| Backend sync endpoints | Already partially done                      | Low-Medium     |
+| External cron          | Free (GitHub Actions scheduled)             | Low            |
+| **Total**              | **Slight savings**                          | **~1-2 weeks** |
 
 ---
 
@@ -1329,34 +1349,34 @@ What changed → what gets deployed:
 
 ### Phase 1
 
-| Risk | Likelihood | Impact | Mitigation |
-|------|-----------|--------|------------|
-| Preview deploys create stale sessions on production backend | Low | Low | Sessions auto-expire via TTL (existing `autoEndInterval` in `packages/backend/src/server.ts:294`) |
+| Risk                                                        | Likelihood | Impact | Mitigation                                                                                        |
+| ----------------------------------------------------------- | ---------- | ------ | ------------------------------------------------------------------------------------------------- |
+| Preview deploys create stale sessions on production backend | Low        | Low    | Sessions auto-expire via TTL (existing `autoEndInterval` in `packages/backend/src/server.ts:294`) |
 
 ### Phase 2
 
-| Risk | Likelihood | Impact | Mitigation |
-|------|-----------|--------|------------|
-| Docker resource exhaustion on VM | Low | Medium | Max 10-12 concurrent PRs, resource limits per container, ~2GB per PR on 40GB VM |
-| Stale environments not cleaned up | Low | Medium | Sweep on every push to main + daily cron at 3am + systemd timer |
-| Cloudflare Tunnel downtime | Low | Low | PR backends unreachable temporarily; acceptable for dev environments |
-| Homelab outage | Low | Low | PR environments temporarily unavailable; acceptable for dev environments |
-| Docker image build time | Medium | Low | GHA build cache (per-PR + main fallback), Buildx layer caching |
+| Risk                              | Likelihood | Impact | Mitigation                                                                      |
+| --------------------------------- | ---------- | ------ | ------------------------------------------------------------------------------- |
+| Docker resource exhaustion on VM  | Low        | Medium | Max 10-12 concurrent PRs, resource limits per container, ~2GB per PR on 40GB VM |
+| Stale environments not cleaned up | Low        | Medium | Sweep on every push to main + daily cron at 3am + systemd timer                 |
+| Cloudflare Tunnel downtime        | Low        | Low    | PR backends unreachable temporarily; acceptable for dev environments            |
+| Homelab outage                    | Low        | Low    | PR environments temporarily unavailable; acceptable for dev environments        |
+| Docker image build time           | Medium     | Low    | GHA build cache (per-PR + main fallback), Buildx layer caching                  |
 
 ### Phase 3
 
-| Risk | Likelihood | Impact | Mitigation |
-|------|-----------|--------|------------|
-| GraphQL schema bloat | Medium | Low | Organize by domain (board queries, user queries, etc.) |
-| Breaking frontend during migration | Medium | Medium | Keep old API routes as thin proxies during transition; remove only after all consumers migrated |
-| Performance regression (extra network hop) | Low | Low | Frontend already makes GraphQL calls for session data; batch queries where possible |
+| Risk                                       | Likelihood | Impact | Mitigation                                                                                      |
+| ------------------------------------------ | ---------- | ------ | ----------------------------------------------------------------------------------------------- |
+| GraphQL schema bloat                       | Medium     | Low    | Organize by domain (board queries, user queries, etc.)                                          |
+| Breaking frontend during migration         | Medium     | Medium | Keep old API routes as thin proxies during transition; remove only after all consumers migrated |
+| Performance regression (extra network hop) | Low        | Low    | Frontend already makes GraphQL calls for session data; batch queries where possible             |
 
 ### Phase 4
 
-| Risk | Likelihood | Impact | Mitigation |
-|------|-----------|--------|------------|
-| Sync downtime during migration | Low | Medium | Run both Vercel crons and backend sync in parallel for 1 week before removing Vercel crons |
-| Aurora API rate limiting | Low | Medium | Backend sync already limits to 1 user per call (`packages/backend/src/handlers/sync.ts:31`) |
+| Risk                           | Likelihood | Impact | Mitigation                                                                                  |
+| ------------------------------ | ---------- | ------ | ------------------------------------------------------------------------------------------- |
+| Sync downtime during migration | Low        | Medium | Run both Vercel crons and backend sync in parallel for 1 week before removing Vercel crons  |
+| Aurora API rate limiting       | Low        | Medium | Backend sync already limits to 1 user per call (`packages/backend/src/handlers/sync.ts:31`) |
 
 ---
 
@@ -1430,6 +1450,7 @@ PR with FE-only changes:     web-pr-N  →  staging-backend   (shared, tracks ma
 ```
 
 **Routing priority (branch-deploy Traefik):**
+
 - Per-PR backend: `Host(N.ws.preview.boardsesh.com)` at **priority 100** (wins when present)
 - Staging backend: `HostRegexp(^[0-9]+\.ws\.preview\.boardsesh\.com$)` at **priority 1** (catch-all fallback)
 
@@ -1438,6 +1459,7 @@ Client-side WebSocket resolution works unchanged — `{N}.ws.preview.boardsesh.c
 ### What Counts as Backend Changes
 
 The `detect-changes` job in `branch-deploy.yml` checks the PR diff. These paths trigger a per-PR backend build:
+
 - `packages/backend/**`, `packages/shared-schema/**`, `packages/db/**`
 - `packages/crypto/**`, `packages/aurora-sync/**`
 - `Dockerfile.backend`, `bun.lock`, `package.json`
@@ -1449,6 +1471,7 @@ Everything else is treated as FE-only. `workflow_dispatch` always does a full bu
 ### Staging Backend Configuration
 
 The staging backend runs as part of the shared docker-compose infrastructure (managed by Ansible):
+
 - **Image:** `ghcr.io/boardsesh/boardsesh-daemon:staging` (auto-rebuilt on main push via `staging-backend-deploy.yml`)
 - **Database:** Real Neon DB (same `DATABASE_URL` as per-PR deploys)
 - **Redis:** Shared Redis container on the `branch-deploys` network
@@ -1458,17 +1481,18 @@ The staging backend runs as part of the shared docker-compose infrastructure (ma
 ### Path Patterns
 
 Backend-affecting paths are defined in two places that must stay in sync:
+
 1. `staging-backend-deploy.yml` lines 7-14 — YAML `paths:` filter (triggers staging rebuild on main push)
 2. `branch-deploy.yml` `detect-changes` job — shell `case` patterns (decides per-PR vs staging for PRs)
 
 ### Workflows
 
-| Workflow | Trigger | Purpose |
-|----------|---------|---------|
-| `branch-deploy.yml` | PR open/sync | Detects changes, builds web (always) + backend (if needed), deploys |
-| `staging-backend-deploy.yml` | Push to main (backend paths) | Rebuilds staging backend image, restarts container on VM |
-| `branch-deploy-cleanup.yml` | PR close | Removes per-PR containers (backend may not exist for FE-only) |
-| `branch-deploy-sweep.yml` | Daily 3am UTC + main push | Cleans stale containers, prunes images (7-day TTL) |
+| Workflow                     | Trigger                      | Purpose                                                             |
+| ---------------------------- | ---------------------------- | ------------------------------------------------------------------- |
+| `branch-deploy.yml`          | PR open/sync                 | Detects changes, builds web (always) + backend (if needed), deploys |
+| `staging-backend-deploy.yml` | Push to main (backend paths) | Rebuilds staging backend image, restarts container on VM            |
+| `branch-deploy-cleanup.yml`  | PR close                     | Removes per-PR containers (backend may not exist for FE-only)       |
+| `branch-deploy-sweep.yml`    | Daily 3am UTC + main push    | Cleans stale containers, prunes images (7-day TTL)                  |
 
 ---
 
@@ -1476,32 +1500,32 @@ Backend-affecting paths are defined in two places that must stay in sync:
 
 ### BoardSesh repo
 
-| File | Relevance |
-|------|-----------|
-| `docs/branch-deploys.md` | This document |
-| `Dockerfile.web` | New — standalone Next.js web container |
-| `packages/web/app/lib/backend-url.ts` | Runtime WS URL resolver (prerequisite: update pattern + wire into call sites) |
-| `packages/backend/src/handlers/cors.ts` | CORS config (needs update for `*.preview.boardsesh.com`) |
-| `packages/backend/src/handlers/join.ts` | Existing `backendUrl` query param pattern |
-| `packages/backend/src/handlers/sync.ts` | User sync cron endpoint |
-| `packages/backend/src/server.ts` | All backend HTTP routes, session cleanup |
-| `packages/backend/Dockerfile` | Backend container build |
-| `packages/aurora-sync/` | Shared sync library used by both web and backend |
-| `vercel.json` | Build command (migration skip), cron definitions |
-| `.github/workflows/branch-deploy.yml` | Build images + trigger Ansible deploy on PR open/sync |
-| `.github/workflows/branch-deploy-cleanup.yml` | Trigger Ansible cleanup + GHCR delete on PR close |
-| `.github/workflows/branch-deploy-sweep.yml` | Trigger Ansible sweep on push to main / daily |
-| `.github/workflows/dev-db-docker.yml` | Existing path-filtered CI for DB changes |
-| `.github/workflows/test.yml` | Existing CI for web package |
-| `packages/web/app/api/internal/` | 12 route files to eventually migrate (Phase 3) |
-| `packages/web/app/api/v1/` | 16 route files to eventually migrate (Phase 3) |
+| File                                          | Relevance                                                                     |
+| --------------------------------------------- | ----------------------------------------------------------------------------- |
+| `docs/branch-deploys.md`                      | This document                                                                 |
+| `Dockerfile.web`                              | New — standalone Next.js web container                                        |
+| `packages/web/app/lib/backend-url.ts`         | Runtime WS URL resolver (prerequisite: update pattern + wire into call sites) |
+| `packages/backend/src/handlers/cors.ts`       | CORS config (needs update for `*.preview.boardsesh.com`)                      |
+| `packages/backend/src/handlers/join.ts`       | Existing `backendUrl` query param pattern                                     |
+| `packages/backend/src/handlers/sync.ts`       | User sync cron endpoint                                                       |
+| `packages/backend/src/server.ts`              | All backend HTTP routes, session cleanup                                      |
+| `packages/backend/Dockerfile`                 | Backend container build                                                       |
+| `packages/aurora-sync/`                       | Shared sync library used by both web and backend                              |
+| `vercel.json`                                 | Build command (migration skip), cron definitions                              |
+| `.github/workflows/branch-deploy.yml`         | Build images + trigger Ansible deploy on PR open/sync                         |
+| `.github/workflows/branch-deploy-cleanup.yml` | Trigger Ansible cleanup + GHCR delete on PR close                             |
+| `.github/workflows/branch-deploy-sweep.yml`   | Trigger Ansible sweep on push to main / daily                                 |
+| `.github/workflows/dev-db-docker.yml`         | Existing path-filtered CI for DB changes                                      |
+| `.github/workflows/test.yml`                  | Existing CI for web package                                                   |
+| `packages/web/app/api/internal/`              | 12 route files to eventually migrate (Phase 3)                                |
+| `packages/web/app/api/v1/`                    | 16 route files to eventually migrate (Phase 3)                                |
 
 ### Ansible repo (`blackheathdc-ansible`)
 
-| File | Relevance |
-|------|-----------|
-| `roles/branch_deploy_host/` | New role — VM provisioning + PR lifecycle management |
-| `playbooks/manage_branch_deploys.yml` | New playbook (deploy/cleanup/sweep) |
-| `inventories/hosts.yml` | New branch-deploy VM entry |
-| cloudflared config | `*.preview.boardsesh.com` + `*.ws.preview.boardsesh.com` ingress rules |
-| `.github/workflows/deploy.yml` | Existing deploy pattern (prior art for self-hosted runners) |
+| File                                  | Relevance                                                              |
+| ------------------------------------- | ---------------------------------------------------------------------- |
+| `roles/branch_deploy_host/`           | New role — VM provisioning + PR lifecycle management                   |
+| `playbooks/manage_branch_deploys.yml` | New playbook (deploy/cleanup/sweep)                                    |
+| `inventories/hosts.yml`               | New branch-deploy VM entry                                             |
+| cloudflared config                    | `*.preview.boardsesh.com` + `*.ws.preview.boardsesh.com` ingress rules |
+| `.github/workflows/deploy.yml`        | Existing deploy pattern (prior art for self-hosted runners)            |

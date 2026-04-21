@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
-import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import React, { useState, useEffect, useLayoutEffect, useCallback, useRef } from 'react';
-import { render, act, fireEvent, cleanup } from '@testing-library/react';
+import { describe, it, expect, vi, beforeEach, afterEach } from "vite-plus/test";
+import React, { useState, useEffect, useLayoutEffect, useCallback, useRef } from "react";
+import { render, act, fireEvent, cleanup } from "@testing-library/react";
 
 // ---------------------------------------------------------------------------
 // Isolated test of the queue drawer lazy-mount pattern.
@@ -40,11 +40,7 @@ const QueueContent = () => {
  * - isQueueOpen: whether the queue sub-drawer is open
  * - queueMounted: whether the queue sub-drawer tree exists in the DOM
  */
-const PlayDrawerSimulation = ({
-  isOpen: isOpenProp,
-}: {
-  isOpen: boolean;
-}) => {
+const PlayDrawerSimulation = ({ isOpen: isOpenProp }: { isOpen: boolean }) => {
   const [isOpen, setIsOpen] = useState(isOpenProp);
   const [isQueueOpen, setIsQueueOpen] = useState(false);
   const [queueMounted, setQueueMounted] = useState(false);
@@ -94,10 +90,7 @@ const PlayDrawerSimulation = ({
       {queueMounted && (
         <div data-testid="queue-drawer" data-open={isQueueOpen}>
           <QueueContent />
-          <button
-            data-testid="close-queue-btn"
-            onClick={() => setIsQueueOpen(false)}
-          >
+          <button data-testid="close-queue-btn" onClick={() => setIsQueueOpen(false)}>
             Close Queue
           </button>
           {/* Simulates onTransitionEnd(false) after close animation */}
@@ -131,7 +124,7 @@ const controllerRef: { current: ControllerHandle | null } = { current: null };
 // Tests
 // ---------------------------------------------------------------------------
 
-describe('Queue drawer lazy-mount pattern', () => {
+describe("Queue drawer lazy-mount pattern", () => {
   beforeEach(() => {
     queueContentMounted.current = false;
     queueContentRenderCount.current = 0;
@@ -145,15 +138,15 @@ describe('Queue drawer lazy-mount pattern', () => {
   // -------------------------------------------------------------------------
   // Core: queue content is NOT mounted when play drawer opens
   // -------------------------------------------------------------------------
-  it('does NOT mount queue content when the play drawer opens', () => {
+  it("does NOT mount queue content when the play drawer opens", () => {
     const { queryByTestId } = render(<PlayDrawerSimulation isOpen={true} />);
 
     // Play drawer content should be present
-    expect(queryByTestId('play-content')).not.toBeNull();
+    expect(queryByTestId("play-content")).not.toBeNull();
 
     // Queue content should NOT be present — this is the key optimization
-    expect(queryByTestId('queue-drawer')).toBeNull();
-    expect(queryByTestId('queue-content')).toBeNull();
+    expect(queryByTestId("queue-drawer")).toBeNull();
+    expect(queryByTestId("queue-content")).toBeNull();
     expect(queueContentMounted.current).toBe(false);
     expect(queueContentRenderCount.current).toBe(0);
   });
@@ -161,72 +154,66 @@ describe('Queue drawer lazy-mount pattern', () => {
   // -------------------------------------------------------------------------
   // Queue mounts when user clicks the queue button
   // -------------------------------------------------------------------------
-  it('mounts queue content when the user opens the queue', () => {
-    const { queryByTestId, getByTestId } = render(
-      <PlayDrawerSimulation isOpen={true} />,
-    );
+  it("mounts queue content when the user opens the queue", () => {
+    const { queryByTestId, getByTestId } = render(<PlayDrawerSimulation isOpen={true} />);
 
     // Initially: queue not mounted
-    expect(queryByTestId('queue-content')).toBeNull();
+    expect(queryByTestId("queue-content")).toBeNull();
 
     // User clicks the queue button
     act(() => {
-      fireEvent.click(getByTestId('open-queue-btn'));
+      fireEvent.click(getByTestId("open-queue-btn"));
     });
 
     // Queue should now be mounted and open
-    expect(queryByTestId('queue-drawer')).not.toBeNull();
-    expect(queryByTestId('queue-content')).not.toBeNull();
+    expect(queryByTestId("queue-drawer")).not.toBeNull();
+    expect(queryByTestId("queue-content")).not.toBeNull();
     expect(queueContentMounted.current).toBe(true);
-    expect(getByTestId('queue-drawer').dataset.open).toBe('true');
+    expect(getByTestId("queue-drawer").dataset.open).toBe("true");
   });
 
   // -------------------------------------------------------------------------
   // Queue stays mounted during close animation, then unmounts
   // -------------------------------------------------------------------------
-  it('keeps queue mounted during close animation, unmounts after transition end', () => {
-    const { queryByTestId, getByTestId } = render(
-      <PlayDrawerSimulation isOpen={true} />,
-    );
+  it("keeps queue mounted during close animation, unmounts after transition end", () => {
+    const { queryByTestId, getByTestId } = render(<PlayDrawerSimulation isOpen={true} />);
 
     // Open the queue
     act(() => {
-      fireEvent.click(getByTestId('open-queue-btn'));
+      fireEvent.click(getByTestId("open-queue-btn"));
     });
     expect(queueContentMounted.current).toBe(true);
 
     // Close the queue (isQueueOpen=false, but queueMounted still true for animation)
     act(() => {
-      fireEvent.click(getByTestId('close-queue-btn'));
+      fireEvent.click(getByTestId("close-queue-btn"));
     });
 
     // Queue drawer is still in DOM (for exit animation) but marked closed
-    expect(queryByTestId('queue-drawer')).not.toBeNull();
-    expect(getByTestId('queue-drawer').dataset.open).toBe('false');
+    expect(queryByTestId("queue-drawer")).not.toBeNull();
+    expect(getByTestId("queue-drawer").dataset.open).toBe("false");
     expect(queueContentMounted.current).toBe(true);
 
     // Simulate the transition end callback
     act(() => {
-      fireEvent.click(getByTestId('queue-transition-end'));
+      fireEvent.click(getByTestId("queue-transition-end"));
     });
 
     // Now queue should be fully unmounted
-    expect(queryByTestId('queue-drawer')).toBeNull();
-    expect(queryByTestId('queue-content')).toBeNull();
+    expect(queryByTestId("queue-drawer")).toBeNull();
+    expect(queryByTestId("queue-content")).toBeNull();
     expect(queueContentMounted.current).toBe(false);
   });
 
   // -------------------------------------------------------------------------
   // Play drawer close unmounts queue immediately
   // -------------------------------------------------------------------------
-  it('unmounts queue immediately when play drawer closes', () => {
-    const { queryByTestId, getByTestId } = render(
-      <PlayDrawerSimulation isOpen={true} />,
-    );
+  it("unmounts queue immediately when play drawer closes", () => {
+    const { queryByTestId, getByTestId } = render(<PlayDrawerSimulation isOpen={true} />);
 
     // Open the queue
     act(() => {
-      fireEvent.click(getByTestId('open-queue-btn'));
+      fireEvent.click(getByTestId("open-queue-btn"));
     });
     expect(queueContentMounted.current).toBe(true);
 
@@ -236,43 +223,41 @@ describe('Queue drawer lazy-mount pattern', () => {
     });
 
     // Both play content and queue should be gone
-    expect(queryByTestId('play-content')).toBeNull();
-    expect(queryByTestId('queue-drawer')).toBeNull();
-    expect(queryByTestId('queue-content')).toBeNull();
+    expect(queryByTestId("play-content")).toBeNull();
+    expect(queryByTestId("queue-drawer")).toBeNull();
+    expect(queryByTestId("queue-content")).toBeNull();
     expect(queueContentMounted.current).toBe(false);
   });
 
   // -------------------------------------------------------------------------
   // Re-opening queue after close works correctly
   // -------------------------------------------------------------------------
-  it('re-mounts queue when opened again after a full close cycle', () => {
-    const { queryByTestId, getByTestId } = render(
-      <PlayDrawerSimulation isOpen={true} />,
-    );
+  it("re-mounts queue when opened again after a full close cycle", () => {
+    const { queryByTestId, getByTestId } = render(<PlayDrawerSimulation isOpen={true} />);
 
     // Open the queue
     act(() => {
-      fireEvent.click(getByTestId('open-queue-btn'));
+      fireEvent.click(getByTestId("open-queue-btn"));
     });
     expect(queueContentMounted.current).toBe(true);
     const firstRenderCount = queueContentRenderCount.current;
 
     // Close the queue + transition end
     act(() => {
-      fireEvent.click(getByTestId('close-queue-btn'));
+      fireEvent.click(getByTestId("close-queue-btn"));
     });
     act(() => {
-      fireEvent.click(getByTestId('queue-transition-end'));
+      fireEvent.click(getByTestId("queue-transition-end"));
     });
     expect(queueContentMounted.current).toBe(false);
 
     // Re-open the queue
     act(() => {
-      fireEvent.click(getByTestId('open-queue-btn'));
+      fireEvent.click(getByTestId("open-queue-btn"));
     });
 
     // Queue should be mounted again
-    expect(queryByTestId('queue-content')).not.toBeNull();
+    expect(queryByTestId("queue-content")).not.toBeNull();
     expect(queueContentMounted.current).toBe(true);
     expect(queueContentRenderCount.current).toBeGreaterThan(firstRenderCount);
   });
@@ -280,14 +265,12 @@ describe('Queue drawer lazy-mount pattern', () => {
   // -------------------------------------------------------------------------
   // Re-opening play drawer starts with queue unmounted
   // -------------------------------------------------------------------------
-  it('starts with queue unmounted when play drawer re-opens', () => {
-    const { queryByTestId, getByTestId } = render(
-      <PlayDrawerSimulation isOpen={true} />,
-    );
+  it("starts with queue unmounted when play drawer re-opens", () => {
+    const { queryByTestId, getByTestId } = render(<PlayDrawerSimulation isOpen={true} />);
 
     // Open queue, then close play drawer
     act(() => {
-      fireEvent.click(getByTestId('open-queue-btn'));
+      fireEvent.click(getByTestId("open-queue-btn"));
     });
     expect(queueContentMounted.current).toBe(true);
 
@@ -302,28 +285,26 @@ describe('Queue drawer lazy-mount pattern', () => {
     });
 
     // Play content should be back, but queue should NOT be mounted
-    expect(queryByTestId('play-content')).not.toBeNull();
-    expect(queryByTestId('queue-drawer')).toBeNull();
-    expect(queryByTestId('queue-content')).toBeNull();
+    expect(queryByTestId("play-content")).not.toBeNull();
+    expect(queryByTestId("queue-drawer")).toBeNull();
+    expect(queryByTestId("queue-content")).toBeNull();
     expect(queueContentMounted.current).toBe(false);
   });
 
   // -------------------------------------------------------------------------
   // Transition end with isQueueOpen=true does NOT unmount (race condition guard)
   // -------------------------------------------------------------------------
-  it('does NOT unmount on transition end if queue was re-opened (race guard)', () => {
-    const { queryByTestId, getByTestId } = render(
-      <PlayDrawerSimulation isOpen={true} />,
-    );
+  it("does NOT unmount on transition end if queue was re-opened (race guard)", () => {
+    const { queryByTestId, getByTestId } = render(<PlayDrawerSimulation isOpen={true} />);
 
     // Open the queue
     act(() => {
-      fireEvent.click(getByTestId('open-queue-btn'));
+      fireEvent.click(getByTestId("open-queue-btn"));
     });
 
     // Close the queue
     act(() => {
-      fireEvent.click(getByTestId('close-queue-btn'));
+      fireEvent.click(getByTestId("close-queue-btn"));
     });
 
     // Before transition end fires, re-open the queue
@@ -333,23 +314,23 @@ describe('Queue drawer lazy-mount pattern', () => {
 
     // Now the stale transition end fires — should NOT unmount
     act(() => {
-      fireEvent.click(getByTestId('queue-transition-end'));
+      fireEvent.click(getByTestId("queue-transition-end"));
     });
 
     // Queue should still be mounted because isQueueOpen is true
-    expect(queryByTestId('queue-content')).not.toBeNull();
+    expect(queryByTestId("queue-content")).not.toBeNull();
     expect(queueContentMounted.current).toBe(true);
   });
 
   // -------------------------------------------------------------------------
   // Queue never renders when play drawer starts and stays closed
   // -------------------------------------------------------------------------
-  it('never renders queue content when play drawer is never opened', () => {
+  it("never renders queue content when play drawer is never opened", () => {
     const { queryByTestId } = render(<PlayDrawerSimulation isOpen={false} />);
 
-    expect(queryByTestId('play-content')).toBeNull();
-    expect(queryByTestId('queue-drawer')).toBeNull();
-    expect(queryByTestId('queue-content')).toBeNull();
+    expect(queryByTestId("play-content")).toBeNull();
+    expect(queryByTestId("queue-drawer")).toBeNull();
+    expect(queryByTestId("queue-content")).toBeNull();
     expect(queueContentRenderCount.current).toBe(0);
   });
 });

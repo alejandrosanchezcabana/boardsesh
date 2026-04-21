@@ -1,9 +1,13 @@
-import { eq, and } from 'drizzle-orm';
-import type { ConnectionContext, ToggleFavoriteInput, ToggleFavoriteResult } from '@boardsesh/shared-schema';
-import { db } from '../../../db/client';
-import * as dbSchema from '@boardsesh/db/schema';
-import { requireAuthenticated, validateInput } from '../shared/helpers';
-import { ToggleFavoriteInputSchema } from '../../../validation/schemas';
+import { eq, and } from "drizzle-orm";
+import type {
+  ConnectionContext,
+  ToggleFavoriteInput,
+  ToggleFavoriteResult,
+} from "@boardsesh/shared-schema";
+import { db } from "../../../db/client";
+import * as dbSchema from "@boardsesh/db/schema";
+import { requireAuthenticated, validateInput } from "../shared/helpers";
+import { ToggleFavoriteInputSchema } from "../../../validation/schemas";
 
 export const favoriteMutations = {
   /**
@@ -13,10 +17,10 @@ export const favoriteMutations = {
   toggleFavorite: async (
     _: unknown,
     { input }: { input: ToggleFavoriteInput },
-    ctx: ConnectionContext
+    ctx: ConnectionContext,
   ): Promise<ToggleFavoriteResult> => {
     requireAuthenticated(ctx);
-    validateInput(ToggleFavoriteInputSchema, input, 'input');
+    validateInput(ToggleFavoriteInputSchema, input, "input");
 
     const userId = ctx.userId!;
 
@@ -29,8 +33,8 @@ export const favoriteMutations = {
           eq(dbSchema.userFavorites.userId, userId),
           eq(dbSchema.userFavorites.boardName, input.boardName),
           eq(dbSchema.userFavorites.climbUuid, input.climbUuid),
-          eq(dbSchema.userFavorites.angle, input.angle)
-        )
+          eq(dbSchema.userFavorites.angle, input.angle),
+        ),
       )
       .limit(1);
 
@@ -43,8 +47,8 @@ export const favoriteMutations = {
             eq(dbSchema.userFavorites.userId, userId),
             eq(dbSchema.userFavorites.boardName, input.boardName),
             eq(dbSchema.userFavorites.climbUuid, input.climbUuid),
-            eq(dbSchema.userFavorites.angle, input.angle)
-          )
+            eq(dbSchema.userFavorites.angle, input.angle),
+          ),
         );
       return { favorited: false };
     } else {

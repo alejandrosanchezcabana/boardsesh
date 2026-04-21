@@ -1,8 +1,8 @@
-import React from 'react';
-import { PropsWithChildren } from 'react';
-import { BoardName, BoardOnlyRouteParameters } from '@/app/lib/types';
+import React from "react";
+import { PropsWithChildren } from "react";
+import { BoardName, BoardOnlyRouteParameters } from "@/app/lib/types";
 
-import { BoardProvider } from '../components/board-provider/board-provider-context';
+import { BoardProvider } from "../components/board-provider/board-provider-context";
 
 interface BoardLayoutProps {
   params: Promise<BoardOnlyRouteParameters>;

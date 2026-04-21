@@ -21,17 +21,17 @@ interface OffsetCursorData {
 
 export function encodeCursor(createdAt: string | Date, id: number): string {
   const data: KeysetCursorData = {
-    t: typeof createdAt === 'string' ? createdAt : createdAt.toISOString(),
+    t: typeof createdAt === "string" ? createdAt : createdAt.toISOString(),
     i: id,
   };
-  return Buffer.from(JSON.stringify(data)).toString('base64url');
+  return Buffer.from(JSON.stringify(data)).toString("base64url");
 }
 
 export function decodeCursor(cursor: string): { createdAt: string; id: number } | null {
   try {
-    const json = Buffer.from(cursor, 'base64url').toString('utf-8');
+    const json = Buffer.from(cursor, "base64url").toString("utf-8");
     const data: KeysetCursorData = JSON.parse(json);
-    if (!data.t || typeof data.i !== 'number') return null;
+    if (!data.t || typeof data.i !== "number") return null;
     return { createdAt: data.t, id: data.i };
   } catch {
     return null;
@@ -40,14 +40,14 @@ export function decodeCursor(cursor: string): { createdAt: string; id: number } 
 
 export function encodeOffsetCursor(offset: number): string {
   const data: OffsetCursorData = { o: offset };
-  return Buffer.from(JSON.stringify(data)).toString('base64url');
+  return Buffer.from(JSON.stringify(data)).toString("base64url");
 }
 
 export function decodeOffsetCursor(cursor: string): number | null {
   try {
-    const json = Buffer.from(cursor, 'base64url').toString('utf-8');
+    const json = Buffer.from(cursor, "base64url").toString("utf-8");
     const data: OffsetCursorData = JSON.parse(json);
-    if (typeof data.o !== 'number' || data.o < 0) return null;
+    if (typeof data.o !== "number" || data.o < 0) return null;
     return data.o;
   } catch {
     return null;

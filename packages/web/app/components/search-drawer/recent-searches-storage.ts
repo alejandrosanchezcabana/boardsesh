@@ -1,5 +1,5 @@
-import { openDB, IDBPDatabase } from 'idb';
-import { SearchRequestPagination } from '@/app/lib/types';
+import { openDB, IDBPDatabase } from "idb";
+import { SearchRequestPagination } from "@/app/lib/types";
 
 export type RecentSearch = {
   id: string;
@@ -8,18 +8,18 @@ export type RecentSearch = {
   timestamp: number;
 };
 
-export const RECENT_SEARCHES_CHANGED_EVENT = 'boardsesh:recent-searches-changed';
-const DB_NAME = 'boardsesh-recent-searches';
+export const RECENT_SEARCHES_CHANGED_EVENT = "boardsesh:recent-searches-changed";
+const DB_NAME = "boardsesh-recent-searches";
 const DB_VERSION = 1;
-const STORE_NAME = 'searches';
-const STORE_KEY = 'recent';
+const STORE_NAME = "searches";
+const STORE_KEY = "recent";
 const MAX_ITEMS = 10;
-const LEGACY_STORAGE_KEY = 'boardsesh_recent_searches';
+const LEGACY_STORAGE_KEY = "boardsesh_recent_searches";
 
 let dbPromise: Promise<IDBPDatabase> | null = null;
 
 const initDB = async (): Promise<IDBPDatabase | null> => {
-  if (typeof window === 'undefined' || !window.indexedDB) {
+  if (typeof window === "undefined" || !window.indexedDB) {
     return null;
   }
   if (!dbPromise) {
@@ -41,7 +41,7 @@ export function getFilterKey(filters: Partial<SearchRequestPagination>): string 
 }
 
 export async function getRecentSearches(): Promise<RecentSearch[]> {
-  if (typeof window === 'undefined') return [];
+  if (typeof window === "undefined") return [];
   try {
     const db = await initDB();
     if (!db) return [];
@@ -59,13 +59,16 @@ export async function getRecentSearches(): Promise<RecentSearch[]> {
 
     return [];
   } catch (error) {
-    console.error('Failed to get recent searches:', error);
+    console.error("Failed to get recent searches:", error);
     return [];
   }
 }
 
-export async function addRecentSearch(label: string, filters: Partial<SearchRequestPagination>): Promise<void> {
-  if (typeof window === 'undefined') return;
+export async function addRecentSearch(
+  label: string,
+  filters: Partial<SearchRequestPagination>,
+): Promise<void> {
+  if (typeof window === "undefined") return;
   try {
     const existing = await getRecentSearches();
     const filterKey = getFilterKey(filters);
@@ -87,6 +90,6 @@ export async function addRecentSearch(label: string, filters: Partial<SearchRequ
     await db.put(STORE_NAME, updated, STORE_KEY);
     window.dispatchEvent(new CustomEvent(RECENT_SEARCHES_CHANGED_EVENT));
   } catch (error) {
-    console.error('Failed to add recent search:', error);
+    console.error("Failed to add recent search:", error);
   }
 }

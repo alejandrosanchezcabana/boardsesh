@@ -1,12 +1,12 @@
-import dayjs from 'dayjs';
-import isoWeek from 'dayjs/plugin/isoWeek';
-import isSameOrAfter from 'dayjs/plugin/isSameOrAfter';
-import isSameOrBefore from 'dayjs/plugin/isSameOrBefore';
-import type { GetUserProfileStatsQueryResponse } from '@/app/lib/graphql/operations';
-import type { CssBarChartBar } from '@/app/components/charts/css-bar-chart';
-import type { GroupedBar } from '@/app/components/charts/css-bar-chart';
-import { themeTokens } from '@/app/theme/theme-config';
-import { type GradeDisplayFormat } from '@/app/lib/grade-colors';
+import dayjs from "dayjs";
+import isoWeek from "dayjs/plugin/isoWeek";
+import isSameOrAfter from "dayjs/plugin/isSameOrAfter";
+import isSameOrBefore from "dayjs/plugin/isSameOrBefore";
+import type { GetUserProfileStatsQueryResponse } from "@/app/lib/graphql/operations";
+import type { CssBarChartBar } from "@/app/components/charts/css-bar-chart";
+import type { GroupedBar } from "@/app/components/charts/css-bar-chart";
+import { themeTokens } from "@/app/theme/theme-config";
+import { type GradeDisplayFormat } from "@/app/lib/grade-colors";
 import {
   type LogbookEntry,
   type UnifiedTimeframeType,
@@ -18,7 +18,7 @@ import {
   getLayoutDisplayName,
   getLayoutColor,
   BOARD_TYPES,
-} from './profile-constants';
+} from "./profile-constants";
 
 // Derive flash/redpoint colors from design tokens
 const FLASH_COLOR = `${themeTokens.colors.success}99`; // 60% opacity hex
@@ -41,15 +41,15 @@ export function filterLogbookByTimeframe(
 ): LogbookEntry[] {
   const now = dayjs();
   switch (timeframe) {
-    case 'today':
-      return logbook.filter((entry) => dayjs(entry.climbed_at).isSame(now, 'day'));
-    case 'lastWeek':
-      return logbook.filter((entry) => dayjs(entry.climbed_at).isAfter(now.subtract(1, 'week')));
-    case 'lastMonth':
-      return logbook.filter((entry) => dayjs(entry.climbed_at).isAfter(now.subtract(1, 'month')));
-    case 'lastYear':
-      return logbook.filter((entry) => dayjs(entry.climbed_at).isAfter(now.subtract(1, 'year')));
-    case 'custom':
+    case "today":
+      return logbook.filter((entry) => dayjs(entry.climbed_at).isSame(now, "day"));
+    case "lastWeek":
+      return logbook.filter((entry) => dayjs(entry.climbed_at).isAfter(now.subtract(1, "week")));
+    case "lastMonth":
+      return logbook.filter((entry) => dayjs(entry.climbed_at).isAfter(now.subtract(1, "month")));
+    case "lastYear":
+      return logbook.filter((entry) => dayjs(entry.climbed_at).isAfter(now.subtract(1, "year")));
+    case "custom":
       return logbook.filter((entry) => {
         // Compare date strings only (YYYY-MM-DD) to avoid timezone issues.
         // climbed_at is an ISO 8601 UTC timestamp, but the user picks calendar
@@ -58,7 +58,7 @@ export function filterLogbookByTimeframe(
         const dateStr = entry.climbed_at.slice(0, 10); // 'YYYY-MM-DD'
         return dateStr >= fromDate && dateStr <= toDate;
       });
-    case 'all':
+    case "all":
     default:
       return logbook;
   }
@@ -72,19 +72,19 @@ function filterByUnifiedTimeframe(
   fromDate?: string,
   toDate?: string,
 ): LogbookEntry[] {
-  if (timeframe === 'all') return entries;
+  if (timeframe === "all") return entries;
   const now = dayjs();
   return entries.filter((entry) => {
     switch (timeframe) {
-      case 'today':
-        return dayjs(entry.climbed_at).isSame(now, 'day');
-      case 'lastWeek':
-        return dayjs(entry.climbed_at).isAfter(now.subtract(1, 'week'));
-      case 'lastMonth':
-        return dayjs(entry.climbed_at).isAfter(now.subtract(1, 'month'));
-      case 'lastYear':
-        return dayjs(entry.climbed_at).isAfter(now.subtract(1, 'year'));
-      case 'custom': {
+      case "today":
+        return dayjs(entry.climbed_at).isSame(now, "day");
+      case "lastWeek":
+        return dayjs(entry.climbed_at).isAfter(now.subtract(1, "week"));
+      case "lastMonth":
+        return dayjs(entry.climbed_at).isAfter(now.subtract(1, "month"));
+      case "lastYear":
+        return dayjs(entry.climbed_at).isAfter(now.subtract(1, "year"));
+      case "custom": {
         const dateStr = entry.climbed_at.slice(0, 10);
         return (!fromDate || dateStr >= fromDate) && (!toDate || dateStr <= toDate);
       }
@@ -104,7 +104,7 @@ export interface LayoutLegendEntry {
 export function buildAggregatedStackedBars(
   allBoardsTicks: Record<string, LogbookEntry[]>,
   timeframe: UnifiedTimeframeType,
-  gradeFormat: GradeDisplayFormat = 'v-grade',
+  gradeFormat: GradeDisplayFormat = "v-grade",
   fromDate?: string,
   toDate?: string,
 ): { bars: CssBarChartBar[]; legendEntries: LayoutLegendEntry[] } | null {
@@ -118,7 +118,7 @@ export function buildAggregatedStackedBars(
     const filteredTicks = filterByUnifiedTimeframe(ticks, timeframe, fromDate, toDate);
 
     filteredTicks.forEach((entry) => {
-      if (entry.difficulty === null || entry.status === 'attempt' || !entry.climbUuid) return;
+      if (entry.difficulty === null || entry.status === "attempt" || !entry.climbUuid) return;
       const grade = mapping[entry.difficulty];
       if (grade) {
         const layoutKey = getLayoutKey(boardType, entry.layoutId);
@@ -136,8 +136,16 @@ export function buildAggregatedStackedBars(
   const sortedGrades = sortGrades(Array.from(allGrades), gradeFormat);
 
   const layoutOrder = [
-    'kilter-1', 'kilter-8', 'tension-9', 'tension-10', 'tension-11',
-    'moonboard-1', 'moonboard-2', 'moonboard-3', 'moonboard-4', 'moonboard-5',
+    "kilter-1",
+    "kilter-8",
+    "tension-9",
+    "tension-10",
+    "tension-11",
+    "moonboard-1",
+    "moonboard-2",
+    "moonboard-3",
+    "moonboard-4",
+    "moonboard-5",
   ];
   const sortedLayouts = Array.from(allLayouts).sort((a, b) => {
     const indexA = layoutOrder.indexOf(a);
@@ -149,8 +157,8 @@ export function buildAggregatedStackedBars(
   });
 
   const legendEntries: LayoutLegendEntry[] = sortedLayouts.map((layoutKey) => {
-    const [boardType, layoutIdStr] = layoutKey.split('-');
-    const layoutId = layoutIdStr === 'unknown' ? null : parseInt(layoutIdStr, 10);
+    const [boardType, layoutIdStr] = layoutKey.split("-");
+    const layoutId = layoutIdStr === "unknown" ? null : parseInt(layoutIdStr, 10);
     return {
       label: getLayoutDisplayName(boardType, layoutId),
       color: getLayoutColor(boardType, layoutId),
@@ -161,8 +169,8 @@ export function buildAggregatedStackedBars(
     key: grade,
     label: grade,
     segments: sortedLayouts.map((layoutKey) => {
-      const [boardType, layoutIdStr] = layoutKey.split('-');
-      const layoutId = layoutIdStr === 'unknown' ? null : parseInt(layoutIdStr, 10);
+      const [boardType, layoutIdStr] = layoutKey.split("-");
+      const layoutId = layoutIdStr === "unknown" ? null : parseInt(layoutIdStr, 10);
       return {
         value: layoutGradeClimbs[layoutKey]?.[grade]?.size || 0,
         color: getLayoutColor(boardType, layoutId),
@@ -180,33 +188,35 @@ export function buildWeeklyBars(
   filteredLogbook: LogbookEntry[],
   fromDate?: string,
   toDate?: string,
-  gradeFormat: GradeDisplayFormat = 'v-grade',
+  gradeFormat: GradeDisplayFormat = "v-grade",
 ): CssBarChartBar[] | null {
   if (filteredLogbook.length === 0) return null;
 
   const mapping = getDifficultyMapping(gradeFormat);
 
-  const entries = (fromDate || toDate)
-    ? filteredLogbook.filter((entry) => {
-        const d = dayjs(entry.climbed_at);
-        if (fromDate && d.isBefore(dayjs(fromDate), 'day')) return false;
-        if (toDate && d.isAfter(dayjs(toDate), 'day')) return false;
-        return true;
-      })
-    : filteredLogbook;
+  const entries =
+    fromDate || toDate
+      ? filteredLogbook.filter((entry) => {
+          const d = dayjs(entry.climbed_at);
+          if (fromDate && d.isBefore(dayjs(fromDate), "day")) return false;
+          if (toDate && d.isAfter(dayjs(toDate), "day")) return false;
+          return true;
+        })
+      : filteredLogbook;
 
   if (entries.length === 0) return null;
 
   const DEFAULT_MAX_WEEKS = 52;
   const allWeekKeys: string[] = [];
-  const first = dayjs(entries[entries.length - 1]?.climbed_at).startOf('isoWeek');
-  const last = dayjs(entries[0]?.climbed_at).endOf('isoWeek');
+  const first = dayjs(entries[entries.length - 1]?.climbed_at).startOf("isoWeek");
+  const last = dayjs(entries[0]?.climbed_at).endOf("isoWeek");
   let current = first;
   while (current.isBefore(last) || current.isSame(last)) {
     allWeekKeys.push(`${current.isoWeekYear()}-W${current.isoWeek()}`);
-    current = current.add(1, 'week');
+    current = current.add(1, "week");
   }
-  const weekKeys = allWeekKeys.length > DEFAULT_MAX_WEEKS ? allWeekKeys.slice(-DEFAULT_MAX_WEEKS) : allWeekKeys;
+  const weekKeys =
+    allWeekKeys.length > DEFAULT_MAX_WEEKS ? allWeekKeys.slice(-DEFAULT_MAX_WEEKS) : allWeekKeys;
 
   const weeklyData: Record<string, Record<string, number>> = {};
   entries.forEach((entry) => {
@@ -232,11 +242,12 @@ export function buildWeeklyBars(
 
   if (activeGrades.length === 0) return null;
 
-  const spansYears = weekKeys.length > 1 &&
-    weekKeys[0].split('-')[0] !== weekKeys[weekKeys.length - 1].split('-')[0];
+  const spansYears =
+    weekKeys.length > 1 &&
+    weekKeys[0].split("-")[0] !== weekKeys[weekKeys.length - 1].split("-")[0];
 
   return weekKeys.map((wk) => {
-    const [year, weekPart] = wk.split('-');
+    const [year, weekPart] = wk.split("-");
     const displayLabel = spansYears ? `${weekPart} '${year.slice(2)}` : weekPart;
     return {
       key: wk,
@@ -254,7 +265,7 @@ export function buildWeeklyBars(
 
 export function buildFlashRedpointBars(
   filteredLogbook: LogbookEntry[],
-  gradeFormat: GradeDisplayFormat = 'v-grade',
+  gradeFormat: GradeDisplayFormat = "v-grade",
 ): GroupedBar[] | null {
   if (filteredLogbook.length === 0) return null;
 
@@ -268,8 +279,8 @@ export function buildFlashRedpointBars(
     if (!difficulty) return;
     // Prefer the canonical status field when available. Fall back to the old
     // tries-based heuristic for legacy rows that don't have status set.
-    const isFlash = entry.status === 'flash' || (entry.status == null && entry.tries === 1);
-    const isRedpoint = entry.status === 'send' || (entry.status == null && entry.tries > 1);
+    const isFlash = entry.status === "flash" || (entry.status == null && entry.tries === 1);
+    const isRedpoint = entry.status === "send" || (entry.status == null && entry.tries > 1);
     if (isFlash) {
       flash[difficulty] = (flash[difficulty] || 0) + 1;
     } else if (isRedpoint) {
@@ -286,8 +297,8 @@ export function buildFlashRedpointBars(
     key: grade,
     label: grade,
     values: [
-      { value: flash[grade] || 0, color: FLASH_COLOR, label: 'Flash' },
-      { value: redpoint[grade] || 0, color: REDPOINT_COLOR, label: 'Redpoint' },
+      { value: flash[grade] || 0, color: FLASH_COLOR, label: "Flash" },
+      { value: redpoint[grade] || 0, color: REDPOINT_COLOR, label: "Redpoint" },
     ],
   }));
 }
@@ -297,7 +308,7 @@ export function buildFlashRedpointBars(
 export function buildAggregatedFlashRedpointBars(
   allBoardsTicks: Record<string, LogbookEntry[]>,
   timeframe: UnifiedTimeframeType,
-  gradeFormat: GradeDisplayFormat = 'v-grade',
+  gradeFormat: GradeDisplayFormat = "v-grade",
   fromDate?: string,
   toDate?: string,
 ): GroupedBar[] | null {
@@ -336,8 +347,16 @@ function vGradeToPoints(vGrade: string): number {
 }
 
 const LAYOUT_ORDER = [
-  'kilter-1', 'kilter-8', 'tension-9', 'tension-10', 'tension-11',
-  'moonboard-1', 'moonboard-2', 'moonboard-3', 'moonboard-4', 'moonboard-5',
+  "kilter-1",
+  "kilter-8",
+  "tension-9",
+  "tension-10",
+  "tension-11",
+  "moonboard-1",
+  "moonboard-2",
+  "moonboard-3",
+  "moonboard-4",
+  "moonboard-5",
 ];
 
 export function buildVPointsTimeline(
@@ -351,8 +370,9 @@ export function buildVPointsTimeline(
 
   BOARD_TYPES.forEach((boardType) => {
     const ticks = allBoardsTicks[boardType] || [];
-    const filtered = filterByUnifiedTimeframe(ticks, timeframe, fromDate, toDate)
-      .filter((e) => e.difficulty !== null && e.status !== 'attempt');
+    const filtered = filterByUnifiedTimeframe(ticks, timeframe, fromDate, toDate).filter(
+      (e) => e.difficulty !== null && e.status !== "attempt",
+    );
 
     for (const entry of filtered) {
       const layoutKey = getLayoutKey(boardType, entry.layoutId);
@@ -372,12 +392,12 @@ export function buildVPointsTimeline(
 
   // Build full week key range
   const allWeekKeys: string[] = [];
-  const first = dayjs(sorted[0].climbed_at).startOf('isoWeek');
-  const last = dayjs(sorted[sorted.length - 1].climbed_at).endOf('isoWeek');
+  const first = dayjs(sorted[0].climbed_at).startOf("isoWeek");
+  const last = dayjs(sorted[sorted.length - 1].climbed_at).endOf("isoWeek");
   let current = first;
-  while (current.isBefore(last) || current.isSame(last, 'day')) {
+  while (current.isBefore(last) || current.isSame(last, "day")) {
     allWeekKeys.push(`${current.isoWeekYear()}-W${current.isoWeek()}`);
-    current = current.add(1, 'week');
+    current = current.add(1, "week");
   }
 
   if (allWeekKeys.length === 0) return null;
@@ -415,18 +435,18 @@ export function buildVPointsTimeline(
   // Week label formatting
   const spansYears =
     cappedKeys.length > 1 &&
-    cappedKeys[0].split('-')[0] !== cappedKeys[cappedKeys.length - 1].split('-')[0];
+    cappedKeys[0].split("-")[0] !== cappedKeys[cappedKeys.length - 1].split("-")[0];
 
   const weekLabels = cappedKeys.map((wk) => {
-    const [year, weekPart] = wk.split('-');
+    const [year, weekPart] = wk.split("-");
     return spansYears ? `${weekPart} '${year.slice(2)}` : weekPart;
   });
 
   // Build cumulative series per layout
   let totalPoints = 0;
   const series: VPointsLayoutSeries[] = sortedLayouts.map((layoutKey) => {
-    const [boardType, layoutIdStr] = layoutKey.split('-');
-    const layoutId = layoutIdStr === 'unknown' ? null : parseInt(layoutIdStr, 10);
+    const [boardType, layoutIdStr] = layoutKey.split("-");
+    const layoutId = layoutIdStr === "unknown" ? null : parseInt(layoutIdStr, 10);
     const weekPoints = layoutWeeklyPoints[layoutKey];
 
     // Base from skipped weeks
@@ -471,8 +491,8 @@ export interface LayoutPercentage {
 }
 
 export function buildStatisticsSummary(
-  profileStats: GetUserProfileStatsQueryResponse['userProfileStats'] | null,
-  gradeFormat: GradeDisplayFormat = 'v-grade',
+  profileStats: GetUserProfileStatsQueryResponse["userProfileStats"] | null,
+  gradeFormat: GradeDisplayFormat = "v-grade",
 ): { totalAscents: number; layoutPercentages: LayoutPercentage[] } {
   if (!profileStats) {
     return { totalAscents: 0, layoutPercentages: [] };
@@ -483,7 +503,8 @@ export function buildStatisticsSummary(
 
   const layoutsWithExactPercentages = profileStats.layoutStats
     .map((stats) => {
-      const exactPercentage = totalAscents > 0 ? (stats.distinctClimbCount / totalAscents) * 100 : 0;
+      const exactPercentage =
+        totalAscents > 0 ? (stats.distinctClimbCount / totalAscents) * 100 : 0;
       const grades: Record<string, number> = {};
       stats.gradeCounts.forEach(({ grade, count }) => {
         const difficultyNum = parseInt(grade, 10);
@@ -513,7 +534,9 @@ export function buildStatisticsSummary(
   // Distribute remaining percentage points using largest remainder method
   const totalFloored = layoutsWithExactPercentages.reduce((sum, l) => sum + l.percentage, 0);
   const remaining = 100 - totalFloored;
-  const sortedByRemainder = [...layoutsWithExactPercentages].sort((a, b) => b.remainder - a.remainder);
+  const sortedByRemainder = [...layoutsWithExactPercentages].sort(
+    (a, b) => b.remainder - a.remainder,
+  );
   for (let i = 0; i < remaining && i < sortedByRemainder.length; i++) {
     sortedByRemainder[i].percentage += 1;
   }

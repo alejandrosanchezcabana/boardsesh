@@ -1,5 +1,5 @@
-import type { SessionGradeDistributionItem } from '@boardsesh/shared-schema';
-import { getGradeLabel } from '@boardsesh/db/queries';
+import type { SessionGradeDistributionItem } from "@boardsesh/shared-schema";
+import { getGradeLabel } from "@boardsesh/db/queries";
 
 /**
  * Compute session aggregate stats from tick rows.
@@ -13,12 +13,15 @@ export function computeSessionAggregates(
   let totalFlashes = 0;
   let totalAttempts = 0;
   for (const row of tickRows) {
-    if (row.tick.status === 'flash') { totalFlashes++; totalSends++; }
-    else if (row.tick.status === 'send') {
+    if (row.tick.status === "flash") {
+      totalFlashes++;
+      totalSends++;
+    } else if (row.tick.status === "send") {
       totalSends++;
       totalAttempts += Math.max(row.tick.attemptCount - 1, 0);
+    } else if (row.tick.status === "attempt") {
+      totalAttempts += row.tick.attemptCount;
     }
-    else if (row.tick.status === 'attempt') { totalAttempts += row.tick.attemptCount; }
   }
   return { totalSends, totalFlashes, totalAttempts };
 }
@@ -35,22 +38,32 @@ export function buildGradeDistributionFromTicks(
     consensusDifficulty?: number | null;
   }>,
 ): SessionGradeDistributionItem[] {
-  const gradeMap = new Map<string, { grade: string; difficulty: number; flash: number; send: number; attempt: number }>();
+  const gradeMap = new Map<
+    string,
+    { grade: string; difficulty: number; flash: number; send: number; attempt: number }
+  >();
 
   for (const row of tickRows) {
-    const effectiveDifficulty = row.tick.difficulty ?? (row.consensusDifficulty != null ? Math.round(row.consensusDifficulty) : null);
+    const effectiveDifficulty =
+      row.tick.difficulty ??
+      (row.consensusDifficulty != null ? Math.round(row.consensusDifficulty) : null);
     if (effectiveDifficulty == null) continue;
     const effectiveGradeName = row.difficultyName || getGradeLabel(effectiveDifficulty) || null;
     if (!effectiveGradeName) continue;
     const key = `${effectiveGradeName}:${effectiveDifficulty}`;
-    const existing = gradeMap.get(key) ?? { grade: effectiveGradeName, difficulty: effectiveDifficulty, flash: 0, send: 0, attempt: 0 };
+    const existing = gradeMap.get(key) ?? {
+      grade: effectiveGradeName,
+      difficulty: effectiveDifficulty,
+      flash: 0,
+      send: 0,
+      attempt: 0,
+    };
 
-    if (row.tick.status === 'flash') existing.flash++;
-    else if (row.tick.status === 'send') {
+    if (row.tick.status === "flash") existing.flash++;
+    else if (row.tick.status === "send") {
       existing.send++;
       existing.attempt += Math.max(row.tick.attemptCount - 1, 0);
-    }
-    else if (row.tick.status === 'attempt') existing.attempt += row.tick.attemptCount;
+    } else if (row.tick.status === "attempt") existing.attempt += row.tick.attemptCount;
 
     gradeMap.set(key, existing);
   }

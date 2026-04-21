@@ -36,12 +36,12 @@ bun add aurora-climbing-api
 First, import the client and create an instance:
 
 ```typescript
-import AuroraClimbingClient from 'aurora-climbing-api';
+import AuroraClimbingClient from "aurora-climbing-api";
 
 // Initialize the client
 const client = new AuroraClimbingClient({
-  domain: 'api.auroraclimbing.com',
-  apiVersion: 'v1', // Optional API version
+  domain: "api.auroraclimbing.com",
+  apiVersion: "v1", // Optional API version
 });
 ```
 
@@ -51,17 +51,17 @@ const client = new AuroraClimbingClient({
 
 ```typescript
 const signUpDetails = {
-  username: 'newuser',
-  password: 'securepassword',
-  emailAddress: 'user@example.com',
+  username: "newuser",
+  password: "securepassword",
+  emailAddress: "user@example.com",
   mailingListOptIn: true,
 };
 
 try {
   const session = await client.signUp(signUpDetails);
-  console.log('Signed up successfully:', session);
+  console.log("Signed up successfully:", session);
 } catch (error) {
-  console.error('Sign up failed:', error);
+  console.error("Sign up failed:", error);
 }
 ```
 
@@ -69,11 +69,11 @@ try {
 
 ```typescript
 try {
-  const session = await client.signIn('username', 'password');
-  console.log('Signed in successfully:', session);
-  console.log('Token:', client.token); // Token is automatically set
+  const session = await client.signIn("username", "password");
+  console.log("Signed in successfully:", session);
+  console.log("Token:", client.token); // Token is automatically set
 } catch (error) {
-  console.error('Sign in failed:', error);
+  console.error("Sign in failed:", error);
 }
 ```
 
@@ -82,9 +82,9 @@ try {
 ```typescript
 try {
   await client.signOut();
-  console.log('Signed out successfully');
+  console.log("Signed out successfully");
 } catch (error) {
-  console.error('Sign out failed:', error);
+  console.error("Sign out failed:", error);
 }
 ```
 
@@ -95,9 +95,9 @@ try {
 ```typescript
 try {
   const profile = await client.getUserProfile(userId);
-  console.log('User profile:', profile);
+  console.log("User profile:", profile);
 } catch (error) {
-  console.error('Failed to get profile:', error);
+  console.error("Failed to get profile:", error);
 }
 ```
 
@@ -106,28 +106,28 @@ try {
 ```typescript
 const profileDetails = {
   id: userId,
-  name: 'John Doe',
-  emailAddress: 'john@example.com',
-  instagramUsername: 'johndoe_climbs',
+  name: "John Doe",
+  emailAddress: "john@example.com",
+  instagramUsername: "johndoe_climbs",
   isPublic: true,
   // Optional avatar update
   avatarAction: {
-    type: 'upload',
+    type: "upload",
     data: imageBlob, // A Blob or File object
   },
   // Optional gym details
   gymDetails: {
-    name: 'My Home Gym',
-    address: '123 Main St',
+    name: "My Home Gym",
+    address: "123 Main St",
     // Other gym properties...
   },
 };
 
 try {
   await client.saveProfile(profileDetails);
-  console.log('Profile updated successfully');
+  console.log("Profile updated successfully");
 } catch (error) {
-  console.error('Failed to update profile:', error);
+  console.error("Failed to update profile:", error);
 }
 ```
 
@@ -135,10 +135,10 @@ try {
 
 ```typescript
 try {
-  await client.deleteUser(userId, 'current-password');
-  console.log('Account deleted successfully');
+  await client.deleteUser(userId, "current-password");
+  console.log("Account deleted successfully");
 } catch (error) {
-  console.error('Failed to delete account:', error);
+  console.error("Failed to delete account:", error);
 }
 ```
 
@@ -149,9 +149,9 @@ try {
 ```typescript
 try {
   const followers = await client.getFollowers(userId);
-  console.log('Followers:', followers);
+  console.log("Followers:", followers);
 } catch (error) {
-  console.error('Failed to get followers:', error);
+  console.error("Failed to get followers:", error);
 }
 ```
 
@@ -160,16 +160,16 @@ try {
 ```typescript
 try {
   const following = await client.getFollowing(userId);
-  console.log('Following:', following);
+  console.log("Following:", following);
 } catch (error) {
-  console.error('Failed to get following:', error);
+  console.error("Failed to get following:", error);
 }
 ```
 
 ### Follow a User
 
 ```typescript
-import { FollowState } from 'aurora-climbing-api';
+import { FollowState } from "aurora-climbing-api";
 
 try {
   const result = await client.saveFollow(
@@ -177,16 +177,16 @@ try {
     currentUserId, // Your user ID
     FollowState.PENDING,
   );
-  console.log('Follow request sent:', result);
+  console.log("Follow request sent:", result);
 } catch (error) {
-  console.error('Failed to follow user:', error);
+  console.error("Failed to follow user:", error);
 }
 ```
 
 ### Update Follow Status
 
 ```typescript
-import { FollowState } from 'aurora-climbing-api';
+import { FollowState } from "aurora-climbing-api";
 
 // Accept a follow request
 try {
@@ -195,9 +195,9 @@ try {
     targetUserId, // User who requested to follow you
     FollowState.ACCEPTED,
   );
-  console.log('Follow request accepted:', result);
+  console.log("Follow request accepted:", result);
 } catch (error) {
-  console.error('Failed to update follow status:', error);
+  console.error("Failed to update follow status:", error);
 }
 ```
 
@@ -207,11 +207,11 @@ try {
 
 ```typescript
 const climbDetails = {
-  uuid: 'new-climb-uuid', // or existing UUID to update
+  uuid: "new-climb-uuid", // or existing UUID to update
   layoutId: 1,
   setterId: currentUserId,
-  name: 'My New Climb',
-  description: 'A fun climb with interesting moves',
+  name: "My New Climb",
+  description: "A fun climb with interesting moves",
   isDraft: false,
   framesCount: 1,
   framesPace: 0,
@@ -221,9 +221,9 @@ const climbDetails = {
 
 try {
   const climb = await client.saveClimb(climbDetails);
-  console.log('Climb saved:', climb);
+  console.log("Climb saved:", climb);
 } catch (error) {
-  console.error('Failed to save climb:', error);
+  console.error("Failed to save climb:", error);
 }
 ```
 
@@ -231,10 +231,10 @@ try {
 
 ```typescript
 try {
-  await client.deleteClimb('climb-uuid');
-  console.log('Climb deleted successfully');
+  await client.deleteClimb("climb-uuid");
+  console.log("Climb deleted successfully");
 } catch (error) {
-  console.error('Failed to delete climb:', error);
+  console.error("Failed to delete climb:", error);
 }
 ```
 
@@ -243,15 +243,15 @@ try {
 ```typescript
 const report = {
   userID: currentUserId,
-  climbUUID: 'climb-uuid',
-  message: 'This climb has inappropriate content',
+  climbUUID: "climb-uuid",
+  message: "This climb has inappropriate content",
 };
 
 try {
   await client.reportClimb(report);
-  console.log('Climb reported successfully');
+  console.log("Climb reported successfully");
 } catch (error) {
-  console.error('Failed to report climb:', error);
+  console.error("Failed to report climb:", error);
 }
 ```
 
@@ -261,24 +261,24 @@ try {
 
 ```typescript
 const ascentDetails = {
-  uuid: 'new-ascent-uuid', // or existing UUID to update
+  uuid: "new-ascent-uuid", // or existing UUID to update
   userID: currentUserId,
-  climbUUID: 'climb-uuid',
+  climbUUID: "climb-uuid",
   angle: 40,
   isMirror: false,
   bidCount: 0,
   quality: 4, // Rating out of 5
   difficulty: 3, // Difficulty rating
   isBenchmark: false,
-  comment: 'Great climb, crux is at the top',
+  comment: "Great climb, crux is at the top",
   climbedAt: new Date().toISOString(),
 };
 
 try {
   const result = await client.saveAscent(ascentDetails);
-  console.log('Ascent saved:', result);
+  console.log("Ascent saved:", result);
 } catch (error) {
-  console.error('Failed to save ascent:', error);
+  console.error("Failed to save ascent:", error);
 }
 ```
 
@@ -286,10 +286,10 @@ try {
 
 ```typescript
 try {
-  await client.deleteAscent('ascent-uuid');
-  console.log('Ascent deleted successfully');
+  await client.deleteAscent("ascent-uuid");
+  console.log("Ascent deleted successfully");
 } catch (error) {
-  console.error('Failed to delete ascent:', error);
+  console.error("Failed to delete ascent:", error);
 }
 ```
 
@@ -297,10 +297,10 @@ try {
 
 ```typescript
 try {
-  const logbook = await client.getLogbook(userId, ['climb', 'boulder']);
-  console.log('Logbook entries:', logbook);
+  const logbook = await client.getLogbook(userId, ["climb", "boulder"]);
+  console.log("Logbook entries:", logbook);
 } catch (error) {
-  console.error('Failed to get logbook:', error);
+  console.error("Failed to get logbook:", error);
 }
 ```
 
@@ -310,21 +310,21 @@ try {
 
 ```typescript
 const bidDetails = {
-  uuid: 'new-bid-uuid', // or existing UUID to update
+  uuid: "new-bid-uuid", // or existing UUID to update
   userID: currentUserId,
-  climbUUID: 'climb-uuid',
+  climbUUID: "climb-uuid",
   angle: 40,
   isMirror: false,
   bidCount: 1,
-  comment: 'Almost got it, need more tries',
+  comment: "Almost got it, need more tries",
   climbedAt: new Date().toISOString(),
 };
 
 try {
   const result = await client.saveBid(bidDetails);
-  console.log('Bid saved:', result);
+  console.log("Bid saved:", result);
 } catch (error) {
-  console.error('Failed to save bid:', error);
+  console.error("Failed to save bid:", error);
 }
 ```
 
@@ -332,10 +332,10 @@ try {
 
 ```typescript
 try {
-  await client.deleteBid('bid-uuid');
-  console.log('Bid deleted successfully');
+  await client.deleteBid("bid-uuid");
+  console.log("Bid deleted successfully");
 } catch (error) {
-  console.error('Failed to delete bid:', error);
+  console.error("Failed to delete bid:", error);
 }
 ```
 
@@ -345,19 +345,19 @@ try {
 
 ```typescript
 const circuitDetails = {
-  uuid: 'new-circuit-uuid', // or existing UUID to update
+  uuid: "new-circuit-uuid", // or existing UUID to update
   userID: currentUserId,
-  name: 'Endurance Training',
-  description: 'A circuit designed for building endurance',
-  color: '#FF5733',
+  name: "Endurance Training",
+  description: "A circuit designed for building endurance",
+  color: "#FF5733",
   isPublic: true,
 };
 
 try {
   const result = await client.saveCircuit(circuitDetails);
-  console.log('Circuit saved:', result);
+  console.log("Circuit saved:", result);
 } catch (error) {
-  console.error('Failed to save circuit:', error);
+  console.error("Failed to save circuit:", error);
 }
 ```
 
@@ -365,10 +365,10 @@ try {
 
 ```typescript
 try {
-  await client.deleteCircuit('circuit-uuid');
-  console.log('Circuit deleted successfully');
+  await client.deleteCircuit("circuit-uuid");
+  console.log("Circuit deleted successfully");
 } catch (error) {
-  console.error('Failed to delete circuit:', error);
+  console.error("Failed to delete circuit:", error);
 }
 ```
 
@@ -376,11 +376,11 @@ try {
 
 ```typescript
 try {
-  const climbUUIDs = ['climb-uuid-1', 'climb-uuid-2', 'climb-uuid-3'];
-  await client.saveCircuitClimbs('circuit-uuid', climbUUIDs);
-  console.log('Climbs added to circuit successfully');
+  const climbUUIDs = ["climb-uuid-1", "climb-uuid-2", "climb-uuid-3"];
+  await client.saveCircuitClimbs("circuit-uuid", climbUUIDs);
+  console.log("Climbs added to circuit successfully");
 } catch (error) {
-  console.error('Failed to add climbs to circuit:', error);
+  console.error("Failed to add climbs to circuit:", error);
 }
 ```
 
@@ -388,11 +388,11 @@ try {
 
 ```typescript
 try {
-  const circuitUUIDs = new Set(['circuit-uuid-1', 'circuit-uuid-2']);
-  await client.saveClimbCircuits('climb-uuid', circuitUUIDs);
-  console.log('Climb added to circuits successfully');
+  const circuitUUIDs = new Set(["circuit-uuid-1", "circuit-uuid-2"]);
+  await client.saveClimbCircuits("climb-uuid", circuitUUIDs);
+  console.log("Climb added to circuits successfully");
 } catch (error) {
-  console.error('Failed to add climb to circuits:', error);
+  console.error("Failed to add climb to circuits:", error);
 }
 ```
 
@@ -402,22 +402,22 @@ try {
 
 ```typescript
 const wallDetails = {
-  uuid: 'new-wall-uuid', // or existing UUID to update
+  uuid: "new-wall-uuid", // or existing UUID to update
   userId: currentUserId,
-  name: 'Home Wall',
+  name: "Home Wall",
   isAdjustable: true,
   angle: 30,
   layoutId: 1,
   productSizeId: 2,
-  serialNumber: 'WALL123', // Optional
+  serialNumber: "WALL123", // Optional
   holdSetIds: [1, 3, 5], // IDs of hold sets on the wall
 };
 
 try {
   const result = await client.saveWall(wallDetails);
-  console.log('Wall saved:', result);
+  console.log("Wall saved:", result);
 } catch (error) {
-  console.error('Failed to save wall:', error);
+  console.error("Failed to save wall:", error);
 }
 ```
 
@@ -425,10 +425,10 @@ try {
 
 ```typescript
 try {
-  await client.deleteWall('wall-uuid');
-  console.log('Wall deleted successfully');
+  await client.deleteWall("wall-uuid");
+  console.log("Wall deleted successfully");
 } catch (error) {
-  console.error('Failed to delete wall:', error);
+  console.error("Failed to delete wall:", error);
 }
 ```
 
@@ -438,17 +438,17 @@ try {
 
 ```typescript
 const tag = {
-  entityUUID: 'climb-uuid', // UUID of the entity being tagged
+  entityUUID: "climb-uuid", // UUID of the entity being tagged
   userID: currentUserId,
-  name: 'Dynamic',
+  name: "Dynamic",
   isListed: true,
 };
 
 try {
   const result = await client.saveTag(tag);
-  console.log('Tag saved:', result);
+  console.log("Tag saved:", result);
 } catch (error) {
-  console.error('Failed to save tag:', error);
+  console.error("Failed to save tag:", error);
 }
 ```
 
@@ -460,12 +460,12 @@ try {
 try {
   await client.saveExhibit(
     currentUserId,
-    'climb-uuid',
-    'SERIAL123', // Optional serial number
+    "climb-uuid",
+    "SERIAL123", // Optional serial number
   );
-  console.log('Exhibit saved successfully');
+  console.log("Exhibit saved successfully");
 } catch (error) {
-  console.error('Failed to save exhibit:', error);
+  console.error("Failed to save exhibit:", error);
 }
 ```
 
@@ -473,16 +473,16 @@ try {
 
 ```typescript
 const filter = {
-  serialNumber: 'SERIAL123',
-  before: '2023-01-01T00:00:00Z', // Optional timestamp
-  after: '2022-01-01T00:00:00Z', // Optional timestamp
+  serialNumber: "SERIAL123",
+  before: "2023-01-01T00:00:00Z", // Optional timestamp
+  after: "2022-01-01T00:00:00Z", // Optional timestamp
 };
 
 try {
   const exhibits = await client.getExhibits(filter);
-  console.log('Exhibits:', exhibits);
+  console.log("Exhibits:", exhibits);
 } catch (error) {
-  console.error('Failed to get exhibits:', error);
+  console.error("Failed to get exhibits:", error);
 }
 ```
 
@@ -493,14 +493,14 @@ try {
 ```typescript
 try {
   // Search with a query
-  const results = await client.explore('crimpy problems');
-  console.log('Search results:', results);
+  const results = await client.explore("crimpy problems");
+  console.log("Search results:", results);
 
   // Search with a type filter
-  const boulderResults = await client.explore('crimpy', 'boulder');
-  console.log('Boulder results:', boulderResults);
+  const boulderResults = await client.explore("crimpy", "boulder");
+  console.log("Boulder results:", boulderResults);
 } catch (error) {
-  console.error('Search failed:', error);
+  console.error("Search failed:", error);
 }
 ```
 
@@ -510,15 +510,15 @@ try {
 
 ```typescript
 const filter = {
-  types: ['user', 'climb', 'follow'],
-  before: '2023-01-01T00:00:00Z', // Optional timestamp for pagination
+  types: ["user", "climb", "follow"],
+  before: "2023-01-01T00:00:00Z", // Optional timestamp for pagination
 };
 
 try {
   const notifications = await client.getNotifications(filter);
-  console.log('Notifications:', notifications);
+  console.log("Notifications:", notifications);
 } catch (error) {
-  console.error('Failed to get notifications:', error);
+  console.error("Failed to get notifications:", error);
 }
 ```
 
@@ -529,9 +529,9 @@ try {
 ```typescript
 try {
   const leaderboards = await client.getLeaderboards();
-  console.log('Available leaderboards:', leaderboards);
+  console.log("Available leaderboards:", leaderboards);
 } catch (error) {
-  console.error('Failed to get leaderboards:', error);
+  console.error("Failed to get leaderboards:", error);
 }
 ```
 
@@ -541,13 +541,13 @@ try {
 try {
   // Get first page of scores
   const scores = await client.getLeaderboardScores(leaderboardId);
-  console.log('Leaderboard scores:', scores);
+  console.log("Leaderboard scores:", scores);
 
   // Get next page (pagination)
   const nextPageScores = await client.getLeaderboardScores(leaderboardId, 20);
-  console.log('Next page scores:', nextPageScores);
+  console.log("Next page scores:", nextPageScores);
 } catch (error) {
-  console.error('Failed to get leaderboard scores:', error);
+  console.error("Failed to get leaderboard scores:", error);
 }
 ```
 
@@ -558,9 +558,9 @@ try {
 ```typescript
 try {
   const pins = await client.getPins();
-  console.log('Gym pins:', pins);
+  console.log("Gym pins:", pins);
 } catch (error) {
-  console.error('Failed to get pins:', error);
+  console.error("Failed to get pins:", error);
 }
 ```
 
@@ -571,26 +571,26 @@ try {
 ```typescript
 // Define shared sync tables with timestamps
 const sharedSyncs = [
-  { tableName: 'climbs', lastSynchronizedAt: '2023-01-01T00:00:00.000000' },
-  { tableName: 'sets', lastSynchronizedAt: '2023-01-01T00:00:00.000000' },
+  { tableName: "climbs", lastSynchronizedAt: "2023-01-01T00:00:00.000000" },
+  { tableName: "sets", lastSynchronizedAt: "2023-01-01T00:00:00.000000" },
 ];
 
 // Define user sync tables with timestamps (only if authenticated)
 const userSyncs = [
-  { tableName: 'ascents', lastSynchronizedAt: '2023-01-01T00:00:00.000000' },
-  { tableName: 'walls', lastSynchronizedAt: '2023-01-01T00:00:00.000000' },
+  { tableName: "ascents", lastSynchronizedAt: "2023-01-01T00:00:00.000000" },
+  { tableName: "walls", lastSynchronizedAt: "2023-01-01T00:00:00.000000" },
 ];
 
 try {
   // Sync both shared and user data
   const syncResult = await client.sync(sharedSyncs, userSyncs);
-  console.log('Sync completed:', syncResult);
+  console.log("Sync completed:", syncResult);
 
   // Or sync only shared data (no authentication required)
   const publicSyncResult = await client.sync(sharedSyncs);
-  console.log('Public sync completed:', publicSyncResult);
+  console.log("Public sync completed:", publicSyncResult);
 } catch (error) {
-  console.error('Sync failed:', error);
+  console.error("Sync failed:", error);
 }
 ```
 
@@ -605,24 +605,24 @@ try {
 } catch (error) {
   if (error instanceof Error) {
     // Check for specific error messages
-    if (error.message.includes('Authentication required')) {
-      console.error('You need to sign in first');
-    } else if (error.message.includes('Too many')) {
-      console.error('Rate limit reached, try again later');
+    if (error.message.includes("Authentication required")) {
+      console.error("You need to sign in first");
+    } else if (error.message.includes("Too many")) {
+      console.error("Rate limit reached, try again later");
     } else {
       // Try to parse validation errors
       try {
         const validationErrors = JSON.parse(error.message);
         if (validationErrors.password) {
-          console.error('Password error:', validationErrors.password[0]);
+          console.error("Password error:", validationErrors.password[0]);
         }
       } catch {
         // Not a JSON error
-        console.error('API error:', error.message);
+        console.error("API error:", error.message);
       }
     }
   } else {
-    console.error('Unknown error:', error);
+    console.error("Unknown error:", error);
   }
 }
 ```

@@ -1,11 +1,11 @@
-import { spawn } from 'node:child_process';
-import { createConnection } from 'node:net';
-import { setTimeout as delay } from 'node:timers/promises';
-import { join, dirname, resolve } from 'node:path';
-import { fileURLToPath } from 'node:url';
+import { spawn } from "node:child_process";
+import { createConnection } from "node:net";
+import { setTimeout as delay } from "node:timers/promises";
+import { join, dirname, resolve } from "node:path";
+import { fileURLToPath } from "node:url";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
-const ROOT_DIR = resolve(__dirname, '..');
+const ROOT_DIR = resolve(__dirname, "..");
 
 const DEFAULT_BACKEND_PORT = 8080;
 const DEFAULT_WEB_PORT = 3000;
@@ -35,7 +35,7 @@ async function checkBackendHealth(port: number): Promise<boolean> {
       const timeoutId = setTimeout(() => controller.abort(), 1000);
 
       const response = await fetch(`http://localhost:${port}/health`, {
-        method: 'GET',
+        method: "GET",
         signal: controller.signal,
       });
 
@@ -60,18 +60,18 @@ async function checkBackendHealth(port: number): Promise<boolean> {
  */
 async function isPortInUse(port: number, timeout = 500): Promise<boolean> {
   return new Promise((resolve) => {
-    const socket = createConnection({ port, host: 'localhost' }, () => {
+    const socket = createConnection({ port, host: "localhost" }, () => {
       socket.destroy();
       resolve(true);
     });
 
     socket.setTimeout(timeout);
-    socket.on('timeout', () => {
+    socket.on("timeout", () => {
       socket.destroy();
       resolve(false);
     });
 
-    socket.on('error', () => {
+    socket.on("error", () => {
       resolve(false);
     });
   });
@@ -102,21 +102,21 @@ async function findAvailablePort(basePort: number, maxAttempts = 10): Promise<nu
 function startBackend(port: number): ReturnType<typeof spawn> {
   console.log(`[dev] Starting backend on port ${port}...`);
 
-  const backendProcess = spawn('bun', ['run', 'backend:dev'], {
+  const backendProcess = spawn("bun", ["run", "backend:dev"], {
     cwd: ROOT_DIR,
-    stdio: ['inherit', 'inherit', 'inherit'],
+    stdio: ["inherit", "inherit", "inherit"],
     env: {
       ...process.env,
       PORT: String(port),
     },
   });
 
-  backendProcess.on('error', (error) => {
+  backendProcess.on("error", (error) => {
     console.error(`[dev] Backend failed to start:`, error);
     process.exit(1);
   });
 
-  backendProcess.on('exit', (code, signal) => {
+  backendProcess.on("exit", (code, signal) => {
     if (signal) {
       console.log(`[dev] Backend terminated by signal ${signal}`);
     } else if (code !== 0) {
@@ -133,9 +133,9 @@ function startBackend(port: number): ReturnType<typeof spawn> {
 function startWeb(port: number, backendPort: number): ReturnType<typeof spawn> {
   console.log(`[dev] Starting web on port ${port}...`);
 
-  const webProcess = spawn('bun', ['run', 'dev'], {
-    cwd: join(ROOT_DIR, 'packages/web'),
-    stdio: ['inherit', 'inherit', 'inherit'],
+  const webProcess = spawn("bun", ["run", "dev"], {
+    cwd: join(ROOT_DIR, "packages/web"),
+    stdio: ["inherit", "inherit", "inherit"],
     env: {
       ...process.env,
       PORT: String(port),
@@ -143,12 +143,12 @@ function startWeb(port: number, backendPort: number): ReturnType<typeof spawn> {
     },
   });
 
-  webProcess.on('error', (error) => {
+  webProcess.on("error", (error) => {
     console.error(`[dev] Web failed to start:`, error);
     process.exit(1);
   });
 
-  webProcess.on('exit', (code, signal) => {
+  webProcess.on("exit", (code, signal) => {
     if (signal) {
       console.log(`[dev] Web terminated by signal ${signal}`);
     } else if (code !== 0) {
@@ -163,31 +163,35 @@ function startWeb(port: number, backendPort: number): ReturnType<typeof spawn> {
  * Cleanup handler for graceful shutdown
  */
 async function shutdown() {
-  console.log('\n[dev] Shutting down...');
+  console.log("\n[dev] Shutting down...");
 
   // Only kill processes we started
   if (processes.backend.isManaged && processes.backend.process) {
-    console.log('[dev] Stopping backend...');
-    processes.backend.process.kill('SIGTERM');
+    console.log("[dev] Stopping backend...");
+    processes.backend.process.kill("SIGTERM");
   } else if (processes.backend.process) {
-    console.log('[dev] Backend was already running, leaving it as-is');
+    console.log("[dev] Backend was already running, leaving it as-is");
   }
 
   if (processes.web.process) {
-    console.log('[dev] Stopping web...');
-    processes.web.process.kill('SIGTERM');
+    console.log("[dev] Stopping web...");
+    processes.web.process.kill("SIGTERM");
   }
 
   // Give processes time to shut down gracefully
   await delay(1000);
 
   // Force kill if still running
-  if (processes.backend.isManaged && processes.backend.process && !processes.backend.process.killed) {
-    processes.backend.process.kill('SIGKILL');
+  if (
+    processes.backend.isManaged &&
+    processes.backend.process &&
+    !processes.backend.process.killed
+  ) {
+    processes.backend.process.kill("SIGKILL");
   }
 
   if (processes.web.process && !processes.web.process.killed) {
-    processes.web.process.kill('SIGKILL');
+    processes.web.process.kill("SIGKILL");
   }
 
   process.exit(0);
@@ -199,9 +203,12 @@ async function shutdown() {
 async function main(): Promise<void> {
   // Parse command line args
   const args = process.argv.slice(2);
-  const startNewBackend = args.includes('--be');
+  const startNewBackend = args.includes("--be");
 
-  const requestedBackendPort = parseInt(process.env.BACKEND_PORT || String(DEFAULT_BACKEND_PORT), 10);
+  const requestedBackendPort = parseInt(
+    process.env.BACKEND_PORT || String(DEFAULT_BACKEND_PORT),
+    10,
+  );
   const requestedWebPort = parseInt(process.env.PORT || String(DEFAULT_WEB_PORT), 10);
 
   // Determine backend port
@@ -227,12 +234,10 @@ async function main(): Promise<void> {
   }
 
   // Find available port for web (always auto-increment)
-  const webPort = process.env.PORT
-    ? requestedWebPort
-    : await findAvailablePort(requestedWebPort);
+  const webPort = process.env.PORT ? requestedWebPort : await findAvailablePort(requestedWebPort);
 
   console.log(`[dev] Boardsesh Development Orchestrator`);
-  console.log(`[dev] Backend port: ${backendPort}${startNewBackend ? ' (new instance)' : ''}`);
+  console.log(`[dev] Backend port: ${backendPort}${startNewBackend ? " (new instance)" : ""}`);
   console.log(`[dev] Web port: ${webPort}`);
   console.log();
 
@@ -269,11 +274,11 @@ async function main(): Promise<void> {
   processes.web.process = startWeb(webPort, backendPort);
 
   // Graceful shutdown
-  process.on('SIGINT', shutdown);
-  process.on('SIGTERM', shutdown);
+  process.on("SIGINT", shutdown);
+  process.on("SIGTERM", shutdown);
 }
 
 main().catch((error) => {
-  console.error('[dev] Fatal error:', error);
+  console.error("[dev] Fatal error:", error);
   process.exit(1);
 });

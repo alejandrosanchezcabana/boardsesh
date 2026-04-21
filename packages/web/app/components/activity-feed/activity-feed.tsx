@@ -1,25 +1,25 @@
-'use client';
+"use client";
 
-import React, { useMemo } from 'react';
-import Box from '@mui/material/Box';
-import MuiButton from '@mui/material/Button';
-import MuiAlert from '@mui/material/Alert';
-import PersonSearchOutlined from '@mui/icons-material/PersonSearchOutlined';
-import PublicOutlined from '@mui/icons-material/PublicOutlined';
-import ErrorOutline from '@mui/icons-material/ErrorOutline';
-import { useInfiniteQuery } from '@tanstack/react-query';
-import { EmptyState } from '@/app/components/ui/empty-state';
-import { useWsAuthToken } from '@/app/hooks/use-ws-auth-token';
-import { createGraphQLHttpClient } from '@/app/lib/graphql/client';
+import React, { useMemo } from "react";
+import Box from "@mui/material/Box";
+import MuiButton from "@mui/material/Button";
+import MuiAlert from "@mui/material/Alert";
+import PersonSearchOutlined from "@mui/icons-material/PersonSearchOutlined";
+import PublicOutlined from "@mui/icons-material/PublicOutlined";
+import ErrorOutline from "@mui/icons-material/ErrorOutline";
+import { useInfiniteQuery } from "@tanstack/react-query";
+import { EmptyState } from "@/app/components/ui/empty-state";
+import { useWsAuthToken } from "@/app/hooks/use-ws-auth-token";
+import { createGraphQLHttpClient } from "@/app/lib/graphql/client";
 import {
   GET_SESSION_GROUPED_FEED,
   type GetSessionGroupedFeedQueryResponse,
-} from '@/app/lib/graphql/operations';
-import type { SessionFeedItem, SessionFeedResult } from '@boardsesh/shared-schema';
-import { VoteSummaryProvider } from '@/app/components/social/vote-summary-context';
-import SessionFeedCard from './session-feed-card';
-import FeedItemSkeleton from './feed-item-skeleton';
-import { useInfiniteScroll } from '@/app/hooks/use-infinite-scroll';
+} from "@/app/lib/graphql/operations";
+import type { SessionFeedItem, SessionFeedResult } from "@boardsesh/shared-schema";
+import { VoteSummaryProvider } from "@/app/components/social/vote-summary-context";
+import SessionFeedCard from "./session-feed-card";
+import FeedItemSkeleton from "./feed-item-skeleton";
+import { useInfiniteScroll } from "@/app/hooks/use-infinite-scroll";
 
 /** Page type for the session-grouped feed */
 export type SessionFeedPage = SessionFeedResult;
@@ -45,55 +45,50 @@ export default function ActivityFeed({
 
   const hasInitialData = !!initialFeedResult && initialFeedResult.sessions.length > 0;
 
-  const queryKey = ['sessionFeed', boardUuid, userId] as const;
+  const queryKey = ["sessionFeed", boardUuid, userId] as const;
 
-  const { data, fetchNextPage, hasNextPage, isFetchingNextPage, isLoading, error, refetch } = useInfiniteQuery<
-    SessionFeedPage,
-    Error
-  >({
-    queryKey,
-    queryFn: async ({ pageParam }) => {
-      const client = createGraphQLHttpClient(isAuthenticated ? token : null);
-      const input = {
-        limit: 20,
-        cursor: pageParam as string | null,
-        boardUuid: boardUuid || undefined,
-        userId: userId || undefined,
-      };
+  const { data, fetchNextPage, hasNextPage, isFetchingNextPage, isLoading, error, refetch } =
+    useInfiniteQuery<SessionFeedPage, Error>({
+      queryKey,
+      queryFn: async ({ pageParam }) => {
+        const client = createGraphQLHttpClient(isAuthenticated ? token : null);
+        const input = {
+          limit: 20,
+          cursor: pageParam as string | null,
+          boardUuid: boardUuid || undefined,
+          userId: userId || undefined,
+        };
 
-      const response = await client.request<GetSessionGroupedFeedQueryResponse>(
-        GET_SESSION_GROUPED_FEED,
-        { input },
-      );
-      return response.sessionGroupedFeed;
-    },
-    initialPageParam: null as string | null,
-    getNextPageParam: (lastPage) => {
-      if (!lastPage.hasMore) return undefined;
-      return lastPage.cursor ?? undefined;
-    },
-    enabled: isAuthenticated ? !!token : true,
-    staleTime: isAuthenticated ? 60 * 1000 : 24 * 60 * 60 * 1000,
-    ...(hasInitialData
-      ? {
-          initialData: {
-            pages: [initialFeedResult!],
-            pageParams: [null],
-          },
-          initialDataUpdatedAt: Date.now(),
-        }
-      : {}),
-  });
+        const response = await client.request<GetSessionGroupedFeedQueryResponse>(
+          GET_SESSION_GROUPED_FEED,
+          { input },
+        );
+        return response.sessionGroupedFeed;
+      },
+      initialPageParam: null as string | null,
+      getNextPageParam: (lastPage) => {
+        if (!lastPage.hasMore) return undefined;
+        return lastPage.cursor ?? undefined;
+      },
+      enabled: isAuthenticated ? !!token : true,
+      staleTime: isAuthenticated ? 60 * 1000 : 24 * 60 * 60 * 1000,
+      ...(hasInitialData
+        ? {
+            initialData: {
+              pages: [initialFeedResult!],
+              pageParams: [null],
+            },
+            initialDataUpdatedAt: Date.now(),
+          }
+        : {}),
+    });
 
   const sessions: SessionFeedItem[] = useMemo(
     () => data?.pages.flatMap((p) => p.sessions) ?? [],
     [data],
   );
 
-  const sessionIds = useMemo(
-    () => sessions.map((s) => s.sessionId),
-    [sessions],
-  );
+  const sessionIds = useMemo(() => sessions.map((s) => s.sessionId), [sessions]);
 
   const { sentinelRef } = useInfiniteScroll({
     onLoadMore: fetchNextPage,
@@ -103,7 +98,10 @@ export default function ActivityFeed({
 
   if ((authLoading || isLoading) && sessions.length === 0) {
     return (
-      <Box data-testid="activity-feed" sx={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+      <Box
+        data-testid="activity-feed"
+        sx={{ display: "flex", flexDirection: "column", gap: "12px" }}
+      >
         <FeedItemSkeleton />
         <FeedItemSkeleton />
         <FeedItemSkeleton />
@@ -112,7 +110,7 @@ export default function ActivityFeed({
   }
 
   return (
-    <Box data-testid="activity-feed" sx={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+    <Box data-testid="activity-feed" sx={{ display: "flex", flexDirection: "column", gap: "12px" }}>
       {!isAuthenticated && (
         <MuiAlert severity="info" sx={{ mb: 1 }}>
           Sign in to see a personalized feed from climbers you follow.
@@ -122,8 +120,8 @@ export default function ActivityFeed({
       {isAuthenticated && !authLoading && !token && (
         <MuiAlert severity="warning" sx={{ mb: 1 }}>
           {authError
-            ? 'Signed in, but Boardsesh could not load authenticated session data on this device.'
-            : 'Signed in, but Boardsesh could not access authenticated session data on this device.'}
+            ? "Signed in, but Boardsesh could not load authenticated session data on this device."
+            : "Signed in, but Boardsesh could not access authenticated session data on this device."}
         </MuiAlert>
       )}
 
@@ -161,7 +159,11 @@ export default function ActivityFeed({
           {sessions.map((session) => (
             <SessionFeedCard key={session.sessionId} session={session} />
           ))}
-          <Box ref={sentinelRef} data-testid="activity-feed-sentinel" sx={{ display: 'flex', flexDirection: 'column', gap: '12px', py: 2, minHeight: 20 }}>
+          <Box
+            ref={sentinelRef}
+            data-testid="activity-feed-sentinel"
+            sx={{ display: "flex", flexDirection: "column", gap: "12px", py: 2, minHeight: 20 }}
+          >
             {isFetchingNextPage && (
               <>
                 <FeedItemSkeleton />

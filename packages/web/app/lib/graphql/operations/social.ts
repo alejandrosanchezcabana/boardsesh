@@ -1,4 +1,4 @@
-import { gql } from 'graphql-request';
+import { gql } from "graphql-request";
 import type {
   PublicUserProfile,
   FollowConnection,
@@ -6,7 +6,7 @@ import type {
   UnifiedSearchConnection,
   FollowingAscentsFeedResult,
   SetterProfile,
-} from '@boardsesh/shared-schema';
+} from "@boardsesh/shared-schema";
 
 // ============================================
 // Follow Mutations
@@ -332,7 +332,7 @@ export interface GetSetterClimbsFullQueryVariables {
 
 export interface GetSetterClimbsFullQueryResponse {
   setterClimbsFull: {
-    climbs: import('@/app/lib/types').Climb[];
+    climbs: import("@/app/lib/types").Climb[];
     totalCount: number;
     hasMore: boolean;
   };
@@ -378,7 +378,7 @@ export interface GetUserClimbsQueryVariables {
 
 export interface GetUserClimbsQueryResponse {
   userClimbs: {
-    climbs: import('@/app/lib/types').Climb[];
+    climbs: import("@/app/lib/types").Climb[];
     totalCount: number;
     hasMore: boolean;
   };

@@ -1,5 +1,5 @@
-import { notFound, redirect } from 'next/navigation';
-import { resolveBoardBySlug } from '@/app/lib/board-slug-utils';
+import { notFound, redirect } from "next/navigation";
+import { resolveBoardBySlug } from "@/app/lib/board-slug-utils";
 
 interface BoardSlugPageParams {
   board_slug: string;

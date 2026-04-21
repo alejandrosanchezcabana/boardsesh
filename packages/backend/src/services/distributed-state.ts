@@ -1,5 +1,5 @@
-export { DistributedStateManager } from './distributed-state/index';
-export type { DistributedConnection } from './distributed-state/index';
+export { DistributedStateManager } from "./distributed-state/index";
+export type { DistributedConnection } from "./distributed-state/index";
 export {
   initializeDistributedState,
   getDistributedState,
@@ -7,4 +7,4 @@ export {
   shutdownDistributedState,
   resetDistributedState,
   forceResetDistributedState,
-} from './distributed-state/index';
+} from "./distributed-state/index";

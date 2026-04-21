@@ -1,4 +1,4 @@
-import { track } from '@vercel/analytics';
+import { track } from "@vercel/analytics";
 
 type ShareOptions = {
   /** The full URL to share */
@@ -22,14 +22,14 @@ type ShareOptions = {
  * navigator.clipboard is unavailable.
  */
 function legacyCopy(text: string): boolean {
-  const textarea = document.createElement('textarea');
+  const textarea = document.createElement("textarea");
   textarea.value = text;
-  textarea.style.position = 'fixed';
-  textarea.style.opacity = '0';
+  textarea.style.position = "fixed";
+  textarea.style.opacity = "0";
   document.body.appendChild(textarea);
   textarea.select();
   try {
-    return document.execCommand('copy');
+    return document.execCommand("copy");
   } finally {
     document.body.removeChild(textarea);
   }
@@ -39,7 +39,7 @@ async function copyToClipboard(text: string): Promise<void> {
   if (navigator.clipboard?.writeText) {
     await navigator.clipboard.writeText(text);
   } else if (!legacyCopy(text)) {
-    throw new Error('Copy failed');
+    throw new Error("Copy failed");
   }
 }
 
@@ -57,20 +57,20 @@ export async function shareWithFallback({
   try {
     if (navigator.share && navigator.canShare?.(shareData)) {
       await navigator.share(shareData);
-      track(trackingEvent, { ...trackingProps, method: 'native' });
+      track(trackingEvent, { ...trackingProps, method: "native" });
       return true;
     } else {
       await copyToClipboard(url);
       onClipboardSuccess?.();
-      track(trackingEvent, { ...trackingProps, method: 'clipboard' });
+      track(trackingEvent, { ...trackingProps, method: "clipboard" });
       return true;
     }
   } catch (error) {
-    if ((error as Error).name !== 'AbortError') {
+    if ((error as Error).name !== "AbortError") {
       try {
         await copyToClipboard(url);
         onClipboardSuccess?.();
-        track(trackingEvent, { ...trackingProps, method: 'clipboard' });
+        track(trackingEvent, { ...trackingProps, method: "clipboard" });
         return true;
       } catch {
         onError?.();

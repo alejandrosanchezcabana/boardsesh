@@ -2,19 +2,19 @@
 
 ## Basic Info
 
-| Field | Value |
-|-------|-------|
-| App Name | Boardsesh |
-| Package Name | com.boardsesh.app |
-| Category | Health & Fitness |
-| Tags | Sports, Fitness |
-| Content Rating | Everyone (IARC) |
-| Pricing | Free |
-| Contains Ads | No |
-| In-app Purchases | No |
-| Contact Email | TODO: fill in team contact email |
-| Support URL | https://boardsesh.com |
-| Privacy Policy URL | https://boardsesh.com/privacy |
+| Field              | Value                            |
+| ------------------ | -------------------------------- |
+| App Name           | Boardsesh                        |
+| Package Name       | com.boardsesh.app                |
+| Category           | Health & Fitness                 |
+| Tags               | Sports, Fitness                  |
+| Content Rating     | Everyone (IARC)                  |
+| Pricing            | Free                             |
+| Contains Ads       | No                               |
+| In-app Purchases   | No                               |
+| Contact Email      | TODO: fill in team contact email |
+| Support URL        | https://boardsesh.com            |
+| Privacy Policy URL | https://boardsesh.com/privacy    |
 
 ## Short Description
 
@@ -72,6 +72,7 @@ Requires Bluetooth Low Energy (BLE) for board connection. Works without a board 
 ## Screenshots
 
 **Specs:**
+
 - Minimum 2, maximum 8 per device type (phone, 7-inch tablet, 10-inch tablet)
 - JPEG or PNG, 16:9 or 9:16 aspect ratio
 - Minimum 320px, maximum 3840px per side
@@ -97,6 +98,7 @@ First release. Connect to your Kilter, Tension, or MoonBoard over Bluetooth. Bro
 Internal reference for QA and closed testing tracks. Not a Play Store field.
 
 **Demo Account**
+
 - Email: test@boardsesh.com
 - Password: test
 
@@ -121,15 +123,15 @@ Internal reference for QA and closed testing tracks. Not a Play Store field.
 
 ### Data Collected
 
-| Data type | Collected | Shared | Purpose | Optional |
-|-----------|-----------|--------|---------|----------|
-| Email address | Yes | No | Account management | No (required for account) |
-| Name | Yes | No | App functionality, personalization | No (required for profile) |
-| Approximate location | Yes | No | App functionality | Yes |
-| Precise location | Yes | No | App functionality | Yes |
-| Health info - Fitness activity | Yes | No | App functionality | Yes |
-| App interactions | Yes | No | Analytics | No (collected automatically) |
-| Crash logs | Yes | No | Analytics | No (collected automatically) |
+| Data type                      | Collected | Shared | Purpose                            | Optional                     |
+| ------------------------------ | --------- | ------ | ---------------------------------- | ---------------------------- |
+| Email address                  | Yes       | No     | Account management                 | No (required for account)    |
+| Name                           | Yes       | No     | App functionality, personalization | No (required for profile)    |
+| Approximate location           | Yes       | No     | App functionality                  | Yes                          |
+| Precise location               | Yes       | No     | App functionality                  | Yes                          |
+| Health info - Fitness activity | Yes       | No     | App functionality                  | Yes                          |
+| App interactions               | Yes       | No     | Analytics                          | No (collected automatically) |
+| Crash logs                     | Yes       | No     | Analytics                          | No (collected automatically) |
 
 ### Data NOT Collected
 

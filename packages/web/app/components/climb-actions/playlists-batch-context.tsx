@@ -1,11 +1,11 @@
-'use client';
+"use client";
 
-import React, { useMemo } from 'react';
-import { createTypedContext } from '@/app/lib/create-typed-context';
-import type { Playlist } from '@/app/lib/graphql/operations/playlists';
+import React, { useMemo } from "react";
+import { createTypedContext } from "@/app/lib/create-typed-context";
+import type { Playlist } from "@/app/lib/graphql/operations/playlists";
 
 // Re-export Playlist type for convenience
-export type { Playlist } from '@/app/lib/graphql/operations/playlists';
+export type { Playlist } from "@/app/lib/graphql/operations/playlists";
 
 interface PlaylistsContextValue {
   playlists: Playlist[];
@@ -16,14 +16,14 @@ interface PlaylistsContextValue {
     name: string,
     description?: string,
     color?: string,
-    icon?: string
+    icon?: string,
   ) => Promise<Playlist>;
   isLoading: boolean;
   isAuthenticated: boolean;
   refreshPlaylists: () => Promise<void>;
 }
 
-const [PlaylistsCtx, usePlaylistsContext] = createTypedContext<PlaylistsContextValue>('Playlists');
+const [PlaylistsCtx, usePlaylistsContext] = createTypedContext<PlaylistsContextValue>("Playlists");
 
 export const PlaylistsContext = PlaylistsCtx;
 export { usePlaylistsContext };
@@ -37,7 +37,7 @@ interface PlaylistsProviderProps {
     name: string,
     description?: string,
     color?: string,
-    icon?: string
+    icon?: string,
   ) => Promise<Playlist>;
   isLoading: boolean;
   isAuthenticated: boolean;
@@ -60,7 +60,7 @@ export function PlaylistsProvider({
     () => (climbUuid: string) => {
       return playlistMemberships.get(climbUuid) || new Set<string>();
     },
-    [playlistMemberships]
+    [playlistMemberships],
   );
 
   const value = useMemo<PlaylistsContextValue>(
@@ -83,7 +83,7 @@ export function PlaylistsProvider({
       isLoading,
       isAuthenticated,
       refreshPlaylists,
-    ]
+    ],
   );
 
   return <PlaylistsContext.Provider value={value}>{children}</PlaylistsContext.Provider>;

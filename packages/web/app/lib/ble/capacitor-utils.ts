@@ -1,5 +1,5 @@
 export const isCapacitor = (): boolean =>
-  typeof window !== 'undefined' && window.Capacitor !== undefined;
+  typeof window !== "undefined" && window.Capacitor !== undefined;
 
 interface CapacitorBleManualScanPlugin {
   requestLEScan?: unknown;
@@ -23,8 +23,8 @@ export const supportsCapacitorBleManualScan = (): boolean => {
  * it appears — it primarily matches native-app WKWebViews.
  */
 export const isCapacitorWebView = (): boolean => {
-  if (typeof navigator === 'undefined') return false;
-  const ua = navigator.userAgent || '';
+  if (typeof navigator === "undefined") return false;
+  const ua = navigator.userAgent || "";
   const isAndroidWebView = /Android/.test(ua) && /\bwv\b/.test(ua);
   const isIOSWebView = /iPhone|iPad|iPod/.test(ua) && !/Safari/.test(ua);
   return isAndroidWebView || isIOSWebView;
@@ -62,9 +62,9 @@ export const waitForCapacitor = (
 export const isNativeApp = (): boolean =>
   isCapacitor() && window.Capacitor?.isNativePlatform?.() === true;
 
-export const getPlatform = (): 'ios' | 'android' | 'web' => {
-  if (!isCapacitor()) return 'web';
+export const getPlatform = (): "ios" | "android" | "web" => {
+  if (!isCapacitor()) return "web";
   const platform = window.Capacitor?.getPlatform?.();
-  if (platform === 'ios' || platform === 'android') return platform;
-  return 'web';
+  if (platform === "ios" || platform === "android") return platform;
+  return "web";
 };

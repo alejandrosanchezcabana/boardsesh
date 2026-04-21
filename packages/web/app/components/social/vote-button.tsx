@@ -1,16 +1,16 @@
-'use client';
+"use client";
 
-import React, { useState, useCallback, useEffect, useRef } from 'react';
-import Box from '@mui/material/Box';
-import IconButton from '@mui/material/IconButton';
-import MuiTypography from '@mui/material/Typography';
-import ArrowUpwardOutlined from '@mui/icons-material/ArrowUpwardOutlined';
-import ArrowDownwardOutlined from '@mui/icons-material/ArrowDownwardOutlined';
-import FavoriteBorderOutlined from '@mui/icons-material/FavoriteBorderOutlined';
-import FavoriteOutlined from '@mui/icons-material/FavoriteOutlined';
-import { useWsAuthToken } from '@/app/hooks/use-ws-auth-token';
-import { useSnackbar } from '@/app/components/providers/snackbar-provider';
-import { createGraphQLHttpClient } from '@/app/lib/graphql/client';
+import React, { useState, useCallback, useEffect, useRef } from "react";
+import Box from "@mui/material/Box";
+import IconButton from "@mui/material/IconButton";
+import MuiTypography from "@mui/material/Typography";
+import ArrowUpwardOutlined from "@mui/icons-material/ArrowUpwardOutlined";
+import ArrowDownwardOutlined from "@mui/icons-material/ArrowDownwardOutlined";
+import FavoriteBorderOutlined from "@mui/icons-material/FavoriteBorderOutlined";
+import FavoriteOutlined from "@mui/icons-material/FavoriteOutlined";
+import { useWsAuthToken } from "@/app/hooks/use-ws-auth-token";
+import { useSnackbar } from "@/app/components/providers/snackbar-provider";
+import { createGraphQLHttpClient } from "@/app/lib/graphql/client";
 import {
   VOTE,
   GET_VOTE_SUMMARY,
@@ -18,10 +18,10 @@ import {
   type VoteMutationResponse,
   type GetVoteSummaryQueryVariables,
   type GetVoteSummaryQueryResponse,
-} from '@/app/lib/graphql/operations';
-import { themeTokens } from '@/app/theme/theme-config';
-import type { SocialEntityType } from '@boardsesh/shared-schema';
-import { useVoteSummaryContext } from './vote-summary-context';
+} from "@/app/lib/graphql/operations";
+import { themeTokens } from "@/app/theme/theme-config";
+import type { SocialEntityType } from "@boardsesh/shared-schema";
+import { useVoteSummaryContext } from "./vote-summary-context";
 
 interface VoteButtonProps {
   entityType: SocialEntityType;
@@ -29,9 +29,14 @@ interface VoteButtonProps {
   initialUpvotes?: number;
   initialDownvotes?: number;
   initialUserVote?: number;
-  layout?: 'vertical' | 'horizontal';
+  layout?: "vertical" | "horizontal";
   likeOnly?: boolean;
-  onVoteChange?: (summary: { upvotes: number; downvotes: number; voteScore: number; userVote: number }) => void;
+  onVoteChange?: (summary: {
+    upvotes: number;
+    downvotes: number;
+    voteScore: number;
+    userVote: number;
+  }) => void;
 }
 
 export default function VoteButton({
@@ -40,7 +45,7 @@ export default function VoteButton({
   initialUpvotes = 0,
   initialDownvotes = 0,
   initialUserVote,
-  layout = 'horizontal',
+  layout = "horizontal",
   likeOnly = false,
   onVoteChange,
 }: VoteButtonProps) {
@@ -89,10 +94,10 @@ export default function VoteButton({
     const fetchVoteSummary = async () => {
       try {
         const client = createGraphQLHttpClient(token);
-        const response = await client.request<GetVoteSummaryQueryResponse, GetVoteSummaryQueryVariables>(
-          GET_VOTE_SUMMARY,
-          { entityType, entityId },
-        );
+        const response = await client.request<
+          GetVoteSummaryQueryResponse,
+          GetVoteSummaryQueryVariables
+        >(GET_VOTE_SUMMARY, { entityType, entityId });
         if (!cancelled && !hasVotedRef.current) {
           const summary = response.voteSummary;
           setUpvotes(summary.upvotes);
@@ -114,7 +119,7 @@ export default function VoteButton({
   const handleVote = useCallback(
     async (value: 1 | -1) => {
       if (!isAuthenticated || !token) {
-        showMessage('Sign in to vote', 'info');
+        showMessage("Sign in to vote", "info");
         return;
       }
 
@@ -156,10 +161,9 @@ export default function VoteButton({
       setIsLoading(true);
       try {
         const client = createGraphQLHttpClient(token);
-        const response = await client.request<VoteMutationResponse, VoteMutationVariables>(
-          VOTE,
-          { input: { entityType, entityId, value } },
-        );
+        const response = await client.request<VoteMutationResponse, VoteMutationVariables>(VOTE, {
+          input: { entityType, entityId, value },
+        });
 
         // Use server response as source of truth
         const s = response.vote;
@@ -178,28 +182,38 @@ export default function VoteButton({
           voteScore: prevUpvotes - prevDownvotes,
           userVote: prevUserVote,
         });
-        showMessage('Failed to vote', 'error');
+        showMessage("Failed to vote", "error");
       } finally {
         setIsLoading(false);
       }
     },
-    [upvotes, downvotes, userVote, isAuthenticated, token, entityType, entityId, onVoteChange, showMessage],
+    [
+      upvotes,
+      downvotes,
+      userVote,
+      isAuthenticated,
+      token,
+      entityType,
+      entityId,
+      onVoteChange,
+      showMessage,
+    ],
   );
 
   const score = upvotes - downvotes;
-  const isVertical = layout === 'vertical';
+  const isVertical = layout === "vertical";
   const isLiked = userVote === 1;
 
   if (likeOnly) {
     return (
-      <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+      <Box sx={{ display: "flex", alignItems: "center", gap: 0.5 }}>
         <IconButton
           size="small"
           onClick={() => handleVote(1)}
           disabled={isLoading}
-          aria-label={isLiked ? 'Unlike' : 'Like'}
+          aria-label={isLiked ? "Unlike" : "Like"}
           sx={{
-            color: isLiked ? themeTokens.colors.error : 'var(--neutral-400)',
+            color: isLiked ? themeTokens.colors.error : "var(--neutral-400)",
             p: 0.5,
           }}
         >
@@ -213,7 +227,7 @@ export default function VoteButton({
           <MuiTypography
             variant="body2"
             sx={{
-              color: isLiked ? themeTokens.colors.error : 'var(--neutral-500)',
+              color: isLiked ? themeTokens.colors.error : "var(--neutral-500)",
               fontSize: themeTokens.typography.fontSize.xs,
             }}
           >
@@ -227,9 +241,9 @@ export default function VoteButton({
   return (
     <Box
       sx={{
-        display: 'flex',
-        flexDirection: isVertical ? 'column' : 'row',
-        alignItems: 'center',
+        display: "flex",
+        flexDirection: isVertical ? "column" : "row",
+        alignItems: "center",
         gap: 0,
       }}
     >
@@ -239,7 +253,7 @@ export default function VoteButton({
         disabled={isLoading}
         aria-label="Upvote"
         sx={{
-          color: userVote === 1 ? themeTokens.colors.success : 'var(--neutral-400)',
+          color: userVote === 1 ? themeTokens.colors.success : "var(--neutral-400)",
           p: 0.5,
         }}
       >
@@ -250,13 +264,13 @@ export default function VoteButton({
         fontWeight={600}
         sx={{
           minWidth: 20,
-          textAlign: 'center',
+          textAlign: "center",
           color:
             userVote === 1
               ? themeTokens.colors.success
               : userVote === -1
                 ? themeTokens.colors.error
-                : 'var(--neutral-600)',
+                : "var(--neutral-600)",
         }}
       >
         {score}
@@ -267,7 +281,7 @@ export default function VoteButton({
         disabled={isLoading}
         aria-label="Downvote"
         sx={{
-          color: userVote === -1 ? themeTokens.colors.error : 'var(--neutral-400)',
+          color: userVote === -1 ? themeTokens.colors.error : "var(--neutral-400)",
           p: 0.5,
         }}
       >

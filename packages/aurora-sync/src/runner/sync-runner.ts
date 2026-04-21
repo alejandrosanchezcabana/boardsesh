@@ -1,15 +1,15 @@
-import { neon, neonConfig, Pool } from '@neondatabase/serverless';
-import { drizzle as drizzleHttp } from 'drizzle-orm/neon-http';
-import { drizzle } from 'drizzle-orm/neon-serverless';
-import { eq, ne, and, or, isNotNull, sql } from 'drizzle-orm';
-import ws from 'ws';
+import { neon, neonConfig, Pool } from "@neondatabase/serverless";
+import { drizzle as drizzleHttp } from "drizzle-orm/neon-http";
+import { drizzle } from "drizzle-orm/neon-serverless";
+import { eq, ne, and, or, isNotNull, sql } from "drizzle-orm";
+import ws from "ws";
 
-import { auroraCredentials } from '@boardsesh/db/schema/auth';
-import { syncUserData } from '../sync/user-sync';
-import { AuroraClimbingClient } from '../api/aurora-client';
-import { decrypt, encrypt } from '@boardsesh/crypto';
-import type { AuroraBoardName } from '../api/types';
-import type { SyncRunnerConfig, SyncSummary, CredentialRecord } from './types';
+import { auroraCredentials } from "@boardsesh/db/schema/auth";
+import { syncUserData } from "../sync/user-sync";
+import { AuroraClimbingClient } from "../api/aurora-client";
+import { decrypt, encrypt } from "@boardsesh/crypto";
+import type { AuroraBoardName } from "../api/types";
+import type { SyncRunnerConfig, SyncSummary, CredentialRecord } from "./types";
 
 // Configure WebSocket constructor for Node.js environment
 neonConfig.webSocketConstructor = ws;
@@ -20,7 +20,7 @@ neonConfig.webSocketConstructor = ws;
 function createFreshPool(): Pool {
   const connectionString = process.env.DATABASE_URL;
   if (!connectionString) {
-    throw new Error('DATABASE_URL is required');
+    throw new Error("DATABASE_URL is required");
   }
   return new Pool({
     connectionString,
@@ -36,7 +36,7 @@ function createFreshPool(): Pool {
 function createHttpDb() {
   const connectionString = process.env.DATABASE_URL;
   if (!connectionString) {
-    throw new Error('DATABASE_URL is required');
+    throw new Error("DATABASE_URL is required");
   }
   const sql = neon(connectionString);
   return drizzleHttp({ client: sql });
@@ -94,7 +94,7 @@ export class SyncRunner {
       this.log(`[SyncRunner] ✓ Successfully synced user ${cred.userId} for ${cred.boardType}`);
     } catch (error) {
       results.failed++;
-      const errorMsg = error instanceof Error ? error.message : 'Unknown error';
+      const errorMsg = error instanceof Error ? error.message : "Unknown error";
       results.errors.push({
         userId: cred.userId,
         boardType: cred.boardType,
@@ -104,7 +104,9 @@ export class SyncRunner {
         userId: cred.userId,
         board: cred.boardType,
       });
-      this.log(`[SyncRunner] ✗ Failed to sync user ${cred.userId} for ${cred.boardType}: ${errorMsg}`);
+      this.log(
+        `[SyncRunner] ✗ Failed to sync user ${cred.userId} for ${cred.boardType}: ${errorMsg}`,
+      );
     }
 
     return results;
@@ -137,7 +139,7 @@ export class SyncRunner {
         this.log(`[SyncRunner] ✓ Successfully synced user ${cred.userId} for ${cred.boardType}`);
       } catch (error) {
         results.failed++;
-        const errorMsg = error instanceof Error ? error.message : 'Unknown error';
+        const errorMsg = error instanceof Error ? error.message : "Unknown error";
         results.errors.push({
           userId: cred.userId,
           boardType: cred.boardType,
@@ -147,7 +149,9 @@ export class SyncRunner {
           userId: cred.userId,
           board: cred.boardType,
         });
-        this.log(`[SyncRunner] ✗ Failed to sync user ${cred.userId} for ${cred.boardType}: ${errorMsg}`);
+        this.log(
+          `[SyncRunner] ✗ Failed to sync user ${cred.userId} for ${cred.boardType}: ${errorMsg}`,
+        );
       }
     }
 
@@ -182,12 +186,12 @@ export class SyncRunner {
       .from(auroraCredentials)
       .where(
         and(
-          or(eq(auroraCredentials.syncStatus, 'active'), eq(auroraCredentials.syncStatus, 'error')),
+          or(eq(auroraCredentials.syncStatus, "active"), eq(auroraCredentials.syncStatus, "error")),
           isNotNull(auroraCredentials.encryptedUsername),
           isNotNull(auroraCredentials.encryptedPassword),
           isNotNull(auroraCredentials.auroraUserId),
           // Kilter backend is permanently down
-          ne(auroraCredentials.boardType, 'kilter'),
+          ne(auroraCredentials.boardType, "kilter"),
         ),
       );
 
@@ -203,12 +207,12 @@ export class SyncRunner {
       .from(auroraCredentials)
       .where(
         and(
-          or(eq(auroraCredentials.syncStatus, 'active'), eq(auroraCredentials.syncStatus, 'error')),
+          or(eq(auroraCredentials.syncStatus, "active"), eq(auroraCredentials.syncStatus, "error")),
           isNotNull(auroraCredentials.encryptedUsername),
           isNotNull(auroraCredentials.encryptedPassword),
           isNotNull(auroraCredentials.auroraUserId),
           // Kilter backend is permanently down
-          ne(auroraCredentials.boardType, 'kilter'),
+          ne(auroraCredentials.boardType, "kilter"),
         ),
       )
       .orderBy(sql`${auroraCredentials.lastSyncAt} ASC NULLS FIRST`) // Never-synced users first, then oldest
@@ -219,7 +223,7 @@ export class SyncRunner {
 
   private async syncSingleCredential(cred: CredentialRecord): Promise<void> {
     if (!cred.encryptedUsername || !cred.encryptedPassword || !cred.auroraUserId) {
-      throw new Error('Missing credentials or user ID');
+      throw new Error("Missing credentials or user ID");
     }
 
     const boardType = cred.boardType as AuroraBoardName;
@@ -231,7 +235,12 @@ export class SyncRunner {
       username = decrypt(cred.encryptedUsername);
       password = decrypt(cred.encryptedPassword);
     } catch (decryptError) {
-      await this.updateCredentialStatus(cred.userId, cred.boardType, 'error', `Decryption failed: ${decryptError}`);
+      await this.updateCredentialStatus(
+        cred.userId,
+        cred.boardType,
+        "error",
+        `Decryption failed: ${decryptError}`,
+      );
       throw new Error(`Failed to decrypt credentials: ${decryptError}`);
     }
 
@@ -243,11 +252,16 @@ export class SyncRunner {
     try {
       const loginResponse = await auroraClient.signIn(username, password);
       if (!loginResponse.token) {
-        throw new Error('Login succeeded but no token returned');
+        throw new Error("Login succeeded but no token returned");
       }
       token = loginResponse.token;
     } catch (loginError) {
-      await this.updateCredentialStatus(cred.userId, cred.boardType, 'error', `Login failed: ${loginError}`);
+      await this.updateCredentialStatus(
+        cred.userId,
+        cred.boardType,
+        "error",
+        `Login failed: ${loginError}`,
+      );
       throw new Error(`Failed to login: ${loginError}`);
     }
 
@@ -259,10 +273,18 @@ export class SyncRunner {
     try {
       // Sync user data - pass NextAuth userId directly since we have it
       this.log(`[SyncRunner] Syncing user ${cred.userId} for ${boardType}...`);
-      await syncUserData(pool, boardType, token, cred.auroraUserId, cred.userId, undefined, this.log.bind(this));
+      await syncUserData(
+        pool,
+        boardType,
+        token,
+        cred.auroraUserId,
+        cred.userId,
+        undefined,
+        this.log.bind(this),
+      );
 
       // Update last sync time on success
-      await this.updateCredentialStatus(cred.userId, cred.boardType, 'active', null, new Date());
+      await this.updateCredentialStatus(cred.userId, cred.boardType, "active", null, new Date());
     } finally {
       // Always close the pool when done
       await pool.end();

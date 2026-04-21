@@ -29,7 +29,7 @@ export function fnv1aHash(str: string): string {
   }
 
   // Convert to unsigned 32-bit integer and return as hex
-  return (hash >>> 0).toString(16).padStart(8, '0');
+  return (hash >>> 0).toString(16).padStart(8, "0");
 }
 
 /**
@@ -44,11 +44,14 @@ export function fnv1aHash(str: string): string {
  */
 export function computeQueueStateHash(
   queue: Array<{ uuid: string }>,
-  currentItemUuid: string | null
+  currentItemUuid: string | null,
 ): string {
   // Create canonical representation: sorted queue UUIDs + current UUID
-  const queueUuids = queue.map(item => item.uuid).sort().join(',');
-  const currentUuid = currentItemUuid || 'null';
+  const queueUuids = queue
+    .map((item) => item.uuid)
+    .sort()
+    .join(",");
+  const currentUuid = currentItemUuid || "null";
   const canonical = `${queueUuids}|${currentUuid}`;
 
   return fnv1aHash(canonical);

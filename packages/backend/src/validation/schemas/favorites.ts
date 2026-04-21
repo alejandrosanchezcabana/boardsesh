@@ -1,5 +1,5 @@
-import { z } from 'zod';
-import { ExternalUUIDSchema, BoardNameSchema } from './primitives';
+import { z } from "zod";
+import { ExternalUUIDSchema, BoardNameSchema } from "./primitives";
 
 /**
  * Toggle favorite input validation schema

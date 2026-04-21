@@ -12,17 +12,17 @@
  *   public/openapi.json
  */
 
-import { writeFileSync, mkdirSync } from 'fs';
-import { dirname, join } from 'path';
-import { fileURLToPath } from 'url';
+import { writeFileSync, mkdirSync } from "fs";
+import { dirname, join } from "path";
+import { fileURLToPath } from "url";
 
 // Import the generator
-import { generateOpenApiDocument } from '../app/lib/api-docs/generate-openapi';
+import { generateOpenApiDocument } from "../app/lib/api-docs/generate-openapi";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
-const outputPath = join(__dirname, '../public/openapi.json');
+const outputPath = join(__dirname, "../public/openapi.json");
 
-console.log('Generating OpenAPI specification...');
+console.log("Generating OpenAPI specification...");
 
 const spec = generateOpenApiDocument();
 

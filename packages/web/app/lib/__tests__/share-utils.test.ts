@@ -1,20 +1,20 @@
-import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { shareWithFallback } from '../share-utils';
+import { describe, it, expect, vi, beforeEach, afterEach } from "vite-plus/test";
+import { shareWithFallback } from "../share-utils";
 
 // Mock @vercel/analytics
-vi.mock('@vercel/analytics', () => ({
+vi.mock("@vercel/analytics", () => ({
   track: vi.fn(),
 }));
 
 const baseOptions = {
-  url: 'https://boardsesh.com/test',
-  title: 'Test Share',
-  text: 'Check this out',
-  trackingEvent: 'Test Shared',
-  trackingProps: { source: 'unit-test' },
+  url: "https://boardsesh.com/test",
+  title: "Test Share",
+  text: "Check this out",
+  trackingEvent: "Test Shared",
+  trackingProps: { source: "unit-test" },
 };
 
-describe('shareWithFallback', () => {
+describe("shareWithFallback", () => {
   let originalNavigator: Navigator;
 
   beforeEach(() => {
@@ -23,7 +23,7 @@ describe('shareWithFallback', () => {
   });
 
   afterEach(() => {
-    Object.defineProperty(globalThis, 'navigator', {
+    Object.defineProperty(globalThis, "navigator", {
       value: originalNavigator,
       configurable: true,
       writable: true,
@@ -31,15 +31,15 @@ describe('shareWithFallback', () => {
   });
 
   function mockNavigator(overrides: Partial<Navigator>) {
-    Object.defineProperty(globalThis, 'navigator', {
+    Object.defineProperty(globalThis, "navigator", {
       value: { ...originalNavigator, ...overrides },
       configurable: true,
       writable: true,
     });
   }
 
-  describe('native share path', () => {
-    it('uses navigator.share when available and canShare returns true', async () => {
+  describe("native share path", () => {
+    it("uses navigator.share when available and canShare returns true", async () => {
       const share = vi.fn().mockResolvedValue(undefined);
       const canShare = vi.fn().mockReturnValue(true);
       mockNavigator({ share, canShare } as unknown as Partial<Navigator>);
@@ -54,8 +54,8 @@ describe('shareWithFallback', () => {
       });
     });
 
-    it('returns false when native share is cancelled (AbortError)', async () => {
-      const abortError = new DOMException('Share cancelled', 'AbortError');
+    it("returns false when native share is cancelled (AbortError)", async () => {
+      const abortError = new DOMException("Share cancelled", "AbortError");
       const share = vi.fn().mockRejectedValue(abortError);
       const canShare = vi.fn().mockReturnValue(true);
       mockNavigator({ share, canShare } as unknown as Partial<Navigator>);
@@ -67,8 +67,8 @@ describe('shareWithFallback', () => {
       expect(onError).not.toHaveBeenCalled();
     });
 
-    it('falls back to clipboard when native share fails with non-AbortError', async () => {
-      const share = vi.fn().mockRejectedValue(new Error('Share failed'));
+    it("falls back to clipboard when native share fails with non-AbortError", async () => {
+      const share = vi.fn().mockRejectedValue(new Error("Share failed"));
       const canShare = vi.fn().mockReturnValue(true);
       const writeText = vi.fn().mockResolvedValue(undefined);
       mockNavigator({
@@ -86,8 +86,8 @@ describe('shareWithFallback', () => {
     });
   });
 
-  describe('clipboard fallback path', () => {
-    it('copies to clipboard when navigator.share is unavailable', async () => {
+  describe("clipboard fallback path", () => {
+    it("copies to clipboard when navigator.share is unavailable", async () => {
       const writeText = vi.fn().mockResolvedValue(undefined);
       mockNavigator({
         share: undefined,
@@ -102,7 +102,7 @@ describe('shareWithFallback', () => {
       expect(onClipboardSuccess).toHaveBeenCalled();
     });
 
-    it('copies to clipboard when canShare returns false', async () => {
+    it("copies to clipboard when canShare returns false", async () => {
       const writeText = vi.fn().mockResolvedValue(undefined);
       mockNavigator({
         share: vi.fn(),
@@ -117,7 +117,7 @@ describe('shareWithFallback', () => {
       expect(writeText).toHaveBeenCalledWith(baseOptions.url);
     });
 
-    it('copies to clipboard when canShare is undefined', async () => {
+    it("copies to clipboard when canShare is undefined", async () => {
       const writeText = vi.fn().mockResolvedValue(undefined);
       mockNavigator({
         share: vi.fn(),
@@ -133,11 +133,11 @@ describe('shareWithFallback', () => {
     });
   });
 
-  describe('error handling', () => {
-    it('calls onError when both share and clipboard fail', async () => {
-      const share = vi.fn().mockRejectedValue(new Error('Share failed'));
+  describe("error handling", () => {
+    it("calls onError when both share and clipboard fail", async () => {
+      const share = vi.fn().mockRejectedValue(new Error("Share failed"));
       const canShare = vi.fn().mockReturnValue(true);
-      const writeText = vi.fn().mockRejectedValue(new Error('Clipboard failed'));
+      const writeText = vi.fn().mockRejectedValue(new Error("Clipboard failed"));
       mockNavigator({
         share,
         canShare,
@@ -151,8 +151,8 @@ describe('shareWithFallback', () => {
       expect(onError).toHaveBeenCalled();
     });
 
-    it('returns false without calling onError when AbortError and clipboard not attempted', async () => {
-      const abortError = new DOMException('Aborted', 'AbortError');
+    it("returns false without calling onError when AbortError and clipboard not attempted", async () => {
+      const abortError = new DOMException("Aborted", "AbortError");
       const share = vi.fn().mockRejectedValue(abortError);
       const canShare = vi.fn().mockReturnValue(true);
       mockNavigator({ share, canShare } as unknown as Partial<Navigator>);
@@ -167,24 +167,24 @@ describe('shareWithFallback', () => {
     });
   });
 
-  describe('analytics tracking', () => {
-    it('tracks native share method', async () => {
-      const { track } = await import('@vercel/analytics');
+  describe("analytics tracking", () => {
+    it("tracks native share method", async () => {
+      const { track } = await import("@vercel/analytics");
       const share = vi.fn().mockResolvedValue(undefined);
       const canShare = vi.fn().mockReturnValue(true);
       mockNavigator({ share, canShare } as unknown as Partial<Navigator>);
 
       await shareWithFallback(baseOptions);
 
-      expect(track).toHaveBeenCalledWith('Test Shared', {
-        source: 'unit-test',
-        method: 'native',
+      expect(track).toHaveBeenCalledWith("Test Shared", {
+        source: "unit-test",
+        method: "native",
       });
     });
 
-    it('tracks clipboard method on error-path fallback', async () => {
-      const { track } = await import('@vercel/analytics');
-      const share = vi.fn().mockRejectedValue(new Error('Share failed'));
+    it("tracks clipboard method on error-path fallback", async () => {
+      const { track } = await import("@vercel/analytics");
+      const share = vi.fn().mockRejectedValue(new Error("Share failed"));
       const canShare = vi.fn().mockReturnValue(true);
       const writeText = vi.fn().mockResolvedValue(undefined);
       mockNavigator({
@@ -195,14 +195,14 @@ describe('shareWithFallback', () => {
 
       await shareWithFallback(baseOptions);
 
-      expect(track).toHaveBeenCalledWith('Test Shared', {
-        source: 'unit-test',
-        method: 'clipboard',
+      expect(track).toHaveBeenCalledWith("Test Shared", {
+        source: "unit-test",
+        method: "clipboard",
       });
     });
 
-    it('tracks clipboard method', async () => {
-      const { track } = await import('@vercel/analytics');
+    it("tracks clipboard method", async () => {
+      const { track } = await import("@vercel/analytics");
       const writeText = vi.fn().mockResolvedValue(undefined);
       mockNavigator({
         share: undefined,
@@ -211,9 +211,9 @@ describe('shareWithFallback', () => {
 
       await shareWithFallback(baseOptions);
 
-      expect(track).toHaveBeenCalledWith('Test Shared', {
-        source: 'unit-test',
-        method: 'clipboard',
+      expect(track).toHaveBeenCalledWith("Test Shared", {
+        source: "unit-test",
+        method: "clipboard",
       });
     });
   });

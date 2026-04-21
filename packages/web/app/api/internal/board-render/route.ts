@@ -1,15 +1,15 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { readFile } from 'fs/promises';
-import { join } from 'path';
-import { existsSync } from 'fs';
-import sharp from 'sharp';
-import { getBoardDetailsForBoard } from '@/app/lib/board-utils';
-import { HOLD_STATE_MAP, THUMBNAIL_WIDTH } from '@/app/components/board-renderer/types';
-import type { BoardName } from '@/app/lib/types';
-import { createOgImageHeaders, OG_IMAGE_HEIGHT, OG_IMAGE_WIDTH } from '@/app/lib/seo/og';
+import { NextRequest, NextResponse } from "next/server";
+import { readFile } from "fs/promises";
+import { join } from "path";
+import { existsSync } from "fs";
+import sharp from "sharp";
+import { getBoardDetailsForBoard } from "@/app/lib/board-utils";
+import { HOLD_STATE_MAP, THUMBNAIL_WIDTH } from "@/app/components/board-renderer/types";
+import type { BoardName } from "@/app/lib/types";
+import { createOgImageHeaders, OG_IMAGE_HEIGHT, OG_IMAGE_WIDTH } from "@/app/lib/seo/og";
 
 // Node.js runtime for reliable WASM loading via filesystem
-export const runtime = 'nodejs';
+export const runtime = "nodejs";
 
 const THUMBNAIL_WEBP_OPTIONS: sharp.WebpOptions = {
   quality: 60,
@@ -34,16 +34,26 @@ let renderOverlay: ((configJson: string) => Uint8Array) | null = null;
 let wasmInitPromise: Promise<void> | null = null;
 
 function findWasmPath(): string {
-  const wasmFilename = 'board_renderer_wasm_bg.wasm';
+  const wasmFilename = "board_renderer_wasm_bg.wasm";
   const candidates = [
     // Monorepo dev: cwd is packages/web, workspace deps hoisted to root
-    join(process.cwd(), '..', '..', 'node_modules/@boardsesh/board-renderer-wasm/pkg', wasmFilename),
+    join(
+      process.cwd(),
+      "..",
+      "..",
+      "node_modules/@boardsesh/board-renderer-wasm/pkg",
+      wasmFilename,
+    ),
     // Vercel standalone: cwd is /var/task, node_modules at root
-    join(process.cwd(), 'node_modules/@boardsesh/board-renderer-wasm/pkg', wasmFilename),
+    join(process.cwd(), "node_modules/@boardsesh/board-renderer-wasm/pkg", wasmFilename),
     // Vercel standalone: nested under packages/web
-    join(process.cwd(), 'packages/web/node_modules/@boardsesh/board-renderer-wasm/pkg', wasmFilename),
+    join(
+      process.cwd(),
+      "packages/web/node_modules/@boardsesh/board-renderer-wasm/pkg",
+      wasmFilename,
+    ),
     // Relative to __dirname (works if file tracing copies it alongside the route)
-    join(process.cwd(), '.next/server', wasmFilename),
+    join(process.cwd(), ".next/server", wasmFilename),
   ];
   for (const candidate of candidates) {
     if (existsSync(candidate)) return candidate;
@@ -57,7 +67,7 @@ async function ensureWasmInitialized() {
   if (renderOverlay) return;
   if (!wasmInitPromise) {
     wasmInitPromise = (async () => {
-      const wasmModule = await import('@boardsesh/board-renderer-wasm');
+      const wasmModule = await import("@boardsesh/board-renderer-wasm");
       const wasmPath = findWasmPath();
       const wasmBytes = await readFile(wasmPath);
       wasmModule.initSync({ module: wasmBytes });
@@ -67,7 +77,14 @@ async function ensureWasmInitialized() {
   await wasmInitPromise;
 }
 
-const VALID_BOARD_NAMES = new Set(['kilter', 'tension', 'moonboard', 'decoy', 'touchstone', 'grasshopper']);
+const VALID_BOARD_NAMES = new Set([
+  "kilter",
+  "tension",
+  "moonboard",
+  "decoy",
+  "touchstone",
+  "grasshopper",
+]);
 
 // THUMBNAIL_WIDTH imported from @/app/components/board-renderer/types
 // Full: native board resolution for crisp rendering in climb drawer/card cover
@@ -83,10 +100,10 @@ const VALID_BOARD_NAMES = new Set(['kilter', 'tension', 'moonboard', 'decoy', 't
  */
 function findPublicImagePath(relPath: string): string | null {
   const candidates = [
-    join(process.cwd(), 'public', relPath),
-    join(process.cwd(), 'packages/web/public', relPath),
+    join(process.cwd(), "public", relPath),
+    join(process.cwd(), "packages/web/public", relPath),
     join(process.cwd(), relPath),
-    join(process.cwd(), '..', '..', 'packages/web/public', relPath),
+    join(process.cwd(), "..", "..", "packages/web/public", relPath),
   ];
   for (const candidate of candidates) {
     if (existsSync(candidate)) return candidate;
@@ -96,9 +113,9 @@ function findPublicImagePath(relPath: string): string | null {
 
 /** Convert a raw image filename to its WebP equivalent, optionally as a thumbnail. */
 function toWebpPath(dir: string, filename: string, isThumbnail: boolean): string {
-  const webpName = filename.replace(/\.png$/, '.webp');
+  const webpName = filename.replace(/\.png$/, ".webp");
   if (isThumbnail) {
-    const lastSlash = webpName.lastIndexOf('/');
+    const lastSlash = webpName.lastIndexOf("/");
     if (lastSlash >= 0) {
       return `${dir}/${webpName.substring(0, lastSlash)}/thumbs${webpName.substring(lastSlash)}`;
     }
@@ -129,10 +146,12 @@ function getBackgroundRelPaths(boardDetails: BoardDetailsForBg, isThumbnail: boo
     }
   } else if (boardDetails.layoutFolder && boardDetails.holdSetImages) {
     // MoonBoard: board background + hold set layers
-    const bgFile = 'moonboard-bg.png';
-    paths.push(toWebpPath('images/moonboard', bgFile, isThumbnail));
+    const bgFile = "moonboard-bg.png";
+    paths.push(toWebpPath("images/moonboard", bgFile, isThumbnail));
     for (const holdSetImage of boardDetails.holdSetImages) {
-      paths.push(toWebpPath(`images/moonboard/${boardDetails.layoutFolder}`, holdSetImage, isThumbnail));
+      paths.push(
+        toWebpPath(`images/moonboard/${boardDetails.layoutFolder}`, holdSetImage, isThumbnail),
+      );
     }
   }
 
@@ -173,30 +192,33 @@ export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
 
-    const boardName = searchParams.get('board_name');
-    const layoutId = searchParams.get('layout_id');
-    const sizeId = searchParams.get('size_id');
-    const setIds = searchParams.get('set_ids');
-    const frames = searchParams.get('frames');
-    const thumbnail = searchParams.get('thumbnail') === '1';
-    const includeBackground = searchParams.get('include_background') === '1';
-    const isOgVariant = searchParams.get('variant') === 'og';
-    const format = searchParams.get('format') ?? (isOgVariant ? 'png' : 'webp');
+    const boardName = searchParams.get("board_name");
+    const layoutId = searchParams.get("layout_id");
+    const sizeId = searchParams.get("size_id");
+    const setIds = searchParams.get("set_ids");
+    const frames = searchParams.get("frames");
+    const thumbnail = searchParams.get("thumbnail") === "1";
+    const includeBackground = searchParams.get("include_background") === "1";
+    const isOgVariant = searchParams.get("variant") === "og";
+    const format = searchParams.get("format") ?? (isOgVariant ? "png" : "webp");
     // Mirroring is handled client-side via CSS scaleX(-1) to maximize cache hit rate
 
     if (!boardName || !layoutId || !sizeId || !setIds || frames === null) {
-      return NextResponse.json({ error: 'Missing required parameters' }, { status: 400 });
+      return NextResponse.json({ error: "Missing required parameters" }, { status: 400 });
     }
 
     if (!VALID_BOARD_NAMES.has(boardName)) {
-      return NextResponse.json({ error: 'Invalid board_name' }, { status: 400 });
+      return NextResponse.json({ error: "Invalid board_name" }, { status: 400 });
     }
 
-    if (format !== 'webp' && format !== 'png') {
-      return NextResponse.json({ error: 'Invalid format' }, { status: 400 });
+    if (format !== "webp" && format !== "png") {
+      return NextResponse.json({ error: "Invalid format" }, { status: 400 });
     }
 
-    const parsedSetIds = setIds.split(',').map(Number).filter((n) => !isNaN(n));
+    const parsedSetIds = setIds
+      .split(",")
+      .map(Number)
+      .filter((n) => !isNaN(n));
 
     // Get board details (pure computation, no DB)
     const boardDetails = getBoardDetailsForBoard({
@@ -252,7 +274,7 @@ export async function GET(request: NextRequest) {
     // Initialize WASM if needed and render
     await ensureWasmInitialized();
     if (!renderOverlay) {
-      return NextResponse.json({ error: 'WASM renderer failed to initialize' }, { status: 500 });
+      return NextResponse.json({ error: "WASM renderer failed to initialize" }, { status: 500 });
     }
     const wasmT0 = performance.now();
     const rawBytes = renderOverlay(JSON.stringify(config));
@@ -270,7 +292,7 @@ export async function GET(request: NextRequest) {
     const sharpT0 = performance.now();
     let imageBuffer: Buffer | null = null;
     let outputBuffer: Buffer | null = null;
-    let outputContentType = 'image/png';
+    let outputContentType = "image/png";
     let bgMs = 0;
     let composeMs = 0;
     let didCompositeBackground = false;
@@ -287,11 +309,11 @@ export async function GET(request: NextRequest) {
         // Load and resize background images, skipping any that fail
         const results = await Promise.allSettled(
           bgFsPaths.map((fsPath) =>
-            sharp(fsPath).resize(width, height, { fit: 'fill' }).toBuffer(),
+            sharp(fsPath).resize(width, height, { fit: "fill" }).toBuffer(),
           ),
         );
         const resizedBuffers = results
-          .filter((r): r is PromiseFulfilledResult<Buffer> => r.status === 'fulfilled')
+          .filter((r): r is PromiseFulfilledResult<Buffer> => r.status === "fulfilled")
           .map((r) => r.value);
 
         const [firstBg, ...restBgs] = resizedBuffers;
@@ -300,18 +322,18 @@ export async function GET(request: NextRequest) {
           // Composite: first background as base → remaining backgrounds → WASM overlay on top
           const composeT0 = performance.now();
           const compositedImage = sharp(firstBg).composite([
-            ...restBgs.map((buf) => ({ input: buf, blend: 'over' as const })),
+            ...restBgs.map((buf) => ({ input: buf, blend: "over" as const })),
             {
               input: overlayBuffer,
               raw: { width, height, channels: 4 as const },
-              blend: 'over' as const,
+              blend: "over" as const,
             },
           ]);
-          if (!isOgVariant && format === 'webp') {
+          if (!isOgVariant && format === "webp") {
             outputBuffer = await compositedImage
               .webp(thumbnail ? THUMBNAIL_WEBP_OPTIONS : DEFAULT_WEBP_OPTIONS)
               .toBuffer();
-            outputContentType = 'image/webp';
+            outputContentType = "image/webp";
           } else {
             imageBuffer = await compositedImage.png(DEFAULT_PNG_OPTIONS).toBuffer();
           }
@@ -321,11 +343,11 @@ export async function GET(request: NextRequest) {
           // All background loads failed — fall back to overlay-only
           const composeT0 = performance.now();
           const overlayImage = sharp(overlayBuffer, { raw: { width, height, channels: 4 } });
-          if (!isOgVariant && format === 'webp') {
+          if (!isOgVariant && format === "webp") {
             outputBuffer = await overlayImage
               .webp(thumbnail ? THUMBNAIL_WEBP_OPTIONS : { lossless: true })
               .toBuffer();
-            outputContentType = 'image/webp';
+            outputContentType = "image/webp";
           } else {
             imageBuffer = await overlayImage.png(DEFAULT_PNG_OPTIONS).toBuffer();
           }
@@ -335,11 +357,11 @@ export async function GET(request: NextRequest) {
         // No background images found — fall back to overlay-only lossless
         const composeT0 = performance.now();
         const overlayImage = sharp(overlayBuffer, { raw: { width, height, channels: 4 } });
-        if (!isOgVariant && format === 'webp') {
+        if (!isOgVariant && format === "webp") {
           outputBuffer = await overlayImage
             .webp(thumbnail ? THUMBNAIL_WEBP_OPTIONS : { lossless: true })
             .toBuffer();
-          outputContentType = 'image/webp';
+          outputContentType = "image/webp";
         } else {
           imageBuffer = await overlayImage.png(DEFAULT_PNG_OPTIONS).toBuffer();
         }
@@ -349,11 +371,11 @@ export async function GET(request: NextRequest) {
       // Default: overlay-only lossless WebP (25-30% smaller than PNG)
       const composeT0 = performance.now();
       const overlayImage = sharp(overlayBuffer, { raw: { width, height, channels: 4 } });
-      if (!isOgVariant && format === 'webp') {
+      if (!isOgVariant && format === "webp") {
         outputBuffer = await overlayImage
           .webp(thumbnail ? THUMBNAIL_WEBP_OPTIONS : { lossless: true })
           .toBuffer();
-        outputContentType = 'image/webp';
+        outputContentType = "image/webp";
       } else {
         imageBuffer = await overlayImage.png(DEFAULT_PNG_OPTIONS).toBuffer();
       }
@@ -369,24 +391,33 @@ export async function GET(request: NextRequest) {
             input: imageBuffer,
             left: Math.round((OG_IMAGE_WIDTH - width) / 2),
             top: Math.round((OG_IMAGE_HEIGHT - height) / 2),
-            blend: 'over',
+            blend: "over",
           },
         ])
         .png(DEFAULT_PNG_OPTIONS)
         .toBuffer();
-      outputContentType = 'image/png';
-    } else if (outputBuffer === null && imageBuffer && format === 'webp') {
+      outputContentType = "image/png";
+    } else if (outputBuffer === null && imageBuffer && format === "webp") {
       outputBuffer = await sharp(imageBuffer)
-        .webp(thumbnail ? THUMBNAIL_WEBP_OPTIONS : didCompositeBackground ? DEFAULT_WEBP_OPTIONS : { lossless: true })
+        .webp(
+          thumbnail
+            ? THUMBNAIL_WEBP_OPTIONS
+            : didCompositeBackground
+              ? DEFAULT_WEBP_OPTIONS
+              : { lossless: true },
+        )
         .toBuffer();
-      outputContentType = 'image/webp';
+      outputContentType = "image/webp";
     } else if (outputBuffer === null && imageBuffer) {
       outputBuffer = imageBuffer;
-      outputContentType = 'image/png';
+      outputContentType = "image/png";
     }
 
     if (!outputBuffer) {
-      return NextResponse.json({ error: 'Render failed: no output buffer generated' }, { status: 500 });
+      return NextResponse.json(
+        { error: "Render failed: no output buffer generated" },
+        { status: 500 },
+      );
     }
 
     const encodeMs = performance.now() - encodeT0;
@@ -404,13 +435,13 @@ export async function GET(request: NextRequest) {
       headers: {
         ...createOgImageHeaders({
           contentType: outputContentType,
-          version: 'immutable',
-          serverTiming: timingParts.join(', '),
+          version: "immutable",
+          serverTiming: timingParts.join(", "),
         }),
       },
     });
   } catch (error) {
-    console.error('Board render error:', error);
+    console.error("Board render error:", error);
     const message = error instanceof Error ? error.message : String(error);
     return NextResponse.json({ error: `Render failed: ${message}` }, { status: 500 });
   }

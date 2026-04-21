@@ -1,8 +1,8 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { getDb } from '@/app/lib/db/db';
-import * as schema from '@/app/lib/db/schema';
-import { eq, and } from 'drizzle-orm';
-import { tryConstructSlugViewUrl } from '@/app/lib/url-utils';
+import { NextRequest, NextResponse } from "next/server";
+import { getDb } from "@/app/lib/db/db";
+import * as schema from "@/app/lib/db/schema";
+import { eq, and } from "drizzle-orm";
+import { tryConstructSlugViewUrl } from "@/app/lib/url-utils";
 
 /**
  * GET /api/internal/climb-redirect?boardType=...&climbUuid=...&proposalUuid=...
@@ -12,12 +12,12 @@ import { tryConstructSlugViewUrl } from '@/app/lib/url-utils';
  */
 export async function GET(request: NextRequest) {
   const { searchParams } = request.nextUrl;
-  const boardType = searchParams.get('boardType');
-  const climbUuid = searchParams.get('climbUuid');
-  const proposalUuid = searchParams.get('proposalUuid');
+  const boardType = searchParams.get("boardType");
+  const climbUuid = searchParams.get("climbUuid");
+  const proposalUuid = searchParams.get("proposalUuid");
 
   if (!boardType || !climbUuid) {
-    return NextResponse.json({ error: 'Missing boardType or climbUuid' }, { status: 400 });
+    return NextResponse.json({ error: "Missing boardType or climbUuid" }, { status: 400 });
   }
 
   try {
@@ -32,15 +32,12 @@ export async function GET(request: NextRequest) {
       })
       .from(schema.boardClimbs)
       .where(
-        and(
-          eq(schema.boardClimbs.uuid, climbUuid),
-          eq(schema.boardClimbs.boardType, boardType),
-        ),
+        and(eq(schema.boardClimbs.uuid, climbUuid), eq(schema.boardClimbs.boardType, boardType)),
       )
       .limit(1);
 
     if (!climb) {
-      return NextResponse.json({ error: 'Climb not found' }, { status: 404 });
+      return NextResponse.json({ error: "Climb not found" }, { status: 404 });
     }
 
     const angle = climb.angle ?? 0;
@@ -61,7 +58,10 @@ export async function GET(request: NextRequest) {
       .limit(1);
 
     if (!psls || !psls.productSizeId || !psls.setId) {
-      return NextResponse.json({ error: 'No board configuration found for this climb' }, { status: 404 });
+      return NextResponse.json(
+        { error: "No board configuration found for this climb" },
+        { status: 404 },
+      );
     }
 
     // Collect all set IDs for this product size + layout combination
@@ -76,14 +76,19 @@ export async function GET(request: NextRequest) {
         ),
       );
 
-    const setIdArray = setRows
-      .map((r) => r.setId)
-      .filter((id): id is number => id != null);
+    const setIdArray = setRows.map((r) => r.setId).filter((id): id is number => id != null);
 
-    const numericFallback = `/${boardType}/${climb.layoutId}/${psls.productSizeId}/${setIdArray.join(',')}/${angle}/view/${climbUuid}`;
-    let url = tryConstructSlugViewUrl(
-      boardType, climb.layoutId, psls.productSizeId, setIdArray, angle, climbUuid, climb.name ?? undefined,
-    ) ?? numericFallback;
+    const numericFallback = `/${boardType}/${climb.layoutId}/${psls.productSizeId}/${setIdArray.join(",")}/${angle}/view/${climbUuid}`;
+    let url =
+      tryConstructSlugViewUrl(
+        boardType,
+        climb.layoutId,
+        psls.productSizeId,
+        setIdArray,
+        angle,
+        climbUuid,
+        climb.name ?? undefined,
+      ) ?? numericFallback;
 
     if (proposalUuid) {
       url += `?proposalUuid=${encodeURIComponent(proposalUuid)}`;
@@ -91,7 +96,7 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json({ url });
   } catch (error) {
-    console.error('[climb-redirect] Error resolving climb URL:', error);
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+    console.error("[climb-redirect] Error resolving climb URL:", error);
+    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
 }

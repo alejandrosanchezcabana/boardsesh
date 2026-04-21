@@ -1,21 +1,21 @@
-'use client';
+"use client";
 
-import React, { useMemo, useState } from 'react';
-import Box from '@mui/material/Box';
-import Typography from '@mui/material/Typography';
-import Dialog from '@mui/material/Dialog';
-import DialogTitle from '@mui/material/DialogTitle';
-import DialogContent from '@mui/material/DialogContent';
-import DialogActions from '@mui/material/DialogActions';
-import IconButton from '@mui/material/IconButton';
-import CloseOutlined from '@mui/icons-material/CloseOutlined';
-import PlayArrowOutlined from '@mui/icons-material/PlayArrowOutlined';
-import VideocamOutlined from '@mui/icons-material/VideocamOutlined';
-import { Instagram, PersonOutlined } from '@mui/icons-material';
-import { useQuery } from '@tanstack/react-query';
-import { BetaLink } from '@/app/lib/api-wrappers/sync-api-types';
-import { dedupeBetaLinks, getInstagramEmbedUrl } from '@/app/lib/instagram-url';
-import { themeTokens } from '@/app/theme/theme-config';
+import React, { useMemo, useState } from "react";
+import Box from "@mui/material/Box";
+import Typography from "@mui/material/Typography";
+import Dialog from "@mui/material/Dialog";
+import DialogTitle from "@mui/material/DialogTitle";
+import DialogContent from "@mui/material/DialogContent";
+import DialogActions from "@mui/material/DialogActions";
+import IconButton from "@mui/material/IconButton";
+import CloseOutlined from "@mui/icons-material/CloseOutlined";
+import PlayArrowOutlined from "@mui/icons-material/PlayArrowOutlined";
+import VideocamOutlined from "@mui/icons-material/VideocamOutlined";
+import { Instagram, PersonOutlined } from "@mui/icons-material";
+import { useQuery } from "@tanstack/react-query";
+import { BetaLink } from "@/app/lib/api-wrappers/sync-api-types";
+import { dedupeBetaLinks, getInstagramEmbedUrl } from "@/app/lib/instagram-url";
+import { themeTokens } from "@/app/theme/theme-config";
 
 const THUMB_SIZE = themeTokens.spacing[16]; // 64px
 
@@ -26,7 +26,7 @@ interface PlayViewBetaSliderProps {
 
 const PlayViewBetaSlider: React.FC<PlayViewBetaSliderProps> = ({ boardName, climbUuid }) => {
   const { data: betaLinks = [] } = useQuery<BetaLink[]>({
-    queryKey: ['betaLinks', boardName, climbUuid],
+    queryKey: ["betaLinks", boardName, climbUuid],
     queryFn: async () => {
       const res = await fetch(`/api/v1/${boardName}/beta/${climbUuid}`);
       if (!res.ok) return [];
@@ -53,13 +53,13 @@ const PlayViewBetaSlider: React.FC<PlayViewBetaSliderProps> = ({ boardName, clim
           variant="caption"
           color="text.secondary"
           sx={{
-            display: 'flex',
-            alignItems: 'center',
+            display: "flex",
+            alignItems: "center",
             gap: 0.5,
             mb: `${themeTokens.spacing[1]}px`,
             fontWeight: themeTokens.typography.fontWeight.semibold,
-            textTransform: 'uppercase',
-            letterSpacing: '0.05em',
+            textTransform: "uppercase",
+            letterSpacing: "0.05em",
             fontSize: themeTokens.typography.fontSize.xs,
           }}
         >
@@ -69,11 +69,11 @@ const PlayViewBetaSlider: React.FC<PlayViewBetaSliderProps> = ({ boardName, clim
 
         <Box
           sx={{
-            display: 'flex',
+            display: "flex",
             gap: `${themeTokens.spacing[2]}px`,
-            overflowX: 'auto',
-            scrollbarWidth: 'none',
-            '&::-webkit-scrollbar': { display: 'none' },
+            overflowX: "auto",
+            scrollbarWidth: "none",
+            "&::-webkit-scrollbar": { display: "none" },
             pb: `${themeTokens.spacing[1]}px`,
           }}
         >
@@ -86,17 +86,17 @@ const PlayViewBetaSlider: React.FC<PlayViewBetaSliderProps> = ({ boardName, clim
                 minWidth: THUMB_SIZE,
                 height: THUMB_SIZE,
                 borderRadius: `${themeTokens.borderRadius.md}px`,
-                overflow: 'hidden',
-                cursor: 'pointer',
-                position: 'relative',
-                bgcolor: 'var(--neutral-100)',
-                border: '1px solid var(--neutral-200)',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
+                overflow: "hidden",
+                cursor: "pointer",
+                position: "relative",
+                bgcolor: "var(--neutral-100)",
+                border: "1px solid var(--neutral-200)",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
                 flexShrink: 0,
                 transition: `border-color ${themeTokens.transitions.fast}`,
-                '&:hover': {
+                "&:hover": {
                   borderColor: themeTokens.colors.primary,
                 },
               }}
@@ -105,50 +105,57 @@ const PlayViewBetaSlider: React.FC<PlayViewBetaSliderProps> = ({ boardName, clim
                 <Box
                   component="img"
                   src={link.thumbnail}
-                  alt={`Beta by ${link.foreign_username || 'unknown'}`}
+                  alt={`Beta by ${link.foreign_username || "unknown"}`}
                   sx={{
-                    width: '100%',
-                    height: '100%',
-                    objectFit: 'cover',
+                    width: "100%",
+                    height: "100%",
+                    objectFit: "cover",
                   }}
                 />
               ) : (
-                <Instagram sx={{ fontSize: themeTokens.typography.fontSize['2xl'], color: 'var(--neutral-400)' }} />
+                <Instagram
+                  sx={{
+                    fontSize: themeTokens.typography.fontSize["2xl"],
+                    color: "var(--neutral-400)",
+                  }}
+                />
               )}
               {/* Play overlay */}
               <Box
                 sx={{
-                  position: 'absolute',
+                  position: "absolute",
                   inset: 0,
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
                   bgcolor: themeTokens.semantic.overlayLight,
                   opacity: 0,
                   transition: `opacity ${themeTokens.transitions.fast}`,
-                  '&:hover': { opacity: 1 },
+                  "&:hover": { opacity: 1 },
                 }}
               >
-                <PlayArrowOutlined sx={{ color: 'white', fontSize: themeTokens.typography.fontSize['2xl'] }} />
+                <PlayArrowOutlined
+                  sx={{ color: "white", fontSize: themeTokens.typography.fontSize["2xl"] }}
+                />
               </Box>
               {/* Username chip */}
               {link.foreign_username && (
                 <Typography
                   variant="caption"
                   sx={{
-                    position: 'absolute',
+                    position: "absolute",
                     bottom: 0,
                     left: 0,
                     right: 0,
                     bgcolor: themeTokens.semantic.overlayDark,
-                    color: 'white',
+                    color: "white",
                     fontSize: themeTokens.typography.fontSize.xs,
                     px: 0.5,
-                    py: '1px',
-                    textAlign: 'center',
-                    overflow: 'hidden',
-                    textOverflow: 'ellipsis',
-                    whiteSpace: 'nowrap',
+                    py: "1px",
+                    textAlign: "center",
+                    overflow: "hidden",
+                    textOverflow: "ellipsis",
+                    whiteSpace: "nowrap",
                     lineHeight: 1.4,
                   }}
                 >
@@ -167,14 +174,19 @@ const PlayViewBetaSlider: React.FC<PlayViewBetaSliderProps> = ({ boardName, clim
           onClose={handleClose}
           maxWidth="sm"
           fullWidth
-          sx={{ '& .MuiDialog-paper': { maxWidth: 500, width: '90%' } }}
+          sx={{ "& .MuiDialog-paper": { maxWidth: 500, width: "90%" } }}
         >
-          <DialogTitle sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', py: 1 }}>
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+          <DialogTitle
+            sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", py: 1 }}
+          >
+            <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
               {selectedVideo.foreign_username && (
-                <Typography variant="body2" sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-                  <PersonOutlined sx={{ fontSize: themeTokens.typography.fontSize.base }} />
-                  @{selectedVideo.foreign_username}
+                <Typography
+                  variant="body2"
+                  sx={{ display: "flex", alignItems: "center", gap: 0.5 }}
+                >
+                  <PersonOutlined sx={{ fontSize: themeTokens.typography.fontSize.base }} />@
+                  {selectedVideo.foreign_username}
                 </Typography>
               )}
               {selectedVideo.angle && (
@@ -190,21 +202,21 @@ const PlayViewBetaSlider: React.FC<PlayViewBetaSliderProps> = ({ boardName, clim
           <DialogContent sx={{ p: 0 }}>
             <Box
               sx={{
-                position: 'relative',
-                paddingBottom: '140%',
-                overflow: 'hidden',
+                position: "relative",
+                paddingBottom: "140%",
+                overflow: "hidden",
               }}
             >
               <iframe
                 key={iframeKey}
-                src={getInstagramEmbedUrl(selectedVideo.link) || ''}
+                src={getInstagramEmbedUrl(selectedVideo.link) || ""}
                 style={{
-                  position: 'absolute',
+                  position: "absolute",
                   top: 0,
                   left: 0,
-                  width: '100%',
-                  height: '100%',
-                  border: 'none',
+                  width: "100%",
+                  height: "100%",
+                  border: "none",
                 }}
                 scrolling="no"
                 title="Beta video"
@@ -219,14 +231,15 @@ const PlayViewBetaSlider: React.FC<PlayViewBetaSliderProps> = ({ boardName, clim
               rel="noopener noreferrer"
               sx={{
                 color: themeTokens.colors.primary,
-                display: 'inline-flex',
-                alignItems: 'center',
+                display: "inline-flex",
+                alignItems: "center",
                 gap: 0.5,
                 fontSize: themeTokens.typography.fontSize.sm,
-                textDecoration: 'none',
+                textDecoration: "none",
               }}
             >
-              <Instagram sx={{ fontSize: themeTokens.typography.fontSize.base }} /> View on Instagram
+              <Instagram sx={{ fontSize: themeTokens.typography.fontSize.base }} /> View on
+              Instagram
             </Box>
           </DialogActions>
         </Dialog>

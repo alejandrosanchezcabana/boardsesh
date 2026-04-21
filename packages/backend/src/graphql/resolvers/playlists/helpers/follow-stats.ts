@@ -1,6 +1,6 @@
-import { eq, and, inArray, sql } from 'drizzle-orm';
-import { db } from '../../../../db/client';
-import * as dbSchema from '@boardsesh/db/schema';
+import { eq, and, inArray, sql } from "drizzle-orm";
+import { db } from "../../../../db/client";
+import * as dbSchema from "@boardsesh/db/schema";
 
 /**
  * Batch-fetch followerCount and isFollowedByMe for a list of playlist UUIDs.
@@ -24,7 +24,7 @@ export async function getPlaylistFollowStats(
     .where(inArray(dbSchema.playlistFollows.playlistUuid, playlistUuids))
     .groupBy(dbSchema.playlistFollows.playlistUuid);
 
-  const countMap = new Map(followerCounts.map(r => [r.playlistUuid, r.count]));
+  const countMap = new Map(followerCounts.map((r) => [r.playlistUuid, r.count]));
 
   // Is-followed-by-me check (only if authenticated)
   const followedSet = new Set<string>();
@@ -36,7 +36,7 @@ export async function getPlaylistFollowStats(
         and(
           eq(dbSchema.playlistFollows.followerId, currentUserId),
           inArray(dbSchema.playlistFollows.playlistUuid, playlistUuids),
-        )
+        ),
       );
     for (const r of followed) {
       followedSet.add(r.playlistUuid);

@@ -1,20 +1,20 @@
-'use client';
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
-import { getImageUrl } from './util';
-import { BoardDetails } from '@/app/lib/types';
-import { HeatmapData } from './types';
-import { LitUpHoldsMap } from './types';
-import { scaleLog } from 'd3-scale';
-import useHeatmapData from '../search-drawer/use-heatmap';
-import { usePathname } from 'next/navigation';
-import { useUISearchParams } from '@/app/components/queue-control/ui-searchparams-provider';
-import MuiSelect from '@mui/material/Select';
-import MenuItem from '@mui/material/MenuItem';
-import MuiSwitch from '@mui/material/Switch';
-import FormControlLabel from '@mui/material/FormControlLabel';
-import MuiButton from '@mui/material/Button';
-import { track } from '@vercel/analytics';
-import BoardRenderer from './board-renderer';
+"use client";
+import React, { useCallback, useEffect, useMemo, useState } from "react";
+import { getImageUrl } from "./util";
+import { BoardDetails } from "@/app/lib/types";
+import { HeatmapData } from "./types";
+import { LitUpHoldsMap } from "./types";
+import { scaleLog } from "d3-scale";
+import useHeatmapData from "../search-drawer/use-heatmap";
+import { usePathname } from "next/navigation";
+import { useUISearchParams } from "@/app/components/queue-control/ui-searchparams-provider";
+import MuiSelect from "@mui/material/Select";
+import MenuItem from "@mui/material/MenuItem";
+import MuiSwitch from "@mui/material/Switch";
+import FormControlLabel from "@mui/material/FormControlLabel";
+import MuiButton from "@mui/material/Button";
+import { track } from "@vercel/analytics";
+import BoardRenderer from "./board-renderer";
 
 const LEGEND_HEIGHT = 96; // Increased from 80
 const BLUR_RADIUS = 10; // Increased blur radius
@@ -22,21 +22,21 @@ const HEAT_RADIUS_MULTIPLIER = 2; // Increased radius multiplier
 
 // Updated color constants with more yellow/orange for middle values
 const HEATMAP_COLORS = [
-  '#4caf50', // Light green
-  '#8bc34a', // Lime green
-  '#cddc39', // Lime
-  '#ffeb3b', // Yellow
-  '#ffc107', // Amber
-  '#ff9800', // Orange
-  '#ff7043', // Deep Orange
-  '#ff5722', // Darker Orange
-  '#f44336', // Light Red
-  '#d32f2f', // Deep Red
+  "#4caf50", // Light green
+  "#8bc34a", // Lime green
+  "#cddc39", // Lime
+  "#ffeb3b", // Yellow
+  "#ffc107", // Amber
+  "#ff9800", // Orange
+  "#ff7043", // Deep Orange
+  "#ff5722", // Darker Orange
+  "#f44336", // Light Red
+  "#d32f2f", // Deep Red
 ];
 
 // Helper function to extract angle from pathname
 const getAngleFromPath = (pathname: string): number => {
-  const path = pathname.split('/');
+  const path = pathname.split("/");
   const angle = Number(path[path.length - 2]);
   return isNaN(angle) ? 40 : angle; // Default to 40 if not valid
 };
@@ -49,21 +49,25 @@ interface BoardHeatmapProps {
 
 // Define the color mode type including user-specific modes
 type ColorMode =
-  | 'total'
-  | 'starting'
-  | 'hand'
-  | 'foot'
-  | 'finish'
-  | 'difficulty'
-  | 'ascents'
-  | 'userAscents'
-  | 'userAttempts';
+  | "total"
+  | "starting"
+  | "hand"
+  | "foot"
+  | "finish"
+  | "difficulty"
+  | "ascents"
+  | "userAscents"
+  | "userAttempts";
 
-const BoardHeatmap: React.FC<BoardHeatmapProps> = ({ boardDetails, litUpHoldsMap, onHoldClick }) => {
+const BoardHeatmap: React.FC<BoardHeatmapProps> = ({
+  boardDetails,
+  litUpHoldsMap,
+  onHoldClick,
+}) => {
   const pathname = usePathname();
   const { uiSearchParams } = useUISearchParams();
 
-  const [colorMode, setColorMode] = useState<ColorMode>('ascents');
+  const [colorMode, setColorMode] = useState<ColorMode>("ascents");
   const [showNumbers, setShowNumbers] = useState(false);
   const [showHeatmap, setShowHeatmap] = useState(false);
   const [excludeFootHolds, setExcludeFootHolds] = useState(false);
@@ -76,7 +80,7 @@ const BoardHeatmap: React.FC<BoardHeatmapProps> = ({ boardDetails, litUpHoldsMap
     boardName: boardDetails.board_name,
     layoutId: boardDetails.layout_id,
     sizeId: boardDetails.size_id,
-    setIds: boardDetails.set_ids.join(','),
+    setIds: boardDetails.set_ids.join(","),
     angle,
     filters: uiSearchParams,
     enabled: showHeatmap,
@@ -86,7 +90,10 @@ const BoardHeatmap: React.FC<BoardHeatmapProps> = ({ boardDetails, litUpHoldsMap
   const [animationFrame, setAnimationFrame] = useState(0);
   const { boardWidth, boardHeight, holdsData } = boardDetails;
 
-  const heatmapMap = useMemo(() => new Map(heatmapData?.map((data) => [data.holdId, data]) || []), [heatmapData]);
+  const heatmapMap = useMemo(
+    () => new Map(heatmapData?.map((data) => [data.holdId, data]) || []),
+    [heatmapData],
+  );
 
   // Animated holds map for the mini loading board (radial sweep like clock hands)
   const animatedHoldsMap = useMemo<LitUpHoldsMap>(() => {
@@ -101,7 +108,7 @@ const BoardHeatmap: React.FC<BoardHeatmapProps> = ({ boardDetails, litUpHoldsMap
     const sweepWidth = 60; // 60 degree sweep arc
 
     const holdsMap: LitUpHoldsMap = {};
-    const colors = ['#4ECDC4', '#45B7D1', '#96CEB4'];
+    const colors = ["#4ECDC4", "#45B7D1", "#96CEB4"];
 
     for (const hold of holdsData) {
       // Calculate angle from center (in degrees, 0-360)
@@ -118,7 +125,7 @@ const BoardHeatmap: React.FC<BoardHeatmapProps> = ({ boardDetails, litUpHoldsMap
         const colorIndex = Math.floor(normalizedDiff * 3);
 
         holdsMap[hold.id] = {
-          state: 'HAND',
+          state: "HAND",
           color: colors[colorIndex] || colors[0],
           displayColor: colors[colorIndex] || colors[0],
         };
@@ -142,33 +149,38 @@ const BoardHeatmap: React.FC<BoardHeatmapProps> = ({ boardDetails, litUpHoldsMap
   // Helper to check if a hold is exclusively used as a foot hold
   const isFootOnlyHold = useCallback((data: HeatmapData | undefined): boolean => {
     if (!data) return false;
-    return data.footUses > 0 && data.handUses === 0 && data.startingUses === 0 && data.finishUses === 0;
+    return (
+      data.footUses > 0 && data.handUses === 0 && data.startingUses === 0 && data.finishUses === 0
+    );
   }, []);
 
   // Updated getValue function to handle user-specific data
-  const getValue = useCallback((data: HeatmapData | undefined): number => {
-    if (!data) return 0;
-    switch (colorMode) {
-      case 'starting':
-        return data.startingUses;
-      case 'hand':
-        return data.handUses;
-      case 'foot':
-        return data.footUses;
-      case 'finish':
-        return data.finishUses;
-      case 'difficulty':
-        return data.averageDifficulty || 0;
-      case 'ascents':
-        return data.totalAscents || 0;
-      case 'userAscents':
-        return data.userAscents || 0;
-      case 'userAttempts':
-        return data.userAttempts || 0;
-      default:
-        return data.totalUses;
-    }
-  }, [colorMode]);
+  const getValue = useCallback(
+    (data: HeatmapData | undefined): number => {
+      if (!data) return 0;
+      switch (colorMode) {
+        case "starting":
+          return data.startingUses;
+        case "hand":
+          return data.handUses;
+        case "foot":
+          return data.footUses;
+        case "finish":
+          return data.finishUses;
+        case "difficulty":
+          return data.averageDifficulty || 0;
+        case "ascents":
+          return data.totalAscents || 0;
+        case "userAscents":
+          return data.userAscents || 0;
+        case "userAttempts":
+          return data.userAttempts || 0;
+        default:
+          return data.totalUses;
+      }
+    },
+    [colorMode],
+  );
 
   // Pre-filter and memoize holds that need rendering to avoid repeated filtering
   const holdsToRender = useMemo(() => {
@@ -194,7 +206,7 @@ const BoardHeatmap: React.FC<BoardHeatmapProps> = ({ boardDetails, litUpHoldsMap
 
     if (values.length === 0) {
       return {
-        colorScale: () => 'transparent',
+        colorScale: () => "transparent",
         opacityScale: () => 0,
       };
     }
@@ -210,7 +222,7 @@ const BoardHeatmap: React.FC<BoardHeatmapProps> = ({ boardDetails, litUpHoldsMap
 
     const getColorScale = () => {
       return (value: number) => {
-        if (!value || value < threshold) return 'transparent';
+        if (!value || value < threshold) return "transparent";
         const index = Math.floor(logScale(value));
         return HEATMAP_COLORS[index];
       };
@@ -230,7 +242,7 @@ const BoardHeatmap: React.FC<BoardHeatmapProps> = ({ boardDetails, litUpHoldsMap
   }, [holdsToRender, threshold]);
 
   const ColorLegend = () => {
-    const gradientId = 'heatmap-gradient';
+    const gradientId = "heatmap-gradient";
     const legendWidth = boardWidth * 0.8; // Make legend 80% of board width
     const legendHeight = 36; // Increased from 30
     const x = (boardWidth - legendWidth) / 2;
@@ -251,7 +263,11 @@ const BoardHeatmap: React.FC<BoardHeatmapProps> = ({ boardDetails, litUpHoldsMap
         <defs>
           <linearGradient id={gradientId}>
             {HEATMAP_COLORS.map((color, index) => (
-              <stop key={color} offset={`${(index / (HEATMAP_COLORS.length - 1)) * 100}%`} stopColor={color} />
+              <stop
+                key={color}
+                offset={`${(index / (HEATMAP_COLORS.length - 1)) * 100}%`}
+                stopColor={color}
+              />
             ))}
           </linearGradient>
         </defs>
@@ -271,23 +287,23 @@ const BoardHeatmap: React.FC<BoardHeatmapProps> = ({ boardDetails, litUpHoldsMap
 
   // Updated color mode options to include user-specific options
   const colorModeOptions = [
-    { value: 'ascents', label: 'Ascents' },
-    { value: 'total', label: 'Total Problems' },
-    { value: 'starting', label: 'Starting Holds' },
-    { value: 'hand', label: 'Hand Holds' },
-    { value: 'foot', label: 'Foot Holds' },
-    { value: 'finish', label: 'Finish Holds' },
-    { value: 'difficulty', label: 'Difficulty' },
+    { value: "ascents", label: "Ascents" },
+    { value: "total", label: "Total Problems" },
+    { value: "starting", label: "Starting Holds" },
+    { value: "hand", label: "Hand Holds" },
+    { value: "foot", label: "Foot Holds" },
+    { value: "finish", label: "Finish Holds" },
+    { value: "difficulty", label: "Difficulty" },
     // Always include user options since auth is handled server-side
-    { value: 'userAscents', label: 'Your Ascents' },
-    { value: 'userAttempts', label: 'Your Attempts' },
+    { value: "userAscents", label: "Your Ascents" },
+    { value: "userAttempts", label: "Your Attempts" },
   ];
 
   const thresholdOptions = [
-    { value: 1, label: 'All' },
-    { value: 2, label: 'Min 2' },
-    { value: 5, label: 'Min 5' },
-    { value: 10, label: 'Min 10' },
+    { value: 1, label: "All" },
+    { value: 2, label: "Min 2" },
+    { value: 5, label: "Min 5" },
+    { value: 10, label: "Min 10" },
   ];
 
   return (
@@ -297,21 +313,21 @@ const BoardHeatmap: React.FC<BoardHeatmapProps> = ({ boardDetails, litUpHoldsMap
         {showHeatmap && heatmapLoading && (
           <div
             style={{
-              position: 'absolute',
-              top: '50%',
-              left: '50%',
-              transform: 'translate(-50%, -50%)',
+              position: "absolute",
+              top: "50%",
+              left: "50%",
+              transform: "translate(-50%, -50%)",
               zIndex: 10,
-              background: 'rgba(0, 0, 0, 0.85)',
-              borderRadius: '12px',
-              padding: '16px',
-              display: 'flex',
-              flexDirection: 'column',
-              alignItems: 'center',
-              gap: '12px',
+              background: "rgba(0, 0, 0, 0.85)",
+              borderRadius: "12px",
+              padding: "16px",
+              display: "flex",
+              flexDirection: "column",
+              alignItems: "center",
+              gap: "12px",
             }}
           >
-            <div style={{ width: '120px', height: '120px' }}>
+            <div style={{ width: "120px", height: "120px" }}>
               <BoardRenderer
                 litUpHoldsMap={animatedHoldsMap}
                 mirrored={false}
@@ -319,7 +335,9 @@ const BoardHeatmap: React.FC<BoardHeatmapProps> = ({ boardDetails, litUpHoldsMap
                 thumbnail={true}
               />
             </div>
-            <span style={{ fontSize: '14px', color: 'var(--semantic-surface)', fontWeight: 500 }}>Loading heatmap...</span>
+            <span style={{ fontSize: "14px", color: "var(--semantic-surface)", fontWeight: 500 }}>
+              Loading heatmap...
+            </span>
           </div>
         )}
         <svg
@@ -346,107 +364,116 @@ const BoardHeatmap: React.FC<BoardHeatmapProps> = ({ boardDetails, litUpHoldsMap
 
             {/* Heat overlay with blur effect */}
             {showHeatmap && !heatmapLoading && (
-            <>
-              {/* Blurred background layer */}
-              <g filter="url(#blur)">
-                {holdsToRender.map(({ hold, value }) => (
-                  <circle
-                    key={`heat-blur-${hold.id}`}
-                    cx={hold.cx}
-                    cy={hold.cy}
-                    r={hold.r * HEAT_RADIUS_MULTIPLIER}
-                    fill={colorScale(value)}
-                    opacity={opacityScale(value) * 0.5}
-                  />
-                ))}
-              </g>
-              <filter id="blurMe">
-                <feGaussianBlur in="SourceGraphic" stdDeviation="20" />
-              </filter>
-
-              {/* Sharp circles with numbers */}
-              {holdsToRender.map(({ hold, value }) => (
-                <g key={`heat-sharp-${hold.id}`}>
-                  <circle
-                    cx={hold.cx}
-                    cy={hold.cy}
-                    r={hold.r}
-                    fill={colorScale(value)}
-                    opacity={opacityScale(value)}
-                    filter="url(#blurMe)"
-                  />
-                  {showNumbers && (
-                    <text
-                      x={hold.cx}
-                      y={hold.cy}
-                      textAnchor="middle"
-                      dominantBaseline="middle"
-                      fontSize={Math.max(8, hold.r * 0.6)}
-                      fontWeight="bold"
-                      fill={'#000'}
-                      style={{ userSelect: 'none' }}
-                    >
-                      {value}
-                    </text>
-                  )}
+              <>
+                {/* Blurred background layer */}
+                <g filter="url(#blur)">
+                  {holdsToRender.map(({ hold, value }) => (
+                    <circle
+                      key={`heat-blur-${hold.id}`}
+                      cx={hold.cx}
+                      cy={hold.cy}
+                      r={hold.r * HEAT_RADIUS_MULTIPLIER}
+                      fill={colorScale(value)}
+                      opacity={opacityScale(value) * 0.5}
+                    />
+                  ))}
                 </g>
+                <filter id="blurMe">
+                  <feGaussianBlur in="SourceGraphic" stdDeviation="20" />
+                </filter>
+
+                {/* Sharp circles with numbers */}
+                {holdsToRender.map(({ hold, value }) => (
+                  <g key={`heat-sharp-${hold.id}`}>
+                    <circle
+                      cx={hold.cx}
+                      cy={hold.cy}
+                      r={hold.r}
+                      fill={colorScale(value)}
+                      opacity={opacityScale(value)}
+                      filter="url(#blurMe)"
+                    />
+                    {showNumbers && (
+                      <text
+                        x={hold.cx}
+                        y={hold.cy}
+                        textAnchor="middle"
+                        dominantBaseline="middle"
+                        fontSize={Math.max(8, hold.r * 0.6)}
+                        fontWeight="bold"
+                        fill={"#000"}
+                        style={{ userSelect: "none" }}
+                      >
+                        {value}
+                      </text>
+                    )}
+                  </g>
+                ))}
+              </>
+            )}
+
+            {/* Interaction layer - only render when click handler exists */}
+            {onHoldClick &&
+              holdsData.map((hold) => (
+                <circle
+                  key={`click-${hold.id}`}
+                  cx={hold.cx}
+                  cy={hold.cy}
+                  r={hold.r}
+                  fill="transparent"
+                  className="cursor-pointer"
+                  onClick={() => {
+                    onHoldClick(hold.id);
+                    track("Heatmap Hold Clicked", {
+                      hold_id: hold.id,
+                      boardLayout: `${boardDetails.layout_name}`,
+                    });
+                  }}
+                />
               ))}
-            </>
-          )}
 
-          {/* Interaction layer - only render when click handler exists */}
-          {onHoldClick && holdsData.map((hold) => (
-            <circle
-              key={`click-${hold.id}`}
-              cx={hold.cx}
-              cy={hold.cy}
-              r={hold.r}
-              fill="transparent"
-              className="cursor-pointer"
-              onClick={() => {
-                onHoldClick(hold.id);
-                track('Heatmap Hold Clicked', {
-                  hold_id: hold.id,
-                  boardLayout: `${boardDetails.layout_name}`,
-                });
-              }}
-            />
-          ))}
+            {/* Selected holds overlay */}
+            {holdsData.map((hold) => {
+              const litUpHold = litUpHoldsMap?.[hold.id];
+              if (!litUpHold) return null;
+              return (
+                <circle
+                  key={`selected-${hold.id}`}
+                  cx={hold.cx}
+                  cy={hold.cy}
+                  r={hold.r}
+                  stroke={litUpHold.color}
+                  strokeWidth="4"
+                  fill="none"
+                  className="transition-colors duration-200"
+                />
+              );
+            })}
 
-          {/* Selected holds overlay */}
-          {holdsData.map((hold) => {
-            const litUpHold = litUpHoldsMap?.[hold.id];
-            if (!litUpHold) return null;
-            return (
-              <circle
-                key={`selected-${hold.id}`}
-                cx={hold.cx}
-                cy={hold.cy}
-                r={hold.r}
-                stroke={litUpHold.color}
-                strokeWidth="4"
-                fill="none"
-                className="transition-colors duration-200"
-              />
-            );
-          })}
-
-          {showHeatmap && !heatmapLoading && <ColorLegend />}
-        </g>
-      </svg>
+            {showHeatmap && !heatmapLoading && <ColorLegend />}
+          </g>
+        </svg>
       </div>
-      <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', alignItems: 'center', marginTop: '8px' }}>
+      <div
+        style={{
+          display: "flex",
+          flexWrap: "wrap",
+          gap: "8px",
+          alignItems: "center",
+          marginTop: "8px",
+        }}
+      >
         <MuiButton
-          variant={showHeatmap ? 'contained' : 'outlined'}
+          variant={showHeatmap ? "contained" : "outlined"}
           size="small"
           onClick={() => {
             setShowHeatmap(!showHeatmap);
-            track(`Heatmap ${showHeatmap ? 'Shown' : 'Hidden'}`, {
-              boardLayout: boardDetails.layout_name || '',
+            track(`Heatmap ${showHeatmap ? "Shown" : "Hidden"}`, {
+              boardLayout: boardDetails.layout_name || "",
             });
           }}
         >
-          {showHeatmap ? 'Hide Heatmap' : 'Show Heatmap'}
+          {showHeatmap ? "Hide Heatmap" : "Show Heatmap"}
         </MuiButton>
 
         {showHeatmap && (
@@ -456,9 +483,9 @@ const BoardHeatmap: React.FC<BoardHeatmapProps> = ({ boardDetails, litUpHoldsMap
               onChange={(e) => {
                 const value = e.target.value as ColorMode;
                 setColorMode(value);
-                track('Heatmap Mode Changed', {
+                track("Heatmap Mode Changed", {
                   mode: value,
-                  board: boardDetails.layout_name || '',
+                  board: boardDetails.layout_name || "",
                 });
               }}
               size="small"
@@ -498,15 +525,15 @@ const BoardHeatmap: React.FC<BoardHeatmapProps> = ({ boardDetails, litUpHoldsMap
                   checked={excludeFootHolds}
                   onChange={(_, checked) => {
                     setExcludeFootHolds(checked);
-                    track('Heatmap Foot Holds Toggle', {
+                    track("Heatmap Foot Holds Toggle", {
                       excluded: checked,
-                      board: boardDetails.layout_name || '',
+                      board: boardDetails.layout_name || "",
                     });
                   }}
                   size="small"
                 />
               }
-              label={excludeFootHolds ? 'No Feet' : 'Feet'}
+              label={excludeFootHolds ? "No Feet" : "Feet"}
             />
           </>
         )}

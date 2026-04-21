@@ -81,11 +81,11 @@
   width: 36px;
   height: 4px;
   border-radius: 2px;
-  background-color: var(--neutral-300, #D1D5DB);
+  background-color: var(--neutral-300, #d1d5db);
 }
 
 :global(html[data-theme="dark"]) .expandDragBarPill {
-  background-color: var(--neutral-500, #6B7280);
+  background-color: var(--neutral-500, #6b7280);
 }
 
 .expandLabel {
@@ -149,4 +149,3 @@
   align-self: flex-start;
   margin-top: 10px;
 }
-

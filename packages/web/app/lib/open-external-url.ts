@@ -1,4 +1,4 @@
-import { isNativeApp } from '@/app/lib/ble/capacitor-utils';
+import { isNativeApp } from "@/app/lib/ble/capacitor-utils";
 
 /**
  * Opens an external URL. On native apps, uses Capacitor's Browser plugin
@@ -11,10 +11,10 @@ export function openExternalUrl(url: string): void {
     if (browser) {
       browser.open({ url }).catch(() => {
         // Fallback if plugin fails
-        window.open(url, '_blank', 'noopener');
+        window.open(url, "_blank", "noopener");
       });
       return;
     }
   }
-  window.open(url, '_blank', 'noopener');
+  window.open(url, "_blank", "noopener");
 }

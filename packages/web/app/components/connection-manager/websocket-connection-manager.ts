@@ -1,6 +1,12 @@
-import { Client, Event as WsEvent, EventListener as WsEventListener } from 'graphql-ws';
+import { Client, Event as WsEvent, EventListener as WsEventListener } from "graphql-ws";
 
-export type ConnectionState = 'idle' | 'connecting' | 'connected' | 'reconnecting' | 'stale' | 'error';
+export type ConnectionState =
+  | "idle"
+  | "connecting"
+  | "connected"
+  | "reconnecting"
+  | "stale"
+  | "error";
 
 type ConnectionSnapshot = {
   name: string | null;
@@ -30,27 +36,27 @@ class WebSocketConnectionManager {
   private intervalId: ReturnType<typeof setInterval> | null = null;
 
   constructor() {
-    if (typeof window !== 'undefined') {
-      document.addEventListener('visibilitychange', this.handleVisibilityChange);
+    if (typeof window !== "undefined") {
+      document.addEventListener("visibilitychange", this.handleVisibilityChange);
       this.startHealthCheck();
     }
   }
 
-  registerClient(client: Client, name: string = 'primary'): () => void {
+  registerClient(client: Client, name: string = "primary"): () => void {
     // The graphql-ws client always supports `on`
-    const id = Symbol('ws-client');
+    const id = Symbol("ws-client");
     const now = Date.now();
     const record: RegisteredClient = {
       id,
       name,
       client,
       lastActivity: now,
-      state: 'connecting',
+      state: "connecting",
       error: null,
       cleanup: [],
     };
 
-    if (!this.primaryName || name === 'session') {
+    if (!this.primaryName || name === "session") {
       this.primaryName = name;
     }
 
@@ -66,41 +72,41 @@ class WebSocketConnectionManager {
       record.lastActivity = Date.now();
     };
 
-    attach('connecting', () => {
-      record.state = 'connecting';
+    attach("connecting", () => {
+      record.state = "connecting";
       markActivity();
       this.notify();
     });
 
-    attach('connected', () => {
-      record.state = 'connected';
+    attach("connected", () => {
+      record.state = "connected";
       markActivity();
       this.notify();
     });
 
-    attach('ping', (received: boolean) => {
+    attach("ping", (received: boolean) => {
       if (received) markActivity();
     });
 
-    attach('pong', (received: boolean) => {
+    attach("pong", (received: boolean) => {
       if (received) {
-        record.state = 'connected';
+        record.state = "connected";
         markActivity();
         this.notify();
       }
     });
 
-    attach('message', () => {
+    attach("message", () => {
       markActivity();
     });
 
-    attach('closed', () => {
-      record.state = 'reconnecting';
+    attach("closed", () => {
+      record.state = "reconnecting";
       this.notify();
     });
 
-    attach('error', (err: unknown) => {
-      record.state = 'error';
+    attach("error", (err: unknown) => {
+      record.state = "error";
       record.error = err instanceof Error ? err : new Error(String(err));
       this.notify();
     });
@@ -128,7 +134,7 @@ class WebSocketConnectionManager {
   getSnapshot(): ConnectionSnapshot {
     const primary = this.getPrimary();
     if (!primary) {
-      return { name: null, state: 'idle', lastActivity: null, error: null };
+      return { name: null, state: "idle", lastActivity: null, error: null };
     }
 
     return {
@@ -141,8 +147,8 @@ class WebSocketConnectionManager {
 
   forceReconnect(targetName?: string) {
     const target = this.getPrimary(targetName);
-    if (target && typeof target.client.terminate === 'function') {
-      target.state = 'reconnecting';
+    if (target && typeof target.client.terminate === "function") {
+      target.state = "reconnecting";
       this.notify();
       target.client.terminate();
     }
@@ -154,7 +160,7 @@ class WebSocketConnectionManager {
   }
 
   dispose() {
-    document.removeEventListener('visibilitychange', this.handleVisibilityChange);
+    document.removeEventListener("visibilitychange", this.handleVisibilityChange);
     this.stopHealthCheck();
   }
 
@@ -165,10 +171,10 @@ class WebSocketConnectionManager {
     this.intervalId = setInterval(() => {
       const now = Date.now();
       this.clients.forEach((record) => {
-        if (now - record.lastActivity > STALE_GRACE_MS && record.state !== 'reconnecting') {
-          record.state = 'reconnecting';
+        if (now - record.lastActivity > STALE_GRACE_MS && record.state !== "reconnecting") {
+          record.state = "reconnecting";
           this.notify();
-          if (typeof record.client.terminate === 'function') {
+          if (typeof record.client.terminate === "function") {
             record.client.terminate();
           }
         }
@@ -184,7 +190,7 @@ class WebSocketConnectionManager {
   }
 
   private handleVisibilityChange = () => {
-    if (document.visibilityState !== 'visible') {
+    if (document.visibilityState !== "visible") {
       // Tab hidden — pause the interval to avoid unnecessary CPU cycles
       this.stopHealthCheck();
       return;
@@ -199,7 +205,7 @@ class WebSocketConnectionManager {
 
     const now = Date.now();
     const isStale = now - primary.lastActivity > STALE_GRACE_MS;
-    const isUnhealthy = primary.state === 'error' || primary.state === 'reconnecting';
+    const isUnhealthy = primary.state === "error" || primary.state === "reconnecting";
     if (isStale || isUnhealthy) {
       this.forceReconnect(primary.name);
     }
@@ -229,25 +235,31 @@ class WebSocketConnectionManager {
     this.listeners.clear();
     this.stopHealthCheck();
 
-    if (typeof window !== 'undefined') {
-      document.removeEventListener('visibilitychange', this.handleVisibilityChange);
-      document.addEventListener('visibilitychange', this.handleVisibilityChange);
+    if (typeof window !== "undefined") {
+      document.removeEventListener("visibilitychange", this.handleVisibilityChange);
+      document.addEventListener("visibilitychange", this.handleVisibilityChange);
       this.startHealthCheck();
     }
   }
 }
 
-export const connectionManager = typeof window !== 'undefined'
-  ? new WebSocketConnectionManager()
-  : // Provide a no-op shim for SSR
-    {
-      registerClient: () => () => {},
-      subscribe: () => () => {},
-      getSnapshot: (): ConnectionSnapshot => ({ name: null, state: 'idle', lastActivity: null, error: null }),
-      forceReconnect: () => {},
-      setPrimaryName: () => {},
-      dispose: () => {},
-      __resetForTests: () => {},
-    } as unknown as WebSocketConnectionManager;
+export const connectionManager =
+  typeof window !== "undefined"
+    ? new WebSocketConnectionManager()
+    : // Provide a no-op shim for SSR
+      ({
+        registerClient: () => () => {},
+        subscribe: () => () => {},
+        getSnapshot: (): ConnectionSnapshot => ({
+          name: null,
+          state: "idle",
+          lastActivity: null,
+          error: null,
+        }),
+        forceReconnect: () => {},
+        setPrimaryName: () => {},
+        dispose: () => {},
+        __resetForTests: () => {},
+      } as unknown as WebSocketConnectionManager);
 
 export { KEEP_ALIVE_MS, STALE_GRACE_MS, HEALTH_CHECK_INTERVAL_MS };

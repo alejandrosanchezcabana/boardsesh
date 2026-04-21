@@ -1,8 +1,8 @@
-import type Redis from 'ioredis';
-import { DistributedStateManager } from './distributed-state';
+import type Redis from "ioredis";
+import { DistributedStateManager } from "./distributed-state";
 
-export { DistributedStateManager } from './distributed-state';
-export type { DistributedConnection } from './constants';
+export { DistributedStateManager } from "./distributed-state";
+export type { DistributedConnection } from "./constants";
 
 // Singleton instance - initialized when Redis is available
 let distributedStateManager: DistributedStateManager | null = null;
@@ -16,14 +16,14 @@ let distributedStateManager: DistributedStateManager | null = null;
  */
 export function initializeDistributedState(
   redis: Redis,
-  instanceId?: string
+  instanceId?: string,
 ): DistributedStateManager {
   if (distributedStateManager) {
     if (
       !(distributedStateManager as DistributedStateManager & { _hasWarnedReInit?: boolean })
         ._hasWarnedReInit
     ) {
-      console.warn('[DistributedState] Already initialized, returning existing instance');
+      console.warn("[DistributedState] Already initialized, returning existing instance");
       (
         distributedStateManager as DistributedStateManager & { _hasWarnedReInit?: boolean }
       )._hasWarnedReInit = true;
@@ -84,8 +84,8 @@ export function forceResetDistributedState(): void {
   if (distributedStateManager) {
     if (!distributedStateManager.isStopped()) {
       console.warn(
-        '[DistributedState] Force resetting without prior stop() - ' +
-          'clearing heartbeat interval but Redis state may be orphaned'
+        "[DistributedState] Force resetting without prior stop() - " +
+          "clearing heartbeat interval but Redis state may be orphaned",
       );
       distributedStateManager.stopHeartbeat();
     }

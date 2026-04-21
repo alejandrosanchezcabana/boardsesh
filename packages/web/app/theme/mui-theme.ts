@@ -1,5 +1,5 @@
-import { createTheme, type ThemeOptions, type Components, type Theme } from '@mui/material/styles';
-import { themeTokens, darkTokens } from './theme-config';
+import { createTheme, type ThemeOptions, type Components, type Theme } from "@mui/material/styles";
+import { themeTokens, darkTokens } from "./theme-config";
 
 // Shared component overrides used by both light and dark themes
 const sharedComponents: Components<Theme> = {
@@ -8,13 +8,13 @@ const sharedComponents: Components<Theme> = {
       root: {
         borderRadius: themeTokens.borderRadius.md,
         fontWeight: themeTokens.typography.fontWeight.medium,
-        textTransform: 'none' as const,
-        '&:not(:disabled):not(.MuiButton-text):hover': {
-          transform: 'translateY(-1px)',
-          boxShadow: 'var(--shadow-sm)',
+        textTransform: "none" as const,
+        "&:not(:disabled):not(.MuiButton-text):hover": {
+          transform: "translateY(-1px)",
+          boxShadow: "var(--shadow-sm)",
         },
-        '&:not(:disabled):active': {
-          transform: 'translateY(0)',
+        "&:not(:disabled):active": {
+          transform: "translateY(0)",
         },
       },
       sizeMedium: {
@@ -36,11 +36,11 @@ const sharedComponents: Components<Theme> = {
     styleOverrides: {
       root: {
         borderRadius: themeTokens.borderRadius.lg,
-        boxShadow: 'var(--shadow-sm)',
-        transition: 'box-shadow 0.2s ease, transform 0.2s ease',
-        userSelect: 'none' as const,
-        '&:hover': {
-          boxShadow: 'var(--shadow-md)',
+        boxShadow: "var(--shadow-sm)",
+        transition: "box-shadow 0.2s ease, transform 0.2s ease",
+        userSelect: "none" as const,
+        "&:hover": {
+          boxShadow: "var(--shadow-md)",
         },
       },
     },
@@ -48,14 +48,14 @@ const sharedComponents: Components<Theme> = {
   MuiTextField: {
     styleOverrides: {
       root: {
-        '& .MuiOutlinedInput-root': {
+        "& .MuiOutlinedInput-root": {
           borderRadius: themeTokens.borderRadius.md,
         },
       },
     },
     defaultProps: {
-      variant: 'outlined' as const,
-      size: 'small',
+      variant: "outlined" as const,
+      size: "small",
     },
   },
   MuiOutlinedInput: {
@@ -79,21 +79,21 @@ const sharedComponents: Components<Theme> = {
       },
       paperAnchorBottom: {
         borderRadius: `${themeTokens.borderRadius.lg}px ${themeTokens.borderRadius.lg}px 0 0`,
-        paddingBottom: 'env(safe-area-inset-bottom, 0px)',
+        paddingBottom: "env(safe-area-inset-bottom, 0px)",
       },
       paperAnchorLeft: {
         borderRadius: `0 ${themeTokens.borderRadius.lg}px ${themeTokens.borderRadius.lg}px 0`,
-        paddingTop: 'env(safe-area-inset-top, 0px)',
-        paddingBottom: 'env(safe-area-inset-bottom, 0px)',
+        paddingTop: "env(safe-area-inset-top, 0px)",
+        paddingBottom: "env(safe-area-inset-bottom, 0px)",
       },
       paperAnchorRight: {
         borderRadius: `${themeTokens.borderRadius.lg}px 0 0 ${themeTokens.borderRadius.lg}px`,
-        paddingTop: 'env(safe-area-inset-top, 0px)',
-        paddingBottom: 'env(safe-area-inset-bottom, 0px)',
+        paddingTop: "env(safe-area-inset-top, 0px)",
+        paddingBottom: "env(safe-area-inset-bottom, 0px)",
       },
       paperAnchorTop: {
         borderRadius: `0 0 ${themeTokens.borderRadius.lg}px ${themeTokens.borderRadius.lg}px`,
-        paddingTop: 'env(safe-area-inset-top, 0px)',
+        paddingTop: "env(safe-area-inset-top, 0px)",
       },
     },
   },
@@ -108,8 +108,8 @@ const sharedComponents: Components<Theme> = {
     styleOverrides: {
       root: {
         borderRadius: themeTokens.borderRadius.md,
-        '&:before': {
-          display: 'none',
+        "&:before": {
+          display: "none",
         },
       },
     },
@@ -118,7 +118,7 @@ const sharedComponents: Components<Theme> = {
     styleOverrides: {
       root: {
         fontWeight: themeTokens.typography.fontWeight.medium,
-        backgroundColor: 'var(--neutral-50)',
+        backgroundColor: "var(--neutral-50)",
       },
     },
   },
@@ -132,9 +132,9 @@ const sharedComponents: Components<Theme> = {
   MuiTab: {
     styleOverrides: {
       root: {
-        textTransform: 'none' as const,
+        textTransform: "none" as const,
         fontWeight: themeTokens.typography.fontWeight.medium,
-        '&.Mui-selected': {
+        "&.Mui-selected": {
           color: themeTokens.colors.primary,
         },
       },
@@ -152,7 +152,7 @@ const sharedComponents: Components<Theme> = {
     styleOverrides: {
       badge: {
         fontWeight: themeTokens.typography.fontWeight.semibold,
-        boxShadow: '0 0 0 2px var(--semantic-surface)',
+        boxShadow: "0 0 0 2px var(--semantic-surface)",
       },
     },
   },
@@ -162,9 +162,9 @@ const sharedComponents: Components<Theme> = {
         color: themeTokens.colors.amber,
       },
       icon: {
-        transition: 'transform 0.15s ease',
-        '&:hover': {
-          transform: 'scale(1.1)',
+        transition: "transform 0.15s ease",
+        "&:hover": {
+          transform: "scale(1.1)",
         },
       },
     },
@@ -172,9 +172,9 @@ const sharedComponents: Components<Theme> = {
   MuiCssBaseline: {
     styleOverrides: {
       html: {
-        touchAction: 'manipulation',
-        scrollbarWidth: 'thin',
-        scrollbarColor: 'var(--neutral-300) var(--neutral-100)',
+        touchAction: "manipulation",
+        scrollbarWidth: "thin",
+        scrollbarColor: "var(--neutral-300) var(--neutral-100)",
       },
     },
   },
@@ -195,11 +195,11 @@ const sharedComponents: Components<Theme> = {
   MuiBottomNavigationAction: {
     styleOverrides: {
       label: {
-        fontSize: '10px',
-        marginTop: '2px',
+        fontSize: "10px",
+        marginTop: "2px",
         lineHeight: 1,
-        '&.Mui-selected': {
-          fontSize: '10px',
+        "&.Mui-selected": {
+          fontSize: "10px",
         },
       },
     },
@@ -207,7 +207,7 @@ const sharedComponents: Components<Theme> = {
   MuiSkeleton: {
     styleOverrides: {
       root: {
-        backgroundColor: 'var(--neutral-100)',
+        backgroundColor: "var(--neutral-100)",
       },
     },
   },
@@ -250,7 +250,7 @@ const sharedOptions: Partial<ThemeOptions> = {
 };
 
 const lightShadows = [
-  'none',
+  "none",
   themeTokens.shadows.xs,
   themeTokens.shadows.sm,
   themeTokens.shadows.sm,
@@ -270,12 +270,12 @@ const darkComponents: Components<Theme> = {
       root: {
         backgroundColor: darkTokens.semantic.inputSurface,
         color: themeTokens.neutral[800],
-        '&.Mui-disabled': {
+        "&.Mui-disabled": {
           backgroundColor: themeTokens.neutral[200],
         },
       },
       input: {
-        '&::placeholder': {
+        "&::placeholder": {
           color: themeTokens.neutral[500],
           opacity: 1,
         },
@@ -289,16 +289,16 @@ const darkComponents: Components<Theme> = {
         borderRadius: themeTokens.borderRadius.md,
         backgroundColor: darkTokens.semantic.inputSurface,
         color: themeTokens.neutral[800],
-        '& .MuiOutlinedInput-notchedOutline': {
+        "& .MuiOutlinedInput-notchedOutline": {
           borderColor: themeTokens.neutral[300],
         },
-        '&:hover .MuiOutlinedInput-notchedOutline': {
+        "&:hover .MuiOutlinedInput-notchedOutline": {
           borderColor: themeTokens.neutral[400],
         },
-        '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
+        "&.Mui-focused .MuiOutlinedInput-notchedOutline": {
           borderColor: themeTokens.colors.primary,
         },
-        '&.Mui-disabled': {
+        "&.Mui-disabled": {
           backgroundColor: themeTokens.neutral[200],
         },
       },
@@ -309,13 +309,13 @@ const darkComponents: Components<Theme> = {
       root: {
         backgroundColor: darkTokens.semantic.inputSurface,
         color: themeTokens.neutral[800],
-        '&:hover': {
+        "&:hover": {
           backgroundColor: themeTokens.neutral[100],
         },
-        '&.Mui-focused': {
+        "&.Mui-focused": {
           backgroundColor: darkTokens.semantic.inputSurface,
         },
-        '&.Mui-disabled': {
+        "&.Mui-disabled": {
           backgroundColor: themeTokens.neutral[200],
         },
       },
@@ -346,7 +346,7 @@ const darkComponents: Components<Theme> = {
     styleOverrides: {
       root: {
         color: themeTokens.neutral[500],
-        '&.Mui-focused': {
+        "&.Mui-focused": {
           color: themeTokens.colors.primary,
         },
       },
@@ -356,12 +356,12 @@ const darkComponents: Components<Theme> = {
     ...sharedComponents.MuiTextField,
     styleOverrides: {
       root: {
-        '& .MuiOutlinedInput-root': {
+        "& .MuiOutlinedInput-root": {
           borderRadius: themeTokens.borderRadius.md,
           backgroundColor: darkTokens.semantic.inputSurface,
           color: themeTokens.neutral[800],
         },
-        '& .MuiInputLabel-root': {
+        "& .MuiInputLabel-root": {
           color: themeTokens.neutral[500],
         },
       },
@@ -370,7 +370,7 @@ const darkComponents: Components<Theme> = {
 };
 
 const darkShadows = [
-  'none',
+  "none",
   darkTokens.shadows.xs,
   darkTokens.shadows.sm,
   darkTokens.shadows.sm,
@@ -385,7 +385,7 @@ const darkShadows = [
 export const lightTheme = createTheme({
   ...sharedOptions,
   palette: {
-    mode: 'light',
+    mode: "light",
     primary: {
       main: themeTokens.colors.primary,
       dark: themeTokens.colors.primaryActive,
@@ -431,7 +431,7 @@ export const lightTheme = createTheme({
 export const darkTheme = createTheme({
   ...sharedOptions,
   palette: {
-    mode: 'dark',
+    mode: "dark",
     primary: {
       main: themeTokens.colors.primary,
       dark: themeTokens.colors.primaryActive,

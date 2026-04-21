@@ -1,19 +1,19 @@
-'use client';
+"use client";
 
-import React from 'react';
-import Typography from '@mui/material/Typography';
-import ToggleButtonGroup from '@mui/material/ToggleButtonGroup';
-import ToggleButton from '@mui/material/ToggleButton';
-import Stack from '@mui/material/Stack';
-import Box from '@mui/material/Box';
-import { DatePicker as MuiDatePicker } from '@mui/x-date-pickers/DatePicker';
-import dayjs from 'dayjs';
-import SwipeableDrawer from '@/app/components/swipeable-drawer/swipeable-drawer';
+import React from "react";
+import Typography from "@mui/material/Typography";
+import ToggleButtonGroup from "@mui/material/ToggleButtonGroup";
+import ToggleButton from "@mui/material/ToggleButton";
+import Stack from "@mui/material/Stack";
+import Box from "@mui/material/Box";
+import { DatePicker as MuiDatePicker } from "@mui/x-date-pickers/DatePicker";
+import dayjs from "dayjs";
+import SwipeableDrawer from "@/app/components/swipeable-drawer/swipeable-drawer";
 import {
   type UnifiedTimeframeType,
   unifiedTimeframeOptions,
   boardOptions,
-} from '@/app/profile/[user_id]/utils/profile-constants';
+} from "@/app/profile/[user_id]/utils/profile-constants";
 
 interface StatsFilterDrawerProps {
   open: boolean;
@@ -50,7 +50,7 @@ export default function StatsFilterDrawer({
       title="Filters"
       onTransitionEnd={onTransitionEnd}
     >
-      <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3, pb: 2 }}>
+      <Box sx={{ display: "flex", flexDirection: "column", gap: 3, pb: 2 }}>
         <Box>
           <Typography variant="body2" fontWeight={600} sx={{ mb: 1 }}>
             Board
@@ -59,11 +59,15 @@ export default function StatsFilterDrawer({
             exclusive
             size="small"
             value={selectedBoard}
-            onChange={(_, val) => { if (val) onBoardChange(val as string); }}
+            onChange={(_, val) => {
+              if (val) onBoardChange(val as string);
+            }}
             fullWidth
           >
             {boardOptions.map((opt) => (
-              <ToggleButton key={opt.value} value={opt.value}>{opt.label}</ToggleButton>
+              <ToggleButton key={opt.value} value={opt.value}>
+                {opt.label}
+              </ToggleButton>
             ))}
           </ToggleButtonGroup>
         </Box>
@@ -76,28 +80,32 @@ export default function StatsFilterDrawer({
             exclusive
             size="small"
             value={timeframe}
-            onChange={(_, val) => { if (val) onTimeframeChange(val as UnifiedTimeframeType); }}
+            onChange={(_, val) => {
+              if (val) onTimeframeChange(val as UnifiedTimeframeType);
+            }}
             fullWidth
-            sx={{ flexWrap: 'wrap' }}
+            sx={{ flexWrap: "wrap" }}
           >
             {unifiedTimeframeOptions.map((opt) => (
-              <ToggleButton key={opt.value} value={opt.value}>{opt.label}</ToggleButton>
+              <ToggleButton key={opt.value} value={opt.value}>
+                {opt.label}
+              </ToggleButton>
             ))}
           </ToggleButtonGroup>
         </Box>
 
-        {timeframe === 'custom' && (
-          <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1.5}>
+        {timeframe === "custom" && (
+          <Stack direction={{ xs: "column", sm: "row" }} spacing={1.5}>
             <MuiDatePicker
               value={fromDate ? dayjs(fromDate) : null}
-              onChange={(val) => onFromDateChange(val ? val.format('YYYY-MM-DD') : '')}
-              slotProps={{ textField: { size: 'small', fullWidth: true } }}
+              onChange={(val) => onFromDateChange(val ? val.format("YYYY-MM-DD") : "")}
+              slotProps={{ textField: { size: "small", fullWidth: true } }}
               label="From"
             />
             <MuiDatePicker
               value={toDate ? dayjs(toDate) : null}
-              onChange={(val) => onToDateChange(val ? val.format('YYYY-MM-DD') : '')}
-              slotProps={{ textField: { size: 'small', fullWidth: true } }}
+              onChange={(val) => onToDateChange(val ? val.format("YYYY-MM-DD") : "")}
+              slotProps={{ textField: { size: "small", fullWidth: true } }}
               label="To"
             />
           </Stack>

@@ -1,85 +1,85 @@
-import { describe, it, expect, vi } from 'vitest';
-import { render, screen } from '@testing-library/react';
-import React from 'react';
+import { describe, it, expect, vi } from "vite-plus/test";
+import { render, screen } from "@testing-library/react";
+import React from "react";
 
 // Mock server-only
-vi.mock('server-only', () => ({}));
+vi.mock("server-only", () => ({}));
 
 // Mock BoardImportPrompt to a simple stub so we can detect when it renders
-vi.mock('@/app/components/settings/board-import-prompt', () => ({
+vi.mock("@/app/components/settings/board-import-prompt", () => ({
   default: ({ boardType }: { boardType: string }) => (
     <div data-testid="board-import-prompt" data-board-type={boardType} />
   ),
 }));
 
 // Mock the CSS module
-vi.mock('../../profile-page.module.css', () => ({
+vi.mock("../../profile-page.module.css", () => ({
   default: {},
 }));
 
-import BoardStatsSection from '../board-stats-section';
+import BoardStatsSection from "../board-stats-section";
 
 const defaultProps = {
-  selectedBoard: 'kilter',
+  selectedBoard: "kilter",
   loading: false,
   filteredLogbook: [],
   isOwnProfile: false,
 };
 
-describe('BoardStatsSection empty state conditional rendering', () => {
-  it('shows loading spinner while aggregated data is loading', () => {
+describe("BoardStatsSection empty state conditional rendering", () => {
+  it("shows loading spinner while aggregated data is loading", () => {
     render(<BoardStatsSection {...defaultProps} loading={true} />);
 
-    expect(screen.getByRole('progressbar')).toBeTruthy();
+    expect(screen.getByRole("progressbar")).toBeTruthy();
   });
 
-  it('shows EmptyState for other users profile with no data on kilter', () => {
+  it("shows EmptyState for other users profile with no data on kilter", () => {
     render(<BoardStatsSection {...defaultProps} isOwnProfile={false} selectedBoard="kilter" />);
 
-    expect(screen.getByText('No climbing data for this period')).toBeTruthy();
-    expect(screen.queryByTestId('board-import-prompt')).toBeNull();
+    expect(screen.getByText("No climbing data for this period")).toBeTruthy();
+    expect(screen.queryByTestId("board-import-prompt")).toBeNull();
   });
 
-  it('shows EmptyState for other users profile with no data on tension', () => {
+  it("shows EmptyState for other users profile with no data on tension", () => {
     render(<BoardStatsSection {...defaultProps} isOwnProfile={false} selectedBoard="tension" />);
 
-    expect(screen.getByText('No climbing data for this period')).toBeTruthy();
-    expect(screen.queryByTestId('board-import-prompt')).toBeNull();
+    expect(screen.getByText("No climbing data for this period")).toBeTruthy();
+    expect(screen.queryByTestId("board-import-prompt")).toBeNull();
   });
 
-  it('shows BoardImportPrompt for own profile with no data on kilter', () => {
+  it("shows BoardImportPrompt for own profile with no data on kilter", () => {
     render(<BoardStatsSection {...defaultProps} isOwnProfile={true} selectedBoard="kilter" />);
 
-    const prompt = screen.getByTestId('board-import-prompt');
+    const prompt = screen.getByTestId("board-import-prompt");
     expect(prompt).toBeTruthy();
-    expect(prompt.getAttribute('data-board-type')).toBe('kilter');
-    expect(screen.queryByText('No climbing data for this period')).toBeNull();
+    expect(prompt.getAttribute("data-board-type")).toBe("kilter");
+    expect(screen.queryByText("No climbing data for this period")).toBeNull();
   });
 
-  it('shows BoardImportPrompt for own profile with no data on tension', () => {
+  it("shows BoardImportPrompt for own profile with no data on tension", () => {
     render(<BoardStatsSection {...defaultProps} isOwnProfile={true} selectedBoard="tension" />);
 
-    const prompt = screen.getByTestId('board-import-prompt');
+    const prompt = screen.getByTestId("board-import-prompt");
     expect(prompt).toBeTruthy();
-    expect(prompt.getAttribute('data-board-type')).toBe('tension');
-    expect(screen.queryByText('No climbing data for this period')).toBeNull();
+    expect(prompt.getAttribute("data-board-type")).toBe("tension");
+    expect(screen.queryByText("No climbing data for this period")).toBeNull();
   });
 
-  it('shows EmptyState for own profile with no data on moonboard', () => {
+  it("shows EmptyState for own profile with no data on moonboard", () => {
     render(<BoardStatsSection {...defaultProps} isOwnProfile={true} selectedBoard="moonboard" />);
 
-    expect(screen.getByText('No climbing data for this period')).toBeTruthy();
-    expect(screen.queryByTestId('board-import-prompt')).toBeNull();
+    expect(screen.getByText("No climbing data for this period")).toBeTruthy();
+    expect(screen.queryByTestId("board-import-prompt")).toBeNull();
   });
 
-  it('renders nothing when filtered logbook has data', () => {
+  it("renders nothing when filtered logbook has data", () => {
     const logbookEntry = {
-      climbed_at: '2024-01-01',
+      climbed_at: "2024-01-01",
       difficulty: 10,
       tries: 1,
       angle: 40,
-      status: 'send' as const,
-      climbUuid: 'uuid-1',
+      status: "send" as const,
+      climbUuid: "uuid-1",
     };
 
     const { container } = render(
@@ -91,8 +91,8 @@ describe('BoardStatsSection empty state conditional rendering', () => {
       />,
     );
 
-    expect(container.innerHTML).toBe('');
-    expect(screen.queryByTestId('board-import-prompt')).toBeNull();
-    expect(screen.queryByText('No climbing data for this period')).toBeNull();
+    expect(container.innerHTML).toBe("");
+    expect(screen.queryByTestId("board-import-prompt")).toBeNull();
+    expect(screen.queryByText("No climbing data for this period")).toBeNull();
   });
 });

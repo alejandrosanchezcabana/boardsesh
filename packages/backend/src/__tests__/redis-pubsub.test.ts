@@ -1,13 +1,13 @@
-import { describe, it, expect, beforeAll, afterAll, beforeEach, vi } from 'vitest';
-import Redis from 'ioredis';
-import { createRedisPubSubAdapter, type RedisPubSubAdapter } from '../pubsub/redis-adapter';
-import type { QueueEvent, SessionEvent } from '@boardsesh/shared-schema';
+import { describe, it, expect, beforeAll, afterAll, beforeEach, vi } from "vite-plus/test";
+import Redis from "ioredis";
+import { createRedisPubSubAdapter, type RedisPubSubAdapter } from "../pubsub/redis-adapter";
+import type { QueueEvent, SessionEvent } from "@boardsesh/shared-schema";
 
 // Integration tests require Redis to be running
 // Run with: docker-compose -f docker-compose.test.yml up redis
-const REDIS_URL = process.env.REDIS_URL || 'redis://localhost:6380';
+const REDIS_URL = process.env.REDIS_URL || "redis://localhost:6380";
 
-describe('Redis PubSub Adapter', () => {
+describe("Redis PubSub Adapter", () => {
   let publisher1: Redis;
   let subscriber1: Redis;
   let publisher2: Redis;
@@ -24,10 +24,10 @@ describe('Redis PubSub Adapter', () => {
 
     // Wait for all connections
     await Promise.all([
-      new Promise<void>((resolve) => publisher1.once('ready', resolve)),
-      new Promise<void>((resolve) => subscriber1.once('ready', resolve)),
-      new Promise<void>((resolve) => publisher2.once('ready', resolve)),
-      new Promise<void>((resolve) => subscriber2.once('ready', resolve)),
+      new Promise<void>((resolve) => publisher1.once("ready", resolve)),
+      new Promise<void>((resolve) => subscriber1.once("ready", resolve)),
+      new Promise<void>((resolve) => publisher2.once("ready", resolve)),
+      new Promise<void>((resolve) => subscriber2.once("ready", resolve)),
     ]);
 
     adapter1 = createRedisPubSubAdapter(publisher1, subscriber1);
@@ -43,9 +43,9 @@ describe('Redis PubSub Adapter', () => {
     ]);
   });
 
-  describe('Cross-instance message delivery', () => {
-    it('should deliver queue events from instance 1 to instance 2', async () => {
-      const sessionId = 'test-session-1';
+  describe("Cross-instance message delivery", () => {
+    it("should deliver queue events from instance 1 to instance 2", async () => {
+      const sessionId = "test-session-1";
       const receivedEvents: QueueEvent[] = [];
 
       // Set up listener on adapter2
@@ -63,21 +63,21 @@ describe('Redis PubSub Adapter', () => {
 
       // Publish from adapter1
       const event: QueueEvent = {
-        __typename: 'QueueItemAdded',
+        __typename: "QueueItemAdded",
         item: {
-          uuid: 'test-uuid',
+          uuid: "test-uuid",
           climb: {
-            uuid: 'climb-uuid',
-            setter_username: 'test-setter',
-            name: 'Test Climb',
-            description: 'A test climb',
-            frames: 'test-frames',
+            uuid: "climb-uuid",
+            setter_username: "test-setter",
+            name: "Test Climb",
+            description: "A test climb",
+            frames: "test-frames",
             angle: 40,
             ascensionist_count: 10,
-            difficulty: 'V5',
-            quality_average: '4.5',
+            difficulty: "V5",
+            quality_average: "4.5",
             stars: 4.5,
-            difficulty_error: '0.5',
+            difficulty_error: "0.5",
             mirrored: false,
             benchmark_difficulty: null,
           },
@@ -94,14 +94,14 @@ describe('Redis PubSub Adapter', () => {
       await new Promise((resolve) => setTimeout(resolve, 200));
 
       expect(receivedEvents.length).toBe(1);
-      expect(receivedEvents[0].__typename).toBe('QueueItemAdded');
+      expect(receivedEvents[0].__typename).toBe("QueueItemAdded");
 
       // Cleanup
       await adapter2.unsubscribeQueueChannel(sessionId);
     });
 
-    it('should deliver session events from instance 1 to instance 2', async () => {
-      const sessionId = 'test-session-2';
+    it("should deliver session events from instance 1 to instance 2", async () => {
+      const sessionId = "test-session-2";
       const receivedEvents: SessionEvent[] = [];
 
       // Set up listener on adapter2
@@ -119,10 +119,10 @@ describe('Redis PubSub Adapter', () => {
 
       // Publish from adapter1
       const event: SessionEvent = {
-        __typename: 'UserJoined',
+        __typename: "UserJoined",
         user: {
-          id: 'user-123',
-          username: 'TestUser',
+          id: "user-123",
+          username: "TestUser",
           isLeader: true,
           avatarUrl: undefined,
         },
@@ -134,14 +134,14 @@ describe('Redis PubSub Adapter', () => {
       await new Promise((resolve) => setTimeout(resolve, 200));
 
       expect(receivedEvents.length).toBe(1);
-      expect(receivedEvents[0].__typename).toBe('UserJoined');
+      expect(receivedEvents[0].__typename).toBe("UserJoined");
 
       // Cleanup
       await adapter2.unsubscribeSessionChannel(sessionId);
     });
 
-    it('should NOT deliver messages to the same instance that published them', async () => {
-      const sessionId = 'test-session-3';
+    it("should NOT deliver messages to the same instance that published them", async () => {
+      const sessionId = "test-session-3";
       const receivedEvents: QueueEvent[] = [];
 
       // Set up listener on adapter1 (same instance that will publish)
@@ -159,8 +159,8 @@ describe('Redis PubSub Adapter', () => {
 
       // Publish from adapter1 (same instance)
       const event: QueueEvent = {
-        __typename: 'QueueItemRemoved',
-        uuid: 'removed-uuid',
+        __typename: "QueueItemRemoved",
+        uuid: "removed-uuid",
       };
 
       await adapter1.publishQueueEvent(sessionId, event);
@@ -176,9 +176,9 @@ describe('Redis PubSub Adapter', () => {
     });
   });
 
-  describe('Channel management', () => {
-    it('should not subscribe to the same channel twice', async () => {
-      const sessionId = 'test-session-4';
+  describe("Channel management", () => {
+    it("should not subscribe to the same channel twice", async () => {
+      const sessionId = "test-session-4";
 
       // Subscribe twice
       await adapter1.subscribeQueueChannel(sessionId);
@@ -192,16 +192,16 @@ describe('Redis PubSub Adapter', () => {
       await adapter1.unsubscribeQueueChannel(sessionId);
     });
 
-    it('should handle unsubscribe for non-subscribed channel', async () => {
-      const sessionId = 'test-session-never-subscribed';
+    it("should handle unsubscribe for non-subscribed channel", async () => {
+      const sessionId = "test-session-never-subscribed";
 
       // Should not throw
       await adapter1.unsubscribeQueueChannel(sessionId);
     });
   });
 
-  describe('Instance ID', () => {
-    it('should generate unique instance IDs for each adapter', () => {
+  describe("Instance ID", () => {
+    it("should generate unique instance IDs for each adapter", () => {
       const id1 = adapter1.getInstanceId();
       const id2 = adapter2.getInstanceId();
 
@@ -212,8 +212,8 @@ describe('Redis PubSub Adapter', () => {
   });
 });
 
-describe('Redis PubSub Adapter - Unit Tests (mocked)', () => {
-  it('should publish to correct channel format', async () => {
+describe("Redis PubSub Adapter - Unit Tests (mocked)", () => {
+  it("should publish to correct channel format", async () => {
     const mockPublish = vi.fn().mockResolvedValue(1);
     const mockPublisher = { publish: mockPublish } as unknown as Redis;
     const mockSubscriber = {
@@ -225,14 +225,14 @@ describe('Redis PubSub Adapter - Unit Tests (mocked)', () => {
     const adapter = createRedisPubSubAdapter(mockPublisher, mockSubscriber);
 
     const event: QueueEvent = {
-      __typename: 'ClimbMirrored',
+      __typename: "ClimbMirrored",
       mirrored: true,
     };
 
-    await adapter.publishQueueEvent('session-123', event);
+    await adapter.publishQueueEvent("session-123", event);
 
     expect(mockPublish).toHaveBeenCalledTimes(1);
-    expect(mockPublish.mock.calls[0][0]).toBe('boardsesh:queue:session-123');
+    expect(mockPublish.mock.calls[0][0]).toBe("boardsesh:queue:session-123");
 
     const publishedMessage = JSON.parse(mockPublish.mock.calls[0][1]);
     expect(publishedMessage.event).toEqual(event);
@@ -240,7 +240,7 @@ describe('Redis PubSub Adapter - Unit Tests (mocked)', () => {
     expect(publishedMessage.timestamp).toBeDefined();
   });
 
-  it('should subscribe to correct channel format', async () => {
+  it("should subscribe to correct channel format", async () => {
     const mockSubscribe = vi.fn().mockResolvedValue(undefined);
     const mockPublisher = { publish: vi.fn() } as unknown as Redis;
     const mockSubscriber = {
@@ -251,8 +251,8 @@ describe('Redis PubSub Adapter - Unit Tests (mocked)', () => {
 
     const adapter = createRedisPubSubAdapter(mockPublisher, mockSubscriber);
 
-    await adapter.subscribeSessionChannel('session-456');
+    await adapter.subscribeSessionChannel("session-456");
 
-    expect(mockSubscribe).toHaveBeenCalledWith('boardsesh:session:session-456');
+    expect(mockSubscribe).toHaveBeenCalledWith("boardsesh:session:session-456");
   });
 });

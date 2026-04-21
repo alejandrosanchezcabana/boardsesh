@@ -43,11 +43,11 @@ Screenshots are saved to `mobile/screenshots/`.
 
 ### Required screenshot sizes
 
-| Device | Resolution | Required? |
-|--------|-----------|-----------|
-| 6.9" iPhone (iPhone 16 Pro Max) | 1320x2868 | Yes |
-| 6.5" iPhone (iPhone 14 Plus) | 1284x2778 | Can reuse 6.9" screenshots |
-| 12.9" iPad (iPad Pro) | 2048x2732 | No, but recommended |
+| Device                          | Resolution | Required?                  |
+| ------------------------------- | ---------- | -------------------------- |
+| 6.9" iPhone (iPhone 16 Pro Max) | 1320x2868  | Yes                        |
+| 6.5" iPhone (iPhone 14 Plus)    | 1284x2778  | Can reuse 6.9" screenshots |
+| 12.9" iPad (iPad Pro)           | 2048x2732  | No, but recommended        |
 
 ### Manual alternative
 
@@ -84,6 +84,7 @@ If the Playwright tests are not set up or you need specific screenshots:
 5. When done, the Xcode Organizer window opens automatically showing your new archive.
 
 If the archive fails:
+
 - Check that your signing certificate is valid and not expired.
 - Check that the provisioning profile matches the bundle ID `com.boardsesh.app`.
 - Check that Capacitor native dependencies are installed: `cd mobile/ios/App && pod install`.
@@ -147,26 +148,31 @@ App Store Connect asks about data collection during submission. Answer based on 
 ### Data types collected
 
 **Contact Info - Email Address**
+
 - Usage: App Functionality
 - Linked to user's identity: Yes
 - Used for tracking: No
 
 **Contact Info - Name**
+
 - Usage: App Functionality
 - Linked to user's identity: Yes
 - Used for tracking: No
 
 **Location - Precise Location**
+
 - Usage: App Functionality
 - Linked to user's identity: Yes
 - Used for tracking: No
 
 **Health & Fitness - Fitness Activity**
+
 - Usage: App Functionality
 - Linked to user's identity: Yes
 - Used for tracking: No
 
 **Diagnostics - Usage Data**
+
 - Usage: Analytics
 - Linked to user's identity: No
 - Used for tracking: No

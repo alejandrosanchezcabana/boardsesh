@@ -1,4 +1,4 @@
-import { test, expect } from '@playwright/test';
+import { test, expect } from "@playwright/test";
 
 /**
  * E2E tests for the home page feed tabs (Sessions, Proposals, Comments).
@@ -7,18 +7,18 @@ import { test, expect } from '@playwright/test';
  * infinite scroll works, and the board filter applies across tabs.
  */
 
-test.describe('Sessions Feed - Unauthenticated', () => {
-  test('renders Sessions tab as default', async ({ page }) => {
-    await page.goto('/feed');
+test.describe("Sessions Feed - Unauthenticated", () => {
+  test("renders Sessions tab as default", async ({ page }) => {
+    await page.goto("/feed");
 
     // The Sessions tab should be active by default
-    const sessionsTab = page.getByRole('tab', { name: 'Sessions' });
+    const sessionsTab = page.getByRole("tab", { name: "Sessions" });
     await expect(sessionsTab).toBeVisible({ timeout: 15000 });
-    await expect(sessionsTab).toHaveAttribute('aria-selected', 'true');
+    await expect(sessionsTab).toHaveAttribute("aria-selected", "true");
   });
 
-  test('renders initial feed items', async ({ page }) => {
-    await page.goto('/feed');
+  test("renders initial feed items", async ({ page }) => {
+    await page.goto("/feed");
 
     // Wait for feed items to render
     const feedItems = page.locator('[data-testid="activity-feed-item"]');
@@ -29,8 +29,8 @@ test.describe('Sessions Feed - Unauthenticated', () => {
     expect(count).toBeGreaterThan(0);
   });
 
-  test('infinite scroll loads more items', async ({ page }) => {
-    await page.goto('/feed');
+  test("infinite scroll loads more items", async ({ page }) => {
+    await page.goto("/feed");
 
     // Wait for initial items to render
     const feedItems = page.locator('[data-testid="activity-feed-item"]');
@@ -59,12 +59,12 @@ test.describe('Sessions Feed - Unauthenticated', () => {
   });
 });
 
-test.describe('Proposals Feed', () => {
-  test('renders proposals when tab is clicked', async ({ page }) => {
-    await page.goto('/feed');
+test.describe("Proposals Feed", () => {
+  test("renders proposals when tab is clicked", async ({ page }) => {
+    await page.goto("/feed");
 
     // Click the Proposals tab
-    const proposalsTab = page.getByRole('tab', { name: 'Proposals' });
+    const proposalsTab = page.getByRole("tab", { name: "Proposals" });
     await expect(proposalsTab).toBeVisible({ timeout: 15000 });
     await proposalsTab.click();
 
@@ -76,23 +76,23 @@ test.describe('Proposals Feed', () => {
     await expect(proposalFeed).toBeVisible({ timeout: 15000 });
   });
 
-  test('can navigate directly to proposals tab', async ({ page }) => {
-    await page.goto('/feed?tab=proposals');
+  test("can navigate directly to proposals tab", async ({ page }) => {
+    await page.goto("/feed?tab=proposals");
 
-    const proposalsTab = page.getByRole('tab', { name: 'Proposals' });
-    await expect(proposalsTab).toHaveAttribute('aria-selected', 'true', { timeout: 15000 });
+    const proposalsTab = page.getByRole("tab", { name: "Proposals" });
+    await expect(proposalsTab).toHaveAttribute("aria-selected", "true", { timeout: 15000 });
 
     const proposalFeed = page.locator('[data-testid="proposal-feed"]');
     await expect(proposalFeed).toBeVisible({ timeout: 15000 });
   });
 });
 
-test.describe('Comments Feed', () => {
-  test('renders comments when tab is clicked', async ({ page }) => {
-    await page.goto('/feed');
+test.describe("Comments Feed", () => {
+  test("renders comments when tab is clicked", async ({ page }) => {
+    await page.goto("/feed");
 
     // Click the Comments tab
-    const commentsTab = page.getByRole('tab', { name: 'Comments' });
+    const commentsTab = page.getByRole("tab", { name: "Comments" });
     await expect(commentsTab).toBeVisible({ timeout: 15000 });
     await commentsTab.click();
 
@@ -104,32 +104,32 @@ test.describe('Comments Feed', () => {
     await expect(commentFeed).toBeVisible({ timeout: 15000 });
   });
 
-  test('can navigate directly to comments tab', async ({ page }) => {
-    await page.goto('/feed?tab=comments');
+  test("can navigate directly to comments tab", async ({ page }) => {
+    await page.goto("/feed?tab=comments");
 
-    const commentsTab = page.getByRole('tab', { name: 'Comments' });
-    await expect(commentsTab).toHaveAttribute('aria-selected', 'true', { timeout: 15000 });
+    const commentsTab = page.getByRole("tab", { name: "Comments" });
+    await expect(commentsTab).toHaveAttribute("aria-selected", "true", { timeout: 15000 });
 
     const commentFeed = page.locator('[data-testid="comment-feed"]');
     await expect(commentFeed).toBeVisible({ timeout: 15000 });
   });
 });
 
-test.describe('Tab Navigation', () => {
-  test('all three tabs are visible', async ({ page }) => {
-    await page.goto('/feed');
+test.describe("Tab Navigation", () => {
+  test("all three tabs are visible", async ({ page }) => {
+    await page.goto("/feed");
 
-    await expect(page.getByRole('tab', { name: 'Sessions' })).toBeVisible({ timeout: 15000 });
-    await expect(page.getByRole('tab', { name: 'Proposals' })).toBeVisible();
-    await expect(page.getByRole('tab', { name: 'Comments' })).toBeVisible();
+    await expect(page.getByRole("tab", { name: "Sessions" })).toBeVisible({ timeout: 15000 });
+    await expect(page.getByRole("tab", { name: "Proposals" })).toBeVisible();
+    await expect(page.getByRole("tab", { name: "Comments" })).toBeVisible();
   });
 
-  test('tab switching preserves board filter in URL', async ({ page }) => {
+  test("tab switching preserves board filter in URL", async ({ page }) => {
     // Start with a board filter
-    await page.goto('/feed?board=test-board-uuid');
+    await page.goto("/feed?board=test-board-uuid");
 
     // Switch to Proposals tab
-    const proposalsTab = page.getByRole('tab', { name: 'Proposals' });
+    const proposalsTab = page.getByRole("tab", { name: "Proposals" });
     await expect(proposalsTab).toBeVisible({ timeout: 15000 });
     await proposalsTab.click();
 
@@ -138,7 +138,7 @@ test.describe('Tab Navigation', () => {
     await expect(page).toHaveURL(/tab=proposals/, { timeout: 10000 });
 
     // Switch to Comments tab
-    const commentsTab = page.getByRole('tab', { name: 'Comments' });
+    const commentsTab = page.getByRole("tab", { name: "Comments" });
     await commentsTab.click();
 
     // Board filter should still be preserved
@@ -146,48 +146,48 @@ test.describe('Tab Navigation', () => {
     await expect(page).toHaveURL(/tab=comments/, { timeout: 10000 });
   });
 
-  test('sessions tab does not have sort buttons', async ({ page }) => {
-    await page.goto('/feed');
+  test("sessions tab does not have sort buttons", async ({ page }) => {
+    await page.goto("/feed");
 
     // Wait for the page to load
-    const sessionsTab = page.getByRole('tab', { name: 'Sessions' });
+    const sessionsTab = page.getByRole("tab", { name: "Sessions" });
     await expect(sessionsTab).toBeVisible({ timeout: 15000 });
 
     // Sort buttons (Top, Hot, Controversial) should NOT exist
-    await expect(page.getByRole('button', { name: 'Top' })).not.toBeVisible();
-    await expect(page.getByRole('button', { name: 'Hot' })).not.toBeVisible();
-    await expect(page.getByRole('button', { name: 'Controversial' })).not.toBeVisible();
+    await expect(page.getByRole("button", { name: "Top" })).not.toBeVisible();
+    await expect(page.getByRole("button", { name: "Hot" })).not.toBeVisible();
+    await expect(page.getByRole("button", { name: "Controversial" })).not.toBeVisible();
   });
 });
 
-test.describe('Sessions Feed - Authenticated', () => {
+test.describe("Sessions Feed - Authenticated", () => {
   test.beforeEach(async ({ page }) => {
     // Log in via the auth login form. The login page honors callbackUrl,
     // so we land directly on /feed after auth succeeds.
-    await page.goto('/auth/login?callbackUrl=/feed');
-    await page.getByLabel('Email').fill('test@boardsesh.com');
-    await page.getByLabel('Password').fill('test');
-    await page.getByRole('button', { name: 'Login' }).click();
+    await page.goto("/auth/login?callbackUrl=/feed");
+    await page.getByLabel("Email").fill("test@boardsesh.com");
+    await page.getByLabel("Password").fill("test");
+    await page.getByRole("button", { name: "Login" }).click();
 
     // Wait for redirect to the feed page after login
-    await page.waitForURL('/feed', { timeout: 15000 });
+    await page.waitForURL("/feed", { timeout: 15000 });
   });
 
-  test('renders personalized feed without sign-in alert', async ({ page }) => {
+  test("renders personalized feed without sign-in alert", async ({ page }) => {
     // The Sessions tab should be active by default
-    const sessionsTab = page.getByRole('tab', { name: 'Sessions' });
+    const sessionsTab = page.getByRole("tab", { name: "Sessions" });
     await expect(sessionsTab).toBeVisible({ timeout: 15000 });
-    await expect(sessionsTab).toHaveAttribute('aria-selected', 'true');
+    await expect(sessionsTab).toHaveAttribute("aria-selected", "true");
 
     // Wait for feed items to render
     const feedItems = page.locator('[data-testid="activity-feed-item"]');
     await expect(feedItems.first()).toBeVisible({ timeout: 30000 });
 
     // Should NOT show the "Sign in" alert
-    await expect(page.getByText('Sign in to see a personalized feed')).not.toBeVisible();
+    await expect(page.getByText("Sign in to see a personalized feed")).not.toBeVisible();
   });
 
-  test('infinite scroll pagination works with authenticated feed', async ({ page }) => {
+  test("infinite scroll pagination works with authenticated feed", async ({ page }) => {
     // Wait for initial items to render
     const feedItems = page.locator('[data-testid="activity-feed-item"]');
     await expect(feedItems.first()).toBeVisible({ timeout: 30000 });

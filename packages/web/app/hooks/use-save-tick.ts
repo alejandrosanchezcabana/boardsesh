@@ -1,23 +1,23 @@
-'use client';
+"use client";
 
-import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { useWsAuthToken } from './use-ws-auth-token';
-import { useSession } from 'next-auth/react';
-import { createGraphQLHttpClient } from '@/app/lib/graphql/client';
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useWsAuthToken } from "./use-ws-auth-token";
+import { useSession } from "next-auth/react";
+import { createGraphQLHttpClient } from "@/app/lib/graphql/client";
 import {
   SAVE_TICK,
   type SaveTickMutationVariables,
   type SaveTickMutationResponse,
-} from '@/app/lib/graphql/operations';
-import type { BoardName } from '@/app/lib/types';
+} from "@/app/lib/graphql/operations";
+import type { BoardName } from "@/app/lib/types";
 import {
   accumulatedLogbookQueryKey,
   fetchLogbookQueryKeyPrefix,
   toLogbookEntry,
   type TickStatus,
   type LogbookEntry,
-} from './use-logbook';
-import { clearTickDraft } from '@/app/lib/tick-draft-db';
+} from "./use-logbook";
+import { clearTickDraft } from "@/app/lib/tick-draft-db";
 
 // Options for saving a tick (local storage, no Aurora required)
 export interface SaveTickOptions {
@@ -50,11 +50,11 @@ export function useSaveTick(boardName: BoardName) {
 
   return useMutation({
     mutationFn: async (options: SaveTickOptions) => {
-      if (sessionStatus !== 'authenticated') {
-        throw new Error('Not authenticated');
+      if (sessionStatus !== "authenticated") {
+        throw new Error("Not authenticated");
       }
       if (!token) {
-        throw new Error('Auth token not available');
+        throw new Error("Auth token not available");
       }
 
       const client = createGraphQLHttpClient(token);
@@ -99,14 +99,14 @@ export function useSaveTick(boardName: BoardName) {
         difficulty: options.difficulty ?? null,
         comment: options.comment,
         climbed_at: options.climbedAt,
-        is_ascent: options.status === 'flash' || options.status === 'send',
+        is_ascent: options.status === "flash" || options.status === "send",
         status: options.status,
       };
 
-      queryClient.setQueryData<LogbookEntry[]>(
-        accumulatedKey,
-        (existing = []) => [optimisticEntry, ...existing],
-      );
+      queryClient.setQueryData<LogbookEntry[]>(accumulatedKey, (existing = []) => [
+        optimisticEntry,
+        ...existing,
+      ]);
 
       return { tempUuid };
     },
@@ -149,7 +149,7 @@ export function useSaveTick(boardName: BoardName) {
       // so the new embed shows up without a page reload.
       if (options.videoUrl) {
         queryClient.invalidateQueries({
-          queryKey: ['betaLinks', boardName, options.climbUuid],
+          queryKey: ["betaLinks", boardName, options.climbUuid],
         });
       }
     },

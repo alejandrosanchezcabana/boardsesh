@@ -30,7 +30,9 @@
   color: var(--neutral-600);
   cursor: pointer;
   white-space: nowrap;
-  transition: background-color 150ms ease, border-color 150ms ease;
+  transition:
+    background-color 150ms ease,
+    border-color 150ms ease;
   flex-shrink: 0;
 }
 

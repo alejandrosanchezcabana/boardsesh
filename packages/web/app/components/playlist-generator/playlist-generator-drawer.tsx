@@ -1,28 +1,31 @@
-'use client';
+"use client";
 
-import React, { useState, useCallback, useMemo, useEffect } from 'react';
-import CircularProgress from '@mui/material/CircularProgress';
-import { useSnackbar } from '@/app/components/providers/snackbar-provider';
-import MuiButton from '@mui/material/Button';
-import Typography from '@mui/material/Typography';
-import SwipeableDrawer from '../swipeable-drawer/swipeable-drawer';
-import { ArrowBackOutlined, ElectricBoltOutlined } from '@mui/icons-material';
-import { BoardDetails, Climb } from '@/app/lib/types';
-import { executeGraphQL } from '@/app/lib/graphql/client';
-import { SEARCH_CLIMBS, ClimbSearchInputVariables, ClimbSearchResponse } from '@/app/lib/graphql/operations/climb-search';
+import React, { useState, useCallback, useMemo, useEffect } from "react";
+import CircularProgress from "@mui/material/CircularProgress";
+import { useSnackbar } from "@/app/components/providers/snackbar-provider";
+import MuiButton from "@mui/material/Button";
+import Typography from "@mui/material/Typography";
+import SwipeableDrawer from "../swipeable-drawer/swipeable-drawer";
+import { ArrowBackOutlined, ElectricBoltOutlined } from "@mui/icons-material";
+import { BoardDetails, Climb } from "@/app/lib/types";
+import { executeGraphQL } from "@/app/lib/graphql/client";
+import {
+  SEARCH_CLIMBS,
+  ClimbSearchInputVariables,
+  ClimbSearchResponse,
+} from "@/app/lib/graphql/operations/climb-search";
 import {
   ADD_CLIMB_TO_PLAYLIST,
   AddClimbToPlaylistMutationVariables,
   AddClimbToPlaylistMutationResponse,
-} from '@/app/lib/graphql/operations/playlists';
-import { useWsAuthToken } from '@/app/hooks/use-ws-auth-token';
-import { WorkoutType, GeneratorOptions, PlannedClimbSlot, WORKOUT_TYPES } from './types';
-import WorkoutTypeSelector from './workout-type-selector';
-import GeneratorOptionsForm, { getDefaultOptions } from './generator-options-form';
-import GradeProgressionChart from './grade-progression-chart';
-import { generateWorkoutPlan, groupSlotsBySection, getGradeName } from './generation-utils';
-import styles from './playlist-generator-drawer.module.css';
-
+} from "@/app/lib/graphql/operations/playlists";
+import { useWsAuthToken } from "@/app/hooks/use-ws-auth-token";
+import { WorkoutType, GeneratorOptions, PlannedClimbSlot, WORKOUT_TYPES } from "./types";
+import WorkoutTypeSelector from "./workout-type-selector";
+import GeneratorOptionsForm, { getDefaultOptions } from "./generator-options-form";
+import GradeProgressionChart from "./grade-progression-chart";
+import { generateWorkoutPlan, groupSlotsBySection, getGradeName } from "./generation-utils";
+import styles from "./playlist-generator-drawer.module.css";
 
 interface PlaylistGeneratorDrawerProps {
   open: boolean;
@@ -33,7 +36,7 @@ interface PlaylistGeneratorDrawerProps {
   onSuccess?: () => void;
 }
 
-type DrawerState = 'select' | 'configure' | 'generating';
+type DrawerState = "select" | "configure" | "generating";
 
 const PlaylistGeneratorDrawer: React.FC<PlaylistGeneratorDrawerProps> = ({
   open,
@@ -49,7 +52,7 @@ const PlaylistGeneratorDrawer: React.FC<PlaylistGeneratorDrawerProps> = ({
   // Default target grade (middle of range)
   const defaultTargetGrade = 18; // 6b/V4
 
-  const [drawerState, setDrawerState] = useState<DrawerState>('select');
+  const [drawerState, setDrawerState] = useState<DrawerState>("select");
   const [selectedType, setSelectedType] = useState<WorkoutType | null>(null);
   const [options, setOptions] = useState<GeneratorOptions | null>(null);
   const [generating, setGenerating] = useState(false);
@@ -58,7 +61,7 @@ const PlaylistGeneratorDrawer: React.FC<PlaylistGeneratorDrawerProps> = ({
   // Reset state when drawer opens/closes
   useEffect(() => {
     if (open) {
-      setDrawerState('select');
+      setDrawerState("select");
       setSelectedType(null);
       setOptions(null);
       setGenerating(false);
@@ -73,16 +76,19 @@ const PlaylistGeneratorDrawer: React.FC<PlaylistGeneratorDrawerProps> = ({
   }, [options]);
 
   // Handle workout type selection
-  const handleTypeSelect = useCallback((type: WorkoutType) => {
-    setSelectedType(type);
-    setOptions(getDefaultOptions(type, defaultTargetGrade));
-    setDrawerState('configure');
-  }, [defaultTargetGrade]);
+  const handleTypeSelect = useCallback(
+    (type: WorkoutType) => {
+      setSelectedType(type);
+      setOptions(getDefaultOptions(type, defaultTargetGrade));
+      setDrawerState("configure");
+    },
+    [defaultTargetGrade],
+  );
 
   // Handle back button
   const handleBack = useCallback(() => {
-    if (drawerState === 'configure') {
-      setDrawerState('select');
+    if (drawerState === "configure") {
+      setDrawerState("select");
       setSelectedType(null);
       setOptions(null);
     }
@@ -98,19 +104,19 @@ const PlaylistGeneratorDrawer: React.FC<PlaylistGeneratorDrawerProps> = ({
   // Search for climbs at a specific grade
   const searchClimbsForGrade = async (
     grade: number,
-    excludeUuids: Set<string>
+    excludeUuids: Set<string>,
   ): Promise<Climb[]> => {
-    const input: ClimbSearchInputVariables['input'] = {
+    const input: ClimbSearchInputVariables["input"] = {
       boardName: boardDetails.board_name,
       layoutId: boardDetails.layout_id,
       sizeId: boardDetails.size_id,
-      setIds: boardDetails.set_ids.join(','),
+      setIds: boardDetails.set_ids.join(","),
       angle,
       minGrade: grade,
       maxGrade: grade,
       minAscents: options?.minAscents || 5,
-      sortBy: 'quality',
-      sortOrder: 'desc',
+      sortBy: "quality",
+      sortOrder: "desc",
       page: 1,
       pageSize: 50, // Get a pool of climbs to choose from
       onlyTallClimbs: options?.onlyTallClimbs || false,
@@ -119,11 +125,11 @@ const PlaylistGeneratorDrawer: React.FC<PlaylistGeneratorDrawerProps> = ({
     // Apply climb bias filters if user is authenticated
     if (options && isAuthenticated) {
       switch (options.climbBias) {
-        case 'unfamiliar':
+        case "unfamiliar":
           input.hideAttempted = true;
           input.hideCompleted = true;
           break;
-        case 'attempted':
+        case "attempted":
           input.showOnlyAttempted = true;
           break;
         // 'any' - no additional filters
@@ -133,7 +139,7 @@ const PlaylistGeneratorDrawer: React.FC<PlaylistGeneratorDrawerProps> = ({
     const response = await executeGraphQL<ClimbSearchResponse, ClimbSearchInputVariables>(
       SEARCH_CLIMBS,
       { input },
-      token
+      token,
     );
 
     // Filter out already selected climbs
@@ -143,12 +149,12 @@ const PlaylistGeneratorDrawer: React.FC<PlaylistGeneratorDrawerProps> = ({
   // Generate the playlist
   const handleGenerate = useCallback(async () => {
     if (!options || plannedSlots.length === 0) {
-      showMessage('No climbs to generate', 'error');
+      showMessage("No climbs to generate", "error");
       return;
     }
 
     setGenerating(true);
-    setDrawerState('generating');
+    setDrawerState("generating");
     setProgress({ current: 0, total: plannedSlots.length });
 
     const addedUuids = new Set<string>();
@@ -194,7 +200,10 @@ const PlaylistGeneratorDrawer: React.FC<PlaylistGeneratorDrawerProps> = ({
         const selectedClimb = availableClimbs[selectedIndex];
 
         // Add to playlist
-        await executeGraphQL<AddClimbToPlaylistMutationResponse, AddClimbToPlaylistMutationVariables>(
+        await executeGraphQL<
+          AddClimbToPlaylistMutationResponse,
+          AddClimbToPlaylistMutationVariables
+        >(
           ADD_CLIMB_TO_PLAYLIST,
           {
             input: {
@@ -203,19 +212,18 @@ const PlaylistGeneratorDrawer: React.FC<PlaylistGeneratorDrawerProps> = ({
               angle,
             },
           },
-          token
+          token,
         );
 
         addedUuids.add(selectedClimb.uuid);
 
         // Remove from cache
         const updatedCache = (climbCache.get(slot.grade) || []).filter(
-          (c) => c.uuid !== selectedClimb.uuid
+          (c) => c.uuid !== selectedClimb.uuid,
         );
         climbCache.set(slot.grade, updatedCache);
-
       } catch (error) {
-        console.error('Error adding climb:', error);
+        console.error("Error adding climb:", error);
         failedSlots.push(slot);
       }
 
@@ -226,43 +234,51 @@ const PlaylistGeneratorDrawer: React.FC<PlaylistGeneratorDrawerProps> = ({
     setGenerating(false);
 
     if (failedSlots.length === 0) {
-      showMessage(`Added ${plannedSlots.length} climbs to playlist`, 'success');
+      showMessage(`Added ${plannedSlots.length} climbs to playlist`, "success");
     } else if (failedSlots.length < plannedSlots.length) {
       showMessage(
         `Added ${plannedSlots.length - failedSlots.length} climbs. ${failedSlots.length} slots couldn't be filled.`,
-        'warning'
+        "warning",
       );
     } else {
-      showMessage('Failed to generate playlist. No suitable climbs found.', 'error');
+      showMessage("Failed to generate playlist. No suitable climbs found.", "error");
     }
 
     onSuccess?.();
     onClose();
-  }, [options, plannedSlots, playlistUuid, angle, token, isAuthenticated, boardDetails, onSuccess, onClose]);
+  }, [
+    options,
+    plannedSlots,
+    playlistUuid,
+    angle,
+    token,
+    isAuthenticated,
+    boardDetails,
+    onSuccess,
+    onClose,
+  ]);
 
   // Get workout type info
-  const workoutTypeInfo = selectedType
-    ? WORKOUT_TYPES.find((t) => t.type === selectedType)
-    : null;
+  const workoutTypeInfo = selectedType ? WORKOUT_TYPES.find((t) => t.type === selectedType) : null;
 
   // Render title based on state
   const renderTitle = () => {
-    if (drawerState === 'select') {
-      return 'Generate Playlist';
+    if (drawerState === "select") {
+      return "Generate Playlist";
     }
-    if (drawerState === 'generating') {
-      return 'Generating...';
+    if (drawerState === "generating") {
+      return "Generating...";
     }
-    return workoutTypeInfo?.name || 'Options';
+    return workoutTypeInfo?.name || "Options";
   };
 
   // Render content based on state
   const renderContent = () => {
-    if (drawerState === 'select') {
+    if (drawerState === "select") {
       return <WorkoutTypeSelector onSelect={handleTypeSelect} />;
     }
 
-    if (drawerState === 'generating') {
+    if (drawerState === "generating") {
       return (
         <div className={styles.generatingContainer}>
           <CircularProgress size={48} />
@@ -273,7 +289,7 @@ const PlaylistGeneratorDrawer: React.FC<PlaylistGeneratorDrawerProps> = ({
       );
     }
 
-    if (drawerState === 'configure' && selectedType && options) {
+    if (drawerState === "configure" && selectedType && options) {
       const groupedSlots = groupSlotsBySection(plannedSlots);
 
       return (
@@ -287,18 +303,25 @@ const PlaylistGeneratorDrawer: React.FC<PlaylistGeneratorDrawerProps> = ({
           <div className={styles.summarySection}>
             {groupedSlots.map((group) => (
               <div key={group.section} className={styles.summaryRow}>
-                <Typography variant="body2" component="span" color="text.secondary">{group.label}</Typography>
+                <Typography variant="body2" component="span" color="text.secondary">
+                  {group.label}
+                </Typography>
                 <Typography variant="body2" component="span">
-                  {group.slots.length} climb{group.slots.length !== 1 ? 's' : ''}
-                  {' '}({getGradeName(group.slots[0].grade)}
+                  {group.slots.length} climb{group.slots.length !== 1 ? "s" : ""} (
+                  {getGradeName(group.slots[0].grade)}
                   {group.slots[0].grade !== group.slots[group.slots.length - 1].grade &&
-                    ` - ${getGradeName(group.slots[group.slots.length - 1].grade)}`})
+                    ` - ${getGradeName(group.slots[group.slots.length - 1].grade)}`}
+                  )
                 </Typography>
               </div>
             ))}
             <div className={styles.totalRow}>
-              <Typography variant="body2" component="span" fontWeight={600}>Total</Typography>
-              <Typography variant="body2" component="span" fontWeight={600}>{plannedSlots.length} climbs</Typography>
+              <Typography variant="body2" component="span" fontWeight={600}>
+                Total
+              </Typography>
+              <Typography variant="body2" component="span" fontWeight={600}>
+                {plannedSlots.length} climbs
+              </Typography>
             </div>
           </div>
 
@@ -323,7 +346,7 @@ const PlaylistGeneratorDrawer: React.FC<PlaylistGeneratorDrawerProps> = ({
     <SwipeableDrawer
       title={
         <div className={styles.drawerHeader}>
-          {drawerState === 'configure' && (
+          {drawerState === "configure" && (
             <MuiButton
               variant="text"
               startIcon={<ArrowBackOutlined />}
@@ -332,7 +355,7 @@ const PlaylistGeneratorDrawer: React.FC<PlaylistGeneratorDrawerProps> = ({
             />
           )}
           <span className={styles.drawerTitle}>{renderTitle()}</span>
-          {drawerState === 'configure' && <div className={styles.headerSpacer} />}
+          {drawerState === "configure" && <div className={styles.headerSpacer} />}
         </div>
       }
       open={open}
@@ -341,17 +364,17 @@ const PlaylistGeneratorDrawer: React.FC<PlaylistGeneratorDrawerProps> = ({
       showCloseButton={!generating}
       disableBackdropClick={generating}
       styles={{
-        wrapper: { height: '85vh' },
+        wrapper: { height: "85vh" },
         header: {
           borderBottom: `1px solid var(--neutral-200)`,
         },
         body: {
-          padding: drawerState === 'select' ? 0 : 16,
-          overflow: 'auto',
+          padding: drawerState === "select" ? 0 : 16,
+          overflow: "auto",
         },
       }}
       extra={
-        drawerState === 'configure' && !generating ? (
+        drawerState === "configure" && !generating ? (
           <MuiButton
             variant="contained"
             startIcon={<ElectricBoltOutlined />}

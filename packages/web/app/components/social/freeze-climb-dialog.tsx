@@ -1,19 +1,19 @@
-'use client';
+"use client";
 
-import React, { useState, useCallback } from 'react';
-import Dialog from '@mui/material/Dialog';
-import DialogTitle from '@mui/material/DialogTitle';
-import DialogContent from '@mui/material/DialogContent';
-import DialogActions from '@mui/material/DialogActions';
-import Button from '@mui/material/Button';
-import TextField from '@mui/material/TextField';
-import FormControlLabel from '@mui/material/FormControlLabel';
-import Switch from '@mui/material/Switch';
-import Snackbar from '@mui/material/Snackbar';
-import { themeTokens } from '@/app/theme/theme-config';
-import { useWsAuthToken } from '@/app/hooks/use-ws-auth-token';
-import { createGraphQLHttpClient } from '@/app/lib/graphql/client';
-import { FREEZE_CLIMB } from '@/app/lib/graphql/operations/proposals';
+import React, { useState, useCallback } from "react";
+import Dialog from "@mui/material/Dialog";
+import DialogTitle from "@mui/material/DialogTitle";
+import DialogContent from "@mui/material/DialogContent";
+import DialogActions from "@mui/material/DialogActions";
+import Button from "@mui/material/Button";
+import TextField from "@mui/material/TextField";
+import FormControlLabel from "@mui/material/FormControlLabel";
+import Switch from "@mui/material/Switch";
+import Snackbar from "@mui/material/Snackbar";
+import { themeTokens } from "@/app/theme/theme-config";
+import { useWsAuthToken } from "@/app/hooks/use-ws-auth-token";
+import { createGraphQLHttpClient } from "@/app/lib/graphql/client";
+import { FREEZE_CLIMB } from "@/app/lib/graphql/operations/proposals";
 
 interface FreezeClimbDialogProps {
   open: boolean;
@@ -34,9 +34,9 @@ export default function FreezeClimbDialog({
 }: FreezeClimbDialogProps) {
   const { token } = useWsAuthToken();
   const [frozen, setFrozen] = useState(currentlyFrozen);
-  const [reason, setReason] = useState('');
+  const [reason, setReason] = useState("");
   const [loading, setLoading] = useState(false);
-  const [snackbar, setSnackbar] = useState('');
+  const [snackbar, setSnackbar] = useState("");
 
   const handleSubmit = useCallback(async () => {
     if (!token) return;
@@ -54,7 +54,7 @@ export default function FreezeClimbDialog({
       onFreezeChanged?.(frozen);
       onClose();
     } catch (err) {
-      setSnackbar('Failed to update freeze status');
+      setSnackbar("Failed to update freeze status");
     } finally {
       setLoading(false);
     }
@@ -63,16 +63,11 @@ export default function FreezeClimbDialog({
   return (
     <>
       <Dialog open={open} onClose={onClose} maxWidth="sm" fullWidth>
-        <DialogTitle>{currentlyFrozen ? 'Unfreeze Climb' : 'Freeze Climb'}</DialogTitle>
+        <DialogTitle>{currentlyFrozen ? "Unfreeze Climb" : "Freeze Climb"}</DialogTitle>
         <DialogContent>
           <FormControlLabel
-            control={
-              <Switch
-                checked={frozen}
-                onChange={(e) => setFrozen(e.target.checked)}
-              />
-            }
-            label={frozen ? 'Frozen (no new proposals)' : 'Not frozen'}
+            control={<Switch checked={frozen} onChange={(e) => setFrozen(e.target.checked)} />}
+            label={frozen ? "Frozen (no new proposals)" : "Not frozen"}
             sx={{ mb: 2, mt: 1 }}
           />
           <TextField
@@ -87,18 +82,20 @@ export default function FreezeClimbDialog({
           />
         </DialogContent>
         <DialogActions>
-          <Button onClick={onClose} sx={{ textTransform: 'none' }}>Cancel</Button>
+          <Button onClick={onClose} sx={{ textTransform: "none" }}>
+            Cancel
+          </Button>
           <Button
             onClick={handleSubmit}
             variant="contained"
             disabled={loading}
             sx={{
-              textTransform: 'none',
+              textTransform: "none",
               bgcolor: themeTokens.colors.primary,
-              '&:hover': { bgcolor: themeTokens.colors.primaryHover },
+              "&:hover": { bgcolor: themeTokens.colors.primaryHover },
             }}
           >
-            {loading ? 'Saving...' : 'Save'}
+            {loading ? "Saving..." : "Save"}
           </Button>
         </DialogActions>
       </Dialog>
@@ -106,7 +103,7 @@ export default function FreezeClimbDialog({
       <Snackbar
         open={!!snackbar}
         autoHideDuration={3000}
-        onClose={() => setSnackbar('')}
+        onClose={() => setSnackbar("")}
         message={snackbar}
       />
     </>

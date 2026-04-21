@@ -1,8 +1,8 @@
-import { jwtDecrypt } from 'jose';
-import { hkdf } from '@panva/hkdf';
-import { db } from '../db/client';
-import { esp32Controllers } from '@boardsesh/db/schema/app';
-import { eq } from 'drizzle-orm';
+import { jwtDecrypt } from "jose";
+import { hkdf } from "@panva/hkdf";
+import { db } from "../db/client";
+import { esp32Controllers } from "@boardsesh/db/schema/app";
+import { eq } from "drizzle-orm";
 
 export interface AuthResult {
   userId: string;
@@ -30,11 +30,11 @@ async function deriveEncryptionKey(secret: string): Promise<Uint8Array> {
   }
   const encoder = new TextEncoder();
   cachedEncryptionKey = await hkdf(
-    'sha256',
+    "sha256",
     encoder.encode(secret),
-    '',
-    'NextAuth.js Generated Encryption Key',
-    32
+    "",
+    "NextAuth.js Generated Encryption Key",
+    32,
   );
   cachedSecret = secret;
   return cachedEncryptionKey;
@@ -77,7 +77,7 @@ export async function validateNextAuthToken(token: string): Promise<AuthResult |
   try {
     const secret = process.env.NEXTAUTH_SECRET;
     if (!secret) {
-      console.warn('[Auth] NEXTAUTH_SECRET not configured');
+      console.warn("[Auth] NEXTAUTH_SECRET not configured");
       return null;
     }
 
@@ -89,7 +89,7 @@ export async function validateNextAuthToken(token: string): Promise<AuthResult |
 
     const userId = payload.sub as string | undefined;
     if (!userId) {
-      console.warn('[Auth] Token missing sub claim');
+      console.warn("[Auth] Token missing sub claim");
       tokenCache.set(token, { result: null, expiresAt: now + TOKEN_CACHE_TTL_MS });
       return null;
     }
@@ -99,7 +99,7 @@ export async function validateNextAuthToken(token: string): Promise<AuthResult |
     return result;
   } catch (error) {
     if (error instanceof Error) {
-      console.warn('[Auth] Token validation failed:', error.message);
+      console.warn("[Auth] Token validation failed:", error.message);
     }
     tokenCache.set(token, { result: null, expiresAt: now + TOKEN_CACHE_TTL_MS });
     return null;
@@ -112,18 +112,18 @@ export async function validateNextAuthToken(token: string): Promise<AuthResult |
  */
 export function extractAuthToken(
   connectionParams?: Record<string, unknown>,
-  requestUrl?: string
+  requestUrl?: string,
 ): string | null {
   // Check connection params (preferred method)
-  if (connectionParams?.authToken && typeof connectionParams.authToken === 'string') {
+  if (connectionParams?.authToken && typeof connectionParams.authToken === "string") {
     return connectionParams.authToken;
   }
 
   // Fall back to URL query params
   if (requestUrl) {
     try {
-      const url = new URL(requestUrl, 'http://localhost');
-      const token = url.searchParams.get('token');
+      const url = new URL(requestUrl, "http://localhost");
+      const token = url.searchParams.get("token");
       if (token) {
         return token;
       }
@@ -139,10 +139,8 @@ export function extractAuthToken(
  * Extract controller API key from connection params.
  * Controllers should pass their API key in connectionParams.controllerApiKey
  */
-export function extractControllerApiKey(
-  connectionParams?: Record<string, unknown>
-): string | null {
-  if (connectionParams?.controllerApiKey && typeof connectionParams.controllerApiKey === 'string') {
+export function extractControllerApiKey(connectionParams?: Record<string, unknown>): string | null {
+  if (connectionParams?.controllerApiKey && typeof connectionParams.controllerApiKey === "string") {
     return connectionParams.controllerApiKey;
   }
   return null;
@@ -153,7 +151,7 @@ export function extractControllerApiKey(
  * Returns null if the API key is invalid or not found.
  */
 export async function validateControllerApiKey(
-  apiKey: string
+  apiKey: string,
 ): Promise<ControllerAuthResult | null> {
   try {
     const [controller] = await db
@@ -163,7 +161,7 @@ export async function validateControllerApiKey(
       .limit(1);
 
     if (!controller) {
-      console.warn('[Auth] Controller API key not found');
+      console.warn("[Auth] Controller API key not found");
       return null;
     }
 
@@ -179,7 +177,7 @@ export async function validateControllerApiKey(
     };
   } catch (error) {
     if (error instanceof Error) {
-      console.warn('[Auth] Controller validation failed:', error.message);
+      console.warn("[Auth] Controller validation failed:", error.message);
     }
     return null;
   }

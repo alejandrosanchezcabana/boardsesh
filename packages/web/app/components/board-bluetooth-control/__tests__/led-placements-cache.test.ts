@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { describe, it, expect, vi, beforeEach } from "vite-plus/test";
 
 /**
  * Tests for the module-level LED placements cache pattern used in use-board-bluetooth.ts.
@@ -16,9 +16,13 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
  * in isolation to verify correctness without coupling to the full React hook.
  */
 
-type GetLedPlacementsFn = (boardName: string, layoutId: number, sizeId: number) => Record<number, number>;
+type GetLedPlacementsFn = (
+  boardName: string,
+  layoutId: number,
+  sizeId: number,
+) => Record<number, number>;
 
-describe('LED placements cache', () => {
+describe("LED placements cache", () => {
   let cachedGetLedPlacements: GetLedPlacementsFn | null;
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   let mockImport: any;
@@ -40,7 +44,7 @@ describe('LED placements cache', () => {
     return cachedGetLedPlacements;
   }
 
-  it('calls the dynamic import on the first load', async () => {
+  it("calls the dynamic import on the first load", async () => {
     const fakeFn: GetLedPlacementsFn = () => ({ 1: 0, 2: 1 });
     mockImport.mockResolvedValue({ getLedPlacements: fakeFn });
 
@@ -50,7 +54,7 @@ describe('LED placements cache', () => {
     expect(fn).toBe(fakeFn);
   });
 
-  it('does not call the dynamic import on subsequent loads', async () => {
+  it("does not call the dynamic import on subsequent loads", async () => {
     const fakeFn: GetLedPlacementsFn = () => ({ 1: 0, 2: 1 });
     mockImport.mockResolvedValue({ getLedPlacements: fakeFn });
 
@@ -61,7 +65,7 @@ describe('LED placements cache', () => {
     expect(mockImport).toHaveBeenCalledTimes(1);
   });
 
-  it('returns the same function reference on every call', async () => {
+  it("returns the same function reference on every call", async () => {
     const fakeFn: GetLedPlacementsFn = () => ({ 10: 5 });
     mockImport.mockResolvedValue({ getLedPlacements: fakeFn });
 
@@ -72,23 +76,23 @@ describe('LED placements cache', () => {
     expect(fn1).toBe(fakeFn);
   });
 
-  it('correctly passes through arguments to the cached function', async () => {
+  it("correctly passes through arguments to the cached function", async () => {
     const fakeFn: GetLedPlacementsFn = vi.fn(() => ({ 5: 2, 8: 3 }));
     mockImport.mockResolvedValue({ getLedPlacements: fakeFn });
 
     const fn = await loadGetLedPlacements();
-    const result = fn('kilter', 1, 10);
+    const result = fn("kilter", 1, 10);
 
-    expect(fakeFn).toHaveBeenCalledWith('kilter', 1, 10);
+    expect(fakeFn).toHaveBeenCalledWith("kilter", 1, 10);
     expect(result).toEqual({ 5: 2, 8: 3 });
   });
 
-  it('returns an empty object when the cached function returns one', async () => {
+  it("returns an empty object when the cached function returns one", async () => {
     const fakeFn: GetLedPlacementsFn = () => ({});
     mockImport.mockResolvedValue({ getLedPlacements: fakeFn });
 
     const fn = await loadGetLedPlacements();
-    const result = fn('tension', 2, 5);
+    const result = fn("tension", 2, 5);
 
     expect(result).toEqual({});
     expect(Object.keys(result)).toHaveLength(0);

@@ -1,6 +1,6 @@
 // Tick types (Local Ascent Tracking)
 
-export type TickStatus = 'flash' | 'send' | 'attempt';
+export type TickStatus = "flash" | "send" | "attempt";
 
 export type Tick = {
   uuid: string;

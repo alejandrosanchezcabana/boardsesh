@@ -1,19 +1,25 @@
-'use client';
+"use client";
 
-import React, { useState, useCallback } from 'react';
-import AddCircleOutlined from '@mui/icons-material/AddCircleOutlined';
-import CheckCircleOutlined from '@mui/icons-material/CheckCircleOutlined';
-import { track } from '@vercel/analytics';
-import { ClimbActionProps, ClimbActionResult } from '../types';
-import { useOptionalQueueActions } from '../../graphql-queue';
-import { themeTokens } from '@/app/theme/theme-config';
-import { buildActionResult, computeActionDisplay, ActionIconElement, ActionButtonElement, ActionListElement } from '../action-view-renderer';
+import React, { useState, useCallback } from "react";
+import AddCircleOutlined from "@mui/icons-material/AddCircleOutlined";
+import CheckCircleOutlined from "@mui/icons-material/CheckCircleOutlined";
+import { track } from "@vercel/analytics";
+import { ClimbActionProps, ClimbActionResult } from "../types";
+import { useOptionalQueueActions } from "../../graphql-queue";
+import { themeTokens } from "@/app/theme/theme-config";
+import {
+  buildActionResult,
+  computeActionDisplay,
+  ActionIconElement,
+  ActionButtonElement,
+  ActionListElement,
+} from "../action-view-renderer";
 
 export function QueueAction({
   climb,
   boardDetails,
   viewMode,
-  size = 'default',
+  size = "default",
   showLabel,
   disabled,
   className,
@@ -23,33 +29,36 @@ export function QueueAction({
   const [recentlyAdded, setRecentlyAdded] = useState(false);
   const { iconSize, shouldShowLabel } = computeActionDisplay(viewMode, size, showLabel);
 
-  const handleClick = useCallback((e?: React.MouseEvent) => {
-    e?.stopPropagation();
-    e?.preventDefault();
+  const handleClick = useCallback(
+    (e?: React.MouseEvent) => {
+      e?.stopPropagation();
+      e?.preventDefault();
 
-    if (!queueActions?.addToQueue || recentlyAdded) return;
+      if (!queueActions?.addToQueue || recentlyAdded) return;
 
-    queueActions.addToQueue(climb);
+      queueActions.addToQueue(climb);
 
-    track('Add to Queue', {
-      source: 'climbActions',
-      boardLayout: boardDetails.layout_name || '',
-    });
+      track("Add to Queue", {
+        source: "climbActions",
+        boardLayout: boardDetails.layout_name || "",
+      });
 
-    setRecentlyAdded(true);
-    setTimeout(() => {
-      setRecentlyAdded(false);
-    }, 5000);
+      setRecentlyAdded(true);
+      setTimeout(() => {
+        setRecentlyAdded(false);
+      }, 5000);
 
-    // Don't call onComplete in list mode — keep the drawer open so the user
-    // sees the "Added" confirmation. Other modes close as before.
-    if (viewMode !== 'list') {
-      onComplete?.();
-    }
-  }, [queueActions, recentlyAdded, climb, boardDetails.layout_name, onComplete, viewMode]);
+      // Don't call onComplete in list mode — keep the drawer open so the user
+      // sees the "Added" confirmation. Other modes close as before.
+      if (viewMode !== "list") {
+        onComplete?.();
+      }
+    },
+    [queueActions, recentlyAdded, climb, boardDetails.layout_name, onComplete, viewMode],
+  );
 
-  const label = recentlyAdded ? 'Added' : 'Add to Queue';
-  const shortLabel = recentlyAdded ? 'Added' : 'Queue';
+  const label = recentlyAdded ? "Added" : "Add to Queue";
+  const shortLabel = recentlyAdded ? "Added" : "Queue";
 
   const Icon = recentlyAdded ? CheckCircleOutlined : AddCircleOutlined;
   const iconStyle = recentlyAdded
@@ -60,7 +69,7 @@ export function QueueAction({
   const listIcon = <ListIcon sx={{ fontSize: iconSize }} />;
 
   return buildActionResult({
-    key: 'queue',
+    key: "queue",
     label,
     icon,
     onClick: handleClick,
@@ -72,17 +81,17 @@ export function QueueAction({
     available: !!queueActions,
     iconElementOverride: (
       <ActionIconElement
-        tooltip={recentlyAdded ? 'Added to queue' : 'Add to queue'}
+        tooltip={recentlyAdded ? "Added to queue" : "Add to queue"}
         onClick={handleClick}
         className={className}
       >
-        <span style={{ cursor: recentlyAdded ? 'not-allowed' : 'pointer' }}>{icon}</span>
+        <span style={{ cursor: recentlyAdded ? "not-allowed" : "pointer" }}>{icon}</span>
       </ActionIconElement>
     ),
     buttonElementOverride: (
       <ActionButtonElement
         icon={icon}
-        label={viewMode === 'compact' ? shortLabel : label}
+        label={viewMode === "compact" ? shortLabel : label}
         showLabel={shouldShowLabel}
         onClick={handleClick}
         disabled={disabled || recentlyAdded}
@@ -91,10 +100,15 @@ export function QueueAction({
       />
     ),
     listElementOverride: (
-      <ActionListElement icon={listIcon} label={label} onClick={handleClick} disabled={disabled || recentlyAdded} />
+      <ActionListElement
+        icon={listIcon}
+        label={label}
+        onClick={handleClick}
+        disabled={disabled || recentlyAdded}
+      />
     ),
     menuItem: {
-      key: 'queue',
+      key: "queue",
       label,
       icon,
       onClick: () => handleClick(),

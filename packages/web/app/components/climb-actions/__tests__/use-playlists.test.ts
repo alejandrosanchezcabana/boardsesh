@@ -1,8 +1,8 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { renderHook, act } from '@testing-library/react';
-import React from 'react';
-import { PlaylistsContext } from '../playlists-batch-context';
-import { usePlaylists } from '../use-playlists';
+import { describe, it, expect, vi, beforeEach } from "vite-plus/test";
+import { renderHook, act } from "@testing-library/react";
+import React from "react";
+import { PlaylistsContext } from "../playlists-batch-context";
+import { usePlaylists } from "../use-playlists";
 
 // Helper to create a wrapper with PlaylistsContext.Provider
 function createWrapper(contextValue: React.ContextType<typeof PlaylistsContext>) {
@@ -11,8 +11,8 @@ function createWrapper(contextValue: React.ContextType<typeof PlaylistsContext>)
   };
 }
 
-describe('usePlaylists', () => {
-  const defaultOptions = { climbUuid: 'climb-1', angle: 40 };
+describe("usePlaylists", () => {
+  const defaultOptions = { climbUuid: "climb-1", angle: 40 };
 
   const mockGetPlaylistsForClimb = vi.fn().mockReturnValue(new Set());
   const mockAddToPlaylist = vi.fn();
@@ -21,13 +21,13 @@ describe('usePlaylists', () => {
   const mockRefreshPlaylists = vi.fn();
 
   const testPlaylist = {
-    id: '1',
-    uuid: 'pl-1',
-    boardType: 'kilter',
-    name: 'Test Playlist',
+    id: "1",
+    uuid: "pl-1",
+    boardType: "kilter",
+    name: "Test Playlist",
     isPublic: false,
-    createdAt: '2024-01-01T00:00:00Z',
-    updatedAt: '2024-01-01T00:00:00Z',
+    createdAt: "2024-01-01T00:00:00Z",
+    updatedAt: "2024-01-01T00:00:00Z",
     climbCount: 5,
     followerCount: 0,
     isFollowedByMe: false,
@@ -49,8 +49,8 @@ describe('usePlaylists', () => {
     mockGetPlaylistsForClimb.mockReturnValue(new Set());
   });
 
-  describe('with PlaylistsProvider', () => {
-    it('returns playlists from context', () => {
+  describe("with PlaylistsProvider", () => {
+    it("returns playlists from context", () => {
       const { result } = renderHook(() => usePlaylists(defaultOptions), {
         wrapper: createWrapper(defaultContext),
       });
@@ -58,47 +58,47 @@ describe('usePlaylists', () => {
       expect(result.current.playlists).toEqual([testPlaylist]);
     });
 
-    it('calls getPlaylistsForClimb with climbUuid', () => {
+    it("calls getPlaylistsForClimb with climbUuid", () => {
       renderHook(() => usePlaylists(defaultOptions), {
         wrapper: createWrapper(defaultContext),
       });
 
-      expect(mockGetPlaylistsForClimb).toHaveBeenCalledWith('climb-1');
+      expect(mockGetPlaylistsForClimb).toHaveBeenCalledWith("climb-1");
     });
 
-    it('addToPlaylist passes playlistId, climbUuid, and angle', async () => {
+    it("addToPlaylist passes playlistId, climbUuid, and angle", async () => {
       const { result } = renderHook(() => usePlaylists(defaultOptions), {
         wrapper: createWrapper(defaultContext),
       });
 
       await act(async () => {
-        await result.current.addToPlaylist('pl-1');
+        await result.current.addToPlaylist("pl-1");
       });
 
-      expect(mockAddToPlaylist).toHaveBeenCalledWith('pl-1', 'climb-1', 40);
+      expect(mockAddToPlaylist).toHaveBeenCalledWith("pl-1", "climb-1", 40);
     });
 
-    it('removeFromPlaylist passes playlistId and climbUuid', async () => {
+    it("removeFromPlaylist passes playlistId and climbUuid", async () => {
       const { result } = renderHook(() => usePlaylists(defaultOptions), {
         wrapper: createWrapper(defaultContext),
       });
 
       await act(async () => {
-        await result.current.removeFromPlaylist('pl-1');
+        await result.current.removeFromPlaylist("pl-1");
       });
 
-      expect(mockRemoveFromPlaylist).toHaveBeenCalledWith('pl-1', 'climb-1');
+      expect(mockRemoveFromPlaylist).toHaveBeenCalledWith("pl-1", "climb-1");
     });
 
-    it('createPlaylist delegates to context', async () => {
+    it("createPlaylist delegates to context", async () => {
       const mockPlaylist = {
-        id: '2',
-        uuid: 'pl-new',
-        boardType: 'kilter',
-        name: 'New Playlist',
+        id: "2",
+        uuid: "pl-new",
+        boardType: "kilter",
+        name: "New Playlist",
         isPublic: false,
-        createdAt: '2024-01-01T00:00:00Z',
-        updatedAt: '2024-01-01T00:00:00Z',
+        createdAt: "2024-01-01T00:00:00Z",
+        updatedAt: "2024-01-01T00:00:00Z",
         climbCount: 0,
         followerCount: 0,
         isFollowedByMe: false,
@@ -111,14 +111,24 @@ describe('usePlaylists', () => {
 
       let created;
       await act(async () => {
-        created = await result.current.createPlaylist('New Playlist', 'A description', '#ff0000', 'star');
+        created = await result.current.createPlaylist(
+          "New Playlist",
+          "A description",
+          "#ff0000",
+          "star",
+        );
       });
 
-      expect(mockCreatePlaylist).toHaveBeenCalledWith('New Playlist', 'A description', '#ff0000', 'star');
+      expect(mockCreatePlaylist).toHaveBeenCalledWith(
+        "New Playlist",
+        "A description",
+        "#ff0000",
+        "star",
+      );
       expect(created).toEqual(mockPlaylist);
     });
 
-    it('returns isLoading and isAuthenticated', () => {
+    it("returns isLoading and isAuthenticated", () => {
       const { result } = renderHook(() => usePlaylists(defaultOptions), {
         wrapper: createWrapper(defaultContext),
       });
@@ -127,7 +137,7 @@ describe('usePlaylists', () => {
       expect(result.current.isAuthenticated).toBe(true);
     });
 
-    it('refreshPlaylists delegates to context', async () => {
+    it("refreshPlaylists delegates to context", async () => {
       const { result } = renderHook(() => usePlaylists(defaultOptions), {
         wrapper: createWrapper(defaultContext),
       });
@@ -140,8 +150,8 @@ describe('usePlaylists', () => {
     });
   });
 
-  describe('without PlaylistsProvider', () => {
-    it('returns safe defaults when no PlaylistsProvider is present', () => {
+  describe("without PlaylistsProvider", () => {
+    it("returns safe defaults when no PlaylistsProvider is present", () => {
       const { result } = renderHook(() => usePlaylists(defaultOptions));
 
       expect(result.current.playlists).toEqual([]);
@@ -150,47 +160,47 @@ describe('usePlaylists', () => {
       expect(result.current.isAuthenticated).toBe(false);
     });
 
-    it('addToPlaylist is a no-op when no provider', async () => {
+    it("addToPlaylist is a no-op when no provider", async () => {
       const { result } = renderHook(() => usePlaylists(defaultOptions));
 
       // Should not throw
       await act(async () => {
-        await result.current.addToPlaylist('pl-1');
+        await result.current.addToPlaylist("pl-1");
       });
     });
 
-    it('removeFromPlaylist is a no-op when no provider', async () => {
+    it("removeFromPlaylist is a no-op when no provider", async () => {
       const { result } = renderHook(() => usePlaylists(defaultOptions));
 
       // Should not throw
       await act(async () => {
-        await result.current.removeFromPlaylist('pl-1');
+        await result.current.removeFromPlaylist("pl-1");
       });
     });
 
-    it('createPlaylist returns empty playlist when no provider', async () => {
+    it("createPlaylist returns empty playlist when no provider", async () => {
       const { result } = renderHook(() => usePlaylists(defaultOptions));
 
       let created;
       await act(async () => {
-        created = await result.current.createPlaylist('Test');
+        created = await result.current.createPlaylist("Test");
       });
 
       expect(created).toEqual({
-        id: '',
-        uuid: '',
-        boardType: '',
-        name: '',
+        id: "",
+        uuid: "",
+        boardType: "",
+        name: "",
         isPublic: false,
-        createdAt: '',
-        updatedAt: '',
+        createdAt: "",
+        updatedAt: "",
         climbCount: 0,
         followerCount: 0,
         isFollowedByMe: false,
       });
     });
 
-    it('refreshPlaylists is a no-op when no provider', async () => {
+    it("refreshPlaylists is a no-op when no provider", async () => {
       const { result } = renderHook(() => usePlaylists(defaultOptions));
 
       // Should not throw
@@ -199,7 +209,7 @@ describe('usePlaylists', () => {
       });
     });
 
-    it('does not throw when rendered without provider', () => {
+    it("does not throw when rendered without provider", () => {
       expect(() => {
         renderHook(() => usePlaylists(defaultOptions));
       }).not.toThrow();

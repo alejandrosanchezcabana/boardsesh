@@ -1,10 +1,10 @@
-'use client';
+"use client";
 
-import React from 'react';
-import MuiTooltip from '@mui/material/Tooltip';
-import type { TooltipProps as MuiTooltipProps } from '@mui/material/Tooltip';
+import React from "react";
+import MuiTooltip from "@mui/material/Tooltip";
+import type { TooltipProps as MuiTooltipProps } from "@mui/material/Tooltip";
 
-type ActionTooltipProps = Pick<MuiTooltipProps, 'title' | 'placement' | 'children'>;
+type ActionTooltipProps = Pick<MuiTooltipProps, "title" | "placement" | "children">;
 
 /**
  * A tooltip wrapper for action buttons that disables tooltips on touch devices.
@@ -20,12 +20,12 @@ export function ActionTooltip({ children, ...props }: ActionTooltipProps) {
 
   React.useEffect(() => {
     // Check if device has no hover capability (touch device)
-    const mediaQuery = window.matchMedia('(hover: none)');
+    const mediaQuery = window.matchMedia("(hover: none)");
     setIsTouchDevice(mediaQuery.matches);
 
     const handler = (e: MediaQueryListEvent) => setIsTouchDevice(e.matches);
-    mediaQuery.addEventListener('change', handler);
-    return () => mediaQuery.removeEventListener('change', handler);
+    mediaQuery.addEventListener("change", handler);
+    return () => mediaQuery.removeEventListener("change", handler);
   }, []);
 
   // On touch devices, render children without tooltip wrapper

@@ -1,26 +1,26 @@
 // @vitest-environment jsdom
-import { describe, it, expect, vi } from 'vitest';
-import { render } from '@testing-library/react';
-import React from 'react';
-import type { BoardDetails } from '@/app/lib/types';
+import { describe, it, expect, vi } from "vite-plus/test";
+import { render } from "@testing-library/react";
+import React from "react";
+import type { BoardDetails } from "@/app/lib/types";
 
-vi.mock('../util', () => ({
+vi.mock("../util", () => ({
   getImageUrl: (imageUrl: string, board: string) => `/images/${board}/${imageUrl}`,
   buildOverlayUrl: vi.fn(
     (_bd: BoardDetails, frames: string, thumbnail?: boolean) =>
-      `/api/internal/board-render?frames=${frames}${thumbnail ? '&thumbnail=1' : ''}&include_background=1`,
+      `/api/internal/board-render?frames=${frames}${thumbnail ? "&thumbnail=1" : ""}&include_background=1`,
   ),
 }));
 
-import BoardImageLayers from '../board-image-layers';
-import { buildOverlayUrl } from '../util';
+import BoardImageLayers from "../board-image-layers";
+import { buildOverlayUrl } from "../util";
 
 const mockBoardDetails: BoardDetails = {
-  board_name: 'kilter',
+  board_name: "kilter",
   layout_id: 1,
   size_id: 7,
   set_ids: [1, 20],
-  images_to_holds: { 'product_sizes_layouts_sets/36-1.png': [] },
+  images_to_holds: { "product_sizes_layouts_sets/36-1.png": [] },
   holdsData: [],
   edge_left: 0,
   edge_right: 144,
@@ -30,96 +30,84 @@ const mockBoardDetails: BoardDetails = {
   boardHeight: 1350,
 };
 
-describe('BoardImageLayers', () => {
-  it('renders single composited image when frames are provided', () => {
+describe("BoardImageLayers", () => {
+  it("renders single composited image when frames are provided", () => {
     const { container } = render(
-      <BoardImageLayers
-        boardDetails={mockBoardDetails}
-        frames="p1r42p2r43"
-        mirrored={false}
-      />,
+      <BoardImageLayers boardDetails={mockBoardDetails} frames="p1r42p2r43" mirrored={false} />,
     );
 
-    const images = container.querySelectorAll('img');
+    const images = container.querySelectorAll("img");
     // Single composited image (background + overlay baked together)
     expect(images).toHaveLength(1);
-    expect(images[0].getAttribute('src')).toContain('frames=p1r42p2r43');
+    expect(images[0].getAttribute("src")).toContain("frames=p1r42p2r43");
   });
 
-  it('renders background images when no frames are provided', () => {
+  it("renders background images when no frames are provided", () => {
     const { container } = render(
-      <BoardImageLayers
-        boardDetails={mockBoardDetails}
-        mirrored={false}
-      />,
+      <BoardImageLayers boardDetails={mockBoardDetails} mirrored={false} />,
     );
 
-    const images = container.querySelectorAll('img');
+    const images = container.querySelectorAll("img");
     expect(images).toHaveLength(1);
-    expect(images[0].getAttribute('src')).toBe('/images/kilter/product_sizes_layouts_sets/36-1.png');
+    expect(images[0].getAttribute("src")).toBe(
+      "/images/kilter/product_sizes_layouts_sets/36-1.png",
+    );
   });
 
-  it('renders multiple background images when no frames and board has multiple sets', () => {
+  it("renders multiple background images when no frames and board has multiple sets", () => {
     const multiSetBoard: BoardDetails = {
       ...mockBoardDetails,
       images_to_holds: {
-        'product_sizes_layouts_sets/36-1.png': [],
-        'product_sizes_layouts_sets/37-1.png': [],
+        "product_sizes_layouts_sets/36-1.png": [],
+        "product_sizes_layouts_sets/37-1.png": [],
       },
     };
 
     const { container } = render(
-      <BoardImageLayers
-        boardDetails={multiSetBoard}
-        mirrored={false}
-      />,
+      <BoardImageLayers boardDetails={multiSetBoard} mirrored={false} />,
     );
 
-    expect(container.querySelectorAll('img')).toHaveLength(2);
+    expect(container.querySelectorAll("img")).toHaveLength(2);
   });
 
-  it('renders single composited image even with multiple background sets', () => {
+  it("renders single composited image even with multiple background sets", () => {
     const multiSetBoard: BoardDetails = {
       ...mockBoardDetails,
       images_to_holds: {
-        'product_sizes_layouts_sets/36-1.png': [],
-        'product_sizes_layouts_sets/37-1.png': [],
+        "product_sizes_layouts_sets/36-1.png": [],
+        "product_sizes_layouts_sets/37-1.png": [],
       },
     };
 
     const { container } = render(
-      <BoardImageLayers
-        boardDetails={multiSetBoard}
-        frames="p1r42"
-        mirrored={false}
-      />,
+      <BoardImageLayers boardDetails={multiSetBoard} frames="p1r42" mirrored={false} />,
     );
 
     // Only 1 composited image, no separate backgrounds
-    expect(container.querySelectorAll('img')).toHaveLength(1);
+    expect(container.querySelectorAll("img")).toHaveLength(1);
   });
 
-  it('applies scaleX(-1) transform when mirrored', () => {
+  it("applies scaleX(-1) transform when mirrored", () => {
     const { container } = render(
       <BoardImageLayers
         boardDetails={mockBoardDetails}
         frames="p1r42"
         mirrored={true}
-        style={{ width: '100%' }}
+        style={{ width: "100%" }}
       />,
     );
 
     const wrapper = container.firstChild as HTMLElement;
-    expect(wrapper.style.transform).toBe('scaleX(-1)');
+    expect(wrapper.style.transform).toBe("scaleX(-1)");
   });
 
-  it('does not apply transform when not mirrored', () => {
+  it("does not apply transform when not mirrored", () => {
     const { container } = render(
       <BoardImageLayers
         boardDetails={mockBoardDetails}
         frames="p1r42"
         mirrored={false}
-        style={{ width: '100%' }}
+        style={{ width: "100%" }}
       />,
     );
 
@@ -127,7 +115,7 @@ describe('BoardImageLayers', () => {
     expect(wrapper.style.transform).toBeFalsy();
   });
 
-  it('passes thumbnail flag to buildOverlayUrl', () => {
+  it("passes thumbnail flag to buildOverlayUrl", () => {
     render(
       <BoardImageLayers
         boardDetails={mockBoardDetails}
@@ -137,26 +125,21 @@ describe('BoardImageLayers', () => {
       />,
     );
 
-    expect(buildOverlayUrl).toHaveBeenCalledWith(mockBoardDetails, 'p1r42', true);
+    expect(buildOverlayUrl).toHaveBeenCalledWith(mockBoardDetails, "p1r42", true);
   });
 
-  it('uses object-fit contain when contain prop is set', () => {
+  it("uses object-fit contain when contain prop is set", () => {
     const { container } = render(
-      <BoardImageLayers
-        boardDetails={mockBoardDetails}
-        frames="p1r42"
-        mirrored={false}
-        contain
-      />,
+      <BoardImageLayers boardDetails={mockBoardDetails} frames="p1r42" mirrored={false} contain />,
     );
 
-    const images = container.querySelectorAll('img');
+    const images = container.querySelectorAll("img");
     images.forEach((img) => {
-      expect(img.style.objectFit).toBe('contain');
+      expect(img.style.objectFit).toBe("contain");
     });
   });
 
-  it('uses object-fit contain when thumbnail prop is set', () => {
+  it("uses object-fit contain when thumbnail prop is set", () => {
     const { container } = render(
       <BoardImageLayers
         boardDetails={mockBoardDetails}
@@ -166,13 +149,13 @@ describe('BoardImageLayers', () => {
       />,
     );
 
-    const images = container.querySelectorAll('img');
+    const images = container.querySelectorAll("img");
     images.forEach((img) => {
-      expect(img.style.objectFit).toBe('contain');
+      expect(img.style.objectFit).toBe("contain");
     });
   });
 
-  it('uses thumbnail dimensions for img width/height when thumbnail is set', () => {
+  it("uses thumbnail dimensions for img width/height when thumbnail is set", () => {
     const { container } = render(
       <BoardImageLayers
         boardDetails={mockBoardDetails}
@@ -182,24 +165,19 @@ describe('BoardImageLayers', () => {
       />,
     );
 
-    const img = container.querySelector('img')!;
+    const img = container.querySelector("img")!;
     // THUMBNAIL_WIDTH = 200, height = round(200 * 1350 / 1080) = 250
-    expect(img.getAttribute('width')).toBe('200');
-    expect(img.getAttribute('height')).toBe('250');
+    expect(img.getAttribute("width")).toBe("200");
+    expect(img.getAttribute("height")).toBe("250");
   });
 
-  it('uses full board dimensions for img width/height when not thumbnail', () => {
+  it("uses full board dimensions for img width/height when not thumbnail", () => {
     const { container } = render(
-      <BoardImageLayers
-        boardDetails={mockBoardDetails}
-        frames="p1r42"
-        mirrored={false}
-      />,
+      <BoardImageLayers boardDetails={mockBoardDetails} frames="p1r42" mirrored={false} />,
     );
 
-    const img = container.querySelector('img')!;
-    expect(img.getAttribute('width')).toBe('1080');
-    expect(img.getAttribute('height')).toBe('1350');
+    const img = container.querySelector("img")!;
+    expect(img.getAttribute("width")).toBe("1080");
+    expect(img.getAttribute("height")).toBe("1350");
   });
-
 });

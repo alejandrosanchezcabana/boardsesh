@@ -1,4 +1,4 @@
-import { openDB, type IDBPDatabase } from 'idb';
+import { openDB, type IDBPDatabase } from "idb";
 
 type UpgradeCallback = (db: IDBPDatabase) => void;
 
@@ -15,7 +15,7 @@ export function createIndexedDBStore(
   let dbPromise: Promise<IDBPDatabase> | null = null;
 
   return async (): Promise<IDBPDatabase | null> => {
-    if (typeof window === 'undefined' || !window.indexedDB) {
+    if (typeof window === "undefined" || !window.indexedDB) {
       return null;
     }
     if (!dbPromise) {
@@ -47,7 +47,7 @@ export async function migrateFromLocalStorage<T>(
   idbSetter: (value: T) => Promise<void>,
   parser?: (raw: string) => T,
 ): Promise<boolean> {
-  if (typeof window === 'undefined') {
+  if (typeof window === "undefined") {
     return false;
   }
 

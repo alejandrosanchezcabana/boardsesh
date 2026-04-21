@@ -1,31 +1,31 @@
-'use client';
+"use client";
 
-import React from 'react';
-import Box from '@mui/material/Box';
-import Card from '@mui/material/Card';
-import CardContent from '@mui/material/CardContent';
-import Typography from '@mui/material/Typography';
-import Avatar from '@mui/material/Avatar';
-import AvatarGroup from '@mui/material/AvatarGroup';
-import Chip from '@mui/material/Chip';
-import Skeleton from '@mui/material/Skeleton';
-import TimerOutlined from '@mui/icons-material/TimerOutlined';
-import FlagOutlined from '@mui/icons-material/FlagOutlined';
-import FlashOnOutlined from '@mui/icons-material/FlashOnOutlined';
-import CheckCircleOutlineOutlined from '@mui/icons-material/CheckCircleOutlineOutlined';
-import ErrorOutlineOutlined from '@mui/icons-material/ErrorOutlineOutlined';
-import PersonOutlined from '@mui/icons-material/PersonOutlined';
-import Link from 'next/link';
-import type { SessionFeedItem } from '@boardsesh/shared-schema';
-import { CssBarChart } from '@/app/components/charts/css-bar-chart';
-import { buildSessionGradeBars } from '@/app/components/charts/session-grade-bars';
-import OutcomeDoughnut from '@/app/components/charts/outcome-doughnut';
-import VoteButton from '@/app/components/social/vote-button';
-import FeedCommentButton from '@/app/components/social/feed-comment-button';
-import { themeTokens } from '@/app/theme/theme-config';
-import { getGradeColor, getGradeTextColor } from '@/app/lib/grade-colors';
-import { useGradeFormat } from '@/app/hooks/use-grade-format';
-import { generateSessionName } from '@/app/lib/session-utils';
+import React from "react";
+import Box from "@mui/material/Box";
+import Card from "@mui/material/Card";
+import CardContent from "@mui/material/CardContent";
+import Typography from "@mui/material/Typography";
+import Avatar from "@mui/material/Avatar";
+import AvatarGroup from "@mui/material/AvatarGroup";
+import Chip from "@mui/material/Chip";
+import Skeleton from "@mui/material/Skeleton";
+import TimerOutlined from "@mui/icons-material/TimerOutlined";
+import FlagOutlined from "@mui/icons-material/FlagOutlined";
+import FlashOnOutlined from "@mui/icons-material/FlashOnOutlined";
+import CheckCircleOutlineOutlined from "@mui/icons-material/CheckCircleOutlineOutlined";
+import ErrorOutlineOutlined from "@mui/icons-material/ErrorOutlineOutlined";
+import PersonOutlined from "@mui/icons-material/PersonOutlined";
+import Link from "next/link";
+import type { SessionFeedItem } from "@boardsesh/shared-schema";
+import { CssBarChart } from "@/app/components/charts/css-bar-chart";
+import { buildSessionGradeBars } from "@/app/components/charts/session-grade-bars";
+import OutcomeDoughnut from "@/app/components/charts/outcome-doughnut";
+import VoteButton from "@/app/components/social/vote-button";
+import FeedCommentButton from "@/app/components/social/feed-comment-button";
+import { themeTokens } from "@/app/theme/theme-config";
+import { getGradeColor, getGradeTextColor } from "@/app/lib/grade-colors";
+import { useGradeFormat } from "@/app/hooks/use-grade-format";
+import { generateSessionName } from "@/app/lib/session-utils";
 
 interface SessionFeedCardProps {
   session: SessionFeedItem;
@@ -44,7 +44,7 @@ function formatRelativeTime(isoString: string): string {
   const diff = now - then;
 
   const minutes = Math.floor(diff / 60000);
-  if (minutes < 1) return 'just now';
+  if (minutes < 1) return "just now";
   if (minutes < 60) return `${minutes}m ago`;
 
   const hours = Math.floor(minutes / 60);
@@ -97,16 +97,19 @@ export default function SessionFeedCard({ session }: SessionFeedCardProps) {
       data-testid="activity-feed-item"
       sx={{
         transition: `box-shadow ${themeTokens.transitions.normal}`,
-        '&:hover': {
+        "&:hover": {
           boxShadow: themeTokens.shadows.md,
         },
       }}
     >
-      <CardContent sx={{ p: 1.5, '&:last-child': { pb: 1.5 } }}>
+      <CardContent sx={{ p: 1.5, "&:last-child": { pb: 1.5 } }}>
         {/* Header: Avatar(s) + name(s) + time + duration */}
-        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}>
+        <Box sx={{ display: "flex", alignItems: "center", gap: 1, mb: 1 }}>
           {isMultiUser ? (
-            <AvatarGroup max={3} sx={{ '& .MuiAvatar-root': { width: 28, height: 28, fontSize: 12 } }}>
+            <AvatarGroup
+              max={3}
+              sx={{ "& .MuiAvatar-root": { width: 28, height: 28, fontSize: 12 } }}
+            >
               {participants.map((p) => (
                 <Avatar
                   key={p.userId}
@@ -114,7 +117,7 @@ export default function SessionFeedCard({ session }: SessionFeedCardProps) {
                   component={Link}
                   href={`/profile/${p.userId}`}
                   onClick={(e: React.MouseEvent) => e.stopPropagation()}
-                  sx={{ width: 28, height: 28, cursor: 'pointer' }}
+                  sx={{ width: 28, height: 28, cursor: "pointer" }}
                 >
                   {!p.avatarUrl && <PersonOutlined sx={{ fontSize: 14 }} />}
                 </Avatar>
@@ -123,9 +126,11 @@ export default function SessionFeedCard({ session }: SessionFeedCardProps) {
           ) : (
             <Avatar
               src={primaryParticipant?.avatarUrl ?? undefined}
-              {...(primaryParticipant ? { component: Link, href: `/profile/${primaryParticipant.userId}` } : {})}
+              {...(primaryParticipant
+                ? { component: Link, href: `/profile/${primaryParticipant.userId}` }
+                : {})}
               onClick={(e: React.MouseEvent) => e.stopPropagation()}
-              sx={{ width: 32, height: 32, cursor: primaryParticipant ? 'pointer' : 'default' }}
+              sx={{ width: 32, height: 32, cursor: primaryParticipant ? "pointer" : "default" }}
             >
               {!primaryParticipant?.avatarUrl && <PersonOutlined sx={{ fontSize: 16 }} />}
             </Avatar>
@@ -136,21 +141,27 @@ export default function SessionFeedCard({ session }: SessionFeedCardProps) {
               variant="body2"
               fontWeight={600}
               noWrap
-              {...(primaryParticipant ? { component: Link, href: `/profile/${primaryParticipant.userId}` } : {})}
+              {...(primaryParticipant
+                ? { component: Link, href: `/profile/${primaryParticipant.userId}` }
+                : {})}
               onClick={(e: React.MouseEvent) => e.stopPropagation()}
-              sx={{ textDecoration: 'none', color: 'text.primary', cursor: primaryParticipant ? 'pointer' : 'default' }}
+              sx={{
+                textDecoration: "none",
+                color: "text.primary",
+                cursor: primaryParticipant ? "pointer" : "default",
+              }}
             >
               {isMultiUser
-                ? participants.map((p) => p.displayName || 'Climber').join(', ')
-                : primaryParticipant?.displayName || 'Climber'}
+                ? participants.map((p) => p.displayName || "Climber").join(", ")
+                : primaryParticipant?.displayName || "Climber"}
             </Typography>
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+            <Box sx={{ display: "flex", alignItems: "center", gap: 0.5 }}>
               <Typography variant="caption" color="text.secondary">
                 {formatRelativeTime(lastTickAt)}
               </Typography>
               {durationMinutes != null && durationMinutes > 0 && (
-                <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.25 }}>
-                  <TimerOutlined sx={{ fontSize: 12, color: 'text.secondary' }} />
+                <Box sx={{ display: "flex", alignItems: "center", gap: 0.25 }}>
+                  <TimerOutlined sx={{ fontSize: 12, color: "text.secondary" }} />
                   <Typography variant="caption" color="text.secondary">
                     {formatDuration(durationMinutes)}
                   </Typography>
@@ -164,7 +175,7 @@ export default function SessionFeedCard({ session }: SessionFeedCardProps) {
             variant="subtitle2"
             fontWeight={600}
             noWrap
-            sx={{ ml: 'auto', flexShrink: 1, minWidth: 0, textAlign: 'right' }}
+            sx={{ ml: "auto", flexShrink: 1, minWidth: 0, textAlign: "right" }}
           >
             {displayName}
           </Typography>
@@ -174,11 +185,11 @@ export default function SessionFeedCard({ session }: SessionFeedCardProps) {
         <Box
           component={Link}
           href={`/session/${sessionId}`}
-          sx={{ textDecoration: 'none', color: 'inherit', display: 'block' }}
+          sx={{ textDecoration: "none", color: "inherit", display: "block" }}
         >
           {/* Goal */}
           {goal && (
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, mb: 1 }}>
+            <Box sx={{ display: "flex", alignItems: "center", gap: 0.5, mb: 1 }}>
               <FlagOutlined sx={{ fontSize: 14 }} color="action" />
               <Typography variant="caption" color="text.secondary" noWrap>
                 {goal}
@@ -187,73 +198,77 @@ export default function SessionFeedCard({ session }: SessionFeedCardProps) {
           )}
 
           {/* Stats row */}
-          <Box sx={{ display: 'flex', gap: 0.5, mb: 1, flexWrap: 'wrap', alignItems: 'center' }}>
+          <Box sx={{ display: "flex", gap: 0.5, mb: 1, flexWrap: "wrap", alignItems: "center" }}>
             {totalFlashes > 0 && (
               <Chip
                 icon={<FlashOnOutlined />}
-                label={`${totalFlashes} flash${totalFlashes !== 1 ? 'es' : ''}`}
+                label={`${totalFlashes} flash${totalFlashes !== 1 ? "es" : ""}`}
                 size="small"
                 sx={{
                   borderRadius: themeTokens.borderRadius.full,
                   bgcolor: themeTokens.colors.amber,
-                  color: '#000',
-                  '& .MuiChip-icon': { color: 'inherit' },
+                  color: "#000",
+                  "& .MuiChip-icon": { color: "inherit" },
                 }}
               />
             )}
             {/* totalSends includes flashes — subtract to avoid double-counting */}
-            {(totalSends - totalFlashes) > 0 && (
+            {totalSends - totalFlashes > 0 && (
               <Chip
                 icon={<CheckCircleOutlineOutlined />}
-                label={`${totalSends - totalFlashes} send${(totalSends - totalFlashes) !== 1 ? 's' : ''}`}
+                label={`${totalSends - totalFlashes} send${totalSends - totalFlashes !== 1 ? "s" : ""}`}
                 size="small"
                 sx={{
                   borderRadius: themeTokens.borderRadius.full,
                   bgcolor: themeTokens.colors.successBg,
                   color: themeTokens.colors.success,
-                  '& .MuiChip-icon': { color: 'inherit' },
+                  "& .MuiChip-icon": { color: "inherit" },
                 }}
               />
             )}
             {totalAttempts > 0 && (
               <Chip
                 icon={<ErrorOutlineOutlined />}
-                label={`${totalAttempts} attempt${totalAttempts !== 1 ? 's' : ''}`}
+                label={`${totalAttempts} attempt${totalAttempts !== 1 ? "s" : ""}`}
                 size="small"
                 sx={{
                   borderRadius: themeTokens.borderRadius.full,
-                  bgcolor: 'var(--neutral-50)',
+                  bgcolor: "var(--neutral-50)",
                 }}
               />
             )}
-            {hardestGrade && (
-              gradeFormatLoaded ? (
+            {hardestGrade &&
+              (gradeFormatLoaded ? (
                 <Chip
                   label={formatGrade(hardestGrade) ?? hardestGrade}
                   size="small"
                   sx={{
                     borderRadius: themeTokens.borderRadius.full,
-                    bgcolor: hardestGradeColor || 'var(--neutral-200)',
+                    bgcolor: hardestGradeColor || "var(--neutral-200)",
                     color: hardestGradeTextColor,
                     fontWeight: 600,
                   }}
                 />
               ) : (
-                <Skeleton variant="rounded" width={40} height={24} sx={{ borderRadius: themeTokens.borderRadius.full }} />
-              )
-            )}
+                <Skeleton
+                  variant="rounded"
+                  width={40}
+                  height={24}
+                  sx={{ borderRadius: themeTokens.borderRadius.full }}
+                />
+              ))}
           </Box>
 
           {/* Grade chart (compact) + outcome doughnut on desktop */}
           {gradeDistribution.length > 0 && (
             <Box
               sx={{
-                display: 'flex',
-                flexDirection: 'column',
+                display: "flex",
+                flexDirection: "column",
                 mb: 1,
-                '@media (min-width: 768px)': {
-                  flexDirection: 'row',
-                  alignItems: 'stretch',
+                "@media (min-width: 768px)": {
+                  flexDirection: "row",
+                  alignItems: "stretch",
                   gap: 1,
                 },
               }}
@@ -270,10 +285,10 @@ export default function SessionFeedCard({ session }: SessionFeedCardProps) {
               </Box>
               <Box
                 sx={{
-                  display: 'none',
-                  '@media (min-width: 768px)': {
-                    display: 'block',
-                    flex: '0 0 120px',
+                  display: "none",
+                  "@media (min-width: 768px)": {
+                    display: "block",
+                    flex: "0 0 120px",
                   },
                 }}
               >
@@ -290,12 +305,12 @@ export default function SessionFeedCard({ session }: SessionFeedCardProps) {
 
           {/* Board types + climb count */}
           {boardTypes.length > 0 && (
-            <Box sx={{ display: 'flex', gap: 0.5, mb: 1, alignItems: 'center' }}>
+            <Box sx={{ display: "flex", gap: 0.5, mb: 1, alignItems: "center" }}>
               <Typography variant="caption" color="text.secondary">
-                {boardTypes.map((bt) => bt.charAt(0).toUpperCase() + bt.slice(1)).join(', ')}
+                {boardTypes.map((bt) => bt.charAt(0).toUpperCase() + bt.slice(1)).join(", ")}
               </Typography>
-              <Typography variant="caption" color="text.secondary" sx={{ ml: 'auto' }}>
-                {tickCount} climb{tickCount !== 1 ? 's' : ''}
+              <Typography variant="caption" color="text.secondary" sx={{ ml: "auto" }}>
+                {tickCount} climb{tickCount !== 1 ? "s" : ""}
               </Typography>
             </Box>
           )}
@@ -303,7 +318,7 @@ export default function SessionFeedCard({ session }: SessionFeedCardProps) {
       </CardContent>
 
       {/* Social row */}
-      <Box sx={{ display: 'flex', alignItems: 'center', px: 1.5, pb: 1, gap: 1 }}>
+      <Box sx={{ display: "flex", alignItems: "center", px: 1.5, pb: 1, gap: 1 }}>
         <VoteButton
           entityType="session"
           entityId={sessionId}
@@ -311,11 +326,7 @@ export default function SessionFeedCard({ session }: SessionFeedCardProps) {
           initialDownvotes={downvotes}
           likeOnly
         />
-        <FeedCommentButton
-          entityType="session"
-          entityId={sessionId}
-          commentCount={commentCount}
-        />
+        <FeedCommentButton entityType="session" entityId={sessionId} commentCount={commentCount} />
       </Box>
     </Card>
   );

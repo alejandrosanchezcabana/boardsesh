@@ -1,4 +1,4 @@
-version: '3.8'
+version: "3.8"
 
 services:
   board-controller:
@@ -24,7 +24,7 @@ services:
       - BOARD_SET=screw_bolt
       - BOARD_ANGLE=40
     restart: unless-stopped
-    
+
     # For Bluetooth support (Linux hosts only)
     # Uncomment the following lines:
     # privileged: true

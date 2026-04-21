@@ -1,7 +1,7 @@
-'use client';
+"use client";
 
-import { useEffect } from 'react';
-import { setLastUsedBoard } from '@/app/lib/last-used-board-db';
+import { useEffect } from "react";
+import { setLastUsedBoard } from "@/app/lib/last-used-board-db";
 
 interface LastUsedBoardTrackerProps {
   url: string;

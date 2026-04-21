@@ -1,11 +1,11 @@
-'use client';
+"use client";
 
-import { usePersistentSessionState } from '../persistent-session';
-import { useBluetoothConnectedStatus } from '../board-bluetooth-control/bluetooth-status-store';
-import { useQueueBridgeBoardInfo } from '../queue-control/queue-bridge-context';
-import type { BoardDetails } from '@/app/lib/types';
+import { usePersistentSessionState } from "../persistent-session";
+import { useBluetoothConnectedStatus } from "../board-bluetooth-control/bluetooth-status-store";
+import { useQueueBridgeBoardInfo } from "../queue-control/queue-bridge-context";
+import type { BoardDetails } from "@/app/lib/types";
 
-export type BoardLockReason = 'session' | 'bluetooth';
+export type BoardLockReason = "session" | "bluetooth";
 
 export interface ActiveBoardLock {
   lockedBoard: BoardDetails | null;
@@ -28,11 +28,11 @@ export function useActiveBoardLock(): ActiveBoardLock {
   const { boardDetails: bridgeBoardDetails } = useQueueBridgeBoardInfo();
 
   if (activeSession) {
-    return { lockedBoard: activeSession.boardDetails, reason: 'session' };
+    return { lockedBoard: activeSession.boardDetails, reason: "session" };
   }
 
   if (isBluetoothConnected && bridgeBoardDetails) {
-    return { lockedBoard: bridgeBoardDetails, reason: 'bluetooth' };
+    return { lockedBoard: bridgeBoardDetails, reason: "bluetooth" };
   }
 
   return { lockedBoard: null, reason: null };

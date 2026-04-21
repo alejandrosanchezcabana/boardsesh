@@ -1,21 +1,21 @@
-'use client';
+"use client";
 
-import React, { useState } from 'react';
-import Box from '@mui/material/Box';
-import Chip from '@mui/material/Chip';
-import MuiTypography from '@mui/material/Typography';
-import CircularProgress from '@mui/material/CircularProgress';
-import AddOutlined from '@mui/icons-material/AddOutlined';
-import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { useWsAuthToken } from '@/app/hooks/use-ws-auth-token';
-import { createGraphQLHttpClient } from '@/app/lib/graphql/client';
+import React, { useState } from "react";
+import Box from "@mui/material/Box";
+import Chip from "@mui/material/Chip";
+import MuiTypography from "@mui/material/Typography";
+import CircularProgress from "@mui/material/CircularProgress";
+import AddOutlined from "@mui/icons-material/AddOutlined";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useWsAuthToken } from "@/app/hooks/use-ws-auth-token";
+import { createGraphQLHttpClient } from "@/app/lib/graphql/client";
 import {
   GET_MY_GYMS,
   type GetMyGymsQueryVariables,
   type GetMyGymsQueryResponse,
-} from '@/app/lib/graphql/operations';
-import type { Gym } from '@boardsesh/shared-schema';
-import CreateGymForm from './create-gym-form';
+} from "@/app/lib/graphql/operations";
+import type { Gym } from "@boardsesh/shared-schema";
+import CreateGymForm from "./create-gym-form";
 
 interface GymSelectorProps {
   selectedGymUuid: string | null;
@@ -28,7 +28,7 @@ export default function GymSelector({ selectedGymUuid, onSelect }: GymSelectorPr
   const queryClient = useQueryClient();
 
   const { data, isLoading } = useQuery({
-    queryKey: ['myGyms'],
+    queryKey: ["myGyms"],
     queryFn: async () => {
       const client = createGraphQLHttpClient(token!);
       const response = await client.request<GetMyGymsQueryResponse, GetMyGymsQueryVariables>(
@@ -44,27 +44,24 @@ export default function GymSelector({ selectedGymUuid, onSelect }: GymSelectorPr
   const gyms = data ?? [];
 
   const handleGymCreated = (gym: Gym) => {
-    queryClient.setQueryData<Gym[]>(['myGyms'], (prev) => (prev ? [gym, ...prev] : [gym]));
+    queryClient.setQueryData<Gym[]>(["myGyms"], (prev) => (prev ? [gym, ...prev] : [gym]));
     onSelect(gym.uuid);
     setShowCreateForm(false);
   };
 
   if (isLoading) {
     return (
-      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, py: 1 }}>
+      <Box sx={{ display: "flex", alignItems: "center", gap: 1, py: 1 }}>
         <CircularProgress size={16} />
-        <MuiTypography variant="body2" color="text.secondary">Loading gyms...</MuiTypography>
+        <MuiTypography variant="body2" color="text.secondary">
+          Loading gyms...
+        </MuiTypography>
       </Box>
     );
   }
 
   if (showCreateForm) {
-    return (
-      <CreateGymForm
-        onSuccess={handleGymCreated}
-        onCancel={() => setShowCreateForm(false)}
-      />
-    );
+    return <CreateGymForm onSuccess={handleGymCreated} onCancel={() => setShowCreateForm(false)} />;
   }
 
   return (
@@ -72,11 +69,11 @@ export default function GymSelector({ selectedGymUuid, onSelect }: GymSelectorPr
       <MuiTypography variant="body2" sx={{ mb: 1 }}>
         Link to a gym
       </MuiTypography>
-      <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>
+      <Box sx={{ display: "flex", gap: 1, flexWrap: "wrap" }}>
         <Chip
           label="No gym"
-          variant={selectedGymUuid === null ? 'filled' : 'outlined'}
-          color={selectedGymUuid === null ? 'primary' : 'default'}
+          variant={selectedGymUuid === null ? "filled" : "outlined"}
+          color={selectedGymUuid === null ? "primary" : "default"}
           onClick={() => onSelect(null)}
           size="small"
         />
@@ -84,8 +81,8 @@ export default function GymSelector({ selectedGymUuid, onSelect }: GymSelectorPr
           <Chip
             key={gym.uuid}
             label={gym.name}
-            variant={selectedGymUuid === gym.uuid ? 'filled' : 'outlined'}
-            color={selectedGymUuid === gym.uuid ? 'primary' : 'default'}
+            variant={selectedGymUuid === gym.uuid ? "filled" : "outlined"}
+            color={selectedGymUuid === gym.uuid ? "primary" : "default"}
             onClick={() => onSelect(gym.uuid)}
             size="small"
           />

@@ -1,18 +1,23 @@
-import { WebSocketServer, type WebSocket } from 'ws';
-import type { Server as HttpServer, IncomingMessage } from 'http';
-import { useServer, type Extra as WsExtra } from 'graphql-ws/use/ws';
-import type { Context as GqlWsContext } from 'graphql-ws';
-import { GraphQLError, parse } from 'graphql';
-import { schema } from '../graphql/index';
-import { createContext, removeContext, getContext } from '../graphql/context';
-import { validateQueryDepth } from '../graphql/query-depth';
-import { roomManager } from '../services/room-manager';
-import { pubsub } from '../pubsub/index';
-import { validateNextAuthToken, extractAuthToken, extractControllerApiKey, validateControllerApiKey } from '../middleware/auth';
-import { isOriginAllowed } from '../handlers/cors';
-import type { ConnectionContext } from '@boardsesh/shared-schema';
+import { WebSocketServer, type WebSocket } from "ws";
+import type { Server as HttpServer, IncomingMessage } from "http";
+import { useServer, type Extra as WsExtra } from "graphql-ws/use/ws";
+import type { Context as GqlWsContext } from "graphql-ws";
+import { GraphQLError, parse } from "graphql";
+import { schema } from "../graphql/index";
+import { createContext, removeContext, getContext } from "../graphql/context";
+import { validateQueryDepth } from "../graphql/query-depth";
+import { roomManager } from "../services/room-manager";
+import { pubsub } from "../pubsub/index";
+import {
+  validateNextAuthToken,
+  extractAuthToken,
+  extractControllerApiKey,
+  validateControllerApiKey,
+} from "../middleware/auth";
+import { isOriginAllowed } from "../handlers/cors";
+import type { ConnectionContext } from "@boardsesh/shared-schema";
 
-const DEBUG = process.env.NODE_ENV === 'development';
+const DEBUG = process.env.NODE_ENV === "development";
 
 /** Ping interval in milliseconds for detecting dead WebSocket connections. */
 const WS_PING_INTERVAL_MS = 30_000;
@@ -37,11 +42,14 @@ type ServerContext = GqlWsContext<Record<string, unknown>, CustomExtra>;
  * @param httpServer The HTTP server to attach the WebSocket server to
  * @returns The WebSocket server instance
  */
-export function setupWebSocketServer(httpServer: HttpServer): { wss: WebSocketServer; pingInterval: NodeJS.Timeout } {
+export function setupWebSocketServer(httpServer: HttpServer): {
+  wss: WebSocketServer;
+  pingInterval: NodeJS.Timeout;
+} {
   // Create WebSocket server on /graphql path with origin validation
   const wss = new WebSocketServer({
     server: httpServer,
-    path: '/graphql',
+    path: "/graphql",
     verifyClient: (
       info: { origin: string; req: IncomingMessage },
       callback: (res: boolean, code?: number, message?: string) => void,
@@ -61,7 +69,7 @@ export function setupWebSocketServer(httpServer: HttpServer): { wss: WebSocketSe
       }
 
       console.warn(`[WebSocket] Rejected connection from unauthorized origin: ${origin}`);
-      callback(false, 403, 'Origin not allowed');
+      callback(false, 403, "Origin not allowed");
     },
   });
 
@@ -106,15 +114,24 @@ export function setupWebSocketServer(httpServer: HttpServer): { wss: WebSocketSe
         }
 
         // Extract controller MAC address from connection params (used as clientId for BLE disconnect logic)
-        if (connectionParams?.controllerMac && typeof connectionParams.controllerMac === 'string') {
+        if (connectionParams?.controllerMac && typeof connectionParams.controllerMac === "string") {
           controllerMac = connectionParams.controllerMac;
           console.log(`[Auth] Controller MAC: ${controllerMac}`);
         }
 
         // Create context on initial connection with auth info
-        const context = createContext(undefined, isAuthenticated, authenticatedUserId, controllerId, controllerApiKey, controllerMac);
+        const context = createContext(
+          undefined,
+          isAuthenticated,
+          authenticatedUserId,
+          controllerId,
+          controllerApiKey,
+          controllerMac,
+        );
         await roomManager.registerClient(context.connectionId, undefined, authenticatedUserId);
-        console.log(`Client connected: ${context.connectionId} (authenticated: ${isAuthenticated})`);
+        console.log(
+          `Client connected: ${context.connectionId} (authenticated: ${isAuthenticated})`,
+        );
 
         // Store context in ctx.extra for access in other hooks
         (ctx.extra as CustomExtra).context = context;
@@ -127,8 +144,8 @@ export function setupWebSocketServer(httpServer: HttpServer): { wss: WebSocketSe
 
         if (!extra.context) {
           // This should never happen - onConnect should always set context
-          console.error('[Context] CRITICAL: No context in extra - onConnect may have failed');
-          throw new Error('Connection context not initialized - onConnect may have failed');
+          console.error("[Context] CRITICAL: No context in extra - onConnect may have failed");
+          throw new Error("Connection context not initialized - onConnect may have failed");
         }
 
         // Get the latest context (it may have been updated by mutations like joinSession)
@@ -140,7 +157,9 @@ export function setupWebSocketServer(httpServer: HttpServer): { wss: WebSocketSe
         }
 
         if (DEBUG) {
-          console.log(`[Context] Retrieved context: ${latestContext.connectionId}, sessionId: ${latestContext.sessionId}`);
+          console.log(
+            `[Context] Retrieved context: ${latestContext.connectionId}, sessionId: ${latestContext.sessionId}`,
+          );
         }
         return latestContext;
       },
@@ -160,7 +179,7 @@ export function setupWebSocketServer(httpServer: HttpServer): { wss: WebSocketSe
               // Notify session about user leaving
               if (latestContext.userId) {
                 pubsub.publishSessionEvent(result.sessionId, {
-                  __typename: 'UserLeft',
+                  __typename: "UserLeft",
                   userId: latestContext.userId,
                 });
               }
@@ -168,7 +187,7 @@ export function setupWebSocketServer(httpServer: HttpServer): { wss: WebSocketSe
               // Notify about new leader if changed
               if (result.newLeaderId) {
                 pubsub.publishSessionEvent(result.sessionId, {
-                  __typename: 'LeaderChanged',
+                  __typename: "LeaderChanged",
                   leaderId: result.newLeaderId,
                 });
               }
@@ -181,12 +200,12 @@ export function setupWebSocketServer(httpServer: HttpServer): { wss: WebSocketSe
       },
       onSubscribe: (_ctx: ServerContext, _id: string, payload) => {
         if (DEBUG) {
-          console.log(`Subscription started: ${payload.operationName || 'anonymous'}`);
+          console.log(`Subscription started: ${payload.operationName || "anonymous"}`);
         }
 
         // Validate query depth to prevent DoS via deeply nested subscriptions
         if (payload.query) {
-          const document = typeof payload.query === 'string' ? parse(payload.query) : payload.query;
+          const document = typeof payload.query === "string" ? parse(payload.query) : payload.query;
           const depthError = validateQueryDepth(document);
           if (depthError) {
             return [new GraphQLError(depthError)];
@@ -194,11 +213,11 @@ export function setupWebSocketServer(httpServer: HttpServer): { wss: WebSocketSe
         }
       },
       onError: (_ctx: ServerContext, _id: string, _payload, errors) => {
-        console.error('GraphQL error:', errors);
+        console.error("GraphQL error:", errors);
       },
       onComplete: (_ctx: ServerContext, _id: string, payload) => {
         if (DEBUG) {
-          console.log(`Subscription completed: ${payload.operationName || 'anonymous'}`);
+          console.log(`Subscription completed: ${payload.operationName || "anonymous"}`);
         }
       },
     },
@@ -210,10 +229,10 @@ export function setupWebSocketServer(httpServer: HttpServer): { wss: WebSocketSe
   // the TCP connection becomes half-open and onDisconnect never fires.
   // This interval pings every client; if it doesn't respond before the next ping,
   // the socket is terminated, which triggers onDisconnect and cleans up Redis state.
-  wss.on('connection', (ws: WebSocket) => {
+  wss.on("connection", (ws: WebSocket) => {
     const aliveWs = ws as AliveWebSocket;
     aliveWs.isAlive = true;
-    aliveWs.on('pong', () => {
+    aliveWs.on("pong", () => {
       aliveWs.isAlive = true;
     });
   });
@@ -222,7 +241,7 @@ export function setupWebSocketServer(httpServer: HttpServer): { wss: WebSocketSe
     wss.clients.forEach((ws) => {
       const aliveWs = ws as AliveWebSocket;
       if (!aliveWs.isAlive) {
-        if (DEBUG) console.log('[WebSocket] Terminating unresponsive connection');
+        if (DEBUG) console.log("[WebSocket] Terminating unresponsive connection");
         aliveWs.terminate();
         return;
       }

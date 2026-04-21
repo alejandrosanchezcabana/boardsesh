@@ -1,21 +1,21 @@
-'use client';
+"use client";
 
-import React, { useCallback, useState } from 'react';
-import Box from '@mui/material/Box';
-import CircularProgress from '@mui/material/CircularProgress';
-import type { GetUserProfileStatsQueryResponse } from '@/app/lib/graphql/operations/ticks';
-import styles from '@/app/profile/[user_id]/profile-page.module.css';
-import { useProfileData } from '@/app/profile/[user_id]/hooks/use-profile-data';
-import StatsSummary from '@/app/profile/[user_id]/components/stats-summary';
-import BoardStatsSection from '@/app/profile/[user_id]/components/board-stats-section';
-import type { UserProfile, LogbookEntry } from '@/app/profile/[user_id]/utils/profile-constants';
-import { StatsFilterBridgeInjector } from '@/app/components/stats-filter-bridge/stats-filter-bridge-context';
-import StatsFilterDrawer from '@/app/components/stats-filter-drawer/stats-filter-drawer';
+import React, { useCallback, useState } from "react";
+import Box from "@mui/material/Box";
+import CircularProgress from "@mui/material/CircularProgress";
+import type { GetUserProfileStatsQueryResponse } from "@/app/lib/graphql/operations/ticks";
+import styles from "@/app/profile/[user_id]/profile-page.module.css";
+import { useProfileData } from "@/app/profile/[user_id]/hooks/use-profile-data";
+import StatsSummary from "@/app/profile/[user_id]/components/stats-summary";
+import BoardStatsSection from "@/app/profile/[user_id]/components/board-stats-section";
+import type { UserProfile, LogbookEntry } from "@/app/profile/[user_id]/utils/profile-constants";
+import { StatsFilterBridgeInjector } from "@/app/components/stats-filter-bridge/stats-filter-bridge-context";
+import StatsFilterDrawer from "@/app/components/stats-filter-drawer/stats-filter-drawer";
 
 export interface YouProgressContentProps {
   userId: string;
   initialProfile?: UserProfile | null;
-  initialProfileStats?: GetUserProfileStatsQueryResponse['userProfileStats'] | null;
+  initialProfileStats?: GetUserProfileStatsQueryResponse["userProfileStats"] | null;
   initialAllBoardsTicks?: Record<string, LogbookEntry[]>;
   initialLogbook?: LogbookEntry[];
 }
@@ -73,7 +73,7 @@ export default function YouProgressContent({
     if (!open) setDrawerRendered(false);
   }, []);
 
-  const hasActiveFilters = unifiedTimeframe !== 'all' || selectedBoard !== 'all';
+  const hasActiveFilters = unifiedTimeframe !== "all" || selectedBoard !== "all";
 
   if (loading) {
     return (

@@ -1,6 +1,6 @@
 // Activity feed types
 
-import type { SocialEntityType } from './comments';
+import type { SocialEntityType } from "./comments";
 
 export type FollowingAscentFeedItem = {
   uuid: string;
@@ -34,7 +34,7 @@ export type AscentFeedItem = {
   layoutId?: number | null;
   angle: number;
   isMirror: boolean;
-  status: 'flash' | 'send' | 'attempt';
+  status: "flash" | "send" | "attempt";
   attemptCount: number;
   quality?: number | null;
   difficulty?: number | null;
@@ -53,8 +53,8 @@ export type AscentFeedInput = {
   offset?: number;
   boardType?: string;
   layoutIds?: number[];
-  status?: 'flash' | 'send' | 'attempt';
-  statusMode?: 'both' | 'send' | 'attempt';
+  status?: "flash" | "send" | "attempt";
+  statusMode?: "both" | "send" | "attempt";
   flashOnly?: boolean;
   climbName?: string;
   minDifficulty?: number;
@@ -63,18 +63,18 @@ export type AscentFeedInput = {
   maxAngle?: number;
   benchmarkOnly?: boolean;
   sortBy?:
-    | 'recent'
-    | 'hardest'
-    | 'easiest'
-    | 'mostAttempts'
-    | 'climbName'
-    | 'loggedGrade'
-    | 'consensusGrade'
-    | 'date'
-    | 'attemptCount';
-  sortOrder?: 'asc' | 'desc';
-  secondarySortBy?: 'climbName' | 'loggedGrade' | 'consensusGrade' | 'date' | 'attemptCount';
-  secondarySortOrder?: 'asc' | 'desc';
+    | "recent"
+    | "hardest"
+    | "easiest"
+    | "mostAttempts"
+    | "climbName"
+    | "loggedGrade"
+    | "consensusGrade"
+    | "date"
+    | "attemptCount";
+  sortOrder?: "asc" | "desc";
+  secondarySortBy?: "climbName" | "loggedGrade" | "consensusGrade" | "date" | "attemptCount";
+  secondarySortOrder?: "asc" | "desc";
   fromDate?: string;
   toDate?: string;
 };
@@ -85,7 +85,12 @@ export type FollowingAscentsFeedResult = {
   hasMore: boolean;
 };
 
-export type ActivityFeedItemType = 'ascent' | 'new_climb' | 'comment' | 'proposal_approved' | 'session_summary';
+export type ActivityFeedItemType =
+  | "ascent"
+  | "new_climb"
+  | "comment"
+  | "proposal_approved"
+  | "session_summary";
 
 export type ActivityFeedItem = {
   id: string;
@@ -156,7 +161,7 @@ export type SessionGradeDistributionItem = {
 
 export type SessionFeedItem = {
   sessionId: string;
-  sessionType: 'party' | 'inferred';
+  sessionType: "party" | "inferred";
   sessionName?: string | null;
   ownerUserId?: string | null;
   participants: SessionFeedParticipant[];
@@ -208,7 +213,7 @@ export type SessionDetailTick = {
 
 export type SessionDetail = {
   sessionId: string;
-  sessionType: 'party' | 'inferred';
+  sessionType: "party" | "inferred";
   sessionName?: string | null;
   ownerUserId?: string | null;
   participants: SessionFeedParticipant[];

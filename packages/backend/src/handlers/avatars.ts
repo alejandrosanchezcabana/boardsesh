@@ -1,20 +1,20 @@
-import type { IncomingMessage, ServerResponse } from 'http';
-import Busboy from 'busboy';
-import path from 'path';
-import { mkdir, writeFile, unlink, access } from 'fs/promises';
-import { applyCorsHeaders } from './cors';
-import { validateNextAuthToken } from '../middleware/auth';
-import { isS3Configured, uploadToS3, deleteUserAvatarsFromS3 } from '../storage/s3';
+import type { IncomingMessage, ServerResponse } from "http";
+import Busboy from "busboy";
+import path from "path";
+import { mkdir, writeFile, unlink, access } from "fs/promises";
+import { applyCorsHeaders } from "./cors";
+import { validateNextAuthToken } from "../middleware/auth";
+import { isS3Configured, uploadToS3, deleteUserAvatarsFromS3 } from "../storage/s3";
 
 // Avatar upload configuration
-const AVATARS_DIR = './avatars';
+const AVATARS_DIR = "./avatars";
 const MAX_FILE_SIZE = 2 * 1024 * 1024; // 2MB
-const ALLOWED_MIME_TYPES = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
+const ALLOWED_MIME_TYPES = ["image/jpeg", "image/png", "image/gif", "image/webp"];
 const MIME_TO_EXT: Record<string, string> = {
-  'image/jpeg': 'jpg',
-  'image/png': 'png',
-  'image/gif': 'gif',
-  'image/webp': 'webp',
+  "image/jpeg": "jpg",
+  "image/png": "png",
+  "image/gif": "gif",
+  "image/webp": "webp",
 };
 
 // UUID validation regex for path traversal prevention
@@ -38,7 +38,7 @@ async function ensureAvatarsDir(): Promise<void> {
     avatarsDirInitialized = true;
   } catch (error) {
     // Directory might already exist, that's ok
-    if ((error as NodeJS.ErrnoException).code === 'EEXIST') {
+    if ((error as NodeJS.ErrnoException).code === "EEXIST") {
       avatarsDirInitialized = true;
     } else {
       throw error;
@@ -62,7 +62,7 @@ function extractAuthTokenFromHeader(req: IncomingMessage): string | null {
  * Helper to delete existing avatars for a user (all extensions)
  */
 async function deleteExistingAvatars(userId: string): Promise<void> {
-  const extensions = ['jpg', 'png', 'gif', 'webp'];
+  const extensions = ["jpg", "png", "gif", "webp"];
   for (const ext of extensions) {
     const filePath = path.join(AVATARS_DIR, `${userId}.${ext}`);
     try {
@@ -91,15 +91,15 @@ export async function handleAvatarUpload(req: IncomingMessage, res: ServerRespon
   // Validate authentication
   const token = extractAuthTokenFromHeader(req);
   if (!token) {
-    res.writeHead(401, { 'Content-Type': 'application/json' });
-    res.end(JSON.stringify({ error: 'Authentication required' }));
+    res.writeHead(401, { "Content-Type": "application/json" });
+    res.end(JSON.stringify({ error: "Authentication required" }));
     return;
   }
 
   const authResult = await validateNextAuthToken(token);
   if (!authResult) {
-    res.writeHead(401, { 'Content-Type': 'application/json' });
-    res.end(JSON.stringify({ error: 'Invalid or expired token' }));
+    res.writeHead(401, { "Content-Type": "application/json" });
+    res.end(JSON.stringify({ error: "Invalid or expired token" }));
     return;
   }
 
@@ -107,13 +107,17 @@ export async function handleAvatarUpload(req: IncomingMessage, res: ServerRespon
 
   // Check S3 configuration
   const useS3 = isS3Configured();
-  const isProduction = process.env.NODE_ENV === 'production';
+  const isProduction = process.env.NODE_ENV === "production";
 
   // In production, S3 must be configured for avatar uploads
   if (isProduction && !useS3) {
-    console.error('Avatar upload attempted in production without S3 configured');
-    res.writeHead(501, { 'Content-Type': 'application/json' });
-    res.end(JSON.stringify({ error: 'Avatar uploads are not configured. Please contact the administrator.' }));
+    console.error("Avatar upload attempted in production without S3 configured");
+    res.writeHead(501, { "Content-Type": "application/json" });
+    res.end(
+      JSON.stringify({
+        error: "Avatar uploads are not configured. Please contact the administrator.",
+      }),
+    );
     return;
   }
 
@@ -122,9 +126,9 @@ export async function handleAvatarUpload(req: IncomingMessage, res: ServerRespon
     try {
       await ensureAvatarsDir();
     } catch (error) {
-      console.error('Failed to create avatars directory:', error);
-      res.writeHead(500, { 'Content-Type': 'application/json' });
-      res.end(JSON.stringify({ error: 'Server configuration error' }));
+      console.error("Failed to create avatars directory:", error);
+      res.writeHead(500, { "Content-Type": "application/json" });
+      res.end(JSON.stringify({ error: "Server configuration error" }));
       return;
     }
   }
@@ -134,12 +138,12 @@ export async function handleAvatarUpload(req: IncomingMessage, res: ServerRespon
 
     try {
       busboy = Busboy({
-        headers: req.headers as { 'content-type': string },
+        headers: req.headers as { "content-type": string },
         limits: { fileSize: MAX_FILE_SIZE, files: 1 },
       });
     } catch (err) {
-      res.writeHead(400, { 'Content-Type': 'application/json' });
-      res.end(JSON.stringify({ error: 'Invalid request format' }));
+      res.writeHead(400, { "Content-Type": "application/json" });
+      res.end(JSON.stringify({ error: "Invalid request format" }));
       resolve();
       return;
     }
@@ -150,12 +154,12 @@ export async function handleAvatarUpload(req: IncomingMessage, res: ServerRespon
     let fileTruncated = false;
     let invalidMimeType = false;
 
-    busboy.on('field', (name: string, value: string) => {
-      if (name === 'userId') userId = value;
+    busboy.on("field", (name: string, value: string) => {
+      if (name === "userId") userId = value;
     });
 
-    busboy.on('file', (name: string, stream: NodeJS.ReadableStream, info: { mimeType: string }) => {
-      if (name !== 'avatar') {
+    busboy.on("file", (name: string, stream: NodeJS.ReadableStream, info: { mimeType: string }) => {
+      if (name !== "avatar") {
         stream.resume();
         return;
       }
@@ -168,65 +172,65 @@ export async function handleAvatarUpload(req: IncomingMessage, res: ServerRespon
       }
 
       const chunks: Buffer[] = [];
-      stream.on('data', (chunk: Buffer) => chunks.push(chunk));
-      stream.on('end', () => {
+      stream.on("data", (chunk: Buffer) => chunks.push(chunk));
+      stream.on("end", () => {
         fileBuffer = Buffer.concat(chunks);
       });
-      stream.on('limit', () => {
+      stream.on("limit", () => {
         fileTruncated = true;
       });
     });
 
-    busboy.on('finish', async () => {
+    busboy.on("finish", async () => {
       // Validate file size
       if (fileTruncated) {
-        res.writeHead(400, { 'Content-Type': 'application/json' });
-        res.end(JSON.stringify({ error: 'File size must be less than 2MB' }));
+        res.writeHead(400, { "Content-Type": "application/json" });
+        res.end(JSON.stringify({ error: "File size must be less than 2MB" }));
         resolve();
         return;
       }
 
       // Validate MIME type
       if (invalidMimeType) {
-        res.writeHead(400, { 'Content-Type': 'application/json' });
-        res.end(JSON.stringify({ error: 'Only JPG, PNG, GIF, and WebP images are allowed' }));
+        res.writeHead(400, { "Content-Type": "application/json" });
+        res.end(JSON.stringify({ error: "Only JPG, PNG, GIF, and WebP images are allowed" }));
         resolve();
         return;
       }
 
       // Validate userId
       if (!userId) {
-        res.writeHead(400, { 'Content-Type': 'application/json' });
-        res.end(JSON.stringify({ error: 'userId is required' }));
+        res.writeHead(400, { "Content-Type": "application/json" });
+        res.end(JSON.stringify({ error: "userId is required" }));
         resolve();
         return;
       }
 
       if (!validateUserId(userId)) {
-        res.writeHead(400, { 'Content-Type': 'application/json' });
-        res.end(JSON.stringify({ error: 'Invalid userId format' }));
+        res.writeHead(400, { "Content-Type": "application/json" });
+        res.end(JSON.stringify({ error: "Invalid userId format" }));
         resolve();
         return;
       }
 
       // Authorization check: users can only upload avatars for their own userId
       if (userId !== authenticatedUserId) {
-        res.writeHead(403, { 'Content-Type': 'application/json' });
-        res.end(JSON.stringify({ error: 'You can only upload avatars for your own user ID' }));
+        res.writeHead(403, { "Content-Type": "application/json" });
+        res.end(JSON.stringify({ error: "You can only upload avatars for your own user ID" }));
         resolve();
         return;
       }
 
       // Validate file was uploaded
       if (!fileBuffer || !mimeType) {
-        res.writeHead(400, { 'Content-Type': 'application/json' });
-        res.end(JSON.stringify({ error: 'No file uploaded' }));
+        res.writeHead(400, { "Content-Type": "application/json" });
+        res.end(JSON.stringify({ error: "No file uploaded" }));
         resolve();
         return;
       }
 
       // Determine file extension
-      const ext = MIME_TO_EXT[mimeType] || 'jpg';
+      const ext = MIME_TO_EXT[mimeType] || "jpg";
       let avatarUrl: string;
 
       try {
@@ -250,21 +254,21 @@ export async function handleAvatarUpload(req: IncomingMessage, res: ServerRespon
           avatarUrl = `/static/avatars/${userId}.${ext}`;
         }
       } catch (saveErr) {
-        console.error('Failed to save avatar:', saveErr);
-        res.writeHead(500, { 'Content-Type': 'application/json' });
-        res.end(JSON.stringify({ error: 'Failed to save avatar' }));
+        console.error("Failed to save avatar:", saveErr);
+        res.writeHead(500, { "Content-Type": "application/json" });
+        res.end(JSON.stringify({ error: "Failed to save avatar" }));
         resolve();
         return;
       }
 
-      res.writeHead(200, { 'Content-Type': 'application/json' });
+      res.writeHead(200, { "Content-Type": "application/json" });
       res.end(JSON.stringify({ success: true, avatarUrl }));
       resolve();
     });
 
-    busboy.on('error', (err: Error) => {
-      console.error('Busboy error:', err);
-      res.writeHead(400, { 'Content-Type': 'application/json' });
+    busboy.on("error", (err: Error) => {
+      console.error("Busboy error:", err);
+      res.writeHead(400, { "Content-Type": "application/json" });
       res.end(JSON.stringify({ error: err.message }));
       resolve();
     });

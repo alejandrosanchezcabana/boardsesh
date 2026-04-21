@@ -1,20 +1,20 @@
-'use client';
+"use client";
 
-import { useEffect, useRef, Suspense } from 'react';
-import { useSearchParams } from 'next/navigation';
-import { getCsrfToken } from 'next-auth/react';
-import Box from '@mui/material/Box';
-import CircularProgress from '@mui/material/CircularProgress';
-import Typography from '@mui/material/Typography';
+import { useEffect, useRef, Suspense } from "react";
+import { useSearchParams } from "next/navigation";
+import { getCsrfToken } from "next-auth/react";
+import Box from "@mui/material/Box";
+import CircularProgress from "@mui/material/CircularProgress";
+import Typography from "@mui/material/Typography";
 
-const ALLOWED_PROVIDERS = new Set(['google', 'apple', 'facebook']);
+const ALLOWED_PROVIDERS = new Set(["google", "apple", "facebook"]);
 
 function NativeStartInner() {
   const params = useSearchParams();
   const formRef = useRef<HTMLFormElement>(null);
   const submitted = useRef(false);
-  const provider = params.get('provider');
-  const callbackUrl = params.get('callbackUrl') ?? '/';
+  const provider = params.get("provider");
+  const callbackUrl = params.get("callbackUrl") ?? "/";
 
   useEffect(() => {
     if (submitted.current) return;
@@ -24,9 +24,7 @@ function NativeStartInner() {
       if (!csrfToken || !formRef.current || submitted.current) return;
       submitted.current = true;
 
-      const input = formRef.current.querySelector<HTMLInputElement>(
-        'input[name="csrfToken"]',
-      );
+      const input = formRef.current.querySelector<HTMLInputElement>('input[name="csrfToken"]');
       if (input) input.value = csrfToken;
       formRef.current.submit();
     });
@@ -36,10 +34,10 @@ function NativeStartInner() {
     return (
       <Box
         sx={{
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          minHeight: '100vh',
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          minHeight: "100vh",
         }}
       >
         <Typography>Invalid sign-in provider</Typography>
@@ -50,11 +48,11 @@ function NativeStartInner() {
   return (
     <Box
       sx={{
-        display: 'flex',
-        flexDirection: 'column',
-        alignItems: 'center',
-        justifyContent: 'center',
-        minHeight: '100vh',
+        display: "flex",
+        flexDirection: "column",
+        alignItems: "center",
+        justifyContent: "center",
+        minHeight: "100vh",
         gap: 2,
       }}
     >
@@ -64,7 +62,7 @@ function NativeStartInner() {
         ref={formRef}
         method="POST"
         action={`/api/auth/signin/${encodeURIComponent(provider)}`}
-        style={{ display: 'none' }}
+        style={{ display: "none" }}
       >
         <input type="hidden" name="csrfToken" value="" />
         <input type="hidden" name="callbackUrl" value={callbackUrl} />
@@ -79,10 +77,10 @@ export default function NativeStartClient() {
       fallback={
         <Box
           sx={{
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            minHeight: '100vh',
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            minHeight: "100vh",
           }}
         >
           <CircularProgress />

@@ -1,7 +1,7 @@
-import type { SessionGradeDistributionItem } from '@boardsesh/shared-schema';
-import type { CssBarChartBar } from './css-bar-chart';
-import { formatVGrade } from '@/app/lib/grade-colors';
-import { themeTokens } from '@/app/theme/theme-config';
+import type { SessionGradeDistributionItem } from "@boardsesh/shared-schema";
+import type { CssBarChartBar } from "./css-bar-chart";
+import { formatVGrade } from "@/app/lib/grade-colors";
+import { themeTokens } from "@/app/theme/theme-config";
 
 // Match profile page flash/redpoint colors (theme-derived, 60% opacity hex suffix)
 const FLASH_COLOR = `${themeTokens.colors.success}99`;
@@ -9,9 +9,9 @@ const SEND_COLOR = `${themeTokens.colors.error}99`;
 const ATTEMPT_COLOR = `${themeTokens.neutral[300]}99`;
 
 export const SESSION_GRADE_LEGEND = [
-  { label: 'Flash', color: FLASH_COLOR },
-  { label: 'Send', color: SEND_COLOR },
-  { label: 'Attempt', color: ATTEMPT_COLOR },
+  { label: "Flash", color: FLASH_COLOR },
+  { label: "Send", color: SEND_COLOR },
+  { label: "Attempt", color: ATTEMPT_COLOR },
 ] as const;
 
 /**
@@ -33,9 +33,9 @@ export function buildSessionGradeBars(
     key: item.grade,
     label: fmt(item.grade) ?? item.grade,
     segments: [
-      { value: item.flash, color: FLASH_COLOR, label: 'Flash' },
-      { value: item.send, color: SEND_COLOR, label: 'Send' },
-      { value: item.attempt, color: ATTEMPT_COLOR, label: 'Attempt' },
+      { value: item.flash, color: FLASH_COLOR, label: "Flash" },
+      { value: item.send, color: SEND_COLOR, label: "Send" },
+      { value: item.attempt, color: ATTEMPT_COLOR, label: "Attempt" },
     ],
   }));
 }

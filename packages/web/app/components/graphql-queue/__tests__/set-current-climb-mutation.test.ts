@@ -1,20 +1,20 @@
-import { describe, it, expect } from 'vitest';
-import { queueReducer } from '../../queue-control/reducer';
-import type { QueueState, ClimbQueueItem } from '../../queue-control/types';
-import type { Climb, SearchRequestPagination } from '@/app/lib/types';
+import { describe, it, expect } from "vite-plus/test";
+import { queueReducer } from "../../queue-control/reducer";
+import type { QueueState, ClimbQueueItem } from "../../queue-control/types";
+import type { Climb, SearchRequestPagination } from "@/app/lib/types";
 
 const mockClimb: Climb = {
-  uuid: 'climb-1',
-  setter_username: 'setter1',
-  name: 'Test Climb',
-  description: '',
-  frames: '',
+  uuid: "climb-1",
+  setter_username: "setter1",
+  name: "Test Climb",
+  description: "",
+  frames: "",
   angle: 40,
   ascensionist_count: 5,
-  difficulty: '7',
-  quality_average: '3.5',
+  difficulty: "7",
+  quality_average: "3.5",
   stars: 3,
-  difficulty_error: '',
+  difficulty_error: "",
   mirrored: false,
   benchmark_difficulty: null,
   userAscents: 0,
@@ -23,8 +23,8 @@ const mockClimb: Climb = {
 
 const mockClimbQueueItem: ClimbQueueItem = {
   climb: mockClimb,
-  addedBy: 'user-1',
-  uuid: 'queue-item-1',
+  addedBy: "user-1",
+  uuid: "queue-item-1",
   suggested: false,
 };
 
@@ -36,13 +36,13 @@ const mockSearchParams: SearchRequestPagination = {
   minAscents: 1,
   minGrade: 1,
   minRating: 1,
-  sortBy: 'quality',
-  sortOrder: 'desc',
-  name: '',
+  sortBy: "quality",
+  sortOrder: "desc",
+  name: "",
   onlyClassics: false,
   onlyTallClimbs: false,
   settername: [],
-  setternameSuggestion: '',
+  setternameSuggestion: "",
   holdsFilter: {},
   hideAttempted: false,
   hideCompleted: false,
@@ -64,15 +64,15 @@ const initialState: QueueState = {
   needsResync: false,
 };
 
-describe('SET_CURRENT_CLIMB mutation optimization', () => {
-  it('adds item to queue and sets as current in a single dispatch', () => {
+describe("SET_CURRENT_CLIMB mutation optimization", () => {
+  it("adds item to queue and sets as current in a single dispatch", () => {
     const newItem: ClimbQueueItem = {
       ...mockClimbQueueItem,
-      uuid: 'new-item',
+      uuid: "new-item",
     };
 
     const result = queueReducer(initialState, {
-      type: 'SET_CURRENT_CLIMB',
+      type: "SET_CURRENT_CLIMB",
       payload: newItem,
     });
 
@@ -82,11 +82,11 @@ describe('SET_CURRENT_CLIMB mutation optimization', () => {
     expect(result.queue[0]).toEqual(newItem);
   });
 
-  it('inserts after the current item position in the queue', () => {
-    const item1: ClimbQueueItem = { ...mockClimbQueueItem, uuid: 'item-1' };
-    const item2: ClimbQueueItem = { ...mockClimbQueueItem, uuid: 'item-2' };
-    const item3: ClimbQueueItem = { ...mockClimbQueueItem, uuid: 'item-3' };
-    const newItem: ClimbQueueItem = { ...mockClimbQueueItem, uuid: 'new-item' };
+  it("inserts after the current item position in the queue", () => {
+    const item1: ClimbQueueItem = { ...mockClimbQueueItem, uuid: "item-1" };
+    const item2: ClimbQueueItem = { ...mockClimbQueueItem, uuid: "item-2" };
+    const item3: ClimbQueueItem = { ...mockClimbQueueItem, uuid: "item-3" };
+    const newItem: ClimbQueueItem = { ...mockClimbQueueItem, uuid: "new-item" };
 
     const stateWithCurrent: QueueState = {
       ...initialState,
@@ -95,7 +95,7 @@ describe('SET_CURRENT_CLIMB mutation optimization', () => {
     };
 
     const result = queueReducer(stateWithCurrent, {
-      type: 'SET_CURRENT_CLIMB',
+      type: "SET_CURRENT_CLIMB",
       payload: newItem,
     });
 
@@ -105,9 +105,9 @@ describe('SET_CURRENT_CLIMB mutation optimization', () => {
     expect(result.queue).toEqual([item1, item2, newItem, item3]);
   });
 
-  it('appends to queue when currentClimbQueueItem is null', () => {
-    const existingItem: ClimbQueueItem = { ...mockClimbQueueItem, uuid: 'existing' };
-    const newItem: ClimbQueueItem = { ...mockClimbQueueItem, uuid: 'new-item' };
+  it("appends to queue when currentClimbQueueItem is null", () => {
+    const existingItem: ClimbQueueItem = { ...mockClimbQueueItem, uuid: "existing" };
+    const newItem: ClimbQueueItem = { ...mockClimbQueueItem, uuid: "new-item" };
 
     const stateWithQueue: QueueState = {
       ...initialState,
@@ -116,7 +116,7 @@ describe('SET_CURRENT_CLIMB mutation optimization', () => {
     };
 
     const result = queueReducer(stateWithQueue, {
-      type: 'SET_CURRENT_CLIMB',
+      type: "SET_CURRENT_CLIMB",
       payload: newItem,
     });
 
@@ -126,10 +126,10 @@ describe('SET_CURRENT_CLIMB mutation optimization', () => {
     expect(result.queue).toEqual([existingItem, newItem]);
   });
 
-  it('produces valid unique UUIDs via uuid package', () => {
+  it("produces valid unique UUIDs via uuid package", () => {
     // The uuid package (v4) is used in createClimbQueueItem
     // This test verifies the UUID format used in the queue system
-    const { v4: uuidv4 } = require('uuid');
+    const { v4: uuidv4 } = require("uuid");
     const uuid1 = uuidv4();
     const uuid2 = uuidv4();
 
@@ -141,12 +141,12 @@ describe('SET_CURRENT_CLIMB mutation optimization', () => {
     expect(uuid1).not.toBe(uuid2);
   });
 
-  it('preserves existing queue items around the insertion point', () => {
-    const item1: ClimbQueueItem = { ...mockClimbQueueItem, uuid: 'item-1' };
-    const item2: ClimbQueueItem = { ...mockClimbQueueItem, uuid: 'item-2' };
-    const item3: ClimbQueueItem = { ...mockClimbQueueItem, uuid: 'item-3' };
-    const item4: ClimbQueueItem = { ...mockClimbQueueItem, uuid: 'item-4' };
-    const newItem: ClimbQueueItem = { ...mockClimbQueueItem, uuid: 'new-item' };
+  it("preserves existing queue items around the insertion point", () => {
+    const item1: ClimbQueueItem = { ...mockClimbQueueItem, uuid: "item-1" };
+    const item2: ClimbQueueItem = { ...mockClimbQueueItem, uuid: "item-2" };
+    const item3: ClimbQueueItem = { ...mockClimbQueueItem, uuid: "item-3" };
+    const item4: ClimbQueueItem = { ...mockClimbQueueItem, uuid: "item-4" };
+    const newItem: ClimbQueueItem = { ...mockClimbQueueItem, uuid: "new-item" };
 
     const stateWithQueue: QueueState = {
       ...initialState,
@@ -155,7 +155,7 @@ describe('SET_CURRENT_CLIMB mutation optimization', () => {
     };
 
     const result = queueReducer(stateWithQueue, {
-      type: 'SET_CURRENT_CLIMB',
+      type: "SET_CURRENT_CLIMB",
       payload: newItem,
     });
 
@@ -170,11 +170,11 @@ describe('SET_CURRENT_CLIMB mutation optimization', () => {
     expect(result.queue).toHaveLength(5);
   });
 
-  it('works with empty queue and null currentClimbQueueItem', () => {
-    const newItem: ClimbQueueItem = { ...mockClimbQueueItem, uuid: 'first-item' };
+  it("works with empty queue and null currentClimbQueueItem", () => {
+    const newItem: ClimbQueueItem = { ...mockClimbQueueItem, uuid: "first-item" };
 
     const result = queueReducer(initialState, {
-      type: 'SET_CURRENT_CLIMB',
+      type: "SET_CURRENT_CLIMB",
       payload: newItem,
     });
 
@@ -187,11 +187,11 @@ describe('SET_CURRENT_CLIMB mutation optimization', () => {
     expect(result.pendingCurrentClimbUpdates).toEqual([]);
   });
 
-  it('appends when current item is set but not found in queue', () => {
+  it("appends when current item is set but not found in queue", () => {
     // Edge case: currentClimbQueueItem references an item not in the queue array
-    const orphanCurrent: ClimbQueueItem = { ...mockClimbQueueItem, uuid: 'orphan' };
-    const existingItem: ClimbQueueItem = { ...mockClimbQueueItem, uuid: 'existing' };
-    const newItem: ClimbQueueItem = { ...mockClimbQueueItem, uuid: 'new-item' };
+    const orphanCurrent: ClimbQueueItem = { ...mockClimbQueueItem, uuid: "orphan" };
+    const existingItem: ClimbQueueItem = { ...mockClimbQueueItem, uuid: "existing" };
+    const newItem: ClimbQueueItem = { ...mockClimbQueueItem, uuid: "new-item" };
 
     const stateWithOrphan: QueueState = {
       ...initialState,
@@ -200,7 +200,7 @@ describe('SET_CURRENT_CLIMB mutation optimization', () => {
     };
 
     const result = queueReducer(stateWithOrphan, {
-      type: 'SET_CURRENT_CLIMB',
+      type: "SET_CURRENT_CLIMB",
       payload: newItem,
     });
 
@@ -210,10 +210,10 @@ describe('SET_CURRENT_CLIMB mutation optimization', () => {
     expect(result.queue).toEqual([existingItem, newItem]);
   });
 
-  it('inserts after the last item when current is at the end of the queue', () => {
-    const item1: ClimbQueueItem = { ...mockClimbQueueItem, uuid: 'item-1' };
-    const item2: ClimbQueueItem = { ...mockClimbQueueItem, uuid: 'item-2' };
-    const newItem: ClimbQueueItem = { ...mockClimbQueueItem, uuid: 'new-item' };
+  it("inserts after the last item when current is at the end of the queue", () => {
+    const item1: ClimbQueueItem = { ...mockClimbQueueItem, uuid: "item-1" };
+    const item2: ClimbQueueItem = { ...mockClimbQueueItem, uuid: "item-2" };
+    const newItem: ClimbQueueItem = { ...mockClimbQueueItem, uuid: "new-item" };
 
     const stateWithCurrentAtEnd: QueueState = {
       ...initialState,
@@ -222,7 +222,7 @@ describe('SET_CURRENT_CLIMB mutation optimization', () => {
     };
 
     const result = queueReducer(stateWithCurrentAtEnd, {
-      type: 'SET_CURRENT_CLIMB',
+      type: "SET_CURRENT_CLIMB",
       payload: newItem,
     });
 

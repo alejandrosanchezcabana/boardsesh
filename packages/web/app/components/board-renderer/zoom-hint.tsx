@@ -1,11 +1,11 @@
-'use client';
+"use client";
 
-import React, { useEffect, useState, useCallback } from 'react';
-import ZoomInOutlined from '@mui/icons-material/ZoomInOutlined';
-import { getPreference, setPreference } from '@/app/lib/user-preferences-db';
-import styles from './swipe-board-carousel.module.css';
+import React, { useEffect, useState, useCallback } from "react";
+import ZoomInOutlined from "@mui/icons-material/ZoomInOutlined";
+import { getPreference, setPreference } from "@/app/lib/user-preferences-db";
+import styles from "./swipe-board-carousel.module.css";
 
-const PREF_KEY = 'playview:zoomHintSeen';
+const PREF_KEY = "playview:zoomHintSeen";
 const AUTO_DISMISS_MS = 4000;
 
 interface ZoomHintProps {
@@ -23,7 +23,9 @@ export default function ZoomHint({ visible }: ZoomHintProps) {
       if (cancelled || seen) return;
       setShow(true);
     });
-    return () => { cancelled = true; };
+    return () => {
+      cancelled = true;
+    };
   }, [visible]);
 
   useEffect(() => {

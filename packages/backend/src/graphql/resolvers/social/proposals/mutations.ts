@@ -1,54 +1,55 @@
-import { eq, and, sql, isNull } from 'drizzle-orm';
-import type { ConnectionContext, ProposalStatus } from '@boardsesh/shared-schema';
-import { db } from '../../../../db/client';
-import * as dbSchema from '@boardsesh/db/schema';
-import { getGradeLabel } from '@boardsesh/db/queries';
-import { requireAuthenticated, applyRateLimit, validateInput } from '../../shared/helpers';
+import { eq, and, sql, isNull } from "drizzle-orm";
+import type { ConnectionContext, ProposalStatus } from "@boardsesh/shared-schema";
+import { db } from "../../../../db/client";
+import * as dbSchema from "@boardsesh/db/schema";
+import { getGradeLabel } from "@boardsesh/db/queries";
+import { requireAuthenticated, applyRateLimit, validateInput } from "../../shared/helpers";
 import {
   CreateProposalInputSchema,
   VoteOnProposalInputSchema,
   ResolveProposalInputSchema,
   DeleteProposalInputSchema,
-} from '../../../../validation/schemas';
-import { publishSocialEvent } from '../../../../events/index';
-import { requireAdminOrLeader, getUserVoteWeight } from '../roles';
-import { resolveCommunitySetting } from '../community-settings';
-import crypto from 'crypto';
-import { enrichProposal } from './enrichment';
-import { applyProposalEffect, revertProposalEffect } from './effects';
-import { checkAutoApproval } from './grade-analysis';
-import { setterOverrideCommunityStatus, freezeClimb } from './setter-overrides';
+} from "../../../../validation/schemas";
+import { publishSocialEvent } from "../../../../events/index";
+import { requireAdminOrLeader, getUserVoteWeight } from "../roles";
+import { resolveCommunitySetting } from "../community-settings";
+import crypto from "crypto";
+import { enrichProposal } from "./enrichment";
+import { applyProposalEffect, revertProposalEffect } from "./effects";
+import { checkAutoApproval } from "./grade-analysis";
+import { setterOverrideCommunityStatus, freezeClimb } from "./setter-overrides";
 
 export const socialProposalMutations = {
-  createProposal: async (
-    _: unknown,
-    { input }: { input: unknown },
-    ctx: ConnectionContext,
-  ) => {
+  createProposal: async (_: unknown, { input }: { input: unknown }, ctx: ConnectionContext) => {
     requireAuthenticated(ctx);
     await applyRateLimit(ctx, 5);
 
-    const validated = validateInput(CreateProposalInputSchema, input, 'input');
+    const validated = validateInput(CreateProposalInputSchema, input, "input");
     const { climbUuid, boardType, angle, type, proposedValue, reason } = validated;
     const proposerId = ctx.userId!;
 
     // Validate: angle required for grade/benchmark, null for classic
-    if ((type === 'grade' || type === 'benchmark') && angle == null) {
-      throw new Error('Angle is required for grade and benchmark proposals');
+    if ((type === "grade" || type === "benchmark") && angle == null) {
+      throw new Error("Angle is required for grade and benchmark proposals");
     }
-    if (type === 'classic' && angle != null) {
-      throw new Error('Angle must not be set for classic proposals');
+    if (type === "classic" && angle != null) {
+      throw new Error("Angle must not be set for classic proposals");
     }
 
     // Check not frozen
-    const frozenSetting = await resolveCommunitySetting('climb_frozen', climbUuid, angle, boardType);
-    if (frozenSetting === 'true') {
-      throw new Error('This climb is frozen and cannot receive new proposals');
+    const frozenSetting = await resolveCommunitySetting(
+      "climb_frozen",
+      climbUuid,
+      angle,
+      boardType,
+    );
+    if (frozenSetting === "true") {
+      throw new Error("This climb is frozen and cannot receive new proposals");
     }
 
     // Resolve current value
-    let currentValue = '';
-    if (type === 'grade') {
+    let currentValue = "";
+    if (type === "grade") {
       // Try community status first, then board climb stats
       const [communityStatus] = await db
         .select({ communityGrade: dbSchema.climbCommunityStatus.communityGrade })
@@ -75,18 +76,19 @@ export const socialProposalMutations = {
               AND cs.board_type = ${boardType}
             LIMIT 1
           `);
-          const rows = (result as unknown as { rows: Array<{ difficulty_id: number | null }> }).rows;
-          currentValue = getGradeLabel(rows[0]?.difficulty_id ?? null) || 'Unknown';
+          const rows = (result as unknown as { rows: Array<{ difficulty_id: number | null }> })
+            .rows;
+          currentValue = getGradeLabel(rows[0]?.difficulty_id ?? null) || "Unknown";
         } catch {
-          currentValue = 'Unknown';
+          currentValue = "Unknown";
         }
       }
 
       // Prevent proposals to the same grade
       if (currentValue === proposedValue) {
-        throw new Error('Proposed grade is the same as the current grade');
+        throw new Error("Proposed grade is the same as the current grade");
       }
-    } else if (type === 'benchmark') {
+    } else if (type === "benchmark") {
       const [communityStatus] = await db
         .select({ isBenchmark: dbSchema.climbCommunityStatus.isBenchmark })
         .from(dbSchema.climbCommunityStatus)
@@ -99,7 +101,7 @@ export const socialProposalMutations = {
         )
         .limit(1);
       currentValue = String(communityStatus?.isBenchmark || false);
-    } else if (type === 'classic') {
+    } else if (type === "classic") {
       const [classicStatus] = await db
         .select({ isClassic: dbSchema.climbClassicStatus.isClassic })
         .from(dbSchema.climbClassicStatus)
@@ -118,14 +120,14 @@ export const socialProposalMutations = {
       eq(dbSchema.climbProposals.climbUuid, climbUuid),
       eq(dbSchema.climbProposals.boardType, boardType),
       eq(dbSchema.climbProposals.type, type),
-      eq(dbSchema.climbProposals.status, 'open'),
+      eq(dbSchema.climbProposals.status, "open"),
     ];
     if (angle != null) supersedeConditions.push(eq(dbSchema.climbProposals.angle, angle));
     else supersedeConditions.push(isNull(dbSchema.climbProposals.angle));
 
     await db
       .update(dbSchema.climbProposals)
-      .set({ status: 'superseded', resolvedAt: new Date() })
+      .set({ status: "superseded", resolvedAt: new Date() })
       .where(and(...supersedeConditions));
 
     // Insert proposal
@@ -147,66 +149,62 @@ export const socialProposalMutations = {
 
     // Auto-vote with proposer's weight
     const weight = await getUserVoteWeight(proposerId, boardType);
-    await db
-      .insert(dbSchema.proposalVotes)
-      .values({
-        proposalId: proposal.id,
-        userId: proposerId,
-        value: 1,
-        weight,
-      });
+    await db.insert(dbSchema.proposalVotes).values({
+      proposalId: proposal.id,
+      userId: proposerId,
+      value: 1,
+      weight,
+    });
 
     // Check auto-approval (atomic: only transition if still 'open')
     const shouldApprove = await checkAutoApproval(proposal.id, boardType, climbUuid, angle ?? null);
     if (shouldApprove) {
       const [approved] = await db
         .update(dbSchema.climbProposals)
-        .set({ status: 'approved', resolvedAt: new Date() })
-        .where(and(
-          eq(dbSchema.climbProposals.id, proposal.id),
-          eq(dbSchema.climbProposals.status, 'open'),
-        ))
+        .set({ status: "approved", resolvedAt: new Date() })
+        .where(
+          and(
+            eq(dbSchema.climbProposals.id, proposal.id),
+            eq(dbSchema.climbProposals.status, "open"),
+          ),
+        )
         .returning();
 
       if (approved) {
-        proposal.status = 'approved';
+        proposal.status = "approved";
         proposal.resolvedAt = approved.resolvedAt;
 
         await applyProposalEffect(proposal);
 
         publishSocialEvent({
-          type: 'proposal.approved',
+          type: "proposal.approved",
           actorId: proposerId,
-          entityType: 'proposal',
+          entityType: "proposal",
           entityId: uuid,
           timestamp: Date.now(),
           metadata: { climbUuid, boardType, proposalType: type },
-        }).catch((err) => console.error('[Proposals] Failed to publish proposal.approved:', err));
+        }).catch((err) => console.error("[Proposals] Failed to publish proposal.approved:", err));
       }
     }
 
     // Publish created event
     publishSocialEvent({
-      type: 'proposal.created',
+      type: "proposal.created",
       actorId: proposerId,
-      entityType: 'proposal',
+      entityType: "proposal",
       entityId: uuid,
       timestamp: Date.now(),
       metadata: { climbUuid, boardType, proposalType: type },
-    }).catch((err) => console.error('[Proposals] Failed to publish proposal.created:', err));
+    }).catch((err) => console.error("[Proposals] Failed to publish proposal.created:", err));
 
     return enrichProposal(proposal, proposerId);
   },
 
-  voteOnProposal: async (
-    _: unknown,
-    { input }: { input: unknown },
-    ctx: ConnectionContext,
-  ) => {
+  voteOnProposal: async (_: unknown, { input }: { input: unknown }, ctx: ConnectionContext) => {
     requireAuthenticated(ctx);
     await applyRateLimit(ctx, 20);
 
-    const validated = validateInput(VoteOnProposalInputSchema, input, 'input');
+    const validated = validateInput(VoteOnProposalInputSchema, input, "input");
     const { proposalUuid, value } = validated;
     const userId = ctx.userId!;
 
@@ -218,10 +216,10 @@ export const socialProposalMutations = {
       .limit(1);
 
     if (!proposal) {
-      throw new Error('Proposal not found');
+      throw new Error("Proposal not found");
     }
-    if (proposal.status !== 'open') {
-      throw new Error('Can only vote on open proposals');
+    if (proposal.status !== "open") {
+      throw new Error("Can only vote on open proposals");
     }
 
     // Compute voter's weight
@@ -242,7 +240,9 @@ export const socialProposalMutations = {
     if (existingVote) {
       if (existingVote.value === value) {
         // Toggle off
-        await db.delete(dbSchema.proposalVotes).where(eq(dbSchema.proposalVotes.id, existingVote.id));
+        await db
+          .delete(dbSchema.proposalVotes)
+          .where(eq(dbSchema.proposalVotes.id, existingVote.id));
       } else {
         // Change direction
         await db
@@ -257,53 +257,64 @@ export const socialProposalMutations = {
     }
 
     // Check auto-approval (atomic: only transition if still 'open')
-    const shouldApprove = await checkAutoApproval(proposal.id, proposal.boardType, proposal.climbUuid, proposal.angle);
+    const shouldApprove = await checkAutoApproval(
+      proposal.id,
+      proposal.boardType,
+      proposal.climbUuid,
+      proposal.angle,
+    );
     if (shouldApprove) {
       const [approved] = await db
         .update(dbSchema.climbProposals)
-        .set({ status: 'approved', resolvedAt: new Date() })
-        .where(and(
-          eq(dbSchema.climbProposals.id, proposal.id),
-          eq(dbSchema.climbProposals.status, 'open'),
-        ))
+        .set({ status: "approved", resolvedAt: new Date() })
+        .where(
+          and(
+            eq(dbSchema.climbProposals.id, proposal.id),
+            eq(dbSchema.climbProposals.status, "open"),
+          ),
+        )
         .returning();
 
       if (approved) {
-        proposal.status = 'approved';
+        proposal.status = "approved";
         proposal.resolvedAt = approved.resolvedAt;
 
         await applyProposalEffect(proposal);
 
         publishSocialEvent({
-          type: 'proposal.approved',
+          type: "proposal.approved",
           actorId: userId,
-          entityType: 'proposal',
+          entityType: "proposal",
           entityId: proposalUuid,
           timestamp: Date.now(),
-          metadata: { climbUuid: proposal.climbUuid, boardType: proposal.boardType, proposalType: proposal.type },
-        }).catch((err) => console.error('[Proposals] Failed to publish proposal.approved:', err));
+          metadata: {
+            climbUuid: proposal.climbUuid,
+            boardType: proposal.boardType,
+            proposalType: proposal.type,
+          },
+        }).catch((err) => console.error("[Proposals] Failed to publish proposal.approved:", err));
       }
     }
 
     // Publish voted event
     publishSocialEvent({
-      type: 'proposal.voted',
+      type: "proposal.voted",
       actorId: userId,
-      entityType: 'proposal',
+      entityType: "proposal",
       entityId: proposalUuid,
       timestamp: Date.now(),
-      metadata: { value: String(value), climbUuid: proposal.climbUuid, boardType: proposal.boardType },
-    }).catch((err) => console.error('[Proposals] Failed to publish proposal.voted:', err));
+      metadata: {
+        value: String(value),
+        climbUuid: proposal.climbUuid,
+        boardType: proposal.boardType,
+      },
+    }).catch((err) => console.error("[Proposals] Failed to publish proposal.voted:", err));
 
     return enrichProposal(proposal, userId);
   },
 
-  resolveProposal: async (
-    _: unknown,
-    { input }: { input: unknown },
-    ctx: ConnectionContext,
-  ) => {
-    const validated = validateInput(ResolveProposalInputSchema, input, 'input');
+  resolveProposal: async (_: unknown, { input }: { input: unknown }, ctx: ConnectionContext) => {
+    const validated = validateInput(ResolveProposalInputSchema, input, "input");
     const { proposalUuid, status, reason } = validated;
 
     // Find proposal
@@ -313,8 +324,8 @@ export const socialProposalMutations = {
       .where(eq(dbSchema.climbProposals.uuid, proposalUuid))
       .limit(1);
 
-    if (!proposal) throw new Error('Proposal not found');
-    if (proposal.status !== 'open') throw new Error('Can only resolve open proposals');
+    if (!proposal) throw new Error("Proposal not found");
+    if (proposal.status !== "open") throw new Error("Can only resolve open proposals");
 
     await requireAdminOrLeader(ctx, proposal.boardType);
     const userId = ctx.userId!;
@@ -334,29 +345,29 @@ export const socialProposalMutations = {
     proposal.resolvedAt = new Date();
     proposal.resolvedBy = userId;
 
-    if (status === 'approved') {
+    if (status === "approved") {
       await applyProposalEffect(proposal);
     }
 
-    const eventType = status === 'approved' ? 'proposal.approved' : 'proposal.rejected';
+    const eventType = status === "approved" ? "proposal.approved" : "proposal.rejected";
     publishSocialEvent({
       type: eventType,
       actorId: userId,
-      entityType: 'proposal',
+      entityType: "proposal",
       entityId: proposalUuid,
       timestamp: Date.now(),
-      metadata: { climbUuid: proposal.climbUuid, boardType: proposal.boardType, proposalType: proposal.type },
+      metadata: {
+        climbUuid: proposal.climbUuid,
+        boardType: proposal.boardType,
+        proposalType: proposal.type,
+      },
     }).catch((err) => console.error(`[Proposals] Failed to publish ${eventType}:`, err));
 
     return enrichProposal(proposal, userId);
   },
 
-  deleteProposal: async (
-    _: unknown,
-    { input }: { input: unknown },
-    ctx: ConnectionContext,
-  ) => {
-    const validated = validateInput(DeleteProposalInputSchema, input, 'input');
+  deleteProposal: async (_: unknown, { input }: { input: unknown }, ctx: ConnectionContext) => {
+    const validated = validateInput(DeleteProposalInputSchema, input, "input");
     const { proposalUuid } = validated;
 
     // Find proposal
@@ -366,8 +377,8 @@ export const socialProposalMutations = {
       .where(eq(dbSchema.climbProposals.uuid, proposalUuid))
       .limit(1);
 
-    if (!proposal) throw new Error('Proposal not found');
-    if (proposal.status !== 'approved') throw new Error('Can only delete approved proposals');
+    if (!proposal) throw new Error("Proposal not found");
+    if (proposal.status !== "approved") throw new Error("Can only delete approved proposals");
 
     await requireAdminOrLeader(ctx, proposal.boardType);
     const userId = ctx.userId!;
@@ -376,19 +387,21 @@ export const socialProposalMutations = {
     await revertProposalEffect(proposal);
 
     // Hard-delete the proposal (votes cascade-delete via FK, lastProposalId set to null via FK)
-    await db
-      .delete(dbSchema.climbProposals)
-      .where(eq(dbSchema.climbProposals.id, proposal.id));
+    await db.delete(dbSchema.climbProposals).where(eq(dbSchema.climbProposals.id, proposal.id));
 
     // Publish deleted event
     publishSocialEvent({
-      type: 'proposal.deleted',
+      type: "proposal.deleted",
       actorId: userId,
-      entityType: 'proposal',
+      entityType: "proposal",
       entityId: proposalUuid,
       timestamp: Date.now(),
-      metadata: { climbUuid: proposal.climbUuid, boardType: proposal.boardType, proposalType: proposal.type },
-    }).catch((err) => console.error('[Proposals] Failed to publish proposal.deleted:', err));
+      metadata: {
+        climbUuid: proposal.climbUuid,
+        boardType: proposal.boardType,
+        proposalType: proposal.type,
+      },
+    }).catch((err) => console.error("[Proposals] Failed to publish proposal.deleted:", err));
 
     return true;
   },

@@ -1,4 +1,4 @@
-import Tesseract from 'tesseract.js';
+import Tesseract from "tesseract.js";
 
 export interface OcrResult {
   name: string;
@@ -15,52 +15,50 @@ export interface OcrResult {
  */
 async function imageDataToBlob(imageData: ImageData): Promise<Blob> {
   // Check if we're in a browser environment with OffscreenCanvas support
-  if (typeof OffscreenCanvas !== 'undefined') {
+  if (typeof OffscreenCanvas !== "undefined") {
     const canvas = new OffscreenCanvas(imageData.width, imageData.height);
-    const ctx = canvas.getContext('2d');
-    if (!ctx) throw new Error('Could not get canvas context');
+    const ctx = canvas.getContext("2d");
+    if (!ctx) throw new Error("Could not get canvas context");
     ctx.putImageData(imageData, 0, 0);
-    return canvas.convertToBlob({ type: 'image/png' });
+    return canvas.convertToBlob({ type: "image/png" });
   }
 
   // Fallback to regular canvas if OffscreenCanvas not available
-  if (typeof document !== 'undefined') {
-    const canvas = document.createElement('canvas');
+  if (typeof document !== "undefined") {
+    const canvas = document.createElement("canvas");
     canvas.width = imageData.width;
     canvas.height = imageData.height;
-    const ctx = canvas.getContext('2d');
-    if (!ctx) throw new Error('Could not get canvas context');
+    const ctx = canvas.getContext("2d");
+    if (!ctx) throw new Error("Could not get canvas context");
     ctx.putImageData(imageData, 0, 0);
 
     return new Promise((resolve, reject) => {
       canvas.toBlob((blob) => {
         if (blob) resolve(blob);
-        else reject(new Error('Failed to convert canvas to blob'));
-      }, 'image/png');
+        else reject(new Error("Failed to convert canvas to blob"));
+      }, "image/png");
     });
   }
 
-  throw new Error('No canvas implementation available');
+  throw new Error("No canvas implementation available");
 }
 
 /**
  * Run OCR on image data and parse the result.
  * Accepts Buffer (Node) or ImageData (Browser).
  */
-export async function runOCR(
-  imageData: Buffer | ImageData
-): Promise<OcrResult> {
+export async function runOCR(imageData: Buffer | ImageData): Promise<OcrResult> {
   // Convert ImageData to Blob for browser compatibility
   let ocrInput: Buffer | Blob = imageData as Buffer;
   // Guard against ImageData not being defined in Node.js environment
-  if (typeof ImageData !== 'undefined' && imageData instanceof ImageData) {
+  if (typeof ImageData !== "undefined" && imageData instanceof ImageData) {
     ocrInput = await imageDataToBlob(imageData);
   }
 
-  const result = await Tesseract.recognize(ocrInput, 'eng');
+  const result = await Tesseract.recognize(ocrInput, "eng");
   const text = result.data.text;
   const lines = text
-    .split('\n')
+    .split("\n")
     .map((l) => l.trim())
     .filter(Boolean);
   return parseHeaderText(lines);
@@ -76,11 +74,11 @@ export async function runOCR(
  */
 export function parseHeaderText(lines: string[]): OcrResult {
   const warnings: string[] = [];
-  let name = '';
-  let setter = '';
+  let name = "";
+  let setter = "";
   let angle = 40; // Default angle
-  let userGrade = '';
-  let setterGrade = '';
+  let userGrade = "";
+  let setterGrade = "";
   let isBenchmark = false;
 
   // Check for benchmark indicator (orange "B" appears as standalone "B" or "8" in OCR)
@@ -88,12 +86,7 @@ export function parseHeaderText(lines: string[]): OcrResult {
   for (const line of lines) {
     const trimmed = line.trim();
     // Look for standalone "B" or "8" (OCR might read orange B as 8)
-    if (
-      trimmed === 'B' ||
-      trimmed === '8' ||
-      trimmed === '[B]' ||
-      trimmed === '(B)'
-    ) {
+    if (trimmed === "B" || trimmed === "8" || trimmed === "[B]" || trimmed === "(B)") {
       isBenchmark = true;
       break;
     }
@@ -106,11 +99,11 @@ export function parseHeaderText(lines: string[]): OcrResult {
   for (const line of lines) {
     // Skip lines that look like metadata
     if (
-      line.toLowerCase().includes('set by') ||
-      line.toLowerCase().includes('grade:') ||
-      line.toLowerCase().includes('any marked') ||
-      line.toLowerCase().includes('user') ||
-      line.toLowerCase().includes('setter')
+      line.toLowerCase().includes("set by") ||
+      line.toLowerCase().includes("grade:") ||
+      line.toLowerCase().includes("any marked") ||
+      line.toLowerCase().includes("user") ||
+      line.toLowerCase().includes("setter")
     ) {
       continue;
     }
@@ -120,14 +113,14 @@ export function parseHeaderText(lines: string[]): OcrResult {
     }
     // Remove heart emoji and OCR artifacts, trim
     const cleaned = line
-      .replace(/[♡❤️🤍©®]/g, '') // Remove heart, copyright symbols
-      .replace(/\s*[QO@()&]+\s*$/i, '') // Remove trailing Q/O/@/()/& (OCR error for heart/icons)
-      .replace(/^\d+[)\]]\s*/, '') // Remove leading numbers like "0)"
-      .replace(/^[yl]\s+/i, '') // Remove leading y/l (OCR artifacts)
+      .replace(/[♡❤️🤍©®]/g, "") // Remove heart, copyright symbols
+      .replace(/\s*[QO@()&]+\s*$/i, "") // Remove trailing Q/O/@/()/& (OCR error for heart/icons)
+      .replace(/^\d+[)\]]\s*/, "") // Remove leading numbers like "0)"
+      .replace(/^[yl]\s+/i, "") // Remove leading y/l (OCR artifacts)
       .trim();
 
     // Skip lines that are mostly garbage characters (underscores, dashes, equals)
-    const alphaNumeric = cleaned.replace(/[^a-zA-Z0-9]/g, '');
+    const alphaNumeric = cleaned.replace(/[^a-zA-Z0-9]/g, "");
     if (alphaNumeric.length < 3) {
       continue;
     }
@@ -152,7 +145,7 @@ export function parseHeaderText(lines: string[]): OcrResult {
     // Clean up trailing "8" or "B" which may come from heart icon or benchmark indicator
     // We can't reliably distinguish them via OCR, so just remove the trailing chars
     // Benchmark detection relies on standalone "B" or "8" lines (checked earlier)
-    name = name.replace(/\s+[\[(]?[8B]\]?$/i, '').trim();
+    name = name.replace(/\s+[\[(]?[8B]\]?$/i, "").trim();
   }
 
   // Find setter and angle
@@ -174,7 +167,7 @@ export function parseHeaderText(lines: string[]): OcrResult {
   for (const line of lines) {
     // Format: "Grade: User 8A/V11/ Setter 8A/V11"
     const gradeMatch = line.match(
-      /grade[:\s]+user\s+([^\s/]+(?:\/[^\s/]+)?)\s*[/|]\s*setter\s+([^\s]+)/i
+      /grade[:\s]+user\s+([^\s/]+(?:\/[^\s/]+)?)\s*[/|]\s*setter\s+([^\s]+)/i,
     );
     if (gradeMatch) {
       userGrade = gradeMatch[1].trim();
@@ -192,17 +185,17 @@ export function parseHeaderText(lines: string[]): OcrResult {
   }
 
   // Add warnings for missing data
-  if (!name) warnings.push('Could not extract climb name');
-  if (!setter) warnings.push('Could not extract setter name');
-  if (!userGrade) warnings.push('Could not extract user grade');
-  if (!setterGrade) warnings.push('Could not extract setter grade');
+  if (!name) warnings.push("Could not extract climb name");
+  if (!setter) warnings.push("Could not extract setter name");
+  if (!userGrade) warnings.push("Could not extract user grade");
+  if (!setterGrade) warnings.push("Could not extract setter grade");
 
   return {
-    name: name || 'Unknown',
-    setter: setter || 'Unknown',
+    name: name || "Unknown",
+    setter: setter || "Unknown",
     angle,
-    userGrade: userGrade || 'Unknown',
-    setterGrade: setterGrade || userGrade || 'Unknown',
+    userGrade: userGrade || "Unknown",
+    setterGrade: setterGrade || userGrade || "Unknown",
     isBenchmark,
     warnings,
   };

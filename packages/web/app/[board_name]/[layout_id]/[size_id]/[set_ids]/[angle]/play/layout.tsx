@@ -1,10 +1,10 @@
-import React from 'react';
-import { PropsWithChildren } from 'react';
+import React from "react";
+import { PropsWithChildren } from "react";
 
-import { BoardRouteParameters } from '@/app/lib/types';
-import { parseRouteParams } from '@/app/lib/url-utils.server';
-import { getBoardDetailsForBoard } from '@/app/lib/board-utils';
-import PlayLayoutClient from './layout-client';
+import { BoardRouteParameters } from "@/app/lib/types";
+import { parseRouteParams } from "@/app/lib/url-utils.server";
+import { getBoardDetailsForBoard } from "@/app/lib/board-utils";
+import PlayLayoutClient from "./layout-client";
 
 interface LayoutProps {
   params: Promise<BoardRouteParameters>;

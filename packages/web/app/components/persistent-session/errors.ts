@@ -6,6 +6,6 @@
 export class TransientJoinError extends Error {
   constructor(message: string) {
     super(message);
-    this.name = 'TransientJoinError';
+    this.name = "TransientJoinError";
   }
 }

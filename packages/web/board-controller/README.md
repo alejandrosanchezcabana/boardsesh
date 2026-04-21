@@ -26,7 +26,7 @@ pip install fastapi uvicorn aiosqlite
 
 # Or create requirements.txt:
 echo "fastapi>=0.100.0" > requirements.txt
-echo "uvicorn>=0.23.0" >> requirements.txt  
+echo "uvicorn>=0.23.0" >> requirements.txt
 echo "aiosqlite>=0.19.0" >> requirements.txt
 pip install -r requirements.txt
 ```
@@ -79,7 +79,7 @@ Key message types between Boardsesh and controller:
 {
   "type": "controller-handshake",
   "sessionId": "uuid",
-  "controllerId": "uuid", 
+  "controllerId": "uuid",
   "capabilities": ["queue", "bluetooth", "persistence"]
 }
 
@@ -103,7 +103,7 @@ Key message types between Boardsesh and controller:
 }
 
 {
-  "type": "update-current-climb", 
+  "type": "update-current-climb",
   "item": {...},
   "shouldAddToQueue": false
 }
@@ -124,6 +124,7 @@ uvicorn main:BoardController().app --reload --port 8000
 ### Database
 
 SQLite database is created automatically with tables:
+
 - `sessions` - Controller sessions
 - `queue_items` - Queue persistence
 - `climb_cache` - Boardsesh API cache
@@ -155,12 +156,14 @@ https://www.boardsesh.com/{board_name}/{layout}/{size}/{set}/{angle}/list
 ```
 
 For example:
+
 - `https://www.boardsesh.com/kilter/original/12x12/screw_bolt/40/list`
 - `https://www.boardsesh.com/tension/1/8x12/TB2-plastic/30/list`
 
 **Available Options by Board:**
 
 **Kilter Board:**
+
 - **Board Name**: `kilter`
 - **Layouts**: URL-friendly layout names:
   - `original` (most common layout)
@@ -172,6 +175,7 @@ For example:
 - **Angles**: `0`, `5`, `10`, `15`, `20`, `25`, `30`, `35`, `40`, `45`, `50`, `55`, `60`, `65`, `70`
 
 **Tension Board:**
+
 - **Board Name**: `tension`
 - **Layouts**: URL-friendly layout names:
   - `1`, `2`, `3`, ..., `28` (for numbered layouts)
@@ -186,6 +190,7 @@ For example:
 **Note**: The exact available options depend on your specific board configuration and what hold sets you have installed. Visit Boardsesh.com and navigate to your board to see the exact URL parameters for your setup.
 
 **Example configurations:**
+
 ```bash
 # Kilter 12x12 with screw and bolt holds at 45 degrees
 BOARD_NAME=kilter
@@ -209,6 +214,7 @@ python main.py --help
 ```
 
 Options:
+
 - `--no-bluetooth` - Disable Bluetooth support
 - `--port PORT` - Server port (default: 8000)
 - `--host HOST` - Server host (default: 0.0.0.0)
@@ -220,6 +226,7 @@ Options:
 When accessing the controller from HTTPS sites like boardsesh.com, you need SSL support:
 
 **Generate development certificates:**
+
 ```bash
 # Install cryptography library
 pip install cryptography
@@ -232,11 +239,12 @@ python main.py --ssl-cert server.crt --ssl-key server.key
 ```
 
 **Production certificates:**
+
 ```bash
 # Use Let's Encrypt or other CA
 certbot certonly --standalone -d your-domain.com
 
-# Start with real certificates  
+# Start with real certificates
 python main.py --ssl-cert /etc/letsencrypt/live/your-domain.com/fullchain.pem \
                --ssl-key /etc/letsencrypt/live/your-domain.com/privkey.pem
 ```
@@ -248,11 +256,13 @@ The server automatically detects SSL and uses WSS for WebSocket connections.
 ### Bluetooth Issues
 
 1. Ensure Bluetooth adapter is available:
+
    ```bash
    bluetoothctl show
    ```
 
 2. Check if running with proper permissions:
+
    ```bash
    sudo python main.py
    ```
@@ -367,6 +377,7 @@ The controller is designed to seamlessly integrate with Boardsesh.com:
 5. **Fallback**: If controller disconnects, Boardsesh falls back to PeerJS
 
 This allows users to control their climbing board through:
+
 - Boardsesh web interface
 - Kilter/Tension mobile apps
 - Controller web interface
@@ -394,8 +405,9 @@ docker-compose up -d
 ```
 
 **Available tags:**
+
 - `latest` - Latest stable build from main branch
-- `main` - Latest build from main branch  
+- `main` - Latest build from main branch
 - `v1.0.0` - Specific version releases
 - `pr-123` - Pull request builds for testing
 
@@ -412,8 +424,9 @@ Create releases with pre-built assets:
 ### Package Managers
 
 Consider publishing to:
+
 - **PyPI**: `pip install board-controller`
-- **Homebrew**: `brew install board-controller`  
+- **Homebrew**: `brew install board-controller`
 - **APT repository**: For Debian/Ubuntu users
 
 ### One-Line Install Script
@@ -426,7 +439,8 @@ curl -fsSL https://raw.githubusercontent.com/user/repo/main/install.sh | bash
 ```
 
 This would handle:
+
 1. Platform detection (Raspberry Pi, Linux, macOS)
-2. Dependency installation 
+2. Dependency installation
 3. Service setup
 4. Configuration prompts

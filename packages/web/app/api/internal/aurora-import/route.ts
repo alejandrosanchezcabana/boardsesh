@@ -1,14 +1,14 @@
-import { getServerSession } from 'next-auth/next';
-import { NextRequest, NextResponse } from 'next/server';
-import { z } from 'zod';
-import { authOptions } from '@/app/lib/auth/auth-options';
-import { auroraExportSchema, importJsonExportData } from '@/app/lib/data-sync/aurora/json-import';
-import type { ImportResult, ImportProgressEvent } from '@/app/lib/data-sync/aurora/json-import';
+import { getServerSession } from "next-auth/next";
+import { NextRequest, NextResponse } from "next/server";
+import { z } from "zod";
+import { authOptions } from "@/app/lib/auth/auth-options";
+import { auroraExportSchema, importJsonExportData } from "@/app/lib/data-sync/aurora/json-import";
+import type { ImportResult, ImportProgressEvent } from "@/app/lib/data-sync/aurora/json-import";
 
 export const maxDuration = 300;
 
 const requestSchema = z.object({
-  boardType: z.enum(['kilter', 'tension']),
+  boardType: z.enum(["kilter", "tension"]),
   data: auroraExportSchema,
   skipSessionBuild: z.boolean().optional().default(false),
 });
@@ -23,7 +23,7 @@ export async function POST(request: NextRequest) {
     const session = await getServerSession(authOptions);
 
     if (!session?.user?.id) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
     const body = await request.json();
@@ -31,7 +31,7 @@ export async function POST(request: NextRequest) {
 
     if (!parsed.success) {
       return NextResponse.json(
-        { error: 'Invalid request body', details: parsed.error.flatten() },
+        { error: "Invalid request body", details: parsed.error.flatten() },
         { status: 400 },
       );
     }
@@ -43,22 +43,18 @@ export async function POST(request: NextRequest) {
     const stream = new ReadableStream({
       async start(controller) {
         const send = (event: ImportProgressEvent) => {
-          controller.enqueue(encoder.encode(JSON.stringify(event) + '\n'));
+          controller.enqueue(encoder.encode(JSON.stringify(event) + "\n"));
         };
 
         try {
-          const results = await importJsonExportData(
-            session.user!.id,
-            boardType,
-            data,
-            send,
-            { skipSessionBuild },
-          );
+          const results = await importJsonExportData(session.user!.id, boardType, data, send, {
+            skipSessionBuild,
+          });
 
-          send({ type: 'complete', results });
+          send({ type: "complete", results });
         } catch (error) {
-          console.error('Aurora JSON import error:', error);
-          send({ type: 'error', error: error instanceof Error ? error.message : 'Import failed' });
+          console.error("Aurora JSON import error:", error);
+          send({ type: "error", error: error instanceof Error ? error.message : "Import failed" });
         } finally {
           controller.close();
         }
@@ -67,15 +63,15 @@ export async function POST(request: NextRequest) {
 
     return new Response(stream, {
       headers: {
-        'Content-Type': 'text/plain; charset=utf-8',
-        'Cache-Control': 'no-cache, no-transform',
-        'X-Content-Type-Options': 'nosniff',
+        "Content-Type": "text/plain; charset=utf-8",
+        "Cache-Control": "no-cache, no-transform",
+        "X-Content-Type-Options": "nosniff",
       },
     });
   } catch (error) {
-    console.error('Aurora JSON import error:', error);
+    console.error("Aurora JSON import error:", error);
     return NextResponse.json(
-      { error: error instanceof Error ? error.message : 'Import failed' },
+      { error: error instanceof Error ? error.message : "Import failed" },
       { status: 500 },
     );
   }

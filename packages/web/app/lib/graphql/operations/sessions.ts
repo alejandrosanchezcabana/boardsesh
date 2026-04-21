@@ -1,5 +1,5 @@
-import { gql } from 'graphql-request';
-import type { SessionSummary } from '@boardsesh/shared-schema';
+import { gql } from "graphql-request";
+import type { SessionSummary } from "@boardsesh/shared-schema";
 
 // ============================================
 // Fragments

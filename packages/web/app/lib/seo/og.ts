@@ -10,7 +10,7 @@ function toVersionMillis(value: Date | string | number | null | undefined): numb
     return null;
   }
 
-  if (typeof value === 'number') {
+  if (typeof value === "number") {
     return Number.isFinite(value) ? value : null;
   }
 
@@ -23,7 +23,9 @@ function toVersionMillis(value: Date | string | number | null | undefined): numb
   return Number.isFinite(millis) ? millis : null;
 }
 
-export function buildOgVersionToken(...values: Array<Date | string | number | null | undefined>): string {
+export function buildOgVersionToken(
+  ...values: Array<Date | string | number | null | undefined>
+): string {
   let maxMillis = 0;
 
   for (const value of values) {
@@ -48,9 +50,9 @@ export function buildVersionedOgImagePath(
       continue;
     }
 
-    if (typeof value === 'boolean') {
+    if (typeof value === "boolean") {
       if (value) {
-        searchParams.set(key, '1');
+        searchParams.set(key, "1");
       }
       continue;
     }
@@ -59,7 +61,7 @@ export function buildVersionedOgImagePath(
   }
 
   if (version) {
-    searchParams.set('v', version);
+    searchParams.set("v", version);
   }
 
   const query = searchParams.toString();
@@ -84,10 +86,10 @@ export function createOgImageHeaders({
     : `public, s-maxage=${SHORT_TTL_SECONDS}, stale-while-revalidate=${STALE_TTL_SECONDS}`;
 
   return {
-    'Content-Type': contentType,
-    'Cache-Control': browserCacheControl,
-    'CDN-Cache-Control': cdnCacheControl,
-    'Vercel-CDN-Cache-Control': cdnCacheControl,
-    ...(serverTiming ? { 'Server-Timing': serverTiming } : {}),
+    "Content-Type": contentType,
+    "Cache-Control": browserCacheControl,
+    "CDN-Cache-Control": cdnCacheControl,
+    "Vercel-CDN-Cache-Control": cdnCacheControl,
+    ...(serverTiming ? { "Server-Timing": serverTiming } : {}),
   };
 }

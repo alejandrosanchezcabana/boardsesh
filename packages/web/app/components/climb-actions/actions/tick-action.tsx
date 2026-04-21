@@ -1,34 +1,41 @@
-'use client';
+"use client";
 
-import React, { useState, useCallback, useMemo, useRef } from 'react';
-import MuiButton from '@mui/material/Button';
-import MuiBadge from '@mui/material/Badge';
-import Typography from '@mui/material/Typography';
-import Stack from '@mui/material/Stack';
-import Box from '@mui/material/Box';
-import SwipeableDrawer from '../../swipeable-drawer/swipeable-drawer';
-import { ActionTooltip } from '../action-tooltip';
-import CheckOutlined from '@mui/icons-material/CheckOutlined';
-import LoginOutlined from '@mui/icons-material/LoginOutlined';
-import AppsOutlined from '@mui/icons-material/AppsOutlined';
-import { ClimbActionProps, ClimbActionResult } from '../types';
-import { useOptionalBoardProvider, BoardProvider } from '../../board-provider/board-provider-context';
-import { useAuthModal } from '@/app/components/providers/auth-modal-provider';
-import { LogAscentForm } from '../../logbook/logascent-form';
-import { track } from '@vercel/analytics';
-import { constructClimbInfoUrl } from '@/app/lib/url-utils';
-import { openExternalUrl } from '@/app/lib/open-external-url';
-import { themeTokens } from '@/app/theme/theme-config';
-import { useAlwaysTickInApp } from '@/app/hooks/use-always-tick-in-app';
-import { useSession } from 'next-auth/react';
-import { useMyBoards } from '@/app/hooks/use-my-boards';
-import BoardScrollSection from '../../board-scroll/board-scroll-section';
-import BoardScrollCard from '../../board-scroll/board-scroll-card';
-import type { UserBoard } from '@boardsesh/shared-schema';
-import type { BoardName, BoardDetails } from '@/app/lib/types';
-import { LogAscentDrawer } from '../../logbook/log-ascent-drawer';
+import React, { useState, useCallback, useMemo, useRef } from "react";
+import MuiButton from "@mui/material/Button";
+import MuiBadge from "@mui/material/Badge";
+import Typography from "@mui/material/Typography";
+import Stack from "@mui/material/Stack";
+import Box from "@mui/material/Box";
+import SwipeableDrawer from "../../swipeable-drawer/swipeable-drawer";
+import { ActionTooltip } from "../action-tooltip";
+import CheckOutlined from "@mui/icons-material/CheckOutlined";
+import LoginOutlined from "@mui/icons-material/LoginOutlined";
+import AppsOutlined from "@mui/icons-material/AppsOutlined";
+import { ClimbActionProps, ClimbActionResult } from "../types";
+import {
+  useOptionalBoardProvider,
+  BoardProvider,
+} from "../../board-provider/board-provider-context";
+import { useAuthModal } from "@/app/components/providers/auth-modal-provider";
+import { LogAscentForm } from "../../logbook/logascent-form";
+import { track } from "@vercel/analytics";
+import { constructClimbInfoUrl } from "@/app/lib/url-utils";
+import { openExternalUrl } from "@/app/lib/open-external-url";
+import { themeTokens } from "@/app/theme/theme-config";
+import { useAlwaysTickInApp } from "@/app/hooks/use-always-tick-in-app";
+import { useSession } from "next-auth/react";
+import { useMyBoards } from "@/app/hooks/use-my-boards";
+import BoardScrollSection from "../../board-scroll/board-scroll-section";
+import BoardScrollCard from "../../board-scroll/board-scroll-card";
+import type { UserBoard } from "@boardsesh/shared-schema";
+import type { BoardName, BoardDetails } from "@/app/lib/types";
+import { LogAscentDrawer } from "../../logbook/log-ascent-drawer";
 
-const VALID_BOARD_NAMES: ReadonlySet<string> = new Set<BoardName>(['kilter', 'tension', 'moonboard']);
+const VALID_BOARD_NAMES: ReadonlySet<string> = new Set<BoardName>([
+  "kilter",
+  "tension",
+  "moonboard",
+]);
 
 function isValidBoardName(value: string): value is BoardName {
   return VALID_BOARD_NAMES.has(value);
@@ -39,7 +46,7 @@ export function TickAction({
   boardDetails,
   angle,
   viewMode,
-  size = 'default',
+  size = "default",
   showLabel,
   disabled,
   className,
@@ -53,7 +60,7 @@ export function TickAction({
   // Use optional board provider - allows TickAction to work outside board routes
   const boardProvider = useOptionalBoardProvider();
   const { status: sessionStatus } = useSession();
-  const isAuthenticated = boardProvider?.isAuthenticated ?? (sessionStatus === 'authenticated');
+  const isAuthenticated = boardProvider?.isAuthenticated ?? sessionStatus === "authenticated";
   const logbook = boardProvider?.logbook ?? [];
 
   // Fetch user's boards when we need the board selector (no existing BoardProvider + authenticated)
@@ -70,9 +77,9 @@ export function TickAction({
   const boardsReady = hasStartedLoadingRef.current && !isLoadingBoards;
 
   // Filter boards to matching board type (e.g., only Kilter boards for a Kilter climb)
-  const matchingBoards = useMemo(() =>
-    myBoards.filter(b => b.boardType === boardDetails.board_name),
-    [myBoards, boardDetails.board_name]
+  const matchingBoards = useMemo(
+    () => myBoards.filter((b) => b.boardType === boardDetails.board_name),
+    [myBoards, boardDetails.board_name],
   );
 
   const { alwaysUseApp, loaded, enableAlwaysUseApp } = useAlwaysTickInApp();
@@ -80,39 +87,49 @@ export function TickAction({
   // Find ascent entries for this climb
   const filteredLogbook = useMemo(() => {
     if (!logbook || !climb) return [];
-    return logbook.filter(
-      (asc) => asc.climb_uuid === climb.uuid && Number(asc.angle) === angle
-    );
+    return logbook.filter((asc) => asc.climb_uuid === climb.uuid && Number(asc.angle) === angle);
   }, [logbook, climb, angle]);
 
   const hasSuccessfulAscent = filteredLogbook.some((asc) => asc.is_ascent);
   const badgeCount = filteredLogbook.length;
 
-  const handleClick = useCallback((e?: React.MouseEvent) => {
-    e?.stopPropagation();
-    e?.preventDefault();
+  const handleClick = useCallback(
+    (e?: React.MouseEvent) => {
+      e?.stopPropagation();
+      e?.preventDefault();
 
-    track('Tick Button Clicked', {
-      boardLayout: boardDetails.layout_name || '',
-      existingAscentCount: badgeCount,
-    });
+      track("Tick Button Clicked", {
+        boardLayout: boardDetails.layout_name || "",
+        existingAscentCount: badgeCount,
+      });
 
-    if (onTickAction) {
-      onTickAction();
-      return;
-    }
-
-    if (!isAuthenticated && alwaysUseApp && loaded) {
-      const url = constructClimbInfoUrl(boardDetails, climb.uuid);
-      if (url) {
-        openExternalUrl(url);
-        onComplete?.();
+      if (onTickAction) {
+        onTickAction();
         return;
       }
-    }
 
-    setDrawerVisible(true);
-  }, [boardDetails, badgeCount, isAuthenticated, alwaysUseApp, loaded, climb.uuid, angle, onTickAction]);
+      if (!isAuthenticated && alwaysUseApp && loaded) {
+        const url = constructClimbInfoUrl(boardDetails, climb.uuid);
+        if (url) {
+          openExternalUrl(url);
+          onComplete?.();
+          return;
+        }
+      }
+
+      setDrawerVisible(true);
+    },
+    [
+      boardDetails,
+      badgeCount,
+      isAuthenticated,
+      alwaysUseApp,
+      loaded,
+      climb.uuid,
+      angle,
+      onTickAction,
+    ],
+  );
 
   const closeDrawer = useCallback(() => {
     setDrawerVisible(false);
@@ -121,7 +138,10 @@ export function TickAction({
   }, [onComplete]);
 
   // URL for opening in the Aurora app (null for Kilter as app URL is no longer accessible)
-  const openInAppUrl = useMemo(() => constructClimbInfoUrl(boardDetails, climb.uuid), [boardDetails, climb.uuid]);
+  const openInAppUrl = useMemo(
+    () => constructClimbInfoUrl(boardDetails, climb.uuid),
+    [boardDetails, climb.uuid],
+  );
 
   const handleOpenInApp = useCallback(() => {
     if (!openInAppUrl) return;
@@ -130,12 +150,24 @@ export function TickAction({
   }, [openInAppUrl, closeDrawer]);
 
   const renderSignInPrompt = () => (
-    <Stack spacing={3} sx={{ width: '100%', textAlign: 'center', padding: '24px 0' }}>
-      <Typography variant="body2" component="span" fontWeight={600} sx={{ fontSize: 16 }}>Sign in to record ticks</Typography>
+    <Stack spacing={3} sx={{ width: "100%", textAlign: "center", padding: "24px 0" }}>
+      <Typography variant="body2" component="span" fontWeight={600} sx={{ fontSize: 16 }}>
+        Sign in to record ticks
+      </Typography>
       <Typography variant="body1" component="p" color="text.secondary">
         Create a Boardsesh account to log your climbs and track your progress.
       </Typography>
-      <MuiButton variant="contained" startIcon={<LoginOutlined />} onClick={() => openAuthModal({ title: "Sign in to record ticks", description: "Create an account to log your climbs and track your progress." })} fullWidth>
+      <MuiButton
+        variant="contained"
+        startIcon={<LoginOutlined />}
+        onClick={() =>
+          openAuthModal({
+            title: "Sign in to record ticks",
+            description: "Create an account to log your climbs and track your progress.",
+          })
+        }
+        fullWidth
+      >
         Sign In
       </MuiButton>
       {openInAppUrl && (
@@ -143,7 +175,12 @@ export function TickAction({
           <Typography variant="body1" component="p" color="text.secondary">
             Or log your tick in the official app:
           </Typography>
-          <MuiButton variant="outlined" startIcon={<AppsOutlined />} onClick={handleOpenInApp} fullWidth>
+          <MuiButton
+            variant="outlined"
+            startIcon={<AppsOutlined />}
+            onClick={handleOpenInApp}
+            fullWidth
+          >
             Open in App
           </MuiButton>
           <MuiButton
@@ -162,9 +199,9 @@ export function TickAction({
     </Stack>
   );
 
-  const label = 'Log ascent';
-  const shouldShowLabel = showLabel ?? (viewMode === 'button' || viewMode === 'dropdown');
-  const iconSize = size === 'small' ? 14 : size === 'large' ? 20 : 16;
+  const label = "Log ascent";
+  const shouldShowLabel = showLabel ?? (viewMode === "button" || viewMode === "dropdown");
+  const iconSize = size === "small" ? 14 : size === "large" ? 20 : 16;
 
   const icon = <CheckOutlined sx={{ fontSize: iconSize }} />;
   const badgeColor = hasSuccessfulAscent ? themeTokens.colors.success : themeTokens.colors.error;
@@ -173,9 +210,11 @@ export function TickAction({
   // Show board selector when outside a board route, authenticated, and either still loading or have matching boards.
   const hasMatchingBoards = boardsReady && matchingBoards.length > 0;
   const noMatchingBoards = needsBoardSelector && boardsReady && matchingBoards.length === 0;
-  const showBoardSelector = needsBoardSelector && !selectedBoard && (!boardsReady || hasMatchingBoards);
+  const showBoardSelector =
+    needsBoardSelector && !selectedBoard && (!boardsReady || hasMatchingBoards);
 
-  const boardTypeLabel = boardDetails.board_name.charAt(0).toUpperCase() + boardDetails.board_name.slice(1);
+  const boardTypeLabel =
+    boardDetails.board_name.charAt(0).toUpperCase() + boardDetails.board_name.slice(1);
 
   // When a user selects a board from the selector, use its config for the tick.
   // This ensures the tick is logged against the board the user actually climbed on.
@@ -185,7 +224,7 @@ export function TickAction({
       ...boardDetails,
       layout_id: selectedBoard.layoutId,
       size_id: selectedBoard.sizeId,
-      set_ids: selectedBoard.setIds.split(',').map(Number),
+      set_ids: selectedBoard.setIds.split(",").map(Number),
       layout_name: selectedBoard.layoutName ?? boardDetails.layout_name,
       size_name: selectedBoard.sizeName ?? boardDetails.size_name,
       size_description: selectedBoard.sizeDescription ?? boardDetails.size_description,
@@ -194,13 +233,13 @@ export function TickAction({
   }, [selectedBoard, boardDetails]);
 
   // Validate the board name for the conditional BoardProvider
-  const resolvedBoardName: BoardName = isValidBoardName(selectedBoard?.boardType ?? '')
+  const resolvedBoardName: BoardName = isValidBoardName(selectedBoard?.boardType ?? "")
     ? (selectedBoard!.boardType as BoardName)
     : boardDetails.board_name;
 
   const renderBoardSelector = () => (
     <Stack spacing={2} sx={{ py: 2 }}>
-      <Typography variant="body2" fontWeight={600} sx={{ fontSize: 16, textAlign: 'center' }}>
+      <Typography variant="body2" fontWeight={600} sx={{ fontSize: 16, textAlign: "center" }}>
         Which board did you climb on?
       </Typography>
       <BoardScrollSection loading={!boardsReady} size="small">
@@ -226,7 +265,7 @@ export function TickAction({
   );
 
   const renderNoMatchingBoardsMessage = () => (
-    <Stack spacing={2} sx={{ py: 2, textAlign: 'center' }}>
+    <Stack spacing={2} sx={{ py: 2, textAlign: "center" }}>
       <Typography variant="body2" color="text.secondary">
         {`You don\u2019t have any ${boardTypeLabel} boards saved yet. Logging tick for ${boardTypeLabel}.`}
       </Typography>
@@ -250,7 +289,7 @@ export function TickAction({
             placement="bottom"
             onClose={closeDrawer}
             open={drawerVisible}
-            styles={{ wrapper: { height: '60%' } }}
+            styles={{ wrapper: { height: "60%" } }}
           >
             {renderSignInPrompt()}
           </SwipeableDrawer>
@@ -258,12 +297,12 @@ export function TickAction({
       ) : isAuthenticated ? (
         // Outside board route, authenticated - board selector + log form
         <SwipeableDrawer
-          title={showBoardSelector ? 'Select Board' : 'Log Ascent'}
+          title={showBoardSelector ? "Select Board" : "Log Ascent"}
           placement="bottom"
           onClose={closeDrawer}
           open={drawerVisible}
           fullHeight={!showBoardSelector}
-          styles={{ wrapper: { height: showBoardSelector ? '60%' : '100%' } }}
+          styles={{ wrapper: { height: showBoardSelector ? "60%" : "100%" } }}
         >
           {showBoardSelector ? (
             renderBoardSelector()
@@ -281,7 +320,7 @@ export function TickAction({
           placement="bottom"
           onClose={closeDrawer}
           open={drawerVisible}
-          styles={{ wrapper: { height: '60%' } }}
+          styles={{ wrapper: { height: "60%" } }}
         >
           {renderSignInPrompt()}
         </SwipeableDrawer>
@@ -293,8 +332,17 @@ export function TickAction({
   const iconElement = (
     <>
       <ActionTooltip title={label}>
-        <MuiBadge badgeContent={badgeCount} max={99} sx={{ '& .MuiBadge-badge': { backgroundColor: badgeColor, color: 'common.white' } }}>
-          <Box component="span" onClick={handleClick} sx={{ cursor: 'pointer' }} className={className}>
+        <MuiBadge
+          badgeContent={badgeCount}
+          max={99}
+          sx={{ "& .MuiBadge-badge": { backgroundColor: badgeColor, color: "common.white" } }}
+        >
+          <Box
+            component="span"
+            onClick={handleClick}
+            sx={{ cursor: "pointer" }}
+            className={className}
+          >
             {icon}
           </Box>
         </MuiBadge>
@@ -306,12 +354,16 @@ export function TickAction({
   // Button mode
   const buttonElement = (
     <>
-      <MuiBadge badgeContent={badgeCount} max={99} sx={{ '& .MuiBadge-badge': { backgroundColor: badgeColor, color: 'common.white' } }}>
+      <MuiBadge
+        badgeContent={badgeCount}
+        max={99}
+        sx={{ "& .MuiBadge-badge": { backgroundColor: badgeColor, color: "common.white" } }}
+      >
         <MuiButton
           variant="outlined"
           startIcon={icon}
           onClick={handleClick}
-          size={size === 'large' ? 'large' : 'small'}
+          size={size === "large" ? "large" : "small"}
           disabled={disabled}
           className={className}
         >
@@ -324,7 +376,7 @@ export function TickAction({
 
   // Menu item for dropdown
   const menuItem = {
-    key: 'tick',
+    key: "tick",
     label: badgeCount > 0 ? `${label} (${badgeCount})` : label,
     icon,
     onClick: () => handleClick(),
@@ -341,15 +393,15 @@ export function TickAction({
         disabled={disabled}
         sx={{
           height: 48,
-          justifyContent: 'flex-start',
+          justifyContent: "flex-start",
           paddingLeft: `${themeTokens.spacing[4]}px`,
           fontSize: themeTokens.typography.fontSize.base,
-          color: 'text.primary',
-          '& .MuiButton-startIcon': {
-            color: 'text.secondary',
+          color: "text.primary",
+          "& .MuiButton-startIcon": {
+            color: "text.secondary",
           },
-          '&:hover': {
-            backgroundColor: 'action.hover',
+          "&:hover": {
+            backgroundColor: "action.hover",
           },
         }}
       >
@@ -361,17 +413,17 @@ export function TickAction({
 
   let element: React.ReactNode;
   switch (viewMode) {
-    case 'icon':
+    case "icon":
       element = iconElement;
       break;
-    case 'button':
-    case 'compact':
+    case "button":
+    case "compact":
       element = buttonElement;
       break;
-    case 'list':
+    case "list":
       element = listElement;
       break;
-    case 'dropdown':
+    case "dropdown":
       element = drawers; // Need to render drawers even in dropdown mode
       break;
     default:
@@ -381,7 +433,7 @@ export function TickAction({
   return {
     element,
     menuItem,
-    key: 'tick',
+    key: "tick",
     available: true,
   };
 }

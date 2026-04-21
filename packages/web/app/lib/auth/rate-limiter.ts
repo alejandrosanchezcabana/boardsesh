@@ -34,7 +34,7 @@ const DEFAULT_MAX_REQUESTS = 5;
 export function checkRateLimit(
   identifier: string,
   maxRequests: number = DEFAULT_MAX_REQUESTS,
-  windowMs: number = DEFAULT_WINDOW_MS
+  windowMs: number = DEFAULT_WINDOW_MS,
 ): { limited: boolean; retryAfterSeconds: number } {
   const now = Date.now();
   const entry = memoryStore.get(identifier);
@@ -65,20 +65,20 @@ export function checkRateLimit(
  */
 export function getClientIp(request: Request): string {
   // Check x-forwarded-for first (most common proxy header)
-  const forwarded = request.headers.get('x-forwarded-for');
+  const forwarded = request.headers.get("x-forwarded-for");
   if (forwarded) {
     // x-forwarded-for can contain multiple IPs; the first is the original client
-    return forwarded.split(',')[0].trim();
+    return forwarded.split(",")[0].trim();
   }
 
   // Check x-real-ip (used by some proxies like nginx)
-  const realIp = request.headers.get('x-real-ip');
+  const realIp = request.headers.get("x-real-ip");
   if (realIp) {
     return realIp.trim();
   }
 
   // Fallback - still rate limit but with a shared bucket
-  return 'unknown';
+  return "unknown";
 }
 
 // Cleanup expired entries periodically to prevent memory leaks
@@ -93,6 +93,6 @@ const cleanupInterval = setInterval(() => {
 }, 60_000);
 
 // Allow the Node.js process to exit even if this interval is pending
-if (typeof cleanupInterval.unref === 'function') {
+if (typeof cleanupInterval.unref === "function") {
   cleanupInterval.unref();
 }

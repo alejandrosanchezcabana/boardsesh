@@ -1,7 +1,7 @@
-import { createIndexedDBStore } from './idb-helper';
-import type { TickStatus } from '@/app/hooks/use-logbook';
+import { createIndexedDBStore } from "./idb-helper";
+import type { TickStatus } from "@/app/hooks/use-logbook";
 
-const STORE_NAME = 'tick-drafts';
+const STORE_NAME = "tick-drafts";
 
 export interface TickDraft {
   climbUuid: string;
@@ -18,7 +18,7 @@ function draftKey(climbUuid: string, angle: number): string {
   return `${climbUuid}:${angle}`;
 }
 
-const getDB = createIndexedDBStore('boardsesh-tick-drafts', STORE_NAME);
+const getDB = createIndexedDBStore("boardsesh-tick-drafts", STORE_NAME);
 
 export async function saveTickDraft(draft: TickDraft): Promise<void> {
   try {

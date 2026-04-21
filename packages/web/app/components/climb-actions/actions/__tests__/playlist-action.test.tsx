@@ -1,45 +1,45 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { renderHook, render, fireEvent, screen } from '@testing-library/react';
-import type { ClimbActionProps } from '../../types';
-import type { BoardDetails, Climb } from '@/app/lib/types';
+import { describe, it, expect, vi, beforeEach } from "vite-plus/test";
+import { renderHook, render, fireEvent, screen } from "@testing-library/react";
+import type { ClimbActionProps } from "../../types";
+import type { BoardDetails, Climb } from "@/app/lib/types";
 
 const mockUsePlaylists = vi.fn();
 const mockShowMessage = vi.fn();
 
-vi.mock('../../use-playlists', () => ({
+vi.mock("../../use-playlists", () => ({
   usePlaylists: (args: unknown) => mockUsePlaylists(args),
 }));
 
-vi.mock('../../../providers/snackbar-provider', () => ({
+vi.mock("../../../providers/snackbar-provider", () => ({
   useSnackbar: () => ({
     showMessage: mockShowMessage,
   }),
 }));
 
 const mockOpenAuthModal = vi.fn();
-vi.mock('@/app/components/providers/auth-modal-provider', () => ({
+vi.mock("@/app/components/providers/auth-modal-provider", () => ({
   useAuthModal: () => ({ openAuthModal: mockOpenAuthModal }),
 }));
 
-vi.mock('@vercel/analytics', () => ({
+vi.mock("@vercel/analytics", () => ({
   track: vi.fn(),
 }));
 
-import { PlaylistAction } from '../playlist-action';
+import { PlaylistAction } from "../playlist-action";
 
 function createTestClimb(overrides?: Partial<Climb>): Climb {
   return {
-    uuid: 'climb-1',
-    name: 'Test Climb',
-    setter_username: 'setter',
-    description: '',
-    frames: 'p1r10',
+    uuid: "climb-1",
+    name: "Test Climb",
+    setter_username: "setter",
+    description: "",
+    frames: "p1r10",
     angle: 40,
     ascensionist_count: 3,
-    difficulty: 'V4',
-    quality_average: '3.0',
+    difficulty: "V4",
+    quality_average: "3.0",
     stars: 0,
-    difficulty_error: '0.5',
+    difficulty_error: "0.5",
     benchmark_difficulty: null,
     ...overrides,
   };
@@ -47,10 +47,10 @@ function createTestClimb(overrides?: Partial<Climb>): Climb {
 
 function createTestBoardDetails(overrides?: Partial<BoardDetails>): BoardDetails {
   return {
-    board_name: 'kilter',
+    board_name: "kilter",
     layout_id: 1,
     size_id: 1,
-    set_ids: '1',
+    set_ids: "1",
     images_to_holds: {},
     holdsData: {},
     edge_left: 0,
@@ -68,12 +68,12 @@ function createProps(overrides?: Partial<ClimbActionProps>): ClimbActionProps {
     climb: createTestClimb(),
     boardDetails: createTestBoardDetails(),
     angle: 40,
-    viewMode: 'list',
+    viewMode: "list",
     ...overrides,
   };
 }
 
-describe('PlaylistAction (list mode)', () => {
+describe("PlaylistAction (list mode)", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     mockOpenAuthModal.mockClear();
@@ -89,21 +89,21 @@ describe('PlaylistAction (list mode)', () => {
     });
   });
 
-  it('opens playlist selector callback in list mode when authenticated', () => {
+  it("opens playlist selector callback in list mode when authenticated", () => {
     const onOpenPlaylistSelector = vi.fn();
     const onComplete = vi.fn();
     const { result } = renderHook(() =>
-      PlaylistAction(createProps({ onOpenPlaylistSelector, onComplete }))
+      PlaylistAction(createProps({ onOpenPlaylistSelector, onComplete })),
     );
 
     render(<>{result.current.element}</>);
-    fireEvent.click(screen.getByRole('button', { name: /add to playlist/i }));
+    fireEvent.click(screen.getByRole("button", { name: /add to playlist/i }));
 
     expect(onOpenPlaylistSelector).toHaveBeenCalledTimes(1);
     expect(onComplete).toHaveBeenCalledTimes(1);
   });
 
-  it('shows auth modal and does not open playlist selector when unauthenticated', () => {
+  it("shows auth modal and does not open playlist selector when unauthenticated", () => {
     mockUsePlaylists.mockReturnValue({
       playlists: [],
       playlistsContainingClimb: new Set<string>(),
@@ -118,11 +118,11 @@ describe('PlaylistAction (list mode)', () => {
     const onOpenPlaylistSelector = vi.fn();
     const onComplete = vi.fn();
     const { result } = renderHook(() =>
-      PlaylistAction(createProps({ onOpenPlaylistSelector, onComplete }))
+      PlaylistAction(createProps({ onOpenPlaylistSelector, onComplete })),
     );
 
     render(<>{result.current.element}</>);
-    fireEvent.click(screen.getByRole('button', { name: /add to playlist/i }));
+    fireEvent.click(screen.getByRole("button", { name: /add to playlist/i }));
 
     expect(onOpenPlaylistSelector).not.toHaveBeenCalled();
     expect(onComplete).not.toHaveBeenCalled();

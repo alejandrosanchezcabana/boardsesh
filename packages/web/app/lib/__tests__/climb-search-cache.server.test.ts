@@ -1,73 +1,73 @@
 // @vitest-environment node
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from "vite-plus/test";
 
-vi.mock('server-only', () => ({}));
+vi.mock("server-only", () => ({}));
 
 const mockRevalidateTag = vi.fn();
-vi.mock('next/cache', () => ({
+vi.mock("next/cache", () => ({
   revalidateTag: (...args: Parameters<typeof mockRevalidateTag>) => mockRevalidateTag(...args),
 }));
 
 const mockTrack = vi.fn();
-vi.mock('@vercel/analytics/server', () => ({
+vi.mock("@vercel/analytics/server", () => ({
   track: (...args: Parameters<typeof mockTrack>) => mockTrack(...args),
 }));
 
-import { revalidateClimbSearchTags } from '../climb-search-cache.server';
+import { revalidateClimbSearchTags } from "../climb-search-cache.server";
 
-describe('revalidateClimbSearchTags', () => {
+describe("revalidateClimbSearchTags", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     mockTrack.mockResolvedValue(undefined);
   });
 
-  it('revalidates the board tag and emits a metric (layoutId is informational only)', async () => {
+  it("revalidates the board tag and emits a metric (layoutId is informational only)", async () => {
     const headers = new Headers({
-      cookie: 'session=test',
-      'user-agent': 'vitest',
-      'x-forwarded-for': '127.0.0.1',
+      cookie: "session=test",
+      "user-agent": "vitest",
+      "x-forwarded-for": "127.0.0.1",
     });
 
     await revalidateClimbSearchTags({
-      boardName: 'moonboard',
+      boardName: "moonboard",
       layoutId: 3,
       requestHeaders: headers,
-      source: 'internal-route',
+      source: "internal-route",
     });
 
     expect(mockRevalidateTag).toHaveBeenCalledTimes(1);
-    expect(mockRevalidateTag).toHaveBeenCalledWith('climb-search:moonboard', { expire: 0 });
+    expect(mockRevalidateTag).toHaveBeenCalledWith("climb-search:moonboard", { expire: 0 });
     expect(mockTrack).toHaveBeenCalledWith(
-      'Climb Search Cache Invalidated',
+      "Climb Search Cache Invalidated",
       {
-        boardName: 'moonboard',
+        boardName: "moonboard",
         layoutId: 3,
-        source: 'internal-route',
+        source: "internal-route",
       },
       { headers },
     );
   });
 
-  it('revalidates only the board tag when no layout is provided', async () => {
+  it("revalidates only the board tag when no layout is provided", async () => {
     const headers = new Headers({
-      'user-agent': 'vitest',
-      'x-forwarded-for': '127.0.0.1',
+      "user-agent": "vitest",
+      "x-forwarded-for": "127.0.0.1",
     });
 
     await revalidateClimbSearchTags({
-      boardName: 'kilter',
+      boardName: "kilter",
       requestHeaders: headers,
-      source: 'save-climb-proxy',
+      source: "save-climb-proxy",
     });
 
     expect(mockRevalidateTag).toHaveBeenCalledTimes(1);
-    expect(mockRevalidateTag).toHaveBeenCalledWith('climb-search:kilter', { expire: 0 });
+    expect(mockRevalidateTag).toHaveBeenCalledWith("climb-search:kilter", { expire: 0 });
     expect(mockTrack).toHaveBeenCalledWith(
-      'Climb Search Cache Invalidated',
+      "Climb Search Cache Invalidated",
       {
-        boardName: 'kilter',
+        boardName: "kilter",
         layoutId: null,
-        source: 'save-climb-proxy',
+        source: "save-climb-proxy",
       },
       { headers },
     );

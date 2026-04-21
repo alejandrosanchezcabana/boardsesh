@@ -1,15 +1,15 @@
-import { describe, it, expect, beforeEach, afterEach } from 'vitest';
-import { db } from '../db/client';
-import { esp32Controllers } from '@boardsesh/db/schema/app';
-import { eq } from 'drizzle-orm';
-import { sql } from 'drizzle-orm';
-import { controllerMutations } from '../graphql/resolvers/controller/mutations';
-import { controllerQueries } from '../graphql/resolvers/controller/queries';
-import type { ConnectionContext } from '@boardsesh/shared-schema';
+import { describe, it, expect, beforeEach, afterEach } from "vite-plus/test";
+import { db } from "../db/client";
+import { esp32Controllers } from "@boardsesh/db/schema/app";
+import { eq } from "drizzle-orm";
+import { sql } from "drizzle-orm";
+import { controllerMutations } from "../graphql/resolvers/controller/mutations";
+import { controllerQueries } from "../graphql/resolvers/controller/queries";
+import type { ConnectionContext } from "@boardsesh/shared-schema";
 
 // Test user ID
-const TEST_USER_ID = 'test-user-controller-tests';
-const TEST_SESSION_ID = 'test-session-controller-tests';
+const TEST_USER_ID = "test-user-controller-tests";
+const TEST_SESSION_ID = "test-session-controller-tests";
 
 // Helper to create a mock authenticated context
 function createMockContext(overrides: Partial<ConnectionContext> = {}): ConnectionContext {
@@ -26,7 +26,7 @@ function createMockContext(overrides: Partial<ConnectionContext> = {}): Connecti
 function createControllerContext(
   controllerId: string,
   controllerApiKey: string,
-  overrides: Partial<ConnectionContext> = {}
+  overrides: Partial<ConnectionContext> = {},
 ): ConnectionContext {
   return {
     connectionId: `conn-${Date.now()}`,
@@ -39,7 +39,7 @@ function createControllerContext(
   };
 }
 
-describe('Controller Mutations', () => {
+describe("Controller Mutations", () => {
   beforeEach(async () => {
     // Create test user if not exists (needed for FK constraint)
     await db.execute(sql`
@@ -56,22 +56,22 @@ describe('Controller Mutations', () => {
     await db.execute(sql`DELETE FROM esp32_controllers WHERE user_id = ${TEST_USER_ID}`);
   });
 
-  describe('registerController', () => {
-    it('should register a controller with a valid API key', async () => {
+  describe("registerController", () => {
+    it("should register a controller with a valid API key", async () => {
       const ctx = createMockContext();
 
       const result = await controllerMutations.registerController(
         undefined,
         {
           input: {
-            boardName: 'kilter',
+            boardName: "kilter",
             layoutId: 1,
             sizeId: 10,
-            setIds: '1,2,3',
-            name: 'Test Controller',
+            setIds: "1,2,3",
+            name: "Test Controller",
           },
         },
-        ctx
+        ctx,
       );
 
       expect(result.controllerId).toBeDefined();
@@ -86,11 +86,11 @@ describe('Controller Mutations', () => {
 
       expect(controller).toBeDefined();
       expect(controller.userId).toBe(TEST_USER_ID);
-      expect(controller.boardName).toBe('kilter');
-      expect(controller.name).toBe('Test Controller');
+      expect(controller.boardName).toBe("kilter");
+      expect(controller.name).toBe("Test Controller");
     });
 
-    it('should require authentication', async () => {
+    it("should require authentication", async () => {
       const ctx = createMockContext({ isAuthenticated: false, userId: undefined });
 
       await expect(
@@ -98,20 +98,20 @@ describe('Controller Mutations', () => {
           undefined,
           {
             input: {
-              boardName: 'kilter',
+              boardName: "kilter",
               layoutId: 1,
               sizeId: 10,
-              setIds: '1,2,3',
+              setIds: "1,2,3",
             },
           },
-          ctx
-        )
-      ).rejects.toThrow('Authentication required');
+          ctx,
+        ),
+      ).rejects.toThrow("Authentication required");
     });
   });
 
-  describe('deleteController', () => {
-    it('should delete a controller owned by the user', async () => {
+  describe("deleteController", () => {
+    it("should delete a controller owned by the user", async () => {
       const ctx = createMockContext();
 
       // First register a controller
@@ -119,20 +119,20 @@ describe('Controller Mutations', () => {
         undefined,
         {
           input: {
-            boardName: 'kilter',
+            boardName: "kilter",
             layoutId: 1,
             sizeId: 10,
-            setIds: '1,2,3',
+            setIds: "1,2,3",
           },
         },
-        ctx
+        ctx,
       );
 
       // Delete it
       const result = await controllerMutations.deleteController(
         undefined,
         { controllerId: registered.controllerId },
-        ctx
+        ctx,
       );
 
       expect(result).toBe(true);
@@ -146,7 +146,7 @@ describe('Controller Mutations', () => {
       expect(controller).toBeUndefined();
     });
 
-    it('should not delete a controller owned by another user', async () => {
+    it("should not delete a controller owned by another user", async () => {
       // Create test users for this test
       await db.execute(sql`
         INSERT INTO users (id, email, name, created_at, updated_at)
@@ -159,28 +159,28 @@ describe('Controller Mutations', () => {
         ON CONFLICT (id) DO NOTHING
       `);
 
-      const ctx1 = createMockContext({ userId: 'user-1' });
-      const ctx2 = createMockContext({ userId: 'user-2' });
+      const ctx1 = createMockContext({ userId: "user-1" });
+      const ctx2 = createMockContext({ userId: "user-2" });
 
       // Register as user-1
       const registered = await controllerMutations.registerController(
         undefined,
         {
           input: {
-            boardName: 'kilter',
+            boardName: "kilter",
             layoutId: 1,
             sizeId: 10,
-            setIds: '1,2,3',
+            setIds: "1,2,3",
           },
         },
-        ctx1
+        ctx1,
       );
 
       // Try to delete as user-2 (should not throw but won't delete)
       await controllerMutations.deleteController(
         undefined,
         { controllerId: registered.controllerId },
-        ctx2
+        ctx2,
       );
 
       // Verify controller still exists
@@ -196,8 +196,8 @@ describe('Controller Mutations', () => {
     });
   });
 
-  describe('authorizeControllerForSession', () => {
-    it('should authorize a controller for a session', async () => {
+  describe("authorizeControllerForSession", () => {
+    it("should authorize a controller for a session", async () => {
       const ctx = createMockContext();
 
       // Register a controller
@@ -205,20 +205,20 @@ describe('Controller Mutations', () => {
         undefined,
         {
           input: {
-            boardName: 'kilter',
+            boardName: "kilter",
             layoutId: 1,
             sizeId: 10,
-            setIds: '1,2,3',
+            setIds: "1,2,3",
           },
         },
-        ctx
+        ctx,
       );
 
       // Authorize for session
       const result = await controllerMutations.authorizeControllerForSession(
         undefined,
         { controllerId: registered.controllerId, sessionId: TEST_SESSION_ID },
-        ctx
+        ctx,
       );
 
       expect(result).toBe(true);
@@ -232,7 +232,7 @@ describe('Controller Mutations', () => {
       expect(controller.authorizedSessionId).toBe(TEST_SESSION_ID);
     });
 
-    it('should reject authorization from non-owner', async () => {
+    it("should reject authorization from non-owner", async () => {
       // Create test users for this test
       await db.execute(sql`
         INSERT INTO users (id, email, name, created_at, updated_at)
@@ -245,21 +245,21 @@ describe('Controller Mutations', () => {
         ON CONFLICT (id) DO NOTHING
       `);
 
-      const ctx1 = createMockContext({ userId: 'user-1' });
-      const ctx2 = createMockContext({ userId: 'user-2' });
+      const ctx1 = createMockContext({ userId: "user-1" });
+      const ctx2 = createMockContext({ userId: "user-2" });
 
       // Register as user-1
       const registered = await controllerMutations.registerController(
         undefined,
         {
           input: {
-            boardName: 'kilter',
+            boardName: "kilter",
             layoutId: 1,
             sizeId: 10,
-            setIds: '1,2,3',
+            setIds: "1,2,3",
           },
         },
-        ctx1
+        ctx1,
       );
 
       // Try to authorize as user-2
@@ -267,29 +267,25 @@ describe('Controller Mutations', () => {
         controllerMutations.authorizeControllerForSession(
           undefined,
           { controllerId: registered.controllerId, sessionId: TEST_SESSION_ID },
-          ctx2
-        )
-      ).rejects.toThrow('Controller not found or not owned by user');
+          ctx2,
+        ),
+      ).rejects.toThrow("Controller not found or not owned by user");
 
       // Cleanup
       await db.execute(sql`DELETE FROM esp32_controllers WHERE user_id = 'user-1'`);
     });
   });
 
-  describe('controllerHeartbeat', () => {
-    it('should require controller authentication', async () => {
+  describe("controllerHeartbeat", () => {
+    it("should require controller authentication", async () => {
       const ctx = createMockContext(); // No controller auth
 
       await expect(
-        controllerMutations.controllerHeartbeat(
-          undefined,
-          { sessionId: TEST_SESSION_ID },
-          ctx
-        )
-      ).rejects.toThrow('Controller authentication required');
+        controllerMutations.controllerHeartbeat(undefined, { sessionId: TEST_SESSION_ID }, ctx),
+      ).rejects.toThrow("Controller authentication required");
     });
 
-    it('should update lastSeenAt for authenticated controller', async () => {
+    it("should update lastSeenAt for authenticated controller", async () => {
       const ctx = createMockContext();
 
       // Register a controller
@@ -297,25 +293,22 @@ describe('Controller Mutations', () => {
         undefined,
         {
           input: {
-            boardName: 'kilter',
+            boardName: "kilter",
             layoutId: 1,
             sizeId: 10,
-            setIds: '1,2,3',
+            setIds: "1,2,3",
           },
         },
-        ctx
+        ctx,
       );
 
       // Create controller context
-      const controllerCtx = createControllerContext(
-        registered.controllerId,
-        registered.apiKey
-      );
+      const controllerCtx = createControllerContext(registered.controllerId, registered.apiKey);
 
       const result = await controllerMutations.controllerHeartbeat(
         undefined,
         { sessionId: TEST_SESSION_ID },
-        controllerCtx
+        controllerCtx,
       );
 
       expect(result).toBe(true);
@@ -331,7 +324,7 @@ describe('Controller Mutations', () => {
   });
 });
 
-describe('Controller Queries', () => {
+describe("Controller Queries", () => {
   beforeEach(async () => {
     // Create test user if not exists (needed for FK constraint)
     await db.execute(sql`
@@ -348,8 +341,8 @@ describe('Controller Queries', () => {
     await db.execute(sql`DELETE FROM esp32_controllers WHERE user_id = ${TEST_USER_ID}`);
   });
 
-  describe('myControllers', () => {
-    it('should return empty array for user with no controllers', async () => {
+  describe("myControllers", () => {
+    it("should return empty array for user with no controllers", async () => {
       const ctx = createMockContext();
 
       const result = await controllerQueries.myControllers(undefined, undefined, ctx);
@@ -357,7 +350,7 @@ describe('Controller Queries', () => {
       expect(result).toEqual([]);
     });
 
-    it('should return user controllers', async () => {
+    it("should return user controllers", async () => {
       const ctx = createMockContext();
 
       // Register two controllers
@@ -365,45 +358,45 @@ describe('Controller Queries', () => {
         undefined,
         {
           input: {
-            boardName: 'kilter',
+            boardName: "kilter",
             layoutId: 1,
             sizeId: 10,
-            setIds: '1,2,3',
-            name: 'Controller 1',
+            setIds: "1,2,3",
+            name: "Controller 1",
           },
         },
-        ctx
+        ctx,
       );
 
       await controllerMutations.registerController(
         undefined,
         {
           input: {
-            boardName: 'tension',
+            boardName: "tension",
             layoutId: 2,
             sizeId: 12,
-            setIds: '4,5,6',
-            name: 'Controller 2',
+            setIds: "4,5,6",
+            name: "Controller 2",
           },
         },
-        ctx
+        ctx,
       );
 
       const result = await controllerQueries.myControllers(undefined, undefined, ctx);
 
       expect(result).toHaveLength(2);
-      expect(result.map((c) => c.name).sort()).toEqual(['Controller 1', 'Controller 2']);
+      expect(result.map((c) => c.name).sort()).toEqual(["Controller 1", "Controller 2"]);
     });
 
-    it('should require authentication', async () => {
+    it("should require authentication", async () => {
       const ctx = createMockContext({ isAuthenticated: false, userId: undefined });
 
-      await expect(
-        controllerQueries.myControllers(undefined, undefined, ctx)
-      ).rejects.toThrow('Authentication required');
+      await expect(controllerQueries.myControllers(undefined, undefined, ctx)).rejects.toThrow(
+        "Authentication required",
+      );
     });
 
-    it('should show controller online status correctly', async () => {
+    it("should show controller online status correctly", async () => {
       const ctx = createMockContext();
 
       // Register a controller
@@ -411,13 +404,13 @@ describe('Controller Queries', () => {
         undefined,
         {
           input: {
-            boardName: 'kilter',
+            boardName: "kilter",
             layoutId: 1,
             sizeId: 10,
-            setIds: '1,2,3',
+            setIds: "1,2,3",
           },
         },
-        ctx
+        ctx,
       );
 
       // Initially not online (never seen)

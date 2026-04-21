@@ -1,15 +1,15 @@
-import type { SocialEvent, NotificationType } from '@boardsesh/shared-schema';
-import { EventBroker } from './event-broker';
-import { pubsub } from '../pubsub/index';
-import { db } from '../db/client';
-import * as dbSchema from '@boardsesh/db/schema';
-import { eq, and, sql } from 'drizzle-orm';
-import { fanoutFeedItems, fanoutNewClimbFeedItems } from './feed-fanout';
-import crypto from 'crypto';
+import type { SocialEvent, NotificationType } from "@boardsesh/shared-schema";
+import { EventBroker } from "./event-broker";
+import { pubsub } from "../pubsub/index";
+import { db } from "../db/client";
+import * as dbSchema from "@boardsesh/db/schema";
+import { eq, and, sql } from "drizzle-orm";
+import { fanoutFeedItems, fanoutNewClimbFeedItems } from "./feed-fanout";
+import crypto from "crypto";
 import {
   resolveClimbCreatedFollowerRecipients,
   resolveClimbCreatedSubscriptionRecipients,
-} from './recipient-resolution';
+} from "./recipient-resolution";
 
 export const eventBroker = new EventBroker();
 
@@ -36,13 +36,13 @@ async function createInlineNotification(event: SocialEvent): Promise<void> {
     let notificationType: dbSchema.NotificationType | null = null;
 
     switch (event.type) {
-      case 'follow.created': {
+      case "follow.created": {
         recipientId = event.metadata.followedUserId;
-        notificationType = 'new_follower';
+        notificationType = "new_follower";
         break;
       }
-      case 'comment.created': {
-        if (event.entityType === 'tick') {
+      case "comment.created": {
+        if (event.entityType === "tick") {
           const [tick] = await db
             .select({ userId: dbSchema.boardseshTicks.userId })
             .from(dbSchema.boardseshTicks)
@@ -50,12 +50,12 @@ async function createInlineNotification(event: SocialEvent): Promise<void> {
             .limit(1);
           if (tick) {
             recipientId = tick.userId;
-            notificationType = 'comment_on_tick';
+            notificationType = "comment_on_tick";
           }
         }
         break;
       }
-      case 'comment.reply': {
+      case "comment.reply": {
         if (event.metadata.parentCommentId) {
           const [parent] = await db
             .select({ userId: dbSchema.comments.userId })
@@ -64,12 +64,12 @@ async function createInlineNotification(event: SocialEvent): Promise<void> {
             .limit(1);
           if (parent) {
             recipientId = parent.userId;
-            notificationType = 'comment_reply';
+            notificationType = "comment_reply";
           }
         }
         break;
       }
-      case 'proposal.voted': {
+      case "proposal.voted": {
         // Notify proposer about the vote
         const [votedProposal] = await db
           .select({ proposerId: dbSchema.climbProposals.proposerId })
@@ -78,11 +78,11 @@ async function createInlineNotification(event: SocialEvent): Promise<void> {
           .limit(1);
         if (votedProposal) {
           recipientId = votedProposal.proposerId;
-          notificationType = 'proposal_vote';
+          notificationType = "proposal_vote";
         }
         break;
       }
-      case 'proposal.approved': {
+      case "proposal.approved": {
         const [approvedProposal] = await db
           .select({ proposerId: dbSchema.climbProposals.proposerId })
           .from(dbSchema.climbProposals)
@@ -90,11 +90,11 @@ async function createInlineNotification(event: SocialEvent): Promise<void> {
           .limit(1);
         if (approvedProposal) {
           recipientId = approvedProposal.proposerId;
-          notificationType = 'proposal_approved';
+          notificationType = "proposal_approved";
         }
         break;
       }
-      case 'proposal.rejected': {
+      case "proposal.rejected": {
         const [rejectedProposal] = await db
           .select({ proposerId: dbSchema.climbProposals.proposerId })
           .from(dbSchema.climbProposals)
@@ -102,12 +102,12 @@ async function createInlineNotification(event: SocialEvent): Promise<void> {
           .limit(1);
         if (rejectedProposal) {
           recipientId = rejectedProposal.proposerId;
-          notificationType = 'proposal_rejected';
+          notificationType = "proposal_rejected";
         }
         break;
       }
-      case 'vote.cast': {
-        if (event.entityType === 'tick') {
+      case "vote.cast": {
+        if (event.entityType === "tick") {
           const [tick] = await db
             .select({ userId: dbSchema.boardseshTicks.userId })
             .from(dbSchema.boardseshTicks)
@@ -115,9 +115,9 @@ async function createInlineNotification(event: SocialEvent): Promise<void> {
             .limit(1);
           if (tick) {
             recipientId = tick.userId;
-            notificationType = 'vote_on_tick';
+            notificationType = "vote_on_tick";
           }
-        } else if (event.entityType === 'comment') {
+        } else if (event.entityType === "comment") {
           const [comment] = await db
             .select({ userId: dbSchema.comments.userId })
             .from(dbSchema.comments)
@@ -125,18 +125,18 @@ async function createInlineNotification(event: SocialEvent): Promise<void> {
             .limit(1);
           if (comment) {
             recipientId = comment.userId;
-            notificationType = 'vote_on_comment';
+            notificationType = "vote_on_comment";
           }
         }
         break;
       }
-      case 'proposal.created': {
+      case "proposal.created": {
         // Multi-recipient notification (all climbers) — handled by NotificationWorker only
         return;
       }
-      case 'climb.created': {
+      case "climb.created": {
         const boardType = event.metadata.boardType;
-        const layoutId = parseInt(event.metadata.layoutId || '0', 10);
+        const layoutId = parseInt(event.metadata.layoutId || "0", 10);
         if (!boardType || !layoutId) return;
 
         const followerRecipients = await resolveClimbCreatedFollowerRecipients(event.actorId);
@@ -171,16 +171,14 @@ async function createInlineNotification(event: SocialEvent): Promise<void> {
 
         for (const recipient of recipients) {
           const uuid = crypto.randomUUID();
-          await db
-            .insert(dbSchema.notifications)
-            .values({
-              uuid,
-              recipientId: recipient.recipientId,
-              actorId: event.actorId,
-              type: recipient.notificationType,
-              entityType: 'climb',
-              entityId: event.entityId,
-            });
+          await db.insert(dbSchema.notifications).values({
+            uuid,
+            recipientId: recipient.recipientId,
+            actorId: event.actorId,
+            type: recipient.notificationType,
+            entityType: "climb",
+            entityId: event.entityId,
+          });
 
           pubsub.publishNotificationEvent(recipient.recipientId, {
             notification: {
@@ -189,7 +187,7 @@ async function createInlineNotification(event: SocialEvent): Promise<void> {
               actorId: event.actorId,
               actorDisplayName: actor?.displayName || actor?.name || undefined,
               actorAvatarUrl: actor?.avatarUrl || actor?.image || undefined,
-              entityType: 'climb',
+              entityType: "climb",
               entityId: event.entityId,
               climbName: event.metadata.climbName || undefined,
               climbUuid: event.entityId,
@@ -229,7 +227,10 @@ async function createInlineNotification(event: SocialEvent): Promise<void> {
             dbSchema.boardDifficultyGrades,
             and(
               eq(dbSchema.boardDifficultyGrades.boardType, dbSchema.boardClimbs.boardType),
-              eq(dbSchema.boardDifficultyGrades.difficulty, dbSchema.boardClimbStats.displayDifficulty),
+              eq(
+                dbSchema.boardDifficultyGrades.difficulty,
+                dbSchema.boardClimbStats.displayDifficulty,
+              ),
             ),
           )
           .where(
@@ -248,8 +249,10 @@ async function createInlineNotification(event: SocialEvent): Promise<void> {
               name: climb.name ?? event.metadata.climbName,
               boardType,
               layoutId: climb.layoutId,
-              setterDisplayName: climb.setterDisplayName ?? actor?.displayName ?? actor?.name ?? undefined,
-              setterAvatarUrl: climb.setterAvatarUrl ?? actor?.avatarUrl ?? actor?.image ?? undefined,
+              setterDisplayName:
+                climb.setterDisplayName ?? actor?.displayName ?? actor?.name ?? undefined,
+              setterAvatarUrl:
+                climb.setterAvatarUrl ?? actor?.avatarUrl ?? actor?.image ?? undefined,
               angle: climb.angle ?? null,
               frames: climb.frames ?? null,
               difficultyName: climb.difficultyName ?? event.metadata.difficultyName ?? null,
@@ -259,7 +262,7 @@ async function createInlineNotification(event: SocialEvent): Promise<void> {
         }
         return;
       }
-      case 'ascent.logged': {
+      case "ascent.logged": {
         await fanoutFeedItems(event);
         // No notification for ascent.logged - it's feed-only
         return;
@@ -285,16 +288,14 @@ async function createInlineNotification(event: SocialEvent): Promise<void> {
     if (existing) return;
 
     const uuid = crypto.randomUUID();
-    await db
-      .insert(dbSchema.notifications)
-      .values({
-        uuid,
-        recipientId,
-        actorId: event.actorId,
-        type: notificationType,
-        entityType: event.entityType as dbSchema.SocialEntityType,
-        entityId: event.entityId,
-      });
+    await db.insert(dbSchema.notifications).values({
+      uuid,
+      recipientId,
+      actorId: event.actorId,
+      type: notificationType,
+      entityType: event.entityType as dbSchema.SocialEntityType,
+      entityId: event.entityId,
+    });
 
     // Enrich and push via PubSub
     const [actor] = await db
@@ -323,9 +324,9 @@ async function createInlineNotification(event: SocialEvent): Promise<void> {
       },
     });
   } catch (error) {
-    console.error('[Events] Inline notification failed:', error);
+    console.error("[Events] Inline notification failed:", error);
   }
 }
 
-export { EventBroker } from './event-broker';
-export { NotificationWorker } from './notification-worker';
+export { EventBroker } from "./event-broker";
+export { NotificationWorker } from "./notification-worker";

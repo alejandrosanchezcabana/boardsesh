@@ -1,11 +1,11 @@
-import { NextRequest } from 'next/server';
-import { getServerSession } from 'next-auth/next';
-import { authOptions } from '@/app/lib/auth/auth-options';
-import { issueNativeOAuthTransferToken } from '@/app/lib/auth/native-oauth-transfer';
-import { NATIVE_OAUTH_CALLBACK_SCHEME } from '@/app/lib/auth/native-oauth-config';
+import { NextRequest } from "next/server";
+import { getServerSession } from "next-auth/next";
+import { authOptions } from "@/app/lib/auth/auth-options";
+import { issueNativeOAuthTransferToken } from "@/app/lib/auth/native-oauth-transfer";
+import { NATIVE_OAUTH_CALLBACK_SCHEME } from "@/app/lib/auth/native-oauth-config";
 
 const sanitizeNextPath = (nextPath: string | null): string =>
-  nextPath && nextPath.startsWith('/') ? nextPath : '/';
+  nextPath && nextPath.startsWith("/") ? nextPath : "/";
 
 /**
  * Redirect to a custom URL scheme using an HTML page with JavaScript.
@@ -18,7 +18,7 @@ const sanitizeNextPath = (nextPath: string | null): string =>
  * works consistently across iOS and Android.
  */
 const escapeHtmlAttr = (s: string) =>
-  s.replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+  s.replace(/&/g, "&amp;").replace(/"/g, "&quot;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
 
 const deepLinkRedirect = (url: string) =>
   new Response(
@@ -33,7 +33,7 @@ const deepLinkRedirect = (url: string) =>
 </html>`,
     {
       status: 200,
-      headers: { 'Content-Type': 'text/html; charset=utf-8' },
+      headers: { "Content-Type": "text/html; charset=utf-8" },
     },
   );
 
@@ -43,7 +43,7 @@ export async function GET(request: NextRequest) {
     return deepLinkRedirect(`${NATIVE_OAUTH_CALLBACK_SCHEME}?error=session_missing`);
   }
 
-  const nextPath = sanitizeNextPath(request.nextUrl.searchParams.get('next'));
+  const nextPath = sanitizeNextPath(request.nextUrl.searchParams.get("next"));
   let transferToken: string;
   try {
     transferToken = issueNativeOAuthTransferToken({

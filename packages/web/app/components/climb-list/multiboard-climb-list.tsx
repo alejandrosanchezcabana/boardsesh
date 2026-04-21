@@ -1,25 +1,28 @@
-'use client';
+"use client";
 
-import React, { useMemo, useCallback, useState } from 'react';
-import Box from '@mui/material/Box';
-import Typography from '@mui/material/Typography';
-import CircularProgress from '@mui/material/CircularProgress';
-import ToggleButtonGroup from '@mui/material/ToggleButtonGroup';
-import ToggleButton from '@mui/material/ToggleButton';
-import { useMyBoards } from '@/app/hooks/use-my-boards';
-import { useBoardDetailsMap } from '@/app/hooks/use-board-details-map';
-import { useClimbActionsData } from '@/app/hooks/use-climb-actions-data';
-import BoardFilterStrip from '@/app/components/board-scroll/board-filter-strip';
-import ClimbsList from '@/app/components/board-page/climbs-list';
-import { FavoritesProvider } from '@/app/components/climb-actions/favorites-batch-context';
-import { PlaylistsProvider } from '@/app/components/climb-actions/playlists-batch-context';
-import { getDefaultAngleForBoard, type SessionBoardConfig } from '@/app/lib/board-config-for-playlist';
-import { useOptionalQueueActions } from '@/app/components/graphql-queue';
-import { usePersistentSessionState } from '@/app/components/persistent-session/persistent-session-context';
-import type { UserBoard } from '@boardsesh/shared-schema';
-import type { Climb } from '@/app/lib/types';
+import React, { useMemo, useCallback, useState } from "react";
+import Box from "@mui/material/Box";
+import Typography from "@mui/material/Typography";
+import CircularProgress from "@mui/material/CircularProgress";
+import ToggleButtonGroup from "@mui/material/ToggleButtonGroup";
+import ToggleButton from "@mui/material/ToggleButton";
+import { useMyBoards } from "@/app/hooks/use-my-boards";
+import { useBoardDetailsMap } from "@/app/hooks/use-board-details-map";
+import { useClimbActionsData } from "@/app/hooks/use-climb-actions-data";
+import BoardFilterStrip from "@/app/components/board-scroll/board-filter-strip";
+import ClimbsList from "@/app/components/board-page/climbs-list";
+import { FavoritesProvider } from "@/app/components/climb-actions/favorites-batch-context";
+import { PlaylistsProvider } from "@/app/components/climb-actions/playlists-batch-context";
+import {
+  getDefaultAngleForBoard,
+  type SessionBoardConfig,
+} from "@/app/lib/board-config-for-playlist";
+import { useOptionalQueueActions } from "@/app/components/graphql-queue";
+import { usePersistentSessionState } from "@/app/components/persistent-session/persistent-session-context";
+import type { UserBoard } from "@boardsesh/shared-schema";
+import type { Climb } from "@/app/lib/types";
 
-export type SortBy = 'popular' | 'new';
+export type SortBy = "popular" | "new";
 
 interface MultiboardClimbListProps {
   climbs: Climb[];
@@ -70,7 +73,7 @@ export default function MultiboardClimbList({
   selectedBoard,
   onBoardSelect,
   showSortToggle = false,
-  sortBy = 'popular',
+  sortBy = "popular",
   onSortChange,
   totalCount,
   onClimbSelect,
@@ -92,9 +95,8 @@ export default function MultiboardClimbList({
     initialBoards,
   );
   const myBoards = externalBoards ?? fetchedBoards;
-  const isLoadingBoards = externalBoards !== undefined
-    ? (externalBoardsLoading ?? false)
-    : fetchedBoardsLoading;
+  const isLoadingBoards =
+    externalBoards !== undefined ? (externalBoardsLoading ?? false) : fetchedBoardsLoading;
 
   // Prefer the user's active session (the board they are actually climbing on)
   // so playlist previews match the physical wall. Falls back to the list's
@@ -111,17 +113,12 @@ export default function MultiboardClimbList({
     };
   }, [activeSession]);
 
-  const { boardDetailsByClimb, defaultBoardDetails, unsupportedClimbs, upsizedClimbs } = useBoardDetailsMap(
-    climbs,
-    myBoards,
-    selectedBoard,
-    sessionBoard,
-    fallbackBoardTypes,
-  );
+  const { boardDetailsByClimb, defaultBoardDetails, unsupportedClimbs, upsizedClimbs } =
+    useBoardDetailsMap(climbs, myBoards, selectedBoard, sessionBoard, fallbackBoardTypes);
 
   // Climb action data for favorites/playlists context
   const climbUuids = useMemo(() => climbs.map((c) => c.uuid), [climbs]);
-  const actionsBoardName = selectedBoard?.boardType || (climbs[0]?.boardType ?? 'kilter');
+  const actionsBoardName = selectedBoard?.boardType || (climbs[0]?.boardType ?? "kilter");
   const actionsLayoutId = selectedBoard?.layoutId || (climbs[0]?.layoutId ?? 1);
   const actionsAngle = selectedBoard?.angle || getDefaultAngleForBoard(actionsBoardName);
 
@@ -135,19 +132,22 @@ export default function MultiboardClimbList({
 
   // Fallback for the rare case with no queue bridge (e.g. mid-hydration): navigate
   // to the climb's view page so the user is never stranded.
-  const navigateToClimb = useCallback(async (climb: Climb) => {
-    try {
-      const bt = climb.boardType || selectedBoard?.boardType;
-      if (!bt) return;
-      const params = new URLSearchParams({ boardType: bt, climbUuid: climb.uuid });
-      const res = await fetch(`/api/internal/climb-redirect?${params}`);
-      if (!res.ok) return;
-      const { url } = await res.json();
-      if (url) window.location.href = url;
-    } catch (error) {
-      console.error('Failed to navigate to climb:', error);
-    }
-  }, [selectedBoard]);
+  const navigateToClimb = useCallback(
+    async (climb: Climb) => {
+      try {
+        const bt = climb.boardType || selectedBoard?.boardType;
+        if (!bt) return;
+        const params = new URLSearchParams({ boardType: bt, climbUuid: climb.uuid });
+        const res = await fetch(`/api/internal/climb-redirect?${params}`);
+        if (!res.ok) return;
+        const { url } = await res.json();
+        if (url) window.location.href = url;
+      } catch (error) {
+        console.error("Failed to navigate to climb:", error);
+      }
+    },
+    [selectedBoard],
+  );
 
   // Internal selection state drives the visual highlight. A caller-supplied
   // selectedClimbUuid takes precedence so controlled usage still works.
@@ -158,15 +158,18 @@ export default function MultiboardClimbList({
   // Thumbnail click reuses this via ClimbsList and additionally dispatches the
   // PLAY_DRAWER_EVENT so the play view drawer opens. Mirrors the pattern in
   // liked-climbs-list.tsx and board-page-climbs-list.tsx.
-  const handleClimbSelect = useCallback((climb: Climb) => {
-    setInternalSelectedUuid(climb.uuid);
-    if (queueActions?.setCurrentClimb) {
-      queueActions.setCurrentClimb(climb);
-    } else {
-      navigateToClimb(climb);
-    }
-    onClimbSelect?.(climb);
-  }, [queueActions, navigateToClimb, onClimbSelect]);
+  const handleClimbSelect = useCallback(
+    (climb: Climb) => {
+      setInternalSelectedUuid(climb.uuid);
+      if (queueActions?.setCurrentClimb) {
+        queueActions.setCurrentClimb(climb);
+      } else {
+        navigateToClimb(climb);
+      }
+      onClimbSelect?.(climb);
+    },
+    [queueActions, navigateToClimb, onClimbSelect],
+  );
 
   const handleSortChange = (_: React.MouseEvent<HTMLElement>, value: SortBy | null) => {
     if (value && onSortChange) {
@@ -176,19 +179,23 @@ export default function MultiboardClimbList({
 
   // Header with sort toggle and count
   const headerInline = showSortToggle ? (
-    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, flexWrap: 'wrap', flex: 1, minWidth: 0 }}>
-      <ToggleButtonGroup
-        exclusive
-        size="small"
-        value={sortBy}
-        onChange={handleSortChange}
-      >
+    <Box
+      sx={{
+        display: "flex",
+        alignItems: "center",
+        gap: 1.5,
+        flexWrap: "wrap",
+        flex: 1,
+        minWidth: 0,
+      }}
+    >
+      <ToggleButtonGroup exclusive size="small" value={sortBy} onChange={handleSortChange}>
         <ToggleButton value="popular">Popular</ToggleButton>
         <ToggleButton value="new">New</ToggleButton>
       </ToggleButtonGroup>
       {totalCount != null && totalCount > 0 && (
         <Typography variant="body2" color="text.secondary">
-          {totalCount} climb{totalCount !== 1 ? 's' : ''}
+          {totalCount} climb{totalCount !== 1 ? "s" : ""}
         </Typography>
       )}
     </Box>
@@ -209,11 +216,11 @@ export default function MultiboardClimbList({
       )}
 
       {isLoading && climbs.length === 0 ? (
-        <Box sx={{ display: 'flex', justifyContent: 'center', py: 4 }}>
+        <Box sx={{ display: "flex", justifyContent: "center", py: 4 }}>
           <CircularProgress size={24} />
         </Box>
       ) : climbs.length === 0 && !isLoading ? (
-        <Box sx={{ py: 4, textAlign: 'center' }}>
+        <Box sx={{ py: 4, textAlign: "center" }}>
           <Typography variant="body2" color="text.secondary">
             No climbs found
           </Typography>

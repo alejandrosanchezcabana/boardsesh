@@ -1,10 +1,15 @@
-import type { ConnectionContext, EventsReplayResponse } from '@boardsesh/shared-schema';
-import { roomManager, type DiscoverableSession } from '../../../services/room-manager';
-import { pubsub } from '../../../pubsub/index';
-import { validateInput, requireSessionMember, requireAuthenticated } from '../shared/helpers';
-import { SessionIdSchema, LatitudeSchema, LongitudeSchema, RadiusMetersSchema } from '../../../validation/schemas';
-import { generateSessionSummary } from './session-summary';
-import { getDistributedState } from '../../../services/distributed-state';
+import type { ConnectionContext, EventsReplayResponse } from "@boardsesh/shared-schema";
+import { roomManager, type DiscoverableSession } from "../../../services/room-manager";
+import { pubsub } from "../../../pubsub/index";
+import { validateInput, requireSessionMember, requireAuthenticated } from "../shared/helpers";
+import {
+  SessionIdSchema,
+  LatitudeSchema,
+  LongitudeSchema,
+  RadiusMetersSchema,
+} from "../../../validation/schemas";
+import { generateSessionSummary } from "./session-summary";
+import { getDistributedState } from "../../../services/distributed-state";
 
 export const sessionQueries = {
   /**
@@ -13,7 +18,7 @@ export const sessionQueries = {
    */
   session: async (_: unknown, { sessionId }: { sessionId: string }) => {
     // Validate session ID
-    validateInput(SessionIdSchema, sessionId, 'sessionId');
+    validateInput(SessionIdSchema, sessionId, "sessionId");
 
     const users = await roomManager.getSessionUsers(sessionId);
     if (users.length === 0) return null;
@@ -23,12 +28,12 @@ export const sessionQueries = {
 
     return {
       id: sessionId,
-      boardPath: sessionInfo?.boardPath || '',
+      boardPath: sessionInfo?.boardPath || "",
       users,
       queueState,
       // These need connection context, but for Query we return defaults
       isLeader: false,
-      clientId: '',
+      clientId: "",
       goal: sessionInfo?.goal || null,
       isPublic: sessionInfo?.isPublic ?? true,
       startedAt: sessionInfo?.startedAt?.toISOString() || null,
@@ -45,10 +50,10 @@ export const sessionQueries = {
   eventsReplay: async (
     _: unknown,
     { sessionId, sinceSequence }: { sessionId: string; sinceSequence: number },
-    ctx: ConnectionContext
+    ctx: ConnectionContext,
   ): Promise<EventsReplayResponse> => {
     // Validate inputs
-    validateInput(SessionIdSchema, sessionId, 'sessionId');
+    validateInput(SessionIdSchema, sessionId, "sessionId");
 
     // Verify user is a member of the session
     await requireSessionMember(ctx, sessionId);
@@ -71,13 +76,17 @@ export const sessionQueries = {
    */
   nearbySessions: async (
     _: unknown,
-    { latitude, longitude, radiusMeters }: { latitude: number; longitude: number; radiusMeters?: number }
+    {
+      latitude,
+      longitude,
+      radiusMeters,
+    }: { latitude: number; longitude: number; radiusMeters?: number },
   ): Promise<DiscoverableSession[]> => {
     // Validate GPS coordinates
-    validateInput(LatitudeSchema, latitude, 'latitude');
-    validateInput(LongitudeSchema, longitude, 'longitude');
+    validateInput(LatitudeSchema, latitude, "latitude");
+    validateInput(LongitudeSchema, longitude, "longitude");
     if (radiusMeters !== undefined) {
-      validateInput(RadiusMetersSchema, radiusMeters, 'radiusMeters');
+      validateInput(RadiusMetersSchema, radiusMeters, "radiusMeters");
     }
     return roomManager.findNearbySessions(latitude, longitude, radiusMeters || undefined);
   },
@@ -86,7 +95,11 @@ export const sessionQueries = {
    * Get sessions created by the authenticated user
    * Returns empty array if user is not authenticated
    */
-  mySessions: async (_: unknown, __: unknown, ctx: ConnectionContext): Promise<DiscoverableSession[]> => {
+  mySessions: async (
+    _: unknown,
+    __: unknown,
+    ctx: ConnectionContext,
+  ): Promise<DiscoverableSession[]> => {
     // For now, we use userId from context if available
     // In production, this should use authenticated user ID
     if (!ctx.userId) {
@@ -120,7 +133,7 @@ export const sessionQueries = {
           isPermanent: s.isPermanent,
           color: s.color || null,
         };
-      })
+      }),
     );
   },
 
@@ -128,9 +141,13 @@ export const sessionQueries = {
    * Get a session summary with stats, grade distribution, and participants.
    * Available for ended sessions or active sessions with ticks.
    */
-  sessionSummary: async (_: unknown, { sessionId }: { sessionId: string }, ctx: ConnectionContext) => {
+  sessionSummary: async (
+    _: unknown,
+    { sessionId }: { sessionId: string },
+    ctx: ConnectionContext,
+  ) => {
     requireAuthenticated(ctx);
-    validateInput(SessionIdSchema, sessionId, 'sessionId');
+    validateInput(SessionIdSchema, sessionId, "sessionId");
     return generateSessionSummary(sessionId);
   },
 };

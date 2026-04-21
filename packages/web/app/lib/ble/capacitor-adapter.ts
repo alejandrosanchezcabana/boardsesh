@@ -1,36 +1,24 @@
-import type { BoardName } from '@/app/lib/types';
-import type { BleConnection, BluetoothAdapter, DevicePickerFn, DiscoveredDevice } from './types';
+import type { BoardName } from "@/app/lib/types";
+import type { BleConnection, BluetoothAdapter } from "./types";
 import {
   AURORA_OPTIONAL_SERVICE_UUIDS,
   AURORA_SCAN_SERVICE_UUIDS,
-} from '@/app/components/board-bluetooth-control/bluetooth-aurora';
+} from "@/app/components/board-bluetooth-control/bluetooth-aurora";
 import {
-  isMoonboardDeviceName,
   MOONBOARD_OPTIONAL_SERVICE_UUIDS,
   MOONBOARD_SCAN_SERVICE_UUIDS,
-} from '@/app/components/board-bluetooth-control/bluetooth-moonboard';
+} from "@/app/components/board-bluetooth-control/bluetooth-moonboard";
 import {
   MAX_BLUETOOTH_MESSAGE_SIZE,
   UART_SERVICE_UUID,
   UART_WRITE_CHARACTERISTIC_UUID,
-} from '@/app/components/board-bluetooth-control/bluetooth-shared';
+} from "@/app/components/board-bluetooth-control/bluetooth-shared";
 
 const DEFAULT_MTU = MAX_BLUETOOTH_MESSAGE_SIZE;
 
 // Small delay between chunked writes when using the default MTU.
 // Gives CoreBluetooth breathing room when sending many small chunks.
 const INTER_CHUNK_DELAY_MS = 5;
-
-// Auto-stop BLE scan after this duration to prevent indefinite battery drain
-// if the user walks away from the picker dialog.
-const SCAN_TIMEOUT_MS = 30_000;
-
-/** Scan result from the Capacitor BLE plugin's requestLEScan callback. */
-interface CapacitorScanResult {
-  device: { deviceId: string; name?: string };
-  localName?: string;
-  rssi: number;
-}
 
 // Raw Capacitor plugin interface as exposed via window.Capacitor.Plugins.BluetoothLe.
 // The plugin JS is injected by the native shell. We type only the methods we use.
@@ -48,34 +36,25 @@ interface CapacitorBlePlugin {
     services: string[];
     optionalServices?: string[];
   }): Promise<{ deviceId: string; name?: string }>;
-  requestLEScan?(options: { services?: string[] }): Promise<void>;
-  stopLEScan?(): Promise<void>;
-  connect(options: {
-    deviceId: string;
-  }): Promise<void>;
-  disconnect(options: {
-    deviceId: string;
-  }): Promise<void>;
+  connect(options: { deviceId: string }): Promise<void>;
+  disconnect(options: { deviceId: string }): Promise<void>;
   write(options: {
     deviceId: string;
     service: string;
     characteristic: string;
     value: string; // Continuous hex string, e.g. "0102ff"
   }): Promise<void>;
-  requestMtu(options: {
-    deviceId: string;
-    mtu: number;
-  }): Promise<{ value: number }>;
+  requestMtu(options: { deviceId: string; mtu: number }): Promise<{ value: number }>;
   addListener(
-    eventName: 'disconnected' | 'onScanResult',
-    callback: (data: Record<string, unknown>) => void,
+    eventName: "disconnected",
+    callback: (data: { deviceId: string }) => void,
   ): Promise<PluginListenerHandle>;
 }
 
 function getBlePlugin(): CapacitorBlePlugin {
   const plugin = window.Capacitor?.Plugins?.BluetoothLe;
   if (!plugin) {
-    throw new Error('Capacitor BluetoothLe plugin not available');
+    throw new Error("Capacitor BluetoothLe plugin not available");
   }
   return plugin as CapacitorBlePlugin;
 }
@@ -99,24 +78,14 @@ export function _resetInitCache(): void {
 /** Convert a Uint8Array to the continuous hex string the raw plugin expects (v8+) */
 function toHexString(data: Uint8Array): string {
   return Array.from(data)
-    .map((b) => b.toString(16).padStart(2, '0'))
-    .join('');
+    .map((b) => b.toString(16).padStart(2, "0"))
+    .join("");
 }
 
 const delay = (ms: number) => new Promise<void>((resolve) => setTimeout(resolve, ms));
 
-function stopScanQuietly(ble: CapacitorBlePlugin): Promise<void> {
-  if (!ble.stopLEScan) {
-    return Promise.resolve();
-  }
-  return ble.stopLEScan().catch(() => {});
-}
-
 export class CapacitorBleAdapter implements BluetoothAdapter {
-  constructor(
-    private readonly boardName: BoardName = 'kilter',
-    private readonly devicePicker?: DevicePickerFn,
-  ) {}
+  constructor(private readonly boardName: BoardName = "kilter") {}
 
   private deviceId: string | null = null;
   private disconnectCallback: (() => void) | null = null;
@@ -138,94 +107,39 @@ export class CapacitorBleAdapter implements BluetoothAdapter {
     await ensureInitialized();
     const ble = getBlePlugin();
 
-    const services = this.boardName === 'moonboard'
-      ? [...MOONBOARD_SCAN_SERVICE_UUIDS]
-      : [...AURORA_SCAN_SERVICE_UUIDS];
-    const optionalServices = this.boardName === 'moonboard'
-      ? [...MOONBOARD_OPTIONAL_SERVICE_UUIDS]
-      : [...AURORA_OPTIONAL_SERVICE_UUIDS];
+    const services =
+      this.boardName === "moonboard"
+        ? [...MOONBOARD_SCAN_SERVICE_UUIDS]
+        : [...AURORA_SCAN_SERVICE_UUIDS];
+    const optionalServices =
+      this.boardName === "moonboard"
+        ? [...MOONBOARD_OPTIONAL_SERVICE_UUIDS]
+        : [...AURORA_OPTIONAL_SERVICE_UUIDS];
 
-    let selectedDeviceId: string;
-    let selectedDeviceName: string | undefined;
-
-    if (this.devicePicker && ble.requestLEScan && ble.stopLEScan) {
-      // Manual scan with custom picker — deduplicates devices ourselves
-      const devices = new Map<string, DiscoveredDevice>();
-      let updateListener: ((devices: DiscoveredDevice[]) => void) | null = null;
-      const pushDevices = () => updateListener?.([...devices.values()]);
-
-      // Start the picker promise (resolves when user selects a device)
-      const selectionPromise = this.devicePicker((onUpdate) => {
-        updateListener = onUpdate;
-        pushDevices();
-      });
-
-      // Register scan result listener BEFORE starting the scan.
-      // The raw Capacitor plugin delivers results via events, not callbacks.
-      const scanListener = await ble.addListener('onScanResult', (data) => {
-        const result = data as unknown as CapacitorScanResult;
-        const device: DiscoveredDevice = {
-          deviceId: result.device.deviceId,
-          name: result.localName || result.device.name,
-          rssi: result.rssi,
-        };
-
-        if (this.boardName === 'moonboard' && !isMoonboardDeviceName(device.name)) {
-          return;
-        }
-
-        // Deduplicate by name (which includes the serial number for Aurora boards)
-        // rather than deviceId, because iOS can assign different CoreBluetooth UUIDs
-        // to the same physical device across scan results.
-        const dedupeKey = device.name || device.deviceId;
-        devices.set(dedupeKey, device);
-        pushDevices();
-      });
-
-      // Start scanning
-      await ble.requestLEScan({ services });
-
-      // Auto-stop scan after timeout to prevent indefinite battery drain
-      const scanTimeoutId = setTimeout(() => {
-        stopScanQuietly(ble);
-      }, SCAN_TIMEOUT_MS);
-
-      try {
-        selectedDeviceId = await selectionPromise;
-      } finally {
-        clearTimeout(scanTimeoutId);
-        await scanListener.remove();
-        await stopScanQuietly(ble);
-      }
-
-      selectedDeviceName = devices.get(selectedDeviceId)?.name;
-    } else {
-      // Fallback: use the plugin's built-in device picker
-      const device = await ble.requestDevice({
-        services,
-        optionalServices,
-      });
-
-      selectedDeviceId = device.deviceId;
-      selectedDeviceName = device.name;
-    }
+    // Request device — shows native scan dialog on iOS.
+    // MoonBoard controllers advertise Nordic UART directly; Aurora boards use
+    // their own advertised service and expose UART after connection.
+    const device = await ble.requestDevice({
+      services,
+      optionalServices,
+    });
 
     // Connect to the device
-    await ble.connect({ deviceId: selectedDeviceId });
+    await ble.connect({ deviceId: device.deviceId });
 
     // Negotiate larger MTU (iOS negotiates automatically, but requesting
     // explicitly ensures we know the actual value for chunking)
     try {
-      const mtuResult = await ble.requestMtu({ deviceId: selectedDeviceId, mtu: 512 });
+      const mtuResult = await ble.requestMtu({ deviceId: device.deviceId, mtu: 512 });
       this.mtu = mtuResult.value - 3; // MTU minus ATT header overhead
     } catch {
       // MTU negotiation not supported or failed — keep default 20
     }
 
-    this.deviceId = selectedDeviceId;
+    this.deviceId = device.deviceId;
 
     // Listen for unexpected disconnections from the native CoreBluetooth layer
-    this.disconnectListenerHandle = await ble.addListener('disconnected', (data) => {
+    this.disconnectListenerHandle = await ble.addListener("disconnected", (data) => {
       if (data.deviceId === this.deviceId) {
         this.deviceId = null;
         this.disconnectListenerHandle = null;
@@ -234,8 +148,8 @@ export class CapacitorBleAdapter implements BluetoothAdapter {
     });
 
     return {
-      deviceId: selectedDeviceId,
-      deviceName: selectedDeviceName,
+      deviceId: device.deviceId,
+      deviceName: device.name,
     };
   }
 
@@ -260,7 +174,7 @@ export class CapacitorBleAdapter implements BluetoothAdapter {
 
   async write(data: Uint8Array, signal?: AbortSignal): Promise<void> {
     if (!this.deviceId) {
-      throw new Error('Not connected');
+      throw new Error("Not connected");
     }
 
     const ble = getBlePlugin();
@@ -275,7 +189,7 @@ export class CapacitorBleAdapter implements BluetoothAdapter {
     for (let i = 0; i < fullHex.length; i += hexChunkSize) {
       // Check abort signal before each chunk to stop sending stale climbs
       if (signal?.aborted) {
-        throw new DOMException('Write aborted', 'AbortError');
+        throw new DOMException("Write aborted", "AbortError");
       }
 
       // Add a small delay between chunks when using the minimum MTU

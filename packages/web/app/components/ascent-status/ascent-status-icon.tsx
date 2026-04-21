@@ -1,14 +1,18 @@
-'use client';
+"use client";
 
-import React from 'react';
-import CheckOutlined from '@mui/icons-material/CheckOutlined';
-import ElectricBoltOutlined from '@mui/icons-material/ElectricBoltOutlined';
-import { themeTokens } from '@/app/theme/theme-config';
-import { PersonFallingIcon } from '@/app/components/icons/person-falling-icon';
-import { normalizeAscentStatus, type AscentStatusValue, type NormalizeAscentStatusInput } from './ascent-status-utils';
+import React from "react";
+import CheckOutlined from "@mui/icons-material/CheckOutlined";
+import ElectricBoltOutlined from "@mui/icons-material/ElectricBoltOutlined";
+import { themeTokens } from "@/app/theme/theme-config";
+import { PersonFallingIcon } from "@/app/components/icons/person-falling-icon";
+import {
+  normalizeAscentStatus,
+  type AscentStatusValue,
+  type NormalizeAscentStatusInput,
+} from "./ascent-status-utils";
 
 interface AscentStatusIconProps extends NormalizeAscentStatusInput {
-  variant?: 'icon' | 'badge';
+  variant?: "icon" | "badge";
   fontSize?: number;
   className?: string;
   mirrored?: boolean;
@@ -16,12 +20,15 @@ interface AscentStatusIconProps extends NormalizeAscentStatusInput {
   testId?: string;
 }
 
-const STATUS_CONFIG: Record<AscentStatusValue, {
-  Icon: typeof CheckOutlined;
-  iconColor: string;
-  badgeBackgroundColor: string;
-  badgeIconColor: string;
-}> = {
+const STATUS_CONFIG: Record<
+  AscentStatusValue,
+  {
+    Icon: typeof CheckOutlined;
+    iconColor: string;
+    badgeBackgroundColor: string;
+    badgeIconColor: string;
+  }
+> = {
   flash: {
     Icon: ElectricBoltOutlined,
     iconColor: themeTokens.colors.amber,
@@ -32,13 +39,13 @@ const STATUS_CONFIG: Record<AscentStatusValue, {
     Icon: CheckOutlined,
     iconColor: themeTokens.colors.success,
     badgeBackgroundColor: themeTokens.colors.success,
-    badgeIconColor: 'white',
+    badgeIconColor: "white",
   },
   attempt: {
     Icon: PersonFallingIcon,
     iconColor: themeTokens.colors.error,
     badgeBackgroundColor: themeTokens.colors.error,
-    badgeIconColor: 'white',
+    badgeIconColor: "white",
   },
 };
 
@@ -46,7 +53,7 @@ export function AscentStatusIcon({
   status,
   isAscent,
   tries,
-  variant = 'icon',
+  variant = "icon",
   fontSize = themeTokens.typography.fontSize.base,
   className,
   mirrored = false,
@@ -56,12 +63,12 @@ export function AscentStatusIcon({
   const resolvedStatus = normalizeAscentStatus({ status, isAscent, tries });
   const { Icon, iconColor, badgeBackgroundColor, badgeIconColor } = STATUS_CONFIG[resolvedStatus];
   const iconStyle: React.CSSProperties = {
-    color: variant === 'badge' ? badgeIconColor : iconColor,
+    color: variant === "badge" ? badgeIconColor : iconColor,
     fontSize,
-    transform: mirrored ? 'scaleX(-1)' : undefined,
+    transform: mirrored ? "scaleX(-1)" : undefined,
   };
 
-  if (variant === 'icon') {
+  if (variant === "icon") {
     return (
       <Icon
         className={className}
@@ -73,7 +80,7 @@ export function AscentStatusIcon({
     );
   }
 
-  const fallbackBadgeSize = typeof fontSize === 'number' ? fontSize + 8 : themeTokens.spacing[5];
+  const fallbackBadgeSize = typeof fontSize === "number" ? fontSize + 8 : themeTokens.spacing[5];
   const resolvedBadgeSize = badgeSize ?? (className ? undefined : fallbackBadgeSize);
 
   return (
@@ -81,11 +88,11 @@ export function AscentStatusIcon({
       className={className}
       style={{
         backgroundColor: badgeBackgroundColor,
-        borderRadius: '50%',
+        borderRadius: "50%",
         color: badgeIconColor,
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
         flexShrink: 0,
         lineHeight: 0,
         width: resolvedBadgeSize,

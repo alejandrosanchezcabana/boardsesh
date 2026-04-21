@@ -10,28 +10,28 @@
  * - API validation tools
  */
 
-import { OpenApiGeneratorV3 } from '@asteasolutions/zod-to-openapi';
-import { registry } from './openapi-registry';
+import { OpenApiGeneratorV3 } from "@asteasolutions/zod-to-openapi";
+import { registry } from "./openapi-registry";
 
 // Import routes to register them with the registry
-import './openapi-routes';
+import "./openapi-routes";
 
 // Register security scheme
-registry.registerComponent('securitySchemes', 'session', {
-  type: 'apiKey',
-  in: 'cookie',
-  name: 'next-auth.session-token',
-  description: 'NextAuth session cookie',
+registry.registerComponent("securitySchemes", "session", {
+  type: "apiKey",
+  in: "cookie",
+  name: "next-auth.session-token",
+  description: "NextAuth session cookie",
 });
 
 export function generateOpenApiDocument() {
   const generator = new OpenApiGeneratorV3(registry.definitions);
 
   return generator.generateDocument({
-    openapi: '3.0.3',
+    openapi: "3.0.3",
     info: {
-      title: 'Boardsesh REST API',
-      version: '1.0.0',
+      title: "Boardsesh REST API",
+      version: "1.0.0",
       description: `
 # Boardsesh API Documentation
 
@@ -78,50 +78,50 @@ Board-specific endpoints follow this pattern:
 Layout, size, and set IDs can be either numeric IDs or human-readable slugs.
       `.trim(),
       contact: {
-        name: 'Boardsesh',
-        url: 'https://github.com/marcodejongh/boardsesh',
+        name: "Boardsesh",
+        url: "https://github.com/marcodejongh/boardsesh",
       },
       license: {
-        name: 'MIT',
-        url: 'https://opensource.org/licenses/MIT',
+        name: "MIT",
+        url: "https://opensource.org/licenses/MIT",
       },
     },
     servers: [
       {
         url: process.env.VERCEL_URL
           ? `https://${process.env.VERCEL_URL}`
-          : process.env.NEXTAUTH_URL || 'http://localhost:3000',
-        description: 'Current server',
+          : process.env.NEXTAUTH_URL || "http://localhost:3000",
+        description: "Current server",
       },
     ],
     tags: [
       {
-        name: 'Board Configuration',
-        description: 'Endpoints for retrieving board configuration like grades and angles',
+        name: "Board Configuration",
+        description: "Endpoints for retrieving board configuration like grades and angles",
       },
       {
-        name: 'Climbs',
-        description: 'Endpoints for searching and retrieving climb data',
+        name: "Climbs",
+        description: "Endpoints for searching and retrieving climb data",
       },
       {
-        name: 'Slug Resolution',
-        description: 'Convert human-readable slugs to numeric IDs',
+        name: "Slug Resolution",
+        description: "Convert human-readable slugs to numeric IDs",
       },
       {
-        name: 'Authentication',
-        description: 'User registration and authentication',
+        name: "Authentication",
+        description: "User registration and authentication",
       },
       {
-        name: 'Aurora Proxy',
-        description: 'Proxy endpoints for Aurora Climbing platform integration',
+        name: "Aurora Proxy",
+        description: "Proxy endpoints for Aurora Climbing platform integration",
       },
       {
-        name: 'User Profile',
-        description: 'User profile management (requires authentication)',
+        name: "User Profile",
+        description: "User profile management (requires authentication)",
       },
       {
-        name: 'WebSocket',
-        description: 'WebSocket authentication and configuration',
+        name: "WebSocket",
+        description: "WebSocket authentication and configuration",
       },
     ],
   });

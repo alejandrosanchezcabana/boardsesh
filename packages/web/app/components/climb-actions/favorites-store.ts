@@ -36,7 +36,8 @@ class FavoritesStore {
   setFavorites(next: Set<string>): void {
     // React Query creates new Set instances on each fetch, so reference equality
     // almost never fires. Compare contents instead to avoid spurious notifications.
-    if (next.size === this.favorites.size && [...next].every((id) => this.favorites.has(id))) return;
+    if (next.size === this.favorites.size && [...next].every((id) => this.favorites.has(id)))
+      return;
     this.favorites = next;
     this.notify();
   }

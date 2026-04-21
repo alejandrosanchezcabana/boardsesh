@@ -1,26 +1,30 @@
-'use client';
+"use client";
 
-import React, { useState, useEffect, useMemo, useCallback } from 'react';
-import { useRouter } from 'next/navigation';
-import MuiCard from '@mui/material/Card';
-import CardActionArea from '@mui/material/CardActionArea';
-import CardContent from '@mui/material/CardContent';
-import MuiAvatar from '@mui/material/Avatar';
-import Typography from '@mui/material/Typography';
-import Chip from '@mui/material/Chip';
-import Skeleton from '@mui/material/Skeleton';
-import Box from '@mui/material/Box';
-import { PersonOutlined, ArrowForwardIos } from '@mui/icons-material';
-import { createGraphQLHttpClient } from '@/app/lib/graphql/client';
+import React, { useState, useEffect, useMemo, useCallback } from "react";
+import { useRouter } from "next/navigation";
+import MuiCard from "@mui/material/Card";
+import CardActionArea from "@mui/material/CardActionArea";
+import CardContent from "@mui/material/CardContent";
+import MuiAvatar from "@mui/material/Avatar";
+import Typography from "@mui/material/Typography";
+import Chip from "@mui/material/Chip";
+import Skeleton from "@mui/material/Skeleton";
+import Box from "@mui/material/Box";
+import { PersonOutlined, ArrowForwardIos } from "@mui/icons-material";
+import { createGraphQLHttpClient } from "@/app/lib/graphql/client";
 import {
   GET_USER_PROFILE_STATS,
   type GetUserProfileStatsQueryVariables,
   type GetUserProfileStatsQueryResponse,
-} from '@/app/lib/graphql/operations';
-import { getDifficultyMapping, sortGrades } from '@/app/profile/[user_id]/utils/profile-constants';
-import { V_GRADE_COLORS, FONT_GRADE_COLORS, getGradeColorWithOpacity } from '@/app/lib/grade-colors';
-import { useGradeFormat } from '@/app/hooks/use-grade-format';
-import styles from './user-smart-card.module.css';
+} from "@/app/lib/graphql/operations";
+import { getDifficultyMapping, sortGrades } from "@/app/profile/[user_id]/utils/profile-constants";
+import {
+  V_GRADE_COLORS,
+  FONT_GRADE_COLORS,
+  getGradeColorWithOpacity,
+} from "@/app/lib/grade-colors";
+import { useGradeFormat } from "@/app/hooks/use-grade-format";
+import styles from "./user-smart-card.module.css";
 
 interface UserSmartCardProps {
   userId: string;
@@ -49,14 +53,16 @@ interface GradeBar {
   color: string;
 }
 
-const CHIP_SX = { height: 20, fontSize: '0.7rem' } as const;
+const CHIP_SX = { height: 20, fontSize: "0.7rem" } as const;
 
 export default function UserSmartCard({ userId, refreshKey = 0 }: UserSmartCardProps) {
   const router = useRouter();
   const { gradeFormat, loaded: gradeFormatLoaded } = useGradeFormat();
   const [profile, setProfile] = useState<ProfileData | null>(null);
   const [totalClimbs, setTotalClimbs] = useState(0);
-  const [rawStats, setRawStats] = useState<GetUserProfileStatsQueryResponse['userProfileStats'] | null>(null);
+  const [rawStats, setRawStats] = useState<
+    GetUserProfileStatsQueryResponse["userProfileStats"] | null
+  >(null);
   const [loading, setLoading] = useState(true);
 
   const fetchData = useCallback(async () => {
@@ -67,10 +73,10 @@ export default function UserSmartCard({ userId, refreshKey = 0 }: UserSmartCardP
         (async () => {
           try {
             const client = createGraphQLHttpClient(null);
-            const res = await client.request<GetUserProfileStatsQueryResponse, GetUserProfileStatsQueryVariables>(
-              GET_USER_PROFILE_STATS,
-              { userId },
-            );
+            const res = await client.request<
+              GetUserProfileStatsQueryResponse,
+              GetUserProfileStatsQueryVariables
+            >(GET_USER_PROFILE_STATS, { userId });
             return res.userProfileStats;
           } catch {
             return null;
@@ -114,14 +120,17 @@ export default function UserSmartCard({ userId, refreshKey = 0 }: UserSmartCardP
     return sortedGradeKeys.map((grade) => {
       const count = gradeAgg[grade];
       const hex = V_GRADE_COLORS[grade] ?? FONT_GRADE_COLORS[grade.toLowerCase()];
-      const color = hex ? getGradeColorWithOpacity(hex, 0.4) : 'rgba(200, 200, 200, 0.4)';
+      const color = hex ? getGradeColorWithOpacity(hex, 0.4) : "rgba(200, 200, 200, 0.4)";
       return { grade, count, color };
     });
   }, [rawStats, gradeFormat]);
 
-  const maxCount = useMemo(() => Math.max(...gradeBars.map((b: GradeBar) => b.count), 1), [gradeBars]);
+  const maxCount = useMemo(
+    () => Math.max(...gradeBars.map((b: GradeBar) => b.count), 1),
+    [gradeBars],
+  );
 
-  const displayName = profile?.profile?.displayName || profile?.name || 'Climber';
+  const displayName = profile?.profile?.displayName || profile?.name || "Climber";
   const avatarUrl = profile?.profile?.avatarUrl || profile?.image;
 
   if (loading) {
@@ -133,7 +142,12 @@ export default function UserSmartCard({ userId, refreshKey = 0 }: UserSmartCardP
             <div className={styles.skeletonInfo}>
               <Skeleton variant="text" width="60%" height={24} />
               <Skeleton variant="text" width="40%" height={16} />
-              <Skeleton variant="rectangular" width="100%" height={32} sx={{ borderRadius: 0.5, mt: 1 }} />
+              <Skeleton
+                variant="rectangular"
+                width="100%"
+                height={32}
+                sx={{ borderRadius: 0.5, mt: 1 }}
+              />
             </div>
           </div>
         </CardContent>
@@ -160,22 +174,24 @@ export default function UserSmartCard({ userId, refreshKey = 0 }: UserSmartCardP
               </div>
 
               <Typography variant="caption" component="span" color="text.secondary">
-                {profile.followerCount} follower{profile.followerCount !== 1 ? 's' : ''}
-                {' · '}
+                {profile.followerCount} follower{profile.followerCount !== 1 ? "s" : ""}
+                {" · "}
                 {profile.followingCount} following
               </Typography>
 
               {profile.credentials && profile.credentials.length > 0 && (
                 <div className={styles.chips}>
-                  {profile.credentials.map((cred: { boardType: string; auroraUsername: string }) => (
-                    <Chip
-                      key={cred.boardType}
-                      label={cred.boardType.charAt(0).toUpperCase() + cred.boardType.slice(1)}
-                      size="small"
-                      variant="outlined"
-                      sx={CHIP_SX}
-                    />
-                  ))}
+                  {profile.credentials.map(
+                    (cred: { boardType: string; auroraUsername: string }) => (
+                      <Chip
+                        key={cred.boardType}
+                        label={cred.boardType.charAt(0).toUpperCase() + cred.boardType.slice(1)}
+                        size="small"
+                        variant="outlined"
+                        sx={CHIP_SX}
+                      />
+                    ),
+                  )}
                 </div>
               )}
             </div>
@@ -185,8 +201,13 @@ export default function UserSmartCard({ userId, refreshKey = 0 }: UserSmartCardP
 
           {gradeBars.length > 0 && (
             <div className={styles.chartSection}>
-              <Typography variant="caption" component="span" color="text.secondary" className={styles.chartLabel}>
-                {totalClimbs} distinct climb{totalClimbs !== 1 ? 's' : ''}
+              <Typography
+                variant="caption"
+                component="span"
+                color="text.secondary"
+                className={styles.chartLabel}
+              >
+                {totalClimbs} distinct climb{totalClimbs !== 1 ? "s" : ""}
               </Typography>
 
               <div className={styles.gradeBarContainer}>
@@ -205,7 +226,15 @@ export default function UserSmartCard({ userId, refreshKey = 0 }: UserSmartCardP
               <div className={styles.gradeLegend}>
                 {gradeBars.map((bar: GradeBar) => (
                   <span key={bar.grade} className={styles.gradeLegendLabel}>
-                    {gradeFormatLoaded ? bar.grade : <Skeleton variant="text" width={20} sx={{ display: 'inline-block', fontSize: 'inherit' }} />}
+                    {gradeFormatLoaded ? (
+                      bar.grade
+                    ) : (
+                      <Skeleton
+                        variant="text"
+                        width={20}
+                        sx={{ display: "inline-block", fontSize: "inherit" }}
+                      />
+                    )}
                   </span>
                 ))}
               </div>

@@ -1,10 +1,10 @@
-import React from 'react';
-import { Metadata } from 'next';
-import { getServerAuthToken } from '@/app/lib/auth/server-auth';
-import { serverMyBoards } from '@/app/lib/graphql/server-cached-client';
-import { generatePlaylistMetadata } from '@/app/lib/seo/playlist-metadata';
-import PlaylistDetailContent from './playlist-detail-content';
-import styles from '@/app/components/library/playlist-view.module.css';
+import React from "react";
+import { Metadata } from "next";
+import { getServerAuthToken } from "@/app/lib/auth/server-auth";
+import { serverMyBoards } from "@/app/lib/graphql/server-cached-client";
+import { generatePlaylistMetadata } from "@/app/lib/seo/playlist-metadata";
+import PlaylistDetailContent from "./playlist-detail-content";
+import styles from "@/app/components/library/playlist-view.module.css";
 
 export async function generateMetadata({
   params,

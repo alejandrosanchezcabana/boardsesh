@@ -1,11 +1,11 @@
-import type { SocialEvent } from '@boardsesh/shared-schema';
-import type { SocialEntityType } from '@boardsesh/db/schema';
-import { db } from '../db/client';
-import * as dbSchema from '@boardsesh/db/schema';
-import { eq } from 'drizzle-orm';
-import { buildFeedItemMetadata } from './feed-metadata';
+import type { SocialEvent } from "@boardsesh/shared-schema";
+import type { SocialEntityType } from "@boardsesh/db/schema";
+import { db } from "../db/client";
+import * as dbSchema from "@boardsesh/db/schema";
+import { eq } from "drizzle-orm";
+import { buildFeedItemMetadata } from "./feed-metadata";
 
-export { buildFeedItemMetadata } from './feed-metadata';
+export { buildFeedItemMetadata } from "./feed-metadata";
 
 const FANOUT_BATCH_SIZE = 1000;
 
@@ -26,8 +26,8 @@ export async function fanoutFeedItems(event: SocialEvent): Promise<void> {
   const allRows = followers.map((f) => ({
     recipientId: f.followerId,
     actorId: event.actorId,
-    type: 'ascent' as const,
-    entityType: 'tick' as SocialEntityType,
+    type: "ascent" as const,
+    entityType: "tick" as SocialEntityType,
     entityId: event.entityId,
     // boardUuid is intentionally null when a climb isn't associated with a user board.
     // Board-scoped feed filtering simply won't match these items — they still appear
@@ -44,8 +44,8 @@ export async function fanoutFeedItems(event: SocialEvent): Promise<void> {
 }
 
 /**
-   * Fan out new climb feed items to followers of the setter.
-   */
+ * Fan out new climb feed items to followers of the setter.
+ */
 export async function fanoutNewClimbFeedItems(event: SocialEvent): Promise<void> {
   const followers = await db
     .select({ followerId: dbSchema.userFollows.followerId })
@@ -59,8 +59,8 @@ export async function fanoutNewClimbFeedItems(event: SocialEvent): Promise<void>
   const rows = followers.map((f) => ({
     recipientId: f.followerId,
     actorId: event.actorId,
-    type: 'new_climb' as const,
-    entityType: 'climb' as SocialEntityType,
+    type: "new_climb" as const,
+    entityType: "climb" as SocialEntityType,
     entityId: event.entityId,
     boardUuid: null,
     metadata,

@@ -26,7 +26,7 @@ export type QueueNavigationContext = {
 
 // LED update event sent to controller
 export type LedUpdate = {
-  __typename: 'LedUpdate';
+  __typename: "LedUpdate";
   commands: LedCommand[];
   queueItemUuid?: string;
   climbUuid?: string;
@@ -43,7 +43,7 @@ export type LedUpdate = {
 
 // Ping event to keep controller connection alive
 export type ControllerPing = {
-  __typename: 'ControllerPing';
+  __typename: "ControllerPing";
   timestamp: string;
 };
 
@@ -58,7 +58,7 @@ export type ControllerQueueItem = {
 
 // Queue sync event sent to controller
 export type ControllerQueueSync = {
-  __typename: 'ControllerQueueSync';
+  __typename: "ControllerQueueSync";
   queue: ControllerQueueItem[];
   currentIndex: number;
 };

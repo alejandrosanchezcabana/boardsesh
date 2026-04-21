@@ -1,19 +1,19 @@
-'use client';
+"use client";
 
-import React, { useState, useCallback } from 'react';
-import Box from '@mui/material/Box';
-import type { GetUserProfileStatsQueryResponse } from '@/app/lib/graphql/operations/ticks';
-import StatsSummary from '../components/stats-summary';
-import BoardStatsSection from '../components/board-stats-section';
-import { useProfileData } from '../hooks/use-profile-data';
-import type { LogbookEntry } from '../utils/profile-constants';
-import { StatsFilterBridgeInjector } from '@/app/components/stats-filter-bridge/stats-filter-bridge-context';
-import StatsFilterDrawer from '@/app/components/stats-filter-drawer/stats-filter-drawer';
-import styles from '../profile-page.module.css';
+import React, { useState, useCallback } from "react";
+import Box from "@mui/material/Box";
+import type { GetUserProfileStatsQueryResponse } from "@/app/lib/graphql/operations/ticks";
+import StatsSummary from "../components/stats-summary";
+import BoardStatsSection from "../components/board-stats-section";
+import { useProfileData } from "../hooks/use-profile-data";
+import type { LogbookEntry } from "../utils/profile-constants";
+import { StatsFilterBridgeInjector } from "@/app/components/stats-filter-bridge/stats-filter-bridge-context";
+import StatsFilterDrawer from "@/app/components/stats-filter-drawer/stats-filter-drawer";
+import styles from "../profile-page.module.css";
 
 interface AnalyticsContentProps {
   userId: string;
-  initialProfileStats?: GetUserProfileStatsQueryResponse['userProfileStats'] | null;
+  initialProfileStats?: GetUserProfileStatsQueryResponse["userProfileStats"] | null;
   initialAllBoardsTicks?: Record<string, LogbookEntry[]>;
   initialLogbook?: LogbookEntry[];
   initialIsOwnProfile?: boolean;
@@ -70,7 +70,7 @@ export default function AnalyticsContent({
     if (!open) setDrawerRendered(false);
   }, []);
 
-  const hasActiveFilters = unifiedTimeframe !== 'all' || selectedBoard !== 'all';
+  const hasActiveFilters = unifiedTimeframe !== "all" || selectedBoard !== "all";
 
   return (
     <Box className={styles.layout}>

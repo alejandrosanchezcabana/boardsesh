@@ -1,10 +1,10 @@
-import { NextResponse } from 'next/server';
-import { getDb } from '@/app/lib/db/db';
-import { boardseshTicks } from '@/app/lib/db/schema';
-import { and, isNull } from 'drizzle-orm';
-import { buildInferredSessionsForUser } from '@/app/lib/data-sync/aurora/inferred-session-builder';
+import { NextResponse } from "next/server";
+import { getDb } from "@/app/lib/db/db";
+import { boardseshTicks } from "@/app/lib/db/schema";
+import { and, isNull } from "drizzle-orm";
+import { buildInferredSessionsForUser } from "@/app/lib/data-sync/aurora/inferred-session-builder";
 
-export const dynamic = 'force-dynamic';
+export const dynamic = "force-dynamic";
 export const maxDuration = 300;
 
 const CRON_SECRET = process.env.CRON_SECRET;
@@ -16,9 +16,9 @@ const DEADLINE_MS = (maxDuration - 30) * 1000;
 const MAX_USERS_PER_RUN = 50;
 
 export async function GET(request: Request) {
-  const authHeader = request.headers.get('authorization');
+  const authHeader = request.headers.get("authorization");
   if (!CRON_SECRET || authHeader !== `Bearer ${CRON_SECRET}`) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
   try {
@@ -29,12 +29,7 @@ export async function GET(request: Request) {
     const usersWithUnassigned = await db
       .selectDistinct({ userId: boardseshTicks.userId })
       .from(boardseshTicks)
-      .where(
-        and(
-          isNull(boardseshTicks.sessionId),
-          isNull(boardseshTicks.inferredSessionId),
-        ),
-      )
+      .where(and(isNull(boardseshTicks.sessionId), isNull(boardseshTicks.inferredSessionId)))
       .orderBy(boardseshTicks.userId)
       .limit(MAX_USERS_PER_RUN);
 
@@ -81,10 +76,7 @@ export async function GET(request: Request) {
       errors: errors.length > 0 ? errors : undefined,
     });
   } catch (error) {
-    console.error('[Inferred sessions backfill] Error:', error);
-    return NextResponse.json(
-      { error: 'Backfill failed' },
-      { status: 500 },
-    );
+    console.error("[Inferred sessions backfill] Error:", error);
+    return NextResponse.json({ error: "Backfill failed" }, { status: 500 });
   }
 }

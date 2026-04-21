@@ -1,15 +1,15 @@
 {
-    "name": "moonboard-uart-ble",
-    "version": "1.0.0",
-    "description": "MoonBoard UART BLE service (test build)",
-    "platforms": ["native", "espressif32"],
-    "dependencies": {
-        "mocks": "*",
-        "moonboard-protocol": "*",
-        "led-controller": "*",
-        "log-buffer": "*"
-    },
-    "build": {
-        "flags": ["-std=c++17", "-DUNIT_TEST"]
-    }
+  "name": "moonboard-uart-ble",
+  "version": "1.0.0",
+  "description": "MoonBoard UART BLE service (test build)",
+  "platforms": ["native", "espressif32"],
+  "dependencies": {
+    "mocks": "*",
+    "moonboard-protocol": "*",
+    "led-controller": "*",
+    "log-buffer": "*"
+  },
+  "build": {
+    "flags": ["-std=c++17", "-DUNIT_TEST"]
+  }
 }

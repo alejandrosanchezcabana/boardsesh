@@ -72,19 +72,19 @@ The app operates in **hosted mode**: the Capacitor WebView loads the production 
 
 ## Why Capacitor Over React Native
 
-| Factor | Capacitor | React Native |
-|--------|-----------|--------------|
-| UI rewrite needed | **None** — existing web app runs as-is | Full rewrite of every screen/component |
-| Time to MVP | **2-4 weeks** | 4-6 months |
-| Code reuse | **~95%** — same codebase | ~30% (shared-logic, types, schemas) |
-| MUI components | **Keep all** | Replace with Tamagui/NativeBase |
-| SSR / API routes | **Work normally** (hosted mode) | Need separate API client layer |
-| Update speed | **Instant** via web deploy | App store review (1-7 days) |
-| BLE support | Via `@capacitor-community/bluetooth-le` | Via `react-native-ble-plx` |
-| Native feel | Good with proper meta tags/CSS | Excellent |
-| App store presence | Yes | Yes |
-| Bundle size | Small shell (~5MB) + web loads remotely | Larger (~30-50MB) |
-| Maintenance burden | **Low** — one codebase | High — two codebases diverge over time |
+| Factor             | Capacitor                               | React Native                           |
+| ------------------ | --------------------------------------- | -------------------------------------- |
+| UI rewrite needed  | **None** — existing web app runs as-is  | Full rewrite of every screen/component |
+| Time to MVP        | **2-4 weeks**                           | 4-6 months                             |
+| Code reuse         | **~95%** — same codebase                | ~30% (shared-logic, types, schemas)    |
+| MUI components     | **Keep all**                            | Replace with Tamagui/NativeBase        |
+| SSR / API routes   | **Work normally** (hosted mode)         | Need separate API client layer         |
+| Update speed       | **Instant** via web deploy              | App store review (1-7 days)            |
+| BLE support        | Via `@capacitor-community/bluetooth-le` | Via `react-native-ble-plx`             |
+| Native feel        | Good with proper meta tags/CSS          | Excellent                              |
+| App store presence | Yes                                     | Yes                                    |
+| Bundle size        | Small shell (~5MB) + web loads remotely | Larger (~30-50MB)                      |
+| Maintenance burden | **Low** — one codebase                  | High — two codebases diverge over time |
 
 **Bottom line:** The web app already works well on mobile browsers. The primary reason for native apps is BLE on iOS (Safari doesn't support Web Bluetooth) and app store discoverability. Capacitor delivers both without rewriting the app.
 
@@ -146,35 +146,35 @@ Embedding a local copy of the climb database solves three critical problems simu
 
 **Read-only reference data** (bundled as SQLite per board):
 
-| Table | Est. Rows (per board) | Purpose |
-|-------|----------------------|---------|
-| `board_climbs` | 30,000-50,000 | Climb name, description, frames, setter, edges |
-| `board_climb_stats` | 30,000-50,000 | Difficulty, ascensionist count, quality rating (per angle) |
-| `board_difficulty_grades` | ~30 | Grade name translations (V0, V1, etc.) |
-| `board_holes` | ~2,000 | Hold position grid (x, y coords for rendering) |
-| `board_layouts` | ~80 | Layout definitions |
-| `board_product_sizes` | ~150 | Size/edge data (for edge filtering) |
-| `board_products` | ~5 | Product metadata |
-| `board_sets` | ~50 | Set definitions |
-| `board_product_sizes_layouts_sets` | ~500 | Configuration junction table |
+| Table                              | Est. Rows (per board) | Purpose                                                    |
+| ---------------------------------- | --------------------- | ---------------------------------------------------------- |
+| `board_climbs`                     | 30,000-50,000         | Climb name, description, frames, setter, edges             |
+| `board_climb_stats`                | 30,000-50,000         | Difficulty, ascensionist count, quality rating (per angle) |
+| `board_difficulty_grades`          | ~30                   | Grade name translations (V0, V1, etc.)                     |
+| `board_holes`                      | ~2,000                | Hold position grid (x, y coords for rendering)             |
+| `board_layouts`                    | ~80                   | Layout definitions                                         |
+| `board_product_sizes`              | ~150                  | Size/edge data (for edge filtering)                        |
+| `board_products`                   | ~5                    | Product metadata                                           |
+| `board_sets`                       | ~50                   | Set definitions                                            |
+| `board_product_sizes_layouts_sets` | ~500                  | Configuration junction table                               |
 
 **NOT embedded** (stays server-side):
 
-| Data | Reason |
-|------|--------|
-| User accounts & auth | NextAuth server-side sessions |
-| User ticks / logbook | Synced via GraphQL, user-specific |
-| Queue state | Real-time sync via WebSocket |
-| Comments, follows, social | Server-side features |
-| Aurora API sync state | Server-side sync tracking |
+| Data                      | Reason                            |
+| ------------------------- | --------------------------------- |
+| User accounts & auth      | NextAuth server-side sessions     |
+| User ticks / logbook      | Synced via GraphQL, user-specific |
+| Queue state               | Real-time sync via WebSocket      |
+| Comments, follows, social | Server-side features              |
+| Aurora API sync state     | Server-side sync tracking         |
 
 ### Database Size Estimates
 
-| Board | Uncompressed | Compressed (ZIP/SQLite) |
-|-------|-------------|------------------------|
-| Kilter | ~400-500 MB | ~120-150 MB |
-| Tension | ~300-400 MB | ~90-120 MB |
-| MoonBoard | ~100-150 MB | ~30-50 MB |
+| Board     | Uncompressed | Compressed (ZIP/SQLite) |
+| --------- | ------------ | ----------------------- |
+| Kilter    | ~400-500 MB  | ~120-150 MB             |
+| Tension   | ~300-400 MB  | ~90-120 MB              |
+| MoonBoard | ~100-150 MB  | ~30-50 MB               |
 
 The `frames` column (hold positions as text like `p1234r12p5678r13`) dominates the size and compresses well.
 
@@ -214,7 +214,8 @@ export async function searchClimbsLocal(
   const db = await getLocalDatabase(params.board_name);
 
   // The search query is equivalent to the PostgreSQL version but in SQLite SQL
-  const results = await db.query(`
+  const results = await db.query(
+    `
     SELECT c.uuid, c.name, c.description, c.frames, c.setter_username,
            cs.ascensionist_count, cs.quality_average, cs.display_difficulty,
            dg.boulder_name as difficulty
@@ -229,11 +230,21 @@ export async function searchClimbsLocal(
       AND c.edge_bottom > ? AND c.edge_top < ?
     ORDER BY cs.ascensionist_count DESC
     LIMIT ? OFFSET ?
-  `, [params.board_name, params.angle, params.board_name,
-      params.board_name, params.layout_id,
-      sizeEdges.edgeLeft, sizeEdges.edgeRight,
-      sizeEdges.edgeBottom, sizeEdges.edgeTop,
-      pageSize + 1, page * pageSize]);
+  `,
+    [
+      params.board_name,
+      params.angle,
+      params.board_name,
+      params.board_name,
+      params.layout_id,
+      sizeEdges.edgeLeft,
+      sizeEdges.edgeRight,
+      sizeEdges.edgeBottom,
+      sizeEdges.edgeTop,
+      pageSize + 1,
+      page * pageSize,
+    ],
+  );
 
   // Transform to Climb[] (same shape as server response)
   return transformResults(results);
@@ -241,6 +252,7 @@ export async function searchClimbsLocal(
 ```
 
 **Key differences from server query:**
+
 - No `boardsesh_ticks` subqueries (user progress filters only work online)
 - No `ILIKE` (SQLite uses `LIKE` which is case-insensitive by default for ASCII)
 - `ROUND()` works the same in SQLite
@@ -266,13 +278,13 @@ async function syncClimbDatabase(boardName: BoardName) {
   const db = await getLocalDatabase(boardName);
   await db.transaction(async (tx) => {
     for (const climb of climbs) {
-      await tx.run('INSERT OR REPLACE INTO board_climbs ...', climb);
+      await tx.run("INSERT OR REPLACE INTO board_climbs ...", climb);
     }
     for (const stat of stats) {
-      await tx.run('INSERT OR REPLACE INTO board_climb_stats ...', stat);
+      await tx.run("INSERT OR REPLACE INTO board_climb_stats ...", stat);
     }
     for (const uuid of deletedUuids) {
-      await tx.run('DELETE FROM board_climbs WHERE uuid = ?', [uuid]);
+      await tx.run("DELETE FROM board_climbs WHERE uuid = ?", [uuid]);
     }
   });
 
@@ -372,6 +384,7 @@ This feature adds a new **Milestone 1.5: Embedded Climb Database** between BLE I
 **Milestone 1.5: Embedded Climb Database (2 weeks)**
 
 Tasks:
+
 - [ ] Set up `@capacitor-community/sqlite` plugin
 - [ ] Create PostgreSQL → SQLite export script with proper schema translation
 - [ ] Generate SQLite databases for each board (Kilter, Tension, MoonBoard)
@@ -385,6 +398,7 @@ Tasks:
 - [ ] Test offline flow: airplane mode → search → build queue → connect BLE → send climb
 
 Exit criteria:
+
 - Users can search and browse climbs offline after initial board download
 - Climb search is at least as fast as the server-side search
 - Delta sync keeps local database current when online
@@ -394,16 +408,16 @@ Exit criteria:
 
 With the embedded database, the offline story becomes much stronger:
 
-| Feature | Online | Offline |
-|---------|--------|---------|
-| Climb search | Local SQLite (fast) | Local SQLite (same) |
-| Climb details | Local + server enrichment | Local only (no user stats) |
-| Queue management | Synced via GraphQL WS | Local queue in IndexedDB |
-| BLE board control | Works | Works |
-| User progress (ticks) | Available | Hidden (requires server) |
-| Social (comments, follows) | Available | Hidden |
-| Party mode | Available | Unavailable |
-| Auth | NextAuth cookies | Cached session (if persisted) |
+| Feature                    | Online                    | Offline                       |
+| -------------------------- | ------------------------- | ----------------------------- |
+| Climb search               | Local SQLite (fast)       | Local SQLite (same)           |
+| Climb details              | Local + server enrichment | Local only (no user stats)    |
+| Queue management           | Synced via GraphQL WS     | Local queue in IndexedDB      |
+| BLE board control          | Works                     | Works                         |
+| User progress (ticks)      | Available                 | Hidden (requires server)      |
+| Social (comments, follows) | Available                 | Hidden                        |
+| Party mode                 | Available                 | Unavailable                   |
+| Auth                       | NextAuth cookies          | Cached session (if persisted) |
 
 ---
 
@@ -441,43 +455,43 @@ boardsesh/
 ### capacitor.config.ts
 
 ```typescript
-import type { CapacitorConfig } from '@capacitor/cli';
+import type { CapacitorConfig } from "@capacitor/cli";
 
 const config: CapacitorConfig = {
-  appId: 'com.boardsesh.app',
-  appName: 'Boardsesh',
+  appId: "com.boardsesh.app",
+  appName: "Boardsesh",
   // Hosted mode: load from production URL
   server: {
-    url: 'https://boardsesh.com',
+    url: "https://boardsesh.com",
     // Allow navigation within the app's domain
-    allowNavigation: ['boardsesh.com', '*.boardsesh.com'],
+    allowNavigation: ["boardsesh.com", "*.boardsesh.com"],
   },
   ios: {
     // Use WKWebView (default, supports modern JS)
-    contentInset: 'automatic',
-    backgroundColor: '#121212', // Match dark theme
-    preferredContentMode: 'mobile',
+    contentInset: "automatic",
+    backgroundColor: "#121212", // Match dark theme
+    preferredContentMode: "mobile",
   },
   android: {
     // Allow mixed content for dev
     allowMixedContent: true,
-    backgroundColor: '#121212',
+    backgroundColor: "#121212",
   },
   plugins: {
     StatusBar: {
-      style: 'dark',
-      backgroundColor: '#121212',
+      style: "dark",
+      backgroundColor: "#121212",
     },
     Keyboard: {
-      resize: 'body',
+      resize: "body",
       resizeOnFullScreen: true,
     },
     SplashScreen: {
       launchAutoHide: true,
-      androidScaleType: 'CENTER_CROP',
+      androidScaleType: "CENTER_CROP",
       splashFullScreen: true,
       splashImmersive: true,
-      backgroundColor: '#121212',
+      backgroundColor: "#121212",
     },
   },
 };
@@ -511,9 +525,9 @@ The BLE abstraction layer in `packages/web/app/lib/ble/` should:
 // packages/web/app/lib/ble/capacitor-adapter.ts
 // Access the plugin via the injected bridge, not via npm import
 async function getBleClient() {
-  if (!isCapacitor()) throw new Error('Not in Capacitor');
+  if (!isCapacitor()) throw new Error("Not in Capacitor");
   // The plugin JS is injected by the native shell
-  const { BleClient } = await import('@capacitor-community/bluetooth-le');
+  const { BleClient } = await import("@capacitor-community/bluetooth-le");
   return BleClient;
 }
 ```
@@ -545,14 +559,12 @@ The web app needs minimal changes to work well inside the Capacitor shell. All c
 ```typescript
 // packages/web/app/lib/capacitor.ts
 export const isCapacitor = (): boolean =>
-  typeof window !== 'undefined' &&
-  window.Capacitor !== undefined;
+  typeof window !== "undefined" && window.Capacitor !== undefined;
 
-export const isNativeApp = (): boolean =>
-  isCapacitor() && window.Capacitor?.isNativePlatform();
+export const isNativeApp = (): boolean => isCapacitor() && window.Capacitor?.isNativePlatform();
 
-export const getPlatform = (): 'ios' | 'android' | 'web' =>
-  isCapacitor() ? window.Capacitor?.getPlatform() as 'ios' | 'android' : 'web';
+export const getPlatform = (): "ios" | "android" | "web" =>
+  isCapacitor() ? (window.Capacitor?.getPlatform() as "ios" | "android") : "web";
 ```
 
 ### 2. BLE Abstraction Layer
@@ -604,10 +616,10 @@ The app layout's top app bar and bottom navigation need to respect these insets.
 Configure Capacitor's App plugin to handle deep links:
 
 ```typescript
-import { App } from '@capacitor/app';
+import { App } from "@capacitor/app";
 
 // Listen for deep links (boardsesh://climb/xxx, universal links)
-App.addListener('appUrlOpen', ({ url }) => {
+App.addListener("appUrlOpen", ({ url }) => {
   const path = new URL(url).pathname;
   router.push(path);
 });
@@ -616,6 +628,7 @@ App.addListener('appUrlOpen', ({ url }) => {
 ### 6. Hide Web-Only Elements
 
 Some elements should be hidden in the native app:
+
 - Browser install prompts / PWA banners
 - "Use Bluefy for iOS Bluetooth" messages (native BLE works)
 - Any browser-specific instructions
@@ -633,12 +646,13 @@ Some elements should be hidden in the native app:
 
 ### Cookie Behavior in WebViews
 
-| Platform | Cookie Jar | Persistence | Shared with Browser? |
-|----------|-----------|-------------|---------------------|
-| iOS WKWebView | Separate from Safari | May be cleared on app termination | No |
-| Android WebView | Separate from Chrome | Generally persistent | No |
+| Platform        | Cookie Jar           | Persistence                       | Shared with Browser? |
+| --------------- | -------------------- | --------------------------------- | -------------------- |
+| iOS WKWebView   | Separate from Safari | May be cleared on app termination | No                   |
+| Android WebView | Separate from Chrome | Generally persistent              | No                   |
 
 **Key implications:**
+
 - Users logged in via Safari/Chrome will **not** be logged in when they open the Capacitor app — they must log in again
 - WKWebView on iOS can lose cookies when the OS terminates the app process (memory pressure, user force-quit)
 - The `__Secure-` cookie prefix requires HTTPS, which works for production but complicates local development
@@ -646,6 +660,7 @@ Some elements should be hidden in the native app:
 ### WebSocket Auth Chain
 
 The real-time queue/party features use this auth flow:
+
 1. Web app calls `GET /api/internal/ws-auth` which reads the NextAuth session cookie via `getToken()`
 2. If the cookie is missing or expired, `getToken()` returns `null` → WebSocket connects without auth
 3. Backend receives `null` token → mutations and subscriptions that require auth fail silently
@@ -670,6 +685,7 @@ See [OAuth Setup: Native App Authentication](./oauth-setup.md#native-app-authent
 ### CORS Considerations
 
 The backend CORS handler (`packages/backend/src/handlers/cors.ts`) whitelists specific origins:
+
 - iOS WKWebView loading `https://boardsesh.com` sends `Origin: https://boardsesh.com` — should work
 - Android WebView may send `Origin: null` for certain requests
 - The backend currently allows connections without an origin header (for native app support), which helps but should be combined with auth token validation for defense in depth
@@ -685,6 +701,7 @@ The backend CORS handler (`packages/backend/src/handlers/cors.ts`) whitelists sp
 > **Goal:** Verify the web app loads correctly in Capacitor WebView, native BLE plugin can connect, auth works end-to-end, and the Capacitor bridge injection strategy works in hosted mode.
 
 **Tasks:**
+
 - [ ] Initialize Capacitor project in `packages/mobile/`
 - [ ] Configure `capacitor.config.ts` with hosted URL (use staging/dev URL initially)
 - [ ] Add iOS and Android platforms
@@ -706,6 +723,7 @@ The backend CORS handler (`packages/backend/src/handlers/cors.ts`) whitelists sp
 - [ ] **Bluefy banner:** Verify iOS detection behavior in WebView (confirm `isIOS` is true, `isBluetoothSupported` is false — must fix in Milestone 1)
 
 **Exit Criteria:**
+
 - Web app loads and is fully functional in Capacitor on both platforms
 - Auth works end-to-end: login, session persistence across app restarts, WebSocket auth
 - Bridge injection strategy validated (dynamic import or window.Capacitor.Plugins approach chosen)
@@ -720,6 +738,7 @@ The backend CORS handler (`packages/backend/src/handlers/cors.ts`) whitelists sp
 > **Goal:** Replace Web Bluetooth with native BLE when running inside Capacitor, while maintaining Web Bluetooth for regular browser usage.
 
 **Tasks:**
+
 - [ ] Create BLE abstraction layer (`packages/web/app/lib/ble/`)
   - [ ] Define common interface (`BluetoothAdapter`) — see expanded interface below
   - [ ] Implement `WebBluetoothAdapter` (wraps existing `navigator.bluetooth` code)
@@ -741,6 +760,7 @@ The backend CORS handler (`packages/backend/src/handlers/cors.ts`) whitelists sp
 - [ ] Test on multiple physical devices (at least 2 iOS, 2 Android)
 
 **Exit Criteria:**
+
 - BLE works reliably on iOS and Android via native plugin
 - Web Bluetooth continues to work in Chrome/Bluefy
 - No double-chunking — verified by inspecting BLE traffic on a physical board
@@ -755,6 +775,7 @@ The backend CORS handler (`packages/backend/src/handlers/cors.ts`) whitelists sp
 > **Goal:** Make the app feel native — proper status bar, splash screen, safe areas, deep links, offline handling.
 
 **Tasks:**
+
 - [ ] Configure splash screen (icon, colors matching brand) — dedicated native screen, not just WebView spinner
 - [ ] Configure app icons for all required sizes (iOS + Android)
 - [ ] Implement safe area inset handling in CSS
@@ -773,13 +794,14 @@ The backend CORS handler (`packages/backend/src/handlers/cors.ts`) whitelists sp
 - [ ] Add `@capacitor/app` for back button handling (Android)
 - [ ] Test pull-to-refresh behavior
 - [ ] **Offline handling:**
-  - [x] Install `@capacitor/network` plugin *(superseded: implemented native Android/iOS connectivity monitoring directly in shell code)*
+  - [x] Install `@capacitor/network` plugin _(superseded: implemented native Android/iOS connectivity monitoring directly in shell code)_
   - [ ] Add offline detection screen showing cached queue from IndexedDB
   - [ ] Show "reconnecting..." banner when connectivity is lost mid-session
-  - [ ] Ensure app has *some* functionality without internet (cached queue view, BLE connection to board)
+  - [ ] Ensure app has _some_ functionality without internet (cached queue view, BLE connection to board)
 - [ ] **Native crash reporting:** Add Sentry iOS/Android SDKs for crashes outside the WebView (BLE plugin crashes, WebView crashes)
 
 **Exit Criteria:**
+
 - App looks and feels native (no web artifacts visible)
 - Deep links open correct screens (scoped paths only)
 - Status bar, safe areas, and keyboard behavior are correct
@@ -794,6 +816,7 @@ The backend CORS handler (`packages/backend/src/handlers/cors.ts`) whitelists sp
 > **Goal:** Prepare and submit to both app stores. Moved before push notifications — the app can ship without push for v1.0.
 
 **Tasks:**
+
 - [ ] Create app store listings
   - [ ] App description emphasizing BLE board control (not "web wrapper")
   - [ ] Screenshots (iPhone, iPad, Android phone, Android tablet)
@@ -822,6 +845,7 @@ The backend CORS handler (`packages/backend/src/handlers/cors.ts`) whitelists sp
 - [ ] Submit to app stores
 
 **Exit Criteria:**
+
 - Apps accepted and published on both stores
 - CI/CD pipeline builds and signs apps automatically
 - Beta feedback addressed
@@ -834,6 +858,7 @@ The backend CORS handler (`packages/backend/src/handlers/cors.ts`) whitelists sp
 > **Goal:** Native push notifications for party invites, session events, and social interactions. This is a significant backend + frontend effort and can ship as a v1.1 update.
 
 **Tasks:**
+
 - [ ] Install `@capacitor/push-notifications`
 - [ ] **Backend: device token storage** — new database table for device tokens, user association, platform type
 - [ ] **Backend: push sending service** — Firebase Admin SDK (Android) + APNs (iOS)
@@ -851,6 +876,7 @@ The backend CORS handler (`packages/backend/src/handlers/cors.ts`) whitelists sp
 - [ ] Test both platforms in foreground, background, and killed states
 
 **Exit Criteria:**
+
 - Push notifications arrive on both platforms
 - Tapping notification opens correct screen
 - Foreground notifications show as in-app banners
@@ -931,11 +957,11 @@ export interface BleConnection {
 
 ```typescript
 // packages/web/app/lib/ble/capacitor-adapter.ts
-import { BleClient, numberToUUID } from '@capacitor-community/bluetooth-le';
+import { BleClient, numberToUUID } from "@capacitor-community/bluetooth-le";
 
-const AURORA_SERVICE_UUID = '4488b571-7806-4df6-bcff-a2897e4953ff';
-const UART_SERVICE_UUID = '6e400001-b5a3-f393-e0a9-e50e24dcca9e';
-const UART_WRITE_UUID = '6e400002-b5a3-f393-e0a9-e50e24dcca9e';
+const AURORA_SERVICE_UUID = "4488b571-7806-4df6-bcff-a2897e4953ff";
+const UART_SERVICE_UUID = "6e400001-b5a3-f393-e0a9-e50e24dcca9e";
+const UART_WRITE_UUID = "6e400002-b5a3-f393-e0a9-e50e24dcca9e";
 
 export class CapacitorBleAdapter implements BluetoothAdapter {
   private deviceId: string | null = null;
@@ -988,25 +1014,22 @@ export class CapacitorBleAdapter implements BluetoothAdapter {
   }
 
   async write(data: Uint8Array): Promise<void> {
-    if (!this.deviceId) throw new Error('Not connected');
+    if (!this.deviceId) throw new Error("Not connected");
 
     // Adapter owns chunking — callers pass the full packet from getBluetoothPacket().
     // Chunk size based on negotiated MTU (default 20 bytes).
     const chunkSize = this.mtu;
     for (let i = 0; i < data.length; i += chunkSize) {
       const chunk = data.slice(i, i + chunkSize);
-      await BleClient.write(
-        this.deviceId,
-        UART_SERVICE_UUID,
-        UART_WRITE_UUID,
-        chunk,
-      );
+      await BleClient.write(this.deviceId, UART_SERVICE_UUID, UART_WRITE_UUID, chunk);
     }
   }
 
   onDisconnect(callback: () => void): () => void {
     this.disconnectCallback = callback;
-    return () => { this.disconnectCallback = null; };
+    return () => {
+      this.disconnectCallback = null;
+    };
   }
 }
 ```
@@ -1030,13 +1053,14 @@ For day-to-day development, the Capacitor app points at the local dev server ins
 const config: CapacitorConfig = {
   ...baseConfig,
   server: {
-    url: 'http://LOCAL_IP:3000', // Use machine's LAN IP, not localhost
+    url: "http://LOCAL_IP:3000", // Use machine's LAN IP, not localhost
     cleartext: true, // Allow HTTP for local dev
   },
 };
 ```
 
 Run with live reload:
+
 ```bash
 # Start web dev server
 npm run dev
@@ -1052,6 +1076,7 @@ npx cap run android --livereload --external
 ### BLE Testing
 
 BLE requires **physical devices** — simulators/emulators do not support Bluetooth:
+
 - **iOS:** Requires an Apple Developer account, provisioning profile, and a physical iPhone/iPad
 - **Android:** Enable USB debugging, connect via ADB
 - Test with at least one Kilter board and one Tension board if possible
@@ -1065,13 +1090,13 @@ BLE requires **physical devices** — simulators/emulators do not support Blueto
 
 ### Device Testing Matrix
 
-| Device | OS Version | Screen | Purpose |
-|--------|-----------|--------|---------|
-| iPhone 13+ | iOS 16+ | Notched | Safe areas, primary iOS testing |
-| iPhone SE | iOS 16+ | Non-notched | Small screen, no safe area top |
-| iPad | iPadOS 16+ | Large | Tablet layout |
-| Pixel 6+ | Android 12+ | Standard | Primary Android testing |
-| Samsung Galaxy | Android 11 | Variable | Older Android, Samsung WebView quirks |
+| Device         | OS Version  | Screen      | Purpose                               |
+| -------------- | ----------- | ----------- | ------------------------------------- |
+| iPhone 13+     | iOS 16+     | Notched     | Safe areas, primary iOS testing       |
+| iPhone SE      | iOS 16+     | Non-notched | Small screen, no safe area top        |
+| iPad           | iPadOS 16+  | Large       | Tablet layout                         |
+| Pixel 6+       | Android 12+ | Standard    | Primary Android testing               |
+| Samsung Galaxy | Android 11  | Variable    | Older Android, Samsung WebView quirks |
 
 ---
 
@@ -1080,11 +1105,13 @@ BLE requires **physical devices** — simulators/emulators do not support Blueto
 ### App Store Review Considerations
 
 **Apple App Store:**
+
 - Apps that are primarily web wrappers may be rejected under guideline 4.2 (Minimum Functionality). Mitigation: The native BLE integration provides genuine native functionality that isn't available in Safari. The app is not a "thin client" — it enables hardware control that is impossible via the browser.
 - BLE usage description must clearly explain why the app needs Bluetooth access.
 - Privacy nutrition labels must accurately describe data collection.
 
 **Google Play Store:**
+
 - WebView apps are generally accepted if they provide value.
 - BLE permissions must be justified in the app listing.
 - Target API level requirements must be met (currently API 34+).
@@ -1092,6 +1119,7 @@ BLE requires **physical devices** — simulators/emulators do not support Blueto
 ### Version Strategy
 
 Since the web app updates independently of the native shell:
+
 - **Native shell version** (e.g., 1.0.0, 1.1.0): Bumped when native plugins, configs, or platform code changes. Requires app store review.
 - **Web app version**: Deploys via Vercel as usual. No app store review needed. Updates are instant for all users.
 
@@ -1105,7 +1133,7 @@ name: Mobile Build
 on:
   push:
     paths:
-      - 'packages/mobile/**'
+      - "packages/mobile/**"
     branches: [main]
 
 jobs:
@@ -1137,27 +1165,27 @@ jobs:
 
 ### Technical Risks
 
-| Risk | Likelihood | Impact | Mitigation |
-|------|------------|--------|------------|
-| Apple rejects as "web wrapper" | **Medium** | High | Strong mitigations: embedded SQLite climb database with offline search, native BLE board control, haptics, On-Demand Resources for per-board data. Reviewers see genuine native functionality even without a board. Include guided review notes with video demo. |
-| WebView cookie/auth persistence issues | **High** | High | Milestone 0 validates auth end-to-end. Fallback: store JWT in `@capacitor/preferences` and restore on launch. |
-| Capacitor bridge injection in hosted mode | **Medium** | High | Milestone 0 validates plugin JS availability. Test both dynamic import and `window.Capacitor.Plugins` approaches. |
-| BLE double-chunking in adapter layer | **Medium** | High | Adapter owns all chunking. Verify with physical board that LED patterns are correct. |
-| Capacitor BLE plugin incompatibility with Aurora protocol | Low | High | Milestone 0 validates end-to-end BLE. Plugin uses CoreBluetooth (iOS) / Android BLE APIs directly. |
-| WebView performance on older devices | Low | Medium | Capacitor uses WKWebView (iOS) and modern Chromium WebView (Android). The web app already runs well in mobile browsers. |
-| Network dependency (hosted mode) | Medium | Medium | Offline detection screen with cached queue. Service worker for API response caching. |
-| Android WebView CORS origin issues | Medium | Medium | Verify in Milestone 0. Backend allows null origin but should validate auth token. |
-| Version mismatch between web and native shell | Medium | Medium | Version handshake on launch; "update your app" prompt for old shells. |
+| Risk                                                      | Likelihood | Impact | Mitigation                                                                                                                                                                                                                                                       |
+| --------------------------------------------------------- | ---------- | ------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Apple rejects as "web wrapper"                            | **Medium** | High   | Strong mitigations: embedded SQLite climb database with offline search, native BLE board control, haptics, On-Demand Resources for per-board data. Reviewers see genuine native functionality even without a board. Include guided review notes with video demo. |
+| WebView cookie/auth persistence issues                    | **High**   | High   | Milestone 0 validates auth end-to-end. Fallback: store JWT in `@capacitor/preferences` and restore on launch.                                                                                                                                                    |
+| Capacitor bridge injection in hosted mode                 | **Medium** | High   | Milestone 0 validates plugin JS availability. Test both dynamic import and `window.Capacitor.Plugins` approaches.                                                                                                                                                |
+| BLE double-chunking in adapter layer                      | **Medium** | High   | Adapter owns all chunking. Verify with physical board that LED patterns are correct.                                                                                                                                                                             |
+| Capacitor BLE plugin incompatibility with Aurora protocol | Low        | High   | Milestone 0 validates end-to-end BLE. Plugin uses CoreBluetooth (iOS) / Android BLE APIs directly.                                                                                                                                                               |
+| WebView performance on older devices                      | Low        | Medium | Capacitor uses WKWebView (iOS) and modern Chromium WebView (Android). The web app already runs well in mobile browsers.                                                                                                                                          |
+| Network dependency (hosted mode)                          | Medium     | Medium | Offline detection screen with cached queue. Service worker for API response caching.                                                                                                                                                                             |
+| Android WebView CORS origin issues                        | Medium     | Medium | Verify in Milestone 0. Backend allows null origin but should validate auth token.                                                                                                                                                                                |
+| Version mismatch between web and native shell             | Medium     | Medium | Version handshake on launch; "update your app" prompt for old shells.                                                                                                                                                                                            |
 
 ### Schedule Risks
 
-| Risk | Likelihood | Impact | Mitigation |
-|------|------------|--------|------------|
-| App store review delays | Medium | Medium | Submit early, have contingency time. Budget 2 weeks for review cycles. |
-| BLE edge cases on specific devices | **High** | Medium | Budget extra time in Milestone 1. Test on multiple physical devices (see device matrix). |
-| Auth/cookie debugging in WebView | **High** | Medium | Budget extra time in Milestone 0. Cookie persistence varies by OS version. |
-| Push notification backend scope creep | Medium | Medium | Defer to v1.1 post-launch. Ship MVP without push. |
-| Safe area / CSS issues on specific devices | Low | Low | Test on notched and non-notched devices. |
+| Risk                                       | Likelihood | Impact | Mitigation                                                                               |
+| ------------------------------------------ | ---------- | ------ | ---------------------------------------------------------------------------------------- |
+| App store review delays                    | Medium     | Medium | Submit early, have contingency time. Budget 2 weeks for review cycles.                   |
+| BLE edge cases on specific devices         | **High**   | Medium | Budget extra time in Milestone 1. Test on multiple physical devices (see device matrix). |
+| Auth/cookie debugging in WebView           | **High**   | Medium | Budget extra time in Milestone 0. Cookie persistence varies by OS version.               |
+| Push notification backend scope creep      | Medium     | Medium | Defer to v1.1 post-launch. Ship MVP without push.                                        |
+| Safe area / CSS issues on specific devices | Low        | Low    | Test on notched and non-notched devices.                                                 |
 
 ---
 
@@ -1166,6 +1194,7 @@ jobs:
 ### MVP Definition
 
 The MVP includes Milestones 0-2.5 (~8.5 weeks):
+
 - Native app shell loading the web app with validated auth persistence
 - BLE working on iOS (primary motivation) and Android via abstraction layer
 - **Embedded SQLite climb database** with offline search (per-board On-Demand Resources)
@@ -1180,31 +1209,31 @@ Push notifications (Milestone 4) ship as a v1.1 update post-launch.
 
 ### Milestone Summary
 
-| Milestone | Duration | Key Deliverable |
-|-----------|----------|----------------|
-| 0: PoC + Auth | 2 weeks | WebView loads, auth works, bridge injection validated |
-| 1: BLE Integration | 2-3 weeks | Native BLE with abstraction layer, no double-chunking |
-| 1.5: Embedded DB | 2 weeks | SQLite climb database, offline search, delta sync |
-| 2: Native Polish | 1.5 weeks | Safe areas, deep links, haptics, offline UI |
-| 3: App Store | 2 weeks | Store submission, beta testing, review cycles |
-| 4: Push (post-launch) | 2-3 weeks | FCM + APNs, device token backend, notification types |
+| Milestone             | Duration  | Key Deliverable                                       |
+| --------------------- | --------- | ----------------------------------------------------- |
+| 0: PoC + Auth         | 2 weeks   | WebView loads, auth works, bridge injection validated |
+| 1: BLE Integration    | 2-3 weeks | Native BLE with abstraction layer, no double-chunking |
+| 1.5: Embedded DB      | 2 weeks   | SQLite climb database, offline search, delta sync     |
+| 2: Native Polish      | 1.5 weeks | Safe areas, deep links, haptics, offline UI           |
+| 3: App Store          | 2 weeks   | Store submission, beta testing, review cycles         |
+| 4: Push (post-launch) | 2-3 weeks | FCM + APNs, device token backend, notification types  |
 
 ### Performance Targets
 
-| Metric | Target |
-|--------|--------|
+| Metric                    | Target                                          |
+| ------------------------- | ----------------------------------------------- |
 | App launch to interactive | < 3 seconds (depends on network + web app load) |
-| BLE connection | < 5 seconds |
-| BLE LED send | < 1 second |
-| Native shell size | < 10 MB |
-| Memory usage | < 200 MB |
+| BLE connection            | < 5 seconds                                     |
+| BLE LED send              | < 1 second                                      |
+| Native shell size         | < 10 MB                                         |
+| Memory usage              | < 200 MB                                        |
 
 ### Platform Requirements
 
-| Platform | Minimum Version |
-|----------|-----------------|
-| iOS | 16.0+ (Capacitor 6 requirement) |
-| Android | API 33 (Android 13)+ / Target API 34+ |
+| Platform | Minimum Version                       |
+| -------- | ------------------------------------- |
+| iOS      | 16.0+ (Capacitor 6 requirement)       |
+| Android  | API 33 (Android 13)+ / Target API 34+ |
 
 ---
 
@@ -1236,6 +1265,7 @@ Push notifications (Milestone 4) ship as a v1.1 update post-launch.
 ### Platform Permissions
 
 **iOS (Info.plist):**
+
 ```xml
 <key>NSBluetoothAlwaysUsageDescription</key>
 <string>Boardsesh needs Bluetooth to connect to your climbing board and control LED holds</string>
@@ -1244,6 +1274,7 @@ Push notifications (Milestone 4) ship as a v1.1 update post-launch.
 ```
 
 **Android (AndroidManifest.xml):**
+
 ```xml
 <uses-permission android:name="android.permission.BLUETOOTH_CONNECT" />
 <uses-permission android:name="android.permission.BLUETOOTH_SCAN"
@@ -1257,11 +1288,13 @@ Push notifications (Milestone 4) ship as a v1.1 update post-launch.
 ### Deep Linking Configuration
 
 **Custom URL Scheme:**
+
 - `boardsesh://party/join/{sessionId}` — Join party session
 - `boardsesh://climb/{uuid}` — Open climb detail
 - `boardsesh://board/{boardName}/{layoutId}/{sizeId}/{setIds}/{angle}` — Open board config
 
 **Universal Links (iOS) / App Links (Android):**
+
 - `https://boardsesh.com/join/*` → opens app if installed (session invite links only)
 - **Do NOT register the entire `boardsesh.com` domain** — this would hijack all links and prevent users from using the website in their browser
 - Requires `apple-app-site-association` file on `boardsesh.com` (iOS)
@@ -1270,25 +1303,26 @@ Push notifications (Milestone 4) ship as a v1.1 update post-launch.
 
 ### Capacitor vs Web Feature Matrix
 
-| Feature | Web (Chrome) | Web (Safari iOS) | Capacitor iOS | Capacitor Android |
-|---------|-------------|------------------|---------------|-------------------|
-| BLE | Web Bluetooth | Not supported | Native plugin | Native plugin |
-| Offline Climb Search | Not available | Not available | SQLite (bundled) | SQLite (bundled) |
-| Push Notifications | Web Push | Limited | APNs | FCM |
-| Haptics | Not available | Not available | Native | Native |
-| Deep Links | N/A | N/A | Universal links | App links |
-| Wake Lock | Screen Wake Lock API | Not supported | KeepAwake plugin | KeepAwake plugin |
-| App Store Presence | N/A | N/A | App Store | Play Store |
+| Feature              | Web (Chrome)         | Web (Safari iOS) | Capacitor iOS    | Capacitor Android |
+| -------------------- | -------------------- | ---------------- | ---------------- | ----------------- |
+| BLE                  | Web Bluetooth        | Not supported    | Native plugin    | Native plugin     |
+| Offline Climb Search | Not available        | Not available    | SQLite (bundled) | SQLite (bundled)  |
+| Push Notifications   | Web Push             | Limited          | APNs             | FCM               |
+| Haptics              | Not available        | Not available    | Native           | Native            |
+| Deep Links           | N/A                  | N/A              | Universal links  | App links         |
+| Wake Lock            | Screen Wake Lock API | Not supported    | KeepAwake plugin | KeepAwake plugin  |
+| App Store Presence   | N/A                  | N/A              | App Store        | Play Store        |
 
 ---
 
-*Document version: 5.0*
-*Last updated: March 2026*
-*Replaces: v4.0 (March 2026) — added embedded SQLite database strategy*
+_Document version: 5.0_
+_Last updated: March 2026_
+_Replaces: v4.0 (March 2026) — added embedded SQLite database strategy_
 
 ### Changelog (v4.0 → v5.0)
 
 **Major addition:**
+
 - Added "Embedded Climb Database (SQLite)" section — local SQLite database with per-board On-Demand Resources delivery, offline search, delta sync strategy
 - New Milestone 1.5: Embedded Climb Database (2 weeks)
 - Added `@capacitor-community/sqlite` to dependencies
@@ -1299,6 +1333,7 @@ Push notifications (Milestone 4) ship as a v1.1 update post-launch.
 ### Changelog (v3.0 → v4.0)
 
 **Critical fixes:**
+
 - Added "Capacitor Bridge Injection Strategy" section — explains how plugin JS loads in hosted mode
 - Added "Authentication in WebView" section — cookie persistence, WebSocket auth chain, CORS
 - Fixed BLE double-chunking bug — adapter's `write()` now owns all transport-level chunking
@@ -1306,6 +1341,7 @@ Push notifications (Milestone 4) ship as a v1.1 update post-launch.
 - Added "Why Not Local/Bundled Mode" section — documents why static export is infeasible
 
 **High severity fixes:**
+
 - Milestone 0 expanded to 2 weeks — includes auth validation, bridge injection testing, CORS verification, Bluefy banner check
 - Milestone 1 expanded to 2-3 weeks — includes chunking fix, device matrix testing
 - Added "Development Workflow" section — local dev, BLE testing, debugging, device matrix
@@ -1313,6 +1349,7 @@ Push notifications (Milestone 4) ship as a v1.1 update post-launch.
 - App Store risk upgraded from Medium to High with concrete mitigations
 
 **Medium fixes:**
+
 - Added offline fallback screen and `@capacitor/network` plugin to Milestone 2
 - Reordered milestones: App Store submission (M3) before Push Notifications (M4)
 - Push notifications expanded to 2-3 weeks and deferred to post-launch v1.1

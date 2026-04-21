@@ -1,6 +1,6 @@
 // Gym entity types
 
-export type GymMemberRole = 'admin' | 'member';
+export type GymMemberRole = "admin" | "member";
 
 export type Gym = {
   uuid: string;

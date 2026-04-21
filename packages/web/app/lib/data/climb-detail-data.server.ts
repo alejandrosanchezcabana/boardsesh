@@ -1,8 +1,8 @@
-import { dbz } from '@/app/lib/db/db';
-import { eq, and } from 'drizzle-orm';
-import type { BetaLink } from '@/app/lib/api-wrappers/sync-api-types';
-import { UNIFIED_TABLES } from '@/app/lib/db/queries/util/table-select';
-import { climbCommunityStatus } from '@/app/lib/db/schema';
+import { dbz } from "@/app/lib/db/db";
+import { eq, and } from "drizzle-orm";
+import type { BetaLink } from "@/app/lib/api-wrappers/sync-api-types";
+import { UNIFIED_TABLES } from "@/app/lib/db/queries/util/table-select";
+import { climbCommunityStatus } from "@/app/lib/db/schema";
 
 interface FetchClimbDetailDataParams {
   boardName: string;
@@ -10,16 +10,18 @@ interface FetchClimbDetailDataParams {
   angle: number;
 }
 
-export async function fetchClimbDetailData({ boardName, climbUuid, angle }: FetchClimbDetailDataParams) {
+export async function fetchClimbDetailData({
+  boardName,
+  climbUuid,
+  angle,
+}: FetchClimbDetailDataParams) {
   const fetchBetaLinks = async (): Promise<BetaLink[]> => {
     try {
       const { betaLinks } = UNIFIED_TABLES;
       const results = await dbz
         .select()
         .from(betaLinks)
-        .where(
-          and(eq(betaLinks.boardType, boardName), eq(betaLinks.climbUuid, climbUuid)),
-        );
+        .where(and(eq(betaLinks.boardType, boardName), eq(betaLinks.climbUuid, climbUuid)));
 
       return results.map((link) => ({
         climb_uuid: link.climbUuid,
@@ -55,10 +57,7 @@ export async function fetchClimbDetailData({ boardName, climbUuid, angle }: Fetc
     }
   };
 
-  const [betaLinks, communityGrade] = await Promise.all([
-    fetchBetaLinks(),
-    fetchCommunityGrade(),
-  ]);
+  const [betaLinks, communityGrade] = await Promise.all([fetchBetaLinks(), fetchCommunityGrade()]);
 
   return { betaLinks, communityGrade };
 }

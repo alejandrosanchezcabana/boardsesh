@@ -1,4 +1,4 @@
-const sanitizeRelativePath = (path: string): string => (path.startsWith('/') ? path : '/');
+const sanitizeRelativePath = (path: string): string => (path.startsWith("/") ? path : "/");
 
 /**
  * Build the URL that opens in the external browser for native OAuth.
@@ -20,8 +20,8 @@ export const buildNativeOAuthSignInUrl = ({
 }): string => {
   const nextPath = sanitizeRelativePath(callbackPath);
   const nativeCallbackUrl = `${origin}/api/auth/native/callback?next=${encodeURIComponent(nextPath)}`;
-  const startUrl = new URL('/auth/native-start', origin);
-  startUrl.searchParams.set('provider', provider);
-  startUrl.searchParams.set('callbackUrl', nativeCallbackUrl);
+  const startUrl = new URL("/auth/native-start", origin);
+  startUrl.searchParams.set("provider", provider);
+  startUrl.searchParams.set("callbackUrl", nativeCallbackUrl);
   return startUrl.toString();
 };

@@ -1,27 +1,27 @@
-'use client';
+"use client";
 
-import React, { useState, useMemo, useCallback } from 'react';
-import { useInfiniteQuery } from '@tanstack/react-query';
-import { createGraphQLHttpClient } from '@/app/lib/graphql/client';
+import React, { useState, useMemo, useCallback } from "react";
+import { useInfiniteQuery } from "@tanstack/react-query";
+import { createGraphQLHttpClient } from "@/app/lib/graphql/client";
 import {
   GET_USER_CLIMBS,
   type GetUserClimbsQueryVariables,
   type GetUserClimbsQueryResponse,
-} from '@/app/lib/graphql/operations';
-import type { Climb } from '@/app/lib/types';
-import { useWsAuthToken } from '@/app/hooks/use-ws-auth-token';
-import MultiboardClimbList, { type SortBy } from './multiboard-climb-list';
+} from "@/app/lib/graphql/operations";
+import type { Climb } from "@/app/lib/types";
+import { useWsAuthToken } from "@/app/hooks/use-ws-auth-token";
+import MultiboardClimbList, { type SortBy } from "./multiboard-climb-list";
 
 interface UserClimbListProps {
   userId: string;
 }
 
 export default function UserClimbList({ userId }: UserClimbListProps) {
-  const [sortBy, setSortBy] = useState<SortBy>('popular');
+  const [sortBy, setSortBy] = useState<SortBy>("popular");
   const { token } = useWsAuthToken();
 
   const { data, fetchNextPage, hasNextPage, isFetching, isLoading } = useInfiniteQuery({
-    queryKey: ['userClimbs', userId, sortBy],
+    queryKey: ["userClimbs", userId, sortBy],
     queryFn: async ({ pageParam }) => {
       const client = createGraphQLHttpClient(token ?? null);
       const variables: GetUserClimbsQueryVariables = {
@@ -33,10 +33,10 @@ export default function UserClimbList({ userId }: UserClimbListProps) {
         },
       };
 
-      const response = await client.request<GetUserClimbsQueryResponse, GetUserClimbsQueryVariables>(
-        GET_USER_CLIMBS,
-        variables,
-      );
+      const response = await client.request<
+        GetUserClimbsQueryResponse,
+        GetUserClimbsQueryVariables
+      >(GET_USER_CLIMBS, variables);
       return response.userClimbs;
     },
     initialPageParam: 0,
@@ -47,10 +47,7 @@ export default function UserClimbList({ userId }: UserClimbListProps) {
     staleTime: 60 * 1000,
   });
 
-  const climbs: Climb[] = useMemo(
-    () => data?.pages.flatMap((p) => p.climbs) ?? [],
-    [data],
-  );
+  const climbs: Climb[] = useMemo(() => data?.pages.flatMap((p) => p.climbs) ?? [], [data]);
   const totalCount = data?.pages[0]?.totalCount ?? 0;
 
   const handleLoadMore = useCallback(() => {

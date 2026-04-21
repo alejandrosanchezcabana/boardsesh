@@ -1,8 +1,17 @@
-'use client';
+"use client";
 
-import React, { createContext, useContext, useState, useCallback, useMemo, useRef, useLayoutEffect, useEffect } from 'react';
+import React, {
+  createContext,
+  useContext,
+  useState,
+  useCallback,
+  useMemo,
+  useRef,
+  useLayoutEffect,
+  useEffect,
+} from "react";
 
-const useIsomorphicLayoutEffect = typeof window !== 'undefined' ? useLayoutEffect : useEffect;
+const useIsomorphicLayoutEffect = typeof window !== "undefined" ? useLayoutEffect : useEffect;
 
 // -------------------------------------------------------------------
 // State context (consumed by GlobalHeader)
@@ -38,7 +47,12 @@ export function useStatsFilterBridge() {
 // -------------------------------------------------------------------
 
 interface StatsFilterBridgeSetters {
-  register: (openDrawer: () => void, pageTitle: string, backUrl: string | null, hasActiveFilters: boolean) => void;
+  register: (
+    openDrawer: () => void,
+    pageTitle: string,
+    backUrl: string | null,
+    hasActiveFilters: boolean,
+  ) => void;
   update: (hasActiveFilters: boolean) => void;
   deregister: () => void;
 }
@@ -60,13 +74,16 @@ export function StatsFilterBridgeProvider({ children }: { children: React.ReactN
   const [hasActiveFilters, setHasActiveFilters] = useState(false);
   const openDrawerRef = useRef<(() => void) | null>(null);
 
-  const register = useCallback((openDrawer: () => void, title: string, url: string | null, active: boolean) => {
-    openDrawerRef.current = openDrawer;
-    setPageTitle(title);
-    setBackUrl(url);
-    setHasActiveFilters(active);
-    setIsRegistered(true);
-  }, []);
+  const register = useCallback(
+    (openDrawer: () => void, title: string, url: string | null, active: boolean) => {
+      openDrawerRef.current = openDrawer;
+      setPageTitle(title);
+      setBackUrl(url);
+      setHasActiveFilters(active);
+      setIsRegistered(true);
+    },
+    [],
+  );
 
   const update = useCallback((active: boolean) => {
     setHasActiveFilters(active);
@@ -84,13 +101,16 @@ export function StatsFilterBridgeProvider({ children }: { children: React.ReactN
     openDrawerRef.current?.();
   }, []);
 
-  const state = useMemo<StatsFilterBridgeState>(() => ({
-    isActive: isRegistered,
-    pageTitle,
-    backUrl,
-    openFilterDrawer: isRegistered ? stableOpenDrawer : null,
-    hasActiveFilters,
-  }), [isRegistered, pageTitle, backUrl, stableOpenDrawer, hasActiveFilters]);
+  const state = useMemo<StatsFilterBridgeState>(
+    () => ({
+      isActive: isRegistered,
+      pageTitle,
+      backUrl,
+      openFilterDrawer: isRegistered ? stableOpenDrawer : null,
+      hasActiveFilters,
+    }),
+    [isRegistered, pageTitle, backUrl, stableOpenDrawer, hasActiveFilters],
+  );
 
   const setters = useMemo<StatsFilterBridgeSetters>(
     () => ({ register, update, deregister }),
@@ -147,7 +167,9 @@ export function StatsFilterBridgeInjector({
     } else {
       deregister();
     }
-    return () => { deregister(); };
+    return () => {
+      deregister();
+    };
   }, [isActive, register, deregister]);
 
   useEffect(() => {

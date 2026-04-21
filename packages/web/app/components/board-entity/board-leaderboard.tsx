@@ -1,35 +1,38 @@
-'use client';
+"use client";
 
-import React, { useState, useEffect, useCallback } from 'react';
-import Box from '@mui/material/Box';
-import Table from '@mui/material/Table';
-import TableBody from '@mui/material/TableBody';
-import TableCell from '@mui/material/TableCell';
-import TableContainer from '@mui/material/TableContainer';
-import TableHead from '@mui/material/TableHead';
-import TableRow from '@mui/material/TableRow';
-import Chip from '@mui/material/Chip';
-import Avatar from '@mui/material/Avatar';
-import MuiTypography from '@mui/material/Typography';
-import MuiButton from '@mui/material/Button';
-import CircularProgress from '@mui/material/CircularProgress';
-import type { BoardLeaderboard as BoardLeaderboardType, BoardLeaderboardEntry } from '@boardsesh/shared-schema';
-import { useWsAuthToken } from '@/app/hooks/use-ws-auth-token';
-import { createGraphQLHttpClient } from '@/app/lib/graphql/client';
+import React, { useState, useEffect, useCallback } from "react";
+import Box from "@mui/material/Box";
+import Table from "@mui/material/Table";
+import TableBody from "@mui/material/TableBody";
+import TableCell from "@mui/material/TableCell";
+import TableContainer from "@mui/material/TableContainer";
+import TableHead from "@mui/material/TableHead";
+import TableRow from "@mui/material/TableRow";
+import Chip from "@mui/material/Chip";
+import Avatar from "@mui/material/Avatar";
+import MuiTypography from "@mui/material/Typography";
+import MuiButton from "@mui/material/Button";
+import CircularProgress from "@mui/material/CircularProgress";
+import type {
+  BoardLeaderboard as BoardLeaderboardType,
+  BoardLeaderboardEntry,
+} from "@boardsesh/shared-schema";
+import { useWsAuthToken } from "@/app/hooks/use-ws-auth-token";
+import { createGraphQLHttpClient } from "@/app/lib/graphql/client";
 import {
   GET_BOARD_LEADERBOARD,
   type GetBoardLeaderboardQueryResponse,
   type GetBoardLeaderboardQueryVariables,
-} from '@/app/lib/graphql/operations';
-import { themeTokens } from '@/app/theme/theme-config';
+} from "@/app/lib/graphql/operations";
+import { themeTokens } from "@/app/theme/theme-config";
 
-type Period = 'week' | 'month' | 'year' | 'all';
+type Period = "week" | "month" | "year" | "all";
 
 const PERIOD_OPTIONS: { value: Period; label: string }[] = [
-  { value: 'week', label: 'Week' },
-  { value: 'month', label: 'Month' },
-  { value: 'year', label: 'Year' },
-  { value: 'all', label: 'All Time' },
+  { value: "week", label: "Week" },
+  { value: "month", label: "Month" },
+  { value: "year", label: "Year" },
+  { value: "all", label: "All Time" },
 ];
 
 interface BoardLeaderboardProps {
@@ -37,7 +40,7 @@ interface BoardLeaderboardProps {
 }
 
 export default function BoardLeaderboard({ boardUuid }: BoardLeaderboardProps) {
-  const [period, setPeriod] = useState<Period>('all');
+  const [period, setPeriod] = useState<Period>("all");
   const [leaderboard, setLeaderboard] = useState<BoardLeaderboardType | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isLoadingMore, setIsLoadingMore] = useState(false);
@@ -64,14 +67,17 @@ export default function BoardLeaderboard({ boardUuid }: BoardLeaderboardProps) {
         if (append) {
           setLeaderboard((prev) =>
             prev
-              ? { ...data.boardLeaderboard, entries: [...prev.entries, ...data.boardLeaderboard.entries] }
+              ? {
+                  ...data.boardLeaderboard,
+                  entries: [...prev.entries, ...data.boardLeaderboard.entries],
+                }
               : data.boardLeaderboard,
           );
         } else {
           setLeaderboard(data.boardLeaderboard);
         }
       } catch (error) {
-        console.error('Failed to fetch leaderboard:', error);
+        console.error("Failed to fetch leaderboard:", error);
       } finally {
         setIsLoading(false);
         setIsLoadingMore(false);
@@ -93,25 +99,25 @@ export default function BoardLeaderboard({ boardUuid }: BoardLeaderboardProps) {
 
   return (
     <Box>
-      <Box sx={{ display: 'flex', gap: 1, mb: 2, flexWrap: 'wrap' }}>
+      <Box sx={{ display: "flex", gap: 1, mb: 2, flexWrap: "wrap" }}>
         {PERIOD_OPTIONS.map((opt) => (
           <Chip
             key={opt.value}
             label={opt.label}
             size="small"
-            variant={period === opt.value ? 'filled' : 'outlined'}
-            color={period === opt.value ? 'primary' : 'default'}
+            variant={period === opt.value ? "filled" : "outlined"}
+            color={period === opt.value ? "primary" : "default"}
             onClick={() => setPeriod(opt.value)}
           />
         ))}
       </Box>
 
       {isLoading ? (
-        <Box sx={{ display: 'flex', justifyContent: 'center', py: 4 }}>
+        <Box sx={{ display: "flex", justifyContent: "center", py: 4 }}>
           <CircularProgress size={28} />
         </Box>
       ) : !leaderboard || leaderboard.entries.length === 0 ? (
-        <MuiTypography variant="body2" color="text.secondary" sx={{ textAlign: 'center', py: 4 }}>
+        <MuiTypography variant="body2" color="text.secondary" sx={{ textAlign: "center", py: 4 }}>
           No activity yet for this period.
         </MuiTypography>
       ) : (
@@ -120,19 +126,33 @@ export default function BoardLeaderboard({ boardUuid }: BoardLeaderboardProps) {
             <Table size="small">
               <TableHead>
                 <TableRow>
-                  <TableCell sx={{ fontWeight: themeTokens.typography.fontWeight.semibold, width: 40 }}>
+                  <TableCell
+                    sx={{ fontWeight: themeTokens.typography.fontWeight.semibold, width: 40 }}
+                  >
                     #
                   </TableCell>
                   <TableCell sx={{ fontWeight: themeTokens.typography.fontWeight.semibold }}>
                     Climber
                   </TableCell>
-                  <TableCell align="right" sx={{ fontWeight: themeTokens.typography.fontWeight.semibold }}>
+                  <TableCell
+                    align="right"
+                    sx={{ fontWeight: themeTokens.typography.fontWeight.semibold }}
+                  >
                     Sends
                   </TableCell>
-                  <TableCell align="right" sx={{ fontWeight: themeTokens.typography.fontWeight.semibold, display: { xs: 'none', sm: 'table-cell' } }}>
+                  <TableCell
+                    align="right"
+                    sx={{
+                      fontWeight: themeTokens.typography.fontWeight.semibold,
+                      display: { xs: "none", sm: "table-cell" },
+                    }}
+                  >
                     Flashes
                   </TableCell>
-                  <TableCell align="right" sx={{ fontWeight: themeTokens.typography.fontWeight.semibold }}>
+                  <TableCell
+                    align="right"
+                    sx={{ fontWeight: themeTokens.typography.fontWeight.semibold }}
+                  >
                     Hardest
                   </TableCell>
                 </TableRow>
@@ -144,9 +164,10 @@ export default function BoardLeaderboard({ boardUuid }: BoardLeaderboardProps) {
                       <MuiTypography
                         variant="body2"
                         sx={{
-                          fontWeight: entry.rank <= 3
-                            ? themeTokens.typography.fontWeight.bold
-                            : themeTokens.typography.fontWeight.normal,
+                          fontWeight:
+                            entry.rank <= 3
+                              ? themeTokens.typography.fontWeight.bold
+                              : themeTokens.typography.fontWeight.normal,
                           color: entry.rank <= 3 ? themeTokens.colors.primary : undefined,
                         }}
                       >
@@ -154,14 +175,21 @@ export default function BoardLeaderboard({ boardUuid }: BoardLeaderboardProps) {
                       </MuiTypography>
                     </TableCell>
                     <TableCell>
-                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                      <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
                         <Avatar
                           src={entry.userAvatarUrl ?? undefined}
                           sx={{ width: 28, height: 28, fontSize: 12 }}
                         >
                           {entry.userDisplayName?.[0]?.toUpperCase()}
                         </Avatar>
-                        <MuiTypography variant="body2" sx={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                        <MuiTypography
+                          variant="body2"
+                          sx={{
+                            overflow: "hidden",
+                            textOverflow: "ellipsis",
+                            whiteSpace: "nowrap",
+                          }}
+                        >
                           {entry.userDisplayName}
                         </MuiTypography>
                       </Box>
@@ -169,13 +197,11 @@ export default function BoardLeaderboard({ boardUuid }: BoardLeaderboardProps) {
                     <TableCell align="right">
                       <MuiTypography variant="body2">{entry.totalSends}</MuiTypography>
                     </TableCell>
-                    <TableCell align="right" sx={{ display: { xs: 'none', sm: 'table-cell' } }}>
+                    <TableCell align="right" sx={{ display: { xs: "none", sm: "table-cell" } }}>
                       <MuiTypography variant="body2">{entry.totalFlashes}</MuiTypography>
                     </TableCell>
                     <TableCell align="right">
-                      <MuiTypography variant="body2">
-                        {entry.hardestGradeName || '-'}
-                      </MuiTypography>
+                      <MuiTypography variant="body2">{entry.hardestGradeName || "-"}</MuiTypography>
                     </TableCell>
                   </TableRow>
                 ))}
@@ -184,14 +210,14 @@ export default function BoardLeaderboard({ boardUuid }: BoardLeaderboardProps) {
           </TableContainer>
 
           {leaderboard.hasMore && (
-            <Box sx={{ display: 'flex', justifyContent: 'center', mt: 2 }}>
+            <Box sx={{ display: "flex", justifyContent: "center", mt: 2 }}>
               <MuiButton
                 variant="text"
                 size="small"
                 onClick={handleLoadMore}
                 disabled={isLoadingMore}
               >
-                {isLoadingMore ? <CircularProgress size={16} /> : 'Load more'}
+                {isLoadingMore ? <CircularProgress size={16} /> : "Load more"}
               </MuiButton>
             </Box>
           )}

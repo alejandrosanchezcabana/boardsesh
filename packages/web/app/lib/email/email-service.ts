@@ -1,6 +1,6 @@
-import nodemailer, { Transporter } from 'nodemailer';
-import { z } from 'zod';
-import { themeTokens } from '@/app/theme/theme-config';
+import nodemailer, { Transporter } from "nodemailer";
+import { z } from "zod";
+import { themeTokens } from "@/app/theme/theme-config";
 
 // Email validation schema - validates format before using in URLs
 const emailSchema = z.string().email();
@@ -21,12 +21,14 @@ let transporter: Transporter | null = null;
 function getTransporter(): Transporter {
   if (!transporter) {
     if (!process.env.SMTP_USER || !process.env.SMTP_PASSWORD) {
-      throw new Error('SMTP credentials not configured. Set SMTP_USER and SMTP_PASSWORD environment variables.');
+      throw new Error(
+        "SMTP credentials not configured. Set SMTP_USER and SMTP_PASSWORD environment variables.",
+      );
     }
 
     transporter = nodemailer.createTransport({
-      host: process.env.SMTP_HOST || 'smtp.fastmail.com',
-      port: parseInt(process.env.SMTP_PORT || '465', 10),
+      host: process.env.SMTP_HOST || "smtp.fastmail.com",
+      port: parseInt(process.env.SMTP_PORT || "465", 10),
       secure: true, // true for 465, false for 587
       auth: {
         user: process.env.SMTP_USER,
@@ -40,11 +42,11 @@ function getTransporter(): Transporter {
 // HTML escape function to prevent XSS
 function escapeHtml(text: string): string {
   const htmlEscapes: Record<string, string> = {
-    '&': '&amp;',
-    '<': '&lt;',
-    '>': '&gt;',
-    '"': '&quot;',
-    "'": '&#39;',
+    "&": "&amp;",
+    "<": "&lt;",
+    ">": "&gt;",
+    '"': "&quot;",
+    "'": "&#39;",
   };
   return text.replace(/[&<>"']/g, (char) => htmlEscapes[char]);
 }
@@ -52,7 +54,7 @@ function escapeHtml(text: string): string {
 export async function sendVerificationEmail(
   email: string,
   token: string,
-  baseUrl: string
+  baseUrl: string,
 ): Promise<void> {
   // Validate email format before using in URL to prevent injection
   const validatedEmail = emailSchema.parse(email);
@@ -63,7 +65,7 @@ export async function sendVerificationEmail(
   await getTransporter().sendMail({
     from: process.env.EMAIL_FROM || process.env.SMTP_USER,
     to: validatedEmail,
-    subject: 'Verify your Boardsesh email',
+    subject: "Verify your Boardsesh email",
     html: `
       <div style="font-family: ${themeTokens.typography.fontFamily}; max-width: 600px; margin: 0 auto; padding: 20px;">
         <h1 style="color: ${emailColors.primary}; margin-bottom: 24px;">Welcome to Boardsesh!</h1>

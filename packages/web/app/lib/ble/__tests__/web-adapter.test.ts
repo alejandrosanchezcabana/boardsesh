@@ -1,6 +1,6 @@
-import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { AURORA_REQUEST_DEVICE_OPTIONS } from '@/app/components/board-bluetooth-control/bluetooth-aurora';
-import { MOONBOARD_REQUEST_DEVICE_OPTIONS } from '@/app/components/board-bluetooth-control/bluetooth-moonboard';
+import { describe, it, expect, vi, beforeEach, afterEach } from "vite-plus/test";
+import { AURORA_REQUEST_DEVICE_OPTIONS } from "@/app/components/board-bluetooth-control/bluetooth-aurora";
+import { MOONBOARD_REQUEST_DEVICE_OPTIONS } from "@/app/components/board-bluetooth-control/bluetooth-moonboard";
 
 // Mock the shared Bluetooth transport helpers
 const mockRequestDevice = vi.fn();
@@ -8,8 +8,11 @@ const mockGetCharacteristic = vi.fn();
 const mockSplitMessages = vi.fn((data: Uint8Array) => [data]);
 const mockWriteCharacteristicSeries = vi.fn();
 
-vi.mock('@/app/components/board-bluetooth-control/bluetooth-shared', async (importOriginal) => {
-  const actual = await importOriginal<typeof import('@/app/components/board-bluetooth-control/bluetooth-shared')>();
+vi.mock("@/app/components/board-bluetooth-control/bluetooth-shared", async (importOriginal) => {
+  const actual =
+    await importOriginal<
+      typeof import("@/app/components/board-bluetooth-control/bluetooth-shared")
+    >();
   return {
     ...actual,
     requestBluetoothDevice: (...args: Parameters<typeof actual.requestBluetoothDevice>) =>
@@ -22,12 +25,12 @@ vi.mock('@/app/components/board-bluetooth-control/bluetooth-shared', async (impo
   };
 });
 
-import { WebBluetoothAdapter } from '../web-adapter';
+import { WebBluetoothAdapter } from "../web-adapter";
 
 function createMockDevice(overrides?: Partial<BluetoothDevice>) {
   return {
-    id: 'web-dev-1',
-    name: 'Test Board',
+    id: "web-dev-1",
+    name: "Test Board",
     addEventListener: vi.fn(),
     removeEventListener: vi.fn(),
     gatt: {
@@ -44,7 +47,7 @@ function createMockCharacteristic() {
   } as unknown as BluetoothRemoteGATTCharacteristic;
 }
 
-describe('WebBluetoothAdapter', () => {
+describe("WebBluetoothAdapter", () => {
   let adapter: WebBluetoothAdapter;
   let originalBluetooth: unknown;
 
@@ -55,16 +58,16 @@ describe('WebBluetoothAdapter', () => {
   });
 
   afterEach(() => {
-    Object.defineProperty(navigator, 'bluetooth', {
+    Object.defineProperty(navigator, "bluetooth", {
       value: originalBluetooth,
       writable: true,
       configurable: true,
     });
   });
 
-  describe('isAvailable', () => {
-    it('returns true when navigator.bluetooth exists', async () => {
-      Object.defineProperty(navigator, 'bluetooth', {
+  describe("isAvailable", () => {
+    it("returns true when navigator.bluetooth exists", async () => {
+      Object.defineProperty(navigator, "bluetooth", {
         value: { requestDevice: vi.fn() },
         writable: true,
         configurable: true,
@@ -73,8 +76,8 @@ describe('WebBluetoothAdapter', () => {
       expect(await adapter.isAvailable()).toBe(true);
     });
 
-    it('returns false when navigator.bluetooth is undefined', async () => {
-      Object.defineProperty(navigator, 'bluetooth', {
+    it("returns false when navigator.bluetooth is undefined", async () => {
+      Object.defineProperty(navigator, "bluetooth", {
         value: undefined,
         writable: true,
         configurable: true,
@@ -84,8 +87,8 @@ describe('WebBluetoothAdapter', () => {
     });
   });
 
-  describe('requestAndConnect', () => {
-    it('connects and returns device info', async () => {
+  describe("requestAndConnect", () => {
+    it("connects and returns device info", async () => {
       const mockDevice = createMockDevice();
       const mockCharacteristic = createMockCharacteristic();
       mockRequestDevice.mockResolvedValue(mockDevice);
@@ -93,14 +96,14 @@ describe('WebBluetoothAdapter', () => {
 
       const connection = await adapter.requestAndConnect();
 
-      expect(connection.deviceId).toBe('web-dev-1');
-      expect(connection.deviceName).toBe('Test Board');
+      expect(connection.deviceId).toBe("web-dev-1");
+      expect(connection.deviceName).toBe("Test Board");
       expect(mockRequestDevice).toHaveBeenCalledWith(AURORA_REQUEST_DEVICE_OPTIONS);
       expect(mockGetCharacteristic).toHaveBeenCalledWith(mockDevice);
     });
 
-    it('uses Moonboard request options for Moonboard controllers', async () => {
-      const moonboardAdapter = new WebBluetoothAdapter('moonboard');
+    it("uses Moonboard request options for Moonboard controllers", async () => {
+      const moonboardAdapter = new WebBluetoothAdapter("moonboard");
       const mockDevice = createMockDevice();
       mockRequestDevice.mockResolvedValue(mockDevice);
       mockGetCharacteristic.mockResolvedValue(createMockCharacteristic());
@@ -110,7 +113,7 @@ describe('WebBluetoothAdapter', () => {
       expect(mockRequestDevice).toHaveBeenCalledWith(MOONBOARD_REQUEST_DEVICE_OPTIONS);
     });
 
-    it('registers gattserverdisconnected listener', async () => {
+    it("registers gattserverdisconnected listener", async () => {
       const mockDevice = createMockDevice();
       mockRequestDevice.mockResolvedValue(mockDevice);
       mockGetCharacteristic.mockResolvedValue(createMockCharacteristic());
@@ -118,23 +121,23 @@ describe('WebBluetoothAdapter', () => {
       await adapter.requestAndConnect();
 
       expect(mockDevice.addEventListener).toHaveBeenCalledWith(
-        'gattserverdisconnected',
+        "gattserverdisconnected",
         expect.any(Function),
       );
     });
 
-    it('throws when getCharacteristic returns undefined', async () => {
+    it("throws when getCharacteristic returns undefined", async () => {
       mockRequestDevice.mockResolvedValue(createMockDevice());
       mockGetCharacteristic.mockResolvedValue(undefined);
 
       await expect(adapter.requestAndConnect()).rejects.toThrow(
-        'Failed to get UART characteristic',
+        "Failed to get UART characteristic",
       );
     });
 
-    it('cleans up previous device listeners on reconnect', async () => {
-      const firstDevice = createMockDevice({ id: 'first' } as Partial<BluetoothDevice>);
-      const secondDevice = createMockDevice({ id: 'second' } as Partial<BluetoothDevice>);
+    it("cleans up previous device listeners on reconnect", async () => {
+      const firstDevice = createMockDevice({ id: "first" } as Partial<BluetoothDevice>);
+      const secondDevice = createMockDevice({ id: "second" } as Partial<BluetoothDevice>);
       mockGetCharacteristic.mockResolvedValue(createMockCharacteristic());
 
       mockRequestDevice.mockResolvedValueOnce(firstDevice);
@@ -144,12 +147,12 @@ describe('WebBluetoothAdapter', () => {
       await adapter.requestAndConnect();
 
       expect(firstDevice.removeEventListener).toHaveBeenCalledWith(
-        'gattserverdisconnected',
+        "gattserverdisconnected",
         expect.any(Function),
       );
     });
 
-    it('handles undefined device name', async () => {
+    it("handles undefined device name", async () => {
       const mockDevice = createMockDevice({ name: undefined } as Partial<BluetoothDevice>);
       mockRequestDevice.mockResolvedValue(mockDevice);
       mockGetCharacteristic.mockResolvedValue(createMockCharacteristic());
@@ -160,8 +163,8 @@ describe('WebBluetoothAdapter', () => {
     });
   });
 
-  describe('disconnect', () => {
-    it('calls gatt.disconnect on connected device', async () => {
+  describe("disconnect", () => {
+    it("calls gatt.disconnect on connected device", async () => {
       const mockDevice = createMockDevice();
       mockRequestDevice.mockResolvedValue(mockDevice);
       mockGetCharacteristic.mockResolvedValue(createMockCharacteristic());
@@ -172,7 +175,7 @@ describe('WebBluetoothAdapter', () => {
       expect(mockDevice.gatt!.disconnect).toHaveBeenCalled();
     });
 
-    it('removes event listener on disconnect', async () => {
+    it("removes event listener on disconnect", async () => {
       const mockDevice = createMockDevice();
       mockRequestDevice.mockResolvedValue(mockDevice);
       mockGetCharacteristic.mockResolvedValue(createMockCharacteristic());
@@ -181,25 +184,23 @@ describe('WebBluetoothAdapter', () => {
       await adapter.disconnect();
 
       expect(mockDevice.removeEventListener).toHaveBeenCalledWith(
-        'gattserverdisconnected',
+        "gattserverdisconnected",
         expect.any(Function),
       );
     });
 
-    it('does nothing when not connected', async () => {
+    it("does nothing when not connected", async () => {
       // Should not throw
       await adapter.disconnect();
     });
   });
 
-  describe('write', () => {
-    it('throws when not connected', async () => {
-      await expect(adapter.write(new Uint8Array([1, 2, 3]))).rejects.toThrow(
-        'Not connected',
-      );
+  describe("write", () => {
+    it("throws when not connected", async () => {
+      await expect(adapter.write(new Uint8Array([1, 2, 3]))).rejects.toThrow("Not connected");
     });
 
-    it('splits messages and writes via characteristic', async () => {
+    it("splits messages and writes via characteristic", async () => {
       mockRequestDevice.mockResolvedValue(createMockDevice());
       const mockCharacteristic = createMockCharacteristic();
       mockGetCharacteristic.mockResolvedValue(mockCharacteristic);
@@ -222,8 +223,8 @@ describe('WebBluetoothAdapter', () => {
     });
   });
 
-  describe('onDisconnect', () => {
-    it('invokes callback when device disconnects', async () => {
+  describe("onDisconnect", () => {
+    it("invokes callback when device disconnects", async () => {
       const mockDevice = createMockDevice();
       mockRequestDevice.mockResolvedValue(mockDevice);
       mockGetCharacteristic.mockResolvedValue(createMockCharacteristic());
@@ -234,15 +235,16 @@ describe('WebBluetoothAdapter', () => {
       await adapter.requestAndConnect();
 
       // Simulate GATT disconnection by calling the registered listener
-      const addListenerCall = (mockDevice.addEventListener as ReturnType<typeof vi.fn>).mock.calls[0];
-      expect(addListenerCall[0]).toBe('gattserverdisconnected');
+      const addListenerCall = (mockDevice.addEventListener as ReturnType<typeof vi.fn>).mock
+        .calls[0];
+      expect(addListenerCall[0]).toBe("gattserverdisconnected");
       const disconnectHandler = addListenerCall[1];
       disconnectHandler();
 
       expect(callback).toHaveBeenCalledOnce();
     });
 
-    it('returns an unsubscribe function', async () => {
+    it("returns an unsubscribe function", async () => {
       const mockDevice = createMockDevice();
       mockRequestDevice.mockResolvedValue(mockDevice);
       mockGetCharacteristic.mockResolvedValue(createMockCharacteristic());
@@ -255,7 +257,8 @@ describe('WebBluetoothAdapter', () => {
       unsub();
 
       // Simulate disconnection after unsubscribe
-      const addListenerCall = (mockDevice.addEventListener as ReturnType<typeof vi.fn>).mock.calls[0];
+      const addListenerCall = (mockDevice.addEventListener as ReturnType<typeof vi.fn>).mock
+        .calls[0];
       const disconnectHandler = addListenerCall[1];
       disconnectHandler();
 

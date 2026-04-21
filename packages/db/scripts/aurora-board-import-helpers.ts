@@ -1,7 +1,7 @@
-export const DIRECT_AURORA_BOARDS = ['decoy', 'touchstone', 'grasshopper'] as const;
+export const DIRECT_AURORA_BOARDS = ["decoy", "touchstone", "grasshopper"] as const;
 
-export type DirectAuroraBoard = typeof DIRECT_AURORA_BOARDS[number];
-export type ImportedHoldState = 'STARTING' | 'HAND' | 'FINISH' | 'FOOT' | 'OFF';
+export type DirectAuroraBoard = (typeof DIRECT_AURORA_BOARDS)[number];
+export type ImportedHoldState = "STARTING" | "HAND" | "FINISH" | "FOOT" | "OFF";
 
 export interface SourceClimbRow {
   uuid: string;
@@ -25,22 +25,22 @@ export interface DerivedClimbHold {
 
 const AURORA_HOLD_STATE_MAP: Record<DirectAuroraBoard, Record<number, ImportedHoldState>> = {
   decoy: {
-    1: 'STARTING',
-    2: 'HAND',
-    3: 'FINISH',
-    4: 'FOOT',
+    1: "STARTING",
+    2: "HAND",
+    3: "FINISH",
+    4: "FOOT",
   },
   touchstone: {
-    1: 'STARTING',
-    2: 'HAND',
-    3: 'FINISH',
-    4: 'FOOT',
+    1: "STARTING",
+    2: "HAND",
+    3: "FINISH",
+    4: "FOOT",
   },
   grasshopper: {
-    1: 'STARTING',
-    2: 'HAND',
-    3: 'FINISH',
-    4: 'FOOT',
+    1: "STARTING",
+    2: "HAND",
+    3: "FINISH",
+    4: "FOOT",
   },
 };
 
@@ -53,7 +53,7 @@ const HOLD_STATE_PRIORITY: Record<ImportedHoldState, number> = {
 };
 
 function toNumber(value: unknown): number | null {
-  if (value === null || value === undefined || value === '') {
+  if (value === null || value === undefined || value === "") {
     return null;
   }
 
@@ -66,14 +66,23 @@ function asImportedHoldState(value: string | null | undefined): ImportedHoldStat
     return null;
   }
 
-  if (value === 'STARTING' || value === 'HAND' || value === 'FINISH' || value === 'FOOT' || value === 'OFF') {
+  if (
+    value === "STARTING" ||
+    value === "HAND" ||
+    value === "FINISH" ||
+    value === "FOOT" ||
+    value === "OFF"
+  ) {
     return value;
   }
 
   return null;
 }
 
-function choosePreferredHold(existing: DerivedClimbHold | undefined, candidate: DerivedClimbHold): DerivedClimbHold {
+function choosePreferredHold(
+  existing: DerivedClimbHold | undefined,
+  candidate: DerivedClimbHold,
+): DerivedClimbHold {
   if (!existing) {
     return candidate;
   }
@@ -101,10 +110,10 @@ export function deriveClimbHoldsFromFrames(
   }
 
   const holdMap = new Map<number, DerivedClimbHold>();
-  const frames = climb.frames.split(',');
+  const frames = climb.frames.split(",");
 
   frames.forEach((framePart, frameIndex) => {
-    for (const token of framePart.split('p')) {
+    for (const token of framePart.split("p")) {
       if (!token || token === '""') {
         continue;
       }
@@ -123,8 +132,8 @@ export function deriveClimbHoldsFromFrames(
 
       let holdState: ImportedHoldState | null = null;
 
-      if (marker === 'x') {
-        holdState = 'OFF';
+      if (marker === "x") {
+        holdState = "OFF";
       } else {
         holdState = AURORA_HOLD_STATE_MAP[boardName][Number(stateRaw)] ?? null;
       }
@@ -180,8 +189,8 @@ export function dedupeSourceClimbHolds(rows: SourceClimbHoldRow[]): DerivedClimb
         return left.holdId - right.holdId;
       }
 
-      const leftCreatedAt = left.createdAt ?? '';
-      const rightCreatedAt = right.createdAt ?? '';
+      const leftCreatedAt = left.createdAt ?? "";
+      const rightCreatedAt = right.createdAt ?? "";
 
       if (leftCreatedAt !== rightCreatedAt) {
         return rightCreatedAt.localeCompare(leftCreatedAt);

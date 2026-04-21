@@ -1,16 +1,20 @@
-import { v4 as uuidv4 } from 'uuid';
-import { eq, and, inArray } from 'drizzle-orm';
-import type { ConnectionContext } from '@boardsesh/shared-schema';
-import { db } from '../../../db/client';
-import * as dbSchema from '@boardsesh/db/schema';
-import { sessions } from '../../../db/schema';
-import { requireAuthenticated, validateInput } from '../shared/helpers';
-import { getConsensusDifficultyName } from '../shared/sql-expressions';
-import { SaveTickInputSchema, UpdateTickInputSchema, AttachBetaLinkInputSchema } from '../../../validation/schemas';
-import { resolveBoardFromPath } from '../social/boards';
-import { publishSocialEvent } from '../../../events';
-import { assignInferredSession } from '../../../jobs/inferred-session-builder';
-import { publishDebouncedSessionStats } from '../sessions/debounced-stats-publisher';
+import { v4 as uuidv4 } from "uuid";
+import { eq, and, inArray } from "drizzle-orm";
+import type { ConnectionContext } from "@boardsesh/shared-schema";
+import { db } from "../../../db/client";
+import * as dbSchema from "@boardsesh/db/schema";
+import { sessions } from "../../../db/schema";
+import { requireAuthenticated, validateInput } from "../shared/helpers";
+import { getConsensusDifficultyName } from "../shared/sql-expressions";
+import {
+  SaveTickInputSchema,
+  UpdateTickInputSchema,
+  AttachBetaLinkInputSchema,
+} from "../../../validation/schemas";
+import { resolveBoardFromPath } from "../social/boards";
+import { publishSocialEvent } from "../../../events";
+import { assignInferredSession } from "../../../jobs/inferred-session-builder";
+import { publishDebouncedSessionStats } from "../sessions/debounced-stats-publisher";
 
 export const tickMutations = {
   /**
@@ -20,7 +24,7 @@ export const tickMutations = {
   deleteTick: async (
     _: unknown,
     { uuid }: { uuid: string },
-    ctx: ConnectionContext
+    ctx: ConnectionContext,
   ): Promise<boolean> => {
     requireAuthenticated(ctx);
     const userId = ctx.userId!;
@@ -36,10 +40,10 @@ export const tickMutations = {
       .limit(1);
 
     if (!tick) {
-      throw new Error('Tick not found');
+      throw new Error("Tick not found");
     }
     if (tick.userId !== userId) {
-      throw new Error('You can only delete your own ticks');
+      throw new Error("You can only delete your own ticks");
     }
 
     await db.transaction(async (tx) => {
@@ -47,32 +51,41 @@ export const tickMutations = {
       const tickComments = await tx
         .select({ id: dbSchema.comments.id })
         .from(dbSchema.comments)
-        .where(and(eq(dbSchema.comments.entityType, 'tick'), eq(dbSchema.comments.entityId, uuid)));
+        .where(and(eq(dbSchema.comments.entityType, "tick"), eq(dbSchema.comments.entityId, uuid)));
       const commentIds = tickComments.map((c) => c.id);
 
       // Delete notifications referencing these comments (commentId FK is SET NULL, so we must delete explicitly)
       if (commentIds.length > 0) {
-        await tx.delete(dbSchema.notifications).where(
-          inArray(dbSchema.notifications.commentId, commentIds)
-        );
+        await tx
+          .delete(dbSchema.notifications)
+          .where(inArray(dbSchema.notifications.commentId, commentIds));
       }
 
       // Delete related social data for the tick itself
-      await tx.delete(dbSchema.feedItems).where(
-        and(eq(dbSchema.feedItems.entityType, 'tick'), eq(dbSchema.feedItems.entityId, uuid))
-      );
-      await tx.delete(dbSchema.votes).where(
-        and(eq(dbSchema.votes.entityType, 'tick'), eq(dbSchema.votes.entityId, uuid))
-      );
-      await tx.delete(dbSchema.voteCounts).where(
-        and(eq(dbSchema.voteCounts.entityType, 'tick'), eq(dbSchema.voteCounts.entityId, uuid))
-      );
-      await tx.delete(dbSchema.comments).where(
-        and(eq(dbSchema.comments.entityType, 'tick'), eq(dbSchema.comments.entityId, uuid))
-      );
-      await tx.delete(dbSchema.notifications).where(
-        and(eq(dbSchema.notifications.entityType, 'tick'), eq(dbSchema.notifications.entityId, uuid))
-      );
+      await tx
+        .delete(dbSchema.feedItems)
+        .where(
+          and(eq(dbSchema.feedItems.entityType, "tick"), eq(dbSchema.feedItems.entityId, uuid)),
+        );
+      await tx
+        .delete(dbSchema.votes)
+        .where(and(eq(dbSchema.votes.entityType, "tick"), eq(dbSchema.votes.entityId, uuid)));
+      await tx
+        .delete(dbSchema.voteCounts)
+        .where(
+          and(eq(dbSchema.voteCounts.entityType, "tick"), eq(dbSchema.voteCounts.entityId, uuid)),
+        );
+      await tx
+        .delete(dbSchema.comments)
+        .where(and(eq(dbSchema.comments.entityType, "tick"), eq(dbSchema.comments.entityId, uuid)));
+      await tx
+        .delete(dbSchema.notifications)
+        .where(
+          and(
+            eq(dbSchema.notifications.entityType, "tick"),
+            eq(dbSchema.notifications.entityId, uuid),
+          ),
+        );
       // Delete the tick itself
       await tx.delete(dbSchema.boardseshTicks).where(eq(dbSchema.boardseshTicks.uuid, uuid));
 
@@ -93,12 +106,12 @@ export const tickMutations = {
   saveTick: async (
     _: unknown,
     { input }: { input: unknown },
-    ctx: ConnectionContext
+    ctx: ConnectionContext,
   ): Promise<unknown> => {
     requireAuthenticated(ctx);
 
     // Validate input with business rules
-    const validatedInput = validateInput(SaveTickInputSchema, input, 'input');
+    const validatedInput = validateInput(SaveTickInputSchema, input, "input");
 
     const userId = ctx.userId!;
     const uuid = uuidv4();
@@ -160,7 +173,7 @@ export const tickMutations = {
       // idempotent.
       const shouldAttachBeta =
         validatedInput.videoUrl &&
-        (validatedInput.status === 'flash' || validatedInput.status === 'send');
+        (validatedInput.status === "flash" || validatedInput.status === "send");
       if (shouldAttachBeta) {
         await tx
           .insert(dbSchema.boardBetaLinks)
@@ -205,12 +218,15 @@ export const tickMutations = {
     // On failure, the tick stays unassigned until the daily safety-net cron picks it up.
     if (!validatedInput.sessionId) {
       assignInferredSession(uuid, userId, climbedAt, validatedInput.status).catch((err) => {
-        console.error(`[saveTick] Failed to assign inferred session for tick ${uuid} (user ${userId}):`, err);
+        console.error(
+          `[saveTick] Failed to assign inferred session for tick ${uuid} (user ${userId}):`,
+          err,
+        );
       });
     }
 
     // Publish ascent.logged event for feed fan-out (only for successful ascents)
-    if (tick.status === 'flash' || tick.status === 'send') {
+    if (tick.status === "flash" || tick.status === "send") {
       // Fire-and-forget with retry: don't block the response on event publishing
       publishAscentEvent(tick, userId, boardId).catch(() => {
         // Final failure already logged inside publishAscentEvent
@@ -232,11 +248,11 @@ export const tickMutations = {
   attachBetaLink: async (
     _: unknown,
     { input }: { input: unknown },
-    ctx: ConnectionContext
+    ctx: ConnectionContext,
   ): Promise<boolean> => {
     requireAuthenticated(ctx);
 
-    const validated = validateInput(AttachBetaLinkInputSchema, input, 'input');
+    const validated = validateInput(AttachBetaLinkInputSchema, input, "input");
     const now = new Date().toISOString();
 
     await db
@@ -260,12 +276,12 @@ export const tickMutations = {
   updateTick: async (
     _: unknown,
     { uuid, input }: { uuid: string; input: unknown },
-    ctx: ConnectionContext
+    ctx: ConnectionContext,
   ): Promise<unknown> => {
     requireAuthenticated(ctx);
     const userId = ctx.userId!;
 
-    const validatedInput = validateInput(UpdateTickInputSchema, input, 'input');
+    const validatedInput = validateInput(UpdateTickInputSchema, input, "input");
 
     // Verify ownership and get current tick
     const existing = await db
@@ -275,10 +291,10 @@ export const tickMutations = {
       .limit(1);
 
     if (existing.length === 0) {
-      throw new Error('Tick not found');
+      throw new Error("Tick not found");
     }
     if (existing[0].userId !== userId) {
-      throw new Error('Not authorized to update this tick');
+      throw new Error("Not authorized to update this tick");
     }
 
     const updates: Record<string, unknown> = {
@@ -286,7 +302,8 @@ export const tickMutations = {
     };
 
     if (validatedInput.status !== undefined) updates.status = validatedInput.status;
-    if (validatedInput.attemptCount !== undefined) updates.attemptCount = validatedInput.attemptCount;
+    if (validatedInput.attemptCount !== undefined)
+      updates.attemptCount = validatedInput.attemptCount;
     if (validatedInput.quality !== undefined) updates.quality = validatedInput.quality;
     if (validatedInput.difficulty !== undefined) updates.difficulty = validatedInput.difficulty;
     if (validatedInput.isBenchmark !== undefined) updates.isBenchmark = validatedInput.isBenchmark;
@@ -310,7 +327,7 @@ export const tickMutations = {
       quality: updated.quality,
       difficulty: updated.difficulty,
       isBenchmark: updated.isBenchmark,
-      comment: updated.comment || '',
+      comment: updated.comment || "",
       climbedAt: updated.climbedAt,
       createdAt: updated.createdAt,
       updatedAt: updated.updatedAt,
@@ -326,7 +343,19 @@ const RETRY_BASE_DELAY_MS = 500;
  * Retries up to MAX_EVENT_RETRIES times with exponential backoff.
  */
 async function publishAscentEvent(
-  tick: { uuid: string; climbUuid: string; boardType: string; status: string; angle: number; isMirror: boolean | null; isBenchmark: boolean | null; difficulty: number | null; quality: number | null; attemptCount: number; comment: string | null },
+  tick: {
+    uuid: string;
+    climbUuid: string;
+    boardType: string;
+    status: string;
+    angle: number;
+    isMirror: boolean | null;
+    isBenchmark: boolean | null;
+    difficulty: number | null;
+    quality: number | null;
+    attemptCount: number;
+    comment: string | null;
+  },
   userId: string,
   boardId: number | null,
 ): Promise<void> {
@@ -343,8 +372,8 @@ async function publishAscentEvent(
         .where(
           and(
             eq(dbSchema.boardClimbs.uuid, tick.climbUuid),
-            eq(dbSchema.boardClimbs.boardType, tick.boardType)
-          )
+            eq(dbSchema.boardClimbs.boardType, tick.boardType),
+          ),
         )
         .limit(1);
 
@@ -368,13 +397,17 @@ async function publishAscentEvent(
           .where(
             and(
               eq(dbSchema.boardDifficultyGrades.difficulty, tick.difficulty),
-              eq(dbSchema.boardDifficultyGrades.boardType, tick.boardType)
-            )
+              eq(dbSchema.boardDifficultyGrades.boardType, tick.boardType),
+            ),
           )
           .limit(1);
         difficultyName = grade?.boulderName ?? undefined;
       } else {
-        difficultyName = await getConsensusDifficultyName(tick.climbUuid, tick.boardType, tick.angle);
+        difficultyName = await getConsensusDifficultyName(
+          tick.climbUuid,
+          tick.boardType,
+          tick.angle,
+        );
       }
 
       let boardUuid: string | undefined;
@@ -388,33 +421,33 @@ async function publishAscentEvent(
       }
 
       await publishSocialEvent({
-        type: 'ascent.logged',
+        type: "ascent.logged",
         actorId: userId,
-        entityType: 'tick',
+        entityType: "tick",
         entityId: tick.uuid,
         timestamp: Date.now(),
         metadata: {
-          actorDisplayName: userProfile?.displayName || userProfile?.name || '',
-          actorAvatarUrl: userProfile?.avatarUrl || userProfile?.image || '',
-          climbName: climbData?.name || '',
+          actorDisplayName: userProfile?.displayName || userProfile?.name || "",
+          actorAvatarUrl: userProfile?.avatarUrl || userProfile?.image || "",
+          climbName: climbData?.name || "",
           climbUuid: tick.climbUuid,
           boardType: tick.boardType,
-          setterUsername: climbData?.setterUsername || '',
-          layoutId: String(climbData?.layoutId ?? ''),
-          frames: climbData?.frames || '',
-          gradeName: difficultyName || '',
-          difficulty: String(tick.difficulty ?? ''),
-          difficultyName: difficultyName || '',
+          setterUsername: climbData?.setterUsername || "",
+          layoutId: String(climbData?.layoutId ?? ""),
+          frames: climbData?.frames || "",
+          gradeName: difficultyName || "",
+          difficulty: String(tick.difficulty ?? ""),
+          difficultyName: difficultyName || "",
           status: tick.status,
           angle: String(tick.angle),
           isMirror: String(tick.isMirror ?? false),
           isBenchmark: String(tick.isBenchmark ?? false),
-          quality: String(tick.quality ?? ''),
+          quality: String(tick.quality ?? ""),
           attemptCount: String(tick.attemptCount),
-          comment: tick.comment || '',
+          comment: tick.comment || "",
           // boardUuid may be null if the climb isn't associated with a user board;
           // this is intentional — board-scoped feed filtering simply won't match these items
-          boardUuid: boardUuid || '',
+          boardUuid: boardUuid || "",
         },
       });
       return; // Success

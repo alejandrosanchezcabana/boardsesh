@@ -1,9 +1,9 @@
-import { v4 as uuidv4 } from 'uuid';
-import { eq, and, count, isNull, sql, ilike, or, desc, inArray, like } from 'drizzle-orm';
-import type { ConnectionContext } from '@boardsesh/shared-schema';
-import { db } from '../../../db/client';
-import * as dbSchema from '@boardsesh/db/schema';
-import { requireAuthenticated, applyRateLimit, validateInput } from '../shared/helpers';
+import { v4 as uuidv4 } from "uuid";
+import { eq, and, count, isNull, sql, ilike, or, desc, inArray, like } from "drizzle-orm";
+import type { ConnectionContext } from "@boardsesh/shared-schema";
+import { db } from "../../../db/client";
+import * as dbSchema from "@boardsesh/db/schema";
+import { requireAuthenticated, applyRateLimit, validateInput } from "../shared/helpers";
 import {
   CreateBoardInputSchema,
   UpdateBoardInputSchema,
@@ -13,9 +13,9 @@ import {
   SearchBoardsInputSchema,
   PopularBoardConfigsInputSchema,
   UUIDSchema,
-} from '../../../validation/schemas';
-import { generateUniqueGymSlug } from './gyms';
-import { redisClientManager } from '../../../redis/client';
+} from "../../../validation/schemas";
+import { generateUniqueGymSlug } from "./gyms";
+import { redisClientManager } from "../../../redis/client";
 
 // ============================================
 // Helpers
@@ -27,11 +27,12 @@ import { redisClientManager } from '../../../redis/client';
  * then picks the next available suffix in-memory — no sequential DB loop.
  */
 async function generateUniqueSlug(name: string): Promise<string> {
-  const baseSlug = name
-    .toLowerCase()
-    .replace(/[^a-z0-9]+/g, '-')
-    .replace(/^-+|-+$/g, '')
-    .slice(0, 100) || 'board';
+  const baseSlug =
+    name
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, "-")
+      .replace(/^-+|-+$/g, "")
+      .slice(0, 100) || "board";
 
   // Fetch the base slug and all numeric-suffix variants in one query.
   // e.g. for "my-board" we match "my-board" and "my-board-2", "my-board-10", etc.
@@ -40,10 +41,7 @@ async function generateUniqueSlug(name: string): Promise<string> {
     .from(dbSchema.userBoards)
     .where(
       and(
-        or(
-          eq(dbSchema.userBoards.slug, baseSlug),
-          like(dbSchema.userBoards.slug, `${baseSlug}-%`),
-        ),
+        or(eq(dbSchema.userBoards.slug, baseSlug), like(dbSchema.userBoards.slug, `${baseSlug}-%`)),
         isNull(dbSchema.userBoards.deletedAt),
       ),
     );
@@ -91,7 +89,7 @@ export async function resolveBoardFromPath(
         eq(dbSchema.userBoards.sizeId, sizeId),
         eq(dbSchema.userBoards.setIds, setIds),
         isNull(dbSchema.userBoards.deletedAt),
-      )
+      ),
     )
     .limit(1);
 
@@ -107,78 +105,84 @@ async function enrichBoard(
   distanceMeters?: number | null,
 ) {
   // Run all independent queries in parallel to avoid N+1 per board
-  const [ownerResult, tickStatsResult, followerStatsResult, commentStatsResult, followCheckResult, gymInfoResult] =
-    await Promise.all([
-      // Get owner profile
-      db
-        .select({
-          name: dbSchema.users.name,
-          image: dbSchema.users.image,
-          displayName: dbSchema.userProfiles.displayName,
-          avatarUrl: dbSchema.userProfiles.avatarUrl,
-        })
-        .from(dbSchema.users)
-        .leftJoin(dbSchema.userProfiles, eq(dbSchema.users.id, dbSchema.userProfiles.userId))
-        .where(eq(dbSchema.users.id, board.ownerId))
-        .limit(1),
+  const [
+    ownerResult,
+    tickStatsResult,
+    followerStatsResult,
+    commentStatsResult,
+    followCheckResult,
+    gymInfoResult,
+  ] = await Promise.all([
+    // Get owner profile
+    db
+      .select({
+        name: dbSchema.users.name,
+        image: dbSchema.users.image,
+        displayName: dbSchema.userProfiles.displayName,
+        avatarUrl: dbSchema.userProfiles.avatarUrl,
+      })
+      .from(dbSchema.users)
+      .leftJoin(dbSchema.userProfiles, eq(dbSchema.users.id, dbSchema.userProfiles.userId))
+      .where(eq(dbSchema.users.id, board.ownerId))
+      .limit(1),
 
-      // Count total ascents and unique climbers
-      db
-        .select({
-          totalAscents: count(),
-          uniqueClimbers: sql<number>`COUNT(DISTINCT ${dbSchema.boardseshTicks.userId})`,
-        })
-        .from(dbSchema.boardseshTicks)
-        .where(
-          and(
-            eq(dbSchema.boardseshTicks.boardId, board.id),
-            or(
-              eq(dbSchema.boardseshTicks.status, 'flash'),
-              eq(dbSchema.boardseshTicks.status, 'send'),
+    // Count total ascents and unique climbers
+    db
+      .select({
+        totalAscents: count(),
+        uniqueClimbers: sql<number>`COUNT(DISTINCT ${dbSchema.boardseshTicks.userId})`,
+      })
+      .from(dbSchema.boardseshTicks)
+      .where(
+        and(
+          eq(dbSchema.boardseshTicks.boardId, board.id),
+          or(
+            eq(dbSchema.boardseshTicks.status, "flash"),
+            eq(dbSchema.boardseshTicks.status, "send"),
+          ),
+        ),
+      ),
+
+    // Count followers
+    db
+      .select({ count: count() })
+      .from(dbSchema.boardFollows)
+      .where(eq(dbSchema.boardFollows.boardUuid, board.uuid)),
+
+    // Count comments
+    db
+      .select({ count: count() })
+      .from(dbSchema.comments)
+      .where(
+        and(
+          eq(dbSchema.comments.entityType, "board"),
+          eq(dbSchema.comments.entityId, board.uuid),
+          isNull(dbSchema.comments.deletedAt),
+        ),
+      ),
+
+    // Check if authenticated user follows this board
+    authenticatedUserId
+      ? db
+          .select({ count: count() })
+          .from(dbSchema.boardFollows)
+          .where(
+            and(
+              eq(dbSchema.boardFollows.userId, authenticatedUserId),
+              eq(dbSchema.boardFollows.boardUuid, board.uuid),
             ),
           )
-        ),
+      : Promise.resolve([]),
 
-      // Count followers
-      db
-        .select({ count: count() })
-        .from(dbSchema.boardFollows)
-        .where(eq(dbSchema.boardFollows.boardUuid, board.uuid)),
-
-      // Count comments
-      db
-        .select({ count: count() })
-        .from(dbSchema.comments)
-        .where(
-          and(
-            eq(dbSchema.comments.entityType, 'board'),
-            eq(dbSchema.comments.entityId, board.uuid),
-            isNull(dbSchema.comments.deletedAt),
-          )
-        ),
-
-      // Check if authenticated user follows this board
-      authenticatedUserId
-        ? db
-            .select({ count: count() })
-            .from(dbSchema.boardFollows)
-            .where(
-              and(
-                eq(dbSchema.boardFollows.userId, authenticatedUserId),
-                eq(dbSchema.boardFollows.boardUuid, board.uuid),
-              )
-            )
-        : Promise.resolve([]),
-
-      // Get gym info if board is linked to a gym
-      board.gymId
-        ? db
-            .select({ uuid: dbSchema.gyms.uuid, name: dbSchema.gyms.name })
-            .from(dbSchema.gyms)
-            .where(and(eq(dbSchema.gyms.id, board.gymId), isNull(dbSchema.gyms.deletedAt)))
-            .limit(1)
-        : Promise.resolve([]),
-    ]);
+    // Get gym info if board is linked to a gym
+    board.gymId
+      ? db
+          .select({ uuid: dbSchema.gyms.uuid, name: dbSchema.gyms.name })
+          .from(dbSchema.gyms)
+          .where(and(eq(dbSchema.gyms.id, board.gymId), isNull(dbSchema.gyms.deletedAt)))
+          .limit(1)
+      : Promise.resolve([]),
+  ]);
 
   const ownerInfo = ownerResult[0];
   const tickStats = tickStatsResult[0];
@@ -240,7 +244,9 @@ async function enrichBoards(
   const boardIds = boards.map((b) => b.board.id);
   const boardUuids = boards.map((b) => b.board.uuid);
   const ownerIds = [...new Set(boards.map((b) => b.board.ownerId))];
-  const gymIds = [...new Set(boards.map((b) => b.board.gymId).filter((id): id is number => id != null))];
+  const gymIds = [
+    ...new Set(boards.map((b) => b.board.gymId).filter((id): id is number => id != null)),
+  ];
 
   const [ownerRows, tickRows, followerRows, commentRows, followRows, gymRows] = await Promise.all([
     // Batch owner profiles
@@ -268,8 +274,8 @@ async function enrichBoards(
         and(
           inArray(dbSchema.boardseshTicks.boardId, boardIds),
           or(
-            eq(dbSchema.boardseshTicks.status, 'flash'),
-            eq(dbSchema.boardseshTicks.status, 'send'),
+            eq(dbSchema.boardseshTicks.status, "flash"),
+            eq(dbSchema.boardseshTicks.status, "send"),
           ),
         ),
       )
@@ -294,7 +300,7 @@ async function enrichBoards(
       .from(dbSchema.comments)
       .where(
         and(
-          eq(dbSchema.comments.entityType, 'board'),
+          eq(dbSchema.comments.entityType, "board"),
           inArray(dbSchema.comments.entityId, boardUuids),
           isNull(dbSchema.comments.deletedAt),
         ),
@@ -396,16 +402,16 @@ export interface CachedPopularConfig {
 }
 
 const BOARD_TYPE_LABELS: Record<string, string> = {
-  kilter: 'Kilter',
-  tension: 'Tension',
-  moonboard: 'MoonBoard',
-  decoy: 'Decoy',
-  touchstone: 'Touchstone',
-  grasshopper: 'Grasshopper',
-  soill: 'So iLL',
+  kilter: "Kilter",
+  tension: "Tension",
+  moonboard: "MoonBoard",
+  decoy: "Decoy",
+  touchstone: "Touchstone",
+  grasshopper: "Grasshopper",
+  soill: "So iLL",
 };
 
-const GENERIC_SETS = new Set(['bolt ons', 'screw ons', 'foot set', 'plastic', 'wood']);
+const GENERIC_SETS = new Set(["bolt ons", "screw ons", "foot set", "plastic", "wood"]);
 
 function formatDisplayName(
   boardType: string,
@@ -416,41 +422,41 @@ function formatDisplayName(
   const boardLabel = BOARD_TYPE_LABELS[boardType] || boardType;
 
   // Shorten layout name: strip board type, "Board", abbreviations
-  const shortLayout = (layoutName || '')
-    .replace(new RegExp(`\\b${boardLabel}\\b\\s*`, 'gi'), '')
-    .replace(/\bBoard\b\s*/gi, '')
-    .replace(/\bHomewall\b/gi, 'HW')
-    .replace(/\bOriginal\b/gi, 'OG')
-    .replace(/\bLayout\b/gi, '')
-    .replace(/^2\s+/i, '')
-    .replace(/\s+/g, ' ')
+  const shortLayout = (layoutName || "")
+    .replace(new RegExp(`\\b${boardLabel}\\b\\s*`, "gi"), "")
+    .replace(/\bBoard\b\s*/gi, "")
+    .replace(/\bHomewall\b/gi, "HW")
+    .replace(/\bOriginal\b/gi, "OG")
+    .replace(/\bLayout\b/gi, "")
+    .replace(/^2\s+/i, "")
+    .replace(/\s+/g, " ")
     .trim();
 
   // Compact size name: strip "high"/"wide", collapse whitespace around "x"
-  const shortSize = (sizeName || '')
-    .replace(/\s*high\s*/gi, '')
-    .replace(/\s*wide\s*/gi, '')
-    .replace(/\s*x\s*/g, 'x')
-    .replace(/\s+/g, ' ')
+  const shortSize = (sizeName || "")
+    .replace(/\s*high\s*/gi, "")
+    .replace(/\s*wide\s*/gi, "")
+    .replace(/\s*x\s*/g, "x")
+    .replace(/\s+/g, " ")
     .trim();
 
   // Detect distinctive sets (Mainline/Auxiliary vs generic Bolt Ons/Screw Ons)
   const distinctiveSets = setNames.filter((s) => !GENERIC_SETS.has(s.toLowerCase()));
   const hasMainline = distinctiveSets.some((s) => /mainline/i.test(s) && !/kickboard/i.test(s));
   const hasAux = distinctiveSets.some((s) => /auxiliary/i.test(s) && !/kickboard/i.test(s));
-  let setLabel = '';
+  let setLabel = "";
   if (hasMainline && hasAux) {
-    setLabel = ' Full Ride';
+    setLabel = " Full Ride";
   } else if (distinctiveSets.length > 0) {
-    setLabel = ` ${distinctiveSets.map((s) => s.replace(/\bKickboard\b/gi, 'KB')).join(' + ')}`;
+    setLabel = ` ${distinctiveSets.map((s) => s.replace(/\bKickboard\b/gi, "KB")).join(" + ")}`;
   }
 
   return `${shortLayout} ${shortSize}${setLabel}`.trim();
 }
 
-const REDIS_CACHE_KEY = 'boardsesh:popular-board-configs';
+const REDIS_CACHE_KEY = "boardsesh:popular-board-configs";
 const REDIS_CACHE_TTL_SECONDS = 365 * 24 * 60 * 60; // 1 year
-const REDIS_LOCK_KEY = 'boardsesh:popular-board-configs:lock';
+const REDIS_LOCK_KEY = "boardsesh:popular-board-configs:lock";
 const REDIS_LOCK_TTL_SECONDS = 120; // 2 min lock to prevent duplicate queries across nodes
 
 async function getPopularConfigs(): Promise<CachedPopularConfig[]> {
@@ -463,7 +469,7 @@ async function getPopularConfigs(): Promise<CachedPopularConfig[]> {
         return JSON.parse(cached) as CachedPopularConfig[];
       }
     } catch (err) {
-      console.error('[PopularConfigs] Redis read failed:', err);
+      console.error("[PopularConfigs] Redis read failed:", err);
     }
   }
 
@@ -574,9 +580,9 @@ async function getPopularConfigs(): Promise<CachedPopularConfig[]> {
   if (redisClientManager.isRedisConnected()) {
     try {
       const { publisher } = redisClientManager.getClients();
-      await publisher.set(REDIS_CACHE_KEY, JSON.stringify(configs), 'EX', REDIS_CACHE_TTL_SECONDS);
+      await publisher.set(REDIS_CACHE_KEY, JSON.stringify(configs), "EX", REDIS_CACHE_TTL_SECONDS);
     } catch (err) {
-      console.error('[PopularConfigs] Redis write failed:', err);
+      console.error("[PopularConfigs] Redis write failed:", err);
     }
   }
   return configs;
@@ -594,24 +600,30 @@ export async function warmPopularConfigsCache(): Promise<void> {
       const { publisher } = redisClientManager.getClients();
 
       // Try to acquire lock — only the winning node runs the query
-      const lockAcquired = await publisher.set(REDIS_LOCK_KEY, '1', 'EX', REDIS_LOCK_TTL_SECONDS, 'NX');
+      const lockAcquired = await publisher.set(
+        REDIS_LOCK_KEY,
+        "1",
+        "EX",
+        REDIS_LOCK_TTL_SECONDS,
+        "NX",
+      );
       if (!lockAcquired) {
-        console.log('[PopularConfigs] Another node is refreshing the cache, skipping');
+        console.log("[PopularConfigs] Another node is refreshing the cache, skipping");
         return;
       }
       // Winning node: delete stale cache so getPopularConfigs() runs the SQL query
       await publisher.del(REDIS_CACHE_KEY);
     } catch (err) {
-      console.error('[PopularConfigs] Redis lock failed:', err);
+      console.error("[PopularConfigs] Redis lock failed:", err);
     }
   }
 
-  console.log('[PopularConfigs] Refreshing cache...');
+  console.log("[PopularConfigs] Refreshing cache...");
   try {
     const configs = await getPopularConfigs();
     console.log(`[PopularConfigs] Cache warmed with ${configs.length} configs`);
   } catch (err) {
-    console.error('[PopularConfigs] Cache warm-up failed:', err);
+    console.error("[PopularConfigs] Cache warm-up failed:", err);
   }
 }
 
@@ -623,12 +635,8 @@ export const socialBoardQueries = {
   /**
    * Get a board by UUID
    */
-  board: async (
-    _: unknown,
-    { boardUuid }: { boardUuid: string },
-    ctx: ConnectionContext,
-  ) => {
-    validateInput(UUIDSchema, boardUuid, 'boardUuid');
+  board: async (_: unknown, { boardUuid }: { boardUuid: string }, ctx: ConnectionContext) => {
+    validateInput(UUIDSchema, boardUuid, "boardUuid");
 
     const [board] = await db
       .select()
@@ -643,11 +651,7 @@ export const socialBoardQueries = {
   /**
    * Get a board by slug (for URL routing)
    */
-  boardBySlug: async (
-    _: unknown,
-    { slug }: { slug: string },
-    ctx: ConnectionContext,
-  ) => {
+  boardBySlug: async (_: unknown, { slug }: { slug: string }, ctx: ConnectionContext) => {
     // Validate slug format: lowercase alphanumeric with hyphens, max 120 chars
     if (!slug || slug.length > 120 || !/^[a-z0-9](?:[a-z0-9-]*[a-z0-9])?$/.test(slug)) {
       return null;
@@ -672,7 +676,7 @@ export const socialBoardQueries = {
     ctx: ConnectionContext,
   ) => {
     requireAuthenticated(ctx);
-    const validatedInput = validateInput(MyBoardsInputSchema, input || {}, 'input');
+    const validatedInput = validateInput(MyBoardsInputSchema, input || {}, "input");
     const userId = ctx.userId!;
     const limit = validatedInput.limit ?? 20;
     const offset = validatedInput.offset ?? 0;
@@ -687,9 +691,8 @@ export const socialBoardQueries = {
 
     // Build WHERE: owned OR followed, and not deleted
     const ownerCondition = eq(dbSchema.userBoards.ownerId, userId);
-    const followedCondition = followedUuids.length > 0
-      ? inArray(dbSchema.userBoards.uuid, followedUuids)
-      : undefined;
+    const followedCondition =
+      followedUuids.length > 0 ? inArray(dbSchema.userBoards.uuid, followedUuids) : undefined;
     const matchCondition = followedCondition
       ? or(ownerCondition, followedCondition)!
       : ownerCondition;
@@ -725,13 +728,9 @@ export const socialBoardQueries = {
   /**
    * Search public boards
    */
-  searchBoards: async (
-    _: unknown,
-    { input }: { input: unknown },
-    ctx: ConnectionContext,
-  ) => {
+  searchBoards: async (_: unknown, { input }: { input: unknown }, ctx: ConnectionContext) => {
     await applyRateLimit(ctx, 20);
-    const validatedInput = validateInput(SearchBoardsInputSchema, input, 'input');
+    const validatedInput = validateInput(SearchBoardsInputSchema, input, "input");
     const { query, boardType, latitude, longitude, radiusKm } = validatedInput;
     const limit = validatedInput.limit ?? 20;
     const offset = validatedInput.offset ?? 0;
@@ -746,7 +745,9 @@ export const socialBoardQueries = {
       const userPoint = sql`ST_MakePoint(${lon}, ${lat})::geography`;
       // "location" is a PostGIS geography column added via raw migration, not in the Drizzle schema
       const locationCol = sql`${dbSchema.userBoards}.location`;
-      const distanceMeters = sql<number>`ST_Distance(${locationCol}, ${userPoint})`.as('distance_meters');
+      const distanceMeters = sql<number>`ST_Distance(${locationCol}, ${userPoint})`.as(
+        "distance_meters",
+      );
 
       // Build shared WHERE conditions
       const conditions = [
@@ -771,7 +772,7 @@ export const socialBoardQueries = {
         conditions.push(eq(dbSchema.userBoards.boardType, boardType));
       }
       if (query) {
-        const escapedQuery = query.replace(/[%_\\]/g, '\\$&');
+        const escapedQuery = query.replace(/[%_\\]/g, "\\$&");
         conditions.push(
           or(
             ilike(dbSchema.userBoards.name, `%${escapedQuery}%`),
@@ -825,7 +826,7 @@ export const socialBoardQueries = {
 
     if (query) {
       // Escape SQL LIKE wildcards to prevent wildcard injection
-      const escapedQuery = query.replace(/[%_\\]/g, '\\$&');
+      const escapedQuery = query.replace(/[%_\\]/g, "\\$&");
       conditions.push(
         or(
           ilike(dbSchema.userBoards.name, `%${escapedQuery}%`),
@@ -871,15 +872,13 @@ export const socialBoardQueries = {
     { input }: { input?: unknown },
     _ctx: ConnectionContext,
   ) => {
-    const validatedInput = validateInput(PopularBoardConfigsInputSchema, input || {}, 'input');
+    const validatedInput = validateInput(PopularBoardConfigsInputSchema, input || {}, "input");
     const { boardType, limit, offset } = validatedInput;
 
     const allConfigs = await getPopularConfigs();
 
     // Apply optional board type filter
-    const filtered = boardType
-      ? allConfigs.filter((c) => c.boardType === boardType)
-      : allConfigs;
+    const filtered = boardType ? allConfigs.filter((c) => c.boardType === boardType) : allConfigs;
 
     const totalCount = filtered.length;
     const paginated = filtered.slice(offset, offset + limit);
@@ -894,12 +893,8 @@ export const socialBoardQueries = {
   /**
    * Get leaderboard for a board
    */
-  boardLeaderboard: async (
-    _: unknown,
-    { input }: { input: unknown },
-    ctx: ConnectionContext,
-  ) => {
-    const validatedInput = validateInput(BoardLeaderboardInputSchema, input, 'input');
+  boardLeaderboard: async (_: unknown, { input }: { input: unknown }, ctx: ConnectionContext) => {
+    const validatedInput = validateInput(BoardLeaderboardInputSchema, input, "input");
     const { boardUuid, period } = validatedInput;
     const limit = validatedInput.limit ?? 20;
     const offset = validatedInput.offset ?? 0;
@@ -912,29 +907,26 @@ export const socialBoardQueries = {
       .limit(1);
 
     if (!board) {
-      throw new Error('Board not found');
+      throw new Error("Board not found");
     }
 
     // Build time filter
     let timeFilter;
-    let periodLabel = 'All Time';
-    if (period === 'week') {
+    let periodLabel = "All Time";
+    if (period === "week") {
       timeFilter = sql`${dbSchema.boardseshTicks.climbedAt} >= NOW() - INTERVAL '7 days'`;
-      periodLabel = 'This Week';
-    } else if (period === 'month') {
+      periodLabel = "This Week";
+    } else if (period === "month") {
       timeFilter = sql`${dbSchema.boardseshTicks.climbedAt} >= NOW() - INTERVAL '30 days'`;
-      periodLabel = 'This Month';
-    } else if (period === 'year') {
+      periodLabel = "This Month";
+    } else if (period === "year") {
       timeFilter = sql`${dbSchema.boardseshTicks.climbedAt} >= NOW() - INTERVAL '365 days'`;
-      periodLabel = 'This Year';
+      periodLabel = "This Year";
     }
 
     const conditions = [
       eq(dbSchema.boardseshTicks.boardId, board.id),
-      or(
-        eq(dbSchema.boardseshTicks.status, 'flash'),
-        eq(dbSchema.boardseshTicks.status, 'send'),
-      )!,
+      or(eq(dbSchema.boardseshTicks.status, "flash"), eq(dbSchema.boardseshTicks.status, "send"))!,
     ];
 
     if (timeFilter) {
@@ -1019,11 +1011,7 @@ export const socialBoardQueries = {
   /**
    * Get the user's default board
    */
-  defaultBoard: async (
-    _: unknown,
-    _args: unknown,
-    ctx: ConnectionContext,
-  ) => {
+  defaultBoard: async (_: unknown, _args: unknown, ctx: ConnectionContext) => {
     requireAuthenticated(ctx);
     const userId = ctx.userId!;
 
@@ -1036,7 +1024,7 @@ export const socialBoardQueries = {
           eq(dbSchema.userBoards.ownerId, userId),
           eq(dbSchema.userBoards.isOwned, true),
           isNull(dbSchema.userBoards.deletedAt),
-        )
+        ),
       )
       .orderBy(desc(dbSchema.userBoards.createdAt))
       .limit(1);
@@ -1049,12 +1037,7 @@ export const socialBoardQueries = {
     const [anyBoard] = await db
       .select()
       .from(dbSchema.userBoards)
-      .where(
-        and(
-          eq(dbSchema.userBoards.ownerId, userId),
-          isNull(dbSchema.userBoards.deletedAt),
-        )
-      )
+      .where(and(eq(dbSchema.userBoards.ownerId, userId), isNull(dbSchema.userBoards.deletedAt)))
       .orderBy(desc(dbSchema.userBoards.createdAt))
       .limit(1);
 
@@ -1074,15 +1057,11 @@ export const socialBoardMutations = {
   /**
    * Create a new board
    */
-  createBoard: async (
-    _: unknown,
-    { input }: { input: unknown },
-    ctx: ConnectionContext,
-  ) => {
+  createBoard: async (_: unknown, { input }: { input: unknown }, ctx: ConnectionContext) => {
     requireAuthenticated(ctx);
     await applyRateLimit(ctx, 10);
 
-    const validatedInput = validateInput(CreateBoardInputSchema, input, 'input');
+    const validatedInput = validateInput(CreateBoardInputSchema, input, "input");
     const userId = ctx.userId!;
 
     // Check for duplicate config
@@ -1097,12 +1076,12 @@ export const socialBoardMutations = {
           eq(dbSchema.userBoards.sizeId, validatedInput.sizeId),
           eq(dbSchema.userBoards.setIds, validatedInput.setIds),
           isNull(dbSchema.userBoards.deletedAt),
-        )
+        ),
       )
       .limit(1);
 
     if (existing) {
-      throw new Error('You already have a board with this configuration');
+      throw new Error("You already have a board with this configuration");
     }
 
     const uuid = uuidv4();
@@ -1118,7 +1097,7 @@ export const socialBoardMutations = {
         .limit(1);
 
       if (!gym) {
-        throw new Error('Gym not found');
+        throw new Error("Gym not found");
       }
 
       // Verify user is owner or admin of the gym
@@ -1130,13 +1109,13 @@ export const socialBoardMutations = {
             and(
               eq(dbSchema.gymMembers.gymId, gym.id),
               eq(dbSchema.gymMembers.userId, userId),
-              eq(dbSchema.gymMembers.role, 'admin'),
-            )
+              eq(dbSchema.gymMembers.role, "admin"),
+            ),
           )
           .limit(1);
 
         if (!member) {
-          throw new Error('Not authorized to link board to this gym');
+          throw new Error("Not authorized to link board to this gym");
         }
       }
 
@@ -1174,7 +1153,7 @@ export const socialBoardMutations = {
 
             if (validatedInput.latitude != null && validatedInput.longitude != null) {
               await tx.execute(
-                sql`UPDATE gyms SET location = ST_MakePoint(${validatedInput.longitude}, ${validatedInput.latitude})::geography WHERE id = ${newGym.id}`
+                sql`UPDATE gyms SET location = ST_MakePoint(${validatedInput.longitude}, ${validatedInput.latitude})::geography WHERE id = ${newGym.id}`,
               );
             }
 
@@ -1206,7 +1185,7 @@ export const socialBoardMutations = {
 
             if (validatedInput.latitude != null && validatedInput.longitude != null) {
               await tx.execute(
-                sql`UPDATE user_boards SET location = ST_MakePoint(${validatedInput.longitude}, ${validatedInput.latitude})::geography WHERE id = ${newBoard.id}`
+                sql`UPDATE user_boards SET location = ST_MakePoint(${validatedInput.longitude}, ${validatedInput.latitude})::geography WHERE id = ${newBoard.id}`,
               );
             }
 
@@ -1216,7 +1195,7 @@ export const socialBoardMutations = {
           return enrichBoard(board, userId);
         } catch (error) {
           // Auto-gym creation failed; continue to create the board without a gym
-          console.error('Auto-gym creation failed, creating board without gym:', error);
+          console.error("Auto-gym creation failed, creating board without gym:", error);
         }
       }
     }
@@ -1250,7 +1229,7 @@ export const socialBoardMutations = {
     // Populate PostGIS location column if lat/lon provided
     if (validatedInput.latitude != null && validatedInput.longitude != null) {
       await db.execute(
-        sql`UPDATE user_boards SET location = ST_MakePoint(${validatedInput.longitude}, ${validatedInput.latitude})::geography WHERE id = ${board.id}`
+        sql`UPDATE user_boards SET location = ST_MakePoint(${validatedInput.longitude}, ${validatedInput.latitude})::geography WHERE id = ${board.id}`,
       );
     }
 
@@ -1260,15 +1239,11 @@ export const socialBoardMutations = {
   /**
    * Update a board's metadata
    */
-  updateBoard: async (
-    _: unknown,
-    { input }: { input: unknown },
-    ctx: ConnectionContext,
-  ) => {
+  updateBoard: async (_: unknown, { input }: { input: unknown }, ctx: ConnectionContext) => {
     requireAuthenticated(ctx);
     await applyRateLimit(ctx, 20);
 
-    const validatedInput = validateInput(UpdateBoardInputSchema, input, 'input');
+    const validatedInput = validateInput(UpdateBoardInputSchema, input, "input");
     const userId = ctx.userId!;
 
     // Verify ownership
@@ -1279,11 +1254,11 @@ export const socialBoardMutations = {
       .limit(1);
 
     if (!board) {
-      throw new Error('Board not found');
+      throw new Error("Board not found");
     }
 
     if (board.ownerId !== userId) {
-      throw new Error('Not authorized to update this board');
+      throw new Error("Not authorized to update this board");
     }
 
     // Build update values (only provided fields)
@@ -1292,22 +1267,29 @@ export const socialBoardMutations = {
     };
 
     if (validatedInput.name !== undefined) updateValues.name = validatedInput.name;
-    if (validatedInput.description !== undefined) updateValues.description = validatedInput.description;
-    if (validatedInput.locationName !== undefined) updateValues.locationName = validatedInput.locationName;
+    if (validatedInput.description !== undefined)
+      updateValues.description = validatedInput.description;
+    if (validatedInput.locationName !== undefined)
+      updateValues.locationName = validatedInput.locationName;
     if (validatedInput.latitude !== undefined) updateValues.latitude = validatedInput.latitude;
     if (validatedInput.longitude !== undefined) updateValues.longitude = validatedInput.longitude;
     if (validatedInput.isPublic !== undefined) updateValues.isPublic = validatedInput.isPublic;
-    if (validatedInput.isUnlisted !== undefined) updateValues.isUnlisted = validatedInput.isUnlisted;
-    if (validatedInput.hideLocation !== undefined) updateValues.hideLocation = validatedInput.hideLocation;
+    if (validatedInput.isUnlisted !== undefined)
+      updateValues.isUnlisted = validatedInput.isUnlisted;
+    if (validatedInput.hideLocation !== undefined)
+      updateValues.hideLocation = validatedInput.hideLocation;
     if (validatedInput.isOwned !== undefined) updateValues.isOwned = validatedInput.isOwned;
     if (validatedInput.angle !== undefined) updateValues.angle = validatedInput.angle;
-    if (validatedInput.isAngleAdjustable !== undefined) updateValues.isAngleAdjustable = validatedInput.isAngleAdjustable;
-    if (validatedInput.serialNumber !== undefined) updateValues.serialNumber = validatedInput.serialNumber;
+    if (validatedInput.isAngleAdjustable !== undefined)
+      updateValues.isAngleAdjustable = validatedInput.isAngleAdjustable;
+    if (validatedInput.serialNumber !== undefined)
+      updateValues.serialNumber = validatedInput.serialNumber;
 
     // Handle config field changes (layoutId, sizeId, setIds) — only allowed on boards with zero ticks
-    const hasConfigChange = validatedInput.layoutId !== undefined
-      || validatedInput.sizeId !== undefined
-      || validatedInput.setIds !== undefined;
+    const hasConfigChange =
+      validatedInput.layoutId !== undefined ||
+      validatedInput.sizeId !== undefined ||
+      validatedInput.setIds !== undefined;
 
     if (hasConfigChange) {
       const [tickCount] = await db
@@ -1317,7 +1299,7 @@ export const socialBoardMutations = {
 
       if (Number(tickCount?.total || 0) > 0) {
         throw new Error(
-          'Cannot change board configuration because this board has logged climbs. Delete the board and create a new one instead.'
+          "Cannot change board configuration because this board has logged climbs. Delete the board and create a new one instead.",
         );
       }
 
@@ -1338,12 +1320,12 @@ export const socialBoardMutations = {
             eq(dbSchema.userBoards.setIds, newSetIds),
             isNull(dbSchema.userBoards.deletedAt),
             sql`${dbSchema.userBoards.id} != ${board.id}`,
-          )
+          ),
         )
         .limit(1);
 
       if (configConflict) {
-        throw new Error('You already have a board with this configuration');
+        throw new Error("You already have a board with this configuration");
       }
 
       if (validatedInput.layoutId !== undefined) updateValues.layoutId = validatedInput.layoutId;
@@ -1362,12 +1344,12 @@ export const socialBoardMutations = {
             eq(dbSchema.userBoards.slug, validatedInput.slug),
             isNull(dbSchema.userBoards.deletedAt),
             sql`${dbSchema.userBoards.id} != ${board.id}`,
-          )
+          ),
         )
         .limit(1);
 
       if (slugConflict) {
-        throw new Error('Slug is already taken');
+        throw new Error("Slug is already taken");
       }
       updateValues.slug = validatedInput.slug;
     }
@@ -1389,12 +1371,10 @@ export const socialBoardMutations = {
       const lon = validatedInput.longitude ?? updated.longitude;
       if (lat != null && lon != null) {
         await db.execute(
-          sql`UPDATE user_boards SET location = ST_MakePoint(${lon}, ${lat})::geography WHERE id = ${updated.id}`
+          sql`UPDATE user_boards SET location = ST_MakePoint(${lon}, ${lat})::geography WHERE id = ${updated.id}`,
         );
       } else {
-        await db.execute(
-          sql`UPDATE user_boards SET location = NULL WHERE id = ${updated.id}`
-        );
+        await db.execute(sql`UPDATE user_boards SET location = NULL WHERE id = ${updated.id}`);
       }
     }
 
@@ -1412,7 +1392,7 @@ export const socialBoardMutations = {
     requireAuthenticated(ctx);
     await applyRateLimit(ctx, 10);
 
-    validateInput(UUIDSchema, boardUuid, 'boardUuid');
+    validateInput(UUIDSchema, boardUuid, "boardUuid");
     const userId = ctx.userId!;
 
     const [board] = await db
@@ -1422,11 +1402,11 @@ export const socialBoardMutations = {
       .limit(1);
 
     if (!board) {
-      throw new Error('Board not found');
+      throw new Error("Board not found");
     }
 
     if (board.ownerId !== userId) {
-      throw new Error('Not authorized to delete this board');
+      throw new Error("Not authorized to delete this board");
     }
 
     await db
@@ -1448,7 +1428,7 @@ export const socialBoardMutations = {
     requireAuthenticated(ctx);
     await applyRateLimit(ctx, 20);
 
-    const validatedInput = validateInput(FollowBoardInputSchema, input, 'input');
+    const validatedInput = validateInput(FollowBoardInputSchema, input, "input");
     const userId = ctx.userId!;
 
     // Verify board exists and is accessible
@@ -1459,15 +1439,20 @@ export const socialBoardMutations = {
         isPublic: dbSchema.userBoards.isPublic,
       })
       .from(dbSchema.userBoards)
-      .where(and(eq(dbSchema.userBoards.uuid, validatedInput.boardUuid), isNull(dbSchema.userBoards.deletedAt)))
+      .where(
+        and(
+          eq(dbSchema.userBoards.uuid, validatedInput.boardUuid),
+          isNull(dbSchema.userBoards.deletedAt),
+        ),
+      )
       .limit(1);
 
     if (!board) {
-      throw new Error('Board not found');
+      throw new Error("Board not found");
     }
 
     if (!board.isPublic && board.ownerId !== userId) {
-      throw new Error('Cannot follow a private board');
+      throw new Error("Cannot follow a private board");
     }
 
     await db
@@ -1492,7 +1477,7 @@ export const socialBoardMutations = {
     requireAuthenticated(ctx);
     await applyRateLimit(ctx, 20);
 
-    const validatedInput = validateInput(FollowBoardInputSchema, input, 'input');
+    const validatedInput = validateInput(FollowBoardInputSchema, input, "input");
     const userId = ctx.userId!;
 
     await db
@@ -1501,7 +1486,7 @@ export const socialBoardMutations = {
         and(
           eq(dbSchema.boardFollows.userId, userId),
           eq(dbSchema.boardFollows.boardUuid, validatedInput.boardUuid),
-        )
+        ),
       );
 
     return true;

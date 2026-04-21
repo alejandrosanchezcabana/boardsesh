@@ -1,22 +1,25 @@
-'use client';
+"use client";
 
-import React, { useMemo } from 'react';
-import Box from '@mui/material/Box';
-import Typography from '@mui/material/Typography';
-import Chip from '@mui/material/Chip';
-import Rating from '@mui/material/Rating';
-import ChatBubbleOutlineOutlined from '@mui/icons-material/ChatBubbleOutlineOutlined';
-import { useBoardProvider } from '../board-provider/board-provider-context';
-import { themeTokens } from '@/app/theme/theme-config';
-import dayjs from 'dayjs';
-import type { LogbookEntry } from '@/app/hooks/use-logbook';
-import { AscentStatusIcon } from '@/app/components/ascent-status/ascent-status-icon';
-import { normalizeAscentStatus, type AscentStatusValue } from '@/app/components/ascent-status/ascent-status-utils';
+import React, { useMemo } from "react";
+import Box from "@mui/material/Box";
+import Typography from "@mui/material/Typography";
+import Chip from "@mui/material/Chip";
+import Rating from "@mui/material/Rating";
+import ChatBubbleOutlineOutlined from "@mui/icons-material/ChatBubbleOutlineOutlined";
+import { useBoardProvider } from "../board-provider/board-provider-context";
+import { themeTokens } from "@/app/theme/theme-config";
+import dayjs from "dayjs";
+import type { LogbookEntry } from "@/app/hooks/use-logbook";
+import { AscentStatusIcon } from "@/app/components/ascent-status/ascent-status-icon";
+import {
+  normalizeAscentStatus,
+  type AscentStatusValue,
+} from "@/app/components/ascent-status/ascent-status-utils";
 
 function getAscentChipLabel(status: AscentStatusValue): string {
-  if (status === 'flash') return 'Flash';
-  if (status === 'send') return 'Send';
-  return 'Attempt';
+  if (status === "flash") return "Flash";
+  if (status === "send") return "Send";
+  return "Attempt";
 }
 
 interface PlayViewCommentsProps {
@@ -27,9 +30,10 @@ const PlayViewComments: React.FC<PlayViewCommentsProps> = ({ climbUuid }) => {
   const { logbook } = useBoardProvider();
 
   const ascents = useMemo(
-    () => logbook
-      .filter((entry) => entry.climb_uuid === climbUuid)
-      .sort((a, b) => dayjs(b.climbed_at).valueOf() - dayjs(a.climbed_at).valueOf()),
+    () =>
+      logbook
+        .filter((entry) => entry.climb_uuid === climbUuid)
+        .sort((a, b) => dayjs(b.climbed_at).valueOf() - dayjs(a.climbed_at).valueOf()),
     [logbook, climbUuid],
   );
 
@@ -41,13 +45,13 @@ const PlayViewComments: React.FC<PlayViewCommentsProps> = ({ climbUuid }) => {
         variant="caption"
         color="text.secondary"
         sx={{
-          display: 'flex',
-          alignItems: 'center',
+          display: "flex",
+          alignItems: "center",
           gap: 0.5,
           mb: `${themeTokens.spacing[1]}px`,
           fontWeight: themeTokens.typography.fontWeight.semibold,
-          textTransform: 'uppercase',
-          letterSpacing: '0.05em',
+          textTransform: "uppercase",
+          letterSpacing: "0.05em",
           fontSize: themeTokens.typography.fontSize.xs,
         }}
       >
@@ -55,28 +59,28 @@ const PlayViewComments: React.FC<PlayViewCommentsProps> = ({ climbUuid }) => {
         Your Ascents ({ascents.length})
       </Typography>
 
-      <Box sx={{ display: 'flex', flexDirection: 'column', gap: `${themeTokens.spacing[1]}px` }}>
+      <Box sx={{ display: "flex", flexDirection: "column", gap: `${themeTokens.spacing[1]}px` }}>
         {ascents.map((ascent) => {
           const ascentStatus = normalizeAscentStatus({
             status: ascent.status,
             isAscent: ascent.is_ascent,
             tries: ascent.tries,
           });
-          const hasSuccess = ascentStatus !== 'attempt';
+          const hasSuccess = ascentStatus !== "attempt";
 
           return (
             <Box
               key={`${ascent.climb_uuid}-${ascent.climbed_at}`}
               sx={{
-                display: 'flex',
-                alignItems: 'flex-start',
+                display: "flex",
+                alignItems: "flex-start",
                 gap: `${themeTokens.spacing[2]}px`,
                 py: `${themeTokens.spacing[1]}px`,
-                borderBottom: '1px solid var(--neutral-100)',
-                '&:last-child': { borderBottom: 'none' },
+                borderBottom: "1px solid var(--neutral-100)",
+                "&:last-child": { borderBottom: "none" },
               }}
             >
-              <Box sx={{ pt: '2px', flexShrink: 0 }}>
+              <Box sx={{ pt: "2px", flexShrink: 0 }}>
                 <AscentStatusIcon
                   status={ascentStatus}
                   variant="icon"
@@ -85,9 +89,13 @@ const PlayViewComments: React.FC<PlayViewCommentsProps> = ({ climbUuid }) => {
               </Box>
 
               <Box sx={{ flex: 1, minWidth: 0 }}>
-                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, flexWrap: 'wrap' }}>
-                  <Typography variant="caption" color="text.secondary" sx={{ fontSize: themeTokens.typography.fontSize.xs }}>
-                    {dayjs(ascent.climbed_at).format('MMM D, YYYY')}
+                <Box sx={{ display: "flex", alignItems: "center", gap: 1, flexWrap: "wrap" }}>
+                  <Typography
+                    variant="caption"
+                    color="text.secondary"
+                    sx={{ fontSize: themeTokens.typography.fontSize.xs }}
+                  >
+                    {dayjs(ascent.climbed_at).format("MMM D, YYYY")}
                   </Typography>
                   <Chip
                     label={getAscentChipLabel(ascentStatus)}
@@ -95,18 +103,28 @@ const PlayViewComments: React.FC<PlayViewCommentsProps> = ({ climbUuid }) => {
                     sx={{
                       height: themeTokens.spacing[5],
                       fontSize: themeTokens.typography.fontSize.xs,
-                      bgcolor: hasSuccess ? 'var(--color-success-bg)' : 'var(--neutral-100)',
-                      color: hasSuccess ? themeTokens.colors.success : 'var(--neutral-500)',
+                      bgcolor: hasSuccess ? "var(--color-success-bg)" : "var(--neutral-100)",
+                      color: hasSuccess ? themeTokens.colors.success : "var(--neutral-500)",
                     }}
                   />
                   {ascent.tries > 1 && (
-                    <Typography variant="caption" color="text.secondary" sx={{ fontSize: themeTokens.typography.fontSize.xs }}>
+                    <Typography
+                      variant="caption"
+                      color="text.secondary"
+                      sx={{ fontSize: themeTokens.typography.fontSize.xs }}
+                    >
                       {ascent.tries} tries
                     </Typography>
                   )}
                 </Box>
                 {hasSuccess && ascent.quality != null && ascent.quality > 0 && (
-                  <Rating readOnly value={ascent.quality} max={5} size="small" sx={{ mt: 0.25, fontSize: themeTokens.typography.fontSize.xs }} />
+                  <Rating
+                    readOnly
+                    value={ascent.quality}
+                    max={5}
+                    size="small"
+                    sx={{ mt: 0.25, fontSize: themeTokens.typography.fontSize.xs }}
+                  />
                 )}
                 {ascent.comment && (
                   <Typography
@@ -115,12 +133,12 @@ const PlayViewComments: React.FC<PlayViewCommentsProps> = ({ climbUuid }) => {
                     sx={{
                       mt: 0.25,
                       fontSize: themeTokens.typography.fontSize.xs,
-                      whiteSpace: 'pre-wrap',
-                      overflow: 'hidden',
-                      textOverflow: 'ellipsis',
-                      display: '-webkit-box',
+                      whiteSpace: "pre-wrap",
+                      overflow: "hidden",
+                      textOverflow: "ellipsis",
+                      display: "-webkit-box",
                       WebkitLineClamp: 2,
-                      WebkitBoxOrient: 'vertical',
+                      WebkitBoxOrient: "vertical",
                     }}
                   >
                     {ascent.comment}

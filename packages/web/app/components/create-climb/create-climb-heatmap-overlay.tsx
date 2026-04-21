@@ -1,11 +1,11 @@
-'use client';
+"use client";
 
-import React, { useMemo, useState, useEffect } from 'react';
-import { BoardDetails, SearchRequestPagination } from '@/app/lib/types';
-import { HeatmapData, LitUpHoldsMap, HoldState } from '../board-renderer/types';
-import { scaleLog } from 'd3-scale';
-import useHeatmapData from '../search-drawer/use-heatmap';
-import { DEFAULT_SEARCH_PARAMS } from '@/app/lib/url-utils';
+import React, { useMemo, useState, useEffect } from "react";
+import { BoardDetails, SearchRequestPagination } from "@/app/lib/types";
+import { HeatmapData, LitUpHoldsMap, HoldState } from "../board-renderer/types";
+import { scaleLog } from "d3-scale";
+import useHeatmapData from "../search-drawer/use-heatmap";
+import { DEFAULT_SEARCH_PARAMS } from "@/app/lib/url-utils";
 
 const BLUR_RADIUS = 10;
 const HEAT_RADIUS_MULTIPLIER = 2;
@@ -13,16 +13,16 @@ const DEBOUNCE_DELAY_MS = 500;
 
 // Color palette for heatmap
 const HEATMAP_COLORS = [
-  '#4caf50', // Light green
-  '#8bc34a', // Lime green
-  '#cddc39', // Lime
-  '#ffeb3b', // Yellow
-  '#ffc107', // Amber
-  '#ff9800', // Orange
-  '#ff7043', // Deep Orange
-  '#ff5722', // Darker Orange
-  '#f44336', // Light Red
-  '#d32f2f', // Deep Red
+  "#4caf50", // Light green
+  "#8bc34a", // Lime green
+  "#cddc39", // Lime
+  "#ffeb3b", // Yellow
+  "#ffc107", // Amber
+  "#ff9800", // Orange
+  "#ff7043", // Deep Orange
+  "#ff5722", // Darker Orange
+  "#f44336", // Light Red
+  "#d32f2f", // Deep Red
 ];
 
 interface CreateClimbHeatmapOverlayProps {
@@ -60,7 +60,7 @@ const CreateClimbHeatmapOverlay: React.FC<CreateClimbHeatmapOverlayProps> = ({
   const selectedHoldTypes = useMemo(() => {
     const types = new Set<HoldState>();
     Object.values(debouncedHoldsMap).forEach((hold) => {
-      if (hold.state !== 'OFF') {
+      if (hold.state !== "OFF") {
         types.add(hold.state);
       }
     });
@@ -68,17 +68,20 @@ const CreateClimbHeatmapOverlay: React.FC<CreateClimbHeatmapOverlayProps> = ({
   }, [debouncedHoldsMap]);
 
   // Create filters that include the selected holds - uses debounced value to limit API calls
-  const filters: SearchRequestPagination = useMemo(() => ({
-    ...DEFAULT_SEARCH_PARAMS,
-    holdsFilter: debouncedHoldsMap,
-  }), [debouncedHoldsMap]);
+  const filters: SearchRequestPagination = useMemo(
+    () => ({
+      ...DEFAULT_SEARCH_PARAMS,
+      holdsFilter: debouncedHoldsMap,
+    }),
+    [debouncedHoldsMap],
+  );
 
   // Fetch heatmap data with holds filter
   const { data: heatmapData = [], loading } = useHeatmapData({
     boardName: boardDetails.board_name,
     layoutId: boardDetails.layout_id,
     sizeId: boardDetails.size_id,
-    setIds: boardDetails.set_ids.join(','),
+    setIds: boardDetails.set_ids.join(","),
     angle,
     filters,
     enabled,
@@ -101,10 +104,10 @@ const CreateClimbHeatmapOverlay: React.FC<CreateClimbHeatmapOverlayProps> = ({
       // If specific hold types are selected, sum up their usage
       if (selectedHoldTypes.size > 0) {
         let total = 0;
-        if (selectedHoldTypes.has('STARTING')) total += data.startingUses;
-        if (selectedHoldTypes.has('HAND')) total += data.handUses;
-        if (selectedHoldTypes.has('FOOT')) total += data.footUses;
-        if (selectedHoldTypes.has('FINISH')) total += data.finishUses;
+        if (selectedHoldTypes.has("STARTING")) total += data.startingUses;
+        if (selectedHoldTypes.has("HAND")) total += data.handUses;
+        if (selectedHoldTypes.has("FOOT")) total += data.footUses;
+        if (selectedHoldTypes.has("FINISH")) total += data.finishUses;
         return total || data.totalUses; // Fallback to total if no specific types
       }
 
@@ -123,7 +126,7 @@ const CreateClimbHeatmapOverlay: React.FC<CreateClimbHeatmapOverlayProps> = ({
 
     if (values.length === 0) {
       return {
-        colorScale: () => 'transparent',
+        colorScale: () => "transparent",
         opacityScale: () => 0,
       };
     }
@@ -139,7 +142,7 @@ const CreateClimbHeatmapOverlay: React.FC<CreateClimbHeatmapOverlayProps> = ({
 
     return {
       colorScale: (value: number) => {
-        if (!value || value < 1) return 'transparent';
+        if (!value || value < 1) return "transparent";
         const index = Math.floor(logScale(value));
         return HEATMAP_COLORS[index];
       },
@@ -156,8 +159,8 @@ const CreateClimbHeatmapOverlay: React.FC<CreateClimbHeatmapOverlayProps> = ({
   }
 
   // Use unique filter IDs to avoid conflicts with other SVGs on the page
-  const backgroundBlurFilterId = 'create-climb-heatmap-bg-blur';
-  const foregroundGlowFilterId = 'create-climb-heatmap-fg-glow';
+  const backgroundBlurFilterId = "create-climb-heatmap-bg-blur";
+  const foregroundGlowFilterId = "create-climb-heatmap-fg-glow";
 
   // Always render the SVG container to prevent layout shifts, but hide content when not enabled or loading
   const showContent = enabled && !loading;
@@ -167,14 +170,14 @@ const CreateClimbHeatmapOverlay: React.FC<CreateClimbHeatmapOverlayProps> = ({
       viewBox={`0 0 ${boardWidth} ${boardHeight}`}
       preserveAspectRatio="xMidYMid meet"
       style={{
-        position: 'absolute',
+        position: "absolute",
         top: 0,
         left: 0,
-        width: '100%',
-        height: '100%',
-        pointerEvents: 'none',
+        width: "100%",
+        height: "100%",
+        pointerEvents: "none",
         opacity: showContent ? opacity : 0,
-        visibility: showContent ? 'visible' : 'hidden',
+        visibility: showContent ? "visible" : "hidden",
       }}
     >
       <defs>

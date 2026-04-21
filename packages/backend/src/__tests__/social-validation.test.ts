@@ -1,4 +1,4 @@
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect } from "vite-plus/test";
 import {
   FollowInputSchema,
   FollowListInputSchema,
@@ -8,32 +8,32 @@ import {
   SetterProfileInputSchema,
   SetterClimbsInputSchema,
   SetterClimbsFullInputSchema,
-} from '../validation/schemas';
+} from "../validation/schemas";
 
-describe('Social Validation Schemas', () => {
-  describe('FollowInputSchema', () => {
-    it('should accept a valid user ID', () => {
-      const result = FollowInputSchema.safeParse({ userId: 'user-123' });
+describe("Social Validation Schemas", () => {
+  describe("FollowInputSchema", () => {
+    it("should accept a valid user ID", () => {
+      const result = FollowInputSchema.safeParse({ userId: "user-123" });
       expect(result.success).toBe(true);
     });
 
-    it('should reject an empty user ID', () => {
-      const result = FollowInputSchema.safeParse({ userId: '' });
+    it("should reject an empty user ID", () => {
+      const result = FollowInputSchema.safeParse({ userId: "" });
       expect(result.success).toBe(false);
       if (!result.success) {
-        expect(result.error.issues[0].message).toContain('cannot be empty');
+        expect(result.error.issues[0].message).toContain("cannot be empty");
       }
     });
 
-    it('should reject missing userId', () => {
+    it("should reject missing userId", () => {
       const result = FollowInputSchema.safeParse({});
       expect(result.success).toBe(false);
     });
   });
 
-  describe('FollowListInputSchema', () => {
-    it('should accept valid input with defaults', () => {
-      const result = FollowListInputSchema.safeParse({ userId: 'user-123' });
+  describe("FollowListInputSchema", () => {
+    it("should accept valid input with defaults", () => {
+      const result = FollowListInputSchema.safeParse({ userId: "user-123" });
       expect(result.success).toBe(true);
       if (result.success) {
         expect(result.data.limit).toBe(20);
@@ -41,9 +41,9 @@ describe('Social Validation Schemas', () => {
       }
     });
 
-    it('should accept custom limit and offset', () => {
+    it("should accept custom limit and offset", () => {
       const result = FollowListInputSchema.safeParse({
-        userId: 'user-123',
+        userId: "user-123",
         limit: 10,
         offset: 5,
       });
@@ -54,42 +54,42 @@ describe('Social Validation Schemas', () => {
       }
     });
 
-    it('should reject limit exceeding max (50)', () => {
+    it("should reject limit exceeding max (50)", () => {
       const result = FollowListInputSchema.safeParse({
-        userId: 'user-123',
+        userId: "user-123",
         limit: 100,
       });
       expect(result.success).toBe(false);
     });
 
-    it('should reject limit less than 1', () => {
+    it("should reject limit less than 1", () => {
       const result = FollowListInputSchema.safeParse({
-        userId: 'user-123',
+        userId: "user-123",
         limit: 0,
       });
       expect(result.success).toBe(false);
     });
 
-    it('should reject negative offset', () => {
+    it("should reject negative offset", () => {
       const result = FollowListInputSchema.safeParse({
-        userId: 'user-123',
+        userId: "user-123",
         offset: -1,
       });
       expect(result.success).toBe(false);
     });
 
-    it('should reject empty userId', () => {
+    it("should reject empty userId", () => {
       const result = FollowListInputSchema.safeParse({
-        userId: '',
+        userId: "",
         limit: 10,
       });
       expect(result.success).toBe(false);
     });
   });
 
-  describe('SearchUsersInputSchema', () => {
-    it('should accept a valid query', () => {
-      const result = SearchUsersInputSchema.safeParse({ query: 'john' });
+  describe("SearchUsersInputSchema", () => {
+    it("should accept a valid query", () => {
+      const result = SearchUsersInputSchema.safeParse({ query: "john" });
       expect(result.success).toBe(true);
       if (result.success) {
         expect(result.data.limit).toBe(20);
@@ -97,33 +97,33 @@ describe('Social Validation Schemas', () => {
       }
     });
 
-    it('should reject query shorter than 2 characters', () => {
-      const result = SearchUsersInputSchema.safeParse({ query: 'a' });
+    it("should reject query shorter than 2 characters", () => {
+      const result = SearchUsersInputSchema.safeParse({ query: "a" });
       expect(result.success).toBe(false);
       if (!result.success) {
-        expect(result.error.issues[0].message).toContain('at least 2 characters');
+        expect(result.error.issues[0].message).toContain("at least 2 characters");
       }
     });
 
-    it('should reject query longer than 100 characters', () => {
-      const result = SearchUsersInputSchema.safeParse({ query: 'a'.repeat(101) });
+    it("should reject query longer than 100 characters", () => {
+      const result = SearchUsersInputSchema.safeParse({ query: "a".repeat(101) });
       expect(result.success).toBe(false);
     });
 
-    it('should accept optional boardType', () => {
+    it("should accept optional boardType", () => {
       const result = SearchUsersInputSchema.safeParse({
-        query: 'john',
-        boardType: 'kilter',
+        query: "john",
+        boardType: "kilter",
       });
       expect(result.success).toBe(true);
       if (result.success) {
-        expect(result.data.boardType).toBe('kilter');
+        expect(result.data.boardType).toBe("kilter");
       }
     });
 
-    it('should accept custom limit and offset', () => {
+    it("should accept custom limit and offset", () => {
       const result = SearchUsersInputSchema.safeParse({
-        query: 'john',
+        query: "john",
         limit: 5,
         offset: 10,
       });
@@ -134,17 +134,17 @@ describe('Social Validation Schemas', () => {
       }
     });
 
-    it('should reject limit exceeding max (50)', () => {
+    it("should reject limit exceeding max (50)", () => {
       const result = SearchUsersInputSchema.safeParse({
-        query: 'john',
+        query: "john",
         limit: 51,
       });
       expect(result.success).toBe(false);
     });
   });
 
-  describe('FollowingAscentsFeedInputSchema', () => {
-    it('should accept empty input with defaults', () => {
+  describe("FollowingAscentsFeedInputSchema", () => {
+    it("should accept empty input with defaults", () => {
       const result = FollowingAscentsFeedInputSchema.safeParse({});
       expect(result.success).toBe(true);
       if (result.success) {
@@ -153,7 +153,7 @@ describe('Social Validation Schemas', () => {
       }
     });
 
-    it('should accept custom limit and offset', () => {
+    it("should accept custom limit and offset", () => {
       const result = FollowingAscentsFeedInputSchema.safeParse({
         limit: 10,
         offset: 20,
@@ -165,14 +165,14 @@ describe('Social Validation Schemas', () => {
       }
     });
 
-    it('should reject limit exceeding max (50)', () => {
+    it("should reject limit exceeding max (50)", () => {
       const result = FollowingAscentsFeedInputSchema.safeParse({
         limit: 100,
       });
       expect(result.success).toBe(false);
     });
 
-    it('should reject negative offset', () => {
+    it("should reject negative offset", () => {
       const result = FollowingAscentsFeedInputSchema.safeParse({
         offset: -5,
       });
@@ -180,55 +180,55 @@ describe('Social Validation Schemas', () => {
     });
   });
 
-  describe('FollowSetterInputSchema', () => {
-    it('should accept a valid setter username', () => {
-      const result = FollowSetterInputSchema.safeParse({ setterUsername: 'climber42' });
+  describe("FollowSetterInputSchema", () => {
+    it("should accept a valid setter username", () => {
+      const result = FollowSetterInputSchema.safeParse({ setterUsername: "climber42" });
       expect(result.success).toBe(true);
     });
 
-    it('should reject an empty setter username', () => {
-      const result = FollowSetterInputSchema.safeParse({ setterUsername: '' });
+    it("should reject an empty setter username", () => {
+      const result = FollowSetterInputSchema.safeParse({ setterUsername: "" });
       expect(result.success).toBe(false);
       if (!result.success) {
-        expect(result.error.issues[0].message).toContain('cannot be empty');
+        expect(result.error.issues[0].message).toContain("cannot be empty");
       }
     });
 
-    it('should reject setter username exceeding max length', () => {
-      const result = FollowSetterInputSchema.safeParse({ setterUsername: 'a'.repeat(101) });
+    it("should reject setter username exceeding max length", () => {
+      const result = FollowSetterInputSchema.safeParse({ setterUsername: "a".repeat(101) });
       expect(result.success).toBe(false);
     });
   });
 
-  describe('SetterProfileInputSchema', () => {
-    it('should accept a valid username', () => {
-      const result = SetterProfileInputSchema.safeParse({ username: 'climber42' });
+  describe("SetterProfileInputSchema", () => {
+    it("should accept a valid username", () => {
+      const result = SetterProfileInputSchema.safeParse({ username: "climber42" });
       expect(result.success).toBe(true);
     });
 
-    it('should reject an empty username', () => {
-      const result = SetterProfileInputSchema.safeParse({ username: '' });
+    it("should reject an empty username", () => {
+      const result = SetterProfileInputSchema.safeParse({ username: "" });
       expect(result.success).toBe(false);
       if (!result.success) {
-        expect(result.error.issues[0].message).toContain('cannot be empty');
+        expect(result.error.issues[0].message).toContain("cannot be empty");
       }
     });
   });
 
-  describe('SetterClimbsInputSchema', () => {
-    it('should accept valid input with defaults', () => {
-      const result = SetterClimbsInputSchema.safeParse({ username: 'climber42' });
+  describe("SetterClimbsInputSchema", () => {
+    it("should accept valid input with defaults", () => {
+      const result = SetterClimbsInputSchema.safeParse({ username: "climber42" });
       expect(result.success).toBe(true);
       if (result.success) {
-        expect(result.data.sortBy).toBe('popular');
+        expect(result.data.sortBy).toBe("popular");
         expect(result.data.limit).toBe(20);
         expect(result.data.offset).toBe(0);
       }
     });
 
-    it('should accept custom limit and offset', () => {
+    it("should accept custom limit and offset", () => {
       const result = SetterClimbsInputSchema.safeParse({
-        username: 'climber42',
+        username: "climber42",
         limit: 50,
         offset: 10,
       });
@@ -239,69 +239,69 @@ describe('Social Validation Schemas', () => {
       }
     });
 
-    it('should reject limit exceeding max (100)', () => {
+    it("should reject limit exceeding max (100)", () => {
       const result = SetterClimbsInputSchema.safeParse({
-        username: 'climber42',
+        username: "climber42",
         limit: 101,
       });
       expect(result.success).toBe(false);
     });
 
-    it('should accept valid sortBy values', () => {
-      const popular = SetterClimbsInputSchema.safeParse({ username: 'x', sortBy: 'popular' });
-      const newSort = SetterClimbsInputSchema.safeParse({ username: 'x', sortBy: 'new' });
+    it("should accept valid sortBy values", () => {
+      const popular = SetterClimbsInputSchema.safeParse({ username: "x", sortBy: "popular" });
+      const newSort = SetterClimbsInputSchema.safeParse({ username: "x", sortBy: "new" });
       expect(popular.success).toBe(true);
       expect(newSort.success).toBe(true);
     });
 
-    it('should reject invalid sortBy values', () => {
-      const result = SetterClimbsInputSchema.safeParse({ username: 'x', sortBy: 'invalid' });
+    it("should reject invalid sortBy values", () => {
+      const result = SetterClimbsInputSchema.safeParse({ username: "x", sortBy: "invalid" });
       expect(result.success).toBe(false);
     });
   });
 
-  describe('SetterClimbsFullInputSchema', () => {
-    it('should accept valid input with defaults', () => {
-      const result = SetterClimbsFullInputSchema.safeParse({ username: 'climber42' });
+  describe("SetterClimbsFullInputSchema", () => {
+    it("should accept valid input with defaults", () => {
+      const result = SetterClimbsFullInputSchema.safeParse({ username: "climber42" });
       expect(result.success).toBe(true);
       if (result.success) {
-        expect(result.data.sortBy).toBe('popular');
+        expect(result.data.sortBy).toBe("popular");
         expect(result.data.limit).toBe(20);
         expect(result.data.offset).toBe(0);
       }
     });
 
-    it('should accept optional angle, sizeId, and setIds', () => {
+    it("should accept optional angle, sizeId, and setIds", () => {
       const result = SetterClimbsFullInputSchema.safeParse({
-        username: 'climber42',
+        username: "climber42",
         angle: 40,
         sizeId: 10,
-        setIds: '1,2,3',
+        setIds: "1,2,3",
       });
       expect(result.success).toBe(true);
       if (result.success) {
         expect(result.data.angle).toBe(40);
         expect(result.data.sizeId).toBe(10);
-        expect(result.data.setIds).toBe('1,2,3');
+        expect(result.data.setIds).toBe("1,2,3");
       }
     });
 
-    it('should reject limit exceeding max (100)', () => {
+    it("should reject limit exceeding max (100)", () => {
       const result = SetterClimbsFullInputSchema.safeParse({
-        username: 'climber42',
+        username: "climber42",
         limit: 101,
       });
       expect(result.success).toBe(false);
     });
 
-    it('should accept optional boardType', () => {
+    it("should accept optional boardType", () => {
       const result = SetterClimbsFullInputSchema.safeParse({
-        username: 'climber42',
-        boardType: 'kilter',
+        username: "climber42",
+        boardType: "kilter",
       });
       expect(result.success).toBe(true);
       if (result.success) {
-        expect(result.data.boardType).toBe('kilter');
+        expect(result.data.boardType).toBe("kilter");
       }
     });
   });

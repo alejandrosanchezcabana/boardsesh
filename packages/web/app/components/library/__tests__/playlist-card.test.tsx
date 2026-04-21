@@ -1,10 +1,10 @@
-import { describe, it, expect, vi } from 'vitest';
-import { render, screen } from '@testing-library/react';
-import React from 'react';
+import { describe, it, expect, vi } from "vite-plus/test";
+import { render, screen } from "@testing-library/react";
+import React from "react";
 
 // Mock PlaylistPreviewSquare to inspect props
 const mockPreviewSquare = vi.fn();
-vi.mock('../playlist-preview-square', () => ({
+vi.mock("../playlist-preview-square", () => ({
   default: (props: Record<string, unknown>) => {
     mockPreviewSquare(props);
     return <div data-testid="preview-square" />;
@@ -12,7 +12,7 @@ vi.mock('../playlist-preview-square', () => ({
 }));
 
 // Mock CSS modules
-vi.mock('../library.module.css', () => ({
+vi.mock("../library.module.css", () => ({
   default: new Proxy(
     {},
     {
@@ -21,10 +21,10 @@ vi.mock('../library.module.css', () => ({
   ),
 }));
 
-import PlaylistCard from '../playlist-card';
+import PlaylistCard from "../playlist-card";
 
-describe('PlaylistCard', () => {
-  it('renders grid variant with PlaylistPreviewSquare', () => {
+describe("PlaylistCard", () => {
+  it("renders grid variant with PlaylistPreviewSquare", () => {
     render(
       <PlaylistCard
         name="My Kilter Playlist"
@@ -39,19 +39,19 @@ describe('PlaylistCard', () => {
       />,
     );
 
-    expect(screen.getByTestId('preview-square')).toBeDefined();
+    expect(screen.getByTestId("preview-square")).toBeDefined();
     expect(mockPreviewSquare).toHaveBeenCalledWith(
       expect.objectContaining({
-        boardType: 'kilter',
+        boardType: "kilter",
         layoutId: 1,
-        color: '#FF6600',
-        icon: '🔥',
+        color: "#FF6600",
+        icon: "🔥",
         index: 0,
       }),
     );
   });
 
-  it('renders scroll variant with PlaylistPreviewSquare', () => {
+  it("renders scroll variant with PlaylistPreviewSquare", () => {
     render(
       <PlaylistCard
         name="My Tension Playlist"
@@ -65,18 +65,18 @@ describe('PlaylistCard', () => {
       />,
     );
 
-    expect(screen.getByTestId('preview-square')).toBeDefined();
+    expect(screen.getByTestId("preview-square")).toBeDefined();
     expect(mockPreviewSquare).toHaveBeenCalledWith(
       expect.objectContaining({
-        boardType: 'tension',
+        boardType: "tension",
         layoutId: 10,
-        color: '#00FF00',
+        color: "#00FF00",
         index: 2,
       }),
     );
   });
 
-  it('displays name and climb count correctly', () => {
+  it("displays name and climb count correctly", () => {
     render(
       <PlaylistCard
         name="Test Playlist"
@@ -87,8 +87,8 @@ describe('PlaylistCard', () => {
       />,
     );
 
-    expect(screen.getByText('Test Playlist')).toBeDefined();
-    expect(screen.getByText('3 climbs')).toBeDefined();
+    expect(screen.getByText("Test Playlist")).toBeDefined();
+    expect(screen.getByText("3 climbs")).toBeDefined();
   });
 
   it('uses singular "climb" for count of 1', () => {
@@ -102,10 +102,10 @@ describe('PlaylistCard', () => {
       />,
     );
 
-    expect(screen.getByText('1 climb')).toBeDefined();
+    expect(screen.getByText("1 climb")).toBeDefined();
   });
 
-  it('renders correct link href', () => {
+  it("renders correct link href", () => {
     const { container } = render(
       <PlaylistCard
         name="Linked"
@@ -116,11 +116,11 @@ describe('PlaylistCard', () => {
       />,
     );
 
-    const link = container.querySelector('a');
-    expect(link?.getAttribute('href')).toBe('/playlists/linked-id');
+    const link = container.querySelector("a");
+    expect(link?.getAttribute("href")).toBe("/playlists/linked-id");
   });
 
-  it('passes isLikedClimbs through to PlaylistPreviewSquare', () => {
+  it("passes isLikedClimbs through to PlaylistPreviewSquare", () => {
     mockPreviewSquare.mockClear();
 
     render(

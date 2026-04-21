@@ -1,8 +1,8 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { renderHook, waitFor, act } from '@testing-library/react';
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import React from 'react';
-import { useIncrementalQuery } from '../use-incremental-query';
+import { describe, it, expect, vi, beforeEach } from "vite-plus/test";
+import { renderHook, waitFor, act } from "@testing-library/react";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import React from "react";
+import { useIncrementalQuery } from "../use-incremental-query";
 
 function createTestQueryClient() {
   return new QueryClient({
@@ -18,7 +18,7 @@ function createWrapper(queryClient?: QueryClient) {
   const Wrapper = ({ children }: { children: React.ReactNode }) => (
     <QueryClientProvider client={qc}>{children}</QueryClientProvider>
   );
-  Wrapper.displayName = 'QueryClientWrapper';
+  Wrapper.displayName = "QueryClientWrapper";
   return { wrapper: Wrapper, queryClient: qc };
 }
 
@@ -27,7 +27,7 @@ const mergeSet = (a: Set<string>, b: Set<string>) => new Set([...a, ...b]);
 const hasSetChanged = (a: Set<string>, b: Set<string>) => a.size !== b.size;
 const EMPTY_SET = new Set<string>();
 
-describe('useIncrementalQuery', () => {
+describe("useIncrementalQuery", () => {
   let mockFetchChunk: ReturnType<typeof vi.fn<(uuids: string[]) => Promise<Set<string>>>>;
 
   beforeEach(() => {
@@ -35,8 +35,8 @@ describe('useIncrementalQuery', () => {
   });
 
   const defaultOptions = (overrides: Record<string, unknown> = {}) => ({
-    accumulatedKey: ['test', 'accumulated'] as readonly unknown[],
-    fetchKeyPrefix: ['test', 'fetch'] as readonly unknown[],
+    accumulatedKey: ["test", "accumulated"] as readonly unknown[],
+    fetchKeyPrefix: ["test", "fetch"] as readonly unknown[],
     enabled: true,
     fetchChunk: mockFetchChunk,
     merge: mergeSet,
@@ -45,26 +45,25 @@ describe('useIncrementalQuery', () => {
     ...overrides,
   });
 
-  it('fetches data for provided UUIDs', async () => {
-    mockFetchChunk.mockResolvedValueOnce(new Set(['a']));
+  it("fetches data for provided UUIDs", async () => {
+    mockFetchChunk.mockResolvedValueOnce(new Set(["a"]));
     const { wrapper } = createWrapper();
 
-    const { result } = renderHook(
-      () => useIncrementalQuery(['a', 'b'], defaultOptions()),
-      { wrapper },
-    );
+    const { result } = renderHook(() => useIncrementalQuery(["a", "b"], defaultOptions()), {
+      wrapper,
+    });
 
     await waitFor(() => {
-      expect(result.current.data.has('a')).toBe(true);
+      expect(result.current.data.has("a")).toBe(true);
     });
     expect(mockFetchChunk).toHaveBeenCalledTimes(1);
-    expect(mockFetchChunk).toHaveBeenCalledWith(['a', 'b']);
+    expect(mockFetchChunk).toHaveBeenCalledWith(["a", "b"]);
   });
 
-  it('returns initialValue and isLoading=false when disabled', () => {
+  it("returns initialValue and isLoading=false when disabled", () => {
     const { wrapper } = createWrapper();
     const { result } = renderHook(
-      () => useIncrementalQuery(['a'], defaultOptions({ enabled: false })),
+      () => useIncrementalQuery(["a"], defaultOptions({ enabled: false })),
       { wrapper },
     );
 
@@ -73,51 +72,48 @@ describe('useIncrementalQuery', () => {
     expect(mockFetchChunk).not.toHaveBeenCalled();
   });
 
-  it('does not fetch when UUIDs array is empty', () => {
+  it("does not fetch when UUIDs array is empty", () => {
     const { wrapper } = createWrapper();
-    renderHook(
-      () => useIncrementalQuery([], defaultOptions()),
-      { wrapper },
-    );
+    renderHook(() => useIncrementalQuery([], defaultOptions()), { wrapper });
 
     expect(mockFetchChunk).not.toHaveBeenCalled();
   });
 
-  it('incrementally fetches only new UUIDs', async () => {
-    mockFetchChunk.mockResolvedValueOnce(new Set(['a']));
+  it("incrementally fetches only new UUIDs", async () => {
+    mockFetchChunk.mockResolvedValueOnce(new Set(["a"]));
     const { wrapper } = createWrapper();
 
     const { result, rerender } = renderHook(
       ({ uuids }) => useIncrementalQuery(uuids, defaultOptions()),
-      { wrapper, initialProps: { uuids: ['a', 'b'] } },
+      { wrapper, initialProps: { uuids: ["a", "b"] } },
     );
 
     await waitFor(() => {
-      expect(result.current.data.has('a')).toBe(true);
+      expect(result.current.data.has("a")).toBe(true);
     });
     expect(mockFetchChunk).toHaveBeenCalledTimes(1);
 
     // Add a new UUID — only 'c' should be fetched
-    mockFetchChunk.mockResolvedValueOnce(new Set(['c']));
-    rerender({ uuids: ['a', 'b', 'c'] });
+    mockFetchChunk.mockResolvedValueOnce(new Set(["c"]));
+    rerender({ uuids: ["a", "b", "c"] });
 
     await waitFor(() => {
-      expect(result.current.data.has('c')).toBe(true);
+      expect(result.current.data.has("c")).toBe(true);
     });
     expect(mockFetchChunk).toHaveBeenCalledTimes(2);
-    expect(mockFetchChunk).toHaveBeenLastCalledWith(['c']);
+    expect(mockFetchChunk).toHaveBeenLastCalledWith(["c"]);
 
     // Original data still present
-    expect(result.current.data.has('a')).toBe(true);
+    expect(result.current.data.has("a")).toBe(true);
   });
 
-  it('does not refetch already-fetched UUIDs when reordered', async () => {
-    mockFetchChunk.mockResolvedValueOnce(new Set(['a']));
+  it("does not refetch already-fetched UUIDs when reordered", async () => {
+    mockFetchChunk.mockResolvedValueOnce(new Set(["a"]));
     const { wrapper } = createWrapper();
 
     const { result, rerender } = renderHook(
       ({ uuids }) => useIncrementalQuery(uuids, defaultOptions()),
-      { wrapper, initialProps: { uuids: ['b', 'a'] } },
+      { wrapper, initialProps: { uuids: ["b", "a"] } },
     );
 
     await waitFor(() => {
@@ -126,7 +122,7 @@ describe('useIncrementalQuery', () => {
     const callCount = mockFetchChunk.mock.calls.length;
 
     // Same UUIDs, different order
-    rerender({ uuids: ['a', 'b'] });
+    rerender({ uuids: ["a", "b"] });
 
     // Should not trigger a new fetch
     await waitFor(() => {
@@ -134,12 +130,12 @@ describe('useIncrementalQuery', () => {
     });
   });
 
-  it('chunks large UUID arrays into parallel requests', async () => {
+  it("chunks large UUID arrays into parallel requests", async () => {
     // Create 600 UUIDs — should produce 2 chunks (500 + 100)
     const uuids = Array.from({ length: 600 }, (_, i) => `uuid-${i}`);
     mockFetchChunk
-      .mockResolvedValueOnce(new Set(['uuid-0']))
-      .mockResolvedValueOnce(new Set(['uuid-500']));
+      .mockResolvedValueOnce(new Set(["uuid-0"]))
+      .mockResolvedValueOnce(new Set(["uuid-500"]));
 
     const { wrapper } = createWrapper();
     const { result } = renderHook(
@@ -148,8 +144,8 @@ describe('useIncrementalQuery', () => {
     );
 
     await waitFor(() => {
-      expect(result.current.data.has('uuid-0')).toBe(true);
-      expect(result.current.data.has('uuid-500')).toBe(true);
+      expect(result.current.data.has("uuid-0")).toBe(true);
+      expect(result.current.data.has("uuid-500")).toBe(true);
     });
 
     // Should have been called with two chunks
@@ -158,15 +154,12 @@ describe('useIncrementalQuery', () => {
     expect(mockFetchChunk.mock.calls[1][0]).toHaveLength(100);
   });
 
-  it('handles chunk failure gracefully (React Query manages error state)', async () => {
-    mockFetchChunk.mockRejectedValueOnce(new Error('Network error'));
-    vi.spyOn(console, 'error').mockImplementation(() => {});
+  it("handles chunk failure gracefully (React Query manages error state)", async () => {
+    mockFetchChunk.mockRejectedValueOnce(new Error("Network error"));
+    vi.spyOn(console, "error").mockImplementation(() => {});
 
     const { wrapper } = createWrapper();
-    const { result } = renderHook(
-      () => useIncrementalQuery(['a'], defaultOptions()),
-      { wrapper },
-    );
+    const { result } = renderHook(() => useIncrementalQuery(["a"], defaultOptions()), { wrapper });
 
     // Data stays at initial value, isLoading eventually goes false
     await waitFor(() => {
@@ -177,13 +170,13 @@ describe('useIncrementalQuery', () => {
     vi.restoreAllMocks();
   });
 
-  it('handles partial chunk failure (all-or-nothing per batch)', async () => {
+  it("handles partial chunk failure (all-or-nothing per batch)", async () => {
     // With 2 chunks, if Promise.all rejects (one chunk fails), the entire batch fails
     const uuids = Array.from({ length: 600 }, (_, i) => `uuid-${i}`);
     mockFetchChunk
-      .mockResolvedValueOnce(new Set(['uuid-0']))
-      .mockRejectedValueOnce(new Error('Second chunk failed'));
-    vi.spyOn(console, 'error').mockImplementation(() => {});
+      .mockResolvedValueOnce(new Set(["uuid-0"]))
+      .mockRejectedValueOnce(new Error("Second chunk failed"));
+    vi.spyOn(console, "error").mockImplementation(() => {});
 
     const { wrapper } = createWrapper();
     const { result } = renderHook(
@@ -200,17 +193,17 @@ describe('useIncrementalQuery', () => {
     vi.restoreAllMocks();
   });
 
-  it('resets state when enabled becomes false', async () => {
-    mockFetchChunk.mockResolvedValueOnce(new Set(['a']));
+  it("resets state when enabled becomes false", async () => {
+    mockFetchChunk.mockResolvedValueOnce(new Set(["a"]));
     const { wrapper } = createWrapper();
 
     const { result, rerender } = renderHook(
-      ({ enabled }) => useIncrementalQuery(['a'], defaultOptions({ enabled })),
+      ({ enabled }) => useIncrementalQuery(["a"], defaultOptions({ enabled })),
       { wrapper, initialProps: { enabled: true } },
     );
 
     await waitFor(() => {
-      expect(result.current.data.has('a')).toBe(true);
+      expect(result.current.data.has("a")).toBe(true);
     });
 
     // Disable (simulates logout)
@@ -221,123 +214,120 @@ describe('useIncrementalQuery', () => {
     });
   });
 
-  it('re-fetches all UUIDs after re-enable', async () => {
-    mockFetchChunk.mockResolvedValueOnce(new Set(['a']));
+  it("re-fetches all UUIDs after re-enable", async () => {
+    mockFetchChunk.mockResolvedValueOnce(new Set(["a"]));
     const { wrapper } = createWrapper();
 
     const { result, rerender } = renderHook(
-      ({ enabled }) => useIncrementalQuery(['a', 'b'], defaultOptions({ enabled })),
+      ({ enabled }) => useIncrementalQuery(["a", "b"], defaultOptions({ enabled })),
       { wrapper, initialProps: { enabled: true } },
     );
 
     await waitFor(() => {
-      expect(result.current.data.has('a')).toBe(true);
+      expect(result.current.data.has("a")).toBe(true);
     });
 
     // Disable then re-enable — should re-fetch both UUIDs
     rerender({ enabled: false });
     await waitFor(() => expect(result.current.data.size).toBe(0));
 
-    mockFetchChunk.mockResolvedValueOnce(new Set(['a', 'b']));
+    mockFetchChunk.mockResolvedValueOnce(new Set(["a", "b"]));
     rerender({ enabled: true });
 
     await waitFor(() => {
-      expect(result.current.data.has('a')).toBe(true);
-      expect(result.current.data.has('b')).toBe(true);
+      expect(result.current.data.has("a")).toBe(true);
+      expect(result.current.data.has("b")).toBe(true);
     });
     // Should have been fetched again (not skipped as "already fetched")
     expect(mockFetchChunk).toHaveBeenCalledTimes(2);
   });
 
-  it('picks up external cache updates (optimistic updates)', async () => {
-    mockFetchChunk.mockResolvedValueOnce(new Set(['a']));
+  it("picks up external cache updates (optimistic updates)", async () => {
+    mockFetchChunk.mockResolvedValueOnce(new Set(["a"]));
     const { wrapper, queryClient } = createWrapper();
 
-    const { result } = renderHook(
-      () => useIncrementalQuery(['a'], defaultOptions()),
-      { wrapper },
-    );
+    const { result } = renderHook(() => useIncrementalQuery(["a"], defaultOptions()), { wrapper });
 
     await waitFor(() => {
-      expect(result.current.data.has('a')).toBe(true);
+      expect(result.current.data.has("a")).toBe(true);
     });
 
     // Simulate an external optimistic update
     act(() => {
-      queryClient.setQueryData(['test', 'accumulated'], new Set(['a', 'x']));
+      queryClient.setQueryData(["test", "accumulated"], new Set(["a", "x"]));
     });
 
     await waitFor(() => {
-      expect(result.current.data.has('x')).toBe(true);
+      expect(result.current.data.has("x")).toBe(true);
     });
   });
 
-  it('resets fetched tracking when accumulatedKey changes (context switch)', async () => {
+  it("resets fetched tracking when accumulatedKey changes (context switch)", async () => {
     // First context: fetch with key ['ctx1', 'accumulated']
-    mockFetchChunk.mockResolvedValueOnce(new Set(['a']));
+    mockFetchChunk.mockResolvedValueOnce(new Set(["a"]));
     const { wrapper } = createWrapper();
 
     const { result, rerender } = renderHook(
       ({ accKey, fetchPrefix }: { accKey: readonly unknown[]; fetchPrefix: readonly unknown[] }) =>
-        useIncrementalQuery(['a', 'b'], defaultOptions({
-          accumulatedKey: accKey,
-          fetchKeyPrefix: fetchPrefix,
-        })),
+        useIncrementalQuery(
+          ["a", "b"],
+          defaultOptions({
+            accumulatedKey: accKey,
+            fetchKeyPrefix: fetchPrefix,
+          }),
+        ),
       {
         wrapper,
         initialProps: {
-          accKey: ['ctx1', 'accumulated'] as readonly unknown[],
-          fetchPrefix: ['ctx1', 'fetch'] as readonly unknown[],
+          accKey: ["ctx1", "accumulated"] as readonly unknown[],
+          fetchPrefix: ["ctx1", "fetch"] as readonly unknown[],
         },
       },
     );
 
     await waitFor(() => {
-      expect(result.current.data.has('a')).toBe(true);
+      expect(result.current.data.has("a")).toBe(true);
     });
 
     // Switch context — same UUIDs, different key. Should re-fetch all UUIDs
     // because the old fetchedUuidsRef is stale for the new context.
-    mockFetchChunk.mockResolvedValueOnce(new Set(['a', 'b']));
+    mockFetchChunk.mockResolvedValueOnce(new Set(["a", "b"]));
     rerender({
-      accKey: ['ctx2', 'accumulated'] as readonly unknown[],
-      fetchPrefix: ['ctx2', 'fetch'] as readonly unknown[],
+      accKey: ["ctx2", "accumulated"] as readonly unknown[],
+      fetchPrefix: ["ctx2", "fetch"] as readonly unknown[],
     });
 
     await waitFor(() => {
-      expect(result.current.data.has('b')).toBe(true);
+      expect(result.current.data.has("b")).toBe(true);
     });
     // Should have fetched again with all UUIDs (not skipped 'a' and 'b')
     expect(mockFetchChunk).toHaveBeenCalledTimes(2);
     const lastCall = mockFetchChunk.mock.calls[1][0];
-    expect(lastCall).toContain('a');
-    expect(lastCall).toContain('b');
+    expect(lastCall).toContain("a");
+    expect(lastCall).toContain("b");
   });
 
-  it('resets and re-fetches after cache invalidation (removal)', async () => {
-    mockFetchChunk.mockResolvedValueOnce(new Set(['a']));
+  it("resets and re-fetches after cache invalidation (removal)", async () => {
+    mockFetchChunk.mockResolvedValueOnce(new Set(["a"]));
     const { wrapper, queryClient } = createWrapper();
 
-    const { result } = renderHook(
-      () => useIncrementalQuery(['a'], defaultOptions()),
-      { wrapper },
-    );
+    const { result } = renderHook(() => useIncrementalQuery(["a"], defaultOptions()), { wrapper });
 
     await waitFor(() => {
-      expect(result.current.data.has('a')).toBe(true);
+      expect(result.current.data.has("a")).toBe(true);
     });
 
     // Remove ALL test queries (both accumulated and fetch caches) to simulate
     // full invalidation, matching the useInvalidateLogbook pattern.
     // This clears the stale fetch cache so re-fetch actually calls fetchChunk again.
-    mockFetchChunk.mockResolvedValueOnce(new Set(['a', 'refreshed']));
+    mockFetchChunk.mockResolvedValueOnce(new Set(["a", "refreshed"]));
     act(() => {
-      queryClient.removeQueries({ queryKey: ['test'] });
+      queryClient.removeQueries({ queryKey: ["test"] });
     });
 
     // Should re-fetch all UUIDs after invalidation
     await waitFor(() => {
-      expect(result.current.data.has('refreshed')).toBe(true);
+      expect(result.current.data.has("refreshed")).toBe(true);
     });
   });
 });

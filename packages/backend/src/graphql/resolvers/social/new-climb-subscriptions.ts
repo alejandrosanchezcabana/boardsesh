@@ -1,18 +1,18 @@
-import { and, eq, desc, sql } from 'drizzle-orm';
+import { and, eq, desc, sql } from "drizzle-orm";
 import type {
   ConnectionContext,
   NewClimbFeedInput,
   NewClimbFeedResult,
   NewClimbSubscription,
   NewClimbSubscriptionInput,
-} from '@boardsesh/shared-schema';
-import { db } from '../../../db/client';
-import * as dbSchema from '@boardsesh/db/schema';
-import { requireAuthenticated, applyRateLimit, validateInput } from '../shared/helpers';
+} from "@boardsesh/shared-schema";
+import { db } from "../../../db/client";
+import * as dbSchema from "@boardsesh/db/schema";
+import { requireAuthenticated, applyRateLimit, validateInput } from "../shared/helpers";
 import {
   NewClimbFeedInputSchema,
   NewClimbSubscriptionInputSchema,
-} from '../../../validation/schemas';
+} from "../../../validation/schemas";
 
 export const newClimbSubscriptionResolvers = {
   Query: {
@@ -24,7 +24,7 @@ export const newClimbSubscriptionResolvers = {
       _: unknown,
       { input }: { input: NewClimbFeedInput },
     ): Promise<NewClimbFeedResult> => {
-      const validated = validateInput(NewClimbFeedInputSchema, input, 'input');
+      const validated = validateInput(NewClimbFeedInputSchema, input, "input");
       const limit = validated.limit ?? 20;
       const offset = validated.offset ?? 0;
 
@@ -37,8 +37,12 @@ export const newClimbSubscriptionResolvers = {
           angle: dbSchema.boardClimbs.angle,
           frames: dbSchema.boardClimbs.frames,
           createdAt: dbSchema.boardClimbs.createdAt,
-          setterDisplayName: sql<string | null>`COALESCE(${dbSchema.userProfiles.displayName}, ${dbSchema.users.name}, ${dbSchema.boardClimbs.setterUsername})`,
-          setterAvatarUrl: sql<string | null>`COALESCE(${dbSchema.userProfiles.avatarUrl}, ${dbSchema.users.image})`,
+          setterDisplayName: sql<
+            string | null
+          >`COALESCE(${dbSchema.userProfiles.displayName}, ${dbSchema.users.name}, ${dbSchema.boardClimbs.setterUsername})`,
+          setterAvatarUrl: sql<
+            string | null
+          >`COALESCE(${dbSchema.userProfiles.avatarUrl}, ${dbSchema.users.image})`,
           difficultyName: dbSchema.boardDifficultyGrades.boulderName,
         })
         .from(dbSchema.boardClimbs)
@@ -56,7 +60,10 @@ export const newClimbSubscriptionResolvers = {
           dbSchema.boardDifficultyGrades,
           and(
             eq(dbSchema.boardDifficultyGrades.boardType, dbSchema.boardClimbs.boardType),
-            eq(dbSchema.boardDifficultyGrades.difficulty, dbSchema.boardClimbStats.displayDifficulty),
+            eq(
+              dbSchema.boardDifficultyGrades.difficulty,
+              dbSchema.boardClimbStats.displayDifficulty,
+            ),
           ),
         )
         .where(
@@ -82,7 +89,7 @@ export const newClimbSubscriptionResolvers = {
       const totalCount = Number(total) || 0;
       const items = climbs.map((c) => ({
         uuid: c.uuid,
-        name: c.name ?? '',
+        name: c.name ?? "",
         boardType: c.boardType,
         layoutId: c.layoutId,
         setterDisplayName: c.setterDisplayName ?? null,
@@ -127,11 +134,11 @@ export const newClimbSubscriptionResolvers = {
     subscribeNewClimbs: async (
       _: unknown,
       { input }: { input: NewClimbSubscriptionInput },
-      ctx: ConnectionContext
+      ctx: ConnectionContext,
     ): Promise<boolean> => {
       requireAuthenticated(ctx);
       await applyRateLimit(ctx, 20);
-      const validated = validateInput(NewClimbSubscriptionInputSchema, input, 'input');
+      const validated = validateInput(NewClimbSubscriptionInputSchema, input, "input");
 
       await db
         .insert(dbSchema.newClimbSubscriptions)
@@ -148,11 +155,11 @@ export const newClimbSubscriptionResolvers = {
     unsubscribeNewClimbs: async (
       _: unknown,
       { input }: { input: NewClimbSubscriptionInput },
-      ctx: ConnectionContext
+      ctx: ConnectionContext,
     ): Promise<boolean> => {
       requireAuthenticated(ctx);
       await applyRateLimit(ctx, 20);
-      const validated = validateInput(NewClimbSubscriptionInputSchema, input, 'input');
+      const validated = validateInput(NewClimbSubscriptionInputSchema, input, "input");
 
       await db
         .delete(dbSchema.newClimbSubscriptions)

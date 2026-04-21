@@ -1,9 +1,9 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { dbz } from '@/app/lib/db/db';
-import { eq, and } from 'drizzle-orm';
-import { BoardName } from '@/app/lib/types';
-import { extractUuidFromSlug } from '@/app/lib/url-utils';
-import { UNIFIED_TABLES, isValidUnifiedBoardName } from '@/app/lib/db/queries/util/table-select';
+import { NextRequest, NextResponse } from "next/server";
+import { dbz } from "@/app/lib/db/db";
+import { eq, and } from "drizzle-orm";
+import { BoardName } from "@/app/lib/types";
+import { extractUuidFromSlug } from "@/app/lib/url-utils";
+import { UNIFIED_TABLES, isValidUnifiedBoardName } from "@/app/lib/db/queries/util/table-select";
 
 export async function GET(
   request: NextRequest,
@@ -14,7 +14,7 @@ export async function GET(
   const climb_uuid = extractUuidFromSlug(rawClimbUuid);
 
   if (!isValidUnifiedBoardName(board_name)) {
-    return NextResponse.json({ error: 'Invalid board name' }, { status: 400 });
+    return NextResponse.json({ error: "Invalid board name" }, { status: 400 });
   }
 
   try {
@@ -38,7 +38,7 @@ export async function GET(
 
     return NextResponse.json(transformedLinks);
   } catch (error) {
-    console.error('Error fetching beta links:', error);
-    return NextResponse.json({ error: 'Failed to fetch beta links' }, { status: 500 });
+    console.error("Error fetching beta links:", error);
+    return NextResponse.json({ error: "Failed to fetch beta links" }, { status: 500 });
   }
 }

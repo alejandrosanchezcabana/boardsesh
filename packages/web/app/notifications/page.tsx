@@ -1,9 +1,9 @@
-import React from 'react';
-import Box from '@mui/material/Box';
-import MuiTypography from '@mui/material/Typography';
-import { NotificationList } from '@/app/components/notifications';
-import { serverGroupedNotifications } from '@/app/lib/graphql/server-cached-client';
-import { getServerAuthToken } from '@/app/lib/auth/server-auth';
+import React from "react";
+import Box from "@mui/material/Box";
+import MuiTypography from "@mui/material/Typography";
+import { NotificationList } from "@/app/components/notifications";
+import { serverGroupedNotifications } from "@/app/lib/graphql/server-cached-client";
+import { getServerAuthToken } from "@/app/lib/auth/server-auth";
 
 export default async function NotificationsPage() {
   const authToken = await getServerAuthToken();
@@ -13,7 +13,7 @@ export default async function NotificationsPage() {
     try {
       initialData = await serverGroupedNotifications(authToken);
     } catch (error) {
-      console.error('[notifications/page] SSR fetch failed, falling back to client:', error);
+      console.error("[notifications/page] SSR fetch failed, falling back to client:", error);
     }
   }
 

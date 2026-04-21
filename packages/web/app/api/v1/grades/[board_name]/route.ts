@@ -1,9 +1,12 @@
-import { getDb } from '@/app/lib/db/db';
-import { boardDifficultyGrades } from '@/app/lib/db/schema';
-import { eq, and, asc } from 'drizzle-orm';
-import { NextRequest, NextResponse } from 'next/server';
+import { getDb } from "@/app/lib/db/db";
+import { boardDifficultyGrades } from "@/app/lib/db/schema";
+import { eq, and, asc } from "drizzle-orm";
+import { NextRequest, NextResponse } from "next/server";
 
-export async function GET(_request: NextRequest, { params }: { params: Promise<{ board_name: string }> }) {
+export async function GET(
+  _request: NextRequest,
+  { params }: { params: Promise<{ board_name: string }> },
+) {
   try {
     const { board_name } = await params;
     const db = getDb();
@@ -24,6 +27,6 @@ export async function GET(_request: NextRequest, { params }: { params: Promise<{
 
     return NextResponse.json(grades);
   } catch {
-    return NextResponse.json({ error: 'Failed to fetch grades' }, { status: 500 });
+    return NextResponse.json({ error: "Failed to fetch grades" }, { status: 500 });
   }
 }

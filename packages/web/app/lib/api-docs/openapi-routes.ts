@@ -14,7 +14,7 @@
  * 2. Reference schemas from openapi-registry.ts
  */
 
-import { z } from 'zod';
+import { z } from "zod";
 import {
   registry,
   BoardNameSchema,
@@ -39,18 +39,19 @@ import {
   UserProfileSchema,
   UpdateProfileRequestSchema,
   WsAuthResponseSchema,
-} from './openapi-registry';
+} from "./openapi-registry";
 
 // ============================================
 // Board Configuration Routes
 // ============================================
 
 registry.registerPath({
-  method: 'get',
-  path: '/api/v1/{board_name}/grades',
-  summary: 'Get difficulty grades',
-  description: 'Returns all difficulty grades for a specific board type. Grades are board-specific and include both numeric IDs and human-readable names.',
-  tags: ['Board Configuration'],
+  method: "get",
+  path: "/api/v1/{board_name}/grades",
+  summary: "Get difficulty grades",
+  description:
+    "Returns all difficulty grades for a specific board type. Grades are board-specific and include both numeric IDs and human-readable names.",
+  tags: ["Board Configuration"],
   request: {
     params: z.object({
       board_name: BoardNameSchema,
@@ -58,17 +59,17 @@ registry.registerPath({
   },
   responses: {
     200: {
-      description: 'List of grades',
+      description: "List of grades",
       content: {
-        'application/json': {
+        "application/json": {
           schema: GradesResponseSchema,
         },
       },
     },
     500: {
-      description: 'Server error',
+      description: "Server error",
       content: {
-        'application/json': {
+        "application/json": {
           schema: ErrorResponseSchema,
         },
       },
@@ -77,11 +78,12 @@ registry.registerPath({
 });
 
 registry.registerPath({
-  method: 'get',
-  path: '/api/v1/grades/{board_name}',
-  summary: 'Get difficulty grades (alternate)',
-  description: 'Alternate endpoint for getting difficulty grades. Returns the same data as /api/v1/{board_name}/grades.',
-  tags: ['Board Configuration'],
+  method: "get",
+  path: "/api/v1/grades/{board_name}",
+  summary: "Get difficulty grades (alternate)",
+  description:
+    "Alternate endpoint for getting difficulty grades. Returns the same data as /api/v1/{board_name}/grades.",
+  tags: ["Board Configuration"],
   request: {
     params: z.object({
       board_name: BoardNameSchema,
@@ -89,9 +91,9 @@ registry.registerPath({
   },
   responses: {
     200: {
-      description: 'List of grades',
+      description: "List of grades",
       content: {
-        'application/json': {
+        "application/json": {
           schema: GradesResponseSchema,
         },
       },
@@ -100,22 +102,23 @@ registry.registerPath({
 });
 
 registry.registerPath({
-  method: 'get',
-  path: '/api/v1/angles/{board_name}/{layout_id}',
-  summary: 'Get available angles',
-  description: 'Returns all available board angles for a specific layout. Angles are typically between 0-70 degrees depending on the board configuration.',
-  tags: ['Board Configuration'],
+  method: "get",
+  path: "/api/v1/angles/{board_name}/{layout_id}",
+  summary: "Get available angles",
+  description:
+    "Returns all available board angles for a specific layout. Angles are typically between 0-70 degrees depending on the board configuration.",
+  tags: ["Board Configuration"],
   request: {
     params: z.object({
       board_name: BoardNameSchema,
-      layout_id: z.string().describe('Layout ID'),
+      layout_id: z.string().describe("Layout ID"),
     }),
   },
   responses: {
     200: {
-      description: 'List of available angles',
+      description: "List of available angles",
       content: {
-        'application/json': {
+        "application/json": {
           schema: AnglesResponseSchema,
         },
       },
@@ -128,34 +131,35 @@ registry.registerPath({
 // ============================================
 
 registry.registerPath({
-  method: 'get',
-  path: '/api/v1/{board_name}/{layout_id}/{size_id}/{set_ids}/{angle}/{climb_uuid}',
-  summary: 'Get climb details',
-  description: 'Returns detailed information about a specific climb including hold positions, difficulty, and statistics.',
-  tags: ['Climbs'],
+  method: "get",
+  path: "/api/v1/{board_name}/{layout_id}/{size_id}/{set_ids}/{angle}/{climb_uuid}",
+  summary: "Get climb details",
+  description:
+    "Returns detailed information about a specific climb including hold positions, difficulty, and statistics.",
+  tags: ["Climbs"],
   request: {
     params: z.object({
       board_name: BoardNameSchema,
-      layout_id: z.string().describe('Layout ID or slug'),
-      size_id: z.string().describe('Size ID or slug'),
-      set_ids: z.string().describe('Comma-separated set IDs or slug'),
-      angle: z.string().describe('Board angle in degrees'),
-      climb_uuid: z.string().describe('Unique climb identifier'),
+      layout_id: z.string().describe("Layout ID or slug"),
+      size_id: z.string().describe("Size ID or slug"),
+      set_ids: z.string().describe("Comma-separated set IDs or slug"),
+      angle: z.string().describe("Board angle in degrees"),
+      climb_uuid: z.string().describe("Unique climb identifier"),
     }),
   },
   responses: {
     200: {
-      description: 'Climb details',
+      description: "Climb details",
       content: {
-        'application/json': {
+        "application/json": {
           schema: ClimbSchema,
         },
       },
     },
     404: {
-      description: 'Climb not found',
+      description: "Climb not found",
       content: {
-        'application/json': {
+        "application/json": {
           schema: ErrorResponseSchema,
         },
       },
@@ -164,22 +168,23 @@ registry.registerPath({
 });
 
 registry.registerPath({
-  method: 'get',
-  path: '/api/v1/{board_name}/climb-stats/{climb_uuid}',
-  summary: 'Get climb statistics across all angles',
-  description: 'Returns statistics for a climb at every angle it has been attempted. Useful for seeing how difficulty and popularity vary with angle.',
-  tags: ['Climbs'],
+  method: "get",
+  path: "/api/v1/{board_name}/climb-stats/{climb_uuid}",
+  summary: "Get climb statistics across all angles",
+  description:
+    "Returns statistics for a climb at every angle it has been attempted. Useful for seeing how difficulty and popularity vary with angle.",
+  tags: ["Climbs"],
   request: {
     params: z.object({
       board_name: BoardNameSchema,
-      climb_uuid: z.string().describe('Unique climb identifier'),
+      climb_uuid: z.string().describe("Unique climb identifier"),
     }),
   },
   responses: {
     200: {
-      description: 'Climb statistics by angle',
+      description: "Climb statistics by angle",
       content: {
-        'application/json': {
+        "application/json": {
           schema: ClimbStatsResponseSchema,
         },
       },
@@ -188,22 +193,23 @@ registry.registerPath({
 });
 
 registry.registerPath({
-  method: 'get',
-  path: '/api/v1/{board_name}/beta/{climb_uuid}',
-  summary: 'Get beta videos for a climb',
-  description: 'Returns links to beta videos for a specific climb. Beta links are user-submitted and may include videos at different angles.',
-  tags: ['Climbs'],
+  method: "get",
+  path: "/api/v1/{board_name}/beta/{climb_uuid}",
+  summary: "Get beta videos for a climb",
+  description:
+    "Returns links to beta videos for a specific climb. Beta links are user-submitted and may include videos at different angles.",
+  tags: ["Climbs"],
   request: {
     params: z.object({
       board_name: BoardNameSchema,
-      climb_uuid: z.string().describe('Unique climb identifier'),
+      climb_uuid: z.string().describe("Unique climb identifier"),
     }),
   },
   responses: {
     200: {
-      description: 'Beta video links',
+      description: "Beta video links",
       content: {
-        'application/json': {
+        "application/json": {
           schema: BetaLinksResponseSchema,
         },
       },
@@ -212,25 +218,26 @@ registry.registerPath({
 });
 
 registry.registerPath({
-  method: 'get',
-  path: '/api/v1/{board_name}/{layout_id}/{size_id}/{set_ids}/{angle}/setters',
-  summary: 'Get setters for a board configuration',
-  description: 'Returns a list of climb setters for the specified board configuration, ordered by number of climbs set.',
-  tags: ['Climbs'],
+  method: "get",
+  path: "/api/v1/{board_name}/{layout_id}/{size_id}/{set_ids}/{angle}/setters",
+  summary: "Get setters for a board configuration",
+  description:
+    "Returns a list of climb setters for the specified board configuration, ordered by number of climbs set.",
+  tags: ["Climbs"],
   request: {
     params: z.object({
       board_name: BoardNameSchema,
-      layout_id: z.string().describe('Layout ID'),
-      size_id: z.string().describe('Size ID'),
-      set_ids: z.string().describe('Comma-separated set IDs'),
-      angle: z.string().describe('Board angle in degrees'),
+      layout_id: z.string().describe("Layout ID"),
+      size_id: z.string().describe("Size ID"),
+      set_ids: z.string().describe("Comma-separated set IDs"),
+      angle: z.string().describe("Board angle in degrees"),
     }),
   },
   responses: {
     200: {
-      description: 'List of setters',
+      description: "List of setters",
       content: {
-        'application/json': {
+        "application/json": {
           schema: SettersResponseSchema,
         },
       },
@@ -239,25 +246,26 @@ registry.registerPath({
 });
 
 registry.registerPath({
-  method: 'get',
-  path: '/api/v1/{board_name}/{layout_id}/{size_id}/{set_ids}/{angle}/heatmap',
-  summary: 'Get hold usage heatmap',
-  description: 'Returns frequency data for each hold, showing how often holds are used in climbs. Useful for visualizing popular hold positions.',
-  tags: ['Climbs'],
+  method: "get",
+  path: "/api/v1/{board_name}/{layout_id}/{size_id}/{set_ids}/{angle}/heatmap",
+  summary: "Get hold usage heatmap",
+  description:
+    "Returns frequency data for each hold, showing how often holds are used in climbs. Useful for visualizing popular hold positions.",
+  tags: ["Climbs"],
   request: {
     params: z.object({
       board_name: BoardNameSchema,
-      layout_id: z.string().describe('Layout ID'),
-      size_id: z.string().describe('Size ID'),
-      set_ids: z.string().describe('Comma-separated set IDs'),
-      angle: z.string().describe('Board angle in degrees'),
+      layout_id: z.string().describe("Layout ID"),
+      size_id: z.string().describe("Size ID"),
+      set_ids: z.string().describe("Comma-separated set IDs"),
+      angle: z.string().describe("Board angle in degrees"),
     }),
   },
   responses: {
     200: {
-      description: 'Hold usage frequency map',
+      description: "Hold usage frequency map",
       content: {
-        'application/json': {
+        "application/json": {
           schema: HeatmapDataSchema,
         },
       },
@@ -270,30 +278,31 @@ registry.registerPath({
 // ============================================
 
 registry.registerPath({
-  method: 'get',
-  path: '/api/v1/{board_name}/slugs/layout/{slug}',
-  summary: 'Resolve layout slug to ID',
-  description: 'Converts a human-readable layout slug (e.g., "kilter-home-board") to its numeric ID.',
-  tags: ['Slug Resolution'],
+  method: "get",
+  path: "/api/v1/{board_name}/slugs/layout/{slug}",
+  summary: "Resolve layout slug to ID",
+  description:
+    'Converts a human-readable layout slug (e.g., "kilter-home-board") to its numeric ID.',
+  tags: ["Slug Resolution"],
   request: {
     params: z.object({
       board_name: BoardNameSchema,
-      slug: z.string().describe('Layout slug'),
+      slug: z.string().describe("Layout slug"),
     }),
   },
   responses: {
     200: {
-      description: 'Resolved layout ID',
+      description: "Resolved layout ID",
       content: {
-        'application/json': {
+        "application/json": {
           schema: LayoutSlugResponseSchema,
         },
       },
     },
     404: {
-      description: 'Layout not found',
+      description: "Layout not found",
       content: {
-        'application/json': {
+        "application/json": {
           schema: ErrorResponseSchema,
         },
       },
@@ -302,31 +311,31 @@ registry.registerPath({
 });
 
 registry.registerPath({
-  method: 'get',
-  path: '/api/v1/{board_name}/slugs/size/{layout_id}/{slug}',
-  summary: 'Resolve size slug to ID',
-  description: 'Converts a human-readable size slug to its numeric ID for a specific layout.',
-  tags: ['Slug Resolution'],
+  method: "get",
+  path: "/api/v1/{board_name}/slugs/size/{layout_id}/{slug}",
+  summary: "Resolve size slug to ID",
+  description: "Converts a human-readable size slug to its numeric ID for a specific layout.",
+  tags: ["Slug Resolution"],
   request: {
     params: z.object({
       board_name: BoardNameSchema,
-      layout_id: z.string().describe('Layout ID'),
-      slug: z.string().describe('Size slug'),
+      layout_id: z.string().describe("Layout ID"),
+      slug: z.string().describe("Size slug"),
     }),
   },
   responses: {
     200: {
-      description: 'Resolved size ID',
+      description: "Resolved size ID",
       content: {
-        'application/json': {
+        "application/json": {
           schema: SizeSlugResponseSchema,
         },
       },
     },
     404: {
-      description: 'Size not found',
+      description: "Size not found",
       content: {
-        'application/json': {
+        "application/json": {
           schema: ErrorResponseSchema,
         },
       },
@@ -335,32 +344,32 @@ registry.registerPath({
 });
 
 registry.registerPath({
-  method: 'get',
-  path: '/api/v1/{board_name}/slugs/sets/{layout_id}/{size_id}/{slug}',
-  summary: 'Resolve set slug to IDs',
-  description: 'Converts a human-readable set slug to comma-separated set IDs.',
-  tags: ['Slug Resolution'],
+  method: "get",
+  path: "/api/v1/{board_name}/slugs/sets/{layout_id}/{size_id}/{slug}",
+  summary: "Resolve set slug to IDs",
+  description: "Converts a human-readable set slug to comma-separated set IDs.",
+  tags: ["Slug Resolution"],
   request: {
     params: z.object({
       board_name: BoardNameSchema,
-      layout_id: z.string().describe('Layout ID'),
-      size_id: z.string().describe('Size ID'),
-      slug: z.string().describe('Set slug'),
+      layout_id: z.string().describe("Layout ID"),
+      size_id: z.string().describe("Size ID"),
+      slug: z.string().describe("Set slug"),
     }),
   },
   responses: {
     200: {
-      description: 'Resolved set IDs',
+      description: "Resolved set IDs",
       content: {
-        'application/json': {
+        "application/json": {
           schema: SetsSlugResponseSchema,
         },
       },
     },
     404: {
-      description: 'Sets not found',
+      description: "Sets not found",
       content: {
-        'application/json': {
+        "application/json": {
           schema: ErrorResponseSchema,
         },
       },
@@ -373,15 +382,16 @@ registry.registerPath({
 // ============================================
 
 registry.registerPath({
-  method: 'post',
-  path: '/api/auth/register',
-  summary: 'Register a new user',
-  description: 'Creates a new user account with email and password. May require email verification depending on server configuration.',
-  tags: ['Authentication'],
+  method: "post",
+  path: "/api/auth/register",
+  summary: "Register a new user",
+  description:
+    "Creates a new user account with email and password. May require email verification depending on server configuration.",
+  tags: ["Authentication"],
   request: {
     body: {
       content: {
-        'application/json': {
+        "application/json": {
           schema: RegisterRequestSchema,
         },
       },
@@ -389,33 +399,33 @@ registry.registerPath({
   },
   responses: {
     201: {
-      description: 'Account created successfully',
+      description: "Account created successfully",
       content: {
-        'application/json': {
+        "application/json": {
           schema: RegisterResponseSchema,
         },
       },
     },
     400: {
-      description: 'Validation error',
+      description: "Validation error",
       content: {
-        'application/json': {
+        "application/json": {
           schema: ErrorResponseSchema,
         },
       },
     },
     409: {
-      description: 'Email already exists',
+      description: "Email already exists",
       content: {
-        'application/json': {
+        "application/json": {
           schema: ErrorResponseSchema,
         },
       },
     },
     429: {
-      description: 'Rate limit exceeded',
+      description: "Rate limit exceeded",
       content: {
-        'application/json': {
+        "application/json": {
           schema: ErrorResponseSchema,
         },
       },
@@ -424,15 +434,15 @@ registry.registerPath({
 });
 
 registry.registerPath({
-  method: 'post',
-  path: '/api/auth/verify-email',
-  summary: 'Verify email address',
-  description: 'Verifies a user email address using the token sent via email.',
-  tags: ['Authentication'],
+  method: "post",
+  path: "/api/auth/verify-email",
+  summary: "Verify email address",
+  description: "Verifies a user email address using the token sent via email.",
+  tags: ["Authentication"],
   request: {
     body: {
       content: {
-        'application/json': {
+        "application/json": {
           schema: VerifyEmailRequestSchema,
         },
       },
@@ -440,17 +450,17 @@ registry.registerPath({
   },
   responses: {
     200: {
-      description: 'Email verified successfully',
+      description: "Email verified successfully",
       content: {
-        'application/json': {
+        "application/json": {
           schema: z.object({ message: z.string() }),
         },
       },
     },
     400: {
-      description: 'Invalid or expired token',
+      description: "Invalid or expired token",
       content: {
-        'application/json': {
+        "application/json": {
           schema: ErrorResponseSchema,
         },
       },
@@ -459,15 +469,15 @@ registry.registerPath({
 });
 
 registry.registerPath({
-  method: 'post',
-  path: '/api/auth/resend-verification',
-  summary: 'Resend verification email',
-  description: 'Sends a new verification email to the specified address.',
-  tags: ['Authentication'],
+  method: "post",
+  path: "/api/auth/resend-verification",
+  summary: "Resend verification email",
+  description: "Sends a new verification email to the specified address.",
+  tags: ["Authentication"],
   request: {
     body: {
       content: {
-        'application/json': {
+        "application/json": {
           schema: ResendVerificationRequestSchema,
         },
       },
@@ -475,17 +485,17 @@ registry.registerPath({
   },
   responses: {
     200: {
-      description: 'Verification email sent',
+      description: "Verification email sent",
       content: {
-        'application/json': {
+        "application/json": {
           schema: z.object({ message: z.string() }),
         },
       },
     },
     429: {
-      description: 'Rate limit exceeded',
+      description: "Rate limit exceeded",
       content: {
-        'application/json': {
+        "application/json": {
           schema: ErrorResponseSchema,
         },
       },
@@ -498,18 +508,19 @@ registry.registerPath({
 // ============================================
 
 registry.registerPath({
-  method: 'post',
-  path: '/api/v1/{board_name}/proxy/login',
-  summary: 'Login to Aurora board',
-  description: 'Authenticates with the Aurora Climbing API and returns a session token. This token is used for subsequent Aurora API calls.',
-  tags: ['Aurora Proxy'],
+  method: "post",
+  path: "/api/v1/{board_name}/proxy/login",
+  summary: "Login to Aurora board",
+  description:
+    "Authenticates with the Aurora Climbing API and returns a session token. This token is used for subsequent Aurora API calls.",
+  tags: ["Aurora Proxy"],
   request: {
     params: z.object({
       board_name: BoardNameSchema,
     }),
     body: {
       content: {
-        'application/json': {
+        "application/json": {
           schema: AuroraLoginRequestSchema,
         },
       },
@@ -517,17 +528,17 @@ registry.registerPath({
   },
   responses: {
     200: {
-      description: 'Login successful',
+      description: "Login successful",
       content: {
-        'application/json': {
+        "application/json": {
           schema: AuroraLoginResponseSchema,
         },
       },
     },
     401: {
-      description: 'Invalid credentials',
+      description: "Invalid credentials",
       content: {
-        'application/json': {
+        "application/json": {
           schema: ErrorResponseSchema,
         },
       },
@@ -536,18 +547,19 @@ registry.registerPath({
 });
 
 registry.registerPath({
-  method: 'post',
-  path: '/api/v1/{board_name}/proxy/saveAscent',
-  summary: 'Save an ascent to Aurora',
-  description: 'Records a climb completion (ascent) to the Aurora Climbing platform. Requires a valid Aurora session token.',
-  tags: ['Aurora Proxy'],
+  method: "post",
+  path: "/api/v1/{board_name}/proxy/saveAscent",
+  summary: "Save an ascent to Aurora",
+  description:
+    "Records a climb completion (ascent) to the Aurora Climbing platform. Requires a valid Aurora session token.",
+  tags: ["Aurora Proxy"],
   request: {
     params: z.object({
       board_name: BoardNameSchema,
     }),
     body: {
       content: {
-        'application/json': {
+        "application/json": {
           schema: SaveAscentRequestSchema,
         },
       },
@@ -555,17 +567,17 @@ registry.registerPath({
   },
   responses: {
     200: {
-      description: 'Ascent saved successfully',
+      description: "Ascent saved successfully",
       content: {
-        'application/json': {
+        "application/json": {
           schema: z.object({ success: z.boolean() }),
         },
       },
     },
     401: {
-      description: 'Invalid or expired token',
+      description: "Invalid or expired token",
       content: {
-        'application/json': {
+        "application/json": {
           schema: ErrorResponseSchema,
         },
       },
@@ -578,25 +590,25 @@ registry.registerPath({
 // ============================================
 
 registry.registerPath({
-  method: 'get',
-  path: '/api/internal/profile',
-  summary: 'Get current user profile',
-  description: 'Returns the profile of the currently authenticated user.',
-  tags: ['User Profile'],
+  method: "get",
+  path: "/api/internal/profile",
+  summary: "Get current user profile",
+  description: "Returns the profile of the currently authenticated user.",
+  tags: ["User Profile"],
   security: [{ session: [] }],
   responses: {
     200: {
-      description: 'User profile',
+      description: "User profile",
       content: {
-        'application/json': {
+        "application/json": {
           schema: UserProfileSchema,
         },
       },
     },
     401: {
-      description: 'Not authenticated',
+      description: "Not authenticated",
       content: {
-        'application/json': {
+        "application/json": {
           schema: ErrorResponseSchema,
         },
       },
@@ -605,16 +617,16 @@ registry.registerPath({
 });
 
 registry.registerPath({
-  method: 'post',
-  path: '/api/internal/profile',
-  summary: 'Update user profile',
-  description: 'Updates the profile of the currently authenticated user.',
-  tags: ['User Profile'],
+  method: "post",
+  path: "/api/internal/profile",
+  summary: "Update user profile",
+  description: "Updates the profile of the currently authenticated user.",
+  tags: ["User Profile"],
   security: [{ session: [] }],
   request: {
     body: {
       content: {
-        'application/json': {
+        "application/json": {
           schema: UpdateProfileRequestSchema,
         },
       },
@@ -622,17 +634,17 @@ registry.registerPath({
   },
   responses: {
     200: {
-      description: 'Profile updated',
+      description: "Profile updated",
       content: {
-        'application/json': {
+        "application/json": {
           schema: UserProfileSchema,
         },
       },
     },
     401: {
-      description: 'Not authenticated',
+      description: "Not authenticated",
       content: {
-        'application/json': {
+        "application/json": {
           schema: ErrorResponseSchema,
         },
       },
@@ -641,29 +653,29 @@ registry.registerPath({
 });
 
 registry.registerPath({
-  method: 'get',
-  path: '/api/internal/profile/{userId}',
-  summary: 'Get public user profile',
-  description: 'Returns the public profile of any user by their ID.',
-  tags: ['User Profile'],
+  method: "get",
+  path: "/api/internal/profile/{userId}",
+  summary: "Get public user profile",
+  description: "Returns the public profile of any user by their ID.",
+  tags: ["User Profile"],
   request: {
     params: z.object({
-      userId: z.string().describe('User ID'),
+      userId: z.string().describe("User ID"),
     }),
   },
   responses: {
     200: {
-      description: 'User profile',
+      description: "User profile",
       content: {
-        'application/json': {
+        "application/json": {
           schema: UserProfileSchema,
         },
       },
     },
     404: {
-      description: 'User not found',
+      description: "User not found",
       content: {
-        'application/json': {
+        "application/json": {
           schema: ErrorResponseSchema,
         },
       },
@@ -672,25 +684,26 @@ registry.registerPath({
 });
 
 registry.registerPath({
-  method: 'get',
-  path: '/api/internal/ws-auth',
-  summary: 'Get WebSocket authentication token',
-  description: 'Returns a JWT token for authenticating WebSocket connections. Requires an active session.',
-  tags: ['WebSocket'],
+  method: "get",
+  path: "/api/internal/ws-auth",
+  summary: "Get WebSocket authentication token",
+  description:
+    "Returns a JWT token for authenticating WebSocket connections. Requires an active session.",
+  tags: ["WebSocket"],
   security: [{ session: [] }],
   responses: {
     200: {
-      description: 'WebSocket auth token',
+      description: "WebSocket auth token",
       content: {
-        'application/json': {
+        "application/json": {
           schema: WsAuthResponseSchema,
         },
       },
     },
     401: {
-      description: 'Not authenticated',
+      description: "Not authenticated",
       content: {
-        'application/json': {
+        "application/json": {
           schema: ErrorResponseSchema,
         },
       },

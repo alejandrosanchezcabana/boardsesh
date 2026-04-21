@@ -1,7 +1,7 @@
-import 'server-only';
-import { GraphQLClient, RequestDocument, Variables } from 'graphql-request';
-import { getGraphQLHttpUrl } from './client';
-import type { GroupedNotificationConnection } from '@boardsesh/shared-schema';
+import "server-only";
+import { GraphQLClient, RequestDocument, Variables } from "graphql-request";
+import { getGraphQLHttpUrl } from "./client";
+import type { GroupedNotificationConnection } from "@boardsesh/shared-schema";
 
 /**
  * Execute a GraphQL query with an auth token (non-cached, per-user data).
@@ -16,10 +16,10 @@ export async function executeAuthenticatedGraphQL<T = unknown, V extends Variabl
 ): Promise<T> {
   const url = getGraphQLHttpUrl();
   const headers: Record<string, string> = {
-    'Content-Type': 'application/json',
+    "Content-Type": "application/json",
   };
   if (authToken) {
-    headers['Authorization'] = `Bearer ${authToken}`;
+    headers["Authorization"] = `Bearer ${authToken}`;
   }
   const client = new GraphQLClient(url, { headers });
   return client.request<T>(document, variables);
@@ -31,9 +31,10 @@ export async function executeAuthenticatedGraphQL<T = unknown, V extends Variabl
  */
 export async function serverMyBoards(
   authToken: string,
-): Promise<import('@boardsesh/shared-schema').UserBoard[] | null> {
-  const { GET_MY_BOARDS } = await import('@/app/lib/graphql/operations/boards');
-  type GetMyBoardsQueryResponse = import('@/app/lib/graphql/operations/boards').GetMyBoardsQueryResponse;
+): Promise<import("@boardsesh/shared-schema").UserBoard[] | null> {
+  const { GET_MY_BOARDS } = await import("@/app/lib/graphql/operations/boards");
+  type GetMyBoardsQueryResponse =
+    import("@/app/lib/graphql/operations/boards").GetMyBoardsQueryResponse;
 
   try {
     const response = await executeAuthenticatedGraphQL<GetMyBoardsQueryResponse>(
@@ -53,9 +54,9 @@ export async function serverMyBoards(
 export async function serverUserPlaylists(
   authToken: string,
   input: { boardType?: string; layoutId?: number } = {},
-): Promise<import('@/app/lib/graphql/operations/playlists').Playlist[] | null> {
-  const { GET_ALL_USER_PLAYLISTS } = await import('@/app/lib/graphql/operations/playlists');
-  type Response = import('@/app/lib/graphql/operations/playlists').GetAllUserPlaylistsQueryResponse;
+): Promise<import("@/app/lib/graphql/operations/playlists").Playlist[] | null> {
+  const { GET_ALL_USER_PLAYLISTS } = await import("@/app/lib/graphql/operations/playlists");
+  type Response = import("@/app/lib/graphql/operations/playlists").GetAllUserPlaylistsQueryResponse;
 
   try {
     const response = await executeAuthenticatedGraphQL<Response>(
@@ -78,7 +79,7 @@ export async function serverGroupedNotifications(
   limit: number = 20,
   offset: number = 0,
 ): Promise<GroupedNotificationConnection> {
-  const { GET_GROUPED_NOTIFICATIONS } = await import('@/app/lib/graphql/operations/notifications');
+  const { GET_GROUPED_NOTIFICATIONS } = await import("@/app/lib/graphql/operations/notifications");
   type Response = { groupedNotifications: GroupedNotificationConnection };
 
   const data = await executeAuthenticatedGraphQL<Response>(

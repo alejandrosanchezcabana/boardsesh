@@ -2,17 +2,17 @@
 
 ## Basic Info
 
-| Field | Value |
-|-------|-------|
-| App Name | Boardsesh |
-| Subtitle | Train on Kilter, Tension & more |
-| Bundle ID | com.boardsesh.app |
-| Category | Health & Fitness (primary), Sports (secondary) |
-| Age Rating | 4+ |
-| Copyright | 2024-2026 Boardsesh contributors |
-| Support URL | https://boardsesh.com |
-| Marketing URL | https://boardsesh.com |
-| Privacy Policy URL | https://boardsesh.com/privacy |
+| Field              | Value                                          |
+| ------------------ | ---------------------------------------------- |
+| App Name           | Boardsesh                                      |
+| Subtitle           | Train on Kilter, Tension & more                |
+| Bundle ID          | com.boardsesh.app                              |
+| Category           | Health & Fitness (primary), Sports (secondary) |
+| Age Rating         | 4+                                             |
+| Copyright          | 2024-2026 Boardsesh contributors               |
+| Support URL        | https://boardsesh.com                          |
+| Marketing URL      | https://boardsesh.com                          |
+| Privacy Policy URL | https://boardsesh.com/privacy                  |
 
 ## Keywords
 
@@ -51,6 +51,7 @@ iOS Safari does not support Web Bluetooth, which means a website cannot talk to 
 No ads, no subscriptions, no paywalls. Boardsesh is open source and built by climbers. The code is on GitHub if you want to contribute or just see how it works.
 
 Supported boards:
+
 - Kilter Board (all sizes and angles)
 - Tension Board (all sizes and angles)
 - MoonBoard (2016, 2017, 2019, 2024 setups)
@@ -64,6 +65,7 @@ First release. Connect to your Kilter, Tension, or MoonBoard over Bluetooth. Bro
 ## Review Notes
 
 **Demo Account**
+
 - Email: test@boardsesh.com
 - Password: test
 
@@ -93,6 +95,7 @@ The app acts as a BLE Central and connects to climbing boards that advertise the
 The Capacitor BluetoothLe plugin (CapacitorCommunityBluetoothLe) provides the CoreBluetooth bridge. The native implementation uses CBCentralManager for device discovery and CBPeripheral for characteristic writes. The app declares bluetooth-le in UIRequiredDeviceCapabilities and bluetooth-central in UIBackgroundModes.
 
 **Other technical notes**
+
 - Network requests go to boardsesh.com (production API).
 - WebSocket connections for Party Mode go to the backend at wss://backend.boardsesh.com.
 
@@ -100,17 +103,17 @@ The Capacitor BluetoothLe plugin (CapacitorCommunityBluetoothLe) provides the Co
 
 ### Data Linked to You
 
-| Data Type | Category | Purpose |
-|-----------|----------|---------|
-| Email Address | Contact Info | Account creation and authentication |
-| Name / Username | Contact Info | Profile display, shown to other users in Party Mode and social features |
-| Precise Location | Location | Party session discovery (finding nearby sessions), only when user grants permission |
-| Fitness Activity | Health & Fitness | Climb ticks and logbook entries (sends, attempts, grades) |
+| Data Type        | Category         | Purpose                                                                             |
+| ---------------- | ---------------- | ----------------------------------------------------------------------------------- |
+| Email Address    | Contact Info     | Account creation and authentication                                                 |
+| Name / Username  | Contact Info     | Profile display, shown to other users in Party Mode and social features             |
+| Precise Location | Location         | Party session discovery (finding nearby sessions), only when user grants permission |
+| Fitness Activity | Health & Fitness | Climb ticks and logbook entries (sends, attempts, grades)                           |
 
 ### Data Not Linked to You
 
-| Data Type | Category | Purpose |
-|-----------|----------|---------|
+| Data Type  | Category    | Purpose                                                                        |
+| ---------- | ----------- | ------------------------------------------------------------------------------ |
 | Usage Data | Diagnostics | Vercel Analytics for page views and performance metrics, collected anonymously |
 
 ### Data Not Collected

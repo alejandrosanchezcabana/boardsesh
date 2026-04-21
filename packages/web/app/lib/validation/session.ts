@@ -1,4 +1,4 @@
-import { z } from 'zod';
+import { z } from "zod";
 
 /**
  * Maximum length for session names (user-defined session names)
@@ -27,12 +27,9 @@ export const SESSION_ID_MAX_LENGTH = 100;
  */
 export const SessionIdSchema = z
   .string()
-  .min(1, 'Session ID cannot be empty')
+  .min(1, "Session ID cannot be empty")
   .max(SESSION_ID_MAX_LENGTH, `Session ID must be ${SESSION_ID_MAX_LENGTH} characters or less`)
-  .regex(
-    /^[a-zA-Z0-9-]+$/,
-    'Session ID can only contain letters, numbers, and hyphens'
-  );
+  .regex(/^[a-zA-Z0-9-]+$/, "Session ID can only contain letters, numbers, and hyphens");
 
 /**
  * Session name validation schema (for user-defined session names)
@@ -45,7 +42,10 @@ export const SessionIdSchema = z
  */
 export const SessionNameSchema = z
   .string()
-  .max(SESSION_NAME_MAX_LENGTH, `Session name must be ${SESSION_NAME_MAX_LENGTH} characters or less`)
+  .max(
+    SESSION_NAME_MAX_LENGTH,
+    `Session name must be ${SESSION_NAME_MAX_LENGTH} characters or less`,
+  )
   .optional();
 
 /**

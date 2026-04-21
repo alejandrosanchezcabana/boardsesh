@@ -1,8 +1,8 @@
-'use client';
+"use client";
 
-import React, { useCallback, useRef } from 'react';
-import { themeTokens } from '@/app/theme/theme-config';
-import styles from './direction-picker.module.css';
+import React, { useCallback, useRef } from "react";
+import { themeTokens } from "@/app/theme/theme-config";
+import styles from "./direction-picker.module.css";
 
 interface DirectionPickerProps {
   value: number | null;
@@ -47,23 +47,29 @@ const DirectionPicker: React.FC<DirectionPickerProps> = ({
     return Math.round(angle);
   }, []);
 
-  const handleClick = useCallback((e: React.MouseEvent<SVGSVGElement>) => {
-    if (disabled) return;
+  const handleClick = useCallback(
+    (e: React.MouseEvent<SVGSVGElement>) => {
+      if (disabled) return;
 
-    const angle = calculateAngleFromEvent(e.clientX, e.clientY);
-    if (angle !== null) {
-      onChange(angle);
-    }
-  }, [disabled, calculateAngleFromEvent, onChange]);
+      const angle = calculateAngleFromEvent(e.clientX, e.clientY);
+      if (angle !== null) {
+        onChange(angle);
+      }
+    },
+    [disabled, calculateAngleFromEvent, onChange],
+  );
 
-  const handlePointerMove = useCallback((e: React.PointerEvent<SVGSVGElement>) => {
-    if (disabled || e.buttons !== 1) return;
+  const handlePointerMove = useCallback(
+    (e: React.PointerEvent<SVGSVGElement>) => {
+      if (disabled || e.buttons !== 1) return;
 
-    const angle = calculateAngleFromEvent(e.clientX, e.clientY);
-    if (angle !== null) {
-      onChange(angle);
-    }
-  }, [disabled, calculateAngleFromEvent, onChange]);
+      const angle = calculateAngleFromEvent(e.clientX, e.clientY);
+      if (angle !== null) {
+        onChange(angle);
+      }
+    },
+    [disabled, calculateAngleFromEvent, onChange],
+  );
 
   const center = size / 2;
   const radius = size / 2 - 10;
@@ -73,7 +79,8 @@ const DirectionPicker: React.FC<DirectionPickerProps> = ({
   // 0 degrees = up, so we start from -90 in standard math coordinates
   const angleRad = value !== null ? ((value - 90) * Math.PI) / 180 : null;
   const arrowEndX = angleRad !== null ? center + Math.cos(angleRad) * arrowLength : center;
-  const arrowEndY = angleRad !== null ? center + Math.sin(angleRad) * arrowLength : center - arrowLength;
+  const arrowEndY =
+    angleRad !== null ? center + Math.sin(angleRad) * arrowLength : center - arrowLength;
 
   // Arrow head points
   const arrowHeadSize = 10;
@@ -97,10 +104,10 @@ const DirectionPicker: React.FC<DirectionPickerProps> = ({
         ref={circleRef}
         width={size}
         height={size}
-        className={`${styles.picker} ${disabled ? styles.disabled : ''}`}
+        className={`${styles.picker} ${disabled ? styles.disabled : ""}`}
         onClick={handleClick}
         onPointerMove={handlePointerMove}
-        style={{ touchAction: 'none' }}
+        style={{ touchAction: "none" }}
       >
         {/* Outer circle */}
         <circle
@@ -113,18 +120,21 @@ const DirectionPicker: React.FC<DirectionPickerProps> = ({
         />
 
         {/* Direction indicators */}
-        <text x={center} y={12} textAnchor="middle" className={styles.label}>Up</text>
-        <text x={size - 8} y={center + 4} textAnchor="end" className={styles.label}>R</text>
-        <text x={center} y={size - 4} textAnchor="middle" className={styles.label}>Down</text>
-        <text x={8} y={center + 4} textAnchor="start" className={styles.label}>L</text>
+        <text x={center} y={12} textAnchor="middle" className={styles.label}>
+          Up
+        </text>
+        <text x={size - 8} y={center + 4} textAnchor="end" className={styles.label}>
+          R
+        </text>
+        <text x={center} y={size - 4} textAnchor="middle" className={styles.label}>
+          Down
+        </text>
+        <text x={8} y={center + 4} textAnchor="start" className={styles.label}>
+          L
+        </text>
 
         {/* Center dot */}
-        <circle
-          cx={center}
-          cy={center}
-          r={4}
-          fill="var(--neutral-400)"
-        />
+        <circle cx={center} cy={center} r={4} fill="var(--neutral-400)" />
 
         {/* Arrow line */}
         {value !== null && (
@@ -152,15 +162,11 @@ const DirectionPicker: React.FC<DirectionPickerProps> = ({
           cy={center}
           r={radius}
           fill="transparent"
-          style={{ cursor: disabled ? 'not-allowed' : 'pointer' }}
+          style={{ cursor: disabled ? "not-allowed" : "pointer" }}
         />
       </svg>
 
-      {value !== null && (
-        <div className={styles.angleDisplay}>
-          {value}°
-        </div>
-      )}
+      {value !== null && <div className={styles.angleDisplay}>{value}°</div>}
     </div>
   );
 };

@@ -1,8 +1,8 @@
-import path from 'path';
-import fs from 'fs';
-import { fileURLToPath } from 'url';
-import { sql } from 'drizzle-orm';
-import { boardClimbs, boardClimbStats, boardClimbHolds } from '../src/schema/boards/unified.js';
+import path from "path";
+import fs from "fs";
+import { fileURLToPath } from "url";
+import { sql } from "drizzle-orm";
+import { boardClimbs, boardClimbStats, boardClimbHolds } from "../src/schema/boards/unified.js";
 import {
   uuidv5,
   coordinateToHoldId,
@@ -10,8 +10,8 @@ import {
   moveToHoldState,
   MOONBOARD_UUID_NAMESPACE,
   type MoonBoardMove,
-} from './moonboard-helpers.js';
-import { createScriptDb, getScriptDatabaseUrl } from './db-connection.js';
+} from "./moonboard-helpers.js";
+import { createScriptDb, getScriptDatabaseUrl } from "./db-connection.js";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
@@ -78,7 +78,7 @@ interface DumpFile {
 
 // holdsetup.apiId → layout ID in our database
 const HOLDSETUP_TO_LAYOUT: Record<number, number> = {
-  1: 2,  // MoonBoard 2016
+  1: 2, // MoonBoard 2016
   15: 4, // MoonBoard Masters 2017
   17: 5, // MoonBoard Masters 2019
   19: 6, // Mini MoonBoard 2020
@@ -87,23 +87,39 @@ const HOLDSETUP_TO_LAYOUT: Record<number, number> = {
 // Grade string → difficulty ID (matching MOONBOARD_GRADES in moonboard-config.ts)
 // Note: "5+" from MoonBoard maps to 5a (difficulty 13 / V1)
 const GRADE_TO_DIFFICULTY: Record<string, number> = {
-  '5+': 13,
-  '6A': 16, '6a': 16,
-  '6A+': 17, '6a+': 17,
-  '6B': 18, '6b': 18,
-  '6B+': 19, '6b+': 19,
-  '6C': 20, '6c': 20,
-  '6C+': 21, '6c+': 21,
-  '7A': 22, '7a': 22,
-  '7A+': 23, '7a+': 23,
-  '7B': 24, '7b': 24,
-  '7B+': 25, '7b+': 25,
-  '7C': 26, '7c': 26,
-  '7C+': 27, '7c+': 27,
-  '8A': 28, '8a': 28,
-  '8A+': 29, '8a+': 29,
-  '8B': 30, '8b': 30,
-  '8B+': 31, '8b+': 31,
+  "5+": 13,
+  "6A": 16,
+  "6a": 16,
+  "6A+": 17,
+  "6a+": 17,
+  "6B": 18,
+  "6b": 18,
+  "6B+": 19,
+  "6b+": 19,
+  "6C": 20,
+  "6c": 20,
+  "6C+": 21,
+  "6c+": 21,
+  "7A": 22,
+  "7a": 22,
+  "7A+": 23,
+  "7a+": 23,
+  "7B": 24,
+  "7b": 24,
+  "7B+": 25,
+  "7b+": 25,
+  "7C": 26,
+  "7c": 26,
+  "7C+": 27,
+  "7c+": 27,
+  "8A": 28,
+  "8a": 28,
+  "8A+": 29,
+  "8a+": 29,
+  "8B": 30,
+  "8b": 30,
+  "8B+": 31,
+  "8b+": 31,
 };
 
 // =============================================================================
@@ -116,12 +132,12 @@ interface FileConfig {
 }
 
 const FILES_TO_IMPORT: FileConfig[] = [
-  { filename: 'problems MoonBoard 2016 .json', angle: 40 },
-  { filename: 'problems MoonBoard Masters 2017 25.json', angle: 25 },
-  { filename: 'problems MoonBoard Masters 2017 40.json', angle: 40 },
-  { filename: 'problems MoonBoard Masters 2019 25.json', angle: 25 },
-  { filename: 'problems MoonBoard Masters 2019 40.json', angle: 40 },
-  { filename: 'problems Mini MoonBoard 2020 40.json', angle: 40 },
+  { filename: "problems MoonBoard 2016 .json", angle: 40 },
+  { filename: "problems MoonBoard Masters 2017 25.json", angle: 25 },
+  { filename: "problems MoonBoard Masters 2017 40.json", angle: 40 },
+  { filename: "problems MoonBoard Masters 2019 25.json", angle: 25 },
+  { filename: "problems MoonBoard Masters 2019 40.json", angle: 40 },
+  { filename: "problems Mini MoonBoard 2020 40.json", angle: 40 },
 ];
 
 const BATCH_SIZE = 500;
@@ -133,24 +149,23 @@ const BATCH_SIZE = 500;
 async function importMoonBoardProblems() {
   const dumpPath = process.argv[2]
     ? path.resolve(process.cwd(), process.argv[2])
-    : path.join(process.env.HOME || '~', 'Downloads', 'problems_2023_01_30');
+    : path.join(process.env.HOME || "~", "Downloads", "problems_2023_01_30");
 
   // Verify dump directory exists
   if (!fs.existsSync(dumpPath)) {
     console.error(`❌ Dump directory not found: ${dumpPath}`);
-    console.error('   Usage: bun run db:import-moonboard [/path/to/dump]');
+    console.error("   Usage: bun run db:import-moonboard [/path/to/dump]");
     process.exit(1);
   }
 
   const databaseUrl = getScriptDatabaseUrl();
-  const dbHost = databaseUrl.split('@')[1]?.split('/')[0] || 'unknown';
+  const dbHost = databaseUrl.split("@")[1]?.split("/")[0] || "unknown";
   console.log(`🔄 Importing MoonBoard problems to: ${dbHost}`);
   console.log(`📂 Reading dump from: ${dumpPath}`);
 
   const { db, close } = createScriptDb(databaseUrl);
 
   try {
-
     let totalClimbs = 0;
     let totalStats = 0;
     let totalHolds = 0;
@@ -164,7 +179,7 @@ async function importMoonBoardProblems() {
       }
 
       console.log(`\n📖 Processing: ${fileConfig.filename}`);
-      const raw = fs.readFileSync(filePath, 'utf-8');
+      const raw = fs.readFileSync(filePath, "utf-8");
       const dump: DumpFile = JSON.parse(raw);
       console.log(`   Total problems in file: ${dump.data.length}`);
 
@@ -201,12 +216,12 @@ async function importMoonBoardProblems() {
 
         climbRecords.push({
           uuid,
-          boardType: 'moonboard',
+          boardType: "moonboard",
           layoutId,
           setterId: null,
           setterUsername: problem.setby,
           name: problem.name,
-          description: '',
+          description: "",
           hsm: null,
           edgeLeft: null,
           edgeRight: null,
@@ -225,7 +240,7 @@ async function importMoonBoardProblems() {
         });
 
         statsRecords.push({
-          boardType: 'moonboard',
+          boardType: "moonboard",
           climbUuid: uuid,
           angle: fileConfig.angle,
           displayDifficulty: difficultyId,
@@ -240,7 +255,7 @@ async function importMoonBoardProblems() {
         for (const move of problem.moves) {
           const holdId = coordinateToHoldId(move.description);
           holdsRecords.push({
-            boardType: 'moonboard',
+            boardType: "moonboard",
             climbUuid: uuid,
             holdId,
             frameNumber: 0,
@@ -250,7 +265,8 @@ async function importMoonBoardProblems() {
       }
 
       if (skippedGrade > 0) console.log(`   Skipped ${skippedGrade} problems with unknown grade`);
-      if (skippedLayout > 0) console.log(`   Skipped ${skippedLayout} problems with unknown holdsetup`);
+      if (skippedLayout > 0)
+        console.log(`   Skipped ${skippedLayout} problems with unknown holdsetup`);
 
       // Batch insert climbs
       console.log(`   Inserting ${climbRecords.length} climbs...`);
@@ -258,31 +274,38 @@ async function importMoonBoardProblems() {
         const batch = climbRecords.slice(i, i + BATCH_SIZE);
         await db.insert(boardClimbs).values(batch).onConflictDoNothing();
         if ((i + BATCH_SIZE) % 5000 === 0 || i + BATCH_SIZE >= climbRecords.length) {
-          process.stdout.write(`\r   Climbs: ${Math.min(i + BATCH_SIZE, climbRecords.length)}/${climbRecords.length}`);
+          process.stdout.write(
+            `\r   Climbs: ${Math.min(i + BATCH_SIZE, climbRecords.length)}/${climbRecords.length}`,
+          );
         }
       }
-      console.log('');
+      console.log("");
       totalClimbs += climbRecords.length;
 
       // Batch insert stats (upsert to refresh on re-run)
       console.log(`   Inserting ${statsRecords.length} stats...`);
       for (let i = 0; i < statsRecords.length; i += BATCH_SIZE) {
         const batch = statsRecords.slice(i, i + BATCH_SIZE);
-        await db.insert(boardClimbStats).values(batch).onConflictDoUpdate({
-          target: [boardClimbStats.boardType, boardClimbStats.climbUuid, boardClimbStats.angle],
-          set: {
-            displayDifficulty: sql`excluded.display_difficulty`,
-            benchmarkDifficulty: sql`excluded.benchmark_difficulty`,
-            ascensionistCount: sql`excluded.ascensionist_count`,
-            difficultyAverage: sql`excluded.difficulty_average`,
-            qualityAverage: sql`excluded.quality_average`,
-          },
-        });
+        await db
+          .insert(boardClimbStats)
+          .values(batch)
+          .onConflictDoUpdate({
+            target: [boardClimbStats.boardType, boardClimbStats.climbUuid, boardClimbStats.angle],
+            set: {
+              displayDifficulty: sql`excluded.display_difficulty`,
+              benchmarkDifficulty: sql`excluded.benchmark_difficulty`,
+              ascensionistCount: sql`excluded.ascensionist_count`,
+              difficultyAverage: sql`excluded.difficulty_average`,
+              qualityAverage: sql`excluded.quality_average`,
+            },
+          });
         if ((i + BATCH_SIZE) % 5000 === 0 || i + BATCH_SIZE >= statsRecords.length) {
-          process.stdout.write(`\r   Stats: ${Math.min(i + BATCH_SIZE, statsRecords.length)}/${statsRecords.length}`);
+          process.stdout.write(
+            `\r   Stats: ${Math.min(i + BATCH_SIZE, statsRecords.length)}/${statsRecords.length}`,
+          );
         }
       }
-      console.log('');
+      console.log("");
       totalStats += statsRecords.length;
 
       // Batch insert holds
@@ -291,14 +314,16 @@ async function importMoonBoardProblems() {
         const batch = holdsRecords.slice(i, i + BATCH_SIZE);
         await db.insert(boardClimbHolds).values(batch).onConflictDoNothing();
         if ((i + BATCH_SIZE) % 5000 === 0 || i + BATCH_SIZE >= holdsRecords.length) {
-          process.stdout.write(`\r   Holds: ${Math.min(i + BATCH_SIZE, holdsRecords.length)}/${holdsRecords.length}`);
+          process.stdout.write(
+            `\r   Holds: ${Math.min(i + BATCH_SIZE, holdsRecords.length)}/${holdsRecords.length}`,
+          );
         }
       }
-      console.log('');
+      console.log("");
       totalHolds += holdsRecords.length;
     }
 
-    console.log('\n✅ Import completed!');
+    console.log("\n✅ Import completed!");
     console.log(`   Total climbs: ${totalClimbs}`);
     console.log(`   Total stats: ${totalStats}`);
     console.log(`   Total holds: ${totalHolds}`);
@@ -307,7 +332,7 @@ async function importMoonBoardProblems() {
     await close();
     process.exit(0);
   } catch (error) {
-    console.error('❌ Import failed:', error);
+    console.error("❌ Import failed:", error);
     process.exit(1);
   }
 }

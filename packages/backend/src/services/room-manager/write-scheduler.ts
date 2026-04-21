@@ -1,10 +1,10 @@
-import type { ClimbQueueItem } from '@boardsesh/shared-schema';
-import { db } from '../../db/client';
-import { sessions, sessionQueues } from '../../db/schema';
-import { eq } from 'drizzle-orm';
-import type { RedisSessionStore } from '../redis-session-store';
-import type { DistributedStateManager } from '../distributed-state';
-import { isForeignKeyViolation, type PendingWrite } from './types';
+import type { ClimbQueueItem } from "@boardsesh/shared-schema";
+import { db } from "../../db/client";
+import { sessions, sessionQueues } from "../../db/schema";
+import { eq } from "drizzle-orm";
+import type { RedisSessionStore } from "../redis-session-store";
+import type { DistributedStateManager } from "../distributed-state";
+import { isForeignKeyViolation, type PendingWrite } from "./types";
 
 const MAX_RETRY_ATTEMPTS = 3;
 const RETRY_BASE_DELAY = 1000; // 1 second
@@ -62,7 +62,7 @@ export class WriteScheduler {
     currentClimbQueueItem: ClimbQueueItem | null,
     version: number,
     sequence: number,
-    distributedState: DistributedStateManager | null
+    distributedState: DistributedStateManager | null,
   ): void {
     // Refresh session membership TTL on activity to prevent expiry during long sessions
     if (distributedState) {
@@ -92,7 +92,7 @@ export class WriteScheduler {
         } catch (error) {
           console.error(
             `[RoomManager] Debounced Postgres write failed for session ${sessionId}:`,
-            error
+            error,
           );
           // Retry with exponential backoff instead of giving up
           await this.retryPostgresWrite(sessionId, state, error);
@@ -109,7 +109,7 @@ export class WriteScheduler {
   private calculateRetryDelay(attempt: number): number {
     return Math.min(
       RETRY_BASE_DELAY * Math.pow(2, attempt),
-      30000 // Max 30 seconds
+      30000, // Max 30 seconds
     );
   }
 
@@ -118,13 +118,17 @@ export class WriteScheduler {
    */
   private async retryPostgresWrite(
     sessionId: string,
-    state: { queue: ClimbQueueItem[]; currentClimbQueueItem: ClimbQueueItem | null; version: number },
-    lastError?: unknown
+    state: {
+      queue: ClimbQueueItem[];
+      currentClimbQueueItem: ClimbQueueItem | null;
+      version: number;
+    },
+    lastError?: unknown,
   ): Promise<void> {
     // Don't retry FK violations - session doesn't exist, retries will never succeed
     if (lastError && isForeignKeyViolation(lastError)) {
       console.warn(
-        `[RoomManager] Not retrying write for session ${sessionId} - session doesn't exist in Postgres`
+        `[RoomManager] Not retrying write for session ${sessionId} - session doesn't exist in Postgres`,
       );
       this.cancelPendingWrites(sessionId);
       return;
@@ -135,8 +139,8 @@ export class WriteScheduler {
     if (attempts >= MAX_RETRY_ATTEMPTS) {
       console.error(
         `[RoomManager] Max retry attempts (${MAX_RETRY_ATTEMPTS}) reached for session ${sessionId}. ` +
-        `Data may be lost. Last state:`,
-        { queueLength: state.queue.length, version: state.version }
+          `Data may be lost. Last state:`,
+        { queueLength: state.queue.length, version: state.version },
       );
       this.pendingWrites.delete(sessionId);
       this.writeRetryAttempts.delete(sessionId);
@@ -149,7 +153,7 @@ export class WriteScheduler {
 
     console.log(
       `[RoomManager] Scheduling retry ${attempts + 1}/${MAX_RETRY_ATTEMPTS} ` +
-      `for session ${sessionId} in ${delay}ms`
+        `for session ${sessionId} in ${delay}ms`,
     );
 
     // Clear any existing retry timer for this session
@@ -172,7 +176,7 @@ export class WriteScheduler {
         } catch (error) {
           console.error(
             `[RoomManager] Retry ${attempts + 1} failed for session ${sessionId}:`,
-            error
+            error,
           );
           await this.retryPostgresWrite(sessionId, currentState, error);
         }
@@ -203,7 +207,7 @@ export class WriteScheduler {
       writePromises.push(
         writeQueueStateToPostgres(sessionId, state, this).catch((error) => {
           console.error(`[RoomManager] Failed to flush write for session ${sessionId}:`, error);
-        })
+        }),
       );
     }
 
@@ -223,7 +227,7 @@ export class WriteScheduler {
     }
     sessionGraceTimers.clear();
 
-    console.log('[RoomManager] All pending writes flushed');
+    console.log("[RoomManager] All pending writes flushed");
   }
 }
 
@@ -233,7 +237,7 @@ export class WriteScheduler {
 export async function writeQueueStateToPostgres(
   sessionId: string,
   state: PendingWrite,
-  scheduler: WriteScheduler
+  scheduler: WriteScheduler,
 ): Promise<void> {
   // Check if session exists to prevent FK violation
   const sessionExists = await db
@@ -245,7 +249,7 @@ export async function writeQueueStateToPostgres(
   if (sessionExists.length === 0) {
     console.warn(
       `[RoomManager] Skipping queue write for session ${sessionId} - session not in Postgres. ` +
-      `Queue had ${state.queue.length} items.`
+        `Queue had ${state.queue.length} items.`,
     );
     scheduler.cancelPendingWrites(sessionId);
     return;
@@ -275,9 +279,6 @@ export async function writeQueueStateToPostgres(
         },
       });
 
-    await tx
-      .update(sessions)
-      .set({ lastActivity: now })
-      .where(eq(sessions.id, sessionId));
+    await tx.update(sessions).set({ lastActivity: now }).where(eq(sessions.id, sessionId));
   });
 }

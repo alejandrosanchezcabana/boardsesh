@@ -1,9 +1,9 @@
 {
-    "name": "ble-proxy",
-    "version": "1.0.0",
-    "description": "BLE Proxy library for unit testing",
-    "dependencies": {
-        "mocks": "*",
-        "log-buffer": "*"
-    }
+  "name": "ble-proxy",
+  "version": "1.0.0",
+  "description": "BLE Proxy library for unit testing",
+  "dependencies": {
+    "mocks": "*",
+    "log-buffer": "*"
+  }
 }

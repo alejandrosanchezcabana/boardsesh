@@ -8,7 +8,7 @@ function getCertFingerprints(): string[] {
   }
 
   return configuredFingerprints
-    .split(',')
+    .split(",")
     .map((fingerprint) => fingerprint.trim())
     .filter(Boolean);
 }
@@ -16,10 +16,10 @@ function getCertFingerprints(): string[] {
 export function GET(): Response {
   const assetLinks = [
     {
-      relation: ['delegate_permission/common.handle_all_urls'],
+      relation: ["delegate_permission/common.handle_all_urls"],
       target: {
-        namespace: 'android_app',
-        package_name: 'com.boardsesh.app',
+        namespace: "android_app",
+        package_name: "com.boardsesh.app",
         sha256_cert_fingerprints: getCertFingerprints(),
       },
     },
@@ -27,8 +27,8 @@ export function GET(): Response {
 
   return new Response(JSON.stringify(assetLinks), {
     headers: {
-      'Content-Type': 'application/json; charset=utf-8',
-      'Cache-Control': 'public, max-age=3600',
+      "Content-Type": "application/json; charset=utf-8",
+      "Cache-Control": "public, max-age=3600",
     },
   });
 }

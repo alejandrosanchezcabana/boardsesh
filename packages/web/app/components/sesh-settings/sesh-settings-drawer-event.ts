@@ -6,9 +6,9 @@
  * Lives in its own module so the mini-bar can import it without pulling in
  * the full SeshSettingsDrawer tree.
  */
-export const SESH_SETTINGS_DRAWER_EVENT = 'boardsesh:open-sesh-settings-drawer';
+export const SESH_SETTINGS_DRAWER_EVENT = "boardsesh:open-sesh-settings-drawer";
 
 export const dispatchOpenSeshSettingsDrawer = (): void => {
-  if (typeof window === 'undefined') return;
+  if (typeof window === "undefined") return;
   window.dispatchEvent(new CustomEvent(SESH_SETTINGS_DRAWER_EVENT));
 };

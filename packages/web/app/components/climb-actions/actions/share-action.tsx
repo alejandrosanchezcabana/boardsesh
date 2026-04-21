@@ -1,14 +1,12 @@
-'use client';
+"use client";
 
-import React, { useCallback } from 'react';
-import { useSnackbar } from '@/app/components/providers/snackbar-provider';
-import IosShare from '@mui/icons-material/IosShare';
-import { ClimbActionProps, ClimbActionResult } from '../types';
-import {
-  getContextAwareClimbViewUrl,
-} from '@/app/lib/url-utils';
-import { buildActionResult, computeActionDisplay } from '../action-view-renderer';
-import { shareWithFallback } from '@/app/lib/share-utils';
+import React, { useCallback } from "react";
+import { useSnackbar } from "@/app/components/providers/snackbar-provider";
+import IosShare from "@mui/icons-material/IosShare";
+import { ClimbActionProps, ClimbActionResult } from "../types";
+import { getContextAwareClimbViewUrl } from "@/app/lib/url-utils";
+import { buildActionResult, computeActionDisplay } from "../action-view-renderer";
+import { shareWithFallback } from "@/app/lib/share-utils";
 
 export function ShareAction({
   climb,
@@ -16,7 +14,7 @@ export function ShareAction({
   angle,
   currentPathname,
   viewMode,
-  size = 'default',
+  size = "default",
   showLabel,
   disabled,
   className,
@@ -26,40 +24,42 @@ export function ShareAction({
   const { iconSize } = computeActionDisplay(viewMode, size, showLabel);
 
   const viewUrl = getContextAwareClimbViewUrl(
-    currentPathname ?? '',
+    currentPathname ?? "",
     boardDetails,
     angle,
     climb.uuid,
     climb.name,
   );
 
-  const handleClick = useCallback(async (e?: React.MouseEvent) => {
-    e?.stopPropagation();
-    e?.preventDefault();
+  const handleClick = useCallback(
+    async (e?: React.MouseEvent) => {
+      e?.stopPropagation();
+      e?.preventDefault();
 
-    const shareUrl = typeof window !== 'undefined'
-      ? `${window.location.origin}${viewUrl}`
-      : viewUrl;
+      const shareUrl =
+        typeof window !== "undefined" ? `${window.location.origin}${viewUrl}` : viewUrl;
 
-    const shared = await shareWithFallback({
-      url: shareUrl,
-      title: climb.name,
-      text: `Check out "${climb.name}" (${climb.difficulty}) on Boardsesh`,
-      trackingEvent: 'Climb Shared',
-      trackingProps: { boardName: boardDetails.board_name, climbUuid: climb.uuid },
-      onClipboardSuccess: () => showMessage('Link copied to clipboard!', 'success'),
-      onError: () => showMessage('Failed to share', 'error'),
-    });
-    if (shared) {
-      onComplete?.();
-    }
-  }, [climb, viewUrl, boardDetails.board_name, onComplete, showMessage]);
+      const shared = await shareWithFallback({
+        url: shareUrl,
+        title: climb.name,
+        text: `Check out "${climb.name}" (${climb.difficulty}) on Boardsesh`,
+        trackingEvent: "Climb Shared",
+        trackingProps: { boardName: boardDetails.board_name, climbUuid: climb.uuid },
+        onClipboardSuccess: () => showMessage("Link copied to clipboard!", "success"),
+        onError: () => showMessage("Failed to share", "error"),
+      });
+      if (shared) {
+        onComplete?.();
+      }
+    },
+    [climb, viewUrl, boardDetails.board_name, onComplete, showMessage],
+  );
 
   const icon = <IosShare sx={{ fontSize: iconSize }} />;
 
   return buildActionResult({
-    key: 'share',
-    label: 'Share',
+    key: "share",
+    label: "Share",
     icon,
     onClick: handleClick,
     viewMode,

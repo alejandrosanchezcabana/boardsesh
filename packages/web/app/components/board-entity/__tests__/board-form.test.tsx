@@ -1,8 +1,8 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { render, screen, fireEvent, waitFor } from '@testing-library/react';
-import React from 'react';
+import { describe, it, expect, vi, beforeEach } from "vite-plus/test";
+import { render, screen, fireEvent, waitFor } from "@testing-library/react";
+import React from "react";
 
-vi.mock('../map-location-picker', () => ({
+vi.mock("../map-location-picker", () => ({
   default: ({
     onChange,
   }: {
@@ -22,22 +22,22 @@ vi.mock('../map-location-picker', () => ({
   ),
 }));
 
-import BoardForm from '../board-form';
+import BoardForm from "../board-form";
 
 const defaultValues = {
-  name: 'Test Board',
-  description: 'A test board',
-  locationName: 'Test Gym',
+  name: "Test Board",
+  description: "A test board",
+  locationName: "Test Gym",
   isPublic: true,
   isUnlisted: false,
   hideLocation: false,
   isOwned: true,
   angle: 40,
   isAngleAdjustable: true,
-  serialNumber: '',
+  serialNumber: "",
 };
 
-describe('BoardForm', () => {
+describe("BoardForm", () => {
   const mockOnSubmit = vi.fn();
   const mockOnCancel = vi.fn();
 
@@ -46,7 +46,7 @@ describe('BoardForm', () => {
     mockOnSubmit.mockResolvedValue(undefined);
   });
 
-  it('renders all form fields', () => {
+  it("renders all form fields", () => {
     render(
       <BoardForm
         title="Edit Board"
@@ -56,29 +56,29 @@ describe('BoardForm', () => {
       />,
     );
 
-    expect(screen.getByLabelText('Board Name *')).toBeDefined();
-    expect(screen.getByLabelText('Description')).toBeDefined();
-    expect(screen.getByLabelText('Location')).toBeDefined();
-    expect(screen.getByLabelText('Controller Serial Number')).toBeDefined();
-    expect(screen.getByText('Edit Board')).toBeDefined();
-    expect(screen.getByText('Save')).toBeDefined();
+    expect(screen.getByLabelText("Board Name *")).toBeDefined();
+    expect(screen.getByLabelText("Description")).toBeDefined();
+    expect(screen.getByLabelText("Location")).toBeDefined();
+    expect(screen.getByLabelText("Controller Serial Number")).toBeDefined();
+    expect(screen.getByText("Edit Board")).toBeDefined();
+    expect(screen.getByText("Save")).toBeDefined();
   });
 
-  it('renders serial number field with initial value', () => {
+  it("renders serial number field with initial value", () => {
     render(
       <BoardForm
         title="Edit Board"
         submitLabel="Save"
-        initialValues={{ ...defaultValues, serialNumber: 'SN-12345' }}
+        initialValues={{ ...defaultValues, serialNumber: "SN-12345" }}
         onSubmit={mockOnSubmit}
       />,
     );
 
-    const serialField = screen.getByLabelText('Controller Serial Number') as HTMLInputElement;
-    expect(serialField.value).toBe('SN-12345');
+    const serialField = screen.getByLabelText("Controller Serial Number") as HTMLInputElement;
+    expect(serialField.value).toBe("SN-12345");
   });
 
-  it('allows editing the serial number field', () => {
+  it("allows editing the serial number field", () => {
     render(
       <BoardForm
         title="Edit Board"
@@ -88,35 +88,35 @@ describe('BoardForm', () => {
       />,
     );
 
-    const serialField = screen.getByLabelText('Controller Serial Number') as HTMLInputElement;
-    fireEvent.change(serialField, { target: { value: 'NEW-SERIAL' } });
-    expect(serialField.value).toBe('NEW-SERIAL');
+    const serialField = screen.getByLabelText("Controller Serial Number") as HTMLInputElement;
+    fireEvent.change(serialField, { target: { value: "NEW-SERIAL" } });
+    expect(serialField.value).toBe("NEW-SERIAL");
   });
 
-  it('submits form with serial number value', async () => {
+  it("submits form with serial number value", async () => {
     render(
       <BoardForm
         title="Edit Board"
         submitLabel="Save"
-        initialValues={{ ...defaultValues, serialNumber: 'SN-99' }}
+        initialValues={{ ...defaultValues, serialNumber: "SN-99" }}
         onSubmit={mockOnSubmit}
       />,
     );
 
-    fireEvent.submit(screen.getByText('Save').closest('form')!);
+    fireEvent.submit(screen.getByText("Save").closest("form")!);
 
     await waitFor(() => {
       expect(mockOnSubmit).toHaveBeenCalledTimes(1);
       expect(mockOnSubmit).toHaveBeenCalledWith(
         expect.objectContaining({
-          name: 'Test Board',
-          serialNumber: 'SN-99',
+          name: "Test Board",
+          serialNumber: "SN-99",
         }),
       );
     });
   });
 
-  it('submits undefined serialNumber when field is empty', async () => {
+  it("submits undefined serialNumber when field is empty", async () => {
     render(
       <BoardForm
         title="Edit Board"
@@ -126,7 +126,7 @@ describe('BoardForm', () => {
       />,
     );
 
-    fireEvent.submit(screen.getByText('Save').closest('form')!);
+    fireEvent.submit(screen.getByText("Save").closest("form")!);
 
     await waitFor(() => {
       expect(mockOnSubmit).toHaveBeenCalledWith(
@@ -137,7 +137,7 @@ describe('BoardForm', () => {
     });
   });
 
-  it('renders cancel button when onCancel is provided', () => {
+  it("renders cancel button when onCancel is provided", () => {
     render(
       <BoardForm
         title="Edit Board"
@@ -148,13 +148,13 @@ describe('BoardForm', () => {
       />,
     );
 
-    const cancelButton = screen.getByText('Cancel');
+    const cancelButton = screen.getByText("Cancel");
     expect(cancelButton).toBeDefined();
     fireEvent.click(cancelButton);
     expect(mockOnCancel).toHaveBeenCalledTimes(1);
   });
 
-  it('renders angle selector when availableAngles provided', () => {
+  it("renders angle selector when availableAngles provided", () => {
     render(
       <BoardForm
         title="Edit Board"
@@ -165,24 +165,24 @@ describe('BoardForm', () => {
       />,
     );
 
-    expect(screen.getByLabelText('Default Angle')).toBeDefined();
+    expect(screen.getByLabelText("Default Angle")).toBeDefined();
   });
 
-  it('renders slug field when showSlugField is true', () => {
+  it("renders slug field when showSlugField is true", () => {
     render(
       <BoardForm
         title="Edit Board"
         submitLabel="Save"
-        initialValues={{ ...defaultValues, slug: 'my-board' }}
+        initialValues={{ ...defaultValues, slug: "my-board" }}
         showSlugField
         onSubmit={mockOnSubmit}
       />,
     );
 
-    expect(screen.getByLabelText('URL Slug')).toBeDefined();
+    expect(screen.getByLabelText("URL Slug")).toBeDefined();
   });
 
-  it('renders map location picker', () => {
+  it("renders map location picker", () => {
     render(
       <BoardForm
         title="Edit Board"
@@ -192,10 +192,10 @@ describe('BoardForm', () => {
       />,
     );
 
-    expect(screen.getByTestId('map-location-picker')).toBeDefined();
+    expect(screen.getByTestId("map-location-picker")).toBeDefined();
   });
 
-  it('submits form with updated location from map picker', async () => {
+  it("submits form with updated location from map picker", async () => {
     render(
       <BoardForm
         title="Edit Board"
@@ -205,8 +205,8 @@ describe('BoardForm', () => {
       />,
     );
 
-    fireEvent.click(screen.getByTestId('map-select-location'));
-    fireEvent.submit(screen.getByText('Save').closest('form')!);
+    fireEvent.click(screen.getByTestId("map-select-location"));
+    fireEvent.submit(screen.getByText("Save").closest("form")!);
 
     await waitFor(() => {
       expect(mockOnSubmit).toHaveBeenCalledWith(
@@ -218,17 +218,17 @@ describe('BoardForm', () => {
     });
   });
 
-  it('disables submit button when name is empty', () => {
+  it("disables submit button when name is empty", () => {
     render(
       <BoardForm
         title="Edit Board"
         submitLabel="Save"
-        initialValues={{ ...defaultValues, name: '' }}
+        initialValues={{ ...defaultValues, name: "" }}
         onSubmit={mockOnSubmit}
       />,
     );
 
-    const submitButton = screen.getByText('Save');
-    expect(submitButton.closest('button')?.disabled).toBe(true);
+    const submitButton = screen.getByText("Save");
+    expect(submitButton.closest("button")?.disabled).toBe(true);
   });
 });

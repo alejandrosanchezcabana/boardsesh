@@ -1,52 +1,40 @@
-import { describe, it, expect, vi, beforeEach, afterAll } from 'vitest';
+import { describe, it, expect, vi, beforeEach, afterAll } from "vite-plus/test";
 import {
   AURORA_OPTIONAL_SERVICE_UUIDS,
   AURORA_SCAN_SERVICE_UUIDS,
-} from '@/app/components/board-bluetooth-control/bluetooth-aurora';
+} from "@/app/components/board-bluetooth-control/bluetooth-aurora";
 import {
   MOONBOARD_OPTIONAL_SERVICE_UUIDS,
   MOONBOARD_SCAN_SERVICE_UUIDS,
-} from '@/app/components/board-bluetooth-control/bluetooth-moonboard';
+} from "@/app/components/board-bluetooth-control/bluetooth-moonboard";
 
 // Mock window.Capacitor before importing the adapter
 const mockListenerRemove = vi.fn().mockResolvedValue(undefined);
 let disconnectListenerCallback: ((data: { deviceId: string }) => void) | null = null;
 
-// Capture the scan callback so tests can simulate device discovery
-let scanCallback: ((result: { device: { deviceId: string; name?: string }; localName?: string; rssi: number }) => void) | null = null;
-
-const createRequestLEScanMock = () =>
-  vi.fn().mockImplementation((_options: unknown, callback: typeof scanCallback) => {
-    scanCallback = callback;
-    return Promise.resolve();
-  });
-
-const createStopLEScanMock = () => vi.fn().mockResolvedValue(undefined);
-
-// eslint-disable-next-line @typescript-eslint/no-explicit-any -- vi.fn() mock record needs any for dynamic key access + mock methods + undefined assignment
-const mockBlePlugin: Record<string, any> = { // NOSONAR
+const mockBlePlugin = {
   initialize: vi.fn().mockResolvedValue(undefined),
   isEnabled: vi.fn().mockResolvedValue({ value: true }),
-  requestDevice: vi.fn().mockResolvedValue({ deviceId: 'dev-1', name: 'Kilter Board' }),
-  requestLEScan: createRequestLEScanMock(),
-  stopLEScan: createStopLEScanMock(),
+  requestDevice: vi.fn().mockResolvedValue({ deviceId: "dev-1", name: "Kilter Board" }),
   connect: vi.fn().mockResolvedValue(undefined),
   disconnect: vi.fn().mockResolvedValue(undefined),
   write: vi.fn().mockResolvedValue(undefined),
   requestMtu: vi.fn().mockResolvedValue({ value: 185 }),
-  addListener: vi.fn().mockImplementation((_event: string, cb: (data: { deviceId: string }) => void) => {
-    disconnectListenerCallback = cb;
-    return Promise.resolve({ remove: mockListenerRemove });
-  }),
+  addListener: vi
+    .fn()
+    .mockImplementation((_event: string, cb: (data: { deviceId: string }) => void) => {
+      disconnectListenerCallback = cb;
+      return Promise.resolve({ remove: mockListenerRemove });
+    }),
 };
 
 // Store original window.Capacitor so we can clean up
 const originalCapacitor = window.Capacitor;
 
-Object.defineProperty(window, 'Capacitor', {
+Object.defineProperty(window, "Capacitor", {
   value: {
     isNativePlatform: () => true,
-    getPlatform: () => 'ios',
+    getPlatform: () => "ios",
     Plugins: {
       BluetoothLe: mockBlePlugin,
     },
@@ -63,67 +51,53 @@ afterAll(() => {
   }
 });
 
-import { CapacitorBleAdapter, _resetInitCache } from '../capacitor-adapter';
+import { CapacitorBleAdapter, _resetInitCache } from "../capacitor-adapter";
 
-describe('CapacitorBleAdapter', () => {
+describe("CapacitorBleAdapter", () => {
   let adapter: CapacitorBleAdapter;
 
   beforeEach(() => {
     vi.clearAllMocks();
     disconnectListenerCallback = null;
-    scanCallback = null;
     _resetInitCache();
-    mockBlePlugin.initialize.mockResolvedValue(undefined);
-    mockBlePlugin.isEnabled.mockResolvedValue({ value: true });
-    mockBlePlugin.requestDevice.mockResolvedValue({ deviceId: 'dev-1', name: 'Kilter Board' });
-    mockBlePlugin.requestLEScan = createRequestLEScanMock();
-    mockBlePlugin.stopLEScan = createStopLEScanMock();
-    mockBlePlugin.connect.mockResolvedValue(undefined);
-    mockBlePlugin.disconnect.mockResolvedValue(undefined);
-    mockBlePlugin.write.mockResolvedValue(undefined);
-    mockBlePlugin.requestMtu.mockResolvedValue({ value: 185 });
-    mockBlePlugin.addListener.mockImplementation((_event: string, cb: (data: { deviceId: string }) => void) => {
-      disconnectListenerCallback = cb;
-      return Promise.resolve({ remove: mockListenerRemove });
-    });
     adapter = new CapacitorBleAdapter();
   });
 
-  describe('isAvailable', () => {
-    it('returns true when BLE is enabled', async () => {
+  describe("isAvailable", () => {
+    it("returns true when BLE is enabled", async () => {
       expect(await adapter.isAvailable()).toBe(true);
       expect(mockBlePlugin.initialize).toHaveBeenCalled();
       expect(mockBlePlugin.isEnabled).toHaveBeenCalled();
     });
 
-    it('returns false when BLE is disabled', async () => {
+    it("returns false when BLE is disabled", async () => {
       mockBlePlugin.isEnabled.mockResolvedValueOnce({ value: false });
       expect(await adapter.isAvailable()).toBe(false);
     });
 
-    it('returns false when initialize throws', async () => {
-      mockBlePlugin.initialize.mockRejectedValueOnce(new Error('No BLE'));
+    it("returns false when initialize throws", async () => {
+      mockBlePlugin.initialize.mockRejectedValueOnce(new Error("No BLE"));
       expect(await adapter.isAvailable()).toBe(false);
     });
   });
 
-  describe('requestAndConnect', () => {
-    it('connects and returns device info', async () => {
+  describe("requestAndConnect", () => {
+    it("connects and returns device info", async () => {
       const connection = await adapter.requestAndConnect();
 
-      expect(connection.deviceId).toBe('dev-1');
-      expect(connection.deviceName).toBe('Kilter Board');
+      expect(connection.deviceId).toBe("dev-1");
+      expect(connection.deviceName).toBe("Kilter Board");
       expect(mockBlePlugin.requestDevice).toHaveBeenCalledWith({
         services: [...AURORA_SCAN_SERVICE_UUIDS],
         optionalServices: [...AURORA_OPTIONAL_SERVICE_UUIDS],
       });
       expect(mockBlePlugin.connect).toHaveBeenCalledWith({
-        deviceId: 'dev-1',
+        deviceId: "dev-1",
       });
     });
 
-    it('requests Moonboard devices via Nordic UART when board is Moonboard', async () => {
-      const moonboardAdapter = new CapacitorBleAdapter('moonboard');
+    it("requests Moonboard devices via Nordic UART when board is Moonboard", async () => {
+      const moonboardAdapter = new CapacitorBleAdapter("moonboard");
 
       await moonboardAdapter.requestAndConnect();
 
@@ -133,26 +107,23 @@ describe('CapacitorBleAdapter', () => {
       });
     });
 
-    it('negotiates MTU after connecting', async () => {
+    it("negotiates MTU after connecting", async () => {
       await adapter.requestAndConnect();
 
       expect(mockBlePlugin.requestMtu).toHaveBeenCalledWith({
-        deviceId: 'dev-1',
+        deviceId: "dev-1",
         mtu: 512,
       });
     });
 
-    it('registers disconnect listener after connecting', async () => {
+    it("registers disconnect listener after connecting", async () => {
       await adapter.requestAndConnect();
 
-      expect(mockBlePlugin.addListener).toHaveBeenCalledWith(
-        'disconnected',
-        expect.any(Function),
-      );
+      expect(mockBlePlugin.addListener).toHaveBeenCalledWith("disconnected", expect.any(Function));
     });
 
-    it('falls back to default MTU when negotiation fails', async () => {
-      mockBlePlugin.requestMtu.mockRejectedValueOnce(new Error('Not supported'));
+    it("falls back to default MTU when negotiation fails", async () => {
+      mockBlePlugin.requestMtu.mockRejectedValueOnce(new Error("Not supported"));
       await adapter.requestAndConnect();
 
       // Should still connect successfully — write with default 20-byte chunks
@@ -164,15 +135,15 @@ describe('CapacitorBleAdapter', () => {
     });
   });
 
-  describe('disconnect', () => {
-    it('disconnects from connected device', async () => {
+  describe("disconnect", () => {
+    it("disconnects from connected device", async () => {
       await adapter.requestAndConnect();
       await adapter.disconnect();
 
-      expect(mockBlePlugin.disconnect).toHaveBeenCalledWith({ deviceId: 'dev-1' });
+      expect(mockBlePlugin.disconnect).toHaveBeenCalledWith({ deviceId: "dev-1" });
     });
 
-    it('removes disconnect listener before disconnecting', async () => {
+    it("removes disconnect listener before disconnecting", async () => {
       await adapter.requestAndConnect();
       await adapter.disconnect();
 
@@ -183,26 +154,26 @@ describe('CapacitorBleAdapter', () => {
       expect(removeOrder).toBeLessThan(disconnectOrder);
     });
 
-    it('does nothing when not connected', async () => {
+    it("does nothing when not connected", async () => {
       await adapter.disconnect();
       expect(mockBlePlugin.disconnect).not.toHaveBeenCalled();
     });
 
-    it('ignores errors from plugin disconnect', async () => {
+    it("ignores errors from plugin disconnect", async () => {
       await adapter.requestAndConnect();
-      mockBlePlugin.disconnect.mockRejectedValueOnce(new Error('Already disconnected'));
+      mockBlePlugin.disconnect.mockRejectedValueOnce(new Error("Already disconnected"));
 
       // Should not throw
       await adapter.disconnect();
     });
   });
 
-  describe('write', () => {
-    it('throws when not connected', async () => {
-      await expect(adapter.write(new Uint8Array([1, 2, 3]))).rejects.toThrow('Not connected');
+  describe("write", () => {
+    it("throws when not connected", async () => {
+      await expect(adapter.write(new Uint8Array([1, 2, 3]))).rejects.toThrow("Not connected");
     });
 
-    it('writes small data in a single chunk as hex string', async () => {
+    it("writes small data in a single chunk as hex string", async () => {
       mockBlePlugin.requestMtu.mockResolvedValueOnce({ value: 185 });
       await adapter.requestAndConnect();
 
@@ -211,14 +182,14 @@ describe('CapacitorBleAdapter', () => {
 
       expect(mockBlePlugin.write).toHaveBeenCalledTimes(1);
       expect(mockBlePlugin.write).toHaveBeenCalledWith({
-        deviceId: 'dev-1',
-        service: '6e400001-b5a3-f393-e0a9-e50e24dcca9e',
-        characteristic: '6e400002-b5a3-f393-e0a9-e50e24dcca9e',
-        value: '0102030405',
+        deviceId: "dev-1",
+        service: "6e400001-b5a3-f393-e0a9-e50e24dcca9e",
+        characteristic: "6e400002-b5a3-f393-e0a9-e50e24dcca9e",
+        value: "0102030405",
       });
     });
 
-    it('chunks data based on negotiated MTU', async () => {
+    it("chunks data based on negotiated MTU", async () => {
       // MTU 185 → chunk size 182 (185 - 3 ATT header)
       mockBlePlugin.requestMtu.mockResolvedValueOnce({ value: 185 });
       await adapter.requestAndConnect();
@@ -230,8 +201,8 @@ describe('CapacitorBleAdapter', () => {
       expect(mockBlePlugin.write).toHaveBeenCalledTimes(3);
     });
 
-    it('chunks at default 20 bytes when MTU negotiation fails', async () => {
-      mockBlePlugin.requestMtu.mockRejectedValueOnce(new Error('Not supported'));
+    it("chunks at default 20 bytes when MTU negotiation fails", async () => {
+      mockBlePlugin.requestMtu.mockRejectedValueOnce(new Error("Not supported"));
       await adapter.requestAndConnect();
 
       // 50 bytes / 20 byte chunks = 3 writes (20 + 20 + 10)
@@ -241,18 +212,18 @@ describe('CapacitorBleAdapter', () => {
       expect(mockBlePlugin.write).toHaveBeenCalledTimes(3);
     });
 
-    it('encodes bytes as continuous hex string', async () => {
+    it("encodes bytes as continuous hex string", async () => {
       await adapter.requestAndConnect();
 
       const data = new Uint8Array([0x01, 0x02, 0xff]);
       await adapter.write(data);
 
       const writtenValue = mockBlePlugin.write.mock.calls[0][0].value;
-      expect(writtenValue).toBe('0102ff');
+      expect(writtenValue).toBe("0102ff");
     });
 
-    it('aborts remaining chunks when signal is aborted', async () => {
-      mockBlePlugin.requestMtu.mockRejectedValueOnce(new Error('Not supported'));
+    it("aborts remaining chunks when signal is aborted", async () => {
+      mockBlePlugin.requestMtu.mockRejectedValueOnce(new Error("Not supported"));
       await adapter.requestAndConnect();
 
       const controller = new AbortController();
@@ -263,67 +234,67 @@ describe('CapacitorBleAdapter', () => {
 
       // 50 bytes / 20 byte chunks = 3 writes normally, but should stop after 1
       const data = new Uint8Array(50);
-      await expect(adapter.write(data, controller.signal)).rejects.toThrow('Write aborted');
+      await expect(adapter.write(data, controller.signal)).rejects.toThrow("Write aborted");
 
       // Only the first chunk should have been written
       expect(mockBlePlugin.write).toHaveBeenCalledTimes(1);
     });
 
-    it('throws AbortError immediately when signal is already aborted', async () => {
+    it("throws AbortError immediately when signal is already aborted", async () => {
       await adapter.requestAndConnect();
 
       const controller = new AbortController();
       controller.abort();
 
       const data = new Uint8Array([1, 2, 3]);
-      await expect(adapter.write(data, controller.signal)).rejects.toThrow('Write aborted');
+      await expect(adapter.write(data, controller.signal)).rejects.toThrow("Write aborted");
 
       expect(mockBlePlugin.write).not.toHaveBeenCalled();
     });
   });
 
-  describe('onDisconnect', () => {
-    it('stores callback and returns unsubscribe function', () => {
+  describe("onDisconnect", () => {
+    it("stores callback and returns unsubscribe function", () => {
       const callback = vi.fn();
       const unsub = adapter.onDisconnect(callback);
 
-      expect(typeof unsub).toBe('function');
+      expect(typeof unsub).toBe("function");
 
       // After unsubscribe, callback should be cleared
       unsub();
     });
 
-    it('fires callback on unexpected disconnect from native layer', async () => {
+    it("fires callback on unexpected disconnect from native layer", async () => {
       const callback = vi.fn();
       adapter.onDisconnect(callback);
       await adapter.requestAndConnect();
 
       // Simulate the native CoreBluetooth disconnect event
-      disconnectListenerCallback?.({ deviceId: 'dev-1' });
+      disconnectListenerCallback?.({ deviceId: "dev-1" });
 
       expect(callback).toHaveBeenCalledTimes(1);
     });
 
-    it('ignores disconnect events for other devices', async () => {
+    it("ignores disconnect events for other devices", async () => {
       const callback = vi.fn();
       adapter.onDisconnect(callback);
       await adapter.requestAndConnect();
 
-      disconnectListenerCallback?.({ deviceId: 'other-device' });
+      disconnectListenerCallback?.({ deviceId: "other-device" });
 
       expect(callback).not.toHaveBeenCalled();
     });
 
-    it('clears listener handle on unexpected disconnect to prevent orphaned handles', async () => {
+    it("clears listener handle on unexpected disconnect to prevent orphaned handles", async () => {
       const callback = vi.fn();
       adapter.onDisconnect(callback);
       await adapter.requestAndConnect();
 
       // Simulate unexpected disconnect
-      disconnectListenerCallback?.({ deviceId: 'dev-1' });
+      disconnectListenerCallback?.({ deviceId: "dev-1" });
 
       // After unexpected disconnect, write should throw (deviceId cleared)
-      await expect(adapter.write(new Uint8Array([1]))).rejects.toThrow('Not connected');
+      await expect(adapter.write(new Uint8Array([1]))).rejects.toThrow("Not connected");
 
       // Reconnect — should register a fresh listener without orphaning the old one
       mockListenerRemove.mockClear();
@@ -334,7 +305,7 @@ describe('CapacitorBleAdapter', () => {
       // The old handle was nulled out, so disconnect() won't try to remove it twice
     });
 
-    it('does not fire callback on intentional disconnect', async () => {
+    it("does not fire callback on intentional disconnect", async () => {
       const callback = vi.fn();
       adapter.onDisconnect(callback);
       await adapter.requestAndConnect();
@@ -343,150 +314,6 @@ describe('CapacitorBleAdapter', () => {
       await adapter.disconnect();
 
       expect(callback).not.toHaveBeenCalled();
-    });
-  });
-
-  describe('requestAndConnect with devicePicker', () => {
-    it('uses manual scan and custom picker when devicePicker is provided', async () => {
-      const pickerAdapter = new CapacitorBleAdapter('kilter', (subscribe) => {
-        // Subscribe to device updates
-        subscribe(() => {});
-        // Simulate immediate user selection
-        return Promise.resolve('scan-dev-1');
-      });
-
-      // Simulate device discovery after requestLEScan starts
-      mockBlePlugin.requestLEScan.mockImplementation((_opts: unknown, cb: typeof scanCallback) => {
-        cb?.({ device: { deviceId: 'scan-dev-1', name: 'My Kilter' }, rssi: -60 });
-        return Promise.resolve();
-      });
-
-      const connection = await pickerAdapter.requestAndConnect();
-
-      expect(connection.deviceId).toBe('scan-dev-1');
-      expect(connection.deviceName).toBe('My Kilter');
-      expect(mockBlePlugin.requestLEScan).toHaveBeenCalledWith(
-        { services: [...AURORA_SCAN_SERVICE_UUIDS] },
-        expect.any(Function),
-      );
-      expect(mockBlePlugin.stopLEScan).toHaveBeenCalled();
-      expect(mockBlePlugin.requestDevice).not.toHaveBeenCalled();
-      expect(mockBlePlugin.connect).toHaveBeenCalledWith({ deviceId: 'scan-dev-1' });
-    });
-
-    it('deduplicates devices by deviceId', async () => {
-      let receivedDevices: Array<{ deviceId: string; name?: string; rssi: number }> = [];
-
-      const pickerAdapter = new CapacitorBleAdapter('kilter', (subscribe) => {
-        subscribe((devices) => {
-          receivedDevices = devices;
-        });
-        // Yield to the microtask queue so scan callbacks fire first, then select
-        return Promise.resolve().then(() => 'dev-A');
-      });
-
-      // Emit the same device twice with updated RSSI
-      mockBlePlugin.requestLEScan.mockImplementation((_opts: unknown, cb: typeof scanCallback) => {
-        cb?.({ device: { deviceId: 'dev-A', name: 'Board A' }, rssi: -80 });
-        cb?.({ device: { deviceId: 'dev-A', name: 'Board A' }, rssi: -55 });
-        return Promise.resolve();
-      });
-
-      await pickerAdapter.requestAndConnect();
-
-      // Should have exactly 1 device (deduplicated), with updated RSSI
-      expect(receivedDevices).toHaveLength(1);
-      expect(receivedDevices[0].rssi).toBe(-55);
-    });
-
-    it('stops scanning even when picker rejects', async () => {
-      const pickerAdapter = new CapacitorBleAdapter('kilter', () => {
-        return Promise.reject(new Error('User cancelled'));
-      });
-
-      await expect(pickerAdapter.requestAndConnect()).rejects.toThrow('User cancelled');
-
-      expect(mockBlePlugin.stopLEScan).toHaveBeenCalled();
-    });
-
-    it('swallows stopLEScan cleanup errors and preserves the original picker rejection', async () => {
-      mockBlePlugin.stopLEScan.mockRejectedValueOnce(new Error('Scan already stopped'));
-
-      const pickerAdapter = new CapacitorBleAdapter('kilter', () => {
-        return Promise.reject(new Error('User cancelled'));
-      });
-
-      await expect(pickerAdapter.requestAndConnect()).rejects.toThrow('User cancelled');
-      expect(mockBlePlugin.stopLEScan).toHaveBeenCalled();
-    });
-
-    it('falls back to requestDevice when no devicePicker is provided', async () => {
-      const fallbackAdapter = new CapacitorBleAdapter('kilter');
-      await fallbackAdapter.requestAndConnect();
-
-      expect(mockBlePlugin.requestDevice).toHaveBeenCalled();
-      expect(mockBlePlugin.requestLEScan).not.toHaveBeenCalled();
-    });
-
-    it('falls back to requestDevice when requestLEScan is unavailable', async () => {
-      mockBlePlugin.requestLEScan = undefined;
-
-      const fallbackAdapter = new CapacitorBleAdapter('kilter', () => Promise.resolve('scan-dev-1'));
-      const connection = await fallbackAdapter.requestAndConnect();
-
-      expect(connection.deviceId).toBe('dev-1');
-      expect(mockBlePlugin.requestDevice).toHaveBeenCalled();
-      expect(mockBlePlugin.connect).toHaveBeenCalledWith({ deviceId: 'dev-1' });
-    });
-
-    it('falls back to requestDevice when stopLEScan is unavailable', async () => {
-      mockBlePlugin.stopLEScan = undefined;
-
-      const fallbackAdapter = new CapacitorBleAdapter('kilter', () => Promise.resolve('scan-dev-1'));
-      const connection = await fallbackAdapter.requestAndConnect();
-
-      expect(connection.deviceId).toBe('dev-1');
-      expect(mockBlePlugin.requestDevice).toHaveBeenCalled();
-      expect(mockBlePlugin.requestLEScan).not.toHaveBeenCalled();
-    });
-
-    it('uses localName from scan result when device.name is missing', async () => {
-      const pickerAdapter = new CapacitorBleAdapter('kilter', (subscribe) => {
-        subscribe(() => {});
-        return Promise.resolve('dev-local');
-      });
-
-      mockBlePlugin.requestLEScan.mockImplementation((_opts: unknown, cb: typeof scanCallback) => {
-        cb?.({ device: { deviceId: 'dev-local' }, localName: 'Local Name', rssi: -70 });
-        return Promise.resolve();
-      });
-
-      const connection = await pickerAdapter.requestAndConnect();
-      expect(connection.deviceName).toBe('Local Name');
-    });
-
-    it('filters out non-MoonBoard Nordic UART devices from the manual picker list', async () => {
-      let receivedDevices: Array<{ deviceId: string; name?: string; rssi: number }> = [];
-
-      const pickerAdapter = new CapacitorBleAdapter('moonboard', (subscribe) => {
-        subscribe((devices) => {
-          receivedDevices = devices;
-        });
-        return Promise.resolve().then(() => 'moon-1');
-      });
-
-      mockBlePlugin.requestLEScan.mockImplementation((_opts: unknown, cb: typeof scanCallback) => {
-        cb?.({ device: { deviceId: 'uart-1', name: 'UART Widget' }, rssi: -50 });
-        cb?.({ device: { deviceId: 'moon-1', name: 'MoonBoard 2016' }, rssi: -60 });
-        return Promise.resolve();
-      });
-
-      const connection = await pickerAdapter.requestAndConnect();
-
-      expect(connection.deviceId).toBe('moon-1');
-      expect(receivedDevices).toEqual([
-        { deviceId: 'moon-1', name: 'MoonBoard 2016', rssi: -60 },
-      ]);
     });
   });
 });

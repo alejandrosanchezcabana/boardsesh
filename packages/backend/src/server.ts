@@ -1,19 +1,19 @@
-import { createServer, type IncomingMessage, type ServerResponse } from 'http';
-import type { WebSocketServer } from 'ws';
-import { pubsub } from './pubsub/index';
-import { roomManager } from './services/room-manager';
-import { redisClientManager } from './redis/client';
-import { eventBroker, NotificationWorker } from './events/index';
-import { initCors, applyCorsHeaders } from './handlers/cors';
-import { handleHealthCheck } from './handlers/health';
-import { handleSessionJoin } from './handlers/join';
-import { handleAvatarUpload } from './handlers/avatars';
-import { handleStaticAvatar } from './handlers/static';
-import { handleSyncCron } from './handlers/sync';
-import { handleOcrTestDataUpload } from './handlers/ocr-test-data';
-import { createYogaInstance } from './graphql/yoga';
-import { setupWebSocketServer } from './websocket/setup';
-import { warmPopularConfigsCache } from './graphql/resolvers/social/boards';
+import { createServer, type IncomingMessage, type ServerResponse } from "http";
+import type { WebSocketServer } from "ws";
+import { pubsub } from "./pubsub/index";
+import { roomManager } from "./services/room-manager";
+import { redisClientManager } from "./redis/client";
+import { eventBroker, NotificationWorker } from "./events/index";
+import { initCors, applyCorsHeaders } from "./handlers/cors";
+import { handleHealthCheck } from "./handlers/health";
+import { handleSessionJoin } from "./handlers/join";
+import { handleAvatarUpload } from "./handlers/avatars";
+import { handleStaticAvatar } from "./handlers/static";
+import { handleSyncCron } from "./handlers/sync";
+import { handleOcrTestDataUpload } from "./handlers/ocr-test-data";
+import { createYogaInstance } from "./graphql/yoga";
+import { setupWebSocketServer } from "./websocket/setup";
+import { warmPopularConfigsCache } from "./graphql/resolvers/social/boards";
 
 /**
  * Start the Boardsesh Backend server
@@ -44,17 +44,17 @@ export async function startServer(): Promise<ServerResources> {
       await eventBroker.initialize(publisher, streamConsumer);
       const notificationWorker = new NotificationWorker(eventBroker);
       notificationWorker.start();
-      console.log('[Server] EventBroker and NotificationWorker started');
+      console.log("[Server] EventBroker and NotificationWorker started");
     } catch (error) {
-      console.error('[Server] Failed to initialize EventBroker:', error);
+      console.error("[Server] Failed to initialize EventBroker:", error);
     }
   } else {
     await roomManager.initialize(); // Postgres-only mode
-    console.log('[Server] No Redis - EventBroker disabled, inline notification fallback active');
+    console.log("[Server] No Redis - EventBroker disabled, inline notification fallback active");
   }
 
-  const PORT = parseInt(process.env.PORT || '8080', 10);
-  const BOARDSESH_URL = process.env.BOARDSESH_URL || 'https://boardsesh.com';
+  const PORT = parseInt(process.env.PORT || "8080", 10);
+  const BOARDSESH_URL = process.env.BOARDSESH_URL || "https://boardsesh.com";
 
   // Initialize CORS with allowed origins
   initCors(BOARDSESH_URL);
@@ -66,38 +66,41 @@ export async function startServer(): Promise<ServerResources> {
    * Custom request handler that routes requests to appropriate handlers
    */
   async function handleRequest(req: IncomingMessage, res: ServerResponse): Promise<void> {
-    const url = new URL(req.url || '/', `http://${req.headers.host || 'localhost'}`);
+    const url = new URL(req.url || "/", `http://${req.headers.host || "localhost"}`);
     const pathname = url.pathname;
 
     try {
       // Health check endpoint
-      if (pathname === '/health' && req.method === 'GET') {
+      if (pathname === "/health" && req.method === "GET") {
         await handleHealthCheck(req, res);
         return;
       }
 
       // Session join redirect endpoint
-      if (pathname.startsWith('/join/') && req.method === 'GET') {
-        const sessionId = pathname.slice('/join/'.length);
+      if (pathname.startsWith("/join/") && req.method === "GET") {
+        const sessionId = pathname.slice("/join/".length);
         await handleSessionJoin(req, res, sessionId, PORT, BOARDSESH_URL);
         return;
       }
 
       // Avatar upload endpoint (handle OPTIONS for CORS preflight)
-      if (pathname === '/api/avatars' && (req.method === 'POST' || req.method === 'OPTIONS')) {
+      if (pathname === "/api/avatars" && (req.method === "POST" || req.method === "OPTIONS")) {
         await handleAvatarUpload(req, res);
         return;
       }
 
       // OCR test data upload endpoint (handle OPTIONS for CORS preflight)
-      if (pathname === '/api/ocr-test-data' && (req.method === 'POST' || req.method === 'OPTIONS')) {
+      if (
+        pathname === "/api/ocr-test-data" &&
+        (req.method === "POST" || req.method === "OPTIONS")
+      ) {
         await handleOcrTestDataUpload(req, res);
         return;
       }
 
       // Static avatar files
-      if (pathname.startsWith('/static/avatars/')) {
-        const fileName = pathname.slice('/static/avatars/'.length);
+      if (pathname.startsWith("/static/avatars/")) {
+        const fileName = pathname.slice("/static/avatars/".length);
         if (fileName) {
           await handleStaticAvatar(req, res, fileName);
           return;
@@ -105,13 +108,13 @@ export async function startServer(): Promise<ServerResources> {
       }
 
       // Sync cron endpoint (triggered by external cron service)
-      if (pathname === '/sync-cron' && (req.method === 'POST' || req.method === 'OPTIONS')) {
+      if (pathname === "/sync-cron" && (req.method === "POST" || req.method === "OPTIONS")) {
         await handleSyncCron(req, res);
         return;
       }
 
       // GraphQL endpoint - delegate to Yoga
-      if (pathname === '/graphql') {
+      if (pathname === "/graphql") {
         // Apply CORS for GraphQL requests
         if (!applyCorsHeaders(req, res)) return;
 
@@ -121,13 +124,13 @@ export async function startServer(): Promise<ServerResources> {
       }
 
       // 404 for all other routes
-      res.writeHead(404, { 'Content-Type': 'application/json' });
-      res.end(JSON.stringify({ error: 'Not found' }));
+      res.writeHead(404, { "Content-Type": "application/json" });
+      res.end(JSON.stringify({ error: "Not found" }));
     } catch (error) {
-      console.error('Request handler error:', error);
+      console.error("Request handler error:", error);
       if (!res.headersSent) {
-        res.writeHead(500, { 'Content-Type': 'application/json' });
-        res.end(JSON.stringify({ error: 'Internal server error' }));
+        res.writeHead(500, { "Content-Type": "application/json" });
+        res.end(JSON.stringify({ error: "Internal server error" }));
       }
     }
   }
@@ -158,12 +161,12 @@ export async function startServer(): Promise<ServerResources> {
     // Warm up popular board configs cache in the background.
     // Uses a Redis lock so only one node across the cluster runs the query.
     warmPopularConfigsCache().catch((err) => {
-      console.error('[Server] Popular configs cache warm-up failed:', err);
+      console.error("[Server] Popular configs cache warm-up failed:", err);
     });
   });
 
-  httpServer.on('error', (error) => {
-    console.error('HTTP server error:', error);
+  httpServer.on("error", (error) => {
+    console.error("HTTP server error:", error);
   });
 
   /**
@@ -171,7 +174,7 @@ export async function startServer(): Promise<ServerResources> {
    */
   function cleanupIntervals(): void {
     console.log(`[Server] Cleaning up ${intervals.length} intervals`);
-    intervals.forEach(interval => clearInterval(interval));
+    intervals.forEach((interval) => clearInterval(interval));
     intervals.length = 0;
   }
 
@@ -184,9 +187,9 @@ export async function startServer(): Promise<ServerResources> {
 
     try {
       await roomManager.shutdown();
-      console.log('[Server] RoomManager shutdown complete');
+      console.log("[Server] RoomManager shutdown complete");
     } catch (error) {
-      console.error('[Server] Error during RoomManager shutdown:', error);
+      console.error("[Server] Error during RoomManager shutdown:", error);
     }
   }
 
@@ -195,7 +198,7 @@ export async function startServer(): Promise<ServerResources> {
     try {
       await roomManager.flushPendingWrites();
     } catch (error) {
-      console.error('[Server] Error in periodic flush:', error);
+      console.error("[Server] Error in periodic flush:", error);
     }
   }, 60000);
   intervals.push(flushInterval);
@@ -203,7 +206,7 @@ export async function startServer(): Promise<ServerResources> {
   // Periodic TTL refresh for active sessions (every 2 minutes)
   const ttlRefreshInterval = setInterval(async () => {
     try {
-      if (redisClientManager.isRedisConnected() && roomManager['redisStore']) {
+      if (redisClientManager.isRedisConnected() && roomManager["redisStore"]) {
         const activeSessions = roomManager.getAllActiveSessions();
 
         if (activeSessions.length > 0) {
@@ -214,17 +217,19 @@ export async function startServer(): Promise<ServerResources> {
           for (let i = 0; i < activeSessions.length; i += batchSize) {
             const batch = activeSessions.slice(i, i + batchSize);
             await Promise.all(
-              batch.map(sessionId =>
-                roomManager['redisStore']?.refreshTTL(sessionId).catch(err =>
-                  console.error(`[Server] TTL refresh failed for ${sessionId}:`, err)
-                )
-              )
+              batch.map((sessionId) =>
+                roomManager["redisStore"]
+                  ?.refreshTTL(sessionId)
+                  .catch((err) =>
+                    console.error(`[Server] TTL refresh failed for ${sessionId}:`, err),
+                  ),
+              ),
             );
           }
         }
       }
     } catch (error) {
-      console.error('[Server] Error in periodic TTL refresh:', error);
+      console.error("[Server] Error in periodic TTL refresh:", error);
     }
   }, 120000); // 2 minutes
   intervals.push(ttlRefreshInterval);

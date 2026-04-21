@@ -1,10 +1,10 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { renderHook, act } from '@testing-library/react';
-import React from 'react';
+import { describe, it, expect, vi, beforeEach } from "vite-plus/test";
+import { renderHook, act } from "@testing-library/react";
+import React from "react";
 
 // Mock dependencies before importing the module
 const mockTrack = vi.fn();
-vi.mock('@vercel/analytics', () => ({
+vi.mock("@vercel/analytics", () => ({
   track: (...args: unknown[]) => mockTrack(...args),
 }));
 
@@ -20,13 +20,15 @@ let mockBluetoothState = {
   sendFramesToBoard: mockSendFramesToBoard,
 };
 
-vi.mock('../use-board-bluetooth', () => ({
+vi.mock("../use-board-bluetooth", () => ({
   useBoardBluetooth: () => mockBluetoothState,
 }));
 
-let mockCurrentClimbQueueItem: { climb: { uuid: string; frames: string; mirrored: boolean } } | null = null;
+let mockCurrentClimbQueueItem: {
+  climb: { uuid: string; frames: string; mirrored: boolean };
+} | null = null;
 
-vi.mock('../../graphql-queue', () => ({
+vi.mock("../../graphql-queue", () => ({
   useQueueContext: () => ({
     currentClimbQueueItem: mockCurrentClimbQueueItem,
   }),
@@ -39,15 +41,15 @@ vi.mock('../../graphql-queue', () => ({
   }),
 }));
 
-import { BluetoothProvider, useBluetoothContext } from '../bluetooth-context';
-import type { BoardDetails } from '@/app/lib/types';
+import { BluetoothProvider, useBluetoothContext } from "../bluetooth-context";
+import type { BoardDetails } from "@/app/lib/types";
 
 function createTestBoardDetails(overrides?: Partial<BoardDetails>): BoardDetails {
   return {
-    board_name: 'kilter',
+    board_name: "kilter",
     layout_id: 1,
     size_id: 10,
-    set_ids: '1,2',
+    set_ids: "1,2",
     images_to_holds: {},
     holdsData: {},
     edge_left: 0,
@@ -56,10 +58,10 @@ function createTestBoardDetails(overrides?: Partial<BoardDetails>): BoardDetails
     edge_top: 100,
     boardHeight: 100,
     boardWidth: 100,
-    layout_name: 'Original',
-    size_name: '12x12',
-    size_description: 'Full Size',
-    set_names: ['Standard', 'Extended'],
+    layout_name: "Original",
+    size_name: "12x12",
+    size_description: "Full Size",
+    set_names: ["Standard", "Extended"],
     ...overrides,
   } as BoardDetails;
 }
@@ -71,7 +73,7 @@ function createWrapper(boardDetails?: BoardDetails) {
   };
 }
 
-describe('BluetoothProvider', () => {
+describe("BluetoothProvider", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     mockCurrentClimbQueueItem = null;
@@ -84,31 +86,31 @@ describe('BluetoothProvider', () => {
     };
   });
 
-  describe('useBluetoothContext', () => {
-    it('throws when used outside BluetoothProvider', () => {
+  describe("useBluetoothContext", () => {
+    it("throws when used outside BluetoothProvider", () => {
       // Suppress React error boundary console output
-      const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+      const consoleSpy = vi.spyOn(console, "error").mockImplementation(() => {});
       expect(() => {
         renderHook(() => useBluetoothContext());
-      }).toThrow('useBluetoothContext must be used within a BluetoothProvider');
+      }).toThrow("useBluetoothContext must be used within a BluetoothProvider");
       consoleSpy.mockRestore();
     });
 
-    it('returns context values when used inside BluetoothProvider', () => {
+    it("returns context values when used inside BluetoothProvider", () => {
       const { result } = renderHook(() => useBluetoothContext(), {
         wrapper: createWrapper(),
       });
 
-      expect(result.current).toHaveProperty('isConnected');
-      expect(result.current).toHaveProperty('loading');
-      expect(result.current).toHaveProperty('connect');
-      expect(result.current).toHaveProperty('disconnect');
-      expect(result.current).toHaveProperty('sendFramesToBoard');
-      expect(result.current).toHaveProperty('isBluetoothSupported');
-      expect(result.current).toHaveProperty('isIOS');
+      expect(result.current).toHaveProperty("isConnected");
+      expect(result.current).toHaveProperty("loading");
+      expect(result.current).toHaveProperty("connect");
+      expect(result.current).toHaveProperty("disconnect");
+      expect(result.current).toHaveProperty("sendFramesToBoard");
+      expect(result.current).toHaveProperty("isBluetoothSupported");
+      expect(result.current).toHaveProperty("isIOS");
     });
 
-    it('provides correct initial connection state', () => {
+    it("provides correct initial connection state", () => {
       const { result } = renderHook(() => useBluetoothContext(), {
         wrapper: createWrapper(),
       });
@@ -118,10 +120,10 @@ describe('BluetoothProvider', () => {
     });
   });
 
-  describe('auto-send on climb change', () => {
-    it('does not send when not connected', () => {
+  describe("auto-send on climb change", () => {
+    it("does not send when not connected", () => {
       mockCurrentClimbQueueItem = {
-        climb: { uuid: 'climb-1', frames: 'p1r12p2r13', mirrored: false },
+        climb: { uuid: "climb-1", frames: "p1r12p2r13", mirrored: false },
       };
       mockBluetoothState.isConnected = false;
 
@@ -132,7 +134,7 @@ describe('BluetoothProvider', () => {
       expect(mockSendFramesToBoard).not.toHaveBeenCalled();
     });
 
-    it('does not send when connected but no current climb', () => {
+    it("does not send when connected but no current climb", () => {
       mockCurrentClimbQueueItem = null;
       mockBluetoothState.isConnected = true;
 
@@ -143,9 +145,9 @@ describe('BluetoothProvider', () => {
       expect(mockSendFramesToBoard).not.toHaveBeenCalled();
     });
 
-    it('sends frames when connected and climb is available', async () => {
+    it("sends frames when connected and climb is available", async () => {
       mockCurrentClimbQueueItem = {
-        climb: { uuid: 'climb-1', frames: 'p1r12p2r13', mirrored: false },
+        climb: { uuid: "climb-1", frames: "p1r12p2r13", mirrored: false },
       };
       mockBluetoothState.isConnected = true;
 
@@ -157,15 +159,17 @@ describe('BluetoothProvider', () => {
       await act(async () => {
         await vi.waitFor(() => {
           expect(mockSendFramesToBoard).toHaveBeenCalledWith(
-            'p1r12p2r13', false, expect.any(AbortSignal),
+            "p1r12p2r13",
+            false,
+            expect.any(AbortSignal),
           );
         });
       });
     });
 
-    it('sends with mirrored=true when climb is mirrored', async () => {
+    it("sends with mirrored=true when climb is mirrored", async () => {
       mockCurrentClimbQueueItem = {
-        climb: { uuid: 'climb-2', frames: 'p3r14p4r15', mirrored: true },
+        climb: { uuid: "climb-2", frames: "p3r14p4r15", mirrored: true },
       };
       mockBluetoothState.isConnected = true;
 
@@ -176,16 +180,18 @@ describe('BluetoothProvider', () => {
       await act(async () => {
         await vi.waitFor(() => {
           expect(mockSendFramesToBoard).toHaveBeenCalledWith(
-            'p3r14p4r15', true, expect.any(AbortSignal),
+            "p3r14p4r15",
+            true,
+            expect.any(AbortSignal),
           );
         });
       });
     });
 
-    it('tracks success analytics when send succeeds', async () => {
+    it("tracks success analytics when send succeeds", async () => {
       mockSendFramesToBoard.mockResolvedValue(true);
       mockCurrentClimbQueueItem = {
-        climb: { uuid: 'climb-1', frames: 'p1r12', mirrored: false },
+        climb: { uuid: "climb-1", frames: "p1r12", mirrored: false },
       };
       mockBluetoothState.isConnected = true;
 
@@ -195,18 +201,18 @@ describe('BluetoothProvider', () => {
 
       await act(async () => {
         await vi.waitFor(() => {
-          expect(mockTrack).toHaveBeenCalledWith('Climb Sent to Board Success', {
-            climbUuid: 'climb-1',
-            boardLayout: 'Original',
+          expect(mockTrack).toHaveBeenCalledWith("Climb Sent to Board Success", {
+            climbUuid: "climb-1",
+            boardLayout: "Original",
           });
         });
       });
     });
 
-    it('tracks failure analytics when send fails', async () => {
+    it("tracks failure analytics when send fails", async () => {
       mockSendFramesToBoard.mockResolvedValue(false);
       mockCurrentClimbQueueItem = {
-        climb: { uuid: 'climb-1', frames: 'p1r12', mirrored: false },
+        climb: { uuid: "climb-1", frames: "p1r12", mirrored: false },
       };
       mockBluetoothState.isConnected = true;
 
@@ -216,18 +222,18 @@ describe('BluetoothProvider', () => {
 
       await act(async () => {
         await vi.waitFor(() => {
-          expect(mockTrack).toHaveBeenCalledWith('Climb Sent to Board Failure', {
-            climbUuid: 'climb-1',
-            boardLayout: 'Original',
+          expect(mockTrack).toHaveBeenCalledWith("Climb Sent to Board Failure", {
+            climbUuid: "climb-1",
+            boardLayout: "Original",
           });
         });
       });
     });
 
-    it('does not track analytics when send returns undefined (not attempted)', async () => {
+    it("does not track analytics when send returns undefined (not attempted)", async () => {
       mockSendFramesToBoard.mockResolvedValue(undefined);
       mockCurrentClimbQueueItem = {
-        climb: { uuid: 'climb-1', frames: 'p1r12', mirrored: false },
+        climb: { uuid: "climb-1", frames: "p1r12", mirrored: false },
       };
       mockBluetoothState.isConnected = true;
 
@@ -244,11 +250,11 @@ describe('BluetoothProvider', () => {
       expect(mockTrack).not.toHaveBeenCalled();
     });
 
-    it('catches exception and tracks failure when sendFramesToBoard throws', async () => {
-      const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
-      mockSendFramesToBoard.mockRejectedValue(new Error('Bluetooth write failed'));
+    it("catches exception and tracks failure when sendFramesToBoard throws", async () => {
+      const consoleSpy = vi.spyOn(console, "error").mockImplementation(() => {});
+      mockSendFramesToBoard.mockRejectedValue(new Error("Bluetooth write failed"));
       mockCurrentClimbQueueItem = {
-        climb: { uuid: 'climb-1', frames: 'p1r12', mirrored: false },
+        climb: { uuid: "climb-1", frames: "p1r12", mirrored: false },
       };
       mockBluetoothState.isConnected = true;
 
@@ -258,30 +264,30 @@ describe('BluetoothProvider', () => {
 
       await act(async () => {
         await vi.waitFor(() => {
-          expect(mockTrack).toHaveBeenCalledWith('Climb Sent to Board Failure', {
-            climbUuid: 'climb-1',
-            boardLayout: 'Original',
+          expect(mockTrack).toHaveBeenCalledWith("Climb Sent to Board Failure", {
+            climbUuid: "climb-1",
+            boardLayout: "Original",
           });
         });
       });
 
-      expect(consoleSpy).toHaveBeenCalledWith(
-        'Error sending climb to board:',
-        expect.any(Error),
-      );
+      expect(consoleSpy).toHaveBeenCalledWith("Error sending climb to board:", expect.any(Error));
       consoleSpy.mockRestore();
     });
   });
 
-  describe('rapid-swiping cancellation', () => {
-    it('passes AbortSignal to sendFramesToBoard and aborts on unmount', async () => {
+  describe("rapid-swiping cancellation", () => {
+    it("passes AbortSignal to sendFramesToBoard and aborts on unmount", async () => {
       // Simulate a slow send that doesn't resolve
       let resolveFirstSend: (value: boolean) => void;
       mockSendFramesToBoard.mockImplementationOnce(
-        () => new Promise<boolean>((resolve) => { resolveFirstSend = resolve; }),
+        () =>
+          new Promise<boolean>((resolve) => {
+            resolveFirstSend = resolve;
+          }),
       );
       mockCurrentClimbQueueItem = {
-        climb: { uuid: 'climb-1', frames: 'p1r12', mirrored: false },
+        climb: { uuid: "climb-1", frames: "p1r12", mirrored: false },
       };
       mockBluetoothState.isConnected = true;
 
@@ -314,19 +320,19 @@ describe('BluetoothProvider', () => {
       expect(mockTrack).not.toHaveBeenCalled();
     });
 
-    it('does not track analytics when send throws after abort', async () => {
+    it("does not track analytics when send throws after abort", async () => {
       // When signal is already aborted, the send throws AbortError
       // The catch block should check signal.aborted and skip analytics
       mockSendFramesToBoard.mockImplementation(
         (_frames: string, _mirrored: boolean, signal?: AbortSignal) => {
           if (signal?.aborted) {
-            return Promise.reject(new DOMException('Write aborted', 'AbortError'));
+            return Promise.reject(new DOMException("Write aborted", "AbortError"));
           }
           return Promise.resolve(true);
         },
       );
       mockCurrentClimbQueueItem = {
-        climb: { uuid: 'climb-1', frames: 'p1r12', mirrored: false },
+        climb: { uuid: "climb-1", frames: "p1r12", mirrored: false },
       };
       mockBluetoothState.isConnected = true;
 
@@ -343,17 +349,17 @@ describe('BluetoothProvider', () => {
       // The signal was NOT aborted, so analytics should track success
       await act(async () => {
         await vi.waitFor(() => {
-          expect(mockTrack).toHaveBeenCalledWith('Climb Sent to Board Success', {
-            climbUuid: 'climb-1',
-            boardLayout: 'Original',
+          expect(mockTrack).toHaveBeenCalledWith("Climb Sent to Board Success", {
+            climbUuid: "climb-1",
+            boardLayout: "Original",
           });
         });
       });
     });
   });
 
-  describe('disconnect', () => {
-    it('exposes disconnect from the hook', () => {
+  describe("disconnect", () => {
+    it("exposes disconnect from the hook", () => {
       const { result } = renderHook(() => useBluetoothContext(), {
         wrapper: createWrapper(),
       });
@@ -364,21 +370,21 @@ describe('BluetoothProvider', () => {
     });
   });
 
-  describe('connect', () => {
-    it('exposes connect from the hook', async () => {
+  describe("connect", () => {
+    it("exposes connect from the hook", async () => {
       const { result } = renderHook(() => useBluetoothContext(), {
         wrapper: createWrapper(),
       });
 
       await act(async () => {
-        const success = await result.current.connect('p1r12', false);
+        const success = await result.current.connect("p1r12", false);
         expect(success).toBe(true);
       });
 
-      expect(mockConnect).toHaveBeenCalledWith('p1r12', false);
+      expect(mockConnect).toHaveBeenCalledWith("p1r12", false);
     });
 
-    it('returns false when connect fails', async () => {
+    it("returns false when connect fails", async () => {
       mockConnect.mockResolvedValue(false);
 
       const { result } = renderHook(() => useBluetoothContext(), {
@@ -392,8 +398,8 @@ describe('BluetoothProvider', () => {
     });
   });
 
-  describe('context value stability', () => {
-    it('exposes connect and disconnect functions from the hook', () => {
+  describe("context value stability", () => {
+    it("exposes connect and disconnect functions from the hook", () => {
       const { result } = renderHook(() => useBluetoothContext(), {
         wrapper: createWrapper(),
       });

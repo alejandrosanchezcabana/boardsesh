@@ -12,14 +12,16 @@
     "build:shared": "bun run --filter=@boardsesh/shared-schema build",
     "build:crypto": "bun run --filter=@boardsesh/crypto build",
     "build:db": "bun run --filter=@boardsesh/db build",
-    "lint": "bun run --filter='*' lint",
-    "typecheck": "bun run --filter='*' typecheck",
+    "lint": "vp lint",
+    "typecheck": "vp check --no-fmt --no-lint",
     "typecheck:web": "bun run --filter=@boardsesh/web typecheck",
     "typecheck:backend": "bun run --filter=boardsesh-backend typecheck",
     "typecheck:db": "bun run --filter=@boardsesh/db typecheck",
     "typecheck:shared": "bun run --filter=@boardsesh/shared-schema typecheck",
-    "test": "vitest",
-    "test:run": "vitest run",
+    "test": "vp test",
+    "test:run": "vp test run",
+    "check": "vp check",
+    "format": "vp fmt",
     "test:e2e:setup": "sh scripts/dev-db-up.sh",
     "test:e2e": "bun run test:e2e:setup && TEST_USER_EMAIL=test@boardsesh.com TEST_USER_PASSWORD=test bun run --filter=@boardsesh/web test:e2e",
     "test:help-screenshots": "TEST_USER_EMAIL=$(op read 'op://Boardsesh/Boardsesh local/username') TEST_USER_PASSWORD=$(op read 'op://Boardsesh/Boardsesh local/password') bunx playwright test --project=help-screenshots --config=packages/web/playwright.config.ts",
@@ -46,11 +48,16 @@
     "controller:format:check": "find embedded -name '*.cpp' -o -name '*.h' | xargs clang-format --dry-run --Werror",
     "build:wasm": "cd packages/board-renderer-wasm && bash build.sh"
   },
-  "engines": {
-    "node": "22.x"
-  },
   "dependencies": {
     "react": "^19.2.4",
     "react-dom": "^19.2.4"
+  },
+  "devDependencies": {
+    "@vitest/coverage-v8": "^4.1.4",
+    "vite-plus": "^0.1.18",
+    "vitest": "^4.1.4"
+  },
+  "engines": {
+    "node": "22.x"
   }
 }

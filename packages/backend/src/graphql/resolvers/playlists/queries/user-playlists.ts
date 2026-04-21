@@ -1,14 +1,14 @@
-import { eq, and, or, isNull, desc, sql } from 'drizzle-orm';
-import type { ConnectionContext } from '@boardsesh/shared-schema';
-import { db } from '../../../../db/client';
-import * as dbSchema from '@boardsesh/db/schema';
-import { requireAuthenticated, validateInput } from '../../shared/helpers';
+import { eq, and, or, isNull, desc, sql } from "drizzle-orm";
+import type { ConnectionContext } from "@boardsesh/shared-schema";
+import { db } from "../../../../db/client";
+import * as dbSchema from "@boardsesh/db/schema";
+import { requireAuthenticated, validateInput } from "../../shared/helpers";
 import {
   GetUserPlaylistsInputSchema,
   GetAllUserPlaylistsInputSchema,
-} from '../../../../validation/schemas';
-import { getPlaylistFollowStats } from '../helpers/follow-stats';
-import { getClimbCounts, formatOwnedPlaylist, type OwnedPlaylistRow } from '../helpers/enrichment';
+} from "../../../../validation/schemas";
+import { getPlaylistFollowStats } from "../helpers/follow-stats";
+import { getClimbCounts, formatOwnedPlaylist, type OwnedPlaylistRow } from "../helpers/enrichment";
 
 const PLAYLIST_SELECT = {
   id: dbSchema.playlists.id,
@@ -34,12 +34,12 @@ const PLAYLIST_ORDER = desc(
  * Enrich owned playlist rows with climb counts and follow stats.
  */
 async function enrichOwnedPlaylists(playlists: OwnedPlaylistRow[], userId: string) {
-  const countMap = await getClimbCounts(playlists.map(p => p.id));
+  const countMap = await getClimbCounts(playlists.map((p) => p.id));
   const followStats = await getPlaylistFollowStats(
-    playlists.map(p => p.uuid),
+    playlists.map((p) => p.uuid),
     userId,
   );
-  return playlists.map(p => formatOwnedPlaylist(p, countMap, followStats));
+  return playlists.map((p) => formatOwnedPlaylist(p, countMap, followStats));
 }
 
 /**
@@ -51,7 +51,7 @@ export const userPlaylists = async (
   ctx: ConnectionContext,
 ): Promise<unknown[]> => {
   requireAuthenticated(ctx);
-  validateInput(GetUserPlaylistsInputSchema, input, 'input');
+  validateInput(GetUserPlaylistsInputSchema, input, "input");
 
   const userId = ctx.userId!;
 
@@ -66,10 +66,7 @@ export const userPlaylists = async (
       and(
         eq(dbSchema.playlistOwnership.userId, userId),
         eq(dbSchema.playlists.boardType, input.boardType),
-        or(
-          eq(dbSchema.playlists.layoutId, input.layoutId),
-          isNull(dbSchema.playlists.layoutId),
-        ),
+        or(eq(dbSchema.playlists.layoutId, input.layoutId), isNull(dbSchema.playlists.layoutId)),
       ),
     )
     .orderBy(PLAYLIST_ORDER);
@@ -87,7 +84,7 @@ export const allUserPlaylists = async (
   ctx: ConnectionContext,
 ): Promise<unknown[]> => {
   requireAuthenticated(ctx);
-  validateInput(GetAllUserPlaylistsInputSchema, input, 'input');
+  validateInput(GetAllUserPlaylistsInputSchema, input, "input");
 
   const userId = ctx.userId!;
 

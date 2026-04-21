@@ -1,7 +1,7 @@
-import { eq, and, sql } from 'drizzle-orm';
-import { db } from '../db/client';
-import * as dbSchema from '@boardsesh/db/schema';
-import type { NotificationType } from '@boardsesh/db/schema';
+import { eq, and, sql } from "drizzle-orm";
+import { db } from "../db/client";
+import * as dbSchema from "@boardsesh/db/schema";
+import type { NotificationType } from "@boardsesh/db/schema";
 
 interface RecipientInfo {
   recipientId: string;
@@ -30,13 +30,13 @@ export async function resolveCommentRecipients(
     if (parentComment) {
       recipients.push({
         recipientId: parentComment.userId,
-        notificationType: 'comment_reply',
+        notificationType: "comment_reply",
       });
     }
   }
 
   // Notify the entity owner
-  if (entityType === 'tick') {
+  if (entityType === "tick") {
     const [tick] = await db
       .select({ userId: dbSchema.boardseshTicks.userId })
       .from(dbSchema.boardseshTicks)
@@ -46,7 +46,7 @@ export async function resolveCommentRecipients(
     if (tick) {
       recipients.push({
         recipientId: tick.userId,
-        notificationType: 'comment_on_tick',
+        notificationType: "comment_on_tick",
       });
     }
   }
@@ -70,7 +70,7 @@ export async function resolveVoteRecipients(
   entityType: string,
   entityId: string,
 ): Promise<RecipientInfo[]> {
-  if (entityType === 'tick') {
+  if (entityType === "tick") {
     const [tick] = await db
       .select({ userId: dbSchema.boardseshTicks.userId })
       .from(dbSchema.boardseshTicks)
@@ -78,14 +78,16 @@ export async function resolveVoteRecipients(
       .limit(1);
 
     if (tick) {
-      return [{
-        recipientId: tick.userId,
-        notificationType: 'vote_on_tick',
-      }];
+      return [
+        {
+          recipientId: tick.userId,
+          notificationType: "vote_on_tick",
+        },
+      ];
     }
   }
 
-  if (entityType === 'comment') {
+  if (entityType === "comment") {
     const [comment] = await db
       .select({ userId: dbSchema.comments.userId })
       .from(dbSchema.comments)
@@ -93,10 +95,12 @@ export async function resolveVoteRecipients(
       .limit(1);
 
     if (comment) {
-      return [{
-        recipientId: comment.userId,
-        notificationType: 'vote_on_comment',
-      }];
+      return [
+        {
+          recipientId: comment.userId,
+          notificationType: "vote_on_comment",
+        },
+      ];
     }
   }
 
@@ -118,10 +122,12 @@ export async function resolveProposalVoteRecipients(
 
   if (!proposal) return [];
 
-  return [{
-    recipientId: proposal.proposerId,
-    notificationType: 'proposal_vote',
-  }];
+  return [
+    {
+      recipientId: proposal.proposerId,
+      notificationType: "proposal_vote",
+    },
+  ];
 }
 
 /**
@@ -142,20 +148,19 @@ export async function resolveProposalApprovalRecipients(
 
   if (!proposal) return [];
 
-  const recipients: RecipientInfo[] = [{
-    recipientId: proposal.proposerId,
-    notificationType: 'proposal_approved',
-  }];
+  const recipients: RecipientInfo[] = [
+    {
+      recipientId: proposal.proposerId,
+      notificationType: "proposal_approved",
+    },
+  ];
 
   // Also notify upvoters
   const upvoters = await db
     .select({ userId: dbSchema.proposalVotes.userId })
     .from(dbSchema.proposalVotes)
     .where(
-      and(
-        eq(dbSchema.proposalVotes.proposalId, proposal.id),
-        eq(dbSchema.proposalVotes.value, 1),
-      ),
+      and(eq(dbSchema.proposalVotes.proposalId, proposal.id), eq(dbSchema.proposalVotes.value, 1)),
     );
 
   const seen = new Set<string>([proposal.proposerId]);
@@ -164,7 +169,7 @@ export async function resolveProposalApprovalRecipients(
       seen.add(v.userId);
       recipients.push({
         recipientId: v.userId,
-        notificationType: 'proposal_approved',
+        notificationType: "proposal_approved",
       });
     }
   }
@@ -187,10 +192,12 @@ export async function resolveProposalRejectionRecipients(
 
   if (!proposal) return [];
 
-  return [{
-    recipientId: proposal.proposerId,
-    notificationType: 'proposal_rejected',
-  }];
+  return [
+    {
+      recipientId: proposal.proposerId,
+      notificationType: "proposal_rejected",
+    },
+  ];
 }
 
 /**
@@ -217,22 +224,20 @@ export async function resolveProposalCreatedRecipients(
     .filter((c) => c.userId !== actorId)
     .map((c) => ({
       recipientId: c.userId,
-      notificationType: 'proposal_created' as NotificationType,
+      notificationType: "proposal_created" as NotificationType,
     }));
 }
 
 /**
  * Resolve recipient for a follow event.
  */
-export function resolveFollowRecipient(
-  metadata: Record<string, string>,
-): RecipientInfo | null {
+export function resolveFollowRecipient(metadata: Record<string, string>): RecipientInfo | null {
   const followedUserId = metadata.followedUserId;
   if (!followedUserId) return null;
 
   return {
     recipientId: followedUserId,
-    notificationType: 'new_follower',
+    notificationType: "new_follower",
   };
 }
 
@@ -249,7 +254,7 @@ export async function resolveClimbCreatedFollowerRecipients(
 
   return followers.map((f) => ({
     recipientId: f.followerId,
-    notificationType: 'new_climb',
+    notificationType: "new_climb",
   }));
 }
 
@@ -275,6 +280,6 @@ export async function resolveClimbCreatedSubscriptionRecipients(
     .filter((r) => r.userId !== excludeUserId)
     .map((r) => ({
       recipientId: r.userId,
-      notificationType: 'new_climb_global',
+      notificationType: "new_climb_global",
     }));
 }

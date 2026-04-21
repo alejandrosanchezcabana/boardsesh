@@ -1,5 +1,10 @@
-import { gql } from 'graphql-request';
-import type { Tick, SaveTickInput, GetTicksInput, AttachBetaLinkInput } from '@boardsesh/shared-schema';
+import { gql } from "graphql-request";
+import type {
+  Tick,
+  SaveTickInput,
+  GetTicksInput,
+  AttachBetaLinkInput,
+} from "@boardsesh/shared-schema";
 
 export const GET_TICKS = gql`
   query GetTicks($input: GetTicksInput!) {
@@ -51,9 +56,37 @@ export const SAVE_TICK = gql`
 `;
 
 // Partial types matching the fields each query actually requests
-type TickFromGetTicks = Pick<Tick, 'uuid' | 'climbUuid' | 'angle' | 'isMirror' | 'status' | 'attemptCount' | 'quality' | 'difficulty' | 'isBenchmark' | 'comment' | 'climbedAt'>;
-type TickFromGetUserTicks = Pick<Tick, 'climbUuid' | 'angle' | 'status' | 'attemptCount' | 'difficulty' | 'climbedAt' | 'layoutId'>;
-type TickFromSaveTick = Pick<Tick, 'uuid' | 'climbUuid' | 'angle' | 'isMirror' | 'status' | 'attemptCount' | 'quality' | 'difficulty' | 'comment' | 'climbedAt'>;
+type TickFromGetTicks = Pick<
+  Tick,
+  | "uuid"
+  | "climbUuid"
+  | "angle"
+  | "isMirror"
+  | "status"
+  | "attemptCount"
+  | "quality"
+  | "difficulty"
+  | "isBenchmark"
+  | "comment"
+  | "climbedAt"
+>;
+type TickFromGetUserTicks = Pick<
+  Tick,
+  "climbUuid" | "angle" | "status" | "attemptCount" | "difficulty" | "climbedAt" | "layoutId"
+>;
+type TickFromSaveTick = Pick<
+  Tick,
+  | "uuid"
+  | "climbUuid"
+  | "angle"
+  | "isMirror"
+  | "status"
+  | "attemptCount"
+  | "quality"
+  | "difficulty"
+  | "comment"
+  | "climbedAt"
+>;
 
 export interface GetTicksQueryVariables {
   input: GetTicksInput;
@@ -153,7 +186,7 @@ export interface AscentFeedItem {
   layoutId: number | null;
   angle: number;
   isMirror: boolean;
-  status: 'flash' | 'send' | 'attempt';
+  status: "flash" | "send" | "attempt";
   attemptCount: number;
   quality: number | null;
   difficulty: number | null;
@@ -176,14 +209,23 @@ export interface GetUserAscentsFeedQueryVariables {
     boardType?: string;
     boardTypes?: string[];
     layoutIds?: number[];
-    status?: 'flash' | 'send' | 'attempt';
-    statusMode?: 'both' | 'send' | 'attempt';
+    status?: "flash" | "send" | "attempt";
+    statusMode?: "both" | "send" | "attempt";
     flashOnly?: boolean;
     climbName?: string;
-    sortBy?: 'recent' | 'hardest' | 'easiest' | 'mostAttempts' | 'climbName' | 'loggedGrade' | 'consensusGrade' | 'date' | 'attemptCount';
-    sortOrder?: 'asc' | 'desc';
-    secondarySortBy?: 'climbName' | 'loggedGrade' | 'consensusGrade' | 'date' | 'attemptCount';
-    secondarySortOrder?: 'asc' | 'desc';
+    sortBy?:
+      | "recent"
+      | "hardest"
+      | "easiest"
+      | "mostAttempts"
+      | "climbName"
+      | "loggedGrade"
+      | "consensusGrade"
+      | "date"
+      | "attemptCount";
+    sortOrder?: "asc" | "desc";
+    secondarySortBy?: "climbName" | "loggedGrade" | "consensusGrade" | "date" | "attemptCount";
+    secondarySortOrder?: "asc" | "desc";
     minDifficulty?: number;
     maxDifficulty?: number;
     minAngle?: number;
@@ -394,7 +436,7 @@ export interface DeleteTickVariables {
 }
 
 export interface UpdateTickInput {
-  status?: 'flash' | 'send' | 'attempt';
+  status?: "flash" | "send" | "attempt";
   attemptCount?: number;
   quality?: number | null;
   difficulty?: number | null;

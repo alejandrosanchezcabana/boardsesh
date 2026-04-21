@@ -5,18 +5,11 @@
  * For Node.js-specific functions (that use file paths), see parser.ts
  */
 
-import { ImageProcessor } from './image-processor/types';
-import { runOCR } from './core/ocr';
-import {
-  detectHoldsFromPixelData,
-  detectBoardRegion,
-  detectBenchmarkCircle,
-} from './core/holds';
-import {
-  calculateRegions,
-  calculateRegionsFromDetectedBoard,
-} from './core/regions';
-import { MoonBoardClimb, ParseResult, GridCoordinate } from './types';
+import { ImageProcessor } from "./image-processor/types";
+import { runOCR } from "./core/ocr";
+import { detectHoldsFromPixelData, detectBoardRegion, detectBenchmarkCircle } from "./core/holds";
+import { calculateRegions, calculateRegionsFromDetectedBoard } from "./core/regions";
+import { MoonBoardClimb, ParseResult, GridCoordinate } from "./types";
 
 /**
  * Parse a MoonBoard screenshot using the provided ImageProcessor.
@@ -26,9 +19,7 @@ import { MoonBoardClimb, ParseResult, GridCoordinate } from './types';
  * to different iPhone screen sizes. Falls back to proportional calculation if
  * auto-detection fails.
  */
-export async function parseWithProcessor(
-  processor: ImageProcessor
-): Promise<ParseResult> {
+export async function parseWithProcessor(processor: ImageProcessor): Promise<ParseResult> {
   const warnings: string[] = [];
 
   try {
@@ -39,15 +30,9 @@ export async function parseWithProcessor(
     const yellowRegion = detectBoardRegion(fullPixelData);
 
     const regions = yellowRegion
-      ? calculateRegionsFromDetectedBoard(
-          yellowRegion,
-          metadata.width,
-          metadata.height
-        )
+      ? calculateRegionsFromDetectedBoard(yellowRegion, metadata.width, metadata.height)
       : (() => {
-          warnings.push(
-            'Could not auto-detect board region, using proportional fallback'
-          );
+          warnings.push("Could not auto-detect board region, using proportional fallback");
           return calculateRegions(metadata.width, metadata.height);
         })();
 
@@ -70,13 +55,13 @@ export async function parseWithProcessor(
 
     for (const hold of detectedHolds) {
       switch (hold.type) {
-        case 'start':
+        case "start":
           startHolds.push(hold.coordinate);
           break;
-        case 'hand':
+        case "hand":
           handHolds.push(hold.coordinate);
           break;
-        case 'finish':
+        case "finish":
           finishHolds.push(hold.coordinate);
           break;
       }
@@ -84,13 +69,13 @@ export async function parseWithProcessor(
 
     // Validate we found some holds
     if (startHolds.length === 0) {
-      warnings.push('No start holds detected');
+      warnings.push("No start holds detected");
     }
     if (finishHolds.length === 0) {
-      warnings.push('No finish holds detected');
+      warnings.push("No finish holds detected");
     }
     if (startHolds.length + handHolds.length + finishHolds.length === 0) {
-      return { success: false, error: 'No holds detected in image', warnings };
+      return { success: false, error: "No holds detected in image", warnings };
     }
 
     // Build the climb object
@@ -112,7 +97,7 @@ export async function parseWithProcessor(
 
     return { success: true, climb, warnings };
   } catch (error) {
-    const message = error instanceof Error ? error.message : 'Unknown error';
+    const message = error instanceof Error ? error.message : "Unknown error";
     return { success: false, error: `Failed to parse image: ${message}`, warnings };
   }
 }
@@ -128,11 +113,11 @@ export function deduplicateClimbs(climbs: MoonBoardClimb[]): MoonBoardClimb[] {
     // Create a unique key from sorted hold positions
     const key = [
       ...climb.holds.start.sort(),
-      '|',
+      "|",
       ...climb.holds.hand.sort(),
-      '|',
+      "|",
       ...climb.holds.finish.sort(),
-    ].join(',');
+    ].join(",");
 
     // Keep the first occurrence (or could prefer one with better OCR results)
     if (!seen.has(key)) {

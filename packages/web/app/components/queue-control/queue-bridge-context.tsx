@@ -1,29 +1,50 @@
-'use client';
+"use client";
 
-import React, { createContext, useContext, useState, useCallback, useMemo, useLayoutEffect, useRef, useEffect } from 'react';
-import { v4 as uuidv4 } from 'uuid';
+import React, {
+  createContext,
+  useContext,
+  useState,
+  useCallback,
+  useMemo,
+  useLayoutEffect,
+  useRef,
+  useEffect,
+} from "react";
+import { v4 as uuidv4 } from "uuid";
 import {
-  QueueContext, QueueActionsContext, QueueDataContext,
-  CurrentClimbContext, CurrentClimbUuidContext, QueueListContext, SearchContext, SessionContext,
-  type GraphQLQueueContextType, type GraphQLQueueActionsType, type GraphQLQueueDataType,
-} from '../graphql-queue/QueueContext';
-import type { CurrentClimbDataType, QueueListDataType, SearchDataType, SessionDataType } from '../graphql-queue/types';
-import { usePersistentSession } from '../persistent-session';
-import { getBaseBoardPath } from '@/app/lib/url-utils';
-import { DEFAULT_SEARCH_PARAMS } from '@/app/lib/url-utils';
-import type { BoardDetails, Angle, Climb, SearchRequestPagination } from '@/app/lib/types';
-import type { ClimbQueueItem } from './types';
-import { usePathname } from 'next/navigation';
-import dynamic from 'next/dynamic';
-import { canAddClimbToBoard } from '@/app/lib/board-compatibility';
-import { getBoardDetailsForPlaylist } from '@/app/lib/board-config-for-playlist';
-import { useSnackbar } from '../providers/snackbar-provider';
-import { queueAddErrorMessage } from '../board-lock/queue-add-error-messages';
+  QueueContext,
+  QueueActionsContext,
+  QueueDataContext,
+  CurrentClimbContext,
+  CurrentClimbUuidContext,
+  QueueListContext,
+  SearchContext,
+  SessionContext,
+  type GraphQLQueueContextType,
+  type GraphQLQueueActionsType,
+  type GraphQLQueueDataType,
+} from "../graphql-queue/QueueContext";
+import type {
+  CurrentClimbDataType,
+  QueueListDataType,
+  SearchDataType,
+  SessionDataType,
+} from "../graphql-queue/types";
+import { usePersistentSession } from "../persistent-session";
+import { getBaseBoardPath } from "@/app/lib/url-utils";
+import { DEFAULT_SEARCH_PARAMS } from "@/app/lib/url-utils";
+import type { BoardDetails, Angle, Climb, SearchRequestPagination } from "@/app/lib/types";
+import type { ClimbQueueItem } from "./types";
+import { usePathname } from "next/navigation";
+import dynamic from "next/dynamic";
+import { canAddClimbToBoard } from "@/app/lib/board-compatibility";
+import { getBoardDetailsForPlaylist } from "@/app/lib/board-config-for-playlist";
+import { useSnackbar } from "../providers/snackbar-provider";
+import { queueAddErrorMessage } from "../board-lock/queue-add-error-messages";
 
-const LiveActivityBridge = dynamic(
-  () => import('@/app/lib/live-activity/live-activity-bridge'),
-  { ssr: false },
-);
+const LiveActivityBridge = dynamic(() => import("@/app/lib/live-activity/live-activity-bridge"), {
+  ssr: false,
+});
 
 /**
  * Derive BoardDetails + baseBoardPath from a climb's own boardType/layoutId.
@@ -40,9 +61,9 @@ function deriveSeedStateFromClimb(
   if (!climb.boardType || climb.layoutId == null) return null;
   const details = getBoardDetailsForPlaylist(climb.boardType, climb.layoutId);
   if (!details) return null;
-  const setIds = details.set_ids.join(',');
+  const setIds = details.set_ids.join(",");
   const baseBoardPath =
-    details.board_name === 'moonboard'
+    details.board_name === "moonboard"
       ? `/moonboard/${details.layout_id}/${setIds}`
       : `/${details.board_name}/${details.layout_id}/${details.size_id}/${setIds}`;
   return { boardDetails: details, baseBoardPath };
@@ -116,7 +137,12 @@ function usePersistentSessionQueueAdapter(): {
   angle: Angle;
   hasActiveQueue: boolean;
   isHydrated: boolean;
-  syncFromInjected: (q: ClimbQueueItem[], current: ClimbQueueItem | null, boardPath: string, bd: BoardDetails) => void;
+  syncFromInjected: (
+    q: ClimbQueueItem[],
+    current: ClimbQueueItem | null,
+    boardPath: string,
+    bd: BoardDetails,
+  ) => void;
 } {
   const ps = usePersistentSession();
   const { showMessage } = useSnackbar();
@@ -133,14 +159,14 @@ function usePersistentSessionQueueAdapter(): {
     if (isParty && ps.activeSession?.boardPath) {
       return getBaseBoardPath(ps.activeSession.boardPath);
     }
-    return ps.localBoardPath ?? '';
+    return ps.localBoardPath ?? "";
   }, [isParty, ps.activeSession?.boardPath, ps.localBoardPath]);
 
   const hasActiveQueue = (queue.length > 0 || !!currentClimbQueueItem || isParty) && !!boardDetails;
 
   const parsedParams = useMemo(() => {
     if (!boardDetails) {
-      return { board_name: 'kilter' as const, layout_id: 0, size_id: 0, set_ids: [0], angle: 0 };
+      return { board_name: "kilter" as const, layout_id: 0, size_id: 0, set_ids: [0], angle: 0 };
     }
     return {
       board_name: boardDetails.board_name,
@@ -152,8 +178,22 @@ function usePersistentSessionQueueAdapter(): {
   }, [boardDetails, angle]);
 
   // --- Ref holding latest values so action callbacks can be stable ---
-  const latestRef = useRef({ queue, currentClimbQueueItem, boardDetails, baseBoardPath, ps, showMessage });
-  latestRef.current = { queue, currentClimbQueueItem, boardDetails, baseBoardPath, ps, showMessage };
+  const latestRef = useRef({
+    queue,
+    currentClimbQueueItem,
+    boardDetails,
+    baseBoardPath,
+    ps,
+    showMessage,
+  });
+  latestRef.current = {
+    queue,
+    currentClimbQueueItem,
+    boardDetails,
+    baseBoardPath,
+    ps,
+    showMessage,
+  };
 
   // Validates a climb against the locked board (session) or the current
   // adapter board. Shows a Snackbar error and returns false if not
@@ -165,7 +205,7 @@ function usePersistentSessionQueueAdapter(): {
     if (!target) return true;
     const result = canAddClimbToBoard(climb, target);
     if (result.ok) return true;
-    r.showMessage(queueAddErrorMessage(climb, target, result), 'error');
+    r.showMessage(queueAddErrorMessage(climb, target, result), "error");
     return false;
   }, []);
 
@@ -181,17 +221,14 @@ function usePersistentSessionQueueAdapter(): {
     return idx > 0 ? r.queue[idx - 1] : null;
   }, []);
 
-  const setCurrentClimbQueueItem = useCallback(
-    (item: ClimbQueueItem) => {
-      const r = latestRef.current;
-      if (!r.boardDetails) return;
-      const alreadyInQueue = r.queue.some(q => q.uuid === item.uuid);
-      if (alreadyInQueue && r.currentClimbQueueItem?.uuid === item.uuid) return;
-      const newQueue = alreadyInQueue ? r.queue : [...r.queue, item];
-      r.ps.setLocalQueueState(newQueue, item, r.baseBoardPath, r.boardDetails);
-    },
-    [],
-  );
+  const setCurrentClimbQueueItem = useCallback((item: ClimbQueueItem) => {
+    const r = latestRef.current;
+    if (!r.boardDetails) return;
+    const alreadyInQueue = r.queue.some((q) => q.uuid === item.uuid);
+    if (alreadyInQueue && r.currentClimbQueueItem?.uuid === item.uuid) return;
+    const newQueue = alreadyInQueue ? r.queue : [...r.queue, item];
+    r.ps.setLocalQueueState(newQueue, item, r.baseBoardPath, r.boardDetails);
+  }, []);
 
   const addToQueue = useCallback(
     (climb: Climb) => {
@@ -218,32 +255,26 @@ function usePersistentSessionQueueAdapter(): {
     [validateClimbForQueue],
   );
 
-  const removeFromQueue = useCallback(
-    (item: ClimbQueueItem) => {
-      const r = latestRef.current;
-      if (!r.boardDetails) return;
-      const newQueue = r.queue.filter(q => q.uuid !== item.uuid);
-      const newCurrent = r.currentClimbQueueItem?.uuid === item.uuid
-        ? (newQueue[0] ?? null)
-        : r.currentClimbQueueItem;
-      r.ps.setLocalQueueState(newQueue, newCurrent, r.baseBoardPath, r.boardDetails);
-    },
-    [],
-  );
+  const removeFromQueue = useCallback((item: ClimbQueueItem) => {
+    const r = latestRef.current;
+    if (!r.boardDetails) return;
+    const newQueue = r.queue.filter((q) => q.uuid !== item.uuid);
+    const newCurrent =
+      r.currentClimbQueueItem?.uuid === item.uuid ? (newQueue[0] ?? null) : r.currentClimbQueueItem;
+    r.ps.setLocalQueueState(newQueue, newCurrent, r.baseBoardPath, r.boardDetails);
+  }, []);
 
-  const setQueue = useCallback(
-    (newQueue: ClimbQueueItem[]) => {
-      const r = latestRef.current;
-      if (!r.boardDetails) return;
-      const newCurrent = newQueue.length === 0
+  const setQueue = useCallback((newQueue: ClimbQueueItem[]) => {
+    const r = latestRef.current;
+    if (!r.boardDetails) return;
+    const newCurrent =
+      newQueue.length === 0
         ? null
-        : (r.currentClimbQueueItem && newQueue.some(q => q.uuid === r.currentClimbQueueItem!.uuid)
-            ? r.currentClimbQueueItem
-            : newQueue[0]);
-      r.ps.setLocalQueueState(newQueue, newCurrent, r.baseBoardPath, r.boardDetails);
-    },
-    [],
-  );
+        : r.currentClimbQueueItem && newQueue.some((q) => q.uuid === r.currentClimbQueueItem!.uuid)
+          ? r.currentClimbQueueItem
+          : newQueue[0];
+    r.ps.setLocalQueueState(newQueue, newCurrent, r.baseBoardPath, r.boardDetails);
+  }, []);
 
   const mirrorClimb = useCallback(() => {
     const r = latestRef.current;
@@ -253,7 +284,7 @@ function usePersistentSessionQueueAdapter(): {
       ...r.currentClimbQueueItem,
       climb: { ...r.currentClimbQueueItem.climb, mirrored },
     };
-    const newQueue = r.queue.map(q => (q.uuid === updatedItem.uuid ? updatedItem : q));
+    const newQueue = r.queue.map((q) => (q.uuid === updatedItem.uuid ? updatedItem : q));
     r.ps.setLocalQueueState(newQueue, updatedItem, r.baseBoardPath, r.boardDetails);
   }, []);
 
@@ -276,7 +307,7 @@ function usePersistentSessionQueueAdapter(): {
         return newItem;
       }
       const currentIdx = r.currentClimbQueueItem
-        ? r.queue.findIndex(q => q.uuid === r.currentClimbQueueItem!.uuid)
+        ? r.queue.findIndex((q) => q.uuid === r.currentClimbQueueItem!.uuid)
         : -1;
       const newQueue = [...r.queue];
       if (currentIdx >= 0) {
@@ -293,27 +324,25 @@ function usePersistentSessionQueueAdapter(): {
   // Bridge-mode replace: mirrors the local-state update with a new climb while
   // preserving the queue-item uuid and existing addedBy attribution. The
   // bridge context has no network path, so this is a pure local mutation.
-  const replaceQueueItem = useCallback(
-    (queueItemUuid: string, climb: Climb) => {
-      const r = latestRef.current;
-      if (!r.boardDetails) return;
-      const existing = r.queue.find(q => q.uuid === queueItemUuid);
-      if (!existing) return;
-      const updated: ClimbQueueItem = {
-        ...existing,
-        climb,
-      };
-      const newQueue = r.queue.map(q => (q.uuid === queueItemUuid ? updated : q));
-      const nextCurrent = r.currentClimbQueueItem?.uuid === queueItemUuid ? updated : r.currentClimbQueueItem;
-      r.ps.setLocalQueueState(newQueue, nextCurrent, r.baseBoardPath, r.boardDetails);
-    },
-    [],
-  );
+  const replaceQueueItem = useCallback((queueItemUuid: string, climb: Climb) => {
+    const r = latestRef.current;
+    if (!r.boardDetails) return;
+    const existing = r.queue.find((q) => q.uuid === queueItemUuid);
+    if (!existing) return;
+    const updated: ClimbQueueItem = {
+      ...existing,
+      climb,
+    };
+    const newQueue = r.queue.map((q) => (q.uuid === queueItemUuid ? updated : q));
+    const nextCurrent =
+      r.currentClimbQueueItem?.uuid === queueItemUuid ? updated : r.currentClimbQueueItem;
+    r.ps.setLocalQueueState(newQueue, nextCurrent, r.baseBoardPath, r.boardDetails);
+  }, []);
 
   // No-op functions for fields not used by the bottom bar
   const noop = useCallback(() => {}, []);
   const noopStartSession = useCallback(
-    async (_options?: { discoverable?: boolean; name?: string; sessionId?: string }) => '',
+    async (_options?: { discoverable?: boolean; name?: string; sessionId?: string }) => "",
     [],
   );
   const noopJoinSession = useCallback(async (_sessionId: string) => {}, []);
@@ -376,7 +405,7 @@ function usePersistentSessionQueueAdapter(): {
       isFetchingNextPage: false,
       hasDoneFirstFetch: false,
       viewOnlyMode: false,
-      connectionState: 'connected',
+      connectionState: "connected",
       canMutate: true,
       parsedParams,
       isSessionActive: isParty && ps.hasConnected,
@@ -452,7 +481,7 @@ export function QueueBridgeProvider({ children }: { children: React.ReactNode })
   const injectedDataRef = useRef<GraphQLQueueDataType | null>(null);
   // Board state refs for reading during clear() — can't use state in stable callbacks
   const injectedBoardDetailsRef = useRef<BoardDetails | null>(null);
-  const injectedBaseBoardPathRef = useRef<string>('');
+  const injectedBaseBoardPathRef = useRef<string>("");
 
   // Separate version counters: actionsVersion only bumps when the injected
   // actions object identity changes (rare — GraphQLQueueProvider uses latestRef
@@ -468,7 +497,7 @@ export function QueueBridgeProvider({ children }: { children: React.ReactNode })
 
   // eslint-disable-next-line react-hooks/exhaustive-deps -- actionsVersion/dataVersion force re-read of refs
   const effectiveContext = useMemo(
-    () => (isInjected && injectedContextRef.current) ? injectedContextRef.current : adapter.context,
+    () => (isInjected && injectedContextRef.current ? injectedContextRef.current : adapter.context),
     [isInjected, actionsVersion, dataVersion, adapter.context],
   );
 
@@ -507,49 +536,55 @@ export function QueueBridgeProvider({ children }: { children: React.ReactNode })
     [effectiveBoardDetails, effectiveAngle, effectiveHasActiveQueue, effectiveIsHydrated],
   );
 
-  const inject = useCallback((
-    ctx: GraphQLQueueContextType,
-    actions: GraphQLQueueActionsType,
-    data: GraphQLQueueDataType,
-    bd: BoardDetails,
-    a: Angle,
-    baseBoardPath: string,
-  ) => {
-    injectedContextRef.current = ctx;
-    injectedActionsRef.current = actions;
-    injectedDataRef.current = data;
-    injectedBoardDetailsRef.current = bd;
-    injectedBaseBoardPathRef.current = baseBoardPath;
-    setInjectedBoardDetails(bd);
-    setInjectedAngle(a);
-    setIsInjected(true);
-    setActionsVersion(v => v + 1);
-    setDataVersion(v => v + 1);
-  }, []);
+  const inject = useCallback(
+    (
+      ctx: GraphQLQueueContextType,
+      actions: GraphQLQueueActionsType,
+      data: GraphQLQueueDataType,
+      bd: BoardDetails,
+      a: Angle,
+      baseBoardPath: string,
+    ) => {
+      injectedContextRef.current = ctx;
+      injectedActionsRef.current = actions;
+      injectedDataRef.current = data;
+      injectedBoardDetailsRef.current = bd;
+      injectedBaseBoardPathRef.current = baseBoardPath;
+      setInjectedBoardDetails(bd);
+      setInjectedAngle(a);
+      setIsInjected(true);
+      setActionsVersion((v) => v + 1);
+      setDataVersion((v) => v + 1);
+    },
+    [],
+  );
 
-  const updateContext = useCallback((
-    ctx: GraphQLQueueContextType,
-    actions: GraphQLQueueActionsType,
-    data: GraphQLQueueDataType,
-  ) => {
-    const actionsChanged = actions !== injectedActionsRef.current;
-    const dataChanged = data !== injectedDataRef.current;
-    injectedContextRef.current = ctx;
-    injectedActionsRef.current = actions;
-    injectedDataRef.current = data;
-    // Only bump data version when the injected data reference actually changed.
-    // Prevents cascading re-renders when updateContext is called with the same
-    // data (e.g. during session stats updates that don't change queue data).
-    if (dataChanged) {
-      setDataVersion(v => v + 1);
-    }
-    // Only bump actions version when the actions object identity actually changed.
-    // GraphQLQueueProvider's actionsValue uses latestRef with empty deps, so this
-    // almost never changes — keeping QueueActionsContext stable for consumers.
-    if (actionsChanged) {
-      setActionsVersion(v => v + 1);
-    }
-  }, []);
+  const updateContext = useCallback(
+    (
+      ctx: GraphQLQueueContextType,
+      actions: GraphQLQueueActionsType,
+      data: GraphQLQueueDataType,
+    ) => {
+      const actionsChanged = actions !== injectedActionsRef.current;
+      const dataChanged = data !== injectedDataRef.current;
+      injectedContextRef.current = ctx;
+      injectedActionsRef.current = actions;
+      injectedDataRef.current = data;
+      // Only bump data version when the injected data reference actually changed.
+      // Prevents cascading re-renders when updateContext is called with the same
+      // data (e.g. during session stats updates that don't change queue data).
+      if (dataChanged) {
+        setDataVersion((v) => v + 1);
+      }
+      // Only bump actions version when the actions object identity actually changed.
+      // GraphQLQueueProvider's actionsValue uses latestRef with empty deps, so this
+      // almost never changes — keeping QueueActionsContext stable for consumers.
+      if (actionsChanged) {
+        setActionsVersion((v) => v + 1);
+      }
+    },
+    [],
+  );
 
   const clear = useCallback(() => {
     // Before clearing: sync the last injected queue state to the persistent
@@ -567,12 +602,12 @@ export function QueueBridgeProvider({ children }: { children: React.ReactNode })
     injectedActionsRef.current = null;
     injectedDataRef.current = null;
     injectedBoardDetailsRef.current = null;
-    injectedBaseBoardPathRef.current = '';
+    injectedBaseBoardPathRef.current = "";
     setIsInjected(false);
     setInjectedBoardDetails(null);
     setInjectedAngle(0);
-    setActionsVersion(v => v + 1);
-    setDataVersion(v => v + 1);
+    setActionsVersion((v) => v + 1);
+    setDataVersion((v) => v + 1);
   }, []);
 
   const setters = useMemo<QueueBridgeSetters>(
@@ -581,56 +616,80 @@ export function QueueBridgeProvider({ children }: { children: React.ReactNode })
   );
 
   // Derive fine-grained context values from the effective data
-  const effectiveCurrentClimb: CurrentClimbDataType = useMemo(() => ({
-    currentClimbQueueItem: effectiveData.currentClimbQueueItem,
-    currentClimb: effectiveData.currentClimb,
-  }), [effectiveData.currentClimbQueueItem, effectiveData.currentClimb]);
+  const effectiveCurrentClimb: CurrentClimbDataType = useMemo(
+    () => ({
+      currentClimbQueueItem: effectiveData.currentClimbQueueItem,
+      currentClimb: effectiveData.currentClimb,
+    }),
+    [effectiveData.currentClimbQueueItem, effectiveData.currentClimb],
+  );
   const effectiveCurrentClimbUuid = effectiveData.currentClimbQueueItem?.uuid ?? null;
 
-  const effectiveQueueList: QueueListDataType = useMemo(() => ({
-    queue: effectiveData.queue,
-    suggestedClimbs: effectiveData.suggestedClimbs,
-  }), [effectiveData.queue, effectiveData.suggestedClimbs]);
+  const effectiveQueueList: QueueListDataType = useMemo(
+    () => ({
+      queue: effectiveData.queue,
+      suggestedClimbs: effectiveData.suggestedClimbs,
+    }),
+    [effectiveData.queue, effectiveData.suggestedClimbs],
+  );
 
-  const effectiveSearch: SearchDataType = useMemo(() => ({
-    climbSearchParams: effectiveData.climbSearchParams,
-    climbSearchResults: effectiveData.climbSearchResults,
-    totalSearchResultCount: effectiveData.totalSearchResultCount,
-    hasMoreResults: effectiveData.hasMoreResults,
-    isFetchingClimbs: effectiveData.isFetchingClimbs,
-    isFetchingNextPage: effectiveData.isFetchingNextPage,
-    hasDoneFirstFetch: effectiveData.hasDoneFirstFetch,
-    parsedParams: effectiveData.parsedParams,
-  }), [
-    effectiveData.climbSearchParams, effectiveData.climbSearchResults,
-    effectiveData.totalSearchResultCount,
-    effectiveData.hasMoreResults, effectiveData.isFetchingClimbs,
-    effectiveData.isFetchingNextPage, effectiveData.hasDoneFirstFetch,
-    effectiveData.parsedParams,
-  ]);
+  const effectiveSearch: SearchDataType = useMemo(
+    () => ({
+      climbSearchParams: effectiveData.climbSearchParams,
+      climbSearchResults: effectiveData.climbSearchResults,
+      totalSearchResultCount: effectiveData.totalSearchResultCount,
+      hasMoreResults: effectiveData.hasMoreResults,
+      isFetchingClimbs: effectiveData.isFetchingClimbs,
+      isFetchingNextPage: effectiveData.isFetchingNextPage,
+      hasDoneFirstFetch: effectiveData.hasDoneFirstFetch,
+      parsedParams: effectiveData.parsedParams,
+    }),
+    [
+      effectiveData.climbSearchParams,
+      effectiveData.climbSearchResults,
+      effectiveData.totalSearchResultCount,
+      effectiveData.hasMoreResults,
+      effectiveData.isFetchingClimbs,
+      effectiveData.isFetchingNextPage,
+      effectiveData.hasDoneFirstFetch,
+      effectiveData.parsedParams,
+    ],
+  );
 
-  const effectiveSession: SessionDataType = useMemo(() => ({
-    viewOnlyMode: effectiveData.viewOnlyMode,
-    isSessionActive: effectiveData.isSessionActive,
-    sessionId: effectiveData.sessionId,
-    sessionSummary: effectiveData.sessionSummary,
-    sessionGoal: effectiveData.sessionGoal,
-    connectionState: effectiveData.connectionState,
-    canMutate: effectiveData.canMutate,
-    isDisconnected: effectiveData.isDisconnected,
-    users: effectiveData.users ?? [],
-    clientId: effectiveData.clientId ?? null,
-    isLeader: effectiveData.isLeader ?? false,
-    isBackendMode: effectiveData.isBackendMode ?? false,
-    hasConnected: effectiveData.hasConnected ?? false,
-    connectionError: effectiveData.connectionError ?? null,
-  }), [
-    effectiveData.viewOnlyMode, effectiveData.isSessionActive, effectiveData.sessionId,
-    effectiveData.sessionSummary, effectiveData.sessionGoal, effectiveData.connectionState,
-    effectiveData.canMutate, effectiveData.isDisconnected, effectiveData.users,
-    effectiveData.clientId, effectiveData.isLeader, effectiveData.isBackendMode,
-    effectiveData.hasConnected, effectiveData.connectionError,
-  ]);
+  const effectiveSession: SessionDataType = useMemo(
+    () => ({
+      viewOnlyMode: effectiveData.viewOnlyMode,
+      isSessionActive: effectiveData.isSessionActive,
+      sessionId: effectiveData.sessionId,
+      sessionSummary: effectiveData.sessionSummary,
+      sessionGoal: effectiveData.sessionGoal,
+      connectionState: effectiveData.connectionState,
+      canMutate: effectiveData.canMutate,
+      isDisconnected: effectiveData.isDisconnected,
+      users: effectiveData.users ?? [],
+      clientId: effectiveData.clientId ?? null,
+      isLeader: effectiveData.isLeader ?? false,
+      isBackendMode: effectiveData.isBackendMode ?? false,
+      hasConnected: effectiveData.hasConnected ?? false,
+      connectionError: effectiveData.connectionError ?? null,
+    }),
+    [
+      effectiveData.viewOnlyMode,
+      effectiveData.isSessionActive,
+      effectiveData.sessionId,
+      effectiveData.sessionSummary,
+      effectiveData.sessionGoal,
+      effectiveData.connectionState,
+      effectiveData.canMutate,
+      effectiveData.isDisconnected,
+      effectiveData.users,
+      effectiveData.clientId,
+      effectiveData.isLeader,
+      effectiveData.isBackendMode,
+      effectiveData.hasConnected,
+      effectiveData.connectionError,
+    ],
+  );
 
   return (
     <QueueBridgeSetterContext.Provider value={setters}>
@@ -705,9 +764,9 @@ export function QueueBridgeInjector({ boardDetails, angle }: QueueBridgeInjector
       hasInjectedRef.current = false;
       clear();
     };
-  // Only re-run when board details or angle change (navigation between boards)
-  // and not when pathname changes during transition off the board route.
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // Only re-run when board details or angle change (navigation between boards)
+    // and not when pathname changes during transition off the board route.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [boardDetails, angle, inject, clear]);
 
   // Update the context ref whenever any of the queue context values change.
@@ -720,7 +779,16 @@ export function QueueBridgeInjector({ boardDetails, angle }: QueueBridgeInjector
       inject(queueContext, queueActions, queueData, boardDetails, angle, baseBoardPath);
       hasInjectedRef.current = true;
     }
-  }, [queueContext, queueActions, queueData, updateContext, inject, boardDetails, angle, baseBoardPath]);
+  }, [
+    queueContext,
+    queueActions,
+    queueData,
+    updateContext,
+    inject,
+    boardDetails,
+    angle,
+    baseBoardPath,
+  ]);
 
   return null;
 }

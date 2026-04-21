@@ -1,6 +1,6 @@
-import { NextResponse } from 'next/server';
-import { getSizeBySlug, SizeRow } from '@/app/lib/slug-utils';
-import { BoardName, LayoutId } from '@/app/lib/types';
+import { NextResponse } from "next/server";
+import { getSizeBySlug, SizeRow } from "@/app/lib/slug-utils";
+import { BoardName, LayoutId } from "@/app/lib/types";
 
 export async function GET(
   req: Request,
@@ -18,7 +18,7 @@ export async function GET(
         {
           status: 404,
           headers: {
-            'Cache-Control': 'public, s-maxage=31536000, immutable', // Even 404s can be cached - sizes don't change
+            "Cache-Control": "public, s-maxage=31536000, immutable", // Even 404s can be cached - sizes don't change
           },
         },
       );
@@ -26,11 +26,11 @@ export async function GET(
 
     return NextResponse.json(size, {
       headers: {
-        'Cache-Control': 'public, s-maxage=31536000, immutable', // Cache for 1 year, immutable
+        "Cache-Control": "public, s-maxage=31536000, immutable", // Cache for 1 year, immutable
       },
     });
   } catch (error) {
-    console.error('Error fetching size by slug:', error);
-    return NextResponse.json({ error: 'Failed to fetch size' }, { status: 500 });
+    console.error("Error fetching size by slug:", error);
+    return NextResponse.json({ error: "Failed to fetch size" }, { status: 500 });
   }
 }

@@ -1,6 +1,6 @@
-import type Redis from 'ioredis';
-import { KEYS, TTL, validateSessionId } from './constants';
-import { LEADER_ELECTION_SCRIPT } from './lua-scripts';
+import type Redis from "ioredis";
+import { KEYS, TTL, validateSessionId } from "./constants";
+import { LEADER_ELECTION_SCRIPT } from "./lua-scripts";
 
 /**
  * Attempt to elect a connection as leader for a session.
@@ -10,7 +10,7 @@ import { LEADER_ELECTION_SCRIPT } from './lua-scripts';
 export async function tryElectLeader(
   redis: Redis,
   connectionId: string,
-  sessionId: string
+  sessionId: string,
 ): Promise<boolean> {
   validateSessionId(sessionId);
 
@@ -20,7 +20,7 @@ export async function tryElectLeader(
     KEYS.sessionLeader(sessionId),
     KEYS.connection(connectionId),
     connectionId,
-    TTL.sessionMembership.toString()
+    TTL.sessionMembership.toString(),
   )) as number;
 
   return result === 1;

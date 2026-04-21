@@ -1,7 +1,7 @@
-import SwipeableDrawer from '../swipeable-drawer/swipeable-drawer';
-import React from 'react';
-import { LogAscentForm } from './logascent-form';
-import { BoardDetails, Climb } from '@/app/lib/types';
+import SwipeableDrawer from "../swipeable-drawer/swipeable-drawer";
+import React from "react";
+import { LogAscentForm } from "./logascent-form";
+import { BoardDetails, Climb } from "@/app/lib/types";
 
 interface LogAscentDrawerProps {
   open: boolean;
@@ -23,14 +23,10 @@ export const LogAscentDrawer: React.FC<LogAscentDrawerProps> = ({
       onClose={onClose}
       open={open}
       fullHeight
-      styles={{ wrapper: { height: '100%' } }}
+      styles={{ wrapper: { height: "100%" } }}
     >
       {currentClimb && (
-        <LogAscentForm
-          currentClimb={currentClimb}
-          boardDetails={boardDetails}
-          onClose={onClose}
-        />
+        <LogAscentForm currentClimb={currentClimb} boardDetails={boardDetails} onClose={onClose} />
       )}
     </SwipeableDrawer>
   );

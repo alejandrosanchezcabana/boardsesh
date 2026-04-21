@@ -1,55 +1,64 @@
-'use client';
+"use client";
 
-import React, { useState, useCallback, useMemo } from 'react';
-import IosShare from '@mui/icons-material/IosShare';
-import { useSnackbar } from '@/app/components/providers/snackbar-provider';
-import { shareWithFallback } from '@/app/lib/share-utils';
-import Box from '@mui/material/Box';
-import Typography from '@mui/material/Typography';
-import Avatar from '@mui/material/Avatar';
-import Chip from '@mui/material/Chip';
-import Collapse from '@mui/material/Collapse';
-import Divider from '@mui/material/Divider';
-import IconButton from '@mui/material/IconButton';
-import TextField from '@mui/material/TextField';
-import CircularProgress from '@mui/material/CircularProgress';
-import ArrowBackOutlined from '@mui/icons-material/ArrowBackOutlined';
-import PersonOutlined from '@mui/icons-material/PersonOutlined';
-import EditOutlined from '@mui/icons-material/EditOutlined';
-import CloseOutlined from '@mui/icons-material/CloseOutlined';
-import CheckOutlined from '@mui/icons-material/CheckOutlined';
-import ChatBubbleOutlineOutlined from '@mui/icons-material/ChatBubbleOutlineOutlined';
-import DeleteOutlined from '@mui/icons-material/DeleteOutlined';
-import Link from 'next/link';
-import { useRouter } from 'next/navigation';
-import { useSession } from 'next-auth/react';
-import type { SessionDetail, SessionDetailTick, SessionFeedParticipant } from '@boardsesh/shared-schema';
-import VoteButton from '@/app/components/social/vote-button';
-import CommentSection from '@/app/components/social/comment-section';
-import { VoteSummaryProvider } from '@/app/components/social/vote-summary-context';
-import ClimbsList from '@/app/components/board-page/climbs-list';
-import { FavoritesProvider } from '@/app/components/climb-actions/favorites-batch-context';
-import { PlaylistsProvider } from '@/app/components/climb-actions/playlists-batch-context';
-import { useClimbActionsData } from '@/app/hooks/use-climb-actions-data';
-import { useMyBoards } from '@/app/hooks/use-my-boards';
-import { useBoardDetailsMap } from '@/app/hooks/use-board-details-map';
-import { getDefaultAngleForBoard } from '@/app/lib/board-config-for-playlist';
+import React, { useState, useCallback, useMemo } from "react";
+import IosShare from "@mui/icons-material/IosShare";
+import { useSnackbar } from "@/app/components/providers/snackbar-provider";
+import { shareWithFallback } from "@/app/lib/share-utils";
+import Box from "@mui/material/Box";
+import Typography from "@mui/material/Typography";
+import Avatar from "@mui/material/Avatar";
+import Chip from "@mui/material/Chip";
+import Collapse from "@mui/material/Collapse";
+import Divider from "@mui/material/Divider";
+import IconButton from "@mui/material/IconButton";
+import TextField from "@mui/material/TextField";
+import CircularProgress from "@mui/material/CircularProgress";
+import ArrowBackOutlined from "@mui/icons-material/ArrowBackOutlined";
+import PersonOutlined from "@mui/icons-material/PersonOutlined";
+import EditOutlined from "@mui/icons-material/EditOutlined";
+import CloseOutlined from "@mui/icons-material/CloseOutlined";
+import CheckOutlined from "@mui/icons-material/CheckOutlined";
+import ChatBubbleOutlineOutlined from "@mui/icons-material/ChatBubbleOutlineOutlined";
+import DeleteOutlined from "@mui/icons-material/DeleteOutlined";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { useSession } from "next-auth/react";
+import type {
+  SessionDetail,
+  SessionDetailTick,
+  SessionFeedParticipant,
+} from "@boardsesh/shared-schema";
+import VoteButton from "@/app/components/social/vote-button";
+import CommentSection from "@/app/components/social/comment-section";
+import { VoteSummaryProvider } from "@/app/components/social/vote-summary-context";
+import ClimbsList from "@/app/components/board-page/climbs-list";
+import { FavoritesProvider } from "@/app/components/climb-actions/favorites-batch-context";
+import { PlaylistsProvider } from "@/app/components/climb-actions/playlists-batch-context";
+import { useClimbActionsData } from "@/app/hooks/use-climb-actions-data";
+import { useMyBoards } from "@/app/hooks/use-my-boards";
+import { useBoardDetailsMap } from "@/app/hooks/use-board-details-map";
+import { getDefaultAngleForBoard } from "@/app/lib/board-config-for-playlist";
 
-import { useSessionDetail } from '@/app/hooks/use-session-detail';
-import { themeTokens } from '@/app/theme/theme-config';
-import type { Climb, BoardDetails } from '@/app/lib/types';
-import UserSearchDialog from './user-search-dialog';
-import SessionOverviewPanel, { buildSessionSummaryParts } from '@/app/components/session-details/session-overview-panel';
-import CollapsibleSection from '@/app/components/collapsible-section/collapsible-section';
-import type { CollapsibleSectionConfig } from '@/app/components/collapsible-section/collapsible-section';
-import { CssBarChart } from '@/app/components/charts/css-bar-chart';
-import { buildSessionGradeBars, SESSION_GRADE_LEGEND } from '@/app/components/charts/session-grade-bars';
-import { useGradeFormat } from '@/app/hooks/use-grade-format';
-import { generateSessionName } from '@/app/lib/session-utils';
-import { ConfirmPopover } from '@/app/components/ui/confirm-popover';
-import { useDeleteTick } from '@/app/hooks/use-delete-tick';
-import SaveToHealthKitButton from '@/app/components/healthkit/save-to-healthkit-button';
-import type { SessionSummary } from '@boardsesh/shared-schema';
+import { useSessionDetail } from "@/app/hooks/use-session-detail";
+import { themeTokens } from "@/app/theme/theme-config";
+import type { Climb, BoardDetails } from "@/app/lib/types";
+import UserSearchDialog from "./user-search-dialog";
+import SessionOverviewPanel, {
+  buildSessionSummaryParts,
+} from "@/app/components/session-details/session-overview-panel";
+import CollapsibleSection from "@/app/components/collapsible-section/collapsible-section";
+import type { CollapsibleSectionConfig } from "@/app/components/collapsible-section/collapsible-section";
+import { CssBarChart } from "@/app/components/charts/css-bar-chart";
+import {
+  buildSessionGradeBars,
+  SESSION_GRADE_LEGEND,
+} from "@/app/components/charts/session-grade-bars";
+import { useGradeFormat } from "@/app/hooks/use-grade-format";
+import { generateSessionName } from "@/app/lib/session-utils";
+import { ConfirmPopover } from "@/app/components/ui/confirm-popover";
+import { useDeleteTick } from "@/app/hooks/use-delete-tick";
+import SaveToHealthKitButton from "@/app/components/healthkit/save-to-healthkit-button";
+import type { SessionSummary } from "@boardsesh/shared-schema";
 
 interface SessionDetailContentProps {
   session: SessionDetail | null;
@@ -69,50 +78,54 @@ interface SessionDetailContentProps {
 
 function formatDate(isoString: string): string {
   return new Date(isoString).toLocaleDateString(undefined, {
-    weekday: 'short',
-    year: 'numeric',
-    month: 'short',
-    day: 'numeric',
+    weekday: "short",
+    year: "numeric",
+    month: "short",
+    day: "numeric",
   });
 }
 
-function getStatusColor(status: string): 'success' | 'primary' | 'default' {
-  if (status === 'flash') return 'success';
-  if (status === 'send') return 'primary';
-  return 'default';
+function getStatusColor(status: string): "success" | "primary" | "default" {
+  if (status === "flash") return "success";
+  if (status === "send") return "primary";
+  return "default";
 }
 
 function ordinalSuffix(n: number): string {
   const mod100 = n % 100;
   if (mod100 >= 11 && mod100 <= 13) return `${n}th`;
   switch (n % 10) {
-    case 1: return `${n}st`;
-    case 2: return `${n}nd`;
-    case 3: return `${n}rd`;
-    default: return `${n}th`;
+    case 1:
+      return `${n}st`;
+    case 2:
+      return `${n}nd`;
+    case 3:
+      return `${n}rd`;
+    default:
+      return `${n}th`;
   }
 }
 
 function formatAttemptText(tick: SessionDetailTick): string | null {
-  if (tick.status === 'flash') return null;
+  if (tick.status === "flash") return null;
 
   const sessionAttempts = tick.attemptCount;
   const total = tick.totalAttempts;
 
-  if (tick.status === 'send') {
+  if (tick.status === "send") {
     const parts = [`on ${ordinalSuffix(sessionAttempts)} attempt`];
     if (total != null && total > sessionAttempts) {
       parts.push(`${total} total`);
     }
-    return parts.join(', ');
+    return parts.join(", ");
   }
 
   // attempt status
-  const parts = [`${sessionAttempts} attempt${sessionAttempts !== 1 ? 's' : ''}`];
+  const parts = [`${sessionAttempts} attempt${sessionAttempts !== 1 ? "s" : ""}`];
   if (total != null && total > sessionAttempts) {
     parts.push(`${total} total`);
   }
-  return parts.join(', ');
+  return parts.join(", ");
 }
 
 /**
@@ -130,16 +143,16 @@ function convertSessionTicksToClimbs(ticks: SessionDetailTick[]): Climb[] {
 
     seen.set(tick.climbUuid, {
       uuid: tick.climbUuid,
-      name: tick.climbName || 'Unknown Climb',
-      frames: tick.frames || '',
+      name: tick.climbName || "Unknown Climb",
+      frames: tick.frames || "",
       angle: tick.angle,
-      difficulty: tick.difficultyName || '',
-      quality_average: tick.quality != null ? String(tick.quality) : '0',
-      setter_username: tick.setterUsername || '',
-      description: '',
+      difficulty: tick.difficultyName || "",
+      quality_average: tick.quality != null ? String(tick.quality) : "0",
+      setter_username: tick.setterUsername || "",
+      description: "",
       ascensionist_count: 0,
       stars: 0,
-      difficulty_error: '0',
+      difficulty_error: "0",
       benchmark_difficulty: tick.isBenchmark ? tick.difficultyName || null : null,
       mirrored: tick.isMirror,
       boardType: tick.boardType,
@@ -187,24 +200,21 @@ function SessionTickItem({
   return (
     <Box
       sx={{
-        display: 'flex',
-        flexDirection: 'column',
+        display: "flex",
+        flexDirection: "column",
         gap: 0.25,
         py: 0.25,
         borderTop: `1px solid ${themeTokens.neutral[100]}`,
       }}
     >
-      <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.75 }}>
+      <Box sx={{ display: "flex", alignItems: "center", gap: 0.75 }}>
         {isMultiUser && (
           <>
-            <Avatar
-              src={participant?.avatarUrl ?? undefined}
-              sx={{ width: 18, height: 18 }}
-            >
+            <Avatar src={participant?.avatarUrl ?? undefined} sx={{ width: 18, height: 18 }}>
               {!participant?.avatarUrl && <PersonOutlined sx={{ fontSize: 10 }} />}
             </Avatar>
             <Typography variant="caption" sx={{ minWidth: 0 }} noWrap>
-              {participant?.displayName || 'Climber'}
+              {participant?.displayName || "Climber"}
             </Typography>
           </>
         )}
@@ -212,15 +222,18 @@ function SessionTickItem({
           label={tick.status}
           size="small"
           color={getStatusColor(tick.status)}
-          variant={tick.status === 'attempt' ? 'outlined' : 'filled'}
-          sx={{ height: 20, '& .MuiChip-label': { px: 0.75, fontSize: themeTokens.typography.fontSize.xs - 1 } }}
+          variant={tick.status === "attempt" ? "outlined" : "filled"}
+          sx={{
+            height: 20,
+            "& .MuiChip-label": { px: 0.75, fontSize: themeTokens.typography.fontSize.xs - 1 },
+          }}
         />
         {attemptText && (
           <Typography variant="caption" color="text.secondary">
             {attemptText}
           </Typography>
         )}
-        <Box sx={{ ml: 'auto', display: 'flex', alignItems: 'center', gap: 0.25 }}>
+        <Box sx={{ ml: "auto", display: "flex", alignItems: "center", gap: 0.25 }}>
           <VoteButton
             entityType="tick"
             entityId={tick.uuid}
@@ -230,7 +243,7 @@ function SessionTickItem({
           <IconButton
             size="small"
             onClick={() => setCommentsOpen((prev) => !prev)}
-            sx={{ color: commentsOpen ? 'text.primary' : 'text.secondary' }}
+            sx={{ color: commentsOpen ? "text.primary" : "text.secondary" }}
           >
             <ChatBubbleOutlineOutlined fontSize="small" />
           </IconButton>
@@ -240,9 +253,9 @@ function SessionTickItem({
               description="Are you sure? This cannot be undone."
               onConfirm={() => onDelete(tick.uuid)}
               okText="Delete"
-              okButtonProps={{ color: 'error' }}
+              okButtonProps={{ color: "error" }}
             >
-              <IconButton size="small" disabled={isDeleting} sx={{ color: 'text.secondary' }}>
+              <IconButton size="small" disabled={isDeleting} sx={{ color: "text.secondary" }}>
                 <DeleteOutlined fontSize="small" />
               </IconButton>
             </ConfirmPopover>
@@ -250,7 +263,12 @@ function SessionTickItem({
         </Box>
       </Box>
       {tick.comment && (
-        <Typography variant="caption" color="text.secondary" sx={{ pl: isMultiUser ? 3.5 : 0, minWidth: 0 }} noWrap>
+        <Typography
+          variant="caption"
+          color="text.secondary"
+          sx={{ pl: isMultiUser ? 3.5 : 0, minWidth: 0 }}
+          noWrap
+        >
           {tick.comment}
         </Typography>
       )}
@@ -293,8 +311,8 @@ export default function SessionDetailContent({
   const session = embedded ? initialSession : hookSession;
 
   const [isEditing, setIsEditing] = useState(false);
-  const [editName, setEditName] = useState('');
-  const [editDescription, setEditDescription] = useState('');
+  const [editName, setEditName] = useState("");
+  const [editDescription, setEditDescription] = useState("");
   const [addUserDialogOpen, setAddUserDialogOpen] = useState(false);
   const [removingUserId, setRemovingUserId] = useState<string | null>(null);
   const [sessionCommentsOpen, setSessionCommentsOpen] = useState(false);
@@ -306,7 +324,7 @@ export default function SessionDetailContent({
   if (!session) {
     return (
       <Box sx={{ p: 2 }}>
-        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 2 }}>
+        <Box sx={{ display: "flex", alignItems: "center", gap: 1, mb: 2 }}>
           <IconButton component={Link} href="/">
             <ArrowBackOutlined />
           </IconButton>
@@ -341,7 +359,7 @@ export default function SessionDetailContent({
   } = session;
 
   const currentUserId = authSession?.user?.id;
-  const isInferred = sessionType === 'inferred';
+  const isInferred = sessionType === "inferred";
   const isParticipant = currentUserId
     ? participants.some((p) => p.userId === currentUserId)
     : false;
@@ -368,7 +386,7 @@ export default function SessionDetailContent({
         goal: goal ?? null,
       }
     : null;
-  const healthKitBoardType = boardTypes[0] ?? '';
+  const healthKitBoardType = boardTypes[0] ?? "";
 
   // Build a lookup from userId to participant info (memoized to avoid recreating on every render)
   const participantMap = useMemo(() => {
@@ -392,19 +410,14 @@ export default function SessionDetailContent({
   const tickUuids = useMemo(() => ticks.map((t) => t.uuid), [ticks]);
 
   // Build per-climb BoardDetails for multi-board support
-  const { boardDetailsByClimb, defaultBoardDetails, unsupportedClimbs, upsizedClimbs } = useBoardDetailsMap(
-    sessionClimbs,
-    myBoards,
-    null,
-    null,
-    boardTypes,
-  );
+  const { boardDetailsByClimb, defaultBoardDetails, unsupportedClimbs, upsizedClimbs } =
+    useBoardDetailsMap(sessionClimbs, myBoards, null, null, boardTypes);
   const effectiveBoardDetails = defaultBoardDetails ?? fallbackBoardDetails;
 
   // Climb actions data for favorites/playlists — derive from actual climb data, fall back to session metadata
   const climbUuids = useMemo(() => sessionClimbs.map((c) => c.uuid), [sessionClimbs]);
   const firstClimb = sessionClimbs[0];
-  const actionsBoardName = firstClimb?.boardType || boardTypes[0] || '';
+  const actionsBoardName = firstClimb?.boardType || boardTypes[0] || "";
   const actionsLayoutId = firstClimb?.layoutId ?? 1;
   const actionsAngle = firstClimb?.angle ?? getDefaultAngleForBoard(actionsBoardName);
 
@@ -416,66 +429,82 @@ export default function SessionDetailContent({
   });
 
   // Navigate to climb detail page using client-side routing
-  const navigateToClimb = useCallback(async (climb: Climb) => {
-    try {
-      const bt = climb.boardType;
-      if (!bt) return;
-      const params = new URLSearchParams({ boardType: bt, climbUuid: climb.uuid });
-      const res = await fetch(`/api/internal/climb-redirect?${params}`);
-      if (!res.ok) return;
-      const { url } = await res.json();
-      if (url) router.push(url);
-    } catch (error) {
-      console.error('Failed to navigate to climb:', error);
-    }
-  }, [router]);
+  const navigateToClimb = useCallback(
+    async (climb: Climb) => {
+      try {
+        const bt = climb.boardType;
+        if (!bt) return;
+        const params = new URLSearchParams({ boardType: bt, climbUuid: climb.uuid });
+        const res = await fetch(`/api/internal/climb-redirect?${params}`);
+        if (!res.ok) return;
+        const { url } = await res.json();
+        if (url) router.push(url);
+      } catch (error) {
+        console.error("Failed to navigate to climb:", error);
+      }
+    },
+    [router],
+  );
 
   const handleShare = useCallback(async () => {
     const shareUrl = `${window.location.origin}/session/${sessionId}`;
-    const name = sessionName || 'Climbing Session';
+    const name = sessionName || "Climbing Session";
     await shareWithFallback({
       url: shareUrl,
       title: name,
-      text: 'Check out this climbing session on Boardsesh',
-      trackingEvent: 'Session Shared',
+      text: "Check out this climbing session on Boardsesh",
+      trackingEvent: "Session Shared",
       trackingProps: { sessionId },
-      onClipboardSuccess: () => showMessage('Link copied to clipboard!', 'success'),
-      onError: () => showMessage('Failed to share', 'error'),
+      onClipboardSuccess: () => showMessage("Link copied to clipboard!", "success"),
+      onError: () => showMessage("Failed to share", "error"),
     });
   }, [sessionId, sessionName, showMessage]);
 
-  const handleDeleteTick = useCallback((uuid: string) => {
-    deleteTick.mutate(uuid);
-  }, [deleteTick]);
+  const handleDeleteTick = useCallback(
+    (uuid: string) => {
+      deleteTick.mutate(uuid);
+    },
+    [deleteTick],
+  );
 
   // Render tick details below each climb item (per-user rows for multi-user, status/attempts for single-user)
-  const renderTickDetails = useCallback((climb: Climb) => {
-    const climbTicks = ticksByClimb.get(climb.uuid);
-    if (!climbTicks || climbTicks.length === 0) return null;
+  const renderTickDetails = useCallback(
+    (climb: Climb) => {
+      const climbTicks = ticksByClimb.get(climb.uuid);
+      if (!climbTicks || climbTicks.length === 0) return null;
 
-    return (
-      <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.5, px: 2, pb: 1 }}>
-        {climbTicks.map((tick) => {
-          const participant = isMultiUser ? participantMap.get(tick.userId) : null;
-          return (
-            <SessionTickItem
-              key={tick.uuid}
-              tick={tick}
-              isMultiUser={isMultiUser}
-              participant={participant ?? null}
-              currentUserId={currentUserId}
-              onDelete={handleDeleteTick}
-              isDeleting={deleteTick.isPending}
-            />
-          );
-        })}
-      </Box>
-    );
-  }, [ticksByClimb, participantMap, isMultiUser, currentUserId, handleDeleteTick, deleteTick.isPending]);
+      return (
+        <Box sx={{ display: "flex", flexDirection: "column", gap: 0.5, px: 2, pb: 1 }}>
+          {climbTicks.map((tick) => {
+            const participant = isMultiUser ? participantMap.get(tick.userId) : null;
+            return (
+              <SessionTickItem
+                key={tick.uuid}
+                tick={tick}
+                isMultiUser={isMultiUser}
+                participant={participant ?? null}
+                currentUserId={currentUserId}
+                onDelete={handleDeleteTick}
+                isDeleting={deleteTick.isPending}
+              />
+            );
+          })}
+        </Box>
+      );
+    },
+    [
+      ticksByClimb,
+      participantMap,
+      isMultiUser,
+      currentUserId,
+      handleDeleteTick,
+      deleteTick.isPending,
+    ],
+  );
 
   const handleStartEdit = useCallback(() => {
-    setEditName(sessionName || '');
-    setEditDescription(goal || '');
+    setEditName(sessionName || "");
+    setEditDescription(goal || "");
     setIsEditing(true);
   }, [sessionName, goal]);
 
@@ -491,19 +520,25 @@ export default function SessionDetailContent({
     setIsEditing(false);
   }, [updateSessionMutation, editName, editDescription]);
 
-  const handleAddUser = useCallback(async (userId: string) => {
-    setAddUserDialogOpen(false);
-    await addUserMutation.mutateAsync(userId);
-  }, [addUserMutation]);
+  const handleAddUser = useCallback(
+    async (userId: string) => {
+      setAddUserDialogOpen(false);
+      await addUserMutation.mutateAsync(userId);
+    },
+    [addUserMutation],
+  );
 
-  const handleRemoveUser = useCallback(async (userId: string) => {
-    setRemovingUserId(userId);
-    try {
-      await removeUserMutation.mutateAsync(userId);
-    } finally {
-      setRemovingUserId(null);
-    }
-  }, [removeUserMutation]);
+  const handleRemoveUser = useCallback(
+    async (userId: string) => {
+      setRemovingUserId(userId);
+      try {
+        await removeUserMutation.mutateAsync(userId);
+      } finally {
+        setRemovingUserId(null);
+      }
+    },
+    [removeUserMutation],
+  );
 
   const noopLoadMore = useCallback(() => {}, []);
 
@@ -516,10 +551,10 @@ export default function SessionDetailContent({
 
     const gradeMap = new Map<string, { flash: number; send: number; attempt: number }>();
     for (const tick of ticks) {
-      const grade = tick.difficultyName ?? 'Ungraded';
+      const grade = tick.difficultyName ?? "Ungraded";
       const entry = gradeMap.get(grade) ?? { flash: 0, send: 0, attempt: 0 };
-      if (tick.status === 'flash') entry.flash++;
-      else if (tick.status === 'send') entry.send++;
+      if (tick.status === "flash") entry.flash++;
+      else if (tick.status === "send") entry.send++;
       else entry.attempt++;
       gradeMap.set(grade, entry);
     }
@@ -543,10 +578,10 @@ export default function SessionDetailContent({
 
     if (inviteContent) {
       sections.push({
-        key: 'invite',
-        label: 'Invite',
-        title: 'Invite others to join',
-        defaultSummary: 'Share link or QR code',
+        key: "invite",
+        label: "Invite",
+        title: "Invite others to join",
+        defaultSummary: "Share link or QR code",
         getSummary: () => [],
         content: inviteContent,
         defaultActive: true,
@@ -554,87 +589,132 @@ export default function SessionDetailContent({
     }
 
     sections.push({
-      key: 'activity',
-      label: 'Activity',
-      title: `${sessionClimbs.length} climb${sessionClimbs.length !== 1 ? 's' : ''} logged`,
-      defaultSummary: 'No climbs yet',
-      getSummary: () => buildSessionSummaryParts({
-        totalFlashes, totalSends, totalAttempts, tickCount, hardestGrade,
-        formatGrade: gradeFormatLoaded ? formatGrade : undefined,
-      }),
+      key: "activity",
+      label: "Activity",
+      title: `${sessionClimbs.length} climb${sessionClimbs.length !== 1 ? "s" : ""} logged`,
+      defaultSummary: "No climbs yet",
+      getSummary: () =>
+        buildSessionSummaryParts({
+          totalFlashes,
+          totalSends,
+          totalAttempts,
+          tickCount,
+          hardestGrade,
+          formatGrade: gradeFormatLoaded ? formatGrade : undefined,
+        }),
       flush: true,
-      content: effectiveBoardDetails && sessionClimbs.length > 0 ? (
-        <VoteSummaryProvider entityType="tick" entityIds={tickUuids}>
-          <FavoritesProvider {...favoritesProviderProps}>
-            <PlaylistsProvider {...playlistsProviderProps}>
-              <ClimbsList
-                boardDetails={effectiveBoardDetails}
-                boardDetailsByClimb={boardDetailsByClimb}
-                unsupportedClimbs={unsupportedClimbs}
-                upsizedClimbs={upsizedClimbs}
-                climbs={sessionClimbs}
-                isFetching={false}
-                hasMore={false}
-                onClimbSelect={navigateToClimb}
-                onLoadMore={noopLoadMore}
-                hideEndMessage
-                renderItemExtra={renderTickDetails}
-              />
-            </PlaylistsProvider>
-          </FavoritesProvider>
-        </VoteSummaryProvider>
-      ) : (
-        <Typography variant="body2" color="text.secondary">No climbs yet</Typography>
-      ),
+      content:
+        effectiveBoardDetails && sessionClimbs.length > 0 ? (
+          <VoteSummaryProvider entityType="tick" entityIds={tickUuids}>
+            <FavoritesProvider {...favoritesProviderProps}>
+              <PlaylistsProvider {...playlistsProviderProps}>
+                <ClimbsList
+                  boardDetails={effectiveBoardDetails}
+                  boardDetailsByClimb={boardDetailsByClimb}
+                  unsupportedClimbs={unsupportedClimbs}
+                  upsizedClimbs={upsizedClimbs}
+                  climbs={sessionClimbs}
+                  isFetching={false}
+                  hasMore={false}
+                  onClimbSelect={navigateToClimb}
+                  onLoadMore={noopLoadMore}
+                  hideEndMessage
+                  renderItemExtra={renderTickDetails}
+                />
+              </PlaylistsProvider>
+            </FavoritesProvider>
+          </VoteSummaryProvider>
+        ) : (
+          <Typography variant="body2" color="text.secondary">
+            No climbs yet
+          </Typography>
+        ),
     });
 
     sections.push({
-      key: 'analytics',
-      label: 'Analytics',
-      title: 'Grade Distribution',
-      defaultSummary: 'Grades climbed this session',
+      key: "analytics",
+      label: "Analytics",
+      title: "Grade Distribution",
+      defaultSummary: "Grades climbed this session",
       getSummary: () => {
         if (effectiveGradeDistribution.length === 0) return [];
         const count = effectiveGradeDistribution.length;
-        return [`${count} grade${count !== 1 ? 's' : ''}`];
+        return [`${count} grade${count !== 1 ? "s" : ""}`];
       },
       lazy: true,
-      content: effectiveGradeDistribution.length > 0 ? (
-        <Box>
-          <CssBarChart
-            bars={gradeBars}
-            height={160}
-            mobileHeight={120}
-            gap={3}
-            ariaLabel="Session grade distribution"
+      content:
+        effectiveGradeDistribution.length > 0 ? (
+          <Box>
+            <CssBarChart
+              bars={gradeBars}
+              height={160}
+              mobileHeight={120}
+              gap={3}
+              ariaLabel="Session grade distribution"
             />
-            <Box sx={{ display: 'flex', gap: 1.5, justifyContent: 'center', mt: 1 }}>
+            <Box sx={{ display: "flex", gap: 1.5, justifyContent: "center", mt: 1 }}>
               {SESSION_GRADE_LEGEND.map((entry) => (
-                <Box key={entry.label} sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-                  <Box sx={{ width: 10, height: 10, borderRadius: '2px', bgcolor: entry.color }} />
-                  <Typography variant="caption" color="text.secondary">{entry.label}</Typography>
+                <Box key={entry.label} sx={{ display: "flex", alignItems: "center", gap: 0.5 }}>
+                  <Box sx={{ width: 10, height: 10, borderRadius: "2px", bgcolor: entry.color }} />
+                  <Typography variant="caption" color="text.secondary">
+                    {entry.label}
+                  </Typography>
                 </Box>
               ))}
             </Box>
           </Box>
         ) : (
-          <Typography variant="body2" color="text.secondary">Log some climbs to see your grade breakdown</Typography>
+          <Typography variant="body2" color="text.secondary">
+            Log some climbs to see your grade breakdown
+          </Typography>
         ),
-      });
+    });
 
     return sections;
   }, [
-    embedded, inviteContent, sessionClimbs, totalFlashes, totalSends, totalAttempts,
-    tickCount, hardestGrade, gradeFormatLoaded, formatGrade, effectiveBoardDetails,
-    tickUuids, favoritesProviderProps, playlistsProviderProps, boardDetailsByClimb,
-    unsupportedClimbs, upsizedClimbs, navigateToClimb, noopLoadMore, renderTickDetails,
-    effectiveGradeDistribution, gradeBars,
+    embedded,
+    inviteContent,
+    sessionClimbs,
+    totalFlashes,
+    totalSends,
+    totalAttempts,
+    tickCount,
+    hardestGrade,
+    gradeFormatLoaded,
+    formatGrade,
+    effectiveBoardDetails,
+    tickUuids,
+    favoritesProviderProps,
+    playlistsProviderProps,
+    boardDetailsByClimb,
+    unsupportedClimbs,
+    upsizedClimbs,
+    navigateToClimb,
+    noopLoadMore,
+    renderTickDetails,
+    effectiveGradeDistribution,
+    gradeBars,
   ]);
 
   return (
-    <Box sx={{ minHeight: embedded ? 'auto' : '100dvh', pb: embedded ? 0 : '60px', pt: embedded ? 0 : 'var(--global-header-height)' }}>
+    <Box
+      sx={{
+        minHeight: embedded ? "auto" : "100dvh",
+        pb: embedded ? 0 : "60px",
+        pt: embedded ? 0 : "var(--global-header-height)",
+      }}
+    >
       {!embedded && (
-        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, px: 2, py: 1.5, borderBottom: `1px solid ${themeTokens.neutral[200]}` }}>
+        <Box
+          sx={{
+            display: "flex",
+            alignItems: "center",
+            gap: 1,
+            px: 2,
+            py: 1.5,
+            borderBottom: `1px solid ${themeTokens.neutral[200]}`,
+          }}
+        >
           <IconButton component={Link} href="/" size="small">
             <ArrowBackOutlined />
           </IconButton>
@@ -668,7 +748,7 @@ export default function SessionDetailContent({
             </IconButton>
           )}
           {isEditing && (
-            <Box sx={{ display: 'flex', gap: 0.5 }}>
+            <Box sx={{ display: "flex", gap: 0.5 }}>
               <IconButton size="small" onClick={handleCancelEdit} disabled={saving}>
                 <CloseOutlined fontSize="small" />
               </IconButton>
@@ -680,7 +760,15 @@ export default function SessionDetailContent({
         </Box>
       )}
 
-      <Box sx={{ px: embedded ? { xs: 1, sm: 2 } : 2, py: 2, display: 'flex', flexDirection: 'column', gap: 2 }}>
+      <Box
+        sx={{
+          px: embedded ? { xs: 1, sm: 2 } : 2,
+          py: 2,
+          display: "flex",
+          flexDirection: "column",
+          gap: 2,
+        }}
+      >
         {isEditing ? (
           <TextField
             value={editDescription}
@@ -717,7 +805,7 @@ export default function SessionDetailContent({
           <>
             {/* Session-level social */}
             <Box>
-              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}>
+              <Box sx={{ display: "flex", alignItems: "center", gap: 1, mb: 1 }}>
                 <VoteButton
                   entityType="session"
                   entityId={sessionId}
@@ -729,14 +817,14 @@ export default function SessionDetailContent({
                   size="small"
                   data-testid="session-comment-toggle"
                   onClick={() => setSessionCommentsOpen((prev) => !prev)}
-                  sx={{ color: sessionCommentsOpen ? 'text.primary' : 'text.secondary' }}
+                  sx={{ color: sessionCommentsOpen ? "text.primary" : "text.secondary" }}
                 >
                   <ChatBubbleOutlineOutlined fontSize="small" />
                   {commentCount > 0 && (
                     <Typography
                       variant="caption"
                       component="span"
-                      sx={{ ml: 0.5, color: 'inherit', userSelect: 'none', fontSize: 12 }}
+                      sx={{ ml: 0.5, color: "inherit", userSelect: "none", fontSize: 12 }}
                     >
                       {commentCount}
                     </Typography>

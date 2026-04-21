@@ -1,11 +1,11 @@
-import { config } from 'dotenv';
-import { defineConfig } from 'drizzle-kit';
-import path from 'path';
+import { config } from "dotenv";
+import { defineConfig } from "drizzle-kit";
+import path from "path";
 
 // Load environment from root or web package
-config({ path: path.resolve(process.cwd(), '../../.env.local') });
-config({ path: path.resolve(process.cwd(), '../web/.env.local') });
-config({ path: path.resolve(process.cwd(), '../web/.env.development.local') });
+config({ path: path.resolve(process.cwd(), "../../.env.local") });
+config({ path: path.resolve(process.cwd(), "../web/.env.local") });
+config({ path: path.resolve(process.cwd(), "../web/.env.development.local") });
 
 // Support both DATABASE_URL (Neon) and individual POSTGRES_* variables (local Docker)
 const getDatabaseConfig = () => {
@@ -20,13 +20,13 @@ const getDatabaseConfig = () => {
     user: process.env.POSTGRES_USER!,
     password: process.env.POSTGRES_PASSWORD!,
     database: process.env.POSTGRES_DATABASE!,
-    ssl: process.env.VERCEL_ENV === 'production' || process.env.IS_CI === 'true',
+    ssl: process.env.VERCEL_ENV === "production" || process.env.IS_CI === "true",
   };
 };
 
 export default defineConfig({
-  out: './drizzle',
-  schema: './dist/schema/index.js',
-  dialect: 'postgresql',
+  out: "./drizzle",
+  schema: "./dist/schema/index.js",
+  dialect: "postgresql",
   dbCredentials: getDatabaseConfig(),
 });

@@ -1,24 +1,26 @@
-import React from 'react';
-import { PropsWithChildren } from 'react';
-import { BoardRouteParameters } from '@/app/lib/types';
-import { constructClimbListWithSlugs } from '@/app/lib/url-utils';
-import { parseRouteParams } from '@/app/lib/url-utils.server';
-import { permanentRedirect } from 'next/navigation';
-import { getBoardDetailsForBoard, generateBoardTitle } from '@/app/lib/board-utils';
-import BoardSeshHeader from '@/app/components/board-page/header';
-import { GraphQLQueueProvider } from '@/app/components/graphql-queue';
-import { ConnectionSettingsProvider } from '@/app/components/connection-manager/connection-settings-context';
-import { WebSocketConnectionProvider } from '@/app/components/connection-manager/websocket-connection-provider';
-import { PartyProvider } from '@/app/components/party-manager/party-context';
-import { BoardSessionBridge } from '@/app/components/persistent-session';
-import { Metadata } from 'next';
-import { BluetoothProvider } from '@/app/components/board-bluetooth-control/bluetooth-context';
-import { UISearchParamsProvider } from '@/app/components/queue-control/ui-searchparams-provider';
-import { QueueBridgeInjector } from '@/app/components/queue-control/queue-bridge-context';
-import LastUsedBoardTracker from '@/app/components/board-page/last-used-board-tracker';
-import { themeTokens } from '@/app/theme/theme-config';
+import React from "react";
+import { PropsWithChildren } from "react";
+import { BoardRouteParameters } from "@/app/lib/types";
+import { constructClimbListWithSlugs } from "@/app/lib/url-utils";
+import { parseRouteParams } from "@/app/lib/url-utils.server";
+import { permanentRedirect } from "next/navigation";
+import { getBoardDetailsForBoard, generateBoardTitle } from "@/app/lib/board-utils";
+import BoardSeshHeader from "@/app/components/board-page/header";
+import { GraphQLQueueProvider } from "@/app/components/graphql-queue";
+import { ConnectionSettingsProvider } from "@/app/components/connection-manager/connection-settings-context";
+import { WebSocketConnectionProvider } from "@/app/components/connection-manager/websocket-connection-provider";
+import { PartyProvider } from "@/app/components/party-manager/party-context";
+import { BoardSessionBridge } from "@/app/components/persistent-session";
+import { Metadata } from "next";
+import { BluetoothProvider } from "@/app/components/board-bluetooth-control/bluetooth-context";
+import { UISearchParamsProvider } from "@/app/components/queue-control/ui-searchparams-provider";
+import { QueueBridgeInjector } from "@/app/components/queue-control/queue-bridge-context";
+import LastUsedBoardTracker from "@/app/components/board-page/last-used-board-tracker";
+import { themeTokens } from "@/app/theme/theme-config";
 
-export async function generateMetadata(props: { params: Promise<BoardRouteParameters> }): Promise<Metadata> {
+export async function generateMetadata(props: {
+  params: Promise<BoardRouteParameters>;
+}): Promise<Metadata> {
   const params = await props.params;
 
   try {
@@ -53,18 +55,18 @@ export default async function BoardLayout(props: PropsWithChildren<BoardLayoutPr
   if (isNumericFormat) {
     const boardDetails = getBoardDetailsForBoard(parsedParams);
 
-      if (boardDetails.layout_name && boardDetails.size_name && boardDetails.set_names) {
-        const newUrl = constructClimbListWithSlugs(
-          boardDetails.board_name,
-          boardDetails.layout_name,
-          boardDetails.size_name,
-          boardDetails.size_description,
-          boardDetails.set_names,
-          parsedParams.angle,
-        );
+    if (boardDetails.layout_name && boardDetails.size_name && boardDetails.set_names) {
+      const newUrl = constructClimbListWithSlugs(
+        boardDetails.board_name,
+        boardDetails.layout_name,
+        boardDetails.size_name,
+        boardDetails.size_description,
+        boardDetails.set_names,
+        parsedParams.angle,
+      );
 
-        permanentRedirect(newUrl);
-      }
+      permanentRedirect(newUrl);
+    }
   }
 
   const { angle } = parsedParams;
@@ -73,24 +75,33 @@ export default async function BoardLayout(props: PropsWithChildren<BoardLayoutPr
   const boardDetails = getBoardDetailsForBoard(parsedParams);
 
   // Compute the list URL for last-used-board tracking
-  const listUrl = boardDetails.layout_name && boardDetails.size_name && boardDetails.set_names
-    ? constructClimbListWithSlugs(
-        boardDetails.board_name,
-        boardDetails.layout_name,
-        boardDetails.size_name,
-        boardDetails.size_description,
-        boardDetails.set_names,
-        angle,
-      )
-    : `/${boardDetails.board_name}`;
+  const listUrl =
+    boardDetails.layout_name && boardDetails.size_name && boardDetails.set_names
+      ? constructClimbListWithSlugs(
+          boardDetails.board_name,
+          boardDetails.layout_name,
+          boardDetails.size_name,
+          boardDetails.size_description,
+          boardDetails.set_names,
+          angle,
+        )
+      : `/${boardDetails.board_name}`;
 
   return (
-    <div style={{ minHeight: '100dvh', display: 'flex', flexDirection: 'column', padding: 0, background: 'var(--semantic-surface)' }}>
+    <div
+      style={{
+        minHeight: "100dvh",
+        display: "flex",
+        flexDirection: "column",
+        padding: 0,
+        background: "var(--semantic-surface)",
+      }}
+    >
       <LastUsedBoardTracker
         url={listUrl}
         boardName={boardDetails.board_name}
-        layoutName={boardDetails.layout_name || ''}
-        sizeName={boardDetails.size_name || ''}
+        layoutName={boardDetails.layout_name || ""}
+        sizeName={boardDetails.size_name || ""}
         sizeDescription={boardDetails.size_description}
         setNames={boardDetails.set_names || []}
         angle={angle}
@@ -110,8 +121,8 @@ export default async function BoardLayout(props: PropsWithChildren<BoardLayoutPr
                         flex: 1,
                         paddingLeft: `${themeTokens.spacing[2]}px`,
                         paddingRight: `${themeTokens.spacing[2]}px`,
-                        paddingTop: 'var(--global-header-height)',
-                        paddingBottom: 'calc(120px + env(safe-area-inset-bottom, 0px))',
+                        paddingTop: "var(--global-header-height)",
+                        paddingBottom: "calc(120px + env(safe-area-inset-bottom, 0px))",
                       }}
                     >
                       <BoardSeshHeader boardDetails={boardDetails} angle={angle} />

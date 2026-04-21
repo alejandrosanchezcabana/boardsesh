@@ -1,8 +1,8 @@
-import fs from 'fs';
-import path from 'path';
-import { execFileSync } from 'child_process';
-import { fileURLToPath } from 'url';
-import { eq, sql } from 'drizzle-orm';
+import fs from "fs";
+import path from "path";
+import { execFileSync } from "child_process";
+import { fileURLToPath } from "url";
+import { eq, sql } from "drizzle-orm";
 import {
   boardAttempts,
   boardBetaLinks,
@@ -27,14 +27,14 @@ import {
   boardUserSyncs,
   boardUsers,
   boardWalls,
-} from '../src/schema/boards/unified.js';
-import { createScriptDb, getScriptDatabaseUrl } from './db-connection.js';
+} from "../src/schema/boards/unified.js";
+import { createScriptDb, getScriptDatabaseUrl } from "./db-connection.js";
 import {
   dedupeSourceClimbHolds,
   deriveClimbHoldsFromFrames,
   DIRECT_AURORA_BOARDS,
   type DirectAuroraBoard,
-} from './aurora-board-import-helpers.js';
+} from "./aurora-board-import-helpers.js";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const SQLITE_MAX_BUFFER = 256 * 1024 * 1024;
@@ -48,13 +48,15 @@ type ImportConfig = {
   label: string;
   required: boolean;
   destination: unknown;
-  conflictMode?: 'ignore' | 'allowDuplicates';
+  conflictMode?: "ignore" | "allowDuplicates";
   mapRow: (row: SqliteRow, boardName: DirectAuroraBoard) => Record<string, unknown>;
 };
 
 function parseBoardName(value: string | undefined): DirectAuroraBoard {
   if (!value || !DIRECT_AURORA_BOARDS.includes(value as DirectAuroraBoard)) {
-    console.error(`Usage: bunx tsx scripts/import-aurora-board-unified.ts <${DIRECT_AURORA_BOARDS.join('|')}> <sqlite-db-path>`);
+    console.error(
+      `Usage: bunx tsx scripts/import-aurora-board-unified.ts <${DIRECT_AURORA_BOARDS.join("|")}> <sqlite-db-path>`,
+    );
     process.exit(1);
   }
 
@@ -62,20 +64,16 @@ function parseBoardName(value: string | undefined): DirectAuroraBoard {
 }
 
 function runSqliteQuery(sqlitePath: string, query: string): string {
-  return execFileSync(
-    'sqlite3',
-    [sqlitePath, '-json', query],
-    {
-      cwd: __dirname,
-      encoding: 'utf-8',
-      maxBuffer: SQLITE_MAX_BUFFER,
-    },
-  );
+  return execFileSync("sqlite3", [sqlitePath, "-json", query], {
+    cwd: __dirname,
+    encoding: "utf-8",
+    maxBuffer: SQLITE_MAX_BUFFER,
+  });
 }
 
 function readSqliteJson(sqlitePath: string, query: string): SqliteRow[] {
   const result = runSqliteQuery(sqlitePath, query).trim();
-  return result ? JSON.parse(result) as SqliteRow[] : [];
+  return result ? (JSON.parse(result) as SqliteRow[]) : [];
 }
 
 function listSqliteTables(sqlitePath: string): Set<string> {
@@ -100,7 +98,7 @@ function toNumber(value: SqliteValue, label: string): number {
 }
 
 function toNullableNumber(value: SqliteValue): number | null {
-  if (value === null || value === '') {
+  if (value === null || value === "") {
     return null;
   }
 
@@ -124,18 +122,18 @@ function toText(value: SqliteValue, label: string): string {
 }
 
 function toNullableBoolean(value: SqliteValue): boolean | null {
-  if (value === null || value === undefined || value === '') {
+  if (value === null || value === undefined || value === "") {
     return null;
   }
-  if (typeof value === 'number') {
+  if (typeof value === "number") {
     return value !== 0;
   }
-  if (typeof value === 'string') {
+  if (typeof value === "string") {
     const normalized = value.toLowerCase();
-    if (normalized === 'true') {
+    if (normalized === "true") {
       return true;
     }
-    if (normalized === 'false') {
+    if (normalized === "false") {
       return false;
     }
     return Number(value) !== 0;
@@ -146,38 +144,38 @@ function toNullableBoolean(value: SqliteValue): boolean | null {
 function createImportConfigs(): ImportConfig[] {
   return [
     {
-      sourceTable: 'attempts',
-      label: 'attempts',
+      sourceTable: "attempts",
+      label: "attempts",
       required: true,
       destination: boardAttempts,
       mapRow: (row, boardName) => ({
         boardType: boardName,
-        id: toNumber(row.id, 'attempts.id'),
+        id: toNumber(row.id, "attempts.id"),
         position: toNullableNumber(row.position),
         name: toNullableText(row.name),
       }),
     },
     {
-      sourceTable: 'difficulty_grades',
-      label: 'difficulty grades',
+      sourceTable: "difficulty_grades",
+      label: "difficulty grades",
       required: true,
       destination: boardDifficultyGrades,
       mapRow: (row, boardName) => ({
         boardType: boardName,
-        difficulty: toNumber(row.difficulty, 'difficulty_grades.difficulty'),
+        difficulty: toNumber(row.difficulty, "difficulty_grades.difficulty"),
         boulderName: toNullableText(row.boulder_name),
         routeName: toNullableText(row.route_name),
         isListed: toNullableBoolean(row.is_listed),
       }),
     },
     {
-      sourceTable: 'products',
-      label: 'products',
+      sourceTable: "products",
+      label: "products",
       required: true,
       destination: boardProducts,
       mapRow: (row, boardName) => ({
         boardType: boardName,
-        id: toNumber(row.id, 'products.id'),
+        id: toNumber(row.id, "products.id"),
         name: toNullableText(row.name),
         isListed: toNullableBoolean(row.is_listed),
         password: toNullableText(row.password),
@@ -186,48 +184,48 @@ function createImportConfigs(): ImportConfig[] {
       }),
     },
     {
-      sourceTable: 'sets',
-      label: 'sets',
+      sourceTable: "sets",
+      label: "sets",
       required: true,
       destination: boardSets,
       mapRow: (row, boardName) => ({
         boardType: boardName,
-        id: toNumber(row.id, 'sets.id'),
+        id: toNumber(row.id, "sets.id"),
         name: toNullableText(row.name),
         hsm: toNullableNumber(row.hsm),
       }),
     },
     {
-      sourceTable: 'users',
-      label: 'users',
+      sourceTable: "users",
+      label: "users",
       required: true,
       destination: boardUsers,
       mapRow: (row, boardName) => ({
         boardType: boardName,
-        id: toNumber(row.id, 'users.id'),
+        id: toNumber(row.id, "users.id"),
         username: toNullableText(row.username),
         createdAt: toNullableText(row.created_at),
       }),
     },
     {
-      sourceTable: 'shared_syncs',
-      label: 'shared syncs',
+      sourceTable: "shared_syncs",
+      label: "shared syncs",
       required: true,
       destination: boardSharedSyncs,
       mapRow: (row, boardName) => ({
         boardType: boardName,
-        tableName: toText(row.table_name, 'shared_syncs.table_name'),
+        tableName: toText(row.table_name, "shared_syncs.table_name"),
         lastSynchronizedAt: toNullableText(row.last_synchronized_at),
       }),
     },
     {
-      sourceTable: 'layouts',
-      label: 'layouts',
+      sourceTable: "layouts",
+      label: "layouts",
       required: true,
       destination: boardLayouts,
       mapRow: (row, boardName) => ({
         boardType: boardName,
-        id: toNumber(row.id, 'layouts.id'),
+        id: toNumber(row.id, "layouts.id"),
         productId: toNullableNumber(row.product_id),
         name: toNullableText(row.name),
         instagramCaption: toNullableText(row.instagram_caption),
@@ -238,14 +236,14 @@ function createImportConfigs(): ImportConfig[] {
       }),
     },
     {
-      sourceTable: 'product_sizes',
-      label: 'product sizes',
+      sourceTable: "product_sizes",
+      label: "product sizes",
       required: true,
       destination: boardProductSizes,
       mapRow: (row, boardName) => ({
         boardType: boardName,
-        id: toNumber(row.id, 'product_sizes.id'),
-        productId: toNumber(row.product_id, 'product_sizes.product_id'),
+        id: toNumber(row.id, "product_sizes.id"),
+        productId: toNumber(row.product_id, "product_sizes.product_id"),
         edgeLeft: toNullableNumber(row.edge_left),
         edgeRight: toNullableNumber(row.edge_right),
         edgeBottom: toNullableNumber(row.edge_bottom),
@@ -258,13 +256,13 @@ function createImportConfigs(): ImportConfig[] {
       }),
     },
     {
-      sourceTable: 'holes',
-      label: 'holes',
+      sourceTable: "holes",
+      label: "holes",
       required: true,
       destination: boardHoles,
       mapRow: (row, boardName) => ({
         boardType: boardName,
-        id: toNumber(row.id, 'holes.id'),
+        id: toNumber(row.id, "holes.id"),
         productId: toNullableNumber(row.product_id),
         name: toNullableText(row.name),
         x: toNullableNumber(row.x),
@@ -274,13 +272,13 @@ function createImportConfigs(): ImportConfig[] {
       }),
     },
     {
-      sourceTable: 'placement_roles',
-      label: 'placement roles',
+      sourceTable: "placement_roles",
+      label: "placement roles",
       required: true,
       destination: boardPlacementRoles,
       mapRow: (row, boardName) => ({
         boardType: boardName,
-        id: toNumber(row.id, 'placement_roles.id'),
+        id: toNumber(row.id, "placement_roles.id"),
         productId: toNullableNumber(row.product_id),
         position: toNullableNumber(row.position),
         name: toNullableText(row.name),
@@ -290,26 +288,26 @@ function createImportConfigs(): ImportConfig[] {
       }),
     },
     {
-      sourceTable: 'leds',
-      label: 'leds',
+      sourceTable: "leds",
+      label: "leds",
       required: true,
       destination: boardLeds,
       mapRow: (row, boardName) => ({
         boardType: boardName,
-        id: toNumber(row.id, 'leds.id'),
+        id: toNumber(row.id, "leds.id"),
         productSizeId: toNullableNumber(row.product_size_id),
         holeId: toNullableNumber(row.hole_id),
         position: toNullableNumber(row.position),
       }),
     },
     {
-      sourceTable: 'placements',
-      label: 'placements',
+      sourceTable: "placements",
+      label: "placements",
       required: true,
       destination: boardPlacements,
       mapRow: (row, boardName) => ({
         boardType: boardName,
-        id: toNumber(row.id, 'placements.id'),
+        id: toNumber(row.id, "placements.id"),
         layoutId: toNullableNumber(row.layout_id),
         holeId: toNullableNumber(row.hole_id),
         setId: toNullableNumber(row.set_id),
@@ -317,13 +315,13 @@ function createImportConfigs(): ImportConfig[] {
       }),
     },
     {
-      sourceTable: 'product_sizes_layouts_sets',
-      label: 'product size/layout/set mappings',
+      sourceTable: "product_sizes_layouts_sets",
+      label: "product size/layout/set mappings",
       required: true,
       destination: boardProductSizesLayoutsSets,
       mapRow: (row, boardName) => ({
         boardType: boardName,
-        id: toNumber(row.id, 'product_sizes_layouts_sets.id'),
+        id: toNumber(row.id, "product_sizes_layouts_sets.id"),
         productSizeId: toNullableNumber(row.product_size_id),
         layoutId: toNullableNumber(row.layout_id),
         setId: toNullableNumber(row.set_id),
@@ -332,18 +330,18 @@ function createImportConfigs(): ImportConfig[] {
       }),
     },
     {
-      sourceTable: 'climbs',
-      label: 'climbs',
+      sourceTable: "climbs",
+      label: "climbs",
       required: true,
       destination: boardClimbs,
       mapRow: (row, boardName) => ({
-        uuid: toText(row.uuid, 'climbs.uuid'),
+        uuid: toText(row.uuid, "climbs.uuid"),
         boardType: boardName,
-        layoutId: toNumber(row.layout_id, 'climbs.layout_id'),
+        layoutId: toNumber(row.layout_id, "climbs.layout_id"),
         setterId: toNullableNumber(row.setter_id),
         setterUsername: toNullableText(row.setter_username),
         name: toNullableText(row.name),
-        description: toNullableText(row.description) ?? '',
+        description: toNullableText(row.description) ?? "",
         hsm: toNullableNumber(row.hsm),
         edgeLeft: toNullableNumber(row.edge_left),
         edgeRight: toNullableNumber(row.edge_right),
@@ -362,13 +360,13 @@ function createImportConfigs(): ImportConfig[] {
       }),
     },
     {
-      sourceTable: 'walls',
-      label: 'walls',
+      sourceTable: "walls",
+      label: "walls",
       required: true,
       destination: boardWalls,
       mapRow: (row, boardName) => ({
         boardType: boardName,
-        uuid: toText(row.uuid, 'walls.uuid'),
+        uuid: toText(row.uuid, "walls.uuid"),
         userId: toNullableNumber(row.user_id),
         name: toNullableText(row.name),
         productId: toNullableNumber(row.product_id),
@@ -382,25 +380,25 @@ function createImportConfigs(): ImportConfig[] {
       }),
     },
     {
-      sourceTable: 'user_syncs',
-      label: 'user syncs',
+      sourceTable: "user_syncs",
+      label: "user syncs",
       required: false,
       destination: boardUserSyncs,
       mapRow: (row, boardName) => ({
         boardType: boardName,
-        userId: toNumber(row.user_id, 'user_syncs.user_id'),
-        tableName: toText(row.table_name, 'user_syncs.table_name'),
+        userId: toNumber(row.user_id, "user_syncs.user_id"),
+        tableName: toText(row.table_name, "user_syncs.table_name"),
         lastSynchronizedAt: toNullableText(row.last_synchronized_at),
       }),
     },
     {
-      sourceTable: 'circuits',
-      label: 'circuits',
+      sourceTable: "circuits",
+      label: "circuits",
       required: false,
       destination: boardCircuits,
       mapRow: (row, boardName) => ({
         boardType: boardName,
-        uuid: toText(row.uuid, 'circuits.uuid'),
+        uuid: toText(row.uuid, "circuits.uuid"),
         name: toNullableText(row.name),
         description: toNullableText(row.description),
         color: toNullableText(row.color),
@@ -411,14 +409,14 @@ function createImportConfigs(): ImportConfig[] {
       }),
     },
     {
-      sourceTable: 'climb_stats',
-      label: 'climb stats',
+      sourceTable: "climb_stats",
+      label: "climb stats",
       required: true,
       destination: boardClimbStats,
       mapRow: (row, boardName) => ({
         boardType: boardName,
-        climbUuid: toText(row.climb_uuid, 'climb_stats.climb_uuid'),
-        angle: toNumber(row.angle, 'climb_stats.angle'),
+        climbUuid: toText(row.climb_uuid, "climb_stats.climb_uuid"),
+        angle: toNumber(row.angle, "climb_stats.angle"),
         displayDifficulty: toNullableNumber(row.display_difficulty),
         benchmarkDifficulty: toNullableNumber(row.benchmark_difficulty),
         ascensionistCount: toNullableNumber(row.ascensionist_count),
@@ -429,15 +427,15 @@ function createImportConfigs(): ImportConfig[] {
       }),
     },
     {
-      sourceTable: 'climb_stats_history',
-      label: 'climb stats history',
+      sourceTable: "climb_stats_history",
+      label: "climb stats history",
       required: false,
       destination: boardClimbStatsHistory,
-      conflictMode: 'allowDuplicates',
+      conflictMode: "allowDuplicates",
       mapRow: (row, boardName) => ({
         boardType: boardName,
-        climbUuid: toText(row.climb_uuid, 'climb_stats_history.climb_uuid'),
-        angle: toNumber(row.angle, 'climb_stats_history.angle'),
+        climbUuid: toText(row.climb_uuid, "climb_stats_history.climb_uuid"),
+        angle: toNumber(row.angle, "climb_stats_history.angle"),
         displayDifficulty: toNullableNumber(row.display_difficulty),
         benchmarkDifficulty: toNullableNumber(row.benchmark_difficulty),
         ascensionistCount: toNullableNumber(row.ascensionist_count),
@@ -449,14 +447,14 @@ function createImportConfigs(): ImportConfig[] {
       }),
     },
     {
-      sourceTable: 'beta_links',
-      label: 'beta links',
+      sourceTable: "beta_links",
+      label: "beta links",
       required: true,
       destination: boardBetaLinks,
       mapRow: (row, boardName) => ({
         boardType: boardName,
-        climbUuid: toText(row.climb_uuid, 'beta_links.climb_uuid'),
-        link: toText(row.link, 'beta_links.link'),
+        climbUuid: toText(row.climb_uuid, "beta_links.climb_uuid"),
+        link: toText(row.link, "beta_links.link"),
         foreignUsername: toNullableText(row.foreign_username),
         angle: toNullableNumber(row.angle),
         thumbnail: toNullableText(row.thumbnail),
@@ -465,27 +463,27 @@ function createImportConfigs(): ImportConfig[] {
       }),
     },
     {
-      sourceTable: 'circuits_climbs',
-      label: 'circuit climbs',
+      sourceTable: "circuits_climbs",
+      label: "circuit climbs",
       required: false,
       destination: boardCircuitsClimbs,
       mapRow: (row, boardName) => ({
         boardType: boardName,
-        circuitUuid: toText(row.circuit_uuid, 'circuits_climbs.circuit_uuid'),
-        climbUuid: toText(row.climb_uuid, 'circuits_climbs.climb_uuid'),
+        circuitUuid: toText(row.circuit_uuid, "circuits_climbs.circuit_uuid"),
+        climbUuid: toText(row.climb_uuid, "circuits_climbs.climb_uuid"),
         position: toNullableNumber(row.position),
       }),
     },
     {
-      sourceTable: 'tags',
-      label: 'tags',
+      sourceTable: "tags",
+      label: "tags",
       required: false,
       destination: boardTags,
       mapRow: (row, boardName) => ({
         boardType: boardName,
-        entityUuid: toText(row.entity_uuid, 'tags.entity_uuid'),
-        userId: toNumber(row.user_id, 'tags.user_id'),
-        name: toText(row.name, 'tags.name'),
+        entityUuid: toText(row.entity_uuid, "tags.entity_uuid"),
+        userId: toNumber(row.user_id, "tags.user_id"),
+        name: toText(row.name, "tags.name"),
         isListed: toNullableBoolean(row.is_listed),
       }),
     },
@@ -497,7 +495,7 @@ async function insertBatches(
   destination: unknown,
   rows: Record<string, unknown>[],
   label: string,
-  conflictMode: 'ignore' | 'allowDuplicates' = 'ignore',
+  conflictMode: "ignore" | "allowDuplicates" = "ignore",
 ) {
   if (rows.length === 0) {
     console.log(`  - ${label}: 0 rows`);
@@ -509,7 +507,7 @@ async function insertBatches(
   for (let index = 0; index < rows.length; index += BATCH_SIZE) {
     const batch = rows.slice(index, index + BATCH_SIZE);
     const insertQuery = tx.insert(destination as any).values(batch);
-    if (conflictMode === 'ignore') {
+    if (conflictMode === "ignore") {
       await insertQuery.onConflictDoNothing();
     } else {
       await insertQuery;
@@ -528,7 +526,9 @@ async function clearBoardData(tx: any, boardName: DirectAuroraBoard) {
   await tx.delete(boardUserSyncs).where(eq(boardUserSyncs.boardType, boardName));
   await tx.delete(boardWalls).where(eq(boardWalls.boardType, boardName));
   await tx.delete(boardClimbs).where(eq(boardClimbs.boardType, boardName));
-  await tx.delete(boardProductSizesLayoutsSets).where(eq(boardProductSizesLayoutsSets.boardType, boardName));
+  await tx
+    .delete(boardProductSizesLayoutsSets)
+    .where(eq(boardProductSizesLayoutsSets.boardType, boardName));
   await tx.delete(boardPlacements).where(eq(boardPlacements.boardType, boardName));
   await tx.delete(boardLeds).where(eq(boardLeds.boardType, boardName));
   await tx.delete(boardPlacementRoles).where(eq(boardPlacementRoles.boardType, boardName));
@@ -545,10 +545,10 @@ async function clearBoardData(tx: any, boardName: DirectAuroraBoard) {
 
 async function main() {
   const boardName = parseBoardName(process.argv[2]);
-  const sqlitePath = process.argv[3] ? path.resolve(process.cwd(), process.argv[3]) : '';
+  const sqlitePath = process.argv[3] ? path.resolve(process.cwd(), process.argv[3]) : "";
 
   if (!sqlitePath || !fs.existsSync(sqlitePath)) {
-    console.error(`SQLite database not found: ${sqlitePath || '<missing path>'}`);
+    console.error(`SQLite database not found: ${sqlitePath || "<missing path>"}`);
     process.exit(1);
   }
 
@@ -577,25 +577,30 @@ async function main() {
     return tableCache.get(tableName) ?? [];
   };
 
-  const climbRows = getRows('climbs', true);
+  const climbRows = getRows("climbs", true);
   const sourceClimbRows = climbRows.map((row) => ({
-    uuid: toText(row.uuid, 'climbs.uuid'),
+    uuid: toText(row.uuid, "climbs.uuid"),
     frames: toNullableText(row.frames),
   }));
 
-  const climbHoldsRows = availableTables.has('climb_holds') ? getRows('climb_holds', false) : [];
-  const importedClimbHolds = climbHoldsRows.length > 0
-    ? dedupeSourceClimbHolds(climbHoldsRows as Array<{
-        climb_uuid: string | null;
-        hold_id: number | null;
-        frame_number: number | null;
-        hold_state: string | null;
-        created_at?: string | null;
-      }>)
-    : sourceClimbRows.flatMap((row) => deriveClimbHoldsFromFrames(row, boardName));
+  const climbHoldsRows = availableTables.has("climb_holds") ? getRows("climb_holds", false) : [];
+  const importedClimbHolds =
+    climbHoldsRows.length > 0
+      ? dedupeSourceClimbHolds(
+          climbHoldsRows as Array<{
+            climb_uuid: string | null;
+            hold_id: number | null;
+            frame_number: number | null;
+            hold_state: string | null;
+            created_at?: string | null;
+          }>,
+        )
+      : sourceClimbRows.flatMap((row) => deriveClimbHoldsFromFrames(row, boardName));
 
   if (sourceClimbRows.length > 0 && importedClimbHolds.length === 0) {
-    throw new Error(`No climb holds could be imported for ${boardName}; aborting to avoid empty set-filter data`);
+    throw new Error(
+      `No climb holds could be imported for ${boardName}; aborting to avoid empty set-filter data`,
+    );
   }
 
   const mappedClimbHolds = importedClimbHolds.map((row) => ({
@@ -628,7 +633,7 @@ async function main() {
           config.destination,
           mappedRows,
           config.label,
-          config.conflictMode === 'allowDuplicates' ? 'allowDuplicates' : 'ignore',
+          config.conflictMode === "allowDuplicates" ? "allowDuplicates" : "ignore",
         );
       }
 
@@ -636,7 +641,7 @@ async function main() {
         tx,
         boardClimbHolds,
         mappedClimbHolds,
-        climbHoldsRows.length > 0 ? 'climb holds (source)' : 'climb holds (derived from frames)',
+        climbHoldsRows.length > 0 ? "climb holds (source)" : "climb holds (derived from frames)",
       );
 
       // Populate denormalized required_set_ids from climb_holds -> placements
@@ -687,6 +692,6 @@ async function main() {
 }
 
 main().catch((error) => {
-  console.error('Aurora board import failed:', error);
+  console.error("Aurora board import failed:", error);
   process.exit(1);
 });

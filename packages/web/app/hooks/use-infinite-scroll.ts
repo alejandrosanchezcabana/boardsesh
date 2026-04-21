@@ -1,6 +1,6 @@
-'use client';
+"use client";
 
-import { useState, useCallback, useEffect, useRef } from 'react';
+import { useState, useCallback, useEffect, useRef } from "react";
 
 interface UseInfiniteScrollOptions {
   /** Called when sentinel becomes visible and hasMore is true */
@@ -25,7 +25,7 @@ export function useInfiniteScroll({
   onLoadMore,
   hasMore,
   isFetching = false,
-  rootMargin = '200px',
+  rootMargin = "200px",
 }: UseInfiniteScrollOptions) {
   const [sentinelElement, setSentinelElement] = useState<HTMLDivElement | null>(null);
 
@@ -43,15 +43,12 @@ export function useInfiniteScroll({
   isFetchingRef.current = isFetching;
 
   // Stable observer callback — never recreated
-  const handleObserver = useCallback(
-    (entries: IntersectionObserverEntry[]) => {
-      const [target] = entries;
-      if (target.isIntersecting && hasMoreRef.current && !isFetchingRef.current) {
-        onLoadMoreRef.current();
-      }
-    },
-    [],
-  );
+  const handleObserver = useCallback((entries: IntersectionObserverEntry[]) => {
+    const [target] = entries;
+    if (target.isIntersecting && hasMoreRef.current && !isFetchingRef.current) {
+      onLoadMoreRef.current();
+    }
+  }, []);
 
   useEffect(() => {
     if (!sentinelElement) return;

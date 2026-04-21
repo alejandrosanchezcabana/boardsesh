@@ -1,15 +1,15 @@
-'use client';
+"use client";
 
-import React, { createContext, useContext, useState, useEffect, useCallback, useMemo } from 'react';
-import { getPreference, setPreference, removePreference } from '@/app/lib/user-preferences-db';
-import { getBackendWsUrl } from '@/app/lib/backend-url';
+import React, { createContext, useContext, useState, useEffect, useCallback, useMemo } from "react";
+import { getPreference, setPreference, removePreference } from "@/app/lib/user-preferences-db";
+import { getBackendWsUrl } from "@/app/lib/backend-url";
 
-const PARTY_MODE_PREFERENCE_KEY = 'boardsesh:partyMode';
+const PARTY_MODE_PREFERENCE_KEY = "boardsesh:partyMode";
 
 // Backend URL resolved at runtime (supports PR preview domains)
 const BACKEND_URL = getBackendWsUrl();
 
-export type PartyMode = 'direct' | 'backend';
+export type PartyMode = "direct" | "backend";
 
 interface ConnectionSettingsContextType {
   // Backend URL (from env var only)
@@ -23,24 +23,28 @@ interface ConnectionSettingsContextType {
   isLoaded: boolean;
 }
 
-const ConnectionSettingsContext = createContext<ConnectionSettingsContextType | undefined>(undefined);
+const ConnectionSettingsContext = createContext<ConnectionSettingsContextType | undefined>(
+  undefined,
+);
 
-export const ConnectionSettingsProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [storedPartyMode, setStoredPartyMode] = useState<PartyMode>('direct');
+export const ConnectionSettingsProvider: React.FC<{ children: React.ReactNode }> = ({
+  children,
+}) => {
+  const [storedPartyMode, setStoredPartyMode] = useState<PartyMode>("direct");
   const [isLoaded, setIsLoaded] = useState(false);
 
   // Load party mode from IndexedDB on mount
   useEffect(() => {
-    if (typeof window === 'undefined') return;
+    if (typeof window === "undefined") return;
 
     getPreference<PartyMode>(PARTY_MODE_PREFERENCE_KEY)
       .then((storedMode) => {
-        if (storedMode === 'direct' || storedMode === 'backend') {
+        if (storedMode === "direct" || storedMode === "backend") {
           setStoredPartyMode(storedMode);
         }
 
         // Clean up old preference keys if they exist
-        removePreference('boardsesh:backendUrl').catch(() => {});
+        removePreference("boardsesh:backendUrl").catch(() => {});
       })
       .catch(() => {})
       .finally(() => {
@@ -51,13 +55,13 @@ export const ConnectionSettingsProvider: React.FC<{ children: React.ReactNode }>
   // Effective party mode - env var forces backend mode
   const partyMode = useMemo<PartyMode>(() => {
     if (BACKEND_URL) {
-      return 'backend';
+      return "backend";
     }
     return storedPartyMode;
   }, [storedPartyMode]);
 
   const setPartyMode = useCallback((mode: PartyMode) => {
-    if (typeof window !== 'undefined') {
+    if (typeof window !== "undefined") {
       setPreference(PARTY_MODE_PREFERENCE_KEY, mode).catch(() => {});
       setStoredPartyMode(mode);
     }
@@ -73,13 +77,17 @@ export const ConnectionSettingsProvider: React.FC<{ children: React.ReactNode }>
     [partyMode, setPartyMode, isLoaded],
   );
 
-  return <ConnectionSettingsContext.Provider value={value}>{children}</ConnectionSettingsContext.Provider>;
+  return (
+    <ConnectionSettingsContext.Provider value={value}>
+      {children}
+    </ConnectionSettingsContext.Provider>
+  );
 };
 
 export function useConnectionSettings() {
   const context = useContext(ConnectionSettingsContext);
   if (!context) {
-    throw new Error('useConnectionSettings must be used within a ConnectionSettingsProvider');
+    throw new Error("useConnectionSettings must be used within a ConnectionSettingsProvider");
   }
   return context;
 }

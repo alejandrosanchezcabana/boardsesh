@@ -4,73 +4,73 @@
 export const themeTokens = {
   // Brand colors - Neutral grey with subtle warm red accent
   colors: {
-    primary: '#8C4A52', // Muted dusty rose - warm grey-red
-    primaryHover: '#7A3F47', // Darker rose
-    primaryActive: '#6B353D', // Deep dark rose
-    secondary: '#6B7280', // Neutral grey for info/secondary
-    success: '#6B9080', // Muted sage green
-    successHover: '#5A7A6C', // Darker sage green
-    successBg: '#EFF5F2',
-    warning: '#C4943C', // Muted amber
-    warningBg: '#FAF5EC',
-    error: '#B8524C', // Muted brick red
-    errorBg: '#F9EFEE',
-    errorMuted: 'rgba(184, 82, 76, 0.18)', // Translucent error for non-destructive action buttons
-    errorMutedHover: 'rgba(184, 82, 76, 0.28)',
-    purple: '#7C3AED', // For mirror button
-    purpleHover: '#6D28D9',
-    amber: '#FBBF24', // For flash/benchmark badges
-    pink: '#EC4899', // For finish holds in climb creation
-    logoGreen: '#5DBE94', // Brighter sage green for logo
-    logoRose: '#C75B64', // Brighter dusty rose for logo
+    primary: "#8C4A52", // Muted dusty rose - warm grey-red
+    primaryHover: "#7A3F47", // Darker rose
+    primaryActive: "#6B353D", // Deep dark rose
+    secondary: "#6B7280", // Neutral grey for info/secondary
+    success: "#6B9080", // Muted sage green
+    successHover: "#5A7A6C", // Darker sage green
+    successBg: "#EFF5F2",
+    warning: "#C4943C", // Muted amber
+    warningBg: "#FAF5EC",
+    error: "#B8524C", // Muted brick red
+    errorBg: "#F9EFEE",
+    errorMuted: "rgba(184, 82, 76, 0.18)", // Translucent error for non-destructive action buttons
+    errorMutedHover: "rgba(184, 82, 76, 0.28)",
+    purple: "#7C3AED", // For mirror button
+    purpleHover: "#6D28D9",
+    amber: "#FBBF24", // For flash/benchmark badges
+    pink: "#EC4899", // For finish holds in climb creation
+    logoGreen: "#5DBE94", // Brighter sage green for logo
+    logoRose: "#C75B64", // Brighter dusty rose for logo
   },
 
   // Neutral palette
   neutral: {
-    50: '#F9FAFB',
-    100: '#F3F4F6',
-    200: '#E5E7EB',
-    300: '#D1D5DB',
-    400: '#9CA3AF',
-    500: '#6B7280',
-    600: '#4B5563',
-    700: '#374151',
-    800: '#1F2937',
-    900: '#111827',
+    50: "#F9FAFB",
+    100: "#F3F4F6",
+    200: "#E5E7EB",
+    300: "#D1D5DB",
+    400: "#9CA3AF",
+    500: "#6B7280",
+    600: "#4B5563",
+    700: "#374151",
+    800: "#1F2937",
+    900: "#111827",
   },
 
   // Semantic colors
   semantic: {
-    selected: 'rgba(175, 45, 60, 0.28)', // Visible rose tint for selected state
-    selectedHover: '#E8C8CC', // Darker rose tint for hover feedback
-    selectedLight: 'rgba(175, 45, 60, 0.10)', // Very subtle rose highlight
-    selectedBorder: '#8C4A52', // Matches primary
-    background: '#F9FAFB',
-    surface: '#FFFFFF',
-    surfaceElevated: '#FFFFFF',
-    surfaceOverlay: 'rgba(255, 255, 255, 0.95)', // Semi-transparent overlay
-    overlayLight: 'rgba(0, 0, 0, 0.3)', // Light dark overlay for hover states
-    overlayDark: 'rgba(0, 0, 0, 0.6)', // Dark overlay for text backgrounds
+    selected: "rgba(175, 45, 60, 0.28)", // Visible rose tint for selected state
+    selectedHover: "#E8C8CC", // Darker rose tint for hover feedback
+    selectedLight: "rgba(175, 45, 60, 0.10)", // Very subtle rose highlight
+    selectedBorder: "#8C4A52", // Matches primary
+    background: "#F9FAFB",
+    surface: "#FFFFFF",
+    surfaceElevated: "#FFFFFF",
+    surfaceOverlay: "rgba(255, 255, 255, 0.95)", // Semi-transparent overlay
+    overlayLight: "rgba(0, 0, 0, 0.3)", // Light dark overlay for hover states
+    overlayDark: "rgba(0, 0, 0, 0.6)", // Dark overlay for text backgrounds
   },
 
   // Syntax highlighting colors (VS Code dark theme inspired)
   syntax: {
-    keyword: '#569cd6',
-    type: '#4ec9b0',
-    string: '#ce9178',
-    comment: '#6a9955',
-    parameter: '#9cdcfe',
-    default: '#d4d4d4',
+    keyword: "#569cd6",
+    type: "#4ec9b0",
+    string: "#ce9178",
+    comment: "#6a9955",
+    parameter: "#9cdcfe",
+    default: "#d4d4d4",
   },
 
   // Shadows
   shadows: {
-    xs: '0 1px 2px 0 rgba(0, 0, 0, 0.05)',
-    sm: '0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px -1px rgba(0, 0, 0, 0.1)',
-    md: '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -2px rgba(0, 0, 0, 0.1)',
-    lg: '0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -4px rgba(0, 0, 0, 0.1)',
-    xl: '0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1)',
-    inner: 'inset 0 2px 4px 0 rgba(0, 0, 0, 0.05)',
+    xs: "0 1px 2px 0 rgba(0, 0, 0, 0.05)",
+    sm: "0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px -1px rgba(0, 0, 0, 0.1)",
+    md: "0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -2px rgba(0, 0, 0, 0.1)",
+    lg: "0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -4px rgba(0, 0, 0, 0.1)",
+    xl: "0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1)",
+    inner: "inset 0 2px 4px 0 rgba(0, 0, 0, 0.05)",
   },
 
   // Typography
@@ -84,8 +84,8 @@ export const themeTokens = {
       base: 16,
       lg: 18,
       xl: 20,
-      '2xl': 24,
-      '3xl': 30,
+      "2xl": 24,
+      "3xl": 30,
     },
     fontWeight: {
       normal: 400,
@@ -127,9 +127,9 @@ export const themeTokens = {
 
   // Transitions
   transitions: {
-    fast: '150ms ease',
-    normal: '200ms ease',
-    slow: '300ms ease',
+    fast: "150ms ease",
+    normal: "200ms ease",
+    slow: "300ms ease",
   },
 
   // Z-index scale
@@ -153,7 +153,7 @@ export const themeTokens = {
   layout: {
     /** CSS height value for a spacer that prevents the bottom nav bar from covering content on mobile Safari.
      *  Accounts for nav height (~72px), iOS Safari 2dvh offset, and safe area inset. */
-    bottomNavSpacer: 'calc(80px + env(safe-area-inset-bottom, 0px))',
+    bottomNavSpacer: "calc(80px + env(safe-area-inset-bottom, 0px))",
   },
 } as const;
 
@@ -161,45 +161,45 @@ export const themeTokens = {
 // Brand colors (primary, success, error, warning, purple, amber, pink) stay the same.
 export const darkTokens = {
   neutral: {
-    50: '#000000',
-    100: '#121212',
-    200: '#1E1E1E',
-    300: '#2C2C2C',
-    400: '#6B7280',
-    500: '#9CA3AF',
-    600: '#D1D5DB',
-    700: '#E5E7EB',
-    800: '#F3F4F6',
-    900: '#F9FAFB',
+    50: "#000000",
+    100: "#121212",
+    200: "#1E1E1E",
+    300: "#2C2C2C",
+    400: "#6B7280",
+    500: "#9CA3AF",
+    600: "#D1D5DB",
+    700: "#E5E7EB",
+    800: "#F3F4F6",
+    900: "#F9FAFB",
   },
 
   semantic: {
-    selected: 'rgba(175, 45, 60, 0.14)',
-    selectedHover: 'rgba(175, 45, 60, 0.20)',
-    selectedLight: 'rgba(175, 45, 60, 0.08)',
-    selectedBorder: '#8C4A52',
-    background: '#000000',
-    surface: '#0A0A0A',
-    surfaceElevated: '#121212',
-    inputSurface: '#FFFFFF',
-    surfaceOverlay: 'rgba(10, 10, 10, 0.95)',
-    overlayLight: 'rgba(0, 0, 0, 0.4)',
-    overlayDark: 'rgba(0, 0, 0, 0.7)',
+    selected: "rgba(175, 45, 60, 0.14)",
+    selectedHover: "rgba(175, 45, 60, 0.20)",
+    selectedLight: "rgba(175, 45, 60, 0.08)",
+    selectedBorder: "#8C4A52",
+    background: "#000000",
+    surface: "#0A0A0A",
+    surfaceElevated: "#121212",
+    inputSurface: "#FFFFFF",
+    surfaceOverlay: "rgba(10, 10, 10, 0.95)",
+    overlayLight: "rgba(0, 0, 0, 0.4)",
+    overlayDark: "rgba(0, 0, 0, 0.7)",
   },
 
   statusBg: {
-    success: 'rgba(107, 144, 128, 0.12)',
-    error: 'rgba(184, 82, 76, 0.12)',
-    warning: 'rgba(196, 148, 60, 0.12)',
+    success: "rgba(107, 144, 128, 0.12)",
+    error: "rgba(184, 82, 76, 0.12)",
+    warning: "rgba(196, 148, 60, 0.12)",
   },
 
   shadows: {
-    xs: '0 1px 2px 0 rgba(0, 0, 0, 0.2)',
-    sm: '0 1px 3px 0 rgba(0, 0, 0, 0.3), 0 1px 2px -1px rgba(0, 0, 0, 0.3)',
-    md: '0 4px 6px -1px rgba(0, 0, 0, 0.3), 0 2px 4px -2px rgba(0, 0, 0, 0.3)',
-    lg: '0 10px 15px -3px rgba(0, 0, 0, 0.3), 0 4px 6px -4px rgba(0, 0, 0, 0.3)',
-    xl: '0 20px 25px -5px rgba(0, 0, 0, 0.3), 0 8px 10px -6px rgba(0, 0, 0, 0.3)',
-    inner: 'inset 0 2px 4px 0 rgba(0, 0, 0, 0.15)',
+    xs: "0 1px 2px 0 rgba(0, 0, 0, 0.2)",
+    sm: "0 1px 3px 0 rgba(0, 0, 0, 0.3), 0 1px 2px -1px rgba(0, 0, 0, 0.3)",
+    md: "0 4px 6px -1px rgba(0, 0, 0, 0.3), 0 2px 4px -2px rgba(0, 0, 0, 0.3)",
+    lg: "0 10px 15px -3px rgba(0, 0, 0, 0.3), 0 4px 6px -4px rgba(0, 0, 0, 0.3)",
+    xl: "0 20px 25px -5px rgba(0, 0, 0, 0.3), 0 8px 10px -6px rgba(0, 0, 0, 0.3)",
+    inner: "inset 0 2px 4px 0 rgba(0, 0, 0, 0.15)",
   },
 } as const;
 

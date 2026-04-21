@@ -1,4 +1,4 @@
-import { gql } from 'graphql-request';
+import { gql } from "graphql-request";
 
 export const CLIMB_STATS_HISTORY = gql`
   query ClimbStatsHistory($boardName: String!, $climbUuid: ID!) {

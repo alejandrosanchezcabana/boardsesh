@@ -1,8 +1,8 @@
-'use client';
+"use client";
 
-import { useState, useCallback, useRef, useEffect } from 'react';
-import { useFavorite } from './use-favorite';
-import { useAuthModal } from '@/app/components/providers/auth-modal-provider';
+import { useState, useCallback, useRef, useEffect } from "react";
+import { useFavorite } from "./use-favorite";
+import { useAuthModal } from "@/app/components/providers/auth-modal-provider";
 
 interface UseDoubleTapFavoriteOptions {
   climbUuid: string;
@@ -25,7 +25,9 @@ interface UseDoubleTapFavoriteReturn {
  * or as `onCoverDoubleClick` to ClimbCard — both already call useDoubleTap
  * internally).
  */
-export function useDoubleTapFavorite({ climbUuid }: UseDoubleTapFavoriteOptions): UseDoubleTapFavoriteReturn {
+export function useDoubleTapFavorite({
+  climbUuid,
+}: UseDoubleTapFavoriteOptions): UseDoubleTapFavoriteReturn {
   const { isFavorited, toggleFavorite, isAuthenticated } = useFavorite({ climbUuid });
   const [showHeart, setShowHeart] = useState(false);
   const { openAuthModal } = useAuthModal();

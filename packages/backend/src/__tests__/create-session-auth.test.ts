@@ -6,20 +6,20 @@
  * - Anonymous users cannot create discoverable sessions (auth required)
  * - Authenticated users can create both discoverable and non-discoverable sessions
  */
-import { describe, it, expect, vi, beforeEach } from 'vitest';
-import type { ConnectionContext } from '@boardsesh/shared-schema';
+import { describe, it, expect, vi, beforeEach } from "vite-plus/test";
+import type { ConnectionContext } from "@boardsesh/shared-schema";
 
 // Mock dependencies
-vi.mock('../services/room-manager', () => ({
+vi.mock("../services/room-manager", () => ({
   roomManager: {
     joinSession: vi.fn().mockResolvedValue({
-      clientId: 'client-1',
+      clientId: "client-1",
       isLeader: true,
       users: [],
       queue: [],
       currentClimbQueueItem: null,
       sequence: 0,
-      stateHash: 'hash',
+      stateHash: "hash",
       sessionName: null,
     }),
     createDiscoverableSession: vi.fn().mockResolvedValue({}),
@@ -27,20 +27,20 @@ vi.mock('../services/room-manager', () => ({
   },
 }));
 
-vi.mock('../pubsub/index', () => ({
+vi.mock("../pubsub/index", () => ({
   pubsub: { publishSessionEvent: vi.fn() },
 }));
 
-vi.mock('../../context', () => ({
+vi.mock("../../context", () => ({
   updateContext: vi.fn(),
 }));
 
 // Provide a stable UUID for predictable assertions
-vi.mock('uuid', () => ({
-  v4: () => 'test-uuid-1234',
+vi.mock("uuid", () => ({
+  v4: () => "test-uuid-1234",
 }));
 
-vi.mock('../db/client', () => ({
+vi.mock("../db/client", () => ({
   db: {
     select: vi.fn().mockReturnThis(),
     from: vi.fn().mockReturnThis(),
@@ -53,13 +53,13 @@ vi.mock('../db/client', () => ({
   },
 }));
 
-vi.mock('./session-summary', () => ({
+vi.mock("./session-summary", () => ({
   generateSessionSummary: vi.fn().mockResolvedValue(null),
 }));
 
-import { sessionMutations } from '../graphql/resolvers/sessions/mutations';
+import { sessionMutations } from "../graphql/resolvers/sessions/mutations";
 
-function makeAuthenticatedCtx(userId = 'user-1'): ConnectionContext {
+function makeAuthenticatedCtx(userId = "user-1"): ConnectionContext {
   return {
     connectionId: `http-${userId}`,
     sessionId: undefined,
@@ -79,28 +79,28 @@ function makeAnonymousCtx(clientIp?: string): ConnectionContext {
 }
 
 const validNonDiscoverableInput = {
-  boardPath: '/kilter/1/2/3/40',
+  boardPath: "/kilter/1/2/3/40",
   latitude: 0,
   longitude: 0,
   discoverable: false,
-  name: 'Test Session',
+  name: "Test Session",
 };
 
 const validDiscoverableInput = {
-  boardPath: '/kilter/1/2/3/40',
+  boardPath: "/kilter/1/2/3/40",
   latitude: 37.7749,
   longitude: -122.4194,
   discoverable: true,
-  name: 'Discoverable Session',
+  name: "Discoverable Session",
 };
 
-describe('createSession authentication', () => {
+describe("createSession authentication", () => {
   beforeEach(() => {
     vi.clearAllMocks();
   });
 
-  it('allows anonymous users to create non-discoverable sessions', async () => {
-    const ctx = makeAnonymousCtx('192.168.1.1');
+  it("allows anonymous users to create non-discoverable sessions", async () => {
+    const ctx = makeAnonymousCtx("192.168.1.1");
 
     const result = await sessionMutations.createSession(
       undefined,
@@ -108,25 +108,21 @@ describe('createSession authentication', () => {
       ctx,
     );
 
-    expect(result.id).toBe('test-uuid-1234');
-    expect(result.boardPath).toBe('/kilter/1/2/3/40');
-    expect(result.name).toBe('Test Session');
+    expect(result.id).toBe("test-uuid-1234");
+    expect(result.boardPath).toBe("/kilter/1/2/3/40");
+    expect(result.name).toBe("Test Session");
   });
 
-  it('rejects anonymous users from creating discoverable sessions', async () => {
-    const ctx = makeAnonymousCtx('192.168.1.1');
+  it("rejects anonymous users from creating discoverable sessions", async () => {
+    const ctx = makeAnonymousCtx("192.168.1.1");
 
     await expect(
-      sessionMutations.createSession(
-        undefined,
-        { input: validDiscoverableInput },
-        ctx,
-      ),
-    ).rejects.toThrow('Authentication required');
+      sessionMutations.createSession(undefined, { input: validDiscoverableInput }, ctx),
+    ).rejects.toThrow("Authentication required");
   });
 
-  it('allows authenticated users to create discoverable sessions', async () => {
-    const ctx = makeAuthenticatedCtx('user-1');
+  it("allows authenticated users to create discoverable sessions", async () => {
+    const ctx = makeAuthenticatedCtx("user-1");
 
     const result = await sessionMutations.createSession(
       undefined,
@@ -134,12 +130,12 @@ describe('createSession authentication', () => {
       ctx,
     );
 
-    expect(result.id).toBe('test-uuid-1234');
-    expect(result.boardPath).toBe('/kilter/1/2/3/40');
+    expect(result.id).toBe("test-uuid-1234");
+    expect(result.boardPath).toBe("/kilter/1/2/3/40");
   });
 
-  it('allows authenticated users to create non-discoverable sessions', async () => {
-    const ctx = makeAuthenticatedCtx('user-1');
+  it("allows authenticated users to create non-discoverable sessions", async () => {
+    const ctx = makeAuthenticatedCtx("user-1");
 
     const result = await sessionMutations.createSession(
       undefined,
@@ -147,11 +143,11 @@ describe('createSession authentication', () => {
       ctx,
     );
 
-    expect(result.id).toBe('test-uuid-1234');
-    expect(result.name).toBe('Test Session');
+    expect(result.id).toBe("test-uuid-1234");
+    expect(result.name).toBe("Test Session");
   });
 
-  it('returns session metadata for HTTP requests without joining in-memory', async () => {
+  it("returns session metadata for HTTP requests without joining in-memory", async () => {
     const ctx = makeAnonymousCtx();
 
     const result = await sessionMutations.createSession(

@@ -1,10 +1,10 @@
-'use client';
+"use client";
 
-import React from 'react';
-import Stack from '@mui/material/Stack';
-import Box from '@mui/material/Box';
-import Typography from '@mui/material/Typography';
-import MuiTooltip from '@mui/material/Tooltip';
+import React from "react";
+import Stack from "@mui/material/Stack";
+import Box from "@mui/material/Box";
+import Typography from "@mui/material/Typography";
+import MuiTooltip from "@mui/material/Tooltip";
 
 interface HoldIndicatorProps {
   count: number;
@@ -22,15 +22,15 @@ export default function HoldIndicator({ count, max, color, label }: HoldIndicato
         alignItems="center"
         spacing={0.5}
         aria-label={label}
-        sx={{ cursor: 'default' }}
+        sx={{ cursor: "default" }}
       >
         <Box
           sx={(theme) => ({
             width: 10,
             height: 10,
-            borderRadius: '50%',
+            borderRadius: "50%",
             backgroundColor: color,
-            opacity: active ? 1 : theme.palette.mode === 'dark' ? 0.4 : 0.25,
+            opacity: active ? 1 : theme.palette.mode === "dark" ? 0.4 : 0.25,
             flexShrink: 0,
           })}
         />
@@ -39,8 +39,8 @@ export default function HoldIndicator({ count, max, color, label }: HoldIndicato
           sx={{
             fontWeight: 600,
             lineHeight: 1,
-            color: active ? color : 'text.disabled',
-            minWidth: '1.5ch',
+            color: active ? color : "text.disabled",
+            minWidth: "1.5ch",
           }}
         >
           {max !== undefined ? `${count}/${max}` : String(count)}

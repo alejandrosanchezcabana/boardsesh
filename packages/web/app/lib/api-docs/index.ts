@@ -13,6 +13,6 @@
  * 2. Register the endpoint in openapi-routes.ts using registry.registerPath()
  */
 
-export { generateOpenApiDocument } from './generate-openapi';
-export { registry } from './openapi-registry';
-export * from './openapi-registry';
+export { generateOpenApiDocument } from "./generate-openapi";
+export { registry } from "./openapi-registry";
+export * from "./openapi-registry";

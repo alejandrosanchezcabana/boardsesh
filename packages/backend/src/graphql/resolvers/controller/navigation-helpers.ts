@@ -1,5 +1,9 @@
-import type { ClimbQueueItem, QueueNavigationItem, QueueNavigationContext } from '@boardsesh/shared-schema';
-import { getGradeColor } from './grade-colors';
+import type {
+  ClimbQueueItem,
+  QueueNavigationItem,
+  QueueNavigationContext,
+} from "@boardsesh/shared-schema";
+import { getGradeColor } from "./grade-colors";
 
 /**
  * Build a minimal navigation item from a queue item for ESP32 display
@@ -24,7 +28,7 @@ export function buildNavigationItem(item: ClimbQueueItem): QueueNavigationItem {
  */
 export function buildNavigationContext(
   queue: ClimbQueueItem[],
-  currentIndex: number
+  currentIndex: number,
 ): QueueNavigationContext {
   const previousClimbs: QueueNavigationItem[] = [];
   let nextClimb: QueueNavigationItem | null = null;

@@ -1,26 +1,22 @@
-import { describe, it, expect, vi } from 'vitest';
-import { renderHook, act } from '@testing-library/react';
-import { useHoldTypePicker } from '../use-hold-type-picker';
-import type { LitUpHoldsMap } from '../../board-renderer/types';
+import { describe, it, expect, vi } from "vite-plus/test";
+import { renderHook, act } from "@testing-library/react";
+import { useHoldTypePicker } from "../use-hold-type-picker";
+import type { LitUpHoldsMap } from "../../board-renderer/types";
 
-const makeAnchor = () => document.createElement('div');
+const makeAnchor = () => document.createElement("div");
 
-describe('useHoldTypePicker', () => {
-  it('starts closed', () => {
+describe("useHoldTypePicker", () => {
+  it("starts closed", () => {
     const setHoldState = vi.fn();
-    const { result } = renderHook(() =>
-      useHoldTypePicker({ litUpHoldsMap: {}, setHoldState }),
-    );
+    const { result } = renderHook(() => useHoldTypePicker({ litUpHoldsMap: {}, setHoldState }));
 
     expect(result.current.anchorEl).toBeNull();
-    expect(result.current.currentState).toBe('OFF');
+    expect(result.current.currentState).toBe("OFF");
   });
 
-  it('handleHoldClick anchors the picker against the tapped element', () => {
+  it("handleHoldClick anchors the picker against the tapped element", () => {
     const setHoldState = vi.fn();
-    const { result } = renderHook(() =>
-      useHoldTypePicker({ litUpHoldsMap: {}, setHoldState }),
-    );
+    const { result } = renderHook(() => useHoldTypePicker({ litUpHoldsMap: {}, setHoldState }));
 
     const anchor = makeAnchor();
     act(() => {
@@ -30,76 +26,67 @@ describe('useHoldTypePicker', () => {
     expect(result.current.anchorEl).toBe(anchor);
   });
 
-  it('exposes the current state from litUpHoldsMap when a hold is tapped', () => {
+  it("exposes the current state from litUpHoldsMap when a hold is tapped", () => {
     const setHoldState = vi.fn();
     const litUpHoldsMap: LitUpHoldsMap = {
-      42: { state: 'FINISH', color: '#FF00FF', displayColor: '#FF00FF' },
+      42: { state: "FINISH", color: "#FF00FF", displayColor: "#FF00FF" },
     };
 
     const { result, rerender } = renderHook(
-      ({ map }: { map: LitUpHoldsMap }) =>
-        useHoldTypePicker({ litUpHoldsMap: map, setHoldState }),
+      ({ map }: { map: LitUpHoldsMap }) => useHoldTypePicker({ litUpHoldsMap: map, setHoldState }),
       { initialProps: { map: litUpHoldsMap } },
     );
 
-    expect(result.current.currentState).toBe('OFF');
+    expect(result.current.currentState).toBe("OFF");
 
     act(() => {
       result.current.handleHoldClick(42, makeAnchor());
     });
 
     rerender({ map: litUpHoldsMap });
-    expect(result.current.currentState).toBe('FINISH');
+    expect(result.current.currentState).toBe("FINISH");
   });
 
-  it('falls back to OFF when the tapped hold is not in the map', () => {
+  it("falls back to OFF when the tapped hold is not in the map", () => {
     const setHoldState = vi.fn();
-    const { result } = renderHook(() =>
-      useHoldTypePicker({ litUpHoldsMap: {}, setHoldState }),
-    );
+    const { result } = renderHook(() => useHoldTypePicker({ litUpHoldsMap: {}, setHoldState }));
 
     act(() => {
       result.current.handleHoldClick(99, makeAnchor());
     });
 
-    expect(result.current.currentState).toBe('OFF');
+    expect(result.current.currentState).toBe("OFF");
   });
 
-  it('handleSelect calls setHoldState with the tapped hold id and clears the picker', () => {
+  it("handleSelect calls setHoldState with the tapped hold id and clears the picker", () => {
     const setHoldState = vi.fn();
-    const { result } = renderHook(() =>
-      useHoldTypePicker({ litUpHoldsMap: {}, setHoldState }),
-    );
+    const { result } = renderHook(() => useHoldTypePicker({ litUpHoldsMap: {}, setHoldState }));
 
     act(() => {
       result.current.handleHoldClick(7, makeAnchor());
     });
     act(() => {
-      result.current.handleSelect('STARTING');
+      result.current.handleSelect("STARTING");
     });
 
-    expect(setHoldState).toHaveBeenCalledWith(7, 'STARTING');
+    expect(setHoldState).toHaveBeenCalledWith(7, "STARTING");
     expect(result.current.anchorEl).toBeNull();
   });
 
-  it('handleSelect is a no-op when nothing is open', () => {
+  it("handleSelect is a no-op when nothing is open", () => {
     const setHoldState = vi.fn();
-    const { result } = renderHook(() =>
-      useHoldTypePicker({ litUpHoldsMap: {}, setHoldState }),
-    );
+    const { result } = renderHook(() => useHoldTypePicker({ litUpHoldsMap: {}, setHoldState }));
 
     act(() => {
-      result.current.handleSelect('STARTING');
+      result.current.handleSelect("STARTING");
     });
 
     expect(setHoldState).not.toHaveBeenCalled();
   });
 
-  it('handleClose clears the picker without calling setHoldState', () => {
+  it("handleClose clears the picker without calling setHoldState", () => {
     const setHoldState = vi.fn();
-    const { result } = renderHook(() =>
-      useHoldTypePicker({ litUpHoldsMap: {}, setHoldState }),
-    );
+    const { result } = renderHook(() => useHoldTypePicker({ litUpHoldsMap: {}, setHoldState }));
 
     act(() => {
       result.current.handleHoldClick(7, makeAnchor());

@@ -1,7 +1,7 @@
-import { useReducer } from 'react';
-import { QueueState, QueueAction } from './types';
-import { SearchRequestPagination } from '@/app/lib/types';
-import { insertQueueItemIdempotent } from '../persistent-session/event-utils';
+import { useReducer } from "react";
+import { QueueState, QueueAction } from "./types";
+import { SearchRequestPagination } from "@/app/lib/types";
+import { insertQueueItemIdempotent } from "../persistent-session/event-utils";
 
 const initialState = (initialSearchParams: SearchRequestPagination): QueueState => ({
   queue: [],
@@ -17,7 +17,7 @@ const initialState = (initialSearchParams: SearchRequestPagination): QueueState 
 
 export function queueReducer(state: QueueState, action: QueueAction): QueueState {
   switch (action.type) {
-    case 'SET_CURRENT_CLIMB':
+    case "SET_CURRENT_CLIMB":
       const currentIndex = state.currentClimbQueueItem
         ? state.queue.findIndex(({ uuid }) => uuid === state.currentClimbQueueItem?.uuid)
         : -1;
@@ -28,10 +28,14 @@ export function queueReducer(state: QueueState, action: QueueAction): QueueState
         queue:
           currentIndex === -1
             ? [...state.queue, action.payload]
-            : [...state.queue.slice(0, currentIndex + 1), action.payload, ...state.queue.slice(currentIndex + 1)],
+            : [
+                ...state.queue.slice(0, currentIndex + 1),
+                action.payload,
+                ...state.queue.slice(currentIndex + 1),
+              ],
       };
 
-    case 'SET_CURRENT_CLIMB_QUEUE_ITEM':
+    case "SET_CURRENT_CLIMB_QUEUE_ITEM":
       return {
         ...state,
         currentClimbQueueItem: action.payload,
@@ -41,21 +45,23 @@ export function queueReducer(state: QueueState, action: QueueAction): QueueState
             : state.queue,
       };
 
-    case 'SET_CLIMB_SEARCH_PARAMS':
+    case "SET_CLIMB_SEARCH_PARAMS":
       return {
         ...state,
         climbSearchParams: action.payload,
       };
-    case 'INITIAL_QUEUE_DATA': {
+    case "INITIAL_QUEUE_DATA": {
       // Filter out any undefined/null items that could corrupt queue operations
       // This handles edge cases from corrupted IndexedDB or WebSocket data
-      const filteredQueue = action.payload.queue.filter((item): item is NonNullable<typeof item> =>
-        item != null && item.climb != null
+      const filteredQueue = action.payload.queue.filter(
+        (item): item is NonNullable<typeof item> => item != null && item.climb != null,
       );
       const hadCorruptedData = filteredQueue.length !== action.payload.queue.length;
 
       if (hadCorruptedData) {
-        console.warn('[QueueReducer] Filtered corrupted items from INITIAL_QUEUE_DATA, requesting resync');
+        console.warn(
+          "[QueueReducer] Filtered corrupted items from INITIAL_QUEUE_DATA, requesting resync",
+        );
       }
 
       return {
@@ -70,15 +76,17 @@ export function queueReducer(state: QueueState, action: QueueAction): QueueState
       };
     }
 
-    case 'UPDATE_QUEUE': {
+    case "UPDATE_QUEUE": {
       // Filter out any undefined/null items that could corrupt queue operations
-      const filteredQueue = action.payload.queue.filter((item): item is NonNullable<typeof item> =>
-        item != null && item.climb != null
+      const filteredQueue = action.payload.queue.filter(
+        (item): item is NonNullable<typeof item> => item != null && item.climb != null,
       );
       const hadCorruptedData = filteredQueue.length !== action.payload.queue.length;
 
       if (hadCorruptedData) {
-        console.warn('[QueueReducer] Filtered corrupted items from UPDATE_QUEUE, requesting resync');
+        console.warn(
+          "[QueueReducer] Filtered corrupted items from UPDATE_QUEUE, requesting resync",
+        );
       }
 
       return {
@@ -90,25 +98,25 @@ export function queueReducer(state: QueueState, action: QueueAction): QueueState
       };
     }
 
-    case 'ADD_TO_QUEUE':
+    case "ADD_TO_QUEUE":
       return {
         ...state,
         queue: [...state.queue, action.payload],
       };
 
-    case 'REMOVE_FROM_QUEUE':
+    case "REMOVE_FROM_QUEUE":
       return {
         ...state,
         queue: [...action.payload],
       };
 
-    case 'SET_FIRST_FETCH':
+    case "SET_FIRST_FETCH":
       return {
         ...state,
         hasDoneFirstFetch: action.payload,
       };
 
-    case 'MIRROR_CLIMB':
+    case "MIRROR_CLIMB":
       if (!state.currentClimbQueueItem) return state;
       return {
         ...state,
@@ -122,7 +130,7 @@ export function queueReducer(state: QueueState, action: QueueAction): QueueState
       };
 
     // Delta-specific reducers
-    case 'DELTA_ADD_QUEUE_ITEM': {
+    case "DELTA_ADD_QUEUE_ITEM": {
       const { item, position } = action.payload;
 
       // Skip if item or its climb is undefined
@@ -143,41 +151,47 @@ export function queueReducer(state: QueueState, action: QueueAction): QueueState
       };
     }
 
-    case 'DELTA_REMOVE_QUEUE_ITEM': {
+    case "DELTA_REMOVE_QUEUE_ITEM": {
       const { uuid } = action.payload;
       return {
         ...state,
-        queue: state.queue.filter(item => item.uuid !== uuid),
+        queue: state.queue.filter((item) => item.uuid !== uuid),
         // Clear current climb if it was removed
-        currentClimbQueueItem: state.currentClimbQueueItem?.uuid === uuid ? null : state.currentClimbQueueItem,
+        currentClimbQueueItem:
+          state.currentClimbQueueItem?.uuid === uuid ? null : state.currentClimbQueueItem,
       };
     }
 
-    case 'DELTA_REORDER_QUEUE_ITEM': {
+    case "DELTA_REORDER_QUEUE_ITEM": {
       const { uuid, oldIndex, newIndex } = action.payload;
       const newQueue = [...state.queue];
-      
+
       // Validate indices
-      if (oldIndex < 0 || oldIndex >= newQueue.length || newIndex < 0 || newIndex >= newQueue.length) {
+      if (
+        oldIndex < 0 ||
+        oldIndex >= newQueue.length ||
+        newIndex < 0 ||
+        newIndex >= newQueue.length
+      ) {
         return state;
       }
-      
+
       // Verify the item at oldIndex has the expected UUID
       if (newQueue[oldIndex].uuid !== uuid) {
         return state;
       }
-      
+
       // Perform the reorder
       const [movedItem] = newQueue.splice(oldIndex, 1);
       newQueue.splice(newIndex, 0, movedItem);
-      
+
       return {
         ...state,
         queue: newQueue,
       };
     }
 
-    case 'DELTA_UPDATE_CURRENT_CLIMB': {
+    case "DELTA_UPDATE_CURRENT_CLIMB": {
       const {
         item,
         shouldAddToQueue,
@@ -186,7 +200,7 @@ export function queueReducer(state: QueueState, action: QueueAction): QueueState
         eventClientId,
         myClientId,
         correlationId,
-        serverCorrelationId
+        serverCorrelationId,
       } = action.payload;
 
       // NO MORE TIMESTAMP FILTERING - reducer is now pure!
@@ -199,7 +213,7 @@ export function queueReducer(state: QueueState, action: QueueAction): QueueState
           // This is our own update echoed back - skip it and remove from pending
           return {
             ...state,
-            pendingCurrentClimbUpdates: pendingUpdates.filter(id => id !== serverCorrelationId),
+            pendingCurrentClimbUpdates: pendingUpdates.filter((id) => id !== serverCorrelationId),
           };
         }
 
@@ -229,9 +243,16 @@ export function queueReducer(state: QueueState, action: QueueAction): QueueState
       // Add to queue if requested and this queue item doesn't already exist
       // Check by item.uuid for idempotency - the same climb CAN appear multiple times
       // (e.g., user adds it again after completing it)
-      if (item && item.climb && shouldAddToQueue && !state.queue.find(qItem => qItem?.uuid === item.uuid)) {
+      if (
+        item &&
+        item.climb &&
+        shouldAddToQueue &&
+        !state.queue.find((qItem) => qItem?.uuid === item.uuid)
+      ) {
         if (insertAfterCurrent && state.currentClimbQueueItem) {
-          const currentIndex = state.queue.findIndex(q => q.uuid === state.currentClimbQueueItem?.uuid);
+          const currentIndex = state.queue.findIndex(
+            (q) => q.uuid === state.currentClimbQueueItem?.uuid,
+          );
           if (currentIndex >= 0) {
             newQueue = [
               ...state.queue.slice(0, currentIndex + 1),
@@ -248,10 +269,7 @@ export function queueReducer(state: QueueState, action: QueueAction): QueueState
 
       // For local updates, track correlation ID (no timestamp!)
       if (!isServerEvent && item && correlationId) {
-        pendingUpdates = [
-          ...pendingUpdates,
-          correlationId
-        ].slice(-50);  // Still bound to 50 items for safety
+        pendingUpdates = [...pendingUpdates, correlationId].slice(-50); // Still bound to 50 items for safety
       }
 
       return {
@@ -262,30 +280,30 @@ export function queueReducer(state: QueueState, action: QueueAction): QueueState
       };
     }
 
-    case 'CLEANUP_PENDING_UPDATE': {
+    case "CLEANUP_PENDING_UPDATE": {
       return {
         ...state,
         pendingCurrentClimbUpdates: state.pendingCurrentClimbUpdates.filter(
-          id => id !== action.payload.correlationId
+          (id) => id !== action.payload.correlationId,
         ),
       };
     }
 
-    case 'CLEANUP_PENDING_UPDATES_BATCH': {
+    case "CLEANUP_PENDING_UPDATES_BATCH": {
       // Batch cleanup to avoid multiple re-renders
       const idsToRemove = new Set(action.payload.correlationIds);
       return {
         ...state,
         pendingCurrentClimbUpdates: state.pendingCurrentClimbUpdates.filter(
-          id => !idsToRemove.has(id)
+          (id) => !idsToRemove.has(id),
         ),
       };
     }
 
-    case 'DELTA_MIRROR_CURRENT_CLIMB': {
+    case "DELTA_MIRROR_CURRENT_CLIMB": {
       const { mirrored } = action.payload;
       if (!state.currentClimbQueueItem) return state;
-      
+
       const updatedCurrentItem = {
         ...state.currentClimbQueueItem,
         climb: {
@@ -293,12 +311,12 @@ export function queueReducer(state: QueueState, action: QueueAction): QueueState
           mirrored,
         },
       };
-      
+
       // Update the item in the queue as well if it exists
-      const updatedQueue = state.queue.map(item => 
-        item.uuid === state.currentClimbQueueItem?.uuid ? updatedCurrentItem : item
+      const updatedQueue = state.queue.map((item) =>
+        item.uuid === state.currentClimbQueueItem?.uuid ? updatedCurrentItem : item,
       );
-      
+
       return {
         ...state,
         queue: updatedQueue,
@@ -306,9 +324,9 @@ export function queueReducer(state: QueueState, action: QueueAction): QueueState
       };
     }
 
-    case 'DELTA_REPLACE_QUEUE_ITEM': {
+    case "DELTA_REPLACE_QUEUE_ITEM": {
       const { uuid, item } = action.payload;
-      const itemIndex = state.queue.findIndex(qItem => qItem.uuid === uuid);
+      const itemIndex = state.queue.findIndex((qItem) => qItem.uuid === uuid);
 
       if (itemIndex === -1) {
         return state;
@@ -321,11 +339,12 @@ export function queueReducer(state: QueueState, action: QueueAction): QueueState
         ...state,
         queue: newQueue,
         // Update current climb if it was the replaced item
-        currentClimbQueueItem: state.currentClimbQueueItem?.uuid === uuid ? item : state.currentClimbQueueItem,
+        currentClimbQueueItem:
+          state.currentClimbQueueItem?.uuid === uuid ? item : state.currentClimbQueueItem,
       };
     }
 
-    case 'CLEAR_RESYNC_FLAG':
+    case "CLEAR_RESYNC_FLAG":
       return {
         ...state,
         needsResync: false,

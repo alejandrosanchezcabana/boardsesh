@@ -1,4 +1,4 @@
-import { neonConfig } from '@neondatabase/serverless';
+import { neonConfig } from "@neondatabase/serverless";
 
 export interface ConnectionConfig {
   connectionString: string;
@@ -7,13 +7,11 @@ export interface ConnectionConfig {
 }
 
 export function isLocalDevelopment(): boolean {
-  return process.env.VERCEL_ENV === 'development' ||
-         process.env.NODE_ENV === 'development';
+  return process.env.VERCEL_ENV === "development" || process.env.NODE_ENV === "development";
 }
 
 export function isTestEnvironment(): boolean {
-  return process.env.NODE_ENV === 'test' ||
-         process.env.VITEST === 'true';
+  return process.env.NODE_ENV === "test" || process.env.VITEST === "true";
 }
 
 export function getConnectionConfig(): ConnectionConfig {
@@ -25,14 +23,14 @@ export function getConnectionConfig(): ConnectionConfig {
   // Only fall back to local Docker database if DATABASE_URL is not set and in local development
   if (!connectionString && isLocal && !isTest) {
     return {
-      connectionString: 'postgres://postgres:password@db.localtest.me:5432/main',
+      connectionString: "postgres://postgres:password@db.localtest.me:5432/main",
       isLocal,
       isTest,
     };
   }
 
   if (!connectionString) {
-    throw new Error('DATABASE_URL environment variable is required');
+    throw new Error("DATABASE_URL environment variable is required");
   }
 
   return { connectionString, isLocal, isTest };
@@ -41,7 +39,7 @@ export function getConnectionConfig(): ConnectionConfig {
 export function configureNeonForEnvironment(): void {
   const { connectionString } = getConnectionConfig();
   const connectionStringUrl = new URL(connectionString);
-  const isLocalDb = connectionStringUrl.hostname === 'db.localtest.me';
+  const isLocalDb = connectionStringUrl.hostname === "db.localtest.me";
 
   // Apply Neon proxy settings for local Docker database
   if (isLocalDb) {

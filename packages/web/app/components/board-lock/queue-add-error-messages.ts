@@ -1,12 +1,12 @@
-import type { Climb, BoardDetails } from '@/app/lib/types';
-import type { BoardCompatibilityResult } from '@/app/lib/board-compatibility';
-import { capitalizeFirst } from '@/app/lib/string-utils';
+import type { Climb, BoardDetails } from "@/app/lib/types";
+import type { BoardCompatibilityResult } from "@/app/lib/board-compatibility";
+import { capitalizeFirst } from "@/app/lib/string-utils";
 
 type QueueAddFailure = Extract<BoardCompatibilityResult, { ok: false }>;
 
 function climbBoardLabel(climb: Climb): string {
   if (climb.boardType) return capitalizeFirst(climb.boardType);
-  return 'a different board';
+  return "a different board";
 }
 
 function targetBoardLabel(target: BoardDetails): string {
@@ -30,11 +30,11 @@ export function queueAddErrorMessage(
   failure: QueueAddFailure,
 ): string {
   switch (failure.reason) {
-    case 'board_name':
+    case "board_name":
       return `That climb is set on ${climbBoardLabel(climb)}. Your queue is on ${targetBoardLabel(target)}.`;
-    case 'layout':
+    case "layout":
       return `That climb is on a different ${targetBoardLabel(target)} layout.`;
-    case 'holds_out_of_range':
+    case "holds_out_of_range":
       return `That climb uses holds your ${targetSizeLabel(target)} doesn't have.`;
   }
 }

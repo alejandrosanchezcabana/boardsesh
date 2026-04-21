@@ -1,21 +1,21 @@
-'use client';
+"use client";
 
-import React, { useMemo, useState, useCallback } from 'react';
-import IconButton from '@mui/material/IconButton';
-import Menu from '@mui/material/Menu';
-import MenuItem from '@mui/material/MenuItem';
-import ListItemIcon from '@mui/material/ListItemIcon';
-import ListItemText from '@mui/material/ListItemText';
-import Box from '@mui/material/Box';
-import Stack from '@mui/material/Stack';
-import MoreVertOutlined from '@mui/icons-material/MoreVertOutlined';
+import React, { useMemo, useState, useCallback } from "react";
+import IconButton from "@mui/material/IconButton";
+import Menu from "@mui/material/Menu";
+import MenuItem from "@mui/material/MenuItem";
+import ListItemIcon from "@mui/material/ListItemIcon";
+import ListItemText from "@mui/material/ListItemText";
+import Box from "@mui/material/Box";
+import Stack from "@mui/material/Stack";
+import MoreVertOutlined from "@mui/icons-material/MoreVertOutlined";
 import {
   ClimbActionsProps,
   ClimbActionType,
   ClimbActionResult,
   ClimbActionProps,
   DEFAULT_ACTION_ORDER,
-} from './types';
+} from "./types";
 import {
   ViewDetailsAction,
   ForkAction,
@@ -29,7 +29,7 @@ import {
   ShareAction,
   InstagramAction,
   PlaylistAction,
-} from './actions';
+} from "./actions";
 
 // Extended props for OpenInAppAction
 interface OpenInAppActionProps extends ClimbActionProps {
@@ -69,7 +69,7 @@ const ACTION_FUNCTIONS: Record<
  * This ensures hooks are called at the component level (valid), not inside useMemo (invalid).
  */
 function createActionRenderer(
-  actionFn: (props: ClimbActionProps | OpenInAppActionProps) => ClimbActionResult
+  actionFn: (props: ClimbActionProps | OpenInAppActionProps) => ClimbActionResult,
 ): React.FC<ClimbActionProps | OpenInAppActionProps> {
   return function ActionRenderer(props) {
     // Call the action function at component level - hooks inside are now valid
@@ -81,7 +81,10 @@ function createActionRenderer(
 
 // Create stable renderer components for each action type
 // These are created once at module level, so component identity is stable
-const ACTION_RENDERERS: Record<ClimbActionType, React.FC<ClimbActionProps | OpenInAppActionProps>> = {
+const ACTION_RENDERERS: Record<
+  ClimbActionType,
+  React.FC<ClimbActionProps | OpenInAppActionProps>
+> = {
   viewDetails: createActionRenderer(ViewDetailsAction),
   fork: createActionRenderer(ForkAction),
   favorite: createActionRenderer(FavoriteAction),
@@ -104,7 +107,7 @@ export function ClimbActions({
   viewMode,
   include,
   exclude = [],
-  size = 'default',
+  size = "default",
   className,
   onActionComplete,
   onOpenPlaylistSelector,
@@ -134,16 +137,30 @@ export function ClimbActions({
       onTickAction,
       onGoToQueue,
     }),
-    [climb, boardDetails, angle, currentPathname, viewMode, size, onOpenPlaylistSelector, auroraAppUrl, onTickAction, onGoToQueue]
+    [
+      climb,
+      boardDetails,
+      angle,
+      currentPathname,
+      viewMode,
+      size,
+      onOpenPlaylistSelector,
+      auroraAppUrl,
+      onTickAction,
+      onGoToQueue,
+    ],
   );
 
   // Memoize action complete handler to prevent creating new functions on every render
-  const handleActionComplete = useCallback((actionType: ClimbActionType) => {
-    onActionComplete?.(actionType);
-  }, [onActionComplete]);
+  const handleActionComplete = useCallback(
+    (actionType: ClimbActionType) => {
+      onActionComplete?.(actionType);
+    },
+    [onActionComplete],
+  );
 
   // Icon mode - render each action as a component
-  if (viewMode === 'icon') {
+  if (viewMode === "icon") {
     return (
       <>
         {actionsToShow.map((actionType) => {
@@ -162,9 +179,9 @@ export function ClimbActions({
   }
 
   // Button mode - render each action as a component inside Space
-  if (viewMode === 'button' || viewMode === 'compact') {
+  if (viewMode === "button" || viewMode === "compact") {
     return (
-      <Stack direction="row" spacing={1} sx={{ flexWrap: 'wrap' }} className={className}>
+      <Stack direction="row" spacing={1} sx={{ flexWrap: "wrap" }} className={className}>
         {actionsToShow.map((actionType) => {
           const Renderer = ACTION_RENDERERS[actionType];
           if (!Renderer) return null;
@@ -181,9 +198,9 @@ export function ClimbActions({
   }
 
   // List mode - render each action as a full-width row (for drawer menus)
-  if (viewMode === 'list') {
+  if (viewMode === "list") {
     return (
-      <Box sx={{ display: 'flex', flexDirection: 'column', py: 1 }} className={className}>
+      <Box sx={{ display: "flex", flexDirection: "column", py: 1 }} className={className}>
         {actionsToShow.map((actionType) => {
           const Renderer = ACTION_RENDERERS[actionType];
           if (!Renderer) return null;
@@ -200,7 +217,7 @@ export function ClimbActions({
   }
 
   // Dropdown mode - use DropdownActions component for proper hooks handling
-  if (viewMode === 'dropdown') {
+  if (viewMode === "dropdown") {
     return (
       <DropdownActions
         actionsToShow={actionsToShow}
@@ -225,7 +242,7 @@ function DropdownActions({
   onActionComplete,
 }: {
   actionsToShow: ClimbActionType[];
-  commonProps: Omit<ClimbActionProps, 'onComplete'>;
+  commonProps: Omit<ClimbActionProps, "onComplete">;
   className?: string;
   onActionComplete?: (actionType: ClimbActionType) => void;
 }) {
@@ -242,37 +259,36 @@ function DropdownActions({
   };
 
   // Create a stable callback for collecting menu items
-  const menuItemsRef = React.useRef<Map<string, ClimbActionResult['menuItem']>>(new Map());
+  const menuItemsRef = React.useRef<Map<string, ClimbActionResult["menuItem"]>>(new Map());
 
-  const handleMenuItem = React.useCallback((actionType: ClimbActionType, item: ClimbActionResult['menuItem']) => {
-    menuItemsRef.current.set(actionType, item);
-    // Update menu items state (collect all items in order)
-    const items = actionsToShow
-      .map((type) => {
-        const menuItem = menuItemsRef.current.get(type);
-        if (!menuItem) return undefined;
-        return {
-          key: menuItem.key as string,
-          label: menuItem.label,
-          icon: menuItem.icon,
-          onClick: menuItem.onClick,
-          danger: menuItem.danger,
-        } as ActionMenuItemType;
-      })
-      .filter((item): item is ActionMenuItemType => item !== undefined);
-    setMenuItems(items);
-  }, [actionsToShow]);
+  const handleMenuItem = React.useCallback(
+    (actionType: ClimbActionType, item: ClimbActionResult["menuItem"]) => {
+      menuItemsRef.current.set(actionType, item);
+      // Update menu items state (collect all items in order)
+      const items = actionsToShow
+        .map((type) => {
+          const menuItem = menuItemsRef.current.get(type);
+          if (!menuItem) return undefined;
+          return {
+            key: menuItem.key as string,
+            label: menuItem.label,
+            icon: menuItem.icon,
+            onClick: menuItem.onClick,
+            danger: menuItem.danger,
+          } as ActionMenuItemType;
+        })
+        .filter((item): item is ActionMenuItemType => item !== undefined);
+      setMenuItems(items);
+    },
+    [actionsToShow],
+  );
 
   return (
     <>
       <IconButton className={className} onClick={handleOpen}>
         <MoreVertOutlined />
       </IconButton>
-      <Menu
-        anchorEl={anchorEl}
-        open={Boolean(anchorEl)}
-        onClose={handleClose}
-      >
+      <Menu anchorEl={anchorEl} open={Boolean(anchorEl)} onClose={handleClose}>
         {menuItems.map((item) => (
           <MenuItem
             key={item.key}
@@ -280,7 +296,7 @@ function DropdownActions({
               item.onClick?.();
               handleClose();
             }}
-            sx={item.danger ? { color: 'error.main' } : undefined}
+            sx={item.danger ? { color: "error.main" } : undefined}
           >
             {item.icon && <ListItemIcon>{item.icon}</ListItemIcon>}
             <ListItemText>{item.label}</ListItemText>
@@ -312,9 +328,9 @@ function DropdownActionRenderer({
   onMenuItem,
 }: {
   actionType: ClimbActionType;
-  commonProps: Omit<ClimbActionProps, 'onComplete'>;
+  commonProps: Omit<ClimbActionProps, "onComplete">;
   onActionComplete?: (actionType: ClimbActionType) => void;
-  onMenuItem: (item: ClimbActionResult['menuItem']) => void;
+  onMenuItem: (item: ClimbActionResult["menuItem"]) => void;
 }) {
   const actionFn = ACTION_FUNCTIONS[actionType];
   // Track if we've reported the menu item to prevent infinite loops
@@ -331,7 +347,7 @@ function DropdownActionRenderer({
   // Note: actionFn must be called unconditionally to maintain hooks order
   const result = actionFn({
     ...commonProps,
-    viewMode: 'dropdown',
+    viewMode: "dropdown",
     onComplete: onActionComplete ? handleActionCompleteForType : undefined,
   });
 

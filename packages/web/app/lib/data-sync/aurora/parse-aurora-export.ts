@@ -32,23 +32,25 @@ export interface ParsedExportResult {
  */
 export function parseAuroraExport(
   json: Record<string, unknown>,
-  boardType: 'kilter' | 'tension',
+  boardType: "kilter" | "tension",
 ): ParsedExportResult {
-  const user = json.user as { username?: string; email_address?: string; created_at?: string } | undefined;
+  const user = json.user as
+    | { username?: string; email_address?: string; created_at?: string }
+    | undefined;
 
   if (!user?.username) {
-    throw new Error('Invalid file: missing user data. Please select an Aurora JSON export file.');
+    throw new Error("Invalid file: missing user data. Please select an Aurora JSON export file.");
   }
 
   // Check if the export's board type matches the target board
   let boardWarning: string | undefined;
   const climbs = json.climbs;
   if (Array.isArray(climbs) && climbs.length > 0) {
-    const layout = (climbs[0]?.layout as string | undefined)?.toLowerCase() ?? '';
+    const layout = (climbs[0]?.layout as string | undefined)?.toLowerCase() ?? "";
     const boardName = boardType.charAt(0).toUpperCase() + boardType.slice(1);
     const layoutMatchesBoard =
-      (boardType === 'kilter' && layout.includes('kilter')) ||
-      (boardType === 'tension' && layout.includes('tension'));
+      (boardType === "kilter" && layout.includes("kilter")) ||
+      (boardType === "tension" && layout.includes("tension"));
 
     if (!layoutMatchesBoard && layout) {
       boardWarning = `Warning: This export appears to be from "${climbs[0].layout}" but you're importing to ${boardName}. Climbs may not match.`;
@@ -62,7 +64,7 @@ export function parseAuroraExport(
 
   return {
     data: {
-      user: user as StrippedExportData['user'],
+      user: user as StrippedExportData["user"],
       ascents,
       attempts,
       circuits,

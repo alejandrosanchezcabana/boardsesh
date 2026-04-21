@@ -1,15 +1,15 @@
-'use client';
+"use client";
 
-import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { useWsAuthToken } from './use-ws-auth-token';
-import { useSession } from 'next-auth/react';
-import { useSnackbar } from '@/app/components/providers/snackbar-provider';
-import { createGraphQLHttpClient } from '@/app/lib/graphql/client';
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useWsAuthToken } from "./use-ws-auth-token";
+import { useSession } from "next-auth/react";
+import { useSnackbar } from "@/app/components/providers/snackbar-provider";
+import { createGraphQLHttpClient } from "@/app/lib/graphql/client";
 import {
   DELETE_TICK,
   type DeleteTickMutationVariables,
   type DeleteTickMutationResponse,
-} from '@/app/lib/graphql/operations';
+} from "@/app/lib/graphql/operations";
 
 /**
  * Hook to delete a tick (logbook entry) via GraphQL mutation.
@@ -23,11 +23,11 @@ export function useDeleteTick() {
 
   return useMutation({
     mutationFn: async (uuid: string) => {
-      if (sessionStatus !== 'authenticated') {
-        throw new Error('Not authenticated');
+      if (sessionStatus !== "authenticated") {
+        throw new Error("Not authenticated");
       }
       if (!token) {
-        throw new Error('Auth token not available');
+        throw new Error("Auth token not available");
       }
 
       const client = createGraphQLHttpClient(token);
@@ -36,15 +36,15 @@ export function useDeleteTick() {
       return response.deleteTick;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['ascentsFeed'] });
-      queryClient.removeQueries({ queryKey: ['logbook'] });
-      queryClient.invalidateQueries({ queryKey: ['sessionDetail'] });
-      queryClient.invalidateQueries({ queryKey: ['userProfileStats'] });
+      queryClient.invalidateQueries({ queryKey: ["ascentsFeed"] });
+      queryClient.removeQueries({ queryKey: ["logbook"] });
+      queryClient.invalidateQueries({ queryKey: ["sessionDetail"] });
+      queryClient.invalidateQueries({ queryKey: ["userProfileStats"] });
     },
     onError: (err) => {
-      let errorMessage = 'Failed to delete tick';
+      let errorMessage = "Failed to delete tick";
       if (err instanceof Error) {
-        if ('response' in err && typeof err.response === 'object' && err.response !== null) {
+        if ("response" in err && typeof err.response === "object" && err.response !== null) {
           const response = err.response as { errors?: Array<{ message: string }> };
           if (response.errors && response.errors.length > 0) {
             errorMessage = response.errors[0].message;
@@ -53,7 +53,7 @@ export function useDeleteTick() {
           errorMessage = err.message;
         }
       }
-      showMessage(errorMessage, 'error');
+      showMessage(errorMessage, "error");
     },
   });
 }

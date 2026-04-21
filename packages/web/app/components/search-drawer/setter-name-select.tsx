@@ -1,13 +1,13 @@
-'use client';
+"use client";
 
-import React, { useState } from 'react';
-import Autocomplete from '@mui/material/Autocomplete';
-import TextField from '@mui/material/TextField';
-import CircularProgress from '@mui/material/CircularProgress';
-import { useUISearchParams } from '../queue-control/ui-searchparams-provider';
-import { useSearchData } from '../graphql-queue';
-import { useQuery, keepPreviousData } from '@tanstack/react-query';
-import { constructSetterStatsUrl } from '@/app/lib/url-utils';
+import React, { useState } from "react";
+import Autocomplete from "@mui/material/Autocomplete";
+import TextField from "@mui/material/TextField";
+import CircularProgress from "@mui/material/CircularProgress";
+import { useUISearchParams } from "../queue-control/ui-searchparams-provider";
+import { useSearchData } from "../graphql-queue";
+import { useQuery, keepPreviousData } from "@tanstack/react-query";
+import { constructSetterStatsUrl } from "@/app/lib/url-utils";
 
 interface SetterStat {
   setter_username: string;
@@ -27,7 +27,7 @@ const MIN_SEARCH_LENGTH = 2; // Only search when user has typed at least 2 chara
 const SetterNameSelect = () => {
   const { uiSearchParams, updateFilters } = useUISearchParams();
   const { parsedParams } = useSearchData();
-  const [searchValue, setSearchValue] = useState('');
+  const [searchValue, setSearchValue] = useState("");
   const [isOpen, setIsOpen] = useState(false);
 
   // Fetch top setters when dropdown is open OR when user is searching
@@ -41,7 +41,7 @@ const SetterNameSelect = () => {
 
   // Fetch setter stats from the API
   const { data: setterStats, isLoading } = useQuery<SetterStat[]>({
-    queryKey: ['setterStats', apiUrl],
+    queryKey: ["setterStats", apiUrl],
     queryFn: () => fetcher(apiUrl!),
     enabled: !!apiUrl,
     staleTime: 5 * 60 * 1000,
@@ -52,7 +52,7 @@ const SetterNameSelect = () => {
   const options: SetterOption[] = React.useMemo(() => {
     if (!setterStats) return [];
 
-    return setterStats.map(stat => ({
+    return setterStats.map((stat) => ({
       value: stat.setter_username,
       label: `${stat.setter_username} (${stat.climb_count})`,
       count: stat.climb_count,
@@ -61,8 +61,8 @@ const SetterNameSelect = () => {
 
   // Convert selected values (string[]) to option objects for Autocomplete
   const selectedOptions: SetterOption[] = React.useMemo(() => {
-    return (uiSearchParams.settername || []).map(name => {
-      const found = options.find(o => o.value === name);
+    return (uiSearchParams.settername || []).map((name) => {
+      const found = options.find((o) => o.value === name);
       return found || { value: name, label: name, count: 0 };
     });
   }, [uiSearchParams.settername, options]);
@@ -75,9 +75,9 @@ const SetterNameSelect = () => {
       onClose={() => setIsOpen(false)}
       options={options}
       value={selectedOptions}
-      onChange={(_, newValue) => updateFilters({ settername: newValue.map(v => v.value) })}
+      onChange={(_, newValue) => updateFilters({ settername: newValue.map((v) => v.value) })}
       onInputChange={(_, value, reason) => {
-        if (reason !== 'reset') {
+        if (reason !== "reset") {
           setSearchValue(value);
         }
       }}
@@ -89,17 +89,17 @@ const SetterNameSelect = () => {
       limitTags={2}
       noOptionsText={
         isLoading
-          ? 'Loading...'
+          ? "Loading..."
           : !isOpen && searchValue.length === 0
-          ? 'Open dropdown to see setters'
-          : 'No setters found'
+            ? "Open dropdown to see setters"
+            : "No setters found"
       }
-      sx={{ width: '100%' }}
+      sx={{ width: "100%" }}
       size="small"
       renderInput={(params) => (
         <TextField
           {...params}
-          placeholder={selectedOptions.length === 0 ? 'Search setters...' : ''}
+          placeholder={selectedOptions.length === 0 ? "Search setters..." : ""}
           slotProps={{
             input: {
               ...params.InputProps,

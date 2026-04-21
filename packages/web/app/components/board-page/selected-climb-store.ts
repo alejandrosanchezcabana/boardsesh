@@ -1,4 +1,4 @@
-import { createContext, useContext, useSyncExternalStore, useRef, useMemo, useEffect } from 'react';
+import { createContext, useContext, useSyncExternalStore, useRef, useMemo, useEffect } from "react";
 
 /**
  * Lightweight external store for the selected climb UUID.
@@ -45,7 +45,7 @@ export function useIsClimbSelected(climbUuid: string): boolean {
   const store = useContext(SelectionStoreContext);
   const subscribe = store?.subscribe ?? noopSubscribe;
   const getSnapshot = useMemo(
-    () => store ? () => store.getSnapshot() === climbUuid : () => false,
+    () => (store ? () => store.getSnapshot() === climbUuid : () => false),
     [store, climbUuid],
   );
   return useSyncExternalStore(subscribe, getSnapshot, serverSnapshot);

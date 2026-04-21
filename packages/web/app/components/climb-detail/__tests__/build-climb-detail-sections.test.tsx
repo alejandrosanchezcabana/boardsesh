@@ -1,32 +1,32 @@
 // @vitest-environment jsdom
-import { describe, it, expect, vi, beforeEach } from 'vitest';
-import React from 'react';
-import { renderHook } from '@testing-library/react';
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { useBuildClimbDetailSections } from '../build-climb-detail-sections';
-import type { Climb } from '@/app/lib/types';
+import { describe, it, expect, vi, beforeEach } from "vite-plus/test";
+import React from "react";
+import { renderHook } from "@testing-library/react";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { useBuildClimbDetailSections } from "../build-climb-detail-sections";
+import type { Climb } from "@/app/lib/types";
 
 // ---------------------------------------------------------------------------
 // Mocks
 // ---------------------------------------------------------------------------
 
 // Mock next/navigation
-vi.mock('next/navigation', () => ({
+vi.mock("next/navigation", () => ({
   useSearchParams: () => new URLSearchParams(),
 }));
 
 // Mock child components to avoid pulling in their dependency trees
-vi.mock('@/app/components/beta-videos/beta-videos', () => ({
+vi.mock("@/app/components/beta-videos/beta-videos", () => ({
   default: () => null,
 }));
-vi.mock('@/app/components/logbook/logbook-section', () => ({
+vi.mock("@/app/components/logbook/logbook-section", () => ({
   LogbookSection: () => null,
   useLogbookSummary: () => null,
 }));
-vi.mock('@/app/components/social/climb-social-section', () => ({
+vi.mock("@/app/components/social/climb-social-section", () => ({
   default: () => null,
 }));
-vi.mock('@/app/components/charts/climb-analytics', () => ({
+vi.mock("@/app/components/charts/climb-analytics", () => ({
   default: () => null,
 }));
 
@@ -35,10 +35,10 @@ vi.mock('@/app/components/charts/climb-analytics', () => ({
 // ---------------------------------------------------------------------------
 
 const MOCK_CLIMB = {
-  uuid: 'test-climb-uuid',
-  name: 'Test Climb',
-  frames: 'p1r12',
-  setter_username: 'tester',
+  uuid: "test-climb-uuid",
+  name: "Test Climb",
+  frames: "p1r12",
+  setter_username: "tester",
   is_listed: true,
   is_draft: false,
   layout_id: 1,
@@ -47,22 +47,22 @@ const MOCK_CLIMB = {
   edge_bottom: 0,
   edge_top: 100,
   angle: 40,
-  description: '',
+  description: "",
   hsm: 0,
-  difficulty: '5',
-  quality_average: '3.0',
+  difficulty: "5",
+  quality_average: "3.0",
   stars: 3,
   stars_average: 3,
-  difficulty_average: '5',
-  difficulty_error: '0.00',
+  difficulty_average: "5",
+  difficulty_error: "0.00",
   benchmark_difficulty: null,
   ascensionist_count: 10,
-  display_difficulty: 'V5',
-  boulder_name: 'Test Climb',
-  draft_difficulty: '5',
+  display_difficulty: "V5",
+  boulder_name: "Test Climb",
+  draft_difficulty: "5",
   repeat_count: 5,
   votes_count: 8,
-  draft_difficulty_display: 'V5',
+  draft_difficulty_display: "V5",
 } as unknown as Climb;
 
 function createWrapper() {
@@ -72,18 +72,14 @@ function createWrapper() {
     },
   });
   return function Wrapper({ children }: { children: React.ReactNode }) {
-    return (
-      <QueryClientProvider client={queryClient}>
-        {children}
-      </QueryClientProvider>
-    );
+    return <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>;
   };
 }
 
 const BASE_PROPS = {
   climb: MOCK_CLIMB,
   climbUuid: MOCK_CLIMB.uuid,
-  boardType: 'kilter',
+  boardType: "kilter",
   angle: 40,
 };
 
@@ -91,27 +87,21 @@ const BASE_PROPS = {
 // Tests
 // ---------------------------------------------------------------------------
 
-describe('useBuildClimbDetailSections', () => {
+describe("useBuildClimbDetailSections", () => {
   beforeEach(() => {
     vi.restoreAllMocks();
   });
 
-  it('returns 4 sections when enabled (default)', () => {
-    const { result } = renderHook(
-      () => useBuildClimbDetailSections(BASE_PROPS),
-      { wrapper: createWrapper() },
-    );
+  it("returns 4 sections when enabled (default)", () => {
+    const { result } = renderHook(() => useBuildClimbDetailSections(BASE_PROPS), {
+      wrapper: createWrapper(),
+    });
 
     expect(result.current).toHaveLength(4);
-    expect(result.current.map((s) => s.key)).toEqual([
-      'beta',
-      'logbook',
-      'community',
-      'analytics',
-    ]);
+    expect(result.current.map((s) => s.key)).toEqual(["beta", "logbook", "community", "analytics"]);
   });
 
-  it('returns empty array when enabled is false', () => {
+  it("returns empty array when enabled is false", () => {
     const { result } = renderHook(
       () => useBuildClimbDetailSections({ ...BASE_PROPS, enabled: false }),
       { wrapper: createWrapper() },
@@ -120,18 +110,17 @@ describe('useBuildClimbDetailSections', () => {
     expect(result.current).toEqual([]);
   });
 
-  it('does not fire the beta links query when enabled is false', () => {
-    const fetchSpy = vi.spyOn(globalThis, 'fetch');
+  it("does not fire the beta links query when enabled is false", () => {
+    const fetchSpy = vi.spyOn(globalThis, "fetch");
 
-    renderHook(
-      () => useBuildClimbDetailSections({ ...BASE_PROPS, enabled: false }),
-      { wrapper: createWrapper() },
-    );
+    renderHook(() => useBuildClimbDetailSections({ ...BASE_PROPS, enabled: false }), {
+      wrapper: createWrapper(),
+    });
 
     expect(fetchSpy).not.toHaveBeenCalled();
   });
 
-  it('returns sections again when enabled flips from false to true', () => {
+  it("returns sections again when enabled flips from false to true", () => {
     const wrapper = createWrapper();
     const { result, rerender } = renderHook(
       ({ enabled }: { enabled: boolean }) =>
@@ -144,19 +133,13 @@ describe('useBuildClimbDetailSections', () => {
     rerender({ enabled: true });
 
     expect(result.current).toHaveLength(4);
-    expect(result.current.map((s) => s.key)).toEqual([
-      'beta',
-      'logbook',
-      'community',
-      'analytics',
-    ]);
+    expect(result.current.map((s) => s.key)).toEqual(["beta", "logbook", "community", "analytics"]);
   });
 
-  it('all sections have lazy: true', () => {
-    const { result } = renderHook(
-      () => useBuildClimbDetailSections(BASE_PROPS),
-      { wrapper: createWrapper() },
-    );
+  it("all sections have lazy: true", () => {
+    const { result } = renderHook(() => useBuildClimbDetailSections(BASE_PROPS), {
+      wrapper: createWrapper(),
+    });
 
     for (const section of result.current) {
       expect(section.lazy).toBe(true);

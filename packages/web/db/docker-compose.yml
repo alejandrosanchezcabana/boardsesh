@@ -1,17 +1,17 @@
 services:
   postgres:
     image: postgres:17
-    command: '-d 1'
+    command: "-d 1"
     volumes:
       - db_data:/var/lib/postgresql/data
     ports:
-      - '5432:5432'
+      - "5432:5432"
     environment:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: password
       POSTGRES_DB: main
     healthcheck:
-      test: ['CMD-SHELL', 'pg_isready -U postgres']
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -21,7 +21,7 @@ services:
       - PG_CONNECTION_STRING=postgres://postgres:password@postgres:5432/main
       - POSTGRES_DB=main
     ports:
-      - '4444:4444'
+      - "4444:4444"
     depends_on:
       postgres:
         condition: service_healthy
@@ -29,9 +29,9 @@ services:
   redis:
     image: redis:7-alpine
     ports:
-      - '6379:6379'
+      - "6379:6379"
     healthcheck:
-      test: ['CMD', 'redis-cli', 'ping']
+      test: ["CMD", "redis-cli", "ping"]
       interval: 5s
       timeout: 3s
       retries: 5

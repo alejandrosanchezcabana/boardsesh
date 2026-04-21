@@ -4,8 +4,8 @@ on:
   push:
     branches-ignore: [main]
     paths:
-      - 'mobile/**'
-      - '.github/workflows/android-ci.yml'
+      - "mobile/**"
+      - ".github/workflows/android-ci.yml"
   workflow_dispatch:
 
 concurrency:
@@ -24,7 +24,7 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '22'
+          node-version: "22"
 
       - name: Setup Bun
         uses: oven-sh/setup-bun@v2
@@ -32,8 +32,8 @@ jobs:
       - name: Setup Java
         uses: actions/setup-java@v4
         with:
-          distribution: 'temurin'
-          java-version: '21'
+          distribution: "temurin"
+          java-version: "21"
 
       - name: Setup Android SDK
         uses: android-actions/setup-android@v3

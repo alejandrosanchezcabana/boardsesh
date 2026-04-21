@@ -1,11 +1,11 @@
-import 'fake-indexeddb/auto';
-import { openDB } from 'idb';
-import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { getPreference, setPreference, removePreference } from '../user-preferences-db';
-import { DEFAULT_LOGBOOK_PREFERENCES } from '../logbook-preferences';
+import "fake-indexeddb/auto";
+import { openDB } from "idb";
+import { beforeEach, describe, expect, it, vi } from "vite-plus/test";
+import { getPreference, setPreference, removePreference } from "../user-preferences-db";
+import { DEFAULT_LOGBOOK_PREFERENCES } from "../logbook-preferences";
 
-const DB_NAME = 'boardsesh-user-preferences';
-const STORE_NAME = 'preferences';
+const DB_NAME = "boardsesh-user-preferences";
+const STORE_NAME = "preferences";
 const createStorageShim = () => {
   const store = new Map<string, string>();
 
@@ -25,7 +25,7 @@ const createStorageShim = () => {
 
 const storage = createStorageShim();
 
-Object.defineProperty(globalThis, 'localStorage', {
+Object.defineProperty(globalThis, "localStorage", {
   configurable: true,
   value: storage,
 });
@@ -44,126 +44,126 @@ beforeEach(async () => {
   db.close();
 });
 
-describe('user-preferences-db', () => {
-  describe('setPreference / getPreference', () => {
-    it('should store and retrieve a string preference', async () => {
-      await setPreference('testKey', 'testValue');
-      const result = await getPreference<string>('testKey');
-      expect(result).toBe('testValue');
+describe("user-preferences-db", () => {
+  describe("setPreference / getPreference", () => {
+    it("should store and retrieve a string preference", async () => {
+      await setPreference("testKey", "testValue");
+      const result = await getPreference<string>("testKey");
+      expect(result).toBe("testValue");
     });
 
-    it('should store and retrieve an object preference', async () => {
-      const obj = { foo: 'bar', num: 42 };
-      await setPreference('objKey', obj);
-      const result = await getPreference<typeof obj>('objKey');
+    it("should store and retrieve an object preference", async () => {
+      const obj = { foo: "bar", num: 42 };
+      await setPreference("objKey", obj);
+      const result = await getPreference<typeof obj>("objKey");
       expect(result).toEqual(obj);
     });
 
-    it('should store and retrieve logbookPreferences', async () => {
-      await setPreference('logbookPreferences', DEFAULT_LOGBOOK_PREFERENCES);
-      const result = await getPreference('logbookPreferences');
+    it("should store and retrieve logbookPreferences", async () => {
+      await setPreference("logbookPreferences", DEFAULT_LOGBOOK_PREFERENCES);
+      const result = await getPreference("logbookPreferences");
       expect(result).toEqual(DEFAULT_LOGBOOK_PREFERENCES);
     });
 
-    it('should return null for a non-existent key', async () => {
-      const result = await getPreference<string>('nonexistent');
+    it("should return null for a non-existent key", async () => {
+      const result = await getPreference<string>("nonexistent");
       expect(result).toBeNull();
     });
 
-    it('should overwrite an existing preference', async () => {
-      await setPreference('key', 'first');
-      await setPreference('key', 'second');
-      const result = await getPreference<string>('key');
-      expect(result).toBe('second');
+    it("should overwrite an existing preference", async () => {
+      await setPreference("key", "first");
+      await setPreference("key", "second");
+      const result = await getPreference<string>("key");
+      expect(result).toBe("second");
     });
   });
 
-  describe('removePreference', () => {
-    it('should remove an existing preference', async () => {
-      await setPreference('toRemove', 'value');
-      await removePreference('toRemove');
-      const result = await getPreference<string>('toRemove');
+  describe("removePreference", () => {
+    it("should remove an existing preference", async () => {
+      await setPreference("toRemove", "value");
+      await removePreference("toRemove");
+      const result = await getPreference<string>("toRemove");
       expect(result).toBeNull();
     });
 
-    it('should not throw when removing a non-existent key', async () => {
-      await expect(removePreference('nonexistent')).resolves.toBeUndefined();
+    it("should not throw when removing a non-existent key", async () => {
+      await expect(removePreference("nonexistent")).resolves.toBeUndefined();
     });
   });
 
-  describe('localStorage migration', () => {
-    it('should migrate climbListViewMode from localStorage on first read', async () => {
-      storage.setItem('climbListViewMode', 'grid');
+  describe("localStorage migration", () => {
+    it("should migrate climbListViewMode from localStorage on first read", async () => {
+      storage.setItem("climbListViewMode", "grid");
 
-      const result = await getPreference<string>('climbListViewMode');
-      expect(result).toBe('grid');
+      const result = await getPreference<string>("climbListViewMode");
+      expect(result).toBe("grid");
 
       // localStorage key should be cleaned up
-      expect(storage.getItem('climbListViewMode')).toBeNull();
+      expect(storage.getItem("climbListViewMode")).toBeNull();
     });
 
-    it('should migrate boardsesh:partyMode from localStorage on first read', async () => {
-      storage.setItem('boardsesh:partyMode', 'backend');
+    it("should migrate boardsesh:partyMode from localStorage on first read", async () => {
+      storage.setItem("boardsesh:partyMode", "backend");
 
-      const result = await getPreference<string>('boardsesh:partyMode');
-      expect(result).toBe('backend');
+      const result = await getPreference<string>("boardsesh:partyMode");
+      expect(result).toBe("backend");
 
-      expect(storage.getItem('boardsesh:partyMode')).toBeNull();
+      expect(storage.getItem("boardsesh:partyMode")).toBeNull();
     });
 
-    it('should not re-migrate if IndexedDB already has the value', async () => {
+    it("should not re-migrate if IndexedDB already has the value", async () => {
       // Pre-populate IndexedDB
-      await setPreference('climbListViewMode', 'list');
+      await setPreference("climbListViewMode", "list");
 
       // Set a different value in localStorage (simulating stale data)
-      storage.setItem('climbListViewMode', 'grid');
+      storage.setItem("climbListViewMode", "grid");
 
-      const result = await getPreference<string>('climbListViewMode');
-      expect(result).toBe('list');
+      const result = await getPreference<string>("climbListViewMode");
+      expect(result).toBe("list");
 
       // localStorage should remain untouched since migration was skipped
-      expect(storage.getItem('climbListViewMode')).toBe('grid');
+      expect(storage.getItem("climbListViewMode")).toBe("grid");
     });
 
-    it('should return null when neither IndexedDB nor localStorage has the value', async () => {
-      const result = await getPreference<string>('climbListViewMode');
+    it("should return null when neither IndexedDB nor localStorage has the value", async () => {
+      const result = await getPreference<string>("climbListViewMode");
       expect(result).toBeNull();
     });
 
-    it('should not attempt migration for keys without a legacy mapping', async () => {
-      storage.setItem('someOtherKey', 'value');
+    it("should not attempt migration for keys without a legacy mapping", async () => {
+      storage.setItem("someOtherKey", "value");
 
-      const result = await getPreference<string>('someOtherKey');
+      const result = await getPreference<string>("someOtherKey");
       expect(result).toBeNull();
 
       // localStorage should be untouched
-      expect(storage.getItem('someOtherKey')).toBe('value');
+      expect(storage.getItem("someOtherKey")).toBe("value");
     });
 
-    it('should parse JSON values during migration', async () => {
-      storage.setItem('climbListViewMode', JSON.stringify({ mode: 'grid' }));
+    it("should parse JSON values during migration", async () => {
+      storage.setItem("climbListViewMode", JSON.stringify({ mode: "grid" }));
 
-      const result = await getPreference<{ mode: string }>('climbListViewMode');
-      expect(result).toEqual({ mode: 'grid' });
+      const result = await getPreference<{ mode: string }>("climbListViewMode");
+      expect(result).toEqual({ mode: "grid" });
 
-      expect(storage.getItem('climbListViewMode')).toBeNull();
+      expect(storage.getItem("climbListViewMode")).toBeNull();
     });
 
-    it('should persist migrated value so subsequent reads come from IndexedDB', async () => {
-      storage.setItem('climbListViewMode', 'grid');
+    it("should persist migrated value so subsequent reads come from IndexedDB", async () => {
+      storage.setItem("climbListViewMode", "grid");
 
       // First read triggers migration
-      await getPreference<string>('climbListViewMode');
+      await getPreference<string>("climbListViewMode");
 
       // Second read should return from IndexedDB (localStorage is already cleared)
-      const result = await getPreference<string>('climbListViewMode');
-      expect(result).toBe('grid');
+      const result = await getPreference<string>("climbListViewMode");
+      expect(result).toBe("grid");
     });
   });
 
-  describe('error handling', () => {
-    it('getPreference should return null and log error on db failure', async () => {
-      const errorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+  describe("error handling", () => {
+    it("getPreference should return null and log error on db failure", async () => {
+      const errorSpy = vi.spyOn(console, "error").mockImplementation(() => {});
 
       // Corrupt the store by writing a value, then force an error by
       // closing the underlying connection and operating on a closed db
@@ -172,49 +172,49 @@ describe('user-preferences-db', () => {
 
       // Re-import with a broken openDB to test error path
       vi.resetModules();
-      vi.doMock('idb', () => ({
-        openDB: () => Promise.reject(new Error('IndexedDB unavailable')),
+      vi.doMock("idb", () => ({
+        openDB: () => Promise.reject(new Error("IndexedDB unavailable")),
       }));
-      const mod = await import('../user-preferences-db');
+      const mod = await import("../user-preferences-db");
 
-      const result = await mod.getPreference<string>('anyKey');
+      const result = await mod.getPreference<string>("anyKey");
       expect(result).toBeNull();
-      expect(errorSpy).toHaveBeenCalledWith('Failed to get preference:', expect.any(Error));
+      expect(errorSpy).toHaveBeenCalledWith("Failed to get preference:", expect.any(Error));
 
       errorSpy.mockRestore();
-      vi.doUnmock('idb');
+      vi.doUnmock("idb");
     });
 
-    it('setPreference should not throw and log error on db failure', async () => {
-      const errorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+    it("setPreference should not throw and log error on db failure", async () => {
+      const errorSpy = vi.spyOn(console, "error").mockImplementation(() => {});
 
       vi.resetModules();
-      vi.doMock('idb', () => ({
-        openDB: () => Promise.reject(new Error('IndexedDB unavailable')),
+      vi.doMock("idb", () => ({
+        openDB: () => Promise.reject(new Error("IndexedDB unavailable")),
       }));
-      const mod = await import('../user-preferences-db');
+      const mod = await import("../user-preferences-db");
 
-      await expect(mod.setPreference('key', 'val')).resolves.toBeUndefined();
-      expect(errorSpy).toHaveBeenCalledWith('Failed to save preference:', expect.any(Error));
+      await expect(mod.setPreference("key", "val")).resolves.toBeUndefined();
+      expect(errorSpy).toHaveBeenCalledWith("Failed to save preference:", expect.any(Error));
 
       errorSpy.mockRestore();
-      vi.doUnmock('idb');
+      vi.doUnmock("idb");
     });
 
-    it('removePreference should not throw and log error on db failure', async () => {
-      const errorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+    it("removePreference should not throw and log error on db failure", async () => {
+      const errorSpy = vi.spyOn(console, "error").mockImplementation(() => {});
 
       vi.resetModules();
-      vi.doMock('idb', () => ({
-        openDB: () => Promise.reject(new Error('IndexedDB unavailable')),
+      vi.doMock("idb", () => ({
+        openDB: () => Promise.reject(new Error("IndexedDB unavailable")),
       }));
-      const mod = await import('../user-preferences-db');
+      const mod = await import("../user-preferences-db");
 
-      await expect(mod.removePreference('key')).resolves.toBeUndefined();
-      expect(errorSpy).toHaveBeenCalledWith('Failed to remove preference:', expect.any(Error));
+      await expect(mod.removePreference("key")).resolves.toBeUndefined();
+      expect(errorSpy).toHaveBeenCalledWith("Failed to remove preference:", expect.any(Error));
 
       errorSpy.mockRestore();
-      vi.doUnmock('idb');
+      vi.doUnmock("idb");
     });
   });
 });

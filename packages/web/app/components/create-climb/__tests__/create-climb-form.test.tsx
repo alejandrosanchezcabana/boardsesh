@@ -1,7 +1,7 @@
-import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { render, screen, waitFor, fireEvent } from '@testing-library/react';
-import React from 'react';
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { beforeEach, describe, expect, it, vi } from "vite-plus/test";
+import { render, screen, waitFor, fireEvent } from "@testing-library/react";
+import React from "react";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 
 const mockShowMessage = vi.fn();
 const mockRequest = vi.fn();
@@ -11,24 +11,24 @@ const mockReplaceQueueItem = vi.fn();
 let mockQueueActions: Record<string, unknown> | null = null;
 let mockQueueData: Record<string, unknown> | null = null;
 
-vi.mock('next/navigation', () => ({
+vi.mock("next/navigation", () => ({
   useRouter: () => ({ push: vi.fn() }),
-  usePathname: () => '/b/moonboard-2016-40/create',
+  usePathname: () => "/b/moonboard-2016-40/create",
 }));
 
-vi.mock('next-auth/react', () => ({
-  useSession: () => ({ data: { user: { id: 'user-1', name: 'Test User' } } }),
+vi.mock("next-auth/react", () => ({
+  useSession: () => ({ data: { user: { id: "user-1", name: "Test User" } } }),
 }));
 
-vi.mock('../../board-provider/board-provider-context', () => ({
+vi.mock("../../board-provider/board-provider-context", () => ({
   useBoardProvider: () => ({ isAuthenticated: true, saveClimb: vi.fn() }),
 }));
 
-vi.mock('../../board-bluetooth-control/use-board-bluetooth', () => ({
+vi.mock("../../board-bluetooth-control/use-board-bluetooth", () => ({
   useBoardBluetooth: () => ({ isConnected: false, sendFramesToBoard: vi.fn() }),
 }));
 
-vi.mock('../use-create-climb', () => ({
+vi.mock("../use-create-climb", () => ({
   useCreateClimb: () => ({
     litUpHoldsMap: {},
     setHoldState: vi.fn(),
@@ -37,16 +37,16 @@ vi.mock('../use-create-climb', () => ({
     totalHolds: 0,
     isValid: false,
     resetHolds: vi.fn(),
-    generateFramesString: vi.fn(() => 'test-frames'),
+    generateFramesString: vi.fn(() => "test-frames"),
   }),
 }));
 
-vi.mock('../use-moonboard-create-climb', () => ({
+vi.mock("../use-moonboard-create-climb", () => ({
   useMoonBoardCreateClimb: () => ({
     litUpHoldsMap: {
-      1: { state: 'STARTING', color: '#00FF00', displayColor: '#44FF44' },
-      13: { state: 'HAND', color: '#0000FF', displayColor: '#4444FF' },
-      25: { state: 'FINISH', color: '#FF0000', displayColor: '#FF3333' },
+      1: { state: "STARTING", color: "#00FF00", displayColor: "#44FF44" },
+      13: { state: "HAND", color: "#0000FF", displayColor: "#4444FF" },
+      25: { state: "FINISH", color: "#FF0000", displayColor: "#FF3333" },
     },
     setLitUpHoldsMap: vi.fn(),
     setHoldState: vi.fn(),
@@ -59,53 +59,53 @@ vi.mock('../use-moonboard-create-climb', () => ({
   }),
 }));
 
-vi.mock('@/app/components/graphql-queue', () => ({
+vi.mock("@/app/components/graphql-queue", () => ({
   useOptionalQueueActions: () => mockQueueActions,
   useOptionalQueueData: () => mockQueueData,
 }));
 
-vi.mock('../../board-renderer/board-renderer', () => ({
+vi.mock("../../board-renderer/board-renderer", () => ({
   default: () => <div>BoardRenderer</div>,
 }));
 
-vi.mock('../../moonboard-renderer/moonboard-renderer', () => ({
+vi.mock("../../moonboard-renderer/moonboard-renderer", () => ({
   default: () => <div>MoonBoardRenderer</div>,
 }));
 
-vi.mock('@/app/hooks/use-color-mode', () => ({
-  useColorMode: () => ({ mode: 'light' }),
+vi.mock("@/app/hooks/use-color-mode", () => ({
+  useColorMode: () => ({ mode: "light" }),
 }));
 
-vi.mock('@boardsesh/moonboard-ocr/browser', () => ({
+vi.mock("@boardsesh/moonboard-ocr/browser", () => ({
   parseScreenshot: vi.fn(),
 }));
 
-vi.mock('@/app/lib/graphql/client', () => ({
+vi.mock("@/app/lib/graphql/client", () => ({
   createGraphQLHttpClient: () => ({ request: mockRequest }),
 }));
 
-vi.mock('../graphql-queue/graphql-client', () => ({
+vi.mock("../graphql-queue/graphql-client", () => ({
   createGraphQLClient: vi.fn(),
   execute: vi.fn(),
 }));
 
-vi.mock('@/app/components/providers/auth-modal-provider', () => ({
+vi.mock("@/app/components/providers/auth-modal-provider", () => ({
   useAuthModal: () => ({ openAuthModal: mockOpenAuthModal }),
 }));
 
-vi.mock('../../providers/snackbar-provider', () => ({
+vi.mock("../../providers/snackbar-provider", () => ({
   useSnackbar: () => ({ showMessage: mockShowMessage }),
 }));
 
-vi.mock('@/app/lib/climb-search-cache', () => ({
+vi.mock("@/app/lib/climb-search-cache", () => ({
   refreshClimbSearchAfterSave: vi.fn(),
 }));
 
-vi.mock('@/app/hooks/use-ws-auth-token', () => ({
-  useWsAuthToken: () => ({ token: 'auth-token' }),
+vi.mock("@/app/hooks/use-ws-auth-token", () => ({
+  useWsAuthToken: () => ({ token: "auth-token" }),
 }));
 
-import CreateClimbForm from '../create-climb-form';
+import CreateClimbForm from "../create-climb-form";
 
 function renderComponent() {
   const queryClient = new QueryClient();
@@ -117,27 +117,27 @@ function renderComponent() {
         forkName="Test Climb"
         layoutFolder="moonboard2016"
         layoutId={2}
-        holdSetImages={['holdseta.png']}
+        holdSetImages={["holdseta.png"]}
       />
     </QueryClientProvider>,
   );
 }
 
-describe('CreateClimbForm', () => {
+describe("CreateClimbForm", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     mockQueueActions = null;
     mockQueueData = null;
   });
 
-  it('shows a blocking duplicate error for MoonBoard climbs and disables save', async () => {
+  it("shows a blocking duplicate error for MoonBoard climbs and disables save", async () => {
     mockRequest.mockResolvedValue({
       checkMoonBoardClimbDuplicates: [
         {
-          clientKey: 'create-form',
+          clientKey: "create-form",
           exists: true,
-          existingClimbUuid: 'existing-1',
-          existingClimbName: 'Existing Problem',
+          existingClimbUuid: "existing-1",
+          existingClimbName: "Existing Problem",
         },
       ],
     });
@@ -145,27 +145,29 @@ describe('CreateClimbForm', () => {
     renderComponent();
 
     await waitFor(() => {
-      expect(screen.getByText(/This hold pattern already exists as "Existing Problem"/)).toBeTruthy();
+      expect(
+        screen.getByText(/This hold pattern already exists as "Existing Problem"/),
+      ).toBeTruthy();
     });
 
     await waitFor(() => {
       const saveButton = screen
-        .getAllByLabelText('Save climb')
-        .find((el): el is HTMLButtonElement => el.tagName === 'BUTTON');
+        .getAllByLabelText("Save climb")
+        .find((el): el is HTMLButtonElement => el.tagName === "BUTTON");
       expect(saveButton).toBeTruthy();
       expect(saveButton?.disabled).toBe(true);
     });
   });
 
-  describe('Set Active button', () => {
-    it('is not rendered when queueActions is null (no session)', () => {
+  describe("Set Active button", () => {
+    it("is not rendered when queueActions is null (no session)", () => {
       mockQueueActions = null;
       renderComponent();
 
-      expect(screen.queryByLabelText('Set as active climb')).toBeNull();
+      expect(screen.queryByLabelText("Set as active climb")).toBeNull();
     });
 
-    it('is rendered when queueActions is available', () => {
+    it("is rendered when queueActions is available", () => {
       mockQueueActions = {
         setCurrentClimb: mockSetCurrentClimb,
         replaceQueueItem: mockReplaceQueueItem,
@@ -176,10 +178,10 @@ describe('CreateClimbForm', () => {
 
       renderComponent();
 
-      expect(screen.getByLabelText('Set as active climb')).toBeTruthy();
+      expect(screen.getByLabelText("Set as active climb")).toBeTruthy();
     });
 
-    it('is enabled when holds are placed (MoonBoard with 3 holds)', () => {
+    it("is enabled when holds are placed (MoonBoard with 3 holds)", () => {
       mockQueueActions = {
         setCurrentClimb: mockSetCurrentClimb,
         replaceQueueItem: mockReplaceQueueItem,
@@ -190,12 +192,12 @@ describe('CreateClimbForm', () => {
 
       renderComponent();
 
-      const button = screen.getByLabelText('Set as active climb').closest('button');
+      const button = screen.getByLabelText("Set as active climb").closest("button");
       expect(button?.disabled).toBe(false);
     });
 
-    it('calls setCurrentClimb when clicked', async () => {
-      mockSetCurrentClimb.mockResolvedValue({ uuid: 'queue-item-1' });
+    it("calls setCurrentClimb when clicked", async () => {
+      mockSetCurrentClimb.mockResolvedValue({ uuid: "queue-item-1" });
       mockQueueActions = {
         setCurrentClimb: mockSetCurrentClimb,
         replaceQueueItem: mockReplaceQueueItem,
@@ -206,7 +208,7 @@ describe('CreateClimbForm', () => {
 
       renderComponent();
 
-      const button = screen.getByLabelText('Set as active climb');
+      const button = screen.getByLabelText("Set as active climb");
       fireEvent.click(button);
 
       await waitFor(() => {
@@ -217,14 +219,14 @@ describe('CreateClimbForm', () => {
       const climb = mockSetCurrentClimb.mock.calls[0][0];
       expect(climb).toMatchObject({
         angle: 40,
-        frames: '',
+        frames: "",
       });
       // Should have a UUID (the preview UUID)
       expect(climb.uuid).toBeTruthy();
     });
 
     it('shows "Currently active" and is disabled when climb is already active', () => {
-      const previewUuid = 'preview-uuid-123';
+      const previewUuid = "preview-uuid-123";
 
       mockQueueActions = {
         setCurrentClimb: mockSetCurrentClimb,
@@ -240,12 +242,12 @@ describe('CreateClimbForm', () => {
       renderComponent();
 
       // Button should exist and be enabled (moonboard mock has 3 holds)
-      const button = screen.getByLabelText('Set as active climb').closest('button');
+      const button = screen.getByLabelText("Set as active climb").closest("button");
       expect(button?.disabled).toBe(false);
     });
 
-    it('calls replaceQueueItem on second click instead of setCurrentClimb', async () => {
-      mockSetCurrentClimb.mockResolvedValue({ uuid: 'queue-item-1' });
+    it("calls replaceQueueItem on second click instead of setCurrentClimb", async () => {
+      mockSetCurrentClimb.mockResolvedValue({ uuid: "queue-item-1" });
       mockQueueActions = {
         setCurrentClimb: mockSetCurrentClimb,
         replaceQueueItem: mockReplaceQueueItem,
@@ -256,7 +258,7 @@ describe('CreateClimbForm', () => {
 
       renderComponent();
 
-      const button = screen.getByLabelText('Set as active climb');
+      const button = screen.getByLabelText("Set as active climb");
 
       // First click: should call setCurrentClimb
       fireEvent.click(button);
@@ -272,9 +274,12 @@ describe('CreateClimbForm', () => {
       fireEvent.click(button);
       await waitFor(() => {
         expect(mockReplaceQueueItem).toHaveBeenCalled();
-        expect(mockReplaceQueueItem).toHaveBeenCalledWith('queue-item-1', expect.objectContaining({
-          angle: 40,
-        }));
+        expect(mockReplaceQueueItem).toHaveBeenCalledWith(
+          "queue-item-1",
+          expect.objectContaining({
+            angle: 40,
+          }),
+        );
       });
     });
   });

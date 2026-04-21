@@ -1,8 +1,8 @@
-'use client';
+"use client";
 
-import React from 'react';
-import Box from '@mui/material/Box';
-import type { SxProps, Theme } from '@mui/material/styles';
+import React from "react";
+import Box from "@mui/material/Box";
+import type { SxProps, Theme } from "@mui/material/styles";
 
 type TabPanelProps = {
   children?: React.ReactNode;

@@ -1,8 +1,8 @@
 // Community Proposals + Admin Roles types
 
-export type ProposalType = 'grade' | 'classic' | 'benchmark';
-export type ProposalStatus = 'open' | 'approved' | 'rejected' | 'superseded';
-export type CommunityRoleType = 'admin' | 'community_leader';
+export type ProposalType = "grade" | "classic" | "benchmark";
+export type ProposalStatus = "open" | "approved" | "rejected" | "superseded";
+export type CommunityRoleType = "admin" | "community_leader";
 
 export type Proposal = {
   uuid: string;
@@ -116,7 +116,7 @@ export type VoteOnProposalInput = {
 
 export type ResolveProposalInput = {
   proposalUuid: string;
-  status: 'approved' | 'rejected';
+  status: "approved" | "rejected";
   reason?: string | null;
 };
 

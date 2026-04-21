@@ -1,4 +1,4 @@
-import { useRef, useCallback, type RefCallback } from 'react';
+import { useRef, useCallback, type RefCallback } from "react";
 
 const DOUBLE_TAP_THRESHOLD = 300;
 
@@ -26,55 +26,52 @@ export function useDoubleTap(callback: (() => void) | undefined) {
     }
   }, []);
 
-  const handleTouchEnd = useCallback(
-    (e: TouchEvent) => {
-      isTouchDeviceRef.current = true;
+  const handleTouchEnd = useCallback((e: TouchEvent) => {
+    isTouchDeviceRef.current = true;
 
-      const remainingTouches = e.touches?.length ?? 0;
+    const remainingTouches = e.touches?.length ?? 0;
 
-      // If other fingers are still down, this is part of a multi-touch gesture
-      if (remainingTouches > 0) {
-        wasMultiTouchRef.current = true;
-        return;
-      }
+    // If other fingers are still down, this is part of a multi-touch gesture
+    if (remainingTouches > 0) {
+      wasMultiTouchRef.current = true;
+      return;
+    }
 
-      // All fingers lifted — if this was a multi-touch gesture (pinch), skip it
-      if (wasMultiTouchRef.current) {
-        wasMultiTouchRef.current = false;
-        lastTapTimeRef.current = 0;
-        return;
-      }
+    // All fingers lifted — if this was a multi-touch gesture (pinch), skip it
+    if (wasMultiTouchRef.current) {
+      wasMultiTouchRef.current = false;
+      lastTapTimeRef.current = 0;
+      return;
+    }
 
-      if (!callbackRef.current) return;
+    if (!callbackRef.current) return;
 
-      const now = Date.now();
-      const timeSinceLastTap = now - lastTapTimeRef.current;
+    const now = Date.now();
+    const timeSinceLastTap = now - lastTapTimeRef.current;
 
-      if (timeSinceLastTap > 0 && timeSinceLastTap < DOUBLE_TAP_THRESHOLD) {
-        e.preventDefault();
-        lastTapTimeRef.current = 0;
-        callbackRef.current();
-      } else {
-        lastTapTimeRef.current = now;
-      }
-    },
-    [],
-  );
+    if (timeSinceLastTap > 0 && timeSinceLastTap < DOUBLE_TAP_THRESHOLD) {
+      e.preventDefault();
+      lastTapTimeRef.current = 0;
+      callbackRef.current();
+    } else {
+      lastTapTimeRef.current = now;
+    }
+  }, []);
 
   const ref: RefCallback<HTMLElement> = useCallback(
     (node: HTMLElement | null) => {
       // Cleanup previous listeners
       if (elementRef.current) {
-        elementRef.current.removeEventListener('touchstart', handleTouchStart);
-        elementRef.current.removeEventListener('touchend', handleTouchEnd);
+        elementRef.current.removeEventListener("touchstart", handleTouchStart);
+        elementRef.current.removeEventListener("touchend", handleTouchEnd);
       }
 
       elementRef.current = node;
 
       // Attach new listeners
       if (node) {
-        node.addEventListener('touchstart', handleTouchStart, { passive: true });
-        node.addEventListener('touchend', handleTouchEnd, { passive: false });
+        node.addEventListener("touchstart", handleTouchStart, { passive: true });
+        node.addEventListener("touchend", handleTouchEnd, { passive: false });
       }
     },
     [handleTouchStart, handleTouchEnd],

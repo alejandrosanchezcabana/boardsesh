@@ -6,11 +6,11 @@
 .layout {
   min-height: 100vh;
   padding-top: var(--global-header-height);
-  background: var(--semantic-background, #F9FAFB);
+  background: var(--semantic-background, #f9fafb);
 }
 
 .header {
-  background: var(--semantic-surface, #FFFFFF);
+  background: var(--semantic-surface, #ffffff);
   padding: 0 16px; /* spacing.4 */
   display: flex;
   align-items: center;
@@ -63,7 +63,7 @@
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  color: #E1306C; /* Instagram brand color */
+  color: #e1306c; /* Instagram brand color */
   font-size: 14px;
   margin-top: 4px;
   text-decoration: none;

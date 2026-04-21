@@ -1,48 +1,52 @@
-'use client';
+"use client";
 
-import React, { useState, useCallback, useEffect } from 'react';
-import dynamic from 'next/dynamic';
-import Box from '@mui/material/Box';
-import Button from '@mui/material/Button';
-import Typography from '@mui/material/Typography';
-import Card from '@mui/material/Card';
-import CardContent from '@mui/material/CardContent';
-import CardActionArea from '@mui/material/CardActionArea';
-import PlayArrowRounded from '@mui/icons-material/PlayArrowRounded';
-import PeopleOutlined from '@mui/icons-material/PeopleOutlined';
-import BluetoothOutlined from '@mui/icons-material/BluetoothOutlined';
-import LocalOfferOutlined from '@mui/icons-material/LocalOfferOutlined';
-import WarningAmberOutlined from '@mui/icons-material/WarningAmberOutlined';
-import AppleIcon from '@mui/icons-material/Apple';
-import AndroidOutlined from '@mui/icons-material/AndroidOutlined';
-import Skeleton from '@mui/material/Skeleton';
-import SvgIcon from '@mui/material/SvgIcon';
-import { isNativeApp, isCapacitorWebView, waitForCapacitor } from '@/app/lib/ble/capacitor-utils';
-import { useCountdown } from '@/app/lib/hooks/use-countdown';
-import { useSession } from 'next-auth/react';
-import { useRouter } from 'next/navigation';
-import { themeTokens } from '@/app/theme/theme-config';
-import { usePersistentSession } from '@/app/components/persistent-session';
-import BoardDiscoveryScroll from '@/app/components/board-scroll/board-discovery-scroll';
-import { constructBoardSlugListUrl, constructClimbListWithSlugs, tryConstructSlugListUrl } from '@/app/lib/url-utils';
-import { getDefaultAngleForBoard } from '@/app/lib/board-config-for-playlist';
-import type { BoardConfigData } from '@/app/lib/server-board-configs';
-import type { UserBoard, PopularBoardConfig } from '@boardsesh/shared-schema';
-import { track } from '@vercel/analytics';
-import { setClimbSessionCookie } from '@/app/lib/climb-session-cookie';
+import React, { useState, useCallback, useEffect } from "react";
+import dynamic from "next/dynamic";
+import Box from "@mui/material/Box";
+import Button from "@mui/material/Button";
+import Typography from "@mui/material/Typography";
+import Card from "@mui/material/Card";
+import CardContent from "@mui/material/CardContent";
+import CardActionArea from "@mui/material/CardActionArea";
+import PlayArrowRounded from "@mui/icons-material/PlayArrowRounded";
+import PeopleOutlined from "@mui/icons-material/PeopleOutlined";
+import BluetoothOutlined from "@mui/icons-material/BluetoothOutlined";
+import LocalOfferOutlined from "@mui/icons-material/LocalOfferOutlined";
+import WarningAmberOutlined from "@mui/icons-material/WarningAmberOutlined";
+import AppleIcon from "@mui/icons-material/Apple";
+import AndroidOutlined from "@mui/icons-material/AndroidOutlined";
+import Skeleton from "@mui/material/Skeleton";
+import SvgIcon from "@mui/material/SvgIcon";
+import { isNativeApp, isCapacitorWebView, waitForCapacitor } from "@/app/lib/ble/capacitor-utils";
+import { useCountdown } from "@/app/lib/hooks/use-countdown";
+import { useSession } from "next-auth/react";
+import { useRouter } from "next/navigation";
+import { themeTokens } from "@/app/theme/theme-config";
+import { usePersistentSession } from "@/app/components/persistent-session";
+import BoardDiscoveryScroll from "@/app/components/board-scroll/board-discovery-scroll";
+import {
+  constructBoardSlugListUrl,
+  constructClimbListWithSlugs,
+  tryConstructSlugListUrl,
+} from "@/app/lib/url-utils";
+import { getDefaultAngleForBoard } from "@/app/lib/board-config-for-playlist";
+import type { BoardConfigData } from "@/app/lib/server-board-configs";
+import type { UserBoard, PopularBoardConfig } from "@boardsesh/shared-schema";
+import { track } from "@vercel/analytics";
+import { setClimbSessionCookie } from "@/app/lib/climb-session-cookie";
 
 const StartSeshDrawer = dynamic(
-  () => import('@/app/components/session-creation/start-sesh-drawer'),
+  () => import("@/app/components/session-creation/start-sesh-drawer"),
   { ssr: false },
 );
 
 const UnifiedSearchDrawer = dynamic(
-  () => import('@/app/components/search-drawer/unified-search-drawer'),
+  () => import("@/app/components/search-drawer/unified-search-drawer"),
   { ssr: false },
 );
 
 const BoardSelectorDrawer = dynamic(
-  () => import('@/app/components/board-selector-drawer/board-selector-drawer'),
+  () => import("@/app/components/board-selector-drawer/board-selector-drawer"),
   { ssr: false },
 );
 
@@ -72,25 +76,25 @@ function OnboardingCard({ icon, title, description, onClick }: OnboardingCardPro
       variant="outlined"
       sx={{
         borderRadius: `${themeTokens.borderRadius.lg}px`,
-        border: '1px solid var(--neutral-200)',
+        border: "1px solid var(--neutral-200)",
         transition: themeTokens.transitions.fast,
-        '&:hover': {
-          borderColor: 'var(--neutral-300)',
+        "&:hover": {
+          borderColor: "var(--neutral-300)",
           boxShadow: themeTokens.shadows.sm,
         },
       }}
     >
       <CardActionArea onClick={onClick} sx={{ p: 0 }}>
-        <CardContent sx={{ display: 'flex', alignItems: 'center', gap: 2, py: 2, px: 2.5 }}>
+        <CardContent sx={{ display: "flex", alignItems: "center", gap: 2, py: 2, px: 2.5 }}>
           <Box
             sx={{
               width: 44,
               height: 44,
               borderRadius: `${themeTokens.borderRadius.md}px`,
-              backgroundColor: 'var(--semantic-selected-light)',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
+              backgroundColor: "var(--semantic-selected-light)",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
               flexShrink: 0,
               color: themeTokens.colors.primary,
             }}
@@ -101,14 +105,14 @@ function OnboardingCard({ icon, title, description, onClick }: OnboardingCardPro
             <Typography
               variant="body1"
               fontWeight={themeTokens.typography.fontWeight.semibold}
-              sx={{ color: 'var(--neutral-900)', lineHeight: themeTokens.typography.lineHeight.tight }}
+              sx={{
+                color: "var(--neutral-900)",
+                lineHeight: themeTokens.typography.lineHeight.tight,
+              }}
             >
               {title}
             </Typography>
-            <Typography
-              variant="body2"
-              sx={{ color: 'var(--neutral-500)', mt: 0.25 }}
-            >
+            <Typography variant="body2" sx={{ color: "var(--neutral-500)", mt: 0.25 }}>
               {description}
             </Typography>
           </Box>
@@ -123,7 +127,7 @@ const ANDROID_PLAY_STORE_URL = 'https://play.google.com/store/apps/details?id=co
 const ANDROID_SIDELOAD_URL = 'https://github.com/boardsesh/boardsesh/releases/latest';
 const ANDROID_LAUNCH_DATE = new Date('2026-05-03T00:00:00Z');
 
-type InstallPlatform = 'unknown' | 'native' | 'android-web' | 'other-web';
+type InstallPlatform = "unknown" | "native" | "android-web" | "other-web";
 
 function InstallAppShadowCard() {
   return (
@@ -132,11 +136,11 @@ function InstallAppShadowCard() {
       aria-hidden
       sx={{
         borderRadius: `${themeTokens.borderRadius.lg}px`,
-        border: '1px solid var(--neutral-200)',
+        border: "1px solid var(--neutral-200)",
         transition: themeTokens.transitions.fast,
       }}
     >
-      <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, py: 2, px: 2.5 }}>
+      <Box sx={{ display: "flex", alignItems: "center", gap: 2, py: 2, px: 2.5 }}>
         <Skeleton
           variant="rounded"
           width={44}
@@ -153,11 +157,11 @@ function InstallAppShadowCard() {
 }
 
 function InstallAppCard({ platform }: { platform: InstallPlatform }) {
-  const isAndroid = platform === 'android-web';
+  const isAndroid = platform === "android-web";
   const { days, hours, minutes, seconds, done } = useCountdown(ANDROID_LAUNCH_DATE, isAndroid);
 
-  if (platform === 'unknown') return <InstallAppShadowCard />;
-  if (platform === 'native') return null;
+  if (platform === "unknown") return <InstallAppShadowCard />;
+  if (platform === "native") return null;
 
   if (isAndroid) {
     if (done) {
@@ -167,8 +171,8 @@ function InstallAppCard({ platform }: { platform: InstallPlatform }) {
           title="Get the Boardsesh app"
           description="Now on Google Play"
           onClick={() => {
-            track('App Install Click', { platform: 'android', source: 'google-play' });
-            window.open(ANDROID_PLAY_STORE_URL, '_blank', 'noopener,noreferrer');
+            track("App Install Click", { platform: "android", source: "google-play" });
+            window.open(ANDROID_PLAY_STORE_URL, "_blank", "noopener,noreferrer");
           }}
         />
       );
@@ -179,8 +183,8 @@ function InstallAppCard({ platform }: { platform: InstallPlatform }) {
         title="Android app is almost here"
         description={`Landing in ${days}d ${hours}h ${minutes}m ${seconds}s. Tap to sideload the preview build.`}
         onClick={() => {
-          track('App Install Click', { platform: 'android', source: 'github-sideload' });
-          window.open(ANDROID_SIDELOAD_URL, '_blank', 'noopener,noreferrer');
+          track("App Install Click", { platform: "android", source: "github-sideload" });
+          window.open(ANDROID_SIDELOAD_URL, "_blank", "noopener,noreferrer");
         }}
       />
     );
@@ -192,14 +196,17 @@ function InstallAppCard({ platform }: { platform: InstallPlatform }) {
       title="Get the Boardsesh app"
       description="Lights up holds on your board straight from your phone"
       onClick={() => {
-        track('App Install Click', { platform: 'ios', source: 'app-store' });
-        window.open(IOS_APP_STORE_URL, '_blank', 'noopener,noreferrer');
+        track("App Install Click", { platform: "ios", source: "app-store" });
+        window.open(IOS_APP_STORE_URL, "_blank", "noopener,noreferrer");
       }}
     />
   );
 }
 
-export default function HomePageContent({ boardConfigs, initialPopularConfigs }: HomePageContentProps) {
+export default function HomePageContent({
+  boardConfigs,
+  initialPopularConfigs,
+}: HomePageContentProps) {
   const { status } = useSession();
   const router = useRouter();
   const { activeSession } = usePersistentSession();
@@ -209,14 +216,14 @@ export default function HomePageContent({ boardConfigs, initialPopularConfigs }:
   const [seshDrawerMounted, setSeshDrawerMounted] = useState(false);
   const [findClimbersMounted, setFindClimbersMounted] = useState(false);
   const [createBoardMounted, setCreateBoardMounted] = useState(false);
-  const [installPlatform, setInstallPlatform] = useState<InstallPlatform>('unknown');
+  const [installPlatform, setInstallPlatform] = useState<InstallPlatform>("unknown");
 
   useEffect(() => {
     let cancelled = false;
-    const classifyWeb = () => /Android/i.test(navigator.userAgent) ? 'android-web' : 'other-web';
+    const classifyWeb = () => (/Android/i.test(navigator.userAgent) ? "android-web" : "other-web");
 
     if (isNativeApp()) {
-      setInstallPlatform('native');
+      setInstallPlatform("native");
       return;
     }
 
@@ -224,12 +231,14 @@ export default function HomePageContent({ boardConfigs, initialPopularConfigs }:
     // injected window.Capacitor yet. Wait for it before classifying as web,
     // otherwise native users get stuck with install CTAs.
     if (isCapacitorWebView()) {
-      waitForCapacitor().then((appeared) => {
-        if (cancelled) return;
-        setInstallPlatform(appeared && isNativeApp() ? 'native' : classifyWeb());
-      }).catch(() => {
-        if (!cancelled) setInstallPlatform(classifyWeb());
-      });
+      waitForCapacitor()
+        .then((appeared) => {
+          if (cancelled) return;
+          setInstallPlatform(appeared && isNativeApp() ? "native" : classifyWeb());
+        })
+        .catch(() => {
+          if (!cancelled) setInstallPlatform(classifyWeb());
+        });
       return () => {
         cancelled = true;
       };
@@ -250,65 +259,88 @@ export default function HomePageContent({ boardConfigs, initialPopularConfigs }:
     if (createBoardOpen) setCreateBoardMounted(true);
   }, [createBoardOpen]);
 
-  const isAuthenticated = status === 'authenticated';
+  const isAuthenticated = status === "authenticated";
 
-  const handleBoardClick = useCallback((board: UserBoard) => {
-    if (board.slug) {
-      router.push(constructBoardSlugListUrl(board.slug, board.angle));
-    }
-  }, [router]);
+  const handleBoardClick = useCallback(
+    (board: UserBoard) => {
+      if (board.slug) {
+        router.push(constructBoardSlugListUrl(board.slug, board.angle));
+      }
+    },
+    [router],
+  );
 
-  const handleConfigClick = useCallback((config: PopularBoardConfig) => {
-    const angle = getDefaultAngleForBoard(config.boardType);
-    if (config.layoutName && config.sizeName && config.setNames.length > 0) {
-      router.push(constructClimbListWithSlugs(
-        config.boardType,
-        config.layoutName,
-        config.sizeName,
-        config.sizeDescription ?? undefined,
-        config.setNames,
-        angle,
-      ));
-    } else {
-      const setIds = config.setIds.join(',');
-      const numericFallback = `/${config.boardType}/${config.layoutId}/${config.sizeId}/${setIds}/${angle}/list`;
-      router.push(
-        tryConstructSlugListUrl(config.boardType, config.layoutId, config.sizeId, config.setIds, angle)
-          ?? numericFallback,
-      );
-    }
-  }, [router]);
+  const handleConfigClick = useCallback(
+    (config: PopularBoardConfig) => {
+      const angle = getDefaultAngleForBoard(config.boardType);
+      if (config.layoutName && config.sizeName && config.setNames.length > 0) {
+        router.push(
+          constructClimbListWithSlugs(
+            config.boardType,
+            config.layoutName,
+            config.sizeName,
+            config.sizeDescription ?? undefined,
+            config.setNames,
+            angle,
+          ),
+        );
+      } else {
+        const setIds = config.setIds.join(",");
+        const numericFallback = `/${config.boardType}/${config.layoutId}/${config.sizeId}/${setIds}/${angle}/list`;
+        router.push(
+          tryConstructSlugListUrl(
+            config.boardType,
+            config.layoutId,
+            config.sizeId,
+            config.setIds,
+            angle,
+          ) ?? numericFallback,
+        );
+      }
+    },
+    [router],
+  );
 
   const handleCustomClick = useCallback(() => {
     setCreateBoardOpen(true);
   }, []);
 
-  const handleBoardCreated = useCallback((url: string) => {
-    setCreateBoardOpen(false);
-    router.push(url);
-  }, [router]);
+  const handleBoardCreated = useCallback(
+    (url: string) => {
+      setCreateBoardOpen(false);
+      router.push(url);
+    },
+    [router],
+  );
 
   return (
-    <Box sx={{ minHeight: '100dvh', display: 'flex', flexDirection: 'column', pb: 'calc(120px + env(safe-area-inset-bottom, 0px))' }}>
+    <Box
+      sx={{
+        minHeight: "100dvh",
+        display: "flex",
+        flexDirection: "column",
+        pb: "calc(120px + env(safe-area-inset-bottom, 0px))",
+      }}
+    >
       <Box
         component="main"
         sx={{
           flex: 1,
           px: 2,
           py: 2,
-          pt: 'var(--global-header-height)',
-          display: 'flex',
-          flexDirection: 'column',
+          pt: "var(--global-header-height)",
+          display: "flex",
+          flexDirection: "column",
           gap: 3,
         }}
       >
         {/* Hero: Start Climbing CTA */}
         <Box
           sx={{
-            display: 'flex',
-            flexDirection: 'column',
-            alignItems: 'center',
-            textAlign: 'center',
+            display: "flex",
+            flexDirection: "column",
+            alignItems: "center",
+            textAlign: "center",
             gap: 2,
             py: 4,
           }}
@@ -316,14 +348,11 @@ export default function HomePageContent({ boardConfigs, initialPopularConfigs }:
           <Typography
             variant="h5"
             fontWeight={themeTokens.typography.fontWeight.bold}
-            sx={{ color: 'var(--neutral-900)' }}
+            sx={{ color: "var(--neutral-900)" }}
           >
             Get on the board!
           </Typography>
-          <Typography
-            variant="body1"
-            sx={{ color: 'var(--neutral-500)', maxWidth: 320 }}
-          >
+          <Typography variant="body1" sx={{ color: "var(--neutral-500)", maxWidth: 320 }}>
             Track your sends across Kilter, Tension, and MoonBoard.
           </Typography>
           <Button
@@ -333,8 +362,8 @@ export default function HomePageContent({ boardConfigs, initialPopularConfigs }:
             onClick={() => {
               if (activeSession) {
                 let url: string;
-                if (activeSession.boardPath.startsWith('/b/')) {
-                  const segments = activeSession.boardPath.split('/');
+                if (activeSession.boardPath.startsWith("/b/")) {
+                  const segments = activeSession.boardPath.split("/");
                   url = constructBoardSlugListUrl(segments[2], activeSession.parsedParams.angle);
                 } else {
                   url = activeSession.boardPath;
@@ -352,11 +381,11 @@ export default function HomePageContent({ boardConfigs, initialPopularConfigs }:
               py: 1.5,
               fontSize: themeTokens.typography.fontSize.lg,
               fontWeight: themeTokens.typography.fontWeight.semibold,
-              textTransform: 'none',
+              textTransform: "none",
               boxShadow: themeTokens.shadows.md,
             }}
           >
-            {activeSession ? 'Continue climbing' : 'Start climbing'}
+            {activeSession ? "Continue climbing" : "Start climbing"}
           </Button>
         </Box>
 
@@ -371,21 +400,21 @@ export default function HomePageContent({ boardConfigs, initialPopularConfigs }:
         {/* Onboarding Cards */}
         <Box
           sx={{
-            display: 'flex',
-            flexDirection: 'column',
+            display: "flex",
+            flexDirection: "column",
             gap: 1.5,
-            width: '100%',
+            width: "100%",
             maxWidth: 420,
-            mx: 'auto',
+            mx: "auto",
           }}
         >
           <Typography
             variant="body2"
             fontWeight={themeTokens.typography.fontWeight.semibold}
             sx={{
-              color: 'var(--neutral-400)',
-              textTransform: 'uppercase',
-              letterSpacing: '0.05em',
+              color: "var(--neutral-400)",
+              textTransform: "uppercase",
+              letterSpacing: "0.05em",
               fontSize: themeTokens.typography.fontSize.xs,
               px: 0.5,
             }}
@@ -399,7 +428,7 @@ export default function HomePageContent({ boardConfigs, initialPopularConfigs }:
             icon={<WarningAmberOutlined />}
             title="Coming from Kilter?"
             description="Bring your logbook and history over in one step"
-            onClick={() => router.push('/aurora-migration')}
+            onClick={() => router.push("/aurora-migration")}
           />
 
           <OnboardingCard
@@ -413,7 +442,7 @@ export default function HomePageContent({ boardConfigs, initialPopularConfigs }:
             icon={<LocalOfferOutlined />}
             title="Build a playlist"
             description="Line up your climbs before you get to the gym"
-            onClick={() => router.push('/playlists')}
+            onClick={() => router.push("/playlists")}
           />
 
           <OnboardingCard
@@ -427,21 +456,23 @@ export default function HomePageContent({ boardConfigs, initialPopularConfigs }:
             icon={<DiscordIcon />}
             title="Join the crew on Discord"
             description="Share beta, report bugs, and help shape what's next"
-            onClick={() => window.open('https://discord.gg/YXA8GsXfQK', '_blank', 'noopener,noreferrer')}
+            onClick={() =>
+              window.open("https://discord.gg/YXA8GsXfQK", "_blank", "noopener,noreferrer")
+            }
           />
         </Box>
 
         {/* Authenticated users: nudge to feed */}
         {isAuthenticated && (
-          <Box sx={{ textAlign: 'center', py: 2 }}>
-            <Typography variant="body2" sx={{ color: 'var(--neutral-400)', mb: 1 }}>
+          <Box sx={{ textAlign: "center", py: 2 }}>
+            <Typography variant="body2" sx={{ color: "var(--neutral-400)", mb: 1 }}>
               Your friends are climbing.
             </Typography>
             <Button
               variant="text"
               size="small"
-              onClick={() => router.push('/feed')}
-              sx={{ textTransform: 'none' }}
+              onClick={() => router.push("/feed")}
+              sx={{ textTransform: "none" }}
             >
               See the feed
             </Button>

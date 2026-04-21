@@ -1,15 +1,15 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
-import React from 'react';
-import { act } from 'react';
+import { describe, it, expect, vi, beforeEach } from "vite-plus/test";
+import React from "react";
+import { act } from "react";
 
 // ---------------------------------------------------------------------------
 // Mocks
 // ---------------------------------------------------------------------------
 
 const mockIsNativeApp = vi.fn(() => false);
-const mockGetPlatform = vi.fn<() => 'ios' | 'android' | 'web'>(() => 'web');
+const mockGetPlatform = vi.fn<() => "ios" | "android" | "web">(() => "web");
 
-vi.mock('../../ble/capacitor-utils', () => ({
+vi.mock("../../ble/capacitor-utils", () => ({
   isNativeApp: () => mockIsNativeApp(),
   getPlatform: () => mockGetPlatform(),
 }));
@@ -20,7 +20,7 @@ const mockEndLiveActivitySession = vi.fn<() => Promise<void>>(() => Promise.reso
 const mockUpdateLiveActivity = vi.fn<() => Promise<void>>(() => Promise.resolve());
 const mockUpdateLiveActivityClimb = vi.fn<() => Promise<void>>(() => Promise.resolve());
 
-vi.mock('../live-activity-plugin', () => ({
+vi.mock("../live-activity-plugin", () => ({
   isLiveActivityAvailable: () => mockIsLiveActivityAvailable(),
   startLiveActivitySession: (...args: unknown[]) => mockStartLiveActivitySession(...(args as [])),
   endLiveActivitySession: (...args: unknown[]) => mockEndLiveActivitySession(...(args as [])),
@@ -28,20 +28,20 @@ vi.mock('../live-activity-plugin', () => ({
   updateLiveActivityClimb: (...args: unknown[]) => mockUpdateLiveActivityClimb(...(args as [])),
 }));
 
-vi.mock('../../backend-url', () => ({
-  getBackendWsUrl: () => 'ws://localhost:8080/graphql',
+vi.mock("../../backend-url", () => ({
+  getBackendWsUrl: () => "ws://localhost:8080/graphql",
 }));
 
 // Import after mocks are set up
 // eslint-disable-next-line @typescript-eslint/no-require-imports -- dynamic import after mock setup
-const { useLiveActivity } = await import('../use-live-activity');
+const { useLiveActivity } = await import("../use-live-activity");
 
 // ---------------------------------------------------------------------------
 // Helpers
 // ---------------------------------------------------------------------------
 
-import type { ClimbQueueItem } from '@/app/components/queue-control/types';
-import type { BoardDetails } from '../../types';
+import type { ClimbQueueItem } from "@/app/components/queue-control/types";
+import type { BoardDetails } from "../../types";
 
 function makeBoardDetails(overrides?: Partial<BoardDetails>): BoardDetails {
   return {
@@ -53,7 +53,7 @@ function makeBoardDetails(overrides?: Partial<BoardDetails>): BoardDetails {
     edge_top: 100,
     boardHeight: 100,
     boardWidth: 100,
-    board_name: 'kilter',
+    board_name: "kilter",
     layout_id: 1,
     size_id: 1,
     set_ids: [1, 2],
@@ -67,14 +67,14 @@ function makeQueueItem(id: string): ClimbQueueItem {
     climb: {
       uuid: `climb-${id}`,
       name: `Test Climb ${id}`,
-      difficulty: 'V4',
-      frames: 'p1r12p2r13',
+      difficulty: "V4",
+      frames: "p1r12p2r13",
       angle: 40,
-      setter_username: 'tester',
+      setter_username: "tester",
       ascensionist_count: 10,
-      quality_average: '3.5',
+      quality_average: "3.5",
       stars: 3,
-      difficulty_error: '0.5',
+      difficulty_error: "0.5",
       benchmark_difficulty: null,
     },
   };
@@ -110,7 +110,7 @@ function defaultProps(): LiveActivityHookProps {
  */
 async function renderLiveActivityHook(initialProps: LiveActivityHookProps) {
   let latestProps = { ...initialProps };
-  const container = document.createElement('div');
+  const container = document.createElement("div");
   document.body.appendChild(container);
 
   function HookHost() {
@@ -118,7 +118,7 @@ async function renderLiveActivityHook(initialProps: LiveActivityHookProps) {
     return null;
   }
 
-  const ReactDOM = await import('react-dom/client');
+  const ReactDOM = await import("react-dom/client");
   const root = ReactDOM.createRoot(container);
 
   await act(async () => {
@@ -145,30 +145,32 @@ async function renderLiveActivityHook(initialProps: LiveActivityHookProps) {
 // Tests
 // ---------------------------------------------------------------------------
 
-describe('useLiveActivity', () => {
+describe("useLiveActivity", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     mockIsNativeApp.mockReturnValue(false);
-    mockGetPlatform.mockReturnValue('web');
+    mockGetPlatform.mockReturnValue("web");
     mockIsLiveActivityAvailable.mockResolvedValue(true);
   });
 
-  it('does not call plugin on non-iOS platforms', async () => {
+  it("does not call plugin on non-iOS platforms", async () => {
     mockIsNativeApp.mockReturnValue(true);
-    mockGetPlatform.mockReturnValue('android');
+    mockGetPlatform.mockReturnValue("android");
 
-    const item = makeQueueItem('1');
+    const item = makeQueueItem("1");
     const hook = await renderLiveActivityHook({
       ...defaultProps(),
       queue: [item],
       currentClimbQueueItem: item,
       boardDetails: makeBoardDetails(),
       isSessionActive: true,
-      sessionId: 'test-session',
+      sessionId: "test-session",
     });
 
     // Wait for effects
-    await act(async () => { await new Promise((r) => setTimeout(r, 50)); });
+    await act(async () => {
+      await new Promise((r) => setTimeout(r, 50));
+    });
 
     expect(mockStartLiveActivitySession).not.toHaveBeenCalled();
     expect(mockUpdateLiveActivity).not.toHaveBeenCalled();
@@ -176,21 +178,23 @@ describe('useLiveActivity', () => {
     await hook.unmount();
   });
 
-  it('does not call plugin on web', async () => {
+  it("does not call plugin on web", async () => {
     mockIsNativeApp.mockReturnValue(false);
-    mockGetPlatform.mockReturnValue('web');
+    mockGetPlatform.mockReturnValue("web");
 
-    const item = makeQueueItem('1');
+    const item = makeQueueItem("1");
     const hook = await renderLiveActivityHook({
       ...defaultProps(),
       queue: [item],
       currentClimbQueueItem: item,
       boardDetails: makeBoardDetails(),
       isSessionActive: true,
-      sessionId: 'test-session',
+      sessionId: "test-session",
     });
 
-    await act(async () => { await new Promise((r) => setTimeout(r, 50)); });
+    await act(async () => {
+      await new Promise((r) => setTimeout(r, 50));
+    });
 
     expect(mockStartLiveActivitySession).not.toHaveBeenCalled();
     expect(mockUpdateLiveActivity).not.toHaveBeenCalled();
@@ -198,26 +202,28 @@ describe('useLiveActivity', () => {
     await hook.unmount();
   });
 
-  it('calls startSession when queue becomes active in a session', async () => {
+  it("calls startSession when queue becomes active in a session", async () => {
     mockIsNativeApp.mockReturnValue(true);
-    mockGetPlatform.mockReturnValue('ios');
+    mockGetPlatform.mockReturnValue("ios");
 
-    const item = makeQueueItem('1');
+    const item = makeQueueItem("1");
     const hook = await renderLiveActivityHook({
       ...defaultProps(),
       queue: [item],
       currentClimbQueueItem: item,
       boardDetails: makeBoardDetails(),
       isSessionActive: true,
-      sessionId: 'test-session',
+      sessionId: "test-session",
     });
 
-    await act(async () => { await new Promise((r) => setTimeout(r, 50)); });
+    await act(async () => {
+      await new Promise((r) => setTimeout(r, 50));
+    });
 
     expect(mockStartLiveActivitySession).toHaveBeenCalledTimes(1);
     expect(mockStartLiveActivitySession).toHaveBeenCalledWith(
       expect.objectContaining({
-        boardName: 'kilter',
+        boardName: "kilter",
         layoutId: 1,
         sizeId: 1,
       }),
@@ -226,21 +232,23 @@ describe('useLiveActivity', () => {
     await hook.unmount();
   });
 
-  it('calls endSession when queue is cleared', async () => {
+  it("calls endSession when queue is cleared", async () => {
     mockIsNativeApp.mockReturnValue(true);
-    mockGetPlatform.mockReturnValue('ios');
+    mockGetPlatform.mockReturnValue("ios");
 
-    const item = makeQueueItem('1');
+    const item = makeQueueItem("1");
     const hook = await renderLiveActivityHook({
       ...defaultProps(),
       queue: [item],
       currentClimbQueueItem: item,
       boardDetails: makeBoardDetails(),
       isSessionActive: true,
-      sessionId: 'test-session',
+      sessionId: "test-session",
     });
 
-    await act(async () => { await new Promise((r) => setTimeout(r, 50)); });
+    await act(async () => {
+      await new Promise((r) => setTimeout(r, 50));
+    });
     expect(mockStartLiveActivitySession).toHaveBeenCalledTimes(1);
 
     await hook.rerender({
@@ -248,18 +256,20 @@ describe('useLiveActivity', () => {
       currentClimbQueueItem: null,
     });
 
-    await act(async () => { await new Promise((r) => setTimeout(r, 50)); });
+    await act(async () => {
+      await new Promise((r) => setTimeout(r, 50));
+    });
     expect(mockEndLiveActivitySession).toHaveBeenCalled();
 
     await hook.unmount();
   });
 
-  it('calls updateActivity on climb change', async () => {
+  it("calls updateActivity on climb change", async () => {
     mockIsNativeApp.mockReturnValue(true);
-    mockGetPlatform.mockReturnValue('ios');
+    mockGetPlatform.mockReturnValue("ios");
 
-    const item1 = makeQueueItem('1');
-    const item2 = makeQueueItem('2');
+    const item1 = makeQueueItem("1");
+    const item2 = makeQueueItem("2");
 
     const hook = await renderLiveActivityHook({
       ...defaultProps(),
@@ -267,11 +277,13 @@ describe('useLiveActivity', () => {
       currentClimbQueueItem: item1,
       boardDetails: makeBoardDetails(),
       isSessionActive: true,
-      sessionId: 'test-session',
+      sessionId: "test-session",
     });
 
     // Wait for availability check to resolve and session to start
-    await act(async () => { await new Promise((r) => setTimeout(r, 50)); });
+    await act(async () => {
+      await new Promise((r) => setTimeout(r, 50));
+    });
     expect(mockStartLiveActivitySession).toHaveBeenCalled();
 
     mockUpdateLiveActivity.mockClear();
@@ -281,10 +293,12 @@ describe('useLiveActivity', () => {
     // (not the full updateActivity, since the queue didn't change)
     await hook.rerender({ currentClimbQueueItem: item2 });
 
-    await act(async () => { await new Promise((r) => setTimeout(r, 50)); });
+    await act(async () => {
+      await new Promise((r) => setTimeout(r, 50));
+    });
     expect(mockUpdateLiveActivityClimb).toHaveBeenCalledWith(
       expect.objectContaining({
-        climbName: 'Test Climb 2',
+        climbName: "Test Climb 2",
         currentIndex: 1,
         totalClimbs: 2,
         hasNext: false,
@@ -297,21 +311,23 @@ describe('useLiveActivity', () => {
     await hook.unmount();
   });
 
-  it('calls updateActivity in party mode (JS handles updates for all modes)', async () => {
+  it("calls updateActivity in party mode (JS handles updates for all modes)", async () => {
     mockIsNativeApp.mockReturnValue(true);
-    mockGetPlatform.mockReturnValue('ios');
+    mockGetPlatform.mockReturnValue("ios");
 
-    const item = makeQueueItem('1');
+    const item = makeQueueItem("1");
     const hook = await renderLiveActivityHook({
       ...defaultProps(),
       queue: [item],
       currentClimbQueueItem: item,
       boardDetails: makeBoardDetails(),
       isSessionActive: true,
-      sessionId: 'party-123',
+      sessionId: "party-123",
     });
 
-    await act(async () => { await new Promise((r) => setTimeout(r, 50)); });
+    await act(async () => {
+      await new Promise((r) => setTimeout(r, 50));
+    });
 
     // JS side now always sends updates regardless of party mode.
     // The initial render with a queue triggers the queue-sync effect (full update).
@@ -320,11 +336,11 @@ describe('useLiveActivity', () => {
     await hook.unmount();
   });
 
-  it('does not start Live Activity without an active session', async () => {
+  it("does not start Live Activity without an active session", async () => {
     mockIsNativeApp.mockReturnValue(true);
-    mockGetPlatform.mockReturnValue('ios');
+    mockGetPlatform.mockReturnValue("ios");
 
-    const item = makeQueueItem('1');
+    const item = makeQueueItem("1");
     const hook = await renderLiveActivityHook({
       ...defaultProps(),
       queue: [item],
@@ -333,43 +349,49 @@ describe('useLiveActivity', () => {
       isSessionActive: false,
     });
 
-    await act(async () => { await new Promise((r) => setTimeout(r, 50)); });
+    await act(async () => {
+      await new Promise((r) => setTimeout(r, 50));
+    });
 
     expect(mockStartLiveActivitySession).not.toHaveBeenCalled();
 
     await hook.unmount();
   });
 
-  it('ends Live Activity when session becomes inactive', async () => {
+  it("ends Live Activity when session becomes inactive", async () => {
     mockIsNativeApp.mockReturnValue(true);
-    mockGetPlatform.mockReturnValue('ios');
+    mockGetPlatform.mockReturnValue("ios");
 
-    const item = makeQueueItem('1');
+    const item = makeQueueItem("1");
     const hook = await renderLiveActivityHook({
       ...defaultProps(),
       queue: [item],
       currentClimbQueueItem: item,
       boardDetails: makeBoardDetails(),
       isSessionActive: true,
-      sessionId: 'test-session',
+      sessionId: "test-session",
     });
 
-    await act(async () => { await new Promise((r) => setTimeout(r, 50)); });
+    await act(async () => {
+      await new Promise((r) => setTimeout(r, 50));
+    });
     expect(mockStartLiveActivitySession).toHaveBeenCalledTimes(1);
 
     await hook.rerender({ isSessionActive: false });
 
-    await act(async () => { await new Promise((r) => setTimeout(r, 50)); });
+    await act(async () => {
+      await new Promise((r) => setTimeout(r, 50));
+    });
     expect(mockEndLiveActivitySession).toHaveBeenCalled();
 
     await hook.unmount();
   });
 
-  it('starts Live Activity when session becomes active mid-render', async () => {
+  it("starts Live Activity when session becomes active mid-render", async () => {
     mockIsNativeApp.mockReturnValue(true);
-    mockGetPlatform.mockReturnValue('ios');
+    mockGetPlatform.mockReturnValue("ios");
 
-    const item = makeQueueItem('1');
+    const item = makeQueueItem("1");
     const hook = await renderLiveActivityHook({
       ...defaultProps(),
       queue: [item],
@@ -378,18 +400,22 @@ describe('useLiveActivity', () => {
       isSessionActive: false,
     });
 
-    await act(async () => { await new Promise((r) => setTimeout(r, 50)); });
+    await act(async () => {
+      await new Promise((r) => setTimeout(r, 50));
+    });
     expect(mockStartLiveActivitySession).not.toHaveBeenCalled();
 
-    await hook.rerender({ isSessionActive: true, sessionId: 'test-session' });
+    await hook.rerender({ isSessionActive: true, sessionId: "test-session" });
 
-    await act(async () => { await new Promise((r) => setTimeout(r, 50)); });
+    await act(async () => {
+      await new Promise((r) => setTimeout(r, 50));
+    });
     expect(mockStartLiveActivitySession).toHaveBeenCalledTimes(1);
 
     await hook.unmount();
   });
 
-  it('only sends full queue update when queue and current climb change in the same render (effect ordering)', async () => {
+  it("only sends full queue update when queue and current climb change in the same render (effect ordering)", async () => {
     // This test enforces the documented constraint at use-live-activity.ts:153-155:
     // Effect 1 (queue-sync) MUST be declared before Effect 2 (climb-nav) in source
     // order.  React runs effects top-to-bottom, so Effect 1 sets
@@ -399,10 +425,10 @@ describe('useLiveActivity', () => {
     // === false, call updateLiveActivityClimb, and then Effect 1 would also call
     // updateLiveActivity — causing both mocks to fire instead of just one.
     mockIsNativeApp.mockReturnValue(true);
-    mockGetPlatform.mockReturnValue('ios');
+    mockGetPlatform.mockReturnValue("ios");
 
-    const item1 = makeQueueItem('1');
-    const item2 = makeQueueItem('2');
+    const item1 = makeQueueItem("1");
+    const item2 = makeQueueItem("2");
 
     const hook = await renderLiveActivityHook({
       ...defaultProps(),
@@ -410,10 +436,12 @@ describe('useLiveActivity', () => {
       currentClimbQueueItem: item1,
       boardDetails: makeBoardDetails(),
       isSessionActive: true,
-      sessionId: 'test-session',
+      sessionId: "test-session",
     });
 
-    await act(async () => { await new Promise((r) => setTimeout(r, 50)); });
+    await act(async () => {
+      await new Promise((r) => setTimeout(r, 50));
+    });
     expect(mockStartLiveActivitySession).toHaveBeenCalledTimes(1);
 
     mockUpdateLiveActivity.mockClear();
@@ -429,12 +457,14 @@ describe('useLiveActivity', () => {
       currentClimbQueueItem: item2,
     });
 
-    await act(async () => { await new Promise((r) => setTimeout(r, 50)); });
+    await act(async () => {
+      await new Promise((r) => setTimeout(r, 50));
+    });
 
     // Effect 1 should have sent the full update.
     expect(mockUpdateLiveActivity).toHaveBeenCalledWith(
       expect.objectContaining({
-        climbName: 'Test Climb 2',
+        climbName: "Test Climb 2",
         currentIndex: 1,
         totalClimbs: 2,
         hasNext: false,
@@ -448,12 +478,12 @@ describe('useLiveActivity', () => {
     await hook.unmount();
   });
 
-  it('handles plugin unavailability gracefully', async () => {
+  it("handles plugin unavailability gracefully", async () => {
     mockIsNativeApp.mockReturnValue(true);
-    mockGetPlatform.mockReturnValue('ios');
+    mockGetPlatform.mockReturnValue("ios");
     mockIsLiveActivityAvailable.mockResolvedValue(false);
 
-    const item = makeQueueItem('1');
+    const item = makeQueueItem("1");
 
     // Should not throw
     const hook = await renderLiveActivityHook({
@@ -462,10 +492,12 @@ describe('useLiveActivity', () => {
       currentClimbQueueItem: item,
       boardDetails: makeBoardDetails(),
       isSessionActive: true,
-      sessionId: 'test-session',
+      sessionId: "test-session",
     });
 
-    await act(async () => { await new Promise((r) => setTimeout(r, 100)); });
+    await act(async () => {
+      await new Promise((r) => setTimeout(r, 100));
+    });
 
     // When availability resolves to false, startSession should not be called
     expect(mockStartLiveActivitySession).not.toHaveBeenCalled();

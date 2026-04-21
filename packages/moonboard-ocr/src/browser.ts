@@ -20,10 +20,10 @@
  * ```
  */
 
-import { CanvasImageProcessor } from './image-processor/canvas-processor';
+import { CanvasImageProcessor } from "./image-processor/canvas-processor";
 // Import from parser-core to avoid pulling in sharp via parser.ts
-import { parseWithProcessor, deduplicateClimbs } from './parser-core';
-import type { ParseResult, MoonBoardClimb, DetectedHold, GridCoordinate, HoldType } from './types';
+import { parseWithProcessor, deduplicateClimbs } from "./parser-core";
+import type { ParseResult, MoonBoardClimb, DetectedHold, GridCoordinate, HoldType } from "./types";
 
 // Re-export types for consumers
 export type { ParseResult, MoonBoardClimb, DetectedHold, GridCoordinate, HoldType };
@@ -49,7 +49,7 @@ export async function parseScreenshot(image: File | Blob): Promise<ParseResult> 
  */
 export async function parseMultipleScreenshots(
   images: Array<File | Blob>,
-  onProgress?: (current: number, total: number, name: string) => void
+  onProgress?: (current: number, total: number, name: string) => void,
 ): Promise<{ climbs: MoonBoardClimb[]; errors: Array<{ name: string; error: string }> }> {
   const climbs: MoonBoardClimb[] = [];
   const errors: Array<{ name: string; error: string }> = [];
@@ -64,10 +64,10 @@ export async function parseMultipleScreenshots(
       if (result.success && result.climb) {
         climbs.push(result.climb);
       } else {
-        errors.push({ name, error: result.error || 'Unknown error' });
+        errors.push({ name, error: result.error || "Unknown error" });
       }
     } catch (error) {
-      const message = error instanceof Error ? error.message : 'Unknown error';
+      const message = error instanceof Error ? error.message : "Unknown error";
       errors.push({ name, error: message });
     }
   }
@@ -79,6 +79,11 @@ export async function parseMultipleScreenshots(
 export { deduplicateClimbs };
 
 // Re-export the CanvasImageProcessor for advanced use cases
-export { CanvasImageProcessor } from './image-processor/canvas-processor';
-export { parseWithProcessor } from './parser-core';
-export type { ImageProcessor, RawPixelData, ImageMetadata, ImageRegion } from './image-processor/types';
+export { CanvasImageProcessor } from "./image-processor/canvas-processor";
+export { parseWithProcessor } from "./parser-core";
+export type {
+  ImageProcessor,
+  RawPixelData,
+  ImageMetadata,
+  ImageRegion,
+} from "./image-processor/types";

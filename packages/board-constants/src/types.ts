@@ -1,4 +1,4 @@
-import type { BoardName } from '@boardsesh/shared-schema';
+import type { BoardName } from "@boardsesh/shared-schema";
 
 export type { BoardName };
 

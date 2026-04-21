@@ -1,13 +1,13 @@
-'use client';
+"use client";
 
-import React from 'react';
-import ClimbCard from '@/app/components/climb-card/climb-card';
-import ClimbDetailShellClient from './climb-detail-shell.client';
-import { useBuildClimbDetailSections } from './build-climb-detail-sections';
-import { useDoubleTapFavorite } from '@/app/components/climb-actions/use-double-tap-favorite';
-import HeartAnimationOverlay from '@/app/components/climb-card/heart-animation-overlay';
-import type { BetaLink } from '@/app/lib/api-wrappers/sync-api-types';
-import type { BoardDetails, Climb } from '@/app/lib/types';
+import React from "react";
+import ClimbCard from "@/app/components/climb-card/climb-card";
+import ClimbDetailShellClient from "./climb-detail-shell.client";
+import { useBuildClimbDetailSections } from "./build-climb-detail-sections";
+import { useDoubleTapFavorite } from "@/app/components/climb-actions/use-double-tap-favorite";
+import HeartAnimationOverlay from "@/app/components/climb-card/heart-animation-overlay";
+import type { BetaLink } from "@/app/lib/api-wrappers/sync-api-types";
+import type { BoardDetails, Climb } from "@/app/lib/types";
 
 interface ClimbDetailInfoShellClientProps {
   climb: Climb;
@@ -40,11 +40,9 @@ export default function ClimbDetailInfoShellClient({
     boardName,
   });
 
-  const {
-    handleDoubleTap,
-    showHeart,
-    dismissHeart,
-  } = useDoubleTapFavorite({ climbUuid: climb.uuid });
+  const { handleDoubleTap, showHeart, dismissHeart } = useDoubleTapFavorite({
+    climbUuid: climb.uuid,
+  });
 
   return (
     <ClimbDetailShellClient
@@ -55,7 +53,9 @@ export default function ClimbDetailInfoShellClient({
           boardDetails={boardDetails}
           actions={[]}
           onCoverDoubleClick={handleDoubleTap}
-          expandedContent={<HeartAnimationOverlay visible={showHeart} onAnimationEnd={dismissHeart} />}
+          expandedContent={
+            <HeartAnimationOverlay visible={showHeart} onAnimationEnd={dismissHeart} />
+          }
         />
       }
       sections={sections}

@@ -1,7 +1,7 @@
-'use client';
+"use client";
 
-import { useCallback, useEffect, useRef, useState } from 'react';
-import { isNativeApp } from '@/app/lib/ble/capacitor-utils';
+import { useCallback, useEffect, useRef, useState } from "react";
+import { isNativeApp } from "@/app/lib/ble/capacitor-utils";
 
 /**
  * Custom hook to manage screen wake lock.
@@ -24,13 +24,16 @@ export function useWakeLock(enabled: boolean) {
     if (isNativeApp()) {
       const plugin = window.Capacitor?.Plugins?.KeepAwake;
       if (plugin) {
-        plugin.isSupported().then(({ isSupported: supported }) => {
-          setIsSupported(supported);
-        }).catch(() => setIsSupported(false));
+        plugin
+          .isSupported()
+          .then(({ isSupported: supported }) => {
+            setIsSupported(supported);
+          })
+          .catch(() => setIsSupported(false));
         return;
       }
     }
-    setIsSupported('wakeLock' in navigator);
+    setIsSupported("wakeLock" in navigator);
   }, []);
 
   // Request wake lock (native or web)
@@ -43,22 +46,22 @@ export function useWakeLock(enabled: boolean) {
           setIsActive(true);
         }
       } catch (err) {
-        console.warn('KeepAwake request failed:', err);
+        console.warn("KeepAwake request failed:", err);
         setIsActive(false);
       }
       return;
     }
 
-    if (!('wakeLock' in navigator)) {
+    if (!("wakeLock" in navigator)) {
       return;
     }
 
     try {
-      wakeLockRef.current = await navigator.wakeLock.request('screen');
+      wakeLockRef.current = await navigator.wakeLock.request("screen");
       setIsActive(true);
 
       // Listen for release event (e.g., when page becomes hidden)
-      wakeLockRef.current.addEventListener('release', () => {
+      wakeLockRef.current.addEventListener("release", () => {
         setIsActive(false);
       });
     } catch (err) {
@@ -66,7 +69,7 @@ export function useWakeLock(enabled: boolean) {
       // - The document is not visible
       // - The device is low on battery
       // - The user has disabled wake locks
-      console.warn('Wake Lock request failed:', err);
+      console.warn("Wake Lock request failed:", err);
       setIsActive(false);
     }
   }, []);
@@ -81,7 +84,7 @@ export function useWakeLock(enabled: boolean) {
           setIsActive(false);
         }
       } catch (err) {
-        console.warn('KeepAwake release failed:', err);
+        console.warn("KeepAwake release failed:", err);
       }
       return;
     }
@@ -92,7 +95,7 @@ export function useWakeLock(enabled: boolean) {
         wakeLockRef.current = null;
         setIsActive(false);
       } catch (err) {
-        console.warn('Wake Lock release failed:', err);
+        console.warn("Wake Lock release failed:", err);
       }
     }
   }, []);
@@ -114,15 +117,15 @@ export function useWakeLock(enabled: boolean) {
   // Wake locks are automatically released when the page is hidden
   useEffect(() => {
     const handleVisibilityChange = () => {
-      if (document.visibilityState === 'visible' && enabled && isSupported) {
+      if (document.visibilityState === "visible" && enabled && isSupported) {
         requestWakeLock();
       }
     };
 
-    document.addEventListener('visibilitychange', handleVisibilityChange);
+    document.addEventListener("visibilitychange", handleVisibilityChange);
 
     return () => {
-      document.removeEventListener('visibilitychange', handleVisibilityChange);
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
     };
   }, [enabled, isSupported, requestWakeLock]);
 

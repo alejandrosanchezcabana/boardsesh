@@ -1,11 +1,11 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { getClimb } from '@/app/lib/data/queries';
-import { getBoardDetailsForBoard } from '@/app/lib/board-utils';
-import { parseBoardRouteParamsWithSlugs } from '@/app/lib/url-utils.server';
-import { buildOgBoardRenderUrl } from '@/app/components/board-renderer/util';
-import { createOgImageHeaders } from '@/app/lib/seo/og';
+import { NextRequest, NextResponse } from "next/server";
+import { getClimb } from "@/app/lib/data/queries";
+import { getBoardDetailsForBoard } from "@/app/lib/board-utils";
+import { parseBoardRouteParamsWithSlugs } from "@/app/lib/url-utils.server";
+import { buildOgBoardRenderUrl } from "@/app/components/board-renderer/util";
+import { createOgImageHeaders } from "@/app/lib/seo/og";
 
-export const runtime = 'edge';
+export const runtime = "edge";
 
 export async function GET(request: NextRequest) {
   const routeT0 = performance.now();
@@ -13,15 +13,15 @@ export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
 
-    const board_name = searchParams.get('board_name');
-    const layout_id = searchParams.get('layout_id');
-    const size_id = searchParams.get('size_id');
-    const set_ids = searchParams.get('set_ids');
-    const angle = searchParams.get('angle');
-    const climb_uuid = searchParams.get('climb_uuid');
+    const board_name = searchParams.get("board_name");
+    const layout_id = searchParams.get("layout_id");
+    const size_id = searchParams.get("size_id");
+    const set_ids = searchParams.get("set_ids");
+    const angle = searchParams.get("angle");
+    const climb_uuid = searchParams.get("climb_uuid");
 
     if (!board_name || !layout_id || !size_id || !set_ids || !angle || !climb_uuid) {
-      return new Response('Missing required parameters', { status: 400 });
+      return new Response("Missing required parameters", { status: 400 });
     }
 
     const parsedParams = await parseBoardRouteParamsWithSlugs({
@@ -41,7 +41,7 @@ export async function GET(request: NextRequest) {
     const dbMs = performance.now() - dbT0;
 
     if (!currentClimb?.frames) {
-      return new Response('Climb not found', { status: 404 });
+      return new Response("Climb not found", { status: 404 });
     }
 
     const targetPath = buildOgBoardRenderUrl(boardDetails, currentClimb.frames);
@@ -49,17 +49,17 @@ export async function GET(request: NextRequest) {
     const response = NextResponse.redirect(targetUrl, 307);
 
     response.headers.set(
-      'Server-Timing',
+      "Server-Timing",
       `db;dur=${dbMs.toFixed(1)}, route;dur=${(performance.now() - routeT0).toFixed(1)}`,
     );
 
     const cacheHeaders = createOgImageHeaders({
-      contentType: 'image/png',
-      serverTiming: response.headers.get('Server-Timing') || undefined,
+      contentType: "image/png",
+      serverTiming: response.headers.get("Server-Timing") || undefined,
     });
 
     for (const [key, value] of Object.entries(cacheHeaders)) {
-      if (key === 'Content-Type') {
+      if (key === "Content-Type") {
         continue;
       }
       response.headers.set(key, value);
@@ -67,7 +67,7 @@ export async function GET(request: NextRequest) {
 
     return response;
   } catch (error) {
-    console.error('Error redirecting climb OG image:', error);
+    console.error("Error redirecting climb OG image:", error);
     const message = error instanceof Error ? error.message : String(error);
     return new Response(`Error generating image: ${message}`, { status: 500 });
   }

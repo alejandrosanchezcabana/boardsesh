@@ -1,11 +1,14 @@
-'use client';
+"use client";
 
-import React, { useEffect, useMemo } from 'react';
-import { usePathname } from 'next/navigation';
-import { usePersistentSessionState, usePersistentSessionActions } from './persistent-session-context';
-import { BoardDetails, ParsedBoardRouteParameters } from '@/app/lib/types';
-import { getBaseBoardPath } from '@/app/lib/url-utils';
-import { getClimbSessionCookie } from '@/app/lib/climb-session-cookie';
+import React, { useEffect, useMemo } from "react";
+import { usePathname } from "next/navigation";
+import {
+  usePersistentSessionState,
+  usePersistentSessionActions,
+} from "./persistent-session-context";
+import { BoardDetails, ParsedBoardRouteParameters } from "@/app/lib/types";
+import { getBaseBoardPath } from "@/app/lib/url-utils";
+import { getClimbSessionCookie } from "@/app/lib/climb-session-cookie";
 
 interface BoardSessionBridgeProps {
   boardDetails: BoardDetails;
@@ -51,8 +54,13 @@ const BoardSessionBridge: React.FC<BoardSessionBridgeProps> = ({
       // - Board configuration path changed (e.g., navigating to different board/layout/size/sets)
       // Note: We compare baseBoardPaths to ignore changes to angle, /play/[uuid], /list segments
       // This ensures session continuity when navigating between climbs or changing angles
-      const activeSessionBasePath = activeSession?.boardPath ? getBaseBoardPath(activeSession.boardPath) : '';
-      if (activeSession?.sessionId !== sessionIdFromCookie || activeSessionBasePath !== baseBoardPath) {
+      const activeSessionBasePath = activeSession?.boardPath
+        ? getBaseBoardPath(activeSession.boardPath)
+        : "";
+      if (
+        activeSession?.sessionId !== sessionIdFromCookie ||
+        activeSessionBasePath !== baseBoardPath
+      ) {
         // Store the full pathname (including angle and view segment like /list)
         // This allows the /join redirect to send users to the exact page with angle
         activateSession({

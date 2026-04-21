@@ -1,21 +1,21 @@
 // Notification types
 
-import type { SocialEntityType } from './comments';
+import type { SocialEntityType } from "./comments";
 
 export type NotificationType =
-  | 'new_follower'
-  | 'comment_reply'
-  | 'comment_on_tick'
-  | 'comment_on_climb'
-  | 'vote_on_tick'
-  | 'vote_on_comment'
-  | 'new_climb'
-  | 'new_climb_global'
-  | 'proposal_approved'
-  | 'proposal_rejected'
-  | 'proposal_vote'
-  | 'proposal_created'
-  | 'new_climbs_synced';
+  | "new_follower"
+  | "comment_reply"
+  | "comment_on_tick"
+  | "comment_on_climb"
+  | "vote_on_tick"
+  | "vote_on_comment"
+  | "new_climb"
+  | "new_climb_global"
+  | "proposal_approved"
+  | "proposal_rejected"
+  | "proposal_vote"
+  | "proposal_created"
+  | "new_climbs_synced";
 
 export type Notification = {
   uuid: string;

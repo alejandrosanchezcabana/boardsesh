@@ -38,6 +38,7 @@ The Aurora Bluetooth protocol is used by Aurora Climbing products (Kilter Board,
 The protocol is built on top of the **Nordic UART Service (NUS)**, a widely-used BLE serial emulation profile. Communication is unidirectional for LED control: the app writes commands to the board's RX characteristic.
 
 **Key characteristics:**
+
 - Uses Nordic UART Service for serial-over-BLE communication
 - Custom message framing with SOH/STX/ETX delimiters and checksum
 - Two encoding versions: v2 (compact, 10-bit positions) and v3 (extended, 16-bit positions)
@@ -49,13 +50,13 @@ The protocol is built on top of the **Nordic UART Service (NUS)**, a widely-used
 
 ## 2. BLE Service & Characteristic UUIDs
 
-| Name | UUID | Purpose |
-|------|------|---------|
+| Name                     | UUID                                   | Purpose                                                             |
+| ------------------------ | -------------------------------------- | ------------------------------------------------------------------- |
 | **Aurora Board Service** | `4488B571-7806-4DF6-BCFF-A2897E4953FF` | Primary advertisement service UUID; used to filter BLE scan results |
-| **Nordic UART Service** | `6E400001-B5A3-F393-E0A9-E50E24DCCA9E` | Data transport service (NUS) |
-| **RX Characteristic** | `6E400002-B5A3-F393-E0A9-E50E24DCCA9E` | App writes LED commands here (Write Without Response) |
-| **TX Characteristic** | `6E400003-B5A3-F393-E0A9-E50E24DCCA9E` | Board sends data to app (Notify) |
-| **CCCD** | `00002902-0000-1000-8000-00805f9b34fb` | Client Characteristic Configuration Descriptor |
+| **Nordic UART Service**  | `6E400001-B5A3-F393-E0A9-E50E24DCCA9E` | Data transport service (NUS)                                        |
+| **RX Characteristic**    | `6E400002-B5A3-F393-E0A9-E50E24DCCA9E` | App writes LED commands here (Write Without Response)               |
+| **TX Characteristic**    | `6E400003-B5A3-F393-E0A9-E50E24DCCA9E` | Board sends data to app (Notify)                                    |
+| **CCCD**                 | `00002902-0000-1000-8000-00805f9b34fb` | Client Characteristic Configuration Descriptor                      |
 
 **Note:** The app scans using the Aurora Board Service UUID (`4488B571...`) as a filter, but communicates over the Nordic UART Service (`6E400001...`). The board advertises both services.
 
@@ -64,6 +65,7 @@ The protocol is built on top of the **Nordic UART Service (NUS)**, a widely-used
 ## 3. Device Discovery
 
 ### Scan Initiation
+
 ```
 BluetoothAdapter.startLeScan(
     serviceUUIDs: [4488B571-7806-4DF6-BCFF-A2897E4953FF],
@@ -72,14 +74,16 @@ BluetoothAdapter.startLeScan(
 ```
 
 ### Scan Parameters
-| Parameter | Value |
-|-----------|-------|
-| Scan period | 600,000 ms (10 minutes) |
-| Service UUID filter | `4488B571-7806-4DF6-BCFF-A2897E4953FF` |
-| Name filter | Device name must contain product substring (e.g., `"Kilter"`) |
-| Deduplication | Devices tracked in list; duplicates ignored |
+
+| Parameter           | Value                                                         |
+| ------------------- | ------------------------------------------------------------- |
+| Scan period         | 600,000 ms (10 minutes)                                       |
+| Service UUID filter | `4488B571-7806-4DF6-BCFF-A2897E4953FF`                        |
+| Name filter         | Device name must contain product substring (e.g., `"Kilter"`) |
+| Deduplication       | Devices tracked in list; duplicates ignored                   |
 
 ### Discovery Flow
+
 1. Start BLE scan filtered by Aurora Board Service UUID
 2. Post a timeout runnable for 10 minutes
 3. On each `onLeScan` callback:
@@ -90,7 +94,9 @@ BluetoothAdapter.startLeScan(
 4. On timeout: call `reset()` which stops scanning and clears discovered devices
 
 ### Product Name Substrings
+
 The name substring is product-specific and configured at service construction time:
+
 - **Kilter Board**: `"Kilter"`
 - **Tension Board**: `"Tension"` (presumed)
 - **Decoy Board**: `"Decoy"` (presumed)
@@ -107,23 +113,25 @@ BLE device names follow the pattern:
 
 ### Components
 
-| Component | Regex | Example | Description |
-|-----------|-------|---------|-------------|
-| Display Name | Everything before `#` or `@` | `"Kilter Board"` | Human-readable board name |
-| Serial Number | `#[a-z0-9]+` (case-insensitive) | `#abc123` | Unique device identifier (without the `#` prefix) |
-| API Level | `@[0-9]+` | `@3` | Protocol version number |
+| Component     | Regex                           | Example          | Description                                       |
+| ------------- | ------------------------------- | ---------------- | ------------------------------------------------- |
+| Display Name  | Everything before `#` or `@`    | `"Kilter Board"` | Human-readable board name                         |
+| Serial Number | `#[a-z0-9]+` (case-insensitive) | `#abc123`        | Unique device identifier (without the `#` prefix) |
+| API Level     | `@[0-9]+`                       | `@3`             | Protocol version number                           |
 
 ### Parsing Rules
+
 - **Display Name**: `name.substring(0, firstIndexOf('#' or '@'))` - if no `#` or `@`, the entire name is the display name
 - **Serial Number**: First match of `/#[a-z0-9]+/i`, then strip the leading `#`; returns `null` if not present
 - **API Level**: First match of `/@[0-9]+/i`, then strip the leading `@` and parse as integer; defaults to **2** if not present
 
 ### Examples
-| Device Name | Display Name | Serial | API Level |
-|-------------|-------------|--------|-----------|
-| `Kilter Board#abc123@3` | `Kilter Board` | `abc123` | 3 |
-| `Kilter Board@2` | `Kilter Board` | `null` | 2 |
-| `Kilter Board` | `Kilter Board` | `null` | 2 (default) |
+
+| Device Name             | Display Name   | Serial   | API Level   |
+| ----------------------- | -------------- | -------- | ----------- |
+| `Kilter Board#abc123@3` | `Kilter Board` | `abc123` | 3           |
+| `Kilter Board@2`        | `Kilter Board` | `null`   | 2           |
+| `Kilter Board`          | `Kilter Board` | `null`   | 2 (default) |
 
 ---
 
@@ -201,11 +209,14 @@ BLE device names follow the pattern:
 11. **Set up auto-disconnect timer** if user has configured one
 
 ### Connecting Tolerance
+
 - **Period**: 8,000 ms (8 seconds)
 - If the full connection (through characteristic discovery) is not established within this period, the connection is aborted and `onDidFailToConnectToWall()` is notified
 
 ### Disconnect Cleanup
+
 On disconnect (whether intentional or due to error):
+
 1. Notify `onWillDisconnectFromWall()`
 2. Call `gatt.disconnect()`
 3. Call `gatt.close()`
@@ -229,14 +240,14 @@ All LED commands are wrapped in a framing protocol before transmission.
 +-----+--------+----------+-----+-----------------+-----+
 ```
 
-| Field | Size | Value | Description |
-|-------|------|-------|-------------|
-| SOH | 1 byte | `0x01` | Start of Header - marks frame beginning |
-| LENGTH | 1 byte | 0-255 | Number of bytes in PAYLOAD |
-| CHECKSUM | 1 byte | computed | Integrity check of PAYLOAD |
-| STX | 1 byte | `0x02` | Start of Text - marks payload beginning |
-| PAYLOAD | 0-255 bytes | variable | Command byte + LED data |
-| ETX | 1 byte | `0x03` | End of Text - marks frame end |
+| Field    | Size        | Value    | Description                             |
+| -------- | ----------- | -------- | --------------------------------------- |
+| SOH      | 1 byte      | `0x01`   | Start of Header - marks frame beginning |
+| LENGTH   | 1 byte      | 0-255    | Number of bytes in PAYLOAD              |
+| CHECKSUM | 1 byte      | computed | Integrity check of PAYLOAD              |
+| STX      | 1 byte      | `0x02`   | Start of Text - marks payload beginning |
+| PAYLOAD  | 0-255 bytes | variable | Command byte + LED data                 |
+| ETX      | 1 byte      | `0x03`   | End of Text - marks frame end           |
 
 ### Checksum Calculation
 
@@ -247,6 +258,7 @@ checksum = (~(sum of all payload bytes)) & 0xFF
 ```
 
 **Algorithm:**
+
 ```python
 def checksum(payload: list[int]) -> int:
     total = 0
@@ -309,6 +321,7 @@ Byte 2 (COLOR):  Position[9:8] | Green[1:0] | Red[1:0] | Blue[1:0]
 ```
 
 **Bit layout of Byte 2 (corrected):**
+
 ```
   Bit 7   Bit 6   Bit 5   Bit 4   Bit 3   Bit 2   Bit 1   Bit 0
 +-------+-------+-------+-------+-------+-------+-------+-------+
@@ -317,12 +330,14 @@ Byte 2 (COLOR):  Position[9:8] | Green[1:0] | Red[1:0] | Blue[1:0]
 ```
 
 #### Position Encoding (v2)
+
 - **Range**: 0-1023 (10 bits)
 - Positions > 1023 are **skipped** with a log warning
 - Lower 8 bits in Byte 1
 - Upper 2 bits in Byte 2, bits [1:0]
 
 #### Color Encoding (v2)
+
 Colors are derived from a 6-character hex string (e.g., `"FF0000"` for red):
 
 1. Parse hex to get 8-bit R, G, B values (0-255)
@@ -335,6 +350,7 @@ def scaled_color_v2(value_8bit: int, scale: float) -> int:
 ```
 
 #### Maximum LEDs per v2 Frame
+
 - Available payload after command byte: 254 bytes
 - Bytes per LED: 2
 - **Max LEDs per frame: 127**
@@ -369,11 +385,13 @@ Byte 3 (COLOR):   Packed RGB
 ```
 
 #### Position Encoding (v3)
+
 - **Range**: 0-65535 (16 bits)
 - Positions > 65535 are **skipped** with a log warning
 - Little-endian: low byte first, high byte second
 
 #### Color Encoding (v3)
+
 Colors are derived from a 6-character hex string:
 
 1. Parse hex to get 8-bit R, G, B values (0-255)
@@ -390,11 +408,13 @@ def encode_color_v3(r: int, g: int, b: int) -> int:
 **Note:** No power scaling is applied in v3; presumably handled by the board firmware.
 
 #### Maximum LEDs per v3 Frame
+
 - Available payload after command byte: 254 bytes
 - Bytes per LED: 3
 - **Max LEDs per frame: 84**
 
 ### Color Fallback
+
 If a placement role is not found (unknown `roleId`), the color defaults to **white** (`"FFFFFF"`).
 
 ---
@@ -405,12 +425,12 @@ When LED data exceeds a single frame's capacity (255 bytes), it is split across 
 
 ### Command Bytes
 
-| Purpose | API v2 | API v3 | ASCII |
-|---------|--------|--------|-------|
-| **Single** (one frame only) | `80` | `84` | `P` / `T` |
-| **Start** (first of multi-part) | `78` | `82` | `N` / `R` |
-| **Continue** (middle frames) | `77` | `81` | `M` / `Q` |
-| **End** (last of multi-part) | `79` | `83` | `O` / `S` |
+| Purpose                         | API v2 | API v3 | ASCII     |
+| ------------------------------- | ------ | ------ | --------- |
+| **Single** (one frame only)     | `80`   | `84`   | `P` / `T` |
+| **Start** (first of multi-part) | `78`   | `82`   | `N` / `R` |
+| **Continue** (middle frames)    | `77`   | `81`   | `M` / `Q` |
+| **End** (last of multi-part)    | `79`   | `83`   | `O` / `S` |
 
 ### Sequencing Algorithm
 
@@ -445,11 +465,13 @@ bluetoothChunkSize = 20
 Each 20-byte chunk is written to the RX characteristic as a separate GATT write operation, sequenced through the command queue (Section 14).
 
 ### Write Properties
+
 - **Write type**: Write Without Response (implied by Nordic UART RX characteristic)
 - Each chunk is enqueued as a separate `writeCharacteristic()` command
 - The command queue ensures serial execution with GATT write completion callbacks
 
 ### Data Flow
+
 ```
 LED Placement Data
     |
@@ -476,10 +498,11 @@ writeCharacteristic() x N         -- Queued GATT writes
 API v2 includes client-side power budget enforcement. **API v3 does not have this; power management is assumed to be handled by board firmware.**
 
 ### Power Budget Constants
-| Constant | Value |
-|----------|-------|
+
+| Constant              | Value      |
+| --------------------- | ---------- |
 | Max total board power | 18.0 watts |
-| Max power per LED | 0.1 watts |
+| Max power per LED     | 0.1 watts  |
 
 ### Scale Computation Algorithm
 
@@ -597,6 +620,7 @@ WHERE climb_placements.climb_uuid = ?
 ### Result: ClimbPlacementMinimalData
 
 Each row produces a display-ready record:
+
 ```
 {
   x: int,          // Hole X coordinate (for UI rendering)
@@ -642,10 +666,12 @@ Each row produces a display-ready record:
 ## 12. Auto-Disconnect
 
 ### Configuration
+
 - Stored per-user in SharedPreferences as seconds
 - Available intervals: Off, 1, 5, 10, 20, 30, 45, 60, 90, 120, 180, 240, 300, 360, 420, 480, 540, 600 seconds
 
 ### Behavior
+
 - Timer starts when connection is fully established (`announceFullyConnected()`)
 - Timer is **reset** (rescheduled) on every `display()` call
 - When timer expires: `disconnect()` is called automatically
@@ -653,6 +679,7 @@ Each row produces a display-ready record:
 - If interval is `null` (not configured): no auto-disconnect
 
 ### Timer Management
+
 - `rescheduleAutoDisconnectTimeout()`: Clears existing timer, posts new delayed runnable
 - `clearAutoDisconnectTimeout()`: Removes pending auto-disconnect callback
 - `autoDisconnectTimedOut()`: Called when timer fires; initiates full disconnect
@@ -664,31 +691,35 @@ Each row produces a display-ready record:
 The Bluetooth service uses an observer pattern. UI components register as observers to receive lifecycle events.
 
 ### Scanning Events
-| Event | When |
-|-------|------|
-| `onWillStartScanForWalls()` | Just before scan begins |
-| `onDidStartScanForWalls()` | Scan successfully started |
-| `onDidFailToStartScanForWalls()` | Scan failed to start |
-| `onWillStopScanForWalls()` | Just before scan stops |
-| `onDidStopScanForWalls()` | Scan stopped |
+
+| Event                            | When                      |
+| -------------------------------- | ------------------------- |
+| `onWillStartScanForWalls()`      | Just before scan begins   |
+| `onDidStartScanForWalls()`       | Scan successfully started |
+| `onDidFailToStartScanForWalls()` | Scan failed to start      |
+| `onWillStopScanForWalls()`       | Just before scan stops    |
+| `onDidStopScanForWalls()`        | Scan stopped              |
 
 ### Discovery Events
-| Event | When |
-|-------|------|
+
+| Event                        | When                                      |
+| ---------------------------- | ----------------------------------------- |
 | `onDidDiscoverWall(LEDWall)` | Valid board device discovered during scan |
 
 ### Connection Events
-| Event | When |
-|-------|------|
-| `onWillConnectToWall(LEDWall)` | Connection attempt starting |
-| `onDidConnectToWall(LEDWall)` | Full connection established (GATT + services + characteristics) |
-| `onDidFailToConnectToWall(LEDWall)` | Connection failed or timed out |
-| `onWillDisconnectFromWall(LEDWall)` | Disconnect initiated |
-| `onDidDisconnectFromWall(LEDWall)` | Fully disconnected and cleaned up |
+
+| Event                               | When                                                            |
+| ----------------------------------- | --------------------------------------------------------------- |
+| `onWillConnectToWall(LEDWall)`      | Connection attempt starting                                     |
+| `onDidConnectToWall(LEDWall)`       | Full connection established (GATT + services + characteristics) |
+| `onDidFailToConnectToWall(LEDWall)` | Connection failed or timed out                                  |
+| `onWillDisconnectFromWall(LEDWall)` | Disconnect initiated                                            |
+| `onDidDisconnectFromWall(LEDWall)`  | Fully disconnected and cleaned up                               |
 
 ### Data Events
-| Event | When |
-|-------|------|
+
+| Event                       | When                                               |
+| --------------------------- | -------------------------------------------------- |
 | `onCharacteristicUpdated()` | Board sent data via TX characteristic notification |
 
 ---
@@ -698,21 +729,25 @@ The Bluetooth service uses an observer pattern. UI components register as observ
 BLE GATT operations must be serialized (only one outstanding operation at a time). The protocol implements a FIFO command queue.
 
 ### Queue Properties
+
 - Type: `ConcurrentLinkedQueue<Runnable>`
 - Busy flag prevents concurrent execution
 - Commands execute on main thread via `Handler.post()`
 
 ### Queue Operations
+
 1. **Enqueue**: `commandQueue.add(runnable)` then call `nextCommand()`
 2. **Dequeue**: `nextCommand()` checks busy flag, peeks at head, sets busy=true, executes on main handler
 3. **Complete**: `completedCommand()` sets busy=false, removes head, calls `nextCommand()` for next item
 4. **Error**: On GATT null, queue is cleared entirely
 
 ### What Gets Queued
+
 - `setNotify()` - Enable/disable characteristic notifications (CCCD write)
 - `writeCharacteristic()` - Each 20-byte chunk of LED data
 
 ### Completion Triggers
+
 - `onCharacteristicWrite()` callback -> `completedCommand()`
 - `onDescriptorWrite()` callback -> `completedCommand()`
 - Exception during command execution -> `completedCommand()`
@@ -723,12 +758,15 @@ BLE GATT operations must be serialized (only one outstanding operation at a time
 ## 15. Error Handling
 
 ### SecurityException
+
 Caught at every BLE API call site (scan, connect, disconnect, write, read name). When caught:
+
 - Operation is considered failed
 - Log message recorded
 - Graceful fallback (e.g., null name, failed connection notification)
 
 ### Connection Failures
+
 - GATT null after `connectGatt()`: Notify failure
 - Service discovery failure (status != 0): No action (connection stalls, tolerance timer handles it)
 - UART service not found: Connection stalls until tolerance timeout
@@ -736,11 +774,13 @@ Caught at every BLE API call site (scan, connect, disconnect, write, read name).
 - Tolerance timeout (8s): Auto-disconnect + notify failure
 
 ### Write Failures
+
 - `writeCharacteristic()` returns false: Log failure, call `completedCommand()` to proceed to next
 - `writeDescriptor()` returns false: Log failure, call `completedCommand()`
 - GATT null during write: Clear entire queue, log error
 
 ### Wall Mismatch
+
 - `display()` validates `WallMatchBits` (layoutId + productSizeId) before sending
 - If mismatch: Silently abort display, log warning
 
@@ -748,32 +788,32 @@ Caught at every BLE API call site (scan, connect, disconnect, write, read name).
 
 ## 16. Constants Reference
 
-| Constant | Value | Source |
-|----------|-------|--------|
-| Aurora Board Service UUID | `4488B571-7806-4DF6-BCFF-A2897E4953FF` | `BluetoothServiceKt.java:229` |
-| UART Service UUID | `6E400001-B5A3-F393-E0A9-E50E24DCCA9E` | `BluetoothServiceKt.java:234` |
-| RX Characteristic UUID | `6E400002-B5A3-F393-E0A9-E50E24DCCA9E` | `BluetoothServiceKt.java:237` |
-| TX Characteristic UUID | `6E400003-B5A3-F393-E0A9-E50E24DCCA9E` | (from NUS standard) |
-| CCCD UUID | `00002902-0000-1000-8000-00805f9b34fb` | `BluetoothServiceKt.java:240` |
-| BLE Chunk Size | 20 bytes | `BluetoothServiceKt.java:243` |
-| Max Payload Length | 255 bytes | `BluetoothServiceKt.java:31` |
-| Scan Period | 600,000 ms (10 min) | `StdBluetoothService.java:42` |
-| Connection Tolerance | 8,000 ms (8 sec) | `BasicLEDWall.java:87` |
-| Max Board Power (v2) | 18.0 watts | `BluetoothServiceKt.java:232` |
-| Max Power Per LED (v2) | 0.1 watts | `BluetoothServiceKt.java:233` |
-| SOH | `0x01` (1) | Protocol constant |
-| STX | `0x02` (2) | Protocol constant |
-| ETX | `0x03` (3) | Protocol constant |
-| v2 Single | `0x50` (80, 'P') | `BluetoothServiceKt.java:155` |
-| v2 Start | `0x4E` (78, 'N') | `BluetoothServiceKt.java:158` |
-| v2 Continue | `0x4D` (77, 'M') | `BluetoothServiceKt.java:115` |
-| v2 End | `0x4F` (79, 'O') | `BluetoothServiceKt.java:159` |
-| v3 Single | `0x54` (84, 'T') | `BluetoothServiceKt.java:213` |
-| v3 Start | `0x52` (82, 'R') | `BluetoothServiceKt.java:216` |
-| v3 Continue | `0x51` (81, 'Q') | `BluetoothServiceKt.java:176` |
-| v3 End | `0x53` (83, 'S') | `BluetoothServiceKt.java:217` |
-| Default API Level | 2 | `BasicLEDWall.java:306` |
-| Default LED Color | `"FFFFFF"` (white) | `BluetoothServiceKt.java:83,134,193` |
+| Constant                  | Value                                  | Source                               |
+| ------------------------- | -------------------------------------- | ------------------------------------ |
+| Aurora Board Service UUID | `4488B571-7806-4DF6-BCFF-A2897E4953FF` | `BluetoothServiceKt.java:229`        |
+| UART Service UUID         | `6E400001-B5A3-F393-E0A9-E50E24DCCA9E` | `BluetoothServiceKt.java:234`        |
+| RX Characteristic UUID    | `6E400002-B5A3-F393-E0A9-E50E24DCCA9E` | `BluetoothServiceKt.java:237`        |
+| TX Characteristic UUID    | `6E400003-B5A3-F393-E0A9-E50E24DCCA9E` | (from NUS standard)                  |
+| CCCD UUID                 | `00002902-0000-1000-8000-00805f9b34fb` | `BluetoothServiceKt.java:240`        |
+| BLE Chunk Size            | 20 bytes                               | `BluetoothServiceKt.java:243`        |
+| Max Payload Length        | 255 bytes                              | `BluetoothServiceKt.java:31`         |
+| Scan Period               | 600,000 ms (10 min)                    | `StdBluetoothService.java:42`        |
+| Connection Tolerance      | 8,000 ms (8 sec)                       | `BasicLEDWall.java:87`               |
+| Max Board Power (v2)      | 18.0 watts                             | `BluetoothServiceKt.java:232`        |
+| Max Power Per LED (v2)    | 0.1 watts                              | `BluetoothServiceKt.java:233`        |
+| SOH                       | `0x01` (1)                             | Protocol constant                    |
+| STX                       | `0x02` (2)                             | Protocol constant                    |
+| ETX                       | `0x03` (3)                             | Protocol constant                    |
+| v2 Single                 | `0x50` (80, 'P')                       | `BluetoothServiceKt.java:155`        |
+| v2 Start                  | `0x4E` (78, 'N')                       | `BluetoothServiceKt.java:158`        |
+| v2 Continue               | `0x4D` (77, 'M')                       | `BluetoothServiceKt.java:115`        |
+| v2 End                    | `0x4F` (79, 'O')                       | `BluetoothServiceKt.java:159`        |
+| v3 Single                 | `0x54` (84, 'T')                       | `BluetoothServiceKt.java:213`        |
+| v3 Start                  | `0x52` (82, 'R')                       | `BluetoothServiceKt.java:216`        |
+| v3 Continue               | `0x51` (81, 'Q')                       | `BluetoothServiceKt.java:176`        |
+| v3 End                    | `0x53` (83, 'S')                       | `BluetoothServiceKt.java:217`        |
+| Default API Level         | 2                                      | `BasicLEDWall.java:306`              |
+| Default LED Color         | `"FFFFFF"` (white)                     | `BluetoothServiceKt.java:83,134,193` |
 
 ---
 
@@ -784,6 +824,7 @@ Caught at every BLE API call site (scan, connect, disconnect, write, read name).
 Display one hold at position 42 with color `"00FF00"` (green):
 
 **Step 1: Encode LED data**
+
 ```
 position = 42
 pos_lo = 42 & 0xFF = 0x2A
@@ -797,18 +838,21 @@ color_byte = 0x00 | 0x1C | 0x00 = 0x1C
 ```
 
 **Step 2: Build payload (Single command)**
+
 ```
 payload = [0x54, 0x2A, 0x00, 0x1C]
            T     pos_lo pos_hi color
 ```
 
 **Step 3: Compute checksum**
+
 ```
 sum = (0x54 + 0x2A + 0x00 + 0x1C) & 0xFF = 0x9A
 checksum = ~0x9A & 0xFF = 0x65
 ```
 
 **Step 4: Wrap in frame**
+
 ```
 frame = [0x01, 0x04, 0x65, 0x02, 0x54, 0x2A, 0x00, 0x1C, 0x03]
          SOH   LEN   CHK   STX   T     pos_lo pos_hi color  ETX
@@ -819,6 +863,7 @@ frame = [0x01, 0x04, 0x65, 0x02, 0x54, 0x2A, 0x00, 0x1C, 0x03]
 ### Example 2: Three LEDs, API v2 with scaling
 
 Display three holds:
+
 - Position 10, role "Start" (green `"00FF00"`)
 - Position 256, role "Move" (blue `"0000FF"`)
 - Position 500, role "Finish" (red `"FF0000"`)
@@ -828,6 +873,7 @@ Assume `leds_per_hold = 1`, `scale = 1.0` (power OK).
 **Step 1: Encode each LED**
 
 LED 1 (pos=10, color="00FF00"):
+
 ```
 pos_lo = 10 & 0xFF = 0x0A
 pos_hi = (10 >> 8) & 0x03 = 0x00
@@ -839,6 +885,7 @@ bytes: [0x0A, 0x30]
 ```
 
 LED 2 (pos=256, color="0000FF"):
+
 ```
 pos_lo = 256 & 0xFF = 0x00
 pos_hi = (256 >> 8) & 0x03 = 0x01
@@ -848,6 +895,7 @@ bytes: [0x00, 0x0D]
 ```
 
 LED 3 (pos=500, color="FF0000"):
+
 ```
 pos_lo = 500 & 0xFF = 0xF4
 pos_hi = (500 >> 8) & 0x03 = 0x01
@@ -858,18 +906,21 @@ bytes: [0xF4, 0xC1]
 ```
 
 **Step 2: Build payload (Single, fits in one frame)**
+
 ```
 payload = [0x50, 0x0A, 0x30, 0x00, 0x0D, 0xF4, 0xC1]
            P     LED1        LED2        LED3
 ```
 
 **Step 3: Checksum**
+
 ```
 sum = (0x50 + 0x0A + 0x30 + 0x00 + 0x0D + 0xF4 + 0xC1) & 0xFF = 0x56
 checksum = ~0x56 & 0xFF = 0xA9
 ```
 
 **Step 4: Frame**
+
 ```
 [0x01, 0x07, 0xA9, 0x02, 0x50, 0x0A, 0x30, 0x00, 0x0D, 0xF4, 0xC1, 0x03]
  SOH   LEN   CHK   STX   P     ---------- LED data ----------        ETX
@@ -891,42 +942,43 @@ The entire LED addressing scheme is parameterized by `productSizeId`. The same p
 
 #### Kilter Board Original (product_id=1)
 
-| productSizeId | Name | Description | LEDs | Max Position | Edge Coords (L,R,B,T) |
-|:---:|---|---|:---:|:---:|---|
-| 7 | 12 x 14 | Commercial | 527 | 527 | 0, 144, 0, 180 |
-| 8 | 8 x 12 | Home | 311 | 311 | 24, 120, 0, 156 |
-| 10 | 12 x 12 with kickboard | Square | 476 | 476 | 0, 144, 0, 156 |
-| 14 | 7 x 10 | Small | 225 | 224 | 28, 116, 36, 156 |
-| 27 | 12 x 12 without kickboard | Square | 441 | 440 | 0, 144, 12, 156 |
-| 28 | 16 x 12 | Super Wide | 641 | 641 | -24, 168, 0, 156 |
+| productSizeId | Name                      | Description | LEDs | Max Position | Edge Coords (L,R,B,T) |
+| :-----------: | ------------------------- | ----------- | :--: | :----------: | --------------------- |
+|       7       | 12 x 14                   | Commercial  | 527  |     527      | 0, 144, 0, 180        |
+|       8       | 8 x 12                    | Home        | 311  |     311      | 24, 120, 0, 156       |
+|      10       | 12 x 12 with kickboard    | Square      | 476  |     476      | 0, 144, 0, 156        |
+|      14       | 7 x 10                    | Small       | 225  |     224      | 28, 116, 36, 156      |
+|      27       | 12 x 12 without kickboard | Square      | 441  |     440      | 0, 144, 12, 156       |
+|      28       | 16 x 12                   | Super Wide  | 641  |     641      | -24, 168, 0, 156      |
 
 #### Kilter Board Homewall (product_id=7)
 
-| productSizeId | Size | LED Kit | LEDs | Max Position | Edge Coords (L,R,B,T) |
-|:---:|---|---|:---:|:---:|---|
-| 17 | 7x10 | Full Ride | 305 | 304 | -44, 44, 24, 144 |
-| 18 | 7x10 | Mainline | 165 | 164 | -44, 44, 24, 144 |
-| 19 | 7x10 | Auxiliary | 140 | 139 | -44, 44, 24, 144 |
-| 21 | 10x10 | Full Ride | 391 | 390 | -56, 56, 24, 144 |
-| 22 | 10x10 | Mainline | 195 | 194 | -56, 56, 24, 144 |
-| 29 | 10x10 | Auxiliary | 196 | 195 | -56, 56, 24, 144 |
-| **23** | **8x12** | **Full Ride** | **389** | **389** | -44, 44, -12, 144 |
-| **24** | **8x12** | **Mainline** | **219** | **219** | -44, 44, -12, 144 |
-| 25 | 10x12 | Full Ride | 499 | 499 | -56, 56, -12, 144 |
-| 26 | 10x12 | Mainline | 261 | 261 | -56, 56, -12, 144 |
+| productSizeId | Size     | LED Kit       |  LEDs   | Max Position | Edge Coords (L,R,B,T) |
+| :-----------: | -------- | ------------- | :-----: | :----------: | --------------------- |
+|      17       | 7x10     | Full Ride     |   305   |     304      | -44, 44, 24, 144      |
+|      18       | 7x10     | Mainline      |   165   |     164      | -44, 44, 24, 144      |
+|      19       | 7x10     | Auxiliary     |   140   |     139      | -44, 44, 24, 144      |
+|      21       | 10x10    | Full Ride     |   391   |     390      | -56, 56, 24, 144      |
+|      22       | 10x10    | Mainline      |   195   |     194      | -56, 56, 24, 144      |
+|      29       | 10x10    | Auxiliary     |   196   |     195      | -56, 56, 24, 144      |
+|    **23**     | **8x12** | **Full Ride** | **389** |   **389**    | -44, 44, -12, 144     |
+|    **24**     | **8x12** | **Mainline**  | **219** |   **219**    | -44, 44, -12, 144     |
+|      25       | 10x12    | Full Ride     |   499   |     499      | -56, 56, -12, 144     |
+|      26       | 10x12    | Mainline      |   261   |     261      | -56, 56, -12, 144     |
 
 ### 18.3 Hold Set Mask (HSM) - The Bitmask System
 
 Each wall tracks which hold sets are physically installed via a **bitmask** field called `hsm` (Hold Set Mask). Each hold set has a power-of-2 HSM value:
 
-| Set ID | Name | HSM Bit | Bitmask |
-|:---:|---|:---:|:---:|
-| 26 | Mainline | 0 | `0b0001` = 1 |
-| 27 | Auxiliary | 1 | `0b0010` = 2 |
-| 28 | Mainline Kickboard | 2 | `0b0100` = 4 |
-| 29 | Auxiliary Kickboard | 3 | `0b1000` = 8 |
+| Set ID | Name                | HSM Bit |   Bitmask    |
+| :----: | ------------------- | :-----: | :----------: |
+|   26   | Mainline            |    0    | `0b0001` = 1 |
+|   27   | Auxiliary           |    1    | `0b0010` = 2 |
+|   28   | Mainline Kickboard  |    2    | `0b0100` = 4 |
+|   29   | Auxiliary Kickboard |    3    | `0b1000` = 8 |
 
 A wall's `hsm` field is the OR of all installed sets. The `sqliteReadHSM()` function computes this by querying:
+
 ```sql
 SELECT sets.hsm FROM sets WHERE sets.id IN (installed_set_ids)
 -- Results are OR'd together: hsm = row1.hsm | row2.hsm | ...
@@ -936,14 +988,15 @@ SELECT sets.hsm FROM sets WHERE sets.id IN (installed_set_ids)
 
 The `product_sizes_layouts_sets` junction table defines which hold sets belong to each LED kit variant:
 
-| LED Kit (productSizeId) | Contains Sets |
-|---|---|
-| **8x12 Full Ride** (23) | Mainline (26) + Auxiliary (27) + Mainline KB (28) + Aux KB (29) |
-| **8x12 Mainline** (24) | Mainline (26) + Mainline KB (28) + Aux KB (29) |
+| LED Kit (productSizeId)  | Contains Sets                                                   |
+| ------------------------ | --------------------------------------------------------------- |
+| **8x12 Full Ride** (23)  | Mainline (26) + Auxiliary (27) + Mainline KB (28) + Aux KB (29) |
+| **8x12 Mainline** (24)   | Mainline (26) + Mainline KB (28) + Aux KB (29)                  |
 | **10x12 Full Ride** (25) | Mainline (26) + Auxiliary (27) + Mainline KB (28) + Aux KB (29) |
-| **10x12 Mainline** (26) | Mainline (26) + Mainline KB (28) + Aux KB (29) |
+| **10x12 Mainline** (26)  | Mainline (26) + Mainline KB (28) + Aux KB (29)                  |
 
 **Key insight**: Full Ride = Mainline + Auxiliary. The "Mainline" kit is a subset of "Full Ride":
+
 - 8x12: Full Ride has **389 LEDs**, Mainline has **219 LEDs**, the Auxiliary-only difference is **170 LEDs**
 - All 219 Mainline holes are a subset of the Full Ride holes
 
@@ -957,6 +1010,7 @@ The `product_sizes_layouts_sets` junction table defines which hold sets belong t
 This means: **you cannot use Mainline LED positions on a Full Ride board or vice versa**. The `productSizeId` must exactly match the physical LED kit installed.
 
 Example divergence (8x12):
+
 ```
 Hole ID | Full Ride Position | Mainline Position
 --------|-------------------|------------------
@@ -980,6 +1034,7 @@ public boolean equals(WallMatchBits other) {
 ```
 
 In `BasicLEDWall.display()`:
+
 ```java
 if (!this.wallMatchBits.equals(wallMatchBits)) {
     // Log: "wall match bits don't match, bailing out"
@@ -999,6 +1054,7 @@ The `StdBluetoothService` takes a `ledsPerHold` constant at construction time, l
 ```
 
 For Kilter Board, this is **2** (each hold position has 2 physical LEDs). This value is:
+
 - Used as a multiplier in the v2 power budget calculation: `if (ledsPerHold * totalPower <= 18.0)`
 - Passed to `prepBytesV2()` for power scaling
 - **Not used** in v3 (no power scaling)
@@ -1031,6 +1087,7 @@ Given that 8x12 Homewall boards have reported issues while 10x10 and 10x12 work 
 ## Appendix A: Relationship to Other Aurora Products
 
 This protocol is shared across the Aurora Climbing product family. The `StdBluetoothService` is parameterized by:
+
 - **`ledKitNameSubstring`**: Product-specific name filter (e.g., `"Kilter"`, `"Tension"`)
 - **`ledsPerHold`**: Number of physical LEDs per hold position (affects v2 power calculation)
 

@@ -6,7 +6,7 @@
  * structured data instead of HTML strings.
  */
 
-export type TokenType = 'keyword' | 'type' | 'string' | 'comment' | 'parameter' | 'default';
+export type TokenType = "keyword" | "type" | "string" | "comment" | "parameter" | "default";
 
 export type Token = {
   text: string;
@@ -23,28 +23,29 @@ export function tokenizeLine(line: string): Token[] {
 
   const patterns: Array<{ regex: RegExp; type: TokenType }> = [
     // Comments (must be first to capture entire comment)
-    { regex: /^(#.*)/, type: 'comment' },
+    { regex: /^(#.*)/, type: "comment" },
     // Triple-quoted strings (descriptions)
-    { regex: /^("""[\s\S]*?""")/, type: 'string' },
+    { regex: /^("""[\s\S]*?""")/, type: "string" },
     // Double-quoted strings
-    { regex: /^("[^"\\]*(?:\\.[^"\\]*)*")/, type: 'string' },
+    { regex: /^("[^"\\]*(?:\\.[^"\\]*)*")/, type: "string" },
     // Keywords
     {
-      regex: /^(type|input|enum|union|scalar|query|mutation|subscription|fragment|on|implements|interface|extend|schema|directive)\b/i,
-      type: 'keyword',
+      regex:
+        /^(type|input|enum|union|scalar|query|mutation|subscription|fragment|on|implements|interface|extend|schema|directive)\b/i,
+      type: "keyword",
     },
     // Types (capitalized words)
-    { regex: /^([A-Z][a-zA-Z0-9]*)/, type: 'type' },
+    { regex: /^([A-Z][a-zA-Z0-9]*)/, type: "type" },
     // Booleans and null
-    { regex: /^(true|false|null)\b/, type: 'keyword' },
+    { regex: /^(true|false|null)\b/, type: "keyword" },
     // Parameter names (word followed by colon)
-    { regex: /^(\w+)(?=:)/, type: 'parameter' },
+    { regex: /^(\w+)(?=:)/, type: "parameter" },
     // Whitespace and punctuation
-    { regex: /^(\s+|[{}[\]()!:,=@])/, type: 'default' },
+    { regex: /^(\s+|[{}[\]()!:,=@])/, type: "default" },
     // Other identifiers
-    { regex: /^(\w+)/, type: 'default' },
+    { regex: /^(\w+)/, type: "default" },
     // Any other character
-    { regex: /^(.)/, type: 'default' },
+    { regex: /^(.)/, type: "default" },
   ];
 
   while (remaining.length > 0) {
@@ -62,7 +63,7 @@ export function tokenizeLine(line: string): Token[] {
 
     if (!matched) {
       // Safety fallback - should never happen with the catch-all pattern
-      tokens.push({ text: remaining[0], type: 'default' });
+      tokens.push({ text: remaining[0], type: "default" });
       remaining = remaining.slice(1);
     }
   }
@@ -74,5 +75,5 @@ export function tokenizeLine(line: string): Token[] {
  * Tokenizes multiple lines of GraphQL code.
  */
 export function tokenizeGraphQL(code: string): Token[][] {
-  return code.split('\n').map(tokenizeLine);
+  return code.split("\n").map(tokenizeLine);
 }

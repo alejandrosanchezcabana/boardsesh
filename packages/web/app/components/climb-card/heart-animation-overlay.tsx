@@ -1,8 +1,8 @@
-'use client';
+"use client";
 
-import React from 'react';
-import Favorite from '@mui/icons-material/Favorite';
-import styles from './heart-animation-overlay.module.css';
+import React from "react";
+import Favorite from "@mui/icons-material/Favorite";
+import styles from "./heart-animation-overlay.module.css";
 
 interface HeartAnimationOverlayProps {
   visible: boolean;
@@ -23,7 +23,7 @@ const HeartAnimationOverlay = React.memo(function HeartAnimationOverlay({
       <Favorite
         className={styles.heart}
         onAnimationEnd={onAnimationEnd}
-        sx={{ fontSize: size, color: 'white' }}
+        sx={{ fontSize: size, color: "white" }}
       />
     </div>
   );

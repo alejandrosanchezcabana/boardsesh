@@ -1,13 +1,13 @@
-import { eq, and, or, isNull, inArray, desc, sql } from 'drizzle-orm';
-import type { ConnectionContext } from '@boardsesh/shared-schema';
-import { db } from '../../../../db/client';
-import * as dbSchema from '@boardsesh/db/schema';
-import { validateInput } from '../../shared/helpers';
+import { eq, and, or, isNull, inArray, desc, sql } from "drizzle-orm";
+import type { ConnectionContext } from "@boardsesh/shared-schema";
+import { db } from "../../../../db/client";
+import * as dbSchema from "@boardsesh/db/schema";
+import { validateInput } from "../../shared/helpers";
 import {
   DiscoverPlaylistsInputSchema,
   GetPlaylistCreatorsInputSchema,
-} from '../../../../validation/schemas';
-import { formatPublicPlaylist } from '../helpers/enrichment';
+} from "../../../../validation/schemas";
+import { formatPublicPlaylist } from "../helpers/enrichment";
 
 /** Shared select fields for public playlist queries (discover + search). */
 const PUBLIC_PLAYLIST_SELECT = {
@@ -55,10 +55,7 @@ function publicPlaylistBaseQuery() {
       dbSchema.playlistClimbs,
       eq(dbSchema.playlistClimbs.playlistId, dbSchema.playlists.id),
     )
-    .innerJoin(
-      dbSchema.users,
-      eq(dbSchema.users.id, dbSchema.playlistOwnership.userId),
-    );
+    .innerJoin(dbSchema.users, eq(dbSchema.users.id, dbSchema.playlistOwnership.userId));
 }
 
 /** Build the count query for public playlists. */
@@ -74,14 +71,16 @@ function publicPlaylistCountQuery() {
       dbSchema.playlistClimbs,
       eq(dbSchema.playlistClimbs.playlistId, dbSchema.playlists.id),
     )
-    .innerJoin(
-      dbSchema.users,
-      eq(dbSchema.users.id, dbSchema.playlistOwnership.userId),
-    );
+    .innerJoin(dbSchema.users, eq(dbSchema.users.id, dbSchema.playlistOwnership.userId));
 }
 
 // Re-export for search.ts to reuse
-export { PUBLIC_PLAYLIST_SELECT, PUBLIC_PLAYLIST_GROUP_BY, publicPlaylistBaseQuery, publicPlaylistCountQuery };
+export {
+  PUBLIC_PLAYLIST_SELECT,
+  PUBLIC_PLAYLIST_GROUP_BY,
+  publicPlaylistBaseQuery,
+  publicPlaylistCountQuery,
+};
 
 /**
  * Discover public playlists with at least 1 climb.
@@ -89,18 +88,22 @@ export { PUBLIC_PLAYLIST_SELECT, PUBLIC_PLAYLIST_GROUP_BY, publicPlaylistBaseQue
  */
 export const discoverPlaylists = async (
   _: unknown,
-  { input }: { input: {
-    boardType?: string;
-    layoutId?: number;
-    name?: string;
-    creatorIds?: string[];
-    sortBy?: 'recent' | 'popular';
-    page?: number;
-    pageSize?: number;
-  } },
+  {
+    input,
+  }: {
+    input: {
+      boardType?: string;
+      layoutId?: number;
+      name?: string;
+      creatorIds?: string[];
+      sortBy?: "recent" | "popular";
+      page?: number;
+      pageSize?: number;
+    };
+  },
   _ctx: ConnectionContext,
 ): Promise<{ playlists: unknown[]; totalCount: number; hasMore: boolean }> => {
-  validateInput(DiscoverPlaylistsInputSchema, input, 'input');
+  validateInput(DiscoverPlaylistsInputSchema, input, "input");
 
   const page = input.page ?? 0;
   const pageSize = input.pageSize ?? 20;
@@ -112,20 +115,17 @@ export const discoverPlaylists = async (
   }
   if (input.layoutId != null) {
     conditions.push(
-      or(
-        eq(dbSchema.playlists.layoutId, input.layoutId),
-        isNull(dbSchema.playlists.layoutId),
-      )!,
+      or(eq(dbSchema.playlists.layoutId, input.layoutId), isNull(dbSchema.playlists.layoutId))!,
     );
   }
   if (input.name) {
-    conditions.push(sql`LOWER(${dbSchema.playlists.name}) LIKE LOWER(${'%' + input.name + '%'})`);
+    conditions.push(sql`LOWER(${dbSchema.playlists.name}) LIKE LOWER(${"%" + input.name + "%"})`);
   }
   if (input.creatorIds && input.creatorIds.length > 0) {
     conditions.push(inArray(dbSchema.playlistOwnership.userId, input.creatorIds));
   }
 
-  const whereClause = and(...conditions, eq(dbSchema.playlistOwnership.role, 'owner'));
+  const whereClause = and(...conditions, eq(dbSchema.playlistOwnership.role, "owner"));
 
   const countResult = await publicPlaylistCountQuery().where(whereClause);
   const totalCount = countResult[0]?.count || 0;
@@ -134,7 +134,7 @@ export const discoverPlaylists = async (
     .where(whereClause)
     .groupBy(...PUBLIC_PLAYLIST_GROUP_BY)
     .orderBy(
-      input.sortBy === 'popular'
+      input.sortBy === "popular"
         ? desc(sql`count(DISTINCT ${dbSchema.playlistClimbs.id})`)
         : desc(dbSchema.playlists.createdAt),
       desc(dbSchema.playlists.updatedAt),
@@ -158,28 +158,29 @@ export const discoverPlaylists = async (
  */
 export const playlistCreators = async (
   _: unknown,
-  { input }: { input: {
-    boardType: string;
-    layoutId: number;
-    searchQuery?: string;
-  } },
+  {
+    input,
+  }: {
+    input: {
+      boardType: string;
+      layoutId: number;
+      searchQuery?: string;
+    };
+  },
   _ctx: ConnectionContext,
 ): Promise<unknown[]> => {
-  validateInput(GetPlaylistCreatorsInputSchema, input, 'input');
+  validateInput(GetPlaylistCreatorsInputSchema, input, "input");
 
   const conditions = [
     eq(dbSchema.playlists.isPublic, true),
     eq(dbSchema.playlists.boardType, input.boardType),
-    or(
-      eq(dbSchema.playlists.layoutId, input.layoutId),
-      isNull(dbSchema.playlists.layoutId),
-    ),
-    eq(dbSchema.playlistOwnership.role, 'owner'),
+    or(eq(dbSchema.playlists.layoutId, input.layoutId), isNull(dbSchema.playlists.layoutId)),
+    eq(dbSchema.playlistOwnership.role, "owner"),
   ];
 
   if (input.searchQuery) {
     conditions.push(
-      sql`LOWER(${dbSchema.users.name}) LIKE LOWER(${'%' + input.searchQuery + '%'})`,
+      sql`LOWER(${dbSchema.users.name}) LIKE LOWER(${"%" + input.searchQuery + "%"})`,
     );
   }
 
@@ -198,10 +199,7 @@ export const playlistCreators = async (
       dbSchema.playlistClimbs,
       eq(dbSchema.playlistClimbs.playlistId, dbSchema.playlists.id),
     )
-    .innerJoin(
-      dbSchema.users,
-      eq(dbSchema.users.id, dbSchema.playlistOwnership.userId),
-    )
+    .innerJoin(dbSchema.users, eq(dbSchema.users.id, dbSchema.playlistOwnership.userId))
     .where(and(...conditions))
     .groupBy(dbSchema.playlistOwnership.userId, dbSchema.users.name)
     .orderBy(desc(sql`count(DISTINCT ${dbSchema.playlists.id})`))

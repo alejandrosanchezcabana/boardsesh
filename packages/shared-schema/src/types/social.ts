@@ -1,6 +1,6 @@
 // Social / Follow types
 
-import type { SocialEntityType } from './comments';
+import type { SocialEntityType } from "./comments";
 
 export type PublicUserProfile = {
   id: string;
@@ -92,7 +92,7 @@ export type SetterClimbsInput = {
   username: string;
   boardType?: string;
   layoutId?: number;
-  sortBy?: 'popular' | 'new';
+  sortBy?: "popular" | "new";
   limit?: number;
   offset?: number;
 };
@@ -107,17 +107,17 @@ export type UserClimbsInput = {
 // Social Event Types (Redis Streams)
 
 export type SocialEventType =
-  | 'comment.created'
-  | 'comment.reply'
-  | 'vote.cast'
-  | 'follow.created'
-  | 'climb.created'
-  | 'ascent.logged'
-  | 'proposal.created'
-  | 'proposal.voted'
-  | 'proposal.approved'
-  | 'proposal.rejected'
-  | 'proposal.deleted';
+  | "comment.created"
+  | "comment.reply"
+  | "vote.cast"
+  | "follow.created"
+  | "climb.created"
+  | "ascent.logged"
+  | "proposal.created"
+  | "proposal.voted"
+  | "proposal.approved"
+  | "proposal.rejected"
+  | "proposal.deleted";
 
 export type SocialEvent = {
   type: SocialEventType;

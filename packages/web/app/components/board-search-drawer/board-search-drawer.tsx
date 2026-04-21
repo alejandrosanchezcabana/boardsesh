@@ -1,26 +1,26 @@
-'use client';
+"use client";
 
-import React, { useCallback, useEffect, useRef, useState } from 'react';
-import Box from '@mui/material/Box';
-import TextField from '@mui/material/TextField';
-import InputAdornment from '@mui/material/InputAdornment';
-import IconButton from '@mui/material/IconButton';
-import Stack from '@mui/material/Stack';
-import Typography from '@mui/material/Typography';
-import CircularProgress from '@mui/material/CircularProgress';
-import Button from '@mui/material/Button';
-import SearchOutlined from '@mui/icons-material/SearchOutlined';
-import CloseOutlined from '@mui/icons-material/CloseOutlined';
-import OpenInNewOutlined from '@mui/icons-material/OpenInNewOutlined';
-import SwipeableDrawer from '@/app/components/swipeable-drawer/swipeable-drawer';
-import BoardCard from '@/app/components/board-entity/board-card';
-import FollowButton from '@/app/components/ui/follow-button';
-import { useGeolocation } from '@/app/hooks/use-geolocation';
-import { useSearchBoardsMap } from '@/app/hooks/use-search-boards-map';
-import { FOLLOW_BOARD, UNFOLLOW_BOARD } from '@/app/lib/graphql/operations';
-import { themeTokens } from '@/app/theme/theme-config';
-import type { UserBoard } from '@boardsesh/shared-schema';
-import BoardSearchMap from './board-search-map';
+import React, { useCallback, useEffect, useRef, useState } from "react";
+import Box from "@mui/material/Box";
+import TextField from "@mui/material/TextField";
+import InputAdornment from "@mui/material/InputAdornment";
+import IconButton from "@mui/material/IconButton";
+import Stack from "@mui/material/Stack";
+import Typography from "@mui/material/Typography";
+import CircularProgress from "@mui/material/CircularProgress";
+import Button from "@mui/material/Button";
+import SearchOutlined from "@mui/icons-material/SearchOutlined";
+import CloseOutlined from "@mui/icons-material/CloseOutlined";
+import OpenInNewOutlined from "@mui/icons-material/OpenInNewOutlined";
+import SwipeableDrawer from "@/app/components/swipeable-drawer/swipeable-drawer";
+import BoardCard from "@/app/components/board-entity/board-card";
+import FollowButton from "@/app/components/ui/follow-button";
+import { useGeolocation } from "@/app/hooks/use-geolocation";
+import { useSearchBoardsMap } from "@/app/hooks/use-search-boards-map";
+import { FOLLOW_BOARD, UNFOLLOW_BOARD } from "@/app/lib/graphql/operations";
+import { themeTokens } from "@/app/theme/theme-config";
+import type { UserBoard } from "@boardsesh/shared-schema";
+import BoardSearchMap from "./board-search-map";
 
 const DEFAULT_CENTER = { lat: 20, lng: 0 }; // World view — neutral starting point until geolocation resolves
 const DEFAULT_ZOOM = 3;
@@ -38,7 +38,7 @@ interface BoardSearchDrawerProps {
 export default function BoardSearchDrawer({ open, onClose, onBoardOpen }: BoardSearchDrawerProps) {
   const { coordinates: userCoords, requestPermission } = useGeolocation();
 
-  const [query, setQuery] = useState('');
+  const [query, setQuery] = useState("");
   const [center, setCenter] = useState(DEFAULT_CENTER);
   const [zoom, setZoom] = useState(DEFAULT_ZOOM);
   const [selectedBoardUuid, setSelectedBoardUuid] = useState<string | null>(null);
@@ -84,7 +84,7 @@ export default function BoardSearchDrawer({ open, onClose, onBoardOpen }: BoardS
   useEffect(() => {
     if (!open) {
       setSelectedBoardUuid(null);
-      setQuery('');
+      setQuery("");
       setRequestedGeo(false);
       setCenter(DEFAULT_CENTER);
       setZoom(DEFAULT_ZOOM);
@@ -93,16 +93,17 @@ export default function BoardSearchDrawer({ open, onClose, onBoardOpen }: BoardS
     }
   }, [open]);
 
-  const { boards, isLoading, isFetching, radiusKm, hasMore, isFetchingNextPage, fetchNextPage } = useSearchBoardsMap({
-    query,
-    // While the map is still at the default world-view fallback (locationResolved=false),
-    // don't fire a coordinate-based search — the 300 km bucket at zoom 3 would surface a
-    // cluster of boards in Kansas to every user until geolocation resolves.
-    latitude: locationResolved ? center.lat : null,
-    longitude: locationResolved ? center.lng : null,
-    zoom,
-    enabled: open,
-  });
+  const { boards, isLoading, isFetching, radiusKm, hasMore, isFetchingNextPage, fetchNextPage } =
+    useSearchBoardsMap({
+      query,
+      // While the map is still at the default world-view fallback (locationResolved=false),
+      // don't fire a coordinate-based search — the 300 km bucket at zoom 3 would surface a
+      // cluster of boards in Kansas to every user until geolocation resolves.
+      latitude: locationResolved ? center.lat : null,
+      longitude: locationResolved ? center.lng : null,
+      zoom,
+      enabled: open,
+    });
 
   // Infinite scroll inside the horizontal carousel: load the next page when the
   // user scrolls within 300px of the right edge. We can't reuse the shared
@@ -131,7 +132,7 @@ export default function BoardSearchDrawer({ open, onClose, onBoardOpen }: BoardS
   const scrollCardIntoView = useCallback((uuid: string) => {
     const node = cardRefs.current.get(uuid);
     if (!node) return;
-    node.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' });
+    node.scrollIntoView({ behavior: "smooth", inline: "center", block: "nearest" });
   }, []);
 
   const handleMarkerClick = useCallback(
@@ -175,9 +176,9 @@ export default function BoardSearchDrawer({ open, onClose, onBoardOpen }: BoardS
       showCloseButtonOnMobile
       styles={{ body: { padding: 0 } }}
     >
-      <Box sx={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
+      <Box sx={{ display: "flex", flexDirection: "column", height: "100%" }}>
         {/* Search bar */}
-        <Box sx={{ px: 2, pt: 1.5, pb: 1, borderBottom: '1px solid var(--neutral-200)' }}>
+        <Box sx={{ px: 2, pt: 1.5, pb: 1, borderBottom: "1px solid var(--neutral-200)" }}>
           <TextField
             fullWidth
             size="small"
@@ -193,7 +194,7 @@ export default function BoardSearchDrawer({ open, onClose, onBoardOpen }: BoardS
                 ),
                 endAdornment: query ? (
                   <InputAdornment position="end">
-                    <IconButton size="small" onClick={() => setQuery('')} aria-label="Clear">
+                    <IconButton size="small" onClick={() => setQuery("")} aria-label="Clear">
                       <CloseOutlined fontSize="small" />
                     </IconButton>
                   </InputAdornment>
@@ -201,7 +202,14 @@ export default function BoardSearchDrawer({ open, onClose, onBoardOpen }: BoardS
               },
             }}
           />
-          <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mt: 0.75 }}>
+          <Box
+            sx={{
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "space-between",
+              mt: 0.75,
+            }}
+          >
             <Typography variant="caption" color="text.secondary">
               Showing boards within {radiusKm} km of map center
             </Typography>
@@ -210,7 +218,7 @@ export default function BoardSearchDrawer({ open, onClose, onBoardOpen }: BoardS
         </Box>
 
         {/* Map */}
-        <Box sx={{ flex: 1, minHeight: 0, position: 'relative' }}>
+        <Box sx={{ flex: 1, minHeight: 0, position: "relative" }}>
           <BoardSearchMap
             center={center}
             zoom={zoom}
@@ -226,21 +234,21 @@ export default function BoardSearchDrawer({ open, onClose, onBoardOpen }: BoardS
         {/* Results carousel */}
         <Box
           sx={{
-            borderTop: '1px solid var(--neutral-200)',
-            backgroundColor: 'var(--semantic-background)',
+            borderTop: "1px solid var(--neutral-200)",
+            backgroundColor: "var(--semantic-background)",
             flexShrink: 0,
           }}
         >
           {showSpinner ? (
-            <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', py: 3 }}>
+            <Box sx={{ display: "flex", justifyContent: "center", alignItems: "center", py: 3 }}>
               <CircularProgress size={20} />
             </Box>
           ) : boards.length === 0 ? (
-            <Box sx={{ py: 3, textAlign: 'center', px: 2 }}>
+            <Box sx={{ py: 3, textAlign: "center", px: 2 }}>
               <Typography variant="body2" color="text.secondary">
                 {query.trim().length >= 2
                   ? `No boards match "${query.trim()}" here. Try zooming out or searching elsewhere.`
-                  : 'No boards in this area. Pan or zoom out to find more.'}
+                  : "No boards in this area. Pan or zoom out to find more."}
               </Typography>
             </Box>
           ) : (
@@ -248,14 +256,14 @@ export default function BoardSearchDrawer({ open, onClose, onBoardOpen }: BoardS
               ref={carouselRef}
               onScroll={handleCarouselScroll}
               sx={{
-                display: 'flex',
+                display: "flex",
                 gap: 1.5,
-                overflowX: 'auto',
+                overflowX: "auto",
                 px: 2,
                 py: 1.5,
-                scrollSnapType: 'x proximity',
-                scrollbarWidth: 'none',
-                '&::-webkit-scrollbar': { display: 'none' },
+                scrollSnapType: "x proximity",
+                scrollbarWidth: "none",
+                "&::-webkit-scrollbar": { display: "none" },
               }}
             >
               {boards.map((board) => {
@@ -267,8 +275,8 @@ export default function BoardSearchDrawer({ open, onClose, onBoardOpen }: BoardS
                     sx={{
                       width: CAROUSEL_CARD_WIDTH,
                       flexShrink: 0,
-                      scrollSnapAlign: 'start',
-                      outline: isSelected ? `2px solid var(--color-primary)` : 'none',
+                      scrollSnapAlign: "start",
+                      outline: isSelected ? `2px solid var(--color-primary)` : "none",
                       borderRadius: `${themeTokens.borderRadius.lg}px`,
                       transition: themeTokens.transitions.fast,
                     }}
@@ -295,7 +303,7 @@ export default function BoardSearchDrawer({ open, onClose, onBoardOpen }: BoardS
                                 e.stopPropagation();
                                 onBoardOpen(board);
                               }}
-                              sx={{ textTransform: 'none' }}
+                              sx={{ textTransform: "none" }}
                             >
                               Open
                             </Button>
@@ -309,9 +317,9 @@ export default function BoardSearchDrawer({ open, onClose, onBoardOpen }: BoardS
               {isFetchingNextPage && (
                 <Box
                   sx={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
                     width: CAROUSEL_LOAD_INDICATOR_WIDTH,
                     flexShrink: 0,
                   }}

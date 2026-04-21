@@ -1,20 +1,20 @@
-'use client';
+"use client";
 
-import React, { useState, useCallback, useMemo } from 'react';
-import Box from '@mui/material/Box';
-import TextField from '@mui/material/TextField';
-import Chip from '@mui/material/Chip';
-import SearchOutlined from '@mui/icons-material/SearchOutlined';
-import InputAdornment from '@mui/material/InputAdornment';
-import SwipeableDrawer from '../swipeable-drawer/swipeable-drawer';
-import UserSearchResults from '../social/user-search-results';
-import BoardSearchResults from '../social/board-search-results';
-import PlaylistSearchResults from '../social/playlist-search-results';
-import GymSearchResults from '../social/gym-search-results';
-import { useWsAuthToken } from '@/app/hooks/use-ws-auth-token';
-import { BoardDetails } from '@/app/lib/types';
+import React, { useState, useCallback, useMemo } from "react";
+import Box from "@mui/material/Box";
+import TextField from "@mui/material/TextField";
+import Chip from "@mui/material/Chip";
+import SearchOutlined from "@mui/icons-material/SearchOutlined";
+import InputAdornment from "@mui/material/InputAdornment";
+import SwipeableDrawer from "../swipeable-drawer/swipeable-drawer";
+import UserSearchResults from "../social/user-search-results";
+import BoardSearchResults from "../social/board-search-results";
+import PlaylistSearchResults from "../social/playlist-search-results";
+import GymSearchResults from "../social/gym-search-results";
+import { useWsAuthToken } from "@/app/hooks/use-ws-auth-token";
+import { BoardDetails } from "@/app/lib/types";
 
-export type SearchCategory = 'climbs' | 'users' | 'playlists' | 'boards' | 'gyms';
+export type SearchCategory = "climbs" | "users" | "playlists" | "boards" | "gyms";
 
 interface UnifiedSearchDrawerProps {
   open: boolean;
@@ -38,7 +38,7 @@ export default function UnifiedSearchDrawer({
   open,
   onClose,
   onTransitionEnd,
-  defaultCategory = 'boards',
+  defaultCategory = "boards",
   boardDetails,
   renderClimbSearch,
   renderClimbFooter,
@@ -46,13 +46,13 @@ export default function UnifiedSearchDrawer({
   showCloseButtonOnMobile = false,
   showCloseButton = false,
 }: UnifiedSearchDrawerProps) {
-  const [query, setQuery] = useState('');
+  const [query, setQuery] = useState("");
   const [selectedCategory, setSelectedCategory] = useState<SearchCategory>(defaultCategory);
   const { token } = useWsAuthToken();
 
   const handleClose = useCallback(() => {
     onClose();
-    setQuery('');
+    setQuery("");
   }, [onClose]);
 
   // Stable string key for the allow-list. Callers commonly pass a fresh
@@ -61,17 +61,17 @@ export default function UnifiedSearchDrawer({
   // on a character that can't appear in a `SearchCategory` literal gives us
   // a cheap value-equality key without a deep-compare helper.
   const hasBoardDetails = !!boardDetails;
-  const allowedCategoriesKey = allowedCategories ? allowedCategories.join('|') : '';
+  const allowedCategoriesKey = allowedCategories ? allowedCategories.join("|") : "";
   const visibleCategories = useMemo<{ key: SearchCategory; label: string }[]>(() => {
     const all: { key: SearchCategory; label: string; visible: boolean }[] = [
-      { key: 'climbs', label: 'Climbs', visible: hasBoardDetails },
-      { key: 'boards', label: 'Boards', visible: true },
-      { key: 'gyms', label: 'Gyms', visible: true },
-      { key: 'users', label: 'Users', visible: true },
-      { key: 'playlists', label: 'Playlists', visible: true },
+      { key: "climbs", label: "Climbs", visible: hasBoardDetails },
+      { key: "boards", label: "Boards", visible: true },
+      { key: "gyms", label: "Gyms", visible: true },
+      { key: "users", label: "Users", visible: true },
+      { key: "playlists", label: "Playlists", visible: true },
     ];
     const allowedSet = allowedCategoriesKey
-      ? new Set(allowedCategoriesKey.split('|') as SearchCategory[])
+      ? new Set(allowedCategoriesKey.split("|") as SearchCategory[])
       : null;
     return all
       .filter((c) => c.visible && (allowedSet ? allowedSet.has(c.key) : true))
@@ -89,10 +89,10 @@ export default function UnifiedSearchDrawer({
 
   const handleCategoryChange = (newCategory: SearchCategory) => {
     setSelectedCategory(newCategory);
-    setQuery('');
+    setQuery("");
   };
 
-  const isClimbMode = category === 'climbs' && !!boardDetails && !!renderClimbSearch;
+  const isClimbMode = category === "climbs" && !!boardDetails && !!renderClimbSearch;
 
   const showCategoryChips = visibleCategories.length > 1;
 
@@ -102,7 +102,7 @@ export default function UnifiedSearchDrawer({
       open={open}
       onClose={handleClose}
       onTransitionEnd={onTransitionEnd}
-      height={isClimbMode ? '100%' : '80vh'}
+      height={isClimbMode ? "100%" : "80vh"}
       fullHeight={isClimbMode}
       showDragHandle
       showCloseButton={showCloseButton}
@@ -111,23 +111,23 @@ export default function UnifiedSearchDrawer({
       footer={isClimbMode && renderClimbFooter ? renderClimbFooter() : undefined}
       styles={{
         body: {
-          padding: isClimbMode ? '0 16px 16px' : '0',
-          backgroundColor: isClimbMode ? 'var(--semantic-background, #F3F4F6)' : undefined,
+          padding: isClimbMode ? "0 16px 16px" : "0",
+          backgroundColor: isClimbMode ? "var(--semantic-background, #F3F4F6)" : undefined,
         },
-        footer: isClimbMode ? { padding: 0, border: 'none' } : undefined,
-        header: isClimbMode ? { display: 'none' } : undefined,
-        mask: { backgroundColor: 'rgba(128, 128, 128, 0.7)' },
+        footer: isClimbMode ? { padding: 0, border: "none" } : undefined,
+        header: isClimbMode ? { display: "none" } : undefined,
+        mask: { backgroundColor: "rgba(128, 128, 128, 0.7)" },
       }}
     >
       {/* Category pills */}
       {showCategoryChips && (
-        <Box sx={{ display: 'flex', gap: 1, px: 2, py: 1, flexWrap: 'wrap' }}>
+        <Box sx={{ display: "flex", gap: 1, px: 2, py: 1, flexWrap: "wrap" }}>
           {visibleCategories.map((c) => (
             <Chip
               key={c.key}
               label={c.label}
-              variant={category === c.key ? 'filled' : 'outlined'}
-              color={category === c.key ? 'primary' : 'default'}
+              variant={category === c.key ? "filled" : "outlined"}
+              color={category === c.key ? "primary" : "default"}
               onClick={() => handleCategoryChange(c.key)}
             />
           ))}
@@ -145,10 +145,13 @@ export default function UnifiedSearchDrawer({
               fullWidth
               size="small"
               placeholder={
-                category === 'boards' ? 'Search boards...'
-                  : category === 'gyms' ? 'Search gyms...'
-                  : category === 'users' ? 'Search climbers...'
-                  : 'Search playlists...'
+                category === "boards"
+                  ? "Search boards..."
+                  : category === "gyms"
+                    ? "Search gyms..."
+                    : category === "users"
+                      ? "Search climbers..."
+                      : "Search playlists..."
               }
               value={query}
               onChange={(e) => setQuery(e.target.value)}
@@ -165,19 +168,11 @@ export default function UnifiedSearchDrawer({
             />
           </Box>
 
-          <Box sx={{ overflow: 'auto', flex: 1 }}>
-            {category === 'boards' && (
-              <BoardSearchResults query={query} authToken={token} />
-            )}
-            {category === 'gyms' && (
-              <GymSearchResults query={query} authToken={token} />
-            )}
-            {category === 'users' && (
-              <UserSearchResults query={query} authToken={token} />
-            )}
-            {category === 'playlists' && (
-              <PlaylistSearchResults query={query} authToken={token} />
-            )}
+          <Box sx={{ overflow: "auto", flex: 1 }}>
+            {category === "boards" && <BoardSearchResults query={query} authToken={token} />}
+            {category === "gyms" && <GymSearchResults query={query} authToken={token} />}
+            {category === "users" && <UserSearchResults query={query} authToken={token} />}
+            {category === "playlists" && <PlaylistSearchResults query={query} authToken={token} />}
           </Box>
         </>
       )}

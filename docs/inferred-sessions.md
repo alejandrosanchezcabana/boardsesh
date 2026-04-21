@@ -30,6 +30,7 @@ There are no "ungrouped" ticks — the backfill migration (0060) ensures every h
 ### Deterministic session IDs
 
 Session IDs are generated using **UUIDv5** with a fixed namespace (`6ba7b812-9dad-11d1-80b4-00c04fd430c8`) and input `userId:firstTickTimestamp`. This means:
+
 - The same user + first tick timestamp always produces the same session ID
 - Re-running the builder is idempotent
 - The SQL backfill migration produces identical IDs to the TypeScript builder (via PostgreSQL's `uuid_generate_v5`)
@@ -46,10 +47,13 @@ Users can edit inferred sessions they participate in. Authorization requires bei
 **Resolvers:** `packages/backend/src/graphql/resolvers/social/session-mutations.ts`
 
 #### `updateInferredSession`
+
 Update session name and/or description. The `description` field maps to `goal` in the feed response.
 
 #### `addUserToSession`
+
 Adds another user's ticks to the session:
+
 1. Finds the target user's ticks within ±30 minutes of the session's time window
 2. Saves each tick's current `inferredSessionId` to `previousInferredSessionId` (for undo)
 3. Reassigns `inferredSessionId` to the target session
@@ -57,7 +61,9 @@ Adds another user's ticks to the session:
 5. Recalculates aggregate stats for both affected sessions
 
 #### `removeUserFromSession`
+
 Restores ticks to their original sessions (non-destructive undo):
+
 1. Restores each tick's `inferredSessionId` from `previousInferredSessionId`
 2. Deletes the `session_member_overrides` record
 3. Recalculates stats for all affected sessions
@@ -68,34 +74,37 @@ Restores ticks to their original sessions (non-destructive undo):
 ## Database Schema
 
 ### `inferred_sessions` table
-| Column | Type | Description |
-|--------|------|-------------|
-| `id` | text PK | Deterministic UUIDv5 |
-| `user_id` | text FK | Session owner |
-| `name` | text nullable | User-editable session name |
-| `description` | text nullable | User-editable notes (maps to `goal`) |
-| `first_tick_at` | timestamp | Earliest tick time |
-| `last_tick_at` | timestamp | Latest tick time |
-| `tick_count` | integer | Total ticks in session |
-| `total_sends` | integer | Flashes + sends |
-| `total_flashes` | integer | Flash count |
-| `total_attempts` | integer | Attempt count |
+
+| Column           | Type          | Description                          |
+| ---------------- | ------------- | ------------------------------------ |
+| `id`             | text PK       | Deterministic UUIDv5                 |
+| `user_id`        | text FK       | Session owner                        |
+| `name`           | text nullable | User-editable session name           |
+| `description`    | text nullable | User-editable notes (maps to `goal`) |
+| `first_tick_at`  | timestamp     | Earliest tick time                   |
+| `last_tick_at`   | timestamp     | Latest tick time                     |
+| `tick_count`     | integer       | Total ticks in session               |
+| `total_sends`    | integer       | Flashes + sends                      |
+| `total_flashes`  | integer       | Flash count                          |
+| `total_attempts` | integer       | Attempt count                        |
 
 ### `session_member_overrides` table
+
 Tracks when a user is manually added to another user's session.
 
-| Column | Type | Description |
-|--------|------|-------------|
-| `session_id` | text FK | Target inferred session |
-| `user_id` | text FK | Added user |
-| `added_by_user_id` | text FK | Who added them |
-| `added_at` | timestamp | When they were added |
+| Column             | Type      | Description             |
+| ------------------ | --------- | ----------------------- |
+| `session_id`       | text FK   | Target inferred session |
+| `user_id`          | text FK   | Added user              |
+| `added_by_user_id` | text FK   | Who added them          |
+| `added_at`         | timestamp | When they were added    |
 
 ### `boardsesh_ticks` columns
-| Column | Description |
-|--------|-------------|
-| `session_id` | Party mode session (from `board_sessions`) |
-| `inferred_session_id` | Inferred session assignment |
+
+| Column                         | Description                                 |
+| ------------------------------ | ------------------------------------------- |
+| `session_id`                   | Party mode session (from `board_sessions`)  |
+| `inferred_session_id`          | Inferred session assignment                 |
 | `previous_inferred_session_id` | Saved before manual reassignment (for undo) |
 
 ---
@@ -105,6 +114,7 @@ Tracks when a user is manually added to another user's session.
 **Resolver:** `packages/backend/src/graphql/resolvers/social/session-feed.ts`
 
 The `sessionGroupedFeed` query returns sessions ordered by `last_tick_at`. Each session includes:
+
 - `ownerUserId` — the actual session owner (`inferred_sessions.user_id` or `board_sessions.created_by_user_id`), used by the frontend to determine who can be removed
 - Participant info with per-user stats (sorted by sends DESC)
 - Grade distribution
@@ -120,9 +130,11 @@ The feed uses `COALESCE(session_id, inferred_session_id)` to unify party and inf
 ## Frontend
 
 **Session detail page:** `packages/web/app/session/[sessionId]/`
+
 - Server component (`page.tsx`) fetches session data with `React.cache()` deduplication
 - Client component (`session-detail-content.tsx`) handles editing, add/remove users
 - `user-search-dialog.tsx` provides user search for adding climbers
 
 **Feed card:** `packages/web/app/components/activity-feed/session-feed-card.tsx`
+
 - Compact card showing session summary, grade chart, participants

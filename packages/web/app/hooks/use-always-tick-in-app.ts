@@ -1,5 +1,5 @@
-import { useState, useEffect, useCallback } from 'react';
-import { getAlwaysTickInApp, setAlwaysTickInApp } from '@/app/lib/user-preferences-db';
+import { useState, useEffect, useCallback } from "react";
+import { getAlwaysTickInApp, setAlwaysTickInApp } from "@/app/lib/user-preferences-db";
 
 export function useAlwaysTickInApp() {
   const [alwaysUseApp, setAlwaysUseApp] = useState(false);

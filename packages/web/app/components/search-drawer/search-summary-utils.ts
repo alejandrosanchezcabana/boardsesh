@@ -1,8 +1,8 @@
-import { SearchRequestPagination } from '@/app/lib/types';
-import { TENSION_KILTER_GRADES } from '@/app/lib/board-data';
-import { DEFAULT_SEARCH_PARAMS } from '@/app/lib/url-utils';
+import { SearchRequestPagination } from "@/app/lib/types";
+import { TENSION_KILTER_GRADES } from "@/app/lib/board-data";
+import { DEFAULT_SEARCH_PARAMS } from "@/app/lib/url-utils";
 
-export const DEFAULT_CLIMB_SEARCH_SUMMARY = 'What do you want to climb?';
+export const DEFAULT_CLIMB_SEARCH_SUMMARY = "What do you want to climb?";
 
 function getGradeName(gradeId: number): string {
   const grade = TENSION_KILTER_GRADES.find((g) => g.difficulty_id === gradeId);
@@ -11,7 +11,7 @@ function getGradeName(gradeId: number): string {
 
 export function hasActiveFilters(params: SearchRequestPagination): boolean {
   return Object.entries(params).some(([key, value]) => {
-    if (key === 'holdsFilter') {
+    if (key === "holdsFilter") {
       return Object.keys(value || {}).length > 0;
     }
     return value !== DEFAULT_SEARCH_PARAMS[key as keyof typeof DEFAULT_SEARCH_PARAMS];
@@ -20,8 +20,8 @@ export function hasActiveFilters(params: SearchRequestPagination): boolean {
 
 export function hasActiveNonNameFilters(params: SearchRequestPagination): boolean {
   return Object.entries(params).some(([key, value]) => {
-    if (key === 'name') return false;
-    if (key === 'holdsFilter') {
+    if (key === "name") return false;
+    if (key === "holdsFilter") {
       return Object.keys(value || {}).length > 0;
     }
     return value !== DEFAULT_SEARCH_PARAMS[key as keyof typeof DEFAULT_SEARCH_PARAMS];
@@ -45,9 +45,7 @@ export function getClimbPanelSummary(params: SearchRequestPagination): string[] 
 
   if (params.settername.length > 0) {
     parts.push(
-      params.settername.length === 1
-        ? params.settername[0]
-        : `${params.settername.length} setters`,
+      params.settername.length === 1 ? params.settername[0] : `${params.settername.length} setters`,
     );
   }
 
@@ -65,43 +63,43 @@ export function getQualityPanelSummary(params: SearchRequestPagination): string[
     parts.push(`${params.minRating}+ rating`);
   }
   if (params.onlyClassics) {
-    parts.push('Classics');
+    parts.push("Classics");
   }
 
   if (params.gradeAccuracy && params.gradeAccuracy !== DEFAULT_SEARCH_PARAMS.gradeAccuracy) {
-    parts.push('Grade accuracy');
+    parts.push("Grade accuracy");
   }
   if (params.onlyTallClimbs) {
-    parts.push('Tall');
+    parts.push("Tall");
   }
 
   return parts;
 }
 
 export function getStatusPanelSummary(params: SearchRequestPagination): string[] {
-  if (params.onlyDrafts) return ['Drafts'];
-  if (params.projectsOnly) return ['Projects'];
-  if (params.minAscents >= 2) return ['Established'];
+  if (params.onlyDrafts) return ["Drafts"];
+  if (params.projectsOnly) return ["Projects"];
+  if (params.minAscents >= 2) return ["Established"];
   return [];
 }
 
 export function getUserPanelSummary(params: SearchRequestPagination): string[] {
   // Merge "Hide" filters into single entry
   const hideFilters: string[] = [];
-  if (params.hideAttempted) hideFilters.push('attempted');
-  if (params.hideCompleted) hideFilters.push('completed');
+  if (params.hideAttempted) hideFilters.push("attempted");
+  if (params.hideCompleted) hideFilters.push("completed");
 
   // Merge "Only" filters into single entry
   const onlyFilters: string[] = [];
-  if (params.showOnlyAttempted) onlyFilters.push('attempted');
-  if (params.showOnlyCompleted) onlyFilters.push('completed');
+  if (params.showOnlyAttempted) onlyFilters.push("attempted");
+  if (params.showOnlyCompleted) onlyFilters.push("completed");
 
   const parts: string[] = [];
   if (hideFilters.length > 0) {
-    parts.push(`Hide ${hideFilters.join(', ')}`);
+    parts.push(`Hide ${hideFilters.join(", ")}`);
   }
   if (onlyFilters.length > 0) {
-    parts.push(`Only ${onlyFilters.join(', ')}`);
+    parts.push(`Only ${onlyFilters.join(", ")}`);
   }
   return parts;
 }
@@ -109,7 +107,7 @@ export function getUserPanelSummary(params: SearchRequestPagination): string[] {
 export function getHoldsPanelSummary(params: SearchRequestPagination): string[] {
   const holdsCount = Object.keys(params.holdsFilter || {}).length;
   if (holdsCount === 0) return [];
-  return [`${holdsCount} hold${holdsCount !== 1 ? 's' : ''}`];
+  return [`${holdsCount} hold${holdsCount !== 1 ? "s" : ""}`];
 }
 
 /**
@@ -129,10 +127,10 @@ export function getSearchPillSummary(params: SearchRequestPagination): string {
 
   // Show max 2 items, append "+N more" if more
   if (allParts.length <= 2) {
-    return allParts.join(' \u00B7 ');
+    return allParts.join(" \u00B7 ");
   }
   const remaining = allParts.length - 2;
-  return allParts.slice(0, 2).join(' \u00B7 ') + ` \u00B7 +${remaining} more`;
+  return allParts.slice(0, 2).join(" \u00B7 ") + ` \u00B7 +${remaining} more`;
 }
 
 /**
@@ -149,5 +147,5 @@ export function getSearchPillFullSummary(params: SearchRequestPagination): strin
   ];
 
   if (allParts.length === 0) return DEFAULT_CLIMB_SEARCH_SUMMARY;
-  return allParts.join(' \u00B7 ');
+  return allParts.join(" \u00B7 ");
 }

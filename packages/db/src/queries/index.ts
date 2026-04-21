@@ -1,1 +1,1 @@
-export * from './climbs/index';
+export * from "./climbs/index";

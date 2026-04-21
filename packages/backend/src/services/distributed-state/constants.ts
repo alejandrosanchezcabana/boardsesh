@@ -38,7 +38,7 @@ export const TTL = {
 } as const;
 
 // Sentinel value to indicate "don't update this field" in Lua scripts
-export const UNSET_SENTINEL = '__UNSET__';
+export const UNSET_SENTINEL = "__UNSET__";
 
 /**
  * Validate connectionId format to prevent Redis key injection.
@@ -68,11 +68,11 @@ export function connectionToHash(conn: DistributedConnection): Record<string, st
   return {
     connectionId: conn.connectionId,
     instanceId: conn.instanceId,
-    sessionId: conn.sessionId || '',
-    userId: conn.userId || '',
+    sessionId: conn.sessionId || "",
+    userId: conn.userId || "",
     username: conn.username,
-    avatarUrl: conn.avatarUrl || '',
-    isLeader: conn.isLeader ? 'true' : 'false',
+    avatarUrl: conn.avatarUrl || "",
+    isLeader: conn.isLeader ? "true" : "false",
     connectedAt: conn.connectedAt.toString(),
   };
 }
@@ -85,15 +85,15 @@ export function connectionToHash(conn: DistributedConnection): Record<string, st
 export function hashToConnection(hash: Record<string, string>): DistributedConnection {
   // Empty string in Redis means "not set" - convert to null for consistency
   // This matches the pattern: null -> '' (storage) -> null (retrieval)
-  const sessionId = hash.sessionId && hash.sessionId !== '' ? hash.sessionId : null;
-  const userId = hash.userId && hash.userId !== '' ? hash.userId : null;
-  const avatarUrl = hash.avatarUrl && hash.avatarUrl !== '' ? hash.avatarUrl : null;
+  const sessionId = hash.sessionId && hash.sessionId !== "" ? hash.sessionId : null;
+  const userId = hash.userId && hash.userId !== "" ? hash.userId : null;
+  const avatarUrl = hash.avatarUrl && hash.avatarUrl !== "" ? hash.avatarUrl : null;
 
   // Parse connectedAt with warning for invalid values
   let connectedAt = parseInt(hash.connectedAt, 10);
   if (isNaN(connectedAt)) {
     console.warn(
-      `[DistributedState] Invalid connectedAt value "${hash.connectedAt}" for connection ${hash.connectionId?.slice(0, 8)}, using current time`
+      `[DistributedState] Invalid connectedAt value "${hash.connectedAt}" for connection ${hash.connectionId?.slice(0, 8)}, using current time`,
     );
     connectedAt = Date.now();
   }
@@ -105,7 +105,7 @@ export function hashToConnection(hash: Record<string, string>): DistributedConne
     userId,
     username: hash.username,
     avatarUrl,
-    isLeader: hash.isLeader === 'true',
+    isLeader: hash.isLeader === "true",
     connectedAt,
   };
 }

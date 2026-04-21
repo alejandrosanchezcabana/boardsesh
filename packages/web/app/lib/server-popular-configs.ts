@@ -1,12 +1,12 @@
-import React from 'react';
-import 'server-only';
-import { getGraphQLHttpUrl } from '@/app/lib/graphql/client';
+import React from "react";
+import "server-only";
+import { getGraphQLHttpUrl } from "@/app/lib/graphql/client";
 import {
   GET_POPULAR_BOARD_CONFIGS,
   type GetPopularBoardConfigsQueryResponse,
-} from '@/app/lib/graphql/operations';
-import { GraphQLClient } from 'graphql-request';
-import type { PopularBoardConfig } from '@boardsesh/shared-schema';
+} from "@/app/lib/graphql/operations";
+import { GraphQLClient } from "graphql-request";
+import type { PopularBoardConfig } from "@boardsesh/shared-schema";
 
 /**
  * Fetches popular board configurations server-side via the GraphQL backend.
@@ -27,7 +27,7 @@ export const getPopularBoardConfigs = React.cache(async (): Promise<PopularBoard
   const timer = setTimeout(() => controller.abort(), 1000);
   try {
     const client = new GraphQLClient(url, {
-      headers: { 'Content-Type': 'application/json' },
+      headers: { "Content-Type": "application/json" },
       signal: controller.signal,
     });
     const result = await client.request<GetPopularBoardConfigsQueryResponse>(

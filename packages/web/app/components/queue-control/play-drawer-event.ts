@@ -11,9 +11,9 @@
  * can import it without pulling in the full QueueControlBar tree — important
  * for isolated unit tests.
  */
-export const PLAY_DRAWER_EVENT = 'boardsesh:open-play-drawer';
+export const PLAY_DRAWER_EVENT = "boardsesh:open-play-drawer";
 
 export const dispatchOpenPlayDrawer = (): void => {
-  if (typeof window === 'undefined') return;
+  if (typeof window === "undefined") return;
   window.dispatchEvent(new CustomEvent(PLAY_DRAWER_EVENT));
 };
