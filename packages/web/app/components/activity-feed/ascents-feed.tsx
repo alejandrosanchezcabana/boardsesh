@@ -12,7 +12,7 @@ import IconButton from '@mui/material/IconButton';
 import { EmptyState } from '@/app/components/ui/empty-state';
 import CheckCircleOutlined from '@mui/icons-material/CheckCircleOutlined';
 import ElectricBoltOutlined from '@mui/icons-material/ElectricBoltOutlined';
-import CancelOutlined from '@mui/icons-material/CancelOutlined';
+import { PersonFallingIcon } from '@/app/components/icons/person-falling-icon';
 import LocationOnOutlined from '@mui/icons-material/LocationOnOutlined';
 import DeleteOutlined from '@mui/icons-material/DeleteOutlined';
 import dayjs from 'dayjs';
@@ -88,7 +88,7 @@ const getGroupStatusSummary = (group: GroupedAscentFeedItem): { text: string; ic
     icon = <CheckCircleOutlined />;
     color = 'green';
   } else {
-    icon = <CancelOutlined />;
+    icon = <PersonFallingIcon />;
     color = 'default';
   }
 

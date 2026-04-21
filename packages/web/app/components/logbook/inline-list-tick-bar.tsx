@@ -5,6 +5,7 @@ import IconButton from '@mui/material/IconButton';
 import Stack from '@mui/material/Stack';
 import CheckOutlined from '@mui/icons-material/CheckOutlined';
 import CloseOutlined from '@mui/icons-material/CloseOutlined';
+import { PersonFallingIcon } from '@/app/components/icons/person-falling-icon';
 import { Climb, BoardDetails, Angle } from '@/app/lib/types';
 import { useBoardProvider } from '../board-provider/board-provider-context';
 import { TENSION_KILTER_GRADES } from '@/app/lib/board-data';
@@ -191,9 +192,6 @@ export const InlineListTickBar: React.FC<InlineListTickBarProps> = ({
             >
               <CheckOutlined sx={{ fontSize: 18 }} />
             </IconButton>
-            {/* Intentional: both the attempt and cancel buttons use CloseOutlined.
-                The red "X" (attempt/fail) vs small muted "X" (cancel) distinction is
-                a deliberate design choice — do not change these icons. */}
             <IconButton
               ref={attemptButtonRef}
               size="small"
@@ -207,7 +205,7 @@ export const InlineListTickBar: React.FC<InlineListTickBarProps> = ({
                 '&:hover': { backgroundColor: themeTokens.colors.error },
               }}
             >
-              <CloseOutlined sx={{ fontSize: 18 }} />
+              <PersonFallingIcon sx={{ fontSize: 18 }} />
             </IconButton>
             <IconButton
               size="small"

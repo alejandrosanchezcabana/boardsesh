@@ -19,6 +19,7 @@ import ChatBubbleOutlineOutlined from '@mui/icons-material/ChatBubbleOutlineOutl
 import CheckOutlined from '@mui/icons-material/CheckOutlined';
 import SaveOutlined from '@mui/icons-material/SaveOutlined';
 import CloseOutlined from '@mui/icons-material/CloseOutlined';
+import { PersonFallingIcon } from '@/app/components/icons/person-falling-icon';
 import CircularProgress from '@mui/material/CircularProgress';
 import InstagramIcon from '@mui/icons-material/Instagram';
 import LinkOutlined from '@mui/icons-material/LinkOutlined';
@@ -805,7 +806,7 @@ const LogbookFeedItem: React.FC<LogbookFeedItemProps> = React.memo(({
           <ListItemText>Send</ListItemText>
         </MenuItem>
         <MenuItem onClick={() => handleStatusSelect('attempt')}>
-          <ListItemIcon><CloseOutlined sx={{ color: themeTokens.colors.error }} /></ListItemIcon>
+          <ListItemIcon><PersonFallingIcon sx={{ color: themeTokens.colors.error }} /></ListItemIcon>
           <ListItemText>Attempt</ListItemText>
         </MenuItem>
       </Popover>

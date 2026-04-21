@@ -36,6 +36,7 @@ import { useCardSwipeNavigation, EXIT_DURATION, SNAP_BACK_DURATION, ENTER_ANIMAT
 import PlayViewDrawer from '../play-view/play-view-drawer';
 import CircularProgress from '@mui/material/CircularProgress';
 import CloseOutlined from '@mui/icons-material/CloseOutlined';
+import { PersonFallingIcon } from '@/app/components/icons/person-falling-icon';
 import CheckOutlined from '@mui/icons-material/CheckOutlined';
 import ChatBubbleOutlineOutlined from '@mui/icons-material/ChatBubbleOutlineOutlined';
 import InputAdornment from '@mui/material/InputAdornment';
@@ -1080,7 +1081,7 @@ const QueueControlBar: React.FC<QueueControlBarProps> = ({ boardDetails, angle }
                         }}
                         aria-label="Log attempt"
                       >
-                        <CloseOutlined />
+                        <PersonFallingIcon />
                       </IconButton>
                     </TickButtonWithLabel>
                   ) : (

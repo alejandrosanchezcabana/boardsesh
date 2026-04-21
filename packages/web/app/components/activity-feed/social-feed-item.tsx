@@ -12,7 +12,7 @@ import IconButton from '@mui/material/IconButton';
 import PersonOutlined from '@mui/icons-material/PersonOutlined';
 import CheckCircleOutlined from '@mui/icons-material/CheckCircleOutlined';
 import ElectricBoltOutlined from '@mui/icons-material/ElectricBoltOutlined';
-import CancelOutlined from '@mui/icons-material/CancelOutlined';
+import { PersonFallingIcon } from '@/app/components/icons/person-falling-icon';
 import LocationOnOutlined from '@mui/icons-material/LocationOnOutlined';
 import ChatBubbleOutlineOutlined from '@mui/icons-material/ChatBubbleOutlineOutlined';
 import Link from 'next/link';
@@ -54,7 +54,7 @@ const getStatusDisplay = (status: string) => {
     case 'send':
       return { label: 'Send', icon: <CheckCircleOutlined />, chipColor: 'success' as const };
     case 'attempt':
-      return { label: 'Attempt', icon: <CancelOutlined />, chipColor: undefined };
+      return { label: 'Attempt', icon: <PersonFallingIcon />, chipColor: undefined };
     default:
       return { label: status, icon: null, chipColor: undefined };
   }
