@@ -80,7 +80,7 @@ We take intellectual property concerns seriously. If you believe any material in
 
 We will review all valid requests promptly and in good faith. We may also file a counter-notice where we believe a takedown request is based on a misidentification of the material or a misunderstanding of the law.
 
-**Contact:** legal@mdj.ac
+**Contact:** legal@boardsesh.com
 
 ---
 
