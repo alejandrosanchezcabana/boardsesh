@@ -29,6 +29,11 @@ jobs:
     steps:
       - uses: actions/checkout@v6
 
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 'lts/*'
+
       - name: Setup Bun
         uses: oven-sh/setup-bun@v2
 
@@ -108,7 +113,7 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '22'
+          node-version: 'lts/*'
 
       - name: Install unzip (required by setup-bun)
         run: apt-get update && apt-get install -y unzip
