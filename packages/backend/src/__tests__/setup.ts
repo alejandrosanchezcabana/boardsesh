@@ -158,7 +158,8 @@ const createTablesSQL = `
     "sync_error" text,
     "user_id" text REFERENCES "users"("id") ON DELETE SET NULL,
     "required_set_ids" integer[],
-    "compatible_size_ids" integer[]
+    "compatible_size_ids" integer[],
+    "published_at" text
   );
 
   -- Create board_climb_stats table
@@ -233,6 +234,32 @@ const createTablesSQL = `
     "hold_state" text NOT NULL,
     "created_at" timestamp DEFAULT now(),
     PRIMARY KEY ("board_type", "climb_uuid", "hold_id")
+  );
+
+  -- Create user_board_mappings table (needed for setter-follows tests)
+  DROP TABLE IF EXISTS "user_board_mappings" CASCADE;
+  CREATE TABLE IF NOT EXISTS "user_board_mappings" (
+    "id" bigserial PRIMARY KEY NOT NULL,
+    "user_id" text NOT NULL REFERENCES "users"("id") ON DELETE CASCADE,
+    "board_type" text NOT NULL,
+    "board_user_id" integer NOT NULL,
+    "board_username" text,
+    "linked_at" timestamp DEFAULT now() NOT NULL
+  );
+  CREATE UNIQUE INDEX IF NOT EXISTS "unique_user_board_mapping" ON "user_board_mappings" ("user_id", "board_type");
+  CREATE INDEX IF NOT EXISTS "board_user_mapping_idx" ON "user_board_mappings" ("board_type", "board_user_id");
+
+  -- Create inferred_sessions table (needed for session-feed tests)
+  DROP TABLE IF EXISTS "inferred_sessions" CASCADE;
+  CREATE TABLE IF NOT EXISTS "inferred_sessions" (
+    "id" text PRIMARY KEY NOT NULL,
+    "user_id" text NOT NULL REFERENCES "users"("id") ON DELETE CASCADE,
+    "board_type" text NOT NULL,
+    "started_at" timestamp NOT NULL,
+    "ended_at" timestamp,
+    "tick_count" integer DEFAULT 0 NOT NULL,
+    "health_kit_workout_id" text,
+    "created_at" timestamp DEFAULT now() NOT NULL
   );
 
   -- Insert common test users (needed for FK constraints in session tests)

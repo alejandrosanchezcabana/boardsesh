@@ -28,6 +28,7 @@ const { isWorkerRenderingSupportedMock, renderBoardMock, setResolveRenderBoard, 
 vi.mock('@/app/lib/board-render-worker/worker-manager', () => ({
   isWorkerRenderingSupported: isWorkerRenderingSupportedMock,
   renderBoard: renderBoardMock,
+  computeCropTop: vi.fn(() => 0),
 }));
 
 vi.mock('@/app/lib/rendering-metrics', () => ({

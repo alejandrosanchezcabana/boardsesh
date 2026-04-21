@@ -31,14 +31,100 @@ vi.mock('@/app/theme/theme-config', () => ({
     transitions: { normal: '200ms ease' },
     shadows: { md: '0 4px 6px -1px rgba(0, 0, 0, 0.1)' },
     borderRadius: { full: 9999, sm: 4 },
-    colors: { amber: '#FBBF24', success: '#6B9080', successBg: '#EFF5F2' },
-    typography: { fontSize: { xs: 12 } },
-    neutral: { 100: '#F3F4F6', 200: '#E5E7EB', 300: '#D1D5DB' },
+    colors: { amber: '#FBBF24', success: '#6B9080', successBg: '#EFF5F2', error: '#f44336', primary: '#8C4A52' },
+    typography: {
+      fontSize: { xs: 12, sm: 14, base: 16, lg: 18, xl: 20, '2xl': 24 },
+      fontWeight: { normal: 400, medium: 500, semibold: 600, bold: 700 },
+    },
+    spacing: { 0: 0, 1: 4, 2: 8, 3: 12, 4: 16, 5: 20, 6: 24, 16: 64 },
+    neutral: { 100: '#F3F4F6', 200: '#E5E7EB', 300: '#D1D5DB', 400: '#9CA3AF', 500: '#6B7280' },
+    opacity: { subtle: 0.6 },
   },
 }));
 
 vi.mock('@/app/lib/grade-colors', () => ({
   formatVGrade: (g: string | null | undefined) => g ?? null,
+  formatGrade: (g: string | null | undefined) => g ?? null,
+  getSoftGradeColor: () => '#888',
+  getSoftVGradeColor: () => '#888',
+  getSoftGradeColorByFormat: () => '#888',
+  getGradeTintColor: () => null,
+  getGradeColorWithOpacity: () => '#888',
+  getGradeTextColor: () => '#000',
+  isLightColor: () => false,
+  getSoftFontGradeColor: () => '#888',
+}));
+
+vi.mock('@/app/components/providers/snackbar-provider', () => ({
+  useSnackbar: () => ({ showMessage: vi.fn() }),
+}));
+
+vi.mock('@/app/lib/share-utils', () => ({
+  shareWithFallback: vi.fn(),
+}));
+
+vi.mock('@/app/hooks/use-board-details-map', () => ({
+  useBoardDetailsMap: () => ({
+    boardDetailsByClimb: {},
+    defaultBoardDetails: {
+      board_name: 'kilter',
+      layout_id: 1,
+      size_id: 1,
+      set_ids: [1],
+      boardWidth: 100,
+      boardHeight: 200,
+      images_to_holds: {},
+      holdsData: [],
+      edge_left: 0,
+      edge_right: 100,
+      edge_bottom: 0,
+      edge_top: 200,
+    },
+    unsupportedClimbs: new Set(),
+    upsizedClimbs: new Set(),
+  }),
+}));
+
+vi.mock('@/app/components/board-renderer/board-renderer', () => ({
+  default: () => <div data-testid="board-renderer" />,
+}));
+
+vi.mock('@/app/components/board-page/angle-selector', () => ({
+  default: () => <div data-testid="angle-selector" />,
+}));
+
+vi.mock('@/app/components/collapsible-section/collapsible-section', () => ({
+  default: ({ title, children, defaultExpanded }: { title: string; children: React.ReactNode; defaultExpanded?: boolean }) => (
+    <div data-testid="collapsible-section" data-title={title} data-expanded={defaultExpanded}>
+      {children}
+    </div>
+  ),
+}));
+
+vi.mock('@/app/hooks/use-grade-format', () => ({
+  useGradeFormat: () => ({
+    gradeFormat: 'v-grade',
+    formatGrade: (d: string | null | undefined) => d ?? null,
+    getGradeColor: () => '#888',
+    loaded: true,
+  }),
+}));
+
+vi.mock('@/app/lib/session-utils', () => ({
+  generateSessionName: (firstTickAt: string | null, boardTypes: string[]) => {
+    if (!firstTickAt) return 'Session';
+    const day = new Date(firstTickAt).toLocaleDateString('en-US', { weekday: 'long' });
+    const board = boardTypes[0] ? boardTypes[0].charAt(0).toUpperCase() + boardTypes[0].slice(1) : '';
+    return `${day} ${board} Session`;
+  },
+}));
+
+vi.mock('@/app/components/ui/confirm-popover', () => ({
+  ConfirmPopover: () => null,
+}));
+
+vi.mock('@/app/components/healthkit/save-to-healthkit-button', () => ({
+  default: () => null,
 }));
 
 vi.mock('../[sessionId]/user-search-dialog', () => ({
@@ -95,18 +181,25 @@ vi.mock('@/app/components/social/comment-section', () => ({
 
 // Mock ClimbsList to render a testable placeholder with climb data
 vi.mock('@/app/components/board-page/climbs-list', () => ({
-  default: ({
-    climbs,
-    renderItemExtra,
-  }: {
+  default: (props: {
     climbs: Array<{ uuid: string; name: string }>;
     renderItemExtra?: (climb: { uuid: string; name: string }) => React.ReactNode;
+    boardDetails?: unknown;
+    boardDetailsByClimb?: unknown;
+    unsupportedClimbs?: unknown;
+    upsizedClimbs?: unknown;
+    isFetching?: boolean;
+    hasMore?: boolean;
+    onClimbSelect?: unknown;
+    onLoadMore?: unknown;
+    hideEndMessage?: boolean;
+    showBottomSpacer?: boolean;
   }) => (
     <div data-testid="climbs-list">
-      {climbs.map((climb) => (
+      {props.climbs.map((climb) => (
         <div key={climb.uuid} data-testid="climb-item" data-climb-name={climb.name}>
           {climb.name}
-          {renderItemExtra?.(climb)}
+          {props.renderItemExtra?.(climb)}
         </div>
       ))}
     </div>
@@ -224,7 +317,8 @@ describe('SessionDetailContent', () => {
 
   it('renders session stats', () => {
     render(<SessionDetailContent session={makeSession()} />);
-    expect(screen.getByText('5 sends')).toBeTruthy();
+    // totalSends (5) minus totalFlashes (2) = 3 sends
+    expect(screen.getByText('3 sends')).toBeTruthy();
     expect(screen.getByText('2 flashes')).toBeTruthy();
     expect(screen.getByText('3 attempts')).toBeTruthy();
     expect(screen.getByText('8 climbs')).toBeTruthy();

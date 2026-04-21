@@ -122,6 +122,10 @@ vi.mock('@/app/components/play-view/play-view-drawer', () => ({
   default: () => null,
 }));
 
+vi.mock('@/app/components/session-creation/start-sesh-drawer', () => ({
+  default: () => null,
+}));
+
 vi.mock('@/app/components/onboarding/onboarding-tour', () => ({
   TOUR_DRAWER_EVENT: 'tour-drawer',
 }));
@@ -142,10 +146,41 @@ vi.mock('@/app/components/persistent-session', () => ({
   }),
   usePersistentSessionState: () => ({
     activeSession: null,
+    session: null,
+    users: [],
     localBoardDetails: null,
     localCurrentClimbQueueItem: null,
   }),
   usePersistentSessionActions: () => ({}),
+}));
+
+vi.mock('@/app/components/persistent-session/persistent-session-context', () => ({
+  usePersistentSession: () => ({
+    activeSession: null,
+    localBoardDetails: null,
+    localCurrentClimbQueueItem: null,
+  }),
+  usePersistentSessionState: () => ({
+    activeSession: null,
+    session: null,
+    users: [],
+    localBoardDetails: null,
+    localCurrentClimbQueueItem: null,
+  }),
+  usePersistentSessionActions: () => ({}),
+}));
+
+vi.mock('@/app/components/board-provider/board-provider-context', () => ({
+  useBoardProvider: () => ({
+    logbook: [],
+    saveTick: vi.fn(),
+    isAuthenticated: false,
+    isLoading: false,
+    error: null,
+    isInitialized: true,
+    getLogbook: vi.fn(),
+    saveClimb: vi.fn(),
+  }),
 }));
 
 vi.mock('@/app/components/board-bluetooth-control/bluetooth-context', () => ({
@@ -237,6 +272,20 @@ const defaultProps = {
 describe('QueueControlBar offline UI', () => {
   beforeEach(() => {
     mockQueueContext = { ...baseQueueContext };
+    // Mock matchMedia for JSDOM
+    Object.defineProperty(window, 'matchMedia', {
+      writable: true,
+      value: vi.fn().mockImplementation((query: string) => ({
+        matches: false,
+        media: query,
+        onchange: null,
+        addListener: vi.fn(),
+        removeListener: vi.fn(),
+        addEventListener: vi.fn(),
+        removeEventListener: vi.fn(),
+        dispatchEvent: vi.fn(),
+      })),
+    });
   });
 
   it('renders normal controls when online with active session', () => {

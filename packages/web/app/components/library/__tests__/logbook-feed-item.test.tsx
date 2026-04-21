@@ -277,7 +277,7 @@ describe('LogbookFeedItem', () => {
     expect(screen.getByText('Attempt')).toBeDefined();
   });
 
-  it('nulls quality in save payload when status is attempt', async () => {
+  it('preserves quality in save payload when status is changed to attempt', async () => {
     updateTickAsyncMock.mockResolvedValue({});
     render(<LogbookFeedItem item={makeItem()} isEditing />);
     fireEvent.click(screen.getByLabelText(/Change ascent status/));
@@ -285,9 +285,10 @@ describe('LogbookFeedItem', () => {
     await act(async () => {
       fireEvent.click(screen.getByLabelText('Save'));
     });
+    // The component now preserves the existing quality when changing status to attempt
     expect(updateTickAsyncMock).toHaveBeenCalledWith({
       uuid: 'tick-1',
-      input: expect.objectContaining({ status: 'attempt', quality: null }),
+      input: expect.objectContaining({ status: 'attempt', quality: 4 }),
     });
   });
 

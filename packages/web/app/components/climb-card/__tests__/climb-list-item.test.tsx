@@ -10,6 +10,43 @@ let capturedSwipeOptions: Record<string, unknown> | null = null;
 // usePathname and useIsDarkMode are no longer called inside ClimbListItem —
 // pathname and isDark are passed as props from the parent.
 
+vi.mock('@/app/hooks/use-is-dark-mode', () => ({
+  useIsDarkMode: () => false,
+}));
+
+vi.mock('@/app/hooks/use-grade-format', () => ({
+  useGradeFormat: () => ({
+    gradeFormat: 'v-grade',
+    formatGrade: (d: string | null | undefined) => {
+      if (!d) return null;
+      const match = d.match(/V\d+\+?/i);
+      return match ? match[0].toUpperCase() : d;
+    },
+    getGradeColor: () => '#888',
+    loaded: true,
+  }),
+}));
+
+vi.mock('../climb-icons', () => ({
+  default: () => null,
+}));
+
+vi.mock('../../board-page/selected-climb-store', () => ({
+  useIsClimbSelected: () => false,
+}));
+
+vi.mock('../../board-provider/board-provider-context', () => ({
+  useOptionalBoardProvider: () => null,
+}));
+
+vi.mock('../../providers/snackbar-provider', () => ({
+  useSnackbar: () => ({ showMessage: vi.fn() }),
+}));
+
+vi.mock('../../logbook/inline-list-tick-bar', () => ({
+  InlineListTickBar: () => null,
+}));
+
 vi.mock('../../climb-actions', () => ({
   ClimbActions: () => <div data-testid="climb-actions" />,
 }));
@@ -68,16 +105,29 @@ vi.mock('@/app/lib/hooks/use-double-tap', () => ({
 vi.mock('@/app/lib/grade-colors', () => ({
   getSoftGradeColor: () => '#888',
   getSoftVGradeColor: () => '#888',
+  getSoftGradeColorByFormat: () => '#888',
   getGradeTintColor: () => null,
+  getGradeColorWithOpacity: () => '#888',
+  getGradeTextColor: () => '#000',
+  isLightColor: () => false,
   formatVGrade: (d: string) => (d.startsWith('V') ? d : null),
+  formatGrade: (d: string | null | undefined) => d ?? null,
 }));
 
 vi.mock('@/app/lib/climb-action-utils', () => ({
   getExcludedClimbActions: () => [],
 }));
 
+vi.mock('../../climb-actions/playlist-selection-content', () => ({
+  default: () => null,
+}));
+
+vi.mock('../../play-view/queue-drawer', () => ({
+  default: () => null,
+}));
+
 vi.mock('../climb-thumbnail', () => ({
-  default: () => <div data-testid="climb-thumbnail" />,
+  default: () => <div data-testid="climb-thumbnail-inner" />,
 }));
 
 vi.mock('../drawer-climb-header', () => ({
@@ -90,6 +140,22 @@ vi.mock('../../swipeable-drawer/swipeable-drawer', () => ({
 
 vi.mock('../ascent-status', () => ({
   AscentStatus: () => <span data-testid="ascent-status" />,
+}));
+
+vi.mock('../climb-list-item.module.css', () => ({
+  default: new Proxy({}, { get: (_target, prop) => String(prop) }),
+}));
+
+vi.mock('../ascent-status.module.css', () => ({
+  default: new Proxy({}, { get: (_target, prop) => String(prop) }),
+}));
+
+vi.mock('../../swipeable-drawer/swipeable-drawer.module.css', () => ({
+  default: new Proxy({}, { get: (_target, prop) => String(prop) }),
+}));
+
+vi.mock('@/app/hooks/use-drawer-drag-resize', () => ({
+  useDrawerDragResize: () => ({ paperRef: { current: null }, dragHandlers: {} }),
 }));
 
 vi.mock('@/app/theme/theme-config', () => ({
@@ -528,7 +594,7 @@ describe('ClimbListItem', () => {
         />,
       );
 
-      const thumbnail = screen.getByTestId('climb-thumbnail').parentElement!;
+      const thumbnail = screen.getByTestId('climb-thumbnail');
       fireEvent.doubleClick(thumbnail);
 
       expect(mockDoubleTapFavorite.handleDoubleTap).toHaveBeenCalled();
@@ -591,7 +657,7 @@ describe('ClimbListItem', () => {
         />,
       );
 
-      const thumbnail = screen.getByTestId('climb-thumbnail').parentElement!;
+      const thumbnail = screen.getByTestId('climb-thumbnail');
       fireEvent.click(thumbnail);
 
       expect(onThumbnailClick).toHaveBeenCalledOnce();

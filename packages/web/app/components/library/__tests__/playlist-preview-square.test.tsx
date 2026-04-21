@@ -2,9 +2,9 @@ import { describe, it, expect, vi, beforeEach } from 'vite-plus/test';
 import { render, screen } from '@testing-library/react';
 import React from 'react';
 
-// Mock BoardRenderer
-vi.mock('../../board-renderer/board-renderer', () => ({
-  default: () => <div data-testid="board-renderer" />,
+// Mock BoardImageLayers (used instead of BoardRenderer)
+vi.mock('../../board-renderer/board-image-layers', () => ({
+  default: () => <div data-testid="board-image-layers" />,
 }));
 
 // Mock getBoardDetailsForPlaylist
@@ -67,7 +67,7 @@ describe('PlaylistPreviewSquare', () => {
 
     render(<PlaylistPreviewSquare boardType="kilter" layoutId={1} color="#FF6600" />);
 
-    expect(screen.getByTestId('board-renderer')).toBeDefined();
+    expect(screen.getByTestId('board-image-layers')).toBeDefined();
     expect(mockGetBoardDetailsForPlaylist).toHaveBeenCalledWith('kilter', 1);
   });
 
@@ -76,7 +76,7 @@ describe('PlaylistPreviewSquare', () => {
 
     render(<PlaylistPreviewSquare boardType="unknown" color="#FF6600" />);
 
-    expect(screen.queryByTestId('board-renderer')).toBeNull();
+    expect(screen.queryByTestId('board-image-layers')).toBeNull();
   });
 
   it('renders emoji when provided', () => {
@@ -105,7 +105,7 @@ describe('PlaylistPreviewSquare', () => {
     const { container } = render(<PlaylistPreviewSquare boardType="kilter" layoutId={1} isLikedClimbs />);
 
     // Should NOT render the board preview for liked climbs
-    expect(screen.queryByTestId('board-renderer')).toBeNull();
+    expect(screen.queryByTestId('board-image-layers')).toBeNull();
     // Should have the liked gradient class
     expect(container.querySelector('.likedGradient')).toBeDefined();
   });

@@ -150,6 +150,7 @@ describe('InlineListTickBar', () => {
 
   describe('save actions', () => {
     it('clicking the Log ascent button fires confetti and saves', async () => {
+      vi.useFakeTimers();
       render(<InlineListTickBar {...defaultProps} />);
 
       await act(async () => {
@@ -160,7 +161,13 @@ describe('InlineListTickBar', () => {
       expect(mockSaveTick).toHaveBeenCalledTimes(1);
       const call = mockSaveTick.mock.calls[0][0];
       expect(call.status).toBe('flash');
+
+      // Flash saves have a 300ms delay before calling onClose
+      await act(async () => {
+        vi.advanceTimersByTime(300);
+      });
       expect(defaultProps.onClose).toHaveBeenCalledTimes(1);
+      vi.useRealTimers();
     });
 
     // Confetti on attempts is intentional — it's a small celebration for logging

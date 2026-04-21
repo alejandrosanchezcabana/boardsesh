@@ -100,38 +100,91 @@ vi.mock('@/app/components/swipeable-drawer/swipeable-drawer', () => ({
     children,
     title,
     placement,
-    footer,
   }: {
     open: boolean;
     children: React.ReactNode;
-    title: string;
+    title: React.ReactNode;
     placement: string;
-    footer: React.ReactNode;
   }) =>
     open ? (
-      <div data-testid="swipeable-drawer" data-title={title} data-placement={placement}>
+      <div data-testid="swipeable-drawer" data-placement={placement}>
+        <div data-testid="drawer-title">{title}</div>
         {children}
-        {footer}
       </div>
     ) : null,
 }));
 
+vi.mock('@/app/components/swipeable-drawer/swipeable-drawer.module.css', () => ({
+  default: new Proxy({}, { get: (_target, prop) => String(prop) }),
+}));
+
+vi.mock('@/app/hooks/use-drawer-drag-resize', () => ({
+  useDrawerDragResize: () => ({ paperRef: { current: null }, dragHandlers: {} }),
+}));
+
+vi.mock('@/app/components/board-renderer/board-renderer', () => ({
+  default: () => <div data-testid="board-renderer" />,
+}));
+
+vi.mock('@/app/hooks/use-session-timer', () => ({
+  useSessionTimer: () => null,
+}));
+
+vi.mock('@/app/lib/graphql/client', () => ({
+  createGraphQLHttpClient: () => ({ request: vi.fn() }),
+}));
+
+vi.mock('@/app/lib/graphql/operations/activity-feed', () => ({
+  GET_SESSION_DETAIL: 'query GetSessionDetail',
+}));
+
+vi.mock('@/app/lib/share-utils', () => ({
+  shareWithFallback: vi.fn(),
+}));
+
+vi.mock('@/app/components/providers/snackbar-provider', () => ({
+  useSnackbar: () => ({ showMessage: vi.fn() }),
+}));
+
+vi.mock('@/app/lib/session-utils', () => ({
+  generateSessionName: () => 'Session overview',
+}));
+
+vi.mock('qrcode.react', () => ({
+  QRCodeSVG: () => null,
+}));
+
 vi.mock('@/app/components/board-page/angle-selector', () => ({
-  default: ({ onAngleChange, currentAngle }: { onAngleChange: (angle: number) => void; currentAngle: number }) => (
-    <div data-testid="angle-selector">
-      <span>Current: {currentAngle}</span>
-      <button data-testid="change-angle-45" onClick={() => onAngleChange(45)}>
-        Set 45
-      </button>
-      <button data-testid="change-angle-20" onClick={() => onAngleChange(20)}>
-        Set 20
-      </button>
-    </div>
-  ),
+  default: () => null,
 }));
 
 vi.mock('@/app/session/[sessionId]/session-detail-content', () => ({
-  default: () => <div data-testid="session-detail-content" />,
+  default: ({
+    onAngleChange,
+    currentAngle,
+  }: {
+    onAngleChange?: (angle: number) => void;
+    currentAngle?: number;
+    session?: unknown;
+    embedded?: boolean;
+    fallbackBoardDetails?: unknown;
+    inviteContent?: React.ReactNode;
+    namedBoardName?: string;
+  }) => (
+    <div data-testid="session-detail-content">
+      {onAngleChange && currentAngle != null && (
+        <div data-testid="angle-controls">
+          <span>Current: {currentAngle}</span>
+          <button data-testid="change-angle-45" onClick={() => onAngleChange(45)}>
+            Set 45
+          </button>
+          <button data-testid="change-angle-20" onClick={() => onAngleChange(20)}>
+            Set 20
+          </button>
+        </div>
+      )}
+    </div>
+  ),
 }));
 
 import SeshSettingsDrawer from '../sesh-settings-drawer';
@@ -184,9 +237,11 @@ describe('SeshSettingsDrawer', () => {
     expect(container.innerHTML).toBe('');
   });
 
-  it('renders drawer title', () => {
+  it('renders drawer title with session name', () => {
     render(<SeshSettingsDrawer open={true} onClose={vi.fn()} />);
-    expect(screen.getByTestId('swipeable-drawer').getAttribute('data-title')).toBe('Session overview');
+    // The title is rendered as JSX containing the session name from session.name
+    expect(screen.getByTestId('drawer-title')).toBeTruthy();
+    expect(screen.getByText('Morning Sesh')).toBeTruthy();
   });
 
   it('renders session detail content', () => {
@@ -194,20 +249,22 @@ describe('SeshSettingsDrawer', () => {
     expect(screen.getByTestId('session-detail-content')).toBeTruthy();
   });
 
-  it('opens as a top drawer', () => {
+  it('opens as a bottom drawer', () => {
     render(<SeshSettingsDrawer open={true} onClose={vi.fn()} />);
-    expect(screen.getByTestId('swipeable-drawer').getAttribute('data-placement')).toBe('top');
+    expect(screen.getByTestId('swipeable-drawer').getAttribute('data-placement')).toBe('bottom');
   });
 
-  it('shows angle selector when boardDetails and angle exist', () => {
+  it('shows angle controls when boardDetails and angle exist', () => {
     render(<SeshSettingsDrawer open={true} onClose={vi.fn()} />);
-    expect(screen.getByTestId('angle-selector')).toBeTruthy();
+    expect(screen.getByTestId('angle-controls')).toBeTruthy();
   });
 
-  it('hides angle selector when boardDetails is null', () => {
+  it('does not navigate when angle change is clicked but boardDetails is null', () => {
     mockBoardDetails = null;
     render(<SeshSettingsDrawer open={true} onClose={vi.fn()} />);
-    expect(screen.queryByTestId('angle-selector')).toBeNull();
+    // When boardDetails is null, the handleAngleChange callback returns early
+    fireEvent.click(screen.getByTestId('change-angle-45'));
+    expect(mockPush).not.toHaveBeenCalled();
   });
 
   describe('handleAngleChange', () => {
@@ -241,8 +298,8 @@ describe('SeshSettingsDrawer', () => {
     it('does not navigate when angle is undefined', () => {
       mockAngle = undefined;
       render(<SeshSettingsDrawer open={true} onClose={vi.fn()} />);
-      // Angle selector is hidden when angle is undefined, so no button to click
-      expect(screen.queryByTestId('angle-selector')).toBeNull();
+      // Angle controls are hidden when angle is undefined, so no button to click
+      expect(screen.queryByTestId('angle-controls')).toBeNull();
       expect(mockPush).not.toHaveBeenCalled();
     });
   });
@@ -252,7 +309,7 @@ describe('SeshSettingsDrawer', () => {
       const onClose = vi.fn();
       render(<SeshSettingsDrawer open={true} onClose={onClose} />);
 
-      fireEvent.click(screen.getByText('Stop Session'));
+      fireEvent.click(screen.getByLabelText('Stop session'));
       expect(mockDeactivateSession).toHaveBeenCalled();
       expect(mockClearClimbSessionCookie).toHaveBeenCalled();
       expect(onClose).not.toHaveBeenCalled();
@@ -261,17 +318,17 @@ describe('SeshSettingsDrawer', () => {
     it('shows Dismiss button after stopping session', () => {
       render(<SeshSettingsDrawer open={true} onClose={vi.fn()} />);
 
-      fireEvent.click(screen.getByText('Stop Session'));
-      expect(screen.getByText('Dismiss')).toBeTruthy();
-      expect(screen.queryByText('Stop Session')).toBeNull();
+      fireEvent.click(screen.getByLabelText('Stop session'));
+      expect(screen.getByLabelText('Dismiss')).toBeTruthy();
+      expect(screen.queryByLabelText('Stop session')).toBeNull();
     });
 
     it('calls onClose when Dismiss is clicked', () => {
       const onClose = vi.fn();
       render(<SeshSettingsDrawer open={true} onClose={onClose} />);
 
-      fireEvent.click(screen.getByText('Stop Session'));
-      fireEvent.click(screen.getByText('Dismiss'));
+      fireEvent.click(screen.getByLabelText('Stop session'));
+      fireEvent.click(screen.getByLabelText('Dismiss'));
       expect(onClose).toHaveBeenCalled();
     });
   });

@@ -353,7 +353,7 @@ describe('TickAction', () => {
       render(<TestTickAction {...defaultProps} />);
 
       await act(async () => {
-        screen.getByRole('button', { name: /tick/i }).click();
+        screen.getByRole('button', { name: /log ascent/i }).click();
       });
 
       expect(screen.getByTestId('log-ascent-drawer')).toBeTruthy();
@@ -364,7 +364,7 @@ describe('TickAction', () => {
       render(<TestTickAction {...defaultProps} />);
 
       await act(async () => {
-        screen.getByRole('button', { name: /tick/i }).click();
+        screen.getByRole('button', { name: /log ascent/i }).click();
       });
 
       const drawer = screen.getByTestId('swipeable-drawer');
@@ -377,7 +377,7 @@ describe('TickAction', () => {
       render(<TestTickAction {...defaultProps} />);
 
       await act(async () => {
-        screen.getByRole('button', { name: /tick/i }).click();
+        screen.getByRole('button', { name: /log ascent/i }).click();
       });
 
       expect(screen.queryByText('Which board did you climb on?')).toBeNull();
@@ -397,7 +397,7 @@ describe('TickAction', () => {
       renderWithLoadingCycle(defaultProps, [mockUserBoard, mockUserBoard2]);
 
       await act(async () => {
-        screen.getByRole('button', { name: /tick/i }).click();
+        screen.getByRole('button', { name: /log ascent/i }).click();
       });
 
       const drawer = screen.getByTestId('swipeable-drawer');
@@ -412,7 +412,7 @@ describe('TickAction', () => {
       renderWithLoadingCycle(defaultProps, [mockUserBoard, mockTensionBoard]);
 
       await act(async () => {
-        screen.getByRole('button', { name: /tick/i }).click();
+        screen.getByRole('button', { name: /log ascent/i }).click();
       });
 
       // Should only show the kilter board, not the tension board
@@ -425,7 +425,7 @@ describe('TickAction', () => {
 
       // Open drawer
       await act(async () => {
-        screen.getByRole('button', { name: /tick/i }).click();
+        screen.getByRole('button', { name: /log ascent/i }).click();
       });
 
       // Select a board
@@ -446,7 +446,7 @@ describe('TickAction', () => {
       renderWithLoadingCycle(defaultProps, [mockUserBoard]);
 
       await act(async () => {
-        screen.getByRole('button', { name: /tick/i }).click();
+        screen.getByRole('button', { name: /log ascent/i }).click();
       });
 
       await act(async () => {
@@ -469,7 +469,7 @@ describe('TickAction', () => {
       render(<TestTickAction {...defaultProps} />);
 
       await act(async () => {
-        screen.getByRole('button', { name: /tick/i }).click();
+        screen.getByRole('button', { name: /log ascent/i }).click();
       });
 
       expect(screen.getByTestId('board-scroll-loading')).toBeTruthy();
@@ -481,7 +481,7 @@ describe('TickAction', () => {
       renderWithLoadingCycle(defaultProps, [mockUserBoardDifferentConfig]);
 
       await act(async () => {
-        screen.getByRole('button', { name: /tick/i }).click();
+        screen.getByRole('button', { name: /log ascent/i }).click();
       });
 
       await act(async () => {
@@ -499,7 +499,7 @@ describe('TickAction', () => {
       renderWithLoadingCycle(defaultProps, [mockTensionBoard]);
 
       await act(async () => {
-        screen.getByRole('button', { name: /tick/i }).click();
+        screen.getByRole('button', { name: /log ascent/i }).click();
       });
 
       const form = screen.getByTestId('log-ascent-form');
@@ -517,7 +517,7 @@ describe('TickAction', () => {
       render(<TestTickAction {...defaultProps} />);
 
       await act(async () => {
-        screen.getByRole('button', { name: /tick/i }).click();
+        screen.getByRole('button', { name: /log ascent/i }).click();
       });
 
       // Should show the board selector (in loading state), NOT skip to form
@@ -532,7 +532,7 @@ describe('TickAction', () => {
       const { rerender } = render(<TestTickAction {...defaultProps} />);
 
       await act(async () => {
-        screen.getByRole('button', { name: /tick/i }).click();
+        screen.getByRole('button', { name: /log ascent/i }).click();
       });
 
       expect(screen.getByTestId('board-scroll-loading')).toBeTruthy();
@@ -553,7 +553,7 @@ describe('TickAction', () => {
       const { rerender } = render(<TestTickAction {...defaultProps} />);
 
       await act(async () => {
-        screen.getByRole('button', { name: /tick/i }).click();
+        screen.getByRole('button', { name: /log ascent/i }).click();
       });
 
       // Should still be in loading state
@@ -583,7 +583,7 @@ describe('TickAction', () => {
       });
 
       await act(async () => {
-        screen.getByRole('button', { name: /tick/i }).click();
+        screen.getByRole('button', { name: /log ascent/i }).click();
       });
 
       expect(screen.getByText(/don\u2019t have any Kilter boards saved/)).toBeTruthy();
@@ -599,7 +599,7 @@ describe('TickAction', () => {
       });
 
       await act(async () => {
-        screen.getByRole('button', { name: /tick/i }).click();
+        screen.getByRole('button', { name: /log ascent/i }).click();
       });
 
       // Should use boardDetails.board_name (kilter) as the provider boardName
@@ -617,7 +617,7 @@ describe('TickAction', () => {
       });
 
       await act(async () => {
-        screen.getByRole('button', { name: /tick/i }).click();
+        screen.getByRole('button', { name: /log ascent/i }).click();
       });
 
       // Should skip selector (no matching kilter boards) and go to form
@@ -632,7 +632,7 @@ describe('TickAction', () => {
       render(<TestTickAction {...defaultProps} />);
 
       await act(async () => {
-        screen.getByRole('button', { name: /tick/i }).click();
+        screen.getByRole('button', { name: /log ascent/i }).click();
       });
 
       const drawer = screen.getByTestId('swipeable-drawer');
@@ -653,7 +653,7 @@ describe('TickAction', () => {
       render(<TestTickAction {...defaultProps} />);
 
       await act(async () => {
-        screen.getByRole('button', { name: /tick/i }).click();
+        screen.getByRole('button', { name: /log ascent/i }).click();
       });
 
       expect(screen.queryByText('Which board did you climb on?')).toBeNull();
@@ -689,7 +689,7 @@ describe('TickAction', () => {
       });
 
       await act(async () => {
-        screen.getByRole('button', { name: /tick/i }).click();
+        screen.getByRole('button', { name: /log ascent/i }).click();
       });
 
       // Should fall through to form (no matching boards after error)
@@ -711,7 +711,7 @@ describe('TickAction', () => {
       renderWithLoadingCycle(customProps, [invalidBoard]);
 
       await act(async () => {
-        screen.getByRole('button', { name: /tick/i }).click();
+        screen.getByRole('button', { name: /log ascent/i }).click();
       });
 
       await act(async () => {
@@ -729,7 +729,7 @@ describe('TickAction', () => {
 
       // Open drawer
       await act(async () => {
-        screen.getByRole('button', { name: /tick/i }).click();
+        screen.getByRole('button', { name: /log ascent/i }).click();
       });
 
       // Select a board
@@ -749,7 +749,7 @@ describe('TickAction', () => {
 
       // Open drawer again
       await act(async () => {
-        screen.getByRole('button', { name: /tick/i }).click();
+        screen.getByRole('button', { name: /log ascent/i }).click();
       });
 
       // Should show board selector again (not the form)
@@ -805,7 +805,7 @@ describe('TickAction', () => {
       render(<TestTickAction {...defaultProps} />);
 
       await act(async () => {
-        screen.getByRole('button', { name: /tick/i }).click();
+        screen.getByRole('button', { name: /log ascent/i }).click();
       });
 
       expect(mockTrack).toHaveBeenCalledWith('Tick Button Clicked', {
@@ -821,7 +821,7 @@ describe('TickAction', () => {
 
       // Clicking opens the drawer but does not call onComplete yet
       await act(async () => {
-        screen.getByRole('button', { name: /tick/i }).click();
+        screen.getByRole('button', { name: /log ascent/i }).click();
       });
       expect(onComplete).not.toHaveBeenCalled();
 

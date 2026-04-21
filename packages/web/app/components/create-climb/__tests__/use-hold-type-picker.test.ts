@@ -84,9 +84,13 @@ describe('useHoldTypePicker', () => {
     expect(setHoldState).not.toHaveBeenCalled();
   });
 
-  it('handleClose clears the picker without calling setHoldState', () => {
+  it('handleClose clears the picker without calling setHoldState again', () => {
     const setHoldState = vi.fn();
-    const { result } = renderHook(() => useHoldTypePicker({ litUpHoldsMap: {}, setHoldState }));
+    // Start with an existing hold so handleHoldClick does not auto-assign HAND
+    const litUpHoldsMap: LitUpHoldsMap = {
+      7: { state: 'HAND', color: '#00FFFF', displayColor: '#00FFFF' },
+    };
+    const { result } = renderHook(() => useHoldTypePicker({ litUpHoldsMap, setHoldState }));
 
     act(() => {
       result.current.handleHoldClick(7, makeAnchor());

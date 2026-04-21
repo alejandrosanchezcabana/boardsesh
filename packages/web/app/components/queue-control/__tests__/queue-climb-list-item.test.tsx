@@ -50,8 +50,13 @@ vi.mock('@/app/lib/hooks/use-double-tap', () => ({
 vi.mock('@/app/lib/grade-colors', () => ({
   getSoftGradeColor: () => '#888',
   getSoftVGradeColor: () => '#888',
+  getSoftGradeColorByFormat: () => '#888',
   getGradeTintColor: (_d: unknown, _s: unknown, _dark: unknown) => null,
+  getGradeColorWithOpacity: () => '#888',
+  getGradeTextColor: () => '#000',
+  isLightColor: () => false,
   formatVGrade: (d: string) => (d.startsWith('V') ? d : null),
+  formatGrade: (d: string | null | undefined) => d ?? null,
 }));
 
 vi.mock('@/app/lib/climb-action-utils', () => ({
@@ -59,7 +64,7 @@ vi.mock('@/app/lib/climb-action-utils', () => ({
 }));
 
 vi.mock('../../climb-card/climb-thumbnail', () => ({
-  default: () => <div data-testid="climb-thumbnail" />,
+  default: () => <div data-testid="climb-thumbnail-inner" />,
 }));
 
 vi.mock('../../climb-card/drawer-climb-header', () => ({
@@ -259,7 +264,7 @@ describe('QueueClimbListItem', () => {
       render(<QueueClimbListItem {...props} />);
 
       // Simulate ClimbListItem calling its onThumbnailClick by clicking the thumbnail.
-      fireEvent.click(screen.getByTestId('climb-thumbnail').parentElement!);
+      fireEvent.click(screen.getByTestId('climb-thumbnail'));
 
       expect(props.setCurrentClimbQueueItem).toHaveBeenCalledWith(props.item);
       const dispatched = dispatchSpy.mock.calls.some(
@@ -274,7 +279,7 @@ describe('QueueClimbListItem', () => {
       const props = defaultProps();
       render(<QueueClimbListItem {...props} isEditMode />);
 
-      fireEvent.click(screen.getByTestId('climb-thumbnail').parentElement!);
+      fireEvent.click(screen.getByTestId('climb-thumbnail'));
 
       expect(props.setCurrentClimbQueueItem).not.toHaveBeenCalled();
       const dispatched = dispatchSpy.mock.calls.some(

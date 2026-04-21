@@ -21,6 +21,11 @@ vi.mock('../../board-renderer/types', () => ({
       3: { name: 'FINISH', color: '#FF00FF', displayColor: '#FF00FF' },
     },
   },
+  STATE_TO_PRIMARY_CODE: {
+    kilter: { STARTING: 42, HAND: 43, FINISH: 44, FOOT: 45 },
+    tension: { STARTING: 1, HAND: 2, FINISH: 3, FOOT: 4 },
+    moonboard: { STARTING: 42, HAND: 43, FINISH: 44 },
+  },
 }));
 
 import { useCreateClimb } from '../use-create-climb';
