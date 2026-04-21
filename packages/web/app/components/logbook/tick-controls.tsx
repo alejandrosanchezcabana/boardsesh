@@ -443,7 +443,7 @@ export const InlineTriesPicker: React.FC<{
 
 const ASCENT_TYPE_OPTIONS: readonly { value: TickStatus; label: string; icon: React.ReactNode; color: string }[] = [
   { value: 'attempt', label: 'Attempt', icon: <PersonFallingIcon sx={{ fontSize: 18 }} />, color: themeTokens.colors.error },
-  { value: 'send', label: 'Ascent', icon: <CheckOutlined sx={{ fontSize: 18 }} />, color: themeTokens.colors.success },
+  { value: 'send', label: 'Send', icon: <CheckOutlined sx={{ fontSize: 18 }} />, color: themeTokens.colors.success },
   { value: 'flash', label: 'Flash', icon: <ElectricBoltOutlined sx={{ fontSize: 18 }} />, color: themeTokens.colors.amber },
 ];
 
@@ -467,8 +467,8 @@ export const InlineAscentTypePicker: React.FC<{
           role="option"
           disabled={disabled}
         >
-          <span style={{ color: opt.value === ascentType ? opt.color : 'inherit', display: 'flex', opacity: disabled ? 0.3 : 1 }}>{opt.icon}</span>
-          <span className={styles.ascentTypeLabel} style={{ opacity: disabled ? 0.3 : 1 }}>{opt.label}</span>
+          <span className={`${styles.ascentTypeIcon} ${disabled ? styles.ascentTypeItemDisabled : ''}`} style={{ color: opt.value === ascentType ? opt.color : 'inherit' }}>{opt.icon}</span>
+          <span className={`${styles.ascentTypeLabel} ${disabled ? styles.ascentTypeItemDisabled : ''}`}>{opt.label}</span>
         </ButtonBase>
       );
     })}

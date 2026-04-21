@@ -91,6 +91,7 @@
 .expandLabel {
   font-size: 12px;
   font-weight: 600;
+  opacity: 0.7;
 }
 
 /* ------------------------------------------------------------------ */
@@ -149,9 +150,3 @@
   margin-top: 10px;
 }
 
-/* Save button row */
-.saveRow {
-  display: flex;
-  justify-content: flex-end;
-  padding: 4px 0 8px;
-}
