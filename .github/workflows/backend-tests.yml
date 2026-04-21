@@ -105,14 +105,20 @@ jobs:
       pull-requests: write
 
     steps:
+      - name: Download all shard results
+        uses: actions/download-artifact@v4
+        with:
+          pattern: backend-test-results-*
+          path: test-results
+          merge-multiple: true
+
       - name: Publish test report
         uses: turing85/publish-report@v2
         with:
           checkout: 'true'
-          download-artifact-name: backend-test-results-*
           comment-header: backend-integration-tests
           comment-enabled: 'true'
           report-name: Backend Integration Tests
-          report-path: '**/*.xml'
+          report-path: 'test-results/**/*.xml'
           report-reporter: java-junit
           report-fail-on-error: false

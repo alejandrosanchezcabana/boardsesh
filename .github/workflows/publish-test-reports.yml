@@ -36,15 +36,22 @@ jobs:
     if: github.event.workflow.name == 'Backend Integration Tests'
     runs-on: ubuntu-latest
     steps:
+      - name: Download all shard results
+        uses: actions/download-artifact@v4
+        with:
+          pattern: backend-test-results-*
+          path: test-results
+          merge-multiple: true
+          run-id: ${{ github.event.workflow_run.id }}
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+
       - name: Publish Backend Integration Tests report
         uses: turing85/publish-report@v2
         with:
           checkout: 'true'
-          download-artifact-name: backend-test-results
-          download-artifact-run-id: ${{ github.event.workflow_run.id }}
           comment-header: backend-test-report
           comment-enabled: 'true'
           report-name: Backend Integration Tests
-          report-path: '**/*.xml'
+          report-path: 'test-results/**/*.xml'
           report-reporter: java-junit
           report-fail-on-error: false
