@@ -1,0 +1,24 @@
+/* Wrapper for tick/attempt icon buttons — positions the subtitle label below */
+.tickButtonWrapper {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.tickButtonLabel {
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  margin-top: 1px;
+  font-size: 8px;
+  font-weight: 500;
+  line-height: 1;
+  letter-spacing: 0.02em;
+  color: inherit;
+  opacity: 0.55;
+  white-space: nowrap;
+  pointer-events: none;
+  text-transform: lowercase;
+}

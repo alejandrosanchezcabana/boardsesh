@@ -16,6 +16,7 @@ import CloseOutlined from '@mui/icons-material/CloseOutlined';
 import FormatListBulletedOutlined from '@mui/icons-material/FormatListBulletedOutlined';
 import CheckOutlined from '@mui/icons-material/CheckOutlined';
 import ChatBubbleOutlineOutlined from '@mui/icons-material/ChatBubbleOutlineOutlined';
+import { TickIcon, TickButtonWithLabel } from '../logbook/tick-icon';
 import { usePathname } from 'next/navigation';
 import { useQueueActions, useCurrentClimb, useQueueList, useSessionData } from '../graphql-queue';
 import { ClimbActions } from '../climb-actions';
@@ -32,6 +33,7 @@ import SwipeableDrawer from '../swipeable-drawer/swipeable-drawer';
 import AngleSelector from '../board-page/angle-selector';
 import ClimbDetailHeader from '@/app/components/climb-detail/climb-detail-header';
 import { QuickTickBar, type QuickTickBarHandle } from '../logbook/quick-tick-bar';
+import { hasPriorHistoryForClimb } from '@/app/hooks/use-tick-save';
 import type { ActiveDrawer } from '../queue-control/queue-control-bar';
 import { PLAY_DRAWER_EVENT } from '../queue-control/play-drawer-event';
 import type { BoardDetails, Angle, Climb } from '@/app/lib/types';
@@ -170,8 +172,10 @@ const PlayViewTickBar = React.memo<PlayViewTickBarProps>(function PlayViewTickBa
   onClose,
   onError,
 }) {
+  const { logbook } = useBoardProvider();
   const [tickComment, setTickComment] = useState('');
   const [commentFocused, setCommentFocused] = useState(false);
+  const [isFlash, setIsFlash] = useState(() => !hasPriorHistoryForClimb(currentClimb, logbook));
   const quickTickBarRef = useRef<QuickTickBarHandle>(null);
   const isDark = useIsDarkMode();
   // Match queue control bar tint — 'default' variant.
@@ -190,14 +194,16 @@ const PlayViewTickBar = React.memo<PlayViewTickBarProps>(function PlayViewTickBa
   const handleClose = useCallback(() => {
     setTickComment('');
     setCommentFocused(false);
+    setIsFlash(false);
     onClose();
   }, [onClose]);
 
-  // Reset comment when the climb changes
+  // Reset comment and recompute flash state when the climb changes.
   useEffect(() => {
     setTickComment('');
     setCommentFocused(false);
-  }, [currentClimb.uuid]);
+    setIsFlash(!hasPriorHistoryForClimb(currentClimb, logbook));
+  }, [currentClimb.uuid, currentClimb, logbook]);
 
   return (
     <div className={`${styles.tickBarContainer} ${isTickBarActive ? styles.tickBarContainerActive : ''}`}>
@@ -240,6 +246,7 @@ const PlayViewTickBar = React.memo<PlayViewTickBarProps>(function PlayViewTickBa
               onSave={handleClose}
               onError={onError}
               onDraftRestored={(draftComment) => setTickComment(draftComment)}
+              onIsFlashChange={setIsFlash}
               comment={tickComment}
               commentSlot={
                 <div className={`${styles.tickBarComment} ${commentFocused ? styles.tickBarCommentExpanded : ''}`}>
@@ -278,31 +285,36 @@ const PlayViewTickBar = React.memo<PlayViewTickBarProps>(function PlayViewTickBa
                 </div>
               }
             />
-            {/* Action buttons — attempt (X) + save (check), both fire confetti from click target */}
+            {/* Action buttons — attempt (X) + save (check/flash), both fire confetti from click target */}
             <div className={styles.tickBarButtons}>
-              <IconButton
-                onClick={(e) => quickTickBarRef.current?.saveAttempt(e.currentTarget)}
-                sx={{
-                  color: themeTokens.colors.error,
-                  opacity: themeTokens.opacity.subtle,
-                  '&:hover': { color: themeTokens.colors.error, opacity: 1 },
-                }}
-                aria-label="Log attempt"
-              >
-                <CloseOutlined />
-              </IconButton>
-              <IconButton
-                id="button-tick"
-                onClick={(e) => quickTickBarRef.current?.save(e.currentTarget)}
-                sx={{
-                  backgroundColor: themeTokens.colors.success,
-                  color: 'common.white',
-                  '&:hover': { backgroundColor: themeTokens.colors.success },
-                }}
-                aria-label="Log ascent"
-              >
-                <CheckOutlined />
-              </IconButton>
+              <TickButtonWithLabel label="attempt">
+                <IconButton
+                  onClick={(e) => quickTickBarRef.current?.saveAttempt(e.currentTarget)}
+                  sx={{
+                    backgroundColor: themeTokens.colors.errorMuted,
+                    color: themeTokens.colors.error,
+                    '&:hover': { backgroundColor: themeTokens.colors.errorMutedHover },
+                  }}
+                  aria-label="Log attempt"
+                >
+                  <CloseOutlined />
+                </IconButton>
+              </TickButtonWithLabel>
+              <TickButtonWithLabel label={isFlash ? 'flash' : 'tick'}>
+                <IconButton
+                  id="button-tick"
+                  onClick={(e) => quickTickBarRef.current?.save(e.currentTarget)}
+                  sx={{
+                    backgroundColor: isFlash ? themeTokens.colors.amber : themeTokens.colors.success,
+                    color: isFlash ? themeTokens.neutral[900] : 'common.white',
+                    transition: 'background-color 150ms ease, color 150ms ease',
+                    '&:hover': { backgroundColor: isFlash ? themeTokens.colors.amber : themeTokens.colors.success },
+                  }}
+                  aria-label={isFlash ? "Log flash" : "Log ascent"}
+                >
+                  <TickIcon isFlash={isFlash} />
+                </IconButton>
+              </TickButtonWithLabel>
             </div>
           </>
         )}

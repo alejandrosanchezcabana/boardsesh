@@ -26,6 +26,8 @@ export interface QuickTickBarProps {
   onError?: () => void;
   /** Called when a draft is restored from a previous failed save. */
   onDraftRestored?: (comment: string) => void;
+  /** Called when the flash state changes (true = will log as flash, false = send/attempt). */
+  onIsFlashChange?: (isFlash: boolean) => void;
   /** Current comment text. Owned by the parent so the comment field can live
    *  outside this bar (above the queue control bar) without causing reflow. */
   comment: string;
@@ -55,6 +57,7 @@ export const QuickTickBar = forwardRef<QuickTickBarHandle, QuickTickBarProps>(({
   onSave,
   onError,
   onDraftRestored,
+  onIsFlashChange,
   comment,
   commentSlot,
 }, ref) => {
@@ -84,6 +87,12 @@ export const QuickTickBar = forwardRef<QuickTickBarHandle, QuickTickBarProps>(({
   const [difficulty, setDifficulty] = useState<number | undefined>(undefined);
   const [attemptCount, setAttemptCount] = useState<number>(1);
   const [expandedControl, setExpandedControl] = useState<ExpandedControl>(null);
+
+  // Report flash state to the parent so tick buttons can show the flash icon.
+  const isFlash = !!tickTarget && !tickTarget.hasPriorHistory && attemptCount === 1;
+  useEffect(() => {
+    onIsFlashChange?.(isFlash);
+  }, [isFlash, onIsFlashChange]);
 
   // Restore draft values from a previous failed save for this climb.
   const draftLoaded = useRef(false);

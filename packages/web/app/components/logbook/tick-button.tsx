@@ -9,7 +9,6 @@ import Button from '@mui/material/Button';
 import IconButton from '@mui/material/IconButton';
 import Stack from '@mui/material/Stack';
 import SwipeableDrawer from '../swipeable-drawer/swipeable-drawer';
-import CheckOutlined from '@mui/icons-material/CheckOutlined';
 import LoginOutlined from '@mui/icons-material/LoginOutlined';
 import AppsOutlined from '@mui/icons-material/AppsOutlined';
 import { track } from '@vercel/analytics';
@@ -19,6 +18,7 @@ import { constructClimbInfoUrl } from '@/app/lib/url-utils';
 import { openExternalUrl } from '@/app/lib/open-external-url';
 import { themeTokens } from '@/app/theme/theme-config';
 import { useAlwaysTickInApp } from '@/app/hooks/use-always-tick-in-app';
+import { TickIcon, TickButtonWithLabel } from './tick-icon';
 
 interface TickButtonProps {
   angle: Angle;
@@ -26,11 +26,13 @@ interface TickButtonProps {
   boardDetails: BoardDetails;
   onActivateTickBar?: () => void;
   /** Called when the tick button is pressed while tick mode is already active (saves the tick). */
-  onTickSave?: () => void;
+  onTickSave?: (originElement?: HTMLElement) => void;
   tickBarActive?: boolean;
+  /** Whether the current tick will be logged as a flash (no prior history, 1 try). */
+  isFlash?: boolean;
 }
 
-export const TickButton: React.FC<TickButtonProps> = ({ currentClimb, angle, boardDetails, onActivateTickBar, onTickSave, tickBarActive }) => {
+export const TickButton: React.FC<TickButtonProps> = ({ currentClimb, angle, boardDetails, onActivateTickBar, onTickSave, tickBarActive, isFlash }) => {
   const { logbook, isAuthenticated } = useBoardProvider();
   const [drawerVisible, setDrawerVisible] = useState(false);
   const { openAuthModal } = useAuthModal();
@@ -42,7 +44,7 @@ export const TickButton: React.FC<TickButtonProps> = ({ currentClimb, angle, boa
     [boardDetails, currentClimb]
   );
 
-  const showDrawer = () => {
+  const showDrawer = (e?: React.MouseEvent<HTMLButtonElement>) => {
     track('Tick Button Clicked', {
       boardLayout: boardDetails.layout_name || '',
       existingAscentCount: badgeCount,
@@ -50,7 +52,7 @@ export const TickButton: React.FC<TickButtonProps> = ({ currentClimb, angle, boa
 
     // When tick mode is already active, save the tick
     if (tickBarActive && onTickSave) {
-      onTickSave();
+      onTickSave(e?.currentTarget);
       return;
     }
 
@@ -82,29 +84,45 @@ export const TickButton: React.FC<TickButtonProps> = ({ currentClimb, angle, boa
   const hasSuccessfulAscent = filteredLogbook.some((asc) => asc.is_ascent);
   const badgeCount = filteredLogbook.length;
 
+  const tickLabel = isFlash ? 'flash' : 'tick';
+
+  const badge = (
+    <MuiBadge
+      badgeContent={badgeCount > 0 ? badgeCount : 0}
+      max={100}
+      sx={{
+        '& .MuiBadge-badge': {
+          backgroundColor: hasSuccessfulAscent ? themeTokens.colors.success : themeTokens.colors.error,
+          color: 'common.white',
+        },
+      }}
+    >
+      <IconButton
+        id="button-tick"
+        onClick={showDrawer}
+        aria-label={tickBarActive ? (isFlash ? 'Log flash' : 'Log ascent') : 'Log ascent'}
+        sx={tickBarActive
+          ? {
+              backgroundColor: isFlash ? themeTokens.colors.amber : themeTokens.colors.success,
+              color: isFlash ? themeTokens.neutral[900] : 'common.white',
+              transition: 'background-color 150ms ease, color 150ms ease',
+              '&:hover': { backgroundColor: isFlash ? themeTokens.colors.amber : themeTokens.colors.successHover },
+            }
+          : { opacity: themeTokens.opacity.subtle }
+        }
+      >
+        <TickIcon isFlash={!!isFlash && !!tickBarActive} />
+      </IconButton>
+    </MuiBadge>
+  );
+
   return (
     <>
-      <MuiBadge
-        badgeContent={badgeCount > 0 ? badgeCount : 0}
-        max={100}
-        sx={{
-          '& .MuiBadge-badge': {
-            backgroundColor: hasSuccessfulAscent ? themeTokens.colors.success : themeTokens.colors.error,
-            color: 'common.white',
-          },
-        }}
-      >
-        <IconButton
-          id="button-tick"
-          onClick={showDrawer}
-          sx={tickBarActive
-            ? { backgroundColor: themeTokens.colors.success, color: 'common.white', '&:hover': { backgroundColor: themeTokens.colors.successHover } }
-            : { opacity: themeTokens.opacity.subtle }
-          }
-        >
-          <CheckOutlined />
-        </IconButton>
-      </MuiBadge>
+      {tickBarActive ? (
+        <TickButtonWithLabel label={tickLabel}>{badge}</TickButtonWithLabel>
+      ) : (
+        badge
+      )}
 
       {isAuthenticated ? (
         <LogAscentDrawer

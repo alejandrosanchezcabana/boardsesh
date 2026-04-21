@@ -1,5 +1,5 @@
 // @vitest-environment jsdom
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { renderHook, act } from '@testing-library/react';
 import type { Climb, Angle, BoardDetails, BoardName } from '@/app/lib/types';
 import type { LogbookEntry } from '@/app/hooks/use-logbook';
@@ -122,10 +122,11 @@ describe('hasPriorHistoryForClimb', () => {
     expect(hasPriorHistoryForClimb(climb, [])).toBe(true);
   });
 
-  it('returns true when cached logbook history outranks stale zero counts', () => {
+  it('returns false when server counts are zero even if logbook has entries', () => {
     const climb = makeClimb({ uuid: 'c1', userAscents: 0, userAttempts: 0 });
     const logbook = [makeLogbookEntry({ climb_uuid: 'c1' })];
-    expect(hasPriorHistoryForClimb(climb, logbook)).toBe(true);
+    // Server counts take priority over local cache
+    expect(hasPriorHistoryForClimb(climb, logbook)).toBe(false);
   });
 
   it('returns true when logbook has matching entry (no counts on climb)', () => {
@@ -182,9 +183,14 @@ describe('buildTickTarget', () => {
 
 describe('useTickSave', () => {
   beforeEach(() => {
+    vi.useFakeTimers();
     vi.clearAllMocks();
     mockSaveTick.mockResolvedValue(undefined);
     mockLogbookRef.current = [];
+  });
+
+  afterEach(() => {
+    vi.useRealTimers();
   });
 
   function makeOptions(overrides: Partial<UseTickSaveOptions> = {}): UseTickSaveOptions {
@@ -206,7 +212,13 @@ describe('useTickSave', () => {
 
   it('save() fires confetti and calls onSave', () => {
     const onSave = vi.fn();
-    const opts = makeOptions({ onSave });
+    // Use hasPriorHistory: true to avoid flash delay path
+    const opts = makeOptions({ onSave, tickTarget: {
+      climb: makeClimb(),
+      angle: 40 as Angle,
+      boardDetails: makeBoardDetails(),
+      hasPriorHistory: true,
+    }});
 
     const { result } = renderHook(() => useTickSave(opts));
 
@@ -231,7 +243,7 @@ describe('useTickSave', () => {
     });
 
     expect(mockFireConfetti).toHaveBeenCalledTimes(1);
-    expect(mockFireConfetti).toHaveBeenCalledWith(originElement);
+    expect(mockFireConfetti).toHaveBeenCalledWith(originElement, 'attempt');
     expect(onSave).toHaveBeenCalledTimes(1);
     expect(mockSaveTick).toHaveBeenCalledTimes(1);
   });
@@ -348,6 +360,87 @@ describe('useTickSave', () => {
 
     const call = mockSaveTick.mock.calls[0][0];
     expect(call.status).toBe('attempt');
+  });
+
+  describe('confetti variant selection', () => {
+    it('fires "flash" variant for first ascent (no prior history, 1 attempt)', () => {
+      const onSave = vi.fn();
+      const opts = makeOptions({
+        onSave,
+        tickTarget: {
+          climb: makeClimb(),
+          angle: 40 as Angle,
+          boardDetails: makeBoardDetails(),
+          hasPriorHistory: false,
+        },
+        attemptCount: 1,
+      });
+
+      const { result } = renderHook(() => useTickSave(opts));
+
+      const el = document.createElement('button');
+      act(() => { result.current.save(el); });
+
+      expect(mockFireConfetti).toHaveBeenCalledWith(el, 'flash');
+      // Flash delays onSave by 300ms
+      expect(onSave).not.toHaveBeenCalled();
+      act(() => { vi.advanceTimersByTime(300); });
+      expect(onSave).toHaveBeenCalledTimes(1);
+    });
+
+    it('fires "ascent" variant for send (prior history)', () => {
+      const opts = makeOptions({
+        tickTarget: {
+          climb: makeClimb(),
+          angle: 40 as Angle,
+          boardDetails: makeBoardDetails(),
+          hasPriorHistory: true,
+        },
+        attemptCount: 1,
+      });
+
+      const { result } = renderHook(() => useTickSave(opts));
+
+      act(() => { result.current.save(null); });
+
+      expect(mockFireConfetti).toHaveBeenCalledWith(null, 'ascent');
+    });
+
+    it('fires "ascent" variant for send (multiple attempts)', () => {
+      const opts = makeOptions({
+        tickTarget: {
+          climb: makeClimb(),
+          angle: 40 as Angle,
+          boardDetails: makeBoardDetails(),
+          hasPriorHistory: false,
+        },
+        attemptCount: 3,
+      });
+
+      const { result } = renderHook(() => useTickSave(opts));
+
+      act(() => { result.current.save(null); });
+
+      expect(mockFireConfetti).toHaveBeenCalledWith(null, 'ascent');
+    });
+
+    it('fires "attempt" variant for attempts', () => {
+      const opts = makeOptions({
+        tickTarget: {
+          climb: makeClimb(),
+          angle: 40 as Angle,
+          boardDetails: makeBoardDetails(),
+          hasPriorHistory: false,
+        },
+        attemptCount: 1,
+      });
+
+      const { result } = renderHook(() => useTickSave(opts));
+
+      act(() => { result.current.saveAttempt(null); });
+
+      expect(mockFireConfetti).toHaveBeenCalledWith(null, 'attempt');
+    });
   });
 
   it('save() calls onError and saves a draft when saveTick rejects', async () => {
