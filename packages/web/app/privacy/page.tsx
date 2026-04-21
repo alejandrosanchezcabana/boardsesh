@@ -37,7 +37,7 @@ export default function PrivacyPolicyPage() {
         Privacy Policy
       </Typography>
       <Typography variant="body2" color="text.secondary" sx={{ mb: 4 }}>
-        Last updated: March 2026
+        Last updated: April 2026
       </Typography>
       <Divider sx={{ mb: 4 }} />
 
@@ -139,9 +139,25 @@ export default function PrivacyPolicyPage() {
 
       <Section title="Account deletion">
         <Paragraph>
-          You can delete your account from the Settings page in the app. Deleting your account
-          permanently removes your email, username, logbook entries, queue data, and party session
-          history from our servers. This action cannot be undone.
+          You can delete your account and all associated data at any time. There are two ways to do
+          it:
+        </Paragraph>
+        <Paragraph>
+          <strong>In the app:</strong> Go to <strong>Settings</strong>, scroll to the bottom, and
+          tap <strong>Delete Account</strong>. You will be asked to confirm before anything is
+          removed.
+        </Paragraph>
+        <Paragraph>
+          <strong>On the web:</strong> Log in at{' '}
+          <Link href="https://boardsesh.com/settings" target="_blank" rel="noopener">
+            boardsesh.com/settings
+          </Link>{' '}
+          and scroll to the bottom of the page to find the same Delete Account button.
+        </Paragraph>
+        <Paragraph>
+          Deletion is immediate and permanent. Once confirmed, we remove your email address,
+          username, logbook entries, queue data, and party session history from our servers. This
+          cannot be undone.
         </Paragraph>
       </Section>
 
