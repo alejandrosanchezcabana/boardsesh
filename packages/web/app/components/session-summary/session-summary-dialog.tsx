@@ -13,11 +13,18 @@ import { useHealthKitSync, useHealthKitAutoSync } from '@/app/hooks/use-healthki
 
 interface SessionSummaryDialogProps {
   summary: SessionSummary | null;
+  boardType?: string;
+  existingWorkoutId?: string | null;
   onDismiss: () => void;
 }
 
-export default function SessionSummaryDialog({ summary, onDismiss }: SessionSummaryDialogProps) {
-  const { available, state, save } = useHealthKitSync({ summary, boardType: '' });
+export default function SessionSummaryDialog({
+  summary,
+  boardType = '',
+  existingWorkoutId,
+  onDismiss,
+}: SessionSummaryDialogProps) {
+  const { available, state, save } = useHealthKitSync({ summary, boardType, existingWorkoutId });
   const { enabled: autoSyncEnabled, loaded: autoSyncLoaded } = useHealthKitAutoSync();
   const autoSyncedFor = useRef<string | null>(null);
 

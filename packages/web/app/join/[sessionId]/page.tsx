@@ -104,7 +104,7 @@ export default async function JoinSessionPage({ params }: Props) {
       <noscript>
         <meta httpEquiv="refresh" content={`0;url=${joinUrl}`} />
       </noscript>
-      <JoinRedirect sessionId={sessionId} joinUrl={joinUrl} />
+      <JoinRedirect sessionId={sessionId} />
     </>
   );
 }

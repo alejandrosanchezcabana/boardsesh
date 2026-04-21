@@ -211,6 +211,8 @@ export const PersistentSessionProvider: React.FC<{ children: React.ReactNode }> 
       lastReceivedSequenceRef,
       liveSessionStats: eventProcessor.liveSessionStats,
       sessionSummary: lifecycle.sessionSummary,
+      sessionSummaryBoardType: lifecycle.sessionSummaryBoardType ?? null,
+      sessionSummaryHealthKitWorkoutId: lifecycle.sessionSummaryHealthKitWorkoutId ?? null,
     }),
     [
       lifecycle.activeSession,
@@ -219,6 +221,8 @@ export const PersistentSessionProvider: React.FC<{ children: React.ReactNode }> 
       lifecycle.hasConnected,
       lifecycle.error,
       lifecycle.sessionSummary,
+      lifecycle.sessionSummaryBoardType,
+      lifecycle.sessionSummaryHealthKitWorkoutId,
       eventProcessor.currentClimbQueueItem,
       eventProcessor.queue,
       eventProcessor.liveSessionStats,

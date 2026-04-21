@@ -86,6 +86,8 @@ export interface SessionLifecycleState {
   hasConnected: boolean;
   error: Error | null;
   sessionSummary: SessionSummary | null;
+  sessionSummaryBoardType: string | null;
+  sessionSummaryHealthKitWorkoutId: string | null;
 }
 
 export interface SessionLifecycleActions {
@@ -134,6 +136,8 @@ export function useSessionLifecycle({
   const [hasConnected, setHasConnected] = useState(false);
   const [error, setError] = useState<Error | null>(null);
   const [sessionSummary, setSessionSummary] = useState<SessionSummary | null>(null);
+  const [sessionSummaryBoardType, setSessionSummaryBoardType] = useState<string | null>(null);
+  const [sessionSummaryHealthKitWorkoutId, setSessionSummaryHealthKitWorkoutId] = useState<string | null>(null);
 
   // Pending initial queue for new sessions
   const [pendingInitialQueue, setPendingInitialQueue] = useState<PendingInitialQueue | null>(null);
@@ -198,10 +202,13 @@ export function useSessionLifecycle({
 
   const dismissSessionSummary = useCallback(() => {
     setSessionSummary(null);
+    setSessionSummaryBoardType(null);
+    setSessionSummaryHealthKitWorkoutId(null);
   }, []);
 
   const endSessionWithSummary = useCallback(() => {
     const endingSessionId = activeSessionRef.current?.sessionId;
+    const boardType = activeSessionRef.current?.parsedParams.board_name ?? null;
     const token = wsAuthTokenRef.current;
 
     deactivateSession();
@@ -213,6 +220,8 @@ export function useSessionLifecycle({
         .then((response) => {
           if (response.endSession) {
             setSessionSummary(response.endSession);
+            setSessionSummaryBoardType(boardType);
+            setSessionSummaryHealthKitWorkoutId(null);
           }
         })
         .catch((err) => {
@@ -604,6 +613,8 @@ export function useSessionLifecycle({
     hasConnected,
     error,
     sessionSummary,
+    sessionSummaryBoardType,
+    sessionSummaryHealthKitWorkoutId,
     activateSession,
     deactivateSession,
     setInitialQueueForSession,

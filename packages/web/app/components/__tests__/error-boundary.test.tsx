@@ -1,6 +1,5 @@
 import React from 'react';
 import { render, screen, act } from '@testing-library/react';
-import '@testing-library/jest-dom/vitest';
 import { describe, expect, it, vi, beforeEach, afterEach } from 'vite-plus/test';
 import ErrorBoundary from '../error-boundary';
 
@@ -25,7 +24,7 @@ describe('ErrorBoundary', () => {
         <div>hello</div>
       </ErrorBoundary>,
     );
-    expect(screen.getByText('hello')).toBeInTheDocument();
+    expect(screen.getByText('hello')).toBeTruthy();
   });
 
   it('renders fallback on error', () => {
@@ -34,7 +33,7 @@ describe('ErrorBoundary', () => {
         <AlwaysThrow />
       </ErrorBoundary>,
     );
-    expect(screen.getByText('oops')).toBeInTheDocument();
+    expect(screen.getByText('oops')).toBeTruthy();
   });
 
   it('renders nothing when error and no fallback', () => {
@@ -62,7 +61,7 @@ describe('ErrorBoundary', () => {
       );
 
       // Error caught, fallback rendered (null)
-      expect(screen.queryByText('recovered')).not.toBeInTheDocument();
+      expect(screen.queryByText('recovered')).toBeNull();
 
       // Fix the error before the rAF fires
       shouldThrow = false;
@@ -72,7 +71,7 @@ describe('ErrorBoundary', () => {
         vi.advanceTimersByTime(16);
       });
 
-      expect(screen.getByText('recovered')).toBeInTheDocument();
+      expect(screen.getByText('recovered')).toBeTruthy();
     });
 
     it('stops retrying after max attempts', async () => {
@@ -90,7 +89,7 @@ describe('ErrorBoundary', () => {
       }
 
       // Should have given up and show the fallback permanently
-      expect(screen.getByText('gave up')).toBeInTheDocument();
+      expect(screen.getByText('gave up')).toBeTruthy();
     });
 
     it('resets retry budget after quiet period', async () => {
@@ -119,7 +118,7 @@ describe('ErrorBoundary', () => {
       await act(async () => {
         vi.advanceTimersByTime(16);
       });
-      expect(screen.getByText('recovered')).toBeInTheDocument();
+      expect(screen.getByText('recovered')).toBeTruthy();
 
       // Wait for the 30 s reset timer to fire
       await act(async () => {
@@ -142,7 +141,7 @@ describe('ErrorBoundary', () => {
         </ErrorBoundary>,
       );
 
-      expect(screen.getByText('stuck')).toBeInTheDocument();
+      expect(screen.getByText('stuck')).toBeTruthy();
 
       // Flush rAF
       await act(async () => {
@@ -150,7 +149,7 @@ describe('ErrorBoundary', () => {
       });
 
       // Still stuck on fallback
-      expect(screen.getByText('stuck')).toBeInTheDocument();
+      expect(screen.getByText('stuck')).toBeTruthy();
     });
   });
 });
