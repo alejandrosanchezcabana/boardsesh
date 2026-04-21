@@ -41,12 +41,6 @@ export const SaveTickInputSchema = z.object({
     return true;
   },
   { message: 'Flash requires attemptCount of 1', path: ['attemptCount'] }
-).refine(
-  (data) => {
-    if (data.status === 'attempt' && data.quality !== undefined && data.quality !== null) return false;
-    return true;
-  },
-  { message: 'Attempts cannot have quality ratings', path: ['quality'] }
 );
 
 /**

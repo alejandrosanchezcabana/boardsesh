@@ -492,4 +492,108 @@ describe('useTickSave', () => {
       }),
     );
   });
+
+  describe('forceAttempt parameter', () => {
+    it('saveAttempt forces attempt status even when explicitAscentType is flash', () => {
+      const onSave = vi.fn();
+      const opts = makeOptions({
+        onSave,
+        ascentType: 'flash',
+        tickTarget: {
+          climb: makeClimb(),
+          angle: 40 as Angle,
+          boardDetails: makeBoardDetails(),
+          hasPriorHistory: false,
+        },
+        attemptCount: 1,
+      });
+
+      const { result } = renderHook(() => useTickSave(opts));
+
+      act(() => {
+        result.current.saveAttempt();
+      });
+
+      const call = mockSaveTick.mock.calls[0][0];
+      expect(call.status).toBe('attempt');
+      expect(mockFireConfetti).toHaveBeenCalledWith(null, 'attempt');
+    });
+
+    it('saveAttempt forces attempt status even when explicitAscentType is send', () => {
+      const onSave = vi.fn();
+      const opts = makeOptions({
+        onSave,
+        ascentType: 'send',
+        tickTarget: {
+          climb: makeClimb(),
+          angle: 40 as Angle,
+          boardDetails: makeBoardDetails(),
+          hasPriorHistory: true,
+        },
+        attemptCount: 1,
+      });
+
+      const { result } = renderHook(() => useTickSave(opts));
+
+      act(() => {
+        result.current.saveAttempt();
+      });
+
+      const call = mockSaveTick.mock.calls[0][0];
+      expect(call.status).toBe('attempt');
+      expect(mockFireConfetti).toHaveBeenCalledWith(null, 'attempt');
+    });
+
+    it('save uses explicitAscentType when provided', () => {
+      const onSave = vi.fn();
+      const opts = makeOptions({
+        onSave,
+        ascentType: 'send',
+        tickTarget: {
+          climb: makeClimb(),
+          angle: 40 as Angle,
+          boardDetails: makeBoardDetails(),
+          hasPriorHistory: false,
+        },
+        attemptCount: 1,
+      });
+
+      const { result } = renderHook(() => useTickSave(opts));
+
+      act(() => {
+        result.current.save();
+      });
+
+      // Even though hasPriorHistory=false and attemptCount=1 would normally infer flash,
+      // explicitAscentType='send' should take priority
+      const call = mockSaveTick.mock.calls[0][0];
+      expect(call.status).toBe('send');
+      expect(mockFireConfetti).toHaveBeenCalledWith(null, 'ascent');
+    });
+
+    it('save infers flash when no prior history and 1 try', () => {
+      const onSave = vi.fn();
+      const opts = makeOptions({
+        onSave,
+        // No ascentType provided — let the hook infer
+        tickTarget: {
+          climb: makeClimb(),
+          angle: 40 as Angle,
+          boardDetails: makeBoardDetails(),
+          hasPriorHistory: false,
+        },
+        attemptCount: 1,
+      });
+
+      const { result } = renderHook(() => useTickSave(opts));
+
+      act(() => {
+        result.current.save();
+      });
+
+      const call = mockSaveTick.mock.calls[0][0];
+      expect(call.status).toBe('flash');
+      expect(mockFireConfetti).toHaveBeenCalledWith(null, 'flash');
+    });
+  });
 });

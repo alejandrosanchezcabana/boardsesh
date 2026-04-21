@@ -111,7 +111,7 @@ describe('TickButton', () => {
   });
 
   describe('icon rendering', () => {
-    it('renders CheckOutlined when isFlash is false and tickBarActive', () => {
+    it('renders CheckOutlined when tickBarActive and isFlash is false', () => {
       const { container } = render(
         <TickButton {...defaultProps} tickBarActive={true} isFlash={false} />,
       );
@@ -119,7 +119,7 @@ describe('TickButton', () => {
       expect(svg?.getAttribute('data-testid')).toBe('CheckOutlinedIcon');
     });
 
-    it('renders ElectricBoltOutlined when isFlash is true and tickBarActive', () => {
+    it('renders ElectricBoltOutlined when tickBarActive and isFlash is true', () => {
       const { container } = render(
         <TickButton {...defaultProps} tickBarActive={true} isFlash={true} />,
       );
@@ -127,7 +127,7 @@ describe('TickButton', () => {
       expect(svg?.getAttribute('data-testid')).toBe('ElectricBoltOutlinedIcon');
     });
 
-    it('renders CheckOutlined when isFlash is true but tickBarActive is false', () => {
+    it('renders CheckOutlined when tickBarActive is false', () => {
       const { container } = render(
         <TickButton {...defaultProps} tickBarActive={false} isFlash={true} />,
       );
@@ -135,12 +135,57 @@ describe('TickButton', () => {
       expect(svg?.getAttribute('data-testid')).toBe('CheckOutlinedIcon');
     });
 
-    it('renders CheckOutlined when isFlash is undefined', () => {
+    it('renders CheckOutlined when isFlash is undefined and not active', () => {
       const { container } = render(
-        <TickButton {...defaultProps} tickBarActive={true} isFlash={undefined} />,
+        <TickButton {...defaultProps} tickBarActive={false} isFlash={undefined} />,
       );
       const svg = container.querySelector('#button-tick svg');
       expect(svg?.getAttribute('data-testid')).toBe('CheckOutlinedIcon');
+    });
+
+    it('renders person-falling icon and "attempt" label when ascentType is attempt', () => {
+      const { container } = render(
+        <TickButton {...defaultProps} tickBarActive={true} ascentType="attempt" />,
+      );
+      const svg = container.querySelector('#button-tick svg');
+      expect(svg?.getAttribute('data-testid')).toBe('PersonFallingIcon');
+      expect(screen.getByText('attempt')).toBeTruthy();
+    });
+
+    it('renders flash icon and "flash" label when ascentType is flash', () => {
+      const { container } = render(
+        <TickButton {...defaultProps} tickBarActive={true} ascentType="flash" />,
+      );
+      const svg = container.querySelector('#button-tick svg');
+      expect(svg?.getAttribute('data-testid')).toBe('ElectricBoltOutlinedIcon');
+      expect(screen.getByText('flash')).toBeTruthy();
+    });
+
+    it('renders check icon and "tick" label when ascentType is send', () => {
+      const { container } = render(
+        <TickButton {...defaultProps} tickBarActive={true} ascentType="send" />,
+      );
+      const svg = container.querySelector('#button-tick svg');
+      expect(svg?.getAttribute('data-testid')).toBe('CheckOutlinedIcon');
+      expect(screen.getByText('tick')).toBeTruthy();
+    });
+
+    it('renders flash icon when isFlash is true and no ascentType', () => {
+      const { container } = render(
+        <TickButton {...defaultProps} tickBarActive={true} isFlash={true} ascentType={undefined} />,
+      );
+      const svg = container.querySelector('#button-tick svg');
+      expect(svg?.getAttribute('data-testid')).toBe('ElectricBoltOutlinedIcon');
+      expect(screen.getByText('flash')).toBeTruthy();
+    });
+
+    it('renders check icon when isFlash is false and no ascentType', () => {
+      const { container } = render(
+        <TickButton {...defaultProps} tickBarActive={true} isFlash={false} ascentType={undefined} />,
+      );
+      const svg = container.querySelector('#button-tick svg');
+      expect(svg?.getAttribute('data-testid')).toBe('CheckOutlinedIcon');
+      expect(screen.getByText('tick')).toBeTruthy();
     });
   });
 
@@ -163,16 +208,16 @@ describe('TickButton', () => {
   });
 
   describe('accessibility', () => {
-    it('has aria-label "Log flash" when tickBarActive and isFlash', () => {
+    it('has aria-label "Save tick" when tickBarActive', () => {
       render(<TickButton {...defaultProps} tickBarActive={true} isFlash={true} />);
       const button = document.getElementById('button-tick');
-      expect(button?.getAttribute('aria-label')).toBe('Log flash');
+      expect(button?.getAttribute('aria-label')).toBe('Save tick');
     });
 
-    it('has aria-label "Log ascent" when tickBarActive and not isFlash', () => {
+    it('has aria-label "Save tick" when tickBarActive and not isFlash', () => {
       render(<TickButton {...defaultProps} tickBarActive={true} isFlash={false} />);
       const button = document.getElementById('button-tick');
-      expect(button?.getAttribute('aria-label')).toBe('Log ascent');
+      expect(button?.getAttribute('aria-label')).toBe('Save tick');
     });
 
     it('has aria-label "Log ascent" when tickBarActive is false', () => {

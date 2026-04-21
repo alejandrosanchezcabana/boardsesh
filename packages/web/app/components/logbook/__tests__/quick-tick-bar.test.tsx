@@ -200,6 +200,7 @@ describe('QuickTickBar', () => {
 
   describe('save behaviour — history-aware default', () => {
     it('saves as flash with attemptCount 1 when the logbook is empty', async () => {
+      vi.useFakeTimers();
       mockLogbookRef.current = [];
       const ref = React.createRef<QuickTickBarHandle>();
       render(<QuickTickBar ref={ref} {...defaultProps} />);
@@ -213,6 +214,8 @@ describe('QuickTickBar', () => {
       expect(call.status).toBe('flash');
       expect(call.attemptCount).toBe(1);
       expect(call.climbUuid).toBe('climb-1');
+      // Flash saves have a 300ms delay before calling onSave (for button pulse animation).
+      await act(async () => { vi.advanceTimersByTime(300); });
       expect(defaultProps.onSave).toHaveBeenCalledTimes(1);
     });
 
@@ -501,7 +504,7 @@ describe('QuickTickBar', () => {
   });
 
   describe('grade picker selection', () => {
-    it('marks the matched grade as selected when the picker opens', async () => {
+    it('shows consensus grade as focused but not selected when the picker opens', async () => {
       const climb = makeClimb({ difficulty: '6c/V5' });
       render(<QuickTickBar {...defaultProps} currentClimb={climb} />);
 
@@ -512,9 +515,14 @@ describe('QuickTickBar', () => {
 
       await waitFor(() => {
         const items = screen.getAllByRole('option');
+        // Only the "—" (clear) option is selected since no grade is chosen by default
         const selectedItems = items.filter((el) => el.getAttribute('aria-selected') === 'true');
         expect(selectedItems).toHaveLength(1);
-        expect(selectedItems[0].textContent).toBe('V5');
+        expect(selectedItems[0].textContent).toBe('—');
+        // The consensus grade should be labeled as such but not selected
+        const consensusItem = items.find((el) => el.getAttribute('aria-label') === 'V5 (consensus)');
+        expect(consensusItem).toBeTruthy();
+        expect(consensusItem?.getAttribute('aria-selected')).toBe('false');
       });
     });
 
@@ -850,6 +858,68 @@ describe('QuickTickBar', () => {
       mockLogbookRef.current = [];
       // Should not throw
       expect(() => render(<QuickTickBar {...defaultProps} />)).not.toThrow();
+    });
+  });
+
+  describe('onAscentTypeChange callback', () => {
+    it('calls onAscentTypeChange when ascent type changes', async () => {
+      mockLogbookRef.current = [];
+      const onAscentTypeChange = vi.fn();
+      render(<QuickTickBar {...defaultProps} onAscentTypeChange={onAscentTypeChange} />);
+
+      // On mount with no prior history and 1 try, inferred type is flash.
+      expect(onAscentTypeChange).toHaveBeenCalledWith('flash');
+
+      // Open tries picker and select 2 — should change ascent type to send.
+      await act(async () => {
+        screen.getByTestId('quick-tick-attempt').click();
+      });
+      await act(async () => {
+        screen.getByRole('option', { name: '2 tries' }).click();
+      });
+
+      expect(onAscentTypeChange).toHaveBeenCalledWith('send');
+    });
+  });
+
+  describe('expanded mode', () => {
+    it('disables flash option when user has prior history', () => {
+      mockLogbookRef.current = [];
+      const climbWithHistory = makeClimb({ userAscents: 2, userAttempts: 0 });
+      const onExpandedChange = vi.fn();
+      render(
+        <QuickTickBar
+          {...defaultProps}
+          currentClimb={climbWithHistory}
+          expanded={true}
+          onExpandedChange={onExpandedChange}
+        />,
+      );
+
+      // The ascent type picker should be visible in expanded mode.
+      const ascentTypeListbox = screen.getByRole('listbox', { name: 'Ascent type' });
+      expect(ascentTypeListbox).toBeTruthy();
+
+      // The Flash option should be disabled because the climb has prior history.
+      const flashOption = screen.getByRole('option', { name: 'Flash' });
+      expect(flashOption.getAttribute('aria-disabled')).toBe('true');
+      expect(flashOption.hasAttribute('disabled')).toBe(true);
+    });
+
+    it('does not render save button in expanded mode', () => {
+      const onExpandedChange = vi.fn();
+      render(
+        <QuickTickBar
+          {...defaultProps}
+          expanded={true}
+          onExpandedChange={onExpandedChange}
+        />,
+      );
+
+      // There should be no "Save tick" button in expanded mode.
+      expect(screen.queryByRole('button', { name: /save tick/i })).toBeNull();
+      // Also verify by text content.
+      expect(screen.queryByText(/save tick/i)).toBeNull();
     });
   });
 

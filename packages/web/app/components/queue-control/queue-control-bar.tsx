@@ -24,6 +24,7 @@ import QueueList, { QueueListHandle } from './queue-list';
 import { useSwipeable } from 'react-swipeable';
 import { TickButton } from '../logbook/tick-button';
 import { TickButtonWithLabel } from '../logbook/tick-icon';
+import { PersonFallingIcon } from '@/app/components/icons/person-falling-icon';
 import { QuickTickBar, type QuickTickBarHandle } from '../logbook/quick-tick-bar';
 import { hasPriorHistoryForClimb } from '@/app/hooks/use-tick-save';
 import { useBoardProvider } from '../board-provider/board-provider-context';
@@ -36,6 +37,8 @@ import { useCardSwipeNavigation, EXIT_DURATION, SNAP_BACK_DURATION, ENTER_ANIMAT
 import PlayViewDrawer from '../play-view/play-view-drawer';
 import CircularProgress from '@mui/material/CircularProgress';
 import CloseOutlined from '@mui/icons-material/CloseOutlined';
+import KeyboardArrowUpOutlined from '@mui/icons-material/KeyboardArrowUpOutlined';
+import KeyboardArrowDownOutlined from '@mui/icons-material/KeyboardArrowDownOutlined';
 import CheckOutlined from '@mui/icons-material/CheckOutlined';
 import ChatBubbleOutlineOutlined from '@mui/icons-material/ChatBubbleOutlineOutlined';
 import InputAdornment from '@mui/material/InputAdornment';
@@ -202,7 +205,13 @@ const QueueControlBar: React.FC<QueueControlBarProps> = ({ boardDetails, angle }
   const [isFlash, setIsFlash] = useState(
     () => !!currentClimb && !hasPriorHistoryForClimb(currentClimb, logbook),
   );
+  const [ascentType, setAscentType] = useState<'flash' | 'send' | 'attempt'>(
+    () => isFlash ? 'flash' : 'send',
+  );
   const quickTickBarRef = useRef<QuickTickBarHandle>(null);
+
+  // Whether the tick bar is in expanded mode (all pickers visible).
+  const [tickBarExpanded, setTickBarExpanded] = useState(false);
 
   // Swipe-to-dismiss state — tracks vertical offset during down-swipe gesture.
   const [tickSwipeOffset, setTickSwipeOffset] = useState(0);
@@ -482,6 +491,8 @@ const QueueControlBar: React.FC<QueueControlBarProps> = ({ boardDetails, angle }
     } else {
       setTickSwipeOffset(0);
       setIsFlash(false);
+      setAscentType('send');
+      setTickBarExpanded(false);
       const timer = setTimeout(() => {
         setTickRowVisible(false);
         setTickComment('');
@@ -498,27 +509,47 @@ const QueueControlBar: React.FC<QueueControlBarProps> = ({ boardDetails, angle }
       if (!tickSwipeEnabled) return;
       const target = eventData.event.target as HTMLElement | null;
       if (target?.closest('[data-scrollable-picker]')) return;
-      // Only track downward swipes; ignore horizontal-dominant gestures
       if (Math.abs(eventData.deltaX) > Math.abs(eventData.deltaY)) return;
-      if (eventData.deltaY < 0) { setTickSwipeOffset(0); return; }
-      setTickSwipeOffset(eventData.deltaY);
+      if (tickBarExpanded) {
+        // Expanded: only track downward
+        if (eventData.deltaY > 0) setTickSwipeOffset(eventData.deltaY);
+        else setTickSwipeOffset(0);
+      } else {
+        // Compact: track both directions
+        setTickSwipeOffset(eventData.deltaY);
+      }
+    },
+    onSwipedUp: (eventData) => {
+      if (!tickSwipeEnabled) return;
+      const target = eventData.event.target as HTMLElement | null;
+      if (target?.closest('[data-scrollable-picker]')) return;
+      if (!tickBarExpanded && Math.abs(eventData.deltaY) >= 50) {
+        setTickBarExpanded(true);
+      }
+      setTickSwipeOffset(0);
     },
     onSwipedDown: (eventData) => {
       if (!tickSwipeEnabled) return;
       const target = eventData.event.target as HTMLElement | null;
       if (target?.closest('[data-scrollable-picker]')) return;
-      if (Math.abs(eventData.deltaY) >= 80) {
-        // Just close — the CSS grid collapse animation handles the visual exit
-        setActiveDrawer('none');
+      if (tickBarExpanded) {
+        if (Math.abs(eventData.deltaY) >= 120 || eventData.velocity > 0.5) {
+          setActiveDrawer('none');
+        } else if (Math.abs(eventData.deltaY) >= 50) {
+          setTickBarExpanded(false);
+        }
       } else {
-        setTickSwipeOffset(0);
+        if (Math.abs(eventData.deltaY) >= 80) {
+          setActiveDrawer('none');
+        }
       }
+      setTickSwipeOffset(0);
     },
     onSwiped: (eventData) => {
       if (!tickSwipeEnabled) return;
       const target = eventData.event.target as HTMLElement | null;
       if (target?.closest('[data-scrollable-picker]')) return;
-      if (eventData.dir !== 'Down') setTickSwipeOffset(0);
+      if (eventData.dir !== 'Down' && eventData.dir !== 'Up') setTickSwipeOffset(0);
     },
     trackMouse: false,
     preventScrollOnSwipe: false,
@@ -527,6 +558,11 @@ const QueueControlBar: React.FC<QueueControlBarProps> = ({ boardDetails, angle }
 
   const tickDismissStyle = useMemo<React.CSSProperties | undefined>(() => {
     if (tickSwipeOffset === 0) {
+      return { transition: 'grid-template-rows 200ms ease-out, opacity 200ms ease-out' };
+    }
+    // Only apply visual dismiss feedback for downward swipes (positive offset).
+    // Upward swipes (negative offset) snap back — the expand animation handles the visual.
+    if (tickSwipeOffset < 0) {
       return { transition: 'grid-template-rows 200ms ease-out, opacity 200ms ease-out' };
     }
     const fraction = Math.max(0, 1 - tickSwipeOffset / 150);
@@ -877,26 +913,40 @@ const QueueControlBar: React.FC<QueueControlBarProps> = ({ boardDetails, angle }
               ...tickDismissStyle,
             }}
           >
-            {/* Close button — top-right corner of the tick bar */}
-            <div className={styles.tickCloseButton}>
-              <IconButton
-                onClick={() => setActiveDrawer('none')}
-                size="small"
-                aria-label="Close tick bar"
-                sx={{
-                  color: 'text.primary',
-                  backgroundColor: 'action.selected',
-                  '&:hover': { backgroundColor: 'action.focus' },
-                }}
-              >
-                <CloseOutlined sx={{ fontSize: 16 }} />
-              </IconButton>
-            </div>
+            {/* Drag handle — centered across full tick bar width */}
+            <div className={styles.tickDragHandleBar} />
             <div className={styles.tickRowInner}>
-              {/* Drag handle */}
+              {/* Toolbar: expand left, close right */}
               <div className={styles.tickDragHandleRow}>
-                <div className={styles.tickDragHandle} aria-hidden="true">
-                  <div className={styles.tickDragHandleBar} />
+                <div
+                  className={styles.tickExpandButton}
+                  onClick={() => setTickBarExpanded((v) => !v)}
+                  role="button"
+                  tabIndex={0}
+                  onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') setTickBarExpanded((v) => !v); }}
+                  aria-label={tickBarExpanded ? 'Collapse tick bar' : 'Expand tick bar'}
+                >
+                  {tickBarExpanded ? (
+                    <KeyboardArrowDownOutlined sx={{ fontSize: 16, opacity: 0.7 }} />
+                  ) : (
+                    <KeyboardArrowUpOutlined sx={{ fontSize: 16, opacity: 0.7 }} />
+                  )}
+                  <span className={styles.tickExpandLabel}>{tickBarExpanded ? 'Collapse' : 'Expand'}</span>
+                </div>
+                <div className={styles.tickCloseButton}>
+                  <IconButton
+                    onClick={() => setActiveDrawer('none')}
+                    size="small"
+                    aria-label="Close tick bar"
+                    sx={{
+                      color: 'text.primary',
+                      backgroundColor: 'action.selected',
+                      '&:hover': { backgroundColor: 'action.focus' },
+                      padding: '2px',
+                    }}
+                  >
+                    <CloseOutlined sx={{ fontSize: 16 }} />
+                  </IconButton>
                 </div>
               </div>
               {tickBarActive && (
@@ -905,6 +955,7 @@ const QueueControlBar: React.FC<QueueControlBarProps> = ({ boardDetails, angle }
                   currentClimb={currentClimb}
                   angle={angle}
                   boardDetails={boardDetails}
+                  expanded={tickBarExpanded}
                   onSave={() => {
                     if (currentClimb) {
                       setLocalTickedClimbs((prev) => new Set(prev).add(currentClimb.uuid));
@@ -914,6 +965,7 @@ const QueueControlBar: React.FC<QueueControlBarProps> = ({ boardDetails, angle }
                   onError={() => showMessage('Couldn\u2019t save your tick. Give it another go.', 'error')}
                   onDraftRestored={(draftComment) => setTickComment(draftComment)}
                   onIsFlashChange={setIsFlash}
+                  onAscentTypeChange={setAscentType}
                   comment={tickComment}
                   commentSlot={
                     <div className={`${styles.tickComment} ${tickCommentFocused ? styles.tickCommentExpanded : ''}`}>
@@ -950,6 +1002,33 @@ const QueueControlBar: React.FC<QueueControlBarProps> = ({ boardDetails, angle }
                         }}
                       />
                     </div>
+                  }
+                  expandedCommentSlot={
+                    <TextField
+                      fullWidth
+                      size="small"
+                      variant="outlined"
+                      placeholder="Comment..."
+                      multiline
+                      minRows={2}
+                      maxRows={4}
+                      value={tickComment}
+                      onChange={(e) => setTickComment(e.target.value)}
+                      onFocus={handleTickCommentFocus}
+                      onBlur={handleTickCommentBlur}
+                      slotProps={{
+                        htmlInput: { maxLength: 2000, 'aria-label': 'Tick comment' },
+                      }}
+                      sx={{
+                        '& .MuiOutlinedInput-root': {
+                          borderRadius: '8px',
+                          backgroundColor: 'var(--input-bg)',
+                          '& .MuiOutlinedInput-notchedOutline': {
+                            borderColor: 'var(--neutral-200)',
+                          },
+                        },
+                      }}
+                    />
                   }
                 />
               )}
@@ -1068,8 +1147,8 @@ const QueueControlBar: React.FC<QueueControlBarProps> = ({ boardDetails, angle }
                       <NextClimbButton navigate={isViewPage || isPlayPage} boardDetails={boardDetails} />
                     </Stack>
                   </span>
-                  {/* Party / Cancel button — swaps to X when tick mode is active */}
-                  {tickBarActive ? (
+                  {/* Attempt button — only visible in tick mode (collapsed) */}
+                  {tickBarActive && !tickBarExpanded && (
                     <TickButtonWithLabel label="attempt">
                       <IconButton
                         onClick={(e) => quickTickBarRef.current?.saveAttempt(e.currentTarget)}
@@ -1080,12 +1159,11 @@ const QueueControlBar: React.FC<QueueControlBarProps> = ({ boardDetails, angle }
                         }}
                         aria-label="Log attempt"
                       >
-                        <CloseOutlined />
+                        <PersonFallingIcon />
                       </IconButton>
                     </TickButtonWithLabel>
-                  ) : (
-                    <ShareBoardButton />
                   )}
+                  {!tickBarActive && <ShareBoardButton />}
                   {/* Tick button — activates tick mode, or saves when already active */}
                   <TickButton
                     currentClimb={displayedClimb}
@@ -1095,6 +1173,7 @@ const QueueControlBar: React.FC<QueueControlBarProps> = ({ boardDetails, angle }
                     onTickSave={(el) => quickTickBarRef.current?.save(el)}
                     tickBarActive={tickBarActive}
                     isFlash={isFlash}
+                    ascentType={tickBarExpanded ? ascentType : undefined}
                   />
                 </Stack>
               </Box>

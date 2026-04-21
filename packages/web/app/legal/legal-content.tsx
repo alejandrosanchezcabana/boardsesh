@@ -260,6 +260,34 @@ export default function LegalContent() {
                 </Typography>
               </section>
 
+              {/* Third-Party Notices */}
+              <section>
+                <Typography variant="h3">Third-Party Notices</Typography>
+                <ul className={styles.featureList}>
+                  <li>
+                    <Typography variant="body1" component="span">
+                      <strong>Person Falling icon</strong> from{' '}
+                      <MuiLink
+                        href="https://fontawesome.com"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                      >
+                        Font Awesome Free 6.7.2
+                      </MuiLink>{' '}
+                      by @fontawesome. License:{' '}
+                      <MuiLink
+                        href="https://fontawesome.com/license/free"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                      >
+                        CC BY 4.0
+                      </MuiLink>
+                      . Copyright 2024 Fonticons, Inc.
+                    </Typography>
+                  </li>
+                </ul>
+              </section>
+
               {/* Footer */}
               <section className={styles.callToAction}>
                 <Typography variant="body2" component="p" color="text.secondary">

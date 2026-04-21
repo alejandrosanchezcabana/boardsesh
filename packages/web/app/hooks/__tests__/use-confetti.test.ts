@@ -95,7 +95,7 @@ describe('useConfetti', () => {
     });
   });
 
-  describe('flash variant (electric arcs)', () => {
+  describe('flash variant (lightning bolts)', () => {
     it('does not fire canvas-confetti', () => {
       const { result } = renderHook(() => useConfetti());
       const el = createMockElement();
@@ -109,45 +109,34 @@ describe('useConfetti', () => {
       const el = createMockElement();
       result.current(el, 'flash');
 
-      const overlay = document.body.querySelector('[style*="z-index: 1500"]') as HTMLElement;
+      const overlay = document.body.querySelector('[style*="z-index"]') as HTMLElement;
       expect(overlay).not.toBeNull();
       expect(overlay.style.position).toBe('fixed');
       expect(overlay.style.pointerEvents).toBe('none');
     });
 
-    it('overlay contains SVG with arc paths', () => {
+    it('overlay contains SVG with filled bolt paths', () => {
       const { result } = renderHook(() => useConfetti());
       const el = createMockElement();
       result.current(el, 'flash');
 
-      const overlay = document.body.querySelector('[style*="z-index: 1500"]') as HTMLElement;
-      // innerHTML should contain SVG path elements for the electric arcs
+      const overlay = document.body.querySelector('[style*="z-index"]') as HTMLElement;
       expect(overlay.innerHTML).toContain('<svg');
       expect(overlay.innerHTML).toContain('<path');
-      expect(overlay.innerHTML).toContain('#FFC107');
+      // Bolts are filled yellow with dark outline
+      expect(overlay.innerHTML).toContain('#FDE74C');
+      expect(overlay.innerHTML).toContain('#333');
     });
 
-    it('arc paths originate near element edge, not center', () => {
-      const { result } = renderHook(() => useConfetti());
-      const el = createMockElement(100, 400, 40, 40);
-      result.current(el, 'flash');
-
-      const overlay = document.body.querySelector('[style*="z-index: 1500"]') as HTMLElement;
-      // Paths should NOT start at the exact center (120, 420)
-      // They start from the button edge (radius ~20px away from center)
-      expect(overlay.innerHTML).not.toContain('M 120 420');
-      // But should still contain path data
-      expect(overlay.innerHTML).toContain('<path');
-    });
-
-    it('does not contain a screen flash div', () => {
+    it('generates 6 bolt groups', () => {
       const { result } = renderHook(() => useConfetti());
       const el = createMockElement();
       result.current(el, 'flash');
 
-      const overlay = document.body.querySelector('[style*="z-index: 1500"]') as HTMLElement;
-      // Should not have a full-screen white flash div
-      expect(overlay.innerHTML).not.toContain('background:white');
+      const overlay = document.body.querySelector('[style*="z-index"]') as HTMLElement;
+      // Each bolt is a <g> with data-tx attribute
+      const boltMatches = overlay.innerHTML.match(/data-tx/g);
+      expect(boltMatches?.length).toBe(6);
     });
 
     it('removes overlay after 300ms', () => {
@@ -155,10 +144,10 @@ describe('useConfetti', () => {
       const el = createMockElement();
       result.current(el, 'flash');
 
-      const overlays = document.body.querySelectorAll('[style*="z-index: 1500"]');
+      const overlays = document.body.querySelectorAll('[style*="z-index"]');
       expect(overlays.length).toBe(1);
       vi.advanceTimersByTime(300);
-      const overlaysAfter = document.body.querySelectorAll('[style*="z-index: 1500"]');
+      const overlaysAfter = document.body.querySelectorAll('[style*="z-index"]');
       expect(overlaysAfter.length).toBe(0);
     });
 
@@ -167,7 +156,7 @@ describe('useConfetti', () => {
       result.current(null, 'flash');
 
       expect(mockConfetti).not.toHaveBeenCalled();
-      const overlays = document.body.querySelectorAll('[style*="z-index: 1500"]');
+      const overlays = document.body.querySelectorAll('[style*="z-index"]');
       expect(overlays.length).toBe(0);
     });
   });

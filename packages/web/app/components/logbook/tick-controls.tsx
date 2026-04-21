@@ -6,9 +6,13 @@ import Skeleton from '@mui/material/Skeleton';
 import StarIcon from '@mui/icons-material/Star';
 import ChevronLeftIcon from '@mui/icons-material/ChevronLeft';
 import ChevronRightIcon from '@mui/icons-material/ChevronRight';
+import { PersonFallingIcon } from '@/app/components/icons/person-falling-icon';
+import CheckOutlined from '@mui/icons-material/CheckOutlined';
+import ElectricBoltOutlined from '@mui/icons-material/ElectricBoltOutlined';
 import { themeTokens } from '@/app/theme/theme-config';
 import { useGradeFormat } from '@/app/hooks/use-grade-format';
 import { useIsDarkMode } from '@/app/hooks/use-is-dark-mode';
+import type { TickStatus } from '@/app/hooks/use-logbook';
 import styles from './tick-controls.module.css';
 
 export type ExpandedControl = 'grade' | 'stars' | 'tries' | null;
@@ -310,13 +314,13 @@ export const InlineGradePicker: React.FC<{
   useStopHorizontalTouchPropagation(containerRef);
   const { canScrollLeft, canScrollRight } = useScrollIndicators(containerRef);
 
-  // On mount, scroll so the selected (or focus) grade aligns above the grade button.
-  // When no grade is selected, scroll to the consensus grade (focusGradeId) as a reference point.
+  // On mount, scroll so the selected (or focus) grade is visible.
+  // When a gradeButtonRef is available (compact mode), align above the button.
+  // Otherwise (expanded mode), center the grade in the container.
   const scrollTargetId = currentGradeId ?? focusGradeId;
   useLayoutEffect(() => {
     const container = containerRef.current;
-    const gradeButton = gradeButtonRef?.current;
-    if (!container || !gradeButton || scrollTargetId === undefined) return;
+    if (!container || scrollTargetId === undefined) return;
 
     const targetEl = container.querySelector(
       `[data-grade-id="${scrollTargetId}"]`,
@@ -324,14 +328,14 @@ export const InlineGradePicker: React.FC<{
     if (!targetEl) return;
 
     const containerRect = container.getBoundingClientRect();
-    const gradeButtonRect = gradeButton.getBoundingClientRect();
+    const gradeButton = gradeButtonRef?.current;
 
-    const gradeButtonCenterInContainer =
-      gradeButtonRect.left + gradeButtonRect.width / 2 - containerRect.left;
-    const targetItemCenter =
-      targetEl.offsetLeft + targetEl.offsetWidth / 2;
+    const alignCenter = gradeButton
+      ? gradeButton.getBoundingClientRect().left + gradeButton.getBoundingClientRect().width / 2 - containerRect.left
+      : container.clientWidth / 2;
 
-    const targetScrollLeft = targetItemCenter - gradeButtonCenterInContainer;
+    const targetItemCenter = targetEl.offsetLeft + targetEl.offsetWidth / 2;
+    const targetScrollLeft = targetItemCenter - alignCenter;
     const maxScroll = container.scrollWidth - container.clientWidth;
     container.scrollLeft = Math.max(0, Math.min(targetScrollLeft, maxScroll));
   }, [scrollTargetId, gradeButtonRef]);
@@ -358,9 +362,9 @@ export const InlineGradePicker: React.FC<{
               key={grade.difficulty_id}
               data-grade-id={grade.difficulty_id}
               onClick={() => onSelect(grade.difficulty_id)}
-              className={`${styles.pickerItem} ${isSelected || isFocused ? styles.pickerItemSelected : ''}`}
+              className={`${styles.pickerItem} ${isSelected ? styles.pickerItemSelected : ''} ${isFocused ? styles.pickerItemFocused : ''}`}
               aria-label={isFocused ? `${formatted} (consensus)` : formatted}
-              aria-selected={isSelected || isFocused}
+              aria-selected={isSelected}
               role="option"
             >
               <span className={styles.pickerGrade} {...(color ? { style: { '--grade-color': color } as React.CSSProperties } : {})}>
@@ -432,3 +436,41 @@ export const InlineTriesPicker: React.FC<{
     </ScrollIndicatorWrapper>
   );
 };
+
+/* ------------------------------------------------------------------ */
+/*  Ascent type picker — used in expanded tick bar                    */
+/* ------------------------------------------------------------------ */
+
+const ASCENT_TYPE_OPTIONS: readonly { value: TickStatus; label: string; icon: React.ReactNode; color: string }[] = [
+  { value: 'attempt', label: 'Attempt', icon: <PersonFallingIcon sx={{ fontSize: 18 }} />, color: themeTokens.colors.error },
+  { value: 'send', label: 'Send', icon: <CheckOutlined sx={{ fontSize: 18 }} />, color: themeTokens.colors.success },
+  { value: 'flash', label: 'Flash', icon: <ElectricBoltOutlined sx={{ fontSize: 18 }} />, color: themeTokens.colors.amber },
+];
+
+export const InlineAscentTypePicker: React.FC<{
+  ascentType: TickStatus;
+  onSelect: (value: TickStatus) => void;
+  /** Whether flash is available (no prior history and 1 try). */
+  canFlash?: boolean;
+}> = ({ ascentType, onSelect, canFlash = true }) => (
+  <div className={styles.pickerRow} role="listbox" aria-label="Ascent type">
+    {ASCENT_TYPE_OPTIONS.map((opt) => {
+      const disabled = opt.value === 'flash' && !canFlash;
+      return (
+        <ButtonBase
+          key={opt.value}
+          onClick={() => !disabled && onSelect(opt.value)}
+          className={`${styles.pickerItem} ${styles.ascentTypeItem} ${opt.value === ascentType ? styles.pickerItemSelected : ''}`}
+          aria-label={opt.label}
+          aria-selected={opt.value === ascentType}
+          aria-disabled={disabled}
+          role="option"
+          disabled={disabled}
+        >
+          <span className={`${styles.ascentTypeIcon} ${disabled ? styles.ascentTypeItemDisabled : ''}`} style={{ color: opt.value === ascentType ? opt.color : 'inherit' }}>{opt.icon}</span>
+          <span className={`${styles.ascentTypeLabel} ${disabled ? styles.ascentTypeItemDisabled : ''}`}>{opt.label}</span>
+        </ButtonBase>
+      );
+    })}
+  </div>
+);

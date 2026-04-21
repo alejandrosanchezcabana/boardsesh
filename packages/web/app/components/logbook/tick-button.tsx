@@ -17,6 +17,7 @@ import { useAuthModal } from '@/app/components/providers/auth-modal-provider';
 import { constructClimbInfoUrl } from '@/app/lib/url-utils';
 import { openExternalUrl } from '@/app/lib/open-external-url';
 import { themeTokens } from '@/app/theme/theme-config';
+import { PersonFallingIcon } from '@/app/components/icons/person-falling-icon';
 import { useAlwaysTickInApp } from '@/app/hooks/use-always-tick-in-app';
 import { TickIcon, TickButtonWithLabel } from './tick-icon';
 
@@ -30,9 +31,11 @@ interface TickButtonProps {
   tickBarActive?: boolean;
   /** Whether the current tick will be logged as a flash (no prior history, 1 try). */
   isFlash?: boolean;
+  /** The currently selected ascent type in the expanded tick bar. */
+  ascentType?: 'flash' | 'send' | 'attempt';
 }
 
-export const TickButton: React.FC<TickButtonProps> = ({ currentClimb, angle, boardDetails, onActivateTickBar, onTickSave, tickBarActive, isFlash }) => {
+export const TickButton: React.FC<TickButtonProps> = ({ currentClimb, angle, boardDetails, onActivateTickBar, onTickSave, tickBarActive, isFlash, ascentType }) => {
   const { logbook, isAuthenticated } = useBoardProvider();
   const [drawerVisible, setDrawerVisible] = useState(false);
   const { openAuthModal } = useAuthModal();
@@ -84,8 +87,6 @@ export const TickButton: React.FC<TickButtonProps> = ({ currentClimb, angle, boa
   const hasSuccessfulAscent = filteredLogbook.some((asc) => asc.is_ascent);
   const badgeCount = filteredLogbook.length;
 
-  const tickLabel = isFlash ? 'flash' : 'tick';
-
   const badge = (
     <MuiBadge
       badgeContent={badgeCount > 0 ? badgeCount : 0}
@@ -100,21 +101,32 @@ export const TickButton: React.FC<TickButtonProps> = ({ currentClimb, angle, boa
       <IconButton
         id="button-tick"
         onClick={showDrawer}
-        aria-label={tickBarActive ? (isFlash ? 'Log flash' : 'Log ascent') : 'Log ascent'}
+        aria-label={tickBarActive ? 'Save tick' : 'Log ascent'}
         sx={tickBarActive
           ? {
-              backgroundColor: isFlash ? themeTokens.colors.amber : themeTokens.colors.success,
-              color: isFlash ? themeTokens.neutral[900] : 'common.white',
+              backgroundColor: ascentType === 'attempt' ? themeTokens.colors.error
+                : ascentType === 'flash' || isFlash ? themeTokens.colors.amber
+                : themeTokens.colors.success,
+              color: ascentType === 'flash' || isFlash ? themeTokens.neutral[900] : 'common.white',
               transition: 'background-color 150ms ease, color 150ms ease',
-              '&:hover': { backgroundColor: isFlash ? themeTokens.colors.amber : themeTokens.colors.successHover },
+              '&:hover': {
+                backgroundColor: ascentType === 'attempt' ? themeTokens.colors.error
+                  : ascentType === 'flash' || isFlash ? themeTokens.colors.amber
+                  : themeTokens.colors.successHover,
+              },
             }
           : { opacity: themeTokens.opacity.subtle }
         }
       >
-        <TickIcon isFlash={!!isFlash && !!tickBarActive} />
+        {tickBarActive && ascentType === 'attempt'
+          ? <PersonFallingIcon />
+          : <TickIcon isFlash={tickBarActive ? !!(ascentType === 'flash' || isFlash) : false} />
+        }
       </IconButton>
     </MuiBadge>
   );
+
+  const tickLabel = ascentType === 'attempt' ? 'attempt' : (ascentType === 'flash' || isFlash) ? 'flash' : 'tick';
 
   return (
     <>

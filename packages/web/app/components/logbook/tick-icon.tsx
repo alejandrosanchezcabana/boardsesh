@@ -14,7 +14,7 @@ export const TickIcon: React.FC<TickIconProps> = ({ isFlash }) => {
 };
 
 interface TickButtonWithLabelProps {
-  label: 'flash' | 'tick' | 'attempt';
+  label: 'flash' | 'tick' | 'attempt' | 'save';
   children: React.ReactNode;
 }
 

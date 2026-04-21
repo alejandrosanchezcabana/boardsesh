@@ -4,46 +4,22 @@ import { themeTokens } from '@/app/theme/theme-config';
 
 export type ConfettiVariant = 'ascent' | 'attempt' | 'flash';
 
-let arcGlowCounter = 0;
-
-function buildArcPath(cx: number, cy: number, angle: number, startDist: number, length: number): string {
-  const startX = cx + Math.cos(angle) * startDist;
-  const startY = cy + Math.sin(angle) * startDist;
-  let d = `M ${startX.toFixed(1)} ${startY.toFixed(1)}`;
-
-  const segments = 4;
-  for (let s = 1; s <= segments; s++) {
-    const progress = s / segments;
-    const jitter = (Math.random() - 0.5) * 14;
-    const px = startX + Math.cos(angle) * length * progress + Math.sin(angle) * jitter;
-    const py = startY + Math.sin(angle) * length * progress - Math.cos(angle) * jitter;
-    d += ` L ${px.toFixed(1)} ${py.toFixed(1)}`;
-  }
-
-  return d;
-}
-
-function buildArcSvgPair(d: string, length: number, delay: string, filterId: string): string {
-  const segLen = Math.round(length * 0.4);
-  const totalLen = Math.round(length * 1.2);
-  return `
-    <path d="${d}" fill="none" stroke="#FFC107" stroke-width="2.5"
-          filter="url(#${filterId})"
-          stroke-dasharray="${segLen} ${totalLen}"
-          stroke-dashoffset="${segLen}"
-          style="animation: arc-crawl 0.25s ${delay}s ease-out forwards"/>
-    <path d="${d}" fill="none" stroke="white" stroke-width="1"
-          stroke-dasharray="${segLen} ${totalLen}"
-          stroke-dashoffset="${segLen}"
-          style="animation: arc-crawl 0.25s ${delay}s ease-out forwards"/>`;
+/**
+ * Generates a small lightning bolt polygon path string (relative coordinates)
+ * that can be placed in an SVG <path> with a transform for positioning/rotation.
+ * The bolt is ~24px tall, ~10px wide, pointing "up" (negative y direction).
+ */
+function buildBoltShape(): string {
+  // A zigzag lightning bolt polygon (~32px tall, ~16px wide)
+  return 'M 0,-16 L 6,-5 L 2,-5 L 7,5 L 3,5 L 8,16 L -1,4 L 3,4 L -3,-4 L 1,-4 L -4,-16 Z';
 }
 
 let activeOverlay: HTMLElement | null = null;
 
 /**
- * Fires short electric arcs radiating outward from the target element's
- * edge. The overlay is appended to document.body so it's independent of
- * React's render tree and survives component unmounts.
+ * Fires small solid lightning bolt shapes radiating outward from the target
+ * element's edge. The overlay is appended to document.body so it's independent
+ * of React's render tree and survives component unmounts.
  */
 function fireThunderstrike(targetElement: HTMLElement) {
   // Respect reduced motion preference
@@ -55,21 +31,34 @@ function fireThunderstrike(targetElement: HTMLElement) {
     activeOverlay = null;
   }
 
-  const filterId = `arc-glow-${++arcGlowCounter}`;
   const rect = targetElement.getBoundingClientRect();
   const cx = rect.left + rect.width / 2;
   const cy = rect.top + rect.height / 2;
   const buttonRadius = Math.max(rect.width, rect.height) / 2;
 
-  const arcCount = 8;
-  let paths = '';
-  for (let i = 0; i < arcCount; i++) {
-    const angle = (i / arcCount) * Math.PI * 2 + (Math.random() - 0.5) * 0.4;
-    const length = 45 + Math.random() * 35;
-    const startDist = buttonRadius + 2 + Math.random() * 4;
-    const d = buildArcPath(cx, cy, angle, startDist, length);
-    const delay = (Math.random() * 0.05).toFixed(3);
-    paths += buildArcSvgPair(d, length, delay, filterId);
+  const boltCount = 6;
+  const boltShape = buildBoltShape();
+  let bolts = '';
+
+  for (let i = 0; i < boltCount; i++) {
+    const angle = (i / boltCount) * Math.PI * 2 + (Math.random() - 0.5) * 0.3;
+    const startDist = buttonRadius + 4 + Math.random() * 4;
+    const x = cx + Math.cos(angle) * startDist;
+    const y = cy + Math.sin(angle) * startDist;
+    // Rotate bolt to point outward (angle in degrees, offset by 90 since bolt points up)
+    const rotDeg = (angle * 180 / Math.PI) + 90;
+    // Each bolt translates outward during animation
+    const tx = Math.cos(angle) * 35;
+    const ty = Math.sin(angle) * 35;
+    const delay = (Math.random() * 0.04).toFixed(3);
+
+    bolts += `
+      <g style="animation: bolt-fly 0.25s ${delay}s ease-out both"
+         transform="translate(${x.toFixed(1)}, ${y.toFixed(1)}) rotate(${rotDeg.toFixed(1)})"
+         data-tx="${tx.toFixed(1)}" data-ty="${ty.toFixed(1)}">
+        <path d="${boltShape}" fill="#FDE74C" stroke="#333" stroke-width="2"
+              stroke-linejoin="round"/>
+      </g>`;
   }
 
   const overlay = document.createElement('div');
@@ -80,26 +69,39 @@ function fireThunderstrike(targetElement: HTMLElement) {
     pointer-events: none;
   `;
   overlay.innerHTML = `
-    <svg width="100%" height="100%" style="position:absolute;inset:0">
-      <defs>
-        <filter id="${filterId}">
-          <feGaussianBlur stdDeviation="2" result="blur"/>
-          <feMerge>
-            <feMergeNode in="blur"/>
-            <feMergeNode in="SourceGraphic"/>
-          </feMerge>
-        </filter>
-      </defs>
-      ${paths}
+    <svg width="100%" height="100%" style="position:absolute;inset:0;overflow:visible">
+      ${bolts}
     </svg>
     <style>
-      @keyframes arc-crawl {
-        0% { stroke-dashoffset: ${Math.round(45 * 0.4)}; opacity: 1; }
-        70% { opacity: 0.8; }
-        100% { stroke-dashoffset: -${Math.round(80 * 1.2)}; opacity: 0; }
+      @keyframes bolt-fly {
+        0% { opacity: 0; transform: translate(var(--x), var(--y)) rotate(var(--r)) scale(0.5); }
+        20% { opacity: 1; transform: translate(var(--x), var(--y)) rotate(var(--r)) scale(1); }
+        100% { opacity: 0; transform: translate(calc(var(--x) + var(--tx)), calc(var(--y) + var(--ty))) rotate(var(--r)) scale(0.8); }
       }
     </style>
   `;
+
+  // Apply CSS custom properties to each bolt for the animation
+  const groups = overlay.querySelectorAll('g[data-tx]');
+  groups.forEach((g) => {
+    const el = g as HTMLElement;
+    const transform = el.getAttribute('transform') || '';
+    const txVal = el.dataset.tx || '0';
+    const tyVal = el.dataset.ty || '0';
+    // Extract translate and rotate from the transform attribute
+    const translateMatch = transform.match(/translate\(([\d.-]+),\s*([\d.-]+)\)/);
+    const rotateMatch = transform.match(/rotate\(([\d.-]+)\)/);
+    const xPos = translateMatch ? translateMatch[1] : '0';
+    const yPos = translateMatch ? translateMatch[2] : '0';
+    const rot = rotateMatch ? rotateMatch[1] : '0';
+    el.style.setProperty('--x', `${xPos}px`);
+    el.style.setProperty('--y', `${yPos}px`);
+    el.style.setProperty('--r', `${rot}deg`);
+    el.style.setProperty('--tx', `${txVal}px`);
+    el.style.setProperty('--ty', `${tyVal}px`);
+    // Remove the static transform since animation handles positioning
+    el.removeAttribute('transform');
+  });
 
   document.body.appendChild(overlay);
   activeOverlay = overlay;
@@ -133,7 +135,7 @@ function getOrigin(element?: HTMLElement | null): { x: number; y: number } {
  * Variant controls the style:
  * - 'ascent' (default): multi-colour celebratory confetti burst
  * - 'attempt': red-only confetti, shorter range
- * - 'flash': electric arcs radiate from the origin element
+ * - 'flash': lightning bolt shapes radiate from the origin element
  */
 export function useConfetti() {
   const fireConfetti = useCallback((originElement?: HTMLElement | null, variant: ConfettiVariant = 'ascent') => {
