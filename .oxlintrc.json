@@ -22,7 +22,8 @@
     "@typescript-eslint/no-floating-promises": "error",
     "@typescript-eslint/no-misused-promises": ["error", { "checksVoidReturn": false }],
     "@typescript-eslint/consistent-type-imports": "error",
-    "@typescript-eslint/no-unnecessary-type-assertion": "error"
+    "@typescript-eslint/no-unnecessary-type-assertion": "error",
+    "no-console": ["error", { "allow": ["warn", "error", "info"] }]
   },
   "ignorePatterns": [
     "dist/**",

@@ -585,7 +585,7 @@ export async function warmPopularConfigsCache(): Promise<void> {
       // Try to acquire lock — only the winning node runs the query
       const lockAcquired = await publisher.set(REDIS_LOCK_KEY, '1', 'EX', REDIS_LOCK_TTL_SECONDS, 'NX');
       if (!lockAcquired) {
-        console.log('[PopularConfigs] Another node is refreshing the cache, skipping');
+        console.info('[PopularConfigs] Another node is refreshing the cache, skipping');
         return;
       }
       // Winning node: delete stale cache so getPopularConfigs() runs the SQL query
@@ -595,10 +595,10 @@ export async function warmPopularConfigsCache(): Promise<void> {
     }
   }
 
-  console.log('[PopularConfigs] Refreshing cache...');
+  console.info('[PopularConfigs] Refreshing cache...');
   try {
     const configs = await getPopularConfigs();
-    console.log(`[PopularConfigs] Cache warmed with ${configs.length} configs`);
+    console.info(`[PopularConfigs] Cache warmed with ${configs.length} configs`);
   } catch (err) {
     console.error('[PopularConfigs] Cache warm-up failed:', err);
   }

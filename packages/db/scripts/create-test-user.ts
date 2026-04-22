@@ -14,7 +14,7 @@ const TEST_PASSWORD_HASH = '$2b$12$ICPPBhOLDExMf2JX88WhCOz8wbvGHn0VuA5MI1F1bm1kD
 async function createTestUser() {
   const databaseUrl = getScriptDatabaseUrl();
   const dbHost = databaseUrl.split('@')[1]?.split('/')[0] || 'unknown';
-  console.log(`Creating test user on: ${dbHost}`);
+  console.info(`Creating test user on: ${dbHost}`);
 
   const { db, close } = createScriptDb(databaseUrl);
 
@@ -48,7 +48,7 @@ async function createTestUser() {
       })
       .onConflictDoNothing();
 
-    console.log(`Test user created: ${TEST_USER_EMAIL} / test`);
+    console.info(`Test user created: ${TEST_USER_EMAIL} / test`);
     await close();
     process.exit(0);
   } catch (error) {

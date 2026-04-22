@@ -224,5 +224,5 @@ export async function endSession(
   // Remove from memory
   sessionsMap.delete(sessionId);
 
-  console.log(`[RoomManager] Session ${sessionId} explicitly ended`);
+  console.info(`[RoomManager] Session ${sessionId} explicitly ended`);
 }

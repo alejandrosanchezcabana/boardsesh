@@ -117,7 +117,7 @@ export async function joinSession(
   if (graceTimer) {
     clearTimeout(graceTimer);
     sessionGraceTimers.delete(sessionId);
-    console.log(`[RoomManager] Cancelled grace timer for session ${sessionId} (client reconnecting)`);
+    console.info(`[RoomManager] Cancelled grace timer for session ${sessionId} (client reconnecting)`);
   }
 
   // Create or get session in memory - with lazy restore
@@ -125,7 +125,7 @@ export async function joinSession(
     if (redisStore) {
       isNewSession = await restoreSessionWithLock(sessionId, sessionsMap, redisStore, getSessionById);
       if (isNewSession) {
-        console.log(
+        console.info(
           `[RoomManager] Creating new session ${sessionId} with ${initialQueue?.length || 0} initial queue items`,
         );
       }
@@ -134,7 +134,7 @@ export async function joinSession(
       const pgSession = await getSessionById(sessionId);
       if (!pgSession || pgSession.status === 'ended') {
         isNewSession = true;
-        console.log(
+        console.info(
           `[RoomManager] Creating new session ${sessionId} with ${initialQueue?.length || 0} initial queue items`,
         );
       }
@@ -174,7 +174,7 @@ export async function joinSession(
 
   // Initialize queue state for new sessions with provided initial queue
   if (isNewSession && initialQueue && initialQueue.length > 0) {
-    console.log(`[RoomManager] Initializing queue for new session ${sessionId} with ${initialQueue.length} items`);
+    console.info(`[RoomManager] Initializing queue for new session ${sessionId} with ${initialQueue.length} items`);
     await updateQueueStateImmediate(sessionId, initialQueue, initialCurrentClimb || null, 0);
   }
 
@@ -242,7 +242,7 @@ export async function leaveSession(
         const currentClients = sessionsMap.get(sessionId);
         if (currentClients && currentClients.size === 0) {
           sessionsMap.delete(sessionId);
-          console.log(`[RoomManager] Session ${sessionId} removed from memory after grace period`);
+          console.info(`[RoomManager] Session ${sessionId} removed from memory after grace period`);
         }
         sessionGraceTimers.delete(sessionId);
       }, SESSION_GRACE_PERIOD_MS);
@@ -255,7 +255,7 @@ export async function leaveSession(
         if (!distributedState) {
           await redisStore.saveUsers(sessionId, []);
         }
-        console.log(`[RoomManager] Session ${sessionId} marked inactive - grace period started (60s)`);
+        console.info(`[RoomManager] Session ${sessionId} marked inactive - grace period started (60s)`);
       }
 
       // Await pending session insert for brand-new sessions.
@@ -313,7 +313,7 @@ export async function removeClient(
     try {
       const result = await distributedState.removeConnection(connectionId);
       if (result.newLeaderId) {
-        console.log(`[RoomManager] New leader ${result.newLeaderId.slice(0, 8)} elected after client removal`);
+        console.info(`[RoomManager] New leader ${result.newLeaderId.slice(0, 8)} elected after client removal`);
       }
     } catch (err) {
       distributedStateCleanedUp = false;

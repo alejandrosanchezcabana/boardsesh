@@ -33,7 +33,7 @@ const internalSyncSharedData = async (
   },
   recursionCount = 0,
 ): Promise<MergedSyncResult> => {
-  console.log(`Recursion count: ${recursionCount}`);
+  console.info(`Recursion count: ${recursionCount}`);
   if (recursionCount >= 100) {
     console.warn('Maximum recursion depth reached for shared sync');
     return { ...previousResults, complete: true };
@@ -65,11 +65,11 @@ const internalSyncSharedData = async (
   }
 
   if (!currentResult.complete) {
-    console.log(`Sync not complete, recursing. Current recursion count: ${recursionCount}`);
+    console.info(`Sync not complete, recursing. Current recursion count: ${recursionCount}`);
     return internalSyncSharedData(board_name, token, mergedResults, recursionCount + 1);
   }
 
-  console.log(`Sync complete. Returning merged results.`, currentResult);
+  console.info(`Sync complete. Returning merged results.`, currentResult);
   return mergedResults;
 };
 
@@ -171,7 +171,7 @@ async function createSetterSyncNotifications(boardName: AuroraBoardName, newClim
 
       if (notificationValues.length > 0) {
         await db.insert(notifications).values(notificationValues);
-        console.log(
+        console.info(
           `[SharedSync] Created ${notificationValues.length} notifications for setter "${setterUsername}" (${climbs.length} new climbs on ${boardName})`,
         );
       }
@@ -192,7 +192,7 @@ export async function GET(request: Request, props: { params: Promise<SharedSyncR
     }
     const board_name = boardNameParam as AuroraBoardName;
 
-    console.log(`Starting shared sync for ${board_name}`);
+    console.info(`Starting shared sync for ${board_name}`);
 
     // Auth check - always require valid CRON_SECRET
     const authHeader = request.headers.get('authorization');

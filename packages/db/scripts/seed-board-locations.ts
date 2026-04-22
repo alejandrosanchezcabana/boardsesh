@@ -412,7 +412,7 @@ async function seedBoardLocations() {
   const { db, close } = createScriptDb(databaseUrl);
 
   try {
-    console.log('Starting board location seed...');
+    console.info('Starting board location seed...');
 
     // Step 1: Ensure system user exists
     const [existingUser] = await db.select({ id: users.id }).from(users).where(eq(users.id, SYSTEM_USER_ID)).limit(1);
@@ -423,24 +423,24 @@ async function seedBoardLocations() {
         email: SYSTEM_USER_EMAIL,
         name: 'Boardsesh',
       });
-      console.log('Created system user');
+      console.info('Created system user');
     }
 
     // Step 2: Build all board records
-    console.log('Loading Kilter data...');
+    console.info('Loading Kilter data...');
     const kilterRecords = buildKilterRecords();
-    console.log(`  ${kilterRecords.length} Kilter boards`);
+    console.info(`  ${kilterRecords.length} Kilter boards`);
 
-    console.log('Loading Tension data...');
+    console.info('Loading Tension data...');
     const tensionRecords = buildTensionRecords();
-    console.log(`  ${tensionRecords.length} Tension boards`);
+    console.info(`  ${tensionRecords.length} Tension boards`);
 
-    console.log('Loading MoonBoard data...');
+    console.info('Loading MoonBoard data...');
     const moonboardRecords = buildMoonboardRecords();
-    console.log(`  ${moonboardRecords.length} MoonBoard boards`);
+    console.info(`  ${moonboardRecords.length} MoonBoard boards`);
 
     const allRecords = [...kilterRecords, ...tensionRecords, ...moonboardRecords];
-    console.log(`Total: ${allRecords.length} boards to seed`);
+    console.info(`Total: ${allRecords.length} boards to seed`);
 
     // Step 3: Create gym entries (deduplicated by gymSourceKey)
     const gymsBySource = new Map<string, BoardRecord>();
@@ -450,7 +450,7 @@ async function seedBoardLocations() {
       }
     }
 
-    console.log(`Creating ${gymsBySource.size} gym entries...`);
+    console.info(`Creating ${gymsBySource.size} gym entries...`);
     const gymIdMap = new Map<string, number>();
     const gymEntries = [...gymsBySource.entries()];
 
@@ -490,13 +490,13 @@ async function seedBoardLocations() {
         }
       }
     }
-    console.log(`  Created/updated ${gymIdMap.size} gyms`);
+    console.info(`  Created/updated ${gymIdMap.size} gyms`);
 
     // Step 4: Upsert board entries using raw SQL to target the uuid unique
     // constraint specifically. The ORM's onConflictDoNothing would also trigger
     // on the (ownerId, boardType, layoutId, sizeId, setIds) partial unique index,
     // silently dropping boards with common configs across different gyms.
-    console.log('Upserting board entries...');
+    console.info('Upserting board entries...');
     let upserted = 0;
 
     for (let i = 0; i < allRecords.length; i += BATCH_SIZE) {
@@ -535,13 +535,13 @@ async function seedBoardLocations() {
       }
 
       if ((i + BATCH_SIZE) % 200 === 0 || i + BATCH_SIZE >= allRecords.length) {
-        console.log(`  Progress: ${Math.min(i + BATCH_SIZE, allRecords.length)}/${allRecords.length}`);
+        console.info(`  Progress: ${Math.min(i + BATCH_SIZE, allRecords.length)}/${allRecords.length}`);
       }
     }
 
-    console.log(`\nSeed complete:`);
-    console.log(`  Upserted: ${upserted} boards`);
-    console.log(`  Total gyms: ${gymIdMap.size}`);
+    console.info(`\nSeed complete:`);
+    console.info(`  Upserted: ${upserted} boards`);
+    console.info(`  Total gyms: ${gymIdMap.size}`);
   } finally {
     await close();
   }

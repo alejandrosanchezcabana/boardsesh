@@ -65,9 +65,9 @@ class PubSub {
       this.redisAdapter = createRedisPubSubAdapter(publisher, subscriber);
       this.setupRedisMessageHandlers();
 
-      console.log(`[PubSub] Redis mode enabled (instance: ${this.redisAdapter.getInstanceId()})`);
+      console.info(`[PubSub] Redis mode enabled (instance: ${this.redisAdapter.getInstanceId()})`);
     } else {
-      console.log('[PubSub] Local-only mode (single instance - no REDIS_URL configured)');
+      console.info('[PubSub] Local-only mode (single instance - no REDIS_URL configured)');
     }
 
     this.initialized = true;

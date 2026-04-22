@@ -113,7 +113,7 @@ export function useSessionSubscriptions({
           triggerResyncRef.current();
         }
       } else {
-        if (DEBUG) console.log('[PersistentSession] State hash verification passed');
+        if (DEBUG) console.info('[PersistentSession] State hash verification passed');
       }
     }, 60000);
 
@@ -170,7 +170,7 @@ export function useSessionSubscriptions({
   // Trigger a resync with the server
   const triggerResync = useCallback(() => {
     if (triggerResyncRef.current) {
-      console.log('[PersistentSession] Manual resync triggered');
+      console.info('[PersistentSession] Manual resync triggered');
       triggerResyncRef.current();
     }
   }, [triggerResyncRef]);

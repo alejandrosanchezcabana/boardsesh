@@ -663,7 +663,7 @@ const PlayViewDrawer: React.FC<PlayViewDrawerProps> = ({ activeDrawer, setActive
         frames: currentClimb.frames,
         mirrored: !!currentClimb.mirrored,
       }).catch((e: unknown) => {
-        if (process.env.NODE_ENV === 'development') console.debug('Pre-warm render failed:', e);
+        if (process.env.NODE_ENV === 'development') console.info('Pre-warm render failed:', e);
       });
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps -- see comment above

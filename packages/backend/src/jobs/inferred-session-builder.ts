@@ -451,7 +451,7 @@ export async function adoptRecentTicksForSession(
       }
     }
 
-    console.log(`[adoptRecentTicks] Adopted ${tickUuids.length} tick(s) into session ${sessionId} for user ${userId}`);
+    console.info(`[adoptRecentTicks] Adopted ${tickUuids.length} tick(s) into session ${sessionId} for user ${userId}`);
 
     return tickUuids.length;
   });

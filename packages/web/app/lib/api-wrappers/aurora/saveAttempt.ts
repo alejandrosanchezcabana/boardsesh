@@ -33,7 +33,6 @@ export async function saveAttempt(
 
   // Use the web host endpoint with POST method
   const url = `${WEB_HOSTS[board]}/bids/save`;
-  console.log(`Saving attempt to: ${url}`);
 
   const response = await fetch(url, {
     method: 'POST',
@@ -44,9 +43,6 @@ export async function saveAttempt(
     },
     body: requestBody.toString(),
   });
-
-  console.log(`Save attempt response status: ${response.status}`);
-  console.log(`Save attempt response headers:`, Object.fromEntries(response.headers.entries()));
 
   if (!response.ok) {
     const responseClone = response.clone();
@@ -72,7 +68,6 @@ export async function saveAttempt(
   let responseData: unknown;
   try {
     const responseText = await response.text();
-    console.log(`Save attempt response body: ${responseText}`);
 
     if (!responseText || responseText.trim() === '') {
       throw new Error('Empty response from API');

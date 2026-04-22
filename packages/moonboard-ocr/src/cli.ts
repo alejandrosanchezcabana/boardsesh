@@ -31,7 +31,7 @@ program
       const stat = await fs.stat(inputPath);
       let imagePaths: string[] = [];
 
-      console.log(`Processing: ${input}`);
+      console.info(`Processing: ${input}`);
 
       if (stat.isDirectory()) {
         // Process all images in directory
@@ -40,7 +40,7 @@ program
           .filter((f) => isImageFile(f))
           .map((f) => path.join(inputPath, f))
           .sort();
-        console.log(`Found ${imagePaths.length} image files`);
+        console.info(`Found ${imagePaths.length} image files`);
       } else if (isImageFile(inputPath)) {
         // Single image
         imagePaths = [inputPath];
@@ -55,20 +55,20 @@ program
       }
 
       // Parse all images
-      console.log('Parsing screenshots...');
+      console.info('Parsing screenshots...');
       const { climbs, errors } = await parseMultipleScreenshots(imagePaths, (current, total, file) => {
         process.stdout.write(`\rProcessing: ${current}/${total} - ${file}`);
       });
-      console.log(''); // New line after progress
+      console.info(''); // New line after progress
 
       // Report errors
       if (errors.length > 0) {
-        console.log(`\nWarnings (${errors.length} files had errors):`);
+        console.info(`\nWarnings (${errors.length} files had errors):`);
         for (const err of errors.slice(0, 10)) {
-          console.log(`  - ${err.file}: ${err.error}`);
+          console.info(`  - ${err.file}: ${err.error}`);
         }
         if (errors.length > 10) {
-          console.log(`  ... and ${errors.length - 10} more`);
+          console.info(`  ... and ${errors.length - 10} more`);
         }
       }
 
@@ -76,14 +76,14 @@ program
       let finalClimbs = climbs;
       if (options.dedupe !== false && climbs.length > 1) {
         finalClimbs = deduplicateClimbs(climbs);
-        console.log(`\nDeduplicated: ${climbs.length} -> ${finalClimbs.length} unique climbs`);
+        console.info(`\nDeduplicated: ${climbs.length} -> ${finalClimbs.length} unique climbs`);
       }
 
       // Write output
       const outputPath = path.resolve(options.output);
       await fs.writeFile(outputPath, JSON.stringify(finalClimbs, null, 2));
-      console.log(`\nOutput written to: ${outputPath}`);
-      console.log(`Total climbs extracted: ${finalClimbs.length}`);
+      console.info(`\nOutput written to: ${outputPath}`);
+      console.info(`Total climbs extracted: ${finalClimbs.length}`);
     } catch (error) {
       console.error('Error:', error instanceof Error ? error.message : error);
       process.exit(1);
@@ -101,14 +101,14 @@ program
       const content = await fs.readFile(inputPath, 'utf-8');
       const climbs: MoonBoardClimb[] = JSON.parse(content);
 
-      console.log(`Loaded ${climbs.length} climbs from ${input}`);
+      console.info(`Loaded ${climbs.length} climbs from ${input}`);
 
       const dedupedClimbs = deduplicateClimbs(climbs);
-      console.log(`Deduplicated to ${dedupedClimbs.length} unique climbs`);
+      console.info(`Deduplicated to ${dedupedClimbs.length} unique climbs`);
 
       const outputPath = options.output ? path.resolve(options.output) : inputPath;
       await fs.writeFile(outputPath, JSON.stringify(dedupedClimbs, null, 2));
-      console.log(`Output written to: ${outputPath}`);
+      console.info(`Output written to: ${outputPath}`);
     } catch (error) {
       console.error('Error:', error instanceof Error ? error.message : error);
       process.exit(1);
@@ -122,39 +122,39 @@ program
   .action(async (image: string) => {
     try {
       const imagePath = path.resolve(image);
-      console.log(`Testing: ${imagePath}\n`);
+      console.info(`Testing: ${imagePath}\n`);
 
       const result = await parseScreenshot(imagePath);
 
       if (result.success && result.climb) {
-        console.log('=== Parsed Climb Data ===');
-        console.log(`Name: ${result.climb.name}${result.climb.isBenchmark ? ' [BENCHMARK]' : ''}`);
-        console.log(`Setter: ${result.climb.setter}`);
-        console.log(`Angle: ${result.climb.angle}°`);
-        console.log(`User Grade: ${result.climb.userGrade}`);
-        console.log(`Setter Grade: ${result.climb.setterGrade}`);
-        console.log(`Benchmark: ${result.climb.isBenchmark ? 'Yes' : 'No'}`);
-        console.log('\n=== Holds ===');
-        console.log(`Start: ${result.climb.holds.start.join(', ') || 'None detected'}`);
-        console.log(`Hand: ${result.climb.holds.hand.join(', ') || 'None detected'}`);
-        console.log(`Finish: ${result.climb.holds.finish.join(', ') || 'None detected'}`);
+        console.info('=== Parsed Climb Data ===');
+        console.info(`Name: ${result.climb.name}${result.climb.isBenchmark ? ' [BENCHMARK]' : ''}`);
+        console.info(`Setter: ${result.climb.setter}`);
+        console.info(`Angle: ${result.climb.angle}°`);
+        console.info(`User Grade: ${result.climb.userGrade}`);
+        console.info(`Setter Grade: ${result.climb.setterGrade}`);
+        console.info(`Benchmark: ${result.climb.isBenchmark ? 'Yes' : 'No'}`);
+        console.info('\n=== Holds ===');
+        console.info(`Start: ${result.climb.holds.start.join(', ') || 'None detected'}`);
+        console.info(`Hand: ${result.climb.holds.hand.join(', ') || 'None detected'}`);
+        console.info(`Finish: ${result.climb.holds.finish.join(', ') || 'None detected'}`);
 
         if (result.warnings.length > 0) {
-          console.log('\n=== Warnings ===');
+          console.info('\n=== Warnings ===');
           for (const warning of result.warnings) {
-            console.log(`- ${warning}`);
+            console.info(`- ${warning}`);
           }
         }
 
-        console.log('\n=== Raw JSON ===');
-        console.log(JSON.stringify(result.climb, null, 2));
+        console.info('\n=== Raw JSON ===');
+        console.info(JSON.stringify(result.climb, null, 2));
       } else {
-        console.log('=== Parse Failed ===');
-        console.log(`Error: ${result.error}`);
+        console.info('=== Parse Failed ===');
+        console.info(`Error: ${result.error}`);
         if (result.warnings.length > 0) {
-          console.log('\nWarnings:');
+          console.info('\nWarnings:');
           for (const warning of result.warnings) {
-            console.log(`- ${warning}`);
+            console.info(`- ${warning}`);
           }
         }
       }

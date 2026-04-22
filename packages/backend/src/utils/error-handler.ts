@@ -76,7 +76,7 @@ export function logSecurityEvent(event: {
   };
 
   // Log to console in structured format
-  console.log('[SECURITY]', JSON.stringify(logEntry));
+  console.info('[SECURITY]', JSON.stringify(logEntry));
 
   // In production, this could be sent to a security monitoring service
 }

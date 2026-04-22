@@ -29,17 +29,17 @@ export class EventBroker {
     // Create consumer group (idempotent) - uses publisher (non-blocking)
     try {
       await this.publisher.xgroup('CREATE', STREAM_KEY, CONSUMER_GROUP, '$', 'MKSTREAM');
-      console.log(`[EventBroker] Created consumer group "${CONSUMER_GROUP}" on "${STREAM_KEY}"`);
+      console.info(`[EventBroker] Created consumer group "${CONSUMER_GROUP}" on "${STREAM_KEY}"`);
     } catch (error: unknown) {
       // BUSYGROUP means group already exists, which is fine
       if (error instanceof Error && error.message.includes('BUSYGROUP')) {
-        console.log(`[EventBroker] Consumer group "${CONSUMER_GROUP}" already exists`);
+        console.info(`[EventBroker] Consumer group "${CONSUMER_GROUP}" already exists`);
       } else {
         throw error;
       }
     }
 
-    console.log(`[EventBroker] Initialized (consumer: ${this.consumerName})`);
+    console.info(`[EventBroker] Initialized (consumer: ${this.consumerName})`);
   }
 
   isInitialized(): boolean {
@@ -84,7 +84,7 @@ export class EventBroker {
     }
 
     this.running = true;
-    console.log(`[EventBroker] Starting consumer "${this.consumerName}"`);
+    console.info(`[EventBroker] Starting consumer "${this.consumerName}"`);
 
     const runLoop = async () => {
       let consecutiveErrors = 0;
@@ -137,7 +137,7 @@ export class EventBroker {
       // xautoclaim returns [nextStartId, claimedEntries, ...]
       const entries = result[1] as Array<[string, string[]]>;
       if (entries && entries.length > 0) {
-        console.log(`[EventBroker] Reclaimed ${entries.length} pending events`);
+        console.info(`[EventBroker] Reclaimed ${entries.length} pending events`);
         for (const [messageId, fields] of entries) {
           const event = this.parseEvent(fields);
           if (event) {
@@ -232,6 +232,6 @@ export class EventBroker {
       clearTimeout(this.consumerTimeout);
       this.consumerTimeout = null;
     }
-    console.log(`[EventBroker] Consumer "${this.consumerName}" shut down`);
+    console.info(`[EventBroker] Consumer "${this.consumerName}" shut down`);
   }
 }

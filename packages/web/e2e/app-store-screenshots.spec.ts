@@ -146,7 +146,7 @@ test.describe('App Store Screenshots', () => {
 
     if (!drawerOpened) {
       // Fallback: screenshot the queue bar with the climb loaded - still useful
-      console.log('Party mode button not found on production, capturing queue bar instead');
+      console.info('Party mode button not found on production, capturing queue bar instead');
     }
 
     await page.screenshot({ path: `${SCREENSHOT_DIR}/06-party-mode.png` });

@@ -16,10 +16,10 @@ program
   .action(async (options) => {
     const runner = new SyncRunner({
       onLog: options.verbose
-        ? console.log
+        ? console.info
         : (msg: string) => {
             if (msg.includes('✓') || msg.includes('✗') || msg.includes('Found')) {
-              console.log(msg);
+              console.info(msg);
             }
           },
       onError: (error, context) => {
@@ -28,18 +28,18 @@ program
     });
 
     try {
-      console.log('Starting Aurora sync for all users...\n');
+      console.info('Starting Aurora sync for all users...\n');
       const result = await runner.syncAllUsers();
 
-      console.log('\n=== Sync Summary ===');
-      console.log(`Total users: ${result.total}`);
-      console.log(`Successful: ${result.successful}`);
-      console.log(`Failed: ${result.failed}`);
+      console.info('\n=== Sync Summary ===');
+      console.info(`Total users: ${result.total}`);
+      console.info(`Successful: ${result.successful}`);
+      console.info(`Failed: ${result.failed}`);
 
       if (result.errors.length > 0) {
-        console.log('\nErrors:');
+        console.info('\nErrors:');
         result.errors.forEach((err) => {
-          console.log(`  - ${err.userId} (${err.boardType}): ${err.error}`);
+          console.info(`  - ${err.userId} (${err.boardType}): ${err.error}`);
         });
       }
 
@@ -59,16 +59,16 @@ program
   .option('-v, --verbose', 'Enable verbose logging')
   .action(async (userId: string, options) => {
     const runner = new SyncRunner({
-      onLog: options.verbose ? console.log : () => {},
+      onLog: options.verbose ? console.info : () => {},
       onError: (error, _context) => {
         console.error(`Error:`, error.message);
       },
     });
 
     try {
-      console.log(`Syncing user ${userId} for ${options.board}...`);
+      console.info(`Syncing user ${userId} for ${options.board}...`);
       await runner.syncUser(userId, options.board);
-      console.log('Sync completed successfully!');
+      console.info('Sync completed successfully!');
       await runner.close();
       process.exit(0);
     } catch (error) {
@@ -103,22 +103,22 @@ program
         })
         .from(auroraCredentials);
 
-      console.log('\n=== Aurora Credentials ===\n');
+      console.info('\n=== Aurora Credentials ===\n');
 
       if (credentials.length === 0) {
-        console.log('No credentials found.');
+        console.info('No credentials found.');
       } else {
         credentials.forEach((cred) => {
           const status = cred.syncStatus === 'active' ? '✓' : cred.syncStatus === 'error' ? '✗' : '○';
           const lastSync = cred.lastSyncAt ? new Date(cred.lastSyncAt).toISOString() : 'never';
-          console.log(`${status} ${cred.userId} (${cred.boardType})`);
-          console.log(`    Aurora ID: ${cred.auroraUserId}`);
-          console.log(`    Status: ${cred.syncStatus}`);
-          console.log(`    Last sync: ${lastSync}`);
+          console.info(`${status} ${cred.userId} (${cred.boardType})`);
+          console.info(`    Aurora ID: ${cred.auroraUserId}`);
+          console.info(`    Status: ${cred.syncStatus}`);
+          console.info(`    Last sync: ${lastSync}`);
           if (cred.syncError) {
-            console.log(`    Error: ${cred.syncError}`);
+            console.info(`    Error: ${cred.syncError}`);
           }
-          console.log('');
+          console.info('');
         });
       }
 

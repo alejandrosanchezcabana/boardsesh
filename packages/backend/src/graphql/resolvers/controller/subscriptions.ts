@@ -86,7 +86,7 @@ function climbToLedCommands(
     });
   }
 
-  console.log(`[Controller] Converted ${Object.keys(litUpHoldsMap).length} holds to ${commands.length} LED commands`);
+  console.info(`[Controller] Converted ${Object.keys(litUpHoldsMap).length} holds to ${commands.length} LED commands`);
   return commands;
 }
 
@@ -126,7 +126,7 @@ export const controllerSubscriptions = {
       // This is used by the ESP32 display to look up the board image config
       const boardPath = `${controller.boardName}/${controller.layoutId}/${controller.sizeId}/${controller.setIds}`;
 
-      console.log(
+      console.info(
         `[Controller] Controller ${controller.id} subscribed to session ${sessionId} (boardPath: ${boardPath})`,
       );
 

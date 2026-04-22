@@ -19,6 +19,6 @@ export function logMutationMetrics(
   if (rounded > SLOW_MUTATION_THRESHOLD_MS) {
     console.warn(`[MutationMetrics] SLOW ${operation}: ${rounded}ms`, JSON.stringify(payload));
   } else if (process.env.NODE_ENV === 'development') {
-    console.log(`[MutationMetrics] ${operation}: ${rounded}ms`, JSON.stringify(payload));
+    console.info(`[MutationMetrics] ${operation}: ${rounded}ms`, JSON.stringify(payload));
   }
 }

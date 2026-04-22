@@ -94,7 +94,7 @@ export function useQueueEventSubscription({
   useEffect(() => {
     if (!needsResync || !isPersistentSessionActive) return;
 
-    console.log('[QueueContext] Corrupted data detected, triggering resync');
+    console.info('[QueueContext] Corrupted data detected, triggering resync');
     dispatch({ type: 'CLEAR_RESYNC_FLAG' });
     persistentSession.triggerResync();
   }, [needsResync, isPersistentSessionActive, persistentSession, dispatch]);

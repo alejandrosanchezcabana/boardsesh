@@ -160,8 +160,8 @@ async function importMoonBoardProblems() {
 
   const databaseUrl = getScriptDatabaseUrl();
   const dbHost = databaseUrl.split('@')[1]?.split('/')[0] || 'unknown';
-  console.log(`🔄 Importing MoonBoard problems to: ${dbHost}`);
-  console.log(`📂 Reading dump from: ${dumpPath}`);
+  console.info(`🔄 Importing MoonBoard problems to: ${dbHost}`);
+  console.info(`📂 Reading dump from: ${dumpPath}`);
 
   const { db, close } = createScriptDb(databaseUrl);
 
@@ -178,16 +178,16 @@ async function importMoonBoardProblems() {
         continue;
       }
 
-      console.log(`\n📖 Processing: ${fileConfig.filename}`);
+      console.info(`\n📖 Processing: ${fileConfig.filename}`);
       const raw = fs.readFileSync(filePath, 'utf-8');
       const dump: DumpFile = JSON.parse(raw);
-      console.log(`   Total problems in file: ${dump.data.length}`);
+      console.info(`   Total problems in file: ${dump.data.length}`);
 
       // Filter out deleted problems
       const problems = dump.data.filter((p) => p.dateDeleted === null);
       const deleted = dump.data.length - problems.length;
       if (deleted > 0) {
-        console.log(`   Skipping ${deleted} deleted problems`);
+        console.info(`   Skipping ${deleted} deleted problems`);
         totalSkipped += deleted;
       }
 
@@ -264,11 +264,11 @@ async function importMoonBoardProblems() {
         }
       }
 
-      if (skippedGrade > 0) console.log(`   Skipped ${skippedGrade} problems with unknown grade`);
-      if (skippedLayout > 0) console.log(`   Skipped ${skippedLayout} problems with unknown holdsetup`);
+      if (skippedGrade > 0) console.info(`   Skipped ${skippedGrade} problems with unknown grade`);
+      if (skippedLayout > 0) console.info(`   Skipped ${skippedLayout} problems with unknown holdsetup`);
 
       // Batch insert climbs
-      console.log(`   Inserting ${climbRecords.length} climbs...`);
+      console.info(`   Inserting ${climbRecords.length} climbs...`);
       for (let i = 0; i < climbRecords.length; i += BATCH_SIZE) {
         const batch = climbRecords.slice(i, i + BATCH_SIZE);
         await db.insert(boardClimbs).values(batch).onConflictDoNothing();
@@ -276,11 +276,11 @@ async function importMoonBoardProblems() {
           process.stdout.write(`\r   Climbs: ${Math.min(i + BATCH_SIZE, climbRecords.length)}/${climbRecords.length}`);
         }
       }
-      console.log('');
+      console.info('');
       totalClimbs += climbRecords.length;
 
       // Batch insert stats (upsert to refresh on re-run)
-      console.log(`   Inserting ${statsRecords.length} stats...`);
+      console.info(`   Inserting ${statsRecords.length} stats...`);
       for (let i = 0; i < statsRecords.length; i += BATCH_SIZE) {
         const batch = statsRecords.slice(i, i + BATCH_SIZE);
         await db
@@ -300,11 +300,11 @@ async function importMoonBoardProblems() {
           process.stdout.write(`\r   Stats: ${Math.min(i + BATCH_SIZE, statsRecords.length)}/${statsRecords.length}`);
         }
       }
-      console.log('');
+      console.info('');
       totalStats += statsRecords.length;
 
       // Batch insert holds
-      console.log(`   Inserting ${holdsRecords.length} holds...`);
+      console.info(`   Inserting ${holdsRecords.length} holds...`);
       for (let i = 0; i < holdsRecords.length; i += BATCH_SIZE) {
         const batch = holdsRecords.slice(i, i + BATCH_SIZE);
         await db.insert(boardClimbHolds).values(batch).onConflictDoNothing();
@@ -312,15 +312,15 @@ async function importMoonBoardProblems() {
           process.stdout.write(`\r   Holds: ${Math.min(i + BATCH_SIZE, holdsRecords.length)}/${holdsRecords.length}`);
         }
       }
-      console.log('');
+      console.info('');
       totalHolds += holdsRecords.length;
     }
 
-    console.log('\n✅ Import completed!');
-    console.log(`   Total climbs: ${totalClimbs}`);
-    console.log(`   Total stats: ${totalStats}`);
-    console.log(`   Total holds: ${totalHolds}`);
-    console.log(`   Total skipped (deleted): ${totalSkipped}`);
+    console.info('\n✅ Import completed!');
+    console.info(`   Total climbs: ${totalClimbs}`);
+    console.info(`   Total stats: ${totalStats}`);
+    console.info(`   Total holds: ${totalHolds}`);
+    console.info(`   Total skipped (deleted): ${totalSkipped}`);
 
     await close();
     process.exit(0);

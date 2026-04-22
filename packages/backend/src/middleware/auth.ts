@@ -150,7 +150,7 @@ export async function validateControllerApiKey(apiKey: string): Promise<Controll
       return null;
     }
 
-    console.log(`[Auth] Authenticated controller: ${controller.id}`);
+    console.info(`[Auth] Authenticated controller: ${controller.id}`);
     return {
       controllerId: controller.id,
       controllerApiKey: apiKey,

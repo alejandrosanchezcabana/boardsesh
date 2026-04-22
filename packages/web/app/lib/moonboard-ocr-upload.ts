@@ -53,9 +53,9 @@ export async function uploadOcrTestData(
 
     const result = await response.json();
     if (result.skipped) {
-      console.log('[OCR Upload] Upload skipped:', result.reason);
+      console.info('[OCR Upload] Upload skipped:', result.reason);
     } else {
-      console.log('[OCR Upload] Successfully uploaded test data');
+      console.info('[OCR Upload] Successfully uploaded test data');
     }
   } catch (error) {
     // Fire-and-forget: log but don't throw

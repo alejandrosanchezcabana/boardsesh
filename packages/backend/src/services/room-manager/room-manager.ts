@@ -67,13 +67,13 @@ class RoomManager {
   async initialize(redis?: Redis): Promise<void> {
     if (redis) {
       this.redisStore = new RedisSessionStore(redis);
-      console.log('[RoomManager] Redis session storage enabled');
+      console.info('[RoomManager] Redis session storage enabled');
 
       this.distributedState = initializeDistributedState(redis);
       this.distributedState.start();
-      console.log('[RoomManager] Distributed state enabled for multi-instance support');
+      console.info('[RoomManager] Distributed state enabled for multi-instance support');
     } else {
-      console.log('[RoomManager] Redis not available - using Postgres only mode (single instance)');
+      console.info('[RoomManager] Redis not available - using Postgres only mode (single instance)');
     }
   }
 
@@ -83,7 +83,7 @@ class RoomManager {
   async shutdown(): Promise<void> {
     await this.flushPendingWrites();
     await shutdownDistributedState();
-    console.log('[RoomManager] Shutdown complete');
+    console.info('[RoomManager] Shutdown complete');
   }
 
   /**

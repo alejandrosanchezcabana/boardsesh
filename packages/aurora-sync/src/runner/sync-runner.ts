@@ -52,7 +52,7 @@ export class SyncRunner {
     if (this.config.onLog) {
       this.config.onLog(message);
     } else {
-      console.log(message);
+      console.info(message);
     }
   }
 

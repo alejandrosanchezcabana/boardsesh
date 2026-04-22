@@ -42,7 +42,7 @@ async function upsertTableData(
   auroraUserId: number,
   nextAuthUserId: string,
   data: AuroraApiRow[],
-  log: (message: string) => void = console.log,
+  log: (message: string) => void = console.info,
 ): Promise<UpsertResult> {
   if (data.length === 0) return { synced: 0, skipped: 0 };
 
@@ -500,7 +500,7 @@ export async function syncUserData(
   auroraUserId: number,
   nextAuthUserId: string,
   tables: string[] = USER_TABLES,
-  log: (message: string) => void = console.log,
+  log: (message: string) => void = console.info,
 ): Promise<SyncUserDataResult> {
   try {
     const syncParams: SyncOptions = {

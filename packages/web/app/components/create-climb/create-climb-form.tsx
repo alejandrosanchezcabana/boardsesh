@@ -783,7 +783,7 @@ export default function CreateClimbForm({
         });
 
         if (process.env.NODE_ENV !== 'production') {
-          console.debug('[climb-update]', {
+          console.info('[climb-update]', {
             uuid: updateResult.uuid,
             isDraft: updateResult.isDraft,
             publishedAt: updateResult.publishedAt,
@@ -828,7 +828,7 @@ export default function CreateClimbForm({
       });
 
       if (process.env.NODE_ENV !== 'production') {
-        console.debug('[climb-save]', {
+        console.info('[climb-save]', {
           uuid: saveResult?.uuid,
           isDraft,
           publishedAt: saveResult?.publishedAt ?? null,
@@ -934,7 +934,7 @@ export default function CreateClimbForm({
         });
 
         if (process.env.NODE_ENV !== 'production') {
-          console.debug('[climb-update]', {
+          console.info('[climb-update]', {
             uuid: updateResult.uuid,
             isDraft: updateResult.isDraft,
             publishedAt: updateResult.publishedAt,
@@ -990,7 +990,7 @@ export default function CreateClimbForm({
       });
 
       if (process.env.NODE_ENV !== 'production') {
-        console.debug('[climb-save]', {
+        console.info('[climb-save]', {
           uuid: moonBoardResult?.saveMoonBoardClimb?.uuid,
           isDraft,
           publishedAt: moonBoardResult?.saveMoonBoardClimb?.publishedAt ?? null,

@@ -67,7 +67,7 @@ export async function cleanupDeadInstanceConnections(
     return { deadInstances: [], staleConnections: [], sessionsAffected: [] };
   }
 
-  console.log(
+  console.info(
     `[DistributedState] Found ${deadInstances.length} dead instances: ${deadInstances.map((id) => id.slice(0, 8)).join(', ')}`,
   );
 
@@ -82,7 +82,7 @@ export async function cleanupDeadInstanceConnections(
       continue;
     }
 
-    console.log(
+    console.info(
       `[DistributedState] Dead instance ${deadInstanceId.slice(0, 8)} has ${connectionIds.length} orphaned connections`,
     );
 
@@ -127,7 +127,7 @@ export async function cleanupDeadInstanceConnections(
     }
   }
 
-  console.log(
+  console.info(
     `[DistributedState] Cleanup complete: removed ${allStaleConnections.length} stale connections ` +
       `from ${deadInstances.length} dead instances affecting ${allSessionsAffected.size} sessions`,
   );
@@ -188,7 +188,7 @@ export async function cleanupInstanceConnections(redis: Redis, instanceId: strin
   multi.del(KEYS.instanceHeartbeat(instanceId));
   await multi.exec();
 
-  console.log(
+  console.info(
     `[DistributedState] Cleaned up ${connectionIds.length} connections for instance: ${instanceId.slice(0, 8)}`,
   );
 }

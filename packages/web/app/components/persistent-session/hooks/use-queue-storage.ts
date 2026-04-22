@@ -56,7 +56,7 @@ export function useQueueStorage({
       try {
         const persisted = await getPreference<ActiveSessionInfo>(ACTIVE_SESSION_KEY);
         if (persisted && persisted.sessionId && persisted.boardPath && persisted.boardDetails) {
-          if (DEBUG) console.log('[PersistentSession] Restoring persisted session:', persisted.sessionId);
+          if (DEBUG) console.info('[PersistentSession] Restoring persisted session:', persisted.sessionId);
           setActiveSession(persisted);
           setIsLocalQueueLoaded(true);
           return;
@@ -92,7 +92,7 @@ export function useQueueStorage({
   );
 
   const clearLocalQueue = useCallback(() => {
-    if (DEBUG) console.log('[PersistentSession] Clearing local queue');
+    if (DEBUG) console.info('[PersistentSession] Clearing local queue');
     setLocalQueue([]);
     setLocalCurrentClimbQueueItem(null);
     setLocalBoardPath(null);

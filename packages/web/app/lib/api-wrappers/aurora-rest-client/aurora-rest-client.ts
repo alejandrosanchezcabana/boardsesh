@@ -104,9 +104,6 @@ class AuroraClimbingClient {
         signal: AbortSignal.timeout(30000), // 30 second timeout
       });
 
-      console.log(`Response status: ${response.status} ${response.statusText}`);
-      console.log(`Response headers:`, Object.fromEntries(response.headers.entries()));
-
       if (!response.ok) {
         const responseClone = response.clone();
         let errorData;

@@ -103,9 +103,9 @@ export function initCors(boardseshUrl: string): void {
       DEV_WEB_PORTS.forEach((port) => {
         allowedOrigins.push(`http://${tailscale.hostname}:${port}`);
       });
-      console.log(`[CORS] Added Tailscale dev origins for ${tailscale.hostname} (${tailscale.reason})`);
+      console.info(`[CORS] Added Tailscale dev origins for ${tailscale.hostname} (${tailscale.reason})`);
     } else {
-      console.log(`[CORS] Skipping Tailscale dev origins: ${tailscale.reason}`);
+      console.info(`[CORS] Skipping Tailscale dev origins: ${tailscale.reason}`);
     }
   }
 

@@ -135,7 +135,7 @@ function ensureDir(filePath: string): void {
 async function writePng(svgString: string, outputPath: string, width: number, height: number): Promise<void> {
   ensureDir(outputPath);
   await sharp(Buffer.from(svgString)).resize(width, height).png().toFile(outputPath);
-  console.log(`  -> ${path.relative(MOBILE_ROOT, outputPath)} (${width}x${height})`);
+  console.info(`  -> ${path.relative(MOBILE_ROOT, outputPath)} (${width}x${height})`);
 }
 
 // ---------------------------------------------------------------------------
@@ -143,13 +143,13 @@ async function writePng(svgString: string, outputPath: string, width: number, he
 // ---------------------------------------------------------------------------
 
 async function main() {
-  console.log('Generating Boardsesh app assets...\n');
-  console.log(`Output root: ${MOBILE_ROOT}\n`);
+  console.info('Generating Boardsesh app assets...\n');
+  console.info(`Output root: ${MOBILE_ROOT}\n`);
 
   // -----------------------------------------------------------------------
   // 1. iOS App Icon (1024x1024)
   // -----------------------------------------------------------------------
-  console.log('[iOS] App Icon (1024x1024)');
+  console.info('[iOS] App Icon (1024x1024)');
   {
     const size = 1024;
     // ~65% of canvas -> logoScale so that 48 * scale ~ 660
@@ -162,7 +162,7 @@ async function main() {
   // -----------------------------------------------------------------------
   // 2. iOS Splash Screen (2732x2732) - three copies for the image set
   // -----------------------------------------------------------------------
-  console.log('\n[iOS] Splash Screen (2732x2732)');
+  console.info('\n[iOS] Splash Screen (2732x2732)');
   {
     const size = 2732;
     // ~18% of canvas -> logoScale so that 48 * scale ~ 480
@@ -176,14 +176,14 @@ async function main() {
       const outPath = path.join(MOBILE_ROOT, `ios/App/App/Assets.xcassets/Splash.imageset/${name}`);
       ensureDir(outPath);
       fs.writeFileSync(outPath, pngBuffer);
-      console.log(`  -> ${path.relative(MOBILE_ROOT, outPath)} (${size}x${size})`);
+      console.info(`  -> ${path.relative(MOBILE_ROOT, outPath)} (${size}x${size})`);
     }
   }
 
   // -----------------------------------------------------------------------
   // 3. Android icons at all density buckets
   // -----------------------------------------------------------------------
-  console.log('\n[Android] Launcher icons');
+  console.info('\n[Android] Launcher icons');
   const androidDensities: Array<{ name: string; size: number }> = [
     { name: 'mdpi', size: 48 },
     { name: 'hdpi', size: 72 },
@@ -204,7 +204,7 @@ async function main() {
       const outPath = path.join(resDir, iconName);
       ensureDir(outPath);
       fs.writeFileSync(outPath, pngBuffer);
-      console.log(`  -> ${path.relative(MOBILE_ROOT, outPath)} (${size}x${size})`);
+      console.info(`  -> ${path.relative(MOBILE_ROOT, outPath)} (${size}x${size})`);
     }
 
     // ic_launcher_foreground.png - logo on transparent background (for adaptive icons)
@@ -212,10 +212,10 @@ async function main() {
     const fgPath = path.join(resDir, 'ic_launcher_foreground.png');
     ensureDir(fgPath);
     await sharp(Buffer.from(fgSvg)).resize(size, size).png().toFile(fgPath);
-    console.log(`  -> ${path.relative(MOBILE_ROOT, fgPath)} (${size}x${size})`);
+    console.info(`  -> ${path.relative(MOBILE_ROOT, fgPath)} (${size}x${size})`);
   }
 
-  console.log('\nAll assets generated successfully.');
+  console.info('\nAll assets generated successfully.');
 }
 
 main().catch((err) => {

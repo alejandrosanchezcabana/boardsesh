@@ -13,9 +13,9 @@ import * as relations from '../relations/index';
 class QueryLogger implements Logger {
   logQuery(query: string, params: unknown[]): void {
     const timestamp = new Date().toISOString();
-    console.log(`[SQL ${timestamp}] ${query}`);
+    console.info(`[SQL ${timestamp}] ${query}`);
     if (params.length > 0) {
-      console.log(`[SQL params] ${JSON.stringify(params)}`);
+      console.info(`[SQL params] ${JSON.stringify(params)}`);
     }
   }
 }

@@ -41,7 +41,7 @@ export async function joinSession(
   )) as number;
 
   if (becameLeader === 1) {
-    console.log(
+    console.info(
       `[DistributedState] Connection ${connectionId.slice(0, 8)} became leader of session ${sessionId.slice(0, 8)}`,
     );
   }
@@ -80,11 +80,11 @@ export async function leaveSession(
     }
 
     if (result === '') {
-      console.log(`[DistributedState] Session ${sessionId.slice(0, 8)} has no remaining members after leader left`);
+      console.info(`[DistributedState] Session ${sessionId.slice(0, 8)} has no remaining members after leader left`);
       return { newLeaderId: null };
     }
 
-    console.log(`[DistributedState] Elected new leader: ${result.slice(0, 8)} for session ${sessionId.slice(0, 8)}`);
+    console.info(`[DistributedState] Elected new leader: ${result.slice(0, 8)} for session ${sessionId.slice(0, 8)}`);
     return { newLeaderId: result };
   } catch (err) {
     console.error(`[DistributedState] Failed to leave session ${sessionId.slice(0, 8)}:`, err);
@@ -114,7 +114,7 @@ async function leaveSessionFallback(
       const execResult = await multi.exec();
 
       if (execResult === null) {
-        console.log(
+        console.info(
           `[DistributedState] Fallback aborted: leader changed during cleanup for session ${sessionId.slice(0, 8)}`,
         );
         return { newLeaderId: null };
@@ -133,7 +133,7 @@ async function leaveSessionFallback(
           )) as string | null;
 
           if (newLeaderId) {
-            console.log(
+            console.info(
               `[DistributedState] Fallback: elected new leader ${newLeaderId.slice(0, 8)} for session ${sessionId.slice(0, 8)}`,
             );
             return { newLeaderId };
@@ -306,7 +306,7 @@ export async function cleanupStaleSessionMembers(redis: Redis, sessionId: string
   )) as number;
 
   if (removed > 0) {
-    console.log(`[DistributedState] Pruned ${removed} stale members from session ${sessionId.slice(0, 8)}`);
+    console.info(`[DistributedState] Pruned ${removed} stale members from session ${sessionId.slice(0, 8)}`);
   }
   return removed;
 }
@@ -321,5 +321,5 @@ export async function cleanupEmptySession(redis: Redis, sessionId: string): Prom
   multi.del(KEYS.sessionLeader(sessionId));
   await multi.exec();
 
-  console.log(`[DistributedState] Cleaned up empty session: ${sessionId.slice(0, 8)}`);
+  console.info(`[DistributedState] Cleaned up empty session: ${sessionId.slice(0, 8)}`);
 }

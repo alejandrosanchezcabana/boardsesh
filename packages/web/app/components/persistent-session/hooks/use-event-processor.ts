@@ -86,7 +86,7 @@ export function useEventProcessor({ refs }: UseEventProcessorArgs): EventProcess
 
         if (sequenceDecision === 'ignore-stale') {
           if (DEBUG) {
-            console.log(
+            console.info(
               `[PersistentSession] Ignoring stale/duplicate event with sequence ${event.sequence} ` +
                 `(last received: ${lastSeq})`,
             );

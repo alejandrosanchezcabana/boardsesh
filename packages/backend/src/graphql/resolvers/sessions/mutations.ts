@@ -35,7 +35,7 @@ async function authorizeUserControllersForSession(userId: string, sessionId: str
       .set({ authorizedSessionId: sessionId })
       .where(eq(esp32Controllers.userId, userId));
 
-    console.log(`[Session] Auto-authorized user ${userId}'s controllers for session ${sessionId}`);
+    console.info(`[Session] Auto-authorized user ${userId}'s controllers for session ${sessionId}`);
   } catch (error) {
     // Log but don't fail the join - controller auth is a bonus feature
     console.error('[Session] Failed to auto-authorize controllers:', error);
@@ -75,7 +75,7 @@ export const sessionMutations = {
     ctx: ConnectionContext,
   ) => {
     if (DEBUG)
-      console.log(
+      console.info(
         `[joinSession] START - connectionId: ${ctx.connectionId}, sessionId: ${sessionId}, username: ${username}, sessionName: ${sessionName}, initialQueueLength: ${initialQueue?.length || 0}`,
       );
 
@@ -101,14 +101,14 @@ export const sessionMutations = {
       sessionName || undefined,
     );
     if (DEBUG)
-      console.log(
+      console.info(
         `[joinSession] roomManager.joinSession completed - clientId: ${result.clientId}, isLeader: ${result.isLeader}`,
       );
 
     // Update context with session info
-    if (DEBUG) console.log(`[joinSession] Before updateContext - ctx.sessionId: ${ctx.sessionId}`);
+    if (DEBUG) console.info(`[joinSession] Before updateContext - ctx.sessionId: ${ctx.sessionId}`);
     updateContext(ctx.connectionId, { sessionId, userId: result.clientId });
-    if (DEBUG) console.log(`[joinSession] After updateContext - ctx.sessionId: ${ctx.sessionId}`);
+    if (DEBUG) console.info(`[joinSession] After updateContext - ctx.sessionId: ${ctx.sessionId}`);
 
     // Auto-authorize user's ESP32 controllers for this session (if authenticated)
     if (ctx.isAuthenticated && ctx.userId) {
@@ -164,7 +164,7 @@ export const sessionMutations = {
    * Optionally creates a discoverable session with GPS coordinates
    */
   createSession: async (_: unknown, { input }: { input: CreateSessionInput }, ctx: ConnectionContext) => {
-    if (DEBUG) console.log(`[createSession] START - connectionId: ${ctx.connectionId}, boardPath: ${input.boardPath}`);
+    if (DEBUG) console.info(`[createSession] START - connectionId: ${ctx.connectionId}, boardPath: ${input.boardPath}`);
 
     await applyRateLimit(ctx, 5); // Limit session creation to prevent abuse
 
@@ -173,7 +173,7 @@ export const sessionMutations = {
 
     // Generate a unique session ID
     const sessionId = uuidv4();
-    if (DEBUG) console.log(`[createSession] Generated sessionId: ${sessionId}`);
+    if (DEBUG) console.info(`[createSession] Generated sessionId: ${sessionId}`);
 
     if (input.discoverable) {
       // Discoverable sessions require authentication (they write to DB with userId)
@@ -239,7 +239,7 @@ export const sessionMutations = {
         input.discoverable ? undefined : input.name,
       );
       if (DEBUG)
-        console.log(`[createSession] Joined session - clientId: ${result.clientId}, isLeader: ${result.isLeader}`);
+        console.info(`[createSession] Joined session - clientId: ${result.clientId}, isLeader: ${result.isLeader}`);
 
       updateContext(ctx.connectionId, { sessionId, userId: result.clientId });
 
@@ -278,7 +278,7 @@ export const sessionMutations = {
     // via WebSocket (avoids double invocation for HTTP + discoverable sessions).
 
     // HTTP path: return session metadata only; client joins via WebSocket later
-    if (DEBUG) console.log(`[createSession] HTTP request - returning session metadata without joining`);
+    if (DEBUG) console.info(`[createSession] HTTP request - returning session metadata without joining`);
 
     return {
       id: sessionId,

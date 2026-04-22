@@ -284,11 +284,11 @@ beforeAll(async () => {
     if (result.length === 0) {
       // Create the test database
       await adminClient.unsafe(`CREATE DATABASE ${TEST_DB_NAME}`);
-      console.log(`Created test database: ${TEST_DB_NAME}`);
+      console.info(`Created test database: ${TEST_DB_NAME}`);
     }
   } catch (error) {
     // Database might not be available — mock-based tests can still run
-    console.log('Test database check:', error);
+    console.info('Test database check:', error);
     try {
       await adminClient.end();
     } catch {

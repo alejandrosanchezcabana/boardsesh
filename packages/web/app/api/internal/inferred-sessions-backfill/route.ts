@@ -48,7 +48,7 @@ export async function GET(request: Request) {
     for (const { userId } of usersWithUnassigned) {
       // Stop processing before we hit the Vercel timeout
       if (Date.now() - startedAt > DEADLINE_MS) {
-        console.log(
+        console.info(
           `[Inferred sessions backfill] Deadline reached after ${usersSucceeded}/${usersWithUnassigned.length} users`,
         );
         break;
