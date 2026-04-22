@@ -179,20 +179,132 @@ jobs:
           path: packages/web/test-results/
           retention-days: 7
 
-      - name: Upload rendered screenshots
-        uses: actions/upload-artifact@v4
-        if: always()
+      # Functional e2e shards don't generate screenshot assets.
+      # Screenshot capture runs in the dedicated `screenshots` job below.
+
+  screenshots:
+    name: Capture PR screenshots
+    needs: e2e
+    if: github.event_name == 'pull_request'
+    # Soft-fail: a broken screenshot scene should leave the PR's required
+    # checks green and let report-screenshots still update the comment.
+    continue-on-error: true
+    timeout-minutes: 20
+    runs-on: ubuntu-latest
+    container:
+      image: mcr.microsoft.com/playwright:v1.58.0-noble
+
+    services:
+      postgres:
+        image: ghcr.io/boardsesh/boardsesh-dev-db:latest
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: password
+          POSTGRES_DB: main
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+          --shm-size 256mb
+
+      neon-proxy:
+        image: ghcr.io/timowilhelm/local-neon-http-proxy:main
+        env:
+          PG_CONNECTION_STRING: postgres://postgres:password@postgres:5432/main
+          POSTGRES_DB: main
+
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Point db.localtest.me to neon-proxy service
+        run: |
+          PROXY_IP=$(getent hosts neon-proxy | awk '{ print $1 }')
+          echo "$PROXY_IP db.localtest.me" >> /etc/hosts
+
+      - name: Install unzip (required by setup-bun)
+        run: apt-get update && apt-get install -y unzip
+
+      - uses: oven-sh/setup-bun@v2
+
+      - uses: voidzero-dev/setup-vp@v1
         with:
-          name: screenshots-shard-${{ matrix.shard }}
-          path: |
-            mobile/screenshots/
-            packages/web/public/help/
-          if-no-files-found: ignore
+          node-version: 'lts'
+          cache: true
+
+      - name: Install dependencies
+        run: bun install --frozen-lockfile
+
+      - name: Build packages needed for e2e
+        run: vp run build
+        env:
+          NEXTAUTH_SECRET: test-secret-for-ci
+          NEXTAUTH_URL: http://localhost:3000
+          DATABASE_URL: postgresql://postgres:password@db.localtest.me:5432/main
+          NEXT_PUBLIC_WS_URL: ws://localhost:8080/graphql
+
+      - name: Run database migrations
+        run: bunx drizzle-kit migrate
+        working-directory: packages/db
+        env:
+          DATABASE_URL: postgresql://postgres:password@postgres:5432/main
+
+      - name: Start backend and web servers
+        run: |
+          bun run --filter=boardsesh-backend start > backend.log 2>&1 &
+          bun run --filter=@boardsesh/web start > web.log 2>&1 &
+          bunx wait-on http-get://localhost:8080/health http://localhost:3000 --timeout 90000
+        env:
+          DATABASE_URL: postgresql://postgres:password@db.localtest.me:5432/main
+          NEXTAUTH_SECRET: test-secret-for-ci
+          NEXTAUTH_URL: http://localhost:3000
+          NEXT_PUBLIC_WS_URL: ws://localhost:8080/graphql
+
+      - name: Capture screenshots
+        run: |
+          bunx playwright test \
+            --project=app-store-screenshots \
+            --project=layout-screenshots \
+            --project=help-screenshots
+        working-directory: packages/web
+        env:
+          PLAYWRIGHT_TEST_BASE_URL: http://localhost:3000
+          DATABASE_URL: postgresql://postgres:password@db.localtest.me:5432/main
+          NEXTAUTH_SECRET: test-secret-for-ci
+          NEXTAUTH_URL: http://localhost:3000
+          NEXT_PUBLIC_WS_URL: ws://localhost:8080/graphql
+          TEST_USER_EMAIL: test@boardsesh.com
+          TEST_USER_PASSWORD: test
+
+      - name: Dump server logs on failure
+        if: failure()
+        run: |
+          echo "=== backend.log ==="
+          cat backend.log || true
+          echo "=== web.log ==="
+          cat web.log || true
+
+      - name: Stage screenshots for upload
+        if: always()
+        run: |
+          mkdir -p screenshots-out/app-store screenshots-out/layouts screenshots-out/help
+          cp mobile/screenshots/*.png                     screenshots-out/app-store/ 2>/dev/null || true
+          cp packages/web/e2e/screenshots/layouts/*.png    screenshots-out/layouts/   2>/dev/null || true
+          cp packages/web/public/help/*.png                screenshots-out/help/      2>/dev/null || true
+          ls -R screenshots-out || true
+
+      - name: Upload screenshots artifact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: screenshots-current
+          path: screenshots-out/
+          if-no-files-found: warn
           retention-days: 14
 
   report-screenshots:
     name: Report screenshots on PR
-    needs: e2e
+    needs: screenshots
     if: always() && github.event_name == 'pull_request'
     runs-on: ubuntu-latest
     permissions:
@@ -205,21 +317,26 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Download screenshot artifacts
+      - name: Download screenshots artifact
+        id: dl
         uses: actions/download-artifact@v4
+        continue-on-error: true
         with:
-          path: screenshot-artifacts
-          pattern: screenshots-shard-*
-          merge-multiple: false
+          name: screenshots-current
+          path: screenshots-out/
 
-      - name: Push screenshots to test-screenshots branch
+      - name: Push screenshots to per-PR branch
+        id: push
+        if: steps.dl.outcome == 'success'
         run: |
+          set -e
           git config user.email "github-actions@github.com"
           git config user.name "GitHub Actions"
 
           PR_NUMBER="${{ github.event.pull_request.number }}"
           SHA="${{ github.event.pull_request.head.sha }}"
-          BRANCH="test-screenshots"
+          SHORT_SHA="${SHA:0:7}"
+          BRANCH="pr-screenshots/${PR_NUMBER}"
 
           if git ls-remote --exit-code --heads origin "$BRANCH" > /dev/null 2>&1; then
             git fetch origin "$BRANCH"
@@ -228,65 +345,91 @@ jobs:
             git worktree add --orphan -b "$BRANCH" /tmp/ss-branch
           fi
 
-          rm -rf "/tmp/ss-branch/pr-${PR_NUMBER}"
-          mkdir -p "/tmp/ss-branch/pr-${PR_NUMBER}/app-store" \
-                   "/tmp/ss-branch/pr-${PR_NUMBER}/help"
+          # Per-SHA subpath so each commit's URLs are unique — cached browser
+          # views never serve stale bytes when a PR pushes follow-up commits.
+          mkdir -p "/tmp/ss-branch/${SHORT_SHA}/app-store" \
+                   "/tmp/ss-branch/${SHORT_SHA}/layouts" \
+                   "/tmp/ss-branch/${SHORT_SHA}/help"
 
-          find screenshot-artifacts -type f -name '*.png' | while read -r f; do
-            if echo "$f" | grep -q "mobile/screenshots"; then
-              cp "$f" "/tmp/ss-branch/pr-${PR_NUMBER}/app-store/"
-            else
-              cp "$f" "/tmp/ss-branch/pr-${PR_NUMBER}/help/"
-            fi
-          done
+          cp screenshots-out/app-store/*.png "/tmp/ss-branch/${SHORT_SHA}/app-store/" 2>/dev/null || true
+          cp screenshots-out/layouts/*.png  "/tmp/ss-branch/${SHORT_SHA}/layouts/"  2>/dev/null || true
+          cp screenshots-out/help/*.png     "/tmp/ss-branch/${SHORT_SHA}/help/"     2>/dev/null || true
 
           cd /tmp/ss-branch
-          git add "pr-${PR_NUMBER}"
-          git commit -m "screenshots: PR #${PR_NUMBER} @ ${SHA:0:7}" \
-            || echo "nothing to commit"
-          git push origin "$BRANCH"
+          git add "${SHORT_SHA}"
+          if git commit -m "screenshots: PR #${PR_NUMBER} @ ${SHORT_SHA}"; then
+            git push origin "$BRANCH"
+            echo "pushed=true" >> "$GITHUB_OUTPUT"
+            echo "short_sha=${SHORT_SHA}" >> "$GITHUB_OUTPUT"
+          else
+            echo "pushed=false" >> "$GITHUB_OUTPUT"
+          fi
 
       - name: Build screenshot gallery
         run: |
-          python3 << 'PYEOF'
-          import os, glob
+          node << 'NODEEOF'
+          const fs = require('fs');
+          const path = require('path');
 
-          pr   = "${{ github.event.pull_request.number }}"
-          repo = "${{ github.repository }}"
-          sha  = "${{ github.event.pull_request.head.sha }}"
-          run  = "${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
-          base = f"https://raw.githubusercontent.com/{repo}/test-screenshots/pr-{pr}"
+          const pr       = process.env.PR;
+          const repo     = process.env.REPO;
+          const fullSha  = process.env.SHA;
+          const shortSha = fullSha.slice(0, 7);
+          const runUrl   = `${process.env.GH_SERVER}/${repo}/actions/runs/${process.env.RUN_ID}`;
+          const pushed   = process.env.PUSHED === 'true';
 
-          app = sorted(glob.glob(f"/tmp/ss-branch/pr-{pr}/app-store/*.png"))
-          hlp = sorted(glob.glob(f"/tmp/ss-branch/pr-{pr}/help/*.png"))
+          const base = `https://raw.githubusercontent.com/${repo}/pr-screenshots/${pr}/${shortSha}`;
 
-          def table(shots, subdir, cols=3):
-              rows = ["<table>"]
-              for i, f in enumerate(shots):
-                  name = os.path.basename(f).replace(".png", "")
-                  url  = f"{base}/{subdir}/{os.path.basename(f)}"
-                  if i % cols == 0:
-                      if i:
-                          rows.append("</tr>")
-                      rows.append("<tr>")
-                  rows.append(
-                      f'<td align="center">'
-                      f'<a href="{url}"><img src="{url}" width="160"></a>'
-                      f'<br><sub><code>{name}</code></sub></td>'
-                  )
-              rows += ["</tr>", "</table>"]
-              return rows
+          function listPngs(subdir) {
+            const dir = path.join('screenshots-out', subdir);
+            if (!fs.existsSync(dir)) return [];
+            return fs
+              .readdirSync(dir)
+              .filter((f) => f.endsWith('.png'))
+              .sort();
+          }
 
-          out = ["### E2E Screenshots", "", f"Run: [`{sha[:7]}`]({run})", ""]
-          if app:
-              out += ["**App Store Screenshots** (iPhone 16 Pro Max)", ""] + table(app, "app-store") + [""]
-          if hlp:
-              out += ["**Help Screenshots**", ""] + table(hlp, "help") + [""]
-          if not app and not hlp:
-              out.append("_No screenshots rendered._")
+          function table(files, subdir, cols = 3) {
+            const rows = ['<table>'];
+            files.forEach((f, i) => {
+              const name = f.replace('.png', '');
+              const url = `${base}/${subdir}/${f}`;
+              if (i % cols === 0) {
+                if (i) rows.push('</tr>');
+                rows.push('<tr>');
+              }
+              rows.push(
+                `<td align="center"><a href="${url}"><img src="${url}" width="160"></a><br><sub><code>${name}</code></sub></td>`,
+              );
+            });
+            rows.push('</tr>', '</table>');
+            return rows;
+          }
 
-          open("summary.md", "w").write("\n".join(out))
-          PYEOF
+          const app    = listPngs('app-store');
+          const layout = listPngs('layouts');
+          const help   = listPngs('help');
+
+          const out = [`### E2E Screenshots`, '', `Run: [\`${shortSha}\`](${runUrl})`, ''];
+          if (!pushed) {
+            out.push('_Screenshot capture failed for this commit — see the [Actions run](' + runUrl + ') for details._');
+          } else if (!app.length && !layout.length && !help.length) {
+            out.push('_No screenshots rendered._');
+          } else {
+            if (app.length) out.push('**App flow** (iPhone 16 Pro Max)', '', ...table(app, 'app-store'), '');
+            if (layout.length) out.push('**Board layouts**', '', ...table(layout, 'layouts'), '');
+            if (help.length) out.push('**Help docs**', '', ...table(help, 'help'), '');
+          }
+
+          fs.writeFileSync('summary.md', out.join('\n'));
+          NODEEOF
+        env:
+          PR: ${{ github.event.pull_request.number }}
+          REPO: ${{ github.repository }}
+          SHA: ${{ github.event.pull_request.head.sha }}
+          GH_SERVER: ${{ github.server_url }}
+          RUN_ID: ${{ github.run_id }}
+          PUSHED: ${{ steps.push.outputs.pushed }}
 
       - name: Upsert sticky PR comment
         uses: marocchino/sticky-pull-request-comment@v2

@@ -14,7 +14,8 @@
  *
  * Prerequisites:
  *   - Dev server running: bun run dev
- *   - For authenticated tests: 1Password CLI installed and signed in
+ *   - For authenticated tests: TEST_USER_EMAIL and TEST_USER_PASSWORD env vars
+ *     (default to the seeded dev user: test@boardsesh.com / test).
  */
 import { test, expect } from '@playwright/test';
 
@@ -25,13 +26,20 @@ const boardUrl = '/kilter/original/12x12-square/screw_bolt/40/list';
 // Both describe blocks here inherit it without needing their own test.use() calls.
 
 test.describe('Help Page Screenshots', () => {
-  test.skip(true, 'Temporarily disabled — screenshot tests not working as expected');
+  // Serial mode so multiple tests don't race on the same onboarding IDs /
+  // drawer animations — much less flaky than 4-wide parallelism.
+  test.describe.configure({ mode: 'serial' });
+
+  // Setup + drawer animations can chew through time on a cold dev server.
+  test.setTimeout(90_000);
 
   test.beforeEach(async ({ page }) => {
-    await page.goto(boardUrl);
+    await page.goto(boardUrl, { waitUntil: 'domcontentloaded', timeout: 60_000 });
     await page
       .waitForSelector('#onboarding-climb-card, [data-testid="climb-card"]', { timeout: 30000 })
       .catch(() => page.waitForLoadState('domcontentloaded'));
+    // Wait for React hydration before firing any clicks
+    await page.waitForLoadState('networkidle').catch(() => {});
   });
 
   test('main interface', async ({ page }) => {
@@ -39,180 +47,126 @@ test.describe('Help Page Screenshots', () => {
   });
 
   test('search filters', async ({ page }) => {
-    // Open search drawer via the search pill in the header
-    await page.locator('#onboarding-search-button').click();
-    // Wait for the search form content to appear
-    await page.getByText('Grade').first().waitFor({ state: 'visible' });
+    // Open the filters drawer via the header button (aria-label="Open filters").
+    await page.getByRole('button', { name: 'Open filters' }).click();
+    await page.locator('[data-swipeable-drawer="true"]:visible').first().waitFor({ timeout: 10_000 });
     await page.screenshot({ path: `${SCREENSHOT_DIR}/search-filters.png` });
   });
 
   test('search by hold', async ({ page }) => {
-    // Open search drawer and expand the "Holds" section
-    await page.locator('#onboarding-search-button').click();
-    await page.getByText('Grade').first().waitFor({ state: 'visible' });
-    // Click the "Holds" collapsible section to expand it (exact match to avoid "Classify Holds" etc.)
+    await page.getByRole('button', { name: 'Open filters' }).click();
+    await page.locator('[data-swipeable-drawer="true"]:visible').first().waitFor({ timeout: 10_000 });
+    // Expand the "Holds" accordion section.
     await page.getByText('Holds', { exact: true }).click();
     await page.screenshot({ path: `${SCREENSHOT_DIR}/search-by-hold.png` });
   });
 
   test('heatmap', async ({ page }) => {
-    // Open search drawer and expand the "Holds" section
-    await page.locator('#onboarding-search-button').click();
-    await page.getByText('Grade').first().waitFor({ state: 'visible' });
+    await page.getByRole('button', { name: 'Open filters' }).click();
+    await page.locator('[data-swipeable-drawer="true"]:visible').first().waitFor({ timeout: 10_000 });
     await page.getByText('Holds', { exact: true }).click();
-
-    // Click "Show Heatmap" button within the holds section
     await page.getByRole('button', { name: 'Show Heatmap' }).click();
-
-    // Wait for heatmap loading to complete
-    await page.waitForSelector('text=Loading heatmap...', { state: 'hidden', timeout: 10000 }).catch(() => {});
+    await page.waitForSelector('text=Loading heatmap...', { state: 'hidden', timeout: 10_000 }).catch(() => {});
     await page.waitForSelector('button:has-text("Hide Heatmap")', { state: 'visible' });
-
     await page.screenshot({ path: `${SCREENSHOT_DIR}/heatmap.png` });
   });
 
   test('climb detail', async ({ page }) => {
-    // Double-click first climb to add it to the queue
-    const climbCard = page.locator('#onboarding-climb-card');
-    await climbCard.dblclick();
-
-    // Wait for queue bar to appear, then click it to open the play drawer
-    const queueBar = page.locator('[data-testid="queue-control-bar"]');
-    await expect(queueBar).toBeVisible({ timeout: 10000 });
-    // Click the queue toggle text to open play drawer with climb details
-    await page.locator('#onboarding-queue-toggle').click();
-    // Wait for play drawer to open
-    await page.locator('[data-swipeable-drawer="true"]:visible').first().waitFor({ timeout: 10000 });
-
+    // Tap the first climb's thumbnail — this selects the climb AND dispatches
+    // the open-play-drawer event, so the play view shows climb details.
+    const thumbnail = page.locator('#onboarding-climb-card [data-testid="climb-thumbnail"]');
+    await thumbnail.waitFor({ state: 'visible', timeout: 15_000 });
+    await thumbnail.click();
+    await page.locator('[data-swipeable-drawer="true"]:visible').first().waitFor({ timeout: 15_000 });
     await page.screenshot({ path: `${SCREENSHOT_DIR}/climb-detail.png` });
   });
 
   test('party mode modal', async ({ page }) => {
-    // First add a climb to queue so the queue bar appears
-    const climbCard = page.locator('#onboarding-climb-card');
-    await climbCard.dblclick();
+    // Add a climb so the queue bar renders, then open the "Start sesh"
+    // drawer from inside the queue bar.
+    const row = page.locator('#onboarding-climb-card').locator('..').first();
+    await row.waitFor({ state: 'visible', timeout: 15_000 });
+    await row.click();
 
-    // Wait for queue bar
     const queueBar = page.locator('[data-testid="queue-control-bar"]');
-    await expect(queueBar).toBeVisible({ timeout: 10000 });
+    await expect(queueBar).toBeVisible({ timeout: 10_000 });
 
-    // Click "Sesh" button in the global header to open the start session drawer
-    await page.getByRole('button', { name: 'Sesh', exact: true }).click();
-    await page.locator('[data-swipeable-drawer="true"]:visible').first().waitFor({ timeout: 10000 });
-
+    await queueBar.getByText('Start sesh').click();
+    await page.locator('[data-swipeable-drawer="true"]:visible').first().waitFor({ timeout: 10_000 });
     await page.screenshot({ path: `${SCREENSHOT_DIR}/party-mode.png` });
   });
 
   test('login modal', async ({ page }) => {
-    // Open user drawer
+    // Open user drawer → Sign in → auth modal with email/password form.
     await page.getByLabel('User menu').click();
-    // Wait for user drawer content to appear
     await page.getByRole('button', { name: 'Sign in' }).waitFor({ state: 'visible' });
-
-    // Click "Sign in" button in the user drawer
     await page.getByRole('button', { name: 'Sign in' }).click();
-    // Wait for auth modal with login form
     await page.waitForSelector('input#login_email', { state: 'visible' });
-
     await page.screenshot({ path: `${SCREENSHOT_DIR}/login-modal.png` });
   });
 });
 
-// Authenticated tests - requires TEST_USER_EMAIL and TEST_USER_PASSWORD env vars
+// Authenticated tests - requires TEST_USER_EMAIL and TEST_USER_PASSWORD env vars.
+// The seeded dev user (test@boardsesh.com / test) is exported by
+// `vp run test:e2e:setup`, so no 1Password roundtrip is required.
 test.describe('Help Page Screenshots - Authenticated', () => {
-  test.skip(true, 'Temporarily disabled — screenshot tests not working as expected');
+  test.describe.configure({ mode: 'serial' });
+  test.setTimeout(120_000);
 
-  const testEmail = process.env.TEST_USER_EMAIL;
-  const testPassword = process.env.TEST_USER_PASSWORD;
-
-  // test.skip(!testEmail || !testPassword, 'Set TEST_USER_EMAIL and TEST_USER_PASSWORD env vars to run authenticated tests');
+  const testEmail = process.env.TEST_USER_EMAIL ?? 'test@boardsesh.com';
+  const testPassword = process.env.TEST_USER_PASSWORD ?? 'test';
 
   test.beforeEach(async ({ page }) => {
-    await page.goto(boardUrl);
+    await page.goto(boardUrl, { waitUntil: 'domcontentloaded', timeout: 60_000 });
     await page
       .waitForSelector('#onboarding-climb-card, [data-testid="climb-card"]', { timeout: 30000 })
       .catch(() => page.waitForLoadState('domcontentloaded'));
+    await page.waitForLoadState('networkidle').catch(() => {});
 
-    // Login via user drawer
+    // Login via user drawer → auth modal
     await page.getByLabel('User menu').click();
     await page.getByRole('button', { name: 'Sign in' }).waitFor({ state: 'visible' });
     await page.getByRole('button', { name: 'Sign in' }).click();
     await page.waitForSelector('input#login_email', { state: 'visible' });
 
-    // Fill login form
-    await page.locator('input#login_email').fill(testEmail!);
-    await page.locator('input#login_password').fill(testPassword!);
+    await page.locator('input#login_email').fill(testEmail);
+    await page.locator('input#login_password').fill(testPassword);
     await page.locator('button[type="submit"]').filter({ hasText: 'Login' }).click();
 
-    // Wait for login to complete - auth modal should close
-    await page.waitForSelector('input#login_email', { state: 'hidden', timeout: 10000 });
+    // Wait for the auth modal to close (login succeeded).
+    await page.waitForSelector('input#login_email', { state: 'hidden', timeout: 15_000 });
   });
 
   test('personal progress filters', async ({ page }) => {
-    // Open search drawer to show filters including personal progress
-    await page.locator('#onboarding-search-button').click();
-    await page.getByText('Grade').first().waitFor({ state: 'visible' });
-
-    // Expand the Progress section (user-specific filters: attempts, completions, etc.)
+    await page.getByRole('button', { name: 'Open filters' }).click();
+    await page.locator('[data-swipeable-drawer="true"]:visible').first().waitFor({ timeout: 10_000 });
+    // Expand the Progress accordion (user-specific filters: attempts, completions).
     await page.getByText('Progress', { exact: true }).click();
-
     await page.screenshot({ path: `${SCREENSHOT_DIR}/personal-progress.png` });
   });
 
-  test('party mode active session', async ({ page, context }) => {
-    test.slow(); // WebSocket connection setup can be slow in CI
-
-    // Grant geolocation permission so session creation doesn't wait for permission prompt
-    await context.grantPermissions(['geolocation']);
-
-    // First add a climb to queue (also sets localBoardDetails for session creation)
-    const climbCard = page.locator('#onboarding-climb-card');
-    await climbCard.dblclick();
-
-    // Wait for queue bar
-    const queueBar = page.locator('[data-testid="queue-control-bar"]');
-    await expect(queueBar).toBeVisible({ timeout: 10000 });
-
-    // Open start session drawer via "Sesh" button in the global header
-    await page.getByRole('button', { name: 'Sesh', exact: true }).click();
-    await page.locator('[data-swipeable-drawer="true"]:visible').first().waitFor({ timeout: 10000 });
-
-    // Start the session — we're already on a board route so no board selection needed.
-    // The footer "Sesh" button submits the session creation form.
-    await page.getByRole('button', { name: 'Sesh', exact: true }).last().click();
-
-    // Wait for session to start — success snackbar appears after creation
-    await expect(page.getByText('Session started!')).toBeVisible({ timeout: 30000 });
-
-    await page.screenshot({ path: `${SCREENSHOT_DIR}/party-mode-active.png` });
-
-    // Clean up: open session settings and stop the session
-    await page.getByRole('button', { name: 'Sesh', exact: true }).click();
-    await page.getByRole('button', { name: 'Stop Session' }).click();
-  });
-
-  test('hold classification wizard', async ({ page }) => {
-    // Open user drawer and click Classify Holds
-    await page.getByLabel('User menu').click();
-    await page.getByText('Classify Holds').waitFor({ state: 'visible' });
+  // TODO: UserDrawer's "Classify Holds" button is gated on a `boardDetails`
+  // prop that no caller in the current codebase actually passes (see
+  // global-header.tsx — every `<UserDrawer boardConfigs={...} />` site omits
+  // boardDetails). The wizard has no other entry point, so this screenshot
+  // can't be captured until the app wires boardDetails through. Fix the
+  // wiring or add a dedicated route, then flip fixme → test.
+  test.fixme('hold classification wizard', async ({ page }) => {
+    const userMenu = page.getByLabel('User menu');
+    await userMenu.waitFor({ state: 'visible', timeout: 10_000 });
+    await userMenu.click();
+    await page.getByText('Classify Holds').waitFor({ state: 'visible', timeout: 10_000 });
     await page.getByText('Classify Holds').click();
-
-    // Wait for wizard content to load
     await page.waitForSelector('.MuiRating-root, .MuiLinearProgress-root', {
       state: 'visible',
-      timeout: 10000,
+      timeout: 10_000,
     });
-
     await page.screenshot({ path: `${SCREENSHOT_DIR}/hold-classification.png` });
   });
 
   test('settings aurora sync', async ({ page }) => {
-    // Navigate to settings page
     await page.goto('/settings');
-    // Wait for settings page content to load
     await page.waitForSelector('.MuiCard-root', { state: 'visible' });
-
-    // Scroll to Board Accounts section
     await page.evaluate(() => {
       const heading = Array.from(document.querySelectorAll('h4, .MuiCardHeader-title')).find((el) =>
         el.textContent?.includes('Board Accounts'),
@@ -221,7 +175,41 @@ test.describe('Help Page Screenshots - Authenticated', () => {
         heading.scrollIntoView({ behavior: 'instant', block: 'start' });
       }
     });
-
     await page.screenshot({ path: `${SCREENSHOT_DIR}/settings-aurora.png` });
+  });
+
+  // Keep this last: starting a real party session mutates shared backend
+  // state, so ordering it after the other tests avoids bleed-through.
+  test('party mode active session', async ({ page, context }) => {
+    test.slow();
+    await context.grantPermissions(['geolocation']);
+
+    const row = page.locator('#onboarding-climb-card').locator('..').first();
+    await row.waitFor({ state: 'visible', timeout: 15_000 });
+    await row.click();
+
+    const queueBar = page.locator('[data-testid="queue-control-bar"]');
+    await expect(queueBar).toBeVisible({ timeout: 10_000 });
+
+    await queueBar.getByText('Start sesh').click();
+    await page.locator('[data-swipeable-drawer="true"]:visible').first().waitFor({ timeout: 10_000 });
+
+    // Submit the session-creation form (the footer "Sesh" button).
+    await page.getByRole('button', { name: 'Sesh', exact: true }).last().click();
+    await expect(page.getByText('Session started!')).toBeVisible({ timeout: 30_000 });
+
+    await page.screenshot({ path: `${SCREENSHOT_DIR}/party-mode-active.png` });
+
+    // Best-effort cleanup: try to stop the session so later runs start
+    // clean. Ignored if the button label changed post-session.
+    try {
+      await page.getByRole('button', { name: 'Sesh', exact: true }).click({ timeout: 5_000 });
+      await page
+        .getByRole('button', { name: 'Stop Session' })
+        .click({ timeout: 5_000 })
+        .catch(() => {});
+    } catch {
+      // Ignore cleanup failures
+    }
   });
 });

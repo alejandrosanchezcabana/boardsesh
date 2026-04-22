@@ -6,35 +6,32 @@ on:
 
 jobs:
   cleanup:
-    name: Remove PR screenshots
+    name: Delete PR screenshot branch
     runs-on: ubuntu-latest
     permissions:
       contents: write
     steps:
-      - uses: actions/checkout@v6
+      # Each PR owns its own `pr-screenshots/{N}` branch (created by the
+      # `report-screenshots` job in e2e-tests.yml). On close/merge we delete
+      # the whole branch — no path surgery needed, and if the branch was
+      # never created (PR had no screenshot run) the 404 is a no-op.
+      - name: Delete pr-screenshots/{PR} if it exists
+        uses: actions/github-script@v7
         with:
-          fetch-depth: 0
-
-      - name: Remove screenshots for closed PR
-        run: |
-          PR_NUMBER="${{ github.event.pull_request.number }}"
-          BRANCH="test-screenshots"
-
-          if ! git ls-remote --exit-code --heads origin "$BRANCH" > /dev/null 2>&1; then
-            echo "Branch $BRANCH does not exist, nothing to clean up."
-            exit 0
-          fi
-
-          git config user.email "github-actions@github.com"
-          git config user.name "GitHub Actions"
-          git fetch origin "$BRANCH"
-          git worktree add /tmp/ss-branch "$BRANCH"
-
-          if [ -d "/tmp/ss-branch/pr-${PR_NUMBER}" ]; then
-            cd /tmp/ss-branch
-            git rm -rf "pr-${PR_NUMBER}"
-            git commit -m "cleanup: remove screenshots for PR #${PR_NUMBER}"
-            git push origin "$BRANCH"
-          else
-            echo "No screenshots found for PR #${PR_NUMBER}, nothing to do."
-          fi
+          script: |
+            const pr = context.payload.pull_request.number;
+            const ref = `heads/pr-screenshots/${pr}`;
+            try {
+              await github.rest.git.deleteRef({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                ref,
+              });
+              core.info(`Deleted ref refs/${ref}`);
+            } catch (err) {
+              if (err.status === 404 || err.status === 422) {
+                core.info(`refs/${ref} does not exist — nothing to clean up.`);
+                return;
+              }
+              throw err;
+            }

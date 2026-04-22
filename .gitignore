@@ -10,6 +10,7 @@ node_modules
 coverage
 packages/web/playwright-report
 packages/web/test-results
+packages/web/e2e/screenshots/
 
 # next.js
 .next/

@@ -23,9 +23,8 @@ import { mkdirSync } from 'fs';
 const SCREENSHOT_DIR = path.resolve(__dirname, 'screenshots/layouts');
 mkdirSync(SCREENSHOT_DIR, { recursive: true });
 
-// iPhone 15 Pro Max logical viewport — matches app-store-screenshots viewport
-const VIEWPORT = { width: 440, height: 956 };
-const DEVICE_SCALE_FACTOR = 3;
+// Viewport/device settings come from the layout-screenshots project in
+// playwright.config.ts (iPhone 16 Pro Max, 440×956 @ 3×).
 
 /**
  * One entry per unique board layout.
@@ -68,19 +67,13 @@ const LAYOUTS = [
 ] as const;
 
 test.describe('Layout Screenshots', () => {
-  test.skip(true, 'Temporarily disabled — screenshot tests not working as expected');
+  // Run layouts one-at-a-time so heavy board-image loads don't pile up
+  // on the dev server (and so any single layout's failure doesn't poison
+  // the next via shared test-server state).
+  test.describe.configure({ mode: 'serial' });
 
   // Board image assets can be large — give each test plenty of headroom
   test.setTimeout(90_000);
-
-  test.use({
-    viewport: VIEWPORT,
-    deviceScaleFactor: DEVICE_SCALE_FACTOR,
-    isMobile: true,
-    hasTouch: true,
-    userAgent:
-      'Mozilla/5.0 (iPhone; CPU iPhone OS 18_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.0 Mobile/15E148 Safari/604.1',
-  });
 
   for (const layout of LAYOUTS) {
     test(`${layout.label}`, async ({ page }) => {
