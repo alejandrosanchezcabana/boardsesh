@@ -80,8 +80,17 @@ jobs:
     name: Build packages (shared by e2e + screenshots)
     runs-on: ubuntu-latest
     timeout-minutes: 15
+    # Build inside the same container the e2e shards use. Matches the
+    # glibc / libstdc++ / Node ABI that `next start` + native modules
+    # like @next/swc, sharp, lightningcss load against, and keeps the
+    # shared node_modules cache safe across the build → e2e boundary.
+    container:
+      image: mcr.microsoft.com/playwright:v1.58.0-noble
     steps:
       - uses: actions/checkout@v6
+
+      - name: Install unzip (required by setup-bun)
+        run: apt-get update && apt-get install -y unzip
 
       - uses: oven-sh/setup-bun@v2
 
@@ -97,9 +106,12 @@ jobs:
           path: |
             node_modules
             packages/*/node_modules
-          key: ${{ runner.os }}-bun-node-modules-${{ hashFiles('bun.lock') }}
+          # Container-qualified key so bare-runner jobs (typecheck) can't
+          # accidentally share native binaries with jobs running inside
+          # the playwright image, even if glibc happens to match today.
+          key: ${{ runner.os }}-bun-node-modules-playwright-noble-${{ hashFiles('bun.lock') }}
           restore-keys: |
-            ${{ runner.os }}-bun-node-modules-
+            ${{ runner.os }}-bun-node-modules-playwright-noble-
 
       - name: Install dependencies
         if: steps.node-modules-cache.outputs.cache-hit != 'true'
@@ -208,9 +220,11 @@ jobs:
           path: |
             node_modules
             packages/*/node_modules
-          key: ${{ runner.os }}-bun-node-modules-${{ hashFiles('bun.lock') }}
+          # Matches the build-job key so shards hit the cache the build
+          # populated. Qualifier keeps it scoped to the playwright image.
+          key: ${{ runner.os }}-bun-node-modules-playwright-noble-${{ hashFiles('bun.lock') }}
           restore-keys: |
-            ${{ runner.os }}-bun-node-modules-
+            ${{ runner.os }}-bun-node-modules-playwright-noble-
 
       - name: Install dependencies
         if: steps.node-modules-cache.outputs.cache-hit != 'true'
@@ -220,10 +234,12 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           name: ${{ env.BUILT_PACKAGES_ARTIFACT }}
-          # The artifact preserves the source-tree layout (packages/web/.next
-          # etc.) so extract into the repo root to put files back where the
-          # `start` scripts expect them.
-          path: .
+          # upload-artifact@v4 strips the common ancestor of all uploaded
+          # paths — since every path starts with `packages/`, the archive
+          # contains `web/.next/…`, `backend/dist/…`, etc. Extracting into
+          # `packages/` restores the `packages/web/.next/…` layout that
+          # `next start` and `bun run --filter=… start` expect.
+          path: packages/
 
       - name: Run database migrations
         run: bunx drizzle-kit migrate
@@ -285,15 +301,17 @@ jobs:
 
   # ---------------------------------------------------------------------------
   # Screenshots — like an e2e shard but runs the three screenshot Playwright
-  # projects. Depends on `build` for the artifact and on `e2e` so we don't
-  # publish screenshots of an app that didn't pass its functional tests.
+  # projects. `needs: e2e` sequences it after the functional tests so the
+  # two don't fight over shared containers; `if: always()` makes sure a
+  # failing shard doesn't skip the capture (screenshots are informational).
   # ---------------------------------------------------------------------------
   screenshots:
     name: Capture PR screenshots
     needs: [typecheck, build, e2e]
-    if: github.event_name == 'pull_request'
-    # Soft-fail: a broken screenshot scene should leave the PR's required
-    # checks green and let report-screenshots still update the comment.
+    # `always()` so a failing e2e shard doesn't suppress the screenshot
+    # capture — screenshots are informational, not a merge gate. Paired
+    # with `continue-on-error: true` for soft-fail semantics.
+    if: always() && github.event_name == 'pull_request'
     continue-on-error: true
     timeout-minutes: 20
     runs-on: ubuntu-latest
@@ -345,9 +363,11 @@ jobs:
           path: |
             node_modules
             packages/*/node_modules
-          key: ${{ runner.os }}-bun-node-modules-${{ hashFiles('bun.lock') }}
+          # Matches the build-job key so shards hit the cache the build
+          # populated. Qualifier keeps it scoped to the playwright image.
+          key: ${{ runner.os }}-bun-node-modules-playwright-noble-${{ hashFiles('bun.lock') }}
           restore-keys: |
-            ${{ runner.os }}-bun-node-modules-
+            ${{ runner.os }}-bun-node-modules-playwright-noble-
 
       - name: Install dependencies
         if: steps.node-modules-cache.outputs.cache-hit != 'true'
@@ -357,7 +377,9 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           name: ${{ env.BUILT_PACKAGES_ARTIFACT }}
-          path: .
+          # See note on the e2e-job download step — archive root is
+          # `packages/`-stripped, extract into packages/ to restore layout.
+          path: packages/
 
       - name: Run database migrations
         run: bunx drizzle-kit migrate
