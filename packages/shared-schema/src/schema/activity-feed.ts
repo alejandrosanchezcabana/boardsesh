@@ -230,6 +230,24 @@ export const activityFeedTypeDefs = /* GraphQL */ `
     hasMore: Boolean!
   }
 
+  """
+  Input for fetching followed users' ticks on a specific climb.
+  """
+  input FollowingClimbAscentsInput {
+    "Board type (kilter, tension, moonboard)"
+    boardType: String!
+    "Climb UUID"
+    climbUuid: String!
+  }
+
+  """
+  Unpaginated result: all ticks from followed users for a given climb.
+  """
+  type FollowingClimbAscentsResult {
+    "List of feed items"
+    items: [FollowingAscentFeedItem!]!
+  }
+
   # ============================================
   # Materialized Activity Feed Types
   # ============================================

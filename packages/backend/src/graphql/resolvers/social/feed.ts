@@ -8,7 +8,7 @@ import {
   consensusGradeTable,
   consensusGradeJoinCondition,
 } from '../shared/sql-expressions';
-import { FollowingAscentsFeedInputSchema } from '../../../validation/schemas';
+import { FollowingAscentsFeedInputSchema, FollowingClimbAscentsInputSchema } from '../../../validation/schemas';
 
 export const socialFeedQueries = {
   /**
@@ -231,5 +231,76 @@ export const socialFeedQueries = {
       totalCount: 0, // Intentionally 0 — full COUNT(*) was too expensive. No frontend uses this value.
       hasMore,
     };
+  },
+
+  /**
+   * Get ticks from followed users for a specific climb
+   * Requires authentication
+   */
+  followingClimbAscents: async (
+    _: unknown,
+    { input }: { input: { boardType: string; climbUuid: string } },
+    ctx: ConnectionContext,
+  ) => {
+    requireAuthenticated(ctx);
+    const myUserId = ctx.userId!;
+
+    const validatedInput = validateInput(FollowingClimbAscentsInputSchema, input, 'input');
+
+    // Cap results to avoid runaway payloads on highly-trafficked climbs.
+    // The UI is a collapsed list — 100 recent ticks is plenty.
+    const MAX_ITEMS = 100;
+
+    try {
+      const results = await db
+        .select({
+          tick: dbSchema.boardseshTicks,
+          userName: dbSchema.users.name,
+          userImage: dbSchema.users.image,
+          userDisplayName: dbSchema.userProfiles.displayName,
+          userAvatarUrl: dbSchema.userProfiles.avatarUrl,
+        })
+        .from(dbSchema.boardseshTicks)
+        .innerJoin(
+          dbSchema.userFollows,
+          and(
+            eq(dbSchema.userFollows.followingId, dbSchema.boardseshTicks.userId),
+            eq(dbSchema.userFollows.followerId, myUserId),
+          ),
+        )
+        .innerJoin(dbSchema.users, eq(dbSchema.boardseshTicks.userId, dbSchema.users.id))
+        .leftJoin(dbSchema.userProfiles, eq(dbSchema.boardseshTicks.userId, dbSchema.userProfiles.userId))
+        .where(
+          and(
+            eq(dbSchema.boardseshTicks.boardType, validatedInput.boardType),
+            eq(dbSchema.boardseshTicks.climbUuid, validatedInput.climbUuid),
+          ),
+        )
+        .orderBy(desc(dbSchema.boardseshTicks.climbedAt))
+        .limit(MAX_ITEMS);
+
+      const items = results.map(({ tick, userName, userImage, userDisplayName, userAvatarUrl }) => ({
+        uuid: tick.uuid,
+        userId: tick.userId,
+        userDisplayName: userDisplayName || userName || undefined,
+        userAvatarUrl: userAvatarUrl || userImage || undefined,
+        climbUuid: tick.climbUuid,
+        boardType: tick.boardType,
+        angle: tick.angle,
+        isMirror: tick.isMirror ?? false,
+        status: tick.status,
+        attemptCount: tick.attemptCount,
+        quality: tick.quality,
+        difficulty: tick.difficulty,
+        isBenchmark: tick.isBenchmark ?? false,
+        comment: tick.comment || '',
+        climbedAt: tick.climbedAt,
+      }));
+
+      return { items };
+    } catch (err) {
+      console.error('[followingClimbAscents] DB error:', err);
+      throw err;
+    }
   },
 };

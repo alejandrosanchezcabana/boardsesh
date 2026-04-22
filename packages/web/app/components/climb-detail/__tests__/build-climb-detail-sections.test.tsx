@@ -23,6 +23,9 @@ vi.mock('@/app/components/logbook/logbook-section', () => ({
   LogbookSection: () => null,
   useLogbookSummary: () => null,
 }));
+vi.mock('@/app/components/logbook/crew-logbook-view', () => ({
+  CrewLogbookView: () => null,
+}));
 vi.mock('@/app/components/social/climb-social-section', () => ({
   default: () => null,
 }));
@@ -92,13 +95,13 @@ describe('useBuildClimbDetailSections', () => {
     vi.restoreAllMocks();
   });
 
-  it('returns 4 sections when enabled (default)', () => {
+  it('returns 5 sections when enabled (default)', () => {
     const { result } = renderHook(() => useBuildClimbDetailSections(BASE_PROPS), {
       wrapper: createWrapper(),
     });
 
-    expect(result.current).toHaveLength(4);
-    expect(result.current.map((s) => s.key)).toEqual(['beta', 'logbook', 'community', 'analytics']);
+    expect(result.current).toHaveLength(5);
+    expect(result.current.map((s) => s.key)).toEqual(['beta', 'logbook', 'crew-logbook', 'community', 'analytics']);
   });
 
   it('returns empty array when enabled is false', () => {
@@ -130,8 +133,8 @@ describe('useBuildClimbDetailSections', () => {
 
     rerender({ enabled: true });
 
-    expect(result.current).toHaveLength(4);
-    expect(result.current.map((s) => s.key)).toEqual(['beta', 'logbook', 'community', 'analytics']);
+    expect(result.current).toHaveLength(5);
+    expect(result.current.map((s) => s.key)).toEqual(['beta', 'logbook', 'crew-logbook', 'community', 'analytics']);
   });
 
   it('all sections have lazy: true', () => {

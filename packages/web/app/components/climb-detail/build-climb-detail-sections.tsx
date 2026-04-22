@@ -6,6 +6,7 @@ import { useQuery } from '@tanstack/react-query';
 import type { CollapsibleSectionConfig } from '@/app/components/collapsible-section/collapsible-section';
 import BetaVideos from '@/app/components/beta-videos/beta-videos';
 import { LogbookSection, useLogbookSummary } from '@/app/components/logbook/logbook-section';
+import { CrewLogbookView } from '@/app/components/logbook/crew-logbook-view';
 import ClimbSocialSection from '@/app/components/social/climb-social-section';
 import ClimbAnalytics from '@/app/components/charts/climb-analytics';
 import type { BetaLink } from '@/app/lib/api-wrappers/sync-api-types';
@@ -88,6 +89,14 @@ export function useBuildClimbDetailSections({
       getSummary: getLogbookSummaryParts,
       lazy: true,
       content: <LogbookSection climb={climb} />,
+    },
+    {
+      key: 'crew-logbook',
+      label: 'Crew Logbook',
+      title: 'Crew Logbook',
+      defaultSummary: "See your crew's sends",
+      lazy: true,
+      content: <CrewLogbookView currentClimb={climb} boardType={boardType} />,
     },
     {
       key: 'community',

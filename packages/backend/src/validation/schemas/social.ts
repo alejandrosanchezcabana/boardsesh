@@ -94,6 +94,14 @@ export const FollowingAscentsFeedInputSchema = z.object({
 });
 
 /**
+ * Following climb ascents input validation schema
+ */
+export const FollowingClimbAscentsInputSchema = z.object({
+  boardType: BoardNameSchema,
+  climbUuid: z.string().min(1, 'Climb UUID cannot be empty').max(100),
+});
+
+/**
  * New climb feed schemas
  */
 export const NewClimbSubscriptionInputSchema = z.object({

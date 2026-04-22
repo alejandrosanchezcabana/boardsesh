@@ -1,0 +1,127 @@
+'use client';
+
+import React from 'react';
+import NextLink from 'next/link';
+import Avatar from '@mui/material/Avatar';
+import Box from '@mui/material/Box';
+import Card from '@mui/material/Card';
+import CardContent from '@mui/material/CardContent';
+import Chip from '@mui/material/Chip';
+import Link from '@mui/material/Link';
+import Rating from '@mui/material/Rating';
+import Stack from '@mui/material/Stack';
+import Typography from '@mui/material/Typography';
+import PersonOutlined from '@mui/icons-material/PersonOutlined';
+import dayjs from 'dayjs';
+import { AscentStatusIcon } from '@/app/components/ascent-status/ascent-status-icon';
+import {
+  normalizeAscentStatus,
+  type AscentStatusValue,
+} from '@/app/components/ascent-status/ascent-status-utils';
+
+export interface LogbookEntryUser {
+  userId: string;
+  displayName?: string | null;
+  avatarUrl?: string | null;
+}
+
+export interface LogbookEntryCardData {
+  climbedAt: string;
+  angle: number;
+  isMirror: boolean;
+  /** Raw status from the server. The card normalizes via normalizeAscentStatus. */
+  status?: string | null;
+  attemptCount: number;
+  quality?: number | null;
+  comment?: string | null;
+}
+
+export interface LogbookEntryCardProps {
+  entry: LogbookEntryCardData;
+  currentClimbAngle: number;
+  showMirrorTag: boolean;
+  user?: LogbookEntryUser;
+}
+
+export const LogbookEntryCard: React.FC<LogbookEntryCardProps> = ({
+  entry,
+  currentClimbAngle,
+  showMirrorTag,
+  user,
+}) => {
+  const ascentStatus = normalizeAscentStatus({
+    // normalizeAscentStatus does a runtime check for the three known values
+    // and falls back to 'attempt' for anything else — safe for raw strings.
+    status: entry.status as AscentStatusValue | null | undefined,
+    tries: entry.attemptCount,
+  });
+  const hasSuccess = ascentStatus !== 'attempt';
+  const showAngleAndStatus = entry.angle !== currentClimbAngle;
+
+  return (
+    <Card sx={{ width: '100%' }}>
+      <CardContent sx={{ p: 1.5 }}>
+        {user && (
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}>
+            <Link
+              component={NextLink}
+              href={`/profile/${user.userId}`}
+              aria-label={user.displayName || 'Climber profile'}
+              sx={{ display: 'inline-flex' }}
+            >
+              <Avatar src={user.avatarUrl ?? undefined} sx={{ width: 32, height: 32 }}>
+                {!user.avatarUrl && <PersonOutlined sx={{ fontSize: 16 }} />}
+              </Avatar>
+            </Link>
+            <Link
+              component={NextLink}
+              href={`/profile/${user.userId}`}
+              underline="none"
+              color="text.primary"
+            >
+              <Typography variant="body2" fontWeight={600}>
+                {user.displayName || 'Climber'}
+              </Typography>
+            </Link>
+          </Box>
+        )}
+        <Stack spacing={1} sx={{ width: '100%' }}>
+          <Stack direction="row" spacing={1} sx={{ flexWrap: 'wrap' }}>
+            <Typography variant="body2" component="span" fontWeight={600}>
+              {dayjs(entry.climbedAt).format('MMM D, YYYY h:mm A')}
+            </Typography>
+            {showAngleAndStatus && (
+              <>
+                <Chip label={entry.angle} size="small" color="primary" />
+                <AscentStatusIcon status={ascentStatus} variant="icon" />
+              </>
+            )}
+            {showMirrorTag && entry.isMirror && (
+              <Chip label="Mirrored" size="small" color="secondary" />
+            )}
+          </Stack>
+          {hasSuccess && entry.quality != null && entry.quality > 0 && (
+            <Stack direction="row" spacing={1}>
+              <Rating readOnly value={entry.quality} max={5} size="small" />
+            </Stack>
+          )}
+          <Stack direction="row" spacing={1}>
+            <Typography variant="body2" component="span">
+              Attempts: {entry.attemptCount}
+            </Typography>
+          </Stack>
+          {entry.comment && (
+            <Typography
+              variant="body2"
+              component="span"
+              color="text.secondary"
+              sx={{ whiteSpace: 'pre-wrap' }}
+            >
+              {entry.comment}
+            </Typography>
+          )}
+        </Stack>
+      </CardContent>
+    </Card>
+  );
+};
