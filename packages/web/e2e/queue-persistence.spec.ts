@@ -94,8 +94,6 @@ test.describe('Queue Persistence - Local Mode', () => {
     await page.getByLabel('User menu').click();
     const settingsLink = page.locator('a[href="/settings"]');
     await expect(settingsLink).toBeVisible({ timeout: 5000 });
-    // Wait for drawer slide animation to settle before clicking
-    await page.waitForTimeout(500);
     await Promise.all([page.waitForURL(/\/settings/, { timeout: 15000 }), settingsLink.click()]);
     await verifyQueueShowsClimb(page, climbName);
 

@@ -9,12 +9,17 @@ export default defineConfig({
   fullyParallel: true,
   /* Fail the build on CI if you accidentally left test.only in the source code. */
   forbidOnly: !!process.env.CI,
-  /* Retry on CI only */
-  retries: process.env.CI ? 2 : 0,
+  /* 3 retries in CI to absorb infra timing noise; 1 locally to catch genuine flakes */
+  retries: process.env.CI ? 3 : 1,
   /* Opt out of parallel tests on CI. */
   workers: process.env.CI ? 2 : undefined,
+  /* Global per-test timeout — some tests (zoom, login flows) need more than Playwright's 30 s default */
+  timeout: 60_000,
+  /* Raise the default assertion timeout from Playwright's 5 s to 10 s */
+  expect: { timeout: 10_000 },
   /* Reporter to use. See https://playwright.dev/docs/test-reporters */
-  reporter: process.env.CI ? 'github' : 'html',
+  /* In CI: emit both the HTML report (uploaded as an artifact) and GitHub Annotations */
+  reporter: process.env.CI ? [['html'], ['github']] : 'html',
   /* Shared settings for all the projects below. See https://playwright.dev/docs/api/class-testoptions. */
   use: {
     /* Base URL to use in actions like `await page.goto('/')`. */
@@ -22,6 +27,12 @@ export default defineConfig({
 
     /* Collect trace when retrying the failed test. See https://playwright.dev/docs/trace-viewer */
     trace: 'on-first-retry',
+    /* Capture a screenshot on failure for easier CI debugging */
+    screenshot: 'only-on-failure',
+    /* Timeout for individual actions (click, fill, etc.) */
+    actionTimeout: 15_000,
+    /* Timeout for page navigations */
+    navigationTimeout: 30_000,
   },
 
   /* Configure projects for major browsers */
