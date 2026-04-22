@@ -78,14 +78,14 @@ test.describe('App Store Screenshots', () => {
   });
 
   test('04-queue', async ({ page }) => {
-    // Tapping a climb row selects it and adds it to the queue (the row's
-    // onClick routes to setCurrentClimb with shouldAddToQueue=true). Tap
-    // several rows to populate the queue, then screenshot the control bar.
-    const rows = page.locator('#onboarding-climb-card, [data-testid="climb-card"]').locator('..');
-    const count = await rows.count();
-
-    for (let i = 0; i < Math.min(3, count); i++) {
-      await rows.nth(i).click();
+    // Tapping a climb row dispatches setCurrentClimb with shouldAddToQueue,
+    // so each click appends a new queue item. Click the first row three
+    // times to populate the queue without relying on selectors for
+    // non-onboarding rows (which don't carry stable test IDs in list mode).
+    const firstRow = page.locator('#onboarding-climb-card');
+    await firstRow.waitFor({ state: 'visible', timeout: 15000 });
+    for (let i = 0; i < 3; i++) {
+      await firstRow.click();
       await page.waitForTimeout(300);
     }
 
@@ -117,8 +117,10 @@ test.describe('App Store Screenshots', () => {
   });
 
   test('06-party-mode', async ({ page }) => {
-    // Tap a climb row so it lands in the queue and the control bar renders
-    const row = page.locator('#onboarding-climb-card').locator('..').first();
+    // Tap the climb row directly — going up to its virtualizer parent via
+    // .locator('..') lands the click on non-interactive padding and
+    // misses the row's onClick handler.
+    const row = page.locator('#onboarding-climb-card');
     await row.waitFor({ state: 'visible', timeout: 15000 });
     await row.click();
 

@@ -83,8 +83,10 @@ test.describe('Help Page Screenshots', () => {
 
   test('party mode modal', async ({ page }) => {
     // Add a climb so the queue bar renders, then open the "Start sesh"
-    // drawer from inside the queue bar.
-    const row = page.locator('#onboarding-climb-card').locator('..').first();
+    // drawer from inside the queue bar. Click the row itself — the
+    // `.locator('..')` parent lookup used previously hit the virtualizer
+    // container's dead space and often missed the onClick handler.
+    const row = page.locator('#onboarding-climb-card');
     await row.waitFor({ state: 'visible', timeout: 15_000 });
     await row.click();
 
@@ -184,7 +186,9 @@ test.describe('Help Page Screenshots - Authenticated', () => {
     test.slow();
     await context.grantPermissions(['geolocation']);
 
-    const row = page.locator('#onboarding-climb-card').locator('..').first();
+    // Click the row itself, not its virtualizer parent — see note on
+    // `party mode modal` above.
+    const row = page.locator('#onboarding-climb-card');
     await row.waitFor({ state: 'visible', timeout: 15_000 });
     await row.click();
 
