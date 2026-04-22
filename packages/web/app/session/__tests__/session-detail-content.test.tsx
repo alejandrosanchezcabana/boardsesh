@@ -94,7 +94,15 @@ vi.mock('@/app/components/board-page/angle-selector', () => ({
 }));
 
 vi.mock('@/app/components/collapsible-section/collapsible-section', () => ({
-  default: ({ title, children, defaultExpanded }: { title: string; children: React.ReactNode; defaultExpanded?: boolean }) => (
+  default: ({
+    title,
+    children,
+    defaultExpanded,
+  }: {
+    title: string;
+    children: React.ReactNode;
+    defaultExpanded?: boolean;
+  }) => (
     <div data-testid="collapsible-section" data-title={title} data-expanded={defaultExpanded}>
       {children}
     </div>
