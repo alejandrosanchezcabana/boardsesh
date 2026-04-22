@@ -868,6 +868,33 @@ describe('QuickTickBar', () => {
 
       expect(onAscentTypeChange).toHaveBeenCalledWith('send');
     });
+
+    it('reports send when the climb already has userAscents on mount', () => {
+      mockLogbookRef.current = [];
+      const onAscentTypeChange = vi.fn();
+      const climbWithHistory = makeClimb({ userAscents: 1, userAttempts: 0 });
+      render(
+        <QuickTickBar {...defaultProps} currentClimb={climbWithHistory} onAscentTypeChange={onAscentTypeChange} />,
+      );
+      expect(onAscentTypeChange).toHaveBeenLastCalledWith('send');
+    });
+
+    it('reports send when the climb already has userAttempts on mount', () => {
+      mockLogbookRef.current = [];
+      const onAscentTypeChange = vi.fn();
+      const climbWithAttempts = makeClimb({ userAscents: 0, userAttempts: 2 });
+      render(
+        <QuickTickBar {...defaultProps} currentClimb={climbWithAttempts} onAscentTypeChange={onAscentTypeChange} />,
+      );
+      expect(onAscentTypeChange).toHaveBeenLastCalledWith('send');
+    });
+
+    it('reports send when the logbook contains a prior entry for this climb', () => {
+      mockLogbookRef.current = [makeLogbookEntry({ uuid: 'p1', climb_uuid: 'climb-1', angle: 40 })];
+      const onAscentTypeChange = vi.fn();
+      render(<QuickTickBar {...defaultProps} onAscentTypeChange={onAscentTypeChange} />);
+      expect(onAscentTypeChange).toHaveBeenLastCalledWith('send');
+    });
   });
 
   describe('expanded mode', () => {

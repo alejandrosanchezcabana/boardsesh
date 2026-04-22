@@ -439,6 +439,33 @@ describe('QueueControlBar tick bar expanded persistence', () => {
     expect(mockSetPreference).not.toHaveBeenCalledWith('tickBarExpanded', false);
   });
 
+  it('keeps the attempt button visible in collapsed tick mode', async () => {
+    await act(async () => {
+      render(<QueueControlBar {...defaultProps} />);
+    });
+
+    await activateTickBar();
+
+    expect(screen.getByLabelText('Log attempt')).toBeTruthy();
+  });
+
+  it('keeps the attempt button visible when the tick bar is expanded', async () => {
+    mockGetPreference.mockResolvedValue(true);
+
+    await act(async () => {
+      render(<QueueControlBar {...defaultProps} />);
+    });
+
+    await activateTickBar();
+
+    // Wait for the persisted expanded state to apply.
+    await waitFor(() => {
+      expect(screen.getByLabelText('Collapse tick bar')).toBeTruthy();
+    });
+
+    expect(screen.getByLabelText('Log attempt')).toBeTruthy();
+  });
+
   it('restores expanded state on re-open after close', async () => {
     mockGetPreference.mockResolvedValue(true);
 

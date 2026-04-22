@@ -6,13 +6,9 @@ import Skeleton from '@mui/material/Skeleton';
 import StarIcon from '@mui/icons-material/Star';
 import ChevronLeftIcon from '@mui/icons-material/ChevronLeft';
 import ChevronRightIcon from '@mui/icons-material/ChevronRight';
-import { PersonFallingIcon } from '@/app/components/icons/person-falling-icon';
-import CheckOutlined from '@mui/icons-material/CheckOutlined';
-import ElectricBoltOutlined from '@mui/icons-material/ElectricBoltOutlined';
 import { themeTokens } from '@/app/theme/theme-config';
 import { useGradeFormat } from '@/app/hooks/use-grade-format';
 import { useIsDarkMode } from '@/app/hooks/use-is-dark-mode';
-import type { TickStatus } from '@/app/hooks/use-logbook';
 import styles from './tick-controls.module.css';
 
 export type ExpandedControl = 'grade' | 'stars' | 'tries' | null;
@@ -448,67 +444,3 @@ export const InlineTriesPicker: React.FC<{
   );
 };
 
-/* ------------------------------------------------------------------ */
-/*  Ascent type picker — used in expanded tick bar                    */
-/* ------------------------------------------------------------------ */
-
-const ASCENT_TYPE_OPTIONS: readonly {
-  value: TickStatus;
-  label: string;
-  icon: React.ReactNode;
-  color: string;
-}[] = [
-  {
-    value: 'attempt',
-    label: 'Attempt',
-    icon: <PersonFallingIcon sx={{ fontSize: 18 }} />,
-    color: themeTokens.colors.error,
-  },
-  {
-    value: 'send',
-    label: 'Send',
-    icon: <CheckOutlined sx={{ fontSize: 18 }} />,
-    color: themeTokens.colors.success,
-  },
-  {
-    value: 'flash',
-    label: 'Flash',
-    icon: <ElectricBoltOutlined sx={{ fontSize: 18 }} />,
-    color: themeTokens.colors.amber,
-  },
-];
-
-export const InlineAscentTypePicker: React.FC<{
-  ascentType: TickStatus;
-  onSelect: (value: TickStatus) => void;
-  /** Whether flash is available (no prior history and 1 try). */
-  canFlash?: boolean;
-}> = ({ ascentType, onSelect, canFlash = true }) => (
-  <div className={styles.pickerRow} role="listbox" aria-label="Ascent type">
-    {ASCENT_TYPE_OPTIONS.map((opt) => {
-      const disabled = opt.value === 'flash' && !canFlash;
-      return (
-        <ButtonBase
-          key={opt.value}
-          onClick={() => !disabled && onSelect(opt.value)}
-          className={`${styles.pickerItem} ${styles.ascentTypeItem} ${opt.value === ascentType ? styles.pickerItemSelected : ''}`}
-          aria-label={opt.label}
-          aria-selected={opt.value === ascentType}
-          aria-disabled={disabled}
-          role="option"
-          disabled={disabled}
-        >
-          <span
-            className={`${styles.ascentTypeIcon} ${disabled ? styles.ascentTypeItemDisabled : ''}`}
-            style={{ color: opt.value === ascentType ? opt.color : 'inherit' }}
-          >
-            {opt.icon}
-          </span>
-          <span className={`${styles.ascentTypeLabel} ${disabled ? styles.ascentTypeItemDisabled : ''}`}>
-            {opt.label}
-          </span>
-        </ButtonBase>
-      );
-    })}
-  </div>
-);

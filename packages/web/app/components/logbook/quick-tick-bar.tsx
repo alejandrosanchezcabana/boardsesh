@@ -106,13 +106,9 @@ export const QuickTickBar = forwardRef<QuickTickBarHandle, QuickTickBarProps>(
     const [attemptCount, setAttemptCount] = useState<number>(1);
     const [expandedControl, setExpandedControl] = useState<ExpandedControl>(null);
 
-    // Ascent type is always inferred from state: flash on 1st try with no prior history, else send.
-    const inferredType: TickStatus = tickTarget && !tickTarget.hasPriorHistory && attemptCount === 1 ? 'flash' : 'send';
-    const [ascentType, setAscentType] = useState<TickStatus>(inferredType);
-
-    useEffect(() => {
-      setAscentType(inferredType);
-    }, [inferredType]);
+    // Ascent type is derived from state: flash on 1st try with no prior history, else send.
+    const ascentType: TickStatus =
+      tickTarget && !tickTarget.hasPriorHistory && attemptCount === 1 ? 'flash' : 'send';
 
     // Report ascent type to the parent so tick buttons can update their appearance.
     const isFlash = ascentType === 'flash';

@@ -287,21 +287,3 @@
   color: var(--grade-color, inherit);
 }
 
-/* Ascent type picker items — icon + label side by side */
-.ascentTypeItem {
-  gap: 6px;
-  padding: 4px 12px;
-}
-
-.ascentTypeIcon {
-  display: flex;
-}
-
-.ascentTypeItemDisabled {
-  opacity: 0.3;
-}
-
-.ascentTypeLabel {
-  font-size: 13px;
-  font-weight: 600;
-}
