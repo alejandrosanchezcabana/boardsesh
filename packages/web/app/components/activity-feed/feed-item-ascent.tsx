@@ -31,6 +31,7 @@ export default function FeedItemAscent({ item }: FeedItemAscentProps) {
     difficulty: item.difficulty ?? undefined,
     difficultyName: item.difficultyName ?? undefined,
     isBenchmark: item.isBenchmark ?? false,
+    isNoMatch: item.isNoMatch ?? false,
     comment: item.comment || '',
     climbedAt: item.createdAt,
     frames: item.frames ?? undefined,

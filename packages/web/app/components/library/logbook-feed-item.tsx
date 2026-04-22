@@ -46,6 +46,7 @@ import { getExcludedClimbActions } from '@/app/lib/climb-action-utils';
 import { TENSION_KILTER_GRADES, getGradesForBoard } from '@/app/lib/board-data';
 import AscentThumbnail from '@/app/components/activity-feed/ascent-thumbnail';
 import { InlineStarPicker, InlineGradePicker, InlineTriesPicker, type ExpandedControl } from '../logbook/tick-controls';
+import ClimbIcons from '@/app/components/climb-card/climb-icons';
 import { ascentFeedItemToClimb } from './ascent-to-climb';
 import ascentStyles from '@/app/components/climb-card/ascent-status.module.css';
 import drawerCss from '@/app/components/swipeable-drawer/swipeable-drawer.module.css';
@@ -664,6 +665,7 @@ const LogbookFeedItem: React.FC<LogbookFeedItemProps> = React.memo(
               <div className={styles.center}>
                 <Typography variant="body2" component="div" sx={nameSx}>
                   {item.climbName}
+                  <ClimbIcons isNoMatch={!!item.isNoMatch} />
                 </Typography>
                 <Typography variant="body2" component="div" color="text.secondary" sx={subtitleSx}>
                   {subtitle}

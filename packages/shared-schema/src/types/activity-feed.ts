@@ -20,6 +20,7 @@ export type FollowingAscentFeedItem = {
   difficulty?: number;
   difficultyName?: string;
   isBenchmark: boolean;
+  isNoMatch: boolean;
   comment: string;
   climbedAt: string;
   frames?: string;
@@ -43,6 +44,7 @@ export type AscentFeedItem = {
   consensusDifficultyName?: string | null;
   qualityAverage?: number | null;
   isBenchmark: boolean;
+  isNoMatch: boolean;
   comment: string;
   climbedAt: string;
   frames?: string | null;
@@ -108,6 +110,7 @@ export type ActivityFeedItem = {
   commentBody?: string | null;
   isMirror?: boolean | null;
   isBenchmark?: boolean | null;
+  isNoMatch?: boolean | null;
   difficulty?: number | null;
   difficultyName?: string | null;
   quality?: number | null;
@@ -198,6 +201,7 @@ export type SessionDetailTick = {
   quality?: number | null;
   isMirror: boolean;
   isBenchmark: boolean;
+  isNoMatch: boolean;
   comment?: string | null;
   frames?: string | null;
   setterUsername?: string | null;

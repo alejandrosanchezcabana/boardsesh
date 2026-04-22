@@ -22,6 +22,7 @@ import type { FollowingAscentFeedItem } from '@boardsesh/shared-schema';
 import AscentThumbnail from './ascent-thumbnail';
 import VoteButton from '@/app/components/social/vote-button';
 import CommentSection from '@/app/components/social/comment-section';
+import ClimbIcons from '@/app/components/climb-card/climb-icons';
 import { themeTokens } from '@/app/theme/theme-config';
 import styles from './ascents-feed.module.css';
 
@@ -101,6 +102,7 @@ const SocialFeedItem: React.FC<SocialFeedItemProps> = ({ item, showUserHeader = 
               </MuiTypography>
               <MuiTypography variant="body2" component="span" fontWeight={600}>
                 {item.climbName}
+                <ClimbIcons isNoMatch={!!item.isNoMatch} />
               </MuiTypography>
             </Box>
             <MuiTypography variant="caption" color="text.secondary" sx={{ flexShrink: 0 }}>
@@ -148,6 +150,7 @@ const SocialFeedItem: React.FC<SocialFeedItemProps> = ({ item, showUserHeader = 
                 {!showUserHeader && (
                   <MuiTypography variant="body2" component="span" fontWeight={600} className={styles.climbName}>
                     {item.climbName}
+                    <ClimbIcons isNoMatch={!!item.isNoMatch} />
                   </MuiTypography>
                 )}
               </Box>

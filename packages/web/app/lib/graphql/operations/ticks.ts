@@ -161,6 +161,7 @@ export const GET_USER_ASCENTS_FEED = gql`
         consensusDifficultyName
         qualityAverage
         isBenchmark
+        isNoMatch
         comment
         climbedAt
         frames
@@ -190,6 +191,7 @@ export interface AscentFeedItem {
   consensusDifficultyName: string | null;
   qualityAverage: number | null;
   isBenchmark: boolean;
+  isNoMatch: boolean;
   comment: string;
   climbedAt: string;
   frames: string | null;
@@ -259,6 +261,7 @@ export const GET_USER_GROUPED_ASCENTS_FEED = gql`
         frames
         difficultyName
         isBenchmark
+        isNoMatch
         date
         flashCount
         sendCount
@@ -280,6 +283,7 @@ export const GET_USER_GROUPED_ASCENTS_FEED = gql`
           difficulty
           difficultyName
           isBenchmark
+          isNoMatch
           comment
           climbedAt
           frames
@@ -304,6 +308,7 @@ export interface GroupedAscentFeedItem {
   frames: string | null;
   difficultyName: string | null;
   isBenchmark: boolean;
+  isNoMatch: boolean;
   date: string;
   flashCount: number;
   sendCount: number;

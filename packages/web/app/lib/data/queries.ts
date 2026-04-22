@@ -11,6 +11,7 @@ import { getGradeLabel } from '@boardsesh/db/queries';
 
 import { Climb, ParsedBoardRouteParametersWithUuid, BoardName, LayoutId, Size } from '../types';
 import { getSizesForLayoutId, getAllLayouts, getSetsForLayoutAndSize } from '@/app/lib/board-constants';
+import { isNoMatchClimb } from '@/app/lib/no-match-climb';
 
 export const getClimb = cache(async (params: ParsedBoardRouteParametersWithUuid): Promise<Climb> => {
   const result = await sql`
@@ -33,7 +34,11 @@ export const getClimb = cache(async (params: ParsedBoardRouteParametersWithUuid)
         limit 1
       `;
   const row = result[0] as Climb & { difficulty_id: number | null };
-  return { ...row, difficulty: getGradeLabel(row.difficulty_id) } as Climb;
+  return {
+    ...row,
+    difficulty: getGradeLabel(row.difficulty_id),
+    is_no_match: isNoMatchClimb(row.description),
+  } as Climb;
 });
 
 export interface ClimbStatsForAngle {

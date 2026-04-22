@@ -28,6 +28,7 @@ import {
   type GetUserGroupedAscentsFeedQueryResponse,
 } from '@/app/lib/graphql/operations';
 import AscentThumbnail from './ascent-thumbnail';
+import ClimbIcons from '@/app/components/climb-card/climb-icons';
 import { ConfirmPopover } from '@/app/components/ui/confirm-popover';
 import { useDeleteTick } from '@/app/hooks/use-delete-tick';
 import { themeTokens } from '@/app/theme/theme-config';
@@ -193,6 +194,7 @@ const GroupedFeedItem: React.FC<{
                 />
                 <MuiTypography variant="body2" component="span" fontWeight={600} className={styles.climbName}>
                   {group.climbName}
+                  <ClimbIcons isNoMatch={!!group.isNoMatch} />
                 </MuiTypography>
               </Box>
               <MuiTypography variant="body2" component="span" color="text.secondary" className={styles.timeAgo}>

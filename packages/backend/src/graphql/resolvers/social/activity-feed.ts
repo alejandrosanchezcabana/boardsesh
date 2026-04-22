@@ -2,7 +2,7 @@ import { eq, and, desc, sql } from 'drizzle-orm';
 import type { ConnectionContext } from '@boardsesh/shared-schema';
 import { db } from '../../../db/client';
 import * as dbSchema from '@boardsesh/db/schema';
-import { requireAuthenticated, validateInput } from '../shared/helpers';
+import { requireAuthenticated, validateInput, isNoMatchClimb } from '../shared/helpers';
 import { ActivityFeedInputSchema } from '../../../validation/schemas';
 import { encodeCursor, decodeCursor } from '../../../utils/feed-cursor';
 
@@ -29,6 +29,7 @@ function mapFeedItemToGraphQL(row: typeof dbSchema.feedItems.$inferSelect) {
     commentBody: (meta.commentBody as string) ?? null,
     isMirror: (meta.isMirror as boolean) ?? null,
     isBenchmark: (meta.isBenchmark as boolean) ?? null,
+    isNoMatch: (meta.isNoMatch as boolean) ?? null,
     difficulty: (meta.difficulty as number) ?? null,
     difficultyName: (meta.difficultyName as string) ?? null,
     quality: (meta.quality as number) ?? null,
@@ -45,6 +46,7 @@ type TickJoinRow = {
   userDisplayName: string | null;
   userAvatarUrl: string | null;
   climbName: string | null;
+  climbDescription: string | null;
   setterUsername: string | null;
   layoutId: number | null;
   frames: string | null;
@@ -58,6 +60,7 @@ function mapTickRowToFeedItem({
   userDisplayName,
   userAvatarUrl,
   climbName,
+  climbDescription,
   setterUsername,
   layoutId,
   frames,
@@ -84,6 +87,7 @@ function mapTickRowToFeedItem({
     commentBody: null,
     isMirror: tick.isMirror ?? false,
     isBenchmark: tick.isBenchmark ?? false,
+    isNoMatch: isNoMatchClimb(climbDescription),
     difficulty: tick.difficulty,
     difficultyName,
     quality: tick.quality,
@@ -205,6 +209,7 @@ export const activityFeedQueries = {
         userDisplayName: dbSchema.userProfiles.displayName,
         userAvatarUrl: dbSchema.userProfiles.avatarUrl,
         climbName: dbSchema.boardClimbs.name,
+        climbDescription: dbSchema.boardClimbs.description,
         setterUsername: dbSchema.boardClimbs.setterUsername,
         layoutId: dbSchema.boardClimbs.layoutId,
         frames: dbSchema.boardClimbs.frames,

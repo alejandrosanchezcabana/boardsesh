@@ -46,6 +46,7 @@ import { socialRoleQueries, socialRoleMutations } from './social/roles';
 import { socialCommunitySettingsQueries, socialCommunitySettingsMutations } from './social/community-settings';
 import { newClimbSubscriptionResolvers } from './social/new-climb-subscriptions';
 import { newClimbFeedSubscription } from './social/new-climb-feed-subscription';
+import { isNoMatchClimb } from './shared/helpers';
 
 export const resolvers = {
   // Scalar types
@@ -116,7 +117,7 @@ export const resolvers = {
 
   // Climb type resolvers (derived fields)
   Climb: {
-    is_no_match: (climb: { description?: string | null }) => /^no match/i.test(climb.description || ''),
+    is_no_match: (climb: { description?: string | null }) => isNoMatchClimb(climb.description),
   },
 
   // Union type resolvers

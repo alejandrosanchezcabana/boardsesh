@@ -21,6 +21,7 @@ function makeItem(overrides: Partial<AscentFeedItem> = {}): AscentFeedItem {
     consensusDifficultyName: '7a+/V7',
     qualityAverage: 3.5,
     isBenchmark: false,
+    isNoMatch: false,
     comment: '',
     climbedAt: '2026-04-01T00:00:00Z',
     frames: 'p1r14',

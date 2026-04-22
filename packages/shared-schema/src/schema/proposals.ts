@@ -53,6 +53,8 @@ export const proposalsTypeDefs = /* GraphQL */ `
     climbAscensionistCount: Int
     climbDifficultyError: String
     climbBenchmarkDifficulty: String
+    "Whether matching is disallowed on this climb"
+    climbIsNoMatch: Boolean
   }
 
   """

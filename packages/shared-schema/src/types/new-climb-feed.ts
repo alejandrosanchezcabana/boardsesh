@@ -22,6 +22,7 @@ export type NewClimbFeedItem = {
   angle?: number | null;
   frames?: string | null;
   difficultyName?: string | null;
+  isNoMatch: boolean;
   createdAt: string;
 };
 

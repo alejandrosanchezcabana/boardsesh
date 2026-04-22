@@ -3,7 +3,7 @@ import type { ConnectionContext, BoardName } from '@boardsesh/shared-schema';
 import { SUPPORTED_BOARDS } from '@boardsesh/shared-schema';
 import { db } from '../../../db/client';
 import * as dbSchema from '@boardsesh/db/schema';
-import { requireAuthenticated, applyRateLimit, validateInput } from '../shared/helpers';
+import { requireAuthenticated, applyRateLimit, validateInput, isNoMatchClimb } from '../shared/helpers';
 import {
   consensusDifficultyNameExpr,
   consensusDifficultyExpr,
@@ -231,6 +231,7 @@ export const tickQueries = {
       .select({
         tick: dbSchema.boardseshTicks,
         climbName: dbSchema.boardClimbs.name,
+        climbDescription: dbSchema.boardClimbs.description,
         setterUsername: dbSchema.boardClimbs.setterUsername,
         layoutId: dbSchema.boardClimbs.layoutId,
         frames: dbSchema.boardClimbs.frames,
@@ -367,6 +368,7 @@ export const tickQueries = {
       ({
         tick,
         climbName,
+        climbDescription,
         setterUsername,
         layoutId,
         frames,
@@ -393,6 +395,7 @@ export const tickQueries = {
           consensusDifficulty !== null && consensusDifficulty !== undefined ? Number(consensusDifficulty) : null,
         consensusDifficultyName,
         isBenchmark: Boolean(resolvedIsBenchmark),
+        isNoMatch: isNoMatchClimb(climbDescription),
         qualityAverage: qualityAverage != null ? Number(qualityAverage) : null,
         comment: tick.comment || '',
         climbedAt: tick.climbedAt,
@@ -489,6 +492,7 @@ export const tickQueries = {
       .select({
         tick: dbSchema.boardseshTicks,
         climbName: dbSchema.boardClimbs.name,
+        climbDescription: dbSchema.boardClimbs.description,
         setterUsername: dbSchema.boardClimbs.setterUsername,
         layoutId: dbSchema.boardClimbs.layoutId,
         frames: dbSchema.boardClimbs.frames,
@@ -544,6 +548,7 @@ export const tickQueries = {
       difficulty: number | null;
       difficultyName: string | null;
       isBenchmark: boolean;
+      isNoMatch: boolean;
       comment: string;
       climbedAt: string;
       frames: string | null;
@@ -561,6 +566,7 @@ export const tickQueries = {
       frames: string | null;
       difficultyName: string | null;
       isBenchmark: boolean;
+      isNoMatch: boolean;
       date: string;
       items: AscentItem[];
       flashCount: number;
@@ -572,10 +578,21 @@ export const tickQueries = {
 
     const groupMap = new Map<string, GroupedAscent>();
 
-    for (const { tick, climbName, setterUsername, layoutId, frames, difficultyName, day } of tickRows) {
+    for (const {
+      tick,
+      climbName,
+      climbDescription,
+      setterUsername,
+      layoutId,
+      frames,
+      difficultyName,
+      day,
+    } of tickRows) {
       const key = `${tick.climbUuid}-${day}`;
       // Skip ticks that fell inside the date window but belong to a different group.
       if (!pageKeySet.has(key)) continue;
+
+      const isNoMatch = isNoMatchClimb(climbDescription);
 
       const item: AscentItem = {
         uuid: tick.uuid,
@@ -592,6 +609,7 @@ export const tickQueries = {
         difficulty: tick.difficulty,
         difficultyName,
         isBenchmark: tick.isBenchmark ?? false,
+        isNoMatch,
         comment: tick.comment || '',
         climbedAt: tick.climbedAt,
         frames,
@@ -611,6 +629,7 @@ export const tickQueries = {
           frames,
           difficultyName,
           isBenchmark: tick.isBenchmark ?? false,
+          isNoMatch,
           date: day,
           items: [],
           flashCount: 0,

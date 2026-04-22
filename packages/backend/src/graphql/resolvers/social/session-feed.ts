@@ -2,7 +2,7 @@ import { eq, and, desc, sql, count as drizzleCount, isNull, inArray } from 'driz
 import { db } from '../../../db/client';
 import * as dbSchema from '@boardsesh/db/schema';
 import { getGradeLabel } from '@boardsesh/db/queries';
-import { validateInput } from '../shared/helpers';
+import { validateInput, isNoMatchClimb } from '../shared/helpers';
 import { ActivityFeedInputSchema } from '../../../validation/schemas';
 import { encodeOffsetCursor, decodeOffsetCursor } from '../../../utils/feed-cursor';
 import type {
@@ -271,6 +271,7 @@ export const sessionFeedQueries = {
       .select({
         tick: dbSchema.boardseshTicks,
         climbName: dbSchema.boardClimbs.name,
+        climbDescription: dbSchema.boardClimbs.description,
         setterUsername: dbSchema.boardClimbs.setterUsername,
         layoutId: dbSchema.boardClimbs.layoutId,
         frames: dbSchema.boardClimbs.frames,
@@ -340,6 +341,7 @@ export const sessionFeedQueries = {
         quality: row.tick.quality,
         isMirror: row.tick.isMirror ?? false,
         isBenchmark: row.tick.isBenchmark ?? false,
+        isNoMatch: isNoMatchClimb(row.climbDescription),
         comment: row.tick.comment || null,
         frames: row.frames || null,
         setterUsername: row.setterUsername || null,

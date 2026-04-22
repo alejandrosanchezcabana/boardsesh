@@ -33,6 +33,7 @@ export type Proposal = {
   climbAscensionistCount?: number | null;
   climbDifficultyError?: string | null;
   climbBenchmarkDifficulty?: string | null;
+  climbIsNoMatch?: boolean | null;
 };
 
 export type ProposalConnection = {

@@ -17,6 +17,7 @@ import {
   resolveClimbCreatedSubscriptionRecipients,
 } from './recipient-resolution';
 import { fanoutFeedItems, fanoutNewClimbFeedItems } from './feed-fanout';
+import { isNoMatchClimb } from '../graphql/resolvers/shared/helpers';
 import crypto from 'crypto';
 
 export class NotificationWorker {
@@ -269,6 +270,7 @@ export class NotificationWorker {
       .select({
         uuid: dbSchema.boardClimbs.uuid,
         name: dbSchema.boardClimbs.name,
+        description: dbSchema.boardClimbs.description,
         layoutId: dbSchema.boardClimbs.layoutId,
         angle: dbSchema.boardClimbs.angle,
         frames: dbSchema.boardClimbs.frames,
@@ -311,6 +313,7 @@ export class NotificationWorker {
           angle: climb.angle ?? null,
           frames: climb.frames ?? null,
           difficultyName: climb.difficultyName ?? event.metadata.difficultyName ?? null,
+          isNoMatch: isNoMatchClimb(climb.description),
           createdAt: climb.createdAt ?? new Date().toISOString(),
         },
       });
