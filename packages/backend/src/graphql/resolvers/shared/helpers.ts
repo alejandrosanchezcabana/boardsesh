@@ -11,10 +11,7 @@ import { eq } from 'drizzle-orm';
 export { validateInput } from '../../../validation/schemas';
 // Re-export MAX_RETRIES from types
 export { MAX_RETRIES } from './types';
-
-export function isNoMatchClimb(description: string | null | undefined): boolean {
-  return /^no match/i.test(description || '');
-}
+export { isNoMatchClimb } from '@boardsesh/shared-schema';
 
 /**
  * Configuration for session membership retry behavior.

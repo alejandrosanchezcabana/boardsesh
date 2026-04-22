@@ -61,7 +61,7 @@ export default function FeedItemNewClimb({ item }: FeedItemNewClimbProps) {
             </MuiTypography>
             <MuiTypography variant="body2" component="span" fontWeight={600}>
               {item.climbName}
-              <ClimbIcons isNoMatch={!!item.isNoMatch} />
+              <ClimbIcons isNoMatch={!!item.isNoMatch} isBenchmark={!!item.isBenchmark} />
             </MuiTypography>
           </Box>
           <MuiTypography variant="caption" color="text.secondary" sx={{ flexShrink: 0 }}>

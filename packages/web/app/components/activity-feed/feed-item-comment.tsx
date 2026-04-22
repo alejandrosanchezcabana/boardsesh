@@ -58,7 +58,7 @@ export default function FeedItemComment({ item }: FeedItemCommentProps) {
                 </MuiTypography>
                 <MuiTypography variant="body2" component="span" fontWeight={600}>
                   {item.climbName}
-                  <ClimbIcons isNoMatch={!!item.isNoMatch} />
+                  <ClimbIcons isNoMatch={!!item.isNoMatch} isBenchmark={!!item.isBenchmark} />
                 </MuiTypography>
               </>
             )}

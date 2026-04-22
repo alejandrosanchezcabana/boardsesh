@@ -194,7 +194,7 @@ const GroupedFeedItem: React.FC<{
                 />
                 <MuiTypography variant="body2" component="span" fontWeight={600} className={styles.climbName}>
                   {group.climbName}
-                  <ClimbIcons isNoMatch={!!group.isNoMatch} />
+                  <ClimbIcons isNoMatch={!!group.isNoMatch} isBenchmark={!!group.isBenchmark} />
                 </MuiTypography>
               </Box>
               <MuiTypography variant="body2" component="span" color="text.secondary" className={styles.timeAgo}>
