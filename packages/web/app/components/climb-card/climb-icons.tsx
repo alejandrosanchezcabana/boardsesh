@@ -7,6 +7,7 @@ import { themeTokens } from '@/app/theme/theme-config';
 
 type ClimbIconsProps = {
   benchmarkDifficulty?: string | number | null;
+  isBenchmark?: boolean;
   isNoMatch?: boolean;
 };
 
@@ -26,9 +27,9 @@ const noMatchIconSx = {
  * Unified icon cluster for climb labels.
  * Note: benchmark_difficulty > 0 represents benchmark/classic climbs in current data feeds.
  */
-export default function ClimbIcons({ benchmarkDifficulty, isNoMatch = false }: ClimbIconsProps) {
+export default function ClimbIcons({ benchmarkDifficulty, isBenchmark = false, isNoMatch = false }: ClimbIconsProps) {
   const benchmarkValue = benchmarkDifficulty != null ? Number(benchmarkDifficulty) : null;
-  const isBenchmarkOrClassic = benchmarkValue !== null && benchmarkValue > 0 && !Number.isNaN(benchmarkValue);
+  const isBenchmarkOrClassic = isBenchmark || (benchmarkValue !== null && benchmarkValue > 0 && !Number.isNaN(benchmarkValue));
 
   return (
     <>

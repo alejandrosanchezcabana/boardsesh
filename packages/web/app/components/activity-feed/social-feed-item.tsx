@@ -102,7 +102,7 @@ const SocialFeedItem: React.FC<SocialFeedItemProps> = ({ item, showUserHeader = 
               </MuiTypography>
               <MuiTypography variant="body2" component="span" fontWeight={600}>
                 {item.climbName}
-                <ClimbIcons isNoMatch={!!item.isNoMatch} />
+                <ClimbIcons isNoMatch={!!item.isNoMatch} isBenchmark={!!item.isBenchmark} />
               </MuiTypography>
             </Box>
             <MuiTypography variant="caption" color="text.secondary" sx={{ flexShrink: 0 }}>
@@ -150,7 +150,7 @@ const SocialFeedItem: React.FC<SocialFeedItemProps> = ({ item, showUserHeader = 
                 {!showUserHeader && (
                   <MuiTypography variant="body2" component="span" fontWeight={600} className={styles.climbName}>
                     {item.climbName}
-                    <ClimbIcons isNoMatch={!!item.isNoMatch} />
+                    <ClimbIcons isNoMatch={!!item.isNoMatch} isBenchmark={!!item.isBenchmark} />
                   </MuiTypography>
                 )}
               </Box>

@@ -667,7 +667,7 @@ const LogbookFeedItem: React.FC<LogbookFeedItemProps> = React.memo(
               <div className={styles.center}>
                 <Typography variant="body2" component="div" sx={nameSx}>
                   {item.climbName}
-                  <ClimbIcons isNoMatch={!!item.isNoMatch} />
+                  <ClimbIcons isNoMatch={!!item.isNoMatch} isBenchmark={!!item.isBenchmark} />
                 </Typography>
                 <Typography variant="body2" component="div" color="text.secondary" sx={subtitleSx}>
                   {subtitle}
