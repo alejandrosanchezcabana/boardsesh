@@ -1,9 +1,6 @@
 services:
   postgres:
     image: ghcr.io/boardsesh/boardsesh-dev-db:latest
-    build:
-      context: ./packages/db
-      dockerfile: docker/Dockerfile.dev-db
     shm_size: '256mb'
     command: postgres -c max_connections=300 -c log_min_messages=warning
     volumes:
