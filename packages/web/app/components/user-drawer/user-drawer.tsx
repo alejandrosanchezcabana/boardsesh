@@ -114,7 +114,7 @@ export default function UserDrawer({ boardDetails, boardConfigs }: UserDrawerPro
       if (!board.slug) return;
       const boardName = asBoardName(board.boardType);
       const navigate = () => {
-        router.push(constructBoardSlugListUrl(board.slug!, board.angle));
+        router.push(constructBoardSlugListUrl(board.slug, board.angle));
         setShowBoardSelector(false);
       };
       if (!boardName) {

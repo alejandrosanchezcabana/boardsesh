@@ -132,13 +132,13 @@ export function setupWebSocketServer(httpServer: HttpServer): {
         console.log(`Client connected: ${context.connectionId} (authenticated: ${isAuthenticated})`);
 
         // Store context in ctx.extra for access in other hooks
-        (ctx.extra as CustomExtra).context = context;
+        ctx.extra.context = context;
 
         return true; // Allow connection (both authenticated and unauthenticated)
       },
       // context is called for EACH operation - return the stored context
       context: async (ctx: ServerContext): Promise<ConnectionContext> => {
-        const extra = ctx.extra as CustomExtra;
+        const extra = ctx.extra;
 
         if (!extra.context) {
           // This should never happen - onConnect should always set context
@@ -162,7 +162,7 @@ export function setupWebSocketServer(httpServer: HttpServer): {
         return latestContext;
       },
       onDisconnect: async (ctx: ServerContext, code?: number) => {
-        const context = (ctx.extra as CustomExtra)?.context;
+        const context = ctx.extra?.context;
         if (context) {
           console.log(`Client disconnected: ${context.connectionId} (code: ${code})`);
 

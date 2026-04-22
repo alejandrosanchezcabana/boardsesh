@@ -209,7 +209,7 @@ export default function MapLocationPicker({ latitude, longitude, onChange }: Map
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
           <MapOutlined fontSize="small" color="action" />
           <MuiTypography variant="body2">
-            {hasLocation ? `Location: ${latitude!.toFixed(4)}, ${longitude!.toFixed(4)}` : 'Set location on map'}
+            {hasLocation ? `Location: ${latitude.toFixed(4)}, ${longitude.toFixed(4)}` : 'Set location on map'}
           </MuiTypography>
         </Box>
       </AccordionSummary>

@@ -406,7 +406,7 @@ const LogbookSearchForm: React.FC<LogbookSearchFormProps> = ({
                     value={minGrade === '' ? '' : minGrade}
                     onChange={(e: SelectChangeEvent<number | ''>) => {
                       const val = e.target.value;
-                      onMinGradeChange(val === '' ? '' : (val as number));
+                      onMinGradeChange(val === '' ? '' : val);
                     }}
                     className={styles.fullWidth}
                     size="small"
@@ -424,7 +424,7 @@ const LogbookSearchForm: React.FC<LogbookSearchFormProps> = ({
                     value={maxGrade === '' ? '' : maxGrade}
                     onChange={(e: SelectChangeEvent<number | ''>) => {
                       const val = e.target.value;
-                      onMaxGradeChange(val === '' ? '' : (val as number));
+                      onMaxGradeChange(val === '' ? '' : val);
                     }}
                     className={styles.fullWidth}
                     size="small"

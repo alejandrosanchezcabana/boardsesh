@@ -10,7 +10,7 @@ describe('AscentStatusIcon', () => {
 
     const icon = screen.getByTestId('flash-status-icon');
     expect(icon.getAttribute('data-status')).toBe('flash');
-    expect((icon as HTMLElement).style.color).toBe('rgb(251, 191, 36)');
+    expect(icon.style.color).toBe('rgb(251, 191, 36)');
     expect(icon.getAttribute('style')).toContain('font-size: 18px');
   });
 
@@ -34,7 +34,7 @@ describe('AscentStatusIcon', () => {
 
     const badge = screen.getByTestId('attempt-badge');
     expect(badge.getAttribute('data-status')).toBe('attempt');
-    expect((badge as HTMLElement).style.backgroundColor).toBe('rgb(184, 82, 76)');
+    expect(badge.style.backgroundColor).toBe('rgb(184, 82, 76)');
     expect(badge.getAttribute('style')).toContain('width: 20px');
     expect(badge.firstElementChild?.getAttribute('style')).toContain('transform: scaleX(-1)');
   });

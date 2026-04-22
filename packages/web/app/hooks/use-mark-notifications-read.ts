@@ -22,7 +22,7 @@ export function useMarkGroupAsRead() {
 
   return useMutation({
     mutationFn: async (notification: GroupedNotification) => {
-      const client = createGraphQLHttpClient(token!);
+      const client = createGraphQLHttpClient(token);
       const data = await client.request<
         MarkGroupNotificationsReadMutationResponse,
         MarkGroupNotificationsReadMutationVariables
@@ -64,7 +64,7 @@ export function useMarkAllAsRead() {
 
   return useMutation({
     mutationFn: async () => {
-      const client = createGraphQLHttpClient(token!);
+      const client = createGraphQLHttpClient(token);
       await client.request(MARK_ALL_NOTIFICATIONS_READ);
     },
     onSuccess: () => {

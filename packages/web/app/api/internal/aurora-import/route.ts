@@ -45,7 +45,7 @@ export async function POST(request: NextRequest) {
         };
 
         try {
-          const results = await importJsonExportData(session.user!.id, boardType, data, send, {
+          const results = await importJsonExportData(session.user.id, boardType, data, send, {
             skipSessionBuild,
           });
 

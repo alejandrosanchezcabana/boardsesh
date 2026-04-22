@@ -136,7 +136,7 @@ const GeneratorOptionsForm: React.FC<GeneratorOptionsFormProps> = ({
         </Typography>
         <MuiSelect
           value={options.targetGrade}
-          onChange={(e) => updateOption('targetGrade', e.target.value as number)}
+          onChange={(e) => updateOption('targetGrade', e.target.value)}
           className={styles.select}
           size="small"
           MenuProps={{ sx: { width: 'auto' } }}

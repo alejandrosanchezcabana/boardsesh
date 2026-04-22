@@ -29,7 +29,7 @@ export default function UserClimbList({ userId }: UserClimbListProps) {
           userId,
           sortBy,
           limit: 20,
-          offset: pageParam as number,
+          offset: pageParam,
         },
       };
 
@@ -42,7 +42,7 @@ export default function UserClimbList({ userId }: UserClimbListProps) {
     initialPageParam: 0,
     getNextPageParam: (lastPage, _allPages, lastPageParam) => {
       if (!lastPage.hasMore) return undefined;
-      return (lastPageParam as number) + lastPage.climbs.length;
+      return lastPageParam + lastPage.climbs.length;
     },
     staleTime: 60 * 1000,
   });

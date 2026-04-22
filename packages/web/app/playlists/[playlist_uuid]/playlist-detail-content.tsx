@@ -198,7 +198,7 @@ export default function PlaylistDetailContent({
 
       const input: GetPlaylistClimbsInput = {
         playlistId: playlistUuid,
-        page: pageParam as number,
+        page: pageParam,
         pageSize: 20,
         // Specific-board mode when a board is selected
         ...(selectedBoard && {

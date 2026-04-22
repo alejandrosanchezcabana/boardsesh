@@ -194,7 +194,7 @@ async function parseRouteParamsImpl<T extends BoardRouteParameters>(
         }
       : params;
 
-    const parsedParams = parseBoardRouteParams(paramsToPass as T);
+    const parsedParams = parseBoardRouteParams(paramsToPass);
     const hasInvalidNumericIds =
       Number.isNaN(parsedParams.layout_id) ||
       Number.isNaN(parsedParams.size_id) ||
@@ -220,4 +220,4 @@ async function parseRouteParamsImpl<T extends BoardRouteParameters>(
   };
 }
 
-export const parseRouteParams = cache(parseRouteParamsImpl) as typeof parseRouteParamsImpl;
+export const parseRouteParams = cache(parseRouteParamsImpl);

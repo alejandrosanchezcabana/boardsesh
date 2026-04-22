@@ -448,7 +448,7 @@ export default function ControllersSection() {
               <MuiSelect
                 value={selectedBoard || ''}
                 label="Board Type"
-                onChange={(e) => handleBoardChange(e.target.value as BoardName)}
+                onChange={(e) => handleBoardChange(e.target.value)}
               >
                 <MenuItem value="kilter">Kilter</MenuItem>
                 <MenuItem value="tension">Tension</MenuItem>
@@ -460,7 +460,7 @@ export default function ControllersSection() {
               <MuiSelect
                 value={selectedLayout ?? ''}
                 label="Layout"
-                onChange={(e) => handleLayoutChange(e.target.value as number)}
+                onChange={(e) => handleLayoutChange(e.target.value)}
               >
                 {layouts.map(({ id, name }) => (
                   <MenuItem key={id} value={id}>
@@ -472,11 +472,7 @@ export default function ControllersSection() {
 
             <FormControl fullWidth required disabled={!selectedLayout}>
               <InputLabel>Size</InputLabel>
-              <MuiSelect
-                value={selectedSize ?? ''}
-                label="Size"
-                onChange={(e) => handleSizeChange(e.target.value as number)}
-              >
+              <MuiSelect value={selectedSize ?? ''} label="Size" onChange={(e) => handleSizeChange(e.target.value)}>
                 {sizes.map(({ id, name, description }) => (
                   <MenuItem key={id} value={id}>
                     {name} {description}

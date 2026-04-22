@@ -139,7 +139,7 @@ export function useLogbook(boardName: BoardName, climbUuids: ClimbUuid[]) {
 
       if (uuidsToFetch.length === 0) return [];
 
-      const client = createGraphQLHttpClient(token!);
+      const client = createGraphQLHttpClient(token);
       const variables: GetTicksQueryVariables = {
         input: {
           boardType: boardName,

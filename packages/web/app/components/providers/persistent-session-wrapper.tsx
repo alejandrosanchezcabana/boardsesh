@@ -172,7 +172,7 @@ function RootQueueControlBarWithProviders({
   const { queue } = useQueueList();
 
   const climbUuids = useMemo(() => {
-    const queueUuids = queue.map((item) => item.climb?.uuid).filter(Boolean) as string[];
+    const queueUuids = queue.map((item) => item.climb?.uuid).filter(Boolean);
     if (currentClimb?.uuid) {
       queueUuids.push(currentClimb.uuid);
     }

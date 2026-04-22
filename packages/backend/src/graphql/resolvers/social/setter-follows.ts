@@ -217,7 +217,7 @@ export const setterFollowQueries = {
 
     if (boardType) {
       // === Specific board mode ===
-      const boardName = boardType as BoardName;
+      const boardName = boardType;
       if (!isValidBoardName(boardName)) {
         throw new Error(`Invalid board name: ${String(boardName)}. Must be one of: ${SUPPORTED_BOARDS.join(', ')}`);
       }

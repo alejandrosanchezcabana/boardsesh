@@ -129,7 +129,7 @@ function BoardConfigSelects({
         <MuiSelect
           value={selectedAngle}
           label="Angle"
-          onChange={(e: SelectChangeEvent<number>) => onAngleChange(e.target.value as number)}
+          onChange={(e: SelectChangeEvent<number>) => onAngleChange(e.target.value)}
           disabled={!selectedBoard}
         >
           {selectedBoard &&
@@ -192,7 +192,7 @@ export default function BoardSelectorDrawer({
   // Auto-select first board on open
   useEffect(() => {
     if (open && !selectedBoard && SUPPORTED_BOARDS.length > 0) {
-      setSelectedBoard(SUPPORTED_BOARDS[0] as BoardName);
+      setSelectedBoard(SUPPORTED_BOARDS[0]);
     }
     // selectedBoard intentionally excluded: we only auto-select on open, not on every board change
     // eslint-disable-next-line react-hooks/exhaustive-deps

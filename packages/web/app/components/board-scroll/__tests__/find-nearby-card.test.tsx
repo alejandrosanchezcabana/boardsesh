@@ -118,7 +118,7 @@ describe('FindNearbyCard', () => {
 
     for (const status of ['geo-denied', 'error', 'no-results'] as const) {
       const { getByText, unmount } = render(<FindNearbyCard onClick={onClick} status={status} />);
-      getByText(getByText(/.+/).textContent!).parentElement!.click();
+      getByText(getByText(/.+/).textContent).parentElement!.click();
       unmount();
     }
 

@@ -9,7 +9,6 @@ import { useCanvasRendererReady } from '@/app/lib/board-render-worker/worker-man
 import { getBoardDetailsForBoard } from '@/app/lib/board-utils';
 import { getDefaultBoardConfig } from '@/app/lib/default-board-configs';
 import { constructClimbViewUrlWithSlugs, constructClimbViewUrl } from '@/app/lib/url-utils';
-import type { SetIdList } from '@/app/lib/board-data';
 import styles from './ascents-feed.module.css';
 
 interface AscentThumbnailProps {
@@ -79,7 +78,7 @@ const AscentThumbnail: React.FC<AscentThumbnailProps> = ({
         board_name: boardType as BoardName,
         layout_id: layoutId,
         size_id: config?.sizeId ?? 1,
-        set_ids: (config?.setIds ?? []) as SetIdList,
+        set_ids: config?.setIds ?? [],
         angle,
       },
       climbUuid,

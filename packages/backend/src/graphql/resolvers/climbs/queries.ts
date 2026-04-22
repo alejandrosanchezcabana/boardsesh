@@ -1,10 +1,5 @@
 import { eq, and, gte, desc } from 'drizzle-orm';
-import type {
-  BoardName,
-  CheckMoonBoardClimbDuplicatesInput,
-  ClimbSearchInput,
-  ConnectionContext,
-} from '@boardsesh/shared-schema';
+import type { CheckMoonBoardClimbDuplicatesInput, ClimbSearchInput, ConnectionContext } from '@boardsesh/shared-schema';
 import { SUPPORTED_BOARDS, USER_SPECIFIC_SEARCH_PARAMS } from '@boardsesh/shared-schema';
 import type { ClimbSearchParams, ParsedBoardRouteParameters } from '../../../db/queries/climbs/index';
 import { getClimbByUuid } from '../../../db/queries/climbs/index';
@@ -59,7 +54,7 @@ export const climbQueries = {
 
     // Build route parameters
     const params: ParsedBoardRouteParameters = {
-      board_name: input.boardName as BoardName,
+      board_name: input.boardName,
       layout_id: input.layoutId,
       size_id: input.sizeId,
       set_ids: setIds,
@@ -168,7 +163,7 @@ export const climbQueries = {
     if (DEBUG) console.log('[climb] Fetching:', { boardName, layoutId, sizeId, setIds, angle, climbUuid });
 
     const climb = await getClimbByUuid({
-      board_name: boardName as BoardName,
+      board_name: boardName,
       layout_id: layoutId,
       size_id: sizeId,
       angle,

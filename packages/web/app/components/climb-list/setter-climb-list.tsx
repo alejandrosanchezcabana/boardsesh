@@ -32,7 +32,7 @@ export default function SetterClimbList({ username, boardTypes, authToken }: Set
           username,
           sortBy,
           limit: 20,
-          offset: pageParam as number,
+          offset: pageParam,
         },
       };
 
@@ -53,7 +53,7 @@ export default function SetterClimbList({ username, boardTypes, authToken }: Set
     initialPageParam: 0,
     getNextPageParam: (lastPage, _allPages, lastPageParam) => {
       if (!lastPage.hasMore) return undefined;
-      return (lastPageParam as number) + lastPage.climbs.length;
+      return lastPageParam + lastPage.climbs.length;
     },
     staleTime: 60 * 1000,
   });

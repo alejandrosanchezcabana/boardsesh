@@ -18,7 +18,7 @@ export class CanvasImageProcessor implements ImageProcessor {
       imageBitmap = await createImageBitmap(source);
     } else if ('close' in source && typeof source.close === 'function') {
       // ImageBitmap
-      imageBitmap = source as ImageBitmap;
+      imageBitmap = source;
     } else if (source instanceof HTMLImageElement) {
       imageBitmap = await createImageBitmap(source);
     } else {

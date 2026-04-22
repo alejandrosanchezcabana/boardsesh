@@ -1651,7 +1651,7 @@ export default function CreateClimbForm({
                 </Typography>
                 <MuiSelect
                   value={selectedAngle}
-                  onChange={(e) => setSelectedAngle(e.target.value as number)}
+                  onChange={(e) => setSelectedAngle(e.target.value)}
                   className={styles.settingsGradeField}
                   size="small"
                 >
@@ -1669,7 +1669,7 @@ export default function CreateClimbForm({
                 <MuiSelect
                   displayEmpty
                   value={userGrade ?? ''}
-                  onChange={(e) => setUserGrade(e.target.value === '' ? undefined : (e.target.value as string))}
+                  onChange={(e) => setUserGrade(e.target.value === '' ? undefined : e.target.value)}
                   className={styles.settingsGradeField}
                   size="small"
                 >

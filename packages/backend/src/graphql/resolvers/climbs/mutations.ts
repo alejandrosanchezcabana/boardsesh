@@ -350,11 +350,11 @@ export const climbMutations = {
     // On a draft → published transition, announce the new climb so follower
     // feeds pick it up, the same way saveClimb does.
     if (transitioningToPublished) {
-      const { displayName, name, avatarUrl } = await getUserProfile(ctx.userId!);
+      const { displayName, name, avatarUrl } = await getUserProfile(ctx.userId);
       const preferredSetter = displayName || name || null;
       await publishSocialEvent({
         type: 'climb.created',
-        actorId: ctx.userId!,
+        actorId: ctx.userId,
         entityType: 'climb',
         entityId: validated.uuid,
         timestamp: Date.now(),

@@ -926,17 +926,17 @@ async function seedSocialData() {
     console.log('\n--- Step 8.6: Seeding feed_items for activity feed ---');
 
     // Find which fake users the test user follows
-    const testUserFollowing = followRecords.filter((f) => f.followerId === TEST_USER_ID).map((f) => f.followingId!);
+    const testUserFollowing = followRecords.filter((f) => f.followerId === TEST_USER_ID).map((f) => f.followingId);
 
     // Collect ticks from followed users (flash/send only, matching the trendingFeed filter)
     const followedUserTicks = tickRecords.filter(
-      (t) => testUserFollowing.includes(t.userId!) && (t.status === 'flash' || t.status === 'send'),
+      (t) => testUserFollowing.includes(t.userId) && (t.status === 'flash' || t.status === 'send'),
     );
 
     // Build a profile lookup for metadata
     const profileLookup = new Map<string, { displayName: string | null; avatarUrl: string | null }>();
     for (const p of profileRecords) {
-      profileLookup.set(p.userId!, {
+      profileLookup.set(p.userId, {
         displayName: p.displayName ?? null,
         avatarUrl: p.avatarUrl ?? null,
       });
@@ -963,14 +963,14 @@ async function seedSocialData() {
     const feedItemRecords: (typeof feedItems.$inferInsert)[] = [];
 
     for (const tick of feedItemTicks) {
-      const profile = profileLookup.get(tick.userId!) || { displayName: null, avatarUrl: null };
+      const profile = profileLookup.get(tick.userId) || { displayName: null, avatarUrl: null };
 
       feedItemRecords.push({
         recipientId: TEST_USER_ID,
-        actorId: tick.userId!,
+        actorId: tick.userId,
         type: 'ascent',
         entityType: 'tick',
-        entityId: tick.uuid!,
+        entityId: tick.uuid,
         boardUuid: null,
         metadata: {
           actorDisplayName: profile.displayName,
@@ -987,7 +987,7 @@ async function seedSocialData() {
           attemptCount: tick.attemptCount,
           comment: tick.comment || null,
         },
-        createdAt: new Date(tick.climbedAt!),
+        createdAt: new Date(tick.climbedAt),
       });
     }
 
@@ -1047,12 +1047,12 @@ async function seedSocialData() {
             uuid: faker.string.uuid(),
             userId: commenterId,
             entityType: 'tick' as const,
-            entityId: tick.uuid!,
+            entityId: tick.uuid,
             body: pickSocialComment(tickStatus),
             createdAt: commentedAt,
             updatedAt: commentedAt,
-            _tickUuid: tick.uuid!,
-            _tickUserId: tick.userId!,
+            _tickUuid: tick.uuid,
+            _tickUserId: tick.userId,
             _tickStatus: tickStatus,
             _hasThread: false,
           });
@@ -1067,12 +1067,12 @@ async function seedSocialData() {
           uuid: faker.string.uuid(),
           userId: commenterId,
           entityType: 'tick' as const,
-          entityId: tick.uuid!,
+          entityId: tick.uuid,
           body: thread.parent,
           createdAt: commentedAt,
           updatedAt: commentedAt,
-          _tickUuid: tick.uuid!,
-          _tickUserId: tick.userId!,
+          _tickUuid: tick.uuid,
+          _tickUserId: tick.userId,
           _tickStatus: tickStatus,
           _hasThread: true,
         });
@@ -1085,12 +1085,12 @@ async function seedSocialData() {
           uuid: faker.string.uuid(),
           userId: commenterId1,
           entityType: 'tick' as const,
-          entityId: tick.uuid!,
+          entityId: tick.uuid,
           body: pickSocialComment(tickStatus),
           createdAt: commentedAt1,
           updatedAt: commentedAt1,
-          _tickUuid: tick.uuid!,
-          _tickUserId: tick.userId!,
+          _tickUuid: tick.uuid,
+          _tickUserId: tick.userId,
           _tickStatus: tickStatus,
           _hasThread: false,
         });
@@ -1103,12 +1103,12 @@ async function seedSocialData() {
           uuid: faker.string.uuid(),
           userId: commenterId2,
           entityType: 'tick' as const,
-          entityId: tick.uuid!,
+          entityId: tick.uuid,
           body: thread.parent,
           createdAt: commentedAt2,
           updatedAt: commentedAt2,
-          _tickUuid: tick.uuid!,
-          _tickUserId: tick.userId!,
+          _tickUuid: tick.uuid,
+          _tickUserId: tick.userId,
           _tickStatus: tickStatus,
           _hasThread: true,
         });
@@ -1141,7 +1141,7 @@ async function seedSocialData() {
     const threadParents = parentRecords.filter((p) => p._hasThread);
 
     for (const parent of threadParents) {
-      const parentId = parentIdMap.get(parent.uuid!);
+      const parentId = parentIdMap.get(parent.uuid);
       if (!parentId) continue;
 
       // Pick a thread template matching the tick status for reply bodies
@@ -1169,13 +1169,13 @@ async function seedSocialData() {
           uuid: faker.string.uuid(),
           userId: replyAuthor,
           entityType: 'tick' as const,
-          entityId: parent.entityId!,
+          entityId: parent.entityId,
           parentCommentId: parentId,
           body: replyBodies[r],
           createdAt: replyTime,
           updatedAt: replyTime,
-          _parentUuid: parent.uuid!,
-          _parentUserId: parent.userId!,
+          _parentUuid: parent.uuid,
+          _parentUserId: parent.userId,
           _tickUuid: parent._tickUuid,
           _tickUserId: parent._tickUserId,
         });
@@ -1332,16 +1332,16 @@ async function seedSocialData() {
 
     // 1. new_follower notifications — for a subset of follows targeting dev users
     const devUserIds = new Set(devUsers.map((u) => u.id));
-    const followsToDevUsers = followRecords.filter((f) => devUserIds.has(f.followingId!));
+    const followsToDevUsers = followRecords.filter((f) => devUserIds.has(f.followingId));
     // Generate notifications for ~80% of follows to dev users (recent follows)
     for (const follow of followsToDevUsers) {
       if (faker.datatype.boolean(0.8)) {
         createNotification(
-          follow.followingId!,
-          follow.followerId!,
+          follow.followingId,
+          follow.followerId,
           'new_follower',
           'tick', // entity type doesn't matter much for follows
-          follow.followerId!, // entityId = the follower's userId
+          follow.followerId, // entityId = the follower's userId
           null,
           14,
         );
@@ -1350,24 +1350,16 @@ async function seedSocialData() {
 
     // Also generate some new_follower notifications between fake users
     const fakeToFakeFollows = followRecords.filter(
-      (f) => !devUserIds.has(f.followingId!) && !devUserIds.has(f.followerId!),
+      (f) => !devUserIds.has(f.followingId) && !devUserIds.has(f.followerId),
     );
     for (const follow of faker.helpers.arrayElements(fakeToFakeFollows, Math.min(50, fakeToFakeFollows.length))) {
-      createNotification(follow.followingId!, follow.followerId!, 'new_follower', 'tick', follow.followerId!, null, 21);
+      createNotification(follow.followingId, follow.followerId, 'new_follower', 'tick', follow.followerId, null, 21);
     }
 
     // 2. comment_on_tick notifications — from parent comments (not replies)
     for (const parent of parentRecords) {
-      const commentId = parentIdMap.get(parent.uuid!) ?? null;
-      createNotification(
-        parent._tickUserId,
-        parent.userId!,
-        'comment_on_tick',
-        'tick',
-        parent._tickUuid,
-        commentId,
-        14,
-      );
+      const commentId = parentIdMap.get(parent.uuid) ?? null;
+      createNotification(parent._tickUserId, parent.userId, 'comment_on_tick', 'tick', parent._tickUuid, commentId, 14);
     }
 
     // 3. vote_on_tick notifications — for a subset of ticks
@@ -1380,7 +1372,7 @@ async function seedSocialData() {
         if (otherUsersForVote.length === 0) continue;
 
         const voterId = faker.helpers.arrayElement(otherUsersForVote);
-        createNotification(tick.userId!, voterId, 'vote_on_tick', 'tick', tick.uuid!, null, 14);
+        createNotification(tick.userId, voterId, 'vote_on_tick', 'tick', tick.uuid, null, 14);
       }
     }
 
@@ -1392,21 +1384,13 @@ async function seedSocialData() {
       if (otherUsersForVote.length === 0) continue;
 
       const voterId = faker.helpers.arrayElement(otherUsersForVote);
-      createNotification(comment.userId!, voterId, 'vote_on_comment', 'comment', comment.uuid!, null, 14);
+      createNotification(comment.userId, voterId, 'vote_on_comment', 'comment', comment.uuid, null, 14);
     }
 
     // 5. comment_reply notifications — from actual reply comments
     for (const reply of replyRecords) {
-      const replyId = replyIdMap.get(reply.uuid!) ?? null;
-      createNotification(
-        reply._parentUserId,
-        reply.userId!,
-        'comment_reply',
-        'comment',
-        reply._parentUuid,
-        replyId,
-        10,
-      );
+      const replyId = replyIdMap.get(reply.uuid) ?? null;
+      createNotification(reply._parentUserId, reply.userId, 'comment_reply', 'comment', reply._parentUuid, replyId, 10);
     }
 
     // 6. Fixture comment notifications
@@ -1452,8 +1436,8 @@ async function seedSocialData() {
     console.log('');
 
     const unreadNotifications = notificationRecords.filter((n) => n.readAt == null).length;
-    const devUserNotifications = notificationRecords.filter((n) => devUserIds.has(n.recipientId!)).length;
-    const devUserUnread = notificationRecords.filter((n) => devUserIds.has(n.recipientId!) && n.readAt == null).length;
+    const devUserNotifications = notificationRecords.filter((n) => devUserIds.has(n.recipientId)).length;
+    const devUserUnread = notificationRecords.filter((n) => devUserIds.has(n.recipientId) && n.readAt == null).length;
 
     // =========================================================================
     // Summary

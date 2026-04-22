@@ -76,9 +76,7 @@ const AccordionSearchForm: React.FC<AccordionSearchFormProps> = ({ boardDetails,
         <div className={styles.gradeRow}>
           <MuiSelect
             value={uiSearchParams.minGrade || 0}
-            onChange={(e: SelectChangeEvent<number>) =>
-              handleGradeChange('min', (e.target.value as number) || undefined)
-            }
+            onChange={(e: SelectChangeEvent<number>) => handleGradeChange('min', e.target.value || undefined)}
             className={styles.fullWidth}
             size="small"
             displayEmpty
@@ -93,9 +91,7 @@ const AccordionSearchForm: React.FC<AccordionSearchFormProps> = ({ boardDetails,
           </MuiSelect>
           <MuiSelect
             value={uiSearchParams.maxGrade || 0}
-            onChange={(e: SelectChangeEvent<number>) =>
-              handleGradeChange('max', (e.target.value as number) || undefined)
-            }
+            onChange={(e: SelectChangeEvent<number>) => handleGradeChange('max', e.target.value || undefined)}
             className={styles.fullWidth}
             size="small"
             displayEmpty
@@ -155,7 +151,7 @@ const AccordionSearchForm: React.FC<AccordionSearchFormProps> = ({ boardDetails,
           <div className={styles.sortRow}>
             <MuiSelect
               value={uiSearchParams.sortBy}
-              onChange={(e) => updateFilters({ sortBy: e.target.value as typeof uiSearchParams.sortBy })}
+              onChange={(e) => updateFilters({ sortBy: e.target.value })}
               className={styles.fullWidth}
               size="small"
               MenuProps={{ disableScrollLock: true }}
@@ -169,7 +165,7 @@ const AccordionSearchForm: React.FC<AccordionSearchFormProps> = ({ boardDetails,
             </MuiSelect>
             <MuiSelect
               value={uiSearchParams.sortOrder}
-              onChange={(e) => updateFilters({ sortOrder: e.target.value as typeof uiSearchParams.sortOrder })}
+              onChange={(e) => updateFilters({ sortOrder: e.target.value })}
               className={styles.fullWidth}
               size="small"
               MenuProps={{ disableScrollLock: true }}
@@ -223,7 +219,7 @@ const AccordionSearchForm: React.FC<AccordionSearchFormProps> = ({ boardDetails,
             <span className={styles.fieldLabel}>Grade Accuracy</span>
             <MuiSelect
               value={uiSearchParams.gradeAccuracy ?? 0}
-              onChange={(e) => updateFilters({ gradeAccuracy: (e.target.value as number) || undefined })}
+              onChange={(e) => updateFilters({ gradeAccuracy: e.target.value || undefined })}
               className={styles.fullWidth}
               size="small"
               MenuProps={{ disableScrollLock: true }}

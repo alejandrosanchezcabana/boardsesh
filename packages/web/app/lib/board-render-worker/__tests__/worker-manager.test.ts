@@ -486,7 +486,7 @@ describe('renderBoard', () => {
       for (const call of worker.postMessage.mock.calls) {
         const msg = call[0] as Record<string, unknown>;
         if (isRenderMessage(msg)) {
-          resolveWorkerRequest(worker, msg.id as number, makeFakeBitmap());
+          resolveWorkerRequest(worker, msg.id, makeFakeBitmap());
         }
       }
     }
@@ -525,7 +525,7 @@ describe('renderBoard', () => {
       for (const call of worker.postMessage.mock.calls) {
         const msg = call[0] as Record<string, unknown>;
         if (isRenderMessage(msg)) {
-          resolveWorkerRequest(worker, msg.id as number, makeFakeBitmap());
+          resolveWorkerRequest(worker, msg.id, makeFakeBitmap());
         }
       }
     }
@@ -561,7 +561,7 @@ describe('renderBoard', () => {
       for (const call of worker.postMessage.mock.calls) {
         const msg = call[0] as Record<string, unknown>;
         if (isRenderMessage(msg)) {
-          resolveWorkerRequest(worker, msg.id as number, makeFakeBitmap());
+          resolveWorkerRequest(worker, msg.id, makeFakeBitmap());
         }
       }
     }

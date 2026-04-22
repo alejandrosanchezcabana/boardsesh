@@ -276,21 +276,21 @@ function useTestQueueContext() {
  * Hook to read the QueueActionsContext value exposed by QueueBridgeProvider.
  */
 function useTestQueueActions() {
-  return React.useContext(QueueActionsContext) as GraphQLQueueActionsType | undefined;
+  return React.useContext(QueueActionsContext);
 }
 
 /**
  * Hook to read the QueueDataContext value exposed by QueueBridgeProvider.
  */
 function useTestQueueData() {
-  return React.useContext(QueueDataContext) as GraphQLQueueDataType | undefined;
+  return React.useContext(QueueDataContext);
 }
 
 /**
  * Hook to read the CurrentClimbUuidContext value exposed by QueueBridgeProvider.
  */
 function useTestCurrentClimbUuid() {
-  return React.useContext(CurrentClimbUuidContext) as string | null;
+  return React.useContext(CurrentClimbUuidContext);
 }
 
 /** Extract the actions slice from a combined context (simulates GraphQLQueueProvider's actionsValue) */

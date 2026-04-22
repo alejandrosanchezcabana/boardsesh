@@ -81,7 +81,7 @@ export async function validateNextAuthToken(token: string): Promise<AuthResult |
       clockTolerance: 60,
     });
 
-    const userId = payload.sub as string | undefined;
+    const userId = payload.sub;
     if (!userId) {
       console.warn('[Auth] Token missing sub claim');
       tokenCache.set(token, { result: null, expiresAt: now + TOKEN_CACHE_TTL_MS });
