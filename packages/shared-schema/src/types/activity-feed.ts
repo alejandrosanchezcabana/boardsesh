@@ -85,6 +85,15 @@ export type FollowingAscentsFeedResult = {
   hasMore: boolean;
 };
 
+export type FollowingClimbAscentsInput = {
+  boardType: string;
+  climbUuid: string;
+};
+
+export type FollowingClimbAscentsResult = {
+  items: FollowingAscentFeedItem[];
+};
+
 export type ActivityFeedItemType = 'ascent' | 'new_climb' | 'comment' | 'proposal_approved' | 'session_summary';
 
 export type ActivityFeedItem = {

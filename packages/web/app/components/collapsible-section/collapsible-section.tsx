@@ -8,7 +8,8 @@ export interface CollapsibleSectionConfig {
   label: string;
   title: string;
   defaultSummary: string;
-  getSummary: () => string[];
+  /** Optional dynamic summary parts. When omitted or it returns [], falls back to defaultSummary. */
+  getSummary?: () => string[];
   content: React.ReactNode;
   /** When true, content is only mounted while this section is the active one. */
   lazy?: boolean;
@@ -31,7 +32,7 @@ const CollapsibleSection: React.FC<CollapsibleSectionProps> = ({ sections, defau
     <div className={styles.steppedContainer}>
       {sections.map((section) => {
         const isActive = activeKey === section.key;
-        const summaryParts = section.getSummary();
+        const summaryParts = section.getSummary?.() ?? [];
         const summaryText = summaryParts.length > 0 ? summaryParts.join(' \u00B7 ') : section.defaultSummary;
 
         const shouldRenderContent = section.lazy ? isActive : true;

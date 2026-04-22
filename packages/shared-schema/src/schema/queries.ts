@@ -297,6 +297,12 @@ export const queriesTypeDefs = /* GraphQL */ `
       @deprecated(reason: "Use activityFeed query instead")
 
     """
+    Get ticks from followed users for a specific climb.
+    Requires authentication.
+    """
+    followingClimbAscents(input: FollowingClimbAscentsInput!): FollowingClimbAscentsResult!
+
+    """
     Get global activity feed of all recent ascents.
     No authentication required.
     Deprecated: Use trendingFeed instead.

@@ -63,7 +63,7 @@ describe('LogbookView', () => {
           angle: 50,
           tries: 1,
           is_ascent: true,
-          status: undefined,
+          status: 'flash',
           is_mirror: true,
           quality: 3,
           comment: 'Mirrored flash',

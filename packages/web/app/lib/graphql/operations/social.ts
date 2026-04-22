@@ -4,6 +4,7 @@ import type {
   FollowConnection,
   UserSearchConnection,
   UnifiedSearchConnection,
+  FollowingAscentFeedItem,
   FollowingAscentsFeedResult,
   SetterProfile,
 } from '@boardsesh/shared-schema';
@@ -250,6 +251,60 @@ export interface GetGlobalAscentsFeedQueryVariables {
 
 export interface GetGlobalAscentsFeedQueryResponse {
   globalAscentsFeed: FollowingAscentsFeedResult;
+}
+
+// ============================================
+// Following Climb Ascents (ticks on a specific climb from followed users)
+// ============================================
+
+export const GET_FOLLOWING_CLIMB_ASCENTS = gql`
+  query GetFollowingClimbAscents($input: FollowingClimbAscentsInput!) {
+    followingClimbAscents(input: $input) {
+      items {
+        uuid
+        userId
+        userDisplayName
+        userAvatarUrl
+        climbUuid
+        angle
+        isMirror
+        status
+        attemptCount
+        quality
+        comment
+        climbedAt
+      }
+    }
+  }
+`;
+
+export interface GetFollowingClimbAscentsQueryVariables {
+  input: { boardType: string; climbUuid: string };
+}
+
+/**
+ * Narrow subset of FollowingAscentFeedItem matching exactly the fields
+ * selected by GET_FOLLOWING_CLIMB_ASCENTS. Keeps the type truthful about
+ * what the server returns for this query.
+ */
+export type FollowingClimbAscentItem = Pick<
+  FollowingAscentFeedItem,
+  | 'uuid'
+  | 'userId'
+  | 'userDisplayName'
+  | 'userAvatarUrl'
+  | 'climbUuid'
+  | 'angle'
+  | 'isMirror'
+  | 'status'
+  | 'attemptCount'
+  | 'quality'
+  | 'comment'
+  | 'climbedAt'
+>;
+
+export interface GetFollowingClimbAscentsQueryResponse {
+  followingClimbAscents: { items: FollowingClimbAscentItem[] };
 }
 
 // ============================================
