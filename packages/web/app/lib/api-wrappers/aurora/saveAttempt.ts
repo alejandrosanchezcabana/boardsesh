@@ -1,4 +1,5 @@
-import { WEB_HOSTS, SaveAttemptOptions, AuroraBoardName } from './types';
+import type { SaveAttemptOptions, AuroraBoardName } from './types';
+import { WEB_HOSTS } from './types';
 import { generateUuid } from './util';
 import dayjs from 'dayjs';
 

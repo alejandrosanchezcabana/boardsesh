@@ -1,5 +1,6 @@
-import { useEffect, Dispatch } from 'react';
-import { SubscriptionQueueEvent } from '@boardsesh/shared-schema';
+import type { Dispatch } from 'react';
+import { useEffect } from 'react';
+import type { SubscriptionQueueEvent } from '@boardsesh/shared-schema';
 import type { ClimbQueueItem, QueueAction } from '../../queue-control/types';
 
 interface UseQueueEventSubscriptionParams {

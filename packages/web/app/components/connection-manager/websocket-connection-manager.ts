@@ -1,4 +1,4 @@
-import { Client, Event as WsEvent, EventListener as WsEventListener } from 'graphql-ws';
+import type { Client, Event as WsEvent, EventListener as WsEventListener } from 'graphql-ws';
 
 export type ConnectionState = 'idle' | 'connecting' | 'connected' | 'reconnecting' | 'stale' | 'error';
 

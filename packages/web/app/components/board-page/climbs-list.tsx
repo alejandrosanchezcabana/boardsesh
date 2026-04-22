@@ -14,7 +14,7 @@ import { useIsDarkMode } from '@/app/hooks/use-is-dark-mode';
 import { useDrawerDragResize } from '@/app/hooks/use-drawer-drag-resize';
 import drawerCss from '../swipeable-drawer/swipeable-drawer.module.css';
 import { useWindowVirtualizer } from '@tanstack/react-virtual';
-import { Climb, BoardDetails } from '@/app/lib/types';
+import type { Climb, BoardDetails } from '@/app/lib/types';
 import ErrorBoundary from '../error-boundary';
 import ClimbListItem from '../climb-card/climb-list-item';
 import { ClimbCardSkeleton, ClimbListItemSkeleton } from './board-page-skeleton';

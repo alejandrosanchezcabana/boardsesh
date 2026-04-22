@@ -1,12 +1,12 @@
 import React from 'react';
-import { BoardRouteParametersWithUuid } from '@/app/lib/types';
+import type { BoardRouteParametersWithUuid } from '@/app/lib/types';
 import { constructPlayUrlWithSlugs } from '@/app/lib/url-utils';
 import { parseRouteParams } from '@/app/lib/url-utils.server';
 import { getBoardDetailsForBoard } from '@/app/lib/board-utils';
 import { getClimb } from '@/app/lib/data/queries';
 
 import PlayViewClient from './play-view-client';
-import { Metadata } from 'next';
+import type { Metadata } from 'next';
 import { scheduleOverlayWarming } from '@/app/lib/warm-overlay-cache';
 import { buildOgBoardRenderUrl } from '@/app/components/board-renderer/util';
 import { OG_IMAGE_HEIGHT, OG_IMAGE_WIDTH } from '@/app/lib/seo/og';

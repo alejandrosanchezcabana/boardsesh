@@ -2,7 +2,8 @@
 
 import React, { createContext, useContext, useState, useEffect, useCallback, useMemo } from 'react';
 import { useSession } from 'next-auth/react';
-import { PartyProfile, getPartyProfile, clearPartyProfile, ensurePartyProfile } from '@/app/lib/party-profile-db';
+import type { PartyProfile } from '@/app/lib/party-profile-db';
+import { getPartyProfile, clearPartyProfile, ensurePartyProfile } from '@/app/lib/party-profile-db';
 
 interface UserProfileData {
   displayName: string | null;

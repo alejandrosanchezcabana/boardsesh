@@ -3,7 +3,7 @@ import { describe, it, expect, beforeEach, vi } from 'vite-plus/test';
 // Mock capacitor-utils to allow per-test control over platform detection.
 // vi.mock is hoisted before imports, so adapter-factory sees the mocked version.
 vi.mock('../capacitor-utils', async (importOriginal) => {
-  const actual = await importOriginal<typeof import('../capacitor-utils')>();
+  const actual = await importOriginal<Record<string, unknown>>();
   return {
     ...actual,
     isCapacitor: vi.fn().mockReturnValue(false),

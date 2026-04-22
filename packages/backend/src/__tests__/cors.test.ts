@@ -1,3 +1,4 @@
+import type { IncomingMessage, ServerResponse } from 'node:http';
 import { execFileSync } from 'node:child_process';
 import { describe, it, expect, beforeEach, vi } from 'vite-plus/test';
 
@@ -177,7 +178,7 @@ describe('CORS Handler', () => {
       return {
         method,
         headers: origin ? { origin } : {},
-      } as unknown as import('http').IncomingMessage;
+      } as unknown as IncomingMessage;
     }
 
     function createMockRes() {
@@ -189,7 +190,7 @@ describe('CORS Handler', () => {
         writeHead: vi.fn(),
         end: vi.fn(),
         _headers: headers,
-      } as unknown as import('http').ServerResponse & { _headers: Record<string, string> };
+      } as unknown as ServerResponse & { _headers: Record<string, string> };
     }
 
     it('sets Access-Control-Allow-Origin to request origin when allowed', () => {

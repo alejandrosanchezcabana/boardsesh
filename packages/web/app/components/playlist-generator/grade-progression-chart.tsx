@@ -7,7 +7,7 @@ import { TENSION_KILTER_GRADES } from '@/app/lib/board-data';
 import { themeTokens } from '@/app/theme/theme-config';
 import { CssBarChart } from '@/app/components/charts/css-bar-chart';
 import type { CssBarChartBar } from '@/app/components/charts/css-bar-chart';
-import { PlannedClimbSlot } from './types';
+import type { PlannedClimbSlot } from './types';
 
 interface GradeProgressionChartProps {
   plannedSlots: PlannedClimbSlot[];

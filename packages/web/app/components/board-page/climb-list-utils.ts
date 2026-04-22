@@ -1,4 +1,4 @@
-import { Climb } from '@/app/lib/types';
+import type { Climb } from '@/app/lib/types';
 
 /**
  * Classifies a climb list change to determine how to render it.

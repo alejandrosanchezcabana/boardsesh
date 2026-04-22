@@ -47,7 +47,8 @@ vi.mock('@/app/theme/theme-config', () => ({
   },
 }));
 
-import ClimbTitle, { ClimbTitleData } from '../climb-title';
+import type { ClimbTitleData } from '../climb-title';
+import ClimbTitle from '../climb-title';
 
 // --- Helpers ---
 

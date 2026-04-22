@@ -3,7 +3,7 @@
 import React, { useCallback } from 'react';
 import PlayCircleOutlineOutlined from '@mui/icons-material/PlayCircleOutlineOutlined';
 import { track } from '@vercel/analytics';
-import { ClimbActionProps, ClimbActionResult } from '../types';
+import type { ClimbActionProps, ClimbActionResult } from '../types';
 import { useOptionalQueueActions, useOptionalQueueData } from '../../graphql-queue';
 import { themeTokens } from '@/app/theme/theme-config';
 import { buildActionResult, computeActionDisplay, ActionIconElement } from '../action-view-renderer';

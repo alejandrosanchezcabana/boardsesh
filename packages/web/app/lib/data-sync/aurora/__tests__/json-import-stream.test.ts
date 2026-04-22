@@ -1,5 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vite-plus/test';
 import type { ImportProgressEvent, ImportResult } from '../json-import';
+import type { streamImport as _streamImportType } from '../json-import-stream';
 
 // ---------------------------------------------------------------------------
 // Helpers to build a mock ReadableStream from chunks
@@ -58,7 +59,7 @@ function makeCompleteStream(result: ImportResult): ReadableStream<Uint8Array> {
 // ---------------------------------------------------------------------------
 
 describe('streamImport', () => {
-  let streamImport: typeof import('../json-import-stream').streamImport;
+  let streamImport: typeof _streamImportType;
 
   beforeEach(async () => {
     vi.restoreAllMocks();

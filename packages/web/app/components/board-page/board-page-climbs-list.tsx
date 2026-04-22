@@ -1,7 +1,7 @@
 'use client';
 import React, { useMemo, useEffect, useRef } from 'react';
 import { useSearchParams } from 'next/navigation';
-import { Climb, ParsedBoardRouteParameters, BoardDetails } from '@/app/lib/types';
+import type { Climb, ParsedBoardRouteParameters, BoardDetails } from '@/app/lib/types';
 import { useQueueActions, useCurrentClimb, useSearchData } from '../graphql-queue';
 import ClimbsList from './climbs-list';
 import { stabilizeClimbArrayRef } from './climb-list-utils';

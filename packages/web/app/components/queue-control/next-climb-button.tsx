@@ -4,7 +4,7 @@ import React from 'react';
 import Link from 'next/link';
 import { useQueueActions, useSessionData } from '../graphql-queue';
 import { constructPlayUrlWithSlugs, getContextAwareClimbViewUrl } from '@/app/lib/url-utils';
-import { BoardDetails } from '@/app/lib/types';
+import type { BoardDetails } from '@/app/lib/types';
 import { useResolvedBoardDetails } from '@/app/hooks/use-resolved-board-details';
 import FastForwardOutlined from '@mui/icons-material/FastForwardOutlined';
 import { track } from '@vercel/analytics';

@@ -5,6 +5,7 @@ import Box from '@mui/material/Box';
 import MuiButton from '@mui/material/Button';
 import MyLocationOutlined from '@mui/icons-material/MyLocationOutlined';
 import type { Map as LeafletMap, Marker as LeafletMarker, LayerGroup as LeafletLayerGroup } from 'leaflet';
+import type * as LeafletNamespace from 'leaflet';
 import type { UserBoard } from '@boardsesh/shared-schema';
 import { themeTokens } from '@/app/theme/theme-config';
 import markerStyles from './board-search-map.module.css';
@@ -47,7 +48,7 @@ export default function BoardSearchMap({
 }: BoardSearchMapProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<LeafletMap | null>(null);
-  const leafletRef = useRef<typeof import('leaflet') | null>(null);
+  const leafletRef = useRef<typeof LeafletNamespace | null>(null);
   const markersLayerRef = useRef<LeafletLayerGroup | null>(null);
   const markersByUuidRef = useRef<Map<string, LeafletMarker>>(new Map());
   const onViewportChangeRef = useRef(onViewportChange);

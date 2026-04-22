@@ -1,9 +1,13 @@
 import 'server-only';
 import { unstable_cache } from 'next/cache';
-import { GraphQLClient, RequestDocument, Variables } from 'graphql-request';
+import type { RequestDocument, Variables } from 'graphql-request';
+import { GraphQLClient } from 'graphql-request';
 import { sortObjectKeys } from '@/app/lib/cache-utils';
 import { getGraphQLHttpUrl } from './client';
 import { executeAuthenticatedGraphQL } from './server-graphql';
+import type { SessionFeedResult } from '@boardsesh/shared-schema';
+import type { DiscoverablePlaylist, DiscoverPlaylistsQueryResponse } from '@/app/lib/graphql/operations/playlists';
+import type { GetUserProfileStatsQueryResponse, GetUserTicksQueryResponse } from '@/app/lib/graphql/operations/ticks';
 
 // Re-export uncached authenticated server functions so existing imports
 // from this file continue to work without changes.
@@ -78,7 +82,7 @@ export async function cachedSessionGroupedFeed(boardUuid?: string, isAuthenticat
   const revalidate = isAuthenticated ? 300 : 86400;
 
   const query = createCachedGraphQLQuery<{
-    sessionGroupedFeed: import('@boardsesh/shared-schema').SessionFeedResult;
+    sessionGroupedFeed: SessionFeedResult;
   }>(
     GET_SESSION_GROUPED_FEED,
     isAuthenticated ? 'session-grouped-feed-auth' : 'session-grouped-feed-public',
@@ -97,7 +101,7 @@ export async function cachedSessionGroupedFeed(boardUuid?: string, isAuthenticat
 export async function cachedUserSessionGroupedFeed(authToken: string, userId: string) {
   const { GET_SESSION_GROUPED_FEED } = await import('@/app/lib/graphql/operations/activity-feed');
 
-  type Response = { sessionGroupedFeed: import('@boardsesh/shared-schema').SessionFeedResult };
+  type Response = { sessionGroupedFeed: SessionFeedResult };
   const tag = `user-session-feed-${userId}`;
 
   const cachedFn = unstable_cache(
@@ -120,11 +124,11 @@ export async function cachedUserSessionGroupedFeed(authToken: string, userId: st
  * Server-side cached fetch of discover playlists (public, no auth needed).
  */
 export async function cachedDiscoverPlaylists(input: { boardType?: string; layoutId?: number } = {}): Promise<{
-  popular: import('@/app/lib/graphql/operations/playlists').DiscoverablePlaylist[];
-  recent: import('@/app/lib/graphql/operations/playlists').DiscoverablePlaylist[];
+  popular: DiscoverablePlaylist[];
+  recent: DiscoverablePlaylist[];
 } | null> {
   const { DISCOVER_PLAYLISTS } = await import('@/app/lib/graphql/operations/playlists');
-  type Response = import('@/app/lib/graphql/operations/playlists').DiscoverPlaylistsQueryResponse;
+  type Response = DiscoverPlaylistsQueryResponse;
 
   try {
     const popularQuery = createCachedGraphQLQuery<Response>(
@@ -153,9 +157,9 @@ export async function cachedDiscoverPlaylists(input: { boardType?: string; layou
  */
 export async function cachedUserProfileStats(
   userId: string,
-): Promise<import('@/app/lib/graphql/operations/ticks').GetUserProfileStatsQueryResponse['userProfileStats'] | null> {
+): Promise<GetUserProfileStatsQueryResponse['userProfileStats'] | null> {
   const { GET_USER_PROFILE_STATS } = await import('@/app/lib/graphql/operations/ticks');
-  type Response = import('@/app/lib/graphql/operations/ticks').GetUserProfileStatsQueryResponse;
+  type Response = GetUserProfileStatsQueryResponse;
 
   try {
     const tag = `user-profile-stats-${userId}`;
@@ -173,9 +177,9 @@ export async function cachedUserProfileStats(
 export async function cachedUserTicks(
   userId: string,
   boardType: string,
-): Promise<import('@/app/lib/graphql/operations/ticks').GetUserTicksQueryResponse['userTicks'] | null> {
+): Promise<GetUserTicksQueryResponse['userTicks'] | null> {
   const { GET_USER_TICKS } = await import('@/app/lib/graphql/operations/ticks');
-  type Response = import('@/app/lib/graphql/operations/ticks').GetUserTicksQueryResponse;
+  type Response = GetUserTicksQueryResponse;
 
   try {
     const tag = `user-ticks-${userId}-${boardType}`;

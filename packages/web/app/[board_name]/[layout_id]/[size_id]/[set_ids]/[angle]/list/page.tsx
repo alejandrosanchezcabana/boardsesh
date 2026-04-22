@@ -1,7 +1,7 @@
 import React from 'react';
 
 import { notFound, permanentRedirect } from 'next/navigation';
-import { BoardRouteParametersWithUuid, SearchRequestPagination, BoardDetails } from '@/app/lib/types';
+import type { BoardRouteParametersWithUuid, SearchRequestPagination, BoardDetails, Climb } from '@/app/lib/types';
 import { parsedRouteSearchParamsToSearchParams, constructClimbListWithSlugs } from '@/app/lib/url-utils';
 import { parseRouteParams } from '@/app/lib/url-utils.server';
 import BoardPageClimbsList from '@/app/components/board-page/board-page-climbs-list';
@@ -98,7 +98,7 @@ export default async function DynamicResultsPage(props: {
     userId = session?.user?.id;
   }
 
-  let searchResponse: { climbs: import('@/app/lib/types').Climb[]; hasMore: boolean };
+  let searchResponse: { climbs: Climb[]; hasMore: boolean };
 
   try {
     searchResponse = await cachedSearchClimbs(parsedParams, searchParamsObject, isDefaultSearch, userId, {

@@ -6,7 +6,7 @@ import { eq, and, or, isNotNull, asc } from 'drizzle-orm';
 import { decrypt, encrypt } from '@boardsesh/crypto';
 import * as schema from '@/app/lib/db/schema';
 import AuroraClimbingClient from '@/app/lib/api-wrappers/aurora-rest-client/aurora-rest-client';
-import { AuroraBoardName } from '@/app/lib/api-wrappers/aurora/types';
+import type { AuroraBoardName } from '@/app/lib/api-wrappers/aurora/types';
 
 export const dynamic = 'force-dynamic';
 export const maxDuration = 300; // 5 minutes max

@@ -1,5 +1,6 @@
 import { getServerSession } from 'next-auth/next';
-import { NextRequest, NextResponse } from 'next/server';
+import type { NextRequest } from 'next/server';
+import { NextResponse } from 'next/server';
 import { z } from 'zod';
 import { authOptions } from '@/app/lib/auth/auth-options';
 import { auroraExportSchema, importJsonExportData } from '@/app/lib/data-sync/aurora/json-import';

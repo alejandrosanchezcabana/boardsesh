@@ -8,13 +8,13 @@ import { useInfiniteQuery } from '@tanstack/react-query';
 import { usePathname } from 'next/navigation';
 import { useIsDarkMode } from '@/app/hooks/use-is-dark-mode';
 import { track } from '@vercel/analytics';
-import { Climb, BoardDetails } from '@/app/lib/types';
+import type { Climb, BoardDetails } from '@/app/lib/types';
 import { executeGraphQL } from '@/app/lib/graphql/client';
-import {
-  GET_USER_FAVORITE_CLIMBS,
+import type {
   GetUserFavoriteClimbsQueryResponse,
   GetUserFavoriteClimbsQueryVariables,
 } from '@/app/lib/graphql/operations/favorites';
+import { GET_USER_FAVORITE_CLIMBS } from '@/app/lib/graphql/operations/favorites';
 import { useWsAuthToken } from '@/app/hooks/use-ws-auth-token';
 import { useQueueActions } from '@/app/components/graphql-queue';
 import { useSnackbar } from '@/app/components/providers/snackbar-provider';

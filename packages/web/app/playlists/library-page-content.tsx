@@ -7,16 +7,15 @@ import { LabelOutlined, LoginOutlined, SentimentDissatisfiedOutlined } from '@mu
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import { executeGraphQL } from '@/app/lib/graphql/client';
-import {
-  GET_ALL_USER_PLAYLISTS,
+import type {
   GetAllUserPlaylistsQueryResponse,
   GetAllUserPlaylistsInput,
-  DISCOVER_PLAYLISTS,
   DiscoverPlaylistsQueryResponse,
   DiscoverPlaylistsInput,
   Playlist,
   DiscoverablePlaylist,
 } from '@/app/lib/graphql/operations/playlists';
+import { GET_ALL_USER_PLAYLISTS, DISCOVER_PLAYLISTS } from '@/app/lib/graphql/operations/playlists';
 import { useWsAuthToken } from '@/app/hooks/use-ws-auth-token';
 import { useMyBoards } from '@/app/hooks/use-my-boards';
 import { useQueueBridgeBoardInfo } from '@/app/components/queue-control/queue-bridge-context';

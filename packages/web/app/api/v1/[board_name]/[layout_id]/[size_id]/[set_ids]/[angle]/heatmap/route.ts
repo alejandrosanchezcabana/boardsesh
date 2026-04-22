@@ -1,6 +1,6 @@
 import { getHoldHeatmapData } from '@/app/lib/db/queries/climbs/holds-heatmap';
 import { cachedGetHoldHeatmapData } from '@/app/lib/db/queries/climbs/holds-heatmap-cache';
-import { BoardRouteParameters, ErrorResponse, SearchRequestPagination } from '@/app/lib/types';
+import type { BoardRouteParameters, ErrorResponse, SearchRequestPagination } from '@/app/lib/types';
 import { urlParamsToSearchParams } from '@/app/lib/url-utils';
 import { parseBoardRouteParamsWithSlugs } from '@/app/lib/url-utils.server';
 import { NextResponse } from 'next/server';

@@ -21,8 +21,18 @@ import {
   IosShare,
 } from '@mui/icons-material';
 import { useInfiniteQuery } from '@tanstack/react-query';
-import { Climb } from '@/app/lib/types';
+import type { Climb } from '@/app/lib/types';
 import { executeGraphQL, createGraphQLHttpClient } from '@/app/lib/graphql/client';
+import type {
+  GetPlaylistQueryResponse,
+  GetPlaylistQueryVariables,
+  GetPlaylistClimbsQueryResponse,
+  Playlist,
+  UpdatePlaylistLastAccessedMutationVariables,
+  UpdatePlaylistLastAccessedMutationResponse,
+  DeletePlaylistMutationVariables,
+  DeletePlaylistMutationResponse,
+} from '@/app/lib/graphql/operations/playlists';
 import {
   GET_PLAYLIST,
   GET_PLAYLIST_CLIMBS,
@@ -30,16 +40,8 @@ import {
   UPDATE_PLAYLIST_LAST_ACCESSED,
   FOLLOW_PLAYLIST,
   UNFOLLOW_PLAYLIST,
-  GetPlaylistQueryResponse,
-  GetPlaylistQueryVariables,
-  GetPlaylistClimbsQueryResponse,
   type GetPlaylistClimbsQueryVariables,
   type GetPlaylistClimbsInput,
-  Playlist,
-  UpdatePlaylistLastAccessedMutationVariables,
-  UpdatePlaylistLastAccessedMutationResponse,
-  DeletePlaylistMutationVariables,
-  DeletePlaylistMutationResponse,
 } from '@/app/lib/graphql/operations/playlists';
 import { useSnackbar } from '@/app/components/providers/snackbar-provider';
 import { shareWithFallback } from '@/app/lib/share-utils';

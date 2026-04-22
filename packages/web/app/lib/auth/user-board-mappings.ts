@@ -1,7 +1,7 @@
 import { getDb } from '@/app/lib/db/db';
 import { userBoardMappings } from '@/app/lib/db/schema';
 import { eq, and } from 'drizzle-orm';
-import { BoardName } from '@/app/lib/types';
+import type { BoardName } from '@/app/lib/types';
 
 export interface UserBoardMapping {
   id: string;

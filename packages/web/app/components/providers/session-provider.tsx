@@ -2,7 +2,7 @@
 
 import React, { useEffect, useState } from 'react';
 import { SessionProvider, signIn } from 'next-auth/react';
-import { ReactNode } from 'react';
+import type { ReactNode } from 'react';
 import Snackbar from '@mui/material/Snackbar';
 import Alert from '@mui/material/Alert';
 import { isNativeApp } from '@/app/lib/ble/capacitor-utils';

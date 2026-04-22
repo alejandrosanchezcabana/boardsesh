@@ -1,5 +1,5 @@
 import { gql } from 'graphql-request';
-import type { ActivityFeedInput } from '@boardsesh/shared-schema';
+import type { ActivityFeedInput, SessionFeedResult, SessionDetail } from '@boardsesh/shared-schema';
 
 // ============================================
 // Session-Grouped Feed Queries
@@ -192,7 +192,7 @@ export interface GetSessionGroupedFeedQueryVariables {
 }
 
 export interface GetSessionGroupedFeedQueryResponse {
-  sessionGroupedFeed: import('@boardsesh/shared-schema').SessionFeedResult;
+  sessionGroupedFeed: SessionFeedResult;
 }
 
 export interface GetSessionDetailQueryVariables {
@@ -200,5 +200,5 @@ export interface GetSessionDetailQueryVariables {
 }
 
 export interface GetSessionDetailQueryResponse {
-  sessionDetail: import('@boardsesh/shared-schema').SessionDetail | null;
+  sessionDetail: SessionDetail | null;
 }

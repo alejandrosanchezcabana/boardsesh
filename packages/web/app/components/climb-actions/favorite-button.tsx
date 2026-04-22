@@ -7,7 +7,7 @@ import Tooltip from '@mui/material/Tooltip';
 import { useSnackbar } from '@/app/components/providers/snackbar-provider';
 import { track } from '@vercel/analytics';
 import { useFavorite } from './use-favorite';
-import { BoardName } from '@/app/lib/types';
+import type { BoardName } from '@/app/lib/types';
 import { useAuthModal } from '@/app/components/providers/auth-modal-provider';
 import { themeTokens } from '@/app/theme/theme-config';
 

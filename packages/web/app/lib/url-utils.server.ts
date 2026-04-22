@@ -1,7 +1,7 @@
 import 'server-only';
 import { cache } from 'react';
 import { notFound } from 'next/navigation';
-import {
+import type {
   BoardRouteParameters,
   ParsedBoardRouteParametersWithUuid,
   ParsedBoardRouteParameters,
@@ -16,7 +16,8 @@ import {
   parseBoardRouteParams,
   getMoonBoardLayoutBySlug,
 } from './url-utils';
-import { MOONBOARD_LAYOUTS, MOONBOARD_SETS, MOONBOARD_SIZE, MoonBoardLayoutKey } from './moonboard-config';
+import type { MoonBoardLayoutKey } from './moonboard-config';
+import { MOONBOARD_LAYOUTS, MOONBOARD_SETS, MOONBOARD_SIZE } from './moonboard-config';
 
 // Helper to parse MoonBoard size slug (always returns the single size)
 function getMoonBoardSizeBySlug(): { id: number; name: string } {

@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useMemo } from 'react';
-import { Angle, Climb, BoardDetails } from '@/app/lib/types';
+import type { Angle, Climb, BoardDetails } from '@/app/lib/types';
 import { useBoardProvider } from '../board-provider/board-provider-context';
 import MuiBadge from '@mui/material/Badge';
 import Typography from '@mui/material/Typography';

@@ -1,4 +1,4 @@
-import { BoardDetails, BoardName } from '@/app/lib/types';
+import type { BoardDetails, BoardName } from '@/app/lib/types';
 import { BOARD_IMAGE_DIMENSIONS } from '../../lib/board-data';
 export { convertLitUpHoldsStringToMap } from './types';
 

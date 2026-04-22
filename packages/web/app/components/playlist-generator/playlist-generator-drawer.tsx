@@ -7,20 +7,18 @@ import MuiButton from '@mui/material/Button';
 import Typography from '@mui/material/Typography';
 import SwipeableDrawer from '../swipeable-drawer/swipeable-drawer';
 import { ArrowBackOutlined, ElectricBoltOutlined } from '@mui/icons-material';
-import { BoardDetails, Climb } from '@/app/lib/types';
+import type { BoardDetails, Climb } from '@/app/lib/types';
 import { executeGraphQL } from '@/app/lib/graphql/client';
-import {
-  SEARCH_CLIMBS,
-  ClimbSearchInputVariables,
-  ClimbSearchResponse,
-} from '@/app/lib/graphql/operations/climb-search';
-import {
-  ADD_CLIMB_TO_PLAYLIST,
+import type { ClimbSearchInputVariables, ClimbSearchResponse } from '@/app/lib/graphql/operations/climb-search';
+import { SEARCH_CLIMBS } from '@/app/lib/graphql/operations/climb-search';
+import type {
   AddClimbToPlaylistMutationVariables,
   AddClimbToPlaylistMutationResponse,
 } from '@/app/lib/graphql/operations/playlists';
+import { ADD_CLIMB_TO_PLAYLIST } from '@/app/lib/graphql/operations/playlists';
 import { useWsAuthToken } from '@/app/hooks/use-ws-auth-token';
-import { WorkoutType, GeneratorOptions, PlannedClimbSlot, WORKOUT_TYPES } from './types';
+import type { WorkoutType, GeneratorOptions, PlannedClimbSlot } from './types';
+import { WORKOUT_TYPES } from './types';
 import WorkoutTypeSelector from './workout-type-selector';
 import GeneratorOptionsForm, { getDefaultOptions } from './generator-options-form';
 import GradeProgressionChart from './grade-progression-chart';

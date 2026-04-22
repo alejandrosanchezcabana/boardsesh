@@ -1,5 +1,5 @@
 import { cache } from 'react';
-import { ParsedBoardRouteParameters, BoardName } from '@/app/lib/types';
+import type { ParsedBoardRouteParameters, BoardName } from '@/app/lib/types';
 import { getGraphQLHttpUrl } from '@/app/lib/graphql/client';
 
 export type ResolvedBoard = {

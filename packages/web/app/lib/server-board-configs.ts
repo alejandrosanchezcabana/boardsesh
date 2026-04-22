@@ -1,14 +1,9 @@
 import React from 'react';
-import { BoardName, BoardDetails } from '@/app/lib/types';
-import { LayoutRow, SizeRow, SetRow } from '@/app/lib/data/queries';
+import type { BoardName, BoardDetails } from '@/app/lib/types';
+import type { LayoutRow, SizeRow, SetRow } from '@/app/lib/data/queries';
 import { getBoardDetails, getBoardSelectorOptions } from '@/app/lib/board-constants';
-import {
-  MOONBOARD_ENABLED,
-  MOONBOARD_LAYOUTS,
-  MOONBOARD_SETS,
-  MOONBOARD_SIZE,
-  MoonBoardLayoutKey,
-} from '@/app/lib/moonboard-config';
+import type { MoonBoardLayoutKey } from '@/app/lib/moonboard-config';
+import { MOONBOARD_ENABLED, MOONBOARD_LAYOUTS, MOONBOARD_SETS, MOONBOARD_SIZE } from '@/app/lib/moonboard-config';
 
 export type BoardConfigData = {
   layouts: Record<BoardName, LayoutRow[]>;

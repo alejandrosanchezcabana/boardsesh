@@ -1,5 +1,5 @@
 import { dbz } from '@/app/lib/db/db';
-import { BoardName, LayoutId, Size } from '@/app/lib/types';
+import type { BoardName, LayoutId, Size } from '@/app/lib/types';
 import { matchSetNameToSlugParts } from './slug-matching';
 import { generateSlugFromText, generateDescriptionSlug, generateLayoutSlug } from './url-utils';
 import { UNIFIED_TABLES } from '@/app/lib/db/queries/util/table-select';

@@ -11,20 +11,22 @@ import IconButton from '@mui/material/IconButton';
 import MuiButton from '@mui/material/Button';
 import { RemoveOutlined, AddOutlined, RefreshOutlined } from '@mui/icons-material';
 import { TENSION_KILTER_GRADES } from '@/app/lib/board-data';
-import { BoardDetails } from '@/app/lib/types';
-import {
+import type { BoardDetails } from '@/app/lib/types';
+import type {
   WorkoutType,
   GeneratorOptions,
+  VolumeOptions,
+  PyramidOptions,
+  LadderOptions,
+  GradeFocusOptions,
+} from './types';
+import {
   WARM_UP_OPTIONS,
   CLIMB_BIAS_OPTIONS,
   DEFAULT_VOLUME_OPTIONS,
   DEFAULT_PYRAMID_OPTIONS,
   DEFAULT_LADDER_OPTIONS,
   DEFAULT_GRADE_FOCUS_OPTIONS,
-  VolumeOptions,
-  PyramidOptions,
-  LadderOptions,
-  GradeFocusOptions,
 } from './types';
 import styles from './generator-options-form.module.css';
 

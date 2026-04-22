@@ -1,5 +1,6 @@
 import { userSync } from '../api/user-sync-api';
-import { SyncOptions, USER_TABLES, UserSyncData, AuroraBoardName } from '../api/types';
+import type { SyncOptions, UserSyncData, AuroraBoardName } from '../api/types';
+import { USER_TABLES } from '../api/types';
 import { eq, and, inArray, sql } from 'drizzle-orm';
 import { drizzle } from 'drizzle-orm/neon-serverless';
 import type { NeonDatabase } from 'drizzle-orm/neon-serverless';

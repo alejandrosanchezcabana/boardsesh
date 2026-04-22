@@ -1,4 +1,5 @@
-import { createClient, Client, Sink } from 'graphql-ws';
+import type { Client, Sink } from 'graphql-ws';
+import { createClient } from 'graphql-ws';
 import { connectionManager, KEEP_ALIVE_MS } from '../connection-manager/websocket-connection-manager';
 
 export type { Client };

@@ -38,12 +38,12 @@ const EmojiPicker = dynamic(
   },
 );
 import { executeGraphQL } from '@/app/lib/graphql/client';
-import {
-  UPDATE_PLAYLIST,
+import type {
   UpdatePlaylistMutationResponse,
   UpdatePlaylistMutationVariables,
   Playlist,
 } from '@/app/lib/graphql/operations/playlists';
+import { UPDATE_PLAYLIST } from '@/app/lib/graphql/operations/playlists';
 import { useWsAuthToken } from '@/app/hooks/use-ws-auth-token';
 import { themeTokens } from '@/app/theme/theme-config';
 

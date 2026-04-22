@@ -1,7 +1,8 @@
-import { NextRequest, NextResponse } from 'next/server';
+import type { NextRequest } from 'next/server';
+import { NextResponse } from 'next/server';
 import { dbz } from '@/app/lib/db/db';
 import { eq, and } from 'drizzle-orm';
-import { BoardName } from '@/app/lib/types';
+import type { BoardName } from '@/app/lib/types';
 import { extractUuidFromSlug } from '@/app/lib/url-utils';
 import { UNIFIED_TABLES, isValidUnifiedBoardName } from '@/app/lib/db/queries/util/table-select';
 

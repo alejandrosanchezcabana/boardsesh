@@ -1,6 +1,6 @@
 'use client';
 import React, { createContext, useContext, useState } from 'react';
-import { SearchRequestPagination } from '@/lib/types';
+import type { SearchRequestPagination } from '@/lib/types';
 import { useDebouncedCallback } from 'use-debounce';
 import { track } from '@vercel/analytics';
 import { useQueueActions, useSearchData } from '../graphql-queue';

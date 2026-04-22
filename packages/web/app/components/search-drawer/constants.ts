@@ -1,4 +1,4 @@
-import { SearchRequestPagination } from '@/app/lib/types';
+import type { SearchRequestPagination } from '@/app/lib/types';
 import { PAGE_LIMIT } from '../board-page/constants';
 
 // Default climb search parameters

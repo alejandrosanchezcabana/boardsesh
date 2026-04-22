@@ -1,4 +1,4 @@
-import { SearchRequestPagination } from '@/app/lib/types';
+import type { SearchRequestPagination } from '@/app/lib/types';
 import { TENSION_KILTER_GRADES } from '@/app/lib/board-data';
 import { DEFAULT_SEARCH_PARAMS } from '@/app/lib/url-utils';
 

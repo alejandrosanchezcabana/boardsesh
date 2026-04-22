@@ -1,6 +1,6 @@
 import React from 'react';
 import { usePathname } from 'next/navigation';
-import { Climb, BoardDetails } from '@/app/lib/types';
+import type { Climb, BoardDetails } from '@/app/lib/types';
 import { themeTokens } from '@/app/theme/theme-config';
 import ClimbThumbnail from './climb-thumbnail';
 import ClimbTitle from './climb-title';

@@ -1,6 +1,6 @@
 import React from 'react';
 import { notFound, permanentRedirect } from 'next/navigation';
-import { BoardRouteParametersWithUuid } from '@/app/lib/types';
+import type { BoardRouteParametersWithUuid } from '@/app/lib/types';
 import { getClimb } from '@/app/lib/data/queries';
 import { getBoardDetailsForBoard } from '@/app/lib/board-utils';
 import {
@@ -11,7 +11,7 @@ import {
 } from '@/app/lib/url-utils';
 import { parseRouteParams } from '@/app/lib/url-utils.server';
 
-import { Metadata } from 'next';
+import type { Metadata } from 'next';
 import { fetchClimbDetailData } from '@/app/lib/data/climb-detail-data.server';
 import ClimbDetailPageServer from '@/app/components/climb-detail/climb-detail-page.server';
 import { scheduleOverlayWarming } from '@/app/lib/warm-overlay-cache';

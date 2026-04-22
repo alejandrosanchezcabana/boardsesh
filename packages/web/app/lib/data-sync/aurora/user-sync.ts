@@ -1,9 +1,10 @@
 import { getPool } from '@/app/lib/db/db';
 import { userSync } from '../../api-wrappers/aurora/userSync';
-import { SyncOptions, USER_TABLES, UserSyncData, AuroraBoardName } from '../../api-wrappers/aurora/types';
+import type { SyncOptions, UserSyncData, AuroraBoardName } from '../../api-wrappers/aurora/types';
+import { USER_TABLES } from '../../api-wrappers/aurora/types';
 import { eq, and, inArray } from 'drizzle-orm';
 import { drizzle } from 'drizzle-orm/neon-serverless';
-import { NeonDatabase } from 'drizzle-orm/neon-serverless';
+import type { NeonDatabase } from 'drizzle-orm/neon-serverless';
 import { UNIFIED_TABLES } from '../../db/queries/util/table-select';
 import { boardseshTicks, auroraCredentials, playlists, playlistClimbs, playlistOwnership } from '../../db/schema';
 import { randomUUID } from 'crypto';

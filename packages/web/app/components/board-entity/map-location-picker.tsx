@@ -15,6 +15,7 @@ import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import MyLocationOutlined from '@mui/icons-material/MyLocationOutlined';
 import SearchOutlined from '@mui/icons-material/SearchOutlined';
 import type { Map as LeafletMap, Marker as LeafletMarker } from 'leaflet';
+import type * as LeafletNamespace from 'leaflet';
 import { useGeolocation } from '@/app/hooks/use-geolocation';
 
 interface NominatimResult {
@@ -32,7 +33,7 @@ interface MapLocationPickerProps {
 export default function MapLocationPicker({ latitude, longitude, onChange }: MapLocationPickerProps) {
   const mapRef = useRef<LeafletMap | null>(null);
   const markerRef = useRef<LeafletMarker | null>(null);
-  const leafletRef = useRef<typeof import('leaflet') | null>(null);
+  const leafletRef = useRef<typeof LeafletNamespace | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const onChangeRef = useRef(onChange);
   onChangeRef.current = onChange;

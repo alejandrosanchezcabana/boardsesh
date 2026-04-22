@@ -1,7 +1,7 @@
 import { describe, it, expect, vi } from 'vite-plus/test';
 import { v4 as uuidv4 } from 'uuid';
-import { Climb } from '@/app/lib/types';
-import { ClimbQueueItem, UserName } from '../types';
+import type { Climb } from '@/app/lib/types';
+import type { ClimbQueueItem, UserName } from '../types';
 
 // Mock uuid
 vi.mock('uuid', () => ({

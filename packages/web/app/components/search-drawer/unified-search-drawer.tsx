@@ -12,7 +12,7 @@ import BoardSearchResults from '../social/board-search-results';
 import PlaylistSearchResults from '../social/playlist-search-results';
 import GymSearchResults from '../social/gym-search-results';
 import { useWsAuthToken } from '@/app/hooks/use-ws-auth-token';
-import { BoardDetails } from '@/app/lib/types';
+import type { BoardDetails } from '@/app/lib/types';
 
 export type SearchCategory = 'climbs' | 'users' | 'playlists' | 'boards' | 'gyms';
 

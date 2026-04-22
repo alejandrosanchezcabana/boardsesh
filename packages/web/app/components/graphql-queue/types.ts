@@ -1,4 +1,4 @@
-import { QueueActionsType, QueueDataType } from '../queue-control/types';
+import type { QueueActionsType, QueueDataType } from '../queue-control/types';
 import type { ConnectionState } from '../connection-manager/websocket-connection-manager';
 import type { SessionSummary } from '@boardsesh/shared-schema';
 import type { ReactNode } from 'react';

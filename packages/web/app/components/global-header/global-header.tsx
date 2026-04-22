@@ -20,7 +20,7 @@ import { shareWithFallback } from '@/app/lib/share-utils';
 import { useSearchDrawerBridge } from '@/app/components/search-drawer/search-drawer-bridge-context';
 import UserDrawer from '@/app/components/user-drawer/user-drawer';
 import { useIsOnBoardRoute } from '@/app/components/persistent-session/persistent-session-context';
-import { BoardConfigData } from '@/app/lib/server-board-configs';
+import type { BoardConfigData } from '@/app/lib/server-board-configs';
 import { isBoardCreatePath } from '@/app/lib/board-route-paths';
 
 import TuneOutlined from '@mui/icons-material/TuneOutlined';

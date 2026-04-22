@@ -1,4 +1,5 @@
-import { eq, gte, sql, like, notLike, inArray, or, and, SQL } from 'drizzle-orm';
+import type { SQL } from 'drizzle-orm';
+import { eq, gte, sql, like, notLike, inArray, or, and } from 'drizzle-orm';
 import { boardClimbs, boardClimbStats, boardseshTicks, boardProductSizes, boardClimbHolds } from '../../schema/index';
 import type { BoardRouteParams, ClimbSearchParams } from './types';
 

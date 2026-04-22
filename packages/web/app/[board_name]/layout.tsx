@@ -1,6 +1,6 @@
 import React from 'react';
-import { PropsWithChildren } from 'react';
-import { BoardName, BoardOnlyRouteParameters } from '@/app/lib/types';
+import type { PropsWithChildren } from 'react';
+import type { BoardName, BoardOnlyRouteParameters } from '@/app/lib/types';
 
 import { BoardProvider } from '../components/board-provider/board-provider-context';
 

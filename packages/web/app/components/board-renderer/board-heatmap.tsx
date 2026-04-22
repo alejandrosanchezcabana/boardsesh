@@ -1,9 +1,9 @@
 'use client';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { getImageUrl } from './util';
-import { BoardDetails } from '@/app/lib/types';
-import { HeatmapData } from './types';
-import { LitUpHoldsMap } from './types';
+import type { BoardDetails } from '@/app/lib/types';
+import type { HeatmapData } from './types';
+import type { LitUpHoldsMap } from './types';
 import { scaleLog } from 'd3-scale';
 import useHeatmapData from '../search-drawer/use-heatmap';
 import { usePathname } from 'next/navigation';

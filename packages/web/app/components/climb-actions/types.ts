@@ -1,4 +1,4 @@
-import { Climb, BoardDetails } from '@/app/lib/types';
+import type { Climb, BoardDetails } from '@/app/lib/types';
 
 /**
  * Available action types for climbs

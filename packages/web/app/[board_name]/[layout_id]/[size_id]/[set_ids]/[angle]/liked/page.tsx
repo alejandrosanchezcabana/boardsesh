@@ -1,9 +1,9 @@
 import React from 'react';
 import { notFound } from 'next/navigation';
-import { BoardRouteParameters } from '@/app/lib/types';
+import type { BoardRouteParameters } from '@/app/lib/types';
 import { getBoardDetailsForBoard } from '@/app/lib/board-utils';
 import { parseBoardRouteParamsWithSlugs } from '@/app/lib/url-utils.server';
-import { Metadata } from 'next';
+import type { Metadata } from 'next';
 import LikedClimbsViewContent from './liked-climbs-view-content';
 import styles from '@/app/components/library/playlist-view.module.css';
 

@@ -28,9 +28,7 @@ vi.mock('@/app/lib/graphql/client', () => ({
 }));
 
 vi.mock('@/app/lib/graphql/operations/ticks', async () => {
-  const actual = await vi.importActual<typeof import('@/app/lib/graphql/operations/ticks')>(
-    '@/app/lib/graphql/operations/ticks',
-  );
+  const actual = await vi.importActual<Record<string, unknown>>('@/app/lib/graphql/operations/ticks');
   return {
     ...actual,
     GET_USER_ASCENTS_FEED: 'GET_USER_ASCENTS_FEED',
@@ -83,7 +81,7 @@ vi.mock('@/app/profile/[user_id]/utils/profile-constants', () => ({
 }));
 
 vi.mock('@boardsesh/board-constants/product-sizes', async (importOriginal) => {
-  const actual = await importOriginal<typeof import('@boardsesh/board-constants/product-sizes')>();
+  const actual = await importOriginal<Record<string, unknown>>();
   return {
     ...actual,
     // Map layoutId → a stable non-null default so logbookBoards has a usable
@@ -94,7 +92,7 @@ vi.mock('@boardsesh/board-constants/product-sizes', async (importOriginal) => {
 });
 
 vi.mock('@/app/lib/moonboard-config', async (importOriginal) => {
-  const actual = await importOriginal<typeof import('@/app/lib/moonboard-config')>();
+  const actual = await importOriginal<Record<string, unknown>>();
   return {
     ...actual,
     getLayoutById: () => null,

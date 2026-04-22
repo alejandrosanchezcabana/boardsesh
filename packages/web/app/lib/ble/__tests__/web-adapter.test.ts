@@ -1,6 +1,11 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vite-plus/test';
 import { AURORA_REQUEST_DEVICE_OPTIONS } from '@/app/components/board-bluetooth-control/bluetooth-aurora';
 import { MOONBOARD_REQUEST_DEVICE_OPTIONS } from '@/app/components/board-bluetooth-control/bluetooth-moonboard';
+import type {
+  requestBluetoothDevice as _requestBluetoothDevice,
+  getUartCharacteristic as _getUartCharacteristic,
+  writeCharacteristicSeries as _writeCharacteristicSeries,
+} from '@/app/components/board-bluetooth-control/bluetooth-shared';
 
 // Mock the shared Bluetooth transport helpers
 const mockRequestDevice = vi.fn();
@@ -9,13 +14,13 @@ const mockSplitMessages = vi.fn((data: Uint8Array) => [data]);
 const mockWriteCharacteristicSeries = vi.fn();
 
 vi.mock('@/app/components/board-bluetooth-control/bluetooth-shared', async (importOriginal) => {
-  const actual = await importOriginal<typeof import('@/app/components/board-bluetooth-control/bluetooth-shared')>();
+  const actual = await importOriginal<Record<string, unknown>>();
   return {
     ...actual,
-    requestBluetoothDevice: (...args: Parameters<typeof actual.requestBluetoothDevice>) => mockRequestDevice(...args),
-    getUartCharacteristic: (...args: Parameters<typeof actual.getUartCharacteristic>) => mockGetCharacteristic(...args),
+    requestBluetoothDevice: (...args: Parameters<typeof _requestBluetoothDevice>) => mockRequestDevice(...args),
+    getUartCharacteristic: (...args: Parameters<typeof _getUartCharacteristic>) => mockGetCharacteristic(...args),
     splitMessages: (data: Uint8Array) => mockSplitMessages(data),
-    writeCharacteristicSeries: (...args: Parameters<typeof actual.writeCharacteristicSeries>) =>
+    writeCharacteristicSeries: (...args: Parameters<typeof _writeCharacteristicSeries>) =>
       mockWriteCharacteristicSeries(...args),
   };
 });

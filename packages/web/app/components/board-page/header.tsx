@@ -9,7 +9,7 @@ import SearchOutlined from '@mui/icons-material/SearchOutlined';
 import UnifiedSearchDrawer from '../search-drawer/unified-search-drawer';
 import AccordionSearchForm from '../search-drawer/accordion-search-form';
 import { SearchDrawerBridgeInjector } from '../search-drawer/search-drawer-bridge-context';
-import { BoardDetails } from '@/app/lib/types';
+import type { BoardDetails } from '@/app/lib/types';
 import {
   constructClimbListWithSlugs,
   generateLayoutSlug,

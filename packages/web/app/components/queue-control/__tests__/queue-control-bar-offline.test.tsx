@@ -83,7 +83,7 @@ vi.mock('@/app/hooks/use-color-mode', () => ({
 }));
 
 vi.mock('@/app/lib/grade-colors', async (importOriginal) => {
-  const actual = await importOriginal<typeof import('@/app/lib/grade-colors')>();
+  const actual = await importOriginal<Record<string, unknown>>();
   return {
     ...actual,
     getGradeTintColor: () => null,

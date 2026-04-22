@@ -8,7 +8,7 @@ import {
   pickHighestAscentStatus,
   type AscentStatusValue,
 } from '@/app/components/ascent-status/ascent-status-utils';
-import { ClimbUuid } from '@/app/lib/types';
+import type { ClimbUuid } from '@/app/lib/types';
 import { useOptionalBoardProvider } from '../board-provider/board-provider-context';
 
 const EMPTY_LOGBOOK: LogbookEntry[] = [];

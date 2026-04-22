@@ -1,5 +1,5 @@
 import { createIndexedDBStore } from './idb-helper';
-import { BoardName } from '@/app/lib/types';
+import type { BoardName } from '@/app/lib/types';
 
 const STORE_NAME = 'board-configurations';
 

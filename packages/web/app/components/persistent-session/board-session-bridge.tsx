@@ -3,7 +3,7 @@
 import React, { useEffect, useMemo } from 'react';
 import { usePathname } from 'next/navigation';
 import { usePersistentSessionState, usePersistentSessionActions } from './persistent-session-context';
-import { BoardDetails, ParsedBoardRouteParameters } from '@/app/lib/types';
+import type { BoardDetails, ParsedBoardRouteParameters } from '@/app/lib/types';
 import { getBaseBoardPath } from '@/app/lib/url-utils';
 import { getClimbSessionCookie } from '@/app/lib/climb-session-cookie';
 

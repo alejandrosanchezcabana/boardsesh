@@ -1,6 +1,6 @@
 import { dbz } from '@/app/lib/db/db';
-import { ClimbUuid } from '../types';
-import { LogbookEntry, AuroraBoardName } from '../api-wrappers/aurora/types';
+import type { ClimbUuid } from '../types';
+import type { LogbookEntry, AuroraBoardName } from '../api-wrappers/aurora/types';
 import { boardseshTicks } from '@/app/lib/db/schema';
 import { eq, and, inArray, isNotNull, desc } from 'drizzle-orm';
 

@@ -9,13 +9,13 @@ import ListItemIcon from '@mui/material/ListItemIcon';
 import ListItemText from '@mui/material/ListItemText';
 import { FavoriteOutlined, SentimentDissatisfiedOutlined, MoreVertOutlined, AddOutlined } from '@mui/icons-material';
 import { track } from '@vercel/analytics';
-import { BoardDetails, Climb } from '@/app/lib/types';
+import type { BoardDetails, Climb } from '@/app/lib/types';
 import { executeGraphQL } from '@/app/lib/graphql/client';
-import {
-  GET_USER_FAVORITE_CLIMBS,
+import type {
   GetUserFavoriteClimbsQueryResponse,
   GetUserFavoriteClimbsQueryVariables,
 } from '@/app/lib/graphql/operations/favorites';
+import { GET_USER_FAVORITE_CLIMBS } from '@/app/lib/graphql/operations/favorites';
 import { useSnackbar } from '@/app/components/providers/snackbar-provider';
 import { LoadingSpinner } from '@/app/components/ui/loading-spinner';
 import { useWsAuthToken } from '@/app/hooks/use-ws-auth-token';

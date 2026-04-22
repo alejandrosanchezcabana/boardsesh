@@ -17,8 +17,9 @@ import ToggleButton from '@mui/material/ToggleButton';
 import { DateTimePicker } from '@mui/x-date-pickers/DateTimePicker';
 import InfoOutlined from '@mui/icons-material/InfoOutlined';
 import { track } from '@vercel/analytics';
-import { Climb, BoardDetails } from '@/app/lib/types';
-import { useBoardProvider, TickStatus } from '../board-provider/board-provider-context';
+import type { Climb, BoardDetails } from '@/app/lib/types';
+import type { TickStatus } from '../board-provider/board-provider-context';
+import { useBoardProvider } from '../board-provider/board-provider-context';
 import { TENSION_KILTER_GRADES, ANGLES } from '@/app/lib/board-data';
 import { isInstagramUrl } from '@/app/lib/instagram-url';
 

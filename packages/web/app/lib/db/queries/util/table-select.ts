@@ -24,7 +24,7 @@ import {
   boardUserSyncs,
   boardSharedSyncs,
 } from '@/lib/db/schema';
-import { AuroraBoardName } from '@/app/lib/api-wrappers/aurora/types';
+import type { AuroraBoardName } from '@/app/lib/api-wrappers/aurora/types';
 
 // Re-export AuroraBoardName as BoardName for backward compatibility within this module
 export type BoardName = AuroraBoardName;

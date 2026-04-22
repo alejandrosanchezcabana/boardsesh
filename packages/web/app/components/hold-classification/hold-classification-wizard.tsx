@@ -17,17 +17,12 @@ import {
   CompressOutlined,
 } from '@mui/icons-material';
 import { useSession } from 'next-auth/react';
-import { BoardDetails } from '@/app/lib/types';
-import { HoldRenderData } from '../board-renderer/types';
+import type { BoardDetails } from '@/app/lib/types';
+import type { HoldRenderData } from '../board-renderer/types';
 import { getImageUrl } from '../board-renderer/util';
 import { themeTokens } from '@/app/theme/theme-config';
-import {
-  HoldClassificationWizardProps,
-  HoldType,
-  HoldClassification,
-  HOLD_TYPE_OPTIONS,
-  StoredHoldClassification,
-} from './types';
+import type { HoldClassificationWizardProps, HoldType, HoldClassification, StoredHoldClassification } from './types';
+import { HOLD_TYPE_OPTIONS } from './types';
 import DirectionPicker from './direction-picker';
 import styles from './hold-classification-wizard.module.css';
 

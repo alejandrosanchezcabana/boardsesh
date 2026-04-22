@@ -10,7 +10,7 @@ import SwipeableDrawer from '../swipeable-drawer/swipeable-drawer';
 import drawerCss from '../swipeable-drawer/swipeable-drawer.module.css';
 import LoginOutlined from '@mui/icons-material/LoginOutlined';
 import { useQueueActions, useCurrentClimbUuid, useQueueList, useSearchData, useSessionData } from '../graphql-queue';
-import { Climb, BoardDetails } from '@/app/lib/types';
+import type { Climb, BoardDetails } from '@/app/lib/types';
 import { monitorForElements } from '@atlaskit/pragmatic-drag-and-drop/element/adapter';
 import { extractClosestEdge } from '@atlaskit/pragmatic-drag-and-drop-hitbox/closest-edge';
 import { reorder } from '@atlaskit/pragmatic-drag-and-drop/reorder';
@@ -29,7 +29,7 @@ import { themeTokens } from '@/app/theme/theme-config';
 import { useOptionalBoardProvider } from '../board-provider/board-provider-context';
 import { LogAscentDrawer } from '../logbook/log-ascent-drawer';
 import { useAuthModal } from '@/app/components/providers/auth-modal-provider';
-import { ClimbQueueItem } from './types';
+import type { ClimbQueueItem } from './types';
 import { isClimbEditable } from './is-climb-editable';
 import styles from './queue-list.module.css';
 

@@ -36,7 +36,7 @@ import { usePersistentSession } from '@/app/components/persistent-session/persis
 import { useQueueBridgeBoardInfo } from '@/app/components/queue-control/queue-bridge-context';
 import { useQueueList, useCurrentClimb } from '@/app/components/graphql-queue';
 import { useMyBoards } from '@/app/hooks/use-my-boards';
-import { BoardConfigData } from '@/app/lib/server-board-configs';
+import type { BoardConfigData } from '@/app/lib/server-board-configs';
 import type { StoredBoardConfig } from '@/app/lib/saved-boards-db';
 import type { UserBoard, PopularBoardConfig } from '@boardsesh/shared-schema';
 import type { BoardName } from '@/app/lib/types';

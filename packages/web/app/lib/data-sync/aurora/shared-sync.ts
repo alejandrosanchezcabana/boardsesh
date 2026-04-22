@@ -1,10 +1,17 @@
 import { getPool } from '@/app/lib/db/db';
-import { SyncOptions, AuroraBoardName } from '../../api-wrappers/aurora/types';
+import type { SyncOptions, AuroraBoardName } from '../../api-wrappers/aurora/types';
 import { sharedSync } from '../../api-wrappers/aurora/sharedSync';
 import { sql, eq, inArray } from 'drizzle-orm';
 import { drizzle } from 'drizzle-orm/neon-serverless';
-import { NeonDatabase } from 'drizzle-orm/neon-serverless';
-import { Attempt, BetaLink, Climb, ClimbStats, SharedSync, SyncPutFields } from '../../api-wrappers/sync-api-types';
+import type { NeonDatabase } from 'drizzle-orm/neon-serverless';
+import type {
+  Attempt,
+  BetaLink,
+  Climb,
+  ClimbStats,
+  SharedSync,
+  SyncPutFields,
+} from '../../api-wrappers/sync-api-types';
 import { UNIFIED_TABLES } from '../../db/queries/util/table-select';
 import { convertLitUpHoldsStringToMap } from '@/app/components/board-renderer/util';
 import { populateDenormalizedColumns } from '@boardsesh/db/queries';

@@ -6,7 +6,7 @@ import Stack from '@mui/material/Stack';
 import CheckOutlined from '@mui/icons-material/CheckOutlined';
 import CloseOutlined from '@mui/icons-material/CloseOutlined';
 import { PersonFallingIcon } from '@/app/components/icons/person-falling-icon';
-import { Climb, BoardDetails, Angle } from '@/app/lib/types';
+import type { Climb, BoardDetails, Angle } from '@/app/lib/types';
 import { useBoardProvider } from '../board-provider/board-provider-context';
 import { TENSION_KILTER_GRADES } from '@/app/lib/board-data';
 import { loadTickDraft } from '@/app/lib/tick-draft-db';

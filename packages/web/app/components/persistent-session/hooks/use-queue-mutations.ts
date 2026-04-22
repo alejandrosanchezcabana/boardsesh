@@ -1,5 +1,6 @@
 import { useCallback, useRef } from 'react';
-import { execute, Client } from '../../graphql-queue/graphql-client';
+import type { Client } from '../../graphql-queue/graphql-client';
+import { execute } from '../../graphql-queue/graphql-client';
 import {
   ADD_QUEUE_ITEM,
   REMOVE_QUEUE_ITEM,

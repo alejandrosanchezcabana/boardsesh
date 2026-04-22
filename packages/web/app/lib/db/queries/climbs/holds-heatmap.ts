@@ -1,6 +1,6 @@
 import { and, sql } from 'drizzle-orm';
 import { dbz as db } from '@/app/lib/db/db';
-import { ParsedBoardRouteParameters, SearchRequestPagination } from '@/app/lib/types';
+import type { ParsedBoardRouteParameters, SearchRequestPagination } from '@/app/lib/types';
 import { UNIFIED_TABLES } from '@/lib/db/queries/util/table-select';
 import { createClimbFilters } from '@boardsesh/db/queries';
 import { boardseshTicks } from '@/app/lib/db/schema';

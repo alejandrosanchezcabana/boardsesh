@@ -1,7 +1,7 @@
 // api/v1/[board_name]/[layout_id]/[size_id]/[set_ids]/[climb_uuid]
 import { convertLitUpHoldsStringToMap } from '@/app/components/board-renderer/util';
 import { getClimb } from '@/app/lib/data/queries';
-import { BoardRouteParametersWithUuid, ErrorResponse, FetchCurrentProblemResponse } from '@/app/lib/types';
+import type { BoardRouteParametersWithUuid, ErrorResponse, FetchCurrentProblemResponse } from '@/app/lib/types';
 import { parseBoardRouteParamsWithSlugs } from '@/app/lib/url-utils.server';
 import { NextResponse } from 'next/server';
 

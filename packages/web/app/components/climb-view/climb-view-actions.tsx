@@ -2,7 +2,7 @@
 
 import React from 'react';
 import { usePathname } from 'next/navigation';
-import { Climb, BoardDetails } from '@/app/lib/types';
+import type { Climb, BoardDetails } from '@/app/lib/types';
 import styles from './climb-view-actions.module.css';
 import { constructClimbListWithSlugs } from '@/app/lib/url-utils';
 import BackButton from '../back-button';

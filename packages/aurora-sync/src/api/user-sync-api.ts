@@ -1,5 +1,6 @@
-import { SyncData } from './sync-api-types';
-import { WEB_HOSTS, SyncOptions, AuroraBoardName } from './types';
+import type { SyncData } from './sync-api-types';
+import type { SyncOptions, AuroraBoardName } from './types';
+import { WEB_HOSTS } from './types';
 
 export async function userSync(
   board: AuroraBoardName,

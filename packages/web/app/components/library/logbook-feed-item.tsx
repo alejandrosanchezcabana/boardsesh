@@ -35,6 +35,7 @@ import { AscentStatusIcon } from '@/app/components/ascent-status/ascent-status-i
 import { ClimbActions } from '@/app/components/climb-actions';
 import DrawerClimbHeader from '@/app/components/climb-card/drawer-climb-header';
 import { useSwipeActions } from '@/app/hooks/use-swipe-actions';
+import type { SwipeZone } from '@/app/hooks/use-swipe-actions';
 import { useDrawerDragResize } from '@/app/hooks/use-drawer-drag-resize';
 import { useIsDarkMode } from '@/app/hooks/use-is-dark-mode';
 import { useGradeFormat } from '@/app/hooks/use-grade-format';
@@ -520,7 +521,7 @@ const LogbookFeedItem: React.FC<LogbookFeedItemProps> = React.memo(
     // Separate ref for the left action layer DOM element so we can manipulate it directly
     const leftLayerElRef = useRef<HTMLDivElement | null>(null);
 
-    const handleSwipeZoneChange = useCallback((zone: import('@/app/hooks/use-swipe-actions').SwipeZone) => {
+    const handleSwipeZoneChange = useCallback((zone: SwipeZone) => {
       const el = leftLayerElRef.current;
       if (!el) return;
       if (zone === 'right-long') {

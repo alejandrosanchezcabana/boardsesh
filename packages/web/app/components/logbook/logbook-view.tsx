@@ -9,7 +9,7 @@ import Stack from '@mui/material/Stack';
 import Chip from '@mui/material/Chip';
 import Rating from '@mui/material/Rating';
 import { EmptyState } from '@/app/components/ui/empty-state';
-import { Climb } from '@/app/lib/types';
+import type { Climb } from '@/app/lib/types';
 import { useBoardProvider } from '../board-provider/board-provider-context';
 import dayjs from 'dayjs';
 import { AscentStatusIcon } from '@/app/components/ascent-status/ascent-status-icon';

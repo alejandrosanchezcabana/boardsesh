@@ -1,6 +1,6 @@
 import { useSession } from 'next-auth/react';
 import { useCallback } from 'react';
-import { BoardName } from '@/app/lib/types';
+import type { BoardName } from '@/app/lib/types';
 import { createUserBoardMapping } from './user-board-mappings';
 
 /**

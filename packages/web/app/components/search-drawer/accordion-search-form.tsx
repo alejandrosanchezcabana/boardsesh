@@ -5,7 +5,8 @@ import MuiAlert from '@mui/material/Alert';
 import MuiTooltip from '@mui/material/Tooltip';
 import MuiTypography from '@mui/material/Typography';
 import MuiButton from '@mui/material/Button';
-import MuiSelect, { SelectChangeEvent } from '@mui/material/Select';
+import type { SelectChangeEvent } from '@mui/material/Select';
+import MuiSelect from '@mui/material/Select';
 import MenuItem from '@mui/material/MenuItem';
 import MuiSwitch from '@mui/material/Switch';
 import TextField from '@mui/material/TextField';
@@ -20,7 +21,7 @@ import { useBoardProvider } from '@/app/components/board-provider/board-provider
 import SearchClimbNameInput from './search-climb-name-input';
 import SetterNameSelect from './setter-name-select';
 import ClimbHoldSearchForm from './climb-hold-search-form';
-import { BoardDetails } from '@/app/lib/types';
+import type { BoardDetails } from '@/app/lib/types';
 import { buildGradeRangeUpdate } from './grade-range-utils';
 import { useAuthModal } from '@/app/components/providers/auth-modal-provider';
 import {

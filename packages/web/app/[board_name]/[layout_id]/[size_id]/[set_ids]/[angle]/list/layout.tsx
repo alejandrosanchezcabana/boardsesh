@@ -1,8 +1,8 @@
 import React from 'react';
 
-import { PropsWithChildren } from 'react';
+import type { PropsWithChildren } from 'react';
 
-import { BoardRouteParameters } from '@/app/lib/types';
+import type { BoardRouteParameters } from '@/app/lib/types';
 import { constructClimbListWithSlugs } from '@/app/lib/url-utils';
 import { parseRouteParams } from '@/app/lib/url-utils.server';
 import { getBoardDetailsForBoard } from '@/app/lib/board-utils';

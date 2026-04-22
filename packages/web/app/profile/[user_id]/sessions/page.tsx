@@ -1,5 +1,5 @@
 import React from 'react';
-import { Metadata } from 'next';
+import type { Metadata } from 'next';
 import { getServerAuthToken } from '@/app/lib/auth/server-auth';
 import ProfileSessionsContent from './sessions-content';
 

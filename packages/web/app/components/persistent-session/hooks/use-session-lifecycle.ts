@@ -1,5 +1,6 @@
 import { useState, useCallback, useEffect, type Dispatch, type SetStateAction } from 'react';
-import { createGraphQLClient, execute, subscribe, Client } from '../../graphql-queue/graphql-client';
+import type { Client } from '../../graphql-queue/graphql-client';
+import { createGraphQLClient, execute, subscribe } from '../../graphql-queue/graphql-client';
 import {
   INITIAL_RETRY_DELAY_MS,
   MAX_RETRY_DELAY_MS,

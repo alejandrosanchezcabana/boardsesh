@@ -4,7 +4,7 @@ import React, { useMemo } from 'react';
 import Typography from '@mui/material/Typography';
 import BookOutlined from '@mui/icons-material/BookOutlined';
 import { LogbookView } from './logbook-view';
-import { Climb } from '@/app/lib/types';
+import type { Climb } from '@/app/lib/types';
 import { useBoardProvider } from '../board-provider/board-provider-context';
 import dayjs from 'dayjs';
 

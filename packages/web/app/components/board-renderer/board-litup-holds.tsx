@@ -1,5 +1,5 @@
 import React from 'react';
-import { HoldRenderData, LitUpHoldsMap } from './types';
+import type { HoldRenderData, LitUpHoldsMap } from './types';
 
 interface BoardLitupHoldsProps {
   holdsData: HoldRenderData[];

@@ -1,5 +1,5 @@
-import { BoardName } from '../../types';
-import { SaveAscentOptions, SaveAscentResponse, Ascent } from './types';
+import type { BoardName } from '../../types';
+import type { SaveAscentOptions, SaveAscentResponse, Ascent } from './types';
 import dayjs from 'dayjs';
 import { dbz } from '@/app/lib/db/db';
 import { boardseshTicks } from '@/app/lib/db/schema';

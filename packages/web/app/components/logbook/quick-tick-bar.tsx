@@ -6,7 +6,7 @@ import KeyboardArrowUpOutlined from '@mui/icons-material/KeyboardArrowUpOutlined
 import KeyboardArrowDownOutlined from '@mui/icons-material/KeyboardArrowDownOutlined';
 import ElectricBoltOutlined from '@mui/icons-material/ElectricBoltOutlined';
 import ChatBubbleOutlineOutlined from '@mui/icons-material/ChatBubbleOutlineOutlined';
-import { Angle, Climb, BoardDetails } from '@/app/lib/types';
+import type { Angle, Climb, BoardDetails } from '@/app/lib/types';
 import { useBoardProvider } from '../board-provider/board-provider-context';
 import { TENSION_KILTER_GRADES } from '@/app/lib/board-data';
 import { loadTickDraft } from '@/app/lib/tick-draft-db';

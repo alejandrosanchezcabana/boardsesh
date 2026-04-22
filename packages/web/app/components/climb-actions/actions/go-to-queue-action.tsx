@@ -2,7 +2,7 @@
 
 import React, { useCallback } from 'react';
 import QueueMusicOutlined from '@mui/icons-material/QueueMusicOutlined';
-import { ClimbActionProps, ClimbActionResult } from '../types';
+import type { ClimbActionProps, ClimbActionResult } from '../types';
 import { useOptionalQueueActions } from '../../graphql-queue';
 import { buildActionResult, computeActionDisplay } from '../action-view-renderer';
 

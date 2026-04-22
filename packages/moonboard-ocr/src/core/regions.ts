@@ -1,4 +1,4 @@
-import { ImageRegion } from '../image-processor/types';
+import type { ImageRegion } from '../image-processor/types';
 
 export interface ImageRegions {
   header: ImageRegion;

@@ -1,8 +1,8 @@
 // app/api/login/route.ts
 import { getLogbook } from '@/app/lib/data/get-logbook';
 import { getSession } from '@/app/lib/session';
-import { BoardOnlyRouteParameters } from '@/app/lib/types';
-import { AuroraBoardName } from '@/app/lib/api-wrappers/aurora/types';
+import type { BoardOnlyRouteParameters } from '@/app/lib/types';
+import type { AuroraBoardName } from '@/app/lib/api-wrappers/aurora/types';
 import { cookies } from 'next/headers';
 import { NextResponse } from 'next/server';
 import { z } from 'zod';

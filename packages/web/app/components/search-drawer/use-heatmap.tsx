@@ -1,6 +1,6 @@
 import { useEffect, useState, useMemo } from 'react';
-import { BoardName, SearchRequestPagination } from '@/app/lib/types';
-import { HeatmapData } from '../board-renderer/types';
+import type { BoardName, SearchRequestPagination } from '@/app/lib/types';
+import type { HeatmapData } from '../board-renderer/types';
 import { searchParamsToUrlParams } from '@/app/lib/url-utils';
 
 interface UseHeatmapDataProps {

@@ -2,7 +2,7 @@
 
 import React, { useMemo } from 'react';
 import Link from 'next/link';
-import { BoardDetails, BoardName } from '@/app/lib/types';
+import type { BoardDetails, BoardName } from '@/app/lib/types';
 import BoardImageLayers from '@/app/components/board-renderer/board-image-layers';
 import BoardCanvasRenderer from '@/app/components/board-renderer/board-canvas-renderer';
 import { useCanvasRendererReady } from '@/app/lib/board-render-worker/worker-manager';
