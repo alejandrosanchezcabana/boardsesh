@@ -276,6 +276,9 @@ export const GET_FOLLOWING_CLIMB_ASCENTS = gql`
         quality
         comment
         climbedAt
+        upvotes
+        downvotes
+        commentCount
       }
     }
   }
@@ -304,6 +307,9 @@ export type FollowingClimbAscentItem = Pick<
   | 'quality'
   | 'comment'
   | 'climbedAt'
+  | 'upvotes'
+  | 'downvotes'
+  | 'commentCount'
 >;
 
 export interface GetFollowingClimbAscentsQueryResponse {

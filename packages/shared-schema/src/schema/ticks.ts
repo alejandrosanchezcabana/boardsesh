@@ -61,6 +61,16 @@ export const ticksTypeDefs = /* GraphQL */ `
     layoutId: Int
     "Board entity ID if tick was associated with a board"
     boardId: Int
+    # Social aggregates are only populated by read queries (e.g. \`ticks\`).
+    # Mutation resolvers (\`saveTick\`, \`updateTick\`) don't compute them so they
+    # are nullable here; when a client needs guaranteed counts, prefer
+    # \`FollowingAscentFeedItem\` or a direct \`voteSummary\` / \`comments\` query.
+    "Number of upvotes (likes) on this tick. Null unless populated by a read query."
+    upvotes: Int
+    "Number of downvotes on this tick. Null unless populated by a read query."
+    downvotes: Int
+    "Number of (non-deleted) comments on this tick. Null unless populated by a read query."
+    commentCount: Int
   }
 
   """

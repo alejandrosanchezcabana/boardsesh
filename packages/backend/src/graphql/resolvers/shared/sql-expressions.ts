@@ -63,6 +63,29 @@ export const difficultyNameWithFallbackExpr = sql<string | null>`COALESCE(
 export const consensusDifficultyExpr = sql<number | null>`ROUND(${dbSchema.boardClimbStats.displayDifficulty})`;
 
 /**
+ * Number of non-deleted comments targeting each tick, as a correlated
+ * subquery.
+ *
+ * PRECONDITION: the outer query's FROM clause MUST include `boardseshTicks`.
+ * The subquery's WHERE references `boardseshTicks.uuid` from the outer row;
+ * using this expression from a query that does not join `boardseshTicks`
+ * produces a Postgres error at runtime (there is no compile-time guard —
+ * Drizzle's SQL template type cannot encode table-scope requirements).
+ *
+ * Correctness is also size-sensitive: this subquery runs once per returned
+ * row. Only use it in queries with a bounded LIMIT (e.g. followingClimbAscents
+ * caps at 100, and ticks is scoped by user + optional climbUuids). For larger
+ * result sets, prefer a single LEFT JOIN on a grouped COUNT(*) CTE instead.
+ */
+export const tickCommentCountExpr = sql<number>`(
+  SELECT COUNT(*)::int
+  FROM ${dbSchema.comments}
+  WHERE ${dbSchema.comments.entityType} = 'tick'
+    AND ${dbSchema.comments.entityId} = ${dbSchema.boardseshTicks.uuid}
+    AND ${dbSchema.comments.deletedAt} IS NULL
+)`;
+
+/**
  * Imperative query: look up consensus grade name for a specific climb+angle.
  * Used in contexts where an inline SQL expression isn't possible (e.g. event publishing).
  */

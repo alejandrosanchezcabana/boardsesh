@@ -35,6 +35,10 @@ export default function FeedItemAscent({ item }: FeedItemAscentProps) {
     comment: item.comment || '',
     climbedAt: item.createdAt,
     frames: item.frames ?? undefined,
+    // Social aggregates aren't carried on ActivityFeedItem, so we leave them
+    // null rather than fabricating zeros: a future tickUuid-aware
+    // SocialFeedItem would render null counts as "—" / hidden instead of
+    // silently showing "0 likes, 0 comments" on every activity row.
   };
 
   return (

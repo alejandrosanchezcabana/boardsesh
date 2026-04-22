@@ -212,6 +212,17 @@ export const activityFeedTypeDefs = /* GraphQL */ `
     climbedAt: String!
     "Encoded hold frames for thumbnail display"
     frames: String
+    # Social aggregates are only populated by resolvers that opt-in to the
+    # tick comment / vote joins (e.g. \`followingClimbAscents\`). They are
+    # nullable here so adapter paths like activity-feed or the paginated
+    # \`followingAscentsFeed\` / \`globalAscentsFeed\` don't have to compute or
+    # fake counts they don't need.
+    "Number of upvotes (likes) on this tick. Null if the resolver doesn't compute it."
+    upvotes: Int
+    "Number of downvotes on this tick. Null if the resolver doesn't compute it."
+    downvotes: Int
+    "Number of (non-deleted) comments on this tick. Null if the resolver doesn't compute it."
+    commentCount: Int
   }
 
   """

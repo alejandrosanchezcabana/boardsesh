@@ -7,6 +7,7 @@ import {
   difficultyNameWithFallbackExpr,
   consensusGradeTable,
   consensusGradeJoinCondition,
+  tickCommentCountExpr,
 } from '../shared/sql-expressions';
 import { FollowingAscentsFeedInputSchema, FollowingClimbAscentsInputSchema } from '../../../validation/schemas';
 
@@ -259,6 +260,9 @@ export const socialFeedQueries = {
           userImage: dbSchema.users.image,
           userDisplayName: dbSchema.userProfiles.displayName,
           userAvatarUrl: dbSchema.userProfiles.avatarUrl,
+          upvotes: dbSchema.voteCounts.upvotes,
+          downvotes: dbSchema.voteCounts.downvotes,
+          commentCount: tickCommentCountExpr,
         })
         .from(dbSchema.boardseshTicks)
         .innerJoin(
@@ -270,6 +274,13 @@ export const socialFeedQueries = {
         )
         .innerJoin(dbSchema.users, eq(dbSchema.boardseshTicks.userId, dbSchema.users.id))
         .leftJoin(dbSchema.userProfiles, eq(dbSchema.boardseshTicks.userId, dbSchema.userProfiles.userId))
+        .leftJoin(
+          dbSchema.voteCounts,
+          and(
+            eq(dbSchema.voteCounts.entityType, 'tick'),
+            eq(dbSchema.voteCounts.entityId, dbSchema.boardseshTicks.uuid),
+          ),
+        )
         .where(
           and(
             eq(dbSchema.boardseshTicks.boardType, validatedInput.boardType),
@@ -279,23 +290,28 @@ export const socialFeedQueries = {
         .orderBy(desc(dbSchema.boardseshTicks.climbedAt))
         .limit(MAX_ITEMS);
 
-      const items = results.map(({ tick, userName, userImage, userDisplayName, userAvatarUrl }) => ({
-        uuid: tick.uuid,
-        userId: tick.userId,
-        userDisplayName: userDisplayName || userName || undefined,
-        userAvatarUrl: userAvatarUrl || userImage || undefined,
-        climbUuid: tick.climbUuid,
-        boardType: tick.boardType,
-        angle: tick.angle,
-        isMirror: tick.isMirror ?? false,
-        status: tick.status,
-        attemptCount: tick.attemptCount,
-        quality: tick.quality,
-        difficulty: tick.difficulty,
-        isBenchmark: tick.isBenchmark ?? false,
-        comment: tick.comment || '',
-        climbedAt: tick.climbedAt,
-      }));
+      const items = results.map(
+        ({ tick, userName, userImage, userDisplayName, userAvatarUrl, upvotes, downvotes, commentCount }) => ({
+          uuid: tick.uuid,
+          userId: tick.userId,
+          userDisplayName: userDisplayName || userName || undefined,
+          userAvatarUrl: userAvatarUrl || userImage || undefined,
+          climbUuid: tick.climbUuid,
+          boardType: tick.boardType,
+          angle: tick.angle,
+          isMirror: tick.isMirror ?? false,
+          status: tick.status,
+          attemptCount: tick.attemptCount,
+          quality: tick.quality,
+          difficulty: tick.difficulty,
+          isBenchmark: tick.isBenchmark ?? false,
+          comment: tick.comment || '',
+          climbedAt: tick.climbedAt,
+          upvotes: Number(upvotes ?? 0),
+          downvotes: Number(downvotes ?? 0),
+          commentCount: Number(commentCount ?? 0),
+        }),
+      );
 
       return { items };
     } catch (err) {

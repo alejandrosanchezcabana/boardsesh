@@ -15,6 +15,9 @@ export const GET_TICKS = gql`
       isBenchmark
       comment
       climbedAt
+      upvotes
+      downvotes
+      commentCount
     }
   }
 `;
@@ -64,6 +67,9 @@ type TickFromGetTicks = Pick<
   | 'isBenchmark'
   | 'comment'
   | 'climbedAt'
+  | 'upvotes'
+  | 'downvotes'
+  | 'commentCount'
 >;
 type TickFromGetUserTicks = Pick<
   Tick,

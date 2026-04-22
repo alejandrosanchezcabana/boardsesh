@@ -22,6 +22,44 @@ vi.mock('next/link', () => ({
   ),
 }));
 
+vi.mock('@/app/components/social/vote-button', () => ({
+  default: ({
+    entityType,
+    entityId,
+    initialUpvotes,
+  }: {
+    entityType: string;
+    entityId: string;
+    initialUpvotes?: number;
+  }) => (
+    <div
+      data-testid="vote-button"
+      data-entity-type={entityType}
+      data-entity-id={entityId}
+      data-initial-upvotes={initialUpvotes ?? 0}
+    />
+  ),
+}));
+
+vi.mock('@/app/components/social/feed-comment-button', () => ({
+  default: ({
+    entityType,
+    entityId,
+    commentCount,
+  }: {
+    entityType: string;
+    entityId: string;
+    commentCount?: number;
+  }) => (
+    <div
+      data-testid="feed-comment-button"
+      data-entity-type={entityType}
+      data-entity-id={entityId}
+      data-comment-count={commentCount ?? 0}
+    />
+  ),
+}));
+
 const baseEntry = {
   climbedAt: '2025-01-02T12:00:00Z',
   angle: 40,
@@ -139,5 +177,37 @@ describe('LogbookEntryCard', () => {
     const icon = screen.getByTestId('ascent-status-icon');
     expect(icon.getAttribute('data-status')).toBe('attempt');
     expect(screen.queryByTestId('rating')).toBeNull();
+  });
+
+  it('does not render the social footer when tickUuid is absent', () => {
+    render(<LogbookEntryCard entry={baseEntry} currentClimbAngle={40} showMirrorTag={false} />);
+    expect(screen.queryByTestId('vote-button')).toBeNull();
+    expect(screen.queryByTestId('feed-comment-button')).toBeNull();
+  });
+
+  it('renders a like + comment footer wired to the tick when tickUuid is set', () => {
+    render(
+      <LogbookEntryCard
+        entry={{
+          ...baseEntry,
+          tickUuid: 'tick-99',
+          upvotes: 7,
+          downvotes: 1,
+          commentCount: 3,
+        }}
+        currentClimbAngle={40}
+        showMirrorTag={false}
+      />,
+    );
+
+    const vote = screen.getByTestId('vote-button');
+    expect(vote.getAttribute('data-entity-type')).toBe('tick');
+    expect(vote.getAttribute('data-entity-id')).toBe('tick-99');
+    expect(vote.getAttribute('data-initial-upvotes')).toBe('7');
+
+    const comments = screen.getByTestId('feed-comment-button');
+    expect(comments.getAttribute('data-entity-type')).toBe('tick');
+    expect(comments.getAttribute('data-entity-id')).toBe('tick-99');
+    expect(comments.getAttribute('data-comment-count')).toBe('3');
   });
 });

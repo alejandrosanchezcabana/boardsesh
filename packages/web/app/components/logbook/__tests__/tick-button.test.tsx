@@ -252,6 +252,9 @@ describe('TickButton', () => {
           climbed_at: '2025-01-01',
           is_ascent: true,
           status: 'flash',
+          upvotes: 0,
+          downvotes: 0,
+          commentCount: 0,
         },
         {
           uuid: 'log-2',
@@ -265,6 +268,9 @@ describe('TickButton', () => {
           climbed_at: '2025-01-02',
           is_ascent: false,
           status: 'attempt',
+          upvotes: 0,
+          downvotes: 0,
+          commentCount: 0,
         },
       ];
       render(<TickButton {...defaultProps} />);

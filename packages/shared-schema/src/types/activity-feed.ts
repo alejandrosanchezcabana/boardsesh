@@ -24,6 +24,12 @@ export type FollowingAscentFeedItem = {
   comment: string;
   climbedAt: string;
   frames?: string;
+  // Populated only by resolvers that join vote_counts / count comments
+  // (e.g. followingClimbAscents). Null for adapter paths and for the
+  // paginated followingAscentsFeed / globalAscentsFeed endpoints.
+  upvotes?: number | null;
+  downvotes?: number | null;
+  commentCount?: number | null;
 };
 
 export type AscentFeedItem = {
