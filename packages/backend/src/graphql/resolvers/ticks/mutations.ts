@@ -4,7 +4,7 @@ import type { ConnectionContext } from '@boardsesh/shared-schema';
 import { db } from '../../../db/client';
 import * as dbSchema from '@boardsesh/db/schema';
 import { sessions } from '../../../db/schema';
-import { requireAuthenticated, validateInput } from '../shared/helpers';
+import { requireAuthenticated, validateInput, isNoMatchClimb } from '../shared/helpers';
 import { getConsensusDifficultyName } from '../shared/sql-expressions';
 import { SaveTickInputSchema, UpdateTickInputSchema, AttachBetaLinkInputSchema } from '../../../validation/schemas';
 import { resolveBoardFromPath } from '../social/boards';
@@ -326,6 +326,7 @@ async function publishAscentEvent(
       const [climbData] = await db
         .select({
           name: dbSchema.boardClimbs.name,
+          description: dbSchema.boardClimbs.description,
           setterUsername: dbSchema.boardClimbs.setterUsername,
           layoutId: dbSchema.boardClimbs.layoutId,
           frames: dbSchema.boardClimbs.frames,
@@ -395,6 +396,7 @@ async function publishAscentEvent(
           angle: String(tick.angle),
           isMirror: String(tick.isMirror ?? false),
           isBenchmark: String(tick.isBenchmark ?? false),
+          isNoMatch: String(isNoMatchClimb(climbData?.description)),
           quality: String(tick.quality ?? ''),
           attemptCount: String(tick.attemptCount),
           comment: tick.comment || '',

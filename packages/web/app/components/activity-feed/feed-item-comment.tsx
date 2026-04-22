@@ -12,6 +12,7 @@ import dayjs from 'dayjs';
 import relativeTime from 'dayjs/plugin/relativeTime';
 import type { ActivityFeedItem } from '@boardsesh/shared-schema';
 import VoteButton from '@/app/components/social/vote-button';
+import ClimbIcons from '@/app/components/climb-card/climb-icons';
 import styles from './ascents-feed.module.css';
 
 dayjs.extend(relativeTime);
@@ -57,6 +58,7 @@ export default function FeedItemComment({ item }: FeedItemCommentProps) {
                 </MuiTypography>
                 <MuiTypography variant="body2" component="span" fontWeight={600}>
                   {item.climbName}
+                  <ClimbIcons isNoMatch={!!item.isNoMatch} />
                 </MuiTypography>
               </>
             )}

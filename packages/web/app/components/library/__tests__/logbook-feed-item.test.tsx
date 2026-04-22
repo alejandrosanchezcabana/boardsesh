@@ -186,6 +186,7 @@ function makeItem(overrides: Partial<AscentFeedItem> = {}): AscentFeedItem {
     consensusDifficultyName: '7a/V6',
     qualityAverage: 3.5,
     isBenchmark: false,
+    isNoMatch: false,
     comment: 'Nice send!',
     climbedAt: new Date('2026-04-01T12:00:00Z').toISOString(),
     frames: 'p1r14',

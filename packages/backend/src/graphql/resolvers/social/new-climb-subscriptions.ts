@@ -8,7 +8,7 @@ import type {
 } from '@boardsesh/shared-schema';
 import { db } from '../../../db/client';
 import * as dbSchema from '@boardsesh/db/schema';
-import { requireAuthenticated, applyRateLimit, validateInput } from '../shared/helpers';
+import { requireAuthenticated, applyRateLimit, validateInput, isNoMatchClimb } from '../shared/helpers';
 import { NewClimbFeedInputSchema, NewClimbSubscriptionInputSchema } from '../../../validation/schemas';
 
 export const newClimbSubscriptionResolvers = {
@@ -26,6 +26,7 @@ export const newClimbSubscriptionResolvers = {
         .select({
           uuid: dbSchema.boardClimbs.uuid,
           name: dbSchema.boardClimbs.name,
+          description: dbSchema.boardClimbs.description,
           boardType: dbSchema.boardClimbs.boardType,
           layoutId: dbSchema.boardClimbs.layoutId,
           angle: dbSchema.boardClimbs.angle,
@@ -86,6 +87,7 @@ export const newClimbSubscriptionResolvers = {
         angle: c.angle ?? null,
         frames: c.frames ?? null,
         difficultyName: c.difficultyName ?? null,
+        isNoMatch: isNoMatchClimb(c.description),
         createdAt: c.createdAt ?? new Date().toISOString(),
       }));
 

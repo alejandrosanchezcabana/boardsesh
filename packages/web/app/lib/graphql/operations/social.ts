@@ -133,6 +133,7 @@ export const GET_FOLLOWING_ASCENTS_FEED = gql`
         difficulty
         difficultyName
         isBenchmark
+        isNoMatch
         comment
         climbedAt
         frames
@@ -168,6 +169,7 @@ export const GET_GLOBAL_ASCENTS_FEED = gql`
         difficulty
         difficultyName
         isBenchmark
+        isNoMatch
         comment
         climbedAt
         frames

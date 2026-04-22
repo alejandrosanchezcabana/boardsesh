@@ -72,6 +72,7 @@ export const GET_SESSION_DETAIL = gql`
         quality
         isMirror
         isBenchmark
+        isNoMatch
         comment
         frames
         setterUsername
@@ -106,6 +107,7 @@ export const UPDATE_INFERRED_SESSION = gql`
         quality
         isMirror
         isBenchmark
+        isNoMatch
         comment
         frames
         setterUsername
@@ -136,6 +138,7 @@ export const ADD_USER_TO_SESSION = gql`
         quality
         isMirror
         isBenchmark
+        isNoMatch
         comment
         frames
         setterUsername
@@ -166,6 +169,7 @@ export const REMOVE_USER_FROM_SESSION = gql`
         quality
         isMirror
         isBenchmark
+        isNoMatch
         comment
         frames
         setterUsername

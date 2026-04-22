@@ -169,6 +169,7 @@ export default function ProposalCard({ proposal, isAdminOrLeader, onUpdate, onDe
       stars: 0,
       difficulty_error: localProposal.climbDifficultyError || '0',
       benchmark_difficulty: localProposal.climbBenchmarkDifficulty || null,
+      is_no_match: !!localProposal.climbIsNoMatch,
       layoutId,
       boardType,
     };

@@ -2,6 +2,7 @@ import { eq, and, sql, inArray } from 'drizzle-orm';
 import { db } from '../../../../db/client';
 import * as dbSchema from '@boardsesh/db/schema';
 import { resolveCommunitySetting, DEFAULTS } from '../community-settings';
+import { isNoMatchClimb } from '../../shared/helpers';
 
 /**
  * Enrich a single proposal with proposer info, vote counts, climb data, and stats.
@@ -45,6 +46,7 @@ export async function enrichProposal(
     db
       .select({
         name: dbSchema.boardClimbs.name,
+        description: dbSchema.boardClimbs.description,
         frames: dbSchema.boardClimbs.frames,
         layoutId: dbSchema.boardClimbs.layoutId,
         setterUsername: dbSchema.boardClimbs.setterUsername,
@@ -162,6 +164,7 @@ export async function enrichProposal(
     climbAscensionistCount,
     climbDifficultyError,
     climbBenchmarkDifficulty,
+    climbIsNoMatch: isNoMatchClimb(climb?.description),
   };
 }
 
@@ -220,6 +223,7 @@ export async function batchEnrichProposals(
       uuid: dbSchema.boardClimbs.uuid,
       boardType: dbSchema.boardClimbs.boardType,
       name: dbSchema.boardClimbs.name,
+      description: dbSchema.boardClimbs.description,
       frames: dbSchema.boardClimbs.frames,
       layoutId: dbSchema.boardClimbs.layoutId,
       setterUsername: dbSchema.boardClimbs.setterUsername,
@@ -402,6 +406,7 @@ export async function batchEnrichProposals(
         stats?.benchmarkDifficulty != null && stats.benchmarkDifficulty > 0
           ? String(stats.benchmarkDifficulty)
           : undefined,
+      climbIsNoMatch: isNoMatchClimb(climb?.description),
     };
   });
 }

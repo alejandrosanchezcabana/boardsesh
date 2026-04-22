@@ -23,6 +23,7 @@ export function buildFeedItemMetadata(event: SocialEvent): Record<string, unknow
     angle: event.metadata.angle ? Number(event.metadata.angle) : null,
     isMirror: event.metadata.isMirror === 'true',
     isBenchmark: event.metadata.isBenchmark === 'true',
+    isNoMatch: event.metadata.isNoMatch === 'true',
     quality: event.metadata.quality ? Number(event.metadata.quality) : null,
     attemptCount: event.metadata.attemptCount ? Number(event.metadata.attemptCount) : null,
     comment: event.metadata.comment,

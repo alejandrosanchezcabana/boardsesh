@@ -27,6 +27,7 @@ export const GET_NEW_CLIMB_FEED = gql`
         angle
         frames
         difficultyName
+        isNoMatch
         createdAt
       }
       totalCount
@@ -71,6 +72,7 @@ export const NEW_CLIMB_CREATED_SUBSCRIPTION = gql`
         angle
         frames
         difficultyName
+        isNoMatch
         createdAt
       }
     }

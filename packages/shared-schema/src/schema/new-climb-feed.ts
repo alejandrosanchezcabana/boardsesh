@@ -25,6 +25,8 @@ export const newClimbFeedTypeDefs = /* GraphQL */ `
     angle: Int
     frames: String
     difficultyName: String
+    "Whether matching is disallowed on this climb"
+    isNoMatch: Boolean!
     createdAt: String!
   }
 

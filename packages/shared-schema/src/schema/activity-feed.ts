@@ -41,6 +41,8 @@ export const activityFeedTypeDefs = /* GraphQL */ `
     qualityAverage: Float
     "Whether this is a benchmark climb"
     isBenchmark: Boolean!
+    "Whether matching is disallowed on this climb"
+    isNoMatch: Boolean!
     "Comment"
     comment: String!
     "When climbed (ISO 8601)"
@@ -88,6 +90,8 @@ export const activityFeedTypeDefs = /* GraphQL */ `
     difficultyName: String
     "Whether this is a benchmark climb"
     isBenchmark: Boolean!
+    "Whether matching is disallowed on this climb"
+    isNoMatch: Boolean!
     "Date of the attempts (YYYY-MM-DD)"
     date: String!
     "Number of flash sends"
@@ -200,6 +204,8 @@ export const activityFeedTypeDefs = /* GraphQL */ `
     difficultyName: String
     "Whether this is a benchmark climb"
     isBenchmark: Boolean!
+    "Whether matching is disallowed on this climb"
+    isNoMatch: Boolean!
     "Comment"
     comment: String!
     "When climbed (ISO 8601)"
@@ -304,6 +310,8 @@ export const activityFeedTypeDefs = /* GraphQL */ `
     isMirror: Boolean
     "Whether this is a benchmark climb"
     isBenchmark: Boolean
+    "Whether matching is disallowed on this climb"
+    isNoMatch: Boolean
     "Difficulty rating"
     difficulty: Int
     "Human-readable difficulty name"
@@ -437,6 +445,7 @@ export const activityFeedTypeDefs = /* GraphQL */ `
     quality: Int
     isMirror: Boolean!
     isBenchmark: Boolean!
+    isNoMatch: Boolean!
     comment: String
     frames: String
     setterUsername: String

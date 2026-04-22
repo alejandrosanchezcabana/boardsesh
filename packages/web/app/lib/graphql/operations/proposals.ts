@@ -46,6 +46,7 @@ export const GET_CLIMB_PROPOSALS = gql`
         climbAscensionistCount
         climbDifficultyError
         climbBenchmarkDifficulty
+        climbIsNoMatch
       }
       totalCount
       hasMore
@@ -126,6 +127,7 @@ export const BROWSE_PROPOSALS = gql`
         climbAscensionistCount
         climbDifficultyError
         climbBenchmarkDifficulty
+        climbIsNoMatch
       }
       totalCount
       hasMore
@@ -177,6 +179,7 @@ export const CREATE_PROPOSAL = gql`
       climbAscensionistCount
       climbDifficultyError
       climbBenchmarkDifficulty
+      climbIsNoMatch
     }
   }
 `;
@@ -212,6 +215,7 @@ export const VOTE_ON_PROPOSAL = gql`
       climbAscensionistCount
       climbDifficultyError
       climbBenchmarkDifficulty
+      climbIsNoMatch
     }
   }
 `;
@@ -236,6 +240,7 @@ export const RESOLVE_PROPOSAL = gql`
       climbAscensionistCount
       climbDifficultyError
       climbBenchmarkDifficulty
+      climbIsNoMatch
     }
   }
 `;

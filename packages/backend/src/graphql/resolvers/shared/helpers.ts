@@ -12,6 +12,10 @@ export { validateInput } from '../../../validation/schemas';
 // Re-export MAX_RETRIES from types
 export { MAX_RETRIES } from './types';
 
+export function isNoMatchClimb(description: string | null | undefined): boolean {
+  return /^no match/i.test(description || '');
+}
+
 /**
  * Configuration for session membership retry behavior.
  *

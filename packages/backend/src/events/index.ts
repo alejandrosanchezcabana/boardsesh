@@ -10,6 +10,7 @@ import {
   resolveClimbCreatedFollowerRecipients,
   resolveClimbCreatedSubscriptionRecipients,
 } from './recipient-resolution';
+import { isNoMatchClimb } from '../graphql/resolvers/shared/helpers';
 
 export const eventBroker = new EventBroker();
 
@@ -204,6 +205,7 @@ async function createInlineNotification(event: SocialEvent): Promise<void> {
           .select({
             uuid: dbSchema.boardClimbs.uuid,
             name: dbSchema.boardClimbs.name,
+            description: dbSchema.boardClimbs.description,
             layoutId: dbSchema.boardClimbs.layoutId,
             angle: dbSchema.boardClimbs.angle,
             frames: dbSchema.boardClimbs.frames,
@@ -246,6 +248,7 @@ async function createInlineNotification(event: SocialEvent): Promise<void> {
               angle: climb.angle ?? null,
               frames: climb.frames ?? null,
               difficultyName: climb.difficultyName ?? event.metadata.difficultyName ?? null,
+              isNoMatch: isNoMatchClimb(climb.description),
               createdAt: climb.createdAt ?? new Date().toISOString(),
             },
           });

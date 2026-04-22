@@ -19,6 +19,7 @@ import type { ActivityFeedItem } from '@boardsesh/shared-schema';
 import AscentThumbnail from './ascent-thumbnail';
 import VoteButton from '@/app/components/social/vote-button';
 import CommentSection from '@/app/components/social/comment-section';
+import ClimbIcons from '@/app/components/climb-card/climb-icons';
 import { themeTokens } from '@/app/theme/theme-config';
 import styles from './ascents-feed.module.css';
 
@@ -60,6 +61,7 @@ export default function FeedItemNewClimb({ item }: FeedItemNewClimbProps) {
             </MuiTypography>
             <MuiTypography variant="body2" component="span" fontWeight={600}>
               {item.climbName}
+              <ClimbIcons isNoMatch={!!item.isNoMatch} />
             </MuiTypography>
           </Box>
           <MuiTypography variant="caption" color="text.secondary" sx={{ flexShrink: 0 }}>
