@@ -72,7 +72,7 @@ export default defineConfig({
       },
       'build:aurora': {
         command: 'bun run --filter=@boardsesh/aurora-sync build',
-        dependsOn: ['build:crypto', 'build:db'],
+        dependsOn: ['build:shared', 'build:crypto', 'build:db'],
       },
       'build:backend': {
         command: 'bun run --filter=boardsesh-backend build',

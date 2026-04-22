@@ -8,7 +8,7 @@ import type { NeonDatabase } from 'drizzle-orm/neon-serverless';
 import { UNIFIED_TABLES } from '../../db/queries/util/table-select';
 import { boardseshTicks, auroraCredentials, playlists, playlistClimbs, playlistOwnership } from '../../db/schema';
 import { randomUUID } from 'crypto';
-import { convertQuality } from './convert-quality';
+import { convertQuality } from '@boardsesh/shared-schema';
 
 import { buildInferredSessionsForUser } from './inferred-session-builder';
 

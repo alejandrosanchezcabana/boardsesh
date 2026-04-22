@@ -8,7 +8,7 @@ import type { Pool } from '@neondatabase/serverless';
 import { UNIFIED_TABLES } from '../db/table-select';
 import { boardseshTicks, playlists, playlistClimbs, playlistOwnership } from '@boardsesh/db/schema/app';
 import { randomUUID } from 'crypto';
-import { convertQuality } from './convert-quality';
+import { convertQuality } from '@boardsesh/shared-schema';
 
 // Batch size for bulk inserts
 const BATCH_SIZE = 100;
