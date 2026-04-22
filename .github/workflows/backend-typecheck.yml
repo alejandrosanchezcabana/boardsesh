@@ -31,17 +31,5 @@ jobs:
       - name: Install dependencies
         run: bun install --frozen-lockfile
 
-      - name: Build shared-schema
-        run: bun run --filter=@boardsesh/shared-schema build
-
-      - name: Build crypto package
-        run: bun run --filter=@boardsesh/crypto build
-
-      - name: Build db package
-        run: bun run --filter=@boardsesh/db build
-
-      - name: Build aurora-sync package
-        run: bun run --filter=@boardsesh/aurora-sync build
-
-      - name: TypeScript check backend
-        run: bun run --filter=boardsesh-backend build
+      - name: Build and typecheck backend
+        run: vp run build:backend

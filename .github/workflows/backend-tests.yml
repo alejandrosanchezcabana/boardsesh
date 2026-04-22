@@ -71,11 +71,8 @@ jobs:
       - name: Install dependencies
         run: bun install --frozen-lockfile
 
-      - name: Build shared-schema
-        run: bun run --filter=@boardsesh/shared-schema build
-
-      - name: Build db package
-        run: bun run --filter=@boardsesh/db build
+      - name: Build shared packages
+        run: vp run build:db
 
       - name: Run backend integration tests (shard ${{ matrix.shard }}/2)
         run: |

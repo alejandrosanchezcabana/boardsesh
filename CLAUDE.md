@@ -82,7 +82,7 @@ The `boardsesh-dev-db` image is published to GHCR and contains PostgreSQL 17 + P
 
 ### Common Commands (from root)
 
-This project uses [Vite+](https://viteplus.dev) (`vp`) as its unified toolchain for testing, linting, formatting, and type checking. The `bun run` aliases work for build/test/lint commands but **not** for `vp run` commands — use `vp run` directly for dev and database tasks.
+This project uses [Vite+](https://viteplus.dev) (`vp`) as its unified toolchain for testing, linting, formatting, type checking, and task running. Most commands use `vp` directly or `vp run` for tasks defined in the root `vite.config.ts`.
 
 - `vp check` - Run format, lint, and type checks (or `bun run check`)
 - `vp test` - Run all tests (or `bun run test`)
@@ -93,27 +93,26 @@ This project uses [Vite+](https://viteplus.dev) (`vp`) as its unified toolchain 
 - `vp run dev:backend` - Start database and backend only
 - `vp run dev:web` - Start database and web server only
 - `vp run db:up` - Start development databases and run migrations only
-- `bun run build` - Build all packages
-- `bun run build:web` - Build web package only
-- `bun run build:backend` - Build backend package only
-- `bun run typecheck` - Type check all packages (use this instead of build for validation)
-- `bun run typecheck:web` - Type check web package only
-- `bun run typecheck:backend` - Type check backend package only
-- `bun run typecheck:db` - Type check db package only
-- `bun run typecheck:shared` - Type check shared-schema package only
-- `bun run backend:dev` - Start backend directly without database setup
+- `vp run build` - Build all packages (dependency graph handles ordering and parallelism)
+- `vp run build:web` - Build web package and its dependencies
+- `vp run build:backend` - Build backend package and its dependencies
+- `vp run typecheck` - Type check all packages (builds dependencies first)
+- `vp run typecheck:web` - Type check web package only
+- `vp run typecheck:backend` - Type check backend package only
+- `vp run typecheck:db` - Type check db package only
+- `vp run typecheck:shared` - Type check shared-schema package only
 - `bun run backend:start` - Start backend in production mode
 
 ### Running E2E Tests
 
-- `bun run test:e2e` - Full Playwright run: brings up the pre-built dev DB, exports the seeded test user, and runs every spec in `packages/web/e2e/`. Playwright's `webServer` config auto-starts `vp run dev` (backend + web) for you.
-- `bun run test:e2e:setup` - Only bring up the dev DB. Useful when iterating on a single spec: after setup, run `bun run --filter=@boardsesh/web test:e2e -- e2e/<spec>.spec.ts` (or use `test:e2e:ui` for the Playwright UI).
+- `vp run test:e2e` - Full Playwright run: brings up the pre-built dev DB, exports the seeded test user, and runs every spec in `packages/web/e2e/`. Playwright's `webServer` config auto-starts `vp run dev` (backend + web) for you.
+- `vp run test:e2e:setup` - Only bring up the dev DB. Useful when iterating on a single spec: after setup, run `bun run --filter=@boardsesh/web test:e2e -- e2e/<spec>.spec.ts` (or use `test:e2e:ui` for the Playwright UI).
 - The seeded test user is `test@boardsesh.com` / `test`, exported as `TEST_USER_EMAIL`/`TEST_USER_PASSWORD` by the script so screenshot specs (`app-store-screenshots`, `help-screenshots`) run end-to-end without 1Password.
 
 ### Database Commands (run from root or packages/db/)
 
-- `bun run db:migrate` - Apply migrations (also runs on Vercel build)
-- `bun run db:studio` - Open Drizzle Studio for database exploration
+- `vp run db:migrate` - Start dev DB and apply migrations
+- `vp run db:studio` - Start dev DB and open Drizzle Studio for database exploration
 - From packages/db: `bunx drizzle-kit generate` - Generate new migrations
 
 ### Creating Database Migrations
@@ -131,7 +130,7 @@ This project uses [Vite+](https://viteplus.dev) (`vp`) as its unified toolchain 
 bunx drizzle-kit generate
 
 # Then apply locally to test:
-bun run db:migrate
+vp run db:migrate
 ```
 
 ## Architecture Overview
@@ -208,7 +207,7 @@ We are using next.js app router, it's important we try to use server side compon
 
 ### Important rules
 
-- **Use `vp check` or `bun run typecheck` instead of `bun run build` for validation** - Running build interferes with the local dev server and `bunx` commands can mess with lock files. Use `vp check` to run lint + format + typecheck together, or `bun run typecheck` for type checking only.
+- **Use `vp check` or `vp run typecheck` instead of `vp run build` for validation** - Running build interferes with the local dev server and `bunx` commands can mess with lock files. Use `vp check` to run lint + format + typecheck together, or `vp run typecheck` for type checking only.
 - Always try to use server side rendering wherever possibe. But do note that for some parts such as the QueueList and related components, thats impossible, so dont try to force SSR there.
 - Always use MUI (Material UI) components and their properties.
 - Try to avoid use of the style property

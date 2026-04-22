@@ -40,18 +40,13 @@ jobs:
         run: bun install --frozen-lockfile
 
       - name: Build shared packages
-        run: |
-          bun run --filter=@boardsesh/shared-schema build
-          bun run --filter=@boardsesh/crypto build
-          bun run --filter=@boardsesh/board-constants build
-          bun run --filter=@boardsesh/db build
-          bun run --filter=@boardsesh/aurora-sync build
+        run: vp run build:aurora build:constants
 
       - name: Typecheck web
-        run: bun run typecheck:web
+        run: bun run --filter=@boardsesh/web typecheck
 
       - name: Typecheck backend
-        run: bun run typecheck:backend
+        run: bun run --filter=boardsesh-backend typecheck
 
   e2e:
     name: E2E (shard ${{ matrix.shard }})
@@ -125,16 +120,9 @@ jobs:
 
       - name: Build packages needed for e2e
         # board-renderer-wasm ships pre-built pkg/ in git, so skip its bash build.sh
-        # (needs wasm-pack). Build the rest explicitly so we don't run every
-        # workspace's build script.
-        run: |
-          bun run --filter=@boardsesh/shared-schema build
-          bun run --filter=@boardsesh/crypto build
-          bun run --filter=@boardsesh/board-constants build
-          bun run --filter=@boardsesh/db build
-          bun run --filter=@boardsesh/aurora-sync build
-          bun run --filter=boardsesh-backend build
-          bun run --filter=@boardsesh/web build
+        # (needs wasm-pack). vp run build handles the full dependency graph for
+        # backend + web without running every workspace's build script.
+        run: vp run build
         env:
           NEXTAUTH_SECRET: test-secret-for-ci
           NEXTAUTH_URL: http://localhost:3000
