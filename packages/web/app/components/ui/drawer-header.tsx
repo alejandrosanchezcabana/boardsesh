@@ -17,15 +17,17 @@ type DrawerHeaderProps = {
 export function DrawerHeader({ title, onClose, extra, sx }: DrawerHeaderProps) {
   return (
     <Box
-      sx={{
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'space-between',
-        padding: '16px 24px',
-        borderBottom: 1,
-        borderColor: 'divider',
-        ...sx,
-      }}
+      sx={[
+        {
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          padding: '16px 24px',
+          borderBottom: 1,
+          borderColor: 'divider',
+        },
+        ...(Array.isArray(sx) ? sx : sx ? [sx] : []),
+      ]}
     >
       {typeof title === 'string' ? <Typography variant="h6">{title}</Typography> : title}
       <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>

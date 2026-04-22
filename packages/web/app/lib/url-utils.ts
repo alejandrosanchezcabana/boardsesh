@@ -265,7 +265,7 @@ export const constructClimbViewUrl = (
   climb_uuid: ClimbUuid,
   climbName?: string,
 ) => {
-  const baseUrl = `/${board_name}/${layout_id}/${size_id}/${set_ids}/${angle}/view/`;
+  const baseUrl = `/${board_name}/${layout_id}/${size_id}/${set_ids.join(',')}/${angle}/view/`;
   if (climbName && climbName.trim()) {
     const slug = generateSlugFromText(climbName.trim());
     if (slug) {
@@ -313,7 +313,7 @@ export const constructSetterStatsUrl = (
   { board_name, layout_id, angle, size_id, set_ids }: ParsedBoardRouteParameters,
   searchQuery?: string,
 ) => {
-  const baseUrl = `/api/v1/${board_name}/${layout_id}/${size_id}/${set_ids}/${angle}/setters`;
+  const baseUrl = `/api/v1/${board_name}/${layout_id}/${size_id}/${set_ids.join(',')}/${angle}/setters`;
   return searchQuery ? `${baseUrl}?search=${encodeURIComponent(searchQuery)}` : baseUrl;
 };
 

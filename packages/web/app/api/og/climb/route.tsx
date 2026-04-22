@@ -34,10 +34,8 @@ export async function GET(request: NextRequest) {
     });
 
     const dbT0 = performance.now();
-    const [boardDetails, currentClimb] = await Promise.all([
-      getBoardDetailsForBoard(parsedParams),
-      getClimb(parsedParams),
-    ]);
+    const boardDetails = getBoardDetailsForBoard(parsedParams);
+    const currentClimb = await getClimb(parsedParams);
     const dbMs = performance.now() - dbT0;
 
     if (!currentClimb?.frames) {

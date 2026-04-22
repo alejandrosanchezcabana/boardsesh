@@ -74,7 +74,7 @@ export function createOgImageHeaders({
   contentType: string;
   version?: string | null;
   serverTiming?: string;
-}): HeadersInit {
+}): Record<string, string> {
   const isVersioned = version !== null && version !== undefined;
   const browserCacheControl = isVersioned
     ? `public, max-age=${ONE_YEAR_SECONDS}, s-maxage=${ONE_YEAR_SECONDS}, immutable`

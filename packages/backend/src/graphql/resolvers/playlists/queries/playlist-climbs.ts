@@ -36,7 +36,7 @@ async function fetchSpecificBoardClimbs(
 ): Promise<{ climbs: Climb[]; hasMore: boolean }> {
   const boardName = input.boardName as BoardName;
   if (!isValidBoardName(boardName)) {
-    throw new Error(`Invalid board name: ${boardName}. Must be one of: ${SUPPORTED_BOARDS.join(', ')}`);
+    throw new Error(`Invalid board name: ${String(boardName)}. Must be one of: ${SUPPORTED_BOARDS.join(', ')}`);
   }
 
   const tables = UNIFIED_TABLES;

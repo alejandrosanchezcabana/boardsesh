@@ -30,10 +30,8 @@ export async function generateMetadata(props: BoardSlugViewPageProps): Promise<M
       climb_uuid: extractUuidFromSlug(params.climb_uuid),
     };
 
-    const [boardDetails, currentClimb] = await Promise.all([
-      getBoardDetailsForBoard(parsedParams),
-      getClimb(parsedParams),
-    ]);
+    const boardDetails = getBoardDetailsForBoard(parsedParams);
+    const currentClimb = await getClimb(parsedParams);
 
     const climbName = currentClimb.name || `${boardDetails.board_name} Climb`;
     const climbGrade = currentClimb.difficulty || 'Unknown Grade';
@@ -91,8 +89,8 @@ export default async function BoardSlugViewPage(props: BoardSlugViewPageProps) {
   };
 
   try {
-    const [boardDetails, currentClimb, detailData] = await Promise.all([
-      getBoardDetailsForBoard(parsedParams),
+    const boardDetails = getBoardDetailsForBoard(parsedParams);
+    const [currentClimb, detailData] = await Promise.all([
       getClimb(parsedParams),
       fetchClimbDetailData({
         boardName: parsedParams.board_name,

@@ -16,10 +16,8 @@ export async function generateMetadata(props: { params: Promise<BoardRouteParame
 
   try {
     const { parsedParams } = await parseRouteParams(params);
-    const [boardDetails, currentClimb] = await Promise.all([
-      getBoardDetailsForBoard(parsedParams),
-      getClimb(parsedParams),
-    ]);
+    const boardDetails = getBoardDetailsForBoard(parsedParams);
+    const currentClimb = await getClimb(parsedParams);
 
     const climbName = currentClimb.name || `${boardDetails.board_name} Climb`;
     const climbGrade = currentClimb.difficulty || 'Unknown Grade';

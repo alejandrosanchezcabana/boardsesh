@@ -215,9 +215,9 @@ export async function startServer(): Promise<ServerResources> {
             const batch = activeSessions.slice(i, i + batchSize);
             await Promise.all(
               batch.map((sessionId) =>
-                roomManager['redisStore']
-                  ?.refreshTTL(sessionId)
-                  .catch((err) => console.error(`[Server] TTL refresh failed for ${sessionId}:`, err)),
+                roomManager['redisStore']!.refreshTTL(sessionId).catch((err) =>
+                  console.error(`[Server] TTL refresh failed for ${sessionId}:`, err),
+                ),
               ),
             );
           }

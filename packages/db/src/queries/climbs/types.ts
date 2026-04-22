@@ -20,8 +20,8 @@ export interface ClimbSearchParams {
   page?: number;
   pageSize?: number;
   // Sorting
-  sortBy?: 'ascents' | 'difficulty' | 'name' | 'quality' | 'popular' | 'creation' | string;
-  sortOrder?: 'asc' | 'desc' | string;
+  sortBy?: 'ascents' | 'difficulty' | 'name' | 'quality' | 'popular' | 'creation' | (string & {});
+  sortOrder?: 'asc' | 'desc' | (string & {});
   // Filters
   gradeAccuracy?: number;
   minGrade?: number;

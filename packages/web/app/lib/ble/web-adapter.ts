@@ -12,7 +12,9 @@ import type { BleConnection, BluetoothAdapter } from './types';
 export class WebBluetoothAdapter implements BluetoothAdapter {
   constructor(private readonly boardName: BoardName = 'kilter') {}
 
+  // eslint-disable-next-line @typescript-eslint/no-redundant-type-constituents -- Web Bluetooth types resolve correctly at build time
   private device: BluetoothDevice | null = null;
+  // eslint-disable-next-line @typescript-eslint/no-redundant-type-constituents -- Web Bluetooth types resolve correctly at build time
   private characteristic: BluetoothRemoteGATTCharacteristic | null = null;
   private disconnectHandler: (() => void) | null = null;
 

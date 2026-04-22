@@ -46,7 +46,9 @@ describe('SessionProviderWrapper native OAuth deep link', () => {
     // entire location object instead.
     originalLocation = window.location;
     Object.defineProperty(window, 'location', {
-      value: { ...originalLocation, assign: mockLocationAssign },
+      value: Object.assign(Object.create(Object.getPrototypeOf(originalLocation)), originalLocation, {
+        assign: mockLocationAssign,
+      }),
       writable: true,
       configurable: true,
     });

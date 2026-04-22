@@ -553,6 +553,7 @@ const LogbookFeedItem: React.FC<LogbookFeedItemProps> = React.memo(
     );
 
     // Extract stable ref from swipeHandlers to avoid re-creating the callback on every render
+    // eslint-disable-next-line @typescript-eslint/unbound-method -- react-swipeable ref callback, no `this` concern
     const swipeRef = swipeHandlers.ref;
     const contentCombinedRef = useCallback(
       (node: HTMLDivElement | null) => {

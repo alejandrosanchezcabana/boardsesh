@@ -74,10 +74,10 @@ export const getAllBoardConfigs = React.cache(async (): Promise<BoardConfigData>
     { board: 'tension' as BoardName, layoutId: 11, sizeId: 6, setIds: [12, 13] },
   ];
 
-  const detailPromises = commonConfigs.map(async ({ board, layoutId, sizeId, setIds }) => {
+  for (const { board, layoutId, sizeId, setIds } of commonConfigs) {
     const key = `${board}-${layoutId}-${sizeId}-${setIds.join(',')}`;
     try {
-      const details = await getBoardDetails({
+      const details = getBoardDetails({
         board_name: board,
         layout_id: layoutId,
         size_id: sizeId,
@@ -88,9 +88,7 @@ export const getAllBoardConfigs = React.cache(async (): Promise<BoardConfigData>
       console.error(`Failed to fetch details for ${key}:`, error);
       configData.details[key] = null;
     }
-  });
-
-  await Promise.all(detailPromises);
+  }
 
   return configData;
 });

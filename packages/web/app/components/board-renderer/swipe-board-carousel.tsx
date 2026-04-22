@@ -140,18 +140,21 @@ const SwipeBoardCarousel = React.memo<SwipeBoardCarouselProps>(
       return () => el.removeEventListener('touchmove', handler);
     }, [isHorizontalSwipeRef]);
 
+    // Extract stable ref from swipeHandlers to avoid re-creating the callback on every render
+    // eslint-disable-next-line @typescript-eslint/unbound-method -- react-swipeable ref callback, no this concern
+    const swipeRef = swipeHandlers.ref;
     // Merge swipe ref, double-tap ref, and carousel ref into one callback ref
     const mergedRef = useCallback(
       (node: HTMLElement | null) => {
         carouselElRef.current = node;
         doubleTapRef(node);
-        if (swipeHandlers.ref) {
+        if (swipeRef) {
           // react-swipeable ref callback
-          (swipeHandlers.ref as React.RefCallback<HTMLElement>)(node);
+          (swipeRef as React.RefCallback<HTMLElement>)(node);
         }
       },
       // eslint-disable-next-line react-hooks/exhaustive-deps -- only re-create when ref callback changes
-      [doubleTapRef, swipeHandlers.ref],
+      [doubleTapRef, swipeRef],
     );
 
     const renderBoard = (climb: ClimbBoardData) => {

@@ -169,7 +169,7 @@ describe('instagram-posting', () => {
 
     const result = await copyAndOpenInstagram('"There, There" @ 40° on the Kilter Board.');
 
-    expect(global.document.execCommand).toHaveBeenCalledWith('copy');
+    expect(global.document.execCommand).toHaveBeenCalledWith('copy'); // eslint-disable-line @typescript-eslint/unbound-method -- vi.fn() mock, no `this` concern
     expect(result).toEqual({ copied: true, opened: true });
     expect(global.window.location.href).toBe('instagram://camera');
   });

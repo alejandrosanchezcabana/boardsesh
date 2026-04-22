@@ -64,7 +64,7 @@ export default async function CreateClimbPage(props: CreateClimbPageProps) {
   }
 
   // Aurora boards (kilter, tension) - use database
-  const boardDetails = await getBoardDetails(parsedParams);
+  const boardDetails = getBoardDetails(parsedParams);
 
   let editClimb: Climb | undefined;
   let editClimbError: string | undefined;

@@ -219,7 +219,7 @@ export const setterFollowQueries = {
       // === Specific board mode ===
       const boardName = boardType as BoardName;
       if (!isValidBoardName(boardName)) {
-        throw new Error(`Invalid board name: ${boardName}. Must be one of: ${SUPPORTED_BOARDS.join(', ')}`);
+        throw new Error(`Invalid board name: ${String(boardName)}. Must be one of: ${SUPPORTED_BOARDS.join(', ')}`);
       }
 
       const angle = validatedInput.angle ?? DEFAULT_ANGLE;

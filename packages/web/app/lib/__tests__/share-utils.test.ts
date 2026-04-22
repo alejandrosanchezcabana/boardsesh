@@ -32,7 +32,7 @@ describe('shareWithFallback', () => {
 
   function mockNavigator(overrides: Partial<Navigator>) {
     Object.defineProperty(globalThis, 'navigator', {
-      value: { ...originalNavigator, ...overrides },
+      value: Object.assign(Object.create(Object.getPrototypeOf(originalNavigator)), originalNavigator, overrides),
       configurable: true,
       writable: true,
     });

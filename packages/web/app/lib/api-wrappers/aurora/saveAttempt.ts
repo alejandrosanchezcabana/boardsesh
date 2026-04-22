@@ -79,7 +79,7 @@ export async function saveAttempt(
     responseData = JSON.parse(responseText);
   } catch (parseError) {
     console.error('Failed to parse response:', parseError);
-    throw new Error(`Failed to parse API response: ${parseError}`);
+    throw new Error(`Failed to parse API response: ${String(parseError)}`);
   }
 
   return responseData;

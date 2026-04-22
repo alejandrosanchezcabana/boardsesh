@@ -33,7 +33,7 @@ export const favoriteClimbsQuery = {
     const boardName = input.boardName as BoardName;
 
     if (!isValidBoardName(boardName)) {
-      throw new Error(`Invalid board name: ${boardName}. Must be one of: ${SUPPORTED_BOARDS.join(', ')}`);
+      throw new Error(`Invalid board name: ${String(boardName)}. Must be one of: ${SUPPORTED_BOARDS.join(', ')}`);
     }
 
     const page = input.page ?? 0;

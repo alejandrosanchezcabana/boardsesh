@@ -319,7 +319,7 @@ export async function removeClient(
       distributedStateCleanedUp = false;
       console.error(
         `[RoomManager] Failed to remove connection ${connectionId.slice(0, 8)} from distributed state. ` +
-          `Redis data may remain until TTL expires. Error: ${err}`,
+          `Redis data may remain until TTL expires. Error: ${String(err)}`,
       );
     }
   }

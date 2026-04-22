@@ -78,7 +78,9 @@ export const climbMutations = {
     const isListed = !validated.isDraft;
 
     if (!isValidBoardName(validated.boardType)) {
-      throw new Error(`Invalid board type: ${validated.boardType}. Must be one of ${SUPPORTED_BOARDS.join(', ')}`);
+      throw new Error(
+        `Invalid board type: ${String(validated.boardType)}. Must be one of ${SUPPORTED_BOARDS.join(', ')}`,
+      );
     }
 
     const now = new Date().toISOString();
@@ -264,7 +266,9 @@ export const climbMutations = {
     const validated = validateInput(UpdateClimbInputSchema, input, 'input');
 
     if (!isValidBoardName(validated.boardType)) {
-      throw new Error(`Invalid board type: ${validated.boardType}. Must be one of ${SUPPORTED_BOARDS.join(', ')}`);
+      throw new Error(
+        `Invalid board type: ${String(validated.boardType)}. Must be one of ${SUPPORTED_BOARDS.join(', ')}`,
+      );
     }
 
     // Load the existing row and verify ownership + edit window.

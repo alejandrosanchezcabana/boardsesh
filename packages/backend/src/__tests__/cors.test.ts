@@ -171,6 +171,7 @@ describe('CORS Handler', () => {
     });
   });
 
+  /* eslint-disable @typescript-eslint/unbound-method -- all assertions target vi.fn() mocks, no `this` concern */
   describe('applyCorsHeaders', () => {
     function createMockReq(method: string, origin?: string) {
       return {
@@ -260,6 +261,7 @@ describe('CORS Handler', () => {
       expect(result).toBe(true);
     });
   });
+  /* eslint-enable @typescript-eslint/unbound-method */
 
   describe('getAllowedOrigins', () => {
     it('returns the current allowed origins list', () => {

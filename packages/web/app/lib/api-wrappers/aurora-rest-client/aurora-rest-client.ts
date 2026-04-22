@@ -57,8 +57,8 @@ class AuroraClimbingClient {
    * @param contentType - Optional content type override
    * @returns Headers object
    */
-  private createHeaders(contentType?: string): HeadersInit {
-    const headers: HeadersInit = {
+  private createHeaders(contentType?: string): Record<string, string> {
+    const headers: Record<string, string> = {
       Accept: 'application/json',
       'Content-Type': contentType || 'application/x-www-form-urlencoded',
       Connection: 'keep-alive',
@@ -97,7 +97,7 @@ class AuroraClimbingClient {
         ...fetchOptions,
         headers: {
           ...this.createHeaders(contentType),
-          ...(fetchOptions.headers || {}),
+          ...((fetchOptions.headers as Record<string, string> | undefined) ?? {}),
         },
         // Add timeout to prevent hanging requests
         signal: AbortSignal.timeout(30000), // 30 second timeout

@@ -66,7 +66,7 @@ export default async function BoardSlugCreatePage(props: CreatePageProps) {
     );
   }
 
-  const boardDetails = await getBoardDetails(parsedParams);
+  const boardDetails = getBoardDetails(parsedParams);
 
   // When the caller asks to edit an existing climb (drafts, or a recent
   // publish still inside the 24h edit window), load it up-front so the form

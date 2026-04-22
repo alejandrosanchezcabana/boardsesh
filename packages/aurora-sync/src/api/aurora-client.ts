@@ -25,8 +25,8 @@ export class AuroraClimbingClient {
     return this.session?.user_id || null;
   }
 
-  private createHeaders(contentType?: string): HeadersInit {
-    const headers: HeadersInit = {
+  private createHeaders(contentType?: string): Record<string, string> {
+    const headers: Record<string, string> = {
       Accept: 'application/json',
       'Content-Type': contentType || 'application/x-www-form-urlencoded',
       Connection: 'keep-alive',
@@ -59,7 +59,7 @@ export class AuroraClimbingClient {
         ...fetchOptions,
         headers: {
           ...this.createHeaders(contentType),
-          ...(fetchOptions.headers || {}),
+          ...((fetchOptions.headers as Record<string, string> | undefined) ?? {}),
         },
         signal: AbortSignal.timeout(30000), // 30 second timeout
       });

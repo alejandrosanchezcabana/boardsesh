@@ -267,7 +267,7 @@ const HoldClassificationWizard: React.FC<HoldClassificationWizardProps> = ({
   }, [currentHold, classifications]);
 
   const handleHoldTypeSelect = useCallback(
-    async (holdType: HoldType) => {
+    (holdType: HoldType) => {
       if (!currentHold) return;
 
       const current = getCurrentClassification();
@@ -278,13 +278,13 @@ const HoldClassificationWizard: React.FC<HoldClassificationWizardProps> = ({
       };
 
       setClassifications(new Map(classifications).set(currentHold.id, updated));
-      await saveClassification(currentHold.id, updated);
+      saveClassification(currentHold.id, updated);
     },
     [currentHold, classifications, getCurrentClassification, saveClassification],
   );
 
   const handleHandRatingChange = useCallback(
-    async (rating: number) => {
+    (rating: number) => {
       if (!currentHold) return;
 
       const current = getCurrentClassification();
@@ -295,13 +295,13 @@ const HoldClassificationWizard: React.FC<HoldClassificationWizardProps> = ({
       };
 
       setClassifications(new Map(classifications).set(currentHold.id, updated));
-      await saveClassification(currentHold.id, updated);
+      saveClassification(currentHold.id, updated);
     },
     [currentHold, classifications, getCurrentClassification, saveClassification],
   );
 
   const handleFootRatingChange = useCallback(
-    async (rating: number) => {
+    (rating: number) => {
       if (!currentHold) return;
 
       const current = getCurrentClassification();
@@ -312,13 +312,13 @@ const HoldClassificationWizard: React.FC<HoldClassificationWizardProps> = ({
       };
 
       setClassifications(new Map(classifications).set(currentHold.id, updated));
-      await saveClassification(currentHold.id, updated);
+      saveClassification(currentHold.id, updated);
     },
     [currentHold, classifications, getCurrentClassification, saveClassification],
   );
 
   const handlePullDirectionChange = useCallback(
-    async (direction: number) => {
+    (direction: number) => {
       if (!currentHold) return;
 
       const current = getCurrentClassification();
@@ -329,7 +329,7 @@ const HoldClassificationWizard: React.FC<HoldClassificationWizardProps> = ({
       };
 
       setClassifications(new Map(classifications).set(currentHold.id, updated));
-      await saveClassification(currentHold.id, updated);
+      saveClassification(currentHold.id, updated);
     },
     [currentHold, classifications, getCurrentClassification, saveClassification],
   );
