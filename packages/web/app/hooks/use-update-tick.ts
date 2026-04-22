@@ -42,10 +42,10 @@ export function useUpdateTick() {
       return response.updateTick;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['logbookFeed'] });
-      queryClient.invalidateQueries({ queryKey: ['ascentsFeed'] });
-      queryClient.invalidateQueries({ queryKey: ['sessionDetail'] });
-      queryClient.invalidateQueries({ queryKey: ['userProfileStats'] });
+      void queryClient.invalidateQueries({ queryKey: ['logbookFeed'] });
+      void queryClient.invalidateQueries({ queryKey: ['ascentsFeed'] });
+      void queryClient.invalidateQueries({ queryKey: ['sessionDetail'] });
+      void queryClient.invalidateQueries({ queryKey: ['userProfileStats'] });
       queryClient.removeQueries({ queryKey: ['logbook'] });
       showMessage('Tick updated', 'success');
     },

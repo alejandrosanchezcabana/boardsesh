@@ -498,7 +498,7 @@ const QueueControlBar: React.FC<QueueControlBarProps> = ({ boardDetails, angle }
         });
     };
 
-    getPreference<boolean>('swipeHint:queueBarSeen').then((seen) => {
+    void getPreference<boolean>('swipeHint:queueBarSeen').then((seen) => {
       if (cancelled || seen) return;
       if (!window.matchMedia('(pointer: coarse)').matches) return;
 
@@ -519,7 +519,7 @@ const QueueControlBar: React.FC<QueueControlBarProps> = ({ boardDetails, angle }
           await peekOnce(el);
           if (cancelled) return;
           el.style.transform = '';
-          setPreference('swipeHint:queueBarSeen', true);
+          void setPreference('swipeHint:queueBarSeen', true);
         } catch {
           /* cancelled */
         }
@@ -536,7 +536,7 @@ const QueueControlBar: React.FC<QueueControlBarProps> = ({ boardDetails, angle }
   // Restore persisted tick bar expanded state when tick mode opens
   useEffect(() => {
     if (tickBarActive) {
-      getPreference<boolean>('tickBarExpanded').then((persisted) => {
+      void getPreference<boolean>('tickBarExpanded').then((persisted) => {
         if (persisted === true) setTickBarExpanded(true);
       });
     }
@@ -545,7 +545,7 @@ const QueueControlBar: React.FC<QueueControlBarProps> = ({ boardDetails, angle }
   // Persist expanded state on user-initiated toggle (not on automatic resets)
   const handleTickBarExpandedChange = useCallback((expanded: boolean) => {
     setTickBarExpanded(expanded);
-    setPreference('tickBarExpanded', expanded);
+    void setPreference('tickBarExpanded', expanded);
   }, []);
 
   // Close expanded participants when tick mode opens

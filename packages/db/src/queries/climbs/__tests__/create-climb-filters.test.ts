@@ -44,13 +44,13 @@ function sqlToString(fragment: SQL): string {
     .join('');
 }
 
-describe('createClimbFilters: projectsOnly', () => {
-  it('produces no projectsOnly condition by default', () => {
+void describe('createClimbFilters: projectsOnly', () => {
+  void it('produces no projectsOnly condition by default', () => {
     const f = createClimbFilters(params, baseSearch);
     assert.equal(f.projectsOnlyConditions.length, 0);
   });
 
-  it('emits a COALESCE(ascensionist_count, 0) = 0 condition when projectsOnly is on', () => {
+  void it('emits a COALESCE(ascensionist_count, 0) = 0 condition when projectsOnly is on', () => {
     const f = createClimbFilters(params, { projectsOnly: true });
     assert.equal(f.projectsOnlyConditions.length, 1);
     const rendered = sqlToString(f.projectsOnlyConditions[0]);
@@ -61,7 +61,7 @@ describe('createClimbFilters: projectsOnly', () => {
     assert.match(rendered, /= 0/);
   });
 
-  it('adds the projectsOnly condition to the climb WHERE array', () => {
+  void it('adds the projectsOnly condition to the climb WHERE array', () => {
     const baseline = createClimbFilters(params, baseSearch).getClimbWhereConditions();
     const withProjects = createClimbFilters(params, {
       projectsOnly: true,
@@ -72,14 +72,14 @@ describe('createClimbFilters: projectsOnly', () => {
     assert.match(rendered, /COALESCE[^|]*ascensionist_count[^|]*= 0/i);
   });
 
-  it('skips the minAscents stats condition when projectsOnly is on (prevents contradictory SQL)', () => {
+  void it('skips the minAscents stats condition when projectsOnly is on (prevents contradictory SQL)', () => {
     const f = createClimbFilters(params, { projectsOnly: true, minAscents: 10 });
     // No stats condition should reference ascensionist_count >= 10 when projectsOnly is on.
     const rendered = f.climbStatsConditions.map(sqlToString).join(' || ');
     assert.doesNotMatch(rendered, /ascensionist_count/);
   });
 
-  it('emits ascensionist_count >= N when projectsOnly is off and minAscents is set', () => {
+  void it('emits ascensionist_count >= N when projectsOnly is off and minAscents is set', () => {
     const f = createClimbFilters(params, { projectsOnly: false, minAscents: 10 });
     assert.equal(f.climbStatsConditions.length, 1);
     const rendered = sqlToString(f.climbStatsConditions[0]);
@@ -89,7 +89,7 @@ describe('createClimbFilters: projectsOnly', () => {
     assert.match(rendered, />=/);
   });
 
-  it('keeps stats conditions empty so the stats-driven INNER JOIN path is not selected by projectsOnly alone', () => {
+  void it('keeps stats conditions empty so the stats-driven INNER JOIN path is not selected by projectsOnly alone', () => {
     // search-climbs uses climbStatsConditions.length > 0 to pick the INNER JOIN
     // fast path. projectsOnly must live outside climbStatsConditions so climbs
     // with no stats row are not dropped by the INNER JOIN.

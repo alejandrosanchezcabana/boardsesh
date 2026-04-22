@@ -72,7 +72,7 @@ export function useNotificationSubscription() {
       url: wsUrl,
       authToken: token,
       onReconnect: () => {
-        refreshUnreadCount();
+        void refreshUnreadCount();
       },
     });
 
@@ -177,7 +177,7 @@ export function useNotificationSubscription() {
 
     return () => {
       unsub();
-      wsClient.dispose();
+      void wsClient.dispose();
     };
   }, [isAuthenticated, token, queryClient]);
 }

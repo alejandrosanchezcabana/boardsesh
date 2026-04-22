@@ -98,7 +98,7 @@ export default function SwipeHintOrchestrator() {
           }
 
           if (!cancelled) {
-            setPreference(PREF_KEY, true);
+            void setPreference(PREF_KEY, true);
           }
         } catch {
           // Animation cancelled
@@ -106,7 +106,7 @@ export default function SwipeHintOrchestrator() {
       }, INITIAL_DELAY_MS);
     };
 
-    run();
+    void run();
 
     return () => {
       cancelled = true;

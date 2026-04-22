@@ -104,7 +104,7 @@ export default function VoteButton({
       }
     };
 
-    fetchVoteSummary();
+    void fetchVoteSummary();
 
     return () => {
       cancelled = true;

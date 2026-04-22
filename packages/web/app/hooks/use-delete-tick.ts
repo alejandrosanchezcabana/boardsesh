@@ -36,10 +36,10 @@ export function useDeleteTick() {
       return response.deleteTick;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['ascentsFeed'] });
+      void queryClient.invalidateQueries({ queryKey: ['ascentsFeed'] });
       queryClient.removeQueries({ queryKey: ['logbook'] });
-      queryClient.invalidateQueries({ queryKey: ['sessionDetail'] });
-      queryClient.invalidateQueries({ queryKey: ['userProfileStats'] });
+      void queryClient.invalidateQueries({ queryKey: ['sessionDetail'] });
+      void queryClient.invalidateQueries({ queryKey: ['userProfileStats'] });
     },
     onError: (err) => {
       let errorMessage = 'Failed to delete tick';

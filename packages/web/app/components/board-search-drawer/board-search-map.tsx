@@ -85,7 +85,7 @@ export default function BoardSearchMap({
     // import thinking it's dead code: without it, tile panes, zoom controls,
     // and attribution render unstyled.
     // @ts-expect-error — CSS dynamic import handled by Next.js bundler
-    Promise.all([import('leaflet'), import('leaflet/dist/leaflet.css')]).then(([L]) => {
+    void Promise.all([import('leaflet'), import('leaflet/dist/leaflet.css')]).then(([L]) => {
       if (cancelled || !containerRef.current) return;
 
       const map = L.map(containerRef.current, {
@@ -288,7 +288,7 @@ export default function BoardSearchMap({
       // async permission request resolves — otherwise the first tap just
       // triggers the permission prompt and looks like a no-op.
       setPendingMyLocation(true);
-      requestPermission();
+      void requestPermission();
     }
   }, [userCoords, requestPermission, flyToUserCoords]);
 

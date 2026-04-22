@@ -93,13 +93,13 @@ export default function ProposalSection({
   }, [climbUuid, boardType, angle, token]);
 
   useEffect(() => {
-    fetchData();
+    void fetchData();
   }, [fetchData]);
 
   const handleProposalCreated = useCallback(
     (proposal: Proposal) => {
       setProposals((prev) => [proposal, ...prev]);
-      fetchData();
+      void fetchData();
     },
     [fetchData],
   );
@@ -109,7 +109,7 @@ export default function ProposalSection({
       setProposals((prev) => prev.map((p) => (p.uuid === updated.uuid ? updated : p)));
       // Refresh status if proposal was resolved
       if (updated.status !== 'open') {
-        fetchData();
+        void fetchData();
       }
     },
     [fetchData],
@@ -118,7 +118,7 @@ export default function ProposalSection({
   const handleProposalDeleted = useCallback(
     (proposalUuid: string) => {
       setAcceptedProposals((prev) => prev.filter((p) => p.uuid !== proposalUuid));
-      fetchData();
+      void fetchData();
     },
     [fetchData],
   );

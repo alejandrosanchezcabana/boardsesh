@@ -49,7 +49,7 @@ export const PartyProfileProvider: React.FC<{ children: React.ReactNode }> = ({ 
       }
     };
 
-    loadProfile();
+    void loadProfile();
 
     return () => {
       mounted = false;
@@ -79,7 +79,7 @@ export const PartyProfileProvider: React.FC<{ children: React.ReactNode }> = ({ 
       }
     };
 
-    fetchUserProfile();
+    void fetchUserProfile();
 
     return () => {
       mounted = false;

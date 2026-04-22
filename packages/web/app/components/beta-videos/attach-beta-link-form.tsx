@@ -72,7 +72,7 @@ export const AttachBetaLinkForm: React.FC<AttachBetaLinkFormProps> = ({
       await client.request<AttachBetaLinkMutationResponse>(ATTACH_BETA_LINK, variables);
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['betaLinks', boardType, climbUuid] });
+      void queryClient.invalidateQueries({ queryKey: ['betaLinks', boardType, climbUuid] });
       showMessage('Video added to beta', 'success');
       setUrl('');
       onSuccess?.();

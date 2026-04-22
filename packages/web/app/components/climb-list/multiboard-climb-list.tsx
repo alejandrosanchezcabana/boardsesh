@@ -163,9 +163,9 @@ export default function MultiboardClimbList({
     (climb: Climb) => {
       setInternalSelectedUuid(climb.uuid);
       if (queueActions?.setCurrentClimb) {
-        queueActions.setCurrentClimb(climb);
+        void queueActions.setCurrentClimb(climb);
       } else {
-        navigateToClimb(climb);
+        void navigateToClimb(climb);
       }
       onClimbSelect?.(climb);
     },

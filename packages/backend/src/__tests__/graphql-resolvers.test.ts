@@ -67,7 +67,7 @@ describe('GraphQL Resolver Input Validation', () => {
   });
 
   afterAll(async () => {
-    client.dispose();
+    void client.dispose();
     // Close the server
     await new Promise<void>((resolve) => {
       server.httpServer.close(() => {

@@ -330,4 +330,4 @@ async function importMoonBoardProblems() {
   }
 }
 
-importMoonBoardProblems();
+void importMoonBoardProblems();

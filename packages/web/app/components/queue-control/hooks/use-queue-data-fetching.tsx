@@ -248,7 +248,7 @@ export const useQueueDataFetching = ({
 
     const uuids = JSON.parse(climbUuidsString);
     if (uuids.length > 0 && getLogbook) {
-      getLogbook(uuids);
+      void getLogbook(uuids);
     }
   }, [climbUuidsString, getLogbook]);
 
@@ -260,7 +260,7 @@ export const useQueueDataFetching = ({
 
   const fetchMoreClimbs = useCallback(() => {
     if (hasNextPage && !isFetchingNextPage) {
-      fetchNextPage();
+      void fetchNextPage();
     }
   }, [hasNextPage, isFetchingNextPage, fetchNextPage]);
 

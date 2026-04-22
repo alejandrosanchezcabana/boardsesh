@@ -80,7 +80,7 @@ function BluetoothAutoSender({
         });
       }
     };
-    sendClimb();
+    void sendClimb();
 
     return () => {
       controller.abort();
@@ -117,7 +117,7 @@ export function BluetoothProvider({
       // UA looks like a native WebView — bridge may not be injected yet.
       // Poll for window.Capacitor; only confirm support once the bridge appears.
       let cancelled = false;
-      waitForCapacitor(CAPACITOR_BRIDGE_TIMEOUT_MS).then((found) => {
+      void waitForCapacitor(CAPACITOR_BRIDGE_TIMEOUT_MS).then((found) => {
         if (!cancelled && found) {
           setIsBluetoothSupported(true);
         }

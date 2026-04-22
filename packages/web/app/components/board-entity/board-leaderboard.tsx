@@ -84,13 +84,13 @@ export default function BoardLeaderboard({ boardUuid }: BoardLeaderboardProps) {
   );
 
   useEffect(() => {
-    fetchLeaderboard();
+    void fetchLeaderboard();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [token, boardUuid, period]);
 
   const handleLoadMore = () => {
     if (leaderboard) {
-      fetchLeaderboard(leaderboard.entries.length, true);
+      void fetchLeaderboard(leaderboard.entries.length, true);
     }
   };
 

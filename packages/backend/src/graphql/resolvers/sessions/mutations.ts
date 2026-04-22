@@ -112,7 +112,7 @@ export const sessionMutations = {
 
     // Auto-authorize user's ESP32 controllers for this session (if authenticated)
     if (ctx.isAuthenticated && ctx.userId) {
-      authorizeUserControllersForSession(ctx.userId, sessionId);
+      void authorizeUserControllersForSession(ctx.userId, sessionId);
       // Adopt recent solo ticks into this session. The session row exists at
       // this point (ensureSessionRecordExists ran inside roomManager.joinSession).
       const boardTypeFromPath = extractBoardType(boardPath);

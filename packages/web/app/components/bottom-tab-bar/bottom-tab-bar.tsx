@@ -349,7 +349,7 @@ function BottomTabBar({ boardDetails, angle, boardConfigs }: BottomTabBarProps) 
         handleHomeTab();
         break;
       case 'climbs':
-        handleClimbsTab();
+        void handleClimbsTab();
         break;
       case 'library':
         handleLibraryTab();

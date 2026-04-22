@@ -1491,4 +1491,4 @@ async function seedSocialData() {
   }
 }
 
-seedSocialData();
+void seedSocialData();

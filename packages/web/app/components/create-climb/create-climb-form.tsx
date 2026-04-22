@@ -237,7 +237,7 @@ export default function CreateClimbForm({
   const markJustSaved = useCallback(() => {
     setJustSaved(true);
     autosaveSuppressedRef.current = true;
-    clearAutosave();
+    void clearAutosave();
     if (savedTimeoutRef.current !== null) {
       window.clearTimeout(savedTimeoutRef.current);
     }
@@ -339,7 +339,7 @@ export default function CreateClimbForm({
       return;
     }
     let cancelled = false;
-    loadAutosave(autosaveBoardKey).then((saved) => {
+    void loadAutosave(autosaveBoardKey).then((saved) => {
       if (cancelled) return;
       if (saved) {
         try {
@@ -353,7 +353,7 @@ export default function CreateClimbForm({
           if (saved.description) setDescription(saved.description);
           setIsDraft(saved.isDraft);
         } catch {
-          clearAutosave();
+          void clearAutosave();
         }
       }
       autosaveRestoredRef.current = true;
@@ -386,10 +386,10 @@ export default function CreateClimbForm({
       return;
     }
     if (debouncedTotalHolds === 0 && !debouncedAutosave.climbName && !debouncedAutosave.description) {
-      clearAutosave();
+      void clearAutosave();
       return;
     }
-    saveAutosave(debouncedAutosave);
+    void saveAutosave(debouncedAutosave);
   }, [debouncedAutosave, debouncedTotalHolds]);
 
   const moonBoardHolds = useMemo(
@@ -408,7 +408,7 @@ export default function CreateClimbForm({
   useEffect(() => {
     if (boardType === 'aurora' && isConnected && generateFramesString) {
       const frames = generateFramesString();
-      sendFramesToBoard(frames);
+      void sendFramesToBoard(frames);
     }
   }, [boardType, litUpHoldsMap, isConnected, generateFramesString, sendFramesToBoard]);
 
@@ -439,7 +439,7 @@ export default function CreateClimbForm({
     setDescription('');
     clearJustSaved();
     autosaveSuppressedRef.current = true;
-    clearAutosave();
+    void clearAutosave();
     setSavedClimb(null);
     // Detach the tracked queue slot too — Clear starts a fresh climb, so the
     // next Save should create a new queue item rather than replace the old one.
@@ -447,7 +447,7 @@ export default function CreateClimbForm({
     // form, not party state.
     setQueueItemUuid(null);
     if (boardType === 'aurora' && isConnected) {
-      sendFramesToBoard('');
+      void sendFramesToBoard('');
     }
     if (boardType === 'moonboard') {
       setUserGrade(undefined);
@@ -1289,7 +1289,7 @@ export default function CreateClimbForm({
         setShowSettingsPanel(true);
         return;
       }
-      handlePublish();
+      void handlePublish();
     };
 
     return (
@@ -1456,7 +1456,7 @@ export default function CreateClimbForm({
           style={{ display: 'none' }}
           onChange={(e) => {
             const file = e.target.files?.[0];
-            if (file) handleOcrImport(file);
+            if (file) void handleOcrImport(file);
             e.target.value = '';
           }}
           disabled={isOcrProcessing}
@@ -1730,7 +1730,7 @@ export default function CreateClimbForm({
             disabled={isSaving || !canSave}
             onClick={() => {
               setShowSettingsPanel(false);
-              handlePublish();
+              void handlePublish();
             }}
             startIcon={isSaving ? <CircularProgress size={16} /> : <SaveOutlined />}
             sx={{

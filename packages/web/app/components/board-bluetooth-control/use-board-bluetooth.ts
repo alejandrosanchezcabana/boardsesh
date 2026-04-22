@@ -210,7 +210,7 @@ export function useBoardBluetooth({ boardDetails, onConnectionChange }: UseBoard
   const disconnect = useCallback(() => {
     unsubDisconnectRef.current?.();
     unsubDisconnectRef.current = null;
-    adapterRef.current?.disconnect();
+    void adapterRef.current?.disconnect();
     adapterRef.current = null;
     setIsConnected(false);
     onConnectionChange?.(false);
@@ -220,7 +220,7 @@ export function useBoardBluetooth({ boardDetails, onConnectionChange }: UseBoard
   useEffect(() => {
     return () => {
       unsubDisconnectRef.current?.();
-      adapterRef.current?.disconnect();
+      void adapterRef.current?.disconnect();
     };
   }, []);
 

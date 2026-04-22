@@ -129,12 +129,12 @@ export function useSaveTick(boardName: BoardName) {
       });
 
       // Clear any IndexedDB draft for this climb (belt-and-suspenders with QuickTickBar's .then)
-      clearTickDraft(options.climbUuid, options.angle);
+      void clearTickDraft(options.climbUuid, options.angle);
 
       // If the user attached an Instagram video, refresh the beta-videos section
       // so the new embed shows up without a page reload.
       if (options.videoUrl) {
-        queryClient.invalidateQueries({
+        void queryClient.invalidateQueries({
           queryKey: ['betaLinks', boardName, options.climbUuid],
         });
       }

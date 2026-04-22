@@ -67,7 +67,7 @@ export default function LiveActivityBridge({ onSetCurrentClimb, onWidgetNavigate
     if (handle && typeof (handle as { remove?: () => void }).remove === 'function') {
       applyHandle(handle as { remove: () => void });
     } else if (handle && typeof (handle as Promise<{ remove: () => void }>).then === 'function') {
-      (handle as Promise<{ remove: () => void }>).then(applyHandle);
+      void (handle as Promise<{ remove: () => void }>).then(applyHandle);
     }
 
     return () => {

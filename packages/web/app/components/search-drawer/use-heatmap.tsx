@@ -70,7 +70,7 @@ export default function useHeatmapData({
       }
     };
 
-    fetchHeatmapData();
+    void fetchHeatmapData();
 
     return () => {
       cancelled = true;

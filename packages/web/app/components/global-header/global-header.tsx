@@ -186,7 +186,7 @@ export default function GlobalHeader({ boardConfigs }: GlobalHeaderProps) {
     const shareUrl = `${window.location.origin}/profile/${session.user.id}`;
     const displayName = session.user.name || 'My';
 
-    shareWithFallback({
+    void shareWithFallback({
       url: shareUrl,
       title: `${displayName}'s climbing profile`,
       text: `Check out ${displayName}'s climbing profile on Boardsesh`,

@@ -405,12 +405,12 @@ export function useSessionLifecycle({
         graphqlClient = createGraphQLClient({
           url: backendUrl!,
           authToken: wsAuthTokenRef.current,
-          onReconnect: handleReconnect,
+          onReconnect: () => void handleReconnect(),
           connectionName: 'session',
         });
 
         if (!mountedRef.current) {
-          graphqlClient.dispose();
+          void graphqlClient.dispose();
           isConnectingRef.current = false;
           return;
         }
@@ -424,7 +424,7 @@ export function useSessionLifecycle({
         }
 
         if (!mountedRef.current) {
-          graphqlClient.dispose();
+          void graphqlClient.dispose();
           return;
         }
 
@@ -554,7 +554,7 @@ export function useSessionLifecycle({
                   activeSessionRef.current?.sessionId === sessionId &&
                   !isConnectingRef.current
                 ) {
-                  connect();
+                  void connect();
                 }
               }, delay);
             }
@@ -564,12 +564,12 @@ export function useSessionLifecycle({
           }
         }
         if (graphqlClient) {
-          graphqlClient.dispose();
+          void graphqlClient.dispose();
         }
       }
     }
 
-    connect();
+    void connect();
 
     return () => {
       if (DEBUG) console.log('[PersistentSession] Cleaning up connection');
@@ -585,12 +585,12 @@ export function useSessionLifecycle({
       sessionUnsubscribeRef.current = null;
 
       if (clientToCleanup) {
-        Promise.resolve()
+        void Promise.resolve()
           .then(async () => {
             if (sessionRef.current) {
               await execute(clientToCleanup, { query: LEAVE_SESSION }).catch(() => {});
             }
-            clientToCleanup.dispose();
+            void clientToCleanup.dispose();
           })
           .catch((err) => {
             // Swallow errors during cleanup — the WebSocket is being torn down

@@ -90,11 +90,11 @@ export default function SocialLoginButtons({ callbackUrl = '/', disabled = false
         callbackPath: callbackUrl,
       });
 
-      browser.open({ url });
+      void browser.open({ url });
       return;
     }
 
-    signIn(provider, { callbackUrl });
+    void signIn(provider, { callbackUrl });
   };
 
   // Don't render anything if no providers are configured

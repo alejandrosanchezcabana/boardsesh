@@ -82,7 +82,7 @@ describe('useFollowToggle', () => {
     expect(result.current.isFollowing).toBe(false);
 
     act(() => {
-      result.current.handleToggle();
+      void result.current.handleToggle();
     });
 
     expect(result.current.isFollowing).toBe(true);
@@ -177,7 +177,7 @@ describe('useFollowToggle', () => {
     expect(result.current.isLoading).toBe(false);
 
     act(() => {
-      result.current.handleToggle();
+      void result.current.handleToggle();
     });
 
     expect(result.current.isLoading).toBe(true);

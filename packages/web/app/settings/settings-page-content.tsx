@@ -136,7 +136,7 @@ export default function SettingsPageContent() {
   const [healthKitAvailable, setHealthKitAvailable] = useState(false);
   useEffect(() => {
     let cancelled = false;
-    isHealthKitAvailable().then((v) => {
+    void isHealthKitAvailable().then((v) => {
       if (!cancelled) setHealthKitAvailable(v);
     });
     return () => {
@@ -154,7 +154,7 @@ export default function SettingsPageContent() {
   // Fetch profile on mount
   useEffect(() => {
     if (status === 'authenticated') {
-      fetchProfile();
+      void fetchProfile();
     }
   }, [status, fetchProfile]);
 
@@ -558,7 +558,7 @@ export default function SettingsPageContent() {
                 exclusive
                 onChange={(_e, newFormat) => {
                   if (newFormat !== null) {
-                    setGradeFormat(newFormat);
+                    void setGradeFormat(newFormat);
                   }
                 }}
                 disabled={!gradeFormatLoaded}

@@ -236,7 +236,7 @@ export default function ControllersSection() {
   };
 
   useEffect(() => {
-    fetchControllers();
+    void fetchControllers();
   }, []);
 
   const handleAddClick = () => {
@@ -422,7 +422,7 @@ export default function ControllersSection() {
             onSubmit={(e: React.FormEvent) => {
               e.preventDefault();
               if (!selectedBoard || !selectedLayout || !selectedSize || selectedSets.length === 0) return;
-              handleRegister({
+              void handleRegister({
                 name: formValues.name,
                 boardName: selectedBoard,
                 layoutId: selectedLayout,

@@ -117,7 +117,7 @@ export class EventBroker {
       }
     };
 
-    runLoop();
+    void runLoop();
   }
 
   private async reclaimPendingEvents(handler: (event: SocialEvent) => Promise<void>): Promise<void> {

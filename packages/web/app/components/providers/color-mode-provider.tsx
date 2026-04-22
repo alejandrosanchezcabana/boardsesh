@@ -16,7 +16,7 @@ export default function ColorModeProvider({ children }: { children: React.ReactN
 
   // Load saved preference on mount
   useEffect(() => {
-    getPreference<ColorMode>(PREFERENCE_KEY).then((saved) => {
+    void getPreference<ColorMode>(PREFERENCE_KEY).then((saved) => {
       if (saved === 'light' || saved === 'dark') {
         setMode(saved);
         document.documentElement.setAttribute('data-theme', saved);
@@ -28,7 +28,7 @@ export default function ColorModeProvider({ children }: { children: React.ReactN
     setMode((prev) => {
       const next: ColorMode = prev === 'dark' ? 'light' : 'dark';
       document.documentElement.setAttribute('data-theme', next);
-      setPreference(PREFERENCE_KEY, next);
+      void setPreference(PREFERENCE_KEY, next);
       return next;
     });
   }, []);

@@ -124,7 +124,7 @@ export default function LogbookSwipeHintOrchestrator() {
       }, INITIAL_DELAY_MS);
     };
 
-    run();
+    void run();
 
     return () => {
       cancelled = true;

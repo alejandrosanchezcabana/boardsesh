@@ -199,11 +199,11 @@ export default function LibraryPageContent({
   }, [selectedBoard]);
 
   useEffect(() => {
-    fetchUserData();
+    void fetchUserData();
   }, [fetchUserData]);
 
   useEffect(() => {
-    fetchDiscoverData();
+    void fetchDiscoverData();
   }, [fetchDiscoverData]);
 
   const getPlaylistUrl = useCallback(

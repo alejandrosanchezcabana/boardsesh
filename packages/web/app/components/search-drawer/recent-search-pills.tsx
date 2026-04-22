@@ -34,7 +34,7 @@ const RecentSearchPills: React.FC = () => {
     };
 
     const refreshSearches = () => {
-      getRecentSearches().then((nextSearches) => {
+      void getRecentSearches().then((nextSearches) => {
         if (!isMounted) return;
         setSearches(nextSearches);
       });

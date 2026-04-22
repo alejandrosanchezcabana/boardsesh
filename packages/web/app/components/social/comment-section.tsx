@@ -67,7 +67,7 @@ export default function CommentSection({ entityType, entityId, title = 'Discussi
 
     return () => {
       unsub();
-      wsClient.dispose();
+      void wsClient.dispose();
       wsClientRef.current = null;
     };
   }, [entityType, entityId, token]);

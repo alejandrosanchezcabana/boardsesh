@@ -171,13 +171,13 @@ export function useTickSave(options: UseTickSaveOptions): {
             hasDifficulty: difficulty !== undefined,
             hasComment: comment.length > 0,
           });
-          clearTickDraft(climb.uuid, Number(targetAngle));
+          void clearTickDraft(climb.uuid, Number(targetAngle));
         })
         .catch(() => {
           track('Quick Tick Failed', {
             boardLayout: targetBoard.layout_name || '',
           });
-          saveTickDraft(draftValues);
+          void saveTickDraft(draftValues);
           saving.current = false;
           onError?.();
         });

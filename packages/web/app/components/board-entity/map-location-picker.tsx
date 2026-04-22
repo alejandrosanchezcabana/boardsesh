@@ -79,7 +79,7 @@ export default function MapLocationPicker({ latitude, longitude, onChange }: Map
     }
 
     // @ts-expect-error — CSS dynamic import handled by Next.js bundler
-    Promise.all([import('leaflet'), import('leaflet/dist/leaflet.css')]).then(([L]) => {
+    void Promise.all([import('leaflet'), import('leaflet/dist/leaflet.css')]).then(([L]) => {
       if (!containerRef.current) return;
 
       const hasCoords = latitude != null && longitude != null;
@@ -140,7 +140,7 @@ export default function MapLocationPicker({ latitude, longitude, onChange }: Map
       mapRef.current?.flyTo([lat, lng], 14);
       onChangeRef.current(lat, lng);
     } else {
-      requestPermission();
+      void requestPermission();
     }
   }, [userCoords, placeMarker, requestPermission]);
 

@@ -63,7 +63,7 @@ export default function SetterClimbList({ username, boardTypes, authToken }: Set
 
   const handleLoadMore = useCallback(() => {
     if (hasNextPage) {
-      fetchNextPage();
+      void fetchNextPage();
     }
   }, [hasNextPage, fetchNextPage]);
 

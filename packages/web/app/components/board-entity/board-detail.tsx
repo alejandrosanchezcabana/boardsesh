@@ -104,7 +104,7 @@ export function BoardDetailContent({
   }, [token, boardUuid, initialIsFollowing]);
 
   useEffect(() => {
-    fetchBoard();
+    void fetchBoard();
     setIsEditing(false);
     setActiveTab(0);
   }, [fetchBoard]);
@@ -145,7 +145,7 @@ export function BoardDetailContent({
       });
       showMessage(gymUuid ? 'Board linked to gym' : 'Board unlinked from gym', 'success');
       setShowGymSelector(false);
-      fetchBoard();
+      void fetchBoard();
     } catch (error) {
       console.error('Failed to link board to gym:', error);
       showMessage('Failed to link board to gym', 'error');
@@ -157,7 +157,7 @@ export function BoardDetailContent({
       if (board) {
         onFollowChange?.(board.uuid, isFollowing);
       }
-      fetchBoard();
+      void fetchBoard();
     },
     [board, onFollowChange, fetchBoard],
   );

@@ -145,7 +145,7 @@ const QueueList = forwardRef<QueueListHandle, QueueListProps>(
     // the behavior of queue items and board list items.
     const handleSuggestionThumbnailClick = useCallback(
       (climb: Climb) => {
-        setCurrentClimb(climb);
+        void setCurrentClimb(climb);
         dispatchOpenPlayDrawer();
       },
       [setCurrentClimb],

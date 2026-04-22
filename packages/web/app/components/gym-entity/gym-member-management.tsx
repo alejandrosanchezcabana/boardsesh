@@ -66,7 +66,7 @@ export default function GymMemberManagement({ gymUuid, isOwnerOrAdmin }: GymMemb
   );
 
   useEffect(() => {
-    fetchMembers();
+    void fetchMembers();
   }, [fetchMembers]);
 
   const handleRemove = async (userId: string) => {

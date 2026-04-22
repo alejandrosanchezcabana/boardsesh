@@ -93,12 +93,12 @@ export function usePopularBoardConfigs({
     // Skip the initial fetch when SSR data is provided
     if (hasInitialData) return;
     offsetRef.current = 0;
-    fetchPage(0, true);
+    void fetchPage(0, true);
   }, [fetchPage, hasInitialData]);
 
   const loadMore = useCallback(() => {
     if (hasMoreRef.current && !isFetchingRef.current) {
-      fetchPage(offsetRef.current, false);
+      void fetchPage(offsetRef.current, false);
     }
   }, [fetchPage]);
 

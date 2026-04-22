@@ -459,7 +459,7 @@ export default function MoonBoardBulkImport({
               e.preventDefault();
               e.stopPropagation();
               const files = Array.from(e.dataTransfer.files);
-              if (files.length > 0) handleFilesUpload(files);
+              if (files.length > 0) void handleFilesUpload(files);
             }}
           >
             <input
@@ -470,7 +470,7 @@ export default function MoonBoardBulkImport({
               style={{ display: 'none' }}
               onChange={(e) => {
                 const files = Array.from(e.target.files || []);
-                if (files.length > 0) handleFilesUpload(files);
+                if (files.length > 0) void handleFilesUpload(files);
                 e.target.value = '';
               }}
             />

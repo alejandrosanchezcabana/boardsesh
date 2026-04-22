@@ -583,7 +583,7 @@ describe('queue-bridge-context', () => {
         const item1 = createTestQueueItem(climb1, 'u1');
         const { result } = renderWithLocalQueue([item1], item1);
         act(() => {
-          result.current!.setCurrentClimb(climb2);
+          void result.current!.setCurrentClimb(climb2);
         });
         expect(mockSetLocalQueueState).toHaveBeenCalled();
         const [newQueue, newCurrent] = mockSetLocalQueueState.mock.calls[0];
@@ -619,7 +619,7 @@ describe('queue-bridge-context', () => {
         const climb = createTestClimb({ uuid: 'c-cold', boardType: 'kilter', layoutId: 1 });
         const { result } = renderWithoutLocalBoard();
         act(() => {
-          result.current!.setCurrentClimb(climb);
+          void result.current!.setCurrentClimb(climb);
         });
         expect(mockSetLocalQueueState).toHaveBeenCalledTimes(1);
         const [newQueue, newCurrent, boardPath, boardDetails] = mockSetLocalQueueState.mock.calls[0];
@@ -635,7 +635,7 @@ describe('queue-bridge-context', () => {
         const climb = createTestClimb({ uuid: 'mb-1', boardType: 'moonboard', layoutId: 99 });
         const { result } = renderWithoutLocalBoard();
         act(() => {
-          result.current!.setCurrentClimb(climb);
+          void result.current!.setCurrentClimb(climb);
         });
         expect(mockSetLocalQueueState).toHaveBeenCalledTimes(1);
         const [, , boardPath, boardDetails] = mockSetLocalQueueState.mock.calls[0];
@@ -661,7 +661,7 @@ describe('queue-bridge-context', () => {
         const climb = createTestClimb({ uuid: 'orphan', boardType: 'kilter', layoutId: null });
         const { result } = renderWithoutLocalBoard();
         act(() => {
-          result.current!.setCurrentClimb(climb);
+          void result.current!.setCurrentClimb(climb);
         });
         expect(mockSetLocalQueueState).not.toHaveBeenCalled();
       });
@@ -670,7 +670,7 @@ describe('queue-bridge-context', () => {
         const climb = createTestClimb({ uuid: 'orphan', boardType: undefined, layoutId: 1 });
         const { result } = renderWithoutLocalBoard();
         act(() => {
-          result.current!.setCurrentClimb(climb);
+          void result.current!.setCurrentClimb(climb);
         });
         expect(mockSetLocalQueueState).not.toHaveBeenCalled();
       });

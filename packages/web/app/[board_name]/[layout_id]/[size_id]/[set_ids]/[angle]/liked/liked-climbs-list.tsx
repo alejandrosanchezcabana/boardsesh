@@ -177,14 +177,14 @@ export default function LikedClimbsList({ boardDetails, angle }: LikedClimbsList
   const [viewMode, setViewMode] = useState<ViewMode>('list');
 
   useEffect(() => {
-    getPreference<ViewMode>('likedClimbsViewMode').then((saved) => {
+    void getPreference<ViewMode>('likedClimbsViewMode').then((saved) => {
       if (saved) setViewMode(saved);
     });
   }, []);
 
   const handleViewModeChange = useCallback((mode: ViewMode) => {
     setViewMode(mode);
-    setPreference('likedClimbsViewMode', mode);
+    void setPreference('likedClimbsViewMode', mode);
     track('Liked Climbs View Mode Changed', { mode });
   }, []);
 
@@ -237,7 +237,7 @@ export default function LikedClimbsList({ boardDetails, angle }: LikedClimbsList
       currentCount: allClimbs.length,
       hasMore: hasNextPage,
     });
-    fetchNextPage();
+    void fetchNextPage();
   }, [allClimbs.length, hasNextPage, fetchNextPage]);
 
   const { sentinelRef } = useInfiniteScroll({
@@ -251,7 +251,7 @@ export default function LikedClimbsList({ boardDetails, angle }: LikedClimbsList
   const handleClimbSelect = useCallback(
     (climb: Climb) => {
       setSelectedClimbUuid(climb.uuid);
-      setCurrentClimb(climb);
+      void setCurrentClimb(climb);
     },
     [setCurrentClimb],
   );
@@ -260,7 +260,7 @@ export default function LikedClimbsList({ boardDetails, angle }: LikedClimbsList
   const handleClimbOpenDrawer = useCallback(
     (climb: Climb) => {
       setSelectedClimbUuid(climb.uuid);
-      setCurrentClimb(climb);
+      void setCurrentClimb(climb);
       dispatchOpenPlayDrawer();
       track('Liked Climb Card Clicked', {
         climbUuid: climb.uuid,

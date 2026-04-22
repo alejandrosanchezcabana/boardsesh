@@ -53,7 +53,7 @@ export default function SetterProfileContent({ username }: SetterProfileContentP
   }, [username, session]);
 
   useEffect(() => {
-    fetchProfile();
+    void fetchProfile();
   }, [fetchProfile]);
 
   const shareDisplayName = profile?.linkedUserDisplayName || profile?.username || username;

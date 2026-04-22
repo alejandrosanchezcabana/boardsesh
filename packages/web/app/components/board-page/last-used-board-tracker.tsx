@@ -25,7 +25,7 @@ export default function LastUsedBoardTracker({
   boardSlug,
 }: LastUsedBoardTrackerProps) {
   useEffect(() => {
-    setLastUsedBoard({
+    void setLastUsedBoard({
       url,
       boardName,
       layoutName,

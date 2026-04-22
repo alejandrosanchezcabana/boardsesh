@@ -31,7 +31,7 @@ export function SetActiveAction({
 
       if (!queueActions || isCurrentClimb) return;
 
-      queueActions.setCurrentClimb(climb);
+      void queueActions.setCurrentClimb(climb);
 
       track('Set Active Climb', {
         boardLayout: boardDetails.layout_name || '',

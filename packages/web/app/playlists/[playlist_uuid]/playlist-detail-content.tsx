@@ -163,7 +163,7 @@ export default function PlaylistDetailContent({
   }, [playlistUuid, token, tokenLoading]);
 
   useEffect(() => {
-    fetchPlaylist();
+    void fetchPlaylist();
   }, [fetchPlaylist]);
 
   // Update lastAccessedAt when playlist loads (fire-and-forget, only for owners)
@@ -240,7 +240,7 @@ export default function PlaylistDetailContent({
 
   const handleLoadMore = useCallback(() => {
     if (hasNextPage && !isFetchingNextPage) {
-      fetchNextPage();
+      void fetchNextPage();
     }
   }, [hasNextPage, isFetchingNextPage, fetchNextPage]);
 
@@ -250,7 +250,7 @@ export default function PlaylistDetailContent({
 
   const handlePlaylistUpdated = useCallback(() => {
     setListRefreshKey((prev) => prev + 1);
-    fetchPlaylist();
+    void fetchPlaylist();
   }, [fetchPlaylist]);
 
   const handleDelete = useCallback(async () => {

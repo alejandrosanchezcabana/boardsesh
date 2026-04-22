@@ -69,7 +69,7 @@ export default function RoleManagement() {
   }, [token]);
 
   useEffect(() => {
-    fetchRoles();
+    void fetchRoles();
   }, [fetchRoles]);
 
   // Debounced user search
@@ -115,7 +115,7 @@ export default function RoleManagement() {
       setSearchResults([]);
       setGrantBoardType('');
       setSnackbar('Role granted');
-      fetchRoles();
+      void fetchRoles();
     } catch {
       setSnackbar('Failed to grant role');
     }
@@ -134,7 +134,7 @@ export default function RoleManagement() {
           },
         });
         setSnackbar('Role revoked');
-        fetchRoles();
+        void fetchRoles();
       } catch {
         setSnackbar('Failed to revoke role');
       }

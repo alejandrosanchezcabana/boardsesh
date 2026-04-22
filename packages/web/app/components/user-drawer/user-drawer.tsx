@@ -172,7 +172,7 @@ export default function UserDrawer({ boardDetails, boardConfigs }: UserDrawerPro
   );
 
   const handleSignOut = () => {
-    signOut();
+    void signOut();
     handleClose();
   };
 

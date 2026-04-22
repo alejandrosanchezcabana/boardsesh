@@ -29,7 +29,7 @@ export function useHealthKitSync({ summary, boardType, existingWorkoutId }: UseH
 
   useEffect(() => {
     let cancelled = false;
-    isHealthKitAvailable().then((v) => {
+    void isHealthKitAvailable().then((v) => {
       if (!cancelled) setAvailable(v);
     });
     return () => {
@@ -90,7 +90,7 @@ export function useHealthKitAutoSync() {
   const [loaded, setLoaded] = useState(false);
 
   useEffect(() => {
-    getHealthKitAutoSync().then((v) => {
+    void getHealthKitAutoSync().then((v) => {
       setEnabled(v);
       setLoaded(true);
     });

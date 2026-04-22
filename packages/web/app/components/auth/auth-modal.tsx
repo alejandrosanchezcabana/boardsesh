@@ -223,7 +223,7 @@ export default function AuthModal({
               component="form"
               onSubmit={(e: React.FormEvent) => {
                 e.preventDefault();
-                handleLogin();
+                void handleLogin();
               }}
               sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}
             >
@@ -309,7 +309,7 @@ export default function AuthModal({
               component="form"
               onSubmit={(e: React.FormEvent) => {
                 e.preventDefault();
-                handleRegister();
+                void handleRegister();
               }}
               sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}
             >

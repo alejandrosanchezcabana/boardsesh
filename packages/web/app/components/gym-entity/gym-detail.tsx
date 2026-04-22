@@ -81,7 +81,7 @@ export default function GymDetail({ gymUuid, open, onClose, onDeleted, anchor = 
 
   useEffect(() => {
     if (open) {
-      fetchGym();
+      void fetchGym();
       setIsEditing(false);
       setActiveTab(0);
     }

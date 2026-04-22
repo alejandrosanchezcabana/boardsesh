@@ -353,8 +353,8 @@ export default function AuroraCredentialsSection() {
   };
 
   useEffect(() => {
-    fetchCredentials();
-    fetchUnsyncedCounts();
+    void fetchCredentials();
+    void fetchUnsyncedCounts();
   }, []);
 
   const handleAddClick = (boardType: 'kilter' | 'tension') => {
@@ -649,7 +649,7 @@ export default function AuroraCredentialsSection() {
               e.preventDefault();
               const vals = formValues;
               if (!vals.username || !vals.password) return;
-              handleSaveCredentials(vals);
+              void handleSaveCredentials(vals);
             }}
             sx={{ display: 'flex', flexDirection: 'column', gap: 2, mt: 2 }}
           >

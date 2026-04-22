@@ -150,7 +150,7 @@ export const QuickTickBar = forwardRef<QuickTickBarHandle, QuickTickBarProps>(
       if (!tickTarget || draftLoaded.current) return;
       draftLoaded.current = true;
       let cancelled = false;
-      loadTickDraft(tickTarget.climb.uuid, Number(tickTarget.angle)).then((draft) => {
+      void loadTickDraft(tickTarget.climb.uuid, Number(tickTarget.angle)).then((draft) => {
         if (cancelled || !draft) return;
         setQuality(draft.quality);
         setDifficulty(draft.difficulty);

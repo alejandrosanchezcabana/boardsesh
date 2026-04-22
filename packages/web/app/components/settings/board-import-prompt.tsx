@@ -75,7 +75,7 @@ export default function BoardImportPrompt({ boardType, onImportComplete }: Board
   };
 
   useEffect(() => {
-    fetchCredential();
+    void fetchCredential();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [boardType]);
 
@@ -321,7 +321,7 @@ export default function BoardImportPrompt({ boardType, onImportComplete }: Board
             onSubmit={(e: React.FormEvent) => {
               e.preventDefault();
               if (!formValues.username || !formValues.password) return;
-              handleSaveCredentials(formValues);
+              void handleSaveCredentials(formValues);
             }}
             sx={{ display: 'flex', flexDirection: 'column', gap: 2, mt: 2 }}
           >

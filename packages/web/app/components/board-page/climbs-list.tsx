@@ -339,7 +339,7 @@ const ClimbsList = ({
   onClimbSelectRef.current = onClimbSelect;
 
   useEffect(() => {
-    getPreference<ViewMode>(VIEW_MODE_PREFERENCE_KEY).then((stored) => {
+    void getPreference<ViewMode>(VIEW_MODE_PREFERENCE_KEY).then((stored) => {
       if (stored === 'grid' || stored === 'list') {
         setViewMode(stored);
       }

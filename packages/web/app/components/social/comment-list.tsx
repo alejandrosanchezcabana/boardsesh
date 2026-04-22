@@ -66,7 +66,7 @@ export default function CommentList({ entityType, entityId, refreshKey = 0, curr
 
   useEffect(() => {
     setIsLoading(true);
-    fetchComments(0, false).finally(() => setIsLoading(false));
+    void fetchComments(0, false).finally(() => setIsLoading(false));
   }, [fetchComments, refreshKey]);
 
   const handleLoadMore = useCallback(async () => {
@@ -102,7 +102,7 @@ export default function CommentList({ entityType, entityId, refreshKey = 0, curr
   const handleObserver = useCallback((entries: IntersectionObserverEntry[]) => {
     const [target] = entries;
     if (target.isIntersecting && hasMoreRef.current && !isLoadingMoreRef.current) {
-      handleLoadMoreRef.current();
+      void handleLoadMoreRef.current();
     }
   }, []);
 

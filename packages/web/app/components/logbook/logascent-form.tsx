@@ -181,7 +181,7 @@ export const LogAscentForm: React.FC<LogAscentFormProps> = ({ currentClimb, boar
       component="form"
       onSubmit={(e: React.FormEvent) => {
         e.preventDefault();
-        handleSubmit(formValues);
+        void handleSubmit(formValues);
       }}
     >
       <Box sx={{ mb: 2 }}>

@@ -176,7 +176,7 @@ const HoldClassificationWizard: React.FC<HoldClassificationWizardProps> = ({
   // Load existing classifications when the wizard opens
   useEffect(() => {
     if (open && sessionStatus === 'authenticated' && boardDetails) {
-      loadClassifications();
+      void loadClassifications();
     }
     if (open) {
       setCurrentIndex(0);
@@ -231,7 +231,7 @@ const HoldClassificationWizard: React.FC<HoldClassificationWizardProps> = ({
       // Set new timeout
       saveTimeoutRef.current = setTimeout(() => {
         if (pendingSaveRef.current) {
-          doSaveClassification(pendingSaveRef.current.holdId, pendingSaveRef.current.classification);
+          void doSaveClassification(pendingSaveRef.current.holdId, pendingSaveRef.current.classification);
           pendingSaveRef.current = null;
         }
       }, 500);
@@ -246,7 +246,7 @@ const HoldClassificationWizard: React.FC<HoldClassificationWizardProps> = ({
       saveTimeoutRef.current = null;
     }
     if (pendingSaveRef.current) {
-      doSaveClassification(pendingSaveRef.current.holdId, pendingSaveRef.current.classification);
+      void doSaveClassification(pendingSaveRef.current.holdId, pendingSaveRef.current.classification);
       pendingSaveRef.current = null;
     }
   }, [doSaveClassification]);

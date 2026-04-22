@@ -38,7 +38,7 @@ export default function AdminPage() {
         setLoading(false);
       }
     }
-    checkRole();
+    void checkRole();
   }, [token]);
 
   if (loading) return null;

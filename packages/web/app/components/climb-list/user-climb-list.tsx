@@ -52,7 +52,7 @@ export default function UserClimbList({ userId }: UserClimbListProps) {
 
   const handleLoadMore = useCallback(() => {
     if (hasNextPage) {
-      fetchNextPage();
+      void fetchNextPage();
     }
   }, [hasNextPage, fetchNextPage]);
 

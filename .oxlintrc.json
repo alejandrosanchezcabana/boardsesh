@@ -18,7 +18,9 @@
     "@typescript-eslint/no-redundant-type-constituents": "error",
     "@typescript-eslint/no-useless-default-assignment": "error",
     "@typescript-eslint/restrict-template-expressions": "error",
-    "@typescript-eslint/unbound-method": "error"
+    "@typescript-eslint/unbound-method": "error",
+    "@typescript-eslint/no-floating-promises": "error",
+    "@typescript-eslint/no-misused-promises": ["error", { "checksVoidReturn": false }]
   },
   "ignorePatterns": [
     "dist/**",

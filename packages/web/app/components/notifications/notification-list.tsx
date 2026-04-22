@@ -30,7 +30,7 @@ export default function NotificationList({ initialData }: NotificationListProps)
 
   const handleLoadMore = useCallback(() => {
     if (hasMore && !isFetchingMore) {
-      fetchMore();
+      void fetchMore();
     }
   }, [hasMore, isFetchingMore, fetchMore]);
 
@@ -62,7 +62,7 @@ export default function NotificationList({ initialData }: NotificationListProps)
       } else if (notification.type === 'new_climbs_synced' && notification.setterUsername) {
         router.push(`/setter/${encodeURIComponent(notification.setterUsername)}`);
       } else if (notification.climbUuid && notification.boardType) {
-        navigateToClimb(notification.boardType, notification.climbUuid, notification.proposalUuid);
+        void navigateToClimb(notification.boardType, notification.climbUuid, notification.proposalUuid);
       }
     },
     [markGroupAsReadMutation, router, navigateToClimb],

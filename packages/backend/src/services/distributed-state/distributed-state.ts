@@ -64,11 +64,11 @@ export class DistributedStateManager {
     }
 
     this.heartbeatInterval = setInterval(() => {
-      this.updateHeartbeatWithRecovery();
+      void this.updateHeartbeatWithRecovery();
     }, 30_000);
 
     // Initial heartbeat
-    this.updateHeartbeatWithRecovery();
+    void this.updateHeartbeatWithRecovery();
 
     // Clean up connections from dead instances asynchronously on startup
     this.cleanupDeadInstanceConnections().catch((err) => {

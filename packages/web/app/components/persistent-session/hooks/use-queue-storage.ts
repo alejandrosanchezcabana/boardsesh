@@ -68,7 +68,7 @@ export function useQueueStorage({
       setIsLocalQueueLoaded(true);
     }
 
-    restoreState();
+    void restoreState();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []); // Only on mount
 

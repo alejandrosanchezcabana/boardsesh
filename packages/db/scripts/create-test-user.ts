@@ -58,4 +58,4 @@ async function createTestUser() {
   }
 }
 
-createTestUser();
+void createTestUser();

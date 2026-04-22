@@ -153,19 +153,19 @@ export function useProfileData(userId: string, initialData?: InitialData) {
   }, [userId]);
 
   useEffect(() => {
-    if (!initialData?.initialProfile && !initialData?.initialNotFound) fetchProfile();
+    if (!initialData?.initialProfile && !initialData?.initialNotFound) void fetchProfile();
   }, [fetchProfile, initialData?.initialProfile, initialData?.initialNotFound]);
 
   useEffect(() => {
-    if (!initialData?.initialAllBoardsTicks) fetchAllBoardsTicks();
+    if (!initialData?.initialAllBoardsTicks) void fetchAllBoardsTicks();
   }, [fetchAllBoardsTicks, initialData?.initialAllBoardsTicks]);
 
   useEffect(() => {
-    if (!initialData?.initialProfileStats) fetchProfileStats();
+    if (!initialData?.initialProfileStats) void fetchProfileStats();
   }, [fetchProfileStats, initialData?.initialProfileStats]);
 
   useEffect(() => {
-    fetchPercentile();
+    void fetchPercentile();
   }, [fetchPercentile]);
 
   // Filter allBoardsTicks by selected board

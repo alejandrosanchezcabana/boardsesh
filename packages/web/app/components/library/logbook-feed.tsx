@@ -163,7 +163,7 @@ export default function LogbookFeed({ layoutStats, loadingLayoutStats }: Logbook
   useEffect(() => {
     let isCancelled = false;
 
-    getPreference('logbookPreferences').then((saved) => {
+    void getPreference('logbookPreferences').then((saved) => {
       if (isCancelled) return;
 
       let baseFilters = DEFAULT_FILTERS;
@@ -462,13 +462,13 @@ export default function LogbookFeed({ layoutStats, loadingLayoutStats }: Logbook
       const timerId = setTimeout(() => {
         pendingDeleteRef.current = null;
         const client = createGraphQLHttpClient(tokenRef.current ?? null);
-        client
+        void client
           .request<{ deleteTick: boolean }, DeleteTickMutationVariables>(DELETE_TICK, { uuid })
           .then(() => {
-            queryClient.invalidateQueries({ queryKey: ['logbookFeed'] });
+            void queryClient.invalidateQueries({ queryKey: ['logbookFeed'] });
           })
           .catch(() => {
-            queryClient.invalidateQueries({ queryKey: ['logbookFeed'] });
+            void queryClient.invalidateQueries({ queryKey: ['logbookFeed'] });
             showMessage('Failed to delete tick', 'error');
           });
       }, 5000);
@@ -488,7 +488,7 @@ export default function LogbookFeed({ layoutStats, loadingLayoutStats }: Logbook
             if (pendingDeleteRef.current?.uuid === uuid) {
               clearTimeout(pendingDeleteRef.current.timerId);
               pendingDeleteRef.current = null;
-              queryClient.invalidateQueries({ queryKey: ['logbookFeed'] });
+              void queryClient.invalidateQueries({ queryKey: ['logbookFeed'] });
             }
           },
         },
