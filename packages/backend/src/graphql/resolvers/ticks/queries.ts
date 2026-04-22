@@ -1,4 +1,4 @@
-import { eq, and, or, desc, inArray, sql, count, ilike, gte, lte } from 'drizzle-orm';
+import { eq, and, or, desc, inArray, isNull, sql, count, ilike, gte, lte } from 'drizzle-orm';
 import type { ConnectionContext, BoardName } from '@boardsesh/shared-schema';
 import { SUPPORTED_BOARDS } from '@boardsesh/shared-schema';
 import { db } from '../../../db/client';
@@ -10,7 +10,6 @@ import {
   difficultyNameWithFallbackExpr,
   consensusGradeTable,
   consensusGradeJoinCondition,
-  tickCommentCountExpr,
 } from '../shared/sql-expressions';
 import { GetTicksInputSchema, BoardNameSchema, AscentFeedInputSchema } from '../../../validation/schemas';
 
@@ -43,9 +42,6 @@ export const tickQueries = {
       .select({
         tick: dbSchema.boardseshTicks,
         layoutId: dbSchema.boardClimbs.layoutId,
-        upvotes: dbSchema.voteCounts.upvotes,
-        downvotes: dbSchema.voteCounts.downvotes,
-        commentCount: tickCommentCountExpr,
       })
       .from(dbSchema.boardseshTicks)
       .leftJoin(
@@ -55,41 +51,78 @@ export const tickQueries = {
           eq(dbSchema.boardClimbs.boardType, input.boardType),
         ),
       )
-      .leftJoin(
-        dbSchema.voteCounts,
-        and(
-          eq(dbSchema.voteCounts.entityType, 'tick'),
-          eq(dbSchema.voteCounts.entityId, dbSchema.boardseshTicks.uuid),
-        ),
-      )
       .where(and(...conditions))
       .orderBy(desc(dbSchema.boardseshTicks.climbedAt));
 
-    return results.map(({ tick, layoutId, upvotes, downvotes, commentCount }) => ({
-      uuid: tick.uuid,
-      userId: tick.userId,
-      boardType: tick.boardType,
-      climbUuid: tick.climbUuid,
-      angle: tick.angle,
-      isMirror: tick.isMirror,
-      status: tick.status,
-      attemptCount: tick.attemptCount,
-      quality: tick.quality,
-      difficulty: tick.difficulty,
-      isBenchmark: tick.isBenchmark,
-      comment: tick.comment,
-      climbedAt: tick.climbedAt,
-      createdAt: tick.createdAt,
-      updatedAt: tick.updatedAt,
-      sessionId: tick.sessionId,
-      auroraType: tick.auroraType,
-      auroraId: tick.auroraId,
-      auroraSyncedAt: tick.auroraSyncedAt,
-      layoutId,
-      upvotes: Number(upvotes ?? 0),
-      downvotes: Number(downvotes ?? 0),
-      commentCount: Number(commentCount ?? 0),
-    }));
+    // Batch-fetch social aggregates in two grouped queries instead of running
+    // a correlated subquery per row — this resolver is unbounded (no LIMIT),
+    // so a user with thousands of ticks would otherwise hit thousands of
+    // `comments` / `vote_counts` lookups on every accumulated-logbook refresh.
+    const tickUuids = results.map((r) => r.tick.uuid);
+    const [voteRows, commentRows] =
+      tickUuids.length > 0
+        ? await Promise.all([
+            db
+              .select({
+                entityId: dbSchema.voteCounts.entityId,
+                upvotes: dbSchema.voteCounts.upvotes,
+                downvotes: dbSchema.voteCounts.downvotes,
+              })
+              .from(dbSchema.voteCounts)
+              .where(
+                and(
+                  eq(dbSchema.voteCounts.entityType, 'tick'),
+                  inArray(dbSchema.voteCounts.entityId, tickUuids),
+                ),
+              ),
+            db
+              .select({
+                entityId: dbSchema.comments.entityId,
+                commentCount: sql<number>`COUNT(*)::int`.as('comment_count'),
+              })
+              .from(dbSchema.comments)
+              .where(
+                and(
+                  eq(dbSchema.comments.entityType, 'tick'),
+                  inArray(dbSchema.comments.entityId, tickUuids),
+                  isNull(dbSchema.comments.deletedAt),
+                ),
+              )
+              .groupBy(dbSchema.comments.entityId),
+          ])
+        : [[], []];
+
+    const voteMap = new Map(voteRows.map((v) => [v.entityId, v]));
+    const commentMap = new Map(commentRows.map((c) => [c.entityId, Number(c.commentCount)]));
+
+    return results.map(({ tick, layoutId }) => {
+      const votes = voteMap.get(tick.uuid);
+      return {
+        uuid: tick.uuid,
+        userId: tick.userId,
+        boardType: tick.boardType,
+        climbUuid: tick.climbUuid,
+        angle: tick.angle,
+        isMirror: tick.isMirror,
+        status: tick.status,
+        attemptCount: tick.attemptCount,
+        quality: tick.quality,
+        difficulty: tick.difficulty,
+        isBenchmark: tick.isBenchmark,
+        comment: tick.comment,
+        climbedAt: tick.climbedAt,
+        createdAt: tick.createdAt,
+        updatedAt: tick.updatedAt,
+        sessionId: tick.sessionId,
+        auroraType: tick.auroraType,
+        auroraId: tick.auroraId,
+        auroraSyncedAt: tick.auroraSyncedAt,
+        layoutId,
+        upvotes: votes ? Number(votes.upvotes) : 0,
+        downvotes: votes ? Number(votes.downvotes) : 0,
+        commentCount: commentMap.get(tick.uuid) ?? 0,
+      };
+    });
   },
 
   /**

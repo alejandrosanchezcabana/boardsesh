@@ -18,6 +18,14 @@ interface LogbookViewProps {
 // in the bulk vote-summary fetch.
 const isPersistedUuid = (uuid: string | undefined): uuid is string => !!uuid && !uuid.startsWith('temp-');
 
+// Matches BulkVoteSummaryInputSchema.entityIds.max(100) on the backend. A
+// request with more than 100 IDs is rejected outright, so we slice before
+// handing the list to VoteSummaryProvider. Entries beyond this cap still
+// render their social footer, but the current-user vote state on those
+// rows won't be hydrated (VoteButton falls back to a 0 display, not an
+// error).
+const VOTE_SUMMARY_BATCH_LIMIT = 100;
+
 export const LogbookView: React.FC<LogbookViewProps> = ({ currentClimb }) => {
   const { logbook, boardName } = useBoardProvider();
 
@@ -30,7 +38,14 @@ export const LogbookView: React.FC<LogbookViewProps> = ({ currentClimb }) => {
   );
 
   const tickUuids = useMemo(
-    () => climbAscents.map((ascent) => ascent.uuid).filter(isPersistedUuid),
+    () =>
+      climbAscents
+        .map((ascent) => ascent.uuid)
+        .filter(isPersistedUuid)
+        // Ascents are already sorted newest-first, so the most recently
+        // logged ticks (the ones most likely to be scrolled onto screen)
+        // are the ones that get user-vote hydration.
+        .slice(0, VOTE_SUMMARY_BATCH_LIMIT),
     [climbAscents],
   );
 

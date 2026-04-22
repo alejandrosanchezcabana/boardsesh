@@ -40,12 +40,14 @@ export interface LogbookEntryCardData {
    * Tick UUID. When set, the card renders a like + comment footer targeting
    * this tick via the social `tick` entity type. Omit to render the card
    * without social affordances.
+   *
+   * The current user's vote on the tick is resolved by the enclosing
+   * `VoteSummaryProvider` batch-fetch rather than being threaded through the
+   * card, so there is no `userVote` prop here.
    */
   tickUuid?: string | null;
   upvotes?: number | null;
   downvotes?: number | null;
-  /** Current user's vote on this tick (-1, 0, or 1). */
-  userVote?: number | null;
   commentCount?: number | null;
 }
 
@@ -140,7 +142,6 @@ export const LogbookEntryCard: React.FC<LogbookEntryCardProps> = ({
                 entityId={entry.tickUuid}
                 initialUpvotes={entry.upvotes ?? 0}
                 initialDownvotes={entry.downvotes ?? 0}
-                initialUserVote={entry.userVote ?? undefined}
                 likeOnly
               />
               <FeedCommentButton

@@ -79,6 +79,34 @@ describe('LogbookView', () => {
     expect(screen.getByText('No ascents logged for this climb')).toBeTruthy();
   });
 
+  it('caps the vote-summary batch at 100 tick UUIDs to match the backend input limit', () => {
+    const ascents = Array.from({ length: 105 }, (_, i) => ({
+      uuid: `persisted-${String(i).padStart(3, '0')}`,
+      climb_uuid: 'climb-1',
+      // Later index = more recent climbedAt, so ids sort desc by time.
+      climbed_at: new Date(2025, 0, 1, 0, 0, i).toISOString(),
+      angle: 40,
+      tries: 1,
+      is_ascent: true,
+      status: 'send' as const,
+      is_mirror: false,
+      quality: null,
+      comment: '',
+    }));
+
+    mockUseBoardProvider.mockReturnValue({ boardName: 'kilter', logbook: ascents });
+
+    render(<LogbookView currentClimb={makeClimb()} />);
+
+    expect(mockVoteSummaryProvider).toHaveBeenCalledTimes(1);
+    const { entityIds } = mockVoteSummaryProvider.mock.calls[0][0] as { entityIds: string[] };
+    expect(entityIds).toHaveLength(100);
+    // The 100 ids passed to the provider must be the most recent ascents
+    // (newest-first), not an arbitrary slice.
+    expect(entityIds[0]).toBe('persisted-104');
+    expect(entityIds[99]).toBe('persisted-005');
+  });
+
   it('suppresses the social footer and excludes temp- UUIDs from the vote-summary fetch for optimistic entries', () => {
     mockUseBoardProvider.mockReturnValue({
       boardName: 'kilter',
