@@ -87,9 +87,11 @@ test.describe('Climb Setter - Zoomable Board', () => {
     await page.screenshot({ path: beforePath, fullPage: false });
     await testInfo.attach('create-screen-initial', { path: beforePath, contentType: 'image/png' });
 
-    // Reset button should NOT be visible before zooming.
+    // Reset button is always in the DOM but hidden via opacity until zoom activates.
+    // Assert it's not interactable before zooming (tabindex=-1 + opacity:0).
     const resetButton = page.getByRole('button', { name: 'Reset zoom' });
-    await expect(resetButton).not.toBeVisible();
+    await expect(resetButton).toHaveAttribute('tabindex', '-1');
+    await expect(resetButton).toHaveCSS('opacity', '0');
 
     // Pinch out from the center of the board.
     const box = await boardSection.boundingBox();

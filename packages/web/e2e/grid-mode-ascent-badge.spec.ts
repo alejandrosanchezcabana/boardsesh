@@ -68,9 +68,12 @@ test.describe('Grid mode — ascent badge', () => {
     await page.goto(BOARD_URL, { waitUntil: 'domcontentloaded' });
     await waitForClimbs(page);
 
-    // Switch to grid mode
-    await page.getByRole('button', { name: 'Grid view' }).click();
-    await expect(page.locator(CLIMB_CARD).first()).toBeVisible({ timeout: 15_000 });
+    // Unauthenticated cold loads can take a while to hydrate the virtualizer,
+    // so switch to grid mode and wait generously for the first card to paint.
+    const gridButton = page.getByRole('button', { name: 'Grid view' });
+    await expect(gridButton).toBeVisible({ timeout: 10_000 });
+    await gridButton.click();
+    await expect(page.locator(CLIMB_CARD).first()).toBeVisible({ timeout: 30_000 });
 
     // No badges should appear when unauthenticated
     await expect(page.locator(CLIMB_CARD).locator(ASCENT_BADGE).first()).not.toBeVisible();

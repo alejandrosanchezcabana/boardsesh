@@ -477,27 +477,24 @@ export function QueueBridgeProvider({ children }: { children: React.ReactNode })
   const adapterSyncRef = useRef(adapter.syncFromInjected);
   adapterSyncRef.current = adapter.syncFromInjected;
 
-  // eslint-disable-next-line react-hooks/exhaustive-deps -- actionsVersion/dataVersion force re-read of refs
+  // Version counters are included in deps so useMemo re-reads the injected
+  // refs on each updateContext() call. Without them the memo returns its
+  // cached value from first injection (initial empty state), so consumers
+  // never see queue updates that arrive after the board route mounts.
   const effectiveContext = useMemo(
     () => (isInjected && injectedContextRef.current ? injectedContextRef.current : adapter.context),
-    [isInjected, adapter.context],
+    [isInjected, adapter.context, _dataVersion, _actionsVersion],
   );
 
-  // Actions: when injected, use the injected actions ref directly.
-  // This does NOT depend on effectiveContext or dataVersion, so it stays
-  // stable when only data changes (which is the common case).
-  // eslint-disable-next-line react-hooks/exhaustive-deps -- actionsVersion forces re-read of ref
   const effectiveActions: GraphQLQueueActionsType = useMemo(() => {
     if (!isInjected) return adapter.actionsValue;
     return injectedActionsRef.current!;
-  }, [isInjected, adapter.actionsValue]);
+  }, [isInjected, adapter.actionsValue, _actionsVersion]);
 
-  // Data: when injected, use the injected data ref directly.
-  // eslint-disable-next-line react-hooks/exhaustive-deps -- dataVersion forces re-read of ref
   const effectiveData: GraphQLQueueDataType = useMemo(() => {
     if (!isInjected) return adapter.dataValue;
     return injectedDataRef.current!;
-  }, [isInjected, adapter.dataValue]);
+  }, [isInjected, adapter.dataValue, _dataVersion]);
 
   const effectiveBoardDetails = isInjected ? injectedBoardDetails : adapter.boardDetails;
   const effectiveAngle = isInjected ? injectedAngle : adapter.angle;

@@ -265,6 +265,15 @@ if ! vp run db:up; then
 fi
 print_success "Database is ready"
 
+print_step "Step 7: Installing Playwright Browsers"
+
+echo "Downloading Chromium for e2e tests (~280 MB first run, cached after)..."
+if ! (cd packages/web && bunx playwright install chromium); then
+    print_warning "Failed to install Playwright browsers — you can run 'cd packages/web && bunx playwright install chromium' later."
+else
+    print_success "Playwright browsers installed"
+fi
+
 echo ""
 echo -e "${GREEN}${ROCKET} Setup Complete! ${ROCKET}${NC}"
 echo ""
