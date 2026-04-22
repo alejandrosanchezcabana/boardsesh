@@ -394,4 +394,36 @@ describe('streamImport', () => {
       expect(fetchSpy).toHaveBeenCalledTimes(2);
     });
   });
+
+  describe('new Aurora boards (decoy, touchstone, grasshopper)', () => {
+    it('passes decoy boardType to the import endpoint', async () => {
+      const stream = makeCompleteStream(emptyResult);
+      const fetchSpy = vi.spyOn(globalThis, 'fetch').mockResolvedValue(mockFetchResponse(stream));
+
+      await streamImport('decoy', { user: { username: 'test' }, ascents: [{ id: 1 }] }, vi.fn());
+
+      const body = JSON.parse(fetchSpy.mock.calls[0][1]?.body as string);
+      expect(body.boardType).toBe('decoy');
+    });
+
+    it('passes touchstone boardType to the import endpoint', async () => {
+      const stream = makeCompleteStream(emptyResult);
+      const fetchSpy = vi.spyOn(globalThis, 'fetch').mockResolvedValue(mockFetchResponse(stream));
+
+      await streamImport('touchstone', { user: { username: 'test' } }, vi.fn());
+
+      const body = JSON.parse(fetchSpy.mock.calls[0][1]?.body as string);
+      expect(body.boardType).toBe('touchstone');
+    });
+
+    it('passes grasshopper boardType to the import endpoint', async () => {
+      const stream = makeCompleteStream(emptyResult);
+      const fetchSpy = vi.spyOn(globalThis, 'fetch').mockResolvedValue(mockFetchResponse(stream));
+
+      await streamImport('grasshopper', { user: { username: 'test' } }, vi.fn());
+
+      const body = JSON.parse(fetchSpy.mock.calls[0][1]?.body as string);
+      expect(body.boardType).toBe('grasshopper');
+    });
+  });
 });

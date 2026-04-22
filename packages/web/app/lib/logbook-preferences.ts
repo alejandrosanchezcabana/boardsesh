@@ -1,6 +1,7 @@
 import { getAllLayouts } from '@/app/lib/board-constants';
+import { AURORA_BOARDS, type AuroraBoardName } from '@boardsesh/shared-schema';
 
-export type BoardFilter = 'all' | 'kilter' | 'tension' | 'moonboard';
+export type BoardFilter = 'all' | 'moonboard' | AuroraBoardName;
 export type SortPreset = 'recent' | 'hardest';
 export type SortField = 'climbName' | 'loggedGrade' | 'consensusGrade' | 'date' | 'attemptCount';
 export type SortDirection = 'asc' | 'desc';
@@ -61,6 +62,9 @@ export const ALL_LAYOUT_SELECTIONS: Record<Exclude<BoardFilter, 'all'>, number[]
   kilter: getAllLayouts('kilter').map((layout) => layout.id),
   tension: getAllLayouts('tension').map((layout) => layout.id),
   moonboard: getAllLayouts('moonboard').map((layout) => layout.id),
+  decoy: getAllLayouts('decoy').map((layout) => layout.id),
+  touchstone: getAllLayouts('touchstone').map((layout) => layout.id),
+  grasshopper: getAllLayouts('grasshopper').map((layout) => layout.id),
 };
 
 export const DEFAULT_LOGBOOK_PREFERENCES: LogbookPreferences = {
@@ -71,7 +75,7 @@ export const DEFAULT_LOGBOOK_PREFERENCES: LogbookPreferences = {
   sort: DEFAULT_SORT,
 };
 
-const VALID_BOARD_FILTERS: BoardFilter[] = ['all', 'kilter', 'tension', 'moonboard'];
+const VALID_BOARD_FILTERS: BoardFilter[] = ['all', 'moonboard', ...AURORA_BOARDS];
 const VALID_SORT_FIELDS: Array<SortField | ''> = [
   '',
   'climbName',
@@ -115,6 +119,9 @@ function sanitizeLayoutSelections(value: unknown): Record<Exclude<BoardFilter, '
     kilter: sanitizeBoardLayouts(source.kilter, 'kilter'),
     tension: sanitizeBoardLayouts(source.tension, 'tension'),
     moonboard: sanitizeBoardLayouts(source.moonboard, 'moonboard'),
+    decoy: sanitizeBoardLayouts(source.decoy, 'decoy'),
+    touchstone: sanitizeBoardLayouts(source.touchstone, 'touchstone'),
+    grasshopper: sanitizeBoardLayouts(source.grasshopper, 'grasshopper'),
   };
 }
 

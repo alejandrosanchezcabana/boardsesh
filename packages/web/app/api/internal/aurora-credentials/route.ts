@@ -8,16 +8,17 @@ import { z } from 'zod';
 import { authOptions } from '@/app/lib/auth/auth-options';
 import { encrypt, decrypt } from '@boardsesh/crypto';
 import AuroraClimbingClient from '@/app/lib/api-wrappers/aurora-rest-client/aurora-rest-client';
-import type { AuroraBoardName } from '@/app/lib/api-wrappers/aurora/types';
+import type { AuroraBoardName } from '@boardsesh/shared-schema';
+import { AURORA_BOARDS } from '@boardsesh/shared-schema';
 
 const saveCredentialsSchema = z.object({
-  boardType: z.enum(['kilter', 'tension']),
+  boardType: z.enum(AURORA_BOARDS),
   username: z.string().min(1, 'Username is required'),
   password: z.string().min(1, 'Password is required'),
 });
 
 const deleteCredentialsSchema = z.object({
-  boardType: z.enum(['kilter', 'tension']),
+  boardType: z.enum(AURORA_BOARDS),
 });
 
 export interface AuroraCredentialStatus {

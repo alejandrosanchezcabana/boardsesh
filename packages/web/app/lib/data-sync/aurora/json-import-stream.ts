@@ -1,9 +1,10 @@
 import type { ImportProgressEvent, ImportResult } from './json-import';
+import type { AuroraBoardName } from '@boardsesh/shared-schema';
 
 const CHUNK_SIZE = 500;
 
 interface ChunkPayload {
-  boardType: 'kilter' | 'tension';
+  boardType: AuroraBoardName;
   data: {
     user: { username: string; email_address?: string; created_at?: string };
     ascents: unknown[];
@@ -144,7 +145,7 @@ async function sendChunk(payload: ChunkPayload, onEvent: (event: ImportProgressE
  * and results are merged client-side.
  */
 export async function streamImport(
-  boardType: 'kilter' | 'tension',
+  boardType: AuroraBoardName,
   data: unknown,
   onEvent: (event: ImportProgressEvent) => void,
 ): Promise<void> {

@@ -15,6 +15,7 @@ import { randomUUID } from 'crypto';
 import { createHash } from 'crypto';
 import { fontGradeToDifficultyId } from '@/app/lib/board-data';
 import { LAYOUTS, HOLE_PLACEMENTS } from '@/app/lib/board-constants';
+import type { AuroraBoardName } from '@boardsesh/shared-schema';
 import { buildInferredSessionsForUser } from './inferred-session-builder';
 import { populateDenormalizedColumns } from '@boardsesh/db/queries';
 
@@ -81,7 +82,7 @@ export const auroraExportSchema = z.object({
 
 export type AuroraExportData = z.infer<typeof auroraExportSchema>;
 
-type BoardType = 'kilter' | 'tension';
+type BoardType = AuroraBoardName;
 
 // ---------------------------------------------------------------------------
 // Import result types
@@ -159,15 +160,18 @@ export function generateJsonImportAuroraId(
 // Climb draft import helpers
 // ---------------------------------------------------------------------------
 
-/** Map export role names to board-specific hold state codes. */
-const ROLE_TO_CODE: Record<BoardType, Record<string, number>> = {
+/** Map export role names to board-specific hold state codes.
+ * Only boards with known codes are listed — absent entries mean climb draft
+ * import is not supported for that board (ascents/attempts still import fine). */
+const ROLE_TO_CODE: Partial<Record<AuroraBoardName, Record<string, number>>> = {
   kilter: { start: 42, middle: 43, finish: 44, foot: 45 },
   tension: { start: 1, middle: 2, finish: 3, foot: 4 },
 };
 
 /** Resolve a layout name (e.g. "Kilter Board Original") to a layout ID. */
 export function resolveLayoutName(boardType: BoardType, layoutName: string): number | null {
-  const layouts = LAYOUTS[boardType];
+  const layouts = LAYOUTS[boardType as keyof typeof LAYOUTS];
+  if (!layouts) return null;
   for (const layout of Object.values(layouts)) {
     if (layout.name === layoutName) return layout.id;
   }
@@ -186,7 +190,12 @@ export function buildCoordinateMap(boardType: BoardType, layoutId: number): Map<
   if (cached) return cached;
 
   const coordMap = new Map<string, number>();
-  const boardPlacements = HOLE_PLACEMENTS[boardType];
+  const boardPlacements = HOLE_PLACEMENTS[boardType as keyof typeof HOLE_PLACEMENTS];
+
+  if (!boardPlacements) {
+    coordinateMapCache.set(cacheKey, coordMap);
+    return coordMap;
+  }
 
   for (const key of Object.keys(boardPlacements)) {
     // Keys are "layoutId-setId"
@@ -208,6 +217,7 @@ export function convertHoldsToFrames(
   boardType: BoardType,
 ): string | null {
   const roleCodes = ROLE_TO_CODE[boardType];
+  if (!roleCodes) return null; // Board doesn't support climb draft import
   const parts: string[] = [];
 
   for (const hold of holds) {

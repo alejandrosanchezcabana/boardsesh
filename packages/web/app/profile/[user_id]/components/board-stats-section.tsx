@@ -4,6 +4,8 @@ import React from 'react';
 import CircularProgress from '@mui/material/CircularProgress';
 import { EmptyState } from '@/app/components/ui/empty-state';
 import BoardImportPrompt from '@/app/components/settings/board-import-prompt';
+import { AURORA_BOARDS } from '@boardsesh/shared-schema';
+import type { AuroraBoardName } from '@boardsesh/shared-schema';
 import type { LogbookEntry } from '../utils/profile-constants';
 import styles from '../profile-page.module.css';
 
@@ -32,8 +34,8 @@ export default function BoardStatsSection({
     return null;
   }
 
-  if (isOwnProfile && selectedBoard !== 'all' && (selectedBoard === 'kilter' || selectedBoard === 'tension')) {
-    return <BoardImportPrompt boardType={selectedBoard} />;
+  if (isOwnProfile && selectedBoard !== 'all' && AURORA_BOARDS.includes(selectedBoard as AuroraBoardName)) {
+    return <BoardImportPrompt boardType={selectedBoard as AuroraBoardName} />;
   }
 
   return <EmptyState description="No climbing data for this period" />;

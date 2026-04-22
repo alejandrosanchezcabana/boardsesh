@@ -85,6 +85,16 @@ export const sortGrades = (grades: string[], format: GradeDisplayFormat): string
 // desired display style (e.g. "Original Layout" → "Tension Classic").
 const LAYOUT_DISPLAY_OVERRIDES: Record<string, string> = {
   'tension-9': 'Tension Classic',
+  'tension-10': 'Tension 2 Mirror',
+  'tension-11': 'Tension 2 Spray',
+  'moonboard-1': 'MoonBoard 2010',
+  'moonboard-2': 'MoonBoard 2016',
+  'moonboard-3': 'MoonBoard 2024',
+  'moonboard-4': 'MoonBoard Masters 2017',
+  'moonboard-5': 'MoonBoard Masters 2019',
+  'decoy-2': 'Decoy Dungeon Trainer',
+  'touchstone-1': 'Touchstone Winter 2020',
+  'grasshopper-1': 'Grasshopper 2020',
 };
 
 // Colors for each layout — soft, muted palette that feels cohesive
@@ -99,6 +109,9 @@ const layoutColors: Record<string, string> = {
   'moonboard-3': 'hsla(290, 35%, 55%, 0.7)', // Soft plum
   'moonboard-4': 'hsla(230, 40%, 58%, 0.7)', // Dusty blue
   'moonboard-5': 'hsla(210, 45%, 55%, 0.7)', // Slate blue
+  'decoy-2': 'hsla(100, 40%, 52%, 0.7)',     // Soft green
+  'touchstone-1': 'hsla(30, 50%, 55%, 0.7)', // Warm amber
+  'grasshopper-1': 'hsla(75, 45%, 50%, 0.7)', // Yellow-green
 };
 
 export const getLayoutKey = (boardType: string, layoutId: number | null | undefined): string => {

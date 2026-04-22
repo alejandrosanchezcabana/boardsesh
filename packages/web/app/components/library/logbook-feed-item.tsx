@@ -79,6 +79,9 @@ const layoutNames: Record<string, string> = {
   'moonboard-3': 'MoonBoard 2024',
   'moonboard-4': 'MoonBoard Masters 2017',
   'moonboard-5': 'MoonBoard Masters 2019',
+  'decoy-2': 'Decoy Dungeon Trainer',
+  'touchstone-1': 'Touchstone Winter 2020',
+  'grasshopper-1': 'Grasshopper 2020',
 };
 
 const getLayoutDisplayName = (boardType: string, layoutId: number | null): string => {

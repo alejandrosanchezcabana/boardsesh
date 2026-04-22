@@ -42,6 +42,7 @@ vi.mock('@/app/lib/board-constants', () => ({
       9: { id: 9, name: 'Original Layout', productId: 4 },
     },
     moonboard: {},
+    // decoy, touchstone, grasshopper intentionally absent to exercise null-guard
   },
   HOLE_PLACEMENTS: {
     kilter: {
@@ -57,6 +58,7 @@ vi.mock('@/app/lib/board-constants', () => ({
     },
     tension: {},
     moonboard: {},
+    // decoy, touchstone, grasshopper intentionally absent to exercise null-guard
   },
 }));
 
@@ -640,5 +642,44 @@ describe('auroraExportSchema - climb validation', () => {
       ],
     });
     expect(result.success).toBe(false);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// New-board paths: boards without HOLE_PLACEMENTS or ROLE_TO_CODE entries
+// ---------------------------------------------------------------------------
+
+describe('buildCoordinateMap for unsupported boards', () => {
+  it('returns an empty map for a board with no HOLE_PLACEMENTS entry', () => {
+    const coordMap = buildCoordinateMap('decoy', 2);
+    expect(coordMap.size).toBe(0);
+  });
+
+  it('returns an empty map for touchstone', () => {
+    expect(buildCoordinateMap('touchstone', 1).size).toBe(0);
+  });
+
+  it('returns an empty map for grasshopper', () => {
+    expect(buildCoordinateMap('grasshopper', 1).size).toBe(0);
+  });
+});
+
+describe('convertHoldsToFrames for boards without role codes', () => {
+  it('returns null for decoy (no ROLE_TO_CODE entry)', () => {
+    const coordMap = new Map([['10,10', 1]]);
+    const holds = [{ x: 10, y: 10, role: 'start' }];
+    expect(convertHoldsToFrames(holds, coordMap, 'decoy')).toBeNull();
+  });
+
+  it('returns null for touchstone (no ROLE_TO_CODE entry)', () => {
+    const coordMap = new Map([['10,10', 1]]);
+    const holds = [{ x: 10, y: 10, role: 'start' }];
+    expect(convertHoldsToFrames(holds, coordMap, 'touchstone')).toBeNull();
+  });
+
+  it('returns null for grasshopper (no ROLE_TO_CODE entry)', () => {
+    const coordMap = new Map([['10,10', 1]]);
+    const holds = [{ x: 10, y: 10, role: 'start' }];
+    expect(convertHoldsToFrames(holds, coordMap, 'grasshopper')).toBeNull();
   });
 });

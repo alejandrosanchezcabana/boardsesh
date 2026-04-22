@@ -6,11 +6,7 @@ import { eq, and, isNull, count } from 'drizzle-orm';
 import { authOptions } from '@/app/lib/auth/auth-options';
 
 export interface UnsyncedCounts {
-  kilter: {
-    ascents: number;
-    climbs: number;
-  };
-  tension: {
+  [boardType: string]: {
     ascents: number;
     climbs: number;
   };
@@ -38,18 +34,14 @@ export async function GET() {
       .from(auroraCredentials)
       .where(eq(auroraCredentials.userId, session.user.id));
 
-    const counts: UnsyncedCounts = {
-      kilter: { ascents: 0, climbs: 0 },
-      tension: { ascents: 0, climbs: 0 },
-    };
+    const counts: UnsyncedCounts = {};
 
     for (const cred of credentials) {
       if (!cred.auroraUserId) continue;
 
-      const boardType = cred.boardType as 'kilter' | 'tension';
+      const boardType = cred.boardType;
 
       // Count unsynced ticks (ascents/bids) for this user from boardsesh_ticks
-      // Note: boardsesh_ticks uses NextAuth userId, not Aurora user_id
       // Unsynced ticks are those without an auroraId
       const [ascentResult] = await db
         .select({ count: count() })
@@ -74,13 +66,10 @@ export async function GET() {
           ),
         );
 
-      if (boardType === 'kilter') {
-        counts.kilter.ascents = ascentResult?.count ?? 0;
-        counts.kilter.climbs = climbResult?.count ?? 0;
-      } else if (boardType === 'tension') {
-        counts.tension.ascents = ascentResult?.count ?? 0;
-        counts.tension.climbs = climbResult?.count ?? 0;
-      }
+      counts[boardType] = {
+        ascents: ascentResult?.count ?? 0,
+        climbs: climbResult?.count ?? 0,
+      };
     }
 
     return NextResponse.json({ counts });
