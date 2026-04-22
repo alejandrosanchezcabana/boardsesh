@@ -22,6 +22,18 @@ vi.mock('@/app/components/ui/empty-state', () => ({
   EmptyState: ({ description }: { description: string }) => <div data-testid="empty-state">{description}</div>,
 }));
 
+vi.mock('@/app/components/social/vote-summary-context', () => ({
+  VoteSummaryProvider: ({ children }: { children: React.ReactNode }) => <>{children}</>,
+}));
+
+vi.mock('@/app/components/social/vote-button', () => ({
+  default: () => <div data-testid="vote-button" />,
+}));
+
+vi.mock('@/app/components/social/feed-comment-button', () => ({
+  default: () => <div data-testid="feed-comment-button" />,
+}));
+
 import { LogbookView } from '../logbook-view';
 
 function makeClimb(overrides: Partial<Climb> = {}): Climb {

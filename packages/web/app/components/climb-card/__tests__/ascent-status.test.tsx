@@ -113,6 +113,9 @@ describe('AscentStatus', () => {
             climbed_at: '2025-01-01T00:00:00.000Z',
             is_ascent: true,
             status: 'send',
+            upvotes: 0,
+            downvotes: 0,
+            comment_count: 0,
           },
           {
             uuid: '2',
@@ -126,6 +129,9 @@ describe('AscentStatus', () => {
             climbed_at: '2025-01-02T00:00:00.000Z',
             is_ascent: true,
             status: 'flash',
+            upvotes: 0,
+            downvotes: 0,
+            comment_count: 0,
           },
           {
             uuid: '3',
@@ -139,6 +145,9 @@ describe('AscentStatus', () => {
             climbed_at: '2025-01-03T00:00:00.000Z',
             is_ascent: false,
             status: 'attempt',
+            upvotes: 0,
+            downvotes: 0,
+            comment_count: 0,
           },
         ],
       }),
@@ -164,6 +173,9 @@ describe('AscentStatus', () => {
             climbed_at: '2025-01-01T00:00:00.000Z',
             is_ascent: true,
             status: 'send',
+            upvotes: 0,
+            downvotes: 0,
+            comment_count: 0,
           },
           {
             uuid: '2',
@@ -177,6 +189,9 @@ describe('AscentStatus', () => {
             climbed_at: '2025-01-02T00:00:00.000Z',
             is_ascent: true,
             status: 'flash',
+            upvotes: 0,
+            downvotes: 0,
+            comment_count: 0,
           },
         ],
       }),
@@ -213,6 +228,9 @@ describe('AscentStatus', () => {
       climbed_at: '2024-02-01',
       is_ascent: true,
       status: 'flash',
+      upvotes: 0,
+      downvotes: 0,
+      comment_count: 0,
     };
 
     act(() => {

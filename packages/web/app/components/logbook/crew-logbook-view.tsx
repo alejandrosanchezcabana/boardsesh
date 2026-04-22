@@ -1,6 +1,6 @@
 'use client';
 
-import React from 'react';
+import React, { useMemo } from 'react';
 import Box from '@mui/material/Box';
 import CircularProgress from '@mui/material/CircularProgress';
 import { useQuery } from '@tanstack/react-query';
@@ -14,6 +14,7 @@ import {
   type GetFollowingClimbAscentsQueryVariables,
 } from '@/app/lib/graphql/operations';
 import type { Climb } from '@/app/lib/types';
+import { VoteSummaryProvider } from '@/app/components/social/vote-summary-context';
 import { LogbookEntryCard } from './logbook-entry-card';
 
 interface CrewLogbookViewProps {
@@ -62,7 +63,8 @@ export const CrewLogbookView: React.FC<CrewLogbookViewProps> = ({ currentClimb, 
     return <EmptyState description="Couldn't load your crew's logbook. Try again in a bit." />;
   }
 
-  const items = data?.items ?? [];
+  const items = useMemo(() => data?.items ?? [], [data]);
+  const tickUuids = useMemo(() => items.map((item) => item.uuid), [items]);
 
   if (items.length === 0) {
     return <EmptyState description="None of your crew have logged this climb yet" />;
@@ -71,28 +73,34 @@ export const CrewLogbookView: React.FC<CrewLogbookViewProps> = ({ currentClimb, 
   const showMirrorTag = boardType === 'tension';
 
   return (
-    <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
-      {items.map((item) => (
-        <LogbookEntryCard
-          key={item.uuid}
-          entry={{
-            climbedAt: item.climbedAt,
-            angle: item.angle,
-            isMirror: !!item.isMirror,
-            status: item.status,
-            attemptCount: item.attemptCount,
-            quality: item.quality ?? null,
-            comment: item.comment,
-          }}
-          currentClimbAngle={currentClimb.angle}
-          showMirrorTag={showMirrorTag}
-          user={{
-            userId: item.userId,
-            displayName: item.userDisplayName ?? null,
-            avatarUrl: item.userAvatarUrl ?? null,
-          }}
-        />
-      ))}
-    </Box>
+    <VoteSummaryProvider entityType="tick" entityIds={tickUuids}>
+      <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
+        {items.map((item) => (
+          <LogbookEntryCard
+            key={item.uuid}
+            entry={{
+              climbedAt: item.climbedAt,
+              angle: item.angle,
+              isMirror: !!item.isMirror,
+              status: item.status,
+              attemptCount: item.attemptCount,
+              quality: item.quality ?? null,
+              comment: item.comment,
+              tickUuid: item.uuid,
+              upvotes: item.upvotes,
+              downvotes: item.downvotes,
+              commentCount: item.commentCount,
+            }}
+            currentClimbAngle={currentClimb.angle}
+            showMirrorTag={showMirrorTag}
+            user={{
+              userId: item.userId,
+              displayName: item.userDisplayName ?? null,
+              avatarUrl: item.userAvatarUrl ?? null,
+            }}
+          />
+        ))}
+      </Box>
+    </VoteSummaryProvider>
   );
 };

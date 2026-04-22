@@ -37,11 +37,24 @@ export const tickQueries = {
       conditions.push(inArray(dbSchema.boardseshTicks.climbUuid, input.climbUuids));
     }
 
+    // Per-tick comment count (non-deleted) as a correlated subquery so we can
+    // surface social affordances on each row without an N+1 round trip.
+    const commentCountExpr = sql<number>`(
+      SELECT COUNT(*)::int
+      FROM ${dbSchema.comments}
+      WHERE ${dbSchema.comments.entityType} = 'tick'
+        AND ${dbSchema.comments.entityId} = ${dbSchema.boardseshTicks.uuid}
+        AND ${dbSchema.comments.deletedAt} IS NULL
+    )`;
+
     // Fetch ticks with layoutId from unified board_climbs table
     const results = await db
       .select({
         tick: dbSchema.boardseshTicks,
         layoutId: dbSchema.boardClimbs.layoutId,
+        upvotes: dbSchema.voteCounts.upvotes,
+        downvotes: dbSchema.voteCounts.downvotes,
+        commentCount: commentCountExpr,
       })
       .from(dbSchema.boardseshTicks)
       .leftJoin(
@@ -51,10 +64,17 @@ export const tickQueries = {
           eq(dbSchema.boardClimbs.boardType, input.boardType),
         ),
       )
+      .leftJoin(
+        dbSchema.voteCounts,
+        and(
+          eq(dbSchema.voteCounts.entityType, 'tick'),
+          eq(dbSchema.voteCounts.entityId, dbSchema.boardseshTicks.uuid),
+        ),
+      )
       .where(and(...conditions))
       .orderBy(desc(dbSchema.boardseshTicks.climbedAt));
 
-    return results.map(({ tick, layoutId }) => ({
+    return results.map(({ tick, layoutId, upvotes, downvotes, commentCount }) => ({
       uuid: tick.uuid,
       userId: tick.userId,
       boardType: tick.boardType,
@@ -75,6 +95,9 @@ export const tickQueries = {
       auroraId: tick.auroraId,
       auroraSyncedAt: tick.auroraSyncedAt,
       layoutId,
+      upvotes: Number(upvotes ?? 0),
+      downvotes: Number(downvotes ?? 0),
+      commentCount: Number(commentCount ?? 0),
     }));
   },
 

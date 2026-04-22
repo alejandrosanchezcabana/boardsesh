@@ -212,6 +212,12 @@ export const activityFeedTypeDefs = /* GraphQL */ `
     climbedAt: String!
     "Encoded hold frames for thumbnail display"
     frames: String
+    "Number of upvotes (likes) on this tick"
+    upvotes: Int!
+    "Number of downvotes on this tick"
+    downvotes: Int!
+    "Number of (non-deleted) comments on this tick"
+    commentCount: Int!
   }
 
   """

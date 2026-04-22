@@ -33,7 +33,14 @@ vi.mock('../logbook-entry-card', () => ({
     user,
     showMirrorTag,
   }: {
-    entry: { attemptCount: number; status?: string | null };
+    entry: {
+      attemptCount: number;
+      status?: string | null;
+      tickUuid?: string | null;
+      upvotes?: number | null;
+      downvotes?: number | null;
+      commentCount?: number | null;
+    };
     user?: { userId: string; displayName?: string | null };
     showMirrorTag: boolean;
   }) => (
@@ -44,8 +51,28 @@ vi.mock('../logbook-entry-card', () => ({
       data-status={entry.status ?? ''}
       data-attempts={entry.attemptCount}
       data-mirror-tag={String(showMirrorTag)}
+      data-tick-uuid={entry.tickUuid ?? ''}
+      data-upvotes={entry.upvotes ?? 0}
+      data-downvotes={entry.downvotes ?? 0}
+      data-comment-count={entry.commentCount ?? 0}
     />
   ),
+}));
+
+const mockVoteSummaryProvider = vi.fn();
+vi.mock('@/app/components/social/vote-summary-context', () => ({
+  VoteSummaryProvider: ({
+    entityType,
+    entityIds,
+    children,
+  }: {
+    entityType: string;
+    entityIds: string[];
+    children: React.ReactNode;
+  }) => {
+    mockVoteSummaryProvider({ entityType, entityIds });
+    return <div data-testid="vote-summary-provider">{children}</div>;
+  },
 }));
 
 import { CrewLogbookView } from '../crew-logbook-view';
@@ -132,7 +159,7 @@ describe('CrewLogbookView', () => {
     });
   });
 
-  it('renders a card per item and passes through status, user, and mirror-tag props', async () => {
+  it('renders a card per item and passes through status, user, social, and mirror-tag props', async () => {
     mockUseWsAuthToken.mockReturnValue({ token: 'tk', isAuthenticated: true, isLoading: false });
     mockRequest.mockResolvedValueOnce({
       followingClimbAscents: {
@@ -150,6 +177,9 @@ describe('CrewLogbookView', () => {
             quality: 5,
             comment: 'Nice',
             climbedAt: '2025-01-01T00:00:00Z',
+            upvotes: 4,
+            downvotes: 0,
+            commentCount: 2,
           },
           {
             uuid: 'tick-2',
@@ -164,6 +194,9 @@ describe('CrewLogbookView', () => {
             quality: null,
             comment: '',
             climbedAt: '2025-01-02T00:00:00Z',
+            upvotes: 0,
+            downvotes: 1,
+            commentCount: 0,
           },
         ],
       },
@@ -179,10 +212,20 @@ describe('CrewLogbookView', () => {
     // Raw status is passed through — normalisation happens inside LogbookEntryCard.
     expect(cards[0].getAttribute('data-status')).toBe('flash');
     expect(cards[0].getAttribute('data-mirror-tag')).toBe('true');
+    expect(cards[0].getAttribute('data-tick-uuid')).toBe('tick-1');
+    expect(cards[0].getAttribute('data-upvotes')).toBe('4');
+    expect(cards[0].getAttribute('data-comment-count')).toBe('2');
 
     expect(cards[1].getAttribute('data-user-id')).toBe('user-2');
     expect(cards[1].getAttribute('data-status')).toBe('attempt');
     expect(cards[1].getAttribute('data-attempts')).toBe('4');
+    expect(cards[1].getAttribute('data-tick-uuid')).toBe('tick-2');
+
+    // Bulk vote-summary provider is wired with every tick UUID exactly once.
+    expect(mockVoteSummaryProvider).toHaveBeenCalledWith({
+      entityType: 'tick',
+      entityIds: ['tick-1', 'tick-2'],
+    });
   });
 
   it('does not show mirror tag for non-tension boards', async () => {
@@ -203,6 +246,9 @@ describe('CrewLogbookView', () => {
             quality: 3,
             comment: '',
             climbedAt: '2025-01-01T00:00:00Z',
+            upvotes: 0,
+            downvotes: 0,
+            commentCount: 0,
           },
         ],
       },

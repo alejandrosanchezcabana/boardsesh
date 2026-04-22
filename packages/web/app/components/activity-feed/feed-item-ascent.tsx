@@ -35,6 +35,9 @@ export default function FeedItemAscent({ item }: FeedItemAscentProps) {
     comment: item.comment || '',
     climbedAt: item.createdAt,
     frames: item.frames ?? undefined,
+    upvotes: 0,
+    downvotes: 0,
+    commentCount: 0,
   };
 
   return (

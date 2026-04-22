@@ -61,6 +61,12 @@ export const ticksTypeDefs = /* GraphQL */ `
     layoutId: Int
     "Board entity ID if tick was associated with a board"
     boardId: Int
+    "Number of upvotes (likes) on this tick. Only populated by read queries."
+    upvotes: Int
+    "Number of downvotes on this tick. Only populated by read queries."
+    downvotes: Int
+    "Number of (non-deleted) comments on this tick. Only populated by read queries."
+    commentCount: Int
   }
 
   """

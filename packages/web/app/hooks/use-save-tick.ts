@@ -97,6 +97,9 @@ export function useSaveTick(boardName: BoardName) {
         climbed_at: options.climbedAt,
         is_ascent: options.status === 'flash' || options.status === 'send',
         status: options.status,
+        upvotes: 0,
+        downvotes: 0,
+        comment_count: 0,
       };
 
       queryClient.setQueryData<LogbookEntry[]>(accumulatedKey, (existing = []) => [optimisticEntry, ...existing]);

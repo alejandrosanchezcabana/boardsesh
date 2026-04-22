@@ -95,6 +95,9 @@ function makeLogbookEntry(overrides: Partial<LogbookEntry> = {}): LogbookEntry {
     climbed_at: '2025-01-01T00:00:00Z',
     is_ascent: false,
     status: 'attempt',
+    upvotes: 0,
+    downvotes: 0,
+    comment_count: 0,
     ...overrides,
   };
 }

@@ -18,6 +18,8 @@ import {
   normalizeAscentStatus,
   type AscentStatusValue,
 } from '@/app/components/ascent-status/ascent-status-utils';
+import VoteButton from '@/app/components/social/vote-button';
+import FeedCommentButton from '@/app/components/social/feed-comment-button';
 
 export interface LogbookEntryUser {
   userId: string;
@@ -34,6 +36,17 @@ export interface LogbookEntryCardData {
   attemptCount: number;
   quality?: number | null;
   comment?: string | null;
+  /**
+   * Tick UUID. When set, the card renders a like + comment footer targeting
+   * this tick via the social `tick` entity type. Omit to render the card
+   * without social affordances.
+   */
+  tickUuid?: string | null;
+  upvotes?: number | null;
+  downvotes?: number | null;
+  /** Current user's vote on this tick (-1, 0, or 1). */
+  userVote?: number | null;
+  commentCount?: number | null;
 }
 
 export interface LogbookEntryCardProps {
@@ -119,6 +132,23 @@ export const LogbookEntryCard: React.FC<LogbookEntryCardProps> = ({
             >
               {entry.comment}
             </Typography>
+          )}
+          {entry.tickUuid && (
+            <Stack direction="row" spacing={1} alignItems="center" sx={{ mt: 0.5 }}>
+              <VoteButton
+                entityType="tick"
+                entityId={entry.tickUuid}
+                initialUpvotes={entry.upvotes ?? 0}
+                initialDownvotes={entry.downvotes ?? 0}
+                initialUserVote={entry.userVote ?? undefined}
+                likeOnly
+              />
+              <FeedCommentButton
+                entityType="tick"
+                entityId={entry.tickUuid}
+                commentCount={entry.commentCount ?? 0}
+              />
+            </Stack>
           )}
         </Stack>
       </CardContent>

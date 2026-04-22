@@ -24,6 +24,9 @@ export type FollowingAscentFeedItem = {
   comment: string;
   climbedAt: string;
   frames?: string;
+  upvotes: number;
+  downvotes: number;
+  commentCount: number;
 };
 
 export type AscentFeedItem = {

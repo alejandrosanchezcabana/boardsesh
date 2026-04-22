@@ -24,6 +24,9 @@ export type Tick = {
   auroraSyncedAt: string | null;
   layoutId: number | null;
   boardId?: number | null;
+  upvotes?: number | null;
+  downvotes?: number | null;
+  commentCount?: number | null;
 };
 
 export type SaveTickInput = {

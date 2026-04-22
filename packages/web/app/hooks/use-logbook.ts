@@ -24,6 +24,9 @@ export interface LogbookEntry {
   climbed_at: string;
   is_ascent: boolean;
   status?: TickStatus;
+  upvotes: number;
+  downvotes: number;
+  comment_count: number;
 }
 
 type LogbookSourceTick = {
@@ -37,6 +40,9 @@ type LogbookSourceTick = {
   difficulty: number | null;
   comment: string;
   climbedAt: string;
+  upvotes?: number | null;
+  downvotes?: number | null;
+  commentCount?: number | null;
 };
 
 export function toLogbookEntry(tick: LogbookSourceTick): LogbookEntry {
@@ -52,6 +58,9 @@ export function toLogbookEntry(tick: LogbookSourceTick): LogbookEntry {
     climbed_at: tick.climbedAt,
     is_ascent: tick.status === 'flash' || tick.status === 'send',
     status: tick.status,
+    upvotes: tick.upvotes ?? 0,
+    downvotes: tick.downvotes ?? 0,
+    comment_count: tick.commentCount ?? 0,
   };
 }
 
