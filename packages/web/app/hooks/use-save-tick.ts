@@ -99,7 +99,7 @@ export function useSaveTick(boardName: BoardName) {
         status: options.status,
         upvotes: 0,
         downvotes: 0,
-        comment_count: 0,
+        commentCount: 0,
       };
 
       queryClient.setQueryData<LogbookEntry[]>(accumulatedKey, (existing = []) => [optimisticEntry, ...existing]);

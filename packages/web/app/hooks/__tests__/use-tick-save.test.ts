@@ -97,7 +97,7 @@ function makeLogbookEntry(overrides: Partial<LogbookEntry> = {}): LogbookEntry {
     status: 'attempt',
     upvotes: 0,
     downvotes: 0,
-    comment_count: 0,
+    commentCount: 0,
     ...overrides,
   };
 }

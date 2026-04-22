@@ -24,6 +24,11 @@ export type Tick = {
   auroraSyncedAt: string | null;
   layoutId: number | null;
   boardId?: number | null;
+  // Social aggregates are populated only by read queries (the `ticks`
+  // resolver joins `vote_counts` and counts `comments`). Mutation resolvers
+  // like `saveTick` / `updateTick` don't compute them, so these stay optional
+  // at the type level. Client code that reads a tick via a mutation response
+  // should default to 0 rather than rely on these being present.
   upvotes?: number | null;
   downvotes?: number | null;
   commentCount?: number | null;

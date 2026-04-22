@@ -63,6 +63,19 @@ export const difficultyNameWithFallbackExpr = sql<string | null>`COALESCE(
 export const consensusDifficultyExpr = sql<number | null>`ROUND(${dbSchema.boardClimbStats.displayDifficulty})`;
 
 /**
+ * Number of non-deleted comments targeting each tick, as a correlated
+ * subquery. Use inside a query whose FROM includes `boardseshTicks` so the
+ * outer `boardseshTicks.uuid` reference resolves per-row.
+ */
+export const tickCommentCountExpr = sql<number>`(
+  SELECT COUNT(*)::int
+  FROM ${dbSchema.comments}
+  WHERE ${dbSchema.comments.entityType} = 'tick'
+    AND ${dbSchema.comments.entityId} = ${dbSchema.boardseshTicks.uuid}
+    AND ${dbSchema.comments.deletedAt} IS NULL
+)`;
+
+/**
  * Imperative query: look up consensus grade name for a specific climb+angle.
  * Used in contexts where an inline SQL expression isn't possible (e.g. event publishing).
  */

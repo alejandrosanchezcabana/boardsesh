@@ -1,4 +1,4 @@
-import { eq, and, desc, inArray, sql } from 'drizzle-orm';
+import { eq, and, desc, inArray } from 'drizzle-orm';
 import type { ConnectionContext } from '@boardsesh/shared-schema';
 import { db } from '../../../db/client';
 import * as dbSchema from '@boardsesh/db/schema';
@@ -7,6 +7,7 @@ import {
   difficultyNameWithFallbackExpr,
   consensusGradeTable,
   consensusGradeJoinCondition,
+  tickCommentCountExpr,
 } from '../shared/sql-expressions';
 import { FollowingAscentsFeedInputSchema, FollowingClimbAscentsInputSchema } from '../../../validation/schemas';
 
@@ -252,14 +253,6 @@ export const socialFeedQueries = {
     const MAX_ITEMS = 100;
 
     try {
-      const commentCountExpr = sql<number>`(
-        SELECT COUNT(*)::int
-        FROM ${dbSchema.comments}
-        WHERE ${dbSchema.comments.entityType} = 'tick'
-          AND ${dbSchema.comments.entityId} = ${dbSchema.boardseshTicks.uuid}
-          AND ${dbSchema.comments.deletedAt} IS NULL
-      )`;
-
       const results = await db
         .select({
           tick: dbSchema.boardseshTicks,
@@ -269,7 +262,7 @@ export const socialFeedQueries = {
           userAvatarUrl: dbSchema.userProfiles.avatarUrl,
           upvotes: dbSchema.voteCounts.upvotes,
           downvotes: dbSchema.voteCounts.downvotes,
-          commentCount: commentCountExpr,
+          commentCount: tickCommentCountExpr,
         })
         .from(dbSchema.boardseshTicks)
         .innerJoin(

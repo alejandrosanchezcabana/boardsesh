@@ -26,7 +26,7 @@ export interface LogbookEntry {
   status?: TickStatus;
   upvotes: number;
   downvotes: number;
-  comment_count: number;
+  commentCount: number;
 }
 
 type LogbookSourceTick = {
@@ -60,7 +60,7 @@ export function toLogbookEntry(tick: LogbookSourceTick): LogbookEntry {
     status: tick.status,
     upvotes: tick.upvotes ?? 0,
     downvotes: tick.downvotes ?? 0,
-    comment_count: tick.commentCount ?? 0,
+    commentCount: tick.commentCount ?? 0,
   };
 }
 

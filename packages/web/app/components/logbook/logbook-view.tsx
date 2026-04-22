@@ -13,6 +13,11 @@ interface LogbookViewProps {
   currentClimb: Climb;
 }
 
+// Optimistic ticks live under a `temp-` UUID until the save mutation returns
+// the real one — those rows must not render social affordances or be included
+// in the bulk vote-summary fetch.
+const isPersistedUuid = (uuid: string | undefined): uuid is string => !!uuid && !uuid.startsWith('temp-');
+
 export const LogbookView: React.FC<LogbookViewProps> = ({ currentClimb }) => {
   const { logbook, boardName } = useBoardProvider();
 
@@ -23,12 +28,6 @@ export const LogbookView: React.FC<LogbookViewProps> = ({ currentClimb }) => {
         .sort((a, b) => dayjs(b.climbed_at).valueOf() - dayjs(a.climbed_at).valueOf()),
     [logbook, currentClimb.uuid],
   );
-
-  // Optimistic ticks live under a `temp-` UUID until the save mutation returns
-  // the real one — those rows must not render social affordances or be
-  // included in the bulk vote-summary fetch.
-  const isPersistedUuid = (uuid: string | undefined): uuid is string =>
-    !!uuid && !uuid.startsWith('temp-');
 
   const tickUuids = useMemo(
     () => climbAscents.map((ascent) => ascent.uuid).filter(isPersistedUuid),
@@ -58,7 +57,7 @@ export const LogbookView: React.FC<LogbookViewProps> = ({ currentClimb }) => {
               tickUuid: isPersistedUuid(ascent.uuid) ? ascent.uuid : null,
               upvotes: ascent.upvotes,
               downvotes: ascent.downvotes,
-              commentCount: ascent.comment_count,
+              commentCount: ascent.commentCount,
             }}
             currentClimbAngle={currentClimb.angle}
             showMirrorTag={showMirrorTag}

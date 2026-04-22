@@ -10,6 +10,7 @@ import {
   difficultyNameWithFallbackExpr,
   consensusGradeTable,
   consensusGradeJoinCondition,
+  tickCommentCountExpr,
 } from '../shared/sql-expressions';
 import { GetTicksInputSchema, BoardNameSchema, AscentFeedInputSchema } from '../../../validation/schemas';
 
@@ -37,16 +38,6 @@ export const tickQueries = {
       conditions.push(inArray(dbSchema.boardseshTicks.climbUuid, input.climbUuids));
     }
 
-    // Per-tick comment count (non-deleted) as a correlated subquery so we can
-    // surface social affordances on each row without an N+1 round trip.
-    const commentCountExpr = sql<number>`(
-      SELECT COUNT(*)::int
-      FROM ${dbSchema.comments}
-      WHERE ${dbSchema.comments.entityType} = 'tick'
-        AND ${dbSchema.comments.entityId} = ${dbSchema.boardseshTicks.uuid}
-        AND ${dbSchema.comments.deletedAt} IS NULL
-    )`;
-
     // Fetch ticks with layoutId from unified board_climbs table
     const results = await db
       .select({
@@ -54,7 +45,7 @@ export const tickQueries = {
         layoutId: dbSchema.boardClimbs.layoutId,
         upvotes: dbSchema.voteCounts.upvotes,
         downvotes: dbSchema.voteCounts.downvotes,
-        commentCount: commentCountExpr,
+        commentCount: tickCommentCountExpr,
       })
       .from(dbSchema.boardseshTicks)
       .leftJoin(

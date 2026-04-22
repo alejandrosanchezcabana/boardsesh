@@ -254,7 +254,7 @@ describe('TickButton', () => {
           status: 'flash',
           upvotes: 0,
           downvotes: 0,
-          comment_count: 0,
+          commentCount: 0,
         },
         {
           uuid: 'log-2',
@@ -270,7 +270,7 @@ describe('TickButton', () => {
           status: 'attempt',
           upvotes: 0,
           downvotes: 0,
-          comment_count: 0,
+          commentCount: 0,
         },
       ];
       render(<TickButton {...defaultProps} />);
