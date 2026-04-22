@@ -111,8 +111,9 @@ else
         echo "Then re-run this script."
         exit 1
     fi
-    # Reload PATH so vp is available for the rest of this script
-    export PATH="$HOME/.viteplus/bin:$PATH"
+    # Source the env file the installer writes so vp is available immediately
+    # shellcheck source=/dev/null
+    [ -f "$HOME/.vite-plus/env" ] && . "$HOME/.vite-plus/env"
     print_success "Vite+ installed successfully"
 fi
 
@@ -130,33 +131,13 @@ print_success "Dependencies installed successfully"
 
 print_step "Step 4: Setting Up Environment"
 
-# Create .env.local if it doesn't exist (generic config)
-if [ ! -f ".env.local" ]; then
-    echo "Creating .env.local file..."
-    cat > .env.local << 'EOF'
-# Generic configuration for development
-# This file is tracked in git and should NOT contain secrets
+# .env.local lives in packages/web/ and is tracked in git — nothing to create
+print_success "Generic environment file already exists (packages/web/.env.local)"
 
-VERCEL_ENV=development
-POSTGRES_URL=postgresql://postgres:password@localhost:54320/verceldb
-DATABASE_URL=postgresql://postgres:password@localhost:54320/verceldb
-BASE_URL=http://localhost:3000
-POSTGRES_HOST=localhost
-POSTGRES_PORT=54320
-POSTGRES_USER=postgres
-POSTGRES_PASSWORD=password
-POSTGRES_DATABASE=verceldb
-IRON_SESSION_PASSWORD={ "1": "68cJgCDE39gaXwi8LTVW4WioyhGxwcAd" }
-EOF
-    print_success "Generic environment file created"
-else
-    print_success "Generic environment file already exists"
-fi
-
-# Create .env.development.local if it doesn't exist (secrets only)
-if [ ! -f ".env.development.local" ]; then
-    echo "Creating .env.development.local file for secrets..."
-    cat > .env.development.local << 'EOF'
+# Create packages/web/.env.development.local if it doesn't exist (secrets only)
+if [ ! -f "packages/web/.env.development.local" ]; then
+    echo "Creating packages/web/.env.development.local file for secrets..."
+    cat > packages/web/.env.development.local << 'EOF'
 # Development secrets - DO NOT COMMIT TO GIT
 # This file should contain only sensitive tokens and keys
 # Generic configuration goes in .env.local
@@ -242,9 +223,9 @@ if [[ "$setup_tokens" =~ ^[Yy]$ ]] && command_exists jq; then
     if [ $? -eq 0 ]; then
         print_success "Kilter token obtained successfully"
         # Remove commented line and add actual token
-        sed -i.bak '/^# KILTER_SYNC_TOKEN=/d' .env.development.local
-        echo "KILTER_SYNC_TOKEN=$kilter_token" >> .env.development.local
-        rm -f .env.development.local.bak
+        sed -i.bak '/^# KILTER_SYNC_TOKEN=/d' packages/web/.env.development.local
+        echo "KILTER_SYNC_TOKEN=$kilter_token" >> packages/web/.env.development.local
+        rm -f packages/web/.env.development.local.bak
     else
         print_warning "Failed to get Kilter token - you can add it manually later"
     fi
@@ -258,51 +239,31 @@ if [[ "$setup_tokens" =~ ^[Yy]$ ]] && command_exists jq; then
     if [ $? -eq 0 ]; then
         print_success "Tension token obtained successfully"
         # Remove commented line and add actual token
-        sed -i.bak '/^# TENSION_SYNC_TOKEN=/d' .env.development.local
-        echo "TENSION_SYNC_TOKEN=$tension_token" >> .env.development.local
-        rm -f .env.development.local.bak
+        sed -i.bak '/^# TENSION_SYNC_TOKEN=/d' packages/web/.env.development.local
+        echo "TENSION_SYNC_TOKEN=$tension_token" >> packages/web/.env.development.local
+        rm -f packages/web/.env.development.local.bak
     else
         print_warning "Failed to get Tension token - you can add it manually later"
     fi
 
     echo ""
     print_success "Aurora API tokens setup complete"
-    echo "Tokens have been added to your .env.development.local file"
+    echo "Tokens have been added to packages/web/.env.development.local"
 else
     echo ""
     print_warning "Skipping Aurora API tokens setup"
-    echo "You can add them manually later to .env.development.local:"
+    echo "You can add them manually later to packages/web/.env.development.local:"
     echo "  KILTER_SYNC_TOKEN=your_kilter_token"
     echo "  TENSION_SYNC_TOKEN=your_tension_token"
 fi
 
 print_step "Step 6: Setting Up Database"
 
-# Check if database is already set up
-if docker exec db-postgres-1 psql postgresql://postgres:password@localhost:5432/verceldb -c "SELECT 1 FROM board_climbs LIMIT 1;" >/dev/null 2>&1; then
-    print_success "Database is already set up with board data"
-else
-    echo "Starting PostgreSQL database with Docker..."
-    cd packages/web/db/
-    if docker compose version >/dev/null 2>&1; then
-      if ! docker compose up -d; then
-          print_error "Failed to start database container"
-      fi
-    else
-      if ! docker-compose up -d; then
-          print_error "Failed to start database container"
-      fi
-    fi
-
-    echo "Waiting for database to be ready..."
-    sleep 5
-
-    echo "Setting up database schema and loading board data..."
-    echo "This may take a few minutes as we download and process board databases..."
-
-    cd ..
-    print_success "Database setup completed"
+echo "Starting database (pulls pre-built image on first run, starts in seconds after)..."
+if ! vp run db:up; then
+    print_error "Failed to start database"
 fi
+print_success "Database is ready"
 
 echo ""
 echo -e "${GREEN}${ROCKET} Setup Complete! ${ROCKET}${NC}"
