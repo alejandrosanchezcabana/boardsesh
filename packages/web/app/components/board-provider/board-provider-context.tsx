@@ -1,7 +1,7 @@
 'use client';
 import React, { createContext, useContext, useState, useEffect, useCallback, useMemo, useRef } from 'react';
-import { BoardName, ClimbUuid } from '@/app/lib/types';
-import { SaveClimbOptions } from '@/app/lib/api-wrappers/aurora/types';
+import type { BoardName, ClimbUuid } from '@/app/lib/types';
+import type { SaveClimbOptions } from '@/app/lib/api-wrappers/aurora/types';
 import { useSession } from 'next-auth/react';
 import { useLogbook as useLogbookQuery } from '@/app/hooks/use-logbook';
 import { useSaveTick as useSaveTickMutation, type SaveTickOptions } from '@/app/hooks/use-save-tick';

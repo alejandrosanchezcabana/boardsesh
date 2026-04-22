@@ -1,5 +1,6 @@
-import { useEffect, Dispatch } from 'react';
-import { SubscriptionQueueEvent } from '@boardsesh/shared-schema';
+import type { Dispatch } from 'react';
+import { useEffect } from 'react';
+import type { SubscriptionQueueEvent } from '@boardsesh/shared-schema';
 import type { ClimbQueueItem, QueueAction } from '../../queue-control/types';
 
 interface UseQueueEventSubscriptionParams {
@@ -93,7 +94,7 @@ export function useQueueEventSubscription({
   useEffect(() => {
     if (!needsResync || !isPersistentSessionActive) return;
 
-    console.log('[QueueContext] Corrupted data detected, triggering resync');
+    console.info('[QueueContext] Corrupted data detected, triggering resync');
     dispatch({ type: 'CLEAR_RESYNC_FLAG' });
     persistentSession.triggerResync();
   }, [needsResync, isPersistentSessionActive, persistentSession, dispatch]);

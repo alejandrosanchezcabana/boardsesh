@@ -11,7 +11,7 @@ import { ActionTooltip } from '../action-tooltip';
 import CheckOutlined from '@mui/icons-material/CheckOutlined';
 import LoginOutlined from '@mui/icons-material/LoginOutlined';
 import AppsOutlined from '@mui/icons-material/AppsOutlined';
-import { ClimbActionProps, ClimbActionResult } from '../types';
+import type { ClimbActionProps, ClimbActionResult } from '../types';
 import { useOptionalBoardProvider, BoardProvider } from '../../board-provider/board-provider-context';
 import { useAuthModal } from '@/app/components/providers/auth-modal-provider';
 import { LogAscentForm } from '../../logbook/logascent-form';
@@ -27,8 +27,10 @@ import BoardScrollCard from '../../board-scroll/board-scroll-card';
 import type { UserBoard } from '@boardsesh/shared-schema';
 import type { BoardName, BoardDetails } from '@/app/lib/types';
 import { LogAscentDrawer } from '../../logbook/log-ascent-drawer';
+import type { LogbookEntry } from '@/app/hooks/use-logbook';
 
 const VALID_BOARD_NAMES: ReadonlySet<string> = new Set<BoardName>(['kilter', 'tension', 'moonboard']);
+const EMPTY_LOGBOOK: LogbookEntry[] = [];
 
 function isValidBoardName(value: string): value is BoardName {
   return VALID_BOARD_NAMES.has(value);
@@ -54,7 +56,7 @@ export function TickAction({
   const boardProvider = useOptionalBoardProvider();
   const { status: sessionStatus } = useSession();
   const isAuthenticated = boardProvider?.isAuthenticated ?? sessionStatus === 'authenticated';
-  const logbook = boardProvider?.logbook ?? [];
+  const logbook = boardProvider?.logbook ?? EMPTY_LOGBOOK;
 
   // Fetch user's boards when we need the board selector (no existing BoardProvider + authenticated)
   const needsBoardSelector = !boardProvider && isAuthenticated;
@@ -112,7 +114,7 @@ export function TickAction({
 
       setDrawerVisible(true);
     },
-    [boardDetails, badgeCount, isAuthenticated, alwaysUseApp, loaded, climb.uuid, angle, onTickAction],
+    [boardDetails, badgeCount, isAuthenticated, alwaysUseApp, loaded, climb.uuid, onComplete, onTickAction],
   );
 
   const closeDrawer = useCallback(() => {

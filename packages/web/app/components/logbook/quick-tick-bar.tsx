@@ -5,13 +5,12 @@ import Stack from '@mui/material/Stack';
 import KeyboardArrowUpOutlined from '@mui/icons-material/KeyboardArrowUpOutlined';
 import KeyboardArrowDownOutlined from '@mui/icons-material/KeyboardArrowDownOutlined';
 import ChatBubbleOutlineOutlined from '@mui/icons-material/ChatBubbleOutlineOutlined';
-import { Angle, Climb, BoardDetails } from '@/app/lib/types';
+import type { Angle, Climb, BoardDetails } from '@/app/lib/types';
 import { useBoardProvider } from '../board-provider/board-provider-context';
 import { TENSION_KILTER_GRADES } from '@/app/lib/board-data';
 import { loadTickDraft } from '@/app/lib/tick-draft-db';
 import { useTickSave, buildTickTarget, type TickTarget } from '@/app/hooks/use-tick-save';
 import type { TickStatus } from '@/app/hooks/use-logbook';
-import { themeTokens } from '@/app/theme/theme-config';
 import {
   TickControls,
   TickGradeButton,
@@ -126,7 +125,7 @@ export const QuickTickBar = forwardRef<QuickTickBarHandle, QuickTickBarProps>(
       if (!tickTarget || draftLoaded.current) return;
       draftLoaded.current = true;
       let cancelled = false;
-      loadTickDraft(tickTarget.climb.uuid, Number(tickTarget.angle)).then((draft) => {
+      void loadTickDraft(tickTarget.climb.uuid, Number(tickTarget.angle)).then((draft) => {
         if (cancelled || !draft) return;
         setQuality(draft.quality);
         setDifficulty(draft.difficulty);

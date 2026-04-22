@@ -1,4 +1,4 @@
-import { ImageProcessor, RawPixelData, ImageMetadata, ImageRegion, BrowserImageSource } from './types';
+import type { ImageProcessor, RawPixelData, ImageMetadata, ImageRegion, BrowserImageSource } from './types';
 
 /**
  * Canvas-based image processor for browser environment.
@@ -18,7 +18,7 @@ export class CanvasImageProcessor implements ImageProcessor {
       imageBitmap = await createImageBitmap(source);
     } else if ('close' in source && typeof source.close === 'function') {
       // ImageBitmap
-      imageBitmap = source as ImageBitmap;
+      imageBitmap = source;
     } else if (source instanceof HTMLImageElement) {
       imageBitmap = await createImageBitmap(source);
     } else {

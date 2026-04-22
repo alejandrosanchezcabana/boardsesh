@@ -1,5 +1,5 @@
 import React from 'react';
-import { Metadata } from 'next';
+import type { Metadata } from 'next';
 import ClimbsContent from './climbs-content';
 
 type PageProps = { params: Promise<{ user_id: string }> };

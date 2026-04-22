@@ -383,8 +383,6 @@ describe('useClimbActionsData', () => {
       expect(result.current.favoritesProviderProps.favorites.has('climb-1')).toBe(true);
     });
 
-    const callCountAfterInit = mockRequest.mock.calls.length;
-
     // Add climb-3 — only climb-3 should be fetched, not climb-1 and climb-2 again
     mockRequest.mockResolvedValueOnce({ favorites: ['climb-3'] });
     mockRequest.mockResolvedValueOnce({ playlistsForClimbs: [] });

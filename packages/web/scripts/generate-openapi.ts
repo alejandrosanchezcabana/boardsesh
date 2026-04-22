@@ -22,7 +22,7 @@ import { generateOpenApiDocument } from '../app/lib/api-docs/generate-openapi';
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const outputPath = join(__dirname, '../public/openapi.json');
 
-console.log('Generating OpenAPI specification...');
+console.info('Generating OpenAPI specification...');
 
 const spec = generateOpenApiDocument();
 
@@ -32,4 +32,4 @@ mkdirSync(dirname(outputPath), { recursive: true });
 // Write the spec to file
 writeFileSync(outputPath, JSON.stringify(spec, null, 2));
 
-console.log(`OpenAPI specification written to: ${outputPath}`);
+console.info(`OpenAPI specification written to: ${outputPath}`);

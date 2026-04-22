@@ -17,7 +17,7 @@ type SharedDrawerHandle = {
 const SharedDrawers = forwardRef<
   SharedDrawerHandle,
   { boardDetails: BoardDetails; resolveBoardDetails: (climb: Climb) => BoardDetails }
->(({ boardDetails, resolveBoardDetails }, ref) => {
+>(({ boardDetails: _boardDetails, resolveBoardDetails: _resolveBoardDetails }, ref) => {
   const [activeDrawerClimb, setActiveDrawerClimb] = useState<Climb | null>(null);
   const [drawerMode, setDrawerMode] = useState<'actions' | 'playlist' | null>(null);
 

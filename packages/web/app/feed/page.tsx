@@ -2,7 +2,7 @@ import React from 'react';
 import { getServerAuthToken } from '../lib/auth/server-auth';
 import FeedPageContent from './feed-page-content';
 import { cachedSessionGroupedFeed, serverMyBoards } from '../lib/graphql/server-cached-client';
-import type { SessionFeedResult } from '@boardsesh/shared-schema';
+import type { SessionFeedResult, UserBoard } from '@boardsesh/shared-schema';
 import { createNoIndexMetadata } from '@/app/lib/seo/metadata';
 
 export const metadata = createNoIndexMetadata({
@@ -31,7 +31,7 @@ export default async function FeedPage({ searchParams }: FeedProps) {
 
   // SSR: fetch boards + feed in parallel
   let initialFeedResult: SessionFeedResult | null = null;
-  let initialMyBoards: import('@boardsesh/shared-schema').UserBoard[] | null = null;
+  let initialMyBoards: UserBoard[] | null = null;
 
   if (authToken) {
     const feedPromise =

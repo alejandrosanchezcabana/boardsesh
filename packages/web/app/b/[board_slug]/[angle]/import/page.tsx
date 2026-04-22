@@ -3,8 +3,9 @@ import { notFound, redirect } from 'next/navigation';
 import { resolveBoardBySlug, boardToRouteParams } from '@/app/lib/board-slug-utils';
 import { constructBoardSlugListUrl } from '@/app/lib/url-utils';
 import MoonBoardBulkImport from '@/app/components/moonboard-import/moonboard-bulk-import';
-import { MOONBOARD_LAYOUTS, MOONBOARD_SETS, MoonBoardLayoutKey } from '@/app/lib/moonboard-config';
-import { Metadata } from 'next';
+import type { MoonBoardLayoutKey } from '@/app/lib/moonboard-config';
+import { MOONBOARD_LAYOUTS, MOONBOARD_SETS } from '@/app/lib/moonboard-config';
+import type { Metadata } from 'next';
 
 export const metadata: Metadata = {
   title: 'Import Climbs | Boardsesh',

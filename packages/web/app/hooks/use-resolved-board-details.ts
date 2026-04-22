@@ -2,7 +2,7 @@
 
 import { useParams, usePathname, useSearchParams } from 'next/navigation';
 import { parseBoardRouteParams, isNumericId } from '@/app/lib/url-utils';
-import { BoardRouteParametersWithUuid, BoardDetails, BoardRouteIdentity } from '@/app/lib/types';
+import type { BoardRouteParametersWithUuid, BoardDetails, BoardRouteIdentity } from '@/app/lib/types';
 import { getBoardDetailsForBoard } from '@/app/lib/board-utils';
 
 /**

@@ -6,7 +6,24 @@
     "typeCheck": true
   },
   "rules": {
-    "@typescript-eslint/no-explicit-any": "deny"
+    "@typescript-eslint/no-explicit-any": "deny",
+    "no-unused-vars": "error",
+    "import/no-cycle": "error",
+    "prefer-const": "error",
+    "no-template-curly-in-string": "error",
+    "eqeqeq": ["error", "smart"],
+    "@typescript-eslint/return-await": "error",
+    "@typescript-eslint/await-thenable": "error",
+    "@typescript-eslint/no-misused-spread": "error",
+    "@typescript-eslint/no-redundant-type-constituents": "error",
+    "@typescript-eslint/no-useless-default-assignment": "error",
+    "@typescript-eslint/restrict-template-expressions": "error",
+    "@typescript-eslint/unbound-method": "error",
+    "@typescript-eslint/no-floating-promises": "error",
+    "@typescript-eslint/no-misused-promises": ["error", { "checksVoidReturn": false }],
+    "@typescript-eslint/consistent-type-imports": "error",
+    "@typescript-eslint/no-unnecessary-type-assertion": "error",
+    "no-console": ["error", { "allow": ["warn", "error", "info"] }]
   },
   "ignorePatterns": [
     "dist/**",
@@ -14,7 +31,7 @@
     ".next/**",
     "out/**",
     "build/**",
-    "board-controller/**",
+    "**/board-controller/**",
     "embedded/**",
     "packages/board-renderer-wasm/pkg/**"
   ]

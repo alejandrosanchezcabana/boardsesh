@@ -208,7 +208,7 @@ export default function CreateProposalForm({
               <Select
                 value={selectedAngle}
                 label="Angle"
-                onChange={(e) => setSelectedAngle(e.target.value as number | 'all')}
+                onChange={(e) => setSelectedAngle(e.target.value)}
                 MenuProps={{ PaperProps: { sx: { maxHeight: 300 } } }}
               >
                 {boardAngles.map((a) => (

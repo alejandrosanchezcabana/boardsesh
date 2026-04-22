@@ -11,7 +11,8 @@ import EditOutlined from '@mui/icons-material/EditOutlined';
 import CloseOutlined from '@mui/icons-material/CloseOutlined';
 import HistoryOutlined from '@mui/icons-material/HistoryOutlined';
 import { useQueueActions, useQueueList, useSessionData } from '../graphql-queue';
-import QueueList, { QueueListHandle } from '../queue-control/queue-list';
+import type { QueueListHandle } from '../queue-control/queue-list';
+import QueueList from '../queue-control/queue-list';
 import SwipeableDrawer from '../swipeable-drawer/swipeable-drawer';
 import { usePullToClose } from '@/app/lib/hooks/pull-to-close';
 import { useDrawerDragResize } from '@/app/hooks/use-drawer-drag-resize';
@@ -133,6 +134,7 @@ const QueueDrawer: React.FC<QueueDrawerProps> = ({ open, onClose, onTransitionEn
       // Always propagate to parent for lifecycle management
       onTransitionEnd?.(transitionOpen);
     },
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- queuePaperRef is a stable ref
     [onTransitionEnd],
   );
 

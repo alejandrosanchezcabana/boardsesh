@@ -1,5 +1,6 @@
-import { openDB, IDBPDatabase } from 'idb';
-import { SearchRequestPagination } from '@/app/lib/types';
+import type { IDBPDatabase } from 'idb';
+import { openDB } from 'idb';
+import type { SearchRequestPagination } from '@/app/lib/types';
 
 export type RecentSearch = {
   id: string;

@@ -1,5 +1,6 @@
 import { getServerSession } from 'next-auth/next';
-import { NextRequest, NextResponse } from 'next/server';
+import type { NextRequest } from 'next/server';
+import { NextResponse } from 'next/server';
 import { getDb } from '@/app/lib/db/db';
 import * as schema from '@/app/lib/db/schema';
 import { eq, and } from 'drizzle-orm';
@@ -7,7 +8,7 @@ import { z } from 'zod';
 import { authOptions } from '@/app/lib/auth/auth-options';
 import { encrypt, decrypt } from '@boardsesh/crypto';
 import AuroraClimbingClient from '@/app/lib/api-wrappers/aurora-rest-client/aurora-rest-client';
-import { AuroraBoardName } from '@/app/lib/api-wrappers/aurora/types';
+import type { AuroraBoardName } from '@/app/lib/api-wrappers/aurora/types';
 
 const saveCredentialsSchema = z.object({
   boardType: z.enum(['kilter', 'tension']),

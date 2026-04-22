@@ -2,7 +2,6 @@ import type { ClimbQueueItem } from '@boardsesh/shared-schema';
 import { db } from '../../db/client';
 import { sessions, sessionQueues } from '../../db/schema';
 import { eq } from 'drizzle-orm';
-import type { RedisSessionStore } from '../redis-session-store';
 import type { DistributedStateManager } from '../distributed-state';
 import { isForeignKeyViolation, type PendingWrite } from './types';
 
@@ -88,7 +87,7 @@ export class WriteScheduler {
           await writeQueueStateToPostgres(sessionId, state, this);
           this.pendingWrites.delete(sessionId);
           this.postgresWriteTimers.delete(sessionId);
-          console.log(`[RoomManager] Debounced Postgres write completed for session ${sessionId}`);
+          console.info(`[RoomManager] Debounced Postgres write completed for session ${sessionId}`);
         } catch (error) {
           console.error(`[RoomManager] Debounced Postgres write failed for session ${sessionId}:`, error);
           // Retry with exponential backoff instead of giving up
@@ -146,7 +145,7 @@ export class WriteScheduler {
     this.writeRetryAttempts.set(sessionId, attempts + 1);
     const delay = this.calculateRetryDelay(attempts);
 
-    console.log(
+    console.info(
       `[RoomManager] Scheduling retry ${attempts + 1}/${MAX_RETRY_ATTEMPTS} ` +
         `for session ${sessionId} in ${delay}ms`,
     );
@@ -167,7 +166,7 @@ export class WriteScheduler {
           await writeQueueStateToPostgres(sessionId, currentState, this);
           this.pendingWrites.delete(sessionId);
           this.writeRetryAttempts.delete(sessionId);
-          console.log(`[RoomManager] Retry successful for session ${sessionId}`);
+          console.info(`[RoomManager] Retry successful for session ${sessionId}`);
         } catch (error) {
           console.error(`[RoomManager] Retry ${attempts + 1} failed for session ${sessionId}:`, error);
           await this.retryPostgresWrite(sessionId, currentState, error);
@@ -183,7 +182,7 @@ export class WriteScheduler {
    * Called on graceful shutdown to ensure durability.
    */
   async flushPendingWrites(sessionGraceTimers: Map<string, NodeJS.Timeout>): Promise<void> {
-    console.log(`[RoomManager] Flushing ${this.pendingWrites.size} pending writes to Postgres...`);
+    console.info(`[RoomManager] Flushing ${this.pendingWrites.size} pending writes to Postgres...`);
 
     const writePromises: Promise<void>[] = [];
 
@@ -219,7 +218,7 @@ export class WriteScheduler {
     }
     sessionGraceTimers.clear();
 
-    console.log('[RoomManager] All pending writes flushed');
+    console.info('[RoomManager] All pending writes flushed');
   }
 }
 

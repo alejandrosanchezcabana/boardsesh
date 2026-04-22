@@ -7,8 +7,8 @@ import { track } from '@vercel/analytics';
 import { useQueueActions } from '../graphql-queue';
 import { useFavorite } from './use-favorite';
 import { constructCreateClimbUrl, constructClimbInfoUrl, getContextAwareClimbViewUrl } from '@/app/lib/url-utils';
-import { Climb, BoardDetails } from '@/app/lib/types';
-import { UseClimbActionsReturn } from './types';
+import type { Climb, BoardDetails } from '@/app/lib/types';
+import type { UseClimbActionsReturn } from './types';
 import { openExternalUrl } from '@/app/lib/open-external-url';
 import { useAuthModal } from '@/app/components/providers/auth-modal-provider';
 
@@ -217,7 +217,7 @@ export function useClimbActions({
         }
       }
     }
-  }, [climb, viewDetailsUrl, boardDetails.board_name, onActionComplete]);
+  }, [climb, viewDetailsUrl, boardDetails.board_name, onActionComplete, showMessage]);
 
   return {
     // Action handlers

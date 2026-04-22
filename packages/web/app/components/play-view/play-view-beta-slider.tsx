@@ -13,7 +13,7 @@ import PlayArrowOutlined from '@mui/icons-material/PlayArrowOutlined';
 import VideocamOutlined from '@mui/icons-material/VideocamOutlined';
 import { Instagram, PersonOutlined } from '@mui/icons-material';
 import { useQuery } from '@tanstack/react-query';
-import { BetaLink } from '@/app/lib/api-wrappers/sync-api-types';
+import type { BetaLink } from '@/app/lib/api-wrappers/sync-api-types';
 import { dedupeBetaLinks, getInstagramEmbedUrl } from '@/app/lib/instagram-url';
 import { themeTokens } from '@/app/theme/theme-config';
 

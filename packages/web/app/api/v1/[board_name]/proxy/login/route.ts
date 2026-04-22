@@ -4,10 +4,10 @@ import { boardUsers } from '@/app/lib/db/schema';
 import { NextResponse } from 'next/server';
 import { z } from 'zod';
 import AuroraClimbingClient from '@/app/lib/api-wrappers/aurora-rest-client/aurora-rest-client';
-import { BoardOnlyRouteParameters } from '@/app/lib/types';
+import type { BoardOnlyRouteParameters } from '@/app/lib/types';
 import { syncUserData } from '@/app/lib/data-sync/aurora/user-sync';
-import { Session } from '@/app/lib/api-wrappers/aurora-rest-client/types';
-import { AuroraBoardName } from '@/app/lib/api-wrappers/aurora/types';
+import type { Session } from '@/app/lib/api-wrappers/aurora-rest-client/types';
+import type { AuroraBoardName } from '@/app/lib/api-wrappers/aurora/types';
 import { getSession } from '@/app/lib/session';
 import { isAuroraBoardName } from '@/app/lib/board-constants';
 

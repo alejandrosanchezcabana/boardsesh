@@ -1,6 +1,6 @@
 import React from 'react';
 import { ImageResponse } from '@vercel/og';
-import { NextRequest } from 'next/server';
+import type { NextRequest } from 'next/server';
 import { themeTokens } from '@/app/theme/theme-config';
 import { formatBoardDisplayName } from '@/app/lib/string-utils';
 import { createOgImageHeaders, OG_IMAGE_HEIGHT, OG_IMAGE_WIDTH } from '@/app/lib/seo/og';

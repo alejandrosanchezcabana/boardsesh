@@ -4,10 +4,10 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { useSnackbar } from '@/app/components/providers/snackbar-provider';
 import { track } from '@vercel/analytics';
 import * as Sentry from '@sentry/nextjs';
-import { BoardDetails } from '@/app/lib/types';
+import type { BoardDetails } from '@/app/lib/types';
 import { getAuroraBluetoothPacket, parseApiLevel } from './bluetooth-aurora';
 import { getMoonboardBluetoothPacket } from './bluetooth-moonboard';
-import { HoldRenderData } from '../board-renderer/types';
+import type { HoldRenderData } from '../board-renderer/types';
 import { useWakeLock } from './use-wake-lock';
 import type { BluetoothAdapter } from '@/app/lib/ble/types';
 import { createBluetoothAdapter } from '@/app/lib/ble/adapter-factory';
@@ -210,7 +210,7 @@ export function useBoardBluetooth({ boardDetails, onConnectionChange }: UseBoard
   const disconnect = useCallback(() => {
     unsubDisconnectRef.current?.();
     unsubDisconnectRef.current = null;
-    adapterRef.current?.disconnect();
+    void adapterRef.current?.disconnect();
     adapterRef.current = null;
     setIsConnected(false);
     onConnectionChange?.(false);
@@ -220,7 +220,7 @@ export function useBoardBluetooth({ boardDetails, onConnectionChange }: UseBoard
   useEffect(() => {
     return () => {
       unsubDisconnectRef.current?.();
-      adapterRef.current?.disconnect();
+      void adapterRef.current?.disconnect();
     };
   }, []);
 

@@ -1,5 +1,5 @@
 // @vitest-environment jsdom
-import { describe, it, expect, vi, beforeEach } from 'vite-plus/test';
+import { describe, it, expect, vi } from 'vite-plus/test';
 import React from 'react';
 import { render, screen, fireEvent } from '@testing-library/react';
 

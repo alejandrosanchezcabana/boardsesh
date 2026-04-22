@@ -1,5 +1,5 @@
 import React from 'react';
-import { Metadata } from 'next';
+import type { Metadata } from 'next';
 import { redirect } from 'next/navigation';
 import { getProfileData } from '../profile/[user_id]/server-profile-data';
 import { fetchProfileStatsData } from '../profile/[user_id]/server-profile-stats';

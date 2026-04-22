@@ -17,17 +17,12 @@ import {
   CompressOutlined,
 } from '@mui/icons-material';
 import { useSession } from 'next-auth/react';
-import { BoardDetails } from '@/app/lib/types';
-import { HoldRenderData } from '../board-renderer/types';
+import type { BoardDetails } from '@/app/lib/types';
+import type { HoldRenderData } from '../board-renderer/types';
 import { getImageUrl } from '../board-renderer/util';
 import { themeTokens } from '@/app/theme/theme-config';
-import {
-  HoldClassificationWizardProps,
-  HoldType,
-  HoldClassification,
-  HOLD_TYPE_OPTIONS,
-  StoredHoldClassification,
-} from './types';
+import type { HoldClassificationWizardProps, HoldType, HoldClassification, StoredHoldClassification } from './types';
+import { HOLD_TYPE_OPTIONS } from './types';
 import DirectionPicker from './direction-picker';
 import styles from './hold-classification-wizard.module.css';
 
@@ -176,7 +171,7 @@ const HoldClassificationWizard: React.FC<HoldClassificationWizardProps> = ({
   // Load existing classifications when the wizard opens
   useEffect(() => {
     if (open && sessionStatus === 'authenticated' && boardDetails) {
-      loadClassifications();
+      void loadClassifications();
     }
     if (open) {
       setCurrentIndex(0);
@@ -214,7 +209,7 @@ const HoldClassificationWizard: React.FC<HoldClassificationWizardProps> = ({
         setSaving(false);
       }
     },
-    [boardDetails],
+    [boardDetails, showMessage],
   );
 
   // Debounced save - waits 500ms after last change before saving
@@ -231,7 +226,7 @@ const HoldClassificationWizard: React.FC<HoldClassificationWizardProps> = ({
       // Set new timeout
       saveTimeoutRef.current = setTimeout(() => {
         if (pendingSaveRef.current) {
-          doSaveClassification(pendingSaveRef.current.holdId, pendingSaveRef.current.classification);
+          void doSaveClassification(pendingSaveRef.current.holdId, pendingSaveRef.current.classification);
           pendingSaveRef.current = null;
         }
       }, 500);
@@ -246,7 +241,7 @@ const HoldClassificationWizard: React.FC<HoldClassificationWizardProps> = ({
       saveTimeoutRef.current = null;
     }
     if (pendingSaveRef.current) {
-      doSaveClassification(pendingSaveRef.current.holdId, pendingSaveRef.current.classification);
+      void doSaveClassification(pendingSaveRef.current.holdId, pendingSaveRef.current.classification);
       pendingSaveRef.current = null;
     }
   }, [doSaveClassification]);
@@ -267,7 +262,7 @@ const HoldClassificationWizard: React.FC<HoldClassificationWizardProps> = ({
   }, [currentHold, classifications]);
 
   const handleHoldTypeSelect = useCallback(
-    async (holdType: HoldType) => {
+    (holdType: HoldType) => {
       if (!currentHold) return;
 
       const current = getCurrentClassification();
@@ -278,13 +273,13 @@ const HoldClassificationWizard: React.FC<HoldClassificationWizardProps> = ({
       };
 
       setClassifications(new Map(classifications).set(currentHold.id, updated));
-      await saveClassification(currentHold.id, updated);
+      saveClassification(currentHold.id, updated);
     },
     [currentHold, classifications, getCurrentClassification, saveClassification],
   );
 
   const handleHandRatingChange = useCallback(
-    async (rating: number) => {
+    (rating: number) => {
       if (!currentHold) return;
 
       const current = getCurrentClassification();
@@ -295,13 +290,13 @@ const HoldClassificationWizard: React.FC<HoldClassificationWizardProps> = ({
       };
 
       setClassifications(new Map(classifications).set(currentHold.id, updated));
-      await saveClassification(currentHold.id, updated);
+      saveClassification(currentHold.id, updated);
     },
     [currentHold, classifications, getCurrentClassification, saveClassification],
   );
 
   const handleFootRatingChange = useCallback(
-    async (rating: number) => {
+    (rating: number) => {
       if (!currentHold) return;
 
       const current = getCurrentClassification();
@@ -312,13 +307,13 @@ const HoldClassificationWizard: React.FC<HoldClassificationWizardProps> = ({
       };
 
       setClassifications(new Map(classifications).set(currentHold.id, updated));
-      await saveClassification(currentHold.id, updated);
+      saveClassification(currentHold.id, updated);
     },
     [currentHold, classifications, getCurrentClassification, saveClassification],
   );
 
   const handlePullDirectionChange = useCallback(
-    async (direction: number) => {
+    (direction: number) => {
       if (!currentHold) return;
 
       const current = getCurrentClassification();
@@ -329,7 +324,7 @@ const HoldClassificationWizard: React.FC<HoldClassificationWizardProps> = ({
       };
 
       setClassifications(new Map(classifications).set(currentHold.id, updated));
-      await saveClassification(currentHold.id, updated);
+      saveClassification(currentHold.id, updated);
     },
     [currentHold, classifications, getCurrentClassification, saveClassification],
   );

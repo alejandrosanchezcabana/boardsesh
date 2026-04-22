@@ -45,7 +45,7 @@ export default function NewClimbFeed({
   const [subscribed, setSubscribed] = useState(isSubscribed);
   const queryClient = useQueryClient();
 
-  const queryKey = ['newClimbFeed', boardType, layoutId] as const;
+  const queryKey = useMemo(() => ['newClimbFeed', boardType, layoutId] as const, [boardType, layoutId]);
 
   const ensureWsClient = useCallback(() => {
     if (!clientRef.current) {
@@ -124,7 +124,7 @@ export default function NewClimbFeed({
       subscriptionRef.current?.();
       subscriptionRef.current = undefined;
     };
-  }, [boardType, layoutId, ensureWsClient, queryClient]); // queryKey uses boardType+layoutId which are already deps
+  }, [boardType, layoutId, ensureWsClient, queryClient, queryKey]); // queryKey uses boardType+layoutId which are already deps
 
   return (
     <Box>

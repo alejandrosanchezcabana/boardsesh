@@ -43,7 +43,7 @@ export async function restoreSessionWithLock(
     }
   } else {
     // Lock not acquired - wait with exponential backoff for restoration to complete
-    return await waitForRestoration(sessionId, sessionsMap, redisStore, getSessionById);
+    return waitForRestoration(sessionId, sessionsMap, redisStore, getSessionById);
   }
 }
 
@@ -63,7 +63,7 @@ async function tryRestoreFromStores(
   // Try to restore session from Redis first (hot cache)
   const redisSession = await redisStore.getSession(sessionId);
   if (redisSession) {
-    console.log(`[RoomManager] Restoring session ${sessionId} from Redis (inactive session)`);
+    console.info(`[RoomManager] Restoring session ${sessionId} from Redis (inactive session)`);
   } else {
     // Not in Redis, try Postgres (dormant session)
     isNewSession = await restoreFromPostgres(sessionId, redisStore, getSessionById);
@@ -84,7 +84,7 @@ async function restoreFromPostgres(
 ): Promise<boolean> {
   const pgSession = await getSessionById(sessionId);
   if (pgSession && pgSession.status !== 'ended') {
-    console.log(`[RoomManager] Restoring session ${sessionId} from Postgres (dormant session)`);
+    console.info(`[RoomManager] Restoring session ${sessionId} from Postgres (dormant session)`);
     const queueState = await getQueueState(sessionId, redisStore);
     await redisStore.saveSession({
       sessionId: pgSession.id,
@@ -119,7 +119,7 @@ async function waitForRestoration(
   redisStore: RedisSessionStore,
   getSessionById: (id: string) => Promise<Session | null>,
 ): Promise<boolean> {
-  console.log(`[RoomManager] Lock not acquired for session ${sessionId}, waiting with backoff...`);
+  console.info(`[RoomManager] Lock not acquired for session ${sessionId}, waiting with backoff...`);
   let waitTime = 50;
   const maxWait = 2000;
   const maxAttempts = 5;
@@ -130,7 +130,7 @@ async function waitForRestoration(
 
     // Check if session was restored by another instance
     if (sessionsMap.has(sessionId)) {
-      console.log(`[RoomManager] Session ${sessionId} restored by another instance after ${attempt + 1} attempts`);
+      console.info(`[RoomManager] Session ${sessionId} restored by another instance after ${attempt + 1} attempts`);
       sessionRestored = true;
       break;
     }
@@ -144,7 +144,7 @@ async function waitForRestoration(
     // Check Redis to see if the session was restored by another instance
     const redisSession = await redisStore.getSession(sessionId);
     if (redisSession) {
-      console.log(`[RoomManager] Session ${sessionId} found in Redis after backoff, using restored state`);
+      console.info(`[RoomManager] Session ${sessionId} found in Redis after backoff, using restored state`);
       sessionsMap.set(sessionId, new Set());
       return false;
     }
@@ -152,9 +152,9 @@ async function waitForRestoration(
     // Session doesn't exist in Redis - check Postgres as fallback
     const isNew = await restoreFromPostgres(sessionId, redisStore, getSessionById);
     if (!isNew) {
-      console.log(`[RoomManager] Session ${sessionId} found in Postgres after backoff, restoring`);
+      console.info(`[RoomManager] Session ${sessionId} found in Postgres after backoff, restoring`);
     } else {
-      console.log(`[RoomManager] Session ${sessionId} not found after backoff, treating as new session`);
+      console.info(`[RoomManager] Session ${sessionId} not found after backoff, treating as new session`);
     }
     sessionsMap.set(sessionId, new Set());
     return isNew;

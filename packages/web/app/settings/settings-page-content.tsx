@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import Box from '@mui/material/Box';
 import Stack from '@mui/material/Stack';
 import MuiDivider from '@mui/material/Divider';
@@ -136,7 +136,7 @@ export default function SettingsPageContent() {
   const [healthKitAvailable, setHealthKitAvailable] = useState(false);
   useEffect(() => {
     let cancelled = false;
-    isHealthKitAvailable().then((v) => {
+    void isHealthKitAvailable().then((v) => {
       if (!cancelled) setHealthKitAvailable(v);
     });
     return () => {
@@ -151,23 +151,7 @@ export default function SettingsPageContent() {
     }
   }, [status, router]);
 
-  // Fetch profile on mount
-  useEffect(() => {
-    if (status === 'authenticated') {
-      fetchProfile();
-    }
-  }, [status]);
-
-  // Clean up preview URL when component unmounts
-  useEffect(() => {
-    return () => {
-      if (previewUrl && previewUrl.startsWith('blob:')) {
-        URL.revokeObjectURL(previewUrl);
-      }
-    };
-  }, [previewUrl]);
-
-  const fetchProfile = async () => {
+  const fetchProfile = useCallback(async () => {
     try {
       const response = await fetch('/api/internal/profile');
       if (!response.ok) {
@@ -186,7 +170,23 @@ export default function SettingsPageContent() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [showMessage]);
+
+  // Fetch profile on mount
+  useEffect(() => {
+    if (status === 'authenticated') {
+      void fetchProfile();
+    }
+  }, [status, fetchProfile]);
+
+  // Clean up preview URL when component unmounts
+  useEffect(() => {
+    return () => {
+      if (previewUrl && previewUrl.startsWith('blob:')) {
+        URL.revokeObjectURL(previewUrl);
+      }
+    };
+  }, [previewUrl]);
 
   const handleFileSelect = async (file: File): Promise<void> => {
     if (!ALLOWED_TYPES.includes(file.type)) {
@@ -558,7 +558,7 @@ export default function SettingsPageContent() {
                 exclusive
                 onChange={(_e, newFormat) => {
                   if (newFormat !== null) {
-                    setGradeFormat(newFormat);
+                    void setGradeFormat(newFormat);
                   }
                 }}
                 disabled={!gradeFormatLoaded}

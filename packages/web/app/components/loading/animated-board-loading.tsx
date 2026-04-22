@@ -3,8 +3,8 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import Typography from '@mui/material/Typography';
 import BoardRenderer from '../board-renderer/board-renderer';
-import { BoardDetails } from '@/app/lib/types';
-import { LitUpHoldsMap } from '../board-renderer/types';
+import type { BoardDetails } from '@/app/lib/types';
+import type { LitUpHoldsMap } from '../board-renderer/types';
 import { themeTokens } from '@/app/theme/theme-config';
 
 const loadingMessages = [

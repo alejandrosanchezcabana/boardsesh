@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
-import { getSizeBySlug, SizeRow } from '@/app/lib/slug-utils';
-import { BoardName, LayoutId } from '@/app/lib/types';
+import type { SizeRow } from '@/app/lib/slug-utils';
+import { getSizeBySlug } from '@/app/lib/slug-utils';
+import type { BoardName } from '@/app/lib/types';
 
 export async function GET(
   req: Request,
@@ -10,7 +11,7 @@ export async function GET(
   const { board_name, layout_id, slug } = params;
 
   try {
-    const size = await getSizeBySlug(board_name as BoardName, Number(layout_id) as LayoutId, slug);
+    const size = await getSizeBySlug(board_name as BoardName, Number(layout_id), slug);
 
     if (!size) {
       return NextResponse.json(

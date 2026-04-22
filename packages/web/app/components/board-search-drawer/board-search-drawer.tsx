@@ -59,7 +59,7 @@ export default function BoardSearchDrawer({ open, onClose, onBoardOpen }: BoardS
   useEffect(() => {
     if (!open || requestedGeo) return;
     setRequestedGeo(true);
-    requestPermission();
+    void requestPermission();
   }, [open, requestedGeo, requestPermission]);
 
   useEffect(() => {

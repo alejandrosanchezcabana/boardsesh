@@ -28,7 +28,7 @@ export class NotificationWorker {
 
   start(): void {
     this.eventBroker.startConsumer(this.processEvent.bind(this));
-    console.log('[NotificationWorker] Started');
+    console.info('[NotificationWorker] Started');
   }
 
   private async processEvent(event: SocialEvent): Promise<void> {

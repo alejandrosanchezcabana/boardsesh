@@ -1,6 +1,6 @@
-import { HoldRenderData, LitUpHoldsMap } from '../components/board-renderer/types';
+import type { HoldRenderData, LitUpHoldsMap } from '../components/board-renderer/types';
 import type { BoardName as SharedBoardName } from '@boardsesh/shared-schema';
-import { SetIdList } from './board-data';
+import type { SetIdList } from './board-data';
 
 export type Climb = {
   uuid: string;

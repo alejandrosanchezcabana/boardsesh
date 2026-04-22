@@ -26,7 +26,7 @@ export default function GymSelector({ selectedGymUuid, onSelect }: GymSelectorPr
   const { data, isLoading } = useQuery({
     queryKey: ['myGyms'],
     queryFn: async () => {
-      const client = createGraphQLHttpClient(token!);
+      const client = createGraphQLHttpClient(token);
       const response = await client.request<GetMyGymsQueryResponse, GetMyGymsQueryVariables>(GET_MY_GYMS, {
         input: { limit: 50 },
       });

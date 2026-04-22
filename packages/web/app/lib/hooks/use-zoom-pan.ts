@@ -178,8 +178,8 @@ export function useZoomPan({ enabled = true }: UseZoomPanOptions = {}): UseZoomP
         // Zoom toward cursor position
         const rect = containerElRef.current?.getBoundingClientRect();
         if (rect) {
-          const cursorX = (event as WheelEvent).clientX - rect.left - rect.width / 2;
-          const cursorY = (event as WheelEvent).clientY - rect.top - rect.height / 2;
+          const cursorX = event.clientX - rect.left - rect.width / 2;
+          const cursorY = event.clientY - rect.top - rect.height / 2;
           const scaleDiff = newScale - scaleRef.current;
           translateRef.current.x -= (cursorX * scaleDiff) / newScale;
           translateRef.current.y -= (cursorY * scaleDiff) / newScale;

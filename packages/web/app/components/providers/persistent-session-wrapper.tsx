@@ -18,7 +18,7 @@ import { PlaylistsProvider } from '../climb-actions/playlists-batch-context';
 import { useClimbActionsData } from '@/app/hooks/use-climb-actions-data';
 import ErrorBoundary from '../error-boundary';
 import bottomBarStyles from '../bottom-tab-bar/bottom-bar-wrapper.module.css';
-import { BoardConfigData } from '@/app/lib/server-board-configs';
+import type { BoardConfigData } from '@/app/lib/server-board-configs';
 import { isBoardRoutePath } from '@/app/lib/board-route-paths';
 import GlobalHeader from '../global-header/global-header';
 import SessionSummaryDialog from '../session-summary/session-summary-dialog';
@@ -172,7 +172,7 @@ function RootQueueControlBarWithProviders({
   const { queue } = useQueueList();
 
   const climbUuids = useMemo(() => {
-    const queueUuids = queue.map((item) => item.climb?.uuid).filter(Boolean) as string[];
+    const queueUuids = queue.map((item) => item.climb?.uuid).filter(Boolean);
     if (currentClimb?.uuid) {
       queueUuids.push(currentClimb.uuid);
     }

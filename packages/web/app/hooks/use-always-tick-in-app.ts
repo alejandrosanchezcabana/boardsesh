@@ -6,7 +6,7 @@ export function useAlwaysTickInApp() {
   const [loaded, setLoaded] = useState(false);
 
   useEffect(() => {
-    getAlwaysTickInApp().then((value) => {
+    void getAlwaysTickInApp().then((value) => {
       setAlwaysUseApp(value);
       setLoaded(true);
     });

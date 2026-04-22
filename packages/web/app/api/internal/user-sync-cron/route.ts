@@ -6,7 +6,7 @@ import { eq, and, or, isNotNull, asc } from 'drizzle-orm';
 import { decrypt, encrypt } from '@boardsesh/crypto';
 import * as schema from '@/app/lib/db/schema';
 import AuroraClimbingClient from '@/app/lib/api-wrappers/aurora-rest-client/aurora-rest-client';
-import { AuroraBoardName } from '@/app/lib/api-wrappers/aurora/types';
+import type { AuroraBoardName } from '@/app/lib/api-wrappers/aurora/types';
 
 export const dynamic = 'force-dynamic';
 export const maxDuration = 300; // 5 minutes max
@@ -55,7 +55,7 @@ export async function GET(request: Request) {
     }
 
     if (credentials.length === 0) {
-      console.log('[User Sync Cron] No users to sync');
+      console.info('[User Sync Cron] No users to sync');
       return NextResponse.json({
         success: true,
         results: { total: 0, successful: 0, failed: 0, errors: [] },
@@ -63,7 +63,7 @@ export async function GET(request: Request) {
       });
     }
 
-    console.log(
+    console.info(
       `[User Sync Cron] Syncing 1 user (oldest lastSyncAt): ${credentials[0].userId} (${credentials[0].boardType})`,
     );
 
@@ -88,7 +88,6 @@ export async function GET(request: Request) {
         const boardType = cred.boardType as AuroraBoardName;
 
         // Decrypt credentials and get a fresh token
-        let token: string;
         let username: string;
         let password: string;
         try {
@@ -130,7 +129,7 @@ export async function GET(request: Request) {
         }
 
         // Get a fresh token by logging in
-        console.log(`[User Sync Cron] Getting fresh token for user ${cred.userId} (${boardType})...`);
+        console.info(`[User Sync Cron] Getting fresh token for user ${cred.userId} (${boardType})...`);
         const auroraClient = new AuroraClimbingClient({ boardName: boardType });
         let loginResponse;
         try {
@@ -178,7 +177,7 @@ export async function GET(request: Request) {
           continue;
         }
 
-        token = loginResponse.token;
+        const token = loginResponse.token;
 
         // Update the stored token
         const encryptedToken = encrypt(token);
@@ -203,10 +202,10 @@ export async function GET(request: Request) {
 
         // Wait for Aurora session replication across their backend servers
         // Testing if this fixes the 404 errors on Vercel (works locally)
-        console.log('[User Sync Cron] Waiting 5 seconds for Aurora session replication...');
+        console.info('[User Sync Cron] Waiting 5 seconds for Aurora session replication...');
         await new Promise((resolve) => setTimeout(resolve, 5000));
 
-        console.log(`[User Sync Cron] Syncing user ${cred.userId} for ${boardType}...`);
+        console.info(`[User Sync Cron] Syncing user ${cred.userId} for ${boardType}...`);
 
         // syncUserData manages its own connections internally
         await syncUserData(boardType, token, cred.auroraUserId);
@@ -231,7 +230,7 @@ export async function GET(request: Request) {
         }
 
         results.successful++;
-        console.log(`[User Sync Cron] ✓ Successfully synced user ${cred.userId} for ${boardType}`);
+        console.info(`[User Sync Cron] ✓ Successfully synced user ${cred.userId} for ${boardType}`);
       } catch (error) {
         results.failed++;
         const errorMsg = error instanceof Error ? error.message : 'Unknown error';

@@ -87,7 +87,7 @@ export default function CommunitySettingsPanel() {
 
   useEffect(() => {
     if (scope === 'global' || scopeKey) {
-      fetchSettings();
+      void fetchSettings();
     }
   }, [fetchSettings, scope, scopeKey]);
 
@@ -119,7 +119,7 @@ export default function CommunitySettingsPanel() {
       );
       await Promise.all(promises);
       setSnackbar(`Saved ${promises.length} setting${promises.length !== 1 ? 's' : ''}`);
-      fetchSettings();
+      void fetchSettings();
     } catch {
       setSnackbar('Failed to save settings');
     } finally {

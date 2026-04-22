@@ -1,8 +1,8 @@
 'use client';
 
 import React, { useMemo, useState, useEffect } from 'react';
-import { BoardDetails, SearchRequestPagination } from '@/app/lib/types';
-import { HeatmapData, LitUpHoldsMap, HoldState } from '../board-renderer/types';
+import type { BoardDetails, SearchRequestPagination } from '@/app/lib/types';
+import type { HeatmapData, LitUpHoldsMap, HoldState } from '../board-renderer/types';
 import { scaleLog } from 'd3-scale';
 import useHeatmapData from '../search-drawer/use-heatmap';
 import { DEFAULT_SEARCH_PARAMS } from '@/app/lib/url-utils';
@@ -77,7 +77,7 @@ const CreateClimbHeatmapOverlay: React.FC<CreateClimbHeatmapOverlayProps> = ({
   );
 
   // Fetch heatmap data with holds filter
-  const { data: heatmapData = [], loading } = useHeatmapData({
+  const { data: heatmapData, loading } = useHeatmapData({
     boardName: boardDetails.board_name,
     layoutId: boardDetails.layout_id,
     sizeId: boardDetails.size_id,

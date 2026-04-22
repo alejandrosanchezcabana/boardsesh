@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { PropsWithChildren } from 'react';
+import type { PropsWithChildren } from 'react';
 import Tabs from '@mui/material/Tabs';
 import Tab from '@mui/material/Tab';
 import Badge from '@mui/material/Badge';
@@ -9,7 +9,7 @@ import MuiButton from '@mui/material/Button';
 import Box from '@mui/material/Box';
 import { DeleteOutlined } from '@mui/icons-material';
 import { track } from '@vercel/analytics';
-import { BoardDetails } from '@/app/lib/types';
+import type { BoardDetails } from '@/app/lib/types';
 import dynamic from 'next/dynamic';
 
 import { getImageUrl } from '@/app/components/board-renderer/util';

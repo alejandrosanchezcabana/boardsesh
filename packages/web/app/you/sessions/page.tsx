@@ -1,5 +1,5 @@
 import React from 'react';
-import { Metadata } from 'next';
+import type { Metadata } from 'next';
 import { redirect } from 'next/navigation';
 import { getYouSession } from '../you-auth';
 import { cachedUserSessionGroupedFeed } from '@/app/lib/graphql/server-cached-client';

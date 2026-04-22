@@ -1,7 +1,7 @@
 // app/api/v1/[board_name]/proxy/saveClimb/route.ts
 import { saveClimb, saveClimbStats } from '@/app/lib/api-wrappers/aurora/saveClimb';
-import { AuroraBoardName } from '@/app/lib/api-wrappers/aurora/types';
-import { BoardName } from '@/app/lib/types';
+import type { AuroraBoardName } from '@/app/lib/api-wrappers/aurora/types';
+import type { BoardName } from '@/app/lib/types';
 import { encodeMoonBoardHoldsToFrames } from '@/app/lib/moonboard-config';
 import { fontGradeToDifficultyId } from '@/app/lib/board-data';
 import { revalidateClimbSearchTags } from '@/app/lib/climb-search-cache.server';

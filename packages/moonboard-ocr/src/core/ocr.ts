@@ -113,7 +113,7 @@ export function parseHeaderText(lines: string[]): OcrResult {
     }
     // Remove heart emoji and OCR artifacts, trim
     const cleaned = line
-      .replace(/[♡❤️🤍©®]/g, '') // Remove heart, copyright symbols
+      .replace(/♡|❤️|🤍|©|®/gu, '') // Remove heart, copyright symbols
       .replace(/\s*[QO@()&]+\s*$/i, '') // Remove trailing Q/O/@/()/& (OCR error for heart/icons)
       .replace(/^\d+[)\]]\s*/, '') // Remove leading numbers like "0)"
       .replace(/^[yl]\s+/i, '') // Remove leading y/l (OCR artifacts)

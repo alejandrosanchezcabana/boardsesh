@@ -1,5 +1,5 @@
 import { AURORA_BOARDS, SUPPORTED_BOARDS as ALL_SUPPORTED_BOARDS } from '@boardsesh/shared-schema';
-import { Angle, BoardName } from './types';
+import type { Angle, BoardName } from './types';
 import { MOONBOARD_ENABLED, MOONBOARD_ANGLES } from './moonboard-config';
 
 type ImageDimensions = {

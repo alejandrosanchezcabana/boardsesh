@@ -28,9 +28,6 @@ dayjs.extend(isoWeek);
 dayjs.extend(isSameOrAfter);
 dayjs.extend(isSameOrBefore);
 
-// Deduplicate because multiple Font grades map to the same V-grade
-const GRADE_ORDER = [...new Set(Object.values(difficultyMapping))];
-
 // ── Timeframe filtering ─────────────────────────────────────────────
 
 export function filterLogbookByTimeframe(
@@ -530,7 +527,9 @@ export function buildStatisticsSummary(
     sortedByRemainder[i].percentage += 1;
   }
 
-  const layoutPercentages = layoutsWithExactPercentages.map(({ exactPercentage, remainder, ...rest }) => rest);
+  const layoutPercentages = layoutsWithExactPercentages.map(
+    ({ exactPercentage: _exactPercentage, remainder: _remainder, ...rest }) => rest,
+  );
 
   return { totalAscents, layoutPercentages };
 }

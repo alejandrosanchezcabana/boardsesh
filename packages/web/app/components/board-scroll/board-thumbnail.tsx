@@ -2,7 +2,7 @@
 
 import React, { useMemo } from 'react';
 import DashboardOutlined from '@mui/icons-material/DashboardOutlined';
-import { BoardDetails, BoardName } from '@/app/lib/types';
+import type { BoardDetails, BoardName } from '@/app/lib/types';
 import { getBoardDetails } from '@/app/lib/board-constants';
 import { getMoonBoardDetails } from '@/app/lib/moonboard-config';
 import BoardRenderer from '../board-renderer/board-renderer';

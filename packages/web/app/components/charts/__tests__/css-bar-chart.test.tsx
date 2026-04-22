@@ -132,7 +132,6 @@ describe('GroupedBarChart', () => {
     ];
     const { container } = render(<GroupedBarChart bars={bars} />);
     // Only 1 unique label, so no legend entries rendered outside the chart
-    const legendItems = container.querySelectorAll('[class*="MuiBox"]');
     // The chart renders but no legend text for "Flash" outside the chart mock
     // (inside the mock it doesn't render text)
     expect(container.querySelector('[role="img"]')).toBeTruthy();

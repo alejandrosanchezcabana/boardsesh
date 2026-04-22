@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach } from 'vite-plus/test';
+import { describe, it, expect } from 'vite-plus/test';
 import { renderHook, act } from '@testing-library/react';
 import { useEventProcessor } from '../hooks/use-event-processor';
 import type { ClimbQueueItem as LocalClimbQueueItem } from '../../queue-control/types';

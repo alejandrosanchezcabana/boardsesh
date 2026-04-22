@@ -45,7 +45,7 @@ export async function registerConnection(
 
   await multi.exec();
 
-  console.log(
+  console.info(
     `[DistributedState] Registered connection: ${connectionId.slice(0, 8)} on instance: ${instanceId.slice(0, 8)}`,
   );
 }
@@ -98,7 +98,7 @@ export async function removeConnection(
 
   await multi.exec();
 
-  console.log(`[DistributedState] Removed connection: ${connectionId.slice(0, 8)}`);
+  console.info(`[DistributedState] Removed connection: ${connectionId.slice(0, 8)}`);
 
   // Automatically elect new leader if was leader and requested
   let newLeaderId: string | null = null;
@@ -125,7 +125,7 @@ async function electLeaderAfterRemoval(redis: Redis, sessionId: string, connecti
     )) as string | null;
 
     if (newLeaderId) {
-      console.log(
+      console.info(
         `[DistributedState] Elected new leader: ${newLeaderId.slice(0, 8)} after removing ${connectionId.slice(0, 8)}`,
       );
     }
@@ -174,7 +174,7 @@ async function electLeaderFallback(redis: Redis, sessionId: string, connectionId
       const chosenLeader = earliestCandidate || candidates[0];
       await redis.set(KEYS.sessionLeader(sessionId), chosenLeader, 'EX', TTL.sessionMembership);
       await redis.hset(KEYS.connection(chosenLeader), 'isLeader', 'true');
-      console.log(
+      console.info(
         `[DistributedState] Fallback elected leader: ${chosenLeader.slice(0, 8)} after removing ${connectionId.slice(0, 8)}`,
       );
       return chosenLeader;

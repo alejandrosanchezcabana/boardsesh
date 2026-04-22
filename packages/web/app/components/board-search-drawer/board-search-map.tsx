@@ -5,6 +5,7 @@ import Box from '@mui/material/Box';
 import MuiButton from '@mui/material/Button';
 import MyLocationOutlined from '@mui/icons-material/MyLocationOutlined';
 import type { Map as LeafletMap, Marker as LeafletMarker, LayerGroup as LeafletLayerGroup } from 'leaflet';
+import type * as LeafletNamespace from 'leaflet';
 import type { UserBoard } from '@boardsesh/shared-schema';
 import { themeTokens } from '@/app/theme/theme-config';
 import markerStyles from './board-search-map.module.css';
@@ -47,7 +48,7 @@ export default function BoardSearchMap({
 }: BoardSearchMapProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<LeafletMap | null>(null);
-  const leafletRef = useRef<typeof import('leaflet') | null>(null);
+  const leafletRef = useRef<typeof LeafletNamespace | null>(null);
   const markersLayerRef = useRef<LeafletLayerGroup | null>(null);
   const markersByUuidRef = useRef<Map<string, LeafletMarker>>(new Map());
   const onViewportChangeRef = useRef(onViewportChange);
@@ -77,13 +78,15 @@ export default function BoardSearchMap({
     let cancelled = false;
     let resizeObserver: ResizeObserver | null = null;
 
+    const markersByUuid = markersByUuidRef.current;
+
     // The `leaflet/dist/leaflet.css` import loads the Leaflet stylesheet via
     // Next.js's CSS import handling. It isn't a real ES module so TypeScript
     // can't type-check it — hence the @ts-expect-error. Do NOT remove the
     // import thinking it's dead code: without it, tile panes, zoom controls,
     // and attribution render unstyled.
     // @ts-expect-error — CSS dynamic import handled by Next.js bundler
-    Promise.all([import('leaflet'), import('leaflet/dist/leaflet.css')]).then(([L]) => {
+    void Promise.all([import('leaflet'), import('leaflet/dist/leaflet.css')]).then(([L]) => {
       if (cancelled || !containerRef.current) return;
 
       const map = L.map(containerRef.current, {
@@ -148,7 +151,7 @@ export default function BoardSearchMap({
         mapRef.current.remove();
         mapRef.current = null;
         markersLayerRef.current = null;
-        markersByUuidRef.current.clear();
+        markersByUuid.clear();
         leafletRef.current = null;
         setMapReady(false);
       }
@@ -286,7 +289,7 @@ export default function BoardSearchMap({
       // async permission request resolves — otherwise the first tap just
       // triggers the permission prompt and looks like a no-op.
       setPendingMyLocation(true);
-      requestPermission();
+      void requestPermission();
     }
   }, [userCoords, requestPermission, flyToUserCoords]);
 

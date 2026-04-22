@@ -224,8 +224,6 @@ describe('CreateClimbForm', () => {
     });
 
     it('shows "Currently active" and is disabled when climb is already active', () => {
-      const previewUuid = 'preview-uuid-123';
-
       mockQueueActions = {
         setCurrentClimb: mockSetCurrentClimb,
         replaceQueueItem: mockReplaceQueueItem,

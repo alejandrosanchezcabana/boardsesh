@@ -1,5 +1,5 @@
 import React from 'react';
-import { PropsWithChildren } from 'react';
+import type { PropsWithChildren } from 'react';
 import { notFound } from 'next/navigation';
 import { resolveBoardBySlug, boardToRouteParams } from '@/app/lib/board-slug-utils';
 import { getBoardDetailsForBoard } from '@/app/lib/board-utils';

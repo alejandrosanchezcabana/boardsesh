@@ -1,7 +1,7 @@
 // app/api/v1/[board_name]/proxy/saveAscent/route.ts
 import { saveAscent } from '@/app/lib/api-wrappers/aurora/saveAscent';
-import { AuroraBoardName } from '@/app/lib/api-wrappers/aurora/types';
-import { BoardOnlyRouteParameters } from '@/app/lib/types';
+import type { AuroraBoardName } from '@/app/lib/api-wrappers/aurora/types';
+import type { BoardOnlyRouteParameters } from '@/app/lib/types';
 import { NextResponse } from 'next/server';
 import { z } from 'zod';
 import { getServerSession } from 'next-auth/next';

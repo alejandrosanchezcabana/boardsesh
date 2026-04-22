@@ -34,7 +34,7 @@ export function createContext(
   };
   connections.set(id, context);
   if (DEBUG) {
-    console.log(
+    console.info(
       `[Context] createContext: ${id} (authenticated: ${isAuthenticated}, userId: ${userId}, controllerId: ${controllerId}, mac: ${controllerMac}). Total connections: ${connections.size}`,
     );
   }
@@ -63,7 +63,9 @@ export function updateContext(connectionId: string, updates: Partial<Omit<Connec
   }
 
   if (DEBUG) {
-    console.log(`[Context] updateContext: ${connectionId} -> sessionId=${updates.sessionId}, userId=${updates.userId}`);
+    console.info(
+      `[Context] updateContext: ${connectionId} -> sessionId=${updates.sessionId}, userId=${updates.userId}`,
+    );
   }
 
   if (updates.sessionId !== undefined) {

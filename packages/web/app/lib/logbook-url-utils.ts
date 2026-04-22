@@ -1,7 +1,6 @@
 import { parseQueryParamBoolean, parseQueryParamInt } from '@/app/lib/url-utils';
 import {
   DEFAULT_ANGLE_RANGE,
-  DEFAULT_FILTERS,
   DEFAULT_SORT,
   type LogbookFilterState,
   type LogbookSortState,

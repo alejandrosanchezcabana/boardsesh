@@ -1,6 +1,5 @@
 import { neon, neonConfig, Pool } from '@neondatabase/serverless';
 import { drizzle as drizzleHttp } from 'drizzle-orm/neon-http';
-import { drizzle } from 'drizzle-orm/neon-serverless';
 import { eq, ne, and, or, isNotNull, sql } from 'drizzle-orm';
 import ws from 'ws';
 
@@ -53,7 +52,7 @@ export class SyncRunner {
     if (this.config.onLog) {
       this.config.onLog(message);
     } else {
-      console.log(message);
+      console.info(message);
     }
   }
 
@@ -231,8 +230,13 @@ export class SyncRunner {
       username = decrypt(cred.encryptedUsername);
       password = decrypt(cred.encryptedPassword);
     } catch (decryptError) {
-      await this.updateCredentialStatus(cred.userId, cred.boardType, 'error', `Decryption failed: ${decryptError}`);
-      throw new Error(`Failed to decrypt credentials: ${decryptError}`);
+      await this.updateCredentialStatus(
+        cred.userId,
+        cred.boardType,
+        'error',
+        `Decryption failed: ${String(decryptError)}`,
+      );
+      throw new Error(`Failed to decrypt credentials: ${String(decryptError)}`);
     }
 
     // Get fresh token by logging in
@@ -247,8 +251,8 @@ export class SyncRunner {
       }
       token = loginResponse.token;
     } catch (loginError) {
-      await this.updateCredentialStatus(cred.userId, cred.boardType, 'error', `Login failed: ${loginError}`);
-      throw new Error(`Failed to login: ${loginError}`);
+      await this.updateCredentialStatus(cred.userId, cred.boardType, 'error', `Login failed: ${String(loginError)}`);
+      throw new Error(`Failed to login: ${String(loginError)}`);
     }
 
     // Update stored token

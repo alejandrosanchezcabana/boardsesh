@@ -24,9 +24,10 @@ import {
   isNumericId,
   tryConstructSlugPlayUrl,
 } from '@/app/lib/url-utils';
-import { BoardRouteParameters, BoardDetails, Angle, Climb } from '@/app/lib/types';
+import type { BoardRouteParameters, BoardDetails, Angle, Climb } from '@/app/lib/types';
 import PreviousClimbButton from './previous-climb-button';
-import QueueList, { QueueListHandle } from './queue-list';
+import type { QueueListHandle } from './queue-list';
+import QueueList from './queue-list';
 import { useSwipeable } from 'react-swipeable';
 import { TickButton } from '../logbook/tick-button';
 import { TickButtonWithLabel } from '../logbook/tick-icon';
@@ -188,7 +189,6 @@ const QueueControlBar: React.FC<QueueControlBarProps> = ({ boardDetails, angle }
   const handleCloseDrawer = useCallback(() => setActiveDrawer('none'), []);
 
   const isViewPage = pathname.includes('/view/');
-  const isListPage = pathname.includes('/list');
   const isPlayPage = pathname.includes('/play/');
   const { currentClimb } = useCurrentClimb();
   const { queue } = useQueueList();
@@ -278,8 +278,8 @@ const QueueControlBar: React.FC<QueueControlBarProps> = ({ boardDetails, angle }
     !isDisconnected &&
     (connectionState === 'reconnecting' || connectionState === 'stale' || connectionState === 'error');
 
-  const nextClimb = useMemo(() => getNextClimbQueueItem(), [getNextClimbQueueItem, queue, currentClimb]);
-  const previousClimb = useMemo(() => getPreviousClimbQueueItem(), [getPreviousClimbQueueItem, queue, currentClimb]);
+  const nextClimb = useMemo(() => getNextClimbQueueItem(), [getNextClimbQueueItem]);
+  const previousClimb = useMemo(() => getPreviousClimbQueueItem(), [getPreviousClimbQueueItem]);
   const shouldNavigate = isViewPage || isPlayPage;
 
   // Build URL for a climb item (for navigation on view/play pages)
@@ -499,7 +499,7 @@ const QueueControlBar: React.FC<QueueControlBarProps> = ({ boardDetails, angle }
         });
     };
 
-    getPreference<boolean>('swipeHint:queueBarSeen').then((seen) => {
+    void getPreference<boolean>('swipeHint:queueBarSeen').then((seen) => {
       if (cancelled || seen) return;
       if (!window.matchMedia('(pointer: coarse)').matches) return;
 
@@ -520,7 +520,7 @@ const QueueControlBar: React.FC<QueueControlBarProps> = ({ boardDetails, angle }
           await peekOnce(el);
           if (cancelled) return;
           el.style.transform = '';
-          setPreference('swipeHint:queueBarSeen', true);
+          void setPreference('swipeHint:queueBarSeen', true);
         } catch {
           /* cancelled */
         }
@@ -537,7 +537,7 @@ const QueueControlBar: React.FC<QueueControlBarProps> = ({ boardDetails, angle }
   // Restore persisted tick bar expanded state when tick mode opens
   useEffect(() => {
     if (tickBarActive) {
-      getPreference<boolean>('tickBarExpanded').then((persisted) => {
+      void getPreference<boolean>('tickBarExpanded').then((persisted) => {
         if (persisted === true) setTickBarExpanded(true);
       });
     }
@@ -546,7 +546,7 @@ const QueueControlBar: React.FC<QueueControlBarProps> = ({ boardDetails, angle }
   // Persist expanded state on user-initiated toggle (not on automatic resets)
   const handleTickBarExpandedChange = useCallback((expanded: boolean) => {
     setTickBarExpanded(expanded);
-    setPreference('tickBarExpanded', expanded);
+    void setPreference('tickBarExpanded', expanded);
   }, []);
 
   // Close expanded participants when tick mode opens

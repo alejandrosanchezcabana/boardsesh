@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useCallback, useMemo } from 'react';
-import { LitUpHoldsMap, HoldState } from '../board-renderer/types';
+import type { LitUpHoldsMap, HoldState } from '../board-renderer/types';
 import { MOONBOARD_HOLD_STATES } from '@/app/lib/moonboard-config';
 
 interface UseMoonBoardCreateClimbOptions {

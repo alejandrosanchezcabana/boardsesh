@@ -1,7 +1,7 @@
 import React from 'react';
 import { notFound } from 'next/navigation';
-import { Metadata } from 'next';
-import { SearchRequestPagination } from '@/app/lib/types';
+import type { Metadata } from 'next';
+import type { SearchRequestPagination, Climb } from '@/app/lib/types';
 import { parsedRouteSearchParamsToSearchParams } from '@/app/lib/url-utils';
 import { resolveBoardBySlug, boardToRouteParams } from '@/app/lib/board-slug-utils';
 import BoardPageClimbsList from '@/app/components/board-page/board-page-climbs-list';
@@ -101,7 +101,7 @@ export default async function BoardSlugListPage(props: BoardSlugListPageProps) {
     userId = session?.user?.id;
   }
 
-  let searchResponse: { climbs: import('@/app/lib/types').Climb[]; hasMore: boolean };
+  let searchResponse: { climbs: Climb[]; hasMore: boolean };
 
   try {
     searchResponse = await cachedSearchClimbs(parsedParams, searchParamsObject, isDefaultSearch, userId, {

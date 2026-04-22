@@ -1,5 +1,6 @@
 import { describe, it, expect, beforeAll, afterAll } from 'vite-plus/test';
-import { createClient, Client } from 'graphql-ws';
+import type { Client } from 'graphql-ws';
+import { createClient } from 'graphql-ws';
 import WebSocket from 'ws';
 import { SUPPORTED_BOARDS } from '@boardsesh/shared-schema';
 import { startServer } from '../server';
@@ -67,7 +68,7 @@ describe('GraphQL Resolver Input Validation', () => {
   });
 
   afterAll(async () => {
-    client.dispose();
+    void client.dispose();
     // Close the server
     await new Promise<void>((resolve) => {
       server.httpServer.close(() => {

@@ -48,7 +48,7 @@ describe('useConfetti', () => {
       result.current(null);
 
       expect(mockConfetti).toHaveBeenCalledTimes(1);
-      const opts = mockConfetti.mock.calls[0]![0]!;
+      const opts = mockConfetti.mock.calls[0][0]!;
       expect(opts.particleCount).toBe(35);
       expect(opts.spread).toBe(60);
       expect(opts.startVelocity).toBe(25);
@@ -59,7 +59,7 @@ describe('useConfetti', () => {
       const { result } = renderHook(() => useConfetti());
       result.current(null, 'ascent');
 
-      const opts = mockConfetti.mock.calls[0]![0]!;
+      const opts = mockConfetti.mock.calls[0][0]!;
       expect(opts.origin).toEqual({ x: 0.5, y: 0.9 });
     });
 
@@ -73,7 +73,7 @@ describe('useConfetti', () => {
 
       result.current(el, 'ascent');
 
-      const opts = mockConfetti.mock.calls[0]![0]!;
+      const opts = mockConfetti.mock.calls[0][0]!;
       // (100 + 20) / 400 = 0.3
       expect(opts.origin!.x).toBeCloseTo(0.3);
       // (400 + 20) / 800 = 0.525
@@ -87,7 +87,7 @@ describe('useConfetti', () => {
       result.current(null, 'attempt');
 
       expect(mockConfetti).toHaveBeenCalledTimes(1);
-      const opts = mockConfetti.mock.calls[0]![0]!;
+      const opts = mockConfetti.mock.calls[0][0]!;
       expect(opts.particleCount).toBe(35);
       expect(opts.spread).toBe(40);
       expect(opts.startVelocity).toBe(12);

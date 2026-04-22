@@ -3,8 +3,8 @@ import type {
   Notification,
   NotificationConnection,
   GroupedNotificationConnection,
-  NotificationType,
   SocialEntityType,
+  Comment,
 } from '@boardsesh/shared-schema';
 
 // ============================================
@@ -241,8 +241,8 @@ export interface CommentUpdatesSubscriptionVariables {
 
 export type CommentUpdatesSubscriptionResponse = {
   commentUpdates:
-    | { __typename: 'CommentAdded'; comment: import('@boardsesh/shared-schema').Comment }
-    | { __typename: 'CommentUpdated'; comment: import('@boardsesh/shared-schema').Comment }
+    | { __typename: 'CommentAdded'; comment: Comment }
+    | { __typename: 'CommentUpdated'; comment: Comment }
     | {
         __typename: 'CommentDeleted';
         commentUuid: string;

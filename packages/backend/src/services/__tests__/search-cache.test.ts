@@ -175,7 +175,7 @@ describe('SearchCacheService', () => {
 
       service.setCachedResult('key', { data: true });
 
-      expect(mockedRedis.getClients).not.toHaveBeenCalled();
+      expect(mockedRedis.getClients).not.toHaveBeenCalled(); // eslint-disable-line @typescript-eslint/unbound-method -- vi.fn() mock, no `this` concern
     });
 
     it('calls publisher.set with correct arguments', () => {

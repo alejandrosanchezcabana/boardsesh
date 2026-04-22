@@ -3,7 +3,7 @@ import { fireEvent, render, screen } from '@testing-library/react';
 import React from 'react';
 import type { BoardDetails, Climb } from '@/app/lib/types';
 
-let mockPathname = '/b/moonrise-gym/40/list';
+const mockPathname = '/b/moonrise-gym/40/list';
 
 import ClimbThumbnail from '../climb-thumbnail';
 

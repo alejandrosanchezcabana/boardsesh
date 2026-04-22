@@ -5,7 +5,7 @@ import React from 'react';
 import Link from 'next/link';
 import { useQueueActions, useSessionData } from '../graphql-queue';
 import { constructPlayUrlWithSlugs, getContextAwareClimbViewUrl } from '@/app/lib/url-utils';
-import { BoardDetails } from '@/app/lib/types';
+import type { BoardDetails } from '@/app/lib/types';
 import { useResolvedBoardDetails } from '@/app/hooks/use-resolved-board-details';
 import { track } from '@vercel/analytics';
 import FastRewindOutlined from '@mui/icons-material/FastRewindOutlined';
@@ -23,7 +23,7 @@ const PreviousButton = (props: IconButtonProps) => (
   </IconButton>
 );
 
-export default function PreviousClimbButton({ navigate = false, boardDetails }: PreviousClimbButtonProps) {
+export default function PreviousClimbButton({ navigate, boardDetails }: PreviousClimbButtonProps) {
   const { getPreviousClimbQueueItem, setCurrentClimbQueueItem } = useQueueActions();
   const { viewOnlyMode } = useSessionData();
   const { rawParams, angle, pathname, searchParams, isPlayPage, resolvedDetails } =

@@ -1,5 +1,5 @@
-import { BoardName } from '../../types';
-import { SaveClimbOptions } from './types';
+import type { BoardName } from '../../types';
+import type { SaveClimbOptions } from './types';
 import { generateUuid } from './util';
 import { dbz } from '@/app/lib/db/db';
 import { UNIFIED_TABLES } from '@/app/lib/db/queries/util/table-select';

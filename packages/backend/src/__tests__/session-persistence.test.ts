@@ -110,7 +110,7 @@ describe('Session Persistence - Hybrid Redis + Postgres', () => {
       expect(session[0]?.status).toBe('ended');
 
       // Verify removed from Redis (deleteSession uses multi.del)
-      expect(mockRedis.del).toHaveBeenCalledWith(`boardsesh:session:${sessionId}`);
+      expect(mockRedis.del).toHaveBeenCalledWith(`boardsesh:session:${sessionId}`); // eslint-disable-line @typescript-eslint/unbound-method -- vi.fn() mock, no `this` concern
     });
   });
 

@@ -2,7 +2,7 @@ import { describe, it, expect, vi, beforeEach } from 'vite-plus/test';
 
 // Mock React.cache - in test environment it may not deduplicate, so we test the function itself
 vi.mock('react', async () => {
-  const actual = await vi.importActual<typeof import('react')>('react');
+  const actual = await vi.importActual<Record<string, unknown>>('react');
   return {
     ...actual,
     // In server components, React.cache deduplicates within a request.
@@ -175,7 +175,7 @@ describe('getAllBoardConfigs', () => {
     // Reset modules so the re-import picks up the new mock
     vi.resetModules();
     vi.doMock('react', async () => {
-      const actual = await vi.importActual<typeof import('react')>('react');
+      const actual = await vi.importActual<Record<string, unknown>>('react');
       return { ...actual, cache: (fn: Function) => fn };
     });
     vi.doMock('@/app/lib/board-constants', () => ({
@@ -243,7 +243,7 @@ describe('getAllBoardConfigs', () => {
     };
 
     vi.doMock('react', async () => {
-      const actual = await vi.importActual<typeof import('react')>('react');
+      const actual = await vi.importActual<Record<string, unknown>>('react');
       return {
         ...actual,
         default: { ...actual, cache: cacheFn },

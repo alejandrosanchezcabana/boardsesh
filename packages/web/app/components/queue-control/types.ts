@@ -1,5 +1,5 @@
-import { Climb, SearchRequestPagination, ParsedBoardRouteParameters } from '@/app/lib/types';
-import { SessionUser } from '@boardsesh/shared-schema';
+import type { Climb, SearchRequestPagination, ParsedBoardRouteParameters } from '@/app/lib/types';
+import type { SessionUser } from '@boardsesh/shared-schema';
 import type { ConnectionState } from '../connection-manager/websocket-connection-manager';
 
 export type PeerId = string | null;

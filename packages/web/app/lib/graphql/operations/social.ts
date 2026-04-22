@@ -7,6 +7,7 @@ import type {
   FollowingAscentsFeedResult,
   SetterProfile,
 } from '@boardsesh/shared-schema';
+import type { Climb } from '@/app/lib/types';
 
 // ============================================
 // Follow Mutations
@@ -332,7 +333,7 @@ export interface GetSetterClimbsFullQueryVariables {
 
 export interface GetSetterClimbsFullQueryResponse {
   setterClimbsFull: {
-    climbs: import('@/app/lib/types').Climb[];
+    climbs: Climb[];
     totalCount: number;
     hasMore: boolean;
   };
@@ -378,7 +379,7 @@ export interface GetUserClimbsQueryVariables {
 
 export interface GetUserClimbsQueryResponse {
   userClimbs: {
-    climbs: import('@/app/lib/types').Climb[];
+    climbs: Climb[];
     totalCount: number;
     hasMore: boolean;
   };

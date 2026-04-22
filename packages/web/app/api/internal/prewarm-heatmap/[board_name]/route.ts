@@ -141,7 +141,7 @@ export async function GET(request: Request, props: { params: Promise<PrewarmRout
   const boardName = boardNameParam;
 
   try {
-    console.log(`[prewarm-heatmap] starting for ${boardName}`);
+    console.info(`[prewarm-heatmap] starting for ${boardName}`);
 
     const selectorOptions = getBoardSelectorOptions();
     const layouts = selectorOptions.layouts[boardName] ?? [];
@@ -161,14 +161,14 @@ export async function GET(request: Request, props: { params: Promise<PrewarmRout
     );
 
     const targets = buildTargetsForBoard(boardName, anglesByLayout);
-    console.log(`[prewarm-heatmap] ${boardName}: ${targets.length} combinations to warm`);
+    console.info(`[prewarm-heatmap] ${boardName}: ${targets.length} combinations to warm`);
 
     const { warmed, failed } = await runWithConcurrency(targets, CONCURRENCY, (target) =>
       warmTarget(boardName, target),
     );
 
     const durationMs = Date.now() - startedAt;
-    console.log(`[prewarm-heatmap] ${boardName} done in ${durationMs}ms — warmed=${warmed} failed=${failed}`);
+    console.info(`[prewarm-heatmap] ${boardName} done in ${durationMs}ms — warmed=${warmed} failed=${failed}`);
 
     return NextResponse.json({
       board: boardName,

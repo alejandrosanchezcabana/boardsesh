@@ -167,13 +167,13 @@ export function sanitizeLogbookPreferences(value: unknown): LogbookPreferences {
       ? ((sort as Partial<LogbookSortState>).preset as SortPreset)
       : DEFAULT_SORT.preset,
     primaryField: VALID_SORT_FIELDS.includes((sort as Partial<LogbookSortState>).primaryField ?? 'date')
-      ? (((sort as Partial<LogbookSortState>).primaryField || 'date') as SortField)
+      ? (sort as Partial<LogbookSortState>).primaryField || 'date'
       : DEFAULT_SORT.primaryField,
     primaryDirection: VALID_SORT_DIRECTIONS.includes((sort as Partial<LogbookSortState>).primaryDirection ?? 'desc')
       ? ((sort as Partial<LogbookSortState>).primaryDirection as SortDirection)
       : DEFAULT_SORT.primaryDirection,
     secondaryField: VALID_SORT_FIELDS.includes((sort as Partial<LogbookSortState>).secondaryField ?? '')
-      ? (((sort as Partial<LogbookSortState>).secondaryField ?? '') as '' | SortField)
+      ? ((sort as Partial<LogbookSortState>).secondaryField ?? '')
       : DEFAULT_SORT.secondaryField,
     secondaryDirection: VALID_SORT_DIRECTIONS.includes((sort as Partial<LogbookSortState>).secondaryDirection ?? 'desc')
       ? ((sort as Partial<LogbookSortState>).secondaryDirection as SortDirection)

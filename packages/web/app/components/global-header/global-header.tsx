@@ -20,7 +20,7 @@ import { shareWithFallback } from '@/app/lib/share-utils';
 import { useSearchDrawerBridge } from '@/app/components/search-drawer/search-drawer-bridge-context';
 import UserDrawer from '@/app/components/user-drawer/user-drawer';
 import { useIsOnBoardRoute } from '@/app/components/persistent-session/persistent-session-context';
-import { BoardConfigData } from '@/app/lib/server-board-configs';
+import type { BoardConfigData } from '@/app/lib/server-board-configs';
 import { isBoardCreatePath } from '@/app/lib/board-route-paths';
 
 import TuneOutlined from '@mui/icons-material/TuneOutlined';
@@ -186,7 +186,7 @@ export default function GlobalHeader({ boardConfigs }: GlobalHeaderProps) {
     const shareUrl = `${window.location.origin}/profile/${session.user.id}`;
     const displayName = session.user.name || 'My';
 
-    shareWithFallback({
+    void shareWithFallback({
       url: shareUrl,
       title: `${displayName}'s climbing profile`,
       text: `Check out ${displayName}'s climbing profile on Boardsesh`,

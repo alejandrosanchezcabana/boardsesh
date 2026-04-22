@@ -1,5 +1,6 @@
 import { describe, it, expect } from 'vite-plus/test';
-import { DEFAULT_ACTION_ORDER, ClimbActionType } from '../types';
+import type { ClimbActionType } from '../types';
+import { DEFAULT_ACTION_ORDER } from '../types';
 
 /**
  * Test the filtering logic used in ClimbActions component.

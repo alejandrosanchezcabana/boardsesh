@@ -153,7 +153,7 @@ export function useSessionIdManagement({
         })
         .catch((err: unknown) => console.error('[QueueContext] Failed to get session summary:', err));
     }
-  }, [persistentSession, isOffBoardMode, activeSessionId, wsAuthToken]);
+  }, [persistentSession, activeSessionId, wsAuthToken]);
 
   return {
     sessionId,

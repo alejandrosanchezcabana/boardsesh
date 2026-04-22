@@ -84,12 +84,12 @@ export default function FollowerCount({ userId, followerCount, followingCount }:
   const handleOpen = (mode: 'followers' | 'following') => {
     setDrawerMode(mode);
     setUsers([]);
-    fetchUsers(mode);
+    void fetchUsers(mode);
   };
 
   const handleLoadMore = () => {
     if (drawerMode && !loading) {
-      fetchUsers(drawerMode, users.length);
+      void fetchUsers(drawerMode, users.length);
     }
   };
 

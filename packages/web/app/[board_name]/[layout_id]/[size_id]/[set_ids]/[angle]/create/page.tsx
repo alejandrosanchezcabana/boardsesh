@@ -1,11 +1,12 @@
 import React from 'react';
-import { BoardRouteParameters, Climb } from '@/app/lib/types';
+import type { BoardRouteParameters, Climb } from '@/app/lib/types';
 import { getBoardDetails } from '@/app/lib/board-constants';
 import { getClimb } from '@/app/lib/data/queries';
 import { parseRouteParams } from '@/app/lib/url-utils.server';
 import CreateClimbForm from '@/app/components/create-climb/create-climb-form';
-import { MOONBOARD_LAYOUTS, MOONBOARD_SETS, MoonBoardLayoutKey } from '@/app/lib/moonboard-config';
-import { Metadata } from 'next';
+import type { MoonBoardLayoutKey } from '@/app/lib/moonboard-config';
+import { MOONBOARD_LAYOUTS, MOONBOARD_SETS } from '@/app/lib/moonboard-config';
+import type { Metadata } from 'next';
 import { getServerSession } from 'next-auth/next';
 import { authOptions } from '@/app/lib/auth/auth-options';
 
@@ -64,7 +65,7 @@ export default async function CreateClimbPage(props: CreateClimbPageProps) {
   }
 
   // Aurora boards (kilter, tension) - use database
-  const boardDetails = await getBoardDetails(parsedParams);
+  const boardDetails = getBoardDetails(parsedParams);
 
   let editClimb: Climb | undefined;
   let editClimbError: string | undefined;

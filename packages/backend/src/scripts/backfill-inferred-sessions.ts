@@ -12,7 +12,7 @@ import { sql } from 'drizzle-orm';
 import { runInferredSessionBuilderBatched } from '../jobs/inferred-session-builder';
 
 async function main() {
-  console.log('=== Backfill Inferred Sessions ===');
+  console.info('=== Backfill Inferred Sessions ===');
 
   // Check how many unassigned ticks exist
   const [{ count: unassignedCount }] = await db
@@ -23,10 +23,10 @@ async function main() {
   `)
     .then((r) => (r as unknown as { rows: Array<{ count: number }> }).rows);
 
-  console.log(`Found ${unassignedCount} unassigned ticks`);
+  console.info(`Found ${unassignedCount} unassigned ticks`);
 
   if (Number(unassignedCount) === 0) {
-    console.log('No unassigned ticks to process');
+    console.info('No unassigned ticks to process');
   } else {
     // Process in batches until all ticks are assigned
     let totalAssigned = 0;
@@ -34,21 +34,21 @@ async function main() {
 
     while (true) {
       iteration++;
-      console.log(`\nIteration ${iteration}...`);
+      console.info(`\nIteration ${iteration}...`);
 
       const result = await runInferredSessionBuilderBatched({ batchSize: 10000 });
       totalAssigned += result.ticksAssigned;
 
-      console.log(`  Processed ${result.usersProcessed} users, assigned ${result.ticksAssigned} ticks`);
+      console.info(`  Processed ${result.usersProcessed} users, assigned ${result.ticksAssigned} ticks`);
 
       if (result.ticksAssigned === 0) break;
     }
 
-    console.log(`\nTotal ticks assigned: ${totalAssigned}`);
+    console.info(`\nTotal ticks assigned: ${totalAssigned}`);
   }
 
   // Migrate orphaned votes/comments with "ug:" entity IDs
-  console.log('\n=== Migrating orphaned ug: entity references ===');
+  console.info('\n=== Migrating orphaned ug: entity references ===');
 
   const [voteResult] = await db
     .execute(sql`
@@ -64,12 +64,12 @@ async function main() {
   `)
     .then((r) => (r as unknown as { rows: Array<{ count: number }> }).rows);
 
-  console.log(`Found ${voteResult.count} orphaned vote_counts, ${commentResult.count} orphaned comments`);
+  console.info(`Found ${voteResult.count} orphaned vote_counts, ${commentResult.count} orphaned comments`);
 
   if (Number(voteResult.count) > 0 || Number(commentResult.count) > 0) {
-    console.log('Note: These ug: references cannot be automatically migrated to inferred session IDs');
-    console.log('because the mapping depends on the original ungrouped session computation.');
-    console.log('Consider manually reviewing and either deleting or migrating these entries.');
+    console.info('Note: These ug: references cannot be automatically migrated to inferred session IDs');
+    console.info('because the mapping depends on the original ungrouped session computation.');
+    console.info('Consider manually reviewing and either deleting or migrating these entries.');
   }
 
   // Verify final state
@@ -81,7 +81,7 @@ async function main() {
   `)
     .then((r) => (r as unknown as { rows: Array<{ count: number }> }).rows);
 
-  console.log(`\n=== Final state: ${remaining} unassigned ticks remaining ===`);
+  console.info(`\n=== Final state: ${remaining} unassigned ticks remaining ===`);
 
   process.exit(0);
 }

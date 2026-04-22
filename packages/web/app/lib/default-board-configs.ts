@@ -4,8 +4,8 @@
  * These represent the most common configurations for each layout.
  */
 
-import { BoardName } from '@/app/lib/types';
-import { SetIdList } from '@/app/lib/board-data';
+import type { BoardName } from '@/app/lib/types';
+import type { SetIdList } from '@/app/lib/board-data';
 import { tryConstructSlugViewUrl } from '@/app/lib/url-utils';
 
 export interface DefaultBoardConfig {

@@ -93,7 +93,7 @@ export function setupWebSocketServer(httpServer: HttpServer): {
           if (authResult) {
             isAuthenticated = true;
             authenticatedUserId = authResult.userId;
-            console.log(`[Auth] Authenticated user: ${authenticatedUserId}`);
+            console.info(`[Auth] Authenticated user: ${authenticatedUserId}`);
           }
         }
 
@@ -109,14 +109,14 @@ export function setupWebSocketServer(httpServer: HttpServer): {
           if (controllerResult) {
             controllerId = controllerResult.controllerId;
             controllerApiKey = controllerResult.controllerApiKey;
-            console.log(`[Auth] Authenticated controller: ${controllerId}`);
+            console.info(`[Auth] Authenticated controller: ${controllerId}`);
           }
         }
 
         // Extract controller MAC address from connection params (used as clientId for BLE disconnect logic)
         if (connectionParams?.controllerMac && typeof connectionParams.controllerMac === 'string') {
           controllerMac = connectionParams.controllerMac;
-          console.log(`[Auth] Controller MAC: ${controllerMac}`);
+          console.info(`[Auth] Controller MAC: ${controllerMac}`);
         }
 
         // Create context on initial connection with auth info
@@ -129,16 +129,16 @@ export function setupWebSocketServer(httpServer: HttpServer): {
           controllerMac,
         );
         await roomManager.registerClient(context.connectionId, undefined, authenticatedUserId);
-        console.log(`Client connected: ${context.connectionId} (authenticated: ${isAuthenticated})`);
+        console.info(`Client connected: ${context.connectionId} (authenticated: ${isAuthenticated})`);
 
         // Store context in ctx.extra for access in other hooks
-        (ctx.extra as CustomExtra).context = context;
+        ctx.extra.context = context;
 
         return true; // Allow connection (both authenticated and unauthenticated)
       },
       // context is called for EACH operation - return the stored context
       context: async (ctx: ServerContext): Promise<ConnectionContext> => {
-        const extra = ctx.extra as CustomExtra;
+        const extra = ctx.extra;
 
         if (!extra.context) {
           // This should never happen - onConnect should always set context
@@ -155,16 +155,16 @@ export function setupWebSocketServer(httpServer: HttpServer): {
         }
 
         if (DEBUG) {
-          console.log(
+          console.info(
             `[Context] Retrieved context: ${latestContext.connectionId}, sessionId: ${latestContext.sessionId}`,
           );
         }
         return latestContext;
       },
       onDisconnect: async (ctx: ServerContext, code?: number) => {
-        const context = (ctx.extra as CustomExtra)?.context;
+        const context = ctx.extra?.context;
         if (context) {
-          console.log(`Client disconnected: ${context.connectionId} (code: ${code})`);
+          console.info(`Client disconnected: ${context.connectionId} (code: ${code})`);
 
           // Get the latest context state (sessionId may have been updated)
           const latestContext = getContext(context.connectionId);
@@ -198,7 +198,7 @@ export function setupWebSocketServer(httpServer: HttpServer): {
       },
       onSubscribe: (_ctx: ServerContext, _id: string, payload) => {
         if (DEBUG) {
-          console.log(`Subscription started: ${payload.operationName || 'anonymous'}`);
+          console.info(`Subscription started: ${payload.operationName || 'anonymous'}`);
         }
 
         // Validate query depth to prevent DoS via deeply nested subscriptions
@@ -215,7 +215,7 @@ export function setupWebSocketServer(httpServer: HttpServer): {
       },
       onComplete: (_ctx: ServerContext, _id: string, payload) => {
         if (DEBUG) {
-          console.log(`Subscription completed: ${payload.operationName || 'anonymous'}`);
+          console.info(`Subscription completed: ${payload.operationName || 'anonymous'}`);
         }
       },
     },
@@ -239,7 +239,7 @@ export function setupWebSocketServer(httpServer: HttpServer): {
     wss.clients.forEach((ws) => {
       const aliveWs = ws as AliveWebSocket;
       if (!aliveWs.isAlive) {
-        if (DEBUG) console.log('[WebSocket] Terminating unresponsive connection');
+        if (DEBUG) console.info('[WebSocket] Terminating unresponsive connection');
         aliveWs.terminate();
         return;
       }

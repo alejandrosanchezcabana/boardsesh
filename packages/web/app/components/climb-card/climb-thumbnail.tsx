@@ -1,6 +1,6 @@
 import React, { useMemo } from 'react';
 
-import { BoardDetails, Climb } from '@/app/lib/types';
+import type { BoardDetails, Climb } from '@/app/lib/types';
 import BoardImageLayers from '@/app/components/board-renderer/board-image-layers';
 import BoardCanvasRenderer from '@/app/components/board-renderer/board-canvas-renderer';
 import { useCanvasRendererReady } from '@/app/lib/board-render-worker/worker-manager';
@@ -19,7 +19,15 @@ type ClimbThumbnailProps = {
 };
 
 const ClimbThumbnail: React.FC<ClimbThumbnailProps> = React.memo(
-  ({ boardDetails, currentClimb, pathname, onClick, maxHeight, preferImageLayers = false, fetchPriority }) => {
+  ({
+    boardDetails,
+    currentClimb,
+    pathname: _pathname,
+    onClick,
+    maxHeight,
+    preferImageLayers = false,
+    fetchPriority,
+  }) => {
     const canvasReady = useCanvasRendererReady();
 
     const boardStyle = useMemo<React.CSSProperties>(

@@ -139,7 +139,7 @@ export default function VerifyRequestContent() {
                 component="form"
                 onSubmit={(e: React.FormEvent) => {
                   e.preventDefault();
-                  handleResend();
+                  void handleResend();
                 }}
                 sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}
               >

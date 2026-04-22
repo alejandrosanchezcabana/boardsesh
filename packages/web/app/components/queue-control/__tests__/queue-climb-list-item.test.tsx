@@ -298,8 +298,8 @@ describe('QueueClimbListItem', () => {
 
     it('checkbox reflects isSelected prop', () => {
       render(<QueueClimbListItem {...defaultProps()} isEditMode isSelected />);
-      const checkbox = screen.getByRole('checkbox') as HTMLInputElement;
-      expect(checkbox.checked).toBe(true);
+      const checkbox = screen.getByRole('checkbox');
+      expect((checkbox as HTMLInputElement).checked).toBe(true);
     });
 
     it('calls onToggleSelect when checkbox is toggled', () => {

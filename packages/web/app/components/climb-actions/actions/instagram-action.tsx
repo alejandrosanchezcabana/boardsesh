@@ -2,7 +2,7 @@
 
 import React, { useCallback, useMemo, useState } from 'react';
 import InstagramIcon from '@mui/icons-material/Instagram';
-import { ClimbActionProps, ClimbActionResult } from '../types';
+import type { ClimbActionProps, ClimbActionResult } from '../types';
 import { buildActionResult, computeActionDisplay } from '../action-view-renderer';
 import PostToInstagramDialog from '@/app/components/library/post-to-instagram-dialog';
 import AttachBetaLinkDialog from '@/app/components/beta-videos/attach-beta-link-dialog';

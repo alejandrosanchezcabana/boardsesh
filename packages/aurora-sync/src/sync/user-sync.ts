@@ -1,5 +1,6 @@
 import { userSync } from '../api/user-sync-api';
-import { SyncOptions, USER_TABLES, UserSyncData, AuroraBoardName } from '../api/types';
+import type { SyncOptions, UserSyncData, AuroraBoardName } from '../api/types';
+import { USER_TABLES } from '../api/types';
 import { eq, and, inArray, sql } from 'drizzle-orm';
 import { drizzle } from 'drizzle-orm/neon-serverless';
 import type { NeonDatabase } from 'drizzle-orm/neon-serverless';
@@ -41,7 +42,7 @@ async function upsertTableData(
   auroraUserId: number,
   nextAuthUserId: string,
   data: AuroraApiRow[],
-  log: (message: string) => void = console.log,
+  log: (message: string) => void = console.info,
 ): Promise<UpsertResult> {
   if (data.length === 0) return { synced: 0, skipped: 0 };
 
@@ -499,7 +500,7 @@ export async function syncUserData(
   auroraUserId: number,
   nextAuthUserId: string,
   tables: string[] = USER_TABLES,
-  log: (message: string) => void = console.log,
+  log: (message: string) => void = console.info,
 ): Promise<SyncUserDataResult> {
   try {
     const syncParams: SyncOptions = {

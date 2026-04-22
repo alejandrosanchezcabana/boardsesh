@@ -128,7 +128,7 @@ describe('adoptRecentTicksForSession', () => {
 
     await adoptRecentTicksForSession('user-1', 'party-session-1');
 
-    expect(db.transaction).toHaveBeenCalledOnce();
+    expect(db.transaction).toHaveBeenCalledOnce(); // eslint-disable-line @typescript-eslint/unbound-method -- vi.fn() mock, no `this` concern
   });
 
   it('adopts orphaned ticks (no inferred session)', async () => {

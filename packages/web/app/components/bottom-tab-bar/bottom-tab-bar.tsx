@@ -17,7 +17,7 @@ import DynamicFeedOutlined from '@mui/icons-material/DynamicFeedOutlined';
 import PersonOutlined from '@mui/icons-material/PersonOutlined';
 import { usePathname, useRouter } from 'next/navigation';
 import { track } from '@vercel/analytics';
-import { BoardDetails, BoardName } from '@/app/lib/types';
+import type { BoardDetails, BoardName } from '@/app/lib/types';
 import {
   constructClimbListWithSlugs,
   constructBoardSlugListUrl,
@@ -38,7 +38,7 @@ import { getLastUsedBoard } from '@/app/lib/last-used-board-db';
 import { getRecentSearches } from '@/app/components/search-drawer/recent-searches-storage';
 import BoardDiscoveryScroll from '../board-scroll/board-discovery-scroll';
 import BoardSelectorDrawer from '../board-selector-drawer/board-selector-drawer';
-import { BoardConfigData } from '@/app/lib/server-board-configs';
+import type { BoardConfigData } from '@/app/lib/server-board-configs';
 import { getDefaultAngleForBoard } from '@/app/lib/board-config-for-playlist';
 import { useSession } from 'next-auth/react';
 import type { UserBoard, PopularBoardConfig } from '@boardsesh/shared-schema';
@@ -162,9 +162,6 @@ function BottomTabBar({ boardDetails, angle, boardConfigs }: BottomTabBarProps) 
   const createPlaylist = playlistsContext?.createPlaylist ?? playlistsProviderProps.createPlaylist;
   const isAuthenticated = playlistsContext?.isAuthenticated ?? playlistsProviderProps.isAuthenticated;
   const canCreatePlaylistHere = !!playlistBoardName && playlistLayoutId > 0;
-
-  // Hide playlists for moonboard (not yet supported)
-  const isMoonboard = playlistBoardName === 'moonboard';
 
   // Determine active tab from pathname
   const activeTabFromPath = getActiveTab(pathname);
@@ -352,7 +349,7 @@ function BottomTabBar({ boardDetails, angle, boardConfigs }: BottomTabBarProps) 
         handleHomeTab();
         break;
       case 'climbs':
-        handleClimbsTab();
+        void handleClimbsTab();
         break;
       case 'library':
         handleLibraryTab();
@@ -367,44 +364,6 @@ function BottomTabBar({ boardDetails, angle, boardConfigs }: BottomTabBarProps) 
         handleYouTab();
         break;
     }
-  };
-
-  const handleOpenCreatePlaylist = () => {
-    if (!isAuthenticated) {
-      openAuthModal({
-        title: 'Sign in to create playlists',
-        description: 'Sign in to create and manage your climb playlists.',
-        onSuccess: () => {
-          if (!canCreatePlaylistHere) {
-            if (boardConfigs) {
-              setPendingCreateAction('playlist');
-              setIsBoardSelectorRendered(true);
-              setIsBoardSelectorOpen(true);
-            } else {
-              showMessage('Select a board before creating a playlist', 'error');
-            }
-            return;
-          }
-          setIsCreatePlaylistRendered(true);
-          setIsCreatePlaylistOpen(true);
-        },
-      });
-      return;
-    }
-
-    if (!canCreatePlaylistHere) {
-      if (boardConfigs) {
-        setPendingCreateAction('playlist');
-        setIsBoardSelectorRendered(true);
-        setIsBoardSelectorOpen(true);
-      } else {
-        showMessage('Select a board before creating a playlist', 'error');
-      }
-      return;
-    }
-
-    setIsCreatePlaylistRendered(true);
-    setIsCreatePlaylistOpen(true);
   };
 
   const handleBoardSelected = useCallback(
@@ -554,7 +513,7 @@ function BottomTabBar({ boardDetails, angle, boardConfigs }: BottomTabBarProps) 
 
       // Navigate to the new playlist
       router.push(getPlaylistUrl(newPlaylist.uuid));
-    } catch (error) {
+    } catch {
       showMessage('Failed to create playlist', 'error');
     } finally {
       setIsCreatingPlaylist(false);

@@ -4,6 +4,7 @@ import { userBoards } from '@boardsesh/db/schema/app';
 import { eq, and, gt, gte, lte, ne, isNull } from 'drizzle-orm';
 import type { RedisSessionStore } from '../redis-session-store';
 import type { DistributedStateManager } from '../distributed-state';
+import type { WriteScheduler } from './write-scheduler';
 import { haversineDistance, getBoundingBox, DEFAULT_SEARCH_RADIUS_METERS } from '../../utils/geo';
 import type { DiscoverableSession } from './types';
 
@@ -152,8 +153,8 @@ export async function findNearbySessions(
       id: session.id,
       name: session.name,
       boardPath: session.boardPath,
-      latitude: session.latitude!,
-      longitude: session.longitude!,
+      latitude: session.latitude,
+      longitude: session.longitude,
       createdAt: session.createdAt,
       createdByUserId: session.createdByUserId,
       participantCount,
@@ -191,7 +192,7 @@ export async function endSession(
   sessionId: string,
   sessionsMap: Map<string, Set<string>>,
   redisStore: RedisSessionStore | null,
-  writeScheduler: import('./write-scheduler').WriteScheduler,
+  writeScheduler: WriteScheduler,
   sessionGraceTimers: Map<string, NodeJS.Timeout>,
   pendingJoinPersists: Map<string, Promise<void>>,
 ): Promise<void> {
@@ -223,5 +224,5 @@ export async function endSession(
   // Remove from memory
   sessionsMap.delete(sessionId);
 
-  console.log(`[RoomManager] Session ${sessionId} explicitly ended`);
+  console.info(`[RoomManager] Session ${sessionId} explicitly ended`);
 }

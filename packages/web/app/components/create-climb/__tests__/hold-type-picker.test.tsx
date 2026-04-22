@@ -198,8 +198,8 @@ describe('HoldTypePicker', () => {
       currentState: 'OFF',
     });
 
-    const startButton = screen.getByLabelText('Start') as HTMLButtonElement;
-    expect(startButton.disabled).toBe(true);
+    const startButton = screen.getByLabelText('Start');
+    expect((startButton as HTMLButtonElement).disabled).toBe(true);
 
     fireEvent.click(startButton);
     expect(onSelect).not.toHaveBeenCalled();
@@ -212,8 +212,8 @@ describe('HoldTypePicker', () => {
       currentState: 'OFF',
     });
 
-    const finishButton = screen.getByLabelText('Finish') as HTMLButtonElement;
-    expect(finishButton.disabled).toBe(true);
+    const finishButton = screen.getByLabelText('Finish');
+    expect((finishButton as HTMLButtonElement).disabled).toBe(true);
 
     fireEvent.click(finishButton);
     expect(onSelect).not.toHaveBeenCalled();
@@ -228,8 +228,8 @@ describe('HoldTypePicker', () => {
       currentState: 'STARTING',
     });
 
-    const startButton = screen.getByLabelText('Start') as HTMLButtonElement;
-    expect(startButton.disabled).toBe(false);
+    const startButton = screen.getByLabelText('Start');
+    expect((startButton as HTMLButtonElement).disabled).toBe(false);
 
     fireEvent.click(startButton);
     expect(onSelect).toHaveBeenCalledWith('STARTING');
@@ -249,8 +249,8 @@ describe('HoldTypePicker', () => {
       finishCount: 2,
     });
 
-    const footButton = screen.getByLabelText('Foot') as HTMLButtonElement;
-    expect(footButton.disabled).toBe(false);
+    const footButton = screen.getByLabelText('Foot');
+    expect((footButton as HTMLButtonElement).disabled).toBe(false);
 
     fireEvent.click(footButton);
     expect(onSelect).toHaveBeenCalledWith('FOOT');

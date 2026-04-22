@@ -8,8 +8,10 @@ import {
   pickHighestAscentStatus,
   type AscentStatusValue,
 } from '@/app/components/ascent-status/ascent-status-utils';
-import { ClimbUuid } from '@/app/lib/types';
+import type { ClimbUuid } from '@/app/lib/types';
 import { useOptionalBoardProvider } from '../board-provider/board-provider-context';
+
+const EMPTY_LOGBOOK: LogbookEntry[] = [];
 
 interface AscentStatusProps {
   climbUuid: ClimbUuid;
@@ -35,7 +37,7 @@ function getHighestStatus(entries: LogbookEntry[]): AscentStatusValue | null {
 
 export const AscentStatus = ({ climbUuid, fontSize, className, mirroredClassName }: AscentStatusProps) => {
   const boardProvider = useOptionalBoardProvider();
-  const logbook = boardProvider?.logbook ?? [];
+  const logbook = boardProvider?.logbook ?? EMPTY_LOGBOOK;
   const boardName = boardProvider?.boardName ?? 'kilter';
 
   const ascentsForClimb = useMemo(

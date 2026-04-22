@@ -14,7 +14,7 @@ import { useIsDarkMode } from '@/app/hooks/use-is-dark-mode';
 import { useDrawerDragResize } from '@/app/hooks/use-drawer-drag-resize';
 import drawerCss from '../swipeable-drawer/swipeable-drawer.module.css';
 import { useWindowVirtualizer } from '@tanstack/react-virtual';
-import { Climb, BoardDetails } from '@/app/lib/types';
+import type { Climb, BoardDetails } from '@/app/lib/types';
 import ErrorBoundary from '../error-boundary';
 import ClimbListItem from '../climb-card/climb-list-item';
 import { ClimbCardSkeleton, ClimbListItemSkeleton } from './board-page-skeleton';
@@ -339,7 +339,7 @@ const ClimbsList = ({
   onClimbSelectRef.current = onClimbSelect;
 
   useEffect(() => {
-    getPreference<ViewMode>(VIEW_MODE_PREFERENCE_KEY).then((stored) => {
+    void getPreference<ViewMode>(VIEW_MODE_PREFERENCE_KEY).then((stored) => {
       if (stored === 'grid' || stored === 'list') {
         setViewMode(stored);
       }
@@ -532,7 +532,7 @@ const ClimbsList = ({
     if (lastVirtualItem.index >= visibleClimbs.length - 5 && hasMore && !isFetching) {
       handleLoadMore();
     }
-  }, [viewMode, lastVirtualItem?.index, visibleClimbs.length, hasMore, isFetching, handleLoadMore]);
+  }, [viewMode, lastVirtualItem, visibleClimbs.length, hasMore, isFetching, handleLoadMore]);
 
   return (
     <SelectionStoreContext.Provider value={selectionStore}>

@@ -1,4 +1,5 @@
-import { useState, useEffect, Dispatch } from 'react';
+import type { Dispatch } from 'react';
+import { useState, useEffect } from 'react';
 import type { QueueAction, ClimbQueue, ClimbQueueItem } from '../../queue-control/types';
 
 interface UseQueueRestorationParams {
@@ -36,7 +37,7 @@ export function useQueueRestoration({
   // Guard to prevent syncing empty initial state before restoration completes.
   // Uses useState (not useRef) so the sync effect only sees hasRestored=true
   // in the render where state.queue already contains the restored data.
-  const [hasRestored, setHasRestored] = useState(false);
+  const [_hasRestored, setHasRestored] = useState(false);
 
   // Initialize queue state from persistent session when remounting
   useEffect(() => {

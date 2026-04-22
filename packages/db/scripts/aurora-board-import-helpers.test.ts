@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { dedupeSourceClimbHolds, deriveClimbHoldsFromFrames } from './aurora-board-import-helpers.js';
 
-test('deriveClimbHoldsFromFrames maps aurora role codes', () => {
+void test('deriveClimbHoldsFromFrames maps aurora role codes', () => {
   const holds = deriveClimbHoldsFromFrames(
     {
       uuid: 'climb-1',
@@ -19,7 +19,7 @@ test('deriveClimbHoldsFromFrames maps aurora role codes', () => {
   ]);
 });
 
-test('deriveClimbHoldsFromFrames prefers meaningful non-foot states for duplicate holds', () => {
+void test('deriveClimbHoldsFromFrames prefers meaningful non-foot states for duplicate holds', () => {
   const holds = deriveClimbHoldsFromFrames(
     {
       uuid: 'climb-2',
@@ -36,7 +36,7 @@ test('deriveClimbHoldsFromFrames prefers meaningful non-foot states for duplicat
   ]);
 });
 
-test('deriveClimbHoldsFromFrames prefers FOOT over OFF', () => {
+void test('deriveClimbHoldsFromFrames prefers FOOT over OFF', () => {
   // FOOT in frame 0, OFF in frame 1 -> FOOT wins
   const holds1 = deriveClimbHoldsFromFrames(
     {
@@ -60,7 +60,7 @@ test('deriveClimbHoldsFromFrames prefers FOOT over OFF', () => {
   assert.deepEqual(holds2, [{ climbUuid: 'climb-5', holdId: 501, frameNumber: 1, holdState: 'FOOT' }]);
 });
 
-test('dedupeSourceClimbHolds keeps the newest source hold row per climb and hold', () => {
+void test('dedupeSourceClimbHolds keeps the newest source hold row per climb and hold', () => {
   const holds = dedupeSourceClimbHolds([
     {
       climb_uuid: 'climb-3',

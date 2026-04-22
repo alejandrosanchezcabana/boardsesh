@@ -7,7 +7,7 @@ import { ActivityFeedInputSchema } from '../../../validation/schemas';
 import { encodeCursor, decodeCursor } from '../../../utils/feed-cursor';
 
 function mapFeedItemToGraphQL(row: typeof dbSchema.feedItems.$inferSelect) {
-  const meta = (row.metadata || {}) as Record<string, unknown>;
+  const meta = row.metadata || {};
   return {
     id: String(row.id),
     type: row.type,

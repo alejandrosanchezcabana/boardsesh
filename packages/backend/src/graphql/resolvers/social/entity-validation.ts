@@ -136,7 +136,7 @@ export async function validateEntityExists(entityType: SocialEntityType, entityI
     }
 
     default: {
-      throw new Error(`Unknown entity type: ${entityType}`);
+      throw new Error(`Unknown entity type: ${String(entityType)}`);
     }
   }
 }

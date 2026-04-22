@@ -1,9 +1,9 @@
 'use client';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { getImageUrl } from './util';
-import { BoardDetails } from '@/app/lib/types';
-import { HeatmapData } from './types';
-import { LitUpHoldsMap } from './types';
+import type { BoardDetails } from '@/app/lib/types';
+import type { HeatmapData } from './types';
+import type { LitUpHoldsMap } from './types';
 import { scaleLog } from 'd3-scale';
 import useHeatmapData from '../search-drawer/use-heatmap';
 import { usePathname } from 'next/navigation';
@@ -72,7 +72,7 @@ const BoardHeatmap: React.FC<BoardHeatmapProps> = ({ boardDetails, litUpHoldsMap
   const angle = useMemo(() => getAngleFromPath(pathname), [pathname]);
 
   // Only fetch heatmap data when heatmap is enabled
-  const { data: heatmapData = [], loading: heatmapLoading } = useHeatmapData({
+  const { data: heatmapData, loading: heatmapLoading } = useHeatmapData({
     boardName: boardDetails.board_name,
     layoutId: boardDetails.layout_id,
     sizeId: boardDetails.size_id,

@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
-import { getSetsBySlug, SetRow } from '@/app/lib/slug-utils';
-import { BoardName } from '@/app/lib/types';
+import type { SetRow } from '@/app/lib/slug-utils';
+import { getSetsBySlug } from '@/app/lib/slug-utils';
+import type { BoardName } from '@/app/lib/types';
 
 export async function GET(
   req: Request,

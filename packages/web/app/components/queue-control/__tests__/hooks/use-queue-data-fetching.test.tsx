@@ -2,8 +2,8 @@ import { describe, it, expect, vi, beforeEach, afterEach } from 'vite-plus/test'
 import { renderHook, waitFor } from '@testing-library/react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { useQueueDataFetching } from '../../hooks/use-queue-data-fetching';
-import { ParsedBoardRouteParameters, SearchRequestPagination, Climb } from '@/app/lib/types';
-import { ClimbQueue } from '../../types';
+import type { ParsedBoardRouteParameters, SearchRequestPagination, Climb } from '@/app/lib/types';
+import type { ClimbQueue } from '../../types';
 import { useBoardProvider, useOptionalBoardProvider } from '../../../board-provider/board-provider-context';
 import React from 'react';
 

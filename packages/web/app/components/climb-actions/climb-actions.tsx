@@ -9,7 +9,8 @@ import ListItemText from '@mui/material/ListItemText';
 import Box from '@mui/material/Box';
 import Stack from '@mui/material/Stack';
 import MoreVertOutlined from '@mui/icons-material/MoreVertOutlined';
-import { ClimbActionsProps, ClimbActionType, ClimbActionResult, ClimbActionProps, DEFAULT_ACTION_ORDER } from './types';
+import type { ClimbActionsProps, ClimbActionType, ClimbActionResult, ClimbActionProps } from './types';
+import { DEFAULT_ACTION_ORDER } from './types';
 import {
   ViewDetailsAction,
   ForkAction,
@@ -346,7 +347,8 @@ function DropdownActionRenderer({
       hasReportedRef.current = true;
       onMenuItemRef.current(result.menuItem);
     }
-  }, [result.available]); // Only depend on availability, not menuItem object
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- Only depend on availability, not menuItem object
+  }, [result.available]);
 
   // Render any elements needed in DOM (modals, drawers, etc.)
   if (!result.available || !result.element) return null;

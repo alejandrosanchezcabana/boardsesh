@@ -36,7 +36,7 @@ export const socialSearchQueries = {
       .select({ count: count() })
       .from(dbSchema.users)
       .leftJoin(dbSchema.userProfiles, eq(dbSchema.users.id, dbSchema.userProfiles.userId))
-      .where(searchConditions!);
+      .where(searchConditions);
 
     if (boardType) {
       countQuery = db
@@ -50,7 +50,7 @@ export const socialSearchQueries = {
             eq(dbSchema.userBoardMappings.boardType, boardType),
           ),
         )
-        .where(searchConditions!);
+        .where(searchConditions);
     }
 
     const countResult = await countQuery;
@@ -101,7 +101,7 @@ export const socialSearchQueries = {
             eq(dbSchema.userBoardMappings.boardType, boardType),
           ),
         )
-        .where(searchConditions!)
+        .where(searchConditions)
         .orderBy(...orderByExpressions)
         .limit(limit)
         .offset(offset);
@@ -110,7 +110,7 @@ export const socialSearchQueries = {
         .select(selectFields)
         .from(dbSchema.users)
         .leftJoin(dbSchema.userProfiles, eq(dbSchema.users.id, dbSchema.userProfiles.userId))
-        .where(searchConditions!)
+        .where(searchConditions)
         .orderBy(...orderByExpressions)
         .limit(limit)
         .offset(offset);

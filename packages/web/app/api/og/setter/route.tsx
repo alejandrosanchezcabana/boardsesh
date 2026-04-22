@@ -1,6 +1,6 @@
 import React from 'react';
 import { ImageResponse } from '@vercel/og';
-import { NextRequest } from 'next/server';
+import type { NextRequest } from 'next/server';
 import { dbz } from '@/app/lib/db/db';
 import { sql } from 'drizzle-orm';
 import { themeTokens } from '@/app/theme/theme-config';

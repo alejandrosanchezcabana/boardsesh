@@ -15,6 +15,7 @@ import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import MyLocationOutlined from '@mui/icons-material/MyLocationOutlined';
 import SearchOutlined from '@mui/icons-material/SearchOutlined';
 import type { Map as LeafletMap, Marker as LeafletMarker } from 'leaflet';
+import type * as LeafletNamespace from 'leaflet';
 import { useGeolocation } from '@/app/hooks/use-geolocation';
 
 interface NominatimResult {
@@ -32,7 +33,7 @@ interface MapLocationPickerProps {
 export default function MapLocationPicker({ latitude, longitude, onChange }: MapLocationPickerProps) {
   const mapRef = useRef<LeafletMap | null>(null);
   const markerRef = useRef<LeafletMarker | null>(null);
-  const leafletRef = useRef<typeof import('leaflet') | null>(null);
+  const leafletRef = useRef<typeof LeafletNamespace | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const onChangeRef = useRef(onChange);
   onChangeRef.current = onChange;
@@ -79,7 +80,7 @@ export default function MapLocationPicker({ latitude, longitude, onChange }: Map
     }
 
     // @ts-expect-error — CSS dynamic import handled by Next.js bundler
-    Promise.all([import('leaflet'), import('leaflet/dist/leaflet.css')]).then(([L]) => {
+    void Promise.all([import('leaflet'), import('leaflet/dist/leaflet.css')]).then(([L]) => {
       if (!containerRef.current) return;
 
       const hasCoords = latitude != null && longitude != null;
@@ -140,7 +141,7 @@ export default function MapLocationPicker({ latitude, longitude, onChange }: Map
       mapRef.current?.flyTo([lat, lng], 14);
       onChangeRef.current(lat, lng);
     } else {
-      requestPermission();
+      void requestPermission();
     }
   }, [userCoords, placeMarker, requestPermission]);
 
@@ -208,7 +209,7 @@ export default function MapLocationPicker({ latitude, longitude, onChange }: Map
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
           <MapOutlined fontSize="small" color="action" />
           <MuiTypography variant="body2">
-            {hasLocation ? `Location: ${latitude!.toFixed(4)}, ${longitude!.toFixed(4)}` : 'Set location on map'}
+            {hasLocation ? `Location: ${latitude.toFixed(4)}, ${longitude.toFixed(4)}` : 'Set location on map'}
           </MuiTypography>
         </Box>
       </AccordionSummary>

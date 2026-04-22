@@ -499,11 +499,11 @@ async function insertBatches(
   conflictMode: 'ignore' | 'allowDuplicates' = 'ignore',
 ) {
   if (rows.length === 0) {
-    console.log(`  - ${label}: 0 rows`);
+    console.info(`  - ${label}: 0 rows`);
     return;
   }
 
-  console.log(`  - ${label}: ${rows.length} rows`);
+  console.info(`  - ${label}: ${rows.length} rows`);
 
   for (let index = 0; index < rows.length; index += BATCH_SIZE) {
     const batch = rows.slice(index, index + BATCH_SIZE);
@@ -553,8 +553,8 @@ async function main() {
 
   const databaseUrl = getScriptDatabaseUrl();
   const dbHost = new URL(databaseUrl).host;
-  console.log(`Importing ${boardName} from ${sqlitePath}`);
-  console.log(`Target database: ${dbHost}`);
+  console.info(`Importing ${boardName} from ${sqlitePath}`);
+  console.info(`Target database: ${dbHost}`);
 
   const availableTables = listSqliteTables(sqlitePath);
   const tableCache = new Map<string, SqliteRow[]>();
@@ -565,7 +565,7 @@ async function main() {
       if (required) {
         throw new Error(`Required SQLite table is missing: ${tableName}`);
       }
-      console.log(`  - ${tableName}: table missing, skipping`);
+      console.info(`  - ${tableName}: table missing, skipping`);
       return [];
     }
 
@@ -613,10 +613,10 @@ async function main() {
   try {
     const transactionalDb = db as unknown as PgDatabase<PgQueryResultHKT>;
     await transactionalDb.transaction(async (tx) => {
-      console.log(`Clearing existing ${boardName} rows from unified tables...`);
+      console.info(`Clearing existing ${boardName} rows from unified tables...`);
       await clearBoardData(tx, boardName);
 
-      console.log(`Loading ${boardName} tables into unified schema...`);
+      console.info(`Loading ${boardName} tables into unified schema...`);
 
       for (const config of importConfigs) {
         const sourceRows = getRows(config.sourceTable, config.required);
@@ -642,7 +642,7 @@ async function main() {
       );
 
       // Populate denormalized required_set_ids from climb_holds -> placements
-      console.log(`  Computing required_set_ids for ${boardName}...`);
+      console.info(`  Computing required_set_ids for ${boardName}...`);
       await tx.execute(sql`
         UPDATE board_climbs c SET required_set_ids = sub.sets
         FROM (
@@ -661,7 +661,7 @@ async function main() {
       `);
 
       // Populate denormalized compatible_size_ids from edge comparison
-      console.log(`  Computing compatible_size_ids for ${boardName}...`);
+      console.info(`  Computing compatible_size_ids for ${boardName}...`);
       await tx.execute(sql`
         UPDATE board_climbs c SET compatible_size_ids = sub.size_ids
         FROM (
@@ -682,7 +682,7 @@ async function main() {
       `);
     });
 
-    console.log(`Finished importing ${boardName}.`);
+    console.info(`Finished importing ${boardName}.`);
   } finally {
     await close();
   }

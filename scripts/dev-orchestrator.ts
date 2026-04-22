@@ -42,7 +42,7 @@ async function checkBackendHealth(port: number): Promise<boolean> {
       clearTimeout(timeoutId);
 
       if (response.ok) {
-        console.log(`[dev] ✓ Backend is already running on port ${port}`);
+        console.info(`[dev] ✓ Backend is already running on port ${port}`);
         return true;
       }
     } catch {
@@ -86,7 +86,7 @@ async function findAvailablePort(basePort: number, maxAttempts = 10): Promise<nu
     const inUse = await isPortInUse(port);
     if (!inUse) {
       if (i > 0) {
-        console.log(`[dev] Port ${basePort} in use, using ${port} instead`);
+        console.info(`[dev] Port ${basePort} in use, using ${port} instead`);
       }
       return port;
     }
@@ -100,7 +100,7 @@ async function findAvailablePort(basePort: number, maxAttempts = 10): Promise<nu
  * Start the backend in the background
  */
 function startBackend(port: number): ReturnType<typeof spawn> {
-  console.log(`[dev] Starting backend on port ${port}...`);
+  console.info(`[dev] Starting backend on port ${port}...`);
 
   const backendProcess = spawn('bun', ['run', '--filter=boardsesh-backend', 'dev'], {
     cwd: ROOT_DIR,
@@ -118,7 +118,7 @@ function startBackend(port: number): ReturnType<typeof spawn> {
 
   backendProcess.on('exit', (code, signal) => {
     if (signal) {
-      console.log(`[dev] Backend terminated by signal ${signal}`);
+      console.info(`[dev] Backend terminated by signal ${signal}`);
     } else if (code !== 0) {
       console.error(`[dev] Backend exited with code ${code}`);
     }
@@ -131,7 +131,7 @@ function startBackend(port: number): ReturnType<typeof spawn> {
  * Start the Next.js development server
  */
 function startWeb(port: number, backendPort: number): ReturnType<typeof spawn> {
-  console.log(`[dev] Starting web on port ${port}...`);
+  console.info(`[dev] Starting web on port ${port}...`);
 
   const webProcess = spawn('bun', ['run', 'dev'], {
     cwd: join(ROOT_DIR, 'packages/web'),
@@ -150,7 +150,7 @@ function startWeb(port: number, backendPort: number): ReturnType<typeof spawn> {
 
   webProcess.on('exit', (code, signal) => {
     if (signal) {
-      console.log(`[dev] Web terminated by signal ${signal}`);
+      console.info(`[dev] Web terminated by signal ${signal}`);
     } else if (code !== 0) {
       console.error(`[dev] Web exited with code ${code}`);
     }
@@ -163,18 +163,18 @@ function startWeb(port: number, backendPort: number): ReturnType<typeof spawn> {
  * Cleanup handler for graceful shutdown
  */
 async function shutdown() {
-  console.log('\n[dev] Shutting down...');
+  console.info('\n[dev] Shutting down...');
 
   // Only kill processes we started
   if (processes.backend.isManaged && processes.backend.process) {
-    console.log('[dev] Stopping backend...');
+    console.info('[dev] Stopping backend...');
     processes.backend.process.kill('SIGTERM');
   } else if (processes.backend.process) {
-    console.log('[dev] Backend was already running, leaving it as-is');
+    console.info('[dev] Backend was already running, leaving it as-is');
   }
 
   if (processes.web.process) {
-    console.log('[dev] Stopping web...');
+    console.info('[dev] Stopping web...');
     processes.web.process.kill('SIGTERM');
   }
 
@@ -213,7 +213,7 @@ async function main(): Promise<void> {
     backendHealthy = await checkBackendHealth(DEFAULT_BACKEND_PORT);
     if (backendHealthy) {
       backendPort = DEFAULT_BACKEND_PORT;
-      console.log(`[dev] Reusing existing backend on port ${backendPort}`);
+      console.info(`[dev] Reusing existing backend on port ${backendPort}`);
     } else {
       shouldStartBackend = true;
     }
@@ -229,10 +229,10 @@ async function main(): Promise<void> {
   // Find available port for web (always auto-increment)
   const webPort = process.env.PORT ? requestedWebPort : await findAvailablePort(requestedWebPort);
 
-  console.log(`[dev] Boardsesh Development Orchestrator`);
-  console.log(`[dev] Backend port: ${backendPort}${startNewBackend ? ' (new instance)' : ''}`);
-  console.log(`[dev] Web port: ${webPort}`);
-  console.log();
+  console.info(`[dev] Boardsesh Development Orchestrator`);
+  console.info(`[dev] Backend port: ${backendPort}${startNewBackend ? ' (new instance)' : ''}`);
+  console.info(`[dev] Web port: ${webPort}`);
+  console.info();
 
   // Start backend if needed
   if (shouldStartBackend && !backendHealthy) {
@@ -247,12 +247,12 @@ async function main(): Promise<void> {
     }
 
     // Start backend
-    console.log(`[dev] Starting backend on port ${backendPort}...`);
+    console.info(`[dev] Starting backend on port ${backendPort}...`);
     processes.backend.process = startBackend(backendPort);
     processes.backend.isManaged = true;
 
     // Wait for backend to be healthy
-    console.log(`[dev] Waiting for backend to be healthy...`);
+    console.info(`[dev] Waiting for backend to be healthy...`);
     backendHealthy = await checkBackendHealth(backendPort);
 
     if (!backendHealthy) {
@@ -260,7 +260,7 @@ async function main(): Promise<void> {
       process.exit(1);
     }
 
-    console.log(`[dev] ✓ Backend is healthy`);
+    console.info(`[dev] ✓ Backend is healthy`);
   }
 
   // Start web

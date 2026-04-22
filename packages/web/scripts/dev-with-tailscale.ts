@@ -101,12 +101,12 @@ function main(): void {
   setDefaultEnv('NEXTAUTH_URL', `http://${resolution.hostname}:${webPort}`);
   setDefaultEnv('BASE_URL', `http://${resolution.hostname}:${webPort}`);
 
-  console.log(`[dev] Hostname: ${resolution.hostname} (${resolution.source})`);
+  console.info(`[dev] Hostname: ${resolution.hostname} (${resolution.source})`);
   if (resolution.reason) {
-    console.log(`[dev] ${resolution.reason}`);
+    console.info(`[dev] ${resolution.reason}`);
   }
-  console.log(`[dev] Web URL: http://${resolution.hostname}:${webPort}`);
-  console.log(`[dev] Backend WS URL: ${process.env.NEXT_PUBLIC_WS_URL}`);
+  console.info(`[dev] Web URL: http://${resolution.hostname}:${webPort}`);
+  console.info(`[dev] Backend WS URL: ${process.env.NEXT_PUBLIC_WS_URL}`);
 
   const nextProcess = spawn('next', ['dev', '--hostname', '0.0.0.0', '--turbopack'], {
     env: process.env,

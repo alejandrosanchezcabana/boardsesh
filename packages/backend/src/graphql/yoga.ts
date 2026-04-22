@@ -1,5 +1,4 @@
 import { createYoga } from 'graphql-yoga';
-import type { IncomingMessage } from 'http';
 import { v4 as uuidv4 } from 'uuid';
 import { schema } from './index';
 import { validateNextAuthToken } from '../middleware/auth';
@@ -67,7 +66,7 @@ export function createYogaInstance() {
     // Logging - suppress debug entirely (Yoga internals like "Parsing request" are noisy)
     logging: {
       debug: () => {},
-      info: (...args: unknown[]) => console.log('[Yoga]', ...args),
+      info: (...args: unknown[]) => console.info('[Yoga]', ...args),
       warn: (...args: unknown[]) => console.warn('[Yoga]', ...args),
       error: (...args: unknown[]) => console.error('[Yoga]', ...args),
     },

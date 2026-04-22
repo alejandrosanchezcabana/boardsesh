@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
-import { getLayoutBySlug, LayoutRow } from '@/app/lib/slug-utils';
-import { BoardName } from '@/app/lib/types';
+import type { LayoutRow } from '@/app/lib/slug-utils';
+import { getLayoutBySlug } from '@/app/lib/slug-utils';
+import type { BoardName } from '@/app/lib/types';
 
 export async function GET(
   req: Request,

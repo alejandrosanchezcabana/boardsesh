@@ -1,5 +1,6 @@
-import { getSetterStats, SetterStat } from '@/app/lib/db/queries/climbs/setter-stats';
-import { BoardRouteParameters, ErrorResponse } from '@/app/lib/types';
+import type { SetterStat } from '@/app/lib/db/queries/climbs/setter-stats';
+import { getSetterStats } from '@/app/lib/db/queries/climbs/setter-stats';
+import type { BoardRouteParameters, ErrorResponse } from '@/app/lib/types';
 import { parseBoardRouteParamsWithSlugs } from '@/app/lib/url-utils.server';
 import { NextResponse } from 'next/server';
 

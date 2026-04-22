@@ -2,7 +2,7 @@
 
 import React, { useMemo } from 'react';
 import { MOONBOARD_GRID, MOONBOARD_SIZE, getGridPosition, MOONBOARD_HOLD_STATES } from '@/app/lib/moonboard-config';
-import { MoonBoardRendererProps } from './types';
+import type { MoonBoardRendererProps } from './types';
 
 const MoonBoardRenderer: React.FC<MoonBoardRendererProps> = ({
   layoutFolder,

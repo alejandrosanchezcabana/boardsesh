@@ -1,6 +1,6 @@
 import type { MoonBoardHoldsInput } from '@boardsesh/shared-schema';
 import type { LitUpHoldsMap } from '@/app/components/board-renderer/types';
-import { holdIdToCoordinate, type MoonBoardCoordinate } from './moonboard-config';
+import { holdIdToCoordinate } from './moonboard-config';
 
 export const MOONBOARD_DUPLICATE_ERROR_PREFIX = 'A MoonBoard climb with the same holds already exists';
 
@@ -14,7 +14,7 @@ export function convertLitUpHoldsMapToMoonBoardHolds(litUpHoldsMap: LitUpHoldsMa
   const sortedEntries = Object.entries(litUpHoldsMap).sort(([a], [b]) => Number(a) - Number(b));
 
   for (const [holdId, hold] of sortedEntries) {
-    const coord = holdIdToCoordinate(Number(holdId)) as MoonBoardCoordinate;
+    const coord = holdIdToCoordinate(Number(holdId));
 
     if (hold.state === 'STARTING') {
       holds.start.push(coord);

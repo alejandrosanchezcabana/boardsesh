@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-import { BoardDetails, HoldState } from '@/app/lib/types';
+import type { BoardDetails, HoldState } from '@/app/lib/types';
 import { useUISearchParams } from '@/app/components/queue-control/ui-searchparams-provider';
 import MuiSelect from '@mui/material/Select';
 import MenuItem from '@mui/material/MenuItem';

@@ -118,7 +118,7 @@ export function useDiscoverBoards({
       }
     };
 
-    doFetch();
+    void doFetch();
 
     return () => {
       cancelled = true;

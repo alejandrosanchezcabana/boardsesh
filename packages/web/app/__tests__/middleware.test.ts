@@ -215,29 +215,29 @@ function makeRequest(url: string): NextRequest {
 }
 
 describe('middleware session redirect', () => {
-  it('redirects when ?session= is present on a list page', async () => {
-    const response = await middleware(makeRequest('/b/kilter-original-12x12/40/list?session=abc-123'));
+  it('redirects when ?session= is present on a list page', () => {
+    const response = middleware(makeRequest('/b/kilter-original-12x12/40/list?session=abc-123'));
     expect(response.status).toBe(307);
     const location = response.headers.get('location');
     expect(location).toBe('http://localhost:3000/b/kilter-original-12x12/40/list');
   });
 
-  it('redirects when ?session= is present on any page', async () => {
-    const response = await middleware(makeRequest('/some/page?session=xyz'));
+  it('redirects when ?session= is present on any page', () => {
+    const response = middleware(makeRequest('/some/page?session=xyz'));
     expect(response.status).toBe(307);
     const location = response.headers.get('location');
     expect(location).toBe('http://localhost:3000/some/page');
   });
 
-  it('sets the climb session cookie on redirect', async () => {
-    const response = await middleware(makeRequest('/b/kilter-original-12x12/40/list?session=abc-123'));
+  it('sets the climb session cookie on redirect', () => {
+    const response = middleware(makeRequest('/b/kilter-original-12x12/40/list?session=abc-123'));
     const setCookie = response.headers.get('set-cookie');
     expect(setCookie).toContain(CLIMB_SESSION_COOKIE);
     expect(setCookie).toContain('abc-123');
   });
 
-  it('preserves other query params when stripping session', async () => {
-    const response = await middleware(
+  it('preserves other query params when stripping session', () => {
+    const response = middleware(
       makeRequest('/b/kilter-original-12x12/40/list?minGrade=10&session=abc-123&sortBy=difficulty'),
     );
     expect(response.status).toBe(307);
@@ -247,26 +247,26 @@ describe('middleware session redirect', () => {
     expect(location.searchParams.has('session')).toBe(false);
   });
 
-  it('does not redirect when no ?session= is present', async () => {
-    const response = await middleware(makeRequest('/b/kilter-original-12x12/40/list'));
+  it('does not redirect when no ?session= is present', () => {
+    const response = middleware(makeRequest('/b/kilter-original-12x12/40/list'));
     expect(response.status).not.toBe(307);
   });
 
-  it('session redirect takes priority over CDN cache headers', async () => {
-    const response = await middleware(makeRequest('/kilter/original/12x12-square/screw_bolt/40/list?session=abc-123'));
+  it('session redirect takes priority over CDN cache headers', () => {
+    const response = middleware(makeRequest('/kilter/original/12x12-square/screw_bolt/40/list?session=abc-123'));
     expect(response.status).toBe(307);
     expect(response.headers.has('Vercel-CDN-Cache-Control')).toBe(false);
   });
 });
 
 describe('middleware cache headers on list pages', () => {
-  it('does not rewrite cacheable list pages', async () => {
-    const response = await middleware(makeRequest(LEGACY_LIST));
+  it('does not rewrite cacheable list pages', () => {
+    const response = middleware(makeRequest(LEGACY_LIST));
     expect(response.headers.has('x-middleware-rewrite')).toBe(false);
   });
 
-  it('sets CDN cache headers on cacheable list pages', async () => {
-    const response = await middleware(makeRequest(LEGACY_LIST));
+  it('sets CDN cache headers on cacheable list pages', () => {
+    const response = middleware(makeRequest(LEGACY_LIST));
     expect(response.headers.get('Vercel-CDN-Cache-Control')).toBe(
       `s-maxage=${TTL_24H}, stale-while-revalidate=${TTL_24H * 7}`,
     );
@@ -275,17 +275,17 @@ describe('middleware cache headers on list pages', () => {
     );
   });
 
-  it('still sets cache headers when vercel-flag-overrides cookie is present', async () => {
+  it('still sets cache headers when vercel-flag-overrides cookie is present', () => {
     const req = makeRequest(LEGACY_LIST);
     req.cookies.set('vercel-flag-overrides', 'some-override');
-    const response = await middleware(req);
+    const response = middleware(req);
     expect(response.headers.get('Vercel-CDN-Cache-Control')).toBe(
       `s-maxage=${TTL_24H}, stale-while-revalidate=${TTL_24H * 7}`,
     );
   });
 
-  it('does not set cache headers for non-list pages', async () => {
-    const response = await middleware(makeRequest('/some/page'));
+  it('does not set cache headers for non-list pages', () => {
+    const response = middleware(makeRequest('/some/page'));
     expect(response.headers.has('Vercel-CDN-Cache-Control')).toBe(false);
     expect(response.headers.has('CDN-Cache-Control')).toBe(false);
   });

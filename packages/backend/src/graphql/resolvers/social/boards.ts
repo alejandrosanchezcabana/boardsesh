@@ -585,7 +585,7 @@ export async function warmPopularConfigsCache(): Promise<void> {
       // Try to acquire lock — only the winning node runs the query
       const lockAcquired = await publisher.set(REDIS_LOCK_KEY, '1', 'EX', REDIS_LOCK_TTL_SECONDS, 'NX');
       if (!lockAcquired) {
-        console.log('[PopularConfigs] Another node is refreshing the cache, skipping');
+        console.info('[PopularConfigs] Another node is refreshing the cache, skipping');
         return;
       }
       // Winning node: delete stale cache so getPopularConfigs() runs the SQL query
@@ -595,10 +595,10 @@ export async function warmPopularConfigsCache(): Promise<void> {
     }
   }
 
-  console.log('[PopularConfigs] Refreshing cache...');
+  console.info('[PopularConfigs] Refreshing cache...');
   try {
     const configs = await getPopularConfigs();
-    console.log(`[PopularConfigs] Cache warmed with ${configs.length} configs`);
+    console.info(`[PopularConfigs] Cache warmed with ${configs.length} configs`);
   } catch (err) {
     console.error('[PopularConfigs] Cache warm-up failed:', err);
   }
@@ -848,7 +848,7 @@ export const socialBoardQueries = {
   /**
    * Get leaderboard for a board
    */
-  boardLeaderboard: async (_: unknown, { input }: { input: unknown }, ctx: ConnectionContext) => {
+  boardLeaderboard: async (_: unknown, { input }: { input: unknown }, _ctx: ConnectionContext) => {
     const validatedInput = validateInput(BoardLeaderboardInputSchema, input, 'input');
     const { boardUuid, period } = validatedInput;
     const limit = validatedInput.limit ?? 20;
@@ -916,7 +916,7 @@ export const socialBoardQueries = {
 
     // Batch fetch user profiles
     const userIds = entries.map((e) => e.userId);
-    let userMap = new Map<string, { displayName?: string; avatarUrl?: string }>();
+    const userMap = new Map<string, { displayName?: string; avatarUrl?: string }>();
 
     if (userIds.length > 0) {
       const users = await db
@@ -1147,7 +1147,7 @@ export const socialBoardMutations = {
             return newBoard;
           });
 
-          return enrichBoard(board, userId);
+          return await enrichBoard(board, userId);
         } catch (error) {
           // Auto-gym creation failed; continue to create the board without a gym
           console.error('Auto-gym creation failed, creating board without gym:', error);

@@ -37,9 +37,7 @@ const mockFrom = vi.fn();
 const mockWhere = vi.fn();
 const mockLimit = vi.fn();
 const mockInsert = vi.fn();
-const mockValues = vi.fn();
 const mockUpdate = vi.fn();
-const mockSet = vi.fn();
 const mockTransaction = vi.fn();
 
 vi.mock('@/app/lib/db/db', () => ({

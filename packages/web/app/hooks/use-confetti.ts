@@ -144,7 +144,7 @@ export function useConfetti() {
     }
 
     const isAttempt = variant === 'attempt';
-    confetti({
+    void confetti({
       particleCount: 35,
       spread: isAttempt ? 40 : 60,
       startVelocity: isAttempt ? 12 : 25,

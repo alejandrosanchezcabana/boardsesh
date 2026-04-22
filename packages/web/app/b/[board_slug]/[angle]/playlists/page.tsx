@@ -1,6 +1,6 @@
 import React from 'react';
 import { notFound } from 'next/navigation';
-import { Metadata } from 'next';
+import type { Metadata } from 'next';
 import { resolveBoardBySlug } from '@/app/lib/board-slug-utils';
 import { constructBoardSlugPlaylistsUrl } from '@/app/lib/url-utils';
 import { getServerAuthToken } from '@/app/lib/auth/server-auth';

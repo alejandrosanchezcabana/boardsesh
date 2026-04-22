@@ -104,7 +104,7 @@ export const socialProposalQueries = {
   climbCommunityStatus: async (
     _: unknown,
     { climbUuid, boardType, angle }: { climbUuid: string; boardType: string; angle: number },
-    ctx: ConnectionContext,
+    _ctx: ConnectionContext,
   ) => {
     // Get community status
     const [status] = await db
@@ -171,7 +171,7 @@ export const socialProposalQueries = {
   bulkClimbCommunityStatus: async (
     _: unknown,
     { climbUuids, boardType, angle }: { climbUuids: string[]; boardType: string; angle: number },
-    ctx: ConnectionContext,
+    _ctx: ConnectionContext,
   ) => {
     if (climbUuids.length === 0) return [];
 
@@ -221,7 +221,7 @@ export const socialProposalQueries = {
   climbClassicStatus: async (
     _: unknown,
     { climbUuid, boardType }: { climbUuid: string; boardType: string },
-    ctx: ConnectionContext,
+    _ctx: ConnectionContext,
   ) => {
     const [status] = await db
       .select()

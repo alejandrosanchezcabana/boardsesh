@@ -21,8 +21,18 @@ import {
   IosShare,
 } from '@mui/icons-material';
 import { useInfiniteQuery } from '@tanstack/react-query';
-import { Climb } from '@/app/lib/types';
+import type { Climb } from '@/app/lib/types';
 import { executeGraphQL, createGraphQLHttpClient } from '@/app/lib/graphql/client';
+import type {
+  GetPlaylistQueryResponse,
+  GetPlaylistQueryVariables,
+  GetPlaylistClimbsQueryResponse,
+  Playlist,
+  UpdatePlaylistLastAccessedMutationVariables,
+  UpdatePlaylistLastAccessedMutationResponse,
+  DeletePlaylistMutationVariables,
+  DeletePlaylistMutationResponse,
+} from '@/app/lib/graphql/operations/playlists';
 import {
   GET_PLAYLIST,
   GET_PLAYLIST_CLIMBS,
@@ -30,16 +40,8 @@ import {
   UPDATE_PLAYLIST_LAST_ACCESSED,
   FOLLOW_PLAYLIST,
   UNFOLLOW_PLAYLIST,
-  GetPlaylistQueryResponse,
-  GetPlaylistQueryVariables,
-  GetPlaylistClimbsQueryResponse,
   type GetPlaylistClimbsQueryVariables,
   type GetPlaylistClimbsInput,
-  Playlist,
-  UpdatePlaylistLastAccessedMutationVariables,
-  UpdatePlaylistLastAccessedMutationResponse,
-  DeletePlaylistMutationVariables,
-  DeletePlaylistMutationResponse,
 } from '@/app/lib/graphql/operations/playlists';
 import { useSnackbar } from '@/app/components/providers/snackbar-provider';
 import { shareWithFallback } from '@/app/lib/share-utils';
@@ -163,7 +165,7 @@ export default function PlaylistDetailContent({
   }, [playlistUuid, token, tokenLoading]);
 
   useEffect(() => {
-    fetchPlaylist();
+    void fetchPlaylist();
   }, [fetchPlaylist]);
 
   // Update lastAccessedAt when playlist loads (fire-and-forget, only for owners)
@@ -191,12 +193,12 @@ export default function PlaylistDetailContent({
     isLoading: isClimbsLoading,
   } = useInfiniteQuery({
     queryKey: ['playlistClimbs', playlistUuid, selectedBoard?.uuid ?? 'all', listRefreshKey],
-    queryFn: async ({ pageParam = 0 }) => {
+    queryFn: async ({ pageParam }) => {
       const client = createGraphQLHttpClient(token);
 
       const input: GetPlaylistClimbsInput = {
         playlistId: playlistUuid,
-        page: pageParam as number,
+        page: pageParam,
         pageSize: 20,
         // Specific-board mode when a board is selected
         ...(selectedBoard && {
@@ -240,7 +242,7 @@ export default function PlaylistDetailContent({
 
   const handleLoadMore = useCallback(() => {
     if (hasNextPage && !isFetchingNextPage) {
-      fetchNextPage();
+      void fetchNextPage();
     }
   }, [hasNextPage, isFetchingNextPage, fetchNextPage]);
 
@@ -250,7 +252,7 @@ export default function PlaylistDetailContent({
 
   const handlePlaylistUpdated = useCallback(() => {
     setListRefreshKey((prev) => prev + 1);
-    fetchPlaylist();
+    void fetchPlaylist();
   }, [fetchPlaylist]);
 
   const handleDelete = useCallback(async () => {

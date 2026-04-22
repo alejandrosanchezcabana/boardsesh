@@ -38,8 +38,8 @@ import { HoldClassificationWizard } from '../hold-classification';
 import BoardDiscoveryScroll from '../board-scroll/board-discovery-scroll';
 import BoardSelectorDrawer from '../board-selector-drawer/board-selector-drawer';
 import MyBoardsDrawer from '../my-boards-drawer/my-boards-drawer';
-import { BoardConfigData } from '@/app/lib/server-board-configs';
-import { BoardDetails, BoardName } from '@/app/lib/types';
+import type { BoardConfigData } from '@/app/lib/server-board-configs';
+import type { BoardDetails, BoardName } from '@/app/lib/types';
 import type { BoardRouteIdentity } from '@/app/lib/types';
 import { SUPPORTED_BOARDS } from '@/app/lib/board-data';
 import type { UserBoard, PopularBoardConfig } from '@boardsesh/shared-schema';
@@ -114,7 +114,7 @@ export default function UserDrawer({ boardDetails, boardConfigs }: UserDrawerPro
       if (!board.slug) return;
       const boardName = asBoardName(board.boardType);
       const navigate = () => {
-        router.push(constructBoardSlugListUrl(board.slug!, board.angle));
+        router.push(constructBoardSlugListUrl(board.slug, board.angle));
         setShowBoardSelector(false);
       };
       if (!boardName) {
@@ -172,7 +172,7 @@ export default function UserDrawer({ boardDetails, boardConfigs }: UserDrawerPro
   );
 
   const handleSignOut = () => {
-    signOut();
+    void signOut();
     handleClose();
   };
 

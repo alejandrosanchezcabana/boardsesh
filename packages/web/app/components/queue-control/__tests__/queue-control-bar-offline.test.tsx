@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach, afterEach } from 'vite-plus/test';
+import { describe, it, expect, vi, beforeEach } from 'vite-plus/test';
 import { render, screen, fireEvent, act } from '@testing-library/react';
 import React from 'react';
 
@@ -15,24 +15,24 @@ vi.mock('@/app/components/graphql-queue', () => ({
   useQueueData: () => mockQueueContext,
   useQueueActions: () => mockQueueContext,
   useCurrentClimb: () => ({
-    currentClimb: (mockQueueContext as Record<string, unknown>).currentClimb,
+    currentClimb: mockQueueContext.currentClimb,
   }),
   useQueueList: () => ({
-    queue: (mockQueueContext as Record<string, unknown>).queue,
+    queue: mockQueueContext.queue,
     suggestedClimbs: [],
   }),
   useSessionData: () => ({
-    viewOnlyMode: (mockQueueContext as Record<string, unknown>).viewOnlyMode ?? false,
-    isSessionActive: !!(mockQueueContext as Record<string, unknown>).sessionId,
-    sessionId: (mockQueueContext as Record<string, unknown>).sessionId ?? null,
+    viewOnlyMode: mockQueueContext.viewOnlyMode ?? false,
+    isSessionActive: !!mockQueueContext.sessionId,
+    sessionId: mockQueueContext.sessionId ?? null,
     sessionSummary: null,
     sessionSummaryBoardType: null,
     sessionSummaryHealthKitWorkoutId: null,
     sessionGoal: null,
-    connectionState: (mockQueueContext as Record<string, unknown>).connectionState ?? 'idle',
-    canMutate: (mockQueueContext as Record<string, unknown>).canMutate ?? true,
-    isDisconnected: (mockQueueContext as Record<string, unknown>).isDisconnected ?? false,
-    users: (mockQueueContext as Record<string, unknown>).users ?? [],
+    connectionState: mockQueueContext.connectionState ?? 'idle',
+    canMutate: mockQueueContext.canMutate ?? true,
+    isDisconnected: mockQueueContext.isDisconnected ?? false,
+    users: mockQueueContext.users ?? [],
     clientId: null,
     isLeader: true,
     isBackendMode: false,
@@ -83,7 +83,7 @@ vi.mock('@/app/hooks/use-color-mode', () => ({
 }));
 
 vi.mock('@/app/lib/grade-colors', async (importOriginal) => {
-  const actual = await importOriginal<typeof import('@/app/lib/grade-colors')>();
+  const actual = await importOriginal<Record<string, unknown>>();
   return {
     ...actual,
     getGradeTintColor: () => null,

@@ -1,8 +1,8 @@
 import React, { useMemo } from 'react';
 import { getImageUrl } from './util';
-import { BoardDetails } from '@/app/lib/types';
+import type { BoardDetails } from '@/app/lib/types';
 import BoardLitupHolds from './board-litup-holds';
-import { LitUpHoldsMap } from './types';
+import type { LitUpHoldsMap } from './types';
 import styles from './board-renderer.module.css';
 import MoonBoardRenderer from '../moonboard-renderer/moonboard-renderer';
 

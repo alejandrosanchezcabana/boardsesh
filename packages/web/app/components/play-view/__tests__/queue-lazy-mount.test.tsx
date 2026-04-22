@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
-import { describe, it, expect, vi, beforeEach, afterEach } from 'vite-plus/test';
-import React, { useState, useEffect, useLayoutEffect, useCallback, useRef } from 'react';
+import { describe, it, expect, beforeEach, afterEach } from 'vite-plus/test';
+import React, { useState, useEffect, useLayoutEffect } from 'react';
 import { render, act, fireEvent, cleanup } from '@testing-library/react';
 
 // ---------------------------------------------------------------------------

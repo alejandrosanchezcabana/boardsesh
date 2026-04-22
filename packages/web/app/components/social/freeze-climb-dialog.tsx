@@ -53,7 +53,7 @@ export default function FreezeClimbDialog({
       });
       onFreezeChanged?.(frozen);
       onClose();
-    } catch (err) {
+    } catch {
       setSnackbar('Failed to update freeze status');
     } finally {
       setLoading(false);

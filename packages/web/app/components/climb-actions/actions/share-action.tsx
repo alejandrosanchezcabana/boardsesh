@@ -3,7 +3,7 @@
 import React, { useCallback } from 'react';
 import { useSnackbar } from '@/app/components/providers/snackbar-provider';
 import IosShare from '@mui/icons-material/IosShare';
-import { ClimbActionProps, ClimbActionResult } from '../types';
+import type { ClimbActionProps, ClimbActionResult } from '../types';
 import { getContextAwareClimbViewUrl } from '@/app/lib/url-utils';
 import { buildActionResult, computeActionDisplay } from '../action-view-renderer';
 import { shareWithFallback } from '@/app/lib/share-utils';

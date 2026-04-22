@@ -30,15 +30,17 @@ const statusIcons: Record<ResultStatus, React.ReactNode> = {
 export function ResultPage({ status, title, subTitle, extra, icon, sx }: ResultPageProps) {
   return (
     <Box
-      sx={{
-        display: 'flex',
-        flexDirection: 'column',
-        alignItems: 'center',
-        justifyContent: 'center',
-        padding: 4,
-        textAlign: 'center',
-        ...sx,
-      }}
+      sx={[
+        {
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          justifyContent: 'center',
+          padding: 4,
+          textAlign: 'center',
+        },
+        ...(Array.isArray(sx) ? sx : sx ? [sx] : []),
+      ]}
     >
       <Box sx={{ mb: 3 }}>{icon || statusIcons[status]}</Box>
       <Typography variant="h5" sx={{ mb: 1 }}>

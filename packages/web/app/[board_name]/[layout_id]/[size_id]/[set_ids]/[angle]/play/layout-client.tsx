@@ -1,13 +1,13 @@
 'use client';
 
 import React from 'react';
-import { PropsWithChildren } from 'react';
+import type { PropsWithChildren } from 'react';
 import Badge from '@mui/material/Badge';
 import MuiButton from '@mui/material/Button';
 import Box from '@mui/material/Box';
 import { DeleteOutlined } from '@mui/icons-material';
 import { track } from '@vercel/analytics';
-import { BoardDetails } from '@/app/lib/types';
+import type { BoardDetails } from '@/app/lib/types';
 
 import QueueList from '@/app/components/queue-control/queue-list';
 import { useQueueActions, useQueueList } from '@/app/components/graphql-queue';

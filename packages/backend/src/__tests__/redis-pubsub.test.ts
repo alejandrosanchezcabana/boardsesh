@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeAll, afterAll, beforeEach, vi } from 'vite-plus/test';
+import { describe, it, expect, beforeAll, afterAll, vi } from 'vite-plus/test';
 import Redis from 'ioredis';
 import { createRedisPubSubAdapter, type RedisPubSubAdapter } from '../pubsub/redis-adapter';
 import type { QueueEvent, SessionEvent } from '@boardsesh/shared-schema';

@@ -99,11 +99,12 @@ export function usePullToClose({
 
   // Clean up timers on unmount
   useEffect(() => {
+    const timers = timersRef.current;
     return () => {
-      for (const id of timersRef.current) {
+      for (const id of timers) {
         clearTimeout(id);
       }
-      timersRef.current.clear();
+      timers.clear();
     };
   }, []);
 

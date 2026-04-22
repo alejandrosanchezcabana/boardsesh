@@ -1,6 +1,6 @@
 import { useReducer } from 'react';
-import { QueueState, QueueAction } from './types';
-import { SearchRequestPagination } from '@/app/lib/types';
+import type { QueueState, QueueAction } from './types';
+import type { SearchRequestPagination } from '@/app/lib/types';
 import { insertQueueItemIdempotent } from '../persistent-session/event-utils';
 
 const initialState = (initialSearchParams: SearchRequestPagination): QueueState => ({

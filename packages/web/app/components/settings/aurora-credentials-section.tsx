@@ -275,7 +275,7 @@ export function ImportProgressSteps({ progress }: { progress: ImportProgress | n
         const isActive = index === currentStepIndex;
         const isPending = index > currentStepIndex;
         const hasCounts = isActive && progress?.current != null && progress?.total != null;
-        const progressPercent = hasCounts ? (progress!.current! / progress!.total!) * 100 : 0;
+        const progressPercent = hasCounts ? (progress.current! / progress.total!) * 100 : 0;
 
         return (
           <div key={step} className={styles.progressStep}>
@@ -289,7 +289,7 @@ export function ImportProgressSteps({ progress }: { progress: ImportProgress | n
                 fontWeight={isActive ? 600 : 400}
               >
                 {STEP_LABELS[step]}
-                {hasCounts && ` (${progress!.current} / ${progress!.total})`}
+                {hasCounts && ` (${progress.current} / ${progress.total})`}
               </Typography>
             </div>
             {hasCounts && (
@@ -353,8 +353,8 @@ export default function AuroraCredentialsSection() {
   };
 
   useEffect(() => {
-    fetchCredentials();
-    fetchUnsyncedCounts();
+    void fetchCredentials();
+    void fetchUnsyncedCounts();
   }, []);
 
   const handleAddClick = (boardType: 'kilter' | 'tension') => {
@@ -649,7 +649,7 @@ export default function AuroraCredentialsSection() {
               e.preventDefault();
               const vals = formValues;
               if (!vals.username || !vals.password) return;
-              handleSaveCredentials(vals);
+              void handleSaveCredentials(vals);
             }}
             sx={{ display: 'flex', flexDirection: 'column', gap: 2, mt: 2 }}
           >

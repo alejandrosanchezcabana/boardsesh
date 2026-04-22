@@ -8,7 +8,7 @@ import EditOutlined from '@mui/icons-material/EditOutlined';
 import Link from 'next/link';
 import { track } from '@vercel/analytics';
 import { useSession } from 'next-auth/react';
-import { ClimbActionProps, ClimbActionResult } from '../types';
+import type { ClimbActionProps, ClimbActionResult } from '../types';
 import { constructCreateClimbUrl } from '@/app/lib/url-utils';
 import { themeTokens } from '@/app/theme/theme-config';
 import { buildActionResult, computeActionDisplay } from '../action-view-renderer';

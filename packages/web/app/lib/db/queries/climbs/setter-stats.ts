@@ -1,6 +1,6 @@
 import { eq, sql, and, ilike } from 'drizzle-orm';
 import { dbz as db } from '@/app/lib/db/db';
-import { ParsedBoardRouteParameters } from '@/app/lib/types';
+import type { ParsedBoardRouteParameters } from '@/app/lib/types';
 import { UNIFIED_TABLES } from '@/lib/db/queries/util/table-select';
 
 export interface SetterStat {

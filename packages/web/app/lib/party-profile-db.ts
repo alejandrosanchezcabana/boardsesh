@@ -82,7 +82,7 @@ const migrateFromLegacyStorage = async (): Promise<boolean> => {
     if (migrated) {
       // Also clean up legacy username key if present
       localStorage.removeItem('boardsesh:username');
-      console.log('Successfully migrated party profile from localStorage to IndexedDB');
+      console.info('Successfully migrated party profile from localStorage to IndexedDB');
     }
 
     return migrated;

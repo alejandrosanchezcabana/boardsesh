@@ -1,7 +1,7 @@
 import SwipeableDrawer from '../swipeable-drawer/swipeable-drawer';
 import React from 'react';
 import { LogAscentForm } from './logascent-form';
-import { BoardDetails, Climb } from '@/app/lib/types';
+import type { BoardDetails, Climb } from '@/app/lib/types';
 
 interface LogAscentDrawerProps {
   open: boolean;

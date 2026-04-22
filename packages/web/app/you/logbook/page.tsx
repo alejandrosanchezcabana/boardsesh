@@ -1,5 +1,5 @@
 import React, { Suspense } from 'react';
-import { Metadata } from 'next';
+import type { Metadata } from 'next';
 import { redirect } from 'next/navigation';
 import LogbookFeed from '@/app/components/library/logbook-feed';
 import LogbookLoading from './loading';

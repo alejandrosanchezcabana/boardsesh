@@ -64,25 +64,25 @@ export class DistributedStateManager {
     }
 
     this.heartbeatInterval = setInterval(() => {
-      this.updateHeartbeatWithRecovery();
+      void this.updateHeartbeatWithRecovery();
     }, 30_000);
 
     // Initial heartbeat
-    this.updateHeartbeatWithRecovery();
+    void this.updateHeartbeatWithRecovery();
 
     // Clean up connections from dead instances asynchronously on startup
     this.cleanupDeadInstanceConnections().catch((err) => {
       console.error('[DistributedState] Startup dead instance cleanup failed:', err);
     });
 
-    console.log(`[DistributedState] Started with instance ID: ${this.instanceId.slice(0, 8)}`);
+    console.info(`[DistributedState] Started with instance ID: ${this.instanceId.slice(0, 8)}`);
   }
 
   /** Stop background tasks and clean up instance state. */
   async stop(): Promise<void> {
     this.stopHeartbeat();
     await cleanupInstanceConnections(this.redis, this.instanceId);
-    console.log(`[DistributedState] Stopped instance: ${this.instanceId.slice(0, 8)}`);
+    console.info(`[DistributedState] Stopped instance: ${this.instanceId.slice(0, 8)}`);
   }
 
   /** Stop only the heartbeat interval synchronously. */
@@ -236,11 +236,11 @@ export class DistributedStateManager {
 
       // Heartbeat succeeded - reset failure counter and restore health
       if (this.consecutiveHeartbeatFailures > 0) {
-        console.log(`[DistributedState] Heartbeat recovered after ${this.consecutiveHeartbeatFailures} failures`);
+        console.info(`[DistributedState] Heartbeat recovered after ${this.consecutiveHeartbeatFailures} failures`);
         this.consecutiveHeartbeatFailures = 0;
       }
       if (!this.isHealthy) {
-        console.log('[DistributedState] Redis connection restored, marking as healthy');
+        console.info('[DistributedState] Redis connection restored, marking as healthy');
         this.isHealthy = true;
       }
 

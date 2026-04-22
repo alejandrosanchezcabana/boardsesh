@@ -2,14 +2,10 @@
 
 import React, { useState, useEffect } from 'react';
 import HistoryOutlined from '@mui/icons-material/HistoryOutlined';
-import {
-  getRecentSearches,
-  getFilterKey,
-  RecentSearch,
-  RECENT_SEARCHES_CHANGED_EVENT,
-} from './recent-searches-storage';
+import type { RecentSearch } from './recent-searches-storage';
+import { getRecentSearches, getFilterKey, RECENT_SEARCHES_CHANGED_EVENT } from './recent-searches-storage';
 import { useUISearchParams } from '@/app/components/queue-control/ui-searchparams-provider';
-import { SearchRequestPagination } from '@/app/lib/types';
+import type { SearchRequestPagination } from '@/app/lib/types';
 import { DEFAULT_SEARCH_PARAMS } from '@/app/lib/url-utils';
 import { getSearchPillFullSummary } from './search-summary-utils';
 import styles from './recent-search-pills.module.css';
@@ -34,7 +30,7 @@ const RecentSearchPills: React.FC = () => {
     };
 
     const refreshSearches = () => {
-      getRecentSearches().then((nextSearches) => {
+      void getRecentSearches().then((nextSearches) => {
         if (!isMounted) return;
         setSearches(nextSearches);
       });

@@ -189,7 +189,7 @@ const OnboardingTour: React.FC = () => {
       }
     };
 
-    checkOnboarding();
+    void checkOnboarding();
   }, [session?.user?.id]);
 
   const handleClose = useCallback(async () => {

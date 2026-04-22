@@ -259,7 +259,7 @@ const SwipeableDrawer: React.FC<SwipeableDrawerProps> = ({
     }
 
     return sx;
-  }, [userStyles?.wrapper, height, width, fullHeightProp]);
+  }, [userStyles?.wrapper, height, width, fullHeightProp, placement]);
 
   // SwipeableDrawer onClose handler.
   // When triggered by a swipe fling, the Paper is at an intermediate position

@@ -14,7 +14,7 @@ export const playlist = async (
   _: unknown,
   { playlistId }: { playlistId: string },
   ctx: ConnectionContext,
-): Promise<unknown | null> => {
+): Promise<unknown> => {
   const userId = ctx.userId;
 
   const playlistResult = await db

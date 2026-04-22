@@ -5,11 +5,11 @@
  * For Node.js-specific functions (that use file paths), see parser.ts
  */
 
-import { ImageProcessor } from './image-processor/types';
+import type { ImageProcessor } from './image-processor/types';
 import { runOCR } from './core/ocr';
 import { detectHoldsFromPixelData, detectBoardRegion, detectBenchmarkCircle } from './core/holds';
 import { calculateRegions, calculateRegionsFromDetectedBoard } from './core/regions';
-import { MoonBoardClimb, ParseResult, GridCoordinate } from './types';
+import type { MoonBoardClimb, ParseResult, GridCoordinate } from './types';
 
 /**
  * Parse a MoonBoard screenshot using the provided ImageProcessor.

@@ -84,7 +84,7 @@ const BoardCanvasRenderer = React.memo(function BoardCanvasRenderer({
         canvas.height = 0;
       }
     };
-  }, [boardDetails, frames, mirrored, thumbnail, contain, workerSupported]);
+  }, [boardDetails, frames, mirrored, thumbnail, contain, workerSupported, cropTop]);
 
   // Fall back to server-rendered image layers if the worker render fails
   if (failed || !workerSupported) {

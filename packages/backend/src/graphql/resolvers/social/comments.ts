@@ -81,7 +81,7 @@ async function getCommentVoteCounts(commentUuid: string) {
 export const socialCommentQueries = {
   comments: async (_: unknown, { input }: { input: unknown }, ctx: ConnectionContext) => {
     const validated = validateInput(CommentsInputSchema, input, 'input');
-    const { entityType, entityId, parentCommentUuid, sortBy, limit = 20, offset = 0 } = validated;
+    const { entityType, entityId, parentCommentUuid, sortBy, limit, offset } = validated;
 
     const authenticatedUserId = ctx.isAuthenticated ? ctx.userId : null;
 

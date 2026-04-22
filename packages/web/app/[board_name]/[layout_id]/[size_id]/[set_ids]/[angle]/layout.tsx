@@ -1,6 +1,6 @@
 import React from 'react';
-import { PropsWithChildren } from 'react';
-import { BoardRouteParameters } from '@/app/lib/types';
+import type { PropsWithChildren } from 'react';
+import type { BoardRouteParameters } from '@/app/lib/types';
 import { constructClimbListWithSlugs } from '@/app/lib/url-utils';
 import { parseRouteParams } from '@/app/lib/url-utils.server';
 import { permanentRedirect } from 'next/navigation';
@@ -11,7 +11,7 @@ import { ConnectionSettingsProvider } from '@/app/components/connection-manager/
 import { WebSocketConnectionProvider } from '@/app/components/connection-manager/websocket-connection-provider';
 import { PartyProvider } from '@/app/components/party-manager/party-context';
 import { BoardSessionBridge } from '@/app/components/persistent-session';
-import { Metadata } from 'next';
+import type { Metadata } from 'next';
 import { BluetoothProvider } from '@/app/components/board-bluetooth-control/bluetooth-context';
 import { UISearchParamsProvider } from '@/app/components/queue-control/ui-searchparams-provider';
 import { QueueBridgeInjector } from '@/app/components/queue-control/queue-bridge-context';

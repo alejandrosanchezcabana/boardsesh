@@ -94,7 +94,7 @@ export default function UserSmartCard({ userId, refreshKey = 0 }: UserSmartCardP
   }, [userId]);
 
   useEffect(() => {
-    fetchData();
+    void fetchData();
   }, [fetchData, refreshKey]);
 
   const gradeBars = useMemo(() => {

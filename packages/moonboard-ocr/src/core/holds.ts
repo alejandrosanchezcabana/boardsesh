@@ -1,5 +1,6 @@
-import { HoldType, GridCoordinate, GRID_POSITIONS, DetectedHold } from '../types';
-import { RawPixelData, ImageRegion } from '../image-processor/types';
+import type { HoldType, GridCoordinate, DetectedHold } from '../types';
+import { GRID_POSITIONS } from '../types';
+import type { RawPixelData, ImageRegion } from '../image-processor/types';
 
 interface CircleCenter {
   x: number;

@@ -1,4 +1,4 @@
-import { Metadata } from 'next';
+import type { Metadata } from 'next';
 import { createNoIndexMetadata } from './metadata';
 import { buildVersionedOgImagePath, OG_IMAGE_HEIGHT, OG_IMAGE_WIDTH } from './og';
 import { getPlaylistOgSummary } from './dynamic-og-data';

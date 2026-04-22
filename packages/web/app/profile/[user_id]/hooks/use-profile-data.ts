@@ -68,8 +68,6 @@ export function useProfileData(userId: string, initialData?: InitialData) {
   } | null>(null);
 
   const isOwnProfile = session?.user?.id ? session.user.id === userId : (initialData?.initialIsOwnProfile ?? false);
-  const hasCredentials = (profile?.credentials?.length ?? 0) > 0;
-  const authToken = (session as { authToken?: string } | null)?.authToken ?? null;
 
   const fetchProfile = useCallback(async () => {
     try {
@@ -155,19 +153,19 @@ export function useProfileData(userId: string, initialData?: InitialData) {
   }, [userId]);
 
   useEffect(() => {
-    if (!initialData?.initialProfile && !initialData?.initialNotFound) fetchProfile();
+    if (!initialData?.initialProfile && !initialData?.initialNotFound) void fetchProfile();
   }, [fetchProfile, initialData?.initialProfile, initialData?.initialNotFound]);
 
   useEffect(() => {
-    if (!initialData?.initialAllBoardsTicks) fetchAllBoardsTicks();
+    if (!initialData?.initialAllBoardsTicks) void fetchAllBoardsTicks();
   }, [fetchAllBoardsTicks, initialData?.initialAllBoardsTicks]);
 
   useEffect(() => {
-    if (!initialData?.initialProfileStats) fetchProfileStats();
+    if (!initialData?.initialProfileStats) void fetchProfileStats();
   }, [fetchProfileStats, initialData?.initialProfileStats]);
 
   useEffect(() => {
-    fetchPercentile();
+    void fetchPercentile();
   }, [fetchPercentile]);
 
   // Filter allBoardsTicks by selected board

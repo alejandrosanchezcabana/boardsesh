@@ -12,11 +12,11 @@ async function main() {
     if (shuttingDown) return;
     shuttingDown = true;
 
-    console.log('\nShutting down Boardsesh Daemon...');
+    console.info('\nShutting down Boardsesh Daemon...');
 
     // Force exit after 10 seconds if graceful shutdown stalls
     const forceTimer = setTimeout(() => {
-      console.log('Forcing shutdown...');
+      console.info('Forcing shutdown...');
       process.exit(1);
     }, 10000);
     forceTimer.unref();
@@ -35,14 +35,14 @@ async function main() {
     // Wait for WS and HTTP servers to close before touching the DB pool
     await new Promise<void>((resolve) => {
       wss.close(() => {
-        console.log('WebSocket server closed');
+        console.info('WebSocket server closed');
         resolve();
       });
     });
 
     await new Promise<void>((resolve) => {
       httpServer.close(() => {
-        console.log('HTTP server closed');
+        console.info('HTTP server closed');
         resolve();
       });
     });
@@ -53,12 +53,12 @@ async function main() {
     // Close database connection pool
     try {
       await closePool();
-      console.log('Database pool closed');
+      console.info('Database pool closed');
     } catch (error) {
       console.warn('Error closing database pool:', error);
     }
 
-    console.log('Shutdown complete');
+    console.info('Shutdown complete');
     process.exit(0);
   }
 

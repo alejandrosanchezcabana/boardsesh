@@ -87,7 +87,7 @@ export function PlaylistAction({
 
       setPopoverOpen((prev) => !prev);
     },
-    [isAuthenticated, onComplete, onOpenPlaylistSelector, viewMode],
+    [isAuthenticated, onComplete, onOpenPlaylistSelector, viewMode, openAuthModal],
   );
 
   const { showMessage } = useSnackbar();
@@ -114,7 +114,7 @@ export function PlaylistAction({
         }
         onComplete?.();
         // Note: No need to call refreshPlaylists() - optimistic updates handle state
-      } catch (error) {
+      } catch {
         showMessage(isInPlaylist ? 'Failed to remove from playlist' : 'Failed to add to playlist', 'error');
       }
     },
@@ -163,7 +163,7 @@ export function PlaylistAction({
       setShowCreateForm(false);
       onComplete?.();
       // Note: No need to call refreshPlaylists() - optimistic updates handle state
-    } catch (error) {
+    } catch {
       showMessage('Failed to create playlist', 'error');
     } finally {
       setCreatingPlaylist(false);

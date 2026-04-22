@@ -1,6 +1,6 @@
 import { useSession } from 'next-auth/react';
 import { useCallback } from 'react';
-import { BoardName } from '@/app/lib/types';
+import type { BoardName } from '@/app/lib/types';
 import { createUserBoardMapping } from './user-board-mappings';
 
 /**
@@ -23,7 +23,6 @@ export function useAuthIntegration() {
 
       try {
         await createUserBoardMapping(session.user.id, boardType, boardUserId, boardUsername);
-        console.log(`Successfully linked ${boardType} account for user ${session.user.id}`);
       } catch (error) {
         console.error('Failed to link board account:', error);
         // Don't throw - this is a background operation

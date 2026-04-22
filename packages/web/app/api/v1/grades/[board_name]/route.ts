@@ -1,7 +1,8 @@
 import { getDb } from '@/app/lib/db/db';
 import { boardDifficultyGrades } from '@/app/lib/db/schema';
 import { eq, and, asc } from 'drizzle-orm';
-import { NextRequest, NextResponse } from 'next/server';
+import type { NextRequest } from 'next/server';
+import { NextResponse } from 'next/server';
 
 export async function GET(_request: NextRequest, { params }: { params: Promise<{ board_name: string }> }) {
   try {

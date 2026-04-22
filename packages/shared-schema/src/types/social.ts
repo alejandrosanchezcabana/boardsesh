@@ -1,7 +1,5 @@
 // Social / Follow types
 
-import type { SocialEntityType } from './comments';
-
 export type PublicUserProfile = {
   id: string;
   displayName?: string;

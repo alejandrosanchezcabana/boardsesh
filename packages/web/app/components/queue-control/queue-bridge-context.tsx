@@ -468,8 +468,8 @@ export function QueueBridgeProvider({ children }: { children: React.ReactNode })
   // Separate version counters: actionsVersion only bumps when the injected
   // actions object identity changes (rare — GraphQLQueueProvider uses latestRef
   // pattern). dataVersion bumps on every data change (expected).
-  const [actionsVersion, setActionsVersion] = useState(0);
-  const [dataVersion, setDataVersion] = useState(0);
+  const [_actionsVersion, setActionsVersion] = useState(0);
+  const [_dataVersion, setDataVersion] = useState(0);
 
   const adapter = usePersistentSessionQueueAdapter();
 
@@ -480,7 +480,7 @@ export function QueueBridgeProvider({ children }: { children: React.ReactNode })
   // eslint-disable-next-line react-hooks/exhaustive-deps -- actionsVersion/dataVersion force re-read of refs
   const effectiveContext = useMemo(
     () => (isInjected && injectedContextRef.current ? injectedContextRef.current : adapter.context),
-    [isInjected, actionsVersion, dataVersion, adapter.context],
+    [isInjected, adapter.context],
   );
 
   // Actions: when injected, use the injected actions ref directly.
@@ -490,14 +490,14 @@ export function QueueBridgeProvider({ children }: { children: React.ReactNode })
   const effectiveActions: GraphQLQueueActionsType = useMemo(() => {
     if (!isInjected) return adapter.actionsValue;
     return injectedActionsRef.current!;
-  }, [isInjected, adapter.actionsValue, actionsVersion]);
+  }, [isInjected, adapter.actionsValue]);
 
   // Data: when injected, use the injected data ref directly.
   // eslint-disable-next-line react-hooks/exhaustive-deps -- dataVersion forces re-read of ref
   const effectiveData: GraphQLQueueDataType = useMemo(() => {
     if (!isInjected) return adapter.dataValue;
     return injectedDataRef.current!;
-  }, [isInjected, adapter.dataValue, dataVersion]);
+  }, [isInjected, adapter.dataValue]);
 
   const effectiveBoardDetails = isInjected ? injectedBoardDetails : adapter.boardDetails;
   const effectiveAngle = isInjected ? injectedAngle : adapter.angle;

@@ -1,4 +1,4 @@
-import { AuroraBoardName } from './types';
+import type { AuroraBoardName } from './types';
 import { userSync } from './userSync';
 
 interface Bid {

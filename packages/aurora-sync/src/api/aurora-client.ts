@@ -1,4 +1,5 @@
-import { HOST_BASES, AuroraBoardName, LoginResponse, Session, ClientOptions } from './types';
+import type { LoginResponse, Session, ClientOptions } from './types';
+import { HOST_BASES } from './types';
 
 /**
  * Aurora Climbing API Client
@@ -25,8 +26,8 @@ export class AuroraClimbingClient {
     return this.session?.user_id || null;
   }
 
-  private createHeaders(contentType?: string): HeadersInit {
-    const headers: HeadersInit = {
+  private createHeaders(contentType?: string): Record<string, string> {
+    const headers: Record<string, string> = {
       Accept: 'application/json',
       'Content-Type': contentType || 'application/x-www-form-urlencoded',
       Connection: 'keep-alive',
@@ -59,12 +60,12 @@ export class AuroraClimbingClient {
         ...fetchOptions,
         headers: {
           ...this.createHeaders(contentType),
-          ...(fetchOptions.headers || {}),
+          ...((fetchOptions.headers as Record<string, string> | undefined) ?? {}),
         },
         signal: AbortSignal.timeout(30000), // 30 second timeout
       });
 
-      console.log(`Response status: ${response.status} ${response.statusText}`);
+      console.info(`Response status: ${response.status} ${response.statusText}`);
 
       if (!response.ok) {
         const responseClone = response.clone();

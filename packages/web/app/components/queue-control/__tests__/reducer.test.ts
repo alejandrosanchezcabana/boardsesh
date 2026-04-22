@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vite-plus/test';
 import { queueReducer } from '../reducer';
-import { QueueState, QueueAction, ClimbQueueItem } from '../types';
-import { SearchRequestPagination, Climb } from '@/app/lib/types';
+import type { QueueState, QueueAction, ClimbQueueItem } from '../types';
+import type { SearchRequestPagination, Climb } from '@/app/lib/types';
 
 const mockClimb: Climb = {
   uuid: 'climb-1',

@@ -10,7 +10,7 @@ import { usePathname } from 'next/navigation';
 import ClimbCardCover from './climb-card-cover';
 import ClimbTitle from './climb-title';
 import HeartAnimationOverlay from './heart-animation-overlay';
-import { Climb, BoardDetails } from '@/app/lib/types';
+import type { Climb, BoardDetails } from '@/app/lib/types';
 import { ClimbActions } from '../climb-actions';
 import { useDoubleTapFavorite } from '../climb-actions/use-double-tap-favorite';
 import { themeTokens } from '@/app/theme/theme-config';

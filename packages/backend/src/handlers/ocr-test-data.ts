@@ -84,7 +84,7 @@ export async function handleOcrTestDataUpload(req: IncomingMessage, res: ServerR
 
   // Check if S3 is configured - if not, skip silently
   if (!isS3Configured()) {
-    console.log('[OCR Test Data] S3 not configured, skipping upload');
+    console.info('[OCR Test Data] S3 not configured, skipping upload');
     res.writeHead(200, { 'Content-Type': 'application/json' });
     res.end(JSON.stringify({ success: true, skipped: true, reason: 'S3 not configured' }));
     return;
@@ -113,7 +113,7 @@ export async function handleOcrTestDataUpload(req: IncomingMessage, res: ServerR
         headers: req.headers as { 'content-type': string },
         limits: { fileSize: MAX_FILE_SIZE, files: 1 },
       });
-    } catch (err) {
+    } catch {
       res.writeHead(400, { 'Content-Type': 'application/json' });
       res.end(JSON.stringify({ error: 'Invalid request format' }));
       resolve();
@@ -237,7 +237,7 @@ export async function handleOcrTestDataUpload(req: IncomingMessage, res: ServerR
         const metadataKey = `moonboard-ocr-test-data/${folderName}/parsed-result.json`;
         await uploadToS3(metadataBuffer, metadataKey, 'application/json');
 
-        console.log(`[OCR Test Data] Uploaded test data to ${folderName}`);
+        console.info(`[OCR Test Data] Uploaded test data to ${folderName}`);
 
         res.writeHead(200, { 'Content-Type': 'application/json' });
         res.end(JSON.stringify({ success: true, folder: folderName }));

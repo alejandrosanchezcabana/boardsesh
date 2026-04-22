@@ -6,7 +6,7 @@ let capturedOnAnimationEnd: (() => void) | undefined;
 
 vi.mock('@mui/icons-material/Favorite', () => ({
   default: ({
-    sx,
+    sx: _sx,
     onAnimationEnd,
     ...rest
   }: { sx?: unknown; onAnimationEnd?: () => void } & Record<string, unknown>) => {
@@ -36,7 +36,6 @@ describe('HeartAnimationOverlay', () => {
   it('has pointer-events: none on the overlay', () => {
     render(<HeartAnimationOverlay visible={true} onAnimationEnd={vi.fn()} />);
     const overlay = screen.getByTestId('heart-animation-overlay');
-    const computedStyle = window.getComputedStyle(overlay);
     // CSS modules may not apply in test, so check class is applied
     expect(overlay.className).toContain('overlay');
   });

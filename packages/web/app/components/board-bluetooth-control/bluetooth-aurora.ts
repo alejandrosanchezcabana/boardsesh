@@ -1,8 +1,7 @@
-import { LedPlacements } from '@/app/lib/types';
+import type { LedPlacements } from '@/app/lib/types';
 import { HOLD_STATE_MAP } from '../board-renderer/types';
 import { AURORA_ADVERTISED_SERVICE_UUID, MESSAGE_BODY_MAX_LENGTH, UART_SERVICE_UUID } from './bluetooth-shared';
-import { AuroraBoardName } from '@/app/lib/api-wrappers/aurora/types';
-import { BoardName } from '@boardsesh/shared-schema';
+import type { AuroraBoardName } from '@/app/lib/api-wrappers/aurora/types';
 
 // --- API v3 command bytes (3 bytes per LED, 16-bit positions) ---
 const V3_PACKET_MIDDLE = 81; // 'Q'

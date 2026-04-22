@@ -6,9 +6,6 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vite-plus/test';
 import { v4 as uuidv4 } from 'uuid';
 import { roomManager, VersionConflictError } from '../services/room-manager';
-import { db } from '../db/client';
-import { sessions, sessionQueues } from '../db/schema';
-import { eq } from 'drizzle-orm';
 import type { ClimbQueueItem } from '@boardsesh/shared-schema';
 import { queueMutations } from '../graphql/resolvers/queue/mutations';
 import { pubsub } from '../pubsub/index';

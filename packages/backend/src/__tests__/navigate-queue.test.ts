@@ -2,8 +2,7 @@ import { describe, it, expect, beforeEach, afterEach, vi } from 'vite-plus/test'
 import { v4 as uuidv4 } from 'uuid';
 import { roomManager } from '../services/room-manager';
 import { db } from '../db/client';
-import { esp32Controllers } from '@boardsesh/db/schema/app';
-import { eq, sql } from 'drizzle-orm';
+import { sql } from 'drizzle-orm';
 import { controllerMutations } from '../graphql/resolvers/controller/mutations';
 import type { ConnectionContext, ClimbQueueItem, Climb } from '@boardsesh/shared-schema';
 import { pubsub } from '../pubsub/index';

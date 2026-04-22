@@ -28,7 +28,8 @@ vi.mock('@vercel/analytics', () => ({
 }));
 
 // Import after mocks.
-import { QuickTickBar, QuickTickBarHandle } from '../quick-tick-bar';
+import type { QuickTickBarHandle } from '../quick-tick-bar';
+import { QuickTickBar } from '../quick-tick-bar';
 import { hasPriorHistoryForClimb } from '@/app/hooks/use-tick-save';
 
 // --- Fixtures ---
@@ -103,7 +104,7 @@ const defaultProps = {
  * react-swipeable uses touch events internally, so we dispatch native touch
  * events with TouchEvent-shaped fields that the library reads.
  */
-function simulateSwipe(el: HTMLElement, deltaX: number) {
+function _simulateSwipe(el: HTMLElement, deltaX: number) {
   const startX = 200;
   const startY = 100;
   const endX = startX + deltaX;

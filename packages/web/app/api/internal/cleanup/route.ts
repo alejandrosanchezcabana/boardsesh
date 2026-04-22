@@ -66,7 +66,7 @@ export async function GET(request: Request) {
     }
 
     if (feedDeleted > 0 || notifDeleted > 0) {
-      console.log(`[Cleanup cron] Deleted ${feedDeleted} feed items, ${notifDeleted} notifications`);
+      console.info(`[Cleanup cron] Deleted ${feedDeleted} feed items, ${notifDeleted} notifications`);
     }
 
     return NextResponse.json({

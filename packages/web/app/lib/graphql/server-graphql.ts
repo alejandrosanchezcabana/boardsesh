@@ -1,7 +1,10 @@
 import 'server-only';
-import { GraphQLClient, RequestDocument, Variables } from 'graphql-request';
+import type { RequestDocument, Variables } from 'graphql-request';
+import { GraphQLClient } from 'graphql-request';
 import { getGraphQLHttpUrl } from './client';
-import type { GroupedNotificationConnection } from '@boardsesh/shared-schema';
+import type { GroupedNotificationConnection, UserBoard } from '@boardsesh/shared-schema';
+import type { GetMyBoardsQueryResponse } from '@/app/lib/graphql/operations/boards';
+import type { Playlist, GetAllUserPlaylistsQueryResponse } from '@/app/lib/graphql/operations/playlists';
 
 /**
  * Execute a GraphQL query with an auth token (non-cached, per-user data).
@@ -29,11 +32,8 @@ export async function executeAuthenticatedGraphQL<T = unknown, V extends Variabl
  * Server-side fetch of the current user's boards (owned + followed).
  * NOT cached — personalized data is per-user.
  */
-export async function serverMyBoards(
-  authToken: string,
-): Promise<import('@boardsesh/shared-schema').UserBoard[] | null> {
+export async function serverMyBoards(authToken: string): Promise<UserBoard[] | null> {
   const { GET_MY_BOARDS } = await import('@/app/lib/graphql/operations/boards');
-  type GetMyBoardsQueryResponse = import('@/app/lib/graphql/operations/boards').GetMyBoardsQueryResponse;
 
   try {
     const response = await executeAuthenticatedGraphQL<GetMyBoardsQueryResponse>(
@@ -53,9 +53,9 @@ export async function serverMyBoards(
 export async function serverUserPlaylists(
   authToken: string,
   input: { boardType?: string; layoutId?: number } = {},
-): Promise<import('@/app/lib/graphql/operations/playlists').Playlist[] | null> {
+): Promise<Playlist[] | null> {
   const { GET_ALL_USER_PLAYLISTS } = await import('@/app/lib/graphql/operations/playlists');
-  type Response = import('@/app/lib/graphql/operations/playlists').GetAllUserPlaylistsQueryResponse;
+  type Response = GetAllUserPlaylistsQueryResponse;
 
   try {
     const response = await executeAuthenticatedGraphQL<Response>(GET_ALL_USER_PLAYLISTS, { input }, authToken);

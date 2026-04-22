@@ -34,7 +34,7 @@ export const queueMutations = {
     }
 
     if (DEBUG)
-      console.log(
+      console.info(
         '[addQueueItem] Adding item:',
         item.climb?.name,
         'by client:',
@@ -53,7 +53,7 @@ export const queueMutations = {
       // Get current state and update
       const currentState = await roomManager.getQueueState(sessionId);
       if (DEBUG)
-        console.log(
+        console.info(
           '[addQueueItem] Current state - queue size:',
           currentState.queue.length,
           'version:',
@@ -65,7 +65,7 @@ export const queueMutations = {
       // Only add if not already in queue
       if (queue.some((i) => i.uuid === item.uuid)) {
         // Item already in queue - return without publishing event
-        if (DEBUG) console.log('[addQueueItem] Item already in queue, skipping');
+        if (DEBUG) console.info('[addQueueItem] Item already in queue, skipping');
         return item;
       }
 
@@ -83,7 +83,7 @@ export const queueMutations = {
         break; // Success, exit retry loop
       } catch (error) {
         if (error instanceof VersionConflictError && attempt < MAX_RETRIES - 1) {
-          if (DEBUG) console.log(`[addQueueItem] Version conflict, retrying (attempt ${attempt + 1}/${MAX_RETRIES})`);
+          if (DEBUG) console.info(`[addQueueItem] Version conflict, retrying (attempt ${attempt + 1}/${MAX_RETRIES})`);
           continue; // Retry
         }
         throw error; // Re-throw if not a version conflict or max retries exceeded
@@ -218,14 +218,14 @@ export const queueMutations = {
     // Debug: track who's setting null
     if (DEBUG) {
       if (item === null) {
-        console.log(
+        console.info(
           '[setCurrentClimb] Setting current climb to NULL by client:',
           ctx.connectionId,
           'session:',
           sessionId,
         );
       } else {
-        console.log(
+        console.info(
           '[setCurrentClimb] Setting current climb to:',
           item.climb?.name,
           'by client:',
@@ -254,7 +254,7 @@ export const queueMutations = {
       } catch (error) {
         if (error instanceof VersionConflictError && attempt < MAX_RETRIES - 1) {
           if (DEBUG)
-            console.log(`[setCurrentClimb] Version conflict, retrying (attempt ${attempt + 1}/${MAX_RETRIES})`);
+            console.info(`[setCurrentClimb] Version conflict, retrying (attempt ${attempt + 1}/${MAX_RETRIES})`);
           continue; // Retry
         }
         throw error; // Re-throw if not a version conflict or max retries exceeded

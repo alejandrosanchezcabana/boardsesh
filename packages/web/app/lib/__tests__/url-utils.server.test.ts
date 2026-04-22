@@ -75,7 +75,7 @@ describe('url-utils.server concepts', () => {
     it('should handle error case patterns', () => {
       const validateRequired = (value: unknown, fieldName: string) => {
         if (!value) {
-          throw new Error(`${fieldName} not found for slug: ${value}`);
+          throw new Error(`${fieldName} not found for slug: ${String(value)}`);
         }
         return value;
       };

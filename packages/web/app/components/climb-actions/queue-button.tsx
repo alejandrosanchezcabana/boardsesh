@@ -6,7 +6,7 @@ import CheckCircleOutlined from '@mui/icons-material/CheckCircleOutlined';
 import MuiTooltip from '@mui/material/Tooltip';
 import { track } from '@vercel/analytics';
 import { useQueueActions, useQueueList } from '../graphql-queue';
-import { Climb, BoardDetails } from '@/app/lib/types';
+import type { Climb, BoardDetails } from '@/app/lib/types';
 import { themeTokens } from '@/app/theme/theme-config';
 
 type QueueButtonProps = {

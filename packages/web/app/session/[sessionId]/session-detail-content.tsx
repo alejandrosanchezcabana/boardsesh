@@ -271,9 +271,9 @@ export default function SessionDetailContent({
   fallbackBoardDetails = null,
   afterParticipants,
   inviteContent,
-  currentAngle,
-  onAngleChange,
-  namedBoardName,
+  currentAngle: _currentAngle,
+  onAngleChange: _onAngleChange,
+  namedBoardName: _namedBoardName,
 }: SessionDetailContentProps) {
   const { data: authSession } = useSession();
   const router = useRouter();
@@ -284,7 +284,6 @@ export default function SessionDetailContent({
     session: hookSession,
     updateSession: updateSessionMutation,
     addUser: addUserMutation,
-    removeUser: removeUserMutation,
   } = useSessionDetail({
     sessionId: sessionIdProp ?? initialSession?.sessionId,
     initialData: initialSession,
@@ -297,7 +296,6 @@ export default function SessionDetailContent({
   const [editName, setEditName] = useState('');
   const [editDescription, setEditDescription] = useState('');
   const [addUserDialogOpen, setAddUserDialogOpen] = useState(false);
-  const [removingUserId, setRemovingUserId] = useState<string | null>(null);
   const [sessionCommentsOpen, setSessionCommentsOpen] = useState(false);
 
   const saving = updateSessionMutation.isPending || addUserMutation.isPending;
@@ -375,9 +373,6 @@ export default function SessionDetailContent({
     }
     return map;
   }, [participants]);
-
-  // Use the actual owner from the backend
-  const ownerUserId = session.ownerUserId ?? null;
 
   // Convert ticks to Climb objects for ClimbsList
   const sessionClimbs = useMemo(() => convertSessionTicksToClimbs(ticks), [ticks]);
@@ -503,18 +498,6 @@ export default function SessionDetailContent({
       await addUserMutation.mutateAsync(userId);
     },
     [addUserMutation],
-  );
-
-  const handleRemoveUser = useCallback(
-    async (userId: string) => {
-      setRemovingUserId(userId);
-      try {
-        await removeUserMutation.mutateAsync(userId);
-      } finally {
-        setRemovingUserId(null);
-      }
-    },
-    [removeUserMutation],
   );
 
   const noopLoadMore = useCallback(() => {}, []);

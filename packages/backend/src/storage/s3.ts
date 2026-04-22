@@ -142,7 +142,7 @@ export async function getFromS3(key: string): Promise<{
       contentType: response.ContentType,
       contentLength: response.ContentLength,
     };
-  } catch (error) {
+  } catch {
     // Return null for not found or other errors
     return null;
   }

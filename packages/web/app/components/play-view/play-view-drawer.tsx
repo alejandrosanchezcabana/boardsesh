@@ -209,7 +209,7 @@ export const PlayViewTickBar = React.memo<PlayViewTickBarProps>(function PlayVie
   // Restore persisted tick bar expanded state when tick bar opens
   useEffect(() => {
     if (isTickBarActive) {
-      getPreference<boolean>('tickBarExpanded').then((persisted) => {
+      void getPreference<boolean>('tickBarExpanded').then((persisted) => {
         if (persisted === true) setTickBarExpanded(true);
       });
     }
@@ -218,7 +218,7 @@ export const PlayViewTickBar = React.memo<PlayViewTickBarProps>(function PlayVie
   // Persist expanded state on user-initiated toggle (not on automatic resets)
   const handleTickBarExpandedChange = useCallback((expanded: boolean) => {
     setTickBarExpanded(expanded);
-    setPreference('tickBarExpanded', expanded);
+    void setPreference('tickBarExpanded', expanded);
   }, []);
 
   const handleCommentFocus = useCallback(() => setCommentFocused(true), []);
@@ -663,7 +663,7 @@ const PlayViewDrawer: React.FC<PlayViewDrawerProps> = ({ activeDrawer, setActive
         frames: currentClimb.frames,
         mirrored: !!currentClimb.mirrored,
       }).catch((e: unknown) => {
-        if (process.env.NODE_ENV === 'development') console.debug('Pre-warm render failed:', e);
+        if (process.env.NODE_ENV === 'development') console.info('Pre-warm render failed:', e);
       });
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps -- see comment above

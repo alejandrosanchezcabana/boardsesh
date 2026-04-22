@@ -5,7 +5,6 @@ import { track } from '@vercel/analytics';
 import Box from '@mui/material/Box';
 import Typography from '@mui/material/Typography';
 import Button from '@mui/material/Button';
-import ButtonBase from '@mui/material/ButtonBase';
 import LoginOutlined from '@mui/icons-material/LoginOutlined';
 import EditOutlined from '@mui/icons-material/EditOutlined';
 import PlayCircleOutlineOutlined from '@mui/icons-material/PlayCircleOutlineOutlined';
@@ -37,7 +36,7 @@ import { usePersistentSession } from '@/app/components/persistent-session/persis
 import { useQueueBridgeBoardInfo } from '@/app/components/queue-control/queue-bridge-context';
 import { useQueueList, useCurrentClimb } from '@/app/components/graphql-queue';
 import { useMyBoards } from '@/app/hooks/use-my-boards';
-import { BoardConfigData } from '@/app/lib/server-board-configs';
+import type { BoardConfigData } from '@/app/lib/server-board-configs';
 import type { StoredBoardConfig } from '@/app/lib/saved-boards-db';
 import type { UserBoard, PopularBoardConfig } from '@boardsesh/shared-schema';
 import type { BoardName } from '@/app/lib/types';
@@ -280,7 +279,6 @@ export default function StartSeshDrawer({ open, onClose, onTransitionEnd, boardC
   };
 
   const hasSelection = selectedBoard || selectedCustomConfig;
-  const selectedName = selectedBoard?.name ?? selectedCustomConfig?.name;
 
   const boardSelector = (
     <Box>

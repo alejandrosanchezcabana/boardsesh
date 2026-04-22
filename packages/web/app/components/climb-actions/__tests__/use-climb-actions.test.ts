@@ -107,11 +107,10 @@ describe('useClimbActions', () => {
 
     // Mock window.open
     Object.defineProperty(global, 'window', {
-      value: {
-        ...global.window,
+      value: Object.assign(Object.create(Object.getPrototypeOf(global.window)), global.window, {
         open: vi.fn(),
         location: { origin: 'https://boardsesh.com' },
-      },
+      }),
       writable: true,
       configurable: true,
     });

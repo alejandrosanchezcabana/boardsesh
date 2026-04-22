@@ -166,7 +166,7 @@ self.onmessage = async (event: MessageEvent<WorkerMessage>) => {
   }
 
   // Render request
-  const request = msg as RenderRequest;
+  const request = msg;
   if (request.origin && !baseOrigin) {
     baseOrigin = request.origin;
   }

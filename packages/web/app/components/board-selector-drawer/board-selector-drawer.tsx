@@ -5,20 +5,22 @@ import Box from '@mui/material/Box';
 import Button from '@mui/material/Button';
 import FormControl from '@mui/material/FormControl';
 import InputLabel from '@mui/material/InputLabel';
-import MuiSelect, { SelectChangeEvent } from '@mui/material/Select';
+import type { SelectChangeEvent } from '@mui/material/Select';
+import MuiSelect from '@mui/material/Select';
 import MenuItem from '@mui/material/MenuItem';
 import CircularProgress from '@mui/material/CircularProgress';
 import CollapsibleSection from '@/app/components/collapsible-section/collapsible-section';
 import type { CollapsibleSectionConfig } from '@/app/components/collapsible-section/collapsible-section';
 import { useRouter } from 'next/navigation';
 import SwipeableDrawer from '../swipeable-drawer/swipeable-drawer';
-import { BoardConfigData } from '@/app/lib/server-board-configs';
-import { BoardName } from '@/app/lib/types';
+import type { BoardConfigData } from '@/app/lib/server-board-configs';
+import type { BoardName } from '@/app/lib/types';
 import { BOARD_NAME_PREFIX_REGEX } from '@/app/lib/board-constants';
 import { SUPPORTED_BOARDS, ANGLES } from '@/app/lib/board-data';
 import { getDefaultSizeForLayout } from '@/app/lib/board-constants';
 import { constructClimbListWithSlugs, constructBoardSlugListUrl } from '@/app/lib/url-utils';
-import { saveBoardConfig, StoredBoardConfig } from '@/app/lib/saved-boards-db';
+import type { StoredBoardConfig } from '@/app/lib/saved-boards-db';
+import { saveBoardConfig } from '@/app/lib/saved-boards-db';
 import type { UserBoard } from '@boardsesh/shared-schema';
 import { useBoardSwitchGuard } from '@/app/components/board-lock/use-board-switch-guard';
 import type { BoardRouteIdentity } from '@/app/lib/types';
@@ -127,7 +129,7 @@ function BoardConfigSelects({
         <MuiSelect
           value={selectedAngle}
           label="Angle"
-          onChange={(e: SelectChangeEvent<number>) => onAngleChange(e.target.value as number)}
+          onChange={(e: SelectChangeEvent<number>) => onAngleChange(e.target.value)}
           disabled={!selectedBoard}
         >
           {selectedBoard &&
@@ -190,7 +192,7 @@ export default function BoardSelectorDrawer({
   // Auto-select first board on open
   useEffect(() => {
     if (open && !selectedBoard && SUPPORTED_BOARDS.length > 0) {
-      setSelectedBoard(SUPPORTED_BOARDS[0] as BoardName);
+      setSelectedBoard(SUPPORTED_BOARDS[0]);
     }
     // selectedBoard intentionally excluded: we only auto-select on open, not on every board change
     // eslint-disable-next-line react-hooks/exhaustive-deps

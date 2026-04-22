@@ -9,7 +9,6 @@ import ChatBubbleOutlineOutlined from '@mui/icons-material/ChatBubbleOutlineOutl
 import { useBoardProvider } from '../board-provider/board-provider-context';
 import { themeTokens } from '@/app/theme/theme-config';
 import dayjs from 'dayjs';
-import type { LogbookEntry } from '@/app/hooks/use-logbook';
 import { AscentStatusIcon } from '@/app/components/ascent-status/ascent-status-icon';
 import { normalizeAscentStatus, type AscentStatusValue } from '@/app/components/ascent-status/ascent-status-utils';
 

@@ -74,7 +74,7 @@ export function useSaveClimb(boardName: BoardName) {
 
         return result.saveClimb;
       } finally {
-        client.dispose();
+        void client.dispose();
       }
     },
     onError: () => {
@@ -111,7 +111,7 @@ export function useUpdateClimb() {
         });
         return result.updateClimb;
       } finally {
-        client.dispose();
+        void client.dispose();
       }
     },
   });

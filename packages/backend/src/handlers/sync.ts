@@ -28,10 +28,10 @@ export async function handleSyncCron(req: IncomingMessage, res: ServerResponse):
     return;
   }
 
-  console.log('[Sync] Starting sync cron job (1 user)...');
+  console.info('[Sync] Starting sync cron job (1 user)...');
 
   const runner = new SyncRunner({
-    onLog: (msg: string) => console.log(`[Sync] ${msg}`),
+    onLog: (msg: string) => console.info(`[Sync] ${msg}`),
     onError: (error: Error, context: { userId?: string; board?: string }) => {
       console.error(`[Sync] Error for ${context.userId}/${context.board}:`, error.message);
     },
@@ -54,7 +54,7 @@ export async function handleSyncCron(req: IncomingMessage, res: ServerResponse):
       }),
     );
 
-    console.log(`[Sync] Completed: ${result.successful}/${result.total} user synced`);
+    console.info(`[Sync] Completed: ${result.successful}/${result.total} user synced`);
   } catch (error) {
     console.error('[Sync] Cron job failed:', error);
     res.writeHead(500, { 'Content-Type': 'application/json' });

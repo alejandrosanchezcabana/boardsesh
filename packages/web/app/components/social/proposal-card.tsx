@@ -89,7 +89,7 @@ export default function ProposalCard({ proposal, isAdminOrLeader, onUpdate, onDe
         });
         setLocalProposal(result.voteOnProposal);
         onUpdate?.(result.voteOnProposal);
-      } catch (err) {
+      } catch {
         setSnackbar('Failed to vote');
       } finally {
         setLoading(false);
@@ -109,7 +109,7 @@ export default function ProposalCard({ proposal, isAdminOrLeader, onUpdate, onDe
         });
         setLocalProposal(result.resolveProposal);
         onUpdate?.(result.resolveProposal);
-      } catch (err) {
+      } catch {
         setSnackbar('Failed to resolve proposal');
       } finally {
         setLoading(false);

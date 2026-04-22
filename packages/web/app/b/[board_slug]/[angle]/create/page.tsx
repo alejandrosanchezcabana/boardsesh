@@ -4,9 +4,10 @@ import { resolveBoardBySlug, boardToRouteParams } from '@/app/lib/board-slug-uti
 import { getBoardDetails } from '@/app/lib/board-constants';
 import { getClimb } from '@/app/lib/data/queries';
 import CreateClimbForm from '@/app/components/create-climb/create-climb-form';
-import { MOONBOARD_LAYOUTS, MOONBOARD_SETS, MoonBoardLayoutKey } from '@/app/lib/moonboard-config';
+import type { MoonBoardLayoutKey } from '@/app/lib/moonboard-config';
+import { MOONBOARD_LAYOUTS, MOONBOARD_SETS } from '@/app/lib/moonboard-config';
 import type { Climb } from '@/app/lib/types';
-import { Metadata } from 'next';
+import type { Metadata } from 'next';
 import { getServerSession } from 'next-auth/next';
 import { authOptions } from '@/app/lib/auth/auth-options';
 
@@ -66,7 +67,7 @@ export default async function BoardSlugCreatePage(props: CreatePageProps) {
     );
   }
 
-  const boardDetails = await getBoardDetails(parsedParams);
+  const boardDetails = getBoardDetails(parsedParams);
 
   // When the caller asks to edit an existing climb (drafts, or a recent
   // publish still inside the 24h edit window), load it up-front so the form

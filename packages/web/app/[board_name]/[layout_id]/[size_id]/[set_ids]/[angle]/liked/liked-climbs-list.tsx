@@ -8,13 +8,13 @@ import { useInfiniteQuery } from '@tanstack/react-query';
 import { usePathname } from 'next/navigation';
 import { useIsDarkMode } from '@/app/hooks/use-is-dark-mode';
 import { track } from '@vercel/analytics';
-import { Climb, BoardDetails } from '@/app/lib/types';
+import type { Climb, BoardDetails } from '@/app/lib/types';
 import { executeGraphQL } from '@/app/lib/graphql/client';
-import {
-  GET_USER_FAVORITE_CLIMBS,
+import type {
   GetUserFavoriteClimbsQueryResponse,
   GetUserFavoriteClimbsQueryVariables,
 } from '@/app/lib/graphql/operations/favorites';
+import { GET_USER_FAVORITE_CLIMBS } from '@/app/lib/graphql/operations/favorites';
 import { useWsAuthToken } from '@/app/hooks/use-ws-auth-token';
 import { useQueueActions } from '@/app/components/graphql-queue';
 import { useSnackbar } from '@/app/components/providers/snackbar-provider';
@@ -177,20 +177,20 @@ export default function LikedClimbsList({ boardDetails, angle }: LikedClimbsList
   const [viewMode, setViewMode] = useState<ViewMode>('list');
 
   useEffect(() => {
-    getPreference<ViewMode>('likedClimbsViewMode').then((saved) => {
+    void getPreference<ViewMode>('likedClimbsViewMode').then((saved) => {
       if (saved) setViewMode(saved);
     });
   }, []);
 
   const handleViewModeChange = useCallback((mode: ViewMode) => {
     setViewMode(mode);
-    setPreference('likedClimbsViewMode', mode);
+    void setPreference('likedClimbsViewMode', mode);
     track('Liked Climbs View Mode Changed', { mode });
   }, []);
 
   const { data, fetchNextPage, hasNextPage, isFetching, isFetchingNextPage, isLoading, error } = useInfiniteQuery({
     queryKey: ['likedClimbs', boardDetails.board_name, boardDetails.layout_id, boardDetails.size_id, angle],
-    queryFn: async ({ pageParam = 0 }) => {
+    queryFn: async ({ pageParam }) => {
       const response = await executeGraphQL<GetUserFavoriteClimbsQueryResponse, GetUserFavoriteClimbsQueryVariables>(
         GET_USER_FAVORITE_CLIMBS,
         {
@@ -217,7 +217,7 @@ export default function LikedClimbsList({ boardDetails, angle }: LikedClimbsList
     staleTime: 5 * 60 * 1000,
   });
 
-  const allClimbs: Climb[] = data?.pages.flatMap((page) => page.climbs as Climb[]) ?? [];
+  const allClimbs: Climb[] = useMemo(() => data?.pages.flatMap((page) => page.climbs as Climb[]) ?? [], [data?.pages]);
   const totalCount = data?.pages[0]?.totalCount ?? 0;
 
   useEffect(() => {
@@ -230,6 +230,7 @@ export default function LikedClimbsList({ boardDetails, angle }: LikedClimbsList
   // Show all liked climbs regardless of layout (unlike playlists, favorites span all layouts)
   const visibleClimbs: Climb[] = useMemo(() => {
     return allClimbs.map((climb) => ({ ...climb, angle }));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [allClimbs, angle]);
 
   const handleLoadMore = useCallback(() => {
@@ -237,7 +238,7 @@ export default function LikedClimbsList({ boardDetails, angle }: LikedClimbsList
       currentCount: allClimbs.length,
       hasMore: hasNextPage,
     });
-    fetchNextPage();
+    void fetchNextPage();
   }, [allClimbs.length, hasNextPage, fetchNextPage]);
 
   const { sentinelRef } = useInfiniteScroll({
@@ -251,7 +252,7 @@ export default function LikedClimbsList({ boardDetails, angle }: LikedClimbsList
   const handleClimbSelect = useCallback(
     (climb: Climb) => {
       setSelectedClimbUuid(climb.uuid);
-      setCurrentClimb(climb);
+      void setCurrentClimb(climb);
     },
     [setCurrentClimb],
   );
@@ -260,7 +261,7 @@ export default function LikedClimbsList({ boardDetails, angle }: LikedClimbsList
   const handleClimbOpenDrawer = useCallback(
     (climb: Climb) => {
       setSelectedClimbUuid(climb.uuid);
-      setCurrentClimb(climb);
+      void setCurrentClimb(climb);
       dispatchOpenPlayDrawer();
       track('Liked Climb Card Clicked', {
         climbUuid: climb.uuid,

@@ -44,7 +44,6 @@ export default function YouProgressContent({
     loadingAggregated,
     aggregatedStackedBars,
     loadingProfileStats,
-    layoutStats,
     statisticsSummary,
     hardestSend,
     hardestFlash,

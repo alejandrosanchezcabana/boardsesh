@@ -3,7 +3,7 @@ import type { ConnectionContext } from '@boardsesh/shared-schema';
 import { db } from '../../../db/client';
 import * as dbSchema from '@boardsesh/db/schema';
 import { requireAuthenticated, applyRateLimit, validateInput } from '../shared/helpers';
-import { GrantRoleInputSchema, RevokeRoleInputSchema, BoardNameSchema } from '../../../validation/schemas';
+import { GrantRoleInputSchema, RevokeRoleInputSchema } from '../../../validation/schemas';
 
 /**
  * Check if a user has admin role (global or for a specific board type).
@@ -98,7 +98,7 @@ async function enrichRoleAssignment(role: typeof dbSchema.communityRoles.$inferS
 }
 
 export const socialRoleQueries = {
-  communityRoles: async (_: unknown, { boardType }: { boardType?: string }, ctx: ConnectionContext) => {
+  communityRoles: async (_: unknown, { boardType }: { boardType?: string }, _ctx: ConnectionContext) => {
     const conditions = boardType ? [eq(dbSchema.communityRoles.boardType, boardType)] : [];
 
     const roles =

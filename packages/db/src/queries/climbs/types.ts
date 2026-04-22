@@ -1,4 +1,4 @@
-import type { BoardName, HoldState } from '@boardsesh/shared-schema';
+import type { BoardName } from '@boardsesh/shared-schema';
 
 /**
  * Route parameters identifying a specific board configuration.
@@ -20,8 +20,8 @@ export interface ClimbSearchParams {
   page?: number;
   pageSize?: number;
   // Sorting
-  sortBy?: 'ascents' | 'difficulty' | 'name' | 'quality' | 'popular' | 'creation' | string;
-  sortOrder?: 'asc' | 'desc' | string;
+  sortBy?: 'ascents' | 'difficulty' | 'name' | 'quality' | 'popular' | 'creation' | (string & {});
+  sortOrder?: 'asc' | 'desc' | (string & {});
   // Filters
   gradeAccuracy?: number;
   minGrade?: number;

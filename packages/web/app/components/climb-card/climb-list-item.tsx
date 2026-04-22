@@ -8,7 +8,7 @@ import AddOutlined from '@mui/icons-material/AddOutlined';
 import CheckOutlined from '@mui/icons-material/CheckOutlined';
 import LocalOfferOutlined from '@mui/icons-material/LocalOfferOutlined';
 import { track } from '@vercel/analytics';
-import { Climb, BoardDetails } from '@/app/lib/types';
+import type { Climb, BoardDetails } from '@/app/lib/types';
 import ClimbThumbnail from './climb-thumbnail';
 import ClimbTitle, { type ClimbTitleProps } from './climb-title';
 import DrawerClimbHeader from './drawer-climb-header';
@@ -27,7 +27,6 @@ import { useIsClimbSelected } from '../board-page/selected-climb-store';
 import { InlineListTickBar } from '../logbook/inline-list-tick-bar';
 import { useOptionalBoardProvider } from '../board-provider/board-provider-context';
 import { useSnackbar } from '../providers/snackbar-provider';
-import styles from './climb-list-item.module.css';
 import ascentStyles from './ascent-status.module.css';
 import drawerCss from '../swipeable-drawer/swipeable-drawer.module.css';
 

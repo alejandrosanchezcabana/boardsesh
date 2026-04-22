@@ -486,7 +486,7 @@ describe('renderBoard', () => {
       for (const call of worker.postMessage.mock.calls) {
         const msg = call[0] as Record<string, unknown>;
         if (isRenderMessage(msg)) {
-          resolveWorkerRequest(worker, msg.id as number, makeFakeBitmap());
+          resolveWorkerRequest(worker, msg.id, makeFakeBitmap());
         }
       }
     }
@@ -525,7 +525,7 @@ describe('renderBoard', () => {
       for (const call of worker.postMessage.mock.calls) {
         const msg = call[0] as Record<string, unknown>;
         if (isRenderMessage(msg)) {
-          resolveWorkerRequest(worker, msg.id as number, makeFakeBitmap());
+          resolveWorkerRequest(worker, msg.id, makeFakeBitmap());
         }
       }
     }
@@ -561,7 +561,7 @@ describe('renderBoard', () => {
       for (const call of worker.postMessage.mock.calls) {
         const msg = call[0] as Record<string, unknown>;
         if (isRenderMessage(msg)) {
-          resolveWorkerRequest(worker, msg.id as number, makeFakeBitmap());
+          resolveWorkerRequest(worker, msg.id, makeFakeBitmap());
         }
       }
     }
@@ -661,7 +661,7 @@ describe('renderBoard', () => {
   it('sends the correct render request shape to the worker', async () => {
     const { renderBoard } = await import('../worker-manager');
 
-    renderBoard({
+    void renderBoard({
       boardDetails: mockBoardDetails,
       frames: 'p1r42p2r43',
       mirrored: true,
@@ -705,7 +705,7 @@ describe('renderBoard', () => {
   it('sets outputWidth to boardWidth when thumbnail is false', async () => {
     const { renderBoard } = await import('../worker-manager');
 
-    renderBoard({
+    void renderBoard({
       boardDetails: mockBoardDetails,
       frames: 'p5r42',
       mirrored: false,
@@ -737,7 +737,7 @@ describe('worker pool size', () => {
     stubGlobals();
     const { renderBoard } = await import('../worker-manager');
 
-    renderBoard({
+    void renderBoard({
       boardDetails: mockBoardDetails,
       frames: 'p1r42',
       mirrored: false,
@@ -758,7 +758,7 @@ describe('worker pool size', () => {
 
     const { renderBoard } = await import('../worker-manager');
 
-    renderBoard({
+    void renderBoard({
       boardDetails: mockBoardDetails,
       frames: 'p1r42',
       mirrored: false,

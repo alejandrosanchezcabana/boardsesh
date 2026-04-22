@@ -114,7 +114,7 @@ describe('QuickTickBar grade format integration', () => {
       loaded: false,
     });
 
-    const { container } = render(<QuickTickBar {...defaultProps} />);
+    render(<QuickTickBar {...defaultProps} />);
 
     // A MUI Skeleton should be rendered inside the grade button.
     const gradeEl = screen.getByTestId('quick-tick-grade');

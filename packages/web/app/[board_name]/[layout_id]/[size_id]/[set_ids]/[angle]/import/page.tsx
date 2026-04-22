@@ -1,9 +1,10 @@
 import React from 'react';
-import { BoardRouteParameters } from '@/app/lib/types';
+import type { BoardRouteParameters } from '@/app/lib/types';
 import { parseRouteParams } from '@/app/lib/url-utils.server';
 import MoonBoardBulkImport from '@/app/components/moonboard-import/moonboard-bulk-import';
-import { MOONBOARD_LAYOUTS, MOONBOARD_SETS, MoonBoardLayoutKey } from '@/app/lib/moonboard-config';
-import { Metadata } from 'next';
+import type { MoonBoardLayoutKey } from '@/app/lib/moonboard-config';
+import { MOONBOARD_LAYOUTS, MOONBOARD_SETS } from '@/app/lib/moonboard-config';
+import type { Metadata } from 'next';
 import { redirect } from 'next/navigation';
 
 export const metadata: Metadata = {

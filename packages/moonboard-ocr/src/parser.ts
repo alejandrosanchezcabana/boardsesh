@@ -7,7 +7,7 @@
 
 import path from 'path';
 import { SharpImageProcessor } from './image-processor/sharp-processor';
-import { MoonBoardClimb, ParseResult } from './types';
+import type { MoonBoardClimb, ParseResult } from './types';
 import { parseWithProcessor, deduplicateClimbs } from './parser-core';
 
 // Re-export browser-safe core functions for backward compatibility

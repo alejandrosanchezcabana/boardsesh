@@ -65,9 +65,9 @@ class PubSub {
       this.redisAdapter = createRedisPubSubAdapter(publisher, subscriber);
       this.setupRedisMessageHandlers();
 
-      console.log(`[PubSub] Redis mode enabled (instance: ${this.redisAdapter.getInstanceId()})`);
+      console.info(`[PubSub] Redis mode enabled (instance: ${this.redisAdapter.getInstanceId()})`);
     } else {
-      console.log('[PubSub] Local-only mode (single instance - no REDIS_URL configured)');
+      console.info('[PubSub] Local-only mode (single instance - no REDIS_URL configured)');
     }
 
     this.initialized = true;
@@ -133,7 +133,7 @@ class PubSub {
       try {
         await this.redisAdapter.subscribeQueueChannel(sessionId);
       } catch (error) {
-        console.error(`[PubSub] Failed to subscribe to Redis queue channel: ${error}`);
+        console.error(`[PubSub] Failed to subscribe to Redis queue channel: ${String(error)}`);
         // Remove the subscriber since Redis subscription failed
         this.queueSubscribers.get(sessionId)?.delete(callback);
         if (this.queueSubscribers.get(sessionId)?.size === 0) {
@@ -154,7 +154,7 @@ class PubSub {
 
         if (this.redisAdapter) {
           this.redisAdapter.unsubscribeQueueChannel(sessionId).catch((error) => {
-            console.error(`[PubSub] Failed to unsubscribe from Redis queue channel: ${error}`);
+            console.error(`[PubSub] Failed to unsubscribe from Redis queue channel: ${String(error)}`);
           });
         }
       }
@@ -183,7 +183,7 @@ class PubSub {
       try {
         await this.redisAdapter.subscribeSessionChannel(sessionId);
       } catch (error) {
-        console.error(`[PubSub] Failed to subscribe to Redis session channel: ${error}`);
+        console.error(`[PubSub] Failed to subscribe to Redis session channel: ${String(error)}`);
         // Remove the subscriber since Redis subscription failed
         this.sessionSubscribers.get(sessionId)?.delete(callback);
         if (this.sessionSubscribers.get(sessionId)?.size === 0) {
@@ -204,7 +204,7 @@ class PubSub {
 
         if (this.redisAdapter) {
           this.redisAdapter.unsubscribeSessionChannel(sessionId).catch((error) => {
-            console.error(`[PubSub] Failed to unsubscribe from Redis session channel: ${error}`);
+            console.error(`[PubSub] Failed to unsubscribe from Redis session channel: ${String(error)}`);
           });
         }
       }
@@ -374,7 +374,7 @@ class PubSub {
       try {
         await this.redisAdapter.subscribeNotificationChannel(userId);
       } catch (error) {
-        console.error(`[PubSub] Failed to subscribe to Redis notification channel: ${error}`);
+        console.error(`[PubSub] Failed to subscribe to Redis notification channel: ${String(error)}`);
         this.notificationSubscribers.get(userId)?.delete(callback);
         if (this.notificationSubscribers.get(userId)?.size === 0) {
           this.notificationSubscribers.delete(userId);
@@ -391,7 +391,7 @@ class PubSub {
         this.notificationSubscribers.delete(userId);
         if (this.redisAdapter) {
           this.redisAdapter.unsubscribeNotificationChannel(userId).catch((error) => {
-            console.error(`[PubSub] Failed to unsubscribe from Redis notification channel: ${error}`);
+            console.error(`[PubSub] Failed to unsubscribe from Redis notification channel: ${String(error)}`);
           });
         }
       }
@@ -444,7 +444,7 @@ class PubSub {
       try {
         await this.redisAdapter.subscribeCommentChannel(entityKey);
       } catch (error) {
-        console.error(`[PubSub] Failed to subscribe to Redis comment channel: ${error}`);
+        console.error(`[PubSub] Failed to subscribe to Redis comment channel: ${String(error)}`);
         this.commentSubscribers.get(entityKey)?.delete(callback);
         if (this.commentSubscribers.get(entityKey)?.size === 0) {
           this.commentSubscribers.delete(entityKey);
@@ -461,7 +461,7 @@ class PubSub {
         this.commentSubscribers.delete(entityKey);
         if (this.redisAdapter) {
           this.redisAdapter.unsubscribeCommentChannel(entityKey).catch((error) => {
-            console.error(`[PubSub] Failed to unsubscribe from Redis comment channel: ${error}`);
+            console.error(`[PubSub] Failed to unsubscribe from Redis comment channel: ${String(error)}`);
           });
         }
       }
@@ -513,7 +513,7 @@ class PubSub {
       try {
         await this.redisAdapter.subscribeNewClimbChannel(channelKey);
       } catch (error) {
-        console.error(`[PubSub] Failed to subscribe to Redis new climb channel: ${error}`);
+        console.error(`[PubSub] Failed to subscribe to Redis new climb channel: ${String(error)}`);
         this.newClimbSubscribers.get(channelKey)?.delete(callback);
         if (this.newClimbSubscribers.get(channelKey)?.size === 0) {
           this.newClimbSubscribers.delete(channelKey);
@@ -530,7 +530,7 @@ class PubSub {
         this.newClimbSubscribers.delete(channelKey);
         if (this.redisAdapter) {
           this.redisAdapter.unsubscribeNewClimbChannel(channelKey).catch((error) => {
-            console.error(`[PubSub] Failed to unsubscribe from Redis new climb channel: ${error}`);
+            console.error(`[PubSub] Failed to unsubscribe from Redis new climb channel: ${String(error)}`);
           });
         }
       }

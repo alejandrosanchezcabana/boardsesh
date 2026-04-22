@@ -1,4 +1,4 @@
-import { BoardDetails } from '@/app/lib/types';
+import type { BoardDetails } from '@/app/lib/types';
 
 /**
  * All available hold types with their display labels

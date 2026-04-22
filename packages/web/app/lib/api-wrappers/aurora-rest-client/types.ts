@@ -1,4 +1,4 @@
-import { AuroraBoardName } from '../aurora/types';
+import type { AuroraBoardName } from '../aurora/types';
 
 export const HOST_BASES: Record<AuroraBoardName, string> = {
   kilter: 'kilterboardapp',

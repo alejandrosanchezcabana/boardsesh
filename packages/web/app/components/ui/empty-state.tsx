@@ -16,15 +16,17 @@ type EmptyStateProps = {
 export function EmptyState({ icon, description = 'No data', children, sx }: EmptyStateProps) {
   return (
     <Box
-      sx={{
-        display: 'flex',
-        flexDirection: 'column',
-        alignItems: 'center',
-        justifyContent: 'center',
-        padding: 4,
-        color: 'text.secondary',
-        ...sx,
-      }}
+      sx={[
+        {
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          justifyContent: 'center',
+          padding: 4,
+          color: 'text.secondary',
+        },
+        ...(Array.isArray(sx) ? sx : sx ? [sx] : []),
+      ]}
     >
       <Box sx={{ fontSize: 48, mb: 1, opacity: 0.4 }}>{icon || <InboxOutlined fontSize="inherit" />}</Box>
       {typeof description === 'string' ? (

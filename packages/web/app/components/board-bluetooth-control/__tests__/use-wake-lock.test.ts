@@ -116,7 +116,7 @@ describe('useWakeLock', () => {
       expect(result.current.isActive).toBe(false);
     });
 
-    expect(sentinel.release).toHaveBeenCalled();
+    expect(sentinel.release).toHaveBeenCalled(); // eslint-disable-line @typescript-eslint/unbound-method -- vi.fn() mock, no `this` concern
   });
 
   it('re-acquires wake lock on visibility change when document becomes visible', async () => {
@@ -229,7 +229,7 @@ describe('useWakeLock', () => {
     unmount();
 
     // Release should have been called during cleanup
-    expect(sentinel.release).toHaveBeenCalled();
+    expect(sentinel.release).toHaveBeenCalled(); // eslint-disable-line @typescript-eslint/unbound-method -- vi.fn() mock, no `this` concern
   });
 
   it('sets isActive correctly through lifecycle', async () => {

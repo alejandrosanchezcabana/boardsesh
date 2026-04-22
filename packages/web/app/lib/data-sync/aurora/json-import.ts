@@ -858,7 +858,7 @@ export async function importJsonExportData(
       try {
         const assigned = await buildInferredSessionsForUser(userId);
         if (assigned > 0) {
-          console.log(`Built inferred sessions: assigned ${assigned} ticks for user ${userId}`);
+          console.info(`Built inferred sessions: assigned ${assigned} ticks for user ${userId}`);
         }
       } catch (error) {
         console.error('Error building inferred sessions after JSON import:', error);

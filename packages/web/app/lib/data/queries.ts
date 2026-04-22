@@ -9,7 +9,7 @@ import { cache } from 'react';
 import { sql } from '@/app/lib/db/db';
 import { getGradeLabel } from '@boardsesh/db/queries';
 
-import { Climb, ParsedBoardRouteParametersWithUuid, BoardName, LayoutId, Size } from '../types';
+import type { Climb, ParsedBoardRouteParametersWithUuid, BoardName, LayoutId, Size } from '../types';
 import { getSizesForLayoutId, getAllLayouts, getSetsForLayoutAndSize } from '@/app/lib/board-constants';
 
 export const getClimb = cache(async (params: ParsedBoardRouteParametersWithUuid): Promise<Climb> => {

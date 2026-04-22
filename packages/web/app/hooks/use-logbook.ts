@@ -125,6 +125,7 @@ export function useLogbook(boardName: BoardName, climbUuids: ClimbUuid[]) {
   // fetchedUuidsRef, since climbUuids/isEnabled may not have changed.
   const newUuids = useMemo(
     () => (isEnabled ? climbUuids.filter((uuid) => !fetchedUuidsRef.current.has(uuid)) : []),
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- invalidationCount forces recomputation after cache invalidation clears fetchedUuidsRef
     [climbUuids, isEnabled, invalidationCount],
   );
 
@@ -138,7 +139,7 @@ export function useLogbook(boardName: BoardName, climbUuids: ClimbUuid[]) {
 
       if (uuidsToFetch.length === 0) return [];
 
-      const client = createGraphQLHttpClient(token!);
+      const client = createGraphQLHttpClient(token);
       const variables: GetTicksQueryVariables = {
         input: {
           boardType: boardName,

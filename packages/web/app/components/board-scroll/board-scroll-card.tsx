@@ -5,8 +5,8 @@ import DashboardOutlined from '@mui/icons-material/DashboardOutlined';
 import BoardRenderer from '../board-renderer/board-renderer';
 import { useBoardDetails } from './board-thumbnail';
 import { formatCount, formatSends } from '@/app/lib/format-climb-stats';
-import { BoardConfigData } from '@/app/lib/server-board-configs';
-import { StoredBoardConfig } from '@/app/lib/saved-boards-db';
+import type { BoardConfigData } from '@/app/lib/server-board-configs';
+import type { StoredBoardConfig } from '@/app/lib/saved-boards-db';
 import type { UserBoard, PopularBoardConfig } from '@boardsesh/shared-schema';
 import styles from './board-scroll.module.css';
 

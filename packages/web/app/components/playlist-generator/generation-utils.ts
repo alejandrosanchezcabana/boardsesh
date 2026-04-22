@@ -1,15 +1,15 @@
 // Playlist Generation Utilities
 
 import { TENSION_KILTER_GRADES } from '@/app/lib/board-data';
-import {
+import type {
   GeneratorOptions,
   PlannedClimbSlot,
-  WARM_UP_CONFIG,
   VolumeOptions,
   PyramidOptions,
   LadderOptions,
   GradeFocusOptions,
 } from './types';
+import { WARM_UP_CONFIG } from './types';
 
 const MIN_GRADE = TENSION_KILTER_GRADES[0].difficulty_id; // 10
 const MAX_GRADE = TENSION_KILTER_GRADES[TENSION_KILTER_GRADES.length - 1].difficulty_id; // 33

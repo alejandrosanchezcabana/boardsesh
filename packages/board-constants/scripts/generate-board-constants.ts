@@ -458,7 +458,7 @@ function main(): void {
   const boardData = {} as Record<GeneratedBoardName, GeneratedBoardData>;
 
   for (const boardName of BOARD_NAMES) {
-    console.log(`Querying ${boardName} board constants...`);
+    console.info(`Querying ${boardName} board constants...`);
     boardData[boardName] = {
       sizes: querySizes(boardName),
       layouts: queryLayouts(boardName),
@@ -470,13 +470,13 @@ function main(): void {
     assertBoardDataIsComplete(boardName, boardData[boardName]);
   }
 
-  console.log(`Writing ${PRODUCT_OUTPUT_PATH}...`);
+  console.info(`Writing ${PRODUCT_OUTPUT_PATH}...`);
   writeFileSync(PRODUCT_OUTPUT_PATH, generateProductDataFile(boardData), 'utf-8');
 
-  console.log(`Writing ${LED_OUTPUT_PATH}...`);
+  console.info(`Writing ${LED_OUTPUT_PATH}...`);
   writeFileSync(LED_OUTPUT_PATH, generateLedDataFile(boardData), 'utf-8');
 
-  console.log('Board constants generated.');
+  console.info('Board constants generated.');
 }
 
 main();

@@ -71,7 +71,7 @@ export default function ActivityFeed({
     ...(hasInitialData
       ? {
           initialData: {
-            pages: [initialFeedResult!],
+            pages: [initialFeedResult],
             pageParams: [null],
           },
           initialDataUpdatedAt: Date.now(),
