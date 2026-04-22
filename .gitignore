@@ -86,3 +86,4 @@ packages/db/docker/tmp/
 
 # local environment variables
 .env.local
+eng.traineddata

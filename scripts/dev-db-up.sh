@@ -84,6 +84,31 @@ if [ "$all_running" = true ]; then
   exit 0
 fi
 
+# ── Cross-worktree fast path: postgres already running on port 5432 ──────
+# If another worktree already started the DB stack, reuse it instead of
+# starting duplicate containers (which would fail on port conflicts anyway).
+# Only reuse the container if it is actually the boardsesh dev DB image —
+# another project's postgres on port 5432 must not receive boardsesh migrations.
+PG_CONTAINER=$(docker ps --filter "publish=5432" --filter "status=running" -q 2>/dev/null | head -1)
+if [ -n "$PG_CONTAINER" ]; then
+  PG_IMAGE=$(docker inspect "$PG_CONTAINER" --format='{{.Config.Image}}' 2>/dev/null)
+  case "$PG_IMAGE" in
+    *boardsesh*) ;;
+    *)
+      echo "WARNING: A postgres container is running on port 5432 but it is not the boardsesh dev DB (image: $PG_IMAGE). Skipping cross-worktree fast path."
+      PG_CONTAINER=""
+      ;;
+  esac
+fi
+if [ -n "$PG_CONTAINER" ]; then
+  echo "Postgres already running on port 5432 (shared DB detected) — skipping container startup..."
+  run_pending_drizzle_sql_migrations
+  echo ""
+  echo "Development database is ready (shared from another worktree)."
+  echo "  Test user: test@boardsesh.com / test"
+  exit 0
+fi
+
 echo "Starting development database containers..."
 docker compose up -d postgres redis
 

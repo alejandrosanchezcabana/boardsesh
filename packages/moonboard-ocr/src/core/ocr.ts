@@ -145,7 +145,7 @@ export function parseHeaderText(lines: string[]): OcrResult {
     // Clean up trailing "8" or "B" which may come from heart icon or benchmark indicator
     // We can't reliably distinguish them via OCR, so just remove the trailing chars
     // Benchmark detection relies on standalone "B" or "8" lines (checked earlier)
-    name = name.replace(/\s+[\[(]?[8B]\]?$/i, '').trim();
+    name = name.replace(/\s+[[(]?[8B]\]?$/i, '').trim();
   }
 
   // Find setter and angle

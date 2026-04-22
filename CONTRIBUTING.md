@@ -15,7 +15,11 @@ You can also check out this [video](https://www.youtube.com/watch?v=dSl_qnWO104)
 Run the automated setup script:
 
 ```bash
-./packages/web/setup-dev.sh
+# macOS/Linux
+./scripts/setup-dev.sh
+
+# Windows (PowerShell) — install Vite+ first, then run the script manually
+irm https://vite.plus/ps1 | iex
 ```
 
 This script will:

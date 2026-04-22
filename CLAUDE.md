@@ -74,22 +74,22 @@ vp run dev
 The `boardsesh-dev-db` image is published to GHCR and contains PostgreSQL 17 + PostGIS with all Kilter/Tension/MoonBoard board data pre-loaded, a test user (`test@boardsesh.com` / `test`), social seed data (fake users, follows, ticks, comments, notifications), and all drizzle migrations applied. It is rebuilt automatically when files in `packages/db/docker/`, `packages/db/scripts/`, `packages/db/src/schema/`, `packages/db/drizzle/`, or `packages/db/package.json` change on main.
 
 - **Pull directly**: `docker pull ghcr.io/boardsesh/boardsesh-dev-db:latest`
-- **Reset your local database**: `docker compose down -v && bun run db:up`
+- **Reset your local database**: `docker compose down -v && vp run db:up`
 - **Build locally** (e.g. to test Dockerfile changes): `docker compose up -d --build postgres`
 
 ### Common Commands (from root)
 
-This project uses [Vite+](https://viteplus.dev) (`vp`) as its unified toolchain for testing, linting, formatting, and type checking. The `bun run` aliases still work and delegate to `vp` internally.
+This project uses [Vite+](https://viteplus.dev) (`vp`) as its unified toolchain for testing, linting, formatting, and type checking. The `bun run` aliases work for build/test/lint commands but **not** for `vp run` commands — use `vp run` directly for dev and database tasks.
 
 - `vp check` - Run format, lint, and type checks (or `bun run check`)
 - `vp test` - Run all tests (or `bun run test`)
 - `vp test run` - Run tests once without watch mode (or `bun run test:run`)
 - `vp lint` - Lint all packages (or `bun run lint`)
 - `vp fmt` - Format all files with Oxfmt (or `bun run format`)
-- `vp run dev` - Start development databases, backend, and web server (or `bun run dev`)
-- `vp run dev:backend` - Start database and backend only (or `bun run dev:backend`)
-- `vp run dev:web` - Start database and web server only (or `bun run dev:web`)
-- `vp run db:up` - Start development databases and run migrations only (or `bun run db:up`)
+- `vp run dev` - Start development databases, backend, and web server
+- `vp run dev:backend` - Start database and backend only
+- `vp run dev:web` - Start database and web server only
+- `vp run db:up` - Start development databases and run migrations only
 - `bun run build` - Build all packages
 - `bun run build:web` - Build web package only
 - `bun run build:backend` - Build backend package only
@@ -103,7 +103,7 @@ This project uses [Vite+](https://viteplus.dev) (`vp`) as its unified toolchain 
 
 ### Running E2E Tests
 
-- `bun run test:e2e` - Full Playwright run: brings up the pre-built dev DB, exports the seeded test user, and runs every spec in `packages/web/e2e/`. Playwright's `webServer` config auto-starts `bun run dev` (backend + web) for you.
+- `bun run test:e2e` - Full Playwright run: brings up the pre-built dev DB, exports the seeded test user, and runs every spec in `packages/web/e2e/`. Playwright's `webServer` config auto-starts `vp run dev` (backend + web) for you.
 - `bun run test:e2e:setup` - Only bring up the dev DB. Useful when iterating on a single spec: after setup, run `bun run --filter=@boardsesh/web test:e2e -- e2e/<spec>.spec.ts` (or use `test:e2e:ui` for the Playwright UI).
 - The seeded test user is `test@boardsesh.com` / `test`, exported as `TEST_USER_EMAIL`/`TEST_USER_PASSWORD` by the script so screenshot specs (`app-store-screenshots`, `help-screenshots`) run end-to-end without 1Password.
 
