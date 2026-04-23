@@ -2,6 +2,8 @@
 
 set -e
 
+REPO_ROOT=$(cd "$(dirname "$0")/.." && pwd)
+
 # Colors for output
 RED='\033[0;31m'
 GREEN='\033[0;32m'
@@ -135,12 +137,13 @@ print_step "Step 4: Setting Up Environment"
 print_success "Generic environment file already exists (packages/web/.env.local)"
 
 # Create packages/web/.env.development.local if it doesn't exist (secrets only)
-if [ ! -f "packages/web/.env.development.local" ]; then
-    echo "Creating packages/web/.env.development.local file for secrets..."
-    cat > packages/web/.env.development.local << 'EOF'
+SECRETS_ENV="$REPO_ROOT/packages/web/.env.development.local"
+if [ ! -f "$SECRETS_ENV" ]; then
+    echo "Creating $SECRETS_ENV for secrets..."
+    cat > "$SECRETS_ENV" << 'EOF'
 # Development secrets - DO NOT COMMIT TO GIT
 # This file should contain only sensitive tokens and keys
-# Generic configuration goes in .env.local
+# Generic configuration is in packages/web/.env.local (tracked in git)
 
 # Aurora API tokens for shared sync
 # KILTER_SYNC_TOKEN=your_kilter_token_here
@@ -204,7 +207,7 @@ get_aurora_token() {
 # Ask user if they want to set up tokens
 if ! command_exists jq; then
     echo -e "${YELLOW}jq is not available, skipping Aurora API token setup${NC}"
-    echo "You can install jq and run the setup again, or add tokens manually to .env.development.local"
+    echo "You can install jq and run the setup again, or add tokens manually to packages/web/.env.development.local"
 else
     echo -e "${YELLOW}Do you want to set up Aurora API tokens now? (y/n)${NC}"
     read -r setup_tokens
@@ -223,9 +226,9 @@ if [[ "$setup_tokens" =~ ^[Yy]$ ]] && command_exists jq; then
     if [ $? -eq 0 ]; then
         print_success "Kilter token obtained successfully"
         # Remove commented line and add actual token
-        sed -i.bak '/^# KILTER_SYNC_TOKEN=/d' packages/web/.env.development.local
-        echo "KILTER_SYNC_TOKEN=$kilter_token" >> packages/web/.env.development.local
-        rm -f packages/web/.env.development.local.bak
+        sed -i.bak '/^# KILTER_SYNC_TOKEN=/d' "$SECRETS_ENV"
+        echo "KILTER_SYNC_TOKEN=$kilter_token" >> "$SECRETS_ENV"
+        rm -f "$SECRETS_ENV.bak"
     else
         print_warning "Failed to get Kilter token - you can add it manually later"
     fi
@@ -239,9 +242,9 @@ if [[ "$setup_tokens" =~ ^[Yy]$ ]] && command_exists jq; then
     if [ $? -eq 0 ]; then
         print_success "Tension token obtained successfully"
         # Remove commented line and add actual token
-        sed -i.bak '/^# TENSION_SYNC_TOKEN=/d' packages/web/.env.development.local
-        echo "TENSION_SYNC_TOKEN=$tension_token" >> packages/web/.env.development.local
-        rm -f packages/web/.env.development.local.bak
+        sed -i.bak '/^# TENSION_SYNC_TOKEN=/d' "$SECRETS_ENV"
+        echo "TENSION_SYNC_TOKEN=$tension_token" >> "$SECRETS_ENV"
+        rm -f "$SECRETS_ENV.bak"
     else
         print_warning "Failed to get Tension token - you can add it manually later"
     fi
@@ -260,10 +263,11 @@ fi
 print_step "Step 6: Setting Up Database"
 
 echo "Starting database (pulls pre-built image on first run, starts in seconds after)..."
+cd "$REPO_ROOT"
 if ! vp run db:up; then
     print_error "Failed to start database"
 fi
-print_success "Database is ready"
+print_success "Database is ready (test user: test@boardsesh.com / test)"
 
 print_step "Step 7: Installing Playwright Browsers"
 
