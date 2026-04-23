@@ -12,6 +12,8 @@ import com.getcapacitor.PluginCall;
 import com.getcapacitor.PluginMethod;
 import com.getcapacitor.annotation.CapacitorPlugin;
 
+import org.json.JSONObject;
+
 /**
  * Lets debug builds swap the Capacitor server URL at runtime.
  *
@@ -27,7 +29,10 @@ public class DevUrlPlugin extends Plugin {
     public void getState(PluginCall call) {
         JSObject ret = new JSObject();
         ret.put("isDebug", BuildConfig.DEBUG);
-        ret.put("currentUrl", DevUrlPrefs.getOverrideUrl(getContext()));
+        String current = DevUrlPrefs.getOverrideUrl(getContext());
+        // Use JSONObject.NULL so the key serializes as JS `null` (not `undefined`)
+        // to match the TypeScript contract `string | null`.
+        ret.put("currentUrl", current != null ? current : JSONObject.NULL);
         ret.put("defaultUrl", DEFAULT_URL);
         call.resolve(ret);
     }

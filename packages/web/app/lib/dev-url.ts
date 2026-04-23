@@ -10,13 +10,19 @@ export type DevUrlState = {
   defaultUrl: string;
 };
 
-const plugin = () => (typeof window === 'undefined' ? undefined : window.Capacitor?.Plugins?.DevUrl);
+const plugin = () => {
+  if (typeof window === 'undefined' || !isNativeApp()) return undefined;
+  return window.Capacitor?.Plugins?.DevUrl;
+};
 
 export async function getDevUrlState(): Promise<DevUrlState | null> {
   const p = plugin();
   if (!p) return null;
   try {
-    return await p.getState();
+    const raw = await p.getState();
+    // Android's JSObject may still omit the key in older plugin builds; normalize
+    // to `null` so the web side's `string | null` contract holds regardless.
+    return { ...raw, currentUrl: raw.currentUrl ?? null };
   } catch {
     return null;
   }

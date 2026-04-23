@@ -9,6 +9,7 @@ import TextField from '@mui/material/TextField';
 import Button from '@mui/material/Button';
 import Typography from '@mui/material/Typography';
 import Stack from '@mui/material/Stack';
+import CircularProgress from '@mui/material/CircularProgress';
 
 import { clearDevUrl, getDevUrlState, setDevUrl, type DevUrlState } from '@/app/lib/dev-url';
 
@@ -17,10 +18,30 @@ interface DevUrlDialogProps {
   onClose: () => void;
 }
 
+// If the native side fails to tear the process down within this window, re-enable
+// the UI so the dialog doesn't stay wedged (e.g. in a web browser preview, or if
+// the plugin call silently no-ops in a release build).
+const RESTART_TIMEOUT_MS = 1500;
+
+function validateUrl(input: string): string | null {
+  const trimmed = input.trim();
+  if (!trimmed) return 'Enter a URL';
+  try {
+    const parsed = new URL(trimmed);
+    if (parsed.protocol !== 'http:' && parsed.protocol !== 'https:') {
+      return 'URL must start with http:// or https://';
+    }
+    return null;
+  } catch {
+    return 'Not a valid URL';
+  }
+}
+
 export default function DevUrlDialog({ open, onClose }: DevUrlDialogProps) {
   const [state, setState] = useState<DevUrlState | null>(null);
   const [input, setInput] = useState('');
   const [busy, setBusy] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     if (!open) return;
@@ -30,46 +51,71 @@ export default function DevUrlDialog({ open, onClose }: DevUrlDialogProps) {
       if (cancelled) return;
       setState(next);
       setInput(next?.currentUrl ?? '');
+      setError(null);
+      setBusy(false);
     })();
     return () => {
       cancelled = true;
     };
   }, [open]);
 
-  const save = async () => {
-    if (!input.trim()) return;
+  const runWithRestartFallback = async (action: () => Promise<void>) => {
     setBusy(true);
-    await setDevUrl(input.trim());
+    setError(null);
+    try {
+      await action();
+      // If the process isn't killed within the timeout, something went wrong —
+      // unlock the dialog so the user can try again.
+      window.setTimeout(() => setBusy(false), RESTART_TIMEOUT_MS);
+    } catch (e) {
+      setBusy(false);
+      setError(e instanceof Error ? e.message : 'Something went wrong');
+    }
   };
 
-  const clear = async () => {
-    setBusy(true);
-    await clearDevUrl();
+  const save = () => {
+    const validationError = validateUrl(input);
+    if (validationError) {
+      setError(validationError);
+      return;
+    }
+    void runWithRestartFallback(() => setDevUrl(input.trim()));
+  };
+
+  const clear = () => {
+    void runWithRestartFallback(() => clearDevUrl());
+  };
+
+  const useDefault = () => {
+    setInput(state?.defaultUrl ?? 'https://www.boardsesh.com');
+    setError(null);
   };
 
   return (
-    <Dialog open={open} onClose={onClose} fullWidth maxWidth="xs">
+    <Dialog open={open} onClose={busy ? undefined : onClose} fullWidth maxWidth="xs">
       <DialogTitle>Dev URL</DialogTitle>
       <DialogContent>
         <Stack spacing={2} sx={{ mt: 1 }}>
           <Typography variant="body2" color="text.secondary">
-            Point the WebView at a different origin. The app will relaunch after saving.
+            Point the WebView at a different origin. The app will restart after saving.
           </Typography>
           <TextField
             label="Server URL"
             placeholder={state?.defaultUrl ?? 'https://www.boardsesh.com'}
             value={input}
-            onChange={(e) => setInput(e.target.value)}
+            onChange={(e) => {
+              setInput(e.target.value);
+              if (error) setError(null);
+            }}
+            error={Boolean(error)}
+            helperText={error ?? ' '}
+            disabled={busy}
             fullWidth
             autoFocus
             autoComplete="off"
             spellCheck={false}
           />
-          <Button
-            size="small"
-            variant="outlined"
-            onClick={() => setInput(state?.defaultUrl ?? 'https://www.boardsesh.com')}
-          >
+          <Button size="small" variant="outlined" onClick={useDefault} disabled={busy}>
             Use production
           </Button>
           {state?.currentUrl && (
@@ -86,8 +132,13 @@ export default function DevUrlDialog({ open, onClose }: DevUrlDialogProps) {
         <Button onClick={clear} disabled={busy || !state?.currentUrl} color="warning">
           Clear override
         </Button>
-        <Button onClick={save} disabled={busy || !input.trim()} variant="contained">
-          Save & restart
+        <Button
+          onClick={save}
+          disabled={busy || !input.trim()}
+          variant="contained"
+          startIcon={busy ? <CircularProgress size={14} color="inherit" /> : undefined}
+        >
+          {busy ? 'Restarting…' : 'Save & restart'}
         </Button>
       </DialogActions>
     </Dialog>

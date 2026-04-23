@@ -67,10 +67,13 @@ public class DevUrlPlugin: CAPPlugin, CAPBridgedPlugin {
     }
 
     private func scheduleRestart() {
-        // Small delay so the JS-side promise resolves before we tear the process down.
-        // exit(0) is debug-only per the guards above; never reached in release.
+        // Wrap the exit(0) symbol itself in #if DEBUG so it's never emitted into the
+        // release binary — App Store static analysis flags `exit` symbols even when
+        // they are unreachable at runtime.
+        #if DEBUG
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.15) {
             exit(0)
         }
+        #endif
     }
 }

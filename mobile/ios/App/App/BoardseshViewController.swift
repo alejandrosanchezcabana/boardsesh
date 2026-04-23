@@ -8,15 +8,15 @@ class BoardseshViewController: CAPBridgeViewController {
         super.capacitorDidLoad()
         bridge?.registerPluginInstance(LiveActivityPlugin())
         bridge?.registerPluginInstance(HealthKitPlugin())
-        bridge?.registerPluginInstance(DevUrlPlugin())
+        // DevUrlPlugin is auto-registered via the CAP_PLUGIN macro in DevUrlPlugin.m
     }
 
     override open func instanceDescriptor() -> InstanceDescriptor {
         let descriptor = super.instanceDescriptor()
         #if DEBUG
-        if let devUrl = DevUrlPlugin.currentOverride() {
+        if let devUrl = DevUrlPlugin.currentOverride(), URL(string: devUrl) != nil {
             descriptor.serverURL = devUrl
-            descriptor.allowNavigation = ["*"]
+            descriptor.allowedNavigationHostnames = ["*"]
         }
         #endif
         return descriptor

@@ -33,7 +33,6 @@ public class MainActivity extends BridgeActivity {
     @Override
     public void onCreate(Bundle savedInstanceState) {
         registerPlugin(DevUrlPlugin.class);
-        applyDevUrlOverride();
 
         super.onCreate(savedInstanceState);
         EdgeToEdge.enable(this);
@@ -48,18 +47,21 @@ public class MainActivity extends BridgeActivity {
         webView.setWebViewClient(new OfflineAwareBridgeWebViewClient(bridge));
     }
 
-    private void applyDevUrlOverride() {
-        if (!BuildConfig.DEBUG) {
-            return;
+    @Override
+    protected void load() {
+        // Runs after super.onCreate() has loaded CapConfig from assets but before
+        // Bridge.Builder consumes it. Setting this.config here is respected by
+        // the builder path; setting it before super.onCreate() is not.
+        if (BuildConfig.DEBUG) {
+            String devUrl = DevUrlPrefs.getOverrideUrl(this);
+            if (devUrl != null) {
+                this.config = new CapConfig.Builder(this)
+                    .setServerUrl(devUrl)
+                    .setAllowNavigation(new String[]{"*"})
+                    .create();
+            }
         }
-        String devUrl = DevUrlPrefs.getOverrideUrl(this);
-        if (devUrl == null) {
-            return;
-        }
-        this.config = new CapConfig.Builder(this)
-            .setServerUrl(devUrl)
-            .setAllowNavigation(new String[]{"*"})
-            .create();
+        super.load();
     }
 
     private String currentRetryUrl() {
@@ -167,9 +169,10 @@ public class MainActivity extends BridgeActivity {
             if (url != null && DEV_RESET_SCHEME.equalsIgnoreCase(url.getScheme())) {
                 if (BuildConfig.DEBUG) {
                     DevUrlPrefs.setOverrideUrl(MainActivity.this, null);
-                    new Handler(Looper.getMainLooper()).postDelayed(
-                        () -> Process.killProcess(Process.myPid()),
-                        100
+                    // No JS promise to flush here — post to the main looper so the
+                    // WebView finishes handling the click before the process dies.
+                    new Handler(Looper.getMainLooper()).post(
+                        () -> Process.killProcess(Process.myPid())
                     );
                 }
                 return true;
