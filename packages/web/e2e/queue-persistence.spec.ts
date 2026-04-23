@@ -91,11 +91,15 @@ test.describe('Queue Persistence - Local Mode', () => {
     await expect(page).toHaveURL('/', { timeout: 15000 });
     await verifyQueueShowsClimb(page, climbName);
 
-    // 2. Navigate to Settings via user drawer (client-side Link navigation)
+    // 2. Navigate to Help via user drawer (client-side Link navigation).
+    // Previously this step navigated to /settings to exercise the drawer →
+    // Link pathway, but /settings was auth-gated in 3c4c5271 and the test
+    // doesn't log in — /help covers the same drawer → public-route path
+    // without the auth redirect race.
     await page.getByLabel('User menu').click();
-    const settingsLink = page.locator('a[href="/settings"]');
-    await expect(settingsLink).toBeVisible({ timeout: 5000 });
-    await Promise.all([page.waitForURL(/\/settings/, { timeout: 15000 }), settingsLink.click()]);
+    const helpLink = page.locator('a[href="/help"]');
+    await expect(helpLink).toBeVisible({ timeout: 5000 });
+    await Promise.all([page.waitForURL(/\/help$/, { timeout: 15000 }), helpLink.click()]);
     await verifyQueueShowsClimb(page, climbName);
 
     // 3. Navigate to Discover via bottom tab bar
