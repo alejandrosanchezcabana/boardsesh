@@ -3,6 +3,11 @@ apply plugin: 'com.android.application'
 android {
     namespace = "com.boardsesh.app"
     compileSdk = rootProject.ext.compileSdkVersion
+    // BuildConfig is generated on-demand in AGP 8+; the DevUrl plugin and
+    // MainActivity gate on BuildConfig.DEBUG, so generation must be opted in.
+    buildFeatures {
+        buildConfig = true
+    }
     defaultConfig {
         applicationId = "com.boardsesh.app"
         minSdkVersion = rootProject.ext.minSdkVersion
