@@ -6,9 +6,7 @@
 
 ## How to get everything going
 
-If you want to fix bugs, build features, or make this app even better, follow the instructions described in this [blogpost](https://www.linkedin.com/pulse/git-github-demystified-guide-open-source-contribution-nishan-baral-i4ndc), take into account that the blogpost is generic and it's not specifically targeted to boardeash contributions.
-
-You can also check out this [video](https://www.youtube.com/watch?v=dSl_qnWO104) which explains the procedure (yes, it is super old, but the concepts are still valid).
+Fork the repo on GitHub, clone your fork locally, create a branch, make your change, and open a pull request against `main`. Run the setup script below to get a working local environment before you start.
 
 ## One-Command Setup
 
@@ -34,6 +32,8 @@ This script will:
 
 Once you've run setup, you will have a copy of both the Tension and Kilter climbs database on your computer!!
 
+After setup completes, open [http://localhost:3000](http://localhost:3000) after starting the dev server and log in with `test@boardsesh.com` / `test`.
+
 ## Start Developing
 
 After setup completes, start the development server:
@@ -46,9 +46,9 @@ This automatically starts the database containers (PostgreSQL, neon-proxy, Redis
 
 You can also run pieces independently:
 
+- `vp run db:up` - Database only (PostgreSQL, Redis, neon-proxy + migrations)
 - `vp run dev:backend` - Database + backend only
 - `vp run dev:web` - Database + web only
-- `vp run db:up` - Database only
 
 ## Keeping local data up to date
 
