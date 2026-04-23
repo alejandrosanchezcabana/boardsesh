@@ -511,7 +511,7 @@ const ClimbListItem: React.FC<ClimbListItemProps> = React.memo(
         padding: contentPadding ?? `${themeTokens.spacing[2]}px ${themeTokens.spacing[2]}px`,
         gap: themeTokens.spacing[3],
         backgroundColor: resolvedBg,
-        borderBottom: '1px solid var(--neutral-200)',
+        borderBottom: '1px solid var(--border-subtle)',
         cursor: 'pointer' as const,
         userSelect: 'none' as const,
         opacity: contentOpacity ?? 1,

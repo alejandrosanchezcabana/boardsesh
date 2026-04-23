@@ -160,12 +160,12 @@ export const themeTokens = {
 // Brand colors (primary, success, error, warning, purple, amber, pink) stay the same.
 export const darkTokens = {
   neutral: {
-    50: '#0A0A0A',
-    100: '#1A1A1A',
-    200: '#2A2A2A',
+    50: '#121212',
+    100: '#222222',
+    200: '#333333',
     300: '#3A3A3A',
     400: '#6B7280',
-    500: '#9CA3AF',
+    500: '#B3B3B3',
     600: '#D1D5DB',
     700: '#E5E7EB',
     800: '#F3F4F6',
@@ -173,9 +173,9 @@ export const darkTokens = {
   },
 
   semantic: {
-    selected: 'rgba(175, 45, 60, 0.14)',
-    selectedHover: 'rgba(175, 45, 60, 0.20)',
-    selectedLight: 'rgba(175, 45, 60, 0.08)',
+    selected: 'rgba(175, 45, 60, 0.22)',
+    selectedHover: 'rgba(175, 45, 60, 0.30)',
+    selectedLight: 'rgba(175, 45, 60, 0.12)',
     selectedBorder: '#8C4A52',
     background: '#121212',
     surface: '#1A1A1A',

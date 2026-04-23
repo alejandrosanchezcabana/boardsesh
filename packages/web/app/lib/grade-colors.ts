@@ -205,7 +205,7 @@ function hexToHSL(hex: string): { h: number; s: number; l: number } {
 function softenColor(hex: string, darkMode?: boolean): string {
   const { h } = hexToHSL(hex);
   if (darkMode) {
-    return `hsl(${Math.round(h)}, 80%, 72%)`;
+    return `hsl(${Math.round(h)}, 80%, 77%)`;
   }
   return `hsl(${Math.round(h)}, 72%, 44%)`;
 }

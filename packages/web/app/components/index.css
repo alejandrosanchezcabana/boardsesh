@@ -88,12 +88,12 @@ html[data-theme='dark'] {
   color-scheme: dark;
 
   /* Neutral palette (inverted) */
-  --neutral-50: #0a0a0a;
-  --neutral-100: #1a1a1a;
-  --neutral-200: #2a2a2a;
+  --neutral-50: #121212;
+  --neutral-100: #222222;
+  --neutral-200: #333333;
   --neutral-300: #3a3a3a;
   --neutral-400: #6b7280;
-  --neutral-500: #9ca3af;
+  --neutral-500: #b3b3b3;
   --neutral-600: #d1d5db;
   --neutral-700: #e5e7eb;
   --neutral-800: #f3f4f6;
@@ -103,9 +103,9 @@ html[data-theme='dark'] {
   --semantic-background: #121212;
   --semantic-surface: #1a1a1a;
   --semantic-surface-overlay: rgba(26, 26, 26, 0.95);
-  --semantic-selected: rgba(175, 45, 60, 0.14);
-  --semantic-selected-hover: rgba(175, 45, 60, 0.2);
-  --semantic-selected-light: rgba(175, 45, 60, 0.08);
+  --semantic-selected: rgba(175, 45, 60, 0.22);
+  --semantic-selected-hover: rgba(175, 45, 60, 0.3);
+  --semantic-selected-light: rgba(175, 45, 60, 0.12);
 
   /* Status background tints (semi-transparent for dark) */
   --color-success-bg: rgba(107, 144, 128, 0.12);
