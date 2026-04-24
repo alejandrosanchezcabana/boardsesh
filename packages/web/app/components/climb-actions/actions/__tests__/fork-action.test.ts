@@ -1,4 +1,8 @@
 import { describe, it, expect, vi, beforeEach } from 'vite-plus/test';
+import { ForkAction } from '../fork-action';
+import { constructCreateClimbUrl } from '@/app/lib/url-utils';
+import type { ClimbActionProps } from '../../types';
+import type { BoardDetails, Climb } from '@/app/lib/types';
 
 // Mock dependencies before importing the module
 vi.mock('@vercel/analytics', () => ({
@@ -40,11 +44,6 @@ const mockUseSession = vi.fn();
 vi.mock('next-auth/react', () => ({
   useSession: () => mockUseSession(),
 }));
-
-import { ForkAction } from '../fork-action';
-import { constructCreateClimbUrl } from '@/app/lib/url-utils';
-import type { ClimbActionProps } from '../../types';
-import type { BoardDetails, Climb } from '@/app/lib/types';
 
 function createTestClimb(overrides?: Partial<Climb>): Climb {
   return {

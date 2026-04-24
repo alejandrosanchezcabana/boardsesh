@@ -1,5 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vite-plus/test';
 import { renderHook, act } from '@testing-library/react';
+import { useAuthIntegration } from '../use-auth-integration';
 
 const mockUseSession = vi.fn();
 vi.mock('next-auth/react', () => ({
@@ -10,8 +11,6 @@ const mockCreateMapping = vi.fn();
 vi.mock('../user-board-mappings', () => ({
   createUserBoardMapping: (...args: unknown[]) => mockCreateMapping(...args),
 }));
-
-import { useAuthIntegration } from '../use-auth-integration';
 
 describe('useAuthIntegration', () => {
   beforeEach(() => {

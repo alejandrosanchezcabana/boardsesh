@@ -1,4 +1,8 @@
 import { describe, it, expect, vi } from 'vite-plus/test';
+import { getAuroraBluetoothPacket as getBluetoothPacket } from '../bluetooth-aurora';
+import { splitMessages } from '../bluetooth-shared';
+import { getLedPlacements } from '@boardsesh/board-constants/led-placements';
+import type { BoardName } from '@/app/lib/types';
 
 /**
  * Integration tests: full pipeline from climb frames → LED lookup → BLE packet.
@@ -14,11 +18,6 @@ import { describe, it, expect, vi } from 'vite-plus/test';
 vi.mock('@/app/lib/moonboard-config', () => ({
   MOONBOARD_ENABLED: false,
 }));
-
-import { getAuroraBluetoothPacket as getBluetoothPacket } from '../bluetooth-aurora';
-import { splitMessages } from '../bluetooth-shared';
-import { getLedPlacements } from '@boardsesh/board-constants/led-placements';
-import type { BoardName } from '@/app/lib/types';
 
 // ---- Helpers ----
 

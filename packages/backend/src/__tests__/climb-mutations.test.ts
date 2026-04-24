@@ -1,5 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from 'vite-plus/test';
 import type { ConnectionContext } from '@boardsesh/shared-schema';
+import { climbMutations } from '../graphql/resolvers/climbs/mutations';
 
 const { mockDb, mockPublishSocialEvent, insertCalls } = vi.hoisted(() => {
   const insertCalls: Array<{ table: unknown; values: unknown }> = [];
@@ -30,8 +31,6 @@ vi.mock('../utils/rate-limiter', () => ({
 vi.mock('../utils/redis-rate-limiter', () => ({
   checkRateLimitRedis: vi.fn().mockResolvedValue(undefined),
 }));
-
-import { climbMutations } from '../graphql/resolvers/climbs/mutations';
 
 function makeCtx(overrides: Partial<ConnectionContext> = {}): ConnectionContext {
   return {

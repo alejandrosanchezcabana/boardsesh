@@ -1,12 +1,11 @@
 import { describe, it, expect, vi } from 'vite-plus/test';
 import { renderHook } from '@testing-library/react';
+import { useColorMode } from '@/app/hooks/use-color-mode';
+import { useIsDarkMode } from '../use-is-dark-mode';
 
 vi.mock('@/app/hooks/use-color-mode', () => ({
   useColorMode: vi.fn(),
 }));
-
-import { useColorMode } from '@/app/hooks/use-color-mode';
-import { useIsDarkMode } from '../use-is-dark-mode';
 
 const mockUseColorMode = vi.mocked(useColorMode);
 

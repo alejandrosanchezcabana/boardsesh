@@ -1,6 +1,7 @@
 import { describe, it, expect, vi } from 'vite-plus/test';
 import { render, screen, fireEvent } from '@testing-library/react';
 import React from 'react';
+import FeedCommentButton from '../feed-comment-button';
 
 // --- Mocks ---
 
@@ -18,8 +19,6 @@ vi.mock('../comment-section', () => ({
     );
   },
 }));
-
-import FeedCommentButton from '../feed-comment-button';
 
 describe('FeedCommentButton', () => {
   describe('Initial rendering', () => {

@@ -1,6 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vite-plus/test';
 import { render, screen, fireEvent } from '@testing-library/react';
 import React from 'react';
+import SeshSettingsDrawer from '../sesh-settings-drawer';
 
 const mockPush = vi.fn();
 const mockReplace = vi.fn();
@@ -186,8 +187,6 @@ vi.mock('@/app/session/[sessionId]/session-detail-content', () => ({
     </div>
   ),
 }));
-
-import SeshSettingsDrawer from '../sesh-settings-drawer';
 
 describe('SeshSettingsDrawer', () => {
   beforeEach(() => {

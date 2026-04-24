@@ -1,6 +1,9 @@
 import { describe, it, expect, vi, beforeEach } from 'vite-plus/test';
 import { renderHook, waitFor, act } from '@testing-library/react';
 import { createQueryWrapper } from '@/app/test-utils/test-providers';
+import { useWsAuthToken } from '../use-ws-auth-token';
+import { useSession } from 'next-auth/react';
+import { useSaveClimb } from '../use-save-climb';
 
 vi.mock('../use-ws-auth-token', () => ({
   useWsAuthToken: vi.fn(),
@@ -25,10 +28,6 @@ vi.mock('@/app/components/graphql-queue/graphql-client', () => ({
 vi.mock('@/app/lib/graphql/operations/new-climb-feed', () => ({
   SAVE_CLIMB_MUTATION: 'SAVE_CLIMB_MUTATION',
 }));
-
-import { useWsAuthToken } from '../use-ws-auth-token';
-import { useSession } from 'next-auth/react';
-import { useSaveClimb } from '../use-save-climb';
 
 const mockUseWsAuthToken = vi.mocked(useWsAuthToken);
 const mockUseSession = vi.mocked(useSession);

@@ -3,6 +3,8 @@ import { render, screen } from '@testing-library/react';
 import React from 'react';
 import type { Climb, BoardDetails, BoardName } from '@/app/lib/types';
 import type { ClimbActionResult, ClimbActionMenuItem, ClimbActionType } from '../types';
+import { GoToQueueAction } from '../actions/go-to-queue-action';
+import type { ClimbActionProps } from '../types';
 
 // --- Mock factories ---
 
@@ -104,8 +106,6 @@ vi.mock('../action-view-renderer', () => ({
 }));
 
 // Import after mocks
-import { GoToQueueAction } from '../actions/go-to-queue-action';
-import type { ClimbActionProps } from '../types';
 
 // --- Test data ---
 

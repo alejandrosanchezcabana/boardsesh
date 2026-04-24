@@ -1,8 +1,10 @@
 // @vitest-environment jsdom
+
 import { describe, it, expect, vi, beforeEach } from 'vite-plus/test';
 import { render, screen, fireEvent } from '@testing-library/react';
 import React from 'react';
 import type { Climb, BoardDetails } from '@/app/lib/types';
+import ClimbsList from '../climbs-list';
 
 // --- Mocks ---
 
@@ -148,8 +150,6 @@ vi.mock('@tanstack/react-virtual', () => ({
     };
   },
 }));
-
-import ClimbsList from '../climbs-list';
 
 // --- Helpers ---
 

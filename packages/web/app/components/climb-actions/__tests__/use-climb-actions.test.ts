@@ -1,5 +1,6 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vite-plus/test';
 import { renderHook, act } from '@testing-library/react';
+import { useClimbActions } from '../use-climb-actions';
 
 // --- Mocks ---
 
@@ -57,8 +58,6 @@ vi.mock('@/app/lib/url-utils', () => ({
   constructCreateClimbUrl: vi.fn(() => '/climb/create'),
   constructClimbInfoUrl: vi.fn(() => '/climb/info'),
 }));
-
-import { useClimbActions } from '../use-climb-actions';
 
 // --- Test data ---
 

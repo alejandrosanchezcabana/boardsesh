@@ -2,10 +2,9 @@ import { describe, it, expect, vi } from 'vite-plus/test';
 import { fireEvent, render, screen } from '@testing-library/react';
 import React from 'react';
 import type { BoardDetails, Climb } from '@/app/lib/types';
+import ClimbThumbnail from '../climb-thumbnail';
 
 const mockPathname = '/b/moonrise-gym/40/list';
-
-import ClimbThumbnail from '../climb-thumbnail';
 
 const boardDetails = {
   board_name: 'kilter',

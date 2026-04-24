@@ -1,5 +1,6 @@
 import { createIndexedDBStore, migrateFromLocalStorage } from './idb-helper';
 import type { LogbookPreferences } from './logbook-preferences';
+import type { GradeDisplayFormat } from './grade-colors';
 
 const STORE_NAME = 'preferences';
 
@@ -99,7 +100,6 @@ export const setAlwaysTickInApp = async (enabled: boolean): Promise<void> => {
 export type { GradeDisplayFormat } from './grade-colors';
 // Re-export so existing consumers don't break.
 // The canonical definition lives in grade-colors.ts.
-import type { GradeDisplayFormat } from './grade-colors';
 
 /**
  * Get the grade display format preference.

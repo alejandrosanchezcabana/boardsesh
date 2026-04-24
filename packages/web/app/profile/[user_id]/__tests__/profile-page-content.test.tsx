@@ -1,6 +1,8 @@
 import { describe, it, expect, vi, beforeEach } from 'vite-plus/test';
 import { render, screen } from '@testing-library/react';
 import React from 'react';
+import ProfilePageContent from '../profile-page-content';
+import { useProfileData } from '../hooks/use-profile-data';
 
 // --- Mocks (before component imports) ---
 
@@ -78,9 +80,6 @@ vi.mock('@/app/lib/share-utils', () => ({
 }));
 
 // --- Imports after mocks ---
-
-import ProfilePageContent from '../profile-page-content';
-import { useProfileData } from '../hooks/use-profile-data';
 
 const mockUseProfileData = vi.mocked(useProfileData);
 

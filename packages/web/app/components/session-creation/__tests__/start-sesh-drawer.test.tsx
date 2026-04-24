@@ -1,6 +1,7 @@
 import React from 'react';
 import { render, screen, fireEvent, waitFor, act } from '@testing-library/react';
 import { describe, it, expect, vi, beforeEach } from 'vite-plus/test';
+import StartSeshDrawer from '../start-sesh-drawer';
 
 // --- Mocks ---
 
@@ -199,8 +200,6 @@ vi.mock('@/app/components/graphql-queue', () => ({
     currentClimb: null,
   }),
 }));
-
-import StartSeshDrawer from '../start-sesh-drawer';
 
 // --- Helpers ---
 

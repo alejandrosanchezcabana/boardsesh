@@ -2,6 +2,7 @@ import { describe, it, expect, vi, beforeEach, afterEach } from 'vite-plus/test'
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import React from 'react';
 import type { ActiveSessionInfo } from '@/app/components/persistent-session/types';
+import HomePageContent from '../home-page-content';
 
 // --- Mocks ---
 
@@ -52,8 +53,6 @@ vi.mock('@/app/components/board-selector-drawer/board-selector-drawer', () => ({
 vi.mock('@/app/components/board-scroll/board-discovery-scroll', () => ({
   default: () => null,
 }));
-
-import HomePageContent from '../home-page-content';
 
 // --- Helpers ---
 

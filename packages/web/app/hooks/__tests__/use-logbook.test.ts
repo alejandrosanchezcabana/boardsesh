@@ -3,6 +3,15 @@ import { describe, it, expect, vi, beforeEach } from 'vite-plus/test';
 import { renderHook, waitFor, act } from '@testing-library/react';
 import { QueryClientProvider } from '@tanstack/react-query';
 import { createQueryWrapper, createTestQueryClient } from '@/app/test-utils/test-providers';
+import { useWsAuthToken } from '../use-ws-auth-token';
+import { useSession } from 'next-auth/react';
+import {
+  useLogbook,
+  useInvalidateLogbook,
+  logbookQueryKey,
+  accumulatedLogbookQueryKey,
+  type LogbookEntry,
+} from '../use-logbook';
 
 vi.mock('../use-ws-auth-token', () => ({
   useWsAuthToken: vi.fn(),
@@ -20,16 +29,6 @@ vi.mock('@/app/lib/graphql/client', () => ({
 vi.mock('@/app/lib/graphql/operations', () => ({
   GET_TICKS: 'GET_TICKS_QUERY',
 }));
-
-import { useWsAuthToken } from '../use-ws-auth-token';
-import { useSession } from 'next-auth/react';
-import {
-  useLogbook,
-  useInvalidateLogbook,
-  logbookQueryKey,
-  accumulatedLogbookQueryKey,
-  type LogbookEntry,
-} from '../use-logbook';
 
 const mockUseWsAuthToken = vi.mocked(useWsAuthToken);
 const mockUseSession = vi.mocked(useSession);

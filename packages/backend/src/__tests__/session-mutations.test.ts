@@ -18,8 +18,11 @@
  * - User not found error for addUserToSession
  * - Tick restoration flow verification for removeUserFromSession
  */
+
 import { describe, it, expect, vi, beforeEach } from 'vite-plus/test';
 import type { ConnectionContext } from '@boardsesh/shared-schema';
+import { sessionEditMutations } from '../graphql/resolvers/social/session-mutations';
+import { db } from '../db/client';
 
 // Mock the database client before importing the module under test
 vi.mock('../db/client', () => {
@@ -48,9 +51,6 @@ vi.mock('../graphql/resolvers/social/session-feed', () => ({
 vi.mock('../jobs/inferred-session-builder', () => ({
   assignInferredSession: vi.fn().mockResolvedValue('new-session-id'),
 }));
-
-import { sessionEditMutations } from '../graphql/resolvers/social/session-mutations';
-import { db } from '../db/client';
 
 // Helper to create an authenticated context
 function makeCtx(userId = 'user-1'): ConnectionContext {

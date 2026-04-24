@@ -1,5 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vite-plus/test';
 import { renderHook, act } from '@testing-library/react';
+import { useDoubleTapFavorite } from '../use-double-tap-favorite';
+import { useFavorite } from '../use-favorite';
 
 const mockToggleFavorite = vi.fn().mockResolvedValue(true);
 const mockOpenAuthModal = vi.fn();
@@ -16,9 +18,6 @@ vi.mock('../use-favorite', () => ({
 vi.mock('@/app/components/providers/auth-modal-provider', () => ({
   useAuthModal: () => ({ openAuthModal: mockOpenAuthModal }),
 }));
-
-import { useDoubleTapFavorite } from '../use-double-tap-favorite';
-import { useFavorite } from '../use-favorite';
 
 const mockedUseFavorite = vi.mocked(useFavorite);
 

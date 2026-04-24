@@ -1,9 +1,8 @@
 import { describe, it, expect, vi } from 'vite-plus/test';
+import { resolveFollowRecipient } from '../recipient-resolution';
 
 // Mock the db client to avoid DATABASE_URL requirement
 vi.mock('../../db/client', () => ({ db: {} }));
-
-import { resolveFollowRecipient } from '../recipient-resolution';
 
 describe('resolveFollowRecipient', () => {
   it('returns recipient for valid follow metadata', () => {

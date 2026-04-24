@@ -3,6 +3,7 @@ import React from 'react';
 import { render, screen, act } from '@testing-library/react';
 import type { Angle, BoardDetails, BoardName, Climb } from '@/app/lib/types';
 import type { LogbookEntry } from '@/app/hooks/use-logbook';
+import { InlineListTickBar } from '../inline-list-tick-bar';
 
 // --- Mocks (must be hoisted before imports of the component under test) ---
 
@@ -52,7 +53,6 @@ vi.mock('@/app/hooks/use-grade-format', () => ({
 }));
 
 // Import after mocks.
-import { InlineListTickBar } from '../inline-list-tick-bar';
 
 // --- Fixtures ---
 

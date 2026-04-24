@@ -1,9 +1,11 @@
 // @vitest-environment jsdom
+
 import { describe, it, expect, vi, beforeEach } from 'vite-plus/test';
 import { renderHook, act } from '@testing-library/react';
 import React from 'react';
 import type { BoardDetails, BoardRouteIdentity } from '@/app/lib/types';
 import type { ActiveBoardLock } from '../use-active-board-lock';
+import { useBoardSwitchGuard } from '../use-board-switch-guard';
 
 let mockLock: ActiveBoardLock = { lockedBoard: null, reason: null };
 const mockConfirmBoardSwitch = vi.fn();
@@ -23,8 +25,6 @@ vi.mock('../board-switch-confirm-provider', () => ({
 vi.mock('../../board-bluetooth-control/bluetooth-status-store', () => ({
   disconnectAllBluetooth: () => mockDisconnectAll(),
 }));
-
-import { useBoardSwitchGuard } from '../use-board-switch-guard';
 
 function makeBoard(partial: Partial<BoardDetails> = {}): BoardDetails {
   return {

@@ -3,6 +3,11 @@ import { render, screen } from '@testing-library/react';
 import React from 'react';
 import type { Climb, BoardDetails, BoardName } from '@/app/lib/types';
 import type { ClimbActionProps, ClimbActionResult } from '../types';
+import { ForkAction } from '../actions/fork-action';
+import { TickAction } from '../actions/tick-action';
+import { FavoriteAction } from '../actions/favorite-action';
+import { QueueAction } from '../actions/queue-action';
+import { MirrorAction } from '../actions/mirror-action';
 
 // --- Mock factories ---
 
@@ -120,11 +125,6 @@ vi.mock('../../board-scroll/board-scroll-card', () => ({
 }));
 
 // Import after mocks
-import { ForkAction } from '../actions/fork-action';
-import { TickAction } from '../actions/tick-action';
-import { FavoriteAction } from '../actions/favorite-action';
-import { QueueAction } from '../actions/queue-action';
-import { MirrorAction } from '../actions/mirror-action';
 
 // --- Test data ---
 

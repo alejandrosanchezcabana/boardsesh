@@ -1,6 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vite-plus/test';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import React from 'react';
+import BoardForm from '../board-form';
 
 vi.mock('../map-location-picker', () => ({
   default: ({
@@ -17,8 +18,6 @@ vi.mock('../map-location-picker', () => ({
     </div>
   ),
 }));
-
-import BoardForm from '../board-form';
 
 const defaultValues = {
   name: 'Test Board',

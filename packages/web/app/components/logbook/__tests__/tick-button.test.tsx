@@ -3,6 +3,7 @@ import React from 'react';
 import { render, screen } from '@testing-library/react';
 import type { Angle, BoardDetails, BoardName, Climb } from '@/app/lib/types';
 import type { LogbookEntry } from '@/app/hooks/use-logbook';
+import { TickButton } from '../tick-button';
 
 // --- Mocks (must be hoisted before imports of the component under test) ---
 
@@ -50,7 +51,6 @@ vi.mock('../../swipeable-drawer/swipeable-drawer', () => ({
 }));
 
 // Import after mocks.
-import { TickButton } from '../tick-button';
 
 // --- Fixtures ---
 

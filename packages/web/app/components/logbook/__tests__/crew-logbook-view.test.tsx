@@ -1,9 +1,11 @@
 // @vitest-environment jsdom
+
 import { describe, expect, it, vi, beforeEach } from 'vite-plus/test';
 import React from 'react';
 import { render, screen, waitFor } from '@testing-library/react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import type { Climb } from '@/app/lib/types';
+import { CrewLogbookView } from '../crew-logbook-view';
 
 const mockRequest = vi.fn();
 const mockUseWsAuthToken = vi.fn();
@@ -22,9 +24,7 @@ vi.mock('@/app/lib/graphql/client', () => ({
 }));
 
 vi.mock('@/app/components/ui/empty-state', () => ({
-  EmptyState: ({ description }: { description: string }) => (
-    <div data-testid="empty-state">{description}</div>
-  ),
+  EmptyState: ({ description }: { description: string }) => <div data-testid="empty-state">{description}</div>,
 }));
 
 vi.mock('../logbook-entry-card', () => ({
@@ -75,8 +75,6 @@ vi.mock('@/app/components/social/vote-summary-context', () => ({
   },
 }));
 
-import { CrewLogbookView } from '../crew-logbook-view';
-
 function makeClimb(overrides: Partial<Climb> = {}): Climb {
   return {
     uuid: 'climb-1',
@@ -113,9 +111,7 @@ describe('CrewLogbookView', () => {
 
     renderWithClient(<CrewLogbookView currentClimb={makeClimb()} boardType="kilter" />);
 
-    expect(screen.getByTestId('empty-state').textContent).toBe(
-      "Sign in to see your crew's logbook for this climb",
-    );
+    expect(screen.getByTestId('empty-state').textContent).toBe("Sign in to see your crew's logbook for this climb");
     expect(mockRequest).not.toHaveBeenCalled();
   });
 
@@ -123,9 +119,7 @@ describe('CrewLogbookView', () => {
     mockUseWsAuthToken.mockReturnValue({ token: null, isAuthenticated: false, isLoading: true });
     mockUseSession.mockReturnValue({ data: null, status: 'loading' });
 
-    const { container } = renderWithClient(
-      <CrewLogbookView currentClimb={makeClimb()} boardType="kilter" />,
-    );
+    const { container } = renderWithClient(<CrewLogbookView currentClimb={makeClimb()} boardType="kilter" />);
 
     expect(container.querySelector('.MuiCircularProgress-root')).not.toBeNull();
     expect(screen.queryByTestId('empty-state')).toBeNull();
@@ -140,9 +134,7 @@ describe('CrewLogbookView', () => {
     renderWithClient(<CrewLogbookView currentClimb={makeClimb()} boardType="kilter" />);
 
     await waitFor(() => {
-      expect(screen.getByTestId('empty-state').textContent).toBe(
-        'None of your crew have logged this climb yet',
-      );
+      expect(screen.getByTestId('empty-state').textContent).toBe('None of your crew have logged this climb yet');
     });
   });
 

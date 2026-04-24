@@ -1,4 +1,10 @@
 import { beforeEach, describe, expect, it, vi } from 'vite-plus/test';
+import {
+  buildMoonBoardClimbHoldRows,
+  buildMoonBoardDuplicateError,
+  encodeMoonBoardHoldsToFrames,
+  findMoonBoardDuplicateMatches,
+} from '../graphql/resolvers/climbs/moonboard-duplicates';
 
 const { mockDb } = vi.hoisted(() => ({
   mockDb: {
@@ -9,13 +15,6 @@ const { mockDb } = vi.hoisted(() => ({
 vi.mock('../db/client', () => ({
   db: mockDb,
 }));
-
-import {
-  buildMoonBoardClimbHoldRows,
-  buildMoonBoardDuplicateError,
-  encodeMoonBoardHoldsToFrames,
-  findMoonBoardDuplicateMatches,
-} from '../graphql/resolvers/climbs/moonboard-duplicates';
 
 describe('moonboard duplicate helpers', () => {
   beforeEach(() => {

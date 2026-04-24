@@ -1,6 +1,7 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vite-plus/test';
 import { render, act } from '@testing-library/react';
 import React from 'react';
+import LogbookSwipeHintOrchestrator, { REPEAT_COUNT, ANIMATIONS_PER_CYCLE } from '../logbook-swipe-hint-orchestrator';
 
 const getPreferenceMock = vi.fn();
 const setPreferenceMock = vi.fn();
@@ -9,8 +10,6 @@ vi.mock('@/app/lib/user-preferences-db', () => ({
   getPreference: (...args: unknown[]) => getPreferenceMock(...args),
   setPreference: (...args: unknown[]) => setPreferenceMock(...args),
 }));
-
-import LogbookSwipeHintOrchestrator, { REPEAT_COUNT, ANIMATIONS_PER_CYCLE } from '../logbook-swipe-hint-orchestrator';
 
 type FakeAnimation = {
   finished: Promise<void>;

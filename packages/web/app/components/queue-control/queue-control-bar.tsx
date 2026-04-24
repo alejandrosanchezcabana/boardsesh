@@ -1,4 +1,5 @@
 'use client';
+
 import React, { useState, useCallback, useRef, useEffect, useMemo } from 'react';
 import { createPortal } from 'react-dom';
 import MuiButton from '@mui/material/Button';
@@ -73,6 +74,7 @@ import { QRCodeSVG } from 'qrcode.react';
 import { shareWithFallback } from '@/app/lib/share-utils';
 import { getPreference, setPreference } from '@/app/lib/user-preferences-db';
 import styles from './queue-control-bar.module.css';
+import { PLAY_DRAWER_EVENT as PLAY_DRAWER_EVENT_INTERNAL } from './play-drawer-event';
 
 export type ActiveDrawer = 'none' | 'play' | 'queue' | 'tick';
 
@@ -80,7 +82,6 @@ export type ActiveDrawer = 'none' | 'play' | 'queue' | 'tick';
 // The actual definition lives in ./play-drawer-event to keep the import graph
 // light for callsites that only need the dispatch helper.
 export { PLAY_DRAWER_EVENT, dispatchOpenPlayDrawer } from './play-drawer-event';
-import { PLAY_DRAWER_EVENT as PLAY_DRAWER_EVENT_INTERNAL } from './play-drawer-event';
 
 const QUEUE_DRAWER_STYLES = { wrapper: { height: '70%' }, body: { padding: 0 } } as const;
 

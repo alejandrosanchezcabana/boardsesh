@@ -1,6 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vite-plus/test';
 import { render, screen, fireEvent, act, waitFor } from '@testing-library/react';
 import React from 'react';
+import QueueControlBar from '../queue-control-bar';
 
 // -- All mocks before imports --
 
@@ -215,7 +216,6 @@ Object.defineProperty(window, 'matchMedia', {
 });
 
 // Import after mocks
-import QueueControlBar from '../queue-control-bar';
 
 const mockClimb = {
   uuid: 'climb-1',

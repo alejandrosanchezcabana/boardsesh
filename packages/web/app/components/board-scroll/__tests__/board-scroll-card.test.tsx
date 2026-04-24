@@ -2,6 +2,7 @@ import { describe, it, expect, vi } from 'vite-plus/test';
 import { render } from '@testing-library/react';
 import React from 'react';
 import type { UserBoard } from '@boardsesh/shared-schema';
+import BoardScrollCard from '../board-scroll-card';
 
 // Mock BoardRenderer
 vi.mock('../../board-renderer/board-renderer', () => ({
@@ -41,8 +42,6 @@ vi.mock('../board-scroll.module.css', () => ({
     },
   ),
 }));
-
-import BoardScrollCard from '../board-scroll-card';
 
 function makeUserBoard(overrides?: Partial<UserBoard>): UserBoard {
   return {

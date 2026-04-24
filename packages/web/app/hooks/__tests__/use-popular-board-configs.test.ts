@@ -1,6 +1,7 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vite-plus/test';
 import { renderHook, waitFor, act } from '@testing-library/react';
 import type { PopularBoardConfig, PopularBoardConfigConnection } from '@boardsesh/shared-schema';
+import { usePopularBoardConfigs } from '../use-popular-board-configs';
 
 // --- Mocks ---
 
@@ -15,8 +16,6 @@ vi.mock('@/app/lib/graphql/operations', () => ({
 }));
 
 // --- Import after mocks ---
-
-import { usePopularBoardConfigs } from '../use-popular-board-configs';
 
 // --- Helpers ---
 

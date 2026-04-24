@@ -1,6 +1,8 @@
 import { describe, it, expect, vi, beforeEach } from 'vite-plus/test';
 import { render, screen } from '@testing-library/react';
 import React from 'react';
+import type { ActivityFeedItem } from '@boardsesh/shared-schema';
+import SessionSummaryFeedItem from '../session-summary-feed-item';
 
 // --- Mocks ---
 
@@ -30,9 +32,6 @@ vi.mock('@/app/hooks/use-grade-format', () => ({
 vi.mock('@/app/lib/grade-colors', () => ({
   getGradeColor: (d: string | null | undefined) => (d ? '#vivid' : undefined),
 }));
-
-import type { ActivityFeedItem } from '@boardsesh/shared-schema';
-import SessionSummaryFeedItem from '../session-summary-feed-item';
 
 // --- Helpers ---
 

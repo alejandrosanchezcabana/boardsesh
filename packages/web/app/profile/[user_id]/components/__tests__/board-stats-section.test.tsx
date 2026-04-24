@@ -1,6 +1,7 @@
 import { describe, it, expect, vi } from 'vite-plus/test';
 import { render, screen } from '@testing-library/react';
 import React from 'react';
+import BoardStatsSection from '../board-stats-section';
 
 // Mock server-only
 vi.mock('server-only', () => ({}));
@@ -16,8 +17,6 @@ vi.mock('@/app/components/settings/board-import-prompt', () => ({
 vi.mock('../../profile-page.module.css', () => ({
   default: {},
 }));
-
-import BoardStatsSection from '../board-stats-section';
 
 const defaultProps = {
   selectedBoard: 'kilter',

@@ -1,8 +1,11 @@
 // @vitest-environment jsdom
+
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vite-plus/test';
 import { renderHook, act } from '@testing-library/react';
 import type { Climb, Angle, BoardDetails, BoardName } from '@/app/lib/types';
 import type { LogbookEntry } from '@/app/hooks/use-logbook';
+import { hasPriorHistoryForClimb, buildTickTarget, useTickSave, type UseTickSaveOptions } from '../use-tick-save';
+import { saveTickDraft } from '@/app/lib/tick-draft-db';
 
 // --- Mocks (must be hoisted before imports of the module under test) ---
 
@@ -38,8 +41,6 @@ vi.mock('@/app/lib/tick-draft-db', () => ({
 }));
 
 // Import after mocks.
-import { hasPriorHistoryForClimb, buildTickTarget, useTickSave, type UseTickSaveOptions } from '../use-tick-save';
-import { saveTickDraft } from '@/app/lib/tick-draft-db';
 
 // --- Fixtures ---
 

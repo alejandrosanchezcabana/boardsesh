@@ -1,6 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vite-plus/test';
 import { render, screen } from '@testing-library/react';
 import React from 'react';
+import PlaylistPreviewSquare from '../playlist-preview-square';
 
 // Mock BoardImageLayers (used instead of BoardRenderer)
 vi.mock('../../board-renderer/board-image-layers', () => ({
@@ -38,8 +39,6 @@ vi.mock('../library.module.css', () => ({
     },
   ),
 }));
-
-import PlaylistPreviewSquare from '../playlist-preview-square';
 
 const MOCK_BOARD_DETAILS = {
   board_name: 'kilter',

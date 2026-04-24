@@ -2,6 +2,7 @@ import { describe, it, expect, vi, beforeEach } from 'vite-plus/test';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import React from 'react';
 import type { Proposal } from '@boardsesh/shared-schema';
+import ProposalCard from '../proposal-card';
 
 // --- Mocks ---
 
@@ -118,8 +119,6 @@ vi.mock('@/app/theme/theme-config', () => ({
     },
   },
 }));
-
-import ProposalCard from '../proposal-card';
 
 // --- Helpers ---
 

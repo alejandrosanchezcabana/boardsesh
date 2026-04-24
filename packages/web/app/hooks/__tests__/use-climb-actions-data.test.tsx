@@ -1,5 +1,10 @@
 import { describe, it, expect, vi, beforeEach } from 'vite-plus/test';
 import { renderHook, waitFor, act } from '@testing-library/react';
+import { useWsAuthToken } from '@/app/hooks/use-ws-auth-token';
+import { useSnackbar } from '@/app/components/providers/snackbar-provider';
+import { useClimbActionsData } from '../use-climb-actions-data';
+import { createQueryWrapper } from '@/app/test-utils/test-providers';
+import type { Playlist } from '@/app/lib/graphql/operations/playlists';
 
 vi.mock('@/app/hooks/use-ws-auth-token', () => ({
   useWsAuthToken: vi.fn(),
@@ -26,12 +31,6 @@ vi.mock('@/app/lib/graphql/operations/playlists', () => ({
   REMOVE_CLIMB_FROM_PLAYLIST: 'REMOVE_CLIMB_FROM_PLAYLIST',
   CREATE_PLAYLIST: 'CREATE_PLAYLIST',
 }));
-
-import { useWsAuthToken } from '@/app/hooks/use-ws-auth-token';
-import { useSnackbar } from '@/app/components/providers/snackbar-provider';
-import { useClimbActionsData } from '../use-climb-actions-data';
-import { createQueryWrapper } from '@/app/test-utils/test-providers';
-import type { Playlist } from '@/app/lib/graphql/operations/playlists';
 
 const mockUseWsAuthToken = vi.mocked(useWsAuthToken);
 const mockUseSnackbar = vi.mocked(useSnackbar);

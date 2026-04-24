@@ -1,19 +1,4 @@
 import { describe, it, expect, vi } from 'vite-plus/test';
-
-/**
- * Comprehensive BLE protocol tests validated against:
- * - Aurora Bluetooth Protocol Spec (derived from Kilter Board Android App v3.6.4)
- * - Captured payloads from Aurora's official Kilter app
- * - 3rd-party validated payloads for Kilter Original boards
- *
- * Spec sections referenced in comments (e.g. "§6" = Section 6 of the spec).
- */
-
-// Mock transitive dependencies so bluetooth-aurora.ts can be imported directly
-vi.mock('@/app/lib/moonboard-config', () => ({
-  MOONBOARD_ENABLED: false,
-}));
-
 import {
   checksum,
   wrapBytes,
@@ -28,6 +13,20 @@ import {
 } from '../bluetooth-aurora';
 import { splitMessages } from '../bluetooth-shared';
 import { getLedPlacements } from '@boardsesh/board-constants/led-placements';
+
+/**
+ * Comprehensive BLE protocol tests validated against:
+ * - Aurora Bluetooth Protocol Spec (derived from Kilter Board Android App v3.6.4)
+ * - Captured payloads from Aurora's official Kilter app
+ * - 3rd-party validated payloads for Kilter Original boards
+ *
+ * Spec sections referenced in comments (e.g. "§6" = Section 6 of the spec).
+ */
+
+// Mock transitive dependencies so bluetooth-aurora.ts can be imported directly
+vi.mock('@/app/lib/moonboard-config', () => ({
+  MOONBOARD_ENABLED: false,
+}));
 
 // ---- Test helpers ----
 

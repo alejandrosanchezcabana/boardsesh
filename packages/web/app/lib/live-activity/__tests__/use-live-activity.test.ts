@@ -1,6 +1,8 @@
 import { describe, it, expect, vi, beforeEach } from 'vite-plus/test';
 import React from 'react';
 import { act } from 'react';
+import type { ClimbQueueItem } from '@/app/components/queue-control/types';
+import type { BoardDetails } from '../../types';
 
 // ---------------------------------------------------------------------------
 // Mocks
@@ -39,9 +41,6 @@ const { useLiveActivity } = await import('../use-live-activity');
 // ---------------------------------------------------------------------------
 // Helpers
 // ---------------------------------------------------------------------------
-
-import type { ClimbQueueItem } from '@/app/components/queue-control/types';
-import type { BoardDetails } from '../../types';
 
 function makeBoardDetails(overrides?: Partial<BoardDetails>): BoardDetails {
   return {

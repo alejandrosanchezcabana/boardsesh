@@ -1,6 +1,8 @@
 import { describe, it, expect, vi, beforeEach } from 'vite-plus/test';
 import { renderHook, waitFor } from '@testing-library/react';
 import { createQueryWrapper } from '@/app/test-utils/test-providers';
+import { useWsAuthToken } from '../use-ws-auth-token';
+import { useUnreadNotificationCount, UNREAD_COUNT_QUERY_KEY } from '../use-unread-notification-count';
 
 vi.mock('../use-ws-auth-token', () => ({
   useWsAuthToken: vi.fn(),
@@ -14,9 +16,6 @@ vi.mock('@/app/lib/graphql/client', () => ({
 vi.mock('@/app/lib/graphql/operations', () => ({
   GET_UNREAD_NOTIFICATION_COUNT: 'GET_UNREAD_NOTIFICATION_COUNT_QUERY',
 }));
-
-import { useWsAuthToken } from '../use-ws-auth-token';
-import { useUnreadNotificationCount, UNREAD_COUNT_QUERY_KEY } from '../use-unread-notification-count';
 
 const mockUseWsAuthToken = vi.mocked(useWsAuthToken);
 

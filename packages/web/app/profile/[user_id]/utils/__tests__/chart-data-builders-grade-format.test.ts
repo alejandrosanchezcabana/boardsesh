@@ -1,4 +1,11 @@
 import { describe, it, expect, vi } from 'vite-plus/test';
+import {
+  buildAggregatedStackedBars,
+  buildWeeklyBars,
+  buildFlashRedpointBars,
+  buildStatisticsSummary,
+} from '../chart-data-builders';
+import type { LogbookEntry } from '../profile-constants';
 
 vi.mock('@/app/lib/board-data', () => ({
   SUPPORTED_BOARDS: ['kilter', 'tension'],
@@ -21,14 +28,6 @@ vi.mock('@/app/theme/theme-config', () => ({
     neutral: { 300: '#e0e0e0' },
   },
 }));
-
-import {
-  buildAggregatedStackedBars,
-  buildWeeklyBars,
-  buildFlashRedpointBars,
-  buildStatisticsSummary,
-} from '../chart-data-builders';
-import type { LogbookEntry } from '../profile-constants';
 
 // ── Shared test data ───────────────────────────────────────────────────────
 

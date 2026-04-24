@@ -1,5 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vite-plus/test';
 import { render, screen, fireEvent } from '@testing-library/react';
+import AuroraMigrationContent from '../aurora-migration-content';
 
 let mockSessionStatus = 'unauthenticated';
 let mockSessionData: { user?: { email?: string } } | null = null;
@@ -23,8 +24,6 @@ vi.mock('@/app/components/settings/board-import-prompt', () => ({
     <div data-testid={`board-import-prompt-${boardType}`}>Import {boardType}</div>
   ),
 }));
-
-import AuroraMigrationContent from '../aurora-migration-content';
 
 describe('AuroraMigrationContent', () => {
   beforeEach(() => {

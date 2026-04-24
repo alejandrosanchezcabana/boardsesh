@@ -6,6 +6,7 @@ import type {
   getUartCharacteristic as _getUartCharacteristic,
   writeCharacteristicSeries as _writeCharacteristicSeries,
 } from '@/app/components/board-bluetooth-control/bluetooth-shared';
+import { WebBluetoothAdapter } from '../web-adapter';
 
 // Mock the shared Bluetooth transport helpers
 const mockRequestDevice = vi.fn();
@@ -24,8 +25,6 @@ vi.mock('@/app/components/board-bluetooth-control/bluetooth-shared', async (impo
       mockWriteCharacteristicSeries(...args),
   };
 });
-
-import { WebBluetoothAdapter } from '../web-adapter';
 
 function createMockDevice(overrides?: Partial<BluetoothDevice>) {
   return {

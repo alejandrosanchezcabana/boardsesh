@@ -1,4 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vite-plus/test';
+import { generateInferredSessionId } from '../jobs/inferred-session-builder';
 
 // Mock the db module before imports
 const mockSelect = vi.fn();
@@ -90,8 +91,6 @@ vi.mock('@boardsesh/db/schema', () => ({
     totalAttempts: 'total_attempts',
   },
 }));
-
-import { generateInferredSessionId } from '../jobs/inferred-session-builder';
 
 describe('Inferred Session Assignment (assignInferredSession)', () => {
   beforeEach(() => {

@@ -1,13 +1,12 @@
 import { describe, it, expect, vi, beforeEach } from 'vite-plus/test';
 import { renderHook, act } from '@testing-library/react';
+import { useMutationGuard } from '../use-mutation-guard';
+import type { ConnectionState } from '../../../connection-manager/websocket-connection-manager';
 
 const mockShowMessage = vi.fn();
 vi.mock('@/app/components/providers/snackbar-provider', () => ({
   useSnackbar: () => ({ showMessage: mockShowMessage }),
 }));
-
-import { useMutationGuard } from '../use-mutation-guard';
-import type { ConnectionState } from '../../../connection-manager/websocket-connection-manager';
 
 type TestParams = {
   sessionId: string | null;

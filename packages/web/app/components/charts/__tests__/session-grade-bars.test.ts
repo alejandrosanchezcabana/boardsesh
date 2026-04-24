@@ -1,4 +1,6 @@
 import { describe, it, expect, vi } from 'vite-plus/test';
+import { buildSessionGradeBars, SESSION_GRADE_LEGEND } from '../session-grade-bars';
+import type { SessionGradeDistributionItem } from '@boardsesh/shared-schema';
 
 vi.mock('@/app/lib/grade-colors', () => ({
   formatVGrade: (grade: string | null | undefined) => {
@@ -19,9 +21,6 @@ vi.mock('@/app/theme/theme-config', () => ({
     neutral: { 300: '#e0e0e0' },
   },
 }));
-
-import { buildSessionGradeBars, SESSION_GRADE_LEGEND } from '../session-grade-bars';
-import type { SessionGradeDistributionItem } from '@boardsesh/shared-schema';
 
 describe('buildSessionGradeBars', () => {
   it('returns empty array for empty input', () => {

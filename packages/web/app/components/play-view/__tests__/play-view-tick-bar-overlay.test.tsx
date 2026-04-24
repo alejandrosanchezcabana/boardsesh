@@ -1,7 +1,9 @@
 // @vitest-environment jsdom
+
 import { describe, it, expect, vi, beforeEach } from 'vite-plus/test';
 import React from 'react';
 import { render, screen, fireEvent, act, waitFor } from '@testing-library/react';
+import { PlayViewTickBar } from '../play-view-drawer';
 
 // ---------------------------------------------------------------------------
 // Mocks — must come before imports
@@ -74,7 +76,6 @@ vi.mock('@/app/components/providers/snackbar-provider', () => ({
 }));
 
 // Import after mocks
-import { PlayViewTickBar } from '../play-view-drawer';
 
 // ---------------------------------------------------------------------------
 // Helpers

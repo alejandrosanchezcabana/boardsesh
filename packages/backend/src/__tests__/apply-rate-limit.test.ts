@@ -2,8 +2,10 @@
  * Tests for applyRateLimit helper — specifically the key selection logic
  * that determines how anonymous vs authenticated requests are rate limited.
  */
+
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vite-plus/test';
 import type { ConnectionContext } from '@boardsesh/shared-schema';
+import { applyRateLimit } from '../graphql/resolvers/shared/helpers';
 
 // Mock rate limiter utilities so we can inspect which keys are used
 const mockCheckRateLimit = vi.fn();
@@ -31,8 +33,6 @@ vi.mock('../services/distributed-state', () => ({
 vi.mock('../db/client', () => ({
   db: {},
 }));
-
-import { applyRateLimit } from '../graphql/resolvers/shared/helpers';
 
 describe('applyRateLimit key selection', () => {
   beforeEach(() => {

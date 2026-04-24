@@ -3,6 +3,7 @@ import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import React from 'react';
 import type { BoardDetails } from '@/app/lib/types';
 import type { BoardConfigData } from '@/app/lib/server-board-configs';
+import BottomTabBar from '../bottom-tab-bar';
 
 const mockPush = vi.fn();
 const mockShowMessage = vi.fn();
@@ -184,8 +185,6 @@ vi.mock('@/app/lib/board-config-for-playlist', () => ({
 vi.mock('@/app/lib/color-utils', () => ({
   isValidHexColor: (c: string) => /^#[0-9a-f]{6}$/i.test(c),
 }));
-
-import BottomTabBar from '../bottom-tab-bar';
 
 const boardDetails = {
   images_to_holds: {},

@@ -1,5 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vite-plus/test';
 import { renderHook, act, waitFor } from '@testing-library/react';
+import { useGradeFormat } from '../use-grade-format';
 
 const mockGetFormat = vi.fn().mockResolvedValue('v-grade' as 'v-grade' | 'font');
 const mockSetFormat = vi.fn().mockResolvedValue(undefined);
@@ -13,8 +14,6 @@ vi.mock('@/app/lib/grade-colors', () => ({
   formatGrade: (d: string | null | undefined, format: string) => (d ? `${format}:${d}` : null),
   getSoftGradeColorByFormat: (d: string | null | undefined, format: string) => (d ? `color:${format}:${d}` : undefined),
 }));
-
-import { useGradeFormat } from '../use-grade-format';
 
 describe('useGradeFormat', () => {
   beforeEach(() => {

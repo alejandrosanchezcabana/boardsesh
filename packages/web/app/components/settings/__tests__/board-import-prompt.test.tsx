@@ -1,6 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vite-plus/test';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import React from 'react';
+import BoardImportPrompt from '../board-import-prompt';
 
 // Mock server-only
 vi.mock('server-only', () => ({}));
@@ -21,8 +22,6 @@ vi.mock('@/app/lib/data-sync/aurora/json-import-stream', () => ({
 vi.mock('next-auth/react', () => ({
   useSession: () => ({ data: { user: { id: 'test-user' } } }),
 }));
-
-import BoardImportPrompt from '../board-import-prompt';
 
 let mockFetch: ReturnType<typeof vi.fn>;
 

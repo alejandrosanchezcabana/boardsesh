@@ -1,6 +1,8 @@
 import { describe, it, expect, vi } from 'vite-plus/test';
 import { render, screen } from '@testing-library/react';
 import React from 'react';
+import { CssBarChart, GroupedBarChart } from '../css-bar-chart';
+import type { CssBarChartBar, GroupedBar } from '../css-bar-chart';
 
 // Mock MUI X Charts since they use SVG/canvas internals
 vi.mock('@mui/x-charts/BarChart', () => ({
@@ -13,9 +15,6 @@ vi.mock('@mui/x-charts/BarChart', () => ({
     />
   ),
 }));
-
-import { CssBarChart, GroupedBarChart } from '../css-bar-chart';
-import type { CssBarChartBar, GroupedBar } from '../css-bar-chart';
 
 describe('CssBarChart', () => {
   it('renders with correct aria-label', () => {

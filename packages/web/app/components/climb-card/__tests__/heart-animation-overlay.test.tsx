@@ -1,6 +1,7 @@
 import { describe, it, expect, vi } from 'vite-plus/test';
 import { render, screen, act } from '@testing-library/react';
 import React from 'react';
+import HeartAnimationOverlay from '../heart-animation-overlay';
 
 let capturedOnAnimationEnd: (() => void) | undefined;
 
@@ -18,8 +19,6 @@ vi.mock('@mui/icons-material/Favorite', () => ({
     );
   },
 }));
-
-import HeartAnimationOverlay from '../heart-animation-overlay';
 
 describe('HeartAnimationOverlay', () => {
   it('renders nothing when visible is false', () => {

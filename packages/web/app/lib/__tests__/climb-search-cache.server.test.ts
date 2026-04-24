@@ -1,5 +1,7 @@
 // @vitest-environment node
+
 import { beforeEach, describe, expect, it, vi } from 'vite-plus/test';
+import { revalidateClimbSearchTags } from '../climb-search-cache.server';
 
 vi.mock('server-only', () => ({}));
 
@@ -12,8 +14,6 @@ const mockTrack = vi.fn();
 vi.mock('@vercel/analytics/server', () => ({
   track: (...args: Parameters<typeof mockTrack>) => mockTrack(...args),
 }));
-
-import { revalidateClimbSearchTags } from '../climb-search-cache.server';
 
 describe('revalidateClimbSearchTags', () => {
   beforeEach(() => {

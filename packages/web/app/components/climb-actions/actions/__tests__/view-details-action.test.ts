@@ -1,4 +1,8 @@
 import { describe, it, expect, vi, beforeEach } from 'vite-plus/test';
+import { ViewDetailsAction } from '../view-details-action';
+import { getContextAwareClimbViewUrl } from '@/app/lib/url-utils';
+import type { ClimbActionProps } from '../../types';
+import type { BoardDetails, Climb } from '@/app/lib/types';
 
 // Mock dependencies before importing the module
 vi.mock('@vercel/analytics', () => ({
@@ -31,11 +35,6 @@ vi.mock('@mui/material/Button', () => ({
 vi.mock('../../action-tooltip', () => ({
   ActionTooltip: ({ children }: { children: React.ReactNode }) => children,
 }));
-
-import { ViewDetailsAction } from '../view-details-action';
-import { getContextAwareClimbViewUrl } from '@/app/lib/url-utils';
-import type { ClimbActionProps } from '../../types';
-import type { BoardDetails, Climb } from '@/app/lib/types';
 
 function createTestClimb(overrides?: Partial<Climb>): Climb {
   return {

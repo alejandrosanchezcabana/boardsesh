@@ -1,13 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vite-plus/test';
 import { renderHook } from '@testing-library/react';
-
-// Mock dependencies
-vi.mock('@/app/lib/board-config-for-playlist', () => ({
-  getUserBoardDetails: vi.fn(),
-  getBoardDetailsForPlaylist: vi.fn(),
-  resolveBoardDetailsForClimb: vi.fn(),
-}));
-
 import { useBoardDetailsMap } from '../use-board-details-map';
 import {
   getUserBoardDetails,
@@ -16,6 +8,13 @@ import {
 } from '@/app/lib/board-config-for-playlist';
 import type { UserBoard } from '@boardsesh/shared-schema';
 import type { Climb, BoardDetails } from '@/app/lib/types';
+
+// Mock dependencies
+vi.mock('@/app/lib/board-config-for-playlist', () => ({
+  getUserBoardDetails: vi.fn(),
+  getBoardDetailsForPlaylist: vi.fn(),
+  resolveBoardDetailsForClimb: vi.fn(),
+}));
 
 const mockGetUserBoardDetails = vi.mocked(getUserBoardDetails);
 const mockGetBoardDetailsForPlaylist = vi.mocked(getBoardDetailsForPlaylist);

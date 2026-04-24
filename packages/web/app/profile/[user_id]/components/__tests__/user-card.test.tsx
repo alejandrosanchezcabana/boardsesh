@@ -2,6 +2,8 @@ import { describe, it, expect, vi, beforeEach } from 'vite-plus/test';
 import { render, screen } from '@testing-library/react';
 import React from 'react';
 import type { UserProfile } from '../../utils/profile-constants';
+import UserCard from '../user-card';
+import type { UserCardProps } from '../user-card';
 
 // Mock dependencies before component import
 vi.mock('@/app/components/ui/follow-button', () => ({
@@ -27,9 +29,6 @@ vi.mock('@/app/theme/theme-config', () => ({
     shadows: { md: '0 4px 6px -1px rgba(0, 0, 0, 0.1)' },
   },
 }));
-
-import UserCard from '../user-card';
-import type { UserCardProps } from '../user-card';
 
 function createDefaultProfile(overrides: Partial<UserProfile> = {}): UserProfile {
   return {

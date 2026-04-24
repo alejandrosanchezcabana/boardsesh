@@ -1,6 +1,7 @@
 import { afterEach, describe, it, expect, vi } from 'vite-plus/test';
 import React, { useRef, useEffect } from 'react';
 import { render, screen, cleanup, fireEvent } from '@testing-library/react';
+import HoldTypePicker, { buildOptions } from '../hold-type-picker';
 
 // Mock HOLD_STATE_MAP so picker color assertions don't depend on the real LED
 // colors — if production LED hex values change, these tests should keep passing
@@ -47,8 +48,6 @@ vi.mock('../../board-renderer/types', () => ({
     },
   },
 }));
-
-import HoldTypePicker, { buildOptions } from '../hold-type-picker';
 
 // Note: MUI Popover prints "anchorEl is invalid" warnings during the brief
 // window between `cleanup()` and the Popover exit transition. They're benign

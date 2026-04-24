@@ -1,13 +1,12 @@
 import type { Client, Sink } from 'graphql-ws';
 import { createClient } from 'graphql-ws';
 import { connectionManager, KEEP_ALIVE_MS } from '../connection-manager/websocket-connection-manager';
+import { INITIAL_RETRY_DELAY_MS, MAX_RETRY_DELAY_MS, BACKOFF_MULTIPLIER } from './retry-constants';
 
 export type { Client };
 
 const DEBUG = process.env.NODE_ENV === 'development';
 const MUTATION_TIMEOUT_MS = 30_000; // 30 second timeout for mutations
-
-import { INITIAL_RETRY_DELAY_MS, MAX_RETRY_DELAY_MS, BACKOFF_MULTIPLIER } from './retry-constants';
 
 let clientCounter = 0;
 

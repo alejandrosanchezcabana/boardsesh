@@ -1,4 +1,6 @@
 import { describe, it, expect, beforeEach, vi } from 'vite-plus/test';
+import { createBluetoothAdapter, _resetFactoryCache } from '../adapter-factory';
+import { isCapacitor, isCapacitorWebView, waitForCapacitor } from '../capacitor-utils';
 
 // Mock capacitor-utils to allow per-test control over platform detection.
 // vi.mock is hoisted before imports, so adapter-factory sees the mocked version.
@@ -11,9 +13,6 @@ vi.mock('../capacitor-utils', async (importOriginal) => {
     waitForCapacitor: vi.fn().mockResolvedValue(false),
   };
 });
-
-import { createBluetoothAdapter, _resetFactoryCache } from '../adapter-factory';
-import { isCapacitor, isCapacitorWebView, waitForCapacitor } from '../capacitor-utils';
 
 describe('adapter-factory', () => {
   beforeEach(() => {

@@ -3,6 +3,9 @@ import type { ConnectionState } from '../connection-manager/websocket-connection
 import type { SessionSummary } from '@boardsesh/shared-schema';
 import type { ReactNode } from 'react';
 import type { ParsedBoardRouteParameters, BoardDetails } from '@/app/lib/types';
+import type { Climb, SearchRequestPagination } from '@/app/lib/types';
+import type { ClimbQueueItem, ClimbQueue } from '../queue-control/types';
+import type { SessionUser } from '@boardsesh/shared-schema';
 
 // Stable action functions extended with session management
 export type GraphQLQueueActionsType = {
@@ -27,10 +30,6 @@ export type GraphQLQueueDataType = {
 export type GraphQLQueueContextType = GraphQLQueueActionsType & GraphQLQueueDataType;
 
 // --- Fine-grained context types for targeted subscriptions ---
-
-import type { Climb, SearchRequestPagination } from '@/app/lib/types';
-import type { ClimbQueueItem, ClimbQueue } from '../queue-control/types';
-import type { SessionUser } from '@boardsesh/shared-schema';
 
 export type CurrentClimbDataType = {
   currentClimbQueueItem: ClimbQueueItem | null;

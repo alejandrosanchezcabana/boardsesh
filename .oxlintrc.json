@@ -53,7 +53,8 @@
     "typescript/prefer-as-const": "error",
     "typescript/prefer-function-type": "error",
     "import/default": "error",
-    "import/export": "error"
+    "import/export": "error",
+    "import/first": "error"
   },
   "ignorePatterns": [
     "dist/**",

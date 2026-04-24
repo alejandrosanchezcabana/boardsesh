@@ -1,5 +1,7 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vite-plus/test';
 import { renderHook } from '@testing-library/react';
+import { useWsAuthToken } from '../use-ws-auth-token';
+import { useNotificationSubscription } from '../use-notification-subscription';
 
 // --- Mocks ---
 
@@ -51,9 +53,6 @@ vi.mock('@tanstack/react-query', () => ({
     setQueriesData: mockSetQueriesData,
   }),
 }));
-
-import { useWsAuthToken } from '../use-ws-auth-token';
-import { useNotificationSubscription } from '../use-notification-subscription';
 
 const mockUseWsAuthToken = vi.mocked(useWsAuthToken);
 

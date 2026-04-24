@@ -1,10 +1,9 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vite-plus/test';
 import { renderHook } from '@testing-library/react';
-
-vi.mock('canvas-confetti', () => ({ default: vi.fn() }));
-
 import confetti from 'canvas-confetti';
 import { useConfetti } from '../use-confetti';
+
+vi.mock('canvas-confetti', () => ({ default: vi.fn() }));
 
 const mockConfetti = vi.mocked(confetti);
 

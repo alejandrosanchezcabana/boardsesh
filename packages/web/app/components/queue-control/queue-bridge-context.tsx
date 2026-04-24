@@ -36,6 +36,7 @@ import { canAddClimbToBoard } from '@/app/lib/board-compatibility';
 import { getBoardDetailsForPlaylist } from '@/app/lib/board-config-for-playlist';
 import { useSnackbar } from '../providers/snackbar-provider';
 import { queueAddErrorMessage } from '../board-lock/queue-add-error-messages';
+import { QueueBridgeBoardInfoContext, type QueueBridgeBoardInfo } from './queue-bridge-board-info-context';
 
 const LiveActivityBridge = dynamic(() => import('@/app/lib/live-activity/live-activity-bridge'), {
   ssr: false,
@@ -67,8 +68,6 @@ function deriveSeedStateFromClimb(climb: Climb): { boardDetails: BoardDetails; b
 // Extracted to ./queue-bridge-board-info-context so consumers (e.g. board-lock
 // hooks) can import it without forming an import cycle through this file.
 // -------------------------------------------------------------------
-
-import { QueueBridgeBoardInfoContext, type QueueBridgeBoardInfo } from './queue-bridge-board-info-context';
 
 export { useQueueBridgeBoardInfo } from './queue-bridge-board-info-context';
 

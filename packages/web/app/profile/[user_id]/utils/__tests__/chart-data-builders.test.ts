@@ -1,6 +1,16 @@
 import { describe, it, expect, vi } from 'vite-plus/test';
 import dayjs from 'dayjs';
 import isoWeek from 'dayjs/plugin/isoWeek';
+import {
+  filterLogbookByTimeframe,
+  buildAggregatedStackedBars,
+  buildAggregatedFlashRedpointBars,
+  buildWeeklyBars,
+  buildFlashRedpointBars,
+  buildStatisticsSummary,
+  buildVPointsTimeline,
+} from '../chart-data-builders';
+import type { LogbookEntry } from '../profile-constants';
 
 dayjs.extend(isoWeek);
 
@@ -55,17 +65,6 @@ vi.mock('@/app/lib/board-data', () => ({
 vi.mock('@/app/theme/theme-config', () => ({
   themeTokens: { colors: { success: '#6B9080', error: '#B8524C' } },
 }));
-
-import {
-  filterLogbookByTimeframe,
-  buildAggregatedStackedBars,
-  buildAggregatedFlashRedpointBars,
-  buildWeeklyBars,
-  buildFlashRedpointBars,
-  buildStatisticsSummary,
-  buildVPointsTimeline,
-} from '../chart-data-builders';
-import type { LogbookEntry } from '../profile-constants';
 
 // ── Helpers ─────────────────────────────────────────────────────────────────
 

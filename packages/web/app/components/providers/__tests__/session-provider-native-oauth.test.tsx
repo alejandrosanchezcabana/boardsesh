@@ -1,6 +1,7 @@
 import { describe, expect, it, vi, beforeEach, afterEach } from 'vite-plus/test';
 import { render, act, cleanup } from '@testing-library/react';
 import React from 'react';
+import SessionProviderWrapper from '../session-provider';
 
 // Mock next-auth/react
 const mockSignIn = vi.fn();
@@ -14,8 +15,6 @@ const mockIsNativeApp = vi.fn();
 vi.mock('@/app/lib/ble/capacitor-utils', () => ({
   isNativeApp: () => mockIsNativeApp(),
 }));
-
-import SessionProviderWrapper from '../session-provider';
 
 type AppUrlOpenListener = (event: { url: string }) => void;
 

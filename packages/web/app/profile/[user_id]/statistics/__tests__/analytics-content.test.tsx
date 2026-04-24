@@ -1,6 +1,8 @@
 import { describe, it, expect, vi, beforeEach } from 'vite-plus/test';
 import { render, screen } from '@testing-library/react';
 import React from 'react';
+import AnalyticsContent from '../analytics-content';
+import { useProfileData } from '../../hooks/use-profile-data';
 
 vi.mock('../../hooks/use-profile-data', () => ({
   useProfileData: vi.fn(),
@@ -20,9 +22,6 @@ vi.mock('../../components/board-stats-section', () => ({
     />
   ),
 }));
-
-import AnalyticsContent from '../analytics-content';
-import { useProfileData } from '../../hooks/use-profile-data';
 
 const mockUseProfileData = vi.mocked(useProfileData);
 

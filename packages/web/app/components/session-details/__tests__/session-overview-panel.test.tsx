@@ -1,6 +1,7 @@
 import { describe, it, expect, vi } from 'vite-plus/test';
 import { render, screen } from '@testing-library/react';
 import React from 'react';
+import SessionOverviewPanel, { buildSessionSummaryParts } from '../session-overview-panel';
 
 // Mock dependencies
 vi.mock('@/app/components/charts/css-bar-chart', () => ({
@@ -25,8 +26,6 @@ vi.mock('@/app/hooks/use-grade-format', () => ({
     setGradeFormat: vi.fn(),
   }),
 }));
-
-import SessionOverviewPanel, { buildSessionSummaryParts } from '../session-overview-panel';
 
 type SessionOverviewPanelProps = React.ComponentProps<typeof SessionOverviewPanel>;
 

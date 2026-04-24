@@ -1,9 +1,11 @@
 // @vitest-environment jsdom
+
 import { describe, it, expect, vi, beforeEach } from 'vite-plus/test';
 import { render, screen } from '@testing-library/react';
 import React from 'react';
 import type { Climb, BoardDetails } from '@/app/lib/types';
 import type { ClimbQueueItem } from '../types';
+import QueueList from '../queue-list';
 
 // --- Mock data ---
 
@@ -237,8 +239,6 @@ Object.defineProperty(globalThis, 'IntersectionObserver', {
   value: MockIntersectionObserver,
   writable: true,
 });
-
-import QueueList from '../queue-list';
 
 // --- Helpers ---
 

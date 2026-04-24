@@ -1,4 +1,14 @@
 import { describe, it, expect, vi } from 'vite-plus/test';
+import {
+  auroraExportSchema,
+  normalizeTimestamp,
+  generateJsonImportAuroraId,
+  resolveLayoutName,
+  buildCoordinateMap,
+  convertHoldsToFrames,
+  computeEdgesFromHolds,
+  generateClimbImportUuid,
+} from '../json-import';
 
 // Mock server-only and DB modules to avoid server-component import errors
 vi.mock('server-only', () => ({}));
@@ -61,17 +71,6 @@ vi.mock('@/app/lib/board-constants', () => ({
     // decoy, touchstone, grasshopper intentionally absent to exercise null-guard
   },
 }));
-
-import {
-  auroraExportSchema,
-  normalizeTimestamp,
-  generateJsonImportAuroraId,
-  resolveLayoutName,
-  buildCoordinateMap,
-  convertHoldsToFrames,
-  computeEdgesFromHolds,
-  generateClimbImportUuid,
-} from '../json-import';
 
 // ---------------------------------------------------------------------------
 // normalizeTimestamp

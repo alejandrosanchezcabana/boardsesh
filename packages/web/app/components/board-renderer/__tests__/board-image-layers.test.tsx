@@ -1,8 +1,11 @@
 // @vitest-environment jsdom
+
 import { describe, it, expect, vi } from 'vite-plus/test';
 import { render } from '@testing-library/react';
 import React from 'react';
 import type { BoardDetails } from '@/app/lib/types';
+import BoardImageLayers from '../board-image-layers';
+import { buildOverlayUrl } from '../util';
 
 vi.mock('../util', () => ({
   getImageUrl: (imageUrl: string, board: string) => `/images/${board}/${imageUrl}`,
@@ -11,9 +14,6 @@ vi.mock('../util', () => ({
       `/api/internal/board-render?frames=${frames}${thumbnail ? '&thumbnail=1' : ''}&include_background=1`,
   ),
 }));
-
-import BoardImageLayers from '../board-image-layers';
-import { buildOverlayUrl } from '../util';
 
 const mockBoardDetails: BoardDetails = {
   board_name: 'kilter',

@@ -1,6 +1,8 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vite-plus/test';
 import { render, screen } from '@testing-library/react';
 import React from 'react';
+import type { ClimbTitleData } from '../climb-title';
+import ClimbTitle from '../climb-title';
 
 // --- Mocks ---
 
@@ -46,9 +48,6 @@ vi.mock('@/app/theme/theme-config', () => ({
     },
   },
 }));
-
-import type { ClimbTitleData } from '../climb-title';
-import ClimbTitle from '../climb-title';
 
 // --- Helpers ---
 

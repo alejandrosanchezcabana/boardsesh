@@ -1,5 +1,6 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vite-plus/test';
 import { renderHook, act } from '@testing-library/react';
+import { useSwipeActions, type UseSwipeActionsOptions } from '../use-swipe-actions';
 
 // Capture the config passed to useSwipeable
 let capturedSwipeableConfig: Record<string, (...args: unknown[]) => unknown> = {};
@@ -21,8 +22,6 @@ vi.mock('../use-swipe-direction', () => ({
     isHorizontalRef: mockIsHorizontalRef,
   }),
 }));
-
-import { useSwipeActions, type UseSwipeActionsOptions } from '../use-swipe-actions';
 
 function createDefaultOptions(): UseSwipeActionsOptions {
   return {

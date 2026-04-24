@@ -1,6 +1,8 @@
 // @vitest-environment node
+
 import { beforeEach, describe, expect, it, vi } from 'vite-plus/test';
 import { NextRequest } from 'next/server';
+import { GET } from '../route';
 
 vi.mock('@/app/lib/url-utils.server', () => ({
   parseBoardRouteParamsWithSlugs: vi.fn(async (params) => ({
@@ -39,8 +41,6 @@ vi.mock('@/app/lib/board-utils', () => ({
 vi.mock('@/app/components/board-renderer/util', () => ({
   buildOgBoardRenderUrl: vi.fn(() => '/api/internal/board-render?board_name=kilter&variant=og&format=png'),
 }));
-
-import { GET } from '../route';
 
 function makeRequest(params: Record<string, string>): NextRequest {
   const url = new URL('http://localhost:3000/api/og/climb');

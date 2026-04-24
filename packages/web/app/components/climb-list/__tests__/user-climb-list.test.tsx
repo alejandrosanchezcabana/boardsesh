@@ -2,6 +2,7 @@ import { describe, it, expect, vi, beforeEach } from 'vite-plus/test';
 import { render, screen, waitFor } from '@testing-library/react';
 import React from 'react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import UserClimbList from '../user-climb-list';
 
 // --- Mocks ---
 
@@ -37,8 +38,6 @@ vi.mock('../multiboard-climb-list', () => ({
 }));
 
 // --- Import after mocks ---
-
-import UserClimbList from '../user-climb-list';
 
 // --- Helpers ---
 

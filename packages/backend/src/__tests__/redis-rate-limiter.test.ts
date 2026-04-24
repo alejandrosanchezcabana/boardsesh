@@ -1,4 +1,5 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vite-plus/test';
+import { checkRateLimitRedis } from '../utils/redis-rate-limiter';
 
 // Use vi.hoisted() so mock variables are available when vi.mock factories run
 const { mockEval, mockIsRedisConnected, mockCheckRateLimit } = vi.hoisted(() => ({
@@ -21,8 +22,6 @@ vi.mock('../redis/client', () => ({
 vi.mock('../utils/rate-limiter', () => ({
   checkRateLimit: mockCheckRateLimit,
 }));
-
-import { checkRateLimitRedis } from '../utils/redis-rate-limiter';
 
 describe('checkRateLimitRedis', () => {
   beforeEach(() => {

@@ -1,5 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vite-plus/test';
 import { renderHook, waitFor } from '@testing-library/react';
+import { useWsAuthToken } from '@/app/hooks/use-ws-auth-token';
+import { useMyBoards } from '../use-my-boards';
 
 vi.mock('@/app/hooks/use-ws-auth-token', () => ({
   useWsAuthToken: vi.fn(),
@@ -13,9 +15,6 @@ vi.mock('@/app/lib/graphql/client', () => ({
 vi.mock('@/app/lib/graphql/operations', () => ({
   GET_MY_BOARDS: 'GET_MY_BOARDS',
 }));
-
-import { useWsAuthToken } from '@/app/hooks/use-ws-auth-token';
-import { useMyBoards } from '../use-my-boards';
 
 const mockUseWsAuthToken = vi.mocked(useWsAuthToken);
 

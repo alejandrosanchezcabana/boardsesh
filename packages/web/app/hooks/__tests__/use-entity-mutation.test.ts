@@ -1,5 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vite-plus/test';
 import { renderHook, act } from '@testing-library/react';
+import { useWsAuthToken } from '@/app/hooks/use-ws-auth-token';
+import { useEntityMutation } from '../use-entity-mutation';
 
 vi.mock('@/app/hooks/use-ws-auth-token', () => ({
   useWsAuthToken: vi.fn(),
@@ -14,9 +16,6 @@ const mockRequest = vi.fn();
 vi.mock('@/app/lib/graphql/client', () => ({
   createGraphQLHttpClient: () => ({ request: mockRequest }),
 }));
-
-import { useWsAuthToken } from '@/app/hooks/use-ws-auth-token';
-import { useEntityMutation } from '../use-entity-mutation';
 
 const mockUseWsAuthToken = vi.mocked(useWsAuthToken);
 

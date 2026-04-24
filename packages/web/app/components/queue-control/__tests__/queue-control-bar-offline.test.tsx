@@ -1,6 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vite-plus/test';
 import { render, screen, fireEvent, act } from '@testing-library/react';
 import React from 'react';
+import QueueControlBar from '../queue-control-bar';
 
 // -- All mocks before imports --
 
@@ -194,7 +195,6 @@ vi.mock('@/app/components/board-bluetooth-control/bluetooth-context', () => ({
 }));
 
 // Import after mocks
-import QueueControlBar from '../queue-control-bar';
 
 const mockClimb = {
   uuid: 'climb-1',

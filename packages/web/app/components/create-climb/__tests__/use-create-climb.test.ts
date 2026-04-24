@@ -1,5 +1,6 @@
 import { describe, it, expect, vi } from 'vite-plus/test';
 import { renderHook, act } from '@testing-library/react';
+import { useCreateClimb } from '../use-create-climb';
 
 vi.mock('../../board-renderer/types', () => ({
   HOLD_STATE_MAP: {
@@ -27,8 +28,6 @@ vi.mock('../../board-renderer/types', () => ({
     moonboard: { STARTING: 42, HAND: 43, FINISH: 44 },
   },
 }));
-
-import { useCreateClimb } from '../use-create-climb';
 
 describe('useCreateClimb', () => {
   describe('initial state', () => {

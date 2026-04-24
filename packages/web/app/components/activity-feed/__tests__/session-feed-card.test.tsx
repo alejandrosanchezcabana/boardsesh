@@ -2,6 +2,7 @@ import { describe, it, expect, vi } from 'vite-plus/test';
 import { render, screen } from '@testing-library/react';
 import React from 'react';
 import type { SessionFeedItem } from '@boardsesh/shared-schema';
+import SessionFeedCard from '../session-feed-card';
 
 // Mock dependencies
 vi.mock('next/link', () => ({
@@ -70,8 +71,6 @@ vi.mock('@/app/hooks/use-grade-format', () => ({
     setGradeFormat: vi.fn(),
   }),
 }));
-
-import SessionFeedCard from '../session-feed-card';
 
 function makeSession(overrides: Partial<SessionFeedItem> = {}): SessionFeedItem {
   return {

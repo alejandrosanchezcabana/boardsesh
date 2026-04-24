@@ -1,6 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vite-plus/test';
 import { render, screen, fireEvent, waitFor, act } from '@testing-library/react';
 import React from 'react';
+import VoteButton from '../vote-button';
 
 // --- Mocks ---
 
@@ -35,8 +36,6 @@ let mockContextValue: { getVoteSummary: (id: string) => unknown } | null = null;
 vi.mock('../vote-summary-context', () => ({
   useVoteSummaryContext: () => mockContextValue,
 }));
-
-import VoteButton from '../vote-button';
 
 // --- Helpers ---
 

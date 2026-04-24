@@ -5,6 +5,7 @@ import { renderHook, act, waitFor } from '@testing-library/react';
 import React from 'react';
 import { getPreference, setPreference, removePreference } from '@/app/lib/user-preferences-db';
 import type { BoardDetails } from '@/app/lib/types';
+import { PersistentSessionProvider, usePersistentSession } from '../persistent-session-context';
 
 // ---------------------------------------------------------------------------
 // Mock heavy dependencies that PersistentSessionProvider relies on
@@ -47,7 +48,6 @@ vi.mock('@/app/utils/hash', () => ({
 }));
 
 // Import AFTER mocks are set up
-import { PersistentSessionProvider, usePersistentSession } from '../persistent-session-context';
 
 // ---------------------------------------------------------------------------
 // Constants matching the source

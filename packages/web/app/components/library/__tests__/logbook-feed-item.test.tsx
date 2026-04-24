@@ -2,6 +2,7 @@ import { describe, it, expect, vi, beforeEach } from 'vite-plus/test';
 import { render, screen, fireEvent, act } from '@testing-library/react';
 import React from 'react';
 import type { AscentFeedItem } from '@/app/lib/graphql/operations/ticks';
+import LogbookFeedItem from '../logbook-feed-item';
 
 // --- Capture hooks ---
 
@@ -163,7 +164,6 @@ vi.mock('next/dynamic', () => ({
 }));
 
 // --- Import component after mocks ---
-import LogbookFeedItem from '../logbook-feed-item';
 
 // --- Helpers ---
 

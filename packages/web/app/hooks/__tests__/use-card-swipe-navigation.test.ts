@@ -1,5 +1,6 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vite-plus/test';
 import { renderHook, act } from '@testing-library/react';
+import { useCardSwipeNavigation, EXIT_DURATION, SNAP_BACK_DURATION } from '../use-card-swipe-navigation';
 
 // Capture the config passed to useSwipeable
 let capturedSwipeableConfig: Record<string, (...args: unknown[]) => unknown> = {};
@@ -9,8 +10,6 @@ vi.mock('react-swipeable', () => ({
     return { ref: vi.fn() };
   },
 }));
-
-import { useCardSwipeNavigation, EXIT_DURATION, SNAP_BACK_DURATION } from '../use-card-swipe-navigation';
 
 function createDefaultOptions() {
   return {

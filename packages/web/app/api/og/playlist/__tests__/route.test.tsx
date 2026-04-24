@@ -1,6 +1,8 @@
 // @vitest-environment node
+
 import { beforeEach, describe, expect, it, vi } from 'vite-plus/test';
 import { NextRequest } from 'next/server';
+import { GET } from '../route';
 
 const playlistRouteState = vi.hoisted(() => ({
   getPlaylistOgSummaryMock: vi.fn(),
@@ -62,8 +64,6 @@ vi.mock('@vercel/og', () => ({
     });
   }),
 }));
-
-import { GET } from '../route';
 
 function makeRequest(params: Record<string, string>): NextRequest {
   const url = new URL('http://localhost:3000/api/og/playlist');

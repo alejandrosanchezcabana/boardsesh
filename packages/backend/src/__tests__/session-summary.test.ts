@@ -1,4 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vite-plus/test';
+import { generateSessionSummary } from '../graphql/resolvers/sessions/session-summary';
 
 // Shared mock state, declared with vi.hoisted to ensure availability before mock setup
 const mockState = vi.hoisted(() => ({
@@ -61,8 +62,6 @@ vi.mock('drizzle-orm', () => ({
   desc: (..._args: unknown[]) => ({}),
   isNotNull: (..._args: unknown[]) => ({}),
 }));
-
-import { generateSessionSummary } from '../graphql/resolvers/sessions/session-summary';
 
 describe('generateSessionSummary', () => {
   beforeEach(() => {

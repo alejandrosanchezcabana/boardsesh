@@ -1,6 +1,10 @@
 import { describe, it, expect, vi, beforeEach } from 'vite-plus/test';
 import { render, screen, fireEvent } from '@testing-library/react';
 import React from 'react';
+import YouProgressContent from '../you-progress-content';
+import YouTabBar from '../you-tab-bar';
+import { useProfileData } from '@/app/profile/[user_id]/hooks/use-profile-data';
+import { usePathname } from 'next/navigation';
 
 // --- Mocks (before component imports) ---
 
@@ -43,11 +47,6 @@ vi.mock('@/app/components/stats-filter-drawer/stats-filter-drawer', () => ({
 }));
 
 // --- Imports after mocks ---
-
-import YouProgressContent from '../you-progress-content';
-import YouTabBar from '../you-tab-bar';
-import { useProfileData } from '@/app/profile/[user_id]/hooks/use-profile-data';
-import { usePathname } from 'next/navigation';
 
 const mockUseProfileData = vi.mocked(useProfileData);
 const mockUsePathname = vi.mocked(usePathname);

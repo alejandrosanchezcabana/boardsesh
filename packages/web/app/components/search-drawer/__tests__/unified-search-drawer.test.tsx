@@ -1,6 +1,8 @@
 import { describe, it, expect, vi, beforeEach } from 'vite-plus/test';
 import { render, screen } from '@testing-library/react';
 import React from 'react';
+import UnifiedSearchDrawer from '../unified-search-drawer';
+import type { BoardDetails } from '@/app/lib/types';
 
 // Capture the props passed to the underlying SwipeableDrawer so we can assert on them.
 const swipeableDrawerProps: Array<Record<string, unknown>> = [];
@@ -63,9 +65,6 @@ vi.mock('@/app/components/social/gym-search-results', () => ({
     return <div data-testid="gym-search-results" />;
   },
 }));
-
-import UnifiedSearchDrawer from '../unified-search-drawer';
-import type { BoardDetails } from '@/app/lib/types';
 
 const mockBoardDetails = {
   board_name: 'kilter',

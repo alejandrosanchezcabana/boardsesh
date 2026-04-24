@@ -1,6 +1,20 @@
 import { describe, it, expect, vi, beforeEach } from 'vite-plus/test';
 import { renderHook, act } from '@testing-library/react';
 import React from 'react';
+import { QueueBridgeProvider, QueueBridgeInjector, useQueueBridgeBoardInfo } from '../queue-bridge-context';
+import {
+  QueueContext,
+  QueueActionsContext,
+  QueueDataContext,
+  CurrentClimbUuidContext,
+} from '../../graphql-queue/QueueContext';
+import type {
+  GraphQLQueueContextType,
+  GraphQLQueueActionsType,
+  GraphQLQueueDataType,
+} from '../../graphql-queue/QueueContext';
+import type { BoardDetails, Climb, Angle } from '@/app/lib/types';
+import type { ClimbQueueItem } from '../types';
 
 // ---------------------------------------------------------------------------
 // Mocks — must be defined before importing the SUT
@@ -102,20 +116,6 @@ vi.mock('@/app/lib/board-config-for-playlist', () => ({
 }));
 
 // Now import the SUT — after all vi.mock calls
-import { QueueBridgeProvider, QueueBridgeInjector, useQueueBridgeBoardInfo } from '../queue-bridge-context';
-import {
-  QueueContext,
-  QueueActionsContext,
-  QueueDataContext,
-  CurrentClimbUuidContext,
-} from '../../graphql-queue/QueueContext';
-import type {
-  GraphQLQueueContextType,
-  GraphQLQueueActionsType,
-  GraphQLQueueDataType,
-} from '../../graphql-queue/QueueContext';
-import type { BoardDetails, Climb, Angle } from '@/app/lib/types';
-import type { ClimbQueueItem } from '../types';
 
 // ---------------------------------------------------------------------------
 // Helpers

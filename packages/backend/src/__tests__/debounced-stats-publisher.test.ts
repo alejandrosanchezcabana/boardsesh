@@ -1,4 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vite-plus/test';
+import { publishDebouncedSessionStats } from '../graphql/resolvers/sessions/debounced-stats-publisher';
 
 // --- Hoisted mocks ---
 const { buildSessionStatsUpdatedEventMock, publishSessionEventMock, redisSetMock, redisGetMock, redisDelMock } =
@@ -34,8 +35,6 @@ vi.mock('../redis/client', () => ({
     }),
   },
 }));
-
-import { publishDebouncedSessionStats } from '../graphql/resolvers/sessions/debounced-stats-publisher';
 
 describe('publishDebouncedSessionStats', () => {
   beforeEach(() => {

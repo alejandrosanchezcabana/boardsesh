@@ -1,5 +1,6 @@
 import { describe, it, expect, vi } from 'vite-plus/test';
 import { renderHook, act } from '@testing-library/react';
+import { useMoonBoardCreateClimb } from '../use-moonboard-create-climb';
 
 vi.mock('@/app/lib/moonboard-config', () => ({
   MOONBOARD_HOLD_STATES: {
@@ -8,8 +9,6 @@ vi.mock('@/app/lib/moonboard-config', () => ({
     finish: { color: '#FF00FF', displayColor: '#FF00FF' },
   },
 }));
-
-import { useMoonBoardCreateClimb } from '../use-moonboard-create-climb';
 
 describe('useMoonBoardCreateClimb', () => {
   describe('initial state', () => {

@@ -5,6 +5,8 @@ import type { QueryClient } from '@tanstack/react-query';
 import { QueryClientProvider } from '@tanstack/react-query';
 import { createTestQueryClient } from '@/app/test-utils/test-providers';
 import type { Comment as CommentType } from '@boardsesh/shared-schema';
+import { useWsAuthToken } from '@/app/hooks/use-ws-auth-token';
+import CommentFeed from '../comment-feed';
 
 // --- Mocks ---
 
@@ -32,9 +34,6 @@ vi.mock('@/app/components/social/vote-button', () => ({
 vi.mock('../feed-item-skeleton', () => ({
   default: () => <div data-testid="feed-item-skeleton" />,
 }));
-
-import { useWsAuthToken } from '@/app/hooks/use-ws-auth-token';
-import CommentFeed from '../comment-feed';
 
 const mockUseWsAuthToken = vi.mocked(useWsAuthToken);
 

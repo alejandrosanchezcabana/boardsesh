@@ -1,6 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vite-plus/test';
 import { render, screen, fireEvent } from '@testing-library/react';
 import React from 'react';
+import GlobalHeader from '../global-header';
 
 let mockActiveSession: Record<string, unknown> | null = null;
 let mockIsOnBoardRoute = false;
@@ -121,8 +122,6 @@ vi.mock('@/app/components/profile-header-bridge/profile-header-bridge-context', 
 vi.mock('@/app/components/providers/snackbar-provider', () => ({
   useSnackbar: () => ({ showMessage: vi.fn() }),
 }));
-
-import GlobalHeader from '../global-header';
 
 const mockBoardConfigs = {} as Parameters<typeof GlobalHeader>[0]['boardConfigs'];
 

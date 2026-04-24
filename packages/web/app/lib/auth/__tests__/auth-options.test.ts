@@ -1,4 +1,5 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vite-plus/test';
+import { authOptions } from '../auth-options';
 
 // Mock server-only before any imports
 vi.mock('server-only', () => ({}));
@@ -75,7 +76,6 @@ vi.mock('@/app/lib/db/schema', () => ({
 }));
 
 // Import after mocks are registered
-import { authOptions } from '../auth-options';
 
 // Helper to grab the signIn callback
 type SignInParams = Parameters<NonNullable<NonNullable<typeof authOptions.callbacks>['signIn']>>[0];

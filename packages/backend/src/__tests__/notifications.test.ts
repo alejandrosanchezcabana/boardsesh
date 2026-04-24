@@ -1,5 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vite-plus/test';
 import { GroupedNotificationsInputSchema } from '../validation/schemas';
+import type { ConnectionContext } from '@boardsesh/shared-schema';
+import { socialNotificationQueries, socialNotificationMutations } from '../graphql/resolvers/social/notifications';
 
 // All mock variables must be inside vi.hoisted() to avoid "Cannot access before initialization" errors
 const { mockExecute, mockSelect, mockFrom, mockWhere, mockSet, mockReturning, mockUpdate } = vi.hoisted(() => {
@@ -46,9 +48,6 @@ vi.mock('../utils/rate-limiter', () => ({
 vi.mock('../utils/redis-rate-limiter', () => ({
   checkRateLimitRedis: vi.fn(),
 }));
-
-import type { ConnectionContext } from '@boardsesh/shared-schema';
-import { socialNotificationQueries, socialNotificationMutations } from '../graphql/resolvers/social/notifications';
 
 function makeCtx(overrides: Partial<ConnectionContext> = {}): ConnectionContext {
   return {

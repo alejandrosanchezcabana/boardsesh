@@ -1,4 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vite-plus/test';
+import type { ConnectionContext } from '@boardsesh/shared-schema';
+import { setterFollowMutations, setterFollowQueries } from '../graphql/resolvers/social/setter-follows';
 
 // All mock variables must be inside vi.hoisted() to avoid "Cannot access before initialization" errors
 const { mockDb } = vi.hoisted(() => {
@@ -66,9 +68,6 @@ vi.mock('../db/queries/util/table-select', () => ({
 vi.mock('../db/queries/util/hold-state', () => ({
   convertLitUpHoldsStringToMap: vi.fn().mockReturnValue([{}]),
 }));
-
-import type { ConnectionContext } from '@boardsesh/shared-schema';
-import { setterFollowMutations, setterFollowQueries } from '../graphql/resolvers/social/setter-follows';
 
 function makeCtx(overrides: Partial<ConnectionContext> = {}): ConnectionContext {
   return {

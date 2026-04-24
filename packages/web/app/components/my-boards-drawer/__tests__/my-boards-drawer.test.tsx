@@ -1,6 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vite-plus/test';
 import { render, screen, fireEvent } from '@testing-library/react';
 import React from 'react';
+import MyBoardsDrawer from '../my-boards-drawer';
 
 // Mock data
 let mockBoards: Array<Record<string, unknown>> = [];
@@ -97,8 +98,6 @@ vi.mock('../my-boards-drawer.module.css', () => ({
     },
   ),
 }));
-
-import MyBoardsDrawer from '../my-boards-drawer';
 
 function makeBoard(overrides?: Record<string, unknown>) {
   return {

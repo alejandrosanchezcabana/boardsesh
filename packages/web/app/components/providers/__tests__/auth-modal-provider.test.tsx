@@ -1,6 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vite-plus/test';
 import { renderHook, act } from '@testing-library/react';
 import React from 'react';
+import { AuthModalProvider, useAuthModal } from '../auth-modal-provider';
 
 const { mockAuthModal } = vi.hoisted(() => ({
   mockAuthModal: vi.fn(
@@ -35,8 +36,6 @@ const { mockAuthModal } = vi.hoisted(() => ({
 vi.mock('@/app/components/auth/auth-modal', () => ({
   default: mockAuthModal,
 }));
-
-import { AuthModalProvider, useAuthModal } from '../auth-modal-provider';
 
 function wrapper({ children }: { children: React.ReactNode }) {
   return <AuthModalProvider>{children}</AuthModalProvider>;

@@ -1,6 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vite-plus/test';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import type { BoardDetails } from '@/app/lib/types';
+import PlaylistSelectionContent from '../playlist-selection-content';
 
 const mockUsePlaylists = vi.fn();
 const mockShowMessage = vi.fn();
@@ -22,8 +23,6 @@ vi.mock('@/app/components/providers/auth-modal-provider', () => ({
 vi.mock('@vercel/analytics', () => ({
   track: vi.fn(),
 }));
-
-import PlaylistSelectionContent from '../playlist-selection-content';
 
 function createBoardDetails(overrides?: Partial<BoardDetails>): BoardDetails {
   return {

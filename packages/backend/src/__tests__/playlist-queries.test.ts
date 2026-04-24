@@ -1,4 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vite-plus/test';
+import type { ConnectionContext } from '@boardsesh/shared-schema';
+import { playlistQueries, getPlaylistFollowStats } from '../graphql/resolvers/playlists/queries';
 
 const { mockDb } = vi.hoisted(() => {
   const mockDb = {
@@ -65,9 +67,6 @@ vi.mock('../db/queries/util/table-select', () => ({
 vi.mock('../db/queries/util/hold-state', () => ({
   convertLitUpHoldsStringToMap: vi.fn().mockReturnValue([{}]),
 }));
-
-import type { ConnectionContext } from '@boardsesh/shared-schema';
-import { playlistQueries, getPlaylistFollowStats } from '../graphql/resolvers/playlists/queries';
 
 function makeCtx(overrides: Partial<ConnectionContext> = {}): ConnectionContext {
   return {

@@ -1,12 +1,11 @@
 import type { IncomingMessage, ServerResponse } from 'node:http';
 import { execFileSync } from 'node:child_process';
 import { describe, it, expect, beforeEach, vi } from 'vite-plus/test';
+import { initCors, isOriginAllowed, applyCorsHeaders, getAllowedOrigins } from '../handlers/cors';
 
 vi.mock('node:child_process', () => ({
   execFileSync: vi.fn(),
 }));
-
-import { initCors, isOriginAllowed, applyCorsHeaders, getAllowedOrigins } from '../handlers/cors';
 
 describe('CORS Handler', () => {
   beforeEach(() => {

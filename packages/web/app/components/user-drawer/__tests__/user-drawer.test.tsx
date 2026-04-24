@@ -2,6 +2,7 @@ import { describe, it, expect, vi, beforeEach } from 'vite-plus/test';
 import { render, screen, fireEvent, act } from '@testing-library/react';
 import React from 'react';
 import type { UserBoard, PopularBoardConfig } from '@boardsesh/shared-schema';
+import UserDrawer from '../user-drawer';
 
 // -------------------------------------------------------------------------
 // vi.fn() instances — must be declared before vi.mock() so their references
@@ -113,7 +114,6 @@ vi.mock('@/app/components/my-boards-drawer/my-boards-drawer', () => ({
 }));
 
 // Import after all vi.mock() declarations
-import UserDrawer from '../user-drawer';
 
 // -------------------------------------------------------------------------
 // Helpers

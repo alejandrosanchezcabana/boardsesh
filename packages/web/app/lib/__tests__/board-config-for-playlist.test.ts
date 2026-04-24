@@ -1,4 +1,9 @@
 import { describe, it, expect, vi, beforeEach } from 'vite-plus/test';
+import { resolveBoardDetailsForClimb, type SessionBoardConfig } from '../board-config-for-playlist';
+import { getBoardDetails, getSizesForLayoutId, getSetsForLayoutAndSize } from '@/app/lib/board-constants';
+import { getMoonBoardDetails } from '@/app/lib/moonboard-config';
+import { canAddClimbToBoard } from '@/app/lib/board-compatibility';
+import type { Climb, BoardDetails } from '@/app/lib/types';
 
 vi.mock('@/app/lib/board-constants', () => ({
   getBoardDetails: vi.fn(),
@@ -16,12 +21,6 @@ vi.mock('@/app/lib/moonboard-config', () => ({
 vi.mock('@/app/lib/board-compatibility', () => ({
   canAddClimbToBoard: vi.fn(),
 }));
-
-import { resolveBoardDetailsForClimb, type SessionBoardConfig } from '../board-config-for-playlist';
-import { getBoardDetails, getSizesForLayoutId, getSetsForLayoutAndSize } from '@/app/lib/board-constants';
-import { getMoonBoardDetails } from '@/app/lib/moonboard-config';
-import { canAddClimbToBoard } from '@/app/lib/board-compatibility';
-import type { Climb, BoardDetails } from '@/app/lib/types';
 
 const mockGetBoardDetails = vi.mocked(getBoardDetails);
 const mockGetSizes = vi.mocked(getSizesForLayoutId);

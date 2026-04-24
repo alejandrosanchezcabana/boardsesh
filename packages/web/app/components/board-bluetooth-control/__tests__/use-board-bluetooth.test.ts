@@ -1,5 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vite-plus/test';
 import { renderHook, act } from '@testing-library/react';
+import { useBoardBluetooth } from '../use-board-bluetooth';
+import { _resetFactoryCache } from '@/app/lib/ble/adapter-factory';
 
 // --- Mocks ---
 
@@ -64,9 +66,6 @@ vi.mock('@/app/components/providers/snackbar-provider', () => ({
 vi.mock('@vercel/analytics', () => ({
   track: vi.fn(),
 }));
-
-import { useBoardBluetooth } from '../use-board-bluetooth';
-import { _resetFactoryCache } from '@/app/lib/ble/adapter-factory';
 
 const mockBoardDetails = {
   board_name: 'kilter',

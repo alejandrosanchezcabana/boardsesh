@@ -2,6 +2,7 @@ import { describe, it, expect, vi } from 'vite-plus/test';
 import { render, screen, fireEvent } from '@testing-library/react';
 import React from 'react';
 import type { SessionDetail } from '@boardsesh/shared-schema';
+import SessionDetailContent from '../[sessionId]/session-detail-content';
 
 // Mock dependencies
 vi.mock('next/link', () => ({
@@ -256,8 +257,6 @@ vi.mock('@/app/lib/board-config-for-playlist', () => ({
 vi.mock('@/app/components/board-renderer/util', () => ({
   convertLitUpHoldsStringToMap: () => [{}],
 }));
-
-import SessionDetailContent from '../[sessionId]/session-detail-content';
 
 function makeSession(overrides: Partial<SessionDetail> = {}): SessionDetail {
   return {

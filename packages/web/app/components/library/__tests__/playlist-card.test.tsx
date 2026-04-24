@@ -1,6 +1,7 @@
 import { describe, it, expect, vi } from 'vite-plus/test';
 import { render, screen } from '@testing-library/react';
 import React from 'react';
+import PlaylistCard from '../playlist-card';
 
 // Mock PlaylistPreviewSquare to inspect props
 const mockPreviewSquare = vi.fn();
@@ -20,8 +21,6 @@ vi.mock('../library.module.css', () => ({
     },
   ),
 }));
-
-import PlaylistCard from '../playlist-card';
 
 describe('PlaylistCard', () => {
   it('renders grid variant with PlaylistPreviewSquare', () => {

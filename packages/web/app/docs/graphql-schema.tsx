@@ -27,12 +27,12 @@ import CardContent from '@mui/material/CardContent';
 import Typography from '@mui/material/Typography';
 import Stack from '@mui/material/Stack';
 import { typeDefs as typeDefsArray } from '@boardsesh/shared-schema/schema';
-
-const typeDefs = typeDefsArray.join('\n');
 import { TabPanel } from '@/app/components/ui/tab-panel';
 import { themeTokens } from '@/app/theme/theme-config';
 import { tokenizeLine } from './graphql-tokenizer';
 import styles from './docs.module.css';
+
+const typeDefs = typeDefsArray.join('\n');
 
 // Typography destructuring removed - using MUI Typography directly
 

@@ -28,11 +28,11 @@ import { ProfileHeaderShareProvider } from '../profile-header-bridge/profile-hea
 import { isNativeApp } from '@/app/lib/ble/capacitor-utils';
 import dynamic from 'next/dynamic';
 import { SESH_SETTINGS_DRAWER_EVENT } from '../sesh-settings/sesh-settings-drawer-event';
+import { BoardSwitchConfirmProvider } from '../board-lock/board-switch-confirm-provider';
 
 const SeshSettingsDrawer = dynamic(() => import('../sesh-settings/sesh-settings-drawer'), {
   ssr: false,
 });
-import { BoardSwitchConfirmProvider } from '../board-lock/board-switch-confirm-provider';
 
 type PersistentSessionWrapperProps = {
   children: React.ReactNode;

@@ -1,8 +1,10 @@
 // @vitest-environment jsdom
+
 import { describe, it, expect, vi, beforeEach } from 'vite-plus/test';
 import { render, act } from '@testing-library/react';
 import React from 'react';
 import type { BoardDetails } from '@/app/lib/types';
+import BoardCanvasRenderer from '../board-canvas-renderer';
 
 // --- Mocks ---
 
@@ -38,8 +40,6 @@ vi.mock('@/app/lib/rendering-metrics', () => ({
 vi.mock('../board-image-layers', () => ({
   default: () => <div data-testid="board-image-layers" />,
 }));
-
-import BoardCanvasRenderer from '../board-canvas-renderer';
 
 const mockBoardDetails: BoardDetails = {
   board_name: 'kilter',

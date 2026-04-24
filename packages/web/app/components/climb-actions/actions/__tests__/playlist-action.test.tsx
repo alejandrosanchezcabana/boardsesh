@@ -2,6 +2,7 @@ import { describe, it, expect, vi, beforeEach } from 'vite-plus/test';
 import { renderHook, render, fireEvent, screen } from '@testing-library/react';
 import type { ClimbActionProps } from '../../types';
 import type { BoardDetails, Climb } from '@/app/lib/types';
+import { PlaylistAction } from '../playlist-action';
 
 const mockUsePlaylists = vi.fn();
 const mockShowMessage = vi.fn();
@@ -24,8 +25,6 @@ vi.mock('@/app/components/providers/auth-modal-provider', () => ({
 vi.mock('@vercel/analytics', () => ({
   track: vi.fn(),
 }));
-
-import { PlaylistAction } from '../playlist-action';
 
 function createTestClimb(overrides?: Partial<Climb>): Climb {
   return {

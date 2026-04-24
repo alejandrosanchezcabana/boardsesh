@@ -1,12 +1,11 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vite-plus/test';
 import { renderHook, waitFor, act } from '@testing-library/react';
+import useHeatmapData from '../use-heatmap';
+import { searchParamsToUrlParams } from '@/app/lib/url-utils';
 
 vi.mock('@/app/lib/url-utils', () => ({
   searchParamsToUrlParams: vi.fn(() => new URLSearchParams('minGrade=1')),
 }));
-
-import useHeatmapData from '../use-heatmap';
-import { searchParamsToUrlParams } from '@/app/lib/url-utils';
 
 const defaultProps = {
   boardName: 'kilter' as const,

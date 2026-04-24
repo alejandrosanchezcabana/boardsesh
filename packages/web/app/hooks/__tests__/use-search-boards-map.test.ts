@@ -1,6 +1,8 @@
 import { describe, it, expect, vi, beforeEach } from 'vite-plus/test';
 import { renderHook, waitFor } from '@testing-library/react';
 import type { UserBoard, UserBoardConnection } from '@boardsesh/shared-schema';
+import { createQueryWrapper } from '@/app/test-utils/test-providers';
+import { useSearchBoardsMap, zoomToRadiusKm } from '../use-search-boards-map';
 
 // --- Mocks (declared before importing the hook) ---
 
@@ -26,9 +28,6 @@ vi.mock('@/app/hooks/use-debounced-value', () => ({
 vi.mock('@/app/lib/graphql/operations', () => ({
   SEARCH_BOARDS: 'SEARCH_BOARDS_QUERY',
 }));
-
-import { createQueryWrapper } from '@/app/test-utils/test-providers';
-import { useSearchBoardsMap, zoomToRadiusKm } from '../use-search-boards-map';
 
 // --- Helpers ---
 

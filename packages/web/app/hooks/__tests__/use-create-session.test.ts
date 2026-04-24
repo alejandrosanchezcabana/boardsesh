@@ -1,5 +1,8 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vite-plus/test';
 import { renderHook, act } from '@testing-library/react';
+import { useWsAuthToken } from '@/app/hooks/use-ws-auth-token';
+import { useCreateSession } from '../use-create-session';
+import type { SessionCreationFormData } from '@/app/components/session-creation/session-creation-form';
 
 vi.mock('@/app/hooks/use-ws-auth-token', () => ({
   useWsAuthToken: vi.fn(),
@@ -13,10 +16,6 @@ vi.mock('@/app/lib/graphql/client', () => ({
 vi.mock('@/app/lib/graphql/operations/create-session', () => ({
   CREATE_SESSION: 'CREATE_SESSION_MUTATION',
 }));
-
-import { useWsAuthToken } from '@/app/hooks/use-ws-auth-token';
-import { useCreateSession } from '../use-create-session';
-import type { SessionCreationFormData } from '@/app/components/session-creation/session-creation-form';
 
 const mockUseWsAuthToken = vi.mocked(useWsAuthToken);
 

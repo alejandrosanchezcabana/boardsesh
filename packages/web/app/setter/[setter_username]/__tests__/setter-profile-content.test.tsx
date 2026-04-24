@@ -1,6 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vite-plus/test';
 import { render, screen, waitFor, fireEvent } from '@testing-library/react';
 import React from 'react';
+import SetterProfileContent from '../setter-profile-content';
 
 const mockRequest = vi.fn();
 const mockShowMessage = vi.fn();
@@ -55,8 +56,6 @@ vi.mock('@/app/components/climb-list/setter-climb-list', () => ({
 vi.mock('@/app/components/ui/loading-spinner', () => ({
   LoadingSpinner: () => <div data-testid="loading-spinner" role="progressbar" />,
 }));
-
-import SetterProfileContent from '../setter-profile-content';
 
 function makeProfile(overrides: Record<string, unknown> = {}) {
   return {

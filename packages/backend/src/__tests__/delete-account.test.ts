@@ -10,8 +10,11 @@
  * - Transaction rolls back on failure
  * - Input validation rejects invalid types
  */
+
 import { describe, it, expect, vi, beforeEach } from 'vite-plus/test';
 import type { ConnectionContext } from '@boardsesh/shared-schema';
+import { userMutations } from '../graphql/resolvers/users/mutations';
+import { userQueries } from '../graphql/resolvers/users/queries';
 
 // Hoist mock variables so they're available before module evaluation
 const { mockDb, txCalls } = vi.hoisted(() => {
@@ -32,9 +35,6 @@ const { mockDb, txCalls } = vi.hoisted(() => {
 vi.mock('../db/client', () => ({
   db: mockDb,
 }));
-
-import { userMutations } from '../graphql/resolvers/users/mutations';
-import { userQueries } from '../graphql/resolvers/users/queries';
 
 function makeAuthCtx(userId = 'user-1'): ConnectionContext {
   return {

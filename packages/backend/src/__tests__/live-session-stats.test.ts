@@ -1,5 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from 'vite-plus/test';
 import type { SessionDetail } from '@boardsesh/shared-schema';
+import { buildSessionStatsUpdatedEvent } from '../graphql/resolvers/sessions/live-session-stats';
 
 const { sessionDetailMock } = vi.hoisted(() => ({
   sessionDetailMock: vi.fn(),
@@ -10,8 +11,6 @@ vi.mock('../graphql/resolvers/social/session-feed', () => ({
     sessionDetail: sessionDetailMock,
   },
 }));
-
-import { buildSessionStatsUpdatedEvent } from '../graphql/resolvers/sessions/live-session-stats';
 
 function makeSessionDetail(overrides: Partial<SessionDetail> = {}): SessionDetail {
   return {

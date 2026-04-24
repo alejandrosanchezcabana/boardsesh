@@ -2,6 +2,8 @@ import { beforeEach, describe, expect, it, vi } from 'vite-plus/test';
 import { render, screen, waitFor, fireEvent } from '@testing-library/react';
 import React from 'react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import DraftsDrawer from '../drafts-drawer';
+import type { BoardDetails } from '@/app/lib/types';
 
 const mockPush = vi.fn();
 const mockRequest = vi.fn();
@@ -34,9 +36,6 @@ vi.mock('../../climb-card/climb-list-item', () => ({
     </div>
   ),
 }));
-
-import DraftsDrawer from '../drafts-drawer';
-import type { BoardDetails } from '@/app/lib/types';
 
 const boardDetails: BoardDetails = {
   board_name: 'kilter',

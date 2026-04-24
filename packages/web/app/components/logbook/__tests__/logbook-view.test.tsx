@@ -1,8 +1,10 @@
 // @vitest-environment jsdom
+
 import { describe, expect, it, vi, beforeEach } from 'vite-plus/test';
 import { render, screen } from '@testing-library/react';
 import React from 'react';
 import type { Climb } from '@/app/lib/types';
+import { LogbookView } from '../logbook-view';
 
 const mockUseBoardProvider = vi.fn();
 
@@ -45,8 +47,6 @@ vi.mock('@/app/components/social/vote-button', () => ({
 vi.mock('@/app/components/social/feed-comment-button', () => ({
   default: ({ entityId }: { entityId: string }) => <div data-testid="feed-comment-button" data-entity-id={entityId} />,
 }));
-
-import { LogbookView } from '../logbook-view';
 
 function makeClimb(overrides: Partial<Climb> = {}): Climb {
   return {

@@ -1,5 +1,8 @@
 import { describe, it, expect, vi, beforeEach } from 'vite-plus/test';
 import { renderHook } from '@testing-library/react';
+import { SetActiveAction } from '../set-active-action';
+import type { ClimbActionProps } from '../../types';
+import type { BoardDetails, Climb } from '@/app/lib/types';
 
 // Mock dependencies before importing the module
 vi.mock('@vercel/analytics', () => ({
@@ -51,10 +54,6 @@ vi.mock('@mui/material/Button', () => ({
 vi.mock('../../action-tooltip', () => ({
   ActionTooltip: ({ children }: { children: React.ReactNode }) => children,
 }));
-
-import { SetActiveAction } from '../set-active-action';
-import type { ClimbActionProps } from '../../types';
-import type { BoardDetails, Climb } from '@/app/lib/types';
 
 function createTestClimb(overrides?: Partial<Climb>): Climb {
   return {

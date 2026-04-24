@@ -3,6 +3,7 @@ import { render, screen, fireEvent } from '@testing-library/react';
 import React from 'react';
 import type { Climb, BoardDetails } from '@/app/lib/types';
 import type { ClimbQueueItem } from '../types';
+import QueueClimbListItem from '../queue-climb-list-item';
 
 // --- Mocks ---
 
@@ -112,8 +113,6 @@ vi.mock('@/app/theme/theme-config', () => ({
     },
   },
 }));
-
-import QueueClimbListItem from '../queue-climb-list-item';
 
 // --- Helpers ---
 

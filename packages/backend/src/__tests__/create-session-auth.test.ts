@@ -6,8 +6,10 @@
  * - Anonymous users cannot create discoverable sessions (auth required)
  * - Authenticated users can create both discoverable and non-discoverable sessions
  */
+
 import { describe, it, expect, vi, beforeEach } from 'vite-plus/test';
 import type { ConnectionContext } from '@boardsesh/shared-schema';
+import { sessionMutations } from '../graphql/resolvers/sessions/mutations';
 
 // Mock dependencies
 vi.mock('../services/room-manager', () => ({
@@ -56,8 +58,6 @@ vi.mock('../db/client', () => ({
 vi.mock('./session-summary', () => ({
   generateSessionSummary: vi.fn().mockResolvedValue(null),
 }));
-
-import { sessionMutations } from '../graphql/resolvers/sessions/mutations';
 
 function makeAuthenticatedCtx(userId = 'user-1'): ConnectionContext {
   return {

@@ -5,7 +5,11 @@
  * (within 2 hours, no session_id) are adopted into the new session,
  * and affected inferred sessions are cleaned up properly.
  */
+
 import { describe, it, expect, vi, beforeEach } from 'vite-plus/test';
+import { adoptRecentTicksForSession, extractBoardType } from '../jobs/inferred-session-builder';
+import { recalculateSessionStats } from '../graphql/resolvers/social/session-mutations';
+import { db } from '../db/client';
 
 // Track mutation calls on the transaction mock
 let txUpdateSetCalls: unknown[] = [];
@@ -81,10 +85,6 @@ vi.mock('@boardsesh/db/schema', () => ({
 vi.mock('../graphql/resolvers/social/session-mutations', () => ({
   recalculateSessionStats: vi.fn().mockResolvedValue(undefined),
 }));
-
-import { adoptRecentTicksForSession, extractBoardType } from '../jobs/inferred-session-builder';
-import { recalculateSessionStats } from '../graphql/resolvers/social/session-mutations';
-import { db } from '../db/client';
 
 describe('extractBoardType', () => {
   it('extracts board type from standard path', () => {

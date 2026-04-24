@@ -2,6 +2,7 @@ import { describe, it, expect, vi, beforeEach } from 'vite-plus/test';
 import { render, screen, fireEvent } from '@testing-library/react';
 import React from 'react';
 import type { Climb, BoardDetails } from '@/app/lib/types';
+import ClimbListItem from '../climb-list-item';
 
 // --- Mocks ---
 
@@ -169,8 +170,6 @@ vi.mock('@/app/theme/theme-config', () => ({
     },
   },
 }));
-
-import ClimbListItem from '../climb-list-item';
 
 // Default props that every ClimbListItem render needs
 const defaultPathname = '/kilter/original/12x12/default/40/list';

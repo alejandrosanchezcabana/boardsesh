@@ -7,6 +7,7 @@ import {
   MOONBOARD_OPTIONAL_SERVICE_UUIDS,
   MOONBOARD_SCAN_SERVICE_UUIDS,
 } from '@/app/components/board-bluetooth-control/bluetooth-moonboard';
+import { CapacitorBleAdapter, _resetInitCache } from '../capacitor-adapter';
 
 // Mock window.Capacitor before importing the adapter
 const mockListenerRemove = vi.fn().mockResolvedValue(undefined);
@@ -48,8 +49,6 @@ afterAll(() => {
     window.Capacitor = originalCapacitor;
   }
 });
-
-import { CapacitorBleAdapter, _resetInitCache } from '../capacitor-adapter';
 
 describe('CapacitorBleAdapter', () => {
   let adapter: CapacitorBleAdapter;

@@ -1,6 +1,8 @@
 // @vitest-environment node
+
 import { describe, it, expect, vi, beforeEach } from 'vite-plus/test';
 import { NextRequest } from 'next/server';
+import { GET } from '../route';
 
 // Mock WASM module - returns raw RGBA with 8-byte dimension header
 const mockRenderOverlay = vi.fn((_config: string) => {
@@ -130,8 +132,6 @@ vi.mock('@/app/lib/seo/og', () => ({
     'Vercel-CDN-Cache-Control': 'public, s-maxage=31536000, immutable',
   })),
 }));
-
-import { GET } from '../route';
 
 function makeRequest(params: Record<string, string>): NextRequest {
   const url = new URL('http://localhost:3000/api/internal/board-render');

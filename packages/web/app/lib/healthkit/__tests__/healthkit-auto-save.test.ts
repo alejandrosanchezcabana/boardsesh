@@ -1,6 +1,13 @@
 import { describe, it, expect, vi, beforeEach } from 'vite-plus/test';
 import type { SessionSummary } from '@boardsesh/shared-schema';
 import { autoSaveToHealthKit, _resetAutoSaveGuard, isSessionSavedOrInFlight } from '../healthkit-auto-save';
+import {
+  getHealthKitAutoSync,
+  isHealthKitAvailable,
+  requestHealthKitAuthorization,
+  saveSessionToHealthKit,
+} from '../healthkit-bridge';
+import { createGraphQLHttpClient } from '@/app/lib/graphql/client';
 
 // Mock dependencies
 vi.mock('../healthkit-bridge', () => ({
@@ -17,14 +24,6 @@ vi.mock('@/app/lib/graphql/client', () => ({
 vi.mock('@/app/lib/graphql/operations/activity-feed', () => ({
   SET_SESSION_HEALTHKIT_WORKOUT_ID: 'SET_SESSION_HEALTHKIT_WORKOUT_ID',
 }));
-
-import {
-  getHealthKitAutoSync,
-  isHealthKitAvailable,
-  requestHealthKitAuthorization,
-  saveSessionToHealthKit,
-} from '../healthkit-bridge';
-import { createGraphQLHttpClient } from '@/app/lib/graphql/client';
 
 const mockGetAutoSync = vi.mocked(getHealthKitAutoSync);
 const mockIsAvailable = vi.mocked(isHealthKitAvailable);

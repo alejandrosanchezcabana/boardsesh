@@ -1,9 +1,11 @@
 // @vitest-environment jsdom
+
 import { describe, it, expect, vi, beforeEach } from 'vite-plus/test';
 import { renderHook } from '@testing-library/react';
 import React from 'react';
 import type { BoardDetails } from '@/app/lib/types';
 import type { ActiveSessionInfo } from '../../persistent-session/types';
+import { useActiveBoardLock } from '../use-active-board-lock';
 
 type SessionState = { activeSession: ActiveSessionInfo | null };
 
@@ -26,8 +28,6 @@ vi.mock('../../queue-control/queue-bridge-context', () => ({
     hasActiveQueue: !!mockBridgeBoardDetails,
   }),
 }));
-
-import { useActiveBoardLock } from '../use-active-board-lock';
 
 function makeBoard(partial: Partial<BoardDetails> = {}): BoardDetails {
   return {

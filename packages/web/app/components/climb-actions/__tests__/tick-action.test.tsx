@@ -3,6 +3,8 @@ import { render, screen, act } from '@testing-library/react';
 import React from 'react';
 import type { Climb, BoardDetails, BoardName } from '@/app/lib/types';
 import type { UserBoard } from '@boardsesh/shared-schema';
+import { TickAction } from '../actions/tick-action';
+import type { ClimbActionProps } from '../types';
 
 // --- Mock factories ---
 
@@ -171,8 +173,6 @@ vi.mock('../../board-scroll/board-scroll-card', () => ({
 }));
 
 // Import after mocks
-import { TickAction } from '../actions/tick-action';
-import type { ClimbActionProps } from '../types';
 
 // --- Test data ---
 

@@ -1,6 +1,7 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vite-plus/test';
 import { renderHook, waitFor } from '@testing-library/react';
 import type { UserBoard } from '@boardsesh/shared-schema';
+import { useDiscoverBoards } from '../use-discover-boards';
 
 // --- Mocks ---
 
@@ -19,8 +20,6 @@ vi.mock('@/app/lib/graphql/operations', () => ({
 }));
 
 // --- Import after mocks ---
-
-import { useDiscoverBoards } from '../use-discover-boards';
 
 // --- Helpers ---
 

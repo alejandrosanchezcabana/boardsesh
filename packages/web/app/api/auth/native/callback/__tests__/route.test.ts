@@ -1,5 +1,8 @@
 import { describe, expect, it, vi, beforeEach } from 'vite-plus/test';
 import { NextRequest } from 'next/server';
+import { GET } from '../route';
+import { getServerSession } from 'next-auth/next';
+import { issueNativeOAuthTransferToken } from '@/app/lib/auth/native-oauth-transfer';
 
 // Mock dependencies before importing the route handler
 vi.mock('next-auth/next', () => ({
@@ -13,10 +16,6 @@ vi.mock('@/app/lib/auth/auth-options', () => ({
 vi.mock('@/app/lib/auth/native-oauth-transfer', () => ({
   issueNativeOAuthTransferToken: vi.fn(),
 }));
-
-import { GET } from '../route';
-import { getServerSession } from 'next-auth/next';
-import { issueNativeOAuthTransferToken } from '@/app/lib/auth/native-oauth-transfer';
 
 const mockedGetServerSession = vi.mocked(getServerSession);
 const mockedIssueToken = vi.mocked(issueNativeOAuthTransferToken);

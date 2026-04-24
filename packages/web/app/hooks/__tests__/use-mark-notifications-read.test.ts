@@ -3,6 +3,9 @@ import { renderHook, act } from '@testing-library/react';
 import { createTestQueryClient } from '@/app/test-utils/test-providers';
 import { QueryClientProvider } from '@tanstack/react-query';
 import React from 'react';
+import { useWsAuthToken } from '../use-ws-auth-token';
+import { useMarkGroupAsRead, useMarkAllAsRead } from '../use-mark-notifications-read';
+import type { GroupedNotification, GroupedNotificationConnection } from '@boardsesh/shared-schema';
 
 vi.mock('../use-ws-auth-token', () => ({
   useWsAuthToken: vi.fn(),
@@ -25,10 +28,6 @@ vi.mock('../use-unread-notification-count', () => ({
 vi.mock('../use-grouped-notifications', () => ({
   GROUPED_NOTIFICATIONS_QUERY_KEY: ['notifications', 'grouped'],
 }));
-
-import { useWsAuthToken } from '../use-ws-auth-token';
-import { useMarkGroupAsRead, useMarkAllAsRead } from '../use-mark-notifications-read';
-import type { GroupedNotification, GroupedNotificationConnection } from '@boardsesh/shared-schema';
 
 const mockUseWsAuthToken = vi.mocked(useWsAuthToken);
 
