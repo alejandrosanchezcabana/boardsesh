@@ -541,8 +541,11 @@ export default function UserDrawer({ boardDetails, boardConfigs }: UserDrawerPro
         open={showRating}
         onClose={() => setShowRating(false)}
         source="drawer-feedback"
-        title="Rate Boardsesh"
         onSubmitted={({ rating }) => {
+          // Defensive: the dialog body always calls onClose in its submit
+          // path, but closing explicitly here too guarantees no stacking if
+          // that ever changes. Idempotent — React coalesces the setState.
+          setShowRating(false);
           // Only chain into the App Store prompt on a clearly positive rating —
           // asking a user who just gave us 2 stars to publicly review us is
           // how you end up with 2-star public reviews. The in-app prompt banner

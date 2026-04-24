@@ -17,11 +17,13 @@ vi.mock('@/app/lib/feedback-prompt-db', () => ({
 
 import { FeedbackDialog } from '../feedback-dialog';
 import { useSubmitAppFeedback } from '@/app/hooks/use-submit-app-feedback';
+import { setFeedbackStatus } from '@/app/lib/feedback-prompt-db';
 
 type MutationOptions = { onSuccess?: () => void; onError?: (err: Error) => void };
 type Mutate = (payload: unknown, options?: MutationOptions) => void;
 
 const mockedUseSubmitAppFeedback = vi.mocked(useSubmitAppFeedback);
+const mockedSetFeedbackStatus = vi.mocked(setFeedbackStatus);
 
 function pickStars(n: number) {
   fireEvent.click(screen.getByRole('option', { name: `${n} star${n > 1 ? 's' : ''}` }));
@@ -39,6 +41,7 @@ function setupMutate(behavior: 'success' | 'error' | 'noop') {
 describe('FeedbackDialog — onSubmitted chaining', () => {
   beforeEach(() => {
     mockedUseSubmitAppFeedback.mockReset();
+    mockedSetFeedbackStatus.mockClear();
   });
 
   it('fires onSubmitted with the submitted values AFTER the mutation succeeds', async () => {
@@ -51,6 +54,45 @@ describe('FeedbackDialog — onSubmitted chaining', () => {
     });
     expect(onSubmitted).toHaveBeenCalledTimes(1);
     expect(onSubmitted).toHaveBeenCalledWith({ rating: 5, comment: null });
+  });
+
+  it('calls onClose on successful submission — guarantees no stacking when a caller chains another dialog in onSubmitted', async () => {
+    setupMutate('success');
+    const onClose = vi.fn();
+    render(<FeedbackDialog open onClose={onClose} source="drawer-feedback" onSubmitted={vi.fn()} />);
+    pickStars(5);
+    await act(async () => {
+      fireEvent.click(screen.getByRole('button', { name: /^send$/i }));
+    });
+    expect(onClose).toHaveBeenCalled();
+  });
+
+  it('marks the auto-banner status as "submitted" when the user rates via the drawer', async () => {
+    setupMutate('success');
+    render(<FeedbackDialog open onClose={vi.fn()} source="drawer-feedback" onSubmitted={vi.fn()} />);
+    pickStars(4);
+    await act(async () => {
+      fireEvent.click(screen.getByRole('button', { name: /^send$/i }));
+    });
+    expect(mockedSetFeedbackStatus).toHaveBeenCalledWith('submitted');
+  });
+
+  it("does NOT mark the auto-banner status on a bug submission — bugs aren't a rating", async () => {
+    setupMutate('success');
+    render(<FeedbackDialog open onClose={vi.fn()} source="drawer-bug" mode="bug" onSubmitted={vi.fn()} />);
+    fireEvent.change(screen.getByPlaceholderText(/what were you doing/i), {
+      target: { value: 'crashed when submitting' },
+    });
+    await act(async () => {
+      fireEvent.click(screen.getByRole('button', { name: /send bug report/i }));
+    });
+    expect(mockedSetFeedbackStatus).not.toHaveBeenCalled();
+  });
+
+  it('uses "Rate Boardsesh" as the default title when no title is passed', () => {
+    setupMutate('noop');
+    render(<FeedbackDialog open onClose={vi.fn()} source="drawer-feedback" />);
+    expect(screen.getByText('Rate Boardsesh')).toBeTruthy();
   });
 
   it('does NOT fire onSubmitted when the mutation errors', async () => {
