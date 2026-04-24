@@ -65,6 +65,7 @@ export default function BoardSearchMap({
   // access (debounced setTimeout, one-shot moveend) from firing after
   // map.remove() — reading a destroyed map's _mapPane throws.
   const cancelledRef = useRef(false);
+  const fireViewportRef = useRef<(() => void) | null>(null);
   const [mapReady, setMapReady] = useState(false);
   const [pendingMyLocation, setPendingMyLocation] = useState(false);
 
@@ -139,6 +140,7 @@ export default function BoardSearchMap({
       // 'zoomend' before 'moveend'; a second handler on 'zoomend' would clear
       // programmaticMoveRef prematurely, letting the 'moveend' fireViewport and
       // the once('moveend') callback both fire, producing two updates per flyTo.
+      fireViewportRef.current = fireViewport;
       map.on('moveend', fireViewport);
 
       // Observe container size so we can correct Leaflet's internal size whenever
@@ -161,9 +163,11 @@ export default function BoardSearchMap({
         resizeObserver = null;
       }
       if (mapRef.current) {
-        // Detach moveend before remove() so teardown-time events can't
-        // re-arm fireViewport's setTimeout.
-        mapRef.current.off('moveend');
+        // Detach only our handler before remove() so teardown-time events
+        // can't re-arm fireViewport's setTimeout. Pass undefined when the
+        // ref is unset (shouldn't happen) to fall back to clearing all.
+        mapRef.current.off('moveend', fireViewportRef.current ?? undefined);
+        fireViewportRef.current = null;
         mapRef.current.remove();
         mapRef.current = null;
         markersLayerRef.current = null;

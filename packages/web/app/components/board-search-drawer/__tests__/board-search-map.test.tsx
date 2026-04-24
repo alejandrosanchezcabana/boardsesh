@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vite-plus/test';
-import { render, act } from '@testing-library/react';
+import { render, act, fireEvent } from '@testing-library/react';
 import React from 'react';
 import BoardSearchMap from '../board-search-map';
 
@@ -32,8 +32,12 @@ const { mockState, resetMockState } = vi.hoisted(() => {
       if (event === 'moveend') state.handlers.moveend.push(fn);
       return m as MockMap;
     });
-    m.off = vi.fn(() => {
-      state.handlers.moveend = [];
+    m.off = vi.fn((event: string, fn?: () => void) => {
+      if (event === 'moveend') {
+        state.handlers.moveend = fn
+          ? state.handlers.moveend.filter((h) => h !== fn)
+          : [];
+      }
       return m as MockMap;
     });
     m.once = vi.fn((event: string, fn: () => void) => {
@@ -125,7 +129,7 @@ describe('BoardSearchMap lifecycle', () => {
 
     // Cleanup must detach moveend BEFORE removing the map. With this order,
     // remove()'s teardown emission finds no handlers and schedules nothing.
-    expect(mockState.map!.off).toHaveBeenCalledWith('moveend');
+    expect(mockState.map!.off).toHaveBeenCalledWith('moveend', expect.any(Function));
     const offOrder = mockState.map!.off.mock.invocationCallOrder.at(-1)!;
     const removeOrder = mockState.map!.remove.mock.invocationCallOrder.at(-1)!;
     expect(offOrder).toBeLessThan(removeOrder);
@@ -172,6 +176,36 @@ describe('BoardSearchMap lifecycle', () => {
 
     expect(mockState.map!.getCenter).not.toHaveBeenCalled();
     expect(onViewportChange).not.toHaveBeenCalled();
+  });
+
+  // At-destination guard: if the map is already at the user's location and
+  // zoom level, flyTo would be a no-op and never emit moveend, so the once()
+  // handler would never fire. The guard detects this and calls onViewportChange
+  // immediately instead of relying on a moveend that will never come.
+  it('calls onViewportChange immediately when map is already at user location', async () => {
+    const FLY_TO_ZOOM = 13;
+    mockState.map!.getCenter.mockReturnValue({ lat: 37.5, lng: -122.1 });
+    mockState.map!.getZoom.mockReturnValue(FLY_TO_ZOOM);
+
+    const onViewportChange = vi.fn();
+    const userCoords = { latitude: 37.5, longitude: -122.1 };
+
+    const { getByRole } = render(
+      <BoardSearchMap {...baseProps} userCoords={userCoords} onViewportChange={onViewportChange} />,
+    );
+
+    await act(async () => {
+      await Promise.resolve();
+      await Promise.resolve();
+    });
+
+    act(() => {
+      fireEvent.click(getByRole('button', { name: /my location/i }));
+    });
+
+    expect(mockState.map!.flyTo).not.toHaveBeenCalled();
+    expect(mockState.map!.once).not.toHaveBeenCalled();
+    expect(onViewportChange).toHaveBeenCalledWith({ lat: 37.5, lng: -122.1, zoom: FLY_TO_ZOOM });
   });
 
   // Per-invocation `cancelled` guard: if the component unmounts before the
