@@ -26,7 +26,7 @@ export const feedbackMutations = {
       })
       .returning();
 
-    // Fire-and-forget; postFeedbackToDiscord never throws but catch defensively.
+    // Fire-and-forget. postFeedbackToDiscord swallows all errors internally.
     void postFeedbackToDiscord({
       feedbackId: row.id,
       rating,
@@ -34,8 +34,6 @@ export const feedbackMutations = {
       platform: validated.platform,
       appVersion,
       source: validated.source,
-    }).catch((error) => {
-      console.error('[submitAppFeedback] Discord forward failed:', error);
     });
 
     return true;

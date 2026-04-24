@@ -61,12 +61,17 @@ export function useShakeDetector(onShake: () => void, { enabled = true }: UseSha
           return;
         }
         // Fallback: some browsers only populate accelerationIncludingGravity.
-        // Approximate excluding-gravity magnitude by subtracting 1g from the
-        // total magnitude. Rough but good enough for shake detection.
+        // Recover the user-acceleration magnitude from the including-gravity
+        // magnitude under the worst-case assumption that gravity is orthogonal
+        // to the shake axis (true for lateral shakes on an upright phone):
+        //   |total|² ≈ |user|² + |gravity|²  ⟹  |user| ≈ √(|total|² − g²)
+        // Clamp to 0 to avoid NaN in the degenerate parallel-opposite case
+        // (phone in free-fall-like motion, not relevant for a shake gesture).
         const g = event.accelerationIncludingGravity;
         if (!g || g.x === null || g.y === null || g.z === null) return;
-        const total = Math.sqrt(g.x * g.x + g.y * g.y + g.z * g.z);
-        processMagnitude(Math.abs(total - 9.8));
+        const totalSq = g.x * g.x + g.y * g.y + g.z * g.z;
+        const GRAVITY_SQ = 9.8 * 9.8;
+        processMagnitude(Math.sqrt(Math.max(0, totalSq - GRAVITY_SQ)));
       };
 
       const requestPermission = (DeviceMotionEvent as unknown as { requestPermission?: IosRequestPermission })
