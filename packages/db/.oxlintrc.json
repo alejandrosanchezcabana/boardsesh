@@ -2,19 +2,5 @@
   "$schema": "https://raw.githubusercontent.com/oxc-project/oxc/main/npm/oxlint/configuration_schema.json",
   "extends": ["../../.oxlintrc.json"],
   "plugins": ["typescript", "import"],
-  "rules": {
-    "nextjs/inline-script-id": "off",
-    "nextjs/no-assign-module-variable": "off",
-    "nextjs/no-async-client-component": "off",
-    "nextjs/no-before-interactive-script-outside-document": "off",
-    "nextjs/no-css-tags": "off",
-    "nextjs/no-document-import-in-page": "off",
-    "nextjs/no-duplicate-head": "off",
-    "nextjs/no-html-link-for-pages": "off",
-    "nextjs/no-page-custom-font": "off",
-    "nextjs/no-script-component-in-head": "off",
-    "nextjs/no-typos": "off",
-    "nextjs/no-unwanted-polyfillio": "off"
-  },
   "ignorePatterns": ["dist/**", "node_modules/**", "drizzle/**"]
 }
