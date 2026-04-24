@@ -29,7 +29,8 @@
     "nextjs/no-async-client-component": "error",
     "nextjs/no-before-interactive-script-outside-document": "error",
     "nextjs/no-css-tags": "error",
-    "nextjs/no-document-import-in-page": "error"
+    "nextjs/no-document-import-in-page": "error",
+    "nextjs/no-duplicate-head": "error"
   },
   "ignorePatterns": [
     "dist/**",
