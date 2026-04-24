@@ -364,40 +364,39 @@ export const PlayViewTickBar = React.memo<PlayViewTickBarProps>(function PlayVie
               }
             />
             {/* Action buttons — attempt + tick (order matches queue control bar) */}
-            {
-              <div className={styles.tickBarButtons}>
-                <TickButtonWithLabel label="attempt">
-                  <IconButton
-                    onClick={(e) => quickTickBarRef.current?.saveAttempt(e.currentTarget)}
-                    sx={{
-                      backgroundColor: themeTokens.colors.errorMuted,
-                      color: themeTokens.colors.error,
-                      '&:hover': { backgroundColor: themeTokens.colors.errorMutedHover },
-                    }}
-                    aria-label="Log attempt"
-                  >
-                    <PersonFallingIcon />
-                  </IconButton>
-                </TickButtonWithLabel>
-                <TickButtonWithLabel label={isFlash ? 'flash' : 'tick'}>
-                  <IconButton
-                    id="button-tick"
-                    onClick={(e) => quickTickBarRef.current?.save(e.currentTarget)}
-                    sx={{
-                      backgroundColor: isFlash ? themeTokens.colors.amber : themeTokens.colors.success,
-                      color: isFlash ? themeTokens.neutral[900] : 'common.white',
-                      transition: 'background-color 150ms ease, color 150ms ease',
-                      '&:hover': {
-                        backgroundColor: isFlash ? themeTokens.colors.amber : themeTokens.colors.successHover,
-                      },
-                    }}
-                    aria-label="Save tick"
-                  >
-                    <TickIcon isFlash={!!isFlash} />
-                  </IconButton>
-                </TickButtonWithLabel>
-              </div>
-            }
+
+            <div className={styles.tickBarButtons}>
+              <TickButtonWithLabel label="attempt">
+                <IconButton
+                  onClick={(e) => quickTickBarRef.current?.saveAttempt(e.currentTarget)}
+                  sx={{
+                    backgroundColor: themeTokens.colors.errorMuted,
+                    color: themeTokens.colors.error,
+                    '&:hover': { backgroundColor: themeTokens.colors.errorMutedHover },
+                  }}
+                  aria-label="Log attempt"
+                >
+                  <PersonFallingIcon />
+                </IconButton>
+              </TickButtonWithLabel>
+              <TickButtonWithLabel label={isFlash ? 'flash' : 'tick'}>
+                <IconButton
+                  id="button-tick"
+                  onClick={(e) => quickTickBarRef.current?.save(e.currentTarget)}
+                  sx={{
+                    backgroundColor: isFlash ? themeTokens.colors.amber : themeTokens.colors.success,
+                    color: isFlash ? themeTokens.neutral[900] : 'common.white',
+                    transition: 'background-color 150ms ease, color 150ms ease',
+                    '&:hover': {
+                      backgroundColor: isFlash ? themeTokens.colors.amber : themeTokens.colors.successHover,
+                    },
+                  }}
+                  aria-label="Save tick"
+                >
+                  <TickIcon isFlash={!!isFlash} />
+                </IconButton>
+              </TickButtonWithLabel>
+            </div>
           </>
         )}
       </div>

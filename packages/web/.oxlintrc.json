@@ -15,7 +15,8 @@
     "nextjs/no-script-component-in-head": "error",
     "nextjs/no-typos": "error",
     "nextjs/no-unwanted-polyfillio": "error",
-    "react/jsx-boolean-value": ["error", "never"]
+    "react/jsx-boolean-value": ["error", "never"],
+    "react/jsx-curly-brace-presence": "error"
   },
   "ignorePatterns": [".next/**", "out/**", "build/**", "next-env.d.ts", "node_modules/**", "**/board-controller/**"]
 }

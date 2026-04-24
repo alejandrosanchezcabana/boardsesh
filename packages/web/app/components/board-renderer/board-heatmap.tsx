@@ -383,7 +383,7 @@ const BoardHeatmap: React.FC<BoardHeatmapProps> = ({ boardDetails, litUpHoldsMap
                         dominantBaseline="middle"
                         fontSize={Math.max(8, hold.r * 0.6)}
                         fontWeight="bold"
-                        fill={'#000'}
+                        fill="#000"
                         style={{ userSelect: 'none' }}
                       >
                         {value}
