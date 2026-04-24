@@ -18,7 +18,12 @@ interface BluetoothContextValue {
   loading: boolean;
   connect: (initialFrames?: string, mirrored?: boolean) => Promise<boolean>;
   disconnect: () => void;
-  sendFramesToBoard: (frames: string, mirrored?: boolean, signal?: AbortSignal, climbUuid?: string) => Promise<boolean | undefined>;
+  sendFramesToBoard: (
+    frames: string,
+    mirrored?: boolean,
+    signal?: AbortSignal,
+    climbUuid?: string,
+  ) => Promise<boolean | undefined>;
   isBluetoothSupported: boolean;
   isIOS: boolean;
 }
@@ -35,7 +40,12 @@ function BluetoothAutoSender({
   sendFramesToBoard,
   layoutName,
 }: {
-  sendFramesToBoard: (frames: string, mirrored?: boolean, signal?: AbortSignal, climbUuid?: string) => Promise<boolean | undefined>;
+  sendFramesToBoard: (
+    frames: string,
+    mirrored?: boolean,
+    signal?: AbortSignal,
+    climbUuid?: string,
+  ) => Promise<boolean | undefined>;
   layoutName: string;
 }) {
   const { currentClimbQueueItem } = useCurrentClimb();

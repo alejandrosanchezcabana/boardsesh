@@ -73,9 +73,7 @@ export async function GET(request: Request) {
             computed_at = EXCLUDED.computed_at
     `);
 
-    const [countResult] = await db
-      .select({ count: sql<number>`count(*)::int` })
-      .from(userClimbPercentiles);
+    const [countResult] = await db.select({ count: sql<number>`count(*)::int` }).from(userClimbPercentiles);
 
     revalidateTag(USER_CLIMB_PERCENTILE_CACHE_TAG, { expire: 0 });
 
@@ -85,9 +83,6 @@ export async function GET(request: Request) {
     });
   } catch (error) {
     console.error('[profile-percentiles] Error:', error);
-    return NextResponse.json(
-      { error: 'Profile percentile refresh failed' },
-      { status: 500 },
-    );
+    return NextResponse.json({ error: 'Profile percentile refresh failed' }, { status: 500 });
   }
 }

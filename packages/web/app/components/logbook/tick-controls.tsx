@@ -443,4 +443,3 @@ export const InlineTriesPicker: React.FC<{
     </ScrollIndicatorWrapper>
   );
 };
-

@@ -1,6 +1,11 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { AuroraRequestError } from '../api/errors';
 
+type SyncRunnerPrivates = {
+  updateCredentialStatus: (userId: string, boardType: string, status: string, error?: string | null) => Promise<void>;
+  syncSingleCredential: (cred: ReturnType<typeof createCredential>) => Promise<void>;
+};
+
 const { mockDecrypt, mockEncrypt, mockSignIn } = vi.hoisted(() => ({
   mockDecrypt: vi.fn(),
   mockEncrypt: vi.fn(),
@@ -36,7 +41,8 @@ describe('SyncRunner login failure handling', () => {
 
   it('keeps credential state unchanged for transient Aurora login failures', async () => {
     const runner = new SyncRunner();
-    const updateCredentialStatus = vi.spyOn(runner as any, 'updateCredentialStatus').mockResolvedValue(undefined);
+    const runnerPrivates = runner as unknown as SyncRunnerPrivates;
+    const updateCredentialStatus = vi.spyOn(runnerPrivates, 'updateCredentialStatus').mockResolvedValue(undefined);
 
     mockSignIn.mockRejectedValue(
       new AuroraRequestError({
@@ -48,7 +54,7 @@ describe('SyncRunner login failure handling', () => {
       }),
     );
 
-    await expect((runner as any).syncSingleCredential(createCredential())).rejects.toThrow(
+    await expect(runnerPrivates.syncSingleCredential(createCredential())).rejects.toThrow(
       'Aurora HTTP 503 Service Unavailable',
     );
 
@@ -57,7 +63,8 @@ describe('SyncRunner login failure handling', () => {
 
   it('marks invalid credentials as an error', async () => {
     const runner = new SyncRunner();
-    const updateCredentialStatus = vi.spyOn(runner as any, 'updateCredentialStatus').mockResolvedValue(undefined);
+    const runnerPrivates = runner as unknown as SyncRunnerPrivates;
+    const updateCredentialStatus = vi.spyOn(runnerPrivates, 'updateCredentialStatus').mockResolvedValue(undefined);
 
     mockSignIn.mockRejectedValue(
       new AuroraRequestError({
@@ -69,7 +76,7 @@ describe('SyncRunner login failure handling', () => {
       }),
     );
 
-    await expect((runner as any).syncSingleCredential(createCredential())).rejects.toThrow(
+    await expect(runnerPrivates.syncSingleCredential(createCredential())).rejects.toThrow(
       'Login failed: Invalid username or password',
     );
 

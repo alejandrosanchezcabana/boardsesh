@@ -135,9 +135,6 @@ describe('setterFollowQueries.userClimbs', () => {
     );
 
     expect(result.totalCount).toBe(2);
-    expect(result.climbs.map((climb) => climb.uuid)).toEqual([
-      `${CLIMB_PREFIX}linked-kilter`,
-      `${CLIMB_PREFIX}direct`,
-    ]);
+    expect(result.climbs.map((climb) => climb.uuid)).toEqual([`${CLIMB_PREFIX}linked-kilter`, `${CLIMB_PREFIX}direct`]);
   });
 });

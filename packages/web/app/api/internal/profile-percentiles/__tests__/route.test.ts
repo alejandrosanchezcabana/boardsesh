@@ -47,11 +47,13 @@ describe('GET /api/internal/profile-percentiles', () => {
   });
 
   it('refreshes the snapshot and invalidates the shared percentile cache tag', async () => {
-    const response = await routeModule.GET(new Request('http://localhost/api/internal/profile-percentiles', {
-      headers: {
-        authorization: 'Bearer test-secret',
-      },
-    }));
+    const response = await routeModule.GET(
+      new Request('http://localhost/api/internal/profile-percentiles', {
+        headers: {
+          authorization: 'Bearer test-secret',
+        },
+      }),
+    );
 
     expect(response.status).toBe(200);
     expect(mockExecute).toHaveBeenCalledTimes(1);

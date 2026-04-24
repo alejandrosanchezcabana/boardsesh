@@ -178,7 +178,9 @@ export async function cachedUserProfileStats(
  */
 export async function cachedUserClimbPercentile(
   userId: string,
-): Promise<import('@/app/lib/graphql/operations/ticks').GetUserClimbPercentileQueryResponse['userClimbPercentile'] | null> {
+): Promise<
+  import('@/app/lib/graphql/operations/ticks').GetUserClimbPercentileQueryResponse['userClimbPercentile'] | null
+> {
   const { GET_USER_CLIMB_PERCENTILE } = await import('@/app/lib/graphql/operations/ticks');
   type Response = import('@/app/lib/graphql/operations/ticks').GetUserClimbPercentileQueryResponse;
 

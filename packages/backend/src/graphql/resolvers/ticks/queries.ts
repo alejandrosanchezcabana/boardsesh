@@ -69,12 +69,7 @@ export const tickQueries = {
                 downvotes: dbSchema.voteCounts.downvotes,
               })
               .from(dbSchema.voteCounts)
-              .where(
-                and(
-                  eq(dbSchema.voteCounts.entityType, 'tick'),
-                  inArray(dbSchema.voteCounts.entityId, tickUuids),
-                ),
-              ),
+              .where(and(eq(dbSchema.voteCounts.entityType, 'tick'), inArray(dbSchema.voteCounts.entityId, tickUuids))),
             db
               .select({
                 entityId: dbSchema.comments.entityId,

@@ -314,9 +314,7 @@ beforeAll(async () => {
       // ignore cleanup errors
     }
     if (process.env.SKIP_TEST_INFRA === '1') {
-      console.warn(
-        '[setup] Test database unreachable (SKIP_TEST_INFRA=1) — DB-dependent tests will fail.',
-      );
+      console.warn('[setup] Test database unreachable (SKIP_TEST_INFRA=1) — DB-dependent tests will fail.');
       return;
     }
     throw new Error(

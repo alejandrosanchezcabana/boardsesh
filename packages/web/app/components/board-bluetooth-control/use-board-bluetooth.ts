@@ -126,7 +126,14 @@ export function useBoardBluetooth({ boardDetails, onConnectionChange }: UseBoard
             {
               level: 'warning',
               tags: { board: boardDetails.board_name, layout: boardDetails.layout_id, size: boardDetails.size_id },
-              extra: { climbUuid, layoutId: boardDetails.layout_id, sizeId: boardDetails.size_id, setIds: boardDetails.set_ids, skippedPositionCount: result.skippedPositionCount, skippedRoleCount: result.skippedRoleCount },
+              extra: {
+                climbUuid,
+                layoutId: boardDetails.layout_id,
+                sizeId: boardDetails.size_id,
+                setIds: boardDetails.set_ids,
+                skippedPositionCount: result.skippedPositionCount,
+                skippedRoleCount: result.skippedRoleCount,
+              },
             },
           );
           showMessage('This climb is for a different board configuration.', 'error');
@@ -135,14 +142,18 @@ export function useBoardBluetooth({ boardDetails, onConnectionChange }: UseBoard
 
         if (skippedCount > 0) {
           // Partial miss — some holds couldn't be lit but we can still send
-          Sentry.captureMessage(
-            `[BLE] ${skippedCount} of ${result.totalPlacements} placements skipped`,
-            {
-              level: 'warning',
-              tags: { board: boardDetails.board_name, layout: boardDetails.layout_id, size: boardDetails.size_id },
-              extra: { climbUuid, layoutId: boardDetails.layout_id, sizeId: boardDetails.size_id, setIds: boardDetails.set_ids, skippedPositionCount: result.skippedPositionCount, skippedRoleCount: result.skippedRoleCount },
+          Sentry.captureMessage(`[BLE] ${skippedCount} of ${result.totalPlacements} placements skipped`, {
+            level: 'warning',
+            tags: { board: boardDetails.board_name, layout: boardDetails.layout_id, size: boardDetails.size_id },
+            extra: {
+              climbUuid,
+              layoutId: boardDetails.layout_id,
+              sizeId: boardDetails.size_id,
+              setIds: boardDetails.set_ids,
+              skippedPositionCount: result.skippedPositionCount,
+              skippedRoleCount: result.skippedRoleCount,
             },
-          );
+          });
           showMessage(
             `${skippedCount} hold${skippedCount > 1 ? 's' : ''} couldn't be lit — your board may be a different size than this climb was set for.`,
             'warning',

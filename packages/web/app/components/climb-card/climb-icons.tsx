@@ -29,7 +29,8 @@ const noMatchIconSx = {
  */
 export default function ClimbIcons({ benchmarkDifficulty, isBenchmark = false, isNoMatch = false }: ClimbIconsProps) {
   const benchmarkValue = benchmarkDifficulty != null ? Number(benchmarkDifficulty) : null;
-  const isBenchmarkOrClassic = isBenchmark || (benchmarkValue !== null && benchmarkValue > 0 && !Number.isNaN(benchmarkValue));
+  const isBenchmarkOrClassic =
+    isBenchmark || (benchmarkValue !== null && benchmarkValue > 0 && !Number.isNaN(benchmarkValue));
 
   return (
     <>

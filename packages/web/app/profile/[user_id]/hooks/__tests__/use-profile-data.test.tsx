@@ -260,29 +260,31 @@ describe('useProfileData', () => {
       totalActiveUsers: 40,
     };
 
-    const { result } = renderHook(() => useProfileData('user-1', {
-      initialProfile: {
-        id: 'user-1',
-        email: undefined,
-        name: 'Test User',
-        image: null,
-        profile: null,
-        credentials: [],
-        followerCount: 0,
-        followingCount: 0,
-        isFollowedByMe: false,
-      },
-      initialProfileStats: {
-        totalDistinctClimbs: 12,
-        layoutStats: [],
-      },
-      initialPercentile,
-      initialAllBoardsTicks: {
-        kilter: [],
-      },
-      initialLogbook: [],
-      initialIsOwnProfile: true,
-    }));
+    const { result } = renderHook(() =>
+      useProfileData('user-1', {
+        initialProfile: {
+          id: 'user-1',
+          email: undefined,
+          name: 'Test User',
+          image: null,
+          profile: null,
+          credentials: [],
+          followerCount: 0,
+          followingCount: 0,
+          isFollowedByMe: false,
+        },
+        initialProfileStats: {
+          totalDistinctClimbs: 12,
+          layoutStats: [],
+        },
+        initialPercentile,
+        initialAllBoardsTicks: {
+          kilter: [],
+        },
+        initialLogbook: [],
+        initialIsOwnProfile: true,
+      }),
+    );
 
     expect(result.current.percentile).toEqual(initialPercentile);
     expect(mockRequest).not.toHaveBeenCalledWith(GET_USER_CLIMB_PERCENTILE, { userId: 'user-1' });

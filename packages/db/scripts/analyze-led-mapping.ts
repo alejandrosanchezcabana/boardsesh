@@ -19,7 +19,7 @@ import { LED_PLACEMENTS } from '../../board-constants/src/generated/led-placemen
 
 function rows<T>(result: unknown): T[] {
   const r = result as { rows?: T[] };
-  return Array.isArray(r) ? r : r.rows ?? [];
+  return Array.isArray(r) ? r : (r.rows ?? []);
 }
 
 interface ClimbRow {
@@ -84,9 +84,7 @@ async function main() {
     const sizesResult = await db.execute(sql`
       SELECT id, name FROM board_product_sizes ORDER BY board_type, id
     `);
-    const sizeNames = new Map(
-      rows<{ id: number; name: string }>(sizesResult).map((s) => [s.id, s.name]),
-    );
+    const sizeNames = new Map(rows<{ id: number; name: string }>(sizesResult).map((s) => [s.id, s.name]));
 
     // Get set-to-layout-size mappings
     const setsResult = await db.execute(sql`
@@ -123,9 +121,7 @@ async function main() {
       for (const layoutId of layouts) {
         if (layoutFilter !== undefined && layoutId !== layoutFilter) continue;
 
-        const sizeKeys = layoutSizeKeys
-          .filter((k) => k.startsWith(`${layoutId}-`))
-          .map((k) => Number(k.split('-')[1]));
+        const sizeKeys = layoutSizeKeys.filter((k) => k.startsWith(`${layoutId}-`)).map((k) => Number(k.split('-')[1]));
 
         // Fetch ALL climbs for this board/layout once (reused across sizes)
         const climbsResult = await db.execute(sql`
@@ -147,9 +143,7 @@ async function main() {
           WHERE board_type = ${boardName}
           GROUP BY climb_uuid
         `);
-        const statsMap = new Map(
-          rows<StatsRow>(statsResult).map((s) => [s.climb_uuid, Number(s.total_ascents)]),
-        );
+        const statsMap = new Map(rows<StatsRow>(statsResult).map((s) => [s.climb_uuid, Number(s.total_ascents)]));
 
         for (const sizeId of sizeKeys) {
           if (sizeFilter !== undefined && sizeId !== sizeFilter) continue;
@@ -185,20 +179,17 @@ async function main() {
             const ascents = statsMap.get(climb.uuid) ?? 0;
 
             // Critical check: does the climb claim to be compatible with this size?
-            const claimsSizeCompat =
-              climb.compatible_size_ids !== null && climb.compatible_size_ids.includes(sizeId);
+            const claimsSizeCompat = climb.compatible_size_ids !== null && climb.compatible_size_ids.includes(sizeId);
 
             // Is denormalized data missing?
             // In PostgreSQL, NULL <@ ARRAY[...] returns NULL (not TRUE), so these rows
             // are excluded from search results. Treat them as "null denorm", not bypass.
-            const hasMissingDenorm =
-              climb.compatible_size_ids === null || climb.required_set_ids === null;
+            const hasMissingDenorm = climb.compatible_size_ids === null || climb.required_set_ids === null;
 
             // Does the climb pass the set filter for this config?
             // Only true when required_set_ids is non-null AND all sets are available.
             const passesSetFilter =
-              climb.required_set_ids !== null &&
-              climb.required_set_ids.every((setId) => availableSets.includes(setId));
+              climb.required_set_ids !== null && climb.required_set_ids.every((setId) => availableSets.includes(setId));
 
             if (hasMissingDenorm) {
               // NULL denormalized columns — PostgreSQL excludes these from search
@@ -227,7 +218,9 @@ async function main() {
           grandTotalNullDenorm += nullDenorm.length;
           grandTotalMismatch += correctlyExcluded;
 
-          console.log(`\n    FILTER BYPASS (passes search filters, breaks BLE): ${filterBypass.length.toLocaleString()}`);
+          console.log(
+            `\n    FILTER BYPASS (passes search filters, breaks BLE): ${filterBypass.length.toLocaleString()}`,
+          );
           console.log(`    NULL denormalized columns: ${nullDenorm.length.toLocaleString()}`);
           console.log(`    Correctly excluded by search filters: ${correctlyExcluded.toLocaleString()}`);
 
@@ -244,18 +237,12 @@ async function main() {
                 `      "${climb.name || '(unnamed)'}" by ${climb.setter_username || '?'}` +
                   ` — ${ascents.toLocaleString()} ascents${listedTag}`,
               );
-              console.log(
-                `        ${missingPlacementIds.length} of ${totalPlacements} placements missing LED mapping`,
-              );
+              console.log(`        ${missingPlacementIds.length} of ${totalPlacements} placements missing LED mapping`);
               console.log(
                 `        Missing IDs: [${missingPlacementIds.slice(0, 10).join(', ')}${missingPlacementIds.length > 10 ? `, ... (${missingPlacementIds.length} total)` : ''}]`,
               );
-              console.log(
-                `        compatible_size_ids: [${climb.compatible_size_ids?.join(', ')}]`,
-              );
-              console.log(
-                `        required_set_ids: [${climb.required_set_ids?.join(', ')}]`,
-              );
+              console.log(`        compatible_size_ids: [${climb.compatible_size_ids?.join(', ')}]`);
+              console.log(`        required_set_ids: [${climb.required_set_ids?.join(', ')}]`);
               if (verbose) {
                 console.log(`        uuid: ${climb.uuid}`);
                 console.log(
@@ -269,11 +256,12 @@ async function main() {
             for (const { missingPlacementIds } of filterBypass) {
               for (const id of missingPlacementIds) allMissing.add(id);
             }
+            console.log(`\n    Missing placement IDs in filter-bypassing climbs: ${allMissing.size}`);
             console.log(
-              `\n    Missing placement IDs in filter-bypassing climbs: ${allMissing.size}`,
-            );
-            console.log(
-              `    IDs: [${[...allMissing].sort((a, b) => a - b).slice(0, 30).join(', ')}${allMissing.size > 30 ? '...' : ''}]`,
+              `    IDs: [${[...allMissing]
+                .sort((a, b) => a - b)
+                .slice(0, 30)
+                .join(', ')}${allMissing.size > 30 ? '...' : ''}]`,
             );
           }
 

@@ -15,7 +15,7 @@ import { populateDenormalizedColumns } from '../src/queries/climbs/populate-deno
 
 function rows<T>(result: unknown): T[] {
   const r = result as { rows?: T[] };
-  return Array.isArray(r) ? r : r.rows ?? [];
+  return Array.isArray(r) ? r : (r.rows ?? []);
 }
 
 const args = process.argv.slice(2);

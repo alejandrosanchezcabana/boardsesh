@@ -27,10 +27,7 @@ export default async function globalSetup() {
     return;
   }
 
-  const [pgUp, redisUp] = await Promise.all([
-    isPortOpen('127.0.0.1', PG_PORT),
-    isPortOpen('127.0.0.1', REDIS_PORT),
-  ]);
+  const [pgUp, redisUp] = await Promise.all([isPortOpen('127.0.0.1', PG_PORT), isPortOpen('127.0.0.1', REDIS_PORT)]);
   if (pgUp && redisUp) {
     console.info(`[test-infra] postgres:${PG_PORT} + redis:${REDIS_PORT} already reachable — skipping docker`);
     return;

@@ -437,14 +437,16 @@ export const setterFollowQueries = {
 
     // 2. Build WHERE condition: userId match OR (boardType + setterUsername) in linked mappings, AND not draft
     const tables = UNIFIED_TABLES;
-    const linkedOwnershipCondition = linkedMappings.length > 0
-      ? sql.join(
-          linkedMappings.map(({ boardType, boardUsername }) =>
-            sql`(${tables.climbs.boardType} = ${boardType} AND ${tables.climbs.setterUsername} = ${boardUsername})`
-          ),
-          sql` OR `,
-        )
-      : null;
+    const linkedOwnershipCondition =
+      linkedMappings.length > 0
+        ? sql.join(
+            linkedMappings.map(
+              ({ boardType, boardUsername }) =>
+                sql`(${tables.climbs.boardType} = ${boardType} AND ${tables.climbs.setterUsername} = ${boardUsername})`,
+            ),
+            sql` OR `,
+          )
+        : null;
 
     const ownershipCondition = linkedOwnershipCondition
       ? sql`(${tables.climbs.userId} = ${userId} OR ${linkedOwnershipCondition})`
