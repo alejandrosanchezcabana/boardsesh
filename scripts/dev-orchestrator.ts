@@ -1,4 +1,4 @@
-import { spawn } from 'node:child_process';
+import { execFileSync, spawn, spawnSync } from 'node:child_process';
 import { createConnection } from 'node:net';
 import { setTimeout as delay } from 'node:timers/promises';
 import { join, dirname, resolve } from 'node:path';
@@ -24,6 +24,43 @@ const processes: { backend: ProcessRef; web: ProcessRef } = {
 };
 
 let backendHealthy = false;
+
+/**
+ * Find the first existing ref from a preference list (e.g. origin/main → main).
+ */
+function resolveBaseRef(): string | null {
+  for (const ref of ['origin/main', 'main']) {
+    const result = spawnSync('git', ['rev-parse', '--verify', '--quiet', ref], {
+      cwd: ROOT_DIR,
+    });
+    if (result.status === 0) return ref;
+  }
+  return null;
+}
+
+/**
+ * Returns true if packages/backend differs from the merge base with origin/main (or main).
+ * Covers committed, staged, and unstaged changes.
+ */
+function hasBackendChanges(): { changed: boolean; baseRef: string | null } {
+  try {
+    const baseRef = resolveBaseRef();
+    if (!baseRef) return { changed: false, baseRef: null };
+
+    const mergeBase = execFileSync('git', ['merge-base', 'HEAD', baseRef], {
+      cwd: ROOT_DIR,
+      encoding: 'utf8',
+    }).trim();
+
+    // `git diff <mergeBase> -- <path>` compares working tree to merge base; --quiet exits 1 on diff.
+    const result = spawnSync('git', ['diff', '--quiet', mergeBase, '--', 'packages/backend'], {
+      cwd: ROOT_DIR,
+    });
+    return { changed: result.status === 1, baseRef };
+  } catch {
+    return { changed: false, baseRef: null };
+  }
+}
 
 /**
  * Check if backend is already running and healthy
@@ -199,7 +236,13 @@ async function shutdown() {
 async function main(): Promise<void> {
   // Parse command line args
   const args = process.argv.slice(2);
-  const startNewBackend = args.includes('--be');
+  const explicitNewBackend = args.includes('--be');
+  const { changed: backendChanged, baseRef } = hasBackendChanges();
+  const forceNewBackend = explicitNewBackend || backendChanged;
+
+  if (backendChanged && !explicitNewBackend) {
+    console.info(`[dev] Detected changes in packages/backend vs ${baseRef} — starting a fresh backend`);
+  }
 
   const requestedBackendPort = parseInt(process.env.BACKEND_PORT || String(DEFAULT_BACKEND_PORT), 10);
   const requestedWebPort = parseInt(process.env.PORT || String(DEFAULT_WEB_PORT), 10);
@@ -209,7 +252,7 @@ async function main(): Promise<void> {
   let shouldStartBackend = false;
 
   // Check if the default backend port has a healthy instance
-  if (!startNewBackend && !process.env.BACKEND_PORT) {
+  if (!forceNewBackend && !process.env.BACKEND_PORT) {
     backendHealthy = await checkBackendHealth(DEFAULT_BACKEND_PORT);
     if (backendHealthy) {
       backendPort = DEFAULT_BACKEND_PORT;
@@ -217,7 +260,7 @@ async function main(): Promise<void> {
     } else {
       shouldStartBackend = true;
     }
-  } else if (startNewBackend) {
+  } else if (forceNewBackend) {
     // Find available port for new backend
     backendPort = await findAvailablePort(requestedBackendPort);
     shouldStartBackend = true;
@@ -230,7 +273,7 @@ async function main(): Promise<void> {
   const webPort = process.env.PORT ? requestedWebPort : await findAvailablePort(requestedWebPort);
 
   console.info(`[dev] Boardsesh Development Orchestrator`);
-  console.info(`[dev] Backend port: ${backendPort}${startNewBackend ? ' (new instance)' : ''}`);
+  console.info(`[dev] Backend port: ${backendPort}${forceNewBackend ? ' (new instance)' : ''}`);
   console.info(`[dev] Web port: ${webPort}`);
   console.info();
 
