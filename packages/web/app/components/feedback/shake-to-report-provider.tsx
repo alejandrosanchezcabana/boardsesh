@@ -17,7 +17,13 @@ import { BugReportDialog } from './bug-report-dialog';
  */
 export const ShakeToReportProvider: React.FC = () => {
   const [open, setOpen] = useState(false);
-  const [dismissed, setDismissed] = useState(true);
+  // null = hydration pending. We keep the detector detached until IndexedDB
+  // resolves: defaulting to "not dismissed" would let a previously opted-out
+  // user see the dialog fire if they happen to shake during the ~100-300ms
+  // hydration window, silently overriding their explicit opt-out. First-time
+  // users lose the same window of shake availability, which is an acceptable
+  // trade — they're not likely to shake the phone in the first 300ms of load.
+  const [dismissed, setDismissed] = useState<boolean | null>(null);
   const { showMessage } = useSnackbar();
 
   useEffect(() => {
@@ -40,7 +46,7 @@ export const ShakeToReportProvider: React.FC = () => {
     showMessage('Shake to report off. Tap your avatar up top to send feedback.', 'info', undefined, 6000);
   }, [showMessage]);
 
-  useShakeDetector(handleShake, { enabled: !open && !dismissed });
+  useShakeDetector(handleShake, { enabled: !open && dismissed === false });
 
   return (
     <BugReportDialog

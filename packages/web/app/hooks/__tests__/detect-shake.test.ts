@@ -85,25 +85,29 @@ describe('detectShake', () => {
   });
 
   describe('DEFAULT_SHAKE_OPTIONS (tuned to reduce false positives)', () => {
-    it('ignores a strong single bump (13 m/s²) below the 14 m/s² threshold', () => {
-      const step = detectShake(13, 100, initialShakeState());
+    it('ignores a single jolt just below the threshold', () => {
+      const step = detectShake(DEFAULT_SHAKE_OPTIONS.threshold - 1, 100, initialShakeState());
       expect(step.fired).toBe(false);
       expect(step.state.joltTimestamps).toEqual([]);
     });
 
-    it('does not fire on two jolts — a single bump-and-recover', () => {
+    it('does not fire when only requiredJolts-1 jolts occur', () => {
       let state = initialShakeState();
-      state = detectShake(20, 0, state).state;
-      const step = detectShake(20, 300, state);
-      expect(step.fired).toBe(false);
-      expect(step.state.joltTimestamps).toEqual([0, 300]);
+      for (let i = 0; i < DEFAULT_SHAKE_OPTIONS.requiredJolts - 1; i += 1) {
+        const step = detectShake(DEFAULT_SHAKE_OPTIONS.threshold + 5, i * 200, state);
+        expect(step.fired).toBe(false);
+        state = step.state;
+      }
+      expect(state.joltTimestamps.length).toBe(DEFAULT_SHAKE_OPTIONS.requiredJolts - 1);
     });
 
-    it('fires on three jolts inside the window — a deliberate shake', () => {
+    it('fires once requiredJolts jolts land inside windowMs', () => {
       let state = initialShakeState();
-      state = detectShake(20, 0, state).state;
-      state = detectShake(20, 200, state).state;
-      const step = detectShake(20, 400, state);
+      let step = { fired: false, state } as ReturnType<typeof detectShake>;
+      for (let i = 0; i < DEFAULT_SHAKE_OPTIONS.requiredJolts; i += 1) {
+        step = detectShake(DEFAULT_SHAKE_OPTIONS.threshold + 5, i * 200, state);
+        state = step.state;
+      }
       expect(step.fired).toBe(true);
     });
   });
