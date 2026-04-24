@@ -28,10 +28,6 @@
 
 @media (min-width: 768px) {
   .bottomBarWrapper {
-    /* Desktop gets a flat 16px bottom gutter on the wrapper, so the
-       BottomNavigation child must stop adding its own safe-area padding
-       or the two stack. Zero the child's padding var in this breakpoint. */
-    --tab-bar-safe-area-padding: 0px;
     left: 0;
     right: 0;
     padding-bottom: 16px;
