@@ -13,7 +13,6 @@ import type { AppFeedbackPlatform, AppFeedbackSource } from '@boardsesh/shared-s
 
 const BUG_SOURCES: ReadonlySet<AppFeedbackSource> = new Set(['shake-bug', 'drawer-bug']);
 
-const COLOR_BUG = 0xed4245;
 const COLOR_GREEN = 0x57f287;
 const COLOR_YELLOW = 0xfee75c;
 const COLOR_RED = 0xed4245;
@@ -27,15 +26,11 @@ export interface FeedbackDiscordPayload {
   source: AppFeedbackSource;
 }
 
-export function isDiscordConfigured(): boolean {
-  return !!process.env.DISCORD_FEEDBACK_URL;
-}
-
 function buildWebhookBody(payload: FeedbackDiscordPayload): Record<string, unknown> {
   const isBug = BUG_SOURCES.has(payload.source);
   const title = isBug ? '🐞 Bug report' : `⭐ Rating: ${payload.rating ?? '?'}/5`;
   const color = isBug
-    ? COLOR_BUG
+    ? COLOR_RED
     : payload.rating !== null && payload.rating >= 4
       ? COLOR_GREEN
       : payload.rating !== null && payload.rating >= 3

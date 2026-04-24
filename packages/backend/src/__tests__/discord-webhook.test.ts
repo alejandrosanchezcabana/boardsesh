@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vite-plus/test';
-import { __internal, isDiscordConfigured, postFeedbackToDiscord } from '../services/discord';
+import { __internal, postFeedbackToDiscord } from '../services/discord';
 
 const originalUrl = process.env.DISCORD_FEEDBACK_URL;
 
@@ -76,28 +76,6 @@ describe('Discord webhook payload privacy', () => {
     });
     const embed = (body.embeds as Array<Record<string, unknown>>)[0];
     expect((embed.footer as { text: string }).text).toBe('feedback #1337');
-  });
-});
-
-describe('isDiscordConfigured', () => {
-  afterEach(() => {
-    if (originalUrl === undefined) delete process.env.DISCORD_FEEDBACK_URL;
-    else process.env.DISCORD_FEEDBACK_URL = originalUrl;
-  });
-
-  it('is false when the env var is unset', () => {
-    delete process.env.DISCORD_FEEDBACK_URL;
-    expect(isDiscordConfigured()).toBe(false);
-  });
-
-  it('is false when the env var is blank', () => {
-    process.env.DISCORD_FEEDBACK_URL = '';
-    expect(isDiscordConfigured()).toBe(false);
-  });
-
-  it('is true when the env var is set', () => {
-    process.env.DISCORD_FEEDBACK_URL = 'https://discord.com/api/webhooks/x/y';
-    expect(isDiscordConfigured()).toBe(true);
   });
 });
 

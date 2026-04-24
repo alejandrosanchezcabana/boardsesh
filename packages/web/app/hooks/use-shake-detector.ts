@@ -57,8 +57,7 @@ export function useShakeDetector(onShake: () => void, { enabled = true }: UseSha
       const handler = (event: DeviceMotionEvent) => {
         const accel = event.acceleration;
         if (accel && accel.x !== null && accel.y !== null && accel.z !== null) {
-          const { x, y, z } = accel;
-          processMagnitude(Math.sqrt((x ?? 0) ** 2 + (y ?? 0) ** 2 + (z ?? 0) ** 2));
+          processMagnitude(Math.sqrt(accel.x * accel.x + accel.y * accel.y + accel.z * accel.z));
           return;
         }
         // Fallback: some browsers only populate accelerationIncludingGravity.
@@ -66,7 +65,7 @@ export function useShakeDetector(onShake: () => void, { enabled = true }: UseSha
         // total magnitude. Rough but good enough for shake detection.
         const g = event.accelerationIncludingGravity;
         if (!g || g.x === null || g.y === null || g.z === null) return;
-        const total = Math.sqrt((g.x ?? 0) ** 2 + (g.y ?? 0) ** 2 + (g.z ?? 0) ** 2);
+        const total = Math.sqrt(g.x * g.x + g.y * g.y + g.z * g.z);
         processMagnitude(Math.abs(total - 9.8));
       };
 
