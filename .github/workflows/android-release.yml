@@ -159,8 +159,14 @@ jobs:
             **Minimum Android version:** 13 (API 33)
 
             The AAB has been uploaded to Google Play internal testing track.
-            Download the APK below to sideload on your Android device.
-          files: mobile/android/app/build/outputs/apk/release/*.apk
+            Sideload options:
+            - `app-release.apk` — signed production build.
+            - `app-debug.apk` — debug build with the in-app Dev URL switcher
+              unlocked (user drawer → Dev URL). Cannot be installed alongside
+              the release build; uninstall one before installing the other.
+          files: |
+            mobile/android/app/build/outputs/apk/release/*.apk
+            mobile/android/app/build/outputs/apk/debug/*.apk
           draft: false
           prerelease: false
         env:
