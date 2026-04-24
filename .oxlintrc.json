@@ -33,7 +33,8 @@
     "nextjs/no-duplicate-head": "error",
     "nextjs/no-html-link-for-pages": "error",
     "nextjs/no-page-custom-font": "error",
-    "nextjs/no-script-component-in-head": "error"
+    "nextjs/no-script-component-in-head": "error",
+    "nextjs/no-typos": "error"
   },
   "ignorePatterns": [
     "dist/**",
