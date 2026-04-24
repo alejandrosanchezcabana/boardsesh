@@ -23,7 +23,8 @@
     "@typescript-eslint/no-misused-promises": ["error", { "checksVoidReturn": false }],
     "@typescript-eslint/consistent-type-imports": "error",
     "@typescript-eslint/no-unnecessary-type-assertion": "error",
-    "no-console": ["error", { "allow": ["warn", "error", "info"] }]
+    "no-console": ["error", { "allow": ["warn", "error", "info"] }],
+    "typescript/adjacent-overload-signatures": "error"
   },
   "ignorePatterns": [
     "dist/**",
