@@ -142,11 +142,26 @@ function resolveTlsBundle(): TlsBundle | null {
   }
 
   const stderr = (result.stderr || '').toString().trim();
-  console.warn(
-    `[dev] HTTPS: 'tailscale cert' failed — falling back to HTTP. ${stderr || '(no error output)'}\n` +
-      `[dev] HTTPS: to enable, turn on "HTTPS Certificates" for your tailnet at ` +
-      `https://login.tailscale.com/admin/dns — one-time setup, then re-run 'vp run dev'.`,
-  );
+  console.warn(`[dev] HTTPS: 'tailscale cert' failed — falling back to HTTP. ${stderr || '(no error output)'}`);
+
+  // Targeted hints based on what Tailscale actually said. The daemon's own
+  // error text is more reliable than our classification of failure modes.
+  if (/operator|require root|denied/i.test(stderr) && stderr.includes('--operator=')) {
+    console.warn(
+      `[dev] HTTPS: fix with ONE command: 'sudo tailscale set --operator=$USER'. ` +
+        `Grants your user permission to talk to the Tailscale daemon (one-time).`,
+    );
+  } else if (/HTTPS.*not enabled|not configured|dnsname/i.test(stderr)) {
+    console.warn(
+      `[dev] HTTPS: enable "HTTPS Certificates" for your tailnet at ` +
+        `https://login.tailscale.com/admin/dns (one-time setup).`,
+    );
+  } else {
+    console.warn(
+      `[dev] HTTPS: check that MagicDNS + HTTPS Certificates are enabled at ` +
+        `https://login.tailscale.com/admin/dns and that 'tailscale cert <host>' works from this shell.`,
+    );
+  }
   return null;
 }
 
