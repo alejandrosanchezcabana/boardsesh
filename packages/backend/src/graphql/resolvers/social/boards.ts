@@ -663,22 +663,57 @@ export const socialBoardQueries = {
       .from(dbSchema.userBoards)
       .where(and(inArray(dbSchema.userBoards.serialNumber, cleaned), isNull(dbSchema.userBoards.deletedAt)));
 
-    const userId = ctx.isAuthenticated ? ctx.userId : undefined;
+    // Unauthenticated callers get an allowlisted response built directly from
+    // the DB rows — skip enrichBoards entirely (no owner/stats/follow queries).
+    // Public boards include UGC fields; non-public boards get config only.
+    if (!ctx.isAuthenticated) {
+      return boards.map((board) => {
+        const base = {
+          uuid: board.uuid,
+          slug: board.slug,
+          ownerId: '',
+          ownerDisplayName: null,
+          ownerAvatarUrl: null,
+          boardType: board.boardType,
+          layoutId: Number(board.layoutId),
+          sizeId: Number(board.sizeId),
+          setIds: board.setIds,
+          name: board.isPublic ? board.name : board.boardType,
+          description: board.isPublic ? board.description : null,
+          locationName: board.isPublic ? board.locationName : null,
+          latitude: null,
+          longitude: null,
+          isPublic: board.isPublic,
+          isUnlisted: board.isUnlisted,
+          hideLocation: board.hideLocation,
+          isOwned: false,
+          angle: Number(board.angle),
+          isAngleAdjustable: board.isAngleAdjustable,
+          createdAt: board.createdAt.toISOString(),
+          layoutName: null,
+          sizeName: null,
+          sizeDescription: null,
+          setNames: null,
+          totalAscents: 0,
+          uniqueClimbers: 0,
+          followerCount: 0,
+          commentCount: 0,
+          isFollowedByMe: false,
+          gymId: null,
+          gymUuid: null,
+          gymName: null,
+          distanceMeters: null,
+          serialNumber: board.serialNumber ?? null,
+        };
+
+        return base;
+      });
+    }
+
     const enriched = await enrichBoards(
       boards.map((board) => ({ board })),
-      userId,
+      ctx.userId,
     );
-
-    // Strip sensitive fields for unauthenticated callers
-    if (!ctx.isAuthenticated) {
-      return enriched.map((board) => ({
-        ...board,
-        latitude: null,
-        longitude: null,
-        ownerDisplayName: null,
-        ownerAvatarUrl: null,
-      }));
-    }
 
     return enriched;
   },
