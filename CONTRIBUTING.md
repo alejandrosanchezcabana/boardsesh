@@ -52,15 +52,25 @@ You can also run pieces independently:
 
 ## Testing web changes on Android
 
-You don't have to rebuild the Android app every time you change the web UI. The **debug APK** shipped with each main build includes a Dev URL switcher that points the in-app WebView at any origin you choose — a Tailscale tunnel to your laptop, a Vercel preview, etc.
+You don't have to rebuild the Android app every time you change the web UI. The **debug APK** shipped with each main build includes a Dev URL switcher that points the in-app WebView at any origin you choose — typically your laptop reached over [Tailscale](https://tailscale.com).
+
+### One-time setup: Tailscale
+
+`vp run dev` already looks for Tailscale. It runs your local dev server through `scripts/dev-with-tailscale.ts`, which calls `tailscale status --json` to find your machine's MagicDNS name (e.g. `your-laptop.tail-scale.ts.net`) and binds `BASE_URL`, `NEXTAUTH_URL`, and `NEXT_PUBLIC_WS_URL` to it. Without Tailscale it falls back to `localhost`, which Android can't reach from a real device.
+
+1. Install Tailscale on both your laptop and your phone and sign into the same tailnet.
+2. On your laptop, confirm `tailscale status` shows your phone online.
+3. Start the dev server with `vp run dev`. Look for `[dev] Web URL: http://<your-host>.ts.net:3000` in the output — that's the URL to paste into the app.
+
+### Point the app at your dev server
 
 1. Grab `app-debug.apk` from the most recent [Android Build release](https://github.com/boardsesh/boardsesh/releases?q=android-build). Uninstall the release build first if you have it — both variants use the same package id.
 2. Install the APK (enable "Install unknown apps" for your source if Android prompts you).
 3. Open the app, tap the avatar in the top left, and choose **Dev URL** from the drawer.
-4. Paste your dev origin (e.g. `https://your-host.ts.net`) and tap **Save & restart**. The app relaunches against that URL.
-5. If the dev server dies and the WebView can't load, the offline fallback page shows a **Reset dev URL to production** link to get you back to `www.boardsesh.com`.
+4. Paste `http://<your-host>.ts.net:3000` (the URL `vp run dev` printed) and tap **Save & restart**. The app relaunches against your laptop.
+5. If the dev server stops or you lose tailnet connectivity, the app shows a native **Reset to production** prompt (or, if the WebView gets far enough to render an error page, a **Reset dev URL** link) that clears the override and relaunches.
 
-The menu item is only visible in debug builds; release builds don't expose it.
+The menu item is only visible in debug builds; release builds don't expose it. Vercel preview URLs (`https://<preview>.boardsesh.com`) work too if you'd rather not run a local server.
 
 ## Keeping local data up to date
 

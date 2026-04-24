@@ -211,11 +211,17 @@ public class MainActivity extends BridgeActivity {
                 fallbackState.onMainFrameError(request.getUrl() != null ? request.getUrl().toString() : null);
             }
 
-            if (!shouldTriggerOfflineFallback(request, error.getErrorCode())) {
+            if (shouldTriggerOfflineFallback(request, error.getErrorCode())) {
+                tryCacheThenFallback(view);
                 return;
             }
 
-            tryCacheThenFallback(view);
+            // Dev-override rescue: even when the device is online, if a bad dev
+            // URL wedges the main frame we must surface the reset link — the
+            // web UI never loads so the in-app dialog is unreachable.
+            if (shouldShowDevOverrideRescue(request, error.getErrorCode())) {
+                renderDevOverrideRescue(view);
+            }
         }
 
         @Override
@@ -229,11 +235,45 @@ public class MainActivity extends BridgeActivity {
                 fallbackState.onMainFrameError(request.getUrl() != null ? request.getUrl().toString() : null);
             }
 
-            if (!request.isForMainFrame() || !isOffline()) {
+            if (request.isForMainFrame() && isOffline()) {
+                tryCacheThenFallback(view);
                 return;
             }
 
-            tryCacheThenFallback(view);
+            // HTTP 5xx / auth-wall on the dev origin — same rescue logic.
+            if (request.isForMainFrame()
+                && BuildConfig.DEBUG
+                && DevUrlPrefs.getOverrideUrl(MainActivity.this) != null) {
+                renderDevOverrideRescue(view);
+            }
         }
+
+        private boolean shouldShowDevOverrideRescue(WebResourceRequest request, int errorCode) {
+            return request.isForMainFrame()
+                && BuildConfig.DEBUG
+                && DevUrlPrefs.getOverrideUrl(MainActivity.this) != null
+                && OfflineFallbackPolicy.isNetworkErrorCode(errorCode);
+        }
+    }
+
+    private void renderDevOverrideRescue(WebView view) {
+        String override = DevUrlPrefs.getOverrideUrl(this);
+        String safeOverride = TextUtils.htmlEncode(override != null ? override : "");
+        String errorHtml = "<!DOCTYPE html><html><head><meta charset='utf-8' />"
+            + "<meta name='viewport' content='width=device-width, initial-scale=1' />"
+            + "<title>Dev URL unreachable</title>"
+            + "<style>body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;"
+            + "background:#0A0A0A;color:#fff;margin:0;padding:24px;display:flex;align-items:center;"
+            + "justify-content:center;min-height:100vh;text-align:center;}main{max-width:360px;}"
+            + "h1{font-size:22px;margin:0 0 12px;}p{color:#c4c4c4;line-height:1.5;}"
+            + "code{background:#1f1f1f;padding:2px 6px;border-radius:4px;font-size:12px;word-break:break-all;}</style>"
+            + "</head><body><main><h1>Dev URL didn't load</h1>"
+            + "<p>The configured dev URL <code>" + safeOverride + "</code> is unreachable."
+            + " Check the tunnel or preview is still running.</p>"
+            + "<p><a href='" + DEV_RESET_SCHEME + "://reset'"
+            + " style='display:inline-block;margin-top:12px;padding:10px 14px;border-radius:10px;"
+            + "background:#fff;color:#0A0A0A;text-decoration:none;font-weight:600;'>"
+            + "Reset to production</a></p></main></body></html>";
+        view.loadDataWithBaseURL(null, errorHtml, "text/html", "UTF-8", null);
     }
 }
