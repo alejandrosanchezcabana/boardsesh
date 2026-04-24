@@ -195,7 +195,7 @@ describe('useShakeDetector — iOS 13+ permission path', () => {
     await flushMicrotasks();
     // No devicemotion listener yet — waiting for gesture.
     expect(addSpy).not.toHaveBeenCalledWith('devicemotion', expect.any(Function));
-    expect(docAddSpy).toHaveBeenCalledWith('pointerdown', expect.any(Function), { once: true });
+    expect(docAddSpy).toHaveBeenCalledWith('pointerdown', expect.any(Function));
   });
 
   it('attaches devicemotion once the user grants permission', async () => {

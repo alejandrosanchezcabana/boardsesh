@@ -126,21 +126,34 @@ export function useShakeDetector(onShake: () => void, { enabled = true }: UseSha
 
       if (typeof requestPermission === 'function') {
         // iOS 13+ Safari: permission must be requested from a user gesture.
+        // Critical: the handler must NOT be an `async` function. WebKit ties
+        // the user-gesture token to the synchronous call stack of the event
+        // handler; wrapping the handler in `async` (even before the first
+        // `await`) is enough to make Safari reject the call with
+        // "Requesting device motion access requires a user gesture to prompt".
+        // We also don't pass { once: true } — we call removeEventListener
+        // manually BEFORE kicking off the permission request, so the same
+        // gesture can't accidentally fire this handler twice and so the
+        // cleanup on unmount has a listener to remove.
         log('iOS 13+ detected — waiting for first pointerdown to request DeviceMotion permission');
-        const onGesture = async () => {
+        const onGesture = () => {
           document.removeEventListener('pointerdown', onGesture);
-          try {
-            const result = await requestPermission.call(DeviceMotionEvent);
-            log(`DeviceMotion permission result: ${result}`);
-            if (result === 'granted' && !cancelled) {
-              window.addEventListener('devicemotion', handler);
-              cleanup = () => window.removeEventListener('devicemotion', handler);
-            }
-          } catch (err) {
-            log('DeviceMotion permission threw:', err);
-          }
+          // Synchronously inside the gesture frame — promise chaining, not
+          // async/await, so WebKit still counts this as a user-initiated call.
+          requestPermission
+            .call(DeviceMotionEvent)
+            .then((result) => {
+              log(`DeviceMotion permission result: ${result}`);
+              if (result === 'granted' && !cancelled) {
+                window.addEventListener('devicemotion', handler);
+                cleanup = () => window.removeEventListener('devicemotion', handler);
+              }
+            })
+            .catch((err) => {
+              log('DeviceMotion permission threw:', err);
+            });
         };
-        document.addEventListener('pointerdown', onGesture, { once: true });
+        document.addEventListener('pointerdown', onGesture);
         cleanup = () => document.removeEventListener('pointerdown', onGesture);
         return;
       }
