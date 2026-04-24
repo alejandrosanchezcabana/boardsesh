@@ -24,7 +24,8 @@
     "react/jsx-no-duplicate-props": "error",
     "react/jsx-no-script-url": "error",
     "react/jsx-no-undef": "error",
-    "react/jsx-no-useless-fragment": "error"
+    "react/jsx-no-useless-fragment": "error",
+    "react/jsx-pascal-case": ["error", { "allowNamespace": true }]
   },
   "ignorePatterns": [".next/**", "out/**", "build/**", "next-env.d.ts", "node_modules/**", "**/board-controller/**"]
 }
