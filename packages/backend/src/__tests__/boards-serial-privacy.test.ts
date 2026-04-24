@@ -128,6 +128,30 @@ describe('boardsBySerialNumbers privacy', () => {
       expect(board.locationName).toBeNull();
     });
 
+    it('strips name, description, and locationName from unlisted boards', async () => {
+      const unlistedBoard = makeDbBoard({
+        isPublic: false,
+        isUnlisted: true,
+        name: 'Hidden Wall',
+        description: 'Not discoverable',
+        locationName: 'Secret Location',
+      });
+      setupDbSelect([unlistedBoard]);
+
+      const results = await socialBoardQueries.boardsBySerialNumbers(
+        null,
+        { serialNumbers: ['SERIAL001'] },
+        makeUnauthCtx(),
+      );
+
+      expect(results).toHaveLength(1);
+      const board = results[0];
+      expect(board.name).toBe('kilter');
+      expect(board.description).toBeNull();
+      expect(board.locationName).toBeNull();
+      expect(board.isUnlisted).toBe(true);
+    });
+
     it('includes name, description, and locationName for public boards', async () => {
       const publicBoard = makeDbBoard({
         isPublic: true,

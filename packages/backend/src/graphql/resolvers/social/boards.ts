@@ -668,7 +668,7 @@ export const socialBoardQueries = {
     // Public boards include UGC fields; non-public boards get config only.
     if (!ctx.isAuthenticated) {
       return boards.map((board) => {
-        const base = {
+        return {
           uuid: board.uuid,
           slug: board.slug,
           ownerId: '',
@@ -705,8 +705,6 @@ export const socialBoardQueries = {
           distanceMeters: null,
           serialNumber: board.serialNumber ?? null,
         };
-
-        return base;
       });
     }
 
