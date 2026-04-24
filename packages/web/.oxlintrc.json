@@ -32,7 +32,8 @@
     "react/no-unescaped-entities": "error",
     "react/no-unknown-property": "error",
     "react/rules-of-hooks": "error",
-    "react/self-closing-comp": "error"
+    "react/self-closing-comp": "error",
+    "react/style-prop-object": "error"
   },
   "ignorePatterns": [".next/**", "out/**", "build/**", "next-env.d.ts", "node_modules/**", "**/board-controller/**"]
 }
