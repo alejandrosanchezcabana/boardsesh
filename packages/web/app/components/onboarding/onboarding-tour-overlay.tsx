@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect, useMemo, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useId, useMemo, useRef, useState } from 'react';
 import { usePathname } from 'next/navigation';
 import Popper from '@mui/material/Popper';
 import Paper from '@mui/material/Paper';
@@ -9,6 +9,16 @@ import Box from '@mui/material/Box';
 import { useOnboardingTour } from './onboarding-tour-provider';
 import { getStepById, type TourStepDef } from './onboarding-tour-steps';
 import styles from './onboarding-tour-overlay.module.css';
+
+const FOCUSABLE_SELECTOR = [
+  'a[href]',
+  'area[href]',
+  'input:not([disabled])',
+  'select:not([disabled])',
+  'textarea:not([disabled])',
+  'button:not([disabled])',
+  '[tabindex]:not([tabindex="-1"])',
+].join(',');
 
 /** How long to keep polling for an anchor element before giving up. */
 const ANCHOR_POLL_DURATION_MS = 2000;
@@ -132,19 +142,35 @@ type OverlayContentProps = {
   step: TourStepDef;
   stepIndex: number;
   totalSteps: number;
+  titleId: string;
+  bodyId: string;
+  primaryButtonRef?: React.Ref<HTMLButtonElement>;
   onNext: () => void;
   onSkip: () => void;
 };
 
-function OverlayContent({ step, stepIndex, totalSteps, onNext, onSkip }: OverlayContentProps) {
+function OverlayContent({
+  step,
+  stepIndex,
+  totalSteps,
+  titleId,
+  bodyId,
+  primaryButtonRef,
+  onNext,
+  onSkip,
+}: OverlayContentProps) {
   const isLast = stepIndex === totalSteps - 1;
   const buttonLabel = step.primaryLabel ?? (isLast ? 'Finish' : 'Next');
   const showPrimary = step.primaryLabel !== null;
 
   return (
     <>
-      <div className={styles.title}>{step.title}</div>
-      <div className={styles.body}>{step.body}</div>
+      <div className={styles.title} id={titleId}>
+        {step.title}
+      </div>
+      <div className={styles.body} id={bodyId}>
+        {step.body}
+      </div>
       <div className={styles.footer}>
         <span className={styles.progress}>
           {stepIndex + 1} of {totalSteps}
@@ -154,7 +180,7 @@ function OverlayContent({ step, stepIndex, totalSteps, onNext, onSkip }: Overlay
             Skip tour
           </button>
           {showPrimary && (
-            <Button variant="contained" size="small" onClick={onNext}>
+            <Button ref={primaryButtonRef} variant="contained" size="small" onClick={onNext}>
               {buttonLabel}
             </Button>
           )}
@@ -167,6 +193,9 @@ function OverlayContent({ step, stepIndex, totalSteps, onNext, onSkip }: Overlay
 export default function OnboardingTourOverlay() {
   const { active, currentStepId, stepIndex, totalSteps, next, skip } = useOnboardingTour();
   const pathname = usePathname();
+  const reactId = useId();
+  const titleId = `tour-title-${reactId}`;
+  const bodyId = `tour-body-${reactId}`;
 
   const step = useMemo(() => (currentStepId ? (getStepById(currentStepId) ?? null) : null), [currentStepId]);
 
@@ -176,11 +205,55 @@ export default function OnboardingTourOverlay() {
   const anchor = useAnchorElement(step?.anchorSelectors ?? null, overlayActive);
   const rect = useAnchorRect(anchor);
 
+  const introPaperRef = useRef<HTMLDivElement | null>(null);
+  const primaryButtonRef = useRef<HTMLButtonElement | null>(null);
+
   // Scroll the anchor into view when it becomes available for the current step.
   useEffect(() => {
     if (!overlayActive || !anchor) return;
     anchor.scrollIntoView({ behavior: 'smooth', block: 'center' });
   }, [anchor, overlayActive, currentStepId]);
+
+  const isIntro = !!step && step.id === 'home-intro';
+
+  // Autofocus the primary button when the intro dialog opens so keyboard
+  // users land inside the modal rather than on whatever was previously focused.
+  useEffect(() => {
+    if (!overlayActive || !isIntro) return;
+    const el = primaryButtonRef.current;
+    if (!el) return;
+    // Defer past the initial render so the element is actually focusable.
+    const rafId = requestAnimationFrame(() => el.focus());
+    return () => cancelAnimationFrame(rafId);
+  }, [overlayActive, isIntro]);
+
+  // Keyboard handling for the intro modal: Escape skips, Tab is trapped
+  // inside the dialog so users can't accidentally tab into the page behind.
+  const handleIntroKeyDown = useCallback(
+    (event: React.KeyboardEvent<HTMLDivElement>) => {
+      if (event.key === 'Escape') {
+        event.preventDefault();
+        skip();
+        return;
+      }
+      if (event.key !== 'Tab') return;
+      const container = introPaperRef.current;
+      if (!container) return;
+      const focusables = container.querySelectorAll<HTMLElement>(FOCUSABLE_SELECTOR);
+      if (focusables.length === 0) return;
+      const first = focusables[0];
+      const last = focusables[focusables.length - 1];
+      const activeEl = document.activeElement as HTMLElement | null;
+      if (event.shiftKey && activeEl === first) {
+        event.preventDefault();
+        last.focus();
+      } else if (!event.shiftKey && activeEl === last) {
+        event.preventDefault();
+        first.focus();
+      }
+    },
+    [skip],
+  );
 
   if (!overlayActive || !step) return null;
 
@@ -210,8 +283,22 @@ export default function OnboardingTourOverlay() {
             { name: 'flip', options: { fallbackPlacements: ['top', 'bottom'] } },
           ]}
         >
-          <Paper className={styles.paper} elevation={8}>
-            <OverlayContent step={step} stepIndex={stepIndex} totalSteps={totalSteps} onNext={next} onSkip={skip} />
+          <Paper
+            className={styles.paper}
+            elevation={8}
+            role="dialog"
+            aria-labelledby={titleId}
+            aria-describedby={bodyId}
+          >
+            <OverlayContent
+              step={step}
+              stepIndex={stepIndex}
+              totalSteps={totalSteps}
+              titleId={titleId}
+              bodyId={bodyId}
+              onNext={next}
+              onSkip={skip}
+            />
           </Paper>
         </Popper>
       </>
@@ -221,21 +308,52 @@ export default function OnboardingTourOverlay() {
   // The first step is a welcome dialog — centred with a dim scrim behind it.
   // Other non-anchored steps (or steps whose anchor hasn't mounted yet) render
   // as a top banner so they don't overlap the drawer they're narrating.
-  const isIntro = step.id === 'home-intro';
   if (isIntro) {
     return (
       <>
         <div className={styles.introScrim} />
-        <Paper className={styles.introPaper} elevation={8}>
-          <OverlayContent step={step} stepIndex={stepIndex} totalSteps={totalSteps} onNext={next} onSkip={skip} />
+        <Paper
+          ref={introPaperRef}
+          className={styles.introPaper}
+          elevation={8}
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby={titleId}
+          aria-describedby={bodyId}
+          onKeyDown={handleIntroKeyDown}
+        >
+          <OverlayContent
+            step={step}
+            stepIndex={stepIndex}
+            totalSteps={totalSteps}
+            titleId={titleId}
+            bodyId={bodyId}
+            primaryButtonRef={primaryButtonRef}
+            onNext={next}
+            onSkip={skip}
+          />
         </Paper>
       </>
     );
   }
 
   return (
-    <Paper className={styles.bannerPaper} elevation={8}>
-      <OverlayContent step={step} stepIndex={stepIndex} totalSteps={totalSteps} onNext={next} onSkip={skip} />
+    <Paper
+      className={styles.bannerPaper}
+      elevation={8}
+      role="dialog"
+      aria-labelledby={titleId}
+      aria-describedby={bodyId}
+    >
+      <OverlayContent
+        step={step}
+        stepIndex={stepIndex}
+        totalSteps={totalSteps}
+        titleId={titleId}
+        bodyId={bodyId}
+        onNext={next}
+        onSkip={skip}
+      />
     </Paper>
   );
 }

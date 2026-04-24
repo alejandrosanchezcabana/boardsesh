@@ -293,11 +293,17 @@ export function OnboardingTourProvider({ children }: { children: React.ReactNode
     }
   }, [pathname, currentStepId, advanceFrom]);
 
+  // Both notifyQueueLength and notifyCurrentClimb read the live step from
+  // `currentStepIdRef` rather than closing over `currentStepId`. That keeps
+  // their identity stable across step transitions — callers (TourQueueWatcher)
+  // sit inside `useEffect` deps arrays, so an unstable callback would cause
+  // the watcher's effects to re-fire on every step change even when no watched
+  // step was active.
   const notifyQueueLength = useCallback(
     (length: number) => {
       const prev = lastQueueLengthRef.current;
       lastQueueLengthRef.current = length;
-      if (currentStepId !== 'queue-add') return;
+      if (currentStepIdRef.current !== 'queue-add') return;
       // Advance on the first increment after entering the step (or immediately
       // if the queue already has items when the step is entered).
       if (prev === null && length > 0) {
@@ -308,7 +314,7 @@ export function OnboardingTourProvider({ children }: { children: React.ReactNode
         advanceFrom('queue-add', 'event');
       }
     },
-    [currentStepId, advanceFrom],
+    [advanceFrom],
   );
 
   const notifyCurrentClimb = useCallback(
@@ -319,7 +325,7 @@ export function OnboardingTourProvider({ children }: { children: React.ReactNode
       // (`TOUR_CLIMB_LIST_PICK_EVENT`) because async queue hydration can
       // change currentClimb without any user interaction, which used to
       // falsely skip the "pick a climb" step.
-      if (currentStepId !== 'queue-bar') return;
+      if (currentStepIdRef.current !== 'queue-bar') return;
       if (!climbUuid) return;
 
       // Cancel any prior grace-period timer so rapid changes don't
@@ -341,7 +347,7 @@ export function OnboardingTourProvider({ children }: { children: React.ReactNode
         currentClimbTimerRef.current = window.setTimeout(fire, CURRENT_CLIMB_GRACE_MS - elapsed);
       }
     },
-    [currentStepId, advanceFrom, clearCurrentClimbTimer],
+    [advanceFrom, clearCurrentClimbTimer],
   );
 
   // Listen for the explicit "user picked a climb in the list" signal

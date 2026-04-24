@@ -239,3 +239,47 @@ describe('OnboardingTourOverlay — primary button omission', () => {
     expect(screen.getByText(/Skip tour/i)).toBeDefined();
   });
 });
+
+describe('OnboardingTourOverlay — intro modal a11y', () => {
+  it('has dialog role, aria-modal, and labelled/described-by pointing at the title/body', () => {
+    setTourState({ active: true, currentStepId: 'home-intro', stepIndex: 0 });
+    mockUsePathname.mockReturnValue('/');
+    render(<OnboardingTourOverlay />);
+
+    const dialog = screen.getByRole('dialog');
+    expect(dialog.getAttribute('aria-modal')).toBe('true');
+
+    const labelledBy = dialog.getAttribute('aria-labelledby');
+    const describedBy = dialog.getAttribute('aria-describedby');
+    expect(labelledBy).toBeTruthy();
+    expect(describedBy).toBeTruthy();
+    expect(document.getElementById(labelledBy!)?.textContent).toMatch(/Let's get you climbing/i);
+    expect(document.getElementById(describedBy!)?.textContent).toBeTruthy();
+  });
+
+  it('Escape key triggers skip()', async () => {
+    setTourState({ active: true, currentStepId: 'home-intro', stepIndex: 0 });
+    mockUsePathname.mockReturnValue('/');
+    render(<OnboardingTourOverlay />);
+
+    const dialog = screen.getByRole('dialog');
+    fireEvent.keyDown(dialog, { key: 'Escape' });
+    expect(tourState.skip).toHaveBeenCalledTimes(1);
+  });
+
+  it('non-intro anchored dialogs expose dialog role + labelledby but are not aria-modal', async () => {
+    buildClimbCard('onboarding-climb-card-2');
+    buildClimbCard('onboarding-climb-card');
+    setTourState({ active: true, currentStepId: 'climb-list', stepIndex: 2 });
+    mockUsePathname.mockReturnValue('/kilter/10/5/1,2/40/list');
+
+    render(<OnboardingTourOverlay />);
+    await screen.findByTestId('mui-popper');
+
+    const dialog = screen.getByRole('dialog');
+    expect(dialog.getAttribute('aria-labelledby')).toBeTruthy();
+    // Anchored Popper steps are not modal — the user is interacting with the
+    // page behind (e.g. the climb list).
+    expect(dialog.getAttribute('aria-modal')).toBeNull();
+  });
+});

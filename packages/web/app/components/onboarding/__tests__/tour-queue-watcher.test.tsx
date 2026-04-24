@@ -90,4 +90,45 @@ describe('TourQueueWatcher', () => {
     rerender(<TourQueueWatcher />);
     expect(notifyCurrentClimb).toHaveBeenCalledWith(null);
   });
+
+  it('does not re-fire notifications when only the surrounding tour-context fields change', () => {
+    // Simulates a step transition in the real provider: queue/climb values
+    // are identical, but the context object has a new identity (because
+    // `currentStepId`, `start`, `next`, etc. all changed). The notify
+    // callbacks themselves are stable, so the watcher's effects should NOT
+    // re-fire on them.
+    const notifyQueueLength = vi.fn();
+    const notifyCurrentClimb = vi.fn();
+    mockUseQueueList.mockReturnValue({ queue: [{ uuid: 'q1' }] });
+    mockUseCurrentClimb.mockReturnValue({ currentClimb: { uuid: 'c1' } });
+    mockUseOnboardingTourOptional.mockReturnValue({
+      notifyQueueLength,
+      notifyCurrentClimb,
+      // Extra fields to simulate the full context — they change on each
+      // render but should be ignored by the watcher.
+      currentStepId: 'home-intro',
+      start: vi.fn(),
+      next: vi.fn(),
+    });
+
+    const { rerender } = render(<TourQueueWatcher />);
+    expect(notifyQueueLength).toHaveBeenCalledTimes(1);
+    expect(notifyCurrentClimb).toHaveBeenCalledTimes(1);
+
+    // Re-render with a "new" context object, same stable notify callbacks
+    // and same queue/climb data.
+    mockUseOnboardingTourOptional.mockReturnValue({
+      notifyQueueLength,
+      notifyCurrentClimb,
+      currentStepId: 'climb-list', // changed
+      start: vi.fn(), // new identity
+      next: vi.fn(), // new identity
+    });
+    rerender(<TourQueueWatcher />);
+
+    // Still only the initial call — no spurious re-notification from a
+    // step transition that didn't affect queue/climb.
+    expect(notifyQueueLength).toHaveBeenCalledTimes(1);
+    expect(notifyCurrentClimb).toHaveBeenCalledTimes(1);
+  });
 });
