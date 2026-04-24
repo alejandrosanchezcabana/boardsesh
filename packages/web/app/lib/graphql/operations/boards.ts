@@ -164,7 +164,6 @@ export const GET_MY_BOARD_SERIAL_CONFIGS = gql`
       layoutId
       sizeId
       setIds
-      angle
       updatedAt
       boardUuid
       boardSlug
@@ -320,7 +319,6 @@ export type BoardSerialConfig = {
   layoutId: number;
   sizeId: number;
   setIds: string;
-  angle: number | null;
   updatedAt: string;
   boardUuid: string | null;
   boardSlug: string | null;

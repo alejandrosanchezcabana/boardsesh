@@ -107,8 +107,6 @@ export const boardEntitiesTypeDefs = /* GraphQL */ `
     sizeId: Int!
     "Comma-separated set IDs at last connect"
     setIds: String!
-    "Angle at last connect, if known"
-    angle: Int
     "When the recording was last updated"
     updatedAt: String!
     "Linked saved board UUID (when the connect happened from a /b/{slug}/... route)"

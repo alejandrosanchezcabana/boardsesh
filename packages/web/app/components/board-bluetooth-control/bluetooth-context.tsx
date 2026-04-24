@@ -116,7 +116,7 @@ export function BluetoothProvider({
   children,
 }: {
   boardDetails: BoardDetails;
-  /** Current route's angle (not on BoardDetails). Used for the auto-recorded serial mapping. */
+  /** Current route's angle. Threaded to the picker dialog for the "switch config" URL. */
   angle?: number;
   /** Saved board UUID when this provider sits under a /b/{slug}/... route. */
   boardUuid?: string;
@@ -124,7 +124,6 @@ export function BluetoothProvider({
 }) {
   const { isConnected, loading, connect, disconnect, sendFramesToBoard, pickerState } = useBoardBluetooth({
     boardDetails,
-    angle,
     boardUuid,
   });
   const { token } = useWsAuthToken();

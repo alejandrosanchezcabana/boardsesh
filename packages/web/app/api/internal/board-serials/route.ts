@@ -12,7 +12,6 @@ const bodySchema = z.object({
   layoutId: z.number().int().nonnegative(),
   sizeId: z.number().int().nonnegative(),
   setIds: z.string().min(1),
-  angle: z.number().int().optional(),
   boardUuid: z.string().min(1).optional(),
 });
 
@@ -29,7 +28,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: parsed.error.issues[0].message }, { status: 400 });
     }
 
-    const { serialNumber, boardName, layoutId, sizeId, setIds, angle, boardUuid } = parsed.data;
+    const { serialNumber, boardName, layoutId, sizeId, setIds, boardUuid } = parsed.data;
     const db = getDb();
 
     await db
@@ -41,7 +40,6 @@ export async function POST(request: NextRequest) {
         layoutId,
         sizeId,
         setIds,
-        angle: angle ?? null,
         boardUuid: boardUuid ?? null,
       })
       .onConflictDoUpdate({
@@ -51,7 +49,6 @@ export async function POST(request: NextRequest) {
           layoutId,
           sizeId,
           setIds,
-          angle: angle ?? null,
           boardUuid: boardUuid ?? null,
           updatedAt: new Date(),
         },

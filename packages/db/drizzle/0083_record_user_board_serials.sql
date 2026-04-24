@@ -6,7 +6,6 @@ CREATE TABLE "user_board_serials" (
 	"layout_id" bigint NOT NULL,
 	"size_id" bigint NOT NULL,
 	"set_ids" text NOT NULL,
-	"angle" integer,
 	"board_uuid" text,
 	"created_at" timestamp DEFAULT now() NOT NULL,
 	"updated_at" timestamp DEFAULT now() NOT NULL

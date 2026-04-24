@@ -52,8 +52,6 @@ export const convertToMirroredFramesString = (frames: string, holdsData: HoldRen
 
 type UseBoardBluetoothOptions = {
   boardDetails?: BoardDetails;
-  /** Current route's board angle (not part of BoardDetails). Used for the auto-recorded mapping. */
-  angle?: number;
   /** Saved board UUID when on a /b/{slug}/... route — used to link the recorded serial mapping. */
   boardUuid?: string;
   onConnectionChange?: (connected: boolean) => void;
@@ -63,12 +61,7 @@ type UseBoardBluetoothOptions = {
  * Fire-and-forget POST to record the (serial, board config) mapping for the
  * authenticated user. Failures are swallowed — connect must not block on this.
  */
-function recordBoardSerial(
-  serialNumber: string,
-  boardDetails: BoardDetails,
-  angle: number | undefined,
-  boardUuid: string | undefined,
-): void {
+function recordBoardSerial(serialNumber: string, boardDetails: BoardDetails, boardUuid: string | undefined): void {
   void fetch('/api/internal/board-serials', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
@@ -78,13 +71,12 @@ function recordBoardSerial(
       layoutId: boardDetails.layout_id,
       sizeId: boardDetails.size_id,
       setIds: boardDetails.set_ids.join(','),
-      angle,
       boardUuid,
     }),
   }).catch(() => {});
 }
 
-export function useBoardBluetooth({ boardDetails, angle, boardUuid, onConnectionChange }: UseBoardBluetoothOptions) {
+export function useBoardBluetooth({ boardDetails, boardUuid, onConnectionChange }: UseBoardBluetoothOptions) {
   const { showMessage } = useSnackbar();
   const [loading, setLoading] = useState(false);
   const [isConnected, setIsConnected] = useState(false);
@@ -293,7 +285,7 @@ export function useBoardBluetooth({ boardDetails, angle, boardUuid, onConnection
         if (boardDetails.board_name !== 'moonboard') {
           const serialNumber = parseSerialNumber(connection.deviceName);
           if (serialNumber) {
-            recordBoardSerial(serialNumber, boardDetails, angle, boardUuid);
+            recordBoardSerial(serialNumber, boardDetails, boardUuid);
           }
         }
 
@@ -317,16 +309,7 @@ export function useBoardBluetooth({ boardDetails, angle, boardUuid, onConnection
 
       return false;
     },
-    [
-      handleDisconnection,
-      boardDetails,
-      angle,
-      boardUuid,
-      onConnectionChange,
-      sendFramesToBoard,
-      showMessage,
-      devicePicker,
-    ],
+    [handleDisconnection, boardDetails, boardUuid, onConnectionChange, sendFramesToBoard, showMessage, devicePicker],
   );
 
   // Disconnect from the board — update state synchronously for immediate UI

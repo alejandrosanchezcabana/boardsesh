@@ -19,6 +19,7 @@ export type ResolvedBoardConfig = {
   layoutId: number;
   sizeId: number;
   setIds: string;
+  /** Saved-board default angle, when the entry came from `userBoards`. Recorded entries don't carry an angle. */
   angle?: number | null;
   /** When the entry is linked to a saved board, its slug — used to build /b/{slug}/... URLs. */
   boardSlug?: string | null;
@@ -41,7 +42,6 @@ export function configFromResolvedEntry(entry: ResolvedBoardEntry): ResolvedBoar
     layoutId: entry.config.layoutId,
     sizeId: entry.config.sizeId,
     setIds: entry.config.setIds,
-    angle: entry.config.angle,
     boardSlug: entry.config.boardSlug,
   };
 }

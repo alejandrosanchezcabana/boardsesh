@@ -1,5 +1,5 @@
 {
-  "id": "58551c95-a702-472b-8656-8e4731bd91dc",
+  "id": "eb225993-0154-4047-9ffd-f7b3dfc61d51",
   "prevId": "437a42b0-8f99-482b-b954-568841bcd444",
   "version": "7",
   "dialect": "postgresql",
@@ -3305,12 +3305,6 @@
           "type": "text",
           "primaryKey": false,
           "notNull": true
-        },
-        "angle": {
-          "name": "angle",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": false
         },
         "board_uuid": {
           "name": "board_uuid",
