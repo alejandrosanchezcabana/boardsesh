@@ -108,6 +108,13 @@ jobs:
         with:
           name: built-packages
 
+      # actions/checkout on a pull_request event fetches only the PR merge ref,
+      # so `origin/main` isn't present locally and vitest's `--changed` silently
+      # matches zero files. Fetch the base ref explicitly so the diff works.
+      - name: Fetch base ref for vitest --changed
+        if: github.event_name == 'pull_request'
+        run: git fetch --depth=50 origin ${{ github.base_ref }}:refs/remotes/origin/${{ github.base_ref }}
+
       - name: Run tests
         run: |
           if [ "${{ github.event_name }}" = "pull_request" ]; then
