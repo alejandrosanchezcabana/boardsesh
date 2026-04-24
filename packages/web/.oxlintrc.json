@@ -33,7 +33,8 @@
     "react/no-unknown-property": "error",
     "react/rules-of-hooks": "error",
     "react/self-closing-comp": "error",
-    "react/style-prop-object": "error"
+    "react/style-prop-object": "error",
+    "react/void-dom-elements-no-children": "error"
   },
   "ignorePatterns": [".next/**", "out/**", "build/**", "next-env.d.ts", "node_modules/**", "**/board-controller/**"]
 }
