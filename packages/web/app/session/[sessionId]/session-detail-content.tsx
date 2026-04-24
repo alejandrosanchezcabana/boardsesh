@@ -72,6 +72,12 @@ type SessionDetailContentProps = {
   onAngleChange?: (angle: number) => void;
   /** User-facing name of the named board (e.g., "My Home Wall") */
   namedBoardName?: string;
+  /**
+   * When set, forces the CollapsibleSection to render with this key active
+   * and disables user interaction with the section headers. Used by the
+   * onboarding tour to guide the user through each section.
+   */
+  tourActiveSection?: 'invite' | 'activity' | 'analytics' | null;
 };
 
 function formatDate(isoString: string): string {
@@ -279,6 +285,7 @@ export default function SessionDetailContent({
   currentAngle: _currentAngle,
   onAngleChange: _onAngleChange,
   namedBoardName: _namedBoardName,
+  tourActiveSection,
 }: SessionDetailContentProps) {
   const { data: authSession } = useSession();
   const router = useRouter();
@@ -762,7 +769,9 @@ export default function SessionDetailContent({
         )}
 
         {/* Collapsible pills for embedded (drawer) mode */}
-        {embedded && embeddedSections.length > 0 && <CollapsibleSection sections={embeddedSections} />}
+        {embedded && embeddedSections.length > 0 && (
+          <CollapsibleSection sections={embeddedSections} forcedActiveKey={tourActiveSection ?? undefined} />
+        )}
 
         {/* Full layout for standalone page */}
         {!embedded && (

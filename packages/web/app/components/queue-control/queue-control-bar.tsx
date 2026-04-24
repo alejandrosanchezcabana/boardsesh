@@ -38,7 +38,7 @@ import { useBoardProvider } from '../board-provider/board-provider-context';
 import ClimbThumbnail from '../climb-card/climb-thumbnail';
 import ClimbTitle from '../climb-card/climb-title';
 import { themeTokens } from '@/app/theme/theme-config';
-import { TOUR_DRAWER_EVENT } from '../onboarding/onboarding-tour';
+import { TOUR_CLOSE_PLAY_VIEW_EVENT } from '../onboarding/onboarding-tour-events';
 import { ShareBoardButton } from '../board-page/share-button';
 import {
   useCardSwipeNavigation,
@@ -73,7 +73,7 @@ import { QRCodeSVG } from 'qrcode.react';
 import { shareWithFallback } from '@/app/lib/share-utils';
 import { getPreference, setPreference } from '@/app/lib/user-preferences-db';
 import styles from './queue-control-bar.module.css';
-import { PLAY_DRAWER_EVENT as PLAY_DRAWER_EVENT_INTERNAL } from './play-drawer-event';
+import { PLAY_DRAWER_EVENT as PLAY_DRAWER_EVENT_INTERNAL, dispatchOpenPlayDrawer } from './play-drawer-event';
 
 export type ActiveDrawer = 'none' | 'play' | 'queue' | 'tick';
 
@@ -158,14 +158,12 @@ const QueueControlBar: React.FC<QueueControlBarProps> = ({ boardDetails, angle }
     };
   }, []);
 
-  // Listen for tour events to open/close the queue drawer
+  // Tour hook: close the play view drawer on demand (e.g. before showing the
+  // session overview so the two drawers don't stack).
   useEffect(() => {
-    const handler = (e: Event) => {
-      const { open } = (e as CustomEvent<{ open: boolean }>).detail;
-      setActiveDrawer(open ? 'queue' : 'none');
-    };
-    window.addEventListener(TOUR_DRAWER_EVENT, handler);
-    return () => window.removeEventListener(TOUR_DRAWER_EVENT, handler);
+    const handler = () => setActiveDrawer('none');
+    window.addEventListener(TOUR_CLOSE_PLAY_VIEW_EVENT, handler);
+    return () => window.removeEventListener(TOUR_CLOSE_PLAY_VIEW_EVENT, handler);
   }, []);
 
   // Listen for play drawer open requests from climb list items that live
@@ -209,7 +207,10 @@ const QueueControlBar: React.FC<QueueControlBarProps> = ({ boardDetails, angle }
     if (currentQueueItem) {
       setCurrentClimbQueueItem(currentQueueItem);
     }
-    setActiveDrawer('play');
+    // Dispatch the window event so external listeners (e.g. the onboarding tour
+    // provider) observe the play drawer opening. The internal listener in this
+    // component also toggles activeDrawer to 'play'.
+    dispatchOpenPlayDrawer();
   }, [currentClimb, viewOnlyMode, queue, setCurrentClimbQueueItem]);
 
   const { showMessage } = useSnackbar();
@@ -851,7 +852,7 @@ const QueueControlBar: React.FC<QueueControlBarProps> = ({ boardDetails, angle }
           <div
             className={`${styles.sessionHeaderWrapper} ${!tickBarActive && !tickRowVisible ? styles.sessionHeaderExpanded : ''}`}
           >
-            <div className={styles.sessionHeaderInner}>
+            <div className={styles.sessionHeaderInner} data-tour-anchor="session-mini-bar">
               {/* Offline overlay on session header */}
               {isDisconnected && !dismissedDisconnect && (
                 <div

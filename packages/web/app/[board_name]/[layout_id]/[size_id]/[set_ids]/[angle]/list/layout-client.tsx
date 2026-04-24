@@ -26,7 +26,7 @@ const SearchResultsFooter = dynamic(() => import('@/app/components/search-drawer
 const QueueList = dynamic(() => import('@/app/components/queue-control/queue-list'), {
   ssr: false,
 });
-const OnboardingTour = dynamic(() => import('@/app/components/onboarding/onboarding-tour'), {
+const TourQueueWatcher = dynamic(() => import('@/app/components/onboarding/tour-queue-watcher'), {
   ssr: false,
 });
 
@@ -179,7 +179,7 @@ const ListLayoutClient: React.FC<PropsWithChildren<ListLayoutClientProps>> = ({ 
       <Box component="aside" className={styles.sider} sx={{ width: 400, padding: '0 8px 20px 8px' }}>
         <TabsWrapper boardDetails={boardDetails} />
       </Box>
-      <OnboardingTour />
+      <TourQueueWatcher />
     </Box>
   );
 };

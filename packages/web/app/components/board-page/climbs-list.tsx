@@ -26,6 +26,8 @@ import SwipeHintOrchestrator from './swipe-hint-orchestrator';
 import { getExcludedClimbActions } from '@/app/lib/climb-action-utils';
 import { SelectionStoreContext, useSelectionStore } from './selected-climb-store';
 import { dispatchOpenPlayDrawer } from '../queue-control/play-drawer-event';
+import { useOnboardingTourOptional } from '@/app/components/onboarding/onboarding-tour-provider';
+import { dispatchTourClimbListPick } from '@/app/components/onboarding/onboarding-tour-events';
 import listStyles from './climbs-list.module.css';
 
 const SwipeableDrawer = dynamic(() => import('../swipeable-drawer/swipeable-drawer'), {
@@ -263,7 +265,7 @@ const GridClimbItem = React.memo(function GridClimbItem({
   }, [onClimbClickByIndex, index, needsBiggerBoard, onNeedsBiggerBoard]);
   return (
     <>
-      <div {...(index === 0 ? { id: 'onboarding-climb-card' } : {})}>
+      <div {...(index === 0 ? { id: 'onboarding-climb-card' } : index === 1 ? { id: 'onboarding-climb-card-2' } : {})}>
         <ClimbCard
           climb={climb}
           boardDetails={boardDetails}
@@ -338,6 +340,10 @@ const ClimbsList = ({
   const onClimbSelectRef = useRef(onClimbSelect);
   onClimbSelectRef.current = onClimbSelect;
 
+  const tour = useOnboardingTourOptional();
+  const tourStepRef = useRef(tour?.currentStepId ?? null);
+  tourStepRef.current = tour?.currentStepId ?? null;
+
   useEffect(() => {
     void getPreference<ViewMode>(VIEW_MODE_PREFERENCE_KEY).then((stored) => {
       if (stored === 'grid' || stored === 'list') {
@@ -376,6 +382,13 @@ const ClimbsList = ({
       const climb = climbs[index];
       if (climb) {
         onClimbSelectRef.current?.(climb);
+        // Explicit user-pick signal for the onboarding tour. Fires only while
+        // the tour is on the climb-list step so it can advance without
+        // relying on a currentClimb-change observer (which async queue
+        // hydration can trip).
+        if (tourStepRef.current === 'climb-list') {
+          dispatchTourClimbListPick();
+        }
         track('Climb List Row Clicked', { climbUuid: climb.uuid });
       }
     },
@@ -388,7 +401,14 @@ const ClimbsList = ({
       const climb = climbs[index];
       if (climb) {
         onClimbSelectRef.current?.(climb);
-        dispatchOpenPlayDrawer();
+        // During the onboarding tour's "set active" step, swallow the play
+        // drawer open — we want the user to just set the climb active so the
+        // tour can advance to the queue-add step, not fall into the play view.
+        if (tourStepRef.current === 'climb-list') {
+          dispatchTourClimbListPick();
+        } else {
+          dispatchOpenPlayDrawer();
+        }
         track('Climb List Cover Clicked', { climbUuid: climb.uuid });
       }
     },
@@ -602,7 +622,11 @@ const ClimbsList = ({
                         key={virtualItem.key}
                         ref={virtualizer.measureElement}
                         data-index={virtualItem.index}
-                        {...(index === 0 ? { id: 'onboarding-climb-card' } : {})}
+                        {...(index === 0
+                          ? { id: 'onboarding-climb-card' }
+                          : index === 1
+                            ? { id: 'onboarding-climb-card-2' }
+                            : {})}
                         style={{
                           position: 'absolute',
                           top: 0,

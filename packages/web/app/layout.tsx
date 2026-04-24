@@ -15,6 +15,9 @@ import { VercelToolbar } from '@vercel/toolbar/next';
 import { getAllBoardConfigs } from './lib/server-board-configs';
 import { EMPTY_FEATURE_FLAGS } from './flags';
 import { FeatureFlagsProvider } from './components/providers/feature-flags-provider';
+import { OnboardingTourProvider } from './components/onboarding/onboarding-tour-provider';
+import OnboardingTourOverlay from './components/onboarding/onboarding-tour-overlay';
+import OnboardingDummySeshMount from './components/onboarding/onboarding-dummy-sesh-mount';
 import './components/index.css';
 import type { Viewport, Metadata } from 'next';
 
@@ -62,7 +65,11 @@ export default async function RootLayout({ children }: { children: React.ReactNo
                     <FeatureFlagsProvider flags={EMPTY_FEATURE_FLAGS}>
                       <PersistentSessionWrapper boardConfigs={boardConfigs}>
                         <NavigationLoadingProvider>
-                          <NotificationSubscriptionManager>{children}</NotificationSubscriptionManager>
+                          <OnboardingTourProvider>
+                            <NotificationSubscriptionManager>{children}</NotificationSubscriptionManager>
+                            <OnboardingTourOverlay />
+                            <OnboardingDummySeshMount />
+                          </OnboardingTourProvider>
                         </NavigationLoadingProvider>
                       </PersistentSessionWrapper>
                     </FeatureFlagsProvider>

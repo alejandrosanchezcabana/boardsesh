@@ -39,6 +39,10 @@ import { QuickTickBar, type QuickTickBarHandle } from '../logbook/quick-tick-bar
 import { hasPriorHistoryForClimb } from '@/app/hooks/use-tick-save';
 import type { ActiveDrawer } from '../queue-control/queue-control-bar';
 import { PLAY_DRAWER_EVENT } from '../queue-control/play-drawer-event';
+import {
+  TOUR_CLOSE_PLAY_QUEUE_EVENT,
+  TOUR_OPEN_PLAY_QUEUE_EVENT,
+} from '@/app/components/onboarding/onboarding-tour-events';
 import type { BoardDetails, Angle, Climb } from '@/app/lib/types';
 import styles from './play-view-drawer.module.css';
 import drawerCss from '../swipeable-drawer/swipeable-drawer.module.css';
@@ -417,6 +421,13 @@ const PlayViewDrawer: React.FC<PlayViewDrawerProps> = ({ activeDrawer, setActive
   const [isActionsOpen, setIsActionsOpen] = useState(false);
   const [isQueueOpen, setIsQueueOpen] = useState(false);
   const [queueMounted, setQueueMounted] = useState(false);
+  /**
+   * True while the nested queue is being opened by the onboarding tour — read
+   * at `QueueDrawer` mount time to seed `initialShowHistory`. Kept as a ref
+   * rather than state because it only needs to be consumed once per mount and
+   * must be synchronously up-to-date with the open handler.
+   */
+  const queueOpenedByTourRef = useRef(false);
   const [isPlaylistSelectorOpen, setIsPlaylistSelectorOpen] = useState(false);
   const [isTickBarActive, setIsTickBarActive] = useState(false);
   const [isBoardZoomed, setIsBoardZoomed] = useState(false);
@@ -597,6 +608,28 @@ const PlayViewDrawer: React.FC<PlayViewDrawerProps> = ({ activeDrawer, setActive
     const handler = () => setIsQueueOpen(false);
     window.addEventListener(PLAY_DRAWER_EVENT, handler);
     return () => window.removeEventListener(PLAY_DRAWER_EVENT, handler);
+  }, []);
+
+  // Tour hooks: allow the onboarding tour to open/close the nested queue
+  // drawer without the user having to find the button.
+  useEffect(() => {
+    const openHandler = () => {
+      queueOpenedByTourRef.current = true;
+      setIsActionsOpen(false);
+      setIsPlaylistSelectorOpen(false);
+      setQueueMounted(true);
+      setIsQueueOpen(true);
+    };
+    const closeHandler = () => {
+      queueOpenedByTourRef.current = false;
+      setIsQueueOpen(false);
+    };
+    window.addEventListener(TOUR_OPEN_PLAY_QUEUE_EVENT, openHandler);
+    window.addEventListener(TOUR_CLOSE_PLAY_QUEUE_EVENT, closeHandler);
+    return () => {
+      window.removeEventListener(TOUR_OPEN_PLAY_QUEUE_EVENT, openHandler);
+      window.removeEventListener(TOUR_CLOSE_PLAY_QUEUE_EVENT, closeHandler);
+    };
   }, []);
 
   const [drawerOpen, setDrawerOpen] = useState(false);
@@ -972,6 +1005,7 @@ const PlayViewDrawer: React.FC<PlayViewDrawerProps> = ({ activeDrawer, setActive
           onClose={handleCloseQueueDrawer}
           onTransitionEnd={handleQueueTransitionEnd}
           boardDetails={boardDetails}
+          initialShowHistory={queueOpenedByTourRef.current}
         />
       )}
     </SwipeableDrawer>
