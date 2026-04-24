@@ -139,14 +139,17 @@ export function BluetoothProvider({
 
     if (serials.length === 0) return;
 
-    // Deduplicate and check if we already resolved these serials
-    const uniqueSerials = [...new Set(serials)].sort();
-    const serialsKey = uniqueSerials.join(',');
+    // Check if we already resolved these serials (resolveSerialNumbers deduplicates internally)
+    const sortedSerials = [...serials].sort();
+    const serialsKey = sortedSerials.join(',');
     if (serialsKey === resolvedSerialsRef.current) return;
-    resolvedSerialsRef.current = serialsKey;
 
-    resolveSerialNumbers(token, uniqueSerials)
-      .then(setResolvedBoards)
+    resolveSerialNumbers(token, sortedSerials)
+      .then((boardMap) => {
+        // Only mark as resolved on success so transient failures allow retries
+        resolvedSerialsRef.current = serialsKey;
+        setResolvedBoards(boardMap);
+      })
       .catch((err) => {
         console.error('[BLE] Failed to resolve serial numbers:', err);
       });

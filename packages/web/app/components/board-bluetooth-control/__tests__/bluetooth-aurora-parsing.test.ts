@@ -48,6 +48,18 @@ describe('parseBoardTypeFromDeviceName', () => {
     expect(parseBoardTypeFromDeviceName('TENSION BOARD')).toBe('tension');
   });
 
+  it('identifies decoy boards', () => {
+    expect(parseBoardTypeFromDeviceName('Decoy Board#999@3')).toBe('decoy');
+  });
+
+  it('identifies touchstone boards', () => {
+    expect(parseBoardTypeFromDeviceName('Touchstone Board#456@2')).toBe('touchstone');
+  });
+
+  it('identifies grasshopper boards', () => {
+    expect(parseBoardTypeFromDeviceName('Grasshopper Board#789@1')).toBe('grasshopper');
+  });
+
   it('returns undefined for moonboard (not handled by this function)', () => {
     expect(parseBoardTypeFromDeviceName('MoonBoard 123')).toBeUndefined();
   });

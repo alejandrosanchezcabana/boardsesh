@@ -26,10 +26,23 @@ export function useBluetoothScan() {
   const { token } = useWsAuthToken();
   const [devices, setDevices] = useState<DiscoveredDevice[]>([]);
   const [resolvedBoards, setResolvedBoards] = useState<Map<string, UserBoard>>(new Map());
-  // Start as 'idle' to avoid SSR/client hydration mismatch — check capabilities in useEffect
+  // Start as 'idle' to avoid SSR/client hydration mismatch — capabilities are
+  // checked in a useEffect on mount. This means there is a single-frame flash
+  // where the quick-start card appears actionable on non-Capacitor environments
+  // (desktop Chrome with Web Bluetooth, Safari, etc.) before the effect fires
+  // and sets 'unavailable'. Clicking during that frame is harmless — startScan
+  // has the same guard.
   const [status, setStatus] = useState<BluetoothScanStatus>('idle');
 
+  // Track whether the hook is still mounted so async callbacks from in-flight
+  // BLE operations (scan timeout, serial resolution) don't call setState after
+  // the component has unmounted.
+  const mountedRef = useRef(true);
+
   useEffect(() => {
+    // This hook requires Capacitor's manual BLE scan APIs (requestLEScan / stopLEScan).
+    // All other environments are unsupported — including desktop browsers with
+    // Web Bluetooth (which can't do background LE scans without a user gesture).
     if (!supportsCapacitorBleManualScan()) {
       setStatus('unavailable');
     }
@@ -97,7 +110,9 @@ export function useBluetoothScan() {
 
       try {
         const boardMap = await resolveSerialNumbers(token, serials);
-        setResolvedBoards(boardMap);
+        if (mountedRef.current) {
+          setResolvedBoards(boardMap);
+        }
       } catch (err) {
         console.error('[BLE Scan] Failed to resolve serial numbers:', err);
       }
@@ -145,7 +160,9 @@ export function useBluetoothScan() {
         // Deduplicate by name (includes serial for Aurora boards)
         const dedupeKey = device.name || device.deviceId;
         devicesMapRef.current.set(dedupeKey, device);
-        setDevices([...devicesMapRef.current.values()]);
+        if (mountedRef.current) {
+          setDevices([...devicesMapRef.current.values()]);
+        }
 
         // Debounce serial resolution — wait 500ms after last device found
         if (resolveTimeoutRef.current) {
@@ -164,18 +181,26 @@ export function useBluetoothScan() {
         await stopScan();
         // Final resolve attempt
         await resolveSerials(devicesMapRef.current);
-        setStatus('done');
+        if (mountedRef.current) {
+          setStatus('done');
+        }
       }, SCAN_TIMEOUT_MS);
     } catch (err) {
       console.error('[BLE Scan] Scan failed:', err);
       await stopScan();
-      setStatus('done');
+      if (mountedRef.current) {
+        setStatus('done');
+      }
     }
   }, [stopScan, resolveSerials]);
 
-  // Cleanup on unmount — must be synchronous (React requirement)
+  // Cleanup on unmount — mark unmounted before sync cleanup so in-flight
+  // async callbacks skip their setState calls.
   useEffect(() => {
-    return cleanupSync;
+    return () => {
+      mountedRef.current = false;
+      cleanupSync();
+    };
   }, [cleanupSync]);
 
   return { devices, resolvedBoards, status, startScan, stopScan };

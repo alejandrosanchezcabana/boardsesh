@@ -1,7 +1,8 @@
-import type { BoardName, LedPlacements } from '@/app/lib/types';
+import type { LedPlacements } from '@/app/lib/types';
 import { HOLD_STATE_MAP } from '../board-renderer/types';
 import { AURORA_ADVERTISED_SERVICE_UUID, MESSAGE_BODY_MAX_LENGTH, UART_SERVICE_UUID } from './bluetooth-shared';
 import type { AuroraBoardName } from '@/app/lib/api-wrappers/aurora/types';
+import { AURORA_BOARDS } from '@boardsesh/shared-schema';
 
 // --- API v3 command bytes (3 bytes per LED, 16-bit positions) ---
 const V3_PACKET_MIDDLE = 81; // 'Q'
@@ -68,13 +69,12 @@ export const parseSerialNumber = (deviceName?: string): string | undefined => {
 /**
  * Infer the board type from a BLE device name.
  * e.g. "Kilter Board#751737@3" → 'kilter', "Tension Board#123@2" → 'tension'
+ * Supports all Aurora boards: kilter, tension, decoy, touchstone, grasshopper.
  */
-export const parseBoardTypeFromDeviceName = (deviceName?: string): BoardName | undefined => {
+export const parseBoardTypeFromDeviceName = (deviceName?: string): AuroraBoardName | undefined => {
   if (!deviceName) return undefined;
   const lower = deviceName.toLowerCase();
-  if (lower.startsWith('kilter')) return 'kilter';
-  if (lower.startsWith('tension')) return 'tension';
-  return undefined;
+  return AURORA_BOARDS.find((board) => lower.startsWith(board));
 };
 
 // --- v3 encoding (API level >= 3) ---

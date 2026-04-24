@@ -29,7 +29,13 @@ export function AutoConnectHandler({ connect, isBluetoothSupported }: AutoConnec
   const autoConnectSerial = searchParams.get('autoConnect');
 
   useEffect(() => {
-    if (!autoConnectSerial || autoConnectSerial.length > 20 || triggeredRef.current) return;
+    if (
+      !autoConnectSerial ||
+      !/^[A-Za-z0-9]+$/.test(autoConnectSerial) ||
+      autoConnectSerial.length > 20 ||
+      triggeredRef.current
+    )
+      return;
     if (!hasDoneFirstFetch || !climbSearchResults || climbSearchResults.length === 0) return;
     if (!isBluetoothSupported) return;
 
