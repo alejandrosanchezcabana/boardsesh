@@ -79,6 +79,7 @@ describe('useOfflineReconciliation', () => {
     if (overrides.lastReceivedSequence !== undefined) {
       mockLastReceivedSequenceRef.current = overrides.lastReceivedSequence;
     }
+    // eslint-disable-next-line typescript/no-invalid-void-type -- renderHook<Result, Props>: the hook returns void.
     return renderHook<void, UseOfflineReconciliationParams>((props) => useOfflineReconciliation(props), {
       initialProps: {
         offlineBuffer: {
