@@ -6,7 +6,7 @@
     "typeCheck": true
   },
   "rules": {
-    "@typescript-eslint/no-explicit-any": "deny",
+    "@typescript-eslint/no-explicit-any": ["error", { "fixToUnknown": true }],
     "no-unused-vars": "error",
     "import/no-cycle": "error",
     "prefer-const": "error",
