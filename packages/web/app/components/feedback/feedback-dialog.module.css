@@ -10,9 +10,3 @@
   right: var(--spacing-2);
   z-index: 1;
 }
-
-.secondaryAction {
-  display: flex;
-  justify-content: center;
-  padding: 0 var(--spacing-3) var(--spacing-3);
-}

@@ -1,25 +1,40 @@
-import 'fake-indexeddb/auto';
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vite-plus/test';
 import { render, act, waitFor } from '@testing-library/react';
 import React from 'react';
-import { openDB } from 'idb';
 import { ShakeToReportProvider } from '../shake-to-report-provider';
-import { setPreference } from '@/app/lib/user-preferences-db';
 
-// Capture the most recent callback and options passed to useShakeDetector
-// so tests can deterministically "simulate" a shake and read the enabled flag.
-type ShakeHookArgs = { onShake: () => void; enabled: boolean };
-const lastShakeHookCall: { current: ShakeHookArgs | null } = { current: null };
+type DismissedResolver = {
+  resolve: (value: boolean) => void;
+  reject: (error: unknown) => void;
+};
+
+// vi.mock factories are hoisted above module-level code, so any refs they
+// need must be created via vi.hoisted. Capturing the dismissed-preference
+// resolver here gives every test deterministic control over hydration
+// (success, opt-out, and rejection paths alike) without hitting IndexedDB.
+const { pendingGetRef, setDismissedMock, showMessageMock, shakeHookRef } = vi.hoisted(() => ({
+  pendingGetRef: { current: null as DismissedResolver | null },
+  setDismissedMock: vi.fn(),
+  showMessageMock: vi.fn(),
+  shakeHookRef: { current: null as { onShake: () => void; enabled: boolean } | null },
+}));
 
 vi.mock('@/app/hooks/use-shake-detector', () => ({
   useShakeDetector: (onShake: () => void, options: { enabled: boolean }) => {
-    lastShakeHookCall.current = { onShake, enabled: options.enabled };
+    shakeHookRef.current = { onShake, enabled: options.enabled };
   },
 }));
 
-const showMessage = vi.fn();
 vi.mock('@/app/components/providers/snackbar-provider', () => ({
-  useSnackbar: () => ({ showMessage }),
+  useSnackbar: () => ({ showMessage: showMessageMock }),
+}));
+
+vi.mock('@/app/lib/user-preferences-db', () => ({
+  getShakeToReportDismissed: () =>
+    new Promise<boolean>((resolve, reject) => {
+      pendingGetRef.current = { resolve, reject };
+    }),
+  setShakeToReportDismissed: setDismissedMock,
 }));
 
 // BugReportDialog pulls in React Query / form children we don't care about
@@ -29,29 +44,40 @@ type CapturedDialogProps = {
   onClose: () => void;
   secondaryAction?: { label: string; onClick: () => void };
 };
-const lastDialogProps: { current: CapturedDialogProps | null } = { current: null };
+const { dialogPropsRef } = vi.hoisted(() => ({
+  dialogPropsRef: { current: null as CapturedDialogProps | null },
+}));
 
 vi.mock('../bug-report-dialog', () => ({
   BugReportDialog: (props: CapturedDialogProps) => {
-    lastDialogProps.current = props;
+    dialogPropsRef.current = props;
     return props.open ? <div data-testid="bug-report-dialog">open</div> : null;
   },
 }));
 
-const DB_NAME = 'boardsesh-user-preferences';
-const STORE_NAME = 'preferences';
-
-beforeEach(async () => {
-  lastShakeHookCall.current = null;
-  lastDialogProps.current = null;
-  showMessage.mockClear();
-  const db = await openDB(DB_NAME, 1, {
-    upgrade(db) {
-      if (!db.objectStoreNames.contains(STORE_NAME)) db.createObjectStore(STORE_NAME);
-    },
+async function resolveHydration(value: boolean) {
+  await waitFor(() => expect(pendingGetRef.current).not.toBeNull());
+  await act(async () => {
+    pendingGetRef.current!.resolve(value);
+    await Promise.resolve();
   });
-  await db.clear(STORE_NAME);
-  db.close();
+}
+
+async function rejectHydration(error: unknown) {
+  await waitFor(() => expect(pendingGetRef.current).not.toBeNull());
+  await act(async () => {
+    pendingGetRef.current!.reject(error);
+    await Promise.resolve();
+  });
+}
+
+beforeEach(() => {
+  shakeHookRef.current = null;
+  dialogPropsRef.current = null;
+  pendingGetRef.current = null;
+  showMessageMock.mockClear();
+  setDismissedMock.mockReset();
+  setDismissedMock.mockResolvedValue(undefined);
 });
 
 afterEach(() => {
@@ -62,39 +88,47 @@ describe('ShakeToReportProvider', () => {
   it('keeps the shake detector disabled until the dismissed preference hydrates', async () => {
     render(<ShakeToReportProvider />);
     // First render — hydration has not resolved yet.
-    expect(lastShakeHookCall.current?.enabled).toBe(false);
+    expect(shakeHookRef.current?.enabled).toBe(false);
+
+    await resolveHydration(false);
+
     // Once resolution completes, detector enables for a first-time user.
-    await waitFor(() => {
-      expect(lastShakeHookCall.current?.enabled).toBe(true);
-    });
+    expect(shakeHookRef.current?.enabled).toBe(true);
   });
 
   it('leaves the shake detector disabled for a user who previously opted out', async () => {
-    await setPreference('shakeToReport:dismissed', true);
     render(<ShakeToReportProvider />);
-    // Wait long enough for hydration to complete, then confirm it stays off.
-    await new Promise((resolve) => setTimeout(resolve, 20));
-    expect(lastShakeHookCall.current?.enabled).toBe(false);
+    await resolveHydration(true);
+    expect(shakeHookRef.current?.enabled).toBe(false);
+  });
+
+  it('falls back to detector-on when the preference read rejects', async () => {
+    render(<ShakeToReportProvider />);
+    await rejectHydration(new Error('IndexedDB unavailable'));
+    // A failed preference lookup must not leave the detector permanently off;
+    // the user shouldn't lose the feature because storage is broken.
+    expect(shakeHookRef.current?.enabled).toBe(true);
   });
 
   it('opens the dialog when the detector fires', async () => {
     render(<ShakeToReportProvider />);
-    await waitFor(() => expect(lastShakeHookCall.current?.enabled).toBe(true));
+    await resolveHydration(false);
     act(() => {
-      lastShakeHookCall.current?.onShake();
+      shakeHookRef.current?.onShake();
     });
-    expect(lastDialogProps.current?.open).toBe(true);
+    expect(dialogPropsRef.current?.open).toBe(true);
     // Detector pauses while the dialog is open so a continuous shake can't re-trigger.
-    expect(lastShakeHookCall.current?.enabled).toBe(false);
+    expect(shakeHookRef.current?.enabled).toBe(false);
   });
 
   it('persists the opt-out, silences the detector, and fires the fallback snackbar', async () => {
     render(<ShakeToReportProvider />);
-    await waitFor(() => expect(lastShakeHookCall.current?.enabled).toBe(true));
+    await resolveHydration(false);
     act(() => {
-      lastShakeHookCall.current?.onShake();
+      shakeHookRef.current?.onShake();
     });
-    const action = lastDialogProps.current?.secondaryAction;
+
+    const action = dialogPropsRef.current?.secondaryAction;
     expect(action?.label).toBe("Don't show this again");
 
     act(() => {
@@ -102,23 +136,18 @@ describe('ShakeToReportProvider', () => {
     });
 
     // Dialog closes, detector is now permanently off for this session.
-    expect(lastDialogProps.current?.open).toBe(false);
-    expect(lastShakeHookCall.current?.enabled).toBe(false);
+    expect(dialogPropsRef.current?.open).toBe(false);
+    expect(shakeHookRef.current?.enabled).toBe(false);
+
+    // Preference write fired with true.
+    expect(setDismissedMock).toHaveBeenCalledWith(true);
 
     // Snackbar points the user at the manual fallback path.
-    expect(showMessage).toHaveBeenCalledWith(
+    expect(showMessageMock).toHaveBeenCalledWith(
       'Shake to report off. Tap your avatar up top to send feedback.',
       'info',
       undefined,
       6000,
     );
-
-    // And the preference survived into IndexedDB.
-    await waitFor(async () => {
-      const db = await openDB(DB_NAME, 1);
-      const value = await db.get(STORE_NAME, 'shakeToReport:dismissed');
-      db.close();
-      expect(value).toBe(true);
-    });
   });
 });

@@ -28,9 +28,17 @@ export const ShakeToReportProvider: React.FC = () => {
 
   useEffect(() => {
     let cancelled = false;
-    void getShakeToReportDismissed().then((value) => {
-      if (!cancelled) setDismissed(value);
-    });
+    getShakeToReportDismissed()
+      .then((value) => {
+        if (!cancelled) setDismissed(value);
+      })
+      .catch(() => {
+        // IndexedDB can fail in private browsing or when the storage quota is
+        // exhausted. Fall back to "not dismissed" so the feature is still
+        // available — a broken opt-out is less bad than a silently dead
+        // detector the user can never re-enable via the normal path.
+        if (!cancelled) setDismissed(false);
+      });
     return () => {
       cancelled = true;
     };

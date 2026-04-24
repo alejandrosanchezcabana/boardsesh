@@ -3,6 +3,7 @@
 import React from 'react';
 import Button from '@mui/material/Button';
 import Dialog from '@mui/material/Dialog';
+import DialogActions from '@mui/material/DialogActions';
 import DialogContent from '@mui/material/DialogContent';
 import IconButton from '@mui/material/IconButton';
 import CloseOutlined from '@mui/icons-material/CloseOutlined';
@@ -111,11 +112,11 @@ const FeedbackDialogBody: React.FC<Omit<FeedbackDialogProps, 'open'>> = ({
         />
       </DialogContent>
       {secondaryAction && (
-        <div className={styles.secondaryAction}>
+        <DialogActions sx={{ justifyContent: 'center' }}>
           <Button variant="text" size="small" color="inherit" onClick={() => secondaryAction.onClick()}>
             {secondaryAction.label}
           </Button>
-        </div>
+        </DialogActions>
       )}
     </div>
   );
