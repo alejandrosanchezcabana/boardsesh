@@ -37,7 +37,8 @@
     "typescript/no-extra-non-null-assertion": "error",
     "typescript/no-for-in-array": "error",
     "typescript/no-implied-eval": "error",
-    "typescript/no-invalid-void-type": "error"
+    "typescript/no-invalid-void-type": "error",
+    "typescript/no-meaningless-void-operator": "error"
   },
   "ignorePatterns": [
     "dist/**",
