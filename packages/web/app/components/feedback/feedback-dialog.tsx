@@ -70,12 +70,18 @@ const FeedbackDialogBody: React.FC<Omit<FeedbackDialogProps, 'open'>> = ({
         source,
       },
       {
-        onSuccess: () => showMessage(isBug ? 'Bug logged — thanks.' : 'Thanks — logged.', 'success'),
+        onSuccess: () => {
+          showMessage(isBug ? 'Bug logged — thanks.' : 'Thanks — logged.', 'success');
+          // Fire chained follow-ups (e.g. "also leave a store review?") only
+          // on successful submission. Otherwise we'd be prompting the user to
+          // publicly review the app right after telling them their feedback
+          // didn't save.
+          onSubmitted?.(values);
+        },
         onError: () => showMessage("Couldn't send — we'll keep your feedback.", 'warning'),
       },
     );
     onClose();
-    onSubmitted?.(values);
   };
 
   return (
