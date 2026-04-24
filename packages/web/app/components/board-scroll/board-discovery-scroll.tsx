@@ -102,12 +102,15 @@ export default function BoardDiscoveryScroll({
     return set;
   }, [myBoards]);
 
-  // BLE-resolved boards that are NOT already in myBoards — show as separate cards
+  // BLE-resolved boards that are NOT already in myBoards — show as separate cards.
+  // Only deliberately-saved entries are surfaced here; auto-recorded fallbacks
+  // lack the social metadata the discovery card UI expects.
   const bleOnlyBoards = useMemo(
     () =>
-      Array.from(bleResolvedBoards.values()).filter(
-        (board) => !board.serialNumber || !myBoardSerialSet.has(board.serialNumber),
-      ),
+      Array.from(bleResolvedBoards.values())
+        .filter((entry) => entry.kind === 'saved')
+        .map((entry) => entry.board)
+        .filter((board) => !board.serialNumber || !myBoardSerialSet.has(board.serialNumber)),
     [bleResolvedBoards, myBoardSerialSet],
   );
 

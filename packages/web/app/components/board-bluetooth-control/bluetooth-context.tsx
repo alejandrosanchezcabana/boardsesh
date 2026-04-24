@@ -16,7 +16,7 @@ import { DevicePickerDialog } from './device-picker-dialog';
 import { AutoConnectHandler } from './auto-connect-handler';
 import { parseSerialNumber } from './bluetooth-aurora';
 import { useWsAuthToken } from '@/app/hooks/use-ws-auth-token';
-import { resolveSerialNumbers } from '@/app/lib/ble/resolve-serials';
+import { resolveSerialNumbers, type ResolvedBoardEntry } from '@/app/lib/ble/resolve-serials';
 import type { UserBoard } from '@boardsesh/shared-schema';
 import type { DiscoveredDevice } from '@/app/lib/ble/types';
 import type { PickerState } from './use-board-bluetooth';
@@ -111,21 +111,29 @@ function BluetoothAutoSender({
 
 export function BluetoothProvider({
   boardDetails,
+  angle,
+  boardUuid,
   children,
 }: {
   boardDetails: BoardDetails;
+  /** Current route's angle (not on BoardDetails). Used for the auto-recorded serial mapping. */
+  angle?: number;
+  /** Saved board UUID when this provider sits under a /b/{slug}/... route. */
+  boardUuid?: string;
   children: React.ReactNode;
 }) {
   const { isConnected, loading, connect, disconnect, sendFramesToBoard, pickerState } = useBoardBluetooth({
     boardDetails,
+    angle,
+    boardUuid,
   });
   const { token } = useWsAuthToken();
 
   const [isBluetoothSupported, setIsBluetoothSupported] = useState(false);
   const [isIOS, setIsIOS] = useState(false);
 
-  // Resolve BLE device serial numbers to known boards
-  const [resolvedBoards, setResolvedBoards] = useState<Map<string, UserBoard>>(new Map());
+  // Resolve BLE device serial numbers to known boards or to auto-recorded configs.
+  const [resolvedBoards, setResolvedBoards] = useState<Map<string, ResolvedBoardEntry>>(new Map());
   const resolvedSerialsRef = useRef<string>('');
 
   // Test-only escape hatch for app-store screenshot generation. When the
@@ -135,7 +143,7 @@ export function BluetoothProvider({
   // unavailable in headless Chromium, and the demo serials don't exist in
   // the dev DB so the real resolver wouldn't match them).
   const [demoPickerState, setDemoPickerState] = useState<PickerState | null>(null);
-  const [demoResolvedBoards, setDemoResolvedBoards] = useState<Map<string, UserBoard> | null>(null);
+  const [demoResolvedBoards, setDemoResolvedBoards] = useState<Map<string, ResolvedBoardEntry> | null>(null);
   useEffect(() => {
     if (typeof window === 'undefined') return;
     if (window.sessionStorage.getItem('boardsesh:e2e-bluetooth-picker') !== '1') return;
@@ -170,42 +178,49 @@ export function BluetoothProvider({
       isFollowedByMe: false,
       ...overrides,
     });
-    const boardsBySerial = new Map<string, UserBoard>([
+    const wrap = (board: UserBoard): ResolvedBoardEntry => ({ kind: 'saved', board });
+    const boardsBySerial = new Map<string, ResolvedBoardEntry>([
       [
         '751737',
-        makeBoard({
-          boardType: 'kilter',
-          layoutId: 8,
-          sizeId: 25,
-          setIds: '28,29,26,27',
-          name: "Marco's Board",
-          serialNumber: '751737',
-          angle: 35,
-        }),
+        wrap(
+          makeBoard({
+            boardType: 'kilter',
+            layoutId: 8,
+            sizeId: 25,
+            setIds: '28,29,26,27',
+            name: "Marco's Board",
+            serialNumber: '751737',
+            angle: 35,
+          }),
+        ),
       ],
       [
         '751970',
-        makeBoard({
-          boardType: 'kilter',
-          layoutId: 8,
-          sizeId: 22,
-          setIds: '26',
-          name: 'Rise and Grind',
-          serialNumber: '751970',
-          locationName: 'Denver, CO',
-          angle: 25,
-        }),
+        wrap(
+          makeBoard({
+            boardType: 'kilter',
+            layoutId: 8,
+            sizeId: 22,
+            setIds: '26',
+            name: 'Rise and Grind',
+            serialNumber: '751970',
+            locationName: 'Denver, CO',
+            angle: 25,
+          }),
+        ),
       ],
       [
         '480221',
-        makeBoard({
-          boardType: 'tension',
-          layoutId: 10,
-          sizeId: 6,
-          setIds: '12,13',
-          name: '9 Degrees Chatswood',
-          serialNumber: '480221',
-        }),
+        wrap(
+          makeBoard({
+            boardType: 'tension',
+            layoutId: 10,
+            sizeId: 6,
+            setIds: '12,13',
+            name: '9 Degrees Chatswood',
+            serialNumber: '480221',
+          }),
+        ),
       ],
     ]);
     setDemoResolvedBoards(boardsBySerial);
@@ -314,6 +329,8 @@ export function BluetoothProvider({
           onSelect={activePickerState.handleSelect}
           onCancel={activePickerState.handleCancel}
           resolvedBoards={activeResolvedBoards}
+          boardDetails={boardDetails}
+          angle={angle}
         />
       )}
       <AutoConnectHandler connect={connect} isBluetoothSupported={isBluetoothSupported} />

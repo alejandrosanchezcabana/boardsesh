@@ -364,6 +364,13 @@ export const queriesTypeDefs = /* GraphQL */ `
     boardsBySerialNumbers(serialNumbers: [String!]!): [UserBoard!]!
 
     """
+    Recorded board configurations for the current user keyed by controller serial.
+    Used as a fallback when boardsBySerialNumbers returns nothing for a serial,
+    and to detect connect-time config mismatches. Requires authentication.
+    """
+    myBoardSerialConfigs(serialNumbers: [String!]!): [BoardSerialConfig!]!
+
+    """
     Get current user's boards.
     Requires authentication.
     """

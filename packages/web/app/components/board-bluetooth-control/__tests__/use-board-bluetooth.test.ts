@@ -59,6 +59,7 @@ vi.mock('@/app/lib/ble/adapter-factory', () => ({
 vi.mock('../bluetooth-aurora', () => ({
   getAuroraBluetoothPacket: mockGetAuroraBluetoothPacket,
   parseApiLevel: vi.fn(() => 3),
+  parseSerialNumber: vi.fn(() => undefined),
 }));
 
 vi.mock('../bluetooth-moonboard', () => ({

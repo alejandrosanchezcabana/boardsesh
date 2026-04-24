@@ -717,6 +717,53 @@ export const socialBoardQueries = {
   },
 
   /**
+   * Auto-recorded serial→config rows for the current user, optionally joined
+   * to the saved board they're linked to. Used as a fallback in serial lookups
+   * and for detecting connect-time config mismatches.
+   */
+  myBoardSerialConfigs: async (_: unknown, { serialNumbers }: { serialNumbers: string[] }, ctx: ConnectionContext) => {
+    requireAuthenticated(ctx);
+    await applyRateLimit(ctx, 20);
+
+    const cleaned = serialNumbers.filter((s) => s.trim().length > 0).slice(0, 20);
+    if (cleaned.length === 0) return [];
+
+    const userId = ctx.userId!;
+    const rows = await db
+      .select({
+        serialNumber: dbSchema.userBoardSerials.serialNumber,
+        boardName: dbSchema.userBoardSerials.boardName,
+        layoutId: dbSchema.userBoardSerials.layoutId,
+        sizeId: dbSchema.userBoardSerials.sizeId,
+        setIds: dbSchema.userBoardSerials.setIds,
+        angle: dbSchema.userBoardSerials.angle,
+        updatedAt: dbSchema.userBoardSerials.updatedAt,
+        boardUuid: dbSchema.userBoardSerials.boardUuid,
+        boardSlug: dbSchema.userBoards.slug,
+      })
+      .from(dbSchema.userBoardSerials)
+      .leftJoin(
+        dbSchema.userBoards,
+        and(eq(dbSchema.userBoards.uuid, dbSchema.userBoardSerials.boardUuid), isNull(dbSchema.userBoards.deletedAt)),
+      )
+      .where(
+        and(eq(dbSchema.userBoardSerials.userId, userId), inArray(dbSchema.userBoardSerials.serialNumber, cleaned)),
+      );
+
+    return rows.map((r) => ({
+      serialNumber: r.serialNumber,
+      boardName: r.boardName,
+      layoutId: Number(r.layoutId),
+      sizeId: Number(r.sizeId),
+      setIds: r.setIds,
+      angle: r.angle,
+      updatedAt: r.updatedAt.toISOString(),
+      boardUuid: r.boardUuid,
+      boardSlug: r.boardSlug,
+    }));
+  },
+
+  /**
    * Get current user's boards (owned + followed)
    */
   myBoards: async (_: unknown, { input }: { input?: { limit?: number; offset?: number } }, ctx: ConnectionContext) => {

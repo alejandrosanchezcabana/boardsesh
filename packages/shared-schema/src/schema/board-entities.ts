@@ -92,6 +92,32 @@ export const boardEntitiesTypeDefs = /* GraphQL */ `
   }
 
   """
+  Auto-recorded board configuration that the current user was on the last time
+  they connected to a controller with the given serial. Acts as a fallback for
+  serial→board lookups when no deliberately-saved \`UserBoard\` matches.
+  """
+  type BoardSerialConfig {
+    "Controller box serial number"
+    serialNumber: String!
+    "Board type (kilter, tension, ...)"
+    boardName: String!
+    "Layout ID at last connect"
+    layoutId: Int!
+    "Size ID at last connect"
+    sizeId: Int!
+    "Comma-separated set IDs at last connect"
+    setIds: String!
+    "Angle at last connect, if known"
+    angle: Int
+    "When the recording was last updated"
+    updatedAt: String!
+    "Linked saved board UUID (when the connect happened from a /b/{slug}/... route)"
+    boardUuid: ID
+    "Linked saved board slug (resolved from boardUuid)"
+    boardSlug: String
+  }
+
+  """
   A leaderboard entry for a board.
   """
   type BoardLeaderboardEntry {

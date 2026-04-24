@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { useWsAuthToken } from '@/app/hooks/use-ws-auth-token';
-import { resolveSerialNumbers } from '@/app/lib/ble/resolve-serials';
+import { resolveSerialNumbers, type ResolvedBoardEntry } from '@/app/lib/ble/resolve-serials';
 import {
   parseSerialNumber,
   AURORA_SCAN_SERVICE_UUIDS,
@@ -10,7 +10,6 @@ import {
 import { MOONBOARD_SCAN_SERVICE_UUIDS } from '@/app/components/board-bluetooth-control/bluetooth-moonboard';
 import { supportsCapacitorBleManualScan } from '@/app/lib/ble/capacitor-utils';
 import type { BleScanPlugin, DiscoveredDevice, CapacitorScanResult, PluginListenerHandle } from '@/app/lib/ble/types';
-import type { UserBoard } from '@boardsesh/shared-schema';
 
 // Auto-stop scan after this duration
 const SCAN_TIMEOUT_MS = 15_000;
@@ -25,7 +24,7 @@ function getBlePlugin(): BleScanPlugin | null {
 export function useBluetoothScan() {
   const { token } = useWsAuthToken();
   const [devices, setDevices] = useState<DiscoveredDevice[]>([]);
-  const [resolvedBoards, setResolvedBoards] = useState<Map<string, UserBoard>>(new Map());
+  const [resolvedBoards, setResolvedBoards] = useState<Map<string, ResolvedBoardEntry>>(new Map());
   // Start as 'idle' to avoid SSR/client hydration mismatch — capabilities are
   // checked in a useEffect on mount. This means there is a single-frame flash
   // where the quick-start card appears actionable on non-Capacitor environments
