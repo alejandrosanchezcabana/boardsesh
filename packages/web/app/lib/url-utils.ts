@@ -94,20 +94,21 @@ export const searchParamsToUrlParams = (input: SearchRequestPagination): URLSear
 
   const params: Record<string, string> = {};
 
-  // Only add parameters that differ from defaults
-  if (gradeAccuracy !== DEFAULT_SEARCH_PARAMS.gradeAccuracy) {
+  // Only add parameters that differ from defaults. `!= null` guards defend against legacy
+  // persisted state where the type says `number` but the value is `undefined`.
+  if (gradeAccuracy != null && gradeAccuracy !== DEFAULT_SEARCH_PARAMS.gradeAccuracy) {
     params.gradeAccuracy = gradeAccuracy.toString();
   }
-  if (maxGrade !== DEFAULT_SEARCH_PARAMS.maxGrade) {
+  if (maxGrade != null && maxGrade !== DEFAULT_SEARCH_PARAMS.maxGrade) {
     params.maxGrade = maxGrade.toString();
   }
-  if (minGrade !== DEFAULT_SEARCH_PARAMS.minGrade) {
+  if (minGrade != null && minGrade !== DEFAULT_SEARCH_PARAMS.minGrade) {
     params.minGrade = minGrade.toString();
   }
-  if (minAscents !== DEFAULT_SEARCH_PARAMS.minAscents) {
+  if (minAscents != null && minAscents !== DEFAULT_SEARCH_PARAMS.minAscents) {
     params.minAscents = minAscents.toString();
   }
-  if (minRating !== DEFAULT_SEARCH_PARAMS.minRating) {
+  if (minRating != null && minRating !== DEFAULT_SEARCH_PARAMS.minRating) {
     params.minRating = minRating.toString();
   }
   if (sortBy !== DEFAULT_SEARCH_PARAMS.sortBy) {
@@ -131,10 +132,10 @@ export const searchParamsToUrlParams = (input: SearchRequestPagination): URLSear
   if (setternameSuggestion && setternameSuggestion !== DEFAULT_SEARCH_PARAMS.setternameSuggestion) {
     params.setternameSuggestion = setternameSuggestion;
   }
-  if (page !== DEFAULT_SEARCH_PARAMS.page) {
+  if (page != null && page !== DEFAULT_SEARCH_PARAMS.page) {
     params.page = page.toString();
   }
-  if (pageSize !== DEFAULT_SEARCH_PARAMS.pageSize) {
+  if (pageSize != null && pageSize !== DEFAULT_SEARCH_PARAMS.pageSize) {
     params.pageSize = pageSize.toString();
   }
   if (hideAttempted !== DEFAULT_SEARCH_PARAMS.hideAttempted) {
