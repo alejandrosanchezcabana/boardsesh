@@ -83,4 +83,32 @@ describe('detectShake', () => {
     expect(step.fired).toBe(false);
     expect(step.state.joltTimestamps).toEqual([]);
   });
+
+  describe('DEFAULT_SHAKE_OPTIONS (tuned to reduce false positives)', () => {
+    it('ignores a single jolt just below the threshold', () => {
+      const step = detectShake(DEFAULT_SHAKE_OPTIONS.threshold - 1, 100, initialShakeState());
+      expect(step.fired).toBe(false);
+      expect(step.state.joltTimestamps).toEqual([]);
+    });
+
+    it('does not fire when only requiredJolts-1 jolts occur', () => {
+      let state = initialShakeState();
+      for (let i = 0; i < DEFAULT_SHAKE_OPTIONS.requiredJolts - 1; i += 1) {
+        const step = detectShake(DEFAULT_SHAKE_OPTIONS.threshold + 5, i * 200, state);
+        expect(step.fired).toBe(false);
+        state = step.state;
+      }
+      expect(state.joltTimestamps.length).toBe(DEFAULT_SHAKE_OPTIONS.requiredJolts - 1);
+    });
+
+    it('fires once requiredJolts jolts land inside windowMs', () => {
+      let state = initialShakeState();
+      let step = { fired: false, state } as ReturnType<typeof detectShake>;
+      for (let i = 0; i < DEFAULT_SHAKE_OPTIONS.requiredJolts; i += 1) {
+        step = detectShake(DEFAULT_SHAKE_OPTIONS.threshold + 5, i * 200, state);
+        state = step.state;
+      }
+      expect(step.fired).toBe(true);
+    });
+  });
 });

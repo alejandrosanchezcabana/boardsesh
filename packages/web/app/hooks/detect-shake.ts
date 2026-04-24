@@ -25,18 +25,26 @@ export type ShakeOptions = {
 export const DEFAULT_SHAKE_OPTIONS: ShakeOptions = {
   /**
    * User-acceleration magnitude (m/s², excluding gravity) that counts as a
-   * "jolt". 12 comfortably catches a purposeful shake on most phones and
-   * ignores normal handling, walking, and pocketing. Tune upward if we see
-   * false positives in the wild; the old 15 was too strict — real shakes
-   * often peak around 12–25 depending on grip and device.
+   * "jolt". A deliberate shake peaks around 15–25 m/s²; a single hard bump
+   * (setting the phone down, the pad slapping the wall) can cross 12 but
+   * rarely reaches 14. Paired with requiredJolts=3 this keeps incidental
+   * handling from firing the report dialog.
    */
-  threshold: 12,
+  threshold: 14,
   /** Jolts older than this (ms) are pruned from the rolling window. */
   windowMs: 1000,
-  /** After firing, suppress further fires for this duration (ms). */
-  cooldownMs: 3000,
-  /** Two direction reversals inside the window is enough to mean "shake". */
-  requiredJolts: 2,
+  /**
+   * After firing, suppress further fires for this duration (ms). 30s gives
+   * the user time to close the dialog and put the phone down without an
+   * immediate re-trigger from incidental motion.
+   */
+  cooldownMs: 30_000,
+  /**
+   * Three jolts inside the window means two direction reversals — the
+   * signature of a human shaking an object, not a phone being picked up
+   * or jostled in a pocket.
+   */
+  requiredJolts: 3,
 };
 
 export const initialShakeState = (): ShakeState => ({ joltTimestamps: [], lastFireAt: null });
