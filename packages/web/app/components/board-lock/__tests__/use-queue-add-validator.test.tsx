@@ -15,7 +15,7 @@ vi.mock('../use-active-board-lock', () => ({
   useActiveBoardLock: () => mockLock,
 }));
 
-vi.mock('../../queue-control/queue-bridge-context', () => ({
+vi.mock('../../queue-control/queue-bridge-board-info-context', () => ({
   useQueueBridgeBoardInfo: () => ({
     boardDetails: mockFallbackBoard,
     angle: 0,

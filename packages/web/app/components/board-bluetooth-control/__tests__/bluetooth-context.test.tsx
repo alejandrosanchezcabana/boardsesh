@@ -23,7 +23,38 @@ let mockBluetoothState = {
 };
 
 vi.mock('../use-board-bluetooth', () => ({
-  useBoardBluetooth: () => mockBluetoothState,
+  useBoardBluetooth: () => ({ ...mockBluetoothState, pickerState: null }),
+}));
+
+vi.mock('@/app/hooks/use-ws-auth-token', () => ({
+  useWsAuthToken: () => ({ token: null }),
+}));
+
+vi.mock('@/app/lib/ble/resolve-serials', () => ({
+  resolveSerialNumbers: vi.fn().mockResolvedValue(new Map()),
+}));
+
+vi.mock('../bluetooth-aurora', () => ({
+  parseSerialNumber: vi.fn(),
+}));
+
+vi.mock('../device-picker-dialog', () => ({
+  DevicePickerDialog: () => null,
+}));
+
+vi.mock('../auto-connect-handler', () => ({
+  AutoConnectHandler: () => null,
+}));
+
+vi.mock('../bluetooth-status-store', () => ({
+  registerBluetoothConnection: vi.fn(() => vi.fn()),
+}));
+
+vi.mock('@/app/lib/ble/capacitor-utils', () => ({
+  isCapacitor: vi.fn(() => false),
+  isCapacitorWebView: vi.fn(() => false),
+  waitForCapacitor: vi.fn().mockResolvedValue(false),
+  CAPACITOR_BRIDGE_TIMEOUT_MS: 2000,
 }));
 
 let mockCurrentClimbQueueItem: {

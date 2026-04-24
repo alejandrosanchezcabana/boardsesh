@@ -1,7 +1,8 @@
 'use client';
 
-import React, { useState, useCallback, useEffect } from 'react';
+import React, { useState, useCallback, useEffect, useMemo } from 'react';
 import { useSession } from 'next-auth/react';
+import { useRouter } from 'next/navigation';
 import BoardScrollSection from './board-scroll-section';
 import BoardScrollCard from './board-scroll-card';
 import FindNearbyCard, { type FindNearbyStatus } from './find-nearby-card';
@@ -12,7 +13,10 @@ import BoardSearchDrawer from '../board-search-drawer/board-search-drawer';
 import { useDiscoverBoards } from '@/app/hooks/use-discover-boards';
 import { usePopularBoardConfigs } from '@/app/hooks/use-popular-board-configs';
 import { useMyBoards } from '@/app/hooks/use-my-boards';
+import { useBluetoothScan } from '@/app/hooks/use-bluetooth-scan';
+import { parseSerialNumber } from '../board-bluetooth-control/bluetooth-aurora';
 import type { UserBoard, PopularBoardConfig } from '@boardsesh/shared-schema';
+import { constructBoardSlugListUrl } from '@/app/lib/url-utils';
 import styles from './board-scroll.module.css';
 
 function deriveFindNearbyStatus({
@@ -53,6 +57,7 @@ export default function BoardDiscoveryScroll({
 }: BoardDiscoveryScrollProps) {
   const { status } = useSession();
   const isAuthenticated = status === 'authenticated';
+  const router = useRouter();
 
   const [locationEnabled, setLocationEnabled] = useState(false);
   const [searchDrawerOpen, setSearchDrawerOpen] = useState(false);
@@ -75,13 +80,56 @@ export default function BoardDiscoveryScroll({
   const myBoards = externalMyBoards ?? internalMyBoards;
   const [myBoardsVisible, setMyBoardsVisible] = useState(false);
 
+  // Bluetooth scan for quick start
+  const { devices: bleDevices, resolvedBoards: bleResolvedBoards, status: bleStatus, startScan } = useBluetoothScan();
+
+  // Build a set of serial numbers found nearby via BLE
+  const bleSerialSet = useMemo(() => {
+    const set = new Set<string>();
+    for (const device of bleDevices) {
+      const serial = parseSerialNumber(device.name);
+      if (serial) set.add(serial);
+    }
+    return set;
+  }, [bleDevices]);
+
+  // Set of myBoard serial numbers so we can detect overlap
+  const myBoardSerialSet = useMemo(() => {
+    const set = new Set<string>();
+    for (const board of myBoards) {
+      if (board.serialNumber) set.add(board.serialNumber);
+    }
+    return set;
+  }, [myBoards]);
+
+  // BLE-resolved boards that are NOT already in myBoards — show as separate cards
+  const bleOnlyBoards = useMemo(
+    () =>
+      Array.from(bleResolvedBoards.values()).filter(
+        (board) => !board.serialNumber || !myBoardSerialSet.has(board.serialNumber),
+      ),
+    [bleResolvedBoards, myBoardSerialSet],
+  );
+
+  const [bleBoardsVisible, setBleBoardsVisible] = useState(false);
+
   useEffect(() => {
     if (myBoards.length > 0) {
-      requestAnimationFrame(() => setMyBoardsVisible(true));
+      const id = requestAnimationFrame(() => setMyBoardsVisible(true));
+      return () => cancelAnimationFrame(id);
     } else {
       setMyBoardsVisible(false);
     }
   }, [myBoards.length]);
+
+  useEffect(() => {
+    if (bleOnlyBoards.length > 0) {
+      const id = requestAnimationFrame(() => setBleBoardsVisible(true));
+      return () => cancelAnimationFrame(id);
+    } else {
+      setBleBoardsVisible(false);
+    }
+  }, [bleOnlyBoards.length]);
 
   const handleFindNearbyClick = useCallback(() => {
     setLocationEnabled(true);
@@ -101,6 +149,24 @@ export default function BoardDiscoveryScroll({
       onBoardClick(board);
     },
     [onBoardClick],
+  );
+
+  const handleBluetoothClick = useCallback(() => {
+    startScan();
+  }, [startScan]);
+
+  // Navigate to a BLE-discovered board with auto-connect serial param
+  const handleBleBoardClick = useCallback(
+    (board: UserBoard) => {
+      if (board.serialNumber && board.slug) {
+        router.push(
+          constructBoardSlugListUrl(board.slug, board.angle) + `?autoConnect=${encodeURIComponent(board.serialNumber)}`,
+        );
+      } else {
+        onBoardClick(board);
+      }
+    },
+    [router, onBoardClick],
   );
 
   return (
@@ -129,7 +195,12 @@ export default function BoardDiscoveryScroll({
           </div>
           <div className={styles.stackedCards}>
             <SearchBoardsCard onClick={handleSearchClick} size="small" />
-            <BluetoothQuickStartCard size="small" />
+            <BluetoothQuickStartCard
+              onClick={handleBluetoothClick}
+              status={bleStatus}
+              hasResults={bleDevices.length > 0}
+              size="small"
+            />
           </div>
         </div>
 
@@ -143,19 +214,38 @@ export default function BoardDiscoveryScroll({
           />
         ))}
 
-        {/* My boards - animate in between cluster and popular */}
-        {myBoards.map((board) => (
+        {/* BLE-discovered boards NOT already in myBoards - animate in */}
+        {bleOnlyBoards.map((board) => (
           <div
-            key={board.uuid}
-            className={`${styles.myBoardCardFadeIn} ${myBoardsVisible ? styles.myBoardCardFadeInVisible : ''}`}
+            key={`ble-${board.uuid}`}
+            className={`${styles.myBoardCardFadeIn} ${bleBoardsVisible ? styles.myBoardCardFadeInVisible : ''}`}
           >
             <BoardScrollCard
               userBoard={board}
               selected={selectedBoardUuid === board.uuid}
-              onClick={() => onBoardClick(board)}
+              onClick={() => handleBleBoardClick(board)}
+              bluetoothNearby
             />
           </div>
         ))}
+
+        {/* My boards - animate in, show bluetooth badge if found nearby */}
+        {myBoards.map((board) => {
+          const isBleNearby = !!board.serialNumber && bleSerialSet.has(board.serialNumber);
+          return (
+            <div
+              key={board.uuid}
+              className={`${styles.myBoardCardFadeIn} ${myBoardsVisible ? styles.myBoardCardFadeInVisible : ''}`}
+            >
+              <BoardScrollCard
+                userBoard={board}
+                selected={selectedBoardUuid === board.uuid}
+                onClick={() => (isBleNearby ? handleBleBoardClick(board) : onBoardClick(board))}
+                bluetoothNearby={isBleNearby}
+              />
+            </div>
+          );
+        })}
 
         {popularConfigs.map((config) => (
           <BoardScrollCard

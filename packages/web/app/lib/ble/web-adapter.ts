@@ -22,7 +22,7 @@ export class WebBluetoothAdapter implements BluetoothAdapter {
     return typeof navigator !== 'undefined' && !!navigator.bluetooth;
   }
 
-  async requestAndConnect(): Promise<BleConnection> {
+  async requestAndConnect(_targetSerial?: string): Promise<BleConnection> {
     // Clean up any existing device listeners
     this.cleanupListeners();
 

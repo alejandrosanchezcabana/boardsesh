@@ -147,6 +147,9 @@ describe('useLogbook', () => {
       climbed_at: '2024-01-01',
       is_ascent: true,
       status: 'send',
+      upvotes: 0,
+      downvotes: 0,
+      commentCount: 0,
     });
   });
 

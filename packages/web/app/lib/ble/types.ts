@@ -1,3 +1,14 @@
+export type PluginListenerHandle = {
+  remove(): Promise<void>;
+};
+
+/** Scan result from the Capacitor BLE plugin's requestLEScan callback. */
+export type CapacitorScanResult = {
+  device: { deviceId: string; name?: string };
+  localName?: string;
+  rssi: number;
+};
+
 export type BleConnection = {
   deviceId: string;
   deviceName?: string;
@@ -18,12 +29,25 @@ export type DiscoveredDevice = {
  */
 export type DevicePickerFn = (subscribe: (onUpdate: (devices: DiscoveredDevice[]) => void) => void) => Promise<string>;
 
+/** Minimal BLE plugin interface for scan-only consumers (e.g. discovery scroll). */
+export type BleScanPlugin = {
+  initialize(): Promise<void>;
+  isEnabled(): Promise<{ value: boolean }>;
+  requestLEScan?(options: { services?: string[] }): Promise<void>;
+  stopLEScan?(): Promise<void>;
+  addListener(eventName: string, callback: (data: Record<string, unknown>) => void): Promise<PluginListenerHandle>;
+};
+
 export type BluetoothAdapter = {
   /** Check if BLE is available and enabled */
   isAvailable(): Promise<boolean>;
 
-  /** Scan for and connect to a board. Shows platform-appropriate device picker. */
-  requestAndConnect(): Promise<BleConnection>;
+  /**
+   * Scan for and connect to a board. Shows platform-appropriate device picker.
+   * If `targetSerial` is provided, auto-selects the device matching that serial
+   * number instead of showing the picker (for quick-start flows).
+   */
+  requestAndConnect(targetSerial?: string): Promise<BleConnection>;
 
   /** Disconnect from the current device */
   disconnect(): Promise<void>;

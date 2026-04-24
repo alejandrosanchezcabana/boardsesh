@@ -81,6 +81,11 @@ vi.mock('@vercel/analytics', () => ({
   track: vi.fn(),
 }));
 
+vi.mock('@/app/lib/ble/capacitor-utils', () => ({
+  supportsCapacitorBleManualScan: vi.fn(() => false),
+  isNativeApp: vi.fn(() => false),
+}));
+
 const mockBoardDetails = {
   board_name: 'kilter',
   layout_id: 1,
@@ -206,7 +211,7 @@ describe('useBoardBluetooth', () => {
       await result.current.connect();
     });
 
-    expect(mockCreateBluetoothAdapter).toHaveBeenCalledWith('moonboard');
+    expect(mockCreateBluetoothAdapter).toHaveBeenCalledWith('moonboard', undefined);
   });
 
   it('handles connect failure', async () => {

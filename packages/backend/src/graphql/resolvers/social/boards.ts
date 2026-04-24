@@ -645,6 +645,45 @@ export const socialBoardQueries = {
   },
 
   /**
+   * Look up boards by controller serial numbers.
+   * Searches all boards (including unlisted/non-public) so BLE device
+   * discovery can resolve any board regardless of visibility.
+   * No auth required (BLE scan-before-login), but rate-limited.
+   * Unauthenticated callers receive stripped responses (no GPS/owner data).
+   */
+  boardsBySerialNumbers: async (_: unknown, { serialNumbers }: { serialNumbers: string[] }, ctx: ConnectionContext) => {
+    await applyRateLimit(ctx, 20);
+
+    // Filter out empty strings and limit to 20 to prevent abuse
+    const cleaned = serialNumbers.filter((s) => s.trim().length > 0).slice(0, 20);
+    if (cleaned.length === 0) return [];
+
+    const boards = await db
+      .select()
+      .from(dbSchema.userBoards)
+      .where(and(inArray(dbSchema.userBoards.serialNumber, cleaned), isNull(dbSchema.userBoards.deletedAt)));
+
+    const userId = ctx.isAuthenticated ? ctx.userId : undefined;
+    const enriched = await enrichBoards(
+      boards.map((board) => ({ board })),
+      userId,
+    );
+
+    // Strip sensitive fields for unauthenticated callers
+    if (!ctx.isAuthenticated) {
+      return enriched.map((board) => ({
+        ...board,
+        latitude: null,
+        longitude: null,
+        ownerDisplayName: null,
+        ownerAvatarUrl: null,
+      }));
+    }
+
+    return enriched;
+  },
+
+  /**
    * Get current user's boards (owned + followed)
    */
   myBoards: async (_: unknown, { input }: { input?: { limit?: number; offset?: number } }, ctx: ConnectionContext) => {

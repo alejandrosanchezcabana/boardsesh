@@ -2,6 +2,7 @@
 
 import React, { useMemo } from 'react';
 import DashboardOutlined from '@mui/icons-material/DashboardOutlined';
+import BluetoothOutlined from '@mui/icons-material/BluetoothOutlined';
 import BoardRenderer from '../board-renderer/board-renderer';
 import { useBoardDetails } from './board-thumbnail';
 import { formatCount, formatSends } from '@/app/lib/format-climb-stats';
@@ -34,6 +35,7 @@ type BoardScrollCardProps = {
   disabled?: boolean;
   disabledText?: string;
   distanceMeters?: number | null;
+  bluetoothNearby?: boolean;
   size?: 'default' | 'small';
   onClick: () => void;
 };
@@ -47,6 +49,7 @@ export default function BoardScrollCard({
   disabled,
   disabledText,
   distanceMeters,
+  bluetoothNearby,
   size = 'default',
   onClick,
 }: BoardScrollCardProps) {
@@ -107,6 +110,11 @@ export default function BoardScrollCard({
           </div>
         )}
         {distanceMeters != null && <div className={styles.distanceBadge}>{formatDistance(distanceMeters)}</div>}
+        {bluetoothNearby && (
+          <div className={`${styles.distanceBadge} ${styles.bluetoothBadge}`}>
+            <BluetoothOutlined sx={{ fontSize: 14, verticalAlign: 'middle' }} />
+          </div>
+        )}
       </div>
       <div
         className={`${styles.cardName} ${selected ? styles.cardNameSelected : ''} ${disabled ? styles.cardNameDisabled : ''}`}

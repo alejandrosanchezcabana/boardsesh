@@ -148,6 +148,14 @@ export const GET_POPULAR_BOARD_CONFIGS = gql`
   }
 `;
 
+export const GET_BOARDS_BY_SERIAL_NUMBERS = gql`
+  query GetBoardsBySerialNumbers($serialNumbers: [String!]!) {
+    boardsBySerialNumbers(serialNumbers: $serialNumbers) {
+      ${BOARD_FIELDS}
+    }
+  }
+`;
+
 // ============================================
 // Board Mutations
 // ============================================
@@ -280,4 +288,12 @@ export type GetPopularBoardConfigsQueryVariables = {
 
 export type GetPopularBoardConfigsQueryResponse = {
   popularBoardConfigs: PopularBoardConfigConnection;
+};
+
+export type GetBoardsBySerialNumbersQueryVariables = {
+  serialNumbers: string[];
+};
+
+export type GetBoardsBySerialNumbersQueryResponse = {
+  boardsBySerialNumbers: UserBoard[];
 };

@@ -12,11 +12,17 @@ import {
   CAPACITOR_BRIDGE_TIMEOUT_MS,
 } from '@/app/lib/ble/capacitor-utils';
 import { registerBluetoothConnection } from './bluetooth-status-store';
+import { DevicePickerDialog } from './device-picker-dialog';
+import { AutoConnectHandler } from './auto-connect-handler';
+import { parseSerialNumber } from './bluetooth-aurora';
+import { useWsAuthToken } from '@/app/hooks/use-ws-auth-token';
+import { resolveSerialNumbers } from '@/app/lib/ble/resolve-serials';
+import type { UserBoard } from '@boardsesh/shared-schema';
 
 type BluetoothContextValue = {
   isConnected: boolean;
   loading: boolean;
-  connect: (initialFrames?: string, mirrored?: boolean) => Promise<boolean>;
+  connect: (initialFrames?: string, mirrored?: boolean, targetSerial?: string) => Promise<boolean>;
   disconnect: () => void;
   sendFramesToBoard: (
     frames: string,
@@ -108,12 +114,46 @@ export function BluetoothProvider({
   boardDetails: BoardDetails;
   children: React.ReactNode;
 }) {
-  const { isConnected, loading, connect, disconnect, sendFramesToBoard } = useBoardBluetooth({
+  const { isConnected, loading, connect, disconnect, sendFramesToBoard, pickerState } = useBoardBluetooth({
     boardDetails,
   });
+  const { token } = useWsAuthToken();
 
   const [isBluetoothSupported, setIsBluetoothSupported] = useState(false);
   const [isIOS, setIsIOS] = useState(false);
+
+  // Resolve BLE device serial numbers to known boards
+  const [resolvedBoards, setResolvedBoards] = useState<Map<string, UserBoard>>(new Map());
+  const resolvedSerialsRef = useRef<string>('');
+
+  useEffect(() => {
+    if (!pickerState || pickerState.devices.length === 0 || !token) {
+      return;
+    }
+
+    const serials: string[] = [];
+    for (const device of pickerState.devices) {
+      const serial = parseSerialNumber(device.name);
+      if (serial) serials.push(serial);
+    }
+
+    if (serials.length === 0) return;
+
+    // Check if we already resolved these serials (resolveSerialNumbers deduplicates internally)
+    const sortedSerials = [...serials].sort();
+    const serialsKey = sortedSerials.join(',');
+    if (serialsKey === resolvedSerialsRef.current) return;
+
+    resolveSerialNumbers(token, sortedSerials)
+      .then((boardMap) => {
+        // Only mark as resolved on success so transient failures allow retries
+        resolvedSerialsRef.current = serialsKey;
+        setResolvedBoards(boardMap);
+      })
+      .catch((err) => {
+        console.error('[BLE] Failed to resolve serial numbers:', err);
+      });
+  }, [pickerState, token]);
 
   useEffect(() => {
     let cancelPolling: (() => void) | undefined;
@@ -175,6 +215,15 @@ export function BluetoothProvider({
       {isConnected && (
         <BluetoothAutoSender sendFramesToBoard={sendFramesToBoard} layoutName={boardDetails.layout_name ?? ''} />
       )}
+      {pickerState && (
+        <DevicePickerDialog
+          devices={pickerState.devices}
+          onSelect={pickerState.handleSelect}
+          onCancel={pickerState.handleCancel}
+          resolvedBoards={resolvedBoards}
+        />
+      )}
+      <AutoConnectHandler connect={connect} isBluetoothSupported={isBluetoothSupported} />
       {children}
     </BluetoothContext.Provider>
   );

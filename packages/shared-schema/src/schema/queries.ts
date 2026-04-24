@@ -358,6 +358,12 @@ export const queriesTypeDefs = /* GraphQL */ `
     boardBySlug(slug: String!): UserBoard
 
     """
+    Look up boards by controller serial numbers.
+    Searches all boards (including unlisted/non-public).
+    """
+    boardsBySerialNumbers(serialNumbers: [String!]!): [UserBoard!]!
+
+    """
     Get current user's boards.
     Requires authentication.
     """

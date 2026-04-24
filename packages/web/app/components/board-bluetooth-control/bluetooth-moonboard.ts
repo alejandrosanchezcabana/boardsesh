@@ -25,6 +25,10 @@ export const MOONBOARD_REQUEST_DEVICE_OPTIONS: RequestDeviceOptions = {
   optionalServices: [...MOONBOARD_OPTIONAL_SERVICE_UUIDS],
 };
 
+export function isMoonboardDeviceName(name?: string): boolean {
+  return !!name && MOONBOARD_DEVICE_NAME_PREFIXES.some((prefix) => name.startsWith(prefix));
+}
+
 export function getMoonboardSerialPosition(holdId: number): number {
   const maxHoldId = MOONBOARD_GRID.numColumns * MOONBOARD_GRID.numRows;
   if (!Number.isInteger(holdId) || holdId < 1 || holdId > maxHoldId) {

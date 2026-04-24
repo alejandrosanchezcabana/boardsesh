@@ -1,10 +1,19 @@
 import type { BoardName } from '@/app/lib/types';
-import type { BleConnection, BluetoothAdapter } from './types';
+import type {
+  BleConnection,
+  BluetoothAdapter,
+  CapacitorScanResult,
+  DevicePickerFn,
+  DiscoveredDevice,
+  PluginListenerHandle,
+} from './types';
 import {
   AURORA_OPTIONAL_SERVICE_UUIDS,
   AURORA_SCAN_SERVICE_UUIDS,
+  parseSerialNumber,
 } from '@/app/components/board-bluetooth-control/bluetooth-aurora';
 import {
+  isMoonboardDeviceName,
   MOONBOARD_OPTIONAL_SERVICE_UUIDS,
   MOONBOARD_SCAN_SERVICE_UUIDS,
 } from '@/app/components/board-bluetooth-control/bluetooth-moonboard';
@@ -20,14 +29,14 @@ const DEFAULT_MTU = MAX_BLUETOOTH_MESSAGE_SIZE;
 // Gives CoreBluetooth breathing room when sending many small chunks.
 const INTER_CHUNK_DELAY_MS = 5;
 
+// Auto-stop BLE scan after this duration to prevent indefinite battery drain
+// if the user walks away from the picker dialog.
+const SCAN_TIMEOUT_MS = 30_000;
+
 // Raw Capacitor plugin interface as exposed via window.Capacitor.Plugins.BluetoothLe.
 // The plugin JS is injected by the native shell. We type only the methods we use.
 // IMPORTANT: The raw plugin's write() expects `value` as a continuous hex string (no spaces), not DataView.
 // The BleClient npm wrapper normally handles this conversion, but we bypass it.
-
-type PluginListenerHandle = {
-  remove(): Promise<void>;
-};
 
 type CapacitorBlePlugin = {
   initialize(): Promise<void>;
@@ -36,6 +45,8 @@ type CapacitorBlePlugin = {
     services: string[];
     optionalServices?: string[];
   }): Promise<{ deviceId: string; name?: string }>;
+  requestLEScan?(options: { services?: string[] }): Promise<void>;
+  stopLEScan?(): Promise<void>;
   connect(options: { deviceId: string }): Promise<void>;
   disconnect(options: { deviceId: string }): Promise<void>;
   write(options: {
@@ -45,7 +56,10 @@ type CapacitorBlePlugin = {
     value: string; // Continuous hex string, e.g. "0102ff"
   }): Promise<void>;
   requestMtu(options: { deviceId: string; mtu: number }): Promise<{ value: number }>;
-  addListener(eventName: 'disconnected', callback: (data: { deviceId: string }) => void): Promise<PluginListenerHandle>;
+  addListener(
+    eventName: 'disconnected' | 'onScanResult',
+    callback: (data: Record<string, unknown>) => void,
+  ): Promise<PluginListenerHandle>;
 };
 
 function getBlePlugin(): CapacitorBlePlugin {
@@ -81,8 +95,18 @@ function toHexString(data: Uint8Array): string {
 
 const delay = (ms: number) => new Promise<void>((resolve) => setTimeout(resolve, ms));
 
+function stopScanQuietly(ble: CapacitorBlePlugin): Promise<void> {
+  if (!ble.stopLEScan) {
+    return Promise.resolve();
+  }
+  return ble.stopLEScan().catch(() => {});
+}
+
 export class CapacitorBleAdapter implements BluetoothAdapter {
-  constructor(private readonly boardName: BoardName = 'kilter') {}
+  constructor(
+    private readonly boardName: BoardName = 'kilter',
+    private readonly devicePicker?: DevicePickerFn,
+  ) {}
 
   private deviceId: string | null = null;
   private disconnectCallback: (() => void) | null = null;
@@ -100,7 +124,7 @@ export class CapacitorBleAdapter implements BluetoothAdapter {
     }
   }
 
-  async requestAndConnect(): Promise<BleConnection> {
+  async requestAndConnect(targetSerial?: string): Promise<BleConnection> {
     await ensureInitialized();
     const ble = getBlePlugin();
 
@@ -109,27 +133,117 @@ export class CapacitorBleAdapter implements BluetoothAdapter {
     const optionalServices =
       this.boardName === 'moonboard' ? [...MOONBOARD_OPTIONAL_SERVICE_UUIDS] : [...AURORA_OPTIONAL_SERVICE_UUIDS];
 
-    // Request device — shows native scan dialog on iOS.
-    // MoonBoard controllers advertise Nordic UART directly; Aurora boards use
-    // their own advertised service and expose UART after connection.
-    const device = await ble.requestDevice({
-      services,
-      optionalServices,
-    });
+    let selectedDeviceId: string;
+    let selectedDeviceName: string | undefined;
+
+    if (this.devicePicker && ble.requestLEScan && ble.stopLEScan) {
+      // Manual scan with custom picker — deduplicates devices ourselves
+      const devices = new Map<string, DiscoveredDevice>();
+      let updateListener: ((devices: DiscoveredDevice[]) => void) | null = null;
+      const pushDevices = () => updateListener?.([...devices.values()]);
+
+      // When targetSerial is set, auto-resolve instead of waiting for picker
+      let autoSelectResolve: ((deviceId: string) => void) | null = null;
+      let autoSelectReject: ((error: Error) => void) | null = null;
+
+      // Start the picker promise (resolves when user selects a device)
+      let selectionPromise: Promise<string>;
+      if (targetSerial) {
+        // Skip the picker UI — resolve automatically when matching device is found
+        selectionPromise = new Promise<string>((resolve, reject) => {
+          autoSelectResolve = resolve;
+          autoSelectReject = reject;
+        });
+      } else {
+        selectionPromise = this.devicePicker((onUpdate) => {
+          updateListener = onUpdate;
+          pushDevices();
+        });
+      }
+
+      // Register scan result listener BEFORE starting the scan.
+      // The raw Capacitor plugin delivers results via events, not callbacks.
+      const scanListener = await ble.addListener('onScanResult', (data) => {
+        const result = data as unknown as CapacitorScanResult;
+        const device: DiscoveredDevice = {
+          deviceId: result.device.deviceId,
+          name: result.localName || result.device.name,
+          rssi: result.rssi,
+        };
+
+        if (this.boardName === 'moonboard' && !isMoonboardDeviceName(device.name)) {
+          return;
+        }
+
+        // Deduplicate by name (which includes the serial number for Aurora boards)
+        // rather than deviceId, because iOS can assign different CoreBluetooth UUIDs
+        // to the same physical device across scan results.
+        const dedupeKey = device.name || device.deviceId;
+        devices.set(dedupeKey, device);
+        pushDevices();
+
+        // Auto-select if this device matches the target serial
+        if (autoSelectResolve && targetSerial) {
+          const serial = parseSerialNumber(device.name);
+          if (serial === targetSerial) {
+            autoSelectResolve(device.deviceId);
+            autoSelectResolve = null;
+          }
+        }
+      });
+
+      // Start scanning
+      await ble.requestLEScan({ services });
+
+      // Auto-stop scan after timeout to prevent indefinite battery drain.
+      // If auto-selecting by serial, reject the promise so the caller isn't stuck forever.
+      const scanTimeoutId = setTimeout(() => {
+        stopScanQuietly(ble);
+        if (autoSelectReject) {
+          autoSelectReject(new Error('Target board not found during scan'));
+          autoSelectReject = null;
+        }
+      }, SCAN_TIMEOUT_MS);
+
+      try {
+        selectedDeviceId = await selectionPromise;
+      } finally {
+        clearTimeout(scanTimeoutId);
+        await scanListener.remove();
+        await stopScanQuietly(ble);
+      }
+
+      // Find the device name — map is keyed by name (dedupeKey), so search by deviceId
+      for (const device of devices.values()) {
+        if (device.deviceId === selectedDeviceId) {
+          selectedDeviceName = device.name;
+          break;
+        }
+      }
+    } else {
+      // Fallback: use the plugin's built-in device picker
+      const device = await ble.requestDevice({
+        services,
+        optionalServices,
+      });
+
+      selectedDeviceId = device.deviceId;
+      selectedDeviceName = device.name;
+    }
 
     // Connect to the device
-    await ble.connect({ deviceId: device.deviceId });
+    await ble.connect({ deviceId: selectedDeviceId });
 
     // Negotiate larger MTU (iOS negotiates automatically, but requesting
     // explicitly ensures we know the actual value for chunking)
     try {
-      const mtuResult = await ble.requestMtu({ deviceId: device.deviceId, mtu: 512 });
-      this.mtu = mtuResult.value - 3; // MTU minus ATT header overhead
+      const mtuResult = await ble.requestMtu({ deviceId: selectedDeviceId, mtu: 512 });
+      this.mtu = Math.max(mtuResult.value - 3, DEFAULT_MTU); // MTU minus ATT header overhead
     } catch {
       // MTU negotiation not supported or failed — keep default 20
     }
 
-    this.deviceId = device.deviceId;
+    this.deviceId = selectedDeviceId;
 
     // Listen for unexpected disconnections from the native CoreBluetooth layer
     this.disconnectListenerHandle = await ble.addListener('disconnected', (data) => {
@@ -141,8 +255,8 @@ export class CapacitorBleAdapter implements BluetoothAdapter {
     });
 
     return {
-      deviceId: device.deviceId,
-      deviceName: device.name,
+      deviceId: selectedDeviceId,
+      deviceName: selectedDeviceName,
     };
   }
 

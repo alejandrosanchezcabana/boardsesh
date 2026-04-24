@@ -26,6 +26,9 @@ const nextConfig = {
   },
   // Include WASM binary in standalone output for serverless functions.
   // Both paths needed: monorepo root (hoisted deps) and local node_modules (symlink).
+  outputFileTracingExcludes: {
+    '/**': ['./e2e/**', './**/*.test.*', './**/*.spec.*'],
+  },
   outputFileTracingIncludes: {
     '/api/internal/board-render': [
       './node_modules/@boardsesh/board-renderer-wasm/pkg/*.wasm',

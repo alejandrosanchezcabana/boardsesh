@@ -112,6 +112,11 @@
   pointer-events: none;
 }
 
+.bluetoothBadge {
+  left: 4px;
+  right: auto;
+}
+
 /* Disabled state */
 .cardSquareDisabled {
   opacity: 0.4;
