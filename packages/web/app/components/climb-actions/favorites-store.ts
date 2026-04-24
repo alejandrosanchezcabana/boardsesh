@@ -5,10 +5,10 @@
  * climb's favorited status flips.
  */
 class FavoritesStore {
-  private favorites: Set<string> = new Set();
+  private favorites = new Set<string>();
   private _isLoading = false;
   private _isAuthenticated = false;
-  private listeners: Set<() => void> = new Set();
+  private listeners = new Set<() => void>();
 
   /** Subscribe to store changes (signature expected by useSyncExternalStore). */
   subscribe = (listener: () => void): (() => void) => {

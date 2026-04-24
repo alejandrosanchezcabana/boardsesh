@@ -27,11 +27,11 @@ import {
 } from './session-discovery';
 
 class RoomManager {
-  private clients: Map<string, ConnectedClient> = new Map();
-  private sessions: Map<string, Set<string>> = new Map();
+  private clients = new Map<string, ConnectedClient>();
+  private sessions = new Map<string, Set<string>>();
   private redisStore: RedisSessionStore | null = null;
   private distributedState: DistributedStateManager | null = null;
-  private sessionGraceTimers: Map<string, NodeJS.Timeout> = new Map();
+  private sessionGraceTimers = new Map<string, NodeJS.Timeout>();
   private readonly SESSION_GRACE_PERIOD_MS = 60_000;
   private pendingJoinPersists = new Map<string, Promise<void>>();
   private writeScheduler = new WriteScheduler();

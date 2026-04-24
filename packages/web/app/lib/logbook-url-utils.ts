@@ -7,13 +7,7 @@ import {
   type SortField,
 } from '@/app/lib/logbook-preferences';
 
-const VALID_SORT_FIELDS: Set<SortField> = new Set([
-  'climbName',
-  'loggedGrade',
-  'consensusGrade',
-  'date',
-  'attemptCount',
-]);
+const VALID_SORT_FIELDS = new Set<SortField>(['climbName', 'loggedGrade', 'consensusGrade', 'date', 'attemptCount']);
 
 function isValidSortField(value: string): value is SortField {
   return VALID_SORT_FIELDS.has(value as SortField);

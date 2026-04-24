@@ -31,11 +31,11 @@ const EVENT_BUFFER_TTL = 300; // 5 minutes
  * - Used when REDIS_URL is not configured
  */
 class PubSub {
-  private queueSubscribers: Map<string, Set<QueueSubscriber>> = new Map();
-  private sessionSubscribers: Map<string, Set<SessionSubscriber>> = new Map();
-  private notificationSubscribers: Map<string, Set<NotificationSubscriber>> = new Map();
-  private commentSubscribers: Map<string, Set<CommentSubscriber>> = new Map();
-  private newClimbSubscribers: Map<string, Set<NewClimbSubscriber>> = new Map();
+  private queueSubscribers = new Map<string, Set<QueueSubscriber>>();
+  private sessionSubscribers = new Map<string, Set<SessionSubscriber>>();
+  private notificationSubscribers = new Map<string, Set<NotificationSubscriber>>();
+  private commentSubscribers = new Map<string, Set<CommentSubscriber>>();
+  private newClimbSubscribers = new Map<string, Set<NewClimbSubscriber>>();
   private redisAdapter: RedisPubSubAdapter | null = null;
   private initialized = false;
   private redisRequired = false;

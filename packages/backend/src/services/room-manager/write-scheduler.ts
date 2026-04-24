@@ -14,10 +14,10 @@ const RETRY_BASE_DELAY = 1000; // 1 second
  * eventually consistent via this scheduler.
  */
 export class WriteScheduler {
-  private postgresWriteTimers: Map<string, NodeJS.Timeout> = new Map();
-  private pendingWrites: Map<string, PendingWrite> = new Map();
-  private writeRetryAttempts: Map<string, number> = new Map();
-  private retryTimers: Map<string, NodeJS.Timeout> = new Map();
+  private postgresWriteTimers = new Map<string, NodeJS.Timeout>();
+  private pendingWrites = new Map<string, PendingWrite>();
+  private writeRetryAttempts = new Map<string, number>();
+  private retryTimers = new Map<string, NodeJS.Timeout>();
 
   reset(): void {
     for (const timer of this.postgresWriteTimers.values()) {

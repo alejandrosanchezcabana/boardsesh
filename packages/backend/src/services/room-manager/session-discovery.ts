@@ -126,7 +126,7 @@ export async function findNearbySessions(
   const sessionIds = sessionsWithDistance.map(({ session }) => session.id);
 
   // Batch check Redis existence to avoid N+1 queries
-  let redisExistsMap: Map<string, boolean> = new Map();
+  let redisExistsMap = new Map<string, boolean>();
   if (redisStore && sessionIds.length > 0) {
     redisExistsMap = await redisStore.batchExists(sessionIds);
   }

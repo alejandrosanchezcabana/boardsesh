@@ -24,7 +24,7 @@ const STALE_GRACE_MS = 10_000;
 const HEALTH_CHECK_INTERVAL_MS = 1000;
 
 class WebSocketConnectionManager {
-  private clients: Map<symbol, RegisteredClient> = new Map();
+  private clients = new Map<symbol, RegisteredClient>();
   private primaryName: string | null = null;
   private listeners = new Set<(snapshot: ConnectionSnapshot) => void>();
   private intervalId: ReturnType<typeof setInterval> | null = null;
