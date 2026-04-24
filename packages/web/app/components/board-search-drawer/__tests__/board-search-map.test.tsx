@@ -1,8 +1,8 @@
 // @vitest-environment jsdom
-/* eslint-disable import/first -- vi.hoisted mocks must appear before imports they mock. */
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vite-plus/test';
 import { render, act } from '@testing-library/react';
 import React from 'react';
+import BoardSearchMap from '../board-search-map';
 
 // Shared mock state. `vi.hoisted` runs before the `vi.mock` factory below
 // (which is itself hoisted above imports), so the factory can reference it.
@@ -74,8 +74,6 @@ vi.mock('leaflet', () => {
 });
 
 vi.mock('leaflet/dist/leaflet.css', () => ({}));
-
-import BoardSearchMap from '../board-search-map';
 
 const baseProps = {
   center: { lat: 0, lng: 0 },
