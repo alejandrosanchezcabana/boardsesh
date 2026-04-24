@@ -1,6 +1,7 @@
 'use client';
 
 import React from 'react';
+import Button from '@mui/material/Button';
 import Dialog from '@mui/material/Dialog';
 import DialogContent from '@mui/material/DialogContent';
 import IconButton from '@mui/material/IconButton';
@@ -19,6 +20,11 @@ export type FeedbackSubmission = {
   comment: string | null;
 };
 
+export type FeedbackDialogSecondaryAction = {
+  label: string;
+  onClick: () => void;
+};
+
 type FeedbackDialogProps = {
   open: boolean;
   onClose: () => void;
@@ -32,6 +38,11 @@ type FeedbackDialogProps = {
    * a rating submission. Not invoked when the form is cancelled/closed.
    */
   onSubmitted?: (submission: FeedbackSubmission) => void;
+  /**
+   * Optional muted action rendered below the form. Used by the shake-triggered
+   * variant to expose a "Don't show this again" escape hatch.
+   */
+  secondaryAction?: FeedbackDialogSecondaryAction;
 };
 
 const FeedbackDialogBody: React.FC<Omit<FeedbackDialogProps, 'open'>> = ({
@@ -40,6 +51,7 @@ const FeedbackDialogBody: React.FC<Omit<FeedbackDialogProps, 'open'>> = ({
   title,
   mode = 'rating',
   onSubmitted,
+  secondaryAction,
 }) => {
   const { mutate } = useSubmitAppFeedback();
   const { showMessage } = useSnackbar();
@@ -98,15 +110,37 @@ const FeedbackDialogBody: React.FC<Omit<FeedbackDialogProps, 'open'>> = ({
           onCancel={onClose}
         />
       </DialogContent>
+      {secondaryAction && (
+        <div className={styles.secondaryAction}>
+          <Button variant="text" size="small" color="inherit" onClick={secondaryAction.onClick}>
+            {secondaryAction.label}
+          </Button>
+        </div>
+      )}
     </div>
   );
 };
 
-export const FeedbackDialog: React.FC<FeedbackDialogProps> = ({ open, onClose, source, title, mode, onSubmitted }) => {
+export const FeedbackDialog: React.FC<FeedbackDialogProps> = ({
+  open,
+  onClose,
+  source,
+  title,
+  mode,
+  onSubmitted,
+  secondaryAction,
+}) => {
   return (
     <Dialog open={open} onClose={onClose} maxWidth="xs" fullWidth>
       {open && (
-        <FeedbackDialogBody onClose={onClose} source={source} title={title} mode={mode} onSubmitted={onSubmitted} />
+        <FeedbackDialogBody
+          onClose={onClose}
+          source={source}
+          title={title}
+          mode={mode}
+          onSubmitted={onSubmitted}
+          secondaryAction={secondaryAction}
+        />
       )}
     </Dialog>
   );

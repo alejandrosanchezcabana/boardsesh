@@ -83,4 +83,28 @@ describe('detectShake', () => {
     expect(step.fired).toBe(false);
     expect(step.state.joltTimestamps).toEqual([]);
   });
+
+  describe('DEFAULT_SHAKE_OPTIONS (tuned to reduce false positives)', () => {
+    it('ignores a strong single bump (13 m/s²) below the 14 m/s² threshold', () => {
+      const step = detectShake(13, 100, initialShakeState());
+      expect(step.fired).toBe(false);
+      expect(step.state.joltTimestamps).toEqual([]);
+    });
+
+    it('does not fire on two jolts — a single bump-and-recover', () => {
+      let state = initialShakeState();
+      state = detectShake(20, 0, state).state;
+      const step = detectShake(20, 300, state);
+      expect(step.fired).toBe(false);
+      expect(step.state.joltTimestamps).toEqual([0, 300]);
+    });
+
+    it('fires on three jolts inside the window — a deliberate shake', () => {
+      let state = initialShakeState();
+      state = detectShake(20, 0, state).state;
+      state = detectShake(20, 200, state).state;
+      const step = detectShake(20, 400, state);
+      expect(step.fired).toBe(true);
+    });
+  });
 });
