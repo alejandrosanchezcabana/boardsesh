@@ -115,7 +115,8 @@ export default function BoardDiscoveryScroll({
 
   useEffect(() => {
     if (myBoards.length > 0) {
-      requestAnimationFrame(() => setMyBoardsVisible(true));
+      const id = requestAnimationFrame(() => setMyBoardsVisible(true));
+      return () => cancelAnimationFrame(id);
     } else {
       setMyBoardsVisible(false);
     }
@@ -123,7 +124,8 @@ export default function BoardDiscoveryScroll({
 
   useEffect(() => {
     if (bleOnlyBoards.length > 0) {
-      requestAnimationFrame(() => setBleBoardsVisible(true));
+      const id = requestAnimationFrame(() => setBleBoardsVisible(true));
+      return () => cancelAnimationFrame(id);
     } else {
       setBleBoardsVisible(false);
     }

@@ -238,7 +238,7 @@ export class CapacitorBleAdapter implements BluetoothAdapter {
     // explicitly ensures we know the actual value for chunking)
     try {
       const mtuResult = await ble.requestMtu({ deviceId: selectedDeviceId, mtu: 512 });
-      this.mtu = mtuResult.value - 3; // MTU minus ATT header overhead
+      this.mtu = Math.max(mtuResult.value - 3, DEFAULT_MTU); // MTU minus ATT header overhead
     } catch {
       // MTU negotiation not supported or failed — keep default 20
     }
