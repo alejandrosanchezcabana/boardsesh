@@ -6,9 +6,9 @@ import Typography from '@mui/material/Typography';
 import { LineChart } from '@mui/x-charts/LineChart';
 import type { VPointsTimelineData } from '../utils/chart-data-builders';
 
-interface VPointsChartProps {
+type VPointsChartProps = {
   data: VPointsTimelineData;
-}
+};
 
 export default function VPointsChart({ data }: VPointsChartProps) {
   const { weekLabels, series, totalPoints } = data;

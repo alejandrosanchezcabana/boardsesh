@@ -51,17 +51,17 @@ import type { BoardRouteIdentity } from '@/app/lib/types';
 type Tab = 'home' | 'climbs' | 'library' | 'feed' | 'create' | 'you';
 type PendingCreateAction = 'climb' | 'playlist' | null;
 
-interface BottomTabBarProps {
+type BottomTabBarProps = {
   boardDetails?: BoardDetails | null;
   angle?: number;
   boardConfigs?: BoardConfigData;
-}
+};
 
-interface SelectedBoardContext {
+type SelectedBoardContext = {
   boardName: string;
   layoutId: number;
   angle: number;
-}
+};
 
 const getActiveTab = (pathname: string): Tab => {
   if (pathname === '/') return 'home';

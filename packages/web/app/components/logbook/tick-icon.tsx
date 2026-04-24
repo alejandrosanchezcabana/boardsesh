@@ -5,18 +5,18 @@ import CheckOutlined from '@mui/icons-material/CheckOutlined';
 import ElectricBoltOutlined from '@mui/icons-material/ElectricBoltOutlined';
 import styles from './tick-icon.module.css';
 
-interface TickIconProps {
+type TickIconProps = {
   isFlash: boolean;
-}
+};
 
 export const TickIcon: React.FC<TickIconProps> = ({ isFlash }) => {
   return isFlash ? <ElectricBoltOutlined /> : <CheckOutlined />;
 };
 
-interface TickButtonWithLabelProps {
+type TickButtonWithLabelProps = {
   label: 'flash' | 'tick' | 'attempt' | 'save';
   children: React.ReactNode;
-}
+};
 
 /**
  * Wraps a tick/attempt IconButton and renders a subtle subtitle label below it,

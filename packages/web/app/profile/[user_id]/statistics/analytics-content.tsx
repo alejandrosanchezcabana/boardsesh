@@ -11,13 +11,13 @@ import { StatsFilterBridgeInjector } from '@/app/components/stats-filter-bridge/
 import StatsFilterDrawer from '@/app/components/stats-filter-drawer/stats-filter-drawer';
 import styles from '../profile-page.module.css';
 
-interface AnalyticsContentProps {
+type AnalyticsContentProps = {
   userId: string;
   initialProfileStats?: GetUserProfileStatsQueryResponse['userProfileStats'] | null;
   initialAllBoardsTicks?: Record<string, LogbookEntry[]>;
   initialLogbook?: LogbookEntry[];
   initialIsOwnProfile?: boolean;
-}
+};
 
 export default function AnalyticsContent({
   userId,

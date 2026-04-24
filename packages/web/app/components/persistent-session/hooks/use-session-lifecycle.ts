@@ -54,7 +54,7 @@ function transformToSubscriptionEvent(event: QueueEvent): SubscriptionQueueEvent
   }
 }
 
-interface UseSessionLifecycleArgs {
+type UseSessionLifecycleArgs = {
   isAuthLoading: boolean;
   handleQueueEvent: (event: SubscriptionQueueEvent) => void;
   handleSessionEvent: (event: SessionEvent) => void;
@@ -77,9 +77,9 @@ interface UseSessionLifecycleArgs {
     | 'queueUnsubscribeRef'
     | 'sessionUnsubscribeRef'
   >;
-}
+};
 
-export interface SessionLifecycleState {
+export type SessionLifecycleState = {
   activeSession: ActiveSessionInfo | null;
   client: Client | null;
   session: Session | null;
@@ -89,9 +89,9 @@ export interface SessionLifecycleState {
   sessionSummary: SessionSummary | null;
   sessionSummaryBoardType: string | null;
   sessionSummaryHealthKitWorkoutId: string | null;
-}
+};
 
-export interface SessionLifecycleActions {
+export type SessionLifecycleActions = {
   activateSession: (info: ActiveSessionInfo) => void;
   deactivateSession: () => void;
   setInitialQueueForSession: (
@@ -103,7 +103,7 @@ export interface SessionLifecycleActions {
   endSessionWithSummary: () => void;
   dismissSessionSummary: () => void;
   setSession: Dispatch<SetStateAction<Session | null>>;
-}
+};
 
 export function useSessionLifecycle({
   isAuthLoading,

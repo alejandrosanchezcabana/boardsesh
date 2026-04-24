@@ -12,11 +12,11 @@ import styles from './board-scroll.module.css';
 
 export type FindNearbyStatus = 'idle' | 'loading' | 'geo-denied' | 'error' | 'no-results';
 
-interface FindNearbyCardProps {
+type FindNearbyCardProps = {
   onClick: () => void;
   status?: FindNearbyStatus;
   size?: 'default' | 'small';
-}
+};
 
 export default function FindNearbyCard({ onClick, status = 'idle', size = 'default' }: FindNearbyCardProps) {
   const isSmall = size === 'small';

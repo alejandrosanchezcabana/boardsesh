@@ -34,11 +34,11 @@ const COMPACT_ZOOM_FACTOR = 10;
 // Minimum viewport size around the hold (ensures we see enough context)
 const MIN_VIEWPORT_SIZE = 200;
 
-interface HoldViewProps {
+type HoldViewProps = {
   hold: HoldRenderData;
   boardDetails: BoardDetails;
   expanded?: boolean;
-}
+};
 
 /**
  * Component that renders a view of a hold on the board

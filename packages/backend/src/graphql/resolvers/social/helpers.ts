@@ -2,11 +2,11 @@ import { eq, and, inArray, count } from 'drizzle-orm';
 import { db } from '../../../db/client';
 import * as dbSchema from '@boardsesh/db/schema';
 
-export interface UserProfileEnrichment {
+export type UserProfileEnrichment = {
   followerCount: number;
   followingCount: number;
   isFollowedByMe: boolean;
-}
+};
 
 /**
  * Batch-fetch follower counts, following counts, and isFollowedByMe

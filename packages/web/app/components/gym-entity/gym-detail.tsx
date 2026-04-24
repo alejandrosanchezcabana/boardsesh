@@ -43,13 +43,13 @@ import EditGymForm from './edit-gym-form';
 import GymMemberManagement from './gym-member-management';
 import CommentSection from '@/app/components/social/comment-section';
 
-interface GymDetailProps {
+type GymDetailProps = {
   gymUuid: string;
   open: boolean;
   onClose: () => void;
   onDeleted?: () => void;
   anchor?: 'top' | 'bottom';
-}
+};
 
 export default function GymDetail({ gymUuid, open, onClose, onDeleted, anchor = 'bottom' }: GymDetailProps) {
   const [gym, setGym] = useState<Gym | null>(null);

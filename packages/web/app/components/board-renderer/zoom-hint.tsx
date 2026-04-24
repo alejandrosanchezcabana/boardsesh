@@ -8,9 +8,9 @@ import styles from './swipe-board-carousel.module.css';
 const PREF_KEY = 'playview:zoomHintSeen';
 const AUTO_DISMISS_MS = 4000;
 
-interface ZoomHintProps {
+type ZoomHintProps = {
   visible: boolean;
-}
+};
 
 export default function ZoomHint({ visible }: ZoomHintProps) {
   const [show, setShow] = useState(false);

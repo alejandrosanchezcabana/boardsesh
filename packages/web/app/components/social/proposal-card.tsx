@@ -51,13 +51,13 @@ const TYPE_COLORS: Record<string, string> = {
   benchmark: themeTokens.colors.purple,
 };
 
-interface ProposalCardProps {
+type ProposalCardProps = {
   proposal: Proposal;
   isAdminOrLeader?: boolean;
   onUpdate?: (updated: Proposal) => void;
   onDelete?: (proposalUuid: string) => void;
   highlight?: boolean;
-}
+};
 
 export default function ProposalCard({ proposal, isAdminOrLeader, onUpdate, onDelete, highlight }: ProposalCardProps) {
   const pathname = usePathname();

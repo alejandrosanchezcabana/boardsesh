@@ -2,14 +2,14 @@ import { useMemo, useCallback, useRef } from 'react';
 import { useSnackbar } from '../../providers/snackbar-provider';
 import type { ConnectionState } from '../../connection-manager/websocket-connection-manager';
 
-interface UseMutationGuardParams {
+type UseMutationGuardParams = {
   sessionId: string | null;
   backendUrl: string | null;
   hasConnected: boolean;
   connectionState: ConnectionState;
   isSessionActive: boolean;
   isSessionReady: boolean;
-}
+};
 
 /**
  * Determines view-only mode and provides a guard function that blocks

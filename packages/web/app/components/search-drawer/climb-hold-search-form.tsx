@@ -15,9 +15,9 @@ import { track } from '@vercel/analytics';
 import { themeTokens } from '@/app/theme/theme-config';
 import styles from './search-form.module.css';
 
-interface ClimbHoldSearchFormProps {
+type ClimbHoldSearchFormProps = {
   boardDetails: BoardDetails;
-}
+};
 
 const ClimbHoldSearchForm: React.FC<ClimbHoldSearchFormProps> = ({ boardDetails }) => {
   const { uiSearchParams, updateFilters } = useUISearchParams();

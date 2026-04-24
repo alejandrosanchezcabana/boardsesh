@@ -6,7 +6,7 @@ import { isNativeApp, getPlatform } from '../ble/capacitor-utils';
 import type { ClimbQueueItem } from '@/app/components/queue-control/types';
 import type { BoardDetails } from '../types';
 
-interface LiveActivityBridgeProps {
+type LiveActivityBridgeProps = {
   queue: ClimbQueueItem[];
   currentClimbQueueItem: ClimbQueueItem | null;
   boardDetails: BoardDetails | null;
@@ -15,7 +15,7 @@ interface LiveActivityBridgeProps {
   onSetCurrentClimb?: (item: ClimbQueueItem) => void;
   /** Called when a widget navigation includes a correlationId (party mode optimistic path). */
   onWidgetNavigate?: (item: ClimbQueueItem, correlationId: string) => void;
-}
+};
 
 export default function LiveActivityBridge({ onSetCurrentClimb, onWidgetNavigate, ...props }: LiveActivityBridgeProps) {
   useLiveActivity(props);

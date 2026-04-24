@@ -13,12 +13,12 @@ import { FOLLOW_USER, UNFOLLOW_USER } from '@/app/lib/graphql/operations';
 import type { UserProfile } from '../utils/profile-constants';
 import styles from '../profile-page.module.css';
 
-export interface UserCardProps {
+export type UserCardProps = {
   userId: string;
   profile: UserProfile;
   isOwnProfile: boolean;
   onProfileUpdate: (updatedProfile: UserProfile) => void;
-}
+};
 
 export default function UserCard({ userId, profile, isOwnProfile, onProfileUpdate }: UserCardProps) {
   const displayName = profile.profile?.displayName || profile.name || 'Climber';

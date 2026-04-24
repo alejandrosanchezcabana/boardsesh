@@ -145,7 +145,7 @@ export const GET_PLAYLIST_CLIMBS = gql`
 
 // TypeScript types for operations
 
-export interface Playlist {
+export type Playlist = {
   id: string;
   uuid: string;
   boardType: string;
@@ -162,128 +162,128 @@ export interface Playlist {
   userRole?: string;
   followerCount: number;
   isFollowedByMe: boolean;
-}
+};
 
-export interface GetAllUserPlaylistsInput {
+export type GetAllUserPlaylistsInput = {
   boardType?: string;
   layoutId?: number;
-}
+};
 
-export interface GetAllUserPlaylistsQueryVariables {
+export type GetAllUserPlaylistsQueryVariables = {
   input: GetAllUserPlaylistsInput;
-}
+};
 
-export interface GetAllUserPlaylistsQueryResponse {
+export type GetAllUserPlaylistsQueryResponse = {
   allUserPlaylists: Playlist[];
-}
+};
 
-export interface GetUserPlaylistsInput {
+export type GetUserPlaylistsInput = {
   boardType: string;
   layoutId: number;
-}
+};
 
-export interface GetUserPlaylistsQueryVariables {
+export type GetUserPlaylistsQueryVariables = {
   input: GetUserPlaylistsInput;
-}
+};
 
-export interface GetUserPlaylistsQueryResponse {
+export type GetUserPlaylistsQueryResponse = {
   userPlaylists: Playlist[];
-}
+};
 
-export interface GetPlaylistQueryVariables {
+export type GetPlaylistQueryVariables = {
   playlistId: string;
-}
+};
 
-export interface GetPlaylistQueryResponse {
+export type GetPlaylistQueryResponse = {
   playlist: Playlist | null;
-}
+};
 
-export interface GetPlaylistsForClimbInput {
+export type GetPlaylistsForClimbInput = {
   boardType: string;
   layoutId: number;
   climbUuid: string;
-}
+};
 
-export interface GetPlaylistsForClimbQueryVariables {
+export type GetPlaylistsForClimbQueryVariables = {
   input: GetPlaylistsForClimbInput;
-}
+};
 
-export interface GetPlaylistsForClimbQueryResponse {
+export type GetPlaylistsForClimbQueryResponse = {
   playlistsForClimb: string[];
-}
+};
 
-export interface GetPlaylistsForClimbsInput {
+export type GetPlaylistsForClimbsInput = {
   boardType: string;
   layoutId: number;
   climbUuids: string[];
-}
+};
 
-export interface GetPlaylistsForClimbsQueryVariables {
+export type GetPlaylistsForClimbsQueryVariables = {
   input: GetPlaylistsForClimbsInput;
-}
+};
 
-export interface ClimbPlaylistMembership {
+export type ClimbPlaylistMembership = {
   climbUuid: string;
   playlistUuids: string[];
-}
+};
 
-export interface GetPlaylistsForClimbsQueryResponse {
+export type GetPlaylistsForClimbsQueryResponse = {
   playlistsForClimbs: ClimbPlaylistMembership[];
-}
+};
 
-export interface CreatePlaylistInput {
+export type CreatePlaylistInput = {
   boardType: string;
   layoutId: number;
   name: string;
   description?: string;
   color?: string;
   icon?: string;
-}
+};
 
-export interface CreatePlaylistMutationVariables {
+export type CreatePlaylistMutationVariables = {
   input: CreatePlaylistInput;
-}
+};
 
-export interface CreatePlaylistMutationResponse {
+export type CreatePlaylistMutationResponse = {
   createPlaylist: Playlist;
-}
+};
 
-export interface UpdatePlaylistInput {
+export type UpdatePlaylistInput = {
   playlistId: string;
   name?: string;
   description?: string;
   isPublic?: boolean;
   color?: string;
   icon?: string;
-}
+};
 
-export interface UpdatePlaylistMutationVariables {
+export type UpdatePlaylistMutationVariables = {
   input: UpdatePlaylistInput;
-}
+};
 
-export interface UpdatePlaylistMutationResponse {
+export type UpdatePlaylistMutationResponse = {
   updatePlaylist: Playlist;
-}
+};
 
-export interface DeletePlaylistMutationVariables {
+export type DeletePlaylistMutationVariables = {
   playlistId: string;
-}
+};
 
-export interface DeletePlaylistMutationResponse {
+export type DeletePlaylistMutationResponse = {
   deletePlaylist: boolean;
-}
+};
 
-export interface AddClimbToPlaylistInput {
+export type AddClimbToPlaylistInput = {
   playlistId: string;
   climbUuid: string;
   angle: number;
-}
+};
 
-export interface AddClimbToPlaylistMutationVariables {
+export type AddClimbToPlaylistMutationVariables = {
   input: AddClimbToPlaylistInput;
-}
+};
 
-export interface AddClimbToPlaylistMutationResponse {
+export type AddClimbToPlaylistMutationResponse = {
   addClimbToPlaylist: {
     id: string;
     playlistId: string;
@@ -292,22 +292,22 @@ export interface AddClimbToPlaylistMutationResponse {
     position: number;
     addedAt: string;
   };
-}
+};
 
-export interface RemoveClimbFromPlaylistInput {
+export type RemoveClimbFromPlaylistInput = {
   playlistId: string;
   climbUuid: string;
-}
+};
 
-export interface RemoveClimbFromPlaylistMutationVariables {
+export type RemoveClimbFromPlaylistMutationVariables = {
   input: RemoveClimbFromPlaylistInput;
-}
+};
 
-export interface RemoveClimbFromPlaylistMutationResponse {
+export type RemoveClimbFromPlaylistMutationResponse = {
   removeClimbFromPlaylist: boolean;
-}
+};
 
-export interface GetPlaylistClimbsInput {
+export type GetPlaylistClimbsInput = {
   playlistId: string;
   boardName?: string;
   layoutId?: number;
@@ -316,13 +316,13 @@ export interface GetPlaylistClimbsInput {
   angle?: number;
   page?: number;
   pageSize?: number;
-}
+};
 
-export interface GetPlaylistClimbsQueryVariables {
+export type GetPlaylistClimbsQueryVariables = {
   input: GetPlaylistClimbsInput;
-}
+};
 
-export interface PlaylistClimbsResult {
+export type PlaylistClimbsResult = {
   climbs: Array<{
     uuid: string;
     layoutId?: number | null;
@@ -341,25 +341,25 @@ export interface PlaylistClimbsResult {
   }>;
   totalCount: number;
   hasMore: boolean;
-}
+};
 
-export interface GetPlaylistClimbsQueryResponse {
+export type GetPlaylistClimbsQueryResponse = {
   playlistClimbs: PlaylistClimbsResult;
-}
+};
 
 // ============================================
 // Discover Playlists Types and Operations
 // ============================================
 
 // Playlist creator info for autocomplete
-export interface PlaylistCreator {
+export type PlaylistCreator = {
   userId: string;
   displayName: string;
   playlistCount: number;
-}
+};
 
 // Discoverable playlist with creator info
-export interface DiscoverablePlaylist {
+export type DiscoverablePlaylist = {
   id: string;
   uuid: string;
   boardType: string;
@@ -373,9 +373,9 @@ export interface DiscoverablePlaylist {
   climbCount: number;
   creatorId: string;
   creatorName: string;
-}
+};
 
-export interface DiscoverPlaylistsInput {
+export type DiscoverPlaylistsInput = {
   boardType?: string;
   layoutId?: number;
   name?: string;
@@ -383,35 +383,35 @@ export interface DiscoverPlaylistsInput {
   sortBy?: 'recent' | 'popular';
   page?: number;
   pageSize?: number;
-}
+};
 
-export interface DiscoverPlaylistsResult {
+export type DiscoverPlaylistsResult = {
   playlists: DiscoverablePlaylist[];
   totalCount: number;
   hasMore: boolean;
-}
+};
 
-export interface DiscoverPlaylistsQueryVariables {
+export type DiscoverPlaylistsQueryVariables = {
   input: DiscoverPlaylistsInput;
-}
+};
 
-export interface DiscoverPlaylistsQueryResponse {
+export type DiscoverPlaylistsQueryResponse = {
   discoverPlaylists: DiscoverPlaylistsResult;
-}
+};
 
-export interface GetPlaylistCreatorsInput {
+export type GetPlaylistCreatorsInput = {
   boardType: string;
   layoutId: number;
   searchQuery?: string;
-}
+};
 
-export interface GetPlaylistCreatorsQueryVariables {
+export type GetPlaylistCreatorsQueryVariables = {
   input: GetPlaylistCreatorsInput;
-}
+};
 
-export interface GetPlaylistCreatorsQueryResponse {
+export type GetPlaylistCreatorsQueryResponse = {
   playlistCreators: PlaylistCreator[];
-}
+};
 
 // Discover public playlists
 export const DISCOVER_PLAYLISTS = gql`
@@ -456,13 +456,13 @@ export const UPDATE_PLAYLIST_LAST_ACCESSED = gql`
   }
 `;
 
-export interface UpdatePlaylistLastAccessedMutationVariables {
+export type UpdatePlaylistLastAccessedMutationVariables = {
   playlistId: string;
-}
+};
 
-export interface UpdatePlaylistLastAccessedMutationResponse {
+export type UpdatePlaylistLastAccessedMutationResponse = {
   updatePlaylistLastAccessed: boolean;
-}
+};
 
 // ============================================
 // Search Playlists (Global) Types and Operations
@@ -492,22 +492,22 @@ export const SEARCH_PLAYLISTS = gql`
   }
 `;
 
-export interface SearchPlaylistsQueryVariables {
+export type SearchPlaylistsQueryVariables = {
   input: {
     query: string;
     boardType?: string;
     limit?: number;
     offset?: number;
   };
-}
+};
 
-export interface SearchPlaylistsQueryResponse {
+export type SearchPlaylistsQueryResponse = {
   searchPlaylists: {
     playlists: DiscoverablePlaylist[];
     totalCount: number;
     hasMore: boolean;
   };
-}
+};
 
 // ============================================
 // Playlist Follow Types and Operations
@@ -525,22 +525,22 @@ export const UNFOLLOW_PLAYLIST = gql`
   }
 `;
 
-export interface FollowPlaylistInput {
+export type FollowPlaylistInput = {
   playlistUuid: string;
-}
+};
 
-export interface FollowPlaylistMutationVariables {
+export type FollowPlaylistMutationVariables = {
   input: FollowPlaylistInput;
-}
+};
 
-export interface FollowPlaylistMutationResponse {
+export type FollowPlaylistMutationResponse = {
   followPlaylist: boolean;
-}
+};
 
-export interface UnfollowPlaylistMutationVariables {
+export type UnfollowPlaylistMutationVariables = {
   input: FollowPlaylistInput;
-}
+};
 
-export interface UnfollowPlaylistMutationResponse {
+export type UnfollowPlaylistMutationResponse = {
   unfollowPlaylist: boolean;
-}
+};

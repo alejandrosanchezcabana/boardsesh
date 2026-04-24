@@ -9,12 +9,12 @@ import ChevronRightOutlined from '@mui/icons-material/ChevronRightOutlined';
 import Link from 'next/link';
 import { themeTokens } from '@/app/theme/theme-config';
 
-interface ProfileNavCardProps {
+type ProfileNavCardProps = {
   title: string;
   subtitle?: string;
   href: string;
   icon: React.ReactNode;
-}
+};
 
 export default function ProfileNavCard({ title, subtitle, href, icon }: ProfileNavCardProps) {
   return (

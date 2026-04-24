@@ -183,61 +183,61 @@ export const COMMENT_UPDATES_SUBSCRIPTION = `
 // Query/Mutation Variable Types
 // ============================================
 
-export interface GetNotificationsQueryVariables {
+export type GetNotificationsQueryVariables = {
   unreadOnly?: boolean;
   limit?: number;
   offset?: number;
-}
+};
 
-export interface GetNotificationsQueryResponse {
+export type GetNotificationsQueryResponse = {
   notifications: NotificationConnection;
-}
+};
 
-export interface GetGroupedNotificationsQueryVariables {
+export type GetGroupedNotificationsQueryVariables = {
   limit?: number;
   offset?: number;
-}
+};
 
-export interface GetGroupedNotificationsQueryResponse {
+export type GetGroupedNotificationsQueryResponse = {
   groupedNotifications: GroupedNotificationConnection;
-}
+};
 
-export interface GetUnreadNotificationCountQueryResponse {
+export type GetUnreadNotificationCountQueryResponse = {
   unreadNotificationCount: number;
-}
+};
 
-export interface MarkNotificationReadMutationVariables {
+export type MarkNotificationReadMutationVariables = {
   notificationUuid: string;
-}
+};
 
-export interface MarkNotificationReadMutationResponse {
+export type MarkNotificationReadMutationResponse = {
   markNotificationRead: boolean;
-}
+};
 
-export interface MarkGroupNotificationsReadMutationVariables {
+export type MarkGroupNotificationsReadMutationVariables = {
   type: string;
   entityType?: string | null;
   entityId?: string | null;
-}
+};
 
-export interface MarkGroupNotificationsReadMutationResponse {
+export type MarkGroupNotificationsReadMutationResponse = {
   markGroupNotificationsRead: number;
-}
+};
 
-export interface MarkAllNotificationsReadMutationResponse {
+export type MarkAllNotificationsReadMutationResponse = {
   markAllNotificationsRead: boolean;
-}
+};
 
-export interface NotificationReceivedSubscriptionResponse {
+export type NotificationReceivedSubscriptionResponse = {
   notificationReceived: {
     notification: Notification;
   };
-}
+};
 
-export interface CommentUpdatesSubscriptionVariables {
+export type CommentUpdatesSubscriptionVariables = {
   entityType: SocialEntityType;
   entityId: string;
-}
+};
 
 export type CommentUpdatesSubscriptionResponse = {
   commentUpdates:

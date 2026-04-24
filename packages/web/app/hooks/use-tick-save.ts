@@ -9,15 +9,15 @@ import { useConfetti } from './use-confetti';
 import { saveTickDraft, clearTickDraft } from '@/app/lib/tick-draft-db';
 
 /** Snapshot of the tick target taken when the bar is first opened with a valid climb. */
-export interface TickTarget {
+export type TickTarget = {
   climb: Climb;
   angle: Angle;
   boardDetails: BoardDetails;
   /** Whether the user has any prior logbook history for this climb at open time. */
   hasPriorHistory: boolean;
-}
+};
 
-export interface UseTickSaveOptions {
+export type UseTickSaveOptions = {
   tickTarget: TickTarget | null;
   quality: number | null;
   difficulty: number | undefined;
@@ -27,7 +27,7 @@ export interface UseTickSaveOptions {
   ascentType?: TickStatus;
   onSave: () => void;
   onError?: () => void;
-}
+};
 
 /**
  * Decide whether the user has any prior history for a climb at open time.

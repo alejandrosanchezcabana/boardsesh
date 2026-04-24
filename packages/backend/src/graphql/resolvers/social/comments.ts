@@ -15,7 +15,7 @@ import { publishSocialEvent } from '../../../events/index';
 import { pubsub } from '../../../pubsub/index';
 import crypto from 'crypto';
 
-interface CommentRow {
+type CommentRow = {
   id: number;
   uuid: string;
   userId: string;
@@ -35,7 +35,7 @@ interface CommentRow {
   upvotes: number;
   downvotes: number;
   userVote: number | null;
-}
+};
 
 function mapCommentRow(row: CommentRow) {
   const isDeleted = row.deletedAt !== null;

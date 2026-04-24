@@ -18,13 +18,13 @@ export function generateInferredSessionId(userId: string, firstTickTimestamp: st
   return uuidv5(`${userId}:${firstTickTimestamp}`, INFERRED_SESSION_NAMESPACE);
 }
 
-export interface TickForGrouping {
+export type TickForGrouping = {
   uuid: string;
   climbedAt: string;
   status: string;
-}
+};
 
-export interface SessionGroup {
+export type SessionGroup = {
   sessionId: string;
   firstTickAt: string;
   lastTickAt: string;
@@ -33,7 +33,7 @@ export interface SessionGroup {
   totalFlashes: number;
   totalAttempts: number;
   tickCount: number;
-}
+};
 
 export function groupTicks(userId: string, ticks: TickForGrouping[]): SessionGroup[] {
   if (ticks.length === 0) return [];

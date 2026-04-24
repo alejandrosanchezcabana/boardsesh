@@ -1,7 +1,7 @@
 // Aurora boards only - different from main BoardName which includes moonboard
 export type AuroraBoardName = 'kilter' | 'tension' | 'decoy' | 'touchstone' | 'grasshopper';
 
-export interface BoardUser {
+export type BoardUser = {
   id: number;
   username: string;
   email_address: string;
@@ -16,9 +16,9 @@ export interface BoardUser {
   height: number | null;
   weight: number | null;
   wingspan: number | null;
-}
+};
 
-export interface LoginResponse {
+export type LoginResponse = {
   error: string;
   login: {
     created_at: string;
@@ -29,9 +29,9 @@ export interface LoginResponse {
   user: BoardUser;
   user_id: number;
   username: string;
-}
+};
 
-export interface SyncOptions {
+export type SyncOptions = {
   tables?: string[];
   walls?: Array<{
     uuid: string;
@@ -56,8 +56,8 @@ export interface SyncOptions {
   }>;
   sharedSyncs?: Array<LastSyncData>;
   userSyncs?: Array<UserSyncData>;
-}
-export interface ClimbStats {
+};
+export type ClimbStats = {
   display_difficulty: number;
   benchmark_difficulty: number | null;
   repeats: number;
@@ -67,8 +67,8 @@ export interface ClimbStats {
   quality_average?: number;
   fa_username?: string;
   fa_at?: string;
-}
-export interface SaveAscentOptions {
+};
+export type SaveAscentOptions = {
   uuid: string;
   user_id: number;
   climb_uuid: string;
@@ -81,8 +81,8 @@ export interface SaveAscentOptions {
   is_benchmark: boolean;
   comment: string;
   climbed_at: string;
-}
-export interface SaveAttemptOptions {
+};
+export type SaveAttemptOptions = {
   user_id: string;
   climb_uuid: string;
   angle: number;
@@ -90,8 +90,8 @@ export interface SaveAttemptOptions {
   bid_count: number;
   comment: string;
   climbed_at: string;
-}
-export interface SaveClimbOptions {
+};
+export type SaveClimbOptions = {
   layout_id: number;
   user_id: string; // NextAuth user ID (UUID)
   name: string;
@@ -102,7 +102,7 @@ export interface SaveClimbOptions {
   frames_pace?: number;
   angle: number;
   setter_username?: string;
-}
+};
 export const HOST_BASES: Record<AuroraBoardName, string> = {
   kilter: 'kilterboardapp',
   tension: 'tensionboardapp2',
@@ -115,7 +115,7 @@ export const WEB_HOSTS: Record<AuroraBoardName, string> = Object.fromEntries(
   Object.entries(HOST_BASES).map(([board, hostBase]) => [board, `https://${hostBase}.com`]),
 ) as Record<AuroraBoardName, string>;
 
-export interface Ascent {
+export type Ascent = {
   uuid: string;
   wall_uuid: string | null;
   climb_uuid: string;
@@ -132,14 +132,14 @@ export interface Ascent {
   climbed_at: string;
   created_at: string;
   updated_at: string;
-}
+};
 
 export type LogbookEntry = Omit<Ascent, 'bid_count'> & {
   tries: number;
   is_ascent: boolean;
 };
 
-export interface ClimbStat {
+export type ClimbStat = {
   climb_uuid: string;
   angle: number;
   ascensionist_count: number;
@@ -150,21 +150,21 @@ export interface ClimbStat {
   fa_at: string;
   created_at: string;
   updated_at: string;
-}
+};
 
-export interface AscentSavedEvent {
+export type AscentSavedEvent = {
   _type: 'ascent_saved';
   ascent: Ascent & {
     is_listed: boolean;
     created_at: string;
     updated_at: string;
   };
-}
+};
 
-export interface ClimbStatSavedEvent {
+export type ClimbStatSavedEvent = {
   _type: 'climb_stat_saved';
   climb_stat: ClimbStat;
-}
+};
 
 export type SaveAscentResponse = {
   events: (AscentSavedEvent | ClimbStatSavedEvent)[];

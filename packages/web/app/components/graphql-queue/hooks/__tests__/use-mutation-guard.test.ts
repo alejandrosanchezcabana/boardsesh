@@ -9,14 +9,14 @@ vi.mock('@/app/components/providers/snackbar-provider', () => ({
 import { useMutationGuard } from '../use-mutation-guard';
 import type { ConnectionState } from '../../../connection-manager/websocket-connection-manager';
 
-interface TestParams {
+type TestParams = {
   sessionId: string | null;
   backendUrl: string | null;
   hasConnected: boolean;
   connectionState: ConnectionState;
   isSessionActive: boolean;
   isSessionReady: boolean;
-}
+};
 
 const defaultParams: TestParams = {
   sessionId: null,

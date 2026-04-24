@@ -4,12 +4,12 @@ import React, { useCallback, useRef } from 'react';
 import { themeTokens } from '@/app/theme/theme-config';
 import styles from './direction-picker.module.css';
 
-interface DirectionPickerProps {
+type DirectionPickerProps = {
   value: number | null;
   onChange: (direction: number) => void;
   disabled?: boolean;
   size?: number;
-}
+};
 
 /**
  * Circular direction picker component

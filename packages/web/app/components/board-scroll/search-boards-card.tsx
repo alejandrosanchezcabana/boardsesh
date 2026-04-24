@@ -5,10 +5,10 @@ import SearchOutlined from '@mui/icons-material/SearchOutlined';
 import BoardThumbnailGrid from './board-thumbnail-grid';
 import styles from './board-scroll.module.css';
 
-interface SearchBoardsCardProps {
+type SearchBoardsCardProps = {
   onClick: () => void;
   size?: 'default' | 'small';
-}
+};
 
 export default function SearchBoardsCard({ onClick, size = 'default' }: SearchBoardsCardProps) {
   const isSmall = size === 'small';

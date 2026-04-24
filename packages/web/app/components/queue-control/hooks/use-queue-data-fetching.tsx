@@ -13,14 +13,14 @@ import {
 } from '@/app/lib/graphql/operations/climb-search';
 import { useWsAuthToken } from '@/app/hooks/use-ws-auth-token';
 
-interface UseQueueDataFetchingProps {
+type UseQueueDataFetchingProps = {
   searchParams: SearchRequestPagination;
   countSearchParams: SearchRequestPagination;
   queue: ClimbQueue;
   parsedParams: ParsedBoardRouteParameters;
   hasDoneFirstFetch: boolean;
   setHasDoneFirstFetch: () => void;
-}
+};
 
 export const useQueueDataFetching = ({
   searchParams,

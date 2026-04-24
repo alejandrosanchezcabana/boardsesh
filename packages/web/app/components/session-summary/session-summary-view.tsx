@@ -22,9 +22,9 @@ import type { SessionSummary } from '@boardsesh/shared-schema';
 import { getGradeColor as getVividGradeColor } from '@/app/lib/grade-colors';
 import { useGradeFormat } from '@/app/hooks/use-grade-format';
 
-interface SessionSummaryViewProps {
+type SessionSummaryViewProps = {
   summary: SessionSummary;
-}
+};
 
 export default function SessionSummaryView({ summary }: SessionSummaryViewProps) {
   const { formatGrade, loaded: gradeFormatLoaded } = useGradeFormat();

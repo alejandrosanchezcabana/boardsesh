@@ -11,12 +11,12 @@ import type { SessionSummary } from '@boardsesh/shared-schema';
 import SessionSummaryView from './session-summary-view';
 import { useHealthKitSync, useHealthKitAutoSync } from '@/app/hooks/use-healthkit-sync';
 
-interface SessionSummaryDialogProps {
+type SessionSummaryDialogProps = {
   summary: SessionSummary | null;
   boardType?: string;
   existingWorkoutId?: string | null;
   onDismiss: () => void;
-}
+};
 
 export default function SessionSummaryDialog({
   summary,

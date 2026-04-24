@@ -18,17 +18,17 @@ import type { Map as LeafletMap, Marker as LeafletMarker } from 'leaflet';
 import type * as LeafletNamespace from 'leaflet';
 import { useGeolocation } from '@/app/hooks/use-geolocation';
 
-interface NominatimResult {
+type NominatimResult = {
   lat: string;
   lon: string;
   display_name: string;
-}
+};
 
-interface MapLocationPickerProps {
+type MapLocationPickerProps = {
   latitude: number | null;
   longitude: number | null;
   onChange: (lat: number, lng: number) => void;
-}
+};
 
 export default function MapLocationPicker({ latitude, longitude, onChange }: MapLocationPickerProps) {
   const mapRef = useRef<LeafletMap | null>(null);

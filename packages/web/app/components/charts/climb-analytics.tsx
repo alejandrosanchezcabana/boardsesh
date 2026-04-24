@@ -30,16 +30,16 @@ function getAngleColor(index: number): string {
   return ANGLE_COLORS[index % ANGLE_COLORS.length];
 }
 
-interface GroupedData {
+type GroupedData = {
   byAngle: Map<number, { date: string; value: number }[]>;
   labels: string[];
-}
+};
 
-interface LineSeriesOptions {
+type LineSeriesOptions = {
   area?: boolean;
   showMark?: boolean;
   stack?: string;
-}
+};
 
 function groupByAngleAndMonth(
   rows: ClimbStatsHistoryEntry[],
@@ -98,11 +98,11 @@ function buildTickInterval(labelCount: number) {
   return (_value: string, index: number) => index % labelInterval === 0;
 }
 
-interface AngleFilterProps {
+type AngleFilterProps = {
   angles: number[];
   selected: Set<number>;
   onToggle: (angle: number) => void;
-}
+};
 
 function AngleFilter({ angles, selected, onToggle }: AngleFilterProps) {
   if (angles.length <= 1) return null;
@@ -131,10 +131,10 @@ function AngleFilter({ angles, selected, onToggle }: AngleFilterProps) {
   );
 }
 
-interface ClimbAnalyticsProps {
+type ClimbAnalyticsProps = {
   climbUuid: string;
   boardType: string;
-}
+};
 
 export default function ClimbAnalytics({ climbUuid, boardType }: ClimbAnalyticsProps) {
   const [rows, setRows] = useState<ClimbStatsHistoryEntry[] | null>(null);

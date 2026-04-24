@@ -2,10 +2,10 @@ import { sql } from 'drizzle-orm';
 import { db } from '../../client';
 import { UNIFIED_TABLES, type BoardName } from '../util/table-select';
 
-interface MatchedClimb {
+type MatchedClimb = {
   uuid: string;
   name: string;
-}
+};
 
 /**
  * Find a climb by exact frames string match.

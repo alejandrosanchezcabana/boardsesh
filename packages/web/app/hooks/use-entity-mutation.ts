@@ -7,11 +7,11 @@ import { createGraphQLHttpClient } from '@/app/lib/graphql/client';
 import type { TypedDocumentNode } from '@graphql-typed-document-node/core';
 import type { Variables } from 'graphql-request';
 
-interface UseEntityMutationOptions {
+type UseEntityMutationOptions = {
   successMessage?: string;
   errorMessage: string;
   authRequiredMessage?: string;
-}
+};
 
 export function useEntityMutation<TResponse, TVariables extends Variables = Variables>(
   mutation: TypedDocumentNode | string,

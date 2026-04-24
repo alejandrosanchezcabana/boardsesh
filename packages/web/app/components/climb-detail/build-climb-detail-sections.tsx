@@ -13,7 +13,7 @@ import type { BetaLink } from '@/app/lib/api-wrappers/sync-api-types';
 import { dedupeBetaLinks } from '@/app/lib/instagram-url';
 import type { Climb } from '@/app/lib/types';
 
-interface BuildClimbDetailSectionsProps {
+type BuildClimbDetailSectionsProps = {
   climb: Climb;
   climbUuid: string;
   boardType: string;
@@ -27,7 +27,7 @@ interface BuildClimbDetailSectionsProps {
    *  `enabled` option on `useQuery`). `useLogbookSummary` is always called
    *  unconditionally because it reads from in-memory context — no network cost. */
   enabled?: boolean;
-}
+};
 
 export function useBuildClimbDetailSections({
   climb,

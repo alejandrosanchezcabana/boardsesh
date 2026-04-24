@@ -170,19 +170,19 @@ export const VOTE = gql`
 // Query/Mutation Variable Types
 // ============================================
 
-export interface GetGlobalCommentFeedVariables {
+export type GetGlobalCommentFeedVariables = {
   input?: {
     cursor?: string | null;
     limit?: number;
     boardUuid?: string | null;
   };
-}
+};
 
-export interface GetGlobalCommentFeedResponse {
+export type GetGlobalCommentFeedResponse = {
   globalCommentFeed: CommentConnection;
-}
+};
 
-export interface GetCommentsQueryVariables {
+export type GetCommentsQueryVariables = {
   input: {
     entityType: SocialEntityType;
     entityId: string;
@@ -192,72 +192,72 @@ export interface GetCommentsQueryVariables {
     limit?: number;
     offset?: number;
   };
-}
+};
 
-export interface GetCommentsQueryResponse {
+export type GetCommentsQueryResponse = {
   comments: CommentConnection;
-}
+};
 
-export interface GetVoteSummaryQueryVariables {
+export type GetVoteSummaryQueryVariables = {
   entityType: SocialEntityType;
   entityId: string;
-}
+};
 
-export interface GetVoteSummaryQueryResponse {
+export type GetVoteSummaryQueryResponse = {
   voteSummary: VoteSummary;
-}
+};
 
-export interface GetBulkVoteSummariesQueryVariables {
+export type GetBulkVoteSummariesQueryVariables = {
   input: {
     entityType: SocialEntityType;
     entityIds: string[];
   };
-}
+};
 
-export interface GetBulkVoteSummariesQueryResponse {
+export type GetBulkVoteSummariesQueryResponse = {
   bulkVoteSummaries: VoteSummary[];
-}
+};
 
-export interface AddCommentMutationVariables {
+export type AddCommentMutationVariables = {
   input: {
     entityType: SocialEntityType;
     entityId: string;
     parentCommentUuid?: string;
     body: string;
   };
-}
+};
 
-export interface AddCommentMutationResponse {
+export type AddCommentMutationResponse = {
   addComment: Comment;
-}
+};
 
-export interface UpdateCommentMutationVariables {
+export type UpdateCommentMutationVariables = {
   input: {
     commentUuid: string;
     body: string;
   };
-}
+};
 
-export interface UpdateCommentMutationResponse {
+export type UpdateCommentMutationResponse = {
   updateComment: Comment;
-}
+};
 
-export interface DeleteCommentMutationVariables {
+export type DeleteCommentMutationVariables = {
   commentUuid: string;
-}
+};
 
-export interface DeleteCommentMutationResponse {
+export type DeleteCommentMutationResponse = {
   deleteComment: boolean;
-}
+};
 
-export interface VoteMutationVariables {
+export type VoteMutationVariables = {
   input: {
     entityType: SocialEntityType;
     entityId: string;
     value: number;
   };
-}
+};
 
-export interface VoteMutationResponse {
+export type VoteMutationResponse = {
   vote: VoteSummary;
-}
+};

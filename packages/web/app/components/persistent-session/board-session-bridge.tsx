@@ -7,11 +7,11 @@ import type { BoardDetails, ParsedBoardRouteParameters } from '@/app/lib/types';
 import { getBaseBoardPath } from '@/app/lib/url-utils';
 import { getClimbSessionCookie } from '@/app/lib/climb-session-cookie';
 
-interface BoardSessionBridgeProps {
+type BoardSessionBridgeProps = {
   boardDetails: BoardDetails;
   parsedParams: ParsedBoardRouteParameters;
   children: React.ReactNode;
-}
+};
 
 /**
  * Bridge component that connects the board layout to the persistent session.

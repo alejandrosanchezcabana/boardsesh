@@ -17,12 +17,12 @@ import {
 } from '@/app/lib/graphql/operations';
 import CommentItem from './comment-item';
 
-interface CommentListProps {
+type CommentListProps = {
   entityType: SocialEntityType;
   entityId: string;
   refreshKey?: number;
   currentUserId?: string | null;
-}
+};
 
 const PAGE_SIZE = 20;
 

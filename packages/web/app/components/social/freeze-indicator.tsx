@@ -4,9 +4,9 @@ import React from 'react';
 import Alert from '@mui/material/Alert';
 import LockIcon from '@mui/icons-material/Lock';
 
-interface FreezeIndicatorProps {
+type FreezeIndicatorProps = {
   reason?: string | null;
-}
+};
 
 export default function FreezeIndicator({ reason }: FreezeIndicatorProps) {
   return (

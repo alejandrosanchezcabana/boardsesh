@@ -11,7 +11,7 @@ const BACKEND_URL = getBackendWsUrl();
 
 export type PartyMode = 'direct' | 'backend';
 
-interface ConnectionSettingsContextType {
+type ConnectionSettingsContextType = {
   // Backend URL (from env var only)
   backendUrl: string | null;
 
@@ -21,7 +21,7 @@ interface ConnectionSettingsContextType {
 
   // Loading state
   isLoaded: boolean;
-}
+};
 
 const ConnectionSettingsContext = createContext<ConnectionSettingsContextType | undefined>(undefined);
 

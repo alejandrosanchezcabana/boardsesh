@@ -15,9 +15,9 @@ import { useMarkGroupAsRead, useMarkAllAsRead } from '@/app/hooks/use-mark-notif
 import { useInfiniteScroll } from '@/app/hooks/use-infinite-scroll';
 import NotificationItem from './notification-item';
 
-interface NotificationListProps {
+type NotificationListProps = {
   initialData?: GroupedNotificationConnection | null;
-}
+};
 
 export default function NotificationList({ initialData }: NotificationListProps) {
   const unreadCount = useUnreadNotificationCount();

@@ -23,7 +23,7 @@ import { themeTokens } from '@/app/theme/theme-config';
 import type { SocialEntityType } from '@boardsesh/shared-schema';
 import { useVoteSummaryContext } from './vote-summary-context';
 
-interface VoteButtonProps {
+type VoteButtonProps = {
   entityType: SocialEntityType;
   entityId: string;
   initialUpvotes?: number;
@@ -32,7 +32,7 @@ interface VoteButtonProps {
   layout?: 'vertical' | 'horizontal';
   likeOnly?: boolean;
   onVoteChange?: (summary: { upvotes: number; downvotes: number; voteScore: number; userVote: number }) => void;
-}
+};
 
 export default function VoteButton({
   entityType,

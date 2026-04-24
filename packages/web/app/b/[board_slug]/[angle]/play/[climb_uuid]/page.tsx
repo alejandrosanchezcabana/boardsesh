@@ -11,9 +11,9 @@ import { extractUuidFromSlug } from '@/app/lib/url-utils';
 import { buildOgBoardRenderUrl } from '@/app/components/board-renderer/util';
 import { OG_IMAGE_HEIGHT, OG_IMAGE_WIDTH } from '@/app/lib/seo/og';
 
-interface BoardSlugPlayPageProps {
+type BoardSlugPlayPageProps = {
   params: Promise<{ board_slug: string; angle: string; climb_uuid: string }>;
-}
+};
 
 export async function generateMetadata(props: BoardSlugPlayPageProps): Promise<Metadata> {
   const params = await props.params;

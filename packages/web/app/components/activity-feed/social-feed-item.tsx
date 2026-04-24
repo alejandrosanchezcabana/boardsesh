@@ -61,10 +61,10 @@ const getStatusDisplay = (status: string) => {
   }
 };
 
-interface SocialFeedItemProps {
+type SocialFeedItemProps = {
   item: FollowingAscentFeedItem;
   showUserHeader?: boolean;
-}
+};
 
 const SocialFeedItem: React.FC<SocialFeedItemProps> = ({ item, showUserHeader = false }) => {
   const [commentsOpen, setCommentsOpen] = useState(false);

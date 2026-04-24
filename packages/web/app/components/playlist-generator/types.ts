@@ -9,51 +9,51 @@ export type EffortLevel = 'moderate' | 'challenging' | 'veryDifficult' | 'maxEff
 export type ClimbBias = 'unfamiliar' | 'attempted' | 'any';
 
 // Base options shared by all workout types
-export interface BaseGeneratorOptions {
+export type BaseGeneratorOptions = {
   warmUp: WarmUpType;
   targetGrade: number; // difficulty_id
   climbBias: ClimbBias;
   minAscents: number;
   minRating: number;
   onlyTallClimbs: boolean;
-}
+};
 
 // Volume workout - high volume at consistent grade
-export interface VolumeOptions extends BaseGeneratorOptions {
+export type VolumeOptions = {
   type: 'volume';
   mainSetClimbs: number;
   mainSetVariability: number; // grades above/below target
-}
+} & BaseGeneratorOptions;
 
 // Pyramid workout - ramp up to peak then back down
-export interface PyramidOptions extends BaseGeneratorOptions {
+export type PyramidOptions = {
   type: 'pyramid';
   numberOfSteps: number;
   climbsPerStep: number;
-}
+} & BaseGeneratorOptions;
 
 // Ladder workout - ramp up through grades
-export interface LadderOptions extends BaseGeneratorOptions {
+export type LadderOptions = {
   type: 'ladder';
   numberOfSteps: number;
   climbsPerStep: number;
-}
+} & BaseGeneratorOptions;
 
 // Grade Focus - single grade workout
-export interface GradeFocusOptions extends BaseGeneratorOptions {
+export type GradeFocusOptions = {
   type: 'gradeFocus';
   numberOfClimbs: number;
-}
+} & BaseGeneratorOptions;
 
 export type GeneratorOptions = VolumeOptions | PyramidOptions | LadderOptions | GradeFocusOptions;
 
 // Workout type metadata for UI
-export interface WorkoutTypeInfo {
+export type WorkoutTypeInfo = {
   type: WorkoutType;
   name: string;
   description: string;
   icon: 'volume' | 'pyramid' | 'ladder' | 'focus';
-}
+};
 
 export const WORKOUT_TYPES: WorkoutTypeInfo[] = [
   {
@@ -162,8 +162,8 @@ export const WARM_UP_CONFIG = {
 };
 
 // Represents a planned climb slot in the generated playlist
-export interface PlannedClimbSlot {
+export type PlannedClimbSlot = {
   grade: number; // difficulty_id
   section: 'warmUp' | 'increasing' | 'peak' | 'decreasing' | 'main';
   index: number;
-}
+};

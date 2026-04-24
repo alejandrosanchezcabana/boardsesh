@@ -23,15 +23,15 @@ const DEBUG = process.env.NODE_ENV === 'development';
 const WS_PING_INTERVAL_MS = 30_000;
 
 /** WebSocket extended with liveness tracking for ping/pong. */
-interface AliveWebSocket extends WebSocket {
+type AliveWebSocket = {
   isAlive: boolean;
-}
+} & WebSocket;
 
 // Extend Extra type with our custom context
-interface CustomExtra extends WsExtra {
+type CustomExtra = {
   context?: ConnectionContext;
   [key: PropertyKey]: unknown;
-}
+} & WsExtra;
 
 // Type alias for convenience
 type ServerContext = GqlWsContext<Record<string, unknown>, CustomExtra>;

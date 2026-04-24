@@ -4,9 +4,9 @@ import { useState, useCallback, useMemo } from 'react';
 import type { LitUpHoldsMap, HoldState } from '../board-renderer/types';
 import { MOONBOARD_HOLD_STATES } from '@/app/lib/moonboard-config';
 
-interface UseMoonBoardCreateClimbOptions {
+type UseMoonBoardCreateClimbOptions = {
   initialHoldsMap?: LitUpHoldsMap;
-}
+};
 
 export function useMoonBoardCreateClimb(options?: UseMoonBoardCreateClimbOptions) {
   const [litUpHoldsMap, setLitUpHoldsMap] = useState<LitUpHoldsMap>(options?.initialHoldsMap ?? {});

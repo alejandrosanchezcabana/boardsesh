@@ -1,4 +1,4 @@
-export interface User {
+export type User = {
   id: number;
   username: string;
   email_address: string;
@@ -17,9 +17,9 @@ export interface User {
   created_at: string;
   updated_at: string;
   permissions: string[];
-}
+};
 
-export interface Wall {
+export type Wall = {
   uuid: string;
   name: string;
   user_id: number;
@@ -34,15 +34,15 @@ export interface Wall {
   is_listed: boolean;
   created_at: string;
   updated_at: string;
-}
+};
 
-export interface WallExpungement {
+export type WallExpungement = {
   wall_uuid: string;
   created_at: string;
   updated_at: string;
-}
+};
 
-export interface Ascent {
+export type Ascent = {
   uuid: string;
   wall_uuid: string | null;
   climb_uuid: string;
@@ -59,30 +59,30 @@ export interface Ascent {
   climbed_at: string;
   created_at: string;
   updated_at: string;
-}
+};
 
-export interface UserSync {
+export type UserSync = {
   user_id: number;
   table_name: string;
   last_synchronized_at: string;
-}
+};
 
-export interface Attempt {
+export type Attempt = {
   id: number;
   position: number;
   name: string;
-}
+};
 
-export interface Product {
+export type Product = {
   id: number;
   name: string;
   is_listed: boolean;
   password: string | null;
   min_count_in_frame: number;
   max_count_in_frame: number;
-}
+};
 
-export interface ProductSize {
+export type ProductSize = {
   id: number;
   product_id: number;
   edge_left: number;
@@ -94,9 +94,9 @@ export interface ProductSize {
   image_filename: string | null;
   position: number;
   is_listed: boolean;
-}
+};
 
-export interface ClimbStats {
+export type ClimbStats = {
   climb_uuid: string;
   angle: number;
   display_difficulty: number;
@@ -106,9 +106,9 @@ export interface ClimbStats {
   quality_average: number;
   fa_username: string;
   fa_at: string;
-}
+};
 
-export interface Hole {
+export type Hole = {
   id: number;
   product_id: number;
   name: string;
@@ -116,16 +116,16 @@ export interface Hole {
   y: number;
   mirrored_hole_id: number | null;
   mirror_group: number;
-}
+};
 
-export interface Led {
+export type Led = {
   id: number;
   product_size_id: number;
   hole_id: number;
   position: number;
-}
+};
 
-export interface Layout {
+export type Layout = {
   id: number;
   product_id: number;
   name: string;
@@ -134,9 +134,9 @@ export interface Layout {
   is_listed: boolean;
   password: string | null;
   created_at: string;
-}
+};
 
-export interface PlacementRole {
+export type PlacementRole = {
   id: number;
   product_id: number;
   position: number;
@@ -144,20 +144,20 @@ export interface PlacementRole {
   full_name: string;
   led_color: string;
   screen_color: string;
-}
+};
 
-export interface Set {
+export type Set = {
   id: number;
   name: string;
   hsm: number;
-}
+};
 
-export interface ProductsAngle {
+export type ProductsAngle = {
   product_id: number;
   angle: number;
-}
+};
 
-export interface BetaLink {
+export type BetaLink = {
   climb_uuid: string;
   link: string;
   foreign_username: string | null;
@@ -165,21 +165,21 @@ export interface BetaLink {
   thumbnail: string | null;
   is_listed: boolean;
   created_at: string;
-}
+};
 
-export interface ProductSizesLayoutsSet {
+export type ProductSizesLayoutsSet = {
   id: number;
   product_size_id: number;
   layout_id: number;
   set_id: number;
   image_filename: string | null;
   is_listed: boolean;
-}
+};
 
-export interface SharedSync {
+export type SharedSync = {
   table_name: string;
   last_synchronized_at: string;
-}
+};
 export type SyncPutFields =
   | User
   | Wall
@@ -201,7 +201,7 @@ export type SyncPutFields =
   | BetaLink
   | ProductSizesLayoutsSet;
 
-export interface SyncDataPUT extends Record<string, Array<SyncPutFields>> {
+export type SyncDataPUT = {
   users: User[];
   walls: Wall[];
   wall_expungements: WallExpungement[];
@@ -221,9 +221,9 @@ export interface SyncDataPUT extends Record<string, Array<SyncPutFields>> {
   products_angles: ProductsAngle[];
   beta_links: BetaLink[];
   product_sizes_layouts_sets: ProductSizesLayoutsSet[];
-}
+} & Record<string, Array<SyncPutFields>>;
 
-export interface Climb {
+export type Climb = {
   uuid: string;
   name: string;
   description: string;
@@ -243,9 +243,9 @@ export interface Climb {
   created_at: string;
   updated_at: string;
   angle: number;
-}
+};
 
-export interface SyncData extends Record<string, unknown> {
+export type SyncData = {
   PUT?: SyncDataPUT;
   _complete?: boolean;
   climbs?: Climb[];
@@ -267,4 +267,4 @@ export interface SyncData extends Record<string, unknown> {
   products_angles?: ProductsAngle[];
   beta_links?: BetaLink[];
   product_sizes_layouts_sets?: ProductSizesLayoutsSet[];
-}
+} & Record<string, unknown>;

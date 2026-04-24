@@ -6,7 +6,7 @@ import { useBuildClimbDetailSections } from '@/app/components/climb-detail/build
 import type { BetaLink } from '@/app/lib/api-wrappers/sync-api-types';
 import type { Climb } from '@/app/lib/types';
 
-interface ClimbViewSidebarProps {
+type ClimbViewSidebarProps = {
   climb: Climb;
   betaLinks: BetaLink[];
   climbUuid: string;
@@ -14,7 +14,7 @@ interface ClimbViewSidebarProps {
   angle: number;
   currentClimbDifficulty?: string;
   boardName?: string;
-}
+};
 
 export default function ClimbViewSidebar({
   climb,

@@ -125,10 +125,10 @@ function TickBadgeAvatar({
   );
 }
 
-export interface QueueControlBarProps {
+export type QueueControlBarProps = {
   boardDetails: BoardDetails;
   angle: Angle;
-}
+};
 
 const QueueControlBar: React.FC<QueueControlBarProps> = ({ boardDetails, angle }) => {
   const [activeDrawer, setActiveDrawer] = useState<ActiveDrawer>('none');

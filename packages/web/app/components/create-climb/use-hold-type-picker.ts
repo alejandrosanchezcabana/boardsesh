@@ -3,15 +3,15 @@ import type { HoldState, LitUpHoldsMap } from '../board-renderer/types';
 
 export type PickerSelection = HoldState | 'OFF';
 
-interface PickerState {
+type PickerState = {
   holdId: number;
   anchor: Element;
-}
+};
 
-interface UseHoldTypePickerOptions {
+type UseHoldTypePickerOptions = {
   litUpHoldsMap: LitUpHoldsMap;
   setHoldState: (holdId: number, state: PickerSelection) => void;
-}
+};
 
 /**
  * Shared state plumbing for the HoldTypePicker. Tracks which hold the user

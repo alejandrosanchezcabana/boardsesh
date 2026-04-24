@@ -27,11 +27,11 @@ import {
 } from '@/app/lib/graphql/operations';
 import type { PublicUserProfile } from '@boardsesh/shared-schema';
 
-interface FollowerCountProps {
+type FollowerCountProps = {
   userId: string;
   followerCount: number;
   followingCount: number;
-}
+};
 
 type DrawerMode = 'followers' | 'following' | null;
 

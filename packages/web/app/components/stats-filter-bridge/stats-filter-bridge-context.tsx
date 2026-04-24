@@ -17,7 +17,7 @@ const useIsomorphicLayoutEffect = typeof window !== 'undefined' ? useLayoutEffec
 // State context (consumed by GlobalHeader)
 // -------------------------------------------------------------------
 
-interface StatsFilterBridgeState {
+type StatsFilterBridgeState = {
   /** Whether a statistics page is currently active. */
   isActive: boolean;
   /** Page title for the header (e.g. "Statistics", "Progress"). */
@@ -28,7 +28,7 @@ interface StatsFilterBridgeState {
   openFilterDrawer: (() => void) | null;
   /** Whether any non-default filters are active (for indicator dot). */
   hasActiveFilters: boolean;
-}
+};
 
 const StatsFilterBridgeContext = createContext<StatsFilterBridgeState>({
   isActive: false,
@@ -46,11 +46,11 @@ export function useStatsFilterBridge() {
 // Setter context (consumed by the injector in page content)
 // -------------------------------------------------------------------
 
-interface StatsFilterBridgeSetters {
+type StatsFilterBridgeSetters = {
   register: (openDrawer: () => void, pageTitle: string, backUrl: string | null, hasActiveFilters: boolean) => void;
   update: (hasActiveFilters: boolean) => void;
   deregister: () => void;
-}
+};
 
 const StatsFilterBridgeSetterContext = createContext<StatsFilterBridgeSetters>({
   register: () => {},
@@ -120,13 +120,13 @@ export function StatsFilterBridgeProvider({ children }: { children: React.ReactN
 // Injector (placed inside page content)
 // -------------------------------------------------------------------
 
-interface StatsFilterBridgeInjectorProps {
+type StatsFilterBridgeInjectorProps = {
   openDrawer: () => void;
   pageTitle: string;
   backUrl: string | null;
   hasActiveFilters: boolean;
   isActive: boolean;
-}
+};
 
 export function StatsFilterBridgeInjector({
   openDrawer,

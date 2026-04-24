@@ -100,7 +100,7 @@ async function compressImage(file: File): Promise<File> {
   });
 }
 
-interface UserProfile {
+type UserProfile = {
   id: string;
   email: string;
   name: string | null;
@@ -112,7 +112,7 @@ interface UserProfile {
     avatarUrl: string | null;
     instagramUrl: string | null;
   } | null;
-}
+};
 
 export default function SettingsPageContent() {
   const { data: session, status } = useSession();

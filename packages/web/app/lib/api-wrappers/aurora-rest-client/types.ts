@@ -11,7 +11,7 @@ export const HOST_BASES: Record<AuroraBoardName, string> = {
 /**
  * User Profile interface
  */
-export interface UserProfile {
+export type UserProfile = {
   id: number;
   username: string;
   email_address: string;
@@ -26,23 +26,23 @@ export interface UserProfile {
   height: number | null;
   weight: number | null;
   wingspan: number | null;
-}
+};
 
 /**
  * Client configuration options
  */
-export interface ClientOptions {
+export type ClientOptions = {
   boardName: AuroraBoardName;
   token?: string | null;
   apiVersion?: string;
-}
+};
 
-export interface Session {
+export type Session = {
   user_id: number;
   token: string;
-}
+};
 
-export interface LoginResponse {
+export type LoginResponse = {
   error?: string;
   login?: {
     created_at: string;
@@ -57,4 +57,4 @@ export interface LoginResponse {
     token: string;
     user_id: number;
   };
-}
+};

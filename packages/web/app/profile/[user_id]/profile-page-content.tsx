@@ -21,7 +21,7 @@ import UserCard from './components/user-card';
 import ProfileNavCard from './components/profile-nav-card';
 import type { UserProfile, LogbookEntry } from './utils/profile-constants';
 
-interface ProfilePageContentProps {
+type ProfilePageContentProps = {
   userId: string;
   initialProfile?: UserProfile | null;
   initialProfileStats?: GetUserProfileStatsQueryResponse['userProfileStats'] | null;
@@ -29,7 +29,7 @@ interface ProfilePageContentProps {
   initialLogbook?: LogbookEntry[];
   initialIsOwnProfile?: boolean;
   initialNotFound?: boolean;
-}
+};
 
 export default function ProfilePageContent({
   userId,

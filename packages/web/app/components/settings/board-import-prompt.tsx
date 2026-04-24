@@ -33,10 +33,10 @@ import {
 import type { AuroraBoardName } from '@boardsesh/shared-schema';
 import styles from './aurora-credentials-section.module.css';
 
-interface BoardImportPromptProps {
+type BoardImportPromptProps = {
   boardType: AuroraBoardName;
   onImportComplete?: () => void;
-}
+};
 
 export default function BoardImportPrompt({ boardType, onImportComplete }: BoardImportPromptProps) {
   const { showMessage } = useSnackbar();

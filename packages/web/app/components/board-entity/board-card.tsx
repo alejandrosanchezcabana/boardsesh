@@ -15,12 +15,12 @@ import type { UserBoard } from '@boardsesh/shared-schema';
 import { themeTokens } from '@/app/theme/theme-config';
 import StatItem from '@/app/components/ui/stat-item';
 
-interface BoardCardProps {
+type BoardCardProps = {
   board: UserBoard;
   onClick?: (board: UserBoard) => void;
   /** Optional trailing action (e.g. follow button) rendered below the stats row. */
   trailingAction?: React.ReactNode;
-}
+};
 
 const BOARD_TYPE_LABELS: Record<string, string> = {
   kilter: 'Kilter',

@@ -22,12 +22,12 @@ import { V_GRADE_COLORS, FONT_GRADE_COLORS, getGradeColorWithOpacity } from '@/a
 import { useGradeFormat } from '@/app/hooks/use-grade-format';
 import styles from './user-smart-card.module.css';
 
-interface UserSmartCardProps {
+type UserSmartCardProps = {
   userId: string;
   refreshKey?: number;
-}
+};
 
-interface ProfileData {
+type ProfileData = {
   id: string;
   name: string | null;
   image: string | null;
@@ -41,13 +41,13 @@ interface ProfileData {
   }>;
   followerCount: number;
   followingCount: number;
-}
+};
 
-interface GradeBar {
+type GradeBar = {
   grade: string;
   count: number;
   color: string;
-}
+};
 
 const CHIP_SX = { height: 20, fontSize: '0.7rem' } as const;
 

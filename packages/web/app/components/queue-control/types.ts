@@ -5,24 +5,24 @@ import type { ConnectionState } from '../connection-manager/websocket-connection
 export type PeerId = string | null;
 export type UserName = PeerId;
 
-export interface QueueItemUser {
+export type QueueItemUser = {
   id: string;
   username: string;
   avatarUrl?: string;
-}
+};
 
-export interface ClimbQueueItem {
+export type ClimbQueueItem = {
   addedBy?: UserName;
   addedByUser?: QueueItemUser;
   tickedBy?: UserName[];
   climb: Climb;
   uuid: string;
   suggested?: boolean;
-}
+};
 
 export type ClimbQueue = ClimbQueueItem[];
 
-export interface QueueState {
+export type QueueState = {
   queue: ClimbQueue;
   currentClimbQueueItem: ClimbQueueItem | null;
   climbSearchParams: SearchRequestPagination;
@@ -36,7 +36,7 @@ export interface QueueState {
   lastReceivedStateHash: string | null;
   // Flag to indicate corrupted data was filtered and a resync is needed
   needsResync: boolean;
-}
+};
 
 export type QueueAction =
   | { type: 'ADD_TO_QUEUE'; payload: ClimbQueueItem }
@@ -81,7 +81,7 @@ export type QueueAction =
   | { type: 'CLEAR_RESYNC_FLAG' };
 
 // Stable action functions — identity rarely changes
-export interface QueueActionsType {
+export type QueueActionsType = {
   addToQueue: (climb: Climb) => void;
   removeFromQueue: (item: ClimbQueueItem) => void;
   /** Sets the climb as current. Resolves to the freshly-created ClimbQueueItem
@@ -106,10 +106,10 @@ export interface QueueActionsType {
    *  The native WebSocket already sent the server mutation, so this only updates
    *  the local reducer state and registers the correlationId for echo suppression. */
   dispatchWidgetNavigation?: (item: ClimbQueueItem, correlationId: string) => void;
-}
+};
 
 // Frequently-changing state data
-export interface QueueDataType {
+export type QueueDataType = {
   queue: ClimbQueue;
   currentClimbQueueItem: ClimbQueueItem | null;
   currentClimb: Climb | null;
@@ -132,7 +132,7 @@ export interface QueueDataType {
   hasConnected?: boolean;
   connectionError?: Error | null;
   isDisconnected: boolean;
-}
+};
 
 // Combined type for backward compatibility
 export type QueueContextType = QueueDataType & QueueActionsType;

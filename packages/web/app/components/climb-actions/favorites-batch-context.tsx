@@ -4,22 +4,22 @@ import React, { useMemo, useLayoutEffect } from 'react';
 import { createTypedContext } from '@/app/lib/create-typed-context';
 import { favoritesStore } from './favorites-store';
 
-interface FavoritesContextValue {
+type FavoritesContextValue = {
   toggleFavorite: (uuid: string) => Promise<boolean>;
-}
+};
 
 const [FavoritesCtx, useFavoritesContext] = createTypedContext<FavoritesContextValue>('Favorites');
 
 export const FavoritesContext = FavoritesCtx;
 export { useFavoritesContext };
 
-interface FavoritesProviderProps {
+type FavoritesProviderProps = {
   favorites: Set<string>;
   toggleFavorite: (uuid: string) => Promise<boolean>;
   isLoading: boolean;
   isAuthenticated: boolean;
   children: React.ReactNode;
-}
+};
 
 export function FavoritesProvider({
   favorites,

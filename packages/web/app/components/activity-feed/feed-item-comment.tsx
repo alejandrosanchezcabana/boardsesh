@@ -17,9 +17,9 @@ import styles from './ascents-feed.module.css';
 
 dayjs.extend(relativeTime);
 
-interface FeedItemCommentProps {
+type FeedItemCommentProps = {
   item: ActivityFeedItem;
-}
+};
 
 export default function FeedItemComment({ item }: FeedItemCommentProps) {
   const timeAgo = dayjs(item.createdAt).fromNow();

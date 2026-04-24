@@ -38,9 +38,9 @@ export async function generateMetadata(props: { params: Promise<BoardRouteParame
   }
 }
 
-interface BoardLayoutProps {
+type BoardLayoutProps = {
   params: Promise<BoardRouteParameters>;
-}
+};
 
 export default async function BoardLayout(props: PropsWithChildren<BoardLayoutProps>) {
   const params = await props.params;

@@ -25,9 +25,9 @@ import styles from './ascents-feed.module.css';
 
 dayjs.extend(relativeTime);
 
-interface FeedItemNewClimbProps {
+type FeedItemNewClimbProps = {
   item: ActivityFeedItem;
-}
+};
 
 export default function FeedItemNewClimb({ item }: FeedItemNewClimbProps) {
   const [commentsOpen, setCommentsOpen] = useState(false);

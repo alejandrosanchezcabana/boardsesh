@@ -9,12 +9,12 @@ import type { AuroraBoardName } from '@boardsesh/shared-schema';
 import type { LogbookEntry } from '../utils/profile-constants';
 import styles from '../profile-page.module.css';
 
-interface BoardStatsSectionProps {
+type BoardStatsSectionProps = {
   selectedBoard: string;
   loading: boolean;
   filteredLogbook: LogbookEntry[];
   isOwnProfile: boolean;
-}
+};
 
 export default function BoardStatsSection({
   selectedBoard,

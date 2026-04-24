@@ -15,10 +15,10 @@ const requestSchema = z.object({
   skipSessionBuild: z.boolean().optional().default(false),
 });
 
-export interface AuroraImportResponse {
+export type AuroraImportResponse = {
   success: boolean;
   results: ImportResult;
-}
+};
 
 export async function POST(request: NextRequest) {
   try {

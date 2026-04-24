@@ -7,7 +7,7 @@ import { NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth/next';
 import { authOptions } from '@/app/lib/auth/auth-options';
 
-export interface HoldHeatmapResponse {
+export type HoldHeatmapResponse = {
   holdStats: Array<{
     holdId: number;
     totalUses: number;
@@ -20,7 +20,7 @@ export interface HoldHeatmapResponse {
     userAscents?: number; // Added for user-specific ascent data
     userAttempts?: number; // Added for user-specific attempt data
   }>;
-}
+};
 
 export async function GET(
   req: Request,

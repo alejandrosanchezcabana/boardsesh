@@ -9,9 +9,9 @@ export const GET_DELETE_ACCOUNT_INFO = gql`
   }
 `;
 
-export interface GetDeleteAccountInfoResponse {
+export type GetDeleteAccountInfoResponse = {
   deleteAccountInfo: DeleteAccountInfo;
-}
+};
 
 export const DELETE_ACCOUNT = gql`
   mutation DeleteAccount($input: DeleteAccountInput!) {
@@ -19,6 +19,6 @@ export const DELETE_ACCOUNT = gql`
   }
 `;
 
-export interface DeleteAccountResponse {
+export type DeleteAccountResponse = {
   deleteAccount: boolean;
-}
+};

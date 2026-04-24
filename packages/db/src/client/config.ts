@@ -1,10 +1,10 @@
 import { neonConfig } from '@neondatabase/serverless';
 
-export interface ConnectionConfig {
+export type ConnectionConfig = {
   connectionString: string;
   isLocal: boolean;
   isTest: boolean;
-}
+};
 
 export function isLocalDevelopment(): boolean {
   return process.env.VERCEL_ENV === 'development' || process.env.NODE_ENV === 'development';

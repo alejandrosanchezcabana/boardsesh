@@ -5,9 +5,9 @@ import type { LitUpHoldsMap, HoldState } from '../board-renderer/types';
 import { HOLD_STATE_MAP, STATE_TO_PRIMARY_CODE } from '../board-renderer/types';
 import type { BoardName } from '@/app/lib/types';
 
-interface UseCreateClimbOptions {
+type UseCreateClimbOptions = {
   initialHoldsMap?: LitUpHoldsMap;
-}
+};
 
 export function useCreateClimb(boardName: BoardName, options?: UseCreateClimbOptions) {
   const [litUpHoldsMap, setLitUpHoldsMap] = useState<LitUpHoldsMap>(options?.initialHoldsMap ?? {});

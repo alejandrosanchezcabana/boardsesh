@@ -3,7 +3,7 @@ import { createIndexedDBStore } from './idb-helper';
 const STORE_NAME = 'autosave';
 const AUTOSAVE_KEY = 'create-climb';
 
-export interface CreateClimbAutosave {
+export type CreateClimbAutosave = {
   /** Serialised holds map (JSON stringified LitUpHoldsMap) */
   holdsJson: string;
   climbName: string;
@@ -11,7 +11,7 @@ export interface CreateClimbAutosave {
   isDraft: boolean;
   /** Board identifier so we only restore on the matching board */
   boardKey: string;
-}
+};
 
 const getDB = createIndexedDBStore('boardsesh-create-climb', STORE_NAME);
 

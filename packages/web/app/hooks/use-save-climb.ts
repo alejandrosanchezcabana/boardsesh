@@ -18,18 +18,18 @@ import type { BoardName } from '@/app/lib/types';
 import type { SaveClimbOptions } from '@/app/lib/api-wrappers/aurora/types';
 import type { UpdateClimbInput } from '@boardsesh/shared-schema';
 
-export interface SaveClimbResponse {
+export type SaveClimbResponse = {
   uuid: string;
   createdAt?: string | null;
   publishedAt?: string | null;
-}
+};
 
-export interface UpdateClimbResponse {
+export type UpdateClimbResponse = {
   uuid: string;
   createdAt?: string | null;
   publishedAt?: string | null;
   isDraft: boolean;
-}
+};
 
 /**
  * Hook to save a new climb via GraphQL mutation.

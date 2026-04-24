@@ -7,10 +7,10 @@ import type { BoardDetails } from '@/app/lib/types';
 
 export type BoardLockReason = 'session' | 'bluetooth';
 
-export interface ActiveBoardLock {
+export type ActiveBoardLock = {
   lockedBoard: BoardDetails | null;
   reason: BoardLockReason | null;
-}
+};
 
 /**
  * Reports whether the user's active board is anchored to something that

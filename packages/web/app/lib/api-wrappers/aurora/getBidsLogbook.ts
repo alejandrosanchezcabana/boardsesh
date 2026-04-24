@@ -1,7 +1,7 @@
 import type { AuroraBoardName } from './types';
 import { userSync } from './userSync';
 
-interface Bid {
+type Bid = {
   uuid: string;
   user_id: number;
   climb_uuid: string;
@@ -11,7 +11,7 @@ interface Bid {
   comment: string;
   climbed_at: string;
   created_at: string;
-}
+};
 
 export async function getBidsLogbook(board: AuroraBoardName, token: string, userId: string): Promise<Bid[]> {
   const syncResults = await userSync(board, Number(userId), { tables: ['bids'] }, token);

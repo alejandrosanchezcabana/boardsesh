@@ -13,10 +13,10 @@ const HEALTH_CHECK_TIMEOUT_MS = 5000;
 const HEALTH_CHECK_INTERVAL_MS = 500;
 const HEALTH_CHECK_MAX_ATTEMPTS = HEALTH_CHECK_TIMEOUT_MS / HEALTH_CHECK_INTERVAL_MS;
 
-interface ProcessRef {
+type ProcessRef = {
   process: ReturnType<typeof spawn> | null;
   isManaged: boolean; // Did we start it?
-}
+};
 
 const processes: { backend: ProcessRef; web: ProcessRef } = {
   backend: { process: null, isManaged: false },

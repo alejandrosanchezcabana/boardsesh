@@ -15,14 +15,14 @@ import { useWsAuthToken } from '@/app/hooks/use-ws-auth-token';
 import { createGraphQLHttpClient } from '@/app/lib/graphql/client';
 import { FREEZE_CLIMB } from '@/app/lib/graphql/operations/proposals';
 
-interface FreezeClimbDialogProps {
+type FreezeClimbDialogProps = {
   open: boolean;
   onClose: () => void;
   climbUuid: string;
   boardType: string;
   currentlyFrozen: boolean;
   onFreezeChanged?: (frozen: boolean) => void;
-}
+};
 
 export default function FreezeClimbDialog({
   open,

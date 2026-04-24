@@ -27,7 +27,7 @@ import dayjs from 'dayjs';
 
 type LogType = 'ascent' | 'attempt';
 
-interface LogAscentFormValues {
+type LogAscentFormValues = {
   date: dayjs.Dayjs;
   angle: number;
   attempts: number;
@@ -35,7 +35,7 @@ interface LogAscentFormValues {
   difficulty: number;
   notes?: string;
   videoUrl?: string;
-}
+};
 
 // Helper to determine tick status from attempt count (for ascents)
 const getAscentStatus = (attempts: number): TickStatus => {
@@ -50,11 +50,11 @@ const getTickStatus = (logType: LogType, attempts: number): TickStatus => {
   return getAscentStatus(attempts);
 };
 
-interface LogAscentFormProps {
+type LogAscentFormProps = {
   currentClimb: Climb;
   boardDetails: BoardDetails;
   onClose: () => void;
-}
+};
 
 export const LogAscentForm: React.FC<LogAscentFormProps> = ({ currentClimb, boardDetails, onClose }) => {
   const { saveTick, isAuthenticated } = useBoardProvider();

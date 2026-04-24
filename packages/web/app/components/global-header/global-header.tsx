@@ -40,22 +40,22 @@ const TITLE_HEADER_PAGES: Record<string, string> = {
 /** Pages where the global header is completely hidden */
 const HIDDEN_HEADER_PAGES = ['/'];
 
-interface GlobalHeaderProps {
+type GlobalHeaderProps = {
   boardConfigs: BoardConfigData;
-}
+};
 
-interface CenteredHeaderProps {
+type CenteredHeaderProps = {
   left?: React.ReactNode;
   title: string;
   right?: React.ReactNode;
-}
+};
 
-interface ProfileHeaderConfig {
+type ProfileHeaderConfig = {
   userId: string;
   title: string;
   backUrl: string;
   isRoot: boolean;
-}
+};
 
 function CenteredHeader({ left, title, right }: CenteredHeaderProps) {
   return (

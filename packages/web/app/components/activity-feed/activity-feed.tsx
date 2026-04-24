@@ -21,7 +21,7 @@ import { useInfiniteScroll } from '@/app/hooks/use-infinite-scroll';
 /** Page type for the session-grouped feed */
 export type SessionFeedPage = SessionFeedResult;
 
-interface ActivityFeedProps {
+type ActivityFeedProps = {
   isAuthenticated: boolean;
   boardUuid?: string | null;
   /** Filter sessions by a specific user */
@@ -29,7 +29,7 @@ interface ActivityFeedProps {
   onFindClimbers?: () => void;
   /** SSR-provided initial session feed result */
   initialFeedResult?: SessionFeedResult | null;
-}
+};
 
 export default function ActivityFeed({
   isAuthenticated,

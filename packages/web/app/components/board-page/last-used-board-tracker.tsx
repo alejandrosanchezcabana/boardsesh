@@ -3,7 +3,7 @@
 import { useEffect } from 'react';
 import { setLastUsedBoard } from '@/app/lib/last-used-board-db';
 
-interface LastUsedBoardTrackerProps {
+type LastUsedBoardTrackerProps = {
   url: string;
   boardName: string;
   layoutName: string;
@@ -12,7 +12,7 @@ interface LastUsedBoardTrackerProps {
   setNames: string[];
   angle: number;
   boardSlug?: string;
-}
+};
 
 export default function LastUsedBoardTracker({
   url,

@@ -108,12 +108,12 @@ function toWebpPath(dir: string, filename: string, isThumbnail: boolean): string
   return `${dir}/${webpName}`;
 }
 
-interface BoardDetailsForBg {
+type BoardDetailsForBg = {
   board_name: string;
   images_to_holds: Record<string, unknown>;
   layoutFolder?: string;
   holdSetImages?: string[];
-}
+};
 
 /**
  * Build the ordered list of public/-relative paths for background images.

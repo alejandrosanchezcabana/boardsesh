@@ -34,10 +34,10 @@ const SeshSettingsDrawer = dynamic(() => import('../sesh-settings/sesh-settings-
 });
 import { BoardSwitchConfirmProvider } from '../board-lock/board-switch-confirm-provider';
 
-interface PersistentSessionWrapperProps {
+type PersistentSessionWrapperProps = {
   children: React.ReactNode;
   boardConfigs: BoardConfigData;
-}
+};
 
 /**
  * Root-level wrapper that provides:

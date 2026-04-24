@@ -21,18 +21,18 @@ import { buildInstagramCaption, copyAndOpenInstagram, getBoardDisplayName } from
 import type { BetaLink } from '@/app/lib/api-wrappers/sync-api-types';
 import { themeTokens } from '@/app/theme/theme-config';
 
-export interface InstagramPostingTarget {
+export type InstagramPostingTarget = {
   boardType: string;
   climbUuid: string;
   climbName: string;
   angle: number;
-}
+};
 
-interface PostToInstagramDialogProps {
+type PostToInstagramDialogProps = {
   open: boolean;
   onClose: () => void;
   item: InstagramPostingTarget | null;
-}
+};
 
 const instructions = [
   'Copy the caption and open Instagram.',

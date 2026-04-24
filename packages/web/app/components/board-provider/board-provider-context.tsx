@@ -21,7 +21,7 @@ export type { TickStatus, LogbookEntry } from '@/app/hooks/use-logbook';
 
 import type { LogbookEntry } from '@/app/hooks/use-logbook';
 
-interface BoardContextType {
+type BoardContextType = {
   boardName: BoardName;
   isAuthenticated: boolean;
   isLoading: boolean;
@@ -32,7 +32,7 @@ interface BoardContextType {
   saveTick: (options: SaveTickOptions) => Promise<void>;
   saveClimb: (options: Omit<SaveClimbOptions, 'setter_id' | 'user_id'>) => Promise<SaveClimbResponse>;
   updateClimb: (input: UpdateClimbInput) => Promise<UpdateClimbResponse>;
-}
+};
 
 const BoardContext = createContext<BoardContextType | undefined>(undefined);
 

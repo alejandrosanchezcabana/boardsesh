@@ -123,66 +123,66 @@ export const UPDATE_CLIMB_MUTATION = gql`
   }
 `;
 
-export interface GetNewClimbFeedVariables {
+export type GetNewClimbFeedVariables = {
   input: NewClimbFeedInput;
-}
+};
 
-export interface GetNewClimbFeedResponse {
+export type GetNewClimbFeedResponse = {
   newClimbFeed: NewClimbFeedResult;
-}
+};
 
-export interface GetMyNewClimbSubscriptionsResponse {
+export type GetMyNewClimbSubscriptionsResponse = {
   myNewClimbSubscriptions: NewClimbSubscription[];
-}
+};
 
-export interface SubscribeNewClimbsVariables {
+export type SubscribeNewClimbsVariables = {
   input: NewClimbSubscriptionInput;
-}
+};
 
-export interface SubscribeNewClimbsResponse {
+export type SubscribeNewClimbsResponse = {
   subscribeNewClimbs: boolean;
-}
+};
 
-export interface UnsubscribeNewClimbsVariables {
+export type UnsubscribeNewClimbsVariables = {
   input: NewClimbSubscriptionInput;
-}
+};
 
-export interface UnsubscribeNewClimbsResponse {
+export type UnsubscribeNewClimbsResponse = {
   unsubscribeNewClimbs: boolean;
-}
+};
 
-export interface NewClimbCreatedSubscriptionPayload {
+export type NewClimbCreatedSubscriptionPayload = {
   newClimbCreated: NewClimbCreatedEvent;
-}
+};
 
-export interface SaveClimbMutationVariables {
+export type SaveClimbMutationVariables = {
   input: SaveClimbInput;
-}
+};
 
-export interface SaveClimbMutationResponse {
+export type SaveClimbMutationResponse = {
   saveClimb: SaveClimbResult;
-}
+};
 
-export interface CheckMoonBoardClimbDuplicatesVariables {
+export type CheckMoonBoardClimbDuplicatesVariables = {
   input: CheckMoonBoardClimbDuplicatesInput;
-}
+};
 
-export interface CheckMoonBoardClimbDuplicatesResponse {
+export type CheckMoonBoardClimbDuplicatesResponse = {
   checkMoonBoardClimbDuplicates: MoonBoardClimbDuplicateMatch[];
-}
+};
 
-export interface SaveMoonBoardClimbMutationVariables {
+export type SaveMoonBoardClimbMutationVariables = {
   input: SaveMoonBoardClimbInput;
-}
+};
 
-export interface SaveMoonBoardClimbMutationResponse {
+export type SaveMoonBoardClimbMutationResponse = {
   saveMoonBoardClimb: SaveClimbResult;
-}
+};
 
-export interface UpdateClimbMutationVariables {
+export type UpdateClimbMutationVariables = {
   input: UpdateClimbInput;
-}
+};
 
-export interface UpdateClimbMutationResponse {
+export type UpdateClimbMutationResponse = {
   updateClimb: UpdateClimbResult;
-}
+};

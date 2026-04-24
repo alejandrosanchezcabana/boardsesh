@@ -20,13 +20,13 @@ import { themeTokens } from '@/app/theme/theme-config';
 type FeedTab = 'sessions' | 'proposals' | 'comments';
 const VALID_TABS: FeedTab[] = ['sessions', 'proposals', 'comments'];
 
-interface FeedPageContentProps {
+type FeedPageContentProps = {
   initialTab?: FeedTab;
   initialBoardUuid?: string;
   initialFeedResult?: SessionFeedResult | null;
   isAuthenticatedSSR?: boolean;
   initialMyBoards?: UserBoard[] | null;
-}
+};
 
 export default function FeedPageContent({
   initialTab = 'sessions',

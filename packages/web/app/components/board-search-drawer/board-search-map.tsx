@@ -14,7 +14,7 @@ const VIEWPORT_DEBOUNCE_MS = 250;
 const MARKER_SIZE = 16;
 const MARKER_SIZE_SELECTED = 22;
 
-interface BoardSearchMapProps {
+type BoardSearchMapProps = {
   center: { lat: number; lng: number };
   zoom: number;
   boards: UserBoard[];
@@ -26,7 +26,7 @@ interface BoardSearchMapProps {
   requestPermission: () => void | Promise<void>;
   onBoardClick: (board: UserBoard) => void;
   onViewportChange: (viewport: { lat: number; lng: number; zoom: number }) => void;
-}
+};
 
 function markerClassName(selected: boolean): string {
   return selected ? `${markerStyles.marker} ${markerStyles.markerSelected}` : markerStyles.marker;

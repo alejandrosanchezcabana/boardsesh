@@ -5,7 +5,7 @@ import { evaluateQueueEventSequence, insertQueueItemIdempotent } from '../event-
 import type { SharedRefs } from '../types';
 import { DEBUG } from '../types';
 
-interface UseEventProcessorArgs {
+type UseEventProcessorArgs = {
   refs: Pick<
     SharedRefs,
     | 'lastReceivedSequenceRef'
@@ -16,16 +16,16 @@ interface UseEventProcessorArgs {
     | 'sessionEventSubscribersRef'
     | 'offlineBufferRef'
   >;
-}
+};
 
-export interface EventProcessorState {
+export type EventProcessorState = {
   queue: LocalClimbQueueItem[];
   currentClimbQueueItem: LocalClimbQueueItem | null;
   lastReceivedStateHash: string | null;
   liveSessionStats: SessionLiveStats | null;
-}
+};
 
-export interface EventProcessorActions {
+export type EventProcessorActions = {
   handleQueueEvent: (event: SubscriptionQueueEvent) => void;
   handleSessionEvent: (event: SessionEvent) => void;
   setQueueState: Dispatch<SetStateAction<LocalClimbQueueItem[]>>;
@@ -33,7 +33,7 @@ export interface EventProcessorActions {
   setLiveSessionStats: Dispatch<SetStateAction<SessionLiveStats | null>>;
   notifyQueueSubscribers: (event: SubscriptionQueueEvent) => void;
   notifySessionSubscribers: (event: SessionEvent) => void;
-}
+};
 
 export function useEventProcessor({ refs }: UseEventProcessorArgs): EventProcessorState & EventProcessorActions {
   const {

@@ -7,9 +7,9 @@ const PROFILE_KEY = 'party-profile';
 // Legacy localStorage keys to migrate from
 const LEGACY_USER_ID_KEY = 'boardsesh:userId';
 
-export interface PartyProfile {
+export type PartyProfile = {
   id: string; // UUID, auto-generated
-}
+};
 
 const getDB = createIndexedDBStore('boardsesh-party', STORE_NAME);
 

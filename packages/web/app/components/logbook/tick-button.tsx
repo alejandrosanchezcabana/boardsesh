@@ -21,7 +21,7 @@ import { PersonFallingIcon } from '@/app/components/icons/person-falling-icon';
 import { useAlwaysTickInApp } from '@/app/hooks/use-always-tick-in-app';
 import { TickIcon, TickButtonWithLabel } from './tick-icon';
 
-interface TickButtonProps {
+type TickButtonProps = {
   angle: Angle;
   currentClimb: Climb | null;
   boardDetails: BoardDetails;
@@ -33,7 +33,7 @@ interface TickButtonProps {
   isFlash?: boolean;
   /** The currently selected ascent type in the expanded tick bar. */
   ascentType?: 'flash' | 'send' | 'attempt';
-}
+};
 
 export const TickButton: React.FC<TickButtonProps> = ({
   currentClimb,

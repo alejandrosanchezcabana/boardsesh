@@ -16,12 +16,12 @@ import ZoomableBoard from './zoomable-board';
 import ZoomHint from './zoom-hint';
 import styles from './swipe-board-carousel.module.css';
 
-interface ClimbBoardData {
+type ClimbBoardData = {
   frames: string;
   mirrored?: boolean;
-}
+};
 
-export interface SwipeBoardCarouselProps {
+export type SwipeBoardCarouselProps = {
   boardDetails: BoardDetails;
   currentClimb: ClimbBoardData;
   nextClimb?: ClimbBoardData | null;
@@ -38,7 +38,7 @@ export interface SwipeBoardCarouselProps {
   isDrawerOpen?: boolean;
   overlay?: React.ReactNode;
   onZoomChange?: (zoomed: boolean) => void;
-}
+};
 
 const SwipeBoardCarousel = React.memo<SwipeBoardCarouselProps>(
   ({

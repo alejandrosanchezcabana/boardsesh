@@ -13,13 +13,13 @@ import { getBackendWsUrl } from '../backend-url';
 import type { ClimbQueueItem } from '@/app/components/queue-control/types';
 import type { BoardDetails } from '../types';
 
-interface UseLiveActivityOptions {
+type UseLiveActivityOptions = {
   queue: ClimbQueueItem[];
   currentClimbQueueItem: ClimbQueueItem | null;
   boardDetails: BoardDetails | null;
   sessionId: string | null;
   isSessionActive: boolean;
-}
+};
 
 export function useLiveActivity({
   queue,

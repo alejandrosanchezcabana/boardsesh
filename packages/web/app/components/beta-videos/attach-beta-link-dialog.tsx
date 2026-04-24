@@ -6,14 +6,14 @@ import DialogTitle from '@mui/material/DialogTitle';
 import DialogContent from '@mui/material/DialogContent';
 import AttachBetaLinkForm from './attach-beta-link-form';
 
-interface AttachBetaLinkDialogProps {
+type AttachBetaLinkDialogProps = {
   open: boolean;
   onClose: () => void;
   boardType: string;
   climbUuid: string;
   climbName?: string;
   angle?: number | null;
-}
+};
 
 export const AttachBetaLinkDialog: React.FC<AttachBetaLinkDialogProps> = ({
   open,

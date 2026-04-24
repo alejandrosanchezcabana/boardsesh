@@ -19,10 +19,10 @@ import { themeTokens } from '@/app/theme/theme-config';
 
 const THUMB_SIZE = themeTokens.spacing[16]; // 64px
 
-interface PlayViewBetaSliderProps {
+type PlayViewBetaSliderProps = {
   boardName: string;
   climbUuid: string | undefined;
-}
+};
 
 const PlayViewBetaSlider: React.FC<PlayViewBetaSliderProps> = ({ boardName, climbUuid }) => {
   const { data: betaLinks = [] } = useQuery<BetaLink[]>({

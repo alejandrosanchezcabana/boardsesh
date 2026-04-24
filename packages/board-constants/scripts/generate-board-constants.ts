@@ -25,15 +25,15 @@ for (const envPath of ENV_PATHS) {
   }
 }
 
-interface PostgresConfig {
+type PostgresConfig = {
   host: string;
   port: string;
   user: string;
   password: string;
   database: string;
-}
+};
 
-interface ProductSize {
+type ProductSize = {
   id: number;
   name: string;
   description: string;
@@ -42,43 +42,43 @@ interface ProductSize {
   edgeBottom: number;
   edgeTop: number;
   productId: number;
-}
+};
 
-interface Layout {
+type Layout = {
   id: number;
   name: string;
   productId: number;
-}
+};
 
-interface SetMapping {
+type SetMapping = {
   setId: number;
   setName: string;
   layoutId: number;
   sizeId: number;
-}
+};
 
-interface ImageFilenameMapping {
+type ImageFilenameMapping = {
   layoutId: number;
   sizeId: number;
   setId: number;
   imageFilename: string;
-}
+};
 
-interface LedPlacement {
+type LedPlacement = {
   placementId: number;
   position: number;
   layoutId: number;
   sizeId: number;
-}
+};
 
-interface HolePlacement {
+type HolePlacement = {
   placementId: number;
   mirroredPlacementId: number | null;
   x: number;
   y: number;
   setId: number;
   layoutId: number;
-}
+};
 
 type GeneratedBoardData = {
   sizes: ProductSize[];

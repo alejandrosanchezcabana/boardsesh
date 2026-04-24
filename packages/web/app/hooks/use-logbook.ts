@@ -12,7 +12,7 @@ import type { BoardName, ClimbUuid } from '@/app/lib/types';
 export type TickStatus = 'flash' | 'send' | 'attempt';
 
 // Logbook entry representing a user's tick on a climb
-export interface LogbookEntry {
+export type LogbookEntry = {
   uuid: string;
   climb_uuid: string;
   angle: number;
@@ -27,7 +27,7 @@ export interface LogbookEntry {
   upvotes: number;
   downvotes: number;
   commentCount: number;
-}
+};
 
 type LogbookSourceTick = {
   uuid: string;

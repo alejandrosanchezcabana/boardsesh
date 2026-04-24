@@ -14,12 +14,12 @@ import { ANGLES } from '@/app/lib/board-data';
 import { getBoardSelectorOptions } from '@/app/lib/board-constants';
 import BoardForm from './board-form';
 
-interface EditBoardFormProps {
+type EditBoardFormProps = {
   board: UserBoard;
   totalAscents?: number;
   onSuccess?: (board: UserBoard) => void;
   onCancel?: () => void;
-}
+};
 
 export default function EditBoardForm({ board, totalAscents, onSuccess, onCancel }: EditBoardFormProps) {
   const { showMessage } = useSnackbar();

@@ -12,15 +12,15 @@ import {
 } from '@/app/lib/graphql/operations';
 import type { UserBoard, UserBoardConnection } from '@boardsesh/shared-schema';
 
-export interface SearchBoardsMapInput {
+export type SearchBoardsMapInput = {
   query: string;
   latitude: number | null;
   longitude: number | null;
   zoom: number;
   enabled: boolean;
-}
+};
 
-export interface SearchBoardsMapResult {
+export type SearchBoardsMapResult = {
   boards: UserBoard[];
   isLoading: boolean;
   isFetching: boolean;
@@ -28,7 +28,7 @@ export interface SearchBoardsMapResult {
   isFetchingNextPage: boolean;
   fetchNextPage: () => void;
   radiusKm: number;
-}
+};
 
 const PAGE_LIMIT = 30;
 

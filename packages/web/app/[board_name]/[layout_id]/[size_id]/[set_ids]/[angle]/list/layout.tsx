@@ -9,9 +9,9 @@ import { getBoardDetailsForBoard } from '@/app/lib/board-utils';
 import { permanentRedirect } from 'next/navigation';
 import ListLayoutClient from './layout-client';
 
-interface LayoutProps {
+type LayoutProps = {
   params: Promise<BoardRouteParameters>;
-}
+};
 
 export default async function ListLayout(props: PropsWithChildren<LayoutProps>) {
   const params = await props.params;

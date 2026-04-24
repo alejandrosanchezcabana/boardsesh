@@ -29,12 +29,12 @@ const QUEUE_DRAWER_STYLES = {
   body: { padding: 0, overflow: 'hidden' as const, touchAction: 'pan-y' as const },
 } as const;
 
-export interface QueueDrawerProps {
+export type QueueDrawerProps = {
   open: boolean;
   onClose: () => void;
   onTransitionEnd?: (open: boolean) => void;
   boardDetails: BoardDetails;
-}
+};
 
 const QueueDrawer: React.FC<QueueDrawerProps> = ({ open, onClose, onTransitionEnd, boardDetails }) => {
   // Internal state

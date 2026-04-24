@@ -1,6 +1,6 @@
 import { isNativeApp, getPlatform } from '../ble/capacitor-utils';
 
-interface LiveActivityStartOptions {
+type LiveActivityStartOptions = {
   sessionId: string;
   serverUrl: string;
   wsUrl?: string;
@@ -9,9 +9,9 @@ interface LiveActivityStartOptions {
   layoutId: number;
   sizeId: number;
   setIds: string;
-}
+};
 
-interface LiveActivityUpdateOptions {
+type LiveActivityUpdateOptions = {
   climbName: string;
   climbDifficulty: string;
   angle: number;
@@ -29,10 +29,10 @@ interface LiveActivityUpdateOptions {
     frames: string;
     setterUsername: string;
   }>;
-}
+};
 
 /** Lightweight update options for climb navigation (no queue array). */
-interface LiveActivityClimbUpdateOptions {
+type LiveActivityClimbUpdateOptions = {
   climbName: string;
   climbDifficulty: string;
   angle: number;
@@ -41,16 +41,16 @@ interface LiveActivityClimbUpdateOptions {
   hasNext: boolean;
   hasPrevious: boolean;
   climbUuid: string;
-}
+};
 
-interface LiveActivityPlugin {
+type LiveActivityPlugin = {
   isAvailable(): Promise<{ available: boolean }>;
   startSession(options: LiveActivityStartOptions): Promise<void>;
   endSession(): Promise<void>;
   updateActivity(options: LiveActivityUpdateOptions): Promise<void>;
   /** Lightweight climb-only update — no queue serialization. */
   updateActivityClimb(options: LiveActivityClimbUpdateOptions): Promise<void>;
-}
+};
 
 function getPlugin(): LiveActivityPlugin | null {
   if (!isNativeApp() || getPlatform() !== 'ios') return null;

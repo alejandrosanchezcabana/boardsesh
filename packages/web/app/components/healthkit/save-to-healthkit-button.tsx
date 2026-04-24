@@ -6,12 +6,12 @@ import FavoriteOutlined from '@mui/icons-material/FavoriteOutlined';
 import type { SessionSummary } from '@boardsesh/shared-schema';
 import { useHealthKitSync } from '@/app/hooks/use-healthkit-sync';
 
-interface SaveToHealthKitButtonProps {
+type SaveToHealthKitButtonProps = {
   summary: SessionSummary | null;
   boardType?: string;
   existingWorkoutId?: string | null;
   size?: 'small' | 'medium' | 'large';
-}
+};
 
 /**
  * iOS-only button that saves a climbing session to Apple Health.

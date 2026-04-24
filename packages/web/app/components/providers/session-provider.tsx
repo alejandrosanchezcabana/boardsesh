@@ -8,9 +8,9 @@ import Alert from '@mui/material/Alert';
 import { isNativeApp } from '@/app/lib/ble/capacitor-utils';
 import { NATIVE_OAUTH_CALLBACK_SCHEME } from '@/app/lib/auth/native-oauth-config';
 
-interface SessionProviderWrapperProps {
+type SessionProviderWrapperProps = {
   children: ReactNode;
-}
+};
 
 export default function SessionProviderWrapper({ children }: SessionProviderWrapperProps) {
   const [deepLinkError, setDeepLinkError] = useState(false);

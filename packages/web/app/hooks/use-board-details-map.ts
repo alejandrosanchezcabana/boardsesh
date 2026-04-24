@@ -8,7 +8,7 @@ import {
   type SessionBoardConfig,
 } from '@/app/lib/board-config-for-playlist';
 
-interface UseBoardDetailsMapResult {
+type UseBoardDetailsMapResult = {
   /** BoardDetails keyed by climb uuid — resolved per climb. */
   boardDetailsByClimb: Record<string, BoardDetails>;
   /** Fallback BoardDetails for the list as a whole (hydration fallback). */
@@ -17,7 +17,7 @@ interface UseBoardDetailsMapResult {
   unsupportedClimbs: Set<string>;
   /** Climbs that fit only on a larger size than the user's current session board. */
   upsizedClimbs: Set<string>;
-}
+};
 
 /**
  * Builds per-climb BoardDetails for multi-board climb rendering. When the

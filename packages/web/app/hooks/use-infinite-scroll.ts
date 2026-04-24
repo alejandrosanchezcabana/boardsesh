@@ -2,7 +2,7 @@
 
 import { useState, useCallback, useEffect, useRef } from 'react';
 
-interface UseInfiniteScrollOptions {
+type UseInfiniteScrollOptions = {
   /** Called when sentinel becomes visible and hasMore is true */
   onLoadMore: () => void;
   /** Whether there are more items to load */
@@ -11,7 +11,7 @@ interface UseInfiniteScrollOptions {
   isFetching?: boolean;
   /** Root margin for the IntersectionObserver. Defaults to '200px'. */
   rootMargin?: string;
-}
+};
 
 /**
  * Reusable IntersectionObserver hook for infinite scroll.

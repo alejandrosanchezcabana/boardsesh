@@ -3,7 +3,7 @@ import { getPreference, setPreference, removePreference } from './user-preferenc
 const KEY = 'lastUsedBoard';
 const LEGACY_COOKIE_NAME = 'default_board_url';
 
-export interface LastUsedBoardData {
+export type LastUsedBoardData = {
   url: string;
   boardName: string;
   layoutName: string;
@@ -12,7 +12,7 @@ export interface LastUsedBoardData {
   setNames: string[];
   angle: number;
   boardSlug?: string;
-}
+};
 
 let migrationDone = false;
 

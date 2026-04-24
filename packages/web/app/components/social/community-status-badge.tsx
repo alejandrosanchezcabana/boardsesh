@@ -8,13 +8,13 @@ import LockIcon from '@mui/icons-material/Lock';
 import EmojiEventsIcon from '@mui/icons-material/EmojiEvents';
 import { themeTokens } from '@/app/theme/theme-config';
 
-interface CommunityStatusBadgeProps {
+type CommunityStatusBadgeProps = {
   communityGrade?: string | null;
   isClassic?: boolean;
   isBenchmark?: boolean;
   isFrozen?: boolean;
   compact?: boolean;
-}
+};
 
 export default function CommunityStatusBadge({
   communityGrade,

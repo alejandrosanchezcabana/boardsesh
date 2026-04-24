@@ -4,11 +4,11 @@ import type { BetaLink } from '@/app/lib/api-wrappers/sync-api-types';
 import { UNIFIED_TABLES } from '@/app/lib/db/queries/util/table-select';
 import { climbCommunityStatus } from '@/app/lib/db/schema';
 
-interface FetchClimbDetailDataParams {
+type FetchClimbDetailDataParams = {
   boardName: string;
   climbUuid: string;
   angle: number;
-}
+};
 
 export async function fetchClimbDetailData({ boardName, climbUuid, angle }: FetchClimbDetailDataParams) {
   const fetchBetaLinks = async (): Promise<BetaLink[]> => {

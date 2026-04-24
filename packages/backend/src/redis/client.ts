@@ -2,11 +2,11 @@ import Redis from 'ioredis';
 
 const REDIS_URL = process.env.REDIS_URL;
 
-export interface RedisClients {
+export type RedisClients = {
   publisher: Redis;
   subscriber: Redis;
   streamConsumer: Redis;
-}
+};
 
 class RedisClientManager {
   private publisher: Redis | null = null;

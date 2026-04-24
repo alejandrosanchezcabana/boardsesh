@@ -1,13 +1,13 @@
 import { useEffect, useState } from 'react';
 
-export interface Countdown {
+export type Countdown = {
   days: number;
   hours: number;
   minutes: number;
   seconds: number;
   /** True once the target time has been reached. */
   done: boolean;
-}
+};
 
 /**
  * Live countdown to `target`. Only schedules a 1s interval when `active`

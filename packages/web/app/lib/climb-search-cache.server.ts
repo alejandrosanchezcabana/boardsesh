@@ -7,12 +7,12 @@ import { getBoardClimbSearchTag } from '@/app/lib/climb-search-cache';
 
 export type ClimbSearchInvalidationSource = 'internal-route' | 'save-climb-proxy';
 
-interface RevalidateClimbSearchTagsOptions {
+type RevalidateClimbSearchTagsOptions = {
   boardName: BoardName;
   layoutId?: number;
   requestHeaders?: Headers;
   source: ClimbSearchInvalidationSource;
-}
+};
 
 export async function revalidateClimbSearchTags({
   boardName,

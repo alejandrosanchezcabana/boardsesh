@@ -16,7 +16,7 @@ function safeJSONParse<T>(value: string | undefined | null, fallback: T): T {
   }
 }
 
-export interface RedisSessionData {
+export type RedisSessionData = {
   sessionId: string;
   boardPath: string;
   queue: ClimbQueueItem[];
@@ -31,7 +31,7 @@ export interface RedisSessionData {
   name: string | null;
   createdByUserId: string | null;
   createdAt: Date;
-}
+};
 
 /**
  * Redis session store for hybrid persistence strategy.

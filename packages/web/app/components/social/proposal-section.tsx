@@ -24,14 +24,14 @@ import FreezeIndicator from './freeze-indicator';
 import FreezeClimbDialog from './freeze-climb-dialog';
 import CommunityStatusBadge from './community-status-badge';
 
-interface ProposalSectionProps {
+type ProposalSectionProps = {
   climbUuid: string;
   boardType: string;
   angle: number;
   currentClimbDifficulty?: string;
   boardName?: string;
   highlightProposalUuid?: string;
-}
+};
 
 export default function ProposalSection({
   climbUuid,

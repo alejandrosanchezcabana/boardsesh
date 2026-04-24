@@ -22,12 +22,12 @@ export const NUM_COLUMNS = 11;
 // Types
 // =============================================================================
 
-export interface MoonBoardMove {
+export type MoonBoardMove = {
   problemId: number;
   description: string; // e.g., "J3", "E4"
   isStart: boolean;
   isEnd: boolean;
-}
+};
 
 // =============================================================================
 // Helper functions

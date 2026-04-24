@@ -4,12 +4,12 @@ import { db } from '../db/client';
 import { esp32Controllers } from '@boardsesh/db/schema/app';
 import { eq } from 'drizzle-orm';
 
-export interface AuthResult {
+export type AuthResult = {
   userId: string;
   isAuthenticated: true;
-}
+};
 
-export interface ControllerAuthResult {
+export type ControllerAuthResult = {
   controllerId: string;
   controllerApiKey: string;
   userId: string | null;
@@ -17,7 +17,7 @@ export interface ControllerAuthResult {
   layoutId: number;
   sizeId: number;
   setIds: string;
-}
+};
 
 // Cache the derived encryption key — it only changes if NEXTAUTH_SECRET changes,
 // which requires a process restart anyway.
@@ -37,10 +37,10 @@ async function deriveEncryptionKey(secret: string): Promise<Uint8Array> {
 // Short-lived in-process cache for validated tokens: token → { result, expiresAt }
 // Avoids repeated JWE decryption for the same token across rapid requests.
 const TOKEN_CACHE_TTL_MS = 60_000; // 60 seconds
-interface TokenCacheEntry {
+type TokenCacheEntry = {
   result: AuthResult | null;
   expiresAt: number;
-}
+};
 const tokenCache = new Map<string, TokenCacheEntry>();
 
 // Periodically evict stale entries so the map doesn't grow unbounded.

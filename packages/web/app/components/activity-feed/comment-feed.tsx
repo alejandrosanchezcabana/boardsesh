@@ -40,10 +40,10 @@ const ENTITY_TYPE_LABELS: Record<string, string> = {
   playlist_climb: 'a playlist climb',
 };
 
-interface CommentFeedProps {
+type CommentFeedProps = {
   isAuthenticated: boolean;
   boardUuid?: string | null;
-}
+};
 
 export default function CommentFeed({ isAuthenticated, boardUuid }: CommentFeedProps) {
   const { token, isLoading: authLoading } = useWsAuthToken();

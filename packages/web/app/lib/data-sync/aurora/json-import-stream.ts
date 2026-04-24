@@ -3,7 +3,7 @@ import type { AuroraBoardName } from '@boardsesh/shared-schema';
 
 const CHUNK_SIZE = 500;
 
-interface ChunkPayload {
+type ChunkPayload = {
   boardType: AuroraBoardName;
   data: {
     user: { username: string; email_address?: string; created_at?: string };
@@ -13,7 +13,7 @@ interface ChunkPayload {
     climbs: unknown[];
   };
   skipSessionBuild: boolean;
-}
+};
 
 /**
  * Splits an array into chunks of the given size.

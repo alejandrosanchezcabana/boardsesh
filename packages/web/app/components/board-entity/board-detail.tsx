@@ -56,14 +56,14 @@ const BOARD_TYPE_LABELS: Record<string, string> = {
   soill: 'So iLL',
 };
 
-export interface BoardDetailContentProps {
+export type BoardDetailContentProps = {
   boardUuid: string;
   /** Override for the initial isFollowedByMe state (e.g. from search results). */
   initialIsFollowing?: boolean;
   onDeleted?: () => void;
   /** Called when follow state changes, so parent can update caches. */
   onFollowChange?: (boardUuid: string, isFollowing: boolean) => void;
-}
+};
 
 export function BoardDetailContent({
   boardUuid,
@@ -348,13 +348,13 @@ export function BoardDetailContent({
   );
 }
 
-interface BoardDetailProps {
+type BoardDetailProps = {
   boardUuid: string;
   open: boolean;
   onClose: () => void;
   onDeleted?: () => void;
   anchor?: 'top' | 'bottom';
-}
+};
 
 export default function BoardDetail({ boardUuid, open, onClose, onDeleted, anchor = 'bottom' }: BoardDetailProps) {
   return (

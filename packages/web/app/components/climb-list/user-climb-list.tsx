@@ -12,9 +12,9 @@ import type { Climb } from '@/app/lib/types';
 import { useWsAuthToken } from '@/app/hooks/use-ws-auth-token';
 import MultiboardClimbList, { type SortBy } from './multiboard-climb-list';
 
-interface UserClimbListProps {
+type UserClimbListProps = {
   userId: string;
-}
+};
 
 export default function UserClimbList({ userId }: UserClimbListProps) {
   const [sortBy, setSortBy] = useState<SortBy>('popular');

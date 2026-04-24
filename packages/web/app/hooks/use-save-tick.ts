@@ -16,7 +16,7 @@ import {
 import { clearTickDraft } from '@/app/lib/tick-draft-db';
 
 // Options for saving a tick (local storage, no Aurora required)
-export interface SaveTickOptions {
+export type SaveTickOptions = {
   climbUuid: string;
   angle: number;
   isMirror: boolean;
@@ -32,7 +32,7 @@ export interface SaveTickOptions {
   sizeId?: number;
   setIds?: string;
   videoUrl?: string;
-}
+};
 
 /**
  * Hook to save a tick (logbook entry) via GraphQL mutation.

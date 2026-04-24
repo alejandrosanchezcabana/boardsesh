@@ -26,12 +26,12 @@ import {
 } from '@/app/lib/graphql/operations/playlists';
 import { useIncrementalQuery } from '@/app/hooks/use-incremental-query';
 
-interface UseClimbActionsDataOptions {
+type UseClimbActionsDataOptions = {
   boardName: string;
   layoutId: number;
   angle: number;
   climbUuids: string[];
-}
+};
 
 // Merge helpers (stable references to avoid re-creating on every render)
 const mergeSetFn = (acc: Set<string>, fetched: Set<string>): Set<string> => new Set([...acc, ...fetched]);

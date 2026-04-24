@@ -12,9 +12,9 @@ export const metadata: Metadata = {
   description: 'Import MoonBoard climbs from screenshots',
 };
 
-interface ImportPageProps {
+type ImportPageProps = {
   params: Promise<BoardRouteParameters>;
-}
+};
 
 // Helper to get MoonBoard layout info from layout ID
 function getMoonBoardLayoutInfo(layoutId: number) {

@@ -5,9 +5,9 @@ import { resolveBoardBySlug, boardToRouteParams } from '@/app/lib/board-slug-uti
 import { getBoardDetailsForBoard } from '@/app/lib/board-utils';
 import ListLayoutClient from '@/app/[board_name]/[layout_id]/[size_id]/[set_ids]/[angle]/list/layout-client';
 
-interface LayoutProps {
+type LayoutProps = {
   params: Promise<{ board_slug: string; angle: string }>;
-}
+};
 
 export default async function BoardSlugListLayout(props: PropsWithChildren<LayoutProps>) {
   const params = await props.params;

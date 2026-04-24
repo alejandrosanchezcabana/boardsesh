@@ -11,7 +11,7 @@ import { getDefaultBoardConfig } from '@/app/lib/default-board-configs';
 import { constructClimbViewUrlWithSlugs, constructClimbViewUrl } from '@/app/lib/url-utils';
 import styles from './ascents-feed.module.css';
 
-interface AscentThumbnailProps {
+type AscentThumbnailProps = {
   boardType: string;
   layoutId: number | null;
   angle: number;
@@ -21,7 +21,7 @@ interface AscentThumbnailProps {
   isMirror: boolean;
   /** When provided, renders as a <button> instead of the climb-view <Link>. */
   onClick?: (e: React.MouseEvent) => void;
-}
+};
 
 const AscentThumbnail: React.FC<AscentThumbnailProps> = ({
   boardType,

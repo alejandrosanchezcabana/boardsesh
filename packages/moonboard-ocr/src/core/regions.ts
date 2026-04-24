@@ -1,9 +1,9 @@
 import type { ImageRegion } from '../image-processor/types';
 
-export interface ImageRegions {
+export type ImageRegions = {
   header: ImageRegion;
   board: ImageRegion;
-}
+};
 
 /**
  * Calculate header and board regions based on image dimensions.

@@ -14,10 +14,10 @@ import type { Gym, GymConnection } from '@boardsesh/shared-schema';
 import { useDebouncedValue } from '@/app/hooks/use-debounced-value';
 import { useInfiniteScroll } from '@/app/hooks/use-infinite-scroll';
 
-interface GymSearchResultsProps {
+type GymSearchResultsProps = {
   query: string;
   authToken: string | null;
-}
+};
 
 export default function GymSearchResults({ query, authToken }: GymSearchResultsProps) {
   const [selectedGymUuid, setSelectedGymUuid] = useState<string | null>(null);

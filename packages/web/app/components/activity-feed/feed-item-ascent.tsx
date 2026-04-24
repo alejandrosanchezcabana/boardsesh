@@ -4,9 +4,9 @@ import React from 'react';
 import type { ActivityFeedItem, FollowingAscentFeedItem } from '@boardsesh/shared-schema';
 import SocialFeedItem from './social-feed-item';
 
-interface FeedItemAscentProps {
+type FeedItemAscentProps = {
   item: ActivityFeedItem;
-}
+};
 
 /**
  * Thin adapter: maps ActivityFeedItem to FollowingAscentFeedItem shape

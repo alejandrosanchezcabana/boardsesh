@@ -25,14 +25,14 @@ const HEATMAP_COLORS = [
   '#d32f2f', // Deep Red
 ];
 
-interface CreateClimbHeatmapOverlayProps {
+type CreateClimbHeatmapOverlayProps = {
   boardDetails: BoardDetails;
   angle: number;
   litUpHoldsMap: LitUpHoldsMap;
   opacity: number;
   enabled: boolean;
   onLoadingChange?: (loading: boolean) => void;
-}
+};
 
 const CreateClimbHeatmapOverlay: React.FC<CreateClimbHeatmapOverlayProps> = ({
   boardDetails,

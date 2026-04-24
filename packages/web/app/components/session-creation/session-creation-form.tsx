@@ -27,15 +27,15 @@ const COLOR_OPTIONS = [
   '#FF5722',
 ];
 
-export interface SessionCreationFormData {
+export type SessionCreationFormData = {
   name?: string;
   goal?: string;
   color?: string;
   isPermanent?: boolean;
   discoverable: boolean;
-}
+};
 
-interface SessionCreationFormProps {
+type SessionCreationFormProps = {
   onSubmit: (data: SessionCreationFormData) => void | Promise<void>;
   isGymAdmin?: boolean;
   isSubmitting?: boolean;
@@ -44,7 +44,7 @@ interface SessionCreationFormProps {
   isAnonymous?: boolean;
   /** Render the submit button externally via this render prop instead of inline */
   renderSubmit?: (props: { onSubmit: () => void; isSubmitting: boolean; label: string }) => React.ReactNode;
-}
+};
 
 export default function SessionCreationForm({
   onSubmit,

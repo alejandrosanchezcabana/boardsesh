@@ -41,7 +41,7 @@ export const getClimb = cache(async (params: ParsedBoardRouteParametersWithUuid)
   } as Climb;
 });
 
-export interface ClimbStatsForAngle {
+export type ClimbStatsForAngle = {
   angle: number;
   ascensionist_count: string; // comes as string from DB
   quality_average: string | null; // comes as string from DB
@@ -50,7 +50,7 @@ export interface ClimbStatsForAngle {
   fa_username: string | null;
   fa_at: string | null;
   difficulty: string | null;
-}
+};
 
 export const getClimbStatsForAllAngles = async (
   params: ParsedBoardRouteParametersWithUuid,

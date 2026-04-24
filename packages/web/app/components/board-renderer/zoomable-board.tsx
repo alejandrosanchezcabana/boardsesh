@@ -6,11 +6,11 @@ import CropFreeOutlined from '@mui/icons-material/CropFreeOutlined';
 import { useZoomPan } from '@/app/lib/hooks/use-zoom-pan';
 import styles from './swipe-board-carousel.module.css';
 
-interface ZoomableBoardProps {
+type ZoomableBoardProps = {
   children: React.ReactNode;
   onZoomChange?: (isZoomed: boolean) => void;
   resetKey: string;
-}
+};
 
 const ZoomableBoard = memo(function ZoomableBoard({ children, onZoomChange, resetKey }: ZoomableBoardProps) {
   const { containerRef, contentRef, isZoomed, resetZoom, gestureHandlers } = useZoomPan();

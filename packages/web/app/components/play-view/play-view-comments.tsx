@@ -18,9 +18,9 @@ function getAscentChipLabel(status: AscentStatusValue): string {
   return 'Attempt';
 }
 
-interface PlayViewCommentsProps {
+type PlayViewCommentsProps = {
   climbUuid: string | undefined;
-}
+};
 
 const PlayViewComments: React.FC<PlayViewCommentsProps> = ({ climbUuid }) => {
   const { logbook } = useBoardProvider();

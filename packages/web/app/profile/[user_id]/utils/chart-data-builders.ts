@@ -93,10 +93,10 @@ function filterByUnifiedTimeframe(
 
 // ── Aggregated stacked bars (grade x layout, for stats summary) ─────
 
-export interface LayoutLegendEntry {
+export type LayoutLegendEntry = {
   label: string;
   color: string;
-}
+};
 
 export function buildAggregatedStackedBars(
   allBoardsTicks: Record<string, LogbookEntry[]>,
@@ -313,19 +313,19 @@ export function buildAggregatedFlashRedpointBars(
 
 // ── V-Points stacked area timeline ──────────────────────────────────
 
-export interface VPointsLayoutSeries {
+export type VPointsLayoutSeries = {
   layoutKey: string;
   displayName: string;
   color: string;
   /** Cumulative v-points per week for this layout */
   data: number[];
-}
+};
 
-export interface VPointsTimelineData {
+export type VPointsTimelineData = {
   weekLabels: string[];
   series: VPointsLayoutSeries[];
   totalPoints: number;
-}
+};
 
 /**
  * Extract the numeric V-grade value from a V-grade string.
@@ -468,7 +468,7 @@ export function buildVPointsTimeline(
 
 // ── Statistics summary (layout percentages) ─────────────────────────
 
-export interface LayoutPercentage {
+export type LayoutPercentage = {
   layoutKey: string;
   boardType: string;
   layoutId: number | null;
@@ -477,7 +477,7 @@ export interface LayoutPercentage {
   count: number;
   grades: Record<string, number>;
   percentage: number;
-}
+};
 
 export function buildStatisticsSummary(
   profileStats: GetUserProfileStatsQueryResponse['userProfileStats'] | null,

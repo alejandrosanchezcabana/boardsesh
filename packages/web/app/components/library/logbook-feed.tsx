@@ -56,10 +56,10 @@ type StatusMode = 'both' | 'send' | 'attempt';
 
 // ---------- Component ----------
 
-interface LogbookFeedProps {
+type LogbookFeedProps = {
   layoutStats: LayoutStats[];
   loadingLayoutStats: boolean;
-}
+};
 
 export default function LogbookFeed({ layoutStats, loadingLayoutStats }: LogbookFeedProps) {
   const { data: session } = useSession();

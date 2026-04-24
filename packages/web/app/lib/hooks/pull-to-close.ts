@@ -29,7 +29,7 @@ export function findScrollContainer(target: HTMLElement, stopAt?: HTMLElement | 
 
 // ── Pull-to-close state ───────────────────────────────────────────────────────
 
-export interface PullToCloseState {
+export type PullToCloseState = {
   startY: number;
   /** Y position where the pull gesture origin is measured from.
    *  When `trackPullOrigin` is true and the touch starts with scroll not at
@@ -38,7 +38,7 @@ export interface PullToCloseState {
   scrollContainer: HTMLElement | null;
   isPulling: boolean;
   translateY: number;
-}
+};
 
 function createInitialState(): PullToCloseState {
   return { startY: 0, pullOriginY: 0, scrollContainer: null, isPulling: false, translateY: 0 };
@@ -46,7 +46,7 @@ function createInitialState(): PullToCloseState {
 
 // ── Hook ──────────────────────────────────────────────────────────────────────
 
-export interface UsePullToCloseOptions {
+export type UsePullToCloseOptions = {
   /** The paper DOM element to apply transforms to. */
   paperEl: HTMLElement | null;
   /** Called when the gesture exceeds the close threshold. */
@@ -66,9 +66,9 @@ export interface UsePullToCloseOptions {
    * paper starts moving from 0px (not from the dead zone distance). Default: false.
    */
   offsetByDeadZone?: boolean;
-}
+};
 
-export interface UsePullToCloseReturn {
+export type UsePullToCloseReturn = {
   /** Mutable ref to the current gesture state. Useful for consumers that need
    *  to read or adjust state (e.g., setting pullOriginY externally). */
   stateRef: React.MutableRefObject<PullToCloseState>;
@@ -78,7 +78,7 @@ export interface UsePullToCloseReturn {
   onTouchMove: (clientY: number, touchCount: number, cancelled?: boolean) => void;
   /** Call from touchend. */
   onTouchEnd: () => void;
-}
+};
 
 export function usePullToClose({
   paperEl,

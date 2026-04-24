@@ -184,77 +184,77 @@ export const GET_GLOBAL_ASCENTS_FEED = gql`
 // Query/Mutation Variable Types
 // ============================================
 
-export interface FollowUserMutationVariables {
+export type FollowUserMutationVariables = {
   input: { userId: string };
-}
+};
 
-export interface FollowUserMutationResponse {
+export type FollowUserMutationResponse = {
   followUser: boolean;
-}
+};
 
-export interface UnfollowUserMutationVariables {
+export type UnfollowUserMutationVariables = {
   input: { userId: string };
-}
+};
 
-export interface UnfollowUserMutationResponse {
+export type UnfollowUserMutationResponse = {
   unfollowUser: boolean;
-}
+};
 
-export interface GetPublicProfileQueryVariables {
+export type GetPublicProfileQueryVariables = {
   userId: string;
-}
+};
 
-export interface GetPublicProfileQueryResponse {
+export type GetPublicProfileQueryResponse = {
   publicProfile: PublicUserProfile | null;
-}
+};
 
-export interface GetFollowersQueryVariables {
+export type GetFollowersQueryVariables = {
   input: { userId: string; limit?: number; offset?: number };
-}
+};
 
-export interface GetFollowersQueryResponse {
+export type GetFollowersQueryResponse = {
   followers: FollowConnection;
-}
+};
 
-export interface GetFollowingQueryVariables {
+export type GetFollowingQueryVariables = {
   input: { userId: string; limit?: number; offset?: number };
-}
+};
 
-export interface GetFollowingQueryResponse {
+export type GetFollowingQueryResponse = {
   following: FollowConnection;
-}
+};
 
-export interface IsFollowingQueryVariables {
+export type IsFollowingQueryVariables = {
   userId: string;
-}
+};
 
-export interface IsFollowingQueryResponse {
+export type IsFollowingQueryResponse = {
   isFollowing: boolean;
-}
+};
 
-export interface SearchUsersQueryVariables {
+export type SearchUsersQueryVariables = {
   input: { query: string; boardType?: string; limit?: number; offset?: number };
-}
+};
 
-export interface SearchUsersQueryResponse {
+export type SearchUsersQueryResponse = {
   searchUsers: UserSearchConnection;
-}
+};
 
-export interface GetFollowingAscentsFeedQueryVariables {
+export type GetFollowingAscentsFeedQueryVariables = {
   input?: { limit?: number; offset?: number };
-}
+};
 
-export interface GetFollowingAscentsFeedQueryResponse {
+export type GetFollowingAscentsFeedQueryResponse = {
   followingAscentsFeed: FollowingAscentsFeedResult;
-}
+};
 
-export interface GetGlobalAscentsFeedQueryVariables {
+export type GetGlobalAscentsFeedQueryVariables = {
   input?: { limit?: number; offset?: number };
-}
+};
 
-export interface GetGlobalAscentsFeedQueryResponse {
+export type GetGlobalAscentsFeedQueryResponse = {
   globalAscentsFeed: FollowingAscentsFeedResult;
-}
+};
 
 // ============================================
 // Following Climb Ascents (ticks on a specific climb from followed users)
@@ -284,9 +284,9 @@ export const GET_FOLLOWING_CLIMB_ASCENTS = gql`
   }
 `;
 
-export interface GetFollowingClimbAscentsQueryVariables {
+export type GetFollowingClimbAscentsQueryVariables = {
   input: { boardType: string; climbUuid: string };
-}
+};
 
 /**
  * Narrow subset of FollowingAscentFeedItem matching exactly the fields
@@ -312,9 +312,9 @@ export type FollowingClimbAscentItem = Pick<
   | 'commentCount'
 >;
 
-export interface GetFollowingClimbAscentsQueryResponse {
+export type GetFollowingClimbAscentsQueryResponse = {
   followingClimbAscents: { items: FollowingClimbAscentItem[] };
-}
+};
 
 // ============================================
 // Setter Follow Mutations
@@ -380,7 +380,7 @@ export const GET_SETTER_CLIMBS_FULL = gql`
   }
 `;
 
-export interface GetSetterClimbsFullQueryVariables {
+export type GetSetterClimbsFullQueryVariables = {
   input: {
     username: string;
     boardType?: string;
@@ -392,15 +392,15 @@ export interface GetSetterClimbsFullQueryVariables {
     limit?: number;
     offset?: number;
   };
-}
+};
 
-export interface GetSetterClimbsFullQueryResponse {
+export type GetSetterClimbsFullQueryResponse = {
   setterClimbsFull: {
     climbs: Climb[];
     totalCount: number;
     hasMore: boolean;
   };
-}
+};
 
 // ============================================
 // User Climbs (climbs created by a user, across all linked setters)
@@ -431,22 +431,22 @@ export const GET_USER_CLIMBS = gql`
   }
 `;
 
-export interface GetUserClimbsQueryVariables {
+export type GetUserClimbsQueryVariables = {
   input: {
     userId: string;
     sortBy?: string;
     limit?: number;
     offset?: number;
   };
-}
+};
 
-export interface GetUserClimbsQueryResponse {
+export type GetUserClimbsQueryResponse = {
   userClimbs: {
     climbs: Climb[];
     totalCount: number;
     hasMore: boolean;
   };
-}
+};
 
 // ============================================
 // Unified Search
@@ -483,34 +483,34 @@ export const SEARCH_USERS_AND_SETTERS = gql`
 // Setter Query/Mutation Variable Types
 // ============================================
 
-export interface FollowSetterMutationVariables {
+export type FollowSetterMutationVariables = {
   input: { setterUsername: string };
-}
+};
 
-export interface FollowSetterMutationResponse {
+export type FollowSetterMutationResponse = {
   followSetter: boolean;
-}
+};
 
-export interface UnfollowSetterMutationVariables {
+export type UnfollowSetterMutationVariables = {
   input: { setterUsername: string };
-}
+};
 
-export interface UnfollowSetterMutationResponse {
+export type UnfollowSetterMutationResponse = {
   unfollowSetter: boolean;
-}
+};
 
-export interface GetSetterProfileQueryVariables {
+export type GetSetterProfileQueryVariables = {
   input: { username: string };
-}
+};
 
-export interface GetSetterProfileQueryResponse {
+export type GetSetterProfileQueryResponse = {
   setterProfile: SetterProfile | null;
-}
+};
 
-export interface SearchUsersAndSettersQueryVariables {
+export type SearchUsersAndSettersQueryVariables = {
   input: { query: string; boardType?: string; limit?: number; offset?: number };
-}
+};
 
-export interface SearchUsersAndSettersQueryResponse {
+export type SearchUsersAndSettersQueryResponse = {
   searchUsersAndSetters: UnifiedSearchConnection;
-}
+};

@@ -11,10 +11,10 @@
 export type TickStatus = 'flash' | 'send' | 'attempt';
 
 /** Thread template: a parent comment + 1-3 coherent replies */
-export interface ThreadTemplate {
+export type ThreadTemplate = {
   parent: string;
   replies: string[];
-}
+};
 
 // =============================================================================
 // Tick Comments (user's own ascent note — the `comment` field on ticks)

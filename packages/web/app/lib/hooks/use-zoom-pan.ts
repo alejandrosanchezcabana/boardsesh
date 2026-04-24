@@ -7,18 +7,18 @@ const MIN_SCALE = 1;
 const MAX_SCALE = 4;
 const ZOOM_THRESHOLD = 1.02; // Consider "zoomed" above this
 
-interface UseZoomPanOptions {
+type UseZoomPanOptions = {
   enabled?: boolean;
-}
+};
 
-interface UseZoomPanReturn {
+type UseZoomPanReturn = {
   containerRef: React.RefCallback<HTMLDivElement>;
   contentRef: React.RefObject<HTMLDivElement | null>;
   isZoomed: boolean;
   resetZoom: () => void;
   /** Spread onto the gesture target element: <div {...gestureHandlers} /> */
   gestureHandlers: ReturnType<ReturnType<typeof useGesture>>;
-}
+};
 
 export function useZoomPan({ enabled = true }: UseZoomPanOptions = {}): UseZoomPanReturn {
   const contentRef = useRef<HTMLDivElement | null>(null);

@@ -3,25 +3,25 @@ export const DIRECT_AURORA_BOARDS = ['decoy', 'touchstone', 'grasshopper'] as co
 export type DirectAuroraBoard = (typeof DIRECT_AURORA_BOARDS)[number];
 export type ImportedHoldState = 'STARTING' | 'HAND' | 'FINISH' | 'FOOT' | 'OFF';
 
-export interface SourceClimbRow {
+export type SourceClimbRow = {
   uuid: string;
   frames: string | null;
-}
+};
 
-export interface SourceClimbHoldRow {
+export type SourceClimbHoldRow = {
   climb_uuid: string | null;
   hold_id: number | null;
   frame_number: number | null;
   hold_state: string | null;
   created_at?: string | null;
-}
+};
 
-export interface DerivedClimbHold {
+export type DerivedClimbHold = {
   climbUuid: string;
   holdId: number;
   frameNumber: number;
   holdState: ImportedHoldState;
-}
+};
 
 const AURORA_HOLD_STATE_MAP: Record<DirectAuroraBoard, Record<number, ImportedHoldState>> = {
   decoy: {

@@ -4,13 +4,13 @@ import { UNIFIED_TABLES, type BoardName } from '../util/table-select';
 import { getGradeLabel } from '@boardsesh/db/queries';
 import type { Climb } from '@boardsesh/shared-schema';
 
-interface GetClimbParams {
+type GetClimbParams = {
   board_name: BoardName;
   layout_id: number;
   size_id: number;
   angle: number;
   climb_uuid: string;
-}
+};
 
 export const getClimbByUuid = async (params: GetClimbParams): Promise<Climb | null> => {
   const tables = UNIFIED_TABLES;

@@ -31,9 +31,9 @@ const OnboardingTour = dynamic(() => import('@/app/components/onboarding/onboard
   ssr: false,
 });
 
-interface ListLayoutClientProps {
+type ListLayoutClientProps = {
   boardDetails: BoardDetails;
-}
+};
 
 // Isolated component for the queue tab label - subscribes to context independently
 const QueueTabLabel: React.FC = () => {

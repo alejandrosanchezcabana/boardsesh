@@ -53,7 +53,7 @@ import { useDeleteTick } from '@/app/hooks/use-delete-tick';
 import SaveToHealthKitButton from '@/app/components/healthkit/save-to-healthkit-button';
 import type { SessionSummary } from '@boardsesh/shared-schema';
 
-interface SessionDetailContentProps {
+type SessionDetailContentProps = {
   session: SessionDetail | null;
   sessionId?: string;
   embedded?: boolean;
@@ -67,7 +67,7 @@ interface SessionDetailContentProps {
   onAngleChange?: (angle: number) => void;
   /** User-facing name of the named board (e.g., "My Home Wall") */
   namedBoardName?: string;
-}
+};
 
 function formatDate(isoString: string): string {
   return new Date(isoString).toLocaleDateString(undefined, {

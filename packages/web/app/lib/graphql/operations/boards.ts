@@ -190,94 +190,94 @@ export const UNFOLLOW_BOARD = gql`
 // Query/Mutation Variable Types
 // ============================================
 
-export interface GetBoardQueryVariables {
+export type GetBoardQueryVariables = {
   boardUuid: string;
-}
+};
 
-export interface GetBoardQueryResponse {
+export type GetBoardQueryResponse = {
   board: UserBoard | null;
-}
+};
 
-export interface GetBoardBySlugQueryVariables {
+export type GetBoardBySlugQueryVariables = {
   slug: string;
-}
+};
 
-export interface GetBoardBySlugQueryResponse {
+export type GetBoardBySlugQueryResponse = {
   boardBySlug: UserBoard | null;
-}
+};
 
-export interface GetMyBoardsQueryVariables {
+export type GetMyBoardsQueryVariables = {
   input?: MyBoardsInput;
-}
+};
 
-export interface GetMyBoardsQueryResponse {
+export type GetMyBoardsQueryResponse = {
   myBoards: UserBoardConnection;
-}
+};
 
-export interface GetDefaultBoardQueryResponse {
+export type GetDefaultBoardQueryResponse = {
   defaultBoard: UserBoard | null;
-}
+};
 
-export interface SearchBoardsQueryVariables {
+export type SearchBoardsQueryVariables = {
   input: SearchBoardsInput;
-}
+};
 
-export interface SearchBoardsQueryResponse {
+export type SearchBoardsQueryResponse = {
   searchBoards: UserBoardConnection;
-}
+};
 
-export interface GetBoardLeaderboardQueryVariables {
+export type GetBoardLeaderboardQueryVariables = {
   input: BoardLeaderboardInput;
-}
+};
 
-export interface GetBoardLeaderboardQueryResponse {
+export type GetBoardLeaderboardQueryResponse = {
   boardLeaderboard: BoardLeaderboard;
-}
+};
 
-export interface CreateBoardMutationVariables {
+export type CreateBoardMutationVariables = {
   input: CreateBoardInput;
-}
+};
 
-export interface CreateBoardMutationResponse {
+export type CreateBoardMutationResponse = {
   createBoard: UserBoard;
-}
+};
 
-export interface UpdateBoardMutationVariables {
+export type UpdateBoardMutationVariables = {
   input: UpdateBoardInput;
-}
+};
 
-export interface UpdateBoardMutationResponse {
+export type UpdateBoardMutationResponse = {
   updateBoard: UserBoard;
-}
+};
 
-export interface DeleteBoardMutationVariables {
+export type DeleteBoardMutationVariables = {
   boardUuid: string;
-}
+};
 
-export interface DeleteBoardMutationResponse {
+export type DeleteBoardMutationResponse = {
   deleteBoard: boolean;
-}
+};
 
-export interface FollowBoardMutationVariables {
+export type FollowBoardMutationVariables = {
   input: FollowBoardInput;
-}
+};
 
-export interface FollowBoardMutationResponse {
+export type FollowBoardMutationResponse = {
   followBoard: boolean;
-}
+};
 
-export interface UnfollowBoardMutationVariables {
+export type UnfollowBoardMutationVariables = {
   input: FollowBoardInput;
-}
+};
 
-export interface UnfollowBoardMutationResponse {
+export type UnfollowBoardMutationResponse = {
   unfollowBoard: boolean;
-}
+};
 
-export interface GetPopularBoardConfigsQueryVariables {
+export type GetPopularBoardConfigsQueryVariables = {
   input?: PopularBoardConfigsInput;
-}
+};
 
-export interface GetPopularBoardConfigsQueryResponse {
+export type GetPopularBoardConfigsQueryResponse = {
   popularBoardConfigs: PopularBoardConfigConnection;
-}
+};

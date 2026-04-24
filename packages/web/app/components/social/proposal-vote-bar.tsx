@@ -8,12 +8,12 @@ import Chip from '@mui/material/Chip';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import { themeTokens } from '@/app/theme/theme-config';
 
-interface ProposalVoteBarProps {
+type ProposalVoteBarProps = {
   weightedUpvotes: number;
   weightedDownvotes: number;
   requiredUpvotes: number;
   status: string;
-}
+};
 
 export default function ProposalVoteBar({
   weightedUpvotes,

@@ -3,7 +3,7 @@
 import { createContext, useContext } from 'react';
 import type { Angle, BoardDetails } from '@/app/lib/types';
 
-export interface QueueBridgeBoardInfo {
+export type QueueBridgeBoardInfo = {
   boardDetails: BoardDetails | null;
   angle: Angle;
   hasActiveQueue: boolean;
@@ -14,7 +14,7 @@ export interface QueueBridgeBoardInfo {
    * flag — otherwise they race the async restore and see stale defaults.
    */
   isHydrated: boolean;
-}
+};
 
 export const QueueBridgeBoardInfoContext = createContext<QueueBridgeBoardInfo>({
   boardDetails: null,

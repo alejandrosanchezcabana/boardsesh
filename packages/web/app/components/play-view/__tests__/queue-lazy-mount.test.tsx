@@ -110,13 +110,13 @@ const PlayDrawerSimulation = ({ isOpen: isOpenProp }: { isOpen: boolean }) => {
   );
 };
 
-interface ControllerHandle {
+type ControllerHandle = {
   setIsOpen: (v: boolean) => void;
   setIsQueueOpen: (v: boolean) => void;
   setQueueMounted: (v: boolean) => void;
   openQueue: () => void;
   closeQueue: () => void;
-}
+};
 
 const controllerRef: { current: ControllerHandle | null } = { current: null };
 

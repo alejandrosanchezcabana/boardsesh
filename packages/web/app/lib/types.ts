@@ -247,6 +247,6 @@ export type BoardOnlyRouteParameters = {
 
 export type FetchCurrentProblemResponse = Climb;
 
-export interface ErrorResponse {
+export type ErrorResponse = {
   error: string;
-}
+};

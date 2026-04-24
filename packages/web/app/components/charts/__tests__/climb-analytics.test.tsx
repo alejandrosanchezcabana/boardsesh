@@ -19,10 +19,10 @@ vi.mock('@mui/x-charts/LineChart', () => ({
 
 import ClimbAnalytics from '../climb-analytics';
 
-interface MockLineChartProps {
+type MockLineChartProps = {
   series: Array<Record<string, unknown>>;
   xAxis: Array<{ tickInterval?: (value: string, index: number) => boolean }>;
-}
+};
 
 const MOCK_RESPONSE = {
   climbStatsHistory: [

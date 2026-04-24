@@ -5,7 +5,7 @@ import { useRef, useEffect, useMemo, useState, useCallback } from 'react';
 
 const DEFAULT_CHUNK_SIZE = 500;
 
-interface UseIncrementalQueryOptions<T> {
+type UseIncrementalQueryOptions<T> = {
   /** Stable cache key for accumulated results (no UUIDs in key). Values must be primitives. */
   accumulatedKey: readonly unknown[];
   /** Prefix for dynamic fetch keys — UUIDs are appended automatically. Values must be primitives. */
@@ -26,9 +26,9 @@ interface UseIncrementalQueryOptions<T> {
    * merge always grows the collection, so a size change is a reliable signal.
    */
   hasChanged: (prev: T, next: T) => boolean;
-}
+};
 
-interface UseIncrementalQueryResult<T> {
+type UseIncrementalQueryResult<T> = {
   data: T;
   isLoading: boolean;
   /**
@@ -37,7 +37,7 @@ interface UseIncrementalQueryResult<T> {
    * from overwriting the optimistic state.
    */
   cancelFetches: () => Promise<void>;
-}
+};
 
 function chunkArray<U>(arr: U[], size: number): U[][] {
   const chunks: U[][] = [];

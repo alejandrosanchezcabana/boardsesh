@@ -6,12 +6,12 @@ import Box from '@mui/material/Box';
 import Typography from '@mui/material/Typography';
 import MuiTooltip from '@mui/material/Tooltip';
 
-interface HoldIndicatorProps {
+type HoldIndicatorProps = {
   count: number;
   max?: number;
   color: string;
   label: string;
-}
+};
 
 export default function HoldIndicator({ count, max, color, label }: HoldIndicatorProps) {
   const active = count > 0;

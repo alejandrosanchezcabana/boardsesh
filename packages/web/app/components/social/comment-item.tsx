@@ -38,7 +38,7 @@ import CommentForm from './comment-form';
 
 dayjs.extend(relativeTime);
 
-interface CommentItemProps {
+type CommentItemProps = {
   comment: CommentType;
   onCommentUpdated: (comment: CommentType) => void;
   onCommentDeleted: (uuid: string) => void;
@@ -46,7 +46,7 @@ interface CommentItemProps {
   entityId: string;
   depth?: number;
   currentUserId?: string | null;
-}
+};
 
 export default function CommentItem({
   comment,

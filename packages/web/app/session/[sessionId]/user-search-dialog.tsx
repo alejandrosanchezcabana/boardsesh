@@ -22,18 +22,18 @@ import {
   type SearchUsersQueryResponse,
 } from '@/app/lib/graphql/operations/social';
 
-interface UserSearchDialogProps {
+type UserSearchDialogProps = {
   open: boolean;
   onClose: () => void;
   onSelectUser: (userId: string) => void;
   excludeUserIds?: string[];
-}
+};
 
-interface SearchResult {
+type SearchResult = {
   id: string;
   displayName: string | null;
   avatarUrl: string | null;
-}
+};
 
 export default function UserSearchDialog({ open, onClose, onSelectUser, excludeUserIds = [] }: UserSearchDialogProps) {
   const { token: authToken } = useWsAuthToken();

@@ -4,9 +4,9 @@ import React from 'react';
 
 import ProfileSubPageLayout from '../profile-sub-page-layout';
 
-interface ProfileSubPageLayoutProps {
+type ProfileSubPageLayoutProps = {
   children: React.ReactNode;
-}
+};
 
 function createDefaultProps(overrides: Partial<ProfileSubPageLayoutProps> = {}): ProfileSubPageLayoutProps {
   return {

@@ -16,7 +16,7 @@ import {
 import { isInstagramUrl } from '@/app/lib/instagram-url';
 import { useSnackbar } from '@/app/components/providers/snackbar-provider';
 
-interface AttachBetaLinkFormProps {
+type AttachBetaLinkFormProps = {
   boardType: string;
   climbUuid: string;
   climbName?: string;
@@ -29,7 +29,7 @@ interface AttachBetaLinkFormProps {
   showCancel?: boolean;
   autoFocus?: boolean;
   compact?: boolean;
-}
+};
 
 export const AttachBetaLinkForm: React.FC<AttachBetaLinkFormProps> = ({
   boardType,

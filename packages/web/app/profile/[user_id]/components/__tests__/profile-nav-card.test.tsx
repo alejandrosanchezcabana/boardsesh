@@ -20,12 +20,12 @@ vi.mock('@/app/theme/theme-config', () => ({
 
 import ProfileNavCard from '../profile-nav-card';
 
-interface ProfileNavCardProps {
+type ProfileNavCardProps = {
   title: string;
   subtitle?: string;
   href: string;
   icon: React.ReactNode;
-}
+};
 
 function createDefaultProps(overrides: Partial<ProfileNavCardProps> = {}): ProfileNavCardProps {
   return {

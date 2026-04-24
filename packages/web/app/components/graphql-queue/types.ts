@@ -5,15 +5,15 @@ import type { ReactNode } from 'react';
 import type { ParsedBoardRouteParameters, BoardDetails } from '@/app/lib/types';
 
 // Stable action functions extended with session management
-export interface GraphQLQueueActionsType extends QueueActionsType {
+export type GraphQLQueueActionsType = {
   startSession: (options?: { discoverable?: boolean; name?: string; sessionId?: string }) => Promise<string>;
   joinSession: (sessionId: string) => Promise<void>;
   endSession: () => void;
   dismissSessionSummary: () => void;
-}
+} & QueueActionsType;
 
 // Frequently-changing state data extended with session state
-export interface GraphQLQueueDataType extends QueueDataType {
+export type GraphQLQueueDataType = {
   isSessionActive: boolean;
   sessionId: string | null;
   sessionSummary: SessionSummary | null;
@@ -21,7 +21,7 @@ export interface GraphQLQueueDataType extends QueueDataType {
   connectionState: ConnectionState;
   canMutate: boolean;
   isDisconnected: boolean;
-}
+} & QueueDataType;
 
 // Combined type for backward compatibility
 export type GraphQLQueueContextType = GraphQLQueueActionsType & GraphQLQueueDataType;
@@ -32,20 +32,20 @@ import type { Climb, SearchRequestPagination } from '@/app/lib/types';
 import type { ClimbQueueItem, ClimbQueue } from '../queue-control/types';
 import type { SessionUser } from '@boardsesh/shared-schema';
 
-export interface CurrentClimbDataType {
+export type CurrentClimbDataType = {
   currentClimbQueueItem: ClimbQueueItem | null;
   currentClimb: Climb | null;
-}
+};
 
-export interface QueueListDataType {
+export type QueueListDataType = {
   queue: ClimbQueue;
   // suggestedClimbs lives here (not SearchContext) because it depends on queue
   // state — filtering search results against the queue. If it were in SearchContext,
   // every queue change would trigger re-renders in search-only consumers.
   suggestedClimbs: Climb[];
-}
+};
 
-export interface SearchDataType {
+export type SearchDataType = {
   climbSearchParams: SearchRequestPagination;
   climbSearchResults: Climb[] | null;
   totalSearchResultCount: number | null;
@@ -54,9 +54,9 @@ export interface SearchDataType {
   isFetchingNextPage: boolean;
   hasDoneFirstFetch: boolean;
   parsedParams: ParsedBoardRouteParameters;
-}
+};
 
-export interface SessionDataType {
+export type SessionDataType = {
   viewOnlyMode: boolean;
   isSessionActive: boolean;
   sessionId: string | null;
@@ -71,7 +71,7 @@ export interface SessionDataType {
   isBackendMode: boolean;
   hasConnected: boolean;
   connectionError: Error | null;
-}
+};
 
 export type GraphQLQueueContextProps = {
   parsedParams: ParsedBoardRouteParameters;

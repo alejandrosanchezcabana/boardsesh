@@ -15,10 +15,10 @@ import { scheduleOverlayWarming } from '@/app/lib/warm-overlay-cache';
 import { buildOverlayUrl } from '@/app/components/board-renderer/util';
 import { formatBoardDisplayName } from '@/app/lib/string-utils';
 
-interface BoardSlugListPageProps {
+type BoardSlugListPageProps = {
   params: Promise<{ board_slug: string; angle: string }>;
   searchParams: Promise<SearchRequestPagination>;
-}
+};
 
 export async function generateMetadata(props: BoardSlugListPageProps): Promise<Metadata> {
   const params = await props.params;

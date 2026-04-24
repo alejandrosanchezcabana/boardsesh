@@ -1,9 +1,9 @@
 export const isCapacitor = (): boolean => typeof window !== 'undefined' && window.Capacitor !== undefined;
 
-interface CapacitorBleManualScanPlugin {
+type CapacitorBleManualScanPlugin = {
   requestLEScan?: unknown;
   stopLEScan?: unknown;
-}
+};
 
 export const supportsCapacitorBleManualScan = (): boolean => {
   if (!isCapacitor()) return false;

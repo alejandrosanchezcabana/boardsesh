@@ -23,7 +23,7 @@ export const CREATE_SESSION = gql`
 // Types
 // ============================================
 
-export interface CreateSessionInput {
+export type CreateSessionInput = {
   boardPath: string;
   latitude: number;
   longitude: number;
@@ -33,9 +33,9 @@ export interface CreateSessionInput {
   isPermanent?: boolean;
   boardIds?: number[];
   color?: string;
-}
+};
 
-export interface CreateSessionResponse {
+export type CreateSessionResponse = {
   createSession: {
     id: string;
     name: string | null;
@@ -46,4 +46,4 @@ export interface CreateSessionResponse {
     color: string | null;
     startedAt: string;
   };
-}
+};

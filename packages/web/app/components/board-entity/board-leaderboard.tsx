@@ -32,9 +32,9 @@ const PERIOD_OPTIONS: { value: Period; label: string }[] = [
   { value: 'all', label: 'All Time' },
 ];
 
-interface BoardLeaderboardProps {
+type BoardLeaderboardProps = {
   boardUuid: string;
-}
+};
 
 export default function BoardLeaderboard({ boardUuid }: BoardLeaderboardProps) {
   const [period, setPeriod] = useState<Period>('all');

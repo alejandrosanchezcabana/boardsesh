@@ -1,10 +1,10 @@
 export type AscentStatusValue = 'flash' | 'send' | 'attempt';
 
-export interface NormalizeAscentStatusInput {
+export type NormalizeAscentStatusInput = {
   status?: AscentStatusValue | null;
   isAscent?: boolean | null;
   tries?: number | null;
-}
+};
 
 const STATUS_PRIORITY: AscentStatusValue[] = ['flash', 'send', 'attempt'];
 

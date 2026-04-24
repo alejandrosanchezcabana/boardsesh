@@ -29,11 +29,11 @@ const CAROUSEL_CARD_WIDTH = 280; // Empirically picked to fit the BoardCard layo
 const CAROUSEL_LOAD_INDICATOR_WIDTH = 80;
 const INFINITE_SCROLL_THRESHOLD = 300; // Trigger fetchNextPage when within this many px of the right edge
 
-interface BoardSearchDrawerProps {
+type BoardSearchDrawerProps = {
   open: boolean;
   onClose: () => void;
   onBoardOpen: (board: UserBoard) => void;
-}
+};
 
 export default function BoardSearchDrawer({ open, onClose, onBoardOpen }: BoardSearchDrawerProps) {
   const { coordinates: userCoords, requestPermission } = useGeolocation();

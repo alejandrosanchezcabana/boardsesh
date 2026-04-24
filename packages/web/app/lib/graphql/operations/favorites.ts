@@ -15,32 +15,32 @@ export const TOGGLE_FAVORITE = gql`
 `;
 
 // Type for the favorites query variables
-export interface FavoritesQueryVariables {
+export type FavoritesQueryVariables = {
   boardName: string;
   climbUuids: string[];
   angle: number;
-}
+};
 
 // Type for the favorites query response
-export interface FavoritesQueryResponse {
+export type FavoritesQueryResponse = {
   favorites: string[];
-}
+};
 
 // Type for the toggle favorite mutation variables
-export interface ToggleFavoriteMutationVariables {
+export type ToggleFavoriteMutationVariables = {
   input: {
     boardName: string;
     climbUuid: string;
     angle: number;
   };
-}
+};
 
 // Type for the toggle favorite mutation response
-export interface ToggleFavoriteMutationResponse {
+export type ToggleFavoriteMutationResponse = {
   toggleFavorite: {
     favorited: boolean;
   };
-}
+};
 
 // Get user favorites counts per board
 export const GET_USER_FAVORITES_COUNTS = gql`
@@ -52,14 +52,14 @@ export const GET_USER_FAVORITES_COUNTS = gql`
   }
 `;
 
-export interface FavoritesCount {
+export type FavoritesCount = {
   boardName: string;
   count: number;
-}
+};
 
-export interface UserFavoritesCountsQueryResponse {
+export type UserFavoritesCountsQueryResponse = {
   userFavoritesCounts: FavoritesCount[];
-}
+};
 
 // Get active boards for the current user
 export const GET_USER_ACTIVE_BOARDS = gql`
@@ -68,9 +68,9 @@ export const GET_USER_ACTIVE_BOARDS = gql`
   }
 `;
 
-export interface UserActiveBoardsQueryResponse {
+export type UserActiveBoardsQueryResponse = {
   userActiveBoards: string[];
-}
+};
 
 // Get user's favorite climbs with full data
 export const GET_USER_FAVORITE_CLIMBS = gql`
@@ -97,7 +97,7 @@ export const GET_USER_FAVORITE_CLIMBS = gql`
   }
 `;
 
-export interface GetUserFavoriteClimbsInput {
+export type GetUserFavoriteClimbsInput = {
   boardName: string;
   layoutId: number;
   sizeId: number;
@@ -105,13 +105,13 @@ export interface GetUserFavoriteClimbsInput {
   angle: number;
   page?: number;
   pageSize?: number;
-}
+};
 
-export interface GetUserFavoriteClimbsQueryVariables {
+export type GetUserFavoriteClimbsQueryVariables = {
   input: GetUserFavoriteClimbsInput;
-}
+};
 
-export interface UserFavoriteClimbsResult {
+export type UserFavoriteClimbsResult = {
   climbs: Array<{
     uuid: string;
     layoutId?: number | null;
@@ -129,8 +129,8 @@ export interface UserFavoriteClimbsResult {
   }>;
   totalCount: number;
   hasMore: boolean;
-}
+};
 
-export interface GetUserFavoriteClimbsQueryResponse {
+export type GetUserFavoriteClimbsQueryResponse = {
   userFavoriteClimbs: UserFavoriteClimbsResult;
-}
+};

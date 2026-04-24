@@ -5,12 +5,12 @@ import { useSession } from 'next-auth/react';
 import type { PartyProfile } from '@/app/lib/party-profile-db';
 import { getPartyProfile, clearPartyProfile, ensurePartyProfile } from '@/app/lib/party-profile-db';
 
-interface UserProfileData {
+type UserProfileData = {
   displayName: string | null;
   avatarUrl: string | null;
-}
+};
 
-interface PartyProfileContextType {
+type PartyProfileContextType = {
   profile: PartyProfile | null;
   isLoading: boolean;
   hasProfile: boolean;
@@ -20,7 +20,7 @@ interface PartyProfileContextType {
   isAuthenticated: boolean;
   clearProfile: () => Promise<void>;
   refreshProfile: () => Promise<void>;
-}
+};
 
 const PartyProfileContext = createContext<PartyProfileContextType | undefined>(undefined);
 

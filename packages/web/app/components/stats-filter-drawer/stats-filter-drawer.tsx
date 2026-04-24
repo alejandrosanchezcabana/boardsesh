@@ -15,7 +15,7 @@ import {
   boardOptions,
 } from '@/app/profile/[user_id]/utils/profile-constants';
 
-interface StatsFilterDrawerProps {
+type StatsFilterDrawerProps = {
   open: boolean;
   onClose: () => void;
   selectedBoard: string;
@@ -27,7 +27,7 @@ interface StatsFilterDrawerProps {
   toDate: string;
   onToDateChange: (date: string) => void;
   onTransitionEnd?: (open: boolean) => void;
-}
+};
 
 export default function StatsFilterDrawer({
   open,

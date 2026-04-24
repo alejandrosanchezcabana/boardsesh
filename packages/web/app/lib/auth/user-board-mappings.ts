@@ -3,14 +3,14 @@ import { userBoardMappings } from '@/app/lib/db/schema';
 import { eq, and } from 'drizzle-orm';
 import type { BoardName } from '@/app/lib/types';
 
-export interface UserBoardMapping {
+export type UserBoardMapping = {
   id: string;
   userId: string;
   boardType: BoardName;
   boardUserId: number;
   boardUsername: string | null;
   linkedAt: Date;
-}
+};
 
 /**
  * Create a mapping between a NextAuth user and an Aurora board user

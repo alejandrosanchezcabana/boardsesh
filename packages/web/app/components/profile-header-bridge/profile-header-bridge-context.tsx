@@ -4,10 +4,10 @@ import React, { createContext, useContext, useState, useCallback, useMemo, useLa
 
 const useIsomorphicLayoutEffect = typeof window !== 'undefined' ? useLayoutEffect : useEffect;
 
-interface ProfileHeaderShareState {
+type ProfileHeaderShareState = {
   isActive: boolean;
   displayName: string | null;
-}
+};
 
 const ProfileHeaderShareContext = createContext<ProfileHeaderShareState>({
   isActive: false,
@@ -18,10 +18,10 @@ export function useProfileHeaderShare() {
   return useContext(ProfileHeaderShareContext);
 }
 
-interface ProfileHeaderShareSetters {
+type ProfileHeaderShareSetters = {
   register: (displayName: string | null) => void;
   deregister: () => void;
-}
+};
 
 const ProfileHeaderShareSetterContext = createContext<ProfileHeaderShareSetters>({
   register: () => {},
@@ -65,10 +65,10 @@ export function ProfileHeaderShareProvider({ children }: { children: React.React
   );
 }
 
-interface ProfileHeaderShareInjectorProps {
+type ProfileHeaderShareInjectorProps = {
   displayName: string | null;
   isActive: boolean;
-}
+};
 
 export function ProfileHeaderShareInjector({ displayName, isActive }: ProfileHeaderShareInjectorProps) {
   const { register, deregister } = useContext(ProfileHeaderShareSetterContext);

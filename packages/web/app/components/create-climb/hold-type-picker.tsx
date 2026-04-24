@@ -12,7 +12,7 @@ import type { BoardName } from '@/app/lib/types';
 
 type SelectableState = HoldState | 'OFF';
 
-interface HoldTypePickerProps {
+type HoldTypePickerProps = {
   boardName: BoardName;
   anchorEl: Element | null;
   currentState: SelectableState;
@@ -20,7 +20,7 @@ interface HoldTypePickerProps {
   finishCount: number;
   onSelect: (state: SelectableState) => void;
   onClose: () => void;
-}
+};
 
 // Hold types the picker can show, in display order. Search-only states like
 // ANY/NOT and the MoonBoard above-marker AUX state are intentionally excluded
@@ -49,11 +49,11 @@ const PICKER_STATES_BY_BOARD: Record<BoardName, readonly PickerHoldState[]> = {
   moonboard: ['STARTING', 'HAND', 'FINISH'],
 };
 
-interface PickerOption {
+type PickerOption = {
   state: PickerHoldState;
   label: string;
   color: string;
-}
+};
 
 /**
  * Build the picker's options for a given board. The list of states comes from
@@ -155,14 +155,14 @@ export default function HoldTypePicker({
   );
 }
 
-interface SwatchProps {
+type SwatchProps = {
   label: string;
   color?: string;
   isActive: boolean;
   isDisabled: boolean;
   isClear?: boolean;
   onClick: () => void;
-}
+};
 
 function Swatch({ label, color, isActive, isDisabled, isClear, onClick }: SwatchProps) {
   const ring = isClear ? themeTokens.neutral[400] : (color ?? themeTokens.neutral[400]);

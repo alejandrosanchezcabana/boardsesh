@@ -9,7 +9,7 @@ import { GetPlaylistClimbsInputSchema } from '../../../../validation/schemas';
 import { UNIFIED_TABLES, isValidBoardName } from '../../../../db/queries/util/table-select';
 import { verifyPlaylistAccess } from '../helpers/enrichment';
 
-export interface PlaylistClimbsInput {
+export type PlaylistClimbsInput = {
   playlistId: string;
   boardName?: string;
   layoutId?: number;
@@ -18,7 +18,7 @@ export interface PlaylistClimbsInput {
   angle?: number;
   page?: number;
   pageSize?: number;
-}
+};
 
 function paginateResults<T>(results: T[], pageSize: number) {
   const hasMore = results.length > pageSize;

@@ -5,7 +5,7 @@
 
 import type { GridCoordinate } from '../../types';
 
-export interface ExpectedClimbResult {
+export type ExpectedClimbResult = {
   /** Fixture filename */
   fixture: string;
   /** Expected climb name (null = skip OCR validation for this field) */
@@ -26,7 +26,7 @@ export interface ExpectedClimbResult {
   handHolds: GridCoordinate[];
   /** Expected finish holds */
   finishHolds: GridCoordinate[];
-}
+};
 
 export const EXPECTED_RESULTS: ExpectedClimbResult[] = [
   {

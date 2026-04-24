@@ -108,19 +108,19 @@ for (const [board, roles] of Object.entries(HOLD_STATE_MAP)) {
   );
 }
 
-interface ClimbRow {
+type ClimbRow = {
   uuid: string;
   board_type: string;
   name: string | null;
   setter_username: string | null;
   frames: string | null;
   is_listed: boolean | null;
-}
+};
 
-interface StatsRow {
+type StatsRow = {
   climb_uuid: string;
   total_ascents: string;
-}
+};
 
 function parseFrames(frames: string): Array<{ holdId: number; roleCode: number }> {
   const holds: Array<{ holdId: number; roleCode: number }> = [];
@@ -136,10 +136,10 @@ function parseFrames(frames: string): Array<{ holdId: number; roleCode: number }
   return holds;
 }
 
-interface Problem {
+type Problem = {
   type: 'unknown_role' | 'no_starting' | 'no_finish' | 'empty_frames' | 'malformed_frames' | 'negative_role';
   detail: string;
-}
+};
 
 function analyzeClimb(climb: ClimbRow): Problem[] {
   const problems: Problem[] = [];

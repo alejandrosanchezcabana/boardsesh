@@ -8,9 +8,9 @@ import { constructClimbInfoUrl } from '@/app/lib/url-utils';
 import { buildActionResult, buildUnavailableResult, computeActionDisplay } from '../action-view-renderer';
 import { openExternalUrl } from '@/app/lib/open-external-url';
 
-interface OpenInAppActionProps extends ClimbActionProps {
+type OpenInAppActionProps = {
   auroraAppUrl?: string;
-}
+} & ClimbActionProps;
 
 export function OpenInAppAction({
   climb,

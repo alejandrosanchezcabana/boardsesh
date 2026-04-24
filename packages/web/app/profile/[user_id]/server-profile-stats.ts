@@ -3,11 +3,11 @@ import { SUPPORTED_BOARDS } from '@/app/lib/board-data';
 import type { LogbookEntry } from './utils/profile-constants';
 import type { GetUserProfileStatsQueryResponse } from '@/app/lib/graphql/operations/ticks';
 
-export interface ProfileStatsData {
+export type ProfileStatsData = {
   initialProfileStats: GetUserProfileStatsQueryResponse['userProfileStats'] | null;
   initialAllBoardsTicks: Record<string, LogbookEntry[]>;
   initialLogbook: LogbookEntry[];
-}
+};
 
 /**
  * Fetches profile stats and tick data for a user across all boards.

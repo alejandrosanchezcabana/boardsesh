@@ -13,11 +13,11 @@ import type { UserBoard } from '@boardsesh/shared-schema';
 import type { Climb } from '@/app/lib/types';
 import MultiboardClimbList, { type SortBy } from './multiboard-climb-list';
 
-interface SetterClimbListProps {
+type SetterClimbListProps = {
   username: string;
   boardTypes?: string[];
   authToken?: string | null;
-}
+};
 
 export default function SetterClimbList({ username, boardTypes, authToken }: SetterClimbListProps) {
   const [selectedBoard, setSelectedBoard] = useState<UserBoard | null>(null);

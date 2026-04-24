@@ -21,7 +21,7 @@ import type { Climb } from '@/app/lib/types';
 
 export type SortBy = 'popular' | 'new';
 
-interface MultiboardClimbListProps {
+type MultiboardClimbListProps = {
   climbs: Climb[];
   isFetching: boolean;
   isLoading: boolean;
@@ -57,7 +57,7 @@ interface MultiboardClimbListProps {
   boards?: UserBoard[];
   /** Loading flag matching `boards` when it's passed in externally. */
   boardsLoading?: boolean;
-}
+};
 
 export default function MultiboardClimbList({
   climbs,

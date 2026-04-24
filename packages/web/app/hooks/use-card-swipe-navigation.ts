@@ -9,7 +9,7 @@ const SNAP_BACK_DURATION = 200; // ms for snap-back animation
 const CLIP_EXIT_DURATION = 100; // ms before starting enter — text leaves narrow clip area faster than full EXIT_DURATION
 const ENTER_ANIMATION_DURATION = 170; // ms for enter crossfade/transition after navigation
 
-export interface UseCardSwipeNavigationOptions {
+export type UseCardSwipeNavigationOptions = {
   onSwipeNext: () => void;
   onSwipePrevious: () => void;
   canSwipeNext: boolean;
@@ -17,9 +17,9 @@ export interface UseCardSwipeNavigationOptions {
   threshold?: number;
   delayNavigation?: boolean;
   enabled?: boolean;
-}
+};
 
-export interface UseCardSwipeNavigationReturn {
+export type UseCardSwipeNavigationReturn = {
   swipeHandlers: ReturnType<typeof useSwipeable>;
   swipeOffset: number;
   isAnimating: boolean;
@@ -29,7 +29,7 @@ export interface UseCardSwipeNavigationReturn {
   resetSwipe: () => void;
   /** Ref indicating the current swipe direction: true=horizontal, false=vertical, null=undecided */
   isHorizontalSwipeRef: React.RefObject<boolean | null>;
-}
+};
 
 export function useCardSwipeNavigation({
   onSwipeNext,

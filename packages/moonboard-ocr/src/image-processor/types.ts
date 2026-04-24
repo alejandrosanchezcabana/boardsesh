@@ -1,30 +1,30 @@
 /**
  * Represents raw pixel data from an image
  */
-export interface RawPixelData {
+export type RawPixelData = {
   data: Uint8Array | Uint8ClampedArray;
   width: number;
   height: number;
   channels: 4; // Always RGBA for consistency between Sharp and Canvas
-}
+};
 
 /**
  * Image metadata
  */
-export interface ImageMetadata {
+export type ImageMetadata = {
   width: number;
   height: number;
-}
+};
 
 /**
  * Region specification for cropping
  */
-export interface ImageRegion {
+export type ImageRegion = {
   x: number;
   y: number;
   width: number;
   height: number;
-}
+};
 
 /**
  * Valid input sources for loading images in Node.js
@@ -45,7 +45,7 @@ export type ImageSource = NodeImageSource | BrowserImageSource;
  * Abstraction layer for image processing operations.
  * Implemented by SharpImageProcessor (Node) and CanvasImageProcessor (Browser).
  */
-export interface ImageProcessor {
+export type ImageProcessor = {
   /**
    * Load image from various sources
    * - Node: Buffer, string path
@@ -81,4 +81,4 @@ export interface ImageProcessor {
    * Get the source file name (for metadata)
    */
   getSourceName(): string;
-}
+};

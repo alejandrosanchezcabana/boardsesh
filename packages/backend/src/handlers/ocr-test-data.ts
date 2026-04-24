@@ -16,7 +16,7 @@ const MIME_TO_EXT: Record<string, string> = {
 
 // Expected metadata structure from OCR upload
 // This matches the metadata object created in moonboard-ocr-upload.ts
-interface OcrUploadMetadata {
+type OcrUploadMetadata = {
   layoutId: number;
   angle: number;
   climb: {
@@ -25,7 +25,7 @@ interface OcrUploadMetadata {
     holds?: unknown;
     sourceFile?: string;
   };
-}
+};
 
 /**
  * Type guard to check if the parsed metadata has the expected structure.

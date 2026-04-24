@@ -9,10 +9,10 @@ import { CssBarChart } from '@/app/components/charts/css-bar-chart';
 import type { CssBarChartBar } from '@/app/components/charts/css-bar-chart';
 import type { PlannedClimbSlot } from './types';
 
-interface GradeProgressionChartProps {
+type GradeProgressionChartProps = {
   plannedSlots: PlannedClimbSlot[];
   height?: number;
-}
+};
 
 function getGradeName(difficultyId: number): string {
   return (

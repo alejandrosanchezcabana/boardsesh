@@ -30,7 +30,7 @@ const DRAFTS_DRAWER_STYLES = {
   body: { padding: 0, overflow: 'hidden' as const, touchAction: 'pan-y' as const },
 } as const;
 
-export interface DraftsDrawerProps {
+export type DraftsDrawerProps = {
   open: boolean;
   onClose: () => void;
   boardDetails: BoardDetails;
@@ -42,7 +42,7 @@ export interface DraftsDrawerProps {
    * falls back to navigating to the climb view page.
    */
   onLoadDraft?: (climb: Climb) => void;
-}
+};
 
 const DraftsDrawer: React.FC<DraftsDrawerProps> = ({ open, onClose, boardDetails, angle, onLoadDraft }) => {
   const router = useRouter();

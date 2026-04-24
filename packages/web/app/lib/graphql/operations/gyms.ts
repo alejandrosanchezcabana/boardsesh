@@ -159,106 +159,106 @@ export const LINK_BOARD_TO_GYM = gql`
 // Query/Mutation Variable Types
 // ============================================
 
-export interface GetGymQueryVariables {
+export type GetGymQueryVariables = {
   gymUuid: string;
-}
+};
 
-export interface GetGymQueryResponse {
+export type GetGymQueryResponse = {
   gym: Gym | null;
-}
+};
 
-export interface GetGymBySlugQueryVariables {
+export type GetGymBySlugQueryVariables = {
   slug: string;
-}
+};
 
-export interface GetGymBySlugQueryResponse {
+export type GetGymBySlugQueryResponse = {
   gymBySlug: Gym | null;
-}
+};
 
-export interface GetMyGymsQueryVariables {
+export type GetMyGymsQueryVariables = {
   input?: MyGymsInput;
-}
+};
 
-export interface GetMyGymsQueryResponse {
+export type GetMyGymsQueryResponse = {
   myGyms: GymConnection;
-}
+};
 
-export interface SearchGymsQueryVariables {
+export type SearchGymsQueryVariables = {
   input: SearchGymsInput;
-}
+};
 
-export interface SearchGymsQueryResponse {
+export type SearchGymsQueryResponse = {
   searchGyms: GymConnection;
-}
+};
 
-export interface GetGymMembersQueryVariables {
+export type GetGymMembersQueryVariables = {
   input: GymMembersInput;
-}
+};
 
-export interface GetGymMembersQueryResponse {
+export type GetGymMembersQueryResponse = {
   gymMembers: GymMemberConnection;
-}
+};
 
-export interface CreateGymMutationVariables {
+export type CreateGymMutationVariables = {
   input: CreateGymInput;
-}
+};
 
-export interface CreateGymMutationResponse {
+export type CreateGymMutationResponse = {
   createGym: Gym;
-}
+};
 
-export interface UpdateGymMutationVariables {
+export type UpdateGymMutationVariables = {
   input: UpdateGymInput;
-}
+};
 
-export interface UpdateGymMutationResponse {
+export type UpdateGymMutationResponse = {
   updateGym: Gym;
-}
+};
 
-export interface DeleteGymMutationVariables {
+export type DeleteGymMutationVariables = {
   gymUuid: string;
-}
+};
 
-export interface DeleteGymMutationResponse {
+export type DeleteGymMutationResponse = {
   deleteGym: boolean;
-}
+};
 
-export interface AddGymMemberMutationVariables {
+export type AddGymMemberMutationVariables = {
   input: AddGymMemberInput;
-}
+};
 
-export interface AddGymMemberMutationResponse {
+export type AddGymMemberMutationResponse = {
   addGymMember: boolean;
-}
+};
 
-export interface RemoveGymMemberMutationVariables {
+export type RemoveGymMemberMutationVariables = {
   input: RemoveGymMemberInput;
-}
+};
 
-export interface RemoveGymMemberMutationResponse {
+export type RemoveGymMemberMutationResponse = {
   removeGymMember: boolean;
-}
+};
 
-export interface FollowGymMutationVariables {
+export type FollowGymMutationVariables = {
   input: FollowGymInput;
-}
+};
 
-export interface FollowGymMutationResponse {
+export type FollowGymMutationResponse = {
   followGym: boolean;
-}
+};
 
-export interface UnfollowGymMutationVariables {
+export type UnfollowGymMutationVariables = {
   input: FollowGymInput;
-}
+};
 
-export interface UnfollowGymMutationResponse {
+export type UnfollowGymMutationResponse = {
   unfollowGym: boolean;
-}
+};
 
-export interface LinkBoardToGymMutationVariables {
+export type LinkBoardToGymMutationVariables = {
   input: LinkBoardToGymInput;
-}
+};
 
-export interface LinkBoardToGymMutationResponse {
+export type LinkBoardToGymMutationResponse = {
   linkBoardToGym: boolean;
-}
+};

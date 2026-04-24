@@ -4,11 +4,11 @@ import { getPlatform, isNativeApp } from '@/app/lib/ble/capacitor-utils';
 
 export type InstagramPostingPlatform = 'ios' | 'android' | 'unsupported';
 
-export interface InstagramCaptionInput {
+export type InstagramCaptionInput = {
   climbName: string;
   angle: number;
   boardType?: string;
-}
+};
 
 const BOARD_CAPTION_CONFIG: Record<string, { name: string; displayName: string; handle: string; hashtags: string }> = {
   kilter: {
@@ -31,10 +31,10 @@ const BOARD_CAPTION_CONFIG: Record<string, { name: string; displayName: string; 
   },
 };
 
-export interface CopyAndOpenInstagramResult {
+export type CopyAndOpenInstagramResult = {
   copied: boolean;
   opened: boolean;
-}
+};
 
 const IOS_INSTAGRAM_CREATE_URL = 'instagram://camera';
 const ANDROID_INSTAGRAM_OPEN_URL = 'instagram://camera';

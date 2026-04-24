@@ -6,10 +6,10 @@ const STORE_NAME = 'onboarding';
 // This will cause the tour to show again for all users.
 export const ONBOARDING_VERSION = 1;
 
-export interface OnboardingStatus {
+export type OnboardingStatus = {
   completedVersion: number;
   completedAt: string;
-}
+};
 
 const getDB = createIndexedDBStore('boardsesh-onboarding', STORE_NAME);
 

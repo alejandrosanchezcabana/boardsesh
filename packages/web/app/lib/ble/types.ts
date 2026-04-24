@@ -1,14 +1,14 @@
-export interface BleConnection {
+export type BleConnection = {
   deviceId: string;
   deviceName?: string;
-}
+};
 
 /** A BLE device discovered during scanning. */
-export interface DiscoveredDevice {
+export type DiscoveredDevice = {
   deviceId: string;
   name?: string;
   rssi: number;
-}
+};
 
 /**
  * Function provided by the React layer to display a custom device picker.
@@ -18,7 +18,7 @@ export interface DiscoveredDevice {
  */
 export type DevicePickerFn = (subscribe: (onUpdate: (devices: DiscoveredDevice[]) => void) => void) => Promise<string>;
 
-export interface BluetoothAdapter {
+export type BluetoothAdapter = {
   /** Check if BLE is available and enabled */
   isAvailable(): Promise<boolean>;
 
@@ -39,4 +39,4 @@ export interface BluetoothAdapter {
 
   /** Register a callback for disconnection events. Returns an unsubscribe function. */
   onDisconnect(callback: () => void): () => void;
-}
+};

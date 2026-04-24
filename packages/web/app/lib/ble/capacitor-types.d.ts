@@ -1,4 +1,4 @@
-interface CapacitorGeolocationPlugin {
+type CapacitorGeolocationPlugin = {
   getCurrentPosition(options?: { enableHighAccuracy?: boolean; timeout?: number; maximumAge?: number }): Promise<{
     coords: {
       latitude: number;
@@ -13,34 +13,34 @@ interface CapacitorGeolocationPlugin {
   }>;
   checkPermissions(): Promise<{ location: 'prompt' | 'granted' | 'denied' }>;
   requestPermissions(): Promise<{ location: 'prompt' | 'granted' | 'denied' }>;
-}
+};
 
-interface CapacitorKeepAwakePlugin {
+type CapacitorKeepAwakePlugin = {
   keepAwake(): Promise<void>;
   allowSleep(): Promise<void>;
   isSupported(): Promise<{ isSupported: boolean }>;
   isKeptAwake(): Promise<{ isKeptAwake: boolean }>;
-}
+};
 
-interface CapacitorBrowserPlugin {
+type CapacitorBrowserPlugin = {
   open(options: { url: string; toolbarColor?: string }): Promise<void>;
   close(): Promise<void>;
-}
+};
 
-interface CapacitorAppPlugin {
+type CapacitorAppPlugin = {
   addListener(
     eventName: 'appUrlOpen',
     listenerFunc: (event: { url: string }) => void,
   ): Promise<{ remove: () => Promise<void> }>;
-}
+};
 
-interface CapacitorDevUrlPlugin {
+type CapacitorDevUrlPlugin = {
   getState(): Promise<{ isDebug: boolean; currentUrl: string | null; defaultUrl: string }>;
   setUrl(options: { url: string }): Promise<void>;
   clearUrl(): Promise<void>;
-}
+};
 
-interface CapacitorGlobal {
+type CapacitorGlobal = {
   isNativePlatform(): boolean;
   getPlatform(): string;
   Plugins: {
@@ -62,9 +62,10 @@ interface CapacitorGlobal {
     };
     [key: string]: unknown;
   };
-}
+};
 
 declare global {
+  // eslint-disable-next-line typescript/consistent-type-definitions
   interface Window {
     Capacitor?: CapacitorGlobal;
   }

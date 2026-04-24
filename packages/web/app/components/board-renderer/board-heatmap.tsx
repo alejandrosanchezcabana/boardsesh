@@ -41,11 +41,11 @@ const getAngleFromPath = (pathname: string): number => {
   return isNaN(angle) ? 40 : angle; // Default to 40 if not valid
 };
 
-interface BoardHeatmapProps {
+type BoardHeatmapProps = {
   boardDetails: BoardDetails;
   litUpHoldsMap?: LitUpHoldsMap;
   onHoldClick?: (holdId: number) => void;
-}
+};
 
 // Define the color mode type including user-specific modes
 type ColorMode =

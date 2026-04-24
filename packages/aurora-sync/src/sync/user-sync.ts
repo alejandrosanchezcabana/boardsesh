@@ -27,11 +27,11 @@ async function processBatches<T>(
   }
 }
 
-interface UpsertResult {
+type UpsertResult = {
   synced: number;
   skipped: number;
   skippedReason?: string;
-}
+};
 
 type AuroraApiRow = Record<string, string>;
 
@@ -483,11 +483,11 @@ export async function getLastSharedSyncTimes(pool: Pool, boardName: AuroraBoardN
   }
 }
 
-export interface SyncTableResult {
+export type SyncTableResult = {
   synced: number;
   skipped?: number;
   skippedReason?: string;
-}
+};
 
 export type SyncUserDataResult = Record<string, SyncTableResult>;
 

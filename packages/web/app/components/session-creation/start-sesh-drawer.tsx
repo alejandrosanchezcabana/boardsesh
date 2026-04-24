@@ -41,12 +41,12 @@ import type { StoredBoardConfig } from '@/app/lib/saved-boards-db';
 import type { UserBoard, PopularBoardConfig } from '@boardsesh/shared-schema';
 import type { BoardName } from '@/app/lib/types';
 
-interface StartSeshDrawerProps {
+type StartSeshDrawerProps = {
   open: boolean;
   onClose: () => void;
   onTransitionEnd?: (open: boolean) => void;
   boardConfigs?: BoardConfigData;
-}
+};
 
 export default function StartSeshDrawer({ open, onClose, onTransitionEnd, boardConfigs }: StartSeshDrawerProps) {
   const { status } = useSession();

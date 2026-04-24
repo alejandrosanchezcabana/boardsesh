@@ -21,7 +21,7 @@ const deleteCredentialsSchema = z.object({
   boardType: z.enum(AURORA_BOARDS),
 });
 
-export interface AuroraCredentialStatus {
+export type AuroraCredentialStatus = {
   boardType: string;
   auroraUsername: string;
   auroraUserId: number | null;
@@ -29,7 +29,7 @@ export interface AuroraCredentialStatus {
   syncStatus: string;
   syncError: string | null;
   createdAt: string;
-}
+};
 
 /**
  * GET - Get all Aurora credentials status for the logged-in user

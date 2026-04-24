@@ -1,6 +1,6 @@
 import Tesseract from 'tesseract.js';
 
-export interface OcrResult {
+export type OcrResult = {
   name: string;
   setter: string;
   angle: number;
@@ -8,7 +8,7 @@ export interface OcrResult {
   setterGrade: string;
   isBenchmark: boolean;
   warnings: string[];
-}
+};
 
 /**
  * Convert ImageData to a PNG Blob for better Tesseract.js compatibility in browsers.

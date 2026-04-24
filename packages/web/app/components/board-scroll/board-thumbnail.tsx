@@ -11,13 +11,13 @@ import type { StoredBoardConfig } from '@/app/lib/saved-boards-db';
 import type { UserBoard, PopularBoardConfig } from '@boardsesh/shared-schema';
 import styles from './board-scroll.module.css';
 
-interface BoardThumbnailProps {
+type BoardThumbnailProps = {
   userBoard?: UserBoard;
   storedConfig?: StoredBoardConfig;
   popularConfig?: PopularBoardConfig;
   boardConfigs?: BoardConfigData;
   size?: number;
-}
+};
 
 export function useBoardDetails(
   userBoard?: UserBoard,

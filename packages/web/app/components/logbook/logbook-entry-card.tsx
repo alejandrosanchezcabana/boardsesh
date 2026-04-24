@@ -14,20 +14,17 @@ import Typography from '@mui/material/Typography';
 import PersonOutlined from '@mui/icons-material/PersonOutlined';
 import dayjs from 'dayjs';
 import { AscentStatusIcon } from '@/app/components/ascent-status/ascent-status-icon';
-import {
-  normalizeAscentStatus,
-  type AscentStatusValue,
-} from '@/app/components/ascent-status/ascent-status-utils';
+import { normalizeAscentStatus, type AscentStatusValue } from '@/app/components/ascent-status/ascent-status-utils';
 import VoteButton from '@/app/components/social/vote-button';
 import FeedCommentButton from '@/app/components/social/feed-comment-button';
 
-export interface LogbookEntryUser {
+export type LogbookEntryUser = {
   userId: string;
   displayName?: string | null;
   avatarUrl?: string | null;
-}
+};
 
-export interface LogbookEntryCardData {
+export type LogbookEntryCardData = {
   climbedAt: string;
   angle: number;
   isMirror: boolean;
@@ -49,14 +46,14 @@ export interface LogbookEntryCardData {
   upvotes?: number | null;
   downvotes?: number | null;
   commentCount?: number | null;
-}
+};
 
-export interface LogbookEntryCardProps {
+export type LogbookEntryCardProps = {
   entry: LogbookEntryCardData;
   currentClimbAngle: number;
   showMirrorTag: boolean;
   user?: LogbookEntryUser;
-}
+};
 
 export const LogbookEntryCard: React.FC<LogbookEntryCardProps> = ({
   entry,
@@ -88,12 +85,7 @@ export const LogbookEntryCard: React.FC<LogbookEntryCardProps> = ({
                 {!user.avatarUrl && <PersonOutlined sx={{ fontSize: 16 }} />}
               </Avatar>
             </Link>
-            <Link
-              component={NextLink}
-              href={`/profile/${user.userId}`}
-              underline="none"
-              color="text.primary"
-            >
+            <Link component={NextLink} href={`/profile/${user.userId}`} underline="none" color="text.primary">
               <Typography variant="body2" fontWeight={600}>
                 {user.displayName || 'Climber'}
               </Typography>
@@ -111,9 +103,7 @@ export const LogbookEntryCard: React.FC<LogbookEntryCardProps> = ({
                 <AscentStatusIcon status={ascentStatus} variant="icon" />
               </>
             )}
-            {showMirrorTag && entry.isMirror && (
-              <Chip label="Mirrored" size="small" color="secondary" />
-            )}
+            {showMirrorTag && entry.isMirror && <Chip label="Mirrored" size="small" color="secondary" />}
           </Stack>
           {hasSuccess && entry.quality != null && entry.quality > 0 && (
             <Stack direction="row" spacing={1}>
@@ -126,12 +116,7 @@ export const LogbookEntryCard: React.FC<LogbookEntryCardProps> = ({
             </Typography>
           </Stack>
           {entry.comment && (
-            <Typography
-              variant="body2"
-              component="span"
-              color="text.secondary"
-              sx={{ whiteSpace: 'pre-wrap' }}
-            >
+            <Typography variant="body2" component="span" color="text.secondary" sx={{ whiteSpace: 'pre-wrap' }}>
               {entry.comment}
             </Typography>
           )}
@@ -144,11 +129,7 @@ export const LogbookEntryCard: React.FC<LogbookEntryCardProps> = ({
                 initialDownvotes={entry.downvotes ?? 0}
                 likeOnly
               />
-              <FeedCommentButton
-                entityType="tick"
-                entityId={entry.tickUuid}
-                commentCount={entry.commentCount ?? 0}
-              />
+              <FeedCommentButton entityType="tick" entityId={entry.tickUuid} commentCount={entry.commentCount ?? 0} />
             </Stack>
           )}
         </Stack>

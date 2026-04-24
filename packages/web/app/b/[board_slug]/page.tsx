@@ -1,9 +1,9 @@
 import { notFound, redirect } from 'next/navigation';
 import { resolveBoardBySlug } from '@/app/lib/board-slug-utils';
 
-interface BoardSlugPageParams {
+type BoardSlugPageParams = {
   board_slug: string;
-}
+};
 
 /**
  * Redirect /b/[slug] → /b/[slug]/{board.angle}/list

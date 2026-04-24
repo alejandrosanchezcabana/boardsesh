@@ -4,13 +4,13 @@ import React from 'react';
 
 // --- Mocks ---
 
-interface GradeFormatMock {
+type GradeFormatMock = {
   gradeFormat: 'v-grade' | 'font';
   formatGrade: (d: string | null | undefined) => string | null;
   getGradeColor: (d?: string | null, dk?: boolean) => string | undefined;
   loaded: boolean;
   setGradeFormat: ReturnType<typeof vi.fn>;
-}
+};
 const defaultGradeFormat: GradeFormatMock = {
   gradeFormat: 'v-grade',
   formatGrade: (d: string | null | undefined) => {

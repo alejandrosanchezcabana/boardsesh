@@ -16,7 +16,7 @@ import type { BoardDetails } from '@/app/lib/types';
 
 export type SearchCategory = 'climbs' | 'users' | 'playlists' | 'boards' | 'gyms';
 
-interface UnifiedSearchDrawerProps {
+type UnifiedSearchDrawerProps = {
   open: boolean;
   onClose: () => void;
   onTransitionEnd?: (open: boolean) => void;
@@ -32,7 +32,7 @@ interface UnifiedSearchDrawerProps {
   showCloseButtonOnMobile?: boolean;
   /** Show drawer close button. */
   showCloseButton?: boolean;
-}
+};
 
 export default function UnifiedSearchDrawer({
   open,

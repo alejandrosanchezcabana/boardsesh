@@ -27,7 +27,7 @@ import type { BoardRouteIdentity } from '@/app/lib/types';
 
 const CreateBoardForm = lazy(() => import('../board-entity/create-board-form'));
 
-interface BoardConfigSelectsProps {
+type BoardConfigSelectsProps = {
   selectedBoard: BoardName | undefined;
   selectedLayout: number | undefined;
   selectedSize: number | undefined;
@@ -41,7 +41,7 @@ interface BoardConfigSelectsProps {
   onSizeChange: (sizeId: number) => void;
   onSetsChange: (setIds: number[]) => void;
   onAngleChange: (angle: number) => void;
-}
+};
 
 function BoardConfigSelects({
   selectedBoard,
@@ -144,14 +144,14 @@ function BoardConfigSelects({
   );
 }
 
-interface BoardSelectorDrawerProps {
+type BoardSelectorDrawerProps = {
   open: boolean;
   onClose: () => void;
   onTransitionEnd?: (open: boolean) => void;
   boardConfigs: BoardConfigData;
   placement?: 'top' | 'bottom';
   onBoardSelected?: (url: string, config?: StoredBoardConfig) => void;
-}
+};
 
 export default function BoardSelectorDrawer({
   open,

@@ -11,9 +11,9 @@ import { getWorkoutIcon } from './workout-icons';
 import { themeTokens } from '@/app/theme/theme-config';
 import styles from './workout-type-selector.module.css';
 
-interface WorkoutTypeSelectorProps {
+type WorkoutTypeSelectorProps = {
   onSelect: (type: WorkoutType) => void;
-}
+};
 
 const WorkoutTypeSelector: React.FC<WorkoutTypeSelectorProps> = ({ onSelect }) => {
   return (

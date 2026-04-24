@@ -1,7 +1,7 @@
 /**
  * Connection data stored in Redis for cross-instance visibility.
  */
-export interface DistributedConnection {
+export type DistributedConnection = {
   connectionId: string;
   instanceId: string;
   sessionId: string | null;
@@ -10,7 +10,7 @@ export interface DistributedConnection {
   avatarUrl: string | null;
   isLeader: boolean;
   connectedAt: number; // Unix timestamp ms
-}
+};
 
 /**
  * Redis key prefixes for distributed state.

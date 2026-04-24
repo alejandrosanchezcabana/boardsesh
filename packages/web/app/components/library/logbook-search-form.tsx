@@ -29,7 +29,7 @@ import styles from '../search-drawer/accordion-search-form.module.css';
 import headerStyles from '../global-header/global-header.module.css';
 import footerStyles from '../search-drawer/search-form.module.css';
 
-interface LogbookSearchFormProps {
+type LogbookSearchFormProps = {
   searchText: string;
   onSearchChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
   minGrade: number | '';
@@ -44,7 +44,7 @@ interface LogbookSearchFormProps {
   onBoardToggle: (board: UserBoard | null) => void;
   filters: LogbookFilterState;
   onFiltersChange: (updater: (prev: LogbookFilterState) => LogbookFilterState) => void;
-}
+};
 
 function getResultTypeSummary(filters: LogbookFilterState): string[] {
   const parts: string[] = [];

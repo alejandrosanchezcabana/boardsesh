@@ -39,7 +39,7 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 // Types for the MoonBoard JSON dump
 // =============================================================================
 
-interface MoonBoardProblem {
+type MoonBoardProblem = {
   name: string;
   grade: string; // e.g., "7C", "6B+"
   userGrade: string | null;
@@ -65,12 +65,12 @@ interface MoonBoardProblem {
   dateInserted: string;
   dateUpdated: string;
   dateDeleted: string | null;
-}
+};
 
-interface DumpFile {
+type DumpFile = {
   total: number;
   data: MoonBoardProblem[];
-}
+};
 
 // =============================================================================
 // Mapping constants
@@ -126,10 +126,10 @@ const GRADE_TO_DIFFICULTY: Record<string, number> = {
 // Files to import
 // =============================================================================
 
-interface FileConfig {
+type FileConfig = {
   filename: string;
   angle: number;
-}
+};
 
 const FILES_TO_IMPORT: FileConfig[] = [
   { filename: 'problems MoonBoard 2016 .json', angle: 40 },

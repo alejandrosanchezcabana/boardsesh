@@ -7,17 +7,17 @@
  *   sort order is inherently unstable (scores change between requests).
  */
 
-interface KeysetCursorData {
+type KeysetCursorData = {
   /** ISO timestamp string */
   t: string;
   /** feed_items.id */
   i: number;
-}
+};
 
-interface OffsetCursorData {
+type OffsetCursorData = {
   /** numeric offset */
   o: number;
-}
+};
 
 export function encodeCursor(createdAt: string | Date, id: number): string {
   const data: KeysetCursorData = {

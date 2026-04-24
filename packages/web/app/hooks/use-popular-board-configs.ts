@@ -3,21 +3,21 @@ import { createGraphQLHttpClient } from '@/app/lib/graphql/client';
 import { GET_POPULAR_BOARD_CONFIGS, type GetPopularBoardConfigsQueryResponse } from '@/app/lib/graphql/operations';
 import type { PopularBoardConfig } from '@boardsesh/shared-schema';
 
-interface UsePopularBoardConfigsOptions {
+type UsePopularBoardConfigsOptions = {
   /** Number of configs per page */
   limit?: number;
   /** SSR-provided initial data to avoid loading flash */
   initialData?: PopularBoardConfig[];
-}
+};
 
-interface PopularBoardConfigsResult {
+type PopularBoardConfigsResult = {
   configs: PopularBoardConfig[];
   isLoading: boolean;
   isLoadingMore: boolean;
   hasMore: boolean;
   error: string | null;
   loadMore: () => void;
-}
+};
 
 /**
  * Fetches popular board configurations with pagination support.

@@ -12,13 +12,13 @@ import type { UseClimbActionsReturn } from './types';
 import { openExternalUrl } from '@/app/lib/open-external-url';
 import { useAuthModal } from '@/app/components/providers/auth-modal-provider';
 
-interface UseClimbActionsOptions {
+type UseClimbActionsOptions = {
   climb: Climb;
   boardDetails: BoardDetails;
   angle: number;
   auroraAppUrl?: string;
   onActionComplete?: (action: string) => void;
-}
+};
 
 export function useClimbActions({
   climb,

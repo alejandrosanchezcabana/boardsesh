@@ -5,10 +5,10 @@ import AddOutlined from '@mui/icons-material/AddOutlined';
 import BoardThumbnailGrid from './board-thumbnail-grid';
 import styles from './board-scroll.module.css';
 
-interface CustomBoardCardProps {
+type CustomBoardCardProps = {
   onClick: () => void;
   size?: 'default' | 'small';
-}
+};
 
 export default function CustomBoardCard({ onClick, size = 'default' }: CustomBoardCardProps) {
   const isSmall = size === 'small';

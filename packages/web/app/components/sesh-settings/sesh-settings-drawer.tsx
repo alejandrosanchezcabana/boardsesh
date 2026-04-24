@@ -40,11 +40,11 @@ const getShareUrl = (sessionId: string | null) => {
   }
 };
 
-interface SeshSettingsDrawerProps {
+type SeshSettingsDrawerProps = {
   open: boolean;
   onClose: () => void;
   onTransitionEnd?: (open: boolean) => void;
-}
+};
 
 export default function SeshSettingsDrawer({ open, onClose, onTransitionEnd }: SeshSettingsDrawerProps) {
   const { activeSession, session, users, deactivateSession, liveSessionStats } = usePersistentSession();

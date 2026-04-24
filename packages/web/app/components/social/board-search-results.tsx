@@ -21,14 +21,14 @@ import type { UserBoard, UserBoardConnection } from '@boardsesh/shared-schema';
 import { useDebouncedValue } from '@/app/hooks/use-debounced-value';
 import { useInfiniteScroll } from '@/app/hooks/use-infinite-scroll';
 
-interface BoardSearchResultsProps {
+type BoardSearchResultsProps = {
   query: string;
   authToken: string | null;
   /** Show a follow button on each board card. */
   showFollowButton?: boolean;
   /** Called when a board is selected (instead of opening internal BoardDetail drawer). */
   onBoardSelect?: (board: UserBoard) => void;
-}
+};
 
 export default function BoardSearchResults({
   query,

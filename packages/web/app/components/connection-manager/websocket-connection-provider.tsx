@@ -4,13 +4,13 @@ import React, { createContext, useContext, useEffect, useMemo, useRef, useState 
 import type { ConnectionState } from './websocket-connection-manager';
 import { connectionManager } from './websocket-connection-manager';
 
-interface ConnectionContextValue {
+type ConnectionContextValue = {
   state: ConnectionState;
   lastActivity: number | null;
   name: string | null;
   error?: Error | null;
   forceReconnect: () => void;
-}
+};
 
 const WebSocketConnectionContext = createContext<ConnectionContextValue | null>(null);
 

@@ -9,16 +9,16 @@ import { useSearchData } from '../graphql-queue';
 import { useQuery, keepPreviousData } from '@tanstack/react-query';
 import { constructSetterStatsUrl } from '@/app/lib/url-utils';
 
-interface SetterStat {
+type SetterStat = {
   setter_username: string;
   climb_count: number;
-}
+};
 
-interface SetterOption {
+type SetterOption = {
   value: string;
   label: string;
   count: number;
-}
+};
 
 const fetcher = (url: string) => fetch(url).then((res) => res.json());
 

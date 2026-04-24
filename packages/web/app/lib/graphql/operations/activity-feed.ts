@@ -191,18 +191,18 @@ export const SET_SESSION_HEALTHKIT_WORKOUT_ID = gql`
 // Query Variable Types
 // ============================================
 
-export interface GetSessionGroupedFeedQueryVariables {
+export type GetSessionGroupedFeedQueryVariables = {
   input?: ActivityFeedInput;
-}
+};
 
-export interface GetSessionGroupedFeedQueryResponse {
+export type GetSessionGroupedFeedQueryResponse = {
   sessionGroupedFeed: SessionFeedResult;
-}
+};
 
-export interface GetSessionDetailQueryVariables {
+export type GetSessionDetailQueryVariables = {
   sessionId: string;
-}
+};
 
-export interface GetSessionDetailQueryResponse {
+export type GetSessionDetailQueryResponse = {
   sessionDetail: SessionDetail | null;
-}
+};

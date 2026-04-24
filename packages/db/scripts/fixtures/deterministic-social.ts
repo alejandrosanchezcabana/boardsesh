@@ -13,7 +13,7 @@
 // Types
 // =============================================================================
 
-export interface FixtureUser {
+export type FixtureUser = {
   id: string;
   name: string;
   email: string;
@@ -21,9 +21,9 @@ export interface FixtureUser {
   displayName: string;
   avatarUrl: string | null;
   instagramUrl: string | null;
-}
+};
 
-export interface FixtureTick {
+export type FixtureTick = {
   uuid: string;
   userId: string;
   boardType: 'kilter' | 'tension';
@@ -35,28 +35,28 @@ export interface FixtureTick {
   comment: string;
   /** Global index (0-79) for deterministic date spacing */
   globalIndex: number;
-}
+};
 
-export interface FixtureComment {
+export type FixtureComment = {
   uuid: string;
   userId: string;
   body: string;
   parentCommentUuid: string | null;
   /** Minutes after the parent tick was created */
   minutesAfterTick: number;
-}
+};
 
-export interface FixtureConversation {
+export type FixtureConversation = {
   tickUuid: string;
   theme: string;
   comments: FixtureComment[];
-}
+};
 
-export interface FixtureVote {
+export type FixtureVote = {
   userId: string;
   commentUuid: string;
   value: 1 | -1;
-}
+};
 
 // =============================================================================
 // Constants

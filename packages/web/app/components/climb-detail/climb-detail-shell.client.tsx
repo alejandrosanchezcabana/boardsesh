@@ -6,12 +6,12 @@ import CollapsibleSection from '@/app/components/collapsible-section/collapsible
 import type { CollapsibleSectionConfig } from '@/app/components/collapsible-section/collapsible-section';
 import styles from './climb-detail-shell.module.css';
 
-interface ClimbDetailShellClientProps {
+type ClimbDetailShellClientProps = {
   mode: 'play' | 'info';
   aboveFold: React.ReactNode;
   sections: CollapsibleSectionConfig[];
   desktopRightColumn?: React.ReactNode | null;
-}
+};
 
 export default function ClimbDetailShellClient({
   mode,

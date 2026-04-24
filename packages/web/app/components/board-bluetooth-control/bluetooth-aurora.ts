@@ -117,12 +117,12 @@ export const encodePositionAndColorV2 = (position: number, ledColor: string, sca
 
 // --- Packet generation ---
 
-interface CommandBytes {
+type CommandBytes = {
   middle: number;
   first: number;
   last: number;
   only: number;
-}
+};
 
 const V3_COMMANDS: CommandBytes = {
   middle: V3_PACKET_MIDDLE,

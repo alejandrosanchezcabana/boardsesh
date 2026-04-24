@@ -3,7 +3,7 @@ import { db } from '../../../../db/client';
 import * as dbSchema from '@boardsesh/db/schema';
 
 /** Raw playlist row shape from owned-playlist queries (userPlaylists, allUserPlaylists). */
-export interface OwnedPlaylistRow {
+export type OwnedPlaylistRow = {
   id: bigint;
   uuid: string;
   boardType: string;
@@ -17,7 +17,7 @@ export interface OwnedPlaylistRow {
   updatedAt: Date;
   lastAccessedAt: Date | null;
   role: string;
-}
+};
 
 /** Fetch climb counts for a list of playlist numeric IDs. Returns Map<stringId, count>. */
 export async function getClimbCounts(playlistIds: bigint[]): Promise<Map<string, number>> {
@@ -63,7 +63,7 @@ export function formatOwnedPlaylist(
 }
 
 /** Raw row shape from discover / search playlist queries. */
-export interface PublicPlaylistRow {
+export type PublicPlaylistRow = {
   id: bigint;
   uuid: string;
   boardType: string;
@@ -77,7 +77,7 @@ export interface PublicPlaylistRow {
   creatorId: string;
   creatorName: string;
   climbCount: number;
-}
+};
 
 /** Transform a public playlist DB row into the GraphQL response shape. */
 export function formatPublicPlaylist(p: PublicPlaylistRow) {

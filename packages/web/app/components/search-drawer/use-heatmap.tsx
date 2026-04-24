@@ -3,7 +3,7 @@ import type { BoardName, SearchRequestPagination } from '@/app/lib/types';
 import type { HeatmapData } from '../board-renderer/types';
 import { searchParamsToUrlParams } from '@/app/lib/url-utils';
 
-interface UseHeatmapDataProps {
+type UseHeatmapDataProps = {
   boardName: BoardName;
   layoutId: number;
   sizeId: number;
@@ -11,7 +11,7 @@ interface UseHeatmapDataProps {
   angle: number;
   filters: SearchRequestPagination;
   enabled?: boolean;
-}
+};
 
 export default function useHeatmapData({
   boardName,

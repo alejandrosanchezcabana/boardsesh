@@ -20,12 +20,12 @@ import { themeTokens } from '@/app/theme/theme-config';
 import { useSnackbar } from '../providers/snackbar-provider';
 import { isValidHexColor } from '@/app/lib/color-utils';
 
-interface PlaylistSelectionContentProps {
+type PlaylistSelectionContentProps = {
   climbUuid: string;
   boardDetails: BoardDetails;
   angle: number;
   onDone?: () => void;
-}
+};
 
 export default function PlaylistSelectionContent({
   climbUuid,

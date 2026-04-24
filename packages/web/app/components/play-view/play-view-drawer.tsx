@@ -59,13 +59,13 @@ type WindowWithIdleCallback = Window & {
   requestIdleCallback?: ((cb: () => void, opts?: { timeout: number }) => number) | undefined;
 };
 
-interface PlayDrawerContentProps {
+type PlayDrawerContentProps = {
   climb: Climb;
   boardType: string;
   angle: number;
   aboveFold: React.ReactNode;
   sectionsEnabled: boolean;
-}
+};
 
 const PlayDrawerContent = React.memo<PlayDrawerContentProps>(
   ({ climb, boardType, angle, aboveFold, sectionsEnabled }) => {
@@ -84,7 +84,7 @@ const PlayDrawerContent = React.memo<PlayDrawerContentProps>(
 );
 PlayDrawerContent.displayName = 'PlayDrawerContent';
 
-interface PlayViewActionBarProps {
+type PlayViewActionBarProps = {
   canSwipePrevious: boolean;
   canSwipeNext: boolean;
   isMirrored: boolean;
@@ -98,7 +98,7 @@ interface PlayViewActionBarProps {
   onOpenActions: () => void;
   onOpenQueue: () => void;
   angleSelector?: React.ReactNode;
-}
+};
 
 export const PlayViewActionBar = React.memo(function PlayViewActionBar({
   canSwipePrevious,
@@ -173,14 +173,14 @@ PlayViewActionBar.displayName = 'PlayViewActionBar';
  * This prevents comment keystrokes from invalidating the parent `aboveFold` useMemo,
  * which would otherwise re-render the entire board carousel on every keystroke.
  */
-interface PlayViewTickBarProps {
+type PlayViewTickBarProps = {
   isTickBarActive: boolean;
   currentClimb: Climb;
   angle: Angle;
   boardDetails: BoardDetails;
   onClose: () => void;
   onError: () => void;
-}
+};
 
 export const PlayViewTickBar = React.memo<PlayViewTickBarProps>(function PlayViewTickBar({
   isTickBarActive,
@@ -405,12 +405,12 @@ export const PlayViewTickBar = React.memo<PlayViewTickBarProps>(function PlayVie
 });
 PlayViewTickBar.displayName = 'PlayViewTickBar';
 
-interface PlayViewDrawerProps {
+type PlayViewDrawerProps = {
   activeDrawer: ActiveDrawer;
   setActiveDrawer: (drawer: ActiveDrawer) => void;
   boardDetails: BoardDetails;
   angle: Angle;
-}
+};
 
 const PlayViewDrawer: React.FC<PlayViewDrawerProps> = ({ activeDrawer, setActiveDrawer, boardDetails, angle }) => {
   const isOpen = activeDrawer === 'play';

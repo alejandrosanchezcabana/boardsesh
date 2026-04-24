@@ -46,20 +46,20 @@ function verifyFrameIntegrity(packet: Uint8Array): void {
   expect(i).toBe(bytes.length);
 }
 
-interface SizeExpectation {
+type SizeExpectation = {
   name: string;
   sizeId: number;
   v3: string;
   v2: string;
-}
+};
 
-interface ClimbTest {
+type ClimbTest = {
   climbName: string;
   board: BoardName;
   frames: string;
   layoutId: number;
   sizes: SizeExpectation[];
-}
+};
 
 /** Generate tests for a climb across all its fully-compatible sizes. */
 function testClimb(climb: ClimbTest) {

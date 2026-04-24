@@ -4,19 +4,19 @@ import { createGraphQLHttpClient } from '@/app/lib/graphql/client';
 import { SEARCH_BOARDS, type SearchBoardsQueryResponse } from '@/app/lib/graphql/operations';
 import type { UserBoard } from '@boardsesh/shared-schema';
 
-interface UseDiscoverBoardsOptions {
+type UseDiscoverBoardsOptions = {
   /** Maximum number of boards to return */
   limit?: number;
   /** Whether to request geolocation from the browser */
   enableLocation?: boolean;
-}
+};
 
-interface DiscoverBoardsResult {
+type DiscoverBoardsResult = {
   boards: UserBoard[];
   isLoading: boolean;
   hasLocation: boolean;
   error: string | null;
-}
+};
 
 /**
  * Discovers nearby public boards for the home page.

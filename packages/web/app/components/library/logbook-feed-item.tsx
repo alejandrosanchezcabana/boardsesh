@@ -287,7 +287,7 @@ function LogbookGradeRow({
 
 // --- Main component ---
 
-interface LogbookFeedItemProps {
+type LogbookFeedItemProps = {
   item: AscentFeedItem;
   showBoardType?: boolean;
   isEditing?: boolean;
@@ -300,7 +300,7 @@ interface LogbookFeedItemProps {
   allowInstagramLinking?: boolean;
   /** When true, tag this item so the first-visit swipe-hint animation can target it. */
   isSwipeHintTarget?: boolean;
-}
+};
 
 const LogbookFeedItem: React.FC<LogbookFeedItemProps> = React.memo(
   ({

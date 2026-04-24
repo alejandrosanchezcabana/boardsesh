@@ -25,16 +25,16 @@ function getOperationName(operation: { query: string }, type: 'mutation' | 'quer
   return name;
 }
 
-export interface ExtendedClient extends Client {
+export type ExtendedClient = {
   onReconnect?: (callback: () => void) => void;
-}
+} & Client;
 
-export interface GraphQLClientOptions {
+export type GraphQLClientOptions = {
   url: string;
   authToken?: string | null;
   onReconnect?: () => void;
   connectionName?: string;
-}
+};
 
 /**
  * Creates a GraphQL-WS client for connecting to the Boardsesh backend

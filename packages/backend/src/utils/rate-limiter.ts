@@ -3,10 +3,10 @@
  * Uses a sliding window algorithm with per-connection tracking.
  */
 
-interface RateLimitEntry {
+type RateLimitEntry = {
   count: number;
   resetAt: number;
-}
+};
 
 // Store rate limit state per connection
 const rateLimitMap = new Map<string, RateLimitEntry>();

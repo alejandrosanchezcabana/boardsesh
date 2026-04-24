@@ -11,16 +11,16 @@ import type { BoardDetails, BoardRouteIdentity } from '@/app/lib/types';
 import type { BoardLockReason } from './use-active-board-lock';
 import { capitalizeFirst } from '@/app/lib/string-utils';
 
-interface ConfirmArgs {
+type ConfirmArgs = {
   reason: BoardLockReason;
   lockedBoard: BoardDetails;
   target: BoardRouteIdentity | BoardDetails;
   onConfirmed: () => void;
-}
+};
 
-interface BoardSwitchConfirmContextValue {
+type BoardSwitchConfirmContextValue = {
   confirmBoardSwitch: (args: ConfirmArgs) => void;
-}
+};
 
 const BoardSwitchConfirmContext = createContext<BoardSwitchConfirmContextValue | null>(null);
 
@@ -42,12 +42,12 @@ function formatBoardLabel(board: BoardDetails | BoardRouteIdentity): string {
   return parts.join(' · ');
 }
 
-interface DialogState {
+type DialogState = {
   open: boolean;
   reason: BoardLockReason;
   lockedLabel: string;
   targetLabel: string;
-}
+};
 
 export function BoardSwitchConfirmProvider({ children }: { children: React.ReactNode }) {
   const [state, setState] = useState<DialogState | null>(null);

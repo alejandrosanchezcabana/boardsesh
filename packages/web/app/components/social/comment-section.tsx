@@ -21,11 +21,11 @@ import {
 import CommentForm from './comment-form';
 import CommentList from './comment-list';
 
-interface CommentSectionProps {
+type CommentSectionProps = {
   entityType: SocialEntityType;
   entityId: string;
   title?: string;
-}
+};
 
 export default function CommentSection({ entityType, entityId, title = 'Discussion' }: CommentSectionProps) {
   const [refreshKey, setRefreshKey] = useState(0);

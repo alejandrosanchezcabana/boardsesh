@@ -38,14 +38,14 @@ const setTourDrawer = (open: boolean) => {
   window.dispatchEvent(new CustomEvent(TOUR_DRAWER_EVENT, { detail: { open } }));
 };
 
-interface TourStep {
+type TourStep = {
   title: string;
   description: React.ReactNode;
   target: (() => HTMLElement) | null;
   placement?: 'top' | 'bottom' | 'left' | 'right';
   mask?: boolean;
   cover?: React.ReactNode;
-}
+};
 
 function CustomTour({
   open,

@@ -5,19 +5,19 @@ import Box from '@mui/material/Box';
 import Typography from '@mui/material/Typography';
 import { BarChart } from '@mui/x-charts/BarChart';
 
-export interface BarSegment {
+export type BarSegment = {
   value: number;
   color: string;
   label?: string;
-}
+};
 
-export interface CssBarChartBar {
+export type CssBarChartBar = {
   key: string;
   label: string;
   segments: BarSegment[];
-}
+};
 
-interface CssBarChartProps {
+type CssBarChartProps = {
   bars: CssBarChartBar[];
   height?: number;
   mobileHeight?: number;
@@ -28,7 +28,7 @@ interface CssBarChartProps {
   maxLabels?: number;
   /** Render x-axis labels at a -45° angle (useful for dense charts). */
   angledLabels?: boolean;
-}
+};
 
 export const CssBarChart = React.memo(function CssBarChart({
   bars,
@@ -121,20 +121,20 @@ export const CssBarChart = React.memo(function CssBarChart({
 });
 
 /* Grouped (side-by-side) bar chart for flash vs redpoint */
-export interface GroupedBar {
+export type GroupedBar = {
   key: string;
   label: string;
   values: Array<{ value: number; color: string; label: string }>;
-}
+};
 
-interface GroupedBarChartProps {
+type GroupedBarChartProps = {
   bars: GroupedBar[];
   height?: number;
   mobileHeight?: number;
   showLegend?: boolean;
   gap?: number;
   ariaLabel?: string;
-}
+};
 
 export const GroupedBarChart = React.memo(function GroupedBarChart({
   bars,

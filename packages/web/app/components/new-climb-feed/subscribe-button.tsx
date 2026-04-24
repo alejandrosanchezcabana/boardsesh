@@ -18,13 +18,13 @@ import {
   type UnsubscribeNewClimbsResponse,
 } from '@/app/lib/graphql/operations/new-climb-feed';
 
-interface SubscribeButtonProps {
+type SubscribeButtonProps = {
   boardType: string;
   layoutId: number;
   isSubscribed: boolean;
   onSubscriptionChange?: (isSubscribed: boolean) => void;
   disabled?: boolean;
-}
+};
 
 export default function SubscribeButton({
   boardType,

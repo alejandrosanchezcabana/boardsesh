@@ -3,11 +3,11 @@
 import { useQuery } from '@tanstack/react-query';
 import { useSession } from 'next-auth/react';
 
-interface WsAuthResponse {
+type WsAuthResponse = {
   token: string | null;
   authenticated: boolean;
   error?: string;
-}
+};
 
 async function fetchWsAuthToken(): Promise<WsAuthResponse> {
   const response = await fetch('/api/internal/ws-auth');

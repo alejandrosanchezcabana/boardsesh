@@ -3,9 +3,9 @@
 import React from 'react';
 import { PartyProfileProvider } from './party-profile-context';
 
-interface PartyProfileWrapperProps {
+type PartyProfileWrapperProps = {
   children: React.ReactNode;
-}
+};
 
 /**
  * Wrapper component that provides party profile context.

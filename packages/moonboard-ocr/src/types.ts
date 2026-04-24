@@ -8,7 +8,7 @@ export type GridCoordinate = `${Column}${Row}`;
 
 export type HoldType = 'start' | 'hand' | 'finish';
 
-export interface DetectedHold {
+export type DetectedHold = {
   type: HoldType;
   coordinate: GridCoordinate;
   // Pixel position in the original image (for debugging)
@@ -16,9 +16,9 @@ export interface DetectedHold {
   pixelY: number;
   // Confidence score (0-1)
   confidence: number;
-}
+};
 
-export interface MoonBoardClimb {
+export type MoonBoardClimb = {
   // Climb metadata from OCR
   name: string;
   setter: string;
@@ -39,40 +39,40 @@ export interface MoonBoardClimb {
 
   // Optional: parsing confidence/errors
   parseWarnings?: string[];
-}
+};
 
-export interface ParseResult {
+export type ParseResult = {
   success: boolean;
   climb?: MoonBoardClimb;
   error?: string;
   warnings: string[];
-}
+};
 
-export interface BoardRegion {
+export type BoardRegion = {
   // Coordinates of the board area in the image
   x: number;
   y: number;
   width: number;
   height: number;
-}
+};
 
-export interface HeaderRegion {
+export type HeaderRegion = {
   // Coordinates of the header/text area
   x: number;
   y: number;
   width: number;
   height: number;
-}
+};
 
 // Color detection thresholds (in HSV)
-export interface ColorRange {
+export type ColorRange = {
   hueMin: number;
   hueMax: number;
   satMin: number;
   satMax: number;
   valMin: number;
   valMax: number;
-}
+};
 
 export const HOLD_COLORS: Record<HoldType, ColorRange> = {
   // Red circles for start holds

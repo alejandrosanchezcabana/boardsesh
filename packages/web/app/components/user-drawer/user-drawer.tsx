@@ -59,11 +59,11 @@ function asBoardName(value: string): BoardName | null {
   return (SUPPORTED_BOARDS as readonly string[]).includes(value) ? (value as BoardName) : null;
 }
 
-interface UserDrawerProps {
+type UserDrawerProps = {
   boardDetails?: BoardDetails | null;
   angle?: number;
   boardConfigs?: BoardConfigData;
-}
+};
 
 export default function UserDrawer({ boardDetails, boardConfigs }: UserDrawerProps) {
   const { data: session } = useSession();

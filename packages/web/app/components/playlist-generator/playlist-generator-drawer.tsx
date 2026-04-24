@@ -25,14 +25,14 @@ import GradeProgressionChart from './grade-progression-chart';
 import { generateWorkoutPlan, groupSlotsBySection, getGradeName } from './generation-utils';
 import styles from './playlist-generator-drawer.module.css';
 
-interface PlaylistGeneratorDrawerProps {
+type PlaylistGeneratorDrawerProps = {
   open: boolean;
   onClose: () => void;
   playlistUuid: string;
   boardDetails: BoardDetails;
   angle: number;
   onSuccess?: () => void;
-}
+};
 
 type DrawerState = 'select' | 'configure' | 'generating';
 

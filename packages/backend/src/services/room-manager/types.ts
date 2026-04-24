@@ -10,7 +10,7 @@ export class VersionConflictError extends Error {
   }
 }
 
-export interface ConnectedClient {
+export type ConnectedClient = {
   connectionId: string;
   sessionId: string | null;
   userId: string | null;
@@ -18,7 +18,7 @@ export interface ConnectedClient {
   avatarUrl?: string;
   isLeader: boolean;
   connectedAt: Date;
-}
+};
 
 export type DiscoverableSession = {
   id: string;
@@ -37,20 +37,20 @@ export type DiscoverableSession = {
   color?: string | null;
 };
 
-export interface QueueState {
+export type QueueState = {
   queue: ClimbQueueItem[];
   currentClimbQueueItem: ClimbQueueItem | null;
   version: number;
   sequence: number;
   stateHash: string;
-}
+};
 
-export interface PendingWrite {
+export type PendingWrite = {
   queue: ClimbQueueItem[];
   currentClimbQueueItem: ClimbQueueItem | null;
   version: number;
   sequence: number;
-}
+};
 
 /**
  * Check if an error is a PostgreSQL foreign key violation (error code 23503).

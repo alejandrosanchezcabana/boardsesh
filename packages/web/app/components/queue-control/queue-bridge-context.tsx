@@ -76,7 +76,7 @@ export { useQueueBridgeBoardInfo } from './queue-bridge-board-info-context';
 // Setter context (for the injector to push board-route context into the bridge)
 // -------------------------------------------------------------------
 
-interface QueueBridgeSetters {
+type QueueBridgeSetters = {
   inject: (
     ctx: GraphQLQueueContextType,
     actions: GraphQLQueueActionsType,
@@ -87,7 +87,7 @@ interface QueueBridgeSetters {
   ) => void;
   updateContext: (ctx: GraphQLQueueContextType, actions: GraphQLQueueActionsType, data: GraphQLQueueDataType) => void;
   clear: () => void;
-}
+};
 
 const QueueBridgeSetterContext = createContext<QueueBridgeSetters>({
   inject: () => {},
@@ -689,10 +689,10 @@ export function QueueBridgeProvider({ children }: { children: React.ReactNode })
 // QueueBridgeInjector — placed inside board route layouts
 // -------------------------------------------------------------------
 
-interface QueueBridgeInjectorProps {
+type QueueBridgeInjectorProps = {
   boardDetails: BoardDetails;
   angle: Angle;
-}
+};
 
 export function QueueBridgeInjector({ boardDetails, angle }: QueueBridgeInjectorProps) {
   const { inject, updateContext, clear } = useContext(QueueBridgeSetterContext);

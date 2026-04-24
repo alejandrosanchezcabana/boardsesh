@@ -27,9 +27,9 @@ import { getGradeColor, getGradeTextColor } from '@/app/lib/grade-colors';
 import { useGradeFormat } from '@/app/hooks/use-grade-format';
 import { generateSessionName } from '@/app/lib/session-utils';
 
-interface SessionFeedCardProps {
+type SessionFeedCardProps = {
   session: SessionFeedItem;
-}
+};
 
 function formatDuration(minutes: number): string {
   if (minutes < 60) return `${minutes}min`;

@@ -364,7 +364,7 @@ export const SET_COMMUNITY_SETTING = gql`
 // Variable & Response Types
 // ============================================
 
-export interface GetClimbProposalsVariables {
+export type GetClimbProposalsVariables = {
   input: {
     climbUuid: string;
     boardType: string;
@@ -374,33 +374,33 @@ export interface GetClimbProposalsVariables {
     limit?: number;
     offset?: number;
   };
-}
+};
 
-export interface GetClimbProposalsResponse {
+export type GetClimbProposalsResponse = {
   climbProposals: ProposalConnection;
-}
+};
 
-export interface GetClimbCommunityStatusVariables {
+export type GetClimbCommunityStatusVariables = {
   climbUuid: string;
   boardType: string;
   angle: number;
-}
+};
 
-export interface GetClimbCommunityStatusResponse {
+export type GetClimbCommunityStatusResponse = {
   climbCommunityStatus: ClimbCommunityStatusType;
-}
+};
 
-export interface GetBulkClimbCommunityStatusVariables {
+export type GetBulkClimbCommunityStatusVariables = {
   climbUuids: string[];
   boardType: string;
   angle: number;
-}
+};
 
-export interface GetBulkClimbCommunityStatusResponse {
+export type GetBulkClimbCommunityStatusResponse = {
   bulkClimbCommunityStatus: ClimbCommunityStatusType[];
-}
+};
 
-export interface BrowseProposalsVariables {
+export type BrowseProposalsVariables = {
   input: {
     boardType?: string | null;
     boardUuid?: string | null;
@@ -409,13 +409,13 @@ export interface BrowseProposalsVariables {
     limit?: number;
     offset?: number;
   };
-}
+};
 
-export interface BrowseProposalsResponse {
+export type BrowseProposalsResponse = {
   browseProposals: ProposalConnection;
-}
+};
 
-export interface CreateProposalVariables {
+export type CreateProposalVariables = {
   input: {
     climbUuid: string;
     boardType: string;
@@ -424,112 +424,112 @@ export interface CreateProposalVariables {
     proposedValue: string;
     reason?: string | null;
   };
-}
+};
 
-export interface CreateProposalResponse {
+export type CreateProposalResponse = {
   createProposal: Proposal;
-}
+};
 
-export interface VoteOnProposalVariables {
+export type VoteOnProposalVariables = {
   input: {
     proposalUuid: string;
     value: number;
   };
-}
+};
 
-export interface VoteOnProposalResponse {
+export type VoteOnProposalResponse = {
   voteOnProposal: Proposal;
-}
+};
 
-export interface ResolveProposalVariables {
+export type ResolveProposalVariables = {
   input: {
     proposalUuid: string;
     status: 'approved' | 'rejected';
     reason?: string | null;
   };
-}
+};
 
-export interface ResolveProposalResponse {
+export type ResolveProposalResponse = {
   resolveProposal: Proposal;
-}
+};
 
-export interface DeleteProposalVariables {
+export type DeleteProposalVariables = {
   input: {
     proposalUuid: string;
   };
-}
+};
 
-export interface DeleteProposalResponse {
+export type DeleteProposalResponse = {
   deleteProposal: boolean;
-}
+};
 
-export interface FreezeClimbVariables {
+export type FreezeClimbVariables = {
   input: {
     climbUuid: string;
     boardType: string;
     frozen: boolean;
     reason?: string | null;
   };
-}
+};
 
-export interface FreezeClimbResponse {
+export type FreezeClimbResponse = {
   freezeClimb: boolean;
-}
+};
 
-export interface GetCommunityRolesVariables {
+export type GetCommunityRolesVariables = {
   boardType?: string;
-}
+};
 
-export interface GetCommunityRolesResponse {
+export type GetCommunityRolesResponse = {
   communityRoles: CommunityRoleAssignment[];
-}
+};
 
-export interface GetMyRolesResponse {
+export type GetMyRolesResponse = {
   myRoles: CommunityRoleAssignment[];
-}
+};
 
-export interface GrantRoleVariables {
+export type GrantRoleVariables = {
   input: {
     userId: string;
     role: CommunityRoleType;
     boardType?: string | null;
   };
-}
+};
 
-export interface GrantRoleResponse {
+export type GrantRoleResponse = {
   grantRole: CommunityRoleAssignment;
-}
+};
 
-export interface RevokeRoleVariables {
+export type RevokeRoleVariables = {
   input: {
     userId: string;
     role: CommunityRoleType;
     boardType?: string | null;
   };
-}
+};
 
-export interface RevokeRoleResponse {
+export type RevokeRoleResponse = {
   revokeRole: boolean;
-}
+};
 
-export interface GetCommunitySettingsVariables {
+export type GetCommunitySettingsVariables = {
   scope: string;
   scopeKey: string;
-}
+};
 
-export interface GetCommunitySettingsResponse {
+export type GetCommunitySettingsResponse = {
   communitySettings: CommunitySettingType[];
-}
+};
 
-export interface SetCommunitySettingVariables {
+export type SetCommunitySettingVariables = {
   input: {
     scope: string;
     scopeKey: string;
     key: string;
     value: string;
   };
-}
+};
 
-export interface SetCommunitySettingResponse {
+export type SetCommunitySettingResponse = {
   setCommunitySettings: CommunitySettingType;
-}
+};

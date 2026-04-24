@@ -28,7 +28,7 @@ function getMoonBoardHoldSetImages(layoutKey: MoonBoardLayoutKey, setIds: number
   return sets.filter((s) => setIds.includes(s.id)).map((s) => s.imageFile);
 }
 
-interface CreatePageProps {
+type CreatePageProps = {
   params: Promise<{ board_slug: string; angle: string }>;
   searchParams: Promise<{
     forkFrames?: string;
@@ -36,7 +36,7 @@ interface CreatePageProps {
     forkDescription?: string;
     editClimbUuid?: string;
   }>;
-}
+};
 
 export default async function BoardSlugCreatePage(props: CreatePageProps) {
   const [params, searchParams] = await Promise.all([props.params, props.searchParams]);

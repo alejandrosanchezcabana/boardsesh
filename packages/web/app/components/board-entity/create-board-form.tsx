@@ -15,7 +15,7 @@ import type { BoardName } from '@/app/lib/types';
 import { ANGLES } from '@/app/lib/board-data';
 import BoardForm from './board-form';
 
-interface CreateBoardFormProps {
+type CreateBoardFormProps = {
   boardType: string;
   layoutId: number;
   sizeId: number;
@@ -23,7 +23,7 @@ interface CreateBoardFormProps {
   defaultAngle: number;
   onSuccess?: (board: UserBoard) => void;
   onCancel?: () => void;
-}
+};
 
 export default function CreateBoardForm({
   boardType,

@@ -14,10 +14,10 @@ import type { Gym } from '@boardsesh/shared-schema';
 import { themeTokens } from '@/app/theme/theme-config';
 import StatItem from '@/app/components/ui/stat-item';
 
-interface GymCardProps {
+type GymCardProps = {
   gym: Gym;
   onClick?: (gym: Gym) => void;
-}
+};
 
 export default function GymCard({ gym, onClick }: GymCardProps) {
   return (

@@ -12,12 +12,12 @@ import { END_SESSION as END_SESSION_GQL, type EndSessionResponse } from '@/app/l
 import type { SessionSummary } from '@boardsesh/shared-schema';
 import type { ClimbQueueItem } from '../../queue-control/types';
 
-interface UseSessionIdManagementParams {
+type UseSessionIdManagementParams = {
   isOffBoardMode: boolean;
   propsBaseBoardPath?: string;
   currentQueue: ClimbQueueItem[];
   currentClimbQueueItem: ClimbQueueItem | null;
-}
+};
 
 export function useSessionIdManagement({
   isOffBoardMode,

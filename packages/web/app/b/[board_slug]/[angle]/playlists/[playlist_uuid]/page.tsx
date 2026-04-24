@@ -9,9 +9,9 @@ import { generatePlaylistMetadata } from '@/app/lib/seo/playlist-metadata';
 import PlaylistDetailContent from '@/app/playlists/[playlist_uuid]/playlist-detail-content';
 import styles from '@/app/components/library/playlist-view.module.css';
 
-interface PlaylistDetailPageProps {
+type PlaylistDetailPageProps = {
   params: Promise<{ board_slug: string; angle: string; playlist_uuid: string }>;
-}
+};
 
 export async function generateMetadata(props: PlaylistDetailPageProps): Promise<Metadata> {
   const params = await props.params;

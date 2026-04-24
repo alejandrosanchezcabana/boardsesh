@@ -3,10 +3,10 @@ import { dbz as db } from '@/app/lib/db/db';
 import type { ParsedBoardRouteParameters } from '@/app/lib/types';
 import { UNIFIED_TABLES } from '@/lib/db/queries/util/table-select';
 
-export interface SetterStat {
+export type SetterStat = {
   setter_username: string;
   climb_count: number;
-}
+};
 
 export const getSetterStats = async (
   params: ParsedBoardRouteParameters,

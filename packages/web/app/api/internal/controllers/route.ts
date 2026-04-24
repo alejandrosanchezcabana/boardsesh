@@ -20,7 +20,7 @@ const deleteControllerSchema = z.object({
   controllerId: z.string().uuid(),
 });
 
-export interface ControllerInfo {
+export type ControllerInfo = {
   id: string;
   name: string | null;
   boardName: string;
@@ -30,7 +30,7 @@ export interface ControllerInfo {
   isOnline: boolean;
   lastSeen: string | null;
   createdAt: string;
-}
+};
 
 // Consider controller online if seen within last 60 seconds
 const ONLINE_THRESHOLD_MS = 60 * 1000;

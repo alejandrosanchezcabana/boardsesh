@@ -16,14 +16,14 @@ import type { LayoutPercentage, LayoutLegendEntry, VPointsTimelineData } from '.
 import VPointsChart from './v-points-chart';
 import styles from '../profile-page.module.css';
 
-interface GradeHighlight {
+type GradeHighlight = {
   label: string;
   color: string;
   textColor: string;
   status: 'send' | 'flash';
-}
+};
 
-export interface StatsSummaryProps {
+export type StatsSummaryProps = {
   statisticsSummary: {
     totalAscents: number;
     layoutPercentages: LayoutPercentage[];
@@ -37,7 +37,7 @@ export interface StatsSummaryProps {
   aggregatedFlashRedpointBars: GroupedBar[] | null;
   vPointsTimeline: VPointsTimelineData | null;
   percentile?: { totalDistinctClimbs: number; percentile: number; totalActiveUsers: number } | null;
-}
+};
 
 export default function StatsSummary({
   statisticsSummary,

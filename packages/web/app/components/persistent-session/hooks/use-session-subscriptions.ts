@@ -5,7 +5,7 @@ import type { ClimbQueueItem as LocalClimbQueueItem } from '../../queue-control/
 import type { Session, ActiveSessionInfo, SharedRefs } from '../types';
 import { CORRUPTION_RESYNC_COOLDOWN_MS, DEBUG } from '../types';
 
-interface UseSessionSubscriptionsArgs {
+type UseSessionSubscriptionsArgs = {
   session: Session | null;
   activeSession: ActiveSessionInfo | null;
   queue: LocalClimbQueueItem[];
@@ -22,13 +22,13 @@ interface UseSessionSubscriptionsArgs {
     | 'queueEventSubscribersRef'
     | 'sessionEventSubscribersRef'
   >;
-}
+};
 
-export interface SessionSubscriptionsActions {
+export type SessionSubscriptionsActions = {
   subscribeToQueueEvents: (callback: (event: SubscriptionQueueEvent) => void) => () => void;
   subscribeToSessionEvents: (callback: (event: SessionEvent) => void) => () => void;
   triggerResync: () => void;
-}
+};
 
 export function useSessionSubscriptions({
   session,

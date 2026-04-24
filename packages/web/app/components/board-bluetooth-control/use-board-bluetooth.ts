@@ -42,10 +42,10 @@ export const convertToMirroredFramesString = (frames: string, holdsData: HoldRen
     .join(''); // Reassemble into a single string
 };
 
-interface UseBoardBluetoothOptions {
+type UseBoardBluetoothOptions = {
   boardDetails?: BoardDetails;
   onConnectionChange?: (connected: boolean) => void;
-}
+};
 
 export function useBoardBluetooth({ boardDetails, onConnectionChange }: UseBoardBluetoothOptions) {
   const { showMessage } = useSnackbar();

@@ -73,10 +73,10 @@ const GatedComponent = ({
  * controller to avoid the rerender/remount ambiguity that can occur with
  * RTL's rerender() when the wrapper tree changes.
  */
-interface ControllerHandle {
+type ControllerHandle = {
   setIsOpen: (v: boolean) => void;
   setContextValue: (v: number) => void;
-}
+};
 
 const controllerRef: { current: ControllerHandle | null } = { current: null };
 

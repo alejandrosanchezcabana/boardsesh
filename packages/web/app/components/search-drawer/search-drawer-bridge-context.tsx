@@ -18,7 +18,7 @@ const useIsomorphicLayoutEffect = typeof window !== 'undefined' ? useLayoutEffec
 // State context (consumed by GlobalHeader)
 // -------------------------------------------------------------------
 
-interface SearchDrawerBridgeState {
+type SearchDrawerBridgeState = {
   /** Callback to open the climb search drawer. null when no board list page is active. */
   openClimbSearchDrawer: (() => void) | null;
   /** Filter summary text like "V5-V7 · Tall" or "Search climbs..." */
@@ -31,7 +31,7 @@ interface SearchDrawerBridgeState {
   setNameFilter: ((name: string) => void) | null;
   /** Whether any filters other than name are active (for filter button indicator). */
   hasActiveNonNameFilters: boolean;
-}
+};
 
 const SearchDrawerBridgeContext = createContext<SearchDrawerBridgeState>({
   openClimbSearchDrawer: null,
@@ -50,7 +50,7 @@ export function useSearchDrawerBridge() {
 // Setter context (consumed by the injector in BoardSeshHeader)
 // -------------------------------------------------------------------
 
-interface SearchDrawerBridgeSetters {
+type SearchDrawerBridgeSetters = {
   register: (
     openDrawer: () => void,
     summary: string,
@@ -61,7 +61,7 @@ interface SearchDrawerBridgeSetters {
   ) => void;
   update: (summary: string, active: boolean, nameFilter: string, nonNameActive: boolean) => void;
   deregister: () => void;
-}
+};
 
 const SearchDrawerBridgeSetterContext = createContext<SearchDrawerBridgeSetters>({
   register: () => {},
@@ -148,7 +148,7 @@ export function SearchDrawerBridgeProvider({ children }: { children: React.React
 // Injector (placed inside BoardSeshHeader on list pages)
 // -------------------------------------------------------------------
 
-interface SearchDrawerBridgeInjectorProps {
+type SearchDrawerBridgeInjectorProps = {
   openDrawer: () => void;
   summary: string;
   hasActiveFilters: boolean;
@@ -156,7 +156,7 @@ interface SearchDrawerBridgeInjectorProps {
   nameFilter: string;
   onNameFilterChange: (name: string) => void;
   hasActiveNonNameFilters: boolean;
-}
+};
 
 export function SearchDrawerBridgeInjector({
   openDrawer,

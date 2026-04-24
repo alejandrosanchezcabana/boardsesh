@@ -36,10 +36,10 @@ import styles from './accordion-search-form.module.css';
 
 import { KILTER_HOMEWALL_LAYOUT_ID } from '@/app/lib/board-constants';
 
-interface AccordionSearchFormProps {
+type AccordionSearchFormProps = {
   boardDetails: BoardDetails;
   defaultActiveKey?: string[];
-}
+};
 
 const AccordionSearchForm: React.FC<AccordionSearchFormProps> = ({ boardDetails, defaultActiveKey }) => {
   const { uiSearchParams, updateFilters } = useUISearchParams();

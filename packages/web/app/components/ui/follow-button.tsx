@@ -6,7 +6,7 @@ import CircularProgress from '@mui/material/CircularProgress';
 import { useFollowToggle } from '@/app/hooks/use-follow-toggle';
 import type { TypedDocumentNode } from '@graphql-typed-document-node/core';
 
-interface FollowButtonProps {
+type FollowButtonProps = {
   entityId: string;
   initialIsFollowing: boolean;
   followMutation: TypedDocumentNode | string;
@@ -14,7 +14,7 @@ interface FollowButtonProps {
   entityLabel: string;
   getFollowVariables: (entityId: string) => Record<string, unknown>;
   onFollowChange?: (isFollowing: boolean) => void;
-}
+};
 
 export default function FollowButton({
   entityId,

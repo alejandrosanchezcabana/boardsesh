@@ -32,13 +32,13 @@ import styles from './generator-options-form.module.css';
 
 import { KILTER_HOMEWALL_LAYOUT_ID } from '@/app/lib/board-constants';
 
-interface GeneratorOptionsFormProps {
+type GeneratorOptionsFormProps = {
   workoutType: WorkoutType;
   options: GeneratorOptions;
   onChange: (options: GeneratorOptions) => void;
   onReset: () => void;
   boardDetails: BoardDetails;
-}
+};
 
 const GeneratorOptionsForm: React.FC<GeneratorOptionsFormProps> = ({
   workoutType,

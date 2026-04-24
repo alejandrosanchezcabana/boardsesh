@@ -36,11 +36,11 @@ import { useSnackbar } from '@/app/components/providers/snackbar-provider';
 // Get board config data (synchronous - from generated data)
 const boardSelectorOptions = getBoardSelectorOptions();
 
-interface ControllerCardProps {
+type ControllerCardProps = {
   controller: ControllerInfo;
   onRemove: () => void;
   isRemoving: boolean;
-}
+};
 
 function ControllerCard({ controller, onRemove, isRemoving }: ControllerCardProps) {
   const boardName = controller.boardName.charAt(0).toUpperCase() + controller.boardName.slice(1);
@@ -125,12 +125,12 @@ function ControllerCard({ controller, onRemove, isRemoving }: ControllerCardProp
   );
 }
 
-interface ApiKeySuccessModalProps {
+type ApiKeySuccessModalProps = {
   isOpen: boolean;
   apiKey: string;
   controllerName: string;
   onClose: () => void;
-}
+};
 
 function ApiKeySuccessModal({ isOpen, apiKey, controllerName, onClose }: ApiKeySuccessModalProps) {
   const { showMessage } = useSnackbar();

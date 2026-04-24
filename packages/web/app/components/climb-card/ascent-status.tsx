@@ -13,7 +13,7 @@ import { useOptionalBoardProvider } from '../board-provider/board-provider-conte
 
 const EMPTY_LOGBOOK: LogbookEntry[] = [];
 
-interface AscentStatusProps {
+type AscentStatusProps = {
   climbUuid: ClimbUuid;
   fontSize?: number;
   /** Class for the badge wrapper (e.g. positioning on a thumbnail).
@@ -21,7 +21,7 @@ interface AscentStatusProps {
   className?: string;
   /** Additional class for the mirrored ascent badge (bottom-left positioning). */
   mirroredClassName?: string;
-}
+};
 
 function getHighestStatus(entries: LogbookEntry[]): AscentStatusValue | null {
   return pickHighestAscentStatus(

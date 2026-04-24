@@ -27,9 +27,9 @@ import {
 } from './actions';
 
 // Extended props for OpenInAppAction
-interface OpenInAppActionProps extends ClimbActionProps {
+type OpenInAppActionProps = {
   auroraAppUrl?: string;
-}
+} & ClimbActionProps;
 
 // Local type for menu items used in dropdown mode
 type ActionMenuItemType = {

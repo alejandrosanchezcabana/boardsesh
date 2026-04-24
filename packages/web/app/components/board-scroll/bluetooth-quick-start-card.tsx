@@ -5,9 +5,9 @@ import BluetoothOutlined from '@mui/icons-material/BluetoothOutlined';
 import BoardThumbnailGrid from './board-thumbnail-grid';
 import styles from './board-scroll.module.css';
 
-interface BluetoothQuickStartCardProps {
+type BluetoothQuickStartCardProps = {
   size?: 'default' | 'small';
-}
+};
 
 export default function BluetoothQuickStartCard({ size = 'default' }: BluetoothQuickStartCardProps) {
   const isSmall = size === 'small';

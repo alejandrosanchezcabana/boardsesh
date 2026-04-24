@@ -13,10 +13,10 @@ import { GET_MY_GYMS, type GetMyGymsQueryVariables, type GetMyGymsQueryResponse 
 import type { Gym } from '@boardsesh/shared-schema';
 import CreateGymForm from './create-gym-form';
 
-interface GymSelectorProps {
+type GymSelectorProps = {
   selectedGymUuid: string | null;
   onSelect: (gymUuid: string | null) => void;
-}
+};
 
 export default function GymSelector({ selectedGymUuid, onSelect }: GymSelectorProps) {
   const [showCreateForm, setShowCreateForm] = useState(false);

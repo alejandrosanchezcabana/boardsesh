@@ -2,7 +2,7 @@ import type { BoardName } from '@boardsesh/shared-schema';
 
 export type { BoardName };
 
-export interface ProductSizeData {
+export type ProductSizeData = {
   id: number;
   name: string;
   description: string;
@@ -11,32 +11,32 @@ export interface ProductSizeData {
   edgeBottom: number;
   edgeTop: number;
   productId: number;
-}
+};
 
-export interface LayoutData {
+export type LayoutData = {
   id: number;
   name: string;
   productId: number;
-}
+};
 
-export interface SetData {
+export type SetData = {
   id: number;
   name: string;
-}
+};
 
-export interface SizeEdges {
+export type SizeEdges = {
   edgeLeft: number;
   edgeRight: number;
   edgeBottom: number;
   edgeTop: number;
-}
+};
 
 export type HoldTuple = [number, number | null, number, number];
 
-export interface LedPositionWithColor {
+export type LedPositionWithColor = {
   position: number;
   r: number;
   g: number;
   b: number;
   role?: number;
-}
+};

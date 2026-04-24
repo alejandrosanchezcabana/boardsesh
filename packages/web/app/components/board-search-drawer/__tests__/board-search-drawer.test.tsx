@@ -19,13 +19,13 @@ vi.mock('@/app/hooks/use-geolocation', () => ({
   }),
 }));
 
-interface SearchBoardsMapInputCapture {
+type SearchBoardsMapInputCapture = {
   query: string;
   latitude: number | null;
   longitude: number | null;
   zoom: number;
   enabled: boolean;
-}
+};
 let lastSearchInput: SearchBoardsMapInputCapture | null = null;
 let mockBoards: UserBoard[] = [];
 const mockFetchNextPage = vi.fn();

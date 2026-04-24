@@ -45,7 +45,7 @@ export function buildSessionSummaryParts(stats: {
   return parts;
 }
 
-interface SessionOverviewPanelProps {
+type SessionOverviewPanelProps = {
   totalSends: number;
   totalFlashes: number;
   totalAttempts: number;
@@ -66,7 +66,7 @@ interface SessionOverviewPanelProps {
   onAngleChange?: (angle: number) => void;
   /** User-facing name of the named board (e.g., "My Home Wall") */
   namedBoardName?: string;
-}
+};
 
 function formatDuration(minutes: number): string {
   if (minutes < 60) return `${minutes}min`;

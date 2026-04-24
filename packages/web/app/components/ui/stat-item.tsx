@@ -3,11 +3,11 @@ import Box from '@mui/material/Box';
 import MuiTypography from '@mui/material/Typography';
 import { themeTokens } from '@/app/theme/theme-config';
 
-interface StatItemProps {
+type StatItemProps = {
   icon: React.ReactNode;
   value: number;
   label: string;
-}
+};
 
 export default function StatItem({ icon, value, label }: StatItemProps) {
   return (

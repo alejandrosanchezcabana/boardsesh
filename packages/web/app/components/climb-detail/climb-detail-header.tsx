@@ -11,11 +11,11 @@ import { formatSends } from '@/app/lib/format-climb-stats';
 import { useIsDarkMode } from '@/app/hooks/use-is-dark-mode';
 import type { Climb } from '@/app/lib/types';
 
-interface ClimbDetailHeaderProps {
+type ClimbDetailHeaderProps = {
   climb: Climb;
   /** Community-voted grade override, fetched separately from climb_community_status table */
   communityGrade?: string | null;
-}
+};
 
 /**
  * Header component for climb detail view.

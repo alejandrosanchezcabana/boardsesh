@@ -9,9 +9,9 @@ import { VoteSummaryProvider } from '@/app/components/social/vote-summary-contex
 import { useBoardProvider } from '../board-provider/board-provider-context';
 import { LogbookEntryCard } from './logbook-entry-card';
 
-interface LogbookViewProps {
+type LogbookViewProps = {
   currentClimb: Climb;
-}
+};
 
 // Optimistic ticks live under a `temp-` UUID until the save mutation returns
 // the real one — those rows must not render social affordances or be included

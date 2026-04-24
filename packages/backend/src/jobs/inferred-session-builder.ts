@@ -13,7 +13,7 @@ const SESSION_GAP_MS = 4 * 60 * 60 * 1000;
 /**
  * Tick data needed for session grouping
  */
-export interface TickForGrouping {
+export type TickForGrouping = {
   id: bigint | number;
   uuid: string;
   userId: string;
@@ -21,12 +21,12 @@ export interface TickForGrouping {
   status: string;
   sessionId: string | null;
   inferredSessionId: string | null;
-}
+};
 
 /**
  * Result of grouping ticks into inferred sessions
  */
-export interface InferredSessionGroup {
+export type InferredSessionGroup = {
   sessionId: string;
   userId: string;
   firstTickAt: string;
@@ -36,7 +36,7 @@ export interface InferredSessionGroup {
   totalFlashes: number;
   totalAttempts: number;
   tickCount: number;
-}
+};
 
 /**
  * Generate a deterministic UUID v5 for an inferred session.

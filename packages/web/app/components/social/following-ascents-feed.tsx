@@ -19,9 +19,9 @@ import { VoteSummaryProvider } from '@/app/components/social/vote-summary-contex
 import SocialFeedItem from '@/app/components/activity-feed/social-feed-item';
 import { useInfiniteScroll } from '@/app/hooks/use-infinite-scroll';
 
-interface FollowingAscentsFeedProps {
+type FollowingAscentsFeedProps = {
   onFindClimbers?: () => void;
-}
+};
 
 export default function FollowingAscentsFeed({ onFindClimbers }: FollowingAscentsFeedProps) {
   const { token, isAuthenticated, isLoading: authLoading } = useWsAuthToken();

@@ -8,10 +8,10 @@ import type { BoardName } from '@/app/lib/types';
 import type { SetIdList } from '@/app/lib/board-data';
 import { tryConstructSlugViewUrl } from '@/app/lib/url-utils';
 
-export interface DefaultBoardConfig {
+export type DefaultBoardConfig = {
   sizeId: number;
   setIds: SetIdList;
-}
+};
 
 /**
  * Default configurations for each layout.

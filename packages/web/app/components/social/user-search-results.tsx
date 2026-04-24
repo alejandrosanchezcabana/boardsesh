@@ -25,10 +25,10 @@ import type { UnifiedSearchResult, UnifiedSearchConnection } from '@boardsesh/sh
 import { useDebouncedValue } from '@/app/hooks/use-debounced-value';
 import { useInfiniteScroll } from '@/app/hooks/use-infinite-scroll';
 
-interface UserSearchResultsProps {
+type UserSearchResultsProps = {
   query: string;
   authToken: string | null;
-}
+};
 
 export default function UserSearchResults({ query, authToken }: UserSearchResultsProps) {
   const debouncedQuery = useDebouncedValue(query, 300);

@@ -30,23 +30,23 @@ const GEOJSON_PACKAGE = '@hangtime/climbing-boards';
 // GeoJSON types
 // =============================================================================
 
-interface GeoJsonFeature<P> {
+type GeoJsonFeature<P> = {
   type: 'Feature';
   id?: string | number;
   properties: P;
   geometry: { type: 'Point'; coordinates: [number, number] };
-}
+};
 
-interface GeoJsonFeatureCollection<P> {
+type GeoJsonFeatureCollection<P> = {
   type: 'FeatureCollection';
   features: GeoJsonFeature<P>[];
-}
+};
 
 // =============================================================================
 // Types for hangtime GeoJSON feature properties
 // =============================================================================
 
-interface KilterWall {
+type KilterWall = {
   id: string;
   wall_uuid: string;
   gym_uuid: string;
@@ -58,9 +58,9 @@ interface KilterWall {
   serial_number: string | null;
   accumulated_hold_set_value: number | null;
   is_listed: number | null;
-}
+};
 
-interface KilterGym {
+type KilterGym = {
   id: string;
   gym_uuid: string;
   name: string | null;
@@ -71,33 +71,33 @@ interface KilterGym {
   latitude: number | null;
   longitude: number | null;
   walls: KilterWall[];
-}
+};
 
-interface TensionGym {
+type TensionGym = {
   id: number;
   username: string;
   name: string;
   latitude: number;
   longitude: number;
-}
+};
 
-interface MoonboardGym {
+type MoonboardGym = {
   Name: string;
   Description: string;
   Latitude: number;
   Longitude: number;
   IsCommercial: boolean;
   IsLed: boolean;
-}
+};
 
 // =============================================================================
 // Board configuration data (from product-sizes-data.ts)
 // =============================================================================
 
-interface SetMapping {
+type SetMapping = {
   id: number;
   name: string;
-}
+};
 
 /** Layout ID lookup by Kilter product name */
 const KILTER_PRODUCT_TO_LAYOUT: Record<string, number> = {
@@ -259,7 +259,7 @@ function loadGeoJson<P>(filename: string): GeoJsonFeatureCollection<P> {
 // Board record builders
 // =============================================================================
 
-interface BoardRecord {
+type BoardRecord = {
   uuid: string;
   slug: string;
   boardType: string;
@@ -275,7 +275,7 @@ interface BoardRecord {
   gymSourceKey: string; // used to group boards under the same gym
   gymName: string;
   gymAddress: string | null;
-}
+};
 
 function buildKilterRecords(): BoardRecord[] {
   const fc = loadGeoJson<KilterGym>('kilterboardapp.geojson');

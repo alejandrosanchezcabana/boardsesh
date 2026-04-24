@@ -213,11 +213,11 @@ export const getGradeName = (difficultyId: number): string => {
 };
 
 // Group slots by section for display
-export interface GroupedSlots {
+export type GroupedSlots = {
   section: PlannedClimbSlot['section'];
   label: string;
   slots: PlannedClimbSlot[];
-}
+};
 
 export const groupSlotsBySection = (slots: PlannedClimbSlot[]): GroupedSlots[] => {
   const groups: GroupedSlots[] = [];

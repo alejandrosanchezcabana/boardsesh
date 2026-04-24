@@ -32,14 +32,14 @@ import {
   buildVPointsTimeline,
 } from '../utils/chart-data-builders';
 
-interface InitialData {
+type InitialData = {
   initialProfile?: UserProfile;
   initialProfileStats?: GetUserProfileStatsQueryResponse['userProfileStats'];
   initialAllBoardsTicks?: Record<string, LogbookEntry[]>;
   initialLogbook?: LogbookEntry[];
   initialIsOwnProfile?: boolean;
   initialNotFound?: boolean;
-}
+};
 
 export function useProfileData(userId: string, initialData?: InitialData) {
   const { data: session } = useSession();

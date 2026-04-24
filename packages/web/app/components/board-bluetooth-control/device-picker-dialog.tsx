@@ -17,11 +17,11 @@ import Stack from '@mui/material/Stack';
 import Typography from '@mui/material/Typography';
 import type { DiscoveredDevice } from '@/app/lib/ble/types';
 
-interface DevicePickerDialogProps {
+type DevicePickerDialogProps = {
   devices: DiscoveredDevice[];
   onSelect: (deviceId: string) => void;
   onCancel: () => void;
-}
+};
 
 function signalLabel(rssi: number): string {
   if (rssi >= -50) return 'Strong';

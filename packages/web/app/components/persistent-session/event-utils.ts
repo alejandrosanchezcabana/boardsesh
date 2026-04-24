@@ -1,8 +1,8 @@
 import type { SessionUser } from '@boardsesh/shared-schema';
 
-interface UuidItem {
+type UuidItem = {
   uuid: string;
-}
+};
 
 export function upsertSessionUser(users: SessionUser[], user: SessionUser): SessionUser[] {
   const existingIndex = users.findIndex((existingUser) => existingUser.id === user.id);

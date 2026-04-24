@@ -2,7 +2,7 @@ import type { Dispatch } from 'react';
 import { useState, useEffect } from 'react';
 import type { QueueAction, ClimbQueue, ClimbQueueItem } from '../../queue-control/types';
 
-interface UseQueueRestorationParams {
+type UseQueueRestorationParams = {
   isPersistentSessionActive: boolean;
   sessionId: string | null;
   baseBoardPath: string;
@@ -18,7 +18,7 @@ interface UseQueueRestorationParams {
     clearLocalQueue: () => void;
     localBoardDetails: unknown;
   };
-}
+};
 
 /**
  * Handles initial queue restoration from persistent session (party mode)

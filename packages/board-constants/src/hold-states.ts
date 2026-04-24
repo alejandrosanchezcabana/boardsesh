@@ -4,12 +4,12 @@ export type HoldCode = number;
 export type HoldColor = string;
 export type HoldRenderStyle = 'circle' | 'above-marker';
 
-export interface HoldStateInfo {
+export type HoldStateInfo = {
   name: HoldState;
   color: HoldColor;
   displayColor?: HoldColor;
   renderStyle?: HoldRenderStyle;
-}
+};
 
 // Canonical mapping of board-specific hold role codes to their state and LED colors.
 // Each board product has its own set of role codes.

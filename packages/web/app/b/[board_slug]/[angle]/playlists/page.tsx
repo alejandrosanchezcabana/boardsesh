@@ -15,9 +15,9 @@ export async function generateMetadata(): Promise<Metadata> {
   };
 }
 
-interface PlaylistsPageProps {
+type PlaylistsPageProps = {
   params: Promise<{ board_slug: string; angle: string }>;
-}
+};
 
 export default async function BoardSlugPlaylistsPage(props: PlaylistsPageProps) {
   const params = await props.params;

@@ -4,11 +4,11 @@ import React from 'react';
 import AddOutlined from '@mui/icons-material/AddOutlined';
 import styles from './board-scroll.module.css';
 
-interface CreateBoardCardProps {
+type CreateBoardCardProps = {
   onClick: () => void;
   label?: string;
   size?: 'default' | 'small';
-}
+};
 
 export default function CreateBoardCard({ onClick, label = 'New Board', size = 'default' }: CreateBoardCardProps) {
   const isSmall = size === 'small';

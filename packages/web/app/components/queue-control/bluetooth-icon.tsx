@@ -1,9 +1,9 @@
 import React from 'react';
 
-interface BluetoothIconProps {
+type BluetoothIconProps = {
   style?: React.CSSProperties;
   className?: string;
-}
+};
 
 /**
  * A discrete Bluetooth icon for queue items added via ESP32 controller.

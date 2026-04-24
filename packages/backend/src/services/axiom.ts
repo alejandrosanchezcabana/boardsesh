@@ -5,14 +5,14 @@
  * Only active in production environment.
  */
 
-export interface DeviceLog {
+export type DeviceLog = {
   _time: string;
   controller_id: string;
   level: string;
   component: string;
   message: string;
   [key: string]: unknown; // Additional metadata
-}
+};
 
 const AXIOM_INGEST_URL = 'https://api.axiom.co/v1/datasets';
 

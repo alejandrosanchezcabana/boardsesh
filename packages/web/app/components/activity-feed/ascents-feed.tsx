@@ -39,11 +39,11 @@ dayjs.extend(relativeTime);
 dayjs.extend(utc);
 dayjs.extend(relativeTime);
 
-interface AscentsFeedProps {
+type AscentsFeedProps = {
   userId: string;
   pageSize?: number;
   isOwnProfile?: boolean;
-}
+};
 
 // Layout name mapping
 const layoutNames: Record<string, string> = {

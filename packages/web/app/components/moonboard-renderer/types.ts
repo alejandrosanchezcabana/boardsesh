@@ -5,14 +5,14 @@ import type { LitUpHoldsMap } from '../board-renderer/types';
 export type MoonBoardHoldType = 'start' | 'hand' | 'finish';
 
 // A hold on the MoonBoard
-export interface MoonBoardHold {
+export type MoonBoardHold = {
   coordinate: MoonBoardCoordinate;
   type: MoonBoardHoldType;
   holdId: number; // Computed from coordinate (1-198)
-}
+};
 
 // MoonBoard climb data structure
-export interface MoonBoardClimb {
+export type MoonBoardClimb = {
   name: string;
   setter?: string;
   grade?: string;
@@ -20,14 +20,14 @@ export interface MoonBoardClimb {
   holds: MoonBoardHold[];
   angle: number;
   isBenchmark?: boolean;
-}
+};
 
 // Props for the MoonBoard renderer component
-export interface MoonBoardRendererProps {
+export type MoonBoardRendererProps = {
   layoutFolder: string; // e.g., 'moonboard2024'
   holdSetImages: string[]; // e.g., ['holdsetd.png', 'holdsete.png']
   litUpHoldsMap?: LitUpHoldsMap;
   mirrored?: boolean;
   thumbnail?: boolean;
   onHoldClick?: (holdId: number, anchor: Element) => void;
-}
+};

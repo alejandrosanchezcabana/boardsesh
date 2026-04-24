@@ -13,15 +13,15 @@ export const CLIMB_STATS_HISTORY = gql`
   }
 `;
 
-export interface ClimbStatsHistoryEntry {
+export type ClimbStatsHistoryEntry = {
   angle: number;
   ascensionistCount: number | null;
   qualityAverage: number | null;
   difficultyAverage: number | null;
   displayDifficulty: number | null;
   createdAt: string;
-}
+};
 
-export interface ClimbStatsHistoryResponse {
+export type ClimbStatsHistoryResponse = {
   climbStatsHistory: ClimbStatsHistoryEntry[];
-}
+};

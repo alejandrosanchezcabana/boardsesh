@@ -15,11 +15,11 @@ import type { SessionDetail } from '@boardsesh/shared-schema';
 
 export const SESSION_DETAIL_QUERY_KEY = (sessionId: string) => ['sessionDetail', sessionId] as const;
 
-interface UseSessionDetailOptions {
+type UseSessionDetailOptions = {
   sessionId?: string;
   initialData?: SessionDetail | null;
   enabled?: boolean;
-}
+};
 
 export function useSessionDetail({ sessionId, initialData, enabled = true }: UseSessionDetailOptions) {
   const { token, isAuthenticated } = useWsAuthToken();

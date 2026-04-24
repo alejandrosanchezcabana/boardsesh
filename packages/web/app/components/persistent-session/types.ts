@@ -14,7 +14,7 @@ import type { BoardDetails, ParsedBoardRouteParameters } from '@/app/lib/types';
 export type { QueueState } from '@boardsesh/shared-schema';
 
 // Session type matching the GraphQL response
-export interface Session {
+export type Session = {
   id: string;
   name: string | null;
   boardPath: string;
@@ -28,10 +28,10 @@ export interface Session {
   endedAt?: string | null;
   isPermanent?: boolean;
   color?: string | null;
-}
+};
 
 // Active session info stored at root level
-export interface ActiveSessionInfo {
+export type ActiveSessionInfo = {
   sessionId: string;
   sessionName?: string;
   boardPath: string;
@@ -41,10 +41,10 @@ export interface ActiveSessionInfo {
   namedBoardName?: string;
   /** UUID of the named board (UserBoard) */
   namedBoardUuid?: string;
-}
+};
 
 // Stable action functions — identity rarely changes
-export interface PersistentSessionActionsType {
+export type PersistentSessionActionsType = {
   // Local queue management (in-memory only, no IndexedDB persistence)
   setLocalQueueState: (
     queue: LocalClimbQueueItem[],
@@ -86,10 +86,10 @@ export interface PersistentSessionActionsType {
   // Session ending with summary
   endSessionWithSummary: () => void;
   dismissSessionSummary: () => void;
-}
+};
 
 // Frequently-changing state data
-export interface PersistentSessionStateType {
+export type PersistentSessionStateType = {
   // Active session info
   activeSession: ActiveSessionInfo | null;
 
@@ -125,18 +125,18 @@ export interface PersistentSessionStateType {
   sessionSummary: SessionSummary | null;
   sessionSummaryBoardType: string | null;
   sessionSummaryHealthKitWorkoutId: string | null;
-}
+};
 
 // Combined type for backward compatibility
 export type PersistentSessionContextType = PersistentSessionStateType & PersistentSessionActionsType;
 
 // Pending initial queue for new sessions
-export interface PendingInitialQueue {
+export type PendingInitialQueue = {
   sessionId: string;
   queue: LocalClimbQueueItem[];
   currentClimb: LocalClimbQueueItem | null;
   sessionName?: string;
-}
+};
 
 // Convert local ClimbQueueItem to GraphQL input format
 export function toClimbQueueItemInput(item: LocalClimbQueueItem) {
@@ -180,7 +180,7 @@ export function toClimbQueueItemInput(item: LocalClimbQueueItem) {
 }
 
 // Shared refs type used across hooks
-export interface SharedRefs {
+export type SharedRefs = {
   offlineBufferRef: MutableRefObject<LocalClimbQueueItem[]>;
   wsAuthTokenRef: MutableRefObject<string | null>;
   usernameRef: MutableRefObject<string | undefined>;
@@ -201,7 +201,7 @@ export interface SharedRefs {
   sessionUnsubscribeRef: MutableRefObject<(() => void) | null>;
   queueEventSubscribersRef: MutableRefObject<Set<(event: SubscriptionQueueEvent) => void>>;
   sessionEventSubscribersRef: MutableRefObject<Set<(event: SessionEvent) => void>>;
-}
+};
 
 // Default backend URL resolved at runtime (supports PR preview domains)
 export const DEFAULT_BACKEND_URL = getBackendWsUrl();

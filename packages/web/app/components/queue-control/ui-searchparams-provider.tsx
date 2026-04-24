@@ -6,11 +6,11 @@ import { track } from '@vercel/analytics';
 import { useQueueActions, useSearchData } from '../graphql-queue';
 import { DEFAULT_SEARCH_PARAMS } from '@/app/lib/url-utils';
 
-interface UISearchParamsContextType {
+type UISearchParamsContextType = {
   uiSearchParams: SearchRequestPagination;
   updateFilters: (newFilters: Partial<SearchRequestPagination>, instant?: boolean) => void;
   clearClimbSearchParams: () => void;
-}
+};
 
 const UISearchParamsContext = createContext<UISearchParamsContextType | undefined>(undefined);
 

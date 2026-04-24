@@ -16,10 +16,10 @@ import AddCircleOutline from '@mui/icons-material/AddCircleOutline';
 import type { GroupedNotification, NotificationType } from '@boardsesh/shared-schema';
 import { themeTokens } from '@/app/theme/theme-config';
 
-interface NotificationItemProps {
+type NotificationItemProps = {
   notification: GroupedNotification;
   onClick: (notification: GroupedNotification) => void;
-}
+};
 
 function formatTimeAgo(dateStr: string): string {
   const date = new Date(dateStr);

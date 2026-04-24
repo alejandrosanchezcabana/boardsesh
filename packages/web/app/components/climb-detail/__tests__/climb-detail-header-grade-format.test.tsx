@@ -9,13 +9,13 @@ import React from 'react';
 
 vi.mock('@/app/hooks/use-is-dark-mode', () => ({ useIsDarkMode: () => false }));
 
-interface GradeFormatMock {
+type GradeFormatMock = {
   gradeFormat: 'v-grade' | 'font';
   formatGrade: (d: string | null | undefined) => string | null;
   getGradeColor: (d?: string | null, dk?: boolean) => string | undefined;
   loaded: boolean;
   setGradeFormat: ReturnType<typeof vi.fn>;
-}
+};
 const defaultGradeFormat: GradeFormatMock = {
   gradeFormat: 'v-grade',
   formatGrade: (d: string | null | undefined) => {

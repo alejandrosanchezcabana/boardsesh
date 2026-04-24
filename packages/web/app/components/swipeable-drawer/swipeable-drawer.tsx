@@ -11,7 +11,7 @@ import styles from './swipeable-drawer.module.css';
 
 type Placement = 'left' | 'right' | 'top' | 'bottom';
 
-export interface SwipeableDrawerProps {
+export type SwipeableDrawerProps = {
   swipeEnabled?: boolean;
   showDragHandle?: boolean;
   // Drawer props
@@ -43,7 +43,7 @@ export interface SwipeableDrawerProps {
   /** Ref forwarded to the MUI Paper element inside the drawer. */
   paperRef?: React.Ref<HTMLDivElement>;
   children?: React.ReactNode;
-}
+};
 
 const SwipeableDrawer: React.FC<SwipeableDrawerProps> = ({
   swipeEnabled,

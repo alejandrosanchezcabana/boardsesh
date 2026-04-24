@@ -19,7 +19,7 @@ const layerContainStyle: React.CSSProperties = {
   objectFit: 'contain',
 };
 
-export interface BoardImageLayersProps {
+export type BoardImageLayersProps = {
   boardDetails: BoardDetails;
   frames?: string;
   mirrored: boolean;
@@ -30,7 +30,7 @@ export interface BoardImageLayersProps {
   style?: React.CSSProperties;
   /** Set fetchpriority="high" for LCP-critical images */
   fetchPriority?: 'high' | 'low' | 'auto';
-}
+};
 
 /**
  * Renders a board as layered images:

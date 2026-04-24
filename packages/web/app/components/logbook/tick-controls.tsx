@@ -130,7 +130,7 @@ const ScrollIndicatorWrapper: React.FC<{
 /*  Grade button — rendered separately from stars/tries for alignment */
 /* ------------------------------------------------------------------ */
 
-export interface TickGradeButtonProps {
+export type TickGradeButtonProps = {
   /** Current difficulty override (difficulty_id or undefined). */
   difficulty: number | undefined;
   /** Grade list for looking up the selected grade name. */
@@ -139,7 +139,7 @@ export interface TickGradeButtonProps {
   expandedControl: ExpandedControl;
   /** Toggle a control's picker open/closed. */
   onExpandedControlChange: (control: ExpandedControl) => void;
-}
+};
 
 /**
  * Standalone grade button — positioned independently from the
@@ -191,7 +191,7 @@ TickGradeButton.displayName = 'TickGradeButton';
 /*  Stars + Tries controls                                            */
 /* ------------------------------------------------------------------ */
 
-export interface TickControlsProps {
+export type TickControlsProps = {
   /** Current quality rating (1–5 or null). */
   quality: number | null;
   /** Current attempt count. */
@@ -202,7 +202,7 @@ export interface TickControlsProps {
   onExpandedControlChange: (control: ExpandedControl) => void;
   /** Ref forwarded to the tries button for picker scroll alignment. */
   triesButtonRef?: React.RefObject<HTMLButtonElement | null>;
-}
+};
 
 /**
  * Stars + Tries buttons. Grade is rendered separately via TickGradeButton
@@ -443,4 +443,3 @@ export const InlineTriesPicker: React.FC<{
     </ScrollIndicatorWrapper>
   );
 };
-

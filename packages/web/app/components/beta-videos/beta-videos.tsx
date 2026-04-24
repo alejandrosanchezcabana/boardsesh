@@ -17,9 +17,9 @@ import type { BetaLink } from '@/app/lib/api-wrappers/sync-api-types';
 import { dedupeBetaLinks, getInstagramEmbedUrl } from '@/app/lib/instagram-url';
 import { themeTokens } from '@/app/theme/theme-config';
 
-interface BetaVideosProps {
+type BetaVideosProps = {
   betaLinks: BetaLink[];
-}
+};
 
 const BetaVideos: React.FC<BetaVideosProps> = ({ betaLinks }) => {
   const [modalVisible, setModalVisible] = useState(false);

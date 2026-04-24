@@ -4,7 +4,7 @@ import { getLayout, ORPHANED_KILTER_LAYOUT_DEFAULTS } from '@boardsesh/board-con
 import { MOONBOARD_LAYOUTS } from '@/app/lib/moonboard-config';
 import type { BoardName } from '@/app/lib/types';
 
-export interface UserProfile {
+export type UserProfile = {
   id: string;
   email: string | undefined;
   name: string | null;
@@ -21,9 +21,9 @@ export interface UserProfile {
   followerCount: number;
   followingCount: number;
   isFollowedByMe: boolean;
-}
+};
 
-export interface LogbookEntry {
+export type LogbookEntry = {
   climbed_at: string;
   difficulty: number | null;
   tries: number;
@@ -32,7 +32,7 @@ export interface LogbookEntry {
   layoutId?: number | null;
   boardType?: string;
   climbUuid?: string;
-}
+};
 
 export type UnifiedTimeframeType = 'all' | 'lastYear' | 'lastMonth' | 'lastWeek' | 'today' | 'custom';
 
@@ -109,7 +109,7 @@ const layoutColors: Record<string, string> = {
   'moonboard-3': 'hsla(290, 35%, 55%, 0.7)', // Soft plum
   'moonboard-4': 'hsla(230, 40%, 58%, 0.7)', // Dusty blue
   'moonboard-5': 'hsla(210, 45%, 55%, 0.7)', // Slate blue
-  'decoy-2': 'hsla(100, 40%, 52%, 0.7)',     // Soft green
+  'decoy-2': 'hsla(100, 40%, 52%, 0.7)', // Soft green
   'touchstone-1': 'hsla(30, 50%, 55%, 0.7)', // Warm amber
   'grasshopper-1': 'hsla(75, 45%, 50%, 0.7)', // Yellow-green
 };

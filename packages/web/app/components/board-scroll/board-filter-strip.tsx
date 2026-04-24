@@ -6,7 +6,7 @@ import BoardScrollSection from './board-scroll-section';
 import BoardScrollCard from './board-scroll-card';
 import styles from './board-scroll.module.css';
 
-interface BoardFilterStripSingleProps {
+type BoardFilterStripSingleProps = {
   boards: UserBoard[];
   loading: boolean;
   selectedBoard: UserBoard | null;
@@ -16,9 +16,9 @@ interface BoardFilterStripSingleProps {
   /** Label shown on disabled cards instead of their normal meta text */
   disabledText?: string;
   multiSelect?: false;
-}
+};
 
-interface BoardFilterStripMultiProps {
+type BoardFilterStripMultiProps = {
   boards: UserBoard[];
   loading: boolean;
   selectedBoards: UserBoard[];
@@ -28,7 +28,7 @@ interface BoardFilterStripMultiProps {
   /** Label shown on disabled cards instead of their normal meta text */
   disabledText?: string;
   multiSelect: true;
-}
+};
 
 type BoardFilterStripProps = BoardFilterStripSingleProps | BoardFilterStripMultiProps;
 

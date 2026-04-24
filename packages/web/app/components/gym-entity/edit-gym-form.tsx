@@ -11,11 +11,11 @@ import {
 import type { Gym } from '@boardsesh/shared-schema';
 import GymForm, { type GymFormFieldValues } from './gym-form';
 
-interface EditGymFormProps {
+type EditGymFormProps = {
   gym: Gym;
   onSuccess?: (gym: Gym) => void;
   onCancel?: () => void;
-}
+};
 
 export default function EditGymForm({ gym, onSuccess, onCancel }: EditGymFormProps) {
   const { showMessage } = useSnackbar();

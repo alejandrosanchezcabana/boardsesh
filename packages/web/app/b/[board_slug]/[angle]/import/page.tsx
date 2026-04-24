@@ -24,9 +24,9 @@ function getMoonBoardHoldSetImages(layoutKey: MoonBoardLayoutKey, setIds: number
   return sets.filter((s) => setIds.includes(s.id)).map((s) => s.imageFile);
 }
 
-interface ImportPageProps {
+type ImportPageProps = {
   params: Promise<{ board_slug: string; angle: string }>;
-}
+};
 
 export default async function BoardSlugImportPage(props: ImportPageProps) {
   const params = await props.params;

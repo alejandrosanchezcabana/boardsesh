@@ -14,12 +14,12 @@ import LockOutlined from '@mui/icons-material/LockOutlined';
 import CheckCircleOutlined from '@mui/icons-material/CheckCircleOutlined';
 import { useSnackbar } from '@/app/components/providers/snackbar-provider';
 
-interface SetPasswordSectionProps {
+type SetPasswordSectionProps = {
   hasPassword: boolean;
   userEmail: string;
   linkedProviders: string[];
   onPasswordSet: () => void;
-}
+};
 
 function formatProviderName(provider: string): string {
   const names: Record<string, string> = {

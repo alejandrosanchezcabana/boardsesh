@@ -3,17 +3,17 @@ import { renderHook, waitFor } from '@testing-library/react';
 
 import { clearDevUrl, getDevUrlState, setDevUrl, useDevUrl } from '../dev-url';
 
-interface MockPlugin {
+type MockPlugin = {
   getState: ReturnType<typeof vi.fn>;
   setUrl: ReturnType<typeof vi.fn>;
   clearUrl: ReturnType<typeof vi.fn>;
-}
+};
 
-interface MockCapacitor {
+type MockCapacitor = {
   isNativePlatform: () => boolean;
   getPlatform: () => string;
   Plugins: { DevUrl?: MockPlugin };
-}
+};
 
 function installCapacitor(plugin: MockPlugin | undefined, isNative = true) {
   const cap: MockCapacitor = {

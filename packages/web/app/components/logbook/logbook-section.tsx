@@ -8,16 +8,16 @@ import type { Climb } from '@/app/lib/types';
 import { useBoardProvider } from '../board-provider/board-provider-context';
 import dayjs from 'dayjs';
 
-interface LogbookSectionProps {
+type LogbookSectionProps = {
   climb: Climb;
-}
+};
 
-export interface LogbookSummary {
+export type LogbookSummary = {
   totalAttempts: number;
   sessionCount: number;
   successfulAscents: number;
   failedAttempts: number;
-}
+};
 
 /** Hook to compute logbook summary for a given climb. */
 export function useLogbookSummary(climbUuid: string): LogbookSummary | null {

@@ -42,7 +42,7 @@ export function computeDragResult(
   return 'expand';
 }
 
-export interface DrawerDragResizeOptions {
+export type DrawerDragResizeOptions = {
   /** Whether the drawer is currently open. Height resets to initialHeight when false. */
   open: boolean;
   /** Called when a drag-down from the initial height should close the drawer. */
@@ -54,9 +54,9 @@ export interface DrawerDragResizeOptions {
   /** Optional external scroll element for auto-expand detection.
    *  When provided, the hook listens on this element instead of auto-detecting. */
   scrollElement?: HTMLElement | null;
-}
+};
 
-export interface DrawerDragResizeResult {
+export type DrawerDragResizeResult = {
   /** Ref to forward to SwipeableDrawer's paperRef prop. */
   paperRef: React.RefObject<HTMLDivElement | null>;
   /** Touch handlers to spread onto the drag header zone element. */
@@ -65,7 +65,7 @@ export interface DrawerDragResizeResult {
     onTouchMove: (e: React.TouchEvent) => void;
     onTouchEnd: (e: React.TouchEvent) => void;
   };
-}
+};
 
 function parseFraction(pct: string): number {
   return parseFloat(pct) / 100;

@@ -7,14 +7,14 @@ import type { SerializeOptions } from 'cookie';
  * {@link https://wicg.github.io/cookie-store/#dictdef-cookielistitem CookieListItem}
  * as specified by W3C.
  */
-interface CookieListItem extends Pick<SerializeOptions, 'domain' | 'path' | 'sameSite' | 'secure'> {
+type CookieListItem = {
   /** A string with the name of a cookie. */
   name: string;
   /** A string containing the value of the cookie. */
   value: string;
   /** A number of milliseconds or Date interface containing the expires of the cookie. */
   expires?: SerializeOptions['expires'] | number;
-}
+} & Pick<SerializeOptions, 'domain' | 'path' | 'sameSite' | 'secure'>;
 
 /**
  * Superset of {@link CookieListItem} extending it with
@@ -25,7 +25,7 @@ type ResponseCookie = CookieListItem & Pick<SerializeOptions, 'httpOnly' | 'maxA
  * The high-level type definition of the .get() and .set() methods
  * of { cookies() } from "next/headers"
  */
-interface CookieStore {
+type CookieStore = {
   get: (name: string) =>
     | {
         name: string;
@@ -36,13 +36,13 @@ interface CookieStore {
     (name: string, value: string, cookie?: Partial<ResponseCookie>): void;
     (options: ResponseCookie): void;
   };
-}
+};
 
-interface BoardSessionData {
+type BoardSessionData = {
   token: string;
   username: string;
   userId: number;
-}
+};
 
 export const getSession = async (cookies: CookieStore, boardName: BoardName) => {
   if (!process.env.IRON_SESSION_PASSWORD) {

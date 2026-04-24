@@ -6,16 +6,16 @@ import type { Climb, SearchRequestPagination, ParsedBoardRouteParameters } from 
 import type { ClimbQueueItem } from '../../queue-control/types';
 
 // Re-define the types locally to avoid importing from QueueContext (which pulls in the full dep tree)
-interface CurrentClimbDataType {
+type CurrentClimbDataType = {
   currentClimbQueueItem: ClimbQueueItem | null;
   currentClimb: Climb | null;
-}
+};
 
-interface QueueListDataType {
+type QueueListDataType = {
   queue: ClimbQueueItem[];
-}
+};
 
-interface SearchDataType {
+type SearchDataType = {
   climbSearchParams: SearchRequestPagination;
   climbSearchResults: Climb[] | null;
   suggestedClimbs: Climb[];
@@ -25,9 +25,9 @@ interface SearchDataType {
   isFetchingNextPage: boolean;
   hasDoneFirstFetch: boolean;
   parsedParams: ParsedBoardRouteParameters;
-}
+};
 
-interface SessionDataType {
+type SessionDataType = {
   viewOnlyMode: boolean;
   isSessionActive: boolean;
   sessionId: string | null;
@@ -44,7 +44,7 @@ interface SessionDataType {
   isBackendMode: boolean;
   hasConnected: boolean;
   connectionError: Error | null;
-}
+};
 
 // Create standalone contexts to test the isolation pattern without importing the full QueueContext module
 const CurrentClimbContext = createContext<CurrentClimbDataType | undefined>(undefined);

@@ -5,7 +5,7 @@ import { UNIFIED_TABLES } from '@/lib/db/queries/util/table-select';
 import { createClimbFilters } from '@boardsesh/db/queries';
 import { boardseshTicks } from '@/app/lib/db/schema';
 
-export interface HoldHeatmapData {
+export type HoldHeatmapData = {
   holdId: number;
   totalUses: number;
   startingUses: number;
@@ -16,7 +16,7 @@ export interface HoldHeatmapData {
   averageDifficulty: number | null;
   userAscents?: number;
   userAttempts?: number;
-}
+};
 
 export const getHoldHeatmapData = async (
   params: ParsedBoardRouteParameters,

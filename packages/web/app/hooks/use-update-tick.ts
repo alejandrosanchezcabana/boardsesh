@@ -12,10 +12,10 @@ import {
   type UpdateTickInput,
 } from '@/app/lib/graphql/operations';
 
-export interface UpdateTickOptions {
+export type UpdateTickOptions = {
   uuid: string;
   input: UpdateTickInput;
-}
+};
 
 /**
  * Hook to update a tick (logbook entry) via GraphQL mutation.

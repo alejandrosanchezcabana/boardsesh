@@ -4,9 +4,9 @@ import React from 'react';
 import Box from '@mui/material/Box';
 import styles from '../profile-page.module.css';
 
-interface ProfileSubPageLayoutProps {
+type ProfileSubPageLayoutProps = {
   children: React.ReactNode;
-}
+};
 
 export default function ProfileSubPageLayout({ children }: ProfileSubPageLayoutProps) {
   return (

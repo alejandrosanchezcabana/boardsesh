@@ -26,9 +26,9 @@ import { shareWithFallback } from '@/app/lib/share-utils';
 import type { SetterProfile } from '@boardsesh/shared-schema';
 import styles from '@/app/components/library/playlist-view.module.css';
 
-interface SetterProfileContentProps {
+type SetterProfileContentProps = {
   username: string;
-}
+};
 
 export default function SetterProfileContent({ username }: SetterProfileContentProps) {
   const { data: session } = useSession();

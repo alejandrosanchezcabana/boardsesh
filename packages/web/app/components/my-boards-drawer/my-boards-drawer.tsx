@@ -26,12 +26,12 @@ type DrawerView =
   | { type: 'search' }
   | { type: 'board-detail'; boardUuid: string; from: 'list' | 'search'; isFollowedByMe?: boolean };
 
-interface MyBoardsDrawerProps {
+type MyBoardsDrawerProps = {
   open: boolean;
   onClose: () => void;
   onCreateBoard?: () => void;
   onTransitionEnd?: (open: boolean) => void;
-}
+};
 
 export default function MyBoardsDrawer({ open, onClose, onCreateBoard, onTransitionEnd }: MyBoardsDrawerProps) {
   const { boards, isLoading, error } = useMyBoards(open);

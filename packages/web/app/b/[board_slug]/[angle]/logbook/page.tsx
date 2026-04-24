@@ -13,9 +13,9 @@ export const metadata = createNoIndexMetadata({
   description: 'Your climbing history',
 });
 
-interface BoardSlugLogbookPageProps {
+type BoardSlugLogbookPageProps = {
   params: Promise<{ board_slug: string; angle: string }>;
-}
+};
 
 export default async function BoardSlugLogbookPage(props: BoardSlugLogbookPageProps) {
   const params = await props.params;

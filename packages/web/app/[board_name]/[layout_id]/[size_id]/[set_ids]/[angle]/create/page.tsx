@@ -15,7 +15,7 @@ export const metadata: Metadata = {
   description: 'Create a new climb on your climbing board',
 };
 
-interface CreateClimbPageProps {
+type CreateClimbPageProps = {
   params: Promise<BoardRouteParameters>;
   searchParams: Promise<{
     forkFrames?: string;
@@ -23,7 +23,7 @@ interface CreateClimbPageProps {
     forkDescription?: string;
     editClimbUuid?: string;
   }>;
-}
+};
 
 // Helper to get MoonBoard layout info from layout ID
 function getMoonBoardLayoutInfo(layoutId: number) {

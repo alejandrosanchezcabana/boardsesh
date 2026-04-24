@@ -2,11 +2,11 @@ import type { Dispatch } from 'react';
 import { useEffect, useRef } from 'react';
 import type { QueueAction } from '../../queue-control/types';
 
-interface UsePendingUpdateCleanupParams {
+type UsePendingUpdateCleanupParams = {
   isPersistentSessionActive: boolean;
   pendingCurrentClimbUpdates: string[];
   dispatch: Dispatch<QueueAction>;
-}
+};
 
 /**
  * Garbage-collects orphaned pending current-climb updates that were never

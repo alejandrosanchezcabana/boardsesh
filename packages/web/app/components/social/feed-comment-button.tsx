@@ -9,12 +9,12 @@ import ChatBubbleOutlineOutlined from '@mui/icons-material/ChatBubbleOutlineOutl
 import type { SocialEntityType } from '@boardsesh/shared-schema';
 import CommentSection from './comment-section';
 
-interface FeedCommentButtonProps {
+type FeedCommentButtonProps = {
   entityType: SocialEntityType;
   entityId: string;
   commentCount?: number;
   defaultExpanded?: boolean;
-}
+};
 
 export default function FeedCommentButton({
   entityType,

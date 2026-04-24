@@ -21,9 +21,9 @@ import Link from 'next/link';
 
 dayjs.extend(relativeTime);
 
-interface NewClimbFeedItemProps {
+type NewClimbFeedItemProps = {
   item: NewClimbFeedItem;
-}
+};
 
 export default function NewClimbFeedItem({ item }: NewClimbFeedItemProps) {
   const timeAgo = dayjs(item.createdAt).fromNow();

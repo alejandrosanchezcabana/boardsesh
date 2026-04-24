@@ -25,7 +25,7 @@ import SwipeableDrawer from '@/app/components/swipeable-drawer/swipeable-drawer'
 import type { Proposal, ProposalType } from '@boardsesh/shared-schema';
 import type { BoardName } from '@/app/lib/types';
 
-interface CreateProposalFormProps {
+type CreateProposalFormProps = {
   climbUuid: string;
   boardType: string;
   angle: number;
@@ -34,7 +34,7 @@ interface CreateProposalFormProps {
   currentClimbDifficulty?: string;
   boardName?: string;
   onCreated?: (proposal: Proposal) => void;
-}
+};
 
 export default function CreateProposalForm({
   climbUuid,

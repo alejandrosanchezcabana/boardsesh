@@ -3,7 +3,7 @@ import { useEffect } from 'react';
 import type { SubscriptionQueueEvent } from '@boardsesh/shared-schema';
 import type { ClimbQueueItem, QueueAction } from '../../queue-control/types';
 
-interface UseQueueEventSubscriptionParams {
+type UseQueueEventSubscriptionParams = {
   isPersistentSessionActive: boolean;
   dispatch: Dispatch<QueueAction>;
   persistentSession: {
@@ -12,7 +12,7 @@ interface UseQueueEventSubscriptionParams {
     triggerResync: () => void;
   };
   needsResync: boolean;
-}
+};
 
 /**
  * Subscribes to queue events from the persistent session (party mode)

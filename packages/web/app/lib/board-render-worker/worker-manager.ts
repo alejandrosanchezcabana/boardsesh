@@ -211,7 +211,7 @@ async function ensureImagesPreloaded(urls: string[]): Promise<void> {
   }
 }
 
-export interface RenderBoardOptions {
+export type RenderBoardOptions = {
   boardDetails: BoardDetails;
   frames: string;
   mirrored: boolean;
@@ -220,7 +220,7 @@ export interface RenderBoardOptions {
    *  Callers that already computed cropTop for canvas sizing should pass it here
    *  to guarantee the canvas element and worker render stay in sync. */
   cropTop?: number;
-}
+};
 
 /**
  * Check if the browser supports OffscreenCanvas (required for worker rendering).

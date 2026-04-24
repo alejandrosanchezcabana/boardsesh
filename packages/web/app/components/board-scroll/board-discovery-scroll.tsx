@@ -33,7 +33,7 @@ function deriveFindNearbyStatus({
   return 'no-results';
 }
 
-interface BoardDiscoveryScrollProps {
+type BoardDiscoveryScrollProps = {
   onBoardClick: (board: UserBoard) => void;
   onConfigClick: (config: PopularBoardConfig) => void;
   onCustomClick: () => void;
@@ -41,7 +41,7 @@ interface BoardDiscoveryScrollProps {
   initialPopularConfigs?: PopularBoardConfig[];
   /** Externally-provided boards to display inline (avoids double-fetch when parent already calls useMyBoards) */
   myBoards?: UserBoard[];
-}
+};
 
 export default function BoardDiscoveryScroll({
   onBoardClick,

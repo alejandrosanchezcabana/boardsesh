@@ -26,10 +26,10 @@ import {
 } from '@/app/lib/graphql/operations';
 import type { GymMember } from '@boardsesh/shared-schema';
 
-interface GymMemberManagementProps {
+type GymMemberManagementProps = {
   gymUuid: string;
   isOwnerOrAdmin: boolean;
-}
+};
 
 export default function GymMemberManagement({ gymUuid, isOwnerOrAdmin }: GymMemberManagementProps) {
   const [members, setMembers] = useState<GymMember[]>([]);

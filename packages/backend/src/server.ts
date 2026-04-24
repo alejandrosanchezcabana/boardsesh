@@ -22,12 +22,12 @@ import { warmPopularConfigsCache } from './graphql/resolvers/social/boards';
  * for WebSocket subscriptions. Non-GraphQL routes are handled by custom
  * request handlers.
  */
-export interface ServerResources {
+export type ServerResources = {
   wss: WebSocketServer;
   httpServer: ReturnType<typeof createServer>;
   cleanupIntervals: () => void;
   shutdownServices: () => Promise<void>;
-}
+};
 
 export async function startServer(): Promise<ServerResources> {
   // Initialize PubSub (connects to Redis if configured)

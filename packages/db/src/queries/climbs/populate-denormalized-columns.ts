@@ -4,9 +4,9 @@ import { sql } from 'drizzle-orm';
  * A minimal database interface that supports raw SQL execution.
  * Works with any drizzle instance (NeonDatabase, PostgresJsDatabase, etc.)
  */
-interface ExecutableDb {
+type ExecutableDb = {
   execute: (query: ReturnType<typeof sql>) => Promise<unknown>;
-}
+};
 
 /**
  * Populate the denormalized `required_set_ids` and `compatible_size_ids` columns

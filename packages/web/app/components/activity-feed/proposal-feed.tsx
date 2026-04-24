@@ -19,10 +19,10 @@ import ProposalCard from '@/app/components/social/proposal-card';
 import FeedItemSkeleton from './feed-item-skeleton';
 import { useInfiniteScroll } from '@/app/hooks/use-infinite-scroll';
 
-interface ProposalFeedProps {
+type ProposalFeedProps = {
   isAuthenticated: boolean;
   boardUuid?: string | null;
-}
+};
 
 export default function ProposalFeed({ isAuthenticated, boardUuid }: ProposalFeedProps) {
   const { token, isLoading: authLoading } = useWsAuthToken();

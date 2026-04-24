@@ -20,10 +20,10 @@ import {
 import { useDebouncedValue } from '@/app/hooks/use-debounced-value';
 import { useInfiniteScroll } from '@/app/hooks/use-infinite-scroll';
 
-interface PlaylistSearchResultsProps {
+type PlaylistSearchResultsProps = {
   query: string;
   authToken: string | null;
-}
+};
 
 type PlaylistPage = {
   playlists: DiscoverablePlaylist[];

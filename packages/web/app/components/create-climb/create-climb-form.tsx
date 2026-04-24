@@ -88,15 +88,15 @@ const SETTINGS_DRAWER_STYLES = {
   body: { padding: 0 },
 };
 
-interface CreateClimbFormValues {
+type CreateClimbFormValues = {
   name: string;
   description: string;
   isDraft: boolean;
-}
+};
 
 type BoardType = 'aurora' | 'moonboard';
 
-interface CreateClimbFormProps {
+type CreateClimbFormProps = {
   boardType: BoardType;
   angle: number;
   // Aurora-specific
@@ -116,7 +116,7 @@ interface CreateClimbFormProps {
   layoutFolder?: string;
   layoutId?: number;
   holdSetImages?: string[];
-}
+};
 
 const EDIT_WINDOW_MS = 24 * 60 * 60 * 1000;
 
@@ -198,7 +198,7 @@ export default function CreateClimbForm({
   // Tracks the row we've saved during this form session so subsequent Save
   // presses update that row in place instead of creating a new climb. Cleared
   // by Clear. Set by both create (saveClimb) and load-a-draft flows.
-  interface SavedClimbState {
+  type SavedClimbState = {
     uuid: string;
     boardType: string;
     /** ISO timestamp of when the row was created */
@@ -206,7 +206,7 @@ export default function CreateClimbForm({
     /** ISO timestamp of when the row was first published; null while still draft */
     publishedAt: string | null;
     isDraft: boolean;
-  }
+  };
   const [savedClimb, setSavedClimb] = useState<SavedClimbState | null>(null);
 
   // Tracks the uuid of the queue item representing the climb the user is

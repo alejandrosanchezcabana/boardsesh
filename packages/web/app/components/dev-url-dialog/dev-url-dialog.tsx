@@ -13,10 +13,10 @@ import CircularProgress from '@mui/material/CircularProgress';
 
 import { clearDevUrl, getDevUrlState, setDevUrl, type DevUrlState } from '@/app/lib/dev-url';
 
-interface DevUrlDialogProps {
+type DevUrlDialogProps = {
   open: boolean;
   onClose: () => void;
-}
+};
 
 // If the native side fails to tear the process down within this window, re-enable
 // the UI so the dialog doesn't stay wedged (e.g. in a web browser preview, or if

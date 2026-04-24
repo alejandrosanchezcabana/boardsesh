@@ -22,14 +22,14 @@ import {
 } from './tick-controls';
 import styles from './inline-list-tick-bar.module.css';
 
-export interface InlineListTickBarProps {
+export type InlineListTickBarProps = {
   climb: Climb;
   angle: Angle;
   boardDetails: BoardDetails;
   onClose: () => void;
   /** Called when a save fails so the parent can show feedback. */
   onError?: () => void;
-}
+};
 
 export const InlineListTickBar: React.FC<InlineListTickBarProps> = ({
   climb,

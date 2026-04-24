@@ -369,7 +369,7 @@ async function enrichBoards(
 // Popular Board Config Cache (Redis-backed)
 // ============================================
 
-export interface CachedPopularConfig {
+export type CachedPopularConfig = {
   boardType: string;
   layoutId: number;
   layoutName: string | null;
@@ -382,7 +382,7 @@ export interface CachedPopularConfig {
   totalAscents: number;
   boardCount: number;
   displayName: string;
-}
+};
 
 const BOARD_TYPE_LABELS: Record<string, string> = {
   kilter: 'Kilter',

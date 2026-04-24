@@ -3,7 +3,7 @@
 import React, { useState } from 'react';
 import styles from './collapsible-section.module.css';
 
-export interface CollapsibleSectionConfig {
+export type CollapsibleSectionConfig = {
   key: string;
   label: string;
   title: string;
@@ -17,12 +17,12 @@ export interface CollapsibleSectionConfig {
   defaultActive?: boolean;
   /** When true, removes the inner padding around the expanded content. */
   flush?: boolean;
-}
+};
 
-interface CollapsibleSectionProps {
+type CollapsibleSectionProps = {
   sections: CollapsibleSectionConfig[];
   defaultActiveKey?: string;
-}
+};
 
 const CollapsibleSection: React.FC<CollapsibleSectionProps> = ({ sections, defaultActiveKey }) => {
   const sectionDefaultActive = sections.find((s) => s.defaultActive);

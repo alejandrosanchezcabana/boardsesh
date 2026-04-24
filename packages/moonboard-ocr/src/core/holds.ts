@@ -2,12 +2,12 @@ import type { HoldType, GridCoordinate, DetectedHold } from '../types';
 import { GRID_POSITIONS } from '../types';
 import type { RawPixelData, ImageRegion } from '../image-processor/types';
 
-interface CircleCenter {
+type CircleCenter = {
   x: number;
   y: number;
   type: HoldType;
   pixelCount: number;
-}
+};
 
 /**
  * Check if a pixel is the MoonBoard yellow color.

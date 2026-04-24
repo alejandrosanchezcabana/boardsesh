@@ -17,9 +17,9 @@ const loadingMessages = [
   'Checking route conditions...',
 ];
 
-interface FullPageLoadingOverlayProps {
+type FullPageLoadingOverlayProps = {
   isVisible: boolean;
-}
+};
 
 const FullPageLoadingOverlay: React.FC<FullPageLoadingOverlayProps> = ({ isVisible }) => {
   const [currentMessage, setCurrentMessage] = useState(loadingMessages[0]);

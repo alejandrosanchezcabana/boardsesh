@@ -6,7 +6,7 @@ import type { BetaLink } from '@/app/lib/api-wrappers/sync-api-types';
 import type { BoardDetails, Climb } from '@/app/lib/types';
 import styles from '@/app/[board_name]/[layout_id]/[size_id]/[set_ids]/[angle]/view/[climb_uuid]/climb-view.module.css';
 
-interface ClimbDetailPageServerProps {
+type ClimbDetailPageServerProps = {
   climb: Climb;
   boardDetails: BoardDetails;
   betaLinks: BetaLink[];
@@ -15,7 +15,7 @@ interface ClimbDetailPageServerProps {
   angle: number;
   currentClimbDifficulty?: string;
   boardName?: string;
-}
+};
 
 export default function ClimbDetailPageServer({
   climb,

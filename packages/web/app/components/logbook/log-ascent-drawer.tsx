@@ -3,12 +3,12 @@ import React from 'react';
 import { LogAscentForm } from './logascent-form';
 import type { BoardDetails, Climb } from '@/app/lib/types';
 
-interface LogAscentDrawerProps {
+type LogAscentDrawerProps = {
   open: boolean;
   onClose: () => void;
   currentClimb: Climb | null;
   boardDetails: BoardDetails;
-}
+};
 
 export const LogAscentDrawer: React.FC<LogAscentDrawerProps> = ({ open, onClose, currentClimb, boardDetails }) => {
   return (

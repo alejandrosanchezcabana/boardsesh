@@ -4,10 +4,10 @@ import React from 'react';
 
 // SVG icons for workout types matching the iOS app style
 
-interface IconProps {
+type IconProps = {
   size?: number;
   color?: string;
-}
+};
 
 export const VolumeIcon: React.FC<IconProps> = ({ size = 24, color = 'currentColor' }) => (
   <svg width={size} height={size} viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">

@@ -15,13 +15,13 @@ const NOTIFICATION_CHANNEL_PREFIX = 'boardsesh:notifications:';
 const COMMENT_CHANNEL_PREFIX = 'boardsesh:comments:';
 const NEW_CLIMB_CHANNEL_PREFIX = 'boardsesh:new-climbs:';
 
-interface RedisMessage {
+type RedisMessage = {
   instanceId: string;
   event: QueueEvent | SessionEvent | NotificationEvent | CommentEvent | NewClimbCreatedEvent;
   timestamp: number;
-}
+};
 
-export interface RedisPubSubAdapter {
+export type RedisPubSubAdapter = {
   publishQueueEvent(sessionId: string, event: QueueEvent): Promise<void>;
   publishSessionEvent(sessionId: string, event: SessionEvent): Promise<void>;
   publishNotificationEvent(userId: string, event: NotificationEvent): Promise<void>;
@@ -43,7 +43,7 @@ export interface RedisPubSubAdapter {
   onCommentMessage(callback: (entityKey: string, event: CommentEvent) => void): void;
   onNewClimbMessage(callback: (channelKey: string, event: NewClimbCreatedEvent) => void): void;
   getInstanceId(): string;
-}
+};
 
 export function createRedisPubSubAdapter(publisher: Redis, subscriber: Redis): RedisPubSubAdapter {
   const instanceId = uuidv4();

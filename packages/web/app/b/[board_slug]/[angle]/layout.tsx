@@ -19,10 +19,10 @@ import LastUsedBoardTracker from '@/app/components/board-page/last-used-board-tr
 import { constructBoardSlugListUrl } from '@/app/lib/url-utils';
 import { themeTokens } from '@/app/theme/theme-config';
 
-interface BoardSlugRouteParams {
+type BoardSlugRouteParams = {
   board_slug: string;
   angle: string;
-}
+};
 
 export async function generateMetadata(props: { params: Promise<BoardSlugRouteParams> }): Promise<Metadata> {
   const params = await props.params;

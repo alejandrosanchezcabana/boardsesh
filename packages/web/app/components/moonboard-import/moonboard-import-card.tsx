@@ -17,7 +17,7 @@ import type { MoonBoardClimbDuplicateMatch } from '@boardsesh/shared-schema';
 import type { LitUpHoldsMap } from '../board-renderer/types';
 import styles from './moonboard-import-card.module.css';
 
-interface MoonBoardImportCardProps {
+type MoonBoardImportCardProps = {
   climb: MoonBoardClimb;
   duplicateMatch: MoonBoardClimbDuplicateMatch | null;
   layoutFolder: string;
@@ -25,7 +25,7 @@ interface MoonBoardImportCardProps {
   litUpHoldsMap: LitUpHoldsMap;
   onEdit: () => void;
   onRemove: () => void;
-}
+};
 
 export default function MoonBoardImportCard({
   climb,

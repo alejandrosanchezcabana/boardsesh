@@ -21,14 +21,14 @@ import type { MoonBoardClimb, GridCoordinate } from '@boardsesh/moonboard-ocr/br
 import type { LitUpHoldsMap } from '../board-renderer/types';
 import styles from './moonboard-edit-modal.module.css';
 
-interface MoonBoardEditModalProps {
+type MoonBoardEditModalProps = {
   open: boolean;
   climb: MoonBoardClimb;
   layoutFolder: string;
   holdSetImages: string[];
   onSave: (updatedClimb: MoonBoardClimb) => void;
   onCancel: () => void;
-}
+};
 
 /**
  * Convert OCR climb holds to the lit up holds map format

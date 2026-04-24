@@ -10,14 +10,14 @@ import { themeTokens } from '@/app/theme/theme-config';
 const MAX_BODY_LENGTH = 2000;
 const COUNTER_THRESHOLD = 1800;
 
-interface CommentFormProps {
+type CommentFormProps = {
   onSubmit: (body: string) => Promise<void>;
   onCancel?: () => void;
   initialBody?: string;
   placeholder?: string;
   autoFocus?: boolean;
   submitLabel?: string;
-}
+};
 
 export default function CommentForm({
   onSubmit,

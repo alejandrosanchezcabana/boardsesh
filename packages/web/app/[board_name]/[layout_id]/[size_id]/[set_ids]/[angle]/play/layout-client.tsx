@@ -14,9 +14,9 @@ import { useQueueActions, useQueueList } from '@/app/components/graphql-queue';
 import { ConfirmPopover } from '@/app/components/ui/confirm-popover';
 import styles from './layout-client.module.css';
 
-interface PlayLayoutClientProps {
+type PlayLayoutClientProps = {
   boardDetails: BoardDetails;
-}
+};
 
 const QueueSidebar: React.FC<{ boardDetails: BoardDetails }> = ({ boardDetails }) => {
   const { queue } = useQueueList();

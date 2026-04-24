@@ -80,13 +80,13 @@ function makeQueueItem(id: string): ClimbQueueItem {
   };
 }
 
-interface LiveActivityHookProps {
+type LiveActivityHookProps = {
   queue: ClimbQueueItem[];
   currentClimbQueueItem: ClimbQueueItem | null;
   boardDetails: BoardDetails | null;
   sessionId: string | null;
   isSessionActive: boolean;
-}
+};
 
 function defaultProps(): LiveActivityHookProps {
   return {

@@ -13,11 +13,11 @@ export const maxDuration = 300; // 5 minutes max
 
 const CRON_SECRET = process.env.CRON_SECRET;
 
-interface SyncResult {
+type SyncResult = {
   userId: string;
   boardType: string;
   error?: string;
-}
+};
 
 export async function GET(request: Request) {
   try {

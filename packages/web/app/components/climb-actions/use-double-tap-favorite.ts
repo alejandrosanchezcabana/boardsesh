@@ -4,17 +4,17 @@ import { useState, useCallback, useRef, useEffect } from 'react';
 import { useFavorite } from './use-favorite';
 import { useAuthModal } from '@/app/components/providers/auth-modal-provider';
 
-interface UseDoubleTapFavoriteOptions {
+type UseDoubleTapFavoriteOptions = {
   climbUuid: string;
-}
+};
 
-interface UseDoubleTapFavoriteReturn {
+type UseDoubleTapFavoriteReturn = {
   handleDoubleTap: () => void;
   showHeart: boolean;
   dismissHeart: () => void;
   isFavorited: boolean;
   toggleFavorite: () => Promise<boolean>;
-}
+};
 
 /**
  * Manages favorite toggle + heart animation state for double-tap-to-like.

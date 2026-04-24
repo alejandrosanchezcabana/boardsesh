@@ -7,7 +7,7 @@ import { trackRenderError, type RenderContext } from '@/app/lib/rendering-metric
 import { THUMBNAIL_WIDTH } from './types';
 import BoardImageLayers from './board-image-layers';
 
-export interface BoardCanvasRendererProps {
+export type BoardCanvasRendererProps = {
   boardDetails: BoardDetails;
   frames: string;
   mirrored: boolean;
@@ -16,7 +16,7 @@ export interface BoardCanvasRendererProps {
   contain?: boolean;
   /** Additional styles for the canvas element */
   style?: React.CSSProperties;
-}
+};
 
 /**
  * Renders a board as a single <canvas> element using a Web Worker + WASM.

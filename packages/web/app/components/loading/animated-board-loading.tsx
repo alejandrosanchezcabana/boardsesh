@@ -20,14 +20,14 @@ const loadingMessages = [
   'Checking route conditions...',
 ];
 
-interface AnimatedBoardLoadingProps {
+type AnimatedBoardLoadingProps = {
   isVisible: boolean;
   boardDetails?: BoardDetails | null;
   /** Render inline without overlay or messages */
   inline?: boolean;
   /** Size for inline mode (default: 80) */
   size?: number;
-}
+};
 
 const AnimatedBoardLoading: React.FC<AnimatedBoardLoadingProps> = ({
   isVisible,

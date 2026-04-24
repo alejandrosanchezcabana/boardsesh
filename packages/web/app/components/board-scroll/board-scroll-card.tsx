@@ -25,7 +25,7 @@ function formatDistance(meters: number): string {
   return `${(meters / 1000).toFixed(1)}km`;
 }
 
-interface BoardScrollCardProps {
+type BoardScrollCardProps = {
   userBoard?: UserBoard;
   storedConfig?: StoredBoardConfig;
   popularConfig?: PopularBoardConfig;
@@ -36,7 +36,7 @@ interface BoardScrollCardProps {
   distanceMeters?: number | null;
   size?: 'default' | 'small';
   onClick: () => void;
-}
+};
 
 export default function BoardScrollCard({
   userBoard,

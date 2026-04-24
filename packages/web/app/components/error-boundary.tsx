@@ -6,7 +6,7 @@ const MAX_RECOVERY_ATTEMPTS = 3;
 /** Reset the retry counter after this many ms without errors. */
 const RETRY_RESET_MS = 30_000;
 
-interface ErrorBoundaryProps {
+type ErrorBoundaryProps = {
   children: ReactNode;
   fallback?: ReactNode;
   /**
@@ -17,12 +17,12 @@ interface ErrorBoundaryProps {
    * The retry budget resets after 30 s of error-free operation.
    */
   recoverable?: boolean;
-}
+};
 
-interface ErrorBoundaryState {
+type ErrorBoundaryState = {
   hasError: boolean;
   retryCount: number;
-}
+};
 
 export default class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundaryState> {
   private rafHandle: number | null = null;

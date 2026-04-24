@@ -25,11 +25,11 @@ const INTER_CHUNK_DELAY_MS = 5;
 // IMPORTANT: The raw plugin's write() expects `value` as a continuous hex string (no spaces), not DataView.
 // The BleClient npm wrapper normally handles this conversion, but we bypass it.
 
-interface PluginListenerHandle {
+type PluginListenerHandle = {
   remove(): Promise<void>;
-}
+};
 
-interface CapacitorBlePlugin {
+type CapacitorBlePlugin = {
   initialize(): Promise<void>;
   isEnabled(): Promise<{ value: boolean }>;
   requestDevice(options: {
@@ -46,7 +46,7 @@ interface CapacitorBlePlugin {
   }): Promise<void>;
   requestMtu(options: { deviceId: string; mtu: number }): Promise<{ value: number }>;
   addListener(eventName: 'disconnected', callback: (data: { deviceId: string }) => void): Promise<PluginListenerHandle>;
-}
+};
 
 function getBlePlugin(): CapacitorBlePlugin {
   const plugin = window.Capacitor?.Plugins?.BluetoothLe;

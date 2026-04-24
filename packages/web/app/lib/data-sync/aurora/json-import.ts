@@ -88,19 +88,19 @@ type BoardType = AuroraBoardName;
 // Import result types
 // ---------------------------------------------------------------------------
 
-export interface ImportCounts {
+export type ImportCounts = {
   imported: number;
   skipped: number;
   failed: number;
-}
+};
 
-export interface ImportResult {
+export type ImportResult = {
   ascents: ImportCounts;
   attempts: ImportCounts;
   circuits: ImportCounts;
   climbs: ImportCounts;
   unresolvedClimbs: string[];
-}
+};
 
 // ---------------------------------------------------------------------------
 // Progress event types for streaming progress reporting

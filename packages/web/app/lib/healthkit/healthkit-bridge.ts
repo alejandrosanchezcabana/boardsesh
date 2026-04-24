@@ -2,7 +2,7 @@ import type { SessionSummary } from '@boardsesh/shared-schema';
 import { isNativeApp, getPlatform } from '../ble/capacitor-utils';
 import { getPreference, setPreference } from '../user-preferences-db';
 
-interface HealthKitPlugin {
+type HealthKitPlugin = {
   isAvailable(): Promise<{ available: boolean }>;
   requestAuthorization(): Promise<{ granted: boolean }>;
   saveWorkout(options: {
@@ -14,7 +14,7 @@ interface HealthKitPlugin {
     hardestGrade?: string;
     boardType: string;
   }): Promise<{ workoutId: string }>;
-}
+};
 
 const HEALTHKIT_AUTO_SYNC_KEY = 'healthKitAutoSync';
 
@@ -48,9 +48,9 @@ export async function requestHealthKitAuthorization(): Promise<boolean> {
   }
 }
 
-export interface SaveSessionResult {
+export type SaveSessionResult = {
   workoutId: string;
-}
+};
 
 export async function saveSessionToHealthKit(
   summary: SessionSummary,

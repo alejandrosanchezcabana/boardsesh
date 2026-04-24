@@ -18,18 +18,18 @@ import type { ActivityFeedItem } from '@boardsesh/shared-schema';
 import { getGradeColor } from '@/app/lib/grade-colors';
 import { useGradeFormat } from '@/app/hooks/use-grade-format';
 
-interface SessionSummaryMetadata {
+type SessionSummaryMetadata = {
   totalSends?: number;
   totalAttempts?: number;
   durationMinutes?: number;
   goal?: string;
   gradeDistribution?: Array<{ grade: string; count: number }>;
   participants?: Array<{ userId: string; displayName?: string; avatarUrl?: string }>;
-}
+};
 
-interface SessionSummaryFeedItemProps {
+type SessionSummaryFeedItemProps = {
   item: ActivityFeedItem;
-}
+};
 
 export default function SessionSummaryFeedItem({ item }: SessionSummaryFeedItemProps) {
   const { formatGrade, loaded: gradeFormatLoaded } = useGradeFormat();

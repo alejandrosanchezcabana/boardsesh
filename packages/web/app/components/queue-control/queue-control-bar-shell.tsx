@@ -8,9 +8,9 @@ import Stack from '@mui/material/Stack';
 import { themeTokens } from '@/app/theme/theme-config';
 import styles from './queue-control-bar.module.css';
 
-interface QueueControlBarShellProps {
+type QueueControlBarShellProps = {
   message?: string;
-}
+};
 
 export default function QueueControlBarShell({ message = 'No climb selected' }: QueueControlBarShellProps) {
   return (

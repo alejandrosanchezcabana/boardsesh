@@ -19,7 +19,7 @@ export const DEFAULT_CONFIRMATION_PEEK_OFFSET = 76;
 
 export type SwipeZone = 'none' | 'left-short' | 'left-long' | 'right-short' | 'right-long';
 
-export interface UseSwipeActionsOptions {
+export type UseSwipeActionsOptions = {
   /** Called when the user swipes left past the threshold */
   onSwipeLeft: () => void;
   /** Called when the user swipes left past the long-swipe threshold */
@@ -49,9 +49,9 @@ export interface UseSwipeActionsOptions {
   /** Pixels the content peeks left during confirmation to reveal the action icon.
    *  Should match the right action layer width so both states show the same area. */
   confirmationPeekOffset?: number;
-}
+};
 
-export interface UseSwipeActionsReturn {
+export type UseSwipeActionsReturn = {
   /** Spread onto the swipeable container element */
   swipeHandlers: ReturnType<typeof useSwipeable>;
   /** Whether a left-swipe action was just confirmed (checkmark peek is visible) */
@@ -62,7 +62,7 @@ export interface UseSwipeActionsReturn {
   leftActionRef: React.RefCallback<HTMLElement>;
   /** Ref for the right action background (visible on swipe left) */
   rightActionRef: React.RefCallback<HTMLElement>;
-}
+};
 
 /**
  * Hook for swipe-to-action gestures on list items.

@@ -3,10 +3,10 @@ import { searchClimbs as searchClimbsQuery, countClimbs } from '../../../db/quer
 import type { ClimbSearchContext } from '../shared/types';
 import { searchCache, DEFAULT_SEARCH_CACHE_TTL } from '../../../services/search-cache';
 
-interface CachedClimbsResult {
+type CachedClimbsResult = {
   climbs: Climb[];
   hasMore: boolean;
-}
+};
 
 /**
  * Field-level resolvers for ClimbSearchResult

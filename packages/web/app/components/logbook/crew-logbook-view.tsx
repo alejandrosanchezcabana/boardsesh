@@ -17,10 +17,10 @@ import type { Climb } from '@/app/lib/types';
 import { VoteSummaryProvider } from '@/app/components/social/vote-summary-context';
 import { LogbookEntryCard } from './logbook-entry-card';
 
-interface CrewLogbookViewProps {
+type CrewLogbookViewProps = {
   currentClimb: Climb;
   boardType: string;
-}
+};
 
 export const CrewLogbookView: React.FC<CrewLogbookViewProps> = ({ currentClimb, boardType }) => {
   const { token, isAuthenticated, isLoading: authLoading } = useWsAuthToken();

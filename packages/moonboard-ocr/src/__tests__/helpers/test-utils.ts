@@ -6,12 +6,12 @@ import { expect } from 'vite-plus/test';
 import type { ParseResult } from '../../types';
 import type { ExpectedClimbResult } from '../fixtures/expected-results';
 
-export interface ValidationOptions {
+export type ValidationOptions = {
   /** Whether to validate OCR fields (name, setter, grades) */
   validateOcr: boolean;
   /** Use partial matching for name (toContain instead of toBe) */
   partialNameMatch: boolean;
-}
+};
 
 /**
  * Validate a parse result against expected data.

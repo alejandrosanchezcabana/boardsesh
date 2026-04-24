@@ -22,7 +22,7 @@ export type HoldRenderData = {
   r: number;
 };
 
-export interface HeatmapData {
+export type HeatmapData = {
   holdId: number;
   totalUses: number;
   startingUses: number;
@@ -33,7 +33,7 @@ export interface HeatmapData {
   averageDifficulty: number | null;
   userAscents?: number;
   userAttempts?: number;
-}
+};
 
 /** Thumbnail render width in pixels. Covers 3x retina at ~64px CSS display. */
 export const THUMBNAIL_WIDTH = 200;

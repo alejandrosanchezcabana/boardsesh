@@ -41,17 +41,17 @@ const BoardSelectorDrawer = dynamic(() => import('@/app/components/board-selecto
   ssr: false,
 });
 
-interface HomePageContentProps {
+type HomePageContentProps = {
   boardConfigs: BoardConfigData;
   initialPopularConfigs?: PopularBoardConfig[];
-}
+};
 
-interface OnboardingCardProps {
+type OnboardingCardProps = {
   icon: React.ReactNode;
   title: string;
   description: string;
   onClick: () => void;
-}
+};
 
 function DiscordIcon() {
   return (

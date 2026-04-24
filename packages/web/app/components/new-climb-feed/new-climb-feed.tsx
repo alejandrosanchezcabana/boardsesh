@@ -24,12 +24,12 @@ import SubscribeButton from './subscribe-button';
 import { useWsAuthToken } from '@/app/hooks/use-ws-auth-token';
 import { useInfiniteScroll } from '@/app/hooks/use-infinite-scroll';
 
-interface NewClimbFeedProps {
+type NewClimbFeedProps = {
   boardType: string;
   layoutId: number;
   isAuthenticated: boolean;
   isSubscribed?: boolean;
-}
+};
 
 const PAGE_SIZE = 20;
 

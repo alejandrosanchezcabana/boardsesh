@@ -1,13 +1,13 @@
 import React from 'react';
 import type { HoldRenderData, LitUpHoldsMap } from './types';
 
-interface BoardLitupHoldsProps {
+type BoardLitupHoldsProps = {
   holdsData: HoldRenderData[];
   litUpHoldsMap: LitUpHoldsMap;
   mirrored: boolean;
   thumbnail?: boolean;
   onHoldClick?: (holdId: number, anchor: Element) => void;
-}
+};
 
 const areLitUpHoldsMapsEqual = (prev: LitUpHoldsMap, next: LitUpHoldsMap): boolean => {
   const prevKeys = Object.keys(prev);
