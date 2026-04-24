@@ -164,9 +164,15 @@ export default function BoardSearchMap({
       }
       if (mapRef.current) {
         // Detach only our handler before remove() so teardown-time events
-        // can't re-arm fireViewport's setTimeout. Pass undefined when the
-        // ref is unset (shouldn't happen) to fall back to clearing all.
-        mapRef.current.off('moveend', fireViewportRef.current ?? undefined);
+        // can't re-arm fireViewport's setTimeout. fireViewportRef is always
+        // set when mapRef is set (both assigned in the same .then()), but the
+        // else branch makes the fallback intent explicit rather than relying
+        // on Leaflet treating undefined the same as an omitted argument.
+        if (fireViewportRef.current) {
+          mapRef.current.off('moveend', fireViewportRef.current);
+        } else {
+          mapRef.current.off('moveend');
+        }
         fireViewportRef.current = null;
         mapRef.current.remove();
         mapRef.current = null;
