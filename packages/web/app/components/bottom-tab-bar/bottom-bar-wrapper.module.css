@@ -40,14 +40,21 @@
    (which creates a visible backdrop-filter seam), extend the BottomNavigation
    below the wrapper via negative margin so the frosted glass is one element.
    The wrapper has no overflow:hidden, so the child visually overflows to
-   cover the 2dvh gap plus any safe area beyond it. */
+   cover the 2dvh gap plus any safe area beyond it.
+
+   Use raw env(safe-area-inset-bottom) here instead of the :root-defined
+   var(--safe-area-inset-bottom). iOS Safari resolves var()-of-env() to 0
+   inside nested calc/max in some contexts, which collapses the negative
+   bottom-extension and leaves the Safari URL-bar area uncovered (visible
+   body background, which is black in dark mode). env() is reliable here
+   because this block only matches iOS Safari. */
 @supports (-webkit-touch-callout: none) {
   @media (hover: none) and (pointer: coarse) {
     .bottomBarWrapper:not(.nativeApp) {
       --tab-bar-top-radius: 0px;
       --tab-bar-bottom-radius: 0px;
-      --tab-bar-safe-area-padding: max(2dvh, var(--safe-area-inset-bottom, env(safe-area-inset-bottom, 0px)));
-      --tab-bar-bottom-extension: calc(-1 * max(2dvh, var(--safe-area-inset-bottom, env(safe-area-inset-bottom, 0px))));
+      --tab-bar-safe-area-padding: max(2dvh, env(safe-area-inset-bottom, 0px));
+      --tab-bar-bottom-extension: calc(-1 * max(2dvh, env(safe-area-inset-bottom, 0px)));
       bottom: 2dvh;
       left: 0;
       right: 0;
