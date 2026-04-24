@@ -492,5 +492,4 @@ const SwipeableDrawer: React.FC<SwipeableDrawerProps> = ({
 };
 
 const MemoSwipeableDrawer = React.memo(SwipeableDrawer);
-export { MemoSwipeableDrawer as SwipeableDrawer };
 export default MemoSwipeableDrawer;

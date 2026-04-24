@@ -56,13 +56,9 @@ const SwipeableDrawer = dynamic(() => import('../swipeable-drawer/swipeable-draw
   ssr: false,
 });
 const PostToInstagramDialog = dynamic(() => import('./post-to-instagram-dialog'), { ssr: false });
-const AttachBetaLinkDialog = dynamic(
-  () =>
-    import('@/app/components/beta-videos/attach-beta-link-dialog').then((m) => ({
-      default: m.AttachBetaLinkDialog,
-    })),
-  { ssr: false },
-);
+const AttachBetaLinkDialog = dynamic(() => import('@/app/components/beta-videos/attach-beta-link-dialog'), {
+  ssr: false,
+});
 
 dayjs.extend(relativeTime);
 

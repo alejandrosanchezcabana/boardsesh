@@ -31,7 +31,7 @@ type AttachBetaLinkFormProps = {
   compact?: boolean;
 };
 
-export const AttachBetaLinkForm: React.FC<AttachBetaLinkFormProps> = ({
+const AttachBetaLinkForm: React.FC<AttachBetaLinkFormProps> = ({
   boardType,
   climbUuid,
   climbName,

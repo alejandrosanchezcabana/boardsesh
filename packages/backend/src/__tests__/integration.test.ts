@@ -1,5 +1,6 @@
 import { describe, it, expect, beforeAll, afterAll, afterEach } from 'vite-plus/test';
 import { type Client, createClient } from 'graphql-ws';
+// eslint-disable-next-line import/no-named-as-default -- `ws` exports both default and named `WebSocket`; default is the correct one for graphql-ws.
 import WebSocket from 'ws';
 import { v4 as uuidv4 } from 'uuid';
 import { startServer } from '../server';

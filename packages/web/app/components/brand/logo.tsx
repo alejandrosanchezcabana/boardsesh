@@ -74,7 +74,7 @@ const PixelLetter = ({
   </>
 );
 
-export const Logo = ({ size = 'md', showText = true, linkToHome = true }: LogoProps) => {
+const Logo = ({ size = 'md', showText = true, linkToHome = true }: LogoProps) => {
   const { icon, fontSize, gap } = sizes[size];
   const pixelSize = 3;
   const shadowOffset = 2;

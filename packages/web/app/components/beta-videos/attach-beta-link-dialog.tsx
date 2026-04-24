@@ -15,7 +15,7 @@ type AttachBetaLinkDialogProps = {
   angle?: number | null;
 };
 
-export const AttachBetaLinkDialog: React.FC<AttachBetaLinkDialogProps> = ({
+const AttachBetaLinkDialog: React.FC<AttachBetaLinkDialogProps> = ({
   open,
   onClose,
   boardType,

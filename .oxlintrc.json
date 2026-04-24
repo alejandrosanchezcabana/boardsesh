@@ -61,7 +61,8 @@
     "import/no-amd": "error",
     "import/no-commonjs": "error",
     "import/no-duplicates": ["error", { "preferInline": true }],
-    "import/no-empty-named-blocks": "error"
+    "import/no-empty-named-blocks": "error",
+    "import/no-named-as-default": "error"
   },
   "ignorePatterns": [
     "dist/**",
