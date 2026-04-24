@@ -90,6 +90,7 @@ export default async function ProfilePage({ params }: PageProps) {
       userId={user_id}
       initialProfile={initialProfile}
       initialProfileStats={statsData.initialProfileStats}
+      initialPercentile={statsData.initialPercentile}
       initialAllBoardsTicks={statsData.initialAllBoardsTicks}
       initialLogbook={statsData.initialLogbook}
       initialIsOwnProfile={viewerUserId === user_id}

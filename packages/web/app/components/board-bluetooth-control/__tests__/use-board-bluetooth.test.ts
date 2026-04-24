@@ -25,8 +25,22 @@ const {
       Promise.resolve(mockAdapter),
     ),
     mockGetAuroraBluetoothPacket: vi.fn<
-      (frames: string, placementPositions: Record<number, number>, boardName: string) => Uint8Array
-    >(() => new Uint8Array([1, 2, 3])),
+      (
+        frames: string,
+        placementPositions: Record<number, number>,
+        boardName: string,
+      ) => {
+        packet: Uint8Array;
+        skippedPositionCount: number;
+        skippedRoleCount: number;
+        totalPlacements: number;
+      }
+    >(() => ({
+      packet: new Uint8Array([1, 2, 3]),
+      skippedPositionCount: 0,
+      skippedRoleCount: 0,
+      totalPlacements: 1,
+    })),
     mockGetMoonboardBluetoothPacket: vi.fn<(frames: string) => Uint8Array>(() => new Uint8Array([9, 8, 7])),
     mockGetLedPlacements: vi.fn<(boardName: string, layoutId: number, sizeId: number) => Record<number, number>>(
       () => ({ 4131: 39 }),
@@ -105,7 +119,12 @@ describe('useBoardBluetooth', () => {
     mockAdapter.disconnect.mockResolvedValue(undefined);
     mockAdapter.write.mockResolvedValue(undefined);
     mockAdapter.onDisconnect.mockReturnValue(vi.fn());
-    mockGetAuroraBluetoothPacket.mockReturnValue(new Uint8Array([1, 2, 3]));
+    mockGetAuroraBluetoothPacket.mockReturnValue({
+      packet: new Uint8Array([1, 2, 3]),
+      skippedPositionCount: 0,
+      skippedRoleCount: 0,
+      totalPlacements: 1,
+    });
     mockGetMoonboardBluetoothPacket.mockReturnValue(new Uint8Array([9, 8, 7]));
     mockGetLedPlacements.mockReturnValue({ 4131: 39 });
   });

@@ -316,7 +316,7 @@ describe('userClimbs query', () => {
     const ctx = makeCtx();
 
     // 1. userBoardMappings → linked username
-    const mappingsChain = createMockChain([{ boardUsername: 'aurora-setter' }]);
+    const mappingsChain = createMockChain([{ boardType: 'kilter', boardUsername: 'aurora-setter' }]);
     mockDb.select.mockReturnValueOnce(mappingsChain);
 
     // 2. Count query → 2 climbs

@@ -13,6 +13,8 @@ import type { GetUserProfileStatsQueryResponse, GetUserTicksQueryResponse } from
 // from this file continue to work without changes.
 export { serverMyBoards, serverUserPlaylists, serverGroupedNotifications } from './server-graphql';
 
+export const USER_CLIMB_PERCENTILE_CACHE_TAG = 'user-climb-percentile';
+
 /**
  * Execute a GraphQL query via HTTP (non-cached version for internal use)
  */
@@ -166,6 +168,30 @@ export async function cachedUserProfileStats(
     const query = createCachedGraphQLQuery<Response>(GET_USER_PROFILE_STATS, tag, 300);
     const result = await query({ userId });
     return result.userProfileStats;
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Cached server-side fetch of user climb percentile (public, no auth needed).
+ */
+export async function cachedUserClimbPercentile(
+  userId: string,
+): Promise<
+  import('@/app/lib/graphql/operations/ticks').GetUserClimbPercentileQueryResponse['userClimbPercentile'] | null
+> {
+  const { GET_USER_CLIMB_PERCENTILE } = await import('@/app/lib/graphql/operations/ticks');
+  type Response = import('@/app/lib/graphql/operations/ticks').GetUserClimbPercentileQueryResponse;
+
+  try {
+    const query = createCachedGraphQLQuery<Response>(
+      GET_USER_CLIMB_PERCENTILE,
+      USER_CLIMB_PERCENTILE_CACHE_TAG,
+      604800,
+    );
+    const result = await query({ userId });
+    return result.userClimbPercentile;
   } catch {
     return null;
   }

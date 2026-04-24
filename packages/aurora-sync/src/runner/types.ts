@@ -3,6 +3,15 @@ export interface SyncRunnerConfig {
   onError?: (error: Error, context: { userId?: string; board?: string }) => void;
 }
 
+export interface DaemonOptions {
+  timeZone?: string;
+  quietHoursStart?: number;
+  quietHoursEnd?: number;
+  quietPollMs?: number;
+  minDelayMinutes?: number;
+  maxDelayMinutes?: number;
+}
+
 export interface SyncSummary {
   total: number;
   successful: number;

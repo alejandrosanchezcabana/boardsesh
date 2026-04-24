@@ -69,7 +69,7 @@ export function useBoardBluetooth({ boardDetails, onConnectionChange }: UseBoard
 
   // Function to send frames string to the board
   const sendFramesToBoard = useCallback(
-    async (frames: string, mirrored: boolean = false, signal?: AbortSignal) => {
+    async (frames: string, mirrored: boolean = false, signal?: AbortSignal, climbUuid?: string) => {
       if (!adapterRef.current || !frames || !boardDetails) return;
 
       try {
@@ -110,30 +110,57 @@ export function useBoardBluetooth({ boardDetails, onConnectionChange }: UseBoard
           return false;
         }
 
-        // getAuroraBluetoothPacket throws if any placements can't be resolved.
-        // Catch separately so we can report to Sentry without crashing the UI.
-        let bluetoothPacket: Uint8Array;
-        try {
-          bluetoothPacket = getAuroraBluetoothPacket(
-            framesToSend,
-            placementPositions,
-            boardDetails.board_name,
-            apiLevelRef.current,
-          );
-        } catch (error) {
-          Sentry.captureException(error, {
-            tags: {
-              board: boardDetails.board_name,
-              layout: boardDetails.layout_id,
-              size: boardDetails.size_id,
+        const result = getAuroraBluetoothPacket(
+          framesToSend,
+          placementPositions,
+          boardDetails.board_name,
+          apiLevelRef.current,
+        );
+
+        const skippedCount = result.skippedPositionCount + result.skippedRoleCount;
+
+        if (skippedCount > 0 && result.packet.length === 0) {
+          // Every placement was skipped — completely wrong board config
+          Sentry.captureMessage(
+            `[BLE] All ${result.totalPlacements} placements skipped — climb incompatible with board`,
+            {
+              level: 'warning',
+              tags: { board: boardDetails.board_name, layout: boardDetails.layout_id, size: boardDetails.size_id },
+              extra: {
+                climbUuid,
+                layoutId: boardDetails.layout_id,
+                sizeId: boardDetails.size_id,
+                setIds: boardDetails.set_ids,
+                skippedPositionCount: result.skippedPositionCount,
+                skippedRoleCount: result.skippedRoleCount,
+              },
             },
-          });
-          console.error('[BLE] Packet generation failed:', error);
-          showMessage('This climb is not compatible with your board.', 'error');
+          );
+          showMessage('This climb is for a different board configuration.', 'error');
           return false;
         }
 
-        await adapterRef.current.write(bluetoothPacket, signal);
+        if (skippedCount > 0) {
+          // Partial miss — some holds couldn't be lit but we can still send
+          Sentry.captureMessage(`[BLE] ${skippedCount} of ${result.totalPlacements} placements skipped`, {
+            level: 'warning',
+            tags: { board: boardDetails.board_name, layout: boardDetails.layout_id, size: boardDetails.size_id },
+            extra: {
+              climbUuid,
+              layoutId: boardDetails.layout_id,
+              sizeId: boardDetails.size_id,
+              setIds: boardDetails.set_ids,
+              skippedPositionCount: result.skippedPositionCount,
+              skippedRoleCount: result.skippedRoleCount,
+            },
+          });
+          showMessage(
+            `${skippedCount} hold${skippedCount > 1 ? 's' : ''} couldn't be lit — your board may be a different size than this climb was set for.`,
+            'warning',
+          );
+        }
+
+        await adapterRef.current.write(result.packet, signal);
         void incrementBluetoothSends().then(maybeFireFeedbackPromptEvent);
         return true;
       } catch (error) {

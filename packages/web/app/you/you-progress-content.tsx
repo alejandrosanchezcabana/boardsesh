@@ -3,7 +3,10 @@
 import React, { useCallback, useState } from 'react';
 import Box from '@mui/material/Box';
 import CircularProgress from '@mui/material/CircularProgress';
-import type { GetUserProfileStatsQueryResponse } from '@/app/lib/graphql/operations/ticks';
+import type {
+  GetUserClimbPercentileQueryResponse,
+  GetUserProfileStatsQueryResponse,
+} from '@/app/lib/graphql/operations/ticks';
 import styles from '@/app/profile/[user_id]/profile-page.module.css';
 import { useProfileData } from '@/app/profile/[user_id]/hooks/use-profile-data';
 import StatsSummary from '@/app/profile/[user_id]/components/stats-summary';
@@ -16,6 +19,7 @@ export interface YouProgressContentProps {
   userId: string;
   initialProfile?: UserProfile | null;
   initialProfileStats?: GetUserProfileStatsQueryResponse['userProfileStats'] | null;
+  initialPercentile?: GetUserClimbPercentileQueryResponse['userClimbPercentile'] | null;
   initialAllBoardsTicks?: Record<string, LogbookEntry[]>;
   initialLogbook?: LogbookEntry[];
 }
@@ -24,6 +28,7 @@ export default function YouProgressContent({
   userId,
   initialProfile,
   initialProfileStats,
+  initialPercentile,
   initialAllBoardsTicks,
   initialLogbook,
 }: YouProgressContentProps) {
@@ -51,6 +56,7 @@ export default function YouProgressContent({
   } = useProfileData(userId, {
     initialProfile: initialProfile ?? undefined,
     initialProfileStats: initialProfileStats ?? undefined,
+    initialPercentile,
     initialAllBoardsTicks,
     initialLogbook,
     initialIsOwnProfile: true,

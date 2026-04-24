@@ -43,9 +43,7 @@ vi.mock('@/app/components/social/vote-button', () => ({
 }));
 
 vi.mock('@/app/components/social/feed-comment-button', () => ({
-  default: ({ entityId }: { entityId: string }) => (
-    <div data-testid="feed-comment-button" data-entity-id={entityId} />
-  ),
+  default: ({ entityId }: { entityId: string }) => <div data-testid="feed-comment-button" data-entity-id={entityId} />,
 }));
 
 import { LogbookView } from '../logbook-view';

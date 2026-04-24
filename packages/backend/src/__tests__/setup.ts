@@ -22,6 +22,8 @@ const createTablesSQL = `
   DROP TABLE IF EXISTS "board_session_clients" CASCADE;
   DROP TABLE IF EXISTS "board_session_participants" CASCADE;
   DROP TABLE IF EXISTS "board_sessions" CASCADE;
+  DROP TABLE IF EXISTS "user_climb_percentiles" CASCADE;
+  DROP TABLE IF EXISTS "user_board_mappings" CASCADE;
   DROP TABLE IF EXISTS "users" CASCADE;
 
   -- Create users table (minimal, needed for FK reference)
@@ -33,6 +35,25 @@ const createTablesSQL = `
     "image" text,
     "created_at" timestamp DEFAULT now() NOT NULL,
     "updated_at" timestamp DEFAULT now() NOT NULL
+  );
+
+  CREATE TABLE IF NOT EXISTS "user_board_mappings" (
+    "id" bigserial PRIMARY KEY NOT NULL,
+    "user_id" text NOT NULL REFERENCES "users"("id") ON DELETE CASCADE,
+    "board_type" text NOT NULL,
+    "board_user_id" integer NOT NULL,
+    "board_username" text,
+    "linked_at" timestamp DEFAULT now() NOT NULL
+  );
+
+  CREATE UNIQUE INDEX IF NOT EXISTS "unique_user_board_mapping" ON "user_board_mappings" ("user_id", "board_type");
+
+  CREATE TABLE IF NOT EXISTS "user_climb_percentiles" (
+    "user_id" text PRIMARY KEY NOT NULL REFERENCES "users"("id") ON DELETE CASCADE,
+    "total_distinct_climbs" integer DEFAULT 0 NOT NULL,
+    "percentile" double precision DEFAULT 0 NOT NULL,
+    "total_active_users" integer DEFAULT 0 NOT NULL,
+    "computed_at" timestamp DEFAULT now() NOT NULL
   );
 
   -- Create board_sessions table
@@ -293,9 +314,7 @@ beforeAll(async () => {
       // ignore cleanup errors
     }
     if (process.env.SKIP_TEST_INFRA === '1') {
-      console.warn(
-        '[setup] Test database unreachable (SKIP_TEST_INFRA=1) — DB-dependent tests will fail.',
-      );
+      console.warn('[setup] Test database unreachable (SKIP_TEST_INFRA=1) — DB-dependent tests will fail.');
       return;
     }
     throw new Error(

@@ -23,6 +23,7 @@ export default async function ProfileStatisticsPage({ params }: PageProps) {
     <AnalyticsContent
       userId={user_id}
       initialProfileStats={statsData.initialProfileStats}
+      initialPercentile={statsData.initialPercentile}
       initialAllBoardsTicks={statsData.initialAllBoardsTicks}
       initialLogbook={statsData.initialLogbook}
       initialIsOwnProfile={viewerUserId === user_id}

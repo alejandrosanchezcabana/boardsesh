@@ -69,12 +69,7 @@ export const tickQueries = {
                 downvotes: dbSchema.voteCounts.downvotes,
               })
               .from(dbSchema.voteCounts)
-              .where(
-                and(
-                  eq(dbSchema.voteCounts.entityType, 'tick'),
-                  inArray(dbSchema.voteCounts.entityId, tickUuids),
-                ),
-              ),
+              .where(and(eq(dbSchema.voteCounts.entityType, 'tick'), inArray(dbSchema.voteCounts.entityId, tickUuids))),
             db
               .select({
                 entityId: dbSchema.comments.entityId,
@@ -734,41 +729,35 @@ export const tickQueries = {
       return { totalDistinctClimbs: 0, percentile: 0, totalActiveUsers: 0 };
     }
 
-    // 1. Get user's distinct climb count (sends + flashes only)
-    const [userResult] = await db
-      .select({ count: sql<number>`COUNT(DISTINCT ${dbSchema.boardseshTicks.climbUuid})::int` })
-      .from(dbSchema.boardseshTicks)
-      .where(and(eq(dbSchema.boardseshTicks.userId, userId), sql`${dbSchema.boardseshTicks.status} != 'attempt'`));
-    const userClimbCount = Number(userResult?.count ?? 0);
+    const [snapshot] = await db
+      .select({
+        totalDistinctClimbs: dbSchema.userClimbPercentiles.totalDistinctClimbs,
+        percentile: dbSchema.userClimbPercentiles.percentile,
+        totalActiveUsers: dbSchema.userClimbPercentiles.totalActiveUsers,
+      })
+      .from(dbSchema.userClimbPercentiles)
+      .where(eq(dbSchema.userClimbPercentiles.userId, userId))
+      .limit(1);
 
-    // 2. Count all active users and how many have fewer distinct climbs
-    const rankingResult = await db.execute(sql`
-      WITH user_counts AS (
-        SELECT user_id, COUNT(DISTINCT climb_uuid)::int AS distinct_climbs
-        FROM boardsesh_ticks
-        WHERE status != 'attempt'
-        GROUP BY user_id
-      )
-      SELECT
-        COUNT(*)::int AS total_active_users,
-        COUNT(*) FILTER (WHERE distinct_climbs < ${userClimbCount})::int AS users_with_fewer
-      FROM user_counts
-    `);
+    if (snapshot) {
+      return {
+        totalDistinctClimbs: Number(snapshot.totalDistinctClimbs ?? 0),
+        percentile: Number(snapshot.percentile ?? 0),
+        totalActiveUsers: Number(snapshot.totalActiveUsers ?? 0),
+      };
+    }
 
-    const rows = (
-      rankingResult as unknown as {
-        rows: Array<{ total_active_users: number; users_with_fewer: number }>;
-      }
-    ).rows;
-    const totalActiveUsers = Number(rows[0]?.total_active_users ?? 0);
-    const usersWithFewer = Number(rows[0]?.users_with_fewer ?? 0);
-
-    const percentile = totalActiveUsers > 0 ? Math.round((usersWithFewer / totalActiveUsers) * 1000) / 10 : 0;
+    const [summary] = await db
+      .select({
+        totalActiveUsers: dbSchema.userClimbPercentiles.totalActiveUsers,
+      })
+      .from(dbSchema.userClimbPercentiles)
+      .limit(1);
 
     return {
-      totalDistinctClimbs: userClimbCount,
-      percentile,
-      totalActiveUsers,
+      totalDistinctClimbs: 0,
+      percentile: 0,
+      totalActiveUsers: Number(summary?.totalActiveUsers ?? 0),
     };
   },
 

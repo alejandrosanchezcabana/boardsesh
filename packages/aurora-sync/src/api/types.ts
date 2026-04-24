@@ -1,5 +1,6 @@
-// Aurora boards only (kilter/tension) - different from main BoardName which includes moonboard
-export type AuroraBoardName = 'kilter' | 'tension';
+import { AURORA_BOARDS, type AuroraBoardName } from '@boardsesh/shared-schema/types';
+
+export { AURORA_BOARDS, type AuroraBoardName };
 
 export interface BoardUser {
   id: number;
@@ -79,6 +80,9 @@ export type UserSyncData = LastSyncData & {
 export const HOST_BASES: Record<AuroraBoardName, string> = {
   kilter: 'kilterboardapp',
   tension: 'tensionboardapp2',
+  decoy: 'decoyboardapp',
+  touchstone: 'touchstoneboardapp',
+  grasshopper: 'grasshopperboardapp',
 };
 
 export const API_HOSTS: Record<AuroraBoardName, string> = Object.fromEntries(

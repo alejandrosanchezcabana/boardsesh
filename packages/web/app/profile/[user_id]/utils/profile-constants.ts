@@ -109,7 +109,7 @@ const layoutColors: Record<string, string> = {
   'moonboard-3': 'hsla(290, 35%, 55%, 0.7)', // Soft plum
   'moonboard-4': 'hsla(230, 40%, 58%, 0.7)', // Dusty blue
   'moonboard-5': 'hsla(210, 45%, 55%, 0.7)', // Slate blue
-  'decoy-2': 'hsla(100, 40%, 52%, 0.7)',     // Soft green
+  'decoy-2': 'hsla(100, 40%, 52%, 0.7)', // Soft green
   'touchstone-1': 'hsla(30, 50%, 55%, 0.7)', // Warm amber
   'grasshopper-1': 'hsla(75, 45%, 50%, 0.7)', // Yellow-green
 };

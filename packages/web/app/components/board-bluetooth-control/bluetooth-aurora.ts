@@ -138,8 +138,22 @@ const V2_COMMANDS: CommandBytes = {
   only: V2_PACKET_ONLY,
 };
 
+export interface BluetoothPacketResult {
+  packet: Uint8Array;
+  /** Placements in frames with no LED position for this board size */
+  skippedPositionCount: number;
+  /** Placements with an unrecognised role code (no colour) */
+  skippedRoleCount: number;
+  /** Total placement entries parsed from the frames string */
+  totalPlacements: number;
+}
+
 /**
  * Build the BLE packet for a set of Aurora LED placements.
+ *
+ * Missing placements are skipped gracefully — the returned result includes
+ * counts so callers can decide how to handle partial or full misses.
+ *
  * @param apiLevel - Protocol version from the board's BLE name (default 3)
  */
 export const getAuroraBluetoothPacket = (
@@ -147,7 +161,7 @@ export const getAuroraBluetoothPacket = (
   placementPositions: LedPlacements,
   boardName: AuroraBoardName,
   apiLevel: number = 3,
-) => {
+): BluetoothPacketResult => {
   const isV2 = apiLevel < 3;
   const cmds = isV2 ? V2_COMMANDS : V3_COMMANDS;
 
@@ -179,13 +193,17 @@ export const getAuroraBluetoothPacket = (
     ledEntries.push({ position: ledPosition, color });
   });
 
-  if (skippedPositionCount > 0 || skippedRoleCount > 0) {
-    const skippedCount = skippedPositionCount + skippedRoleCount;
-    throw new Error(
-      `[BLE] ${skippedCount} of ${skippedCount + ledEntries.length} placements have no LED mapping ` +
-        `for this board configuration. The climb is incompatible with the connected board — ` +
-        `search filters should have prevented this selection.`,
-    );
+  const totalPlacements = ledEntries.length + skippedPositionCount + skippedRoleCount;
+
+  // If every placement was skipped there's nothing to send — return an empty
+  // packet so the caller can handle the full-miss case without an exception.
+  if (ledEntries.length === 0) {
+    return {
+      packet: new Uint8Array(0),
+      skippedPositionCount,
+      skippedRoleCount,
+      totalPlacements,
+    };
   }
 
   // Compute v2 power scale (v3 doesn't need it)
@@ -194,6 +212,7 @@ export const getAuroraBluetoothPacket = (
   // Build message parts
   const resultArray: number[][] = [];
   let tempArray = [cmds.middle];
+  let ledsWritten = 0;
 
   for (const { position, color } of ledEntries) {
     const encoded = isV2
@@ -201,11 +220,11 @@ export const getAuroraBluetoothPacket = (
       : encodePositionAndColorV3(position, color);
 
     if (encoded.length === 0) {
-      // v2 position > 1023 — should never happen with real Aurora boards (max ~641)
-      throw new Error(
-        `[BLE v2] LED position ${position} exceeds 10-bit limit (1023). ` +
-          `This board may require API v3 — check the device name for @3.`,
-      );
+      // v2 position > 1023 — never happens with real Aurora boards (max ~641).
+      // Treat as a skipped placement to keep the contract consistent with graceful
+      // degradation (result object, not exceptions).
+      skippedPositionCount++;
+      continue;
     }
 
     if (tempArray.length + encoded.length > MESSAGE_BODY_MAX_LENGTH) {
@@ -213,6 +232,18 @@ export const getAuroraBluetoothPacket = (
       tempArray = [cmds.middle];
     }
     tempArray.push(...encoded);
+    ledsWritten++;
+  }
+
+  // All LEDs overflowed the v2 10-bit limit — return empty packet so the caller
+  // can treat it as a full miss (same path as "every placement was skipped").
+  if (ledsWritten === 0) {
+    return {
+      packet: new Uint8Array(0),
+      skippedPositionCount,
+      skippedRoleCount,
+      totalPlacements,
+    };
   }
 
   resultArray.push(tempArray);
@@ -222,5 +253,10 @@ export const getAuroraBluetoothPacket = (
     resultArray[resultArray.length - 1][0] = cmds.last;
   }
 
-  return Uint8Array.from(resultArray.flatMap(wrapBytes));
+  return {
+    packet: Uint8Array.from(resultArray.flatMap(wrapBytes)),
+    skippedPositionCount,
+    skippedRoleCount,
+    totalPlacements,
+  };
 };

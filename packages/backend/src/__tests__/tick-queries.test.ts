@@ -2,6 +2,7 @@ import { describe, it, expect, beforeAll, afterEach } from 'vite-plus/test';
 import { sql } from 'drizzle-orm';
 import { db } from '../db/client';
 import { tickQueries } from '../graphql/resolvers/ticks/queries';
+import type { ConnectionContext } from '@boardsesh/shared-schema';
 
 /**
  * Integration tests for the tick query resolvers, covering the three behavior
@@ -58,6 +59,21 @@ const callUserAscentsFeed = (userId: string, input: Record<string, unknown>) =>
 const callUserGroupedAscentsFeed = (userId: string, input: Record<string, unknown>) =>
   tickQueries.userGroupedAscentsFeed(undefined, { userId, input }) as Promise<GroupedResult>;
 
+const callUserClimbPercentile = (userId: string) =>
+  tickQueries.userClimbPercentile(undefined, { userId }, {
+    connectionId: 'tick-queries-test-conn',
+    isAuthenticated: false,
+    userId: null,
+    sessionId: null,
+    boardPath: null,
+    controllerId: null,
+    controllerApiKey: null,
+  } as ConnectionContext) as Promise<{
+    totalDistinctClimbs: number;
+    percentile: number;
+    totalActiveUsers: number;
+  }>;
+
 const insertUser = async (id: string) => {
   await db.execute(sql`
     INSERT INTO "users" (id, email, name, created_at, updated_at)
@@ -91,6 +107,7 @@ const insertTick = async (params: {
 };
 
 const cleanup = async () => {
+  await db.execute(sql`DELETE FROM user_climb_percentiles WHERE user_id IN (${TEST_USER_ID}, ${OTHER_USER_ID})`);
   await db.execute(sql`DELETE FROM boardsesh_ticks WHERE user_id IN (${TEST_USER_ID}, ${OTHER_USER_ID})`);
   await db.execute(sql`DELETE FROM board_climbs WHERE uuid LIKE ${CLIMB_PREFIX + '%'}`);
 };
@@ -459,6 +476,38 @@ describe('tickQueries — behavior fixes', () => {
       expect(result.groups).toHaveLength(1);
       expect(result.groups[0].items).toHaveLength(1);
       expect(result.groups[0].items[0].uuid).toBe('tick-mine');
+    });
+  });
+
+  describe('userClimbPercentile — snapshot reads', () => {
+    it('returns the stored percentile snapshot for the requested user', async () => {
+      await db.execute(sql`
+        INSERT INTO user_climb_percentiles (user_id, total_distinct_climbs, percentile, total_active_users, computed_at)
+        VALUES (${TEST_USER_ID}, 42, 87.5, 200, NOW())
+      `);
+
+      const result = await callUserClimbPercentile(TEST_USER_ID);
+
+      expect(result).toEqual({
+        totalDistinctClimbs: 42,
+        percentile: 87.5,
+        totalActiveUsers: 200,
+      });
+    });
+
+    it('falls back to zero percentile while preserving the active-user count when a user has no snapshot row', async () => {
+      await db.execute(sql`
+        INSERT INTO user_climb_percentiles (user_id, total_distinct_climbs, percentile, total_active_users, computed_at)
+        VALUES (${OTHER_USER_ID}, 12, 55, 88, NOW())
+      `);
+
+      const result = await callUserClimbPercentile(TEST_USER_ID);
+
+      expect(result).toEqual({
+        totalDistinctClimbs: 0,
+        percentile: 0,
+        totalActiveUsers: 88,
+      });
     });
   });
 });

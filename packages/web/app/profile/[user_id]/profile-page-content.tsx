@@ -13,7 +13,10 @@ import { EmptyState } from '@/app/components/ui/empty-state';
 import { ProfileHeaderShareInjector } from '@/app/components/profile-header-bridge/profile-header-bridge-context';
 import { CssBarChart } from '@/app/components/charts/css-bar-chart';
 import { useGradeFormat } from '@/app/hooks/use-grade-format';
-import type { GetUserProfileStatsQueryResponse } from '@/app/lib/graphql/operations/ticks';
+import type {
+  GetUserClimbPercentileQueryResponse,
+  GetUserProfileStatsQueryResponse,
+} from '@/app/lib/graphql/operations/ticks';
 import styles from './profile-page.module.css';
 import { useProfileData } from './hooks/use-profile-data';
 import { buildWeeklyBars } from './utils/chart-data-builders';
@@ -25,6 +28,7 @@ interface ProfilePageContentProps {
   userId: string;
   initialProfile?: UserProfile | null;
   initialProfileStats?: GetUserProfileStatsQueryResponse['userProfileStats'] | null;
+  initialPercentile?: GetUserClimbPercentileQueryResponse['userClimbPercentile'] | null;
   initialAllBoardsTicks?: Record<string, LogbookEntry[]>;
   initialLogbook?: LogbookEntry[];
   initialIsOwnProfile?: boolean;
@@ -35,6 +39,7 @@ export default function ProfilePageContent({
   userId,
   initialProfile,
   initialProfileStats,
+  initialPercentile,
   initialAllBoardsTicks,
   initialLogbook,
   initialIsOwnProfile,
@@ -45,6 +50,7 @@ export default function ProfilePageContent({
   const { loading, notFound, profile, setProfile, isOwnProfile, statisticsSummary } = useProfileData(userId, {
     initialProfile: initialProfile ?? undefined,
     initialProfileStats: initialProfileStats ?? undefined,
+    initialPercentile,
     initialAllBoardsTicks,
     initialLogbook,
     initialIsOwnProfile,

@@ -1,6 +1,13 @@
 import type { SyncData } from './sync-api-types';
 import type { SyncOptions, AuroraBoardName } from './types';
 import { WEB_HOSTS } from './types';
+import {
+  assertAuroraResponseOk,
+  createAuroraInvalidResponseError,
+  createAuroraNetworkError,
+  createAuroraTimeoutError,
+  isAuroraRequestError,
+} from './errors';
 
 export async function userSync(
   board: AuroraBoardName,
@@ -40,17 +47,29 @@ export async function userSync(
     Cookie: `token=${token}`,
   };
 
-  const response = await fetch(webUrl, {
-    method: 'POST',
-    headers,
-    body: requestBody,
-  });
+  try {
+    const response = await fetch(webUrl, {
+      method: 'POST',
+      headers,
+      body: requestBody,
+      signal: AbortSignal.timeout(30000),
+    });
 
-  if (!response.ok) {
-    const errorText = await response.text();
-    console.error(`User sync failed for ${board}: ${response.status}`, errorText);
-    throw new Error(`HTTP error! status: ${response.status}`);
+    await assertAuroraResponseOk(response, webUrl);
+    return await response.json();
+  } catch (error) {
+    if (isAuroraRequestError(error)) {
+      throw error;
+    }
+
+    if (error instanceof Error && (error.name === 'AbortError' || error.name === 'TimeoutError')) {
+      throw createAuroraTimeoutError(webUrl, error);
+    }
+
+    if (error instanceof TypeError) {
+      throw createAuroraNetworkError(webUrl, error);
+    }
+
+    throw createAuroraInvalidResponseError(webUrl, error);
   }
-
-  return response.json();
 }

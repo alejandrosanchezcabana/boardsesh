@@ -423,22 +423,34 @@ export const setterFollowQueries = {
 
     // 1. Look up linked Aurora usernames
     const mappings = await db
-      .select({ boardUsername: dbSchema.userBoardMappings.boardUsername })
+      .select({
+        boardType: dbSchema.userBoardMappings.boardType,
+        boardUsername: dbSchema.userBoardMappings.boardUsername,
+      })
       .from(dbSchema.userBoardMappings)
       .where(eq(dbSchema.userBoardMappings.userId, userId));
 
-    const linkedUsernames = mappings.map((m) => m.boardUsername).filter((u): u is string => u !== null && u.length > 0);
+    const linkedMappings = mappings.filter(
+      (mapping): mapping is { boardType: string; boardUsername: string } =>
+        mapping.boardUsername !== null && mapping.boardUsername.length > 0,
+    );
 
-    // 2. Build WHERE condition: userId match OR setterUsername in linked usernames, AND not draft
+    // 2. Build WHERE condition: userId match OR (boardType + setterUsername) in linked mappings, AND not draft
     const tables = UNIFIED_TABLES;
+    const linkedOwnershipCondition =
+      linkedMappings.length > 0
+        ? sql.join(
+            linkedMappings.map(
+              ({ boardType, boardUsername }) =>
+                sql`(${tables.climbs.boardType} = ${boardType} AND ${tables.climbs.setterUsername} = ${boardUsername})`,
+            ),
+            sql` OR `,
+          )
+        : null;
 
-    const ownershipCondition =
-      linkedUsernames.length > 0
-        ? sql`(${tables.climbs.userId} = ${userId} OR ${tables.climbs.setterUsername} IN (${sql.join(
-            linkedUsernames.map((u) => sql`${u}`),
-            sql`, `,
-          )}))`
-        : eq(tables.climbs.userId, userId);
+    const ownershipCondition = linkedOwnershipCondition
+      ? sql`(${tables.climbs.userId} = ${userId} OR ${linkedOwnershipCondition})`
+      : eq(tables.climbs.userId, userId);
 
     const whereCondition = and(ownershipCondition, eq(tables.climbs.isDraft, false));
 
@@ -450,48 +462,72 @@ export const setterFollowQueries = {
 
     const totalCount = Number(countResult?.count ?? 0);
 
-    // 4. Get climbs with stats at the most popular angle.
-    // Uses DISTINCT ON to pick the best angle per (board_type, climb_uuid)
-    // instead of a correlated subquery per row.
+    // 4. Get climbs with stats at the most popular angle, but only compute stats for owned climbs.
     const ownershipSql =
-      linkedUsernames.length > 0
-        ? sql`(c.user_id = ${userId} OR c.setter_username IN (${sql.join(
-            linkedUsernames.map((u) => sql`${u}`),
-            sql`, `,
-          )}))`
+      linkedMappings.length > 0
+        ? sql`(c.user_id = ${userId} OR ${sql.join(
+            linkedMappings.map(
+              ({ boardType, boardUsername }) =>
+                sql`(c.board_type = ${boardType} AND c.setter_username = ${boardUsername})`,
+            ),
+            sql` OR `,
+          )})`
         : sql`c.user_id = ${userId}`;
 
     const orderSql =
-      sortBy === 'popular' ? sql`COALESCE(best.ascensionist_count, 0) DESC` : sql`c.created_at DESC NULLS LAST`;
+      sortBy === 'popular'
+        ? sql`COALESCE(best.ascensionist_count, 0) DESC`
+        : sql`owned_climbs.created_at DESC NULLS LAST`;
 
     const rawResult = await db.execute(sql`
-      WITH best_angle AS (
-        SELECT DISTINCT ON (board_type, climb_uuid)
-          board_type, climb_uuid, angle,
-          ascensionist_count, display_difficulty, quality_average,
-          difficulty_average, benchmark_difficulty
-        FROM board_climb_stats
-        ORDER BY board_type, climb_uuid, ascensionist_count DESC NULLS LAST
+      WITH owned_climbs AS (
+        SELECT
+          c.uuid,
+          c.layout_id,
+          c.board_type,
+          c.setter_username,
+          c.name,
+          c.description,
+          c.frames,
+          c.created_at
+        FROM board_climbs c
+        WHERE ${ownershipSql} AND c.is_draft = false
+      ),
+      best_angle AS (
+        SELECT DISTINCT ON (stats.board_type, stats.climb_uuid)
+          stats.board_type,
+          stats.climb_uuid,
+          stats.angle,
+          stats.ascensionist_count,
+          stats.display_difficulty,
+          stats.quality_average,
+          stats.difficulty_average,
+          stats.benchmark_difficulty
+        FROM board_climb_stats stats
+        INNER JOIN owned_climbs
+          ON owned_climbs.board_type = stats.board_type
+         AND owned_climbs.uuid = stats.climb_uuid
+        ORDER BY stats.board_type, stats.climb_uuid, stats.ascensionist_count DESC NULLS LAST, stats.angle ASC
       )
       SELECT
-        c.uuid,
-        c.layout_id,
-        c.board_type,
-        c.setter_username,
-        c.name,
-        c.description,
-        c.frames,
+        owned_climbs.uuid,
+        owned_climbs.layout_id,
+        owned_climbs.board_type,
+        owned_climbs.setter_username,
+        owned_climbs.name,
+        owned_climbs.description,
+        owned_climbs.frames,
         best.angle AS stats_angle,
         best.ascensionist_count,
         ROUND(best.display_difficulty::numeric, 0)::int AS difficulty_id,
         ROUND(best.quality_average::numeric, 2) AS quality_average,
         ROUND(best.difficulty_average::numeric - best.display_difficulty::numeric, 2) AS difficulty_error,
         best.benchmark_difficulty
-      FROM board_climbs c
+      FROM owned_climbs
       LEFT JOIN best_angle best
-        ON best.board_type = c.board_type AND best.climb_uuid = c.uuid
-      WHERE ${ownershipSql} AND c.is_draft = false
-      ORDER BY ${orderSql}
+        ON best.board_type = owned_climbs.board_type
+       AND best.climb_uuid = owned_climbs.uuid
+      ORDER BY ${orderSql}, owned_climbs.uuid DESC
       LIMIT ${limit + 1}
       OFFSET ${offset}
     `);

@@ -1,10 +1,18 @@
-import { cachedUserProfileStats, cachedUserTicks } from '@/app/lib/graphql/server-cached-client';
+import {
+  cachedUserClimbPercentile,
+  cachedUserProfileStats,
+  cachedUserTicks,
+} from '@/app/lib/graphql/server-cached-client';
 import { SUPPORTED_BOARDS } from '@/app/lib/board-data';
 import type { LogbookEntry } from './utils/profile-constants';
-import type { GetUserProfileStatsQueryResponse } from '@/app/lib/graphql/operations/ticks';
+import type {
+  GetUserClimbPercentileQueryResponse,
+  GetUserProfileStatsQueryResponse,
+} from '@/app/lib/graphql/operations/ticks';
 
 export interface ProfileStatsData {
   initialProfileStats: GetUserProfileStatsQueryResponse['userProfileStats'] | null;
+  initialPercentile: GetUserClimbPercentileQueryResponse['userClimbPercentile'] | null;
   initialAllBoardsTicks: Record<string, LogbookEntry[]>;
   initialLogbook: LogbookEntry[];
 }
@@ -14,8 +22,9 @@ export interface ProfileStatsData {
  * Shared between /you, /profile/[user_id], and /profile/[user_id]/statistics pages.
  */
 export async function fetchProfileStatsData(userId: string): Promise<ProfileStatsData> {
-  const [initialProfileStats, ...ticksResults] = await Promise.all([
+  const [initialProfileStats, initialPercentile, ...ticksResults] = await Promise.all([
     cachedUserProfileStats(userId),
+    cachedUserClimbPercentile(userId),
     ...SUPPORTED_BOARDS.map((boardType) => cachedUserTicks(userId, boardType)),
   ]);
 
@@ -38,5 +47,5 @@ export async function fetchProfileStatsData(userId: string): Promise<ProfileStat
 
   const initialLogbook = initialAllBoardsTicks['kilter'] ?? [];
 
-  return { initialProfileStats, initialAllBoardsTicks, initialLogbook };
+  return { initialProfileStats, initialPercentile, initialAllBoardsTicks, initialLogbook };
 }

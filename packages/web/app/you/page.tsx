@@ -29,6 +29,7 @@ export default async function YouPage() {
       userId={userId}
       initialProfile={initialProfile}
       initialProfileStats={statsData.initialProfileStats}
+      initialPercentile={statsData.initialPercentile}
       initialAllBoardsTicks={statsData.initialAllBoardsTicks}
       initialLogbook={statsData.initialLogbook}
     />

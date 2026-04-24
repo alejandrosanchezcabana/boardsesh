@@ -67,6 +67,11 @@ describe('useProfileData', () => {
           totalDistinctClimbs: 3,
           layoutStats: [],
         },
+        initialPercentile: {
+          totalDistinctClimbs: 3,
+          percentile: 75,
+          totalActiveUsers: 20,
+        },
         initialAllBoardsTicks: {
           kilter: [
             {
@@ -109,6 +114,7 @@ describe('useProfileData', () => {
     expect(result.current.loading).toBe(false);
     expect(result.current.hardestSend).toMatchObject({ label: 'V6', status: 'send' });
     expect(result.current.hardestFlash).toMatchObject({ label: 'V5', status: 'flash' });
+    expect(mockRequest).not.toHaveBeenCalledWith(GET_USER_CLIMB_PERCENTILE, { userId: 'user-1' });
   });
 
   it('fetches missing profile, ticks, stats, and percentile data on mount', async () => {
@@ -200,6 +206,11 @@ describe('useProfileData', () => {
           totalDistinctClimbs: 4,
           layoutStats: [],
         },
+        initialPercentile: {
+          totalDistinctClimbs: 4,
+          percentile: 80,
+          totalActiveUsers: 20,
+        },
         initialAllBoardsTicks: {
           kilter: [
             {
@@ -231,10 +242,6 @@ describe('useProfileData', () => {
       }),
     );
 
-    await waitFor(() => {
-      expect(mockRequest).toHaveBeenCalled();
-    });
-
     expect(result.current.hardestSend).toMatchObject({ label: 'V8', status: 'send' });
     expect(result.current.hardestFlash).toMatchObject({ label: 'V8', status: 'flash' });
 
@@ -244,5 +251,42 @@ describe('useProfileData', () => {
 
     expect(result.current.hardestSend).toMatchObject({ label: 'V6', status: 'send' });
     expect(result.current.hardestFlash).toBeNull();
+  });
+
+  it('uses initial percentile data without making a percentile query', () => {
+    const initialPercentile = {
+      totalDistinctClimbs: 12,
+      percentile: 90,
+      totalActiveUsers: 40,
+    };
+
+    const { result } = renderHook(() =>
+      useProfileData('user-1', {
+        initialProfile: {
+          id: 'user-1',
+          email: undefined,
+          name: 'Test User',
+          image: null,
+          profile: null,
+          credentials: [],
+          followerCount: 0,
+          followingCount: 0,
+          isFollowedByMe: false,
+        },
+        initialProfileStats: {
+          totalDistinctClimbs: 12,
+          layoutStats: [],
+        },
+        initialPercentile,
+        initialAllBoardsTicks: {
+          kilter: [],
+        },
+        initialLogbook: [],
+        initialIsOwnProfile: true,
+      }),
+    );
+
+    expect(result.current.percentile).toEqual(initialPercentile);
+    expect(mockRequest).not.toHaveBeenCalledWith(GET_USER_CLIMB_PERCENTILE, { userId: 'user-1' });
   });
 });

@@ -501,7 +501,7 @@ describe('§8 Multi-Part Message Sequencing', () => {
   describe('v3 command bytes (Q=81, R=82, S=83, T=84)', () => {
     it('uses T (84) for single-frame packets', () => {
       const positions: Record<number, number> = { 1: 10 };
-      const packet = getBluetoothPacket('p1r42', positions, 'kilter', 3);
+      const packet = getBluetoothPacket('p1r42', positions, 'kilter', 3).packet;
       const frames = parseFrames(packet);
       expect(frames).toHaveLength(1);
       expect(frames[0].commandByte).toBe(84); // T = Single
@@ -515,7 +515,7 @@ describe('§8 Multi-Part Message Sequencing', () => {
         positions[i] = i;
         frames += `p${i}r42`;
       }
-      const packet = getBluetoothPacket(frames, positions, 'kilter', 3);
+      const packet = getBluetoothPacket(frames, positions, 'kilter', 3).packet;
       const parsed = parseFrames(packet);
       expect(parsed.length).toBeGreaterThan(1);
       expect(parsed[0].commandByte).toBe(82); // R = Start
@@ -529,7 +529,7 @@ describe('§8 Multi-Part Message Sequencing', () => {
   describe('v2 command bytes (M=77, N=78, O=79, P=80)', () => {
     it('uses P (80) for single-frame packets', () => {
       const positions: Record<number, number> = { 1: 10 };
-      const packet = getBluetoothPacket('p1r42', positions, 'kilter', 2);
+      const packet = getBluetoothPacket('p1r42', positions, 'kilter', 2).packet;
       const frames = parseFrames(packet);
       expect(frames).toHaveLength(1);
       expect(frames[0].commandByte).toBe(80); // P = Single
@@ -543,7 +543,7 @@ describe('§8 Multi-Part Message Sequencing', () => {
         positions[i] = i;
         frames += `p${i}r42`;
       }
-      const packet = getBluetoothPacket(frames, positions, 'kilter', 2);
+      const packet = getBluetoothPacket(frames, positions, 'kilter', 2).packet;
       const parsed = parseFrames(packet);
       expect(parsed.length).toBeGreaterThan(1);
       expect(parsed[0].commandByte).toBe(78); // N = Start
@@ -561,7 +561,7 @@ describe('§8 Multi-Part Message Sequencing', () => {
       positions[i] = i;
       frames += `p${i}r42`;
     }
-    const packet = getBluetoothPacket(frames, positions, 'kilter', 3);
+    const packet = getBluetoothPacket(frames, positions, 'kilter', 3).packet;
     const parsed = parseFrames(packet);
     for (const frame of parsed) {
       expect(frame.payloadLength).toBeLessThanOrEqual(255);
@@ -575,7 +575,7 @@ describe('§8 Multi-Part Message Sequencing', () => {
       positions[i] = i;
       frames += `p${i}r42`;
     }
-    const packet = getBluetoothPacket(frames, positions, 'kilter', 3);
+    const packet = getBluetoothPacket(frames, positions, 'kilter', 3).packet;
     const allLeds = decodeAllV3Leds(packet);
     expect(allLeds).toHaveLength(200);
     // Verify all positions are present
@@ -590,7 +590,7 @@ describe('§8 Multi-Part Message Sequencing', () => {
       positions[i] = i;
       frames += `p${i}r42`;
     }
-    const packet = getBluetoothPacket(frames, positions, 'kilter', 2);
+    const packet = getBluetoothPacket(frames, positions, 'kilter', 2).packet;
     const allLeds = decodeAllV2Leds(packet);
     expect(allLeds).toHaveLength(200);
     const decodedPositions = allLeds.map((l) => l.position).sort((a, b) => a - b);
@@ -692,13 +692,13 @@ describe('getBluetoothPacket — API level selection', () => {
   const positions: Record<number, number> = { 1: 10 };
 
   it('defaults to v3 encoding when apiLevel is omitted', () => {
-    const packet = getBluetoothPacket('p1r42', positions, 'kilter');
+    const packet = getBluetoothPacket('p1r42', positions, 'kilter').packet;
     const frames = parseFrames(packet);
     expect(frames[0].commandByte).toBe(84); // T = v3 Single
   });
 
   it('uses v3 encoding for apiLevel=3', () => {
-    const packet = getBluetoothPacket('p1r42', positions, 'kilter', 3);
+    const packet = getBluetoothPacket('p1r42', positions, 'kilter', 3).packet;
     const bytes = Array.from(packet);
     // v3: 3 bytes per LED + 1 cmd byte = 4 bytes payload
     expect(bytes[1]).toBe(4); // LENGTH
@@ -706,7 +706,7 @@ describe('getBluetoothPacket — API level selection', () => {
   });
 
   it('uses v2 encoding for apiLevel=2', () => {
-    const packet = getBluetoothPacket('p1r42', positions, 'kilter', 2);
+    const packet = getBluetoothPacket('p1r42', positions, 'kilter', 2).packet;
     const bytes = Array.from(packet);
     // v2: 2 bytes per LED + 1 cmd byte = 3 bytes payload
     expect(bytes[1]).toBe(3); // LENGTH
@@ -714,23 +714,25 @@ describe('getBluetoothPacket — API level selection', () => {
   });
 
   it('uses v2 encoding for apiLevel=1', () => {
-    const packet = getBluetoothPacket('p1r42', positions, 'kilter', 1);
+    const packet = getBluetoothPacket('p1r42', positions, 'kilter', 1).packet;
     const frames = parseFrames(packet);
     expect(frames[0].commandByte).toBe(80); // P = v2 Single
   });
 
-  it('throws when any placements are missing', () => {
+  it('reports skipped placements when any are missing', () => {
     const sparse: Record<number, number> = { 1: 39 };
-    expect(() => getBluetoothPacket('p1r42p9999r42', sparse, 'kilter', 3)).toThrow(
-      '1 of 2 placements have no LED mapping',
-    );
+    const result = getBluetoothPacket('p1r42p9999r42', sparse, 'kilter', 3);
+    expect(result.skippedPositionCount).toBe(1);
+    expect(result.totalPlacements).toBe(2);
+    expect(result.packet.length).toBeGreaterThan(0);
   });
 
-  it('throws when a hold role is not mapped for the board', () => {
+  it('reports skipped role when a hold role is not mapped for the board', () => {
     const positions: Record<number, number> = { 1: 39, 2: 40 };
-    expect(() => getBluetoothPacket('p1r42p2r1', positions, 'kilter', 3)).toThrow(
-      '1 of 2 placements have no LED mapping',
-    );
+    const result = getBluetoothPacket('p1r42p2r1', positions, 'kilter', 3);
+    expect(result.skippedRoleCount).toBe(1);
+    expect(result.totalPlacements).toBe(2);
+    expect(result.packet.length).toBeGreaterThan(0);
   });
 });
 
@@ -741,7 +743,7 @@ describe('getBluetoothPacket — API level selection', () => {
 describe('getBluetoothPacket — v2 encoding integration', () => {
   it('encodes 2 bytes per LED', () => {
     const positions: Record<number, number> = { 1: 10, 2: 256 };
-    const packet = getBluetoothPacket('p1r42p2r42', positions, 'kilter', 2);
+    const packet = getBluetoothPacket('p1r42p2r42', positions, 'kilter', 2).packet;
     const leds = decodeLedPositionsV2(packet);
     expect(leds).toHaveLength(2);
     expect(leds[0].position).toBe(10);
@@ -750,15 +752,26 @@ describe('getBluetoothPacket — v2 encoding integration', () => {
 
   it('packs position high bits into color byte', () => {
     const positions: Record<number, number> = { 1: 512 }; // 0x200, posHi=2
-    const packet = getBluetoothPacket('p1r42', positions, 'kilter', 2);
+    const packet = getBluetoothPacket('p1r42', positions, 'kilter', 2).packet;
     const leds = decodeLedPositionsV2(packet);
     expect(leds[0].position).toBe(512);
     expect(leds[0].colorByte & 0x03).toBe(2); // posHi in bits [1:0]
   });
 
-  it('throws when v2 position exceeds 10-bit limit', () => {
+  it('skips v2 positions that exceed the 10-bit limit instead of throwing', () => {
     const positions: Record<number, number> = { 1: 39, 2: 1024 };
-    expect(() => getBluetoothPacket('p1r42p2r42', positions, 'kilter', 2)).toThrow('exceeds 10-bit limit');
+    const result = getBluetoothPacket('p1r42p2r42', positions, 'kilter', 2);
+    expect(result.skippedPositionCount).toBe(1);
+    expect(result.totalPlacements).toBe(2);
+    expect(result.packet.length).toBeGreaterThan(0);
+  });
+
+  it('returns an empty packet when all v2 positions exceed the 10-bit limit', () => {
+    const positions: Record<number, number> = { 1: 1024, 2: 2000 };
+    const result = getBluetoothPacket('p1r42p2r42', positions, 'kilter', 2);
+    expect(result.skippedPositionCount).toBe(2);
+    expect(result.totalPlacements).toBe(2);
+    expect(result.packet.length).toBe(0);
   });
 });
 
@@ -775,7 +788,7 @@ describe('ledsPerHold — per-board v2 power budget', () => {
       positions[i] = i;
       frames += `p${i}r42`; // Kilter role 42
     }
-    const packet = getBluetoothPacket(frames, positions, 'kilter', 2);
+    const packet = getBluetoothPacket(frames, positions, 'kilter', 2).packet;
     const allLeds = decodeAllV2Leds(packet);
     expect(allLeds).toHaveLength(40);
   });
@@ -788,7 +801,7 @@ describe('ledsPerHold — per-board v2 power budget', () => {
       positions[i] = i;
       frames += `p${i}r1`; // Tension role 1
     }
-    const packet = getBluetoothPacket(frames, positions, 'tension', 2);
+    const packet = getBluetoothPacket(frames, positions, 'tension', 2).packet;
     const allLeds = decodeAllV2Leds(packet);
     expect(allLeds).toHaveLength(40);
   });
@@ -830,24 +843,25 @@ const CORRECT_10x12_POSITIONS: Record<number, number> = {
 
 describe('Captured Aurora payloads — position verification', () => {
   it('Kilter 10x12 Full Ride (size 25) LED positions match Aurora app', () => {
-    const packet = getBluetoothPacket(CLIMB_FRAMES, CORRECT_10x12_POSITIONS, 'kilter');
+    const packet = getBluetoothPacket(CLIMB_FRAMES, CORRECT_10x12_POSITIONS, 'kilter').packet;
     const ourPositions = decodeLedPositionsV3(packet).map((l) => l.position);
     const auroraPositions = decodeLedPositionsV3(AURORA_10x12_HEX).map((l) => l.position);
     expect(ourPositions).toEqual(auroraPositions);
   });
 
   it('Kilter 8x12 Full Ride (size 23) LED positions match Aurora app', () => {
-    const packet = getBluetoothPacket(CLIMB_FRAMES, CORRECT_8x12_POSITIONS, 'kilter');
+    const packet = getBluetoothPacket(CLIMB_FRAMES, CORRECT_8x12_POSITIONS, 'kilter').packet;
     const ourPositions = decodeLedPositionsV3(packet).map((l) => l.position);
     const auroraPositions = decodeLedPositionsV3(AURORA_8x12_HEX).map((l) => l.position);
     expect(ourPositions).toEqual(auroraPositions);
   });
 
-  it('throws when placements have no LED mapping', () => {
+  it('reports skipped placements when some have no LED mapping', () => {
     const sparseLedMap = { 4131: 39, 4421: 389 };
-    expect(() => getBluetoothPacket('p4131r42p4421r42p9999r45', sparseLedMap, 'kilter')).toThrow(
-      '1 of 3 placements have no LED mapping',
-    );
+    const result = getBluetoothPacket('p4131r42p4421r42p9999r45', sparseLedMap, 'kilter');
+    expect(result.skippedPositionCount).toBe(1);
+    expect(result.totalPlacements).toBe(3);
+    expect(result.packet.length).toBeGreaterThan(0);
   });
 
   it('8x12 kickboard positions match Aurora expectations', () => {
@@ -879,12 +893,12 @@ const CORRECT_8x12_ORIGINAL_POSITIONS: Record<number, number> = {
 
 describe('Kilter Original (Layout 1) — 3rd-party validated payloads (byte-exact)', () => {
   it('12x12 full packet byte-exact match', () => {
-    const packet = getBluetoothPacket(CORNERS_12x12_FRAMES, CORRECT_12x12_POSITIONS, 'kilter');
+    const packet = getBluetoothPacket(CORNERS_12x12_FRAMES, CORRECT_12x12_POSITIONS, 'kilter').packet;
     expect(toHex(packet)).toBe(VALIDATED_12x12_HEX);
   });
 
   it('8x12 Original full packet byte-exact match', () => {
-    const packet = getBluetoothPacket(CORNERS_8x12_ORIGINAL_FRAMES, CORRECT_8x12_ORIGINAL_POSITIONS, 'kilter');
+    const packet = getBluetoothPacket(CORNERS_8x12_ORIGINAL_FRAMES, CORRECT_8x12_ORIGINAL_POSITIONS, 'kilter').packet;
     expect(toHex(packet)).toBe(VALIDATED_8x12_ORIGINAL_HEX);
   });
 
@@ -906,7 +920,7 @@ describe('Kilter Original (Layout 1) — 3rd-party validated payloads (byte-exac
 
   it('12x12 full packet matches when using real LED data', () => {
     const ledMap = getLedPlacements('kilter', 1, 10);
-    const packet = getBluetoothPacket(CORNERS_12x12_FRAMES, ledMap, 'kilter');
+    const packet = getBluetoothPacket(CORNERS_12x12_FRAMES, ledMap, 'kilter').packet;
     const ourPositions = decodeLedPositionsV3(packet).map((l) => l.position);
     const validatedPositions = decodeLedPositionsV3(VALIDATED_12x12_HEX).map((l) => l.position);
     expect(ourPositions).toEqual(validatedPositions);
@@ -914,7 +928,7 @@ describe('Kilter Original (Layout 1) — 3rd-party validated payloads (byte-exac
 
   it('8x12 Original full packet matches when using real LED data', () => {
     const ledMap = getLedPlacements('kilter', 1, 8);
-    const packet = getBluetoothPacket(CORNERS_8x12_ORIGINAL_FRAMES, ledMap, 'kilter');
+    const packet = getBluetoothPacket(CORNERS_8x12_ORIGINAL_FRAMES, ledMap, 'kilter').packet;
     const ourPositions = decodeLedPositionsV3(packet).map((l) => l.position);
     const validatedPositions = decodeLedPositionsV3(VALIDATED_8x12_ORIGINAL_HEX).map((l) => l.position);
     expect(ourPositions).toEqual(validatedPositions);

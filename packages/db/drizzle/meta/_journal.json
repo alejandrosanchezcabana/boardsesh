@@ -575,6 +575,13 @@
       "when": 1776994120681,
       "tag": "0081_nullable_feedback_rating",
       "breakpoints": true
+    },
+    {
+      "idx": 82,
+      "version": "7",
+      "when": 1776316766635,
+      "tag": "0082_add_user_climb_percentiles",
+      "breakpoints": true
     }
   ]
 }

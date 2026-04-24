@@ -6,9 +6,11 @@ import ws from 'ws';
 import { auroraCredentials } from '@boardsesh/db/schema/auth';
 import { syncUserData } from '../sync/user-sync';
 import { AuroraClimbingClient } from '../api/aurora-client';
+import { isTransientAuroraError } from '../api/errors';
 import { decrypt, encrypt } from '@boardsesh/crypto';
 import type { AuroraBoardName } from '../api/types';
-import type { SyncRunnerConfig, SyncSummary, CredentialRecord } from './types';
+import { resolveDaemonOptions, runDaemonLoop } from './daemon';
+import type { SyncRunnerConfig, SyncSummary, CredentialRecord, DaemonOptions } from './types';
 
 // Configure WebSocket constructor for Node.js environment
 neonConfig.webSocketConstructor = ws;
@@ -43,6 +45,7 @@ function createHttpDb() {
 
 export class SyncRunner {
   private config: SyncRunnerConfig;
+  private daemonController: AbortController | null = null;
 
   constructor(config: SyncRunnerConfig = {}) {
     this.config = config;
@@ -111,7 +114,7 @@ export class SyncRunner {
 
   /**
    * @deprecated Use syncNextUser() instead to avoid IP blocking
-   * Sync all users with active credentials
+   * Sync all users with syncable credentials
    */
   async syncAllUsers(): Promise<SyncSummary> {
     const results: SyncSummary = {
@@ -173,22 +176,70 @@ export class SyncRunner {
     await this.syncSingleCredential(cred);
   }
 
+  async runDaemon(options: DaemonOptions = {}): Promise<void> {
+    if (this.daemonController && !this.daemonController.signal.aborted) {
+      throw new Error('Daemon mode is already running');
+    }
+
+    // Resolve once here so startup config errors (e.g. equal quiet hours) surface
+    // before we spawn an AbortController or log "Starting daemon mode".
+    const resolved = resolveDaemonOptions(options);
+    const controller = new AbortController();
+    this.daemonController = controller;
+
+    this.log(
+      `[SyncRunner] Starting daemon mode (${resolved.timeZone}, quiet ${resolved.quietHoursStart}:00-${resolved.quietHoursEnd}:00, random interval ${resolved.minDelayMinutes}-${resolved.maxDelayMinutes} minutes)`,
+    );
+
+    try {
+      await runDaemonLoop(
+        async () => {
+          await this.syncNextUser();
+        },
+        resolved,
+        {
+          signal: controller.signal,
+          onLog: this.log.bind(this),
+          onCycleError: (error) => {
+            const err = error instanceof Error ? error : new Error(String(error));
+            this.handleError(err, {});
+            this.log(`[SyncRunner] Daemon cycle failed: ${err.message}`);
+          },
+        },
+      );
+    } finally {
+      this.daemonController = null;
+      this.log('[SyncRunner] Daemon mode stopped');
+    }
+  }
+
+  // Shared WHERE clause for credentials that are eligible to be synced.
+  // Kilter is excluded because the Kilter backend is permanently down.
+  //
+  // Sync statuses picked up:
+  //   - 'pending': newly linked credentials that haven't been synced yet.
+  //     The daemon bootstraps them on its first cycle.
+  //   - 'active': regularly-synced credentials.
+  //   - 'error': previously failed credentials — retry so transient-classified
+  //     failures recover automatically. `sync_error` gets overwritten each retry.
+  private syncableCredentialsFilter() {
+    return and(
+      or(
+        eq(auroraCredentials.syncStatus, 'pending'),
+        eq(auroraCredentials.syncStatus, 'active'),
+        eq(auroraCredentials.syncStatus, 'error'),
+      ),
+      isNotNull(auroraCredentials.encryptedUsername),
+      isNotNull(auroraCredentials.encryptedPassword),
+      isNotNull(auroraCredentials.auroraUserId),
+      ne(auroraCredentials.boardType, 'kilter'),
+    );
+  }
+
   private async getActiveCredentials(): Promise<CredentialRecord[]> {
     // Use HTTP for simple lookup query (no transaction needed)
     const db = createHttpDb();
-    const credentials = await db
-      .select()
-      .from(auroraCredentials)
-      .where(
-        and(
-          or(eq(auroraCredentials.syncStatus, 'active'), eq(auroraCredentials.syncStatus, 'error')),
-          isNotNull(auroraCredentials.encryptedUsername),
-          isNotNull(auroraCredentials.encryptedPassword),
-          isNotNull(auroraCredentials.auroraUserId),
-          // Kilter backend is permanently down
-          ne(auroraCredentials.boardType, 'kilter'),
-        ),
-      );
+    const credentials = await db.select().from(auroraCredentials).where(this.syncableCredentialsFilter());
 
     return credentials as CredentialRecord[];
   }
@@ -200,16 +251,7 @@ export class SyncRunner {
     const credentials = await db
       .select()
       .from(auroraCredentials)
-      .where(
-        and(
-          or(eq(auroraCredentials.syncStatus, 'active'), eq(auroraCredentials.syncStatus, 'error')),
-          isNotNull(auroraCredentials.encryptedUsername),
-          isNotNull(auroraCredentials.encryptedPassword),
-          isNotNull(auroraCredentials.auroraUserId),
-          // Kilter backend is permanently down
-          ne(auroraCredentials.boardType, 'kilter'),
-        ),
-      )
+      .where(this.syncableCredentialsFilter())
       .orderBy(sql`${auroraCredentials.lastSyncAt} ASC NULLS FIRST`) // Never-synced users first, then oldest
       .limit(1);
 
@@ -230,13 +272,9 @@ export class SyncRunner {
       username = decrypt(cred.encryptedUsername);
       password = decrypt(cred.encryptedPassword);
     } catch (decryptError) {
-      await this.updateCredentialStatus(
-        cred.userId,
-        cred.boardType,
-        'error',
-        `Decryption failed: ${String(decryptError)}`,
-      );
-      throw new Error(`Failed to decrypt credentials: ${String(decryptError)}`);
+      const errorMessage = `Decryption failed: ${this.formatErrorMessage(decryptError)}`;
+      await this.updateCredentialStatus(cred.userId, cred.boardType, 'error', errorMessage);
+      throw new Error(errorMessage);
     }
 
     // Get fresh token by logging in
@@ -251,8 +289,16 @@ export class SyncRunner {
       }
       token = loginResponse.token;
     } catch (loginError) {
-      await this.updateCredentialStatus(cred.userId, cred.boardType, 'error', `Login failed: ${String(loginError)}`);
-      throw new Error(`Failed to login: ${String(loginError)}`);
+      if (isTransientAuroraError(loginError)) {
+        this.log(
+          `[SyncRunner] Transient Aurora login error for user ${cred.userId} (${boardType}); will retry later: ${loginError.message}`,
+        );
+        throw loginError;
+      }
+
+      const errorMessage = `Login failed: ${this.formatErrorMessage(loginError)}`;
+      await this.updateCredentialStatus(cred.userId, cred.boardType, 'error', errorMessage);
+      throw new Error(errorMessage);
     }
 
     // Update stored token
@@ -315,7 +361,15 @@ export class SyncRunner {
    * Close is now a no-op since we create fresh pools per operation
    */
   async close(): Promise<void> {
-    // No-op - pools are created and closed per operation now
+    this.daemonController?.abort();
+  }
+
+  private formatErrorMessage(error: unknown): string {
+    if (error instanceof Error) {
+      return error.message;
+    }
+
+    return String(error);
   }
 }
 

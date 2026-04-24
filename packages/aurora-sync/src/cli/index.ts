@@ -1,31 +1,69 @@
 #!/usr/bin/env node
 import { program } from 'commander';
 import { SyncRunner } from '../runner/sync-runner';
+import { AURORA_BOARDS } from '../api/types';
 
 // Load environment variables from .env files if available
 import { config } from 'dotenv';
 config({ path: '.env.local' });
 config({ path: '.env' });
 
+const AURORA_BOARD_OPTIONS = AURORA_BOARDS.join(', ');
+
+function createRunner(verbose: boolean): SyncRunner {
+  return new SyncRunner({
+    onLog: verbose
+      ? console.info
+      : (msg: string) => {
+          if (
+            msg.includes('✓') ||
+            msg.includes('✗') ||
+            msg.includes('Found') ||
+            msg.includes('Daemon') ||
+            msg.includes('Quiet hours') ||
+            msg.includes('Waiting') ||
+            msg.includes('No users') ||
+            msg.includes('Transient')
+          ) {
+            console.info(msg);
+          }
+        },
+    onError: (error, context) => {
+      console.error(`Error syncing ${context.userId ?? 'daemon'}/${context.board ?? 'unknown'}:`, error.message);
+    },
+  });
+}
+
+function installDaemonSignalHandlers(runner: SyncRunner): () => void {
+  let shuttingDown = false;
+
+  const handleSignal = (signal: NodeJS.Signals) => {
+    if (shuttingDown) {
+      return;
+    }
+
+    shuttingDown = true;
+    console.info(`\nReceived ${signal}. Stopping Aurora sync daemon...`);
+    void runner.close();
+  };
+
+  process.on('SIGINT', handleSignal);
+  process.on('SIGTERM', handleSignal);
+
+  return () => {
+    process.off('SIGINT', handleSignal);
+    process.off('SIGTERM', handleSignal);
+  };
+}
+
 program.name('aurora-sync').description('Aurora board sync utility for Boardsesh').version('1.0.0');
 
 program
   .command('all')
-  .description('Sync all users with active Aurora credentials')
+  .description('Sync all users with syncable Aurora credentials')
   .option('-v, --verbose', 'Enable verbose logging')
   .action(async (options) => {
-    const runner = new SyncRunner({
-      onLog: options.verbose
-        ? console.info
-        : (msg: string) => {
-            if (msg.includes('✓') || msg.includes('✗') || msg.includes('Found')) {
-              console.info(msg);
-            }
-          },
-      onError: (error, context) => {
-        console.error(`Error syncing ${context.userId}/${context.board}:`, error.message);
-      },
-    });
+    const runner = createRunner(options.verbose);
 
     try {
       console.info('Starting Aurora sync for all users...\n');
@@ -53,17 +91,34 @@ program
   });
 
 program
+  .command('daemon')
+  .description('Run Aurora sync continuously with Sydney quiet hours and random delays')
+  .option('-v, --verbose', 'Enable verbose logging')
+  .action(async (options) => {
+    const runner = createRunner(options.verbose);
+    const removeSignalHandlers = installDaemonSignalHandlers(runner);
+
+    try {
+      console.info('Starting Aurora sync daemon...\n');
+      await runner.runDaemon();
+      removeSignalHandlers();
+      await runner.close();
+      process.exit(0);
+    } catch (error) {
+      removeSignalHandlers();
+      console.error('Fatal daemon error:', error);
+      await runner.close();
+      process.exit(1);
+    }
+  });
+
+program
   .command('user <userId>')
   .description('Sync a specific user by NextAuth user ID')
-  .option('-b, --board <type>', 'Board type (kilter or tension)', 'kilter')
+  .option('-b, --board <type>', `Board type (${AURORA_BOARD_OPTIONS})`, 'kilter')
   .option('-v, --verbose', 'Enable verbose logging')
   .action(async (userId: string, options) => {
-    const runner = new SyncRunner({
-      onLog: options.verbose ? console.info : () => {},
-      onError: (error, _context) => {
-        console.error(`Error:`, error.message);
-      },
-    });
+    const runner = createRunner(options.verbose);
 
     try {
       console.info(`Syncing user ${userId} for ${options.board}...`);

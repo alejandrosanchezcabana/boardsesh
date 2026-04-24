@@ -34,9 +34,12 @@
     "dev": "tsx watch src/cli/index.ts",
     "build": "tsc",
     "start": "node dist/cli/index.js",
+    "test": "vp test",
+    "typecheck": "tsc --noEmit",
     "lint": "vp lint",
     "lint-fix": "vp lint --fix",
     "sync:all": "tsx src/cli/index.ts all",
+    "sync:daemon": "tsx src/cli/index.ts daemon",
     "sync:user": "tsx src/cli/index.ts user"
   },
   "dependencies": {

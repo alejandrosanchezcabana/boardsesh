@@ -30,10 +30,7 @@ export interface ParsedExportResult {
  *
  * @throws {Error} If the JSON is missing required user data.
  */
-export function parseAuroraExport(
-  json: Record<string, unknown>,
-  boardType: string,
-): ParsedExportResult {
+export function parseAuroraExport(json: Record<string, unknown>, boardType: string): ParsedExportResult {
   const user = json.user as { username?: string; email_address?: string; created_at?: string } | undefined;
 
   if (!user?.username) {

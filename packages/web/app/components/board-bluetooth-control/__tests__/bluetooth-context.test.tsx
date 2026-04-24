@@ -158,7 +158,7 @@ describe('BluetoothProvider', () => {
       // The useEffect triggers async sendClimb
       await act(async () => {
         await vi.waitFor(() => {
-          expect(mockSendFramesToBoard).toHaveBeenCalledWith('p1r12p2r13', false, expect.any(AbortSignal));
+          expect(mockSendFramesToBoard).toHaveBeenCalledWith('p1r12p2r13', false, expect.any(AbortSignal), 'climb-1');
         });
       });
     });
@@ -175,7 +175,7 @@ describe('BluetoothProvider', () => {
 
       await act(async () => {
         await vi.waitFor(() => {
-          expect(mockSendFramesToBoard).toHaveBeenCalledWith('p3r14p4r15', true, expect.any(AbortSignal));
+          expect(mockSendFramesToBoard).toHaveBeenCalledWith('p3r14p4r15', true, expect.any(AbortSignal), 'climb-2');
         });
       });
     });

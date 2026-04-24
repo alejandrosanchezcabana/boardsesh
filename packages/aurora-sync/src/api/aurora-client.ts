@@ -1,5 +1,12 @@
 import type { LoginResponse, Session, ClientOptions } from './types';
 import { HOST_BASES } from './types';
+import {
+  assertAuroraResponseOk,
+  createAuroraInvalidResponseError,
+  createAuroraNetworkError,
+  createAuroraTimeoutError,
+  isAuroraRequestError,
+} from './errors';
 
 /**
  * Aurora Climbing API Client
@@ -67,49 +74,29 @@ export class AuroraClimbingClient {
 
       console.info(`Response status: ${response.status} ${response.statusText}`);
 
-      if (!response.ok) {
-        const responseClone = response.clone();
-        let errorData;
-        try {
-          errorData = await response.json();
-        } catch {
-          try {
-            errorData = await responseClone.text();
-          } catch {
-            errorData = 'Could not read error response';
-          }
-        }
-        console.error(`API Error - ${url}:`, {
-          status: response.status,
-          statusText: response.statusText,
-          data: errorData,
-        });
-        throw new Error(
-          JSON.stringify({
-            status: response.status,
-            statusText: response.statusText,
-            data: errorData,
-            url: url,
-          }),
-        );
-      }
+      await assertAuroraResponseOk(response, url, {
+        invalidCredentialsMessage: 'Invalid username or password',
+        rateLimitedMessage: 'Too many login attempts. Please try again later.',
+      });
 
-      return (await response.json()) as T;
+      try {
+        return (await response.json()) as T;
+      } catch (error) {
+        throw createAuroraInvalidResponseError(url, error);
+      }
     } catch (error) {
       console.error(`API request failed: ${endpoint}`, error);
 
-      if (error instanceof Error) {
-        if (error.name === 'AbortError') {
-          throw new Error(`Request timeout: ${url} took longer than 30 seconds`);
-        }
-        if (error.message.includes('fetch')) {
-          throw new Error(
-            `Network error: Unable to connect to ${url}. Check internet connection and Aurora API status.`,
-          );
-        }
-        if (error.message.includes('Failed to fetch')) {
-          throw new Error(`DNS/Connection error: Cannot resolve ${url}. Aurora servers may be unavailable.`);
-        }
+      if (isAuroraRequestError(error)) {
+        throw error;
+      }
+
+      if (error instanceof Error && (error.name === 'AbortError' || error.name === 'TimeoutError')) {
+        throw createAuroraTimeoutError(url, error);
+      }
+
+      if (error instanceof TypeError) {
+        throw createAuroraNetworkError(url, error);
       }
 
       throw error;
@@ -117,73 +104,60 @@ export class AuroraClimbingClient {
   }
 
   async signIn(username: string, password: string): Promise<LoginResponse> {
-    try {
-      const data = await this.request<LoginResponse>(
-        '/sessions',
-        {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            username,
-            password,
-            tou: 'accepted',
-            pp: 'accepted',
-            ua: 'app',
-          }),
-        },
-        { apiUrl: false },
-      );
+    const data = await this.request<LoginResponse>(
+      '/sessions',
+      {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          username,
+          password,
+          tou: 'accepted',
+          pp: 'accepted',
+          ua: 'app',
+        }),
+      },
+      { apiUrl: false },
+    );
 
-      if (data.session) {
-        this.setSession({ token: data.session.token, user_id: data.session.user_id });
+    if (data.session) {
+      this.setSession({ token: data.session.token, user_id: data.session.user_id });
 
-        return {
+      return {
+        token: data.session.token,
+        user_id: data.session.user_id,
+        username: username,
+        error: '',
+        login: {
+          created_at: new Date().toISOString(),
           token: data.session.token,
           user_id: data.session.user_id,
+        },
+        user: {
+          id: data.session.user_id,
           username: username,
-          error: '',
-          login: {
-            created_at: new Date().toISOString(),
-            token: data.session.token,
-            user_id: data.session.user_id,
-          },
-          user: {
-            id: data.session.user_id,
-            username: username,
-            email_address: '',
-            created_at: new Date().toISOString(),
-            updated_at: new Date().toISOString(),
-            is_listed: true,
-            is_public: true,
-            avatar_image: null,
-            banner_image: null,
-            city: null,
-            country: null,
-            height: null,
-            weight: null,
-            wingspan: null,
-          },
-        };
-      } else if (data.token && data.user_id) {
-        this.setSession({ token: data.token, user_id: data.user_id });
-        return data;
-      }
-      throw new Error('Login failed: Invalid response format');
-    } catch (error) {
-      if (typeof error === 'object' && error !== null && 'message' in error) {
-        try {
-          const errorObj = JSON.parse((error as Error).message);
-          if (errorObj.status === 422) {
-            throw new Error('Invalid username or password');
-          } else if (errorObj.status === 429) {
-            throw new Error('Too many login attempts. Please try again later.');
-          }
-        } catch {
-          // If parsing fails, just throw the original error
-        }
-      }
-      throw error;
+          email_address: '',
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
+          is_listed: true,
+          is_public: true,
+          avatar_image: null,
+          banner_image: null,
+          city: null,
+          country: null,
+          height: null,
+          weight: null,
+          wingspan: null,
+        },
+      };
     }
+
+    if (data.token && data.user_id) {
+      this.setSession({ token: data.token, user_id: data.user_id });
+      return data;
+    }
+
+    throw new Error('Login failed: Invalid response format');
   }
 }
 

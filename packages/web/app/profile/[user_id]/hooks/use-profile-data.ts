@@ -35,6 +35,7 @@ import {
 interface InitialData {
   initialProfile?: UserProfile;
   initialProfileStats?: GetUserProfileStatsQueryResponse['userProfileStats'];
+  initialPercentile?: GetUserClimbPercentileQueryResponse['userClimbPercentile'] | null;
   initialAllBoardsTicks?: Record<string, LogbookEntry[]>;
   initialLogbook?: LogbookEntry[];
   initialIsOwnProfile?: boolean;
@@ -65,7 +66,7 @@ export function useProfileData(userId: string, initialData?: InitialData) {
     totalDistinctClimbs: number;
     percentile: number;
     totalActiveUsers: number;
-  } | null>(null);
+  } | null>(initialData?.initialPercentile ?? null);
 
   const isOwnProfile = session?.user?.id ? session.user.id === userId : (initialData?.initialIsOwnProfile ?? false);
 
@@ -165,8 +166,8 @@ export function useProfileData(userId: string, initialData?: InitialData) {
   }, [fetchProfileStats, initialData?.initialProfileStats]);
 
   useEffect(() => {
-    void fetchPercentile();
-  }, [fetchPercentile]);
+    if (!initialData?.initialPercentile) void fetchPercentile();
+  }, [fetchPercentile, initialData?.initialPercentile]);
 
   // Filter allBoardsTicks by selected board
   const filteredBoardsTicks = useMemo<Record<string, LogbookEntry[]>>(() => {
