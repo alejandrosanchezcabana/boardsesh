@@ -269,18 +269,21 @@ export function OnboardingTourProvider({ children }: { children: React.ReactNode
   }, [currentStepId, userId, clearCurrentClimbTimer]);
 
   // Listen for PLAY_DRAWER_EVENT to advance step queue-thumbnail → play-view.
+  // The handler reads `currentStepIdRef` (live) so the listener can be
+  // attached once rather than re-subscribed on every step change.
   useEffect(() => {
     const handler = () => {
-      if (currentStepId === 'queue-thumbnail') {
+      if (currentStepIdRef.current === 'queue-thumbnail') {
         advanceFrom('queue-thumbnail', 'event');
       }
     };
     window.addEventListener(PLAY_DRAWER_EVENT, handler);
     return () => window.removeEventListener(PLAY_DRAWER_EVENT, handler);
-  }, [currentStepId, advanceFrom]);
+  }, [advanceFrom]);
 
   // Auto-advance home-pick-board → climb-list when the pathname changes into
-  // a board list route.
+  // a board list route. This effect legitimately depends on `pathname` and
+  // `currentStepId` — it's the trigger itself, not an event listener.
   useEffect(() => {
     if (currentStepId !== 'home-pick-board') return;
     const step = getStepById('climb-list');
