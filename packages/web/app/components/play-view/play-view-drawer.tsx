@@ -417,6 +417,7 @@ const PlayViewDrawer: React.FC<PlayViewDrawerProps> = ({ activeDrawer, setActive
   const [isActionsOpen, setIsActionsOpen] = useState(false);
   const [isQueueOpen, setIsQueueOpen] = useState(false);
   const [queueMounted, setQueueMounted] = useState(false);
+  const [queueOpenedByTour, setQueueOpenedByTour] = useState(false);
   const [isPlaylistSelectorOpen, setIsPlaylistSelectorOpen] = useState(false);
   const [isTickBarActive, setIsTickBarActive] = useState(false);
   const [isBoardZoomed, setIsBoardZoomed] = useState(false);
@@ -597,6 +598,28 @@ const PlayViewDrawer: React.FC<PlayViewDrawerProps> = ({ activeDrawer, setActive
     const handler = () => setIsQueueOpen(false);
     window.addEventListener(PLAY_DRAWER_EVENT, handler);
     return () => window.removeEventListener(PLAY_DRAWER_EVENT, handler);
+  }, []);
+
+  // Tour hooks: allow the onboarding tour to open/close the nested queue
+  // drawer without the user having to find the button.
+  useEffect(() => {
+    const openHandler = () => {
+      setIsActionsOpen(false);
+      setIsPlaylistSelectorOpen(false);
+      setQueueMounted(true);
+      setQueueOpenedByTour(true);
+      setIsQueueOpen(true);
+    };
+    const closeHandler = () => {
+      setIsQueueOpen(false);
+      setQueueOpenedByTour(false);
+    };
+    window.addEventListener('onboarding:open-play-queue', openHandler);
+    window.addEventListener('onboarding:close-play-queue', closeHandler);
+    return () => {
+      window.removeEventListener('onboarding:open-play-queue', openHandler);
+      window.removeEventListener('onboarding:close-play-queue', closeHandler);
+    };
   }, []);
 
   const [drawerOpen, setDrawerOpen] = useState(false);
@@ -972,6 +995,7 @@ const PlayViewDrawer: React.FC<PlayViewDrawerProps> = ({ activeDrawer, setActive
           onClose={handleCloseQueueDrawer}
           onTransitionEnd={handleQueueTransitionEnd}
           boardDetails={boardDetails}
+          initialShowHistory={queueOpenedByTour}
         />
       )}
     </SwipeableDrawer>

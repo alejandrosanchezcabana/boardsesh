@@ -378,7 +378,7 @@ export default function StartSeshDrawer({ open, onClose, onTransitionEnd, boardC
           </Button>
         }
       >
-        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+        <Box data-tour-anchor="start-sesh-drawer" sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
           <Typography variant="body2" component="span">
             {isLoggedIn
               ? 'Track your climbs and invite others to join.'

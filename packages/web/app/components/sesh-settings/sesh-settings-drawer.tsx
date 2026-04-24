@@ -44,9 +44,24 @@ type SeshSettingsDrawerProps = {
   open: boolean;
   onClose: () => void;
   onTransitionEnd?: (open: boolean) => void;
+  /**
+   * When set, the drawer renders from this mock SessionDetail instead of the
+   * user's live session. Used by the onboarding tour to preview a populated
+   * party session. Skips GraphQL, hides the stop/share controls, and bypasses
+   * the "no active session" guard.
+   */
+  tourMockSession?: SessionDetail;
+  /** Forces the embedded CollapsibleSection to show a specific section during the tour. */
+  tourActiveSection?: 'invite' | 'activity' | 'analytics' | null;
 };
 
-export default function SeshSettingsDrawer({ open, onClose, onTransitionEnd }: SeshSettingsDrawerProps) {
+export default function SeshSettingsDrawer({
+  open,
+  onClose,
+  onTransitionEnd,
+  tourMockSession,
+  tourActiveSection,
+}: SeshSettingsDrawerProps) {
   const { activeSession, session, users, deactivateSession, liveSessionStats } = usePersistentSession();
   const { boardDetails, angle } = useQueueBridgeBoardInfo();
   const { token: authToken } = useWsAuthToken();
@@ -112,7 +127,7 @@ export default function SeshSettingsDrawer({ open, onClose, onTransitionEnd }: S
       const client = createGraphQLHttpClient(authToken);
       return client.request<GetSessionDetailQueryResponse>(GET_SESSION_DETAIL, { sessionId });
     },
-    enabled: open && !!sessionId && !!authToken,
+    enabled: open && !!sessionId && !!authToken && !tourMockSession,
     staleTime: 5000,
     refetchOnWindowFocus: false,
   });
@@ -217,37 +232,56 @@ export default function SeshSettingsDrawer({ open, onClose, onTransitionEnd }: S
   if (sessionForView) {
     lastSessionRef.current = sessionForView;
   }
-  const displaySession = sessionForView ?? lastSessionRef.current;
+  const displaySession = tourMockSession ?? sessionForView ?? lastSessionRef.current;
 
-  const timerText = useSessionTimer(session?.startedAt ?? displaySession?.firstTickAt);
+  const timerText = useSessionTimer(
+    tourMockSession ? tourMockSession.firstTickAt : (session?.startedAt ?? displaySession?.firstTickAt),
+  );
 
   const drawerTitle = displaySession
     ? displaySession.sessionName || generateSessionName(displaySession.firstTickAt, displaySession.boardTypes)
     : 'Session';
 
-  const inviteContent =
-    !isStopped && shareUrl ? (
-      <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5 }}>
-        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-          <Typography variant="body2" color="text.secondary" sx={{ flex: 1 }}>
-            Get your crew in by sharing this link or scanning the QR code
-          </Typography>
-          <IconButton onClick={handleShareSession} aria-label="Share session link">
-            <IosShare />
-          </IconButton>
-          <IconButton onClick={() => setShowQr((v) => !v)} aria-label={showQr ? 'Hide QR code' : 'Show QR code'}>
-            <QrCode2Outlined color={showQr ? 'primary' : 'inherit'} />
-          </IconButton>
-        </Box>
-        {showQr && (
-          <Box sx={{ display: 'flex', justifyContent: 'center', py: 1 }}>
-            <QRCodeSVG value={shareUrl} size={180} />
-          </Box>
-        )}
+  const tourShareUrl = 'https://boardsesh.com/join/crew-night-preview';
+  const inviteContent = tourMockSession ? (
+    <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5 }}>
+      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+        <Typography variant="body2" color="text.secondary" sx={{ flex: 1 }}>
+          Share this link or QR code with your crew and they&apos;ll show up live.
+        </Typography>
+        <IconButton disabled aria-label="Share session link (preview)">
+          <IosShare />
+        </IconButton>
+        <IconButton disabled aria-label="Show QR code (preview)">
+          <QrCode2Outlined />
+        </IconButton>
       </Box>
-    ) : undefined;
+      <Box sx={{ display: 'flex', justifyContent: 'center', py: 1 }}>
+        <QRCodeSVG value={tourShareUrl} size={140} />
+      </Box>
+    </Box>
+  ) : !isStopped && shareUrl ? (
+    <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5 }}>
+      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+        <Typography variant="body2" color="text.secondary" sx={{ flex: 1 }}>
+          Get your crew in by sharing this link or scanning the QR code
+        </Typography>
+        <IconButton onClick={handleShareSession} aria-label="Share session link">
+          <IosShare />
+        </IconButton>
+        <IconButton onClick={() => setShowQr((v) => !v)} aria-label={showQr ? 'Hide QR code' : 'Show QR code'}>
+          <QrCode2Outlined color={showQr ? 'primary' : 'inherit'} />
+        </IconButton>
+      </Box>
+      {showQr && (
+        <Box sx={{ display: 'flex', justifyContent: 'center', py: 1 }}>
+          <QRCodeSVG value={shareUrl} size={180} />
+        </Box>
+      )}
+    </Box>
+  ) : undefined;
 
-  if (!activeSession && !isStopped) return null;
+  if (!activeSession && !tourMockSession && !isStopped) return null;
 
   return (
     <SwipeableDrawer
@@ -295,7 +329,7 @@ export default function SeshSettingsDrawer({ open, onClose, onTransitionEnd }: S
                 {timerText}
               </Typography>
             )}
-            {!isStopped ? (
+            {!isStopped && !tourMockSession ? (
               <IconButton
                 size="small"
                 onClick={handleStopSession}
@@ -335,7 +369,7 @@ export default function SeshSettingsDrawer({ open, onClose, onTransitionEnd }: S
         body: { padding: `${themeTokens.spacing[2]}px 0` },
       }}
     >
-      <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, pb: 2 }}>
+      <Box data-tour-anchor="sesh-settings-drawer" sx={{ display: 'flex', flexDirection: 'column', gap: 2, pb: 2 }}>
         {isLoading && !displaySession && (
           <Box sx={{ display: 'flex', justifyContent: 'center', py: 4 }}>
             <CircularProgress size={28} />
@@ -356,8 +390,9 @@ export default function SeshSettingsDrawer({ open, onClose, onTransitionEnd }: S
             fallbackBoardDetails={sessionBoardDetails}
             inviteContent={inviteContent}
             currentAngle={angle}
-            onAngleChange={!isStopped ? handleAngleChange : undefined}
+            onAngleChange={!isStopped && !tourMockSession ? handleAngleChange : undefined}
             namedBoardName={activeSession?.namedBoardName}
+            tourActiveSection={tourActiveSection}
           />
         )}
       </Box>

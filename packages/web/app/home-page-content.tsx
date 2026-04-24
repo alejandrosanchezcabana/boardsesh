@@ -9,6 +9,7 @@ import Card from '@mui/material/Card';
 import CardContent from '@mui/material/CardContent';
 import CardActionArea from '@mui/material/CardActionArea';
 import PlayArrowRounded from '@mui/icons-material/PlayArrowRounded';
+import PlayCircleOutlineOutlined from '@mui/icons-material/PlayCircleOutlineOutlined';
 import PeopleOutlined from '@mui/icons-material/PeopleOutlined';
 import BluetoothOutlined from '@mui/icons-material/BluetoothOutlined';
 import LocalOfferOutlined from '@mui/icons-material/LocalOfferOutlined';
@@ -31,6 +32,8 @@ import type { BoardConfigData } from '@/app/lib/server-board-configs';
 import type { UserBoard, PopularBoardConfig } from '@boardsesh/shared-schema';
 import { track } from '@vercel/analytics';
 import { setClimbSessionCookie } from '@/app/lib/climb-session-cookie';
+import { useOnboardingTourOptional } from '@/app/components/onboarding/onboarding-tour-provider';
+import { TOUR_OPEN_START_SESH_EVENT } from '@/app/components/onboarding/onboarding-tour-events';
 
 const StartSeshDrawer = dynamic(() => import('@/app/components/session-creation/start-sesh-drawer'), { ssr: false });
 
@@ -196,6 +199,7 @@ export default function HomePageContent({ boardConfigs, initialPopularConfigs }:
   const { status } = useSession();
   const router = useRouter();
   const { activeSession } = usePersistentSession();
+  const onboardingTour = useOnboardingTourOptional();
   const [seshDrawerOpen, setSeshDrawerOpen] = useState(false);
   const [findClimbersOpen, setFindClimbersOpen] = useState(false);
   const [createBoardOpen, setCreateBoardOpen] = useState(false);
@@ -236,6 +240,15 @@ export default function HomePageContent({ boardConfigs, initialPopularConfigs }:
   useEffect(() => {
     if (seshDrawerOpen) setSeshDrawerMounted(true);
   }, [seshDrawerOpen]);
+
+  useEffect(() => {
+    const handler = () => {
+      setSeshDrawerMounted(true);
+      setSeshDrawerOpen(true);
+    };
+    window.addEventListener(TOUR_OPEN_START_SESH_EVENT, handler);
+    return () => window.removeEventListener(TOUR_OPEN_START_SESH_EVENT, handler);
+  }, []);
 
   useEffect(() => {
     if (findClimbersOpen) setFindClimbersMounted(true);
@@ -404,6 +417,13 @@ export default function HomePageContent({ boardConfigs, initialPopularConfigs }:
           </Typography>
 
           <InstallAppCard platform={installPlatform} />
+
+          <OnboardingCard
+            icon={<PlayCircleOutlineOutlined />}
+            title="Take the tour"
+            description="A one-minute walk-through of queuing, logging, and sessions with your crew"
+            onClick={() => onboardingTour?.start()}
+          />
 
           <OnboardingCard
             icon={<WarningAmberOutlined />}

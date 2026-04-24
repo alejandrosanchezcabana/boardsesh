@@ -33,12 +33,24 @@ export type QueueDrawerProps = {
   onClose: () => void;
   onTransitionEnd?: (open: boolean) => void;
   boardDetails: BoardDetails;
+  /**
+   * When true, history (climbs queued before the current one) is visible on
+   * mount. Useful for the onboarding tour so the user sees every climb they
+   * queued regardless of which one is currently active.
+   */
+  initialShowHistory?: boolean;
 };
 
-const QueueDrawer: React.FC<QueueDrawerProps> = ({ open, onClose, onTransitionEnd, boardDetails }) => {
+const QueueDrawer: React.FC<QueueDrawerProps> = ({
+  open,
+  onClose,
+  onTransitionEnd,
+  boardDetails,
+  initialShowHistory = false,
+}) => {
   // Internal state
   const [isEditMode, setIsEditMode] = useState(false);
-  const [showHistory, setShowHistory] = useState(false);
+  const [showHistory, setShowHistory] = useState(initialShowHistory);
   const [selectedItems, setSelectedItems] = useState<Set<string>>(new Set());
 
   // Refs

@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import styles from './collapsible-section.module.css';
 
 export type CollapsibleSectionConfig = {
@@ -22,16 +22,26 @@ export type CollapsibleSectionConfig = {
 type CollapsibleSectionProps = {
   sections: CollapsibleSectionConfig[];
   defaultActiveKey?: string;
+  /** When provided, forces this section to be active (e.g. for a guided tour). */
+  forcedActiveKey?: string | null;
 };
 
-const CollapsibleSection: React.FC<CollapsibleSectionProps> = ({ sections, defaultActiveKey }) => {
+const CollapsibleSection: React.FC<CollapsibleSectionProps> = ({ sections, defaultActiveKey, forcedActiveKey }) => {
   const sectionDefaultActive = sections.find((s) => s.defaultActive);
   const [activeKey, setActiveKey] = useState<string | null>(sectionDefaultActive?.key ?? defaultActiveKey ?? null);
+
+  useEffect(() => {
+    if (forcedActiveKey === undefined) return;
+    setActiveKey(forcedActiveKey);
+  }, [forcedActiveKey]);
+
+  const effectiveActiveKey = forcedActiveKey !== undefined ? forcedActiveKey : activeKey;
+  const interactionDisabled = forcedActiveKey !== undefined;
 
   return (
     <div className={styles.steppedContainer}>
       {sections.map((section) => {
-        const isActive = activeKey === section.key;
+        const isActive = effectiveActiveKey === section.key;
         const summaryParts = section.getSummary?.() ?? [];
         const summaryText = summaryParts.length > 0 ? summaryParts.join(' \u00B7 ') : section.defaultSummary;
 
@@ -41,11 +51,11 @@ const CollapsibleSection: React.FC<CollapsibleSectionProps> = ({ sections, defau
           <div
             key={section.key}
             className={`${styles.sectionCard} ${isActive ? styles.sectionCardActive : ''}`}
-            {...(!isActive ? { onClick: () => setActiveKey(section.key) } : {})}
+            {...(!isActive && !interactionDisabled ? { onClick: () => setActiveKey(section.key) } : {})}
           >
             <div
               className={`${styles.collapsedRow} ${isActive ? styles.collapsedRowActive : ''}`}
-              {...(isActive ? { onClick: () => setActiveKey(null) } : {})}
+              {...(isActive && !interactionDisabled ? { onClick: () => setActiveKey(null) } : {})}
             >
               <span className={styles.collapsedLabel}>{isActive ? section.title : section.label}</span>
               <span className={`${styles.collapsedSummary} ${isActive ? styles.collapsedSummaryHidden : ''}`}>
