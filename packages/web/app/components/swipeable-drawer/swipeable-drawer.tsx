@@ -96,7 +96,7 @@ const SwipeableDrawer: React.FC<SwipeableDrawerProps> = ({
   const verticalDragHandle = useMemo(
     () =>
       effectiveSwipeEnabled && showDragHandle ? (
-        <div className={placement === 'left' ? styles.dragHandleZoneRight : styles.dragHandleZoneLeft}></div>
+        <div className={placement === 'left' ? styles.dragHandleZoneRight : styles.dragHandleZoneLeft} />
       ) : null,
     [effectiveSwipeEnabled, showDragHandle, placement],
   );
