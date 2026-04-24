@@ -194,6 +194,8 @@ const AccordionSearchForm: React.FC<AccordionSearchFormProps> = ({ boardDetails,
               <TextField
                 type="number"
                 slotProps={{ htmlInput: { min: 1 } }}
+                // 0 is the "no filter" sentinel (DEFAULT_SEARCH_PARAMS.minAscents),
+                // so render it as the empty placeholder rather than a literal "0".
                 value={uiSearchParams.minAscents || ''}
                 onChange={(e) => updateFilters({ minAscents: Number(e.target.value) || 0 })}
                 className={styles.fullWidth}
@@ -206,6 +208,8 @@ const AccordionSearchForm: React.FC<AccordionSearchFormProps> = ({ boardDetails,
               <TextField
                 type="number"
                 slotProps={{ htmlInput: { min: 1.0, max: 3.0, step: 0.1 } }}
+                // 0 is the "no filter" sentinel (DEFAULT_SEARCH_PARAMS.minRating),
+                // so render it as the empty placeholder rather than a literal "0".
                 value={uiSearchParams.minRating || ''}
                 onChange={(e) => updateFilters({ minRating: Number(e.target.value) || 0 })}
                 className={styles.fullWidth}
