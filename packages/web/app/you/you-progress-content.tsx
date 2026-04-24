@@ -89,7 +89,7 @@ export default function YouProgressContent({
         pageTitle="Progress"
         backUrl={null}
         hasActiveFilters={hasActiveFilters}
-        isActive={true}
+        isActive
       />
       <StatsSummary
         statisticsSummary={statisticsSummary}
@@ -107,7 +107,7 @@ export default function YouProgressContent({
         selectedBoard={selectedBoard}
         loading={loadingAggregated}
         filteredLogbook={filteredLogbook}
-        isOwnProfile={true}
+        isOwnProfile
       />
       {drawerRendered && (
         <StatsFilterDrawer

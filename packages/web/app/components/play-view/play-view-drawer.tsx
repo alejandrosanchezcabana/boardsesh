@@ -853,7 +853,7 @@ const PlayViewDrawer: React.FC<PlayViewDrawerProps> = ({ activeDrawer, setActive
         keepMounted
         paperRef={playPaperRef}
         swipeEnabled={!isActionsOpen && !isQueueOpen && !isPlaylistSelectorOpen}
-        showDragHandle={true}
+        showDragHandle
         styles={{
           body: { padding: 0 },
           wrapper: { height: '100%', backgroundColor: 'var(--semantic-background)' },

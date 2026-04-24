@@ -183,7 +183,7 @@ describe('LogbookFeed — boards URL round-trip', () => {
     const client = createTestQueryClient();
     const { rerender } = render(
       <QueryClientProvider client={client}>
-        <LogbookFeed layoutStats={[]} loadingLayoutStats={true} />
+        <LogbookFeed layoutStats={[]} loadingLayoutStats />
       </QueryClientProvider>,
     );
 

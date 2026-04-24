@@ -112,7 +112,7 @@ describe('BoardFilterStrip', () => {
 
   it('renders loading state when loading is true', () => {
     const { container, queryByText } = render(
-      <BoardFilterStrip boards={[]} loading={true} selectedBoard={null} onBoardSelect={onBoardSelect} />,
+      <BoardFilterStrip boards={[]} loading selectedBoard={null} onBoardSelect={onBoardSelect} />,
     );
 
     // Should render (not null) even with empty boards when loading

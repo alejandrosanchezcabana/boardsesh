@@ -139,7 +139,7 @@ describe('PlayViewTickBar expanded state persistence', () => {
   });
 
   it('reads persisted expanded state when tick bar becomes active', async () => {
-    render(<PlayViewTickBar {...defaultProps} isTickBarActive={true} />);
+    render(<PlayViewTickBar {...defaultProps} isTickBarActive />);
 
     await waitFor(() => {
       expect(mockGetPreference).toHaveBeenCalledWith('tickBarExpanded');
@@ -149,7 +149,7 @@ describe('PlayViewTickBar expanded state persistence', () => {
   it('restores expanded state when persisted value is true', async () => {
     mockGetPreference.mockResolvedValue(true);
 
-    render(<PlayViewTickBar {...defaultProps} isTickBarActive={true} />);
+    render(<PlayViewTickBar {...defaultProps} isTickBarActive />);
 
     // Should show "Collapse" label (meaning it's in expanded mode)
     await waitFor(() => {
@@ -160,7 +160,7 @@ describe('PlayViewTickBar expanded state persistence', () => {
   it('starts collapsed when persisted value is null', async () => {
     mockGetPreference.mockResolvedValue(null);
 
-    render(<PlayViewTickBar {...defaultProps} isTickBarActive={true} />);
+    render(<PlayViewTickBar {...defaultProps} isTickBarActive />);
 
     // Wait for async preference read to complete
     await waitFor(() => {
@@ -172,7 +172,7 @@ describe('PlayViewTickBar expanded state persistence', () => {
   });
 
   it('persists expanded state when user clicks expand', async () => {
-    render(<PlayViewTickBar {...defaultProps} isTickBarActive={true} />);
+    render(<PlayViewTickBar {...defaultProps} isTickBarActive />);
 
     await waitFor(() => {
       expect(mockGetPreference).toHaveBeenCalledWith('tickBarExpanded');
@@ -190,7 +190,7 @@ describe('PlayViewTickBar expanded state persistence', () => {
   it('persists collapsed state when user clicks collapse', async () => {
     mockGetPreference.mockResolvedValue(true);
 
-    render(<PlayViewTickBar {...defaultProps} isTickBarActive={true} />);
+    render(<PlayViewTickBar {...defaultProps} isTickBarActive />);
 
     // Wait for expanded state to be restored from IndexedDB
     const collapseText = await screen.findByText('Collapse');
@@ -207,7 +207,7 @@ describe('PlayViewTickBar expanded state persistence', () => {
 
   it('does not persist state on close reset', () => {
     const onClose = vi.fn();
-    const { rerender } = render(<PlayViewTickBar {...defaultProps} isTickBarActive={true} onClose={onClose} />);
+    const { rerender } = render(<PlayViewTickBar {...defaultProps} isTickBarActive onClose={onClose} />);
 
     mockSetPreference.mockClear();
 
@@ -219,13 +219,13 @@ describe('PlayViewTickBar expanded state persistence', () => {
   });
 
   it('does not persist state on climb change reset', () => {
-    const { rerender } = render(<PlayViewTickBar {...defaultProps} isTickBarActive={true} />);
+    const { rerender } = render(<PlayViewTickBar {...defaultProps} isTickBarActive />);
 
     mockSetPreference.mockClear();
 
     // Change the climb — this triggers the climb-change useEffect reset
     const newClimb = { ...mockClimb, uuid: 'climb-2' };
-    rerender(<PlayViewTickBar {...defaultProps} isTickBarActive={true} currentClimb={newClimb as never} />);
+    rerender(<PlayViewTickBar {...defaultProps} isTickBarActive currentClimb={newClimb as never} />);
 
     // Should not persist the automatic reset
     expect(mockSetPreference).not.toHaveBeenCalledWith('tickBarExpanded', false);
@@ -233,7 +233,7 @@ describe('PlayViewTickBar expanded state persistence', () => {
 
   it('toggles between expand and collapse labels', async () => {
     await act(async () => {
-      render(<PlayViewTickBar {...defaultProps} isTickBarActive={true} />);
+      render(<PlayViewTickBar {...defaultProps} isTickBarActive />);
     });
 
     // Starts collapsed
@@ -262,7 +262,7 @@ describe('PlayViewTickBar expanded state persistence', () => {
 
   it('calls onClose when close button is clicked', () => {
     const onClose = vi.fn();
-    render(<PlayViewTickBar {...defaultProps} isTickBarActive={true} onClose={onClose} />);
+    render(<PlayViewTickBar {...defaultProps} isTickBarActive onClose={onClose} />);
 
     const closeButton = screen.getByLabelText('Close tick bar');
     fireEvent.click(closeButton);

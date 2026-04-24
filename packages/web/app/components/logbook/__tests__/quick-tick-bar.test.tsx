@@ -904,7 +904,7 @@ describe('QuickTickBar', () => {
   describe('expanded mode', () => {
     it('does not render save button in expanded mode', () => {
       const onExpandedChange = vi.fn();
-      render(<QuickTickBar {...defaultProps} expanded={true} onExpandedChange={onExpandedChange} />);
+      render(<QuickTickBar {...defaultProps} expanded onExpandedChange={onExpandedChange} />);
 
       // There should be no "Save tick" button in expanded mode.
       expect(screen.queryByRole('button', { name: /save tick/i })).toBeNull();

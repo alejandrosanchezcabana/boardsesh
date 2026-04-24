@@ -87,7 +87,7 @@ describe('UnifiedSearchDrawer', () => {
   it('renders all default category chips when no allow-list is provided', () => {
     render(
       <UnifiedSearchDrawer
-        open={true}
+        open
         onClose={vi.fn()}
         boardDetails={mockBoardDetails}
         renderClimbSearch={() => <div data-testid="climb-search" />}
@@ -105,7 +105,7 @@ describe('UnifiedSearchDrawer', () => {
   it('hides the category pill row entirely when allowedCategories narrows to a single category', () => {
     render(
       <UnifiedSearchDrawer
-        open={true}
+        open
         onClose={vi.fn()}
         defaultCategory="climbs"
         allowedCategories={['climbs']}
@@ -124,9 +124,7 @@ describe('UnifiedSearchDrawer', () => {
   });
 
   it('falls back to the first allowed category when defaultCategory is not in the allow-list', () => {
-    render(
-      <UnifiedSearchDrawer open={true} onClose={vi.fn()} defaultCategory="boards" allowedCategories={['users']} />,
-    );
+    render(<UnifiedSearchDrawer open onClose={vi.fn()} defaultCategory="boards" allowedCategories={['users']} />);
 
     // The users search placeholder is shown, confirming the category fell back.
     expect(screen.getByPlaceholderText('Search climbers...')).toBeTruthy();
@@ -134,9 +132,7 @@ describe('UnifiedSearchDrawer', () => {
   });
 
   it('never transiently mounts the wrong category results on first render (no flash)', () => {
-    render(
-      <UnifiedSearchDrawer open={true} onClose={vi.fn()} defaultCategory="boards" allowedCategories={['users']} />,
-    );
+    render(<UnifiedSearchDrawer open onClose={vi.fn()} defaultCategory="boards" allowedCategories={['users']} />);
 
     // If the fallback ran as a post-render effect, BoardSearchResults would
     // mount once before unmounting in favor of UserSearchResults. Deriving the
@@ -148,7 +144,7 @@ describe('UnifiedSearchDrawer', () => {
   it('forwards showCloseButton and showCloseButtonOnMobile to SwipeableDrawer', () => {
     render(
       <UnifiedSearchDrawer
-        open={true}
+        open
         onClose={vi.fn()}
         defaultCategory="climbs"
         allowedCategories={['climbs']}
@@ -166,7 +162,7 @@ describe('UnifiedSearchDrawer', () => {
   });
 
   it('defaults showCloseButton and showCloseButtonOnMobile to false when not provided', () => {
-    render(<UnifiedSearchDrawer open={true} onClose={vi.fn()} defaultCategory="boards" />);
+    render(<UnifiedSearchDrawer open onClose={vi.fn()} defaultCategory="boards" />);
 
     const last = swipeableDrawerProps[swipeableDrawerProps.length - 1];
     expect(last.showCloseButton).toBe(false);
@@ -176,7 +172,7 @@ describe('UnifiedSearchDrawer', () => {
   it('still shows the climbs category when boardDetails is provided without an allow-list', () => {
     render(
       <UnifiedSearchDrawer
-        open={true}
+        open
         onClose={vi.fn()}
         boardDetails={mockBoardDetails}
         renderClimbSearch={() => <div data-testid="climb-search" />}
@@ -187,7 +183,7 @@ describe('UnifiedSearchDrawer', () => {
   });
 
   it('hides the climbs category when boardDetails is not provided', () => {
-    render(<UnifiedSearchDrawer open={true} onClose={vi.fn()} defaultCategory="boards" />);
+    render(<UnifiedSearchDrawer open onClose={vi.fn()} defaultCategory="boards" />);
 
     expect(screen.queryByText('Climbs')).toBeNull();
   });
@@ -198,24 +194,14 @@ describe('UnifiedSearchDrawer', () => {
     // state must not glitch and the visibleCategories memo key should stay
     // stable across renders with identical contents.
     const { rerender } = render(
-      <UnifiedSearchDrawer
-        open={true}
-        onClose={vi.fn()}
-        defaultCategory="boards"
-        allowedCategories={['users', 'boards']}
-      />,
+      <UnifiedSearchDrawer open onClose={vi.fn()} defaultCategory="boards" allowedCategories={['users', 'boards']} />,
     );
 
     expect(screen.getByPlaceholderText('Search boards...')).toBeTruthy();
 
     // Re-render with a fresh array literal of the same contents.
     rerender(
-      <UnifiedSearchDrawer
-        open={true}
-        onClose={vi.fn()}
-        defaultCategory="boards"
-        allowedCategories={['users', 'boards']}
-      />,
+      <UnifiedSearchDrawer open onClose={vi.fn()} defaultCategory="boards" allowedCategories={['users', 'boards']} />,
     );
 
     // Category is still 'boards', not reset to the allow-list's first entry.

@@ -25,5 +25,5 @@ export default async function YouSessionsPage() {
       })
     : null;
 
-  return <ActivityFeed isAuthenticated={true} userId={userId} initialFeedResult={initialFeedResult} />;
+  return <ActivityFeed isAuthenticated userId={userId} initialFeedResult={initialFeedResult} />;
 }

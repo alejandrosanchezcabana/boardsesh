@@ -79,7 +79,7 @@ export default function AnalyticsContent({
         pageTitle="Statistics"
         backUrl={`/profile/${userId}`}
         hasActiveFilters={hasActiveFilters}
-        isActive={true}
+        isActive
       />
       <Box component="main" className={styles.content}>
         <StatsSummary

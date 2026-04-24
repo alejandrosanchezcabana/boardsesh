@@ -28,7 +28,7 @@ const defaultProps = {
 
 describe('BoardStatsSection empty state conditional rendering', () => {
   it('shows loading spinner while aggregated data is loading', () => {
-    render(<BoardStatsSection {...defaultProps} loading={true} />);
+    render(<BoardStatsSection {...defaultProps} loading />);
 
     expect(screen.getByRole('progressbar')).toBeTruthy();
   });
@@ -48,7 +48,7 @@ describe('BoardStatsSection empty state conditional rendering', () => {
   });
 
   it('shows BoardImportPrompt for own profile with no data on kilter', () => {
-    render(<BoardStatsSection {...defaultProps} isOwnProfile={true} selectedBoard="kilter" />);
+    render(<BoardStatsSection {...defaultProps} isOwnProfile selectedBoard="kilter" />);
 
     const prompt = screen.getByTestId('board-import-prompt');
     expect(prompt).toBeTruthy();
@@ -57,7 +57,7 @@ describe('BoardStatsSection empty state conditional rendering', () => {
   });
 
   it('shows BoardImportPrompt for own profile with no data on tension', () => {
-    render(<BoardStatsSection {...defaultProps} isOwnProfile={true} selectedBoard="tension" />);
+    render(<BoardStatsSection {...defaultProps} isOwnProfile selectedBoard="tension" />);
 
     const prompt = screen.getByTestId('board-import-prompt');
     expect(prompt).toBeTruthy();
@@ -66,7 +66,7 @@ describe('BoardStatsSection empty state conditional rendering', () => {
   });
 
   it('shows EmptyState for own profile with no data on moonboard', () => {
-    render(<BoardStatsSection {...defaultProps} isOwnProfile={true} selectedBoard="moonboard" />);
+    render(<BoardStatsSection {...defaultProps} isOwnProfile selectedBoard="moonboard" />);
 
     expect(screen.getByText('No climbing data for this period')).toBeTruthy();
     expect(screen.queryByTestId('board-import-prompt')).toBeNull();
@@ -83,12 +83,7 @@ describe('BoardStatsSection empty state conditional rendering', () => {
     };
 
     const { container } = render(
-      <BoardStatsSection
-        {...defaultProps}
-        isOwnProfile={true}
-        selectedBoard="kilter"
-        filteredLogbook={[logbookEntry]}
-      />,
+      <BoardStatsSection {...defaultProps} isOwnProfile selectedBoard="kilter" filteredLogbook={[logbookEntry]} />,
     );
 
     expect(container.innerHTML).toBe('');

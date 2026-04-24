@@ -5,7 +5,7 @@ import { TickIcon, TickButtonWithLabel } from '../tick-icon';
 
 describe('TickIcon', () => {
   it('renders ElectricBoltOutlined when isFlash is true', () => {
-    const { container } = render(<TickIcon isFlash={true} />);
+    const { container } = render(<TickIcon isFlash />);
     // MUI icons render as SVG with a data-testid attribute on the path
     const svg = container.querySelector('svg');
     expect(svg).toBeTruthy();

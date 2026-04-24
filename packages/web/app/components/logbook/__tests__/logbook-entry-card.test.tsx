@@ -5,9 +5,7 @@ import { render, screen } from '@testing-library/react';
 import { LogbookEntryCard } from '../logbook-entry-card';
 
 vi.mock('@/app/components/ascent-status/ascent-status-icon', () => ({
-  AscentStatusIcon: ({ status }: { status: string }) => (
-    <div data-testid="ascent-status-icon" data-status={status} />
-  ),
+  AscentStatusIcon: ({ status }: { status: string }) => <div data-testid="ascent-status-icon" data-status={status} />,
 }));
 
 vi.mock('@mui/material/Rating', () => ({
@@ -118,13 +116,7 @@ describe('LogbookEntryCard', () => {
   });
 
   it('shows the angle chip and status icon when entry angle differs from the current climb angle', () => {
-    render(
-      <LogbookEntryCard
-        entry={{ ...baseEntry, angle: 50 }}
-        currentClimbAngle={40}
-        showMirrorTag={false}
-      />,
-    );
+    render(<LogbookEntryCard entry={{ ...baseEntry, angle: 50 }} currentClimbAngle={40} showMirrorTag={false} />);
     const icon = screen.getByTestId('ascent-status-icon');
     expect(icon.getAttribute('data-status')).toBe('send');
     expect(screen.getByText('50')).toBeTruthy();
@@ -132,21 +124,11 @@ describe('LogbookEntryCard', () => {
 
   it('shows the Mirrored chip only when showMirrorTag is true and the entry is mirrored', () => {
     const { rerender } = render(
-      <LogbookEntryCard
-        entry={{ ...baseEntry, isMirror: true }}
-        currentClimbAngle={40}
-        showMirrorTag={false}
-      />,
+      <LogbookEntryCard entry={{ ...baseEntry, isMirror: true }} currentClimbAngle={40} showMirrorTag={false} />,
     );
     expect(screen.queryByText('Mirrored')).toBeNull();
 
-    rerender(
-      <LogbookEntryCard
-        entry={{ ...baseEntry, isMirror: true }}
-        currentClimbAngle={40}
-        showMirrorTag={true}
-      />,
-    );
+    rerender(<LogbookEntryCard entry={{ ...baseEntry, isMirror: true }} currentClimbAngle={40} showMirrorTag />);
     expect(screen.getByText('Mirrored')).toBeTruthy();
   });
 

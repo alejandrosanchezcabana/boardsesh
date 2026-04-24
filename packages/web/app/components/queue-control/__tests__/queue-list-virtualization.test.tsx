@@ -266,7 +266,7 @@ describe('QueueList rendering', () => {
   });
 
   it('renders all suggested climbs when active', () => {
-    render(<QueueList boardDetails={makeBoardDetails()} active={true} />);
+    render(<QueueList boardDetails={makeBoardDetails()} active />);
 
     // All 20 suggested ClimbListItems should be in the DOM
     const suggestedItems = screen.getAllByTestId('climb-list-item');
@@ -293,7 +293,7 @@ describe('QueueList rendering', () => {
   });
 
   it('renders suggestions section header when active', () => {
-    render(<QueueList boardDetails={makeBoardDetails()} active={true} />);
+    render(<QueueList boardDetails={makeBoardDetails()} active />);
 
     expect(screen.getByText('Suggestions')).toBeTruthy();
   });
@@ -326,7 +326,7 @@ describe('QueueList rendering', () => {
   it('renders history items only when showHistory is true', () => {
     mockCurrentClimbUuid = 'queue-2';
 
-    render(<QueueList boardDetails={makeBoardDetails()} active={false} showHistory={true} />);
+    render(<QueueList boardDetails={makeBoardDetails()} active={false} showHistory />);
 
     const queueItems = screen.getAllByTestId('queue-climb-list-item');
     expect(queueItems).toHaveLength(2);

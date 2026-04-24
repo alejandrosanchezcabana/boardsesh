@@ -26,7 +26,7 @@ describe('SetPasswordSection', () => {
     it('shows password enabled status', () => {
       render(
         <SetPasswordSection
-          hasPassword={true}
+          hasPassword
           userEmail="user@example.com"
           linkedProviders={['google']}
           onPasswordSet={vi.fn()}
@@ -39,7 +39,7 @@ describe('SetPasswordSection', () => {
     it('does not show the set password form', () => {
       render(
         <SetPasswordSection
-          hasPassword={true}
+          hasPassword
           userEmail="user@example.com"
           linkedProviders={['google']}
           onPasswordSet={vi.fn()}

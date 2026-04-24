@@ -189,7 +189,7 @@ describe('ActivityFeed', () => {
         sessionGroupedFeed: { sessions, cursor: 'cursor-1', hasMore: true },
       });
 
-      render(<ActivityFeed isAuthenticated={true} />, { wrapper: createWrapper() });
+      render(<ActivityFeed isAuthenticated />, { wrapper: createWrapper() });
 
       await waitFor(() => {
         expect(screen.getAllByTestId('activity-feed-item')).toHaveLength(2);
@@ -204,7 +204,7 @@ describe('ActivityFeed', () => {
         sessionGroupedFeed: { sessions: [], cursor: null, hasMore: false },
       });
 
-      render(<ActivityFeed isAuthenticated={true} onFindClimbers={onFindClimbers} />, {
+      render(<ActivityFeed isAuthenticated onFindClimbers={onFindClimbers} />, {
         wrapper: createWrapper(),
       });
 

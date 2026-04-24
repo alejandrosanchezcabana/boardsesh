@@ -315,12 +315,7 @@ const BoardHeatmap: React.FC<BoardHeatmapProps> = ({ boardDetails, litUpHoldsMap
             }}
           >
             <div style={{ width: '120px', height: '120px' }}>
-              <BoardRenderer
-                litUpHoldsMap={animatedHoldsMap}
-                mirrored={false}
-                boardDetails={boardDetails}
-                thumbnail={true}
-              />
+              <BoardRenderer litUpHoldsMap={animatedHoldsMap} mirrored={false} boardDetails={boardDetails} thumbnail />
             </div>
             <span style={{ fontSize: '14px', color: 'var(--semantic-surface)', fontWeight: 500 }}>
               Loading heatmap...

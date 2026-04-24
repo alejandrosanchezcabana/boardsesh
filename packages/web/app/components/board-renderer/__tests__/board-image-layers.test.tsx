@@ -81,7 +81,7 @@ describe('BoardImageLayers', () => {
 
   it('applies scaleX(-1) transform when mirrored', () => {
     const { container } = render(
-      <BoardImageLayers boardDetails={mockBoardDetails} frames="p1r42" mirrored={true} style={{ width: '100%' }} />,
+      <BoardImageLayers boardDetails={mockBoardDetails} frames="p1r42" mirrored style={{ width: '100%' }} />,
     );
 
     const wrapper = container.firstChild as HTMLElement;

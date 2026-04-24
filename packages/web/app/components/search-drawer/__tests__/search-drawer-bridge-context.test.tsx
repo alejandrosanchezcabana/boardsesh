@@ -140,7 +140,7 @@ describe('search-drawer-bridge-context', () => {
           <SearchDrawerBridgeInjector
             openDrawer={mockOpenDrawer}
             summary="V5-V7"
-            hasActiveFilters={true}
+            hasActiveFilters
             isOnListPage={isOnListPage}
             nameFilter=""
             onNameFilterChange={() => {}}
@@ -171,7 +171,7 @@ describe('search-drawer-bridge-context', () => {
             openDrawer={mockOpenDrawer}
             summary={summary}
             hasActiveFilters={hasActiveFilters}
-            isOnListPage={true}
+            isOnListPage
             nameFilter=""
             onNameFilterChange={() => {}}
             hasActiveNonNameFilters={false}
@@ -202,7 +202,7 @@ describe('search-drawer-bridge-context', () => {
             openDrawer={mockOpenDrawer}
             summary={summary}
             hasActiveFilters={hasActiveFilters}
-            isOnListPage={true}
+            isOnListPage
             nameFilter=""
             onNameFilterChange={() => {}}
             hasActiveNonNameFilters={false}
@@ -231,7 +231,7 @@ describe('search-drawer-bridge-context', () => {
           <SearchDrawerBridgeInjector
             openDrawer={mockOpenDrawer}
             summary="V5-V7"
-            hasActiveFilters={true}
+            hasActiveFilters
             isOnListPage={isOnListPage}
             nameFilter=""
             onNameFilterChange={() => {}}
@@ -274,7 +274,7 @@ describe('search-drawer-bridge-context', () => {
             openDrawer={mockOpenDrawer}
             summary="V5-V7"
             hasActiveFilters={false}
-            isOnListPage={true}
+            isOnListPage
             nameFilter={nameFilter}
             onNameFilterChange={() => {}}
             hasActiveNonNameFilters={false}
@@ -300,7 +300,7 @@ describe('search-drawer-bridge-context', () => {
             openDrawer={mockOpenDrawer}
             summary="V5-V7"
             hasActiveFilters={false}
-            isOnListPage={true}
+            isOnListPage
             nameFilter=""
             onNameFilterChange={onNameFilterChange}
             hasActiveNonNameFilters={false}
@@ -328,8 +328,8 @@ describe('search-drawer-bridge-context', () => {
           <SearchDrawerBridgeInjector
             openDrawer={mockOpenDrawer}
             summary="V5-V7"
-            hasActiveFilters={true}
-            isOnListPage={true}
+            hasActiveFilters
+            isOnListPage
             nameFilter=""
             onNameFilterChange={() => {}}
             hasActiveNonNameFilters={nonNameActive}
@@ -369,7 +369,7 @@ describe('search-drawer-bridge-context', () => {
             openDrawer={currentOpenDrawer}
             summary="V5-V7"
             hasActiveFilters={false}
-            isOnListPage={true}
+            isOnListPage
             nameFilter=""
             onNameFilterChange={() => {}}
             hasActiveNonNameFilters={false}
