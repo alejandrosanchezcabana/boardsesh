@@ -60,7 +60,8 @@
     "import/no-absolute-path": "error",
     "import/no-amd": "error",
     "import/no-commonjs": "error",
-    "import/no-duplicates": ["error", { "preferInline": true }]
+    "import/no-duplicates": ["error", { "preferInline": true }],
+    "import/no-empty-named-blocks": "error"
   },
   "ignorePatterns": [
     "dist/**",
