@@ -20,7 +20,8 @@
     "react/jsx-filename-extension": ["error", { "allow": "always", "extensions": ["jsx", "tsx"] }],
     "react/jsx-fragments": ["error", "syntax"],
     "react/jsx-handler-names": "error",
-    "react/jsx-key": "error"
+    "react/jsx-key": "error",
+    "react/jsx-no-duplicate-props": "error"
   },
   "ignorePatterns": [".next/**", "out/**", "build/**", "next-env.d.ts", "node_modules/**", "**/board-controller/**"]
 }
