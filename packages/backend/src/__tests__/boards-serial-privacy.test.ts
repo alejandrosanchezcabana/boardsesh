@@ -1,7 +1,10 @@
 import { describe, it, expect, vi, beforeEach } from 'vite-plus/test';
 import type { ConnectionContext } from '@boardsesh/shared-schema';
+import { socialBoardQueries } from '../graphql/resolvers/social/boards';
 
-// Mock db + dependencies before importing resolver
+// Mock db + dependencies before importing resolver.
+// `vi.mock` is hoisted to the top of the file at parse time, so even though
+// these calls appear textually below the resolver import, they execute first.
 const { mockDb } = vi.hoisted(() => {
   const mockDb = {
     execute: vi.fn(),
@@ -28,8 +31,6 @@ vi.mock('../utils/redis-rate-limiter', () => ({
 vi.mock('../events/index', () => ({
   publishSocialEvent: vi.fn().mockResolvedValue(undefined),
 }));
-
-import { socialBoardQueries } from '../graphql/resolvers/social/boards';
 
 // Minimal DB row matching the userBoards schema shape
 function makeDbBoard(overrides: Record<string, unknown> = {}) {
