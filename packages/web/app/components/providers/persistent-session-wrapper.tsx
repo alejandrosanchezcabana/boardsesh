@@ -30,7 +30,6 @@ import dynamic from 'next/dynamic';
 import { SESH_SETTINGS_DRAWER_EVENT } from '../sesh-settings/sesh-settings-drawer-event';
 import { BoardSwitchConfirmProvider } from '../board-lock/board-switch-confirm-provider';
 import { FeedbackPromptBanner } from '../feedback/feedback-prompt-banner';
-import { ShakeToReportProvider } from '../feedback/shake-to-report-provider';
 
 const SeshSettingsDrawer = dynamic(() => import('../sesh-settings/sesh-settings-drawer'), {
   ssr: false,
@@ -62,7 +61,6 @@ export default function PersistentSessionWrapper({ children, boardConfigs }: Per
                   <RootBottomBar boardConfigs={boardConfigs} />
                   <RootSessionSummaryDialog />
                   <RootSeshSettingsDrawer />
-                  <ShakeToReportProvider />
                 </ProfileHeaderShareProvider>
               </StatsFilterBridgeProvider>
             </SearchDrawerBridgeProvider>
