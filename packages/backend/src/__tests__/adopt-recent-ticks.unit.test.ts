@@ -8,7 +8,9 @@
 
 import { describe, it, expect, vi, beforeEach } from 'vite-plus/test';
 import { adoptRecentTicksForSession, extractBoardType } from '../jobs/inferred-session-builder';
-import { recalculateSessionStats } from '../graphql/resolvers/social/session-mutations';
+// Import from the direct source, not the re-export. inferred-session-builder resolves
+// `recalculateSessionStats` to `./session-stats`, so that's the module we must mock.
+import { recalculateSessionStats } from '../graphql/resolvers/social/session-stats';
 import { db } from '../db/client';
 
 // Track mutation calls on the transaction mock
@@ -82,7 +84,7 @@ vi.mock('@boardsesh/db/schema', () => ({
   },
 }));
 
-vi.mock('../graphql/resolvers/social/session-mutations', () => ({
+vi.mock('../graphql/resolvers/social/session-stats', () => ({
   recalculateSessionStats: vi.fn().mockResolvedValue(undefined),
 }));
 

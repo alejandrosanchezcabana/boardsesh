@@ -531,25 +531,27 @@ export const setterFollowQueries = {
       OFFSET ${offset}
     `);
 
-    const rawRows = (
-      rawResult as unknown as {
-        rows: Array<{
-          uuid: string;
-          layout_id: number | null;
-          board_type: string;
-          setter_username: string | null;
-          name: string | null;
-          description: string | null;
-          frames: string | null;
-          stats_angle: number | null;
-          ascensionist_count: number | null;
-          difficulty_id: number | null;
-          quality_average: number | null;
-          difficulty_error: number | null;
-          benchmark_difficulty: number | null;
-        }>;
-      }
-    ).rows;
+    type RawRow = {
+      uuid: string;
+      layout_id: number | null;
+      board_type: string;
+      setter_username: string | null;
+      name: string | null;
+      description: string | null;
+      frames: string | null;
+      stats_angle: number | null;
+      ascensionist_count: number | null;
+      difficulty_id: number | null;
+      quality_average: number | null;
+      difficulty_error: number | null;
+      benchmark_difficulty: number | null;
+    };
+
+    // Normalise across drivers: neon-serverless wraps rows in `{rows: [...]}`,
+    // postgres-js (used in tests) returns the array directly.
+    const rawRows = Array.isArray(rawResult)
+      ? (rawResult as unknown as RawRow[])
+      : ((rawResult as unknown as { rows?: RawRow[] }).rows ?? []);
 
     const hasMore = rawRows.length > limit;
     const trimmedResults = hasMore ? rawRows.slice(0, limit) : rawRows;
