@@ -84,11 +84,11 @@ The `boardsesh-dev-db` image is published to GHCR and contains PostgreSQL 17 + P
 
 This project uses [Vite+](https://viteplus.dev) (`vp`) as its unified toolchain for testing, linting, formatting, type checking, and task running. Most commands use `vp` directly or `vp run` for tasks defined in the root `vite.config.ts`.
 
-- `vp check` - Run format, lint, and type checks (or `bun run check`)
-- `vp test` - Run all tests (or `bun run test`)
-- `vp test run` - Run tests once without watch mode (or `bun run test:run`)
-- `vp lint` - Lint all packages (or `bun run lint`)
-- `vp fmt` - Format all files with Oxfmt (or `bun run format`)
+- `vp check` - Run format, lint, and type checks (this is the canonical validation command and what runs in pre-commit)
+- `vp test` - Run all tests
+- `vp test run` - Run tests once without watch mode
+- `vp lint` - Lint all packages
+- `vp fmt` - Format all files with Oxfmt
 - `vp run dev` - Start development databases, backend, and web server
 - `vp run dev:backend` - Start database and backend only
 - `vp run dev:web` - Start database and web server only
@@ -197,7 +197,7 @@ We are using next.js app router, it's important we try to use server side compon
 
 ### Testing
 
-- Tests use Vitest via Vite+ (`vp test` or `bun run test`)
+- Tests use Vitest via Vite+ (`vp test`)
 - Run `vp test run --reporter=agent` for CI-friendly output
 - Run `vp test --project web` to run only web tests
 - Run `vp test --project backend` to run only backend tests
@@ -208,7 +208,8 @@ We are using next.js app router, it's important we try to use server side compon
 
 ### Important rules
 
-- **Use `vp check` or `vp run typecheck` instead of `vp run build` for validation** - Running build interferes with the local dev server and `bunx` commands can mess with lock files. Use `vp check` to run lint + format + typecheck together, or `vp run typecheck` for type checking only.
+- **Validation must go through `vp` — never `bun run`, `bunx`, or `npx`.** This repo's toolchain is Vite+ (`vp`). For lint, format, typecheck, test, build, and dev, use `vp` and `vp run` exclusively. Do not invoke `bun run check`, `bun run lint`, `bun run test`, `bun run --filter=... typecheck`, `bunx tsc`, `npx eslint`, etc. — they bypass the unified config, can mutate `bun.lock`, and skip the typecheck/lint settings wired into `vite.config.ts`. The only sanctioned non-`vp` invocations are: (a) `bunx drizzle-kit generate` for migrations (no `vp` wrapper exists), and (b) `bun run backend:start` for production backend startup. If you find yourself reaching for `bun run` or `bunx` for anything else, stop and use the `vp` equivalent.
+- **Use `vp check` or `vp run typecheck` instead of `vp run build` for validation** - Running build interferes with the local dev server and `bunx` commands can mess with lock files. Use `vp check` to run lint + format + typecheck together (typecheck is wired in via `lint.options.typeCheck` in `vite.config.ts`, so `vp check` and the staged pre-commit hook both run it), or `vp run typecheck` for type checking only.
 - Always try to use server side rendering wherever possibe. But do note that for some parts such as the QueueList and related components, thats impossible, so dont try to force SSR there.
 - Always use MUI (Material UI) components and their properties.
 - Try to avoid use of the style property

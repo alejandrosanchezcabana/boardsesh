@@ -6,6 +6,12 @@ export default defineConfig({
     semi: true,
     trailingComma: 'all',
   },
+  lint: {
+    options: {
+      typeAware: true,
+      typeCheck: true,
+    },
+  },
   test: {
     projects: [
       './packages/web/vite.config.ts',
