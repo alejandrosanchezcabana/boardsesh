@@ -6,7 +6,7 @@ export const appFeedback = pgTable(
   {
     id: bigserial({ mode: 'bigint' }).primaryKey().notNull(),
     userId: text('user_id').references(() => users.id, { onDelete: 'set null' }),
-    rating: integer('rating').notNull(),
+    rating: integer('rating'),
     comment: text('comment'),
     platform: text('platform').notNull(),
     appVersion: text('app_version'),

@@ -13,6 +13,7 @@ import HelpOutlineOutlined from '@mui/icons-material/HelpOutlineOutlined';
 import InfoOutlined from '@mui/icons-material/InfoOutlined';
 import StarBorderOutlined from '@mui/icons-material/StarBorderOutlined';
 import FeedbackOutlined from '@mui/icons-material/FeedbackOutlined';
+import BugReportOutlined from '@mui/icons-material/BugReportOutlined';
 import GpsFixedOutlined from '@mui/icons-material/GpsFixedOutlined';
 import LocalOfferOutlined from '@mui/icons-material/LocalOfferOutlined';
 import SwapHorizOutlined from '@mui/icons-material/SwapHorizOutlined';
@@ -41,6 +42,7 @@ import { useDevUrl } from '@/app/lib/dev-url';
 import { useAuthModal } from '@/app/components/providers/auth-modal-provider';
 import { HoldClassificationWizard } from '../hold-classification';
 import { FeedbackDialog } from '../feedback/feedback-dialog';
+import { BugReportDialog } from '../feedback/bug-report-dialog';
 import { requestInAppReview } from '@/app/lib/in-app-review';
 import { setFeedbackStatus } from '@/app/lib/feedback-prompt-db';
 import BoardDiscoveryScroll from '../board-scroll/board-discovery-scroll';
@@ -88,6 +90,7 @@ export default function UserDrawer({ boardDetails, boardConfigs }: UserDrawerPro
   const [showDevUrl, setShowDevUrl] = useState(false);
   const { isAvailable: devUrlAvailable } = useDevUrl();
   const [showFeedback, setShowFeedback] = useState(false);
+  const [showBugReport, setShowBugReport] = useState(false);
 
   const { mode, toggleMode } = useColorMode();
   const isMoonboard = boardDetails?.board_name === 'moonboard';
@@ -445,6 +448,20 @@ export default function UserDrawer({ boardDetails, boardConfigs }: UserDrawerPro
               <span className={styles.menuItemLabel}>Send feedback</span>
             </button>
 
+            <button
+              type="button"
+              className={styles.menuItem}
+              onClick={() => {
+                handleClose();
+                setShowBugReport(true);
+              }}
+            >
+              <span className={styles.menuItemIcon}>
+                <BugReportOutlined />
+              </span>
+              <span className={styles.menuItemLabel}>Report a bug</span>
+            </button>
+
             {/* Logout */}
             {session?.user && (
               <>
@@ -543,6 +560,7 @@ export default function UserDrawer({ boardDetails, boardConfigs }: UserDrawerPro
       {devUrlAvailable && <DevUrlDialog open={showDevUrl} onClose={() => setShowDevUrl(false)} />}
 
       <FeedbackDialog open={showFeedback} onClose={() => setShowFeedback(false)} source="drawer-feedback" />
+      <BugReportDialog open={showBugReport} onClose={() => setShowBugReport(false)} source="drawer-bug" />
     </>
   );
 }

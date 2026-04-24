@@ -12,39 +12,52 @@ import { setFeedbackStatus } from '@/app/lib/feedback-prompt-db';
 import type { AppFeedbackSource } from '@boardsesh/shared-schema';
 import styles from './feedback-dialog.module.css';
 
+export type FeedbackDialogMode = 'rating' | 'bug';
+
 interface FeedbackDialogProps {
   open: boolean;
   onClose: () => void;
   source: AppFeedbackSource;
   title?: string;
+  mode?: FeedbackDialogMode;
 }
 
 const FeedbackDialogBody: React.FC<Omit<FeedbackDialogProps, 'open'>> = ({
   onClose,
   source,
-  title = 'Send feedback',
+  title,
+  mode = 'rating',
 }) => {
   const { mutate } = useSubmitAppFeedback();
   const { showMessage } = useSnackbar();
+  const isBug = mode === 'bug';
+  const resolvedTitle = title ?? (isBug ? 'Report a bug' : 'Send feedback');
 
   const handleSubmit = (values: { rating: number | null; comment: string | null }) => {
-    // FeedbackForm in drawer-feedback mode disables Send until a rating is
-    // picked, so rating is guaranteed non-null here. Guard anyway — the
-    // backend rejects rating < 1.
-    if (values.rating === null) {
-      onClose();
-      return;
+    if (isBug) {
+      // Bug-mode form guarantees comment length via canSubmit.
+      if (!values.comment) {
+        onClose();
+        return;
+      }
+    } else {
+      // Rating-mode form disables Send until a rating is picked.
+      if (values.rating === null) {
+        onClose();
+        return;
+      }
+      // Suppress the automatic banner for users who manually engaged.
+      void setFeedbackStatus('submitted');
     }
-    // Suppress the automatic banner for users who manually engaged.
-    void setFeedbackStatus('submitted');
+
     mutate(
       {
-        rating: values.rating,
+        rating: isBug ? null : values.rating,
         comment: values.comment,
         source,
       },
       {
-        onSuccess: () => showMessage('Thanks — logged.', 'success'),
+        onSuccess: () => showMessage(isBug ? 'Bug logged — thanks.' : 'Thanks — logged.', 'success'),
         onError: () => showMessage("Couldn't send — we'll keep your feedback.", 'warning'),
       },
     );
@@ -52,27 +65,27 @@ const FeedbackDialogBody: React.FC<Omit<FeedbackDialogProps, 'open'>> = ({
   };
 
   return (
-    <>
+    <div className={styles.dialogBody}>
       <IconButton aria-label="Close" onClick={onClose} className={styles.closeButton} size="small">
         <CloseOutlined fontSize="small" />
       </IconButton>
       <DialogContent>
         <FeedbackForm
-          mode="drawer-feedback"
-          title={title}
-          submitLabel="Send"
+          mode={isBug ? 'bug' : 'drawer-feedback'}
+          title={resolvedTitle}
+          submitLabel={isBug ? 'Send bug report' : 'Send'}
           onSubmit={handleSubmit}
           onCancel={onClose}
         />
       </DialogContent>
-    </>
+    </div>
   );
 };
 
-export const FeedbackDialog: React.FC<FeedbackDialogProps> = ({ open, onClose, source, title }) => {
+export const FeedbackDialog: React.FC<FeedbackDialogProps> = ({ open, onClose, source, title, mode }) => {
   return (
     <Dialog open={open} onClose={onClose} maxWidth="xs" fullWidth>
-      {open && <FeedbackDialogBody onClose={onClose} source={source} title={title} />}
+      {open && <FeedbackDialogBody onClose={onClose} source={source} title={title} mode={mode} />}
     </Dialog>
   );
 };

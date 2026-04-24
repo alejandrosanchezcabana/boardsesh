@@ -4,12 +4,13 @@ export const feedbackTypeDefs = /* GraphQL */ `
   """
   input SubmitAppFeedbackInput {
     """
-    1–5 star rating.
+    1–5 star rating. Null for bug reports.
     """
-    rating: Int!
+    rating: Int
 
     """
-    Optional free-text comment. Typically present when rating is below 3.
+    Optional free-text comment. Required for bug-report sources; typically
+    present for rating sources when rating is below 3.
     """
     comment: String
 
@@ -24,7 +25,8 @@ export const feedbackTypeDefs = /* GraphQL */ `
     appVersion: String
 
     """
-    Where the feedback originated: 'prompt' | 'drawer-feedback'.
+    Where the feedback originated: 'prompt' | 'drawer-feedback' (rating flows)
+    or 'shake-bug' | 'drawer-bug' (bug reports).
     """
     source: String!
   }

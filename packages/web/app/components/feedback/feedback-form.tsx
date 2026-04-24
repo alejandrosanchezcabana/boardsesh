@@ -12,12 +12,15 @@ import styles from './feedback-form.module.css';
 
 type View = 'rating' | 'comment';
 
+const BUG_COMMENT_MIN = 10;
+
 interface FeedbackFormProps {
   /**
    * 'prompt' — compact, inline rating + save icon; low ratings reveal a comment.
-   * 'drawer-feedback' — manual from user drawer; rating optional, comment is the focus.
+   * 'drawer-feedback' — manual from user drawer; rating required, comment optional.
+   * 'bug' — bug report: no rating, description required (≥10 chars).
    */
-  mode: 'prompt' | 'drawer-feedback';
+  mode: 'prompt' | 'drawer-feedback' | 'bug';
   onSubmit: (values: { rating: number | null; comment: string | null }) => void | Promise<void>;
   onCancel?: () => void;
   title: string;
@@ -36,10 +39,11 @@ export const FeedbackForm: React.FC<FeedbackFormProps> = ({
   const generatedId = useId();
   const resolvedTitleId = titleId ?? generatedId;
   const [rating, setRating] = useState<number | null>(null);
-  const [view, setView] = useState<View>(mode === 'drawer-feedback' ? 'comment' : 'rating');
+  const [view, setView] = useState<View>(mode === 'prompt' ? 'rating' : 'comment');
   const [comment, setComment] = useState('');
   const [submitting, setSubmitting] = useState(false);
 
+  const isBug = mode === 'bug';
   const isPromptRating = mode === 'prompt' && view === 'rating';
   const isPromptComment = mode === 'prompt' && view === 'comment';
 
@@ -53,7 +57,11 @@ export const FeedbackForm: React.FC<FeedbackFormProps> = ({
     }
     setSubmitting(true);
     try {
-      await onSubmit({ rating, comment: comment.trim() || null });
+      const trimmed = comment.trim();
+      await onSubmit({
+        rating: isBug ? null : rating,
+        comment: trimmed || null,
+      });
     } finally {
       setSubmitting(false);
     }
@@ -77,6 +85,7 @@ export const FeedbackForm: React.FC<FeedbackFormProps> = ({
   const canSubmit = (() => {
     if (submitting) return false;
     if (isPromptRating) return rating !== null;
+    if (isBug) return comment.trim().length >= BUG_COMMENT_MIN;
     // Drawer Send-feedback always requires a rating. Backend schema enforces
     // min=1, so sending rating=null or 0 would hard-fail.
     if (mode === 'drawer-feedback') return rating !== null;
@@ -151,19 +160,27 @@ export const FeedbackForm: React.FC<FeedbackFormProps> = ({
         {heading}
       </MuiTypography>
 
-      <div className={styles.rating}>
-        <InlineStarPicker quality={rating} onSelect={setRating} />
-      </div>
+      {!isBug && (
+        <div className={styles.rating}>
+          <InlineStarPicker quality={rating} onSelect={setRating} />
+        </div>
+      )}
 
       <TextField
         value={comment}
         onChange={(event) => setComment(event.target.value)}
-        placeholder="What's on your mind?"
+        placeholder={isBug ? 'What were you doing? What did you expect vs see?' : "What's on your mind?"}
         multiline
-        minRows={3}
-        maxRows={6}
+        minRows={isBug ? 4 : 3}
+        maxRows={isBug ? 8 : 6}
         fullWidth
         size="small"
+        required={isBug}
+        helperText={(() => {
+          if (!isBug) return undefined;
+          const remaining = BUG_COMMENT_MIN - comment.trim().length;
+          return remaining > 0 ? `${remaining} more characters to go` : ' ';
+        })()}
         slotProps={{ htmlInput: { maxLength: 2000 } }}
         className={styles.comment}
       />

@@ -39,6 +39,17 @@ interface CapacitorInAppReviewPlugin {
   requestReview(): Promise<void>;
 }
 
+interface CapacitorMotionPlugin {
+  addListener(
+    eventName: 'accel',
+    listenerFunc: (event: {
+      acceleration: { x: number; y: number; z: number };
+      accelerationIncludingGravity: { x: number; y: number; z: number };
+    }) => void,
+  ): Promise<{ remove: () => Promise<void> }>;
+  removeAllListeners(): Promise<void>;
+}
+
 interface CapacitorDevUrlPlugin {
   getState(): Promise<{ isDebug: boolean; currentUrl: string | null; defaultUrl: string }>;
   setUrl(options: { url: string }): Promise<void>;
@@ -56,6 +67,7 @@ interface CapacitorGlobal {
     App?: CapacitorAppPlugin;
     DevUrl?: CapacitorDevUrlPlugin;
     InAppReview?: CapacitorInAppReviewPlugin;
+    Motion?: CapacitorMotionPlugin;
     LiveActivity?: {
       isAvailable(): Promise<{ available: boolean }>;
       startSession(options: Record<string, unknown>): Promise<void>;

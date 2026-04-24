@@ -105,3 +105,48 @@ describe('FeedbackForm — drawer-feedback mode', () => {
     expect(onSubmit).toHaveBeenCalledWith({ rating: 5, comment: null });
   });
 });
+
+describe('FeedbackForm — bug mode', () => {
+  const BUG_PLACEHOLDER = /what were you doing/i;
+
+  it('hides the star picker', () => {
+    render(<FeedbackForm mode="bug" title="Report a bug" submitLabel="Send bug report" onSubmit={vi.fn()} />);
+    expect(screen.queryByRole('option', { name: /1 star/i })).toBeNull();
+    expect(screen.queryByRole('option', { name: /5 stars/i })).toBeNull();
+  });
+
+  it('disables submit until the description reaches the 10-char minimum', () => {
+    render(<FeedbackForm mode="bug" title="Report a bug" submitLabel="Send bug report" onSubmit={vi.fn()} />);
+    const submit = getSaveButton(/send bug report/i);
+    expect(submit.disabled).toBe(true);
+
+    fireEvent.change(screen.getByPlaceholderText(BUG_PLACEHOLDER), { target: { value: 'too short' } });
+    expect(submit.disabled).toBe(true);
+
+    fireEvent.change(screen.getByPlaceholderText(BUG_PLACEHOLDER), { target: { value: 'ten chars!' } });
+    expect(submit.disabled).toBe(false);
+  });
+
+  it('shows a character-remaining helper until the minimum is reached', () => {
+    render(<FeedbackForm mode="bug" title="Report a bug" submitLabel="Send bug report" onSubmit={vi.fn()} />);
+    expect(screen.getByText(/10 more characters to go/i)).toBeTruthy();
+    fireEvent.change(screen.getByPlaceholderText(BUG_PLACEHOLDER), { target: { value: 'abc' } });
+    expect(screen.getByText(/7 more characters to go/i)).toBeTruthy();
+    fireEvent.change(screen.getByPlaceholderText(BUG_PLACEHOLDER), { target: { value: 'abcdefghij' } });
+    // At or past the minimum — the counter text is gone.
+    expect(screen.queryByText(/more characters to go/i)).toBeNull();
+  });
+
+  it('submits with rating=null and the trimmed description', async () => {
+    const onSubmit = vi.fn();
+    render(<FeedbackForm mode="bug" title="Report a bug" submitLabel="Send bug report" onSubmit={onSubmit} />);
+    fireEvent.change(screen.getByPlaceholderText(BUG_PLACEHOLDER), {
+      target: { value: '  app crashed on submit  ' },
+    });
+    await act(async () => {
+      fireEvent.click(screen.getByRole('button', { name: /send bug report/i }));
+    });
+    expect(onSubmit).toHaveBeenCalledTimes(1);
+    expect(onSubmit).toHaveBeenCalledWith({ rating: null, comment: 'app crashed on submit' });
+  });
+});

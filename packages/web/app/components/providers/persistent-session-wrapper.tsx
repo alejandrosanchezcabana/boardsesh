@@ -34,6 +34,7 @@ const SeshSettingsDrawer = dynamic(() => import('../sesh-settings/sesh-settings-
 });
 import { BoardSwitchConfirmProvider } from '../board-lock/board-switch-confirm-provider';
 import { FeedbackPromptBanner } from '../feedback/feedback-prompt-banner';
+import { ShakeToReportProvider } from '../feedback/shake-to-report-provider';
 
 interface PersistentSessionWrapperProps {
   children: React.ReactNode;
@@ -61,6 +62,7 @@ export default function PersistentSessionWrapper({ children, boardConfigs }: Per
                   <RootBottomBar boardConfigs={boardConfigs} />
                   <RootSessionSummaryDialog />
                   <RootSeshSettingsDrawer />
+                  <ShakeToReportProvider />
                 </ProfileHeaderShareProvider>
               </StatsFilterBridgeProvider>
             </SearchDrawerBridgeProvider>

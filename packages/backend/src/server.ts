@@ -1,4 +1,6 @@
 import { createServer, type IncomingMessage, type ServerResponse } from 'http';
+import { createServer as createHttpsServer } from 'https';
+import { readFileSync } from 'node:fs';
 import type { WebSocketServer } from 'ws';
 import { pubsub } from './pubsub/index';
 import { roomManager } from './services/room-manager';
@@ -132,8 +134,18 @@ export async function startServer(): Promise<ServerResources> {
     }
   }
 
-  // Create HTTP server with custom request handler
-  const httpServer = createServer(handleRequest);
+  // Create HTTP or HTTPS server with custom request handler.
+  // DEV_HTTPS_CERT_FILE / DEV_HTTPS_KEY_FILE are injected by the dev
+  // orchestrator when it provisions a Tailscale cert so phones can reach the
+  // dev backend over a secure context (required for DeviceMotion, Bluetooth,
+  // etc. in mobile browsers). In any other environment both are unset and
+  // we fall through to plain HTTP.
+  const certFile = process.env.DEV_HTTPS_CERT_FILE;
+  const keyFile = process.env.DEV_HTTPS_KEY_FILE;
+  const tlsEnabled = !!(certFile && keyFile);
+  const httpServer = tlsEnabled
+    ? createHttpsServer({ cert: readFileSync(certFile!), key: readFileSync(keyFile!) }, handleRequest)
+    : createServer(handleRequest);
 
   // Setup WebSocket server for GraphQL subscriptions (includes ping/pong heartbeat)
   const { wss, pingInterval } = setupWebSocketServer(httpServer);
@@ -144,16 +156,18 @@ export async function startServer(): Promise<ServerResources> {
   console.info(`Boardsesh Backend starting on port ${PORT}...`);
 
   // Start HTTP server (WebSocket server is attached to it)
+  const httpScheme = tlsEnabled ? 'https' : 'http';
+  const wsScheme = tlsEnabled ? 'wss' : 'ws';
   httpServer.listen(PORT, () => {
-    console.info(`Boardsesh Backend is running on port ${PORT}`);
-    console.info(`  GraphQL HTTP: http://0.0.0.0:${PORT}/graphql`);
-    console.info(`  GraphQL WS: ws://0.0.0.0:${PORT}/graphql`);
-    console.info(`  Health check: http://0.0.0.0:${PORT}/health`);
-    console.info(`  Join session: http://0.0.0.0:${PORT}/join/:sessionId`);
-    console.info(`  Avatar upload: http://0.0.0.0:${PORT}/api/avatars`);
-    console.info(`  Avatar files: http://0.0.0.0:${PORT}/static/avatars/`);
-    console.info(`  OCR test data: http://0.0.0.0:${PORT}/api/ocr-test-data`);
-    console.info(`  Sync cron: http://0.0.0.0:${PORT}/sync-cron`);
+    console.info(`Boardsesh Backend is running on port ${PORT}${tlsEnabled ? ' (TLS)' : ''}`);
+    console.info(`  GraphQL HTTP: ${httpScheme}://0.0.0.0:${PORT}/graphql`);
+    console.info(`  GraphQL WS: ${wsScheme}://0.0.0.0:${PORT}/graphql`);
+    console.info(`  Health check: ${httpScheme}://0.0.0.0:${PORT}/health`);
+    console.info(`  Join session: ${httpScheme}://0.0.0.0:${PORT}/join/:sessionId`);
+    console.info(`  Avatar upload: ${httpScheme}://0.0.0.0:${PORT}/api/avatars`);
+    console.info(`  Avatar files: ${httpScheme}://0.0.0.0:${PORT}/static/avatars/`);
+    console.info(`  OCR test data: ${httpScheme}://0.0.0.0:${PORT}/api/ocr-test-data`);
+    console.info(`  Sync cron: ${httpScheme}://0.0.0.0:${PORT}/sync-cron`);
 
     // Warm up popular board configs cache in the background.
     // Uses a Redis lock so only one node across the cluster runs the query.

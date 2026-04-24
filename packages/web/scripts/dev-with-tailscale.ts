@@ -97,18 +97,39 @@ function main(): void {
   const backendPort = process.env.BACKEND_PORT || DEFAULT_BACKEND_PORT;
   const resolution = resolveHostname();
 
-  setDefaultEnv('NEXT_PUBLIC_WS_URL', `ws://${resolution.hostname}:${backendPort}/graphql`);
-  setDefaultEnv('NEXTAUTH_URL', `http://${resolution.hostname}:${webPort}`);
-  setDefaultEnv('BASE_URL', `http://${resolution.hostname}:${webPort}`);
+  // HTTPS mode: orchestrator has provisioned a Tailscale cert and injected
+  // DEV_HTTPS_CERT_FILE / DEV_HTTPS_KEY_FILE. Both must be present to switch
+  // schemes; otherwise stay on HTTP so non-Tailscale devs are unaffected.
+  const certFile = process.env.DEV_HTTPS_CERT_FILE;
+  const keyFile = process.env.DEV_HTTPS_KEY_FILE;
+  const tlsEnabled = !!(certFile && keyFile);
+  const httpScheme = tlsEnabled ? 'https' : 'http';
+  const wsScheme = tlsEnabled ? 'wss' : 'ws';
+
+  setDefaultEnv('NEXT_PUBLIC_WS_URL', `${wsScheme}://${resolution.hostname}:${backendPort}/graphql`);
+  setDefaultEnv('NEXTAUTH_URL', `${httpScheme}://${resolution.hostname}:${webPort}`);
+  setDefaultEnv('BASE_URL', `${httpScheme}://${resolution.hostname}:${webPort}`);
 
   console.info(`[dev] Hostname: ${resolution.hostname} (${resolution.source})`);
   if (resolution.reason) {
     console.info(`[dev] ${resolution.reason}`);
   }
-  console.info(`[dev] Web URL: http://${resolution.hostname}:${webPort}`);
+  console.info(`[dev] Web URL: ${httpScheme}://${resolution.hostname}:${webPort}`);
   console.info(`[dev] Backend WS URL: ${process.env.NEXT_PUBLIC_WS_URL}`);
+  if (tlsEnabled) {
+    console.info('[dev] TLS: serving via Next.js --experimental-https with Tailscale cert');
+  }
 
-  const nextProcess = spawn('next', ['dev', '--hostname', '0.0.0.0', '--turbopack'], {
+  const nextArgs = ['dev', '--hostname', '0.0.0.0', '--turbopack'];
+  if (tlsEnabled) {
+    // Next.js requires --experimental-https to switch the dev server into
+    // HTTPS mode; the cert+key flags then point at the files to use instead
+    // of auto-generating a self-signed one. Without --experimental-https the
+    // other two flags are silently ignored and the banner still says http://.
+    nextArgs.push('--experimental-https', '--experimental-https-cert', certFile!, '--experimental-https-key', keyFile!);
+  }
+
+  const nextProcess = spawn('next', nextArgs, {
     env: process.env,
     stdio: 'inherit',
   });
