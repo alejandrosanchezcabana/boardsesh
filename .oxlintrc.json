@@ -34,7 +34,8 @@
     "nextjs/no-html-link-for-pages": "error",
     "nextjs/no-page-custom-font": "error",
     "nextjs/no-script-component-in-head": "error",
-    "nextjs/no-typos": "error"
+    "nextjs/no-typos": "error",
+    "nextjs/no-unwanted-polyfillio": "error"
   },
   "ignorePatterns": [
     "dist/**",
