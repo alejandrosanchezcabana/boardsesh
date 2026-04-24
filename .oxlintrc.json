@@ -31,7 +31,8 @@
     "nextjs/no-css-tags": "error",
     "nextjs/no-document-import-in-page": "error",
     "nextjs/no-duplicate-head": "error",
-    "nextjs/no-html-link-for-pages": "error"
+    "nextjs/no-html-link-for-pages": "error",
+    "nextjs/no-page-custom-font": "error"
   },
   "ignorePatterns": [
     "dist/**",
