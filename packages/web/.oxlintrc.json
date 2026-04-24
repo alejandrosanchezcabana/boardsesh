@@ -19,7 +19,8 @@
     "react/jsx-curly-brace-presence": "error",
     "react/jsx-filename-extension": ["error", { "allow": "always", "extensions": ["jsx", "tsx"] }],
     "react/jsx-fragments": ["error", "syntax"],
-    "react/jsx-handler-names": "error"
+    "react/jsx-handler-names": "error",
+    "react/jsx-key": "error"
   },
   "ignorePatterns": [".next/**", "out/**", "build/**", "next-env.d.ts", "node_modules/**", "**/board-controller/**"]
 }
