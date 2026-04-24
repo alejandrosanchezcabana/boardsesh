@@ -1,7 +1,7 @@
 .bottomBarWrapper {
   --tab-bar-top-radius: 16px;
   --tab-bar-bottom-radius: 16px;
-  --tab-bar-safe-area-padding: var(--safe-area-inset-bottom, env(safe-area-inset-bottom, 0px));
+  --tab-bar-safe-area-padding: var(--safe-area-inset-bottom);
   --tab-bar-bottom-extension: 0px;
   position: fixed;
   bottom: 0;
@@ -12,23 +12,20 @@
   border-radius: 16px;
 }
 
+/* In Capacitor native the tab bar sits edge-to-edge. Safe-area clearance
+   is already handled: on Android the @capacitor-community/safe-area plugin
+   pads the WebView decorView (Chromium < 140) or passes real insets through
+   to env() (Chromium 140+); on iOS WKWebView env() reports home-indicator
+   inset natively. --tab-bar-safe-area-padding (inherited from the base
+   .bottomBarWrapper rule above, which reads --safe-area-inset-bottom from
+   :root) therefore picks up the correct inset automatically — no extra
+   Android floor or native-specific override is needed here. */
 .nativeApp {
   --tab-bar-top-radius: 0px;
   --tab-bar-bottom-radius: 0px;
-  --tab-bar-safe-area-padding: var(--safe-area-inset-bottom, env(safe-area-inset-bottom, 0px));
   left: 0;
   right: 0;
   border-radius: 0;
-}
-
-/* Android Capacitor 8 draws the WebView under the gesture/nav bar, but
-   Chromium < 140 does not populate env(safe-area-inset-bottom) even with
-   viewport-fit=cover. The @capacitor-community/safe-area plugin sets
-   --safe-area-inset-bottom on :root once its WindowInsets listener fires;
-   floor at 24px so the tab bar never renders under the gesture pill during
-   the first-paint window before that happens. */
-.androidNative {
-  --tab-bar-safe-area-padding: max(var(--safe-area-inset-bottom, env(safe-area-inset-bottom, 0px)), 24px);
 }
 
 @media (min-width: 768px) {
@@ -45,14 +42,21 @@
    (which creates a visible backdrop-filter seam), extend the BottomNavigation
    below the wrapper via negative margin so the frosted glass is one element.
    The wrapper has no overflow:hidden, so the child visually overflows to
-   cover the 2dvh gap plus any safe area beyond it. */
+   cover the 2dvh gap plus any safe area beyond it.
+
+   Use raw env(safe-area-inset-bottom) here instead of the :root-defined
+   var(--safe-area-inset-bottom). iOS Safari resolves var()-of-env() to 0
+   inside nested calc/max in some contexts, which collapses the negative
+   bottom-extension and leaves the Safari URL-bar area uncovered (visible
+   body background, which is black in dark mode). env() is reliable here
+   because this block only matches iOS Safari. */
 @supports (-webkit-touch-callout: none) {
   @media (hover: none) and (pointer: coarse) {
     .bottomBarWrapper:not(.nativeApp) {
       --tab-bar-top-radius: 0px;
       --tab-bar-bottom-radius: 0px;
-      --tab-bar-safe-area-padding: max(2dvh, var(--safe-area-inset-bottom, env(safe-area-inset-bottom, 0px)));
-      --tab-bar-bottom-extension: calc(-1 * max(2dvh, var(--safe-area-inset-bottom, env(safe-area-inset-bottom, 0px))));
+      --tab-bar-safe-area-padding: max(2dvh, env(safe-area-inset-bottom, 0px));
+      --tab-bar-bottom-extension: calc(-1 * max(2dvh, env(safe-area-inset-bottom, 0px)));
       bottom: 2dvh;
       left: 0;
       right: 0;

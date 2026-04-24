@@ -8,7 +8,7 @@
 
 .header {
   touch-action: manipulation;
-  padding-top: var(--safe-area-inset-top, env(safe-area-inset-top, 0px));
+  padding-top: var(--safe-area-inset-top);
 }
 
 .header button,

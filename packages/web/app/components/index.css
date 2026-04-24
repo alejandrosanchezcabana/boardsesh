@@ -76,8 +76,40 @@
   --input-bg-hover: #f3f4f6;
   --input-bg-focused: #ffffff;
 
+  /* Safe-area insets, exposed as CSS vars so consumers resolve through
+     a single indirection (and so future per-platform or per-view overrides
+     don't have to touch every call site).
+
+     Source of inset values, by platform:
+     - iOS WKWebView: WebKit populates env(safe-area-inset-*) natively once
+       viewport-fit=cover is set. No plugin help needed.
+     - Android Chromium >= 140 with viewport-fit=cover: the
+       @capacitor-community/safe-area plugin zeroes the decorView padding
+       and passes real system WindowInsets through, so env() reports the
+       real gesture/nav/status bar insets.
+     - Android Chromium < 140: the same plugin pads the decorView with the
+       real WindowInsets natively and then explicitly rewrites the insets
+       delivered to the WebView to Insets.of(0,0,0,0) — so the WebView
+       coordinate origin is already inside the safe zone, and env() here
+       correctly reports 0 (no inset remaining to account for). Single
+       source of truth in both Android branches.
+     - Desktop and mobile web browsers: env() reports 0 unless the browser
+       itself has a UI chrome inset (Mobile Safari bottom chrome).
+
+     Consumers use `var(--safe-area-inset-*)` directly, no `env()` fallback
+     — these vars are always defined here, so the fallback is dead code.
+     The one exception is the iOS Safari `@supports (-webkit-touch-callout:
+     none)` block in bottom-bar-wrapper.module.css, which uses raw `env()`
+     directly inside its nested calc/max expression. iOS Safari has a
+     long-standing bug where var-of-env collapses to 0 inside such
+     expressions, so raw env() is the only reliable option there. */
+  --safe-area-inset-top: env(safe-area-inset-top, 0px);
+  --safe-area-inset-right: env(safe-area-inset-right, 0px);
+  --safe-area-inset-bottom: env(safe-area-inset-bottom, 0px);
+  --safe-area-inset-left: env(safe-area-inset-left, 0px);
+
   /* Layout */
-  --global-header-height: calc(max(8dvh, 48px) + var(--safe-area-inset-top, env(safe-area-inset-top, 0px)));
+  --global-header-height: calc(max(8dvh, 48px) + var(--safe-area-inset-top));
 
   /* Tap highlight (Android/mobile browsers) */
   --tap-highlight: transparent;
