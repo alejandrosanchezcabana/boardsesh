@@ -33,8 +33,12 @@ export const DEFAULT_SHAKE_OPTIONS: ShakeOptions = {
   threshold: 14,
   /** Jolts older than this (ms) are pruned from the rolling window. */
   windowMs: 1000,
-  /** After firing, suppress further fires for this duration (ms). */
-  cooldownMs: 3000,
+  /**
+   * After firing, suppress further fires for this duration (ms). 30s gives
+   * the user time to close the dialog and put the phone down without an
+   * immediate re-trigger from incidental motion.
+   */
+  cooldownMs: 30_000,
   /**
    * Three jolts inside the window means two direction reversals — the
    * signature of a human shaking an object, not a phone being picked up
