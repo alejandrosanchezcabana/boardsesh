@@ -1,4 +1,5 @@
 import { execFileSync, spawn, spawnSync } from 'node:child_process';
+import { mkdirSync, existsSync, statSync } from 'node:fs';
 import { createConnection } from 'node:net';
 import { setTimeout as delay } from 'node:timers/promises';
 import { join, dirname, resolve } from 'node:path';
@@ -12,6 +13,21 @@ const DEFAULT_WEB_PORT = 3000;
 const HEALTH_CHECK_TIMEOUT_MS = 5000;
 const HEALTH_CHECK_INTERVAL_MS = 500;
 const HEALTH_CHECK_MAX_ATTEMPTS = HEALTH_CHECK_TIMEOUT_MS / HEALTH_CHECK_INTERVAL_MS;
+
+const TAILSCALE_STATUS_TIMEOUT_MS = 1500;
+const TAILSCALE_CERT_TIMEOUT_MS = 60_000;
+/**
+ * Certs older than this are regenerated on startup. Tailscale serves valid
+ * Let's Encrypt certs (90-day lifetime) and caches them in its own state, so
+ * a day-old file is a cheap roundtrip to refresh.
+ */
+const CERT_MAX_AGE_MS = 24 * 60 * 60 * 1000;
+
+interface TlsBundle {
+  hostname: string;
+  certFile: string;
+  keyFile: string;
+}
 
 interface ProcessRef {
   process: ReturnType<typeof spawn> | null;
@@ -63,18 +79,91 @@ function hasBackendChanges(): { changed: boolean; baseRef: string | null } {
 }
 
 /**
+ * Resolve the Tailscale hostname from `tailscale status --json`. Returns null
+ * if Tailscale isn't installed, not logged in, or not reporting a DNS name.
+ */
+function resolveTailscaleHostname(): string | null {
+  try {
+    const statusJson = execFileSync('tailscale', ['status', '--json'], {
+      encoding: 'utf8',
+      timeout: TAILSCALE_STATUS_TIMEOUT_MS,
+      stdio: ['ignore', 'pipe', 'pipe'],
+    });
+    const parsed = JSON.parse(statusJson) as { Self?: { DNSName?: string } };
+    const dns = parsed.Self?.DNSName?.trim().replace(/\.$/, '');
+    return dns && /^[a-zA-Z0-9.-]+$/.test(dns) ? dns.toLowerCase() : null;
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Try to provision a TLS cert for the Tailscale hostname via `tailscale cert`.
+ * On success, returns cert+key paths usable by both Next.js and the backend.
+ *
+ * Requires the tailnet's "HTTPS Certificates" feature to be enabled in the
+ * Tailscale admin console (one-time setup) and the node to be logged in.
+ * Any failure falls back to plain HTTP with a diagnostic hint.
+ */
+function resolveTlsBundle(): TlsBundle | null {
+  const hostname = resolveTailscaleHostname();
+  if (!hostname) return null;
+
+  const certDir = join(ROOT_DIR, 'node_modules', '.cache', 'boardsesh-dev-certs');
+  const certFile = join(certDir, `${hostname}.crt`);
+  const keyFile = join(certDir, `${hostname}.key`);
+
+  try {
+    mkdirSync(certDir, { recursive: true });
+  } catch (error) {
+    console.warn('[dev] HTTPS: could not create cert cache dir — falling back to HTTP', error);
+    return null;
+  }
+
+  const cached =
+    existsSync(certFile) && existsSync(keyFile) && Date.now() - statSync(certFile).mtimeMs < CERT_MAX_AGE_MS;
+
+  if (cached) {
+    console.info(`[dev] HTTPS: reusing cached Tailscale cert for ${hostname}`);
+    return { hostname, certFile, keyFile };
+  }
+
+  console.info(`[dev] HTTPS: requesting Tailscale cert for ${hostname} (may take a few seconds the first time)...`);
+  const result = spawnSync('tailscale', ['cert', `--cert-file=${certFile}`, `--key-file=${keyFile}`, hostname], {
+    cwd: ROOT_DIR,
+    stdio: ['ignore', 'pipe', 'pipe'],
+    timeout: TAILSCALE_CERT_TIMEOUT_MS,
+    encoding: 'utf8',
+  });
+
+  if (result.status === 0 && existsSync(certFile) && existsSync(keyFile)) {
+    console.info(`[dev] HTTPS: provisioned cert for ${hostname}`);
+    return { hostname, certFile, keyFile };
+  }
+
+  const stderr = (result.stderr || '').toString().trim();
+  console.warn(
+    `[dev] HTTPS: 'tailscale cert' failed — falling back to HTTP. ${stderr || '(no error output)'}\n` +
+      `[dev] HTTPS: to enable, turn on "HTTPS Certificates" for your tailnet at ` +
+      `https://login.tailscale.com/admin/dns — one-time setup, then re-run 'vp run dev'.`,
+  );
+  return null;
+}
+
+/**
  * Check if backend is already running and healthy
  */
-async function checkBackendHealth(port: number): Promise<boolean> {
+async function checkBackendHealth(port: number, tls: TlsBundle | null): Promise<boolean> {
+  // When TLS is active, fetch via the Tailscale hostname — certs are issued
+  // for that name, so a localhost fetch would fail verification.
+  const origin = tls ? `https://${tls.hostname}:${port}` : `http://localhost:${port}`;
+
   for (let attempt = 0; attempt < HEALTH_CHECK_MAX_ATTEMPTS; attempt++) {
     try {
       const controller = new AbortController();
       const timeoutId = setTimeout(() => controller.abort(), 1000);
 
-      const response = await fetch(`http://localhost:${port}/health`, {
-        method: 'GET',
-        signal: controller.signal,
-      });
+      const response = await fetch(`${origin}/health`, { method: 'GET', signal: controller.signal });
 
       clearTimeout(timeoutId);
 
@@ -136,7 +225,7 @@ async function findAvailablePort(basePort: number, maxAttempts = 10): Promise<nu
 /**
  * Start the backend in the background
  */
-function startBackend(port: number): ReturnType<typeof spawn> {
+function startBackend(port: number, tls: TlsBundle | null): ReturnType<typeof spawn> {
   console.info(`[dev] Starting backend on port ${port}...`);
 
   const backendProcess = spawn('bun', ['run', '--filter=boardsesh-backend', 'dev'], {
@@ -145,6 +234,7 @@ function startBackend(port: number): ReturnType<typeof spawn> {
     env: {
       ...process.env,
       PORT: String(port),
+      ...(tls ? { DEV_HTTPS_CERT_FILE: tls.certFile, DEV_HTTPS_KEY_FILE: tls.keyFile } : {}),
     },
   });
 
@@ -167,7 +257,7 @@ function startBackend(port: number): ReturnType<typeof spawn> {
 /**
  * Start the Next.js development server
  */
-function startWeb(port: number, backendPort: number): ReturnType<typeof spawn> {
+function startWeb(port: number, backendPort: number, tls: TlsBundle | null): ReturnType<typeof spawn> {
   console.info(`[dev] Starting web on port ${port}...`);
 
   const webProcess = spawn('bun', ['run', 'dev'], {
@@ -177,6 +267,13 @@ function startWeb(port: number, backendPort: number): ReturnType<typeof spawn> {
       ...process.env,
       PORT: String(port),
       BACKEND_PORT: String(backendPort),
+      ...(tls
+        ? {
+            DEV_HTTPS_CERT_FILE: tls.certFile,
+            DEV_HTTPS_KEY_FILE: tls.keyFile,
+            TAILSCALE_HOSTNAME: tls.hostname,
+          }
+        : {}),
     },
   });
 
@@ -244,6 +341,11 @@ async function main(): Promise<void> {
     console.info(`[dev] Detected changes in packages/backend vs ${baseRef} — starting a fresh backend`);
   }
 
+  // Try to provision a Tailscale HTTPS cert so real phones (which require a
+  // secure context for DeviceMotion, Web Bluetooth, clipboard, etc.) can
+  // actually use those APIs against the dev server. Null → HTTP fallback.
+  const tls = resolveTlsBundle();
+
   const requestedBackendPort = parseInt(process.env.BACKEND_PORT || String(DEFAULT_BACKEND_PORT), 10);
   const requestedWebPort = parseInt(process.env.PORT || String(DEFAULT_WEB_PORT), 10);
 
@@ -253,7 +355,7 @@ async function main(): Promise<void> {
 
   // Check if the default backend port has a healthy instance
   if (!forceNewBackend && !process.env.BACKEND_PORT) {
-    backendHealthy = await checkBackendHealth(DEFAULT_BACKEND_PORT);
+    backendHealthy = await checkBackendHealth(DEFAULT_BACKEND_PORT, tls);
     if (backendHealthy) {
       backendPort = DEFAULT_BACKEND_PORT;
       console.info(`[dev] Reusing existing backend on port ${backendPort}`);
@@ -275,6 +377,9 @@ async function main(): Promise<void> {
   console.info(`[dev] Boardsesh Development Orchestrator`);
   console.info(`[dev] Backend port: ${backendPort}${forceNewBackend ? ' (new instance)' : ''}`);
   console.info(`[dev] Web port: ${webPort}`);
+  if (tls) {
+    console.info(`[dev] HTTPS enabled — https://${tls.hostname}:${webPort}`);
+  }
   console.info();
 
   // Start backend if needed
@@ -291,12 +396,12 @@ async function main(): Promise<void> {
 
     // Start backend
     console.info(`[dev] Starting backend on port ${backendPort}...`);
-    processes.backend.process = startBackend(backendPort);
+    processes.backend.process = startBackend(backendPort, tls);
     processes.backend.isManaged = true;
 
     // Wait for backend to be healthy
     console.info(`[dev] Waiting for backend to be healthy...`);
-    backendHealthy = await checkBackendHealth(backendPort);
+    backendHealthy = await checkBackendHealth(backendPort, tls);
 
     if (!backendHealthy) {
       console.error(`[dev] ✗ Backend failed to start or become healthy`);
@@ -307,7 +412,7 @@ async function main(): Promise<void> {
   }
 
   // Start web
-  processes.web.process = startWeb(webPort, backendPort);
+  processes.web.process = startWeb(webPort, backendPort, tls);
 
   // Graceful shutdown
   process.on('SIGINT', shutdown);
