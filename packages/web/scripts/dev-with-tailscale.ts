@@ -122,7 +122,11 @@ function main(): void {
 
   const nextArgs = ['dev', '--hostname', '0.0.0.0', '--turbopack'];
   if (tlsEnabled) {
-    nextArgs.push('--experimental-https-cert', certFile!, '--experimental-https-key', keyFile!);
+    // Next.js requires --experimental-https to switch the dev server into
+    // HTTPS mode; the cert+key flags then point at the files to use instead
+    // of auto-generating a self-signed one. Without --experimental-https the
+    // other two flags are silently ignored and the banner still says http://.
+    nextArgs.push('--experimental-https', '--experimental-https-cert', certFile!, '--experimental-https-key', keyFile!);
   }
 
   const nextProcess = spawn('next', nextArgs, {

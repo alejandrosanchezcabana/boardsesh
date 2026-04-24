@@ -1,6 +1,7 @@
 import { execFileSync, spawn, spawnSync } from 'node:child_process';
 import { mkdirSync, existsSync, statSync } from 'node:fs';
 import { createConnection } from 'node:net';
+import { createInterface } from 'node:readline/promises';
 import { setTimeout as delay } from 'node:timers/promises';
 import { join, dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -97,15 +98,52 @@ function resolveTailscaleHostname(): string | null {
   }
 }
 
+interface ProvisionResult {
+  ok: boolean;
+  stderr: string;
+}
+
+function provisionTailscaleCert(hostname: string, certFile: string, keyFile: string): ProvisionResult {
+  const result = spawnSync('tailscale', ['cert', `--cert-file=${certFile}`, `--key-file=${keyFile}`, hostname], {
+    cwd: ROOT_DIR,
+    stdio: ['ignore', 'pipe', 'pipe'],
+    timeout: TAILSCALE_CERT_TIMEOUT_MS,
+    encoding: 'utf8',
+  });
+  return {
+    ok: result.status === 0 && existsSync(certFile) && existsSync(keyFile),
+    stderr: (result.stderr || '').toString().trim(),
+  };
+}
+
+/**
+ * Interactive y/n prompt. Returns `null` when stdin/stdout aren't a TTY
+ * (e.g. running under CI, a detached shell, or piped output) so callers can
+ * skip the prompt entirely in non-interactive contexts.
+ */
+async function promptYesNo(question: string, defaultYes: boolean): Promise<boolean | null> {
+  if (!process.stdin.isTTY || !process.stdout.isTTY) return null;
+  const rl = createInterface({ input: process.stdin, output: process.stdout });
+  try {
+    const answer = (await rl.question(question)).trim().toLowerCase();
+    if (!answer) return defaultYes;
+    return answer.startsWith('y');
+  } finally {
+    rl.close();
+  }
+}
+
 /**
  * Try to provision a TLS cert for the Tailscale hostname via `tailscale cert`.
  * On success, returns cert+key paths usable by both Next.js and the backend.
  *
- * Requires the tailnet's "HTTPS Certificates" feature to be enabled in the
- * Tailscale admin console (one-time setup) and the node to be logged in.
- * Any failure falls back to plain HTTP with a diagnostic hint.
+ * Requires the tailnet's "HTTPS Certificates" feature enabled + the local
+ * user to be the Tailscale operator. If we detect the well-known operator
+ * permission failure and we're running interactively, we offer to run the
+ * one-shot fix (`sudo tailscale set --operator=$USER`) ourselves and then
+ * retry. Any failure falls back to plain HTTP with a targeted hint.
  */
-function resolveTlsBundle(): TlsBundle | null {
+async function resolveTlsBundle(): Promise<TlsBundle | null> {
   const hostname = resolveTailscaleHostname();
   if (!hostname) return null;
 
@@ -129,26 +167,51 @@ function resolveTlsBundle(): TlsBundle | null {
   }
 
   console.info(`[dev] HTTPS: requesting Tailscale cert for ${hostname} (may take a few seconds the first time)...`);
-  const result = spawnSync('tailscale', ['cert', `--cert-file=${certFile}`, `--key-file=${keyFile}`, hostname], {
-    cwd: ROOT_DIR,
-    stdio: ['ignore', 'pipe', 'pipe'],
-    timeout: TAILSCALE_CERT_TIMEOUT_MS,
-    encoding: 'utf8',
-  });
-
-  if (result.status === 0 && existsSync(certFile) && existsSync(keyFile)) {
+  const initial = provisionTailscaleCert(hostname, certFile, keyFile);
+  if (initial.ok) {
     console.info(`[dev] HTTPS: provisioned cert for ${hostname}`);
     return { hostname, certFile, keyFile };
   }
+  let stderr = initial.stderr;
 
-  const stderr = (result.stderr || '').toString().trim();
+  // Self-heal path: the most common first-run failure is that the Tailscale
+  // daemon runs as root and the current user doesn't have operator rights on
+  // it. Tailscale prints the exact fix in its own stderr — we detect that,
+  // ask consent, and run it.
+  const isOperatorDenied = stderr.includes('--operator=') && /operator|denied|root/i.test(stderr);
+  const user = process.env.USER || process.env.LOGNAME;
+  if (isOperatorDenied && user) {
+    const accept = await promptYesNo(
+      `[dev] HTTPS: Tailscale requires operator permission for your user. ` +
+        `Run 'sudo tailscale set --operator=${user}' now? [Y/n] `,
+      true,
+    );
+    if (accept === true) {
+      console.info(`[dev] HTTPS: running 'sudo tailscale set --operator=${user}' (sudo may prompt for your password)`);
+      const setResult = spawnSync('sudo', ['tailscale', 'set', `--operator=${user}`], { stdio: 'inherit' });
+      if (setResult.status === 0) {
+        console.info('[dev] HTTPS: operator set — retrying cert provisioning...');
+        const retry = provisionTailscaleCert(hostname, certFile, keyFile);
+        if (retry.ok) {
+          console.info(`[dev] HTTPS: provisioned cert for ${hostname}`);
+          return { hostname, certFile, keyFile };
+        }
+        stderr = retry.stderr || stderr;
+      } else {
+        console.warn('[dev] HTTPS: sudo command failed — continuing with HTTP fallback.');
+      }
+    } else if (accept === null) {
+      console.warn('[dev] HTTPS: non-interactive shell; skipping auto-fix prompt.');
+    }
+    // accept === false → user declined; fall through to the hint + HTTP fallback.
+  }
+
   console.warn(`[dev] HTTPS: 'tailscale cert' failed — falling back to HTTP. ${stderr || '(no error output)'}`);
 
-  // Targeted hints based on what Tailscale actually said. The daemon's own
-  // error text is more reliable than our classification of failure modes.
-  if (/operator|require root|denied/i.test(stderr) && stderr.includes('--operator=')) {
+  // Targeted hints based on what Tailscale actually said.
+  if (isOperatorDenied) {
     console.warn(
-      `[dev] HTTPS: fix with ONE command: 'sudo tailscale set --operator=$USER'. ` +
+      `[dev] HTTPS: fix with ONE command: 'sudo tailscale set --operator=${user ?? '$USER'}'. ` +
         `Grants your user permission to talk to the Tailscale daemon (one-time).`,
     );
   } else if (/HTTPS.*not enabled|not configured|dnsname/i.test(stderr)) {
@@ -359,7 +422,7 @@ async function main(): Promise<void> {
   // Try to provision a Tailscale HTTPS cert so real phones (which require a
   // secure context for DeviceMotion, Web Bluetooth, clipboard, etc.) can
   // actually use those APIs against the dev server. Null → HTTP fallback.
-  const tls = resolveTlsBundle();
+  const tls = await resolveTlsBundle();
 
   const requestedBackendPort = parseInt(process.env.BACKEND_PORT || String(DEFAULT_BACKEND_PORT), 10);
   const requestedWebPort = parseInt(process.env.PORT || String(DEFAULT_WEB_PORT), 10);
