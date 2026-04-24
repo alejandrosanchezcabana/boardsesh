@@ -5,12 +5,13 @@ import { auroraCredentials, boardseshTicks, boardClimbs } from '@/app/lib/db/sch
 import { eq, and, isNull, count } from 'drizzle-orm';
 import { authOptions } from '@/app/lib/auth/auth-options';
 
-export interface UnsyncedCounts {
-  [boardType: string]: {
+export type UnsyncedCounts = Record<
+  string,
+  {
     ascents: number;
     climbs: number;
-  };
-}
+  }
+>;
 
 /**
  * GET - Get count of unsynced items for the logged-in user's Aurora accounts

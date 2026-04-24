@@ -2,12 +2,13 @@ import { AURORA_BOARDS, SUPPORTED_BOARDS as ALL_SUPPORTED_BOARDS } from '@boards
 import type { Angle, BoardName } from './types';
 import { MOONBOARD_ENABLED, MOONBOARD_ANGLES } from './moonboard-config';
 
-type ImageDimensions = {
-  [imageName: string]: {
+type ImageDimensions = Record<
+  string,
+  {
     width: number;
     height: number;
-  };
-};
+  }
+>;
 
 export type SetIdList = number[];
 

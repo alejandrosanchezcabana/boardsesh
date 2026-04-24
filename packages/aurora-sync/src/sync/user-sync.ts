@@ -489,9 +489,7 @@ export interface SyncTableResult {
   skippedReason?: string;
 }
 
-export interface SyncUserDataResult {
-  [tableName: string]: SyncTableResult;
-}
+export type SyncUserDataResult = Record<string, SyncTableResult>;
 
 export async function syncUserData(
   pool: Pool,

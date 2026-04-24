@@ -15,7 +15,7 @@ type FeedTab = 'sessions' | 'proposals' | 'comments';
 const VALID_TABS: FeedTab[] = ['sessions', 'proposals', 'comments'];
 
 type FeedProps = {
-  searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
+  searchParams: Promise<Record<string, string | string[] | undefined>>;
 };
 
 export default async function FeedPage({ searchParams }: FeedProps) {
