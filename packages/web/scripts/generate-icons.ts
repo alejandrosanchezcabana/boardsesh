@@ -60,18 +60,18 @@ async function main() {
   const darkSvg512 = readFileSync(DARK_ICON_512_SVG);
 
   // Generate favicon PNGs at multiple sizes for the ICO container
-  const [png16, png32, png48, ...rest] = await Promise.all([
+  const [png16, png32, png48] = await Promise.all([
     sharp(darkSvg512).resize(16, 16).png().toBuffer(),
     sharp(darkSvg512).resize(32, 32).png().toBuffer(),
     sharp(darkSvg512).resize(48, 48).png().toBuffer(),
+  ]);
 
-    // Generate app icons from dark variant
+  // Generate app icons from dark variant
+  await Promise.all([
     sharp(darkSvg1024).resize(192, 192).png().toFile(resolve(webRoot, 'public/icons/icon-192.png')),
     sharp(darkSvg1024).resize(512, 512).png().toFile(resolve(webRoot, 'public/icons/icon-512.png')),
     sharp(darkSvg1024).resize(180, 180).png().toFile(resolve(webRoot, 'public/icons/apple-touch-icon.png')),
   ]);
-
-  void rest; // sharp toFile results, unused
 
   // Generate maskable icon: render the dark icon at 410px centered on a 512px dark canvas.
   // This gives ~10% padding on each side, keeping content within the maskable safe zone.

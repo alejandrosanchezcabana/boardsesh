@@ -6,7 +6,7 @@ const MOBILE_ROOT = path.resolve(import.meta.dirname, '..');
 const REPO_ROOT = path.resolve(MOBILE_ROOT, '..');
 const SVG_ROOT = path.join(REPO_ROOT, 'svg');
 
-const SPLASH_BG = '#0A0A0A';
+const SPLASH_BG = '#0e0e10';
 
 const APP_ICON_SVG = path.join(SVG_ROOT, 'app-icon/icon-dark-1024.svg');
 const SPLASH_LOGO_SVG = path.join(SVG_ROOT, 'mark/route-mark.svg');

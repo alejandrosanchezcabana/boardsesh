@@ -192,7 +192,7 @@ export const darkTokens = {
     selectedHover: 'rgba(175, 45, 60, 0.30)',
     selectedLight: 'rgba(175, 45, 60, 0.12)',
     selectedBorder: '#8C4A52',
-    background: '#0E0E0E',
+    background: '#0e0e10',
     surface: '#1A1A1A',
     surfaceElevated: '#282828',
     inputSurface: '#FFFFFF',
