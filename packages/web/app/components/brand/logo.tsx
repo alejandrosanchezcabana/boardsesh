@@ -16,68 +16,45 @@ const sizes = {
   lg: { icon: 52, fontSize: 20, gap: 10 },
 };
 
-// Pixel art letter definitions (each letter on a grid)
-// B letter - 7 wide x 9 tall pixels
-const B_PIXELS = [
-  [1, 1, 1, 1, 1, 1, 0],
-  [1, 1, 1, 1, 1, 1, 1],
-  [1, 1, 0, 0, 0, 1, 1],
-  [1, 1, 1, 1, 1, 1, 0],
-  [1, 1, 1, 1, 1, 1, 1],
-  [1, 1, 0, 0, 0, 1, 1],
-  [1, 1, 0, 0, 0, 1, 1],
-  [1, 1, 1, 1, 1, 1, 1],
-  [1, 1, 1, 1, 1, 1, 0],
-];
+const { holdGrey, contextGrey, purple, cyan, green, orange } = themeTokens.routeMark;
 
-// S letter - 7 wide x 9 tall pixels
-const S_PIXELS = [
-  [0, 1, 1, 1, 1, 1, 1],
-  [1, 1, 1, 1, 1, 1, 1],
-  [1, 1, 0, 0, 0, 0, 0],
-  [1, 1, 1, 1, 1, 1, 0],
-  [0, 1, 1, 1, 1, 1, 1],
-  [0, 0, 0, 0, 0, 1, 1],
-  [0, 0, 0, 0, 0, 1, 1],
-  [1, 1, 1, 1, 1, 1, 1],
-  [1, 1, 1, 1, 1, 1, 0],
-];
-
-const PixelLetter = ({
-  pixels,
-  startX,
-  startY,
-  pixelSize,
-  fill,
-}: {
-  pixels: number[][];
-  startX: number;
-  startY: number;
-  pixelSize: number;
-  fill: string;
-}) => (
+/** Context dots -- subtle background holds that add texture at larger sizes */
+const ContextDots = () => (
   <>
-    {pixels.map((row, y) =>
-      row.map((pixel, x) =>
-        pixel ? (
-          <rect
-            key={`${x}-${y}`}
-            x={startX + x * pixelSize}
-            y={startY + y * pixelSize}
-            width={pixelSize}
-            height={pixelSize}
-            fill={fill}
-          />
-        ) : null,
-      ),
-    )}
+    <ellipse cx="10" cy="12" rx="3.6" ry="2.4" fill={contextGrey} transform="rotate(-10 10 12)" />
+    <ellipse cx="52" cy="16" rx="3.6" ry="2.4" fill={contextGrey} transform="rotate(20 52 16)" />
+    <ellipse cx="14" cy="50" rx="3.6" ry="2.4" fill={contextGrey} transform="rotate(25 14 50)" />
+    <ellipse cx="54" cy="50" rx="3.6" ry="2.4" fill={contextGrey} transform="rotate(-15 54 50)" />
+    <ellipse cx="32" cy="32" rx="3.2" ry="2.2" fill={contextGrey} transform="rotate(5 32 32)" />
+    <ellipse cx="22" cy="28" rx="3" ry="2" fill={contextGrey} transform="rotate(-25 22 28)" />
+    <ellipse cx="44" cy="36" rx="3" ry="2" fill={contextGrey} transform="rotate(14 44 36)" />
+  </>
+);
+
+/** The 4 climbing holds (start, hand, foot, finish) arranged in a diamond */
+const Holds = () => (
+  <>
+    {/* Start hold -- purple */}
+    <ellipse cx="28" cy="10" rx="4" ry="2.8" fill={holdGrey} transform="rotate(-8 28 10)" />
+    <circle cx="28" cy="10" r="9" fill="none" stroke={purple} strokeWidth="2" />
+
+    {/* Hand hold -- cyan */}
+    <ellipse cx="46" cy="26" rx="4" ry="2.8" fill={holdGrey} transform="rotate(18 46 26)" />
+    <circle cx="46" cy="26" r="9" fill="none" stroke={cyan} strokeWidth="2" />
+
+    {/* Foot hold -- green */}
+    <ellipse cx="18" cy="38" rx="3.6" ry="2.6" fill={holdGrey} transform="rotate(-22 18 38)" />
+    <circle cx="18" cy="38" r="9" fill="none" stroke={green} strokeWidth="2" />
+
+    {/* Finish hold -- orange */}
+    <ellipse cx="32" cy="54" rx="4" ry="2.8" fill={holdGrey} transform="rotate(5 32 54)" />
+    <circle cx="32" cy="54" r="9" fill="none" stroke={orange} strokeWidth="2" />
   </>
 );
 
 const Logo = ({ size = 'md', showText = true, linkToHome = true }: LogoProps) => {
   const { icon, fontSize, gap } = sizes[size];
-  const pixelSize = 3;
-  const shadowOffset = 2;
+  const showContext = size !== 'sm';
 
   const logoContent = (
     <div
@@ -92,57 +69,25 @@ const Logo = ({ size = 'md', showText = true, linkToHome = true }: LogoProps) =>
       <svg
         width={icon}
         height={icon}
-        viewBox="0 0 48 48"
+        viewBox="0 0 64 64"
         fill="none"
         xmlns="http://www.w3.org/2000/svg"
         aria-label="Boardsesh logo"
       >
-        {/* Transparent background */}
-        <rect x="0" y="0" width="48" height="48" rx="4" fill="transparent" />
-
-        {/* Rose shadow layers */}
-        <PixelLetter
-          pixels={B_PIXELS}
-          startX={3 + shadowOffset}
-          startY={6 + shadowOffset}
-          pixelSize={pixelSize}
-          fill={themeTokens.colors.logoRose}
-        />
-        <PixelLetter
-          pixels={S_PIXELS}
-          startX={24 + shadowOffset}
-          startY={6 + shadowOffset}
-          pixelSize={pixelSize}
-          fill={themeTokens.colors.logoRose}
-        />
-
-        {/* Sage green letters */}
-        <PixelLetter
-          pixels={B_PIXELS}
-          startX={3}
-          startY={6}
-          pixelSize={pixelSize}
-          fill={themeTokens.colors.logoGreen}
-        />
-        <PixelLetter
-          pixels={S_PIXELS}
-          startX={24}
-          startY={6}
-          pixelSize={pixelSize}
-          fill={themeTokens.colors.logoGreen}
-        />
+        {showContext && <ContextDots />}
+        <Holds />
       </svg>
       {showText && (
         <span
           style={{
             fontSize,
-            fontWeight: themeTokens.typography.fontWeight.bold,
+            fontWeight: themeTokens.typography.fontWeight.extrabold,
             color: 'var(--neutral-800)',
             letterSpacing: '-0.02em',
             lineHeight: 1,
           }}
         >
-          Boardsesh
+          boardsesh
         </span>
       )}
     </div>

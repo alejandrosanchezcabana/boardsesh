@@ -21,8 +21,18 @@ export const themeTokens = {
     purpleHover: '#6D28D9',
     amber: '#FBBF24', // For flash/benchmark badges
     pink: '#EC4899', // For finish holds in climb creation
-    logoGreen: '#5DBE94', // Brighter sage green for logo
-    logoRose: '#C75B64', // Brighter dusty rose for logo
+    logoGreen: '#5fb27a', // Route mark green
+    logoRose: '#d65a4f', // Brand coral
+  },
+
+  // Route mark colors — the climbing hold indicators in the brand logo
+  routeMark: {
+    holdGrey: '#7a7a7e', // Hold surface fill
+    contextGrey: '#4a4a52', // Background context dots
+    purple: '#c44a8a', // Start hold ring
+    cyan: '#3fb8c4', // Hand hold ring
+    green: '#5fb27a', // Foot hold ring
+    orange: '#e2a44d', // Finish hold ring
   },
 
   // Neutral palette
@@ -91,6 +101,7 @@ export const themeTokens = {
       medium: 500,
       semibold: 600,
       bold: 700,
+      extrabold: 800,
     },
     lineHeight: {
       tight: 1.25,
