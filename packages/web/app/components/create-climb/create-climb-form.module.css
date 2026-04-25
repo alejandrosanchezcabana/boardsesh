@@ -1,7 +1,7 @@
 .pageContainer {
   position: fixed;
   top: var(--safe-area-inset-top);
-  bottom: calc(180px + var(--safe-area-inset-bottom));
+  bottom: var(--bottom-bar-height);
   left: 8px;
   right: 8px;
   display: flex;

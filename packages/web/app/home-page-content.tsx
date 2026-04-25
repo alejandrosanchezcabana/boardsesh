@@ -372,7 +372,7 @@ export default function HomePageContent({ boardConfigs, initialPopularConfigs }:
         minHeight: '100dvh',
         display: 'flex',
         flexDirection: 'column',
-        pb: `calc(120px + ${themeTokens.layout.safeAreaBottom})`,
+        pb: 'var(--bottom-bar-height)',
       }}
     >
       <Box

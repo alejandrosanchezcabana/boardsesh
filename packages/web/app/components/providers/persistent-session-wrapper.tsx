@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { usePathname } from 'next/navigation';
 import { PartyProfileProvider } from '../party-manager/party-profile-context';
 import { PersistentSessionProvider, usePersistentSession } from '../persistent-session';
@@ -133,8 +133,33 @@ export function RootBottomBar({ boardConfigs }: { boardConfigs: BoardConfigData 
   const hideTabBar = HIDE_TAB_BAR_PAGES.some((prefix) => pathname.startsWith(prefix)) && !hasActiveQueue;
   const shouldShowQueueShell = isBoardRoutePath(pathname) && !hasActiveQueue && !boardDetails;
 
+  // Measure the bottom bar's visual occlusion and expose it as --bottom-bar-height.
+  // Use innerHeight - rect.top (not rect.height) so the iOS `bottom: 2dvh` offset
+  // and the BottomNavigation's negative-margin extension are both included.
+  const wrapperRef = useRef<HTMLDivElement | null>(null);
+  useEffect(() => {
+    const el = wrapperRef.current;
+    if (!el) return;
+    const update = () => {
+      const top = el.getBoundingClientRect().top;
+      const px = Math.max(0, window.innerHeight - top);
+      document.documentElement.style.setProperty('--bottom-bar-height', `${px}px`);
+    };
+    update();
+    const ro = typeof ResizeObserver !== 'undefined' ? new ResizeObserver(update) : null;
+    ro?.observe(el);
+    window.addEventListener('resize', update);
+    window.visualViewport?.addEventListener('resize', update);
+    return () => {
+      ro?.disconnect();
+      window.removeEventListener('resize', update);
+      window.visualViewport?.removeEventListener('resize', update);
+    };
+  }, []);
+
   return (
     <div
+      ref={wrapperRef}
       className={`${bottomBarStyles.bottomBarWrapper} ${isNative ? bottomBarStyles.nativeApp : ''}`}
       data-testid="bottom-bar-wrapper"
     >
