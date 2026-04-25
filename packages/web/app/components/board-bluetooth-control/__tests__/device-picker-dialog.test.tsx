@@ -3,6 +3,10 @@ import { render, screen, within, fireEvent } from '@testing-library/react';
 import { DevicePickerDialog } from '../device-picker-dialog';
 import type { DiscoveredDevice } from '@/app/lib/ble/types';
 
+vi.mock('next/navigation', () => ({
+  useRouter: () => ({ push: vi.fn(), replace: vi.fn() }),
+}));
+
 function makeDevice(overrides: Partial<DiscoveredDevice> & { deviceId: string; rssi: number }): DiscoveredDevice {
   return { ...overrides };
 }
