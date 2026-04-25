@@ -6,10 +6,10 @@ const MOBILE_ROOT = path.resolve(import.meta.dirname, '..');
 const REPO_ROOT = path.resolve(MOBILE_ROOT, '..');
 const SVG_ROOT = path.join(REPO_ROOT, 'svg');
 
-const CORAL = '#d65a4f';
+const SPLASH_BG = '#0A0A0A';
 
 const APP_ICON_SVG = path.join(SVG_ROOT, 'app-icon/icon-dark-1024.svg');
-const SPLASH_LOGO_SVG = path.join(SVG_ROOT, 'mark/route-mark-on-coral.svg');
+const SPLASH_LOGO_SVG = path.join(SVG_ROOT, 'mark/route-mark.svg');
 const ADAPTIVE_FG_SVG = path.join(SVG_ROOT, 'mark/route-mark.svg');
 
 function ensureDir(filePath: string): void {
@@ -48,7 +48,7 @@ async function renderSplash(
       width,
       height,
       channels: 4,
-      background: CORAL,
+      background: SPLASH_BG,
     },
   })
     .composite([{ input: logoPng, gravity: 'centre' }])
