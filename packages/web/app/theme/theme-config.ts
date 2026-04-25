@@ -21,8 +21,8 @@ export const themeTokens = {
     purpleHover: '#6D28D9',
     amber: '#FBBF24', // For flash/benchmark badges
     pink: '#EC4899', // For finish holds in climb creation
-    logoGreen: '#5DBE94', // Brighter sage green for logo
-    logoRose: '#C75B64', // Brighter dusty rose for logo
+    logoGreen: '#5fb27a', // Route mark green
+    logoRose: '#d65a4f', // Brand coral
   },
 
   // Neutral palette

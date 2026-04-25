@@ -37,7 +37,11 @@ export const metadata: Metadata = {
     card: 'summary_large_image',
   },
   icons: {
-    icon: '/favicon.ico',
+    icon: [
+      { url: '/favicon.ico', sizes: '32x32' },
+      { url: '/icon.svg', type: 'image/svg+xml' },
+    ],
+    apple: '/icons/apple-touch-icon.png',
   },
 };
 
@@ -46,7 +50,7 @@ export const viewport: Viewport = {
   initialScale: 1,
   maximumScale: 1,
   viewportFit: 'cover',
-  themeColor: '#0A0A0A',
+  themeColor: '#0e0e10',
 };
 
 export default async function RootLayout({ children }: { children: React.ReactNode }) {
