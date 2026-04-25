@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vite-plus/test';
-import { render, act, fireEvent, waitFor } from '@testing-library/react';
+import { render, act, fireEvent } from '@testing-library/react';
 import React from 'react';
 import BoardSearchMap, { FLY_TO_ZOOM } from '../board-search-map';
 
@@ -112,9 +112,16 @@ describe('BoardSearchMap lifecycle', () => {
 
     const { unmount } = render(<BoardSearchMap {...baseProps} onViewportChange={onViewportChange} />);
 
-    await waitFor(() => {
-      expect(mockState.handlers.moveend.length).toBeGreaterThan(0);
+    // Flush the async Leaflet import. waitFor can't be used here because its
+    // setInterval retry mechanism is frozen by vi.useFakeTimers(). Promise
+    // microtasks are unaffected by fake timers, so two ticks suffice: one for
+    // Promise.all to coalesce, one for the .then() to run. The explicit expect
+    // makes failure loud if the flush depth ever needs to change.
+    await act(async () => {
+      await Promise.resolve();
+      await Promise.resolve();
     });
+    expect(mockState.handlers.moveend.length).toBeGreaterThan(0);
 
     // Simulate Leaflet's internal teardown emitting moveend during remove().
     mockState.map!.remove.mockImplementation(() => {
@@ -153,9 +160,13 @@ describe('BoardSearchMap lifecycle', () => {
 
     const { unmount } = render(<BoardSearchMap {...baseProps} onViewportChange={onViewportChange} />);
 
-    await waitFor(() => {
-      expect(mockState.handlers.moveend.length).toBeGreaterThan(0);
+    // Same flush approach as the teardown test above: fake timers freeze
+    // waitFor's setInterval, so we flush microtasks manually instead.
+    await act(async () => {
+      await Promise.resolve();
+      await Promise.resolve();
     });
+    expect(mockState.handlers.moveend.length).toBeGreaterThan(0);
 
     act(() => {
       mockState.handlers.moveend.forEach((fn: () => void) => fn());
