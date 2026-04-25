@@ -66,29 +66,32 @@ export function parseBoardRouteParams<T extends BoardRouteParameters>(
   return parsedParams as T extends BoardRouteParametersWithUuid ? never : ParsedBoardRouteParameters;
 }
 
-export const searchParamsToUrlParams = ({
-  gradeAccuracy,
-  maxGrade,
-  minGrade,
-  minAscents,
-  minRating,
-  sortBy,
-  sortOrder,
-  name,
-  onlyClassics,
-  onlyTallClimbs,
-  settername,
-  setternameSuggestion,
-  holdsFilter,
-  hideAttempted,
-  hideCompleted,
-  showOnlyAttempted,
-  showOnlyCompleted,
-  onlyDrafts,
-  projectsOnly,
-  page,
-  pageSize,
-}: SearchRequestPagination): URLSearchParams => {
+export const searchParamsToUrlParams = (input: SearchRequestPagination): URLSearchParams => {
+  // Coalesce any missing/undefined fields to their defaults. Stored recent searches
+  // (IndexedDB) and partial filter updates can leak undefined values into this path,
+  // which would otherwise crash on `.toString()`.
+  const gradeAccuracy = input.gradeAccuracy ?? DEFAULT_SEARCH_PARAMS.gradeAccuracy;
+  const maxGrade = input.maxGrade ?? DEFAULT_SEARCH_PARAMS.maxGrade;
+  const minGrade = input.minGrade ?? DEFAULT_SEARCH_PARAMS.minGrade;
+  const minAscents = input.minAscents ?? DEFAULT_SEARCH_PARAMS.minAscents;
+  const minRating = input.minRating ?? DEFAULT_SEARCH_PARAMS.minRating;
+  const sortBy = input.sortBy ?? DEFAULT_SEARCH_PARAMS.sortBy;
+  const sortOrder = input.sortOrder ?? DEFAULT_SEARCH_PARAMS.sortOrder;
+  const name = input.name ?? DEFAULT_SEARCH_PARAMS.name;
+  const onlyClassics = input.onlyClassics ?? DEFAULT_SEARCH_PARAMS.onlyClassics;
+  const onlyTallClimbs = input.onlyTallClimbs ?? DEFAULT_SEARCH_PARAMS.onlyTallClimbs;
+  const settername = input.settername ?? DEFAULT_SEARCH_PARAMS.settername;
+  const setternameSuggestion = input.setternameSuggestion ?? DEFAULT_SEARCH_PARAMS.setternameSuggestion;
+  const holdsFilter = input.holdsFilter ?? DEFAULT_SEARCH_PARAMS.holdsFilter;
+  const hideAttempted = input.hideAttempted ?? DEFAULT_SEARCH_PARAMS.hideAttempted;
+  const hideCompleted = input.hideCompleted ?? DEFAULT_SEARCH_PARAMS.hideCompleted;
+  const showOnlyAttempted = input.showOnlyAttempted ?? DEFAULT_SEARCH_PARAMS.showOnlyAttempted;
+  const showOnlyCompleted = input.showOnlyCompleted ?? DEFAULT_SEARCH_PARAMS.showOnlyCompleted;
+  const onlyDrafts = input.onlyDrafts ?? DEFAULT_SEARCH_PARAMS.onlyDrafts;
+  const projectsOnly = input.projectsOnly ?? DEFAULT_SEARCH_PARAMS.projectsOnly;
+  const page = input.page ?? DEFAULT_SEARCH_PARAMS.page;
+  const pageSize = input.pageSize ?? DEFAULT_SEARCH_PARAMS.pageSize;
+
   const params: Record<string, string> = {};
 
   // Only add parameters that differ from defaults

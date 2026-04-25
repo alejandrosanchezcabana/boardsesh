@@ -140,6 +140,49 @@ describe('searchParamsToUrlParams', () => {
 
     expect(result.toString()).toBe('maxGrade=5');
   });
+
+  it('should treat undefined numeric fields as defaults without throwing', () => {
+    // Regression: a recent-search pill tap on iOS Safari was crashing because
+    // IndexedDB-persisted filters contained `undefined` for minGrade/maxGrade/
+    // minAscents/minRating/gradeAccuracy, and the serializer called .toString()
+    // on them. The boundary must coalesce undefined to the default.
+    const corrupt = {
+      ...DEFAULT_SEARCH_PARAMS,
+      minGrade: undefined,
+      maxGrade: undefined,
+      minAscents: undefined,
+      minRating: undefined,
+      gradeAccuracy: undefined,
+    } as unknown as SearchRequestPagination;
+
+    const result = searchParamsToUrlParams(corrupt);
+    expect(result.toString()).toBe('');
+  });
+
+  it('should treat undefined non-numeric fields as defaults without throwing', () => {
+    const corrupt = {
+      ...DEFAULT_SEARCH_PARAMS,
+      sortBy: undefined,
+      sortOrder: undefined,
+      name: undefined,
+      onlyClassics: undefined,
+      onlyTallClimbs: undefined,
+      settername: undefined,
+      setternameSuggestion: undefined,
+      holdsFilter: undefined,
+      hideAttempted: undefined,
+      hideCompleted: undefined,
+      showOnlyAttempted: undefined,
+      showOnlyCompleted: undefined,
+      onlyDrafts: undefined,
+      projectsOnly: undefined,
+      page: undefined,
+      pageSize: undefined,
+    } as unknown as SearchRequestPagination;
+
+    const result = searchParamsToUrlParams(corrupt);
+    expect(result.toString()).toBe('');
+  });
 });
 
 describe('parsedRouteSearchParamsToSearchParams', () => {

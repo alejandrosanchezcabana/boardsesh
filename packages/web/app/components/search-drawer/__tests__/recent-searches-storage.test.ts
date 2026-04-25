@@ -77,6 +77,76 @@ describe('recent-searches-storage', () => {
     });
   });
 
+  describe('sanitization of corrupt persisted entries', () => {
+    it('should replace undefined numeric fields with defaults on read', async () => {
+      // Seed IndexedDB with the exact corrupt shape that crashed iOS Safari:
+      // numeric filter fields stored as `undefined`. (Object.assign keeps the
+      // property present-with-undefined-value, which is what JSON parsing of
+      // older entries produced when the form wrote `|| undefined`.)
+      const corruptEntry: RecentSearch = {
+        id: 'corrupt-1',
+        label: 'Corrupt search',
+        filters: {
+          minGrade: undefined,
+          maxGrade: undefined,
+          minAscents: undefined,
+          minRating: undefined,
+          gradeAccuracy: undefined,
+          name: 'climb',
+        } as Partial<import('@/app/lib/types').SearchRequestPagination>,
+        timestamp: Date.now(),
+      };
+      const db = await openDB(DB_NAME, 1);
+      await db.put(STORE_NAME, [corruptEntry], 'recent');
+      db.close();
+
+      const results = await getRecentSearches();
+      expect(results).toHaveLength(1);
+      expect(results[0].filters.minGrade).toBe(0);
+      expect(results[0].filters.maxGrade).toBe(0);
+      expect(results[0].filters.minAscents).toBe(0);
+      expect(results[0].filters.minRating).toBe(0);
+      expect(results[0].filters.gradeAccuracy).toBe(0);
+      expect(results[0].filters.name).toBe('climb');
+    });
+
+    it('should write the sanitized version back to IndexedDB', async () => {
+      const corruptEntry: RecentSearch = {
+        id: 'corrupt-1',
+        label: 'Corrupt search',
+        filters: { minGrade: undefined, maxGrade: 5 } as Partial<
+          import('@/app/lib/types').SearchRequestPagination
+        >,
+        timestamp: Date.now(),
+      };
+      const db = await openDB(DB_NAME, 1);
+      await db.put(STORE_NAME, [corruptEntry], 'recent');
+      db.close();
+
+      // First read sanitizes and writes back.
+      await getRecentSearches();
+
+      // Read directly from IndexedDB to confirm the corrupt undefined is gone.
+      const db2 = await openDB(DB_NAME, 1);
+      const stored = (await db2.get(STORE_NAME, 'recent')) as RecentSearch[];
+      db2.close();
+      expect(stored[0].filters.minGrade).toBe(0);
+      expect(stored[0].filters.maxGrade).toBe(5);
+    });
+
+    it('should sanitize undefined numeric fields on write', async () => {
+      await addRecentSearch('From form', {
+        minAscents: undefined,
+        minGrade: 7,
+      } as Partial<import('@/app/lib/types').SearchRequestPagination>);
+
+      const results = await getRecentSearches();
+      expect(results).toHaveLength(1);
+      expect(results[0].filters.minAscents).toBe(0);
+      expect(results[0].filters.minGrade).toBe(7);
+    });
+  });
+
   describe('localStorage migration', () => {
     it('should migrate recent searches from localStorage on first read', async () => {
       const legacyData: RecentSearch[] = [
