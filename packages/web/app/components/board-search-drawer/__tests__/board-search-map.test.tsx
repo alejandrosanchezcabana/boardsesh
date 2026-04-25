@@ -1,8 +1,8 @@
 // @vitest-environment jsdom
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vite-plus/test';
-import { render, act, fireEvent } from '@testing-library/react';
+import { render, act, fireEvent, waitFor } from '@testing-library/react';
 import React from 'react';
-import BoardSearchMap from '../board-search-map';
+import BoardSearchMap, { FLY_TO_ZOOM } from '../board-search-map';
 
 // Shared mock state. `vi.hoisted` runs before the `vi.mock` factory below
 // (which is itself hoisted above imports), so the factory can reference it.
@@ -79,6 +79,7 @@ vi.mock('leaflet', () => {
 
 vi.mock('leaflet/dist/leaflet.css', () => ({}));
 
+
 const baseProps = {
   center: { lat: 0, lng: 0 },
   zoom: 2,
@@ -111,12 +112,9 @@ describe('BoardSearchMap lifecycle', () => {
 
     const { unmount } = render(<BoardSearchMap {...baseProps} onViewportChange={onViewportChange} />);
 
-    await act(async () => {
-      await Promise.resolve();
-      await Promise.resolve();
+    await waitFor(() => {
+      expect(mockState.handlers.moveend.length).toBeGreaterThan(0);
     });
-
-    expect(mockState.handlers.moveend.length).toBeGreaterThan(0);
 
     // Simulate Leaflet's internal teardown emitting moveend during remove().
     mockState.map!.remove.mockImplementation(() => {
@@ -155,9 +153,8 @@ describe('BoardSearchMap lifecycle', () => {
 
     const { unmount } = render(<BoardSearchMap {...baseProps} onViewportChange={onViewportChange} />);
 
-    await act(async () => {
-      await Promise.resolve();
-      await Promise.resolve();
+    await waitFor(() => {
+      expect(mockState.handlers.moveend.length).toBeGreaterThan(0);
     });
 
     act(() => {
@@ -183,24 +180,20 @@ describe('BoardSearchMap lifecycle', () => {
   // handler would never fire. The guard detects this and calls onViewportChange
   // immediately instead of relying on a moveend that will never come.
   it('calls onViewportChange immediately when map is already at user location', async () => {
-    const FLY_TO_ZOOM = 13;
     mockState.map!.getCenter.mockReturnValue({ lat: 37.5, lng: -122.1 });
     mockState.map!.getZoom.mockReturnValue(FLY_TO_ZOOM);
 
     const onViewportChange = vi.fn();
     const userCoords = { latitude: 37.5, longitude: -122.1 };
 
-    const { getByRole } = render(
+    const { findByRole } = render(
       <BoardSearchMap {...baseProps} userCoords={userCoords} onViewportChange={onViewportChange} />,
     );
 
-    await act(async () => {
-      await Promise.resolve();
-      await Promise.resolve();
-    });
+    const button = await findByRole('button', { name: /my location/i });
 
     act(() => {
-      fireEvent.click(getByRole('button', { name: /my location/i }));
+      fireEvent.click(button);
     });
 
     expect(mockState.map!.flyTo).not.toHaveBeenCalled();

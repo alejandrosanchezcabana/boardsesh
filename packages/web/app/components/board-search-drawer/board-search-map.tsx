@@ -13,6 +13,7 @@ import markerStyles from './board-search-map.module.css';
 const VIEWPORT_DEBOUNCE_MS = 250;
 const MARKER_SIZE = 16;
 const MARKER_SIZE_SELECTED = 22;
+export const FLY_TO_ZOOM = 13;
 
 type BoardSearchMapProps = {
   center: { lat: number; lng: number };
@@ -170,8 +171,11 @@ export default function BoardSearchMap({
         // on Leaflet treating undefined the same as an omitted argument.
         if (fireViewportRef.current) {
           mapRef.current.off('moveend', fireViewportRef.current);
-        } else {
-          mapRef.current.off('moveend');
+        } else if (process.env.NODE_ENV !== 'production') {
+          throw new Error(
+            'BoardSearchMap: fireViewportRef.current is null while mapRef.current is set. ' +
+              'Both are assigned in the same .then() block — if this fires, they were decoupled.',
+          );
         }
         fireViewportRef.current = null;
         mapRef.current.remove();
@@ -267,7 +271,6 @@ export default function BoardSearchMap({
     // and locationResolved would stay false for the session. Report the current
     // viewport immediately and bail out instead.
     const current = map.getCenter();
-    const FLY_TO_ZOOM = 13;
     if (
       Math.abs(current.lat - coords.latitude) < 0.0001 &&
       Math.abs(current.lng - coords.longitude) < 0.0001 &&
