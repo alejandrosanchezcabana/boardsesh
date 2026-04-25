@@ -100,11 +100,21 @@ async function main() {
   // 1. iOS App Icon (1024x1024)
   // ---------------------------------------------------------------------------
   console.info('[iOS] App Icon (1024x1024)');
-  await renderSquareSvg(
-    appIconSvg,
-    1024,
-    path.join(MOBILE_ROOT, 'ios/App/App/Assets.xcassets/AppIcon.appiconset/AppIcon-512@2x.png'),
-  );
+  {
+    // Apple rejects any alpha channel on the 1024x1024 marketing icon, so
+    // flatten over the SVG's own background color before encoding.
+    const iosIconPath = path.join(
+      MOBILE_ROOT,
+      'ios/App/App/Assets.xcassets/AppIcon.appiconset/AppIcon-512@2x.png',
+    );
+    ensureDir(iosIconPath);
+    await sharp(appIconSvg)
+      .resize(1024, 1024)
+      .flatten({ background: '#17171a' })
+      .png()
+      .toFile(iosIconPath);
+    console.info(`  -> ${path.relative(MOBILE_ROOT, iosIconPath)} (1024x1024)`);
+  }
 
   // ---------------------------------------------------------------------------
   // 2. iOS Splash (2732x2732, 3 copies for the imageset)
