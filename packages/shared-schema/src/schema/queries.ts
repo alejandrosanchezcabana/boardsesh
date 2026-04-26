@@ -510,20 +510,8 @@ export const queriesTypeDefs = /* GraphQL */ `
     bulkVoteSummaries(input: BulkVoteSummaryInput!): [VoteSummary!]!
 
     # ============================================
-    # Beta Video Queries
+    # Beta Link Queries
     # ============================================
-
-    """
-    Get beta videos for a climb.
-    Returns only videos with status 'ready'.
-    """
-    betaVideos(boardType: String!, climbUuid: String!): [BetaVideo!]!
-
-    """
-    Get a single beta video by UUID.
-    Used for polling upload status.
-    """
-    betaVideo(uuid: ID!): BetaVideo
 
     """
     Get external (Instagram) beta links for a climb.

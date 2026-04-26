@@ -49,7 +49,6 @@ import { newClimbSubscriptionResolvers } from './social/new-climb-subscriptions'
 import { newClimbFeedSubscription } from './social/new-climb-feed-subscription';
 import { feedbackMutations } from './feedback/mutations';
 import { betaVideoQueries } from './beta-videos/queries';
-import { betaVideoMutations } from './beta-videos/mutations';
 import { isNoMatchClimb } from './shared/helpers';
 
 export const resolvers = {
@@ -107,7 +106,6 @@ export const resolvers = {
     ...newClimbSubscriptionResolvers.Mutation,
     ...sessionEditMutations,
     ...feedbackMutations,
-    ...betaVideoMutations,
   },
 
   Subscription: {
