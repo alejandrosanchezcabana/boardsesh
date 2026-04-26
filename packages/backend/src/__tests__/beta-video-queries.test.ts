@@ -18,8 +18,12 @@ const {
     mockDb,
     mockIsBunnyStreamConfigured: vi.fn().mockReturnValue(true),
     mockGetBunnyThumbnailUrl: vi.fn((videoId: string) => `https://cdn.test/${videoId}/thumbnail.jpg`),
-    mockGetSignedThumbnailUrl: vi.fn((videoId: string) => `https://cdn.test/${videoId}/thumbnail.jpg?token=signed&expires=9999`),
-    mockGetSignedPlaybackUrl: vi.fn((videoId: string) => `https://cdn.test/${videoId}/playlist.m3u8?token=signed&expires=9999`),
+    mockGetSignedThumbnailUrl: vi.fn(
+      (videoId: string) => `https://cdn.test/${videoId}/thumbnail.jpg?token=signed&expires=9999`,
+    ),
+    mockGetSignedPlaybackUrl: vi.fn(
+      (videoId: string) => `https://cdn.test/${videoId}/playlist.m3u8?token=signed&expires=9999`,
+    ),
     mockGetBunnyVideoStatus: vi.fn(),
     mockDeleteBunnyVideo: vi.fn().mockResolvedValue(undefined),
   };

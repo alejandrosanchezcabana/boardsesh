@@ -524,5 +524,12 @@ export const queriesTypeDefs = /* GraphQL */ `
     Used for polling upload status.
     """
     betaVideo(uuid: ID!): BetaVideo
+
+    """
+    Get external (Instagram) beta links for a climb.
+    Live-checks each Instagram post and omits any that have been deleted or made private.
+    Caches Instagram thumbnails to our S3 bucket on first read.
+    """
+    betaLinks(boardType: String!, climbUuid: String!): [BetaLink!]!
   }
 `;

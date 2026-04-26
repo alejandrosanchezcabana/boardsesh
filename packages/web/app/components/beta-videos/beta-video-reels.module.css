@@ -4,7 +4,16 @@
 
 .overlay {
   position: fixed;
-  inset: 0;
+  top: 0;
+  left: 0;
+  right: 0;
+  width: 100vw;
+  /* Fall back through 100vh -> 100dvh -> JS-tracked --reels-vh.
+     Android Chrome's URL bar can re-appear after the iframe settles, so
+     we anchor the overlay to the actual visual viewport from JS. */
+  height: 100vh;
+  height: 100dvh;
+  height: var(--reels-vh, 100dvh);
   z-index: 1400;
   background: black;
   display: flex;
@@ -90,15 +99,19 @@
 }
 
 .bottomBar {
-  position: absolute;
-  bottom: 0;
-  left: 0;
-  right: 0;
+  /* In-flow flex child so the iframe in .videoContainer (flex: 1) can never
+     cover the close button. Anchored to the bottom of the overlay, which
+     itself follows the visible viewport via --reels-vh. */
+  position: relative;
+  flex: 0 0 auto;
   display: flex;
   align-items: center;
   justify-content: center;
   padding: 12px 0;
   padding-bottom: max(12px, env(safe-area-inset-bottom));
+  background: rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(8px);
+  z-index: 2;
 }
 
 /* Close button — white-on-black video player chrome, no theme token for white overlays */
@@ -125,16 +138,42 @@
   transform: scale(0.95);
 }
 
-/* Swipe indicator — white-on-black video player chrome, no theme token for white overlays */
-.swipeIndicator {
+.iframeWrapper {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.iframeWrapper iframe {
+  height: 100%;
+  max-height: 100%;
+  width: auto;
+  aspect-ratio: 9 / 14;
+  max-width: 100%;
+  border: none;
+  background: black;
+}
+
+.openOnInstagram {
   position: absolute;
-  top: 50%;
+  top: 12px;
   left: 50%;
-  transform: translate(-50%, -50%);
-  color: rgba(255, 255, 255, 0.5);
-  pointer-events: none;
-  font-size: 12px;
-  text-align: center;
+  transform: translateX(-50%);
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 14px;
+  border-radius: 20px;
+  background: rgba(0, 0, 0, 0.7);
+  backdrop-filter: blur(8px);
+  color: white;
+  font-size: 13px;
+  font-weight: 500;
+  text-decoration: none;
+  z-index: 3;
 }
 
 .commentSheet {

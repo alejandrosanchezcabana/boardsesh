@@ -17,7 +17,9 @@ const { mockDb, mockIsBunnyStreamConfigured, mockCreateBunnyVideo, mockGetTusUpl
     return {
       mockDb,
       mockIsBunnyStreamConfigured: vi.fn().mockReturnValue(true),
-      mockCreateBunnyVideo: vi.fn().mockResolvedValue({ guid: 'bunny-video-guid', title: 'Test', status: 0, length: 0, thumbnailFileName: '' }),
+      mockCreateBunnyVideo: vi
+        .fn()
+        .mockResolvedValue({ guid: 'bunny-video-guid', title: 'Test', status: 0, length: 0, thumbnailFileName: '' }),
       mockGetTusUploadCredentials: vi.fn().mockResolvedValue({
         uploadUrl: 'https://video.bunnycdn.com/tusupload',
         authorizationSignature: 'sig-abc',

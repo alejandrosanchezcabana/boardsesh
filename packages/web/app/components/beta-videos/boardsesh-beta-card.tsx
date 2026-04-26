@@ -1,8 +1,10 @@
 'use client';
 
-import React from 'react';
+import React, { useState } from 'react';
 import PlayArrowOutlined from '@mui/icons-material/PlayArrowOutlined';
+import Instagram from '@mui/icons-material/Instagram';
 import CircularProgress from '@mui/material/CircularProgress';
+import type { BetaLink } from '@/app/lib/api-wrappers/sync-api-types';
 import styles from './boardsesh-beta.module.css';
 
 type BetaVideoData = {
@@ -21,10 +23,19 @@ type BetaVideoData = {
   createdAt: string;
 };
 
-type BoardseshBetaCardProps = {
+type BunnyCardProps = {
+  source?: 'bunny';
   video: BetaVideoData;
   onClick: () => void;
 };
+
+type InstagramCardProps = {
+  source: 'instagram';
+  link: BetaLink;
+  onClick: () => void;
+};
+
+type BoardseshBetaCardProps = BunnyCardProps | InstagramCardProps;
 
 function formatDuration(seconds: number): string {
   const mins = Math.floor(seconds / 60);
@@ -32,7 +43,53 @@ function formatDuration(seconds: number): string {
   return `${mins}:${secs.toString().padStart(2, '0')}`;
 }
 
-const BoardseshBetaCard: React.FC<BoardseshBetaCardProps> = ({ video, onClick }) => {
+const InstagramBetaCard: React.FC<{ link: BetaLink; onClick: () => void }> = ({ link, onClick }) => {
+  const [thumbnailFailed, setThumbnailFailed] = useState(false);
+  const thumbnailSrc = !thumbnailFailed ? link.thumbnail : null;
+
+  return (
+    <div
+      className={styles.card}
+      onClick={onClick}
+      role="button"
+      tabIndex={0}
+      onKeyDown={(e) => {
+        if (e.key === 'Enter') onClick();
+      }}
+    >
+      <div className={styles.thumbnailWrapper}>
+        {thumbnailSrc ? (
+          <img
+            src={thumbnailSrc}
+            alt={`Beta by ${link.foreign_username || 'unknown'}`}
+            className={styles.thumbnail}
+            loading="lazy"
+            referrerPolicy="no-referrer"
+            onError={() => setThumbnailFailed(true)}
+          />
+        ) : (
+          <div className={styles.thumbnailPlaceholder}>
+            <Instagram sx={{ fontSize: 28, color: 'var(--neutral-400)' }} />
+          </div>
+        )}
+        <span className={styles.instagramBadge} aria-label="From Instagram">
+          <Instagram sx={{ fontSize: 12 }} />
+        </span>
+        <div className={styles.playOverlay}>
+          <PlayArrowOutlined sx={{ color: 'white', fontSize: 32 }} />
+        </div>
+        {link.foreign_username && <span className={styles.userChip}>@{link.foreign_username}</span>}
+      </div>
+    </div>
+  );
+};
+
+const BoardseshBetaCard: React.FC<BoardseshBetaCardProps> = (props) => {
+  if (props.source === 'instagram') {
+    return <InstagramBetaCard link={props.link} onClick={props.onClick} />;
+  }
+
+  const { video, onClick } = props;
   const isProcessing = video.status !== 'ready';
 
   return (

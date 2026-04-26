@@ -1,19 +1,33 @@
 'use client';
 
-import React, { useState, useRef, useCallback, useEffect } from 'react';
+import React, { useState, useRef, useCallback, useEffect, useMemo } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useSession } from 'next-auth/react';
 import VideocamOutlined from '@mui/icons-material/VideocamOutlined';
 import FileUploadOutlined from '@mui/icons-material/FileUploadOutlined';
+import Instagram from '@mui/icons-material/Instagram';
 import Skeleton from '@mui/material/Skeleton';
 import Snackbar from '@mui/material/Snackbar';
 import Alert from '@mui/material/Alert';
 import LinearProgress from '@mui/material/LinearProgress';
+import Dialog from '@mui/material/Dialog';
+import DialogTitle from '@mui/material/DialogTitle';
+import DialogContent from '@mui/material/DialogContent';
+import IconButton from '@mui/material/IconButton';
+import CloseOutlined from '@mui/icons-material/CloseOutlined';
 import { createGraphQLHttpClient } from '@/app/lib/graphql/client';
 import { useWsAuthToken } from '@/app/hooks/use-ws-auth-token';
-import { GET_BETA_VIDEOS, CREATE_BETA_VIDEO, GET_BETA_VIDEO } from '@/app/lib/graphql/operations/beta-videos';
+import {
+  GET_BETA_VIDEOS,
+  CREATE_BETA_VIDEO,
+  GET_BETA_VIDEO,
+  GET_BETA_LINKS,
+} from '@/app/lib/graphql/operations/beta-videos';
+import type { BetaLink } from '@/app/lib/api-wrappers/sync-api-types';
+import { dedupeBetaLinks, getInstagramEmbedUrl } from '@/app/lib/instagram-url';
 import BoardseshBetaCard, { type BetaVideoData } from './boardsesh-beta-card';
-import BetaVideoReelsPlayer from './beta-video-reels-player';
+import BetaVideoReelsPlayer, { type ReelsItem } from './beta-video-reels-player';
+import AttachBetaLinkForm from './attach-beta-link-form';
 import styles from './boardsesh-beta.module.css';
 
 type BoardseshBetaSectionProps = {
@@ -41,6 +55,18 @@ type BetaVideoStatusResult = {
   betaVideo: { uuid: string; status: string } | null;
 };
 
+type BetaLinksQueryResult = {
+  betaLinks: Array<{
+    climbUuid: string;
+    link: string;
+    foreignUsername: string | null;
+    angle: number | null;
+    thumbnail: string | null;
+    isListed: boolean | null;
+    createdAt: string | null;
+  }>;
+};
+
 type UploadProgress = {
   uuid: string;
   phase: 'uploading' | 'processing' | 'done' | 'error';
@@ -53,19 +79,19 @@ const BoardseshBetaSection: React.FC<BoardseshBetaSectionProps> = ({ boardType, 
   const isAuthenticated = sessionStatus === 'authenticated';
   const { token: authToken } = useWsAuthToken();
   const queryClient = useQueryClient();
-  const [selectedVideoIndex, setSelectedVideoIndex] = useState<number | null>(null);
+  const [selectedItemIndex, setSelectedItemIndex] = useState<number | null>(null);
   const [upload, setUpload] = useState<UploadProgress | null>(null);
+  const [instagramDialogOpen, setInstagramDialogOpen] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const pollRef = useRef<ReturnType<typeof setInterval> | undefined>(undefined);
 
-  // Clean up polling on unmount
   useEffect(() => {
     return () => {
       if (pollRef.current) clearInterval(pollRef.current);
     };
   }, []);
 
-  const { data, isLoading } = useQuery({
+  const { data: bunnyData, isLoading: isBunnyLoading } = useQuery({
     queryKey: ['boardseshBetaVideos', boardType, climbUuid],
     queryFn: async () => {
       const client = createGraphQLHttpClient();
@@ -73,12 +99,56 @@ const BoardseshBetaSection: React.FC<BoardseshBetaSectionProps> = ({ boardType, 
     },
     enabled: !!climbUuid,
     staleTime: 5 * 60 * 1000,
-    // Poll more frequently while a video is processing
     refetchInterval: upload?.phase === 'processing' ? 5000 : false,
   });
 
-  const videos = data?.betaVideos ?? [];
-  const readyVideos = videos.filter((v) => v.status === 'ready');
+  const { data: betaLinks = [], isLoading: isLinksLoading } = useQuery<BetaLink[]>({
+    queryKey: ['betaLinks', boardType, climbUuid],
+    queryFn: async () => {
+      const client = createGraphQLHttpClient();
+      const result = await client.request<BetaLinksQueryResult>(GET_BETA_LINKS, { boardType, climbUuid });
+      return result.betaLinks.map((b) => ({
+        climb_uuid: b.climbUuid,
+        link: b.link,
+        foreign_username: b.foreignUsername,
+        angle: b.angle,
+        thumbnail: b.thumbnail,
+        is_listed: b.isListed ?? false,
+        created_at: b.createdAt ?? '',
+      }));
+    },
+    enabled: !!climbUuid,
+    staleTime: 5 * 60 * 1000,
+  });
+
+  const isLoading = isBunnyLoading || isLinksLoading;
+  const videos = bunnyData?.betaVideos ?? [];
+  const dedupedLinks = useMemo(() => dedupeBetaLinks(betaLinks), [betaLinks]);
+
+  const reelsItems = useMemo<ReelsItem[]>(() => {
+    const items: ReelsItem[] = [];
+    for (const video of videos) {
+      if (video.status === 'ready') {
+        items.push({ kind: 'bunny', uuid: video.uuid, data: video });
+      }
+    }
+    for (const link of dedupedLinks) {
+      const embedUrl = getInstagramEmbedUrl(link.link);
+      if (!embedUrl) continue;
+      items.push({
+        kind: 'instagram',
+        uuid: `ig:${link.link}`,
+        link: link.link,
+        embedUrl,
+        thumbnail: link.thumbnail,
+        username: link.foreign_username,
+        angle: link.angle,
+      });
+    }
+    return items;
+  }, [videos, dedupedLinks]);
+
+  const totalCount = videos.length + dedupedLinks.length;
 
   const startPollingStatus = useCallback(
     (uuid: string) => {
@@ -112,11 +182,9 @@ const BoardseshBetaSection: React.FC<BoardseshBetaSectionProps> = ({ boardType, 
   const handleFileSelected = useCallback(
     async (e: React.ChangeEvent<HTMLInputElement>) => {
       const file = e.target.files?.[0];
-      // Reset so the same file can be re-selected
       if (fileInputRef.current) fileInputRef.current.value = '';
       if (!file || !authToken) return;
 
-      // Validate portrait orientation and duration
       const validation = await new Promise<{ ok: boolean; error?: string }>((resolve) => {
         const video = document.createElement('video');
         video.preload = 'metadata';
@@ -144,7 +212,6 @@ const BoardseshBetaSection: React.FC<BoardseshBetaSectionProps> = ({ boardType, 
       }
 
       try {
-        // Create video entry
         setUpload({ uuid: '', phase: 'uploading', progress: 0, message: 'Preparing upload...' });
         const client = createGraphQLHttpClient(authToken);
         const result = await client.request<CreateBetaVideoResult>(CREATE_BETA_VIDEO, {
@@ -155,10 +222,8 @@ const BoardseshBetaSection: React.FC<BoardseshBetaSectionProps> = ({ boardType, 
 
         setUpload({ uuid, phase: 'uploading', progress: 0, message: 'Uploading...' });
 
-        // Refetch so the processing card shows up immediately
         void queryClient.invalidateQueries({ queryKey: ['boardseshBetaVideos', boardType, climbUuid] });
 
-        // Start TUS upload
         const { Upload } = await import('tus-js-client');
         const tusUpload = new Upload(file, {
           endpoint: uploadUrl,
@@ -198,6 +263,23 @@ const BoardseshBetaSection: React.FC<BoardseshBetaSectionProps> = ({ boardType, 
 
   const isUploading = upload?.phase === 'uploading' || upload?.phase === 'processing';
 
+  const handleBunnyCardClick = useCallback(
+    (videoUuid: string, status: string) => {
+      if (status !== 'ready') return;
+      const idx = reelsItems.findIndex((item) => item.kind === 'bunny' && item.uuid === videoUuid);
+      if (idx >= 0) setSelectedItemIndex(idx);
+    },
+    [reelsItems],
+  );
+
+  const handleInstagramCardClick = useCallback(
+    (link: BetaLink) => {
+      const idx = reelsItems.findIndex((item) => item.kind === 'instagram' && item.link === link.link);
+      if (idx >= 0) setSelectedItemIndex(idx);
+    },
+    [reelsItems],
+  );
+
   return (
     <>
       <div className={styles.section}>
@@ -205,11 +287,10 @@ const BoardseshBetaSection: React.FC<BoardseshBetaSectionProps> = ({ boardType, 
           <span className={styles.headerLabel}>
             <VideocamOutlined sx={{ fontSize: 14 }} />
             Boardsesh Beta
-            {videos.length > 0 && ` (${videos.length})`}
+            {totalCount > 0 && ` (${totalCount})`}
           </span>
         </div>
 
-        {/* Hidden file input */}
         <input
           ref={fileInputRef}
           type="file"
@@ -229,14 +310,21 @@ const BoardseshBetaSection: React.FC<BoardseshBetaSectionProps> = ({ boardType, 
           ) : (
             <>
               {isAuthenticated && (
-                <div className={styles.uploadCard}>
+                <div className={styles.uploadCardStack}>
                   <button
                     className={styles.uploadButton}
                     onClick={() => fileInputRef.current?.click()}
                     disabled={isUploading}
                     aria-label="Upload beta video"
                   >
-                    <FileUploadOutlined sx={{ fontSize: 16 }} />
+                    <FileUploadOutlined sx={{ fontSize: 14 }} />
+                  </button>
+                  <button
+                    className={styles.uploadButton}
+                    onClick={() => setInstagramDialogOpen(true)}
+                    aria-label="Add Instagram beta link"
+                  >
+                    <Instagram sx={{ fontSize: 14 }} />
                   </button>
                 </div>
               )}
@@ -244,21 +332,23 @@ const BoardseshBetaSection: React.FC<BoardseshBetaSectionProps> = ({ boardType, 
                 <BoardseshBetaCard
                   key={video.uuid}
                   video={video}
-                  onClick={() => {
-                    if (video.status === 'ready') {
-                      const readyIndex = readyVideos.findIndex((v) => v.uuid === video.uuid);
-                      if (readyIndex >= 0) setSelectedVideoIndex(readyIndex);
-                    }
-                  }}
+                  onClick={() => handleBunnyCardClick(video.uuid, video.status)}
                 />
               ))}
-              {videos.length === 0 && !isAuthenticated && <span className={styles.emptyText}>No beta videos yet</span>}
+              {dedupedLinks.map((link) => (
+                <BoardseshBetaCard
+                  key={`ig-${link.link}`}
+                  source="instagram"
+                  link={link}
+                  onClick={() => handleInstagramCardClick(link)}
+                />
+              ))}
+              {totalCount === 0 && !isAuthenticated && <span className={styles.emptyText}>No beta videos yet</span>}
             </>
           )}
         </div>
       </div>
 
-      {/* Upload progress snackbar */}
       {upload && (
         <Snackbar
           open
@@ -285,11 +375,33 @@ const BoardseshBetaSection: React.FC<BoardseshBetaSectionProps> = ({ boardType, 
         </Snackbar>
       )}
 
-      {selectedVideoIndex !== null && (
+      <Dialog open={instagramDialogOpen} onClose={() => setInstagramDialogOpen(false)} maxWidth="xs" fullWidth>
+        <DialogTitle sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', pr: 1 }}>
+          Add Instagram beta
+          <IconButton size="small" onClick={() => setInstagramDialogOpen(false)} aria-label="Close">
+            <CloseOutlined fontSize="small" />
+          </IconButton>
+        </DialogTitle>
+        <DialogContent>
+          <AttachBetaLinkForm
+            boardType={boardType}
+            climbUuid={climbUuid}
+            angle={angle}
+            autoFocus
+            compact
+            submitLabel="Add"
+            showCancel
+            onCancel={() => setInstagramDialogOpen(false)}
+            onSuccess={() => setInstagramDialogOpen(false)}
+          />
+        </DialogContent>
+      </Dialog>
+
+      {selectedItemIndex !== null && (
         <BetaVideoReelsPlayer
-          videos={readyVideos}
-          initialIndex={selectedVideoIndex}
-          onClose={() => setSelectedVideoIndex(null)}
+          items={reelsItems}
+          initialIndex={selectedItemIndex}
+          onClose={() => setSelectedItemIndex(null)}
         />
       )}
     </>

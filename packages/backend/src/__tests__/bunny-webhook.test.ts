@@ -37,11 +37,7 @@ vi.mock('../handlers/cors', () => ({
 
 import { handleBunnyWebhook } from '../handlers/bunny-webhook';
 
-function createMockReq(
-  method: string,
-  body: string,
-  headers: Record<string, string> = {},
-): IncomingMessage {
+function createMockReq(method: string, body: string, headers: Record<string, string> = {}): IncomingMessage {
   const readable = new Readable({
     read() {
       this.push(body);
@@ -208,9 +204,7 @@ describe('handleBunnyWebhook', () => {
     expect(res._statusCode).toBe(200);
     expect(JSON.parse(res._body)).toEqual({ ok: true });
     expect(mockDb.update).toHaveBeenCalled();
-    expect(mockDb._setMock).toHaveBeenCalledWith(
-      expect.objectContaining({ status: 'failed' }),
-    );
+    expect(mockDb._setMock).toHaveBeenCalledWith(expect.objectContaining({ status: 'failed' }));
     // Should NOT set thumbnailUrl for failed videos
     expect(mockGetBunnyThumbnailUrl).not.toHaveBeenCalled();
   });

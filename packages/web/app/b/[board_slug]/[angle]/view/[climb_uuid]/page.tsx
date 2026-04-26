@@ -114,7 +114,6 @@ export default async function BoardSlugViewPage(props: BoardSlugViewPageProps) {
       <ClimbDetailPageServer
         climb={climbWithProcessedData}
         boardDetails={boardDetails}
-        betaLinks={detailData.betaLinks}
         climbUuid={parsedParams.climb_uuid}
         boardType={parsedParams.board_name}
         angle={parsedParams.angle}

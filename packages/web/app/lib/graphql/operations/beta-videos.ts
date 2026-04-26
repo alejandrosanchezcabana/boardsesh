@@ -58,3 +58,17 @@ export const DELETE_BETA_VIDEO = gql`
     deleteBetaVideo(uuid: $uuid)
   }
 `;
+
+export const GET_BETA_LINKS = gql`
+  query GetBetaLinks($boardType: String!, $climbUuid: String!) {
+    betaLinks(boardType: $boardType, climbUuid: $climbUuid) {
+      climbUuid
+      link
+      foreignUsername
+      angle
+      thumbnail
+      isListed
+      createdAt
+    }
+  }
+`;
