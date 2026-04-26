@@ -116,23 +116,29 @@ const BoardseshBetaSection: React.FC<BoardseshBetaSectionProps> = ({ boardType, 
       if (fileInputRef.current) fileInputRef.current.value = '';
       if (!file || !authToken) return;
 
-      // Validate portrait orientation
-      const isPortrait = await new Promise<boolean>((resolve) => {
+      // Validate portrait orientation and duration
+      const validation = await new Promise<{ ok: boolean; error?: string }>((resolve) => {
         const video = document.createElement('video');
         video.preload = 'metadata';
         video.onloadedmetadata = () => {
           URL.revokeObjectURL(video.src);
-          resolve(video.videoWidth <= video.videoHeight);
+          if (video.videoWidth > video.videoHeight) {
+            resolve({ ok: false, error: 'Only portrait videos — record vertically' });
+          } else if (video.duration > 60) {
+            resolve({ ok: false, error: 'Keep it under 60 seconds' });
+          } else {
+            resolve({ ok: true });
+          }
         };
         video.onerror = () => {
           URL.revokeObjectURL(video.src);
-          resolve(false);
+          resolve({ ok: false, error: 'Could not read video file' });
         };
         video.src = URL.createObjectURL(file);
       });
 
-      if (!isPortrait) {
-        setUpload({ uuid: '', phase: 'error', progress: 0, message: 'Only portrait videos — record vertically' });
+      if (!validation.ok) {
+        setUpload({ uuid: '', phase: 'error', progress: 0, message: validation.error! });
         setTimeout(() => setUpload(null), 4000);
         return;
       }

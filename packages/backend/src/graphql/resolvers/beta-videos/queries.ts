@@ -5,6 +5,7 @@ import {
   getBunnyThumbnailUrl,
   getBunnyPlaybackUrl,
   getBunnyVideoStatus,
+  deleteBunnyVideo,
   isBunnyStreamConfigured,
 } from '../../../lib/bunny-stream';
 
@@ -37,6 +38,17 @@ async function syncProcessingStatus(bunnyVideoId: string): Promise<'ready' | 'pr
     const bunnyVideo = await getBunnyVideoStatus(bunnyVideoId);
     // Status >= 3 means encoding finished (3 = transcode done, 4 = resolutions done)
     if (bunnyVideo.status >= 3 && bunnyVideo.status <= 4) {
+      // Reject videos longer than 60 seconds
+      if (bunnyVideo.length > 60) {
+        await db
+          .update(dbSchema.boardseshBetaVideos)
+          .set({ status: 'failed' })
+          .where(eq(dbSchema.boardseshBetaVideos.bunnyVideoId, bunnyVideoId));
+        try {
+          await deleteBunnyVideo(bunnyVideoId);
+        } catch { /* best effort cleanup */ }
+        return 'failed';
+      }
       await db
         .update(dbSchema.boardseshBetaVideos)
         .set({
