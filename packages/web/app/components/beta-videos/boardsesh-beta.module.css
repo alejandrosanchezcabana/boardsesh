@@ -108,13 +108,15 @@
 
 .uploadCard {
   flex-shrink: 0;
-  width: 72px;
+  width: 48px;
   scroll-snap-align: start;
+  /* Match video card height: card width (143px) * 16/9 */
+  height: calc(143px * 16 / 9);
 }
 
 .uploadButton {
   width: 100%;
-  aspect-ratio: 9 / 16;
+  height: 100%;
   border-radius: 8px;
   border: 2px dashed var(--neutral-300);
   background: transparent;
@@ -168,6 +170,7 @@
   }
 
   .uploadCard {
-    width: 85px;
+    width: 56px;
+    height: calc(169px * 16 / 9);
   }
 }
