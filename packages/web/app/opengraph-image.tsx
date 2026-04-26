@@ -23,7 +23,7 @@ export default function Image() {
       }}
     >
       {/* Route mark */}
-      <svg width="120" height="120" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <svg width="220" height="220" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
         <RouteMarkContextDots />
         <RouteMarkHolds />
       </svg>
@@ -31,11 +31,11 @@ export default function Image() {
       {/* Brand name */}
       <div
         style={{
-          fontSize: 64,
+          fontSize: 112,
           fontWeight: 700,
           color: '#f4f1ea',
           letterSpacing: '-1px',
-          marginTop: 24,
+          marginTop: 32,
         }}
       >
         boardsesh
@@ -44,10 +44,10 @@ export default function Image() {
       {/* Tagline */}
       <div
         style={{
-          fontSize: 28,
+          fontSize: 44,
           color: '#8a8780',
           fontWeight: 500,
-          marginTop: 12,
+          marginTop: 16,
         }}
       >
         Train smarter on your climbing board
@@ -58,10 +58,10 @@ export default function Image() {
         style={{
           display: 'flex',
           alignItems: 'center',
-          gap: 16,
-          marginTop: 40,
-          fontSize: 16,
-          color: '#4a4a52',
+          gap: 24,
+          marginTop: 48,
+          fontSize: 28,
+          color: '#6a6a72',
         }}
       >
         <span>Kilter</span>
