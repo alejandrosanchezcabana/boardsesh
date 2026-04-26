@@ -74,6 +74,7 @@ export const betaVideoMutations = {
 
   deleteBetaVideo: async (_: unknown, { uuid }: { uuid: string }, ctx: ConnectionContext): Promise<boolean> => {
     requireAuthenticated(ctx);
+    await applyRateLimit(ctx, 10, 'deleteBetaVideo');
 
     const [video] = await db
       .select()

@@ -1,3 +1,7 @@
+:global(body.reelsPlayerOpen) {
+  overflow: hidden !important;
+}
+
 .overlay {
   position: fixed;
   inset: 0;
@@ -40,6 +44,7 @@
   pointer-events: none;
 }
 
+/* Video player text shadows — specialized video UI on black background, no theme token equivalent */
 .userName {
   font-size: 14px;
   font-weight: 600;
@@ -96,6 +101,7 @@
   padding-bottom: max(12px, env(safe-area-inset-bottom));
 }
 
+/* Close button — white-on-black video player chrome, no theme token for white overlays */
 .closeButton {
   width: 48px;
   height: 48px;
@@ -119,6 +125,7 @@
   transform: scale(0.95);
 }
 
+/* Swipe indicator — white-on-black video player chrome, no theme token for white overlays */
 .swipeIndicator {
   position: absolute;
   top: 50%;
@@ -147,6 +154,6 @@
 .commentSheetBackdrop {
   position: absolute;
   inset: 0;
-  background: rgba(0, 0, 0, 0.4);
+  background: var(--overlay-light);
   z-index: 5;
 }

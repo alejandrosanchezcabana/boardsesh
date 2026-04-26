@@ -50,6 +50,26 @@ export async function handleBunnyWebhook(req: IncomingMessage, res: ServerRespon
       req.on('error', reject);
     });
 
+    // Validate webhook signature if signing key is configured
+    const signature = req.headers['webhook-signature'] as string | undefined;
+    const signingKey = process.env.BUNNY_WEBHOOK_SIGNING_KEY;
+
+    if (signingKey) {
+      if (!signature) {
+        res.writeHead(401, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ error: 'Missing webhook signature' }));
+        return;
+      }
+
+      const crypto = await import('crypto');
+      const expected = crypto.createHmac('sha256', signingKey).update(body).digest('hex');
+      if (signature !== expected) {
+        res.writeHead(401, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ error: 'Invalid webhook signature' }));
+        return;
+      }
+    }
+
     const payload = JSON.parse(body) as BunnyWebhookPayload;
     const { VideoGuid, Status } = payload;
 

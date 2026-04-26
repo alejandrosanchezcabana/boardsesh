@@ -37,7 +37,7 @@ const BoardseshBetaCard: React.FC<BoardseshBetaCardProps> = ({ video, onClick })
 
   return (
     <div
-      className={styles.card}
+      className={`${styles.card} ${isProcessing ? styles.cardProcessing : ''}`}
       onClick={isProcessing ? undefined : onClick}
       role={isProcessing ? undefined : 'button'}
       tabIndex={isProcessing ? undefined : 0}
@@ -48,7 +48,6 @@ const BoardseshBetaCard: React.FC<BoardseshBetaCardProps> = ({ video, onClick })
               if (e.key === 'Enter') onClick();
             }
       }
-      style={isProcessing ? { cursor: 'default', opacity: 0.7 } : undefined}
     >
       <div className={styles.thumbnailWrapper}>
         {video.thumbnailUrl ? (
@@ -59,7 +58,7 @@ const BoardseshBetaCard: React.FC<BoardseshBetaCardProps> = ({ video, onClick })
             loading="lazy"
           />
         ) : (
-          <div style={{ width: '100%', height: '100%', background: 'var(--neutral-200)' }} />
+          <div className={styles.thumbnailPlaceholder} />
         )}
         {isProcessing ? (
           <div className={styles.processingOverlay}>

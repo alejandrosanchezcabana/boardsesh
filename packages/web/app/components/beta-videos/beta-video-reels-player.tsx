@@ -130,11 +130,11 @@ const BetaVideoReelsPlayer: React.FC<BetaVideoReelsPlayerProps> = ({ videos, ini
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [currentIndex, videos.length, onClose]);
 
-  // Lock body scroll
+  // Lock body scroll via CSS class (avoids direct style mutation)
   useEffect(() => {
-    document.body.style.overflow = 'hidden';
+    document.body.classList.add('reelsPlayerOpen');
     return () => {
-      document.body.style.overflow = '';
+      document.body.classList.remove('reelsPlayerOpen');
     };
   }, []);
 

@@ -25,6 +25,10 @@ type BetaVideoResult = {
   createdAt: string;
 };
 
+// Simple TTL cache for sync status checks to avoid N+1 external API calls
+const statusCheckCache = new Map<string, { status: 'ready' | 'processing' | 'failed'; checkedAt: number }>();
+const STATUS_CHECK_TTL_MS = 30_000; // 30 seconds
+
 /**
  * Check Bunny Stream for a video's encoding status and update our DB if it
  * has finished encoding. Bunny status codes:
@@ -32,10 +36,21 @@ type BetaVideoResult = {
  *   4 = resolution finished (all done), 5 = error
  *
  * Status 3 and 4 both mean the video is playable.
+ *
+ * Results are cached for 30 seconds to avoid hammering Bunny's API on
+ * repeated GraphQL requests.
  */
 async function syncProcessingStatus(bunnyVideoId: string): Promise<'ready' | 'processing' | 'failed'> {
+  // Check cache first
+  const cached = statusCheckCache.get(bunnyVideoId);
+  if (cached && Date.now() - cached.checkedAt < STATUS_CHECK_TTL_MS) {
+    return cached.status;
+  }
+
   try {
     const bunnyVideo = await getBunnyVideoStatus(bunnyVideoId);
+    let status: 'ready' | 'processing' | 'failed';
+
     // Status >= 3 means encoding finished (3 = transcode done, 4 = resolutions done)
     if (bunnyVideo.status >= 3 && bunnyVideo.status <= 4) {
       // Reject videos longer than 60 seconds
@@ -47,26 +62,36 @@ async function syncProcessingStatus(bunnyVideoId: string): Promise<'ready' | 'pr
         try {
           await deleteBunnyVideo(bunnyVideoId);
         } catch { /* best effort cleanup */ }
-        return 'failed';
+        status = 'failed';
+      } else {
+        await db
+          .update(dbSchema.boardseshBetaVideos)
+          .set({
+            status: 'ready',
+            thumbnailUrl: getBunnyThumbnailUrl(bunnyVideoId),
+            duration: bunnyVideo.length > 0 ? bunnyVideo.length : null,
+          })
+          .where(eq(dbSchema.boardseshBetaVideos.bunnyVideoId, bunnyVideoId));
+        status = 'ready';
       }
-      await db
-        .update(dbSchema.boardseshBetaVideos)
-        .set({
-          status: 'ready',
-          thumbnailUrl: getBunnyThumbnailUrl(bunnyVideoId),
-          duration: bunnyVideo.length > 0 ? bunnyVideo.length : null,
-        })
-        .where(eq(dbSchema.boardseshBetaVideos.bunnyVideoId, bunnyVideoId));
-      return 'ready';
-    }
-    if (bunnyVideo.status === 5) {
+    } else if (bunnyVideo.status === 5) {
       await db
         .update(dbSchema.boardseshBetaVideos)
         .set({ status: 'failed' })
         .where(eq(dbSchema.boardseshBetaVideos.bunnyVideoId, bunnyVideoId));
-      return 'failed';
+      status = 'failed';
+    } else {
+      status = 'processing';
     }
-    return 'processing';
+
+    statusCheckCache.set(bunnyVideoId, { status, checkedAt: Date.now() });
+
+    // Clean up ready/failed entries from cache after TTL so we don't leak memory
+    if (status !== 'processing') {
+      setTimeout(() => statusCheckCache.delete(bunnyVideoId), STATUS_CHECK_TTL_MS);
+    }
+
+    return status;
   } catch {
     return 'processing';
   }

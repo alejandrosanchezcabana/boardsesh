@@ -47,6 +47,17 @@
   transform: scale(0.97);
 }
 
+.cardProcessing {
+  cursor: default;
+  opacity: 0.7;
+}
+
+.thumbnailPlaceholder {
+  width: 100%;
+  height: 100%;
+  background: var(--neutral-200);
+}
+
 .thumbnailWrapper {
   position: relative;
   aspect-ratio: 9 / 16;
@@ -68,7 +79,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  background: rgba(0, 0, 0, 0.2);
+  background: var(--overlay-light);
   opacity: 0;
   transition: opacity 150ms ease;
 }
@@ -81,6 +92,7 @@
   position: absolute;
   top: 6px;
   right: 6px;
+  /* Slightly darker than --overlay-dark for legibility on thumbnails */
   background: rgba(0, 0, 0, 0.7);
   color: white;
   font-size: 11px;
@@ -95,7 +107,7 @@
   bottom: 0;
   left: 0;
   right: 0;
-  background: rgba(0, 0, 0, 0.6);
+  background: var(--overlay-dark);
   color: white;
   font-size: 11px;
   padding: 2px 6px;
@@ -145,6 +157,7 @@
   align-items: center;
   justify-content: center;
   gap: 6px;
+  /* No exact theme token for 0.45 opacity — between --overlay-light (0.3) and --overlay-dark (0.6) */
   background: rgba(0, 0, 0, 0.45);
 }
 
