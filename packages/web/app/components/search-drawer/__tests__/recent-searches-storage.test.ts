@@ -114,9 +114,7 @@ describe('recent-searches-storage', () => {
       const corruptEntry: RecentSearch = {
         id: 'corrupt-1',
         label: 'Corrupt search',
-        filters: { minGrade: undefined, maxGrade: 5 } as Partial<
-          import('@/app/lib/types').SearchRequestPagination
-        >,
+        filters: { minGrade: undefined, maxGrade: 5 } as Partial<import('@/app/lib/types').SearchRequestPagination>,
         timestamp: Date.now(),
       };
       const db = await openDB(DB_NAME, 1);

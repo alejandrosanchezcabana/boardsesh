@@ -111,7 +111,12 @@ describe('boardsBySerialNumbers privacy', () => {
 
   describe('unauthenticated callers', () => {
     it('strips name, description, and locationName from non-public boards', async () => {
-      const privateBoard = makeDbBoard({ isPublic: false, name: 'Secret Wall', description: 'Hidden', locationName: 'Home' });
+      const privateBoard = makeDbBoard({
+        isPublic: false,
+        name: 'Secret Wall',
+        description: 'Hidden',
+        locationName: 'Home',
+      });
       setupDbSelect([privateBoard]);
 
       const results = await socialBoardQueries.boardsBySerialNumbers(
@@ -262,11 +267,7 @@ describe('boardsBySerialNumbers privacy', () => {
     it('does not call enrichBoards (no owner/stats queries)', async () => {
       setupDbSelect([makeDbBoard()]);
 
-      await socialBoardQueries.boardsBySerialNumbers(
-        null,
-        { serialNumbers: ['SERIAL001'] },
-        makeUnauthCtx(),
-      );
+      await socialBoardQueries.boardsBySerialNumbers(null, { serialNumbers: ['SERIAL001'] }, makeUnauthCtx());
 
       // Only one select call: the board lookup itself.
       // enrichBoards would trigger 6+ additional select calls.
@@ -287,13 +288,13 @@ describe('boardsBySerialNumbers privacy', () => {
 
       // First call: board lookup; remaining calls: enrichBoards queries
       setupDbSelectSequence([
-        [board],             // board lookup
+        [board], // board lookup
         [{ userId: 'owner-123', name: 'Owner', image: null, displayName: 'The Owner', avatarUrl: null }], // owner
         [{ boardId: 1, totalAscents: 42, uniqueClimbers: 10 }], // ticks
-        [{ boardUuid: 'board-uuid-1', count: 5 }],   // followers
-        [{ entityId: 'board-uuid-1', count: 3 }],     // comments
-        [{ boardUuid: 'board-uuid-1' }],               // follow status
-        [],                                             // gyms
+        [{ boardUuid: 'board-uuid-1', count: 5 }], // followers
+        [{ entityId: 'board-uuid-1', count: 3 }], // comments
+        [{ boardUuid: 'board-uuid-1' }], // follow status
+        [], // gyms
       ]);
 
       const results = await socialBoardQueries.boardsBySerialNumbers(

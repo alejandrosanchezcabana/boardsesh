@@ -3,6 +3,8 @@
  * Server-side only — never import in client components.
  */
 
+import { createHash } from 'node:crypto';
+
 const BUNNY_API_BASE = 'https://video.bunnycdn.com';
 
 function getConfig() {
@@ -128,8 +130,7 @@ function signCdnUrl(baseUrl: string, videoId: string, ttlSeconds = 14400): strin
   }
 
   const expires = Math.floor(Date.now() / 1000) + ttlSeconds;
-  const crypto = require('crypto') as typeof import('crypto');
-  const token = crypto.createHash('sha256').update(`${apiKey}${videoId}${expires}`).digest('hex');
+  const token = createHash('sha256').update(`${apiKey}${videoId}${expires}`).digest('hex');
   const separator = baseUrl.includes('?') ? '&' : '?';
   return `${baseUrl}${separator}token=${token}&expires=${expires}`;
 }
