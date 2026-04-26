@@ -36,7 +36,7 @@
 
 .card {
   flex-shrink: 0;
-  width: 110px;
+  width: 143px;
   cursor: pointer;
   scroll-snap-align: start;
   transition: transform 150ms ease;
@@ -108,7 +108,7 @@
 
 .uploadCard {
   flex-shrink: 0;
-  width: 110px;
+  width: 72px;
   scroll-snap-align: start;
 }
 
@@ -164,10 +164,10 @@
 
 @media (min-width: 768px) {
   .card {
-    width: 130px;
+    width: 169px;
   }
 
   .uploadCard {
-    width: 130px;
+    width: 85px;
   }
 }

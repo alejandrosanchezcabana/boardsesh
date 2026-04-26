@@ -228,6 +228,18 @@ const BoardseshBetaSection: React.FC<BoardseshBetaSectionProps> = ({ boardType, 
             ))
           ) : (
             <>
+              {isAuthenticated && (
+                <div className={styles.uploadCard}>
+                  <button
+                    className={styles.uploadButton}
+                    onClick={() => fileInputRef.current?.click()}
+                    disabled={isUploading}
+                    aria-label="Upload beta video"
+                  >
+                    <FileUploadOutlined sx={{ fontSize: 20 }} />
+                  </button>
+                </div>
+              )}
               {videos.map((video) => (
                 <BoardseshBetaCard
                   key={video.uuid}
@@ -240,19 +252,6 @@ const BoardseshBetaSection: React.FC<BoardseshBetaSectionProps> = ({ boardType, 
                   }}
                 />
               ))}
-              {isAuthenticated && (
-                <div className={styles.uploadCard}>
-                  <button
-                    className={styles.uploadButton}
-                    onClick={() => fileInputRef.current?.click()}
-                    disabled={isUploading}
-                    aria-label="Upload beta video"
-                  >
-                    <FileUploadOutlined sx={{ fontSize: 24 }} />
-                    {videos.length === 0 ? 'Add beta' : 'Upload'}
-                  </button>
-                </div>
-              )}
               {videos.length === 0 && !isAuthenticated && <span className={styles.emptyText}>No beta videos yet</span>}
             </>
           )}
