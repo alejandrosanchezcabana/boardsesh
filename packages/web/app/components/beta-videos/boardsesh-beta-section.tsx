@@ -236,7 +236,7 @@ const BoardseshBetaSection: React.FC<BoardseshBetaSectionProps> = ({ boardType, 
                     disabled={isUploading}
                     aria-label="Upload beta video"
                   >
-                    <FileUploadOutlined sx={{ fontSize: 20 }} />
+                    <FileUploadOutlined sx={{ fontSize: 16 }} />
                   </button>
                 </div>
               )}
