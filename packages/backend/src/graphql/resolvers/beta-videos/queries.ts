@@ -3,7 +3,8 @@ import * as dbSchema from '@boardsesh/db/schema';
 import { eq, and, ne } from 'drizzle-orm';
 import {
   getBunnyThumbnailUrl,
-  getBunnyPlaybackUrl,
+  getSignedThumbnailUrl,
+  getSignedPlaybackUrl,
   getBunnyVideoStatus,
   deleteBunnyVideo,
   isBunnyStreamConfigured,
@@ -158,8 +159,8 @@ export const betaVideoQueries = {
           angle: row.angle,
           bunnyVideoId: row.bunnyVideoId,
           status: effectiveStatus,
-          thumbnailUrl: isReady ? (row.thumbnailUrl ?? getBunnyThumbnailUrl(row.bunnyVideoId)) : null,
-          playbackUrl: isReady ? getBunnyPlaybackUrl(row.bunnyVideoId) : null,
+          thumbnailUrl: isReady ? getSignedThumbnailUrl(row.bunnyVideoId) : null,
+          playbackUrl: isReady ? getSignedPlaybackUrl(row.bunnyVideoId) : null,
           duration: row.duration,
           createdAt: row.createdAt,
         };
@@ -212,8 +213,8 @@ export const betaVideoQueries = {
       angle: row.angle,
       bunnyVideoId: row.bunnyVideoId,
       status: effectiveStatus,
-      thumbnailUrl: isReady ? (row.thumbnailUrl ?? getBunnyThumbnailUrl(row.bunnyVideoId)) : null,
-      playbackUrl: isReady ? getBunnyPlaybackUrl(row.bunnyVideoId) : null,
+      thumbnailUrl: isReady ? getSignedThumbnailUrl(row.bunnyVideoId) : null,
+      playbackUrl: isReady ? getSignedPlaybackUrl(row.bunnyVideoId) : null,
       duration: row.duration,
       createdAt: row.createdAt,
     };

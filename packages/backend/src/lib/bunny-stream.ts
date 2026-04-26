@@ -117,8 +117,26 @@ export async function getBunnyVideoStatus(videoId: string): Promise<BunnyVideoRe
 }
 
 /**
- * Construct the thumbnail URL for a video.
- * Bunny generates thumbnails at thumbnail.jpg by default.
+ * Generate a signed token for Bunny Stream CDN URLs.
+ * Token = SHA256(apiKey + videoId + expirationTimestamp)
+ * URLs expire after the given TTL (default 4 hours).
+ */
+function signCdnUrl(baseUrl: string, videoId: string, ttlSeconds = 14400): string {
+  const { apiKey } = getConfig();
+  if (!apiKey) {
+    return baseUrl;
+  }
+
+  const expires = Math.floor(Date.now() / 1000) + ttlSeconds;
+  const crypto = require('crypto') as typeof import('crypto');
+  const token = crypto.createHash('sha256').update(`${apiKey}${videoId}${expires}`).digest('hex');
+  const separator = baseUrl.includes('?') ? '&' : '?';
+  return `${baseUrl}${separator}token=${token}&expires=${expires}`;
+}
+
+/**
+ * Construct an unsigned thumbnail URL for storage in the database.
+ * Do NOT serve this directly to clients — use getSignedThumbnailUrl instead.
  */
 export function getBunnyThumbnailUrl(videoId: string): string {
   const { cdnHostname } = getConfig();
@@ -130,15 +148,24 @@ export function getBunnyThumbnailUrl(videoId: string): string {
 }
 
 /**
- * Construct the HLS playback URL for a video.
+ * Construct a signed thumbnail URL for serving to clients.
+ * Expires after 4 hours.
  */
-export function getBunnyPlaybackUrl(videoId: string): string {
+export function getSignedThumbnailUrl(videoId: string): string {
+  return signCdnUrl(getBunnyThumbnailUrl(videoId), videoId);
+}
+
+/**
+ * Construct a signed HLS playback URL for serving to clients.
+ * Expires after 4 hours.
+ */
+export function getSignedPlaybackUrl(videoId: string): string {
   const { cdnHostname } = getConfig();
   if (!cdnHostname) {
     throw new Error('Bunny Stream CDN hostname not configured');
   }
 
-  return `https://${cdnHostname}/${videoId}/playlist.m3u8`;
+  return signCdnUrl(`https://${cdnHostname}/${videoId}/playlist.m3u8`, videoId);
 }
 
 /**

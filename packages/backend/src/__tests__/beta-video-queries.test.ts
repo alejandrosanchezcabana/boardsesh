@@ -4,7 +4,8 @@ const {
   mockDb,
   mockIsBunnyStreamConfigured,
   mockGetBunnyThumbnailUrl,
-  mockGetBunnyPlaybackUrl,
+  mockGetSignedThumbnailUrl,
+  mockGetSignedPlaybackUrl,
   mockGetBunnyVideoStatus,
   mockDeleteBunnyVideo,
 } = vi.hoisted(() => {
@@ -17,7 +18,8 @@ const {
     mockDb,
     mockIsBunnyStreamConfigured: vi.fn().mockReturnValue(true),
     mockGetBunnyThumbnailUrl: vi.fn((videoId: string) => `https://cdn.test/${videoId}/thumbnail.jpg`),
-    mockGetBunnyPlaybackUrl: vi.fn((videoId: string) => `https://cdn.test/${videoId}/playlist.m3u8`),
+    mockGetSignedThumbnailUrl: vi.fn((videoId: string) => `https://cdn.test/${videoId}/thumbnail.jpg?token=signed&expires=9999`),
+    mockGetSignedPlaybackUrl: vi.fn((videoId: string) => `https://cdn.test/${videoId}/playlist.m3u8?token=signed&expires=9999`),
     mockGetBunnyVideoStatus: vi.fn(),
     mockDeleteBunnyVideo: vi.fn().mockResolvedValue(undefined),
   };
@@ -30,7 +32,8 @@ vi.mock('../db/client', () => ({
 vi.mock('../lib/bunny-stream', () => ({
   isBunnyStreamConfigured: mockIsBunnyStreamConfigured,
   getBunnyThumbnailUrl: mockGetBunnyThumbnailUrl,
-  getBunnyPlaybackUrl: mockGetBunnyPlaybackUrl,
+  getSignedThumbnailUrl: mockGetSignedThumbnailUrl,
+  getSignedPlaybackUrl: mockGetSignedPlaybackUrl,
   getBunnyVideoStatus: mockGetBunnyVideoStatus,
   deleteBunnyVideo: mockDeleteBunnyVideo,
 }));
@@ -113,8 +116,8 @@ describe('betaVideos query', () => {
     expect(result[0]).toMatchObject({
       uuid: 'video-1',
       status: 'ready',
-      thumbnailUrl: 'https://cdn.test/bunny-1/thumbnail.jpg',
-      playbackUrl: 'https://cdn.test/bunny-1/playlist.m3u8',
+      thumbnailUrl: 'https://cdn.test/bunny-1/thumbnail.jpg?token=signed&expires=9999',
+      playbackUrl: 'https://cdn.test/bunny-1/playlist.m3u8?token=signed&expires=9999',
       userDisplayName: 'TestUser',
     });
   });
@@ -186,7 +189,7 @@ describe('betaVideos query', () => {
     expect(result[0]).toMatchObject({
       uuid: 'video-3',
       status: 'ready',
-      playbackUrl: 'https://cdn.test/bunny-3/playlist.m3u8',
+      playbackUrl: 'https://cdn.test/bunny-3/playlist.m3u8?token=signed&expires=9999',
     });
     expect(mockGetBunnyVideoStatus).toHaveBeenCalledWith('bunny-3');
   });
@@ -276,8 +279,8 @@ describe('betaVideo query (single)', () => {
 
     expect(result).not.toBeNull();
     expect(result!.status).toBe('ready');
-    expect(result!.playbackUrl).toBe('https://cdn.test/bunny-single/playlist.m3u8');
-    expect(result!.thumbnailUrl).toBe('https://cdn.test/bunny-single/thumbnail.jpg');
+    expect(result!.playbackUrl).toBe('https://cdn.test/bunny-single/playlist.m3u8?token=signed&expires=9999');
+    expect(result!.thumbnailUrl).toBe('https://cdn.test/bunny-single/thumbnail.jpg?token=signed&expires=9999');
     expect(mockGetBunnyVideoStatus).toHaveBeenCalledWith('bunny-single');
   });
 });
