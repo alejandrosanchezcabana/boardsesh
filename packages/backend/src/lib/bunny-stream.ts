@@ -53,43 +53,6 @@ export async function createBunnyVideo(title: string): Promise<BunnyVideoRespons
 }
 
 /**
- * Generate a TUS upload URL for direct browser upload to Bunny Stream.
- * The client uploads directly to this URL, bypassing our server.
- */
-export function generateTusUploadUrl(_videoId: string): string {
-  const { apiKey, libraryId } = getConfig();
-  if (!apiKey || !libraryId) {
-    throw new Error('Bunny Stream is not configured');
-  }
-
-  // Bunny TUS endpoint format
-  return `https://video.bunnycdn.com/tusupload`;
-}
-
-/**
- * Get TUS upload metadata headers needed for direct browser upload.
- * The client needs these when initializing the TUS upload.
- */
-export function getTusUploadMetadata(videoId: string): {
-  uploadUrl: string;
-  metadata: Record<string, string>;
-} {
-  const { apiKey, libraryId } = getConfig();
-  if (!apiKey || !libraryId) {
-    throw new Error('Bunny Stream is not configured');
-  }
-
-  return {
-    uploadUrl: 'https://video.bunnycdn.com/tusupload',
-    metadata: {
-      filetype: 'video/mp4',
-      title: videoId,
-      collection: libraryId,
-    },
-  };
-}
-
-/**
  * Generate the authorization signature for TUS uploads.
  * Bunny Stream uses SHA256(libraryId + apiKey + expirationTime + videoId).
  */

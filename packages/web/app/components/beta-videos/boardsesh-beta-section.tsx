@@ -78,6 +78,7 @@ const BoardseshBetaSection: React.FC<BoardseshBetaSectionProps> = ({ boardType, 
   });
 
   const videos = data?.betaVideos ?? [];
+  const readyVideos = videos.filter((v) => v.status === 'ready');
 
   const startPollingStatus = useCallback(
     (uuid: string) => {
@@ -221,12 +222,15 @@ const BoardseshBetaSection: React.FC<BoardseshBetaSectionProps> = ({ boardType, 
             ))
           ) : (
             <>
-              {videos.map((video, index) => (
+              {videos.map((video) => (
                 <BoardseshBetaCard
                   key={video.uuid}
                   video={video}
                   onClick={() => {
-                    if (video.status === 'ready') setSelectedVideoIndex(index);
+                    if (video.status === 'ready') {
+                      const readyIndex = readyVideos.findIndex((v) => v.uuid === video.uuid);
+                      if (readyIndex >= 0) setSelectedVideoIndex(readyIndex);
+                    }
                   }}
                 />
               ))}
@@ -278,7 +282,7 @@ const BoardseshBetaSection: React.FC<BoardseshBetaSectionProps> = ({ boardType, 
 
       {selectedVideoIndex !== null && (
         <BetaVideoReelsPlayer
-          videos={videos.filter((v) => v.status === 'ready')}
+          videos={readyVideos}
           initialIndex={selectedVideoIndex}
           onClose={() => setSelectedVideoIndex(null)}
         />

@@ -40,18 +40,28 @@ export const betaVideoMutations = {
     const uuid = crypto.randomUUID();
     const libraryId = process.env.BUNNY_STREAM_LIBRARY_ID!;
 
-    // Insert DB record
-    await db.insert(dbSchema.boardseshBetaVideos).values({
-      uuid,
-      userId: ctx.userId!,
-      boardType: validated.boardType,
-      climbUuid: validated.climbUuid,
-      angle: validated.angle ?? null,
-      bunnyVideoId: bunnyVideo.guid,
-      bunnyLibraryId: libraryId,
-      title: validated.title ?? null,
-      status: 'processing',
-    });
+    // Insert DB record — clean up Bunny video if DB insert fails
+    try {
+      await db.insert(dbSchema.boardseshBetaVideos).values({
+        uuid,
+        userId: ctx.userId!,
+        boardType: validated.boardType,
+        climbUuid: validated.climbUuid,
+        angle: validated.angle ?? null,
+        bunnyVideoId: bunnyVideo.guid,
+        bunnyLibraryId: libraryId,
+        title: validated.title ?? null,
+        status: 'processing',
+      });
+    } catch (dbError) {
+      // Best-effort cleanup of the orphaned Bunny video
+      try {
+        await deleteBunnyVideo(bunnyVideo.guid);
+      } catch {
+        /* best effort */
+      }
+      throw dbError;
+    }
 
     // Get TUS upload credentials for the client
     const tusCredentials = await getTusUploadCredentials(bunnyVideo.guid);

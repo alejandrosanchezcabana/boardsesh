@@ -8,7 +8,7 @@ import { getBunnyThumbnailUrl } from '../lib/bunny-stream';
 type BunnyWebhookPayload = {
   VideoGuid: string;
   VideoLibraryId: number;
-  Status: number; // 3 = finished encoding, 4 = encoding failed, 5 = upload failed
+  Status: number; // 3 = finished encoding, 4 = resolution finished (ready), 5 = encoding/upload failed
 };
 
 /**
@@ -17,8 +17,8 @@ type BunnyWebhookPayload = {
  *
  * Status codes:
  * - 3: Finished encoding (ready to play)
- * - 4: Encoding failed
- * - 5: Upload failed
+ * - 4: Resolution finished (all resolutions encoded, ready to play)
+ * - 5: Encoding/upload failed
  */
 export async function handleBunnyWebhook(req: IncomingMessage, res: ServerResponse): Promise<void> {
   if (!applyCorsHeaders(req, res)) return;
@@ -36,11 +36,15 @@ export async function handleBunnyWebhook(req: IncomingMessage, res: ServerRespon
   }
 
   try {
-    // Parse JSON body
+    // Parse JSON body with size limit (10KB max)
     const body = await new Promise<string>((resolve, reject) => {
       let data = '';
       req.on('data', (chunk: Buffer) => {
         data += chunk.toString();
+        if (data.length > 10240) {
+          req.destroy();
+          reject(new Error('Payload too large'));
+        }
       });
       req.on('end', () => resolve(data));
       req.on('error', reject);
@@ -57,9 +61,9 @@ export async function handleBunnyWebhook(req: IncomingMessage, res: ServerRespon
 
     // Map Bunny status to our status
     let newStatus: string;
-    if (Status === 3) {
+    if (Status === 3 || Status === 4) {
       newStatus = 'ready';
-    } else if (Status === 4 || Status === 5) {
+    } else if (Status === 5) {
       newStatus = 'failed';
     } else {
       // Unknown status, ignore
@@ -84,6 +88,11 @@ export async function handleBunnyWebhook(req: IncomingMessage, res: ServerRespon
     res.writeHead(200, { 'Content-Type': 'application/json' });
     res.end(JSON.stringify({ ok: true }));
   } catch (error) {
+    if (error instanceof Error && error.message === 'Payload too large') {
+      res.writeHead(413, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ error: 'Payload too large' }));
+      return;
+    }
     console.error('[BunnyWebhook] Error processing webhook:', error);
     res.writeHead(500, { 'Content-Type': 'application/json' });
     res.end(JSON.stringify({ error: 'Internal server error' }));

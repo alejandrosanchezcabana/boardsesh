@@ -17,6 +17,7 @@ import {
   type VoteMutationResponse,
 } from '@/app/lib/graphql/operations/comments-votes';
 import { DELETE_BETA_VIDEO } from '@/app/lib/graphql/operations/beta-videos';
+import { themeTokens } from '@/app/theme/theme-config';
 import type { BetaVideoData } from './boardsesh-beta-card';
 import HlsVideoPlayer, { type HlsVideoPlayerHandle } from './hls-video-player';
 import styles from './beta-video-reels.module.css';
@@ -29,7 +30,7 @@ type BetaVideoReelsPlayerProps = {
 
 const BetaVideoReelsPlayer: React.FC<BetaVideoReelsPlayerProps> = ({ videos, initialIndex, onClose }) => {
   const [currentIndex, setCurrentIndex] = useState(initialIndex);
-  const { status: sessionStatus } = useSession();
+  const { status: sessionStatus, data: session } = useSession();
   const isAuthenticated = sessionStatus === 'authenticated';
   const { token: authToken } = useWsAuthToken();
   const queryClient = useQueryClient();
@@ -139,7 +140,7 @@ const BetaVideoReelsPlayer: React.FC<BetaVideoReelsPlayerProps> = ({ videos, ini
 
   if (!currentVideo) return null;
 
-  const isOwner = !!currentVideo.userId && isAuthenticated;
+  const isOwner = isAuthenticated && !!currentVideo.userId && currentVideo.userId === session?.user?.id;
 
   return (
     <div className={styles.overlay}>
@@ -157,6 +158,7 @@ const BetaVideoReelsPlayer: React.FC<BetaVideoReelsPlayerProps> = ({ videos, ini
               src={currentVideo.playbackUrl}
               poster={currentVideo.thumbnailUrl ?? undefined}
               autoPlay
+              muted
               loop
               className={styles.videoElement}
             />
@@ -176,7 +178,7 @@ const BetaVideoReelsPlayer: React.FC<BetaVideoReelsPlayerProps> = ({ videos, ini
           {isAuthenticated && (
             <button className={styles.actionButton} onClick={handleLike} aria-label={isLiked ? 'Unlike' : 'Like'}>
               {isLiked ? (
-                <Favorite sx={{ fontSize: 28, color: '#ff2d55' }} />
+                <Favorite sx={{ fontSize: 28, color: themeTokens.colors.error }} />
               ) : (
                 <FavoriteBorderOutlined sx={{ fontSize: 28 }} />
               )}
