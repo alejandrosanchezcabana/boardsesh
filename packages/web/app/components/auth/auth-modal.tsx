@@ -25,6 +25,7 @@ import SocialLoginButtons from '@/app/components/auth/social-login-buttons';
 import { TabPanel } from '@/app/components/ui/tab-panel';
 import { useSnackbar } from '@/app/components/providers/snackbar-provider';
 import { themeTokens } from '@/app/theme/theme-config';
+import { generateRandomUsername } from '@/app/lib/generate-username';
 
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
@@ -135,6 +136,9 @@ export default function AuthModal({
     try {
       setRegisterLoading(true);
 
+      // Generate random username if name is empty
+      const name = registerValues.name.trim() || generateRandomUsername();
+
       const response = await fetch('/api/auth/register', {
         method: 'POST',
         headers: {
@@ -143,7 +147,7 @@ export default function AuthModal({
         body: JSON.stringify({
           email: registerValues.email,
           password: registerValues.password,
-          name: registerValues.name,
+          name: name,
         }),
       });
 
