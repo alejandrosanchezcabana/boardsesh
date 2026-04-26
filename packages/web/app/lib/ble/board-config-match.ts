@@ -6,10 +6,14 @@ import type { ResolvedBoardEntry } from './resolve-serials';
  * so order/whitespace differences don't trigger spurious mismatches.
  */
 function normaliseSetIds(setIds: string): string {
-  return setIds
-    .split(',')
-    .map((s) => s.trim())
-    .filter((s) => s.length > 0)
+  return [
+    ...new Set(
+      setIds
+        .split(',')
+        .map((s) => s.trim())
+        .filter((s) => s.length > 0),
+    ),
+  ]
     .sort()
     .join(',');
 }

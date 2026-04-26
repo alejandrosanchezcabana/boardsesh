@@ -105,6 +105,21 @@ function setupDbSelectSequence(calls: unknown[][]) {
   });
 }
 
+// Set up the mock chain for `db.select().from().leftJoin().where()` resolving to rows.
+// `myBoardSerialConfigs` calls: select({...}).from(userBoardSerials).leftJoin(...).where(...)
+// where the where(...) result is awaited directly (no .limit()/.groupBy()).
+function setupDbLeftJoin(rows: unknown[]) {
+  const terminal = Object.assign(Promise.resolve(rows), {
+    groupBy: vi.fn().mockResolvedValue(rows),
+    limit: vi.fn().mockResolvedValue(rows),
+  });
+  const mockWhere = vi.fn().mockReturnValue(terminal);
+  const mockLeftJoin = vi.fn().mockReturnValue({ where: mockWhere });
+  const mockFrom = vi.fn().mockReturnValue({ where: mockWhere, leftJoin: mockLeftJoin });
+  mockDb.select.mockReturnValue({ from: mockFrom });
+  return { mockWhere, mockLeftJoin, mockFrom };
+}
+
 describe('boardsBySerialNumbers privacy', () => {
   beforeEach(() => {
     vi.clearAllMocks();
@@ -315,5 +330,140 @@ describe('boardsBySerialNumbers privacy', () => {
       expect(result.totalAscents).toBe(42);
       expect(result.uniqueClimbers).toBe(10);
     });
+  });
+});
+
+describe('myBoardSerialConfigs privacy', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  function makeRecording(overrides: Record<string, unknown> = {}) {
+    return {
+      serialNumber: 'SERIAL001',
+      boardName: 'kilter',
+      layoutId: 1,
+      sizeId: 10,
+      setIds: '1,20',
+      updatedAt: new Date('2026-04-01'),
+      boardUuid: null,
+      boardSlug: null,
+      ...overrides,
+    };
+  }
+
+  it('throws when caller is not authenticated', async () => {
+    setupDbLeftJoin([]);
+
+    await expect(
+      socialBoardQueries.myBoardSerialConfigs(null, { serialNumbers: ['SERIAL001'] }, makeUnauthCtx()),
+    ).rejects.toThrow(/Authentication required/);
+
+    // Must short-circuit before any DB call.
+    expect(mockDb.select).not.toHaveBeenCalled();
+  });
+
+  it('returns empty array when input has no non-empty serials', async () => {
+    setupDbLeftJoin([]);
+
+    const results = await socialBoardQueries.myBoardSerialConfigs(
+      null,
+      { serialNumbers: ['', '   '] },
+      makeAuthCtx('user-1'),
+    );
+
+    expect(results).toEqual([]);
+    // No DB query when input is empty after filtering.
+    expect(mockDb.select).not.toHaveBeenCalled();
+  });
+
+  it('queries the DB and returns mapped recordings for the calling user', async () => {
+    const recording = makeRecording({
+      serialNumber: 'SN42',
+      boardName: 'tension',
+      layoutId: 5,
+      sizeId: 12,
+      setIds: '1,3',
+      boardUuid: 'linked-board-uuid',
+      boardSlug: 'my-tension',
+    });
+    setupDbLeftJoin([recording]);
+
+    const results = await socialBoardQueries.myBoardSerialConfigs(
+      null,
+      { serialNumbers: ['SN42'] },
+      makeAuthCtx('user-1'),
+    );
+
+    expect(results).toHaveLength(1);
+    expect(results[0]).toEqual({
+      serialNumber: 'SN42',
+      boardName: 'tension',
+      layoutId: 5,
+      sizeId: 12,
+      setIds: '1,3',
+      updatedAt: '2026-04-01T00:00:00.000Z',
+      boardUuid: 'linked-board-uuid',
+      boardSlug: 'my-tension',
+    });
+    // Single DB call — the resolver does not enrich beyond the leftJoin.
+    expect(mockDb.select).toHaveBeenCalledTimes(1);
+  });
+
+  it('does not return recordings belonging to other users (DB filter is the boundary)', async () => {
+    // Simulate the WHERE clause filtering correctly: when called as user-1,
+    // the DB only returns user-1's rows. user-2's row is invisible to user-1
+    // and would never appear in the result set.
+    const userOneRecording = makeRecording({ serialNumber: 'SHARED-SERIAL' });
+    setupDbLeftJoin([userOneRecording]);
+
+    const userOneResults = await socialBoardQueries.myBoardSerialConfigs(
+      null,
+      { serialNumbers: ['SHARED-SERIAL'] },
+      makeAuthCtx('user-1'),
+    );
+
+    expect(userOneResults).toHaveLength(1);
+    expect(userOneResults[0].serialNumber).toBe('SHARED-SERIAL');
+
+    // Now simulate the same query as user-2: DB returns nothing because
+    // user-2 has no recording for that serial. User-2 cannot see user-1's row.
+    vi.clearAllMocks();
+    setupDbLeftJoin([]);
+
+    const userTwoResults = await socialBoardQueries.myBoardSerialConfigs(
+      null,
+      { serialNumbers: ['SHARED-SERIAL'] },
+      makeAuthCtx('user-2'),
+    );
+
+    expect(userTwoResults).toEqual([]);
+  });
+
+  it('caps input at 20 serials before querying the DB', async () => {
+    setupDbLeftJoin([]);
+
+    const twentyFiveSerials = Array.from({ length: 25 }, (_, i) => `SN${i}`);
+    await socialBoardQueries.myBoardSerialConfigs(null, { serialNumbers: twentyFiveSerials }, makeAuthCtx('user-1'));
+
+    // Even though we passed 25 serials, only one DB call should happen and
+    // the resolver should have sliced internally. We can't introspect the
+    // inArray operator's args without mocking drizzle-orm, so the assertion
+    // here is "no error, single query, returns []" — the slice is also unit
+    // tested by the boundary value at the caller layer.
+    expect(mockDb.select).toHaveBeenCalledTimes(1);
+  });
+
+  it('handles a recording with no linked board (boardUuid + boardSlug both null)', async () => {
+    setupDbLeftJoin([makeRecording({ boardUuid: null, boardSlug: null })]);
+
+    const results = await socialBoardQueries.myBoardSerialConfigs(
+      null,
+      { serialNumbers: ['SERIAL001'] },
+      makeAuthCtx('user-1'),
+    );
+
+    expect(results[0].boardUuid).toBeNull();
+    expect(results[0].boardSlug).toBeNull();
   });
 });

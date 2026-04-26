@@ -1,18 +1,20 @@
 import { getServerSession } from 'next-auth/next';
 import { type NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
+import { and, eq, isNull } from 'drizzle-orm';
 import { getDb } from '@/app/lib/db/db';
 import * as schema from '@/app/lib/db/schema';
 import { authOptions } from '@/app/lib/auth/auth-options';
+import { checkRateLimit, getClientIp } from '@/app/lib/auth/rate-limiter';
 import { AURORA_BOARDS } from '@boardsesh/shared-schema';
 
 const bodySchema = z.object({
-  serialNumber: z.string().trim().min(1),
+  serialNumber: z.string().trim().min(1).max(64),
   boardName: z.enum(AURORA_BOARDS),
   layoutId: z.number().int().nonnegative(),
   sizeId: z.number().int().nonnegative(),
-  setIds: z.string().min(1),
-  boardUuid: z.string().min(1).optional(),
+  setIds: z.string().min(1).max(256),
+  boardUuid: z.string().min(1).max(64).optional(),
 });
 
 export async function POST(request: NextRequest) {
@@ -22,7 +24,30 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const body = await request.json();
+    const clientIp = getClientIp(request);
+    const ipRateLimit = checkRateLimit(`board-serials:${clientIp}`, 30, 60_000);
+    if (ipRateLimit.limited) {
+      return NextResponse.json(
+        { error: 'Too many requests. Please try again later.' },
+        { status: 429, headers: { 'Retry-After': String(ipRateLimit.retryAfterSeconds) } },
+      );
+    }
+
+    const userRateLimit = checkRateLimit(`board-serials:user:${session.user.id}`, 30, 60_000);
+    if (userRateLimit.limited) {
+      return NextResponse.json(
+        { error: 'Too many requests. Please try again later.' },
+        { status: 429, headers: { 'Retry-After': String(userRateLimit.retryAfterSeconds) } },
+      );
+    }
+
+    let body;
+    try {
+      body = await request.json();
+    } catch {
+      return NextResponse.json({ error: 'Invalid request body' }, { status: 400 });
+    }
+
     const parsed = bodySchema.safeParse(body);
     if (!parsed.success) {
       return NextResponse.json({ error: parsed.error.issues[0].message }, { status: 400 });
@@ -30,6 +55,26 @@ export async function POST(request: NextRequest) {
 
     const { serialNumber, boardName, layoutId, sizeId, setIds, boardUuid } = parsed.data;
     const db = getDb();
+
+    // The recording table is a fallback for users who haven't fully populated
+    // their saved-boards (user_boards) dataset. If a saved board already
+    // exists for this controller, it's authoritative — skip the recording so
+    // saved-vs-recorded resolution stays unambiguous.
+    const savedMatch = await db
+      .select({ id: schema.userBoards.id })
+      .from(schema.userBoards)
+      .where(
+        and(
+          eq(schema.userBoards.ownerId, session.user.id),
+          eq(schema.userBoards.serialNumber, serialNumber),
+          isNull(schema.userBoards.deletedAt),
+        ),
+      )
+      .limit(1);
+
+    if (savedMatch.length > 0) {
+      return NextResponse.json({ ok: true, skipped: 'already_saved' });
+    }
 
     await db
       .insert(schema.userBoardSerials)

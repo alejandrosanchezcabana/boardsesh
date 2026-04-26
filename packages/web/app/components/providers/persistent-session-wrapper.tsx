@@ -144,7 +144,7 @@ export function RootBottomBar({ boardConfigs }: { boardConfigs: BoardConfigData 
           <BoardProvider boardName={boardDetails.board_name}>
             <ConnectionSettingsProvider>
               <WebSocketConnectionProvider>
-                <BluetoothProvider boardDetails={boardDetails}>
+                <BluetoothProvider boardDetails={boardDetails} angle={angle}>
                   <RootQueueControlBarWithProviders boardDetails={boardDetails} angle={angle} />
                 </BluetoothProvider>
               </WebSocketConnectionProvider>
