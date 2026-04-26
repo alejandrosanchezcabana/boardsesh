@@ -508,5 +508,21 @@ export const queriesTypeDefs = /* GraphQL */ `
     Get vote summaries for multiple entities of the same type.
     """
     bulkVoteSummaries(input: BulkVoteSummaryInput!): [VoteSummary!]!
+
+    # ============================================
+    # Beta Video Queries
+    # ============================================
+
+    """
+    Get beta videos for a climb.
+    Returns only videos with status 'ready'.
+    """
+    betaVideos(boardType: String!, climbUuid: String!): [BetaVideo!]!
+
+    """
+    Get a single beta video by UUID.
+    Used for polling upload status.
+    """
+    betaVideo(uuid: ID!): BetaVideo
   }
 `;

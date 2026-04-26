@@ -57,6 +57,7 @@ import { getGradeTintColor } from '@/app/lib/grade-colors';
 import { useIsDarkMode } from '@/app/hooks/use-is-dark-mode';
 import { getPreference, setPreference } from '@/app/lib/user-preferences-db';
 import QueueDrawer from './queue-drawer';
+import BoardseshBetaSection from '../beta-videos/boardsesh-beta-section';
 
 /** Window with optional requestIdleCallback (not available in all browsers). */
 type WindowWithIdleCallback = Window & {
@@ -83,7 +84,16 @@ const PlayDrawerContent = React.memo<PlayDrawerContentProps>(
       enabled: sectionsEnabled,
     });
 
-    return <ClimbDetailShellClient mode="play" sections={sections} aboveFold={aboveFold} />;
+    return (
+      <ClimbDetailShellClient
+        mode="play"
+        sections={sections}
+        aboveFold={aboveFold}
+        betaSection={
+          sectionsEnabled ? <BoardseshBetaSection boardType={boardType} climbUuid={climb.uuid} angle={angle} /> : null
+        }
+      />
+    );
   },
 );
 PlayDrawerContent.displayName = 'PlayDrawerContent';

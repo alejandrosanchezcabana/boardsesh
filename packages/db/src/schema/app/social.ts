@@ -22,6 +22,7 @@ export const socialEntityTypeEnum = pgEnum('social_entity_type', [
   'board',
   'gym',
   'session',
+  'beta_video',
 ]);
 
 export const comments = pgTable(
@@ -79,4 +80,5 @@ export type SocialEntityType =
   | 'proposal'
   | 'board'
   | 'gym'
-  | 'session';
+  | 'session'
+  | 'beta_video';

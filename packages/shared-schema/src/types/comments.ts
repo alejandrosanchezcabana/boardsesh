@@ -8,7 +8,8 @@ export type SocialEntityType =
   | 'proposal'
   | 'board'
   | 'gym'
-  | 'session';
+  | 'session'
+  | 'beta_video';
 
 export type SortMode = 'new' | 'top' | 'controversial' | 'hot';
 

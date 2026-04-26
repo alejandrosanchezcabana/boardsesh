@@ -8,6 +8,7 @@ import { useDoubleTapFavorite } from '@/app/components/climb-actions/use-double-
 import HeartAnimationOverlay from '@/app/components/climb-card/heart-animation-overlay';
 import type { BetaLink } from '@/app/lib/api-wrappers/sync-api-types';
 import type { BoardDetails, Climb } from '@/app/lib/types';
+import BoardseshBetaSection from '@/app/components/beta-videos/boardsesh-beta-section';
 
 type ClimbDetailInfoShellClientProps = {
   climb: Climb;
@@ -57,6 +58,7 @@ export default function ClimbDetailInfoShellClient({
         />
       }
       sections={sections}
+      betaSection={<BoardseshBetaSection boardType={boardType} climbUuid={climbUuid} angle={angle} />}
     />
   );
 }

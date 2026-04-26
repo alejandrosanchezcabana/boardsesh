@@ -18,3 +18,4 @@ export * from './vote-counts';
 export * from './session-participants';
 export * from './feedback';
 export * from './profile-percentiles';
+export * from './beta-videos';

@@ -11,6 +11,7 @@ import ClimbSocialSection from '@/app/components/social/climb-social-section';
 import ClimbAnalytics from '@/app/components/charts/climb-analytics';
 import type { BetaLink } from '@/app/lib/api-wrappers/sync-api-types';
 import { dedupeBetaLinks } from '@/app/lib/instagram-url';
+import { Instagram } from '@mui/icons-material';
 import type { Climb } from '@/app/lib/types';
 
 type BuildClimbDetailSectionsProps = {
@@ -73,8 +74,16 @@ export function useBuildClimbDetailSections({
   return [
     {
       key: 'beta',
-      label: 'Beta Videos',
-      title: 'Beta Videos',
+      label: (
+        <>
+          <Instagram sx={{ fontSize: 14, verticalAlign: 'middle' }} /> IG Beta Videos
+        </>
+      ),
+      title: (
+        <>
+          <Instagram sx={{ fontSize: 14, verticalAlign: 'middle' }} /> IG Beta Videos
+        </>
+      ),
       defaultSummary: 'No videos',
       getSummary: () =>
         uniqueBetaLinks.length > 0 ? [`${uniqueBetaLinks.length} video${uniqueBetaLinks.length !== 1 ? 's' : ''}`] : [],

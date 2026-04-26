@@ -13,6 +13,7 @@ import { handleAvatarUpload } from './handlers/avatars';
 import { handleStaticAvatar } from './handlers/static';
 import { handleSyncCron } from './handlers/sync';
 import { handleOcrTestDataUpload } from './handlers/ocr-test-data';
+import { handleBunnyWebhook } from './handlers/bunny-webhook';
 import { createYogaInstance } from './graphql/yoga';
 import { setupWebSocketServer } from './websocket/setup';
 import { warmPopularConfigsCache } from './graphql/resolvers/social/boards';
@@ -112,6 +113,12 @@ export async function startServer(): Promise<ServerResources> {
         return;
       }
 
+      // Bunny Stream webhook endpoint
+      if (pathname === '/api/bunny-webhook' && (req.method === 'POST' || req.method === 'OPTIONS')) {
+        await handleBunnyWebhook(req, res);
+        return;
+      }
+
       // GraphQL endpoint - delegate to Yoga
       if (pathname === '/graphql') {
         // Apply CORS for GraphQL requests
@@ -168,6 +175,7 @@ export async function startServer(): Promise<ServerResources> {
     console.info(`  Avatar files: ${httpScheme}://0.0.0.0:${PORT}/static/avatars/`);
     console.info(`  OCR test data: ${httpScheme}://0.0.0.0:${PORT}/api/ocr-test-data`);
     console.info(`  Sync cron: ${httpScheme}://0.0.0.0:${PORT}/sync-cron`);
+    console.info(`  Bunny webhook: ${httpScheme}://0.0.0.0:${PORT}/api/bunny-webhook`);
 
     // Warm up popular board configs cache in the background.
     // Uses a Redis lock so only one node across the cluster runs the query.

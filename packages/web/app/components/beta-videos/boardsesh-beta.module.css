@@ -1,0 +1,173 @@
+.section {
+  padding: 12px 12px 0;
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 8px;
+}
+
+.headerLabel {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--neutral-500);
+}
+
+.scrollContainer {
+  display: flex;
+  gap: 10px;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  scroll-snap-type: x proximity;
+  scrollbar-width: none;
+  padding-bottom: 4px;
+}
+
+.scrollContainer::-webkit-scrollbar {
+  display: none;
+}
+
+.card {
+  flex-shrink: 0;
+  width: 110px;
+  cursor: pointer;
+  scroll-snap-align: start;
+  transition: transform 150ms ease;
+  position: relative;
+}
+
+.card:active {
+  transform: scale(0.97);
+}
+
+.thumbnailWrapper {
+  position: relative;
+  aspect-ratio: 9 / 16;
+  border-radius: 8px;
+  overflow: hidden;
+  background: var(--neutral-100);
+  border: 1px solid var(--neutral-200);
+}
+
+.thumbnail {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.playOverlay {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.2);
+  opacity: 0;
+  transition: opacity 150ms ease;
+}
+
+.card:hover .playOverlay {
+  opacity: 1;
+}
+
+.durationBadge {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  background: rgba(0, 0, 0, 0.7);
+  color: white;
+  font-size: 11px;
+  font-weight: 600;
+  padding: 1px 5px;
+  border-radius: 4px;
+  pointer-events: none;
+}
+
+.userChip {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: rgba(0, 0, 0, 0.6);
+  color: white;
+  font-size: 11px;
+  padding: 2px 6px;
+  text-align: center;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  line-height: 1.4;
+}
+
+.uploadCard {
+  flex-shrink: 0;
+  width: 110px;
+  scroll-snap-align: start;
+}
+
+.uploadButton {
+  width: 100%;
+  aspect-ratio: 9 / 16;
+  border-radius: 8px;
+  border: 2px dashed var(--neutral-300);
+  background: transparent;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  color: var(--neutral-400);
+  font-size: 12px;
+  transition:
+    border-color 200ms ease,
+    color 200ms ease;
+}
+
+.uploadButton:hover {
+  border-color: var(--primary);
+  color: var(--primary);
+}
+
+.processingOverlay {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  background: rgba(0, 0, 0, 0.45);
+}
+
+.processingLabel {
+  font-size: 10px;
+  font-weight: 600;
+  color: white;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.emptyText {
+  font-size: 13px;
+  color: var(--neutral-400);
+  align-self: center;
+  white-space: nowrap;
+}
+
+@media (min-width: 768px) {
+  .card {
+    width: 130px;
+  }
+
+  .uploadCard {
+    width: 130px;
+  }
+}

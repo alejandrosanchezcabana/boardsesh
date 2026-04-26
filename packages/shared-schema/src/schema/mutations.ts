@@ -446,6 +446,21 @@ export const mutationsTypeDefs = /* GraphQL */ `
     """
     revokeRole(input: RevokeRoleInput!): Boolean!
 
+    # ============================================
+    # Beta Video Mutations (require auth)
+    # ============================================
+
+    """
+    Create a beta video entry and get TUS upload credentials.
+    The client uploads directly to Bunny Stream using the returned credentials.
+    """
+    createBetaVideo(input: CreateBetaVideoInput!): CreateBetaVideoResult!
+
+    """
+    Delete a beta video. Only the uploader can delete.
+    """
+    deleteBetaVideo(uuid: ID!): Boolean!
+
     # ESP32 sends LED positions from official app Bluetooth
     # frames: Pre-built frames string from ESP32 (preferred)
     # positions: Legacy LED positions array (for backwards compatibility)
