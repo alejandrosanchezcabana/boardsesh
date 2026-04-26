@@ -40,6 +40,7 @@ vi.mock('bcryptjs', () => ({
   default: {
     compare: (...args: unknown[]) => mockBcryptCompare(...args),
   },
+  compare: (...args: unknown[]) => mockBcryptCompare(...args),
 }));
 
 // --- DB mock ---

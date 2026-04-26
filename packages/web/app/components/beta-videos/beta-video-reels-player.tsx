@@ -71,7 +71,7 @@ const BetaVideoReelsPlayer: React.FC<BetaVideoReelsPlayerProps> = ({ videos, ini
           value: 1,
         },
       });
-      queryClient.invalidateQueries({ queryKey: ['voteSummary', 'beta_video', currentVideo.uuid] });
+      void queryClient.invalidateQueries({ queryKey: ['voteSummary', 'beta_video', currentVideo.uuid] });
     } catch (error) {
       console.error('Failed to vote:', error);
     }
@@ -82,7 +82,7 @@ const BetaVideoReelsPlayer: React.FC<BetaVideoReelsPlayerProps> = ({ videos, ini
     try {
       const client = createGraphQLHttpClient(authToken);
       await client.request(DELETE_BETA_VIDEO, { uuid: currentVideo.uuid });
-      queryClient.invalidateQueries({ queryKey: ['boardseshBetaVideos'] });
+      void queryClient.invalidateQueries({ queryKey: ['boardseshBetaVideos'] });
       if (videos.length <= 1) {
         onClose();
       } else {

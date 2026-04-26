@@ -92,7 +92,7 @@ const BoardseshBetaSection: React.FC<BoardseshBetaSectionProps> = ({ boardType, 
             clearInterval(pollRef.current);
             pollRef.current = undefined;
             setUpload({ uuid, phase: 'done', progress: 100, message: 'Your beta is live!' });
-            queryClient.invalidateQueries({ queryKey: ['boardseshBetaVideos', boardType, climbUuid] });
+            void queryClient.invalidateQueries({ queryKey: ['boardseshBetaVideos', boardType, climbUuid] });
             setTimeout(() => setUpload(null), 3000);
           } else if (result.betaVideo?.status === 'failed' || attempts > 120) {
             clearInterval(pollRef.current);
@@ -149,7 +149,7 @@ const BoardseshBetaSection: React.FC<BoardseshBetaSectionProps> = ({ boardType, 
         setUpload({ uuid, phase: 'uploading', progress: 0, message: 'Uploading...' });
 
         // Refetch so the processing card shows up immediately
-        queryClient.invalidateQueries({ queryKey: ['boardseshBetaVideos', boardType, climbUuid] });
+        void queryClient.invalidateQueries({ queryKey: ['boardseshBetaVideos', boardType, climbUuid] });
 
         // Start TUS upload
         const { Upload } = await import('tus-js-client');
