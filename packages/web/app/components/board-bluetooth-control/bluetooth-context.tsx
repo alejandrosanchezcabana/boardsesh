@@ -17,14 +17,10 @@ import { DevicePickerDialog } from './device-picker-dialog';
 import { BoardConfigMismatchDialog } from './board-config-mismatch-dialog';
 import { AutoConnectHandler } from './auto-connect-handler';
 import { parseSerialNumber } from './bluetooth-aurora';
+import { useSnackbar } from '../providers/snackbar-provider';
 import { useWsAuthToken } from '@/app/hooks/use-ws-auth-token';
 import { resolveSerialNumbers, type ResolvedBoardEntry } from '@/app/lib/ble/resolve-serials';
-import {
-  buildSwitchUrl,
-  configFromResolvedEntry,
-  matchesBoardDetails,
-  type ResolvedBoardConfig,
-} from '@/app/lib/ble/board-config-match';
+import { buildSwitchUrl, decidePickerSelection, type ResolvedBoardConfig } from '@/app/lib/ble/board-config-match';
 import type { UserBoard } from '@boardsesh/shared-schema';
 import type { DiscoveredDevice } from '@/app/lib/ble/types';
 import type { PickerState } from './use-board-bluetooth';
@@ -132,6 +128,7 @@ export function BluetoothProvider({
     boardUuid,
   });
   const { token, isAuthenticated } = useWsAuthToken();
+  const { showMessage } = useSnackbar();
 
   // Both `[board_name]/[layout_id]/[size_id]/[set_ids]/[angle]/...` and
   // `/b/{slug}/{angle}/...` routes carry `[angle]` as a dynamic segment.
@@ -344,23 +341,13 @@ export function BluetoothProvider({
 
   const handlePickerSelect = useCallback(
     (deviceId: string) => {
-      if (!activePickerState || !boardDetails) {
-        activePickerState?.handleSelect(deviceId);
-        return;
-      }
-      const device = activePickerState.devices.find((d) => d.deviceId === deviceId);
-      const serial = device ? parseSerialNumber(device.name) : undefined;
-      const entry = serial ? activeResolvedBoards.get(serial) : undefined;
-      if (!entry || !serial) {
+      if (!activePickerState) return;
+      const decision = decidePickerSelection(deviceId, activePickerState.devices, activeResolvedBoards, boardDetails);
+      if (decision.kind === 'forward') {
         activePickerState.handleSelect(deviceId);
         return;
       }
-      const config = configFromResolvedEntry(entry);
-      if (matchesBoardDetails(config, boardDetails)) {
-        activePickerState.handleSelect(deviceId);
-        return;
-      }
-      setMismatch({ deviceId, serial, config });
+      setMismatch({ deviceId, serial: decision.serial, config: decision.config });
     },
     [activePickerState, activeResolvedBoards, boardDetails],
   );
@@ -379,14 +366,19 @@ export function BluetoothProvider({
   const handleMismatchSwitch = useCallback(() => {
     if (!mismatch) return;
     const target = buildSwitchUrl(mismatch.config, routeAngle);
+    if (!target) {
+      // Couldn't resolve a switch URL (unknown layout/size, missing slug data).
+      // Don't silently close both dialogs and strand the user — surface the
+      // failure so they can pick "Connect anyway" or cancel deliberately.
+      showMessage("Couldn't switch to that board's config. Try Connect anyway.", 'warning');
+      return;
+    }
     setMismatch(null);
     // Cancel the in-flight picker promise; the new route will mount a fresh
     // BluetoothProvider that auto-connects via the ?autoConnect serial param.
     activePickerState?.handleCancel();
-    if (target) {
-      router.push(`${target}?autoConnect=${encodeURIComponent(mismatch.serial)}`);
-    }
-  }, [mismatch, routeAngle, activePickerState, router]);
+    router.push(`${target}?autoConnect=${encodeURIComponent(mismatch.serial)}`);
+  }, [mismatch, routeAngle, activePickerState, router, showMessage]);
 
   return (
     <BluetoothContext.Provider value={value}>

@@ -11,6 +11,7 @@ import Typography from '@mui/material/Typography';
 import type { BoardDetails } from '@/app/lib/types';
 import { getBoardDetails } from '@/app/lib/board-constants';
 import { parseSetIds, type ResolvedBoardConfig } from '@/app/lib/ble/board-config-match';
+import { themeTokens } from '@/app/theme/theme-config';
 
 type BoardConfigMismatchDialogProps = {
   open: boolean;
@@ -64,7 +65,7 @@ export function BoardConfigMismatchDialog({
         <DialogContentText component="div">
           Our records show this board has a different config than you have configured.
         </DialogContentText>
-        <Stack spacing={1} sx={{ mt: 2 }}>
+        <Stack spacing={`${themeTokens.spacing[1]}px`} sx={{ mt: `${themeTokens.spacing[2]}px` }}>
           <Typography variant="body2">
             <strong>You&apos;re configured for:</strong> {currentLabel}
           </Typography>
@@ -73,7 +74,14 @@ export function BoardConfigMismatchDialog({
           </Typography>
         </Stack>
       </DialogContent>
-      <DialogActions sx={{ flexWrap: 'wrap', gap: 1, px: 3, pb: 2 }}>
+      <DialogActions
+        sx={{
+          flexWrap: 'wrap',
+          gap: `${themeTokens.spacing[1]}px`,
+          px: `${themeTokens.spacing[3]}px`,
+          pb: `${themeTokens.spacing[2]}px`,
+        }}
+      >
         <Button onClick={onCancel}>Cancel</Button>
         <Button onClick={onConnectAnyway} color="warning">
           Connect anyway

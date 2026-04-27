@@ -2,10 +2,12 @@ import { describe, it, expect } from 'vite-plus/test';
 import {
   buildSwitchUrl,
   configFromResolvedEntry,
+  decidePickerSelection,
   matchesBoardDetails,
   type ResolvedBoardConfig,
 } from '../board-config-match';
 import type { ResolvedBoardEntry } from '../resolve-serials';
+import type { DiscoveredDevice } from '@/app/lib/ble/types';
 import type { BoardDetails } from '@/app/lib/types';
 
 function makeBoardDetails(overrides: Partial<BoardDetails> = {}): BoardDetails {
@@ -71,6 +73,13 @@ describe('matchesBoardDetails', () => {
 
   it('dedupes repeated setIds', () => {
     expect(matchesBoardDetails(makeConfig({ setIds: '1,1,20,20' }), makeBoardDetails())).toBe(true);
+  });
+
+  it('sorts setIds numerically (not lexicographically) so multi-digit ids match', () => {
+    // Lexicographic sort would rank "10" before "2"; numeric sort puts "2" first.
+    expect(matchesBoardDetails(makeConfig({ setIds: '10,2,30' }), makeBoardDetails({ set_ids: [2, 10, 30] }))).toBe(
+      true,
+    );
   });
 
   it('does not match when one side is a strict subset', () => {
@@ -155,5 +164,105 @@ describe('buildSwitchUrl', () => {
   it('returns null when boardName is not a known board', () => {
     const url = buildSwitchUrl(makeConfig({ boardName: 'not-a-board', boardSlug: undefined }), 40);
     expect(url).toBeNull();
+  });
+});
+
+describe('decidePickerSelection', () => {
+  function makeDevice(deviceId: string, name: string): DiscoveredDevice {
+    return { deviceId, name, rssi: -60 };
+  }
+
+  // Build a saved-kind ResolvedBoardEntry with the given config — minimal
+  // UserBoard shape so we don't depend on UserBoard fields we don't use.
+  function makeSavedEntry(config: {
+    boardType: string;
+    layoutId: number;
+    sizeId: number;
+    setIds: string;
+  }): ResolvedBoardEntry {
+    return {
+      kind: 'saved',
+      board: {
+        boardType: config.boardType,
+        layoutId: config.layoutId,
+        sizeId: config.sizeId,
+        setIds: config.setIds,
+        slug: 'a-slug',
+      } as ResolvedBoardEntry extends { kind: 'saved'; board: infer B } ? B : never,
+    };
+  }
+
+  const matchingDeviceName = 'Kilter Board#KB-99@3';
+  const matchingDeviceId = 'dev-1';
+
+  it('forwards when boardDetails is undefined', () => {
+    const result = decidePickerSelection(
+      matchingDeviceId,
+      [makeDevice(matchingDeviceId, matchingDeviceName)],
+      new Map(),
+      undefined,
+    );
+    expect(result).toEqual({ kind: 'forward' });
+  });
+
+  it('forwards when the device has no parseable serial', () => {
+    const result = decidePickerSelection(
+      matchingDeviceId,
+      [makeDevice(matchingDeviceId, 'Just A Name No Hash')],
+      new Map(),
+      makeBoardDetails(),
+    );
+    expect(result).toEqual({ kind: 'forward' });
+  });
+
+  it('forwards when no resolved entry exists for the serial', () => {
+    const result = decidePickerSelection(
+      matchingDeviceId,
+      [makeDevice(matchingDeviceId, matchingDeviceName)],
+      new Map(),
+      makeBoardDetails(),
+    );
+    expect(result).toEqual({ kind: 'forward' });
+  });
+
+  it('forwards when the resolved config matches the current route', () => {
+    const resolvedBoards = new Map<string, ResolvedBoardEntry>([
+      ['KB-99', makeSavedEntry({ boardType: 'kilter', layoutId: 1, sizeId: 10, setIds: '1,20' })],
+    ]);
+    const result = decidePickerSelection(
+      matchingDeviceId,
+      [makeDevice(matchingDeviceId, matchingDeviceName)],
+      resolvedBoards,
+      makeBoardDetails(),
+    );
+    expect(result).toEqual({ kind: 'forward' });
+  });
+
+  it('returns mismatch when the resolved config differs from the current route', () => {
+    const resolvedBoards = new Map<string, ResolvedBoardEntry>([
+      // Different layout from the current BoardDetails (layout 1 vs 99).
+      ['KB-99', makeSavedEntry({ boardType: 'kilter', layoutId: 99, sizeId: 10, setIds: '1,20' })],
+    ]);
+    const result = decidePickerSelection(
+      matchingDeviceId,
+      [makeDevice(matchingDeviceId, matchingDeviceName)],
+      resolvedBoards,
+      makeBoardDetails(),
+    );
+    expect(result.kind).toBe('mismatch');
+    if (result.kind === 'mismatch') {
+      expect(result.serial).toBe('KB-99');
+      expect(result.config.layoutId).toBe(99);
+    }
+  });
+
+  it('forwards when the deviceId is not in the discovered list', () => {
+    const result = decidePickerSelection(
+      'unknown-device',
+      [makeDevice(matchingDeviceId, matchingDeviceName)],
+      new Map(),
+      makeBoardDetails(),
+    );
+    expect(result).toEqual({ kind: 'forward' });
   });
 });

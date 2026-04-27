@@ -730,7 +730,13 @@ export const socialBoardQueries = {
     const cleaned = validated.serialNumbers.filter((s) => s.length > 0);
     if (cleaned.length === 0) return [];
 
-    const userId = ctx.userId!;
+    // requireAuthenticated only checks the isAuthenticated flag; explicitly
+    // guard userId so a malformed context can't slip undefined into the query.
+    const { userId } = ctx;
+    if (!userId) {
+      throw new Error('Authentication required to perform this operation');
+    }
+
     const rows = await db
       .select({
         serialNumber: dbSchema.userBoardSerials.serialNumber,

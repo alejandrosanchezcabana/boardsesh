@@ -1,6 +1,8 @@
 import type { BoardDetails, BoardName } from '@/app/lib/types';
 import { getBoardDetails } from '@/app/lib/board-constants';
 import { constructBoardSlugListUrl, constructClimbListWithSlugs } from '@/app/lib/url-utils';
+import { parseSerialNumber } from '@/app/components/board-bluetooth-control/bluetooth-aurora';
+import type { DiscoveredDevice } from '@/app/lib/ble/types';
 import type { ResolvedBoardEntry } from './resolve-serials';
 
 /**
@@ -17,8 +19,10 @@ export function parseSetIds(setIds: string | number[]): number[] {
 }
 
 /**
- * Normalise a comma-separated set_ids string to a sorted, deduped representation
- * so order/whitespace differences don't trigger spurious mismatches.
+ * Normalise a comma-separated set_ids string to a deduped, numerically-sorted
+ * representation so order/whitespace differences don't trigger spurious
+ * mismatches. Sorts numerically (not lexicographically) so multi-digit ids
+ * compare the same way the write-path emits them: ["10","2"] → "2,10".
  */
 export function normaliseSetIds(setIds: string): string {
   return [
@@ -29,7 +33,7 @@ export function normaliseSetIds(setIds: string): string {
         .filter((s) => s.length > 0),
     ),
   ]
-    .sort()
+    .sort((a, b) => Number(a) - Number(b))
     .join(',');
 }
 
@@ -73,6 +77,37 @@ export function matchesBoardDetails(config: ResolvedBoardConfig, current: BoardD
     config.sizeId === current.size_id &&
     normaliseSetIds(config.setIds) === normaliseSetIds(current.set_ids.join(','))
   );
+}
+
+/**
+ * Decide what to do when the user picks a device from the BLE picker. Pure so
+ * it can be unit-tested without mounting the BluetoothProvider.
+ *
+ * Returns:
+ * - `{ kind: 'forward' }` — no resolved entry or config matches the current
+ *   route → forward the deviceId to the picker promise resolver.
+ * - `{ kind: 'mismatch', config, serial }` — the resolved config differs from
+ *   the route the user is on → caller should open the mismatch dialog.
+ */
+export type PickerSelectionDecision =
+  | { kind: 'forward' }
+  | { kind: 'mismatch'; serial: string; config: ResolvedBoardConfig };
+
+export function decidePickerSelection(
+  deviceId: string,
+  devices: ReadonlyArray<DiscoveredDevice>,
+  resolvedBoards: ReadonlyMap<string, ResolvedBoardEntry>,
+  boardDetails: BoardDetails | undefined,
+): PickerSelectionDecision {
+  if (!boardDetails) return { kind: 'forward' };
+  const device = devices.find((d) => d.deviceId === deviceId);
+  const serial = device ? parseSerialNumber(device.name) : undefined;
+  if (!serial) return { kind: 'forward' };
+  const entry = resolvedBoards.get(serial);
+  if (!entry) return { kind: 'forward' };
+  const config = configFromResolvedEntry(entry);
+  if (matchesBoardDetails(config, boardDetails)) return { kind: 'forward' };
+  return { kind: 'mismatch', serial, config };
 }
 
 /**

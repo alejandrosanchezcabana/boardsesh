@@ -18,6 +18,15 @@ export type ResolvedBoardEntry = { kind: 'saved'; board: UserBoard } | { kind: '
 export type { BoardSerialConfig };
 
 /**
+ * Backend caps each serial-lookup query at 20 entries. Bigger requests are
+ * rejected by `SerialNumberLookupSchema`, and the resolver-side `.catch`
+ * would otherwise swallow the rejection and return an empty result for the
+ * whole scan. Cap at the client to preserve the previous "first 20 win"
+ * semantics.
+ */
+const MAX_SERIALS_PER_REQUEST = 20;
+
+/**
  * Resolve an array of BLE serial numbers via GraphQL. Saved-board matches
  * (`boardsBySerialNumbers`) win; for authenticated callers we additionally
  * query `myBoardSerialConfigs` so any unmatched serial falls back to the
@@ -30,7 +39,7 @@ export async function resolveSerialNumbers(
   serials: string[],
   options: { isAuthenticated?: boolean } = {},
 ): Promise<Map<string, ResolvedBoardEntry>> {
-  const unique = [...new Set(serials)];
+  const unique = [...new Set(serials)].slice(0, MAX_SERIALS_PER_REQUEST);
   if (unique.length === 0) return new Map();
 
   const client = createGraphQLHttpClient(token);
