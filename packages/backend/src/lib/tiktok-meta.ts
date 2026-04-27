@@ -50,17 +50,14 @@ async function fetchTikTokMetaUncached(url: string): Promise<TikTokMetaResult> {
 
   let res: Response;
   try {
-    const controller = new AbortController();
-    const timer = setTimeout(() => controller.abort(), FETCH_TIMEOUT_MS);
     res = await fetch(oembedUrl, {
       headers: {
         'User-Agent': USER_AGENT,
         Accept: 'application/json',
       },
-      signal: controller.signal,
+      signal: AbortSignal.timeout(FETCH_TIMEOUT_MS),
       cache: 'no-store',
     });
-    clearTimeout(timer);
   } catch {
     return { status: 'transient_error' };
   }

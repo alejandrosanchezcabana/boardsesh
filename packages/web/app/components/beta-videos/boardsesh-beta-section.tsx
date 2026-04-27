@@ -80,7 +80,7 @@ const BoardseshBetaSection: React.FC<BoardseshBetaSectionProps> = ({ boardType, 
                 </div>
               )}
               {dedupedLinks.map((link) => (
-                <BoardseshBetaCard key={`ig-${link.link}`} link={link} />
+                <BoardseshBetaCard key={link.link} link={link} />
               ))}
               {totalCount === 0 && !isAuthenticated && <span className={styles.emptyText}>No beta videos yet</span>}
             </>

@@ -27,7 +27,7 @@ describe('beta-link-thumbnails: key + url helpers', () => {
 
   it('builds dev proxy thumbnail URL with encoded source', () => {
     const remote = 'https://scontent.cdninstagram.com/img.jpg?foo=bar';
-    expect(getDevProxyThumbnailUrl(remote)).toBe(`/api/internal/instagram-thumbnail?url=${encodeURIComponent(remote)}`);
+    expect(getDevProxyThumbnailUrl(remote)).toBe(`/api/internal/beta-link-thumbnail?url=${encodeURIComponent(remote)}`);
   });
 
   it('isOurS3Url recognizes URLs from the configured bucket prefix', () => {

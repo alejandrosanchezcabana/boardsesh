@@ -1,3 +1,15 @@
+/**
+ * Dev-only proxy for Instagram + TikTok beta-link thumbnails.
+ *
+ * The `betaLinks` GraphQL resolver caches thumbnails to S3 in production. In
+ * development (or any environment without `AWS_S3_BUCKET_NAME` set) S3 isn't
+ * available, so the resolver returns URLs that point at this route — letting
+ * the browser fetch CDN thumbnails through our backend instead of cross-
+ * origin against fbcdn / cdninstagram / tiktokcdn.
+ *
+ * Disabled (410) whenever S3 is configured: real environments should never
+ * need this hop, and disabling closes off a needless SSRF surface.
+ */
 import { type NextRequest, NextResponse } from 'next/server';
 
 const ALLOWED_HOST_SUFFIXES = [
@@ -13,12 +25,6 @@ const USER_AGENT =
 
 export const dynamic = 'force-dynamic';
 
-/**
- * Disable the proxy whenever real S3 storage is configured. The proxy only
- * exists for the dev path where thumbnails can't be cached to a public bucket;
- * any environment with `AWS_S3_BUCKET_NAME` set should serve persisted S3
- * URLs directly. Returning 410 closes off a needless SSRF surface in prod.
- */
 function isProxyDisabled(): boolean {
   return !!process.env.AWS_S3_BUCKET_NAME;
 }
@@ -40,15 +46,16 @@ export async function GET(request: NextRequest) {
   const hostAllowed = ALLOWED_HOST_SUFFIXES.some((suffix) => parsed.hostname.endsWith(suffix));
   if (!hostAllowed) return new NextResponse('Host not allowed', { status: 400 });
 
-  const controller = new AbortController();
-  const timer = setTimeout(() => controller.abort(), FETCH_TIMEOUT_MS);
   try {
     const upstream = await fetch(target, {
       headers: { 'User-Agent': USER_AGENT, Accept: 'image/*,*/*;q=0.8' },
-      signal: controller.signal,
+      signal: AbortSignal.timeout(FETCH_TIMEOUT_MS),
+      // Block redirects: a CDN URL that 30x's into an internal address would
+      // otherwise be silently followed. Allowlist applies only to the URL we
+      // were handed, not whatever the upstream wants to bounce us to.
+      redirect: 'error',
       cache: 'no-store',
     });
-    clearTimeout(timer);
     if (!upstream.ok || !upstream.body) {
       return new NextResponse('Upstream failed', { status: upstream.status || 502 });
     }

@@ -2,8 +2,14 @@ import { getPublicUrl, isS3Configured, uploadToS3 } from '../storage/s3';
 
 export { isS3Configured };
 
+/**
+ * Dev-only thumbnail proxy. Used by both Instagram and TikTok branches when
+ * S3 is not configured — lets the browser fetch CDN thumbnails through our
+ * backend instead of cross-origin. The matching route is 410'd in production
+ * whenever AWS_S3_BUCKET_NAME is set.
+ */
 export function getDevProxyThumbnailUrl(remoteUrl: string): string {
-  return `/api/internal/instagram-thumbnail?url=${encodeURIComponent(remoteUrl)}`;
+  return `/api/internal/beta-link-thumbnail?url=${encodeURIComponent(remoteUrl)}`;
 }
 
 const FETCH_TIMEOUT_MS = 4000;
@@ -30,14 +36,11 @@ export function isOurS3Url(url: string | null): boolean {
 
 async function cacheRemoteThumbnail(key: string, sourceUrl: string): Promise<string | null> {
   try {
-    const controller = new AbortController();
-    const timer = setTimeout(() => controller.abort(), FETCH_TIMEOUT_MS);
     const res = await fetch(sourceUrl, {
       headers: { 'User-Agent': USER_AGENT, Accept: 'image/*,*/*;q=0.8' },
-      signal: controller.signal,
+      signal: AbortSignal.timeout(FETCH_TIMEOUT_MS),
       cache: 'no-store',
     });
-    clearTimeout(timer);
     if (!res.ok) return null;
     const arrayBuffer = await res.arrayBuffer();
     const buffer = Buffer.from(arrayBuffer);

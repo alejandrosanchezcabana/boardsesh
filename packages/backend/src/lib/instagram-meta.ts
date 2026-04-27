@@ -61,17 +61,14 @@ async function fetchInstagramMetaUncached(url: string): Promise<InstagramMetaRes
 
   let html: string;
   try {
-    const controller = new AbortController();
-    const timer = setTimeout(() => controller.abort(), FETCH_TIMEOUT_MS);
     const res = await fetch(embedUrl, {
       headers: {
         'User-Agent': USER_AGENT,
         'Accept-Language': 'en-US,en;q=0.9',
       },
-      signal: controller.signal,
+      signal: AbortSignal.timeout(FETCH_TIMEOUT_MS),
       cache: 'no-store',
     });
-    clearTimeout(timer);
     if (!res.ok) return { status: 'transient_error' };
     html = await res.text();
   } catch {

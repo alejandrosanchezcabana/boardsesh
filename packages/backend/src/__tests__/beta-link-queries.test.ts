@@ -175,7 +175,7 @@ describe('betaLinks resolver', () => {
 
     const result = await betaLinkQueries.betaLinks(undefined, { boardType: 'kilter', climbUuid: 'climb-1' });
     expect(result[0]?.thumbnail).toBe(
-      `/api/internal/instagram-thumbnail?url=${encodeURIComponent('https://scontent.cdninstagram.com/raw.jpg')}`,
+      `/api/internal/beta-link-thumbnail?url=${encodeURIComponent('https://scontent.cdninstagram.com/raw.jpg')}`,
     );
     expect(cacheInstagramMock).not.toHaveBeenCalled();
   });
