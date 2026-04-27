@@ -2,24 +2,6 @@
   padding: 12px 12px 0;
 }
 
-.header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  margin-bottom: 8px;
-}
-
-.headerLabel {
-  display: flex;
-  align-items: center;
-  gap: 4px;
-  font-size: 12px;
-  font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-  color: var(--neutral-500);
-}
-
 .scrollContainer {
   display: flex;
   gap: 10px;
@@ -90,37 +72,6 @@
   line-height: 1.4;
 }
 
-.uploadCard {
-  flex-shrink: 0;
-  width: 72px;
-  scroll-snap-align: start;
-  display: flex;
-}
-
-.uploadButton {
-  flex: 1;
-  border-radius: 8px;
-  border: 2px dashed var(--neutral-300);
-  background: transparent;
-  cursor: pointer;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 6px;
-  color: var(--neutral-400);
-  font-size: 12px;
-  font-weight: 600;
-  transition:
-    border-color 200ms ease,
-    color 200ms ease;
-}
-
-.uploadButton:hover {
-  border-color: var(--primary);
-  color: var(--primary);
-}
-
 .platformBadge {
   position: absolute;
   top: 6px;
@@ -145,9 +96,5 @@
 @media (min-width: 768px) {
   .card {
     width: 169px;
-  }
-
-  .uploadCard {
-    width: 85px;
   }
 }

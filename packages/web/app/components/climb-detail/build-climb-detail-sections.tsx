@@ -2,11 +2,19 @@
 
 import React from 'react';
 import { useSearchParams } from 'next/navigation';
+import { useQuery } from '@tanstack/react-query';
+import VideocamOutlined from '@mui/icons-material/VideocamOutlined';
 import type { CollapsibleSectionConfig } from '@/app/components/collapsible-section/collapsible-section';
 import { LogbookSection, useLogbookSummary } from '@/app/components/logbook/logbook-section';
 import { CrewLogbookView } from '@/app/components/logbook/crew-logbook-view';
 import ClimbSocialSection from '@/app/components/social/climb-social-section';
 import ClimbAnalytics from '@/app/components/charts/climb-analytics';
+import BoardseshBetaSection from '@/app/components/beta-videos/boardsesh-beta-section';
+import BoardseshBetaAddButton from '@/app/components/beta-videos/boardsesh-beta-add-button';
+import { createGraphQLHttpClient } from '@/app/lib/graphql/client';
+import { GET_BETA_LINKS } from '@/app/lib/graphql/operations/beta-links';
+import { dedupeBetaLinks, mapBetaLinksResponse } from '@/app/lib/beta-video-url';
+import type { BetaLink } from '@/app/lib/api-wrappers/sync-api-types';
 import type { Climb } from '@/app/lib/types';
 
 type BuildClimbDetailSectionsProps = {
@@ -34,6 +42,21 @@ export function useBuildClimbDetailSections({
   const highlightProposalUuid = searchParams.get('proposalUuid') ?? undefined;
   const logbookSummary = useLogbookSummary(climb.uuid);
 
+  const { data: betaLinks = [] } = useQuery<BetaLink[]>({
+    queryKey: ['betaLinks', boardType, climbUuid],
+    queryFn: async () => {
+      const client = createGraphQLHttpClient();
+      const result = await client.request<{ betaLinks: Parameters<typeof mapBetaLinksResponse>[0] }>(GET_BETA_LINKS, {
+        boardType,
+        climbUuid,
+      });
+      return mapBetaLinksResponse(result.betaLinks);
+    },
+    enabled: enabledProp && !!climbUuid,
+    staleTime: 5 * 60 * 1000,
+  });
+  const betaCount = dedupeBetaLinks(betaLinks).length;
+
   if (!enabledProp) return [];
 
   const getLogbookSummaryParts = (): string[] => {
@@ -49,7 +72,31 @@ export function useBuildClimbDetailSections({
     return parts;
   };
 
+  const betaLabel = (
+    <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}>
+      <VideocamOutlined sx={{ fontSize: 16 }} />
+      Beta
+    </span>
+  );
+  const betaTitle = (
+    <span style={{ display: 'inline-flex', alignItems: 'center', gap: 8 }}>
+      <VideocamOutlined sx={{ fontSize: 22 }} />
+      Beta
+    </span>
+  );
+
   return [
+    {
+      key: 'beta',
+      label: betaLabel,
+      title: betaTitle,
+      defaultSummary: 'No videos yet',
+      getSummary: () => (betaCount > 0 ? [`${betaCount} video${betaCount !== 1 ? 's' : ''}`] : []),
+      defaultActive: !highlightProposalUuid,
+      flush: true,
+      action: <BoardseshBetaAddButton boardType={boardType} climbUuid={climbUuid} angle={angle} />,
+      content: <BoardseshBetaSection boardType={boardType} climbUuid={climbUuid} />,
+    },
     {
       key: 'logbook',
       label: 'Your Logbook',

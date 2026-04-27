@@ -81,6 +81,12 @@
   pointer-events: none;
 }
 
+.headerAction {
+  display: inline-flex;
+  align-items: center;
+  flex-shrink: 0;
+}
+
 /* Expandable content area */
 .expandableContent {
   display: grid;

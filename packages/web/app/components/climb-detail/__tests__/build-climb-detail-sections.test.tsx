@@ -29,6 +29,14 @@ vi.mock('@/app/components/social/climb-social-section', () => ({
 vi.mock('@/app/components/charts/climb-analytics', () => ({
   default: () => null,
 }));
+vi.mock('@/app/components/beta-videos/boardsesh-beta-section', () => ({
+  default: () => null,
+}));
+vi.mock('@/app/lib/graphql/client', () => ({
+  createGraphQLHttpClient: () => ({
+    request: async () => ({ betaLinks: [] }),
+  }),
+}));
 
 // ---------------------------------------------------------------------------
 // Test helpers
@@ -92,13 +100,13 @@ describe('useBuildClimbDetailSections', () => {
     vi.restoreAllMocks();
   });
 
-  it('returns 4 sections when enabled (default)', () => {
+  it('returns 5 sections when enabled (default)', () => {
     const { result } = renderHook(() => useBuildClimbDetailSections(BASE_PROPS), {
       wrapper: createWrapper(),
     });
 
-    expect(result.current).toHaveLength(4);
-    expect(result.current.map((s) => s.key)).toEqual(['logbook', 'crew-logbook', 'community', 'analytics']);
+    expect(result.current).toHaveLength(5);
+    expect(result.current.map((s) => s.key)).toEqual(['beta', 'logbook', 'crew-logbook', 'community', 'analytics']);
   });
 
   it('returns empty array when enabled is false', () => {
@@ -120,17 +128,27 @@ describe('useBuildClimbDetailSections', () => {
 
     rerender({ enabled: true });
 
-    expect(result.current).toHaveLength(4);
-    expect(result.current.map((s) => s.key)).toEqual(['logbook', 'crew-logbook', 'community', 'analytics']);
+    expect(result.current).toHaveLength(5);
+    expect(result.current.map((s) => s.key)).toEqual(['beta', 'logbook', 'crew-logbook', 'community', 'analytics']);
   });
 
-  it('all sections have lazy: true', () => {
+  it('non-beta sections are lazy', () => {
     const { result } = renderHook(() => useBuildClimbDetailSections(BASE_PROPS), {
       wrapper: createWrapper(),
     });
 
     for (const section of result.current) {
+      if (section.key === 'beta') continue;
       expect(section.lazy).toBe(true);
     }
+  });
+
+  it('beta is the default-active section when no proposalUuid is set', () => {
+    const { result } = renderHook(() => useBuildClimbDetailSections(BASE_PROPS), {
+      wrapper: createWrapper(),
+    });
+
+    const beta = result.current.find((s) => s.key === 'beta');
+    expect(beta?.defaultActive).toBe(true);
   });
 });
