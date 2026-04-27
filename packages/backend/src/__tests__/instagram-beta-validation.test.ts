@@ -211,6 +211,23 @@ describe('instagram-beta-validation', () => {
     ).toBe(true);
   });
 
+  it('does not match fallback tokens that appear inside larger words', () => {
+    // "Fell From Heaven" — "fell" should not match inside "befell".
+    expect(
+      instagramBetaValidationInternals.containsNormalizedClimbName(
+        'the storm that befell us from on high seemed heaven sent',
+        'Fell From Heaven',
+      ),
+    ).toBe(false);
+  });
+
+  it('indexOfWord requires whole-word matches', () => {
+    expect(instagramBetaValidationInternals.indexOfWord('the storm befell us', 'fell', 0)).toBe(-1);
+    expect(instagramBetaValidationInternals.indexOfWord('we fell hard today', 'fell', 0)).toBe(3);
+    expect(instagramBetaValidationInternals.indexOfWord('fell at the start', 'fell', 0)).toBe(0);
+    expect(instagramBetaValidationInternals.indexOfWord('one then fell', 'fell', 0)).toBe(9);
+  });
+
   it('opens the circuit after enough fetch failures and stops calling out', async () => {
     fetchMock.mockRejectedValue(new Error('TimeoutError'));
 

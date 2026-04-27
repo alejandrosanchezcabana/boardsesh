@@ -1,3 +1,4 @@
+import { GraphQLError } from 'graphql';
 import { getInstagramMediaId } from '../lib/instagram-meta';
 import { createCircuitBreaker } from '../lib/circuit-breaker';
 
@@ -45,9 +46,15 @@ export const instagramValidationCircuitForTesting = validationCircuit;
 const GENERIC_VALIDATION_ERROR =
   "We couldn't verify this Instagram link. Make sure it's a public post or reel that Boardsesh can preview, and that the caption or title mentions the climb name.";
 
-export class InstagramBetaValidationError extends Error {
+// Extends GraphQLError so the user-facing message survives Yoga's
+// `maskedErrors: true` in production. Plain Error subclasses are replaced
+// with the generic "Unexpected error." string before reaching the client,
+// which would surface as the fallback "Couldn't add video. Try again."
+// toast instead of our specific guidance ("post must mention the climb",
+// "already linked to <other climb>", etc.).
+export class InstagramBetaValidationError extends GraphQLError {
   constructor(message: string) {
-    super(message);
+    super(message, { extensions: { code: 'INSTAGRAM_BETA_VALIDATION' } });
     this.name = 'InstagramBetaValidationError';
   }
 }
@@ -94,6 +101,24 @@ function containsAsWord(haystack: string, needle: string): boolean {
   return haystack.includes(` ${needle} `);
 }
 
+// Word-bounded indexOf for the ordered-token fallback. Returns the start
+// index of `needle` if it appears as a whole word at or after `fromIndex`,
+// otherwise -1. Necessary because plain indexOf would match "fell" inside
+// "befell".
+function indexOfWord(haystack: string, needle: string, fromIndex: number): number {
+  let cursor = fromIndex;
+  while (cursor <= haystack.length) {
+    const idx = haystack.indexOf(needle, cursor);
+    if (idx === -1) return -1;
+    const before = idx === 0 ? ' ' : haystack[idx - 1];
+    const afterIdx = idx + needle.length;
+    const after = afterIdx >= haystack.length ? ' ' : haystack[afterIdx];
+    if (before === ' ' && after === ' ') return idx;
+    cursor = idx + 1;
+  }
+  return -1;
+}
+
 // Minimum length per token before we'll allow the ordered-token fallback to
 // fire. Short tokens like "the", "to", "for", "up" appear in nearly every
 // English Instagram caption, so a climb name like "The Project" or "Power
@@ -120,7 +145,7 @@ function containsNormalizedClimbName(haystack: string, climbName: string): boole
 
   let cursor = 0;
   for (const token of tokens) {
-    const nextIndex = normalizedHaystack.indexOf(token, cursor);
+    const nextIndex = indexOfWord(normalizedHaystack, token, cursor);
     if (nextIndex === -1) return false;
     cursor = nextIndex + token.length;
   }
@@ -252,6 +277,7 @@ export const instagramBetaValidationInternals = {
   containsAsWord,
   containsNormalizedClimbName,
   decodeHtmlEntities,
+  indexOfWord,
   normalizeText,
   parseMetaContent,
   parseUsernameFromOgTitle,

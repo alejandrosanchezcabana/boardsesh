@@ -49,11 +49,8 @@ const fakeCtx = { userId: 'test-user', isAuthenticated: true } as unknown as Par
   typeof import('../graphql/resolvers/ticks/mutations').validateAndEnrichBetaLinkInsert
 >[0];
 
-import {
-  escapeLikePattern,
-  validateAndEnrichBetaLinkInsert,
-  videoUrlForTickStatus,
-} from '../graphql/resolvers/ticks/mutations';
+import { validateAndEnrichBetaLinkInsert, videoUrlForTickStatus } from '../graphql/resolvers/ticks/mutations';
+import { escapeLikePattern } from '../utils/like-pattern';
 
 const fetchMock = vi.fn(() => {
   throw new Error('fetch should not be called for non-Instagram URLs');

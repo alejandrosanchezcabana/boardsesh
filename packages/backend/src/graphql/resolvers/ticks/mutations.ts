@@ -1,10 +1,12 @@
 import { v4 as uuidv4 } from 'uuid';
 import { eq, and, inArray, like } from 'drizzle-orm';
+import { GraphQLError } from 'graphql';
 import type { ConnectionContext } from '@boardsesh/shared-schema';
 import { db } from '../../../db/client';
 import * as dbSchema from '@boardsesh/db/schema';
 import { sessions } from '../../../db/schema';
 import { applyRateLimit, requireAuthenticated, validateInput, isNoMatchClimb } from '../shared/helpers';
+import { escapeLikePattern } from '../../../utils/like-pattern';
 import { getConsensusDifficultyName } from '../shared/sql-expressions';
 import { SaveTickInputSchema, UpdateTickInputSchema, AttachBetaLinkInputSchema } from '../../../validation/schemas';
 import { resolveBoardFromPath } from '../social/boards';
@@ -31,14 +33,6 @@ async function getClimbNameForBetaValidation(boardType: string, climbUuid: strin
     throw new InstagramBetaValidationError("We couldn't verify this Instagram link for the selected climb.");
   }
   return climbName;
-}
-
-// Escape `\`, `_`, and `%` so Instagram shortcodes containing underscores
-// (which are LIKE single-char wildcards) don't expand the prefilter to
-// unrelated rows. Backslash is escaped first so we don't double-escape the
-// inserts we add for `_` / `%`.
-export function escapeLikePattern(value: string): string {
-  return value.replace(/\\/g, '\\\\').replace(/[_%]/g, (m) => `\\${m}`);
 }
 
 // Beta links are only attached on successful ascents (flash / send), never on
@@ -373,11 +367,12 @@ export const tickMutations = {
     const validated = validateInput(AttachBetaLinkInputSchema, input, 'input');
     const now = new Date().toISOString();
 
-    // Validation happens before the transaction — it's an outbound HTTP fetch
-    // we don't want to hold a DB connection open for. The insert itself is
-    // wrapped so a constraint failure or connection drop after a successful
-    // validation surfaces an explicit error rather than landing the user on
-    // the generic "couldn't add video" toast.
+    // Validation runs first — it's an outbound HTTP fetch we don't want to
+    // hold a DB connection open for. The insert is a single statement; no
+    // need to wrap it in a transaction. The catch surfaces an explicit error
+    // for the rare case where the insert fails (constraint, connection drop)
+    // after validation already passed, so the user doesn't see the generic
+    // "couldn't add video" toast.
     const enrichedInsert = await validateAndEnrichBetaLinkInsert(
       ctx,
       validated.boardType,
@@ -386,24 +381,24 @@ export const tickMutations = {
     );
 
     try {
-      await db.transaction(async (tx) => {
-        await tx
-          .insert(dbSchema.boardBetaLinks)
-          .values({
-            boardType: validated.boardType,
-            climbUuid: validated.climbUuid,
-            link: validated.link,
-            angle: validated.angle ?? null,
-            isListed: true,
-            thumbnail: enrichedInsert.thumbnail,
-            foreignUsername: enrichedInsert.foreignUsername,
-            createdAt: now,
-          })
-          .onConflictDoNothing();
-      });
+      await db
+        .insert(dbSchema.boardBetaLinks)
+        .values({
+          boardType: validated.boardType,
+          climbUuid: validated.climbUuid,
+          link: validated.link,
+          angle: validated.angle ?? null,
+          isListed: true,
+          thumbnail: enrichedInsert.thumbnail,
+          foreignUsername: enrichedInsert.foreignUsername,
+          createdAt: now,
+        })
+        .onConflictDoNothing();
     } catch (err) {
       console.error('[attachBetaLink] insert failed after validation passed:', err);
-      throw new Error("Couldn't save the beta link. Please try again.");
+      throw new GraphQLError("Couldn't save the beta link. Please try again.", {
+        extensions: { code: 'BETA_LINK_INSERT_FAILED' },
+      });
     }
 
     return true;

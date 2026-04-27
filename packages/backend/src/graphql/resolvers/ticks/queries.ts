@@ -11,6 +11,7 @@ import {
   consensusGradeJoinCondition,
 } from '../shared/sql-expressions';
 import { GetTicksInputSchema, BoardNameSchema, AscentFeedInputSchema } from '../../../validation/schemas';
+import { escapeLikePattern } from '../../../utils/like-pattern';
 
 export const tickQueries = {
   /**
@@ -306,10 +307,6 @@ export const tickQueries = {
         ),
       )
       .leftJoin(consensusGradeTable, consensusGradeJoinCondition);
-
-    // Escape LIKE wildcards so user input is treated as a literal substring,
-    // not a SQL pattern (e.g. typing "100%" should match the literal string).
-    const escapeLikePattern = (value: string): string => value.replace(/[\\%_]/g, (char) => `\\${char}`);
 
     // Full conditions including climb name filter (requires JOIN)
     const allConditions = [
