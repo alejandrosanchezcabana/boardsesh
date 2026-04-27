@@ -24,9 +24,7 @@ import CircularProgress from '@mui/material/CircularProgress';
 import InstagramIcon from '@mui/icons-material/Instagram';
 import LinkOutlined from '@mui/icons-material/LinkOutlined';
 import dynamic from 'next/dynamic';
-import dayjs from 'dayjs';
-import relativeTime from 'dayjs/plugin/relativeTime';
-import utc from 'dayjs/plugin/utc';
+import { formatTickRelativeTime } from '@/app/lib/format-tick-time';
 import { track } from '@vercel/analytics';
 import type { AscentFeedItem } from '@/app/lib/graphql/operations/ticks';
 import type { BoardDetails, BoardName } from '@/app/lib/types';
@@ -61,8 +59,6 @@ const AttachBetaLinkDialog = dynamic(() => import('@/app/components/beta-videos/
   ssr: false,
 });
 
-dayjs.extend(relativeTime);
-dayjs.extend(utc);
 
 // Layout name mapping
 const layoutNames: Record<string, string> = {
@@ -500,7 +496,7 @@ const LogbookFeedItem: React.FC<LogbookFeedItemProps> = React.memo(
     // Subtitle: "2h ago . 40deg . Kilter Original"
     const subtitle = useMemo(() => {
       const parts: string[] = [];
-      parts.push(dayjs(item.climbedAt).utc(true).fromNow());
+      parts.push(formatTickRelativeTime(item.climbedAt));
       parts.push(`${item.angle}\u00B0`);
       if (showBoardType) {
         parts.push(getLayoutDisplayName(item.boardType, item.layoutId));
