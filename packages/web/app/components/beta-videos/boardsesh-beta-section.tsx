@@ -8,14 +8,26 @@ import { GET_BETA_LINKS } from '@/app/lib/graphql/operations/beta-links';
 import type { BetaLink } from '@/app/lib/api-wrappers/sync-api-types';
 import { dedupeBetaLinks, mapBetaLinksResponse } from '@/app/lib/beta-video-url';
 import BoardseshBetaCard from './boardsesh-beta-card';
+import BoardseshBetaAddPanel from './boardsesh-beta-add-panel';
 import styles from './boardsesh-beta.module.css';
 
 type BoardseshBetaSectionProps = {
   boardType: string;
   climbUuid: string;
+  angle: number;
+  isAdding: boolean;
+  onCancelAdd: () => void;
+  onAddSuccess: () => void;
 };
 
-const BoardseshBetaSection: React.FC<BoardseshBetaSectionProps> = ({ boardType, climbUuid }) => {
+const BoardseshBetaSection: React.FC<BoardseshBetaSectionProps> = ({
+  boardType,
+  climbUuid,
+  angle,
+  isAdding,
+  onCancelAdd,
+  onAddSuccess,
+}) => {
   const { data: betaLinks = [], isLoading } = useQuery<BetaLink[]>({
     queryKey: ['betaLinks', boardType, climbUuid],
     queryFn: async () => {
@@ -32,6 +44,18 @@ const BoardseshBetaSection: React.FC<BoardseshBetaSectionProps> = ({ boardType, 
 
   const dedupedLinks = useMemo(() => dedupeBetaLinks(betaLinks), [betaLinks]);
   const totalCount = dedupedLinks.length;
+
+  if (isAdding) {
+    return (
+      <BoardseshBetaAddPanel
+        boardType={boardType}
+        climbUuid={climbUuid}
+        angle={angle}
+        onCancel={onCancelAdd}
+        onSuccess={onAddSuccess}
+      />
+    );
+  }
 
   return (
     <div className={styles.section}>

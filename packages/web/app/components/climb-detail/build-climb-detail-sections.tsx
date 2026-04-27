@@ -1,6 +1,6 @@
 'use client';
 
-import React from 'react';
+import React, { useState } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { useQuery } from '@tanstack/react-query';
 import VideocamOutlined from '@mui/icons-material/VideocamOutlined';
@@ -41,6 +41,7 @@ export function useBuildClimbDetailSections({
   const searchParams = useSearchParams();
   const highlightProposalUuid = searchParams.get('proposalUuid') ?? undefined;
   const logbookSummary = useLogbookSummary(climb.uuid);
+  const [isAddingBeta, setIsAddingBeta] = useState(false);
 
   const { data: betaLinks = [] } = useQuery<BetaLink[]>({
     queryKey: ['betaLinks', boardType, climbUuid],
@@ -94,8 +95,17 @@ export function useBuildClimbDetailSections({
       getSummary: () => (betaCount > 0 ? [`${betaCount} video${betaCount !== 1 ? 's' : ''}`] : []),
       defaultActive: !highlightProposalUuid,
       flush: true,
-      action: <BoardseshBetaAddButton boardType={boardType} climbUuid={climbUuid} angle={angle} />,
-      content: <BoardseshBetaSection boardType={boardType} climbUuid={climbUuid} />,
+      action: <BoardseshBetaAddButton isAdding={isAddingBeta} onToggle={() => setIsAddingBeta((v) => !v)} />,
+      content: (
+        <BoardseshBetaSection
+          boardType={boardType}
+          climbUuid={climbUuid}
+          angle={angle}
+          isAdding={isAddingBeta}
+          onCancelAdd={() => setIsAddingBeta(false)}
+          onAddSuccess={() => setIsAddingBeta(false)}
+        />
+      ),
     },
     {
       key: 'logbook',
