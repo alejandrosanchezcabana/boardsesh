@@ -117,7 +117,10 @@
 
   /* Layout */
   --global-header-height: calc(max(8dvh, 48px) + var(--safe-area-inset-top));
-  --bottom-bar-height: calc(120px + var(--safe-area-inset-bottom));
+  /* Matches the SSR-rendered bottom-bar wrapper height on board routes:
+     queue-control shell (~85px: session header strip + main row) + tab bar (~60px).
+     JS in persistent-session-wrapper measures the actual height post-hydration. */
+  --bottom-bar-height: calc(145px + var(--safe-area-inset-bottom));
 
   /* Tap highlight (Android/mobile browsers) */
   --tap-highlight: transparent;

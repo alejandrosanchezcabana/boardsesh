@@ -29,5 +29,6 @@ export type MoonBoardRendererProps = {
   litUpHoldsMap?: LitUpHoldsMap;
   mirrored?: boolean;
   thumbnail?: boolean;
+  fillHeight?: boolean;
   onHoldClick?: (holdId: number, anchor: Element) => void;
 };

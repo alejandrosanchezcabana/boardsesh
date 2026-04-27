@@ -1042,8 +1042,20 @@ export default function CreateClimbForm({
   }, [pendingFormValues]);
 
   const handlePublish = useCallback(async () => {
-    if (!isValid || !climbName.trim()) {
+    if (!climbName.trim()) {
       return;
+    }
+
+    if (!isValid) {
+      // MoonBoard: drafts are allowed to be incomplete; only block publish.
+      if (boardType === 'moonboard') {
+        if (!isDraft) {
+          showMessage('A valid climb needs at least 1 start hold and 1 finish hold', 'warning');
+          return;
+        }
+      } else {
+        return;
+      }
     }
 
     if (boardType === 'moonboard' && (isCheckingMoonBoardDuplicate || moonBoardDuplicateError)) {
@@ -1088,8 +1100,10 @@ export default function CreateClimbForm({
 
   const canSave =
     isLoggedIn &&
-    isValid &&
     climbName.trim().length > 0 &&
+    // MoonBoard: button is always clickable; handlePublish shows a snackbar when publishing an invalid climb,
+    // and silently saves drafts regardless of validity.
+    (boardType === 'moonboard' || isValid) &&
     (boardType !== 'moonboard' || (!isCheckingMoonBoardDuplicate && !moonBoardDuplicateError));
 
   const handleToggleSettings = useCallback(() => {
@@ -1422,6 +1436,7 @@ export default function CreateClimbForm({
                 holdSetImages={holdSetImages}
                 litUpHoldsMap={litUpHoldsMap}
                 onHoldClick={picker.handleHoldClick}
+                fillHeight
               />
             </div>
           ) : null}
@@ -1437,15 +1452,6 @@ export default function CreateClimbForm({
         onSelect={picker.handleSelect}
         onClose={picker.handleClose}
       />
-
-      {/* MoonBoard validation hint band */}
-      {boardType === 'moonboard' && !isValid && totalHolds > 0 && (
-        <div className={styles.validationHintBar}>
-          <Typography variant="body2" component="span" color="text.secondary">
-            A valid climb needs at least 1 start hold and 1 finish hold
-          </Typography>
-        </div>
-      )}
 
       {/* MoonBoard-only: hidden file input (trigger lives in the bottom row) */}
       {boardType === 'moonboard' && (

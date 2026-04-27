@@ -5,6 +5,7 @@ import MuiCard from '@mui/material/Card';
 import CardContent from '@mui/material/CardContent';
 import Box from '@mui/material/Box';
 import Stack from '@mui/material/Stack';
+import PlayCircleOutlineOutlined from '@mui/icons-material/PlayCircleOutlineOutlined';
 import { themeTokens } from '@/app/theme/theme-config';
 import styles from './queue-control-bar.module.css';
 
@@ -21,6 +22,20 @@ export default function QueueControlBarShell({ message = 'No climb selected' }: 
     >
       <MuiCard variant="outlined" className={styles.card} sx={{ border: 'none', backgroundColor: 'transparent' }}>
         <CardContent sx={{ p: 0, '&:last-child': { pb: 0 } }}>
+          {/* Session header placeholder — matches the hydrated bar's "Start sesh" strip
+              so first paint height equals post-hydration height (no reflow). */}
+          <div className={`${styles.sessionHeaderWrapper} ${styles.sessionHeaderExpanded}`}>
+            <div className={styles.sessionHeaderInner}>
+              <div
+                className={styles.sessionHeader}
+                aria-hidden="true"
+                style={{ backgroundColor: 'var(--semantic-surface)', justifyContent: 'flex-end' }}
+              >
+                <PlayCircleOutlineOutlined sx={{ fontSize: 16, opacity: 0.7 }} />
+                <span className={styles.sessionName}>Start sesh</span>
+              </div>
+            </div>
+          </div>
           <div className={styles.swipeWrapper}>
             <div
               className={styles.swipeContainer}

@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
+import React, { useState, useEffect, useLayoutEffect, useCallback, useMemo, useRef } from 'react';
 import { usePathname } from 'next/navigation';
 import { PartyProfileProvider } from '../party-manager/party-profile-context';
 import { PersistentSessionProvider, usePersistentSession } from '../persistent-session';
@@ -34,6 +34,8 @@ import { FeedbackPromptBanner } from '../feedback/feedback-prompt-banner';
 const SeshSettingsDrawer = dynamic(() => import('../sesh-settings/sesh-settings-drawer'), {
   ssr: false,
 });
+
+const useIsomorphicLayoutEffect = typeof window !== 'undefined' ? useLayoutEffect : useEffect;
 
 type PersistentSessionWrapperProps = {
   children: React.ReactNode;
@@ -134,15 +136,18 @@ export function RootBottomBar({ boardConfigs }: { boardConfigs: BoardConfigData 
   const shouldShowQueueShell = isBoardRoutePath(pathname) && !hasActiveQueue && !boardDetails;
 
   // Measure the bottom bar's visual occlusion and expose it as --bottom-bar-height.
-  // Use innerHeight - rect.top (not rect.height) so the iOS `bottom: 2dvh` offset
+  // Use viewportHeight - rect.top (not rect.height) so the iOS `bottom: 2dvh` offset
   // and the BottomNavigation's negative-margin extension are both included.
+  // Prefer visualViewport.height over innerHeight so iOS keyboard / URL-bar collapse
+  // shrinks the published value as expected.
   const wrapperRef = useRef<HTMLDivElement | null>(null);
-  useEffect(() => {
+  useIsomorphicLayoutEffect(() => {
     const el = wrapperRef.current;
     if (!el) return;
     const update = () => {
       const top = el.getBoundingClientRect().top;
-      const px = Math.max(0, window.innerHeight - top);
+      const viewportH = window.visualViewport?.height ?? window.innerHeight;
+      const px = Math.max(0, viewportH - top);
       document.documentElement.style.setProperty('--bottom-bar-height', `${px}px`);
     };
     update();
@@ -154,6 +159,7 @@ export function RootBottomBar({ boardConfigs }: { boardConfigs: BoardConfigData 
       ro?.disconnect();
       window.removeEventListener('resize', update);
       window.visualViewport?.removeEventListener('resize', update);
+      document.documentElement.style.removeProperty('--bottom-bar-height');
     };
   }, []);
 
