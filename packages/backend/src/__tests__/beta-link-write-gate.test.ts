@@ -33,7 +33,11 @@ vi.mock('../lib/beta-link-thumbnails', () => ({
   isS3Configured: vi.fn(() => false),
 }));
 
-import { validateAndEnrichBetaLinkInsert } from '../graphql/resolvers/ticks/mutations';
+import {
+  escapeLikePattern,
+  validateAndEnrichBetaLinkInsert,
+  videoUrlForTickStatus,
+} from '../graphql/resolvers/ticks/mutations';
 
 const fetchMock = vi.fn(() => {
   throw new Error('fetch should not be called for non-Instagram URLs');
@@ -72,5 +76,41 @@ describe('validateAndEnrichBetaLinkInsert (gate)', () => {
     expect(result).toEqual({ thumbnail: null, foreignUsername: null });
     expect(fetchMock).not.toHaveBeenCalled();
     expect(mockDbSelect).not.toHaveBeenCalled();
+  });
+});
+
+describe('videoUrlForTickStatus', () => {
+  it('returns the URL for flash/send', () => {
+    const url = 'https://www.instagram.com/reel/ABC123/';
+    expect(videoUrlForTickStatus('flash', url)).toBe(url);
+    expect(videoUrlForTickStatus('send', url)).toBe(url);
+  });
+
+  it('returns null for attempt status (beta only attaches on successful ascents)', () => {
+    expect(videoUrlForTickStatus('attempt', 'https://www.instagram.com/reel/ABC123/')).toBeNull();
+  });
+
+  it('returns null when no URL is provided', () => {
+    expect(videoUrlForTickStatus('send', null)).toBeNull();
+    expect(videoUrlForTickStatus('send', undefined)).toBeNull();
+    expect(videoUrlForTickStatus('flash', '')).toBeNull();
+  });
+});
+
+describe('escapeLikePattern', () => {
+  it('escapes LIKE wildcards in shortcodes', () => {
+    expect(escapeLikePattern('A_B')).toBe('A\\_B');
+    expect(escapeLikePattern('A%B')).toBe('A\\%B');
+    expect(escapeLikePattern('A_B%C_D')).toBe('A\\_B\\%C\\_D');
+  });
+
+  it('escapes backslashes before adding new escape sequences', () => {
+    expect(escapeLikePattern('A\\B')).toBe('A\\\\B');
+    expect(escapeLikePattern('A\\_B')).toBe('A\\\\\\_B');
+  });
+
+  it('passes plain alphanumerics through unchanged', () => {
+    expect(escapeLikePattern('ABC123xyz')).toBe('ABC123xyz');
+    expect(escapeLikePattern('DLM2nf9S1h6')).toBe('DLM2nf9S1h6');
   });
 });

@@ -139,6 +139,24 @@ describe('instagram-beta-validation', () => {
     expect(instagramBetaValidationInternals.parseUsernameFromOgTitle('Random title without pattern')).toBeNull();
   });
 
+  it('accepts a public post that mentions the climb name even when og:image is missing', async () => {
+    fetchMock.mockResolvedValue({
+      headers: new Headers({ 'content-type': 'text/html; charset=utf-8' }),
+      ok: true,
+      text: async () => `
+        <html><head>
+          <meta name="description" content="Cut to the Chase V10 from yesterday's session." />
+          <meta property="og:title" content="camgibbs on Instagram: Cut to the Chase V10" />
+          <meta property="al:ios:url" content="instagram://media?id=123456789" />
+        </head></html>
+      `,
+    });
+
+    await expect(
+      validateInstagramBetaLink('https://www.instagram.com/p/CU-NOpdL8Kf/', 'Cut to the Chase'),
+    ).resolves.toMatchObject({ imageUrl: null, mediaId: '123456789' });
+  });
+
   it('returns the parsed username on the metadata', async () => {
     fetchMock.mockResolvedValue({
       headers: new Headers({ 'content-type': 'text/html; charset=utf-8' }),

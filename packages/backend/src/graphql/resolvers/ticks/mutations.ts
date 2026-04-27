@@ -33,6 +33,26 @@ async function getClimbNameForBetaValidation(boardType: string, climbUuid: strin
   return climbName;
 }
 
+// Escape `\`, `_`, and `%` so Instagram shortcodes containing underscores
+// (which are LIKE single-char wildcards) don't expand the prefilter to
+// unrelated rows. Backslash is escaped first so we don't double-escape the
+// inserts we add for `_` / `%`.
+export function escapeLikePattern(value: string): string {
+  return value.replace(/\\/g, '\\\\').replace(/[_%]/g, (m) => `\\${m}`);
+}
+
+// Beta links are only attached on successful ascents (flash / send), never on
+// `attempt`. Returns the URL to attach, or null if the tick shouldn't carry
+// one. Exported so the rule can be unit-tested without integration setup.
+export function videoUrlForTickStatus(
+  status: 'flash' | 'send' | 'attempt',
+  videoUrl: string | null | undefined,
+): string | null {
+  if (!videoUrl) return null;
+  if (status !== 'flash' && status !== 'send') return null;
+  return videoUrl;
+}
+
 async function ensureInstagramShortcodeIsNotAlreadyLinked(
   boardType: string,
   selectedClimbUuid: string,
@@ -43,9 +63,17 @@ async function ensureInstagramShortcodeIsNotAlreadyLinked(
 
   // Narrow at the DB level — the shortcode appears as `/p/<id>/`, `/reel/<id>/`,
   // or `/tv/<id>/` in the link. A LIKE prefilter avoids loading every beta
-  // link for the board on every write. Drizzle parameterizes the value, and
-  // we re-verify with `getInstagramMediaId` below so any false positives
-  // (e.g. shortcodes appearing in non-canonical positions) are filtered out.
+  // link for the board on every write. Drizzle parameterizes the value;
+  // escapeLikePattern handles `_` / `%` since shortcodes can contain
+  // underscores (which would otherwise act as wildcards). The post-fetch
+  // `getInstagramMediaId(entry.link)` re-check still filters any false
+  // positives (e.g. shortcodes appearing in non-canonical positions).
+  //
+  // Race: two concurrent attaches of the same shortcode can both pass this
+  // check. The (boardType, climbUuid, link) PK + onConflictDoNothing makes
+  // the loser a silent no-op rather than a duplicate row. The loser misses
+  // the friendly "already linked" message — acceptable for a beta-link
+  // feature; an advisory lock would be overkill.
   const existingLinks = await db
     .select({
       climbName: dbSchema.boardClimbs.name,
@@ -63,7 +91,7 @@ async function ensureInstagramShortcodeIsNotAlreadyLinked(
     .where(
       and(
         eq(dbSchema.boardBetaLinks.boardType, boardType),
-        like(dbSchema.boardBetaLinks.link, `%${incomingShortcode}%`),
+        like(dbSchema.boardBetaLinks.link, `%${escapeLikePattern(incomingShortcode)}%`),
       ),
     );
 
@@ -219,17 +247,10 @@ export const tickMutations = {
     // surface shape; the helper confirms the post is actually public, mentions
     // the climb name, and isn't already attached to another climb. TikTok and
     // other supported platforms skip the deep validation.
-    const shouldAttachBeta =
-      validatedInput.videoUrl && (validatedInput.status === 'flash' || validatedInput.status === 'send');
-    let enrichedInsert: EnrichedBetaInsert = { thumbnail: null, foreignUsername: null };
-
-    if (shouldAttachBeta && validatedInput.videoUrl) {
-      enrichedInsert = await validateAndEnrichBetaLinkInsert(
-        validatedInput.boardType,
-        validatedInput.climbUuid,
-        validatedInput.videoUrl,
-      );
-    }
+    const attachedVideoUrl = videoUrlForTickStatus(validatedInput.status, validatedInput.videoUrl);
+    const enrichedInsert: EnrichedBetaInsert = attachedVideoUrl
+      ? await validateAndEnrichBetaLinkInsert(validatedInput.boardType, validatedInput.climbUuid, attachedVideoUrl)
+      : { thumbnail: null, foreignUsername: null };
 
     // Insert into database
     const [tick] = await db.transaction(async (tx) => {
@@ -268,13 +289,13 @@ export const tickMutations = {
       // Attach the video URL as community beta for this climb if the user
       // provided one on a successful ascent. The (boardType, climbUuid, link)
       // PK makes re-submission idempotent.
-      if (shouldAttachBeta) {
+      if (attachedVideoUrl) {
         await tx
           .insert(dbSchema.boardBetaLinks)
           .values({
             boardType: validatedInput.boardType,
             climbUuid: validatedInput.climbUuid,
-            link: validatedInput.videoUrl!,
+            link: attachedVideoUrl,
             angle: validatedInput.angle,
             isListed: true,
             thumbnail: enrichedInsert.thumbnail,

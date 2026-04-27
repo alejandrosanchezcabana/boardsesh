@@ -156,7 +156,11 @@ export async function fetchInstagramPageMetadata(url: string): Promise<Instagram
 export async function validateInstagramBetaLink(url: string, climbName: string): Promise<InstagramPageMetadata> {
   const metadata = await fetchInstagramPageMetadata(url);
 
-  if (!metadata.imageUrl || !metadata.mediaId) {
+  // mediaId is the canonical identity for the post (used for dedup + S3 cache
+  // key), so without it we can't safely persist. imageUrl is just enrichment —
+  // a public post with a caption mentioning the climb name should pass even
+  // if og:image happens to be missing.
+  if (!metadata.mediaId) {
     throw new InstagramBetaValidationError(GENERIC_VALIDATION_ERROR);
   }
 
