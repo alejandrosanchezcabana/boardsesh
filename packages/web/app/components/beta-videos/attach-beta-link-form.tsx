@@ -21,7 +21,7 @@ import { useSnackbar } from '@/app/components/providers/snackbar-provider';
 // (zod errors, InstagramBetaValidationError, our explicit throws). Anything
 // else — fetch failures, library bugs, `error.message` — is opaque and we
 // fall back to the generic toast so we never leak internal strings.
-function extractGraphQLErrorMessage(error: unknown): string | null {
+export function extractGraphQLErrorMessage(error: unknown): string | null {
   if (!error || typeof error !== 'object') return null;
   if (!('response' in error)) return null;
   const response = (error as { response?: unknown }).response;

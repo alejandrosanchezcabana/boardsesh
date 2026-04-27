@@ -32,6 +32,14 @@ const INSTAGRAM_FETCH_HEADERS = {
 // rejecting us. While the breaker is open the validator throws the generic
 // error immediately — users see "we couldn't verify this Instagram link"
 // instead of waiting for a guaranteed-failing fetch.
+//
+// Known limitation: state is per-process. In a multi-pod deploy each
+// instance tracks its own failures, so one pod tripping the breaker
+// doesn't stop another from continuing to hit Instagram. The per-user
+// rate limit at the resolver layer is the cluster-wide protection;
+// this breaker is best-effort per-instance back-off. If this becomes
+// a problem (e.g. fleet-wide IP block from IG) the failure window
+// could move to Redis using the same key pattern as redis-rate-limiter.
 const validationCircuit = createCircuitBreaker({
   windowMs: 60 * 1000,
   threshold: 10,

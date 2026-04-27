@@ -121,6 +121,14 @@ async function enrichInstagramBetaInsert(metadata: InstagramPageMetadata): Promi
     return { thumbnail: null, foreignUsername };
   }
 
+  // Note: this S3 write happens before the boardseshTicks/boardBetaLinks
+  // insert in saveTick. If that subsequent transaction rolls back (bad
+  // sessionId, DB hiccup, dup conflict that we don't surface), the S3
+  // object is orphaned. Acceptable trade-off: the cache key is the IG
+  // media ID, so any future attach for the same post idempotently reuses
+  // the existing object — orphans aren't duplicated, they just sit at a
+  // few KB each indexed by media ID. If this becomes meaningful a
+  // periodic GC keyed on `boardBetaLinks.thumbnail` could sweep them.
   const cached = await cacheInstagramThumbnail(mediaId, metadata.imageUrl);
   return { thumbnail: cached, foreignUsername };
 }
