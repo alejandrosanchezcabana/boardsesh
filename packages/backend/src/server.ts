@@ -118,6 +118,9 @@ export async function startServer(): Promise<ServerResources> {
             return;
           }
         }
+        res.writeHead(400);
+        res.end();
+        return;
       }
 
       // Sync cron endpoint (triggered by external cron service)

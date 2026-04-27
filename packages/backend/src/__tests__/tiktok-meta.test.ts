@@ -233,4 +233,41 @@ describe('fetchTikTokMeta', () => {
 
     dateSpy.mockRestore();
   });
+
+  it('opens the circuit after a burst of transient errors and short-circuits subsequent calls', async () => {
+    const transientResponse = { ok: false, status: 503, json: () => Promise.resolve({}) };
+    const fetchMock = vi.fn().mockResolvedValue(transientResponse);
+    vi.stubGlobal('fetch', fetchMock);
+
+    const dateSpy = vi.spyOn(Date, 'now');
+    dateSpy.mockReturnValue(0);
+
+    const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
+
+    for (let i = 0; i < 10; i++) {
+      const url = `https://www.tiktok.com/@user/video/${String(i).padStart(19, '0')}`;
+      const result = await fetchTikTokMeta(url);
+      expect(result).toEqual({ status: 'transient_error' });
+    }
+    expect(fetchMock).toHaveBeenCalledTimes(10);
+
+    // Eleventh URL: breaker is open, no fetch call is made.
+    const blocked = await fetchTikTokMeta('https://www.tiktok.com/@user/video/9999999999999999999');
+    expect(blocked).toEqual({ status: 'transient_error' });
+    expect(fetchMock).toHaveBeenCalledTimes(10);
+
+    // Jump past the 5-minute cooldown and confirm the breaker closes.
+    fetchMock.mockResolvedValueOnce({
+      ok: true,
+      status: 200,
+      json: () => Promise.resolve(JSON.parse(oembedBody())),
+    });
+    dateSpy.mockReturnValue(5 * 60 * 1000 + 1);
+    const recovered = await fetchTikTokMeta(LONG_URL);
+    expect(recovered.status).toBe('ok');
+    expect(fetchMock).toHaveBeenCalledTimes(11);
+
+    dateSpy.mockRestore();
+    warnSpy.mockRestore();
+  });
 });
