@@ -30,6 +30,7 @@ export interface InstagramPageMetadata {
   imageUrl: string | null;
   mediaId: string | null;
   ogTitle: string | null;
+  username: string | null;
 }
 
 function decodeHtmlEntities(value: string): string {
@@ -40,11 +41,16 @@ function decodeHtmlEntities(value: string): string {
 }
 
 function normalizeText(value: string): string {
+  // Strip combining marks (NFKD splits accented chars into base + mark, then
+  // we drop the marks). Replace anything that isn't a Unicode letter or
+  // number with a single space so non-Latin climb names (Cyrillic, CJK, etc.)
+  // survive normalization. Lowercase last because some scripts have
+  // case-folding rules but most don't — applying to the whole string is fine.
   return decodeHtmlEntities(value)
     .normalize('NFKD')
-    .replace(new RegExp('[\\u0300-\\u036f]', 'g'), '')
+    .replace(/\p{M}+/gu, '')
+    .replace(/[^\p{L}\p{N}]+/gu, ' ')
     .toLowerCase()
-    .replace(/[^a-z0-9]+/g, ' ')
     .trim()
     .replace(/\s+/g, ' ');
 }
@@ -70,14 +76,15 @@ function containsNormalizedClimbName(haystack: string, climbName: string): boole
 
 function parseMetaContent(html: string, target: string): string | null {
   const metaTagRegex = /<meta\b[^>]*>/gi;
-  const attrRegex = /([a-zA-Z_:.-]+)\s*=\s*"([^"]*)"/g;
+  // Match double-quoted, single-quoted, or unquoted attribute values.
+  const attrRegex = /([a-zA-Z_:.-]+)\s*=\s*(?:"([^"]*)"|'([^']*)'|([^\s>]+))/g;
   const normalizedTarget = target.toLowerCase();
 
   for (const metaTag of html.match(metaTagRegex) ?? []) {
     const attrs: Record<string, string> = {};
     let match: RegExpExecArray | null;
     while ((match = attrRegex.exec(metaTag)) !== null) {
-      attrs[match[1].toLowerCase()] = match[2];
+      attrs[match[1].toLowerCase()] = match[2] ?? match[3] ?? match[4] ?? '';
     }
 
     if (attrs.property?.toLowerCase() === normalizedTarget || attrs.name?.toLowerCase() === normalizedTarget) {
@@ -88,12 +95,29 @@ function parseMetaContent(html: string, target: string): string | null {
   return null;
 }
 
+// Instagram's og:title is consistently "<username> on Instagram: <caption…>"
+// (with an optional leading "@"). Pull the username out so the caller can
+// persist it eagerly when the row is inserted.
+function parseUsernameFromOgTitle(ogTitle: string | null): string | null {
+  if (!ogTitle) return null;
+  const match = ogTitle.match(/^@?([\w.]+)\s+on\s+Instagram\b/i);
+  return match?.[1] ?? null;
+}
+
 export async function fetchInstagramPageMetadata(url: string): Promise<InstagramPageMetadata> {
-  const response = await fetch(url, {
-    headers: INSTAGRAM_FETCH_HEADERS,
-    redirect: 'follow',
-    signal: AbortSignal.timeout(8000),
-  });
+  // Wrap the network leg in a try/catch so timeouts (AbortSignal.timeout),
+  // DNS failures, and connection resets surface as InstagramBetaValidationError
+  // instead of leaking raw runtime errors to the resolver.
+  let response: Response;
+  try {
+    response = await fetch(url, {
+      headers: INSTAGRAM_FETCH_HEADERS,
+      redirect: 'follow',
+      signal: AbortSignal.timeout(8000),
+    });
+  } catch {
+    throw new InstagramBetaValidationError(GENERIC_VALIDATION_ERROR);
+  }
 
   if (!response.ok) {
     throw new InstagramBetaValidationError(GENERIC_VALIDATION_ERROR);
@@ -104,7 +128,13 @@ export async function fetchInstagramPageMetadata(url: string): Promise<Instagram
     throw new InstagramBetaValidationError(GENERIC_VALIDATION_ERROR);
   }
 
-  const html = await response.text();
+  let html: string;
+  try {
+    html = await response.text();
+  } catch {
+    throw new InstagramBetaValidationError(GENERIC_VALIDATION_ERROR);
+  }
+
   const description = parseMetaContent(html, 'description') ?? parseMetaContent(html, 'og:description');
   const ogTitle = parseMetaContent(html, 'og:title') ?? parseMetaContent(html, 'twitter:title');
   const imageUrl = parseMetaContent(html, 'og:image') ?? parseMetaContent(html, 'twitter:image');
@@ -119,6 +149,7 @@ export async function fetchInstagramPageMetadata(url: string): Promise<Instagram
     imageUrl,
     mediaId: mediaIdFromAppUrl ?? getInstagramMediaId(url),
     ogTitle,
+    username: parseUsernameFromOgTitle(ogTitle),
   };
 }
 
@@ -144,4 +175,5 @@ export const instagramBetaValidationInternals = {
   decodeHtmlEntities,
   normalizeText,
   parseMetaContent,
+  parseUsernameFromOgTitle,
 };

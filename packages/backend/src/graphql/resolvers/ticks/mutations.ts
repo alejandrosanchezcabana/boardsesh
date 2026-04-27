@@ -1,5 +1,5 @@
 import { v4 as uuidv4 } from 'uuid';
-import { eq, and, inArray } from 'drizzle-orm';
+import { eq, and, inArray, like } from 'drizzle-orm';
 import type { ConnectionContext } from '@boardsesh/shared-schema';
 import { db } from '../../../db/client';
 import * as dbSchema from '@boardsesh/db/schema';
@@ -41,6 +41,11 @@ async function ensureInstagramShortcodeIsNotAlreadyLinked(
   const incomingShortcode = getInstagramMediaId(instagramUrl);
   if (!incomingShortcode) return;
 
+  // Narrow at the DB level — the shortcode appears as `/p/<id>/`, `/reel/<id>/`,
+  // or `/tv/<id>/` in the link. A LIKE prefilter avoids loading every beta
+  // link for the board on every write. Drizzle parameterizes the value, and
+  // we re-verify with `getInstagramMediaId` below so any false positives
+  // (e.g. shortcodes appearing in non-canonical positions) are filtered out.
   const existingLinks = await db
     .select({
       climbName: dbSchema.boardClimbs.name,
@@ -55,7 +60,12 @@ async function ensureInstagramShortcodeIsNotAlreadyLinked(
         eq(dbSchema.boardClimbs.uuid, dbSchema.boardBetaLinks.climbUuid),
       ),
     )
-    .where(eq(dbSchema.boardBetaLinks.boardType, boardType));
+    .where(
+      and(
+        eq(dbSchema.boardBetaLinks.boardType, boardType),
+        like(dbSchema.boardBetaLinks.link, `%${incomingShortcode}%`),
+      ),
+    );
 
   for (const entry of existingLinks) {
     if (getInstagramMediaId(entry.link) !== incomingShortcode) continue;
@@ -78,17 +88,38 @@ type EnrichedBetaInsert = {
 };
 
 async function enrichInstagramBetaInsert(metadata: InstagramPageMetadata): Promise<EnrichedBetaInsert> {
+  const foreignUsername = metadata.username;
+
   if (!isS3Configured() || !metadata.imageUrl) {
-    return { thumbnail: null, foreignUsername: null };
+    return { thumbnail: null, foreignUsername };
   }
 
   const mediaId = metadata.mediaId;
   if (!mediaId) {
-    return { thumbnail: null, foreignUsername: null };
+    return { thumbnail: null, foreignUsername };
   }
 
   const cached = await cacheInstagramThumbnail(mediaId, metadata.imageUrl);
-  return { thumbnail: cached, foreignUsername: null };
+  return { thumbnail: cached, foreignUsername };
+}
+
+// Single gated entrypoint for write-time beta-link validation. Non-Instagram
+// URLs (TikTok and other zod-allowed platforms) skip the deep checks and
+// return null thumbnail/username — the read-time `betaLinks` resolver will
+// enrich them lazily. Exported for testing.
+export async function validateAndEnrichBetaLinkInsert(
+  boardType: string,
+  climbUuid: string,
+  url: string,
+): Promise<EnrichedBetaInsert> {
+  if (!isInstagramUrl(url)) {
+    return { thumbnail: null, foreignUsername: null };
+  }
+
+  const climbName = await getClimbNameForBetaValidation(boardType, climbUuid);
+  await ensureInstagramShortcodeIsNotAlreadyLinked(boardType, climbUuid, url);
+  const metadata = await validateInstagramBetaLink(url, climbName);
+  return enrichInstagramBetaInsert(metadata);
 }
 
 export const tickMutations = {
@@ -185,22 +216,19 @@ export const tickMutations = {
 
     // Run write-time Instagram validation before opening the transaction so a
     // bad video URL doesn't leave a half-state. Zod already validated the
-    // surface shape; this confirms the post is actually public, mentions the
-    // climb name, and isn't already attached to another climb. TikTok / other
-    // platforms skip the deep validation — only the regex check applies.
+    // surface shape; the helper confirms the post is actually public, mentions
+    // the climb name, and isn't already attached to another climb. TikTok and
+    // other supported platforms skip the deep validation.
     const shouldAttachBeta =
       validatedInput.videoUrl && (validatedInput.status === 'flash' || validatedInput.status === 'send');
     let enrichedInsert: EnrichedBetaInsert = { thumbnail: null, foreignUsername: null };
 
-    if (shouldAttachBeta && validatedInput.videoUrl && isInstagramUrl(validatedInput.videoUrl)) {
-      const climbName = await getClimbNameForBetaValidation(validatedInput.boardType, validatedInput.climbUuid);
-      await ensureInstagramShortcodeIsNotAlreadyLinked(
+    if (shouldAttachBeta && validatedInput.videoUrl) {
+      enrichedInsert = await validateAndEnrichBetaLinkInsert(
         validatedInput.boardType,
         validatedInput.climbUuid,
         validatedInput.videoUrl,
       );
-      const metadata = await validateInstagramBetaLink(validatedInput.videoUrl, climbName);
-      enrichedInsert = await enrichInstagramBetaInsert(metadata);
     }
 
     // Insert into database
@@ -316,14 +344,11 @@ export const tickMutations = {
     const validated = validateInput(AttachBetaLinkInputSchema, input, 'input');
     const now = new Date().toISOString();
 
-    let enrichedInsert: EnrichedBetaInsert = { thumbnail: null, foreignUsername: null };
-
-    if (isInstagramUrl(validated.link)) {
-      const climbName = await getClimbNameForBetaValidation(validated.boardType, validated.climbUuid);
-      await ensureInstagramShortcodeIsNotAlreadyLinked(validated.boardType, validated.climbUuid, validated.link);
-      const metadata = await validateInstagramBetaLink(validated.link, climbName);
-      enrichedInsert = await enrichInstagramBetaInsert(metadata);
-    }
+    const enrichedInsert = await validateAndEnrichBetaLinkInsert(
+      validated.boardType,
+      validated.climbUuid,
+      validated.link,
+    );
 
     await db
       .insert(dbSchema.boardBetaLinks)

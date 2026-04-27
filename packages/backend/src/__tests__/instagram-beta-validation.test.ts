@@ -102,4 +102,58 @@ describe('instagram-beta-validation', () => {
     expect(getInstagramMediaId('https://www.instagram.com/reel/ABC123xyz/')).toBe('ABC123xyz');
     expect(getInstagramMediaId('https://www.instagram.com/p/ABC123xyz/?img_index=1')).toBe('ABC123xyz');
   });
+
+  it('wraps fetch failures in InstagramBetaValidationError', async () => {
+    fetchMock.mockRejectedValue(new Error('TimeoutError: signal timed out'));
+
+    await expect(
+      validateInstagramBetaLink('https://www.instagram.com/p/CU-NOpdL8Kf/', 'Cut to the Chase'),
+    ).rejects.toBeInstanceOf(InstagramBetaValidationError);
+  });
+
+  it('matches climb names in non-Latin scripts after Unicode-aware normalization', () => {
+    // Cyrillic — would have been wiped to empty by [^a-z0-9].
+    expect(
+      instagramBetaValidationInternals.containsNormalizedClimbName(
+        'climber on Instagram: Покатушки @ 40° on the Kilter Board',
+        'Покатушки',
+      ),
+    ).toBe(true);
+    // CJK — shouldn't survive lowercase but should survive the filter.
+    expect(
+      instagramBetaValidationInternals.containsNormalizedClimbName(
+        'climber on Instagram: 攀岩 @ 40° on the Kilter Board',
+        '攀岩',
+      ),
+    ).toBe(true);
+  });
+
+  it('parses username from Instagram og:title patterns', () => {
+    expect(instagramBetaValidationInternals.parseUsernameFromOgTitle('camgibbs on Instagram: "Cut to the Chase"')).toBe(
+      'camgibbs',
+    );
+    expect(
+      instagramBetaValidationInternals.parseUsernameFromOgTitle('@cam.gibbs on Instagram in Boulder, CO: ...'),
+    ).toBe('cam.gibbs');
+    expect(instagramBetaValidationInternals.parseUsernameFromOgTitle(null)).toBeNull();
+    expect(instagramBetaValidationInternals.parseUsernameFromOgTitle('Random title without pattern')).toBeNull();
+  });
+
+  it('returns the parsed username on the metadata', async () => {
+    fetchMock.mockResolvedValue({
+      headers: new Headers({ 'content-type': 'text/html; charset=utf-8' }),
+      ok: true,
+      text: async () => `
+        <html><head>
+          <meta property="og:title" content="camgibbs on Instagram: Cut to the Chase V10" />
+          <meta name="description" content="Cut to the Chase V10" />
+          <meta property="og:image" content="https://cdn.example.com/image.jpg" />
+          <meta property="al:ios:url" content="instagram://media?id=123456789" />
+        </head></html>
+      `,
+    });
+
+    const metadata = await validateInstagramBetaLink('https://www.instagram.com/p/CU-NOpdL8Kf/', 'Cut to the Chase');
+    expect(metadata.username).toBe('camgibbs');
+  });
 });
