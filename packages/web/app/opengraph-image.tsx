@@ -11,11 +11,12 @@ export const alt = 'Boardsesh - Train smarter on your climbing board';
 export const size = { width: 1200, height: 630 };
 export const contentType = 'image/png';
 
-// Resolve the icon next to this source file so the read works regardless of
-// the runtime's cwd. Next.js's bundler doesn't populate `import.meta.dirname`,
-// so fall back to deriving it from `import.meta.url`.
-const moduleDir = dirname(fileURLToPath(import.meta.url));
-const iconSvg = readFileSync(join(moduleDir, 'icon.svg'));
+// Resolve icon.svg via import.meta.url so @vercel/nft traces it into the
+// standalone container build. dirname+join yields a plain string, which
+// avoids a Turbopack URL-prototype mismatch we saw when passing the URL
+// straight into readFileSync.
+const iconPath = join(dirname(fileURLToPath(import.meta.url)), 'icon.svg');
+const iconSvg = readFileSync(iconPath);
 const iconDataUrl = `data:image/svg+xml;base64,${iconSvg.toString('base64')}`;
 
 export default function Image() {
