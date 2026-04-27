@@ -39,8 +39,8 @@ All tokens live in `packages/web/app/theme/theme-config.ts` and are exposed as C
 | `colors.purpleHover`   | `#6D28D9` | --                      | Mirror button hover                             |
 | `colors.amber`         | `#FBBF24` | --                      | Flash/benchmark badges                          |
 | `colors.pink`          | `#EC4899` | --                      | Finish holds in climb creation                  |
-| `colors.logoGreen`     | `#5DBE94` | --                      | Logo accent green                               |
-| `colors.logoRose`      | `#C75B64` | --                      | Logo accent rose                                |
+| `colors.accentGreen`   | `#5fb27a` | --                      | Playlist tile + OG card accent (palette only)   |
+| `colors.accentRose`    | `#d65a4f` | --                      | Playlist tile + OG card accent (palette only)   |
 
 ### Neutral Palette
 

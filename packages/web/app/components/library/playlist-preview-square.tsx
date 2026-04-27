@@ -9,12 +9,12 @@ import styles from './library.module.css';
 
 const PLAYLIST_COLORS = [
   themeTokens.colors.primary,
-  themeTokens.colors.logoGreen,
+  themeTokens.colors.accentGreen,
   themeTokens.colors.purple,
   themeTokens.colors.warning,
   themeTokens.colors.pink,
   themeTokens.colors.success,
-  themeTokens.colors.logoRose,
+  themeTokens.colors.accentRose,
   themeTokens.colors.amber,
 ];
 

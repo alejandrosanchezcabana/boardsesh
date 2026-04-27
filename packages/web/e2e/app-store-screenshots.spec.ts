@@ -1,7 +1,7 @@
 /**
  * App Store Screenshot Generation
  *
- * Captures screenshots at iPhone 15 Pro Max resolution for App Store submission.
+ * Captures screenshots at iPhone 14 Plus 6.5" resolution for App Store submission.
  * Screenshots are saved to mobile/screenshots/ for upload to App Store Connect.
  *
  * Run via the dedicated Playwright project (viewport set in playwright.config.ts):
@@ -17,11 +17,11 @@
  *   - For authenticated tests: 1Password CLI installed and signed in
  *
  * Required App Store sizes:
- *   - 6.9" (iPhone 16 Pro Max): 1320x2868 -- screenshots taken at this logical size
- *   - 6.5" (iPhone 14 Plus): 1284x2778 -- App Store Connect accepts 6.9" for this slot
+ *   - 6.5" (iPhone 14 Plus): 1284x2778 -- screenshots taken at this logical size
+ *   - 6.9" (iPhone 16 Pro Max): 1320x2868 -- App Store Connect accepts 6.5" for this slot
  *   - 12.9" iPad: 2048x2732 -- optional, not covered here
  */
-import { test, expect } from '@playwright/test';
+import { test } from '@playwright/test';
 import path from 'path';
 
 const SCREENSHOT_DIR = path.resolve(__dirname, '../../../mobile/screenshots');
@@ -39,7 +39,25 @@ test.describe('App Store Screenshots', () => {
   // These are heavy pages at 3x scale -- give them room to load
   test.setTimeout(90_000);
 
+  // Hide Next.js dev-mode indicator (the "N" badge + issue counter) so it
+  // doesn't appear in App Store submissions. Runs before every navigation.
   test.beforeEach(async ({ page }) => {
+    await page.addInitScript(() => {
+      const style = document.createElement('style');
+      style.textContent = 'nextjs-portal { display: none !important; }';
+      const inject = () => document.head?.appendChild(style.cloneNode(true));
+      if (document.head) inject();
+      else document.addEventListener('DOMContentLoaded', inject);
+    });
+    // Suppress the web-only "Get the Boardsesh app" install prompt — it
+    // never appears in the iOS build, so it shouldn't appear in App Store
+    // screenshots either. The home-page-content reads this flag and
+    // short-circuits to platform="native" without exposing the Capacitor
+    // bridge to the rest of the app (which would have wider side effects
+    // on Bluetooth, auto-connect, etc.).
+    await page.addInitScript(() => {
+      sessionStorage.setItem('boardsesh:e2e-suppress-install-card', '1');
+    });
     await page.goto(boardUrl, { waitUntil: 'domcontentloaded', timeout: 60_000 });
     await page
       .waitForSelector('#onboarding-climb-card, [data-testid="climb-card"]', { timeout: 60_000 })
@@ -51,7 +69,16 @@ test.describe('App Store Screenshots', () => {
   });
 
   test('01-climb-list', async ({ page }) => {
-    // Main browse interface showing climb cards with grades and ratings
+    // Main browse interface showing climb cards with grades and ratings.
+    // Wait until every MUI skeleton has unmounted so no shimmering loading
+    // shadows leak into the shot, then give the queue-hint intro animation
+    // time to finish.
+    await page
+      .waitForFunction(() => document.querySelectorAll('.MuiSkeleton-root').length === 0, null, {
+        timeout: 30_000,
+      })
+      .catch(() => {});
+    await page.waitForTimeout(10_000);
     await page.screenshot({ path: `${SCREENSHOT_DIR}/01-climb-list.png` });
   });
 
@@ -73,75 +100,87 @@ test.describe('App Store Screenshots', () => {
     await thumbnail.click();
 
     await page.locator('[data-swipeable-drawer="true"]:visible').first().waitFor({ timeout: 15000 });
+    // Board renderer fetches the layout SVG + hold images asynchronously after
+    // the drawer animates in. Wait 5s so the board has fully painted before
+    // the screenshot.
+    await page.waitForTimeout(5_000);
 
     await page.screenshot({ path: `${SCREENSHOT_DIR}/03-board-view.png` });
   });
 
   test('04-queue', async ({ page }) => {
-    // Tapping a climb row dispatches setCurrentClimb with shouldAddToQueue,
-    // so each click appends a new queue item. Click the first row three
-    // times to populate the queue without relying on selectors for
-    // non-onboarding rows (which don't carry stable test IDs in list mode).
+    // Populate the queue using the only two stable selectors in list mode:
+    // the first two onboarding-tagged rows. Click the second one twice so
+    // the queue holds three items with at least one repeat — gives the
+    // queue drawer real content while staying inside reachable selectors.
     const firstRow = page.locator('#onboarding-climb-card');
-    await firstRow.waitFor({ state: 'visible', timeout: 15000 });
-    for (let i = 0; i < 3; i++) {
-      await firstRow.click();
-      await page.waitForTimeout(300);
-    }
+    const secondRow = page.locator('#onboarding-climb-card-2');
+    await firstRow.waitFor({ state: 'visible', timeout: 15_000 });
+    await secondRow.waitFor({ state: 'visible', timeout: 15_000 });
+    await firstRow.click();
+    await page.waitForTimeout(300);
+    await secondRow.click();
+    await page.waitForTimeout(300);
+    await firstRow.click();
+    await page.waitForTimeout(300);
 
-    const queueBar = page.locator('[data-testid="queue-control-bar"]');
-    await expect(queueBar).toBeVisible({ timeout: 10000 });
+    // Open the play drawer (tap the thumbnail), then press the in-drawer
+    // queue button so the screenshot shows the actual queue list, not the
+    // climb browser with the queue bar at the bottom.
+    const thumbnail = firstRow.locator('[data-testid="climb-thumbnail"]');
+    await thumbnail.click();
+    await page.locator('[data-swipeable-drawer="true"]:visible').first().waitFor({ timeout: 15000 });
+
+    await page.getByRole('button', { name: 'Open queue' }).click();
+    // The queue drawer is the second swipeable drawer (stacked above play).
+    await page.locator('[data-swipeable-drawer="true"]:visible').nth(1).waitFor({ timeout: 10_000 });
+    // Toggle history so previously-played climbs are listed alongside the
+    // current one — otherwise the queue panel would only show the active
+    // climb (already-played items are hidden by default).
+    const historyToggle = page.locator('button:has(svg[data-testid="HistoryOutlinedIcon"])').first();
+    await historyToggle.click().catch(() => {});
+    // Let the queue drawer's Suggestions section finish loading so its
+    // skeleton placeholders unmount before the screenshot.
+    await page
+      .waitForFunction(() => document.querySelectorAll('.MuiSkeleton-root').length === 0, null, {
+        timeout: 20_000,
+      })
+      .catch(() => {});
+    await page.waitForTimeout(800);
 
     await page.screenshot({ path: `${SCREENSHOT_DIR}/04-queue.png` });
   });
 
   test('05-bluetooth', async ({ page }) => {
-    // Open the play drawer by tapping the first climb's thumbnail (same
-    // reliable path as 03-board-view) so Bluetooth UI is reachable.
-    const thumbnail = page.locator('#onboarding-climb-card [data-testid="climb-thumbnail"]');
-    await thumbnail.waitFor({ state: 'visible', timeout: 15000 });
-    await thumbnail.click();
-
-    await page.locator('[data-swipeable-drawer="true"]:visible').first().waitFor({ timeout: 15000 });
-
-    // Click the Bluetooth/connect button if visible in the play drawer.
-    // Web Bluetooth isn't available in Playwright's headless Chromium, so
-    // the button may or may not render — capture whichever state we get.
-    const bleButton = page.getByLabel('Connect to board').or(page.getByLabel('Bluetooth'));
-    if (await bleButton.isVisible().catch(() => false)) {
-      await bleButton.click();
-      await page.waitForTimeout(500);
-    }
-
+    // Web Bluetooth isn't available in Playwright's headless Chromium, so we
+    // can't drive the real picker. Set the e2e flag that BluetoothProvider
+    // honors to render DevicePickerDialog with three named demo devices
+    // (Kilter / Tension / MoonBoard) — the screenshot mirrors what users see
+    // when scanning for nearby boards.
+    await page.addInitScript(() => {
+      sessionStorage.setItem('boardsesh:e2e-bluetooth-picker', '1');
+    });
+    await page.goto(boardUrl, { waitUntil: 'domcontentloaded', timeout: 60_000 });
+    const dialog = page.getByRole('dialog').filter({ hasText: /select your board/i });
+    await dialog.waitFor({ timeout: 15_000 });
+    // Board-thumbnail SVGs inside each picker card load hold images
+    // asynchronously. Wait for the network to settle and give the SVG paint
+    // a moment to finish so the cards never appear with placeholder/broken
+    // imagery in the screenshot.
+    await page.waitForLoadState('networkidle').catch(() => {});
+    await page.waitForTimeout(2_000);
     await page.screenshot({ path: `${SCREENSHOT_DIR}/05-bluetooth.png` });
   });
 
   test('06-party-mode', async ({ page }) => {
-    // Tap the climb row directly — going up to its virtualizer parent via
-    // .locator('..') lands the click on non-interactive padding and
-    // misses the row's onClick handler.
-    const row = page.locator('#onboarding-climb-card');
-    await row.waitFor({ state: 'visible', timeout: 15000 });
-    await row.click();
-
-    const queueBar = page.locator('[data-testid="queue-control-bar"]');
-    await expect(queueBar).toBeVisible({ timeout: 10000 });
-
-    // The "Start sesh" affordance lives inside the queue bar (queue-control-bar.tsx:948).
-    // Click it to open the session-start drawer for the screenshot.
-    const startSeshTrigger = queueBar.getByText('Start sesh');
-    if (await startSeshTrigger.isVisible().catch(() => false)) {
-      await startSeshTrigger.click();
-      await page
-        .locator('[data-swipeable-drawer="true"]:visible')
-        .first()
-        .waitFor({ timeout: 5000 })
-        .catch(() => {
-          // If the drawer doesn't open (e.g. blocked by auth guard), fall
-          // back to screenshotting the queue bar with the climb loaded.
-        });
-    }
-
+    // Reuse the dummy SeshSettingsDrawer the onboarding tour uses — it's
+    // mounted globally by OnboardingDummySeshMount and listens for a custom
+    // event. This avoids hitting the real session backend for the screenshot.
+    await page.evaluate(() => {
+      window.dispatchEvent(new CustomEvent('onboarding:open-dummy-sesh'));
+    });
+    await page.locator('[data-swipeable-drawer="true"]:visible').first().waitFor({ timeout: 10_000 });
+    await page.waitForTimeout(800);
     await page.screenshot({ path: `${SCREENSHOT_DIR}/06-party-mode.png` });
   });
 

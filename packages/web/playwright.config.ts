@@ -55,13 +55,13 @@ export default defineConfig({
       testMatch: ['**/help-screenshots.spec.ts'],
     },
 
-    // App Store screenshots - iPhone 16 Pro Max (440×956 @ 3×).
+    // App Store screenshots - iPhone 14 Plus 6.5" (428×926 @ 3× = 1284×2778).
     // Run in CI via the `screenshots` job; locally with:
     //   cd packages/web && bunx playwright test --project=app-store-screenshots
     {
       name: 'app-store-screenshots',
       use: {
-        viewport: { width: 440, height: 956 },
+        viewport: { width: 428, height: 926 },
         deviceScaleFactor: 3,
         isMobile: true,
         hasTouch: true,

@@ -1,6 +1,0 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 512 512">
-  <circle cx="256" cy="256" r="240" fill="#d65a4f"></circle>
-  <circle cx="256" cy="256" r="240" fill="none" stroke="#f4f1ea" stroke-width="20"></circle>
-  <text x="256" y="290" text-anchor="middle" font-family="Archivo, &#39;Helvetica Neue&#39;, Helvetica, Arial, sans-serif" font-weight="900" font-size="160" fill="#f4f1ea" letter-spacing="-4">SENT</text>
-  <text x="256" y="370" text-anchor="middle" font-family="&#39;JetBrains Mono&#39;, ui-monospace, Menlo, monospace" font-weight="500" font-size="20" fill="#f4f1ea" letter-spacing="6" opacity="0.85">BOARDSESH</text>
-</svg>

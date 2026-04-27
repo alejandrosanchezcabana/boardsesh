@@ -8,6 +8,7 @@ export const themeTokens = {
     primaryHover: '#7A3F47', // Darker rose
     primaryActive: '#6B353D', // Deep dark rose
     secondary: '#6B7280', // Neutral grey for info/secondary
+    info: '#4A6F8A', // Cool slate — sits between brand purples and neutral grey, used for help/guide accents
     success: '#6B9080', // Muted sage green
     successHover: '#5A7A6C', // Darker sage green
     successBg: '#EFF5F2',
@@ -17,12 +18,20 @@ export const themeTokens = {
     errorBg: '#F9EFEE',
     errorMuted: 'rgba(184, 82, 76, 0.18)', // Translucent error for non-destructive action buttons
     errorMutedHover: 'rgba(184, 82, 76, 0.28)',
-    purple: '#7C3AED', // For mirror button
-    purpleHover: '#6D28D9',
+    purple: '#9C27B0', // V11 brand purple — Mirror button + chart palette accent
+    purpleHover: '#7B1FA2', // V12 — Mirror button hover
     amber: '#FBBF24', // For flash/benchmark badges
     pink: '#EC4899', // For finish holds in climb creation
-    logoGreen: '#5fb27a', // Route mark green
-    logoRose: '#d65a4f', // Brand coral
+    accentGreen: '#5fb27a', // Playlist tile + OG card accent (palette colour, not the route mark)
+    accentRose: '#d65a4f', // Playlist tile + OG card accent (palette colour, not the brand coral)
+  },
+
+  // Warm text colours scoped to brand surfaces (landing hero, splash,
+  // OG/social, App Store screenshots, marketing emails). Standard product
+  // UI keeps the cool neutral scale — do not blanket-replace neutrals.
+  text: {
+    brandPrimary: '#f4f1ea',
+    brandMuted: '#8a8780',
   },
 
   // Neutral palette

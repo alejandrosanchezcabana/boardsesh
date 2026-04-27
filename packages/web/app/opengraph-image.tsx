@@ -1,7 +1,9 @@
 import React from 'react';
 import { ImageResponse } from 'next/og';
 import { readFileSync } from 'node:fs';
+import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { themeTokens } from './theme/theme-config';
 
 export const runtime = 'nodejs';
 
@@ -9,8 +11,12 @@ export const alt = 'Boardsesh - Train smarter on your climbing board';
 export const size = { width: 1200, height: 630 };
 export const contentType = 'image/png';
 
-// new URL + import.meta.url lets @vercel/nft trace and include icon.svg in standalone output
-const iconSvg = readFileSync(fileURLToPath(new URL('./icon.svg', import.meta.url)));
+// Resolve icon.svg via import.meta.url so @vercel/nft traces it into the
+// standalone container build. dirname+join yields a plain string, which
+// avoids a Turbopack URL-prototype mismatch we saw when passing the URL
+// straight into readFileSync.
+const iconPath = join(dirname(fileURLToPath(import.meta.url)), 'icon.svg');
+const iconSvg = readFileSync(iconPath);
 const iconDataUrl = `data:image/svg+xml;base64,${iconSvg.toString('base64')}`;
 
 export default function Image() {
@@ -23,7 +29,7 @@ export default function Image() {
         flexDirection: 'column',
         alignItems: 'center',
         justifyContent: 'center',
-        backgroundColor: '#0a0a0c',
+        backgroundColor: '#0e0e10',
         fontFamily: 'sans-serif',
       }}
     >
@@ -34,7 +40,7 @@ export default function Image() {
         style={{
           fontSize: 128,
           fontWeight: 900,
-          color: '#f4f1ea',
+          color: themeTokens.text.brandPrimary,
           letterSpacing: '-2px',
           marginTop: 24,
         }}
@@ -45,13 +51,13 @@ export default function Image() {
       <div
         style={{
           fontSize: 36,
-          color: '#8a8780',
+          color: themeTokens.text.brandMuted,
           fontWeight: 500,
           marginTop: 12,
           letterSpacing: '6px',
         }}
       >
-        FROM V11 TO V17
+        ONE APP FOR YOUR BOARDS
       </div>
     </div>,
     { ...size },

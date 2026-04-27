@@ -5,6 +5,7 @@ export default defineConfig({
     singleQuote: true,
     semi: true,
     trailingComma: 'all',
+    ignore: ['design/**'],
   },
   lint: {
     options: {

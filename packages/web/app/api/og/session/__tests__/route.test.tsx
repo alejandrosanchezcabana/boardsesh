@@ -25,8 +25,8 @@ vi.mock('@/app/theme/theme-config', () => ({
     },
     colors: {
       primary: '#123456',
-      logoGreen: '#22AA88',
-      logoRose: '#CC6677',
+      accentGreen: '#22AA88',
+      accentRose: '#CC6677',
     },
   },
   darkTokens: {
