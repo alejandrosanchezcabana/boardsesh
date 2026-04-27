@@ -171,7 +171,7 @@ describe('playlistClimbs resolver', () => {
   });
 
   it('should throw for private playlist when not authenticated', async () => {
-    const ctx = makeCtx({ isAuthenticated: false, userId: null });
+    const ctx = makeCtx({ isAuthenticated: false, userId: undefined });
 
     // Playlist exists but is private
     const playlistChain = createMockChain([{ id: BigInt(1), isPublic: false }]);

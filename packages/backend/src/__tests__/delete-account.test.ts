@@ -135,7 +135,7 @@ describe('deleteAccount mutation', () => {
 
     const updateCalls = txCalls.filter((c) => c.method === 'update');
     expect(updateCalls).toHaveLength(1);
-    expect((updateCalls[0] as { setArgs: unknown }).setArgs).toEqual({ setterUsername: null });
+    expect((updateCalls[0] as unknown as { setArgs: unknown }).setArgs).toEqual({ setterUsername: null });
   });
 
   it('should not call update when removeSetterName is false', async () => {

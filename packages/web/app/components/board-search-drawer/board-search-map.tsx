@@ -91,11 +91,8 @@ export default function BoardSearchMap({
     const markersByUuid = markersByUuidRef.current;
 
     // The `leaflet/dist/leaflet.css` import loads the Leaflet stylesheet via
-    // Next.js's CSS import handling. It isn't a real ES module so TypeScript
-    // can't type-check it — hence the @ts-expect-error. Do NOT remove the
-    // import thinking it's dead code: without it, tile panes, zoom controls,
-    // and attribution render unstyled.
-    // @ts-expect-error — CSS dynamic import handled by Next.js bundler
+    // Next.js's CSS import handling. Do NOT remove it thinking it's dead code:
+    // without it, tile panes, zoom controls, and attribution render unstyled.
     void Promise.all([import('leaflet'), import('leaflet/dist/leaflet.css')]).then(([L]) => {
       if (cancelled || !containerRef.current) return;
 

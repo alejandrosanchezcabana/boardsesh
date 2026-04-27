@@ -1,3 +1,4 @@
+/// <reference types="node" />
 import type { CapacitorConfig } from '@capacitor/cli';
 
 const config: CapacitorConfig = {
@@ -15,7 +16,6 @@ const config: CapacitorConfig = {
   },
   android: {
     backgroundColor: '#0A0A0A',
-    overScrollMode: 'never',
   },
   plugins: {
     // @capacitor-community/safe-area handles inset propagation itself. Disable

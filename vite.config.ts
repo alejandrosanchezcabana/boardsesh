@@ -8,13 +8,10 @@ export default defineConfig({
     ignore: ['design/**'],
   },
   lint: {
+    ignorePatterns: ['**/board-controller/**', 'mobile/**'],
     options: {
-      // typeAware/typeCheck (oxlint type-aware rules + tsgolint integration)
-      // are off here: oxlint requires the two paired (`--type-check` errors
-      // without `--type-aware`), and enabling them surfaces ~138 pre-existing
-      // violations across bundled assets and unrelated files. Full type
-      // checking still runs via `vp run typecheck` and the typecheck CI job;
-      // the staged hook (`vp check --fix`) handles lint + format.
+      typeAware: true,
+      typeCheck: true,
     },
   },
   test: {

@@ -48,7 +48,7 @@ type ImportConfig = {
   sourceTable: string;
   label: string;
   required: boolean;
-  destination: unknown;
+  destination: PgTable;
   conflictMode?: 'ignore' | 'allowDuplicates';
   mapRow: (row: SqliteRow, boardName: DirectAuroraBoard) => Record<string, unknown>;
 };

@@ -59,6 +59,7 @@ describe('Redis PubSub Adapter', () => {
       // Publish from adapter1
       const event: QueueEvent = {
         __typename: 'QueueItemAdded',
+        sequence: 1,
         item: {
           uuid: 'test-uuid',
           climb: {
@@ -155,6 +156,7 @@ describe('Redis PubSub Adapter', () => {
       // Publish from adapter1 (same instance)
       const event: QueueEvent = {
         __typename: 'QueueItemRemoved',
+        sequence: 1,
         uuid: 'removed-uuid',
       };
 
@@ -221,6 +223,7 @@ describe('Redis PubSub Adapter - Unit Tests (mocked)', () => {
 
     const event: QueueEvent = {
       __typename: 'ClimbMirrored',
+      sequence: 1,
       mirrored: true,
     };
 

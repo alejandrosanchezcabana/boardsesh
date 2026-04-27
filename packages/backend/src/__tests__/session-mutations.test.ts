@@ -63,9 +63,10 @@ function makeCtx(userId = 'user-1'): ConnectionContext {
 // Helper to create an unauthenticated context
 function makeUnauthCtx(): ConnectionContext {
   return {
+    connectionId: 'conn-unauth',
     isAuthenticated: false,
-    userId: null,
-  } as ConnectionContext;
+    userId: undefined,
+  };
 }
 
 /**

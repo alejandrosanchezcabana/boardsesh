@@ -14,7 +14,7 @@ import { recalculateSessionStats } from '../graphql/resolvers/social/session-sta
 import { db } from '../db/client';
 
 // Track mutation calls on the transaction mock
-let txUpdateSetCalls: unknown[] = [];
+let txUpdateSetCalls: unknown[][] = [];
 let txDeleteWhereCalls: unknown[] = [];
 
 // Queue of results for sequential tx.select() calls
