@@ -1,4 +1,6 @@
-import type { BoardDetails } from '@/app/lib/types';
+import type { BoardDetails, BoardName } from '@/app/lib/types';
+import { getBoardDetails } from '@/app/lib/board-constants';
+import { constructBoardSlugListUrl, constructClimbListWithSlugs } from '@/app/lib/url-utils';
 import type { ResolvedBoardEntry } from './resolve-serials';
 
 /**
@@ -18,7 +20,7 @@ export function parseSetIds(setIds: string | number[]): number[] {
  * Normalise a comma-separated set_ids string to a sorted, deduped representation
  * so order/whitespace differences don't trigger spurious mismatches.
  */
-function normaliseSetIds(setIds: string): string {
+export function normaliseSetIds(setIds: string): string {
   return [
     ...new Set(
       setIds
@@ -74,4 +76,40 @@ export function matchesBoardDetails(config: ResolvedBoardConfig, current: BoardD
     config.sizeId === current.size_id &&
     normaliseSetIds(config.setIds) === normaliseSetIds(current.set_ids.join(','))
   );
+}
+
+/**
+ * Build the climb-list URL the user should land on when they choose
+ * "Switch to correct config" in the BoardConfigMismatchDialog.
+ *
+ * Prefers `/b/{slug}/{angle}/list` when the entry is linked to a saved board.
+ * Falls back to the traditional climb-list URL derived from layout/size/set
+ * names. Returns null if no resolvable URL exists for the config.
+ */
+export function buildSwitchUrl(config: ResolvedBoardConfig, currentAngle: number): string | null {
+  const angle = config.angle ?? currentAngle;
+  if (config.boardSlug) {
+    return constructBoardSlugListUrl(config.boardSlug, angle);
+  }
+  try {
+    const details = getBoardDetails({
+      board_name: config.boardName as BoardName,
+      layout_id: config.layoutId,
+      size_id: config.sizeId,
+      set_ids: parseSetIds(config.setIds),
+    });
+    if (details.layout_name && details.size_name && details.set_names) {
+      return constructClimbListWithSlugs(
+        details.board_name,
+        details.layout_name,
+        details.size_name,
+        details.size_description,
+        details.set_names,
+        angle,
+      );
+    }
+  } catch {
+    // Fall through.
+  }
+  return null;
 }

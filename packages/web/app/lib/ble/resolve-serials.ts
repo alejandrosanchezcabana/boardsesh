@@ -19,16 +19,26 @@ export type { BoardSerialConfig };
 
 /**
  * Resolve an array of BLE serial numbers via GraphQL. Saved-board matches
- * (`boardsBySerialNumbers`) win; for any unmatched serial we fall back to the
- * authenticated user's auto-recorded config (`myBoardSerialConfigs`). The
- * fallback query 401s for unauthenticated callers — failures there are
- * swallowed so the saved-board half of the result still surfaces.
+ * (`boardsBySerialNumbers`) win; for authenticated callers we additionally
+ * query `myBoardSerialConfigs` so any unmatched serial falls back to the
+ * user's own auto-recorded config. Skipped entirely for unauthenticated
+ * callers — `myBoardSerialConfigs` requires auth and the guaranteed 401
+ * just pollutes telemetry / wastes a rate-limit slot.
  */
-export async function resolveSerialNumbers(token: string, serials: string[]): Promise<Map<string, ResolvedBoardEntry>> {
+export async function resolveSerialNumbers(
+  token: string,
+  serials: string[],
+  options: { isAuthenticated?: boolean } = {},
+): Promise<Map<string, ResolvedBoardEntry>> {
   const unique = [...new Set(serials)];
   if (unique.length === 0) return new Map();
 
   const client = createGraphQLHttpClient(token);
+  const recordedRequest = options.isAuthenticated
+    ? client
+        .request<GetMyBoardSerialConfigsQueryResponse>(GET_MY_BOARD_SERIAL_CONFIGS, { serialNumbers: unique })
+        .catch(() => ({ myBoardSerialConfigs: [] as BoardSerialConfig[] }))
+    : Promise.resolve({ myBoardSerialConfigs: [] as BoardSerialConfig[] });
 
   const [savedResult, recordedResult] = await Promise.all([
     client
@@ -36,11 +46,7 @@ export async function resolveSerialNumbers(token: string, serials: string[]): Pr
         serialNumbers: unique,
       })
       .catch(() => ({ boardsBySerialNumbers: [] as UserBoard[] })),
-    client
-      .request<GetMyBoardSerialConfigsQueryResponse>(GET_MY_BOARD_SERIAL_CONFIGS, {
-        serialNumbers: unique,
-      })
-      .catch(() => ({ myBoardSerialConfigs: [] as BoardSerialConfig[] })),
+    recordedRequest,
   ]);
 
   const result = new Map<string, ResolvedBoardEntry>();

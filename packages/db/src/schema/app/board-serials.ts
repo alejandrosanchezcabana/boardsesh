@@ -24,6 +24,11 @@ export const userBoardSerials = pgTable(
     layoutId: bigint('layout_id', { mode: 'number' }).notNull(),
     sizeId: bigint('size_id', { mode: 'number' }).notNull(),
     setIds: text('set_ids').notNull(),
+    // ON DELETE SET NULL: when the linked saved board is removed (or soft-
+    // deleted, since the resolver also filters by deletedAt), the link clears
+    // but `boardName/layoutId/sizeId/setIds` remain pointing at the old config
+    // until the user reconnects. The next BLE connect will refresh the row, so
+    // the staleness window is bounded by the user's connection cadence.
     boardUuid: text('board_uuid').references(() => userBoards.uuid, { onDelete: 'set null' }),
     createdAt: timestamp('created_at').defaultNow().notNull(),
     // No DB-level ON UPDATE trigger — `defaultNow()` only fires on insert.

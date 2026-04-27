@@ -22,7 +22,7 @@ function getBlePlugin(): BleScanPlugin | null {
 }
 
 export function useBluetoothScan() {
-  const { token } = useWsAuthToken();
+  const { token, isAuthenticated } = useWsAuthToken();
   const [devices, setDevices] = useState<DiscoveredDevice[]>([]);
   const [resolvedBoards, setResolvedBoards] = useState<Map<string, ResolvedBoardEntry>>(new Map());
   // Start as 'idle' to avoid SSR/client hydration mismatch — capabilities are
@@ -108,7 +108,7 @@ export function useBluetoothScan() {
       if (serials.length === 0) return;
 
       try {
-        const boardMap = await resolveSerialNumbers(token, serials);
+        const boardMap = await resolveSerialNumbers(token, serials, { isAuthenticated });
         if (mountedRef.current) {
           setResolvedBoards(boardMap);
         }
@@ -116,7 +116,7 @@ export function useBluetoothScan() {
         console.error('[BLE Scan] Failed to resolve serial numbers:', err);
       }
     },
-    [token],
+    [token, isAuthenticated],
   );
 
   const startScan = useCallback(async () => {

@@ -62,6 +62,11 @@ type UseBoardBluetoothOptions = {
  * authenticated user. Failures are swallowed — connect must not block on this.
  */
 function recordBoardSerial(serialNumber: string, boardDetails: BoardDetails, boardUuid: string | undefined): void {
+  // Sort + dedupe before joining so the recording is canonical regardless of
+  // how the route emitted set_ids — `matchesBoardDetails` also normalises on
+  // read, but keeping the stored value canonical means recorded entries
+  // produced by different routes are byte-equal.
+  const setIds = [...new Set(boardDetails.set_ids)].sort((a, b) => a - b).join(',');
   void fetch('/api/internal/board-serials', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
@@ -70,7 +75,7 @@ function recordBoardSerial(serialNumber: string, boardDetails: BoardDetails, boa
       boardName: boardDetails.board_name,
       layoutId: boardDetails.layout_id,
       sizeId: boardDetails.size_id,
-      setIds: boardDetails.set_ids.join(','),
+      setIds,
       boardUuid,
     }),
   }).catch(() => {});

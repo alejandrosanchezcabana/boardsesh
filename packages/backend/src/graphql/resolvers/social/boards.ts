@@ -12,6 +12,7 @@ import {
   FollowBoardInputSchema,
   SearchBoardsInputSchema,
   PopularBoardConfigsInputSchema,
+  SerialNumberLookupSchema,
   UUIDSchema,
 } from '../../../validation/schemas';
 import { generateUniqueGymSlug } from './gyms';
@@ -654,8 +655,8 @@ export const socialBoardQueries = {
   boardsBySerialNumbers: async (_: unknown, { serialNumbers }: { serialNumbers: string[] }, ctx: ConnectionContext) => {
     await applyRateLimit(ctx, 20);
 
-    // Filter out empty strings and limit to 20 to prevent abuse
-    const cleaned = serialNumbers.filter((s) => s.trim().length > 0).slice(0, 20);
+    const validated = validateInput(SerialNumberLookupSchema, { serialNumbers }, 'serialNumbers');
+    const cleaned = validated.serialNumbers.filter((s) => s.length > 0);
     if (cleaned.length === 0) return [];
 
     const boards = await db
@@ -725,7 +726,8 @@ export const socialBoardQueries = {
     requireAuthenticated(ctx);
     await applyRateLimit(ctx, 20);
 
-    const cleaned = serialNumbers.filter((s) => s.trim().length > 0).slice(0, 20);
+    const validated = validateInput(SerialNumberLookupSchema, { serialNumbers }, 'serialNumbers');
+    const cleaned = validated.serialNumbers.filter((s) => s.length > 0);
     if (cleaned.length === 0) return [];
 
     const userId = ctx.userId!;

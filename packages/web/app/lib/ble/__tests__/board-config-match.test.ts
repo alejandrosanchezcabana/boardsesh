@@ -1,5 +1,10 @@
 import { describe, it, expect } from 'vite-plus/test';
-import { configFromResolvedEntry, matchesBoardDetails, type ResolvedBoardConfig } from '../board-config-match';
+import {
+  buildSwitchUrl,
+  configFromResolvedEntry,
+  matchesBoardDetails,
+  type ResolvedBoardConfig,
+} from '../board-config-match';
 import type { ResolvedBoardEntry } from '../resolve-serials';
 import type { BoardDetails } from '@/app/lib/types';
 
@@ -130,5 +135,28 @@ describe('configFromResolvedEntry', () => {
       setIds: '2,5',
       boardSlug: 'shared-tension',
     });
+  });
+});
+
+describe('buildSwitchUrl', () => {
+  it('uses /b/{slug}/{angle}/list when the entry has a boardSlug', () => {
+    const url = buildSwitchUrl(makeConfig({ boardSlug: 'my-kilter', angle: 35 }), 50);
+    expect(url).toBe('/b/my-kilter/35/list');
+  });
+
+  it('falls back to currentAngle when the entry has no angle', () => {
+    const url = buildSwitchUrl(makeConfig({ boardSlug: 'my-kilter' }), 50);
+    expect(url).toBe('/b/my-kilter/50/list');
+  });
+
+  it('returns null when no boardSlug and getBoardDetails throws (unknown layout)', () => {
+    // Layout 99999 is guaranteed not to be in the static board data — getBoardDetails throws.
+    const url = buildSwitchUrl(makeConfig({ boardName: 'kilter', layoutId: 99999, sizeId: 99999, setIds: '999' }), 40);
+    expect(url).toBeNull();
+  });
+
+  it('returns null when boardName is not a known board', () => {
+    const url = buildSwitchUrl(makeConfig({ boardName: 'not-a-board', boardSlug: undefined }), 40);
+    expect(url).toBeNull();
   });
 });

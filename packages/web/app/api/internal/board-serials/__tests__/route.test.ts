@@ -43,6 +43,10 @@ vi.mock('@/app/lib/db/schema', () => ({
     serialNumber: 'userBoards.serialNumber',
     deletedAt: 'userBoards.deletedAt',
     isPublic: 'userBoards.isPublic',
+    boardType: 'userBoards.boardType',
+    layoutId: 'userBoards.layoutId',
+    sizeId: 'userBoards.sizeId',
+    setIds: 'userBoards.setIds',
   },
   userBoardSerials: {
     userId: 'userBoardSerials.userId',
@@ -136,9 +140,24 @@ describe('POST /api/internal/board-serials', () => {
   it('returns 400 when serialNumber is missing', async () => {
     mockGetServerSession.mockResolvedValue({ user: { id: 'user-1' } });
 
-    const { serialNumber: _drop, ...rest } = validBody;
-    void _drop;
-    const response = await POST(createRequest(rest));
+    const { boardName, layoutId, sizeId, setIds } = validBody;
+    const response = await POST(createRequest({ boardName, layoutId, sizeId, setIds }));
+    expect(response.status).toBe(400);
+    expect(mockInsert).not.toHaveBeenCalled();
+  });
+
+  it('returns 400 when setIds contains non-integer tokens', async () => {
+    mockGetServerSession.mockResolvedValue({ user: { id: 'user-1' } });
+
+    const response = await POST(createRequest({ ...validBody, setIds: '1, 20' }));
+    expect(response.status).toBe(400);
+    expect(mockInsert).not.toHaveBeenCalled();
+  });
+
+  it('returns 400 when setIds contains a leading/trailing comma', async () => {
+    mockGetServerSession.mockResolvedValue({ user: { id: 'user-1' } });
+
+    const response = await POST(createRequest({ ...validBody, setIds: ',1,20' }));
     expect(response.status).toBe(400);
     expect(mockInsert).not.toHaveBeenCalled();
   });
@@ -221,15 +240,49 @@ describe('POST /api/internal/board-serials', () => {
     expect(mockValues).toHaveBeenCalledWith(expect.objectContaining({ boardUuid: 'public-gym-board' }));
   });
 
-  it('short-circuits and skips upsert when saved board already exists for this serial', async () => {
+  it('short-circuits when a saved board exists with matching config', async () => {
     mockGetServerSession.mockResolvedValue({ user: { id: 'user-1' } });
-    mockLimit.mockResolvedValue([{ id: 42 }]); // saved board found
+    // savedMatch returns the user's saved board with the SAME config as the POST.
+    mockLimit.mockResolvedValueOnce([{ boardType: 'kilter', layoutId: 1, sizeId: 10, setIds: '1,20' }]);
 
     const response = await POST(createRequest(validBody));
     expect(response.status).toBe(200);
     expect(await response.json()).toEqual({ ok: true, skipped: 'already_saved' });
 
     expect(mockInsert).not.toHaveBeenCalled();
+  });
+
+  it('short-circuits when saved-board setIds differ only in order/dedup (normaliseSetIds)', async () => {
+    mockGetServerSession.mockResolvedValue({ user: { id: 'user-1' } });
+    mockLimit.mockResolvedValueOnce([
+      { boardType: 'kilter', layoutId: 1, sizeId: 10, setIds: '20,1,20' }, // duplicate + reverse order
+    ]);
+
+    const response = await POST(createRequest(validBody));
+    expect(response.status).toBe(200);
+    expect(await response.json()).toEqual({ ok: true, skipped: 'already_saved' });
+    expect(mockInsert).not.toHaveBeenCalled();
+  });
+
+  it('upserts when saved board exists but config differs (drift detection)', async () => {
+    mockGetServerSession.mockResolvedValue({ user: { id: 'user-1' } });
+    // savedMatch returns the saved board with a STALE config (different layout).
+    // First select = savedMatch, second select = boardUuid validation (no boardUuid sent → not called)
+    mockLimit.mockResolvedValueOnce([{ boardType: 'kilter', layoutId: 99, sizeId: 10, setIds: '1,20' }]);
+
+    const response = await POST(createRequest(validBody));
+    expect(response.status).toBe(200);
+    expect(await response.json()).toEqual({ ok: true });
+
+    expect(mockInsert).toHaveBeenCalledTimes(1);
+    expect(mockValues).toHaveBeenCalledWith(
+      expect.objectContaining({
+        boardName: 'kilter',
+        layoutId: 1,
+        sizeId: 10,
+        setIds: '1,20',
+      }),
+    );
   });
 
   it('returns 500 on unexpected error', async () => {

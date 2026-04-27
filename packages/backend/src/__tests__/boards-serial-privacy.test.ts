@@ -363,17 +363,22 @@ describe('myBoardSerialConfigs privacy', () => {
     expect(mockDb.select).not.toHaveBeenCalled();
   });
 
-  it('returns empty array when input has no non-empty serials', async () => {
+  it('rejects empty/whitespace-only serials at validation', async () => {
     setupDbLeftJoin([]);
 
-    const results = await socialBoardQueries.myBoardSerialConfigs(
-      null,
-      { serialNumbers: ['', '   '] },
-      makeAuthCtx('user-1'),
-    );
+    await expect(
+      socialBoardQueries.myBoardSerialConfigs(null, { serialNumbers: ['', '   '] }, makeAuthCtx('user-1')),
+    ).rejects.toThrow();
+
+    expect(mockDb.select).not.toHaveBeenCalled();
+  });
+
+  it('returns empty array when the input array is empty', async () => {
+    setupDbLeftJoin([]);
+
+    const results = await socialBoardQueries.myBoardSerialConfigs(null, { serialNumbers: [] }, makeAuthCtx('user-1'));
 
     expect(results).toEqual([]);
-    // No DB query when input is empty after filtering.
     expect(mockDb.select).not.toHaveBeenCalled();
   });
 
@@ -440,18 +445,25 @@ describe('myBoardSerialConfigs privacy', () => {
     expect(userTwoResults).toEqual([]);
   });
 
-  it('caps input at 20 serials before querying the DB', async () => {
+  it('rejects input with more than 20 serials (Zod validation)', async () => {
     setupDbLeftJoin([]);
 
     const twentyFiveSerials = Array.from({ length: 25 }, (_, i) => `SN${i}`);
-    await socialBoardQueries.myBoardSerialConfigs(null, { serialNumbers: twentyFiveSerials }, makeAuthCtx('user-1'));
+    await expect(
+      socialBoardQueries.myBoardSerialConfigs(null, { serialNumbers: twentyFiveSerials }, makeAuthCtx('user-1')),
+    ).rejects.toThrow();
 
-    // Even though we passed 25 serials, only one DB call should happen and
-    // the resolver should have sliced internally. We can't introspect the
-    // inArray operator's args without mocking drizzle-orm, so the assertion
-    // here is "no error, single query, returns []" — the slice is also unit
-    // tested by the boundary value at the caller layer.
-    expect(mockDb.select).toHaveBeenCalledTimes(1);
+    expect(mockDb.select).not.toHaveBeenCalled();
+  });
+
+  it('rejects input with a serial longer than 64 chars', async () => {
+    setupDbLeftJoin([]);
+
+    await expect(
+      socialBoardQueries.myBoardSerialConfigs(null, { serialNumbers: ['A'.repeat(65)] }, makeAuthCtx('user-1')),
+    ).rejects.toThrow();
+
+    expect(mockDb.select).not.toHaveBeenCalled();
   });
 
   it('handles a recording with no linked board (boardUuid + boardSlug both null)', async () => {
@@ -464,6 +476,28 @@ describe('myBoardSerialConfigs privacy', () => {
     );
 
     expect(results[0].boardUuid).toBeNull();
+    expect(results[0].boardSlug).toBeNull();
+  });
+
+  it('returns boardSlug=null when the linked board is soft-deleted (leftJoin excludes it)', async () => {
+    // The resolver's leftJoin filters by `isNull(userBoards.deletedAt)`. When
+    // the linked board has been soft-deleted, the join condition fails and
+    // userBoards.slug comes back as null, even though the recording row still
+    // carries its original boardUuid pointer. The recording stays usable as a
+    // fallback (config is intact), it just loses the saved-board linkage.
+    const orphanedRecording = makeRecording({
+      boardUuid: 'deleted-board-uuid',
+      boardSlug: null,
+    });
+    setupDbLeftJoin([orphanedRecording]);
+
+    const results = await socialBoardQueries.myBoardSerialConfigs(
+      null,
+      { serialNumbers: ['SERIAL001'] },
+      makeAuthCtx('user-1'),
+    );
+
+    expect(results[0].boardUuid).toBe('deleted-board-uuid');
     expect(results[0].boardSlug).toBeNull();
   });
 });

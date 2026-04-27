@@ -7,13 +7,21 @@ import * as schema from '@/app/lib/db/schema';
 import { authOptions } from '@/app/lib/auth/auth-options';
 import { checkRateLimit, getClientIp } from '@/app/lib/auth/rate-limiter';
 import { AURORA_BOARDS } from '@boardsesh/shared-schema';
+import { normaliseSetIds } from '@/app/lib/ble/board-config-match';
 
 const bodySchema = z.object({
   serialNumber: z.string().trim().min(1).max(64),
   boardName: z.enum(AURORA_BOARDS),
   layoutId: z.number().int().nonnegative(),
   sizeId: z.number().int().nonnegative(),
-  setIds: z.string().min(1).max(256),
+  // Comma-separated positive integers only — no whitespace, no empties. The
+  // recorded value flows to the picker preview and "switch config" URL builder
+  // through `parseSetIds`, which silently drops non-numeric tokens; rejecting
+  // garbage at the boundary keeps recordings useful and labels honest.
+  setIds: z
+    .string()
+    .max(256)
+    .regex(/^\d+(,\d+)*$/, 'setIds must be a comma-separated list of integers'),
   boardUuid: z.string().min(1).max(64).optional(),
 });
 
@@ -56,12 +64,19 @@ export async function POST(request: NextRequest) {
     const { serialNumber, boardName, layoutId, sizeId, setIds, boardUuid } = parsed.data;
     const db = getDb();
 
-    // The recording table is a fallback for users who haven't fully populated
-    // their saved-boards (user_boards) dataset. If a saved board already
-    // exists for this controller, it's authoritative — skip the recording so
-    // saved-vs-recorded resolution stays unambiguous.
+    // If the user already has a saved board for this controller AND its config
+    // matches the POST, the recording adds nothing — short-circuit. If the
+    // configs differ, fall through and upsert so the recording reflects current
+    // reality (the wall might have been physically reconfigured since the
+    // saved board was created). The saved-board entry remains authoritative for
+    // serial→board lookups, but the recording lets us detect drift.
     const savedMatch = await db
-      .select({ id: schema.userBoards.id })
+      .select({
+        boardType: schema.userBoards.boardType,
+        layoutId: schema.userBoards.layoutId,
+        sizeId: schema.userBoards.sizeId,
+        setIds: schema.userBoards.setIds,
+      })
       .from(schema.userBoards)
       .where(
         and(
@@ -73,7 +88,15 @@ export async function POST(request: NextRequest) {
       .limit(1);
 
     if (savedMatch.length > 0) {
-      return NextResponse.json({ ok: true, skipped: 'already_saved' });
+      const saved = savedMatch[0];
+      const configMatches =
+        saved.boardType === boardName &&
+        Number(saved.layoutId) === layoutId &&
+        Number(saved.sizeId) === sizeId &&
+        normaliseSetIds(saved.setIds) === normaliseSetIds(setIds);
+      if (configMatches) {
+        return NextResponse.json({ ok: true, skipped: 'already_saved' });
+      }
     }
 
     // Validate the supplied boardUuid before linking. The client can pass any

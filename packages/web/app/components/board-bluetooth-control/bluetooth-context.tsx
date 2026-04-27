@@ -1,6 +1,7 @@
 'use client';
 
-import React, { createContext, useContext, useEffect, useMemo, useRef, useState } from 'react';
+import React, { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { track } from '@vercel/analytics';
 import { useBoardBluetooth } from './use-board-bluetooth';
 import { useCurrentClimb } from '../graphql-queue';
@@ -13,10 +14,17 @@ import {
 } from '@/app/lib/ble/capacitor-utils';
 import { registerBluetoothConnection } from './bluetooth-status-store';
 import { DevicePickerDialog } from './device-picker-dialog';
+import { BoardConfigMismatchDialog } from './board-config-mismatch-dialog';
 import { AutoConnectHandler } from './auto-connect-handler';
 import { parseSerialNumber } from './bluetooth-aurora';
 import { useWsAuthToken } from '@/app/hooks/use-ws-auth-token';
 import { resolveSerialNumbers, type ResolvedBoardEntry } from '@/app/lib/ble/resolve-serials';
+import {
+  buildSwitchUrl,
+  configFromResolvedEntry,
+  matchesBoardDetails,
+  type ResolvedBoardConfig,
+} from '@/app/lib/ble/board-config-match';
 import type { UserBoard } from '@boardsesh/shared-schema';
 import type { DiscoveredDevice } from '@/app/lib/ble/types';
 import type { PickerState } from './use-board-bluetooth';
@@ -126,7 +134,7 @@ export function BluetoothProvider({
     boardDetails,
     boardUuid,
   });
-  const { token } = useWsAuthToken();
+  const { token, isAuthenticated } = useWsAuthToken();
 
   const [isBluetoothSupported, setIsBluetoothSupported] = useState(false);
   const [isIOS, setIsIOS] = useState(false);
@@ -233,34 +241,34 @@ export function BluetoothProvider({
   const activePickerState = pickerState ?? demoPickerState;
   const activeResolvedBoards = demoResolvedBoards ?? resolvedBoards;
 
-  useEffect(() => {
-    if (!activePickerState || activePickerState.devices.length === 0 || !token) {
-      return;
-    }
-
+  // Derive a stable key from the *set* of serials in the picker. The
+  // pickerState object identity changes on every BLE advertisement (RSSI
+  // updates, etc.), but the resolver only needs to re-run when the serial
+  // set actually changes.
+  const sortedSerialsKey = useMemo(() => {
+    if (!activePickerState) return '';
     const serials: string[] = [];
     for (const device of activePickerState.devices) {
       const serial = parseSerialNumber(device.name);
       if (serial) serials.push(serial);
     }
+    return [...serials].sort().join(',');
+  }, [activePickerState]);
 
-    if (serials.length === 0) return;
+  useEffect(() => {
+    if (!sortedSerialsKey || !token) return;
+    if (sortedSerialsKey === resolvedSerialsRef.current) return;
 
-    // Check if we already resolved these serials (resolveSerialNumbers deduplicates internally)
-    const sortedSerials = [...serials].sort();
-    const serialsKey = sortedSerials.join(',');
-    if (serialsKey === resolvedSerialsRef.current) return;
-
-    resolveSerialNumbers(token, sortedSerials)
+    resolveSerialNumbers(token, sortedSerialsKey.split(','), { isAuthenticated })
       .then((boardMap) => {
         // Only mark as resolved on success so transient failures allow retries
-        resolvedSerialsRef.current = serialsKey;
+        resolvedSerialsRef.current = sortedSerialsKey;
         setResolvedBoards(boardMap);
       })
       .catch((err) => {
         console.error('[BLE] Failed to resolve serial numbers:', err);
       });
-  }, [activePickerState, token]);
+  }, [sortedSerialsKey, token, isAuthenticated]);
 
   useEffect(() => {
     let cancelPolling: (() => void) | undefined;
@@ -317,6 +325,63 @@ export function BluetoothProvider({
     [isConnected, loading, connect, disconnect, sendFramesToBoard, isBluetoothSupported, isIOS],
   );
 
+  // Mismatch interception: when the user picks a controller whose resolved
+  // config doesn't match the route they're on, hold the picker promise open
+  // and surface the BoardConfigMismatchDialog. The picker only emits the
+  // selection — this provider decides whether to forward, switch, or cancel.
+  const router = useRouter();
+  const [mismatch, setMismatch] = useState<{
+    deviceId: string;
+    serial: string;
+    config: ResolvedBoardConfig;
+  } | null>(null);
+
+  const handlePickerSelect = useCallback(
+    (deviceId: string) => {
+      if (!activePickerState || !boardDetails) {
+        activePickerState?.handleSelect(deviceId);
+        return;
+      }
+      const device = activePickerState.devices.find((d) => d.deviceId === deviceId);
+      const serial = device ? parseSerialNumber(device.name) : undefined;
+      const entry = serial ? activeResolvedBoards.get(serial) : undefined;
+      if (!entry || !serial) {
+        activePickerState.handleSelect(deviceId);
+        return;
+      }
+      const config = configFromResolvedEntry(entry);
+      if (matchesBoardDetails(config, boardDetails)) {
+        activePickerState.handleSelect(deviceId);
+        return;
+      }
+      setMismatch({ deviceId, serial, config });
+    },
+    [activePickerState, activeResolvedBoards, boardDetails],
+  );
+
+  const handleMismatchConnectAnyway = useCallback(() => {
+    if (mismatch && activePickerState) {
+      activePickerState.handleSelect(mismatch.deviceId);
+    }
+    setMismatch(null);
+  }, [mismatch, activePickerState]);
+
+  const handleMismatchCancel = useCallback(() => {
+    setMismatch(null);
+  }, []);
+
+  const handleMismatchSwitch = useCallback(() => {
+    if (!mismatch) return;
+    const target = buildSwitchUrl(mismatch.config, angle ?? 0);
+    setMismatch(null);
+    // Cancel the in-flight picker promise; the new route will mount a fresh
+    // BluetoothProvider that auto-connects via the ?autoConnect serial param.
+    activePickerState?.handleCancel();
+    if (target) {
+      router.push(`${target}?autoConnect=${encodeURIComponent(mismatch.serial)}`);
+    }
+  }, [mismatch, angle, activePickerState, router]);
+
   return (
     <BluetoothContext.Provider value={value}>
       {isConnected && (
@@ -325,11 +390,19 @@ export function BluetoothProvider({
       {activePickerState && (
         <DevicePickerDialog
           devices={activePickerState.devices}
-          onSelect={activePickerState.handleSelect}
+          onSelect={handlePickerSelect}
           onCancel={activePickerState.handleCancel}
           resolvedBoards={activeResolvedBoards}
-          boardDetails={boardDetails}
-          angle={angle}
+        />
+      )}
+      {mismatch && boardDetails && (
+        <BoardConfigMismatchDialog
+          open
+          currentBoardDetails={boardDetails}
+          recordedConfig={mismatch.config}
+          onSwitch={handleMismatchSwitch}
+          onConnectAnyway={handleMismatchConnectAnyway}
+          onCancel={handleMismatchCancel}
         />
       )}
       <AutoConnectHandler connect={connect} isBluetoothSupported={isBluetoothSupported} />
