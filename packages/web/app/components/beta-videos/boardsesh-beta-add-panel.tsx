@@ -24,15 +24,31 @@ const BoardseshBetaAddPanel: React.FC<BoardseshBetaAddPanelProps> = ({
   onCancel,
   onSuccess,
 }) => {
-  // Reset add-mode in the parent whenever this panel goes away — covers the
-  // case where the user collapses the section mid-add (lazy: true unmounts
-  // the form and its draft URL state). Idempotent w.r.t. success/cancel
-  // paths, which already flip the flag.
+  // Reset add-mode in the parent only when the panel unmounts via an
+  // unhandled path (section collapse via lazy: true). When the user
+  // explicitly cancels or successfully submits, the parent already flipped
+  // isAddingBeta, so we set committedRef to suppress the cleanup and avoid
+  // a redundant setState + re-render.
   const onCancelRef = useRef(onCancel);
+  const committedRef = useRef(false);
   useEffect(() => {
     onCancelRef.current = onCancel;
   });
-  useEffect(() => () => onCancelRef.current(), []);
+  useEffect(
+    () => () => {
+      if (!committedRef.current) onCancelRef.current();
+    },
+    [],
+  );
+
+  const handleCancel = () => {
+    committedRef.current = true;
+    onCancel();
+  };
+  const handleSuccess = () => {
+    committedRef.current = true;
+    onSuccess();
+  };
 
   return (
     <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5, px: 1.5, pt: 1.5, pb: 0.5 }}>
@@ -44,8 +60,8 @@ const BoardseshBetaAddPanel: React.FC<BoardseshBetaAddPanelProps> = ({
         compact
         submitLabel="Add"
         showCancel
-        onCancel={onCancel}
-        onSuccess={onSuccess}
+        onCancel={handleCancel}
+        onSuccess={handleSuccess}
       />
     </Box>
   );

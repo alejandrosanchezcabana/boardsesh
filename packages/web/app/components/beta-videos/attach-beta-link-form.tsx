@@ -14,7 +14,12 @@ import {
   type AttachBetaLinkMutationVariables,
   type AttachBetaLinkMutationResponse,
 } from '@/app/lib/graphql/operations';
-import { isBetaVideoUrl, BETA_VIDEO_URL_VALIDATION_MESSAGE } from '@/app/lib/beta-video-url';
+import {
+  isBetaVideoUrl,
+  isInstagramUrl,
+  isTikTokUrl,
+  BETA_VIDEO_URL_VALIDATION_MESSAGE,
+} from '@/app/lib/beta-video-url';
 import { useSnackbar } from '@/app/components/providers/snackbar-provider';
 
 type AttachBetaLinkFormProps = {
@@ -74,11 +79,8 @@ const AttachBetaLinkForm: React.FC<AttachBetaLinkFormProps> = ({
     },
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: ['betaLinks', boardType, climbUuid] });
-      track('Beta Video Added', {
-        boardType,
-        climbUuid,
-        platform: /tiktok\.com/i.test(trimmed) ? 'TikTok' : 'Instagram',
-      });
+      const platform = isTikTokUrl(trimmed) ? 'TikTok' : isInstagramUrl(trimmed) ? 'Instagram' : 'Unknown';
+      track('Beta Video Added', { boardType, climbUuid, platform });
       showMessage('Video added to beta', 'success');
       setUrl('');
       onSuccess?.();

@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 import { describe, it, expect, vi, beforeEach } from 'vite-plus/test';
-import React, { act } from 'react';
-import { renderHook, render, screen, waitFor } from '@testing-library/react';
+import React from 'react';
+import { renderHook, render, screen, waitFor, fireEvent } from '@testing-library/react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { useBuildClimbDetailSections } from '../build-climb-detail-sections';
 import type { Climb } from '@/app/lib/types';
@@ -37,8 +37,15 @@ vi.mock('@/app/components/beta-videos/boardsesh-beta-list', () => ({
 vi.mock('@/app/components/beta-videos/boardsesh-beta-add-panel', () => ({
   default: () => <div data-testid="beta-add-panel" />,
 }));
+// Render the add-button as a real <button> wired to its onToggle prop so
+// integration tests can drive add-mode via fireEvent.click rather than
+// reaching into React element props.
 vi.mock('@/app/components/beta-videos/boardsesh-beta-add-button', () => ({
-  default: () => null,
+  default: ({ onToggle }: { isAdding: boolean; onToggle: () => void }) => (
+    <button type="button" data-testid="beta-add-toggle" onClick={onToggle}>
+      toggle
+    </button>
+  ),
 }));
 
 // Mutable mock payload for the betaLinks GraphQL query.
@@ -248,24 +255,33 @@ describe('useBuildClimbDetailSections', () => {
     });
   });
 
-  it('beta content swaps from list to add panel when the action toggle fires', () => {
+  it('beta content swaps from list to add panel when the user clicks the toggle button', () => {
     const { result } = renderHook(() => useBuildClimbDetailSections(BASE_PROPS), {
       wrapper: createWrapper(),
     });
 
-    const initialBeta = result.current.find((s) => s.key === 'beta')!;
-    const { rerender } = render(<>{initialBeta.content}</>);
+    const renderBeta = () => {
+      const beta = result.current.find((s) => s.key === 'beta')!;
+      return (
+        <>
+          {beta.action}
+          {beta.content}
+        </>
+      );
+    };
+
+    const { rerender } = render(renderBeta());
     expect(screen.queryByTestId('beta-list')).not.toBeNull();
     expect(screen.queryByTestId('beta-add-panel')).toBeNull();
 
-    const action = initialBeta.action as React.ReactElement<{ onToggle: () => void }>;
-    act(() => {
-      action.props.onToggle();
-    });
-
-    const nextBeta = result.current.find((s) => s.key === 'beta')!;
-    rerender(<>{nextBeta.content}</>);
+    fireEvent.click(screen.getByTestId('beta-add-toggle'));
+    rerender(renderBeta());
     expect(screen.queryByTestId('beta-add-panel')).not.toBeNull();
     expect(screen.queryByTestId('beta-list')).toBeNull();
+
+    fireEvent.click(screen.getByTestId('beta-add-toggle'));
+    rerender(renderBeta());
+    expect(screen.queryByTestId('beta-list')).not.toBeNull();
+    expect(screen.queryByTestId('beta-add-panel')).toBeNull();
   });
 });

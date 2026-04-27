@@ -4,7 +4,7 @@ import React, { useState } from 'react';
 import Instagram from '@mui/icons-material/Instagram';
 import { track } from '@vercel/analytics';
 import type { BetaLink } from '@/app/lib/api-wrappers/sync-api-types';
-import { isTikTokUrl } from '@/app/lib/tiktok-url';
+import { isInstagramUrl, isTikTokUrl } from '@/app/lib/beta-video-url';
 import TikTokIcon from './tiktok-icon';
 import styles from './boardsesh-beta.module.css';
 
@@ -16,8 +16,10 @@ const BoardseshBetaCard: React.FC<BoardseshBetaCardProps> = ({ link }) => {
   const [thumbnailFailed, setThumbnailFailed] = useState(false);
   const thumbnailSrc = !thumbnailFailed ? link.thumbnail : null;
   const isTikTok = isTikTokUrl(link.link);
+  const isInstagram = !isTikTok && isInstagramUrl(link.link);
   const PlatformIcon = isTikTok ? TikTokIcon : Instagram;
-  const platformName = isTikTok ? 'TikTok' : 'Instagram';
+  const displayPlatform = isTikTok ? 'TikTok' : 'Instagram';
+  const analyticsPlatform = isTikTok ? 'TikTok' : isInstagram ? 'Instagram' : 'Unknown';
 
   return (
     <a
@@ -25,12 +27,12 @@ const BoardseshBetaCard: React.FC<BoardseshBetaCardProps> = ({ link }) => {
       target="_blank"
       rel="noopener noreferrer"
       className={styles.card}
-      aria-label={`Open beta on ${platformName}${link.foreign_username ? ` by ${link.foreign_username}` : ''}`}
+      aria-label={`Open beta on ${displayPlatform}${link.foreign_username ? ` by ${link.foreign_username}` : ''}`}
       onClick={() =>
         track('Beta Video Link Clicked', {
-          platform: platformName,
+          platform: analyticsPlatform,
           climbUuid: link.climb_uuid,
-          foreignUsername: link.foreign_username ?? '',
+          ...(link.foreign_username ? { foreignUsername: link.foreign_username } : {}),
         })
       }
     >
@@ -49,7 +51,7 @@ const BoardseshBetaCard: React.FC<BoardseshBetaCardProps> = ({ link }) => {
             <PlatformIcon sx={{ fontSize: 28, color: 'var(--neutral-400)' }} />
           </div>
         )}
-        <span className={styles.platformBadge} aria-label={`From ${platformName}`}>
+        <span className={styles.platformBadge} aria-label={`From ${displayPlatform}`}>
           <PlatformIcon sx={{ fontSize: 12 }} />
         </span>
         {link.foreign_username && <span className={styles.userChip}>@{link.foreign_username}</span>}
