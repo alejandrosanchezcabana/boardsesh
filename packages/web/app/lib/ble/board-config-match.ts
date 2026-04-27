@@ -1,9 +1,19 @@
 import type { BoardDetails, BoardName } from '@/app/lib/types';
+import { SUPPORTED_BOARDS } from '@boardsesh/shared-schema';
 import { getBoardDetails } from '@/app/lib/board-constants';
 import { constructBoardSlugListUrl, constructClimbListWithSlugs } from '@/app/lib/url-utils';
 import { parseSerialNumber } from '@/app/components/board-bluetooth-control/bluetooth-aurora';
 import type { DiscoveredDevice } from '@/app/lib/ble/types';
 import type { ResolvedBoardEntry } from './resolve-serials';
+
+/**
+ * Narrow a string from the DB / wire to the closed `BoardName` union. Returns
+ * undefined if the value isn't a recognised board so callers can fail
+ * gracefully instead of relying on an unsafe `as BoardName` cast.
+ */
+function asBoardName(value: string): BoardName | undefined {
+  return (SUPPORTED_BOARDS as readonly string[]).includes(value) ? (value as BoardName) : undefined;
+}
 
 /**
  * Parse a comma-separated set_ids string into a number[]. Accepts an array
@@ -126,9 +136,16 @@ export function buildSwitchUrl(config: ResolvedBoardConfig, currentAngle: number
   if (config.boardSlug) {
     return constructBoardSlugListUrl(config.boardSlug, currentAngle);
   }
+  // Validate the wire-side string against the closed BoardName union before
+  // handing it to getBoardDetails — avoids an unsafe `as BoardName` cast.
+  const boardName = asBoardName(config.boardName);
+  if (!boardName) {
+    console.warn('[BLE] buildSwitchUrl: unrecognised boardName', config.boardName);
+    return null;
+  }
   try {
     const details = getBoardDetails({
-      board_name: config.boardName as BoardName,
+      board_name: boardName,
       layout_id: config.layoutId,
       size_id: config.sizeId,
       set_ids: parseSetIds(config.setIds),
@@ -143,8 +160,11 @@ export function buildSwitchUrl(config: ResolvedBoardConfig, currentAngle: number
         currentAngle,
       );
     }
-  } catch {
-    // Fall through.
+  } catch (err) {
+    // getBoardDetails throws on unknown layout/size/set combinations. Surface
+    // it for debugging — the user-facing snackbar in the mismatch handler
+    // already covers the null return.
+    console.warn('[BLE] buildSwitchUrl: getBoardDetails threw for', config, err);
   }
   return null;
 }
