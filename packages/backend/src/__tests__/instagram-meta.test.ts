@@ -60,6 +60,7 @@ describe('fetchInstagramMeta', () => {
 
   afterEach(() => {
     vi.unstubAllGlobals();
+    vi.restoreAllMocks();
     vi.useRealTimers();
   });
 
@@ -206,8 +207,6 @@ describe('fetchInstagramMeta', () => {
     dateSpy.mockReturnValue(start + INSTAGRAM_META_TTL_MS + 1);
     await fetchInstagramMeta(SAMPLE_URL);
     expect(fetchMock).toHaveBeenCalledTimes(2);
-
-    dateSpy.mockRestore();
   });
 
   it('opens the circuit after a burst of transient errors and short-circuits subsequent calls', async () => {
@@ -249,7 +248,5 @@ describe('fetchInstagramMeta', () => {
     expect(recovered.status).toBe('ok');
     expect(fetchMock).toHaveBeenCalledTimes(11);
 
-    dateSpy.mockRestore();
-    warnSpy.mockRestore();
   });
 });
