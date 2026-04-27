@@ -29,9 +29,18 @@ export const themeTokens = {
   // Warm text colours scoped to brand surfaces (landing hero, splash,
   // OG/social, App Store screenshots, marketing emails). Standard product
   // UI keeps the cool neutral scale — do not blanket-replace neutrals.
+  //
+  // `brandPrimary` / `brandMuted` are the dark-surface (warm cream) values
+  // that ship on dark brand surfaces and on the constant-purple hero CTA.
+  // `brandPrimaryLight` / `brandMutedLight` are warm darks for the same
+  // tokens on light surfaces (the home hero in light mode). The
+  // `--bs-text-brand-*` CSS vars in `app/components/index.css` mirror this
+  // pair: light root → light values, `data-theme='dark'` → dark values.
   text: {
     brandPrimary: '#f4f1ea',
     brandMuted: '#8a8780',
+    brandPrimaryLight: '#2a1f1f',
+    brandMutedLight: '#6b5b54',
   },
 
   // Neutral palette
