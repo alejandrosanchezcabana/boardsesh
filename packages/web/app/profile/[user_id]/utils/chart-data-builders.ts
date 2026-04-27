@@ -1,4 +1,5 @@
 import dayjs from 'dayjs';
+import isoWeek from 'dayjs/plugin/isoWeek';
 import isSameOrAfter from 'dayjs/plugin/isSameOrAfter';
 import isSameOrBefore from 'dayjs/plugin/isSameOrBefore';
 import { parseTickTime, tickTimeMs } from '@/app/lib/format-tick-time';
@@ -23,6 +24,7 @@ import {
 const FLASH_COLOR = `${themeTokens.colors.success}99`; // 60% opacity hex
 const REDPOINT_COLOR = `${themeTokens.colors.error}99`;
 
+dayjs.extend(isoWeek);
 dayjs.extend(isSameOrAfter);
 dayjs.extend(isSameOrBefore);
 
@@ -203,8 +205,9 @@ export function buildWeeklyBars(
 
   const DEFAULT_MAX_WEEKS = 52;
   const allWeekKeys: string[] = [];
-  const first = parseTickTime(entries[entries.length - 1]?.climbed_at).startOf('isoWeek');
-  const last = parseTickTime(entries[0]?.climbed_at).endOf('isoWeek');
+  // Safe to drop the optional chain: `entries.length === 0` is handled above.
+  const first = parseTickTime(entries[entries.length - 1].climbed_at).startOf('isoWeek');
+  const last = parseTickTime(entries[0].climbed_at).endOf('isoWeek');
   let current = first;
   while (current.isBefore(last) || current.isSame(last)) {
     allWeekKeys.push(`${current.isoWeekYear()}-W${current.isoWeek()}`);

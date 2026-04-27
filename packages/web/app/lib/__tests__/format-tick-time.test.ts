@@ -51,12 +51,21 @@ describe('parseTickTime', () => {
 });
 
 describe('formatTickAbsoluteTime', () => {
-  it('renders the absolute moment in the viewer-local clock', () => {
-    // The output displays the local-clock equivalent of the UTC moment, so we
-    // assert against the same helper applied to the Z-suffixed form rather
-    // than a literal — that keeps the test host-TZ independent.
-    expect(formatTickAbsoluteTime(NAIVE, 'YYYY-MM-DD HH:mm')).toBe(
-      formatTickAbsoluteTime(Z_FORM, 'YYYY-MM-DD HH:mm'),
-    );
+  it('parses naive strings as UTC, not local time', () => {
+    // The output is the local-clock equivalent of the UTC moment; rendering
+    // it with a `Z` offset token and parsing back via `Date` recovers the
+    // absolute ms regardless of host TZ. If the helper ever parsed NAIVE in
+    // local time, the recovered ms would be off by the host offset.
+    const formatted = formatTickAbsoluteTime(NAIVE, 'YYYY-MM-DDTHH:mm:ss.SSSZ');
+    expect(new Date(formatted).getTime()).toBe(ABSOLUTE_MS);
+  });
+});
+
+describe('helper guards', () => {
+  it('throws when given an empty string instead of silently using "now"', () => {
+    expect(() => formatTickRelativeTime('')).toThrow(TypeError);
+    expect(() => parseTickTime('')).toThrow(TypeError);
+    expect(() => tickTimeMs('')).toThrow(TypeError);
+    expect(() => formatTickAbsoluteTime('', 'X')).toThrow(TypeError);
   });
 });
