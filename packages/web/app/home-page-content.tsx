@@ -15,7 +15,6 @@ import PeopleOutlined from '@mui/icons-material/PeopleOutlined';
 import BluetoothOutlined from '@mui/icons-material/BluetoothOutlined';
 import LocalOfferOutlined from '@mui/icons-material/LocalOfferOutlined';
 import WarningAmberOutlined from '@mui/icons-material/WarningAmberOutlined';
-import AppleIcon from '@mui/icons-material/Apple';
 import AndroidOutlined from '@mui/icons-material/AndroidOutlined';
 import Skeleton from '@mui/material/Skeleton';
 import SvgIcon from '@mui/material/SvgIcon';
@@ -51,12 +50,44 @@ type HomePageContentProps = {
   initialPopularConfigs?: PopularBoardConfig[];
 };
 
+type OnboardingCardAccent = 'action' | 'social' | 'help' | 'none';
+
 type OnboardingCardProps = {
   icon: React.ReactNode;
   title: string;
   description: string;
   onClick: () => void;
+  /**
+   * Category colour-coding for the icon chip. Cards that do similar jobs
+   * share an accent so the list is scannable. The whole card remains the
+   * CTA — the chip colour is metadata, not a CTA token. Defaults to
+   * 'action' (rose) for backwards compatibility.
+   */
+  accent?: OnboardingCardAccent;
 };
+
+// Soft tint backgrounds (~10% alpha) for each accent. Inlined rather than
+// added as CSS vars — these only render here.
+const accentSurface: Record<OnboardingCardAccent, string> = {
+  action: 'var(--semantic-selected-light)', // existing rose tint
+  social: 'rgba(156, 39, 176, 0.10)', // V11 purple
+  help: 'rgba(74, 111, 138, 0.12)', // info slate — same desaturated dark-UI family as the rest
+  none: 'transparent',
+};
+
+function resolveAccentIconColor(accent: OnboardingCardAccent): string {
+  switch (accent) {
+    case 'social':
+      return themeTokens.colors.purple;
+    case 'help':
+      return themeTokens.colors.info;
+    case 'none':
+      return 'inherit';
+    case 'action':
+    default:
+      return themeTokens.colors.primary;
+  }
+}
 
 function DiscordIcon() {
   return (
@@ -66,7 +97,7 @@ function DiscordIcon() {
   );
 }
 
-function OnboardingCard({ icon, title, description, onClick }: OnboardingCardProps) {
+function OnboardingCard({ icon, title, description, onClick, accent = 'action' }: OnboardingCardProps) {
   return (
     <Card
       variant="outlined"
@@ -87,12 +118,12 @@ function OnboardingCard({ icon, title, description, onClick }: OnboardingCardPro
               width: 44,
               height: 44,
               borderRadius: `${themeTokens.borderRadius.md}px`,
-              backgroundColor: 'var(--semantic-selected-light)',
+              backgroundColor: accentSurface[accent],
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
               flexShrink: 0,
-              color: themeTokens.colors.primary,
+              color: resolveAccentIconColor(accent),
             }}
           >
             {icon}
@@ -185,9 +216,18 @@ function InstallAppCard({ platform }: { platform: InstallPlatform }) {
 
   return (
     <OnboardingCard
-      icon={<AppleIcon />}
+      icon={
+        <Image
+          src="/icon.svg"
+          width={44}
+          height={44}
+          alt=""
+          style={{ borderRadius: themeTokens.borderRadius.md, display: 'block' }}
+        />
+      }
       title="Get the Boardsesh app"
       description="Lights up holds on your board straight from your phone"
+      accent="none"
       onClick={() => {
         track('App Install Click', { platform: 'ios', source: 'app-store' });
         window.open(IOS_APP_STORE_URL, '_blank', 'noopener,noreferrer');
@@ -378,7 +418,20 @@ export default function HomePageContent({ boardConfigs, initialPopularConfigs }:
               fontSize: themeTokens.typography.fontSize.lg,
               fontWeight: themeTokens.typography.fontWeight.semibold,
               textTransform: 'none',
-              boxShadow: themeTokens.shadows.md,
+              // Brand-surface CTA — V13 brand purple, not the in-product
+              // rose. The hero is the only place this rule applies on /;
+              // the rest of the page is in-product chrome and stays on
+              // tokens.primary. The global MUI Button override applies a
+              // translateY(-1px) on hover; explicitly cancel it here so
+              // the brand CTA stays anchored.
+              backgroundColor: '#6A1B9A',
+              color: 'var(--bs-text-brand-primary)',
+              boxShadow: '0 4px 12px rgba(106, 27, 154, 0.30)',
+              '&:hover': {
+                backgroundColor: '#5C1A87',
+                boxShadow: '0 4px 12px rgba(106, 27, 154, 0.40)',
+                transform: 'none',
+              },
             }}
           >
             {activeSession ? 'Continue climbing' : 'Start climbing'}
@@ -424,6 +477,7 @@ export default function HomePageContent({ boardConfigs, initialPopularConfigs }:
             icon={<PlayCircleOutlineOutlined />}
             title="Take the tour"
             description="A one-minute walk-through of queuing, logging, and sessions with your crew"
+            accent="help"
             onClick={() => onboardingTour?.start()}
           />
 
@@ -431,20 +485,15 @@ export default function HomePageContent({ boardConfigs, initialPopularConfigs }:
             icon={<WarningAmberOutlined />}
             title="Coming from Kilter?"
             description="Bring your logbook and history over in one step"
+            accent="help"
             onClick={() => router.push('/aurora-migration')}
-          />
-
-          <OnboardingCard
-            icon={<PeopleOutlined />}
-            title="Find your crew"
-            description="Follow friends and see what they're climbing"
-            onClick={() => setFindClimbersOpen(true)}
           />
 
           <OnboardingCard
             icon={<LocalOfferOutlined />}
             title="Build a playlist"
             description="Line up your climbs before you get to the gym"
+            accent="action"
             onClick={() => router.push('/playlists')}
           />
 
@@ -452,13 +501,23 @@ export default function HomePageContent({ boardConfigs, initialPopularConfigs }:
             icon={<BluetoothOutlined />}
             title="Connect your board"
             description="Pair via Bluetooth and light up your next climb"
+            accent="action"
             onClick={() => setSeshDrawerOpen(true)}
+          />
+
+          <OnboardingCard
+            icon={<PeopleOutlined />}
+            title="Find your crew"
+            description="Follow friends and see what they're climbing"
+            accent="social"
+            onClick={() => setFindClimbersOpen(true)}
           />
 
           <OnboardingCard
             icon={<DiscordIcon />}
             title="Join the crew on Discord"
             description="Share beta, report bugs, and help shape what's next"
+            accent="social"
             onClick={() => window.open('https://discord.gg/YXA8GsXfQK', '_blank', 'noopener,noreferrer')}
           />
         </Box>

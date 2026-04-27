@@ -8,6 +8,7 @@ export const themeTokens = {
     primaryHover: '#7A3F47', // Darker rose
     primaryActive: '#6B353D', // Deep dark rose
     secondary: '#6B7280', // Neutral grey for info/secondary
+    info: '#4A6F8A', // Cool slate — sits between brand purples and neutral grey, used for help/guide accents
     success: '#6B9080', // Muted sage green
     successHover: '#5A7A6C', // Darker sage green
     successBg: '#EFF5F2',
