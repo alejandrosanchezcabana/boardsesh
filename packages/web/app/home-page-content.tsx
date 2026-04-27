@@ -337,10 +337,10 @@ export default function HomePageContent({ boardConfigs, initialPopularConfigs }:
             alignItems: 'center',
             textAlign: 'center',
             gap: 2,
-            py: 4,
+            py: 1,
           }}
         >
-          <Image src="/brand/icon-transparent.svg" width={96} height={96} alt="Boardsesh logo" priority />
+          <Image src="/brand/icon-transparent.svg" width={115} height={115} alt="Boardsesh logo" priority />
           <Typography
             variant="h5"
             fontWeight={themeTokens.typography.fontWeight.bold}
