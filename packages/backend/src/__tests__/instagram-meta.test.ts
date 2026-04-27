@@ -209,4 +209,47 @@ describe('fetchInstagramMeta', () => {
 
     dateSpy.mockRestore();
   });
+
+  it('opens the circuit after a burst of transient errors and short-circuits subsequent calls', async () => {
+    // 11 distinct URLs each return a transient (503). The first 10 record
+    // failures and trip the breaker; the 11th call short-circuits to
+    // transient_error without making a network request. We mock 11
+    // responses but only expect 10 fetches to land.
+    const transientResponse = { ok: false, status: 503, text: () => Promise.resolve('') };
+    const fetchMock = vi.fn().mockResolvedValue(transientResponse);
+    vi.stubGlobal('fetch', fetchMock);
+
+    const dateSpy = vi.spyOn(Date, 'now');
+    dateSpy.mockReturnValue(0);
+
+    // Suppress the breaker's console.warn so the test output stays clean.
+    const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
+
+    for (let i = 0; i < 10; i++) {
+      const result = await fetchInstagramMeta(`https://www.instagram.com/p/CIRCUIT${i}/`);
+      expect(result).toEqual({ status: 'transient_error' });
+    }
+    expect(fetchMock).toHaveBeenCalledTimes(10);
+
+    // Eleventh URL: breaker is open, no fetch call is made.
+    const blocked = await fetchInstagramMeta('https://www.instagram.com/p/CIRCUITX/');
+    expect(blocked).toEqual({ status: 'transient_error' });
+    expect(fetchMock).toHaveBeenCalledTimes(10);
+
+    // Once the cooldown elapses, the breaker closes and fetches resume.
+    // The default IG cooldown is 5 minutes; jump just past it and provide
+    // a successful response to confirm.
+    fetchMock.mockResolvedValueOnce({
+      ok: true,
+      status: 200,
+      text: () => Promise.resolve(htmlWithImage()),
+    });
+    dateSpy.mockReturnValue(5 * 60 * 1000 + 1);
+    const recovered = await fetchInstagramMeta('https://www.instagram.com/p/RECOVER/');
+    expect(recovered.status).toBe('ok');
+    expect(fetchMock).toHaveBeenCalledTimes(11);
+
+    dateSpy.mockRestore();
+    warnSpy.mockRestore();
+  });
 });

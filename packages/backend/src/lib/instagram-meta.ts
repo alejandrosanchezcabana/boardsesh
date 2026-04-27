@@ -1,4 +1,5 @@
 import { getInstagramMediaId, INSTAGRAM_URL_REGEX, isInstagramUrl } from '@boardsesh/shared-schema';
+import { createCircuitBreaker } from './circuit-breaker';
 
 export { INSTAGRAM_URL_REGEX, isInstagramUrl, getInstagramMediaId };
 
@@ -16,13 +17,8 @@ export const INSTAGRAM_TRANSIENT_TTL_MS = 2 * 60 * 1000;
 // Circuit breaker: if we observe a burst of transient errors, stop calling
 // out for a cooldown so we don't keep poking IG while it's actively
 // throttling us. The resolver layer keeps serving cached thumbnails during
-// the open window (see enrichRow's transient_error handling).
-//
-// State is per-process (module-singleton) — same shape as the existing
-// `metaCache` / `inflight` maps. In a horizontally scaled deploy each
-// instance independently rate-limits itself; threshold + cooldown are sized
-// so a single instance can't sustain enough outbound load to matter, but a
-// fleet-wide breaker would need a Redis-backed counter (out of scope here).
+// the open window (see enrichRow's transient_error handling). State scope
+// (per-process vs. fleet-wide) is documented on createCircuitBreaker.
 const CIRCUIT_WINDOW_MS = 60 * 1000;
 const CIRCUIT_THRESHOLD = 10;
 const CIRCUIT_COOLDOWN_MS = 5 * 60 * 1000;
@@ -68,34 +64,21 @@ function looksLikeLoginWall(html: string): boolean {
 const metaCache = new Map<string, { data: InstagramMetaResult; expiresAt: number }>();
 const inflight = new Map<string, Promise<InstagramMetaResult>>();
 
-const transientTimestamps: number[] = [];
-let circuitOpenUntil = 0;
-
-function recordTransientError(): void {
-  const now = Date.now();
-  transientTimestamps.push(now);
-  // Drop entries outside the rolling window.
-  const cutoff = now - CIRCUIT_WINDOW_MS;
-  while (transientTimestamps.length > 0 && transientTimestamps[0] < cutoff) {
-    transientTimestamps.shift();
-  }
-  if (transientTimestamps.length >= CIRCUIT_THRESHOLD && circuitOpenUntil <= now) {
-    circuitOpenUntil = now + CIRCUIT_COOLDOWN_MS;
+const circuit = createCircuitBreaker({
+  windowMs: CIRCUIT_WINDOW_MS,
+  threshold: CIRCUIT_THRESHOLD,
+  cooldownMs: CIRCUIT_COOLDOWN_MS,
+  onOpen: (count, cooldownMs) => {
     console.warn(
-      `[instagram-meta] circuit breaker open for ${CIRCUIT_COOLDOWN_MS / 1000}s after ${transientTimestamps.length} transient errors in ${CIRCUIT_WINDOW_MS / 1000}s`,
+      `[instagram-meta] circuit breaker open for ${cooldownMs / 1000}s after ${count} transient errors in ${CIRCUIT_WINDOW_MS / 1000}s`,
     );
-  }
-}
-
-function isCircuitOpen(): boolean {
-  return Date.now() < circuitOpenUntil;
-}
+  },
+});
 
 export function clearInstagramMetaCache(): void {
   metaCache.clear();
   inflight.clear();
-  transientTimestamps.length = 0;
-  circuitOpenUntil = 0;
+  circuit.reset();
 }
 
 async function fetchInstagramMetaUncached(url: string): Promise<InstagramMetaResult> {
@@ -183,7 +166,7 @@ export async function fetchInstagramMeta(url: string): Promise<InstagramMetaResu
   // call. The resolver layer keeps serving cached thumbnails during this
   // window (see enrichRow). Don't poison the meta cache with this synthetic
   // result — once the circuit closes we want to retry normally.
-  if (isCircuitOpen()) {
+  if (circuit.isOpen()) {
     return { status: 'transient_error' };
   }
 
@@ -195,7 +178,7 @@ export async function fetchInstagramMeta(url: string): Promise<InstagramMetaResu
       const ttl = result.status === 'transient_error' ? INSTAGRAM_TRANSIENT_TTL_MS : INSTAGRAM_META_TTL_MS;
       metaCache.set(url, { data: result, expiresAt: Date.now() + ttl });
       if (result.status === 'transient_error') {
-        recordTransientError();
+        circuit.recordFailure();
       }
       return result;
     })

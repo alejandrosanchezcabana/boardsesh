@@ -1,5 +1,6 @@
 import { createHash } from 'node:crypto';
 import { getTikTokVideoId, isTikTokUrl, TIKTOK_URL_REGEX } from '@boardsesh/shared-schema';
+import { createCircuitBreaker } from './circuit-breaker';
 
 export { TIKTOK_URL_REGEX, isTikTokUrl };
 
@@ -12,8 +13,7 @@ export const TIKTOK_META_TTL_MS = 10 * 60 * 1000;
 // refetch on every read. See instagram-meta.ts for the same pattern.
 export const TIKTOK_TRANSIENT_TTL_MS = 2 * 60 * 1000;
 
-// Per-process circuit breaker — see instagram-meta.ts for the full note on
-// fleet-wide vs. per-instance scoping.
+// Per-process circuit breaker — scope notes on createCircuitBreaker.
 const CIRCUIT_WINDOW_MS = 60 * 1000;
 const CIRCUIT_THRESHOLD = 10;
 const CIRCUIT_COOLDOWN_MS = 5 * 60 * 1000;
@@ -47,33 +47,21 @@ type OEmbedResponse = {
 const metaCache = new Map<string, { data: TikTokMetaResult; expiresAt: number }>();
 const inflight = new Map<string, Promise<TikTokMetaResult>>();
 
-const transientTimestamps: number[] = [];
-let circuitOpenUntil = 0;
-
-function recordTransientError(): void {
-  const now = Date.now();
-  transientTimestamps.push(now);
-  const cutoff = now - CIRCUIT_WINDOW_MS;
-  while (transientTimestamps.length > 0 && transientTimestamps[0] < cutoff) {
-    transientTimestamps.shift();
-  }
-  if (transientTimestamps.length >= CIRCUIT_THRESHOLD && circuitOpenUntil <= now) {
-    circuitOpenUntil = now + CIRCUIT_COOLDOWN_MS;
+const circuit = createCircuitBreaker({
+  windowMs: CIRCUIT_WINDOW_MS,
+  threshold: CIRCUIT_THRESHOLD,
+  cooldownMs: CIRCUIT_COOLDOWN_MS,
+  onOpen: (count, cooldownMs) => {
     console.warn(
-      `[tiktok-meta] circuit breaker open for ${CIRCUIT_COOLDOWN_MS / 1000}s after ${transientTimestamps.length} transient errors in ${CIRCUIT_WINDOW_MS / 1000}s`,
+      `[tiktok-meta] circuit breaker open for ${cooldownMs / 1000}s after ${count} transient errors in ${CIRCUIT_WINDOW_MS / 1000}s`,
     );
-  }
-}
-
-function isCircuitOpen(): boolean {
-  return Date.now() < circuitOpenUntil;
-}
+  },
+});
 
 export function clearTikTokMetaCache(): void {
   metaCache.clear();
   inflight.clear();
-  transientTimestamps.length = 0;
-  circuitOpenUntil = 0;
+  circuit.reset();
 }
 
 async function fetchTikTokMetaUncached(url: string): Promise<TikTokMetaResult> {
@@ -126,7 +114,7 @@ export async function fetchTikTokMeta(url: string): Promise<TikTokMetaResult> {
     return cached.data;
   }
 
-  if (isCircuitOpen()) {
+  if (circuit.isOpen()) {
     return { status: 'transient_error' };
   }
 
@@ -138,7 +126,7 @@ export async function fetchTikTokMeta(url: string): Promise<TikTokMetaResult> {
       const ttl = result.status === 'transient_error' ? TIKTOK_TRANSIENT_TTL_MS : TIKTOK_META_TTL_MS;
       metaCache.set(url, { data: result, expiresAt: Date.now() + ttl });
       if (result.status === 'transient_error') {
-        recordTransientError();
+        circuit.recordFailure();
       }
       return result;
     })

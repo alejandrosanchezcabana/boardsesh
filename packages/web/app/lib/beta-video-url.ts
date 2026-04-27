@@ -24,7 +24,10 @@ function absolutizeThumbnail(thumbnail: string | null): string | null {
   if (!thumbnail || !thumbnail.startsWith('/')) return thumbnail;
   const backendBase = getBackendHttpUrl();
   if (!backendBase) return thumbnail;
-  return `${backendBase}${thumbnail}`;
+  // Defensive: getBackendHttpUrl strips a trailing slash today, but normalize
+  // here too so a future change to its return shape can't produce
+  // `https://host//static/...` which would 404.
+  return `${backendBase.replace(/\/+$/, '')}${thumbnail}`;
 }
 
 /**
