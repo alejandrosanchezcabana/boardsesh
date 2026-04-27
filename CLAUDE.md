@@ -4,16 +4,17 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-Boardsesh is a monorepo containing a Next.js 15 application for controlling standardized interactive climbing training boards (Kilter, Tension). It adds missing functionality to boards using Aurora Climbing's software, including queue management and real-time collaborative control.
+Boardsesh is a monorepo containing a Next.js 16 application for controlling standardized interactive climbing training boards (Kilter, Tension). It adds missing functionality to boards using Aurora Climbing's software, including queue management and real-time collaborative control.
 
 ## Project Rules
 
+
+- We are slowly moving away from running rest-apis and backend operations in the next.js service, instead packages/backend should implement all backends, ideally using graphql
 - Work autonomously end-to-end. Backend + frontend + deploy + QA. Never stop at "the API is ready but the UI isn't updated."
 - Use subagents (always Opus) for all grunt work. Pair every implementation subagent with a QA/reviewer subagent.
 - Work high-level: divide work, subagents execute, you orchestrate and fix issues.
 - No AI-generated images ever. Real photos or diagrams only.
 - No buzzwords. Concrete numbers and simple language.
-- Keep `REQUESTS.md` updated as the feature backlog. Mark items as you complete them.
 - No unnecessary check-ins. Default to action. Full autonomy except no data deletion without asking.
 
 ## Documentation
@@ -209,7 +210,7 @@ We are using next.js app router, it's important we try to use server side compon
 ### Important rules
 
 - **Validation must go through `vp` — never `bun run`, `bunx`, or `npx`.** This repo's toolchain is Vite+ (`vp`). For lint, format, typecheck, test, build, and dev, use `vp` and `vp run` exclusively. Do not invoke `bun run check`, `bun run lint`, `bun run test`, `bun run --filter=... typecheck`, `bunx tsc`, `npx eslint`, etc. — they bypass the unified config, can mutate `bun.lock`, and skip the typecheck/lint settings wired into `vite.config.ts`. The only sanctioned non-`vp` invocations are: (a) `bunx drizzle-kit generate` for migrations (no `vp` wrapper exists), and (b) `bun run backend:start` for production backend startup. If you find yourself reaching for `bun run` or `bunx` for anything else, stop and use the `vp` equivalent.
-- **Use `vp check` or `vp run typecheck` instead of `vp run build` for validation** - Running build interferes with the local dev server and `bunx` commands can mess with lock files. Use `vp check` to run lint + format + typecheck together (typecheck is wired in via `lint.options.typeCheck` in `vite.config.ts`, so `vp check` and the staged pre-commit hook both run it), or `vp run typecheck` for type checking only.
+- **Use `vp check` or `vp run typecheck` instead of `vp run build` for validation** - Running build interferes with the local dev server and `bunx` commands can mess with lock files. `vp check` runs lint + format (the staged pre-commit hook calls `vp check --fix`). TypeScript type checking is run separately via `vp run typecheck` and in the typecheck CI job — `lint.options.typeCheck` is intentionally off in `vite.config.ts` because oxlint's type-aware mode surfaces a backlog of pre-existing violations across bundled assets and unrelated files. Run `vp run typecheck` (or one of `vp run typecheck:web|backend|db|shared`) before pushing.
 - Always try to use server side rendering wherever possibe. But do note that for some parts such as the QueueList and related components, thats impossible, so dont try to force SSR there.
 - Always use MUI (Material UI) components and their properties.
 - Try to avoid use of the style property

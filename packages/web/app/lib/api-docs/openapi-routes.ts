@@ -21,7 +21,6 @@ import {
   GradesResponseSchema,
   ClimbSchema,
   ClimbStatsResponseSchema,
-  BetaLinksResponseSchema,
   SettersResponseSchema,
   HeatmapDataSchema,
   AnglesResponseSchema,
@@ -186,31 +185,6 @@ registry.registerPath({
       content: {
         'application/json': {
           schema: ClimbStatsResponseSchema,
-        },
-      },
-    },
-  },
-});
-
-registry.registerPath({
-  method: 'get',
-  path: '/api/v1/{board_name}/beta/{climb_uuid}',
-  summary: 'Get beta videos for a climb',
-  description:
-    'Returns links to beta videos for a specific climb. Beta links are user-submitted and may include videos at different angles.',
-  tags: ['Climbs'],
-  request: {
-    params: z.object({
-      board_name: BoardNameSchema,
-      climb_uuid: z.string().describe('Unique climb identifier'),
-    }),
-  },
-  responses: {
-    200: {
-      description: 'Beta video links',
-      content: {
-        'application/json': {
-          schema: BetaLinksResponseSchema,
         },
       },
     },

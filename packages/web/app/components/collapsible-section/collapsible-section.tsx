@@ -5,8 +5,8 @@ import styles from './collapsible-section.module.css';
 
 export type CollapsibleSectionConfig = {
   key: string;
-  label: string;
-  title: string;
+  label: React.ReactNode;
+  title: React.ReactNode;
   defaultSummary: string;
   /** Optional dynamic summary parts. When omitted or it returns [], falls back to defaultSummary. */
   getSummary?: () => string[];

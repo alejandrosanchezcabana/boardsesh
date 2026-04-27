@@ -8,11 +8,12 @@ export default defineConfig({
   },
   lint: {
     options: {
-      // typeCheck runs tsgolint (the TypeScript Go rewrite) so vp check —
-      // including the staged pre-commit hook — gets fast type checking.
-      // typeAware (extra type-aware oxlint rules) is intentionally off to
-      // keep precommit fast; run it manually or in CI if needed.
-      typeCheck: true,
+      // typeAware/typeCheck (oxlint type-aware rules + tsgolint integration)
+      // are off here: oxlint requires the two paired (`--type-check` errors
+      // without `--type-aware`), and enabling them surfaces ~138 pre-existing
+      // violations across bundled assets and unrelated files. Full type
+      // checking still runs via `vp run typecheck` and the typecheck CI job;
+      // the staged hook (`vp check --fix`) handles lint + format.
     },
   },
   test: {

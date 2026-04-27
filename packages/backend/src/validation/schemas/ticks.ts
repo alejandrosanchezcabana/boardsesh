@@ -1,8 +1,6 @@
 import { z } from 'zod';
+import { BETA_VIDEO_URL_REGEX, BETA_VIDEO_URL_VALIDATION_MESSAGE } from '@boardsesh/shared-schema';
 import { ExternalUUIDSchema, BoardNameSchema } from './primitives';
-
-const INSTAGRAM_URL_REGEX =
-  /^https?:\/\/(?:www\.)?(?:instagram\.com|instagr\.am)\/(?:p|reel|tv)\/([\w-]+)\/?(?:[?#].*)?$/i;
 
 /**
  * Tick status validation schema
@@ -31,12 +29,7 @@ export const SaveTickInputSchema = z
     layoutId: z.number().int().positive().optional(),
     sizeId: z.number().int().positive().optional(),
     setIds: z.string().min(1).optional(),
-    videoUrl: z
-      .string()
-      .max(500)
-      .regex(INSTAGRAM_URL_REGEX, 'Must be an Instagram post or reel URL')
-      .optional()
-      .nullable(),
+    videoUrl: z.string().max(500).regex(BETA_VIDEO_URL_REGEX, BETA_VIDEO_URL_VALIDATION_MESSAGE).optional().nullable(),
   })
   .refine(
     (data) => {
@@ -65,7 +58,7 @@ export const GetTicksInputSchema = z.object({
 export const AttachBetaLinkInputSchema = z.object({
   boardType: BoardNameSchema,
   climbUuid: ExternalUUIDSchema,
-  link: z.string().max(500).regex(INSTAGRAM_URL_REGEX, 'Must be an Instagram post or reel URL'),
+  link: z.string().max(500).regex(BETA_VIDEO_URL_REGEX, BETA_VIDEO_URL_VALIDATION_MESSAGE),
   angle: z.number().int().min(0).max(90).optional().nullable(),
 });
 

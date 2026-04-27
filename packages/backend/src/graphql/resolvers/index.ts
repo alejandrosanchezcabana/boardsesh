@@ -48,6 +48,7 @@ import { socialCommunitySettingsQueries, socialCommunitySettingsMutations } from
 import { newClimbSubscriptionResolvers } from './social/new-climb-subscriptions';
 import { newClimbFeedSubscription } from './social/new-climb-feed-subscription';
 import { feedbackMutations } from './feedback/mutations';
+import { betaLinkQueries } from './beta-videos/queries';
 import { isNoMatchClimb } from './shared/helpers';
 
 export const resolvers = {
@@ -80,6 +81,7 @@ export const resolvers = {
     ...socialRoleQueries,
     ...socialCommunitySettingsQueries,
     ...newClimbSubscriptionResolvers.Query,
+    ...betaLinkQueries,
   },
 
   Mutation: {

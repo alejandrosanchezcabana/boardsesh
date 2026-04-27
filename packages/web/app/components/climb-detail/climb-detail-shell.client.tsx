@@ -11,6 +11,7 @@ type ClimbDetailShellClientProps = {
   mode: 'play' | 'info';
   aboveFold: React.ReactNode;
   sections: CollapsibleSectionConfig[];
+  betaSection?: React.ReactNode;
   desktopRightColumn?: React.ReactNode | null;
 };
 
@@ -18,6 +19,7 @@ export default function ClimbDetailShellClient({
   mode,
   aboveFold,
   sections,
+  betaSection,
   desktopRightColumn,
 }: ClimbDetailShellClientProps) {
   const isDesktop = useMediaQuery('(min-width:1024px)', { noSsr: true });
@@ -37,7 +39,10 @@ export default function ClimbDetailShellClient({
     return (
       <div className={styles.mobileScrollLayout} data-scroll-container>
         <div className={styles.aboveFold}>{aboveFold}</div>
-        <div className={styles.belowFold}>{showSections && <CollapsibleSection sections={sections} />}</div>
+        <div className={styles.belowFold}>
+          {showSections && betaSection}
+          {showSections && <CollapsibleSection sections={sections} />}
+        </div>
       </div>
     );
   }
@@ -46,9 +51,21 @@ export default function ClimbDetailShellClient({
     <div className={styles.infoPageLayout}>
       <div>
         {aboveFold}
-        {!isDesktop ? <CollapsibleSection sections={sections} /> : null}
+        {!isDesktop ? (
+          <>
+            {betaSection}
+            <CollapsibleSection sections={sections} />
+          </>
+        ) : null}
       </div>
-      <div>{isDesktop ? (desktopRightColumn ?? <CollapsibleSection sections={sections} />) : null}</div>
+      <div>
+        {isDesktop ? (
+          <>
+            {betaSection}
+            {desktopRightColumn ?? <CollapsibleSection sections={sections} />}
+          </>
+        ) : null}
+      </div>
     </div>
   );
 }

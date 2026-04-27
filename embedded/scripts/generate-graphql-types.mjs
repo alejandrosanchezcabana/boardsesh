@@ -145,7 +145,7 @@ function parseGraphQLSchema(schemaContent) {
       const isNullable = !fieldType.endsWith('!');
 
       // Clean up type
-      fieldType = fieldType.replace(/[\[\]!]/g, '');
+      fieldType = fieldType.replace(/[[\]!]/g, '');
 
       fields.push({
         name: fieldName,

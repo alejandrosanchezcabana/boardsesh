@@ -103,20 +103,6 @@ export const ClimbStatsSchema = z
 export const ClimbStatsResponseSchema = z.array(ClimbStatsSchema).openapi('ClimbStatsResponse');
 
 // ============================================
-// Beta Link Schema
-// ============================================
-
-export const BetaLinkSchema = z
-  .object({
-    angle: z.number().describe('Board angle for this beta'),
-    foreign_username: z.string().describe('Username of the person who posted the beta'),
-    link: z.string().describe('URL to the beta video'),
-  })
-  .openapi('BetaLink');
-
-export const BetaLinksResponseSchema = z.array(BetaLinkSchema).openapi('BetaLinksResponse');
-
-// ============================================
 // Setter Schema
 // ============================================
 
@@ -303,7 +289,6 @@ registry.register('Grade', GradeSchema);
 registry.register('Climb', ClimbSchema);
 registry.register('ClimbSearchResult', ClimbSearchResultSchema);
 registry.register('ClimbStats', ClimbStatsSchema);
-registry.register('BetaLink', BetaLinkSchema);
 registry.register('Setter', SetterSchema);
 registry.register('Angle', AngleSchema);
 registry.register('HoldType', HoldTypeSchema);

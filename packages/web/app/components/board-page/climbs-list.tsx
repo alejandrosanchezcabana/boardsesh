@@ -334,8 +334,6 @@ const ClimbsList = ({
   const visibleClimbs = useMemo(() => climbs.slice(0, visibleCount), [climbs, visibleCount]);
 
   const [viewMode, setViewMode] = useState<ViewMode>('list');
-  const [hydrated, setHydrated] = useState(false);
-  useEffect(() => setHydrated(true), []);
 
   const onClimbSelectRef = useRef(onClimbSelect);
   onClimbSelectRef.current = onClimbSelect;
@@ -645,7 +643,6 @@ const ClimbsList = ({
                           fetchPriority={index === 0 ? 'high' : undefined}
                           onSelect={() => handleClimbClickByIndex(index)}
                           onThumbnailClick={() => handleClimbThumbnailClickByIndex(index)}
-                          disableSwipe={!hydrated}
                           unsupported={unsupportedClimbs?.has(climb.uuid)}
                           needsBiggerBoard={upsizedClimbs?.has(climb.uuid)}
                           onNeedsBiggerBoard={handleNeedsBiggerBoard}

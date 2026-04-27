@@ -13,7 +13,7 @@ import {
   type AttachBetaLinkMutationVariables,
   type AttachBetaLinkMutationResponse,
 } from '@/app/lib/graphql/operations';
-import { isInstagramUrl } from '@/app/lib/instagram-url';
+import { isBetaVideoUrl, BETA_VIDEO_URL_VALIDATION_MESSAGE } from '@/app/lib/beta-video-url';
 import { useSnackbar } from '@/app/components/providers/snackbar-provider';
 
 type AttachBetaLinkFormProps = {
@@ -38,7 +38,7 @@ const AttachBetaLinkForm: React.FC<AttachBetaLinkFormProps> = ({
   angle,
   resetTrigger,
   submitLabel = 'Share beta',
-  helperText = 'Paste a reel or post link so others can see your beta.',
+  helperText = 'Paste an Instagram or TikTok link so others can see your beta.',
   onSuccess,
   onCancel,
   showCancel = false,
@@ -55,7 +55,7 @@ const AttachBetaLinkForm: React.FC<AttachBetaLinkFormProps> = ({
   }, [resetTrigger]);
 
   const trimmed = url.trim();
-  const validationError = trimmed && !isInstagramUrl(trimmed) ? 'Needs to be an Instagram post or reel URL' : null;
+  const validationError = trimmed && !isBetaVideoUrl(trimmed) ? BETA_VIDEO_URL_VALIDATION_MESSAGE : null;
 
   const mutation = useMutation({
     mutationFn: async () => {
@@ -89,8 +89,8 @@ const AttachBetaLinkForm: React.FC<AttachBetaLinkFormProps> = ({
       <TextField
         autoFocus={autoFocus}
         fullWidth
-        placeholder="https://www.instagram.com/reel/..."
-        label={climbName ? `Instagram URL for ${climbName}` : 'Instagram URL'}
+        placeholder="Instagram or TikTok URL"
+        label={climbName ? `Beta video URL for ${climbName}` : 'Beta video URL'}
         value={url}
         onChange={(e) => setUrl(e.target.value)}
         error={!!validationError}
