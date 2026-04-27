@@ -1,12 +1,16 @@
 import React from 'react';
 import { ImageResponse } from 'next/og';
-import { RouteMarkContextDots, RouteMarkHolds } from '@/app/components/brand/route-mark-svg';
+import { readFileSync } from 'node:fs';
+import { join } from 'node:path';
 
-export const runtime = 'edge';
+export const runtime = 'nodejs';
 
 export const alt = 'Boardsesh - Train smarter on your climbing board';
 export const size = { width: 1200, height: 630 };
 export const contentType = 'image/png';
+
+const iconSvg = readFileSync(join(process.cwd(), 'app', 'icon.svg'));
+const iconDataUrl = `data:image/svg+xml;base64,${iconSvg.toString('base64')}`;
 
 export default function Image() {
   return new ImageResponse(
@@ -18,57 +22,35 @@ export default function Image() {
         flexDirection: 'column',
         alignItems: 'center',
         justifyContent: 'center',
-        backgroundColor: '#0e0e10',
+        backgroundColor: '#0a0a0c',
         fontFamily: 'sans-serif',
       }}
     >
-      {/* Route mark */}
-      <svg width="220" height="220" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
-        <RouteMarkContextDots />
-        <RouteMarkHolds />
-      </svg>
+      {/* eslint-disable-next-line @next/next/no-img-element */}
+      <img src={iconDataUrl} width={320} height={320} alt="" />
 
-      {/* Brand name */}
       <div
         style={{
-          fontSize: 112,
-          fontWeight: 700,
+          fontSize: 128,
+          fontWeight: 900,
           color: '#f4f1ea',
-          letterSpacing: '-1px',
-          marginTop: 32,
+          letterSpacing: '-2px',
+          marginTop: 24,
         }}
       >
         boardsesh
       </div>
 
-      {/* Tagline */}
       <div
         style={{
-          fontSize: 44,
+          fontSize: 36,
           color: '#8a8780',
           fontWeight: 500,
-          marginTop: 16,
+          marginTop: 12,
+          letterSpacing: '6px',
         }}
       >
-        Train smarter on your climbing board
-      </div>
-
-      {/* Supported boards */}
-      <div
-        style={{
-          display: 'flex',
-          alignItems: 'center',
-          gap: 24,
-          marginTop: 48,
-          fontSize: 28,
-          color: '#6a6a72',
-        }}
-      >
-        <span>Kilter</span>
-        <span style={{ color: '#333333' }}>-</span>
-        <span>Tension</span>
-        <span style={{ color: '#333333' }}>-</span>
-        <span>MoonBoard</span>
+        FROM V11 TO V17
       </div>
     </div>,
     { ...size },

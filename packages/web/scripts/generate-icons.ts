@@ -66,18 +66,20 @@ async function main() {
     sharp(darkSvg512).resize(48, 48).png().toBuffer(),
   ]);
 
-  // Generate app icons from dark variant
+  // Generate app icons from the square (no-rounded-corners) source so that
+  // browser tab favicons and Apple touch icons render flush — the OS applies
+  // its own corner mask on home-screen surfaces.
   await Promise.all([
-    sharp(darkSvg1024).resize(192, 192).png().toFile(resolve(webRoot, 'public/icons/icon-192.png')),
-    sharp(darkSvg1024).resize(512, 512).png().toFile(resolve(webRoot, 'public/icons/icon-512.png')),
-    sharp(darkSvg1024).resize(180, 180).png().toFile(resolve(webRoot, 'public/icons/apple-touch-icon.png')),
+    sharp(darkSvg512).resize(192, 192).png().toFile(resolve(webRoot, 'public/icons/icon-192.png')),
+    sharp(darkSvg512).resize(512, 512).png().toFile(resolve(webRoot, 'public/icons/icon-512.png')),
+    sharp(darkSvg512).resize(180, 180).png().toFile(resolve(webRoot, 'public/icons/apple-touch-icon.png')),
   ]);
 
   // Generate maskable icon: render the dark icon at 410px centered on a 512px dark canvas.
   // This gives ~10% padding on each side, keeping content within the maskable safe zone.
   const darkSmall = await sharp(darkSvg1024).resize(410, 410).png().toBuffer();
   await sharp({
-    create: { width: 512, height: 512, channels: 4, background: { r: 23, g: 23, b: 26, alpha: 1 } },
+    create: { width: 512, height: 512, channels: 4, background: { r: 16, g: 16, b: 18, alpha: 1 } },
   })
     .composite([{ input: darkSmall, left: 51, top: 51 }])
     .png()

@@ -6,7 +6,7 @@ const MOBILE_ROOT = path.resolve(import.meta.dirname, '..');
 const REPO_ROOT = path.resolve(MOBILE_ROOT, '..');
 const SVG_ROOT = path.join(REPO_ROOT, 'svg');
 
-const SPLASH_BG = '#0e0e10';
+const SPLASH_BG = '#101012';
 
 const APP_ICON_SVG = path.join(SVG_ROOT, 'app-icon/icon-dark-1024.svg');
 const SPLASH_LOGO_SVG = path.join(SVG_ROOT, 'mark/route-mark.svg');
@@ -103,16 +103,9 @@ async function main() {
   {
     // Apple rejects any alpha channel on the 1024x1024 marketing icon, so
     // flatten over the SVG's own background color before encoding.
-    const iosIconPath = path.join(
-      MOBILE_ROOT,
-      'ios/App/App/Assets.xcassets/AppIcon.appiconset/AppIcon-512@2x.png',
-    );
+    const iosIconPath = path.join(MOBILE_ROOT, 'ios/App/App/Assets.xcassets/AppIcon.appiconset/AppIcon-512@2x.png');
     ensureDir(iosIconPath);
-    await sharp(appIconSvg)
-      .resize(1024, 1024)
-      .flatten({ background: '#17171a' })
-      .png()
-      .toFile(iosIconPath);
+    await sharp(appIconSvg).resize(1024, 1024).flatten({ background: '#101012' }).png().toFile(iosIconPath);
     console.info(`  -> ${path.relative(MOBILE_ROOT, iosIconPath)} (1024x1024)`);
   }
 
