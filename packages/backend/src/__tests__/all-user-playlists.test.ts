@@ -146,7 +146,7 @@ describe('allUserPlaylists resolver', () => {
   });
 
   it('should require authentication', async () => {
-    const ctx = makeCtx({ isAuthenticated: false, userId: null });
+    const ctx = makeCtx({ isAuthenticated: false, userId: undefined });
 
     await expect(playlistQueries.allUserPlaylists(null, { input: {} }, ctx)).rejects.toThrow('Authentication required');
   });

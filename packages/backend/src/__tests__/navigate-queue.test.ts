@@ -18,9 +18,11 @@ function createMockClimb(overrides: Partial<Climb> = {}): Climb {
     name: 'Test Climb',
     difficulty: '6a/V3',
     angle: 40,
-    ascensionistCount: 10,
-    qualityAverage: 3.5,
-    difficultyAverage: 3.0,
+    ascensionist_count: 10,
+    quality_average: '3.5',
+    stars: 3.5,
+    difficulty_error: '0.5',
+    benchmark_difficulty: null,
     description: 'A test climb',
     setter_username: 'test_setter',
     frames: 'test-frames',
@@ -45,8 +47,6 @@ function createMockContext(overrides: Partial<ConnectionContext> = {}): Connecti
     isAuthenticated: true,
     userId: TEST_USER_ID,
     sessionId: TEST_SESSION_ID,
-    rateLimitTokens: 60,
-    rateLimitLastReset: Date.now(),
     ...overrides,
   };
 }
@@ -64,8 +64,6 @@ function createControllerContext(
     sessionId: undefined,
     controllerId,
     controllerApiKey,
-    rateLimitTokens: 60,
-    rateLimitLastReset: Date.now(),
     ...overrides,
   };
 }

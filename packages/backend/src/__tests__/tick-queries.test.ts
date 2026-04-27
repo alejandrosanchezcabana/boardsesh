@@ -2,7 +2,6 @@ import { describe, it, expect, beforeAll, afterEach } from 'vite-plus/test';
 import { sql } from 'drizzle-orm';
 import { db } from '../db/client';
 import { tickQueries } from '../graphql/resolvers/ticks/queries';
-import type { ConnectionContext } from '@boardsesh/shared-schema';
 
 /**
  * Integration tests for the tick query resolvers, covering the three behavior
@@ -60,15 +59,18 @@ const callUserGroupedAscentsFeed = (userId: string, input: Record<string, unknow
   tickQueries.userGroupedAscentsFeed(undefined, { userId, input }) as Promise<GroupedResult>;
 
 const callUserClimbPercentile = (userId: string) =>
-  tickQueries.userClimbPercentile(undefined, { userId }, {
-    connectionId: 'tick-queries-test-conn',
-    isAuthenticated: false,
-    userId: null,
-    sessionId: null,
-    boardPath: null,
-    controllerId: null,
-    controllerApiKey: null,
-  } as ConnectionContext) as Promise<{
+  tickQueries.userClimbPercentile(
+    undefined,
+    { userId },
+    {
+      connectionId: 'tick-queries-test-conn',
+      isAuthenticated: false,
+      userId: undefined,
+      sessionId: undefined,
+      controllerId: undefined,
+      controllerApiKey: undefined,
+    },
+  ) as Promise<{
     totalDistinctClimbs: number;
     percentile: number;
     totalActiveUsers: number;

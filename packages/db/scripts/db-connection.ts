@@ -57,7 +57,10 @@ function configureNeonForLocal(connectionString: string): void {
   }
 }
 
-type ScriptDb = ReturnType<typeof drizzleServerless> | ReturnType<typeof drizzlePostgres>;
+// Both driver factories return PgDatabase instances with identical query-builder
+// surface; pick one as the script-facing type so callers don't have to deal with
+// a union (which breaks overload resolution on .returning(), .onConflictDoX, etc).
+type ScriptDb = ReturnType<typeof drizzlePostgres>;
 
 /**
  * Create a database connection suitable for scripts.
@@ -85,7 +88,7 @@ export function createScriptDb(url?: string): { db: ScriptDb; close: () => Promi
   // Neon serverless (local proxy or production)
   configureNeonForLocal(databaseUrl);
   const pool = new Pool({ connectionString: databaseUrl });
-  const db = drizzleServerless(pool);
+  const db = drizzleServerless(pool) as unknown as ScriptDb;
   return {
     db,
     close: async () => {

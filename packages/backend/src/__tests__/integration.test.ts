@@ -35,21 +35,22 @@ type SessionQueryResult = {
   users: Array<{ id: string }>;
 };
 
-type QueueEvent = {
-  __typename: string;
-  state?: { queue: Array<{ uuid: string }>; currentClimbQueueItem?: { uuid: string } | null };
-  item?: { uuid: string; climb?: { name: string } };
-  uuid?: string;
-  oldIndex?: number;
-  newIndex?: number;
-};
+type QueueEvent =
+  | {
+      __typename: 'FullSync';
+      state: { queue: Array<{ uuid: string }>; currentClimbQueueItem?: { uuid: string } | null };
+    }
+  | { __typename: 'QueueItemAdded'; item: { uuid: string; climb?: { name: string } } }
+  | { __typename: 'QueueItemRemoved'; uuid: string }
+  | { __typename: 'QueueReordered'; uuid: string; oldIndex: number; newIndex: number }
+  | { __typename: 'CurrentClimbChanged'; item: { uuid: string; climb?: { name: string } } | null }
+  | { __typename: 'ClimbMirrored'; mirrored: boolean };
 
-type SessionEvent = {
-  __typename: string;
-  user?: { id: string; username: string };
-  userId?: string;
-  leaderId?: string;
-};
+type SessionEvent =
+  | { __typename: 'UserJoined'; user: { id: string; username: string } }
+  | { __typename: 'UserLeft'; userId: string }
+  | { __typename: 'LeaderChanged'; leaderId: string }
+  | { __typename: 'SessionEnded'; reason: string };
 
 // Test fixtures
 const TEST_BOARD_PATH = '/kilter/1/2/3/40';
@@ -113,6 +114,14 @@ async function execute<T>(
       complete: () => resolve(result),
     });
   });
+}
+
+// Asserts the event has the expected __typename and narrows for follow-up access.
+function expectTypename<T extends { __typename: string }, K extends T['__typename']>(
+  event: T,
+  typename: K,
+): asserts event is Extract<T, { __typename: K }> {
+  expect(event.__typename).toBe(typename);
 }
 
 // Helper to wait for a specific event from a subscription
@@ -284,7 +293,7 @@ describe('Daemon Integration Tests', () => {
       // Verify one user is leader
       const leader = result2.joinSession.users.find((u) => u.isLeader);
       expect(leader).toBeDefined();
-      expect(leader.id).toBe(result1.joinSession.clientId);
+      expect(leader!.id).toBe(result1.joinSession.clientId);
     });
   });
 
@@ -305,7 +314,7 @@ describe('Daemon Integration Tests', () => {
         (e) => e.__typename === 'FullSync',
       );
 
-      expect(event.__typename).toBe('FullSync');
+      expectTypename(event, 'FullSync');
       expect(event.state.queue).toEqual([]);
     });
   });
@@ -480,9 +489,12 @@ describe('Daemon Integration Tests', () => {
       const events = await eventPromise;
 
       // First event should be FullSync, second should be QueueItemAdded
-      expect(events[0].__typename).toBe('FullSync');
-      expect(events[1].__typename).toBe('QueueItemAdded');
-      expect(events[1].item.uuid).toBe(getTestClimbUuid('sync-test'));
+      expect(events[0]).toBeDefined();
+      const second = events[1];
+      expect(second).toBeDefined();
+      expectTypename(events[0]!, 'FullSync');
+      expectTypename(second!, 'QueueItemAdded');
+      expect(second!.item.uuid).toBe(getTestClimbUuid('sync-test'));
     });
 
     it('should sync current climb changes across clients', async () => {
@@ -515,8 +527,10 @@ describe('Daemon Integration Tests', () => {
 
       const events = await eventPromise;
 
-      expect(events[1].__typename).toBe('CurrentClimbChanged');
-      expect(events[1].item.uuid).toBe(getTestClimbUuid('current-sync'));
+      const second = events[1];
+      expect(second).toBeDefined();
+      expectTypename(second!, 'CurrentClimbChanged');
+      expect(second!.item?.uuid).toBe(getTestClimbUuid('current-sync'));
     });
 
     it('should sync queue reordering across clients', async () => {
@@ -558,7 +572,7 @@ describe('Daemon Integration Tests', () => {
 
       const event = await eventPromise;
 
-      expect(event.__typename).toBe('QueueReordered');
+      expectTypename(event, 'QueueReordered');
       expect(event.uuid).toBe(getTestClimbUuid('reorder-1'));
       expect(event.oldIndex).toBe(1);
       expect(event.newIndex).toBe(0);
@@ -598,7 +612,7 @@ describe('Daemon Integration Tests', () => {
 
       const event = await eventPromise;
 
-      expect(event.__typename).toBe('LeaderChanged');
+      expectTypename(event, 'LeaderChanged');
       expect(event.leaderId).toBe(result2.joinSession.clientId);
     });
 
@@ -663,7 +677,7 @@ describe('Daemon Integration Tests', () => {
 
       const event = await eventPromise;
 
-      expect(event.__typename).toBe('UserJoined');
+      expectTypename(event, 'UserJoined');
       expect(event.user.username).toBe('Second');
     });
 
@@ -696,7 +710,7 @@ describe('Daemon Integration Tests', () => {
 
       const event = await eventPromise;
 
-      expect(event.__typename).toBe('UserLeft');
+      expectTypename(event, 'UserLeft');
       expect(event.userId).toBe(result2.joinSession.clientId);
     });
 
@@ -736,8 +750,10 @@ describe('Daemon Integration Tests', () => {
       const leaderChangedEvent = events.find((e) => e.__typename === 'LeaderChanged');
 
       expect(userLeftEvent).toBeDefined();
-      expect(userLeftEvent.userId).toBe(result1.joinSession.clientId);
       expect(leaderChangedEvent).toBeDefined();
+      expectTypename(userLeftEvent!, 'UserLeft');
+      expectTypename(leaderChangedEvent!, 'LeaderChanged');
+      expect(userLeftEvent.userId).toBe(result1.joinSession.clientId);
       expect(leaderChangedEvent.leaderId).toBe(result2.joinSession.clientId);
     });
   });

@@ -1,9 +1,11 @@
 #!/usr/bin/env bun
 import { copyFile, mkdir, readFile, writeFile } from 'node:fs/promises';
 import { dirname, join } from 'node:path';
+import { fileURLToPath } from 'node:url';
 import sharp from 'sharp';
 
-const ROOT = join(import.meta.dir, '..');
+const __dirname = dirname(fileURLToPath(import.meta.url));
+const ROOT = join(__dirname, '..');
 const DESIGN = join(ROOT, 'design');
 const ICON_SVG = join(DESIGN, 'svg', 'icon-master.svg');
 // iOS applies its own squircle mask, so the source for Apple icons must be

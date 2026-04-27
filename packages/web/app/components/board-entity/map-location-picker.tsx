@@ -79,7 +79,6 @@ export default function MapLocationPicker({ latitude, longitude, onChange }: Map
       leafletRef.current = null;
     }
 
-    // @ts-expect-error — CSS dynamic import handled by Next.js bundler
     void Promise.all([import('leaflet'), import('leaflet/dist/leaflet.css')]).then(([L]) => {
       if (!containerRef.current) return;
 

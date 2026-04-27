@@ -123,37 +123,32 @@ describe('Inferred Session Assignment (assignInferredSession)', () => {
   });
 
   describe('Status-based counting logic', () => {
-    it('flash counts as both send and flash', () => {
-      const status = 'flash';
-      const isSend = status === 'flash' || status === 'send';
-      const isFlash = status === 'flash';
-      const isAttempt = status === 'attempt';
+    type TickStatus = 'flash' | 'send' | 'attempt';
+    const classify = (status: TickStatus) => ({
+      isSend: status === 'flash' || status === 'send',
+      isFlash: status === 'flash',
+      isAttempt: status === 'attempt',
+    });
 
-      expect(isSend).toBe(true);
-      expect(isFlash).toBe(true);
-      expect(isAttempt).toBe(false);
+    it('flash counts as both send and flash', () => {
+      const result = classify('flash');
+      expect(result.isSend).toBe(true);
+      expect(result.isFlash).toBe(true);
+      expect(result.isAttempt).toBe(false);
     });
 
     it('send counts as send only', () => {
-      const status = 'send';
-      const isSend = status === 'flash' || status === 'send';
-      const isFlash = status === 'flash';
-      const isAttempt = status === 'attempt';
-
-      expect(isSend).toBe(true);
-      expect(isFlash).toBe(false);
-      expect(isAttempt).toBe(false);
+      const result = classify('send');
+      expect(result.isSend).toBe(true);
+      expect(result.isFlash).toBe(false);
+      expect(result.isAttempt).toBe(false);
     });
 
     it('attempt counts as attempt only', () => {
-      const status = 'attempt';
-      const isSend = status === 'flash' || status === 'send';
-      const isFlash = status === 'flash';
-      const isAttempt = status === 'attempt';
-
-      expect(isSend).toBe(false);
-      expect(isFlash).toBe(false);
-      expect(isAttempt).toBe(true);
+      const result = classify('attempt');
+      expect(result.isSend).toBe(false);
+      expect(result.isFlash).toBe(false);
+      expect(result.isAttempt).toBe(true);
     });
   });
 

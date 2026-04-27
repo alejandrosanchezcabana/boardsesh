@@ -289,7 +289,7 @@ describe('discoverPlaylists resolver', () => {
   });
 
   it('should not require authentication', async () => {
-    const ctx = makeCtx({ isAuthenticated: false, userId: null });
+    const ctx = makeCtx({ isAuthenticated: false, userId: undefined });
 
     const { chain: countChain } = createMockChain([{ count: 1 }]);
     mockDb.select.mockReturnValueOnce(countChain);
