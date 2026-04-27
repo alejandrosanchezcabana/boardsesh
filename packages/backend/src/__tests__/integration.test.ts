@@ -828,4 +828,21 @@ describe('Daemon Integration Tests', () => {
       expect(result.session.users).toHaveLength(1); // Only client2 remains
     });
   });
+
+  describe('HTTP path handling', () => {
+    it('returns 400 for /static/beta-link-thumbnails/ with no platform segment', async () => {
+      const res = await fetch(`http://localhost:${TEST_PORT}/static/beta-link-thumbnails/`);
+      expect(res.status).toBe(400);
+    });
+
+    it('returns 400 for /static/beta-link-thumbnails/<platform> with no filename', async () => {
+      const res = await fetch(`http://localhost:${TEST_PORT}/static/beta-link-thumbnails/instagram`);
+      expect(res.status).toBe(400);
+    });
+
+    it('returns 400 for /static/beta-link-thumbnails/ with empty platform segment', async () => {
+      const res = await fetch(`http://localhost:${TEST_PORT}/static/beta-link-thumbnails//filename.jpg`);
+      expect(res.status).toBe(400);
+    });
+  });
 });
