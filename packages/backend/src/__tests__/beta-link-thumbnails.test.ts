@@ -30,8 +30,14 @@ describe('beta-link-thumbnails: key + url helpers', () => {
     expect(getDevProxyThumbnailUrl(remote)).toBe(`/api/internal/beta-link-thumbnail?url=${encodeURIComponent(remote)}`);
   });
 
-  it('isOurS3Url recognizes URLs from the configured bucket prefix', () => {
+  it('isOurS3Url recognizes the new /static/ prefix and the legacy bucket prefix', () => {
+    // Canonical (post-fix) form
+    expect(isOurS3Url('/static/beta-link-thumbnails/instagram/ABC.jpg')).toBe(true);
+    expect(isOurS3Url('/static/beta-link-thumbnails/tiktok/cache_42.jpg')).toBe(true);
+    // Legacy direct-bucket form (still recognized so the resolver short-circuit
+    // holds for rows that haven't been backfilled yet).
     expect(isOurS3Url('https://example-bucket.s3.amazonaws.com/beta-link-thumbnails/instagram/ABC.jpg')).toBe(true);
+    // Foreign URLs
     expect(isOurS3Url('https://scontent.cdninstagram.com/foo.jpg')).toBe(false);
     expect(isOurS3Url(null)).toBe(false);
   });
@@ -57,12 +63,15 @@ describe('cacheInstagramThumbnail', () => {
     vi.unstubAllGlobals();
   });
 
-  it('uploads fetched image to the expected S3 key and returns the public URL', async () => {
+  it('uploads fetched image to the expected S3 key and returns the static proxy URL', async () => {
     mockFetchImageOnce({ contentType: 'image/jpeg' });
 
     const url = await cacheInstagramThumbnail('ABC123', 'https://scontent.cdninstagram.com/photo.jpg');
 
-    expect(url).toBe('https://example-bucket.s3.amazonaws.com/beta-link-thumbnails/instagram/ABC123.jpg');
+    // Returns the backend-relative /static/ URL (proxied through
+    // handleStaticBetaThumbnail), not the direct S3 URL — Tigris on Railway
+    // doesn't honor public-read ACLs.
+    expect(url).toBe('/static/beta-link-thumbnails/instagram/ABC123.jpg');
     expect(uploadToS3).toHaveBeenCalledTimes(1);
     const [buffer, key, contentType] = vi.mocked(uploadToS3).mock.calls[0];
     expect(Buffer.isBuffer(buffer)).toBe(true);
@@ -121,7 +130,7 @@ describe('cacheTikTokThumbnail', () => {
 
     const url = await cacheTikTokThumbnail('cache_42', 'https://p16-sign.tiktokcdn.com/photo.webp');
 
-    expect(url).toBe('https://example-bucket.s3.amazonaws.com/beta-link-thumbnails/tiktok/cache_42.jpg');
+    expect(url).toBe('/static/beta-link-thumbnails/tiktok/cache_42.jpg');
     const [, key, contentType] = vi.mocked(uploadToS3).mock.calls[0];
     expect(key).toBe('beta-link-thumbnails/tiktok/cache_42.jpg');
     expect(contentType).toBe('image/webp');

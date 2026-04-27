@@ -96,12 +96,20 @@ async function persistEnriched(row: Row, persistedThumbnail: string | null, newU
  * Fetch live metadata + (re)cache the thumbnail to S3 if available, falling
  * back to the dev proxy. The same control flow applies to Instagram and
  * TikTok — only the platform-specific helpers passed in `cfg` differ.
+ *
+ * Resilience contract: once we have our own cached thumbnail for a row, the
+ * UI must keep rendering it regardless of what Instagram/TikTok does. We
+ * never null out a cached thumbnail because of a transient error or a
+ * `gone` heuristic miss — those signals can flap when IG rate-limits us or
+ * serves a login wall.
  */
 async function enrichRow(row: Row, cfg: EnrichConfig): Promise<BetaLinkResult | null> {
+  const haveCachedThumbnail = isOurS3Url(row.thumbnail);
+
   // Short-circuit: row is fully enriched (thumbnail already on our S3 *and*
   // we know the username). The live fetch would only confirm the post still
   // exists — skip it to avoid hammering Instagram/TikTok on every read.
-  if (isOurS3Url(row.thumbnail) && row.foreignUsername) {
+  if (haveCachedThumbnail && row.foreignUsername) {
     return {
       climbUuid: row.climbUuid,
       link: row.link,
@@ -115,21 +123,31 @@ async function enrichRow(row: Row, cfg: EnrichConfig): Promise<BetaLinkResult | 
 
   const meta = await cfg.fetchMeta(row.link);
 
-  if (meta.status === 'gone') return null;
-  if (meta.status === 'transient_error') return passthroughResult(row);
+  if (meta.status === 'gone') {
+    // If we already cached a thumbnail and have a username, trust our cache:
+    // the `gone` detector is a heuristic over IG HTML and can false-positive
+    // during rate-limiting / login-wall responses. Only filter the row when
+    // we have nothing useful to render anyway.
+    if (haveCachedThumbnail) return passthroughResult(row);
+    return null;
+  }
+
+  if (meta.status === 'transient_error') {
+    // Same idea: serve whatever we have cached. passthroughResult already
+    // returns the cached thumbnail when isOurS3Url(row.thumbnail) is true.
+    return passthroughResult(row);
+  }
 
   const cacheId = cfg.getCacheId(row.link);
   let thumbnail: string | null = null;
   let persistedThumbnail: string | null = null;
 
-  if (isS3Configured()) {
-    if (isOurS3Url(row.thumbnail)) {
-      thumbnail = row.thumbnail;
-    } else if (cacheId) {
-      thumbnail = await cfg.cacheThumbnail(cacheId, meta.thumbnail);
-      persistedThumbnail = thumbnail;
-    }
-  } else {
+  if (haveCachedThumbnail) {
+    thumbnail = row.thumbnail;
+  } else if (isS3Configured() && cacheId) {
+    thumbnail = await cfg.cacheThumbnail(cacheId, meta.thumbnail);
+    persistedThumbnail = thumbnail;
+  } else if (!isS3Configured()) {
     thumbnail = getDevProxyThumbnailUrl(meta.thumbnail);
   }
 

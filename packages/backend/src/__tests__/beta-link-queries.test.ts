@@ -130,12 +130,26 @@ describe('betaLinks resolver', () => {
     expect(fetchTikTokMetaMock).not.toHaveBeenCalled();
   });
 
-  it('drops Instagram rows that come back as gone', async () => {
+  it('drops Instagram rows that come back as gone with no cached thumbnail', async () => {
     selectMock.mockReturnValueOnce([row({ link: 'https://www.instagram.com/p/GONE/' })]);
     fetchInstagramMetaMock.mockResolvedValueOnce({ status: 'gone' });
 
     const result = await betaLinkQueries.betaLinks(undefined, { boardType: 'kilter', climbUuid: 'climb-1' });
     expect(result).toEqual([]);
+  });
+
+  it('keeps gone rows when we already have our own cached thumbnail (gone is heuristic)', async () => {
+    // The `gone` detector is HTML-based and false-positives during IG
+    // login-wall / rate-limit responses. If we have a cached thumbnail we
+    // can render, trust the cache over the live signal.
+    selectMock.mockReturnValueOnce([
+      row({ link: 'https://www.instagram.com/p/ABC/', thumbnail: OUR_S3_THUMB, foreignUsername: null }),
+    ]);
+    fetchInstagramMetaMock.mockResolvedValueOnce({ status: 'gone' });
+
+    const result = await betaLinkQueries.betaLinks(undefined, { boardType: 'kilter', climbUuid: 'climb-1' });
+    expect(result).toHaveLength(1);
+    expect(result[0]).toMatchObject({ thumbnail: OUR_S3_THUMB });
   });
 
   it('passes through rows on transient_error, only serving an S3-cached thumbnail', async () => {
