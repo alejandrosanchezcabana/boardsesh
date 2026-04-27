@@ -11,6 +11,85 @@ import { resolveBoardFromPath } from '../social/boards';
 import { publishSocialEvent } from '../../../events';
 import { assignInferredSession } from '../../../jobs/inferred-session-builder';
 import { publishDebouncedSessionStats } from '../sessions/debounced-stats-publisher';
+import { getInstagramMediaId, isInstagramUrl } from '../../../lib/instagram-meta';
+import {
+  InstagramBetaValidationError,
+  validateInstagramBetaLink,
+  type InstagramPageMetadata,
+} from '../../../utils/instagram-beta-validation';
+import { cacheInstagramThumbnail, isS3Configured } from '../../../lib/beta-link-thumbnails';
+
+async function getClimbNameForBetaValidation(boardType: string, climbUuid: string): Promise<string> {
+  const [climb] = await db
+    .select({ name: dbSchema.boardClimbs.name })
+    .from(dbSchema.boardClimbs)
+    .where(and(eq(dbSchema.boardClimbs.boardType, boardType), eq(dbSchema.boardClimbs.uuid, climbUuid)))
+    .limit(1);
+
+  const climbName = climb?.name?.trim();
+  if (!climbName) {
+    throw new InstagramBetaValidationError("We couldn't verify this Instagram link for the selected climb.");
+  }
+  return climbName;
+}
+
+async function ensureInstagramShortcodeIsNotAlreadyLinked(
+  boardType: string,
+  selectedClimbUuid: string,
+  instagramUrl: string,
+): Promise<void> {
+  const incomingShortcode = getInstagramMediaId(instagramUrl);
+  if (!incomingShortcode) return;
+
+  const existingLinks = await db
+    .select({
+      climbName: dbSchema.boardClimbs.name,
+      climbUuid: dbSchema.boardBetaLinks.climbUuid,
+      link: dbSchema.boardBetaLinks.link,
+    })
+    .from(dbSchema.boardBetaLinks)
+    .innerJoin(
+      dbSchema.boardClimbs,
+      and(
+        eq(dbSchema.boardClimbs.boardType, dbSchema.boardBetaLinks.boardType),
+        eq(dbSchema.boardClimbs.uuid, dbSchema.boardBetaLinks.climbUuid),
+      ),
+    )
+    .where(eq(dbSchema.boardBetaLinks.boardType, boardType));
+
+  for (const entry of existingLinks) {
+    if (getInstagramMediaId(entry.link) !== incomingShortcode) continue;
+
+    if (entry.climbUuid === selectedClimbUuid) {
+      throw new InstagramBetaValidationError(
+        'We already have this Instagram video linked for this climb. Try a different post or reel.',
+      );
+    }
+
+    throw new InstagramBetaValidationError(
+      `This Instagram post is already attached to "${entry.climbName}". Multi-climb slideshows are hard to navigate — please post a separate reel for this climb and share that one instead.`,
+    );
+  }
+}
+
+type EnrichedBetaInsert = {
+  thumbnail: string | null;
+  foreignUsername: string | null;
+};
+
+async function enrichInstagramBetaInsert(metadata: InstagramPageMetadata): Promise<EnrichedBetaInsert> {
+  if (!isS3Configured() || !metadata.imageUrl) {
+    return { thumbnail: null, foreignUsername: null };
+  }
+
+  const mediaId = metadata.mediaId;
+  if (!mediaId) {
+    return { thumbnail: null, foreignUsername: null };
+  }
+
+  const cached = await cacheInstagramThumbnail(mediaId, metadata.imageUrl);
+  return { thumbnail: cached, foreignUsername: null };
+}
 
 export const tickMutations = {
   /**
@@ -104,6 +183,26 @@ export const tickMutations = {
       );
     }
 
+    // Run write-time Instagram validation before opening the transaction so a
+    // bad video URL doesn't leave a half-state. Zod already validated the
+    // surface shape; this confirms the post is actually public, mentions the
+    // climb name, and isn't already attached to another climb. TikTok / other
+    // platforms skip the deep validation — only the regex check applies.
+    const shouldAttachBeta =
+      validatedInput.videoUrl && (validatedInput.status === 'flash' || validatedInput.status === 'send');
+    let enrichedInsert: EnrichedBetaInsert = { thumbnail: null, foreignUsername: null };
+
+    if (shouldAttachBeta && validatedInput.videoUrl && isInstagramUrl(validatedInput.videoUrl)) {
+      const climbName = await getClimbNameForBetaValidation(validatedInput.boardType, validatedInput.climbUuid);
+      await ensureInstagramShortcodeIsNotAlreadyLinked(
+        validatedInput.boardType,
+        validatedInput.climbUuid,
+        validatedInput.videoUrl,
+      );
+      const metadata = await validateInstagramBetaLink(validatedInput.videoUrl, climbName);
+      enrichedInsert = await enrichInstagramBetaInsert(metadata);
+    }
+
     // Insert into database
     const [tick] = await db.transaction(async (tx) => {
       const [createdTick] = await tx
@@ -138,12 +237,9 @@ export const tickMutations = {
         await tx.update(sessions).set({ lastActivity: new Date() }).where(eq(sessions.id, validatedInput.sessionId));
       }
 
-      // Attach the Instagram URL as community beta for this climb if the
-      // user provided one on a successful ascent. Zod already validated the
-      // URL format; the (boardType, climbUuid, link) PK makes re-submission
-      // idempotent.
-      const shouldAttachBeta =
-        validatedInput.videoUrl && (validatedInput.status === 'flash' || validatedInput.status === 'send');
+      // Attach the video URL as community beta for this climb if the user
+      // provided one on a successful ascent. The (boardType, climbUuid, link)
+      // PK makes re-submission idempotent.
       if (shouldAttachBeta) {
         await tx
           .insert(dbSchema.boardBetaLinks)
@@ -153,6 +249,8 @@ export const tickMutations = {
             link: validatedInput.videoUrl!,
             angle: validatedInput.angle,
             isListed: true,
+            thumbnail: enrichedInsert.thumbnail,
+            foreignUsername: enrichedInsert.foreignUsername,
             createdAt: now,
           })
           .onConflictDoNothing();
@@ -218,6 +316,15 @@ export const tickMutations = {
     const validated = validateInput(AttachBetaLinkInputSchema, input, 'input');
     const now = new Date().toISOString();
 
+    let enrichedInsert: EnrichedBetaInsert = { thumbnail: null, foreignUsername: null };
+
+    if (isInstagramUrl(validated.link)) {
+      const climbName = await getClimbNameForBetaValidation(validated.boardType, validated.climbUuid);
+      await ensureInstagramShortcodeIsNotAlreadyLinked(validated.boardType, validated.climbUuid, validated.link);
+      const metadata = await validateInstagramBetaLink(validated.link, climbName);
+      enrichedInsert = await enrichInstagramBetaInsert(metadata);
+    }
+
     await db
       .insert(dbSchema.boardBetaLinks)
       .values({
@@ -226,6 +333,8 @@ export const tickMutations = {
         link: validated.link,
         angle: validated.angle ?? null,
         isListed: true,
+        thumbnail: enrichedInsert.thumbnail,
+        foreignUsername: enrichedInsert.foreignUsername,
         createdAt: now,
       })
       .onConflictDoNothing();
