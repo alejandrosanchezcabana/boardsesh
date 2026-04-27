@@ -13,7 +13,20 @@ const USER_AGENT =
 
 export const dynamic = 'force-dynamic';
 
+/**
+ * Disable the proxy whenever real S3 storage is configured. The proxy only
+ * exists for the dev path where thumbnails can't be cached to a public bucket;
+ * any environment with `AWS_S3_BUCKET_NAME` set should serve persisted S3
+ * URLs directly. Returning 410 closes off a needless SSRF surface in prod.
+ */
+function isProxyDisabled(): boolean {
+  return !!process.env.AWS_S3_BUCKET_NAME;
+}
+
 export async function GET(request: NextRequest) {
+  if (isProxyDisabled()) {
+    return new NextResponse('Disabled', { status: 410 });
+  }
   const target = request.nextUrl.searchParams.get('url');
   if (!target) return new NextResponse('Missing url', { status: 400 });
 

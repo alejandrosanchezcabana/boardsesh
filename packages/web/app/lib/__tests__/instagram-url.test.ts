@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vite-plus/test';
 import type { BetaLink } from '@/app/lib/api-wrappers/sync-api-types';
-import { dedupeBetaLinks, getInstagramEmbedUrl, getInstagramMediaId, isInstagramUrl } from '../instagram-url';
+import { dedupeBetaLinks } from '../beta-video-url';
+import { getInstagramEmbedUrl, getInstagramMediaId, isInstagramUrl } from '../instagram-url';
 
 function makeBetaLink(overrides: Partial<BetaLink>): BetaLink {
   return {

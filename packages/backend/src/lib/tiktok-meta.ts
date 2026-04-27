@@ -1,19 +1,13 @@
 import { createHash } from 'node:crypto';
+import { getTikTokVideoId, isTikTokUrl, TIKTOK_URL_REGEX } from '@boardsesh/shared-schema';
+
+export { TIKTOK_URL_REGEX, isTikTokUrl };
 
 const FETCH_TIMEOUT_MS = 4000;
 const USER_AGENT =
   'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.0 Safari/605.1.15';
 
-// Match any tiktok host: tiktok.com, www.tiktok.com, vm.tiktok.com, vt.tiktok.com,
-// m.tiktok.com, t.tiktok.com. oEmbed accepts all of these so we don't need to
-// normalize the URL before resolving.
-export const TIKTOK_URL_REGEX = /^https?:\/\/(?:[a-z0-9-]+\.)?tiktok\.com\//i;
-
-const LONG_FORM_VIDEO_ID = /^https?:\/\/(?:www\.|m\.)?tiktok\.com\/@[\w.-]+\/video\/(\d+)/i;
-
-export function isTikTokUrl(url: string): boolean {
-  return TIKTOK_URL_REGEX.test(url);
-}
+export const TIKTOK_META_TTL_MS = 10 * 60 * 1000;
 
 /**
  * Stable cache key for a TikTok URL.
@@ -24,8 +18,8 @@ export function isTikTokUrl(url: string): boolean {
  * fall back to a hash of the URL — we don't expand them.
  */
 export function getTikTokCacheId(url: string): string | null {
-  const match = url.match(LONG_FORM_VIDEO_ID);
-  if (match) return match[1];
+  const videoId = getTikTokVideoId(url);
+  if (videoId) return videoId;
   if (!isTikTokUrl(url)) return null;
   return `s${createHash('sha1').update(url).digest('hex').slice(0, 16)}`;
 }
@@ -41,7 +35,15 @@ type OEmbedResponse = {
   author_name?: string;
 };
 
-export async function fetchTikTokMeta(url: string): Promise<TikTokMetaResult> {
+const metaCache = new Map<string, { data: TikTokMetaResult; expiresAt: number }>();
+const inflight = new Map<string, Promise<TikTokMetaResult>>();
+
+export function clearTikTokMetaCache(): void {
+  metaCache.clear();
+  inflight.clear();
+}
+
+async function fetchTikTokMetaUncached(url: string): Promise<TikTokMetaResult> {
   if (!isTikTokUrl(url)) return { status: 'gone' };
 
   const oembedUrl = `https://www.tiktok.com/oembed?url=${encodeURIComponent(url)}`;
@@ -63,9 +65,8 @@ export async function fetchTikTokMeta(url: string): Promise<TikTokMetaResult> {
     return { status: 'transient_error' };
   }
 
-  // 404 / 410 → the video is private or deleted. Other non-2xx → treat as
-  // transient (rate limit, edge hiccup) so we keep showing the cached
-  // thumbnail next time.
+  // 404 / 410 → the video is private or deleted. Other non-2xx → transient
+  // (rate limit, edge hiccup) so we keep showing the cached thumbnail.
   if (res.status === 404 || res.status === 410) return { status: 'gone' };
   if (!res.ok) return { status: 'transient_error' };
 
@@ -76,11 +77,40 @@ export async function fetchTikTokMeta(url: string): Promise<TikTokMetaResult> {
     return { status: 'transient_error' };
   }
 
-  if (!data.thumbnail_url) return { status: 'gone' };
+  // Some 200s come back without a thumbnail_url during edge / rate-limit
+  // hiccups. Prefer transient_error over `gone` so we don't drop a real
+  // beta video — `gone` only fires on explicit 404/410 above.
+  if (!data.thumbnail_url) return { status: 'transient_error' };
 
   return {
     status: 'ok',
     thumbnail: data.thumbnail_url,
     username: data.author_unique_id ?? data.author_name ?? null,
   };
+}
+
+export async function fetchTikTokMeta(url: string): Promise<TikTokMetaResult> {
+  const now = Date.now();
+  const cached = metaCache.get(url);
+  if (cached && cached.expiresAt > now) {
+    return cached.data;
+  }
+
+  const existing = inflight.get(url);
+  if (existing) return existing;
+
+  const promise = fetchTikTokMetaUncached(url)
+    .then((result) => {
+      // Only cache terminal results — don't pin transient errors.
+      if (result.status !== 'transient_error') {
+        metaCache.set(url, { data: result, expiresAt: Date.now() + TIKTOK_META_TTL_MS });
+      }
+      return result;
+    })
+    .finally(() => {
+      inflight.delete(url);
+    });
+
+  inflight.set(url, promise);
+  return promise;
 }

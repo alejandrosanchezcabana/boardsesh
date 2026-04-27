@@ -19,6 +19,9 @@ import AttachBetaLinkForm from '@/app/components/beta-videos/attach-beta-link-fo
 import { useSnackbar } from '@/app/components/providers/snackbar-provider';
 import { buildInstagramCaption, copyAndOpenInstagram, getBoardDisplayName } from '@/app/lib/instagram-posting';
 import type { BetaLink } from '@/app/lib/api-wrappers/sync-api-types';
+import { mapBetaLinksResponse } from '@/app/lib/beta-video-url';
+import { createGraphQLHttpClient } from '@/app/lib/graphql/client';
+import { GET_BETA_LINKS } from '@/app/lib/graphql/operations/beta-links';
 import { themeTokens } from '@/app/theme/theme-config';
 
 export type InstagramPostingTarget = {
@@ -53,9 +56,12 @@ export default function PostToInstagramDialog({ open, onClose, item }: PostToIns
     queryKey: ['betaLinks', item?.boardType, item?.climbUuid],
     queryFn: async () => {
       if (!item) return [];
-      const res = await fetch(`/api/v1/${item.boardType}/beta/${item.climbUuid}`);
-      if (!res.ok) return [];
-      return res.json();
+      const client = createGraphQLHttpClient();
+      const result = await client.request<{ betaLinks: Parameters<typeof mapBetaLinksResponse>[0] }>(GET_BETA_LINKS, {
+        boardType: item.boardType,
+        climbUuid: item.climbUuid,
+      });
+      return mapBetaLinksResponse(result.betaLinks);
     },
     enabled: open && !!item,
     staleTime: 5 * 60 * 1000,

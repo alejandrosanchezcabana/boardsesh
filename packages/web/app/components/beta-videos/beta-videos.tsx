@@ -14,7 +14,8 @@ import { Instagram, PersonOutlined, ExpandLessOutlined } from '@mui/icons-materi
 import ExpandMoreOutlined from '@mui/icons-material/ExpandMoreOutlined';
 import { EmptyState } from '@/app/components/ui/empty-state';
 import type { BetaLink } from '@/app/lib/api-wrappers/sync-api-types';
-import { dedupeBetaLinks, getInstagramEmbedUrl } from '@/app/lib/instagram-url';
+import { dedupeBetaLinks } from '@/app/lib/beta-video-url';
+import { getInstagramEmbedUrl } from '@/app/lib/instagram-url';
 import { themeTokens } from '@/app/theme/theme-config';
 
 type BetaVideosProps = {

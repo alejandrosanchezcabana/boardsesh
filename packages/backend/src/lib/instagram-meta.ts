@@ -1,20 +1,12 @@
+import { getInstagramMediaId, INSTAGRAM_URL_REGEX, isInstagramUrl } from '@boardsesh/shared-schema';
+
+export { INSTAGRAM_URL_REGEX, isInstagramUrl, getInstagramMediaId };
+
 const FETCH_TIMEOUT_MS = 4000;
 const USER_AGENT =
   'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.0 Safari/605.1.15';
 
 export const INSTAGRAM_META_TTL_MS = 10 * 60 * 1000;
-
-export const INSTAGRAM_URL_REGEX =
-  /^https?:\/\/(?:www\.)?(?:instagram\.com|instagr\.am)\/(?:p|reel|tv)\/([\w-]+)\/?(?:[?#].*)?$/i;
-
-export function isInstagramUrl(url: string): boolean {
-  return INSTAGRAM_URL_REGEX.test(url);
-}
-
-export function getInstagramMediaId(url: string): string | null {
-  const match = url.match(INSTAGRAM_URL_REGEX);
-  return match?.[1] ?? null;
-}
 
 export type InstagramMetaResult =
   | { status: 'ok'; thumbnail: string; username: string | null }
@@ -38,6 +30,20 @@ function decodeJsonString(s: string): string {
   } catch {
     return s;
   }
+}
+
+/**
+ * IG sometimes serves a 200 OK login wall (rate limit, age-gate, geo-block)
+ * instead of the embed page. The login wall has no `EmbeddedMediaImage` /
+ * `og:image` so the regular path would classify it as `gone`. Detect a
+ * couple of stable signals so we can map it to `transient_error` instead.
+ */
+function looksLikeLoginWall(html: string): boolean {
+  return (
+    /accounts\/login/i.test(html) ||
+    /<title>\s*Login\s*[••]\s*Instagram\s*<\/title>/i.test(html) ||
+    /Please wait a few minutes before you try again/i.test(html)
+  );
 }
 
 const metaCache = new Map<string, { data: InstagramMetaResult; expiresAt: number }>();
@@ -106,7 +112,13 @@ async function fetchInstagramMetaUncached(url: string): Promise<InstagramMetaRes
   }
 
   if (!thumbnail) {
-    // 200 OK but no embedded image — post is private/deleted/age-gated.
+    // 200 OK but no embedded image — could be a real "post is gone" page
+    // *or* a login wall served by Instagram during rate-limit / age-gate /
+    // geo-block. Treat the login-wall variants as transient so we don't
+    // silently drop a real beta link the next time the resolver runs.
+    if (looksLikeLoginWall(html)) {
+      return { status: 'transient_error' };
+    }
     return { status: 'gone' };
   }
 

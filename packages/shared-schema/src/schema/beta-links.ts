@@ -1,6 +1,6 @@
 export const betaLinksTypeDefs = /* GraphQL */ `
   """
-  An external Instagram beta link attached to a climb.
+  An external Instagram or TikTok beta link attached to a climb.
   Thumbnail (when present) is served from our own S3 bucket.
   """
   type BetaLink {

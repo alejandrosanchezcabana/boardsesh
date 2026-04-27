@@ -78,6 +78,18 @@ describe('fetchInstagramMeta', () => {
     expect(result).toEqual({ status: 'gone' });
   });
 
+  it('maps login-wall 200 to transient_error so we keep the cached thumbnail', async () => {
+    mockFetchOnce(`<html><body><a href="/accounts/login">Log in</a></body></html>`);
+    const result = await fetchInstagramMeta(SAMPLE_URL);
+    expect(result).toEqual({ status: 'transient_error' });
+  });
+
+  it('maps rate-limit interstitial to transient_error', async () => {
+    mockFetchOnce(`<html><body>Please wait a few minutes before you try again</body></html>`);
+    const result = await fetchInstagramMeta(SAMPLE_URL);
+    expect(result).toEqual({ status: 'transient_error' });
+  });
+
   it('returns transient_error on non-OK response', async () => {
     mockFetchOnce('', 503);
     const result = await fetchInstagramMeta(SAMPLE_URL);

@@ -15,6 +15,11 @@ describe('isTikTokUrl', () => {
     expect(isTikTokUrl('https://t.tiktok.com/abc')).toBe(true);
   });
 
+  it('accepts multi-subdomain hosts', () => {
+    expect(isTikTokUrl('https://www.us.tiktok.com/@a/video/1')).toBe(true);
+    expect(isTikTokUrl('https://a.b.c.tiktok.com/foo')).toBe(true);
+  });
+
   it('rejects non-tiktok hosts and lookalikes', () => {
     expect(isTikTokUrl('https://www.instagram.com/reel/ABC/')).toBe(false);
     expect(isTikTokUrl('https://nottiktok.com/@a/video/1')).toBe(false);
