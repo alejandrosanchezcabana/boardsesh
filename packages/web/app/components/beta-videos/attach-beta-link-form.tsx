@@ -6,6 +6,7 @@ import Button from '@mui/material/Button';
 import CircularProgress from '@mui/material/CircularProgress';
 import Box from '@mui/material/Box';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { track } from '@vercel/analytics';
 import { createGraphQLHttpClient } from '@/app/lib/graphql/client';
 import { useWsAuthToken } from '@/app/hooks/use-ws-auth-token';
 import {
@@ -73,6 +74,11 @@ const AttachBetaLinkForm: React.FC<AttachBetaLinkFormProps> = ({
     },
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: ['betaLinks', boardType, climbUuid] });
+      track('Beta Video Added', {
+        boardType,
+        climbUuid,
+        platform: /tiktok\.com/i.test(trimmed) ? 'TikTok' : 'Instagram',
+      });
       showMessage('Video added to beta', 'success');
       setUrl('');
       onSuccess?.();

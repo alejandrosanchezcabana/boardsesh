@@ -1,6 +1,6 @@
 'use client';
 
-import React from 'react';
+import React, { useEffect, useRef } from 'react';
 import Box from '@mui/material/Box';
 import AttachBetaLinkForm from './attach-beta-link-form';
 
@@ -24,6 +24,16 @@ const BoardseshBetaAddPanel: React.FC<BoardseshBetaAddPanelProps> = ({
   onCancel,
   onSuccess,
 }) => {
+  // Reset add-mode in the parent whenever this panel goes away — covers the
+  // case where the user collapses the section mid-add (lazy: true unmounts
+  // the form and its draft URL state). Idempotent w.r.t. success/cancel
+  // paths, which already flip the flag.
+  const onCancelRef = useRef(onCancel);
+  useEffect(() => {
+    onCancelRef.current = onCancel;
+  });
+  useEffect(() => () => onCancelRef.current(), []);
+
   return (
     <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5, px: 1.5, pt: 1.5, pb: 0.5 }}>
       <AttachBetaLinkForm

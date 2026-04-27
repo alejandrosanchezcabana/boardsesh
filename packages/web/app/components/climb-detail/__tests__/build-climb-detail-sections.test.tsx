@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 import { describe, it, expect, vi, beforeEach } from 'vite-plus/test';
-import React from 'react';
-import { renderHook } from '@testing-library/react';
+import React, { act } from 'react';
+import { renderHook, render, screen, waitFor } from '@testing-library/react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { useBuildClimbDetailSections } from '../build-climb-detail-sections';
 import type { Climb } from '@/app/lib/types';
@@ -10,9 +10,11 @@ import type { Climb } from '@/app/lib/types';
 // Mocks
 // ---------------------------------------------------------------------------
 
-// Mock next/navigation
+// Mock next/navigation. Tests can mutate `mockSearchParams` to vary the
+// resolved query string per case.
+let mockSearchParams = new URLSearchParams();
 vi.mock('next/navigation', () => ({
-  useSearchParams: () => new URLSearchParams(),
+  useSearchParams: () => mockSearchParams,
 }));
 
 // Mock child components to avoid pulling in their dependency trees
@@ -29,12 +31,29 @@ vi.mock('@/app/components/social/climb-social-section', () => ({
 vi.mock('@/app/components/charts/climb-analytics', () => ({
   default: () => null,
 }));
-vi.mock('@/app/components/beta-videos/boardsesh-beta-section', () => ({
+vi.mock('@/app/components/beta-videos/boardsesh-beta-list', () => ({
+  default: () => <div data-testid="beta-list" />,
+}));
+vi.mock('@/app/components/beta-videos/boardsesh-beta-add-panel', () => ({
+  default: () => <div data-testid="beta-add-panel" />,
+}));
+vi.mock('@/app/components/beta-videos/boardsesh-beta-add-button', () => ({
   default: () => null,
 }));
+
+// Mutable mock payload for the betaLinks GraphQL query.
+let mockBetaLinks: Array<{
+  climbUuid: string;
+  link: string;
+  foreignUsername: string | null;
+  angle: number | null;
+  thumbnail: string | null;
+  isListed: boolean;
+  createdAt: string;
+}> = [];
 vi.mock('@/app/lib/graphql/client', () => ({
   createGraphQLHttpClient: () => ({
-    request: async () => ({ betaLinks: [] }),
+    request: async () => ({ betaLinks: mockBetaLinks }),
   }),
 }));
 
@@ -98,6 +117,8 @@ const BASE_PROPS = {
 describe('useBuildClimbDetailSections', () => {
   beforeEach(() => {
     vi.restoreAllMocks();
+    mockSearchParams = new URLSearchParams();
+    mockBetaLinks = [];
   });
 
   it('returns 5 sections when enabled (default)', () => {
@@ -149,5 +170,102 @@ describe('useBuildClimbDetailSections', () => {
 
     const beta = result.current.find((s) => s.key === 'beta');
     expect(beta?.defaultActive).toBe(true);
+  });
+
+  it('beta is NOT default-active when proposalUuid is set (community wins)', () => {
+    mockSearchParams = new URLSearchParams('proposalUuid=abc');
+    const { result } = renderHook(() => useBuildClimbDetailSections(BASE_PROPS), {
+      wrapper: createWrapper(),
+    });
+
+    const beta = result.current.find((s) => s.key === 'beta');
+    const community = result.current.find((s) => s.key === 'community');
+    expect(beta?.defaultActive).toBe(false);
+    expect(community?.defaultActive).toBe(true);
+  });
+
+  it('getSummary returns the deduped video count once betaLinks loads', async () => {
+    mockBetaLinks = [
+      {
+        climbUuid: MOCK_CLIMB.uuid,
+        link: 'https://www.instagram.com/reel/aaa/',
+        foreignUsername: 'a',
+        angle: 40,
+        thumbnail: null,
+        isListed: true,
+        createdAt: '2024-01-01',
+      },
+      {
+        climbUuid: MOCK_CLIMB.uuid,
+        link: 'https://www.instagram.com/reel/bbb/',
+        foreignUsername: 'b',
+        angle: 40,
+        thumbnail: null,
+        isListed: true,
+        createdAt: '2024-01-02',
+      },
+      {
+        climbUuid: MOCK_CLIMB.uuid,
+        link: 'https://www.tiktok.com/@user/video/123',
+        foreignUsername: 'c',
+        angle: 40,
+        thumbnail: null,
+        isListed: true,
+        createdAt: '2024-01-03',
+      },
+    ];
+
+    const { result } = renderHook(() => useBuildClimbDetailSections(BASE_PROPS), {
+      wrapper: createWrapper(),
+    });
+
+    await waitFor(() => {
+      const beta = result.current.find((s) => s.key === 'beta');
+      expect(beta?.getSummary?.()).toEqual(['3 videos']);
+    });
+  });
+
+  it('getSummary uses singular form for one video', async () => {
+    mockBetaLinks = [
+      {
+        climbUuid: MOCK_CLIMB.uuid,
+        link: 'https://www.instagram.com/reel/aaa/',
+        foreignUsername: 'a',
+        angle: 40,
+        thumbnail: null,
+        isListed: true,
+        createdAt: '2024-01-01',
+      },
+    ];
+
+    const { result } = renderHook(() => useBuildClimbDetailSections(BASE_PROPS), {
+      wrapper: createWrapper(),
+    });
+
+    await waitFor(() => {
+      const beta = result.current.find((s) => s.key === 'beta');
+      expect(beta?.getSummary?.()).toEqual(['1 video']);
+    });
+  });
+
+  it('beta content swaps from list to add panel when the action toggle fires', () => {
+    const { result } = renderHook(() => useBuildClimbDetailSections(BASE_PROPS), {
+      wrapper: createWrapper(),
+    });
+
+    const initialBeta = result.current.find((s) => s.key === 'beta')!;
+    const { rerender } = render(<>{initialBeta.content}</>);
+    expect(screen.queryByTestId('beta-list')).not.toBeNull();
+    expect(screen.queryByTestId('beta-add-panel')).toBeNull();
+
+    const action = initialBeta.action as React.ReactElement<{ onToggle: () => void }>;
+    act(() => {
+      action.props.onToggle();
+    });
+
+    const nextBeta = result.current.find((s) => s.key === 'beta')!;
+    rerender(<>{nextBeta.content}</>);
+    expect(screen.queryByTestId('beta-add-panel')).not.toBeNull();
+    expect(screen.queryByTestId('beta-list')).toBeNull();
   });
 });

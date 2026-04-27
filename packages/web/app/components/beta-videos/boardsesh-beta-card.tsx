@@ -2,6 +2,7 @@
 
 import React, { useState } from 'react';
 import Instagram from '@mui/icons-material/Instagram';
+import { track } from '@vercel/analytics';
 import type { BetaLink } from '@/app/lib/api-wrappers/sync-api-types';
 import { isTikTokUrl } from '@/app/lib/tiktok-url';
 import TikTokIcon from './tiktok-icon';
@@ -25,6 +26,13 @@ const BoardseshBetaCard: React.FC<BoardseshBetaCardProps> = ({ link }) => {
       rel="noopener noreferrer"
       className={styles.card}
       aria-label={`Open beta on ${platformName}${link.foreign_username ? ` by ${link.foreign_username}` : ''}`}
+      onClick={() =>
+        track('Beta Video Link Clicked', {
+          platform: platformName,
+          climbUuid: link.climb_uuid,
+          foreignUsername: link.foreign_username ?? '',
+        })
+      }
     >
       <div className={styles.thumbnailWrapper}>
         {thumbnailSrc ? (

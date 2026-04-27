@@ -72,7 +72,7 @@ export function dedupeBetaLinks(betaLinks: BetaLink[]): BetaLink[] {
 
 /**
  * Maps the GraphQL `betaLinks` response into the `BetaLink` shape used by
- * the rest of the web app. Used by both `BoardseshBetaSection` and the IG
+ * the rest of the web app. Used by both `BoardseshBetaList` and the IG
  * post dialog.
  */
 type BetaLinksGqlRow = {

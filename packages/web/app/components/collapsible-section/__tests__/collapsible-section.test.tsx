@@ -60,6 +60,19 @@ describe('CollapsibleSection', () => {
       render(<CollapsibleSection sections={sections} />);
       expect(screen.getByText('Recent activity')).toBeDefined();
     });
+
+    it('honours defaultActive when sections arrive on a later render', () => {
+      // Simulates the play-drawer deferred-mount path: parent first renders
+      // with no sections, then the climb-detail hook returns the real list
+      // a tick later.
+      const { rerender } = render(<CollapsibleSection sections={[]} />);
+      expect(screen.queryByText('Recent activity')).toBeNull();
+
+      const sections = makeSections();
+      sections[1].defaultActive = true;
+      rerender(<CollapsibleSection sections={sections} />);
+      expect(screen.getByText('Recent activity')).toBeDefined();
+    });
   });
 
   describe('controlled mode (forcedActiveKey)', () => {

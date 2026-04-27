@@ -19,10 +19,7 @@ const BoardseshBetaAddButton: React.FC<BoardseshBetaAddButtonProps> = ({ isAddin
   return (
     <IconButton
       size="small"
-      onClick={(event) => {
-        event.stopPropagation();
-        onToggle();
-      }}
+      onClick={onToggle}
       aria-label={isAdding ? 'Cancel adding beta video' : 'Add beta video'}
       sx={{ color: 'text.primary' }}
     >

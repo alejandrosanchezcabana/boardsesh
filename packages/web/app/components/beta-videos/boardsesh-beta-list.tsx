@@ -4,42 +4,14 @@ import React from 'react';
 import Skeleton from '@mui/material/Skeleton';
 import type { BetaLink } from '@/app/lib/api-wrappers/sync-api-types';
 import BoardseshBetaCard from './boardsesh-beta-card';
-import BoardseshBetaAddPanel from './boardsesh-beta-add-panel';
 import styles from './boardsesh-beta.module.css';
 
-type BoardseshBetaSectionProps = {
-  boardType: string;
-  climbUuid: string;
-  angle: number;
+type BoardseshBetaListProps = {
   links: BetaLink[];
   isLoading: boolean;
-  isAdding: boolean;
-  onCancelAdd: () => void;
-  onAddSuccess: () => void;
 };
 
-const BoardseshBetaSection: React.FC<BoardseshBetaSectionProps> = ({
-  boardType,
-  climbUuid,
-  angle,
-  links,
-  isLoading,
-  isAdding,
-  onCancelAdd,
-  onAddSuccess,
-}) => {
-  if (isAdding) {
-    return (
-      <BoardseshBetaAddPanel
-        boardType={boardType}
-        climbUuid={climbUuid}
-        angle={angle}
-        onCancel={onCancelAdd}
-        onSuccess={onAddSuccess}
-      />
-    );
-  }
-
+const BoardseshBetaList: React.FC<BoardseshBetaListProps> = ({ links, isLoading }) => {
   return (
     <div className={styles.section}>
       <div className={styles.scrollContainer}>
@@ -64,4 +36,4 @@ const BoardseshBetaSection: React.FC<BoardseshBetaSectionProps> = ({
   );
 };
 
-export default BoardseshBetaSection;
+export default BoardseshBetaList;
