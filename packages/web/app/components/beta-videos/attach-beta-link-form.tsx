@@ -6,6 +6,7 @@ import Button from '@mui/material/Button';
 import CircularProgress from '@mui/material/CircularProgress';
 import Box from '@mui/material/Box';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { track } from '@vercel/analytics';
 import { createGraphQLHttpClient } from '@/app/lib/graphql/client';
 import { useWsAuthToken } from '@/app/hooks/use-ws-auth-token';
 import {
@@ -13,7 +14,12 @@ import {
   type AttachBetaLinkMutationVariables,
   type AttachBetaLinkMutationResponse,
 } from '@/app/lib/graphql/operations';
-import { isBetaVideoUrl, BETA_VIDEO_URL_VALIDATION_MESSAGE } from '@/app/lib/beta-video-url';
+import {
+  isBetaVideoUrl,
+  isInstagramUrl,
+  isTikTokUrl,
+  BETA_VIDEO_URL_VALIDATION_MESSAGE,
+} from '@/app/lib/beta-video-url';
 import { useSnackbar } from '@/app/components/providers/snackbar-provider';
 
 // graphql-request throws ClientError-shaped errors with a `response.errors[]`
@@ -91,6 +97,8 @@ const AttachBetaLinkForm: React.FC<AttachBetaLinkFormProps> = ({
     },
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: ['betaLinks', boardType, climbUuid] });
+      const platform = isTikTokUrl(trimmed) ? 'TikTok' : isInstagramUrl(trimmed) ? 'Instagram' : 'Unknown';
+      track('Beta Video Added', { boardType, climbUuid, platform });
       showMessage('Video added to beta', 'success');
       setUrl('');
       onSuccess?.();

@@ -10,7 +10,8 @@ import { LogbookSection, useLogbookSummary } from '@/app/components/logbook/logb
 import { CrewLogbookView } from '@/app/components/logbook/crew-logbook-view';
 import ClimbSocialSection from '@/app/components/social/climb-social-section';
 import ClimbAnalytics from '@/app/components/charts/climb-analytics';
-import BoardseshBetaSection from '@/app/components/beta-videos/boardsesh-beta-section';
+import BoardseshBetaList from '@/app/components/beta-videos/boardsesh-beta-list';
+import BoardseshBetaAddPanel from '@/app/components/beta-videos/boardsesh-beta-add-panel';
 import BoardseshBetaAddButton from '@/app/components/beta-videos/boardsesh-beta-add-button';
 import { createGraphQLHttpClient } from '@/app/lib/graphql/client';
 import { GET_BETA_LINKS } from '@/app/lib/graphql/operations/beta-links';
@@ -18,14 +19,14 @@ import { dedupeBetaLinks, mapBetaLinksResponse } from '@/app/lib/beta-video-url'
 import type { BetaLink } from '@/app/lib/api-wrappers/sync-api-types';
 import type { Climb } from '@/app/lib/types';
 
-const BETA_LABEL = (
+const betaLabel = (
   <Box component="span" sx={{ display: 'inline-flex', alignItems: 'center', gap: 0.75 }}>
     <VideocamOutlined sx={{ fontSize: 16 }} />
     Beta
   </Box>
 );
 
-const BETA_TITLE = (
+const betaTitle = (
   <Box component="span" sx={{ display: 'inline-flex', alignItems: 'center', gap: 1 }}>
     <VideocamOutlined sx={{ fontSize: 22 }} />
     Beta
@@ -92,8 +93,8 @@ export function useBuildClimbDetailSections({
   return [
     {
       key: 'beta',
-      label: BETA_LABEL,
-      title: BETA_TITLE,
+      label: betaLabel,
+      title: betaTitle,
       defaultSummary: 'No videos yet',
       getSummary: () => (betaCount > 0 ? [`${betaCount} video${betaCount !== 1 ? 's' : ''}`] : []),
       defaultActive: !highlightProposalUuid,
@@ -101,16 +102,19 @@ export function useBuildClimbDetailSections({
       lazy: true,
       action: <BoardseshBetaAddButton isAdding={isAddingBeta} onToggle={() => setIsAddingBeta((v) => !v)} />,
       content: (
-        <BoardseshBetaSection
-          boardType={boardType}
-          climbUuid={climbUuid}
-          angle={angle}
-          links={dedupedBetaLinks}
-          isLoading={betaLinksLoading}
-          isAdding={isAddingBeta}
-          onCancelAdd={() => setIsAddingBeta(false)}
-          onAddSuccess={() => setIsAddingBeta(false)}
-        />
+        <Box aria-live="polite">
+          {isAddingBeta ? (
+            <BoardseshBetaAddPanel
+              boardType={boardType}
+              climbUuid={climbUuid}
+              angle={angle}
+              onCancel={() => setIsAddingBeta(false)}
+              onSuccess={() => setIsAddingBeta(false)}
+            />
+          ) : (
+            <BoardseshBetaList links={dedupedBetaLinks} isLoading={betaLinksLoading} />
+          )}
+        </Box>
       ),
     },
     {
