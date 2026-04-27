@@ -6,6 +6,9 @@ import sharp from 'sharp';
 const ROOT = join(import.meta.dir, '..');
 const DESIGN = join(ROOT, 'design');
 const ICON_SVG = join(DESIGN, 'svg', 'icon-master.svg');
+// iOS applies its own squircle mask, so the source for Apple icons must be
+// flat (no corner radius) to avoid double-rounding.
+const ICON_IOS_SVG = join(DESIGN, 'svg', 'icon-master-ios.svg');
 const ICON_TRANSPARENT_SVG = join(DESIGN, 'svg', 'icon-master-transparent.svg');
 const OG_SVG = join(DESIGN, 'svg', 'og-image.svg');
 
@@ -28,7 +31,7 @@ const designJobs: RasterJob[] = [
     height: s,
   })),
   ...IOS_SIZES.map((s) => ({
-    svg: ICON_SVG,
+    svg: ICON_IOS_SVG,
     out: join(DESIGN, 'ios', `apple-icon-${s}.png`),
     width: s,
     height: s,

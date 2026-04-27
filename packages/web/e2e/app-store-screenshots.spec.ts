@@ -49,6 +49,19 @@ test.describe('App Store Screenshots', () => {
       if (document.head) inject();
       else document.addEventListener('DOMContentLoaded', inject);
     });
+    // Pretend we're inside the iOS Capacitor shell so isNativeApp() returns
+    // true. This hides the "Get the Boardsesh app" install prompt on the
+    // home page — that card is web-only and would never appear in the iOS
+    // build. The stub is intentionally minimal; we don't expose any plugin
+    // bridges, so screens that genuinely need the bridge (BLE adapter) keep
+    // their own gates.
+    await page.addInitScript(() => {
+      (window as unknown as { Capacitor: unknown }).Capacitor = {
+        isNativePlatform: () => true,
+        getPlatform: () => 'ios',
+        Plugins: {},
+      };
+    });
     await page.goto(boardUrl, { waitUntil: 'domcontentloaded', timeout: 60_000 });
     await page
       .waitForSelector('#onboarding-climb-card, [data-testid="climb-card"]', { timeout: 60_000 })
