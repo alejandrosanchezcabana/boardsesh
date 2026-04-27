@@ -16,6 +16,24 @@ import {
 import { isBetaVideoUrl, BETA_VIDEO_URL_VALIDATION_MESSAGE } from '@/app/lib/beta-video-url';
 import { useSnackbar } from '@/app/components/providers/snackbar-provider';
 
+// graphql-request throws ClientError-shaped errors with a `response.errors[]`
+// array. We trust those messages because they come from our own resolvers
+// (zod errors, InstagramBetaValidationError, our explicit throws). Anything
+// else — fetch failures, library bugs, `error.message` — is opaque and we
+// fall back to the generic toast so we never leak internal strings.
+function extractGraphQLErrorMessage(error: unknown): string | null {
+  if (!error || typeof error !== 'object') return null;
+  if (!('response' in error)) return null;
+  const response = (error as { response?: unknown }).response;
+  if (!response || typeof response !== 'object' || !('errors' in response)) return null;
+  const errors = (response as { errors?: unknown }).errors;
+  if (!Array.isArray(errors) || errors.length === 0) return null;
+  const first = errors[0];
+  if (!first || typeof first !== 'object' || !('message' in first)) return null;
+  const message = (first as { message?: unknown }).message;
+  return typeof message === 'string' && message.length > 0 ? message : null;
+}
+
 type AttachBetaLinkFormProps = {
   boardType: string;
   climbUuid: string;
@@ -78,18 +96,13 @@ const AttachBetaLinkForm: React.FC<AttachBetaLinkFormProps> = ({
       onSuccess?.();
     },
     onError: (error) => {
-      let message = 'Couldn’t add video. Try again.';
-      if (error instanceof Error) {
-        if ('response' in error && typeof error.response === 'object' && error.response !== null) {
-          const response = error.response as { errors?: Array<{ message: string }> };
-          if (response.errors?.length) {
-            message = response.errors[0].message;
-          }
-        } else if (error.message) {
-          message = error.message;
-        }
-      }
-      showMessage(message, 'error');
+      // Surface the GraphQL resolver's user-facing error message (the validator
+      // throws InstagramBetaValidationError with a message we want users to
+      // see). Don't fall back to error.message — for non-GraphQL failures
+      // (network, library internals, type assertions) that field can carry
+      // raw stack traces or implementation strings that shouldn't be shown.
+      const serverMessage = extractGraphQLErrorMessage(error);
+      showMessage(serverMessage ?? 'Couldn’t add video. Try again.', 'error');
     },
   });
 

@@ -4,7 +4,7 @@ import type { ConnectionContext } from '@boardsesh/shared-schema';
 import { db } from '../../../db/client';
 import * as dbSchema from '@boardsesh/db/schema';
 import { sessions } from '../../../db/schema';
-import { requireAuthenticated, validateInput, isNoMatchClimb } from '../shared/helpers';
+import { applyRateLimit, requireAuthenticated, validateInput, isNoMatchClimb } from '../shared/helpers';
 import { getConsensusDifficultyName } from '../shared/sql-expressions';
 import { SaveTickInputSchema, UpdateTickInputSchema, AttachBetaLinkInputSchema } from '../../../validation/schemas';
 import { resolveBoardFromPath } from '../social/boards';
@@ -134,8 +134,11 @@ async function enrichInstagramBetaInsert(metadata: InstagramPageMetadata): Promi
 // Single gated entrypoint for write-time beta-link validation. Non-Instagram
 // URLs (TikTok and other zod-allowed platforms) skip the deep checks and
 // return null thumbnail/username — the read-time `betaLinks` resolver will
-// enrich them lazily. Exported for testing.
+// enrich them lazily. The `ctx` is used to apply per-user rate limiting on
+// the outbound IG fetch (only when we'd actually hit the network).
+// Exported for testing.
 export async function validateAndEnrichBetaLinkInsert(
+  ctx: ConnectionContext,
   boardType: string,
   climbUuid: string,
   url: string,
@@ -143,6 +146,11 @@ export async function validateAndEnrichBetaLinkInsert(
   if (!isInstagramUrl(url)) {
     return { thumbnail: null, foreignUsername: null };
   }
+
+  // Cap outbound IG fetches per user. 30/min is far above legitimate use
+  // (you don't attach beta videos that fast manually) but stops a tight
+  // loop from getting our IP rate-limited or blocked by Instagram.
+  await applyRateLimit(ctx, 30, 'instagram-beta-validation');
 
   const climbName = await getClimbNameForBetaValidation(boardType, climbUuid);
   await ensureInstagramShortcodeIsNotAlreadyLinked(boardType, climbUuid, url);
@@ -249,7 +257,7 @@ export const tickMutations = {
     // other supported platforms skip the deep validation.
     const attachedVideoUrl = videoUrlForTickStatus(validatedInput.status, validatedInput.videoUrl);
     const enrichedInsert: EnrichedBetaInsert = attachedVideoUrl
-      ? await validateAndEnrichBetaLinkInsert(validatedInput.boardType, validatedInput.climbUuid, attachedVideoUrl)
+      ? await validateAndEnrichBetaLinkInsert(ctx, validatedInput.boardType, validatedInput.climbUuid, attachedVideoUrl)
       : { thumbnail: null, foreignUsername: null };
 
     // Insert into database
@@ -365,25 +373,38 @@ export const tickMutations = {
     const validated = validateInput(AttachBetaLinkInputSchema, input, 'input');
     const now = new Date().toISOString();
 
+    // Validation happens before the transaction — it's an outbound HTTP fetch
+    // we don't want to hold a DB connection open for. The insert itself is
+    // wrapped so a constraint failure or connection drop after a successful
+    // validation surfaces an explicit error rather than landing the user on
+    // the generic "couldn't add video" toast.
     const enrichedInsert = await validateAndEnrichBetaLinkInsert(
+      ctx,
       validated.boardType,
       validated.climbUuid,
       validated.link,
     );
 
-    await db
-      .insert(dbSchema.boardBetaLinks)
-      .values({
-        boardType: validated.boardType,
-        climbUuid: validated.climbUuid,
-        link: validated.link,
-        angle: validated.angle ?? null,
-        isListed: true,
-        thumbnail: enrichedInsert.thumbnail,
-        foreignUsername: enrichedInsert.foreignUsername,
-        createdAt: now,
-      })
-      .onConflictDoNothing();
+    try {
+      await db.transaction(async (tx) => {
+        await tx
+          .insert(dbSchema.boardBetaLinks)
+          .values({
+            boardType: validated.boardType,
+            climbUuid: validated.climbUuid,
+            link: validated.link,
+            angle: validated.angle ?? null,
+            isListed: true,
+            thumbnail: enrichedInsert.thumbnail,
+            foreignUsername: enrichedInsert.foreignUsername,
+            createdAt: now,
+          })
+          .onConflictDoNothing();
+      });
+    } catch (err) {
+      console.error('[attachBetaLink] insert failed after validation passed:', err);
+      throw new Error("Couldn't save the beta link. Please try again.");
+    }
 
     return true;
   },

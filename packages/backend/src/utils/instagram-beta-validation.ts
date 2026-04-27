@@ -1,4 +1,5 @@
 import { getInstagramMediaId } from '../lib/instagram-meta';
+import { createCircuitBreaker } from '../lib/circuit-breaker';
 
 const HTML_ENTITY_MAP: Record<string, string> = {
   amp: '&',
@@ -9,11 +10,37 @@ const HTML_ENTITY_MAP: Record<string, string> = {
   quot: '"',
 };
 
+// Hardcoding a desktop User-Agent to scrape Instagram's og:* tags is fragile
+// and at the edge of Meta's ToS — IG has historically responded with a
+// login-wall HTML to unrecognized clients, in which case the validator
+// rejects with the generic error. The circuit breaker below limits the
+// blast radius if/when that starts happening at scale; the rate limiter at
+// the resolver layer caps per-user abuse. If validation acceptance rates
+// drop, revisit by switching to oEmbed + Graph API or removing this
+// write-time check entirely (1736's read-time live check still filters
+// `gone` posts).
 const INSTAGRAM_FETCH_HEADERS = {
   'accept-language': 'en-US,en;q=0.9',
   'user-agent':
     'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/135.0.0.0 Safari/537.36',
 };
+
+// Per-process circuit breaker for the canonical-post fetch. If we observe a
+// burst of failures (timeouts, non-200, non-HTML, login-wall), stop calling
+// out for `cooldownMs` so we don't keep poking IG while it's actively
+// rejecting us. While the breaker is open the validator throws the generic
+// error immediately — users see "we couldn't verify this Instagram link"
+// instead of waiting for a guaranteed-failing fetch.
+const validationCircuit = createCircuitBreaker({
+  windowMs: 60 * 1000,
+  threshold: 10,
+  cooldownMs: 5 * 60 * 1000,
+  onOpen: (failures, cooldownMs) => {
+    console.warn(`[InstagramBetaValidation] circuit OPEN: ${failures} failures in window, cooldown ${cooldownMs}ms`);
+  },
+});
+
+export const instagramValidationCircuitForTesting = validationCircuit;
 
 const GENERIC_VALIDATION_ERROR =
   "We couldn't verify this Instagram link. Make sure it's a public post or reel that Boardsesh can preview, and that the caption or title mentions the climb name.";
@@ -67,6 +94,14 @@ function containsAsWord(haystack: string, needle: string): boolean {
   return haystack.includes(` ${needle} `);
 }
 
+// Minimum length per token before we'll allow the ordered-token fallback to
+// fire. Short tokens like "the", "to", "for", "up" appear in nearly every
+// English Instagram caption, so a climb name like "The Project" or "Power
+// Up" would otherwise produce false positives on unrelated posts. Four
+// characters keeps "fell", "from", "cut", etc. out of the fallback while
+// still allowing genuinely distinguishing words.
+const MIN_TOKEN_LENGTH_FOR_FALLBACK = 4;
+
 function containsNormalizedClimbName(haystack: string, climbName: string): boolean {
   const normalizedHaystack = normalizeText(haystack);
   const normalizedClimbName = normalizeText(climbName);
@@ -75,11 +110,13 @@ function containsNormalizedClimbName(haystack: string, climbName: string): boole
   if (containsAsWord(normalizedHaystack, normalizedClimbName)) return true;
 
   // Ordered-token fallback handles multi-word names with intervening noise
-  // (e.g. "Fell From Heaven" matching "fell down from the heaven"). Skip it
-  // for single-token names — they rely solely on the word-bounded substring
-  // check above to avoid false positives on common short words.
+  // (e.g. "Fell From Heaven" matching "fell down from the heaven"). Only
+  // fire it when every token is long enough to be meaningfully
+  // distinguishing — otherwise common-word climb names would match almost
+  // any English caption.
   const tokens = normalizedClimbName.split(' ').filter(Boolean);
   if (tokens.length < 2) return false;
+  if (tokens.some((t) => t.length < MIN_TOKEN_LENGTH_FOR_FALLBACK)) return false;
 
   let cursor = 0;
   for (const token of tokens) {
@@ -123,6 +160,13 @@ function parseUsernameFromOgTitle(ogTitle: string | null): string | null {
 }
 
 export async function fetchInstagramPageMetadata(url: string): Promise<InstagramPageMetadata> {
+  // Short-circuit when the breaker is open — IG is failing us in bulk, so
+  // there's no point spending the client's request budget on a likely-doomed
+  // fetch. Don't record this as a circuit failure (it isn't a fresh signal).
+  if (validationCircuit.isOpen()) {
+    throw new InstagramBetaValidationError(GENERIC_VALIDATION_ERROR);
+  }
+
   // Wrap the network leg in a try/catch so timeouts (AbortSignal.timeout),
   // DNS failures, and connection resets surface as InstagramBetaValidationError
   // instead of leaking raw runtime errors to the resolver.
@@ -138,15 +182,18 @@ export async function fetchInstagramPageMetadata(url: string): Promise<Instagram
       signal: AbortSignal.timeout(4000),
     });
   } catch {
+    validationCircuit.recordFailure();
     throw new InstagramBetaValidationError(GENERIC_VALIDATION_ERROR);
   }
 
   if (!response.ok) {
+    validationCircuit.recordFailure();
     throw new InstagramBetaValidationError(GENERIC_VALIDATION_ERROR);
   }
 
   const contentType = response.headers.get('content-type') ?? '';
   if (!contentType.includes('text/html')) {
+    validationCircuit.recordFailure();
     throw new InstagramBetaValidationError(GENERIC_VALIDATION_ERROR);
   }
 
@@ -154,6 +201,7 @@ export async function fetchInstagramPageMetadata(url: string): Promise<Instagram
   try {
     html = await response.text();
   } catch {
+    validationCircuit.recordFailure();
     throw new InstagramBetaValidationError(GENERIC_VALIDATION_ERROR);
   }
 
@@ -163,6 +211,10 @@ export async function fetchInstagramPageMetadata(url: string): Promise<Instagram
   const mediaIdFromAppUrl = parseMetaContent(html, 'al:ios:url')?.match(/instagram:\/\/media\?id=(\d+)/)?.[1] ?? null;
 
   if (!description && !ogTitle) {
+    // 200 OK with no og data usually means IG served a login-wall page.
+    // Treat it as a transient failure for breaker purposes so a sustained
+    // wall response trips the cooldown.
+    validationCircuit.recordFailure();
     throw new InstagramBetaValidationError(GENERIC_VALIDATION_ERROR);
   }
 

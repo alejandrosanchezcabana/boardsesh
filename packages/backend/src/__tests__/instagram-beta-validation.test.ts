@@ -3,6 +3,7 @@ import {
   fetchInstagramPageMetadata,
   InstagramBetaValidationError,
   instagramBetaValidationInternals,
+  instagramValidationCircuitForTesting,
   validateInstagramBetaLink,
 } from '../utils/instagram-beta-validation';
 import { getInstagramMediaId } from '../lib/instagram-meta';
@@ -13,6 +14,7 @@ describe('instagram-beta-validation', () => {
   beforeEach(() => {
     fetchMock.mockReset();
     vi.stubGlobal('fetch', fetchMock);
+    instagramValidationCircuitForTesting.reset();
   });
 
   it('extracts public metadata from instagram html', async () => {
@@ -168,6 +170,64 @@ describe('instagram-beta-validation', () => {
       imageUrl: 'https://cdn.example.com/image.jpg',
       mediaId: '123456789',
     });
+  });
+
+  it('skips the ordered-token fallback when any token is too short to be distinguishing', () => {
+    // "The Project" — "the" is 3 chars. The full phrase doesn't appear as a
+    // whole-word substring in this caption, but the tokens "the" and
+    // "project" do appear separately in order. Without the min-length guard
+    // the fallback would false-positive on any English text.
+    expect(
+      instagramBetaValidationInternals.containsNormalizedClimbName(
+        'climber on Instagram: the climb after our project debrief was tough',
+        'The Project',
+      ),
+    ).toBe(false);
+    // "Power Up" — "up" is 2 chars. Same risk.
+    expect(
+      instagramBetaValidationInternals.containsNormalizedClimbName(
+        'climber on Instagram: power moves and warming up first',
+        'Power Up',
+      ),
+    ).toBe(false);
+    // But the word-bounded substring path still matches when the full phrase
+    // appears — we don't gate that path on token length.
+    expect(
+      instagramBetaValidationInternals.containsNormalizedClimbName(
+        'climber on Instagram: sent The Project today',
+        'The Project',
+      ),
+    ).toBe(true);
+  });
+
+  it('still matches multi-word names when every token is long enough', () => {
+    // "Fell From Heaven" — all tokens >= 4 chars, fallback kicks in for
+    // captions that interleave noise between the climb-name tokens.
+    expect(
+      instagramBetaValidationInternals.containsNormalizedClimbName(
+        'climber on Instagram: fell down from the great heaven yesterday',
+        'Fell From Heaven',
+      ),
+    ).toBe(true);
+  });
+
+  it('opens the circuit after enough fetch failures and stops calling out', async () => {
+    fetchMock.mockRejectedValue(new Error('TimeoutError'));
+
+    // Trip the circuit. The threshold is 10; drive it past that.
+    for (let i = 0; i < 10; i++) {
+      await expect(fetchInstagramPageMetadata('https://www.instagram.com/p/CU-NOpdL8Kf/')).rejects.toBeInstanceOf(
+        InstagramBetaValidationError,
+      );
+    }
+    expect(instagramValidationCircuitForTesting.isOpen()).toBe(true);
+    fetchMock.mockClear();
+
+    // Once open, further calls short-circuit without hitting fetch.
+    await expect(fetchInstagramPageMetadata('https://www.instagram.com/p/AnyOther/')).rejects.toBeInstanceOf(
+      InstagramBetaValidationError,
+    );
+    expect(fetchMock).not.toHaveBeenCalled();
   });
 
   it('matches climb names with word boundaries via containsAsWord', () => {

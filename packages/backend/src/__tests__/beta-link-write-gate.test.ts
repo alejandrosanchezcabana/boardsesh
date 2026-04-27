@@ -33,6 +33,22 @@ vi.mock('../lib/beta-link-thumbnails', () => ({
   isS3Configured: vi.fn(() => false),
 }));
 
+// Stub the rate limiter; the gate test only cares about the early-return path
+// for non-Instagram URLs, where applyRateLimit shouldn't even be reached.
+const { mockApplyRateLimit } = vi.hoisted(() => ({
+  mockApplyRateLimit: vi.fn(async () => {}),
+}));
+vi.mock('../graphql/resolvers/shared/helpers', async () => {
+  const actual = await vi.importActual<typeof import('../graphql/resolvers/shared/helpers')>(
+    '../graphql/resolvers/shared/helpers',
+  );
+  return { ...actual, applyRateLimit: mockApplyRateLimit };
+});
+
+const fakeCtx = { userId: 'test-user', isAuthenticated: true } as unknown as Parameters<
+  typeof import('../graphql/resolvers/ticks/mutations').validateAndEnrichBetaLinkInsert
+>[0];
+
 import {
   escapeLikePattern,
   validateAndEnrichBetaLinkInsert,
@@ -47,6 +63,7 @@ describe('validateAndEnrichBetaLinkInsert (gate)', () => {
   beforeEach(() => {
     fetchMock.mockClear();
     mockDbSelect.mockClear();
+    mockApplyRateLimit.mockClear();
     vi.stubGlobal('fetch', fetchMock);
   });
 
@@ -56,6 +73,7 @@ describe('validateAndEnrichBetaLinkInsert (gate)', () => {
 
   it('skips Instagram validation for TikTok URLs', async () => {
     const result = await validateAndEnrichBetaLinkInsert(
+      fakeCtx,
       'kilter',
       '00000000-0000-0000-0000-000000000000',
       'https://www.tiktok.com/@user/video/12345',
@@ -68,6 +86,7 @@ describe('validateAndEnrichBetaLinkInsert (gate)', () => {
 
   it('skips Instagram validation for short-form TikTok URLs', async () => {
     const result = await validateAndEnrichBetaLinkInsert(
+      fakeCtx,
       'tension',
       '00000000-0000-0000-0000-000000000000',
       'https://vm.tiktok.com/abc123',
@@ -76,6 +95,16 @@ describe('validateAndEnrichBetaLinkInsert (gate)', () => {
     expect(result).toEqual({ thumbnail: null, foreignUsername: null });
     expect(fetchMock).not.toHaveBeenCalled();
     expect(mockDbSelect).not.toHaveBeenCalled();
+  });
+
+  it('does not invoke the rate limiter for non-Instagram URLs', async () => {
+    await validateAndEnrichBetaLinkInsert(
+      fakeCtx,
+      'kilter',
+      '00000000-0000-0000-0000-000000000000',
+      'https://www.tiktok.com/@user/video/12345',
+    );
+    expect(mockApplyRateLimit).not.toHaveBeenCalled();
   });
 });
 
