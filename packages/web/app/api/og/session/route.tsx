@@ -104,7 +104,7 @@ export async function GET(request: NextRequest) {
               width: '310px',
               height: '310px',
               borderRadius: '999px',
-              background: themeTokens.colors.logoGreen,
+              background: themeTokens.colors.accentGreen,
               opacity: 0.18,
             }}
           />
@@ -116,7 +116,7 @@ export async function GET(request: NextRequest) {
               width: '360px',
               height: '360px',
               borderRadius: '999px',
-              background: themeTokens.colors.logoRose,
+              background: themeTokens.colors.accentRose,
               opacity: 0.18,
             }}
           />

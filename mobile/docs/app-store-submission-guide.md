@@ -43,11 +43,11 @@ Screenshots are saved to `mobile/screenshots/`.
 
 ### Required screenshot sizes
 
-| Device                          | Resolution | Required?                  |
-| ------------------------------- | ---------- | -------------------------- |
-| 6.9" iPhone (iPhone 16 Pro Max) | 1320x2868  | Yes                        |
-| 6.5" iPhone (iPhone 14 Plus)    | 1284x2778  | Can reuse 6.9" screenshots |
-| 12.9" iPad (iPad Pro)           | 2048x2732  | No, but recommended        |
+| Device                          | Resolution | Required?                    |
+| ------------------------------- | ---------- | ---------------------------- |
+| 6.5" iPhone (iPhone 14 Plus)    | 1284x2778  | Yes — captured by Playwright |
+| 6.9" iPhone (iPhone 16 Pro Max) | 1320x2868  | Can reuse 6.5" screenshots   |
+| 12.9" iPad (iPad Pro)           | 2048x2732  | No, but recommended          |
 
 ### Manual alternative
 

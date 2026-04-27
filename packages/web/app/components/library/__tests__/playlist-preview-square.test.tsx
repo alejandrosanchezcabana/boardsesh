@@ -19,12 +19,12 @@ vi.mock('@/app/theme/theme-config', () => ({
   themeTokens: {
     colors: {
       primary: '#4F46E5',
-      logoGreen: '#22C55E',
+      accentGreen: '#22C55E',
       purple: '#8B5CF6',
       warning: '#F59E0B',
       pink: '#EC4899',
       success: '#10B981',
-      logoRose: '#F43F5E',
+      accentRose: '#F43F5E',
       amber: '#F59E0B',
     },
   },

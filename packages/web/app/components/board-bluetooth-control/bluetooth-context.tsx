@@ -18,6 +18,8 @@ import { parseSerialNumber } from './bluetooth-aurora';
 import { useWsAuthToken } from '@/app/hooks/use-ws-auth-token';
 import { resolveSerialNumbers } from '@/app/lib/ble/resolve-serials';
 import type { UserBoard } from '@boardsesh/shared-schema';
+import type { DiscoveredDevice } from '@/app/lib/ble/types';
+import type { PickerState } from './use-board-bluetooth';
 
 type BluetoothContextValue = {
   isConnected: boolean;
@@ -126,13 +128,104 @@ export function BluetoothProvider({
   const [resolvedBoards, setResolvedBoards] = useState<Map<string, UserBoard>>(new Map());
   const resolvedSerialsRef = useRef<string>('');
 
+  // Test-only escape hatch for app-store screenshot generation. When the
+  // sessionStorage flag is present, render the picker with three plausible
+  // Aurora-named devices and pre-resolved UserBoards so the BLE pairing
+  // screenshot shows named boards with proper thumbnails (Web Bluetooth is
+  // unavailable in headless Chromium, and the demo serials don't exist in
+  // the dev DB so the real resolver wouldn't match them).
+  const [demoPickerState, setDemoPickerState] = useState<PickerState | null>(null);
+  const [demoResolvedBoards, setDemoResolvedBoards] = useState<Map<string, UserBoard> | null>(null);
   useEffect(() => {
-    if (!pickerState || pickerState.devices.length === 0 || !token) {
+    if (typeof window === 'undefined') return;
+    if (window.sessionStorage.getItem('boardsesh:e2e-bluetooth-picker') !== '1') return;
+
+    // Real boards (and where available, real serials) sourced from
+    // production user_boards.json so the picker shows authentic-looking
+    // names + thumbnails. The Tension board has no real serial in the
+    // dataset, so a synthetic one is used purely to drive the resolver.
+    const dummyDevices: DiscoveredDevice[] = [
+      { deviceId: 'demo-kilter-marco', name: 'Kilter Board#751737@3', rssi: -45 },
+      { deviceId: 'demo-kilter-rise', name: 'Kilter Board#751970@3', rssi: -62 },
+      { deviceId: 'demo-tension-9d', name: 'Tension Board#480221@2', rssi: -78 },
+    ];
+    const makeBoard = (
+      overrides: Partial<UserBoard> &
+        Pick<UserBoard, 'boardType' | 'layoutId' | 'sizeId' | 'setIds' | 'name' | 'serialNumber'>,
+    ): UserBoard => ({
+      uuid: `demo-${overrides.serialNumber}`,
+      slug: `demo-${overrides.serialNumber}`,
+      ownerId: 'demo-owner',
+      isPublic: false,
+      isUnlisted: true,
+      hideLocation: true,
+      isOwned: true,
+      angle: 40,
+      isAngleAdjustable: true,
+      createdAt: new Date(0).toISOString(),
+      totalAscents: 0,
+      uniqueClimbers: 0,
+      followerCount: 0,
+      commentCount: 0,
+      isFollowedByMe: false,
+      ...overrides,
+    });
+    const boardsBySerial = new Map<string, UserBoard>([
+      [
+        '751737',
+        makeBoard({
+          boardType: 'kilter',
+          layoutId: 8,
+          sizeId: 25,
+          setIds: '28,29,26,27',
+          name: "Marco's Board",
+          serialNumber: '751737',
+          angle: 35,
+        }),
+      ],
+      [
+        '751970',
+        makeBoard({
+          boardType: 'kilter',
+          layoutId: 8,
+          sizeId: 22,
+          setIds: '26',
+          name: 'Rise and Grind',
+          serialNumber: '751970',
+          locationName: 'Denver, CO',
+          angle: 25,
+        }),
+      ],
+      [
+        '480221',
+        makeBoard({
+          boardType: 'tension',
+          layoutId: 10,
+          sizeId: 6,
+          setIds: '12,13',
+          name: '9 Degrees Chatswood',
+          serialNumber: '480221',
+        }),
+      ],
+    ]);
+    setDemoResolvedBoards(boardsBySerial);
+    setDemoPickerState({
+      devices: dummyDevices,
+      handleSelect: () => setDemoPickerState(null),
+      handleCancel: () => setDemoPickerState(null),
+    });
+  }, []);
+
+  const activePickerState = pickerState ?? demoPickerState;
+  const activeResolvedBoards = demoResolvedBoards ?? resolvedBoards;
+
+  useEffect(() => {
+    if (!activePickerState || activePickerState.devices.length === 0 || !token) {
       return;
     }
 
     const serials: string[] = [];
-    for (const device of pickerState.devices) {
+    for (const device of activePickerState.devices) {
       const serial = parseSerialNumber(device.name);
       if (serial) serials.push(serial);
     }
@@ -153,7 +246,7 @@ export function BluetoothProvider({
       .catch((err) => {
         console.error('[BLE] Failed to resolve serial numbers:', err);
       });
-  }, [pickerState, token]);
+  }, [activePickerState, token]);
 
   useEffect(() => {
     let cancelPolling: (() => void) | undefined;
@@ -215,12 +308,12 @@ export function BluetoothProvider({
       {isConnected && (
         <BluetoothAutoSender sendFramesToBoard={sendFramesToBoard} layoutName={boardDetails.layout_name ?? ''} />
       )}
-      {pickerState && (
+      {activePickerState && (
         <DevicePickerDialog
-          devices={pickerState.devices}
-          onSelect={pickerState.handleSelect}
-          onCancel={pickerState.handleCancel}
-          resolvedBoards={resolvedBoards}
+          devices={activePickerState.devices}
+          onSelect={activePickerState.handleSelect}
+          onCancel={activePickerState.handleCancel}
+          resolvedBoards={activeResolvedBoards}
         />
       )}
       <AutoConnectHandler connect={connect} isBluetoothSupported={isBluetoothSupported} />

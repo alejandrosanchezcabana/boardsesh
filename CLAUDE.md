@@ -8,7 +8,6 @@ Boardsesh is a monorepo containing a Next.js 16 application for controlling stan
 
 ## Project Rules
 
-
 - We are slowly moving away from running rest-apis and backend operations in the next.js service, instead packages/backend should implement all backends, ideally using graphql
 - Work autonomously end-to-end. Backend + frontend + deploy + QA. Never stop at "the API is ready but the UI isn't updated."
 - Use subagents (always Opus) for all grunt work. Pair every implementation subagent with a QA/reviewer subagent.

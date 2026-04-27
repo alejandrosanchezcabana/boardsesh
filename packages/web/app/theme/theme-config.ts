@@ -22,8 +22,8 @@ export const themeTokens = {
     purpleHover: '#7B1FA2', // V12 — Mirror button hover
     amber: '#FBBF24', // For flash/benchmark badges
     pink: '#EC4899', // For finish holds in climb creation
-    logoGreen: '#5fb27a', // Palette accent — used in OG/playlist/chart palettes (legacy name kept; not the route mark)
-    logoRose: '#d65a4f', // Palette accent — used in OG/playlist/chart palettes (legacy name kept; not the brand coral)
+    accentGreen: '#5fb27a', // Playlist tile + OG card accent (palette colour, not the route mark)
+    accentRose: '#d65a4f', // Playlist tile + OG card accent (palette colour, not the brand coral)
   },
 
   // Warm text colours scoped to brand surfaces (landing hero, splash,

@@ -50,7 +50,7 @@ type HomePageContentProps = {
   initialPopularConfigs?: PopularBoardConfig[];
 };
 
-type OnboardingCardAccent = 'action' | 'social' | 'help' | 'none';
+type OnboardingCardAccent = 'action' | 'social' | 'help' | 'v11' | 'v12' | 'v13' | 'none';
 
 type OnboardingCardProps = {
   icon: React.ReactNode;
@@ -67,11 +67,16 @@ type OnboardingCardProps = {
 };
 
 // Soft tint backgrounds (~10% alpha) for each accent. Inlined rather than
-// added as CSS vars — these only render here.
+// added as CSS vars — these only render here. The v11/v12/v13 accents tie
+// the onboarding stack to the project-zone V-grade scale that the brand
+// mark is built on (see designer brief §2a).
 const accentSurface: Record<OnboardingCardAccent, string> = {
   action: 'var(--semantic-selected-light)', // existing rose tint
   social: 'rgba(156, 39, 176, 0.10)', // V11 purple
   help: 'rgba(74, 111, 138, 0.12)', // info slate — same desaturated dark-UI family as the rest
+  v11: 'rgba(156, 39, 176, 0.10)', // V11 #9C27B0
+  v12: 'rgba(123, 31, 162, 0.10)', // V12 #7B1FA2
+  v13: 'rgba(106, 27, 154, 0.10)', // V13 #6A1B9A
   none: 'transparent',
 };
 
@@ -81,6 +86,12 @@ function resolveAccentIconColor(accent: OnboardingCardAccent): string {
       return themeTokens.colors.purple;
     case 'help':
       return themeTokens.colors.info;
+    case 'v11':
+      return '#9C27B0';
+    case 'v12':
+      return '#7B1FA2';
+    case 'v13':
+      return '#6A1B9A';
     case 'none':
       return 'inherit';
     case 'action':
@@ -477,7 +488,7 @@ export default function HomePageContent({ boardConfigs, initialPopularConfigs }:
             icon={<PlayCircleOutlineOutlined />}
             title="Take the tour"
             description="A one-minute walk-through of queuing, logging, and sessions with your crew"
-            accent="help"
+            accent="v11"
             onClick={() => onboardingTour?.start()}
           />
 
@@ -485,7 +496,7 @@ export default function HomePageContent({ boardConfigs, initialPopularConfigs }:
             icon={<WarningAmberOutlined />}
             title="Coming from Kilter?"
             description="Bring your logbook and history over in one step"
-            accent="help"
+            accent="v11"
             onClick={() => router.push('/aurora-migration')}
           />
 
@@ -493,7 +504,7 @@ export default function HomePageContent({ boardConfigs, initialPopularConfigs }:
             icon={<LocalOfferOutlined />}
             title="Build a playlist"
             description="Line up your climbs before you get to the gym"
-            accent="action"
+            accent="v12"
             onClick={() => router.push('/playlists')}
           />
 
@@ -501,7 +512,7 @@ export default function HomePageContent({ boardConfigs, initialPopularConfigs }:
             icon={<BluetoothOutlined />}
             title="Connect your board"
             description="Pair via Bluetooth and light up your next climb"
-            accent="action"
+            accent="v12"
             onClick={() => setSeshDrawerOpen(true)}
           />
 
@@ -509,7 +520,7 @@ export default function HomePageContent({ boardConfigs, initialPopularConfigs }:
             icon={<PeopleOutlined />}
             title="Find your crew"
             description="Follow friends and see what they're climbing"
-            accent="social"
+            accent="v13"
             onClick={() => setFindClimbersOpen(true)}
           />
 
@@ -517,7 +528,7 @@ export default function HomePageContent({ boardConfigs, initialPopularConfigs }:
             icon={<DiscordIcon />}
             title="Join the crew on Discord"
             description="Share beta, report bugs, and help shape what's next"
-            accent="social"
+            accent="v13"
             onClick={() => window.open('https://discord.gg/YXA8GsXfQK', '_blank', 'noopener,noreferrer')}
           />
         </Box>

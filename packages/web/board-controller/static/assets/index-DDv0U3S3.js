@@ -849,7 +849,7 @@ function jE() {
     ['rowSpan', 'start'].forEach(function (o) {
       y[o] = new w(o, 5, !1, o.toLowerCase(), null, !1, !1);
     }));
-  var $ = /[\-:]([a-z])/g;
+  var $ = /[-:]([a-z])/g;
   function E(o) {
     return o[1].toUpperCase();
   }
@@ -5514,7 +5514,7 @@ Error generating stack: ` +
               o === 'http://www.w3.org/1999/xhtml'
                 ? c === 'script'
                   ? ((o = T.createElement('div')),
-                    (o.innerHTML = '<script><\/script>'),
+                    (o.innerHTML = '<script></script>'),
                     (o = o.removeChild(o.firstChild)))
                   : typeof p.is == 'string'
                     ? (o = T.createElement(c, { is: p.is }))
@@ -10292,7 +10292,7 @@ var R2 = '_skip_check_',
   FS = '_multi_value_';
 function kc(e) {
   var t = Hm(C2(e), x2);
-  return t.replace(/\{%%%\:[^;];}/g, ';');
+  return t.replace(/\{%%%:[^;];}/g, ';');
 }
 function P2(e) {
   return bt(e) === 'object' && e && (R2 in e || FS in e);
@@ -17242,7 +17242,7 @@ const mM = function () {
 };
 var Cy = {
     email:
-      /^(([^<>()\[\]\\.,;:\s@"]+(\.[^<>()\[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}])|(([a-zA-Z\-0-9\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF]+\.)+[a-zA-Z\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF]{2,}))$/,
+      /^(([^<>()[\]\\.,;:\s@"]+(\.[^<>()[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}])|(([a-zA-Z\-0-9\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF]+\.)+[a-zA-Z\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF]{2,}))$/,
     hex: /^#?([a-f0-9]{6}|[a-f0-9]{3})$/i,
   },
   Wl = {
@@ -21550,7 +21550,7 @@ function Ly(e, t) {
 function Ay(e) {
   var t = arguments.length > 1 && arguments[1] !== void 0 ? arguments[1] : 0,
     n = ''.concat(t),
-    r = n.match(/^(.*)\%$/);
+    r = n.match(/^(.*)%$/);
   return r ? e * (parseFloat(r[1]) / 100) : parseFloat(n);
 }
 function Dy(e, t) {
@@ -38844,7 +38844,7 @@ var NL = Object.defineProperty,
     }
   };
   ((l.NUMERIC_REGEX = /^[0-9]*$/),
-    (l.ALPHANUMERIC_REGEX = /^[A-Z0-9 $%*+.\/:-]*$/),
+    (l.ALPHANUMERIC_REGEX = /^[A-Z0-9 $%*+./:-]*$/),
     (l.ALPHANUMERIC_CHARSET = '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ $%*+-./:'));
   let s = l;
   e.QrSegment = l;
