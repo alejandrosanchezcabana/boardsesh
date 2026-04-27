@@ -128,6 +128,57 @@ describe('instagram-beta-validation', () => {
     ).toBe(true);
   });
 
+  it('rejects single-word climb names that only appear inside other words', () => {
+    // "Gravity" climb shouldn't validate against a post that just mentions
+    // "antigravity" — that's the false-positive the ordered-token fallback
+    // used to allow.
+    expect(
+      instagramBetaValidationInternals.containsNormalizedClimbName(
+        'climber on Instagram: antigravity training session',
+        'Gravity',
+      ),
+    ).toBe(false);
+    // But the same short name still matches when it appears as a whole word.
+    expect(
+      instagramBetaValidationInternals.containsNormalizedClimbName(
+        'climber on Instagram: sent Gravity today!',
+        'Gravity',
+      ),
+    ).toBe(true);
+  });
+
+  it('parses og:image even when og:title comes first with a long caption', async () => {
+    // Regression guard: parseMetaContent's attrRegex used to be a /g regex
+    // shared across iterations. After the long og:title tag exhausted the
+    // regex's lastIndex, the shorter og:image tag could be silently skipped.
+    fetchMock.mockResolvedValue({
+      headers: new Headers({ 'content-type': 'text/html; charset=utf-8' }),
+      ok: true,
+      text: async () => `
+        <html><head>
+          <meta property="og:title" content="${'a'.repeat(500)} on Instagram: Cut to the Chase V10 ${'b'.repeat(500)}" />
+          <meta property="og:image" content="https://cdn.example.com/image.jpg" />
+          <meta name="description" content="Cut to the Chase V10" />
+          <meta property="al:ios:url" content="instagram://media?id=123456789" />
+        </head></html>
+      `,
+    });
+
+    await expect(fetchInstagramPageMetadata('https://www.instagram.com/p/CU-NOpdL8Kf/')).resolves.toMatchObject({
+      imageUrl: 'https://cdn.example.com/image.jpg',
+      mediaId: '123456789',
+    });
+  });
+
+  it('matches climb names with word boundaries via containsAsWord', () => {
+    expect(instagramBetaValidationInternals.containsAsWord('sent gravity today', 'gravity')).toBe(true);
+    expect(instagramBetaValidationInternals.containsAsWord('gravity is the project', 'gravity')).toBe(true);
+    expect(instagramBetaValidationInternals.containsAsWord('the project is gravity', 'gravity')).toBe(true);
+    expect(instagramBetaValidationInternals.containsAsWord('gravity', 'gravity')).toBe(true);
+    expect(instagramBetaValidationInternals.containsAsWord('antigravity training', 'gravity')).toBe(false);
+    expect(instagramBetaValidationInternals.containsAsWord('gravityfall demo', 'gravity')).toBe(false);
+  });
+
   it('parses username from Instagram og:title patterns', () => {
     expect(instagramBetaValidationInternals.parseUsernameFromOgTitle('camgibbs on Instagram: "Cut to the Chase"')).toBe(
       'camgibbs',

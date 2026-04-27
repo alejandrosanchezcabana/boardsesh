@@ -55,15 +55,31 @@ function normalizeText(value: string): string {
     .replace(/\s+/g, ' ');
 }
 
+// Word-bounded substring: `needle` must appear with whitespace or string
+// edges on both sides in the (already-normalized) haystack. This prevents a
+// climb name like "Gravity" from matching unrelated text that happens to
+// contain the substring (e.g. "antigravity").
+function containsAsWord(haystack: string, needle: string): boolean {
+  if (!haystack || !needle) return false;
+  if (haystack === needle) return true;
+  if (haystack.startsWith(`${needle} `)) return true;
+  if (haystack.endsWith(` ${needle}`)) return true;
+  return haystack.includes(` ${needle} `);
+}
+
 function containsNormalizedClimbName(haystack: string, climbName: string): boolean {
   const normalizedHaystack = normalizeText(haystack);
   const normalizedClimbName = normalizeText(climbName);
 
   if (!normalizedHaystack || !normalizedClimbName) return false;
-  if (normalizedHaystack.includes(normalizedClimbName)) return true;
+  if (containsAsWord(normalizedHaystack, normalizedClimbName)) return true;
 
+  // Ordered-token fallback handles multi-word names with intervening noise
+  // (e.g. "Fell From Heaven" matching "fell down from the heaven"). Skip it
+  // for single-token names — they rely solely on the word-bounded substring
+  // check above to avoid false positives on common short words.
   const tokens = normalizedClimbName.split(' ').filter(Boolean);
-  if (tokens.length === 0) return false;
+  if (tokens.length < 2) return false;
 
   let cursor = 0;
   for (const token of tokens) {
@@ -76,11 +92,13 @@ function containsNormalizedClimbName(haystack: string, climbName: string): boole
 
 function parseMetaContent(html: string, target: string): string | null {
   const metaTagRegex = /<meta\b[^>]*>/gi;
-  // Match double-quoted, single-quoted, or unquoted attribute values.
-  const attrRegex = /([a-zA-Z_:.-]+)\s*=\s*(?:"([^"]*)"|'([^']*)'|([^\s>]+))/g;
   const normalizedTarget = target.toLowerCase();
 
   for (const metaTag of html.match(metaTagRegex) ?? []) {
+    // Construct attrRegex inside the loop so its `/g` `lastIndex` state
+    // can't carry over between iterations and silently skip a shorter
+    // tag's attributes after a longer one.
+    const attrRegex = /([a-zA-Z_:.-]+)\s*=\s*(?:"([^"]*)"|'([^']*)'|([^\s>]+))/g;
     const attrs: Record<string, string> = {};
     let match: RegExpExecArray | null;
     while ((match = attrRegex.exec(metaTag)) !== null) {
@@ -113,7 +131,11 @@ export async function fetchInstagramPageMetadata(url: string): Promise<Instagram
     response = await fetch(url, {
       headers: INSTAGRAM_FETCH_HEADERS,
       redirect: 'follow',
-      signal: AbortSignal.timeout(8000),
+      // Keep the timeout tight so the GraphQL mutation doesn't hang the
+      // client when Instagram is slow or rate-limited. A healthy fetch
+      // returns in well under a second; the user can retry on transient
+      // failures.
+      signal: AbortSignal.timeout(4000),
     });
   } catch {
     throw new InstagramBetaValidationError(GENERIC_VALIDATION_ERROR);
@@ -175,6 +197,7 @@ export async function validateInstagramBetaLink(url: string, climbName: string):
 }
 
 export const instagramBetaValidationInternals = {
+  containsAsWord,
   containsNormalizedClimbName,
   decodeHtmlEntities,
   normalizeText,
