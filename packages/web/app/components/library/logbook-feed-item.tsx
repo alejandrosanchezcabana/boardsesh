@@ -59,7 +59,6 @@ const AttachBetaLinkDialog = dynamic(() => import('@/app/components/beta-videos/
   ssr: false,
 });
 
-
 // Layout name mapping
 const layoutNames: Record<string, string> = {
   'kilter-1': 'Kilter Original',
