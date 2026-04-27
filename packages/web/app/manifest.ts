@@ -7,8 +7,8 @@ export default function manifest(): MetadataRoute.Manifest {
     description: 'Track your sends across Kilter, Tension, and MoonBoard. One app for your boards.',
     start_url: '/',
     display: 'standalone',
-    background_color: '#0e0e10',
-    theme_color: '#0e0e10',
+    background_color: '#101012',
+    theme_color: '#101012',
     icons: [
       {
         src: '/icons/icon-192.png',

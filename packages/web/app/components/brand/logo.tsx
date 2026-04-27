@@ -2,8 +2,8 @@
 
 import React from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { themeTokens } from '@/app/theme/theme-config';
-import { RouteMarkContextDots, RouteMarkHolds } from './route-mark-svg';
 
 type LogoProps = {
   size?: 'sm' | 'md' | 'lg';
@@ -19,7 +19,6 @@ const sizes = {
 
 const Logo = ({ size = 'md', showText = true, linkToHome = true }: LogoProps) => {
   const { icon, fontSize, gap } = sizes[size];
-  const showContext = size !== 'sm';
 
   const logoContent = (
     <div
@@ -31,17 +30,7 @@ const Logo = ({ size = 'md', showText = true, linkToHome = true }: LogoProps) =>
         color: 'inherit',
       }}
     >
-      <svg
-        width={icon}
-        height={icon}
-        viewBox="0 0 64 64"
-        fill="none"
-        xmlns="http://www.w3.org/2000/svg"
-        aria-label="Boardsesh logo"
-      >
-        {showContext && <RouteMarkContextDots />}
-        <RouteMarkHolds />
-      </svg>
+      <Image src="/icon.svg" width={icon} height={icon} alt="Boardsesh logo" priority />
       {showText && (
         <span
           style={{

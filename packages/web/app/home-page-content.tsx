@@ -2,6 +2,7 @@
 
 import React, { useState, useCallback, useEffect } from 'react';
 import dynamic from 'next/dynamic';
+import Image from 'next/image';
 import Box from '@mui/material/Box';
 import Button from '@mui/material/Button';
 import Typography from '@mui/material/Typography';
@@ -336,9 +337,10 @@ export default function HomePageContent({ boardConfigs, initialPopularConfigs }:
             alignItems: 'center',
             textAlign: 'center',
             gap: 2,
-            py: 4,
+            py: 1,
           }}
         >
+          <Image src="/brand/lockup-stacked.svg" width={280} height={308} alt="Boardsesh" priority />
           <Typography
             variant="h5"
             fontWeight={themeTokens.typography.fontWeight.bold}
