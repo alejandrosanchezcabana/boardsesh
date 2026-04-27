@@ -11,6 +11,8 @@ export type CollapsibleSectionConfig = {
   /** Optional dynamic summary parts. When omitted or it returns [], falls back to defaultSummary. */
   getSummary?: () => string[];
   content: React.ReactNode;
+  /** Optional action slot rendered on the right side of the header when expanded. */
+  action?: React.ReactNode;
   /** When true, content is only mounted while this section is the active one. */
   lazy?: boolean;
   /** When true, this section should be the initially active one (overrides defaultActiveKey). */
@@ -33,6 +35,19 @@ const CollapsibleSection: React.FC<CollapsibleSectionProps> = ({ sections, defau
   // Preserve the initial default so we can restore it if we transition back
   // from controlled (forcedActiveKey set) to uncontrolled mode.
   const initialActiveKeyRef = useRef(initialActiveKey);
+  // Track whether we've ever seen a non-empty sections array — sections can
+  // arrive on a later render (deferred below-fold mount in the play drawer),
+  // and we need to honour their defaultActive once they show up.
+  const initializedRef = useRef(sections.length > 0);
+
+  useEffect(() => {
+    if (initializedRef.current) return;
+    if (sections.length === 0) return;
+    const resolvedKey = sections.find((s) => s.defaultActive)?.key ?? defaultActiveKey ?? null;
+    initialActiveKeyRef.current = resolvedKey;
+    setActiveKey(resolvedKey);
+    initializedRef.current = true;
+  }, [sections, defaultActiveKey]);
 
   useEffect(() => {
     if (forcedActiveKey !== undefined) {
@@ -67,9 +82,15 @@ const CollapsibleSection: React.FC<CollapsibleSectionProps> = ({ sections, defau
               {...(isActive && !interactionDisabled ? { onClick: () => setActiveKey(null) } : {})}
             >
               <span className={styles.collapsedLabel}>{isActive ? section.title : section.label}</span>
-              <span className={`${styles.collapsedSummary} ${isActive ? styles.collapsedSummaryHidden : ''}`}>
-                {summaryText}
-              </span>
+              {isActive && section.action ? (
+                <span className={styles.headerAction} onClick={(event) => event.stopPropagation()}>
+                  {section.action}
+                </span>
+              ) : (
+                <span className={`${styles.collapsedSummary} ${isActive ? styles.collapsedSummaryHidden : ''}`}>
+                  {summaryText}
+                </span>
+              )}
             </div>
             <div className={`${styles.expandableContent} ${isActive ? styles.expandableContentOpen : ''}`}>
               <div className={styles.expandableInner}>
