@@ -1,16 +1,164 @@
 import { v4 as uuidv4 } from 'uuid';
-import { eq, and, inArray } from 'drizzle-orm';
+import { eq, and, inArray, like } from 'drizzle-orm';
+import { GraphQLError } from 'graphql';
 import type { ConnectionContext } from '@boardsesh/shared-schema';
 import { db } from '../../../db/client';
 import * as dbSchema from '@boardsesh/db/schema';
 import { sessions } from '../../../db/schema';
-import { requireAuthenticated, validateInput, isNoMatchClimb } from '../shared/helpers';
+import { applyRateLimit, requireAuthenticated, validateInput, isNoMatchClimb } from '../shared/helpers';
+import { escapeLikePattern } from '../../../utils/like-pattern';
 import { getConsensusDifficultyName } from '../shared/sql-expressions';
 import { SaveTickInputSchema, UpdateTickInputSchema, AttachBetaLinkInputSchema } from '../../../validation/schemas';
 import { resolveBoardFromPath } from '../social/boards';
 import { publishSocialEvent } from '../../../events';
 import { assignInferredSession } from '../../../jobs/inferred-session-builder';
 import { publishDebouncedSessionStats } from '../sessions/debounced-stats-publisher';
+import { getInstagramMediaId, isInstagramUrl } from '../../../lib/instagram-meta';
+import {
+  InstagramBetaValidationError,
+  validateInstagramBetaLink,
+  type InstagramPageMetadata,
+} from '../../../utils/instagram-beta-validation';
+import { cacheInstagramThumbnail, isS3Configured } from '../../../lib/beta-link-thumbnails';
+
+async function getClimbNameForBetaValidation(boardType: string, climbUuid: string): Promise<string> {
+  const [climb] = await db
+    .select({ name: dbSchema.boardClimbs.name })
+    .from(dbSchema.boardClimbs)
+    .where(and(eq(dbSchema.boardClimbs.boardType, boardType), eq(dbSchema.boardClimbs.uuid, climbUuid)))
+    .limit(1);
+
+  const climbName = climb?.name?.trim();
+  if (!climbName) {
+    throw new InstagramBetaValidationError("We couldn't verify this Instagram link for the selected climb.");
+  }
+  return climbName;
+}
+
+// Beta links are only attached on successful ascents (flash / send), never on
+// `attempt`. Returns the URL to attach, or null if the tick shouldn't carry
+// one. Exported so the rule can be unit-tested without integration setup.
+export function videoUrlForTickStatus(
+  status: 'flash' | 'send' | 'attempt',
+  videoUrl: string | null | undefined,
+): string | null {
+  if (!videoUrl) return null;
+  if (status !== 'flash' && status !== 'send') return null;
+  return videoUrl;
+}
+
+async function ensureInstagramShortcodeIsNotAlreadyLinked(
+  boardType: string,
+  selectedClimbUuid: string,
+  instagramUrl: string,
+): Promise<void> {
+  const incomingShortcode = getInstagramMediaId(instagramUrl);
+  if (!incomingShortcode) return;
+
+  // Narrow at the DB level — the shortcode appears as `/p/<id>/`, `/reel/<id>/`,
+  // or `/tv/<id>/` in the link. A LIKE prefilter avoids loading every beta
+  // link for the board on every write. Drizzle parameterizes the value;
+  // escapeLikePattern handles `_` / `%` since shortcodes can contain
+  // underscores (which would otherwise act as wildcards). The post-fetch
+  // `getInstagramMediaId(entry.link)` re-check still filters any false
+  // positives (e.g. shortcodes appearing in non-canonical positions).
+  //
+  // Race: two concurrent attaches of the same shortcode can both pass this
+  // check. The (boardType, climbUuid, link) PK + onConflictDoNothing makes
+  // the loser a silent no-op rather than a duplicate row. The loser misses
+  // the friendly "already linked" message — acceptable for a beta-link
+  // feature; an advisory lock would be overkill.
+  const existingLinks = await db
+    .select({
+      climbName: dbSchema.boardClimbs.name,
+      climbUuid: dbSchema.boardBetaLinks.climbUuid,
+      link: dbSchema.boardBetaLinks.link,
+    })
+    .from(dbSchema.boardBetaLinks)
+    .innerJoin(
+      dbSchema.boardClimbs,
+      and(
+        eq(dbSchema.boardClimbs.boardType, dbSchema.boardBetaLinks.boardType),
+        eq(dbSchema.boardClimbs.uuid, dbSchema.boardBetaLinks.climbUuid),
+      ),
+    )
+    .where(
+      and(
+        eq(dbSchema.boardBetaLinks.boardType, boardType),
+        like(dbSchema.boardBetaLinks.link, `%${escapeLikePattern(incomingShortcode)}%`),
+      ),
+    );
+
+  for (const entry of existingLinks) {
+    if (getInstagramMediaId(entry.link) !== incomingShortcode) continue;
+
+    if (entry.climbUuid === selectedClimbUuid) {
+      throw new InstagramBetaValidationError(
+        'We already have this Instagram video linked for this climb. Try a different post or reel.',
+      );
+    }
+
+    throw new InstagramBetaValidationError(
+      `This Instagram post is already attached to "${entry.climbName}". Multi-climb slideshows are hard to navigate — please post a separate reel for this climb and share that one instead.`,
+    );
+  }
+}
+
+type EnrichedBetaInsert = {
+  thumbnail: string | null;
+  foreignUsername: string | null;
+};
+
+async function enrichInstagramBetaInsert(metadata: InstagramPageMetadata): Promise<EnrichedBetaInsert> {
+  const foreignUsername = metadata.username;
+
+  if (!isS3Configured() || !metadata.imageUrl) {
+    return { thumbnail: null, foreignUsername };
+  }
+
+  const mediaId = metadata.mediaId;
+  if (!mediaId) {
+    return { thumbnail: null, foreignUsername };
+  }
+
+  // Note: this S3 write happens before the boardseshTicks/boardBetaLinks
+  // insert in saveTick. If that subsequent transaction rolls back (bad
+  // sessionId, DB hiccup, dup conflict that we don't surface), the S3
+  // object is orphaned. Acceptable trade-off: the cache key is the IG
+  // media ID, so any future attach for the same post idempotently reuses
+  // the existing object — orphans aren't duplicated, they just sit at a
+  // few KB each indexed by media ID. If this becomes meaningful a
+  // periodic GC keyed on `boardBetaLinks.thumbnail` could sweep them.
+  const cached = await cacheInstagramThumbnail(mediaId, metadata.imageUrl);
+  return { thumbnail: cached, foreignUsername };
+}
+
+// Single gated entrypoint for write-time beta-link validation. Non-Instagram
+// URLs (TikTok and other zod-allowed platforms) skip the deep checks and
+// return null thumbnail/username — the read-time `betaLinks` resolver will
+// enrich them lazily. The `ctx` is used to apply per-user rate limiting on
+// the outbound IG fetch (only when we'd actually hit the network).
+// Exported for testing.
+export async function validateAndEnrichBetaLinkInsert(
+  ctx: ConnectionContext,
+  boardType: string,
+  climbUuid: string,
+  url: string,
+): Promise<EnrichedBetaInsert> {
+  if (!isInstagramUrl(url)) {
+    return { thumbnail: null, foreignUsername: null };
+  }
+
+  // Cap outbound IG fetches per user. 30/min is far above legitimate use
+  // (you don't attach beta videos that fast manually) but stops a tight
+  // loop from getting our IP rate-limited or blocked by Instagram.
+  await applyRateLimit(ctx, 30, 'instagram-beta-validation');
+
+  const climbName = await getClimbNameForBetaValidation(boardType, climbUuid);
+  await ensureInstagramShortcodeIsNotAlreadyLinked(boardType, climbUuid, url);
+  const metadata = await validateInstagramBetaLink(url, climbName);
+  return enrichInstagramBetaInsert(metadata);
+}
 
 export const tickMutations = {
   /**
@@ -104,6 +252,16 @@ export const tickMutations = {
       );
     }
 
+    // Run write-time Instagram validation before opening the transaction so a
+    // bad video URL doesn't leave a half-state. Zod already validated the
+    // surface shape; the helper confirms the post is actually public, mentions
+    // the climb name, and isn't already attached to another climb. TikTok and
+    // other supported platforms skip the deep validation.
+    const attachedVideoUrl = videoUrlForTickStatus(validatedInput.status, validatedInput.videoUrl);
+    const enrichedInsert: EnrichedBetaInsert = attachedVideoUrl
+      ? await validateAndEnrichBetaLinkInsert(ctx, validatedInput.boardType, validatedInput.climbUuid, attachedVideoUrl)
+      : { thumbnail: null, foreignUsername: null };
+
     // Insert into database
     const [tick] = await db.transaction(async (tx) => {
       const [createdTick] = await tx
@@ -138,21 +296,20 @@ export const tickMutations = {
         await tx.update(sessions).set({ lastActivity: new Date() }).where(eq(sessions.id, validatedInput.sessionId));
       }
 
-      // Attach the Instagram URL as community beta for this climb if the
-      // user provided one on a successful ascent. Zod already validated the
-      // URL format; the (boardType, climbUuid, link) PK makes re-submission
-      // idempotent.
-      const shouldAttachBeta =
-        validatedInput.videoUrl && (validatedInput.status === 'flash' || validatedInput.status === 'send');
-      if (shouldAttachBeta) {
+      // Attach the video URL as community beta for this climb if the user
+      // provided one on a successful ascent. The (boardType, climbUuid, link)
+      // PK makes re-submission idempotent.
+      if (attachedVideoUrl) {
         await tx
           .insert(dbSchema.boardBetaLinks)
           .values({
             boardType: validatedInput.boardType,
             climbUuid: validatedInput.climbUuid,
-            link: validatedInput.videoUrl!,
+            link: attachedVideoUrl,
             angle: validatedInput.angle,
             isListed: true,
+            thumbnail: enrichedInsert.thumbnail,
+            foreignUsername: enrichedInsert.foreignUsername,
             createdAt: now,
           })
           .onConflictDoNothing();
@@ -218,17 +375,39 @@ export const tickMutations = {
     const validated = validateInput(AttachBetaLinkInputSchema, input, 'input');
     const now = new Date().toISOString();
 
-    await db
-      .insert(dbSchema.boardBetaLinks)
-      .values({
-        boardType: validated.boardType,
-        climbUuid: validated.climbUuid,
-        link: validated.link,
-        angle: validated.angle ?? null,
-        isListed: true,
-        createdAt: now,
-      })
-      .onConflictDoNothing();
+    // Validation runs first — it's an outbound HTTP fetch we don't want to
+    // hold a DB connection open for. The insert is a single statement; no
+    // need to wrap it in a transaction. The catch surfaces an explicit error
+    // for the rare case where the insert fails (constraint, connection drop)
+    // after validation already passed, so the user doesn't see the generic
+    // "couldn't add video" toast.
+    const enrichedInsert = await validateAndEnrichBetaLinkInsert(
+      ctx,
+      validated.boardType,
+      validated.climbUuid,
+      validated.link,
+    );
+
+    try {
+      await db
+        .insert(dbSchema.boardBetaLinks)
+        .values({
+          boardType: validated.boardType,
+          climbUuid: validated.climbUuid,
+          link: validated.link,
+          angle: validated.angle ?? null,
+          isListed: true,
+          thumbnail: enrichedInsert.thumbnail,
+          foreignUsername: enrichedInsert.foreignUsername,
+          createdAt: now,
+        })
+        .onConflictDoNothing();
+    } catch (err) {
+      console.error('[attachBetaLink] insert failed after validation passed:', err);
+      throw new GraphQLError("Couldn't save the beta link. Please try again.", {
+        extensions: { code: 'BETA_LINK_INSERT_FAILED' },
+      });
+    }
 
     return true;
   },
