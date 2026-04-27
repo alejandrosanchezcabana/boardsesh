@@ -22,6 +22,7 @@ vi.mock('bcryptjs', () => ({
   default: {
     hash: (...args: unknown[]) => mockBcryptHash(...args),
   },
+  hash: (...args: unknown[]) => mockBcryptHash(...args),
 }));
 
 // Mock rate limiter

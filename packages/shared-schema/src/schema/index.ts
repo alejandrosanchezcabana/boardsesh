@@ -21,6 +21,7 @@ import { subscriptionsTypeDefs } from './subscriptions';
 import { eventsTypeDefs } from './events';
 import { controllerTypeDefs } from './controller';
 import { feedbackTypeDefs } from './feedback';
+import { betaLinksTypeDefs } from './beta-links';
 
 export const typeDefs = [
   scalarTypeDefs,
@@ -40,6 +41,7 @@ export const typeDefs = [
   proposalsTypeDefs,
   socialTypeDefs,
   newClimbFeedTypeDefs,
+  betaLinksTypeDefs,
   queriesTypeDefs,
   mutationsTypeDefs,
   subscriptionsTypeDefs,

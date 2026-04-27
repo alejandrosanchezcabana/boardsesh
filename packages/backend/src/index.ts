@@ -1,4 +1,7 @@
 import 'dotenv/config';
+// Load .env.development.local (gitignored) on top of .env.development for secrets
+import dotenv from 'dotenv';
+dotenv.config({ path: '.env.development.local', override: true });
 import { startServer } from './server';
 import { redisClientManager } from './redis/client';
 import { closePool } from '@boardsesh/db/client';

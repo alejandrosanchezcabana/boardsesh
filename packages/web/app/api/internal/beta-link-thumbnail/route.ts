@@ -1,0 +1,72 @@
+/**
+ * Dev-only proxy for Instagram + TikTok beta-link thumbnails.
+ *
+ * The `betaLinks` GraphQL resolver caches thumbnails to S3 in production. In
+ * development (or any environment without `AWS_S3_BUCKET_NAME` set) S3 isn't
+ * available, so the resolver returns URLs that point at this route — letting
+ * the browser fetch CDN thumbnails through our backend instead of cross-
+ * origin against fbcdn / cdninstagram / tiktokcdn.
+ *
+ * Disabled (410) whenever S3 is configured: real environments should never
+ * need this hop, and disabling closes off a needless SSRF surface.
+ */
+import { type NextRequest, NextResponse } from 'next/server';
+
+const ALLOWED_HOST_SUFFIXES = [
+  '.fbcdn.net',
+  '.cdninstagram.com',
+  '.tiktokcdn.com',
+  '.tiktokcdn-us.com',
+  '.tiktokcdn-eu.com',
+];
+const FETCH_TIMEOUT_MS = 8000;
+const USER_AGENT =
+  'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.0 Safari/605.1.15';
+
+export const dynamic = 'force-dynamic';
+
+function isProxyDisabled(): boolean {
+  return !!process.env.AWS_S3_BUCKET_NAME;
+}
+
+export async function GET(request: NextRequest) {
+  if (isProxyDisabled()) {
+    return new NextResponse('Disabled', { status: 410 });
+  }
+  const target = request.nextUrl.searchParams.get('url');
+  if (!target) return new NextResponse('Missing url', { status: 400 });
+
+  let parsed: URL;
+  try {
+    parsed = new URL(target);
+  } catch {
+    return new NextResponse('Invalid url', { status: 400 });
+  }
+  if (parsed.protocol !== 'https:') return new NextResponse('Invalid protocol', { status: 400 });
+  const hostAllowed = ALLOWED_HOST_SUFFIXES.some((suffix) => parsed.hostname.endsWith(suffix));
+  if (!hostAllowed) return new NextResponse('Host not allowed', { status: 400 });
+
+  try {
+    const upstream = await fetch(target, {
+      headers: { 'User-Agent': USER_AGENT, Accept: 'image/*,*/*;q=0.8' },
+      signal: AbortSignal.timeout(FETCH_TIMEOUT_MS),
+      // Block redirects: a CDN URL that 30x's into an internal address would
+      // otherwise be silently followed. Allowlist applies only to the URL we
+      // were handed, not whatever the upstream wants to bounce us to.
+      redirect: 'error',
+      cache: 'no-store',
+    });
+    if (!upstream.ok || !upstream.body) {
+      return new NextResponse('Upstream failed', { status: upstream.status || 502 });
+    }
+    return new NextResponse(upstream.body, {
+      status: 200,
+      headers: {
+        'Content-Type': upstream.headers.get('content-type') ?? 'image/jpeg',
+        'Cache-Control': 'public, max-age=3600, s-maxage=86400',
+      },
+    });
+  } catch {
+    return new NextResponse('Fetch failed', { status: 502 });
+  }
+}

@@ -16,9 +16,6 @@ vi.mock('next/navigation', () => ({
 }));
 
 // Mock child components to avoid pulling in their dependency trees
-vi.mock('@/app/components/beta-videos/beta-videos', () => ({
-  default: () => null,
-}));
 vi.mock('@/app/components/logbook/logbook-section', () => ({
   LogbookSection: () => null,
   useLogbookSummary: () => null,
@@ -95,13 +92,13 @@ describe('useBuildClimbDetailSections', () => {
     vi.restoreAllMocks();
   });
 
-  it('returns 5 sections when enabled (default)', () => {
+  it('returns 4 sections when enabled (default)', () => {
     const { result } = renderHook(() => useBuildClimbDetailSections(BASE_PROPS), {
       wrapper: createWrapper(),
     });
 
-    expect(result.current).toHaveLength(5);
-    expect(result.current.map((s) => s.key)).toEqual(['beta', 'logbook', 'crew-logbook', 'community', 'analytics']);
+    expect(result.current).toHaveLength(4);
+    expect(result.current.map((s) => s.key)).toEqual(['logbook', 'crew-logbook', 'community', 'analytics']);
   });
 
   it('returns empty array when enabled is false', () => {
@@ -110,16 +107,6 @@ describe('useBuildClimbDetailSections', () => {
     });
 
     expect(result.current).toEqual([]);
-  });
-
-  it('does not fire the beta links query when enabled is false', () => {
-    const fetchSpy = vi.spyOn(globalThis, 'fetch');
-
-    renderHook(() => useBuildClimbDetailSections({ ...BASE_PROPS, enabled: false }), {
-      wrapper: createWrapper(),
-    });
-
-    expect(fetchSpy).not.toHaveBeenCalled();
   });
 
   it('returns sections again when enabled flips from false to true', () => {
@@ -133,8 +120,8 @@ describe('useBuildClimbDetailSections', () => {
 
     rerender({ enabled: true });
 
-    expect(result.current).toHaveLength(5);
-    expect(result.current.map((s) => s.key)).toEqual(['beta', 'logbook', 'crew-logbook', 'community', 'analytics']);
+    expect(result.current).toHaveLength(4);
+    expect(result.current.map((s) => s.key)).toEqual(['logbook', 'crew-logbook', 'community', 'analytics']);
   });
 
   it('all sections have lazy: true', () => {

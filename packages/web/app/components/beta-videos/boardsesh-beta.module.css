@@ -1,0 +1,153 @@
+.section {
+  padding: 12px 12px 0;
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 8px;
+}
+
+.headerLabel {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--neutral-500);
+}
+
+.scrollContainer {
+  display: flex;
+  gap: 10px;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  scroll-snap-type: x proximity;
+  scrollbar-width: none;
+  padding-bottom: 4px;
+}
+
+.scrollContainer::-webkit-scrollbar {
+  display: none;
+}
+
+.card {
+  flex-shrink: 0;
+  width: 143px;
+  cursor: pointer;
+  scroll-snap-align: start;
+  transition: transform 150ms ease;
+  position: relative;
+  text-decoration: none;
+  color: inherit;
+  display: block;
+}
+
+.card:active {
+  transform: scale(0.97);
+}
+
+.thumbnailPlaceholder {
+  width: 100%;
+  height: 100%;
+  background: var(--neutral-200);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.thumbnailWrapper {
+  position: relative;
+  aspect-ratio: 9 / 16;
+  border-radius: 8px;
+  overflow: hidden;
+  background: var(--neutral-100);
+  border: 1px solid var(--neutral-200);
+}
+
+.thumbnail {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.userChip {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: var(--overlay-dark);
+  color: white;
+  font-size: 11px;
+  padding: 2px 6px;
+  text-align: center;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  line-height: 1.4;
+}
+
+.uploadCard {
+  flex-shrink: 0;
+  width: 72px;
+  scroll-snap-align: start;
+  display: flex;
+}
+
+.uploadButton {
+  flex: 1;
+  border-radius: 8px;
+  border: 2px dashed var(--neutral-300);
+  background: transparent;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  color: var(--neutral-400);
+  font-size: 12px;
+  font-weight: 600;
+  transition:
+    border-color 200ms ease,
+    color 200ms ease;
+}
+
+.uploadButton:hover {
+  border-color: var(--primary);
+  color: var(--primary);
+}
+
+.platformBadge {
+  position: absolute;
+  top: 6px;
+  left: 6px;
+  background: var(--overlay-dark);
+  color: white;
+  border-radius: 4px;
+  padding: 2px 3px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
+}
+
+.emptyText {
+  font-size: 13px;
+  color: var(--neutral-400);
+  align-self: center;
+  white-space: nowrap;
+}
+
+@media (min-width: 768px) {
+  .card {
+    width: 169px;
+  }
+
+  .uploadCard {
+    width: 85px;
+  }
+}

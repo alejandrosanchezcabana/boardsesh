@@ -508,5 +508,16 @@ export const queriesTypeDefs = /* GraphQL */ `
     Get vote summaries for multiple entities of the same type.
     """
     bulkVoteSummaries(input: BulkVoteSummaryInput!): [VoteSummary!]!
+
+    # ============================================
+    # Beta Link Queries
+    # ============================================
+
+    """
+    Get external (Instagram, TikTok) beta links for a climb.
+    Live-checks each post and omits any that have been deleted or made private.
+    Caches thumbnails to our S3 bucket on first read.
+    """
+    betaLinks(boardType: String!, climbUuid: String!): [BetaLink!]!
   }
 `;

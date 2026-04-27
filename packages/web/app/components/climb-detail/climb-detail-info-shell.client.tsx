@@ -6,13 +6,12 @@ import ClimbDetailShellClient from './climb-detail-shell.client';
 import { useBuildClimbDetailSections } from './build-climb-detail-sections';
 import { useDoubleTapFavorite } from '@/app/components/climb-actions/use-double-tap-favorite';
 import HeartAnimationOverlay from '@/app/components/climb-card/heart-animation-overlay';
-import type { BetaLink } from '@/app/lib/api-wrappers/sync-api-types';
 import type { BoardDetails, Climb } from '@/app/lib/types';
+import BoardseshBetaSection from '@/app/components/beta-videos/boardsesh-beta-section';
 
 type ClimbDetailInfoShellClientProps = {
   climb: Climb;
   boardDetails: BoardDetails;
-  betaLinks: BetaLink[];
   climbUuid: string;
   boardType: string;
   angle: number;
@@ -23,7 +22,6 @@ type ClimbDetailInfoShellClientProps = {
 export default function ClimbDetailInfoShellClient({
   climb,
   boardDetails,
-  betaLinks,
   climbUuid,
   boardType,
   angle,
@@ -32,7 +30,6 @@ export default function ClimbDetailInfoShellClient({
 }: ClimbDetailInfoShellClientProps) {
   const sections = useBuildClimbDetailSections({
     climb,
-    betaLinks,
     climbUuid,
     boardType,
     angle,
@@ -57,6 +54,7 @@ export default function ClimbDetailInfoShellClient({
         />
       }
       sections={sections}
+      betaSection={<BoardseshBetaSection boardType={boardType} climbUuid={climbUuid} angle={angle} />}
     />
   );
 }

@@ -52,7 +52,6 @@ vi.mock('@/app/lib/data/queries', () => ({
 vi.mock('@/app/lib/data/climb-detail-data.server', () => ({
   fetchClimbDetailData: vi.fn(async () => ({
     communityGrade: null,
-    betaLinks: [],
   })),
 }));
 

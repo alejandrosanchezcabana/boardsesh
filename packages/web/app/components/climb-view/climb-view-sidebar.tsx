@@ -3,12 +3,10 @@
 import React from 'react';
 import CollapsibleSection from '@/app/components/collapsible-section/collapsible-section';
 import { useBuildClimbDetailSections } from '@/app/components/climb-detail/build-climb-detail-sections';
-import type { BetaLink } from '@/app/lib/api-wrappers/sync-api-types';
 import type { Climb } from '@/app/lib/types';
 
 type ClimbViewSidebarProps = {
   climb: Climb;
-  betaLinks: BetaLink[];
   climbUuid: string;
   boardType: string;
   angle: number;
@@ -18,7 +16,6 @@ type ClimbViewSidebarProps = {
 
 export default function ClimbViewSidebar({
   climb,
-  betaLinks,
   climbUuid,
   boardType,
   angle,
@@ -27,7 +24,6 @@ export default function ClimbViewSidebar({
 }: ClimbViewSidebarProps) {
   const sections = useBuildClimbDetailSections({
     climb,
-    betaLinks,
     climbUuid,
     boardType,
     angle,
