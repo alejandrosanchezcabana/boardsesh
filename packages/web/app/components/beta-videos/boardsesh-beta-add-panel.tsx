@@ -25,7 +25,7 @@ const BoardseshBetaAddPanel: React.FC<BoardseshBetaAddPanelProps> = ({
   onSuccess,
 }) => {
   return (
-    <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5, padding: '12px 12px 4px' }}>
+    <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5, px: 1.5, pt: 1.5, pb: 0.5 }}>
       <AttachBetaLinkForm
         boardType={boardType}
         climbUuid={climbUuid}

@@ -1,12 +1,8 @@
 'use client';
 
-import React, { useMemo } from 'react';
-import { useQuery } from '@tanstack/react-query';
+import React from 'react';
 import Skeleton from '@mui/material/Skeleton';
-import { createGraphQLHttpClient } from '@/app/lib/graphql/client';
-import { GET_BETA_LINKS } from '@/app/lib/graphql/operations/beta-links';
 import type { BetaLink } from '@/app/lib/api-wrappers/sync-api-types';
-import { dedupeBetaLinks, mapBetaLinksResponse } from '@/app/lib/beta-video-url';
 import BoardseshBetaCard from './boardsesh-beta-card';
 import BoardseshBetaAddPanel from './boardsesh-beta-add-panel';
 import styles from './boardsesh-beta.module.css';
@@ -15,6 +11,8 @@ type BoardseshBetaSectionProps = {
   boardType: string;
   climbUuid: string;
   angle: number;
+  links: BetaLink[];
+  isLoading: boolean;
   isAdding: boolean;
   onCancelAdd: () => void;
   onAddSuccess: () => void;
@@ -24,27 +22,12 @@ const BoardseshBetaSection: React.FC<BoardseshBetaSectionProps> = ({
   boardType,
   climbUuid,
   angle,
+  links,
+  isLoading,
   isAdding,
   onCancelAdd,
   onAddSuccess,
 }) => {
-  const { data: betaLinks = [], isLoading } = useQuery<BetaLink[]>({
-    queryKey: ['betaLinks', boardType, climbUuid],
-    queryFn: async () => {
-      const client = createGraphQLHttpClient();
-      const result = await client.request<{ betaLinks: Parameters<typeof mapBetaLinksResponse>[0] }>(GET_BETA_LINKS, {
-        boardType,
-        climbUuid,
-      });
-      return mapBetaLinksResponse(result.betaLinks);
-    },
-    enabled: !!climbUuid,
-    staleTime: 5 * 60 * 1000,
-  });
-
-  const dedupedLinks = useMemo(() => dedupeBetaLinks(betaLinks), [betaLinks]);
-  const totalCount = dedupedLinks.length;
-
   if (isAdding) {
     return (
       <BoardseshBetaAddPanel
@@ -70,10 +53,10 @@ const BoardseshBetaSection: React.FC<BoardseshBetaSectionProps> = ({
           ))
         ) : (
           <>
-            {dedupedLinks.map((link) => (
+            {links.map((link) => (
               <BoardseshBetaCard key={link.link} link={link} />
             ))}
-            {totalCount === 0 && <span className={styles.emptyText}>No beta videos yet</span>}
+            {links.length === 0 && <span className={styles.emptyText}>No beta videos yet</span>}
           </>
         )}
       </div>

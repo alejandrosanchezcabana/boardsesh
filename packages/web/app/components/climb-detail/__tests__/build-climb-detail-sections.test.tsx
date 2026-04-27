@@ -132,13 +132,12 @@ describe('useBuildClimbDetailSections', () => {
     expect(result.current.map((s) => s.key)).toEqual(['beta', 'logbook', 'crew-logbook', 'community', 'analytics']);
   });
 
-  it('non-beta sections are lazy', () => {
+  it('all sections are lazy', () => {
     const { result } = renderHook(() => useBuildClimbDetailSections(BASE_PROPS), {
       wrapper: createWrapper(),
     });
 
     for (const section of result.current) {
-      if (section.key === 'beta') continue;
       expect(section.lazy).toBe(true);
     }
   });

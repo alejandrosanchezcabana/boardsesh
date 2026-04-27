@@ -1,9 +1,10 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { useQuery } from '@tanstack/react-query';
 import VideocamOutlined from '@mui/icons-material/VideocamOutlined';
+import Box from '@mui/material/Box';
 import type { CollapsibleSectionConfig } from '@/app/components/collapsible-section/collapsible-section';
 import { LogbookSection, useLogbookSummary } from '@/app/components/logbook/logbook-section';
 import { CrewLogbookView } from '@/app/components/logbook/crew-logbook-view';
@@ -16,6 +17,20 @@ import { GET_BETA_LINKS } from '@/app/lib/graphql/operations/beta-links';
 import { dedupeBetaLinks, mapBetaLinksResponse } from '@/app/lib/beta-video-url';
 import type { BetaLink } from '@/app/lib/api-wrappers/sync-api-types';
 import type { Climb } from '@/app/lib/types';
+
+const BETA_LABEL = (
+  <Box component="span" sx={{ display: 'inline-flex', alignItems: 'center', gap: 0.75 }}>
+    <VideocamOutlined sx={{ fontSize: 16 }} />
+    Beta
+  </Box>
+);
+
+const BETA_TITLE = (
+  <Box component="span" sx={{ display: 'inline-flex', alignItems: 'center', gap: 1 }}>
+    <VideocamOutlined sx={{ fontSize: 22 }} />
+    Beta
+  </Box>
+);
 
 type BuildClimbDetailSectionsProps = {
   climb: Climb;
@@ -43,7 +58,7 @@ export function useBuildClimbDetailSections({
   const logbookSummary = useLogbookSummary(climb.uuid);
   const [isAddingBeta, setIsAddingBeta] = useState(false);
 
-  const { data: betaLinks = [] } = useQuery<BetaLink[]>({
+  const { data: betaLinks = [], isLoading: betaLinksLoading } = useQuery<BetaLink[]>({
     queryKey: ['betaLinks', boardType, climbUuid],
     queryFn: async () => {
       const client = createGraphQLHttpClient();
@@ -56,7 +71,8 @@ export function useBuildClimbDetailSections({
     enabled: enabledProp && !!climbUuid,
     staleTime: 5 * 60 * 1000,
   });
-  const betaCount = dedupeBetaLinks(betaLinks).length;
+  const dedupedBetaLinks = useMemo(() => dedupeBetaLinks(betaLinks), [betaLinks]);
+  const betaCount = dedupedBetaLinks.length;
 
   if (!enabledProp) return [];
 
@@ -73,34 +89,24 @@ export function useBuildClimbDetailSections({
     return parts;
   };
 
-  const betaLabel = (
-    <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}>
-      <VideocamOutlined sx={{ fontSize: 16 }} />
-      Beta
-    </span>
-  );
-  const betaTitle = (
-    <span style={{ display: 'inline-flex', alignItems: 'center', gap: 8 }}>
-      <VideocamOutlined sx={{ fontSize: 22 }} />
-      Beta
-    </span>
-  );
-
   return [
     {
       key: 'beta',
-      label: betaLabel,
-      title: betaTitle,
+      label: BETA_LABEL,
+      title: BETA_TITLE,
       defaultSummary: 'No videos yet',
       getSummary: () => (betaCount > 0 ? [`${betaCount} video${betaCount !== 1 ? 's' : ''}`] : []),
       defaultActive: !highlightProposalUuid,
       flush: true,
+      lazy: true,
       action: <BoardseshBetaAddButton isAdding={isAddingBeta} onToggle={() => setIsAddingBeta((v) => !v)} />,
       content: (
         <BoardseshBetaSection
           boardType={boardType}
           climbUuid={climbUuid}
           angle={angle}
+          links={dedupedBetaLinks}
+          isLoading={betaLinksLoading}
           isAdding={isAddingBeta}
           onCancelAdd={() => setIsAddingBeta(false)}
           onAddSuccess={() => setIsAddingBeta(false)}

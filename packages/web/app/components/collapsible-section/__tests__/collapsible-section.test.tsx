@@ -134,4 +134,49 @@ describe('CollapsibleSection', () => {
       expect(screen.queryByText('Grade breakdown')).toBeNull();
     });
   });
+
+  describe('action slot', () => {
+    function sectionsWithAction(defaultActive: boolean): CollapsibleSectionConfig[] {
+      const base = makeSections();
+      base[0] = {
+        ...base[0],
+        defaultActive,
+        action: <button data-testid="invite-action">+</button>,
+      };
+      return base;
+    }
+
+    it('does not render the action while the section is collapsed', () => {
+      render(<CollapsibleSection sections={sectionsWithAction(false)} />);
+      expect(screen.queryByTestId('invite-action')).toBeNull();
+    });
+
+    it('renders the action when the section is expanded', () => {
+      render(<CollapsibleSection sections={sectionsWithAction(true)} />);
+      expect(screen.getByTestId('invite-action')).toBeDefined();
+    });
+
+    it('reveals the action after the user expands a collapsed section', () => {
+      render(<CollapsibleSection sections={sectionsWithAction(false)} />);
+      expect(screen.queryByTestId('invite-action')).toBeNull();
+
+      fireEvent.click(screen.getByText('Invite'));
+      expect(screen.getByTestId('invite-action')).toBeDefined();
+    });
+
+    it('clicking the action does not collapse the section', () => {
+      render(<CollapsibleSection sections={sectionsWithAction(true)} />);
+      expect(screen.getByText('Invite others')).toBeDefined();
+
+      fireEvent.click(screen.getByTestId('invite-action'));
+
+      // Section is still expanded (title visible).
+      expect(screen.getByText('Invite others')).toBeDefined();
+    });
+
+    it('hides the summary when an action is provided and the section is expanded', () => {
+      render(<CollapsibleSection sections={sectionsWithAction(true)} />);
+      expect(screen.queryByText('Share link')).toBeNull();
+    });
+  });
 });
