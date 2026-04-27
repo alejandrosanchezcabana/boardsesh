@@ -12,7 +12,6 @@ export const socialTypeDefs = /* GraphQL */ `
     board
     gym
     session
-    beta_video
   }
 
   enum SortMode {

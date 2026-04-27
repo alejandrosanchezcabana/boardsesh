@@ -9,10 +9,11 @@ export default defineConfig({
   lint: {
     options: {
       // typeAware/typeCheck (oxlint type-aware rules + tsgolint integration)
-      // are off here: the underlying oxlint requires the two to be paired
-      // (`--type-check` errors without `--type-aware`), and enabling both
-      // makes precommit too slow on this monorepo. Full type checking still
-      // runs separately via `vp run typecheck` and the typecheck CI job.
+      // are off here: oxlint requires the two paired (`--type-check` errors
+      // without `--type-aware`), and enabling them surfaces ~138 pre-existing
+      // violations across bundled assets and unrelated files. Full type
+      // checking still runs via `vp run typecheck` and the typecheck CI job;
+      // the staged hook (`vp check --fix`) handles lint + format.
     },
   },
   test: {

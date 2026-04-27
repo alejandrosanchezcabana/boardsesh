@@ -3,6 +3,9 @@ import { ExternalUUIDSchema, BoardNameSchema } from './primitives';
 
 const INSTAGRAM_URL_REGEX =
   /^https?:\/\/(?:www\.)?(?:instagram\.com|instagr\.am)\/(?:p|reel|tv)\/([\w-]+)\/?(?:[?#].*)?$/i;
+const TIKTOK_URL_REGEX = /^https?:\/\/(?:[a-z0-9-]+\.)?tiktok\.com\//i;
+const BETA_VIDEO_URL_REGEX = new RegExp(`(?:${INSTAGRAM_URL_REGEX.source})|(?:${TIKTOK_URL_REGEX.source})`, 'i');
+const BETA_VIDEO_URL_ERROR = 'Must be an Instagram or TikTok URL';
 
 /**
  * Tick status validation schema
@@ -31,12 +34,7 @@ export const SaveTickInputSchema = z
     layoutId: z.number().int().positive().optional(),
     sizeId: z.number().int().positive().optional(),
     setIds: z.string().min(1).optional(),
-    videoUrl: z
-      .string()
-      .max(500)
-      .regex(INSTAGRAM_URL_REGEX, 'Must be an Instagram post or reel URL')
-      .optional()
-      .nullable(),
+    videoUrl: z.string().max(500).regex(BETA_VIDEO_URL_REGEX, BETA_VIDEO_URL_ERROR).optional().nullable(),
   })
   .refine(
     (data) => {
@@ -65,7 +63,7 @@ export const GetTicksInputSchema = z.object({
 export const AttachBetaLinkInputSchema = z.object({
   boardType: BoardNameSchema,
   climbUuid: ExternalUUIDSchema,
-  link: z.string().max(500).regex(INSTAGRAM_URL_REGEX, 'Must be an Instagram post or reel URL'),
+  link: z.string().max(500).regex(BETA_VIDEO_URL_REGEX, BETA_VIDEO_URL_ERROR),
   angle: z.number().int().min(0).max(90).optional().nullable(),
 });
 

@@ -20,7 +20,7 @@ import { track } from '@vercel/analytics';
 import type { Climb, BoardDetails } from '@/app/lib/types';
 import { type TickStatus, useBoardProvider } from '../board-provider/board-provider-context';
 import { TENSION_KILTER_GRADES, ANGLES } from '@/app/lib/board-data';
-import { isInstagramUrl } from '@/app/lib/instagram-url';
+import { isBetaVideoUrl, BETA_VIDEO_URL_VALIDATION_MESSAGE } from '@/app/lib/beta-video-url';
 
 import dayjs from 'dayjs';
 
@@ -93,8 +93,8 @@ export const LogAscentForm: React.FC<LogAscentFormProps> = ({ currentClimb, boar
   };
 
   const videoUrlError =
-    logType === 'ascent' && formValues.videoUrl && !isInstagramUrl(formValues.videoUrl)
-      ? 'Needs to be an Instagram post or reel URL'
+    logType === 'ascent' && formValues.videoUrl && !isBetaVideoUrl(formValues.videoUrl)
+      ? BETA_VIDEO_URL_VALIDATION_MESSAGE
       : null;
 
   // Validation function matching backend rules
@@ -116,8 +116,8 @@ export const LogAscentForm: React.FC<LogAscentFormProps> = ({ currentClimb, boar
       return 'Send requires more than 1 attempt';
     }
 
-    if (values.videoUrl && !isInstagramUrl(values.videoUrl)) {
-      return 'Needs to be an Instagram post or reel URL';
+    if (values.videoUrl && !isBetaVideoUrl(values.videoUrl)) {
+      return BETA_VIDEO_URL_VALIDATION_MESSAGE;
     }
 
     return null; // Valid
@@ -311,14 +311,14 @@ export const LogAscentForm: React.FC<LogAscentFormProps> = ({ currentClimb, boar
           <Typography sx={{ width: 120, flexShrink: 0, pt: 1 }}>Video</Typography>
           <Box sx={{ flex: 1 }}>
             <TextField
-              placeholder="https://www.instagram.com/reel/..."
+              placeholder="Instagram or TikTok URL"
               variant="outlined"
               size="small"
               fullWidth
               value={formValues.videoUrl || ''}
               onChange={(e) => setFormValues((prev) => ({ ...prev, videoUrl: e.target.value }))}
               error={!!videoUrlError}
-              helperText={videoUrlError ?? 'Paste a reel link so others can see your beta. (Optional)'}
+              helperText={videoUrlError ?? 'Paste an Instagram or TikTok link so others can see your beta. (Optional)'}
             />
           </Box>
         </Box>

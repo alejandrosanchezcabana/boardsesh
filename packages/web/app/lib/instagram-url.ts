@@ -1,4 +1,5 @@
 import type { BetaLink } from '@/app/lib/api-wrappers/sync-api-types';
+import { getTikTokVideoId } from './tiktok-url';
 
 export const INSTAGRAM_URL_REGEX =
   /^https?:\/\/(?:www\.)?(?:instagram\.com|instagr\.am)\/(?:p|reel|tv)\/([\w-]+)\/?(?:[?#].*)?$/i;
@@ -25,8 +26,13 @@ export function dedupeBetaLinks(betaLinks: BetaLink[]): BetaLink[] {
   const indexByIdentity = new Map<string, number>();
 
   for (const betaLink of betaLinks) {
-    const mediaId = getInstagramMediaId(betaLink.link);
-    const identity = mediaId ? `instagram:${mediaId}` : `raw:${betaLink.link}`;
+    const instagramId = getInstagramMediaId(betaLink.link);
+    const tiktokId = instagramId ? null : getTikTokVideoId(betaLink.link);
+    const identity = instagramId
+      ? `instagram:${instagramId}`
+      : tiktokId
+        ? `tiktok:${tiktokId}`
+        : `raw:${betaLink.link}`;
     const existingIndex = indexByIdentity.get(identity);
 
     if (existingIndex === undefined) {

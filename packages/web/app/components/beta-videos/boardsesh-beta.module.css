@@ -121,11 +121,11 @@
   color: var(--primary);
 }
 
-.instagramBadge {
+.platformBadge {
   position: absolute;
   top: 6px;
   left: 6px;
-  background: rgba(0, 0, 0, 0.6);
+  background: var(--overlay-dark);
   color: white;
   border-radius: 4px;
   padding: 2px 3px;

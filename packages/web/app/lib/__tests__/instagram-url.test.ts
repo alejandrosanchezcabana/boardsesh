@@ -104,4 +104,31 @@ describe('instagram-url', () => {
 
     expect(deduped).toHaveLength(2);
   });
+
+  it('dedupes TikTok links that point to the same video by numeric id', () => {
+    const deduped = dedupeBetaLinks([
+      makeBetaLink({
+        link: 'https://www.tiktok.com/@climber/video/123456789',
+        foreign_username: null,
+      }),
+      makeBetaLink({
+        link: 'https://tiktok.com/@climber/video/123456789?utm=share',
+        foreign_username: 'climber',
+        thumbnail: 'https://cdn.example.com/tt.jpg',
+      }),
+    ]);
+
+    expect(deduped).toHaveLength(1);
+    expect(deduped[0]?.foreign_username).toBe('climber');
+    expect(deduped[0]?.thumbnail).toBe('https://cdn.example.com/tt.jpg');
+  });
+
+  it('keeps Instagram and TikTok links as separate videos', () => {
+    const deduped = dedupeBetaLinks([
+      makeBetaLink({ link: 'https://www.instagram.com/reel/ABC/' }),
+      makeBetaLink({ link: 'https://www.tiktok.com/@a/video/1' }),
+    ]);
+
+    expect(deduped).toHaveLength(2);
+  });
 });

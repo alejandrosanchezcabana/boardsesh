@@ -58,7 +58,14 @@ export default function ClimbDetailShellClient({
           </>
         ) : null}
       </div>
-      <div>{isDesktop ? (desktopRightColumn ?? <CollapsibleSection sections={sections} />) : null}</div>
+      <div>
+        {isDesktop ? (
+          <>
+            {betaSection}
+            {desktopRightColumn ?? <CollapsibleSection sections={sections} />}
+          </>
+        ) : null}
+      </div>
     </div>
   );
 }

@@ -1,6 +1,12 @@
 import { type NextRequest, NextResponse } from 'next/server';
 
-const ALLOWED_HOST_SUFFIXES = ['.fbcdn.net', '.cdninstagram.com'];
+const ALLOWED_HOST_SUFFIXES = [
+  '.fbcdn.net',
+  '.cdninstagram.com',
+  '.tiktokcdn.com',
+  '.tiktokcdn-us.com',
+  '.tiktokcdn-eu.com',
+];
 const FETCH_TIMEOUT_MS = 8000;
 const USER_AGENT =
   'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.0 Safari/605.1.15';

@@ -3,6 +3,8 @@
 import React, { useState } from 'react';
 import Instagram from '@mui/icons-material/Instagram';
 import type { BetaLink } from '@/app/lib/api-wrappers/sync-api-types';
+import { isTikTokUrl } from '@/app/lib/tiktok-url';
+import TikTokIcon from './tiktok-icon';
 import styles from './boardsesh-beta.module.css';
 
 type BoardseshBetaCardProps = {
@@ -12,6 +14,9 @@ type BoardseshBetaCardProps = {
 const BoardseshBetaCard: React.FC<BoardseshBetaCardProps> = ({ link }) => {
   const [thumbnailFailed, setThumbnailFailed] = useState(false);
   const thumbnailSrc = !thumbnailFailed ? link.thumbnail : null;
+  const isTikTok = isTikTokUrl(link.link);
+  const PlatformIcon = isTikTok ? TikTokIcon : Instagram;
+  const platformName = isTikTok ? 'TikTok' : 'Instagram';
 
   return (
     <a
@@ -19,7 +24,7 @@ const BoardseshBetaCard: React.FC<BoardseshBetaCardProps> = ({ link }) => {
       target="_blank"
       rel="noopener noreferrer"
       className={styles.card}
-      aria-label={`Open beta on Instagram${link.foreign_username ? ` by ${link.foreign_username}` : ''}`}
+      aria-label={`Open beta on ${platformName}${link.foreign_username ? ` by ${link.foreign_username}` : ''}`}
     >
       <div className={styles.thumbnailWrapper}>
         {thumbnailSrc ? (
@@ -33,11 +38,11 @@ const BoardseshBetaCard: React.FC<BoardseshBetaCardProps> = ({ link }) => {
           />
         ) : (
           <div className={styles.thumbnailPlaceholder}>
-            <Instagram sx={{ fontSize: 28, color: 'var(--neutral-400)' }} />
+            <PlatformIcon sx={{ fontSize: 28, color: 'var(--neutral-400)' }} />
           </div>
         )}
-        <span className={styles.instagramBadge} aria-label="From Instagram">
-          <Instagram sx={{ fontSize: 12 }} />
+        <span className={styles.platformBadge} aria-label={`From ${platformName}`}>
+          <PlatformIcon sx={{ fontSize: 12 }} />
         </span>
         {link.foreign_username && <span className={styles.userChip}>@{link.foreign_username}</span>}
       </div>
