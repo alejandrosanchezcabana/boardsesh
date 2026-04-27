@@ -77,17 +77,14 @@ describe('matchesBoardDetails', () => {
     expect(matchesBoardDetails(makeConfig({ setIds: '1' }), makeBoardDetails())).toBe(false);
   });
 
-  it('matches even when angle differs (angle is intentionally excluded)', () => {
-    // Saved boards carry an angle; recordings do not. The dialog allows
-    // reconnecting at a different angle on the same physical controller.
-    const config = makeConfig({ angle: 70 });
-    const current = makeBoardDetails(); // BoardDetails has no angle field
-    expect(matchesBoardDetails(config, current)).toBe(true);
-  });
+  // Angle is physically adjustable on almost every board, so it is intentionally
+  // excluded from the mismatch comparison — `BoardDetails` doesn't even carry an
+  // angle field, and `ResolvedBoardConfig` no longer does either. The mismatch
+  // dialog is for layout/size/set drift, not angle drift.
 });
 
 describe('configFromResolvedEntry', () => {
-  it('extracts the saved-kind shape including angle and slug', () => {
+  it('extracts the saved-kind shape (slug from board, no angle)', () => {
     const savedEntry: ResolvedBoardEntry = {
       kind: 'saved',
       board: {
@@ -98,8 +95,7 @@ describe('configFromResolvedEntry', () => {
         layoutId: 3,
         sizeId: 12,
         setIds: '1,20',
-        angle: 40,
-        // remaining UserBoard fields not relevant to the helper
+        angle: 40, // present on UserBoard but intentionally not extracted
       } as ResolvedBoardEntry extends { kind: 'saved'; board: infer B } ? B : never,
     };
 
@@ -108,12 +104,11 @@ describe('configFromResolvedEntry', () => {
       layoutId: 3,
       sizeId: 12,
       setIds: '1,20',
-      angle: 40,
       boardSlug: 'my-kilter',
     });
   });
 
-  it('extracts the recorded-kind shape (no angle, slug from join)', () => {
+  it('extracts the recorded-kind shape (slug from join)', () => {
     const recordedEntry: ResolvedBoardEntry = {
       kind: 'recorded',
       config: {
@@ -139,14 +134,16 @@ describe('configFromResolvedEntry', () => {
 });
 
 describe('buildSwitchUrl', () => {
-  it('uses /b/{slug}/{angle}/list when the entry has a boardSlug', () => {
-    const url = buildSwitchUrl(makeConfig({ boardSlug: 'my-kilter', angle: 35 }), 50);
-    expect(url).toBe('/b/my-kilter/35/list');
-  });
-
-  it('falls back to currentAngle when the entry has no angle', () => {
+  it('uses /b/{slug}/{currentAngle}/list when the entry has a boardSlug', () => {
     const url = buildSwitchUrl(makeConfig({ boardSlug: 'my-kilter' }), 50);
     expect(url).toBe('/b/my-kilter/50/list');
+  });
+
+  it('always uses currentAngle (the saved-board default angle is intentionally ignored)', () => {
+    // Even if the saved board has a different default angle, "Switch" should
+    // keep the user at the angle they're currently using — angle is adjustable.
+    const url = buildSwitchUrl(makeConfig({ boardSlug: 'my-kilter' }), 35);
+    expect(url).toBe('/b/my-kilter/35/list');
   });
 
   it('returns null when no boardSlug and getBoardDetails throws (unknown layout)', () => {

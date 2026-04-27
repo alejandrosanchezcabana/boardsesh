@@ -38,8 +38,6 @@ export type ResolvedBoardConfig = {
   layoutId: number;
   sizeId: number;
   setIds: string;
-  /** Saved-board default angle, when the entry came from `userBoards`. Recorded entries don't carry an angle. */
-  angle?: number | null;
   /** When the entry is linked to a saved board, its slug — used to build /b/{slug}/... URLs. */
   boardSlug?: string | null;
 };
@@ -52,7 +50,6 @@ export function configFromResolvedEntry(entry: ResolvedBoardEntry): ResolvedBoar
       layoutId: entry.board.layoutId,
       sizeId: entry.board.sizeId,
       setIds: entry.board.setIds,
-      angle: entry.board.angle,
       boardSlug: entry.board.slug,
     };
   }
@@ -82,14 +79,17 @@ export function matchesBoardDetails(config: ResolvedBoardConfig, current: BoardD
  * Build the climb-list URL the user should land on when they choose
  * "Switch to correct config" in the BoardConfigMismatchDialog.
  *
- * Prefers `/b/{slug}/{angle}/list` when the entry is linked to a saved board.
- * Falls back to the traditional climb-list URL derived from layout/size/set
- * names. Returns null if no resolvable URL exists for the config.
+ * Always uses `currentAngle` — the saved-board's default angle is intentionally
+ * ignored because angle is physically adjustable on almost every board, so a
+ * user on /b/slug/35/list shouldn't be yanked to 40° just because the saved
+ * board was created with that default. Prefers `/b/{slug}/{angle}/list` when
+ * the entry is linked to a saved board; otherwise falls back to the traditional
+ * climb-list URL derived from layout/size/set names. Returns null if no
+ * resolvable URL exists for the config.
  */
 export function buildSwitchUrl(config: ResolvedBoardConfig, currentAngle: number): string | null {
-  const angle = config.angle ?? currentAngle;
   if (config.boardSlug) {
-    return constructBoardSlugListUrl(config.boardSlug, angle);
+    return constructBoardSlugListUrl(config.boardSlug, currentAngle);
   }
   try {
     const details = getBoardDetails({
@@ -105,7 +105,7 @@ export function buildSwitchUrl(config: ResolvedBoardConfig, currentAngle: number
         details.size_name,
         details.size_description,
         details.set_names,
-        angle,
+        currentAngle,
       );
     }
   } catch {
