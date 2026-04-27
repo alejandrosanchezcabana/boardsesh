@@ -191,7 +191,7 @@ export const socialCommentQueries = {
       OFFSET ${offset}
     `);
 
-    // db.execute() returns QueryResult (neon-serverless) with .rows property
+    // db.execute() returns result with .rows property
     const rawRows = (rawResult as unknown as { rows: CommentRow[] }).rows;
     const comments = rawRows.map(mapCommentRow);
 

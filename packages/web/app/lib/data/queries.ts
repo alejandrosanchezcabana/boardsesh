@@ -71,7 +71,7 @@ export const getClimbStatsForAllAngles = async (
     AND climb_stats.climb_uuid = ${params.climb_uuid}
     ORDER BY climb_stats.angle ASC
   `;
-  return (result as Array<ClimbStatsForAngle & { difficulty_id: number | null }>).map((row) => ({
+  return (result as unknown as Array<ClimbStatsForAngle & { difficulty_id: number | null }>).map((row) => ({
     ...row,
     difficulty: getGradeLabel(row.difficulty_id),
   })) as ClimbStatsForAngle[];

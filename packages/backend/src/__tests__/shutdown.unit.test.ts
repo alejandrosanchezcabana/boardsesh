@@ -75,40 +75,32 @@ describe('shutdown: ordering', () => {
 });
 
 describe('pool configuration', () => {
-  it('idleTimeoutMillis is 30 seconds (not the old 120s)', () => {
-    const neonSource = readFileSync(resolve(ROOT, '../db/src/client/neon.ts'), 'utf-8');
-    expect(neonSource).toContain('idleTimeoutMillis: 30000');
-    expect(neonSource).not.toContain('idleTimeoutMillis: 120000');
+  it('idle_timeout is 30 seconds', () => {
+    const source = readFileSync(resolve(ROOT, '../db/src/client/postgres.ts'), 'utf-8');
+    expect(source).toContain('idle_timeout: 30');
   });
 });
 
 describe('closePool implementation', () => {
-  const neonSource = readFileSync(resolve(ROOT, '../db/src/client/neon.ts'), 'utf-8');
+  const source = readFileSync(resolve(ROOT, '../db/src/client/postgres.ts'), 'utf-8');
 
-  it('is exported from neon.ts', () => {
-    expect(neonSource).toContain('export async function closePool()');
+  it('is exported from postgres.ts', () => {
+    expect(source).toContain('export async function closePool()');
   });
 
-  it('ends the pool and resets to null', () => {
-    expect(neonSource).toContain('await pool.end()');
-    expect(neonSource).toContain('pool = null');
-  });
-
-  it('ends postgresClient and resets to null', () => {
-    expect(neonSource).toContain('postgresClient.end()');
-    expect(neonSource).toContain('postgresClient = null');
+  it('ends the client and resets to null', () => {
+    expect(source).toContain('await client.end()');
+    expect(source).toContain('client = null');
   });
 
   it('resets db singleton to null', () => {
-    expect(neonSource).toContain('db = null');
+    expect(source).toContain('db = null');
   });
 
   it('uses try/finally to ensure singletons are nulled even if .end() throws', () => {
-    // Each .end() call should be in a try/finally so the singleton is always reset
-    const tryCount = (neonSource.match(/try\s*\{/g) ?? []).length;
-    const finallyCount = (neonSource.match(/finally\s*\{/g) ?? []).length;
-    // closePool should have at least 2 try/finally blocks (pool + postgresClient)
-    expect(finallyCount).toBeGreaterThanOrEqual(2);
+    const tryCount = (source.match(/try\s*\{/g) ?? []).length;
+    const finallyCount = (source.match(/finally\s*\{/g) ?? []).length;
+    expect(finallyCount).toBeGreaterThanOrEqual(1);
     expect(tryCount).toBeGreaterThanOrEqual(finallyCount);
   });
 

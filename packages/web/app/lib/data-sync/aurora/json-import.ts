@@ -1,7 +1,7 @@
 import { z } from 'zod';
 import { eq, and, or, inArray, sql } from 'drizzle-orm';
-import { getPool } from '@/app/lib/db/db';
-import { drizzle, type NeonDatabase } from 'drizzle-orm/neon-serverless';
+import { getDb } from '@/app/lib/db/db';
+import type { PgDatabase, PgQueryResultHKT } from 'drizzle-orm/pg-core';
 import {
   boardseshTicks,
   boardClimbs,
@@ -272,7 +272,7 @@ export function generateClimbImportUuid(
 // ---------------------------------------------------------------------------
 
 async function resolveClimbNames(
-  db: NeonDatabase<Record<string, never>>,
+  db: PgDatabase<PgQueryResultHKT, Record<string, unknown>>,
   boardType: BoardType,
   climbNames: string[],
   userId?: string,
@@ -346,7 +346,7 @@ async function resolveClimbNames(
 // ---------------------------------------------------------------------------
 
 async function getExistingTickKeys(
-  db: NeonDatabase<Record<string, never>>,
+  db: PgDatabase<PgQueryResultHKT, Record<string, unknown>>,
   userId: string,
   boardType: BoardType,
 ): Promise<Set<string>> {
@@ -372,7 +372,7 @@ async function getExistingTickKeys(
 // ---------------------------------------------------------------------------
 
 async function batchInsertTicks(
-  db: NeonDatabase<Record<string, never>>,
+  db: PgDatabase<PgQueryResultHKT, Record<string, unknown>>,
   rows: (typeof boardseshTicks.$inferInsert)[],
   conflictSet: Record<string, ReturnType<typeof sql>>,
   step: 'ascents' | 'attempts',
@@ -427,11 +427,7 @@ export async function importJsonExportData(
   // Capture a single "now" for all timestamps in this import
   const now = new Date().toISOString();
 
-  const pool = getPool();
-  const client = await pool.connect();
-
-  try {
-    const db = drizzle(client);
+  const db = getDb();
 
     // Step 1: Import climbs FIRST so they're available for name resolution.
     // Draft climbs are always imported (upserted) against the user's account.
@@ -562,12 +558,11 @@ export async function importJsonExportData(
       const totalRows = draftRows.length + publishedRows.length;
 
       if (totalRows > 0) {
-        await client.query('BEGIN');
-        try {
+        await db.transaction(async (tx) => {
           // Insert draft climbs with upsert (re-import updates them)
           for (let i = 0; i < draftRows.length; i += BATCH_SIZE) {
             const batch = draftRows.slice(i, i + BATCH_SIZE);
-            await db
+            await tx
               .insert(boardClimbs)
               .values(batch)
               .onConflictDoUpdate({
@@ -591,19 +586,14 @@ export async function importJsonExportData(
           // Insert published climbs — skip on conflict (already exist from a prior import)
           for (let i = 0; i < publishedRows.length; i += BATCH_SIZE) {
             const batch = publishedRows.slice(i, i + BATCH_SIZE);
-            await db.insert(boardClimbs).values(batch).onConflictDoNothing();
+            await tx.insert(boardClimbs).values(batch).onConflictDoNothing();
             result.climbs.imported += batch.length;
           }
 
           // Populate denormalized required_set_ids and compatible_size_ids
           const allInsertedUuids = [...draftRows.map((r) => r.uuid), ...publishedRows.map((r) => r.uuid)];
-          await populateDenormalizedColumns(db, boardType, allInsertedUuids);
-
-          await client.query('COMMIT');
-        } catch (error) {
-          await client.query('ROLLBACK');
-          throw error;
-        }
+          await populateDenormalizedColumns(tx, boardType, allInsertedUuids);
+        });
       }
 
       onProgress?.({
@@ -721,11 +711,9 @@ export async function importJsonExportData(
     }, []);
 
     // Step 7: Batch-insert ascents and attempts in a transaction
-    await client.query('BEGIN');
-
-    try {
+    await db.transaction(async (tx) => {
       result.ascents.imported = await batchInsertTicks(
-        db,
+        tx,
         ascentRows,
         {
           climbUuid: sql`excluded.climb_uuid`,
@@ -744,7 +732,7 @@ export async function importJsonExportData(
       );
 
       result.attempts.imported = await batchInsertTicks(
-        db,
+        tx,
         attemptRows,
         {
           climbUuid: sql`excluded.climb_uuid`,
@@ -758,12 +746,7 @@ export async function importJsonExportData(
         data.attempts.length,
         onProgress,
       );
-
-      await client.query('COMMIT');
-    } catch (error) {
-      await client.query('ROLLBACK');
-      throw error;
-    }
+    });
 
     // Step 8: Import circuits as playlists (separate transaction per circuit
     // so one failure doesn't roll back others or abort the tick transaction)
@@ -782,69 +765,66 @@ export async function importJsonExportData(
       const circuitNow = new Date();
 
       try {
-        await client.query('BEGIN');
-
-        const [playlist] = await db
-          .insert(playlists)
-          .values({
-            uuid: randomUUID(),
-            boardType,
-            layoutId: null,
-            name: circuit.name,
-            description: circuit.description ?? null,
-            isPublic: false,
-            color: formattedColor,
-            auroraType: 'circuits',
-            auroraId: circuitAuroraId,
-            auroraSyncedAt: circuitNow,
-            createdAt: circuit.created_at ? new Date(circuit.created_at) : circuitNow,
-            updatedAt: circuitNow,
-          })
-          .onConflictDoUpdate({
-            target: playlists.auroraId,
-            set: {
+        await db.transaction(async (tx) => {
+          const [playlist] = await tx
+            .insert(playlists)
+            .values({
+              uuid: randomUUID(),
+              boardType,
+              layoutId: null,
               name: circuit.name,
               description: circuit.description ?? null,
               isPublic: false,
               color: formattedColor,
-              updatedAt: circuitNow,
+              auroraType: 'circuits',
+              auroraId: circuitAuroraId,
               auroraSyncedAt: circuitNow,
-            },
-          })
-          .returning({ id: playlists.id });
+              createdAt: circuit.created_at ? new Date(circuit.created_at) : circuitNow,
+              updatedAt: circuitNow,
+            })
+            .onConflictDoUpdate({
+              target: playlists.auroraId,
+              set: {
+                name: circuit.name,
+                description: circuit.description ?? null,
+                isPublic: false,
+                color: formattedColor,
+                updatedAt: circuitNow,
+                auroraSyncedAt: circuitNow,
+              },
+            })
+            .returning({ id: playlists.id });
 
-        await db
-          .insert(playlistOwnership)
-          .values({
-            playlistId: playlist.id,
-            userId,
-            role: 'owner',
-          })
-          .onConflictDoNothing();
+          await tx
+            .insert(playlistOwnership)
+            .values({
+              playlistId: playlist.id,
+              userId,
+              role: 'owner',
+            })
+            .onConflictDoNothing();
 
-        // Only replace playlist climbs when we have resolved climbs to insert.
-        // This avoids wiping out previously-resolved climbs if name resolution
-        // fails on a re-import (e.g., climb was renamed/delisted).
-        if (resolvedClimbs.length > 0) {
-          await db.delete(playlistClimbs).where(eq(playlistClimbs.playlistId, playlist.id));
+          // Only replace playlist climbs when we have resolved climbs to insert.
+          // This avoids wiping out previously-resolved climbs if name resolution
+          // fails on a re-import (e.g., climb was renamed/delisted).
+          if (resolvedClimbs.length > 0) {
+            await tx.delete(playlistClimbs).where(eq(playlistClimbs.playlistId, playlist.id));
 
-          // Batch-insert playlist climbs
-          const climbValues = resolvedClimbs.map((climbUuid, i) => ({
-            playlistId: playlist.id,
-            climbUuid,
-            angle: null as number | null,
-            position: i,
-          }));
+            // Batch-insert playlist climbs
+            const climbValues = resolvedClimbs.map((climbUuid, i) => ({
+              playlistId: playlist.id,
+              climbUuid,
+              angle: null as number | null,
+              position: i,
+            }));
 
-          for (let i = 0; i < climbValues.length; i += BATCH_SIZE) {
-            await db.insert(playlistClimbs).values(climbValues.slice(i, i + BATCH_SIZE));
+            for (let i = 0; i < climbValues.length; i += BATCH_SIZE) {
+              await tx.insert(playlistClimbs).values(climbValues.slice(i, i + BATCH_SIZE));
+            }
           }
-        }
-
-        await client.query('COMMIT');
+        });
         result.circuits.imported++;
       } catch (error) {
-        await client.query('ROLLBACK');
         console.error(`Failed to import circuit "${circuit.name}":`, error);
         result.circuits.failed++;
       }
@@ -874,7 +854,4 @@ export async function importJsonExportData(
     }
 
     return result;
-  } finally {
-    client.release();
-  }
 }

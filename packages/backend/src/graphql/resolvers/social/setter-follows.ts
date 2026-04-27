@@ -547,8 +547,7 @@ export const setterFollowQueries = {
       benchmark_difficulty: number | null;
     };
 
-    // Normalise across drivers: neon-serverless wraps rows in `{rows: [...]}`,
-    // postgres-js (used in tests) returns the array directly.
+    // db.execute() returns an array of rows with postgres-js
     const rawRows = Array.isArray(rawResult)
       ? (rawResult as unknown as RawRow[])
       : ((rawResult as unknown as { rows?: RawRow[] }).rows ?? []);

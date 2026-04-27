@@ -1,19 +1,12 @@
 import 'server-only';
-import { neon } from '@neondatabase/serverless';
-import { configureNeonForEnvironment, getConnectionConfig, createNeonHttp } from '@boardsesh/db/client';
+import postgres from 'postgres';
+import { getConnectionConfig, createDb } from '@boardsesh/db/client';
 
-// Re-export from @boardsesh/db with server-only protection
-export { createDb as getDb, createPool as getPool, createNeonHttp } from '@boardsesh/db/client';
-export { configureNeonForEnvironment, getConnectionConfig } from '@boardsesh/db/client';
+export { createDb as getDb, createPool as getPool } from '@boardsesh/db/client';
+export { getConnectionConfig } from '@boardsesh/db/client';
 
-// Configure and export the raw SQL template literal function
-
-// Configure Neon for the environment
-configureNeonForEnvironment();
 const { connectionString } = getConnectionConfig();
 
-// Export the neon SQL template literal function for raw SQL queries
-export const sql = neon(connectionString);
+export const sql = postgres(connectionString, { max: 10, idle_timeout: 30 });
 
-// For backward compatibility (some code may use dbz)
-export const dbz = createNeonHttp();
+export const dbz = createDb();

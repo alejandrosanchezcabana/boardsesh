@@ -1,5 +1,5 @@
 import { desc, sql, and, eq } from 'drizzle-orm';
-import type { DbInstance } from '../../client/neon';
+import type { DbInstance } from '../../client/postgres';
 import { boardClimbs, boardClimbStats } from '../../schema/index';
 import { createClimbFilters } from './create-climb-filters';
 import { getGradeLabel } from './grade-lookup';

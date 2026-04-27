@@ -154,7 +154,7 @@ export const sessionFeedQueries = {
       throw err;
     }
 
-    // db.execute() returns QueryResult (neon-serverless) with .rows property
+    // db.execute() returns result with .rows property
     const rows = (
       sessionRows as unknown as {
         rows: Array<{

@@ -110,7 +110,7 @@ export const getSetterOgSummary = cache(async (username: string): Promise<Setter
     ) AS profile ON true
   `);
 
-  const row = result.rows[0];
+  const row = result[0];
 
   return {
     displayName: row?.display_name || row?.name || username,
@@ -346,9 +346,9 @@ export const getSessionOgSummary = cache(async (sessionId: string): Promise<Sess
     LIMIT 1
   `);
 
-  if (partySessionResult.rows[0]) {
+  if (partySessionResult[0]) {
     sessionType = 'party';
-    sessionRow = partySessionResult.rows[0];
+    sessionRow = partySessionResult[0];
   } else {
     const inferredSessionResult = await dbz.execute<{
       name: string | null;
@@ -387,9 +387,9 @@ export const getSessionOgSummary = cache(async (sessionId: string): Promise<Sess
       LIMIT 1
     `);
 
-    if (inferredSessionResult.rows[0]) {
+    if (inferredSessionResult[0]) {
       sessionType = 'inferred';
-      sessionRow = inferredSessionResult.rows[0];
+      sessionRow = inferredSessionResult[0];
     }
   }
 
@@ -471,7 +471,7 @@ export const getSessionOgSummary = cache(async (sessionId: string): Promise<Sess
     }),
   ]);
 
-  const gradeRows = gradeResult.rows.map((row) => ({
+  const gradeRows = gradeResult.map((row) => ({
     difficulty: Number(row.difficulty),
     count: Number(row.cnt),
   }));
@@ -480,9 +480,9 @@ export const getSessionOgSummary = cache(async (sessionId: string): Promise<Sess
     sessionType,
     sessionName: sessionRow.name || 'Climbing Session',
     leaderName: sessionRow.leader_name || null,
-    participantNames: participantResult.rows.map((row) => row.display_name),
-    participantCount: Number(participantCountResult.rows[0]?.participant_count || 0),
-    totalSends: Number(totalSendsResult.rows[0]?.total_sends || 0),
+    participantNames: participantResult.map((row) => row.display_name),
+    participantCount: Number(participantCountResult[0]?.participant_count || 0),
+    totalSends: Number(totalSendsResult[0]?.total_sends || 0),
     gradeRows,
     boardLabel: boardInfo?.boardLabel || null,
     boardAngle: boardInfo?.boardAngle ?? null,

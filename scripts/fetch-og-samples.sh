@@ -4,7 +4,7 @@ set -u
 
 REPO_ROOT=$(CDPATH= cd -- "$(dirname "$0")/.." && pwd)
 BASE_URL=${BASE_URL:-http://127.0.0.1:3000}
-DATABASE_URL=${DATABASE_URL:-postgresql://postgres:password@db.localtest.me:5432/main}
+DATABASE_URL=${DATABASE_URL:-postgresql://postgres:password@localhost:5432/main}
 OUTPUT_ROOT=${OUTPUT_ROOT:-"$REPO_ROOT/tmp/og-samples"}
 RUN_ID=${RUN_ID:-$(date +%Y%m%d-%H%M%S)}
 RUN_DIR="$OUTPUT_ROOT/$RUN_ID"

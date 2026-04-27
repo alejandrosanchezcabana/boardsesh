@@ -50,7 +50,7 @@ export async function GET(request: NextRequest) {
       `),
     ]);
     const dbMs = performance.now() - dbT0;
-    const gradeRows = gradeResult.rows;
+    const gradeRows = gradeResult;
 
     const displayName = summary.displayName;
     const origin = process.env.VERCEL_URL ? 'https://www.boardsesh.com' : 'http://localhost:3000';

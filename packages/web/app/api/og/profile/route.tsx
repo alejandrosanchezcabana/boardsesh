@@ -9,7 +9,7 @@ import { BOULDER_GRADES } from '@/app/lib/board-data';
 import { createOgImageHeaders, OG_IMAGE_HEIGHT, OG_IMAGE_WIDTH } from '@/app/lib/seo/og';
 import { getProfileOgSummary } from '@/app/lib/seo/dynamic-og-data';
 
-export const runtime = 'edge';
+export const runtime = 'nodejs';
 
 // Maps difficulty ID to Font grade name for OG image labels.
 // OG images are static server-rendered PNGs — they always use Font grades

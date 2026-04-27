@@ -534,10 +534,7 @@ async function getPopularConfigs(): Promise<CachedPopularConfig[]> {
     ORDER BY board_count DESC, total_ascents DESC, configs.board_type, bl.name
   `);
 
-  // db.execute() returns QueryResult with .rows for neon-serverless, or an array directly for postgres-js
-  const rows = Array.isArray(result)
-    ? (result as Array<Record<string, unknown>>)
-    : (result as unknown as { rows: Array<Record<string, unknown>> }).rows;
+  const rows = result as unknown as Array<Record<string, unknown>>;
 
   const configs: CachedPopularConfig[] = rows.map((row) => {
     const boardType = row.board_type as string;

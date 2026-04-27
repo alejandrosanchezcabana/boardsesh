@@ -1,4 +1,4 @@
-import { getPool } from '@/app/lib/db/db';
+import { getDb } from '@/app/lib/db/db';
 import { userSync } from '../../api-wrappers/aurora/userSync';
 import {
   type SyncOptions,
@@ -7,7 +7,7 @@ import {
   USER_TABLES,
 } from '../../api-wrappers/aurora/types';
 import { eq, and, inArray } from 'drizzle-orm';
-import { drizzle, type NeonDatabase } from 'drizzle-orm/neon-serverless';
+import type { PgDatabase, PgQueryResultHKT } from 'drizzle-orm/pg-core';
 import { UNIFIED_TABLES } from '../../db/queries/util/table-select';
 import { boardseshTicks, auroraCredentials, playlists, playlistClimbs, playlistOwnership } from '../../db/schema';
 import { randomUUID } from 'crypto';
@@ -19,7 +19,7 @@ import { buildInferredSessionsForUser } from './inferred-session-builder';
  * Get NextAuth user ID from Aurora user ID
  */
 async function getNextAuthUserId(
-  db: NeonDatabase<Record<string, never>>,
+  db: PgDatabase<PgQueryResultHKT, Record<string, unknown>>,
   boardName: AuroraBoardName,
   auroraUserId: number,
 ): Promise<string | null> {
@@ -33,7 +33,7 @@ async function getNextAuthUserId(
 }
 
 async function upsertTableData(
-  db: NeonDatabase<Record<string, never>>,
+  db: PgDatabase<PgQueryResultHKT, Record<string, unknown>>,
   boardName: AuroraBoardName,
   tableName: string,
   auroraUserId: number,
@@ -382,7 +382,7 @@ async function upsertTableData(
 }
 
 async function updateUserSyncs(
-  tx: NeonDatabase<Record<string, never>>,
+  tx: PgDatabase<PgQueryResultHKT, Record<string, unknown>>,
   boardName: AuroraBoardName,
   userSyncs: UserSyncData[],
 ) {
@@ -408,26 +408,20 @@ async function updateUserSyncs(
 
 export async function getLastSyncTimes(boardName: AuroraBoardName, userId: number, tableNames: string[]) {
   const userSyncsSchema = UNIFIED_TABLES.userSyncs;
-  const pool = getPool();
-  const client = await pool.connect();
+  const db = getDb();
 
-  try {
-    const db = drizzle(client);
-    const result = await db
-      .select()
-      .from(userSyncsSchema)
-      .where(
-        and(
-          eq(userSyncsSchema.boardType, boardName),
-          eq(userSyncsSchema.userId, Number(userId)),
-          inArray(userSyncsSchema.tableName, tableNames),
-        ),
-      );
+  const result = await db
+    .select()
+    .from(userSyncsSchema)
+    .where(
+      and(
+        eq(userSyncsSchema.boardType, boardName),
+        eq(userSyncsSchema.userId, Number(userId)),
+        inArray(userSyncsSchema.tableName, tableNames),
+      ),
+    );
 
-    return result;
-  } finally {
-    client.release();
-  }
+  return result;
 }
 
 export async function syncUserData(
@@ -471,14 +465,8 @@ export async function syncUserData(
       const syncResults = await userSync(board, userId, currentSyncParams, token);
 
       // Process this batch in a transaction
-      const pool = getPool();
-      const client = await pool.connect();
-      try {
-        await client.query('BEGIN');
-
-        // Create a drizzle instance for this transaction
-        const tx = drizzle(client);
-
+      const db = getDb();
+      await db.transaction(async (tx) => {
         // Get NextAuth user ID for dual write to boardsesh_ticks
         const nextAuthUserId = await getNextAuthUserId(tx, board, userId);
         if (!nextAuthUserId) {
@@ -527,15 +515,7 @@ export async function syncUserData(
             userSyncs: newUserSyncs,
           };
         }
-
-        await client.query('COMMIT');
-      } catch (error) {
-        await client.query('ROLLBACK');
-        console.error('Failed to commit sync database transaction:', error);
-        throw error;
-      } finally {
-        client.release();
-      }
+      });
 
       // Check if sync is complete
       isComplete = syncResults._complete !== false;
@@ -555,19 +535,13 @@ export async function syncUserData(
     const hasTickData = (totalResults['ascents']?.synced ?? 0) > 0 || (totalResults['bids']?.synced ?? 0) > 0;
     if (hasTickData) {
       try {
-        const pool = getPool();
-        const client = await pool.connect();
-        try {
-          const tx = drizzle(client);
-          const nextAuthUserId = await getNextAuthUserId(tx, board, userId);
-          if (nextAuthUserId) {
-            const assigned = await buildInferredSessionsForUser(nextAuthUserId);
-            if (assigned > 0) {
-              console.info(`Built inferred sessions: assigned ${assigned} ticks for user ${nextAuthUserId}`);
-            }
+        const db = getDb();
+        const nextAuthUserId = await getNextAuthUserId(db, board, userId);
+        if (nextAuthUserId) {
+          const assigned = await buildInferredSessionsForUser(nextAuthUserId);
+          if (assigned > 0) {
+            console.info(`Built inferred sessions: assigned ${assigned} ticks for user ${nextAuthUserId}`);
           }
-        } finally {
-          client.release();
         }
       } catch (error) {
         console.error('Error building inferred sessions after sync:', error);

@@ -126,11 +126,11 @@ export const getHoldHeatmapData = async (
       const ascentsMap = new Map();
       const attemptsMap = new Map();
 
-      for (const row of userAscentsQuery.rows) {
+      for (const row of userAscentsQuery) {
         ascentsMap.set(Number(row.hold_id), Number(row.user_ascents));
       }
 
-      for (const row of userAttemptsQuery.rows) {
+      for (const row of userAttemptsQuery) {
         attemptsMap.set(Number(row.hold_id), Number(row.user_attempts));
       }
 

@@ -37,7 +37,7 @@ async function getAnglesForLayout(boardName: AuroraBoardName, layoutId: number):
     WHERE l.board_type = ${boardName} AND l.id = ${layoutId}
     ORDER BY pa.angle ASC
   `);
-  return result.rows.map((row) => Number(row.angle));
+  return result.map((row) => Number(row.angle));
 }
 
 function buildTargetsForBoard(boardName: AuroraBoardName, anglesByLayout: Map<number, number[]>): WarmTarget[] {
