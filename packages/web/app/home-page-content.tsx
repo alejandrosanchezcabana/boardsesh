@@ -443,7 +443,11 @@ export default function HomePageContent({ boardConfigs, initialPopularConfigs }:
               // translateY(-1px) on hover; explicitly cancel it here so
               // the brand CTA stays anchored.
               backgroundColor: '#6A1B9A',
-              color: 'var(--bs-text-brand-primary)',
+              // CTA sits on a constant purple background in both themes, so
+              // pin the label to the warm cream rather than reading the
+              // theme-aware brand text token (which flips dark in light mode
+              // and would drop contrast against the purple to ~3.6:1).
+              color: themeTokens.text.brandPrimary,
               boxShadow: '0 4px 12px rgba(106, 27, 154, 0.30)',
               '&:hover': {
                 backgroundColor: '#5C1A87',
