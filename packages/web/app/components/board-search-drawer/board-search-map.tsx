@@ -13,8 +13,7 @@ import markerStyles from './board-search-map.module.css';
 const VIEWPORT_DEBOUNCE_MS = 250;
 const MARKER_SIZE = 16;
 const MARKER_SIZE_SELECTED = 22;
-export const FLY_TO_ZOOM = 13;
-
+const FLY_TO_ZOOM = 13;
 type BoardSearchMapProps = {
   center: { lat: number; lng: number };
   zoom: number;
@@ -164,18 +163,22 @@ export default function BoardSearchMap({
         resizeObserver = null;
       }
       if (mapRef.current) {
-        // Detach only our handler before remove() so teardown-time events
-        // can't re-arm fireViewport's setTimeout. fireViewportRef is always
-        // set when mapRef is set (both assigned in the same .then()), but the
-        // else branch makes the fallback intent explicit rather than relying
-        // on Leaflet treating undefined the same as an omitted argument.
+        // Detach our specific handler before remove() so teardown-time events
+        // can't re-arm fireViewport's setTimeout. fireViewportRef is always set
+        // when mapRef is set (both assigned in the same .then() block). If that
+        // invariant is ever broken by a future refactor, fall back to broad
+        // removal and log in dev so it surfaces without breaking teardown.
         if (fireViewportRef.current) {
           mapRef.current.off('moveend', fireViewportRef.current);
-        } else if (process.env.NODE_ENV !== 'production') {
-          throw new Error(
-            'BoardSearchMap: fireViewportRef.current is null while mapRef.current is set. ' +
-              'Both are assigned in the same .then() block — if this fires, they were decoupled.',
-          );
+        } else {
+          if (process.env.NODE_ENV !== 'production') {
+            console.error(
+              'BoardSearchMap: fireViewportRef.current is null while mapRef.current is set; ' +
+                'falling back to broad map.off("moveend"). Both refs should be set in the ' +
+                'same .then() block — if this fires, they were decoupled.',
+            );
+          }
+          mapRef.current.off('moveend');
         }
         fireViewportRef.current = null;
         mapRef.current.remove();

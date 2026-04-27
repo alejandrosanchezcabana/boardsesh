@@ -2,7 +2,7 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vite-plus/test';
 import { render, act, fireEvent } from '@testing-library/react';
 import React from 'react';
-import BoardSearchMap, { FLY_TO_ZOOM } from '../board-search-map';
+import BoardSearchMap from '../board-search-map';
 
 // Shared mock state. `vi.hoisted` runs before the `vi.mock` factory below
 // (which is itself hoisted above imports), so the factory can reference it.
@@ -191,6 +191,11 @@ describe('BoardSearchMap lifecycle', () => {
   // handler would never fire. The guard detects this and calls onViewportChange
   // immediately instead of relying on a moveend that will never come.
   it('calls onViewportChange immediately when map is already at user location', async () => {
+    // 13 matches the component's internal FLY_TO_ZOOM. Not exported — that
+    // would couple the public API to test infrastructure. If the component
+    // changes the zoom, this test fails: flyTo fires and the not.toHaveBeenCalled
+    // assertion below catches it.
+    const FLY_TO_ZOOM = 13;
     mockState.map!.getCenter.mockReturnValue({ lat: 37.5, lng: -122.1 });
     mockState.map!.getZoom.mockReturnValue(FLY_TO_ZOOM);
 
@@ -203,9 +208,7 @@ describe('BoardSearchMap lifecycle', () => {
 
     const button = await findByRole('button', { name: /my location/i });
 
-    act(() => {
-      fireEvent.click(button);
-    });
+    fireEvent.click(button);
 
     expect(mockState.map!.flyTo).not.toHaveBeenCalled();
     expect(mockState.map!.once).not.toHaveBeenCalled();
