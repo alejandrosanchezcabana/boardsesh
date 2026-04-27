@@ -340,7 +340,7 @@ export default function HomePageContent({ boardConfigs, initialPopularConfigs }:
             py: 1,
           }}
         >
-          <Image src="/brand/icon-transparent.svg" width={115} height={115} alt="Boardsesh logo" priority />
+          <Image src="/brand/lockup-stacked.svg" width={280} height={308} alt="Boardsesh" priority />
           <Typography
             variant="h5"
             fontWeight={themeTokens.typography.fontWeight.bold}
