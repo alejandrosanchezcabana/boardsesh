@@ -264,6 +264,13 @@ export default function HomePageContent({ boardConfigs, initialPopularConfigs }:
     let cancelled = false;
     const classifyWeb = () => (/Android/i.test(navigator.userAgent) ? 'android-web' : 'other-web');
 
+    // App-store screenshot tests set this flag so the install CTA matches
+    // what users see in the actual iOS build (i.e. nothing).
+    if (typeof window !== 'undefined' && window.sessionStorage.getItem('boardsesh:e2e-suppress-install-card') === '1') {
+      setInstallPlatform('native');
+      return;
+    }
+
     if (isNativeApp()) {
       setInstallPlatform('native');
       return;
