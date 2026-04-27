@@ -1,7 +1,7 @@
 import React from 'react';
 import { ImageResponse } from 'next/og';
 import { readFileSync } from 'node:fs';
-import { join } from 'node:path';
+import { fileURLToPath } from 'node:url';
 
 export const runtime = 'nodejs';
 
@@ -9,7 +9,8 @@ export const alt = 'Boardsesh - Train smarter on your climbing board';
 export const size = { width: 1200, height: 630 };
 export const contentType = 'image/png';
 
-const iconSvg = readFileSync(join(process.cwd(), 'app', 'icon.svg'));
+// new URL + import.meta.url lets @vercel/nft trace and include icon.svg in standalone output
+const iconSvg = readFileSync(fileURLToPath(new URL('./icon.svg', import.meta.url)));
 const iconDataUrl = `data:image/svg+xml;base64,${iconSvg.toString('base64')}`;
 
 export default function Image() {
