@@ -2,6 +2,7 @@ import dayjs from 'dayjs';
 import isoWeek from 'dayjs/plugin/isoWeek';
 import isSameOrAfter from 'dayjs/plugin/isSameOrAfter';
 import isSameOrBefore from 'dayjs/plugin/isSameOrBefore';
+import { parseTickTime, tickTimeMs } from '@/app/lib/format-tick-time';
 import type { GetUserProfileStatsQueryResponse } from '@/app/lib/graphql/operations';
 import type { CssBarChartBar, GroupedBar } from '@/app/components/charts/css-bar-chart';
 import { themeTokens } from '@/app/theme/theme-config';
@@ -38,13 +39,13 @@ export function filterLogbookByTimeframe(
   const now = dayjs();
   switch (timeframe) {
     case 'today':
-      return logbook.filter((entry) => dayjs(entry.climbed_at).isSame(now, 'day'));
+      return logbook.filter((entry) => parseTickTime(entry.climbed_at).isSame(now, 'day'));
     case 'lastWeek':
-      return logbook.filter((entry) => dayjs(entry.climbed_at).isAfter(now.subtract(1, 'week')));
+      return logbook.filter((entry) => parseTickTime(entry.climbed_at).isAfter(now.subtract(1, 'week')));
     case 'lastMonth':
-      return logbook.filter((entry) => dayjs(entry.climbed_at).isAfter(now.subtract(1, 'month')));
+      return logbook.filter((entry) => parseTickTime(entry.climbed_at).isAfter(now.subtract(1, 'month')));
     case 'lastYear':
-      return logbook.filter((entry) => dayjs(entry.climbed_at).isAfter(now.subtract(1, 'year')));
+      return logbook.filter((entry) => parseTickTime(entry.climbed_at).isAfter(now.subtract(1, 'year')));
     case 'custom':
       return logbook.filter((entry) => {
         // Compare date strings only (YYYY-MM-DD) to avoid timezone issues.
@@ -73,13 +74,13 @@ function filterByUnifiedTimeframe(
   return entries.filter((entry) => {
     switch (timeframe) {
       case 'today':
-        return dayjs(entry.climbed_at).isSame(now, 'day');
+        return parseTickTime(entry.climbed_at).isSame(now, 'day');
       case 'lastWeek':
-        return dayjs(entry.climbed_at).isAfter(now.subtract(1, 'week'));
+        return parseTickTime(entry.climbed_at).isAfter(now.subtract(1, 'week'));
       case 'lastMonth':
-        return dayjs(entry.climbed_at).isAfter(now.subtract(1, 'month'));
+        return parseTickTime(entry.climbed_at).isAfter(now.subtract(1, 'month'));
       case 'lastYear':
-        return dayjs(entry.climbed_at).isAfter(now.subtract(1, 'year'));
+        return parseTickTime(entry.climbed_at).isAfter(now.subtract(1, 'year'));
       case 'custom': {
         const dateStr = entry.climbed_at.slice(0, 10);
         return (!fromDate || dateStr >= fromDate) && (!toDate || dateStr <= toDate);
@@ -193,7 +194,7 @@ export function buildWeeklyBars(
   const entries =
     fromDate || toDate
       ? filteredLogbook.filter((entry) => {
-          const d = dayjs(entry.climbed_at);
+          const d = parseTickTime(entry.climbed_at);
           if (fromDate && d.isBefore(dayjs(fromDate), 'day')) return false;
           if (toDate && d.isAfter(dayjs(toDate), 'day')) return false;
           return true;
@@ -204,8 +205,9 @@ export function buildWeeklyBars(
 
   const DEFAULT_MAX_WEEKS = 52;
   const allWeekKeys: string[] = [];
-  const first = dayjs(entries[entries.length - 1]?.climbed_at).startOf('isoWeek');
-  const last = dayjs(entries[0]?.climbed_at).endOf('isoWeek');
+  // Safe to drop the optional chain: `entries.length === 0` is handled above.
+  const first = parseTickTime(entries[entries.length - 1].climbed_at).startOf('isoWeek');
+  const last = parseTickTime(entries[0].climbed_at).endOf('isoWeek');
   let current = first;
   while (current.isBefore(last) || current.isSame(last)) {
     allWeekKeys.push(`${current.isoWeekYear()}-W${current.isoWeek()}`);
@@ -218,7 +220,7 @@ export function buildWeeklyBars(
     if (entry.difficulty === null) return;
     const grade = mapping[entry.difficulty];
     if (!grade) return;
-    const d = dayjs(entry.climbed_at);
+    const d = parseTickTime(entry.climbed_at);
     const weekKey = `${d.isoWeekYear()}-W${d.isoWeek()}`;
     if (!weeklyData[weekKey]) weeklyData[weekKey] = {};
     weeklyData[weekKey][grade] = (weeklyData[weekKey][grade] || 0) + 1;
@@ -377,12 +379,12 @@ export function buildVPointsTimeline(
 
   // Collect all entries to find the overall time range
   const allEntries = activeLayouts.flatMap((lk) => entriesByLayout[lk]);
-  const sorted = [...allEntries].sort((a, b) => new Date(a.climbed_at).getTime() - new Date(b.climbed_at).getTime());
+  const sorted = [...allEntries].sort((a, b) => tickTimeMs(a.climbed_at) - tickTimeMs(b.climbed_at));
 
   // Build full week key range
   const allWeekKeys: string[] = [];
-  const first = dayjs(sorted[0].climbed_at).startOf('isoWeek');
-  const last = dayjs(sorted[sorted.length - 1].climbed_at).endOf('isoWeek');
+  const first = parseTickTime(sorted[0].climbed_at).startOf('isoWeek');
+  const last = parseTickTime(sorted[sorted.length - 1].climbed_at).endOf('isoWeek');
   let current = first;
   while (current.isBefore(last) || current.isSame(last, 'day')) {
     allWeekKeys.push(`${current.isoWeekYear()}-W${current.isoWeek()}`);
@@ -404,7 +406,7 @@ export function buildVPointsTimeline(
       if (entry.difficulty === null) continue;
       const grade = difficultyMapping[entry.difficulty];
       if (!grade) continue;
-      const d = dayjs(entry.climbed_at);
+      const d = parseTickTime(entry.climbed_at);
       const wk = `${d.isoWeekYear()}-W${d.isoWeek()}`;
       weekPoints[wk] = (weekPoints[wk] || 0) + vGradeToPoints(grade);
     }

@@ -8,7 +8,7 @@ import Rating from '@mui/material/Rating';
 import ChatBubbleOutlineOutlined from '@mui/icons-material/ChatBubbleOutlineOutlined';
 import { useBoardProvider } from '../board-provider/board-provider-context';
 import { themeTokens } from '@/app/theme/theme-config';
-import dayjs from 'dayjs';
+import { formatTickAbsoluteTime, tickTimeMs } from '@/app/lib/format-tick-time';
 import { AscentStatusIcon } from '@/app/components/ascent-status/ascent-status-icon';
 import { normalizeAscentStatus, type AscentStatusValue } from '@/app/components/ascent-status/ascent-status-utils';
 
@@ -29,7 +29,7 @@ const PlayViewComments: React.FC<PlayViewCommentsProps> = ({ climbUuid }) => {
     () =>
       logbook
         .filter((entry) => entry.climb_uuid === climbUuid)
-        .sort((a, b) => dayjs(b.climbed_at).valueOf() - dayjs(a.climbed_at).valueOf()),
+        .sort((a, b) => tickTimeMs(b.climbed_at) - tickTimeMs(a.climbed_at)),
     [logbook, climbUuid],
   );
 
@@ -91,7 +91,7 @@ const PlayViewComments: React.FC<PlayViewCommentsProps> = ({ climbUuid }) => {
                     color="text.secondary"
                     sx={{ fontSize: themeTokens.typography.fontSize.xs }}
                   >
-                    {dayjs(ascent.climbed_at).format('MMM D, YYYY')}
+                    {formatTickAbsoluteTime(ascent.climbed_at, 'MMM D, YYYY')}
                   </Typography>
                   <Chip
                     label={getAscentChipLabel(ascentStatus)}

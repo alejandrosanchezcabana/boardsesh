@@ -15,10 +15,8 @@ import ElectricBoltOutlined from '@mui/icons-material/ElectricBoltOutlined';
 import { PersonFallingIcon } from '@/app/components/icons/person-falling-icon';
 import LocationOnOutlined from '@mui/icons-material/LocationOnOutlined';
 import DeleteOutlined from '@mui/icons-material/DeleteOutlined';
-import dayjs from 'dayjs';
-import relativeTime from 'dayjs/plugin/relativeTime';
-import utc from 'dayjs/plugin/utc';
 import { useInfiniteQuery } from '@tanstack/react-query';
+import { formatTickRelativeTime, tickTimeMs } from '@/app/lib/format-tick-time';
 import { createGraphQLHttpClient } from '@/app/lib/graphql/client';
 import {
   GET_USER_GROUPED_ASCENTS_FEED,
@@ -34,10 +32,6 @@ import { useDeleteTick } from '@/app/hooks/use-delete-tick';
 import { themeTokens } from '@/app/theme/theme-config';
 import styles from './ascents-feed.module.css';
 import { useInfiniteScroll } from '@/app/hooks/use-infinite-scroll';
-
-dayjs.extend(relativeTime);
-dayjs.extend(utc);
-dayjs.extend(relativeTime);
 
 type AscentsFeedProps = {
   userId: string;
@@ -108,7 +102,7 @@ const TickItemRow: React.FC<{
   onDelete: (uuid: string) => void;
   isDeleting: boolean;
 }> = ({ item, onDelete, isDeleting }) => {
-  const timeAgo = dayjs(item.climbedAt).utc(true).fromNow();
+  const timeAgo = formatTickRelativeTime(item.climbedAt);
   return (
     <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, py: 0.5 }}>
       <Chip
@@ -146,9 +140,9 @@ const GroupedFeedItem: React.FC<{
   isDeleting?: boolean;
 }> = ({ group, isOwnProfile = false, onDeleteTick, isDeleting = false }) => {
   const latestItem = group.items.reduce((latest, item) =>
-    new Date(item.climbedAt) > new Date(latest.climbedAt) ? item : latest,
+    tickTimeMs(item.climbedAt) > tickTimeMs(latest.climbedAt) ? item : latest,
   );
-  const timeAgo = dayjs(latestItem.climbedAt).utc(true).fromNow();
+  const timeAgo = formatTickRelativeTime(latestItem.climbedAt);
   const boardDisplay = getLayoutDisplayName(group.boardType, group.layoutId);
   const statusSummary = getGroupStatusSummary(group);
   const hasSuccess = group.flashCount > 0 || group.sendCount > 0;
