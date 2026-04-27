@@ -17,6 +17,12 @@ export const INSTAGRAM_TRANSIENT_TTL_MS = 2 * 60 * 1000;
 // out for a cooldown so we don't keep poking IG while it's actively
 // throttling us. The resolver layer keeps serving cached thumbnails during
 // the open window (see enrichRow's transient_error handling).
+//
+// State is per-process (module-singleton) — same shape as the existing
+// `metaCache` / `inflight` maps. In a horizontally scaled deploy each
+// instance independently rate-limits itself; threshold + cooldown are sized
+// so a single instance can't sustain enough outbound load to matter, but a
+// fleet-wide breaker would need a Redis-backed counter (out of scope here).
 const CIRCUIT_WINDOW_MS = 60 * 1000;
 const CIRCUIT_THRESHOLD = 10;
 const CIRCUIT_COOLDOWN_MS = 5 * 60 * 1000;

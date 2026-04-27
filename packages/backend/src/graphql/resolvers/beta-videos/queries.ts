@@ -106,10 +106,14 @@ async function persistEnriched(row: Row, persistedThumbnail: string | null, newU
 async function enrichRow(row: Row, cfg: EnrichConfig): Promise<BetaLinkResult | null> {
   const haveCachedThumbnail = isOurS3Url(row.thumbnail);
 
-  // Short-circuit: row is fully enriched (thumbnail already on our S3 *and*
-  // we know the username). The live fetch would only confirm the post still
-  // exists — skip it to avoid hammering Instagram/TikTok on every read.
-  if (haveCachedThumbnail && row.foreignUsername) {
+  // Short-circuit: once we've cached the thumbnail we have everything we
+  // need to render the slider — the live fetch would only refresh the
+  // username, which is presentational. Skipping the fetch avoids an
+  // open-ended refetch loop for rows that get stuck on `gone` (false
+  // positives during IG login-wall responses) and rows whose meta lookup
+  // never returns a username, since `gone` and `transient_error` carry no
+  // username and `persistEnriched` would have nothing to write either.
+  if (haveCachedThumbnail) {
     return {
       climbUuid: row.climbUuid,
       link: row.link,
@@ -124,27 +128,23 @@ async function enrichRow(row: Row, cfg: EnrichConfig): Promise<BetaLinkResult | 
   const meta = await cfg.fetchMeta(row.link);
 
   if (meta.status === 'gone') {
-    // If we already cached a thumbnail and have a username, trust our cache:
-    // the `gone` detector is a heuristic over IG HTML and can false-positive
-    // during rate-limiting / login-wall responses. Only filter the row when
-    // we have nothing useful to render anyway.
-    if (haveCachedThumbnail) return passthroughResult(row);
+    // No cached thumbnail to fall back on — drop the row.
     return null;
   }
 
   if (meta.status === 'transient_error') {
-    // Same idea: serve whatever we have cached. passthroughResult already
-    // returns the cached thumbnail when isOurS3Url(row.thumbnail) is true.
+    // No cached thumbnail; passthroughResult will return thumbnail: null but
+    // keeps the row visible in the slider with whatever metadata we have.
     return passthroughResult(row);
   }
 
+  // haveCachedThumbnail is necessarily false past the short-circuit above —
+  // we only reach this branch on a fresh row whose meta lookup returned ok.
   const cacheId = cfg.getCacheId(row.link);
   let thumbnail: string | null = null;
   let persistedThumbnail: string | null = null;
 
-  if (haveCachedThumbnail) {
-    thumbnail = row.thumbnail;
-  } else if (isS3Configured() && cacheId) {
+  if (isS3Configured() && cacheId) {
     thumbnail = await cfg.cacheThumbnail(cacheId, meta.thumbnail);
     persistedThumbnail = thumbnail;
   } else if (!isS3Configured()) {

@@ -12,6 +12,8 @@ export const TIKTOK_META_TTL_MS = 10 * 60 * 1000;
 // refetch on every read. See instagram-meta.ts for the same pattern.
 export const TIKTOK_TRANSIENT_TTL_MS = 2 * 60 * 1000;
 
+// Per-process circuit breaker — see instagram-meta.ts for the full note on
+// fleet-wide vs. per-instance scoping.
 const CIRCUIT_WINDOW_MS = 60 * 1000;
 const CIRCUIT_THRESHOLD = 10;
 const CIRCUIT_COOLDOWN_MS = 5 * 60 * 1000;

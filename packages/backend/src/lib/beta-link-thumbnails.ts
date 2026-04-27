@@ -9,9 +9,15 @@ const STATIC_THUMBNAIL_PREFIX = '/static/beta-link-thumbnails/';
  * pattern: backend-relative `/static/...` path that the backend proxies out
  * of S3 (Tigris on Railway doesn't honor `ACL: 'public-read'`, so direct
  * bucket URLs 403 in the browser).
+ *
+ * Strips a leading slash from the key so we never produce `/static//...`
+ * if a future refactor changes how keys are constructed — that mismatched
+ * URL would slip past `isOurS3Url` and silently break the resolver
+ * short-circuit.
  */
 function getStaticThumbnailUrl(key: string): string {
-  return `/static/${key}`;
+  const normalizedKey = key.replace(/^\/+/, '');
+  return `/static/${normalizedKey}`;
 }
 
 /**

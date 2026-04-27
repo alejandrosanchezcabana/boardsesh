@@ -94,8 +94,18 @@ async function main(): Promise<void> {
             AND thumbnail NOT LIKE '/static/%'
         `);
 
-    const rowCount = (updateResult as unknown as { rowCount?: number; count?: number }).rowCount ?? 0;
-    console.info(`[backfill] Rewrote ${rowCount} thumbnail URLs.`);
+    // Drizzle exposes the raw driver result here; postgres-js uses `count`,
+    // node-postgres uses `rowCount`. Read both so the script reports a real
+    // number regardless of which driver `createScriptDb` picked.
+    const raw = updateResult as unknown as { rowCount?: number; count?: number };
+    const rewritten = raw.rowCount ?? raw.count;
+    if (rewritten === undefined) {
+      console.warn(
+        '[backfill] update succeeded but driver returned no row count — verify with a SELECT against `board_beta_links`',
+      );
+    } else {
+      console.info(`[backfill] Rewrote ${rewritten} thumbnail URLs.`);
+    }
   } finally {
     await close();
   }

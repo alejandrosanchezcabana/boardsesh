@@ -138,29 +138,28 @@ describe('betaLinks resolver', () => {
     expect(result).toEqual([]);
   });
 
-  it('keeps gone rows when we already have our own cached thumbnail (gone is heuristic)', async () => {
-    // The `gone` detector is HTML-based and false-positives during IG
-    // login-wall / rate-limit responses. If we have a cached thumbnail we
-    // can render, trust the cache over the live signal.
+  it('short-circuits the live fetch as soon as a cached thumbnail is on our S3 (even without username)', async () => {
+    // Once we've cached the thumbnail we have everything the slider needs.
+    // Skipping the live fetch keeps us from re-poking IG every read for
+    // rows that get stuck on `gone` (false positives during login-wall
+    // responses) or `transient_error` (active rate-limiting).
     selectMock.mockReturnValueOnce([
       row({ link: 'https://www.instagram.com/p/ABC/', thumbnail: OUR_S3_THUMB, foreignUsername: null }),
     ]);
-    fetchInstagramMetaMock.mockResolvedValueOnce({ status: 'gone' });
 
     const result = await betaLinkQueries.betaLinks(undefined, { boardType: 'kilter', climbUuid: 'climb-1' });
     expect(result).toHaveLength(1);
-    expect(result[0]).toMatchObject({ thumbnail: OUR_S3_THUMB });
+    expect(result[0]).toMatchObject({ thumbnail: OUR_S3_THUMB, foreignUsername: null });
+    expect(fetchInstagramMetaMock).not.toHaveBeenCalled();
   });
 
-  it('passes through rows on transient_error, only serving an S3-cached thumbnail', async () => {
-    selectMock.mockReturnValueOnce([
-      row({ link: 'https://www.instagram.com/p/ABC/', thumbnail: OUR_S3_THUMB, foreignUsername: 'climber' }),
-    ]);
+  it('passes through transient_error rows with no cached thumbnail (keeps them in the slider with thumbnail: null)', async () => {
+    selectMock.mockReturnValueOnce([row({ link: 'https://www.instagram.com/p/ABC/', thumbnail: null })]);
     fetchInstagramMetaMock.mockResolvedValueOnce({ status: 'transient_error' });
 
     const result = await betaLinkQueries.betaLinks(undefined, { boardType: 'kilter', climbUuid: 'climb-1' });
     expect(result).toHaveLength(1);
-    expect(result[0]).toMatchObject({ thumbnail: OUR_S3_THUMB, foreignUsername: 'climber' });
+    expect(result[0]).toMatchObject({ thumbnail: null });
   });
 
   it('persists the S3 thumbnail on first read when S3 is configured', async () => {
