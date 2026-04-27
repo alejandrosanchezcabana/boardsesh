@@ -5,6 +5,7 @@ import {
   getTikTokCacheId,
   isTikTokUrl,
   TIKTOK_META_TTL_MS,
+  TIKTOK_TRANSIENT_TTL_MS,
 } from '../lib/tiktok-meta';
 
 const LONG_URL = 'https://www.tiktok.com/@scout2015/video/6718335390845095173';
@@ -175,7 +176,7 @@ describe('fetchTikTokMeta', () => {
     expect(fetchMock).toHaveBeenCalledTimes(1);
   });
 
-  it('does not cache transient_error', async () => {
+  it('negative-caches transient_error briefly so a rate-limit does not cause refetches on every read', async () => {
     const fetchMock = vi
       .fn()
       .mockResolvedValueOnce({ ok: false, status: 503, json: () => Promise.resolve({}) })
@@ -186,6 +187,27 @@ describe('fetchTikTokMeta', () => {
     const second = await fetchTikTokMeta(LONG_URL);
 
     expect(first).toEqual({ status: 'transient_error' });
+    expect(second).toEqual({ status: 'transient_error' });
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+  });
+
+  it('refetches after the negative TTL expires', async () => {
+    const fetchMock = vi
+      .fn()
+      .mockResolvedValueOnce({ ok: false, status: 503, json: () => Promise.resolve({}) })
+      .mockResolvedValueOnce({ ok: true, status: 200, json: () => Promise.resolve(JSON.parse(oembedBody())) });
+    vi.stubGlobal('fetch', fetchMock);
+
+    const start = Date.now();
+    const dateSpy = vi.spyOn(Date, 'now');
+    dateSpy.mockReturnValue(start);
+
+    const first = await fetchTikTokMeta(LONG_URL);
+    expect(first).toEqual({ status: 'transient_error' });
+
+    dateSpy.mockReturnValue(start + TIKTOK_TRANSIENT_TTL_MS + 1);
+
+    const second = await fetchTikTokMeta(LONG_URL);
     expect(second.status).toBe('ok');
     expect(fetchMock).toHaveBeenCalledTimes(2);
   });

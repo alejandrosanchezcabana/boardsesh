@@ -10,7 +10,7 @@ import { initCors, applyCorsHeaders } from './handlers/cors';
 import { handleHealthCheck } from './handlers/health';
 import { handleSessionJoin } from './handlers/join';
 import { handleAvatarUpload } from './handlers/avatars';
-import { handleStaticAvatar } from './handlers/static';
+import { handleStaticAvatar, handleStaticBetaThumbnail } from './handlers/static';
 import { handleSyncCron } from './handlers/sync';
 import { handleOcrTestDataUpload } from './handlers/ocr-test-data';
 import { createYogaInstance } from './graphql/yoga';
@@ -103,6 +103,20 @@ export async function startServer(): Promise<ServerResources> {
         if (fileName) {
           await handleStaticAvatar(req, res, fileName);
           return;
+        }
+      }
+
+      // Static beta-link thumbnails (Instagram / TikTok), proxied from S3
+      if (pathname.startsWith('/static/beta-link-thumbnails/')) {
+        const remainder = pathname.slice('/static/beta-link-thumbnails/'.length);
+        const slashIndex = remainder.indexOf('/');
+        if (slashIndex > 0) {
+          const platform = remainder.slice(0, slashIndex);
+          const fileName = remainder.slice(slashIndex + 1);
+          if (fileName) {
+            await handleStaticBetaThumbnail(req, res, platform, fileName);
+            return;
+          }
         }
       }
 

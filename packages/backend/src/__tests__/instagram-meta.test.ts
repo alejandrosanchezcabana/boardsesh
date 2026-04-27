@@ -4,6 +4,7 @@ import {
   fetchInstagramMeta,
   getInstagramMediaId,
   INSTAGRAM_META_TTL_MS,
+  INSTAGRAM_TRANSIENT_TTL_MS,
   isInstagramUrl,
 } from '../lib/instagram-meta';
 
@@ -147,7 +148,7 @@ describe('fetchInstagramMeta', () => {
     expect(fetchMock).toHaveBeenCalledTimes(1);
   });
 
-  it('does not cache transient_error (refetches on next call)', async () => {
+  it('negative-caches transient_error briefly so a rate-limit does not cause refetches on every read', async () => {
     const fetchMock = vi
       .fn()
       .mockResolvedValueOnce({ ok: false, status: 503, text: () => Promise.resolve('') })
@@ -157,7 +158,32 @@ describe('fetchInstagramMeta', () => {
     const first = await fetchInstagramMeta(SAMPLE_URL);
     const second = await fetchInstagramMeta(SAMPLE_URL);
 
+    // First call observes the transient error. Second call returns the
+    // cached result without making a network request — that's the whole
+    // point of the negative cache. The mock's second response (an `ok`)
+    // would only be consumed after the negative TTL expires.
     expect(first).toEqual({ status: 'transient_error' });
+    expect(second).toEqual({ status: 'transient_error' });
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+  });
+
+  it('refetches after the negative TTL expires', async () => {
+    const fetchMock = vi
+      .fn()
+      .mockResolvedValueOnce({ ok: false, status: 503, text: () => Promise.resolve('') })
+      .mockResolvedValueOnce({ ok: true, status: 200, text: () => Promise.resolve(htmlWithImage()) });
+    vi.stubGlobal('fetch', fetchMock);
+
+    const start = Date.now();
+    const dateSpy = vi.spyOn(Date, 'now');
+    dateSpy.mockReturnValue(start);
+
+    const first = await fetchInstagramMeta(SAMPLE_URL);
+    expect(first).toEqual({ status: 'transient_error' });
+
+    dateSpy.mockReturnValue(start + INSTAGRAM_TRANSIENT_TTL_MS + 1);
+
+    const second = await fetchInstagramMeta(SAMPLE_URL);
     expect(second.status).toBe('ok');
     expect(fetchMock).toHaveBeenCalledTimes(2);
   });
@@ -182,5 +208,48 @@ describe('fetchInstagramMeta', () => {
     expect(fetchMock).toHaveBeenCalledTimes(2);
 
     dateSpy.mockRestore();
+  });
+
+  it('opens the circuit after a burst of transient errors and short-circuits subsequent calls', async () => {
+    // 11 distinct URLs each return a transient (503). The first 10 record
+    // failures and trip the breaker; the 11th call short-circuits to
+    // transient_error without making a network request. We mock 11
+    // responses but only expect 10 fetches to land.
+    const transientResponse = { ok: false, status: 503, text: () => Promise.resolve('') };
+    const fetchMock = vi.fn().mockResolvedValue(transientResponse);
+    vi.stubGlobal('fetch', fetchMock);
+
+    const dateSpy = vi.spyOn(Date, 'now');
+    dateSpy.mockReturnValue(0);
+
+    // Suppress the breaker's console.warn so the test output stays clean.
+    const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
+
+    for (let i = 0; i < 10; i++) {
+      const result = await fetchInstagramMeta(`https://www.instagram.com/p/CIRCUIT${i}/`);
+      expect(result).toEqual({ status: 'transient_error' });
+    }
+    expect(fetchMock).toHaveBeenCalledTimes(10);
+
+    // Eleventh URL: breaker is open, no fetch call is made.
+    const blocked = await fetchInstagramMeta('https://www.instagram.com/p/CIRCUITX/');
+    expect(blocked).toEqual({ status: 'transient_error' });
+    expect(fetchMock).toHaveBeenCalledTimes(10);
+
+    // Once the cooldown elapses, the breaker closes and fetches resume.
+    // The default IG cooldown is 5 minutes; jump just past it and provide
+    // a successful response to confirm.
+    fetchMock.mockResolvedValueOnce({
+      ok: true,
+      status: 200,
+      text: () => Promise.resolve(htmlWithImage()),
+    });
+    dateSpy.mockReturnValue(5 * 60 * 1000 + 1);
+    const recovered = await fetchInstagramMeta('https://www.instagram.com/p/RECOVER/');
+    expect(recovered.status).toBe('ok');
+    expect(fetchMock).toHaveBeenCalledTimes(11);
+
+    dateSpy.mockRestore();
+    warnSpy.mockRestore();
   });
 });

@@ -100,3 +100,57 @@ export async function handleStaticAvatar(req: IncomingMessage, res: ServerRespon
     res.end(JSON.stringify({ error: 'Not found' }));
   }
 }
+
+const BETA_THUMBNAIL_PLATFORMS = new Set(['instagram', 'tiktok']);
+const BETA_THUMBNAIL_FILENAME = /^[A-Za-z0-9_-]+\.jpg$/;
+
+/**
+ * Static beta-link thumbnail serving handler
+ * GET /static/beta-link-thumbnails/:platform/:filename
+ *
+ * Streams cached Instagram / TikTok beta-video thumbnails out of S3. Mirrors
+ * the avatar pattern: clients receive a backend-relative URL and we proxy
+ * the bytes from S3 ourselves, because Tigris on Railway doesn't honor the
+ * `ACL: 'public-read'` we set on the upload.
+ */
+export async function handleStaticBetaThumbnail(
+  req: IncomingMessage,
+  res: ServerResponse,
+  platform: string,
+  fileName: string,
+): Promise<void> {
+  if (!applyCorsHeaders(req, res)) return;
+
+  if (!BETA_THUMBNAIL_PLATFORMS.has(platform) || !BETA_THUMBNAIL_FILENAME.test(fileName)) {
+    res.writeHead(400, { 'Content-Type': 'application/json' });
+    res.end(JSON.stringify({ error: 'Invalid path' }));
+    return;
+  }
+
+  if (!isS3Configured()) {
+    // No S3 means no cached thumbnails to serve. Dev environments use the
+    // /api/internal/beta-link-thumbnail proxy instead.
+    res.writeHead(404, { 'Content-Type': 'application/json' });
+    res.end(JSON.stringify({ error: 'Not found' }));
+    return;
+  }
+
+  const s3Key = `beta-link-thumbnails/${platform}/${fileName}`;
+  const s3Object = await getFromS3(s3Key);
+
+  if (!s3Object) {
+    res.writeHead(404, { 'Content-Type': 'application/json' });
+    res.end(JSON.stringify({ error: 'Not found' }));
+    return;
+  }
+
+  res.writeHead(200, {
+    'Content-Type': s3Object.contentType || 'image/jpeg',
+    ...(s3Object.contentLength && { 'Content-Length': s3Object.contentLength }),
+    // Thumbnail keys are immutable per shortcode, so we can let the browser /
+    // CDN cache aggressively.
+    'Cache-Control': 'public, max-age=31536000, immutable',
+  });
+
+  s3Object.stream.pipe(res);
+}
