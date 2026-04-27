@@ -24,6 +24,7 @@ import { constructBoardSlugListUrl, constructClimbListWithSlugs } from '@/app/li
 import {
   configFromResolvedEntry,
   matchesBoardDetails,
+  parseSetIds,
   type ResolvedBoardConfig,
 } from '@/app/lib/ble/board-config-match';
 import type { ResolvedBoardEntry } from '@/app/lib/ble/resolve-serials';
@@ -74,13 +75,6 @@ function UnknownBoardPreview({ boardType }: { boardType?: BoardName }) {
       </div>
     </>
   );
-}
-
-function parseSetIds(setIds: string): number[] {
-  return setIds
-    .split(',')
-    .map((s) => Number(s.trim()))
-    .filter((n) => Number.isFinite(n));
 }
 
 function RecordedBoardPreview({ config }: { config: ResolvedBoardConfig }) {

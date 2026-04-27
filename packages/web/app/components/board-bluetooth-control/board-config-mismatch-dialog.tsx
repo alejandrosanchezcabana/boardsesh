@@ -10,7 +10,7 @@ import Stack from '@mui/material/Stack';
 import Typography from '@mui/material/Typography';
 import type { BoardDetails } from '@/app/lib/types';
 import { getBoardDetails } from '@/app/lib/board-constants';
-import type { ResolvedBoardConfig } from '@/app/lib/ble/board-config-match';
+import { parseSetIds, type ResolvedBoardConfig } from '@/app/lib/ble/board-config-match';
 
 type BoardConfigMismatchDialogProps = {
   open: boolean;
@@ -20,14 +20,6 @@ type BoardConfigMismatchDialogProps = {
   onConnectAnyway: () => void;
   onCancel: () => void;
 };
-
-function parseSetIds(setIds: string | number[]): number[] {
-  if (Array.isArray(setIds)) return setIds;
-  return setIds
-    .split(',')
-    .map((s) => Number(s.trim()))
-    .filter((n) => Number.isFinite(n));
-}
 
 function describeBoardConfig(boardName: string, layoutId: number, sizeId: number, setIds: string | number[]): string {
   try {

@@ -1,7 +1,7 @@
 import { getServerSession } from 'next-auth/next';
 import { type NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
-import { and, eq, isNull } from 'drizzle-orm';
+import { and, eq, isNull, or } from 'drizzle-orm';
 import { getDb } from '@/app/lib/db/db';
 import * as schema from '@/app/lib/db/schema';
 import { authOptions } from '@/app/lib/auth/auth-options';
@@ -76,6 +76,29 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ ok: true, skipped: 'already_saved' });
     }
 
+    // Validate the supplied boardUuid before linking. The client can pass any
+    // string; we only persist the link if the user can legitimately reach a
+    // /b/{slug}/... route for that board (owner or public). Anything else is
+    // silently dropped to null so a forged uuid can't attach the user's
+    // controller to someone else's private board.
+    let linkedBoardUuid: string | null = null;
+    if (boardUuid) {
+      const allowed = await db
+        .select({ uuid: schema.userBoards.uuid })
+        .from(schema.userBoards)
+        .where(
+          and(
+            eq(schema.userBoards.uuid, boardUuid),
+            isNull(schema.userBoards.deletedAt),
+            or(eq(schema.userBoards.ownerId, session.user.id), eq(schema.userBoards.isPublic, true)),
+          ),
+        )
+        .limit(1);
+      if (allowed.length > 0) {
+        linkedBoardUuid = boardUuid;
+      }
+    }
+
     await db
       .insert(schema.userBoardSerials)
       .values({
@@ -85,7 +108,7 @@ export async function POST(request: NextRequest) {
         layoutId,
         sizeId,
         setIds,
-        boardUuid: boardUuid ?? null,
+        boardUuid: linkedBoardUuid,
       })
       .onConflictDoUpdate({
         target: [schema.userBoardSerials.userId, schema.userBoardSerials.serialNumber],
@@ -94,7 +117,7 @@ export async function POST(request: NextRequest) {
           layoutId,
           sizeId,
           setIds,
-          boardUuid: boardUuid ?? null,
+          boardUuid: linkedBoardUuid,
           updatedAt: new Date(),
         },
       });

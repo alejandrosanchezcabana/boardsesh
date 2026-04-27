@@ -38,9 +38,11 @@ vi.mock('@/app/lib/db/db', () => ({
 vi.mock('@/app/lib/db/schema', () => ({
   userBoards: {
     id: 'userBoards.id',
+    uuid: 'userBoards.uuid',
     ownerId: 'userBoards.ownerId',
     serialNumber: 'userBoards.serialNumber',
     deletedAt: 'userBoards.deletedAt',
+    isPublic: 'userBoards.isPublic',
   },
   userBoardSerials: {
     userId: 'userBoardSerials.userId',
@@ -52,6 +54,7 @@ vi.mock('drizzle-orm', () => ({
   and: vi.fn((...args: unknown[]) => ({ _type: 'and', args })),
   eq: vi.fn((col: unknown, val: unknown) => ({ _type: 'eq', col, val })),
   isNull: vi.fn((col: unknown) => ({ _type: 'isNull', col })),
+  or: vi.fn((...args: unknown[]) => ({ _type: 'or', args })),
 }));
 
 function createRequest(body: unknown, raw?: string): NextRequest {
@@ -185,17 +188,37 @@ describe('POST /api/internal/board-serials', () => {
     );
   });
 
-  it('upserts with boardUuid passthrough (no ownership filter)', async () => {
+  it('drops boardUuid when the user neither owns it nor it is public', async () => {
     mockGetServerSession.mockResolvedValue({ user: { id: 'user-1' } });
+    // First select (savedMatch by serial) → no match. Second select (boardUuid
+    // validation) → no match either, so the link must be silently dropped.
+    mockLimit.mockResolvedValueOnce([]).mockResolvedValueOnce([]);
 
     const response = await POST(createRequest({ ...validBody, boardUuid: 'someones-board-uuid' }));
     expect(response.status).toBe(200);
 
-    expect(mockValues).toHaveBeenCalledWith(
-      expect.objectContaining({
-        boardUuid: 'someones-board-uuid',
-      }),
-    );
+    expect(mockValues).toHaveBeenCalledWith(expect.objectContaining({ boardUuid: null }));
+  });
+
+  it('preserves boardUuid when the user owns the board', async () => {
+    mockGetServerSession.mockResolvedValue({ user: { id: 'user-1' } });
+    // savedMatch → empty; boardUuid validation → finds an allowed board row.
+    mockLimit.mockResolvedValueOnce([]).mockResolvedValueOnce([{ uuid: 'my-own-board' }]);
+
+    const response = await POST(createRequest({ ...validBody, boardUuid: 'my-own-board' }));
+    expect(response.status).toBe(200);
+
+    expect(mockValues).toHaveBeenCalledWith(expect.objectContaining({ boardUuid: 'my-own-board' }));
+  });
+
+  it('preserves boardUuid when the board is public (e.g. gym board)', async () => {
+    mockGetServerSession.mockResolvedValue({ user: { id: 'user-1' } });
+    mockLimit.mockResolvedValueOnce([]).mockResolvedValueOnce([{ uuid: 'public-gym-board' }]);
+
+    const response = await POST(createRequest({ ...validBody, boardUuid: 'public-gym-board' }));
+    expect(response.status).toBe(200);
+
+    expect(mockValues).toHaveBeenCalledWith(expect.objectContaining({ boardUuid: 'public-gym-board' }));
   });
 
   it('short-circuits and skips upsert when saved board already exists for this serial', async () => {

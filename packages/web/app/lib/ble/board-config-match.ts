@@ -2,6 +2,19 @@ import type { BoardDetails } from '@/app/lib/types';
 import type { ResolvedBoardEntry } from './resolve-serials';
 
 /**
+ * Parse a comma-separated set_ids string into a number[]. Accepts an array
+ * directly (passthrough) so call sites that already have the normalised form
+ * can share this helper.
+ */
+export function parseSetIds(setIds: string | number[]): number[] {
+  if (Array.isArray(setIds)) return setIds;
+  return setIds
+    .split(',')
+    .map((s) => Number(s.trim()))
+    .filter((n) => Number.isFinite(n));
+}
+
+/**
  * Normalise a comma-separated set_ids string to a sorted, deduped representation
  * so order/whitespace differences don't trigger spurious mismatches.
  */

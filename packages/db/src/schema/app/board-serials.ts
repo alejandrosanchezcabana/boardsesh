@@ -26,6 +26,9 @@ export const userBoardSerials = pgTable(
     setIds: text('set_ids').notNull(),
     boardUuid: text('board_uuid').references(() => userBoards.uuid, { onDelete: 'set null' }),
     createdAt: timestamp('created_at').defaultNow().notNull(),
+    // No DB-level ON UPDATE trigger — `defaultNow()` only fires on insert.
+    // Writers (the upsert in /api/internal/board-serials) must set this
+    // explicitly; raw SQL paths will silently leave it stale.
     updatedAt: timestamp('updated_at').defaultNow().notNull(),
   },
   (table) => ({
