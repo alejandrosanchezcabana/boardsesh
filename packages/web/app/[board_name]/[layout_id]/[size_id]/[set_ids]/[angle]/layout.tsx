@@ -108,7 +108,7 @@ export default async function BoardLayout(props: PropsWithChildren<BoardLayoutPr
           <WebSocketConnectionProvider>
             <GraphQLQueueProvider parsedParams={parsedParams} boardDetails={boardDetails}>
               <PartyProvider>
-                <BluetoothProvider boardDetails={boardDetails} angle={angle}>
+                <BluetoothProvider boardDetails={boardDetails}>
                   <UISearchParamsProvider>
                     <QueueBridgeInjector boardDetails={boardDetails} angle={angle} />
 

@@ -1,7 +1,7 @@
 'use client';
 
 import React, { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { useParams, useRouter } from 'next/navigation';
 import { track } from '@vercel/analytics';
 import { useBoardBluetooth } from './use-board-bluetooth';
 import { useCurrentClimb } from '../graphql-queue';
@@ -119,13 +119,10 @@ function BluetoothAutoSender({
 
 export function BluetoothProvider({
   boardDetails,
-  angle,
   boardUuid,
   children,
 }: {
   boardDetails: BoardDetails;
-  /** Current route's angle. Threaded to the picker dialog for the "switch config" URL. */
-  angle?: number;
   /** Saved board UUID when this provider sits under a /b/{slug}/... route. */
   boardUuid?: string;
   children: React.ReactNode;
@@ -135,6 +132,15 @@ export function BluetoothProvider({
     boardUuid,
   });
   const { token, isAuthenticated } = useWsAuthToken();
+
+  // Both `[board_name]/[layout_id]/[size_id]/[set_ids]/[angle]/...` and
+  // `/b/{slug}/{angle}/...` routes carry `[angle]` as a dynamic segment.
+  // Read it here instead of taking it as a prop so the provider isn't
+  // coupled to the route shape at the call site — only the mismatch
+  // dialog's "switch URL" builder needs it.
+  const params = useParams<{ angle?: string }>();
+  const parsedAngle = Number(params?.angle);
+  const routeAngle = Number.isFinite(parsedAngle) ? parsedAngle : 0;
 
   const [isBluetoothSupported, setIsBluetoothSupported] = useState(false);
   const [isIOS, setIsIOS] = useState(false);
@@ -372,7 +378,7 @@ export function BluetoothProvider({
 
   const handleMismatchSwitch = useCallback(() => {
     if (!mismatch) return;
-    const target = buildSwitchUrl(mismatch.config, angle ?? 0);
+    const target = buildSwitchUrl(mismatch.config, routeAngle);
     setMismatch(null);
     // Cancel the in-flight picker promise; the new route will mount a fresh
     // BluetoothProvider that auto-connects via the ?autoConnect serial param.
@@ -380,7 +386,7 @@ export function BluetoothProvider({
     if (target) {
       router.push(`${target}?autoConnect=${encodeURIComponent(mismatch.serial)}`);
     }
-  }, [mismatch, angle, activePickerState, router]);
+  }, [mismatch, routeAngle, activePickerState, router]);
 
   return (
     <BluetoothContext.Provider value={value}>
