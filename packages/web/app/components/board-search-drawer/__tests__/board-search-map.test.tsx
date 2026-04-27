@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vite-plus/test';
-import { render, act } from '@testing-library/react';
+import { render, act, fireEvent } from '@testing-library/react';
 import React from 'react';
 import BoardSearchMap from '../board-search-map';
 
@@ -32,8 +32,12 @@ const { mockState, resetMockState } = vi.hoisted(() => {
       if (event === 'moveend') state.handlers.moveend.push(fn);
       return m as MockMap;
     });
-    m.off = vi.fn(() => {
-      state.handlers.moveend = [];
+    m.off = vi.fn((event: string, fn?: () => void) => {
+      if (event === 'moveend') {
+        state.handlers.moveend = fn
+          ? state.handlers.moveend.filter((h) => h !== fn)
+          : [];
+      }
       return m as MockMap;
     });
     m.once = vi.fn((event: string, fn: () => void) => {
@@ -75,6 +79,7 @@ vi.mock('leaflet', () => {
 
 vi.mock('leaflet/dist/leaflet.css', () => ({}));
 
+
 const baseProps = {
   center: { lat: 0, lng: 0 },
   zoom: 2,
@@ -107,11 +112,15 @@ describe('BoardSearchMap lifecycle', () => {
 
     const { unmount } = render(<BoardSearchMap {...baseProps} onViewportChange={onViewportChange} />);
 
+    // Flush the async Leaflet import. waitFor can't be used here because its
+    // setInterval retry mechanism is frozen by vi.useFakeTimers(). Promise
+    // microtasks are unaffected by fake timers, so two ticks suffice: one for
+    // Promise.all to coalesce, one for the .then() to run. The explicit expect
+    // makes failure loud if the flush depth ever needs to change.
     await act(async () => {
       await Promise.resolve();
       await Promise.resolve();
     });
-
     expect(mockState.handlers.moveend.length).toBeGreaterThan(0);
 
     // Simulate Leaflet's internal teardown emitting moveend during remove().
@@ -125,7 +134,7 @@ describe('BoardSearchMap lifecycle', () => {
 
     // Cleanup must detach moveend BEFORE removing the map. With this order,
     // remove()'s teardown emission finds no handlers and schedules nothing.
-    expect(mockState.map!.off).toHaveBeenCalledWith('moveend');
+    expect(mockState.map!.off).toHaveBeenCalledWith('moveend', expect.any(Function));
     const offOrder = mockState.map!.off.mock.invocationCallOrder.at(-1)!;
     const removeOrder = mockState.map!.remove.mock.invocationCallOrder.at(-1)!;
     expect(offOrder).toBeLessThan(removeOrder);
@@ -151,10 +160,13 @@ describe('BoardSearchMap lifecycle', () => {
 
     const { unmount } = render(<BoardSearchMap {...baseProps} onViewportChange={onViewportChange} />);
 
+    // Same flush approach as the teardown test above: fake timers freeze
+    // waitFor's setInterval, so we flush microtasks manually instead.
     await act(async () => {
       await Promise.resolve();
       await Promise.resolve();
     });
+    expect(mockState.handlers.moveend.length).toBeGreaterThan(0);
 
     act(() => {
       mockState.handlers.moveend.forEach((fn: () => void) => fn());
@@ -172,6 +184,35 @@ describe('BoardSearchMap lifecycle', () => {
 
     expect(mockState.map!.getCenter).not.toHaveBeenCalled();
     expect(onViewportChange).not.toHaveBeenCalled();
+  });
+
+  // At-destination guard: if the map is already at the user's location and
+  // zoom level, flyTo would be a no-op and never emit moveend, so the once()
+  // handler would never fire. The guard detects this and calls onViewportChange
+  // immediately instead of relying on a moveend that will never come.
+  it('calls onViewportChange immediately when map is already at user location', async () => {
+    // 13 matches the component's internal FLY_TO_ZOOM. Not exported — that
+    // would couple the public API to test infrastructure. If the component
+    // changes the zoom, this test fails: flyTo fires and the not.toHaveBeenCalled
+    // assertion below catches it.
+    const FLY_TO_ZOOM = 13;
+    mockState.map!.getCenter.mockReturnValue({ lat: 37.5, lng: -122.1 });
+    mockState.map!.getZoom.mockReturnValue(FLY_TO_ZOOM);
+
+    const onViewportChange = vi.fn();
+    const userCoords = { latitude: 37.5, longitude: -122.1 };
+
+    const { findByRole } = render(
+      <BoardSearchMap {...baseProps} userCoords={userCoords} onViewportChange={onViewportChange} />,
+    );
+
+    const button = await findByRole('button', { name: /my location/i });
+
+    fireEvent.click(button);
+
+    expect(mockState.map!.flyTo).not.toHaveBeenCalled();
+    expect(mockState.map!.once).not.toHaveBeenCalled();
+    expect(onViewportChange).toHaveBeenCalledWith({ lat: 37.5, lng: -122.1, zoom: FLY_TO_ZOOM });
   });
 
   // Per-invocation `cancelled` guard: if the component unmounts before the
