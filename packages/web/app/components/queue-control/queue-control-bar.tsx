@@ -1001,7 +1001,7 @@ const QueueControlBar: React.FC<QueueControlBarProps> = ({ boardDetails, angle }
                         </Box>
                         {showInviteQr && sessionShareUrl && (
                           <Box sx={{ display: 'flex', justifyContent: 'center', py: 1 }}>
-                            <QRCodeSVG value={sessionShareUrl} size={140} />
+                            <QRCodeSVG value={sessionShareUrl} size={140} level="M" marginSize={4} />
                           </Box>
                         )}
                       </Box>
