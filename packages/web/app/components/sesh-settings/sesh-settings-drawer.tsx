@@ -263,7 +263,7 @@ export default function SeshSettingsDrawer({
         </IconButton>
       </Box>
       <Box sx={{ display: 'flex', justifyContent: 'center', py: 1 }}>
-        <QRCodeSVG value={TOUR_SHARE_QR_PAYLOAD} size={140} aria-hidden />
+        <QRCodeSVG value={TOUR_SHARE_QR_PAYLOAD} size={140} level="M" marginSize={4} aria-hidden />
       </Box>
     </Box>
   ) : !isStopped && shareUrl ? (
@@ -281,7 +281,7 @@ export default function SeshSettingsDrawer({
       </Box>
       {showQr && (
         <Box sx={{ display: 'flex', justifyContent: 'center', py: 1 }}>
-          <QRCodeSVG value={shareUrl} size={180} />
+          <QRCodeSVG value={shareUrl} size={180} level="M" marginSize={4} />
         </Box>
       )}
     </Box>
