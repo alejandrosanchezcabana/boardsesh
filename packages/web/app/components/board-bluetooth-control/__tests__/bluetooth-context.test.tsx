@@ -27,7 +27,7 @@ vi.mock('../use-board-bluetooth', () => ({
 }));
 
 vi.mock('@/app/hooks/use-ws-auth-token', () => ({
-  useWsAuthToken: () => ({ token: null }),
+  useWsAuthToken: () => ({ token: null, isAuthenticated: false }),
 }));
 
 vi.mock('@/app/lib/ble/resolve-serials', () => ({
@@ -42,8 +42,21 @@ vi.mock('../device-picker-dialog', () => ({
   DevicePickerDialog: () => null,
 }));
 
+vi.mock('../board-config-mismatch-dialog', () => ({
+  BoardConfigMismatchDialog: () => null,
+}));
+
 vi.mock('../auto-connect-handler', () => ({
   AutoConnectHandler: () => null,
+}));
+
+vi.mock('next/navigation', () => ({
+  useParams: () => ({ angle: '40' }),
+  useRouter: () => ({ push: vi.fn(), replace: vi.fn() }),
+}));
+
+vi.mock('../../providers/snackbar-provider', () => ({
+  useSnackbar: () => ({ showMessage: vi.fn() }),
 }));
 
 vi.mock('../bluetooth-status-store', () => ({
