@@ -613,6 +613,7 @@ const ClimbListItem: React.FC<ClimbListItemProps> = React.memo(
                 )}
                 <AscentStatus
                   climbUuid={climb.uuid}
+                  angle={climb.angle}
                   fontSize={12}
                   className={ascentStyles.badge}
                   mirroredClassName={ascentStyles.badgeMirrored}

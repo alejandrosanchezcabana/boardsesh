@@ -161,7 +161,11 @@ const PlayViewClient: React.FC<PlayViewClientProps> = ({ boardDetails, initialCl
             titleFontSize={themeTokens.typography.fontSize['2xl']}
             rightAddon={
               displayClimb && (
-                <AscentStatus climbUuid={displayClimb.uuid} fontSize={themeTokens.typography.fontSize['2xl']} />
+                <AscentStatus
+                  climbUuid={displayClimb.uuid}
+                  angle={angle}
+                  fontSize={themeTokens.typography.fontSize['2xl']}
+                />
               )
             }
             isNoMatch={!!displayClimb?.is_no_match}

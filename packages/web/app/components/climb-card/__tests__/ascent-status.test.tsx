@@ -56,20 +56,20 @@ function createBoardContextValue({
   };
 }
 
-function renderWithBoardContext(contextValue: BoardContextType) {
+function renderWithBoardContext(contextValue: BoardContextType, angle = 40) {
   return render(
     <BoardContext.Provider value={contextValue}>
-      <AscentStatus climbUuid="climb-1" />
+      <AscentStatus climbUuid="climb-1" angle={angle} />
     </BoardContext.Provider>,
   );
 }
 
-function AscentStatusHarness() {
+function AscentStatusHarness({ angle = 40 }: { angle?: number } = {}) {
   const { logbook } = useLogbook('kilter', ['climb-1']);
 
   return (
     <BoardContext.Provider value={createBoardContextValue({ logbook })}>
-      <AscentStatus climbUuid="climb-1" />
+      <AscentStatus climbUuid="climb-1" angle={angle} />
     </BoardContext.Provider>
   );
 }
@@ -92,8 +92,82 @@ describe('AscentStatus', () => {
   });
 
   it('renders nothing when the climb has no logbook entries', () => {
-    const { container } = render(<AscentStatus climbUuid="climb-1" />);
+    const { container } = render(<AscentStatus climbUuid="climb-1" angle={40} />);
     expect(container.innerHTML).toBe('');
+  });
+
+  it('hides the badge when the only ticks are at a different angle than the current view', () => {
+    renderWithBoardContext(
+      createBoardContextValue({
+        boardName: 'kilter',
+        logbook: [
+          {
+            uuid: '1',
+            climb_uuid: 'climb-1',
+            angle: 30,
+            is_mirror: false,
+            tries: 1,
+            quality: null,
+            difficulty: null,
+            comment: '',
+            climbed_at: '2025-01-01T00:00:00.000Z',
+            is_ascent: true,
+            status: 'send',
+            upvotes: 0,
+            downvotes: 0,
+            commentCount: 0,
+          },
+        ],
+      }),
+      50,
+    );
+
+    expect(screen.queryByTestId('ascent-badge')).toBeNull();
+  });
+
+  it('shows the badge only for ticks at the current angle', () => {
+    renderWithBoardContext(
+      createBoardContextValue({
+        boardName: 'kilter',
+        logbook: [
+          {
+            uuid: '1',
+            climb_uuid: 'climb-1',
+            angle: 30,
+            is_mirror: false,
+            tries: 1,
+            quality: null,
+            difficulty: null,
+            comment: '',
+            climbed_at: '2025-01-01T00:00:00.000Z',
+            is_ascent: true,
+            status: 'flash',
+            upvotes: 0,
+            downvotes: 0,
+            commentCount: 0,
+          },
+          {
+            uuid: '2',
+            climb_uuid: 'climb-1',
+            angle: 50,
+            is_mirror: false,
+            tries: 4,
+            quality: null,
+            difficulty: null,
+            comment: '',
+            climbed_at: '2025-01-02T00:00:00.000Z',
+            is_ascent: false,
+            status: 'attempt',
+            upvotes: 0,
+            downvotes: 0,
+            commentCount: 0,
+          },
+        ],
+      }),
+      50,
+    );
+
+    expect(screen.getByTestId('ascent-badge').getAttribute('data-status')).toBe('attempt');
   });
 
   it('prefers flash over send and attempt for the same climb', () => {

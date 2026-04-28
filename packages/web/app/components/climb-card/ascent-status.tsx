@@ -15,6 +15,9 @@ const EMPTY_LOGBOOK: LogbookEntry[] = [];
 
 type AscentStatusProps = {
   climbUuid: ClimbUuid;
+  /** Currently selected board angle. Badges only reflect ticks logged at this angle
+   *  so a send at 30° doesn't display when the user is viewing the climb at 50°. */
+  angle: number;
   fontSize?: number;
   /** Class for the badge wrapper (e.g. positioning on a thumbnail).
    *  For mirroring boards this is applied to each individual badge. */
@@ -35,14 +38,14 @@ function getHighestStatus(entries: LogbookEntry[]): AscentStatusValue | null {
   );
 }
 
-export const AscentStatus = ({ climbUuid, fontSize, className, mirroredClassName }: AscentStatusProps) => {
+export const AscentStatus = ({ climbUuid, angle, fontSize, className, mirroredClassName }: AscentStatusProps) => {
   const boardProvider = useOptionalBoardProvider();
   const logbook = boardProvider?.logbook ?? EMPTY_LOGBOOK;
   const boardName = boardProvider?.boardName ?? 'kilter';
 
   const ascentsForClimb = useMemo(
-    () => logbook.filter((ascent) => ascent.climb_uuid === climbUuid),
-    [logbook, climbUuid],
+    () => logbook.filter((ascent) => ascent.climb_uuid === climbUuid && Number(ascent.angle) === angle),
+    [logbook, climbUuid, angle],
   );
 
   const overallStatus = useMemo(() => getHighestStatus(ascentsForClimb), [ascentsForClimb]);

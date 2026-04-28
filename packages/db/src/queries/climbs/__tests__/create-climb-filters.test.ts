@@ -97,3 +97,71 @@ void describe('createClimbFilters: projectsOnly', () => {
     assert.equal(f.climbStatsConditions.length, 0);
   });
 });
+
+void describe('createClimbFilters: personal progress filters are scoped to the current angle', () => {
+  // Locks in the angle-scoping contract — a send at one angle must not leak
+  // into hide/show filters at a different angle. Each filter renders a
+  // (NOT) EXISTS subquery against boardsesh_ticks that must restrict by
+  // the `angle` column.
+  const userId = 'user-abc';
+  const angleParams: BoardRouteParams = { ...params, angle: 50 };
+
+  function progressSql(searchParams: ClimbSearchParams): string {
+    const f = createClimbFilters(angleParams, searchParams, userId);
+    return f.personalProgressConditions.map(sqlToString).join(' && ');
+  }
+
+  void it('emits exactly one progress condition per active filter', () => {
+    const f = createClimbFilters(angleParams, { hideCompleted: true }, userId);
+    assert.equal(f.personalProgressConditions.length, 1);
+  });
+
+  void it('hideCompleted is a NOT EXISTS subquery scoped to the angle column', () => {
+    const sql = progressSql({ hideCompleted: true });
+    assert.match(sql, /NOT EXISTS/);
+    assert.match(sql, /angle\s*=/);
+    // Sanity: targets completions (flash/send), not attempts.
+    assert.match(sql, /'flash'.*'send'/);
+    assert.doesNotMatch(sql, /'attempt'/);
+  });
+
+  void it('hideAttempted is a NOT EXISTS subquery scoped to the angle column', () => {
+    const sql = progressSql({ hideAttempted: true });
+    assert.match(sql, /NOT EXISTS/);
+    assert.match(sql, /angle\s*=/);
+    assert.match(sql, /'attempt'/);
+  });
+
+  void it('showOnlyCompleted is a positive EXISTS subquery scoped to the angle column', () => {
+    const sql = progressSql({ showOnlyCompleted: true });
+    assert.match(sql, /EXISTS/);
+    assert.doesNotMatch(sql, /NOT EXISTS/);
+    assert.match(sql, /angle\s*=/);
+    assert.match(sql, /'flash'.*'send'/);
+  });
+
+  void it('showOnlyAttempted is a positive EXISTS subquery scoped to the angle column', () => {
+    const sql = progressSql({ showOnlyAttempted: true });
+    assert.match(sql, /EXISTS/);
+    assert.doesNotMatch(sql, /NOT EXISTS/);
+    assert.match(sql, /angle\s*=/);
+    assert.match(sql, /'attempt'/);
+  });
+
+  void it('skips personal progress conditions entirely when no userId is supplied', () => {
+    const f = createClimbFilters(angleParams, { hideCompleted: true });
+    assert.equal(f.personalProgressConditions.length, 0);
+  });
+
+  void it('per-climb userAscents/userAttempts selectors are scoped to the angle column', () => {
+    const f = createClimbFilters(angleParams, baseSearch, userId);
+    const selects = f.getUserLogbookSelects();
+    const ascentsSql = sqlToString(selects.userAscents as unknown as SQL);
+    const attemptsSql = sqlToString(selects.userAttempts as unknown as SQL);
+    assert.match(ascentsSql, /angle\s*=/);
+    assert.match(attemptsSql, /angle\s*=/);
+    // And the status sets must still match the semantic of each selector.
+    assert.match(ascentsSql, /'flash'.*'send'/);
+    assert.match(attemptsSql, /'attempt'/);
+  });
+});
