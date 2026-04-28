@@ -33,7 +33,6 @@
                 <category android:name="android.intent.category.DEFAULT" />
                 <category android:name="android.intent.category.BROWSABLE" />
 
-                <data android:scheme="https" android:host="boardsesh.com" android:pathPrefix="/" />
                 <data android:scheme="https" android:host="www.boardsesh.com" android:pathPrefix="/" />
             </intent-filter>
 
