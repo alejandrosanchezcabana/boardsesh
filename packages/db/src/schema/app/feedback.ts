@@ -1,5 +1,15 @@
-import { pgTable, text, integer, timestamp, bigserial, index } from 'drizzle-orm/pg-core';
+import { pgTable, text, integer, timestamp, bigserial, index, jsonb } from 'drizzle-orm/pg-core';
 import { users } from '../auth/users';
+
+export type FeedbackContext = {
+  climbUuid?: string;
+  climbName?: string;
+  difficulty?: string;
+  sessionId?: string;
+  sessionName?: string;
+  url?: string;
+  userAgent?: string;
+};
 
 export const appFeedback = pgTable(
   'app_feedback',
@@ -11,11 +21,18 @@ export const appFeedback = pgTable(
     platform: text('platform').notNull(),
     appVersion: text('app_version'),
     source: text('source').notNull(),
+    boardName: text('board_name'),
+    layoutId: integer('layout_id'),
+    sizeId: integer('size_id'),
+    setIds: jsonb('set_ids').$type<number[]>(),
+    angle: integer('angle'),
+    context: jsonb('context').$type<FeedbackContext>(),
     createdAt: timestamp('created_at', { mode: 'string' }).defaultNow().notNull(),
   },
   (table) => ({
     createdAtIdx: index('app_feedback_created_at_idx').on(table.createdAt),
     userIdx: index('app_feedback_user_idx').on(table.userId),
+    boardIdx: index('app_feedback_board_idx').on(table.boardName),
   }),
 );
 

@@ -93,4 +93,67 @@ describe('SubmitAppFeedbackInputSchema', () => {
     });
     expect(result.success).toBe(false);
   });
+
+  describe('board + context enrichment', () => {
+    it('accepts a submission with full board + context metadata', () => {
+      const result = SubmitAppFeedbackInputSchema.safeParse({
+        ...BASE,
+        rating: 4,
+        source: 'drawer-feedback',
+        boardName: 'kilter',
+        layoutId: 1,
+        sizeId: 5,
+        setIds: [1, 2],
+        angle: 40,
+        context: {
+          climbUuid: 'abc123',
+          climbName: 'Test Climb',
+          difficulty: 'V5',
+          sessionId: 'sess-1',
+          url: '/kilter/1/5/1,2/40',
+          userAgent: 'Mozilla/5.0',
+        },
+      });
+      expect(result.success).toBe(true);
+    });
+
+    it('accepts a submission with no board context (e.g. anonymous from /)', () => {
+      const result = SubmitAppFeedbackInputSchema.safeParse({
+        ...BASE,
+        comment: 'crashed when submitting',
+        source: 'shake-bug',
+      });
+      expect(result.success).toBe(true);
+    });
+
+    it('rejects an unknown board name', () => {
+      const result = SubmitAppFeedbackInputSchema.safeParse({
+        ...BASE,
+        rating: 5,
+        source: 'prompt',
+        boardName: 'fakeboard',
+      });
+      expect(result.success).toBe(false);
+    });
+
+    it('rejects an out-of-range angle', () => {
+      const result = SubmitAppFeedbackInputSchema.safeParse({
+        ...BASE,
+        rating: 5,
+        source: 'prompt',
+        angle: 360,
+      });
+      expect(result.success).toBe(false);
+    });
+
+    it('rejects context with unknown keys', () => {
+      const result = SubmitAppFeedbackInputSchema.safeParse({
+        ...BASE,
+        rating: 5,
+        source: 'prompt',
+        context: { sneaky: 'payload' },
+      });
+      expect(result.success).toBe(false);
+    });
+  });
 });

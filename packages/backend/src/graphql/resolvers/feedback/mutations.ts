@@ -13,6 +13,12 @@ export const feedbackMutations = {
     const comment = validated.comment?.trim() ? validated.comment.trim() : null;
     const appVersion = validated.appVersion ?? null;
     const rating = validated.rating ?? null;
+    const boardName = validated.boardName ?? null;
+    const layoutId = validated.layoutId ?? null;
+    const sizeId = validated.sizeId ?? null;
+    const setIds = validated.setIds ?? null;
+    const angle = validated.angle ?? null;
+    const context = normalizeContext(validated.context);
 
     const rows = await db
       .insert(dbSchema.appFeedback)
@@ -23,6 +29,12 @@ export const feedbackMutations = {
         platform: validated.platform,
         appVersion,
         source: validated.source,
+        boardName,
+        layoutId,
+        sizeId,
+        setIds,
+        angle,
+        context,
       })
       .returning();
     const row = rows[0];
@@ -39,9 +51,26 @@ export const feedbackMutations = {
         platform: validated.platform,
         appVersion,
         source: validated.source,
+        boardName,
+        layoutId,
+        sizeId,
+        setIds,
+        angle,
+        context,
       });
     }
 
     return true;
   },
 };
+
+// Drop null/undefined leaves and return null when the result is empty so we
+// don't write `{}` rows that look like "context was provided but blank".
+function normalizeContext(input: unknown): Record<string, string> | null {
+  if (!input || typeof input !== 'object') return null;
+  const out: Record<string, string> = {};
+  for (const [k, v] of Object.entries(input)) {
+    if (typeof v === 'string' && v.length > 0) out[k] = v;
+  }
+  return Object.keys(out).length > 0 ? out : null;
+}

@@ -9,7 +9,7 @@
  * message with a DB row by id alone.
  */
 
-import type { AppFeedbackPlatform, AppFeedbackSource } from '@boardsesh/shared-schema';
+import type { AppFeedbackPlatform, AppFeedbackSource, FeedbackContextInput } from '@boardsesh/shared-schema';
 
 const BUG_SOURCES: ReadonlySet<AppFeedbackSource> = new Set(['shake-bug', 'drawer-bug']);
 
@@ -24,7 +24,23 @@ export type FeedbackDiscordPayload = {
   platform: AppFeedbackPlatform;
   appVersion: string | null;
   source: AppFeedbackSource;
+  boardName?: string | null;
+  layoutId?: number | null;
+  sizeId?: number | null;
+  setIds?: number[] | null;
+  angle?: number | null;
+  context?: FeedbackContextInput | null;
 };
+
+function formatBoard(payload: FeedbackDiscordPayload): string | null {
+  if (!payload.boardName) return null;
+  const parts: string[] = [payload.boardName];
+  if (payload.layoutId != null) parts.push(`layout ${payload.layoutId}`);
+  if (payload.sizeId != null) parts.push(`size ${payload.sizeId}`);
+  if (payload.setIds && payload.setIds.length > 0) parts.push(`sets [${payload.setIds.join(',')}]`);
+  const base = parts.join(' / ');
+  return payload.angle != null ? `${base} @ ${payload.angle}°` : base;
+}
 
 /** @internal exported for testing only; do not call from resolver code. */
 export function buildWebhookBody(payload: FeedbackDiscordPayload): Record<string, unknown> {
@@ -38,6 +54,34 @@ export function buildWebhookBody(payload: FeedbackDiscordPayload): Record<string
         ? COLOR_YELLOW
         : COLOR_RED;
 
+  const fields: Array<{ name: string; value: string; inline?: boolean }> = [
+    { name: 'Platform', value: payload.platform, inline: true },
+    { name: 'Source', value: payload.source, inline: true },
+    { name: 'App version', value: payload.appVersion ?? 'unknown', inline: true },
+  ];
+
+  const board = formatBoard(payload);
+  if (board) fields.push({ name: 'Board', value: board, inline: false });
+
+  const ctx = payload.context;
+  if (ctx?.climbName || ctx?.climbUuid) {
+    const climbValue = ctx.climbName
+      ? ctx.difficulty
+        ? `${ctx.climbName} (${ctx.difficulty})`
+        : ctx.climbName
+      : (ctx.climbUuid ?? '');
+    fields.push({ name: 'Climb', value: climbValue, inline: false });
+  }
+  if (ctx?.sessionId) {
+    fields.push({
+      name: 'Session',
+      value: ctx.sessionName ? `${ctx.sessionName} (${ctx.sessionId})` : ctx.sessionId,
+      inline: false,
+    });
+  }
+  if (ctx?.url) fields.push({ name: 'URL', value: ctx.url, inline: false });
+  if (ctx?.userAgent) fields.push({ name: 'User agent', value: ctx.userAgent, inline: false });
+
   return {
     username: 'Boardsesh Feedback',
     embeds: [
@@ -45,11 +89,7 @@ export function buildWebhookBody(payload: FeedbackDiscordPayload): Record<string
         title,
         description: payload.comment ?? '(no comment)',
         color,
-        fields: [
-          { name: 'Platform', value: payload.platform, inline: true },
-          { name: 'Source', value: payload.source, inline: true },
-          { name: 'App version', value: payload.appVersion ?? 'unknown', inline: true },
-        ],
+        fields,
         footer: { text: `feedback #${payload.feedbackId}` },
         timestamp: new Date().toISOString(),
       },
