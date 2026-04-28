@@ -68,7 +68,6 @@ import { dispatchOpenSeshSettingsDrawer } from '../sesh-settings/sesh-settings-d
 import { generateSessionName } from '@/app/lib/session-utils';
 import StartSeshDrawer from '../session-creation/start-sesh-drawer';
 import IosShare from '@mui/icons-material/IosShare';
-import QrCode2Outlined from '@mui/icons-material/QrCode2Outlined';
 import { QRCodeSVG } from 'qrcode.react';
 import { shareWithFallback } from '@/app/lib/share-utils';
 import { getPreference, setPreference } from '@/app/lib/user-preferences-db';
@@ -237,7 +236,6 @@ const QueueControlBar: React.FC<QueueControlBarProps> = ({ boardDetails, angle }
   // Keep the tick row mounted during the close animation so it can collapse.
   const [tickRowVisible, setTickRowVisible] = useState(false);
   const [participantsExpanded, setParticipantsExpanded] = useState(false);
-  const [showInviteQr, setShowInviteQr] = useState(false);
 
   const sessionShareUrl = activeSession?.sessionId
     ? `${typeof window !== 'undefined' ? window.location.origin : ''}/join/${activeSession.sessionId}`
@@ -991,17 +989,10 @@ const QueueControlBar: React.FC<QueueControlBarProps> = ({ boardDetails, angle }
                           <IconButton size="small" onClick={handleInviteShare} aria-label="Share session link">
                             <IosShare sx={{ fontSize: 18 }} />
                           </IconButton>
-                          <IconButton
-                            size="small"
-                            onClick={() => setShowInviteQr((v) => !v)}
-                            aria-label={showInviteQr ? 'Hide QR code' : 'Show QR code'}
-                          >
-                            <QrCode2Outlined sx={{ fontSize: 18 }} color={showInviteQr ? 'primary' : 'inherit'} />
-                          </IconButton>
                         </Box>
-                        {showInviteQr && sessionShareUrl && (
+                        {sessionShareUrl && (
                           <Box sx={{ display: 'flex', justifyContent: 'center', py: 1 }}>
-                            <QRCodeSVG value={sessionShareUrl} size={140} />
+                            <QRCodeSVG value={sessionShareUrl} size={140} level="M" marginSize={4} />
                           </Box>
                         )}
                       </Box>
