@@ -360,6 +360,8 @@ export const queriesTypeDefs = /* GraphQL */ `
     """
     Look up boards by controller serial numbers.
     Searches all boards (including unlisted/non-public).
+    Capped at 20 serials per request — exceeding this throws a validation
+    error rather than silently truncating, so callers must cap on their end.
     """
     boardsBySerialNumbers(serialNumbers: [String!]!): [UserBoard!]!
 

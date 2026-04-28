@@ -67,6 +67,10 @@ function recordBoardSerial(serialNumber: string, boardDetails: BoardDetails, boa
   // read, but keeping the stored value canonical means recorded entries
   // produced by different routes are byte-equal.
   const setIds = [...new Set(boardDetails.set_ids)].sort((a, b) => a - b).join(',');
+  // Empty set_ids would serialise to "" and the route's Zod schema rejects
+  // empty strings — the POST 400s and the `.catch` swallows it silently, so
+  // the serial would never get recorded. Skip the call deliberately instead.
+  if (!setIds) return;
   void fetch('/api/internal/board-serials', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
