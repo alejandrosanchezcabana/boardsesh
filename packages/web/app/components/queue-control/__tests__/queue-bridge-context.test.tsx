@@ -194,11 +194,12 @@ function createDefaultPersistentSession(overrides?: Record<string, unknown>) {
     activateSession: vi.fn(),
     setInitialQueueForSession: vi.fn(),
     subscribeToQueueEvents: vi.fn(() => vi.fn()),
-    addQueueItem: vi.fn(),
-    removeQueueItem: vi.fn(),
-    setCurrentClimb: vi.fn(),
-    setQueue: vi.fn(),
-    mirrorCurrentClimb: vi.fn(),
+    addQueueItem: vi.fn(() => Promise.resolve()),
+    removeQueueItem: vi.fn(() => Promise.resolve()),
+    setCurrentClimb: vi.fn(() => Promise.resolve()),
+    setQueue: vi.fn(() => Promise.resolve()),
+    mirrorCurrentClimb: vi.fn(() => Promise.resolve()),
+    replaceQueueItem: vi.fn(() => Promise.resolve()),
     triggerResync: vi.fn(),
     ...overrides,
   };
@@ -671,6 +672,142 @@ describe('queue-bridge-context', () => {
           void result.current!.setCurrentClimb(climb);
         });
         expect(mockSetLocalQueueState).not.toHaveBeenCalled();
+      });
+    });
+
+    // -------------------------------------------------------------------
+    // Party-mode operations: with an active party session, the adapter must
+    // delegate mutations to the persistent session's WebSocket-backed API
+    // instead of setLocalQueueState (which no-ops in party mode).
+    // -------------------------------------------------------------------
+    describe('adapter party-mode operations', () => {
+      const bd = createTestBoardDetails();
+      const climb1 = createTestClimb({ uuid: 'c1', name: 'Climb 1' });
+      const climb2 = createTestClimb({ uuid: 'c2', name: 'Climb 2' });
+      const activeSession = {
+        sessionId: 'party-1',
+        boardPath: '/kilter/1/10/1,2/40/list',
+        boardDetails: bd,
+        parsedParams: {
+          board_name: 'kilter' as const,
+          layout_id: 1,
+          size_id: 10,
+          set_ids: [1, 2],
+          angle: 40 as Angle,
+        },
+      };
+
+      function renderWithPartySession(
+        queue: ClimbQueueItem[],
+        current: ClimbQueueItem | null,
+        psOverrides?: Record<string, unknown>,
+      ) {
+        mockPersistentSession = createDefaultPersistentSession({
+          activeSession,
+          queue,
+          currentClimbQueueItem: current,
+          isLocalQueueLoaded: true,
+          clientId: 'client-abc',
+          ...psOverrides,
+        });
+        const wrapper = ({ children }: { children: React.ReactNode }) => (
+          <QueueBridgeProvider>{children}</QueueBridgeProvider>
+        );
+        return renderHook(() => useTestQueueContext(), { wrapper });
+      }
+
+      it('setCurrentClimb delegates to ps.addQueueItem and ps.setCurrentClimb in party mode', async () => {
+        const item1 = createTestQueueItem(climb1, 'u1');
+        const { result } = renderWithPartySession([item1], item1);
+        await act(async () => {
+          await result.current!.setCurrentClimb(climb2);
+        });
+        expect(mockSetLocalQueueState).not.toHaveBeenCalled();
+        expect(mockPersistentSession.addQueueItem).toHaveBeenCalledTimes(1);
+        const addCall = (mockPersistentSession.addQueueItem as ReturnType<typeof vi.fn>).mock.calls[0];
+        expect(addCall[0].climb.uuid).toBe('c2');
+        // Position is currentIndex + 1 = 1 (current at index 0, insert after)
+        expect(addCall[1]).toBe(1);
+        expect(mockPersistentSession.setCurrentClimb).toHaveBeenCalledTimes(1);
+        const setCurrentCall = (mockPersistentSession.setCurrentClimb as ReturnType<typeof vi.fn>).mock.calls[0];
+        expect(setCurrentCall[0].climb.uuid).toBe('c2');
+        // shouldAddToQueue is false (we already added)
+        expect(setCurrentCall[1]).toBe(false);
+        // correlationId derived from clientId
+        expect(setCurrentCall[2]).toMatch(/^client-abc-/);
+      });
+
+      it('setCurrentClimb passes undefined position when no current is set', async () => {
+        const { result } = renderWithPartySession([], null);
+        await act(async () => {
+          await result.current!.setCurrentClimb(climb1);
+        });
+        expect(mockPersistentSession.addQueueItem).toHaveBeenCalledTimes(1);
+        const addCall = (mockPersistentSession.addQueueItem as ReturnType<typeof vi.fn>).mock.calls[0];
+        expect(addCall[1]).toBeUndefined();
+      });
+
+      it('setCurrentClimbQueueItem delegates to ps.setCurrentClimb in party mode', () => {
+        const item1 = createTestQueueItem(climb1, 'u1');
+        const item2 = createTestQueueItem(climb2, 'u2');
+        const { result } = renderWithPartySession([item1, item2], item1);
+        act(() => {
+          result.current!.setCurrentClimbQueueItem(item2);
+        });
+        expect(mockSetLocalQueueState).not.toHaveBeenCalled();
+        expect(mockPersistentSession.setCurrentClimb).toHaveBeenCalledTimes(1);
+        const call = (mockPersistentSession.setCurrentClimb as ReturnType<typeof vi.fn>).mock.calls[0];
+        expect(call[0].uuid).toBe('u2');
+        // shouldAddToQueue uses item.suggested
+        expect(call[1]).toBe(false);
+      });
+
+      it('addToQueue delegates to ps.addQueueItem in party mode', () => {
+        const { result } = renderWithPartySession([], null);
+        act(() => {
+          result.current!.addToQueue(climb1);
+        });
+        expect(mockSetLocalQueueState).not.toHaveBeenCalled();
+        expect(mockPersistentSession.addQueueItem).toHaveBeenCalledTimes(1);
+        const call = (mockPersistentSession.addQueueItem as ReturnType<typeof vi.fn>).mock.calls[0];
+        expect(call[0].climb.uuid).toBe('c1');
+      });
+
+      it('removeFromQueue delegates to ps.removeQueueItem in party mode', () => {
+        const item1 = createTestQueueItem(climb1, 'u1');
+        const { result } = renderWithPartySession([item1], item1);
+        act(() => {
+          result.current!.removeFromQueue(item1);
+        });
+        expect(mockSetLocalQueueState).not.toHaveBeenCalled();
+        expect(mockPersistentSession.removeQueueItem).toHaveBeenCalledTimes(1);
+        expect((mockPersistentSession.removeQueueItem as ReturnType<typeof vi.fn>).mock.calls[0][0]).toBe('u1');
+      });
+
+      it('setQueue delegates to ps.setQueue in party mode', () => {
+        const item1 = createTestQueueItem(climb1, 'u1');
+        const item2 = createTestQueueItem(climb2, 'u2');
+        const { result } = renderWithPartySession([item1], item1);
+        act(() => {
+          result.current!.setQueue([item1, item2]);
+        });
+        expect(mockSetLocalQueueState).not.toHaveBeenCalled();
+        expect(mockPersistentSession.setQueue).toHaveBeenCalledTimes(1);
+        const call = (mockPersistentSession.setQueue as ReturnType<typeof vi.fn>).mock.calls[0];
+        expect(call[0]).toHaveLength(2);
+        expect(call[1].uuid).toBe('u1');
+      });
+
+      it('mirrorClimb delegates to ps.mirrorCurrentClimb in party mode', () => {
+        const climb = createTestClimb({ uuid: 'c1', mirrored: false });
+        const item = createTestQueueItem(climb, 'u1');
+        const { result } = renderWithPartySession([item], item);
+        act(() => {
+          result.current!.mirrorClimb();
+        });
+        expect(mockSetLocalQueueState).not.toHaveBeenCalled();
+        expect(mockPersistentSession.mirrorCurrentClimb).toHaveBeenCalledTimes(1);
+        expect((mockPersistentSession.mirrorCurrentClimb as ReturnType<typeof vi.fn>).mock.calls[0][0]).toBe(true);
       });
     });
   });
