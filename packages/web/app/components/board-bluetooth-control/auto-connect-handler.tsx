@@ -29,10 +29,13 @@ export function AutoConnectHandler({ connect, isBluetoothSupported }: AutoConnec
   const autoConnectSerial = searchParams.get('autoConnect');
 
   useEffect(() => {
+    // Match the route's Zod schema: 1–64 chars, alphanumerics plus hyphens.
+    // The mismatch-dialog "Switch" flow appends serials directly, including
+    // hyphenated ones (KB-99, SN-1, etc.), so the validator must accept them.
     if (
       !autoConnectSerial ||
-      !/^[A-Za-z0-9]+$/.test(autoConnectSerial) ||
-      autoConnectSerial.length > 20 ||
+      !/^[A-Za-z0-9-]+$/.test(autoConnectSerial) ||
+      autoConnectSerial.length > 64 ||
       triggeredRef.current
     )
       return;

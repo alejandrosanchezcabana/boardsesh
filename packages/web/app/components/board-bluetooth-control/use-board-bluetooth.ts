@@ -5,7 +5,7 @@ import { useSnackbar } from '@/app/components/providers/snackbar-provider';
 import { track } from '@vercel/analytics';
 import * as Sentry from '@sentry/nextjs';
 import type { BoardDetails } from '@/app/lib/types';
-import { getAuroraBluetoothPacket, parseApiLevel } from './bluetooth-aurora';
+import { getAuroraBluetoothPacket, parseApiLevel, parseSerialNumber } from './bluetooth-aurora';
 import { getMoonboardBluetoothPacket } from './bluetooth-moonboard';
 import type { HoldRenderData } from '../board-renderer/types';
 import { useWakeLock } from './use-wake-lock';
@@ -52,10 +52,36 @@ export const convertToMirroredFramesString = (frames: string, holdsData: HoldRen
 
 type UseBoardBluetoothOptions = {
   boardDetails?: BoardDetails;
+  /** Saved board UUID when on a /b/{slug}/... route — used to link the recorded serial mapping. */
+  boardUuid?: string;
   onConnectionChange?: (connected: boolean) => void;
 };
 
-export function useBoardBluetooth({ boardDetails, onConnectionChange }: UseBoardBluetoothOptions) {
+/**
+ * Fire-and-forget POST to record the (serial, board config) mapping for the
+ * authenticated user. Failures are swallowed — connect must not block on this.
+ */
+function recordBoardSerial(serialNumber: string, boardDetails: BoardDetails, boardUuid: string | undefined): void {
+  // Sort + dedupe before joining so the recording is canonical regardless of
+  // how the route emitted set_ids — `matchesBoardDetails` also normalises on
+  // read, but keeping the stored value canonical means recorded entries
+  // produced by different routes are byte-equal.
+  const setIds = [...new Set(boardDetails.set_ids)].sort((a, b) => a - b).join(',');
+  void fetch('/api/internal/board-serials', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      serialNumber,
+      boardName: boardDetails.board_name,
+      layoutId: boardDetails.layout_id,
+      sizeId: boardDetails.size_id,
+      setIds,
+      boardUuid,
+    }),
+  }).catch(() => {});
+}
+
+export function useBoardBluetooth({ boardDetails, boardUuid, onConnectionChange }: UseBoardBluetoothOptions) {
   const { showMessage } = useSnackbar();
   const [loading, setLoading] = useState(false);
   const [isConnected, setIsConnected] = useState(false);
@@ -259,6 +285,15 @@ export function useBoardBluetooth({ boardDetails, onConnectionChange }: UseBoard
           boardLayout: `${boardDetails.layout_name}`,
         });
 
+        // Auto-record the (serial, current config) mapping for serial→config lookups.
+        // Aurora boards only — moonboard device names don't carry a serial in this format.
+        if (boardDetails.board_name !== 'moonboard') {
+          const serialNumber = parseSerialNumber(connection.deviceName);
+          if (serialNumber) {
+            recordBoardSerial(serialNumber, boardDetails, boardUuid);
+          }
+        }
+
         // Send initial frames if provided
         if (initialFrames) {
           await sendFramesToBoard(initialFrames, mirrored);
@@ -279,7 +314,7 @@ export function useBoardBluetooth({ boardDetails, onConnectionChange }: UseBoard
 
       return false;
     },
-    [handleDisconnection, boardDetails, onConnectionChange, sendFramesToBoard, showMessage, devicePicker],
+    [handleDisconnection, boardDetails, boardUuid, onConnectionChange, sendFramesToBoard, showMessage, devicePicker],
   );
 
   // Disconnect from the board — update state synchronously for immediate UI

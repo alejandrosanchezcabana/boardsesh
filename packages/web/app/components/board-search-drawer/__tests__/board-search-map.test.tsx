@@ -34,9 +34,7 @@ const { mockState, resetMockState } = vi.hoisted(() => {
     });
     m.off = vi.fn((event: string, fn?: () => void) => {
       if (event === 'moveend') {
-        state.handlers.moveend = fn
-          ? state.handlers.moveend.filter((h) => h !== fn)
-          : [];
+        state.handlers.moveend = fn ? state.handlers.moveend.filter((h) => h !== fn) : [];
       }
       return m as MockMap;
     });
@@ -78,7 +76,6 @@ vi.mock('leaflet', () => {
 });
 
 vi.mock('leaflet/dist/leaflet.css', () => ({}));
-
 
 const baseProps = {
   center: { lat: 0, lng: 0 },

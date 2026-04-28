@@ -265,6 +265,5 @@ describe('fetchTikTokMeta', () => {
     const recovered = await fetchTikTokMeta(LONG_URL);
     expect(recovered.status).toBe('ok');
     expect(fetchMock).toHaveBeenCalledTimes(11);
-
   });
 });

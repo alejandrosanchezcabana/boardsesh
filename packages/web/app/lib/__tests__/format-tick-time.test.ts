@@ -1,10 +1,5 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vite-plus/test';
-import {
-  formatTickAbsoluteTime,
-  formatTickRelativeTime,
-  parseTickTime,
-  tickTimeMs,
-} from '@/app/lib/format-tick-time';
+import { formatTickAbsoluteTime, formatTickRelativeTime, parseTickTime, tickTimeMs } from '@/app/lib/format-tick-time';
 
 const NAIVE = '2026-04-27 05:39:13.000';
 const Z_FORM = '2026-04-27T05:39:13.000Z';
