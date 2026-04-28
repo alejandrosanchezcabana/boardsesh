@@ -655,6 +655,11 @@ export const socialBoardQueries = {
   boardsBySerialNumbers: async (_: unknown, { serialNumbers }: { serialNumbers: string[] }, ctx: ConnectionContext) => {
     await applyRateLimit(ctx, 20);
 
+    // Behaviour change: this used to silently `.slice(0, 20)` on overflow, now
+    // it throws via Zod (`SerialNumberLookupSchema.max(20)`). Callers MUST cap
+    // before sending — `resolveSerialNumbers` (the only first-party caller) does
+    // this via `MAX_SERIALS_PER_REQUEST`. Throwing surfaces accidental breakage
+    // in any future caller instead of silently dropping serials.
     const validated = validateInput(SerialNumberLookupSchema, { serialNumbers }, 'serialNumbers');
     const cleaned = validated.serialNumbers.filter((s) => s.length > 0);
     if (cleaned.length === 0) return [];

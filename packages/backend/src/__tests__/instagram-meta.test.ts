@@ -247,6 +247,5 @@ describe('fetchInstagramMeta', () => {
     const recovered = await fetchInstagramMeta('https://www.instagram.com/p/RECOVER/');
     expect(recovered.status).toBe('ok');
     expect(fetchMock).toHaveBeenCalledTimes(11);
-
   });
 });

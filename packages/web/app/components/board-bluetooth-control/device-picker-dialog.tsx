@@ -20,6 +20,7 @@ import { getBoardDetails, FALLBACK_BOARD_PREVIEW_CONFIGS } from '@/app/lib/board
 import BoardThumbnail from '../board-scroll/board-thumbnail';
 import { configFromResolvedEntry, parseSetIds, type ResolvedBoardConfig } from '@/app/lib/ble/board-config-match';
 import type { ResolvedBoardEntry } from '@/app/lib/ble/resolve-serials';
+import { formatRelativeTime } from '@/app/lib/session-history-db';
 import styles from './device-picker-dialog.module.css';
 
 type DevicePickerDialogProps = {
@@ -164,7 +165,11 @@ export function DevicePickerDialog({ devices, onSelect, onCancel, resolvedBoards
                   {entry && device.name && entry.kind === 'saved' && (
                     <div className={styles.deviceCardMeta}>{device.name}</div>
                   )}
-                  {entry?.kind === 'recorded' && <div className={styles.deviceCardMeta}>Last connected</div>}
+                  {entry?.kind === 'recorded' && (
+                    <div className={styles.deviceCardMeta}>
+                      Last connected {formatRelativeTime(entry.config.updatedAt)}
+                    </div>
+                  )}
                 </div>
               );
             })}
