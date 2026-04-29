@@ -7,7 +7,10 @@
 
 namespace {
 
-WebSocketsServer gWs(81);
+// Allocated lazily in EmulatorWsServer::begin() so the caller's `port` arg
+// actually applies. The library's WebSocketsServer takes the port at
+// construction, so a file-scope instance would lock us to a hard-coded port.
+WebSocketsServer* gWs = nullptr;
 
 constexpr const char* FW_VERSION = "0.1.0";
 
@@ -37,7 +40,7 @@ String configToHelloJson(const EmulatorConfig& cfg) {
 void onWsEvent(uint8_t clientId, WStype_t type, uint8_t* payload, size_t length) {
     switch (type) {
         case WStype_CONNECTED: {
-            IPAddress ip = gWs.remoteIP(clientId);
+            IPAddress ip = gWs->remoteIP(clientId);
             Serial.printf("[WS] #%u connected from %s\n", clientId, ip.toString().c_str());
             wsServer.handleClientConnected(clientId);
             break;
@@ -62,15 +65,21 @@ void onWsEvent(uint8_t clientId, WStype_t type, uint8_t* payload, size_t length)
 EmulatorWsServer wsServer;
 
 bool EmulatorWsServer::begin(uint16_t port) {
-    (void)port;  // hard-coded to 81 in the ctor of WebSocketsServer above.
-    gWs.begin();
-    gWs.onEvent(onWsEvent);
-    Serial.println("[WS] Listening on port 81");
+    if (gWs != nullptr) {
+        // Idempotent — calling begin() twice with a different port isn't
+        // supported by the underlying library, so just keep the first.
+        Serial.println("[WS] begin() called twice — keeping existing server");
+        return true;
+    }
+    gWs = new WebSocketsServer(port);
+    gWs->begin();
+    gWs->onEvent(onWsEvent);
+    Serial.printf("[WS] Listening on port %u\n", static_cast<unsigned>(port));
     return true;
 }
 
 void EmulatorWsServer::loop() {
-    gWs.loop();
+    if (gWs) gWs->loop();
 }
 
 void EmulatorWsServer::broadcastBleWrite(const uint8_t* data, size_t length) {
@@ -80,7 +89,7 @@ void EmulatorWsServer::broadcastBleWrite(const uint8_t* data, size_t length) {
     doc["hex"]  = bytesToHex(data, length);
     String out;
     serializeJson(doc, out);
-    gWs.broadcastTXT(out);
+    if (gWs) gWs->broadcastTXT(out);
 }
 
 void EmulatorWsServer::broadcastBleConnection(bool connected) {
@@ -88,17 +97,17 @@ void EmulatorWsServer::broadcastBleConnection(bool connected) {
     doc["type"] = connected ? "ble-connected" : "ble-disconnected";
     String out;
     serializeJson(doc, out);
-    gWs.broadcastTXT(out);
+    if (gWs) gWs->broadcastTXT(out);
 }
 
 void EmulatorWsServer::broadcastHello(const EmulatorConfig& cfg) {
     String out = configToHelloJson(cfg);
-    gWs.broadcastTXT(out);
+    if (gWs) gWs->broadcastTXT(out);
 }
 
 void EmulatorWsServer::handleClientConnected(uint8_t clientId) {
     String hello = configToHelloJson(bleEmulator.getConfig());
-    gWs.sendTXT(clientId, hello);
+    if (gWs) gWs->sendTXT(clientId, hello);
 }
 
 void EmulatorWsServer::handleClientMessage(uint8_t clientId, const String& payload) {
@@ -111,7 +120,7 @@ void EmulatorWsServer::handleClientMessage(uint8_t clientId, const String& paylo
     const char* type = doc["type"] | "";
 
     if (strcmp(type, "ping") == 0) {
-        gWs.sendTXT(clientId, "{\"type\":\"pong\"}");
+        if (gWs) gWs->sendTXT(clientId, "{\"type\":\"pong\"}");
         return;
     }
 
@@ -124,7 +133,7 @@ void EmulatorWsServer::handleClientMessage(uint8_t clientId, const String& paylo
         if (strlen(board) > 0) {
             EmulatedBoard b;
             if (!BleEmulator::parseBoard(String(board), b)) {
-                gWs.sendTXT(clientId, "{\"type\":\"error\",\"message\":\"unknown board\"}");
+                if (gWs) gWs->sendTXT(clientId, "{\"type\":\"error\",\"message\":\"unknown board\"}");
                 return;
             }
             cfg.board = b;
@@ -144,7 +153,7 @@ void EmulatorWsServer::handleClientMessage(uint8_t clientId, const String& paylo
         ack["config"]["apiLevel"] = cfg.apiLevel;
         String out;
         serializeJson(ack, out);
-        gWs.broadcastTXT(out);
+        if (gWs) gWs->broadcastTXT(out);
         return;
     }
 

@@ -107,6 +107,8 @@ Cost is roughly £5 / $5 for the ESP32. Nothing else is needed — no LEDs, no l
 
 ### Use it from the web app
 
+> **The debug page only works from `http://localhost:3000`.** It opens a plain `ws://<esp32-ip>:81` socket, and browsers block plain WebSockets from HTTPS origins as mixed content. Vercel preview URLs and any other `https://` origin will load the page but the sockets will silently fail. Use a local dev server.
+
 1. Run `vp run dev` and open `http://localhost:3000`.
 2. Click your avatar (top-left) → **Development**. The menu entry only appears in development builds.
 3. Click the **+** tab and fill in:
