@@ -50,7 +50,12 @@ This keeps the climb-on-wall responsive even for privacy-conscious climbers whil
 
 **One feed table, not two.** A single `board_climb_activity` table with an `eventType` text column (not Postgres enum, so adding new event types like the future `turn` action is a no-op migration). A `metadata jsonb` column carries event-type-specific fields (e.g., the `turn` event will need session info). The first-class columns are only the ones we index on or filter by in the feed query.
 
-**BLE send is the sole producer of `ClimbActivated`.** `setCurrentClimb` does **not** publish display events. Queue advances and BLE sends are deliberately kept separate: a user can advance their queue without being connected to a board (e.g., browsing on a phone away from the wall), and a queue advance in that case has no business showing up on the gym TV. Coupling them would also create a duplicate-publish race when both fire for the same climb. Physical reality is the right anchor: the climb is "active on the board" when LEDs light up. Trade-off: a pure-mirror party session with no BLE pairing produces no display events — acceptable, since a session that never touched the board has nothing to show on a board-centric view.
+**Only the device that actually wrote the frames over BLE may emit `ClimbActivated`.** This is the load-bearing constraint of the whole feature, not a corollary. The producer is gated on a *successful* `sendFramesToBoard` call returning `result === true` for the specific `(climbUuid, boardUuid)` pair that just completed — i.e., the BLE GATT write to the controller actually happened on this device for this climb. Concretely:
+
+- `setCurrentClimb` does **not** publish display events. A queue advance is observed by every party-session participant; if any of them emitted on observation, we'd get N duplicate events for one physical send, plus phantom events when a user advances their queue away from the wall with no BLE connection at all.
+- Every client in a party session runs `BluetoothAutoSender` and reacts to `currentClimbQueueItem` changes, but only the one with an active BLE connection has `sendFramesToBoard` resolve truthy. Clients without a connection see `result` as falsy/undefined and **must not** call `recordBoardActivation`. Clients whose write was aborted (e.g., the user swiped past the climb mid-write — see `controller.signal.aborted` at `bluetooth-context.tsx:84`) also must not call it.
+- This naturally serializes events across a session: only one device is BLE-connected to a given Aurora controller at a time, so only one device per physical send fires the mutation.
+- Trade-off: a pure-mirror party session with no BLE pairing produces no display events. Acceptable — a session that never touched the board has nothing to show on a board-centric view.
 
 **Gym claims are restricted, not advisory.** A claim only succeeds when (a) the board already has a `gymId`, and (b) the claimant email's domain matches the domain of `gyms.contactEmail` on that gym row. Boards without a `gymId` cannot be claimed through this flow — they need a gym row created via support first. User-entered website strings are **never** trusted as a domain source; the only trust anchor is the `gyms.contactEmail` value already stored on the gym row. This stops random users from claiming boards by clicking their own email link.
 
@@ -131,7 +136,7 @@ Mirrors the `verificationTokens` schema (UUID token, 24h expiry, single-use).
 
 ### Producers
 
-- A **new** mutation `recordBoardActivation(boardUuid, climbUuid, angle, mirrored)` is the only producer of `ClimbActivated`. **Unauthenticated callers are allowed** (Web Bluetooth permits anonymous send). The web client calls this from `BluetoothAutoSender` whenever a frame is successfully written to the controller. `setCurrentClimb` does not publish display events.
+- A **new** mutation `recordBoardActivation(boardUuid, climbUuid, angle, mirrored)` is the only producer of `ClimbActivated`. **Unauthenticated callers are allowed** (Web Bluetooth permits anonymous send). The mutation is fired exclusively from `BluetoothAutoSender` after the BLE GATT write returns success for the specific climb (i.e., `sendFramesToBoard(...) === true` and the abort signal was not tripped). No other call site in the codebase may invoke it. `setCurrentClimb` does not publish display events.
 - Resolver behavior:
   - Authenticated + opted-in: full identity fields on the wire (`userId`, `displayName`, `avatarUrl`).
   - Authenticated + opted-out: stripped wire payload; `userId` still persisted to the activity row for private aggregates (e.g., the user's own session view, future stats).
@@ -183,7 +188,13 @@ The avatar group renders, in order: the activator (if they've opted in), then up
 
 ### Bluetooth send → display event
 
-`packages/web/app/components/board-bluetooth-control/bluetooth-context.tsx:74` (`BluetoothAutoSender.sendClimb`): on `result === true`, fire the new `recordBoardActivation` mutation if `boardUuid` is known. **This is the only producer of `ClimbActivated`.** `setCurrentClimb` does not publish display events. This is the deliberate dedupe strategy: the physical send is the ground truth for "the board lit up."
+`packages/web/app/components/board-bluetooth-control/bluetooth-context.tsx:74` (`BluetoothAutoSender.sendClimb`): immediately after the existing `result === true` analytics block (and only there — same `controller.signal.aborted` check applies), fire the new `recordBoardActivation` mutation with the just-written climb's `climbUuid`, `angle`, and `mirrored` plus the resolved `boardUuid`. The same conditions that gate the success-analytics call gate the mutation: BLE write returned truthy *and* the abort signal was not tripped. **No fallback path exists if the write fails or is aborted** — a failed/aborted send produces no display event because the board did not light up. This is the only call site of `recordBoardActivation` in the codebase; do not add others.
+
+Concrete properties this gives us:
+
+- Only the BLE-connected device emits — observers in the same party session do not, because their `sendFramesToBoard` does not resolve `true`.
+- Rapid swiping (where the user advances past a climb before its write completes) does not emit, because the abort signal trips before the success branch runs.
+- `boardUuid` resolution: under `/b/{slug}` the provider already has the saved-board UUID; under generic `/[board_name]/...` routes we fall back to the resolver entry recorded for the connected serial (`packages/web/app/api/internal/board-serials/route.ts`). If neither is available (legitimately new board with no recording yet), skip the mutation rather than guess.
 
 ### BLE-serial → named-board hard redirect
 
