@@ -334,6 +334,15 @@ export default function UserDrawer({ boardDetails, boardConfigs }: UserDrawerPro
                 </button>
               )}
 
+              {process.env.NODE_ENV === 'development' && (
+                <Link href="/development" className={styles.menuItem} onClick={handleClose}>
+                  <span className={styles.menuItemIcon}>
+                    <BuildOutlined />
+                  </span>
+                  <span className={styles.menuItemLabel}>Development</span>
+                </Link>
+              )}
+
               {boardDetails && !isMoonboard && (
                 <button
                   type="button"

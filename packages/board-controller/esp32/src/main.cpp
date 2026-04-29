@@ -19,6 +19,17 @@
  */
 
 #include <Arduino.h>
+
+#ifdef EMULATOR_BUILD
+// Hardware test rig build: skip the real LED/WiFi/WebSocket-client stack and
+// run a BLE-emulator + local WebSocket-server instead. See src/emulator/.
+#include "emulator/emulator_main.h"
+
+void setup() { emulatorSetup(); }
+void loop()  { emulatorLoop(); }
+
+#else  // EMULATOR_BUILD
+
 #include "config/config_manager.h"
 #include "wifi/wifi_manager.h"
 #include "led/led_controller.h"
@@ -190,3 +201,6 @@ void onWebSocketLedUpdate(const LedCommand* commands, int count) {
         ledController.blink(255, 0, 0, 2, 100);
     }
 }
+
+#endif  // EMULATOR_BUILD
+

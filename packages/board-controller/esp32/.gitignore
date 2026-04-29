@@ -1,0 +1,10 @@
+# PlatformIO
+.pio/
+.pioenvs/
+.piolibdeps/
+.vscode/
+.cache/
+
+# Local Wi-Fi credentials for the emulator build env.
+# .env.example is committed; contributors copy it to .env and edit locally.
+.env

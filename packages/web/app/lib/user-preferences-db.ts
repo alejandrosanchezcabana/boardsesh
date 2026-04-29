@@ -1,8 +1,24 @@
+import type { BoardName } from '@boardsesh/shared-schema';
+
 import { createIndexedDBStore, migrateFromLocalStorage } from './idb-helper';
 import type { LogbookPreferences } from './logbook-preferences';
 import type { GradeDisplayFormat } from './grade-colors';
 
 const STORE_NAME = 'preferences';
+
+// Persisted ESP32 emulator connections for the dev-only /development page.
+export type Esp32Connection = {
+  id: string;
+  label: string;
+  ip: string;
+  board: BoardName;
+  serial: string;
+  apiLevel: 2 | 3;
+  layoutId: number;
+  sizeId: number;
+  setIds: number[];
+  angle: number;
+};
 
 export type UserPreferenceKeyMap = {
   libraryTab: 'playlists' | 'logbook';
@@ -12,6 +28,7 @@ export type UserPreferenceKeyMap = {
   'swipeHint:logbookSeen': boolean;
   tickBarExpanded: boolean;
   'shakeToReport:dismissed': boolean;
+  esp32Connections: Esp32Connection[];
 };
 
 // Map of IDB preference keys to their legacy localStorage keys for one-time migration

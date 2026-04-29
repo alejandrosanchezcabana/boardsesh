@@ -72,6 +72,67 @@ You don't have to rebuild the Android app every time you change the web UI. The 
 
 The menu item is only visible in debug builds; release builds don't expose it. Vercel preview URLs (`https://<preview>.boardsesh.com`) work too if you'd rather not run a local server.
 
+## Testing BLE end-to-end with an ESP32
+
+The Bluetooth code path is the hardest one to validate without dragging a real climbing board into the room. To make end-to-end testing accessible to anyone, the repo ships a firmware that turns a generic ESP32 into a fake Kilter / Tension / Decoy / Touchstone / Grasshopper / MoonBoard. The phone or browser pairs with it like a real board, and every BLE write is forwarded over a WebSocket to a debug page in the web app, which decodes the payload and renders the lit-up holds — exercising the same encoder, framing, and protocol logic that runs against real hardware.
+
+Cost is roughly £5 / $5 for the ESP32. Nothing else is needed — no LEDs, no level shifter, no soldering. A generic ESP32 dev board (DevKitC, WROOM-32, WROVER-E, S3 dev kit) works fine.
+
+### One-time setup
+
+1. **Install [PlatformIO Core](https://platformio.org/install/cli)** (`pip install platformio` or VS Code extension). The dev environment is `esp32-emulator`, defined in `packages/board-controller/esp32/platformio.ini`.
+2. **Set Wi-Fi credentials.** The first build copies `packages/board-controller/esp32/.env.example` to `.env` automatically. `.env` is git-ignored, so edit it locally:
+   ```
+   EMULATOR_WIFI_SSID=your-network
+   EMULATOR_WIFI_PASS=your-password
+   ```
+   2.4 GHz networks only — the ESP32 doesn't speak 5 GHz. WPA2 is fine; WPA3 is not (yet).
+3. **Build and flash:**
+   ```bash
+   cd packages/board-controller/esp32
+   pio run -e esp32-emulator -t upload
+   ```
+   If `esptool` errors with "Unable to verify flash chip connection" (some boards lack the auto-reset circuit), hold the **BOOT** button while the upload starts.
+4. **Confirm the firmware came up.** Tail the serial log:
+   ```bash
+   pio device monitor --baud 115200
+   ```
+   You should see something like:
+   ```
+   [WiFi] Connected. IP: 192.168.20.38
+   [BLE] Advertising as: Kilter Board#751737@3
+   [WS] Listening on port 81
+   ```
+   Note the IP — the web UI needs it.
+
+### Use it from the web app
+
+1. Run `vp run dev` and open `http://localhost:3000`.
+2. Click your avatar (top-left) → **Development**. The menu entry only appears in development builds.
+3. Click the **+** tab and fill in:
+   - **IP address**: the one the firmware printed.
+   - **Board / Layout / Size / Hold sets / Angle**: same cascading dropdowns as the "Custom Board" flow. Pick whichever board you're testing.
+   - **Serial / API level**: any value; they only affect the BLE advertised name (e.g. `Tension Board#480221@3`).
+4. Save. The tab opens a WebSocket to the ESP32 and pushes your config so it re-advertises with the right protocol and name.
+5. From the phone or browser, open Boardsesh's BLE picker, pair with the advertised device, queue a climb, and send to board. The development tab decodes the BLE payload and renders the holds in real time.
+
+You can keep multiple ESP32s connected in parallel — each one gets its own tab, sockets stay open in the background, and switching the active tab doesn't drop the others.
+
+### What can it test?
+
+- Aurora API v2 and v3 framing (`Q`/`R`/`S`/`T` and `M`/`N`/`O`/`P` command bytes), single- and multi-packet sequences, position+colour encoding, and v2 power-budget scaling.
+- MoonBoard ASCII protocol (`l#S0,P35,E197#`) including chunked writes that span multiple BLE packets.
+- Reconnect/disconnect handling, stale advertising name caching, and multi-board sessions.
+
+It does **not** simulate LED hardware response timing, board-side errors, or the GATT side-channels Aurora uses for things like firmware updates — for those you still need a real board.
+
+### Troubleshooting
+
+- **Device doesn't show up in the BLE picker** after switching board type. iOS and macOS cache scan results; toggle Bluetooth off/on on the phone. The firmware already force-disconnects the central on config change, but the OS-level scanner cache is independent.
+- **No serial output** after flashing. Press the ESP32's **EN/RST** button to reset; some adapters don't auto-reset reliably.
+- **Wi-Fi never connects.** Re-check the SSID/password in `.env`. Boot logs print `[WiFi] Reason: 202 - AUTH_FAIL` on a bad password and `[WiFi] EMULATOR_WIFI_SSID empty` if the build script didn't pick up your `.env`.
+- **Flashing fails at 921600 baud.** Some WROVER-E modules can't sustain it. The emulator env already drops to 460800; if yours still fails, lower further with `upload_speed = 230400` in `platformio.ini`.
+
 ## Keeping local data up to date
 
 ### Shared Data Sync (Public Climbs)
