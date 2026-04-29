@@ -134,10 +134,11 @@ export function BluetoothProvider({
   // `/b/{slug}/{angle}/...` routes carry `[angle]` as a dynamic segment.
   // Read it here instead of taking it as a prop so the provider isn't
   // coupled to the route shape at the call site — only the mismatch
-  // dialog's "switch URL" builder needs it.
+  // dialog's "switch URL" builder needs it. Stays `null` when absent so
+  // the switch handler can warn instead of routing the user to angle 0.
   const params = useParams<{ angle?: string }>();
-  const parsedAngle = Number(params?.angle);
-  const routeAngle = Number.isFinite(parsedAngle) ? parsedAngle : 0;
+  const parsedAngle = params?.angle != null ? Number(params.angle) : Number.NaN;
+  const routeAngle: number | null = Number.isFinite(parsedAngle) ? parsedAngle : null;
 
   const [isBluetoothSupported, setIsBluetoothSupported] = useState(false);
   const [isIOS, setIsIOS] = useState(false);
@@ -365,6 +366,13 @@ export function BluetoothProvider({
 
   const handleMismatchSwitch = useCallback(() => {
     if (!mismatch) return;
+    if (routeAngle == null) {
+      // Provider mounted on a route that doesn't carry an [angle] segment.
+      // Silently building a URL at angle 0 would yank the user to a fake
+      // angle they never picked — surface the issue and let them choose.
+      showMessage("Couldn't switch — open a climb at a specific angle first.", 'warning');
+      return;
+    }
     const target = buildSwitchUrl(mismatch.config, routeAngle);
     if (!target) {
       // Couldn't resolve a switch URL (unknown layout/size, missing slug data).
