@@ -8,7 +8,7 @@
 // snapshot when a single-frame (T/P) or multi-frame (R…Q…S / N…M…O) sequence
 // completes.
 
-import { buildFramesString, getReverseLedPlacements } from '@boardsesh/board-constants/led-placements';
+import { buildFramesString } from '@boardsesh/board-constants/led-placements';
 import type { BoardName } from '@boardsesh/shared-schema';
 
 import { MOONBOARD_GRID } from '@/app/lib/moonboard-config';
@@ -339,6 +339,3 @@ export function decodeOnce(bytes: Uint8Array, config: DecoderConfig): DecodedFra
   const frames = decoder.push(bytes);
   return frames[0] ?? null;
 }
-
-// Re-export reverse placements helper for callers building UI tooltips.
-export { getReverseLedPlacements };

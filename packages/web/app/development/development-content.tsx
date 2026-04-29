@@ -20,20 +20,9 @@ type DevelopmentContentProps = {
   boardConfigs: BoardConfigData;
 };
 
+// The dev-mode guard lives in page.tsx (notFound() server-side) so production
+// requests never reach this client component. We don't repeat it here.
 export default function DevelopmentContent({ boardConfigs }: DevelopmentContentProps) {
-  // Hard guard so a production build never accidentally renders the dev UI.
-  if (process.env.NODE_ENV !== 'development') {
-    return (
-      <Box sx={{ p: 4 }}>
-        <Typography variant="h6">Development tools are disabled in production builds.</Typography>
-      </Box>
-    );
-  }
-
-  return <DevelopmentInner boardConfigs={boardConfigs} />;
-}
-
-function DevelopmentInner({ boardConfigs }: DevelopmentContentProps) {
   const [connections, setConnections] = useState<Esp32Connection[]>([]);
   const [active, setActive] = useState<string>(ADD_TAB);
   const [dialogOpen, setDialogOpen] = useState(false);

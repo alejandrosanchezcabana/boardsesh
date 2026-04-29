@@ -181,9 +181,14 @@ export default function Esp32Tab({ connection, active, onEdit, onRemove }: Esp32
       </Box>
 
       {latest && (
-        <Box sx={{ fontFamily: 'monospace', fontSize: 12, opacity: 0.7, wordBreak: 'break-all' }}>
+        <Typography
+          variant="caption"
+          component="div"
+          color="text.secondary"
+          sx={{ fontFamily: 'monospace', wordBreak: 'break-all' }}
+        >
           frames: {latest.framesString || '(empty)'}
-        </Box>
+        </Typography>
       )}
     </Box>
   );
