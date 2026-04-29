@@ -2,7 +2,7 @@
 
 ## Context
 
-Gyms with a Kilter/Tension board want a passive screen — a smart TV in a browser pointed at a public URL — that shows the **board's** currently active climb plus a feed of the recent ones, including who sent and who logged a tick. This is a board-centric view, not a session-centric one: it should keep working even when no party session is active and even when several party sessions are sharing one physical board.
+Gyms running any Boardsesh-supported board want a passive screen — a smart TV in a browser pointed at a public URL — that shows the **board's** currently active climb plus a feed of the recent ones, including who sent and who logged a tick. This is a board-centric view, not a session-centric one: it should keep working even when no party session is active and even when several party sessions are sharing one physical board. The implementation is keyed on `userBoards` rows and treats the board type as a parameter, so any board family currently or eventually supported by Boardsesh works without code changes here.
 
 We also have to close two loose ends that this feature depends on:
 
@@ -50,9 +50,9 @@ This keeps the climb-on-wall responsive even for privacy-conscious climbers whil
 
 **One feed table, not two.** A single `board_climb_activity` table with an `eventType` text column (not Postgres enum, so adding new event types like the future `turn` action is a no-op migration). A `metadata jsonb` column carries event-type-specific fields (e.g., the `turn` event will need session info). The first-class columns are only the ones we index on or filter by in the feed query.
 
-**BLE send is the sole producer of `ClimbActivated`.** `setCurrentClimb` does **not** publish display events. This avoids the duplicate-publish race between the queue mutation and the BLE send, and matches physical reality (a climb is "active on the board" when LEDs light up, not when the queue advances). Trade-off: a pure-mirror party session with no BLE pairing produces no display events. That's acceptable — the gym TV is a board-centric view and a session that never touched the board has nothing to show.
+**BLE send is the sole producer of `ClimbActivated`.** `setCurrentClimb` does **not** publish display events. Queue advances and BLE sends are deliberately kept separate: a user can advance their queue without being connected to a board (e.g., browsing on a phone away from the wall), and a queue advance in that case has no business showing up on the gym TV. Coupling them would also create a duplicate-publish race when both fire for the same climb. Physical reality is the right anchor: the climb is "active on the board" when LEDs light up. Trade-off: a pure-mirror party session with no BLE pairing produces no display events — acceptable, since a session that never touched the board has nothing to show on a board-centric view.
 
-**Gym claims are restricted, not advisory.** A claim only succeeds when (a) the board already has a `gymId`, and (b) the claimant email's domain matches `gyms.contactEmail` domain or the gym website domain. Boards without a `gymId` cannot be claimed through this flow — they need a gym row created via support first. This stops random users from claiming boards by clicking their own email link.
+**Gym claims are restricted, not advisory.** A claim only succeeds when (a) the board already has a `gymId`, and (b) the claimant email's domain matches the domain of `gyms.contactEmail` on that gym row. Boards without a `gymId` cannot be claimed through this flow — they need a gym row created via support first. User-entered website strings are **never** trusted as a domain source; the only trust anchor is the `gyms.contactEmail` value already stored on the gym row. This stops random users from claiming boards by clicking their own email link.
 
 **BLE redirect is a hard redirect that preserves session state.** When connect resolves a serial to a saved `userBoards` row owned by the user and the current route is not the matching `/b/{slug}/...`, push to `/b/{slug}/{angle}/...` automatically. The board config (layout/size/setIds/angle) on the target route matches the source, so this is effectively a URL swap; the queue and current climb must survive it.
 
@@ -197,12 +197,12 @@ E2E tests:
 
 ### Gym claim form
 
-`packages/web/app/b/[board_slug]/claim/page.tsx`: server component renders a form (gym name, gym website, claimant email). On POST to a new `/api/gyms/claim` route:
+`packages/web/app/b/[board_slug]/claim/page.tsx`: server component renders a form (claimant email only — the gym is identified by the board's existing `gymId`). On POST to a new `/api/gyms/claim` route:
 
 1. Look up the `userBoards` row by slug.
 2. If `gymId` is already set and verified, return 409.
 3. Generate token (UUID), 24h expiry.
-4. Compute domain match: extract domain from `claimantEmail`, compare to `gyms.contactEmail` domain (if `gymId` set) or to the website domain entered in the form. Store `domainMatched` boolean.
+4. If the board has no `gymId`, reject the claim with a 400 explaining the gym must be created via support first. Otherwise, extract the domain from `claimantEmail` and compare it to the domain of `gyms.contactEmail` on the linked gym row. Reject the claim outright if the domains do not match — the `domainMatched` boolean is therefore always `true` on persisted rows; it remains in the schema only as defense-in-depth so the verify route can re-check.
 5. Insert `gym_board_claims` row.
 6. Send email via `packages/web/app/lib/email/email-service.ts` (already wired with Nodemailer) using a new `sendGymClaimEmail` template. Email body must escape user input (the existing `sendVerificationEmail` shows the pattern).
 7. Rate limit: reuse `checkRateLimit('claim-board:' + clientIp, 5, 60_000)`.
@@ -223,7 +223,7 @@ Boards with no `gymId` cannot be claimed via this flow; users must email support
 - `packages/backend/src/pubsub/redis-adapter.ts` (extend channel prefixes).
 - `packages/backend/src/pubsub/index.ts` (`publishDisplayEvent`).
 - `packages/backend/src/graphql/resolvers/display/{subscriptions,queries,mutations}.ts` (new).
-- `packages/backend/src/graphql/resolvers/queue/mutations.ts` (hook `setCurrentClimb` to also publish display event when session has a `boardUuid`).
+- `packages/backend/src/graphql/resolvers/queue/mutations.ts` — **no display-event producer here.** Queue mutations like `setCurrentClimb` deliberately do not publish display events; users frequently advance the queue without being BLE-connected, so a queue advance is not a reliable signal that the board lit up. The BLE send path is the sole producer.
 - `packages/shared-schema/src/schema/boardDisplay.ts` (new).
 - `packages/web/app/components/board-bluetooth-control/bluetooth-context.tsx` (`BluetoothAutoSender` calls `recordBoardActivation`).
 - `packages/web/app/components/board-bluetooth-control/use-board-bluetooth.ts` (post-connect redirect enforcement).
