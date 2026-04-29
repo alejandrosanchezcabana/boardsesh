@@ -24,7 +24,7 @@ const baseSearch: ClimbSearchParams = {};
  *   - nested SQL fragments with their own queryChunks
  *   - param markers ({ value: <runtime val> })
  */
-function sqlToString(fragment: SQL): string {
+function sqlToString<T>(fragment: SQL<T>): string {
   const chunks = (fragment as unknown as { queryChunks?: unknown[] }).queryChunks ?? [];
   return chunks
     .map((chunk) => {
@@ -156,8 +156,8 @@ void describe('createClimbFilters: personal progress filters are scoped to the c
   void it('per-climb userAscents/userAttempts selectors are scoped to the angle column', () => {
     const f = createClimbFilters(angleParams, baseSearch, userId);
     const selects = f.getUserLogbookSelects();
-    const ascentsSql = sqlToString(selects.userAscents as unknown as SQL);
-    const attemptsSql = sqlToString(selects.userAttempts as unknown as SQL);
+    const ascentsSql = sqlToString(selects.userAscents);
+    const attemptsSql = sqlToString(selects.userAttempts);
     assert.match(ascentsSql, /angle\s*=/);
     assert.match(attemptsSql, /angle\s*=/);
     // And the status sets must still match the semantic of each selector.

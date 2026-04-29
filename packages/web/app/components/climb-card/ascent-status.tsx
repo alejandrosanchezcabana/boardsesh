@@ -44,7 +44,7 @@ export const AscentStatus = ({ climbUuid, angle, fontSize, className, mirroredCl
   const boardName = boardProvider?.boardName ?? 'kilter';
 
   const ascentsForClimb = useMemo(
-    () => logbook.filter((ascent) => ascent.climb_uuid === climbUuid && Number(ascent.angle) === angle),
+    () => logbook.filter((ascent) => ascent.climb_uuid === climbUuid && ascent.angle === angle),
     [logbook, climbUuid, angle],
   );
 
