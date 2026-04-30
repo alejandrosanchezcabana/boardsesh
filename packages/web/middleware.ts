@@ -3,19 +3,10 @@ import { NextResponse, type NextRequest } from 'next/server';
 import { SUPPORTED_BOARDS } from './app/lib/board-data';
 import { getListPageCacheTTL } from './app/lib/list-page-cache';
 import { CLIMB_SESSION_COOKIE } from './app/lib/climb-session-cookie';
-import { DEFAULT_LOCALE, LOCALE_HEADER, type Locale } from './app/lib/i18n/config';
+import { DEFAULT_LOCALE, LOCALE_HEADER } from './app/lib/i18n/config';
+import { detectLocale } from './app/lib/i18n/detect-locale';
 
 const SPECIAL_ROUTES = ['angles', 'grades']; // routes that don't need board validation
-
-function detectLocale(pathname: string): { locale: Locale; strippedPath: string; needsRewrite: boolean } {
-  if (pathname === '/es') {
-    return { locale: 'es', strippedPath: '/', needsRewrite: true };
-  }
-  if (pathname.startsWith('/es/')) {
-    return { locale: 'es', strippedPath: pathname.slice(3), needsRewrite: true };
-  }
-  return { locale: DEFAULT_LOCALE, strippedPath: pathname, needsRewrite: false };
-}
 
 export function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
