@@ -39,6 +39,7 @@ export function useSessionDetail({ sessionId, initialData, enabled = true }: Use
     },
     enabled: enabled && !!sessionId && isAuthenticated && !!token,
     staleTime: 30_000,
+    refetchOnWindowFocus: false,
     ...(initialData
       ? {
           initialData,
@@ -104,6 +105,7 @@ export function useSessionDetail({ sessionId, initialData, enabled = true }: Use
   return {
     session: enabled ? (query.data ?? null) : (initialData ?? null),
     isLoading: query.isLoading,
+    isError: query.isError,
     updateSession,
     addUser,
     removeUser,

@@ -1,8 +1,10 @@
 import { useCallback, useState, type Dispatch, type SetStateAction } from 'react';
-import type { SubscriptionQueueEvent, SessionEvent, SessionLiveStats } from '@boardsesh/shared-schema';
+import { useQueryClient } from '@tanstack/react-query';
+import type { SubscriptionQueueEvent, SessionEvent, SessionDetail } from '@boardsesh/shared-schema';
 import type { ClimbQueueItem as LocalClimbQueueItem } from '../../queue-control/types';
 import { evaluateQueueEventSequence, insertQueueItemIdempotent } from '../event-utils';
 import { type SharedRefs, DEBUG } from '../types';
+import { SESSION_DETAIL_QUERY_KEY } from '@/app/hooks/use-session-detail';
 
 type UseEventProcessorArgs = {
   refs: Pick<
@@ -21,7 +23,6 @@ export type EventProcessorState = {
   queue: LocalClimbQueueItem[];
   currentClimbQueueItem: LocalClimbQueueItem | null;
   lastReceivedStateHash: string | null;
-  liveSessionStats: SessionLiveStats | null;
 };
 
 export type EventProcessorActions = {
@@ -29,7 +30,6 @@ export type EventProcessorActions = {
   handleSessionEvent: (event: SessionEvent) => void;
   setQueueState: Dispatch<SetStateAction<LocalClimbQueueItem[]>>;
   setCurrentClimbQueueItem: Dispatch<SetStateAction<LocalClimbQueueItem | null>>;
-  setLiveSessionStats: Dispatch<SetStateAction<SessionLiveStats | null>>;
   notifyQueueSubscribers: (event: SubscriptionQueueEvent) => void;
   notifySessionSubscribers: (event: SessionEvent) => void;
 };
@@ -45,10 +45,11 @@ export function useEventProcessor({ refs }: UseEventProcessorArgs): EventProcess
     offlineBufferRef,
   } = refs;
 
+  const queryClient = useQueryClient();
+
   const [queue, setQueueState] = useState<LocalClimbQueueItem[]>([]);
   const [currentClimbQueueItem, setCurrentClimbQueueItem] = useState<LocalClimbQueueItem | null>(null);
   const [lastReceivedStateHash, setLastReceivedStateHash] = useState<string | null>(null);
-  const [liveSessionStats, setLiveSessionStats] = useState<SessionLiveStats | null>(null);
 
   // Notify queue event subscribers
   const notifyQueueSubscribers = useCallback(
@@ -176,39 +177,51 @@ export function useEventProcessor({ refs }: UseEventProcessorArgs): EventProcess
   // Handle session events internally
   const handleSessionEvent = useCallback(
     (event: SessionEvent) => {
-      // This is handled externally by the session lifecycle hook via setSession
-      // We only handle stats updates here and forward to subscribers
       if (event.__typename === 'SessionStatsUpdated') {
-        setLiveSessionStats({
-          sessionId: event.sessionId,
-          totalSends: event.totalSends,
-          totalFlashes: event.totalFlashes,
-          totalAttempts: event.totalAttempts,
-          tickCount: event.tickCount,
-          participants: event.participants,
-          gradeDistribution: event.gradeDistribution,
-          boardTypes: event.boardTypes,
-          hardestGrade: event.hardestGrade,
-          durationMinutes: event.durationMinutes,
-          goal: event.goal,
-          ticks: event.ticks,
+        const queryKey = SESSION_DETAIL_QUERY_KEY(event.sessionId);
+        queryClient.setQueryData<SessionDetail | null>(queryKey, (prev) => {
+          if (!prev) return prev;
+
+          // ticks are ordered newest-first (descending by climbedAt)
+          const ticks = event.ticks;
+          const firstTickAt = ticks.length > 0
+            ? ticks[ticks.length - 1].climbedAt
+            : prev.firstTickAt;
+          const lastTickAt = ticks.length > 0
+            ? ticks[0].climbedAt
+            : prev.lastTickAt;
+
+          return {
+            ...prev,
+            participants: event.participants,
+            totalSends: event.totalSends,
+            totalFlashes: event.totalFlashes,
+            totalAttempts: event.totalAttempts,
+            tickCount: event.tickCount,
+            gradeDistribution: event.gradeDistribution,
+            boardTypes: event.boardTypes,
+            hardestGrade: event.hardestGrade,
+            durationMinutes: event.durationMinutes,
+            goal: event.goal,
+            ticks,
+            firstTickAt,
+            lastTickAt,
+          };
         });
       }
       notifySessionSubscribers(event);
     },
-    [notifySessionSubscribers],
+    [queryClient, notifySessionSubscribers],
   );
 
   return {
     queue,
     currentClimbQueueItem,
     lastReceivedStateHash,
-    liveSessionStats,
     handleQueueEvent,
     handleSessionEvent,
     setQueueState,
     setCurrentClimbQueueItem,
-    setLiveSessionStats,
     notifyQueueSubscribers,
     notifySessionSubscribers,
   };

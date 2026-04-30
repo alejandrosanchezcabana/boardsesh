@@ -166,7 +166,7 @@ We are using next.js app router, it's important we try to use server side compon
 #### Data Flow
 
 1. **Server Components**: Initial data fetching in page components
-2. **Client Components**: Interactive features with SWR for data fetching
+2. **Client Components**: Interactive features with React Query (`@tanstack/react-query`) for data fetching
 3. **API Routes**: Two patterns:
    - `/api/internal/...` - Server-side data operations
    - `/api/v1/[board]/proxy/...` - Aurora API proxies

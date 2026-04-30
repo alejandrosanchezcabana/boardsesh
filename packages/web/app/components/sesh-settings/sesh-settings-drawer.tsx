@@ -11,7 +11,6 @@ import IosShare from '@mui/icons-material/IosShare';
 import QrCode2Outlined from '@mui/icons-material/QrCode2Outlined';
 import IconButton from '@mui/material/IconButton';
 import { QRCodeSVG } from 'qrcode.react';
-import { useQuery } from '@tanstack/react-query';
 import SwipeableDrawer from '@/app/components/swipeable-drawer/swipeable-drawer';
 import drawerCss from '@/app/components/swipeable-drawer/swipeable-drawer.module.css';
 import { useDrawerDragResize } from '@/app/hooks/use-drawer-drag-resize';
@@ -20,10 +19,8 @@ import { usePersistentSession } from '@/app/components/persistent-session/persis
 import { useQueueBridgeBoardInfo } from '@/app/components/queue-control/queue-bridge-context';
 import { useRouter, usePathname } from 'next/navigation';
 import { themeTokens } from '@/app/theme/theme-config';
-import { useWsAuthToken } from '@/app/hooks/use-ws-auth-token';
 import { useSessionTimer } from '@/app/hooks/use-session-timer';
-import { createGraphQLHttpClient } from '@/app/lib/graphql/client';
-import { GET_SESSION_DETAIL, type GetSessionDetailQueryResponse } from '@/app/lib/graphql/operations/activity-feed';
+import { useSessionDetail } from '@/app/hooks/use-session-detail';
 import { clearClimbSessionCookie } from '@/app/lib/climb-session-cookie';
 import { shareWithFallback } from '@/app/lib/share-utils';
 import { useSnackbar } from '@/app/components/providers/snackbar-provider';
@@ -69,9 +66,8 @@ export default function SeshSettingsDrawer({
   tourMockSession,
   tourActiveSection,
 }: SeshSettingsDrawerProps) {
-  const { activeSession, session, users, deactivateSession, liveSessionStats } = usePersistentSession();
+  const { activeSession, session, users, deactivateSession } = usePersistentSession();
   const { boardDetails, angle } = useQueueBridgeBoardInfo();
-  const { token: authToken } = useWsAuthToken();
   const router = useRouter();
   const pathname = usePathname();
   const sessionId = activeSession?.sessionId ?? null;
@@ -128,22 +124,10 @@ export default function SeshSettingsDrawer({
     onClose();
   }, [onClose]);
 
-  const { data, isLoading, isError } = useQuery({
-    queryKey: ['activeSessionDetail', sessionId],
-    queryFn: async () => {
-      const client = createGraphQLHttpClient(authToken);
-      return client.request<GetSessionDetailQueryResponse>(GET_SESSION_DETAIL, { sessionId });
-    },
-    enabled: open && !!sessionId && !!authToken && !tourMockSession,
-    staleTime: 5000,
-    refetchOnWindowFocus: false,
+  const { session: sessionDetail, isLoading, isError } = useSessionDetail({
+    sessionId: sessionId ?? undefined,
+    enabled: open && !!sessionId && !tourMockSession,
   });
-
-  const sessionDetail = data?.sessionDetail ?? null;
-  const mergedStats = useMemo(() => {
-    if (liveSessionStats?.sessionId !== sessionId) return null;
-    return liveSessionStats;
-  }, [liveSessionStats, sessionId]);
 
   // Capture a stable timestamp once when the active session first becomes
   // relevant, so that unrelated dep changes don't regenerate different values.
@@ -208,33 +192,7 @@ export default function SeshSettingsDrawer({
     boardDetails?.board_name,
   ]);
 
-  const sessionForView = useMemo<SessionDetail | null>(() => {
-    const base = sessionDetail ?? fallbackSession;
-    if (!base) return null;
-
-    if (!mergedStats) return base;
-
-    const mergedTicks = mergedStats.ticks;
-    const firstTickAt = mergedTicks.length > 0 ? mergedTicks[mergedTicks.length - 1].climbedAt : base.firstTickAt;
-    const lastTickAt = mergedTicks.length > 0 ? mergedTicks[0].climbedAt : base.lastTickAt;
-
-    return {
-      ...base,
-      participants: mergedStats.participants,
-      totalSends: mergedStats.totalSends,
-      totalFlashes: mergedStats.totalFlashes,
-      totalAttempts: mergedStats.totalAttempts,
-      tickCount: mergedStats.tickCount,
-      gradeDistribution: mergedStats.gradeDistribution,
-      boardTypes: mergedStats.boardTypes,
-      hardestGrade: mergedStats.hardestGrade,
-      durationMinutes: mergedStats.durationMinutes,
-      goal: mergedStats.goal,
-      firstTickAt,
-      lastTickAt,
-      ticks: mergedTicks,
-    };
-  }, [sessionDetail, fallbackSession, mergedStats]);
+  const sessionForView = sessionDetail ?? fallbackSession;
 
   if (sessionForView) {
     lastSessionRef.current = sessionForView;
