@@ -341,6 +341,8 @@ const ClimbsList = ({
   const tour = useOnboardingTourOptional();
   const tourStepRef = useRef(tour?.currentStepId ?? null);
   tourStepRef.current = tour?.currentStepId ?? null;
+  const tourCurrentStepId = tour?.currentStepId ?? null;
+  const tourNotifyViewMode = tour?.notifyViewMode;
 
   useEffect(() => {
     void getPreference<ViewMode>(VIEW_MODE_PREFERENCE_KEY).then((stored) => {
@@ -349,6 +351,15 @@ const ClimbsList = ({
       }
     });
   }, []);
+
+  // Notify the onboarding tour of the current view mode whenever it changes
+  // or the tour advances to a new step. Re-firing on step changes lets the
+  // tour auto-advance the grid/list steps when the user is already in the
+  // expected mode at step entry. The provider gates on currentStepIdRef so
+  // calls outside the relevant steps are no-ops.
+  useEffect(() => {
+    tourNotifyViewMode?.(viewMode);
+  }, [viewMode, tourCurrentStepId, tourNotifyViewMode]);
 
   const handleViewModeChange = useCallback((mode: ViewMode) => {
     setViewMode(mode);
@@ -563,10 +574,22 @@ const ClimbsList = ({
           {/* Right: View toggle + Angle selector */}
           <Box sx={rightControlsSx}>
             <Box sx={viewModeToggleBoxSx}>
-              <IconButton onClick={handleListView} aria-label="List view" size="small" sx={listButtonSx}>
+              <IconButton
+                id="onboarding-view-mode-list"
+                onClick={handleListView}
+                aria-label="List view"
+                size="small"
+                sx={listButtonSx}
+              >
                 <FormatListBulletedOutlined fontSize="small" />
               </IconButton>
-              <IconButton onClick={handleGridView} aria-label="Grid view" size="small" sx={gridButtonSx}>
+              <IconButton
+                id="onboarding-view-mode-grid"
+                onClick={handleGridView}
+                aria-label="Grid view"
+                size="small"
+                sx={gridButtonSx}
+              >
                 <AppsOutlined fontSize="small" />
               </IconButton>
             </Box>

@@ -162,8 +162,7 @@ describe('OnboardingTourProvider', () => {
       await flushAsync();
 
       act(() => result.current.start());
-      act(() => result.current.next());
-      act(() => result.current.next()); // now on 'climb-list'
+      for (let i = 0; i < 4; i++) act(() => result.current.next()); // now on 'climb-list'
       expect(result.current.currentStepId).toBe('climb-list');
 
       mockTrack.mockClear();
@@ -228,7 +227,7 @@ describe('OnboardingTourProvider', () => {
 
       // Jump straight to 'queue-add' via sequential next() calls.
       act(() => result.current.start());
-      for (let i = 0; i < 3; i++) act(() => result.current.next());
+      for (let i = 0; i < 5; i++) act(() => result.current.next());
       expect(result.current.currentStepId).toBe('queue-add');
 
       // Initial report of length 0 — no advance
@@ -258,9 +257,10 @@ describe('OnboardingTourProvider', () => {
         await Promise.resolve();
       });
 
-      // Reach climb-list (step 3).
+      // Reach climb-list (after home-intro, home-pick-board, and the two
+      // grid/list view-mode steps).
       act(() => result.current.start());
-      for (let i = 0; i < 2; i++) act(() => result.current.next());
+      for (let i = 0; i < 4; i++) act(() => result.current.next());
       expect(result.current.currentStepId).toBe('climb-list');
 
       // A currentClimb change alone (e.g. async queue hydration) must NOT
@@ -302,9 +302,9 @@ describe('OnboardingTourProvider', () => {
         await Promise.resolve();
       });
 
-      // Reach queue-bar (step 5) — fast-forward past earlier auto-advance gates.
+      // Reach queue-bar — fast-forward past earlier auto-advance gates.
       act(() => result.current.start());
-      for (let i = 0; i < 4; i++) act(() => result.current.next());
+      for (let i = 0; i < 6; i++) act(() => result.current.next());
       expect(result.current.currentStepId).toBe('queue-bar');
 
       act(() => result.current.notifyCurrentClimb('climb-x'));
@@ -331,7 +331,7 @@ describe('OnboardingTourProvider', () => {
       rerender();
       await flushAsync();
 
-      expect(result.current.currentStepId).toBe('climb-list');
+      expect(result.current.currentStepId).toBe('climb-list-grid-view');
     });
   });
 
@@ -340,7 +340,7 @@ describe('OnboardingTourProvider', () => {
       const { result } = renderHook(useOnboardingTour, { wrapper });
       await flushAsync();
       act(() => result.current.start());
-      for (let i = 0; i < 5; i++) act(() => result.current.next());
+      for (let i = 0; i < 7; i++) act(() => result.current.next());
       expect(result.current.currentStepId).toBe('queue-thumbnail');
 
       act(() => {
@@ -423,7 +423,7 @@ describe('OnboardingTourProvider', () => {
 
       // Reach climb-list.
       act(() => result.current.start());
-      for (let i = 0; i < 2; i++) act(() => result.current.next());
+      for (let i = 0; i < 4; i++) act(() => result.current.next());
       expect(result.current.currentStepId).toBe('climb-list');
 
       // Fire a user-pick event — schedules a grace timer but don't let it elapse.
@@ -454,7 +454,7 @@ describe('OnboardingTourProvider', () => {
 
       // Reach queue-bar; setting a current climb schedules the grace timer.
       act(() => result.current.start());
-      for (let i = 0; i < 4; i++) act(() => result.current.next());
+      for (let i = 0; i < 6; i++) act(() => result.current.next());
       expect(result.current.currentStepId).toBe('queue-bar');
       act(() => result.current.notifyCurrentClimb('climb-x'));
 
@@ -478,7 +478,7 @@ describe('OnboardingTourProvider', () => {
       });
 
       act(() => result.current.start());
-      for (let i = 0; i < 2; i++) act(() => result.current.next());
+      for (let i = 0; i < 4; i++) act(() => result.current.next());
       expect(result.current.currentStepId).toBe('climb-list');
 
       // Pile up pick events before grace elapses. Provider should debounce

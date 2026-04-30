@@ -46,6 +46,8 @@ type OnboardingTourContextValue = {
   notifyQueueLength: (length: number) => void;
   /** Called by a bridge component inside the graphql-queue tree when the current climb changes. */
   notifyCurrentClimb: (climbUuid: string | null) => void;
+  /** Called by `ClimbsList` when the climb-list view mode changes (or on first observation). */
+  notifyViewMode: (mode: 'grid' | 'list') => void;
 };
 
 const OnboardingTourContext = createContext<OnboardingTourContextValue | null>(null);
@@ -281,12 +283,13 @@ export function OnboardingTourProvider({ children }: { children: React.ReactNode
     return () => window.removeEventListener(PLAY_DRAWER_EVENT, handler);
   }, [advanceFrom]);
 
-  // Auto-advance home-pick-board → climb-list when the pathname changes into
-  // a board list route. This effect legitimately depends on `pathname` and
-  // `currentStepId` — it's the trigger itself, not an event listener.
+  // Auto-advance home-pick-board → climb-list-grid-view when the pathname
+  // changes into a board list route. This effect legitimately depends on
+  // `pathname` and `currentStepId` — it's the trigger itself, not an event
+  // listener.
   useEffect(() => {
     if (currentStepId !== 'home-pick-board') return;
-    const step = getStepById('climb-list');
+    const step = getStepById('climb-list-grid-view');
     if (!step) return;
     if (step.routeMatches(pathname)) {
       advanceFrom('home-pick-board', 'event');
@@ -315,6 +318,35 @@ export function OnboardingTourProvider({ children }: { children: React.ReactNode
       }
     },
     [advanceFrom],
+  );
+
+  const notifyViewMode = useCallback(
+    (mode: 'grid' | 'list') => {
+      const stepId = currentStepIdRef.current;
+      const expected: TourStepId | null =
+        mode === 'grid' ? 'climb-list-grid-view' : mode === 'list' ? 'climb-list-back-to-list' : null;
+      if (!expected || stepId !== expected) return;
+
+      // Cancel any prior grace-period timer so rapid toggles don't accumulate
+      // multiple advance() calls for the same transition.
+      clearCurrentClimbTimer();
+
+      const fire = () => {
+        currentClimbTimerRef.current = null;
+        if (currentStepIdRef.current === expected) advanceFrom(expected, 'event');
+      };
+
+      // Grace period so the user actually sees the highlighted toggle and
+      // step copy before we advance, even when they're already in the
+      // expected mode at step entry.
+      const elapsed = Date.now() - stepEnteredAtRef.current;
+      if (elapsed >= CURRENT_CLIMB_GRACE_MS) {
+        fire();
+      } else {
+        currentClimbTimerRef.current = window.setTimeout(fire, CURRENT_CLIMB_GRACE_MS - elapsed);
+      }
+    },
+    [advanceFrom, clearCurrentClimbTimer],
   );
 
   const notifyCurrentClimb = useCallback(
@@ -406,8 +438,9 @@ export function OnboardingTourProvider({ children }: { children: React.ReactNode
       complete,
       notifyQueueLength,
       notifyCurrentClimb,
+      notifyViewMode,
     }),
-    [currentStepId, start, next, skip, complete, notifyQueueLength, notifyCurrentClimb],
+    [currentStepId, start, next, skip, complete, notifyQueueLength, notifyCurrentClimb, notifyViewMode],
   );
 
   return <OnboardingTourContext.Provider value={value}>{children}</OnboardingTourContext.Provider>;
