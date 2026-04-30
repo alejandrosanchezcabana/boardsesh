@@ -79,9 +79,15 @@ export const UISearchParamsProvider: React.FC<{ children: React.ReactNode }> = (
   }, 500);
 
   const updateFilters = (newFilters: Partial<SearchRequestPagination>, instant?: boolean) => {
+    // Drop undefined values so a Partial cannot overwrite a defined field with `undefined` —
+    // legacy recent-search entries persisted with undefined numeric fields would otherwise
+    // crash the URL writer downstream.
+    const sanitized = Object.fromEntries(
+      Object.entries(newFilters).filter(([, v]) => v !== undefined),
+    ) as Partial<SearchRequestPagination>;
     const updatedFilters = {
       ...uiSearchParams,
-      ...newFilters,
+      ...sanitized,
       page: 0,
     };
 
