@@ -100,6 +100,11 @@ export default defineConfig({
         command: 'bun run --filter=@boardsesh/web build',
         dependsOn: ['build:shared', 'build:crypto', 'build:db', 'build:constants'],
       },
+      'verify:graphql-treeshake': {
+        command: 'bun packages/web/scripts/verify-graphql-treeshake.ts',
+        dependsOn: ['build:web'],
+        cache: false,
+      },
       build: {
         command: 'true',
         dependsOn: ['build:backend', 'build:web'],
