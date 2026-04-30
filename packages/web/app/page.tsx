@@ -1,6 +1,8 @@
 import React from 'react';
 import { createPageMetadata } from '@/app/lib/seo/metadata';
 import { getServerTranslation } from '@/app/lib/i18n/server';
+import { getLocale } from '@/app/lib/i18n/get-locale';
+import I18nProvider from '@/app/components/providers/i18n-provider';
 import { getAllBoardConfigs } from './lib/server-board-configs';
 import { getPopularBoardConfigs } from './lib/server-popular-configs';
 import HomePageContent from './home-page-content';
@@ -18,7 +20,15 @@ export async function generateMetadata() {
 }
 
 export default async function Home() {
-  const [boardConfigs, popularConfigs] = await Promise.all([getAllBoardConfigs(), getPopularBoardConfigs()]);
+  const [boardConfigs, popularConfigs, locale] = await Promise.all([
+    getAllBoardConfigs(),
+    getPopularBoardConfigs(),
+    getLocale(),
+  ]);
 
-  return <HomePageContent boardConfigs={boardConfigs} initialPopularConfigs={popularConfigs} />;
+  return (
+    <I18nProvider locale={locale} namespaces={['marketing']}>
+      <HomePageContent boardConfigs={boardConfigs} initialPopularConfigs={popularConfigs} />
+    </I18nProvider>
+  );
 }

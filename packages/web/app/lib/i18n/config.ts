@@ -19,6 +19,7 @@ export const LOCALE_LABELS: Record<Locale, string> = {
 };
 
 export const DEFAULT_NAMESPACE = 'common';
+export const ROOT_NAMESPACES = ['common'] as const;
 export const SEED_NAMESPACES = ['common', 'marketing'] as const;
 export type SeedNamespace = (typeof SEED_NAMESPACES)[number];
 
