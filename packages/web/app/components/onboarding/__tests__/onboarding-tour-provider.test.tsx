@@ -400,6 +400,32 @@ describe('OnboardingTourProvider', () => {
       vi.useRealTimers();
     });
 
+    it('cancels a pending grid-view advance when user toggles back to list before grace elapses', async () => {
+      vi.useFakeTimers();
+      const { result } = renderHook(useOnboardingTour, { wrapper });
+      await act(async () => {
+        await Promise.resolve();
+      });
+
+      act(() => result.current.start());
+      for (let i = 0; i < 2; i++) act(() => result.current.next());
+      expect(result.current.currentStepId).toBe('climb-list-grid-view');
+
+      // User taps grid → schedules advance timer.
+      act(() => result.current.notifyViewMode('grid'));
+
+      // User changes their mind and toggles back to list before the grace
+      // window elapses — the pending advance must be dropped so the tour
+      // doesn't skip ahead based on the stale "switched to grid" intent.
+      act(() => result.current.notifyViewMode('list'));
+
+      act(() => {
+        vi.advanceTimersByTime(2000);
+      });
+      expect(result.current.currentStepId).toBe('climb-list-grid-view');
+      vi.useRealTimers();
+    });
+
     it('is a no-op on unrelated steps', async () => {
       const { result } = renderHook(useOnboardingTour, { wrapper });
       await flushAsync();

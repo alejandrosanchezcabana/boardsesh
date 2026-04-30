@@ -323,12 +323,18 @@ export function OnboardingTourProvider({ children }: { children: React.ReactNode
 
   const notifyViewMode = useCallback(
     (mode: 'grid' | 'list') => {
-      const expected: TourStepId = mode === 'grid' ? 'climb-list-grid-view' : 'climb-list-back-to-list';
-      if (currentStepIdRef.current !== expected) return;
+      const stepId = currentStepIdRef.current;
+      if (stepId !== 'climb-list-grid-view' && stepId !== 'climb-list-back-to-list') return;
 
-      // Cancel any prior grace-period timer so rapid toggles don't accumulate
-      // multiple advance() calls for the same transition.
+      // Always cancel any prior view-mode grace timer when a notify lands
+      // on a view-mode step. Without this, a quick toggle-and-back (user
+      // taps grid then list before the grace window elapses) would leave
+      // the original advance timer pending and skip the user past the
+      // back-to-list step on a stale "switched to grid" intent.
       clearGraceAdvanceTimer();
+
+      const expected: TourStepId = mode === 'grid' ? 'climb-list-grid-view' : 'climb-list-back-to-list';
+      if (stepId !== expected) return;
 
       const fire = () => {
         graceAdvanceTimerRef.current = null;
