@@ -1,10 +1,35 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vite-plus/test';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import React from 'react';
+import enMarketing from '@/i18n/locales/en-US/marketing.json';
 import type { ActiveSessionInfo } from '@/app/components/persistent-session/types';
-import HomePageContent from '../home-page-content';
 
 // --- Mocks ---
+
+// Resolve real en-US copy so assertions like /continue climbing/i still match
+// after the page started reading from i18n catalogs. Falls back to the raw
+// key, which surfaces missing keys clearly if a regex stops matching.
+function resolveMarketingKey(key: string): string {
+  const segments = key.split('.');
+  let node: unknown = enMarketing;
+  for (const segment of segments) {
+    if (node && typeof node === 'object' && segment in (node as Record<string, unknown>)) {
+      node = (node as Record<string, unknown>)[segment];
+    } else {
+      return key;
+    }
+  }
+  return typeof node === 'string' ? node : key;
+}
+
+vi.mock('react-i18next', () => ({
+  useTranslation: () => ({
+    t: (key: string) => resolveMarketingKey(key),
+    i18n: { language: 'en-US', changeLanguage: () => Promise.resolve() },
+  }),
+}));
+
+import HomePageContent from '../home-page-content';
 
 const mockPush = vi.fn();
 const mockSetClimbSessionCookie = vi.fn();
