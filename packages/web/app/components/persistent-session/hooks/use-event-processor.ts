@@ -180,37 +180,16 @@ export function useEventProcessor({ refs }: UseEventProcessorArgs): EventProcess
       if (event.__typename === 'SessionStatsUpdated') {
         const queryKey = SESSION_DETAIL_QUERY_KEY(event.sessionId);
         queryClient.setQueryData<SessionDetail | null>(queryKey, (prev) => {
+          if (!prev) return prev;
+
+          // ticks are ordered newest-first (descending by climbedAt)
           const ticks = event.ticks;
           const firstTickAt = ticks.length > 0
             ? ticks[ticks.length - 1].climbedAt
-            : prev?.firstTickAt;
+            : prev.firstTickAt;
           const lastTickAt = ticks.length > 0
             ? ticks[0].climbedAt
-            : prev?.lastTickAt;
-
-          if (!prev) {
-            return {
-              sessionId: event.sessionId,
-              sessionType: 'party' as const,
-              participants: event.participants,
-              totalSends: event.totalSends,
-              totalFlashes: event.totalFlashes,
-              totalAttempts: event.totalAttempts,
-              tickCount: event.tickCount,
-              gradeDistribution: event.gradeDistribution,
-              boardTypes: event.boardTypes,
-              hardestGrade: event.hardestGrade,
-              firstTickAt: firstTickAt ?? '',
-              lastTickAt: lastTickAt ?? '',
-              durationMinutes: event.durationMinutes,
-              goal: event.goal,
-              ticks,
-              upvotes: 0,
-              downvotes: 0,
-              voteScore: 0,
-              commentCount: 0,
-            };
-          }
+            : prev.lastTickAt;
 
           return {
             ...prev,
@@ -225,8 +204,8 @@ export function useEventProcessor({ refs }: UseEventProcessorArgs): EventProcess
             durationMinutes: event.durationMinutes,
             goal: event.goal,
             ticks,
-            firstTickAt: firstTickAt ?? prev.firstTickAt,
-            lastTickAt: lastTickAt ?? prev.lastTickAt,
+            firstTickAt,
+            lastTickAt,
           };
         });
       }

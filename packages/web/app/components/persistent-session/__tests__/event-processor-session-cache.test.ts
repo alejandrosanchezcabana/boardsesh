@@ -4,8 +4,7 @@ import React from 'react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { useEventProcessor } from '../hooks/use-event-processor';
 import type { ClimbQueueItem as LocalClimbQueueItem } from '../../queue-control/types';
-import type { SessionEvent, SessionDetail, SessionDetailTick } from '@boardsesh/shared-schema';
-import type { SubscriptionQueueEvent } from '@boardsesh/shared-schema';
+import type { SessionEvent, SessionDetail, SessionDetailTick, SubscriptionQueueEvent } from '@boardsesh/shared-schema';
 import { SESSION_DETAIL_QUERY_KEY } from '@/app/hooks/use-session-detail';
 
 function createRefs() {
@@ -15,12 +14,14 @@ function createRefs() {
     lastCorruptionResyncRef: { current: 0 },
     isFilteringCorruptedItemsRef: { current: false },
     queueEventSubscribersRef: { current: new Set<(event: SubscriptionQueueEvent) => void>() },
-    sessionEventSubscribersRef: { current: new Set() } as never,
+    sessionEventSubscribersRef: { current: new Set<(event: SessionEvent) => void>() },
     offlineBufferRef: { current: [] as LocalClimbQueueItem[] },
   };
 }
 
-function createStatsEvent(overrides: Partial<Extract<SessionEvent, { __typename: 'SessionStatsUpdated' }>> = {}): SessionEvent {
+function createStatsEvent(
+  overrides: Partial<Extract<SessionEvent, { __typename: 'SessionStatsUpdated' }>> = {},
+): SessionEvent {
   return {
     __typename: 'SessionStatsUpdated',
     sessionId: 'session-abc',
@@ -57,6 +58,33 @@ function createTick(climbedAt: string): SessionDetailTick {
   };
 }
 
+function createExistingSession(overrides: Partial<SessionDetail> = {}): SessionDetail {
+  return {
+    sessionId: 'session-abc',
+    sessionType: 'party',
+    sessionName: null,
+    ownerUserId: null,
+    participants: [],
+    totalSends: 0,
+    totalFlashes: 0,
+    totalAttempts: 0,
+    tickCount: 0,
+    gradeDistribution: [],
+    boardTypes: [],
+    hardestGrade: null,
+    firstTickAt: '2026-04-30T08:00:00Z',
+    lastTickAt: '2026-04-30T09:00:00Z',
+    durationMinutes: null,
+    goal: null,
+    ticks: [],
+    upvotes: 0,
+    downvotes: 0,
+    voteScore: 0,
+    commentCount: 0,
+    ...overrides,
+  };
+}
+
 describe('useEventProcessor - SessionStatsUpdated → React Query cache', () => {
   let queryClient: QueryClient;
 
@@ -69,7 +97,21 @@ describe('useEventProcessor - SessionStatsUpdated → React Query cache', () => 
     queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } });
   });
 
-  it('seeds cache when no existing data', () => {
+  it('does not seed cache when no existing data (waits for HTTP fetch)', () => {
+    const refs = createRefs();
+    const { result } = renderHook(() => useEventProcessor({ refs }), { wrapper: createWrapper() });
+
+    act(() => {
+      result.current.handleSessionEvent(createStatsEvent());
+    });
+
+    const cached = queryClient.getQueryData<SessionDetail>(SESSION_DETAIL_QUERY_KEY('session-abc'));
+    expect(cached).toBeUndefined();
+  });
+
+  it('updates stats in existing cached data', () => {
+    queryClient.setQueryData(SESSION_DETAIL_QUERY_KEY('session-abc'), createExistingSession());
+
     const refs = createRefs();
     const { result } = renderHook(() => useEventProcessor({ refs }), { wrapper: createWrapper() });
 
@@ -89,76 +131,19 @@ describe('useEventProcessor - SessionStatsUpdated → React Query cache', () => 
     expect(cached!.goal).toBe('Send V5');
   });
 
-  it('defaults sessionType to party when seeding', () => {
-    const refs = createRefs();
-    const { result } = renderHook(() => useEventProcessor({ refs }), { wrapper: createWrapper() });
-
-    act(() => {
-      result.current.handleSessionEvent(createStatsEvent());
-    });
-
-    const cached = queryClient.getQueryData<SessionDetail>(SESSION_DETAIL_QUERY_KEY('session-abc'));
-    expect(cached!.sessionType).toBe('party');
-  });
-
-  it('sets firstTickAt/lastTickAt to empty string when no ticks and no prev data', () => {
-    const refs = createRefs();
-    const { result } = renderHook(() => useEventProcessor({ refs }), { wrapper: createWrapper() });
-
-    act(() => {
-      result.current.handleSessionEvent(createStatsEvent({ ticks: [] }));
-    });
-
-    const cached = queryClient.getQueryData<SessionDetail>(SESSION_DETAIL_QUERY_KEY('session-abc'));
-    expect(cached!.firstTickAt).toBe('');
-    expect(cached!.lastTickAt).toBe('');
-  });
-
-  it('derives firstTickAt/lastTickAt from ticks when present', () => {
-    const refs = createRefs();
-    const { result } = renderHook(() => useEventProcessor({ refs }), { wrapper: createWrapper() });
-
-    const ticks = [
-      createTick('2026-04-30T10:00:00Z'),
-      createTick('2026-04-30T09:30:00Z'),
-      createTick('2026-04-30T09:00:00Z'),
-    ];
-
-    act(() => {
-      result.current.handleSessionEvent(createStatsEvent({ ticks }));
-    });
-
-    const cached = queryClient.getQueryData<SessionDetail>(SESSION_DETAIL_QUERY_KEY('session-abc'));
-    expect(cached!.lastTickAt).toBe('2026-04-30T10:00:00Z');
-    expect(cached!.firstTickAt).toBe('2026-04-30T09:00:00Z');
-  });
-
-  it('merges into existing cached data, preserving sessionType and ownerUserId', () => {
-    const existingData: SessionDetail = {
-      sessionId: 'session-abc',
-      sessionType: 'inferred',
-      sessionName: 'My Inferred Session',
-      ownerUserId: 'owner-123',
-      participants: [],
-      totalSends: 1,
-      totalFlashes: 0,
-      totalAttempts: 1,
-      tickCount: 1,
-      gradeDistribution: [],
-      boardTypes: ['kilter'],
-      hardestGrade: 'V3',
-      firstTickAt: '2026-04-30T08:00:00Z',
-      lastTickAt: '2026-04-30T08:00:00Z',
-      durationMinutes: 10,
-      goal: null,
-      ticks: [],
-      upvotes: 5,
-      downvotes: 1,
-      voteScore: 4,
-      commentCount: 3,
-    };
-
-    queryClient.setQueryData(SESSION_DETAIL_QUERY_KEY('session-abc'), existingData);
+  it('preserves sessionType, ownerUserId, and social fields when merging', () => {
+    queryClient.setQueryData(
+      SESSION_DETAIL_QUERY_KEY('session-abc'),
+      createExistingSession({
+        sessionType: 'inferred',
+        sessionName: 'My Inferred Session',
+        ownerUserId: 'owner-123',
+        upvotes: 5,
+        downvotes: 1,
+        voteScore: 4,
+        commentCount: 3,
+      }),
+    );
 
     const refs = createRefs();
     const { result } = renderHook(() => useEventProcessor({ refs }), { wrapper: createWrapper() });
@@ -185,32 +170,29 @@ describe('useEventProcessor - SessionStatsUpdated → React Query cache', () => 
     expect(cached!.hardestGrade).toBe('V6');
   });
 
-  it('preserves prev firstTickAt/lastTickAt when merging with no ticks', () => {
-    const existingData: SessionDetail = {
-      sessionId: 'session-abc',
-      sessionType: 'party',
-      sessionName: null,
-      ownerUserId: null,
-      participants: [],
-      totalSends: 0,
-      totalFlashes: 0,
-      totalAttempts: 0,
-      tickCount: 0,
-      gradeDistribution: [],
-      boardTypes: [],
-      hardestGrade: null,
-      firstTickAt: '2026-04-30T08:00:00Z',
-      lastTickAt: '2026-04-30T09:00:00Z',
-      durationMinutes: null,
-      goal: null,
-      ticks: [],
-      upvotes: 0,
-      downvotes: 0,
-      voteScore: 0,
-      commentCount: 0,
-    };
+  it('derives firstTickAt/lastTickAt from ticks when present', () => {
+    queryClient.setQueryData(SESSION_DETAIL_QUERY_KEY('session-abc'), createExistingSession());
 
-    queryClient.setQueryData(SESSION_DETAIL_QUERY_KEY('session-abc'), existingData);
+    const refs = createRefs();
+    const { result } = renderHook(() => useEventProcessor({ refs }), { wrapper: createWrapper() });
+
+    const ticks = [
+      createTick('2026-04-30T10:00:00Z'),
+      createTick('2026-04-30T09:30:00Z'),
+      createTick('2026-04-30T09:00:00Z'),
+    ];
+
+    act(() => {
+      result.current.handleSessionEvent(createStatsEvent({ ticks }));
+    });
+
+    const cached = queryClient.getQueryData<SessionDetail>(SESSION_DETAIL_QUERY_KEY('session-abc'));
+    expect(cached!.lastTickAt).toBe('2026-04-30T10:00:00Z');
+    expect(cached!.firstTickAt).toBe('2026-04-30T09:00:00Z');
+  });
+
+  it('preserves prev firstTickAt/lastTickAt when merging with no ticks', () => {
+    queryClient.setQueryData(SESSION_DETAIL_QUERY_KEY('session-abc'), createExistingSession());
 
     const refs = createRefs();
     const { result } = renderHook(() => useEventProcessor({ refs }), { wrapper: createWrapper() });
