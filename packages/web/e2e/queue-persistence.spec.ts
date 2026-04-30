@@ -47,6 +47,26 @@ function bottomTabButton(page: Page, name: string, exact = false) {
 test.describe('Queue Persistence - Local Mode', () => {
   const boardUrl = '/kilter/original/12x12-square/screw_bolt/40/list';
 
+  // Warm the SSR routes the persistence tests navigate to. Both pages call
+  // cached GraphQL on the server (cachedDiscoverPlaylists, cachedSessionGroupedFeed)
+  // and trigger Next.js's dev-mode compile-on-first-hit. Without this, the
+  // first navigation to either route during a test races a cold-path
+  // backend round-trip against the per-navigation timeout — which is the
+  // shard-5 flake mode this suite kept tripping. Once warmed, the
+  // unstable_cache returns in well under 1 s for the rest of the run.
+  test.beforeAll(async ({ browser, baseURL }) => {
+    // Manually-created contexts don't inherit `use.baseURL` from the project
+    // config, so relative gotos would otherwise fail with an invalid URL.
+    const context = await browser.newContext({ baseURL });
+    const warmupPage = await context.newPage();
+    try {
+      await warmupPage.goto('/playlists', { timeout: 60_000, waitUntil: 'domcontentloaded' });
+      await warmupPage.goto('/feed', { timeout: 60_000, waitUntil: 'domcontentloaded' });
+    } finally {
+      await context.close();
+    }
+  });
+
   test.beforeEach(async ({ page }) => {
     await page.goto(boardUrl);
     await waitForBoardPage(page);
@@ -85,43 +105,33 @@ test.describe('Queue Persistence - Local Mode', () => {
     test.slow(); // This test walks several pages with queue verification on each
     const climbName = await addClimbToQueue(page);
 
-    // Next.js app-router `router.push` uses a React transition: URL stays
-    // at the current page until the target route's RSC payload arrives.
-    // /playlists and /feed both SSR against the backend, so under shard
-    // contention a single slow query can push the wait past the default
-    // 15 s. 30 s gives room for one round-trip retry.
-    const NAV_TIMEOUT = 30_000;
-
     // Note: an earlier version of this test also navigated via the user
     // drawer → /settings (then /help) to exercise the non-tab-bar path.
-    // Both targets fought with CI: /settings requires auth (3c4c5271),
-    // and /help's tab-bar `Discover` click reliably failed to advance the
-    // URL across several shard-5 runs for reasons the snapshot couldn't
-    // pin down. Coverage of the drawer → Link pathway lives in the
-    // bottom-tab-bar spec's queue-integration tests; this test focuses on
-    // the tab-bar persistence path specifically.
+    // /settings requires auth (3c4c5271), and the drawer pathway is
+    // covered by the bottom-tab-bar spec's queue-integration tests; this
+    // test focuses on the tab-bar persistence path specifically.
 
     // 1. Navigate to Home via bottom tab bar
     await bottomTabButton(page, 'Home').click();
-    await expect(page).toHaveURL('/', { timeout: NAV_TIMEOUT });
+    await expect(page).toHaveURL('/', { timeout: 15_000 });
     await verifyQueueShowsClimb(page, climbName);
 
     // 2. Navigate to Discover via bottom tab bar
     await bottomTabButton(page, 'Discover').click();
-    await expect(page).toHaveURL(/\/playlists/, { timeout: NAV_TIMEOUT });
+    await expect(page).toHaveURL(/\/playlists/, { timeout: 15_000 });
     await verifyQueueShowsClimb(page, climbName);
 
     // 3. Navigate to Feed via bottom tab bar (Notifications tab was removed;
     //    Feed is a second public route that exercises the persistence path).
     await bottomTabButton(page, 'Feed').click();
-    await expect(page).toHaveURL(/\/feed/, { timeout: NAV_TIMEOUT });
+    await expect(page).toHaveURL(/\/feed/, { timeout: 15_000 });
     await verifyQueueShowsClimb(page, climbName);
 
     // 4. Navigate back to climb list via bottom tab bar.
     // Board route re-mounts its own queue bar and restores from the
-    // in-memory bridge state; keep the longer timeout it already had.
+    // in-memory bridge state.
     await bottomTabButton(page, 'Climb', true).click();
-    await expect(page).toHaveURL(/\/kilter\//, { timeout: Math.max(NAV_TIMEOUT, 20_000) });
+    await expect(page).toHaveURL(/\/kilter\//, { timeout: 20_000 });
     await verifyQueueShowsClimb(page, climbName, 15000);
   });
 
