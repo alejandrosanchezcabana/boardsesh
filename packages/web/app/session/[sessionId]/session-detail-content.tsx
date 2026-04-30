@@ -411,11 +411,15 @@ export default function SessionDetailContent({
   // Set the climb as current (so it's sent to the board / shared with the
   // party session) and, when not embedded in a drawer, navigate to its detail
   // page. Embedded mode skips navigation so the drawer stays open.
+  // setCurrentClimb returns null when board-compatibility validation fails
+  // (a snackbar is already surfaced). In that case, skip navigation too — the
+  // user shouldn't land on a climb page for a climb the board rejected.
   const navigateToClimb = useCallback(
     async (climb: Climb) => {
       try {
         if (queueActions) {
-          await queueActions.setCurrentClimb(climb);
+          const result = await queueActions.setCurrentClimb(climb);
+          if (result === null) return;
         }
         if (embedded) return;
         const bt = climb.boardType;

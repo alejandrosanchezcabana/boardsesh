@@ -828,5 +828,19 @@ describe('SessionDetailContent', () => {
       await waitFor(() => expect(mockRouterPush).toHaveBeenCalledWith('/kilter/1/10/1/40/view/climb-1'));
       expect(mockSetCurrentClimb).not.toHaveBeenCalled();
     });
+
+    it('skips navigation when setCurrentClimb rejects validation (returns null)', async () => {
+      // setCurrentClimb resolves to null when validateClimbForQueue fires the
+      // snackbar — the user shouldn't land on a climb page the board can't take.
+      mockSetCurrentClimb.mockResolvedValueOnce(null);
+      mockQueueActions = { setCurrentClimb: mockSetCurrentClimb };
+      render(<SessionDetailContent session={makeSession()} />);
+      fireEvent.click(screen.getByTestId('climb-item'));
+      await waitFor(() => expect(mockSetCurrentClimb).toHaveBeenCalledTimes(1));
+      // Give any pending microtasks a chance to flush
+      await new Promise((resolve) => setTimeout(resolve, 10));
+      expect(global.fetch).not.toHaveBeenCalled();
+      expect(mockRouterPush).not.toHaveBeenCalled();
+    });
   });
 });

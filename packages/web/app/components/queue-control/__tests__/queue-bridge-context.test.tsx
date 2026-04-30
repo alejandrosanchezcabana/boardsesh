@@ -43,6 +43,23 @@ vi.mock('../../party-manager/party-profile-context', () => ({
   usePartyProfile: () => mockPartyProfile,
 }));
 
+const mockShowMessage = vi.fn();
+vi.mock('../../providers/snackbar-provider', () => ({
+  useSnackbar: () => ({ showMessage: mockShowMessage }),
+}));
+
+// Default: every climb passes. Tests that need to exercise the rejection
+// path override this via mockCanAddClimbToBoard.mockReturnValueOnce(...).
+type CompatResult = { ok: true } | { ok: false; reason: 'board_name' | 'layout' | 'holds_out_of_range' };
+const mockCanAddClimbToBoard = vi.fn<(climb: unknown, target: unknown) => CompatResult>(() => ({ ok: true }));
+vi.mock('@/app/lib/board-compatibility', () => ({
+  canAddClimbToBoard: (climb: unknown, target: unknown) => mockCanAddClimbToBoard(climb, target),
+}));
+
+vi.mock('../../board-lock/queue-add-error-messages', () => ({
+  queueAddErrorMessage: () => 'Climb is not compatible with this board',
+}));
+
 vi.mock('../../graphql-queue/QueueContext', () => {
   const React = require('react');
   const ctx = React.createContext(undefined);
@@ -365,6 +382,7 @@ describe('queue-bridge-context', () => {
     mockUuidCounter = 0;
     mockPersistentSession = createDefaultPersistentSession();
     mockPartyProfile = { profile: null, username: '' };
+    mockCanAddClimbToBoard.mockReturnValue({ ok: true });
   });
 
   // -----------------------------------------------------------------------
@@ -887,6 +905,94 @@ describe('queue-bridge-context', () => {
           username: 'climber99',
           avatarUrl: undefined,
         });
+      });
+
+      it('setCurrentClimbQueueItem always re-sends in party mode even when item is already current', () => {
+        // A peer might have moved the current climb away while our local
+        // optimistic state still shows item as current. Tapping should
+        // re-send the mutation so the server reconciles.
+        const item1 = createTestQueueItem(climb1, 'u1');
+        const { result } = renderWithPartySession([item1], item1);
+        act(() => {
+          result.current!.setCurrentClimbQueueItem(item1);
+        });
+        expect(mockSetLocalQueueState).not.toHaveBeenCalled();
+        expect(mockPersistentSession.setCurrentClimb).toHaveBeenCalledTimes(1);
+        expect((mockPersistentSession.setCurrentClimb as ReturnType<typeof vi.fn>).mock.calls[0][0].uuid).toBe(
+          'u1',
+        );
+      });
+
+      it('setCurrentClimb logs and continues when ps.addQueueItem rejects', async () => {
+        const consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+        try {
+          mockPersistentSession = createDefaultPersistentSession({
+            activeSession,
+            queue: [],
+            currentClimbQueueItem: null,
+            isLocalQueueLoaded: true,
+            clientId: 'client-abc',
+            addQueueItem: vi.fn(() => Promise.reject(new Error('ws send failed'))),
+          });
+          const wrapper = ({ children }: { children: React.ReactNode }) => (
+            <QueueBridgeProvider>{children}</QueueBridgeProvider>
+          );
+          const { result } = renderHook(() => useTestQueueContext(), { wrapper });
+          await act(async () => {
+            await result.current!.setCurrentClimb(climb1);
+          });
+          // Error was caught and logged; setCurrentClimb was not attempted
+          // because addQueueItem rejected first.
+          expect(consoleErrorSpy).toHaveBeenCalledWith('Failed to set current climb:', expect.any(Error));
+          expect(mockPersistentSession.setCurrentClimb).not.toHaveBeenCalled();
+        } finally {
+          consoleErrorSpy.mockRestore();
+        }
+      });
+    });
+
+    // -------------------------------------------------------------------
+    // Validation rejection path: validateClimbForQueue surfaces a snackbar
+    // error and short-circuits the mutation.
+    // -------------------------------------------------------------------
+    describe('validation rejection', () => {
+      const bd = createTestBoardDetails();
+      const climb1 = createTestClimb({ uuid: 'c1', name: 'Climb 1' });
+
+      function renderWithLocalBoard() {
+        mockPersistentSession = createDefaultPersistentSession({
+          localQueue: [],
+          localCurrentClimbQueueItem: null,
+          localBoardDetails: bd,
+          localBoardPath: '/kilter/1/10/1,2',
+          isLocalQueueLoaded: true,
+        });
+        const wrapper = ({ children }: { children: React.ReactNode }) => (
+          <QueueBridgeProvider>{children}</QueueBridgeProvider>
+        );
+        return renderHook(() => useTestQueueContext(), { wrapper });
+      }
+
+      it('addToQueue surfaces a snackbar error and skips mutation when canAddClimbToBoard rejects', () => {
+        mockCanAddClimbToBoard.mockReturnValueOnce({ ok: false, reason: 'board_name' });
+        const { result } = renderWithLocalBoard();
+        act(() => {
+          result.current!.addToQueue(climb1);
+        });
+        expect(mockShowMessage).toHaveBeenCalledWith('Climb is not compatible with this board', 'error');
+        expect(mockSetLocalQueueState).not.toHaveBeenCalled();
+      });
+
+      it('setCurrentClimb returns null and skips mutation when canAddClimbToBoard rejects', async () => {
+        mockCanAddClimbToBoard.mockReturnValueOnce({ ok: false, reason: 'board_name' });
+        const { result } = renderWithLocalBoard();
+        let returned: unknown;
+        await act(async () => {
+          returned = await result.current!.setCurrentClimb(climb1);
+        });
+        expect(returned).toBeNull();
+        expect(mockShowMessage).toHaveBeenCalledWith('Climb is not compatible with this board', 'error');
+        expect(mockSetLocalQueueState).not.toHaveBeenCalled();
       });
     });
   });

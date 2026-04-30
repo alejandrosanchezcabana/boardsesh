@@ -218,14 +218,17 @@ function usePersistentSessionQueueAdapter(): {
   const setCurrentClimbQueueItem = useCallback((item: ClimbQueueItem) => {
     const r = latestRef.current;
     const alreadyInQueue = r.queue.some((q) => q.uuid === item.uuid);
-    if (alreadyInQueue && r.currentClimbQueueItem?.uuid === item.uuid) return;
     if (r.ps.activeSession) {
+      // Don't bail on the "already current" optimistic state in party mode —
+      // a peer may have moved the current climb away and our local view
+      // hasn't caught up yet. Always re-send so the server reconciles.
       const correlationId = r.ps.clientId ? `${r.ps.clientId}-${++correlationCounterRef.current}` : undefined;
       r.ps.setCurrentClimb(item, item.suggested, correlationId).catch((err: unknown) => {
         console.error('Failed to set current climb queue item:', err);
       });
       return;
     }
+    if (alreadyInQueue && r.currentClimbQueueItem?.uuid === item.uuid) return;
     if (!r.boardDetails) return;
     const newQueue = alreadyInQueue ? r.queue : [...r.queue, item];
     r.ps.setLocalQueueState(newQueue, item, r.baseBoardPath, r.boardDetails);
@@ -742,7 +745,11 @@ export function QueueBridgeProvider({ children }: { children: React.ReactNode })
 
   // Renamed locals so jsx-handler-names sees on*-prefixed identifiers being
   // passed to the on*-prefixed props on LiveActivityBridge below.
-  const onSetCurrentClimb = adapter.context.setCurrentClimbQueueItem;
+  // Use effectiveActions.setCurrentClimbQueueItem so widget taps route through
+  // the injected GraphQLQueueProvider when on a board route. The adapter's
+  // version writes to local state (no-op in party mode) and would silently
+  // drop widget navigation during an active sesh.
+  const onSetCurrentClimb = effectiveActions.setCurrentClimbQueueItem;
   const onWidgetNavigate = effectiveActions.dispatchWidgetNavigation;
 
   return (
@@ -756,13 +763,16 @@ export function QueueBridgeProvider({ children }: { children: React.ReactNode })
                   <QueueListContext.Provider value={effectiveQueueList}>
                     <SearchContext.Provider value={effectiveSearch}>
                       <SessionContext.Provider value={effectiveSession}>
-                        {/* Sync queue state to iOS Live Activity (code-split, no-op on non-iOS) */}
+                        {/* Sync queue state to iOS Live Activity (code-split, no-op on non-iOS).
+                            Use effectiveData/effectiveBoardDetails so the Live Activity reflects
+                            the live party queue while on a board route (injected mode), not the
+                            adapter's local view (which is a no-op in party mode). */}
                         <LiveActivityBridge
-                          queue={adapter.context.queue}
-                          currentClimbQueueItem={adapter.context.currentClimbQueueItem}
-                          boardDetails={adapter.boardDetails}
-                          sessionId={adapter.context.sessionId}
-                          isSessionActive={adapter.context.isSessionActive}
+                          queue={effectiveData.queue}
+                          currentClimbQueueItem={effectiveData.currentClimbQueueItem}
+                          boardDetails={effectiveBoardDetails}
+                          sessionId={effectiveData.sessionId}
+                          isSessionActive={effectiveData.isSessionActive}
                           onSetCurrentClimb={onSetCurrentClimb}
                           onWidgetNavigate={onWidgetNavigate}
                         />
