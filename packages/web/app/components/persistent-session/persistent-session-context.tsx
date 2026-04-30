@@ -139,13 +139,10 @@ export const PersistentSessionProvider: React.FC<{ children: React.ReactNode }> 
   // 5. Session subscriptions: periodic verification, event subscriptions, corruption checks
   const subscriptions = useSessionSubscriptions({
     session: lifecycle.session,
-    activeSession: lifecycle.activeSession,
     queue: eventProcessor.queue,
     currentClimbQueueItem: eventProcessor.currentClimbQueueItem,
     lastReceivedStateHash: eventProcessor.lastReceivedStateHash,
-    liveSessionStats: eventProcessor.liveSessionStats,
     setQueueState: eventProcessor.setQueueState,
-    setLiveSessionStats: eventProcessor.setLiveSessionStats,
     refs,
   });
 
@@ -209,7 +206,6 @@ export const PersistentSessionProvider: React.FC<{ children: React.ReactNode }> 
       isLocalQueueLoaded: queueStorage.isLocalQueueLoaded,
       offlineBufferRef,
       lastReceivedSequenceRef,
-      liveSessionStats: eventProcessor.liveSessionStats,
       sessionSummary: lifecycle.sessionSummary,
       sessionSummaryBoardType: lifecycle.sessionSummaryBoardType ?? null,
       sessionSummaryHealthKitWorkoutId: lifecycle.sessionSummaryHealthKitWorkoutId ?? null,
@@ -225,7 +221,6 @@ export const PersistentSessionProvider: React.FC<{ children: React.ReactNode }> 
       lifecycle.sessionSummaryHealthKitWorkoutId,
       eventProcessor.currentClimbQueueItem,
       eventProcessor.queue,
-      eventProcessor.liveSessionStats,
       queueStorage.localQueue,
       queueStorage.localCurrentClimbQueueItem,
       queueStorage.localBoardPath,

@@ -1,5 +1,7 @@
 import { describe, it, expect } from 'vite-plus/test';
 import { renderHook, act } from '@testing-library/react';
+import React from 'react';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { useEventProcessor } from '../hooks/use-event-processor';
 import type { ClimbQueueItem as LocalClimbQueueItem } from '../../queue-control/types';
 import type { Climb } from '@/app/lib/types';
@@ -44,10 +46,16 @@ function createRefs(offlineBuffer: LocalClimbQueueItem[] = []) {
   };
 }
 
+function createWrapper() {
+  const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } });
+  return ({ children }: { children: React.ReactNode }) =>
+    React.createElement(QueryClientProvider, { client: queryClient }, children);
+}
+
 describe('useEventProcessor - offline FullSync merge', () => {
   it('FullSync with no offline buffer behaves normally', () => {
     const refs = createRefs([]);
-    const { result } = renderHook(() => useEventProcessor({ refs }));
+    const { result } = renderHook(() => useEventProcessor({ refs }), { wrapper: createWrapper() });
 
     const serverItem = createItem('server-1');
 
@@ -71,7 +79,7 @@ describe('useEventProcessor - offline FullSync merge', () => {
   it('FullSync merges offline buffer items into server queue', () => {
     const offlineItem = createItem('offline-1');
     const refs = createRefs([offlineItem]);
-    const { result } = renderHook(() => useEventProcessor({ refs }));
+    const { result } = renderHook(() => useEventProcessor({ refs }), { wrapper: createWrapper() });
 
     const serverItem = createItem('server-1');
 
@@ -97,7 +105,7 @@ describe('useEventProcessor - offline FullSync merge', () => {
   it('FullSync does not duplicate items with same UUID', () => {
     const sharedItem = createItem('shared-1');
     const refs = createRefs([sharedItem]);
-    const { result } = renderHook(() => useEventProcessor({ refs }));
+    const { result } = renderHook(() => useEventProcessor({ refs }), { wrapper: createWrapper() });
 
     act(() => {
       result.current.handleQueueEvent({
@@ -120,7 +128,7 @@ describe('useEventProcessor - offline FullSync merge', () => {
   it('FullSync still filters null/corrupted items with merge', () => {
     const offlineItem = createItem('offline-1');
     const refs = createRefs([offlineItem]);
-    const { result } = renderHook(() => useEventProcessor({ refs }));
+    const { result } = renderHook(() => useEventProcessor({ refs }), { wrapper: createWrapper() });
 
     const serverItem = createItem('server-1');
 
@@ -146,7 +154,7 @@ describe('useEventProcessor - offline FullSync merge', () => {
   it('non-FullSync events still work normally', () => {
     const refs = createRefs([]);
     refs.lastReceivedSequenceRef.current = 4;
-    const { result } = renderHook(() => useEventProcessor({ refs }));
+    const { result } = renderHook(() => useEventProcessor({ refs }), { wrapper: createWrapper() });
 
     const addedItem = createItem('added-1');
 

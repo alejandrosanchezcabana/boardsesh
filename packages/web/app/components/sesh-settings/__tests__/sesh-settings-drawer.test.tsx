@@ -20,28 +20,26 @@ const mockDeactivateSession = vi.fn();
 let mockAngle: number | undefined = 40;
 let mockBoardDetails: Record<string, unknown> | null = { board_name: 'kilter' };
 let mockSessionDetail: Record<string, unknown> | null = {
-  sessionDetail: {
-    sessionId: 'session-123',
-    sessionType: 'party',
-    sessionName: 'Morning Sesh',
-    participants: [],
-    totalSends: 0,
-    totalFlashes: 0,
-    totalAttempts: 0,
-    tickCount: 0,
-    gradeDistribution: [],
-    boardTypes: [],
-    hardestGrade: null,
-    durationMinutes: 30,
-    goal: 'Send V5',
-    ticks: [],
-    upvotes: 0,
-    downvotes: 0,
-    voteScore: 0,
-    commentCount: 0,
-    firstTickAt: new Date().toISOString(),
-    lastTickAt: new Date().toISOString(),
-  },
+  sessionId: 'session-123',
+  sessionType: 'party',
+  sessionName: 'Morning Sesh',
+  participants: [],
+  totalSends: 0,
+  totalFlashes: 0,
+  totalAttempts: 0,
+  tickCount: 0,
+  gradeDistribution: [],
+  boardTypes: [],
+  hardestGrade: null,
+  durationMinutes: 30,
+  goal: 'Send V5',
+  ticks: [],
+  upvotes: 0,
+  downvotes: 0,
+  voteScore: 0,
+  commentCount: 0,
+  firstTickAt: new Date().toISOString(),
+  lastTickAt: new Date().toISOString(),
 };
 
 vi.mock('next/navigation', () => ({
@@ -58,13 +56,11 @@ vi.mock('@/app/components/persistent-session/persistent-session-context', () => 
     session: mockSession,
     users: [],
     deactivateSession: mockDeactivateSession,
-    liveSessionStats: null,
   }),
   usePersistentSessionState: () => ({
     activeSession: mockActiveSession,
     session: mockSession,
     users: [],
-    liveSessionStats: null,
   }),
   usePersistentSessionActions: () => ({
     deactivateSession: mockDeactivateSession,
@@ -83,16 +79,16 @@ vi.mock('@/app/lib/climb-session-cookie', () => ({
   clearClimbSessionCookie: (...args: unknown[]) => mockClearClimbSessionCookie(...args),
 }));
 
-vi.mock('@/app/hooks/use-ws-auth-token', () => ({
-  useWsAuthToken: () => ({ token: null }),
-}));
-
-vi.mock('@tanstack/react-query', () => ({
-  useQuery: () => ({
-    data: mockSessionDetail,
+vi.mock('@/app/hooks/use-session-detail', () => ({
+  useSessionDetail: () => ({
+    session: mockSessionDetail,
     isLoading: false,
     isError: false,
+    updateSession: { mutateAsync: vi.fn(), isPending: false },
+    addUser: { mutateAsync: vi.fn(), isPending: false },
+    removeUser: { mutateAsync: vi.fn(), isPending: false },
   }),
+  SESSION_DETAIL_QUERY_KEY: (id: string) => ['sessionDetail', id],
 }));
 
 vi.mock('@/app/components/swipeable-drawer/swipeable-drawer', () => ({
@@ -131,13 +127,6 @@ vi.mock('@/app/hooks/use-session-timer', () => ({
   useSessionTimer: () => null,
 }));
 
-vi.mock('@/app/lib/graphql/client', () => ({
-  createGraphQLHttpClient: () => ({ request: vi.fn() }),
-}));
-
-vi.mock('@/app/lib/graphql/operations/activity-feed', () => ({
-  GET_SESSION_DETAIL: 'query GetSessionDetail',
-}));
 
 vi.mock('@/app/lib/share-utils', () => ({
   shareWithFallback: vi.fn(),
@@ -205,28 +194,26 @@ describe('SeshSettingsDrawer', () => {
     mockAngle = 40;
     mockBoardDetails = { board_name: 'kilter' };
     mockSessionDetail = {
-      sessionDetail: {
-        sessionId: 'session-123',
-        sessionType: 'party',
-        sessionName: 'Morning Sesh',
-        participants: [],
-        totalSends: 0,
-        totalFlashes: 0,
-        totalAttempts: 0,
-        tickCount: 0,
-        gradeDistribution: [],
-        boardTypes: [],
-        hardestGrade: null,
-        durationMinutes: 30,
-        goal: 'Send V5',
-        ticks: [],
-        upvotes: 0,
-        downvotes: 0,
-        voteScore: 0,
-        commentCount: 0,
-        firstTickAt: new Date().toISOString(),
-        lastTickAt: new Date().toISOString(),
-      },
+      sessionId: 'session-123',
+      sessionType: 'party',
+      sessionName: 'Morning Sesh',
+      participants: [],
+      totalSends: 0,
+      totalFlashes: 0,
+      totalAttempts: 0,
+      tickCount: 0,
+      gradeDistribution: [],
+      boardTypes: [],
+      hardestGrade: null,
+      durationMinutes: 30,
+      goal: 'Send V5',
+      ticks: [],
+      upvotes: 0,
+      downvotes: 0,
+      voteScore: 0,
+      commentCount: 0,
+      firstTickAt: new Date().toISOString(),
+      lastTickAt: new Date().toISOString(),
     };
   });
 
