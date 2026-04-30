@@ -160,10 +160,14 @@ jobs:
 
             The AAB has been uploaded to Google Play internal testing track.
             Sideload options:
-            - `app-release.apk` — signed production build.
-            - `app-debug.apk` — debug build with the in-app Dev URL switcher
-              unlocked (user drawer → Dev URL). Cannot be installed alongside
-              the release build; uninstall one before installing the other.
+            - `app-release.apk` — signed production build (`com.boardsesh.app`).
+            - `app-debug.apk` — debug build (`com.boardsesh.app.debug`,
+              labelled "Boardsesh debug") with the in-app Dev URL switcher
+              unlocked (user drawer → Dev URL). Installs alongside the
+              release build; both packages are App-Links-verified, so on a
+              dev device pin deep-link routing to the debug package with
+              `scripts/android-debug-install.sh` or:
+              `adb shell pm set-app-links-user-selection --user 0 --package com.boardsesh.app.debug true boardsesh.com www.boardsesh.com`.
           files: |
             mobile/android/app/build/outputs/apk/release/*.apk
             mobile/android/app/build/outputs/apk/debug/*.apk

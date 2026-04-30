@@ -274,6 +274,8 @@ ANDROID_APP_LINK_CERT_FINGERPRINTS=AA:BB:CC:...(upload key),DD:EE:FF:...(google 
 
 Both fingerprints should be included. The upload key fingerprint is needed during development/sideloading. The Google signing key fingerprint is needed for Play Store installs.
 
+The route also emits a second statement for `com.boardsesh.app.debug`, hard-coded to the SHA-256 of the committed `mobile/android/app/debug.keystore`. This is what makes Android App Links resolve to the locally-installed debug build alongside the production package — see `CONTRIBUTING.md` ("Testing web changes on Android") and `scripts/android-debug-install.sh`.
+
 ---
 
 ## 10. Release Tracks
