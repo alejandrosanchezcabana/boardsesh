@@ -5,7 +5,7 @@ export default defineConfig({
     singleQuote: true,
     semi: true,
     trailingComma: 'all',
-    ignore: ['design/**'],
+    ignore: ['design/**', '**/generated/**'],
   },
   lint: {
     ignorePatterns: ['**/board-controller/**', 'mobile/**'],
@@ -62,15 +62,6 @@ export default defineConfig({
         command: 'bun run --filter=@boardsesh/db db:import-moonboard',
         dependsOn: ['db:up'],
         cache: false,
-      },
-
-      // --- Codegen (GraphQL types for client + backend resolvers) ---
-      'codegen:print-schema': {
-        command: 'bun run --filter=@boardsesh/shared-schema print-schema',
-      },
-      codegen: {
-        command: 'bunx graphql-codegen',
-        dependsOn: ['codegen:print-schema'],
       },
 
       // --- Build (topological order via dependsOn) ---

@@ -61,6 +61,33 @@ jobs:
       - name: Run linting
         run: bun run lint
 
+  codegen-drift:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+
+      - uses: oven-sh/setup-bun@v2
+
+      - uses: voidzero-dev/setup-vp@v1
+        with:
+          node-version: 'lts'
+          cache: true
+
+      - name: Install dependencies
+        run: bun install --frozen-lockfile
+
+      - name: Regenerate GraphQL types
+        run: vp run codegen
+
+      - name: Check generated files match committed output
+        run: |
+          if ! git diff --exit-code -- \
+              packages/shared-schema/src/generated \
+              packages/web/app/lib/graphql/generated; then
+            echo "::error::Generated GraphQL files are out of date. Run 'vp run codegen' locally and commit the result."
+            exit 1
+          fi
+
   typecheck:
     needs: setup
     runs-on: ubuntu-latest
