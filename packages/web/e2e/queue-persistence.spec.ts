@@ -54,8 +54,10 @@ test.describe('Queue Persistence - Local Mode', () => {
   // backend round-trip against the per-navigation timeout — which is the
   // shard-5 flake mode this suite kept tripping. Once warmed, the
   // unstable_cache returns in well under 1 s for the rest of the run.
-  test.beforeAll(async ({ browser }) => {
-    const context = await browser.newContext();
+  test.beforeAll(async ({ browser, baseURL }) => {
+    // Manually-created contexts don't inherit `use.baseURL` from the project
+    // config, so relative gotos would otherwise fail with an invalid URL.
+    const context = await browser.newContext({ baseURL });
     const warmupPage = await context.newPage();
     try {
       await warmupPage.goto('/playlists', { timeout: 60_000, waitUntil: 'domcontentloaded' });
