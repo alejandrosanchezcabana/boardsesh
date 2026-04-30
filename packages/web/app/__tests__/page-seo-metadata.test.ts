@@ -1,12 +1,17 @@
 import { describe, expect, it, vi } from 'vite-plus/test';
 
 vi.mock('server-only', () => ({}));
+vi.mock('next/headers', () => ({
+  headers: async () => new Headers(),
+}));
 
 const aboutPage = await import('../about/page');
 const feedPage = await import('../feed/page');
 const loginPage = await import('../auth/login/page');
 const playlistsPage = await import('../playlists/page');
 const settingsPage = await import('../settings/page');
+
+const aboutMetadata = await aboutPage.generateMetadata();
 
 function getOpenGraphImageUrl(image: string | URL | { url: string | URL } | undefined) {
   if (!image) {
@@ -26,18 +31,23 @@ function getOpenGraphImageUrl(image: string | URL | { url: string | URL } | unde
 
 describe('page metadata exports', () => {
   it('gives static marketing pages a canonical URL and default social image', () => {
-    const aboutImages = Array.isArray(aboutPage.metadata.openGraph?.images)
-      ? aboutPage.metadata.openGraph.images
-      : aboutPage.metadata.openGraph?.images
-        ? [aboutPage.metadata.openGraph.images]
+    const aboutImages = Array.isArray(aboutMetadata.openGraph?.images)
+      ? aboutMetadata.openGraph.images
+      : aboutMetadata.openGraph?.images
+        ? [aboutMetadata.openGraph.images]
         : [];
     const aboutImageUrl = getOpenGraphImageUrl(aboutImages[0]);
 
-    expect(aboutPage.metadata.title).toBe('About | Boardsesh');
-    expect(aboutPage.metadata.alternates?.canonical).toBe('/about');
-    expect(aboutPage.metadata.openGraph?.url).toBe('/about');
+    expect(aboutMetadata.title).toBe('About | Boardsesh');
+    expect(aboutMetadata.alternates?.canonical).toBe('/about');
+    expect(aboutMetadata.alternates?.languages).toMatchObject({
+      'en-US': '/about',
+      es: '/es/about',
+      'x-default': '/about',
+    });
+    expect(aboutMetadata.openGraph?.url).toBe('/about');
     expect(aboutImageUrl).toBe('/opengraph-image');
-    expect(aboutPage.metadata.twitter?.images).toEqual(['/opengraph-image']);
+    expect(aboutMetadata.twitter?.images).toEqual(['/opengraph-image']);
   });
 
   it('keeps utility pages out of search by default', () => {

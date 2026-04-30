@@ -17,646 +17,588 @@ import {
   HelpOutlineOutlined,
 } from '@mui/icons-material';
 import Box from '@mui/material/Box';
+import { useTranslation } from 'react-i18next';
 import Logo from '@/app/components/brand/logo';
 import BackButton from '@/app/components/back-button';
 import styles from './help.module.css';
 
-// Typography destructuring removed - using MUI Typography directly
+type LabeledItem = { label: string; body: string };
 
-const helpSections = [
-  {
-    key: 'visualization',
-    label: (
-      <span>
-        <GridOnOutlined className={styles.sectionIcon} />
-        Visualization & Analysis
-      </span>
-    ),
-    children: [
-      {
-        key: 'heatmap',
-        label: 'How do I use the heatmap feature?',
-        children: (
-          <div className={styles.answerContent}>
-            <picture>
-              <source srcSet="/help/heatmap.avif" type="image/avif" />
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src="/help/heatmap.png" alt="Heatmap visualization" className={styles.featureImage} />
-            </picture>
-            <Typography variant="body1" component="p">
-              The heatmap shows hold usage patterns across all climbs, helping you identify popular holds and training
-              opportunities.
-            </Typography>
-            <Typography variant="body1" component="p">
-              <Typography variant="body2" component="span" fontWeight={600}>
-                To access the heatmap:
-              </Typography>
-            </Typography>
-            <ol>
-              <li>Open the search drawer and expand the &quot;Holds&quot; section</li>
-              <li>Click the &quot;Show Heatmap&quot; button</li>
-              <li>The board will display a color overlay from green (low usage) to red (high usage)</li>
-            </ol>
-            <Typography variant="body1" component="p">
-              <Typography variant="body2" component="span" fontWeight={600}>
-                Available color modes:
-              </Typography>
-            </Typography>
-            <ul>
-              <li>
-                <Typography variant="body2" component="span" fontWeight={600}>
-                  Ascents:
-                </Typography>{' '}
-                Overall popularity based on total completions
-              </li>
-              <li>
-                <Typography variant="body2" component="span" fontWeight={600}>
-                  Starting Holds:
-                </Typography>{' '}
-                Common start positions
-              </li>
-              <li>
-                <Typography variant="body2" component="span" fontWeight={600}>
-                  Hand/Foot Holds:
-                </Typography>{' '}
-                Usage by limb type
-              </li>
-              <li>
-                <Typography variant="body2" component="span" fontWeight={600}>
-                  Finish Holds:
-                </Typography>{' '}
-                Common top-out positions
-              </li>
-            </ul>
-            <Typography variant="body1" component="p">
-              Use the toggle switches to show/hide hold numbers and include/exclude foot holds.
-            </Typography>
-          </div>
-        ),
-      },
-      {
-        key: 'hold-classification',
-        label: 'How do I classify holds on my board?',
-        children: (
-          <div className={styles.answerContent}>
-            <picture>
-              <source srcSet="/help/hold-classification.avif" type="image/avif" />
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img
-                src="/help/hold-classification.png"
-                alt="Hold classification wizard"
-                className={styles.featureImage}
-              />
-            </picture>
-            <Typography variant="body1" component="p">
-              Hold classification lets you create personal ratings for each hold on your board, helping you understand
-              your strengths and find suitable climbs.
-            </Typography>
-            <Typography variant="body1" component="p">
-              <Typography variant="body2" component="span" fontWeight={600}>
-                Classification attributes:
-              </Typography>
-            </Typography>
-            <ul>
-              <li>
-                <Typography variant="body2" component="span" fontWeight={600}>
-                  Hold Type:
-                </Typography>{' '}
-                Jug, Sloper, Pinch, Crimp, or Pocket
-              </li>
-              <li>
-                <Typography variant="body2" component="span" fontWeight={600}>
-                  Hand Rating:
-                </Typography>{' '}
-                1-5 difficulty scale for hand use
-              </li>
-              <li>
-                <Typography variant="body2" component="span" fontWeight={600}>
-                  Foot Rating:
-                </Typography>{' '}
-                1-5 difficulty scale for foot use
-              </li>
-              <li>
-                <Typography variant="body2" component="span" fontWeight={600}>
-                  Pull Direction:
-                </Typography>{' '}
-                0-360 optimal pulling angle
-              </li>
-            </ul>
-            <Typography variant="body1" component="p">
-              Classifications are personal and stored in your account, allowing you to build a customized understanding
-              of your board over time.
-            </Typography>
-          </div>
-        ),
-      },
-    ],
-  },
-  {
-    key: 'collaboration',
-    label: (
-      <span>
-        <GroupOutlined className={styles.sectionIcon} />
-        Session & Collaboration
-      </span>
-    ),
-    children: [
-      {
-        key: 'party-mode',
-        label: 'How do I start a collaborative session?',
-        children: (
-          <div className={styles.answerContent}>
-            <picture>
-              <source srcSet="/help/party-mode-active.avif" type="image/avif" />
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src="/help/party-mode-active.png" alt="Active party mode session" className={styles.featureImage} />
-            </picture>
-            <Typography variant="body1" component="p">
-              Party Mode allows multiple climbers to share a queue and take turns on the board in real-time.
-            </Typography>
-            <Typography variant="body1" component="p">
-              <Typography variant="body2" component="span" fontWeight={600}>
-                To start a session:
-              </Typography>
-            </Typography>
-            <ol>
-              <li>Tap the lightbulb icon in the queue bar at the bottom</li>
-              <li>Go to the &quot;Start Session&quot; tab and sign in if not already logged in</li>
-              <li>Click &quot;Start Party Mode&quot; to create a new session</li>
-              <li>Share the session with friends using QR code or link</li>
-            </ol>
-            <Typography variant="body1" component="p">
-              <Typography variant="body2" component="span" fontWeight={600}>
-                To join a session:
-              </Typography>
-            </Typography>
-            <ol>
-              <li>
-                <Typography variant="body2" component="span" fontWeight={600}>
-                  Scan QR Code:
-                </Typography>{' '}
-                The session host can show a QR code that others can scan with their phone camera
-              </li>
-              <li>
-                <Typography variant="body2" component="span" fontWeight={600}>
-                  Share Link:
-                </Typography>{' '}
-                Copy and share the session URL - anyone with the link can join
-              </li>
-              <li>
-                <Typography variant="body2" component="span" fontWeight={600}>
-                  Enter Session ID:
-                </Typography>{' '}
-                Go to the &quot;Join Session&quot; tab and paste either the full URL or just the session ID
-              </li>
-            </ol>
-            <Typography variant="body1" component="p">
-              <Typography variant="body2" component="span" fontWeight={600}>
-                Session features:
-              </Typography>
-            </Typography>
-            <ul>
-              <li>Real-time queue synchronization across all devices</li>
-              <li>Multiple users can add/remove climbs</li>
-              <li>Session leader controls the board display</li>
-              <li>Automatic leader handoff if the current leader disconnects</li>
-              <li>Session persists across page refreshes and reconnections</li>
-            </ul>
-          </div>
-        ),
-      },
-      {
-        key: 'queue-management',
-        label: 'How do I manage the climb queue?',
-        children: (
-          <div className={styles.answerContent}>
-            <picture>
-              <source srcSet="/help/main-interface.avif" type="image/avif" />
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src="/help/main-interface.png" alt="Queue management" className={styles.featureImage} />
-            </picture>
-            <Typography variant="body1" component="p">
-              The queue lets you organize climbs for your session, whether climbing solo or with others.
-            </Typography>
-            <Typography variant="body1" component="p">
-              <Typography variant="body2" component="span" fontWeight={600}>
-                Queue actions:
-              </Typography>
-            </Typography>
-            <ul>
-              <li>
-                <Typography variant="body2" component="span" fontWeight={600}>
-                  Add climbs:
-                </Typography>{' '}
-                Double-tap any climb in the list to add it to your queue
-              </li>
-              <li>
-                <Typography variant="body2" component="span" fontWeight={600}>
-                  Reorder:
-                </Typography>{' '}
-                Drag and drop climbs to change order
-              </li>
-              <li>
-                <Typography variant="body2" component="span" fontWeight={600}>
-                  Set current:
-                </Typography>{' '}
-                Click a climb to make it the active climb
-              </li>
-              <li>
-                <Typography variant="body2" component="span" fontWeight={600}>
-                  Remove:
-                </Typography>{' '}
-                Click the X on any queued climb
-              </li>
-              <li>
-                <Typography variant="body2" component="span" fontWeight={600}>
-                  Mirror:
-                </Typography>{' '}
-                Toggle mirror mode for bilateral training
-              </li>
-            </ul>
-            <Typography variant="body1" component="p">
-              The queue syncs automatically with party members and persists offline for uninterrupted sessions.
-            </Typography>
-          </div>
-        ),
-      },
-    ],
-  },
-  {
-    key: 'training',
-    label: (
-      <span>
-        <ElectricBoltOutlined className={styles.sectionIcon} />
-        Training & Workouts
-      </span>
-    ),
-    children: [
-      {
-        key: 'playlist-generator',
-        label: 'How do I generate a workout playlist?',
-        children: (
-          <div className={styles.answerContent}>
-            <Typography variant="body1" component="p">
-              The Playlist Generator creates structured workouts tailored to your training goals.
-            </Typography>
-            <Typography variant="body1" component="p">
-              <Typography variant="body2" component="span" fontWeight={600}>
-                Workout types:
-              </Typography>
-            </Typography>
-            <ul>
-              <li>
-                <Typography variant="body2" component="span" fontWeight={600}>
-                  Volume:
-                </Typography>{' '}
-                High repetitions at a consistent grade for endurance
-              </li>
-              <li>
-                <Typography variant="body2" component="span" fontWeight={600}>
-                  Pyramid:
-                </Typography>{' '}
-                Ramp up to a peak grade, then back down
-              </li>
-              <li>
-                <Typography variant="body2" component="span" fontWeight={600}>
-                  Ladder:
-                </Typography>{' '}
-                Step progression through increasing grades
-              </li>
-              <li>
-                <Typography variant="body2" component="span" fontWeight={600}>
-                  Grade Focus:
-                </Typography>{' '}
-                Concentrated work at a single target grade
-              </li>
-            </ul>
-            <Typography variant="body1" component="p">
-              <Typography variant="body2" component="span" fontWeight={600}>
-                Configuration options:
-              </Typography>
-            </Typography>
-            <ul>
-              <li>Warm-up style (Standard, Extended, or None)</li>
-              <li>Target grade selection</li>
-              <li>Climb bias (Unfamiliar, Attempted, or Any)</li>
-              <li>Minimum ascent/rating filters</li>
-              <li>Number of climbs per section</li>
-            </ul>
-          </div>
-        ),
-      },
-      {
-        key: 'mirroring',
-        label: 'How do I mirror a climb?',
-        children: (
-          <div className={styles.answerContent}>
-            <Typography variant="body1" component="p">
-              Climb mirroring flips all holds to the opposite side of the board, perfect for bilateral strength
-              training.
-            </Typography>
-            <Typography variant="body1" component="p">
-              <Typography variant="body2" component="span" fontWeight={600}>
-                To mirror a climb:
-              </Typography>
-            </Typography>
-            <ol>
-              <li>Find the climb you want to mirror</li>
-              <li>Look for the mirror toggle icon in the climb actions</li>
-              <li>Toggle it on to flip the climb horizontally</li>
-            </ol>
-            <Typography variant="body1" component="p">
-              When connected via Bluetooth, the LED board will automatically display the mirrored pattern. This feature
-              is available on supported boards like Kilter Homewall.
-            </Typography>
-          </div>
-        ),
-      },
-    ],
-  },
-  {
-    key: 'search',
-    label: (
-      <span>
-        <SearchOutlined className={styles.sectionIcon} />
-        Search & Discovery
-      </span>
-    ),
-    children: [
-      {
-        key: 'search-filters',
-        label: 'What search filters are available?',
-        children: (
-          <div className={styles.answerContent}>
-            <picture>
-              <source srcSet="/help/search-filters.avif" type="image/avif" />
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src="/help/search-filters.png" alt="Search filters" className={styles.featureImage} />
-            </picture>
-            <Typography variant="body1" component="p">
-              <Typography variant="body2" component="span" fontWeight={600}>
-                Basic Search filters:
-              </Typography>
-            </Typography>
-            <ul>
-              <li>
-                <Typography variant="body2" component="span" fontWeight={600}>
-                  Climb Name:
-                </Typography>{' '}
-                Search by climb title
-              </li>
-              <li>
-                <Typography variant="body2" component="span" fontWeight={600}>
-                  Grade Range:
-                </Typography>{' '}
-                Set minimum and maximum grades
-              </li>
-              <li>
-                <Typography variant="body2" component="span" fontWeight={600}>
-                  Setter:
-                </Typography>{' '}
-                Filter by climb creator
-              </li>
-              <li>
-                <Typography variant="body2" component="span" fontWeight={600}>
-                  Min Ascents:
-                </Typography>{' '}
-                Only show popular climbs
-              </li>
-              <li>
-                <Typography variant="body2" component="span" fontWeight={600}>
-                  Min Rating:
-                </Typography>{' '}
-                Filter by quality rating
-              </li>
-              <li>
-                <Typography variant="body2" component="span" fontWeight={600}>
-                  Classics Only:
-                </Typography>{' '}
-                Show only classic-rated climbs
-              </li>
-            </ul>
-            <Typography variant="body1" component="p">
-              <Typography variant="body2" component="span" fontWeight={600}>
-                Personal Progress filters
-              </Typography>{' '}
-              (requires login):
-            </Typography>
-            <picture>
-              <source srcSet="/help/personal-progress.avif" type="image/avif" />
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src="/help/personal-progress.png" alt="Personal progress filters" className={styles.featureImage} />
-            </picture>
-            <ul>
-              <li>Hide completed climbs</li>
-              <li>Hide attempted climbs</li>
-              <li>Show only attempted climbs</li>
-              <li>Show only completed climbs</li>
-            </ul>
-          </div>
-        ),
-      },
-      {
-        key: 'search-by-hold',
-        label: 'How do I search by specific holds?',
-        children: (
-          <div className={styles.answerContent}>
-            <picture>
-              <source srcSet="/help/search-by-hold.avif" type="image/avif" />
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src="/help/search-by-hold.png" alt="Search by hold" className={styles.featureImage} />
-            </picture>
-            <Typography variant="body1" component="p">
-              Search by Hold lets you find climbs that use (or avoid) specific holds on the board.
-            </Typography>
-            <Typography variant="body1" component="p">
-              <Typography variant="body2" component="span" fontWeight={600}>
-                To search by holds:
-              </Typography>
-            </Typography>
-            <ol>
-              <li>Open the search drawer and expand the &quot;Holds&quot; section</li>
-              <li>Select &quot;Include&quot; or &quot;Exclude&quot; mode from the dropdown</li>
-              <li>Tap holds on the board to select them</li>
-              <li>Results update automatically as you select holds</li>
-            </ol>
-            <Typography variant="body1" component="p">
-              <Typography variant="body2" component="span" fontWeight={600}>
-                Include mode:
-              </Typography>{' '}
-              Climbs must use the selected holds
-            </Typography>
-            <Typography variant="body1" component="p">
-              <Typography variant="body2" component="span" fontWeight={600}>
-                Exclude mode:
-              </Typography>{' '}
-              Climbs must not use the selected holds
-            </Typography>
-          </div>
-        ),
-      },
-    ],
-  },
-  {
-    key: 'connectivity',
-    label: (
-      <span>
-        <ApiOutlined className={styles.sectionIcon} />
-        Sync & Connectivity
-      </span>
-    ),
-    children: [
-      {
-        key: 'bluetooth',
-        label: "How do I connect my board's LEDs?",
-        children: (
-          <div className={styles.answerContent}>
-            <Typography variant="body1" component="p">
-              Boardsesh uses Web Bluetooth to control your board&apos;s LED system directly from the browser.
-            </Typography>
-            <Typography variant="body1" component="p">
-              <Typography variant="body2" component="span" fontWeight={600}>
-                Requirements:
-              </Typography>
-            </Typography>
-            <ul>
-              <li>Chrome browser (recommended) or other Web Bluetooth-compatible browser</li>
-              <li>iOS users: Use the Boardsesh app (Safari doesn&apos;t support Web Bluetooth)</li>
-              <li>Bluetooth enabled on your device</li>
-              <li>Board powered on and in range</li>
-            </ul>
-            <Typography variant="body1" component="p">
-              <Typography variant="body2" component="span" fontWeight={600}>
-                To connect:
-              </Typography>
-            </Typography>
-            <ol>
-              <li>Tap the lightbulb icon in the queue bar</li>
-              <li>Select your board from the device list</li>
-              <li>Once connected, LEDs automatically show the current climb</li>
-            </ol>
-            <Typography variant="body1" component="p">
-              The connection supports mirrored patterns and will automatically update when you change climbs.
-            </Typography>
-          </div>
-        ),
-      },
-      {
-        key: 'user-sync',
-        label: 'How do I sync with my Kilter/Tension account?',
-        children: (
-          <div className={styles.answerContent}>
-            <picture>
-              <source srcSet="/help/settings-aurora.avif" type="image/avif" />
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src="/help/settings-aurora.png" alt="Aurora account settings" className={styles.featureImage} />
-            </picture>
-            <Typography variant="body1" component="p">
-              Link your Aurora account (Kilter or Tension) to sync your climb history and progress.
-            </Typography>
-            <Typography variant="body1" component="p">
-              <Typography variant="body2" component="span" fontWeight={600}>
-                To link your account:
-              </Typography>
-            </Typography>
-            <ol>
-              <li>Open the menu (tap your avatar) and go to Settings</li>
-              <li>Find the &quot;Aurora Accounts&quot; section</li>
-              <li>Enter your Kilter or Tension credentials</li>
-              <li>Click &quot;Link Account&quot;</li>
-            </ol>
-            <Typography variant="body1" component="p">
-              <Typography variant="body2" component="span" fontWeight={600}>
-                What syncs:
-              </Typography>
-            </Typography>
-            <ul>
-              <li>Ascent history (completed climbs)</li>
-              <li>Attempts/bids</li>
-              <li>Circuits/playlists</li>
-            </ul>
-            <Typography variant="body1" component="p">
-              Changes sync bidirectionally, so ascents logged in Boardsesh will appear in the official apps.
-            </Typography>
-          </div>
-        ),
-      },
-      {
-        key: 'logbook',
-        label: 'How do I track my climbs?',
-        children: (
-          <div className={styles.answerContent}>
-            <picture>
-              <source srcSet="/help/climb-detail.avif" type="image/avif" />
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src="/help/climb-detail.png" alt="Climb detail with actions" className={styles.featureImage} />
-            </picture>
-            <Typography variant="body1" component="p">
-              Track your climbing progress by logging ascents and attempts.
-            </Typography>
-            <Typography variant="body1" component="p">
-              <Typography variant="body2" component="span" fontWeight={600}>
-                From any climb:
-              </Typography>
-            </Typography>
-            <ul>
-              <li>
-                <Typography variant="body2" component="span" fontWeight={600}>
-                  Tick:
-                </Typography>{' '}
-                Record an attempt on the climb
-              </li>
-              <li>
-                <Typography variant="body2" component="span" fontWeight={600}>
-                  Log Ascent:
-                </Typography>{' '}
-                Mark the climb as completed (sends)
-              </li>
-              <li>
-                <Typography variant="body2" component="span" fontWeight={600}>
-                  Favorite:
-                </Typography>{' '}
-                Save climbs for quick access
-              </li>
-            </ul>
-            <Typography variant="body1" component="p">
-              Your logbook syncs with linked Aurora accounts and can be filtered in search results to find new
-              challenges or revisit old projects.
-            </Typography>
-          </div>
-        ),
-      },
-      {
-        key: 'offline',
-        label: 'Does Boardsesh work offline?',
-        children: (
-          <div className={styles.answerContent}>
-            <Typography variant="body1" component="p">
-              Yes! Boardsesh is designed to work reliably even with intermittent connectivity.
-            </Typography>
-            <Typography variant="body1" component="p">
-              <Typography variant="body2" component="span" fontWeight={600}>
-                What works offline:
-              </Typography>
-            </Typography>
-            <ul>
-              <li>Your queue persists locally via IndexedDB</li>
-              <li>Session tokens are cached for quick reconnection</li>
-              <li>Profile data is stored locally</li>
-              <li>Bluetooth LED control works independently</li>
-            </ul>
-            <Typography variant="body1" component="p">
-              When connectivity is restored, any pending changes sync automatically in the background.
-            </Typography>
-          </div>
-        ),
-      },
-    ],
-  },
-];
+function BoldRow({ label, body }: LabeledItem) {
+  return (
+    <li>
+      <Typography variant="body2" component="span" fontWeight={600}>
+        {label}
+      </Typography>{' '}
+      {body}
+    </li>
+  );
+}
 
 export default function HelpContent() {
+  const { t } = useTranslation('marketing');
   const [expandedSection, setExpandedSection] = useState<string | false>('visualization');
+
+  const helpSections = [
+    {
+      key: 'visualization',
+      label: (
+        <span>
+          <GridOnOutlined className={styles.sectionIcon} />
+          {t('help.sections.visualization.label')}
+        </span>
+      ),
+      children: [
+        {
+          key: 'heatmap',
+          label: t('help.heatmap.q'),
+          children: (
+            <div className={styles.answerContent}>
+              <picture>
+                <source srcSet="/help/heatmap.avif" type="image/avif" />
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img src="/help/heatmap.png" alt={t('help.heatmap.imgAlt')} className={styles.featureImage} />
+              </picture>
+              <Typography variant="body1" component="p">
+                {t('help.heatmap.intro')}
+              </Typography>
+              <Typography variant="body1" component="p">
+                <Typography variant="body2" component="span" fontWeight={600}>
+                  {t('help.heatmap.accessLabel')}
+                </Typography>
+              </Typography>
+              <ol>
+                <li>{t('help.heatmap.access1')}</li>
+                <li>{t('help.heatmap.access2')}</li>
+                <li>{t('help.heatmap.access3')}</li>
+              </ol>
+              <Typography variant="body1" component="p">
+                <Typography variant="body2" component="span" fontWeight={600}>
+                  {t('help.heatmap.modesLabel')}
+                </Typography>
+              </Typography>
+              <ul>
+                <BoldRow label={t('help.heatmap.modes.ascentsLabel')} body={t('help.heatmap.modes.ascentsBody')} />
+                <BoldRow label={t('help.heatmap.modes.startLabel')} body={t('help.heatmap.modes.startBody')} />
+                <BoldRow label={t('help.heatmap.modes.handFootLabel')} body={t('help.heatmap.modes.handFootBody')} />
+                <BoldRow label={t('help.heatmap.modes.finishLabel')} body={t('help.heatmap.modes.finishBody')} />
+              </ul>
+              <Typography variant="body1" component="p">
+                {t('help.heatmap.outro')}
+              </Typography>
+            </div>
+          ),
+        },
+        {
+          key: 'hold-classification',
+          label: t('help.holdClassification.q'),
+          children: (
+            <div className={styles.answerContent}>
+              <picture>
+                <source srcSet="/help/hold-classification.avif" type="image/avif" />
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  src="/help/hold-classification.png"
+                  alt={t('help.holdClassification.imgAlt')}
+                  className={styles.featureImage}
+                />
+              </picture>
+              <Typography variant="body1" component="p">
+                {t('help.holdClassification.intro')}
+              </Typography>
+              <Typography variant="body1" component="p">
+                <Typography variant="body2" component="span" fontWeight={600}>
+                  {t('help.holdClassification.attrsLabel')}
+                </Typography>
+              </Typography>
+              <ul>
+                <BoldRow
+                  label={t('help.holdClassification.attrs.holdTypeLabel')}
+                  body={t('help.holdClassification.attrs.holdTypeBody')}
+                />
+                <BoldRow
+                  label={t('help.holdClassification.attrs.handRatingLabel')}
+                  body={t('help.holdClassification.attrs.handRatingBody')}
+                />
+                <BoldRow
+                  label={t('help.holdClassification.attrs.footRatingLabel')}
+                  body={t('help.holdClassification.attrs.footRatingBody')}
+                />
+                <BoldRow
+                  label={t('help.holdClassification.attrs.pullDirectionLabel')}
+                  body={t('help.holdClassification.attrs.pullDirectionBody')}
+                />
+              </ul>
+              <Typography variant="body1" component="p">
+                {t('help.holdClassification.outro')}
+              </Typography>
+            </div>
+          ),
+        },
+      ],
+    },
+    {
+      key: 'collaboration',
+      label: (
+        <span>
+          <GroupOutlined className={styles.sectionIcon} />
+          {t('help.sections.collaboration.label')}
+        </span>
+      ),
+      children: [
+        {
+          key: 'party-mode',
+          label: t('help.partyMode.q'),
+          children: (
+            <div className={styles.answerContent}>
+              <picture>
+                <source srcSet="/help/party-mode-active.avif" type="image/avif" />
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  src="/help/party-mode-active.png"
+                  alt={t('help.partyMode.imgAlt')}
+                  className={styles.featureImage}
+                />
+              </picture>
+              <Typography variant="body1" component="p">
+                {t('help.partyMode.intro')}
+              </Typography>
+              <Typography variant="body1" component="p">
+                <Typography variant="body2" component="span" fontWeight={600}>
+                  {t('help.partyMode.startLabel')}
+                </Typography>
+              </Typography>
+              <ol>
+                <li>{t('help.partyMode.start1')}</li>
+                <li>{t('help.partyMode.start2')}</li>
+                <li>{t('help.partyMode.start3')}</li>
+                <li>{t('help.partyMode.start4')}</li>
+              </ol>
+              <Typography variant="body1" component="p">
+                <Typography variant="body2" component="span" fontWeight={600}>
+                  {t('help.partyMode.joinLabel')}
+                </Typography>
+              </Typography>
+              <ol>
+                <BoldRow label={t('help.partyMode.join.qrLabel')} body={t('help.partyMode.join.qrBody')} />
+                <BoldRow label={t('help.partyMode.join.shareLabel')} body={t('help.partyMode.join.shareBody')} />
+                <BoldRow label={t('help.partyMode.join.idLabel')} body={t('help.partyMode.join.idBody')} />
+              </ol>
+              <Typography variant="body1" component="p">
+                <Typography variant="body2" component="span" fontWeight={600}>
+                  {t('help.partyMode.featuresLabel')}
+                </Typography>
+              </Typography>
+              <ul>
+                <li>{t('help.partyMode.feature1')}</li>
+                <li>{t('help.partyMode.feature2')}</li>
+                <li>{t('help.partyMode.feature3')}</li>
+                <li>{t('help.partyMode.feature4')}</li>
+                <li>{t('help.partyMode.feature5')}</li>
+              </ul>
+            </div>
+          ),
+        },
+        {
+          key: 'queue-management',
+          label: t('help.queueManagement.q'),
+          children: (
+            <div className={styles.answerContent}>
+              <picture>
+                <source srcSet="/help/main-interface.avif" type="image/avif" />
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  src="/help/main-interface.png"
+                  alt={t('help.queueManagement.imgAlt')}
+                  className={styles.featureImage}
+                />
+              </picture>
+              <Typography variant="body1" component="p">
+                {t('help.queueManagement.intro')}
+              </Typography>
+              <Typography variant="body1" component="p">
+                <Typography variant="body2" component="span" fontWeight={600}>
+                  {t('help.queueManagement.actionsLabel')}
+                </Typography>
+              </Typography>
+              <ul>
+                <BoldRow
+                  label={t('help.queueManagement.actions.addLabel')}
+                  body={t('help.queueManagement.actions.addBody')}
+                />
+                <BoldRow
+                  label={t('help.queueManagement.actions.reorderLabel')}
+                  body={t('help.queueManagement.actions.reorderBody')}
+                />
+                <BoldRow
+                  label={t('help.queueManagement.actions.currentLabel')}
+                  body={t('help.queueManagement.actions.currentBody')}
+                />
+                <BoldRow
+                  label={t('help.queueManagement.actions.removeLabel')}
+                  body={t('help.queueManagement.actions.removeBody')}
+                />
+                <BoldRow
+                  label={t('help.queueManagement.actions.mirrorLabel')}
+                  body={t('help.queueManagement.actions.mirrorBody')}
+                />
+              </ul>
+              <Typography variant="body1" component="p">
+                {t('help.queueManagement.outro')}
+              </Typography>
+            </div>
+          ),
+        },
+      ],
+    },
+    {
+      key: 'training',
+      label: (
+        <span>
+          <ElectricBoltOutlined className={styles.sectionIcon} />
+          {t('help.sections.training.label')}
+        </span>
+      ),
+      children: [
+        {
+          key: 'playlist-generator',
+          label: t('help.playlistGenerator.q'),
+          children: (
+            <div className={styles.answerContent}>
+              <Typography variant="body1" component="p">
+                {t('help.playlistGenerator.intro')}
+              </Typography>
+              <Typography variant="body1" component="p">
+                <Typography variant="body2" component="span" fontWeight={600}>
+                  {t('help.playlistGenerator.typesLabel')}
+                </Typography>
+              </Typography>
+              <ul>
+                <BoldRow
+                  label={t('help.playlistGenerator.types.volumeLabel')}
+                  body={t('help.playlistGenerator.types.volumeBody')}
+                />
+                <BoldRow
+                  label={t('help.playlistGenerator.types.pyramidLabel')}
+                  body={t('help.playlistGenerator.types.pyramidBody')}
+                />
+                <BoldRow
+                  label={t('help.playlistGenerator.types.ladderLabel')}
+                  body={t('help.playlistGenerator.types.ladderBody')}
+                />
+                <BoldRow
+                  label={t('help.playlistGenerator.types.gradeFocusLabel')}
+                  body={t('help.playlistGenerator.types.gradeFocusBody')}
+                />
+              </ul>
+              <Typography variant="body1" component="p">
+                <Typography variant="body2" component="span" fontWeight={600}>
+                  {t('help.playlistGenerator.optionsLabel')}
+                </Typography>
+              </Typography>
+              <ul>
+                <li>{t('help.playlistGenerator.option1')}</li>
+                <li>{t('help.playlistGenerator.option2')}</li>
+                <li>{t('help.playlistGenerator.option3')}</li>
+                <li>{t('help.playlistGenerator.option4')}</li>
+                <li>{t('help.playlistGenerator.option5')}</li>
+              </ul>
+            </div>
+          ),
+        },
+        {
+          key: 'mirroring',
+          label: t('help.mirroring.q'),
+          children: (
+            <div className={styles.answerContent}>
+              <Typography variant="body1" component="p">
+                {t('help.mirroring.intro')}
+              </Typography>
+              <Typography variant="body1" component="p">
+                <Typography variant="body2" component="span" fontWeight={600}>
+                  {t('help.mirroring.howLabel')}
+                </Typography>
+              </Typography>
+              <ol>
+                <li>{t('help.mirroring.step1')}</li>
+                <li>{t('help.mirroring.step2')}</li>
+                <li>{t('help.mirroring.step3')}</li>
+              </ol>
+              <Typography variant="body1" component="p">
+                {t('help.mirroring.outro')}
+              </Typography>
+            </div>
+          ),
+        },
+      ],
+    },
+    {
+      key: 'search',
+      label: (
+        <span>
+          <SearchOutlined className={styles.sectionIcon} />
+          {t('help.sections.search.label')}
+        </span>
+      ),
+      children: [
+        {
+          key: 'search-filters',
+          label: t('help.searchFilters.q'),
+          children: (
+            <div className={styles.answerContent}>
+              <picture>
+                <source srcSet="/help/search-filters.avif" type="image/avif" />
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  src="/help/search-filters.png"
+                  alt={t('help.searchFilters.imgAlt')}
+                  className={styles.featureImage}
+                />
+              </picture>
+              <Typography variant="body1" component="p">
+                <Typography variant="body2" component="span" fontWeight={600}>
+                  {t('help.searchFilters.basicLabel')}
+                </Typography>
+              </Typography>
+              <ul>
+                <BoldRow
+                  label={t('help.searchFilters.basic.nameLabel')}
+                  body={t('help.searchFilters.basic.nameBody')}
+                />
+                <BoldRow
+                  label={t('help.searchFilters.basic.gradeLabel')}
+                  body={t('help.searchFilters.basic.gradeBody')}
+                />
+                <BoldRow
+                  label={t('help.searchFilters.basic.setterLabel')}
+                  body={t('help.searchFilters.basic.setterBody')}
+                />
+                <BoldRow
+                  label={t('help.searchFilters.basic.minAscentsLabel')}
+                  body={t('help.searchFilters.basic.minAscentsBody')}
+                />
+                <BoldRow
+                  label={t('help.searchFilters.basic.minRatingLabel')}
+                  body={t('help.searchFilters.basic.minRatingBody')}
+                />
+                <BoldRow
+                  label={t('help.searchFilters.basic.classicsLabel')}
+                  body={t('help.searchFilters.basic.classicsBody')}
+                />
+              </ul>
+              <Typography variant="body1" component="p">
+                <Typography variant="body2" component="span" fontWeight={600}>
+                  {t('help.searchFilters.personalLabel')}
+                </Typography>{' '}
+                {t('help.searchFilters.personalRequires')}
+              </Typography>
+              <picture>
+                <source srcSet="/help/personal-progress.avif" type="image/avif" />
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  src="/help/personal-progress.png"
+                  alt={t('help.searchFilters.personalImgAlt')}
+                  className={styles.featureImage}
+                />
+              </picture>
+              <ul>
+                <li>{t('help.searchFilters.personal1')}</li>
+                <li>{t('help.searchFilters.personal2')}</li>
+                <li>{t('help.searchFilters.personal3')}</li>
+                <li>{t('help.searchFilters.personal4')}</li>
+              </ul>
+            </div>
+          ),
+        },
+        {
+          key: 'search-by-hold',
+          label: t('help.searchByHold.q'),
+          children: (
+            <div className={styles.answerContent}>
+              <picture>
+                <source srcSet="/help/search-by-hold.avif" type="image/avif" />
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  src="/help/search-by-hold.png"
+                  alt={t('help.searchByHold.imgAlt')}
+                  className={styles.featureImage}
+                />
+              </picture>
+              <Typography variant="body1" component="p">
+                {t('help.searchByHold.intro')}
+              </Typography>
+              <Typography variant="body1" component="p">
+                <Typography variant="body2" component="span" fontWeight={600}>
+                  {t('help.searchByHold.howLabel')}
+                </Typography>
+              </Typography>
+              <ol>
+                <li>{t('help.searchByHold.step1')}</li>
+                <li>{t('help.searchByHold.step2')}</li>
+                <li>{t('help.searchByHold.step3')}</li>
+                <li>{t('help.searchByHold.step4')}</li>
+              </ol>
+              <Typography variant="body1" component="p">
+                <Typography variant="body2" component="span" fontWeight={600}>
+                  {t('help.searchByHold.includeLabel')}
+                </Typography>{' '}
+                {t('help.searchByHold.includeBody')}
+              </Typography>
+              <Typography variant="body1" component="p">
+                <Typography variant="body2" component="span" fontWeight={600}>
+                  {t('help.searchByHold.excludeLabel')}
+                </Typography>{' '}
+                {t('help.searchByHold.excludeBody')}
+              </Typography>
+            </div>
+          ),
+        },
+      ],
+    },
+    {
+      key: 'connectivity',
+      label: (
+        <span>
+          <ApiOutlined className={styles.sectionIcon} />
+          {t('help.sections.connectivity.label')}
+        </span>
+      ),
+      children: [
+        {
+          key: 'bluetooth',
+          label: t('help.bluetooth.q'),
+          children: (
+            <div className={styles.answerContent}>
+              <Typography variant="body1" component="p">
+                {t('help.bluetooth.intro')}
+              </Typography>
+              <Typography variant="body1" component="p">
+                <Typography variant="body2" component="span" fontWeight={600}>
+                  {t('help.bluetooth.requirementsLabel')}
+                </Typography>
+              </Typography>
+              <ul>
+                <li>{t('help.bluetooth.req1')}</li>
+                <li>{t('help.bluetooth.req2')}</li>
+                <li>{t('help.bluetooth.req3')}</li>
+                <li>{t('help.bluetooth.req4')}</li>
+              </ul>
+              <Typography variant="body1" component="p">
+                <Typography variant="body2" component="span" fontWeight={600}>
+                  {t('help.bluetooth.connectLabel')}
+                </Typography>
+              </Typography>
+              <ol>
+                <li>{t('help.bluetooth.connect1')}</li>
+                <li>{t('help.bluetooth.connect2')}</li>
+                <li>{t('help.bluetooth.connect3')}</li>
+              </ol>
+              <Typography variant="body1" component="p">
+                {t('help.bluetooth.outro')}
+              </Typography>
+            </div>
+          ),
+        },
+        {
+          key: 'user-sync',
+          label: t('help.userSync.q'),
+          children: (
+            <div className={styles.answerContent}>
+              <picture>
+                <source srcSet="/help/settings-aurora.avif" type="image/avif" />
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img src="/help/settings-aurora.png" alt={t('help.userSync.imgAlt')} className={styles.featureImage} />
+              </picture>
+              <Typography variant="body1" component="p">
+                {t('help.userSync.intro')}
+              </Typography>
+              <Typography variant="body1" component="p">
+                <Typography variant="body2" component="span" fontWeight={600}>
+                  {t('help.userSync.linkLabel')}
+                </Typography>
+              </Typography>
+              <ol>
+                <li>{t('help.userSync.link1')}</li>
+                <li>{t('help.userSync.link2')}</li>
+                <li>{t('help.userSync.link3')}</li>
+                <li>{t('help.userSync.link4')}</li>
+              </ol>
+              <Typography variant="body1" component="p">
+                <Typography variant="body2" component="span" fontWeight={600}>
+                  {t('help.userSync.syncsLabel')}
+                </Typography>
+              </Typography>
+              <ul>
+                <li>{t('help.userSync.syncs1')}</li>
+                <li>{t('help.userSync.syncs2')}</li>
+                <li>{t('help.userSync.syncs3')}</li>
+              </ul>
+              <Typography variant="body1" component="p">
+                {t('help.userSync.outro')}
+              </Typography>
+            </div>
+          ),
+        },
+        {
+          key: 'logbook',
+          label: t('help.logbook.q'),
+          children: (
+            <div className={styles.answerContent}>
+              <picture>
+                <source srcSet="/help/climb-detail.avif" type="image/avif" />
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img src="/help/climb-detail.png" alt={t('help.logbook.imgAlt')} className={styles.featureImage} />
+              </picture>
+              <Typography variant="body1" component="p">
+                {t('help.logbook.intro')}
+              </Typography>
+              <Typography variant="body1" component="p">
+                <Typography variant="body2" component="span" fontWeight={600}>
+                  {t('help.logbook.fromLabel')}
+                </Typography>
+              </Typography>
+              <ul>
+                <BoldRow label={t('help.logbook.actions.tickLabel')} body={t('help.logbook.actions.tickBody')} />
+                <BoldRow label={t('help.logbook.actions.logLabel')} body={t('help.logbook.actions.logBody')} />
+                <BoldRow
+                  label={t('help.logbook.actions.favoriteLabel')}
+                  body={t('help.logbook.actions.favoriteBody')}
+                />
+              </ul>
+              <Typography variant="body1" component="p">
+                {t('help.logbook.outro')}
+              </Typography>
+            </div>
+          ),
+        },
+        {
+          key: 'offline',
+          label: t('help.offline.q'),
+          children: (
+            <div className={styles.answerContent}>
+              <Typography variant="body1" component="p">
+                {t('help.offline.intro')}
+              </Typography>
+              <Typography variant="body1" component="p">
+                <Typography variant="body2" component="span" fontWeight={600}>
+                  {t('help.offline.worksLabel')}
+                </Typography>
+              </Typography>
+              <ul>
+                <li>{t('help.offline.works1')}</li>
+                <li>{t('help.offline.works2')}</li>
+                <li>{t('help.offline.works3')}</li>
+                <li>{t('help.offline.works4')}</li>
+              </ul>
+              <Typography variant="body1" component="p">
+                {t('help.offline.outro')}
+              </Typography>
+            </div>
+          ),
+        },
+      ],
+    },
+  ];
 
   return (
     <Box className={styles.pageLayout}>
@@ -664,7 +606,7 @@ export default function HelpContent() {
         <BackButton fallbackUrl="/" />
         <Logo size="sm" showText={false} />
         <Typography variant="h6" component="h4" className={styles.headerTitle}>
-          Help
+          {t('help.headerTitle')}
         </Typography>
       </Box>
 
@@ -674,10 +616,10 @@ export default function HelpContent() {
             <div className={styles.heroSection}>
               <HelpOutlineOutlined className={styles.heroIcon} />
               <Typography variant="h4" component="h2" className={styles.heroTitle}>
-                How can we help?
+                {t('help.hero.title')}
               </Typography>
               <Typography variant="body2" component="span" color="text.secondary" className={styles.heroSubtitle}>
-                Learn about Boardsesh features and get the most out of your climbing sessions
+                {t('help.hero.subtitle')}
               </Typography>
             </div>
 

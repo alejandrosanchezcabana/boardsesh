@@ -1,0 +1,9 @@
+{
+  "languageSwitcher": {
+    "ariaLabel": "Idioma"
+  },
+  "languages": {
+    "en-US": "English",
+    "es": "Español"
+  }
+}

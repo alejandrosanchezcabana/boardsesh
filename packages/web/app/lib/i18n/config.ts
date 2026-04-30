@@ -1,0 +1,30 @@
+export const SUPPORTED_LOCALES = ['en-US', 'es'] as const;
+export type Locale = (typeof SUPPORTED_LOCALES)[number];
+
+export const DEFAULT_LOCALE: Locale = 'en-US';
+
+export const LOCALE_HTML_LANG: Record<Locale, string> = {
+  'en-US': 'en',
+  es: 'es',
+};
+
+export const LOCALE_OG: Record<Locale, string> = {
+  'en-US': 'en_US',
+  es: 'es_ES',
+};
+
+export const LOCALE_LABELS: Record<Locale, string> = {
+  'en-US': 'English',
+  es: 'Español',
+};
+
+export const DEFAULT_NAMESPACE = 'common';
+export const SEED_NAMESPACES = ['common', 'marketing'] as const;
+export type SeedNamespace = (typeof SEED_NAMESPACES)[number];
+
+export const LOCALE_HEADER = 'x-boardsesh-locale';
+export const LOCALE_COOKIE = 'NEXT_LOCALE';
+
+export function isSupportedLocale(value: string | undefined | null): value is Locale {
+  return value != null && (SUPPORTED_LOCALES as readonly string[]).includes(value);
+}

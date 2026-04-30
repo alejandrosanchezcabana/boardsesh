@@ -1,0 +1,547 @@
+{
+  "metadata": {
+    "home": {
+      "title": "Boardsesh - Train smarter on your climbing board",
+      "description": "Track your sends across Kilter, Tension, and MoonBoard. One app for your boards.",
+      "ogDescription": "Works with Kilter, Tension, and MoonBoard. Track sessions, control LEDs, climb together."
+    },
+    "about": {
+      "title": "About",
+      "description": "One app for every climbing board. Open source, community-driven."
+    },
+    "help": {
+      "title": "Help",
+      "description": "Learn about Boardsesh features including heatmaps, party mode, playlist generator, and more."
+    },
+    "docs": {
+      "title": "API Documentation",
+      "description": "REST and WebSocket API documentation for Boardsesh - interactive climbing training board integration"
+    },
+    "legal": {
+      "title": "Legal & Intellectual Property Policy",
+      "description": "Legal and intellectual property policy for Boardsesh, including our position on climb data, interoperability, and trademark usage."
+    },
+    "privacy": {
+      "title": "Privacy Policy",
+      "description": "Boardsesh privacy policy - how we handle your data."
+    }
+  },
+  "home": {
+    "hero": {
+      "title": "Get on the board!",
+      "subtitle": "Track your sends across Kilter, Tension, and MoonBoard.",
+      "ctaStart": "Start climbing",
+      "ctaContinue": "Continue climbing"
+    },
+    "onboardingHeader": "Make it yours",
+    "install": {
+      "iosTitle": "Get the Boardsesh app",
+      "iosDescription": "Lights up holds on your board straight from your phone",
+      "androidLiveTitle": "Get the Boardsesh app",
+      "androidLiveDescription": "Now on Google Play",
+      "androidPreLaunchTitle": "Android app is almost here",
+      "androidPreLaunchDescription": "Landing in {{days}}d {{hours}}h {{minutes}}m {{seconds}}s. Tap to sideload the preview build."
+    },
+    "cards": {
+      "tourTitle": "Take the tour",
+      "tourDescription": "A one-minute walk-through of queuing, logging, and sessions with your crew",
+      "auroraTitle": "Coming from Kilter?",
+      "auroraDescription": "Bring your logbook and history over in one step",
+      "crewTitle": "Find your crew",
+      "crewDescription": "Follow friends and see what they're climbing",
+      "playlistTitle": "Build a playlist",
+      "playlistDescription": "Line up your climbs before you get to the gym",
+      "bluetoothTitle": "Connect your board",
+      "bluetoothDescription": "Pair via Bluetooth and light up your next climb",
+      "discordTitle": "Join the crew on Discord",
+      "discordDescription": "Share beta, report bugs, and help shape what's next"
+    },
+    "feed": {
+      "callout": "Your friends are climbing.",
+      "cta": "See the feed"
+    }
+  },
+  "about": {
+    "headerTitle": "About",
+    "hero": {
+      "title": "Track, Train, and Climb Together",
+      "subtitle": "One app for every climbing board"
+    },
+    "vision": {
+      "title": "Our Vision",
+      "p1": "Kilter, Tension, MoonBoard, Decoy, Grasshopper. Every board has its own app and its own walled garden. Your training shouldn't be locked inside one of them.",
+      "p2": "Boardsesh works across all of them so you can just climb."
+    },
+    "features": {
+      "title": "What Boardsesh Offers",
+      "queueLabel": "Queue management.",
+      "queueDescription": "Take turns without the awkward \"who's next?\"",
+      "partyLabel": "Party Mode.",
+      "partyDescription": "Share a session and climb together in real time",
+      "multiBoardLabel": "Multi-board.",
+      "multiBoardDescription": "Works with Kilter, Tension, MoonBoard, and more",
+      "communityLabel": "Community-driven.",
+      "communityDescription": "Built and improved by people who actually climb",
+      "selfHostedLabel": "Self-hostable.",
+      "selfHostedDescription": "Run your own instance if that's your thing"
+    },
+    "openSource": {
+      "title": "Open Source",
+      "body": "Boardsesh is open source under the Apache license. Browse the code, send a PR, file a bug, or fork the whole project.",
+      "cta": "View on GitHub →"
+    },
+    "api": {
+      "title": "API Documentation",
+      "body": "Want to build on climbing data? The API is public. Have at it.",
+      "cta": "Explore the API Documentation →"
+    },
+    "community": {
+      "title": "Join the Community",
+      "body": "Whether you write code, set problems, or just want to tell us what's broken, we'd like to hear from you."
+    },
+    "legalLink": "Legal & Intellectual Property Policy",
+    "footer": "Made by climbers. Open to everyone."
+  },
+  "legal": {
+    "headerTitle": "Legal",
+    "intro": {
+      "title": "Legal & Intellectual Property Policy",
+      "p1": "Boardsesh is a free, open-source, community-built alternative for browsing and interacting with standardised LED climbing training boards (Kilter Board, Tension Board, MoonBoard, and others). It is non-commercial and maintained entirely by volunteers.",
+      "p2": "We believe climbers should have the freedom to choose how they interact with hardware they've purchased, and that community-created data should remain accessible to the community."
+    },
+    "climbData": {
+      "title": "Our Position on Climb Data",
+      "facts": {
+        "title": "Climbs are factual data",
+        "p1": "A climb on a standardised board is a list of hold positions on a fixed, standardised layout (e.g. \"start on A5, use B12, C3, D18, finish on K11\"), combined with a grade and wall angle. This is factual, functional information — comparable to a chess position, a set of GPS coordinates, or a phone number — not a creative work of authorship.",
+        "p2": "Under U.S. copyright law, facts are not copyrightable (<em>Feist Publications, Inc. v. Rural Telephone Service Co.</em>, 499 U.S. 340 (1991)). A standardised board with a finite number of holds (typically 200–500) produces climb definitions that are inherently constrained, factual, and functional."
+      },
+      "community": {
+        "title": "The database is community-created",
+        "p1": "The climb databases for these boards are almost entirely user-generated content. Individual climbers create and submit climbs. The board manufacturers did not author this content — they provide a platform for submission and display.",
+        "p2": "The licensing position varies by manufacturer, but in no case does a manufacturer own the community's climb data:",
+        "aurora": "<strong>Aurora Climbing</strong> (Kilter Board, Tension Board, and others): Aurora's Terms of Use grant them a \"perpetual, unrestricted, unlimited, non-exclusive, irrevocable license\" over user-submitted content. Crucially, this license is <strong>non-exclusive</strong> — it does not transfer ownership to Aurora, nor does it prevent the original creator (or third parties) from independently using, collecting, or presenting the same factual data.",
+        "moonLabel": "Moon Climbing (MoonBoard):",
+        "moonBody": "As of the last review of Moon Climbing's public-facing legal documents (February 2026), Moon Climbing has no app-specific Terms of Service, no End User License Agreement, and no contributed content license governing the MoonBoard app or its climb database. In the absence of any such agreement, Moon Climbing has no contractual claim over climbs created and submitted by its users."
+      },
+      "compilation": {
+        "title": "Comprehensive databases have weak compilation protection",
+        "body": "Even where a database arrangement might qualify for thin copyright protection as a compilation, the U.S. Supreme Court has held that protection extends only to creative selection or arrangement — not to the underlying facts. A database that comprehensively collects all user submissions without editorial curation (as these platforms do) is analogous to an alphabetical phone directory, which the Court found unprotectable in <em>Feist</em>."
+      }
+    },
+    "attribution": {
+      "title": "Attribution & Respect for Creators",
+      "intro": "We respect the climbing community and the people who create climbs.",
+      "item1": "Where climb creator information is available, we attribute the creator by their username.",
+      "item2": "We do not claim authorship of climbs we did not create.",
+      "item3Start": "If you are the creator of a climb and would like it removed, please",
+      "item3Link": "open an issue",
+      "item3End": "or contact us and we will honour your request promptly."
+    },
+    "interop": {
+      "title": "Interoperability & Hardware Compatibility",
+      "intro": "This project provides software and hardware designs that are compatible with standardised climbing board hardware. Climbers who have purchased these boards have a right to use third-party software and controllers with their own hardware.",
+      "software": {
+        "title": "Software interoperability",
+        "body": "Our app communicates with board controllers over standard Bluetooth protocols. The Bluetooth communication protocol used by these boards is unencrypted and based on commodity hardware (WS2812B addressable LEDs driven by standard Bluetooth controllers). Implementing a compatible Bluetooth interface for the purpose of interoperability is well-established as lawful under both U.S. and EU law (<em>Sega Enterprises Ltd. v. Accolade, Inc.</em>, 977 F.2d 1510 (9th Cir. 1992); EU Directive 2009/24/EC, Article 6)."
+      },
+      "controller": {
+        "title": "Open-source controller",
+        "p1": "This project also offers open-source controller hardware and firmware designs. The controller is an independent, original implementation that communicates using the same Bluetooth protocol as the official controllers. It is built on commodity components (standard microcontrollers and WS2812B LEDs) and does not incorporate any proprietary firmware, code, or hardware designs from any board manufacturer. No patents are known to exist covering the LED controller systems used by any current board manufacturer.",
+        "p2": "Our controller is designed to be interoperable with both this project's software and, at the user's discretion, official manufacturer apps. Any such interoperability is initiated by the end user on their own hardware."
+      }
+    },
+    "trademark": {
+      "title": "Trademark Usage",
+      "body": "We use board and product names (e.g. \"Kilter Board\", \"MoonBoard\", \"Tension Board\") solely to describe hardware compatibility and interoperability. These names are trademarks of their respective owners. This project is not affiliated with, endorsed by, or sponsored by Aurora Climbing, Moon Climbing, or any board manufacturer."
+    },
+    "dmca": {
+      "title": "DMCA & Takedown Requests",
+      "intro": "We take intellectual property concerns seriously. If you believe any material in this project infringes your copyright, please contact us with the following information:",
+      "item1": "Identification of the copyrighted work you believe is infringed.",
+      "item2": "Identification of the material you believe is infringing, with enough detail for us to locate it.",
+      "item3": "Your contact information (name, address, email, phone number).",
+      "item4": "A statement that you have a good faith belief that the use is not authorised by the copyright owner, its agent, or the law.",
+      "item5": "A statement, under penalty of perjury, that the information in your notice is accurate and that you are the copyright owner or authorised to act on their behalf.",
+      "review1": "We will review all valid requests promptly and in good faith. We may also file a counter-notice where we believe a takedown request is based on a misidentification of the material or a misunderstanding of the law.",
+      "contactLabel": "Contact:"
+    },
+    "community": {
+      "title": "A Note to the Community",
+      "p1": "The climbing community has a long tradition of openly sharing beta. This project exists in that spirit. We are not trying to harm any company — we are trying to give climbers better tools to interact with hardware they already own and data they helped create.",
+      "p2": "Manufacturers continue to benefit from this ecosystem. Our project drives demand for their physical products (holds, boards, panels) where they provide genuine value. We simply believe climbers deserve a choice in how they interact with their hardware.",
+      "p3": "If you are a board manufacturer and would like to discuss collaboration or have concerns, we welcome open dialogue. Please reach out."
+    },
+    "thirdParty": {
+      "title": "Third-Party Notices",
+      "iconLabel": "Person Falling icon",
+      "iconFrom": "from",
+      "fontAwesomeLink": "Font Awesome Free 6.7.2",
+      "byAuthor": "by @fontawesome.",
+      "licenseLabel": "License:",
+      "licenseLink": "CC BY 4.0",
+      "copyright": ". Copyright 2024 Fonticons, Inc."
+    },
+    "footer": "This document is provided for informational purposes and does not constitute legal advice. Last updated: 08-02-2026"
+  },
+  "help": {
+    "headerTitle": "Help",
+    "hero": {
+      "title": "How can we help?",
+      "subtitle": "Learn about Boardsesh features and get the most out of your climbing sessions"
+    },
+    "sections": {
+      "visualization": { "label": "Visualization & Analysis" },
+      "collaboration": { "label": "Session & Collaboration" },
+      "training": { "label": "Training & Workouts" },
+      "search": { "label": "Search & Discovery" },
+      "connectivity": { "label": "Sync & Connectivity" }
+    },
+    "heatmap": {
+      "q": "How do I use the heatmap feature?",
+      "imgAlt": "Heatmap visualization",
+      "intro": "The heatmap shows hold usage patterns across all climbs, helping you identify popular holds and training opportunities.",
+      "accessLabel": "To access the heatmap:",
+      "access1": "Open the search drawer and expand the \"Holds\" section",
+      "access2": "Click the \"Show Heatmap\" button",
+      "access3": "The board will display a color overlay from green (low usage) to red (high usage)",
+      "modesLabel": "Available color modes:",
+      "modes": {
+        "ascentsLabel": "Ascents:",
+        "ascentsBody": "Overall popularity based on total completions",
+        "startLabel": "Starting Holds:",
+        "startBody": "Common start positions",
+        "handFootLabel": "Hand/Foot Holds:",
+        "handFootBody": "Usage by limb type",
+        "finishLabel": "Finish Holds:",
+        "finishBody": "Common top-out positions"
+      },
+      "outro": "Use the toggle switches to show/hide hold numbers and include/exclude foot holds."
+    },
+    "holdClassification": {
+      "q": "How do I classify holds on my board?",
+      "imgAlt": "Hold classification wizard",
+      "intro": "Hold classification lets you create personal ratings for each hold on your board, helping you understand your strengths and find suitable climbs.",
+      "attrsLabel": "Classification attributes:",
+      "attrs": {
+        "holdTypeLabel": "Hold Type:",
+        "holdTypeBody": "Jug, Sloper, Pinch, Crimp, or Pocket",
+        "handRatingLabel": "Hand Rating:",
+        "handRatingBody": "1-5 difficulty scale for hand use",
+        "footRatingLabel": "Foot Rating:",
+        "footRatingBody": "1-5 difficulty scale for foot use",
+        "pullDirectionLabel": "Pull Direction:",
+        "pullDirectionBody": "0-360 optimal pulling angle"
+      },
+      "outro": "Classifications are personal and stored in your account, allowing you to build a customized understanding of your board over time."
+    },
+    "partyMode": {
+      "q": "How do I start a collaborative session?",
+      "imgAlt": "Active party mode session",
+      "intro": "Party Mode allows multiple climbers to share a queue and take turns on the board in real-time.",
+      "startLabel": "To start a session:",
+      "start1": "Tap the lightbulb icon in the queue bar at the bottom",
+      "start2": "Go to the \"Start Session\" tab and sign in if not already logged in",
+      "start3": "Click \"Start Party Mode\" to create a new session",
+      "start4": "Share the session with friends using QR code or link",
+      "joinLabel": "To join a session:",
+      "join": {
+        "qrLabel": "Scan QR Code:",
+        "qrBody": "The session host can show a QR code that others can scan with their phone camera",
+        "shareLabel": "Share Link:",
+        "shareBody": "Copy and share the session URL - anyone with the link can join",
+        "idLabel": "Enter Session ID:",
+        "idBody": "Go to the \"Join Session\" tab and paste either the full URL or just the session ID"
+      },
+      "featuresLabel": "Session features:",
+      "feature1": "Real-time queue synchronization across all devices",
+      "feature2": "Multiple users can add/remove climbs",
+      "feature3": "Session leader controls the board display",
+      "feature4": "Automatic leader handoff if the current leader disconnects",
+      "feature5": "Session persists across page refreshes and reconnections"
+    },
+    "queueManagement": {
+      "q": "How do I manage the climb queue?",
+      "imgAlt": "Queue management",
+      "intro": "The queue lets you organize climbs for your session, whether climbing solo or with others.",
+      "actionsLabel": "Queue actions:",
+      "actions": {
+        "addLabel": "Add climbs:",
+        "addBody": "Double-tap any climb in the list to add it to your queue",
+        "reorderLabel": "Reorder:",
+        "reorderBody": "Drag and drop climbs to change order",
+        "currentLabel": "Set current:",
+        "currentBody": "Click a climb to make it the active climb",
+        "removeLabel": "Remove:",
+        "removeBody": "Click the X on any queued climb",
+        "mirrorLabel": "Mirror:",
+        "mirrorBody": "Toggle mirror mode for bilateral training"
+      },
+      "outro": "The queue syncs automatically with party members and persists offline for uninterrupted sessions."
+    },
+    "playlistGenerator": {
+      "q": "How do I generate a workout playlist?",
+      "intro": "The Playlist Generator creates structured workouts tailored to your training goals.",
+      "typesLabel": "Workout types:",
+      "types": {
+        "volumeLabel": "Volume:",
+        "volumeBody": "High repetitions at a consistent grade for endurance",
+        "pyramidLabel": "Pyramid:",
+        "pyramidBody": "Ramp up to a peak grade, then back down",
+        "ladderLabel": "Ladder:",
+        "ladderBody": "Step progression through increasing grades",
+        "gradeFocusLabel": "Grade Focus:",
+        "gradeFocusBody": "Concentrated work at a single target grade"
+      },
+      "optionsLabel": "Configuration options:",
+      "option1": "Warm-up style (Standard, Extended, or None)",
+      "option2": "Target grade selection",
+      "option3": "Climb bias (Unfamiliar, Attempted, or Any)",
+      "option4": "Minimum ascent/rating filters",
+      "option5": "Number of climbs per section"
+    },
+    "mirroring": {
+      "q": "How do I mirror a climb?",
+      "intro": "Climb mirroring flips all holds to the opposite side of the board, perfect for bilateral strength training.",
+      "howLabel": "To mirror a climb:",
+      "step1": "Find the climb you want to mirror",
+      "step2": "Look for the mirror toggle icon in the climb actions",
+      "step3": "Toggle it on to flip the climb horizontally",
+      "outro": "When connected via Bluetooth, the LED board will automatically display the mirrored pattern. This feature is available on supported boards like Kilter Homewall."
+    },
+    "searchFilters": {
+      "q": "What search filters are available?",
+      "imgAlt": "Search filters",
+      "basicLabel": "Basic Search filters:",
+      "basic": {
+        "nameLabel": "Climb Name:",
+        "nameBody": "Search by climb title",
+        "gradeLabel": "Grade Range:",
+        "gradeBody": "Set minimum and maximum grades",
+        "setterLabel": "Setter:",
+        "setterBody": "Filter by climb creator",
+        "minAscentsLabel": "Min Ascents:",
+        "minAscentsBody": "Only show popular climbs",
+        "minRatingLabel": "Min Rating:",
+        "minRatingBody": "Filter by quality rating",
+        "classicsLabel": "Classics Only:",
+        "classicsBody": "Show only classic-rated climbs"
+      },
+      "personalLabel": "Personal Progress filters",
+      "personalRequires": "(requires login):",
+      "personalImgAlt": "Personal progress filters",
+      "personal1": "Hide completed climbs",
+      "personal2": "Hide attempted climbs",
+      "personal3": "Show only attempted climbs",
+      "personal4": "Show only completed climbs"
+    },
+    "searchByHold": {
+      "q": "How do I search by specific holds?",
+      "imgAlt": "Search by hold",
+      "intro": "Search by Hold lets you find climbs that use (or avoid) specific holds on the board.",
+      "howLabel": "To search by holds:",
+      "step1": "Open the search drawer and expand the \"Holds\" section",
+      "step2": "Select \"Include\" or \"Exclude\" mode from the dropdown",
+      "step3": "Tap holds on the board to select them",
+      "step4": "Results update automatically as you select holds",
+      "includeLabel": "Include mode:",
+      "includeBody": "Climbs must use the selected holds",
+      "excludeLabel": "Exclude mode:",
+      "excludeBody": "Climbs must not use the selected holds"
+    },
+    "bluetooth": {
+      "q": "How do I connect my board's LEDs?",
+      "intro": "Boardsesh uses Web Bluetooth to control your board's LED system directly from the browser.",
+      "requirementsLabel": "Requirements:",
+      "req1": "Chrome browser (recommended) or other Web Bluetooth-compatible browser",
+      "req2": "iOS users: Use the Boardsesh app (Safari doesn't support Web Bluetooth)",
+      "req3": "Bluetooth enabled on your device",
+      "req4": "Board powered on and in range",
+      "connectLabel": "To connect:",
+      "connect1": "Tap the lightbulb icon in the queue bar",
+      "connect2": "Select your board from the device list",
+      "connect3": "Once connected, LEDs automatically show the current climb",
+      "outro": "The connection supports mirrored patterns and will automatically update when you change climbs."
+    },
+    "userSync": {
+      "q": "How do I sync with my Kilter/Tension account?",
+      "imgAlt": "Aurora account settings",
+      "intro": "Link your Aurora account (Kilter or Tension) to sync your climb history and progress.",
+      "linkLabel": "To link your account:",
+      "link1": "Open the menu (tap your avatar) and go to Settings",
+      "link2": "Find the \"Aurora Accounts\" section",
+      "link3": "Enter your Kilter or Tension credentials",
+      "link4": "Click \"Link Account\"",
+      "syncsLabel": "What syncs:",
+      "syncs1": "Ascent history (completed climbs)",
+      "syncs2": "Attempts/bids",
+      "syncs3": "Circuits/playlists",
+      "outro": "Changes sync bidirectionally, so ascents logged in Boardsesh will appear in the official apps."
+    },
+    "logbook": {
+      "q": "How do I track my climbs?",
+      "imgAlt": "Climb detail with actions",
+      "intro": "Track your climbing progress by logging ascents and attempts.",
+      "fromLabel": "From any climb:",
+      "actions": {
+        "tickLabel": "Tick:",
+        "tickBody": "Record an attempt on the climb",
+        "logLabel": "Log Ascent:",
+        "logBody": "Mark the climb as completed (sends)",
+        "favoriteLabel": "Favorite:",
+        "favoriteBody": "Save climbs for quick access"
+      },
+      "outro": "Your logbook syncs with linked Aurora accounts and can be filtered in search results to find new challenges or revisit old projects."
+    },
+    "offline": {
+      "q": "Does Boardsesh work offline?",
+      "intro": "Yes! Boardsesh is designed to work reliably even with intermittent connectivity.",
+      "worksLabel": "What works offline:",
+      "works1": "Your queue persists locally via IndexedDB",
+      "works2": "Session tokens are cached for quick reconnection",
+      "works3": "Profile data is stored locally",
+      "works4": "Bluetooth LED control works independently",
+      "outro": "When connectivity is restored, any pending changes sync automatically in the background."
+    }
+  },
+  "docs": {
+    "loading": "Loading documentation...",
+    "headerTitle": "API Documentation",
+    "headerSubtitle": "Complete reference for the Boardsesh REST and WebSocket APIs",
+    "tabs": {
+      "overview": "Overview",
+      "rest": "REST API",
+      "graphql": "GraphQL Schema",
+      "websocket": "WebSocket Guide"
+    },
+    "overview": {
+      "title": "Boardsesh API Overview",
+      "intro": "Boardsesh provides two complementary APIs for interacting with interactive climbing training boards (Kilter, Tension):",
+      "rest": {
+        "title": "REST API",
+        "intro": "Use the REST API for stateless operations like searching climbs, fetching board configuration, and user authentication. The REST API is ideal for:",
+        "feature1": "Fetching climb data and statistics",
+        "feature2": "User registration and authentication",
+        "feature3": "Profile management",
+        "feature4": "Aurora platform integration",
+        "baseUrlLabel": "Base URL:"
+      },
+      "ws": {
+        "title": "WebSocket GraphQL API",
+        "intro": "Use the WebSocket API for real-time features like party sessions and queue synchronization. The GraphQL API provides:",
+        "feature1": "Real-time queue updates via subscriptions",
+        "feature2": "Session management (create, join, leave)",
+        "feature3": "Multi-user collaboration",
+        "feature4": "All REST API functionality via queries/mutations",
+        "endpointLabel": "Endpoint:",
+        "endpointSuffix": "(via graphql-ws protocol)"
+      },
+      "auth": {
+        "title": "Authentication",
+        "restLabel": "REST API:",
+        "restBody": "Uses NextAuth session cookies. Authenticate via",
+        "restBodyEnd": "endpoints.",
+        "wsLabel": "WebSocket API:",
+        "wsBody": "Obtain a JWT token from",
+        "wsBodyEnd": "and include it in the connection parameters:"
+      },
+      "rateLimit": {
+        "title": "Rate Limiting",
+        "body": "Authentication endpoints are rate-limited to prevent abuse. Rate limit headers are included in responses. Public read endpoints have generous limits."
+      }
+    },
+    "ws": {
+      "title": "WebSocket Connection Guide",
+      "introStart": "The Boardsesh WebSocket API uses the",
+      "introEnd": "protocol for real-time GraphQL subscriptions.",
+      "connection": {
+        "title": "Connection Setup"
+      },
+      "session": {
+        "title": "Session Management",
+        "body": "Sessions are the core collaboration unit. Users join sessions to share a climb queue."
+      },
+      "delta": {
+        "title": "Delta Synchronization",
+        "body": "When reconnecting, use delta sync to catch up without full state transfer:"
+      },
+      "connectionHandling": {
+        "title": "Connection Handling",
+        "body": "The WebSocket connection may be interrupted by network changes. Implement reconnection logic with the graphql-ws retry options and use delta sync to maintain state consistency."
+      }
+    }
+  },
+  "privacy": {
+    "title": "Privacy Policy",
+    "lastUpdated": "Last updated: April 2026",
+    "intro1": "Boardsesh is an open-source app for controlling climbing training boards (Kilter, Tension, MoonBoard) over Bluetooth. This policy explains what data we collect, why, and what we do with it.",
+    "intro2": "The short version: we collect only what we need to make the app work. We do not sell your data, we do not run ads, and we do not use third-party tracking.",
+    "collect": {
+      "title": "What we collect",
+      "accountLabel": "Account information.",
+      "accountBody": "When you create an account, we store your email address and username. Your email is used for authentication. Your username is displayed on your profile and visible to other users in Party Mode sessions and social features.",
+      "activityLabel": "Climb activity.",
+      "activityBody": "When you log a send or attempt, we store the climb details, grade, date, and any notes you add. This powers your logbook and progression tracking.",
+      "locationLabel": "Location.",
+      "locationBody": "If you grant location permission, we use your approximate location to help you discover nearby Party Mode sessions. We do not track your location in the background or store location history.",
+      "analyticsLabel": "Analytics.",
+      "analyticsBody": "We use Vercel Analytics to collect anonymous page view and performance data. This helps us understand which features are used and where the app is slow. This data is not linked to your account."
+    },
+    "bluetooth": {
+      "title": "Bluetooth",
+      "body": "Boardsesh uses Bluetooth Low Energy (BLE) to connect to your climbing board's LED controller. The Bluetooth connection is used exclusively to send hold lighting commands to the board. No personal data is transmitted over Bluetooth. The app does not read data from the board beyond basic device identification during pairing."
+    },
+    "location": {
+      "title": "Location data",
+      "body1": "Location access is optional. When granted, it is used for one purpose: making your Party Mode session discoverable to nearby climbers. Your location is shared with the server only while a Party Mode session is active. We do not store your location history, build a location profile, or share location data with anyone outside of the party session discovery feature.",
+      "body2": "You can revoke location permission at any time in your device settings. The app works fully without it."
+    },
+    "thirdParty": {
+      "title": "Third-party services",
+      "vercelLabel": "Vercel.",
+      "vercelBody": "We use Vercel for hosting and analytics. Vercel processes requests to serve the app and collects anonymous usage metrics. See ",
+      "vercelLink": "Vercel's privacy policy",
+      "auroraLabel": "Aurora Climbing API.",
+      "auroraBody": "If you link your Aurora Climbing account (used by Kilter and Tension boards), we sync your climb data with Aurora's servers so your logbook stays consistent across apps. This sync only happens when you initiate it. See ",
+      "auroraLink": "Aurora Climbing",
+      "auroraBodyEnd": " for their data practices."
+    },
+    "sharing": {
+      "title": "Data sharing",
+      "body1": "We do not sell your data. We do not run ads. We do not share your information with third-party marketers or data brokers. The only data shared externally is what is described above (Vercel hosting/analytics, Aurora Climbing sync when you opt in).",
+      "body2": "Other Boardsesh users can see your username, profile, and logged climbs if you participate in social features like Party Mode. This is visible in the app and is part of how the product works."
+    },
+    "retention": {
+      "title": "Data retention",
+      "body": "We keep your account data and climb history for as long as your account is active. If you stop using Boardsesh, your data stays until you delete your account."
+    },
+    "deletion": {
+      "title": "Account deletion",
+      "intro": "You can delete your account and all associated data at any time. There are two ways to do it:",
+      "inApp": "In the app:",
+      "inAppBody": " Go to Settings, scroll to the bottom, and tap Delete Account. You will be asked to confirm before anything is removed.",
+      "onWeb": "On the web:",
+      "onWebBody": " Log in at ",
+      "onWebLink": "boardsesh.com/settings",
+      "onWebBodyEnd": " and scroll to the bottom of the page to find the same Delete Account button.",
+      "permanent": "Deletion is immediate and permanent. Once confirmed, we remove your email address, username, logbook entries, queue data, and party session history from our servers. This cannot be undone."
+    },
+    "children": {
+      "title": "Children",
+      "body": "Boardsesh is not directed at children under 13. We do not knowingly collect personal information from children under 13. If you believe a child under 13 has created an account, contact us and we will delete it."
+    },
+    "changes": {
+      "title": "Changes to this policy",
+      "body": "If we change this privacy policy, we will update this page with the new text and the \"last updated\" date. For significant changes, we may also notify you in the app."
+    },
+    "contact": {
+      "title": "Contact",
+      "body1Start": "Questions about this policy or your data? Email us at ",
+      "body1Email": "support@boardsesh.com",
+      "body1End": ".",
+      "body2Start": "Boardsesh is open source. You can see exactly what data the app collects and how it is processed by reading the source code on ",
+      "body2Link": "GitHub",
+      "body2End": "."
+    }
+  }
+}

@@ -1,0 +1,178 @@
+{
+  "metadata": {
+    "home": {
+      "title": "Boardsesh - Entrena mejor en tu tabla de escalada",
+      "description": "Registra tus envíos en Kilter, Tension y MoonBoard. Una sola app para todas tus tablas.",
+      "ogDescription": "Compatible con Kilter, Tension y MoonBoard. Sigue sesiones, controla los LED, escala en grupo."
+    },
+    "about": {
+      "title": "Acerca de",
+      "description": "Una sola app para todas las tablas de escalada. Código abierto y dirigida por la comunidad."
+    },
+    "help": {
+      "title": "Ayuda",
+      "description": "Descubre las funciones de Boardsesh: mapas de calor, modo fiesta, generador de playlists y más."
+    },
+    "docs": {
+      "title": "Documentación de la API",
+      "description": "Documentación de la API REST y WebSocket de Boardsesh: integración con tablas de entrenamiento de escalada interactivas."
+    },
+    "legal": {
+      "title": "Política Legal y de Propiedad Intelectual",
+      "description": "Política legal y de propiedad intelectual de Boardsesh: nuestra posición sobre datos de problemas, interoperabilidad y uso de marcas."
+    },
+    "privacy": {
+      "title": "Política de Privacidad",
+      "description": "Política de privacidad de Boardsesh: cómo tratamos tus datos."
+    }
+  },
+  "home": {
+    "hero": {
+      "title": "¡A la tabla!",
+      "subtitle": "Registra tus envíos en Kilter, Tension y MoonBoard.",
+      "ctaStart": "Empezar a escalar",
+      "ctaContinue": "Seguir escalando"
+    },
+    "onboardingHeader": "Hazlo tuyo",
+    "install": {
+      "iosTitle": "Descarga la app de Boardsesh",
+      "iosDescription": "Ilumina las presas de tu tabla directamente desde el móvil",
+      "androidLiveTitle": "Descarga la app de Boardsesh",
+      "androidLiveDescription": "Ya disponible en Google Play",
+      "androidPreLaunchTitle": "La app de Android está al caer",
+      "androidPreLaunchDescription": "Llega en {{days}}d {{hours}}h {{minutes}}m {{seconds}}s. Toca para instalar la beta."
+    },
+    "cards": {
+      "tourTitle": "Haz el tour",
+      "tourDescription": "Un recorrido de un minuto por la cola, el registro y las sesiones con tu grupo",
+      "auroraTitle": "¿Vienes de Kilter?",
+      "auroraDescription": "Trae tu logbook y tu historial en un solo paso",
+      "crewTitle": "Encuentra tu grupo",
+      "crewDescription": "Sigue a amigos y mira qué están escalando",
+      "playlistTitle": "Crea una playlist",
+      "playlistDescription": "Prepara tus problemas antes de ir al rocódromo",
+      "bluetoothTitle": "Conecta tu tabla",
+      "bluetoothDescription": "Vincula por Bluetooth e ilumina tu siguiente problema",
+      "discordTitle": "Únete al grupo en Discord",
+      "discordDescription": "Comparte beta, reporta fallos y ayuda a decidir qué viene"
+    },
+    "feed": {
+      "callout": "Tus amigos están escalando.",
+      "cta": "Ver el feed"
+    }
+  },
+  "about": {
+    "headerTitle": "Acerca de",
+    "hero": {
+      "title": "Registra, Entrena y Escala en Grupo",
+      "subtitle": "Una sola app para todas las tablas de escalada"
+    },
+    "vision": {
+      "title": "Nuestra Visión",
+      "p1": "Kilter, Tension, MoonBoard, Decoy, Grasshopper. Cada tabla tiene su propia app y su propio jardín cerrado. Tu entrenamiento no debería estar encerrado en ninguno de ellos.",
+      "p2": "Boardsesh funciona con todas para que tú solo te dediques a escalar."
+    },
+    "features": {
+      "title": "Qué te ofrece Boardsesh",
+      "queueLabel": "Gestión de cola.",
+      "queueDescription": "Turnaos sin el típico «¿quién va ahora?»",
+      "partyLabel": "Modo Fiesta.",
+      "partyDescription": "Comparte una sesión y escala en grupo en tiempo real",
+      "multiBoardLabel": "Multi-tabla.",
+      "multiBoardDescription": "Compatible con Kilter, Tension, MoonBoard y más",
+      "communityLabel": "Dirigida por la comunidad.",
+      "communityDescription": "Construida y mejorada por gente que realmente escala",
+      "selfHostedLabel": "Auto-alojable.",
+      "selfHostedDescription": "Monta tu propia instancia si te apetece"
+    },
+    "openSource": {
+      "title": "Código Abierto",
+      "body": "Boardsesh es código abierto bajo licencia Apache. Navega por el código, manda un PR, abre un issue o haz un fork del proyecto entero.",
+      "cta": "Ver en GitHub →"
+    },
+    "api": {
+      "title": "Documentación de la API",
+      "body": "¿Quieres construir sobre los datos de escalada? La API es pública. Adelante.",
+      "cta": "Explora la documentación de la API →"
+    },
+    "community": {
+      "title": "Únete a la Comunidad",
+      "body": "Tanto si escribes código, abres problemas o solo quieres contarnos qué está roto, queremos saber de ti."
+    },
+    "legalLink": "Política Legal y de Propiedad Intelectual",
+    "footer": "Hecho por escaladores. Abierto para todos."
+  },
+  "privacy": {
+    "title": "Política de Privacidad",
+    "lastUpdated": "Última actualización: abril de 2026",
+    "intro1": "Boardsesh es una app de código abierto para controlar tablas de entrenamiento de escalada (Kilter, Tension, MoonBoard) por Bluetooth. Esta política explica qué datos recogemos, por qué y qué hacemos con ellos.",
+    "intro2": "La versión corta: solo recogemos lo necesario para que la app funcione. No vendemos tus datos, no mostramos anuncios y no usamos rastreo de terceros.",
+    "collect": {
+      "title": "Qué recogemos",
+      "accountLabel": "Información de cuenta.",
+      "accountBody": "Cuando creas una cuenta guardamos tu correo y tu nombre de usuario. El correo se usa para autenticación. El nombre de usuario aparece en tu perfil y es visible para otros usuarios en sesiones de Modo Fiesta y funciones sociales.",
+      "activityLabel": "Actividad de escalada.",
+      "activityBody": "Cuando registras un envío o un intento guardamos los detalles del problema, el grado, la fecha y las notas que añadas. Esto alimenta tu logbook y el seguimiento de progresión.",
+      "locationLabel": "Ubicación.",
+      "locationBody": "Si concedes permiso de ubicación, usamos tu ubicación aproximada para ayudarte a descubrir sesiones de Modo Fiesta cercanas. No rastreamos tu ubicación en segundo plano ni guardamos historial.",
+      "analyticsLabel": "Analítica.",
+      "analyticsBody": "Usamos Vercel Analytics para recoger datos anónimos de páginas vistas y rendimiento. Esto nos ayuda a entender qué funciones se usan y dónde la app va lenta. Estos datos no están vinculados a tu cuenta."
+    },
+    "bluetooth": {
+      "title": "Bluetooth",
+      "body": "Boardsesh usa Bluetooth Low Energy (BLE) para conectar con el controlador de LEDs de tu tabla. La conexión Bluetooth se utiliza únicamente para enviar comandos de iluminación de presas a la tabla. Ningún dato personal se transmite por Bluetooth. La app no lee datos de la tabla más allá de la identificación básica del dispositivo durante el emparejamiento."
+    },
+    "location": {
+      "title": "Datos de ubicación",
+      "body1": "El acceso a la ubicación es opcional. Cuando se concede, se usa para una sola cosa: hacer que tu sesión de Modo Fiesta sea descubrible para escaladores cercanos. Tu ubicación se comparte con el servidor solo mientras una sesión de Modo Fiesta está activa. No guardamos historial, no construimos un perfil de ubicación ni compartimos datos de ubicación con nadie fuera de la función de descubrimiento de sesiones.",
+      "body2": "Puedes revocar el permiso de ubicación en cualquier momento desde los ajustes del dispositivo. La app funciona perfectamente sin él."
+    },
+    "thirdParty": {
+      "title": "Servicios de terceros",
+      "vercelLabel": "Vercel.",
+      "vercelBody": "Usamos Vercel para alojamiento y analítica. Vercel procesa solicitudes para servir la app y recoge métricas de uso anónimas. Consulta ",
+      "vercelLink": "la política de privacidad de Vercel",
+      "auroraLabel": "API de Aurora Climbing.",
+      "auroraBody": "Si vinculas tu cuenta de Aurora Climbing (usada por las tablas Kilter y Tension), sincronizamos tus datos de escalada con los servidores de Aurora para que tu logbook sea coherente entre apps. Esta sincronización solo ocurre cuando tú la inicias. Consulta ",
+      "auroraLink": "Aurora Climbing",
+      "auroraBodyEnd": " para sus prácticas de datos."
+    },
+    "sharing": {
+      "title": "Compartición de datos",
+      "body1": "No vendemos tus datos. No mostramos anuncios. No compartimos tu información con marketers de terceros ni con brokers de datos. Lo único que se comparte externamente es lo descrito arriba (alojamiento/analítica de Vercel, sincronización de Aurora Climbing si la activas).",
+      "body2": "Otros usuarios de Boardsesh pueden ver tu nombre de usuario, tu perfil y tus problemas registrados si participas en funciones sociales como el Modo Fiesta. Esto se ve en la app y forma parte de cómo funciona el producto."
+    },
+    "retention": {
+      "title": "Retención de datos",
+      "body": "Conservamos los datos de tu cuenta y tu historial de escalada mientras tu cuenta esté activa. Si dejas de usar Boardsesh, tus datos se quedan hasta que borres la cuenta."
+    },
+    "deletion": {
+      "title": "Eliminación de cuenta",
+      "intro": "Puedes borrar tu cuenta y todos los datos asociados en cualquier momento. Hay dos formas:",
+      "inApp": "En la app:",
+      "inAppBody": " Ve a Ajustes, baja del todo y toca Eliminar Cuenta. Te pediremos confirmar antes de borrar nada.",
+      "onWeb": "En la web:",
+      "onWebBody": " Inicia sesión en ",
+      "onWebLink": "boardsesh.com/settings",
+      "onWebBodyEnd": " y baja al final de la página para encontrar el mismo botón Eliminar Cuenta.",
+      "permanent": "La eliminación es inmediata y permanente. Una vez confirmada, eliminamos de nuestros servidores tu correo, nombre de usuario, entradas del logbook, datos de la cola y el historial de sesiones de fiesta. Esto no se puede deshacer."
+    },
+    "children": {
+      "title": "Menores",
+      "body": "Boardsesh no está dirigido a menores de 13 años. No recogemos conscientemente información personal de menores de 13 años. Si crees que un menor de 13 ha creado una cuenta, contáctanos y la borraremos."
+    },
+    "changes": {
+      "title": "Cambios en esta política",
+      "body": "Si modificamos esta política de privacidad, actualizaremos esta página con el nuevo texto y la fecha de «última actualización». Para cambios significativos, también podemos avisarte en la app."
+    },
+    "contact": {
+      "title": "Contacto",
+      "body1Start": "¿Preguntas sobre esta política o tus datos? Escríbenos a ",
+      "body1Email": "support@boardsesh.com",
+      "body1End": ".",
+      "body2Start": "Boardsesh es código abierto. Puedes ver exactamente qué datos recoge la app y cómo se procesan leyendo el código fuente en ",
+      "body2Link": "GitHub",
+      "body2End": "."
+    }
+  }
+}

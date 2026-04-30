@@ -3,8 +3,19 @@ import { NextResponse, type NextRequest } from 'next/server';
 import { SUPPORTED_BOARDS } from './app/lib/board-data';
 import { getListPageCacheTTL } from './app/lib/list-page-cache';
 import { CLIMB_SESSION_COOKIE } from './app/lib/climb-session-cookie';
+import { DEFAULT_LOCALE, LOCALE_HEADER, type Locale } from './app/lib/i18n/config';
 
 const SPECIAL_ROUTES = ['angles', 'grades']; // routes that don't need board validation
+
+function detectLocale(pathname: string): { locale: Locale; strippedPath: string; needsRewrite: boolean } {
+  if (pathname === '/es') {
+    return { locale: 'es', strippedPath: '/', needsRewrite: true };
+  }
+  if (pathname.startsWith('/es/')) {
+    return { locale: 'es', strippedPath: pathname.slice(3), needsRewrite: true };
+  }
+  return { locale: DEFAULT_LOCALE, strippedPath: pathname, needsRewrite: false };
+}
 
 export function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
@@ -54,22 +65,39 @@ export function middleware(request: NextRequest) {
     return response;
   }
 
-  let response: NextResponse | undefined;
+  // Detect locale from URL prefix. API routes don't carry a locale prefix —
+  // skip them so we don't mangle their paths.
+  const isApi = pathname.startsWith('/api/');
+  const { locale, strippedPath, needsRewrite } = isApi
+    ? { locale: DEFAULT_LOCALE, strippedPath: pathname, needsRewrite: false }
+    : detectLocale(pathname);
+
+  const requestHeaders = new Headers(request.headers);
+  requestHeaders.set(LOCALE_HEADER, locale);
+
+  let response: NextResponse;
+  if (needsRewrite) {
+    const rewrittenUrl = request.nextUrl.clone();
+    rewrittenUrl.pathname = strippedPath;
+    response = NextResponse.rewrite(rewrittenUrl, {
+      request: { headers: requestHeaders },
+    });
+  } else {
+    response = NextResponse.next({
+      request: { headers: requestHeaders },
+    });
+  }
 
   // Use Vercel-CDN-Cache-Control because Next.js overwrites Cache-Control
   // for dynamic pages (pages that use searchParams) with "private, no-store".
   // Vercel-CDN-Cache-Control is the highest-priority header for Vercel's CDN
   // and is not touched by Next.js rendering.
-  const cacheTTL = getListPageCacheTTL(pathname, request.nextUrl.searchParams);
+  // Cache-key follows the original (locale-prefixed) URL, so en and es never collide.
+  const cacheTTL = getListPageCacheTTL(strippedPath, request.nextUrl.searchParams);
   if (cacheTTL !== null) {
-    response = NextResponse.next();
     const cdnCacheValue = `s-maxage=${cacheTTL}, stale-while-revalidate=${cacheTTL * 7}`;
     response.headers.set('Vercel-CDN-Cache-Control', cdnCacheValue);
     response.headers.set('CDN-Cache-Control', cdnCacheValue);
-  }
-
-  if (!response) {
-    response = NextResponse.next();
   }
 
   return response;

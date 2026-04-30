@@ -23,6 +23,7 @@ import { IOS_APP_STORE_URL, ANDROID_PLAY_STORE_URL, ANDROID_SIDELOAD_URL } from 
 import { useCountdown } from '@/app/lib/hooks/use-countdown';
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
+import { useTranslation } from 'react-i18next';
 import { themeTokens } from '@/app/theme/theme-config';
 import { usePersistentSession } from '@/app/components/persistent-session';
 import BoardDiscoveryScroll from '@/app/components/board-scroll/board-discovery-scroll';
@@ -192,6 +193,7 @@ function InstallAppShadowCard() {
 }
 
 function InstallAppCard({ platform }: { platform: InstallPlatform }) {
+  const { t } = useTranslation('marketing');
   const isAndroid = platform === 'android-web';
   const { days, hours, minutes, seconds, done } = useCountdown(ANDROID_LAUNCH_DATE, isAndroid);
 
@@ -203,8 +205,8 @@ function InstallAppCard({ platform }: { platform: InstallPlatform }) {
       return (
         <OnboardingCard
           icon={<AndroidOutlined />}
-          title="Get the Boardsesh app"
-          description="Now on Google Play"
+          title={t('home.install.androidLiveTitle')}
+          description={t('home.install.androidLiveDescription')}
           onClick={() => {
             track('App Install Click', { platform: 'android', source: 'google-play' });
             window.open(ANDROID_PLAY_STORE_URL, '_blank', 'noopener,noreferrer');
@@ -215,8 +217,8 @@ function InstallAppCard({ platform }: { platform: InstallPlatform }) {
     return (
       <OnboardingCard
         icon={<AndroidOutlined />}
-        title="Android app is almost here"
-        description={`Landing in ${days}d ${hours}h ${minutes}m ${seconds}s. Tap to sideload the preview build.`}
+        title={t('home.install.androidPreLaunchTitle')}
+        description={t('home.install.androidPreLaunchDescription', { days, hours, minutes, seconds })}
         onClick={() => {
           track('App Install Click', { platform: 'android', source: 'github-sideload' });
           window.open(ANDROID_SIDELOAD_URL, '_blank', 'noopener,noreferrer');
@@ -236,8 +238,8 @@ function InstallAppCard({ platform }: { platform: InstallPlatform }) {
           style={{ borderRadius: themeTokens.borderRadius.md, display: 'block' }}
         />
       }
-      title="Get the Boardsesh app"
-      description="Lights up holds on your board straight from your phone"
+      title={t('home.install.iosTitle')}
+      description={t('home.install.iosDescription')}
       accent="none"
       onClick={() => {
         track('App Install Click', { platform: 'ios', source: 'app-store' });
@@ -248,6 +250,7 @@ function InstallAppCard({ platform }: { platform: InstallPlatform }) {
 }
 
 export default function HomePageContent({ boardConfigs, initialPopularConfigs }: HomePageContentProps) {
+  const { t } = useTranslation('marketing');
   const { status } = useSession();
   const router = useRouter();
   const { activeSession } = usePersistentSession();
@@ -404,10 +407,10 @@ export default function HomePageContent({ boardConfigs, initialPopularConfigs }:
             fontWeight={themeTokens.typography.fontWeight.bold}
             sx={{ color: 'var(--bs-text-brand-primary)' }}
           >
-            Get on the board!
+            {t('home.hero.title')}
           </Typography>
           <Typography variant="body1" sx={{ color: 'var(--bs-text-brand-muted)', maxWidth: 320 }}>
-            Track your sends across Kilter, Tension, and MoonBoard.
+            {t('home.hero.subtitle')}
           </Typography>
           <Button
             variant="contained"
@@ -456,7 +459,7 @@ export default function HomePageContent({ boardConfigs, initialPopularConfigs }:
               },
             }}
           >
-            {activeSession ? 'Continue climbing' : 'Start climbing'}
+            {activeSession ? t('home.hero.ctaContinue') : t('home.hero.ctaStart')}
           </Button>
         </Box>
 
@@ -490,55 +493,55 @@ export default function HomePageContent({ boardConfigs, initialPopularConfigs }:
               px: 0.5,
             }}
           >
-            Make it yours
+            {t('home.onboardingHeader')}
           </Typography>
 
           <InstallAppCard platform={installPlatform} />
 
           <OnboardingCard
             icon={<PlayCircleOutlineOutlined />}
-            title="Take the tour"
-            description="A one-minute walk-through of queuing, logging, and sessions with your crew"
+            title={t('home.cards.tourTitle')}
+            description={t('home.cards.tourDescription')}
             accent="v11"
             onClick={() => onboardingTour?.start()}
           />
 
           <OnboardingCard
             icon={<WarningAmberOutlined />}
-            title="Coming from Kilter?"
-            description="Bring your logbook and history over in one step"
+            title={t('home.cards.auroraTitle')}
+            description={t('home.cards.auroraDescription')}
             accent="v11"
             onClick={() => router.push('/aurora-migration')}
           />
 
           <OnboardingCard
             icon={<LocalOfferOutlined />}
-            title="Build a playlist"
-            description="Line up your climbs before you get to the gym"
+            title={t('home.cards.playlistTitle')}
+            description={t('home.cards.playlistDescription')}
             accent="v12"
             onClick={() => router.push('/playlists')}
           />
 
           <OnboardingCard
             icon={<BluetoothOutlined />}
-            title="Connect your board"
-            description="Pair via Bluetooth and light up your next climb"
+            title={t('home.cards.bluetoothTitle')}
+            description={t('home.cards.bluetoothDescription')}
             accent="v12"
             onClick={() => setSeshDrawerOpen(true)}
           />
 
           <OnboardingCard
             icon={<PeopleOutlined />}
-            title="Find your crew"
-            description="Follow friends and see what they're climbing"
+            title={t('home.cards.crewTitle')}
+            description={t('home.cards.crewDescription')}
             accent="v13"
             onClick={() => setFindClimbersOpen(true)}
           />
 
           <OnboardingCard
             icon={<DiscordIcon />}
-            title="Join the crew on Discord"
-            description="Share beta, report bugs, and help shape what's next"
+            title={t('home.cards.discordTitle')}
+            description={t('home.cards.discordDescription')}
             accent="v13"
             onClick={() => window.open('https://discord.gg/YXA8GsXfQK', '_blank', 'noopener,noreferrer')}
           />
@@ -548,10 +551,10 @@ export default function HomePageContent({ boardConfigs, initialPopularConfigs }:
         {isAuthenticated && (
           <Box sx={{ textAlign: 'center', py: 2 }}>
             <Typography variant="body2" sx={{ color: 'var(--neutral-400)', mb: 1 }}>
-              Your friends are climbing.
+              {t('home.feed.callout')}
             </Typography>
             <Button variant="text" size="small" onClick={() => router.push('/feed')} sx={{ textTransform: 'none' }}>
-              See the feed
+              {t('home.feed.cta')}
             </Button>
           </Box>
         )}

@@ -8,18 +8,21 @@ import MuiLink from '@mui/material/Link';
 import { GitHub, GroupOutlined, FavoriteBorderOutlined, ApiOutlined, RocketLaunchOutlined } from '@mui/icons-material';
 import Box from '@mui/material/Box';
 import Stack from '@mui/material/Stack';
+import { useTranslation } from 'react-i18next';
 import Logo from '@/app/components/brand/logo';
 import BackButton from '@/app/components/back-button';
+import LocaleLink from '@/app/components/i18n/locale-link';
 import styles from './about.module.css';
 
 export default function AboutContent() {
+  const { t } = useTranslation('marketing');
   return (
     <Box className={styles.pageLayout}>
       <Box component="header" className={styles.header}>
         <BackButton fallbackUrl="/" />
         <Logo size="sm" showText={false} />
         <Typography variant="h4" className={styles.headerTitle}>
-          About
+          {t('about.headerTitle')}
         </Typography>
       </Box>
 
@@ -27,126 +30,119 @@ export default function AboutContent() {
         <MuiCard>
           <CardContent>
             <Stack spacing={3} className={styles.cardContent}>
-              {/* Hero Section */}
               <div className={styles.heroSection}>
                 <Logo size="lg" linkToHome={false} />
                 <Typography variant="h2" className={styles.heroTitle}>
-                  Track, Train, and Climb Together
+                  {t('about.hero.title')}
                 </Typography>
                 <Typography variant="body2" component="span" color="text.secondary" className={styles.heroSubtitle}>
-                  One app for every climbing board
+                  {t('about.hero.subtitle')}
                 </Typography>
               </div>
 
-              {/* Our Vision */}
               <section>
                 <Typography variant="h3">
                   <RocketLaunchOutlined className={`${styles.sectionIcon} ${styles.primaryIcon}`} />
-                  Our Vision
+                  {t('about.vision.title')}
                 </Typography>
                 <Typography variant="body1" component="p">
-                  Kilter, Tension, MoonBoard, Decoy, Grasshopper. Every board has its own app and its own walled garden.
-                  Your training shouldn&apos;t be locked inside one of them.
+                  {t('about.vision.p1')}
                 </Typography>
                 <Typography variant="body1" component="p">
-                  Boardsesh works across all of them so you can just climb.
+                  {t('about.vision.p2')}
                 </Typography>
               </section>
 
-              {/* Features */}
               <section>
                 <Typography variant="h3">
                   <GroupOutlined className={`${styles.sectionIcon} ${styles.successIcon}`} />
-                  What Boardsesh Offers
+                  {t('about.features.title')}
                 </Typography>
                 <ul className={styles.featureList}>
                   <li>
                     <Typography variant="body2" component="span" fontWeight={600}>
-                      Queue management.
+                      {t('about.features.queueLabel')}
                     </Typography>{' '}
-                    Take turns without the awkward &quot;who&apos;s next?&quot;
+                    {t('about.features.queueDescription')}
                   </li>
                   <li>
                     <Typography variant="body2" component="span" fontWeight={600}>
-                      Party Mode.
+                      {t('about.features.partyLabel')}
                     </Typography>{' '}
-                    Share a session and climb together in real time
+                    {t('about.features.partyDescription')}
                   </li>
                   <li>
                     <Typography variant="body2" component="span" fontWeight={600}>
-                      Multi-board.
+                      {t('about.features.multiBoardLabel')}
                     </Typography>{' '}
-                    Works with Kilter, Tension, MoonBoard, and more
+                    {t('about.features.multiBoardDescription')}
                   </li>
                   <li>
                     <Typography variant="body2" component="span" fontWeight={600}>
-                      Community-driven.
+                      {t('about.features.communityLabel')}
                     </Typography>{' '}
-                    Built and improved by people who actually climb
+                    {t('about.features.communityDescription')}
                   </li>
                   <li>
                     <Typography variant="body2" component="span" fontWeight={600}>
-                      Self-hostable.
+                      {t('about.features.selfHostedLabel')}
                     </Typography>{' '}
-                    Run your own instance if that&apos;s your thing
+                    {t('about.features.selfHostedDescription')}
                   </li>
                 </ul>
               </section>
 
-              {/* Open Source */}
               <section>
                 <Typography variant="h3">
                   <GitHub className={styles.sectionIcon} />
-                  Open Source
+                  {t('about.openSource.title')}
                 </Typography>
                 <Typography variant="body1" component="p">
-                  Boardsesh is open source under the Apache license. Browse the code, send a PR, file a bug, or fork the
-                  whole project.
+                  {t('about.openSource.body')}
                 </Typography>
                 <Typography variant="body1" component="p">
                   <MuiLink href="https://github.com/marcodejongh/boardsesh" target="_blank" rel="noopener noreferrer">
-                    View on GitHub →
+                    {t('about.openSource.cta')}
                   </MuiLink>
                 </Typography>
               </section>
 
-              {/* API Documentation */}
               <section>
                 <Typography variant="h3">
                   <ApiOutlined className={`${styles.sectionIcon} ${styles.primaryIcon}`} />
-                  API Documentation
+                  {t('about.api.title')}
                 </Typography>
                 <Typography variant="body1" component="p">
-                  Want to build on climbing data? The API is public. Have at it.
+                  {t('about.api.body')}
                 </Typography>
                 <Typography variant="body1" component="p">
-                  <MuiLink href="/docs">Explore the API Documentation →</MuiLink>
+                  <MuiLink component={LocaleLink} href="/docs">
+                    {t('about.api.cta')}
+                  </MuiLink>
                 </Typography>
               </section>
 
-              {/* Collaboration */}
               <section>
                 <Typography variant="h3">
                   <FavoriteBorderOutlined className={`${styles.sectionIcon} ${styles.primaryIcon}`} />
-                  Join the Community
+                  {t('about.community.title')}
                 </Typography>
                 <Typography variant="body1" component="p">
-                  Whether you write code, set problems, or just want to tell us what&apos;s broken, we&apos;d like to
-                  hear from you.
+                  {t('about.community.body')}
                 </Typography>
               </section>
 
-              {/* Legal */}
               <section>
                 <Typography variant="body1" component="p">
-                  <MuiLink href="/legal">Legal &amp; Intellectual Property Policy</MuiLink>
+                  <MuiLink component={LocaleLink} href="/legal">
+                    {t('about.legalLink')}
+                  </MuiLink>
                 </Typography>
               </section>
 
-              {/* Call to Action */}
               <section className={styles.callToAction}>
                 <Typography variant="body1" component="p" color="text.secondary">
-                  Made by climbers. Open to everyone.
+                  {t('about.footer')}
                 </Typography>
               </section>
             </Stack>

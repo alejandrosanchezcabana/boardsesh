@@ -1,13 +1,17 @@
 import React from 'react';
 import { createPageMetadata } from '@/app/lib/seo/metadata';
+import { getServerTranslation } from '@/app/lib/i18n/server';
 import LegalContent from './legal-content';
 
-export const metadata = createPageMetadata({
-  title: 'Legal & Intellectual Property Policy',
-  description:
-    'Legal and intellectual property policy for Boardsesh, including our position on climb data, interoperability, and trademark usage.',
-  path: '/legal',
-});
+export async function generateMetadata() {
+  const { t, locale } = await getServerTranslation('marketing');
+  return createPageMetadata({
+    title: t('metadata.legal.title'),
+    description: t('metadata.legal.description'),
+    path: '/legal',
+    locale,
+  });
+}
 
 export default function LegalPage() {
   return <LegalContent />;
