@@ -62,6 +62,7 @@ jobs:
         run: bun run lint
 
   codegen-drift:
+    needs: setup
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v6
@@ -75,6 +76,11 @@ jobs:
 
       - name: Install dependencies
         run: bun install --frozen-lockfile
+
+      - name: Download built packages
+        uses: actions/download-artifact@v4
+        with:
+          name: built-packages
 
       - name: Regenerate GraphQL types
         run: vp run codegen

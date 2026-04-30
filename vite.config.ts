@@ -64,6 +64,14 @@ export default defineConfig({
         cache: false,
       },
 
+      // --- Codegen (GraphQL types for client + backend resolvers) ---
+      // Direct binary invocation — no `bunx` (won't touch the lockfile).
+      // print-schema concatenates the modular gql typeDefs into a single SDL
+      // file that graphql-codegen reads as its schema input.
+      codegen: {
+        command: 'bun packages/shared-schema/scripts/print-schema.ts && graphql-codegen',
+      },
+
       // --- Build (topological order via dependsOn) ---
       'build:shared': {
         command: 'bun run --filter=@boardsesh/shared-schema build',

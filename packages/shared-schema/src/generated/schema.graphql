@@ -5,6 +5,7 @@
   scalar JSON
 
 
+
   """
   A climbing problem/route on an interactive training board.
   Contains all information needed to display and light up the climb on the board.
@@ -158,6 +159,7 @@
   }
 
 
+
   """
   User information displayed in queue items.
   """
@@ -234,6 +236,7 @@
     "Current sequence number after all events"
     currentSequence: Int!
   }
+
 
 
   """
@@ -411,6 +414,7 @@
   }
 
 
+
   # ============================================
   # Board Configuration Types
   # ============================================
@@ -451,6 +455,7 @@
     "When this snapshot was recorded"
     createdAt: String!
   }
+
 
 
   # ============================================
@@ -542,6 +547,7 @@
   }
 
 
+
   # ============================================
   # Favorites Types
   # ============================================
@@ -565,6 +571,7 @@
     "Whether the climb is now favorited"
     favorited: Boolean!
   }
+
 
 
   # ============================================
@@ -721,6 +728,7 @@
     "Optional angle the video was climbed at"
     angle: Int
   }
+
 
 
   # ============================================
@@ -1219,6 +1227,7 @@
   }
 
 
+
   # ============================================
   # Profile Statistics Types
   # ============================================
@@ -1270,6 +1279,7 @@
     "Total number of users with at least one ascent"
     totalActiveUsers: Int!
   }
+
 
 
   # ============================================
@@ -1623,6 +1633,7 @@
   }
 
 
+
   # ============================================
   # Board Entity Types
   # ============================================
@@ -1971,6 +1982,7 @@
   }
 
 
+
   # ============================================
   # Gym Entity Types
   # ============================================
@@ -2207,6 +2219,7 @@
   }
 
 
+
   # ============================================
   # Notification Types
   # ============================================
@@ -2374,6 +2387,7 @@
   Union of possible comment update events.
   """
   union CommentEvent = CommentAdded | CommentUpdated | CommentDeleted
+
 
 
   # ============================================
@@ -2597,6 +2611,7 @@
     limit: Int
     offset: Int
   }
+
 
 
   # ============================================
@@ -3079,6 +3094,7 @@
   }
 
 
+
   # ============================================
   # New Climb Feed & Subscriptions
   # ============================================
@@ -3211,6 +3227,7 @@
   }
 
 
+
   """
   An external Instagram or TikTok beta link attached to a climb.
   Thumbnail (when present) is served from our own S3 bucket.
@@ -3224,6 +3241,7 @@
     isListed: Boolean
     createdAt: String
   }
+
 
 
   """
@@ -3758,6 +3776,7 @@
   }
 
 
+
   """
   Root mutation type for all write operations.
   """
@@ -4236,6 +4255,7 @@
   }
 
 
+
   """
   Root subscription type for real-time updates.
   """
@@ -4268,6 +4288,7 @@
     # ESP32 subscribes to receive LED commands - uses API key auth via connectionParams
     controllerEvents(sessionId: ID!): ControllerEvent!
   }
+
 
 
   """
@@ -4414,6 +4435,7 @@
     "New mirror state"
     mirrored: Boolean!
   }
+
 
 
   # ============================================
@@ -4565,6 +4587,7 @@
     success: Boolean!
     accepted: Int!
   }
+
 
 
   """

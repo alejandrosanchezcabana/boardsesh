@@ -14,7 +14,6 @@
     "test:layout-screenshots": "bunx playwright test --project=layout-screenshots --config=packages/web/playwright.config.ts",
     "test:help-screenshots": "TEST_USER_EMAIL=$(op read 'op://Boardsesh/Boardsesh local/username') TEST_USER_PASSWORD=$(op read 'op://Boardsesh/Boardsesh local/password') bunx playwright test --project=help-screenshots --config=packages/web/playwright.config.ts",
     "backend:start": "bun run --filter=boardsesh-backend start",
-    "codegen": "bun packages/shared-schema/scripts/print-schema.ts && graphql-codegen",
     "controller:codegen": "node embedded/scripts/generate-graphql-types.mjs",
     "controller:codegen:board-data": "node embedded/scripts/generate-board-data.mjs",
     "controller:codegen:test": "node --test embedded/scripts/generate-graphql-types.test.mjs && node --test embedded/scripts/generate-board-data.test.mjs && python3 embedded/scripts/test_prebuild.py",
