@@ -88,6 +88,17 @@ Both `PersistentSessionContext` and `QueueContext` are split into separate **Act
 
 Targeted hooks: `useQueueActions()`, `useQueueData()`, `usePersistentSessionActions()`, `usePersistentSessionState()`.
 
+### QueueBridgeProvider — root-level QueueContext
+
+`QueueBridgeProvider` (`packages/web/app/components/queue-control/queue-bridge-context.tsx`) is mounted once at the root inside `PersistentSessionWrapper` so a `QueueContext` value is always available, even off board routes (e.g. `/you/logbook`, `/session/[sessionId]`, `/playlists/...`). It has two modes:
+
+- **Injected mode** — when a board route mounts `GraphQLQueueProvider`, it injects its full context (with the GraphQL data fetcher and reducer) into the bridge. Consumers transparently see the board route's queue context.
+- **Adapter mode** — off board routes, `usePersistentSessionQueueAdapter` fronts the persistent session directly. Mutations now branch on `ps.activeSession`:
+  - **Solo / no party**: mutations go through `setLocalQueueState` (in-memory, no persistence beyond the session restore on reload).
+  - **Active party session**: mutations delegate to `ps.addQueueItem`, `ps.setCurrentClimb`, `ps.removeQueueItem`, `ps.setQueue`, `ps.mirrorCurrentClimb`, `ps.replaceQueueItem` — the same WebSocket-backed mutators `GraphQLQueueProvider` uses on board routes. `setLocalQueueState` is a no-op when `activeSession` is set, so without this delegation off-board taps would silently disappear.
+  - `setCurrentClimb` checks for an existing queue entry by `climb.uuid` first; if found it reuses that queue item via `ps.setCurrentClimb` without adding a duplicate.
+  - Items created by the adapter populate `addedBy` / `addedByUser` from `usePartyProfile` so peers see consistent attribution regardless of which surface added the climb.
+
 ## Technology Stack
 
 | Component          | Technology                        | Purpose                                                       |

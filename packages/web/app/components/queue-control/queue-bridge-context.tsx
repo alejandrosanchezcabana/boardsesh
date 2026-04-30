@@ -26,9 +26,10 @@ import {
 } from '../graphql-queue/QueueContext';
 import type { CurrentClimbDataType, QueueListDataType, SearchDataType, SessionDataType } from '../graphql-queue/types';
 import { usePersistentSession } from '../persistent-session';
+import { usePartyProfile } from '../party-manager/party-profile-context';
 import { getBaseBoardPath, DEFAULT_SEARCH_PARAMS } from '@/app/lib/url-utils';
 import type { BoardDetails, Angle, Climb, SearchRequestPagination } from '@/app/lib/types';
-import type { ClimbQueueItem } from './types';
+import type { ClimbQueueItem, QueueItemUser } from './types';
 import { usePathname } from 'next/navigation';
 import dynamic from 'next/dynamic';
 import { canAddClimbToBoard } from '@/app/lib/board-compatibility';
@@ -110,6 +111,14 @@ function usePersistentSessionQueueAdapter(): {
 } {
   const ps = usePersistentSession();
   const { showMessage } = useSnackbar();
+  const { profile, username, avatarUrl } = usePartyProfile();
+
+  // Mirror GraphQLQueueProvider's currentUserInfo so queue items created off
+  // board routes carry the same "who added this" attribution.
+  const currentUserInfo: QueueItemUser | undefined = useMemo(() => {
+    if (!profile?.id) return undefined;
+    return { id: profile.id, username: username || '', avatarUrl };
+  }, [profile?.id, username, avatarUrl]);
 
   const isParty = !!ps.activeSession;
   const queue = isParty ? ps.queue : ps.localQueue;
@@ -149,6 +158,7 @@ function usePersistentSessionQueueAdapter(): {
     baseBoardPath,
     ps,
     showMessage,
+    currentUserInfo,
   });
   latestRef.current = {
     queue,
@@ -157,12 +167,27 @@ function usePersistentSessionQueueAdapter(): {
     baseBoardPath,
     ps,
     showMessage,
+    currentUserInfo,
   };
 
   // Counter for correlation IDs sent with party-mode SET_CURRENT_CLIMB
   // mutations so the persistent session's pending-update tracker can
   // match local optimistic state with server confirmations.
   const correlationCounterRef = useRef(0);
+
+  // Build a queue item from a climb, populating addedBy/addedByUser from the
+  // current party profile so off-board mutations (logbook, session view)
+  // carry the same attribution as items created from the board route.
+  const buildQueueItem = useCallback((climb: Climb): ClimbQueueItem => {
+    const r = latestRef.current;
+    return {
+      climb,
+      addedBy: r.ps.clientId ?? null,
+      addedByUser: r.currentUserInfo,
+      uuid: uuidv4(),
+      suggested: false,
+    };
+  }, []);
 
   // Validates a climb against the locked board (session) or the current
   // adapter board. Shows a Snackbar error and returns false if not
@@ -210,12 +235,7 @@ function usePersistentSessionQueueAdapter(): {
     (climb: Climb) => {
       const r = latestRef.current;
       if (!validateClimbForQueue(climb)) return;
-      const newItem: ClimbQueueItem = {
-        climb,
-        addedBy: null,
-        uuid: uuidv4(),
-        suggested: false,
-      };
+      const newItem = buildQueueItem(climb);
       if (r.ps.activeSession) {
         r.ps.addQueueItem(newItem).catch((err: unknown) => {
           console.error('Failed to add queue item:', err);
@@ -234,7 +254,7 @@ function usePersistentSessionQueueAdapter(): {
       const current = r.currentClimbQueueItem ?? newItem;
       r.ps.setLocalQueueState(newQueue, current, r.baseBoardPath, r.boardDetails);
     },
-    [validateClimbForQueue],
+    [validateClimbForQueue, buildQueueItem],
   );
 
   const removeFromQueue = useCallback((item: ClimbQueueItem) => {
@@ -298,19 +318,31 @@ function usePersistentSessionQueueAdapter(): {
     async (climb: Climb): Promise<ClimbQueueItem | null> => {
       const r = latestRef.current;
       if (!validateClimbForQueue(climb)) return null;
-      const newItem: ClimbQueueItem = {
-        climb,
-        addedBy: null,
-        uuid: uuidv4(),
-        suggested: false,
-      };
       if (r.ps.activeSession) {
+        const correlationId = r.ps.clientId ? `${r.ps.clientId}-${++correlationCounterRef.current}` : undefined;
+        // If the climb is already in the queue, reuse the existing item
+        // instead of adding a duplicate. This mirrors the natural behavior
+        // expected by users tapping a logbook/session-view climb that's
+        // already queued from another peer or earlier in the sesh.
+        const existing = r.queue.find((q) => q.climb?.uuid === climb.uuid);
+        if (existing) {
+          try {
+            await r.ps.setCurrentClimb(existing, false, correlationId);
+          } catch (err: unknown) {
+            console.error('Failed to set current climb:', err);
+          }
+          return existing;
+        }
+        const newItem = buildQueueItem(climb);
         const currentIdx = r.currentClimbQueueItem
           ? r.queue.findIndex((q) => q.uuid === r.currentClimbQueueItem!.uuid)
           : -1;
         const position = currentIdx === -1 ? undefined : currentIdx + 1;
-        const correlationId = r.ps.clientId ? `${r.ps.clientId}-${++correlationCounterRef.current}` : undefined;
         try {
+          // Sequential awaits over a single graphql-ws connection preserve
+          // FIFO ordering, so the server processes the add before the
+          // setCurrentClimb that references it. This mirrors
+          // GraphQLQueueProvider.setCurrentClimb.
           await r.ps.addQueueItem(newItem, position);
           await r.ps.setCurrentClimb(newItem, false, correlationId);
         } catch (err: unknown) {
@@ -318,6 +350,7 @@ function usePersistentSessionQueueAdapter(): {
         }
         return newItem;
       }
+      const newItem = buildQueueItem(climb);
       if (!r.boardDetails) {
         // Cold-start path: no active board yet. Seed local state from the
         // climb's own board config so the queue bar begins showing.
@@ -338,7 +371,7 @@ function usePersistentSessionQueueAdapter(): {
       r.ps.setLocalQueueState(newQueue, newItem, r.baseBoardPath, r.boardDetails);
       return newItem;
     },
-    [validateClimbForQueue],
+    [validateClimbForQueue, buildQueueItem],
   );
 
   // Bridge-mode replace: in party mode, delegate to the persistent session's

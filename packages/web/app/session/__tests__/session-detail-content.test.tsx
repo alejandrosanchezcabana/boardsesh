@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vite-plus/test';
-import { render, screen, fireEvent } from '@testing-library/react';
+import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import React from 'react';
 import type { SessionDetail } from '@boardsesh/shared-schema';
 import SessionDetailContent from '../[sessionId]/session-detail-content';
@@ -801,10 +801,7 @@ describe('SessionDetailContent', () => {
       mockQueueActions = { setCurrentClimb: mockSetCurrentClimb };
       render(<SessionDetailContent session={makeSession()} />);
       fireEvent.click(screen.getByTestId('climb-item'));
-      // Wait a microtask for the async click handler to run
-      await Promise.resolve();
-      await Promise.resolve();
-      expect(mockSetCurrentClimb).toHaveBeenCalledTimes(1);
+      await waitFor(() => expect(mockSetCurrentClimb).toHaveBeenCalledTimes(1));
       expect(mockSetCurrentClimb.mock.calls[0][0].uuid).toBe('climb-1');
     });
 
@@ -812,17 +809,14 @@ describe('SessionDetailContent', () => {
       mockQueueActions = { setCurrentClimb: mockSetCurrentClimb };
       render(<SessionDetailContent session={makeSession()} />);
       fireEvent.click(screen.getByTestId('climb-item'));
-      // Wait for async handler (setCurrentClimb -> fetch -> push)
-      for (let i = 0; i < 5; i++) await Promise.resolve();
-      expect(mockRouterPush).toHaveBeenCalledWith('/kilter/1/10/1/40/view/climb-1');
+      await waitFor(() => expect(mockRouterPush).toHaveBeenCalledWith('/kilter/1/10/1/40/view/climb-1'));
     });
 
     it('skips navigation in embedded mode but still sets current climb', async () => {
       mockQueueActions = { setCurrentClimb: mockSetCurrentClimb };
       render(<SessionDetailContent session={makeSession()} embedded />);
       fireEvent.click(screen.getByTestId('climb-item'));
-      for (let i = 0; i < 5; i++) await Promise.resolve();
-      expect(mockSetCurrentClimb).toHaveBeenCalledTimes(1);
+      await waitFor(() => expect(mockSetCurrentClimb).toHaveBeenCalledTimes(1));
       expect(mockRouterPush).not.toHaveBeenCalled();
       expect(global.fetch).not.toHaveBeenCalled();
     });
@@ -831,9 +825,8 @@ describe('SessionDetailContent', () => {
       mockQueueActions = null;
       render(<SessionDetailContent session={makeSession()} />);
       fireEvent.click(screen.getByTestId('climb-item'));
-      for (let i = 0; i < 5; i++) await Promise.resolve();
+      await waitFor(() => expect(mockRouterPush).toHaveBeenCalledWith('/kilter/1/10/1/40/view/climb-1'));
       expect(mockSetCurrentClimb).not.toHaveBeenCalled();
-      expect(mockRouterPush).toHaveBeenCalledWith('/kilter/1/10/1/40/view/climb-1');
     });
   });
 });

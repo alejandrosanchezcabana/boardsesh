@@ -35,6 +35,14 @@ vi.mock('../../persistent-session', () => ({
   usePersistentSessionActions: () => mockPersistentSession,
 }));
 
+let mockPartyProfile: { profile: { id: string } | null; username: string; avatarUrl?: string } = {
+  profile: null,
+  username: '',
+};
+vi.mock('../../party-manager/party-profile-context', () => ({
+  usePartyProfile: () => mockPartyProfile,
+}));
+
 vi.mock('../../graphql-queue/QueueContext', () => {
   const React = require('react');
   const ctx = React.createContext(undefined);
@@ -356,6 +364,7 @@ describe('queue-bridge-context', () => {
     vi.clearAllMocks();
     mockUuidCounter = 0;
     mockPersistentSession = createDefaultPersistentSession();
+    mockPartyProfile = { profile: null, username: '' };
   });
 
   // -----------------------------------------------------------------------
@@ -808,6 +817,76 @@ describe('queue-bridge-context', () => {
         expect(mockSetLocalQueueState).not.toHaveBeenCalled();
         expect(mockPersistentSession.mirrorCurrentClimb).toHaveBeenCalledTimes(1);
         expect((mockPersistentSession.mirrorCurrentClimb as ReturnType<typeof vi.fn>).mock.calls[0][0]).toBe(true);
+      });
+
+      it('replaceQueueItem delegates to ps.replaceQueueItem in party mode', () => {
+        const item1 = createTestQueueItem(climb1, 'u1');
+        const { result } = renderWithPartySession([item1], item1);
+        const newClimb = createTestClimb({ uuid: 'c1-edit', name: 'Edited Climb' });
+        act(() => {
+          result.current!.replaceQueueItem('u1', newClimb);
+        });
+        expect(mockSetLocalQueueState).not.toHaveBeenCalled();
+        expect(mockPersistentSession.replaceQueueItem).toHaveBeenCalledTimes(1);
+        const call = (mockPersistentSession.replaceQueueItem as ReturnType<typeof vi.fn>).mock.calls[0];
+        expect(call[0]).toBe('u1');
+        // Preserves the slot uuid; updates the climb in place
+        expect(call[1].uuid).toBe('u1');
+        expect(call[1].climb.uuid).toBe('c1-edit');
+      });
+
+      it('setCurrentClimb reuses existing queue item instead of duplicating', async () => {
+        const item1 = createTestQueueItem(climb1, 'u1');
+        const { result } = renderWithPartySession([item1], item1);
+        await act(async () => {
+          // Click the same climb that's already in the queue at u1 — should
+          // NOT add a duplicate; should call setCurrentClimb on the existing item.
+          await result.current!.setCurrentClimb(climb1);
+        });
+        expect(mockPersistentSession.addQueueItem).not.toHaveBeenCalled();
+        expect(mockPersistentSession.setCurrentClimb).toHaveBeenCalledTimes(1);
+        const call = (mockPersistentSession.setCurrentClimb as ReturnType<typeof vi.fn>).mock.calls[0];
+        expect(call[0].uuid).toBe('u1');
+        expect(call[0].climb.uuid).toBe('c1');
+      });
+
+      it('setCurrentClimb populates addedBy and addedByUser from party profile', async () => {
+        mockPartyProfile = {
+          profile: { id: 'user-42' },
+          username: 'climber42',
+          avatarUrl: 'https://example.com/a.png',
+        };
+        const { result } = renderWithPartySession([], null);
+        await act(async () => {
+          await result.current!.setCurrentClimb(climb1);
+        });
+        const addCall = (mockPersistentSession.addQueueItem as ReturnType<typeof vi.fn>).mock.calls[0];
+        const newItem = addCall[0];
+        expect(newItem.addedBy).toBe('client-abc');
+        expect(newItem.addedByUser).toEqual({
+          id: 'user-42',
+          username: 'climber42',
+          avatarUrl: 'https://example.com/a.png',
+        });
+      });
+
+      it('addToQueue populates addedBy and addedByUser from party profile', () => {
+        mockPartyProfile = {
+          profile: { id: 'user-99' },
+          username: 'climber99',
+          avatarUrl: undefined,
+        };
+        const { result } = renderWithPartySession([], null);
+        act(() => {
+          result.current!.addToQueue(climb1);
+        });
+        const call = (mockPersistentSession.addQueueItem as ReturnType<typeof vi.fn>).mock.calls[0];
+        expect(call[0].addedBy).toBe('client-abc');
+        expect(call[0].addedByUser).toEqual({
+          id: 'user-99',
+          username: 'climber99',
+          avatarUrl: undefined,
+        });
       });
     });
   });
