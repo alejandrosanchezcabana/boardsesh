@@ -48,7 +48,11 @@ import type { StoredBoardConfig } from '@/app/lib/saved-boards-db';
 import { isValidHexColor } from '@/app/lib/color-utils';
 import { useBoardSwitchGuard } from '@/app/components/board-lock/use-board-switch-guard';
 import { isNativeApp } from '@/app/lib/ble/capacitor-utils';
-import { getNativeTabBarPlugin, addNativeOverlay, removeNativeOverlay } from '@/app/lib/native-tab-bar/native-tab-bar-plugin';
+import {
+  getNativeTabBarPlugin,
+  addNativeOverlay,
+  removeNativeOverlay,
+} from '@/app/lib/native-tab-bar/native-tab-bar-plugin';
 import { useUnreadNotificationCount } from '@/app/hooks/use-unread-notification-count';
 import { getActiveTab } from '@/app/lib/tab-routing';
 import type { Tab } from '@/app/lib/tab-routing';
@@ -343,29 +347,32 @@ function BottomTabBar({ boardDetails, angle, boardConfigs }: BottomTabBarProps) 
     }
   };
 
-  const handleTabChange = useCallback((_event: React.SyntheticEvent, newValue: Tab) => {
-    switch (newValue) {
-      case 'home':
-        handleHomeTab();
-        break;
-      case 'climbs':
-        void handleClimbsTab();
-        break;
-      case 'library':
-        handleLibraryTab();
-        break;
-      case 'feed':
-        handleFeedTab();
-        break;
-      case 'create':
-        handleCreateTab();
-        break;
-      case 'you':
-        handleYouTab();
-        break;
-    }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [handleHomeTab, handleClimbsTab, handleLibraryTab, handleFeedTab, handleCreateTab, handleNotificationsTab]);
+  const handleTabChange = useCallback(
+    (_event: React.SyntheticEvent, newValue: Tab) => {
+      switch (newValue) {
+        case 'home':
+          handleHomeTab();
+          break;
+        case 'climbs':
+          void handleClimbsTab();
+          break;
+        case 'library':
+          handleLibraryTab();
+          break;
+        case 'feed':
+          handleFeedTab();
+          break;
+        case 'create':
+          handleCreateTab();
+          break;
+        case 'you':
+          handleYouTab();
+          break;
+      }
+      // eslint-disable-next-line react-hooks/exhaustive-deps
+    },
+    [handleHomeTab, handleClimbsTab, handleLibraryTab, handleFeedTab, handleCreateTab, handleYouTab],
+  );
 
   // Sync active tab to native on path change
   useEffect(() => {

@@ -20,8 +20,16 @@ export function useTabRouter() {
 
   const push = useCallback(
     (href: string, options?: { scroll?: boolean }) => {
+      // Forward to next/navigation's router.push, only including the options
+      // arg when defined so existing call sites recorded as `push(href)` keep
+      // their single-argument shape.
+      const pushThrough = (h: string) => {
+        if (options === undefined) router.push(h);
+        else router.push(h, options);
+      };
+
       if (!isNativeApp()) {
-        router.push(href, options);
+        pushThrough(href);
         return;
       }
 
@@ -34,26 +42,39 @@ export function useTabRouter() {
 
       // "create" tab has no dedicated webview — always navigate in-place
       if (targetTab === 'create') {
-        router.push(href, options);
+        pushThrough(href);
         return;
       }
 
       // Same-tab navigation — stay within the current webview
       if (targetTab === currentTab || !TABS_WITH_WEBVIEWS.has(targetTab)) {
-        router.push(href, options);
+        pushThrough(href);
         return;
       }
 
-      // Cross-tab navigation — switch to the target tab's webview
-      getNativeTabBarPlugin()?.navigateTab({ tab: targetTab, url: href });
+      // Cross-tab navigation — switch to the target tab's webview if the
+      // native multi-webview plugin is available, otherwise fall back to
+      // in-webview navigation. Older iOS builds without NativeTabBarPlugin
+      // hit the fallback so they keep working until the user updates.
+      const plugin = getNativeTabBarPlugin();
+      if (plugin) {
+        plugin.navigateTab({ tab: targetTab, url: href });
+      } else {
+        pushThrough(href);
+      }
     },
     [router, currentPathname],
   );
 
   const replace = useCallback(
     (href: string, options?: { scroll?: boolean }) => {
+      const replaceThrough = (h: string) => {
+        if (options === undefined) router.replace(h);
+        else router.replace(h, options);
+      };
+
       if (!isNativeApp()) {
-        router.replace(href, options);
+        replaceThrough(href);
         return;
       }
 
@@ -64,11 +85,16 @@ export function useTabRouter() {
       const currentTab = getActiveTab(currentPathname);
 
       if (targetTab === 'create' || targetTab === currentTab || !TABS_WITH_WEBVIEWS.has(targetTab)) {
-        router.replace(href, options);
+        replaceThrough(href);
         return;
       }
 
-      getNativeTabBarPlugin()?.navigateTab({ tab: targetTab, url: href });
+      const plugin = getNativeTabBarPlugin();
+      if (plugin) {
+        plugin.navigateTab({ tab: targetTab, url: href });
+      } else {
+        replaceThrough(href);
+      }
     },
     [router, currentPathname],
   );

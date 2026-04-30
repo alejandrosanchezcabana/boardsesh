@@ -130,20 +130,25 @@ export function RootBottomBar({ boardConfigs }: { boardConfigs: BoardConfigData 
   const { boardDetails, angle, hasActiveQueue } = useQueueBridgeBoardInfo();
   const pathname = usePathname();
   const isNative = isNativeApp();
+  // Older iOS builds are native (Capacitor) but don't have NativeTabBarPlugin.
+  // For those clients we must keep rendering the legacy web bottom-bar wrapper —
+  // the native fixed-position layout depends on `--native-tab-bar-height` being
+  // injected by the new MultiWebViewController, which old binaries don't ship.
+  const useNativeChrome = isNative && getNativeTabBarPlugin() !== null;
 
   const hideTabBar = HIDE_TAB_BAR_PAGES.some((prefix) => pathname.startsWith(prefix)) && !hasActiveQueue;
   const shouldShowQueueShell = isBoardRoutePath(pathname) && !hasActiveQueue && !boardDetails;
 
   // Hide native tab bar on pages where the web tab bar would also be hidden
   useEffect(() => {
-    if (!isNative || !hideTabBar) return;
+    if (!useNativeChrome || !hideTabBar) return;
     getNativeTabBarPlugin()?.setBarsHidden({ hidden: true });
     return () => {
       getNativeTabBarPlugin()?.setBarsHidden({ hidden: false });
     };
-  }, [isNative, hideTabBar]);
+  }, [useNativeChrome, hideTabBar]);
 
-  if (isNative) {
+  if (useNativeChrome) {
     return (
       <div
         style={{
@@ -174,10 +179,7 @@ export function RootBottomBar({ boardConfigs }: { boardConfigs: BoardConfigData 
   }
 
   return (
-    <div
-      className={`${bottomBarStyles.bottomBarWrapper}`}
-      data-testid="bottom-bar-wrapper"
-    >
+    <div className={`${bottomBarStyles.bottomBarWrapper}`} data-testid="bottom-bar-wrapper">
       <FeedbackPromptBanner />
       {hasActiveQueue && boardDetails && (
         <ErrorBoundary>

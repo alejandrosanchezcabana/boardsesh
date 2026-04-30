@@ -10,9 +10,11 @@ interface NativeTabBarPluginInterface {
 export function getNativeTabBarPlugin(): NativeTabBarPluginInterface | null {
   if (!isNativeApp()) return null;
   return (
-    (window as unknown as {
-      Capacitor?: { Plugins?: { NativeTabBar?: NativeTabBarPluginInterface } };
-    }).Capacitor?.Plugins?.NativeTabBar ?? null
+    (
+      window as unknown as {
+        Capacitor?: { Plugins?: { NativeTabBar?: NativeTabBarPluginInterface } };
+      }
+    ).Capacitor?.Plugins?.NativeTabBar ?? null
   );
 }
 

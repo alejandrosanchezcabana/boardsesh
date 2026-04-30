@@ -9,25 +9,25 @@ import os.log
 ///
 /// The "climbs" tab uses the existing Capacitor bridge via `BoardseshViewController`,
 /// embedded as a child view controller. The remaining 4 tabs (home, library, feed,
-/// notifications) use lightweight `SatelliteBridge` webviews that share a single
+/// you) use lightweight `SatelliteBridge` webviews that share a single
 /// `WKProcessPool` for cookie/session sharing.
 final class MultiWebViewController: UIViewController {
 
     // MARK: - Tab Configuration
 
-    static let tabOrder = ["home", "climbs", "library", "feed", "notifications"]
+    static let tabOrder = ["home", "climbs", "library", "feed", "you"]
 
     static let tabInitialPaths: [String: String] = [
         "home": "/",
         "climbs": "/",          // Web layer navigates to the actual board URL
         "library": "/playlists",
         "feed": "/feed",
-        "notifications": "/notifications",
+        "you": "/you",
     ]
 
     /// Loading priority after the active tab finishes loading.
     /// Note: "climbs" is excluded because Capacitor self-loads from capacitor.config.json.
-    private static let deferredLoadOrder = ["feed", "library", "notifications"]
+    private static let deferredLoadOrder = ["feed", "library", "you"]
 
     // MARK: - Properties
 
@@ -82,6 +82,10 @@ final class MultiWebViewController: UIViewController {
         setupSatelliteWebViews()
         setupTabBar()
 
+        // Pipe raw WS frames out to satellites. The climbs tab consumes via
+        // SessionWebSocketManager.onQueueStateChanged directly.
+        SessionWebSocketManager.shared.rawMessageDelegate = WebSocketBroadcaster.shared
+
         // Load the default active tab (home) immediately.
         loadTab("home")
 
@@ -101,6 +105,10 @@ final class MultiWebViewController: UIViewController {
 
     override func viewDidAppear(_ animated: Bool) {
         super.viewDidAppear(animated)
+        // Capacitor may have created its webview later than viewDidLoad
+        // could observe — retry the registration here so the climbs tab
+        // is always wired before the user can interact with it.
+        ensureClimbsWebViewRegistered()
         loadPendingUniversalLink()
     }
 
@@ -153,21 +161,28 @@ final class MultiWebViewController: UIViewController {
 
         capacitorVC.didMove(toParent: self)
 
-        // Store the Capacitor webview reference once it's available.
-        // CAPBridgeViewController creates its webview in loadView(), which fires
-        // when we add the view above.
-        if let webView = capacitorVC.webView {
-            tabWebViews["climbs"] = webView
-            // Capacitor starts loading from capacitor.config.json immediately
-            // when its view is accessed, so mark it as loaded now.
-            loadedTabs.insert("climbs")
-            logger.debug("Stored Capacitor webview for climbs tab")
-        } else {
-            logger.error("BoardseshViewController.webView is nil after setup — climbs tab will not work")
-        }
+        // Best-effort early read of the Capacitor webview. CAPBridgeViewController
+        // creates its webview lazily in loadView(); accessing capacitorVC.view
+        // above usually triggers it, but Capacitor's exact ordering is internal
+        // and not guaranteed. If it's not ready yet we'll retry on viewDidAppear
+        // (see ensureClimbsWebViewRegistered).
+        ensureClimbsWebViewRegistered()
 
         // Climbs tab starts hidden; home is the default.
         capacitorVC.view.isHidden = true
+    }
+
+    /// Idempotently picks up `capacitorVC.webView` once it's available and
+    /// records it in `tabWebViews["climbs"]`. Called from setup and from
+    /// viewDidAppear as a fallback.
+    private func ensureClimbsWebViewRegistered() {
+        guard tabWebViews["climbs"] == nil else { return }
+        guard let capacitorVC = capacitorVC, let webView = capacitorVC.webView else { return }
+        tabWebViews["climbs"] = webView
+        // Capacitor starts loading from capacitor.config.json as soon as its
+        // view is accessed, so mark the tab as loaded.
+        loadedTabs.insert("climbs")
+        logger.debug("Stored Capacitor webview for climbs tab")
     }
 
     // MARK: - Satellite WebView Setup
@@ -312,10 +327,8 @@ final class MultiWebViewController: UIViewController {
         if path == "/" { return "home" }
         if path.hasSuffix("/create") { return "create" }
         if path.hasPrefix("/feed") { return "feed" }
-        if path.hasPrefix("/notifications") { return "notifications" }
-        if path.hasPrefix("/playlists") || path.hasPrefix("/logbook") {
-            return "library"
-        }
+        if path.hasPrefix("/you") { return "you" }
+        if path.hasPrefix("/playlists") { return "library" }
         return "climbs"
     }
 
@@ -531,6 +544,11 @@ final class MultiWebViewController: UIViewController {
     deinit {
         NotificationCenter.default.removeObserver(self)
 
+        // Drop the broadcaster wiring before tearing down the controller so
+        // any in-flight WS frames don't try to evaluateJavaScript into webviews
+        // we're about to destroy.
+        SessionWebSocketManager.shared.rawMessageDelegate = nil
+
         // Break WKScriptMessageHandler retain cycles and clean up broadcaster refs.
         for (tab, bridge) in satelliteBridges {
             bridge.detach()
@@ -538,5 +556,6 @@ final class MultiWebViewController: UIViewController {
                 WebSocketBroadcaster.shared.removeSatelliteWebView(webView)
             }
         }
+        WebSocketBroadcaster.shared.removeAllSatellites()
     }
 }

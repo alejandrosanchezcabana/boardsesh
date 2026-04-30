@@ -38,23 +38,24 @@ vi.mock('../../swipeable-drawer/swipeable-drawer', () => ({
     title: string;
     children: React.ReactNode;
     extra?: React.ReactNode;
-  }) => (open ? <div data-testid={`drawer-${title}`}>{children}{extra}</div> : null),
+  }) =>
+    open ? (
+      <div data-testid={`drawer-${title}`}>
+        {children}
+        {extra}
+      </div>
+    ) : null,
 }));
 
 vi.mock('../../board-selector-drawer/board-selector-drawer', () => ({
-  default: ({
-    open,
-    onClose,
-  }: {
-    open: boolean;
-    onClose: () => void;
-  }) => (open
-    ? (
-        <div data-testid="board-selector-drawer">
-          <button type="button" onClick={onClose}>Close</button>
-        </div>
-      )
-    : null),
+  default: ({ open, onClose }: { open: boolean; onClose: () => void }) =>
+    open ? (
+      <div data-testid="board-selector-drawer">
+        <button type="button" onClick={onClose}>
+          Close
+        </button>
+      </div>
+    ) : null,
 }));
 
 vi.mock('next-auth/react', () => ({
@@ -118,12 +119,14 @@ vi.mock('@/app/lib/ble/capacitor-utils', () => ({
 const mockSetActiveTab = vi.fn().mockResolvedValue(undefined);
 const mockSetBarsHidden = vi.fn().mockResolvedValue(undefined);
 const mockSetNotificationBadge = vi.fn().mockResolvedValue(undefined);
+const mockNavigateTab = vi.fn().mockResolvedValue(undefined);
 const mockAddNativeOverlay = vi.fn();
 const mockRemoveNativeOverlay = vi.fn();
 let mockPluginInstance: {
   setActiveTab: typeof mockSetActiveTab;
   setBarsHidden: typeof mockSetBarsHidden;
   setNotificationBadge: typeof mockSetNotificationBadge;
+  navigateTab: typeof mockNavigateTab;
 } | null = null;
 
 vi.mock('@/app/lib/native-tab-bar/native-tab-bar-plugin', () => ({
@@ -166,6 +169,7 @@ describe('BottomTabBar native iOS', () => {
       setActiveTab: mockSetActiveTab,
       setBarsHidden: mockSetBarsHidden,
       setNotificationBadge: mockSetNotificationBadge,
+      navigateTab: mockNavigateTab,
     };
   });
 
@@ -194,46 +198,45 @@ describe('BottomTabBar native iOS', () => {
     expect(mockSetActiveTab).toHaveBeenCalledWith({ tab: 'climbs' });
   });
 
-  it('dispatching boardsesh:native-tab-tapped with tab="feed" triggers router.push("/feed")', async () => {
+  it('dispatching boardsesh:native-tab-tapped with tab="feed" routes through navigateTab', async () => {
+    mockPathname = '/'; // home tab
     await act(async () => {
       render(<BottomTabBar boardConfigs={boardConfigs} />);
     });
 
     await act(async () => {
-      window.dispatchEvent(
-        new CustomEvent('boardsesh:native-tab-tapped', { detail: { tab: 'feed' } }),
-      );
+      window.dispatchEvent(new CustomEvent('boardsesh:native-tab-tapped', { detail: { tab: 'feed' } }));
     });
 
-    expect(mockPush).toHaveBeenCalledWith('/feed');
+    expect(mockNavigateTab).toHaveBeenCalledWith({ tab: 'feed', url: '/feed' });
   });
 
-  it('dispatching boardsesh:native-tab-tapped with tab="home" triggers router.push("/")', async () => {
+  it('dispatching boardsesh:native-tab-tapped with tab="home" routes through navigateTab', async () => {
+    mockPathname = '/feed'; // not home — switching tabs
     await act(async () => {
       render(<BottomTabBar boardConfigs={boardConfigs} />);
     });
 
     await act(async () => {
-      window.dispatchEvent(
-        new CustomEvent('boardsesh:native-tab-tapped', { detail: { tab: 'home' } }),
-      );
+      window.dispatchEvent(new CustomEvent('boardsesh:native-tab-tapped', { detail: { tab: 'home' } }));
     });
 
-    expect(mockPush).toHaveBeenCalledWith('/');
+    expect(mockNavigateTab).toHaveBeenCalledWith({ tab: 'home', url: '/' });
   });
 
-  it('dispatching boardsesh:native-tab-tapped with tab="notifications" triggers router.push("/notifications")', async () => {
+  it('dispatching boardsesh:native-tab-tapped with tab="you" while unauthenticated does NOT navigate (auth modal opens instead)', async () => {
+    mockPathname = '/'; // home tab
     await act(async () => {
       render(<BottomTabBar boardConfigs={boardConfigs} />);
     });
 
     await act(async () => {
-      window.dispatchEvent(
-        new CustomEvent('boardsesh:native-tab-tapped', { detail: { tab: 'notifications' } }),
-      );
+      window.dispatchEvent(new CustomEvent('boardsesh:native-tab-tapped', { detail: { tab: 'you' } }));
     });
 
-    expect(mockPush).toHaveBeenCalledWith('/notifications');
+    // Unauthenticated users see the auth modal (mocked at module level); the
+    // tab router is short-circuited so navigateTab is not invoked.
+    expect(mockNavigateTab).not.toHaveBeenCalled();
   });
 
   it('calls setNotificationBadge({ count: 3 }) when notificationUnreadCount changes to 3', async () => {
@@ -258,9 +261,7 @@ describe('BottomTabBar native iOS', () => {
     mockAddNativeOverlay.mockClear();
 
     await act(async () => {
-      window.dispatchEvent(
-        new CustomEvent('boardsesh:native-tab-tapped', { detail: { tab: 'climbs' } }),
-      );
+      window.dispatchEvent(new CustomEvent('boardsesh:native-tab-tapped', { detail: { tab: 'climbs' } }));
       await new Promise((r) => setTimeout(r, 0));
     });
 
@@ -275,9 +276,7 @@ describe('BottomTabBar native iOS', () => {
 
     // Open the board selector
     await act(async () => {
-      window.dispatchEvent(
-        new CustomEvent('boardsesh:native-tab-tapped', { detail: { tab: 'climbs' } }),
-      );
+      window.dispatchEvent(new CustomEvent('boardsesh:native-tab-tapped', { detail: { tab: 'climbs' } }));
       await new Promise((r) => setTimeout(r, 0));
     });
 
@@ -300,11 +299,42 @@ describe('BottomTabBar native iOS', () => {
 
     unmount();
 
-    expect(removeListenerSpy).toHaveBeenCalledWith(
-      'boardsesh:native-tab-tapped',
-      expect.any(Function),
-    );
+    expect(removeListenerSpy).toHaveBeenCalledWith('boardsesh:native-tab-tapped', expect.any(Function));
 
     removeListenerSpy.mockRestore();
+  });
+});
+
+// ── Backwards-compat: existing iOS App Store / TestFlight builds ─────────
+// Older binaries are native (Capacitor) but never ship NativeTabBarPlugin.
+// When the new web bundle deploys ahead of the App Store update, those users
+// must keep getting the web BottomNavigation; a silent return-null would
+// strand them with no way to switch tabs.
+describe('BottomTabBar native iOS without NativeTabBarPlugin (old binary)', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    mockPathname = '/';
+    mockNotificationUnreadCount = 0;
+    mockIsNativeApp.mockReturnValue(true);
+    mockPluginInstance = null;
+  });
+
+  afterEach(() => {
+    cleanup();
+  });
+
+  it('renders the web BottomNavigation when the plugin is absent', async () => {
+    await act(async () => {
+      render(<BottomTabBar boardConfigs={boardConfigs} />);
+    });
+    expect(screen.queryByTestId('bottom-tab-bar')).not.toBeNull();
+  });
+
+  it('does not throw when setActiveTab effect runs with no plugin', async () => {
+    mockPathname = '/feed';
+    await act(async () => {
+      render(<BottomTabBar boardConfigs={boardConfigs} />);
+    });
+    expect(mockSetActiveTab).not.toHaveBeenCalled();
   });
 });

@@ -201,21 +201,16 @@ final class SatelliteBridge: NSObject, WKScriptMessageHandler, WKNavigationDeleg
         let manager = SessionWebSocketManager.shared
 
         switch methodName {
-        case "connect":
-            guard let serverUrl = options["serverUrl"] as? String,
-                  let sessionId = options["sessionId"] as? String
-            else {
-                resolveCallback(callbackId: callbackId, success: false, data: ["error": "Missing serverUrl or sessionId"])
-                return
-            }
-            let authToken = options["authToken"] as? String
-            let wsUrl = options["wsUrl"] as? String
-            manager.connect(serverUrl: serverUrl, sessionId: sessionId, authToken: authToken, wsUrl: wsUrl)
-            resolveCallback(callbackId: callbackId, success: true, data: [:])
-
-        case "disconnect":
-            manager.disconnect()
-            resolveCallback(callbackId: callbackId, success: true, data: [:])
+        case "connect", "disconnect", "updateAuthToken":
+            // The climbs tab owns the WebSocket connection lifecycle. Satellite
+            // tabs are read-only consumers via `boardsesh:ws-message` /
+            // `boardsesh:ws-connection-state` events broadcast by
+            // WebSocketBroadcaster. Reject lifecycle mutations from satellites
+            // so two tabs can't fight over one connection.
+            logger.warning("Satellite \(self.tabKey, privacy: .public) attempted '\(methodName, privacy: .public)' — rejected (lifecycle is climbs-tab owned)")
+            resolveCallback(callbackId: callbackId, success: false, data: [
+                "error": "Satellite tabs cannot \(methodName) the WebSocket; the climbs tab owns the connection lifecycle.",
+            ])
 
         case "sendOperation":
             guard let query = options["query"] as? String,
@@ -245,14 +240,6 @@ final class SatelliteBridge: NSObject, WKScriptMessageHandler, WKNavigationDeleg
                 return
             }
             manager.removeSubscription(subscriptionId)
-            resolveCallback(callbackId: callbackId, success: true, data: [:])
-
-        case "updateAuthToken":
-            guard let token = options["token"] as? String else {
-                resolveCallback(callbackId: callbackId, success: false, data: ["error": "Missing token"])
-                return
-            }
-            manager.updateAuthToken(token)
             resolveCallback(callbackId: callbackId, success: true, data: [:])
 
         case "setWebviewActive":
@@ -489,8 +476,8 @@ final class SatelliteBridge: NSObject, WKScriptMessageHandler, WKNavigationDeleg
                 if (path === '/') return 'home';
                 if (path.match(/\\/create$/)) return 'create';
                 if (path.indexOf('/feed') === 0) return 'feed';
-                if (path.indexOf('/notifications') === 0) return 'notifications';
-                if (path.indexOf('/playlists') === 0 || path.indexOf('/logbook') === 0) return 'library';
+                if (path.indexOf('/you') === 0) return 'you';
+                if (path.indexOf('/playlists') === 0) return 'library';
                 return 'climbs';
             }
 

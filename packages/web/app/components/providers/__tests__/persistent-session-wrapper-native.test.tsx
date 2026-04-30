@@ -111,6 +111,21 @@ vi.mock('@/app/lib/ble/capacitor-utils', () => ({
   isNativeApp: () => mockIsNativeApp(),
 }));
 
+// Mock the native-tab-bar plugin module so tests can simulate both
+// "new iOS binary" (plugin present) and "old App Store binary" (null).
+let mockNativeTabBarPlugin: {
+  setActiveTab: () => Promise<void>;
+  setBarsHidden: () => Promise<void>;
+  setNotificationBadge: () => Promise<void>;
+  navigateTab: () => Promise<void>;
+} | null = null;
+
+vi.mock('@/app/lib/native-tab-bar/native-tab-bar-plugin', () => ({
+  getNativeTabBarPlugin: () => mockNativeTabBarPlugin,
+  addNativeOverlay: vi.fn(),
+  removeNativeOverlay: vi.fn(),
+}));
+
 const mockBoardConfigs = {} as Parameters<typeof RootBottomBar>[0]['boardConfigs'];
 
 describe('RootBottomBar native iOS path', () => {
@@ -127,6 +142,12 @@ describe('RootBottomBar native iOS path', () => {
       currentClimb: null,
     };
     mockIsNativeApp.mockReturnValue(true);
+    mockNativeTabBarPlugin = {
+      setActiveTab: vi.fn().mockResolvedValue(undefined),
+      setBarsHidden: vi.fn().mockResolvedValue(undefined),
+      setNotificationBadge: vi.fn().mockResolvedValue(undefined),
+      navigateTab: vi.fn().mockResolvedValue(undefined),
+    };
   });
 
   afterEach(() => {
@@ -183,5 +204,43 @@ describe('RootBottomBar native iOS path', () => {
     render(<RootBottomBar boardConfigs={mockBoardConfigs} />);
 
     expect(screen.getByTestId('bottom-tab-bar')).toBeTruthy();
+  });
+});
+
+// ── Backwards-compat: existing iOS App Store / TestFlight builds ─────────
+// Older binaries are native (Capacitor) but never ship NativeTabBarPlugin.
+// Without this fallback the queue bar would float 83px above bottom against
+// an empty native gap, and the legacy .bottomBarWrapper safe-area padding
+// would never apply.
+describe('RootBottomBar native iOS without NativeTabBarPlugin (old binary)', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    mockPathname = '/';
+    mockQueueBridgeBoardInfo = {
+      boardDetails: null,
+      angle: 0,
+      hasActiveQueue: false,
+    };
+    mockQueueContext = {
+      queue: [],
+      currentClimb: null,
+    };
+    mockIsNativeApp.mockReturnValue(true);
+    mockNativeTabBarPlugin = null;
+  });
+
+  afterEach(() => {
+    cleanup();
+  });
+
+  it('uses the legacy .bottomBarWrapper path even on native when plugin is missing', () => {
+    const { container } = render(<RootBottomBar boardConfigs={mockBoardConfigs} />);
+    const root = container.firstChild as HTMLElement;
+    expect(root?.getAttribute('data-testid')).toBe('bottom-bar-wrapper');
+  });
+
+  it('renders the BottomTabBar inside the legacy wrapper when plugin is missing', () => {
+    const { getByTestId } = render(<RootBottomBar boardConfigs={mockBoardConfigs} />);
+    expect(getByTestId('bottom-tab-bar')).toBeTruthy();
   });
 });

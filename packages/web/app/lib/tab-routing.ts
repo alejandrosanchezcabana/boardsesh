@@ -14,7 +14,7 @@ export const getActiveTab = (pathname: string): Tab => {
   if (pathname.endsWith('/create')) return 'create';
   if (pathname.startsWith('/feed')) return 'feed';
   if (pathname.startsWith('/you')) return 'you';
-  if (pathname.startsWith('/playlists') || pathname.includes('/playlists')) return 'library';
+  if (pathname.startsWith('/playlists')) return 'library';
   return 'climbs';
 };
 
@@ -22,10 +22,4 @@ export const getActiveTab = (pathname: string): Tab => {
  * Tabs that have their own dedicated webview in the native multi-webview setup.
  * The "create" tab has no dedicated webview — it's an action on the current tab.
  */
-export const TABS_WITH_WEBVIEWS: ReadonlySet<Tab> = new Set([
-  'home',
-  'climbs',
-  'library',
-  'feed',
-  'you',
-]);
+export const TABS_WITH_WEBVIEWS: ReadonlySet<Tab> = new Set(['home', 'climbs', 'library', 'feed', 'you']);

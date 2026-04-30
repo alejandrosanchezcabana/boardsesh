@@ -42,7 +42,7 @@ final class NativeTabBarViewTests: XCTestCase {
     // MARK: - Test 1: Six buttons exist after init
 
     func testAllSixButtonsExistAfterInit() {
-        let expectedKeys = ["home", "climbs", "library", "feed", "create", "notifications"]
+        let expectedKeys = ["home", "climbs", "library", "feed", "create", "you"]
         for key in expectedKeys {
             XCTAssertNotNil(button(forTab: key), "Expected a button for tab '\(key)'")
         }
@@ -60,7 +60,7 @@ final class NativeTabBarViewTests: XCTestCase {
         XCTAssertEqual(homeButton?.tintColor, NativeTabBarView.activeColor,
                        "Home button should have active tint color after setActiveTab('home')")
 
-        let expectedKeys = ["climbs", "library", "feed", "create", "notifications"]
+        let expectedKeys = ["climbs", "library", "feed", "create", "you"]
         for key in expectedKeys {
             let btn = button(forTab: key)
             XCTAssertNotNil(btn)
@@ -149,10 +149,10 @@ final class NativeTabBarViewTests: XCTestCase {
 
     // MARK: - Private Helpers
 
-    /// Locate the red notification badge UILabel inside the notifications button.
+    /// Locate the red notification badge UILabel inside the You button.
     private func findNotificationBadge() -> UILabel? {
-        guard let notificationsButton = button(forTab: "notifications") else { return nil }
-        for sub in notificationsButton.subviews {
+        guard let youButton = button(forTab: "you") else { return nil }
+        for sub in youButton.subviews {
             if let label = sub as? UILabel, label.backgroundColor == UIColor(red: 0.937, green: 0.267, blue: 0.267, alpha: 1.0) {
                 return label
             }

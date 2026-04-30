@@ -28,7 +28,7 @@ public class NativeTabBarView: UIView {
         TabDefinition(tabKey: "library",       inactiveSymbol: "tag",          activeSymbol: "tag.fill",          label: "Discover"),
         TabDefinition(tabKey: "feed",          inactiveSymbol: "square.stack", activeSymbol: "square.stack.fill", label: "Feed"),
         TabDefinition(tabKey: "create",        inactiveSymbol: "plus",         activeSymbol: "plus",              label: "Create"),
-        TabDefinition(tabKey: "notifications", inactiveSymbol: "bell",         activeSymbol: "bell.fill",         label: "Notifications"),
+        TabDefinition(tabKey: "you",           inactiveSymbol: "person",       activeSymbol: "person.fill",       label: "You"),
     ]
 
     // MARK: - Public Interface
@@ -43,6 +43,10 @@ public class NativeTabBarView: UIView {
     private var notificationBadge: UILabel!
     private var blurView: UIVisualEffectView!
     private var stackView: UIStackView!
+
+    /// Last requested hidden state. Used to skip redundant animations when a
+    /// drawer is opened/closed in rapid succession.
+    private var lastHiddenState: Bool = false
 
     // MARK: - Init
 
@@ -112,7 +116,7 @@ public class NativeTabBarView: UIView {
             tabLabels[tabDef.tabKey] = titleLabel
             stackView.addArrangedSubview(button)
 
-            if tabDef.tabKey == "notifications" {
+            if tabDef.tabKey == "you" {
                 setupNotificationBadge(on: button)
             }
         }
@@ -193,9 +197,17 @@ public class NativeTabBarView: UIView {
     }
 
     public func setBarsHidden(_ hidden: Bool, animated: Bool = true) {
+        // Idempotency: skip when state is unchanged so rapid open/close
+        // toggles (e.g. drawer animations) don't queue redundant animations.
+        if hidden == lastHiddenState { return }
+        lastHiddenState = hidden
+
         let targetTransform = hidden ? CGAffineTransform(translationX: 0, y: bounds.height) : .identity
         if animated {
-            UIView.animate(withDuration: 0.3, delay: 0, options: .curveEaseInOut) {
+            // .beginFromCurrentState picks up mid-flight transforms when this
+            // is called while a previous animation is still running, avoiding
+            // a snap-back stutter.
+            UIView.animate(withDuration: 0.3, delay: 0, options: [.curveEaseInOut, .beginFromCurrentState]) {
                 self.transform = targetTransform
             }
         } else {
