@@ -66,7 +66,6 @@ const mockPersistentSession = {
   subscribeToSessionEvents: vi.fn(() => vi.fn()),
   triggerResync: vi.fn(),
   endSessionWithSummary: vi.fn(),
-  liveSessionStats: null,
   sessionSummary: null,
   sessionSummaryBoardType: null,
   sessionSummaryHealthKitWorkoutId: null,

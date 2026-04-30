@@ -25,12 +25,18 @@
       "types": "./src/operations.ts",
       "import": "./src/operations.ts",
       "default": "./src/operations.ts"
+    },
+    "./generated": {
+      "types": "./src/generated/types.ts",
+      "import": "./src/generated/types.ts",
+      "default": "./src/generated/types.ts"
     }
   },
   "scripts": {
     "build": "tsc",
     "dev": "tsc --watch",
     "typecheck": "tsc --noEmit",
+    "print-schema": "bun run scripts/print-schema.ts",
     "lint": "vp lint",
     "lint-fix": "vp lint --fix"
   },
@@ -38,6 +44,7 @@
     "graphql": "^16.13.0"
   },
   "devDependencies": {
+    "@types/node": "^25.3.3",
     "typescript": "^5.9.3"
   }
 }

@@ -1,18 +1,15 @@
 import { useCallback, useEffect, type Dispatch, type SetStateAction } from 'react';
-import type { SubscriptionQueueEvent, SessionEvent, SessionLiveStats } from '@boardsesh/shared-schema';
+import type { SubscriptionQueueEvent, SessionEvent } from '@boardsesh/shared-schema';
 import { computeQueueStateHash } from '@/app/utils/hash';
 import type { ClimbQueueItem as LocalClimbQueueItem } from '../../queue-control/types';
-import { type Session, type ActiveSessionInfo, type SharedRefs, CORRUPTION_RESYNC_COOLDOWN_MS, DEBUG } from '../types';
+import { type Session, type SharedRefs, CORRUPTION_RESYNC_COOLDOWN_MS, DEBUG } from '../types';
 
 type UseSessionSubscriptionsArgs = {
   session: Session | null;
-  activeSession: ActiveSessionInfo | null;
   queue: LocalClimbQueueItem[];
   currentClimbQueueItem: LocalClimbQueueItem | null;
   lastReceivedStateHash: string | null;
-  liveSessionStats: { sessionId: string } | null;
   setQueueState: Dispatch<SetStateAction<LocalClimbQueueItem[]>>;
-  setLiveSessionStats: Dispatch<SetStateAction<SessionLiveStats | null>>;
   refs: Pick<
     SharedRefs,
     | 'triggerResyncRef'
@@ -31,13 +28,10 @@ export type SessionSubscriptionsActions = {
 
 export function useSessionSubscriptions({
   session,
-  activeSession,
   queue,
   currentClimbQueueItem,
   lastReceivedStateHash,
-  liveSessionStats: _liveSessionStats,
   setQueueState,
-  setLiveSessionStats,
   refs,
 }: UseSessionSubscriptionsArgs): SessionSubscriptionsActions {
   const {
@@ -136,14 +130,6 @@ export function useSessionSubscriptions({
       }
     }
   }, [session, currentClimbQueueItem, queue, triggerResyncRef]);
-
-  // Reset live stats when active session changes or clears
-  useEffect(() => {
-    setLiveSessionStats((prev: SessionLiveStats | null) => {
-      if (!activeSession) return null;
-      return prev?.sessionId === activeSession.sessionId ? prev : null;
-    });
-  }, [activeSession, setLiveSessionStats]);
 
   // Event subscription functions
   const subscribeToQueueEvents = useCallback(

@@ -4,7 +4,6 @@ import type {
   SessionUser,
   SubscriptionQueueEvent,
   SessionEvent,
-  SessionLiveStats,
   SessionSummary,
   QueueState,
 } from '@boardsesh/shared-schema';
@@ -121,7 +120,6 @@ export type PersistentSessionStateType = {
   // Ref for last received sequence number (used by reconciliation to detect server changes)
   lastReceivedSequenceRef: MutableRefObject<number | null>;
 
-  liveSessionStats: SessionLiveStats | null;
   sessionSummary: SessionSummary | null;
   sessionSummaryBoardType: string | null;
   sessionSummaryHealthKitWorkoutId: string | null;

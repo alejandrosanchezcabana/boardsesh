@@ -166,7 +166,7 @@ We are using next.js app router, it's important we try to use server side compon
 #### Data Flow
 
 1. **Server Components**: Initial data fetching in page components
-2. **Client Components**: Interactive features with SWR for data fetching
+2. **Client Components**: Interactive features with React Query (`@tanstack/react-query`) for data fetching
 3. **API Routes**: Two patterns:
    - `/api/internal/...` - Server-side data operations
    - `/api/v1/[board]/proxy/...` - Aurora API proxies
@@ -220,6 +220,7 @@ We are using next.js app router, it's important we try to use server side compon
 - **Dark mode uses white input fields** — This is intentional for contrast. All input components (TextField, Select, Autocomplete, etc.) have white backgrounds in dark mode via `darkTokens.semantic.inputSurface`. Do not change them to dark backgrounds.
 - **Never use `any` type** - The `no-explicit-any` lint rule is set to `deny` across all packages. Use `unknown`, proper types, or `as unknown as SpecificType` for type assertions. No exceptions - `any` defeats the purpose of TypeScript
 - **Never hardcode user-facing strings** - All visible text must come from the i18n catalogs in `packages/web/i18n/locales/`. See the Internationalisation section below for the call-site pattern.
+- **Variable names must describe their contents** - No single-letter aliases (`r`, `x`, `s`) or vague placeholders (`data`, `info`, `latest`, `temp`, `value`) outside of tight loops or well-known math conventions. The name should tell the next reader what's inside without forcing them to scroll back to the declaration. Prefer destructuring at the use site over a generic alias — `const { queue, currentClimb } = stateRef.current` reads better than `const s = stateRef.current` followed by `s.queue` / `s.currentClimb`.
 
 ### Internationalisation
 

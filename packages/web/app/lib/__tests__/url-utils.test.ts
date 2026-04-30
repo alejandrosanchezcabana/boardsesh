@@ -183,6 +183,33 @@ describe('searchParamsToUrlParams', () => {
     const result = searchParamsToUrlParams(corrupt);
     expect(result.toString()).toBe('');
   });
+
+  describe('with a single undefined numeric field (legacy persisted state)', () => {
+    const numericFields = [
+      'gradeAccuracy',
+      'maxGrade',
+      'minGrade',
+      'minAscents',
+      'minRating',
+      'page',
+      'pageSize',
+    ] as const;
+
+    for (const field of numericFields) {
+      it(`does not throw and omits the param when ${field} is undefined`, () => {
+        const input = {
+          ...DEFAULT_SEARCH_PARAMS,
+          [field]: undefined as unknown as number,
+        } as SearchRequestPagination;
+
+        let result!: URLSearchParams;
+        expect(() => {
+          result = searchParamsToUrlParams(input);
+        }).not.toThrow();
+        expect(result.has(field)).toBe(false);
+      });
+    }
+  });
 });
 
 describe('parsedRouteSearchParamsToSearchParams', () => {

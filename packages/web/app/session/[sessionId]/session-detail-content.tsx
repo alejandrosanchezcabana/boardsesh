@@ -57,6 +57,7 @@ import { generateSessionName } from '@/app/lib/session-utils';
 import { ConfirmPopover } from '@/app/components/ui/confirm-popover';
 import { useDeleteTick } from '@/app/hooks/use-delete-tick';
 import SaveToHealthKitButton from '@/app/components/healthkit/save-to-healthkit-button';
+import { useOptionalQueueActions } from '@/app/components/graphql-queue';
 
 type SessionDetailContentProps = {
   session: SessionDetail | null;
@@ -291,6 +292,7 @@ export default function SessionDetailContent({
   const router = useRouter();
   const deleteTick = useDeleteTick();
   const { showMessage } = useSnackbar();
+  const queueActions = useOptionalQueueActions();
 
   const {
     session: hookSession,
@@ -406,10 +408,20 @@ export default function SessionDetailContent({
     climbUuids,
   });
 
-  // Navigate to climb detail page using client-side routing
+  // Set the climb as current (so it's sent to the board / shared with the
+  // party session) and, when not embedded in a drawer, navigate to its detail
+  // page. Embedded mode skips navigation so the drawer stays open.
+  // setCurrentClimb returns null when board-compatibility validation fails
+  // (a snackbar is already surfaced). In that case, skip navigation too — the
+  // user shouldn't land on a climb page for a climb the board rejected.
   const navigateToClimb = useCallback(
     async (climb: Climb) => {
       try {
+        if (queueActions) {
+          const result = await queueActions.setCurrentClimb(climb);
+          if (result === null) return;
+        }
+        if (embedded) return;
         const bt = climb.boardType;
         if (!bt) return;
         const params = new URLSearchParams({ boardType: bt, climbUuid: climb.uuid });
@@ -421,7 +433,7 @@ export default function SessionDetailContent({
         console.error('Failed to navigate to climb:', error);
       }
     },
-    [router],
+    [queueActions, embedded, router],
   );
 
   const handleShare = useCallback(async () => {
