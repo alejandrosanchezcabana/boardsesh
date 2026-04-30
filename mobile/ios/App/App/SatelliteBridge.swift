@@ -201,63 +201,29 @@ final class SatelliteBridge: NSObject, WKScriptMessageHandler, WKNavigationDeleg
         let manager = SessionWebSocketManager.shared
 
         switch methodName {
-        case "connect", "disconnect", "updateAuthToken":
-            // The climbs tab owns the WebSocket connection lifecycle. Satellite
-            // tabs are read-only consumers via `boardsesh:ws-message` /
-            // `boardsesh:ws-connection-state` events broadcast by
-            // WebSocketBroadcaster. Reject lifecycle mutations from satellites
-            // so two tabs can't fight over one connection.
-            logger.warning("Satellite \(self.tabKey, privacy: .public) attempted '\(methodName, privacy: .public)' — rejected (lifecycle is climbs-tab owned)")
-            resolveCallback(callbackId: callbackId, success: false, data: [
-                "error": "Satellite tabs cannot \(methodName) the WebSocket; the climbs tab owns the connection lifecycle.",
-            ])
-
-        case "sendOperation":
-            guard let query = options["query"] as? String,
-                  let operationId = options["operationId"] as? String
-            else {
-                resolveCallback(callbackId: callbackId, success: false, data: ["error": "Missing query or operationId"])
-                return
-            }
-            let variables = parseVariablesFromOptions(options)
-            manager.sendOperation(query: query, variables: variables, operationId: operationId)
-            resolveCallback(callbackId: callbackId, success: true, data: [:])
-
-        case "subscribe":
-            guard let query = options["query"] as? String,
-                  let subscriptionId = options["subscriptionId"] as? String
-            else {
-                resolveCallback(callbackId: callbackId, success: false, data: ["error": "Missing query or subscriptionId"])
-                return
-            }
-            let variables = parseVariablesFromOptions(options)
-            manager.addSubscription(query: query, variables: variables, subscriptionId: subscriptionId)
-            resolveCallback(callbackId: callbackId, success: true, data: [:])
-
-        case "unsubscribe":
-            guard let subscriptionId = options["subscriptionId"] as? String else {
-                resolveCallback(callbackId: callbackId, success: false, data: ["error": "Missing subscriptionId"])
-                return
-            }
-            manager.removeSubscription(subscriptionId)
-            resolveCallback(callbackId: callbackId, success: true, data: [:])
-
-        case "setWebviewActive":
-            if let active = options["active"] as? Bool {
-                manager.setWebviewActive(active)
-            } else if let activeNum = options["active"] as? NSNumber {
-                manager.setWebviewActive(activeNum.boolValue)
-            }
-            resolveCallback(callbackId: callbackId, success: true, data: [:])
-
-        case "flushBuffer":
-            manager.setWebviewActive(true)
-            resolveCallback(callbackId: callbackId, success: true, data: [:])
-
         case "getConnectionState":
+            // Read-only: any tab can ask whether the climbs-owned connection
+            // is currently up. Used by satellites that want to render a
+            // "reconnecting…" badge.
             resolveCallback(callbackId: callbackId, success: true, data: [
                 "connected": manager.isConnected ? "true" : "false",
                 "reconnectAttempt": "\(manager.reconnectAttempt)",
+            ])
+
+        case "connect", "disconnect", "updateAuthToken",
+             "sendOperation", "subscribe", "unsubscribe",
+             "setWebviewActive", "flushBuffer":
+            // The climbs tab owns the WebSocket connection and all of its
+            // mutations (subscriptions, auth, active-state, send). Satellite
+            // tabs are read-only consumers via `boardsesh:ws-message` /
+            // `boardsesh:ws-connection-state` events broadcast by
+            // WebSocketBroadcaster, so we reject every mutation here. This
+            // also matches main, where SessionWebSocketManager no longer
+            // exposes these methods — calling them from a satellite would
+            // be a no-op at best and a crash at worst.
+            logger.warning("Satellite \(self.tabKey, privacy: .public) attempted '\(methodName, privacy: .public)' — rejected (climbs tab owns the connection)")
+            resolveCallback(callbackId: callbackId, success: false, data: [
+                "error": "Satellite tabs cannot '\(methodName)' the WebSocket; the climbs tab owns the connection lifecycle. Listen for boardsesh:ws-message events instead.",
             ])
 
         default:
