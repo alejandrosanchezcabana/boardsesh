@@ -77,6 +77,66 @@ describe('Discord webhook payload privacy', () => {
     const embed = (body.embeds as Array<Record<string, unknown>>)[0];
     expect((embed.footer as { text: string }).text).toBe('feedback #1337');
   });
+
+  it('renders board metadata as a Board field when provided', () => {
+    const body = buildWebhookBody({
+      feedbackId: 1,
+      rating: null,
+      comment: 'broken',
+      platform: 'web',
+      appVersion: null,
+      source: 'shake-bug',
+      boardName: 'kilter',
+      layoutId: 1,
+      sizeId: 5,
+      setIds: [1, 2],
+      angle: 40,
+    });
+    const embed = (body.embeds as Array<Record<string, unknown>>)[0];
+    const fields = embed.fields as Array<{ name: string; value: string }>;
+    const board = fields.find((f) => f.name === 'Board');
+    expect(board).toBeTruthy();
+    expect(board?.value).toBe('kilter / layout 1 / size 5 / sets [1,2] @ 40°');
+  });
+
+  it('omits the Board field when no board metadata is provided', () => {
+    const body = buildWebhookBody({
+      feedbackId: 1,
+      rating: 5,
+      comment: null,
+      platform: 'web',
+      appVersion: null,
+      source: 'prompt',
+    });
+    const embed = (body.embeds as Array<Record<string, unknown>>)[0];
+    const fields = embed.fields as Array<{ name: string }>;
+    expect(fields.find((f) => f.name === 'Board')).toBeUndefined();
+  });
+
+  it('renders climb / session / URL / user-agent context fields when present', () => {
+    const body = buildWebhookBody({
+      feedbackId: 1,
+      rating: null,
+      comment: 'broken',
+      platform: 'web',
+      appVersion: null,
+      source: 'shake-bug',
+      context: {
+        climbName: 'My Project',
+        difficulty: 'V5',
+        sessionId: 'sess-1',
+        sessionName: 'Friday Sesh',
+        url: '/kilter/1/5/1,2/40',
+        userAgent: 'Mozilla/5.0',
+      },
+    });
+    const embed = (body.embeds as Array<Record<string, unknown>>)[0];
+    const fields = embed.fields as Array<{ name: string; value: string }>;
+    expect(fields.find((f) => f.name === 'Climb')?.value).toBe('My Project (V5)');
+    expect(fields.find((f) => f.name === 'Session')?.value).toBe('Friday Sesh (sess-1)');
+    expect(fields.find((f) => f.name === 'URL')?.value).toBe('/kilter/1/5/1,2/40');
+    expect(fields.find((f) => f.name === 'User agent')?.value).toBe('Mozilla/5.0');
+  });
 });
 
 describe('postFeedbackToDiscord', () => {

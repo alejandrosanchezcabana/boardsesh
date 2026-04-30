@@ -1,5 +1,20 @@
 export const feedbackTypeDefs = /* GraphQL */ `
   """
+  Free-form debug context attached to a feedback submission. Stored as jsonb.
+  Every field is optional — anonymous submissions made outside a board route
+  may carry only \`url\` / \`userAgent\`.
+  """
+  input FeedbackContextInput {
+    climbUuid: String
+    climbName: String
+    difficulty: String
+    sessionId: String
+    sessionName: String
+    url: String
+    userAgent: String
+  }
+
+  """
   Input for submitAppFeedback mutation.
   """
   input SubmitAppFeedbackInput {
@@ -29,5 +44,21 @@ export const feedbackTypeDefs = /* GraphQL */ `
     or 'shake-bug' | 'drawer-bug' (bug reports).
     """
     source: String!
+
+    """
+    Identifier of the board the user is climbing on. Free-form, capped at
+    100 characters by the backend so future board names work without a
+    schema change. Null when submission happens outside a board context.
+    """
+    boardName: String
+    layoutId: Int
+    sizeId: Int
+    setIds: [Int!]
+    angle: Int
+
+    """
+    Optional debug context (current climb, party session, URL, user agent).
+    """
+    context: FeedbackContextInput
   }
 `;
