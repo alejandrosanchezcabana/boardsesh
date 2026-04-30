@@ -183,8 +183,11 @@ export function useEventProcessor({ refs }: UseEventProcessorArgs): EventProcess
           if (!prev) return prev;
 
           // Sort newest-first explicitly so firstTickAt/lastTickAt don't depend
-          // on the server's arrival order.
-          const ticks = [...event.ticks].sort((a, b) => b.climbedAt.localeCompare(a.climbedAt));
+          // on the server's arrival order. Compare epoch millis so mixed
+          // timezone offsets (e.g. `+05:30` vs `Z`) still sort correctly.
+          const ticks = [...event.ticks].sort(
+            (a, b) => new Date(b.climbedAt).getTime() - new Date(a.climbedAt).getTime(),
+          );
           const firstTickAt = ticks.length > 0
             ? ticks[ticks.length - 1].climbedAt
             : prev.firstTickAt;
