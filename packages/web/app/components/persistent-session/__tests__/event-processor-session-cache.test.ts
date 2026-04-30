@@ -191,6 +191,56 @@ describe('useEventProcessor - SessionStatsUpdated → React Query cache', () => 
     expect(cached!.firstTickAt).toBe('2026-04-30T09:00:00Z');
   });
 
+  it('derives firstTickAt/lastTickAt regardless of incoming tick order', () => {
+    queryClient.setQueryData(SESSION_DETAIL_QUERY_KEY('session-abc'), createExistingSession());
+
+    const refs = createRefs();
+    const { result } = renderHook(() => useEventProcessor({ refs }), { wrapper: createWrapper() });
+
+    // Ticks arrive ascending — opposite of the documented newest-first contract.
+    const ticks = [
+      createTick('2026-04-30T09:00:00Z'),
+      createTick('2026-04-30T09:30:00Z'),
+      createTick('2026-04-30T10:00:00Z'),
+    ];
+
+    act(() => {
+      result.current.handleSessionEvent(createStatsEvent({ ticks }));
+    });
+
+    const cached = queryClient.getQueryData<SessionDetail>(SESSION_DETAIL_QUERY_KEY('session-abc'));
+    expect(cached!.lastTickAt).toBe('2026-04-30T10:00:00Z');
+    expect(cached!.firstTickAt).toBe('2026-04-30T09:00:00Z');
+    // Cached ticks are normalized to newest-first.
+    expect(cached!.ticks.map((tick) => tick.climbedAt)).toEqual([
+      '2026-04-30T10:00:00Z',
+      '2026-04-30T09:30:00Z',
+      '2026-04-30T09:00:00Z',
+    ]);
+  });
+
+  it('handles mixed-timezone climbedAt strings via epoch comparison', () => {
+    queryClient.setQueryData(SESSION_DETAIL_QUERY_KEY('session-abc'), createExistingSession());
+
+    const refs = createRefs();
+    const { result } = renderHook(() => useEventProcessor({ refs }), { wrapper: createWrapper() });
+
+    // 14:30+05:30 == 09:00Z; 12:00Z is later; 11:00Z is earliest in absolute time.
+    const ticks = [
+      createTick('2026-04-30T11:00:00Z'),
+      createTick('2026-04-30T14:30:00+05:30'),
+      createTick('2026-04-30T12:00:00Z'),
+    ];
+
+    act(() => {
+      result.current.handleSessionEvent(createStatsEvent({ ticks }));
+    });
+
+    const cached = queryClient.getQueryData<SessionDetail>(SESSION_DETAIL_QUERY_KEY('session-abc'));
+    expect(cached!.lastTickAt).toBe('2026-04-30T12:00:00Z');
+    expect(cached!.firstTickAt).toBe('2026-04-30T14:30:00+05:30');
+  });
+
   it('preserves prev firstTickAt/lastTickAt when merging with no ticks', () => {
     queryClient.setQueryData(SESSION_DETAIL_QUERY_KEY('session-abc'), createExistingSession());
 

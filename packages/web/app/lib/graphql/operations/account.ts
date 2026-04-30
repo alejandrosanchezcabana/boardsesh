@@ -1,24 +1,15 @@
-import { gql } from 'graphql-request';
-import type { DeleteAccountInfo } from '@boardsesh/shared-schema';
+import { graphql } from '@/app/lib/graphql/generated';
 
-export const GET_DELETE_ACCOUNT_INFO = gql`
+export const GET_DELETE_ACCOUNT_INFO = graphql(`
   query GetDeleteAccountInfo {
     deleteAccountInfo {
       publishedClimbCount
     }
   }
-`;
+`);
 
-export type GetDeleteAccountInfoResponse = {
-  deleteAccountInfo: DeleteAccountInfo;
-};
-
-export const DELETE_ACCOUNT = gql`
+export const DELETE_ACCOUNT = graphql(`
   mutation DeleteAccount($input: DeleteAccountInput!) {
     deleteAccount(input: $input)
   }
-`;
-
-export type DeleteAccountResponse = {
-  deleteAccount: boolean;
-};
+`);

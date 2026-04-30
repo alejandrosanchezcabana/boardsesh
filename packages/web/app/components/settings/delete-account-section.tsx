@@ -18,12 +18,7 @@ import { useSnackbar } from '@/app/components/providers/snackbar-provider';
 import { ClientError } from 'graphql-request';
 import { useWsAuthToken } from '@/app/hooks/use-ws-auth-token';
 import { createGraphQLHttpClient } from '@/app/lib/graphql/client';
-import {
-  GET_DELETE_ACCOUNT_INFO,
-  DELETE_ACCOUNT,
-  type GetDeleteAccountInfoResponse,
-  type DeleteAccountResponse,
-} from '@/app/lib/graphql/operations/account';
+import { GET_DELETE_ACCOUNT_INFO, DELETE_ACCOUNT } from '@/app/lib/graphql/operations/account';
 
 export default function DeleteAccountSection() {
   const [dialogOpen, setDialogOpen] = useState(false);
@@ -45,7 +40,7 @@ export default function DeleteAccountSection() {
 
     const client = createGraphQLHttpClient(token);
     client
-      .request<GetDeleteAccountInfoResponse>(GET_DELETE_ACCOUNT_INFO)
+      .request(GET_DELETE_ACCOUNT_INFO)
       .then((data) => {
         if (!cancelled) {
           setPublishedClimbCount(data.deleteAccountInfo.publishedClimbCount);
@@ -89,7 +84,7 @@ export default function DeleteAccountSection() {
       setDeleting(true);
 
       const client = createGraphQLHttpClient(token);
-      await client.request<DeleteAccountResponse>(DELETE_ACCOUNT, {
+      await client.request(DELETE_ACCOUNT, {
         input: { removeSetterName },
       });
 

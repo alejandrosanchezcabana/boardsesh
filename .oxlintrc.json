@@ -9,6 +9,7 @@
     "no-unused-vars": "error",
     "import/no-cycle": "error",
     "prefer-const": "error",
+    "no-nested-ternary": "error",
     "no-template-curly-in-string": "error",
     "eqeqeq": ["error", "smart"],
     "no-console": ["error", { "allow": ["warn", "error", "info"] }],
