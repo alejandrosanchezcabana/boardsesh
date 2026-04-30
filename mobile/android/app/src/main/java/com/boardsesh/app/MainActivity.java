@@ -1,6 +1,7 @@
 package com.boardsesh.app;
 
 import android.content.Context;
+import android.content.Intent;
 import android.net.ConnectivityManager;
 import android.net.Network;
 import android.net.NetworkCapabilities;
@@ -40,10 +41,61 @@ public class MainActivity extends BridgeActivity {
             return;
         }
 
+        if (BuildConfig.DEBUG) {
+            WebView.setWebContentsDebuggingEnabled(true);
+        }
+
         WebView webView = bridge.getWebView();
         WebSettings settings = webView.getSettings();
         settings.setCacheMode(WebSettings.LOAD_DEFAULT);
         webView.setWebViewClient(new OfflineAwareBridgeWebViewClient(bridge));
+
+        // Cold-start deep link: Capacitor's default load() points the WebView at
+        // server.url and discards the launch intent's path, so /join/{id} (and
+        // any other App Link) never lands. Mirror SceneDelegate.swift on iOS by
+        // forwarding the intent URL into the WebView ourselves.
+        loadDeepLinkIfPresent(getIntent(), webView);
+    }
+
+    @Override
+    protected void onNewIntent(Intent intent) {
+        super.onNewIntent(intent);
+        setIntent(intent);
+        if (bridge != null && bridge.getWebView() != null) {
+            loadDeepLinkIfPresent(intent, bridge.getWebView());
+        }
+    }
+
+    private void loadDeepLinkIfPresent(Intent intent, WebView webView) {
+        if (intent == null || !Intent.ACTION_VIEW.equals(intent.getAction())) {
+            return;
+        }
+        Uri data = intent.getData();
+        if (data == null) {
+            return;
+        }
+        String scheme = data.getScheme();
+        if (scheme == null) {
+            return;
+        }
+        String normalizedScheme = scheme.toLowerCase();
+        if (!"http".equals(normalizedScheme) && !"https".equals(normalizedScheme)) {
+            return;
+        }
+        String host = data.getHost();
+        if (host == null) {
+            return;
+        }
+        String normalizedHost = host.toLowerCase();
+        if (!"www.boardsesh.com".equals(normalizedHost) && !"boardsesh.com".equals(normalizedHost)) {
+            return;
+        }
+        // Skip when a dev URL override is active — the WebView is pointed at a
+        // different host and forwarding a www.boardsesh.com URL would cross hosts.
+        if (BuildConfig.DEBUG && DevUrlPrefs.getOverrideUrl(this) != null) {
+            return;
+        }
+        webView.loadUrl(data.toString());
     }
 
     @Override
