@@ -23,6 +23,15 @@ const nextConfig = {
   turbopack: {},
   experimental: {
     optimizePackageImports: ['@mui/material', '@mui/icons-material', '@mui/material-nextjs'],
+    swcPlugins: [
+      [
+        '@swc-contrib/plugin-graphql-codegen-client-preset',
+        {
+          artifactDirectory: './packages/web/app/lib/graphql/generated',
+          gqlTagName: 'graphql',
+        },
+      ],
+    ],
   },
   // Include WASM binary in standalone output for serverless functions.
   // Both paths needed: monorepo root (hoisted deps) and local node_modules (symlink).
