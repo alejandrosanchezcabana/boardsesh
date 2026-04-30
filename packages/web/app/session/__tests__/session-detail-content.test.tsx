@@ -837,8 +837,12 @@ describe('SessionDetailContent', () => {
       render(<SessionDetailContent session={makeSession()} />);
       fireEvent.click(screen.getByTestId('climb-item'));
       await waitFor(() => expect(mockSetCurrentClimb).toHaveBeenCalledTimes(1));
-      // Give any pending microtasks a chance to flush
-      await new Promise((resolve) => setTimeout(resolve, 10));
+      // Wait for the click handler's awaited promise to actually resolve, then
+      // drain one more microtask so the synchronous code following the await
+      // (the `if (result === null) return` early-out) has run. Deterministic —
+      // no real timers involved.
+      await mockSetCurrentClimb.mock.results[0]!.value;
+      await Promise.resolve();
       expect(global.fetch).not.toHaveBeenCalled();
       expect(mockRouterPush).not.toHaveBeenCalled();
     });

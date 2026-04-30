@@ -923,7 +923,7 @@ describe('queue-bridge-context', () => {
         );
       });
 
-      it('setCurrentClimb logs and continues when ps.addQueueItem rejects', async () => {
+      it('setCurrentClimb returns null and skips setCurrentClimb when ps.addQueueItem rejects', async () => {
         const consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
         try {
           mockPersistentSession = createDefaultPersistentSession({
@@ -938,13 +938,85 @@ describe('queue-bridge-context', () => {
             <QueueBridgeProvider>{children}</QueueBridgeProvider>
           );
           const { result } = renderHook(() => useTestQueueContext(), { wrapper });
+          let returnValue: ClimbQueueItem | null | undefined;
           await act(async () => {
-            await result.current!.setCurrentClimb(climb1);
+            returnValue = await result.current!.setCurrentClimb(climb1);
           });
-          // Error was caught and logged; setCurrentClimb was not attempted
-          // because addQueueItem rejected first.
-          expect(consoleErrorSpy).toHaveBeenCalledWith('Failed to set current climb:', expect.any(Error));
+          // addQueueItem rejected, so nothing landed on the server. Return
+          // null so callers (e.g. navigateToClimb) skip downstream side
+          // effects like navigation.
+          expect(returnValue).toBeNull();
+          expect(consoleErrorSpy).toHaveBeenCalledWith(
+            'Failed to add queue item before setting current:',
+            expect.any(Error),
+          );
           expect(mockPersistentSession.setCurrentClimb).not.toHaveBeenCalled();
+        } finally {
+          consoleErrorSpy.mockRestore();
+        }
+      });
+
+      it('setCurrentClimb returns null when ps.setCurrentClimb rejects after addQueueItem succeeds (partial failure)', async () => {
+        // Distinct from the addQueueItem-rejects case: here the item DID
+        // land in the shared queue, but activating it failed. The item is
+        // orphaned (queued but not current). Returning null lets callers
+        // skip navigation since the board never got the update.
+        const consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+        try {
+          mockPersistentSession = createDefaultPersistentSession({
+            activeSession,
+            queue: [],
+            currentClimbQueueItem: null,
+            isLocalQueueLoaded: true,
+            clientId: 'client-abc',
+            addQueueItem: vi.fn(() => Promise.resolve()),
+            setCurrentClimb: vi.fn(() => Promise.reject(new Error('set-current ws send failed'))),
+          });
+          const wrapper = ({ children }: { children: React.ReactNode }) => (
+            <QueueBridgeProvider>{children}</QueueBridgeProvider>
+          );
+          const { result } = renderHook(() => useTestQueueContext(), { wrapper });
+          let returnValue: ClimbQueueItem | null | undefined;
+          await act(async () => {
+            returnValue = await result.current!.setCurrentClimb(climb1);
+          });
+          expect(returnValue).toBeNull();
+          expect(mockPersistentSession.addQueueItem).toHaveBeenCalledTimes(1);
+          expect(mockPersistentSession.setCurrentClimb).toHaveBeenCalledTimes(1);
+          expect(consoleErrorSpy).toHaveBeenCalledWith(
+            'Failed to set current climb after queue add:',
+            expect.any(Error),
+          );
+        } finally {
+          consoleErrorSpy.mockRestore();
+        }
+      });
+
+      it('setCurrentClimb returns null when reusing an existing queue item and ps.setCurrentClimb rejects', async () => {
+        const consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+        try {
+          const item1 = createTestQueueItem(climb1, 'u1');
+          mockPersistentSession = createDefaultPersistentSession({
+            activeSession,
+            queue: [item1],
+            currentClimbQueueItem: null,
+            isLocalQueueLoaded: true,
+            clientId: 'client-abc',
+            setCurrentClimb: vi.fn(() => Promise.reject(new Error('set-current rejected'))),
+          });
+          const wrapper = ({ children }: { children: React.ReactNode }) => (
+            <QueueBridgeProvider>{children}</QueueBridgeProvider>
+          );
+          const { result } = renderHook(() => useTestQueueContext(), { wrapper });
+          let returnValue: ClimbQueueItem | null | undefined;
+          await act(async () => {
+            // climb1 already exists in the queue as item1, so the dedupe
+            // path is taken — setCurrentClimb on the existing item.
+            returnValue = await result.current!.setCurrentClimb(climb1);
+          });
+          expect(returnValue).toBeNull();
+          expect(mockPersistentSession.addQueueItem).not.toHaveBeenCalled();
+          expect(mockPersistentSession.setCurrentClimb).toHaveBeenCalledTimes(1);
         } finally {
           consoleErrorSpy.mockRestore();
         }

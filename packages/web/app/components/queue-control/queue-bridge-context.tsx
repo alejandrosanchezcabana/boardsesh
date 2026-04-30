@@ -324,25 +324,39 @@ function usePersistentSessionQueueAdapter(): {
         if (existing) {
           try {
             await ps.setCurrentClimb(existing, false, correlationId);
+            return existing;
           } catch (err: unknown) {
             console.error('Failed to set current climb:', err);
+            return null;
           }
-          return existing;
         }
         const newItem = buildQueueItem(climb);
         const currentIdx = current ? queue.findIndex((q) => q.uuid === current.uuid) : -1;
         const position = currentIdx === -1 ? undefined : currentIdx + 1;
+        // Split the awaits so a partial failure is observable: addQueueItem
+        // adds the item to the shared queue, then setCurrentClimb activates
+        // it. If addQueueItem fails, nothing landed on the server. If
+        // setCurrentClimb fails after addQueueItem succeeded, the item is
+        // queued but not active — return null so the caller (e.g.
+        // SessionDetailContent.navigateToClimb) doesn't navigate to a climb
+        // the board never actually got told to display.
+        try {
+          await ps.addQueueItem(newItem, position);
+        } catch (err: unknown) {
+          console.error('Failed to add queue item before setting current:', err);
+          return null;
+        }
         try {
           // Sequential awaits over a single graphql-ws connection preserve
           // FIFO ordering, so the server processes the add before the
           // setCurrentClimb that references it. This mirrors
           // GraphQLQueueProvider.setCurrentClimb.
-          await ps.addQueueItem(newItem, position);
           await ps.setCurrentClimb(newItem, false, correlationId);
+          return newItem;
         } catch (err: unknown) {
-          console.error('Failed to set current climb:', err);
+          console.error('Failed to set current climb after queue add:', err);
+          return null;
         }
-        return newItem;
       }
       const newItem = buildQueueItem(climb);
       if (!boardDetails) {
