@@ -182,8 +182,9 @@ export function useEventProcessor({ refs }: UseEventProcessorArgs): EventProcess
         queryClient.setQueryData<SessionDetail | null>(queryKey, (prev) => {
           if (!prev) return prev;
 
-          // ticks are ordered newest-first (descending by climbedAt)
-          const ticks = event.ticks;
+          // Sort newest-first explicitly so firstTickAt/lastTickAt don't depend
+          // on the server's arrival order.
+          const ticks = [...event.ticks].sort((a, b) => b.climbedAt.localeCompare(a.climbedAt));
           const firstTickAt = ticks.length > 0
             ? ticks[ticks.length - 1].climbedAt
             : prev.firstTickAt;
