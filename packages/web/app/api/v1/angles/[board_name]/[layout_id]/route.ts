@@ -1,3 +1,4 @@
+// oxlint-disable-next-line no-restricted-imports -- legacy raw Neon sql usage; migrate to drizzle
 import { sql } from '@/app/lib/db/db';
 import { NextResponse } from 'next/server';
 

@@ -52,13 +52,14 @@ const AccordionSearchForm: React.FC<AccordionSearchFormProps> = ({ boardDetails,
   const isLargestSize = boardDetails.size_name?.toLowerCase().includes('12');
   const showTallClimbsFilter = isKilterHomewall && isLargestSize;
 
-  const statusValue: 'any' | 'drafts' | 'established' | 'projects' = uiSearchParams.onlyDrafts
-    ? 'drafts'
-    : uiSearchParams.projectsOnly
-      ? 'projects'
-      : uiSearchParams.minAscents >= 2
-        ? 'established'
-        : 'any';
+  let statusValue: 'any' | 'drafts' | 'established' | 'projects' = 'any';
+  if (uiSearchParams.onlyDrafts) {
+    statusValue = 'drafts';
+  } else if (uiSearchParams.projectsOnly) {
+    statusValue = 'projects';
+  } else if (uiSearchParams.minAscents >= 2) {
+    statusValue = 'established';
+  }
 
   const handleGradeChange = (type: 'min' | 'max', value: number | undefined) => {
     updateFilters(buildGradeRangeUpdate(type, value, uiSearchParams.minGrade, uiSearchParams.maxGrade));

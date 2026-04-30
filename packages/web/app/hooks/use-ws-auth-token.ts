@@ -36,10 +36,17 @@ export function useWsAuthToken() {
     enabled: status !== 'loading',
   });
 
+  let errorMessage: string | null;
+  if (error) {
+    errorMessage = error instanceof Error ? error.message : 'Unknown error';
+  } else {
+    errorMessage = data?.error ?? null;
+  }
+
   return {
     token: data?.token ?? null,
     isAuthenticated: data?.authenticated ?? false,
     isLoading: isLoading || status === 'loading',
-    error: error ? (error instanceof Error ? error.message : 'Unknown error') : (data?.error ?? null),
+    error: errorMessage,
   };
 }

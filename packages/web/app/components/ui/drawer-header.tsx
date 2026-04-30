@@ -14,6 +14,12 @@ type DrawerHeaderProps = {
   sx?: SxProps<Theme>;
 };
 
+function toSxArray(sx: SxProps<Theme> | undefined) {
+  if (Array.isArray(sx)) return sx;
+  if (sx) return [sx];
+  return [];
+}
+
 export function DrawerHeader({ title, onClose, extra, sx }: DrawerHeaderProps) {
   return (
     <Box
@@ -26,7 +32,7 @@ export function DrawerHeader({ title, onClose, extra, sx }: DrawerHeaderProps) {
           borderBottom: 1,
           borderColor: 'divider',
         },
-        ...(Array.isArray(sx) ? sx : sx ? [sx] : []),
+        ...toSxArray(sx),
       ]}
     >
       {typeof title === 'string' ? <Typography variant="h6">{title}</Typography> : title}

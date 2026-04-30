@@ -9,10 +9,33 @@
     "no-unused-vars": "error",
     "import/no-cycle": "error",
     "prefer-const": "error",
-    "no-nested-ternary": "error",
     "no-template-curly-in-string": "error",
     "eqeqeq": ["error", "smart"],
     "no-console": ["error", { "allow": ["warn", "error", "info"] }],
+    "no-nested-ternary": "error",
+    "no-restricted-globals": [
+      "error",
+      {
+        "name": "localStorage",
+        "message": "Use IndexedDB via packages/web/app/lib/user-preferences-db.ts or a domain-specific *-db.ts module instead. localStorage is only allowed in one-time migration code, and must be marked with // oxlint-disable-next-line no-restricted-globals."
+      },
+      {
+        "name": "sessionStorage",
+        "message": "Use IndexedDB via packages/web/app/lib/user-preferences-db.ts or a domain-specific *-db.ts module instead."
+      }
+    ],
+    "no-restricted-imports": [
+      "error",
+      {
+        "paths": [
+          {
+            "name": "@/app/lib/db/db",
+            "importNames": ["sql"],
+            "message": "Use Drizzle's getDb() or dbz from @/app/lib/db/db instead of the raw Neon sql client. New code must go through the Drizzle query builder."
+          }
+        ]
+      }
+    ],
     "typescript/no-explicit-any": ["deny", { "fixToUnknown": true }],
     "typescript/return-await": "error",
     "typescript/await-thenable": "error",

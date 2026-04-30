@@ -269,15 +269,19 @@ const ClimbTitle: React.FC<ClimbTitleProps> = React.memo(
       </Typography>
     );
 
-    const largeGradeElement =
-      displayDifficulty &&
-      (!gradeFormatLoaded ? (
+    let largeGradeContent: React.ReactNode = null;
+    if (!gradeFormatLoaded) {
+      largeGradeContent = (
         <Skeleton variant="rounded" width={nameFontSize * 2.2} height={nameFontSize} sx={{ flexShrink: 0 }} />
-      ) : formattedGrade ? (
+      );
+    } else if (formattedGrade) {
+      largeGradeContent = (
         <Typography variant="body2" component="span" sx={largeGradeSx}>
           {formattedGrade}
         </Typography>
-      ) : null);
+      );
+    }
+    const largeGradeElement = displayDifficulty && largeGradeContent;
 
     const setterText = climb.is_draft
       ? `Draft by ${climb.setter_username}`

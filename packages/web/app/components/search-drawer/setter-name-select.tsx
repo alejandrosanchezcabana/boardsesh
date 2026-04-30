@@ -85,13 +85,11 @@ const SetterNameSelect = () => {
       filterOptions={(x) => x} // Server-side filtering
       loading={isLoading}
       limitTags={2}
-      noOptionsText={
-        isLoading
-          ? 'Loading...'
-          : !isOpen && searchValue.length === 0
-            ? 'Open dropdown to see setters'
-            : 'No setters found'
-      }
+      noOptionsText={(() => {
+        if (isLoading) return 'Loading...';
+        if (!isOpen && searchValue.length === 0) return 'Open dropdown to see setters';
+        return 'No setters found';
+      })()}
       sx={{ width: '100%' }}
       size="small"
       renderInput={(params) => (

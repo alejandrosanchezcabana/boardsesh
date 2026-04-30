@@ -212,21 +212,27 @@ export default function StatsSummary({
             Grade Distribution
           </Typography>
 
-          {loadingAggregated ? (
-            <div className={styles.loadingStats}>
-              <CircularProgress size={24} />
-            </div>
-          ) : aggregatedStackedBars?.bars ? (
-            <CssBarChart
-              bars={aggregatedStackedBars.bars}
-              height={160}
-              mobileHeight={120}
-              showLegend={false}
-              ariaLabel="Grade distribution across boards"
-            />
-          ) : (
-            <EmptyState description="No ascent data for this period" />
-          )}
+          {(() => {
+            if (loadingAggregated) {
+              return (
+                <div className={styles.loadingStats}>
+                  <CircularProgress size={24} />
+                </div>
+              );
+            }
+            if (aggregatedStackedBars?.bars) {
+              return (
+                <CssBarChart
+                  bars={aggregatedStackedBars.bars}
+                  height={160}
+                  mobileHeight={120}
+                  showLegend={false}
+                  ariaLabel="Grade distribution across boards"
+                />
+              );
+            }
+            return <EmptyState description="No ascent data for this period" />;
+          })()}
         </div>
 
         {aggregatedFlashRedpointBars && !loadingAggregated && (

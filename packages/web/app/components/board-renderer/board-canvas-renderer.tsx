@@ -56,7 +56,12 @@ const BoardCanvasRenderer = React.memo(function BoardCanvasRenderer({
     if (!canvas) return;
 
     let cancelled = false;
-    const context: RenderContext = thumbnail ? 'thumbnail' : contain ? 'full-board' : 'card';
+    let context: RenderContext = 'card';
+    if (thumbnail) {
+      context = 'thumbnail';
+    } else if (contain) {
+      context = 'full-board';
+    }
 
     renderBoard({ boardDetails, frames, mirrored, thumbnail, cropTop })
       .then((bitmap) => {

@@ -214,11 +214,12 @@ export async function GET(request: NextRequest) {
           (OG_IMAGE_HEIGHT - OG_BOARD_PADDING_Y * 2) / boardDetails.boardHeight,
         )
       : null;
-    const outputWidth = isOgVariant
-      ? Math.max(1, Math.round(boardDetails.boardWidth * (ogScale || 1)))
-      : thumbnail
-        ? THUMBNAIL_WIDTH
-        : boardDetails.boardWidth;
+    const computeOutputWidth = () => {
+      if (isOgVariant) return Math.max(1, Math.round(boardDetails.boardWidth * (ogScale || 1)));
+      if (thumbnail) return THUMBNAIL_WIDTH;
+      return boardDetails.boardWidth;
+    };
+    const outputWidth = computeOutputWidth();
 
     // Build hold state map for this board
     const holdStateMap: Record<number, { color: string; renderStyle?: string }> = {};
@@ -366,9 +367,12 @@ export async function GET(request: NextRequest) {
         .toBuffer();
       outputContentType = 'image/png';
     } else if (outputBuffer === null && imageBuffer && format === 'webp') {
-      outputBuffer = await sharp(imageBuffer)
-        .webp(thumbnail ? THUMBNAIL_WEBP_OPTIONS : didCompositeBackground ? DEFAULT_WEBP_OPTIONS : { lossless: true })
-        .toBuffer();
+      const getWebpOptions = () => {
+        if (thumbnail) return THUMBNAIL_WEBP_OPTIONS;
+        if (didCompositeBackground) return DEFAULT_WEBP_OPTIONS;
+        return { lossless: true };
+      };
+      outputBuffer = await sharp(imageBuffer).webp(getWebpOptions()).toBuffer();
       outputContentType = 'image/webp';
     } else if (outputBuffer === null && imageBuffer) {
       outputBuffer = imageBuffer;

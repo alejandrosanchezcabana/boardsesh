@@ -877,11 +877,11 @@ const QueueControlBar: React.FC<QueueControlBarProps> = ({ boardDetails, angle }
                 >
                   <CloudOffOutlined sx={{ fontSize: 14, flexShrink: 0 }} />
                   <span className={styles.offlineBannerText}>
-                    {sessionId
-                      ? users && users.length > 1
-                        ? 'Offline. Queued climbs will still sync.'
-                        : 'Offline. Changes will sync when you reconnect.'
-                      : 'Offline'}
+                    {(() => {
+                      if (!sessionId) return 'Offline';
+                      if (users && users.length > 1) return 'Offline. Queued climbs will still sync.';
+                      return 'Offline. Changes will sync when you reconnect.';
+                    })()}
                   </span>
                   <CloseOutlined sx={{ fontSize: 14, flexShrink: 0, opacity: 0.6 }} />
                 </div>

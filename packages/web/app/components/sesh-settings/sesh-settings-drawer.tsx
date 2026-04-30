@@ -124,7 +124,11 @@ export default function SeshSettingsDrawer({
     onClose();
   }, [onClose]);
 
-  const { session: sessionDetail, isLoading, isError } = useSessionDetail({
+  const {
+    session: sessionDetail,
+    isLoading,
+    isError,
+  } = useSessionDetail({
     sessionId: sessionId ?? undefined,
     enabled: open && !!sessionId && !tourMockSession,
   });
@@ -207,43 +211,50 @@ export default function SeshSettingsDrawer({
     ? displaySession.sessionName || generateSessionName(displaySession.firstTickAt, displaySession.boardTypes)
     : 'Session';
 
-  const inviteContent = tourMockSession ? (
-    <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5 }}>
-      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-        <Typography variant="body2" color="text.secondary" sx={{ flex: 1 }}>
-          Share this link or QR code with your crew and they&apos;ll show up live.
-        </Typography>
-        <IconButton disabled aria-label="Share session link (preview)">
-          <IosShare />
-        </IconButton>
-        <IconButton disabled aria-label="Show QR code (preview)">
-          <QrCode2Outlined />
-        </IconButton>
-      </Box>
-      <Box sx={{ display: 'flex', justifyContent: 'center', py: 1 }}>
-        <QRCodeSVG value={TOUR_SHARE_QR_PAYLOAD} size={140} level="M" marginSize={4} aria-hidden />
-      </Box>
-    </Box>
-  ) : !isStopped && shareUrl ? (
-    <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5 }}>
-      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-        <Typography variant="body2" color="text.secondary" sx={{ flex: 1 }}>
-          Get your crew in by sharing this link or scanning the QR code
-        </Typography>
-        <IconButton onClick={handleShareSession} aria-label="Share session link">
-          <IosShare />
-        </IconButton>
-        <IconButton onClick={() => setShowQr((v) => !v)} aria-label={showQr ? 'Hide QR code' : 'Show QR code'}>
-          <QrCode2Outlined color={showQr ? 'primary' : 'inherit'} />
-        </IconButton>
-      </Box>
-      {showQr && (
-        <Box sx={{ display: 'flex', justifyContent: 'center', py: 1 }}>
-          <QRCodeSVG value={shareUrl} size={180} level="M" marginSize={4} />
+  let inviteContent: React.ReactNode;
+  if (tourMockSession) {
+    inviteContent = (
+      <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5 }}>
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+          <Typography variant="body2" color="text.secondary" sx={{ flex: 1 }}>
+            Share this link or QR code with your crew and they&apos;ll show up live.
+          </Typography>
+          <IconButton disabled aria-label="Share session link (preview)">
+            <IosShare />
+          </IconButton>
+          <IconButton disabled aria-label="Show QR code (preview)">
+            <QrCode2Outlined />
+          </IconButton>
         </Box>
-      )}
-    </Box>
-  ) : undefined;
+        <Box sx={{ display: 'flex', justifyContent: 'center', py: 1 }}>
+          <QRCodeSVG value={TOUR_SHARE_QR_PAYLOAD} size={140} level="M" marginSize={4} aria-hidden />
+        </Box>
+      </Box>
+    );
+  } else if (!isStopped && shareUrl) {
+    inviteContent = (
+      <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5 }}>
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+          <Typography variant="body2" color="text.secondary" sx={{ flex: 1 }}>
+            Get your crew in by sharing this link or scanning the QR code
+          </Typography>
+          <IconButton onClick={handleShareSession} aria-label="Share session link">
+            <IosShare />
+          </IconButton>
+          <IconButton onClick={() => setShowQr((v) => !v)} aria-label={showQr ? 'Hide QR code' : 'Show QR code'}>
+            <QrCode2Outlined color={showQr ? 'primary' : 'inherit'} />
+          </IconButton>
+        </Box>
+        {showQr && (
+          <Box sx={{ display: 'flex', justifyContent: 'center', py: 1 }}>
+            <QRCodeSVG value={shareUrl} size={180} level="M" marginSize={4} />
+          </Box>
+        )}
+      </Box>
+    );
+  } else {
+    inviteContent = undefined;
+  }
 
   if (!activeSession && !tourMockSession && !isStopped) return null;
 

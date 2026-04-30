@@ -37,14 +37,14 @@ export default function SessionSummaryDialog({
     void save();
   }, [summary, available, autoSyncEnabled, autoSyncLoaded, save]);
 
-  const buttonLabel =
-    state === 'saving'
-      ? 'Saving to Apple Health…'
-      : state === 'saved'
-        ? 'Saved to Apple Health'
-        : state === 'error'
-          ? 'Save to Apple Health (retry)'
-          : 'Save to Apple Health';
+  let buttonLabel = 'Save to Apple Health';
+  if (state === 'saving') {
+    buttonLabel = 'Saving to Apple Health…';
+  } else if (state === 'saved') {
+    buttonLabel = 'Saved to Apple Health';
+  } else if (state === 'error') {
+    buttonLabel = 'Save to Apple Health (retry)';
+  }
 
   return (
     <Dialog open={summary !== null} onClose={onDismiss} maxWidth="sm" fullWidth>

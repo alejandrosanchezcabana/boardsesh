@@ -20,9 +20,15 @@ export function computeActionDisplay(
   size: ClimbActionSize = 'default',
   showLabel?: boolean,
 ) {
+  let iconSize = 16;
+  if (size === 'small') {
+    iconSize = 14;
+  } else if (size === 'large') {
+    iconSize = 20;
+  }
   return {
     shouldShowLabel: showLabel ?? (viewMode === 'button' || viewMode === 'dropdown'),
-    iconSize: size === 'small' ? 14 : size === 'large' ? 20 : 16,
+    iconSize,
   };
 }
 

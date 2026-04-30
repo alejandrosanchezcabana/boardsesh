@@ -97,13 +97,15 @@ export default function SubscribeButton({
       disabled={disabled || loading}
       sx={{ gap: 0.5, textTransform: 'none' }}
     >
-      {loading ? (
-        <CircularProgress size={16} />
-      ) : isSubscribed ? (
-        <NotificationsActiveOutlined fontSize="small" />
-      ) : (
-        <NotificationsNoneOutlined fontSize="small" />
-      )}
+      {(() => {
+        if (loading) {
+          return <CircularProgress size={16} />;
+        }
+        if (isSubscribed) {
+          return <NotificationsActiveOutlined fontSize="small" />;
+        }
+        return <NotificationsNoneOutlined fontSize="small" />;
+      })()}
       {isSubscribed ? 'Subscribed' : 'Subscribe'}
     </ToggleButton>
   );

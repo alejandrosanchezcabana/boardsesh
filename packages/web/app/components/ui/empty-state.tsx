@@ -13,6 +13,12 @@ type EmptyStateProps = {
   sx?: SxProps<Theme>;
 };
 
+function toSxArray(sx: SxProps<Theme> | undefined) {
+  if (Array.isArray(sx)) return sx;
+  if (sx) return [sx];
+  return [];
+}
+
 export function EmptyState({ icon, description = 'No data', children, sx }: EmptyStateProps) {
   return (
     <Box
@@ -25,7 +31,7 @@ export function EmptyState({ icon, description = 'No data', children, sx }: Empt
           padding: 4,
           color: 'text.secondary',
         },
-        ...(Array.isArray(sx) ? sx : sx ? [sx] : []),
+        ...toSxArray(sx),
       ]}
     >
       <Box sx={{ fontSize: 48, mb: 1, opacity: 0.4 }}>{icon || <InboxOutlined fontSize="inherit" />}</Box>

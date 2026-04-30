@@ -126,13 +126,15 @@ async function fetchInstagramMetaUncached(url: string): Promise<InstagramMetaRes
     const ogImageRaw = html.match(/property=["']og:image["']\s+content=["']([^"']+)["']/i)?.[1] ?? null;
     const displayUrlRaw = html.match(/"display_url"\s*:\s*"([^"]+)"/)?.[1] ?? null;
     const thumbnailSrcRaw = html.match(/"thumbnail_src"\s*:\s*"([^"]+)"/)?.[1] ?? null;
-    thumbnail = ogImageRaw
-      ? decodeHtmlEntities(ogImageRaw)
-      : displayUrlRaw
-        ? decodeJsonString(displayUrlRaw)
-        : thumbnailSrcRaw
-          ? decodeJsonString(thumbnailSrcRaw)
-          : null;
+    if (ogImageRaw) {
+      thumbnail = decodeHtmlEntities(ogImageRaw);
+    } else if (displayUrlRaw) {
+      thumbnail = decodeJsonString(displayUrlRaw);
+    } else if (thumbnailSrcRaw) {
+      thumbnail = decodeJsonString(thumbnailSrcRaw);
+    } else {
+      thumbnail = null;
+    }
   }
 
   if (!thumbnail) {

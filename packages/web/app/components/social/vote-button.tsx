@@ -246,12 +246,11 @@ export default function VoteButton({
         sx={{
           minWidth: 20,
           textAlign: 'center',
-          color:
-            userVote === 1
-              ? themeTokens.colors.success
-              : userVote === -1
-                ? themeTokens.colors.error
-                : 'var(--neutral-600)',
+          color: (() => {
+            if (userVote === 1) return themeTokens.colors.success;
+            if (userVote === -1) return themeTokens.colors.error;
+            return 'var(--neutral-600)';
+          })(),
         }}
       >
         {score}

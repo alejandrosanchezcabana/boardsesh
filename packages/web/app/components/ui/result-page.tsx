@@ -27,6 +27,12 @@ const statusIcons: Record<ResultStatus, React.ReactNode> = {
   warning: <WarningAmberOutlined sx={{ fontSize: 72, color: 'warning.main' }} />,
 };
 
+function toSxArray(sx: SxProps<Theme> | undefined) {
+  if (Array.isArray(sx)) return sx;
+  if (sx) return [sx];
+  return [];
+}
+
 export function ResultPage({ status, title, subTitle, extra, icon, sx }: ResultPageProps) {
   return (
     <Box
@@ -39,7 +45,7 @@ export function ResultPage({ status, title, subTitle, extra, icon, sx }: ResultP
           padding: 4,
           textAlign: 'center',
         },
-        ...(Array.isArray(sx) ? sx : sx ? [sx] : []),
+        ...toSxArray(sx),
       ]}
     >
       <Box sx={{ mb: 3 }}>{icon || statusIcons[status]}</Box>

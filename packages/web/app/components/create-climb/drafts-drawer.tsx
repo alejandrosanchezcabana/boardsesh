@@ -226,34 +226,43 @@ const DraftsDrawer: React.FC<DraftsDrawerProps> = ({ open, onClose, boardDetails
 
       <div className={queueStyles.queueBodyLayout}>
         <div className={queueStyles.queueScrollContainer}>
-          {isLoading ? (
-            <Box
-              sx={{
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                padding: themeTokens.spacing[8],
-              }}
-            >
-              <CircularProgress size={24} />
-            </Box>
-          ) : error ? (
-            <Box sx={{ padding: themeTokens.spacing[6], textAlign: 'center' }}>
-              <Typography variant="body2" color="text.secondary">
-                Couldn&apos;t load your drafts. Try again.
-              </Typography>
-            </Box>
-          ) : drafts.length === 0 ? (
-            <Box sx={{ padding: themeTokens.spacing[8], textAlign: 'center' }}>
-              <Typography variant="body1" sx={{ fontWeight: themeTokens.typography.fontWeight.semibold }}>
-                No drafts yet
-              </Typography>
-              <Typography variant="body2" color="text.secondary" sx={{ marginTop: 1 }}>
-                Save a climb as a draft to pick it up later.
-              </Typography>
-            </Box>
-          ) : (
-            drafts.map((climb) => (
+          {(() => {
+            if (isLoading) {
+              return (
+                <Box
+                  sx={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    padding: themeTokens.spacing[8],
+                  }}
+                >
+                  <CircularProgress size={24} />
+                </Box>
+              );
+            }
+            if (error) {
+              return (
+                <Box sx={{ padding: themeTokens.spacing[6], textAlign: 'center' }}>
+                  <Typography variant="body2" color="text.secondary">
+                    Couldn&apos;t load your drafts. Try again.
+                  </Typography>
+                </Box>
+              );
+            }
+            if (drafts.length === 0) {
+              return (
+                <Box sx={{ padding: themeTokens.spacing[8], textAlign: 'center' }}>
+                  <Typography variant="body1" sx={{ fontWeight: themeTokens.typography.fontWeight.semibold }}>
+                    No drafts yet
+                  </Typography>
+                  <Typography variant="body2" color="text.secondary" sx={{ marginTop: 1 }}>
+                    Save a climb as a draft to pick it up later.
+                  </Typography>
+                </Box>
+              );
+            }
+            return drafts.map((climb) => (
               <ClimbListItem
                 key={climb.uuid}
                 climb={climb}
@@ -263,8 +272,8 @@ const DraftsDrawer: React.FC<DraftsDrawerProps> = ({ open, onClose, boardDetails
                 disableSwipe
                 onSelect={() => handleSelectDraft(climb)}
               />
-            ))
-          )}
+            ));
+          })()}
         </div>
       </div>
     </SwipeableDrawer>

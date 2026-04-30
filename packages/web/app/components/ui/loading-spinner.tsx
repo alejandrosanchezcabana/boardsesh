@@ -13,7 +13,16 @@ type LoadingSpinnerProps = {
   tip?: React.ReactNode;
 };
 
+type SxArrayItem = Exclude<SxProps<Theme>, readonly unknown[]>;
+
+function toSxArray(sx: SxProps<Theme> | undefined): SxArrayItem[] {
+  if (Array.isArray(sx)) return sx as SxArrayItem[];
+  if (sx) return [sx as SxArrayItem];
+  return [];
+}
+
 export function LoadingSpinner({ spinning = true, size = 40, children, sx, tip }: LoadingSpinnerProps) {
+  const sxArray = toSxArray(sx);
   if (!children) {
     if (!spinning) return null;
     return (
@@ -26,7 +35,7 @@ export function LoadingSpinner({ spinning = true, size = 40, children, sx, tip }
             justifyContent: 'center',
             padding: 4,
           },
-          ...(Array.isArray(sx) ? sx : sx ? [sx] : []),
+          ...sxArray,
         ]}
       >
         <CircularProgress size={size} />
@@ -36,7 +45,7 @@ export function LoadingSpinner({ spinning = true, size = 40, children, sx, tip }
   }
 
   return (
-    <Box sx={[{ position: 'relative' }, ...(Array.isArray(sx) ? sx : sx ? [sx] : [])]}>
+    <Box sx={[{ position: 'relative' }, ...sxArray]}>
       {children}
       {spinning && (
         <Box

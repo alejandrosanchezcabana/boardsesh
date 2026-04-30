@@ -111,28 +111,32 @@ export const TickButton: React.FC<TickButtonProps> = ({
         id="button-tick"
         onClick={showDrawer}
         aria-label={tickBarActive ? 'Save tick' : 'Log ascent'}
-        sx={
-          tickBarActive
-            ? {
-                backgroundColor:
-                  ascentType === 'attempt'
-                    ? themeTokens.colors.error
-                    : ascentType === 'flash' || isFlash
-                      ? themeTokens.colors.amber
-                      : themeTokens.colors.success,
-                color: ascentType === 'flash' || isFlash ? themeTokens.neutral[900] : 'common.white',
-                transition: 'background-color 150ms ease, color 150ms ease',
-                '&:hover': {
-                  backgroundColor:
-                    ascentType === 'attempt'
-                      ? themeTokens.colors.error
-                      : ascentType === 'flash' || isFlash
-                        ? themeTokens.colors.amber
-                        : themeTokens.colors.successHover,
-                },
-              }
-            : { opacity: themeTokens.opacity.subtle }
-        }
+        sx={(() => {
+          if (!tickBarActive) {
+            return { opacity: themeTokens.opacity.subtle };
+          }
+          const isFlashVariant = ascentType === 'flash' || isFlash;
+          let backgroundColor: string;
+          let hoverBackgroundColor: string;
+          if (ascentType === 'attempt') {
+            backgroundColor = themeTokens.colors.error;
+            hoverBackgroundColor = themeTokens.colors.error;
+          } else if (isFlashVariant) {
+            backgroundColor = themeTokens.colors.amber;
+            hoverBackgroundColor = themeTokens.colors.amber;
+          } else {
+            backgroundColor = themeTokens.colors.success;
+            hoverBackgroundColor = themeTokens.colors.successHover;
+          }
+          return {
+            backgroundColor,
+            color: isFlashVariant ? themeTokens.neutral[900] : 'common.white',
+            transition: 'background-color 150ms ease, color 150ms ease',
+            '&:hover': {
+              backgroundColor: hoverBackgroundColor,
+            },
+          };
+        })()}
       >
         {tickBarActive && ascentType === 'attempt' ? (
           <PersonFallingIcon />
@@ -143,7 +147,12 @@ export const TickButton: React.FC<TickButtonProps> = ({
     </MuiBadge>
   );
 
-  const tickLabel = ascentType === 'attempt' ? 'attempt' : ascentType === 'flash' || isFlash ? 'flash' : 'tick';
+  const resolveTickLabel = () => {
+    if (ascentType === 'attempt') return 'attempt';
+    if (ascentType === 'flash' || isFlash) return 'flash';
+    return 'tick';
+  };
+  const tickLabel = resolveTickLabel();
 
   return (
     <>

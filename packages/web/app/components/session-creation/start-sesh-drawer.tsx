@@ -221,11 +221,14 @@ export default function StartSeshDrawer({ open, onClose, onTransitionEnd, boardC
       // Local state may be empty when the QueueBridgeInjector is active on a
       // board route — it only syncs to local state on cleanup (navigating away).
       const effectiveBoardDetails = localBoardDetails ?? bridgeBoardDetails;
-      const effectiveBaseBoardPath = localBoardPath
-        ? getBaseBoardPath(localBoardPath)
-        : bridgeBoardDetails && pathname
-          ? getBaseBoardPath(pathname)
-          : null;
+      let effectiveBaseBoardPath: string | null;
+      if (localBoardPath) {
+        effectiveBaseBoardPath = getBaseBoardPath(localBoardPath);
+      } else if (bridgeBoardDetails && pathname) {
+        effectiveBaseBoardPath = getBaseBoardPath(pathname);
+      } else {
+        effectiveBaseBoardPath = null;
+      }
       const effectiveQueue = localQueue.length > 0 ? localQueue : bridgeQueue;
       const effectiveCurrentClimb = localCurrentClimbQueueItem ?? bridgeCurrentClimbQueueItem;
       const boardsMatch = effectiveBaseBoardPath != null && effectiveBaseBoardPath === getBaseBoardPath(boardPath);
