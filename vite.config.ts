@@ -64,9 +64,19 @@ export default defineConfig({
         cache: false,
       },
 
+      // --- Codegen (GraphQL types for client + backend resolvers) ---
+      'codegen:print-schema': {
+        command: 'bun run --filter=@boardsesh/shared-schema print-schema',
+      },
+      codegen: {
+        command: 'bunx graphql-codegen',
+        dependsOn: ['codegen:print-schema'],
+      },
+
       // --- Build (topological order via dependsOn) ---
       'build:shared': {
         command: 'bun run --filter=@boardsesh/shared-schema build',
+        dependsOn: ['codegen'],
       },
       'build:crypto': {
         command: 'bun run --filter=@boardsesh/crypto build',
