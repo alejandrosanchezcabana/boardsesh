@@ -1,10 +1,10 @@
 import { writeFileSync, mkdirSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { typeDefs } from './schema/index';
+import { typeDefs } from '../src/schema/index';
 
 const here = dirname(fileURLToPath(import.meta.url));
-const outPath = join(here, 'generated', 'schema.graphql');
+const outPath = join(here, '..', 'src', 'generated', 'schema.graphql');
 
 mkdirSync(dirname(outPath), { recursive: true });
 writeFileSync(outPath, typeDefs.join('\n'), 'utf-8');

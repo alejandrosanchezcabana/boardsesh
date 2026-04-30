@@ -5,7 +5,7 @@ const config: CodegenConfig = {
   ignoreNoDocuments: true,
   generates: {
     'packages/shared-schema/src/generated/types.ts': {
-      plugins: ['typescript', 'typescript-resolvers'],
+      plugins: [{ add: { content: '/* eslint-disable */' } }, 'typescript', 'typescript-resolvers'],
       config: {
         contextType: '../types#ConnectionContext',
         useIndexSignature: true,

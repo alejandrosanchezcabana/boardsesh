@@ -36,7 +36,7 @@
     "build": "tsc",
     "dev": "tsc --watch",
     "typecheck": "tsc --noEmit",
-    "print-schema": "bun run src/print-schema.ts",
+    "print-schema": "bun run scripts/print-schema.ts",
     "lint": "vp lint",
     "lint-fix": "vp lint --fix"
   },
@@ -44,6 +44,7 @@
     "graphql": "^16.13.0"
   },
   "devDependencies": {
+    "@types/node": "^25.3.3",
     "typescript": "^5.9.3"
   }
 }

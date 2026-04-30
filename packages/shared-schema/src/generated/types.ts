@@ -1,3 +1,4 @@
+/* eslint-disable */
 import { GraphQLResolveInfo, GraphQLScalarType, GraphQLScalarTypeConfig } from 'graphql';
 import { ConnectionContext } from '../types';
 export type Maybe<T> = T | null;
