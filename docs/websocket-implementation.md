@@ -501,7 +501,7 @@ sequenceDiagram
 | `SessionEnded`        | Session is ended explicitly or by cleanup   | `reason`, `newPath`                                                                                                                                               |
 | `SessionStatsUpdated` | A tick is saved for an active party session | `totalSends`, `totalFlashes`, `totalAttempts`, `tickCount`, `participants`, `gradeDistribution`, `boardTypes`, `hardestGrade`, `durationMinutes`, `goal`, `ticks` |
 
-`SessionStatsUpdated` payloads now include full `ticks` rows so clients can update charts and climbs/attempt lists without issuing an extra session detail refetch.
+`SessionStatsUpdated` payloads include full `ticks` rows so clients can update charts and climbs/attempt lists without issuing an extra session detail refetch. On the client, `useEventProcessor` patches the `SESSION_DETAIL_QUERY_KEY(sessionId)` React Query cache entry directly with the new stats and ticks — there is no separate `liveSessionStats` merge layer, so any component subscribed via `useSessionDetail` re-renders from the updated cache automatically.
 
 ---
 

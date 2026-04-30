@@ -39,6 +39,8 @@ export function useSessionDetail({ sessionId, initialData, enabled = true }: Use
     },
     enabled: enabled && !!sessionId && isAuthenticated && !!token,
     staleTime: 30_000,
+    // Live updates arrive via SessionStatsUpdated cache patches, so a
+    // window-focus refetch would only race the WS feed and reintroduce flicker.
     refetchOnWindowFocus: false,
     ...(initialData
       ? {

@@ -3,6 +3,7 @@ import { openDB } from 'idb';
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vite-plus/test';
 import { renderHook, act, waitFor } from '@testing-library/react';
 import React from 'react';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { getPreference, setPreference, removePreference } from '@/app/lib/user-preferences-db';
 import type { BoardDetails } from '@/app/lib/types';
 import { PersistentSessionProvider, usePersistentSession } from '../persistent-session-context';
@@ -80,8 +81,16 @@ function createTestBoardDetails(overrides?: Partial<BoardDetails>): BoardDetails
   } as BoardDetails;
 }
 
-function wrapper({ children }: { children: React.ReactNode }) {
-  return <PersistentSessionProvider>{children}</PersistentSessionProvider>;
+function createWrapper() {
+  // Fresh QueryClient per test so cached session-detail entries don't leak
+  // across cases. PersistentSessionProvider's useEventProcessor calls
+  // useQueryClient(), so the provider must be in scope.
+  const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } });
+  return ({ children }: { children: React.ReactNode }) => (
+    <QueryClientProvider client={queryClient}>
+      <PersistentSessionProvider>{children}</PersistentSessionProvider>
+    </QueryClientProvider>
+  );
 }
 
 // ---------------------------------------------------------------------------
@@ -149,7 +158,7 @@ describe('Active session persistence', () => {
 
 describe('PersistentSessionProvider auto-restore on mount', () => {
   it('sets isLocalQueueLoaded=true when no stored data exists', async () => {
-    const { result } = renderHook(() => usePersistentSession(), { wrapper });
+    const { result } = renderHook(() => usePersistentSession(), { wrapper: createWrapper() });
 
     await waitFor(() => {
       expect(result.current.isLocalQueueLoaded).toBe(true);
@@ -177,7 +186,7 @@ describe('PersistentSessionProvider auto-restore on mount', () => {
 
     await setPreference(ACTIVE_SESSION_KEY, sessionInfo);
 
-    const { result } = renderHook(() => usePersistentSession(), { wrapper });
+    const { result } = renderHook(() => usePersistentSession(), { wrapper: createWrapper() });
 
     await waitFor(() => {
       expect(result.current.isLocalQueueLoaded).toBe(true);
@@ -190,7 +199,7 @@ describe('PersistentSessionProvider auto-restore on mount', () => {
   });
 
   it('activateSession persists to IndexedDB', async () => {
-    const { result } = renderHook(() => usePersistentSession(), { wrapper });
+    const { result } = renderHook(() => usePersistentSession(), { wrapper: createWrapper() });
 
     await waitFor(() => {
       expect(result.current.isLocalQueueLoaded).toBe(true);
@@ -236,7 +245,7 @@ describe('PersistentSessionProvider auto-restore on mount', () => {
     };
     await setPreference(ACTIVE_SESSION_KEY, sessionInfo);
 
-    const { result } = renderHook(() => usePersistentSession(), { wrapper });
+    const { result } = renderHook(() => usePersistentSession(), { wrapper: createWrapper() });
 
     await waitFor(() => {
       expect(result.current.activeSession).toEqual(sessionInfo);
