@@ -219,7 +219,6 @@ We are using next.js app router, it's important we try to use server side compon
 - While we work together, be careful to remove any code you no longer use, so we dont end up with lots of deadcode
 - **Dark mode uses white input fields** — This is intentional for contrast. All input components (TextField, Select, Autocomplete, etc.) have white backgrounds in dark mode via `darkTokens.semantic.inputSurface`. Do not change them to dark backgrounds.
 - **Never use `any` type** - The `no-explicit-any` lint rule is set to `deny` across all packages. Use `unknown`, proper types, or `as unknown as SpecificType` for type assertions. No exceptions - `any` defeats the purpose of TypeScript
-- **No nested ternaries** - `a ? b : c ? d : e` forces the reader to mentally re-bracket the expression. Use an `if`/`else if`/`else` block, an early return, or a small helper function. A `?:` is fine when both branches are short and unambiguous, but the moment you reach for a second `?:` inside the first, switch forms.
 - **Variable names must describe their contents** - No single-letter aliases (`r`, `x`, `s`) or vague placeholders (`data`, `info`, `latest`, `temp`, `value`) outside of tight loops or well-known math conventions. The name should tell the next reader what's inside without forcing them to scroll back to the declaration. Prefer destructuring at the use site over a generic alias — `const { queue, currentClimb } = stateRef.current` reads better than `const s = stateRef.current` followed by `s.queue` / `s.currentClimb`.
 
 ### Copy & Microcopy
