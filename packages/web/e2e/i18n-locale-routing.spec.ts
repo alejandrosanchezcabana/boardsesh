@@ -8,8 +8,8 @@ import { test, expect } from '@playwright/test';
  * request header reaches the layout, `<html lang>` flips, the right
  * Spanish copy renders, and hreflang alternates point at both locales.
  *
- * This is the only end-to-end check we have for locale rewriting,
- * so it covers a few pages rather than just one.
+ * This is the only end-to-end check we have for locale rewriting, so
+ * it covers a handful of representative pages rather than just one.
  */
 
 test.describe('i18n locale routing', () => {
