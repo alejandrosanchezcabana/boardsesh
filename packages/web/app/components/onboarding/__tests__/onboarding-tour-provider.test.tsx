@@ -318,6 +318,99 @@ describe('OnboardingTourProvider', () => {
     });
   });
 
+  describe('notifyViewMode (climb-list grid/list steps)', () => {
+    it('advances climb-list-grid-view after grace period when user switches to grid', async () => {
+      vi.useFakeTimers();
+      const { result } = renderHook(useOnboardingTour, { wrapper });
+      await act(async () => {
+        await Promise.resolve();
+      });
+
+      // Reach climb-list-grid-view (home-intro → home-pick-board → climb-list-grid-view).
+      act(() => result.current.start());
+      for (let i = 0; i < 2; i++) act(() => result.current.next());
+      expect(result.current.currentStepId).toBe('climb-list-grid-view');
+
+      // Mount-time notify with the default 'list' mode is a no-op for this step.
+      act(() => result.current.notifyViewMode('list'));
+      expect(result.current.currentStepId).toBe('climb-list-grid-view');
+
+      // User switches to grid — schedules the grace timer (still within
+      // CURRENT_CLIMB_GRACE_MS of step entry, so the advance is deferred).
+      act(() => result.current.notifyViewMode('grid'));
+      expect(result.current.currentStepId).toBe('climb-list-grid-view');
+
+      act(() => {
+        vi.advanceTimersByTime(2000);
+      });
+      expect(result.current.currentStepId).toBe('climb-list-back-to-list');
+      vi.useRealTimers();
+    });
+
+    it('advances climb-list-back-to-list after grace period when user switches back to list', async () => {
+      vi.useFakeTimers();
+      const { result } = renderHook(useOnboardingTour, { wrapper });
+      await act(async () => {
+        await Promise.resolve();
+      });
+
+      // Reach climb-list-back-to-list.
+      act(() => result.current.start());
+      for (let i = 0; i < 3; i++) act(() => result.current.next());
+      expect(result.current.currentStepId).toBe('climb-list-back-to-list');
+
+      act(() => result.current.notifyViewMode('list'));
+      act(() => {
+        vi.advanceTimersByTime(2000);
+      });
+      expect(result.current.currentStepId).toBe('climb-list');
+      vi.useRealTimers();
+    });
+
+    it('debounces rapid view-mode toggles into a single advance per transition', async () => {
+      vi.useFakeTimers();
+      const { result } = renderHook(useOnboardingTour, { wrapper });
+      await act(async () => {
+        await Promise.resolve();
+      });
+
+      act(() => result.current.start());
+      for (let i = 0; i < 2; i++) act(() => result.current.next());
+      expect(result.current.currentStepId).toBe('climb-list-grid-view');
+
+      // User toggles back and forth rapidly — only the final 'grid' notify
+      // should result in an advance, and only once.
+      act(() => {
+        result.current.notifyViewMode('grid');
+        result.current.notifyViewMode('list'); // no-op for this step
+        result.current.notifyViewMode('grid');
+      });
+
+      act(() => {
+        vi.advanceTimersByTime(2000);
+      });
+      expect(result.current.currentStepId).toBe('climb-list-back-to-list');
+
+      // Further notifies on the new step's unrelated mode are no-ops.
+      act(() => result.current.notifyViewMode('grid'));
+      act(() => {
+        vi.advanceTimersByTime(2000);
+      });
+      expect(result.current.currentStepId).toBe('climb-list-back-to-list');
+      vi.useRealTimers();
+    });
+
+    it('is a no-op on unrelated steps', async () => {
+      const { result } = renderHook(useOnboardingTour, { wrapper });
+      await flushAsync();
+      act(() => result.current.start()); // home-intro
+
+      act(() => result.current.notifyViewMode('grid'));
+      act(() => result.current.notifyViewMode('list'));
+      expect(result.current.currentStepId).toBe('home-intro');
+    });
+  });
+
   describe('pathname change advance', () => {
     it('home-pick-board auto-advances to climb-list when the path matches a board list route', async () => {
       const { result, rerender } = renderHook(useOnboardingTour, { wrapper });
