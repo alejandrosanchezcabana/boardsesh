@@ -7,12 +7,15 @@ import {
   type SubmitAppFeedbackMutationVariables,
   type SubmitAppFeedbackMutationResponse,
 } from '@/app/lib/graphql/operations';
-import type { SubmitAppFeedbackInput, AppFeedbackBoardName, FeedbackContextInput } from '@boardsesh/shared-schema';
+import type { SubmitAppFeedbackInput, FeedbackContextInput } from '@boardsesh/shared-schema';
 import { getPlatform } from '@/app/lib/ble/capacitor-utils';
 import { getAppVersion } from '@/app/lib/app-info';
 import { useWsAuthToken } from './use-ws-auth-token';
 import { useQueueBridgeBoardInfo } from '@/app/components/queue-control/queue-bridge-board-info-context';
 import { usePersistentSession } from '@/app/components/persistent-session';
+import type { Angle, BoardDetails } from '@/app/lib/types';
+import type { ClimbQueueItem } from '@/app/components/queue-control/types';
+import type { ActiveSessionInfo } from '@/app/components/persistent-session';
 
 /**
  * Fields callers provide. `platform`/`appVersion` are injected by the helper;
@@ -24,27 +27,95 @@ export type SubmitAppFeedbackPayload = Omit<
   'platform' | 'appVersion' | 'boardName' | 'layoutId' | 'sizeId' | 'setIds' | 'angle' | 'context'
 >;
 
-const KNOWN_BOARD_NAMES: ReadonlySet<string> = new Set(['kilter', 'tension', 'moonboard']);
+const BOARD_NAME_MAX = 100;
 const URL_MAX = 1000;
 const UA_MAX = 512;
 
-function asBoardName(name: string | undefined): AppFeedbackBoardName | null {
-  return name && KNOWN_BOARD_NAMES.has(name) ? (name as AppFeedbackBoardName) : null;
-}
+type FeedbackEnrichment = Pick<
+  SubmitAppFeedbackInput,
+  'boardName' | 'layoutId' | 'sizeId' | 'setIds' | 'angle' | 'context'
+>;
 
-function clip(value: string | undefined | null, max: number): string | undefined {
+export type BuildFeedbackEnrichmentArgs = {
+  boardDetails: BoardDetails | null;
+  angle: Angle;
+  activeSession: Pick<ActiveSessionInfo, 'sessionId' | 'sessionName' | 'boardDetails'> | null;
+  /** ps.currentClimbQueueItem — the climb selected in an active party session. */
+  partyClimbQueueItem: ClimbQueueItem | null;
+  /** ps.localCurrentClimbQueueItem — the climb selected locally, no party. */
+  localClimbQueueItem: ClimbQueueItem | null;
+  /** Typically `window.location.pathname + window.location.search`. */
+  url: string | undefined;
+  /** Typically `navigator.userAgent`. */
+  userAgent: string | undefined;
+};
+
+/**
+ * Trim a string to `max` chars, treating empty/whitespace-only as absent.
+ * Exported for tests.
+ */
+export function clip(value: string | null | undefined, max: number): string | undefined {
   if (!value) return undefined;
   return value.length > max ? value.slice(0, max) : value;
 }
 
-function compactContext(input: FeedbackContextInput): FeedbackContextInput | null {
+/**
+ * Clip a board identifier to {@link BOARD_NAME_MAX} chars; returns null when
+ * the value is missing/empty so the resolver can store NULL rather than ''.
+ * Exported for tests.
+ */
+export function clipBoardName(name: string | null | undefined): string | null {
+  return clip(name, BOARD_NAME_MAX) ?? null;
+}
+
+/**
+ * Drop empty/null leaves and return null when nothing remains, so we don't
+ * send `{}` over the wire (looks like "context provided but blank").
+ * Exported for tests.
+ */
+export function compactContext(input: FeedbackContextInput): FeedbackContextInput | null {
   const out: FeedbackContextInput = {};
-  for (const [key, value] of Object.entries(input)) {
+  for (const [key, value] of Object.entries(input) as Array<[keyof FeedbackContextInput, unknown]>) {
     if (typeof value === 'string' && value.length > 0) {
-      (out as Record<string, string>)[key] = value;
+      out[key] = value;
     }
   }
   return Object.keys(out).length > 0 ? out : null;
+}
+
+/**
+ * Pure derivation of the board + queue + session enrichment that gets attached
+ * to a feedback submission. Kept separate from the React hook so it can be
+ * tested without rendering. Selection rules:
+ *
+ * - When a party session is active, prefer its board and current climb (mirrors
+ *   `sesh-settings-drawer`).
+ * - Otherwise fall back to the bridge board and the local current climb.
+ * - When no board is available at all, all board fields are null and `angle`
+ *   is null too — `angle` only makes sense alongside a board.
+ *
+ * Exported for tests.
+ */
+export function buildFeedbackEnrichment(args: BuildFeedbackEnrichmentArgs): FeedbackEnrichment {
+  const board = args.activeSession?.boardDetails ?? args.boardDetails;
+  const climb = (args.activeSession ? args.partyClimbQueueItem : args.localClimbQueueItem)?.climb;
+
+  return {
+    boardName: clipBoardName(board?.board_name),
+    layoutId: board?.layout_id ?? null,
+    sizeId: board?.size_id ?? null,
+    setIds: board?.set_ids ?? null,
+    angle: board ? args.angle : null,
+    context: compactContext({
+      climbUuid: climb?.uuid,
+      climbName: climb?.name,
+      difficulty: climb?.difficulty ?? undefined,
+      sessionId: args.activeSession?.sessionId,
+      sessionName: args.activeSession?.sessionName,
+      url: clip(args.url, URL_MAX),
+      userAgent: clip(args.userAgent, UA_MAX),
+    }),
+  };
 }
 
 /**
@@ -81,38 +152,24 @@ export async function submitAppFeedback(
  */
 export function useSubmitAppFeedback() {
   const { token } = useWsAuthToken();
+  // We deliberately don't gate on `isHydrated` — the bridge defaults to
+  // `boardDetails: null`, which the enrichment treats as "no board". A
+  // submission made during the hydration window simply ships without board
+  // metadata rather than blocking the user.
   const { boardDetails, angle } = useQueueBridgeBoardInfo();
   const ps = usePersistentSession();
 
   return useMutation({
     mutationFn: (payload: SubmitAppFeedbackPayload): Promise<boolean> => {
-      // Prefer the active party session's board (matches sesh-settings-drawer).
-      const board = ps.activeSession?.boardDetails ?? boardDetails;
-      const climb = (ps.activeSession ? ps.currentClimbQueueItem : ps.localCurrentClimbQueueItem)?.climb;
-
-      const enrichment: Pick<
-        SubmitAppFeedbackInput,
-        'boardName' | 'layoutId' | 'sizeId' | 'setIds' | 'angle' | 'context'
-      > = {
-        boardName: asBoardName(board?.board_name),
-        layoutId: board?.layout_id ?? null,
-        sizeId: board?.size_id ?? null,
-        setIds: board?.set_ids ?? null,
-        angle: board ? angle : null,
-        context: compactContext({
-          climbUuid: climb?.uuid,
-          climbName: climb?.name,
-          difficulty: climb?.difficulty ?? undefined,
-          sessionId: ps.activeSession?.sessionId,
-          sessionName: ps.activeSession?.sessionName,
-          url:
-            typeof window !== 'undefined'
-              ? clip(window.location.pathname + window.location.search, URL_MAX)
-              : undefined,
-          userAgent: typeof navigator !== 'undefined' ? clip(navigator.userAgent, UA_MAX) : undefined,
-        }),
-      };
-
+      const enrichment = buildFeedbackEnrichment({
+        boardDetails,
+        angle,
+        activeSession: ps.activeSession,
+        partyClimbQueueItem: ps.currentClimbQueueItem,
+        localClimbQueueItem: ps.localCurrentClimbQueueItem,
+        url: typeof window !== 'undefined' ? window.location.pathname + window.location.search : undefined,
+        userAgent: typeof navigator !== 'undefined' ? navigator.userAgent : undefined,
+      });
       return submitAppFeedback({ ...payload, ...enrichment }, token);
     },
   });

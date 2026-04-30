@@ -1,6 +1,11 @@
 export type AppFeedbackPlatform = 'ios' | 'android' | 'web';
 export type AppFeedbackSource = 'prompt' | 'drawer-feedback' | 'shake-bug' | 'drawer-bug';
-export type AppFeedbackBoardName = 'kilter' | 'tension' | 'moonboard';
+/**
+ * Free-form identifier of the board the user is climbing on. Capped to 100
+ * chars by the backend zod validator so future board names work without a
+ * server change.
+ */
+export type AppFeedbackBoardName = string;
 
 /**
  * Free-form context attached to feedback for debugging. Stored as jsonb on the
@@ -24,9 +29,9 @@ export type SubmitAppFeedbackInput = {
   appVersion?: string | null;
   source: AppFeedbackSource;
   /**
-   * Board the user is climbing on at submission time. Captured from the queue
-   * bridge so reports can be filtered/reproduced per board. Null for anonymous
-   * submissions made outside any board context.
+   * Identifier of the board the user is climbing on at submission time.
+   * Captured from the queue bridge so reports can be filtered/reproduced per
+   * board. Null for anonymous submissions made outside any board context.
    */
   boardName?: AppFeedbackBoardName | null;
   layoutId?: number | null;

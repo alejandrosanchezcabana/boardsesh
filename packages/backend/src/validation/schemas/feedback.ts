@@ -22,7 +22,7 @@ export const SubmitAppFeedbackInputSchema = z
     platform: z.enum(['ios', 'android', 'web']),
     appVersion: z.string().max(64).optional().nullable(),
     source: z.enum([...RATING_SOURCES, ...BUG_SOURCES]),
-    boardName: z.enum(['kilter', 'tension', 'moonboard']).optional().nullable(),
+    boardName: z.string().min(1).max(100).optional().nullable(),
     layoutId: z.number().int().optional().nullable(),
     sizeId: z.number().int().optional().nullable(),
     setIds: z.array(z.number().int()).max(16).optional().nullable(),

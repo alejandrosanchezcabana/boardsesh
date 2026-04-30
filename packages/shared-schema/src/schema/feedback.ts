@@ -46,8 +46,9 @@ export const feedbackTypeDefs = /* GraphQL */ `
     source: String!
 
     """
-    Board the user is climbing on (\`kilter\` | \`tension\` | \`moonboard\`).
-    Null when submission happens outside a board context.
+    Identifier of the board the user is climbing on. Free-form, capped at
+    100 characters by the backend so future board names work without a
+    schema change. Null when submission happens outside a board context.
     """
     boardName: String
     layoutId: Int

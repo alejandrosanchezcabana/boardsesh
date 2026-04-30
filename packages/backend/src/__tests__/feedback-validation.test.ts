@@ -126,12 +126,32 @@ describe('SubmitAppFeedbackInputSchema', () => {
       expect(result.success).toBe(true);
     });
 
-    it('rejects an unknown board name', () => {
+    it('accepts an arbitrary board name (we add new boards over time)', () => {
       const result = SubmitAppFeedbackInputSchema.safeParse({
         ...BASE,
         rating: 5,
         source: 'prompt',
-        boardName: 'fakeboard',
+        boardName: 'grasshopper',
+      });
+      expect(result.success).toBe(true);
+    });
+
+    it('rejects a board name longer than 100 chars (cheap abuse guard)', () => {
+      const result = SubmitAppFeedbackInputSchema.safeParse({
+        ...BASE,
+        rating: 5,
+        source: 'prompt',
+        boardName: 'x'.repeat(101),
+      });
+      expect(result.success).toBe(false);
+    });
+
+    it('rejects an empty-string board name (use null instead of "")', () => {
+      const result = SubmitAppFeedbackInputSchema.safeParse({
+        ...BASE,
+        rating: 5,
+        source: 'prompt',
+        boardName: '',
       });
       expect(result.success).toBe(false);
     });
