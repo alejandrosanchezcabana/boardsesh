@@ -64,13 +64,33 @@ You don't have to rebuild the Android app every time you change the web UI. The 
 
 ### Point the app at your dev server
 
-1. Grab `app-debug.apk` from the most recent [Android Build release](https://github.com/boardsesh/boardsesh/releases?q=android-build). Uninstall the release build first if you have it — both variants use the same package id.
+The debug APK installs **alongside** the production Play Store app. It uses applicationId `com.boardsesh.app.debug`, shows up on the launcher as **Boardsesh debug**, and is signed with the committed `mobile/android/app/debug.keystore` so its SHA-256 is registered in `assetlinks.json` and Android App Links resolve to it on dev devices.
+
+1. Grab `app-debug.apk` from the most recent [Android Build release](https://github.com/boardsesh/boardsesh/releases?q=android-build), or build locally with `./scripts/android-debug-install.sh` (see below).
 2. Install the APK (enable "Install unknown apps" for your source if Android prompts you).
-3. Open the app, tap the avatar in the top left, and choose **Dev URL** from the drawer.
+3. Open **Boardsesh debug**, tap the avatar in the top left, and choose **Dev URL** from the drawer.
 4. Paste `http://<your-host>.ts.net:3000` (the URL `vp run dev` printed) and tap **Save & restart**. The app relaunches against your laptop.
 5. If the dev server stops or you lose tailnet connectivity, the app shows a native **Reset to production** prompt (or, if the WebView gets far enough to render an error page, a **Reset dev URL** link) that clears the override and relaunches.
 
 The menu item is only visible in debug builds; release builds don't expose it. Vercel preview URLs (`https://<preview>.boardsesh.com`) work too if you'd rather not run a local server.
+
+### One-command local install (alongside production)
+
+If you have an Android device attached over adb and an Android SDK installed locally, use the helper script. It builds the debug APK, installs it, re-runs App Links verification, and pins `boardsesh.com` deep links to the debug package on user 0 — so QR codes and `/join/<id>` links open the build under test instead of the production install.
+
+```bash
+./scripts/android-debug-install.sh
+```
+
+If multiple devices are attached, set `ANDROID_SERIAL=<serial>` first.
+
+> **Why the pin step matters.** Both `com.boardsesh.app` and `com.boardsesh.app.debug` are App-Links-verified for `boardsesh.com`. With both verified, Android shows a chooser by default — and a wrong tap silently routes future deep links to the production install. The script pins the debug package via `pm set-app-links-user-selection` so this doesn't bite you. To check or undo manually:
+>
+> ```bash
+> adb shell pm get-app-links com.boardsesh.app.debug
+> adb shell pm set-app-links-user-selection --user 0 \
+>     --package com.boardsesh.app true boardsesh.com www.boardsesh.com  # restore production
+> ```
 
 ## Testing BLE end-to-end with an ESP32
 
