@@ -7,8 +7,6 @@ import { getAllBoardConfigs } from './lib/server-board-configs';
 import { getPopularBoardConfigs } from './lib/server-popular-configs';
 import HomePageContent from './home-page-content';
 
-export const revalidate = false;
-
 export async function generateMetadata() {
   const { t, locale } = await getServerTranslation('marketing');
   return createPageMetadata({

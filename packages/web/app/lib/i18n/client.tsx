@@ -11,9 +11,14 @@ import { DEFAULT_LOCALE, DEFAULT_NAMESPACE, SUPPORTED_LOCALES, type Locale } fro
 // re-mounts the provider with fresh resources, and React reconciles every
 // translated subtree. We only fall through to `changeLanguage` here for the
 // rare case where a parent re-renders this provider with a new `locale` prop
-// without a navigation; in that path consumers may need a tick to re-render
-// because the singleton's identity hasn't changed. Acceptable for v1; revisit
-// if we add a no-navigation in-app toggle.
+// without a navigation.
+//
+// Known limitation in that no-navigation path: `changeLanguage` is async and
+// fired without await, and the singleton's object identity is stable across
+// renders, so `useMemo([locale, resources])` still returns the same instance.
+// Consumers can therefore see the previous locale's strings for one render
+// tick. Acceptable for v1 because the no-navigation path is unused — revisit
+// if we add an in-app locale toggle that doesn't route. See PR #1778 review.
 let clientInstance: i18n | undefined;
 
 function getClientInstance(locale: Locale, resources: Record<string, Record<string, unknown>>): i18n {

@@ -279,7 +279,7 @@ export async function generateMetadata() {
 
 **Adding a new locale**
 
-Touch all of: `SUPPORTED_LOCALES` and `LOCALE_HTML_LANG`/`LOCALE_OG`/`LOCALE_LABELS` in `packages/web/app/lib/i18n/config.ts`, the `detectLocale` helper in `middleware.ts`, every catalog directory under `packages/web/i18n/locales/`, the language switcher options, and the sitemap. Don't ship a partial locale — middleware will rewrite paths but pages will fall back to English everywhere.
+Touch all of: `SUPPORTED_LOCALES` and `LOCALE_HTML_LANG`/`LOCALE_OG`/`LOCALE_LABELS` in `packages/web/app/lib/i18n/config.ts`, every catalog directory under `packages/web/i18n/locales/`, the language switcher options, and the sitemap. `detectLocale` (`packages/web/app/lib/i18n/detect-locale.ts`) iterates `SUPPORTED_LOCALES` and needs no edit — adding the locale to `config.ts` is sufficient for routing. Don't ship a partial locale — middleware will rewrite paths but pages will fall back to English everywhere.
 
 **Don't translate** code samples in `<pre>` blocks (e.g. `app/docs/docs-client.tsx`), brand names ("Boardsesh", "Kilter", "Tension", "MoonBoard"), or user-generated content (climb names, comments, usernames). Trademark phrasing in CLAUDE.md still applies.
 
