@@ -93,3 +93,13 @@ export const PopularBoardConfigsInputSchema = z.object({
   limit: z.number().int().min(1).max(100).optional().default(12),
   offset: z.number().int().min(0).optional().default(0),
 });
+
+/**
+ * Schema for `boardsBySerialNumbers` and `myBoardSerialConfigs` queries.
+ * Caps the array length and per-element size so an attacker can't push a
+ * massive IN-list into the resolver. Mirrors the route Zod schema in
+ * `packages/web/app/api/internal/board-serials/route.ts`.
+ */
+export const SerialNumberLookupSchema = z.object({
+  serialNumbers: z.array(z.string().trim().min(1).max(64)).max(20),
+});

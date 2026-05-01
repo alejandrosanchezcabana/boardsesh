@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useRef, useCallback } from 'react';
+import { useState, useRef, useCallback, type ReactNode } from 'react';
 import ToggleButton from '@mui/material/ToggleButton';
 import NotificationsNoneOutlined from '@mui/icons-material/NotificationsNoneOutlined';
 import NotificationsActiveOutlined from '@mui/icons-material/NotificationsActiveOutlined';
@@ -88,6 +88,15 @@ export default function SubscribeButton({
     }
   };
 
+  let buttonIcon: ReactNode;
+  if (loading) {
+    buttonIcon = <CircularProgress size={16} />;
+  } else if (isSubscribed) {
+    buttonIcon = <NotificationsActiveOutlined fontSize="small" />;
+  } else {
+    buttonIcon = <NotificationsNoneOutlined fontSize="small" />;
+  }
+
   return (
     <ToggleButton
       value="subscribe"
@@ -97,13 +106,7 @@ export default function SubscribeButton({
       disabled={disabled || loading}
       sx={{ gap: 0.5, textTransform: 'none' }}
     >
-      {loading ? (
-        <CircularProgress size={16} />
-      ) : isSubscribed ? (
-        <NotificationsActiveOutlined fontSize="small" />
-      ) : (
-        <NotificationsNoneOutlined fontSize="small" />
-      )}
+      {buttonIcon}
       {isSubscribed ? 'Subscribed' : 'Subscribe'}
     </ToggleButton>
   );

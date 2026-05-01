@@ -23,6 +23,12 @@ type NotificationRow = {
   commentBody: string | null;
 };
 
+function truncateCommentBody(commentBody: string | null): string | undefined {
+  if (!commentBody) return undefined;
+  if (commentBody.length > 100) return commentBody.slice(0, 100) + '...';
+  return commentBody;
+}
+
 function mapNotificationRow(row: NotificationRow) {
   return {
     uuid: row.uuid,
@@ -32,11 +38,7 @@ function mapNotificationRow(row: NotificationRow) {
     actorAvatarUrl: row.actorAvatarUrl || row.actorImage || undefined,
     entityType: row.entityType,
     entityId: row.entityId,
-    commentBody: row.commentBody
-      ? row.commentBody.length > 100
-        ? row.commentBody.slice(0, 100) + '...'
-        : row.commentBody
-      : undefined,
+    commentBody: truncateCommentBody(row.commentBody),
     climbName: undefined,
     climbUuid: undefined,
     boardType: undefined,
@@ -200,11 +202,7 @@ export const socialNotificationQueries = {
         entityId: row.entityId,
         actorCount: Number(row.actorCount),
         actors,
-        commentBody: row.commentBody
-          ? row.commentBody.length > 100
-            ? row.commentBody.slice(0, 100) + '...'
-            : row.commentBody
-          : undefined,
+        commentBody: truncateCommentBody(row.commentBody),
         climbName: undefined as string | undefined,
         climbUuid: undefined as string | undefined,
         boardType: undefined as string | undefined,

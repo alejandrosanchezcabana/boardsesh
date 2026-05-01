@@ -360,8 +360,17 @@ export const queriesTypeDefs = /* GraphQL */ `
     """
     Look up boards by controller serial numbers.
     Searches all boards (including unlisted/non-public).
+    Capped at 20 serials per request — exceeding this throws a validation
+    error rather than silently truncating, so callers must cap on their end.
     """
     boardsBySerialNumbers(serialNumbers: [String!]!): [UserBoard!]!
+
+    """
+    Recorded board configurations for the current user keyed by controller serial.
+    Used as a fallback when boardsBySerialNumbers returns nothing for a serial,
+    and to detect connect-time config mismatches. Requires authentication.
+    """
+    myBoardSerialConfigs(serialNumbers: [String!]!): [BoardSerialConfig!]!
 
     """
     Get current user's boards.

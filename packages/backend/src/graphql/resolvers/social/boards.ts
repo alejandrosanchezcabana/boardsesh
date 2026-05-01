@@ -12,6 +12,7 @@ import {
   FollowBoardInputSchema,
   SearchBoardsInputSchema,
   PopularBoardConfigsInputSchema,
+  SerialNumberLookupSchema,
   UUIDSchema,
 } from '../../../validation/schemas';
 import { generateUniqueGymSlug } from './gyms';
@@ -654,8 +655,13 @@ export const socialBoardQueries = {
   boardsBySerialNumbers: async (_: unknown, { serialNumbers }: { serialNumbers: string[] }, ctx: ConnectionContext) => {
     await applyRateLimit(ctx, 20);
 
-    // Filter out empty strings and limit to 20 to prevent abuse
-    const cleaned = serialNumbers.filter((s) => s.trim().length > 0).slice(0, 20);
+    // Behaviour change: this used to silently `.slice(0, 20)` on overflow, now
+    // it throws via Zod (`SerialNumberLookupSchema.max(20)`). Callers MUST cap
+    // before sending — `resolveSerialNumbers` (the only first-party caller) does
+    // this via `MAX_SERIALS_PER_REQUEST`. Throwing surfaces accidental breakage
+    // in any future caller instead of silently dropping serials.
+    const validated = validateInput(SerialNumberLookupSchema, { serialNumbers }, 'serialNumbers');
+    const cleaned = validated.serialNumbers.filter((s) => s.length > 0);
     if (cleaned.length === 0) return [];
 
     const boards = await db
@@ -714,6 +720,58 @@ export const socialBoardQueries = {
     );
 
     return enriched;
+  },
+
+  /**
+   * Auto-recorded serial→config rows for the current user, optionally joined
+   * to the saved board they're linked to. Used as a fallback in serial lookups
+   * and for detecting connect-time config mismatches.
+   */
+  myBoardSerialConfigs: async (_: unknown, { serialNumbers }: { serialNumbers: string[] }, ctx: ConnectionContext) => {
+    requireAuthenticated(ctx);
+    await applyRateLimit(ctx, 20);
+
+    const validated = validateInput(SerialNumberLookupSchema, { serialNumbers }, 'serialNumbers');
+    const cleaned = validated.serialNumbers.filter((s) => s.length > 0);
+    if (cleaned.length === 0) return [];
+
+    // requireAuthenticated only checks the isAuthenticated flag; explicitly
+    // guard userId so a malformed context can't slip undefined into the query.
+    const { userId } = ctx;
+    if (!userId) {
+      throw new Error('Authentication required to perform this operation');
+    }
+
+    const rows = await db
+      .select({
+        serialNumber: dbSchema.userBoardSerials.serialNumber,
+        boardName: dbSchema.userBoardSerials.boardName,
+        layoutId: dbSchema.userBoardSerials.layoutId,
+        sizeId: dbSchema.userBoardSerials.sizeId,
+        setIds: dbSchema.userBoardSerials.setIds,
+        updatedAt: dbSchema.userBoardSerials.updatedAt,
+        boardUuid: dbSchema.userBoardSerials.boardUuid,
+        boardSlug: dbSchema.userBoards.slug,
+      })
+      .from(dbSchema.userBoardSerials)
+      .leftJoin(
+        dbSchema.userBoards,
+        and(eq(dbSchema.userBoards.uuid, dbSchema.userBoardSerials.boardUuid), isNull(dbSchema.userBoards.deletedAt)),
+      )
+      .where(
+        and(eq(dbSchema.userBoardSerials.userId, userId), inArray(dbSchema.userBoardSerials.serialNumber, cleaned)),
+      );
+
+    return rows.map((r) => ({
+      serialNumber: r.serialNumber,
+      boardName: r.boardName,
+      layoutId: Number(r.layoutId),
+      sizeId: Number(r.sizeId),
+      setIds: r.setIds,
+      updatedAt: r.updatedAt.toISOString(),
+      boardUuid: r.boardUuid,
+      boardSlug: r.boardSlug,
+    }));
   },
 
   /**

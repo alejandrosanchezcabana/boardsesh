@@ -16,8 +16,7 @@ import { PersonFallingIcon } from '@/app/components/icons/person-falling-icon';
 import LocationOnOutlined from '@mui/icons-material/LocationOnOutlined';
 import ChatBubbleOutlineOutlined from '@mui/icons-material/ChatBubbleOutlineOutlined';
 import Link from 'next/link';
-import dayjs from 'dayjs';
-import relativeTime from 'dayjs/plugin/relativeTime';
+import { formatTickRelativeTime } from '@/app/lib/format-tick-time';
 import type { FollowingAscentFeedItem } from '@boardsesh/shared-schema';
 import AscentThumbnail from './ascent-thumbnail';
 import VoteButton from '@/app/components/social/vote-button';
@@ -25,8 +24,6 @@ import CommentSection from '@/app/components/social/comment-section';
 import ClimbIcons from '@/app/components/climb-card/climb-icons';
 import { themeTokens } from '@/app/theme/theme-config';
 import styles from './ascents-feed.module.css';
-
-dayjs.extend(relativeTime);
 
 // Layout name mapping (shared with ascents-feed.tsx)
 const layoutNames: Record<string, string> = {
@@ -68,7 +65,7 @@ type SocialFeedItemProps = {
 
 const SocialFeedItem: React.FC<SocialFeedItemProps> = ({ item, showUserHeader = false }) => {
   const [commentsOpen, setCommentsOpen] = useState(false);
-  const timeAgo = dayjs(item.climbedAt).fromNow();
+  const timeAgo = formatTickRelativeTime(item.climbedAt);
   const statusDisplay = getStatusDisplay(item.status);
   const boardDisplay = getLayoutDisplayName(item.boardType, item.layoutId ?? null);
 

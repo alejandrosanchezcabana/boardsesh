@@ -182,8 +182,34 @@ describe('AutoConnectHandler', () => {
     expect(mockReplace).not.toHaveBeenCalled();
   });
 
-  it('rejects serial numbers with special characters', async () => {
-    mockSearchParams = new URLSearchParams('autoConnect=abc-123');
+  it('accepts hyphenated serial numbers (e.g. KB-99 from the mismatch-switch flow)', async () => {
+    mockSearchParams = new URLSearchParams('autoConnect=KB-99');
+
+    render(<AutoConnectHandler connect={mockConnect} isBluetoothSupported />);
+
+    await act(async () => {
+      await new Promise((r) => setTimeout(r, 10));
+    });
+
+    expect(mockConnect).toHaveBeenCalledTimes(1);
+    expect(mockConnect).toHaveBeenCalledWith('p1r12p2r13', false, 'KB-99');
+  });
+
+  it('rejects serial numbers with disallowed special characters', async () => {
+    // Slashes/spaces/other punctuation are still rejected — only [A-Za-z0-9-] is allowed.
+    mockSearchParams = new URLSearchParams('autoConnect=abc/123');
+
+    render(<AutoConnectHandler connect={mockConnect} isBluetoothSupported />);
+
+    await act(async () => {
+      await new Promise((r) => setTimeout(r, 10));
+    });
+
+    expect(mockConnect).not.toHaveBeenCalled();
+  });
+
+  it('rejects serial numbers longer than 64 characters', async () => {
+    mockSearchParams = new URLSearchParams(`autoConnect=${'A'.repeat(65)}`);
 
     render(<AutoConnectHandler connect={mockConnect} isBluetoothSupported />);
 

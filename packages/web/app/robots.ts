@@ -1,4 +1,5 @@
 import type { MetadataRoute } from 'next';
+import { absoluteUrl } from '@/app/lib/seo/base-url';
 
 export default function robots(): MetadataRoute.Robots {
   return {
@@ -7,6 +8,6 @@ export default function robots(): MetadataRoute.Robots {
       allow: '/',
       disallow: ['/feed', '/api/', '/auth/', '/settings', '/you', '/you/*'],
     },
-    sitemap: 'https://www.boardsesh.com/sitemap.xml',
+    sitemap: absoluteUrl('/sitemap.xml'),
   };
 }

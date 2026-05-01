@@ -1561,8 +1561,12 @@ export const SALTY_THREADS: ThreadTemplate[] = [
 // =============================================================================
 
 export function pickTickComment(status: TickStatus): string {
-  const pool =
-    status === 'flash' ? FLASH_TICK_COMMENTS : status === 'send' ? SEND_TICK_COMMENTS : ATTEMPT_TICK_COMMENTS;
+  let pool = ATTEMPT_TICK_COMMENTS;
+  if (status === 'flash') {
+    pool = FLASH_TICK_COMMENTS;
+  } else if (status === 'send') {
+    pool = SEND_TICK_COMMENTS;
+  }
 
   // 70% status-specific, 30% general
   const useGeneral = Math.random() < 0.3;

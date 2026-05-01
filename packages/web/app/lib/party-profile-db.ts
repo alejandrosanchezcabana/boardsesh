@@ -80,7 +80,7 @@ const migrateFromLegacyStorage = async (): Promise<boolean> => {
     });
 
     if (migrated) {
-      // Also clean up legacy username key if present
+      // oxlint-disable-next-line no-restricted-globals -- one-time migration cleanup
       localStorage.removeItem('boardsesh:username');
       console.info('Successfully migrated party profile from localStorage to IndexedDB');
     }

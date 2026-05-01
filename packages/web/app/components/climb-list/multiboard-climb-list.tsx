@@ -202,6 +202,49 @@ export default function MultiboardClimbList({
     </Box>
   ) : undefined;
 
+  let climbListContent: React.ReactNode;
+  if (isLoading && climbs.length === 0) {
+    climbListContent = (
+      <Box sx={{ display: 'flex', justifyContent: 'center', py: 4 }}>
+        <CircularProgress size={24} />
+      </Box>
+    );
+  } else if (climbs.length === 0 && !isLoading) {
+    climbListContent = (
+      <Box sx={{ py: 4, textAlign: 'center' }}>
+        <Typography variant="body2" color="text.secondary">
+          No climbs found
+        </Typography>
+      </Box>
+    );
+  } else if (defaultBoardDetails) {
+    climbListContent = (
+      <FavoritesProvider {...favoritesProviderProps}>
+        <PlaylistsProvider {...playlistsProviderProps}>
+          <ClimbsList
+            boardDetails={defaultBoardDetails}
+            boardDetailsByClimb={boardDetailsByClimb}
+            unsupportedClimbs={unsupportedClimbs}
+            upsizedClimbs={upsizedClimbs}
+            climbs={climbs}
+            selectedClimbUuid={effectiveSelectedUuid}
+            isFetching={isFetching}
+            hasMore={hasMore}
+            onClimbSelect={handleClimbSelect}
+            onLoadMore={onLoadMore}
+            addToQueue={queueActions?.addToQueue}
+            header={header}
+            headerInline={headerInline}
+            hideEndMessage={hideEndMessage}
+            showBottomSpacer={showBottomSpacer}
+          />
+        </PlaylistsProvider>
+      </FavoritesProvider>
+    );
+  } else {
+    climbListContent = null;
+  }
+
   return (
     <Box>
       {/* Board filter - thumbnail scroll cards */}
@@ -216,39 +259,7 @@ export default function MultiboardClimbList({
         />
       )}
 
-      {isLoading && climbs.length === 0 ? (
-        <Box sx={{ display: 'flex', justifyContent: 'center', py: 4 }}>
-          <CircularProgress size={24} />
-        </Box>
-      ) : climbs.length === 0 && !isLoading ? (
-        <Box sx={{ py: 4, textAlign: 'center' }}>
-          <Typography variant="body2" color="text.secondary">
-            No climbs found
-          </Typography>
-        </Box>
-      ) : defaultBoardDetails ? (
-        <FavoritesProvider {...favoritesProviderProps}>
-          <PlaylistsProvider {...playlistsProviderProps}>
-            <ClimbsList
-              boardDetails={defaultBoardDetails}
-              boardDetailsByClimb={boardDetailsByClimb}
-              unsupportedClimbs={unsupportedClimbs}
-              upsizedClimbs={upsizedClimbs}
-              climbs={climbs}
-              selectedClimbUuid={effectiveSelectedUuid}
-              isFetching={isFetching}
-              hasMore={hasMore}
-              onClimbSelect={handleClimbSelect}
-              onLoadMore={onLoadMore}
-              addToQueue={queueActions?.addToQueue}
-              header={header}
-              headerInline={headerInline}
-              hideEndMessage={hideEndMessage}
-              showBottomSpacer={showBottomSpacer}
-            />
-          </PlaylistsProvider>
-        </FavoritesProvider>
-      ) : null}
+      {climbListContent}
     </Box>
   );
 }

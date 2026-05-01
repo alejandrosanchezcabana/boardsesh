@@ -83,11 +83,12 @@ export default function MapLocationPicker({ latitude, longitude, onChange }: Map
       if (!containerRef.current) return;
 
       const hasCoords = latitude != null && longitude != null;
-      const center: [number, number] = hasCoords
-        ? [latitude, longitude]
-        : userCoords
-          ? [userCoords.latitude, userCoords.longitude]
-          : [40, -95];
+      let center: [number, number] = [40, -95];
+      if (hasCoords) {
+        center = [latitude, longitude];
+      } else if (userCoords) {
+        center = [userCoords.latitude, userCoords.longitude];
+      }
       const zoom = hasCoords || userCoords ? 14 : 3;
 
       const map = L.map(containerRef.current, {

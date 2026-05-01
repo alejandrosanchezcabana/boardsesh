@@ -29,12 +29,32 @@ android {
             keyAlias System.getenv("ANDROID_KEY_ALIAS") ?: ""
             keyPassword System.getenv("ANDROID_KEY_PASSWORD") ?: ""
         }
+        // Committed shared debug keystore so every contributor and CI signs
+        // debug builds with the same SHA-256. The fingerprint is registered
+        // in assetlinks.json (packages/web/app/.well-known/assetlinks.json/route.ts)
+        // so the .debug package is Android-App-Links-verified for boardsesh.com
+        // and deep links route to it on dev devices instead of silently falling
+        // through to the production package.
+        debug {
+            storeFile file("debug.keystore")
+            storePassword "android"
+            keyAlias "androiddebugkey"
+            keyPassword "android"
+        }
     }
     buildTypes {
         release {
             signingConfig signingConfigs.release
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+        }
+        debug {
+            signingConfig signingConfigs.debug
+            // Install alongside the Play Store production app on the same
+            // device. Different applicationId means a separate package and
+            // separate data dir, so neither install collides with the other.
+            applicationIdSuffix ".debug"
+            versionNameSuffix "-debug"
         }
     }
 }

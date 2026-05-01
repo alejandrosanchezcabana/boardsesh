@@ -6,7 +6,7 @@ import BookOutlined from '@mui/icons-material/BookOutlined';
 import { LogbookView } from './logbook-view';
 import type { Climb } from '@/app/lib/types';
 import { useBoardProvider } from '../board-provider/board-provider-context';
-import dayjs from 'dayjs';
+import { formatTickAbsoluteTime } from '@/app/lib/format-tick-time';
 
 type LogbookSectionProps = {
   climb: Climb;
@@ -32,7 +32,7 @@ export function useLogbookSummary(climbUuid: string): LogbookSummary | null {
 
     const totalAttempts = climbAscents.reduce((sum, ascent) => sum + (ascent.tries || 1), 0);
 
-    const sessionDates = new Set(climbAscents.map((ascent) => dayjs(ascent.climbed_at).format('YYYY-MM-DD')));
+    const sessionDates = new Set(climbAscents.map((ascent) => formatTickAbsoluteTime(ascent.climbed_at, 'YYYY-MM-DD')));
     const sessionCount = sessionDates.size;
 
     const successfulAscents = climbAscents.filter((a) => a.is_ascent).length;

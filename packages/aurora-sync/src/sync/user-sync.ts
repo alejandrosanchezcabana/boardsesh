@@ -588,12 +588,16 @@ export async function syncUserData(
       } catch (error) {
         await client.query('ROLLBACK');
         // Extract meaningful error message from PostgreSQL/Drizzle errors
-        const errorMessage =
-          error instanceof Error
-            ? error.message.includes('violates foreign key constraint')
-              ? `FK constraint violation: ${error.message.split('violates foreign key constraint')[1]?.split('"')[1] || 'unknown'}`
-              : error.message.slice(0, 2000)
-            : String(error).slice(0, 2000);
+        let errorMessage: string;
+        if (error instanceof Error) {
+          if (error.message.includes('violates foreign key constraint')) {
+            errorMessage = `FK constraint violation: ${error.message.split('violates foreign key constraint')[1]?.split('"')[1] || 'unknown'}`;
+          } else {
+            errorMessage = error.message.slice(0, 2000);
+          }
+        } else {
+          errorMessage = String(error).slice(0, 2000);
+        }
         log(`Database error: ${errorMessage}`);
         throw new Error(`Database error: ${errorMessage}`);
       } finally {

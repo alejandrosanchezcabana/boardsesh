@@ -13,6 +13,14 @@ vi.mock('@vercel/analytics', () => ({
 const mockSendFramesToBoard = vi.fn().mockResolvedValue(true);
 const mockConnect = vi.fn().mockResolvedValue(true);
 const mockDisconnect = vi.fn();
+const mockPickerHandleSelect = vi.fn();
+const mockPickerHandleCancel = vi.fn();
+
+type PickerStateMock = {
+  devices: Array<{ deviceId: string; name: string; rssi: number }>;
+  handleSelect: (deviceId: string) => void;
+  handleCancel: () => void;
+} | null;
 
 let mockBluetoothState = {
   isConnected: false,
@@ -21,29 +29,71 @@ let mockBluetoothState = {
   disconnect: mockDisconnect,
   sendFramesToBoard: mockSendFramesToBoard,
 };
+let mockPickerState: PickerStateMock = null;
 
 vi.mock('../use-board-bluetooth', () => ({
-  useBoardBluetooth: () => ({ ...mockBluetoothState, pickerState: null }),
+  useBoardBluetooth: () => ({ ...mockBluetoothState, pickerState: mockPickerState }),
 }));
 
+let mockAuth: { token: string | null; isAuthenticated: boolean } = { token: null, isAuthenticated: false };
 vi.mock('@/app/hooks/use-ws-auth-token', () => ({
-  useWsAuthToken: () => ({ token: null }),
+  useWsAuthToken: () => mockAuth,
 }));
 
+const mockResolveSerialNumbers = vi.fn().mockResolvedValue(new Map());
 vi.mock('@/app/lib/ble/resolve-serials', () => ({
-  resolveSerialNumbers: vi.fn().mockResolvedValue(new Map()),
+  resolveSerialNumbers: (...args: unknown[]) => mockResolveSerialNumbers(...args),
 }));
 
+const mockParseSerialNumber = vi.fn();
 vi.mock('../bluetooth-aurora', () => ({
-  parseSerialNumber: vi.fn(),
+  parseSerialNumber: (...args: unknown[]) => mockParseSerialNumber(...args),
 }));
 
+// Capture props the provider passes to the picker / mismatch dialog so tests
+// can drive their callbacks without rendering MUI.
+type PickerProps = {
+  devices: Array<{ deviceId: string; name: string; rssi: number }>;
+  onSelect: (deviceId: string) => void;
+  onCancel: () => void;
+  resolvedBoards?: Map<string, unknown>;
+};
+let lastPickerProps: PickerProps | null = null;
 vi.mock('../device-picker-dialog', () => ({
-  DevicePickerDialog: () => null,
+  DevicePickerDialog: (props: PickerProps) => {
+    lastPickerProps = props;
+    return null;
+  },
+}));
+
+type MismatchDialogProps = {
+  open: boolean;
+  onSwitch: () => void;
+  onConnectAnyway: () => void;
+  onCancel: () => void;
+};
+let lastMismatchProps: MismatchDialogProps | null = null;
+vi.mock('../board-config-mismatch-dialog', () => ({
+  BoardConfigMismatchDialog: (props: MismatchDialogProps) => {
+    lastMismatchProps = props;
+    return null;
+  },
 }));
 
 vi.mock('../auto-connect-handler', () => ({
   AutoConnectHandler: () => null,
+}));
+
+const mockRouterPush = vi.fn();
+const mockRouterReplace = vi.fn();
+vi.mock('next/navigation', () => ({
+  useParams: () => ({ angle: '40' }),
+  useRouter: () => ({ push: mockRouterPush, replace: mockRouterReplace }),
+}));
+
+const mockShowMessage = vi.fn();
+vi.mock('../../providers/snackbar-provider', () => ({
+  useSnackbar: () => ({ showMessage: mockShowMessage }),
 }));
 
 vi.mock('../bluetooth-status-store', () => ({
@@ -114,6 +164,11 @@ describe('BluetoothProvider', () => {
       disconnect: mockDisconnect,
       sendFramesToBoard: mockSendFramesToBoard,
     };
+    mockPickerState = null;
+    lastPickerProps = null;
+    lastMismatchProps = null;
+    mockAuth = { token: null, isAuthenticated: false };
+    mockResolveSerialNumbers.mockResolvedValue(new Map());
   });
 
   describe('useBluetoothContext', () => {
@@ -427,6 +482,114 @@ describe('BluetoothProvider', () => {
       expect(result.current.connect).toBe(mockConnect);
       expect(result.current.disconnect).toBe(mockDisconnect);
       expect(result.current.sendFramesToBoard).toBe(mockSendFramesToBoard);
+    });
+  });
+
+  describe('mismatch interception', () => {
+    // The picker discovers one device whose serial maps to a saved board with
+    // a layout that intentionally doesn't match the provider's boardDetails —
+    // handlePickerSelect should setMismatch instead of forwarding.
+    async function setupMismatchScenario(opts: { withSlug?: boolean } = {}) {
+      const serial = 'KB-99';
+      mockAuth = { token: 'tok', isAuthenticated: true };
+      mockPickerState = {
+        devices: [{ deviceId: 'dev-1', name: `Kilter Board#${serial}@3`, rssi: -55 }],
+        handleSelect: mockPickerHandleSelect,
+        handleCancel: mockPickerHandleCancel,
+      };
+      mockParseSerialNumber.mockReturnValue(serial);
+      mockResolveSerialNumbers.mockResolvedValue(
+        new Map([
+          [
+            serial,
+            {
+              kind: 'saved',
+              board: {
+                boardType: 'kilter',
+                layoutId: 99, // mismatches the test boardDetails (layoutId=1)
+                sizeId: 10,
+                setIds: '1,2',
+                slug: opts.withSlug ? 'my-other-kilter' : undefined,
+              },
+            },
+          ],
+        ]),
+      );
+
+      const wrapper = createWrapper();
+      const rendered = renderHook(() => useBluetoothContext(), { wrapper });
+
+      // Wait for the resolveSerialNumbers effect to settle and the provider
+      // to re-render with the resolved map.
+      await act(async () => {
+        await Promise.resolve();
+        await Promise.resolve();
+      });
+
+      // Drive the provider's handlePickerSelect that DevicePickerDialog received.
+      expect(lastPickerProps).not.toBeNull();
+      await act(async () => {
+        lastPickerProps?.onSelect('dev-1');
+      });
+
+      return rendered;
+    }
+
+    it('Switch to correct config: pushes the slug-based URL with autoConnect serial', async () => {
+      await setupMismatchScenario({ withSlug: true });
+
+      expect(lastMismatchProps).not.toBeNull();
+      expect(lastMismatchProps?.open).toBe(true);
+
+      act(() => {
+        lastMismatchProps?.onSwitch();
+      });
+
+      // Provider cancels the in-flight picker promise and pushes the
+      // slug-based switch URL with the autoConnect serial appended.
+      expect(mockPickerHandleCancel).toHaveBeenCalledTimes(1);
+      expect(mockRouterPush).toHaveBeenCalledTimes(1);
+      const target = mockRouterPush.mock.calls[0][0] as string;
+      expect(target).toContain('/b/my-other-kilter/40/list');
+      expect(target).toContain('autoConnect=KB-99');
+    });
+
+    it('Switch with unresolvable URL: shows snackbar and keeps picker open', async () => {
+      // No slug + unknown layout → buildSwitchUrl returns null.
+      await setupMismatchScenario({ withSlug: false });
+
+      act(() => {
+        lastMismatchProps?.onSwitch();
+      });
+
+      expect(mockShowMessage).toHaveBeenCalledTimes(1);
+      expect(mockShowMessage.mock.calls[0][0]).toMatch(/Couldn't switch/i);
+      expect(mockRouterPush).not.toHaveBeenCalled();
+      expect(mockPickerHandleCancel).not.toHaveBeenCalled();
+    });
+
+    it('Connect anyway: forwards to the original picker handleSelect', async () => {
+      await setupMismatchScenario({ withSlug: true });
+
+      act(() => {
+        lastMismatchProps?.onConnectAnyway();
+      });
+
+      expect(mockPickerHandleSelect).toHaveBeenCalledTimes(1);
+      expect(mockPickerHandleSelect).toHaveBeenCalledWith('dev-1');
+      expect(mockRouterPush).not.toHaveBeenCalled();
+    });
+
+    it('Cancel: drops the mismatch without touching the picker promise or router', async () => {
+      await setupMismatchScenario({ withSlug: true });
+
+      act(() => {
+        lastMismatchProps?.onCancel();
+      });
+
+      expect(mockPickerHandleSelect).not.toHaveBeenCalled();
+      expect(mockPickerHandleCancel).not.toHaveBeenCalled();
+      expect(mockRouterPush).not.toHaveBeenCalled();
     });
   });
 });

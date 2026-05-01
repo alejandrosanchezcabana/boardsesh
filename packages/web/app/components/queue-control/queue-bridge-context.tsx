@@ -26,9 +26,10 @@ import {
 } from '../graphql-queue/QueueContext';
 import type { CurrentClimbDataType, QueueListDataType, SearchDataType, SessionDataType } from '../graphql-queue/types';
 import { usePersistentSession } from '../persistent-session';
+import { usePartyProfile } from '../party-manager/party-profile-context';
 import { getBaseBoardPath, DEFAULT_SEARCH_PARAMS } from '@/app/lib/url-utils';
 import type { BoardDetails, Angle, Climb, SearchRequestPagination } from '@/app/lib/types';
-import type { ClimbQueueItem } from './types';
+import type { ClimbQueueItem, QueueItemUser } from './types';
 import { usePathname } from 'next/navigation';
 import dynamic from 'next/dynamic';
 import { canAddClimbToBoard } from '@/app/lib/board-compatibility';
@@ -110,6 +111,14 @@ function usePersistentSessionQueueAdapter(): {
 } {
   const ps = usePersistentSession();
   const { showMessage } = useSnackbar();
+  const { profile, username, avatarUrl } = usePartyProfile();
+
+  // Mirror GraphQLQueueProvider's currentUserInfo so queue items created off
+  // board routes carry the same "who added this" attribution.
+  const currentUserInfo: QueueItemUser | undefined = useMemo(() => {
+    if (!profile?.id) return undefined;
+    return { id: profile.id, username: username || '', avatarUrl };
+  }, [profile?.id, username, avatarUrl]);
 
   const isParty = !!ps.activeSession;
   const queue = isParty ? ps.queue : ps.localQueue;
@@ -149,6 +158,7 @@ function usePersistentSessionQueueAdapter(): {
     baseBoardPath,
     ps,
     showMessage,
+    currentUserInfo,
   });
   latestRef.current = {
     queue,
@@ -157,148 +167,238 @@ function usePersistentSessionQueueAdapter(): {
     baseBoardPath,
     ps,
     showMessage,
+    currentUserInfo,
   };
+
+  // Counter for correlation IDs sent with party-mode SET_CURRENT_CLIMB
+  // mutations so the persistent session's pending-update tracker can
+  // match local optimistic state with server confirmations.
+  const correlationCounterRef = useRef(0);
+
+  // Build a queue item from a climb, populating addedBy/addedByUser from the
+  // current party profile so off-board mutations (logbook, session view)
+  // carry the same attribution as items created from the board route.
+  const buildQueueItem = useCallback((climb: Climb): ClimbQueueItem => {
+    const { ps, currentUserInfo: user } = latestRef.current;
+    return {
+      climb,
+      addedBy: ps.clientId ?? null,
+      addedByUser: user,
+      uuid: uuidv4(),
+      suggested: false,
+    };
+  }, []);
 
   // Validates a climb against the locked board (session) or the current
   // adapter board. Shows a Snackbar error and returns false if not
   // compatible. Message formatting lives in `queue-add-error-messages`
   // so the board-route and root-level entry points speak the same copy.
   const validateClimbForQueue = useCallback((climb: Climb): boolean => {
-    const r = latestRef.current;
-    const target = r.ps.activeSession?.boardDetails ?? r.boardDetails;
+    const { ps, boardDetails, showMessage } = latestRef.current;
+    const target = ps.activeSession?.boardDetails ?? boardDetails;
     if (!target) return true;
     const result = canAddClimbToBoard(climb, target);
     if (result.ok) return true;
-    r.showMessage(queueAddErrorMessage(climb, target, result), 'error');
+    showMessage(queueAddErrorMessage(climb, target, result), 'error');
     return false;
   }, []);
 
   const getNextClimbQueueItem = useCallback((): ClimbQueueItem | null => {
-    const r = latestRef.current;
-    const idx = r.queue.findIndex(({ uuid }) => uuid === r.currentClimbQueueItem?.uuid);
-    return idx >= 0 && idx < r.queue.length - 1 ? r.queue[idx + 1] : null;
+    const { queue, currentClimbQueueItem: current } = latestRef.current;
+    const idx = queue.findIndex(({ uuid }) => uuid === current?.uuid);
+    return idx >= 0 && idx < queue.length - 1 ? queue[idx + 1] : null;
   }, []);
 
   const getPreviousClimbQueueItem = useCallback((): ClimbQueueItem | null => {
-    const r = latestRef.current;
-    const idx = r.queue.findIndex(({ uuid }) => uuid === r.currentClimbQueueItem?.uuid);
-    return idx > 0 ? r.queue[idx - 1] : null;
+    const { queue, currentClimbQueueItem: current } = latestRef.current;
+    const idx = queue.findIndex(({ uuid }) => uuid === current?.uuid);
+    return idx > 0 ? queue[idx - 1] : null;
   }, []);
 
   const setCurrentClimbQueueItem = useCallback((item: ClimbQueueItem) => {
-    const r = latestRef.current;
-    if (!r.boardDetails) return;
-    const alreadyInQueue = r.queue.some((q) => q.uuid === item.uuid);
-    if (alreadyInQueue && r.currentClimbQueueItem?.uuid === item.uuid) return;
-    const newQueue = alreadyInQueue ? r.queue : [...r.queue, item];
-    r.ps.setLocalQueueState(newQueue, item, r.baseBoardPath, r.boardDetails);
+    const { queue, currentClimbQueueItem: current, ps, boardDetails, baseBoardPath } = latestRef.current;
+    const alreadyInQueue = queue.some((q) => q.uuid === item.uuid);
+    if (ps.activeSession) {
+      // Don't bail on the "already current" optimistic state in party mode —
+      // a peer may have moved the current climb away and our local view
+      // hasn't caught up yet. Always re-send so the server reconciles.
+      const correlationId = ps.clientId ? `${ps.clientId}-${++correlationCounterRef.current}` : undefined;
+      ps.setCurrentClimb(item, item.suggested, correlationId).catch((err: unknown) => {
+        console.error('Failed to set current climb queue item:', err);
+      });
+      return;
+    }
+    if (alreadyInQueue && current?.uuid === item.uuid) return;
+    if (!boardDetails) return;
+    const newQueue = alreadyInQueue ? queue : [...queue, item];
+    ps.setLocalQueueState(newQueue, item, baseBoardPath, boardDetails);
   }, []);
 
   const addToQueue = useCallback(
     (climb: Climb) => {
-      const r = latestRef.current;
+      const { queue, currentClimbQueueItem: current, ps, boardDetails, baseBoardPath } = latestRef.current;
       if (!validateClimbForQueue(climb)) return;
-      const newItem: ClimbQueueItem = {
-        climb,
-        addedBy: null,
-        uuid: uuidv4(),
-        suggested: false,
-      };
-      if (!r.boardDetails) {
+      const newItem = buildQueueItem(climb);
+      if (ps.activeSession) {
+        ps.addQueueItem(newItem).catch((err: unknown) => {
+          console.error('Failed to add queue item:', err);
+        });
+        return;
+      }
+      if (!boardDetails) {
         // Cold-start path: no active board yet. Seed local state from the
         // climb's own board config so the queue bar begins showing.
         const seed = deriveSeedStateFromClimb(climb);
         if (!seed) return;
-        r.ps.setLocalQueueState([newItem], newItem, seed.baseBoardPath, seed.boardDetails);
+        ps.setLocalQueueState([newItem], newItem, seed.baseBoardPath, seed.boardDetails);
         return;
       }
-      const newQueue = [...r.queue, newItem];
-      const current = r.currentClimbQueueItem ?? newItem;
-      r.ps.setLocalQueueState(newQueue, current, r.baseBoardPath, r.boardDetails);
+      ps.setLocalQueueState([...queue, newItem], current ?? newItem, baseBoardPath, boardDetails);
     },
-    [validateClimbForQueue],
+    [validateClimbForQueue, buildQueueItem],
   );
 
   const removeFromQueue = useCallback((item: ClimbQueueItem) => {
-    const r = latestRef.current;
-    if (!r.boardDetails) return;
-    const newQueue = r.queue.filter((q) => q.uuid !== item.uuid);
-    const newCurrent = r.currentClimbQueueItem?.uuid === item.uuid ? (newQueue[0] ?? null) : r.currentClimbQueueItem;
-    r.ps.setLocalQueueState(newQueue, newCurrent, r.baseBoardPath, r.boardDetails);
+    const { queue, currentClimbQueueItem: current, ps, boardDetails, baseBoardPath } = latestRef.current;
+    if (ps.activeSession) {
+      ps.removeQueueItem(item.uuid).catch((err: unknown) => {
+        console.error('Failed to remove queue item:', err);
+      });
+      return;
+    }
+    if (!boardDetails) return;
+    const newQueue = queue.filter((q) => q.uuid !== item.uuid);
+    const newCurrent = current?.uuid === item.uuid ? (newQueue[0] ?? null) : current;
+    ps.setLocalQueueState(newQueue, newCurrent, baseBoardPath, boardDetails);
   }, []);
 
   const setQueue = useCallback((newQueue: ClimbQueueItem[]) => {
-    const r = latestRef.current;
-    if (!r.boardDetails) return;
-    const newCurrent =
-      newQueue.length === 0
-        ? null
-        : r.currentClimbQueueItem && newQueue.some((q) => q.uuid === r.currentClimbQueueItem!.uuid)
-          ? r.currentClimbQueueItem
-          : newQueue[0];
-    r.ps.setLocalQueueState(newQueue, newCurrent, r.baseBoardPath, r.boardDetails);
+    const { currentClimbQueueItem: current, ps, boardDetails, baseBoardPath } = latestRef.current;
+    // Pick the new current climb: keep the existing one if it survived the
+    // queue update, otherwise fall back to the first item (or null when empty).
+    const pickCurrent = (): ClimbQueueItem | null => {
+      if (newQueue.length === 0) return null;
+      if (current && newQueue.some((q) => q.uuid === current.uuid)) return current;
+      return newQueue[0];
+    };
+    if (ps.activeSession) {
+      ps.setQueue(newQueue, pickCurrent()).catch((err: unknown) => {
+        console.error('Failed to set queue:', err);
+      });
+      return;
+    }
+    if (!boardDetails) return;
+    ps.setLocalQueueState(newQueue, pickCurrent(), baseBoardPath, boardDetails);
   }, []);
 
   const mirrorClimb = useCallback(() => {
-    const r = latestRef.current;
-    if (!r.currentClimbQueueItem?.climb || !r.boardDetails) return;
-    const mirrored = !r.currentClimbQueueItem.climb.mirrored;
+    const { queue, currentClimbQueueItem: current, ps, boardDetails, baseBoardPath } = latestRef.current;
+    if (!current?.climb) return;
+    const mirrored = !current.climb.mirrored;
+    if (ps.activeSession) {
+      ps.mirrorCurrentClimb(mirrored).catch((err: unknown) => {
+        console.error('Failed to mirror current climb:', err);
+      });
+      return;
+    }
+    if (!boardDetails) return;
     const updatedItem: ClimbQueueItem = {
-      ...r.currentClimbQueueItem,
-      climb: { ...r.currentClimbQueueItem.climb, mirrored },
+      ...current,
+      climb: { ...current.climb, mirrored },
     };
-    const newQueue = r.queue.map((q) => (q.uuid === updatedItem.uuid ? updatedItem : q));
-    r.ps.setLocalQueueState(newQueue, updatedItem, r.baseBoardPath, r.boardDetails);
+    const newQueue = queue.map((q) => (q.uuid === updatedItem.uuid ? updatedItem : q));
+    ps.setLocalQueueState(newQueue, updatedItem, baseBoardPath, boardDetails);
   }, []);
 
   const setCurrentClimb = useCallback(
     async (climb: Climb): Promise<ClimbQueueItem | null> => {
-      const r = latestRef.current;
+      const { queue, currentClimbQueueItem: current, ps, boardDetails, baseBoardPath } = latestRef.current;
       if (!validateClimbForQueue(climb)) return null;
-      const newItem: ClimbQueueItem = {
-        climb,
-        addedBy: null,
-        uuid: uuidv4(),
-        suggested: false,
-      };
-      if (!r.boardDetails) {
+      if (ps.activeSession) {
+        const correlationId = ps.clientId ? `${ps.clientId}-${++correlationCounterRef.current}` : undefined;
+        // If the climb is already in the queue, reuse the existing item
+        // instead of adding a duplicate. This mirrors the natural behavior
+        // expected by users tapping a logbook/session-view climb that's
+        // already queued from another peer or earlier in the sesh.
+        const existing = queue.find((q) => q.climb?.uuid === climb.uuid);
+        if (existing) {
+          try {
+            await ps.setCurrentClimb(existing, false, correlationId);
+            return existing;
+          } catch (err: unknown) {
+            console.error('Failed to set current climb:', err);
+            return null;
+          }
+        }
+        const newItem = buildQueueItem(climb);
+        const currentIdx = current ? queue.findIndex((q) => q.uuid === current.uuid) : -1;
+        const position = currentIdx === -1 ? undefined : currentIdx + 1;
+        // Split the awaits so a partial failure is observable: addQueueItem
+        // adds the item to the shared queue, then setCurrentClimb activates
+        // it. If addQueueItem fails, nothing landed on the server. If
+        // setCurrentClimb fails after addQueueItem succeeded, the item is
+        // queued but not active — return null so the caller (e.g.
+        // SessionDetailContent.navigateToClimb) doesn't navigate to a climb
+        // the board never actually got told to display.
+        try {
+          await ps.addQueueItem(newItem, position);
+        } catch (err: unknown) {
+          console.error('Failed to add queue item before setting current:', err);
+          return null;
+        }
+        try {
+          // Sequential awaits over a single graphql-ws connection preserve
+          // FIFO ordering, so the server processes the add before the
+          // setCurrentClimb that references it. This mirrors
+          // GraphQLQueueProvider.setCurrentClimb.
+          await ps.setCurrentClimb(newItem, false, correlationId);
+          return newItem;
+        } catch (err: unknown) {
+          console.error('Failed to set current climb after queue add:', err);
+          return null;
+        }
+      }
+      const newItem = buildQueueItem(climb);
+      if (!boardDetails) {
         // Cold-start path: no active board yet. Seed local state from the
         // climb's own board config so the queue bar begins showing.
         const seed = deriveSeedStateFromClimb(climb);
         if (!seed) return null;
-        r.ps.setLocalQueueState([newItem], newItem, seed.baseBoardPath, seed.boardDetails);
+        ps.setLocalQueueState([newItem], newItem, seed.baseBoardPath, seed.boardDetails);
         return newItem;
       }
-      const currentIdx = r.currentClimbQueueItem
-        ? r.queue.findIndex((q) => q.uuid === r.currentClimbQueueItem!.uuid)
-        : -1;
-      const newQueue = [...r.queue];
+      const currentIdx = current ? queue.findIndex((q) => q.uuid === current.uuid) : -1;
+      const newQueue = [...queue];
       if (currentIdx >= 0) {
         newQueue.splice(currentIdx + 1, 0, newItem);
       } else {
         newQueue.push(newItem);
       }
-      r.ps.setLocalQueueState(newQueue, newItem, r.baseBoardPath, r.boardDetails);
+      ps.setLocalQueueState(newQueue, newItem, baseBoardPath, boardDetails);
       return newItem;
     },
-    [validateClimbForQueue],
+    [validateClimbForQueue, buildQueueItem],
   );
 
-  // Bridge-mode replace: mirrors the local-state update with a new climb while
-  // preserving the queue-item uuid and existing addedBy attribution. The
-  // bridge context has no network path, so this is a pure local mutation.
+  // Bridge-mode replace: in party mode, delegate to the persistent session's
+  // WebSocket-backed replaceQueueItem; otherwise mirror the local-state update
+  // with a new climb while preserving the queue-item uuid and existing
+  // addedBy attribution.
   const replaceQueueItem = useCallback((queueItemUuid: string, climb: Climb) => {
-    const r = latestRef.current;
-    if (!r.boardDetails) return;
-    const existing = r.queue.find((q) => q.uuid === queueItemUuid);
+    const { queue, currentClimbQueueItem: current, ps, boardDetails, baseBoardPath } = latestRef.current;
+    const existing = queue.find((q) => q.uuid === queueItemUuid);
     if (!existing) return;
-    const updated: ClimbQueueItem = {
-      ...existing,
-      climb,
-    };
-    const newQueue = r.queue.map((q) => (q.uuid === queueItemUuid ? updated : q));
-    const nextCurrent = r.currentClimbQueueItem?.uuid === queueItemUuid ? updated : r.currentClimbQueueItem;
-    r.ps.setLocalQueueState(newQueue, nextCurrent, r.baseBoardPath, r.boardDetails);
+    const updated: ClimbQueueItem = { ...existing, climb };
+    if (ps.activeSession) {
+      ps.replaceQueueItem(queueItemUuid, updated).catch((err: unknown) => {
+        console.error('Failed to replace queue item:', err);
+      });
+      return;
+    }
+    if (!boardDetails) return;
+    const newQueue = queue.map((q) => (q.uuid === queueItemUuid ? updated : q));
+    const nextCurrent = current?.uuid === queueItemUuid ? updated : current;
+    ps.setLocalQueueState(newQueue, nextCurrent, baseBoardPath, boardDetails);
   }, []);
 
   // No-op functions for fields not used by the bottom bar
@@ -645,7 +745,11 @@ export function QueueBridgeProvider({ children }: { children: React.ReactNode })
 
   // Renamed locals so jsx-handler-names sees on*-prefixed identifiers being
   // passed to the on*-prefixed props on LiveActivityBridge below.
-  const onSetCurrentClimb = adapter.context.setCurrentClimbQueueItem;
+  // Use effectiveActions.setCurrentClimbQueueItem so widget taps route through
+  // the injected GraphQLQueueProvider when on a board route. The adapter's
+  // version writes to local state (no-op in party mode) and would silently
+  // drop widget navigation during an active sesh.
+  const onSetCurrentClimb = effectiveActions.setCurrentClimbQueueItem;
   const onWidgetNavigate = effectiveActions.dispatchWidgetNavigation;
 
   return (
@@ -659,13 +763,16 @@ export function QueueBridgeProvider({ children }: { children: React.ReactNode })
                   <QueueListContext.Provider value={effectiveQueueList}>
                     <SearchContext.Provider value={effectiveSearch}>
                       <SessionContext.Provider value={effectiveSession}>
-                        {/* Sync queue state to iOS Live Activity (code-split, no-op on non-iOS) */}
+                        {/* Sync queue state to iOS Live Activity (code-split, no-op on non-iOS).
+                            Use effectiveData/effectiveBoardDetails so the Live Activity reflects
+                            the live party queue while on a board route (injected mode), not the
+                            adapter's local view (which is a no-op in party mode). */}
                         <LiveActivityBridge
-                          queue={adapter.context.queue}
-                          currentClimbQueueItem={adapter.context.currentClimbQueueItem}
-                          boardDetails={adapter.boardDetails}
-                          sessionId={adapter.context.sessionId}
-                          isSessionActive={adapter.context.isSessionActive}
+                          queue={effectiveData.queue}
+                          currentClimbQueueItem={effectiveData.currentClimbQueueItem}
+                          boardDetails={effectiveBoardDetails}
+                          sessionId={effectiveData.sessionId}
+                          isSessionActive={effectiveData.isSessionActive}
                           onSetCurrentClimb={onSetCurrentClimb}
                           onWidgetNavigate={onWidgetNavigate}
                         />

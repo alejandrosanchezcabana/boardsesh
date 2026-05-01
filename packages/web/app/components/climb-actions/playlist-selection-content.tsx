@@ -156,7 +156,7 @@ export default function PlaylistSelectionContent({
         </MuiTypography>
       </Box>
 
-      {!isAuthenticated ? (
+      {!isAuthenticated && (
         <Stack spacing={1} sx={{ width: '100%', textAlign: 'center', py: themeTokens.spacing[1] }}>
           <MuiTypography component="span" color="text.secondary" sx={{ fontSize: themeTokens.typography.fontSize.sm }}>
             Sign in to create and manage playlists
@@ -175,7 +175,8 @@ export default function PlaylistSelectionContent({
             Sign In
           </MuiButton>
         </Stack>
-      ) : playlists.length === 0 && !showCreateForm ? (
+      )}
+      {isAuthenticated && playlists.length === 0 && !showCreateForm && (
         <Stack spacing={1} sx={{ width: '100%', textAlign: 'center', py: themeTokens.spacing[1] }}>
           <MuiTypography component="span" color="text.secondary" sx={{ fontSize: themeTokens.typography.fontSize.sm }}>
             No playlists yet
@@ -190,7 +191,8 @@ export default function PlaylistSelectionContent({
             Create Your First Playlist
           </MuiButton>
         </Stack>
-      ) : (
+      )}
+      {isAuthenticated && (playlists.length > 0 || showCreateForm) && (
         <>
           {!showCreateForm && (
             <>

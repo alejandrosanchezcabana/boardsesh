@@ -162,8 +162,7 @@ describe('OnboardingTourProvider', () => {
       await flushAsync();
 
       act(() => result.current.start());
-      act(() => result.current.next());
-      act(() => result.current.next()); // now on 'climb-list'
+      for (let i = 0; i < 4; i++) act(() => result.current.next()); // now on 'climb-list'
       expect(result.current.currentStepId).toBe('climb-list');
 
       mockTrack.mockClear();
@@ -228,7 +227,7 @@ describe('OnboardingTourProvider', () => {
 
       // Jump straight to 'queue-add' via sequential next() calls.
       act(() => result.current.start());
-      for (let i = 0; i < 3; i++) act(() => result.current.next());
+      for (let i = 0; i < 5; i++) act(() => result.current.next());
       expect(result.current.currentStepId).toBe('queue-add');
 
       // Initial report of length 0 — no advance
@@ -258,9 +257,10 @@ describe('OnboardingTourProvider', () => {
         await Promise.resolve();
       });
 
-      // Reach climb-list (step 3).
+      // Reach climb-list (after home-intro, home-pick-board, and the two
+      // grid/list view-mode steps).
       act(() => result.current.start());
-      for (let i = 0; i < 2; i++) act(() => result.current.next());
+      for (let i = 0; i < 4; i++) act(() => result.current.next());
       expect(result.current.currentStepId).toBe('climb-list');
 
       // A currentClimb change alone (e.g. async queue hydration) must NOT
@@ -302,9 +302,9 @@ describe('OnboardingTourProvider', () => {
         await Promise.resolve();
       });
 
-      // Reach queue-bar (step 5) — fast-forward past earlier auto-advance gates.
+      // Reach queue-bar — fast-forward past earlier auto-advance gates.
       act(() => result.current.start());
-      for (let i = 0; i < 4; i++) act(() => result.current.next());
+      for (let i = 0; i < 6; i++) act(() => result.current.next());
       expect(result.current.currentStepId).toBe('queue-bar');
 
       act(() => result.current.notifyCurrentClimb('climb-x'));
@@ -315,6 +315,125 @@ describe('OnboardingTourProvider', () => {
       });
       expect(result.current.currentStepId).toBe('queue-thumbnail');
       vi.useRealTimers();
+    });
+  });
+
+  describe('notifyViewMode (climb-list grid/list steps)', () => {
+    it('advances climb-list-grid-view after grace period when user switches to grid', async () => {
+      vi.useFakeTimers();
+      const { result } = renderHook(useOnboardingTour, { wrapper });
+      await act(async () => {
+        await Promise.resolve();
+      });
+
+      // Reach climb-list-grid-view (home-intro → home-pick-board → climb-list-grid-view).
+      act(() => result.current.start());
+      for (let i = 0; i < 2; i++) act(() => result.current.next());
+      expect(result.current.currentStepId).toBe('climb-list-grid-view');
+
+      // Mount-time notify with the default 'list' mode is a no-op for this step.
+      act(() => result.current.notifyViewMode('list'));
+      expect(result.current.currentStepId).toBe('climb-list-grid-view');
+
+      // User switches to grid — schedules the grace timer (still within
+      // CURRENT_CLIMB_GRACE_MS of step entry, so the advance is deferred).
+      act(() => result.current.notifyViewMode('grid'));
+      expect(result.current.currentStepId).toBe('climb-list-grid-view');
+
+      act(() => {
+        vi.advanceTimersByTime(2000);
+      });
+      expect(result.current.currentStepId).toBe('climb-list-back-to-list');
+      vi.useRealTimers();
+    });
+
+    it('advances climb-list-back-to-list after grace period when user switches back to list', async () => {
+      vi.useFakeTimers();
+      const { result } = renderHook(useOnboardingTour, { wrapper });
+      await act(async () => {
+        await Promise.resolve();
+      });
+
+      // Reach climb-list-back-to-list.
+      act(() => result.current.start());
+      for (let i = 0; i < 3; i++) act(() => result.current.next());
+      expect(result.current.currentStepId).toBe('climb-list-back-to-list');
+
+      act(() => result.current.notifyViewMode('list'));
+      act(() => {
+        vi.advanceTimersByTime(2000);
+      });
+      expect(result.current.currentStepId).toBe('climb-list');
+      vi.useRealTimers();
+    });
+
+    it('debounces rapid view-mode toggles into a single advance per transition', async () => {
+      vi.useFakeTimers();
+      const { result } = renderHook(useOnboardingTour, { wrapper });
+      await act(async () => {
+        await Promise.resolve();
+      });
+
+      act(() => result.current.start());
+      for (let i = 0; i < 2; i++) act(() => result.current.next());
+      expect(result.current.currentStepId).toBe('climb-list-grid-view');
+
+      // User toggles back and forth rapidly — only the final 'grid' notify
+      // should result in an advance, and only once.
+      act(() => {
+        result.current.notifyViewMode('grid');
+        result.current.notifyViewMode('list'); // no-op for this step
+        result.current.notifyViewMode('grid');
+      });
+
+      act(() => {
+        vi.advanceTimersByTime(2000);
+      });
+      expect(result.current.currentStepId).toBe('climb-list-back-to-list');
+
+      // Further notifies on the new step's unrelated mode are no-ops.
+      act(() => result.current.notifyViewMode('grid'));
+      act(() => {
+        vi.advanceTimersByTime(2000);
+      });
+      expect(result.current.currentStepId).toBe('climb-list-back-to-list');
+      vi.useRealTimers();
+    });
+
+    it('cancels a pending grid-view advance when user toggles back to list before grace elapses', async () => {
+      vi.useFakeTimers();
+      const { result } = renderHook(useOnboardingTour, { wrapper });
+      await act(async () => {
+        await Promise.resolve();
+      });
+
+      act(() => result.current.start());
+      for (let i = 0; i < 2; i++) act(() => result.current.next());
+      expect(result.current.currentStepId).toBe('climb-list-grid-view');
+
+      // User taps grid → schedules advance timer.
+      act(() => result.current.notifyViewMode('grid'));
+
+      // User changes their mind and toggles back to list before the grace
+      // window elapses — the pending advance must be dropped so the tour
+      // doesn't skip ahead based on the stale "switched to grid" intent.
+      act(() => result.current.notifyViewMode('list'));
+
+      act(() => {
+        vi.advanceTimersByTime(2000);
+      });
+      expect(result.current.currentStepId).toBe('climb-list-grid-view');
+      vi.useRealTimers();
+    });
+
+    it('is a no-op on unrelated steps', async () => {
+      const { result } = renderHook(useOnboardingTour, { wrapper });
+      await flushAsync();
+      act(() => result.current.start()); // home-intro
+
+      act(() => result.current.notifyViewMode('grid'));
+      act(() => result.current.notifyViewMode('list'));
+      expect(result.current.currentStepId).toBe('home-intro');
     });
   });
 
@@ -331,7 +450,7 @@ describe('OnboardingTourProvider', () => {
       rerender();
       await flushAsync();
 
-      expect(result.current.currentStepId).toBe('climb-list');
+      expect(result.current.currentStepId).toBe('climb-list-grid-view');
     });
   });
 
@@ -340,7 +459,7 @@ describe('OnboardingTourProvider', () => {
       const { result } = renderHook(useOnboardingTour, { wrapper });
       await flushAsync();
       act(() => result.current.start());
-      for (let i = 0; i < 5; i++) act(() => result.current.next());
+      for (let i = 0; i < 7; i++) act(() => result.current.next());
       expect(result.current.currentStepId).toBe('queue-thumbnail');
 
       act(() => {
@@ -423,7 +542,7 @@ describe('OnboardingTourProvider', () => {
 
       // Reach climb-list.
       act(() => result.current.start());
-      for (let i = 0; i < 2; i++) act(() => result.current.next());
+      for (let i = 0; i < 4; i++) act(() => result.current.next());
       expect(result.current.currentStepId).toBe('climb-list');
 
       // Fire a user-pick event — schedules a grace timer but don't let it elapse.
@@ -454,7 +573,7 @@ describe('OnboardingTourProvider', () => {
 
       // Reach queue-bar; setting a current climb schedules the grace timer.
       act(() => result.current.start());
-      for (let i = 0; i < 4; i++) act(() => result.current.next());
+      for (let i = 0; i < 6; i++) act(() => result.current.next());
       expect(result.current.currentStepId).toBe('queue-bar');
       act(() => result.current.notifyCurrentClimb('climb-x'));
 
@@ -478,7 +597,7 @@ describe('OnboardingTourProvider', () => {
       });
 
       act(() => result.current.start());
-      for (let i = 0; i < 2; i++) act(() => result.current.next());
+      for (let i = 0; i < 4; i++) act(() => result.current.next());
       expect(result.current.currentStepId).toBe('climb-list');
 
       // Pile up pick events before grace elapses. Provider should debounce

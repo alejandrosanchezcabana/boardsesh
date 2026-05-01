@@ -11,6 +11,7 @@ import {
   consensusGradeJoinCondition,
 } from '../shared/sql-expressions';
 import { GetTicksInputSchema, BoardNameSchema, AscentFeedInputSchema } from '../../../validation/schemas';
+import { escapeLikePattern } from '../../../utils/like-pattern';
 
 export const tickQueries = {
   /**
@@ -227,8 +228,13 @@ export const tickQueries = {
     const fromDate = validatedInput.fromDate;
     const toDate = validatedInput.toDate;
     const legacyStatus = validatedInput.status;
-    const statusMode =
-      validatedInput.statusMode ?? (legacyStatus === 'attempt' ? 'attempt' : legacyStatus ? 'send' : 'both');
+    let inferredStatusMode = 'both';
+    if (legacyStatus === 'attempt') {
+      inferredStatusMode = 'attempt';
+    } else if (legacyStatus) {
+      inferredStatusMode = 'send';
+    }
+    const statusMode = validatedInput.statusMode ?? inferredStatusMode;
     const flashOnly = validatedInput.flashOnly ?? legacyStatus === 'flash';
 
     const resolvedBenchmarkExpr = sql<boolean>`CASE
@@ -307,10 +313,6 @@ export const tickQueries = {
       )
       .leftJoin(consensusGradeTable, consensusGradeJoinCondition);
 
-    // Escape LIKE wildcards so user input is treated as a literal substring,
-    // not a SQL pattern (e.g. typing "100%" should match the literal string).
-    const escapeLikePattern = (value: string): string => value.replace(/[\\%_]/g, (char) => `\\${char}`);
-
     // Full conditions including climb name filter (requires JOIN)
     const allConditions = [
       ...tickConditions,
@@ -370,23 +372,27 @@ export const tickQueries = {
       }
     };
 
-    const resolvedPrimarySort =
-      sortBy === 'recent'
-        ? { field: 'date', direction: sortOrder }
-        : sortBy === 'hardest'
-          ? { field: 'consensusGrade', direction: 'desc' }
-          : sortBy === 'easiest'
-            ? { field: 'loggedGrade', direction: 'asc' }
-            : sortBy === 'mostAttempts'
-              ? { field: 'attemptCount', direction: 'desc' }
-              : { field: sortBy, direction: sortOrder };
+    let resolvedPrimarySort: { field: string; direction: string };
+    if (sortBy === 'recent') {
+      resolvedPrimarySort = { field: 'date', direction: sortOrder };
+    } else if (sortBy === 'hardest') {
+      resolvedPrimarySort = { field: 'consensusGrade', direction: 'desc' };
+    } else if (sortBy === 'easiest') {
+      resolvedPrimarySort = { field: 'loggedGrade', direction: 'asc' };
+    } else if (sortBy === 'mostAttempts') {
+      resolvedPrimarySort = { field: 'attemptCount', direction: 'desc' };
+    } else {
+      resolvedPrimarySort = { field: sortBy, direction: sortOrder };
+    }
 
-    const resolvedSecondarySort =
-      sortBy === 'hardest'
-        ? { field: 'loggedGrade', direction: 'desc' }
-        : secondarySortBy
-          ? { field: secondarySortBy, direction: secondarySortOrder }
-          : null;
+    let resolvedSecondarySort: { field: string; direction: string } | null;
+    if (sortBy === 'hardest') {
+      resolvedSecondarySort = { field: 'loggedGrade', direction: 'desc' };
+    } else if (secondarySortBy) {
+      resolvedSecondarySort = { field: secondarySortBy, direction: secondarySortOrder };
+    } else {
+      resolvedSecondarySort = null;
+    }
 
     const orderClauses = [
       buildOrderClause(resolvedPrimarySort.field, resolvedPrimarySort.direction),

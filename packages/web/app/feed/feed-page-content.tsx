@@ -38,8 +38,14 @@ export default function FeedPageContent({
   const searchParams = useSearchParams();
 
   // Trust the SSR hint during the loading phase to prevent flash of unauthenticated content
-  const isAuthenticated =
-    status === 'authenticated' ? true : status === 'loading' ? (isAuthenticatedSSR ?? false) : false;
+  let isAuthenticated: boolean;
+  if (status === 'authenticated') {
+    isAuthenticated = true;
+  } else if (status === 'loading') {
+    isAuthenticated = isAuthenticatedSSR ?? false;
+  } else {
+    isAuthenticated = false;
+  }
   const { boards: myBoards, isLoading: isLoadingBoards } = useMyBoards(isAuthenticated, 50, initialMyBoards);
 
   // Read state from URL params (with fallbacks to server-provided initial values)

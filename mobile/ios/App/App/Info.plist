@@ -71,6 +71,12 @@
 	<string>Boardsesh uses your location to find nearby boards to climb on and to discover nearby climbing sessions in Party Mode.</string>
 	<key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
 	<string>Boardsesh uses your location to find nearby boards to climb on and to discover nearby climbing sessions in Party Mode.</string>
+	<key>NSCameraUsageDescription</key>
+	<string>Boardsesh uses your camera so you can take a photo of a MoonBoard problem and import it into your library.</string>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>Boardsesh reads photos you choose so you can import MoonBoard screenshots from your library.</string>
+	<key>NSMotionUsageDescription</key>
+	<string>Boardsesh uses device motion so you can shake your phone to send feedback.</string>
 	<key>UIApplicationSceneManifest</key>
 	<dict>
 		<key>UIApplicationSupportsMultipleScenes</key>

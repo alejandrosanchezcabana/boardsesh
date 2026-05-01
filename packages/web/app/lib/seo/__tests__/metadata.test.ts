@@ -38,6 +38,9 @@ describe('SEO metadata helper', () => {
         type: 'website',
         url: '/docs',
         siteName: SITE_NAME,
+        // Default locale (en-US) is now emitted as the OG locale tag so non-English
+        // surfaces can opt into es_ES via the createPageMetadata({ locale }) param.
+        locale: 'en_US',
         images: [
           {
             url: DEFAULT_OG_IMAGE_PATH,

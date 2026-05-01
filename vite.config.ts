@@ -5,7 +5,7 @@ export default defineConfig({
     singleQuote: true,
     semi: true,
     trailingComma: 'all',
-    ignore: ['design/**'],
+    ignore: ['design/**', '**/generated/**'],
   },
   lint: {
     ignorePatterns: ['**/board-controller/**', 'mobile/**'],
@@ -64,9 +64,18 @@ export default defineConfig({
         cache: false,
       },
 
+      // --- Codegen (GraphQL types for client + backend resolvers) ---
+      // Direct binary invocation — no `bunx` (won't touch the lockfile).
+      // print-schema concatenates the modular gql typeDefs into a single SDL
+      // file that graphql-codegen reads as its schema input.
+      codegen: {
+        command: 'bun packages/shared-schema/scripts/print-schema.ts && graphql-codegen',
+      },
+
       // --- Build (topological order via dependsOn) ---
       'build:shared': {
         command: 'bun run --filter=@boardsesh/shared-schema build',
+        dependsOn: ['codegen'],
       },
       'build:crypto': {
         command: 'bun run --filter=@boardsesh/crypto build',
@@ -90,6 +99,11 @@ export default defineConfig({
       'build:web': {
         command: 'bun run --filter=@boardsesh/web build',
         dependsOn: ['build:shared', 'build:crypto', 'build:db', 'build:constants'],
+      },
+      'verify:graphql-treeshake': {
+        command: 'bun packages/web/scripts/verify-graphql-treeshake.ts',
+        dependsOn: ['build:web'],
+        cache: false,
       },
       build: {
         command: 'true',

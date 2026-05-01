@@ -35,6 +35,7 @@ import {
 import { getDefaultAngleForBoard } from '@/app/lib/board-config-for-playlist';
 import DashboardOutlined from '@mui/icons-material/DashboardOutlined';
 import BuildOutlined from '@mui/icons-material/BuildOutlined';
+import DeveloperBoardOutlined from '@mui/icons-material/DeveloperBoardOutlined';
 import SwipeableDrawer from '../swipeable-drawer/swipeable-drawer';
 import DevUrlDialog from '../dev-url-dialog/dev-url-dialog';
 import { useDevUrl } from '@/app/lib/dev-url';
@@ -332,6 +333,15 @@ export default function UserDrawer({ boardDetails, boardConfigs }: UserDrawerPro
                   </span>
                   <span className={styles.menuItemLabel}>Dev URL</span>
                 </button>
+              )}
+
+              {process.env.NODE_ENV === 'development' && (
+                <Link href="/development" className={styles.menuItem} onClick={handleClose}>
+                  <span className={styles.menuItemIcon}>
+                    <DeveloperBoardOutlined />
+                  </span>
+                  <span className={styles.menuItemLabel}>Development</span>
+                </Link>
               )}
 
               {boardDetails && !isMoonboard && (

@@ -103,6 +103,27 @@ export default function StatsSummary({
     </Box>
   );
 
+  let gradeDistributionContent: React.ReactNode;
+  if (loadingAggregated) {
+    gradeDistributionContent = (
+      <div className={styles.loadingStats}>
+        <CircularProgress size={24} />
+      </div>
+    );
+  } else if (aggregatedStackedBars?.bars) {
+    gradeDistributionContent = (
+      <CssBarChart
+        bars={aggregatedStackedBars.bars}
+        height={160}
+        mobileHeight={120}
+        showLegend={false}
+        ariaLabel="Grade distribution across boards"
+      />
+    );
+  } else {
+    gradeDistributionContent = <EmptyState description="No ascent data for this period" />;
+  }
+
   return (
     <MuiCard className={styles.statsCard}>
       <CardContent>
@@ -212,21 +233,7 @@ export default function StatsSummary({
             Grade Distribution
           </Typography>
 
-          {loadingAggregated ? (
-            <div className={styles.loadingStats}>
-              <CircularProgress size={24} />
-            </div>
-          ) : aggregatedStackedBars?.bars ? (
-            <CssBarChart
-              bars={aggregatedStackedBars.bars}
-              height={160}
-              mobileHeight={120}
-              showLegend={false}
-              ariaLabel="Grade distribution across boards"
-            />
-          ) : (
-            <EmptyState description="No ascent data for this period" />
-          )}
+          {gradeDistributionContent}
         </div>
 
         {aggregatedFlashRedpointBars && !loadingAggregated && (

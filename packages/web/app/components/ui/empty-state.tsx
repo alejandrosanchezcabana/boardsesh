@@ -5,6 +5,7 @@ import Box from '@mui/material/Box';
 import Typography from '@mui/material/Typography';
 import InboxOutlined from '@mui/icons-material/InboxOutlined';
 import type { SxProps, Theme } from '@mui/material/styles';
+import { toSxArray } from './sx-utils';
 
 type EmptyStateProps = {
   icon?: React.ReactNode;
@@ -25,7 +26,7 @@ export function EmptyState({ icon, description = 'No data', children, sx }: Empt
           padding: 4,
           color: 'text.secondary',
         },
-        ...(Array.isArray(sx) ? sx : sx ? [sx] : []),
+        ...toSxArray(sx),
       ]}
     >
       <Box sx={{ fontSize: 48, mb: 1, opacity: 0.4 }}>{icon || <InboxOutlined fontSize="inherit" />}</Box>

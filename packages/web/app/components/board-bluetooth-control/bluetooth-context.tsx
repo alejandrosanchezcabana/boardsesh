@@ -1,6 +1,7 @@
 'use client';
 
-import React, { createContext, useContext, useEffect, useMemo, useRef, useState } from 'react';
+import React, { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react';
+import { useParams, useRouter } from 'next/navigation';
 import { track } from '@vercel/analytics';
 import { useBoardBluetooth } from './use-board-bluetooth';
 import { useCurrentClimb } from '../graphql-queue';
@@ -13,10 +14,13 @@ import {
 } from '@/app/lib/ble/capacitor-utils';
 import { registerBluetoothConnection } from './bluetooth-status-store';
 import { DevicePickerDialog } from './device-picker-dialog';
+import { BoardConfigMismatchDialog } from './board-config-mismatch-dialog';
 import { AutoConnectHandler } from './auto-connect-handler';
 import { parseSerialNumber } from './bluetooth-aurora';
+import { useSnackbar } from '../providers/snackbar-provider';
 import { useWsAuthToken } from '@/app/hooks/use-ws-auth-token';
-import { resolveSerialNumbers } from '@/app/lib/ble/resolve-serials';
+import { resolveSerialNumbers, type ResolvedBoardEntry } from '@/app/lib/ble/resolve-serials';
+import { buildSwitchUrl, decidePickerSelection, type ResolvedBoardConfig } from '@/app/lib/ble/board-config-match';
 import type { UserBoard } from '@boardsesh/shared-schema';
 import type { DiscoveredDevice } from '@/app/lib/ble/types';
 import type { PickerState } from './use-board-bluetooth';
@@ -111,21 +115,36 @@ function BluetoothAutoSender({
 
 export function BluetoothProvider({
   boardDetails,
+  boardUuid,
   children,
 }: {
   boardDetails: BoardDetails;
+  /** Saved board UUID when this provider sits under a /b/{slug}/... route. */
+  boardUuid?: string;
   children: React.ReactNode;
 }) {
   const { isConnected, loading, connect, disconnect, sendFramesToBoard, pickerState } = useBoardBluetooth({
     boardDetails,
+    boardUuid,
   });
-  const { token } = useWsAuthToken();
+  const { token, isAuthenticated } = useWsAuthToken();
+  const { showMessage } = useSnackbar();
+
+  // Both `[board_name]/[layout_id]/[size_id]/[set_ids]/[angle]/...` and
+  // `/b/{slug}/{angle}/...` routes carry `[angle]` as a dynamic segment.
+  // Read it here instead of taking it as a prop so the provider isn't
+  // coupled to the route shape at the call site — only the mismatch
+  // dialog's "switch URL" builder needs it. Stays `null` when absent so
+  // the switch handler can warn instead of routing the user to angle 0.
+  const params = useParams<{ angle?: string }>();
+  const parsedAngle = params?.angle != null ? Number(params.angle) : Number.NaN;
+  const routeAngle: number | null = Number.isFinite(parsedAngle) ? parsedAngle : null;
 
   const [isBluetoothSupported, setIsBluetoothSupported] = useState(false);
   const [isIOS, setIsIOS] = useState(false);
 
-  // Resolve BLE device serial numbers to known boards
-  const [resolvedBoards, setResolvedBoards] = useState<Map<string, UserBoard>>(new Map());
+  // Resolve BLE device serial numbers to known boards or to auto-recorded configs.
+  const [resolvedBoards, setResolvedBoards] = useState<Map<string, ResolvedBoardEntry>>(new Map());
   const resolvedSerialsRef = useRef<string>('');
 
   // Test-only escape hatch for app-store screenshot generation. When the
@@ -135,10 +154,11 @@ export function BluetoothProvider({
   // unavailable in headless Chromium, and the demo serials don't exist in
   // the dev DB so the real resolver wouldn't match them).
   const [demoPickerState, setDemoPickerState] = useState<PickerState | null>(null);
-  const [demoResolvedBoards, setDemoResolvedBoards] = useState<Map<string, UserBoard> | null>(null);
+  const [demoResolvedBoards, setDemoResolvedBoards] = useState<Map<string, ResolvedBoardEntry> | null>(null);
   useEffect(() => {
     if (typeof window === 'undefined') return;
-    if (window.sessionStorage.getItem('boardsesh:e2e-bluetooth-picker') !== '1') return;
+    // oxlint-disable-next-line no-restricted-globals -- e2e flag must be read synchronously during render
+    if (sessionStorage.getItem('boardsesh:e2e-bluetooth-picker') !== '1') return;
 
     // Real boards (and where available, real serials) sourced from
     // production user_boards.json so the picker shows authentic-looking
@@ -170,42 +190,49 @@ export function BluetoothProvider({
       isFollowedByMe: false,
       ...overrides,
     });
-    const boardsBySerial = new Map<string, UserBoard>([
+    const wrap = (board: UserBoard): ResolvedBoardEntry => ({ kind: 'saved', board });
+    const boardsBySerial = new Map<string, ResolvedBoardEntry>([
       [
         '751737',
-        makeBoard({
-          boardType: 'kilter',
-          layoutId: 8,
-          sizeId: 25,
-          setIds: '28,29,26,27',
-          name: "Marco's Board",
-          serialNumber: '751737',
-          angle: 35,
-        }),
+        wrap(
+          makeBoard({
+            boardType: 'kilter',
+            layoutId: 8,
+            sizeId: 25,
+            setIds: '28,29,26,27',
+            name: "Marco's Board",
+            serialNumber: '751737',
+            angle: 35,
+          }),
+        ),
       ],
       [
         '751970',
-        makeBoard({
-          boardType: 'kilter',
-          layoutId: 8,
-          sizeId: 22,
-          setIds: '26',
-          name: 'Rise and Grind',
-          serialNumber: '751970',
-          locationName: 'Denver, CO',
-          angle: 25,
-        }),
+        wrap(
+          makeBoard({
+            boardType: 'kilter',
+            layoutId: 8,
+            sizeId: 22,
+            setIds: '26',
+            name: 'Rise and Grind',
+            serialNumber: '751970',
+            locationName: 'Denver, CO',
+            angle: 25,
+          }),
+        ),
       ],
       [
         '480221',
-        makeBoard({
-          boardType: 'tension',
-          layoutId: 10,
-          sizeId: 6,
-          setIds: '12,13',
-          name: '9 Degrees Chatswood',
-          serialNumber: '480221',
-        }),
+        wrap(
+          makeBoard({
+            boardType: 'tension',
+            layoutId: 10,
+            sizeId: 6,
+            setIds: '12,13',
+            name: '9 Degrees Chatswood',
+            serialNumber: '480221',
+          }),
+        ),
       ],
     ]);
     setDemoResolvedBoards(boardsBySerial);
@@ -219,34 +246,34 @@ export function BluetoothProvider({
   const activePickerState = pickerState ?? demoPickerState;
   const activeResolvedBoards = demoResolvedBoards ?? resolvedBoards;
 
-  useEffect(() => {
-    if (!activePickerState || activePickerState.devices.length === 0 || !token) {
-      return;
-    }
-
+  // Derive a stable key from the *set* of serials in the picker. The
+  // pickerState object identity changes on every BLE advertisement (RSSI
+  // updates, etc.), but the resolver only needs to re-run when the serial
+  // set actually changes.
+  const sortedSerialsKey = useMemo(() => {
+    if (!activePickerState) return '';
     const serials: string[] = [];
     for (const device of activePickerState.devices) {
       const serial = parseSerialNumber(device.name);
       if (serial) serials.push(serial);
     }
+    return [...serials].sort().join(',');
+  }, [activePickerState]);
 
-    if (serials.length === 0) return;
+  useEffect(() => {
+    if (!sortedSerialsKey || !token) return;
+    if (sortedSerialsKey === resolvedSerialsRef.current) return;
 
-    // Check if we already resolved these serials (resolveSerialNumbers deduplicates internally)
-    const sortedSerials = [...serials].sort();
-    const serialsKey = sortedSerials.join(',');
-    if (serialsKey === resolvedSerialsRef.current) return;
-
-    resolveSerialNumbers(token, sortedSerials)
+    resolveSerialNumbers(token, sortedSerialsKey.split(','), { isAuthenticated })
       .then((boardMap) => {
         // Only mark as resolved on success so transient failures allow retries
-        resolvedSerialsRef.current = serialsKey;
+        resolvedSerialsRef.current = sortedSerialsKey;
         setResolvedBoards(boardMap);
       })
       .catch((err) => {
         console.error('[BLE] Failed to resolve serial numbers:', err);
       });
-  }, [activePickerState, token]);
+  }, [sortedSerialsKey, token, isAuthenticated]);
 
   useEffect(() => {
     let cancelPolling: (() => void) | undefined;
@@ -303,6 +330,65 @@ export function BluetoothProvider({
     [isConnected, loading, connect, disconnect, sendFramesToBoard, isBluetoothSupported, isIOS],
   );
 
+  // Mismatch interception: when the user picks a controller whose resolved
+  // config doesn't match the route they're on, hold the picker promise open
+  // and surface the BoardConfigMismatchDialog. The picker only emits the
+  // selection — this provider decides whether to forward, switch, or cancel.
+  const router = useRouter();
+  const [mismatch, setMismatch] = useState<{
+    deviceId: string;
+    serial: string;
+    config: ResolvedBoardConfig;
+  } | null>(null);
+
+  const handlePickerSelect = useCallback(
+    (deviceId: string) => {
+      if (!activePickerState) return;
+      const decision = decidePickerSelection(deviceId, activePickerState.devices, activeResolvedBoards, boardDetails);
+      if (decision.kind === 'forward') {
+        activePickerState.handleSelect(deviceId);
+        return;
+      }
+      setMismatch({ deviceId, serial: decision.serial, config: decision.config });
+    },
+    [activePickerState, activeResolvedBoards, boardDetails],
+  );
+
+  const handleMismatchConnectAnyway = useCallback(() => {
+    if (mismatch && activePickerState) {
+      activePickerState.handleSelect(mismatch.deviceId);
+    }
+    setMismatch(null);
+  }, [mismatch, activePickerState]);
+
+  const handleMismatchCancel = useCallback(() => {
+    setMismatch(null);
+  }, []);
+
+  const handleMismatchSwitch = useCallback(() => {
+    if (!mismatch) return;
+    if (routeAngle == null) {
+      // Provider mounted on a route that doesn't carry an [angle] segment.
+      // Silently building a URL at angle 0 would yank the user to a fake
+      // angle they never picked — surface the issue and let them choose.
+      showMessage("Couldn't switch — open a climb at a specific angle first.", 'warning');
+      return;
+    }
+    const target = buildSwitchUrl(mismatch.config, routeAngle);
+    if (!target) {
+      // Couldn't resolve a switch URL (unknown layout/size, missing slug data).
+      // Don't silently close both dialogs and strand the user — surface the
+      // failure so they can pick "Connect anyway" or cancel deliberately.
+      showMessage("Couldn't switch to that board's config. Try Connect anyway.", 'warning');
+      return;
+    }
+    setMismatch(null);
+    // Cancel the in-flight picker promise; the new route will mount a fresh
+    // BluetoothProvider that auto-connects via the ?autoConnect serial param.
+    activePickerState?.handleCancel();
+    router.push(`${target}?autoConnect=${encodeURIComponent(mismatch.serial)}`);
+  }, [mismatch, routeAngle, activePickerState, router, showMessage]);
+
   return (
     <BluetoothContext.Provider value={value}>
       {isConnected && (
@@ -311,9 +397,19 @@ export function BluetoothProvider({
       {activePickerState && (
         <DevicePickerDialog
           devices={activePickerState.devices}
-          onSelect={activePickerState.handleSelect}
+          onSelect={handlePickerSelect}
           onCancel={activePickerState.handleCancel}
           resolvedBoards={activeResolvedBoards}
+        />
+      )}
+      {mismatch && boardDetails && (
+        <BoardConfigMismatchDialog
+          open
+          currentBoardDetails={boardDetails}
+          recordedConfig={mismatch.config}
+          onSwitch={handleMismatchSwitch}
+          onConnectAnyway={handleMismatchConnectAnyway}
+          onCancel={handleMismatchCancel}
         />
       )}
       <AutoConnectHandler connect={connect} isBluetoothSupported={isBluetoothSupported} />

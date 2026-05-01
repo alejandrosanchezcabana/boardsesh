@@ -8,6 +8,7 @@ class BoardseshViewController: CAPBridgeViewController {
         super.capacitorDidLoad()
         bridge?.registerPluginInstance(LiveActivityPlugin())
         bridge?.registerPluginInstance(HealthKitPlugin())
+        bridge?.registerPluginInstance(NativeTabBarPlugin())
         // DevUrlPlugin is auto-registered via the CAP_PLUGIN macro in DevUrlPlugin.m
     }
 
@@ -42,18 +43,14 @@ class BoardseshViewController: CAPBridgeViewController {
         prefs.preferredContentMode = .mobile
         config.defaultWebpagePreferences = prefs
 
+        // Share the process pool with satellite webviews for cookie sharing.
+        config.processPool = MultiWebViewController.sharedProcessPool
+
         return config
     }
 
     override func viewDidLoad() {
         super.viewDidLoad()
-
-        // Let the native scroll view bounce naturally for smooth scroll physics.
-        // CSS overscroll-behavior-y:none on <html> prevents web content from
-        // rubber-banding, and Capacitor's backgroundColor (#0A0A0A) ensures
-        // any native bounce reveals matching black — not a jarring white.
-        // Previously bounces=false was set here, but it degrades momentum
-        // scrolling and touch responsiveness vs Safari.
 
         // UIScrollView adds ~150ms delay to disambiguate taps from scrolls.
         // Since the web layer handles its own scroll/tap detection via
@@ -64,17 +61,15 @@ class BoardseshViewController: CAPBridgeViewController {
             scrollView.canCancelContentTouches = true
         }
 
-        // If a universal link triggered a cold start, navigate to it now
-        // that the bridge and WebView are ready.
-        loadPendingUniversalLink()
+        // NOTE: Tab bar management and universal-link routing have moved to
+        // MultiWebViewController. This VC is now embedded as a child VC for
+        // the climbs tab only — universal link URLs are queued on the parent
+        // (MultiWebViewController.pendingUniversalLinkURL) and replayed by
+        // its viewDidAppear, which navigates to the correct tab via tabForPath.
     }
 
     override func viewDidAppear(_ animated: Bool) {
         super.viewDidAppear(animated)
-
-        // Fallback: the window may not be set during viewDidLoad on first launch.
-        // Check again once the view is fully in the hierarchy.
-        loadPendingUniversalLink()
 
         #if DEBUG
         scheduleDevUrlRescueCheck()
@@ -136,15 +131,6 @@ class BoardseshViewController: CAPBridgeViewController {
         present(alert, animated: true)
     }
     #endif
-
-    private func loadPendingUniversalLink() {
-        guard let sceneDelegate = view.window?.windowScene?.delegate as? SceneDelegate,
-              let pendingURL = sceneDelegate.pendingUniversalLinkURL else {
-            return
-        }
-        sceneDelegate.pendingUniversalLinkURL = nil
-        webView?.load(URLRequest(url: pendingURL))
-    }
 
     override var supportedInterfaceOrientations: UIInterfaceOrientationMask {
         .portrait

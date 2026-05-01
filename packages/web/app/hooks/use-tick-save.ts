@@ -124,17 +124,17 @@ export function useTickSave(options: UseTickSaveOptions): {
       // Fire celebration and close the bar -- don't wait for the network.
       // When an explicit ascentType is provided, derive the variant from status
       // (the isAscent boolean is only meaningful for the legacy two-method API).
-      const variant = explicitAscentType
-        ? status === 'attempt'
-          ? 'attempt'
-          : status === 'flash'
-            ? 'flash'
-            : 'ascent'
-        : !isAscent
-          ? 'attempt'
-          : status === 'flash'
-            ? 'flash'
-            : 'ascent';
+      const resolveVariant = () => {
+        if (explicitAscentType) {
+          if (status === 'attempt') return 'attempt';
+          if (status === 'flash') return 'flash';
+          return 'ascent';
+        }
+        if (!isAscent) return 'attempt';
+        if (status === 'flash') return 'flash';
+        return 'ascent';
+      };
+      const variant = resolveVariant();
       fireConfetti(confettiOrigin ?? null, variant);
       // Flash: brief 300ms delay so the button pulse + sparks play before the bar closes.
       if (variant === 'flash') {

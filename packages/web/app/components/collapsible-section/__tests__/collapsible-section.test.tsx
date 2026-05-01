@@ -60,6 +60,19 @@ describe('CollapsibleSection', () => {
       render(<CollapsibleSection sections={sections} />);
       expect(screen.getByText('Recent activity')).toBeDefined();
     });
+
+    it('honours defaultActive when sections arrive on a later render', () => {
+      // Simulates the play-drawer deferred-mount path: parent first renders
+      // with no sections, then the climb-detail hook returns the real list
+      // a tick later.
+      const { rerender } = render(<CollapsibleSection sections={[]} />);
+      expect(screen.queryByText('Recent activity')).toBeNull();
+
+      const sections = makeSections();
+      sections[1].defaultActive = true;
+      rerender(<CollapsibleSection sections={sections} />);
+      expect(screen.getByText('Recent activity')).toBeDefined();
+    });
   });
 
   describe('controlled mode (forcedActiveKey)', () => {
@@ -132,6 +145,51 @@ describe('CollapsibleSection', () => {
       expect(screen.queryByText('Invite others')).toBeNull();
       expect(screen.queryByText('Recent activity')).toBeNull();
       expect(screen.queryByText('Grade breakdown')).toBeNull();
+    });
+  });
+
+  describe('action slot', () => {
+    function sectionsWithAction(defaultActive: boolean): CollapsibleSectionConfig[] {
+      const base = makeSections();
+      base[0] = {
+        ...base[0],
+        defaultActive,
+        action: <button data-testid="invite-action">+</button>,
+      };
+      return base;
+    }
+
+    it('does not render the action while the section is collapsed', () => {
+      render(<CollapsibleSection sections={sectionsWithAction(false)} />);
+      expect(screen.queryByTestId('invite-action')).toBeNull();
+    });
+
+    it('renders the action when the section is expanded', () => {
+      render(<CollapsibleSection sections={sectionsWithAction(true)} />);
+      expect(screen.getByTestId('invite-action')).toBeDefined();
+    });
+
+    it('reveals the action after the user expands a collapsed section', () => {
+      render(<CollapsibleSection sections={sectionsWithAction(false)} />);
+      expect(screen.queryByTestId('invite-action')).toBeNull();
+
+      fireEvent.click(screen.getByText('Invite'));
+      expect(screen.getByTestId('invite-action')).toBeDefined();
+    });
+
+    it('clicking the action does not collapse the section', () => {
+      render(<CollapsibleSection sections={sectionsWithAction(true)} />);
+      expect(screen.getByText('Invite others')).toBeDefined();
+
+      fireEvent.click(screen.getByTestId('invite-action'));
+
+      // Section is still expanded (title visible).
+      expect(screen.getByText('Invite others')).toBeDefined();
+    });
+
+    it('hides the summary when an action is provided and the section is expanded', () => {
+      render(<CollapsibleSection sections={sectionsWithAction(true)} />);
+      expect(screen.queryByText('Share link')).toBeNull();
     });
   });
 });

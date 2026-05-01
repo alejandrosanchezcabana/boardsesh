@@ -582,6 +582,20 @@
       "when": 1776316766635,
       "tag": "0082_add_user_climb_percentiles",
       "breakpoints": true
+    },
+    {
+      "idx": 83,
+      "version": "7",
+      "when": 1777073355648,
+      "tag": "0083_record_user_board_serials",
+      "breakpoints": true
+    },
+    {
+      "idx": 84,
+      "version": "7",
+      "when": 1777496789115,
+      "tag": "0084_new_mysterio",
+      "breakpoints": true
     }
   ]
 }

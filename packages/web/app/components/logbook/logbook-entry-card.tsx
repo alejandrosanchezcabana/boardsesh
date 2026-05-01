@@ -12,11 +12,11 @@ import Rating from '@mui/material/Rating';
 import Stack from '@mui/material/Stack';
 import Typography from '@mui/material/Typography';
 import PersonOutlined from '@mui/icons-material/PersonOutlined';
-import dayjs from 'dayjs';
 import { AscentStatusIcon } from '@/app/components/ascent-status/ascent-status-icon';
 import { normalizeAscentStatus, type AscentStatusValue } from '@/app/components/ascent-status/ascent-status-utils';
 import VoteButton from '@/app/components/social/vote-button';
 import FeedCommentButton from '@/app/components/social/feed-comment-button';
+import { formatTickAbsoluteTime } from '@/app/lib/format-tick-time';
 
 export type LogbookEntryUser = {
   userId: string;
@@ -95,7 +95,7 @@ export const LogbookEntryCard: React.FC<LogbookEntryCardProps> = ({
         <Stack spacing={1} sx={{ width: '100%' }}>
           <Stack direction="row" spacing={1} sx={{ flexWrap: 'wrap' }}>
             <Typography variant="body2" component="span" fontWeight={600}>
-              {dayjs(entry.climbedAt).format('MMM D, YYYY h:mm A')}
+              {formatTickAbsoluteTime(entry.climbedAt, 'MMM D, YYYY h:mm A')}
             </Typography>
             {showAngleAndStatus && (
               <>

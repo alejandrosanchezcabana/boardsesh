@@ -1,7 +1,8 @@
 import { buildOverlayUrl } from '@/app/components/board-renderer/util';
+import { SITE_URL } from '@/app/lib/seo/base-url';
 import type { BoardDetails, Climb } from '@/app/lib/types';
 
-const BASE_URL = process.env.VERCEL_URL ? 'https://www.boardsesh.com' : 'http://localhost:3000';
+const BASE_URL = process.env.VERCEL_URL ? SITE_URL : 'http://localhost:3000';
 
 /**
  * Fire-and-forget fetches to warm the Vercel Edge CDN cache for

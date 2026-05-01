@@ -599,23 +599,37 @@ async function seedSocialData() {
           } else if (gradeRank > 0.7) {
             // Project grades: fewer flashes, more attempts
             const roll = faker.number.float({ min: 0, max: 1 });
-            status = roll < 0.05 ? 'flash' : roll < 0.55 ? 'send' : 'attempt';
-            attemptCount =
-              status === 'flash'
-                ? 1
-                : status === 'send'
-                  ? faker.number.int({ min: 3, max: 20 })
-                  : faker.number.int({ min: 1, max: 10 });
+            if (roll < 0.05) {
+              status = 'flash';
+            } else if (roll < 0.55) {
+              status = 'send';
+            } else {
+              status = 'attempt';
+            }
+            if (status === 'flash') {
+              attemptCount = 1;
+            } else if (status === 'send') {
+              attemptCount = faker.number.int({ min: 3, max: 20 });
+            } else {
+              attemptCount = faker.number.int({ min: 1, max: 10 });
+            }
           } else {
             // Comfort zone: good mix of flashes and sends
             const roll = faker.number.float({ min: 0, max: 1 });
-            status = roll < 0.25 ? 'flash' : roll < 0.85 ? 'send' : 'attempt';
-            attemptCount =
-              status === 'flash'
-                ? 1
-                : status === 'send'
-                  ? faker.number.int({ min: 2, max: 8 })
-                  : faker.number.int({ min: 1, max: 5 });
+            if (roll < 0.25) {
+              status = 'flash';
+            } else if (roll < 0.85) {
+              status = 'send';
+            } else {
+              status = 'attempt';
+            }
+            if (status === 'flash') {
+              attemptCount = 1;
+            } else if (status === 'send') {
+              attemptCount = faker.number.int({ min: 2, max: 8 });
+            } else {
+              attemptCount = faker.number.int({ min: 1, max: 5 });
+            }
           }
 
           const quality = status !== 'attempt' ? faker.number.int({ min: 1, max: 5 }) : null;
@@ -679,8 +693,14 @@ async function seedSocialData() {
 
           // Weighted status: flash 20%, send 50%, attempt 30%
           const statusRoll = faker.number.float({ min: 0, max: 1 });
-          const status =
-            statusRoll < 0.2 ? ('flash' as const) : statusRoll < 0.7 ? ('send' as const) : ('attempt' as const);
+          let status: 'flash' | 'send' | 'attempt';
+          if (statusRoll < 0.2) {
+            status = 'flash';
+          } else if (statusRoll < 0.7) {
+            status = 'send';
+          } else {
+            status = 'attempt';
+          }
 
           // Each tick in the session is 10-30 minutes after the previous
           const minutesIntoSession = j * faker.number.int({ min: 10, max: 30 });
@@ -688,12 +708,14 @@ async function seedSocialData() {
 
           const difficulty = status !== 'attempt' ? faker.helpers.arrayElement(grades) : null;
           const quality = status !== 'attempt' ? faker.number.int({ min: 1, max: 5 }) : null;
-          const attemptCount =
-            status === 'flash'
-              ? 1
-              : status === 'send'
-                ? faker.number.int({ min: 2, max: 15 })
-                : faker.number.int({ min: 1, max: 5 });
+          let attemptCount: number;
+          if (status === 'flash') {
+            attemptCount = 1;
+          } else if (status === 'send') {
+            attemptCount = faker.number.int({ min: 2, max: 15 });
+          } else {
+            attemptCount = faker.number.int({ min: 1, max: 5 });
+          }
 
           const comment = faker.datatype.boolean(0.3) ? pickTickComment(status) : '';
 
@@ -877,20 +899,28 @@ async function seedSocialData() {
         for (let ti = 0; ti < ticksForUser; ti++) {
           const climb = faker.helpers.arrayElement(climbs);
           const statusRoll = faker.number.float({ min: 0, max: 1 });
-          const status =
-            statusRoll < 0.2 ? ('flash' as const) : statusRoll < 0.7 ? ('send' as const) : ('attempt' as const);
+          let status: 'flash' | 'send' | 'attempt';
+          if (statusRoll < 0.2) {
+            status = 'flash';
+          } else if (statusRoll < 0.7) {
+            status = 'send';
+          } else {
+            status = 'attempt';
+          }
 
           const minutesIntoSession = ti * faker.number.int({ min: 8, max: 20 });
           const climbedAt = new Date(sessionBaseTime + minutesIntoSession * 60 * 1000);
 
           const difficulty = status !== 'attempt' ? faker.helpers.arrayElement(grades) : null;
           const quality = status !== 'attempt' ? faker.number.int({ min: 1, max: 5 }) : null;
-          const attemptCount =
-            status === 'flash'
-              ? 1
-              : status === 'send'
-                ? faker.number.int({ min: 2, max: 10 })
-                : faker.number.int({ min: 1, max: 5 });
+          let attemptCount: number;
+          if (status === 'flash') {
+            attemptCount = 1;
+          } else if (status === 'send') {
+            attemptCount = faker.number.int({ min: 2, max: 10 });
+          } else {
+            attemptCount = faker.number.int({ min: 1, max: 5 });
+          }
 
           await db
             .insert(boardseshTicks)

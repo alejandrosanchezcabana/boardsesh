@@ -6,6 +6,7 @@ import Button from '@mui/material/Button';
 import CircularProgress from '@mui/material/CircularProgress';
 import Box from '@mui/material/Box';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { track } from '@vercel/analytics';
 import { createGraphQLHttpClient } from '@/app/lib/graphql/client';
 import { useWsAuthToken } from '@/app/hooks/use-ws-auth-token';
 import {
@@ -13,8 +14,31 @@ import {
   type AttachBetaLinkMutationVariables,
   type AttachBetaLinkMutationResponse,
 } from '@/app/lib/graphql/operations';
-import { isBetaVideoUrl, BETA_VIDEO_URL_VALIDATION_MESSAGE } from '@/app/lib/beta-video-url';
+import {
+  isBetaVideoUrl,
+  isInstagramUrl,
+  isTikTokUrl,
+  BETA_VIDEO_URL_VALIDATION_MESSAGE,
+} from '@/app/lib/beta-video-url';
 import { useSnackbar } from '@/app/components/providers/snackbar-provider';
+
+// graphql-request throws ClientError-shaped errors with a `response.errors[]`
+// array. We trust those messages because they come from our own resolvers
+// (zod errors, InstagramBetaValidationError, our explicit throws). Anything
+// else — fetch failures, library bugs, `error.message` — is opaque and we
+// fall back to the generic toast so we never leak internal strings.
+export function extractGraphQLErrorMessage(error: unknown): string | null {
+  if (!error || typeof error !== 'object') return null;
+  if (!('response' in error)) return null;
+  const response = (error as { response?: unknown }).response;
+  if (!response || typeof response !== 'object' || !('errors' in response)) return null;
+  const errors = (response as { errors?: unknown }).errors;
+  if (!Array.isArray(errors) || errors.length === 0) return null;
+  const first = errors[0];
+  if (!first || typeof first !== 'object' || !('message' in first)) return null;
+  const message = (first as { message?: unknown }).message;
+  return typeof message === 'string' && message.length > 0 ? message : null;
+}
 
 type AttachBetaLinkFormProps = {
   boardType: string;
@@ -38,7 +62,7 @@ const AttachBetaLinkForm: React.FC<AttachBetaLinkFormProps> = ({
   angle,
   resetTrigger,
   submitLabel = 'Share beta',
-  helperText = 'Paste an Instagram or TikTok link so others can see your beta.',
+  helperText,
   onSuccess,
   onCancel,
   showCancel = false,
@@ -73,12 +97,25 @@ const AttachBetaLinkForm: React.FC<AttachBetaLinkFormProps> = ({
     },
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: ['betaLinks', boardType, climbUuid] });
+      let platform: 'TikTok' | 'Instagram' | 'Unknown' = 'Unknown';
+      if (isTikTokUrl(trimmed)) {
+        platform = 'TikTok';
+      } else if (isInstagramUrl(trimmed)) {
+        platform = 'Instagram';
+      }
+      track('Beta Video Added', { boardType, climbUuid, platform });
       showMessage('Video added to beta', 'success');
       setUrl('');
       onSuccess?.();
     },
-    onError: () => {
-      showMessage('Couldn’t add video. Try again.', 'error');
+    onError: (error) => {
+      // Surface the GraphQL resolver's user-facing error message (the validator
+      // throws InstagramBetaValidationError with a message we want users to
+      // see). Don't fall back to error.message — for non-GraphQL failures
+      // (network, library internals, type assertions) that field can carry
+      // raw stack traces or implementation strings that shouldn't be shown.
+      const serverMessage = extractGraphQLErrorMessage(error);
+      showMessage(serverMessage ?? 'Couldn’t add video. Try again.', 'error');
     },
   });
 
@@ -94,7 +131,13 @@ const AttachBetaLinkForm: React.FC<AttachBetaLinkFormProps> = ({
         value={url}
         onChange={(e) => setUrl(e.target.value)}
         error={!!validationError}
-        helperText={validationError ?? helperText}
+        helperText={
+          validationError ??
+          helperText ??
+          (climbName
+            ? `Paste a public Instagram reel or post that mentions ${climbName}, or a TikTok URL.`
+            : 'Paste a public Instagram reel/post or TikTok URL so others can see your beta.')
+        }
         onKeyDown={(e) => {
           if (e.key === 'Enter' && canSubmit) {
             e.preventDefault();

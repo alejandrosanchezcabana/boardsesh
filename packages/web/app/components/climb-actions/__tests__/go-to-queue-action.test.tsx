@@ -60,10 +60,18 @@ vi.mock('../../graphql-queue', () => ({
  */
 const mockBuildActionResult = vi.fn();
 vi.mock('../action-view-renderer', () => ({
-  computeActionDisplay: (_viewMode: string, size = 'default', _showLabel?: boolean) => ({
-    shouldShowLabel: true,
-    iconSize: size === 'small' ? 14 : size === 'large' ? 20 : 16,
-  }),
+  computeActionDisplay: (_viewMode: string, size = 'default', _showLabel?: boolean) => {
+    let iconSize = 16;
+    if (size === 'small') {
+      iconSize = 14;
+    } else if (size === 'large') {
+      iconSize = 20;
+    }
+    return {
+      shouldShowLabel: true,
+      iconSize,
+    };
+  },
   buildActionResult: (args: Record<string, unknown>) => {
     mockBuildActionResult(args);
     const onClick = args.onClick as (e?: React.MouseEvent) => void;

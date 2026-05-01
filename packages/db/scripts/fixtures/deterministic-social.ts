@@ -208,6 +208,12 @@ function buildFixtureTicks(): FixtureTick[] {
     for (let i = 0; i < 10; i++) {
       const gi = ti * 10 + i;
       const userNum = ((gi + 3) % 12) + 1;
+      let attemptCount = 8;
+      if (cfg.status === 'flash') {
+        attemptCount = 1;
+      } else if (cfg.status === 'send') {
+        attemptCount = 3;
+      }
       ticks.push({
         uuid: `fx-tick-${cfg.short}-${String(i + 1).padStart(2, '0')}`,
         userId: uid(userNum),
@@ -215,7 +221,7 @@ function buildFixtureTicks(): FixtureTick[] {
         angle: ANGLES[gi % 6],
         isMirror: false,
         status: cfg.status,
-        attemptCount: cfg.status === 'flash' ? 1 : cfg.status === 'send' ? 3 : 8,
+        attemptCount,
         quality: cfg.status !== 'attempt' ? 4 : null,
         comment: '',
         globalIndex: gi,

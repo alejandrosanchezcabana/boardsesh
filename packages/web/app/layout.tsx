@@ -11,6 +11,7 @@ import PersistentSessionWrapper from './components/providers/persistent-session-
 import { SnackbarProvider } from './components/providers/snackbar-provider';
 import { AuthModalProvider } from './components/providers/auth-modal-provider';
 import { NotificationSubscriptionManager } from './components/providers/notification-subscription-manager';
+import I18nProvider from './components/providers/i18n-provider';
 import { VercelToolbar } from '@vercel/toolbar/next';
 import { getAllBoardConfigs } from './lib/server-board-configs';
 import { EMPTY_FEATURE_FLAGS } from './flags';
@@ -18,67 +19,79 @@ import { FeatureFlagsProvider } from './components/providers/feature-flags-provi
 import { OnboardingTourProvider } from './components/onboarding/onboarding-tour-provider';
 import OnboardingTourOverlay from './components/onboarding/onboarding-tour-overlay';
 import OnboardingDummySeshMount from './components/onboarding/onboarding-dummy-sesh-mount';
+import { getLocale } from './lib/i18n/get-locale';
+import { LOCALE_HTML_LANG, LOCALE_OG } from './lib/i18n/config';
+import { SITE_URL } from './lib/seo/base-url';
 import './components/index.css';
 import type { Viewport, Metadata } from 'next';
 
-export const metadata: Metadata = {
-  metadataBase: new URL('https://www.boardsesh.com'),
-  title: {
-    default: 'Boardsesh - Train smarter on your climbing board',
-    template: '%s | Boardsesh',
-  },
-  description: 'Track your sends across Kilter, Tension, and MoonBoard. One app for your boards.',
-  openGraph: {
-    type: 'website',
-    siteName: 'Boardsesh',
-    locale: 'en_US',
-  },
-  twitter: {
-    card: 'summary_large_image',
-  },
-  icons: {
-    icon: [
-      { url: '/favicon.ico', sizes: '32x32' },
-      { url: '/icon.svg', type: 'image/svg+xml' },
-    ],
-    apple: '/icons/apple-touch-icon.png',
-  },
-};
+export async function generateMetadata(): Promise<Metadata> {
+  const locale = await getLocale();
+  return {
+    metadataBase: new URL(SITE_URL),
+    title: {
+      default: 'Boardsesh - Train smarter on your climbing board',
+      template: '%s | Boardsesh',
+    },
+    description: 'Track your sends across Kilter, Tension, and MoonBoard. One app for your boards.',
+    openGraph: {
+      type: 'website',
+      siteName: 'Boardsesh',
+      locale: LOCALE_OG[locale],
+    },
+    twitter: {
+      card: 'summary_large_image',
+    },
+    icons: {
+      icon: [
+        { url: '/favicon.ico', sizes: '32x32' },
+        { url: '/icon.svg', type: 'image/svg+xml' },
+      ],
+      apple: '/icons/apple-touch-icon.png',
+    },
+  };
+}
 
 export const viewport: Viewport = {
   width: 'device-width',
   initialScale: 1,
   maximumScale: 1,
   viewportFit: 'cover',
+  // Match Mobile Safari behavior on Android: keyboard overlays the page
+  // without resizing the layout viewport, so 100dvh and position:fixed
+  // bottom bars stay anchored when an input is focused.
+  interactiveWidget: 'resizes-visual',
   themeColor: '#101012',
 };
 
 export default async function RootLayout({ children }: { children: React.ReactNode }) {
-  const boardConfigs = await getAllBoardConfigs();
+  const [boardConfigs, locale] = await Promise.all([getAllBoardConfigs(), getLocale()]);
 
   return (
-    <html lang="en" data-theme="dark" suppressHydrationWarning>
+    <html lang={LOCALE_HTML_LANG[locale]} data-theme="dark" suppressHydrationWarning>
       <body suppressHydrationWarning>
         <Analytics />
         <QueryClientProvider>
           <SessionProviderWrapper>
             <AppRouterCacheProvider>
               <ColorModeProvider>
-                <SnackbarProvider>
-                  <AuthModalProvider>
-                    <FeatureFlagsProvider flags={EMPTY_FEATURE_FLAGS}>
-                      <PersistentSessionWrapper boardConfigs={boardConfigs}>
-                        <NavigationLoadingProvider>
-                          <OnboardingTourProvider>
-                            <NotificationSubscriptionManager>{children}</NotificationSubscriptionManager>
-                            <OnboardingTourOverlay />
-                            <OnboardingDummySeshMount />
-                          </OnboardingTourProvider>
-                        </NavigationLoadingProvider>
-                      </PersistentSessionWrapper>
-                    </FeatureFlagsProvider>
-                  </AuthModalProvider>
-                </SnackbarProvider>
+                <I18nProvider locale={locale}>
+                  <SnackbarProvider>
+                    <AuthModalProvider>
+                      <FeatureFlagsProvider flags={EMPTY_FEATURE_FLAGS}>
+                        <PersistentSessionWrapper boardConfigs={boardConfigs}>
+                          <NavigationLoadingProvider>
+                            <OnboardingTourProvider>
+                              <NotificationSubscriptionManager>{children}</NotificationSubscriptionManager>
+                              <OnboardingTourOverlay />
+                              <OnboardingDummySeshMount />
+                            </OnboardingTourProvider>
+                          </NavigationLoadingProvider>
+                        </PersistentSessionWrapper>
+                      </FeatureFlagsProvider>
+                    </AuthModalProvider>
+                  </SnackbarProvider>
+                </I18nProvider>
               </ColorModeProvider>
             </AppRouterCacheProvider>
           </SessionProviderWrapper>

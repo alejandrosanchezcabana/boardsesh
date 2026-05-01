@@ -99,6 +99,23 @@ export default function ActivityFeed({
     );
   }
 
+  let emptyStateContent: React.ReactNode = null;
+  if (isAuthenticated) {
+    emptyStateContent = (
+      <EmptyState icon={<PersonSearchOutlined fontSize="inherit" />} description="Follow some climbers to fill this up">
+        {onFindClimbers && (
+          <MuiButton variant="contained" onClick={onFindClimbers}>
+            Find Climbers
+          </MuiButton>
+        )}
+      </EmptyState>
+    );
+  } else {
+    emptyStateContent = (
+      <EmptyState icon={<PublicOutlined fontSize="inherit" />} description="No recent activity yet" />
+    );
+  }
+
   return (
     <Box data-testid="activity-feed" sx={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
       {!isAuthenticated && (
@@ -127,20 +144,7 @@ export default function ActivityFeed({
       )}
 
       {!error && sessions.length === 0 ? (
-        isAuthenticated ? (
-          <EmptyState
-            icon={<PersonSearchOutlined fontSize="inherit" />}
-            description="Follow some climbers to fill this up"
-          >
-            {onFindClimbers && (
-              <MuiButton variant="contained" onClick={onFindClimbers}>
-                Find Climbers
-              </MuiButton>
-            )}
-          </EmptyState>
-        ) : (
-          <EmptyState icon={<PublicOutlined fontSize="inherit" />} description="No recent activity yet" />
-        )
+        emptyStateContent
       ) : (
         <VoteSummaryProvider entityType="session" entityIds={sessionIds}>
           {sessions.map((session) => (

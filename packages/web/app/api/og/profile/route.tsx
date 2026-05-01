@@ -1,6 +1,7 @@
 import React from 'react';
 import { ImageResponse } from '@vercel/og';
 import type { NextRequest } from 'next/server';
+// oxlint-disable-next-line no-restricted-imports -- legacy raw Neon sql usage; migrate to drizzle
 import { sql } from '@/app/lib/db/db';
 import { themeTokens } from '@/app/theme/theme-config';
 import { FONT_GRADE_COLORS, getGradeColorWithOpacity } from '@/app/lib/grade-colors';

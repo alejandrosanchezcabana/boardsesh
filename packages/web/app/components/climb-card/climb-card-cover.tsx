@@ -70,6 +70,7 @@ const ClimbCardCover = ({
       {climb && (
         <AscentStatus
           climbUuid={climb.uuid}
+          angle={climb.angle}
           fontSize={12}
           className={styles.badge}
           mirroredClassName={styles.badgeMirrored}

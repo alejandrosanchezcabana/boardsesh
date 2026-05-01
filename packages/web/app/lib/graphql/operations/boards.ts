@@ -156,6 +156,21 @@ export const GET_BOARDS_BY_SERIAL_NUMBERS = gql`
   }
 `;
 
+export const GET_MY_BOARD_SERIAL_CONFIGS = gql`
+  query GetMyBoardSerialConfigs($serialNumbers: [String!]!) {
+    myBoardSerialConfigs(serialNumbers: $serialNumbers) {
+      serialNumber
+      boardName
+      layoutId
+      sizeId
+      setIds
+      updatedAt
+      boardUuid
+      boardSlug
+    }
+  }
+`;
+
 // ============================================
 // Board Mutations
 // ============================================
@@ -296,4 +311,23 @@ export type GetBoardsBySerialNumbersQueryVariables = {
 
 export type GetBoardsBySerialNumbersQueryResponse = {
   boardsBySerialNumbers: UserBoard[];
+};
+
+export type BoardSerialConfig = {
+  serialNumber: string;
+  boardName: string;
+  layoutId: number;
+  sizeId: number;
+  setIds: string;
+  updatedAt: string;
+  boardUuid: string | null;
+  boardSlug: string | null;
+};
+
+export type GetMyBoardSerialConfigsQueryVariables = {
+  serialNumbers: string[];
+};
+
+export type GetMyBoardSerialConfigsQueryResponse = {
+  myBoardSerialConfigs: BoardSerialConfig[];
 };

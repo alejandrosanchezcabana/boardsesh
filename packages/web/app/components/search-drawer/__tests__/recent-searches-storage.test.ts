@@ -1,3 +1,4 @@
+/* oxlint-disable no-restricted-globals -- tests cover one-time localStorage migration */
 import 'fake-indexeddb/auto';
 import { openDB } from 'idb';
 import { beforeEach, describe, expect, it, vi } from 'vite-plus/test';

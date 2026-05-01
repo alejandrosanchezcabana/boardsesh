@@ -54,6 +54,12 @@ const createClimbQueueItem = (
   suggested: !!suggested,
 });
 
+const resolveQueueOperationMode = (isPersistentSessionActive: boolean, isDisconnected: boolean): QueueOperationMode => {
+  if (!isPersistentSessionActive) return 'local';
+  if (isDisconnected) return 'party-offline';
+  return 'party';
+};
+
 // Split contexts: actions (stable) vs data (changes frequently)
 export const QueueActionsContext = createContext<GraphQLQueueActionsType | undefined>(undefined);
 export const QueueDataContext = createContext<GraphQLQueueDataType | undefined>(undefined);
@@ -327,11 +333,7 @@ export const GraphQLQueueProvider = ({
     const r = latestRef.current;
     if (r.guardMutation()) return;
     if (!r.validateQueueAdd(climb)) return;
-    const mode: QueueOperationMode = !r.isPersistentSessionActive
-      ? 'local'
-      : r.isDisconnected
-        ? 'party-offline'
-        : 'party';
+    const mode: QueueOperationMode = resolveQueueOperationMode(r.isPersistentSessionActive, r.isDisconnected);
     const newItem = createClimbQueueItem(climb, r.clientId, r.currentUserInfo);
     r.dispatch({ type: 'DELTA_ADD_QUEUE_ITEM', payload: { item: newItem } });
     if (r.isDisconnected && r.isPersistentSessionActive) {
@@ -354,11 +356,7 @@ export const GraphQLQueueProvider = ({
     const startTime = performance.now();
     const r = latestRef.current;
     if (r.guardMutation()) return;
-    const mode: QueueOperationMode = !r.isPersistentSessionActive
-      ? 'local'
-      : r.isDisconnected
-        ? 'party-offline'
-        : 'party';
+    const mode: QueueOperationMode = resolveQueueOperationMode(r.isPersistentSessionActive, r.isDisconnected);
     r.dispatch({ type: 'DELTA_REMOVE_QUEUE_ITEM', payload: { uuid: item.uuid } });
     if (!r.isDisconnected && r.hasConnected && r.isPersistentSessionActive) {
       r.persistentSession
@@ -382,11 +380,7 @@ export const GraphQLQueueProvider = ({
     const r = latestRef.current;
     if (r.guardMutation()) return null;
     if (!r.validateQueueAdd(climb)) return null;
-    const mode: QueueOperationMode = !r.isPersistentSessionActive
-      ? 'local'
-      : r.isDisconnected
-        ? 'party-offline'
-        : 'party';
+    const mode: QueueOperationMode = resolveQueueOperationMode(r.isPersistentSessionActive, r.isDisconnected);
     const newItem = createClimbQueueItem(climb, r.clientId, r.currentUserInfo);
     const correlationId = r.clientId ? `${r.clientId}-${++r.correlationCounterRef.current}` : undefined;
     r.dispatch({
@@ -426,11 +420,7 @@ export const GraphQLQueueProvider = ({
     if (r.guardMutation()) return;
     if (!r.validateQueueAdd(climb)) return;
     const existing = r.state.queue.find((qItem) => qItem.uuid === queueItemUuid);
-    const mode: QueueOperationMode = !r.isPersistentSessionActive
-      ? 'local'
-      : r.isDisconnected
-        ? 'party-offline'
-        : 'party';
+    const mode: QueueOperationMode = resolveQueueOperationMode(r.isPersistentSessionActive, r.isDisconnected);
     const base = createClimbQueueItem(climb, r.clientId, r.currentUserInfo);
     const newItem: ClimbQueueItem = {
       ...base,
@@ -460,11 +450,7 @@ export const GraphQLQueueProvider = ({
     const startTime = performance.now();
     const r = latestRef.current;
     if (r.guardMutation()) return;
-    const mode: QueueOperationMode = !r.isPersistentSessionActive
-      ? 'local'
-      : r.isDisconnected
-        ? 'party-offline'
-        : 'party';
+    const mode: QueueOperationMode = resolveQueueOperationMode(r.isPersistentSessionActive, r.isDisconnected);
     r.dispatch({
       type: 'UPDATE_QUEUE',
       payload: { queue, currentClimbQueueItem: r.state.currentClimbQueueItem },
@@ -486,11 +472,7 @@ export const GraphQLQueueProvider = ({
     const startTime = performance.now();
     const r = latestRef.current;
     if (r.guardMutation()) return;
-    const mode: QueueOperationMode = !r.isPersistentSessionActive
-      ? 'local'
-      : r.isDisconnected
-        ? 'party-offline'
-        : 'party';
+    const mode: QueueOperationMode = resolveQueueOperationMode(r.isPersistentSessionActive, r.isDisconnected);
     const correlationId = r.clientId ? `${r.clientId}-${++r.correlationCounterRef.current}` : undefined;
     r.dispatch({
       type: 'DELTA_UPDATE_CURRENT_CLIMB',
@@ -530,11 +512,7 @@ export const GraphQLQueueProvider = ({
     const r = latestRef.current;
     if (r.guardMutation()) return;
     if (!r.state.currentClimbQueueItem?.climb) return;
-    const mode: QueueOperationMode = !r.isPersistentSessionActive
-      ? 'local'
-      : r.isDisconnected
-        ? 'party-offline'
-        : 'party';
+    const mode: QueueOperationMode = resolveQueueOperationMode(r.isPersistentSessionActive, r.isDisconnected);
     const newMirroredState = !r.state.currentClimbQueueItem.climb?.mirrored;
     r.dispatch({ type: 'DELTA_MIRROR_CURRENT_CLIMB', payload: { mirrored: newMirroredState } });
     if (!r.isDisconnected && r.hasConnected && r.isPersistentSessionActive) {

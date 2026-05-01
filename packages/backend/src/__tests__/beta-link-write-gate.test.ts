@@ -1,0 +1,142 @@
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+
+const { mockDbSelect } = vi.hoisted(() => ({
+  mockDbSelect: vi.fn(() => {
+    throw new Error('db.select should not be called for non-Instagram URLs');
+  }),
+}));
+
+vi.mock('../db/client', () => ({
+  db: {
+    select: mockDbSelect,
+    insert: vi.fn(),
+    update: vi.fn(),
+    delete: vi.fn(),
+    transaction: vi.fn(),
+  },
+}));
+
+vi.mock('../events', () => ({
+  publishSocialEvent: vi.fn(),
+}));
+
+vi.mock('../jobs/inferred-session-builder', () => ({
+  assignInferredSession: vi.fn(),
+}));
+
+vi.mock('../graphql/resolvers/sessions/debounced-stats-publisher', () => ({
+  publishDebouncedSessionStats: vi.fn(),
+}));
+
+vi.mock('../lib/beta-link-thumbnails', () => ({
+  cacheInstagramThumbnail: vi.fn(),
+  isS3Configured: vi.fn(() => false),
+}));
+
+// Stub the rate limiter; the gate test only cares about the early-return path
+// for non-Instagram URLs, where applyRateLimit shouldn't even be reached.
+const { mockApplyRateLimit } = vi.hoisted(() => ({
+  mockApplyRateLimit: vi.fn(async () => {}),
+}));
+vi.mock('../graphql/resolvers/shared/helpers', async () => {
+  const actual = await vi.importActual<typeof import('../graphql/resolvers/shared/helpers')>(
+    '../graphql/resolvers/shared/helpers',
+  );
+  return { ...actual, applyRateLimit: mockApplyRateLimit };
+});
+
+const fakeCtx = { userId: 'test-user', isAuthenticated: true } as unknown as Parameters<
+  typeof import('../graphql/resolvers/ticks/mutations').validateAndEnrichBetaLinkInsert
+>[0];
+
+import { validateAndEnrichBetaLinkInsert, videoUrlForTickStatus } from '../graphql/resolvers/ticks/mutations';
+import { escapeLikePattern } from '../utils/like-pattern';
+
+const fetchMock = vi.fn(() => {
+  throw new Error('fetch should not be called for non-Instagram URLs');
+});
+
+describe('validateAndEnrichBetaLinkInsert (gate)', () => {
+  beforeEach(() => {
+    fetchMock.mockClear();
+    mockDbSelect.mockClear();
+    mockApplyRateLimit.mockClear();
+    vi.stubGlobal('fetch', fetchMock);
+  });
+
+  afterEach(() => {
+    vi.unstubAllGlobals();
+  });
+
+  it('skips Instagram validation for TikTok URLs', async () => {
+    const result = await validateAndEnrichBetaLinkInsert(
+      fakeCtx,
+      'kilter',
+      '00000000-0000-0000-0000-000000000000',
+      'https://www.tiktok.com/@user/video/12345',
+    );
+
+    expect(result).toEqual({ thumbnail: null, foreignUsername: null });
+    expect(fetchMock).not.toHaveBeenCalled();
+    expect(mockDbSelect).not.toHaveBeenCalled();
+  });
+
+  it('skips Instagram validation for short-form TikTok URLs', async () => {
+    const result = await validateAndEnrichBetaLinkInsert(
+      fakeCtx,
+      'tension',
+      '00000000-0000-0000-0000-000000000000',
+      'https://vm.tiktok.com/abc123',
+    );
+
+    expect(result).toEqual({ thumbnail: null, foreignUsername: null });
+    expect(fetchMock).not.toHaveBeenCalled();
+    expect(mockDbSelect).not.toHaveBeenCalled();
+  });
+
+  it('does not invoke the rate limiter for non-Instagram URLs', async () => {
+    await validateAndEnrichBetaLinkInsert(
+      fakeCtx,
+      'kilter',
+      '00000000-0000-0000-0000-000000000000',
+      'https://www.tiktok.com/@user/video/12345',
+    );
+    expect(mockApplyRateLimit).not.toHaveBeenCalled();
+  });
+});
+
+describe('videoUrlForTickStatus', () => {
+  it('returns the URL for flash/send', () => {
+    const url = 'https://www.instagram.com/reel/ABC123/';
+    expect(videoUrlForTickStatus('flash', url)).toBe(url);
+    expect(videoUrlForTickStatus('send', url)).toBe(url);
+  });
+
+  it('returns null for attempt status (beta only attaches on successful ascents)', () => {
+    expect(videoUrlForTickStatus('attempt', 'https://www.instagram.com/reel/ABC123/')).toBeNull();
+  });
+
+  it('returns null when no URL is provided', () => {
+    expect(videoUrlForTickStatus('send', null)).toBeNull();
+    expect(videoUrlForTickStatus('send', undefined)).toBeNull();
+    expect(videoUrlForTickStatus('flash', '')).toBeNull();
+  });
+});
+
+describe('escapeLikePattern', () => {
+  it('escapes LIKE wildcards in shortcodes', () => {
+    expect(escapeLikePattern('A_B')).toBe('A\\_B');
+    expect(escapeLikePattern('A%B')).toBe('A\\%B');
+    expect(escapeLikePattern('A_B%C_D')).toBe('A\\_B\\%C\\_D');
+  });
+
+  it('escapes backslashes before adding new escape sequences', () => {
+    expect(escapeLikePattern('A\\B')).toBe('A\\\\B');
+    expect(escapeLikePattern('A\\_B')).toBe('A\\\\\\_B');
+  });
+
+  it('passes plain alphanumerics through unchanged', () => {
+    expect(escapeLikePattern('ABC123xyz')).toBe('ABC123xyz');
+    expect(escapeLikePattern('DLM2nf9S1h6')).toBe('DLM2nf9S1h6');
+  });
+});

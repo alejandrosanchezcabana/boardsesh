@@ -12,6 +12,8 @@ const {
   mockGetMoonboardBluetoothPacket,
   mockGetLedPlacements,
   mockShowMessage,
+  mockParseSerialNumber,
+  mockFetch,
 } = vi.hoisted(() => {
   const mockAdapter = {
     isAvailable: vi.fn(),
@@ -48,6 +50,8 @@ const {
       () => ({ 4131: 39 }),
     ),
     mockShowMessage: vi.fn(),
+    mockParseSerialNumber: vi.fn<(name: string) => string | undefined>(() => undefined),
+    mockFetch: vi.fn<typeof fetch>(() => Promise.resolve(new Response(null, { status: 204 }))),
   };
 });
 
@@ -59,6 +63,7 @@ vi.mock('@/app/lib/ble/adapter-factory', () => ({
 vi.mock('../bluetooth-aurora', () => ({
   getAuroraBluetoothPacket: mockGetAuroraBluetoothPacket,
   parseApiLevel: vi.fn(() => 3),
+  parseSerialNumber: mockParseSerialNumber,
 }));
 
 vi.mock('../bluetooth-moonboard', () => ({
@@ -114,6 +119,9 @@ describe('useBoardBluetooth', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     _resetFactoryCache();
+    mockParseSerialNumber.mockReturnValue(undefined);
+    mockFetch.mockResolvedValue(new Response(null, { status: 204 }));
+    vi.stubGlobal('fetch', mockFetch);
     mockCreateBluetoothAdapter.mockResolvedValue(mockAdapter);
     mockAdapter.isAvailable.mockResolvedValue(true);
     mockAdapter.requestAndConnect.mockResolvedValue({
@@ -336,5 +344,49 @@ describe('useBoardBluetooth', () => {
       'error',
     );
     expect(mockAdapter.write).not.toHaveBeenCalledWith(new Uint8Array([1, 2, 3]), undefined);
+  });
+
+  // Traditional `[board_name]/[layout_id]/[size_id]/[set_ids]/[angle]/...` routes
+  // don't carry a boardUuid — the recorded serial mapping should reflect that
+  // (the API row gets a NULL board_uuid). The /b/{slug}/... case sends a UUID.
+  it('records traditional-route serial with no boardUuid when prop is omitted', async () => {
+    mockParseSerialNumber.mockReturnValueOnce('AB1234');
+    const traditionalRouteDetails = {
+      ...mockBoardDetails,
+      set_ids: [1, 2],
+    } as unknown as Parameters<typeof useBoardBluetooth>[0]['boardDetails'];
+
+    const { result } = renderHook(() => useBoardBluetooth({ boardDetails: traditionalRouteDetails }));
+
+    await act(async () => {
+      await result.current.connect();
+    });
+
+    const recordCall = mockFetch.mock.calls.find(([url]) => url === '/api/internal/board-serials');
+    expect(recordCall).toBeDefined();
+    const body = JSON.parse((recordCall![1] as RequestInit).body as string);
+    expect(body.serialNumber).toBe('AB1234');
+    expect(body.boardUuid).toBeUndefined();
+  });
+
+  it('records saved-board serial with boardUuid when prop is provided', async () => {
+    mockParseSerialNumber.mockReturnValueOnce('CD5678');
+    const savedBoardDetails = {
+      ...mockBoardDetails,
+      set_ids: [1, 2],
+    } as unknown as Parameters<typeof useBoardBluetooth>[0]['boardDetails'];
+
+    const { result } = renderHook(() =>
+      useBoardBluetooth({ boardDetails: savedBoardDetails, boardUuid: 'board-uuid-xyz' }),
+    );
+
+    await act(async () => {
+      await result.current.connect();
+    });
+
+    const recordCall = mockFetch.mock.calls.find(([url]) => url === '/api/internal/board-serials');
+    expect(recordCall).toBeDefined();
+    const body = JSON.parse((recordCall![1] as RequestInit).body as string);
+    expect(body.boardUuid).toBe('board-uuid-xyz');
   });
 });

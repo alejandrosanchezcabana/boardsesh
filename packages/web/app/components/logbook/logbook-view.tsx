@@ -2,7 +2,7 @@
 
 import React, { useMemo } from 'react';
 import Box from '@mui/material/Box';
-import dayjs from 'dayjs';
+import { tickTimeMs } from '@/app/lib/format-tick-time';
 import { EmptyState } from '@/app/components/ui/empty-state';
 import type { Climb } from '@/app/lib/types';
 import { VoteSummaryProvider } from '@/app/components/social/vote-summary-context';
@@ -33,7 +33,7 @@ export const LogbookView: React.FC<LogbookViewProps> = ({ currentClimb }) => {
     () =>
       logbook
         .filter((ascent) => ascent.climb_uuid === currentClimb.uuid)
-        .sort((a, b) => dayjs(b.climbed_at).valueOf() - dayjs(a.climbed_at).valueOf()),
+        .sort((a, b) => tickTimeMs(b.climbed_at) - tickTimeMs(a.climbed_at)),
     [logbook, currentClimb.uuid],
   );
 

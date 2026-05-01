@@ -1,5 +1,5 @@
-import { describe, it, expect, vi } from 'vite-plus/test';
-import { render, screen, fireEvent } from '@testing-library/react';
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vite-plus/test';
+import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import React from 'react';
 import type { SessionDetail } from '@boardsesh/shared-schema';
 import SessionDetailContent from '../[sessionId]/session-detail-content';
@@ -9,8 +9,9 @@ vi.mock('next/link', () => ({
   default: ({ children, href }: { children: React.ReactNode; href: string }) => <a href={href}>{children}</a>,
 }));
 
+const mockRouterPush = vi.fn();
 vi.mock('next/navigation', () => ({
-  useRouter: () => ({ push: vi.fn() }),
+  useRouter: () => ({ push: mockRouterPush }),
 }));
 
 vi.mock('next-auth/react', () => ({
@@ -99,13 +100,20 @@ vi.mock('@/app/components/collapsible-section/collapsible-section', () => ({
     title,
     children,
     defaultExpanded,
+    sections,
   }: {
-    title: string;
-    children: React.ReactNode;
+    title?: string;
+    children?: React.ReactNode;
     defaultExpanded?: boolean;
+    sections?: Array<{ key: string; label: string; content: React.ReactNode }>;
   }) => (
     <div data-testid="collapsible-section" data-title={title} data-expanded={defaultExpanded}>
       {children}
+      {sections?.map((s) => (
+        <div key={s.key} data-testid={`section-${s.key}`}>
+          {s.content}
+        </div>
+      ))}
     </div>
   ),
 }));
@@ -199,20 +207,34 @@ vi.mock('@/app/components/board-page/climbs-list', () => ({
     upsizedClimbs?: unknown;
     isFetching?: boolean;
     hasMore?: boolean;
-    onClimbSelect?: unknown;
+    onClimbSelect?: (climb: { uuid: string; name: string }) => void;
     onLoadMore?: unknown;
     hideEndMessage?: boolean;
     showBottomSpacer?: boolean;
   }) => (
     <div data-testid="climbs-list">
       {props.climbs.map((climb) => (
-        <div key={climb.uuid} data-testid="climb-item" data-climb-name={climb.name}>
+        <div
+          key={climb.uuid}
+          data-testid="climb-item"
+          data-climb-name={climb.name}
+          onClick={() => props.onClimbSelect?.(climb)}
+        >
           {climb.name}
           {props.renderItemExtra?.(climb)}
         </div>
       ))}
     </div>
   ),
+}));
+
+// Mock graphql-queue to expose a controllable useOptionalQueueActions for the
+// click-handler tests below. The default export returns null (no provider),
+// matching production behavior on /session/[sessionId] standalone pages.
+const mockSetCurrentClimb = vi.fn();
+let mockQueueActions: { setCurrentClimb: typeof mockSetCurrentClimb } | null = null;
+vi.mock('@/app/components/graphql-queue', () => ({
+  useOptionalQueueActions: () => mockQueueActions,
 }));
 
 vi.mock('@/app/components/climb-actions/favorites-batch-context', () => ({
@@ -754,5 +776,75 @@ describe('SessionDetailContent', () => {
     });
     render(<SessionDetailContent session={session} />);
     expect(screen.getByText('Great beta!')).toBeTruthy();
+  });
+
+  describe('climb click handler', () => {
+    const originalFetch = global.fetch;
+
+    beforeEach(() => {
+      mockSetCurrentClimb.mockReset();
+      mockRouterPush.mockReset();
+      mockQueueActions = null;
+      global.fetch = vi.fn(() =>
+        Promise.resolve({
+          ok: true,
+          json: () => Promise.resolve({ url: '/kilter/1/10/1/40/view/climb-1' }),
+        }),
+      ) as unknown as typeof fetch;
+    });
+
+    afterEach(() => {
+      global.fetch = originalFetch;
+    });
+
+    it('calls setCurrentClimb when clicking a climb with a queue context', async () => {
+      mockQueueActions = { setCurrentClimb: mockSetCurrentClimb };
+      render(<SessionDetailContent session={makeSession()} />);
+      fireEvent.click(screen.getByTestId('climb-item'));
+      await waitFor(() => expect(mockSetCurrentClimb).toHaveBeenCalledTimes(1));
+      expect(mockSetCurrentClimb.mock.calls[0][0].uuid).toBe('climb-1');
+    });
+
+    it('navigates after setting current climb when not embedded', async () => {
+      mockQueueActions = { setCurrentClimb: mockSetCurrentClimb };
+      render(<SessionDetailContent session={makeSession()} />);
+      fireEvent.click(screen.getByTestId('climb-item'));
+      await waitFor(() => expect(mockRouterPush).toHaveBeenCalledWith('/kilter/1/10/1/40/view/climb-1'));
+    });
+
+    it('skips navigation in embedded mode but still sets current climb', async () => {
+      mockQueueActions = { setCurrentClimb: mockSetCurrentClimb };
+      render(<SessionDetailContent session={makeSession()} embedded />);
+      fireEvent.click(screen.getByTestId('climb-item'));
+      await waitFor(() => expect(mockSetCurrentClimb).toHaveBeenCalledTimes(1));
+      expect(mockRouterPush).not.toHaveBeenCalled();
+      expect(global.fetch).not.toHaveBeenCalled();
+    });
+
+    it('still navigates when no queue context is available (legacy fallback)', async () => {
+      mockQueueActions = null;
+      render(<SessionDetailContent session={makeSession()} />);
+      fireEvent.click(screen.getByTestId('climb-item'));
+      await waitFor(() => expect(mockRouterPush).toHaveBeenCalledWith('/kilter/1/10/1/40/view/climb-1'));
+      expect(mockSetCurrentClimb).not.toHaveBeenCalled();
+    });
+
+    it('skips navigation when setCurrentClimb rejects validation (returns null)', async () => {
+      // setCurrentClimb resolves to null when validateClimbForQueue fires the
+      // snackbar — the user shouldn't land on a climb page the board can't take.
+      mockSetCurrentClimb.mockResolvedValueOnce(null);
+      mockQueueActions = { setCurrentClimb: mockSetCurrentClimb };
+      render(<SessionDetailContent session={makeSession()} />);
+      fireEvent.click(screen.getByTestId('climb-item'));
+      await waitFor(() => expect(mockSetCurrentClimb).toHaveBeenCalledTimes(1));
+      // Wait for the click handler's awaited promise to actually resolve, then
+      // drain one more microtask so the synchronous code following the await
+      // (the `if (result === null) return` early-out) has run. Deterministic —
+      // no real timers involved.
+      await mockSetCurrentClimb.mock.results[0]!.value;
+      await Promise.resolve();
+      expect(global.fetch).not.toHaveBeenCalled();
+      expect(mockRouterPush).not.toHaveBeenCalled();
+    });
   });
 });

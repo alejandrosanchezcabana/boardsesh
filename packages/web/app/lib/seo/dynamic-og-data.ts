@@ -5,6 +5,7 @@ import { sql as drizzleSql } from 'drizzle-orm';
 import { buildBoardRenderUrl } from '@/app/components/board-renderer/util';
 import { boardToRouteParams, resolveBoardBySlug } from '@/app/lib/board-slug-utils';
 import { getBoardDetailsForBoard } from '@/app/lib/board-utils';
+// oxlint-disable-next-line no-restricted-imports -- legacy raw Neon sql usage; migrate to drizzle
 import { dbz, sql as rawSql } from '@/app/lib/db/db';
 import { formatBoardDisplayName } from '@/app/lib/string-utils';
 import type { BoardDetails, BoardName, ParsedBoardRouteParameters } from '@/app/lib/types';
