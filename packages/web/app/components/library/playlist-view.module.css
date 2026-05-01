@@ -80,6 +80,10 @@
   padding-right: 32px;
 }
 
+.heroNameWithShare {
+  padding-right: 88px;
+}
+
 .heroMeta {
   display: flex;
   flex-wrap: wrap;
@@ -177,27 +181,6 @@
 .errorMessage {
   color: var(--neutral-500);
   margin-bottom: 20px;
-}
-
-/* Visibility badge */
-.visibilityBadge {
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-  padding: 2px 8px;
-  border-radius: 4px;
-  font-size: 12px;
-  font-weight: 500;
-}
-
-.publicBadge {
-  background-color: var(--neutral-100);
-  color: var(--color-success);
-}
-
-.privateBadge {
-  background-color: var(--neutral-100);
-  color: var(--neutral-500);
 }
 
 /* Mobile adjustments */

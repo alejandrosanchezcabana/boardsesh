@@ -354,7 +354,11 @@ export default function PlaylistDetailContent({
               />
             </div>
             <div className={styles.heroInfo}>
-              <Typography variant="h5" component="h2" className={styles.heroName}>
+              <Typography
+                variant="h5"
+                component="h2"
+                className={`${styles.heroName} ${playlist.isPublic ? styles.heroNameWithShare : ''}`}
+              >
                 {playlist.name}
               </Typography>
               <div className={styles.heroMeta}>
@@ -410,14 +414,22 @@ export default function PlaylistDetailContent({
           </div>
 
           {/* Share + Ellipsis Menu */}
-          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.5 }}>
+          <Box
+            sx={{
+              position: 'absolute',
+              top: 1.5,
+              right: 1.5,
+              display: 'flex',
+              flexDirection: 'row',
+              gap: 0.5,
+            }}
+          >
             {playlist.isPublic && (
               <IconButton onClick={handleShare} aria-label="Share playlist">
                 <IosShare />
               </IconButton>
             )}
             <IconButton
-              className={styles.heroMenuButton}
               onClick={(e: React.MouseEvent<HTMLButtonElement>) => setMenuAnchor(e.currentTarget)}
               aria-label="Playlist actions"
             >
