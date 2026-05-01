@@ -410,14 +410,22 @@ export default function PlaylistDetailContent({
           </div>
 
           {/* Share + Ellipsis Menu */}
-          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.5 }}>
+          <Box
+            sx={{
+              position: 'absolute',
+              top: 8,
+              right: 8,
+              display: 'flex',
+              flexDirection: 'row',
+              gap: 0.5,
+            }}
+          >
             {playlist.isPublic && (
               <IconButton onClick={handleShare} aria-label="Share playlist">
                 <IosShare />
               </IconButton>
             )}
             <IconButton
-              className={styles.heroMenuButton}
               onClick={(e: React.MouseEvent<HTMLButtonElement>) => setMenuAnchor(e.currentTarget)}
               aria-label="Playlist actions"
             >
