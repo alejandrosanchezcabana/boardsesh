@@ -59,6 +59,11 @@ The Next.js surface is large but tractable: ~47 route files to port, ~100 import
    │  Cloudflare in front: CDN cache for static assets, R2 for  │
    │  refdata snapshots, optionally Cloudflare Images for       │
    │  user-uploaded photos                                      │
+   │                                                            │
+   │  During Phase 1 only:                                      │
+   │   • boardsesh.com → Next.js Railway service (existing)     │
+   │   • beta.boardsesh.com → Vite Railway service (new)        │
+   │   • DNS flip at end of Phase 1 swaps the apex to Vite      │
    └────────────────────────────────────────────────────────────┘
                               ▲
                               │ HTTPS GraphQL + WebSocket
@@ -180,6 +185,17 @@ Refresh: when JWT is within 24h of expiry, the interceptor uses the refresh toke
 
 `useSession`-equivalent: a small `SessionProvider` reads from `@capacitor/preferences` (native) or from cookies via a server function (web). Components consume the same hook.
 
+### NextAuth → lucia cookie shim
+
+Existing logged-in users (web + hosted-mode native iOS) must not be logged out at the Phase 1 cutover. The lucia middleware in `packages/backend` accepts both cookie shapes during a 90-day overlap window:
+
+1. Incoming request with a lucia session cookie → validated normally.
+2. Incoming request with a NextAuth JWT cookie (`__Secure-next-auth.session-token` or `next-auth.session-token`) and no lucia cookie → the middleware validates the JWT using the existing `NEXTAUTH_SECRET`, looks up the user, mints a lucia session, sets the lucia cookie, and clears the NextAuth cookie. One-time upgrade per user.
+3. Both cookies present → lucia wins; NextAuth cookie cleared.
+4. After 90 days post-cutover, the NextAuth-acceptance branch is deleted. Stale cookies force re-auth.
+
+See "Migration strategy: beta subdomain → single cutover" for the wider cutover mechanics.
+
 What this is NOT:
 
 - Not a hand-rolled crypto stack. arctic + lucia handle the OAuth and session primitives; we own the schema and the bearer-token issuance.
@@ -261,29 +277,103 @@ Unchanged from v8.0.
 
 Estimate: 4 weeks.
 
+## Migration strategy: beta subdomain → single cutover
+
+The web migrates from Next.js to Vite via a parallel deploy. **Both stacks run in production simultaneously** during Phase 1, on different hostnames:
+
+- `boardsesh.com` and `www.boardsesh.com` — Next.js (existing).
+- `beta.boardsesh.com` — Vite (new), shipping route batches as Phase 1 progresses.
+
+The two stacks share the same backend, the same database, and the same origin storage scope (`*.boardsesh.com` cookies + IndexedDB on the apex). When all routes are ported and burn-in is clean, Cloudflare swaps which Railway service `boardsesh.com` points at. `beta.boardsesh.com` either stays as a permanent staging slot or is decommissioned.
+
+**Why this beats route-by-route URL flipping**: route flipping splits a single app's runtime state (auth, IndexedDB, query cache, in-memory router) across two frameworks at the same origin, making debugging and rollback miserable. One framework per URL keeps the boundaries clean. The cost is that Phase 1 ships no public user-visible value until cutover; we accept this in exchange for a single, atomic switch.
+
+### What `beta.boardsesh.com` looks like during Phase 1
+
+- Persistent banner: "You're on the Boardsesh beta. Some features are still being moved over. Switch back at boardsesh.com."
+- Internal team and opt-in users only initially. A "Try the new Boardsesh" link appears in `boardsesh.com` settings once a meaningful surface (auth + skeleton batches) ships.
+- Each route batch ships to beta first, gets at least 7 days of dogfooding, then is signed off as "ready for cutover." No public traffic is moved until the cutover itself.
+- Cookie domain set to `.boardsesh.com` so a session created on `boardsesh.com` is valid on `beta.boardsesh.com` and vice versa. This lets a beta tester cross-link without re-authenticating.
+
+### Hosted-mode Capacitor compatibility (existing iOS fleet)
+
+The iOS apps in users' hands today load `https://www.boardsesh.com` in hosted mode. After the Phase 1 cutover, that URL serves Vite instead of Next.js. **The native fleet must keep working without an app store update.** This requires the Vite app to support every native-bridge integration the Next.js app uses today.
+
+Inventory of native bridges the Vite app must implement before cutover:
+
+| Bridge | Current Next.js code | Port target |
+|---|---|---|
+| `isCapacitor()` / `isNativeApp()` / `getPlatform()` | `packages/web/app/lib/capacitor.ts` | 1:1 port; same `window.Capacitor` detection |
+| BLE plugin | `packages/web/app/lib/ble/capacitor-adapter.ts` | 1:1 — `BleClient` import works through Vite's bundler unchanged |
+| LiveActivity bridge | Custom event dispatch (`window.dispatchEvent`) and listeners | Same event names; subscribe in TanStack Query mutation hooks or React effects |
+| Deep link handling | `App.addListener('appUrlOpen', ...)` calling Next.js `router.push()` | Same listener; calls TanStack Router `router.navigate()` |
+| `@capacitor/preferences` (token storage) | Used during native OAuth | 1:1 |
+| `@capacitor-community/safe-area` insets | CSS variables already set by the plugin | No change |
+| Bluefy banner suppression | Gated on `isNativeApp()` | 1:1 |
+| Native tab bar (PR #1509, if it ships before cutover) | `window.Capacitor.Plugins.NativeTabBar` events | Same plugin API; bind in the Vite app shell |
+| In-app review prompt (`@capacitor-community/in-app-review`) | Triggered after N session completions | 1:1 |
+
+A **hosted-mode integration test suite** runs against `beta.boardsesh.com` from a real iOS Simulator (and an Android emulator) using the existing Capacitor shell pointed at the beta URL. This runs nightly during Phase 1 and gates every batch's beta promotion. Tests cover:
+
+1. Cold launch: app loads, `window.Capacitor` detected, no JS errors in the WebView.
+2. BLE: native plugin invoked, scan + connect to a mock peripheral, send + verify packet bytes.
+3. Deep link: open `boardsesh://climb/<uuid>` while app is running and while killed; verify navigation lands on the correct route.
+4. Auth: complete native OAuth flow, verify session cookie / token persistence across cold restart.
+5. LiveActivity: trigger a queue update, verify the lock screen UI updates (event-dispatch test on the JS side; visual check is manual on iOS).
+6. App-bound domains: confirm `beta.boardsesh.com` is reachable from the WebView (it falls under the `*.boardsesh.com` entry in the existing `WKAppBoundDomains`).
+
+The test harness lives at `mobile/integration-tests/` and runs in CI on every Phase 1 batch merge.
+
+### Auth cookie compatibility during cutover
+
+The Vite app uses lucia sessions. The Next.js app uses NextAuth. Cookie names, formats, and signing keys differ. **Existing logged-in users (web AND hosted-mode native iOS) would be logged out on cutover** unless we ship a shim.
+
+The shim, part of Phase 0c:
+
+1. The lucia auth middleware in `packages/backend` accepts both lucia session cookies AND NextAuth JWT cookies (`__Secure-next-auth.session-token` and `next-auth.session-token`) during a 90-day overlap window.
+2. On a successful NextAuth-cookie request, the middleware validates the JWT (using the existing `NEXTAUTH_SECRET`), looks up the user, mints a lucia session, sets the lucia cookie, and clears the NextAuth cookie. One-time upgrade per user.
+3. After 90 days post-cutover, the NextAuth-acceptance branch is removed. Any user still on a stale NextAuth cookie is forced to re-auth.
+4. Users on bundled-mode Capacitor apps (Phase 2 onward) are unaffected — they use bearer tokens, not cookies.
+
+### IndexedDB and origin storage compatibility
+
+Per `CLAUDE.md`, the app uses IndexedDB for offline state (queue, user preferences, recent searches, party profile, onboarding status, tab navigation). All scoped to the `boardsesh.com` origin. When Vite takes over the same origin, it inherits these IDB databases.
+
+**Compatibility requirement**: the Vite app's IDB schema must be identical to the Next.js app's schema, or apply migrations on first open. Phase 1's "Settings" batch includes an explicit pass to verify each `*-db.ts` file under `packages/web/app/lib/` opens existing data correctly when running in the Vite stack. Migration logic, if needed, follows the existing localStorage → IDB pattern.
+
+### DNS flip
+
+1. After all batches are on beta and have passed at least 7 days of clean dogfooding, the team picks a Tuesday for cutover (low-traffic day; full week of business-hours coverage).
+2. Cloudflare swap: the Origin Pool for `boardsesh.com` and `www.boardsesh.com` points to the Vite Railway service. Cache purged.
+3. Next.js Railway service stays running for 7 days as warm rollback. If anything explodes, swap the pool back; the cookie shim ensures lucia-issued cookies are not visible to Next.js but the user's underlying session in Postgres is preserved (lucia and NextAuth read the same `users` table).
+4. Monitor: Sentry (JS errors), PostHog (session counts, feature usage), Axiom (request latency, 5xx rate), the hosted-mode integration test suite (now running against the cut-over URL nightly).
+5. After 7 days clean, decommission the Next.js Railway service. Delete `packages/web` (the old one). Rename `packages/app` to `packages/web`.
+
+### Bundled-mode iOS fleet and the Phase 2 cutover
+
+Bundled mode (Phase 2 onward) is **separate from this hosted-mode cutover**. The native shell at the time of the Phase 1 cutover still loads the URL — it doesn't yet ship its own bundled assets. Phase 2 ships a new native shell version that loads `dist/client/` from `capacitor://localhost` and uses bearer tokens. Existing hosted-mode shells continue to work indefinitely on cookie auth; users only get bundled mode by updating from the App Store / Play Store. No forced update.
+
 ## Framework migration (Phase 1) — the big new phase
 
-Replaces v8.0's "dual-build pipeline" entirely. This is the largest single phase in the plan.
+Replaces v8.0's "dual-build pipeline" entirely. This is the largest single phase in the plan. The cutover mechanics live in the previous section ("Migration strategy"); this section covers what gets built.
 
-### Approach: parallel package, route-by-route migration
+### Approach
 
-- Create `packages/app/` with the Vite + TanStack Start skeleton, deploy config, auth scaffold.
-- During migration, both `packages/web` (Next.js) and `packages/app` (Vite) deploy to Railway behind separate hostnames. Cloudflare splits traffic.
-- Migrate routes in batches. For each route: port the page component, port any data loaders to TanStack Router `loader` functions or TanStack Query queries, port metadata to `head` / route options, port the test if it exists.
-- After each batch, flip the Cloudflare router rule for that route from `web` to `app`. The user-visible URL is unchanged.
-- After all routes are flipped, decommission `packages/web`. Rename `packages/app` to `packages/web`.
+Create `packages/app/` with the Vite + TanStack Start skeleton, deploy config, auth scaffold pointing at `packages/backend`, and the hosted-mode bridge inventory ported. Deploy to `beta.boardsesh.com` on Railway. Migrate routes in batches; ship each batch to beta and run the hosted-mode integration suite before promoting the next batch.
+
+After all routes are on beta and burn-in is clean, the team executes the DNS flip per the Migration strategy section.
 
 ### Migration batches (approximate)
 
 | Batch | Routes | Notes |
 |---|---|---|
-| Skeleton | `/`, `/about`, `/legal`, `/privacy`, `/help`, `/docs`, `/development`, `/aurora-migration` | Static-ish, low risk. Shake out the build + deploy + Cloudflare-routing pipeline. |
-| Auth | `/auth/login`, `/auth/native-start`, `/auth/error`, `/auth/verify-request` | Cuts over with the arctic + lucia rollout in Phase 0c. |
-| In-app — board | `/b/[board_slug]`, `/b/[board_slug]/[angle]/{list,liked,playlists,logbook,create,import}`, `/b/[board_slug]/[angle]/view/[climb_uuid]`, `/b/[board_slug]/[angle]/play/[climb_uuid]`, `/b/[board_slug]/[angle]/playlists/[playlist_uuid]` | The largest batch. Same route shape preserved; mostly client-rendered with TanStack Query. |
-| In-app — full board path | `/[board_name]/[layout_id]/[size_id]/[set_ids]/[angle]/...` | Long path, deep dynamic routes; same conversion pattern as above. |
-| Profile / setter / playlist | `/profile/[user_id]`, `/profile/[user_id]/{statistics,sessions,climbs}`, `/setter/[setter_username]`, `/playlists`, `/playlists/[playlist_uuid]` | SEO surfaces — these are SSR routes in TanStack Start. |
+| Skeleton | `/`, `/about`, `/legal`, `/privacy`, `/help`, `/docs`, `/development`, `/aurora-migration` | Static-ish, low risk. Shakes out build + deploy + Railway pipeline. Bridges (BLE, LiveActivity, deep link) ported in this batch even though the static pages don't use them, so the integration tests can run from batch 1. |
+| Auth | `/auth/login`, `/auth/native-start`, `/auth/error`, `/auth/verify-request` | Lands with the arctic + lucia rollout from Phase 0c. Cookie shim verified end-to-end here. |
+| In-app — board | `/b/[board_slug]`, `/b/[board_slug]/[angle]/{list,liked,playlists,logbook,create,import}`, `/b/[board_slug]/[angle]/view/[climb_uuid]`, `/b/[board_slug]/[angle]/play/[climb_uuid]`, `/b/[board_slug]/[angle]/playlists/[playlist_uuid]` | The largest batch. Mostly client-rendered with TanStack Query. |
+| In-app — full board path | `/[board_name]/[layout_id]/[size_id]/[set_ids]/[angle]/...` | Long path, deep dynamic routes; same conversion pattern. |
+| Profile / setter / playlist | `/profile/[user_id]`, `/profile/[user_id]/{statistics,sessions,climbs}`, `/setter/[setter_username]`, `/playlists`, `/playlists/[playlist_uuid]` | SEO surfaces — SSR routes in TanStack Start with Cloudflare cache headers. |
 | Session / party | `/session/[sessionId]`, `/join/[sessionId]`, `/notifications`, `/feed` | Real-time-heavy, mostly SPA. |
-| Settings | `/settings`, `/you`, `/you/{sessions,logbook}` | Auth-gated SPA. |
+| Settings | `/settings`, `/you`, `/you/{sessions,logbook}` | Auth-gated SPA. Includes the IndexedDB compatibility verification pass. |
 
 ### Things deleted with NextAuth and Next.js
 
@@ -541,14 +631,14 @@ Universal / App Links: scoped paths only (`/party/*`, `/invite/*`). Not the enti
 
 ## Changelog
 
-**v9.0 — current.**
-- Commits to **migrating from Next.js to Vite + TanStack Start.** The dual-build mechanism in v8.0 is replaced by one source tree with per-route SSR / SPA flags.
-- Commits to **self-hosting on Railway**. No Vercel, no Cloudflare Pages. Cloudflare stays as a CDN. `packages/scheduler` replaces Vercel Cron. Image optimization moves to Cloudflare Images or self-hosted `sharp`. OG image rendering moves to backend Hono with `satori`.
-- Replaces NextAuth with **arctic + lucia** in `packages/backend`. Bearer tokens for native, cookie sessions for web. New Phase 0c (4 weeks, parallel to 0a/0b).
-- Adds Phase 1 framework migration (~14 weeks) with explicit batch ordering.
-- Reworks the dependency graph: critical path is now ~9 months calendar best case, 9–14 months realistic.
-- Updates "Considered alternatives" to record TanStack Start vs Vike vs React Router 7 vs Astro reasoning, and Next.js dual-build (v8.0) as the rejected default.
-- Carries forward unchanged from v8.0: pinned user story, query router shape contract, mutation queue with idempotency keys, refdata SQLite measurement spike, App Store Plan B, remote-config kill switch, single WebView with client routing, all SQLite indexes and sync channels.
+**v9.1 — current.** Adds the migration cutover strategy and explicit hosted-mode Capacitor compatibility:
+- Migration runs through `beta.boardsesh.com` rather than Cloudflare path-based traffic splitting. Single atomic DNS flip at the end of Phase 1, not a gradual route-by-route move.
+- Hosted-mode Capacitor compatibility is now a formal Phase 1 deliverable, with a per-bridge inventory and a nightly integration test suite at `mobile/integration-tests/` that runs the existing Capacitor shell against the beta URL on iOS Simulator + Android emulator.
+- Auth cookie shim added to Phase 0c: lucia accepts NextAuth cookies for a 90-day overlap and upgrades them in place, so existing logged-in web users (and hosted-mode native users) don't get logged out at cutover.
+- IndexedDB compatibility verification pass added to the Settings batch: the Vite app must open existing `*-db.ts` data correctly since it inherits the same origin storage.
+- Bundled-mode iOS rollout (Phase 2) is explicitly decoupled from the Phase 1 cutover: existing hosted-mode shells continue to work indefinitely on cookie auth.
+
+**v9.0.** Committed to migrating from Next.js to Vite + TanStack Start, self-hosting on Railway (no Vercel), and replacing NextAuth with arctic + lucia. New Phase 0c (auth migration, 4 weeks parallel to 0a/0b). New Phase 1 framework migration (~14 weeks). Critical path ~9 months calendar best case, 9–14 months realistic. Carried forward from v8.0: pinned user story, query router shape contract, mutation queue idempotency, refdata SQLite measurement spike, App Store Plan B, remote-config kill switch, single WebView with client routing.
 
 **v8.0 — superseded by v9.0.** Same offline-first direction, but kept Next.js with a dual-build (`pageExtensions`) mechanism. Workable but ugly forever. v9.0 deletes that constraint by changing frameworks.
 
