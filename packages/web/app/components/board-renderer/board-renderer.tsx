@@ -39,6 +39,7 @@ const BoardRenderer = React.memo(
           litUpHoldsMap={litUpHoldsMap}
           mirrored={mirrored}
           thumbnail={thumbnail}
+          fillHeight={fillHeight}
           onHoldClick={onHoldClick}
         />
       );

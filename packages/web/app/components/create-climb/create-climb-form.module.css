@@ -1,7 +1,7 @@
 .pageContainer {
   position: fixed;
   top: var(--safe-area-inset-top);
-  bottom: calc(180px + var(--safe-area-inset-bottom));
+  bottom: var(--bottom-bar-height);
   left: 8px;
   right: 8px;
   display: flex;
@@ -110,15 +110,6 @@
   display: flex;
   align-items: center;
   justify-content: center;
-}
-
-/* Validation hint band (MoonBoard) */
-.validationHintBar {
-  flex-shrink: 0;
-  padding: 6px 12px;
-  text-align: center;
-  background-color: var(--semantic-surface);
-  border-top: 1px solid var(--neutral-100);
 }
 
 /* Bottom icon row: all icon actions, Save pinned right */

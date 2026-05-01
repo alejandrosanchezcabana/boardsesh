@@ -14,7 +14,6 @@ import BoardFilterStrip from '@/app/components/board-scroll/board-filter-strip';
 import type { SessionFeedResult, UserBoard } from '@boardsesh/shared-schema';
 import { useMyBoards } from '@/app/hooks/use-my-boards';
 import UnifiedSearchDrawer from '@/app/components/search-drawer/unified-search-drawer';
-import { themeTokens } from '@/app/theme/theme-config';
 
 type FeedTab = 'sessions' | 'proposals' | 'comments';
 const VALID_TABS: FeedTab[] = ['sessions', 'proposals', 'comments'];
@@ -95,7 +94,7 @@ export default function FeedPageContent({
         minHeight: '100dvh',
         display: 'flex',
         flexDirection: 'column',
-        pb: `calc(120px + ${themeTokens.layout.safeAreaBottom})`,
+        pb: 'var(--bottom-bar-height)',
       }}
     >
       {/* Feed */}

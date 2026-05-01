@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import React, { useState, useEffect, useLayoutEffect, useCallback, useMemo, useRef } from 'react';
 import { usePathname } from 'next/navigation';
 import { PartyProfileProvider } from '../party-manager/party-profile-context';
 import { PersistentSessionProvider, usePersistentSession } from '../persistent-session';
@@ -35,6 +35,8 @@ import { FeedbackPromptBanner } from '../feedback/feedback-prompt-banner';
 const SeshSettingsDrawer = dynamic(() => import('../sesh-settings/sesh-settings-drawer'), {
   ssr: false,
 });
+
+const useIsomorphicLayoutEffect = typeof window !== 'undefined' ? useLayoutEffect : useEffect;
 
 type PersistentSessionWrapperProps = {
   children: React.ReactNode;
@@ -139,6 +141,36 @@ export function RootBottomBar({ boardConfigs }: { boardConfigs: BoardConfigData 
   const hideTabBar = HIDE_TAB_BAR_PAGES.some((prefix) => pathname.startsWith(prefix)) && !hasActiveQueue;
   const shouldShowQueueShell = isBoardRoutePath(pathname) && !hasActiveQueue && !boardDetails;
 
+  // Measure the bottom bar's visual occlusion and expose it as --bottom-bar-height.
+  // Use viewportHeight - rect.top (not rect.height) so the iOS `bottom: 2dvh` offset
+  // and the BottomNavigation's negative-margin extension are both included.
+  // Prefer visualViewport.height over innerHeight so iOS keyboard / URL-bar collapse
+  // shrinks the published value as expected. The effect bails out via `el == null`
+  // on the useNativeChrome path (where wrapperRef never attaches), so that path
+  // continues to rely on --native-tab-bar-height instead.
+  const wrapperRef = useRef<HTMLDivElement | null>(null);
+  useIsomorphicLayoutEffect(() => {
+    const el = wrapperRef.current;
+    if (!el) return;
+    const update = () => {
+      const top = el.getBoundingClientRect().top;
+      const viewportH = window.visualViewport?.height ?? window.innerHeight;
+      const px = Math.max(0, viewportH - top);
+      document.documentElement.style.setProperty('--bottom-bar-height', `${px}px`);
+    };
+    update();
+    const ro = typeof ResizeObserver !== 'undefined' ? new ResizeObserver(update) : null;
+    ro?.observe(el);
+    window.addEventListener('resize', update);
+    window.visualViewport?.addEventListener('resize', update);
+    return () => {
+      ro?.disconnect();
+      window.removeEventListener('resize', update);
+      window.visualViewport?.removeEventListener('resize', update);
+      document.documentElement.style.removeProperty('--bottom-bar-height');
+    };
+  }, []);
+
   // Hide native tab bar on pages where the web tab bar would also be hidden
   useEffect(() => {
     if (!useNativeChrome || !hideTabBar) return;
@@ -179,7 +211,11 @@ export function RootBottomBar({ boardConfigs }: { boardConfigs: BoardConfigData 
   }
 
   return (
-    <div className={`${bottomBarStyles.bottomBarWrapper}`} data-testid="bottom-bar-wrapper">
+    <div
+      ref={wrapperRef}
+      className={`${bottomBarStyles.bottomBarWrapper} ${isNative ? bottomBarStyles.nativeApp : ''}`}
+      data-testid="bottom-bar-wrapper"
+    >
       <FeedbackPromptBanner />
       {hasActiveQueue && boardDetails && (
         <ErrorBoundary>

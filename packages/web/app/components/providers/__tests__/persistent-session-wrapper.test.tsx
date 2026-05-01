@@ -1,6 +1,6 @@
 import React from 'react';
-import { render, screen } from '@testing-library/react';
-import { beforeEach, describe, expect, it, vi } from 'vite-plus/test';
+import { act, render, screen } from '@testing-library/react';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vite-plus/test';
 import { RootBottomBar } from '../persistent-session-wrapper';
 
 let mockPathname = '/';
@@ -201,5 +201,110 @@ describe('RootBottomBar', () => {
     expect(screen.queryByTestId('queue-control-bar')).toBeNull();
     expect(screen.queryByTestId('queue-control-bar-shell')).toBeNull();
     expect(screen.getByTestId('bottom-tab-bar')).toBeTruthy();
+  });
+});
+
+describe('RootBottomBar --bottom-bar-height measurement', () => {
+  let resizeCallbacks: ResizeObserverCallback[] = [];
+  const originalResizeObserver = globalThis.ResizeObserver;
+
+  const setWrapperTop = (top: number) => {
+    const wrapper = screen.getByTestId('bottom-bar-wrapper');
+    vi.spyOn(wrapper, 'getBoundingClientRect').mockReturnValue({
+      top,
+      bottom: 0,
+      left: 0,
+      right: 0,
+      width: 0,
+      height: 0,
+      x: 0,
+      y: top,
+      toJSON: () => ({}),
+    } as DOMRect);
+  };
+
+  beforeEach(() => {
+    resizeCallbacks = [];
+    mockPathname = '/';
+    mockQueueBridgeBoardInfo = {
+      boardDetails: null,
+      angle: 0,
+      hasActiveQueue: false,
+    };
+    mockQueueContext = { queue: [], currentClimb: null };
+
+    Object.defineProperty(window, 'innerHeight', { configurable: true, value: 800 });
+    document.documentElement.style.removeProperty('--bottom-bar-height');
+
+    class MockResizeObserver {
+      constructor(cb: ResizeObserverCallback) {
+        resizeCallbacks.push(cb);
+      }
+      observe() {}
+      unobserve() {}
+      disconnect() {}
+    }
+    globalThis.ResizeObserver = MockResizeObserver as unknown as typeof ResizeObserver;
+  });
+
+  afterEach(() => {
+    globalThis.ResizeObserver = originalResizeObserver;
+    document.documentElement.style.removeProperty('--bottom-bar-height');
+    vi.restoreAllMocks();
+  });
+
+  it('publishes --bottom-bar-height on mount using viewportHeight - rect.top', () => {
+    const { rerender } = render(<RootBottomBar boardConfigs={mockBoardConfigs} />);
+
+    // First mount measures whatever jsdom reports for the wrapper rect.
+    // To assert the formula, override and rerender to retrigger the layout effect.
+    setWrapperTop(620);
+    act(() => {
+      // Trigger the ResizeObserver callback the effect registered on mount.
+      resizeCallbacks.forEach((cb) => cb([] as unknown as ResizeObserverEntry[], {} as ResizeObserver));
+    });
+
+    expect(document.documentElement.style.getPropertyValue('--bottom-bar-height')).toBe('180px');
+
+    // Sanity: rerender keeps the value stable.
+    rerender(<RootBottomBar boardConfigs={mockBoardConfigs} />);
+    expect(document.documentElement.style.getPropertyValue('--bottom-bar-height')).toBe('180px');
+  });
+
+  it('updates --bottom-bar-height when the wrapper resizes', () => {
+    render(<RootBottomBar boardConfigs={mockBoardConfigs} />);
+
+    setWrapperTop(700);
+    act(() => {
+      resizeCallbacks.forEach((cb) => cb([] as unknown as ResizeObserverEntry[], {} as ResizeObserver));
+    });
+    expect(document.documentElement.style.getPropertyValue('--bottom-bar-height')).toBe('100px');
+
+    setWrapperTop(550);
+    act(() => {
+      resizeCallbacks.forEach((cb) => cb([] as unknown as ResizeObserverEntry[], {} as ResizeObserver));
+    });
+    expect(document.documentElement.style.getPropertyValue('--bottom-bar-height')).toBe('250px');
+  });
+
+  it('removes --bottom-bar-height and detaches resize listeners on unmount', () => {
+    const removeWindowSpy = vi.spyOn(window, 'removeEventListener');
+    const removeViewportSpy = window.visualViewport ? vi.spyOn(window.visualViewport, 'removeEventListener') : null;
+
+    const { unmount } = render(<RootBottomBar boardConfigs={mockBoardConfigs} />);
+
+    setWrapperTop(620);
+    act(() => {
+      resizeCallbacks.forEach((cb) => cb([] as unknown as ResizeObserverEntry[], {} as ResizeObserver));
+    });
+    expect(document.documentElement.style.getPropertyValue('--bottom-bar-height')).toBe('180px');
+
+    unmount();
+
+    expect(document.documentElement.style.getPropertyValue('--bottom-bar-height')).toBe('');
+    expect(removeWindowSpy).toHaveBeenCalledWith('resize', expect.any(Function));
+    if (removeViewportSpy) {
+      expect(removeViewportSpy).toHaveBeenCalledWith('resize', expect.any(Function));
+    }
   });
 });

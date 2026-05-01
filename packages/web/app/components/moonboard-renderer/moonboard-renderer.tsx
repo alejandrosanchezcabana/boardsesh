@@ -10,6 +10,7 @@ const MoonBoardRenderer: React.FC<MoonBoardRendererProps> = ({
   litUpHoldsMap = {},
   mirrored = false,
   thumbnail = false,
+  fillHeight = false,
   onHoldClick,
 }) => {
   const { width, height } = MOONBOARD_SIZE;
@@ -56,16 +57,26 @@ const MoonBoardRenderer: React.FC<MoonBoardRendererProps> = ({
     }
   };
 
-  // Memoize SVG style object to prevent recreation on every render
+  // Memoize SVG style object to prevent recreation on every render.
+  // fillHeight: SVG fills container height; preserveAspectRatio="xMidYMid meet" letterboxes the
+  // image so the full board is always visible regardless of container aspect.
   const svgStyle = useMemo(
-    () => ({
-      width: '100%',
-      height: 'auto',
-      display: 'block' as const,
-      maxHeight: thumbnail ? '10vh' : '55vh',
-      transform: mirrored ? 'scaleX(-1)' : undefined,
-    }),
-    [thumbnail, mirrored],
+    () =>
+      fillHeight
+        ? {
+            width: '100%',
+            height: '100%',
+            display: 'block' as const,
+            transform: mirrored ? 'scaleX(-1)' : undefined,
+          }
+        : {
+            width: '100%',
+            height: 'auto',
+            display: 'block' as const,
+            maxHeight: thumbnail ? '10vh' : '55vh',
+            transform: mirrored ? 'scaleX(-1)' : undefined,
+          },
+    [thumbnail, mirrored, fillHeight],
   );
 
   return (
