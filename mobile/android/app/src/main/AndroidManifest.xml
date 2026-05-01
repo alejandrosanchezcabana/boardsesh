@@ -28,13 +28,41 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
 
+            <!--
+              Android App Links must NOT intercept /api/* or /auth/* paths.
+              OAuth providers (Google, Apple, Facebook) redirect the user to
+              /api/auth/callback/<provider> via a Chrome Custom Tab; the
+              state cookie that NextAuth sets lives in Chrome's cookie jar,
+              not the app's WebView. If the OS routes the callback URL into
+              the app, NextAuth throws "State cookie was missing." Enumerate
+              the deep-linkable top-level paths instead of using a catch-all.
+            -->
             <intent-filter android:autoVerify="true">
                 <action android:name="android.intent.action.VIEW" />
 
                 <category android:name="android.intent.category.DEFAULT" />
                 <category android:name="android.intent.category.BROWSABLE" />
 
-                <data android:scheme="https" android:host="www.boardsesh.com" android:pathPrefix="/" />
+                <data android:scheme="https" android:host="www.boardsesh.com" />
+
+                <data android:pathPrefix="/about" />
+                <data android:pathPrefix="/aurora-migration" />
+                <data android:pathPrefix="/b/" />
+                <data android:pathPrefix="/docs" />
+                <data android:pathPrefix="/feed" />
+                <data android:pathPrefix="/help" />
+                <data android:pathPrefix="/join" />
+                <data android:pathPrefix="/kilter" />
+                <data android:pathPrefix="/legal" />
+                <data android:pathPrefix="/notifications" />
+                <data android:pathPrefix="/playlists" />
+                <data android:pathPrefix="/privacy" />
+                <data android:pathPrefix="/profile" />
+                <data android:pathPrefix="/session" />
+                <data android:pathPrefix="/setter" />
+                <data android:pathPrefix="/settings" />
+                <data android:pathPrefix="/tension" />
+                <data android:pathPrefix="/you" />
             </intent-filter>
 
         </activity>
