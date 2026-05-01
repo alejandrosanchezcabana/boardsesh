@@ -65,6 +65,22 @@
                 <data android:pathPrefix="/you" />
             </intent-filter>
 
+            <!--
+              Custom-scheme intent filter for native OAuth callback. After OAuth
+              completes in a Chrome Custom Tab, /api/auth/native/callback returns
+              an HTML page that redirects to
+              com.boardsesh.app://auth/callback?transferToken=...
+              This filter routes that scheme into MainActivity, where the
+              Capacitor appUrlOpen listener exchanges the transfer token for a
+              NextAuth session. Mirrors CFBundleURLSchemes in iOS Info.plist.
+            -->
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <data android:scheme="com.boardsesh.app" />
+            </intent-filter>
+
         </activity>
 
         <provider
