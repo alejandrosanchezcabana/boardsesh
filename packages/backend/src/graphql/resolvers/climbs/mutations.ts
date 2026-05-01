@@ -314,12 +314,14 @@ export const climbMutations = {
 
     // Decide the next draft/publish state. We only honor a transition from
     // draft → published; a publish → draft attempt is silently ignored.
-    const nextIsDraft =
-      validated.isDraft === undefined
-        ? (existing.isDraft ?? false)
-        : currentlyDraft && validated.isDraft === false
-          ? false
-          : (existing.isDraft ?? false);
+    let nextIsDraft: boolean;
+    if (validated.isDraft === undefined) {
+      nextIsDraft = existing.isDraft ?? false;
+    } else if (currentlyDraft && validated.isDraft === false) {
+      nextIsDraft = false;
+    } else {
+      nextIsDraft = existing.isDraft ?? false;
+    }
 
     const transitioningToPublished = currentlyDraft && validated.isDraft === false;
     const now = new Date().toISOString();

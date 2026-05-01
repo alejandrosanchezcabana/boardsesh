@@ -65,7 +65,12 @@ const BoardImageLayers = React.memo(function BoardImageLayers({
 
   const imgStyle = contain || thumbnail ? layerContainStyle : layerStyle;
 
-  const renderContext: RenderContext = thumbnail ? 'thumbnail' : contain ? 'full-board' : 'card';
+  let renderContext: RenderContext = 'card';
+  if (thumbnail) {
+    renderContext = 'thumbnail';
+  } else if (contain) {
+    renderContext = 'full-board';
+  }
 
   const handleOverlayError = useCallback(() => {
     trackRenderError(renderContext, 'wasm');

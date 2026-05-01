@@ -1,3 +1,4 @@
+/* oxlint-disable no-restricted-globals -- e2e tests run in browser context with full storage access */
 /**
  * App Store Screenshot Generation
  *

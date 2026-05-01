@@ -110,6 +110,57 @@ export default function MyBoardsDrawer({ open, onClose, onCreateBoard, onTransit
       </>
     ) : null;
 
+  const renderListContent = () => {
+    if (error && boards.length === 0) {
+      return (
+        <div className={styles.emptyState} data-testid="my-boards-error">
+          <Alert severity="error" sx={{ width: '100%' }}>
+            {error}
+          </Alert>
+        </div>
+      );
+    }
+    if (isLoading && boards.length === 0) {
+      return (
+        <div className={styles.loadingState} data-testid="my-boards-loading">
+          <CircularProgress size={32} />
+        </div>
+      );
+    }
+    if (boards.length === 0) {
+      return (
+        <div className={styles.emptyState} data-testid="my-boards-empty">
+          <DashboardOutlined sx={{ fontSize: 48, color: 'var(--neutral-300)' }} />
+          <Typography variant="body2" color="text.secondary">
+            No boards yet. Create one from the board selector to get started.
+          </Typography>
+        </div>
+      );
+    }
+    return (
+      <div className={styles.boardList} data-testid="my-boards-list">
+        {boards.map((board) => (
+          <button
+            type="button"
+            key={board.uuid}
+            className={styles.boardItem}
+            onClick={() => handleBoardClick(board)}
+            data-testid={`board-item-${board.uuid}`}
+          >
+            <div className={styles.boardItemIcon}>
+              <DashboardOutlined />
+            </div>
+            <div className={styles.boardItemInfo}>
+              <div className={styles.boardItemName}>{board.name}</div>
+              <div className={styles.boardItemMeta}>{formatBoardMeta(board)}</div>
+            </div>
+            <ChevronRightOutlined className={styles.boardItemAction} />
+          </button>
+        ))}
+      </div>
+    );
+  };
+
   return (
     <SwipeableDrawer
       title={drawerTitle}
@@ -122,46 +173,7 @@ export default function MyBoardsDrawer({ open, onClose, onCreateBoard, onTransit
       extra={headerExtra}
       styles={{ body: { padding: 0 } }}
     >
-      {view.type === 'list' &&
-        (error && boards.length === 0 ? (
-          <div className={styles.emptyState} data-testid="my-boards-error">
-            <Alert severity="error" sx={{ width: '100%' }}>
-              {error}
-            </Alert>
-          </div>
-        ) : isLoading && boards.length === 0 ? (
-          <div className={styles.loadingState} data-testid="my-boards-loading">
-            <CircularProgress size={32} />
-          </div>
-        ) : boards.length === 0 ? (
-          <div className={styles.emptyState} data-testid="my-boards-empty">
-            <DashboardOutlined sx={{ fontSize: 48, color: 'var(--neutral-300)' }} />
-            <Typography variant="body2" color="text.secondary">
-              No boards yet. Create one from the board selector to get started.
-            </Typography>
-          </div>
-        ) : (
-          <div className={styles.boardList} data-testid="my-boards-list">
-            {boards.map((board) => (
-              <button
-                type="button"
-                key={board.uuid}
-                className={styles.boardItem}
-                onClick={() => handleBoardClick(board)}
-                data-testid={`board-item-${board.uuid}`}
-              >
-                <div className={styles.boardItemIcon}>
-                  <DashboardOutlined />
-                </div>
-                <div className={styles.boardItemInfo}>
-                  <div className={styles.boardItemName}>{board.name}</div>
-                  <div className={styles.boardItemMeta}>{formatBoardMeta(board)}</div>
-                </div>
-                <ChevronRightOutlined className={styles.boardItemAction} />
-              </button>
-            ))}
-          </div>
-        ))}
+      {view.type === 'list' && renderListContent()}
 
       {view.type === 'search' && (
         <>

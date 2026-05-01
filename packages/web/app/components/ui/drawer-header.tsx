@@ -6,6 +6,7 @@ import Typography from '@mui/material/Typography';
 import IconButton from '@mui/material/IconButton';
 import CloseOutlined from '@mui/icons-material/CloseOutlined';
 import type { SxProps, Theme } from '@mui/material/styles';
+import { toSxArray } from './sx-utils';
 
 type DrawerHeaderProps = {
   title?: React.ReactNode;
@@ -26,7 +27,7 @@ export function DrawerHeader({ title, onClose, extra, sx }: DrawerHeaderProps) {
           borderBottom: 1,
           borderColor: 'divider',
         },
-        ...(Array.isArray(sx) ? sx : sx ? [sx] : []),
+        ...toSxArray(sx),
       ]}
     >
       {typeof title === 'string' ? <Typography variant="h6">{title}</Typography> : title}

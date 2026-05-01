@@ -65,6 +65,15 @@ const SetterNameSelect = () => {
     });
   }, [uiSearchParams.settername, options]);
 
+  let noOptionsText: string;
+  if (isLoading) {
+    noOptionsText = 'Loading...';
+  } else if (!isOpen && searchValue.length === 0) {
+    noOptionsText = 'Open dropdown to see setters';
+  } else {
+    noOptionsText = 'No setters found';
+  }
+
   return (
     <Autocomplete
       multiple
@@ -85,13 +94,7 @@ const SetterNameSelect = () => {
       filterOptions={(x) => x} // Server-side filtering
       loading={isLoading}
       limitTags={2}
-      noOptionsText={
-        isLoading
-          ? 'Loading...'
-          : !isOpen && searchValue.length === 0
-            ? 'Open dropdown to see setters'
-            : 'No setters found'
-      }
+      noOptionsText={noOptionsText}
       sx={{ width: '100%' }}
       size="small"
       renderInput={(params) => (

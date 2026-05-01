@@ -27,14 +27,14 @@ export default function SaveToHealthKitButton({
 
   if (!available || !summary) return null;
 
-  const label =
-    state === 'saving'
-      ? 'Saving to Apple Health…'
-      : state === 'saved'
-        ? 'Saved to Apple Health'
-        : state === 'error'
-          ? 'Save to Apple Health (retry)'
-          : 'Save to Apple Health';
+  let label = 'Save to Apple Health';
+  if (state === 'saving') {
+    label = 'Saving to Apple Health…';
+  } else if (state === 'saved') {
+    label = 'Saved to Apple Health';
+  } else if (state === 'error') {
+    label = 'Save to Apple Health (retry)';
+  }
 
   return (
     <Button

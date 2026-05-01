@@ -157,7 +157,8 @@ export function BluetoothProvider({
   const [demoResolvedBoards, setDemoResolvedBoards] = useState<Map<string, ResolvedBoardEntry> | null>(null);
   useEffect(() => {
     if (typeof window === 'undefined') return;
-    if (window.sessionStorage.getItem('boardsesh:e2e-bluetooth-picker') !== '1') return;
+    // oxlint-disable-next-line no-restricted-globals -- e2e flag must be read synchronously during render
+    if (sessionStorage.getItem('boardsesh:e2e-bluetooth-picker') !== '1') return;
 
     // Real boards (and where available, real serials) sourced from
     // production user_boards.json so the picker shows authentic-looking

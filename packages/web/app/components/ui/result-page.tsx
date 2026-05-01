@@ -8,6 +8,7 @@ import ErrorOutlined from '@mui/icons-material/ErrorOutlined';
 import InfoOutlined from '@mui/icons-material/InfoOutlined';
 import WarningAmberOutlined from '@mui/icons-material/WarningAmberOutlined';
 import type { SxProps, Theme } from '@mui/material/styles';
+import { toSxArray } from './sx-utils';
 
 type ResultStatus = 'success' | 'error' | 'info' | 'warning';
 
@@ -39,7 +40,7 @@ export function ResultPage({ status, title, subTitle, extra, icon, sx }: ResultP
           padding: 4,
           textAlign: 'center',
         },
-        ...(Array.isArray(sx) ? sx : sx ? [sx] : []),
+        ...toSxArray(sx),
       ]}
     >
       <Box sx={{ mb: 3 }}>{icon || statusIcons[status]}</Box>

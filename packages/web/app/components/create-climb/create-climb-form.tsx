@@ -310,7 +310,15 @@ export default function CreateClimbForm({
 
   // Common state — in edit mode use the original name, not "{name} fork"
   const isEditMode = !!editClimb;
-  const [climbName, setClimbName] = useState(isEditMode ? forkName || '' : forkName ? `${forkName} fork` : '');
+  let initialClimbName: string;
+  if (isEditMode) {
+    initialClimbName = forkName || '';
+  } else if (forkName) {
+    initialClimbName = `${forkName} fork`;
+  } else {
+    initialClimbName = '';
+  }
+  const [climbName, setClimbName] = useState(initialClimbName);
   const [description, setDescription] = useState(forkDescription || '');
   const [showSettingsPanel, setShowSettingsPanel] = useState(false);
   const [showDraftsDrawer, setShowDraftsDrawer] = useState(false);
@@ -577,33 +585,42 @@ export default function CreateClimbForm({
   // the form doesn't own (difficulty, stars, ascents, etc.) get safe defaults
   // — a brand-new draft has nothing to report for those.
   const buildClimbFromFormState = useCallback(
-    (uuid: string, frames: string): Climb => ({
-      uuid,
-      name: climbName,
-      description,
-      frames,
-      angle: boardType === 'moonboard' ? selectedAngle : angle,
-      setter_username: session?.user?.name || '',
-      // Stable owner identity. The queue list (local + peers) uses this —
-      // not setter_username — to decide whether to show the Edit button,
-      // because usernames can change or be blank but userId is immutable.
-      userId: session?.user?.id ?? null,
-      ascensionist_count: 0,
-      difficulty: '',
-      quality_average: '0',
-      stars: 0,
-      difficulty_error: '0',
-      benchmark_difficulty: null,
-      mirrored: false,
-      is_draft: isDraft,
+    (uuid: string, frames: string): Climb => {
       // Stamp publish time on the first save that flips out of draft. Drafts
       // leave this null; once published it stays stable until the 24h window
       // lapses and the backend refuses further updates.
-      published_at:
-        !isDraft && savedClimb?.publishedAt ? savedClimb.publishedAt : !isDraft ? new Date().toISOString() : null,
-      layoutId: boardType === 'aurora' ? (boardDetails?.layout_id ?? null) : (layoutId ?? null),
-      boardType: boardType === 'aurora' ? boardDetails?.board_name : 'moonboard',
-    }),
+      let publishedAt: string | null;
+      if (isDraft) {
+        publishedAt = null;
+      } else if (savedClimb?.publishedAt) {
+        publishedAt = savedClimb.publishedAt;
+      } else {
+        publishedAt = new Date().toISOString();
+      }
+      return {
+        uuid,
+        name: climbName,
+        description,
+        frames,
+        angle: boardType === 'moonboard' ? selectedAngle : angle,
+        setter_username: session?.user?.name || '',
+        // Stable owner identity. The queue list (local + peers) uses this —
+        // not setter_username — to decide whether to show the Edit button,
+        // because usernames can change or be blank but userId is immutable.
+        userId: session?.user?.id ?? null,
+        ascensionist_count: 0,
+        difficulty: '',
+        quality_average: '0',
+        stars: 0,
+        difficulty_error: '0',
+        benchmark_difficulty: null,
+        mirrored: false,
+        is_draft: isDraft,
+        published_at: publishedAt,
+        layoutId: boardType === 'aurora' ? (boardDetails?.layout_id ?? null) : (layoutId ?? null),
+        boardType: boardType === 'aurora' ? boardDetails?.board_name : 'moonboard',
+      };
+    },
     [
       climbName,
       description,
@@ -1292,8 +1309,17 @@ export default function CreateClimbForm({
       void handlePublish();
     };
 
+    let saveTooltip: string;
+    if (isSaving) {
+      saveTooltip = 'Saving...';
+    } else if (needsTitle) {
+      saveTooltip = 'Name your climb';
+    } else {
+      saveTooltip = 'Save climb';
+    }
+
     return (
-      <MuiTooltip title={isSaving ? 'Saving...' : needsTitle ? 'Name your climb' : 'Save climb'}>
+      <MuiTooltip title={saveTooltip}>
         <span>
           <IconButton
             size="small"
@@ -1328,6 +1354,40 @@ export default function CreateClimbForm({
     }),
     [climbName, session?.user?.name],
   );
+
+  let boardRenderer: React.ReactNode = null;
+  if (boardType === 'aurora' && boardDetails) {
+    boardRenderer = (
+      <div className={styles.zoomFill}>
+        <BoardRenderer
+          boardDetails={boardDetails}
+          litUpHoldsMap={litUpHoldsMap}
+          mirrored={false}
+          onHoldClick={picker.handleHoldClick}
+          fillHeight
+        />
+        <CreateClimbHeatmapOverlay
+          boardDetails={boardDetails}
+          angle={angle}
+          litUpHoldsMap={litUpHoldsMap}
+          opacity={heatmapOpacity}
+          enabled={showHeatmap}
+          onLoadingChange={handleHeatmapLoadingChange}
+        />
+      </div>
+    );
+  } else if (boardType === 'moonboard' && layoutFolder && holdSetImages) {
+    boardRenderer = (
+      <div className={styles.moonboardFill}>
+        <MoonBoardRenderer
+          layoutFolder={layoutFolder}
+          holdSetImages={holdSetImages}
+          litUpHoldsMap={litUpHoldsMap}
+          onHoldClick={picker.handleHoldClick}
+        />
+      </div>
+    );
+  }
 
   return (
     <div className={styles.pageContainer} data-testid="climb-setter">
@@ -1396,36 +1456,7 @@ export default function CreateClimbForm({
 
       {/* Board section: zoomable SVG renderer */}
       <div className={styles.boardSectionWrapper} data-testid="climb-setter-board">
-        <ZoomableBoard resetKey={zoomResetKey}>
-          {boardType === 'aurora' && boardDetails ? (
-            <div className={styles.zoomFill}>
-              <BoardRenderer
-                boardDetails={boardDetails}
-                litUpHoldsMap={litUpHoldsMap}
-                mirrored={false}
-                onHoldClick={picker.handleHoldClick}
-                fillHeight
-              />
-              <CreateClimbHeatmapOverlay
-                boardDetails={boardDetails}
-                angle={angle}
-                litUpHoldsMap={litUpHoldsMap}
-                opacity={heatmapOpacity}
-                enabled={showHeatmap}
-                onLoadingChange={handleHeatmapLoadingChange}
-              />
-            </div>
-          ) : boardType === 'moonboard' && layoutFolder && holdSetImages ? (
-            <div className={styles.moonboardFill}>
-              <MoonBoardRenderer
-                layoutFolder={layoutFolder}
-                holdSetImages={holdSetImages}
-                litUpHoldsMap={litUpHoldsMap}
-                onHoldClick={picker.handleHoldClick}
-              />
-            </div>
-          ) : null}
-        </ZoomableBoard>
+        <ZoomableBoard resetKey={zoomResetKey}>{boardRenderer}</ZoomableBoard>
       </div>
 
       <HoldTypePicker

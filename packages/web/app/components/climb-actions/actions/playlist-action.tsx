@@ -338,18 +338,30 @@ export function PlaylistAction({
 
   const label = 'Add to Playlist';
   const shouldShowLabel = showLabel ?? (viewMode === 'button' || viewMode === 'dropdown');
-  const iconSize = size === 'small' ? 14 : size === 'large' ? 20 : 16;
+  let iconSize: number;
+  if (size === 'small') {
+    iconSize = 14;
+  } else if (size === 'large') {
+    iconSize = 20;
+  } else {
+    iconSize = 16;
+  }
 
   const inPlaylistCount = playlistsContainingClimb.size;
-  const icon = popoverOpen ? (
-    <CloseOutlined sx={{ fontSize: iconSize }} />
-  ) : inPlaylistCount > 0 ? (
-    <MuiBadge badgeContent={inPlaylistCount} sx={{ '& .MuiBadge-badge': { top: 2, right: -2 } }}>
-      <LocalOfferOutlined sx={{ fontSize: iconSize }} />
-    </MuiBadge>
-  ) : (
-    <LocalOfferOutlined sx={{ fontSize: iconSize }} />
-  );
+  const renderIcon = () => {
+    if (popoverOpen) {
+      return <CloseOutlined sx={{ fontSize: iconSize }} />;
+    }
+    if (inPlaylistCount > 0) {
+      return (
+        <MuiBadge badgeContent={inPlaylistCount} sx={{ '& .MuiBadge-badge': { top: 2, right: -2 } }}>
+          <LocalOfferOutlined sx={{ fontSize: iconSize }} />
+        </MuiBadge>
+      );
+    }
+    return <LocalOfferOutlined sx={{ fontSize: iconSize }} />;
+  };
+  const icon = renderIcon();
 
   // Icon mode - for Card actions (renders inline content below when expanded)
   const iconElement = (

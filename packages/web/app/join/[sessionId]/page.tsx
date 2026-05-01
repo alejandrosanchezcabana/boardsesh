@@ -49,13 +49,18 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
       : null;
 
     const title = `${joinHeadline} | Boardsesh`;
-    const description = boardInfo
-      ? summary.totalSends > 0
-        ? `${boardInfo}. ${summary.totalSends} send${summary.totalSends !== 1 ? 's' : ''} so far${gradeSummary}. Get on the wall.`
-        : `${boardInfo}. No sends yet. Get on the wall.`
-      : sessionName && sessionName !== 'Climbing Session'
-        ? `${sessionName} is live on Boardsesh. Get on the wall.`
-        : 'Jump into this climbing session on Boardsesh. Get on the wall.';
+    let description: string;
+    if (boardInfo) {
+      if (summary.totalSends > 0) {
+        description = `${boardInfo}. ${summary.totalSends} send${summary.totalSends !== 1 ? 's' : ''} so far${gradeSummary}. Get on the wall.`;
+      } else {
+        description = `${boardInfo}. No sends yet. Get on the wall.`;
+      }
+    } else if (sessionName && sessionName !== 'Climbing Session') {
+      description = `${sessionName} is live on Boardsesh. Get on the wall.`;
+    } else {
+      description = 'Jump into this climbing session on Boardsesh. Get on the wall.';
+    }
 
     const ogImagePath = buildVersionedOgImagePath('/api/og/session', { sessionId, variant: 'join' }, summary.version);
 

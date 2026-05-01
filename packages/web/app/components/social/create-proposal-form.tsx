@@ -97,11 +97,17 @@ export default function CreateProposalForm({
     setLoading(true);
     try {
       const client = createGraphQLHttpClient(token);
+      let proposalAngle: typeof selectedAngle | null;
+      if (type === 'classic' || selectedAngle === 'all') {
+        proposalAngle = null;
+      } else {
+        proposalAngle = selectedAngle;
+      }
       const result = await client.request<{ createProposal: Proposal }>(CREATE_PROPOSAL, {
         input: {
           climbUuid,
           boardType,
-          angle: type === 'classic' ? null : selectedAngle === 'all' ? null : selectedAngle,
+          angle: proposalAngle,
           type,
           proposedValue,
           reason: reason || null,

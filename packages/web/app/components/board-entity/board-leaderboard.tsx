@@ -109,15 +109,17 @@ export default function BoardLeaderboard({ boardUuid }: BoardLeaderboardProps) {
         ))}
       </Box>
 
-      {isLoading ? (
+      {isLoading && (
         <Box sx={{ display: 'flex', justifyContent: 'center', py: 4 }}>
           <CircularProgress size={28} />
         </Box>
-      ) : !leaderboard || leaderboard.entries.length === 0 ? (
+      )}
+      {!isLoading && (!leaderboard || leaderboard.entries.length === 0) && (
         <MuiTypography variant="body2" color="text.secondary" sx={{ textAlign: 'center', py: 4 }}>
           No activity yet for this period.
         </MuiTypography>
-      ) : (
+      )}
+      {!isLoading && leaderboard && leaderboard.entries.length > 0 && (
         <>
           <TableContainer>
             <Table size="small">

@@ -218,8 +218,9 @@ We are using next.js app router, it's important we try to use server side compon
 - For rendering avoid JavaScript breakpoint detection & Grid.useBreakpoint()
 - While we work together, be careful to remove any code you no longer use, so we dont end up with lots of deadcode
 - **Dark mode uses white input fields** — This is intentional for contrast. All input components (TextField, Select, Autocomplete, etc.) have white backgrounds in dark mode via `darkTokens.semantic.inputSurface`. Do not change them to dark backgrounds.
-- **Never use `any` type** - The `no-explicit-any` lint rule is set to `deny` across all packages. Use `unknown`, proper types, or `as unknown as SpecificType` for type assertions. No exceptions - `any` defeats the purpose of TypeScript
 - **Variable names must describe their contents** - No single-letter aliases (`r`, `x`, `s`) or vague placeholders (`data`, `info`, `latest`, `temp`, `value`) outside of tight loops or well-known math conventions. The name should tell the next reader what's inside without forcing them to scroll back to the declaration. Prefer destructuring at the use site over a generic alias — `const { queue, currentClimb } = stateRef.current` reads better than `const s = stateRef.current` followed by `s.queue` / `s.currentClimb`.
+
+A handful of these style rules are enforced as oxlint errors so they fail `vp check`. See `.oxlintrc.json` for the exact rule names and config; the current lint-enforced set includes `typescript/no-explicit-any` (no `any`), `no-nested-ternary`, `no-restricted-globals` (no `localStorage` / `sessionStorage`), and `no-restricted-imports` (no raw Neon `sql` client from `@/app/lib/db/db`).
 
 ### Copy & Microcopy
 
@@ -346,19 +347,18 @@ Bad examples:
 
 **Always use Drizzle ORM query builder** (`db.select()`, `db.insert()`, `db.update()`, `db.delete()`) for database operations. Only fall back to raw SQL (`sql` template literals from `drizzle-orm`) when the query genuinely cannot be expressed with the query builder (complex JOINs with type casts, window functions, CTEs, EXISTS subqueries, complex aggregations).
 
-- **Never use the raw Neon `sql` client** (`import { sql } from '@/app/lib/db/db'`) for new code. Use Drizzle's `db` instance instead (`getDb()` or `dbz`), which provides type safety and schema validation.
+- Importing `sql` from `@/app/lib/db/db` (the raw Neon HTTP client) is blocked by lint (`no-restricted-imports`). Use Drizzle's `db` instance instead (`getDb()` or `dbz`).
 - When raw SQL is necessary, use `db.execute(sql`...`)` with Drizzle's `sql` from `drizzle-orm` — not the Neon HTTP client directly.
 - Both are safe from SQL injection (parameterized), but Drizzle gives you type safety and schema awareness.
 
 ### Client-Side Storage: IndexedDB Only
 
-**Never use `localStorage` or `sessionStorage`**. All client-side persistence must use IndexedDB via the `idb` package.
+All client-side persistence must use IndexedDB via the `idb` package. Bare `localStorage` and `sessionStorage` references are blocked by lint (`no-restricted-globals`); the only legitimate uses are one-time migration code that reads old data and deletes it, plus a couple of e2e test affordances that need synchronous reads at render time. Mark those sites with `// oxlint-disable-next-line no-restricted-globals` and a short reason. Do not bypass the rule by writing `window.localStorage` / `window.sessionStorage` — write the bare global and disable the rule explicitly so the exception is greppable.
 
 - **Simple key-value preferences** (e.g., view mode, party mode): Use the shared utility at `packages/web/app/lib/user-preferences-db.ts` which provides `getPreference<T>(key)`, `setPreference(key, value)`, and `removePreference(key)`.
 - **Domain-specific data** (e.g., recent searches, session history, onboarding status): Create a dedicated `*-db.ts` file in `packages/web/app/lib/` following the established pattern (lazy `dbPromise` init, SSR guard, try-catch error handling). See `tab-navigation-db.ts` or `onboarding-db.ts` for examples.
 - All IndexedDB access must be guarded with `typeof window === 'undefined'` checks for SSR compatibility.
 - When migrating a value from `localStorage` to IndexedDB, include one-time migration logic that reads the old key, writes to IndexedDB, and deletes the localStorage key. See `user-preferences-db.ts` (`getPreference` fallback), `recent-searches-storage.ts`, and `party-profile-db.ts` for examples.
-- The only acceptable `localStorage` references are in one-time migration code that reads old data and deletes it.
 
 ### State Management
 

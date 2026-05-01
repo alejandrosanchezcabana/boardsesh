@@ -133,9 +133,17 @@ export function usePullToClose({
   const onTouchStart = useCallback(
     (clientY: number, scrollContainer: HTMLElement | null) => {
       const atTop = !scrollContainer || scrollContainer.scrollTop <= 0;
+      let pullOriginY: number;
+      if (!trackPullOrigin) {
+        pullOriginY = clientY;
+      } else if (atTop) {
+        pullOriginY = clientY;
+      } else {
+        pullOriginY = 0;
+      }
       stateRef.current = {
         startY: clientY,
-        pullOriginY: trackPullOrigin ? (atTop ? clientY : 0) : clientY,
+        pullOriginY,
         scrollContainer,
         isPulling: false,
         translateY: 0,
