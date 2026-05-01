@@ -23,6 +23,10 @@ const here = dirname(fileURLToPath(import.meta.url));
 const webRoot = join(here, '..');
 const chunksDir = join(webRoot, '.next', 'static', 'chunks');
 const gqlPath = join(webRoot, 'app', 'lib', 'graphql', 'generated', 'gql.ts');
+// account.ts is the single graphql() call site as of this PR. If/when more
+// op files migrate, swap this for a glob over operations/*.ts — the
+// derivation below treats every operation in that file as "must be present
+// in the marker chunk", so adding files extends coverage automatically.
 const accountPath = join(webRoot, 'app', 'lib', 'graphql', 'operations', 'account.ts');
 
 function fail(message: string): never {
@@ -31,9 +35,9 @@ function fail(message: string): never {
 }
 
 function extractOperationNames(source: string): string[] {
-  // Matches `query Name` and `mutation Name` inside graphql template
-  // literals. Captures the identifier only.
-  const matches = source.matchAll(/\b(?:query|mutation)\s+([A-Z]\w+)/g);
+  // Matches `query Name`, `mutation Name`, and `subscription Name` inside
+  // graphql template literals. Captures the identifier only.
+  const matches = source.matchAll(/\b(?:query|mutation|subscription)\s+([A-Z]\w+)/g);
   return [...new Set(Array.from(matches, (m) => m[1]))];
 }
 
@@ -49,9 +53,13 @@ if (mustBeAbsent.length === 0) {
   fail(`no candidate operations to verify against; gql.ts only contains operations that account.ts uses`);
 }
 
+// Recursive: Next App Router can split chunks into per-route subdirectories
+// (e.g. .next/static/chunks/app/...) depending on version and routing config.
 let chunkNames: string[];
 try {
-  chunkNames = readdirSync(chunksDir).filter((name) => name.endsWith('.js'));
+  chunkNames = readdirSync(chunksDir, { recursive: true })
+    .map((entry) => (typeof entry === 'string' ? entry : entry.toString()))
+    .filter((name) => name.endsWith('.js'));
 } catch {
   fail(`chunks directory not found at ${chunksDir}; run \`vp run build:web\` first`);
 }
