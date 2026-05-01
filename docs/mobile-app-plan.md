@@ -1,1364 +1,560 @@
-# Boardsesh Mobile App Distribution Plan (Capacitor)
+# Boardsesh Mobile App Distribution Plan (Capacitor) — v8.0
 
-## Executive Summary
+## What this document is
 
-This document outlines the implementation plan for distributing Boardsesh as native Android and iOS apps using **Capacitor**. Rather than rebuilding the UI in React Native, Capacitor wraps the existing Next.js web app in a native WebView and provides native plugin access for features like Bluetooth Low Energy (BLE). This approach maximizes code reuse — the existing web app runs as-is inside the native shell, with the hosted URL pointing at `boardsesh.com`.
+A working plan for the Capacitor mobile app and the parallel work to make it usable offline. Scope: native shell maintenance, the offline-first pivot (bundled Next.js static export + local SQLite cache + write queue), the Vercel/Neon → Railway hosting move, and the ongoing REST → GraphQL completion in `packages/backend`.
 
-**Key advantage over React Native:** Zero UI rewrite. The web app is the app. Native plugins bridge the gap for hardware features (BLE) that WebView doesn't support.
+This version replaces v7.0. v7.0 over-specified delivery dates against partly-fictional state and contradicted itself on auth in bundled mode. The corrections are listed in the changelog at the bottom.
 
----
+## Pinned user story
 
-## Table of Contents
+A user opens Boardsesh in airplane mode at the gym. They launch the app, browse and search climbs for their board, build a queue, connect via BLE, send climbs to the board (LEDs light up), and tick the ones they sent. Real-time-only features (party mode, comments, others' profiles) show a "needs network" state. When the user reconnects, queued ticks and edits sync to the server. Phase 5 is the milestone where this end-to-end story works.
 
-1. [Architecture Overview](#architecture-overview)
-2. [Why Capacitor Over React Native](#why-capacitor-over-react-native)
-3. [Why Not Local/Bundled Mode](#why-not-localbundled-mode)
-4. [Package Structure](#package-structure)
-5. [Capacitor Bridge Injection Strategy](#capacitor-bridge-injection-strategy)
-6. [Web App Adaptations](#web-app-adaptations)
-7. [Authentication in WebView](#authentication-in-webview)
-8. [Implementation Milestones](#implementation-milestones)
-9. [Bluetooth Strategy](#bluetooth-strategy)
-10. [Development Workflow](#development-workflow)
-11. [App Store Distribution](#app-store-distribution)
-12. [Risk Assessment](#risk-assessment)
-13. [Success Criteria](#success-criteria)
+## Current state (verified against `main`)
 
----
+What is shipped and what is not, as of this rewrite. Anything below is checkable in the repo.
 
-## Architecture Overview
+| Area | Status |
+|------|--------|
+| Capacitor shell at `mobile/` (sibling of `packages/`, not under it) | Shipped. iOS + Android projects, `capacitor.config.ts`, `BoardseshWidgets` LiveActivity extension. |
+| Capacitor major version | 8 (`@capacitor/core: ^8`). Plan must not reference Cap 6 APIs. |
+| Hosted mode | App loads `https://www.boardsesh.com`. iOS uses `limitsNavigationsToAppBoundDomains: true` with `boardsesh.com`, `*.boardsesh.com`, `*.ts.net` declared in `WKAppBoundDomains`. |
+| BLE adapter | `packages/web/app/lib/ble/{capacitor-adapter,web-adapter,adapter-factory,types,resolve-serials,board-config-match}.ts` with tests. |
+| Native plugins installed | `@capacitor-community/{bluetooth-le, in-app-review, keep-awake, safe-area}`, `@capacitor/{app, browser, core, geolocation, motion}`, plus iOS / Android platforms. |
+| Native plugins **not** installed | `@capacitor-community/sqlite`, `@capacitor/push-notifications`, `@capacitor/network`, `@capacitor/haptics`, `@capacitor/keyboard`, `@capacitor/status-bar`, `@capacitor/splash-screen`. Adding these is in-scope for later phases. |
+| Backend GraphQL coverage | 14 resolver domains under `packages/backend/src/graphql/resolvers/` (board, ticks, users, social, feedback, beta-videos, queue, sessions, playlists, favorites, controller, climbs, plus shared helpers). Substantial, not "early." |
+| REST routes still live in `packages/web/app/api/` | 44 `route.ts` files across `/api/internal/*`, `/api/v1/*`, `/api/auth/*`, `/api/og/*`. Sync, search, sync-cron, ws-auth, OG image generation, NextAuth handlers. |
+| Server pages with direct `next/headers` / `auth()` calls | 7. |
+| Server pages importing DB directly | 4. |
+| Hosting | Vercel (web) + Neon (DB) + backend on its current host. |
+| Web `next.config.mjs` | `output: 'standalone'`. No dual-build wiring exists yet. |
+| LiveActivity bridge | iOS extension target exists; queue updates flow through it in hosted mode. |
 
-```
-┌─────────────────────────────────────────────┐
-│                Native Shell                  │
-│  ┌───────────────────────────────────────┐   │
-│  │          Capacitor WebView            │   │
-│  │                                       │   │
-│  │   loads https://boardsesh.com         │   │
-│  │   (existing Next.js app, unchanged)   │   │
-│  │                                       │   │
-│  │   ┌─────────────────────────────┐     │   │
-│  │   │  Capacitor JS Bridge        │     │   │
-│  │   │  - BLE plugin               │     │   │
-│  │   │  - Geolocation              │     │   │
-│  │   │  - Browser (ext. URLs)      │     │   │
-│  │   │  - StatusBar                 │     │   │
-│  │   │  - Keyboard                  │     │   │
-│  │   │  - App (deep links)          │     │   │
-│  │   │  - KeepAwake                 │     │   │
-│  │   │  - PushNotifications         │     │   │
-│  │   │  - Haptics                   │     │   │
-│  │   └─────────────────────────────┘     │   │
-│  └───────────────────────────────────────┘   │
-│                                              │
-│  Native Layer (Swift / Kotlin)               │
-│  - BLE Central Manager                       │
-│  - Push notification handling                │
-│  - Deep link routing                         │
-│  - Status bar / safe area                    │
-└─────────────────────────────────────────────┘
-```
+What this means for sequencing:
 
-### Hosted Mode
+- The native shell is real, so M0–M2 from prior versions are largely done. The remaining native work is hosting bundled assets, optional native plugin additions, and store submission.
+- The GraphQL surface is broad enough that a dedicated REST → GraphQL completion phase is a finite cleanup, not a green-field migration.
+- The export-build conversion is finite because most in-app pages already client-fetch; the genuine cost is in the few server pages and in `cookies()` callsites.
 
-The app operates in **hosted mode**: the Capacitor WebView loads the production URL (`https://boardsesh.com`). This means:
-
-- **Instant updates:** Web deployments to Vercel automatically update the app for all users — no app store review needed for UI/logic changes.
-- **Server-side rendering works:** Next.js SSR, API routes, and server components function normally.
-- **Requires internet:** The app needs a network connection. Offline support is handled by existing IndexedDB caching and a future service worker.
-- **Native plugins available:** Capacitor's JS bridge gives the web code access to native BLE, push notifications, haptics, etc. when running inside the native shell.
-
----
-
-## Why Capacitor Over React Native
-
-| Factor             | Capacitor                               | React Native                           |
-| ------------------ | --------------------------------------- | -------------------------------------- |
-| UI rewrite needed  | **None** — existing web app runs as-is  | Full rewrite of every screen/component |
-| Time to MVP        | **2-4 weeks**                           | 4-6 months                             |
-| Code reuse         | **~95%** — same codebase                | ~30% (shared-logic, types, schemas)    |
-| MUI components     | **Keep all**                            | Replace with Tamagui/NativeBase        |
-| SSR / API routes   | **Work normally** (hosted mode)         | Need separate API client layer         |
-| Update speed       | **Instant** via web deploy              | App store review (1-7 days)            |
-| BLE support        | Via `@capacitor-community/bluetooth-le` | Via `react-native-ble-plx`             |
-| Native feel        | Good with proper meta tags/CSS          | Excellent                              |
-| App store presence | Yes                                     | Yes                                    |
-| Bundle size        | Small shell (~5MB) + web loads remotely | Larger (~30-50MB)                      |
-| Maintenance burden | **Low** — one codebase                  | High — two codebases diverge over time |
-
-**Bottom line:** The web app already works well on mobile browsers. The primary reason for native apps is BLE on iOS (Safari doesn't support Web Bluetooth) and app store discoverability. Capacitor delivers both without rewriting the app.
-
----
-
-## Why Not Fully Local Mode
-
-An alternative to hosted mode would be bundling the **entire** Next.js app locally inside the Capacitor shell (Capacitor's default "local" mode with `output: 'export'`). This was evaluated and rejected because the Boardsesh app is **deeply server-dependent**:
-
-- **33 API routes** under `packages/web/app/api/` — auth, climb search, favorites, logbook, Aurora API proxying, data sync, WebSocket auth
-- **Server components with direct database queries** — e.g., `list/page.tsx` uses `cachedSearchClimbs()` which imports `'server-only'` and uses `unstable_cache` from Next.js
-- **GraphQL server-cached client** — uses `import 'server-only'`, `unstable_cache`, and `GraphQLClient` to query the backend from the server
-- **Middleware** (`middleware.ts`) for route validation
-- **Aurora API proxy routes** — proxies requests server-side to avoid CORS and protect credentials
-
-Switching to fully local mode would require rewriting the entire data and auth layer (**3-6 month effort**). However, we **can** embed the read-only climb database locally for offline search — see the next section.
-
----
-
-## Embedded Climb Database (SQLite)
-
-### Motivation
-
-Embedding a local copy of the climb database solves three critical problems simultaneously:
-
-1. **App Store approval:** The app has genuine native value beyond a WebView — a searchable offline climb database with BLE board control. This is clearly not "just a web wrapper."
-2. **Offline functionality:** Users can browse and search climbs, build a queue, and send climbs to their board via BLE — all without internet. Only social features (comments, follows, party mode) require connectivity.
-3. **Performance:** Climb search queries hit a local SQLite database instead of making network requests. No latency, no loading spinners for search results.
-
-### Architecture
+## Architecture target
 
 ```
-┌─────────────────────────────────────────────────┐
-│                Native Shell                      │
-│                                                  │
-│  ┌──────────────────────┐  ┌──────────────────┐  │
-│  │   Capacitor WebView  │  │  SQLite Database  │  │
-│  │   (hosted mode)      │  │  (bundled asset)  │  │
-│  │                      │  │                   │  │
-│  │  boardsesh.com ──────┼──┤  board_climbs     │  │
-│  │  (auth, social,      │  │  board_climb_stats│  │
-│  │   party, queue sync) │  │  board_holes      │  │
-│  │                      │  │  board_layouts    │  │
-│  │  BLE Adapter ────────┼──┤  board_sets       │  │
-│  │  (native bridge)     │  │  board_grades     │  │
-│  │                      │  │  ...              │  │
-│  └──────────────────────┘  └──────────────────┘  │
-│                                                  │
-│  Server (boardsesh.com) provides:                │
-│  - Auth (NextAuth cookies)                       │
-│  - Real-time queue sync (GraphQL WS)             │
-│  - Social features (comments, follows)           │
-│  - Aurora API proxy (data sync)                  │
-│  - User ticks/logbook                            │
-└─────────────────────────────────────────────────┘
+   ┌──────────────── boardsesh.com (Railway) ───────────────┐
+   │                                                          │
+   │  packages/web (Next.js standalone build)                 │
+   │   • SEO routes server-rendered (homepage, profile,       │
+   │     setter, climb view, public playlist, /b/...)         │
+   │   • Auth endpoints (NextAuth)                            │
+   │   • OG image routes (until they move to backend)         │
+   │                                                          │
+   │  packages/backend (Hono + graphql-ws + Yoga)             │
+   │   • GraphQL queries + mutations + subscriptions          │
+   │   • Hono handlers for auth callbacks, OG, webhooks       │
+   │                                                          │
+   │  Postgres + PostGIS (Railway)                            │
+   │  Redis (Railway, for pub/sub + sessions)                 │
+   └──────────────────────────────────────────────────────────┘
+                             ▲
+                             │ HTTPS GraphQL + WebSocket
+                             │ (cross-origin from app)
+                             │
+   ┌──────────────── mobile/ (Capacitor 8) ──────────────────┐
+   │                                                          │
+   │  iOS (WKWebView) / Android (System WebView)              │
+   │   • Loads bundled Next.js static export from             │
+   │     capacitor://localhost (Phase 2 onward)               │
+   │   • Bearer-token auth (no cross-origin cookie reliance)  │
+   │                                                          │
+   │  Local data:                                             │
+   │   • Refdata SQLite per board (ODR / Asset Pack)          │
+   │   • cached_ticks / cached_playlists / cached_profile     │
+   │   • pending_mutations (write queue)                      │
+   │                                                          │
+   │  Native code:                                            │
+   │   • BLE central                                          │
+   │   • LiveActivity (iOS)                                   │
+   │   • Connectivity monitor                                 │
+   │   • Native tab bar (open question — see "Tab bar" below) │
+   └──────────────────────────────────────────────────────────┘
 ```
 
-### What Gets Embedded
+## Why Capacitor (kept brief)
 
-**Read-only reference data** (bundled as SQLite per board):
+We've already chosen this. We're on Cap 8 with a working BLE adapter, LiveActivity extension, and a hosted shell that ships to both stores. The relevant question now is not "Capacitor vs React Native" but "hosted vs bundled," covered next.
 
-| Table                              | Est. Rows (per board) | Purpose                                                    |
-| ---------------------------------- | --------------------- | ---------------------------------------------------------- |
-| `board_climbs`                     | 30,000-50,000         | Climb name, description, frames, setter, edges             |
-| `board_climb_stats`                | 30,000-50,000         | Difficulty, ascensionist count, quality rating (per angle) |
-| `board_difficulty_grades`          | ~30                   | Grade name translations (V0, V1, etc.)                     |
-| `board_holes`                      | ~2,000                | Hold position grid (x, y coords for rendering)             |
-| `board_layouts`                    | ~80                   | Layout definitions                                         |
-| `board_product_sizes`              | ~150                  | Size/edge data (for edge filtering)                        |
-| `board_products`                   | ~5                    | Product metadata                                           |
-| `board_sets`                       | ~50                   | Set definitions                                            |
-| `board_product_sizes_layouts_sets` | ~500                  | Configuration junction table                               |
+## Hosted vs bundled mode
 
-**NOT embedded** (stays server-side):
+Today the WebView loads `https://www.boardsesh.com`. After the offline-first work, it loads bundled HTML from `capacitor://localhost`. Both modes share the same `packages/web` source tree. The differences are:
 
-| Data                      | Reason                            |
-| ------------------------- | --------------------------------- |
-| User accounts & auth      | NextAuth server-side sessions     |
-| User ticks / logbook      | Synced via GraphQL, user-specific |
-| Queue state               | Real-time sync via WebSocket      |
-| Comments, follows, social | Server-side features              |
-| Aurora API sync state     | Server-side sync tracking         |
+| | Hosted (today) | Bundled (Phase 2+) |
+|---|---|---|
+| Initial load | Network round-trip on every cold start | Local files, no network |
+| Update cadence | Every Vercel/Railway deploy ships to all users | Only WebView JS via OTA (see "Rollback") OR app store update |
+| Auth | NextAuth cookie inside same-origin WebView | Bearer token (see "Auth" below) |
+| Service worker | Possible but not enabled | Not needed |
+| App-bound domains | iOS gates WebView APIs to boardsesh.com | Custom-scheme load is unaffected; app-bound list still applies to outbound `<iframe>` and `WKWebsiteDataStore` scoping |
+| App Store "wrapper" risk | Higher | Lower (app has clear native value with bundled assets + offline) |
 
-### Database Size Estimates
+## The dual-build mechanism (concrete)
 
-| Board     | Uncompressed | Compressed (ZIP/SQLite) |
-| --------- | ------------ | ----------------------- |
-| Kilter    | ~400-500 MB  | ~120-150 MB             |
-| Tension   | ~300-400 MB  | ~90-120 MB              |
-| MoonBoard | ~100-150 MB  | ~30-50 MB               |
+`output: 'export'` is project-wide. You cannot mark some pages as "exportable" and others as "SSR-only" via a flag. The plan must own one of these mechanisms:
 
-The `frames` column (hold positions as text like `p1234r12p5678r13`) dominates the size and compresses well.
+**Chosen: parallel `app/` trees driven by `pageExtensions`.**
 
-### Delivery Strategy
+- The standalone build runs `next build` with default `pageExtensions: ['tsx', 'ts', 'jsx', 'js']`.
+- The export build runs `next build` with `output: 'export'` and `pageExtensions: ['bundled.tsx', 'bundled.ts', 'tsx', 'ts', 'jsx', 'js']`.
+- For routes that work identically in both builds (most in-app pages already fetch client-side), there is one file: `app/foo/page.tsx`.
+- For routes that differ, both files exist: `app/foo/page.tsx` (used by standalone) and `app/foo/page.bundled.tsx` (used by export). The bundled version is a client component that reads route params and queries via the query router.
+- SEO routes that have no business inside the bundle (homepage, public profile, public playlist, climb view, setter) get a `page.bundled.tsx` that **redirects to the in-app equivalent** or 404s. They are not user-reachable in the bundled app.
 
-To avoid bloating the initial app download:
+Why this beats the alternatives:
 
-- **iOS:** Use **On-Demand Resources (ODR)** — each board's SQLite database is a separate ODR tag. Downloaded when the user first selects that board. App Store hosts up to 20 GB of ODR.
-- **Android:** Use **Play Asset Delivery** (asset packs) — similar concept, each board is a separate asset pack downloaded on demand.
-- **Initial app size:** ~10-15 MB (native shell + BLE plugin, no board data)
-- **Per-board download:** ~100-150 MB (one-time, on first board selection)
+- A runtime branch on `process.env.BUILD_TARGET` inside server components doesn't compile under `output: 'export'` — `cookies()` and friends are static-build-incompatible.
+- A whole-tree codemod that strips server-only imports has too much surface area to maintain.
+- Two separate Next.js apps doubles the dev / CI / type-check cost and forks the routing.
 
-```
-First launch flow:
-1. User opens app → sees board selection screen (no download needed)
-2. User selects "Kilter" → "Downloading Kilter climb data (120 MB)..."
-3. SQLite database is copied to app documents directory
-4. User can now search and browse Kilter climbs offline
-5. Periodic sync updates the local database with new climbs
-```
+The cost: every server page either needs a `.bundled.tsx` sibling (small effort for SEO pages — they redirect or 404 in-bundle) or a real client conversion (the 7 pages with `next/headers` calls and the 4 with direct DB imports). Estimate: 10–15 page conversions, plus ~20 small `.bundled.tsx` redirect stubs.
 
-### Query Layer
+A single `next.config.mjs` reads `BUILD_TARGET=export` and switches `output`, `pageExtensions`, and disables image optimization (`images.unoptimized: true`) for the export profile. CI runs both builds; the bundled artifact is consumed by `mobile/` via a script that copies `packages/web/out/` into `mobile/dist/`.
 
-The web app's climb search currently goes through the GraphQL backend → PostgreSQL. In Capacitor, we add a **local search path**:
+## Auth in bundled mode (decided)
 
-```typescript
-// packages/web/app/lib/ble/climb-search-adapter.ts
-export async function searchClimbsLocal(
-  params: ParsedBoardRouteParameters,
-  searchParams: ClimbSearchParams,
-): Promise<ClimbSearchResult> {
-  if (!isNativeApp()) {
-    // Fall through to server-side search
-    return searchClimbsRemote(params, searchParams);
-  }
+**Bearer token. NextAuth cookies are not used inside the bundled app.**
 
-  const db = await getLocalDatabase(params.board_name);
+The plan needs to commit to one model rather than mix cookies and tokens. Cross-origin cookies from `capacitor://localhost` to `https://www.boardsesh.com` rely on `SameSite=None; Secure` plus WebKit ITP behavior that is moving in the wrong direction across iOS releases. Bearer tokens dodge the entire category.
 
-  // The search query is equivalent to the PostgreSQL version but in SQLite SQL
-  const results = await db.query(
-    `
-    SELECT c.uuid, c.name, c.description, c.frames, c.setter_username,
-           cs.ascensionist_count, cs.quality_average, cs.display_difficulty,
-           dg.boulder_name as difficulty
-    FROM board_climbs c
-    LEFT JOIN board_climb_stats cs
-      ON cs.climb_uuid = c.uuid AND cs.board_type = ? AND cs.angle = ?
-    LEFT JOIN board_difficulty_grades dg
-      ON dg.difficulty = ROUND(cs.display_difficulty) AND dg.board_type = ?
-    WHERE c.board_type = ? AND c.layout_id = ? AND c.is_listed = 1
-      AND c.is_draft = 0 AND c.frames_count = 1
-      AND c.edge_left > ? AND c.edge_right < ?
-      AND c.edge_bottom > ? AND c.edge_top < ?
-    ORDER BY cs.ascensionist_count DESC
-    LIMIT ? OFFSET ?
-  `,
-    [
-      params.board_name,
-      params.angle,
-      params.board_name,
-      params.board_name,
-      params.layout_id,
-      sizeEdges.edgeLeft,
-      sizeEdges.edgeRight,
-      sizeEdges.edgeBottom,
-      sizeEdges.edgeTop,
-      pageSize + 1,
-      page * pageSize,
-    ],
-  );
+Concretely:
 
-  // Transform to Climb[] (same shape as server response)
-  return transformResults(results);
+1. **Login flow (unchanged at the user level).** WebView opens the existing `/auth/native-start` flow in the Capacitor Browser plugin (SFSafariViewController on iOS, Custom Tabs on Android). That flow runs OAuth in the system browser's cookie context, then redirects to `com.boardsesh.app://auth/callback?token=<short-lived-hmac-token>`.
+2. **Token exchange.** Native code intercepts the deep link, closes the browser tab, and POSTs the short-lived token to `/api/auth/native/callback` (existing endpoint, kept in `packages/web` standalone build). The server validates the HMAC and returns a long-lived session JWT (rotated weekly) plus a refresh token.
+3. **Storage.** The session JWT and refresh token are stored via `@capacitor/preferences` (which uses Keychain on iOS, encrypted SharedPreferences on Android). Not localStorage. Not IndexedDB.
+4. **Use.** A fetch interceptor in `packages/web/app/lib/auth/native-token.ts` attaches `Authorization: Bearer <jwt>` to every GraphQL request. WebSocket connection attaches the token via connection params, replacing the current `/api/internal/ws-auth` cookie-based handshake.
+5. **Refresh.** When the JWT is within 24h of expiry, the interceptor uses the refresh token to mint a new pair. Refresh failures (revoked, expired refresh) trigger a re-auth via the Browser plugin.
+6. **`useSession` replacement.** A small `NativeSessionProvider` reads from `@capacitor/preferences` on mount and exposes a hook with the same shape as NextAuth's `useSession`. Components don't change. Standalone web continues using NextAuth's `SessionProvider`.
+
+What this means for the backend:
+
+- A bearer-token middleware in `packages/backend/src/middleware/auth.ts` validates the JWT and resolves the session. The current cookie path stays for the standalone web's GraphQL requests. Both paths populate the same `GraphQLContext.session`.
+- `/api/internal/ws-auth` (cookie → token exchange) remains for the standalone web. The bundled app skips it.
+- The native callback endpoint (`/api/auth/native/callback`) issues bearer tokens in addition to setting the existing transfer-token-based cookie path.
+
+What this does **not** require:
+
+- Migrating NextAuth to `packages/backend`. Out of scope for this plan.
+- A separate auth host. Standalone web keeps NextAuth as-is.
+
+## Query router and shape contract
+
+The router decides per query whether to read from local SQLite, from remote GraphQL, or both. The shape problem (local data lacks user-specific fields) is handled by a discriminated return type, not by silently returning a different shape.
+
+```ts
+// packages/web/app/lib/data/query-router.ts
+
+export type QuerySource = 'local' | 'remote' | 'remote-fresh';
+
+export interface QueryResult<T> {
+  data: T;
+  source: QuerySource;
+  // Fields that are present on the remote shape but stripped here.
+  // Components that need them must gate on source === 'remote' or 'remote-fresh'.
+  stripped?: ReadonlyArray<keyof T>;
+  fetchedAt: number;
 }
-```
 
-**Key differences from server query:**
-
-- No `boardsesh_ticks` subqueries (user progress filters only work online)
-- No `ILIKE` (SQLite uses `LIKE` which is case-insensitive by default for ASCII)
-- `ROUND()` works the same in SQLite
-- Offline search returns climb data without user-specific ascent/attempt counts
-
-### Sync Strategy
-
-The local database needs periodic updates as new climbs are added to Aurora's platform:
-
-1. **Initial load:** `copyFromAssets()` copies the bundled SQLite database
-2. **Periodic sync (background):** When online, query the server for climbs updated since `last_sync_timestamp`
-3. **Delta updates:** Insert/update only changed climbs — don't re-download the entire database
-4. **Sync endpoint:** New API route `GET /api/internal/climb-sync?board=kilter&since=2026-03-01` returns recent climbs as JSON
-5. **Sync frequency:** On app launch (if online) + every 24 hours in background
-
-```typescript
-// Sync flow
-async function syncClimbDatabase(boardName: BoardName) {
-  const lastSync = await getPreference(`${boardName}_last_sync`);
-  const response = await fetch(`/api/internal/climb-sync?board=${boardName}&since=${lastSync}`);
-  const { climbs, stats, deletedUuids } = await response.json();
-
-  const db = await getLocalDatabase(boardName);
-  await db.transaction(async (tx) => {
-    for (const climb of climbs) {
-      await tx.run('INSERT OR REPLACE INTO board_climbs ...', climb);
-    }
-    for (const stat of stats) {
-      await tx.run('INSERT OR REPLACE INTO board_climb_stats ...', stat);
-    }
-    for (const uuid of deletedUuids) {
-      await tx.run('DELETE FROM board_climbs WHERE uuid = ?', [uuid]);
-    }
-  });
-
-  await setPreference(`${boardName}_last_sync`, new Date().toISOString());
+export interface RouteSpec<TArgs, T> {
+  local?: (args: TArgs) => Promise<{ data: T; stripped: ReadonlyArray<keyof T> }>;
+  remote: (args: TArgs) => Promise<T>;
+  prefer: 'local-first' | 'cache-first' | 'remote-only';
+  // For cache-first: how stale before we block on the remote call.
+  staleAfterMs?: number;
 }
+
+export async function boardseshQuery<TArgs, T>(
+  route: RouteSpec<TArgs, T>,
+  args: TArgs,
+): Promise<QueryResult<T>>;
 ```
 
-### Build Pipeline
+Concrete contracts per route group:
 
-**Key insight:** The Kilter and Tension data originally comes from **Aurora's own SQLite databases** extracted from their APKs (see `packages/db/docker/Dockerfile.dev-db`). The dev database pipeline already extracts these SQLite files, converts them, and imports into PostgreSQL via pgloader. For the mobile app, we can **reverse this pipeline** — export from PostgreSQL back to SQLite, but only the tables/columns needed for mobile search.
+| Route group | `prefer` | Local source | Stripped fields | Notes |
+|---|---|---|---|---|
+| `climbs.search` | `local-first` (in bundled), `remote` (web) | refdata SQLite | `userAttemptCount`, `userTopAttempts`, `userQualityRating` | Components show user fields only when `source === 'remote-fresh'` |
+| `climbs.byUuid` | `local-first` | refdata SQLite | same as search | |
+| `holds.forLayout` | `local-first` | refdata SQLite | none | Pure refdata |
+| `ticks.forUser` | `cache-first`, 60s | `cached_ticks` | none — cache holds the full shape, including user fields, because it's user-specific data | Background refresh on focus / online |
+| `playlists.forUser` | `cache-first`, 60s | `cached_playlists` | none | |
+| `profile.me` | `cache-first`, 5min | `cached_profile` | none | |
+| `partySession.state` | `remote-only` | n/a | n/a | Subscription, not query |
+| `feed.activity` | `remote-only` | n/a | n/a | Online-only |
+| `comments.forClimb` | `remote-only` | n/a | n/a | Online-only |
 
-The database uses a **unified table design** with a `board_type` discriminator column (not separate `kilter_*`/`tension_*` tables), so per-board export is a simple `WHERE board_type = ?` filter.
+Components that use a route consume `QueryResult<T>` and pattern-match on `source` for online-only fields. The TypeScript type prevents reading `userAttemptCount` from a result whose source is `'local'` — `stripped` narrows it to `undefined`.
+
+Cache priming: the bundled app, on first online launch after auth, runs a background `primeCache()` job that pulls the user's full ticks list, playlists, and profile. It surfaces a one-line progress indicator ("Syncing your climbs"). On subsequent launches, only deltas refresh.
+
+## Mutation queue
+
+Local writes go through a single function that always returns optimistically and queues for sync.
+
+```ts
+// packages/web/app/lib/data/mutation-queue.ts
+
+export interface QueuedMutation<TArgs> {
+  id: string;                  // UUID v7, generated client-side, used as idempotency key
+  name: string;                // 'tick.create' | 'playlist.addClimb' | ...
+  args: TArgs;
+  attempts: number;
+  lastAttemptAt: number | null;
+  lastError: { kind: 'transient' | 'terminal'; message: string } | null;
+  createdAt: number;
+}
+
+export async function boardseshMutate<TArgs, T>(
+  spec: MutationSpec<TArgs, T>,
+  args: TArgs,
+): Promise<{ optimisticResult: T; queued: boolean }>;
+```
+
+Contracts:
+
+- **Idempotency keys are mandatory.** Every mutation generates a `clientMutationId` (UUID v7) on enqueue. The server's GraphQL middleware looks up that key in a `mutation_dedup` table; if seen, it returns the prior result without re-executing. This is the only safe way to handle "did the network request succeed before the connection dropped."
+- **Optimistic UI commits to local SQLite immediately.** The mutation is also written to `pending_mutations`. The TanStack Query cache is invalidated locally so the UI refreshes from the new local state.
+- **Sync.** On reconnect (or app foreground if `pending_mutations` is non-empty), a single drainer pulls mutations in `createdAt` order and submits them to the backend with their `clientMutationId`. Concurrency = 1 to preserve user-perceived order.
+- **Error classification.** Network errors are `transient`: retry with exponential backoff (2s, 8s, 32s, 2m, 10m, 1h max). Server-validation errors (400-class GraphQL errors) are `terminal`: the mutation moves to a "needs attention" list with a tap-to-edit-or-discard UI.
+- **Conflict resolution per mutation:**
+  - `tick.create` — server-wins on the existence check; if the server says the tick already exists for this `(user, climb_uuid, climbed_at)`, the mutation succeeds idempotently. Always safe to retry.
+  - `playlist.addClimb` / `playlist.removeClimb` — server stores per-(playlist, climb) presence as a set; ops are idempotent.
+  - `playlist.rename` — last-write-wins with a server-side `updated_at` check. If the server's `updated_at` is newer than the client's `expectedUpdatedAt`, the local edit is kept in `pending_mutations` and the user sees a "playlist was changed elsewhere — keep mine / use theirs" prompt.
+  - Queue / party operations — never queued. Real-time only. If the user edits the queue offline, the local edits apply locally only; on reconnect the local queue replaces the server queue if the user has not been overridden by another party member (last-write-wins by client `updated_at`).
+
+The "needs attention" UI is part of Phase 6, not "post-launch polish." It must ship with Phase 5 because Phase 5 is when terminal errors first become visible to users.
+
+## Embedded SQLite (refdata)
+
+This is the existing M1.5 work, rolled into Phase 3.
+
+### Sizing — to be measured, not estimated
+
+Prior versions cited "Kilter ~120-150 MB compressed." That was a guess. Before committing to a delivery model, run:
 
 ```bash
-# packages/db/scripts/export-mobile-sqlite.sh
-# Run periodically (e.g., weekly via GitHub Action) to generate fresh SQLite snapshots
-
-for BOARD in kilter tension moonboard; do
-  echo "Exporting $BOARD..."
-
-  # Create SQLite database with schema
-  sqlite3 "$BOARD.db" < packages/db/scripts/mobile-sqlite-schema.sql
-
-  # Export from PostgreSQL → SQLite using the unified tables
-  # Only export listed, non-draft climbs with their stats
-  psql $DATABASE_URL -c "\COPY (
-    SELECT uuid, board_type, layout_id, setter_username, name, description,
-           frames, frames_count, edge_left, edge_right, edge_bottom, edge_top,
-           is_listed, is_draft, created_at
-    FROM board_climbs
-    WHERE board_type = '$BOARD' AND is_listed = true AND is_draft = false
-  ) TO STDOUT WITH CSV HEADER" | sqlite3 "$BOARD.db" ".import --csv /dev/stdin board_climbs"
-
-  # Export climb stats (per angle)
-  psql $DATABASE_URL -c "\COPY (
-    SELECT climb_uuid, board_type, angle, display_difficulty, benchmark_difficulty,
-           ascensionist_count, difficulty_average, quality_average
-    FROM board_climb_stats
-    WHERE board_type = '$BOARD'
-  ) TO STDOUT WITH CSV HEADER" | sqlite3 "$BOARD.db" ".import --csv /dev/stdin board_climb_stats"
-
-  # Export reference tables (small, export all rows for this board)
-  # board_holes, board_layouts, board_product_sizes, board_sets,
-  # board_products, board_difficulty_grades, board_product_sizes_layouts_sets
-
-  # Create indexes for search performance
-  sqlite3 "$BOARD.db" < packages/db/scripts/mobile-sqlite-indexes.sql
-
-  # Vacuum and compress
-  sqlite3 "$BOARD.db" "VACUUM;"
-  zip "$BOARD.db.zip" "$BOARD.db"
-
-  echo "$BOARD: $(du -h $BOARD.db.zip | cut -f1) compressed"
-done
+bun run packages/db/scripts/measure-mobile-export.ts
 ```
 
-A GitHub Action runs this weekly and publishes the SQLite snapshots as release assets or to a CDN for On-Demand Resources / Play Asset Delivery.
-
-### SQLite Indexes for Mobile Search
-
-The search query needs these indexes for good performance:
-
-```sql
--- packages/db/scripts/mobile-sqlite-indexes.sql
-
--- Primary search index (matches the main WHERE clause)
-CREATE INDEX idx_climbs_search ON board_climbs(
-  board_type, layout_id, is_listed, is_draft, frames_count
-);
-
--- Edge filtering (size-specific boundary checks)
-CREATE INDEX idx_climbs_edges ON board_climbs(
-  board_type, layout_id, edge_left, edge_right, edge_bottom, edge_top
-);
-
--- Stats lookup (JOIN condition + sort columns)
-CREATE INDEX idx_stats_lookup ON board_climb_stats(
-  board_type, climb_uuid, angle
-);
-
--- Difficulty range filtering
-CREATE INDEX idx_stats_difficulty ON board_climb_stats(
-  board_type, angle, display_difficulty
-);
-
--- Name search (SQLite's LIKE is case-insensitive for ASCII by default)
-CREATE INDEX idx_climbs_name ON board_climbs(name COLLATE NOCASE);
-
--- Setter filtering
-CREATE INDEX idx_climbs_setter ON board_climbs(setter_username);
-```
-
-### Impact on Milestones
-
-This feature adds a new **Milestone 1.5: Embedded Climb Database** between BLE Integration and Native Polish:
-
-**Milestone 1.5: Embedded Climb Database (2 weeks)**
-
-Tasks:
-
-- [ ] Set up `@capacitor-community/sqlite` plugin
-- [ ] Create PostgreSQL → SQLite export script with proper schema translation
-- [ ] Generate SQLite databases for each board (Kilter, Tension, MoonBoard)
-- [ ] Implement On-Demand Resources (iOS) / Play Asset Delivery (Android) for per-board downloads
-- [ ] Create `searchClimbsLocal()` query function mirroring the server-side search
-- [ ] Implement board selection → download → database init flow
-- [ ] Create sync endpoint (`/api/internal/climb-sync`)
-- [ ] Implement delta sync on app launch
-- [ ] Add offline indicator and graceful degradation (hide user-specific features when offline)
-- [ ] Test search performance locally vs server (should be faster)
-- [ ] Test offline flow: airplane mode → search → build queue → connect BLE → send climb
-
-Exit criteria:
-
-- Users can search and browse climbs offline after initial board download
-- Climb search is at least as fast as the server-side search
-- Delta sync keeps local database current when online
-- Offline queue + BLE works end-to-end without internet
-
-### Hybrid Offline Strategy
-
-With the embedded database, the offline story becomes much stronger:
-
-| Feature                    | Online                    | Offline                       |
-| -------------------------- | ------------------------- | ----------------------------- |
-| Climb search               | Local SQLite (fast)       | Local SQLite (same)           |
-| Climb details              | Local + server enrichment | Local only (no user stats)    |
-| Queue management           | Synced via GraphQL WS     | Local queue in IndexedDB      |
-| BLE board control          | Works                     | Works                         |
-| User progress (ticks)      | Available                 | Hidden (requires server)      |
-| Social (comments, follows) | Available                 | Hidden                        |
-| Party mode                 | Available                 | Unavailable                   |
-| Auth                       | NextAuth cookies          | Cached session (if persisted) |
-
----
-
-## Package Structure
-
-```
-boardsesh/
-├── packages/
-│   ├── web/                    # Existing (minor adaptations)
-│   ├── backend/                # Existing (unchanged)
-│   ├── shared-schema/          # Existing (unchanged)
-│   ├── db/                     # Existing (unchanged)
-│   │
-│   └── mobile/                 # NEW: Capacitor native shell
-│       ├── android/            # Android project (generated by Capacitor)
-│       │   ├── app/
-│       │   │   ├── src/main/
-│       │   │   │   ├── AndroidManifest.xml
-│       │   │   │   ├── java/.../MainActivity.java
-│       │   │   │   └── res/
-│       │   │   └── build.gradle
-│       │   └── build.gradle
-│       ├── ios/                # iOS project (generated by Capacitor)
-│       │   └── App/
-│       │       ├── App/
-│       │       │   ├── AppDelegate.swift
-│       │       │   ├── Info.plist
-│       │       │   └── capacitor.config.json
-│       │       └── App.xcworkspace
-│       ├── capacitor.config.ts # Capacitor configuration
-│       ├── package.json
-│       └── tsconfig.json
-```
-
-### capacitor.config.ts
-
-```typescript
-import type { CapacitorConfig } from '@capacitor/cli';
-
-const config: CapacitorConfig = {
-  appId: 'com.boardsesh.app',
-  appName: 'Boardsesh',
-  // Hosted mode: load from production URL
-  server: {
-    url: 'https://boardsesh.com',
-    // Allow navigation within the app's domain
-    allowNavigation: ['boardsesh.com', '*.boardsesh.com'],
-  },
-  ios: {
-    // Use WKWebView (default, supports modern JS)
-    contentInset: 'automatic',
-    backgroundColor: '#121212', // Match dark theme
-    preferredContentMode: 'mobile',
-  },
-  android: {
-    // Allow mixed content for dev
-    allowMixedContent: true,
-    backgroundColor: '#121212',
-  },
-  plugins: {
-    StatusBar: {
-      style: 'dark',
-      backgroundColor: '#121212',
-    },
-    Keyboard: {
-      // Use 'native' so Android resizes the WebView itself (matching mobile
-      // Chrome's visualViewport behavior). 'body' injects inline styles on
-      // <body>, which fights with @capacitor-community/safe-area's inset
-      // handling. With 'native', existing 100dvh / 100% layouts (e.g. the
-      // climb-name filter drawer with placement="top" fullHeight) shrink to
-      // fit above the keyboard with no web-side changes.
-      resize: 'native',
-      resizeOnFullScreen: true,
-    },
-    SplashScreen: {
-      launchAutoHide: true,
-      androidScaleType: 'CENTER_CROP',
-      splashFullScreen: true,
-      splashImmersive: true,
-      backgroundColor: '#121212',
-    },
-  },
-};
-
-export default config;
-```
-
----
-
-## Capacitor Bridge Injection Strategy
-
-**Critical architectural decision:** In hosted mode, the Capacitor WebView loads `https://boardsesh.com` — a regular web app that doesn't bundle `@capacitor/core` or any Capacitor plugins. The Capacitor native bridge is injected into the WebView by the native shell, making `window.Capacitor` available. However, **plugin JS code** (e.g., `@capacitor-community/bluetooth-le`) also needs to be available in the page context.
-
-### How Plugin JS Gets Loaded
-
-In hosted mode, Capacitor automatically injects the core bridge and registered plugin JS into the WebView before the page loads. This means:
-
-1. **`window.Capacitor`** is available — the core bridge is injected by the native shell
-2. **Registered plugin classes** are available on `window.Capacitor.Plugins` — each native plugin registers its JS interface during injection
-3. **The web app does NOT need `@capacitor/core` or plugin packages as dependencies** — the JS bridge is injected, not bundled
-
-### Web Package Strategy
-
-The BLE abstraction layer in `packages/web/app/lib/ble/` should:
-
-- **Use `window.Capacitor.Plugins.BluetoothLe`** directly (or dynamic import) instead of importing from `@capacitor-community/bluetooth-le`
-- **Guard all Capacitor plugin access** with `isCapacitor()` checks
-- **Never add Capacitor packages to the web package's `dependencies`** — they add unnecessary bundle size for browser users and their JS isn't needed (the bridge injects it)
-
-```typescript
-// packages/web/app/lib/ble/capacitor-adapter.ts
-// Access the plugin via the injected bridge, not via npm import
-async function getBleClient() {
-  if (!isCapacitor()) throw new Error('Not in Capacitor');
-  // The plugin JS is injected by the native shell
-  const { BleClient } = await import('@capacitor-community/bluetooth-le');
-  return BleClient;
-}
-```
-
-> **Note:** If the dynamic import approach doesn't work in hosted mode (since the package isn't in node_modules on the web server), fall back to accessing `window.Capacitor.Plugins.BluetoothLe` directly and wrapping it with a typed interface. Validate this in Milestone 0.
-
-### Type Safety
-
-Install Capacitor plugin packages as **devDependencies** in the web package for TypeScript types only:
-
-```json
-{
-  "devDependencies": {
-    "@capacitor-community/bluetooth-le": "^6.0.0"
-  }
-}
-```
-
-This gives TypeScript type checking without adding anything to the production bundle.
-
----
-
-## Web App Adaptations
-
-The web app needs minimal changes to work well inside the Capacitor shell. All changes are backward-compatible — the app continues to work in regular browsers.
-
-### 1. Detect Capacitor Environment
-
-```typescript
-// packages/web/app/lib/capacitor.ts
-export const isCapacitor = (): boolean => typeof window !== 'undefined' && window.Capacitor !== undefined;
-
-export const isNativeApp = (): boolean => isCapacitor() && window.Capacitor?.isNativePlatform();
-
-export const getPlatform = (): 'ios' | 'android' | 'web' =>
-  isCapacitor() ? (window.Capacitor?.getPlatform() as 'ios' | 'android') : 'web';
-```
-
-### 2. BLE Abstraction Layer
-
-The existing `bluetooth.ts` uses Web Bluetooth API directly. We need an abstraction that uses the native BLE plugin when running in Capacitor and falls back to Web Bluetooth in regular browsers.
-
-See [Bluetooth Strategy](#bluetooth-strategy) for details.
-
-### 3. Remove X-Frame-Options for Capacitor
-
-The Capacitor WebView loads the site in a frame-like context. The current `X-Frame-Options: SAMEORIGIN` header in `next.config.mjs` needs to be relaxed for Capacitor requests. This can be done by checking the User-Agent or using a custom header:
-
-```typescript
-// In next.config.mjs headers()
-{
-  source: '/:path*',
-  headers: [
-    // Only set X-Frame-Options for non-Capacitor requests
-    // Capacitor WebView doesn't actually use iframes, so SAMEORIGIN
-    // usually works fine. Test and adjust if needed.
-    { key: 'X-Frame-Options', value: 'SAMEORIGIN' },
-    { key: 'X-Content-Type-Options', value: 'nosniff' },
-    { key: 'Strict-Transport-Security', value: 'max-age=31536000; includeSubDomains' },
-    { key: 'Referrer-Policy', value: 'strict-origin-when-cross-origin' },
-  ],
-},
-```
+Output: per-board uncompressed and zstd-compressed sizes, with and without the indexes named below. Phase 3 commits to ODR / Asset Pack only if compressed Kilter fits under 200 MB (the iOS cellular-download prompt threshold). If it doesn't, Phase 3 either:
 
-> Note: Capacitor's WKWebView on iOS and Android WebView don't load pages via iframes — they load the URL directly in the WebView. So `X-Frame-Options: SAMEORIGIN` should not cause issues. Verify during Milestone 0.
+- Drops `frames` from the bundled snapshot and fetches it on-demand the first time a climb is viewed (cached locally after); or
+- Splits per-layout, not per-board, so users only download the layout(s) they actually use.
 
-### 4. Safe Area Insets
+The decision happens before Phase 3 starts implementation. There's a one-week measurement spike at the top of Phase 3 to lock in the choice.
 
-Add CSS for device safe areas (notch, rounded corners):
+### Schema and indexes
 
-```css
-/* Already in the web app's global styles or MUI theme */
-:root {
-  --safe-area-top: env(safe-area-inset-top);
-  --safe-area-bottom: env(safe-area-inset-bottom);
-  --safe-area-left: env(safe-area-inset-left);
-  --safe-area-right: env(safe-area-inset-right);
-}
-```
+Local SQLite tables: `board_climbs`, `board_climb_stats`, `board_difficulty_grades`, `board_holes`, `board_layouts`, `board_product_sizes`, `board_products`, `board_sets`, `board_product_sizes_layouts_sets`. Schema lives at `packages/db/scripts/mobile-sqlite-schema.sql`.
 
-The app layout's top app bar and bottom navigation need to respect these insets. MUI's `AppBar` and `BottomNavigation` should add padding using these CSS variables when `isNativeApp()` is true.
+Indexes in `mobile-sqlite-indexes.sql`:
 
-### 5. Deep Link Handling
+- `idx_climbs_search` on `(board_type, layout_id, is_listed, is_draft, frames_count)`
+- `idx_climbs_edges` on `(board_type, layout_id, edge_left, edge_right, edge_bottom, edge_top)`
+- `idx_stats_lookup` on `(climb_uuid, angle)` — `board_type` lives on `board_climbs`, not `board_climb_stats`, so the index doesn't include it
+- `idx_stats_difficulty` on `(angle, display_difficulty)`
+- `idx_climbs_name_nocase` on `(name COLLATE NOCASE)`
+- `idx_climbs_setter` on `(setter_username)`
 
-Configure Capacitor's App plugin to handle deep links:
+Search query goes through `searchClimbsLocal()` in `packages/web/app/lib/data/local/climbs.ts`. The function shape exactly matches the GraphQL query's TypeScript output type, with user-specific fields stripped (returned as `undefined` and surfaced via `stripped` per the query router contract).
 
-```typescript
-import { App } from '@capacitor/app';
+### Sync — two channels
 
-// Listen for deep links (boardsesh://climb/xxx, universal links)
-App.addListener('appUrlOpen', ({ url }) => {
-  const path = new URL(url).pathname;
-  router.push(path);
-});
-```
+1. **New climbs.** Endpoint `GET /api/internal/climb-sync?board=<board>&since=<iso>` returns `{ inserted: Climb[], updated: Climb[], deletedUuids: string[] }`. Runs on app launch and every 24h while online.
+2. **Stats refresh.** `board_climb_stats` (`ascensionist_count`, `quality_average`, `display_difficulty`) changes on every climb every day as Aurora aggregates new ticks. A separate `GET /api/internal/stats-sync?board=<board>&since=<iso>` returns delta rows. Runs weekly, or whenever the user pulls-to-refresh on a stats-heavy view. The UI shows "stats updated 3 days ago" when stale.
 
-### 6. Hide Web-Only Elements
+Both endpoints stream JSON to keep memory low on the client.
 
-Some elements should be hidden in the native app:
+### Build pipeline
 
-- Browser install prompts / PWA banners
-- "Use Bluefy for iOS Bluetooth" messages (native BLE works)
-- Any browser-specific instructions
+`packages/db/scripts/export-mobile-sqlite.ts` runs from a GitHub Action weekly, uploads per-board `.zst` snapshots to Cloudflare R2 (CDN), and triggers a `mobile-bundle-refresh` workflow that updates the ODR / Asset Pack manifests. Mobile shell version is **not** bumped on snapshot updates — the app downloads the new snapshot on next launch.
 
-```typescript
-// Use isNativeApp() to conditionally render
-{!isNativeApp() && <BluefyBanner />}
-```
+## Hosting migration to Railway
 
----
+Cutover phase. Independent of Capacitor work but the export build benefits from a stable backend host before it ships.
 
-## Authentication in WebView
+### Move list
 
-**This is a critical concern the plan must address.** The app uses NextAuth with JWT strategy, storing sessions in cookies (`__Secure-next-auth.session-token` and `next-auth.session-token`).
+| Component | From | To | Risk |
+|---|---|---|---|
+| Postgres | Neon (serverless) | Railway Postgres + PostGIS | Connection pool sizing; PostGIS version (need 3.4+ for `ST_HexagonGrid` used by heatmap) |
+| DB driver | `drizzle-orm/neon-serverless` (HTTP) | `drizzle-orm/postgres-js` (TCP) | Already what local dev uses; production cold-start TLS adds ~50ms per fresh connection |
+| `packages/backend` | Existing host | Railway, co-located with DB | Subscription reconnect storm during cutover |
+| `packages/web` standalone Next.js | Vercel | Railway (long-lived Node container, not serverless) | Loses Vercel image-optimization endpoint; loses Vercel Cron |
+| OG images (`/api/og/*`) | Vercel Edge (`satori`) | Backend Hono with `satori` + `@resvg/resvg-js`, same URL shape preserved | Existing Discord / Twitter cards must keep resolving |
+| Image optimization | Vercel image endpoint | Cloudflare Images in front of R2 origin, custom `next/image` loader | One-time loader rewrite in `next.config.mjs` |
+| Cron jobs (`/api/internal/{user-sync-cron,cleanup,inferred-sessions-backfill,prewarm-heatmap}`) | Vercel Cron | Railway cron service hitting the same internal HTTP endpoints with a shared-secret `CRON_TOKEN` header | Endpoints already exist; auth wrapper must be added before Vercel is shut down |
+| Aurora sync | `packages/aurora-sync` runner (currently triggered from Vercel) | Railway scheduled service in the same stack | Re-point `DATABASE_URL` only |
 
-### Cookie Behavior in WebViews
+### Cutover sequence
 
-| Platform        | Cookie Jar           | Persistence                       | Shared with Browser? |
-| --------------- | -------------------- | --------------------------------- | -------------------- |
-| iOS WKWebView   | Separate from Safari | May be cleared on app termination | No                   |
-| Android WebView | Separate from Chrome | Generally persistent              | No                   |
-
-**Key implications:**
-
-- Users logged in via Safari/Chrome will **not** be logged in when they open the Capacitor app — they must log in again
-- WKWebView on iOS can lose cookies when the OS terminates the app process (memory pressure, user force-quit)
-- The `__Secure-` cookie prefix requires HTTPS, which works for production but complicates local development
-
-### WebSocket Auth Chain
-
-The real-time queue/party features use this auth flow:
-
-1. Web app calls `GET /api/internal/ws-auth` which reads the NextAuth session cookie via `getToken()`
-2. If the cookie is missing or expired, `getToken()` returns `null` → WebSocket connects without auth
-3. Backend receives `null` token → mutations and subscriptions that require auth fail silently
-
-**If cookies don't persist, users appear logged in (cached UI state in IndexedDB) but real-time features break.**
-
-### Mitigation Strategy
-
-1. **Milestone 0: Validate cookie persistence** — Test login → force-quit app → relaunch → verify session on both platforms
-2. **If cookies are unreliable, implement a fallback:**
-   - On successful login, store the JWT token in `@capacitor/preferences` (secure storage)
-   - On app launch, check if session cookie exists; if not, restore from secure storage
-   - Pass the stored token to WebSocket connection params as a backup
-3. **Session refresh:** Add logic to detect expired sessions and prompt re-login with a native-feeling sheet, not a full page redirect
-
-### Native OAuth (Implemented)
-
-Social login (Google, Apple, Facebook) cannot use `signIn()` from the WebView because the WebView and external browser have separate cookie jars. Instead, the app opens `/auth/native-start` in the Capacitor Browser plugin, which runs the entire OAuth flow in the external browser's cookie context. After OAuth completes, the server issues a short-lived HMAC-signed transfer token and redirects to a `com.boardsesh.app://` deep link. The native app intercepts the deep link, closes the browser, and uses the transfer token to create a session inside the WebView via a `native-oauth` credentials provider.
-
-See [OAuth Setup: Native App Authentication](./oauth-setup.md#native-app-authentication-capacitor) for the full flow and file references.
-
-### CORS Considerations
-
-The backend CORS handler (`packages/backend/src/handlers/cors.ts`) whitelists specific origins:
-
-- iOS WKWebView loading `https://boardsesh.com` sends `Origin: https://boardsesh.com` — should work
-- Android WebView may send `Origin: null` for certain requests
-- The backend currently allows connections without an origin header (for native app support), which helps but should be combined with auth token validation for defense in depth
-
-**Action:** Verify Android WebView origin behavior in Milestone 0.
-
----
-
-## Implementation Milestones
-
-### Milestone 0: Proof of Concept + Auth Validation (2 weeks)
-
-> **Goal:** Verify the web app loads correctly in Capacitor WebView, native BLE plugin can connect, auth works end-to-end, and the Capacitor bridge injection strategy works in hosted mode.
-
-**Tasks:**
-
-- [ ] Initialize Capacitor project in `packages/mobile/`
-- [ ] Configure `capacitor.config.ts` with hosted URL (use staging/dev URL initially)
-- [ ] Add iOS and Android platforms
-- [ ] Build and run on iOS simulator (verify web app loads)
-- [ ] Build and run on Android emulator (verify web app loads)
-- [ ] Test on physical iOS device (verify web app loads, navigation works)
-- [ ] Test on physical Android device
-- [ ] **Auth validation:** Log in → force-quit app → relaunch → verify session persists (both platforms)
-- [ ] **Auth validation:** Verify WebSocket connection authenticates correctly in the WebView
-- [ ] **Auth validation:** If cookies are unreliable, prototype `@capacitor/preferences` token backup
-- [ ] **Bridge injection:** Verify `window.Capacitor` is available on page load in hosted mode
-- [ ] **Bridge injection:** Verify plugin classes are accessible via `window.Capacitor.Plugins`
-- [ ] **Bridge injection:** Test dynamic import vs direct `window.Capacitor.Plugins.BluetoothLe` access
-- [ ] Install `@capacitor-community/bluetooth-le` plugin
-- [ ] Write a minimal test: scan for Aurora boards, connect, send one LED command
-- [ ] Verify that Web Bluetooth still works in Android Chrome (no regressions)
-- [ ] Verify `X-Frame-Options` doesn't block Capacitor WebView
-- [ ] **CORS:** Verify Android WebView origin header behavior with the backend
-- [ ] **Bluefy banner:** Verify iOS detection behavior in WebView (confirm `isIOS` is true, `isBluetoothSupported` is false — must fix in Milestone 1)
-
-**Exit Criteria:**
-
-- Web app loads and is fully functional in Capacitor on both platforms
-- Auth works end-to-end: login, session persistence across app restarts, WebSocket auth
-- Bridge injection strategy validated (dynamic import or window.Capacitor.Plugins approach chosen)
-- Native BLE successfully connects to a Kilter or Tension board and lights LEDs on iOS
-- Android CORS behavior documented, no blockers
-- No regressions to the web app in regular browsers
-
----
-
-### Milestone 1: BLE Integration (2-3 weeks)
-
-> **Goal:** Replace Web Bluetooth with native BLE when running inside Capacitor, while maintaining Web Bluetooth for regular browser usage.
-
-**Tasks:**
-
-- [ ] Create BLE abstraction layer (`packages/web/app/lib/ble/`)
-  - [ ] Define common interface (`BluetoothAdapter`) — see expanded interface below
-  - [ ] Implement `WebBluetoothAdapter` (wraps existing `navigator.bluetooth` code)
-  - [ ] Implement `CapacitorBleAdapter` (wraps native BLE plugin via bridge injection strategy from Milestone 0)
-  - [ ] Factory function that returns the right adapter based on environment
-- [ ] **Fix chunking responsibility:** The adapter's `write()` must handle all transport-level chunking internally. Remove `splitMessages()` from the call site in `use-board-bluetooth.ts`. Callers pass the full packet (`getBluetoothPacket()` output); the adapter splits it for transport.
-- [ ] Port protocol logic (packet framing, encoding) to work with both adapters
-- [ ] Update `use-board-bluetooth.ts` to use the abstraction
-- [ ] Update `bluetooth-context.tsx`:
-  - [ ] Remove iOS/Bluefy-specific warnings when `isNativeApp()` is true
-  - [ ] `isBluetoothSupported` returns `true` when `isCapacitor()` is true
-  - [ ] Hide Bluefy download banner in native app context
-- [ ] Handle BLE permissions on both platforms
-  - [ ] iOS: Request Bluetooth permission
-  - [ ] Android: Request location + Bluetooth permissions (Android 12+ vs older)
-- [ ] Test connect/disconnect/reconnect cycles
-- [ ] Test sending multiple climbs in sequence
-- [ ] Test BLE when app is backgrounded and foregrounded
-- [ ] Test on multiple physical devices (at least 2 iOS, 2 Android)
-
-**Exit Criteria:**
-
-- BLE works reliably on iOS and Android via native plugin
-- Web Bluetooth continues to work in Chrome/Bluefy
-- No double-chunking — verified by inspecting BLE traffic on a physical board
-- Switching climbs auto-sends correct LEDs
-- Wake lock keeps screen on during session
-- Bluefy banner hidden in Capacitor on iOS
-
----
-
-### Milestone 2: Native Polish (1.5 weeks)
-
-> **Goal:** Make the app feel native — proper status bar, splash screen, safe areas, deep links, offline handling.
-
-**Tasks:**
-
-- [ ] Configure splash screen (icon, colors matching brand) — dedicated native screen, not just WebView spinner
-- [ ] Configure app icons for all required sizes (iOS + Android)
-- [ ] Implement safe area inset handling in CSS
-- [ ] Configure status bar (dark/light based on theme)
-- [ ] Set up deep link handling
-  - [ ] `boardsesh://` custom scheme
-  - [ ] Universal links (iOS) / App links (Android) for **specific paths only** (`/party/*`, `/invite/*`) — not the entire domain, to avoid hijacking all boardsesh.com links from users who prefer the browser
-  - [ ] Handle party session join links
-  - [ ] Handle climb detail links
-  - [ ] Add "Open in browser" option in the app
-- [ ] Add haptic feedback for key actions (via `@capacitor/haptics`)
-  - [ ] Climb sent to board
-  - [ ] Queue item added
-  - [ ] Bluetooth connected
-- [ ] Add `@capacitor/keyboard` for proper keyboard behavior
-- [ ] Add `@capacitor/app` for back button handling (Android)
-- [ ] Test pull-to-refresh behavior
-- [ ] **Offline handling:**
-  - [x] Install `@capacitor/network` plugin _(superseded: implemented native Android/iOS connectivity monitoring directly in shell code)_
-  - [ ] Add offline detection screen showing cached queue from IndexedDB
-  - [ ] Show "reconnecting..." banner when connectivity is lost mid-session
-  - [ ] Ensure app has _some_ functionality without internet (cached queue view, BLE connection to board)
-- [ ] **Native crash reporting:** Add Sentry iOS/Android SDKs for crashes outside the WebView (BLE plugin crashes, WebView crashes)
-
-**Exit Criteria:**
-
-- App looks and feels native (no web artifacts visible)
-- Deep links open correct screens (scoped paths only)
-- Status bar, safe areas, and keyboard behavior are correct
-- Haptic feedback on key interactions
-- Offline screen shows cached content instead of blank page
-- Native crashes are reported to Sentry
-
----
-
-### Milestone 3: App Store Submission (2 weeks)
-
-> **Goal:** Prepare and submit to both app stores. Moved before push notifications — the app can ship without push for v1.0.
-
-**Tasks:**
-
-- [ ] Create app store listings
-  - [ ] App description emphasizing BLE board control (not "web wrapper")
-  - [ ] Screenshots (iPhone, iPad, Android phone, Android tablet)
-  - [ ] Feature graphic (Play Store)
-  - [ ] Keywords / categories
-- [ ] Prepare legal documents
-  - [ ] Privacy policy (what data is collected, BLE usage)
-  - [ ] Terms of service
-- [ ] Configure app signing
-  - [ ] iOS: Certificates, provisioning profiles, App Store Connect
-  - [ ] Android: Keystore, Play Console setup
-- [ ] Set up CI/CD for app builds
-  - [ ] GitHub Actions workflow for building iOS (via Xcode Cloud or Fastlane)
-  - [ ] GitHub Actions workflow for building Android
-  - [ ] Automated version bumping
-- [ ] **Version handshake:** Add `NATIVE_SHELL_MIN_VERSION` to web app config. On launch, web app checks native shell version via `window.Capacitor` and shows "update your app" prompt if too old.
-- [ ] Beta testing
-  - [ ] iOS TestFlight distribution
-  - [ ] Android Play Store internal testing track
-  - [ ] Gather feedback from 5-10 beta users
-- [ ] **App Store review preparation:**
-  - [ ] In review notes, guide Apple reviewers to BLE connection feature with video demo
-  - [ ] Highlight native features: BLE, haptics, offline mode, native splash screen
-  - [ ] Ensure the offline screen demonstrates the app isn't just a web wrapper
-  - [ ] Address any review feedback
-- [ ] Submit to app stores
-
-**Exit Criteria:**
-
-- Apps accepted and published on both stores
-- CI/CD pipeline builds and signs apps automatically
-- Beta feedback addressed
-- Version handshake works (old native shells prompt for update)
-
----
-
-### Milestone 4: Push Notifications (2-3 weeks, post-launch)
-
-> **Goal:** Native push notifications for party invites, session events, and social interactions. This is a significant backend + frontend effort and can ship as a v1.1 update.
-
-**Tasks:**
-
-- [ ] Install `@capacitor/push-notifications`
-- [ ] **Backend: device token storage** — new database table for device tokens, user association, platform type
-- [ ] **Backend: push sending service** — Firebase Admin SDK (Android) + APNs (iOS)
-- [ ] Set up Firebase Cloud Messaging project (Android)
-- [ ] Set up Apple Push Notification service certificates/keys (iOS)
-- [ ] Create backend endpoints to register/unregister device tokens
-- [ ] Implement push notification types:
-  - [ ] Party session invite
-  - [ ] Climb comment/reply
-  - [ ] New follower
-  - [ ] Session activity (someone joined/left)
-- [ ] Handle notification tap → deep link to relevant screen
-- [ ] Handle foreground notifications (in-app banner)
-- [ ] Implement notification permissions request flow
-- [ ] Test both platforms in foreground, background, and killed states
-
-**Exit Criteria:**
-
-- Push notifications arrive on both platforms
-- Tapping notification opens correct screen
-- Foreground notifications show as in-app banners
-- User can control notification preferences
-
----
-
-## Bluetooth Strategy
-
-### Current Architecture (Web Bluetooth)
+1. Stand up Railway Postgres + PostGIS. Confirm PostGIS version, run heatmap test query against a restored snapshot.
+2. Stand up Railway backend pointing at Railway DB. Run e2e suite against backend at staging hostname.
+3. Stand up Railway standalone Next.js pointing at Railway DB. Run e2e suite at staging.
+4. Add `CRON_TOKEN` to all `/api/internal/*-cron` endpoints. Verify auth path.
+5. Move Aurora sync runner. Verify next scheduled run completes.
+6. DNS flip for `boardsesh.com`. Keep Vercel project warm for 48h as instant rollback.
+7. Decommission Vercel + Neon after a 7-day burn-in.
+
+Estimate: 4 weeks. The original 2-3w estimate did not include the Vercel-specific carry items (cron + image opt + OG).
+
+## REST → GraphQL completion
+
+Out of 44 `route.ts` files in `packages/web/app/api/`, the destinations:
+
+| Group | Count | Destination |
+|---|---|---|
+| `/api/internal/*` data ops (search, sync, profile, favorites, hold-classifications, climb-redirect, etc.) | 18 | GraphQL in `packages/backend`. Existing resolvers cover ~10 already; remaining 8 are net-new resolvers. |
+| `/api/v1/[board_name]/*` (grades, slugs, climb-stats, heatmap) | 14 | GraphQL with same shape. URL shape kept via thin proxy shims in standalone build during overlap, removed after. |
+| `/api/v1/[board_name]/proxy/*` (Aurora: login, saveAscent, saveClimb, getLogbook, user-sync) | 5 | GraphQL mutations wrapping Aurora calls server-side. |
+| `/api/auth/*` (NextAuth + native callback + register + verify-email + providers-config) | 6 | Stay in `packages/web` standalone build. Bundled app uses bearer tokens and the existing native callback. |
+| `/api/og/*` (climb, profile, playlist, setter, session) | 5 | Backend Hono with `satori`, same URL shape preserved at `boardsesh.com` (the standalone build proxies `/api/og/*` to backend; backend renders). |
+| `/api/internal/*-cron` and `ws-auth` | 4 | Stay in `packages/web` standalone build, wrapped with `CRON_TOKEN`. `ws-auth` stays for the cookie path. |
+
+Sequence: migrate by category, smallest first, with parallel resolver + thin shim until the shim can be deleted. Estimate: 6 weeks for the new resolvers + Hono OG carve-out + shim removal.
+
+## Bluetooth Strategy (status quo + chunking fix)
+
+The adapter abstraction already exists at `packages/web/app/lib/ble/`. The remaining items:
+
+1. Verify `splitMessages()` in the protocol layer is no longer called by callers — the adapter's `write()` owns chunking. Tests in `__tests__/capacitor-adapter.test.ts` should assert this for the Capacitor adapter; add an equivalent for `web-adapter.test.ts` if missing.
+2. MTU negotiation on Cap 8: confirm `BleClient.requestMtu` API shape matches what the adapter assumes. Cap 8 changed Android MTU semantics; verify on a physical Pixel before Phase 2.
+3. The Bluefy banner suppression in native is already gated on `isNativeApp()` per existing code. Spot-check on next iOS build.
+
+No new BLE work is on the critical path.
+
+## Native polish (incremental)
+
+Add as needed, not all at once:
+
+- `@capacitor/haptics` — lightweight, add when first haptic-tagged interaction is requested.
+- `@capacitor/keyboard` — already partially handled by `@capacitor-community/safe-area`; add only if specific keyboard issues surface.
+- `@capacitor/status-bar` and `@capacitor/splash-screen` — defer until store reviewers flag them or until UI consistency requires them.
+- `@capacitor/network` — needed for the connectivity banner in Phase 6. Add as part of that phase.
+
+Deep links: existing `boardsesh://` and Universal Link / App Link config already covers `/party/*` and `/invite/*`. Do not register the entire `boardsesh.com` domain — that hijacks the browser experience.
+
+## Analytics and observability
+
+- **PostHog**, single project, separate environments. `posthog-js` in the web (works in both standalone and bundled). Server events from `packages/backend` via `posthog-node`. `distinct_id` lives in IndexedDB in bundled mode (not localStorage), bootstrapped from a device-stable identifier (`@capacitor/device` `identifier` field).
+- **Sentry** in JS today. Add Sentry iOS / Android SDKs in the same milestone the bundled app first ships (Phase 2). Source maps uploaded for both standalone and export builds.
+- **Build-time stub** for both PostHog and Sentry to avoid firing during `next build`.
+
+Cross-cutting, not phased.
+
+## App Store distribution
+
+### Review notes (committed text, not aspiration)
+
+When submitting:
+
+> Boardsesh controls climbing-board hardware via Bluetooth Low Energy. The app embeds a per-board climb database (~150 MB, downloaded on first board selection) so users can search and browse climbs without internet. Reviewers cannot pair to a physical Kilter or Tension board, so the demo flow below shows the offline-only functionality:
+>
+> 1. Open the app. Select "Kilter" → wait for board data download.
+> 2. Without an account: tap "Browse climbs." Search for "Crimpy" — results render from the local database (no network indicator visible).
+> 3. Tap any climb → the climb detail page renders with hold positions and grade.
+> 4. Tap the BLE icon → device picker appears (will not find a board in the test environment, but the picker proves native BLE is active).
+>
+> The app is not a thin web wrapper. The offline climb database, BLE control, and LiveActivity (visible from the lock screen during a session) are native features unavailable to a website.
+
+### Plan B if rejected
+
+iOS Store Guideline 4.2 rejections happen unpredictably even with strong native features. If iOS is rejected:
+
+1. Ship Android first via Play Store internal testing while iOS rework continues.
+2. Add a native onboarding flow (3 native screens before the WebView opens) that visually demonstrates non-WebView UI before the reviewer sees the WebView.
+3. Make the LiveActivity always-on during a session (currently optional) so it appears in the reviewer's lock screen automatically.
+4. Re-submit with an explicit reply to the rejection citing each native feature.
+
+The native-onboarding fallback is built but kept dormant; activate only if rejected.
+
+### Rollback for bundled-mode regressions
+
+The bundled JS is an app store update — slow rollback. To avoid 1-7 day outages:
+
+- **OTA evaluation** at the start of Phase 2: compare Capacitor Live Updates (Ionic), Capgo, and a self-hosted bundle-swap approach. Decision committed before Phase 2 ships. The plan does not assume an OTA solution; if the comparison concludes none is acceptable, Phase 2 also requires a feature flag in the bundled app that lets the app revert to hosted mode (`server.url = 'https://www.boardsesh.com'`) on next launch via a remote config flip.
+- **Remote-config kill switch** is the minimum: a fetch on launch to a small `app-config.json` on R2 / CDN that can flip the WebView back to hosted mode without an app store update. This is a hard requirement of Phase 2.
+
+## Phase plan (with explicit dependencies)
 
 ```
-bluetooth.ts          → Packet encoding, framing (platform-agnostic)
-use-board-bluetooth.ts → React hook using navigator.bluetooth
-bluetooth-context.tsx  → React context providing BLE to the component tree
+0a Hosting cutover ─┐
+                    ├─→ 1 Dual-build pipeline ─→ 2 Bundle switch ─→ 3 Refdata SQLite ─┐
+0b GraphQL cleanup ─┘                                                                   ├─→ 5 Mutation queue ─→ 6 Connectivity polish
+                                                                4 User-data cache ─────┘
 ```
 
-### Target Architecture (Abstracted)
-
-```
-packages/web/app/lib/ble/
-├── types.ts              # Common BluetoothAdapter interface
-├── web-adapter.ts        # Web Bluetooth implementation (existing logic)
-├── capacitor-adapter.ts  # Capacitor BLE plugin implementation
-├── adapter-factory.ts    # Returns correct adapter based on environment
-└── index.ts
-
-packages/web/app/components/board-bluetooth-control/
-├── bluetooth.ts          # Protocol encoding (unchanged, platform-agnostic)
-├── use-board-bluetooth.ts # Updated to use BluetoothAdapter interface
-└── bluetooth-context.tsx  # Updated, removes Bluefy warnings in native
-```
-
-### BluetoothAdapter Interface
-
-```typescript
-// packages/web/app/lib/ble/types.ts
-export interface BluetoothAdapter {
-  /**
-   * Whether BLE is actually available and enabled (not just supported).
-   * On native: checks BleClient.isEnabled() — BLE can be disabled in device settings.
-   * On web: checks navigator.bluetooth existence.
-   */
-  isAvailable(): Promise<boolean>;
-
-  /**
-   * Scan for and connect to a board. Returns a connection handle.
-   * Shows platform-appropriate device picker (Web Bluetooth dialog or native scan sheet).
-   */
-  requestAndConnect(serviceUUIDs: string[]): Promise<BleConnection>;
-
-  /** Disconnect from the current device */
-  disconnect(): Promise<void>;
-
-  /**
-   * Write the COMPLETE packet to the board's UART characteristic.
-   * The adapter handles transport-level chunking internally (20-byte for default MTU,
-   * or larger if MTU negotiation succeeded).
-   *
-   * IMPORTANT: Callers pass the full output of getBluetoothPacket() — do NOT pre-chunk
-   * with splitMessages(). The adapter owns fragmentation.
-   */
-  write(data: Uint8Array): Promise<void>;
-
-  /**
-   * Register a callback for disconnection events. Returns an unsubscribe function.
-   */
-  onDisconnect(callback: () => void): () => void;
-}
-
-export interface BleConnection {
-  deviceId: string;
-  deviceName?: string;
-}
-```
-
-### Capacitor BLE Plugin Usage
-
-```typescript
-// packages/web/app/lib/ble/capacitor-adapter.ts
-import { BleClient, numberToUUID } from '@capacitor-community/bluetooth-le';
-
-const AURORA_SERVICE_UUID = '4488b571-7806-4df6-bcff-a2897e4953ff';
-const UART_SERVICE_UUID = '6e400001-b5a3-f393-e0a9-e50e24dcca9e';
-const UART_WRITE_UUID = '6e400002-b5a3-f393-e0a9-e50e24dcca9e';
-
-export class CapacitorBleAdapter implements BluetoothAdapter {
-  private deviceId: string | null = null;
-  private disconnectCallback: (() => void) | null = null;
-  private mtu = 20; // Default conservative MTU; updated after negotiation
-
-  async isAvailable(): Promise<boolean> {
-    try {
-      await BleClient.initialize();
-      return await BleClient.isEnabled();
-    } catch {
-      return false;
-    }
-  }
-
-  async requestAndConnect(serviceUUIDs: string[]): Promise<BleConnection> {
-    await BleClient.initialize();
-
-    // Request device (shows native scan dialog)
-    const device = await BleClient.requestDevice({
-      services: [serviceUUIDs[0]],
-      optionalServices: serviceUUIDs.slice(1),
-    });
-
-    // Connect
-    await BleClient.connect(device.deviceId, () => {
-      this.disconnectCallback?.();
-    });
-
-    // Negotiate larger MTU on Android (iOS negotiates automatically)
-    try {
-      const negotiatedMtu = await BleClient.requestMtu(device.deviceId, 512);
-      this.mtu = negotiatedMtu - 3; // MTU minus ATT header
-    } catch {
-      // MTU negotiation failed, use default 20
-    }
-
-    this.deviceId = device.deviceId;
-    return {
-      deviceId: device.deviceId,
-      deviceName: device.name,
-    };
-  }
-
-  async disconnect(): Promise<void> {
-    if (this.deviceId) {
-      await BleClient.disconnect(this.deviceId);
-      this.deviceId = null;
-    }
-  }
-
-  async write(data: Uint8Array): Promise<void> {
-    if (!this.deviceId) throw new Error('Not connected');
-
-    // Adapter owns chunking — callers pass the full packet from getBluetoothPacket().
-    // Chunk size based on negotiated MTU (default 20 bytes).
-    const chunkSize = this.mtu;
-    for (let i = 0; i < data.length; i += chunkSize) {
-      const chunk = data.slice(i, i + chunkSize);
-      await BleClient.write(this.deviceId, UART_SERVICE_UUID, UART_WRITE_UUID, chunk);
-    }
-  }
-
-  onDisconnect(callback: () => void): () => void {
-    this.disconnectCallback = callback;
-    return () => {
-      this.disconnectCallback = null;
-    };
-  }
-}
-```
-
-### Protocol Layer
-
-The existing `getBluetoothPacket()` and encoding functions in `bluetooth.ts` are already platform-agnostic — they work with `Uint8Array` and don't touch any browser APIs. They remain unchanged.
-
-**Important change:** `splitMessages()` (which splits into 20-byte chunks) must be **moved into the adapters**, not called by the hook. The hook currently calls `splitMessages(bluetoothPacket)` then `writeCharacteristicSeries()`. After refactoring, the hook calls `adapter.write(fullPacket)` and the adapter handles chunking internally. This prevents double-chunking when the Capacitor adapter also splits, and allows the Capacitor adapter to use a larger chunk size via MTU negotiation.
-
----
-
-## Development Workflow
-
-### Local Development Setup
-
-For day-to-day development, the Capacitor app points at the local dev server instead of production:
-
-```typescript
-// capacitor.config.dev.ts (not committed — or use environment variable)
-const config: CapacitorConfig = {
-  ...baseConfig,
-  server: {
-    url: 'http://LOCAL_IP:3000', // Use machine's LAN IP, not localhost
-    cleartext: true, // Allow HTTP for local dev
-  },
-};
-```
-
-Run with live reload:
-
-```bash
-# Start web dev server
-npm run dev
-
-# Run on iOS with live reload
-cd packages/mobile
-npx cap run ios --livereload --external
-
-# Run on Android with live reload
-npx cap run android --livereload --external
-```
-
-### BLE Testing
-
-BLE requires **physical devices** — simulators/emulators do not support Bluetooth:
-
-- **iOS:** Requires an Apple Developer account, provisioning profile, and a physical iPhone/iPad
-- **Android:** Enable USB debugging, connect via ADB
-- Test with at least one Kilter board and one Tension board if possible
-
-### Debugging
-
-- **iOS WebView:** Safari → Develop menu → select device → inspect WebView
-- **Android WebView:** Chrome → `chrome://inspect` → select device → inspect WebView
-- **Native logs:** Xcode console (iOS), Logcat (Android) — useful for BLE plugin debugging
-- **Network:** WebView network requests appear in Safari/Chrome DevTools just like regular browser requests
-
-### Device Testing Matrix
-
-| Device         | OS Version  | Screen      | Purpose                               |
-| -------------- | ----------- | ----------- | ------------------------------------- |
-| iPhone 13+     | iOS 16+     | Notched     | Safe areas, primary iOS testing       |
-| iPhone SE      | iOS 16+     | Non-notched | Small screen, no safe area top        |
-| iPad           | iPadOS 16+  | Large       | Tablet layout                         |
-| Pixel 6+       | Android 12+ | Standard    | Primary Android testing               |
-| Samsung Galaxy | Android 11  | Variable    | Older Android, Samsung WebView quirks |
-
----
-
-## App Store Distribution
-
-### App Store Review Considerations
-
-**Apple App Store:**
-
-- Apps that are primarily web wrappers may be rejected under guideline 4.2 (Minimum Functionality). Mitigation: The native BLE integration provides genuine native functionality that isn't available in Safari. The app is not a "thin client" — it enables hardware control that is impossible via the browser.
-- BLE usage description must clearly explain why the app needs Bluetooth access.
-- Privacy nutrition labels must accurately describe data collection.
-
-**Google Play Store:**
-
-- WebView apps are generally accepted if they provide value.
-- BLE permissions must be justified in the app listing.
-- Target API level requirements must be met (currently API 34+).
-
-### Version Strategy
-
-Since the web app updates independently of the native shell:
-
-- **Native shell version** (e.g., 1.0.0, 1.1.0): Bumped when native plugins, configs, or platform code changes. Requires app store review.
-- **Web app version**: Deploys via Vercel as usual. No app store review needed. Updates are instant for all users.
-
-In practice, the native shell should rarely need updates after initial launch — most changes happen in the web layer.
-
-### CI/CD Pipeline
-
-```yaml
-# .github/workflows/mobile-build.yml (simplified)
-name: Mobile Build
-on:
-  push:
-    paths:
-      - 'packages/mobile/**'
-    branches: [main]
-
-jobs:
-  build-android:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - run: cd packages/mobile && bun install
-      - run: bunx cap sync android
-      - run: cd android && ./gradlew assembleRelease
-      - uses: actions/upload-artifact@v4
-        with:
-          name: android-release
-          path: packages/mobile/android/app/build/outputs/apk/release/
-
-  build-ios:
-    runs-on: macos-latest
-    steps:
-      - uses: actions/checkout@v4
-      - run: cd packages/mobile && bun install
-      - run: bunx cap sync ios
-      - run: xcodebuild -workspace ios/App/App.xcworkspace -scheme App -archivePath build/App.xcarchive archive
-      # ... signing and export steps
-```
-
----
-
-## Risk Assessment
-
-### Technical Risks
-
-| Risk                                                      | Likelihood | Impact | Mitigation                                                                                                                                                                                                                                                       |
-| --------------------------------------------------------- | ---------- | ------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Apple rejects as "web wrapper"                            | **Medium** | High   | Strong mitigations: embedded SQLite climb database with offline search, native BLE board control, haptics, On-Demand Resources for per-board data. Reviewers see genuine native functionality even without a board. Include guided review notes with video demo. |
-| WebView cookie/auth persistence issues                    | **High**   | High   | Milestone 0 validates auth end-to-end. Fallback: store JWT in `@capacitor/preferences` and restore on launch.                                                                                                                                                    |
-| Capacitor bridge injection in hosted mode                 | **Medium** | High   | Milestone 0 validates plugin JS availability. Test both dynamic import and `window.Capacitor.Plugins` approaches.                                                                                                                                                |
-| BLE double-chunking in adapter layer                      | **Medium** | High   | Adapter owns all chunking. Verify with physical board that LED patterns are correct.                                                                                                                                                                             |
-| Capacitor BLE plugin incompatibility with Aurora protocol | Low        | High   | Milestone 0 validates end-to-end BLE. Plugin uses CoreBluetooth (iOS) / Android BLE APIs directly.                                                                                                                                                               |
-| WebView performance on older devices                      | Low        | Medium | Capacitor uses WKWebView (iOS) and modern Chromium WebView (Android). The web app already runs well in mobile browsers.                                                                                                                                          |
-| Network dependency (hosted mode)                          | Medium     | Medium | Offline detection screen with cached queue. Service worker for API response caching.                                                                                                                                                                             |
-| Android WebView CORS origin issues                        | Medium     | Medium | Verify in Milestone 0. Backend allows null origin but should validate auth token.                                                                                                                                                                                |
-| Version mismatch between web and native shell             | Medium     | Medium | Version handshake on launch; "update your app" prompt for old shells.                                                                                                                                                                                            |
-
-### Schedule Risks
-
-| Risk                                       | Likelihood | Impact | Mitigation                                                                               |
-| ------------------------------------------ | ---------- | ------ | ---------------------------------------------------------------------------------------- |
-| App store review delays                    | Medium     | Medium | Submit early, have contingency time. Budget 2 weeks for review cycles.                   |
-| BLE edge cases on specific devices         | **High**   | Medium | Budget extra time in Milestone 1. Test on multiple physical devices (see device matrix). |
-| Auth/cookie debugging in WebView           | **High**   | Medium | Budget extra time in Milestone 0. Cookie persistence varies by OS version.               |
-| Push notification backend scope creep      | Medium     | Medium | Defer to v1.1 post-launch. Ship MVP without push.                                        |
-| Safe area / CSS issues on specific devices | Low        | Low    | Test on notched and non-notched devices.                                                 |
-
----
-
-## Success Criteria
-
-### MVP Definition
-
-The MVP includes Milestones 0-2.5 (~8.5 weeks):
-
-- Native app shell loading the web app with validated auth persistence
-- BLE working on iOS (primary motivation) and Android via abstraction layer
-- **Embedded SQLite climb database** with offline search (per-board On-Demand Resources)
-- Native look and feel (safe areas, status bar, splash screen, haptics)
-- Deep linking for party sessions (scoped paths, not entire domain)
-- Offline fallback with local climb search + BLE board control
-
-Milestone 3 (App Store submission, ~2 weeks) completes the v1.0 release.
-Push notifications (Milestone 4) ship as a v1.1 update post-launch.
-
-**Realistic total timeline: 12-15 weeks** (including app store review cycles, device-specific debugging, and SQLite integration).
-
-### Milestone Summary
-
-| Milestone             | Duration  | Key Deliverable                                       |
-| --------------------- | --------- | ----------------------------------------------------- |
-| 0: PoC + Auth         | 2 weeks   | WebView loads, auth works, bridge injection validated |
-| 1: BLE Integration    | 2-3 weeks | Native BLE with abstraction layer, no double-chunking |
-| 1.5: Embedded DB      | 2 weeks   | SQLite climb database, offline search, delta sync     |
-| 2: Native Polish      | 1.5 weeks | Safe areas, deep links, haptics, offline UI           |
-| 3: App Store          | 2 weeks   | Store submission, beta testing, review cycles         |
-| 4: Push (post-launch) | 2-3 weeks | FCM + APNs, device token backend, notification types  |
-
-### Performance Targets
-
-| Metric                    | Target                                          |
-| ------------------------- | ----------------------------------------------- |
-| App launch to interactive | < 3 seconds (depends on network + web app load) |
-| BLE connection            | < 5 seconds                                     |
-| BLE LED send              | < 1 second                                      |
-| Native shell size         | < 10 MB                                         |
-| Memory usage              | < 200 MB                                        |
-
-### Platform Requirements
-
-| Platform | Minimum Version                       |
-| -------- | ------------------------------------- |
-| iOS      | 16.0+ (Capacitor 6 requirement)       |
-| Android  | API 33 (Android 13)+ / Target API 34+ |
-
----
+| Phase | Estimate | Hard dependencies | Ships when |
+|---|---|---|---|
+| 0a Hosting → Railway | 4 weeks | none | Postgres + backend + standalone web on Railway, Vercel + Neon decommissioned |
+| 0b GraphQL completion | 6 weeks | none | All non-auth, non-OG REST routes have GraphQL equivalents; shims removable |
+| 1 Dual-build pipeline | 6 weeks | 0b largely done (so client conversions don't double-back) | `BUILD_TARGET=export` produces `out/` with a working app shell, both builds green in CI |
+| 2 Bundle switch (incl. OTA decision + bearer auth) | 4 weeks | 1 | Capacitor app launches in airplane mode, reaches the home screen, bearer-token auth works on physical iOS + Android, kill-switch verified |
+| 3 Refdata SQLite | 4 weeks (incl. 1-week measurement spike) | 2 | Per-board refdata downloads via ODR / Asset Pack, search and climb detail render from local DB offline |
+| 4 User-data cache | 5 weeks | 2 | Profile, ticks, playlists render offline after one online session; stale-while-revalidate refreshes on focus |
+| 5 Mutation queue | 5 weeks | 4 | Pinned user story end-to-end, with `mutation_dedup` server-side and "needs attention" UI for terminal failures |
+| 6 Connectivity polish | 2 weeks | 5 | Persistent online/offline banner, sync count, retry UI, onboarding mentions offline |
+| Cross-cutting (PostHog + Sentry + native crashes) | rolling, 1 week of dedicated work in Phase 2 | n/a | Native crashes report before Phase 2 ships |
+
+Critical path for the pinned user story: 0a (or 0b) → 1 → 2 → 3 → 4 → 5. Sum: ~30 weeks ≈ 7 months calendar time with one engineer, less with parallelism on 0a/0b and partial overlap of 3/4.
+
+The 5-6 month estimate in v7.0 was optimistic. **8 months is a realistic best case** with one full-time engineer; **10-12 months** is realistic with shared engineering capacity and store review cycles. Phases 4 and 5 are the largest single risks.
+
+## Risks (only the ones that change behavior)
+
+| Risk | Likelihood | Impact | Mitigation |
+|---|---|---|---|
+| Bearer-token refresh edge cases (clock skew, revoked refresh, network failure mid-refresh) | Medium | High | Refresh logic gets its own test suite. Failed refresh triggers re-auth via Browser plugin, not silent failure. |
+| Cross-origin GraphQL request gets stripped of `Authorization` header by some WKWebView/CORS edge case | Low | High | Backend logs requests with missing auth at `warn` level; alert if rate spikes after Phase 2 ships. |
+| Refdata SQLite > 200 MB compressed for Kilter | Medium | Medium | Phase 3 measurement spike. Fallback: per-layout split or `frames` lazy-fetch. |
+| `mutation_dedup` table grows unbounded | Low | Medium | Server expires entries older than 30 days; client never replays mutations older than 30 days. |
+| OTA solution all unacceptable; bundled-mode regressions stuck on app store cycle | Medium | High | Remote-config kill switch flips to hosted mode without app store update. |
+| Apple 4.2 rejection | Medium | High | Plan B above. Android-first and native-onboarding fallback. |
+| Vercel cron migration misses an endpoint | Medium | Medium | Inventory above is checked against `vercel.json` before cutover. |
+| Server pages with `next/headers` calls have hidden auth side effects that break in client-converted form | Medium | Medium | Each of the 7 conversions gets a paired Playwright test that exercises the auth-gated content. |
+| Phase 1 page-conversion estimate underestimates real complexity | Medium | Medium | First two conversions are timeboxed to 1 week total to validate the per-page cost; reschedule Phase 1 if the rate doesn't hold. |
+| Per-tab WKWebView pattern (PR #1509-style) blocked by bundled mode | Low (we're not committing to it) | Medium | Plan does not ship per-tab WebViews. See "Tab bar" below. |
+| Stats sync bandwidth on weekly refresh | Low | Low | Delta endpoint streams JSON, gzip-compressed. |
+
+## Tab bar
+
+The plan does not ship per-tab WKWebView. A single WebView with client-side routing matches bundled mode best (preserves TanStack Query cache, in-memory state, and JS context across tab switches). If WebView gesture/scroll performance becomes a real user complaint after Phase 5, revisit then for the most-affected surface only (the board canvas).
+
+## Success criteria
+
+| Layer | Done when |
+|---|---|
+| Hosting | `boardsesh.com`, backend, Postgres all on Railway. Vercel + Neon shut down. |
+| GraphQL | Non-auth REST routes have GraphQL equivalents. `/api/v1/*` and `/api/internal/*` data routes proxy to backend or are removed. |
+| Dual-build | Both `next build` and `BUILD_TARGET=export next build` succeed in CI. The export `out/` is consumed by `mobile/`. |
+| Bundle switch | Bundled iOS + Android apps launch in airplane mode, reach the home screen, and complete bearer-token auth from a fresh install. Kill-switch flip verified. |
+| Refdata | Search and climb detail render from local SQLite. First sync on online launch applies stat deltas without re-downloading the snapshot. |
+| User data | Ticks, playlists, profile render offline after one online session. SWR refresh < 2s on online transition. |
+| Mutation queue | Pinned user story passes in CI on a Capacitor simulator with network simulation. No duplicate ticks under network-failure replay. |
+| Polish | Online/offline banner, sync count, retry UI, onboarding line about offline. |
+
+### Performance targets
+
+| Metric | Target |
+|---|---|
+| Cold start to interactive (bundled) | < 1.5s on a 2022 mid-tier Android device |
+| Climb search latency (local SQLite) | < 100ms p95 for unfiltered queries |
+| BLE connection | < 5s |
+| BLE LED send | < 1s after connect |
+| Native shell binary | < 15 MB without refdata |
+| Refdata per-board download | target < 200 MB compressed (gating) |
+
+### Platform requirements
+
+| | Minimum |
+|---|---|
+| iOS | 14.0 (Capacitor 8 minimum) |
+| Android | API 23 (Capacitor 8 minimum); target API 34+ |
+
+## Considered alternatives (one paragraph each)
+
+**TanStack Start migration (was v6.0).** Move the entire web stack from Next.js to TanStack Start (Vite + TanStack Router). One Vite codebase, two builds. Rejected because the dual-build problem v8.0 solves with parallel `app/` trees does not require a framework swap, and the rewrite cost (8-10 weeks of route-file rewrites) buys no marginal user value.
+
+**React Native + Tamagui hybrid.** Native shell with Tamagui for critical-path screens, `react-native-webview` embedding `boardsesh.com` for the long tail. Rejected because it discards the existing Capacitor + LiveActivity + BLE adapter investment and forks the UI into two render systems (MUI on web, Tamagui on native). Worth revisiting only if WebView gesture performance becomes a real complaint after Phase 5, and only for the board canvas.
+
+**Migrate NextAuth to backend Hono.** Possible long-term cleanup. Out of scope for this plan because bearer-token auth in bundled mode and cookie auth in standalone web both work without it.
 
 ## Appendix
 
-### Dependencies
+### Capacitor 8 dependencies (current `mobile/package.json`)
 
 ```json
 {
   "dependencies": {
-    "@capacitor/core": "^6.0.0",
-    "@capacitor/app": "^6.0.0",
-    "@capacitor/haptics": "^6.0.0",
-    "@capacitor/keyboard": "^6.0.0",
-    "@capacitor/push-notifications": "^6.0.0",
-    "@capacitor/splash-screen": "^6.0.0",
-    "@capacitor/status-bar": "^6.0.0",
-    "@capacitor-community/bluetooth-le": "^6.0.0",
-    "@capacitor-community/sqlite": "^6.0.0",
-    "@capacitor-community/keep-awake": "^6.0.0",
-    "@capacitor/network": "^6.0.0"
+    "@capacitor-community/bluetooth-le": "^8",
+    "@capacitor-community/in-app-review": "^8.0.0",
+    "@capacitor-community/keep-awake": "^8",
+    "@capacitor-community/safe-area": "^8",
+    "@capacitor/android": "^8",
+    "@capacitor/app": "^8",
+    "@capacitor/browser": "^8",
+    "@capacitor/core": "^8",
+    "@capacitor/geolocation": "8.1.0",
+    "@capacitor/ios": "^8",
+    "@capacitor/motion": "^8"
   },
   "devDependencies": {
-    "@capacitor/cli": "^6.0.0"
+    "@capacitor/cli": "^8.3.1",
+    "typescript": "^5.9.3"
   }
 }
 ```
 
-### Platform Permissions
+Phases 3 and 4 add `@capacitor-community/sqlite`. Phase 6 adds `@capacitor/network`. Other plugins (`haptics`, `keyboard`, `status-bar`, `splash-screen`, `push-notifications`) are added on demand, not preemptively.
 
-**iOS (Info.plist):**
+### Permissions
+
+iOS `Info.plist`:
 
 ```xml
 <key>NSBluetoothAlwaysUsageDescription</key>
-<string>Boardsesh needs Bluetooth to connect to your climbing board and control LED holds</string>
+<string>Boardsesh connects to your climbing board to control LED holds.</string>
 <key>NSBluetoothPeripheralUsageDescription</key>
-<string>Connect to your climbing board to control LED holds</string>
+<string>Connect to your climbing board to control LED holds.</string>
 ```
 
-**Android (AndroidManifest.xml):**
+Android `AndroidManifest.xml`:
 
 ```xml
 <uses-permission android:name="android.permission.BLUETOOTH_CONNECT" />
 <uses-permission android:name="android.permission.BLUETOOTH_SCAN"
     android:usesPermissionFlags="neverForLocation" />
 <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
-<!-- For Android 11 and below -->
 <uses-permission android:name="android.permission.BLUETOOTH" />
 <uses-permission android:name="android.permission.BLUETOOTH_ADMIN" />
 ```
 
-### Deep Linking Configuration
+### Deep links
 
-**Custom URL Scheme:**
+Custom scheme:
 
-- `boardsesh://party/join/{sessionId}` — Join party session
-- `boardsesh://climb/{uuid}` — Open climb detail
-- `boardsesh://board/{boardName}/{layoutId}/{sizeId}/{setIds}/{angle}` — Open board config
+- `boardsesh://party/join/{sessionId}` — join party session
+- `boardsesh://climb/{uuid}` — open climb detail
+- `boardsesh://board/{boardName}/{layoutId}/{sizeId}/{setIds}/{angle}` — open board config
 
-**Universal Links (iOS) / App Links (Android):**
+Universal / App Links: scoped paths only (`/party/*`, `/invite/*`). Do not register the entire `boardsesh.com` domain.
 
-- `https://boardsesh.com/join/*` → opens app if installed (session invite links only)
-- **Do NOT register the entire `boardsesh.com` domain** — this would hijack all links and prevent users from using the website in their browser
-- Requires `apple-app-site-association` file on `boardsesh.com` (iOS)
-- Requires `assetlinks.json` on `boardsesh.com` (Android)
-- Include "Open in browser" option in the app for users who prefer the web
+### Capacitor vs web feature matrix (post-Phase 2)
 
-### Capacitor vs Web Feature Matrix
-
-| Feature              | Web (Chrome)         | Web (Safari iOS) | Capacitor iOS    | Capacitor Android |
-| -------------------- | -------------------- | ---------------- | ---------------- | ----------------- |
-| BLE                  | Web Bluetooth        | Not supported    | Native plugin    | Native plugin     |
-| Offline Climb Search | Not available        | Not available    | SQLite (bundled) | SQLite (bundled)  |
-| Push Notifications   | Web Push             | Limited          | APNs             | FCM               |
-| Haptics              | Not available        | Not available    | Native           | Native            |
-| Deep Links           | N/A                  | N/A              | Universal links  | App links         |
-| Wake Lock            | Screen Wake Lock API | Not supported    | KeepAwake plugin | KeepAwake plugin  |
-| App Store Presence   | N/A                  | N/A              | App Store        | Play Store        |
+| Feature | Web (Chrome) | Web (Safari iOS) | Capacitor (bundled) |
+|---|---|---|---|
+| BLE | Web Bluetooth | Not supported | Native plugin |
+| Offline climb search | Not available | Not available | Local SQLite |
+| Offline user data | Not available | Not available | Local SQLite cache |
+| Offline writes | Not available | Not available | Mutation queue |
+| Push notifications | Web Push | Limited | APNs / FCM (when shipped) |
+| Haptics | Not available | Not available | Native (when added) |
+| Wake lock | Screen Wake Lock API | Not supported | KeepAwake plugin |
+| Cold start to interactive | < 2s cached | < 2s cached | < 1.5s (bundled) |
 
 ---
 
-_Document version: 5.0_
-_Last updated: March 2026_
-_Replaces: v4.0 (March 2026) — added embedded SQLite database strategy_
+## Changelog
 
-### Changelog (v4.0 → v5.0)
+**v8.0 — current.**
+- Reflects actual repo state: `mobile/` lives at the repo root (not `packages/mobile/`); the Capacitor shell is on v8 (not v6); 14 backend GraphQL resolver domains already exist; only 7 server pages call `next/headers` and 4 import the DB directly.
+- Commits to bearer-token auth in bundled mode. Cross-origin cookies are no longer the path.
+- Specifies the dual-build mechanism concretely: parallel `page.tsx` / `page.bundled.tsx` files driven by `pageExtensions`, not a runtime branch.
+- Specifies the query router shape contract as a discriminated `QueryResult<T>` so components type-gate on `source` for online-only fields.
+- Specifies mutation idempotency: client-generated UUID v7 keys plus a `mutation_dedup` table on the backend.
+- Replaces the unmeasured SQLite size estimates with a Phase 3 measurement spike that gates the delivery model.
+- Expands the hosting cutover scope to include Vercel cron, image optimization, and OG image generation. Estimate up from 2-3w to 4w.
+- Honest dependency graph: phases are mostly sequential, not "each independently shippable." Critical path is ~30 weeks one-engineer, ~7 months calendar best case.
+- Adds a Plan B for App Store rejection and a hard requirement for a remote-config kill switch in Phase 2.
+- Drops per-tab WKWebView from the plan; single WebView with client routing.
+- Trims the document by ~50% from v7.0; historical changelogs (v3 → v7) and detailed rejected alternatives are preserved in the git history of `docs/mobile-app-plan.md` rather than this file.
 
-**Major addition:**
+**v7.0 — superseded by v8.0.** Pivoted to offline-first on Next.js dual-build. The strategic direction was right; the execution detail was thin and the timelines optimistic. v8.0 keeps the direction and tightens the rest.
 
-- Added "Embedded Climb Database (SQLite)" section — local SQLite database with per-board On-Demand Resources delivery, offline search, delta sync strategy
-- New Milestone 1.5: Embedded Climb Database (2 weeks)
-- Added `@capacitor-community/sqlite` to dependencies
-- Updated timeline from 10-13 weeks to 12-15 weeks
-- Updated feature matrix with "Offline Climb Search" row
-- Updated hybrid offline strategy table showing online/offline feature availability
-
-### Changelog (v3.0 → v4.0)
-
-**Critical fixes:**
-
-- Added "Capacitor Bridge Injection Strategy" section — explains how plugin JS loads in hosted mode
-- Added "Authentication in WebView" section — cookie persistence, WebSocket auth chain, CORS
-- Fixed BLE double-chunking bug — adapter's `write()` now owns all transport-level chunking
-- Expanded `BluetoothAdapter` interface — `isAvailable()`, `serviceUUIDs` param, MTU negotiation, unsubscribe pattern
-- Added "Why Not Local/Bundled Mode" section — documents why static export is infeasible
-
-**High severity fixes:**
-
-- Milestone 0 expanded to 2 weeks — includes auth validation, bridge injection testing, CORS verification, Bluefy banner check
-- Milestone 1 expanded to 2-3 weeks — includes chunking fix, device matrix testing
-- Added "Development Workflow" section — local dev, BLE testing, debugging, device matrix
-- Deep links scoped to specific paths (`/party/*`, `/invite/*`) — not entire domain
-- App Store risk upgraded from Medium to High with concrete mitigations
-
-**Medium fixes:**
-
-- Added offline fallback screen and `@capacitor/network` plugin to Milestone 2
-- Reordered milestones: App Store submission (M3) before Push Notifications (M4)
-- Push notifications expanded to 2-3 weeks and deferred to post-launch v1.1
-- Fixed `@capacitor-community/keep-awake` version from ^5.0.0 to ^6.0.0
-- Added native Sentry SDKs for crash reporting outside WebView
-- Added version handshake between web and native shell
-- Timeline updated from 5-6 weeks to 10-13 weeks realistic estimate
+**v3.0 → v6.0** — see git history of this file.
