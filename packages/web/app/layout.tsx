@@ -50,6 +50,10 @@ export const viewport: Viewport = {
   initialScale: 1,
   maximumScale: 1,
   viewportFit: 'cover',
+  // Match Mobile Safari behavior on Android: keyboard overlays the page
+  // without resizing the layout viewport, so 100dvh and position:fixed
+  // bottom bars stay anchored when an input is focused.
+  interactiveWidget: 'resizes-visual',
   themeColor: '#101012',
 };
 
