@@ -2,67 +2,91 @@
 /**
  * After `next build`, assert that the SWC client-preset plugin actually
  * tree-shook the gql.ts Documents map. A wrong `artifactDirectory` in
- * next.config.mjs silently no-ops the plugin, so we need a positive check.
+ * next.config.mjs (or a missing plugin entirely) silently no-ops the
+ * transform, so we need a positive check.
  *
- * The marker is `GetDeleteAccountInfoDocument` — the only graphql() call
- * site today (account.ts → delete-account-section.tsx → /settings).
- * If the plugin worked, the chunk holding that import must NOT contain
- * unrelated operation names that only the full Documents map would pull in.
+ * Strategy: parse generated/gql.ts to learn every operation name in the
+ * project, parse account.ts to learn the names that are *supposed* to be
+ * in the settings chunk (the only graphql() call site today), then assert
+ * that the rest don't appear there. As more operations migrate to
+ * graphql(), the absence list shrinks automatically — no maintenance.
+ *
+ * Operation names survive bundling as string literals inside the parsed
+ * Document AST (e.g. `name:{kind:"Name",value:"GetBetaLinks"}`), even
+ * though the *Document import identifiers get minified.
  */
 import { readdirSync, readFileSync, statSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const here = dirname(fileURLToPath(import.meta.url));
-const chunksDir = join(here, '..', '.next', 'static', 'chunks');
-
-// Query names survive bundling as string literals inside the parsed Document
-// AST. Import identifiers like *Document are minified, so we grep for the
-// operation name, which is stable across builds.
-const MARKER = 'GetDeleteAccountInfo';
-const MUST_BE_ABSENT = [
-  'GetBetaLinks',
-  'GetGlobalCommentFeed',
-  'GetUserAscentsFeed',
-  'UserFavoritesCounts',
-  'GetNewClimbFeed',
-];
+const webRoot = join(here, '..');
+const chunksDir = join(webRoot, '.next', 'static', 'chunks');
+const gqlPath = join(webRoot, 'app', 'lib', 'graphql', 'generated', 'gql.ts');
+const accountPath = join(webRoot, 'app', 'lib', 'graphql', 'operations', 'account.ts');
 
 function fail(message: string): never {
   console.error(`verify-graphql-treeshake: ${message}`);
   process.exit(1);
 }
 
-let chunks: string[];
+function extractOperationNames(source: string): string[] {
+  // Matches `query Name` and `mutation Name` inside graphql template
+  // literals. Captures the identifier only.
+  const matches = source.matchAll(/\b(?:query|mutation)\s+([A-Z]\w+)/g);
+  return [...new Set(Array.from(matches, (m) => m[1]))];
+}
+
+const allOperationNames = extractOperationNames(readFileSync(gqlPath, 'utf8'));
+const liveOperationNames = extractOperationNames(readFileSync(accountPath, 'utf8'));
+if (liveOperationNames.length === 0) {
+  fail(`could not parse operation names from ${accountPath}`);
+}
+const [marker] = liveOperationNames;
+const mustBeAbsent = allOperationNames.filter((name) => !liveOperationNames.includes(name));
+
+if (mustBeAbsent.length === 0) {
+  fail(`no candidate operations to verify against; gql.ts only contains operations that account.ts uses`);
+}
+
+let chunkNames: string[];
 try {
-  chunks = readdirSync(chunksDir).filter((name) => name.endsWith('.js'));
+  chunkNames = readdirSync(chunksDir).filter((name) => name.endsWith('.js'));
 } catch {
   fail(`chunks directory not found at ${chunksDir}; run \`vp run build:web\` first`);
 }
 
-const markerChunks = chunks.filter((name) => {
-  const content = readFileSync(join(chunksDir, name), 'utf8');
-  return content.includes(MARKER);
-});
+const chunkContent = new Map<string, string>();
+function read(name: string): string {
+  let content = chunkContent.get(name);
+  if (content === undefined) {
+    content = readFileSync(join(chunksDir, name), 'utf8');
+    chunkContent.set(name, content);
+  }
+  return content;
+}
+
+const markerChunks = chunkNames.filter((name) => read(name).includes(marker));
 
 if (markerChunks.length === 0) {
-  fail(`no chunk contains ${MARKER}; account.ts may not have been bundled — did the build complete?`);
+  fail(`no chunk contains ${marker}; account.ts may not have been bundled — did the build complete?`);
 }
 
 const leaks: { chunk: string; size: number; queries: string[] }[] = [];
 for (const name of markerChunks) {
-  const path = join(chunksDir, name);
-  const content = readFileSync(path, 'utf8');
-  const queries = MUST_BE_ABSENT.filter((q) => content.includes(q));
+  const content = read(name);
+  const queries = mustBeAbsent.filter((q) => content.includes(q));
   if (queries.length > 0) {
-    leaks.push({ chunk: name, size: statSync(path).size, queries });
+    leaks.push({ chunk: name, size: statSync(join(chunksDir, name)).size, queries });
   }
 }
 
 if (leaks.length > 0) {
   console.error('SWC plugin transform did not fire — Documents map leaked into settings chunk(s):');
   for (const { chunk, size, queries } of leaks) {
-    console.error(`  ${chunk} (${size} B): ${queries.join(', ')}`);
+    const shown = queries.slice(0, 5).join(', ');
+    const extra = queries.length > 5 ? `, +${queries.length - 5} more` : '';
+    console.error(`  ${chunk} (${size} B): ${shown}${extra}`);
   }
   console.error('Check artifactDirectory in packages/web/next.config.mjs.');
   process.exit(1);
@@ -70,6 +94,6 @@ if (leaks.length > 0) {
 
 const totalSize = markerChunks.reduce((sum, name) => sum + statSync(join(chunksDir, name)).size, 0);
 console.info(
-  `verify-graphql-treeshake: OK — ${markerChunks.length} chunk(s) carry ${MARKER} ` +
-    `(${totalSize} B total), no unrelated operations leaked.`,
+  `verify-graphql-treeshake: OK — ${markerChunks.length} chunk(s) carry ${marker} ` +
+    `(${totalSize} B total), ${mustBeAbsent.length} unrelated operation(s) checked, none leaked.`,
 );
