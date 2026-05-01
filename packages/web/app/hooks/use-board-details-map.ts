@@ -44,19 +44,22 @@ export function useBoardDetailsMap(
 
     // Use the active session when provided; otherwise synthesize one from the
     // selected board so the playlist board filter still drives the preview.
-    const effectiveSession: SessionBoardConfig | null = sessionBoard
-      ? sessionBoard
-      : selectedBoard
-        ? {
-            boardType: selectedBoard.boardType as BoardName,
-            layoutId: selectedBoard.layoutId,
-            sizeId: selectedBoard.sizeId,
-            setIds: selectedBoard.setIds
-              .split(',')
-              .map(Number)
-              .filter((n) => Number.isFinite(n) && n > 0),
-          }
-        : null;
+    let effectiveSession: SessionBoardConfig | null;
+    if (sessionBoard) {
+      effectiveSession = sessionBoard;
+    } else if (selectedBoard) {
+      effectiveSession = {
+        boardType: selectedBoard.boardType as BoardName,
+        layoutId: selectedBoard.layoutId,
+        sizeId: selectedBoard.sizeId,
+        setIds: selectedBoard.setIds
+          .split(',')
+          .map(Number)
+          .filter((n) => Number.isFinite(n) && n > 0),
+      };
+    } else {
+      effectiveSession = null;
+    }
 
     // Only filter by ownership when the user actually owns at least one board.
     // When myBoards is empty we render every climb normally and let selection

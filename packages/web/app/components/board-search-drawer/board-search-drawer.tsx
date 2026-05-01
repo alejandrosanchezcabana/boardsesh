@@ -235,11 +235,12 @@ export default function BoardSearchDrawer({ open, onClose, onBoardOpen }: BoardS
             flexShrink: 0,
           }}
         >
-          {showSpinner ? (
+          {showSpinner && (
             <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', py: 3 }}>
               <CircularProgress size={20} />
             </Box>
-          ) : boards.length === 0 ? (
+          )}
+          {!showSpinner && boards.length === 0 && (
             <Box sx={{ py: 3, textAlign: 'center', px: 2 }}>
               <Typography variant="body2" color="text.secondary">
                 {query.trim().length >= 2
@@ -247,7 +248,8 @@ export default function BoardSearchDrawer({ open, onClose, onBoardOpen }: BoardS
                   : 'No boards in this area. Pan or zoom out to find more.'}
               </Typography>
             </Box>
-          ) : (
+          )}
+          {!showSpinner && boards.length > 0 && (
             <Box
               ref={carouselRef}
               onScroll={handleCarouselScroll}

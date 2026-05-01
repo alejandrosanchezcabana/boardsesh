@@ -233,6 +233,12 @@ const ClimbsListSkeleton = ({ aspectRatio, viewMode }: { aspectRatio: number; vi
   ));
 };
 
+const getOnboardingIdProps = (index: number): { id?: string } => {
+  if (index === 0) return { id: 'onboarding-climb-card' };
+  if (index === 1) return { id: 'onboarding-climb-card-2' };
+  return {};
+};
+
 type GridClimbItemProps = {
   climb: Climb;
   index: number;
@@ -265,7 +271,7 @@ const GridClimbItem = React.memo(function GridClimbItem({
   }, [onClimbClickByIndex, index, needsBiggerBoard, onNeedsBiggerBoard]);
   return (
     <>
-      <div {...(index === 0 ? { id: 'onboarding-climb-card' } : index === 1 ? { id: 'onboarding-climb-card-2' } : {})}>
+      <div {...getOnboardingIdProps(index)}>
         <ClimbCard
           climb={climb}
           boardDetails={boardDetails}
@@ -620,11 +626,7 @@ const ClimbsList = ({
                         key={virtualItem.key}
                         ref={virtualizer.measureElement}
                         data-index={virtualItem.index}
-                        {...(index === 0
-                          ? { id: 'onboarding-climb-card' }
-                          : index === 1
-                            ? { id: 'onboarding-climb-card-2' }
-                            : {})}
+                        {...getOnboardingIdProps(index)}
                         style={{
                           position: 'absolute',
                           top: 0,

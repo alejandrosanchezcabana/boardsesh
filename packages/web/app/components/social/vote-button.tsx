@@ -219,6 +219,15 @@ export default function VoteButton({
     );
   }
 
+  let scoreColor: string;
+  if (userVote === 1) {
+    scoreColor = themeTokens.colors.success;
+  } else if (userVote === -1) {
+    scoreColor = themeTokens.colors.error;
+  } else {
+    scoreColor = 'var(--neutral-600)';
+  }
+
   return (
     <Box
       sx={{
@@ -246,12 +255,7 @@ export default function VoteButton({
         sx={{
           minWidth: 20,
           textAlign: 'center',
-          color:
-            userVote === 1
-              ? themeTokens.colors.success
-              : userVote === -1
-                ? themeTokens.colors.error
-                : 'var(--neutral-600)',
+          color: scoreColor,
         }}
       >
         {score}

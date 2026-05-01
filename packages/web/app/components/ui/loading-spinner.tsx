@@ -4,6 +4,7 @@ import React from 'react';
 import Box from '@mui/material/Box';
 import CircularProgress from '@mui/material/CircularProgress';
 import type { SxProps, Theme } from '@mui/material/styles';
+import { toSxArray } from './sx-utils';
 
 type LoadingSpinnerProps = {
   spinning?: boolean;
@@ -14,6 +15,7 @@ type LoadingSpinnerProps = {
 };
 
 export function LoadingSpinner({ spinning = true, size = 40, children, sx, tip }: LoadingSpinnerProps) {
+  const sxArray = toSxArray(sx);
   if (!children) {
     if (!spinning) return null;
     return (
@@ -26,7 +28,7 @@ export function LoadingSpinner({ spinning = true, size = 40, children, sx, tip }
             justifyContent: 'center',
             padding: 4,
           },
-          ...(Array.isArray(sx) ? sx : sx ? [sx] : []),
+          ...sxArray,
         ]}
       >
         <CircularProgress size={size} />
@@ -36,7 +38,7 @@ export function LoadingSpinner({ spinning = true, size = 40, children, sx, tip }
   }
 
   return (
-    <Box sx={[{ position: 'relative' }, ...(Array.isArray(sx) ? sx : sx ? [sx] : [])]}>
+    <Box sx={[{ position: 'relative' }, ...sxArray]}>
       {children}
       {spinning && (
         <Box

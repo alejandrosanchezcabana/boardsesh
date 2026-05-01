@@ -52,6 +52,7 @@ export async function migrateFromLocalStorage<T>(
   }
 
   try {
+    // oxlint-disable-next-line no-restricted-globals -- one-time migration from legacy localStorage
     const raw = localStorage.getItem(legacyKey);
     if (raw === null) {
       return false;
@@ -69,6 +70,7 @@ export async function migrateFromLocalStorage<T>(
     }
 
     await idbSetter(parsed);
+    // oxlint-disable-next-line no-restricted-globals -- one-time migration cleanup
     localStorage.removeItem(legacyKey);
     return true;
   } catch (error) {

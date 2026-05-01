@@ -269,7 +269,11 @@ export default function HomePageContent({ boardConfigs, initialPopularConfigs }:
 
     // App-store screenshot tests set this flag so the install CTA matches
     // what users see in the actual iOS build (i.e. nothing).
-    if (typeof window !== 'undefined' && window.sessionStorage.getItem('boardsesh:e2e-suppress-install-card') === '1') {
+    if (
+      typeof window !== 'undefined' &&
+      // oxlint-disable-next-line no-restricted-globals -- e2e flag must be read synchronously during render
+      sessionStorage.getItem('boardsesh:e2e-suppress-install-card') === '1'
+    ) {
       setInstallPlatform('native');
       return;
     }

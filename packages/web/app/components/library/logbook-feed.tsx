@@ -317,13 +317,17 @@ export default function LogbookFeed({ layoutStats, loadingLayoutStats }: Logbook
     };
   }, [sortState]);
 
-  const activeFilters = useMemo(
-    () => ({
-      statusMode: (filters.includeSends && filters.includeAttempts
-        ? 'both'
-        : filters.includeSends
-          ? 'send'
-          : 'attempt') as StatusMode,
+  const activeFilters = useMemo(() => {
+    let statusMode: StatusMode;
+    if (filters.includeSends && filters.includeAttempts) {
+      statusMode = 'both';
+    } else if (filters.includeSends) {
+      statusMode = 'send';
+    } else {
+      statusMode = 'attempt';
+    }
+    return {
+      statusMode,
       flashOnly: filters.includeSends ? filters.flashOnly : false,
       minDifficulty: filters.minGrade !== '' ? filters.minGrade : undefined,
       maxDifficulty: filters.maxGrade !== '' ? filters.maxGrade : undefined,
@@ -332,9 +336,8 @@ export default function LogbookFeed({ layoutStats, loadingLayoutStats }: Logbook
       minAngle: filters.angleRange[0] !== DEFAULT_ANGLE_RANGE[0] ? filters.angleRange[0] : undefined,
       maxAngle: filters.angleRange[1] !== DEFAULT_ANGLE_RANGE[1] ? filters.angleRange[1] : undefined,
       benchmarkOnly: filters.benchmarkOnly || undefined,
-    }),
-    [filters],
-  );
+    };
+  }, [filters]);
 
   const feedQueryKey = useMemo(
     () => [
@@ -355,12 +358,12 @@ export default function LogbookFeed({ layoutStats, loadingLayoutStats }: Logbook
       const client = createGraphQLHttpClient(token ?? null);
 
       // For single board type, use boardType; for multiple, use boardTypes
-      const boardTypeFilter =
-        selectedBoardTypes?.length === 1
-          ? { boardType: selectedBoardTypes[0] }
-          : selectedBoardTypes && selectedBoardTypes.length > 1
-            ? { boardTypes: selectedBoardTypes }
-            : {};
+      const buildBoardTypeFilter = () => {
+        if (selectedBoardTypes?.length === 1) return { boardType: selectedBoardTypes[0] };
+        if (selectedBoardTypes && selectedBoardTypes.length > 1) return { boardTypes: selectedBoardTypes };
+        return {};
+      };
+      const boardTypeFilter = buildBoardTypeFilter();
 
       const variables: GetUserAscentsFeedQueryVariables = {
         userId: userId!,
@@ -571,6 +574,23 @@ export default function LogbookFeed({ layoutStats, loadingLayoutStats }: Logbook
   }
 
   if (items.length === 0) {
+    const isLogbookUnavailable = !!userId && !authLoading && !token;
+    let emptyTitle: string;
+    if (isLogbookUnavailable) {
+      emptyTitle = 'Logbook unavailable on this device';
+    } else if (hasFilters) {
+      emptyTitle = 'No matching climbs';
+    } else {
+      emptyTitle = 'No logged climbs yet';
+    }
+    let emptyDescription: string;
+    if (isLogbookUnavailable) {
+      emptyDescription = 'Your account is signed in, but the authenticated data connection did not become available.';
+    } else if (hasFilters) {
+      emptyDescription = 'Try adjusting your filters or sort.';
+    } else {
+      emptyDescription = 'Tick your sends and they show up here.';
+    }
     return (
       <>
         {searchForm}
@@ -584,18 +604,10 @@ export default function LogbookFeed({ layoutStats, loadingLayoutStats }: Logbook
         <div className={styles.emptyContainer}>
           <HistoryOutlined className={styles.emptyIcon} />
           <Typography variant="h6" component="h4" sx={{ mb: 1 }}>
-            {userId && !authLoading && !token
-              ? 'Logbook unavailable on this device'
-              : hasFilters
-                ? 'No matching climbs'
-                : 'No logged climbs yet'}
+            {emptyTitle}
           </Typography>
           <Typography variant="body2" color="text.secondary" sx={{ maxWidth: 300 }}>
-            {userId && !authLoading && !token
-              ? 'Your account is signed in, but the authenticated data connection did not become available.'
-              : hasFilters
-                ? 'Try adjusting your filters or sort.'
-                : 'Tick your sends and they show up here.'}
+            {emptyDescription}
           </Typography>
         </div>
       </>

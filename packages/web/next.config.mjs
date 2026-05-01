@@ -23,6 +23,24 @@ const nextConfig = {
   turbopack: {},
   experimental: {
     optimizePackageImports: ['@mui/material', '@mui/icons-material', '@mui/material-nextjs'],
+    // Tree-shake the gql.ts Documents map by rewriting graphql(`...`) calls
+    // into direct imports of the matching *Document constant.
+    // - Runs during `next build` (Turbopack production); does not run under
+    //   `next dev`, so local dev still bundles the full map.
+    // - artifactDirectory is resolved against the workspace root (where
+    //   bun.lock lives), not packages/web — hence the `./packages/web/...`
+    //   prefix. A wrong path may either silently no-op or trip
+    //   module-not-found, so changes here must be verified by running
+    //   `vp run boardsesh-monorepo#verify:graphql-treeshake` after a build.
+    swcPlugins: [
+      [
+        '@swc-contrib/plugin-graphql-codegen-client-preset',
+        {
+          artifactDirectory: './packages/web/app/lib/graphql/generated',
+          gqlTagName: 'graphql',
+        },
+      ],
+    ],
   },
   // Include WASM binary in standalone output for serverless functions.
   // Both paths needed: monorepo root (hoisted deps) and local node_modules (symlink).

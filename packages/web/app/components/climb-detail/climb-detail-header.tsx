@@ -32,6 +32,49 @@ export default function ClimbDetailHeader({ climb, communityGrade }: ClimbDetail
 
   const hasQuality = climb.quality_average && climb.quality_average !== '0';
 
+  const renderGradeContent = () => {
+    if (!gradeFormatLoaded && displayDifficulty) {
+      return <Skeleton variant="rounded" width={48} height={themeTokens.typography.fontSize['2xl']} />;
+    }
+    if (formattedGrade) {
+      return (
+        <Typography
+          variant="h5"
+          component="span"
+          sx={{
+            fontSize: themeTokens.typography.fontSize['2xl'],
+            fontWeight: themeTokens.typography.fontWeight.bold,
+            lineHeight: 1,
+            color: gradeColor ?? 'text.primary',
+          }}
+        >
+          {formattedGrade}
+        </Typography>
+      );
+    }
+    if (displayDifficulty) {
+      return (
+        <Typography
+          variant="h5"
+          component="span"
+          sx={{
+            fontSize: themeTokens.typography.fontSize.xl,
+            fontWeight: themeTokens.typography.fontWeight.semibold,
+            lineHeight: 1,
+            color: 'text.secondary',
+          }}
+        >
+          {displayDifficulty}
+        </Typography>
+      );
+    }
+    return (
+      <Typography variant="body2" component="span" sx={{ fontStyle: 'italic', color: 'text.secondary' }}>
+        project
+      </Typography>
+    );
+  };
+
   return (
     <Box
       sx={{
@@ -43,41 +86,7 @@ export default function ClimbDetailHeader({ climb, communityGrade }: ClimbDetail
       }}
     >
       {/* Left: Grade */}
-      <Box sx={{ flexShrink: 0, minWidth: 48 }}>
-        {!gradeFormatLoaded && displayDifficulty ? (
-          <Skeleton variant="rounded" width={48} height={themeTokens.typography.fontSize['2xl']} />
-        ) : formattedGrade ? (
-          <Typography
-            variant="h5"
-            component="span"
-            sx={{
-              fontSize: themeTokens.typography.fontSize['2xl'],
-              fontWeight: themeTokens.typography.fontWeight.bold,
-              lineHeight: 1,
-              color: gradeColor ?? 'text.primary',
-            }}
-          >
-            {formattedGrade}
-          </Typography>
-        ) : displayDifficulty ? (
-          <Typography
-            variant="h5"
-            component="span"
-            sx={{
-              fontSize: themeTokens.typography.fontSize.xl,
-              fontWeight: themeTokens.typography.fontWeight.semibold,
-              lineHeight: 1,
-              color: 'text.secondary',
-            }}
-          >
-            {displayDifficulty}
-          </Typography>
-        ) : (
-          <Typography variant="body2" component="span" sx={{ fontStyle: 'italic', color: 'text.secondary' }}>
-            project
-          </Typography>
-        )}
-      </Box>
+      <Box sx={{ flexShrink: 0, minWidth: 48 }}>{renderGradeContent()}</Box>
 
       {/* Center: Name + details */}
       <Box

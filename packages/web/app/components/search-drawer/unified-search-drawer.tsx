@@ -94,6 +94,13 @@ export default function UnifiedSearchDrawer({
 
   const showCategoryChips = visibleCategories.length > 1;
 
+  const searchPlaceholderByCategory: Record<string, string> = {
+    boards: 'Search boards...',
+    gyms: 'Search gyms...',
+    users: 'Search climbers...',
+  };
+  const searchPlaceholder = searchPlaceholderByCategory[category] ?? 'Search playlists...';
+
   return (
     <SwipeableDrawer
       placement="top"
@@ -142,15 +149,7 @@ export default function UnifiedSearchDrawer({
             <TextField
               fullWidth
               size="small"
-              placeholder={
-                category === 'boards'
-                  ? 'Search boards...'
-                  : category === 'gyms'
-                    ? 'Search gyms...'
-                    : category === 'users'
-                      ? 'Search climbers...'
-                      : 'Search playlists...'
-              }
+              placeholder={searchPlaceholder}
               value={query}
               onChange={(e) => setQuery(e.target.value)}
               autoFocus

@@ -7,6 +7,7 @@ import MuiBadge from '@mui/material/Badge';
 import Typography from '@mui/material/Typography';
 import Button from '@mui/material/Button';
 import IconButton from '@mui/material/IconButton';
+import type { SxProps, Theme } from '@mui/material/styles';
 import Stack from '@mui/material/Stack';
 import SwipeableDrawer from '../swipeable-drawer/swipeable-drawer';
 import LoginOutlined from '@mui/icons-material/LoginOutlined';
@@ -96,6 +97,33 @@ export const TickButton: React.FC<TickButtonProps> = ({
   const hasSuccessfulAscent = filteredLogbook.some((asc) => asc.is_ascent);
   const badgeCount = filteredLogbook.length;
 
+  let buttonSx: SxProps<Theme>;
+  if (!tickBarActive) {
+    buttonSx = { opacity: themeTokens.opacity.subtle };
+  } else {
+    const isFlashVariant = ascentType === 'flash' || isFlash;
+    let backgroundColor: string;
+    let hoverBackgroundColor: string;
+    if (ascentType === 'attempt') {
+      backgroundColor = themeTokens.colors.error;
+      hoverBackgroundColor = themeTokens.colors.error;
+    } else if (isFlashVariant) {
+      backgroundColor = themeTokens.colors.amber;
+      hoverBackgroundColor = themeTokens.colors.amber;
+    } else {
+      backgroundColor = themeTokens.colors.success;
+      hoverBackgroundColor = themeTokens.colors.successHover;
+    }
+    buttonSx = {
+      backgroundColor,
+      color: isFlashVariant ? themeTokens.neutral[900] : 'common.white',
+      transition: 'background-color 150ms ease, color 150ms ease',
+      '&:hover': {
+        backgroundColor: hoverBackgroundColor,
+      },
+    };
+  }
+
   const badge = (
     <MuiBadge
       badgeContent={badgeCount > 0 ? badgeCount : 0}
@@ -111,28 +139,7 @@ export const TickButton: React.FC<TickButtonProps> = ({
         id="button-tick"
         onClick={showDrawer}
         aria-label={tickBarActive ? 'Save tick' : 'Log ascent'}
-        sx={
-          tickBarActive
-            ? {
-                backgroundColor:
-                  ascentType === 'attempt'
-                    ? themeTokens.colors.error
-                    : ascentType === 'flash' || isFlash
-                      ? themeTokens.colors.amber
-                      : themeTokens.colors.success,
-                color: ascentType === 'flash' || isFlash ? themeTokens.neutral[900] : 'common.white',
-                transition: 'background-color 150ms ease, color 150ms ease',
-                '&:hover': {
-                  backgroundColor:
-                    ascentType === 'attempt'
-                      ? themeTokens.colors.error
-                      : ascentType === 'flash' || isFlash
-                        ? themeTokens.colors.amber
-                        : themeTokens.colors.successHover,
-                },
-              }
-            : { opacity: themeTokens.opacity.subtle }
-        }
+        sx={buttonSx}
       >
         {tickBarActive && ascentType === 'attempt' ? (
           <PersonFallingIcon />
@@ -143,7 +150,14 @@ export const TickButton: React.FC<TickButtonProps> = ({
     </MuiBadge>
   );
 
-  const tickLabel = ascentType === 'attempt' ? 'attempt' : ascentType === 'flash' || isFlash ? 'flash' : 'tick';
+  let tickLabel: 'flash' | 'tick' | 'attempt';
+  if (ascentType === 'attempt') {
+    tickLabel = 'attempt';
+  } else if (ascentType === 'flash' || isFlash) {
+    tickLabel = 'flash';
+  } else {
+    tickLabel = 'tick';
+  }
 
   return (
     <>

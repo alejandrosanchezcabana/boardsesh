@@ -87,6 +87,7 @@ export async function getRecentSearches(): Promise<RecentSearch[]> {
     }
 
     // Attempt one-time migration from localStorage
+    // oxlint-disable-next-line no-restricted-globals -- one-time migration from legacy localStorage
     const legacy = localStorage.getItem(LEGACY_STORAGE_KEY);
     if (legacy) {
       const parsed = (JSON.parse(legacy) as RecentSearch[]).map((entry) => ({
@@ -94,6 +95,7 @@ export async function getRecentSearches(): Promise<RecentSearch[]> {
         filters: sanitizeFilters(entry.filters).filters,
       }));
       await db.put(STORE_NAME, parsed, STORE_KEY);
+      // oxlint-disable-next-line no-restricted-globals -- one-time migration cleanup
       localStorage.removeItem(LEGACY_STORAGE_KEY);
       return parsed;
     }

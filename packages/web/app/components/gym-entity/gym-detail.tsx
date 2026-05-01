@@ -116,6 +116,134 @@ export default function GymDetail({ gymUuid, open, onClose, onDeleted, anchor = 
     setIsEditing(false);
   };
 
+  let drawerContent: React.ReactNode;
+  if (isLoading) {
+    drawerContent = (
+      <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', flex: 1 }}>
+        <CircularProgress />
+      </Box>
+    );
+  } else if (!gym) {
+    drawerContent = (
+      <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', flex: 1 }}>
+        <MuiTypography color="text.secondary">Gym not found</MuiTypography>
+      </Box>
+    );
+  } else if (isEditing) {
+    drawerContent = (
+      <Box sx={{ px: 2, pb: 2, overflow: 'auto', flex: 1 }}>
+        <EditGymForm gym={gym} onSuccess={handleEditSuccess} onCancel={() => setIsEditing(false)} />
+      </Box>
+    );
+  } else {
+    drawerContent = (
+      <>
+        {/* Header */}
+        <Box sx={{ px: 2, pb: 2 }}>
+          <Box
+            sx={{
+              display: 'flex',
+              alignItems: 'flex-start',
+              justifyContent: 'space-between',
+              gap: 1,
+            }}
+          >
+            <Box sx={{ flex: 1, minWidth: 0 }}>
+              <MuiTypography variant="h5" sx={{ fontWeight: themeTokens.typography.fontWeight.bold }}>
+                {gym.name}
+              </MuiTypography>
+              {gym.address && (
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, mt: 0.5 }}>
+                  <LocationOnOutlined sx={{ fontSize: 16, color: 'var(--neutral-400)' }} />
+                  <MuiTypography variant="body2" color="text.secondary">
+                    {gym.address}
+                  </MuiTypography>
+                </Box>
+              )}
+            </Box>
+          </Box>
+
+          {/* Owner info */}
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mt: 1.5 }}>
+            <Avatar src={gym.ownerAvatarUrl ?? undefined} sx={{ width: 24, height: 24, fontSize: 11 }}>
+              {gym.ownerDisplayName?.[0]?.toUpperCase()}
+            </Avatar>
+            <MuiTypography variant="body2" color="text.secondary">
+              {gym.ownerDisplayName}
+            </MuiTypography>
+          </Box>
+
+          {gym.description && (
+            <MuiTypography variant="body2" sx={{ mt: 1.5, color: 'var(--neutral-600)' }}>
+              {gym.description}
+            </MuiTypography>
+          )}
+
+          {/* Stats */}
+          <Box sx={{ display: 'flex', gap: 2.5, mt: 2, flexWrap: 'wrap' }}>
+            <StatChip icon={<FitnessCenterOutlined sx={{ fontSize: 16 }} />} value={gym.boardCount} label="boards" />
+            <StatChip icon={<PersonOutlined sx={{ fontSize: 16 }} />} value={gym.memberCount} label="members" />
+            <StatChip icon={<PeopleOutlined sx={{ fontSize: 16 }} />} value={gym.followerCount} label="followers" />
+            <StatChip icon={<ChatBubbleOutlined sx={{ fontSize: 16 }} />} value={gym.commentCount} label="comments" />
+          </Box>
+
+          {/* Actions */}
+          <Box sx={{ display: 'flex', gap: 1, mt: 2 }}>
+            {!isOwner && (
+              <FollowButton
+                entityId={gym.uuid}
+                initialIsFollowing={gym.isFollowedByMe}
+                followMutation={FOLLOW_GYM}
+                unfollowMutation={UNFOLLOW_GYM}
+                entityLabel="gym"
+                getFollowVariables={(id) => ({ input: { gymUuid: id } })}
+                onFollowChange={() => fetchGym()}
+              />
+            )}
+            {isOwner && (
+              <>
+                <MuiButton
+                  variant="outlined"
+                  size="small"
+                  startIcon={<EditOutlined />}
+                  onClick={() => setIsEditing(true)}
+                  sx={{ textTransform: 'none' }}
+                >
+                  Edit
+                </MuiButton>
+                <MuiButton
+                  variant="outlined"
+                  size="small"
+                  color="error"
+                  startIcon={<DeleteOutlined />}
+                  onClick={() => setShowDeleteDialog(true)}
+                  disabled={isDeleting}
+                  sx={{ textTransform: 'none' }}
+                >
+                  {isDeleting ? <CircularProgress size={16} /> : 'Delete'}
+                </MuiButton>
+              </>
+            )}
+          </Box>
+        </Box>
+
+        <Divider />
+
+        {/* Tabs */}
+        <Tabs value={activeTab} onChange={(_, v) => setActiveTab(v)} sx={{ px: 2 }}>
+          <Tab label="Members" sx={{ textTransform: 'none' }} />
+          <Tab label="Comments" sx={{ textTransform: 'none' }} />
+        </Tabs>
+
+        {/* Tab content */}
+        <Box sx={{ flex: 1, overflow: 'auto', px: 2, py: 2 }}>
+          {activeTab === 0 && <GymMemberManagement gymUuid={gym.uuid} isOwnerOrAdmin={isOwnerOrAdmin} />}
+          {activeTab === 1 && <CommentSection entityType="gym" entityId={gym.uuid} title="Gym Discussion" />}
+        </Box>
+      </>
+    );
+  }
+
   return (
     <>
       <SwipeableDrawer
@@ -125,132 +253,7 @@ export default function GymDetail({ gymUuid, open, onClose, onDeleted, anchor = 
         height="90dvh"
         styles={{ body: { padding: 0, overflow: 'hidden' } }}
       >
-        {isLoading ? (
-          <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', flex: 1 }}>
-            <CircularProgress />
-          </Box>
-        ) : !gym ? (
-          <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', flex: 1 }}>
-            <MuiTypography color="text.secondary">Gym not found</MuiTypography>
-          </Box>
-        ) : isEditing ? (
-          <Box sx={{ px: 2, pb: 2, overflow: 'auto', flex: 1 }}>
-            <EditGymForm gym={gym} onSuccess={handleEditSuccess} onCancel={() => setIsEditing(false)} />
-          </Box>
-        ) : (
-          <>
-            {/* Header */}
-            <Box sx={{ px: 2, pb: 2 }}>
-              <Box
-                sx={{
-                  display: 'flex',
-                  alignItems: 'flex-start',
-                  justifyContent: 'space-between',
-                  gap: 1,
-                }}
-              >
-                <Box sx={{ flex: 1, minWidth: 0 }}>
-                  <MuiTypography variant="h5" sx={{ fontWeight: themeTokens.typography.fontWeight.bold }}>
-                    {gym.name}
-                  </MuiTypography>
-                  {gym.address && (
-                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, mt: 0.5 }}>
-                      <LocationOnOutlined sx={{ fontSize: 16, color: 'var(--neutral-400)' }} />
-                      <MuiTypography variant="body2" color="text.secondary">
-                        {gym.address}
-                      </MuiTypography>
-                    </Box>
-                  )}
-                </Box>
-              </Box>
-
-              {/* Owner info */}
-              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mt: 1.5 }}>
-                <Avatar src={gym.ownerAvatarUrl ?? undefined} sx={{ width: 24, height: 24, fontSize: 11 }}>
-                  {gym.ownerDisplayName?.[0]?.toUpperCase()}
-                </Avatar>
-                <MuiTypography variant="body2" color="text.secondary">
-                  {gym.ownerDisplayName}
-                </MuiTypography>
-              </Box>
-
-              {gym.description && (
-                <MuiTypography variant="body2" sx={{ mt: 1.5, color: 'var(--neutral-600)' }}>
-                  {gym.description}
-                </MuiTypography>
-              )}
-
-              {/* Stats */}
-              <Box sx={{ display: 'flex', gap: 2.5, mt: 2, flexWrap: 'wrap' }}>
-                <StatChip
-                  icon={<FitnessCenterOutlined sx={{ fontSize: 16 }} />}
-                  value={gym.boardCount}
-                  label="boards"
-                />
-                <StatChip icon={<PersonOutlined sx={{ fontSize: 16 }} />} value={gym.memberCount} label="members" />
-                <StatChip icon={<PeopleOutlined sx={{ fontSize: 16 }} />} value={gym.followerCount} label="followers" />
-                <StatChip
-                  icon={<ChatBubbleOutlined sx={{ fontSize: 16 }} />}
-                  value={gym.commentCount}
-                  label="comments"
-                />
-              </Box>
-
-              {/* Actions */}
-              <Box sx={{ display: 'flex', gap: 1, mt: 2 }}>
-                {!isOwner && (
-                  <FollowButton
-                    entityId={gym.uuid}
-                    initialIsFollowing={gym.isFollowedByMe}
-                    followMutation={FOLLOW_GYM}
-                    unfollowMutation={UNFOLLOW_GYM}
-                    entityLabel="gym"
-                    getFollowVariables={(id) => ({ input: { gymUuid: id } })}
-                    onFollowChange={() => fetchGym()}
-                  />
-                )}
-                {isOwner && (
-                  <>
-                    <MuiButton
-                      variant="outlined"
-                      size="small"
-                      startIcon={<EditOutlined />}
-                      onClick={() => setIsEditing(true)}
-                      sx={{ textTransform: 'none' }}
-                    >
-                      Edit
-                    </MuiButton>
-                    <MuiButton
-                      variant="outlined"
-                      size="small"
-                      color="error"
-                      startIcon={<DeleteOutlined />}
-                      onClick={() => setShowDeleteDialog(true)}
-                      disabled={isDeleting}
-                      sx={{ textTransform: 'none' }}
-                    >
-                      {isDeleting ? <CircularProgress size={16} /> : 'Delete'}
-                    </MuiButton>
-                  </>
-                )}
-              </Box>
-            </Box>
-
-            <Divider />
-
-            {/* Tabs */}
-            <Tabs value={activeTab} onChange={(_, v) => setActiveTab(v)} sx={{ px: 2 }}>
-              <Tab label="Members" sx={{ textTransform: 'none' }} />
-              <Tab label="Comments" sx={{ textTransform: 'none' }} />
-            </Tabs>
-
-            {/* Tab content */}
-            <Box sx={{ flex: 1, overflow: 'auto', px: 2, py: 2 }}>
-              {activeTab === 0 && <GymMemberManagement gymUuid={gym.uuid} isOwnerOrAdmin={isOwnerOrAdmin} />}
-              {activeTab === 1 && <CommentSection entityType="gym" entityId={gym.uuid} title="Gym Discussion" />}
-            </Box>
-          </>
-        )}
+        {drawerContent}
       </SwipeableDrawer>
 
       {/* Delete confirmation dialog */}

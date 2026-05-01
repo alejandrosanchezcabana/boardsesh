@@ -46,13 +46,16 @@ function formatBoard(payload: FeedbackDiscordPayload): string | null {
 export function buildWebhookBody(payload: FeedbackDiscordPayload): Record<string, unknown> {
   const isBug = BUG_SOURCES.has(payload.source);
   const title = isBug ? '🐞 Bug report' : `⭐ Rating: ${payload.rating ?? '?'}/5`;
-  const color = isBug
-    ? COLOR_RED
-    : payload.rating !== null && payload.rating >= 4
-      ? COLOR_GREEN
-      : payload.rating !== null && payload.rating >= 3
-        ? COLOR_YELLOW
-        : COLOR_RED;
+  let color: number;
+  if (isBug) {
+    color = COLOR_RED;
+  } else if (payload.rating !== null && payload.rating >= 4) {
+    color = COLOR_GREEN;
+  } else if (payload.rating !== null && payload.rating >= 3) {
+    color = COLOR_YELLOW;
+  } else {
+    color = COLOR_RED;
+  }
 
   const fields: Array<{ name: string; value: string; inline?: boolean }> = [
     { name: 'Platform', value: payload.platform, inline: true },
@@ -65,11 +68,12 @@ export function buildWebhookBody(payload: FeedbackDiscordPayload): Record<string
 
   const ctx = payload.context;
   if (ctx?.climbName || ctx?.climbUuid) {
-    const climbValue = ctx.climbName
-      ? ctx.difficulty
-        ? `${ctx.climbName} (${ctx.difficulty})`
-        : ctx.climbName
-      : (ctx.climbUuid ?? '');
+    let climbValue: string;
+    if (ctx.climbName) {
+      climbValue = ctx.difficulty ? `${ctx.climbName} (${ctx.difficulty})` : ctx.climbName;
+    } else {
+      climbValue = ctx.climbUuid ?? '';
+    }
     fields.push({ name: 'Climb', value: climbValue, inline: false });
   }
   if (ctx?.sessionId) {

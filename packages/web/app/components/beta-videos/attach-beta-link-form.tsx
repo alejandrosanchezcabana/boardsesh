@@ -97,7 +97,12 @@ const AttachBetaLinkForm: React.FC<AttachBetaLinkFormProps> = ({
     },
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: ['betaLinks', boardType, climbUuid] });
-      const platform = isTikTokUrl(trimmed) ? 'TikTok' : isInstagramUrl(trimmed) ? 'Instagram' : 'Unknown';
+      let platform: 'TikTok' | 'Instagram' | 'Unknown' = 'Unknown';
+      if (isTikTokUrl(trimmed)) {
+        platform = 'TikTok';
+      } else if (isInstagramUrl(trimmed)) {
+        platform = 'Instagram';
+      }
       track('Beta Video Added', { boardType, climbUuid, platform });
       showMessage('Video added to beta', 'success');
       setUrl('');

@@ -19,7 +19,12 @@ const BoardseshBetaCard: React.FC<BoardseshBetaCardProps> = ({ link }) => {
   const isInstagram = !isTikTok && isInstagramUrl(link.link);
   const PlatformIcon = isTikTok ? TikTokIcon : Instagram;
   const displayPlatform = isTikTok ? 'TikTok' : 'Instagram';
-  const analyticsPlatform = isTikTok ? 'TikTok' : isInstagram ? 'Instagram' : 'Unknown';
+  let analyticsPlatform: 'TikTok' | 'Instagram' | 'Unknown' = 'Unknown';
+  if (isTikTok) {
+    analyticsPlatform = 'TikTok';
+  } else if (isInstagram) {
+    analyticsPlatform = 'Instagram';
+  }
 
   return (
     <a

@@ -98,6 +98,37 @@ export default function PostToInstagramDialog({ open, onClose, item }: PostToIns
 
   if (!item) return null;
 
+  let betaVideosContent: React.ReactNode;
+  if (betaLinksLoading) {
+    betaVideosContent = (
+      <Box sx={{ display: 'flex', justifyContent: 'center', py: 4 }}>
+        <CircularProgress size={24} />
+      </Box>
+    );
+  } else if (betaLinksError) {
+    betaVideosContent = (
+      <Box sx={{ mt: 1, display: 'flex', alignItems: 'center', gap: 1.5 }}>
+        <Typography variant="body2" color="error">
+          Couldn&apos;t load beta videos.
+        </Typography>
+        <Button
+          size="small"
+          onClick={() => {
+            void refetchBetaLinks();
+          }}
+        >
+          Retry
+        </Button>
+      </Box>
+    );
+  } else {
+    betaVideosContent = (
+      <Box sx={{ mt: 1 }}>
+        <BetaVideos betaLinks={betaLinks} />
+      </Box>
+    );
+  }
+
   return (
     <Dialog
       open={open}
@@ -324,29 +355,7 @@ export default function PostToInstagramDialog({ open, onClose, item }: PostToIns
             <Typography variant="overline" color="text.secondary" sx={{ letterSpacing: '0.06em' }}>
               Existing Beta Videos
             </Typography>
-            {betaLinksLoading ? (
-              <Box sx={{ display: 'flex', justifyContent: 'center', py: 4 }}>
-                <CircularProgress size={24} />
-              </Box>
-            ) : betaLinksError ? (
-              <Box sx={{ mt: 1, display: 'flex', alignItems: 'center', gap: 1.5 }}>
-                <Typography variant="body2" color="error">
-                  Couldn&apos;t load beta videos.
-                </Typography>
-                <Button
-                  size="small"
-                  onClick={() => {
-                    void refetchBetaLinks();
-                  }}
-                >
-                  Retry
-                </Button>
-              </Box>
-            ) : (
-              <Box sx={{ mt: 1 }}>
-                <BetaVideos betaLinks={betaLinks} />
-              </Box>
-            )}
+            {betaVideosContent}
           </Box>
         </Box>
       </Box>

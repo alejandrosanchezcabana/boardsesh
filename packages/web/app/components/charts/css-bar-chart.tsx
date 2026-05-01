@@ -87,7 +87,10 @@ export const CssBarChart = React.memo(function CssBarChart({
     return <div role="img" aria-label={ariaLabel} />;
   }
 
-  const bottomMargin = showLegend ? (angledLabels ? 40 : 24) : 4;
+  let bottomMargin = 4;
+  if (showLegend) {
+    bottomMargin = angledLabels ? 40 : 24;
+  }
 
   return (
     <Box

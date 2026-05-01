@@ -61,11 +61,14 @@ export default function PlaylistPreviewSquare({
 }: PlaylistPreviewSquareProps) {
   const boardDetails = useMemo(() => getBoardDetailsForPlaylist(boardType, layoutId), [boardType, layoutId]);
 
-  const backgroundColor = isLikedClimbs
-    ? undefined
-    : color && isValidHexColor(color)
-      ? color
-      : PLAYLIST_COLORS[index % PLAYLIST_COLORS.length];
+  let backgroundColor: string | undefined;
+  if (isLikedClimbs) {
+    backgroundColor = undefined;
+  } else if (color && isValidHexColor(color)) {
+    backgroundColor = color;
+  } else {
+    backgroundColor = PLAYLIST_COLORS[index % PLAYLIST_COLORS.length];
+  }
 
   const hasBoardPreview = !isLikedClimbs && boardDetails !== null;
 

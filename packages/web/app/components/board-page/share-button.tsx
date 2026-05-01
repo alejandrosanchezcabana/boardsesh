@@ -56,6 +56,26 @@ export const ShareBoardButton = () => {
     }
   };
 
+  let lightbulbIcon: React.ReactNode;
+  if (isConnecting || btLoading) {
+    lightbulbIcon = <CircularProgress size={16} />;
+  } else if (isBoardConnected) {
+    lightbulbIcon = (
+      <Lightbulb
+        sx={{
+          color: themeTokens.colors.warning,
+          '@keyframes connectedGlow': {
+            '0%': { filter: `drop-shadow(0 0 2px ${themeTokens.colors.warning}99)` },
+            '100%': { filter: `drop-shadow(0 0 6px ${themeTokens.colors.warning})` },
+          },
+          animation: 'connectedGlow 1.5s ease-in-out infinite alternate',
+        }}
+      />
+    );
+  } else {
+    lightbulbIcon = <LightbulbOutlined />;
+  }
+
   return (
     <>
       <IconButton
@@ -63,22 +83,7 @@ export const ShareBoardButton = () => {
         onClick={handleLightbulbClick}
         color={isSessionActive ? 'primary' : 'default'}
       >
-        {isConnecting || btLoading ? (
-          <CircularProgress size={16} />
-        ) : isBoardConnected ? (
-          <Lightbulb
-            sx={{
-              color: themeTokens.colors.warning,
-              '@keyframes connectedGlow': {
-                '0%': { filter: `drop-shadow(0 0 2px ${themeTokens.colors.warning}99)` },
-                '100%': { filter: `drop-shadow(0 0 6px ${themeTokens.colors.warning})` },
-              },
-              animation: 'connectedGlow 1.5s ease-in-out infinite alternate',
-            }}
-          />
-        ) : (
-          <LightbulbOutlined />
-        )}
+        {lightbulbIcon}
       </IconButton>
 
       <Dialog open={unsupportedOpen} onClose={() => setUnsupportedOpen(false)}>

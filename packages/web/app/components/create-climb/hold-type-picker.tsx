@@ -167,6 +167,13 @@ type SwatchProps = {
 function Swatch({ label, color, isActive, isDisabled, isClear, onClick }: SwatchProps) {
   const ring = isClear ? themeTokens.neutral[400] : (color ?? themeTokens.neutral[400]);
 
+  let swatchIconColor = 'transparent';
+  if (isClear) {
+    swatchIconColor = ring;
+  } else if (isActive) {
+    swatchIconColor = '#FFFFFF';
+  }
+
   return (
     <ButtonBase
       onClick={onClick}
@@ -195,7 +202,7 @@ function Swatch({ label, color, isActive, isDisabled, isClear, onClick }: Swatch
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
-          color: isClear ? ring : isActive ? '#FFFFFF' : 'transparent',
+          color: swatchIconColor,
           boxSizing: 'border-box',
         }}
       >

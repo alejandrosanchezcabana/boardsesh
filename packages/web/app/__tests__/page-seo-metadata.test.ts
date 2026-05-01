@@ -29,13 +29,19 @@ function getOpenGraphImageUrl(image: string | URL | { url: string | URL } | unde
   return typeof image.url === 'string' ? image.url : image.url.toString();
 }
 
+function toOpenGraphImageList<T>(images: T | T[] | undefined): T[] {
+  if (Array.isArray(images)) {
+    return images;
+  }
+  if (images) {
+    return [images];
+  }
+  return [];
+}
+
 describe('page metadata exports', () => {
   it('gives static marketing pages a canonical URL and default social image', () => {
-    const aboutImages = Array.isArray(aboutMetadata.openGraph?.images)
-      ? aboutMetadata.openGraph.images
-      : aboutMetadata.openGraph?.images
-        ? [aboutMetadata.openGraph.images]
-        : [];
+    const aboutImages = toOpenGraphImageList(aboutMetadata.openGraph?.images);
     const aboutImageUrl = getOpenGraphImageUrl(aboutImages[0]);
 
     expect(aboutMetadata.title).toBe('About | Boardsesh');
