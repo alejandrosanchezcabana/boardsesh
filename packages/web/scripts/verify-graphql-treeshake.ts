@@ -5,11 +5,17 @@
  * next.config.mjs (or a missing plugin entirely) silently no-ops the
  * transform, so we need a positive check.
  *
- * Strategy: parse generated/gql.ts to learn every operation name in the
- * project, parse account.ts to learn the names that are *supposed* to be
- * in the settings chunk (the only graphql() call site today), then assert
- * that the rest don't appear there. As more operations migrate to
- * graphql(), the absence list shrinks automatically — no maintenance.
+ * Strategy:
+ *   1. Auto-discover every file under app/lib/graphql/operations/ that
+ *      imports `graphql` from the generated module — these are the live
+ *      graphql() call sites whose operations are *supposed* to be bundled.
+ *   2. Parse generated/gql.ts for every operation name in the project.
+ *   3. The set difference is must-be-absent: operations that should NOT
+ *      appear in any chunk that holds a live operation.
+ *   4. Walk static/chunks/ recursively, find chunks containing any live
+ *      operation name, and assert no must-be-absent name leaks in.
+ *
+ * As more files migrate to graphql(), step 1 picks them up automatically.
  *
  * Operation names survive bundling as string literals inside the parsed
  * Document AST (e.g. `name:{kind:"Name",value:"GetBetaLinks"}`), even
@@ -23,11 +29,7 @@ const here = dirname(fileURLToPath(import.meta.url));
 const webRoot = join(here, '..');
 const chunksDir = join(webRoot, '.next', 'static', 'chunks');
 const gqlPath = join(webRoot, 'app', 'lib', 'graphql', 'generated', 'gql.ts');
-// account.ts is the single graphql() call site as of this PR. If/when more
-// op files migrate, swap this for a glob over operations/*.ts — the
-// derivation below treats every operation in that file as "must be present
-// in the marker chunk", so adding files extends coverage automatically.
-const accountPath = join(webRoot, 'app', 'lib', 'graphql', 'operations', 'account.ts');
+const operationsDir = join(webRoot, 'app', 'lib', 'graphql', 'operations');
 
 function fail(message: string): never {
   console.error(`verify-graphql-treeshake: ${message}`);
@@ -41,16 +43,33 @@ function extractOperationNames(source: string): string[] {
   return [...new Set(Array.from(matches, (m) => m[1]))];
 }
 
-const allOperationNames = extractOperationNames(readFileSync(gqlPath, 'utf8'));
-const liveOperationNames = extractOperationNames(readFileSync(accountPath, 'utf8'));
-if (liveOperationNames.length === 0) {
-  fail(`could not parse operation names from ${accountPath}`);
+// Discover graphql() call sites: any file in operations/ that imports the
+// `graphql` helper from the generated module is in scope. Files that use
+// `gql` from `graphql-request` are not — their operations don't go through
+// the Documents map.
+const liveOperationsByFile: Record<string, string[]> = {};
+for (const name of readdirSync(operationsDir).filter((n) => n.endsWith('.ts'))) {
+  const path = join(operationsDir, name);
+  const source = readFileSync(path, 'utf8');
+  if (!/import\s*\{[^}]*\bgraphql\b[^}]*\}\s*from\s*['"][^'"]*graphql\/generated/.test(source)) {
+    continue;
+  }
+  const names = extractOperationNames(source);
+  if (names.length > 0) {
+    liveOperationsByFile[name] = names;
+  }
 }
-const [marker] = liveOperationNames;
+const liveOperationNames = [...new Set(Object.values(liveOperationsByFile).flat())];
+
+if (liveOperationNames.length === 0) {
+  fail(`no graphql() call sites found under ${operationsDir}; nothing to verify`);
+}
+
+const allOperationNames = extractOperationNames(readFileSync(gqlPath, 'utf8'));
 const mustBeAbsent = allOperationNames.filter((name) => !liveOperationNames.includes(name));
 
 if (mustBeAbsent.length === 0) {
-  fail(`no candidate operations to verify against; gql.ts only contains operations that account.ts uses`);
+  fail(`no candidate operations to verify against; every operation in gql.ts is live in operations/`);
 }
 
 // Recursive: Next App Router can split chunks into per-route subdirectories
@@ -74,23 +93,40 @@ function read(name: string): string {
   return content;
 }
 
-const markerChunks = chunkNames.filter((name) => read(name).includes(marker));
+// In bundled output, operation names appear inside the parsed Document AST
+// as `value:"<Name>"`. Matching that exact pattern (rather than a bare
+// substring) avoids collisions with unrelated identifiers — e.g. the
+// generated TypeScript type `DeleteAccountInput` would match a substring
+// search for `DeleteAccount` but is not a graphql operation.
+const opPattern = (name: string): string => `value:"${name}"`;
 
-if (markerChunks.length === 0) {
-  fail(`no chunk contains ${marker}; account.ts may not have been bundled — did the build complete?`);
+// A chunk is a "live chunk" if it contains *any* live operation name. We
+// search by all of them rather than picking a single anchor — that way a
+// future split of operations across multiple files still produces the
+// right marker set without code changes.
+const liveChunks = chunkNames.filter((name) => {
+  const content = read(name);
+  return liveOperationNames.some((op) => content.includes(opPattern(op)));
+});
+
+if (liveChunks.length === 0) {
+  fail(
+    `no chunk contains any of [${liveOperationNames.join(', ')}] as a parsed operation; ` +
+      `operations may not have been bundled — did the build complete?`,
+  );
 }
 
 const leaks: { chunk: string; size: number; queries: string[] }[] = [];
-for (const name of markerChunks) {
+for (const name of liveChunks) {
   const content = read(name);
-  const queries = mustBeAbsent.filter((q) => content.includes(q));
+  const queries = mustBeAbsent.filter((q) => content.includes(opPattern(q)));
   if (queries.length > 0) {
     leaks.push({ chunk: name, size: statSync(join(chunksDir, name)).size, queries });
   }
 }
 
 if (leaks.length > 0) {
-  console.error('SWC plugin transform did not fire — Documents map leaked into settings chunk(s):');
+  console.error('SWC plugin transform did not fire — Documents map leaked into live chunk(s):');
   for (const { chunk, size, queries } of leaks) {
     const shown = queries.slice(0, 5).join(', ');
     const extra = queries.length > 5 ? `, +${queries.length - 5} more` : '';
@@ -100,8 +136,10 @@ if (leaks.length > 0) {
   process.exit(1);
 }
 
-const totalSize = markerChunks.reduce((sum, name) => sum + statSync(join(chunksDir, name)).size, 0);
+const totalSize = liveChunks.reduce((sum, name) => sum + statSync(join(chunksDir, name)).size, 0);
+const fileList = Object.keys(liveOperationsByFile).join(', ');
 console.info(
-  `verify-graphql-treeshake: OK — ${markerChunks.length} chunk(s) carry ${marker} ` +
+  `verify-graphql-treeshake: OK — ${liveChunks.length} chunk(s) covering ` +
+    `${liveOperationNames.length} live operation(s) from [${fileList}] ` +
     `(${totalSize} B total), ${mustBeAbsent.length} unrelated operation(s) checked, none leaked.`,
 );
