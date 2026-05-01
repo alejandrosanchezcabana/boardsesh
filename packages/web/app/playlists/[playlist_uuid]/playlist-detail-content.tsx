@@ -354,7 +354,11 @@ export default function PlaylistDetailContent({
               />
             </div>
             <div className={styles.heroInfo}>
-              <Typography variant="h5" component="h2" className={styles.heroName}>
+              <Typography
+                variant="h5"
+                component="h2"
+                className={`${styles.heroName} ${playlist.isPublic ? styles.heroNameWithShare : ''}`}
+              >
                 {playlist.name}
               </Typography>
               <div className={styles.heroMeta}>
@@ -413,8 +417,8 @@ export default function PlaylistDetailContent({
           <Box
             sx={{
               position: 'absolute',
-              top: 8,
-              right: 8,
+              top: 1.5,
+              right: 1.5,
               display: 'flex',
               flexDirection: 'row',
               gap: 0.5,

@@ -77,6 +77,10 @@
   margin: 0 0 4px 0 !important;
   font-weight: 600 !important;
   word-break: break-word;
+  padding-right: 32px;
+}
+
+.heroNameWithShare {
   padding-right: 88px;
 }
 
