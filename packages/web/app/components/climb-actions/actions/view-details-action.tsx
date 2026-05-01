@@ -4,7 +4,7 @@ import React from 'react';
 import MuiButton from '@mui/material/Button';
 import { ActionTooltip } from '../action-tooltip';
 import InfoOutlined from '@mui/icons-material/InfoOutlined';
-import Link from 'next/link';
+import LocaleLink from '@/app/components/i18n/locale-link';
 import { track } from '@vercel/analytics';
 import type { ClimbActionProps, ClimbActionResult } from '../types';
 import { getContextAwareClimbViewUrl } from '@/app/lib/url-utils';
@@ -53,13 +53,13 @@ export function ViewDetailsAction({
     className,
     iconElementOverride: (
       <ActionTooltip title={label}>
-        <Link href={url} prefetch={false} onClick={handleClick} className={className} style={linkResetStyle}>
+        <LocaleLink href={url} prefetch={false} onClick={handleClick} className={className} style={linkResetStyle}>
           {icon}
-        </Link>
+        </LocaleLink>
       </ActionTooltip>
     ),
     buttonElementOverride: (
-      <Link href={url} prefetch={false} onClick={handleClick} style={linkResetStyle}>
+      <LocaleLink href={url} prefetch={false} onClick={handleClick} style={linkResetStyle}>
         <MuiButton
           variant="outlined"
           startIcon={icon}
@@ -69,10 +69,10 @@ export function ViewDetailsAction({
         >
           {shouldShowLabel && label}
         </MuiButton>
-      </Link>
+      </LocaleLink>
     ),
     listElementOverride: (
-      <Link href={url} prefetch={false} onClick={handleClick} style={linkResetStyle}>
+      <LocaleLink href={url} prefetch={false} onClick={handleClick} style={linkResetStyle}>
         <MuiButton
           variant="text"
           startIcon={icon}
@@ -94,14 +94,14 @@ export function ViewDetailsAction({
         >
           {label}
         </MuiButton>
-      </Link>
+      </LocaleLink>
     ),
     menuItem: {
       key: 'viewDetails',
       label: (
-        <Link href={url} prefetch={false} onClick={handleClick} style={linkResetStyle}>
+        <LocaleLink href={url} prefetch={false} onClick={handleClick} style={linkResetStyle}>
           {label}
-        </Link>
+        </LocaleLink>
       ),
       icon,
     },

@@ -3,7 +3,7 @@ import { NextResponse, type NextRequest } from 'next/server';
 import { SUPPORTED_BOARDS } from './app/lib/board-data';
 import { getListPageCacheTTL } from './app/lib/list-page-cache';
 import { CLIMB_SESSION_COOKIE } from './app/lib/climb-session-cookie';
-import { DEFAULT_LOCALE, LOCALE_HEADER } from './app/lib/i18n/config';
+import { DEFAULT_LOCALE, LOCALE_COOKIE, LOCALE_HEADER, isSupportedLocale } from './app/lib/i18n/config';
 import { detectLocale } from './app/lib/i18n/detect-locale';
 
 const SPECIAL_ROUTES = ['angles', 'grades']; // routes that don't need board validation
@@ -59,6 +59,22 @@ export function middleware(request: NextRequest) {
   // Detect locale from URL prefix. API routes don't carry a locale prefix —
   // skip them so we don't mangle their paths.
   const isApi = pathname.startsWith('/api/');
+
+  // Cookie-driven sticky locale: when a page request arrives without a locale
+  // prefix and the visitor previously chose a non-default locale, send them
+  // to the prefixed URL so subsequent navigation stays in their language.
+  if (!isApi) {
+    const preDetected = detectLocale(pathname);
+    if (preDetected.locale === DEFAULT_LOCALE) {
+      const cookieLocale = request.cookies.get(LOCALE_COOKIE)?.value;
+      if (isSupportedLocale(cookieLocale) && cookieLocale !== DEFAULT_LOCALE) {
+        const target = new URL(`/${cookieLocale}${pathname}`, request.url);
+        target.search = request.nextUrl.search;
+        return NextResponse.redirect(target, 308);
+      }
+    }
+  }
+
   const { locale, strippedPath, needsRewrite } = isApi
     ? { locale: DEFAULT_LOCALE, strippedPath: pathname, needsRewrite: false }
     : detectLocale(pathname);
@@ -76,6 +92,16 @@ export function middleware(request: NextRequest) {
   } else {
     response = NextResponse.next({
       request: { headers: requestHeaders },
+    });
+  }
+
+  // Sticky cookie: any visit on a non-default locale URL writes the cookie so
+  // a shared /es/... link from a friend persists for the recipient too.
+  if (locale !== DEFAULT_LOCALE) {
+    response.cookies.set(LOCALE_COOKIE, locale, {
+      path: '/',
+      sameSite: 'lax',
+      maxAge: 60 * 60 * 24 * 365,
     });
   }
 

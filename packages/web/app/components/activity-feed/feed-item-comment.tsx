@@ -7,7 +7,7 @@ import CardContent from '@mui/material/CardContent';
 import MuiTypography from '@mui/material/Typography';
 import MuiAvatar from '@mui/material/Avatar';
 import PersonOutlined from '@mui/icons-material/PersonOutlined';
-import Link from 'next/link';
+import LocaleLink from '@/app/components/i18n/locale-link';
 import dayjs from 'dayjs';
 import relativeTime from 'dayjs/plugin/relativeTime';
 import type { ActivityFeedItem } from '@boardsesh/shared-schema';
@@ -33,7 +33,7 @@ export default function FeedItemComment({ item }: FeedItemCommentProps) {
           <MuiAvatar
             src={item.actorAvatarUrl ?? undefined}
             sx={{ width: 32, height: 32 }}
-            {...(actorProfileHref ? { component: Link, href: actorProfileHref } : {})}
+            {...(actorProfileHref ? { component: LocaleLink, href: actorProfileHref } : {})}
           >
             {!item.actorAvatarUrl && <PersonOutlined sx={{ fontSize: 16 }} />}
           </MuiAvatar>
@@ -41,7 +41,7 @@ export default function FeedItemComment({ item }: FeedItemCommentProps) {
             <MuiTypography
               variant="body2"
               fontWeight={600}
-              {...(actorProfileHref ? { component: Link, href: actorProfileHref } : {})}
+              {...(actorProfileHref ? { component: LocaleLink, href: actorProfileHref } : {})}
               sx={{ textDecoration: 'none', color: 'text.primary' }}
             >
               {item.actorDisplayName || 'User'}

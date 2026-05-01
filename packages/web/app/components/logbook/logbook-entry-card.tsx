@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-import NextLink from 'next/link';
+import LocaleLink from '@/app/components/i18n/locale-link';
 import Avatar from '@mui/material/Avatar';
 import Box from '@mui/material/Box';
 import Card from '@mui/material/Card';
@@ -76,7 +76,7 @@ export const LogbookEntryCard: React.FC<LogbookEntryCardProps> = ({
         {user && (
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}>
             <Link
-              component={NextLink}
+              component={LocaleLink}
               href={`/profile/${user.userId}`}
               aria-label={user.displayName || 'Climber profile'}
               sx={{ display: 'inline-flex' }}
@@ -85,7 +85,7 @@ export const LogbookEntryCard: React.FC<LogbookEntryCardProps> = ({
                 {!user.avatarUrl && <PersonOutlined sx={{ fontSize: 16 }} />}
               </Avatar>
             </Link>
-            <Link component={NextLink} href={`/profile/${user.userId}`} underline="none" color="text.primary">
+            <Link component={LocaleLink} href={`/profile/${user.userId}`} underline="none" color="text.primary">
               <Typography variant="body2" fontWeight={600}>
                 {user.displayName || 'Climber'}
               </Typography>

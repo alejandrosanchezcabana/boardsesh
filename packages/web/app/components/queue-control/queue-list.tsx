@@ -14,7 +14,8 @@ import type { Climb, BoardDetails } from '@/app/lib/types';
 import { monitorForElements } from '@atlaskit/pragmatic-drag-and-drop/element/adapter';
 import { extractClosestEdge } from '@atlaskit/pragmatic-drag-and-drop-hitbox/closest-edge';
 import { reorder } from '@atlaskit/pragmatic-drag-and-drop/reorder';
-import { usePathname, useRouter, useParams } from 'next/navigation';
+import { usePathname, useParams } from 'next/navigation';
+import { useLocaleRouter } from '@/app/lib/i18n/use-locale-router';
 import { useSession } from 'next-auth/react';
 import { useIsDarkMode } from '@/app/hooks/use-is-dark-mode';
 import { useDrawerDragResize } from '@/app/hooks/use-drawer-drag-resize';
@@ -79,7 +80,7 @@ const QueueList = forwardRef<QueueListHandle, QueueListProps>(
     const { viewOnlyMode } = useSessionData();
     const { setCurrentClimb, setCurrentClimbQueueItem, setQueue, addToQueue } = useQueueActions();
     const pathname = usePathname();
-    const router = useRouter();
+    const router = useLocaleRouter();
     const routeParams = useParams<{ board_slug?: string; angle?: string }>();
     const { data: authSession } = useSession();
     const isDark = useIsDarkMode();

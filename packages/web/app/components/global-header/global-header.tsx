@@ -12,7 +12,7 @@ import SettingsOutlined from '@mui/icons-material/SettingsOutlined';
 import IosShareOutlined from '@mui/icons-material/IosShare';
 import NotificationsOutlined from '@mui/icons-material/NotificationsOutlined';
 import Badge from '@mui/material/Badge';
-import Link from 'next/link';
+import LocaleLink from '@/app/components/i18n/locale-link';
 import { useUnreadNotificationCount } from '@/app/hooks/use-unread-notification-count';
 import { useSession } from 'next-auth/react';
 import UnifiedSearchDrawer from '@/app/components/search-drawer/unified-search-drawer';
@@ -216,7 +216,7 @@ export default function GlobalHeader({ boardConfigs }: GlobalHeaderProps) {
   }, [profileHeaderConfig, profileHeaderShare.displayName, profileHeaderShare.isActive, showMessage]);
 
   const notificationButton = (
-    <IconButton component={Link} href="/notifications" aria-label="Notifications" size="small">
+    <IconButton component={LocaleLink} href="/notifications" aria-label="Notifications" size="small">
       <Badge
         badgeContent={notificationUnreadCount}
         color="error"
@@ -240,7 +240,7 @@ export default function GlobalHeader({ boardConfigs }: GlobalHeaderProps) {
         left={
           <div className={styles.headerActions}>
             <UserDrawer boardConfigs={boardConfigs} />
-            <IconButton component={Link} href="/settings" aria-label="Settings" size="small">
+            <IconButton component={LocaleLink} href="/settings" aria-label="Settings" size="small">
               <SettingsOutlined />
             </IconButton>
           </div>
@@ -284,7 +284,7 @@ export default function GlobalHeader({ boardConfigs }: GlobalHeaderProps) {
           </IconButton>
         )}
         {notificationButton}
-        <IconButton component={Link} href="/settings" aria-label="Settings" size="small">
+        <IconButton component={LocaleLink} href="/settings" aria-label="Settings" size="small">
           <SettingsOutlined />
         </IconButton>
       </header>

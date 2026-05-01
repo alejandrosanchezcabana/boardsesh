@@ -12,7 +12,7 @@ import DeleteOutlined from '@mui/icons-material/DeleteOutlined';
 import ReplyOutlined from '@mui/icons-material/ReplyOutlined';
 import dayjs from 'dayjs';
 import relativeTime from 'dayjs/plugin/relativeTime';
-import Link from 'next/link';
+import LocaleLink from '@/app/components/i18n/locale-link';
 import type { Comment as CommentType, SocialEntityType } from '@boardsesh/shared-schema';
 import { useWsAuthToken } from '@/app/hooks/use-ws-auth-token';
 import { useSnackbar } from '@/app/components/providers/snackbar-provider';
@@ -199,7 +199,7 @@ export default function CommentItem({
         <MuiAvatar
           src={comment.userAvatarUrl ?? undefined}
           sx={{ width: 28, height: 28, mt: 0.25 }}
-          component={Link}
+          component={LocaleLink}
           href={`/profile/${comment.userId}`}
         >
           {!comment.userAvatarUrl && <PersonOutlined sx={{ fontSize: 16 }} />}
@@ -211,7 +211,7 @@ export default function CommentItem({
             <MuiTypography
               variant="body2"
               fontWeight={600}
-              component={Link}
+              component={LocaleLink}
               href={`/profile/${comment.userId}`}
               sx={{ textDecoration: 'none', color: 'text.primary' }}
             >

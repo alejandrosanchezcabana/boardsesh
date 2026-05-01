@@ -24,6 +24,7 @@ export const SEED_NAMESPACES = ['common', 'marketing'] as const;
 export type SeedNamespace = (typeof SEED_NAMESPACES)[number];
 
 export const LOCALE_HEADER = 'x-boardsesh-locale';
+export const LOCALE_COOKIE = 'boardsesh-locale';
 
 export function isSupportedLocale(value: string | undefined | null): value is Locale {
   return value != null && (SUPPORTED_LOCALES as readonly string[]).includes(value);

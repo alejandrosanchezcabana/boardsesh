@@ -2,7 +2,8 @@
 import React, { useState, useCallback } from 'react';
 import IconButton from '@mui/material/IconButton';
 import Box from '@mui/material/Box';
-import { usePathname, useSearchParams, useRouter } from 'next/navigation';
+import { usePathname, useSearchParams } from 'next/navigation';
+import { useLocaleRouter } from '@/app/lib/i18n/use-locale-router';
 import CircularProgress from '@mui/material/CircularProgress';
 import MuiButton from '@mui/material/Button';
 import SearchOutlined from '@mui/icons-material/SearchOutlined';
@@ -28,7 +29,7 @@ import AddOutlined from '@mui/icons-material/AddOutlined';
 import ChevronLeftOutlined from '@mui/icons-material/ChevronLeftOutlined';
 import AngleSelector from './angle-selector';
 import styles from './header.module.css';
-import Link from 'next/link';
+import LocaleLink from '@/app/components/i18n/locale-link';
 
 type BoardSeshHeaderProps = {
   boardDetails: BoardDetails;
@@ -42,7 +43,7 @@ export default function BoardSeshHeader({ boardDetails, angle, isAngleAdjustable
   const { totalSearchResultCount, isFetchingClimbs } = useSearchData();
   const { uiSearchParams, clearClimbSearchParams, updateFilters } = useUISearchParams();
   const searchParams = useSearchParams();
-  const router = useRouter();
+  const router = useLocaleRouter();
   const [searchDropdownOpen, setSearchDropdownOpen] = useState(false);
   const isCreatePage = pathname.includes('/create');
   const isListPage = pathname.includes('/list');
@@ -158,11 +159,11 @@ export default function BoardSeshHeader({ boardDetails, angle, isAngleAdjustable
 
             {hasCreateButton && (
               <div className={styles.desktopOnly}>
-                <Link href={createClimbUrl}>
+                <LocaleLink href={createClimbUrl}>
                   <IconButton title="Create new climb">
                     <AddOutlined />
                   </IconButton>
-                </Link>
+                </LocaleLink>
               </div>
             )}
           </Box>

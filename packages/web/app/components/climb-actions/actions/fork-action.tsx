@@ -5,7 +5,7 @@ import MuiButton from '@mui/material/Button';
 import { ActionTooltip } from '../action-tooltip';
 import CallSplitOutlined from '@mui/icons-material/CallSplitOutlined';
 import EditOutlined from '@mui/icons-material/EditOutlined';
-import Link from 'next/link';
+import LocaleLink from '@/app/components/i18n/locale-link';
 import { track } from '@vercel/analytics';
 import { useSession } from 'next-auth/react';
 import type { ClimbActionProps, ClimbActionResult } from '../types';
@@ -84,13 +84,13 @@ export function ForkAction({
     available: canFork,
     iconElementOverride: url ? (
       <ActionTooltip title={tooltip}>
-        <Link href={url} prefetch={false} onClick={handleClick} className={className} style={linkResetStyle}>
+        <LocaleLink href={url} prefetch={false} onClick={handleClick} className={className} style={linkResetStyle}>
           {icon}
-        </Link>
+        </LocaleLink>
       </ActionTooltip>
     ) : null,
     buttonElementOverride: url ? (
-      <Link href={url} prefetch={false} onClick={handleClick} style={linkResetStyle}>
+      <LocaleLink href={url} prefetch={false} onClick={handleClick} style={linkResetStyle}>
         <MuiButton
           variant="outlined"
           startIcon={icon}
@@ -100,10 +100,10 @@ export function ForkAction({
         >
           {shouldShowLabel && label}
         </MuiButton>
-      </Link>
+      </LocaleLink>
     ) : null,
     listElementOverride: url ? (
-      <Link href={url} prefetch={false} onClick={handleClick} style={linkResetStyle}>
+      <LocaleLink href={url} prefetch={false} onClick={handleClick} style={linkResetStyle}>
         <MuiButton
           variant="text"
           startIcon={icon}
@@ -125,15 +125,15 @@ export function ForkAction({
         >
           {label}
         </MuiButton>
-      </Link>
+      </LocaleLink>
     ) : null,
     menuItem: url
       ? {
           key: 'fork',
           label: (
-            <Link href={url} prefetch={false} onClick={handleClick} style={linkResetStyle}>
+            <LocaleLink href={url} prefetch={false} onClick={handleClick} style={linkResetStyle}>
               {label}
-            </Link>
+            </LocaleLink>
           ),
           icon,
         }

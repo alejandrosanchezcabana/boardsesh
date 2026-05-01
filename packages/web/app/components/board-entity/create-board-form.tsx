@@ -8,7 +8,7 @@ import {
   type CreateBoardMutationVariables,
   type CreateBoardMutationResponse,
 } from '@/app/lib/graphql/operations';
-import { useRouter } from 'next/navigation';
+import { useLocaleRouter } from '@/app/lib/i18n/use-locale-router';
 import { constructBoardSlugListUrl } from '@/app/lib/url-utils';
 import type { UserBoard } from '@boardsesh/shared-schema';
 import type { BoardName } from '@/app/lib/types';
@@ -35,7 +35,7 @@ export default function CreateBoardForm({
   onCancel,
 }: CreateBoardFormProps) {
   const { showMessage } = useSnackbar();
-  const router = useRouter();
+  const router = useLocaleRouter();
 
   const availableAngles = ANGLES[boardType as BoardName] ?? [];
 

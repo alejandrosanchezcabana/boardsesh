@@ -17,7 +17,8 @@ import {
 import { readFiltersFromQuery, readSortFromQuery, filtersToQueryParams } from '@/app/lib/logbook-url-utils';
 import { getPreference, setPreference } from '@/app/lib/user-preferences-db';
 import { useSession } from 'next-auth/react';
-import { usePathname, useSearchParams, useRouter } from 'next/navigation';
+import { usePathname, useSearchParams } from 'next/navigation';
+import { useLocaleRouter } from '@/app/lib/i18n/use-locale-router';
 import { useInfiniteQuery, useQueryClient } from '@tanstack/react-query';
 import { createGraphQLHttpClient } from '@/app/lib/graphql/client';
 import { useWsAuthToken } from '@/app/hooks/use-ws-auth-token';
@@ -64,7 +65,7 @@ export default function LogbookFeed({ layoutStats, loadingLayoutStats }: Logbook
   const { data: session } = useSession();
   const pathname = usePathname();
   const searchParams = useSearchParams();
-  const router = useRouter();
+  const router = useLocaleRouter();
   const { token, isLoading: authLoading, error: authError } = useWsAuthToken();
   const userId = session?.user?.id;
   const isNarrowViewport = useMediaQuery('(max-width: 768px)', { noSsr: true });

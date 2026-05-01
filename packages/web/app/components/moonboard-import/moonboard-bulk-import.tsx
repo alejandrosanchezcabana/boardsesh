@@ -15,8 +15,9 @@ import MuiButton from '@mui/material/Button';
 import Typography from '@mui/material/Typography';
 import CircularProgress from '@mui/material/CircularProgress';
 import { InboxOutlined, SaveOutlined, ClearOutlined, ArrowBackOutlined, LoginOutlined } from '@mui/icons-material';
-import { usePathname, useRouter } from 'next/navigation';
-import Link from 'next/link';
+import { usePathname } from 'next/navigation';
+import { useLocaleRouter } from '@/app/lib/i18n/use-locale-router';
+import LocaleLink from '@/app/components/i18n/locale-link';
 import { useSession } from 'next-auth/react';
 import { parseMultipleScreenshots, deduplicateClimbs, type MoonBoardClimb } from '@boardsesh/moonboard-ocr/browser';
 import type { MoonBoardClimbDuplicateMatch } from '@boardsesh/shared-schema';
@@ -153,7 +154,7 @@ export default function MoonBoardBulkImport({
   holdSetImages,
   angle,
 }: MoonBoardBulkImportProps) {
-  const router = useRouter();
+  const router = useLocaleRouter();
   const pathname = usePathname();
   const { data: session } = useSession();
   const queryClient = useQueryClient();
@@ -428,11 +429,11 @@ export default function MoonBoardBulkImport({
         <MuiAlert severity="warning" variant="filled" sx={warningAlertSx} className={styles.warningAlert}>
           <AlertTitle>Login Required</AlertTitle>
           Please log in to save climbs to the database.{' '}
-          <Link href="/api/auth/signin">
+          <LocaleLink href="/api/auth/signin">
             <MuiButton variant="text" startIcon={<LoginOutlined />} sx={{ padding: 0, color: 'inherit' }}>
               Log in
             </MuiButton>
-          </Link>
+          </LocaleLink>
         </MuiAlert>
       )}
 

@@ -15,7 +15,7 @@ import ElectricBoltOutlined from '@mui/icons-material/ElectricBoltOutlined';
 import { PersonFallingIcon } from '@/app/components/icons/person-falling-icon';
 import LocationOnOutlined from '@mui/icons-material/LocationOnOutlined';
 import ChatBubbleOutlineOutlined from '@mui/icons-material/ChatBubbleOutlineOutlined';
-import Link from 'next/link';
+import LocaleLink from '@/app/components/i18n/locale-link';
 import { formatTickRelativeTime } from '@/app/lib/format-tick-time';
 import type { FollowingAscentFeedItem } from '@boardsesh/shared-schema';
 import AscentThumbnail from './ascent-thumbnail';
@@ -78,7 +78,7 @@ const SocialFeedItem: React.FC<SocialFeedItemProps> = ({ item, showUserHeader = 
             <MuiAvatar
               src={item.userAvatarUrl ?? undefined}
               sx={{ width: 32, height: 32 }}
-              component={Link}
+              component={LocaleLink}
               href={`/profile/${item.userId}`}
             >
               {!item.userAvatarUrl && <PersonOutlined sx={{ fontSize: 16 }} />}
@@ -87,7 +87,7 @@ const SocialFeedItem: React.FC<SocialFeedItemProps> = ({ item, showUserHeader = 
               <MuiTypography
                 variant="body2"
                 fontWeight={600}
-                component={Link}
+                component={LocaleLink}
                 href={`/profile/${item.userId}`}
                 sx={{ textDecoration: 'none', color: 'text.primary' }}
               >

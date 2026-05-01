@@ -18,13 +18,16 @@ import Instagram from '@mui/icons-material/Instagram';
 import HistoryOutlined from '@mui/icons-material/HistoryOutlined';
 import ChevronRightOutlined from '@mui/icons-material/ChevronRightOutlined';
 import { useSession } from 'next-auth/react';
-import { useRouter } from 'next/navigation';
+import { useLocaleRouter } from '@/app/lib/i18n/use-locale-router';
+import { localeHref } from '@/app/lib/i18n/locale-href';
+import { DEFAULT_LOCALE, isSupportedLocale, type Locale } from '@/app/lib/i18n/config';
+import { useTranslation } from 'react-i18next';
 import Logo from '@/app/components/brand/logo';
 import AuroraCredentialsSection from '@/app/components/settings/aurora-credentials-section';
 import ControllersSection from '@/app/components/settings/controllers-section';
 import DeleteAccountSection from '@/app/components/settings/delete-account-section';
 import SetPasswordSection from '@/app/components/settings/set-password-section';
-import Link from 'next/link';
+import LocaleLink from '@/app/components/i18n/locale-link';
 import BackButton from '@/app/components/back-button';
 import { useWsAuthToken } from '@/app/hooks/use-ws-auth-token';
 import { usePartyProfile } from '@/app/components/party-manager/party-profile-context';
@@ -115,7 +118,9 @@ type UserProfile = {
 
 export default function SettingsPageContent() {
   const { data: session, status } = useSession();
-  const router = useRouter();
+  const router = useLocaleRouter();
+  const { i18n } = useTranslation();
+  const activeLocale: Locale = isSupportedLocale(i18n.language) ? i18n.language : DEFAULT_LOCALE;
   const [formValues, setFormValues] = useState({ displayName: '', instagramUrl: '' });
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -147,7 +152,8 @@ export default function SettingsPageContent() {
   // Redirect unauthenticated users to login with a return URL
   useEffect(() => {
     if (status === 'unauthenticated') {
-      router.push('/auth/login?callbackUrl=%2Fsettings');
+      const callback = encodeURIComponent(localeHref('/settings', activeLocale));
+      router.push(`/auth/login?callbackUrl=${callback}`);
     }
   }, [status, router]);
 
@@ -606,7 +612,7 @@ export default function SettingsPageContent() {
 
         <Card variant="outlined" sx={{ borderRadius: 2 }}>
           <CardContent
-            component={Link}
+            component={LocaleLink}
             href="/playlists"
             sx={{
               display: 'flex',

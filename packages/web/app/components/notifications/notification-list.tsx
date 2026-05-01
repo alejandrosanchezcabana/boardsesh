@@ -7,7 +7,7 @@ import MuiButton from '@mui/material/Button';
 import MuiTypography from '@mui/material/Typography';
 import CircularProgress from '@mui/material/CircularProgress';
 import NotificationsNoneOutlined from '@mui/icons-material/NotificationsNoneOutlined';
-import { useRouter } from 'next/navigation';
+import { useLocaleRouter } from '@/app/lib/i18n/use-locale-router';
 import type { GroupedNotification, GroupedNotificationConnection } from '@boardsesh/shared-schema';
 import { useUnreadNotificationCount } from '@/app/hooks/use-unread-notification-count';
 import { useGroupedNotifications } from '@/app/hooks/use-grouped-notifications';
@@ -26,7 +26,7 @@ export default function NotificationList({ initialData }: NotificationListProps)
   );
   const markGroupAsReadMutation = useMarkGroupAsRead();
   const markAllAsReadMutation = useMarkAllAsRead();
-  const router = useRouter();
+  const router = useLocaleRouter();
 
   const handleLoadMore = useCallback(() => {
     if (hasMore && !isFetchingMore) {

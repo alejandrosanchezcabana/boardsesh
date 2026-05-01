@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useMemo } from 'react';
-import Link from 'next/link';
+import LocaleLink from '@/app/components/i18n/locale-link';
 import type { BoardDetails, BoardName } from '@/app/lib/types';
 import BoardImageLayers from '@/app/components/board-renderer/board-image-layers';
 import BoardCanvasRenderer from '@/app/components/board-renderer/board-canvas-renderer';
@@ -138,9 +138,9 @@ const AscentThumbnail: React.FC<AscentThumbnailProps> = ({
   }
 
   return (
-    <Link href={climbViewPath!} className={styles.thumbnailLink} title={`View ${climbName}`}>
+    <LocaleLink href={climbViewPath!} className={styles.thumbnailLink} title={`View ${climbName}`}>
       <div className={styles.thumbnailContainer}>{thumbnailContent}</div>
-    </Link>
+    </LocaleLink>
   );
 };
 

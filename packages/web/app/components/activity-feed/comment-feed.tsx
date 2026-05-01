@@ -10,7 +10,7 @@ import MuiButton from '@mui/material/Button';
 import ErrorOutline from '@mui/icons-material/ErrorOutline';
 import ChatBubbleOutlineOutlined from '@mui/icons-material/ChatBubbleOutlineOutlined';
 import PersonOutlined from '@mui/icons-material/PersonOutlined';
-import Link from 'next/link';
+import LocaleLink from '@/app/components/i18n/locale-link';
 
 import dayjs from 'dayjs';
 import relativeTime from 'dayjs/plugin/relativeTime';
@@ -140,7 +140,7 @@ function CommentFeedCard({ comment }: { comment: CommentType }) {
           <Avatar
             src={comment.userAvatarUrl ?? undefined}
             sx={{ width: 32, height: 32 }}
-            component={Link}
+            component={LocaleLink}
             href={`/profile/${comment.userId}`}
           >
             {!comment.userAvatarUrl && <PersonOutlined sx={{ fontSize: 16 }} />}
@@ -149,7 +149,7 @@ function CommentFeedCard({ comment }: { comment: CommentType }) {
             <Typography
               variant="body2"
               fontWeight={600}
-              component={Link}
+              component={LocaleLink}
               href={`/profile/${comment.userId}`}
               sx={{ textDecoration: 'none', color: 'text.primary' }}
             >

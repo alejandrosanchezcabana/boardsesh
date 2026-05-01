@@ -2,7 +2,7 @@
 
 import React from 'react';
 
-import Link from 'next/link';
+import LocaleLink from '@/app/components/i18n/locale-link';
 import { useQueueActions, useSessionData } from '../graphql-queue';
 import { constructPlayUrlWithSlugs, getContextAwareClimbViewUrl } from '@/app/lib/url-utils';
 import type { BoardDetails } from '@/app/lib/types';
@@ -89,9 +89,9 @@ export default function PreviousClimbButton({ navigate, boardDetails }: Previous
 
     const climbUrl = buildClimbUrl();
     return (
-      <Link href={climbUrl} prefetch={false} onClick={handleClick}>
+      <LocaleLink href={climbUrl} prefetch={false} onClick={handleClick}>
         <PreviousButton />
-      </Link>
+      </LocaleLink>
     );
   }
   return <PreviousButton onClick={handleClick} disabled={!previousClimb || viewOnlyMode} />;

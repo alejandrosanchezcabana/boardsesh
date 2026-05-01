@@ -1,6 +1,7 @@
 import { useState, useEffect, useMemo, useCallback, useRef } from 'react';
-import { useSearchParams, useRouter, usePathname } from 'next/navigation';
+import { useSearchParams, usePathname } from 'next/navigation';
 import { v4 as uuidv4 } from 'uuid';
+import { useLocaleRouter } from '@/app/lib/i18n/use-locale-router';
 import { getBaseBoardPath } from '@/app/lib/url-utils';
 import { saveSessionToHistory } from '@/app/lib/session-history-db';
 import { getClimbSessionCookie, setClimbSessionCookie, clearClimbSessionCookie } from '@/app/lib/climb-session-cookie';
@@ -26,7 +27,7 @@ export function useSessionIdManagement({
   currentClimbQueueItem,
 }: UseSessionIdManagementParams) {
   const searchParams = useSearchParams();
-  const router = useRouter();
+  const router = useLocaleRouter();
   const pathname = usePathname();
   const { backendUrl } = useConnectionSettings();
   const { token: wsAuthToken } = useWsAuthToken();

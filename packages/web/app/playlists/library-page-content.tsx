@@ -5,7 +5,7 @@ import MuiButton from '@mui/material/Button';
 import Typography from '@mui/material/Typography';
 import { LabelOutlined, LoginOutlined, SentimentDissatisfiedOutlined } from '@mui/icons-material';
 import { useSession } from 'next-auth/react';
-import { useRouter } from 'next/navigation';
+import { useLocaleRouter } from '@/app/lib/i18n/use-locale-router';
 import { executeGraphQL } from '@/app/lib/graphql/client';
 import {
   type GetAllUserPlaylistsQueryResponse,
@@ -56,7 +56,7 @@ export default function LibraryPageContent({
 }: LibraryPageContentProps) {
   const { data: session, status: sessionStatus } = useSession();
   const { token, isLoading: tokenLoading } = useWsAuthToken();
-  const router = useRouter();
+  const router = useLocaleRouter();
 
   const hasInitialBoardData = initialMyBoards != null && initialMyBoards.length > 0;
   const hasInitialPlaylistData = initialPlaylists != null;

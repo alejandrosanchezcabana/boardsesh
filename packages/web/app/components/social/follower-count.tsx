@@ -11,7 +11,7 @@ import ListItemAvatar from '@mui/material/ListItemAvatar';
 import ListItemText from '@mui/material/ListItemText';
 import CircularProgress from '@mui/material/CircularProgress';
 import { PersonOutlined } from '@mui/icons-material';
-import Link from 'next/link';
+import LocaleLink from '@/app/components/i18n/locale-link';
 import SwipeableDrawer from '@/app/components/swipeable-drawer/swipeable-drawer';
 import FollowButton from '@/app/components/ui/follow-button';
 import {
@@ -116,7 +116,7 @@ export default function FollowerCount({ userId, followerCount, followingCount }:
           {users.map((user) => (
             <ListItem
               key={user.id}
-              component={Link}
+              component={LocaleLink}
               href={`/profile/${user.id}`}
               sx={{
                 textDecoration: 'none',

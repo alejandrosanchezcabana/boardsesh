@@ -1,7 +1,8 @@
 'use client';
 
 import { useEffect, useRef } from 'react';
-import { useSearchParams, usePathname, useRouter } from 'next/navigation';
+import { useSearchParams, usePathname } from 'next/navigation';
+import { useLocaleRouter } from '@/app/lib/i18n/use-locale-router';
 import { useSearchData, useQueueActions } from '../graphql-queue';
 
 type AutoConnectHandlerProps = {
@@ -21,7 +22,7 @@ type AutoConnectHandlerProps = {
 export function AutoConnectHandler({ connect, isBluetoothSupported }: AutoConnectHandlerProps) {
   const searchParams = useSearchParams();
   const pathname = usePathname();
-  const router = useRouter();
+  const router = useLocaleRouter();
   const { climbSearchResults, hasDoneFirstFetch } = useSearchData();
   const { setCurrentClimb } = useQueueActions();
   const triggeredRef = useRef(false);

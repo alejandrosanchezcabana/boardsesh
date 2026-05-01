@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-import Link from 'next/link';
+import LocaleLink from '@/app/components/i18n/locale-link';
 import PlaylistPreviewSquare from './playlist-preview-square';
 import styles from './library.module.css';
 
@@ -34,7 +34,7 @@ export default function PlaylistCard({
 }: PlaylistCardProps) {
   if (variant === 'grid') {
     return (
-      <Link href={href} className={styles.cardCompact}>
+      <LocaleLink href={href} className={styles.cardCompact}>
         <div className={styles.cardCompactSquare}>
           <PlaylistPreviewSquare
             boardType={boardType}
@@ -53,12 +53,12 @@ export default function PlaylistCard({
             {climbCount} {climbCount === 1 ? 'climb' : 'climbs'}
           </div>
         </div>
-      </Link>
+      </LocaleLink>
     );
   }
 
   return (
-    <Link href={href} className={`${styles.card} ${styles.cardScroll}`}>
+    <LocaleLink href={href} className={`${styles.card} ${styles.cardScroll}`}>
       <div className={styles.cardSquare}>
         <PlaylistPreviewSquare
           boardType={boardType}
@@ -74,6 +74,6 @@ export default function PlaylistCard({
       <div className={styles.cardMeta}>
         {climbCount} {climbCount === 1 ? 'climb' : 'climbs'}
       </div>
-    </Link>
+    </LocaleLink>
   );
 }

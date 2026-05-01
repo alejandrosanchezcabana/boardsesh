@@ -10,7 +10,7 @@ import MuiAvatar from '@mui/material/Avatar';
 import Typography from '@mui/material/Typography';
 import Chip from '@mui/material/Chip';
 import CircularProgress from '@mui/material/CircularProgress';
-import Link from 'next/link';
+import LocaleLink from '@/app/components/i18n/locale-link';
 import { PersonOutlined } from '@mui/icons-material';
 import { useInfiniteQuery } from '@tanstack/react-query';
 import FollowButton from '@/app/components/ui/follow-button';
@@ -104,7 +104,7 @@ export default function UserSearchResults({ query, authToken }: UserSearchResult
             return (
               <ListItem
                 key={`user-${result.user.id}`}
-                component={Link}
+                component={LocaleLink}
                 href={`/profile/${result.user.id}`}
                 sx={{
                   textDecoration: 'none',
@@ -153,7 +153,7 @@ export default function UserSearchResults({ query, authToken }: UserSearchResult
             return (
               <ListItem
                 key={`setter-${result.setter.username}`}
-                component={Link}
+                component={LocaleLink}
                 href={`/setter/${encodeURIComponent(result.setter.username)}`}
                 sx={{
                   textDecoration: 'none',

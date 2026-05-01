@@ -34,6 +34,11 @@ vi.mock('next-auth/react', () => ({
 vi.mock('next/navigation', () => ({
   useRouter: () => ({ push: mockPush }),
   usePathname: () => '/test',
+  useSearchParams: () => new URLSearchParams(),
+}));
+
+vi.mock('react-i18next', () => ({
+  useTranslation: () => ({ i18n: { language: 'en-US', changeLanguage: vi.fn() }, t: (key: string) => key }),
 }));
 
 vi.mock('next/link', () => ({

@@ -3,7 +3,7 @@
 import React, { useEffect, useState } from 'react';
 import IconButton from '@mui/material/IconButton';
 import ArrowBackOutlined from '@mui/icons-material/ArrowBackOutlined';
-import { useRouter } from 'next/navigation';
+import { useLocaleRouter } from '@/app/lib/i18n/use-locale-router';
 
 type BackButtonProps = {
   fallbackUrl?: string;
@@ -11,7 +11,7 @@ type BackButtonProps = {
 };
 
 const BackButton = ({ fallbackUrl, className }: BackButtonProps) => {
-  const router = useRouter();
+  const router = useLocaleRouter();
   const [canGoBack, setCanGoBack] = useState(false);
 
   useEffect(() => {

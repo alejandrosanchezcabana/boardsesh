@@ -1,0 +1,71 @@
+import { test, expect } from '@playwright/test';
+
+/**
+ * Locale-aware navigation: cookie persistence, in-app link prefixing,
+ * and the API/external pass-through guards.
+ *
+ * Sister spec to i18n-locale-routing.spec.ts which covers the static
+ * middleware → server-component → catalog pipeline. This one exercises
+ * the runtime navigation surface introduced with the drawer language
+ * switcher.
+ */
+test.describe('i18n locale navigation', () => {
+  test('cookie pre-set redirects unprefixed URL to the cookie locale', async ({ context, page }) => {
+    await context.addCookies([
+      {
+        name: 'boardsesh-locale',
+        value: 'es',
+        domain: 'localhost',
+        path: '/',
+      },
+    ]);
+
+    const response = await page.goto('/about', { waitUntil: 'domcontentloaded' });
+
+    // Final landing URL should be the Spanish version after the 308.
+    expect(page.url()).toMatch(/\/es\/about$/);
+    await expect(page.locator('html')).toHaveAttribute('lang', 'es');
+
+    // Confirm the redirect chain saw a 308 from the unprefixed entry.
+    const chain = response?.request().redirectedFrom();
+    expect(chain).not.toBeNull();
+  });
+
+  test('visiting /es/* writes the locale cookie back', async ({ context, page }) => {
+    await context.clearCookies();
+
+    await page.goto('/es/about', { waitUntil: 'domcontentloaded' });
+
+    const cookies = await context.cookies();
+    const localeCookie = cookies.find((c) => c.name === 'boardsesh-locale');
+    expect(localeCookie?.value).toBe('es');
+  });
+
+  test('default locale visit does NOT write a cookie', async ({ context, page }) => {
+    await context.clearCookies();
+
+    await page.goto('/about', { waitUntil: 'domcontentloaded' });
+
+    const cookies = await context.cookies();
+    const localeCookie = cookies.find((c) => c.name === 'boardsesh-locale');
+    expect(localeCookie).toBeUndefined();
+  });
+
+  test('LocaleLink rewrites in-app hrefs but leaves /api/ paths alone', async ({ page }) => {
+    await page.goto('/es/about', { waitUntil: 'domcontentloaded' });
+
+    // Anchors generated through LocaleLink should keep the /es prefix.
+    const localizedHrefs = await page
+      .locator('a[href^="/es/"]')
+      .evaluateAll((nodes) => nodes.map((n) => (n as HTMLAnchorElement).getAttribute('href')));
+    expect(localizedHrefs.length).toBeGreaterThan(0);
+
+    // Any anchor pointing at /api/ must not be locale-prefixed.
+    const apiHrefs = await page
+      .locator('a[href^="/api/"], a[href^="/es/api/"]')
+      .evaluateAll((nodes) => nodes.map((n) => (n as HTMLAnchorElement).getAttribute('href')));
+    for (const href of apiHrefs) {
+      expect(href).not.toMatch(/^\/es\/api\//);
+    }
+  });
+});

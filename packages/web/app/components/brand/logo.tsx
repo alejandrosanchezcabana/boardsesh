@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-import Link from 'next/link';
+import LocaleLink from '@/app/components/i18n/locale-link';
 import Image from 'next/image';
 import { themeTokens } from '@/app/theme/theme-config';
 
@@ -49,9 +49,9 @@ const Logo = ({ size = 'md', showText = true, linkToHome = true }: LogoProps) =>
 
   if (linkToHome) {
     return (
-      <Link href="/" style={{ textDecoration: 'none', color: 'inherit', display: 'flex' }}>
+      <LocaleLink href="/" style={{ textDecoration: 'none', color: 'inherit', display: 'flex' }}>
         {logoContent}
-      </Link>
+      </LocaleLink>
     );
   }
 

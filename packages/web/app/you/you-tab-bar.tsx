@@ -3,12 +3,13 @@
 import React, { useCallback } from 'react';
 import Tabs from '@mui/material/Tabs';
 import Tab from '@mui/material/Tab';
-import { useRouter, usePathname } from 'next/navigation';
+import { usePathname } from 'next/navigation';
+import { useLocaleRouter } from '@/app/lib/i18n/use-locale-router';
 
 type YouTab = 'progress' | 'sessions' | 'logbook';
 
 export default function YouTabBar() {
-  const router = useRouter();
+  const router = useLocaleRouter();
   const pathname = usePathname();
 
   let activeTab: YouTab;

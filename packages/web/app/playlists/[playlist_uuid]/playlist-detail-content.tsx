@@ -50,7 +50,7 @@ import PlaylistPreviewSquare from '@/app/components/library/playlist-preview-squ
 import { useWsAuthToken } from '@/app/hooks/use-ws-auth-token';
 import { getBoardDetailsForPlaylist, getDefaultAngleForBoard } from '@/app/lib/board-config-for-playlist';
 import { themeTokens } from '@/app/theme/theme-config';
-import { useRouter } from 'next/navigation';
+import { useLocaleRouter } from '@/app/lib/i18n/use-locale-router';
 import BackButton from '@/app/components/back-button';
 import { PlaylistGeneratorDrawer } from '@/app/components/playlist-generator';
 import PlaylistEditDrawer from '@/app/components/library/playlist-edit-drawer';
@@ -96,7 +96,7 @@ export default function PlaylistDetailContent({
   boardConfig,
   initialMyBoards,
 }: PlaylistDetailContentProps) {
-  const router = useRouter();
+  const router = useLocaleRouter();
   const { showMessage } = useSnackbar();
   const [playlist, setPlaylist] = useState<Playlist | null>(null);
   const [loading, setLoading] = useState(true);
