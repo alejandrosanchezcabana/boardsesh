@@ -174,6 +174,53 @@ const DraftsDrawer: React.FC<DraftsDrawerProps> = ({ open, onClose, boardDetails
     [boardDetails, angle],
   );
 
+  let draftsListContent: React.ReactNode;
+  if (isLoading) {
+    draftsListContent = (
+      <Box
+        sx={{
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          padding: themeTokens.spacing[8],
+        }}
+      >
+        <CircularProgress size={24} />
+      </Box>
+    );
+  } else if (error) {
+    draftsListContent = (
+      <Box sx={{ padding: themeTokens.spacing[6], textAlign: 'center' }}>
+        <Typography variant="body2" color="text.secondary">
+          Couldn&apos;t load your drafts. Try again.
+        </Typography>
+      </Box>
+    );
+  } else if (drafts.length === 0) {
+    draftsListContent = (
+      <Box sx={{ padding: themeTokens.spacing[8], textAlign: 'center' }}>
+        <Typography variant="body1" sx={{ fontWeight: themeTokens.typography.fontWeight.semibold }}>
+          No drafts yet
+        </Typography>
+        <Typography variant="body2" color="text.secondary" sx={{ marginTop: 1 }}>
+          Save a climb as a draft to pick it up later.
+        </Typography>
+      </Box>
+    );
+  } else {
+    draftsListContent = drafts.map((climb) => (
+      <ClimbListItem
+        key={climb.uuid}
+        climb={climb}
+        boardDetails={boardDetails}
+        pathname={pathname}
+        isDark={isDark}
+        disableSwipe
+        onSelect={() => handleSelectDraft(climb)}
+      />
+    ));
+  }
+
   return (
     <SwipeableDrawer
       placement="bottom"
@@ -225,56 +272,7 @@ const DraftsDrawer: React.FC<DraftsDrawerProps> = ({ open, onClose, boardDetails
       </div>
 
       <div className={queueStyles.queueBodyLayout}>
-        <div className={queueStyles.queueScrollContainer}>
-          {(() => {
-            if (isLoading) {
-              return (
-                <Box
-                  sx={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    padding: themeTokens.spacing[8],
-                  }}
-                >
-                  <CircularProgress size={24} />
-                </Box>
-              );
-            }
-            if (error) {
-              return (
-                <Box sx={{ padding: themeTokens.spacing[6], textAlign: 'center' }}>
-                  <Typography variant="body2" color="text.secondary">
-                    Couldn&apos;t load your drafts. Try again.
-                  </Typography>
-                </Box>
-              );
-            }
-            if (drafts.length === 0) {
-              return (
-                <Box sx={{ padding: themeTokens.spacing[8], textAlign: 'center' }}>
-                  <Typography variant="body1" sx={{ fontWeight: themeTokens.typography.fontWeight.semibold }}>
-                    No drafts yet
-                  </Typography>
-                  <Typography variant="body2" color="text.secondary" sx={{ marginTop: 1 }}>
-                    Save a climb as a draft to pick it up later.
-                  </Typography>
-                </Box>
-              );
-            }
-            return drafts.map((climb) => (
-              <ClimbListItem
-                key={climb.uuid}
-                climb={climb}
-                boardDetails={boardDetails}
-                pathname={pathname}
-                isDark={isDark}
-                disableSwipe
-                onSelect={() => handleSelectDraft(climb)}
-              />
-            ));
-          })()}
-        </div>
+        <div className={queueStyles.queueScrollContainer}>{draftsListContent}</div>
       </div>
     </SwipeableDrawer>
   );

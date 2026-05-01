@@ -8,6 +8,7 @@ import ErrorOutlined from '@mui/icons-material/ErrorOutlined';
 import InfoOutlined from '@mui/icons-material/InfoOutlined';
 import WarningAmberOutlined from '@mui/icons-material/WarningAmberOutlined';
 import type { SxProps, Theme } from '@mui/material/styles';
+import { toSxArray } from './sx-utils';
 
 type ResultStatus = 'success' | 'error' | 'info' | 'warning';
 
@@ -26,12 +27,6 @@ const statusIcons: Record<ResultStatus, React.ReactNode> = {
   info: <InfoOutlined sx={{ fontSize: 72, color: 'info.main' }} />,
   warning: <WarningAmberOutlined sx={{ fontSize: 72, color: 'warning.main' }} />,
 };
-
-function toSxArray(sx: SxProps<Theme> | undefined) {
-  if (Array.isArray(sx)) return sx;
-  if (sx) return [sx];
-  return [];
-}
 
 export function ResultPage({ status, title, subTitle, extra, icon, sx }: ResultPageProps) {
   return (

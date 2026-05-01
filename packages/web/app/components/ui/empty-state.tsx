@@ -5,6 +5,7 @@ import Box from '@mui/material/Box';
 import Typography from '@mui/material/Typography';
 import InboxOutlined from '@mui/icons-material/InboxOutlined';
 import type { SxProps, Theme } from '@mui/material/styles';
+import { toSxArray } from './sx-utils';
 
 type EmptyStateProps = {
   icon?: React.ReactNode;
@@ -12,12 +13,6 @@ type EmptyStateProps = {
   children?: React.ReactNode;
   sx?: SxProps<Theme>;
 };
-
-function toSxArray(sx: SxProps<Theme> | undefined) {
-  if (Array.isArray(sx)) return sx;
-  if (sx) return [sx];
-  return [];
-}
 
 export function EmptyState({ icon, description = 'No data', children, sx }: EmptyStateProps) {
   return (

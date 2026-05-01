@@ -147,12 +147,14 @@ export const TickButton: React.FC<TickButtonProps> = ({
     </MuiBadge>
   );
 
-  const resolveTickLabel = () => {
-    if (ascentType === 'attempt') return 'attempt';
-    if (ascentType === 'flash' || isFlash) return 'flash';
-    return 'tick';
-  };
-  const tickLabel = resolveTickLabel();
+  let tickLabel: 'flash' | 'tick' | 'attempt' | 'save';
+  if (ascentType === 'attempt') {
+    tickLabel = 'attempt';
+  } else if (ascentType === 'flash' || isFlash) {
+    tickLabel = 'flash';
+  } else {
+    tickLabel = 'tick';
+  }
 
   return (
     <>

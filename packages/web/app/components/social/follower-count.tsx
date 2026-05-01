@@ -94,6 +94,66 @@ export default function FollowerCount({ userId, followerCount, followingCount }:
     }
   };
 
+  let drawerBody: React.ReactNode;
+  if (loading && users.length === 0) {
+    drawerBody = (
+      <Box sx={{ display: 'flex', justifyContent: 'center', py: 4 }}>
+        <CircularProgress />
+      </Box>
+    );
+  } else if (users.length === 0) {
+    drawerBody = (
+      <Box sx={{ display: 'flex', justifyContent: 'center', py: 4 }}>
+        <Typography variant="body2" color="text.secondary">
+          {drawerMode === 'followers' ? 'No followers yet' : 'Not following anyone'}
+        </Typography>
+      </Box>
+    );
+  } else {
+    drawerBody = (
+      <>
+        <List>
+          {users.map((user) => (
+            <ListItem
+              key={user.id}
+              component={Link}
+              href={`/profile/${user.id}`}
+              sx={{
+                textDecoration: 'none',
+                color: 'inherit',
+                '&:hover': { backgroundColor: 'action.hover' },
+              }}
+              secondaryAction={
+                <FollowButton
+                  entityId={user.id}
+                  initialIsFollowing={user.isFollowedByMe}
+                  followMutation={FOLLOW_USER}
+                  unfollowMutation={UNFOLLOW_USER}
+                  entityLabel="user"
+                  getFollowVariables={(id) => ({ input: { userId: id } })}
+                />
+              }
+            >
+              <ListItemAvatar>
+                <MuiAvatar src={user.avatarUrl ?? undefined} sx={{ width: 40, height: 40 }}>
+                  {!user.avatarUrl && <PersonOutlined />}
+                </MuiAvatar>
+              </ListItemAvatar>
+              <ListItemText primary={user.displayName || 'User'} secondary={`${user.followerCount} followers`} />
+            </ListItem>
+          ))}
+        </List>
+        {hasMore && (
+          <Box sx={{ p: 2 }}>
+            <MuiButton onClick={handleLoadMore} disabled={loading} variant="outlined" fullWidth>
+              {loading ? 'Loading...' : `Load more (${users.length} of ${totalCount})`}
+            </MuiButton>
+          </Box>
+        )}
+      </>
+    );
+  }
+
   return (
     <>
       <Box sx={{ display: 'flex', gap: 2, alignItems: 'center' }}>
@@ -142,66 +202,7 @@ export default function FollowerCount({ userId, followerCount, followingCount }:
           body: { padding: 0 },
         }}
       >
-        {(() => {
-          if (loading && users.length === 0) {
-            return (
-              <Box sx={{ display: 'flex', justifyContent: 'center', py: 4 }}>
-                <CircularProgress />
-              </Box>
-            );
-          }
-          if (users.length === 0) {
-            return (
-              <Box sx={{ display: 'flex', justifyContent: 'center', py: 4 }}>
-                <Typography variant="body2" color="text.secondary">
-                  {drawerMode === 'followers' ? 'No followers yet' : 'Not following anyone'}
-                </Typography>
-              </Box>
-            );
-          }
-          return (
-            <>
-              <List>
-                {users.map((user) => (
-                  <ListItem
-                    key={user.id}
-                    component={Link}
-                    href={`/profile/${user.id}`}
-                    sx={{
-                      textDecoration: 'none',
-                      color: 'inherit',
-                      '&:hover': { backgroundColor: 'action.hover' },
-                    }}
-                    secondaryAction={
-                      <FollowButton
-                        entityId={user.id}
-                        initialIsFollowing={user.isFollowedByMe}
-                        followMutation={FOLLOW_USER}
-                        unfollowMutation={UNFOLLOW_USER}
-                        entityLabel="user"
-                        getFollowVariables={(id) => ({ input: { userId: id } })}
-                      />
-                    }
-                  >
-                    <ListItemAvatar>
-                      <MuiAvatar src={user.avatarUrl ?? undefined} sx={{ width: 40, height: 40 }}>
-                        {!user.avatarUrl && <PersonOutlined />}
-                      </MuiAvatar>
-                    </ListItemAvatar>
-                    <ListItemText primary={user.displayName || 'User'} secondary={`${user.followerCount} followers`} />
-                  </ListItem>
-                ))}
-              </List>
-              {hasMore && (
-                <Box sx={{ p: 2 }}>
-                  <MuiButton onClick={handleLoadMore} disabled={loading} variant="outlined" fullWidth>
-                    {loading ? 'Loading...' : `Load more (${users.length} of ${totalCount})`}
-                  </MuiButton>
-                </Box>
-              )}
-            </>
-          );
-        })()}
+        {drawerBody}
       </SwipeableDrawer>
     </>
   );

@@ -338,12 +338,14 @@ export function PlaylistAction({
 
   const label = 'Add to Playlist';
   const shouldShowLabel = showLabel ?? (viewMode === 'button' || viewMode === 'dropdown');
-  const getIconSize = () => {
-    if (size === 'small') return 14;
-    if (size === 'large') return 20;
-    return 16;
-  };
-  const iconSize = getIconSize();
+  let iconSize: number;
+  if (size === 'small') {
+    iconSize = 14;
+  } else if (size === 'large') {
+    iconSize = 20;
+  } else {
+    iconSize = 16;
+  }
 
   const inPlaylistCount = playlistsContainingClimb.size;
   const renderIcon = () => {

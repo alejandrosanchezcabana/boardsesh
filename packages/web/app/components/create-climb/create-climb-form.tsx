@@ -310,11 +310,14 @@ export default function CreateClimbForm({
 
   // Common state — in edit mode use the original name, not "{name} fork"
   const isEditMode = !!editClimb;
-  const initialClimbName = (() => {
-    if (isEditMode) return forkName || '';
-    if (forkName) return `${forkName} fork`;
-    return '';
-  })();
+  let initialClimbName: string;
+  if (isEditMode) {
+    initialClimbName = forkName || '';
+  } else if (forkName) {
+    initialClimbName = `${forkName} fork`;
+  } else {
+    initialClimbName = '';
+  }
   const [climbName, setClimbName] = useState(initialClimbName);
   const [description, setDescription] = useState(forkDescription || '');
   const [showSettingsPanel, setShowSettingsPanel] = useState(false);
@@ -1352,6 +1355,40 @@ export default function CreateClimbForm({
     [climbName, session?.user?.name],
   );
 
+  let boardRenderer: React.ReactNode = null;
+  if (boardType === 'aurora' && boardDetails) {
+    boardRenderer = (
+      <div className={styles.zoomFill}>
+        <BoardRenderer
+          boardDetails={boardDetails}
+          litUpHoldsMap={litUpHoldsMap}
+          mirrored={false}
+          onHoldClick={picker.handleHoldClick}
+          fillHeight
+        />
+        <CreateClimbHeatmapOverlay
+          boardDetails={boardDetails}
+          angle={angle}
+          litUpHoldsMap={litUpHoldsMap}
+          opacity={heatmapOpacity}
+          enabled={showHeatmap}
+          onLoadingChange={handleHeatmapLoadingChange}
+        />
+      </div>
+    );
+  } else if (boardType === 'moonboard' && layoutFolder && holdSetImages) {
+    boardRenderer = (
+      <div className={styles.moonboardFill}>
+        <MoonBoardRenderer
+          layoutFolder={layoutFolder}
+          holdSetImages={holdSetImages}
+          litUpHoldsMap={litUpHoldsMap}
+          onHoldClick={picker.handleHoldClick}
+        />
+      </div>
+    );
+  }
+
   return (
     <div className={styles.pageContainer} data-testid="climb-setter">
       {/* Header section: alerts + control row */}
@@ -1419,44 +1456,7 @@ export default function CreateClimbForm({
 
       {/* Board section: zoomable SVG renderer */}
       <div className={styles.boardSectionWrapper} data-testid="climb-setter-board">
-        <ZoomableBoard resetKey={zoomResetKey}>
-          {(() => {
-            if (boardType === 'aurora' && boardDetails) {
-              return (
-                <div className={styles.zoomFill}>
-                  <BoardRenderer
-                    boardDetails={boardDetails}
-                    litUpHoldsMap={litUpHoldsMap}
-                    mirrored={false}
-                    onHoldClick={picker.handleHoldClick}
-                    fillHeight
-                  />
-                  <CreateClimbHeatmapOverlay
-                    boardDetails={boardDetails}
-                    angle={angle}
-                    litUpHoldsMap={litUpHoldsMap}
-                    opacity={heatmapOpacity}
-                    enabled={showHeatmap}
-                    onLoadingChange={handleHeatmapLoadingChange}
-                  />
-                </div>
-              );
-            }
-            if (boardType === 'moonboard' && layoutFolder && holdSetImages) {
-              return (
-                <div className={styles.moonboardFill}>
-                  <MoonBoardRenderer
-                    layoutFolder={layoutFolder}
-                    holdSetImages={holdSetImages}
-                    litUpHoldsMap={litUpHoldsMap}
-                    onHoldClick={picker.handleHoldClick}
-                  />
-                </div>
-              );
-            }
-            return null;
-          })()}
-        </ZoomableBoard>
+        <ZoomableBoard resetKey={zoomResetKey}>{boardRenderer}</ZoomableBoard>
       </div>
 
       <HoldTypePicker

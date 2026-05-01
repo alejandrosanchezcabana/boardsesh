@@ -6,6 +6,7 @@ import Typography from '@mui/material/Typography';
 import IconButton from '@mui/material/IconButton';
 import CloseOutlined from '@mui/icons-material/CloseOutlined';
 import type { SxProps, Theme } from '@mui/material/styles';
+import { toSxArray } from './sx-utils';
 
 type DrawerHeaderProps = {
   title?: React.ReactNode;
@@ -13,12 +14,6 @@ type DrawerHeaderProps = {
   extra?: React.ReactNode;
   sx?: SxProps<Theme>;
 };
-
-function toSxArray(sx: SxProps<Theme> | undefined) {
-  if (Array.isArray(sx)) return sx;
-  if (sx) return [sx];
-  return [];
-}
 
 export function DrawerHeader({ title, onClose, extra, sx }: DrawerHeaderProps) {
   return (

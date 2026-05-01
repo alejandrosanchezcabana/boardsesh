@@ -848,6 +848,15 @@ const QueueControlBar: React.FC<QueueControlBarProps> = ({ boardDetails, angle }
     );
   }
 
+  let offlineBannerText: string;
+  if (!sessionId) {
+    offlineBannerText = 'Offline';
+  } else if (users && users.length > 1) {
+    offlineBannerText = 'Offline. Queued climbs will still sync.';
+  } else {
+    offlineBannerText = 'Offline. Changes will sync when you reconnect.';
+  }
+
   return (
     <div id="onboarding-queue-bar" className={`queue-bar-shadow ${styles.queueBar}`} data-testid="queue-control-bar">
       {/* Main Control Bar */}
@@ -876,13 +885,7 @@ const QueueControlBar: React.FC<QueueControlBarProps> = ({ boardDetails, angle }
                   }}
                 >
                   <CloudOffOutlined sx={{ fontSize: 14, flexShrink: 0 }} />
-                  <span className={styles.offlineBannerText}>
-                    {(() => {
-                      if (!sessionId) return 'Offline';
-                      if (users && users.length > 1) return 'Offline. Queued climbs will still sync.';
-                      return 'Offline. Changes will sync when you reconnect.';
-                    })()}
-                  </span>
+                  <span className={styles.offlineBannerText}>{offlineBannerText}</span>
                   <CloseOutlined sx={{ fontSize: 14, flexShrink: 0, opacity: 0.6 }} />
                 </div>
               )}

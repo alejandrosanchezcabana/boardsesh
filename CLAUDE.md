@@ -353,7 +353,7 @@ Bad examples:
 
 ### Client-Side Storage: IndexedDB Only
 
-All client-side persistence must use IndexedDB via the `idb` package. Bare `localStorage` and `sessionStorage` references are blocked by lint (`no-restricted-globals`); the only legitimate uses are one-time migration code that reads old data and deletes it (mark those sites with `// oxlint-disable-next-line no-restricted-globals`).
+All client-side persistence must use IndexedDB via the `idb` package. Bare `localStorage` and `sessionStorage` references are blocked by lint (`no-restricted-globals`); the only legitimate uses are one-time migration code that reads old data and deletes it, plus a couple of e2e test affordances that need synchronous reads at render time. Mark those sites with `// oxlint-disable-next-line no-restricted-globals` and a short reason. Do not bypass the rule by writing `window.localStorage` / `window.sessionStorage` — write the bare global and disable the rule explicitly so the exception is greppable.
 
 - **Simple key-value preferences** (e.g., view mode, party mode): Use the shared utility at `packages/web/app/lib/user-preferences-db.ts` which provides `getPreference<T>(key)`, `setPreference(key, value)`, and `removePreference(key)`.
 - **Domain-specific data** (e.g., recent searches, session history, onboarding status): Create a dedicated `*-db.ts` file in `packages/web/app/lib/` following the established pattern (lazy `dbPromise` init, SSR guard, try-catch error handling). See `tab-navigation-db.ts` or `onboarding-db.ts` for examples.
