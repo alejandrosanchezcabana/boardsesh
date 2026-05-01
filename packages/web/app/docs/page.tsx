@@ -1,12 +1,24 @@
 import { createPageMetadata } from '@/app/lib/seo/metadata';
+import { getServerTranslation } from '@/app/lib/i18n/server';
+import { getLocale } from '@/app/lib/i18n/get-locale';
+import I18nProvider from '@/app/components/providers/i18n-provider';
 import DocsClientPage from './docs-client';
 
-export const metadata = createPageMetadata({
-  title: 'API Documentation',
-  description: 'REST and WebSocket API documentation for Boardsesh - interactive climbing training board integration',
-  path: '/docs',
-});
+export async function generateMetadata() {
+  const { t, locale } = await getServerTranslation('marketing');
+  return createPageMetadata({
+    title: t('metadata.docs.title'),
+    description: t('metadata.docs.description'),
+    path: '/docs',
+    locale,
+  });
+}
 
-export default function DocsPage() {
-  return <DocsClientPage />;
+export default async function DocsPage() {
+  const locale = await getLocale();
+  return (
+    <I18nProvider locale={locale} namespaces={['marketing']}>
+      <DocsClientPage />
+    </I18nProvider>
+  );
 }

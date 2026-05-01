@@ -127,7 +127,6 @@ vi.mock('@/app/hooks/use-session-timer', () => ({
   useSessionTimer: () => null,
 }));
 
-
 vi.mock('@/app/lib/share-utils', () => ({
   shareWithFallback: vi.fn(),
 }));

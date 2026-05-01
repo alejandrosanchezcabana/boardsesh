@@ -1,4 +1,7 @@
 import type { Metadata } from 'next';
+import { DEFAULT_LOCALE, LOCALE_OG, SUPPORTED_LOCALES, type Locale } from '@/app/lib/i18n/config';
+import { localeHref } from '@/app/lib/i18n/locale-href';
+import { absoluteUrl } from './base-url';
 
 export const SITE_NAME = 'Boardsesh';
 export const DEFAULT_OG_IMAGE_PATH = '/opengraph-image';
@@ -13,6 +16,7 @@ type PageMetadataOptions = {
   keywords?: string[];
   openGraphType?: 'website' | 'article' | 'profile';
   twitterCard?: 'summary' | 'summary_large_image' | 'app' | 'player';
+  locale?: Locale;
 };
 
 function normalizePath(path?: string): string | undefined {
@@ -35,6 +39,15 @@ export function withBrandTitle(title: string): string {
   return `${title} | ${SITE_NAME}`;
 }
 
+function buildLanguageAlternates(basePath: string): Record<string, string> {
+  const languages: Record<string, string> = {};
+  for (const locale of SUPPORTED_LOCALES) {
+    languages[locale] = localeHref(basePath, locale);
+  }
+  languages['x-default'] = localeHref(basePath, DEFAULT_LOCALE);
+  return languages;
+}
+
 export function createPageMetadata({
   title,
   description,
@@ -45,15 +58,23 @@ export function createPageMetadata({
   keywords,
   openGraphType = 'website',
   twitterCard = 'summary_large_image',
+  locale = DEFAULT_LOCALE,
 }: PageMetadataOptions): Metadata {
-  const canonicalPath = normalizePath(path);
+  const basePath = normalizePath(path);
+  const canonicalPath = basePath ? localeHref(basePath, locale) : undefined;
   const fullTitle = withBrandTitle(title);
   const normalizedImagePath = imagePath ? normalizePath(imagePath) : undefined;
+  const alternates: Metadata['alternates'] = basePath
+    ? {
+        canonical: canonicalPath,
+        languages: buildLanguageAlternates(basePath),
+      }
+    : undefined;
 
   return {
     title: fullTitle,
     description,
-    alternates: canonicalPath ? { canonical: canonicalPath } : undefined,
+    alternates,
     robots,
     keywords,
     openGraph: {
@@ -62,6 +83,7 @@ export function createPageMetadata({
       type: openGraphType,
       url: canonicalPath,
       siteName: SITE_NAME,
+      locale: LOCALE_OG[locale],
       images: normalizedImagePath
         ? [
             {
@@ -86,3 +108,5 @@ export function createNoIndexMetadata(options: Omit<PageMetadataOptions, 'robots
     robots: { index: false, follow: true },
   });
 }
+
+export { absoluteUrl };

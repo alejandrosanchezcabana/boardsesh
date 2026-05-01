@@ -918,9 +918,7 @@ describe('queue-bridge-context', () => {
         });
         expect(mockSetLocalQueueState).not.toHaveBeenCalled();
         expect(mockPersistentSession.setCurrentClimb).toHaveBeenCalledTimes(1);
-        expect((mockPersistentSession.setCurrentClimb as ReturnType<typeof vi.fn>).mock.calls[0][0].uuid).toBe(
-          'u1',
-        );
+        expect((mockPersistentSession.setCurrentClimb as ReturnType<typeof vi.fn>).mock.calls[0][0].uuid).toBe('u1');
       });
 
       it('setCurrentClimb returns null and skips setCurrentClimb when ps.addQueueItem rejects', async () => {

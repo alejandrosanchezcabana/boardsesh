@@ -1,13 +1,25 @@
 import React from 'react';
 import { createPageMetadata } from '@/app/lib/seo/metadata';
+import { getServerTranslation } from '@/app/lib/i18n/server';
+import { getLocale } from '@/app/lib/i18n/get-locale';
+import I18nProvider from '@/app/components/providers/i18n-provider';
 import HelpContent from './help-content';
 
-export const metadata = createPageMetadata({
-  title: 'Help',
-  description: 'Learn about Boardsesh features including heatmaps, party mode, playlist generator, and more.',
-  path: '/help',
-});
+export async function generateMetadata() {
+  const { t, locale } = await getServerTranslation('marketing');
+  return createPageMetadata({
+    title: t('metadata.help.title'),
+    description: t('metadata.help.description'),
+    path: '/help',
+    locale,
+  });
+}
 
-export default function HelpPage() {
-  return <HelpContent />;
+export default async function HelpPage() {
+  const locale = await getLocale();
+  return (
+    <I18nProvider locale={locale} namespaces={['marketing']}>
+      <HelpContent />
+    </I18nProvider>
+  );
 }

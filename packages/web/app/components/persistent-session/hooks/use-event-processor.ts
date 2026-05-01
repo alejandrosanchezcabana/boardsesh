@@ -188,12 +188,8 @@ export function useEventProcessor({ refs }: UseEventProcessorArgs): EventProcess
           const ticks = [...event.ticks].sort(
             (a, b) => new Date(b.climbedAt).getTime() - new Date(a.climbedAt).getTime(),
           );
-          const firstTickAt = ticks.length > 0
-            ? ticks[ticks.length - 1].climbedAt
-            : prev.firstTickAt;
-          const lastTickAt = ticks.length > 0
-            ? ticks[0].climbedAt
-            : prev.lastTickAt;
+          const firstTickAt = ticks.length > 0 ? ticks[ticks.length - 1].climbedAt : prev.firstTickAt;
+          const lastTickAt = ticks.length > 0 ? ticks[0].climbedAt : prev.lastTickAt;
 
           return {
             ...prev,
