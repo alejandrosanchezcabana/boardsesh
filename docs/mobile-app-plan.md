@@ -483,7 +483,13 @@ const config: CapacitorConfig = {
       backgroundColor: '#121212',
     },
     Keyboard: {
-      resize: 'body',
+      // Use 'native' so Android resizes the WebView itself (matching mobile
+      // Chrome's visualViewport behavior). 'body' injects inline styles on
+      // <body>, which fights with @capacitor-community/safe-area's inset
+      // handling. With 'native', existing 100dvh / 100% layouts (e.g. the
+      // climb-name filter drawer with placement="top" fullHeight) shrink to
+      // fit above the keyboard with no web-side changes.
+      resize: 'native',
       resizeOnFullScreen: true,
     },
     SplashScreen: {
