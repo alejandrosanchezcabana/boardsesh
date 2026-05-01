@@ -46,6 +46,8 @@ type OnboardingTourContextValue = {
   notifyQueueLength: (length: number) => void;
   /** Called by a bridge component inside the graphql-queue tree when the current climb changes. */
   notifyCurrentClimb: (climbUuid: string | null) => void;
+  /** Called by `ClimbsList` when the climb-list view mode changes (or on first observation). */
+  notifyViewMode: (mode: 'grid' | 'list') => void;
 };
 
 const OnboardingTourContext = createContext<OnboardingTourContextValue | null>(null);
@@ -97,15 +99,16 @@ export function OnboardingTourProvider({ children }: { children: React.ReactNode
     currentStepIdRef.current = currentStepId;
   }, [currentStepId]);
   /**
-   * Outstanding grace-period timer scheduled by `notifyCurrentClimb`. Cleared
-   * whenever the step changes or the tour ends so a stale tick from a
-   * previous step can't resurrect a skipped/completed tour.
+   * Outstanding grace-period timer used by event-driven step advances
+   * (`notifyCurrentClimb`, `notifyViewMode`, and the climb-list-pick listener).
+   * Cleared whenever the step changes or the tour ends so a stale tick from
+   * a previous step can't resurrect a skipped/completed tour.
    */
-  const currentClimbTimerRef = useRef<number | null>(null);
-  const clearCurrentClimbTimer = useCallback(() => {
-    if (currentClimbTimerRef.current !== null) {
-      window.clearTimeout(currentClimbTimerRef.current);
-      currentClimbTimerRef.current = null;
+  const graceAdvanceTimerRef = useRef<number | null>(null);
+  const clearGraceAdvanceTimer = useCallback(() => {
+    if (graceAdvanceTimerRef.current !== null) {
+      window.clearTimeout(graceAdvanceTimerRef.current);
+      graceAdvanceTimerRef.current = null;
     }
   }, []);
 
@@ -229,14 +232,14 @@ export function OnboardingTourProvider({ children }: { children: React.ReactNode
 
     track('Onboarding Tour Completed', { durationSeconds });
 
-    clearCurrentClimbTimer();
+    clearGraceAdvanceTimer();
     setCurrentStepId(null);
     currentStepIdRef.current = null;
     startedAtRef.current = null;
     lastQueueLengthRef.current = null;
     void clearTourProgress(userId);
     void saveOnboardingStatus(userId);
-  }, [currentStepId, userId, clearCurrentClimbTimer]);
+  }, [currentStepId, userId, clearGraceAdvanceTimer]);
 
   const next = useCallback(() => {
     if (!currentStepId) return;
@@ -259,14 +262,14 @@ export function OnboardingTourProvider({ children }: { children: React.ReactNode
       stepIndex: getStepIndex(atStepId),
     });
 
-    clearCurrentClimbTimer();
+    clearGraceAdvanceTimer();
     setCurrentStepId(null);
     currentStepIdRef.current = null;
     startedAtRef.current = null;
     lastQueueLengthRef.current = null;
     void clearTourProgress(userId);
     void saveOnboardingStatus(userId);
-  }, [currentStepId, userId, clearCurrentClimbTimer]);
+  }, [currentStepId, userId, clearGraceAdvanceTimer]);
 
   // Listen for PLAY_DRAWER_EVENT to advance step queue-thumbnail → play-view.
   // The handler reads `currentStepIdRef` (live) so the listener can be
@@ -281,12 +284,13 @@ export function OnboardingTourProvider({ children }: { children: React.ReactNode
     return () => window.removeEventListener(PLAY_DRAWER_EVENT, handler);
   }, [advanceFrom]);
 
-  // Auto-advance home-pick-board → climb-list when the pathname changes into
-  // a board list route. This effect legitimately depends on `pathname` and
-  // `currentStepId` — it's the trigger itself, not an event listener.
+  // Auto-advance home-pick-board → climb-list-grid-view when the pathname
+  // changes into a board list route. This effect legitimately depends on
+  // `pathname` and `currentStepId` — it's the trigger itself, not an event
+  // listener.
   useEffect(() => {
     if (currentStepId !== 'home-pick-board') return;
-    const step = getStepById('climb-list');
+    const step = getStepById('climb-list-grid-view');
     if (!step) return;
     if (step.routeMatches(pathname)) {
       advanceFrom('home-pick-board', 'event');
@@ -317,6 +321,39 @@ export function OnboardingTourProvider({ children }: { children: React.ReactNode
     [advanceFrom],
   );
 
+  const notifyViewMode = useCallback(
+    (mode: 'grid' | 'list') => {
+      const stepId = currentStepIdRef.current;
+      if (stepId !== 'climb-list-grid-view' && stepId !== 'climb-list-back-to-list') return;
+
+      // Always cancel any prior view-mode grace timer when a notify lands
+      // on a view-mode step. Without this, a quick toggle-and-back (user
+      // taps grid then list before the grace window elapses) would leave
+      // the original advance timer pending and skip the user past the
+      // back-to-list step on a stale "switched to grid" intent.
+      clearGraceAdvanceTimer();
+
+      const expected: TourStepId = mode === 'grid' ? 'climb-list-grid-view' : 'climb-list-back-to-list';
+      if (stepId !== expected) return;
+
+      const fire = () => {
+        graceAdvanceTimerRef.current = null;
+        if (currentStepIdRef.current === expected) advanceFrom(expected, 'event');
+      };
+
+      // Grace period so the user actually sees the highlighted toggle and
+      // step copy before we advance, even when they're already in the
+      // expected mode at step entry.
+      const elapsed = Date.now() - stepEnteredAtRef.current;
+      if (elapsed >= CURRENT_CLIMB_GRACE_MS) {
+        fire();
+      } else {
+        graceAdvanceTimerRef.current = window.setTimeout(fire, CURRENT_CLIMB_GRACE_MS - elapsed);
+      }
+    },
+    [advanceFrom, clearGraceAdvanceTimer],
+  );
+
   const notifyCurrentClimb = useCallback(
     (climbUuid: string | null) => {
       currentClimbUuidRef.current = climbUuid;
@@ -330,10 +367,10 @@ export function OnboardingTourProvider({ children }: { children: React.ReactNode
 
       // Cancel any prior grace-period timer so rapid changes don't
       // accumulate multiple advance() calls for the same transition.
-      clearCurrentClimbTimer();
+      clearGraceAdvanceTimer();
 
       const fire = () => {
-        currentClimbTimerRef.current = null;
+        graceAdvanceTimerRef.current = null;
         if (currentStepIdRef.current !== 'queue-bar') return;
         if (currentClimbUuidRef.current) advanceFrom('queue-bar', 'event');
       };
@@ -344,10 +381,10 @@ export function OnboardingTourProvider({ children }: { children: React.ReactNode
       if (elapsed >= CURRENT_CLIMB_GRACE_MS) {
         fire();
       } else {
-        currentClimbTimerRef.current = window.setTimeout(fire, CURRENT_CLIMB_GRACE_MS - elapsed);
+        graceAdvanceTimerRef.current = window.setTimeout(fire, CURRENT_CLIMB_GRACE_MS - elapsed);
       }
     },
-    [advanceFrom, clearCurrentClimbTimer],
+    [advanceFrom, clearGraceAdvanceTimer],
   );
 
   // Listen for the explicit "user picked a climb in the list" signal
@@ -356,27 +393,27 @@ export function OnboardingTourProvider({ children }: { children: React.ReactNode
     const handler = () => {
       if (currentStepIdRef.current !== 'climb-list') return;
       const elapsed = Date.now() - stepEnteredAtRef.current;
-      clearCurrentClimbTimer();
+      clearGraceAdvanceTimer();
       const fire = () => {
-        currentClimbTimerRef.current = null;
+        graceAdvanceTimerRef.current = null;
         if (currentStepIdRef.current === 'climb-list') advanceFrom('climb-list', 'event');
       };
       if (elapsed >= CURRENT_CLIMB_GRACE_MS) {
         fire();
       } else {
-        currentClimbTimerRef.current = window.setTimeout(fire, CURRENT_CLIMB_GRACE_MS - elapsed);
+        graceAdvanceTimerRef.current = window.setTimeout(fire, CURRENT_CLIMB_GRACE_MS - elapsed);
       }
     };
     window.addEventListener(TOUR_CLIMB_LIST_PICK_EVENT, handler);
     return () => window.removeEventListener(TOUR_CLIMB_LIST_PICK_EVENT, handler);
-  }, [advanceFrom, clearCurrentClimbTimer]);
+  }, [advanceFrom, clearGraceAdvanceTimer]);
 
   // Cancel any outstanding grace-period timer whenever the step changes so a
   // stale timer can't fire `advanceFrom` against a step the user has already
   // skipped past.
   useEffect(() => {
-    return () => clearCurrentClimbTimer();
-  }, [currentStepId, clearCurrentClimbTimer]);
+    return () => clearGraceAdvanceTimer();
+  }, [currentStepId, clearGraceAdvanceTimer]);
 
   // If we entered queue-bar and a climb is already set, honour the grace
   // period then advance. For climb-list we do NOT auto-advance on entry —
@@ -385,14 +422,14 @@ export function OnboardingTourProvider({ children }: { children: React.ReactNode
     if (currentStepId !== 'queue-bar') return;
     if (!currentClimbUuidRef.current) return;
     const step = currentStepId;
-    clearCurrentClimbTimer();
-    currentClimbTimerRef.current = window.setTimeout(() => {
-      currentClimbTimerRef.current = null;
+    clearGraceAdvanceTimer();
+    graceAdvanceTimerRef.current = window.setTimeout(() => {
+      graceAdvanceTimerRef.current = null;
       if (currentStepIdRef.current !== step) return;
       if (currentClimbUuidRef.current) advanceFrom(step, 'event');
     }, CURRENT_CLIMB_GRACE_MS);
-    return () => clearCurrentClimbTimer();
-  }, [currentStepId, advanceFrom, clearCurrentClimbTimer]);
+    return () => clearGraceAdvanceTimer();
+  }, [currentStepId, advanceFrom, clearGraceAdvanceTimer]);
 
   const value = useMemo<OnboardingTourContextValue>(
     () => ({
@@ -406,8 +443,9 @@ export function OnboardingTourProvider({ children }: { children: React.ReactNode
       complete,
       notifyQueueLength,
       notifyCurrentClimb,
+      notifyViewMode,
     }),
-    [currentStepId, start, next, skip, complete, notifyQueueLength, notifyCurrentClimb],
+    [currentStepId, start, next, skip, complete, notifyQueueLength, notifyCurrentClimb, notifyViewMode],
   );
 
   return <OnboardingTourContext.Provider value={value}>{children}</OnboardingTourContext.Provider>;

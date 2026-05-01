@@ -1,6 +1,8 @@
 export type TourStepId =
   | 'home-intro'
   | 'home-pick-board'
+  | 'climb-list-grid-view'
+  | 'climb-list-back-to-list'
   | 'climb-list'
   | 'queue-add'
   | 'queue-bar'
@@ -19,6 +21,8 @@ export type AdvanceTrigger =
   | 'queue-added'
   | 'current-climb-set'
   | 'play-drawer-open'
+  | 'view-mode-grid'
+  | 'view-mode-list'
   | 'finish';
 
 export type StepEnterEffect =
@@ -71,6 +75,26 @@ export const TOUR_STEPS: TourStepDef[] = [
     primaryLabel: null,
     advanceTrigger: 'route-change',
     onEnter: 'open-start-sesh',
+  },
+  {
+    id: 'climb-list-grid-view',
+    routeMatches: isBoardListPath,
+    anchorSelectors: ['#onboarding-view-mode-grid'],
+    title: 'Two ways to browse',
+    body: 'Tap the grid icon to see every climb as a card.',
+    primaryLabel: null,
+    placement: 'bottom',
+    advanceTrigger: 'view-mode-grid',
+  },
+  {
+    id: 'climb-list-back-to-list',
+    routeMatches: isBoardListPath,
+    anchorSelectors: ['#onboarding-view-mode-list'],
+    title: 'Back to list view',
+    body: 'Tap the list icon to keep going — list view shows more detail and swipes.',
+    primaryLabel: null,
+    placement: 'bottom',
+    advanceTrigger: 'view-mode-list',
   },
   {
     id: 'climb-list',
