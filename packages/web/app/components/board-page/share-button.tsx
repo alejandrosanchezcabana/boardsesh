@@ -34,6 +34,10 @@ export const ShareBoardButton = () => {
   const { currentClimbQueueItem } = useCurrentClimb();
   const [unsupportedOpen, setUnsupportedOpen] = useState(false);
   const [lightDrawerOpen, setLightDrawerOpen] = useState(false);
+  // Defer mounting the drawer until the user actually long-presses. Keeps it
+  // out of the initial board-page render path (the glyph-snap useMemo and
+  // related effects only run for users who opt into the feature).
+  const [hasOpenedDrawer, setHasOpenedDrawer] = useState(false);
 
   const isConnecting = !!(sessionId && !hasConnected);
 
@@ -41,6 +45,7 @@ export const ShareBoardButton = () => {
   // when there's no board to control would dead-end the user.
   const handleLongPress = useCallback(() => {
     if (!isBoardConnected) return;
+    setHasOpenedDrawer(true);
     setLightDrawerOpen(true);
   }, [isBoardConnected]);
 
@@ -102,7 +107,7 @@ export const ShareBoardButton = () => {
         {lightbulbIcon}
       </IconButton>
 
-      <LightControlDrawer open={lightDrawerOpen} onClose={() => setLightDrawerOpen(false)} />
+      {hasOpenedDrawer && <LightControlDrawer open={lightDrawerOpen} onClose={() => setLightDrawerOpen(false)} />}
 
       <Dialog open={unsupportedOpen} onClose={() => setUnsupportedOpen(false)}>
         <DialogTitle>Board lighting unavailable</DialogTitle>
