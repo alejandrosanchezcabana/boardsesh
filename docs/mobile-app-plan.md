@@ -264,6 +264,25 @@ Unchanged from v8.0.
 | Image optimization | Vercel | Cloudflare Images OR self-hosted `sharp` route | Decide during Phase 0a, not assumed |
 | Cron | Vercel Cron | `packages/scheduler` (new), node-cron, shared-secret `CRON_TOKEN` | Targets existing internal endpoints |
 | Aurora sync | Vercel-triggered runner | Same `packages/aurora-sync` runner, deployed as Railway service | `DATABASE_URL` re-pointed only |
+| Web analytics | `@vercel/analytics`, `@vercel/speed-insights` | PostHog (`posthog-js` + `posthog-node`) | See "Analytics and observability"; ~60 call-site rewrite. 14-day dual-write before decommission. |
+| Feature flags | `@flags-sdk/vercel` (empty today) | PostHog feature flags | Hook signature unchanged; provider impl swaps. |
+| Dev toolbar | `@vercel/toolbar` | Delete | No replacement needed. |
+| CDN cache header name | `Vercel-CDN-Cache-Control` (37 sites incl. `middleware.ts:82-91`, OG routes, board grades, slugs) | `CDN-Cache-Control` (Cloudflare-honoured) plus `Cache-Control` for browser | Single grep-and-replace; verify Cloudflare cache rules pick up the new header. |
+| Sentry cron monitors | `automaticVercelMonitors: true` in `next.config.mjs:135` | Manual `Sentry.withMonitor()` wrapping each job in `packages/scheduler` | Auto-instrumentation only works on Vercel deploy metadata; will silently stop on Railway. |
+| Route timeouts | `export const maxDuration = 300` on 7 long-running cron / sync routes | Delete the export — long-lived Node has no per-request timeout | Routes: `user-sync-cron`, `profile-percentiles`, `inferred-sessions-backfill`, `prewarm-heatmap/[board_name]`, `shared-sync/[board_name]`, `aurora-import`, `cleanup`. |
+| Env-var audit | `VERCEL_ENV`, `VERCEL_URL` reads in 13 files | New `BOARDSESH_ENV` (production / preview / development) and `BOARDSESH_BASE_URL` | Files: `sentry.{edge,server}.config.ts`, `app/api/og/setter/route.tsx:56`, `app/lib/auth/auth-options.ts:142`, `app/lib/warm-overlay-cache.ts:5`, `app/lib/api-docs/generate-openapi.ts:91-92`, `packages/backend/src/handlers/cors.ts:18-20`, `packages/db/drizzle.config.ts:23`, `packages/db/src/client/config.ts:10`, `packages/crypto/src/env.ts:21`, `vercel.json:3`, `.github/workflows/branch-deploy.yml:183`. |
+| Preview-deploy CORS regex | `^https://boardsesh-[a-z0-9]+-marcodejonghs-projects\.vercel\.app$` in `packages/backend/src/handlers/cors.ts:18-20` | Railway preview hostname pattern (or Cloudflare-routed `*.preview.boardsesh.com`) | Same regex shape; new domain. |
+| Rate limiter | In-memory map in `packages/web/app/lib/auth/rate-limiter.ts` | Redis-backed (Railway-managed Redis already used by `packages/backend`) | In-memory was tolerable on Vercel because each cold-start was a fresh process. Multi-instance Railway makes it both wrong (cross-instance bypass) and right (single instance won't lose counter on restart) — choose Redis for multi-instance correctness. |
+| OG cache warming | `warm-overlay-cache.ts:5` derives URL from `VERCEL_URL` | `BOARDSESH_BASE_URL` env var | Same logic, new source. |
+| CI preview env signal | `.github/workflows/branch-deploy.yml:183` sets `VERCEL_ENV=preview` | `BOARDSESH_ENV=preview` (or Railway's native env discrimination) | Cascade with the env-var audit. |
+| `vercel.json` | Cron block (8 jobs), build command, framework | Delete file | Crons move to `packages/scheduler`; build command moves to `Dockerfile`. |
+| Sleeper cron | `user-sync-cron` (`maxDuration = 300`, dev-mode auth bypass) is **not** listed in `vercel.json` — triggered some other way today | Decide intent before migration: keep as on-demand via `packages/scheduler` API, or schedule it explicitly | Without resolving this, the route silently disappears from the schedule on Railway. |
+| Next.js standalone build | `output: 'standalone'` in `next.config.mjs:9` | Delete with Next.js | Vercel-specific lambda packaging; irrelevant once Vite SSR runs in a container. |
+| Next.js data cache | `unstable_cache()` (5 sites: `server-cached-client.ts:67,112`, `holds-heatmap-cache.ts:55`, `search-climbs.ts:109`) + `revalidateTag()` (2 sites: `profile-percentiles/route.ts:78`, `climb-search-cache.server.ts:25`) | Backend-side cache layer (Redis with explicit TTLs) or Cloudflare cache-tag purge headers | Phase 1 work, called out here so the cache-tag semantics aren't silently lost. |
+| Next.js redirects / headers / transpilePackages | `next.config.mjs:74-103` (5 permanent redirects), `:57-73` (apple-app-site-association + 4 security headers), `:15-21` (5 monorepo packages) | TanStack Start route-level redirects, Hono pre-request middleware for headers, native Vite TS support for monorepo | Phase 1 work; explicit list ensures none are dropped. |
+| WASM bundling | `outputFileTracingIncludes` in `next.config.mjs:50-56` ships `@boardsesh/board-renderer-wasm/pkg/*.wasm` and `./public/images/**` for `/api/internal/board-render` | Vite asset handling (verify WASM is bundled into `dist/server` or copied at build) | Verify on first Phase 1 board-render build; failure mode is silent (route 500s in production). |
+| Sentry tunnel | `tunnelRoute: '/monitoring'` in `next.config.mjs:128`, excluded from middleware in `middleware.ts:101` | Hono route in `packages/backend` proxying to Sentry | Phase 1 work; without it, Sentry events are blocked by ad-blockers. |
+| SWC GraphQL codegen plugin | `@swc-contrib/plugin-graphql-codegen-client-preset` in `next.config.mjs:35-42` | Vite plugin equivalent or build-time codegen step | Phase 1 work. |
 
 ### Cutover sequence
 
@@ -275,7 +294,7 @@ Unchanged from v8.0.
 6. DNS flip for `boardsesh.com`. Keep Vercel project warm for 7 days as instant rollback.
 7. Decommission Vercel + Neon.
 
-Estimate: 4 weeks.
+Estimate: 4 weeks for the hosting cutover. The PostHog migration (analytics, feature flags, ingest proxy) and the Vercel-platform residue items (CDN-header rename, Sentry cron monitor rewiring, env-var audit, rate-limiter Redis backing, CORS regex, OG cache-warming URL source, `vercel.json` deletion) run as a parallel sub-track on the same 4-week wall-clock. Combined budget for the parallel sub-track: ~2 dev-weeks, sequenced so the dual-write window for analytics straddles the DNS flip.
 
 ## Migration strategy: beta subdomain → single cutover
 
@@ -427,13 +446,30 @@ Deep links (`boardsesh://party/*`, `/invite/*` Universal / App Links) continue w
 
 ## Analytics and observability
 
-PostHog (single project, separate envs). `posthog-js` in the web (works in both web SSR/SPA and bundled). Server events from `packages/backend` via `posthog-node`. `distinct_id` lives in IndexedDB in bundled mode (not localStorage), bootstrapped from `@capacitor/device.identifier`.
+### Today's stack to retire
 
-Sentry for JS + native (iOS/Android SDKs added in Phase 2). Source maps uploaded for Vite builds (web client + SSR server) and native dSYMs / ProGuard.
+`@vercel/analytics` (one mount in `app/layout.tsx:73`, ~60 `track('EventName', { props })` call sites across the client), `@vercel/speed-insights` (one mount in `app/layout.tsx:99`), `@vercel/toolbar` (dev-only, `app/layout.tsx:15` plus `next.config.mjs:2`), `@flags-sdk/vercel` + `app/flags.ts` + `app/.well-known/vercel/flags/route.ts` (empty scaffold today, but the SDK ships in production bundles).
 
-Logs: backend + SSR server emit structured JSON to stdout. Railway's log forwarder ships to a chosen aggregator (Axiom is already in use per `packages/backend/src/services/axiom.ts`; keep it).
+### PostHog migration
 
-Cross-cutting; not phased.
+- **Stack.** PostHog Cloud (region TBD; default US). `posthog-js` in the Vite client. `posthog-node` in `packages/backend` for server-side capture and feature-flag evaluation. PostHog feature flags replace `@flags-sdk/vercel`: the `useFeatureFlag` hook signature in `packages/web/app/components/providers/feature-flags-provider.tsx` stays, the implementation switches.
+- **Reverse-proxy ingest path.** PostHog is commonly served through `/ingest/*` to bypass ad-blockers. The project has no rewrite for this today. Add the equivalent in TanStack Start (a `serverFn`-backed proxy in the SSR server, or a Hono route in `packages/backend`). Decide during Phase 0a. Cloudflare WAF rule allowlisting `/ingest/*` lands at the same time.
+- **`distinct_id` storage.** The codebase is IndexedDB-only (`no-restricted-globals` lint rule per CLAUDE.md). PostHog defaults to localStorage + cookies; configure `persistence: 'memory'` plus an IDB-backed shim that bootstraps `distinct_id` from `@capacitor/device.identifier` in bundled mode and from a UUID stored in `user-preferences-db.ts` on web.
+- **Identify / alias lifecycle.** `posthog.identify()` fires inside `SessionProvider` after lucia issues a session. `posthog.alias()` runs once on first authed event after a previously-anonymous session, carrying over the anonymous `distinct_id`. Wired during Phase 0c so it lands with `useSession`.
+- **Server-side capture.** `packages/backend` already has Axiom for ESP32 logs (`packages/backend/src/services/axiom.ts`); keep it. Add `posthog-node` alongside, used for resolver-level events (e.g. `tick.created`, `playlist.shared`) where the client is unreliable.
+- **Session recording.** Off by default. Add an opt-in toggle in `/settings`. No recording before legal review of the privacy policy text.
+- **Event-call-site rewrite.** ~60 `track('EventName', props)` sites become `posthog.capture('EventName', props)`. Mechanical — codemod-able with a small `jscodeshift` script that targets the existing `track` import. Estimate 1 dev-day of mechanical change + 2 days of dashboard rebuild in PostHog.
+- **Dashboards / funnels.** Rebuild existing Vercel Analytics dashboards in PostHog before cutover. Side-by-side dual-write for 14 days so historical comparisons are possible. After 14 days, drop `@vercel/analytics` and `@vercel/speed-insights`.
+
+### Sentry, source maps, logs
+
+Sentry for JS + native (iOS/Android SDKs added in Phase 2). Source maps uploaded for Vite builds (web client + SSR server) and native dSYMs / ProGuard. The Sentry tunnel route currently at `/monitoring` (`next.config.mjs:128`, excluded from middleware in `middleware.ts:101`) ports to a Hono route in `packages/backend` proxying to Sentry — without it, Sentry events are blocked by ad-blockers.
+
+`automaticVercelMonitors: true` (`next.config.mjs:135`) only works on Vercel's deploy metadata; on Railway, each `packages/scheduler` job wraps execution in `Sentry.withMonitor(slug, ...)` and emits a heartbeat. Alert if a heartbeat is absent for >2× the expected interval.
+
+Logs: backend + SSR server emit structured JSON to stdout. Railway's log forwarder ships to Axiom (already in use per `packages/backend/src/services/axiom.ts`; keep it).
+
+Cross-cutting; the PostHog migration is sequenced inside Phase 0a, the rest is not phased.
 
 ## App Store distribution
 
@@ -503,6 +539,11 @@ The realistic range is **9–14 months** depending on shared engineering capacit
 | OTA solutions all unacceptable; bundle regressions stuck on app store cycle | Medium | High | Remote-config kill switch flips to hosted mode without an app store update. |
 | Apple 4.2 rejection | Medium | High | Plan B above. |
 | Railway region outage | Low | High | Postgres backups daily; backend stateless; one-day RTO with manual restore. Consider warm replica in Phase 6+ if outages prove material. |
+| PostHog event volume / cost surprise | Medium | Low | Start with sampled capture on the chattiest events (`Heatmap Hold Clicked`, `Climb List Row Clicked`, `Queue Operation`); tune after 30 days of real volume. |
+| PostHog reverse-proxy blocked by Cloudflare WAF | Medium | Medium | Add an explicit Cloudflare rule allowlisting `/ingest/*`; verify in staging before cutover. |
+| Removing `automaticVercelMonitors` leaves crons silently untracked | Medium | Medium | Each `packages/scheduler` job wraps execution in `Sentry.withMonitor(slug, ...)` and emits a heartbeat; alert if absent for >2× expected interval. (Strengthens the existing `packages/scheduler` cron-drift mitigation by tying cron monitoring to manual instrumentation rather than Vercel deploy metadata.) |
+| Vercel Analytics historical data lost at cutover | Medium | Low | 14-day dual-write; export Vercel Analytics raw events to CSV before decommissioning. |
+| In-memory rate-limiter behaviour change once on Redis | Low | Medium | Redis-backed limiter has stricter bounds than in-memory; surface a `429`-rate dashboard during the first 7 days post-cutover. |
 
 ## Tab bar
 
@@ -631,7 +672,13 @@ Universal / App Links: scoped paths only (`/party/*`, `/invite/*`). Not the enti
 
 ## Changelog
 
-**v9.1 — current.** Adds the migration cutover strategy and explicit hosted-mode Capacitor compatibility:
+**v9.2 — current.** Closes Vercel-platform inventory gaps in Phase 0a:
+- PostHog migration sub-plan replaces the one-paragraph mention. Covers Vercel Analytics retirement, `@flags-sdk/vercel` swap, `/ingest/*` reverse proxy, IDB-only `distinct_id`, `posthog-node` server capture, identify/alias lifecycle tied to Phase 0c lucia auth, ~60 `track()` call-site rewrite, 14-day dual-write before decommission.
+- Hosting cutover table extended with rows for `Vercel-CDN-Cache-Control` rename, `automaticVercelMonitors` Sentry rewiring, `maxDuration` route-export deletion, `VERCEL_ENV`/`VERCEL_URL` audit (13 files → `BOARDSESH_ENV` / `BOARDSESH_BASE_URL`), preview CORS regex update, rate-limiter Redis backing, OG cache-warming URL source, CI preview env signal, `vercel.json` deletion, sleeper `user-sync-cron` resolution, `output: 'standalone'` removal, `unstable_cache`/`revalidateTag` replacement, redirects/headers/transpilePackages port, WASM bundling verification, Sentry tunnel route port, SWC GraphQL codegen plugin replacement.
+- Five new risk rows: PostHog cost, ingest WAF, cron monitor regression, analytics historical data loss, rate-limiter step change.
+- Phase 0a reframed as "4-week hosting cutover + parallel ~2-week analytics/platform sub-track on the same wall-clock."
+
+**v9.1.** Adds the migration cutover strategy and explicit hosted-mode Capacitor compatibility:
 - Migration runs through `beta.boardsesh.com` rather than Cloudflare path-based traffic splitting. Single atomic DNS flip at the end of Phase 1, not a gradual route-by-route move.
 - Hosted-mode Capacitor compatibility is now a formal Phase 1 deliverable, with a per-bridge inventory and a nightly integration test suite at `mobile/integration-tests/` that runs the existing Capacitor shell against the beta URL on iOS Simulator + Android emulator.
 - Auth cookie shim added to Phase 0c: lucia accepts NextAuth cookies for a 90-day overlap and upgrades them in place, so existing logged-in web users (and hosted-mode native users) don't get logged out at cutover.
