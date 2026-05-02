@@ -37,6 +37,15 @@ type BluetoothContextValue = {
     signal?: AbortSignal,
     climbUuid?: string,
   ) => Promise<boolean | undefined>;
+  /** Send a "clear all LEDs" packet to the connected board. */
+  clearBoard: () => Promise<boolean | undefined>;
+  /** Board configuration for the current route — exposed so light-show
+   * features (party mode) can read holdsData and edge bounds. */
+  boardDetails: BoardDetails;
+  /** True while a non-queue light show (e.g. party mode) is driving the
+   * board. The auto-sender stops emitting queue frames during this. */
+  partyActive: boolean;
+  setPartyActive: (active: boolean) => void;
   isBluetoothSupported: boolean;
   isIOS: boolean;
 };
@@ -130,6 +139,15 @@ export function BluetoothProvider({
   });
   const { token, isAuthenticated } = useWsAuthToken();
   const { showMessage } = useSnackbar();
+
+  const [partyActive, setPartyActive] = useState(false);
+  const clearBoard = useCallback(() => sendFramesToBoard(''), [sendFramesToBoard]);
+
+  // Stop the party loop the moment the board disconnects so a reconnect
+  // doesn't immediately resume an orphaned interval in the drawer.
+  useEffect(() => {
+    if (!isConnected && partyActive) setPartyActive(false);
+  }, [isConnected, partyActive]);
 
   // Both `[board_name]/[layout_id]/[size_id]/[set_ids]/[angle]/...` and
   // `/b/{slug}/{angle}/...` routes carry `[angle]` as a dynamic segment.
@@ -325,10 +343,25 @@ export function BluetoothProvider({
       connect,
       disconnect,
       sendFramesToBoard,
+      clearBoard,
+      boardDetails,
+      partyActive,
+      setPartyActive,
       isBluetoothSupported,
       isIOS,
     }),
-    [isConnected, loading, connect, disconnect, sendFramesToBoard, isBluetoothSupported, isIOS],
+    [
+      isConnected,
+      loading,
+      connect,
+      disconnect,
+      sendFramesToBoard,
+      clearBoard,
+      boardDetails,
+      partyActive,
+      isBluetoothSupported,
+      isIOS,
+    ],
   );
 
   // Mismatch interception: when the user picks a controller whose resolved
@@ -392,7 +425,7 @@ export function BluetoothProvider({
 
   return (
     <BluetoothContext.Provider value={value}>
-      {isConnected && (
+      {isConnected && !partyActive && (
         <BluetoothAutoSender sendFramesToBoard={sendFramesToBoard} layoutName={boardDetails.layout_name ?? ''} />
       )}
       {activePickerState && (

@@ -138,16 +138,32 @@ export function useBoardBluetooth({ boardDetails, boardUuid, onConnectionChange 
     onConnectionChange?.(false);
   }, [onConnectionChange]);
 
-  // Function to send frames string to the board
+  // Function to send frames string to the board.
+  // An empty `frames` string is the "clear all LEDs" path: Aurora's packet
+  // builder already returns a zero-length placement set, which the board
+  // interprets as "no LEDs lit", overwriting whatever was on the wall.
   const sendFramesToBoard = useCallback(
     async (frames: string, mirrored: boolean = false, signal?: AbortSignal, climbUuid?: string) => {
-      if (!adapterRef.current || !frames || !boardDetails) return;
+      if (!adapterRef.current || !boardDetails) return;
 
       try {
         if (boardDetails.board_name === 'moonboard') {
+          // MoonBoard's packet format isn't designed to encode "clear" via an
+          // empty frame string — skip the write rather than send a malformed
+          // packet to the board.
+          if (!frames) return;
           const bluetoothPacket = getMoonboardBluetoothPacket(frames);
           await adapterRef.current.write(bluetoothPacket, signal);
           void incrementBluetoothSends().then(maybeFireFeedbackPromptEvent);
+          return true;
+        }
+
+        // Empty frames is the "clear all LEDs" path. Skip mirroring and the
+        // LED-placement load entirely — the Aurora packet builder produces a
+        // standalone clear packet that doesn't depend on placement data.
+        if (frames === '') {
+          const clearResult = getAuroraBluetoothPacket('', {}, boardDetails.board_name, apiLevelRef.current);
+          await adapterRef.current.write(clearResult.packet, signal);
           return true;
         }
 
