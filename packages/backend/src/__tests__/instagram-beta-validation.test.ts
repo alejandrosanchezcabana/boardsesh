@@ -71,19 +71,33 @@ describe('validateInstagramBetaLink', () => {
     expect(fetchInstagramMetaMock).not.toHaveBeenCalled();
   });
 
-  it('passes through a null thumbnail when Instagram omits it', async () => {
+  it('normalizes an empty-string thumbnail to null', async () => {
+    // fetchInstagramMeta in practice returns 'gone' when no thumbnail is
+    // found, so a status:'ok' with thumbnail:'' is a defensive contract test
+    // — the validator shouldn't propagate '' as a fake imageUrl since
+    // downstream consumers may null-check rather than truthy-check.
     fetchInstagramMetaMock.mockResolvedValue({
       status: 'ok',
-      // fetchInstagramMeta normally rejects status:'ok' without a thumbnail,
-      // but the validator shouldn't care — `enrichInstagramBetaInsert` is
-      // resilient to a null thumbnail (it skips the S3 cache step).
       thumbnail: '',
       username: null,
     });
 
-    await expect(validateInstagramBetaLink('https://www.instagram.com/p/CU-NOpdL8Kf/')).resolves.toMatchObject({
+    await expect(validateInstagramBetaLink('https://www.instagram.com/p/CU-NOpdL8Kf/')).resolves.toEqual({
+      imageUrl: null,
       mediaId: 'CU-NOpdL8Kf',
       username: null,
     });
+  });
+
+  it('wraps unexpected fetchInstagramMeta errors as a transient validation error', async () => {
+    // fetchInstagramMeta is designed to return status enums, never throw —
+    // but if it ever does (regex blowup, dependency regression), the user
+    // should see our specific transient-error message, not Yoga's generic
+    // "Unexpected error." toast from masked errors in production.
+    fetchInstagramMetaMock.mockRejectedValue(new Error('boom'));
+
+    await expect(validateInstagramBetaLink('https://www.instagram.com/p/CU-NOpdL8Kf/')).rejects.toThrowError(
+      'Instagram is temporarily blocking us',
+    );
   });
 });

@@ -34,7 +34,17 @@ export async function validateInstagramBetaLink(url: string): Promise<InstagramP
     throw new InstagramBetaValidationError(GENERIC_VALIDATION_ERROR);
   }
 
-  const result = await fetchInstagramMeta(url);
+  // fetchInstagramMeta is designed to return a status enum rather than throw,
+  // but a try/catch keeps any unexpected runtime error (regex/JSON edge case,
+  // dependency change) inside the InstagramBetaValidationError envelope so
+  // Yoga's maskedErrors: true doesn't surface a generic "Unexpected error."
+  // toast to the user.
+  let result;
+  try {
+    result = await fetchInstagramMeta(url);
+  } catch {
+    throw new InstagramBetaValidationError(TRANSIENT_ERROR);
+  }
 
   if (result.status === 'gone') {
     throw new InstagramBetaValidationError(POST_UNAVAILABLE_ERROR);
@@ -45,7 +55,10 @@ export async function validateInstagramBetaLink(url: string): Promise<InstagramP
   }
 
   return {
-    imageUrl: result.thumbnail,
+    // Normalize empty-string thumbnail to null so downstream consumers that
+    // null-check (rather than truthy-check) imageUrl behave consistently with
+    // the previous validator's contract.
+    imageUrl: result.thumbnail || null,
     mediaId,
     username: result.username,
   };
